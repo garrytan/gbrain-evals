@@ -364,11 +364,13 @@ export const A23_FREEZE_AT = '2026-10-26T00:00:00Z';
 /** Cells whose earlier failed answers a ruling sends back to be answered again (A23). */
 export const REANSWER_OVERRIDES: Record<string, { at: string; basis: string; outcomes?: Outcome[] }> = {
   's1.gbrain-defaults.full-surface': { at: A23_FREEZE_AT, basis: 'A23: 237 of the 600 think answers were recorded harness_invalid because the metering proxy refused gbrain\'s own think call once the $11.38 lease could not cover its reservation; that is a harness fault, so those answers are answered again at the $20 lease and the 363 others are kept' },
+  's1.gbrain-defaults.shipped-defaults': { at: A23_FREEZE_AT, outcomes: ['harness_invalid'], basis: 'A24: the 19 answers A23 priced as missing on c4 and c5 are recorded harness_invalid answers in the component-b8000 arm, and a resume counts a recorded answer as answered, so A23\'s unit would have skipped them. They are answered again; every other answer is kept' },
   's2b.baseline-full-context.baseline': { at: A23_FREEZE_AT, outcomes: ['reader_error'], basis: 'A23: the metering proxy refused all 60 requests of the 20 gpt-6.1-sol answers (3 attempts each, 0 forwarded, $0) because one reading reserves about $5.40 against the $1.37 lease, and the A22 runner recorded each refusal as a reader_error. That is a harness fault, so those answers are answered again at the $20 lease and every other answer is kept' },
 };
 
 /** Shards whose conversations a ruling reruns fresh, carrying nothing from before the freeze (A23). */
 export const FRESH_OVERRIDES: Record<string, { at: string; shards: number[]; basis: string }> = {
+  's1.ext-temporal-graph.common': { at: A23_FREEZE_AT, shards: [8, 9], basis: 'A24: A23 prices c8 and c9 as fresh reruns. Their A17 realizations hold 120 rows recorded ingest_degraded, a final outcome a resume would carry; this keeps a resumed unit from carrying them, and a unit already ingesting after the freeze keeps its own realization' },
   's1.ext-memory-bank.recipe': { at: A23_FREEZE_AT, shards: [0, 1, 3], basis: 'A23: the store kept its data in an anonymous volume, so every A17 snapshot tar was empty, and the restored realizations (A17 c0-a2, c1-a2, c3-a2; A22 c1-a3, c3-a2) answered from an empty store. Their 11 rows and 45 answers are harness-invalid, and the three conversations are ingested again on a named volume and answered from scratch' },
 };
 

@@ -453,6 +453,25 @@ describe('resume', () => {
     } finally { server.stop(); }
   });
 
+  test('A24: a run-config written with A22 launch fields resumes under A23 and A24 launch fields; a change to what the cell measures is still refused', async () => {
+    const base = cellDef('baseline-recency', 'in-process', [component({ reader_replicates: {} })], { configuration: 'baseline' });
+    const out = join(tmp, 'a24-config');
+    const run = (def: CellDefinition, c: Corpus = corpus) => runCell(def, { out, ...quiet }, { corpus: c, system: new FullContextSystem('recency'), reader: scriptedReader(), judge: scriptedJudge() });
+    await runCell(base, { out, stopAfterQuestions: 2, ...quiet }, { corpus, system: new FullContextSystem('recency'), reader: scriptedReader(), judge: scriptedJudge() });
+    const path = join(out, 'cells', base.arms[0].cell_id, 'run-config.json');
+    const a22 = JSON.parse(readFileSync(path, 'utf8'));
+    a22.cell = { ...a22.cell, shards: 10, expected_hours: 30, lease: { usd: 27, basis: 'A20' } };
+    const a22Text = JSON.stringify(a22, null, 2) + '\n';
+    writeFileSync(path, a22Text);
+    const a24: CellDefinition = { ...base, shards: 2, expected_hours: 48, lease: { usd: 20, basis: 'A23' }, reanswer_invalid_before: { at: '2026-10-26T00:00:00Z', basis: 'ruling', outcomes: ['harness_invalid'] }, fresh_before: { at: '2026-10-26T00:00:00Z', shards: [0], basis: 'ruling' } };
+    expect((await run(a24)).status).toBe('complete');
+    expect(readFileSync(path, 'utf8')).toBe(a22Text);
+    const arm = a24.arms[0];
+    for (const changed of [{ ...a24, arms: [{ ...arm, budget: 4000 }] }, { ...a24, arms: [{ ...arm, readers: [arm.readers[0]] }] }, { ...a24, effort: 'high' as 'medium' }]) await expect(run(changed)).rejects.toThrow(/holds a different configuration/);
+    await expect(run(a24, { ...corpus, source: { ...corpus.source, revision: 'another-revision' } })).rejects.toThrow(/holds a different configuration/);
+    expect(readFileSync(path, 'utf8')).toBe(a22Text);
+  });
+
   test('A23: --fresh-before reruns a conversation fresh: ingested again, every question asked again, nothing carried from a realization ingested before the cutoff, even after an interrupted fresh run; a restored snapshot is refused', async () => {
     const fake = new FakeMemorySystem();
     let ingests = 0;
@@ -984,10 +1003,22 @@ describe('the generated cell manifest', () => {
     expect(fs.estimate.lines.own_answer / 600).toBeCloseTo(0.2, 1);
     expect(shardsOf('s1.gbrain-defaults.full-surface').map(u => u.lease_usd)).toEqual(Array(10).fill(20));
     expect(shardsOf('s1.gbrain-defaults.full-surface').every(u => u.command.includes('--reanswer-invalid-before 2026-10-26T00:00:00Z'))).toBe(true);
-    expect(units.filter(u => u.command.includes('--reanswer-invalid-before')).map(u => u.id).filter(id => !id.startsWith('s1.gbrain-defaults.full-surface.c'))).toEqual(['s2b.baseline-full-context.baseline']);
+    expect(units.filter(u => u.command.includes('--reanswer-invalid-before')).map(u => u.id).filter(id => !id.startsWith('s1.gbrain-defaults.full-surface.c') && !id.startsWith('s1.gbrain-defaults.shipped-defaults.c'))).toEqual(['s2b.baseline-full-context.baseline']);
     expect(units.find(u => u.id === 's2b.baseline-full-context.baseline')!.command).toContain('--reanswer-invalid-before 2026-10-26T00:00:00Z --reanswer-outcomes reader_error');
-    expect(units.filter(u => u.command.includes('--fresh-before 2026-10-26T00:00:00Z')).map(u => u.id)).toEqual(['s1.ext-memory-bank.recipe.c0', 's1.ext-memory-bank.recipe.c1', 's1.ext-memory-bank.recipe.c3']);
+    expect(units.filter(u => u.command.includes('--fresh-before 2026-10-26T00:00:00Z')).map(u => u.id).filter(id => id.startsWith('s1.ext-memory-bank'))).toEqual(['s1.ext-memory-bank.recipe.c0', 's1.ext-memory-bank.recipe.c1', 's1.ext-memory-bank.recipe.c3']);
     expect(units.find(u => u.id === 's2b.baseline-full-context.baseline')!.lease_usd).toBe(20);
+  });
+
+  test('A24: every unit the A23 price counts as answering again or rerunning fresh carries the flag that makes its resume do it', () => {
+    const m = loadManifest();
+    const units = campaignCells(m);
+    const cmd = (id: string) => units.find(u => u.id === id)!.command;
+    const freeze = '2026-10-26T00:00:00Z';
+    for (const i of [4, 5]) expect(cmd(`s1.gbrain-defaults.shipped-defaults.c${i}`)).toContain(`--reanswer-invalid-before ${freeze} --reanswer-outcomes harness_invalid`);
+    for (let i = 0; i < 10; i++) expect(cmd(`s1.gbrain-defaults.full-surface.c${i}`)).toContain(`--reanswer-invalid-before ${freeze}`);
+    expect(cmd('s2b.baseline-full-context.baseline')).toContain(`--reanswer-invalid-before ${freeze} --reanswer-outcomes reader_error`);
+    for (const id of ['s1.ext-memory-bank.recipe.c0', 's1.ext-memory-bank.recipe.c1', 's1.ext-memory-bank.recipe.c3', 's1.ext-temporal-graph.common.c8', 's1.ext-temporal-graph.common.c9']) expect(cmd(id)).toContain(`--fresh-before ${freeze}`);
+    expect(units.filter(u => u.command.includes('--fresh-before')).map(u => u.id).sort()).toEqual(['s1.ext-memory-bank.recipe.c0', 's1.ext-memory-bank.recipe.c1', 's1.ext-memory-bank.recipe.c3', 's1.ext-temporal-graph.common.c8', 's1.ext-temporal-graph.common.c9']);
   });
 
   test('A22: graph-pipeline S1 leases $65 a shard from its measured ingest; S1 hybrid is scheduled for its question phase', () => {

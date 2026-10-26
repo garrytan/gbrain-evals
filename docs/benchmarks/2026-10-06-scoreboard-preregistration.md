@@ -348,10 +348,11 @@ A BEAM-10M conversation is about 6,000 to 7,000 conversation pages, past gbrain'
   (0.60.106.0), resolved hash `415dafe5ada70e8ba2ba72126a1af950a04eaab31aec0da4b7cf09f43186ccab` (fact extraction on
   `claude-sonnet-4-6`, no content-repair model).
 - **Campaigns** (`2026-10-06-scoreboard/campaign/`), each hash covering the manifest, the git tree of every file a
-  cell executes (159 files at the A9, A14, A17, A19 and A20 trees, 160 at A22 and A23) and the pinned images:
+  cell executes (159 files at the A9, A14, A17, A19 and A20 trees, 160 at A22, A23 and A24) and the pinned images:
   - `q1-scoreboard-sealed`: S1, BEAM-100K and BEAM-1M sealed, and LoCoMo; 149 launch units (A23); cap $8,000 (A23; $7,800 from A20);
-    launched from the custodian's host. Hash `b13010e1cdab897aab7143231ae005f040c3e19c06dcd8f9210963478ae6bd95` (A23, 160 files)
-    for every unit that runs from A23 on, replacing `0c4459fc4a0ea6164cedf14b650b5483c603a21150534be40fe46dbb1a4fe169`
+    launched from the custodian's host. Hash `a92b06c59ceb0c635c125147263eeacef2b47a88a558def6c8dafef18de987ea` (A24, 160 files)
+    for every unit that runs from A24 on, replacing `b13010e1cdab897aab7143231ae005f040c3e19c06dcd8f9210963478ae6bd95`
+    (A23), under which the first A23 units started. That replaced `0c4459fc4a0ea6164cedf14b650b5483c603a21150534be40fe46dbb1a4fe169`
     (A22), under which waves 2 and 3 and the wave-1 reruns settled. That replaced
     `43749abd1ebecd8b8e16b3d9f91401647f27e95f247d65339e7819eaedb1cfb6` (A20), which replaced `a1ff43c5` (A19, never
     relayed). Wave 1's settled units ran at
@@ -1343,7 +1344,54 @@ were auto-approved under Garry's standing rule, 2026-10-12, apart from item 11, 
   A22 receipts. At this tree, v3-s2 hashes to `5417b675` and v3-m to `0459384e`. Each public campaign still renders
   from its launch tree.
 
+**A24 (2026-10-26, before the cells it affects): two A23 harness faults, fixed in place, and a re-freeze.** The
+custodian's first A23 resumes found two harness faults. Both units stopped before any billed call ($0), and no
+record was lost. The fixes keep the 363 valid think answers rather than rerunning those conversations fresh. The price
+is unchanged: the re-answers involved (about $108) are already in A23's plan, and the cap and ledger formula stay as
+A23 set them. Each fix has a test that fails on the A23 code and passes on this tree.
+
+- **1. A resume refused its own configuration (`RESUME_REFUSED … holds a different configuration`).**
+  `runConfigText` (`eval/runner/q1/cell.ts`) wrote the whole cell definition except `estimate` and `arms` into the
+  arm's configuration identity, launch-control fields included. A23's new `lease` and `reanswer_invalid_before` on
+  `s1.gbrain-defaults.full-surface` and `s2b.baseline-full-context.baseline` therefore no longer matched the
+  restored A22 `run-config.json`, and the run stopped.
+  - Launch-control fields (`lease`, `reanswer_invalid_before` with its outcomes, `fresh_before`, `shards`,
+    `expected_hours`, `snapshot_command`, `restore_command`) are no longer part of the identity. They decide how a
+    unit is leased, laid out and resumed, not what the cell measures.
+  - Both sides of the comparison drop them, so a file written at A22 or at A23 (with the fields) resumes under this
+    freeze, and the units that started at A23 resume cleanly. A written `run-config.json` is kept byte for byte, so
+    every `config_sha256` already published stays valid.
+  - A change to what the cell measures (an arm, a reader, a budget, the effort, the dataset) is still refused.
+- **2. The 19 "missing" shipped-defaults answers on S1 c4 and c5 are recorded `harness_invalid` answers** in the
+  component-b8000 arm. A resume counts a recorded answer as answered, and A23's unit carried no reanswer flag, so it
+  would have skipped them. `s1.gbrain-defaults.shipped-defaults` now runs with
+  `--reanswer-invalid-before 2026-10-26T00:00:00Z --reanswer-outcomes harness_invalid`.
+  - Every other unit the A23 price counts as answering again or rerunning fresh was checked, and a test pins each
+    flag: the full-surface think answers, the S2b full-context `reader_error` answers, memory-bank c0, c1 and c3.
+    temporal-graph c8 and c9, priced as fresh reruns, now also carry `--fresh-before 2026-10-26T00:00:00Z`. Their A17
+    realizations hold 120 `ingest_degraded` rows, a final outcome a resume would otherwise carry; a unit already
+    ingesting after the freeze keeps its own realization.
+- **Ledger.** A24 units run in a ledger of their own, because a state directory frozen at another hash refuses to
+  launch. The custodian runs `shootout-cell.ts init` for this freeze in a fresh state directory, then, before any
+  reservation, `set-cap` to $8,000 minus what the A17, A22 and A23 ledgers have committed, minus the backfill run's
+  cap (or its committed spend once it has run). The A17 ledger is never set above $7,200, and the A22 and A23 ledgers
+  take no new lease. As their leases settle under their reservations, `set-cap` raises the A24 cap to the same
+  formula and never above it.
+- **Freeze.** The sealed campaign is re-frozen at hash
+  `a92b06c59ceb0c635c125147263eeacef2b47a88a558def6c8dafef18de987ea` (160 tree files, 149 units, $8,855.86 in leases,
+  cap $8,000). This replaces A23's `b13010e1` for every unit that runs from here, including the A23 units that
+  resume. At this tree, v3-s2 hashes to `0ecb4a09` and v3-m to `8ac8642b`. Each public campaign still renders from
+  its launch tree.
+
 ## Changelog
+
+### 2026-10-26: amendment A24
+
+Two A23 harness faults, both caught at $0 with no record lost, are fixed in place. A resume no longer counts
+launch-control fields (lease, reanswer and fresh flags, VM layout) as part of a cell's configuration, on either side
+of the comparison, so A22 and A23 run-configs resume. S1 shipped-defaults c4 and c5 answer their 19 recorded
+`harness_invalid` answers again, and temporal-graph c8 and c9 carry the fresh flag their price assumed. The price and
+the cap are unchanged. Re-frozen at `a92b06c5`, 149 units.
 
 ### 2026-10-25: amendment A23
 

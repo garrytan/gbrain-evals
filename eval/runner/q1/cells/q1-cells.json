@@ -661,6 +661,13 @@
       "lease": {
         "usd": 27,
         "basis": "A20: every wave-1 shard used up its $18.17 lease while reading"
+      },
+      "reanswer_invalid_before": {
+        "at": "2026-10-26T00:00:00Z",
+        "outcomes": [
+          "harness_invalid"
+        ],
+        "basis": "A24: the 19 answers A23 priced as missing on c4 and c5 are recorded harness_invalid answers in the component-b8000 arm, and a resume counts a recorded answer as answered, so A23's unit would have skipped them. They are answered again; every other answer is kept"
       }
     },
     {
@@ -1480,6 +1487,14 @@
       "lease": {
         "usd": 350,
         "basis": "A20: wave 1 projects $305 a shard; the lease holds 15% over it, since a stop mid-ingest wastes the shard"
+      },
+      "fresh_before": {
+        "at": "2026-10-26T00:00:00Z",
+        "shards": [
+          8,
+          9
+        ],
+        "basis": "A24: A23 prices c8 and c9 as fresh reruns. Their A17 realizations hold 120 rows recorded ingest_degraded, a final outcome a resume would carry; this keeps a resumed unit from carrying them, and a unit already ingesting after the freeze keeps its own realization"
       }
     },
     {

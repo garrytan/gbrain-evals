@@ -441,9 +441,17 @@ export function armReaders(arm: ArmDefinition, cap: CapabilityRecord): string[] 
 
 const PROMPTS: Record<string, string> = { native: NATIVE_READER_TEMPLATE, rehydrated: READER_TEMPLATE, agent: FILE_AGENT_SYSTEM };
 
+/**
+ * Launch-control fields of a cell definition: how its units are leased, laid out on VMs, snapshotted and sent back to
+ * answer again. They change between freezes without changing what the cell measures, so they are not part of its
+ * configuration identity (A24).
+ */
+export const LAUNCH_CONTROL_FIELDS = ['lease', 'reanswer_invalid_before', 'fresh_before', 'shards', 'expected_hours', 'snapshot_command', 'restore_command'] as const;
+
 /** The arm's configuration identity, deterministic: the scoreboard's config_sha256 is the sha256 of these bytes. */
 export function runConfigText(def: CellDefinition, arm: ArmDefinition, ctx: { instrument: Instrument; dataset: Corpus['source']; scheduledSha: string; limit: number | null }): string {
-  const { estimate: _e, arms: _a, ...cell } = def;
+  const { estimate: _e, arms: _a, ...rest } = def;
+  const cell = Object.fromEntries(Object.entries(rest).filter(([k]) => !(LAUNCH_CONTROL_FIELDS as readonly string[]).includes(k)));
   const counter = arm.mode === 'packed' || arm.mode === 'native-default' ? readerCounter(arm.readers).identity : arm.mode === 'full-context' ? arm.readers.map(r => ({ reader: r, ...readerTokenizer(r) })) : null;
   const prompt = arm.mode === 'full-context' ? PROMPTS.rehydrated : arm.mode === 'agent' && def.system === 'baseline-file-agent' ? PROMPTS.agent : arm.mode === 'packed' || arm.mode === 'native-default' ? PROMPTS.native : null;
   return JSON.stringify({
@@ -452,6 +460,16 @@ export function runConfigText(def: CellDefinition, arm: ArmDefinition, ctx: { in
     reader: { effort: def.effort, max_tokens: READER_MAX_TOKENS, prompt_sha256: prompt ? sha256(prompt) : null },
     renderer: RENDERER_VERSION, counter, dataset: ctx.dataset, scheduled_sha256: ctx.scheduledSha, limit: ctx.limit,
   }, null, 2) + '\n';
+}
+
+/**
+ * A run config with its launch-control fields left out, for comparing a written run-config.json with this run's. A
+ * file written before A24 (A22 and A23 included those fields) compares equal when only they differ.
+ */
+export function runConfigIdentity(text: string): string {
+  const c = JSON.parse(text) as { cell?: Record<string, unknown> };
+  if (c.cell) for (const k of LAUNCH_CONTROL_FIELDS) delete c.cell[k];
+  return JSON.stringify(c);
 }
 
 // ─── Probes ──────────────────────────────────────────────────────────
@@ -555,12 +573,15 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
   const instrument = instrumentFor(def.canonical_instrument);
   const scheduledSha = sha256(selected.map(q => q.id).join('\n'));
 
-  // Run configs: written once, refused when a resume would change them.
+  // Run configs: written once and kept byte for byte (config_sha256 is their sha256), refused when a resume would change
+  // what the cell measures; launch-control fields are left out of the comparison on both sides (A24).
   const configs = new Map<string, { text: string; sha: string }>();
   for (const a of arms) {
-    const text = runConfigText(def, a, { instrument, dataset: corpus.source, scheduledSha, limit: opts.limit ?? null });
+    const fresh = runConfigText(def, a, { instrument, dataset: corpus.source, scheduledSha, limit: opts.limit ?? null });
     const path = join(out, 'cells', a.cell_id, 'run-config.json');
-    if (existsSync(path) && readFileSync(path, 'utf8') !== text) throw refuse({ code: 'RESUME_REFUSED', message: `${rel(path)} holds a different configuration than this run (${a.cell_id})`,
+    const written = existsSync(path) ? readFileSync(path, 'utf8') : null;
+    const text = written ?? fresh;
+    if (written !== null && runConfigIdentity(written) !== runConfigIdentity(fresh)) throw refuse({ code: 'RESUME_REFUSED', message: `${rel(path)} holds a different configuration than this run (${a.cell_id})`,
       why: 'a counted cell runs exactly the configuration it froze; a changed configuration is a new cell identity', fix: { next: 'run', argv: [...FRONT, 'run', '--cell', def.id, '--out', '<a fresh directory>'] } });
     writeAtomic(path, text);
     configs.set(a.id, { text, sha: sha256(text) });

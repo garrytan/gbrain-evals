@@ -13,7 +13,7 @@
       "benchmark": "beam-10m",
       "config": "shipped-defaults",
       "lease_usd": 27,
-      "command": "bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.shipped-defaults --shard 0/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "command": "bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.shipped-defaults --shard 0/10 --system-url http://127.0.0.1:8700 --reanswer-invalid-before 2026-10-26T00:00:00Z --reanswer-outcomes harness_invalid --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
       "vm": {
         "size": "standard-4"
@@ -42,7 +42,7 @@
       "benchmark": "beam-10m",
       "config": "shipped-defaults",
       "lease_usd": 27,
-      "command": "bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.shipped-defaults --shard 1/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "command": "bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.shipped-defaults --shard 1/10 --system-url http://127.0.0.1:8700 --reanswer-invalid-before 2026-10-26T00:00:00Z --reanswer-outcomes harness_invalid --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
       "vm": {
         "size": "standard-4"
@@ -71,7 +71,7 @@
       "benchmark": "beam-10m",
       "config": "shipped-defaults",
       "lease_usd": 27,
-      "command": "bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.shipped-defaults --shard 2/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "command": "bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.shipped-defaults --shard 2/10 --system-url http://127.0.0.1:8700 --reanswer-invalid-before 2026-10-26T00:00:00Z --reanswer-outcomes harness_invalid --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
       "vm": {
         "size": "standard-4"
@@ -100,7 +100,7 @@
       "benchmark": "beam-10m",
       "config": "shipped-defaults",
       "lease_usd": 27,
-      "command": "bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.shipped-defaults --shard 3/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "command": "bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.shipped-defaults --shard 3/10 --system-url http://127.0.0.1:8700 --reanswer-invalid-before 2026-10-26T00:00:00Z --reanswer-outcomes harness_invalid --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
       "vm": {
         "size": "standard-4"
@@ -129,7 +129,7 @@
       "benchmark": "beam-10m",
       "config": "shipped-defaults",
       "lease_usd": 27,
-      "command": "bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.shipped-defaults --shard 4/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "command": "bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.shipped-defaults --shard 4/10 --system-url http://127.0.0.1:8700 --reanswer-invalid-before 2026-10-26T00:00:00Z --reanswer-outcomes harness_invalid --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
       "vm": {
         "size": "standard-4"
@@ -158,7 +158,7 @@
       "benchmark": "beam-10m",
       "config": "shipped-defaults",
       "lease_usd": 27,
-      "command": "bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.shipped-defaults --shard 5/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "command": "bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.shipped-defaults --shard 5/10 --system-url http://127.0.0.1:8700 --reanswer-invalid-before 2026-10-26T00:00:00Z --reanswer-outcomes harness_invalid --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
       "vm": {
         "size": "standard-4"
@@ -187,7 +187,7 @@
       "benchmark": "beam-10m",
       "config": "shipped-defaults",
       "lease_usd": 27,
-      "command": "bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.shipped-defaults --shard 6/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "command": "bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.shipped-defaults --shard 6/10 --system-url http://127.0.0.1:8700 --reanswer-invalid-before 2026-10-26T00:00:00Z --reanswer-outcomes harness_invalid --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
       "vm": {
         "size": "standard-4"
@@ -216,7 +216,7 @@
       "benchmark": "beam-10m",
       "config": "shipped-defaults",
       "lease_usd": 27,
-      "command": "bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.shipped-defaults --shard 7/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "command": "bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.shipped-defaults --shard 7/10 --system-url http://127.0.0.1:8700 --reanswer-invalid-before 2026-10-26T00:00:00Z --reanswer-outcomes harness_invalid --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
       "vm": {
         "size": "standard-4"
@@ -245,7 +245,7 @@
       "benchmark": "beam-10m",
       "config": "shipped-defaults",
       "lease_usd": 27,
-      "command": "bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.shipped-defaults --shard 8/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "command": "bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.shipped-defaults --shard 8/10 --system-url http://127.0.0.1:8700 --reanswer-invalid-before 2026-10-26T00:00:00Z --reanswer-outcomes harness_invalid --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
       "vm": {
         "size": "standard-4"
@@ -274,7 +274,7 @@
       "benchmark": "beam-10m",
       "config": "shipped-defaults",
       "lease_usd": 27,
-      "command": "bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.shipped-defaults --shard 9/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "command": "bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.shipped-defaults --shard 9/10 --system-url http://127.0.0.1:8700 --reanswer-invalid-before 2026-10-26T00:00:00Z --reanswer-outcomes harness_invalid --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
       "vm": {
         "size": "standard-4"
@@ -1619,7 +1619,7 @@
       "benchmark": "beam-10m",
       "config": "common",
       "lease_usd": 350,
-      "command": "bash eval/systems/bootstrap.sh up --system ext-temporal-graph --config common && bun eval/runner/q1/cell.ts run --cell s1.ext-temporal-graph.common --shard 8/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-temporal-graph; exit $rc",
+      "command": "bash eval/systems/bootstrap.sh up --system ext-temporal-graph --config common && bun eval/runner/q1/cell.ts run --cell s1.ext-temporal-graph.common --shard 8/10 --system-url http://127.0.0.1:8700 --fresh-before 2026-10-26T00:00:00Z --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-temporal-graph; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-temporal-graph --datasets beam-10m",
       "vm": {
         "size": "standard-4"
@@ -1646,7 +1646,7 @@
       "benchmark": "beam-10m",
       "config": "common",
       "lease_usd": 350,
-      "command": "bash eval/systems/bootstrap.sh up --system ext-temporal-graph --config common && bun eval/runner/q1/cell.ts run --cell s1.ext-temporal-graph.common --shard 9/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-temporal-graph; exit $rc",
+      "command": "bash eval/systems/bootstrap.sh up --system ext-temporal-graph --config common && bun eval/runner/q1/cell.ts run --cell s1.ext-temporal-graph.common --shard 9/10 --system-url http://127.0.0.1:8700 --fresh-before 2026-10-26T00:00:00Z --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-temporal-graph; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-temporal-graph --datasets beam-10m",
       "vm": {
         "size": "standard-4"

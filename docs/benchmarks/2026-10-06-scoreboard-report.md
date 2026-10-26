@@ -21,8 +21,8 @@ bun eval/runner/scoreboard.ts check --receipt <receipt dir>
 
 `publication.json` says which campaign covers which rows and at which launch tree each renders: public-v2 for the
 external and baseline rows on LongMemEval (`4bccbd5a`), public-v3-s2 for gbrain on LongMemEval-S (`3532b1aa`),
-public-v3-m for gbrain on LongMemEval-M (`0518e2fd`), and the sealed campaign (hash `b13010e1` for every unit that runs from A23 on, `0c4459fc` for the units settled under
-A22, and `eefd1799` for wave 1's settled units) for everything else. `--preview` writes no README block and opens the disclosures with a
+public-v3-m for gbrain on LongMemEval-M (`0518e2fd`), and the sealed campaign (hash `a92b06c5` for every unit that runs from A24 on, `b13010e1` for units started under A23, `0c4459fc` for
+the units settled under A22, and `eefd1799` for wave 1's settled units) for everything else. `--preview` writes no README block and opens the disclosures with a
 public-results-only line; the preview is how this layout was checked.
 
 ## Provenance
