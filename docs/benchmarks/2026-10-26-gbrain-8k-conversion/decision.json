@@ -20,7 +20,7 @@
     },
     "release_decision": "Opening 3 of the 3 the protocol allows (decision 1 auto vs chunk, pass; decision 2 H1, fail). The last opening.",
     "access_log_before": {
-      "verified": "fill-at-custody: the custodian reads the owner's access-log.jsonl and writes its 35 lines here (action and decision id, in order) before custody; the first 6 are the ones H1 recorded, the other 29 are expected to be H1's own lines",
+      "verified": "2026-10-26: read by the custodian from the owner's access-log.jsonl before custody (action and decision id only): 35 lines, the first 6 as H1 recorded them, then H1's 21 open and 8 score lines under its decision id",
       "lines": 35,
       "entries": [
         {
@@ -48,119 +48,119 @@
           "decision_id": "p8-quotes-heldout-2026-10-05"
         },
         {
-          "action": "fill-at-custody",
+          "action": "open",
           "decision_id": "sealed-v2-decision-2-2026-10-10:depth-first-vs-cap-only"
         },
         {
-          "action": "fill-at-custody",
+          "action": "open",
           "decision_id": "sealed-v2-decision-2-2026-10-10:depth-first-vs-cap-only"
         },
         {
-          "action": "fill-at-custody",
+          "action": "open",
           "decision_id": "sealed-v2-decision-2-2026-10-10:depth-first-vs-cap-only"
         },
         {
-          "action": "fill-at-custody",
+          "action": "open",
           "decision_id": "sealed-v2-decision-2-2026-10-10:depth-first-vs-cap-only"
         },
         {
-          "action": "fill-at-custody",
+          "action": "open",
           "decision_id": "sealed-v2-decision-2-2026-10-10:depth-first-vs-cap-only"
         },
         {
-          "action": "fill-at-custody",
+          "action": "open",
           "decision_id": "sealed-v2-decision-2-2026-10-10:depth-first-vs-cap-only"
         },
         {
-          "action": "fill-at-custody",
+          "action": "open",
           "decision_id": "sealed-v2-decision-2-2026-10-10:depth-first-vs-cap-only"
         },
         {
-          "action": "fill-at-custody",
+          "action": "open",
           "decision_id": "sealed-v2-decision-2-2026-10-10:depth-first-vs-cap-only"
         },
         {
-          "action": "fill-at-custody",
+          "action": "open",
           "decision_id": "sealed-v2-decision-2-2026-10-10:depth-first-vs-cap-only"
         },
         {
-          "action": "fill-at-custody",
+          "action": "open",
           "decision_id": "sealed-v2-decision-2-2026-10-10:depth-first-vs-cap-only"
         },
         {
-          "action": "fill-at-custody",
+          "action": "open",
           "decision_id": "sealed-v2-decision-2-2026-10-10:depth-first-vs-cap-only"
         },
         {
-          "action": "fill-at-custody",
+          "action": "open",
           "decision_id": "sealed-v2-decision-2-2026-10-10:depth-first-vs-cap-only"
         },
         {
-          "action": "fill-at-custody",
+          "action": "open",
           "decision_id": "sealed-v2-decision-2-2026-10-10:depth-first-vs-cap-only"
         },
         {
-          "action": "fill-at-custody",
+          "action": "open",
           "decision_id": "sealed-v2-decision-2-2026-10-10:depth-first-vs-cap-only"
         },
         {
-          "action": "fill-at-custody",
+          "action": "open",
           "decision_id": "sealed-v2-decision-2-2026-10-10:depth-first-vs-cap-only"
         },
         {
-          "action": "fill-at-custody",
+          "action": "open",
           "decision_id": "sealed-v2-decision-2-2026-10-10:depth-first-vs-cap-only"
         },
         {
-          "action": "fill-at-custody",
+          "action": "open",
           "decision_id": "sealed-v2-decision-2-2026-10-10:depth-first-vs-cap-only"
         },
         {
-          "action": "fill-at-custody",
+          "action": "open",
           "decision_id": "sealed-v2-decision-2-2026-10-10:depth-first-vs-cap-only"
         },
         {
-          "action": "fill-at-custody",
+          "action": "open",
           "decision_id": "sealed-v2-decision-2-2026-10-10:depth-first-vs-cap-only"
         },
         {
-          "action": "fill-at-custody",
+          "action": "open",
           "decision_id": "sealed-v2-decision-2-2026-10-10:depth-first-vs-cap-only"
         },
         {
-          "action": "fill-at-custody",
+          "action": "open",
           "decision_id": "sealed-v2-decision-2-2026-10-10:depth-first-vs-cap-only"
         },
         {
-          "action": "fill-at-custody",
+          "action": "score",
           "decision_id": "sealed-v2-decision-2-2026-10-10:depth-first-vs-cap-only"
         },
         {
-          "action": "fill-at-custody",
+          "action": "score",
           "decision_id": "sealed-v2-decision-2-2026-10-10:depth-first-vs-cap-only"
         },
         {
-          "action": "fill-at-custody",
+          "action": "score",
           "decision_id": "sealed-v2-decision-2-2026-10-10:depth-first-vs-cap-only"
         },
         {
-          "action": "fill-at-custody",
+          "action": "score",
           "decision_id": "sealed-v2-decision-2-2026-10-10:depth-first-vs-cap-only"
         },
         {
-          "action": "fill-at-custody",
+          "action": "score",
           "decision_id": "sealed-v2-decision-2-2026-10-10:depth-first-vs-cap-only"
         },
         {
-          "action": "fill-at-custody",
+          "action": "score",
           "decision_id": "sealed-v2-decision-2-2026-10-10:depth-first-vs-cap-only"
         },
         {
-          "action": "fill-at-custody",
+          "action": "score",
           "decision_id": "sealed-v2-decision-2-2026-10-10:depth-first-vs-cap-only"
         },
         {
-          "action": "fill-at-custody",
+          "action": "score",
           "decision_id": "sealed-v2-decision-2-2026-10-10:depth-first-vs-cap-only"
         }
       ]

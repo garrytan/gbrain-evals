@@ -254,13 +254,13 @@ to $8,800. Of it, **$300 is leased to this preregistration, one cap covering the
 held-out F1–F4 cells together** (about $50 and $250). The approval is also the authority to use sealed confirmation
 v2's third and last opening for these cells. In his words: "launch them once the default-off wave PR and the
 gbrain-evals prereg PR are in place". Anything past $300 goes back to him before it is spent. The owner launches
-the paid cells; no agent does.
+the paid cells through the custodian (GBRA-205) on the owner's custody machine, as that approval directs.
 
 ## Before custody (this pull request)
 
-1. **Half done.** The measured commit is written above and into `decision.json` (`gbrain.commit`, the wave PR's head
-   `cf3ec433`). Still open: the custodian's reading of the access log written into `decision.json`
-   (`sealed.access_log_before`, 29 of 35 lines `fill-at-custody`); the harness refuses every sealed step until then.
+1. **Done.** The measured commit is written above and into `decision.json` (`gbrain.commit`, the wave PR's head
+   `cf3ec433`). The custodian read the owner's access log on 2026-10-26 (action and decision id only) and wrote its
+   35 lines into `decision.json` (`sealed.access_log_before`): the 6 H1 recorded, then H1's 21 open and 8 score lines.
 2. **Done.** Harness (`eval/runner/budgeted-delivery/c8k.ts`, `c8k-product.ts`, `c8k-run.sh`): the live
    product-path arms through the stdio dispatch, the product-text renderer, the extraction step, R5, `decision.json`,
    `family.json` (Holm over D1, D2, D3 and D3′, plus the R5 non-inferiority interval), the campaign and cells, the verdict function
