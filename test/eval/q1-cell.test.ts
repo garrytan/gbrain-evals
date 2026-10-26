@@ -190,10 +190,10 @@ describe('keyless end to end: two component cells into a scoreboard receipt', ()
   test('`bun eval/runner/scoreboard.ts check` passes over a receipt made from the two cells', () => {
     const scheduled = selectCellQuestions(corpus.questions, { kind: 'all' }).map(q => ({ question_id: q.id, conversation: q.conversation }));
     const campaign: CampaignManifest = {
-      schema: CAMPAIGN_SCHEMA, campaign_id: 'q1-cell-keyless', campaign_hash: 'keyless', gbrain: { commit: 'f'.repeat(40), version: 'stand-in', resolved_search_mode: 'fake' },
+      schema: CAMPAIGN_SCHEMA, campaign_id: 'q1-cell-keyless', campaign_hash: 'keyless', gbrain: { commit: 'f'.repeat(40), version: 'stand-in', date: '2026-10-06', resolved_search_mode: 'fake' },
       measured: { from: '2026-10-06', to: '2026-10-06' }, readers: READERS, statistics: { alpha: 0.05, draws: 199, descriptive_draws: 200, seed: 7 },
       sets: [{ id: 'S3', label: 'LoCoMo-shaped fixture', benchmark: 'locomo', exposure: 'E2', role: 'headline', cluster_unit: 'conversation', claim_min_clusters: 2, scheduled, exclusions: [] }],
-      cells: [scoreboardCampaignCell(gb, gb.arms[0], results[0].arms[0]), scoreboardCampaignCell(ext, ext.arms[0], results[1].arms[0])],
+      cells: [{ ...scoreboardCampaignCell(gb, gb.arms[0], results[0].arms[0]), pin: 'GBrain 0.0.0.0 (ffffffff, 2026-10-06)' }, scoreboardCampaignCell(ext, ext.arms[0], results[1].arms[0])],
       families: [{ id: 'F1', label: 'fixture, component, 8,000 tokens', anchor: gb.arms[0].cell_id, comparators: [ext.arms[0].cell_id] }, { id: 'F3', label: 'fixture, recall', anchor: gb.arms[0].cell_id, comparators: [ext.arms[0].cell_id] }],
       pins: [], release_assets: [], disclosures: ['Keyless fixture: the fake system stands in for both rows; scores prove the wiring only.'], render_targets: [], hedge_classifier: CLASSIFIER_VERSION_V2,
     };

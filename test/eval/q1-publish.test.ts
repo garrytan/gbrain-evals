@@ -9,7 +9,8 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'no
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { loadManifest } from '../../eval/runner/q1/cells/definitions.ts';
-import { bundlePins, settledLeases, unitCell, type Publication } from '../../eval/runner/q1/publish.ts';
+import { bundlePins, gbrainBuildLabel, settledLeases, unitCell, type Publication } from '../../eval/runner/q1/publish.ts';
+import { GBRAIN_BUILD } from '../../eval/runner/scoreboard.ts';
 
 const ROOT = resolve(import.meta.dir, '../..');
 const m = loadManifest();
@@ -68,7 +69,15 @@ describe('publication.json', () => {
     const appendix = config.sources.filter(s => s.appendix);
     expect(appendix).toHaveLength(1);
     expect(appendix[0].systems).toEqual(['gbrain-defaults']);
-    expect(appendix[0].pins?.['gbrain-defaults']).toContain('7aa2caa0');
+    expect(gbrainBuildLabel(appendix[0].gbrain!)).toBe('GBrain 0.60.106.0 (7aa2caa0, 2026-10-08)');
     expect(config.sources.find(s => !s.appendix && s.campaign.endsWith('public-v2.json'))?.exclude_systems).toEqual(['gbrain-defaults']);
+  });
+
+  test('the GBrain label comes from publish.ts: version, commit and date, never a hand-written pin, with the not-current-master footnote', () => {
+    const label = gbrainBuildLabel(config.gbrain);
+    expect(label).toBe('GBrain 0.60.138.0 (f05943e6, 2026-10-09)');
+    expect(GBRAIN_BUILD.test(label)).toBe(true);
+    expect([config.pins, ...config.sources.map(s => s.pins ?? {})].some(p => 'gbrain-defaults' in p)).toBe(false);
+    expect(config.gbrain.footnote).toMatch(/not current master.*rerun.*current master.*A23/);
   });
 });

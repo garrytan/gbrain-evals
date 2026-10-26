@@ -265,6 +265,24 @@ describe('cohorts, estimand and claim rules', () => {
     expect(sb.headline[0].label).toContain('shipped defaults, hybrid search');
     rmSync(dir, { recursive: true });
   });
+  test('every GBrain row carries its version: the headline and size-curve rows name the build, and a GBrain cell or appendix row without one is refused', () => {
+    const { dir, sb } = fresh();
+    const label = 'GBrain 0.60.95.0 (c5fb0201, 2026-10-01)';
+    expect(sb.headline.find(r => r.system === 'gbrain-defaults')!.label).toContain(label);
+    expect(sb.size_curve.rows.find(r => r.system === 'gbrain-defaults')!.label).toContain(label);
+    expect(sb.cells.filter(c => c.system === 'gbrain-defaults').every(c => c.pin === label)).toBe(true);
+    for (const pin of [undefined, 'gbrain f05943e6 (0.60.138.0)']) {
+      editJson(join(dir, 'campaign.json'), c => { const cell = c.cells.find(x => x.system === 'gbrain-defaults')!; if (pin === undefined) delete cell.pin; else cell.pin = pin; });
+      expect(() => loadCampaign(dir)).toThrow(/GBrain cell s1-gbrain-8k carries no version/);
+    }
+    editJson(join(dir, 'campaign.json'), c => {
+      const cell = c.cells.find(x => x.system === 'gbrain-defaults')!;
+      cell.pin = label;
+      c.appendix = [{ ...cell, pin: 'gbrain old-build', dir: 'appendix/old-build/s1-gbrain-8k', appendix: 'found and fixed', reason: 'measured before a fix' }];
+    });
+    expect(() => loadCampaign(dir)).toThrow(/GBrain appendix cell s1-gbrain-8k carries no version/);
+    rmSync(dir, { recursive: true });
+  });
 });
 
 describe('appendix rows and sensitivity views (v6)', () => {
@@ -277,8 +295,8 @@ describe('appendix rows and sensitivity views (v6)', () => {
     const out = set.scheduled.slice(0, 3).map(q => q.question_id);
     editJson(join(dir, 'campaign.json'), c => {
       const cell = c.cells.find(x => x.cell_id === 's2a-gbrain-8k')!;
-      cell.pin = 'gbrain new-build';
-      c.appendix = [{ ...cell, pin: 'gbrain old-build', dir: 'appendix/old-build/s2a-gbrain-8k', appendix: 'found and fixed', reason: 'measured before a fix; reported for the record' }];
+      cell.pin = 'GBrain 0.60.96.0 (d1e2f3a4, 2026-10-02)';
+      c.appendix = [{ ...cell, pin: 'GBrain 0.60.95.0 (c5fb0201, 2026-10-01)', dir: 'appendix/old-build/s2a-gbrain-8k', appendix: 'found and fixed', reason: 'measured before a fix; reported for the record' }];
       c.sets.find(s => s.id === 'S2a')!.sensitivity = [{ id: 'repeats', label: 'without repeated sessions', reason: 'these haystacks repeat a session.', question_ids: out }];
     });
     const d = deriveAll(dir);
@@ -286,11 +304,11 @@ describe('appendix rows and sensitivity views (v6)', () => {
     const sb = d.scoreboard;
     expect(sb.schema).toBe('gbrain-evals/scoreboard/v6');
     expect(sb.appendix).toHaveLength(1);
-    expect(sb.appendix[0]).toMatchObject({ cell_id: 's2a-gbrain-8k', pin: 'gbrain old-build', mean: s2a.mean, valued: s2a.valued, appendix: 'found and fixed' });
+    expect(sb.appendix[0]).toMatchObject({ cell_id: 's2a-gbrain-8k', pin: 'GBrain 0.60.95.0 (c5fb0201, 2026-10-01)', mean: s2a.mean, valued: s2a.valued, appendix: 'found and fixed' });
     expect(sb.comparisons.filter(c => c.set === 'S2a').map(c => c.anchor)).toEqual(before.comparisons.filter(c => c.set === 'S2a').map(c => c.anchor));
     expect(sb.comparisons.map(c => ({ id: c.id, delta: c.delta }))).toEqual(before.comparisons.map(c => ({ id: c.id, delta: c.delta })));
     const main = sb.cells.find(c => c.cell_id === 's2a-gbrain-8k')!;
-    expect(main.pin).toBe('gbrain new-build');
+    expect(main.pin).toBe('GBrain 0.60.96.0 (d1e2f3a4, 2026-10-02)');
     const view = main.sensitivity[0];
     expect(view).toMatchObject({ id: 'repeats', scheduled: main.scheduled - 3 });
     expect(view.valued).toBeLessThanOrEqual(main.valued);
@@ -302,7 +320,7 @@ describe('appendix rows and sensitivity views (v6)', () => {
     expect(md).toContain('## Sensitivity views');
     expect(md).toContain(`Excluded: ${out.join(', ')}.`);
     expect(md).toContain('## Appendix: found and fixed');
-    expect(md).toContain('| `s2a-gbrain-8k` | S2a | `gbrain-defaults` | gbrain old-build |');
+    expect(md).toContain('| `s2a-gbrain-8k` | S2a | `gbrain-defaults` | GBrain 0.60.95.0 (c5fb0201, 2026-10-01) |');
     expect(checkReceipt(dir, {}).messages).toEqual([]);
     editJson(join(dir, 'campaign.json'), c => { c.sets.find(s => s.id === 'S2a')!.sensitivity![0].question_ids.push('not-a-question'); });
     expect(() => deriveAll(dir)).toThrow(/sensitivity repeats names not-a-question/);

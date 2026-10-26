@@ -41,8 +41,10 @@ export interface PublicationSource {
   campaign: string; launch_tree: string;
   /** Only these systems, or every system but these. */
   systems?: string[]; exclude_systems?: string[];
-  /** The build label each system's cells carry (CampaignCell.pin). */
+  /** The build label each system's cells carry (CampaignCell.pin); never gbrain-defaults, whose label comes from `gbrain`. */
   pins?: Record<string, string>;
+  /** The GBrain build this source measured, when it is not the publication's (an appendix of an older pin). */
+  gbrain?: GbrainBuild;
   /** Publish this source's arms only in an appendix: its name, why, and the directory under appendix/. */
   appendix?: { name: string; reason: string; dir: string };
 }
@@ -51,7 +53,8 @@ export interface Publication {
   /** Where the full receipt is published: a path on the results branch, the branch commit that holds it, and the
    * sha256 of its SHA256SUMS file (every file's sha256, sorted by path). Filled when the receipt is pushed. */
   published: { branch: string; path: string; commit: string | null; sha256: string | null };
-  gbrain: CampaignManifest['gbrain'];
+  /** The GBrain build the main rows measured, and the footnote every rendering of them carries. */
+  gbrain: CampaignManifest['gbrain'] & { footnote: string };
   hedge_classifier: string;
   statistics: CampaignManifest['statistics'];
   /** Campaigns still running: an arm with no source whose unit one of them schedules is not run with that reason. */
@@ -60,11 +63,16 @@ export interface Publication {
   not_run_reason: string;
   sources: PublicationSource[];
   sensitivity: Array<{ sets: string[]; id: string; label: string; reason: string; question_ids: string[] }>;
-  /** Build labels for systems the pin table does not cover (gbrain, the baselines); external kinds take theirs from the pin table. */
+  /** Build labels for the baselines (gbrain-defaults takes its label from `gbrain`); external kinds take theirs from the pin table. */
   pins: Record<string, string>;
   disclosures: string[];
   render_targets: string[];
 }
+
+type GbrainBuild = Pick<CampaignManifest['gbrain'], 'commit' | 'version' | 'date'>;
+
+/** Every GBrain row's build label: "GBrain 0.60.138.0 (f05943e6, 2026-10-09)". The scoreboard refuses a GBrain row without one (GBRAIN_BUILD). */
+export function gbrainBuildLabel(g: GbrainBuild): string { return `GBrain ${g.version} (${g.commit.slice(0, 8)}, ${g.date})`; }
 
 interface LeaseEvent { event: string; lease_id: string; cell?: string; at: string }
 
@@ -104,7 +112,9 @@ const covers = (s: PublicationSource, system: string) => (!s.systems || s.system
 
 export function assemble(config: Publication, results: string, out: string, trees: string, preview = false): CampaignManifest {
   const m = loadManifest();
-  const pins = { ...bundlePins(REPO_ROOT), ...config.pins };
+  for (const p of [config.pins, ...config.sources.map(s => s.pins ?? {})]) if (p['gbrain-defaults']) throw new Error('publication.json writes a gbrain-defaults pin by hand; the GBrain label comes from its gbrain build (publish.ts gbrainBuildLabel)');
+  const label = gbrainBuildLabel(config.gbrain);
+  const pins: Record<string, string> = { ...bundlePins(REPO_ROOT), ...config.pins, 'gbrain-defaults': label };
   rmSync(out, { recursive: true, force: true });
   mkdirSync(out, { recursive: true });
   const covered = new Map<string, Pick<CampaignCell, 'status' | 'config_sha256' | 'pin'>>();
@@ -122,7 +132,7 @@ export function assemble(config: Publication, results: string, out: string, tree
       byCell.set(def, [...(byCell.get(def) ?? []), join(state, 'results', unit, l.lease)]);
     }
     const tree = launchTree(src.launch_tree, trees);
-    const treePins = { ...bundlePins(tree), ...config.pins };
+    const treePins: Record<string, string> = { ...bundlePins(tree), ...config.pins, 'gbrain-defaults': src.gbrain ? gbrainBuildLabel(src.gbrain) : label };
     for (const [def, leaseDirs] of byCell) {
       const from = leaseDirs.filter(d => existsSync(join(d, 'cells', def.arms[0].cell_id, 'receipt.json')));
       if (!from.length) {
@@ -196,7 +206,7 @@ export function assemble(config: Publication, results: string, out: string, tree
     measured: { from: (seen[0] ?? '').slice(0, 10), to: (seen.at(-1) ?? '').slice(0, 10) }, readers: m.readers, statistics: config.statistics,
     hedge_classifier: config.hedge_classifier, sets, cells, families, ...(appendix.length ? { appendix } : {}),
     pins: Object.entries(pins).filter(([k]) => m.cells.some(c => c.system === k) && k.startsWith('ext-')).map(([system, version]) => ({ system, version, latest_release: null })),
-    release_assets: [], disclosures: preview ? [PREVIEW_DISCLOSURE, ...config.disclosures] : config.disclosures, render_targets: preview ? [] : config.render_targets,
+    release_assets: [], disclosures: [...(preview ? [PREVIEW_DISCLOSURE] : []), `GBrain rows measure ${label}. ${config.gbrain.footnote}`, ...config.disclosures], render_targets: preview ? [] : config.render_targets,
   };
   writeFileSync(join(out, 'campaign.json'), JSON.stringify(campaign, null, 2) + '\n');
   cpSync(join(REPO_ROOT, 'docs/benchmarks/2026-10-06-scoreboard/power.json'), join(out, 'power.json'));

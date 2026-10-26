@@ -125,6 +125,7 @@ export function writeSyntheticReceipt(dir: string, o: SyntheticOptions = {}): Ca
       cell_id: c.id, set: c.set, system: c.system, arm: c.arm, budget: c.budget, configuration: c.system.startsWith('ext-') ? 'recipe' : c.system === 'gbrain-defaults' ? 'shipped-defaults' : 'baseline',
       ...(c.anchor ? { anchor: true } : {}), status: c.status ?? 'complete', ...(c.not_run_reason ? { not_run_reason: c.not_run_reason } : {}),
       readers: READERS, canonical_instrument: INSTRUMENT, config_sha256: sha(runConfig),
+      ...(c.system === 'gbrain-defaults' ? { pin: 'GBrain 0.60.95.0 (c5fb0201, 2026-10-01)' } : {}),
     });
   }
   const s1 = (arm: string) => cells.filter(c => c.set === 'S1' && c.arm === arm && c.system !== 'gbrain-defaults').map(c => c.id);
@@ -135,7 +136,7 @@ export function writeSyntheticReceipt(dir: string, o: SyntheticOptions = {}): Ca
   if (cells.some(c => c.id === 's1-gbrain-default')) families.splice(1, 0, { id: 'F2', label: 'BEAM-10M, whole system', anchor: 's1-gbrain-default', comparators: s1('whole-system') });
   const campaign: CampaignManifest = {
     schema: CAMPAIGN_SCHEMA, campaign_id: 'q1-scoreboard-synthetic', campaign_hash: sha('synthetic'),
-    gbrain: { commit: 'c5fb0201aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', version: '0.60.95.0', resolved_search_mode: 'hybrid' },
+    gbrain: { commit: 'c5fb0201aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', version: '0.60.95.0', date: '2026-10-01', resolved_search_mode: 'hybrid' },
     measured: { from: '2026-10-20', to: '2026-10-28' }, readers: READERS,
     statistics: { alpha: 0.05, draws: o.draws ?? 199, descriptive_draws: 1000, seed: 7 }, hedge_classifier: o.hedgeClassifier ?? CURRENT_CLASSIFIER,
     sets, cells: campaignCells, families,

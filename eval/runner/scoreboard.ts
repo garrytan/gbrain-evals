@@ -227,10 +227,13 @@ export interface CampaignCell {
 }
 /** A cell published only in an appendix (the found-and-fixed rows): derived and tabled, never compared, never in a headline. */
 export interface AppendixCell extends CampaignCell { appendix: string; reason: string; dir: string; pin: string }
+const GBRAIN_VERSION_WHY = 'every GBrain row names the release it measured (version, commit, date), so a reader never takes an old pin for current master';
+/** How a GBrain row names the build it measured (q1/publish.ts gbrainBuildLabel): version, short commit and commit date. */
+export const GBRAIN_BUILD = /^GBrain \d+(\.\d+){3} \([0-9a-f]{8}, \d{4}-\d{2}-\d{2}\)$/;
 export interface CampaignFamily { id: 'F1' | 'F2' | 'F3'; label: string; anchor: string; comparators: string[] }
 export interface CampaignManifest {
   schema: typeof CAMPAIGN_SCHEMA; campaign_id: string; campaign_hash: string;
-  gbrain: { commit: string; version: string; resolved_search_mode: string };
+  gbrain: { commit: string; version: string; date: string; resolved_search_mode: string };
   measured: { from: string; to: string };
   readers: string[];
   statistics: { alpha: number; draws: number; descriptive_draws: number; seed: number };
@@ -325,6 +328,7 @@ function validateCampaign(receipt: string, c: CampaignManifest): void {
   for (const a of c.appendix ?? []) {
     if (!sets.has(a.set)) throw invalid(receipt, `appendix cell ${a.cell_id} names unknown set ${a.set}`, why);
     if (!a.dir || !a.appendix || !a.reason || !a.pin) throw invalid(receipt, `appendix cell ${a.cell_id} needs dir, appendix, reason and pin`, 'an appendix row says which build it measured and why it is not in the main tables');
+    if (a.system === 'gbrain-defaults' && !GBRAIN_BUILD.test(a.pin)) throw invalid(receipt, `GBrain appendix cell ${a.cell_id} carries no version: its build is ${JSON.stringify(a.pin)}`, GBRAIN_VERSION_WHY);
     if (dirs.has(a.dir)) throw invalid(receipt, `appendix dir ${a.dir} is listed twice`, why);
     dirs.add(a.dir);
   }
@@ -332,6 +336,7 @@ function validateCampaign(receipt: string, c: CampaignManifest): void {
     if (cells.has(cell.cell_id)) throw invalid(receipt, `cell ${cell.cell_id} is listed twice`, why);
     if (!sets.has(cell.set)) throw invalid(receipt, `cell ${cell.cell_id} names unknown set ${cell.set}`, why);
     if (!kinds.has(cell.system)) throw invalid(receipt, `cell ${cell.cell_id} names system ${cell.system}, which is not a kind id in eval/systems/kinds.json`, 'published rows describe every system by its kind id');
+    if (cell.system === 'gbrain-defaults' && !GBRAIN_BUILD.test(cell.pin ?? '')) throw invalid(receipt, `GBrain cell ${cell.cell_id} carries no version: its build is ${JSON.stringify(cell.pin ?? null)}`, GBRAIN_VERSION_WHY);
     if (cell.status === 'not-run' && !cell.not_run_reason) throw invalid(receipt, `cell ${cell.cell_id} is not-run without a reason`, 'a cell that did not run is published with its reason');
     if (!cell.readers.length) throw invalid(receipt, `cell ${cell.cell_id} promises no readers`, why);
     cells.set(cell.cell_id, cell);
@@ -826,7 +831,7 @@ export function deriveAll(receipt: string): Derivation {
   const headline: HeadlineRow[] = order.filter(sys => sys === 'gbrain-defaults' || !sys.startsWith('ext-') || campaign.cells.some(c => c.system === sys) || required.includes(sys)).map(system => {
     const cell = headCell(headSet.id, system);
     const cs = cell ? costFor(cell) : null;
-    const config = system === 'gbrain-defaults' ? `shipped defaults, ${campaign.gbrain.resolved_search_mode} search` : cell?.label ?? cell?.configuration ?? '';
+    const config = system === 'gbrain-defaults' ? `${cell?.pin ? `${cell.pin}, ` : ''}shipped defaults, ${campaign.gbrain.resolved_search_mode} search` : cell?.label ?? cell?.configuration ?? '';
     return {
       system, label: `${kindLabel(kinds, system)}${config ? `; ${config}` : ''}`, cell: cell?.cell_id ?? null, accuracy: accuracy(cell),
       personal_month_usd: cs?.personal_month_usd ?? null, latency_p50_ms: cell ? cells.find(c => c.cell_id === cell.cell_id)!.latency_p50_ms : null,
@@ -837,7 +842,7 @@ export function deriveAll(receipt: string): Derivation {
   const curveSets = ['beam-100k', 'beam-1m', 'beam-10m'].map(b => campaign.sets.find(s => s.benchmark === b)).filter((s): s is CampaignSet => !!s);
   const externals = required.map(sys => ({ sys, cell: headCell(headSet.id, sys) })).map(x => ({ ...x, mean: x.cell ? cells.find(c => c.cell_id === x.cell!.cell_id)!.mean : null })).filter(x => x.mean !== null).sort((a, b) => b.mean! - a.mean! || (a.sys < b.sys ? -1 : 1));
   const curveRows = ['gbrain-defaults', 'baseline-full-context', 'baseline-file-agent', ...(externals.length ? [externals[0].sys] : [])].map(system => ({
-    system, label: system === externals[0]?.sys ? `best external row, ${kindLabel(kinds, system)}` : kindLabel(kinds, system),
+    system, label: system === externals[0]?.sys ? `best external row, ${kindLabel(kinds, system)}` : system === 'gbrain-defaults' && headCell(headSet.id, system)?.pin ? `${kindLabel(kinds, system)}; ${headCell(headSet.id, system)!.pin}` : kindLabel(kinds, system),
     values: curveSets.map(s => { const cell = headCell(s.id, system); if (!cell) return 'not run'; const a = cells.find(c => c.cell_id === cell.cell_id)!; return a.status === 'not-run' ? `not run: ${a.not_run_reason}` : a.mean === null ? 'no scored questions' : `${pct(a.mean)} (${a.valued}/${a.scheduled})`; }),
   }));
 

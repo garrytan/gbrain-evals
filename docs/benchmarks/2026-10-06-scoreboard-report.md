@@ -54,7 +54,9 @@ it lands with the real render.
    the size curve across BEAM-100K, BEAM-1M and BEAM-10M for gbrain, the two baselines that need no memory system
    and the best external row.
 3. **Builds.** Each row carries the build it measured, in the report's Build column:
-   - gbrain `f05943e6` (0.60.138.0) on every sealed and public row (A14, A15);
+   - every sealed and public GBrain row reads "GBrain 0.60.138.0 (f05943e6, 2026-10-09)" (A14, A15). The label comes
+     from `publication.json` through `publish.ts`, the renderer refuses a GBrain row without one, and a footnote says
+     the build is not current master and that a rerun of the GBrain rows at current master is planned after A23;
    - external kinds as `bundle lock <hash>, capabilities <hash>`, which
      [the builds table](../comparison-systems.md#builds-the-q1-scoreboard-measured) maps to products;
    - baselines as `harness baseline`.
