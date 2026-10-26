@@ -1,18 +1,18 @@
 {
   "kind": "c8k-gate",
   "decision_id": "sealed-v2-decision-3-2026-10-26:8k-conversion-f1-f4",
-  "decision_sha256": "bfd5a2f20213ed610f3cda91b7237f2df1e8930522483a2e7a385d6455e99245",
+  "decision_sha256": "0ca3e7547e37d5afefbd845d7b3fc03aebf92b342e436aab5c41717e814c9744",
   "phase": "retrieval",
-  "created_at": "2026-10-26T03:04:46.460Z",
+  "created_at": "2026-10-26T04:28:15.992Z",
   "gbrain": {
-    "commit": "6f82a94e00d20c096267999fcf71948872463aab",
+    "commit": "cf3ec433f4fffda60d00076bae7361100c632cc4",
     "version": "0.60.461.0",
     "keyless": true,
     "embedding": "hash@1536 (keyless control)"
   },
   "access_log_lines_at_gate": 0,
   "labels_read_under_this_decision": 0,
-  "evidence_sha256": "8b6b4e5fbb81c5432d5ad0d18ca9335d54cfe0762448bc023af9f435e4841bff",
+  "evidence_sha256": "7026976f5bd83cd4878057a360893cdcfa532d741907c484a302481dcd5a5986",
   "renderer": {
     "version": "c8k-product-text-v1",
     "recipe_hash": "3feadd3d59999b6423ae5e2656622ed2b722600bd517345f2f9c438b55011a94",
@@ -34,20 +34,21 @@
         "rows": 100,
         "questions": 100,
         "tool_errors": 0,
+        "safe_index_pending": 0,
         "rows_outside_history": 0,
+        "extract_receipt_rows": 2,
         "budget_used_over_cap": 0,
         "not_cap_only": 0,
         "facts": {
-          "questions_with_facts": 21,
-          "rows_mean": 0.26,
+          "questions_with_facts": 22,
+          "rows_mean": 0.28,
           "tokens_max": 156,
           "over_share_or_rows": 0,
           "cap_tokens": 1210
         },
         "budget_used_mean": null,
-        "result_rows_mean": 9.81,
+        "result_rows_mean": 9.84,
         "notices": {
-          "degraded_recall": 100,
           "search_filter_hint": 85
         }
       },
@@ -55,7 +56,9 @@
         "rows": 100,
         "questions": 100,
         "tool_errors": 0,
+        "safe_index_pending": 0,
         "rows_outside_history": 0,
+        "extract_receipt_rows": 2,
         "budget_used_over_cap": 0,
         "not_cap_only": 0,
         "facts": {
@@ -65,10 +68,9 @@
           "over_share_or_rows": 0,
           "cap_tokens": 1210
         },
-        "budget_used_mean": 5492.84,
-        "result_rows_mean": 10.92,
+        "budget_used_mean": 5492.87,
+        "result_rows_mean": 10.94,
         "notices": {
-          "degraded_recall": 100,
           "search_filter_hint": 91
         }
       },
@@ -76,7 +78,9 @@
         "rows": 100,
         "questions": 100,
         "tool_errors": 0,
+        "safe_index_pending": 0,
         "rows_outside_history": 0,
+        "extract_receipt_rows": 2,
         "budget_used_over_cap": 0,
         "not_cap_only": 0,
         "facts": {
@@ -86,18 +90,19 @@
           "over_share_or_rows": 0,
           "cap_tokens": 1210
         },
-        "budget_used_mean": 5492.9,
-        "result_rows_mean": 10.3,
+        "budget_used_mean": 5492.85,
+        "result_rows_mean": 10.31,
         "notices": {
-          "degraded_recall": 100,
-          "search_filter_hint": 89
+          "search_filter_hint": 88
         }
       },
       "A3": {
         "rows": 100,
         "questions": 100,
         "tool_errors": 0,
+        "safe_index_pending": 0,
         "rows_outside_history": 0,
+        "extract_receipt_rows": 2,
         "budget_used_over_cap": 0,
         "not_cap_only": 0,
         "facts": {
@@ -107,18 +112,19 @@
           "over_share_or_rows": 0,
           "cap_tokens": 1210
         },
-        "budget_used_mean": 5493.07,
+        "budget_used_mean": 5493.27,
         "result_rows_mean": 10.59,
         "notices": {
-          "degraded_recall": 100,
-          "search_filter_hint": 55
+          "search_filter_hint": 54
         }
       },
       "A4": {
         "rows": 100,
         "questions": 100,
         "tool_errors": 0,
+        "safe_index_pending": 0,
         "rows_outside_history": 0,
+        "extract_receipt_rows": 2,
         "budget_used_over_cap": 0,
         "not_cap_only": 0,
         "facts": {
@@ -128,18 +134,19 @@
           "over_share_or_rows": 0,
           "cap_tokens": 1210
         },
-        "budget_used_mean": 5493.09,
+        "budget_used_mean": 5493.29,
         "result_rows_mean": 10.58,
         "notices": {
-          "degraded_recall": 100,
-          "search_filter_hint": 55
+          "search_filter_hint": 54
         }
       },
       "R5": {
         "rows": 100,
         "questions": 100,
         "tool_errors": 0,
+        "safe_index_pending": 0,
         "rows_outside_history": 0,
+        "extract_receipt_rows": 0,
         "budget_used_over_cap": 0,
         "not_cap_only": 0,
         "facts": {
@@ -152,7 +159,6 @@
         "budget_used_mean": 13399.72,
         "result_rows_mean": 4.97,
         "notices": {
-          "degraded_recall": 100,
           "search_filter_hint": 11
         }
       }

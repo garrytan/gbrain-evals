@@ -1,7 +1,7 @@
 {
   "set": "h1-dry-run-fixture",
   "labels_sha256": "046f941b7e7c99337898abc1e2bcee047689c02a7ca665ef39da6580be655924",
-  "run_sha256": "67e3c6e1973f86d6898bc21e0ef81ad2b5e1950f79ca68df1fc3c174f9c58cf3",
+  "run_sha256": "691846bdbdb0415fc407622d56b3502b0d7bed13b1f4407b5ddd6a232356e656",
   "packed_recall": {
     "top_k": 1000,
     "answerable": {
@@ -41,19 +41,19 @@
     "by_type": {
       "multi-session": {
         "n": 24,
-        "correct": 13
+        "correct": 12
       },
       "temporal-reasoning": {
         "n": 12,
-        "correct": 4
+        "correct": 6
       },
       "knowledge-update": {
         "n": 12,
-        "correct": 3
+        "correct": 4
       },
       "abstention": {
         "n": 12,
-        "correct": 5
+        "correct": 3
       }
     }
   }

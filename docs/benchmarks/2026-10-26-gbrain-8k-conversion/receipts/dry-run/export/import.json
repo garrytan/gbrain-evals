@@ -1,6 +1,6 @@
 {
   "kind": "c8k-import",
-  "commit": "6f82a94e00d20c096267999fcf71948872463aab",
+  "commit": "cf3ec433f4fffda60d00076bae7361100c632cc4",
   "version": "0.60.461.0",
   "keyless": true,
   "embedding": "hash@1536 (keyless control)",

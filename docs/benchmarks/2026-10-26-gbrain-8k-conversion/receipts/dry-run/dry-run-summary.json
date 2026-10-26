@@ -2,7 +2,7 @@
   "kind": "c8k-dry-run",
   "note": "Keyless: an invented fixture (h1-fixture.ts), dummy keys, hash vectors and the reranker off, every lease proxy pointed at stub-proxy.ts --vary (stub facts are the first-person sentences of each turn). Answers, facts, verdicts, the decision outcome and every dollar figure are meaningless: the dollars are the stub usage (prompt characters / 4 in, 2 tokens out) priced at list prices by the lease proxies; nothing was paid.",
   "bun": "1.4.2",
-  "gbrain_commit": "6f82a94e00d20c096267999fcf71948872463aab",
+  "gbrain_commit": "cf3ec433f4fffda60d00076bae7361100c632cc4",
   "fixture": {
     "questions": 60,
     "haystacks": 12,
@@ -18,8 +18,8 @@
     "labels_sha256": "046f941b7e7c99337898abc1e2bcee047689c02a7ca665ef39da6580be655924"
   },
   "development_slice": 100,
-  "development_wall_seconds": 3738,
-  "chain_wall_seconds": 186,
+  "development_wall_seconds": 3742,
+  "chain_wall_seconds": 187,
   "labels_mode_after_run": "0o0",
   "stub": {
     "ok": true,
@@ -71,7 +71,7 @@
     "recommended_prefix": [],
     "verdicts": {
       "D1": "inconclusive",
-      "D2": "inconclusive",
+      "D2": "fail",
       "D3": "fail",
       "D4": "inconclusive"
     },
@@ -106,13 +106,13 @@
       "probe": "freeze-unfilled-decision",
       "refused": true,
       "access_log_lines_added": 0,
-      "message": "[c8k] freeze refused: the decision file is not ready for custody: gbrain.commit is fill-at-freeze (the wave's merge commit is written before custody); sealed.access_log_before does not record every ve"
+      "message": "[c8k] freeze refused: the decision file is not ready for custody: sealed.access_log_before does not record every verified line"
     },
     {
       "probe": "freeze-other-gbrain-commit",
       "refused": true,
       "access_log_lines_added": 0,
-      "message": "[c8k] freeze refused: --gbrain resolved to 6f82a94e00d20c096267999fcf71948872463aab; the decision pins 0000000000000000000000000000000000000000"
+      "message": "[c8k] freeze refused: --gbrain resolved to cf3ec433f4fffda60d00076bae7361100c632cc4; the decision pins 0000000000000000000000000000000000000000"
     },
     {
       "probe": "read-outside-root",

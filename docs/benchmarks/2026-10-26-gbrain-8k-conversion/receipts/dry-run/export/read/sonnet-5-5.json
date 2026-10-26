@@ -6,37 +6,37 @@
     "A0": {
       "rows": 60,
       "reader_errors": 0,
-      "input_tokens_mean": 6293,
+      "input_tokens_mean": 5897.116666666667,
       "output_tokens_mean": 2
     },
     "A1": {
       "rows": 60,
       "reader_errors": 0,
-      "input_tokens_mean": 7525.35,
+      "input_tokens_mean": 7327.85,
       "output_tokens_mean": 2
     },
     "A2": {
       "rows": 60,
       "reader_errors": 0,
-      "input_tokens_mean": 7336.15,
+      "input_tokens_mean": 7185,
       "output_tokens_mean": 2
     },
     "A3": {
       "rows": 60,
       "reader_errors": 0,
-      "input_tokens_mean": 7335.1,
+      "input_tokens_mean": 7203.433333333333,
       "output_tokens_mean": 2
     },
     "A4": {
       "rows": 60,
       "reader_errors": 0,
-      "input_tokens_mean": 7335.1,
+      "input_tokens_mean": 7203.433333333333,
       "output_tokens_mean": 2
     },
     "R5": {
       "rows": 60,
       "reader_errors": 0,
-      "input_tokens_mean": 7192.266666666666,
+      "input_tokens_mean": 7107.266666666666,
       "output_tokens_mean": 2
     }
   }

@@ -60,10 +60,11 @@ export interface ProductModules {
   stdioFrameBytes: number;
   knownConfigKeys: readonly string[];
   NoticeLedger: new () => unknown;
+  runRepairCommand: (e: unknown, args: string[]) => Promise<void>;
 }
 
 export async function loadProductModules(load: <T>(rel: string) => Promise<T>): Promise<ProductModules> {
-  const [pg, imp, disp, ext, tb, srv, cfg, nl] = await Promise.all([
+  const [pg, imp, disp, ext, tb, srv, cfg, nl, rep] = await Promise.all([
     load<{ PGLiteEngine: ProductModules['PGLiteEngine'] }>('src/core/pglite-engine.ts'),
     load<{ importFromContent: ProductModules['importFromContent'] }>('src/core/import-file.ts'),
     load<{ dispatchToolCall: ProductModules['dispatchToolCall'] }>('src/mcp/dispatch.ts'),
@@ -72,11 +73,13 @@ export async function loadProductModules(load: <T>(rel: string) => Promise<T>): 
     load<{ MCP_STDIO_MAX_MESSAGE_BYTES: number }>('src/mcp/server.ts'),
     load<{ KNOWN_CONFIG_KEYS: readonly string[] }>('src/core/config.ts'),
     load<{ NoticeLedger: ProductModules['NoticeLedger'] }>('src/core/notice-ledger.ts'),
+    load<{ runRepairCommand: ProductModules['runRepairCommand'] }>('src/commands/repair.ts'),
   ]);
   const missing = C8K_KEYS.filter(k => !cfg.KNOWN_CONFIG_KEYS.includes(k));
   if (missing.length) throw new Error(`this gbrain build does not register ${missing.join(', ')} (needs the GBRA-205 wave, 6f82a94e or later)`);
   return { PGLiteEngine: pg.PGLiteEngine, importFromContent: imp.importFromContent, dispatchToolCall: disp.dispatchToolCall, runExtractConversationFactsCore: ext.runExtractConversationFactsCore,
-    resultTokens: tb.resultTokens, stdioFrameBytes: srv.MCP_STDIO_MAX_MESSAGE_BYTES, knownConfigKeys: cfg.KNOWN_CONFIG_KEYS, NoticeLedger: nl.NoticeLedger };
+    resultTokens: tb.resultTokens, stdioFrameBytes: srv.MCP_STDIO_MAX_MESSAGE_BYTES, knownConfigKeys: cfg.KNOWN_CONFIG_KEYS, NoticeLedger: nl.NoticeLedger,
+    runRepairCommand: rep.runRepairCommand };
 }
 
 /**
@@ -108,6 +111,31 @@ export async function importHistory(m: ProductModules, e: any, conv: Corpus['con
     await m.importFromContent(e, slugOf(src), page, {});
   }
   return { sessions: conv.sessions.length };
+}
+
+/**
+ * gbrain's operator remedy for the doctor's safe_index_pending check, run in process exactly as the CLI runs it:
+ * `gbrain repair safe-chunks --source default --json` (preview), then the same with `--apply` (embedding as normal).
+ * Fact extraction writes an extract_receipt page that is never chunked, so without it every remote query reports
+ * safe_index_pending and every arm's evidence carries a degraded-recall block. safe-chunks is not preview-bound, so the
+ * preview prints no --expect hash. Returns the preview's and the apply's counts and the pages still below the fence.
+ */
+export async function repairSafeChunks(m: ProductModules, e: any): Promise<{ previewed: number; applied: number; failed: number; complete: boolean; pending_after: number }> {
+  const run = async (args: string[]) => {
+    const lines: string[] = [];
+    const log = console.log;
+    console.log = (...xs: unknown[]) => { lines.push(xs.map(String).join(' ')); };
+    try { await m.runRepairCommand(e, ['safe-chunks', '--source', 'default', ...args, '--json']); } finally { console.log = log; }
+    const out = JSON.parse(lines.join('\n')) as { results: Array<{ kind: string; affected: number; applied: number; failed: unknown[]; complete: boolean; stopped?: { reason: string; message: string } }> };
+    const r = out.results.find(x => x.kind === 'safe-chunks');
+    if (!r) throw new Error('gbrain repair safe-chunks returned no safe-chunks result');
+    if (r.stopped) throw new Error(`gbrain repair safe-chunks stopped: ${r.stopped.reason}: ${r.stopped.message}`);
+    return r;
+  };
+  const preview = await run([]);
+  const apply = preview.affected ? await run(['--apply']) : { applied: 0, failed: [], complete: true };
+  const [left] = await e.executeRaw(`SELECT COUNT(*)::int AS n FROM pages WHERE deleted_at IS NULL AND chunker_version < 4`);
+  return { previewed: preview.affected, applied: apply.applied, failed: apply.failed.length, complete: apply.complete, pending_after: Number(left?.n ?? 0) };
 }
 
 /** Saved facts that are not extraction audit rows, per visibility. */

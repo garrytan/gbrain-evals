@@ -41,7 +41,7 @@ import { compareAggregate, custodyCheck, leakScan, oneSidedLossP, readLog, retur
 import { kindGuard } from './e2-readings.ts';
 import {
   BRAIN_SETTINGS, C8K_ARMS, FACTS_BLOCK_MAX_ROWS, FACTS_BLOCK_SHARE, KEYLESS_SETTINGS, RECIPE_HASH, RENDER_RECIPE, RENDERER_VERSION,
-  armById, brainName, clearArmKeys, factCounts, factRows, importHistory, loadProductModules, openBrain, queryArm, renderContext, resultRows, setArmKeys, stdioDispatchOpts,
+  armById, brainName, clearArmKeys, factCounts, factRows, importHistory, loadProductModules, openBrain, queryArm, renderContext, repairSafeChunks, resultRows, setArmKeys, stdioDispatchOpts,
   type EvidenceRow, type ProductModules,
 } from './c8k-product.ts';
 
@@ -172,6 +172,7 @@ export async function runImport(o: { custodyRoot: string; corpus: Corpus; brains
     pages_equal_sessions: rows.every(r => r.pages === r.sessions), settings: { ...BRAIN_SETTINGS, ...(o.keyless ? KEYLESS_SETTINGS : {}) } };
 }
 
+/** Per brain: gbrain's conversation fact extraction, then the doctor-recommended safe-chunks repair (c8k-product.ts repairSafeChunks). */
 export async function runExtract(o: { custodyRoot: string; corpus: Corpus; brains: string; m: ProductModules; identity: Row }) {
   const done = join(o.brains, 'extracted.ndjson');
   const finished = new Set(readNdjson(done).map(r => r.brain));
@@ -186,8 +187,9 @@ export async function runExtract(o: { custodyRoot: string; corpus: Corpus; brain
       let res: Row = {}, error: string | null = null;
       try { res = await o.m.runExtractConversationFactsCore(e, { force: true, sourceId: 'default' }); } catch (err) { error = String((err as Error).message ?? err).slice(0, 300); }
       const facts = await factCounts(e);
+      const safeChunks = await repairSafeChunks(o.m, e);
       appendFileSync(done, JSON.stringify({ brain: name, pages_processed: Number(res.pages_processed ?? 0), pages_failed: Number(res.pages_failed ?? 0), segments: Number(res.segments_processed ?? 0),
-        facts_extracted: Number(res.facts_extracted ?? 0), ...facts, error: error ? 'extraction threw' : null, seconds: Math.round((performance.now() - t0) / 100) / 10 }) + '\n');
+        facts_extracted: Number(res.facts_extracted ?? 0), ...facts, safe_chunks: safeChunks, error: error ? 'extraction threw' : null, seconds: Math.round((performance.now() - t0) / 100) / 10 }) + '\n');
     } finally { await e.disconnect(); }
   }
   const rows = readNdjson(done);
@@ -195,7 +197,10 @@ export async function runExtract(o: { custodyRoot: string; corpus: Corpus; brain
   return { kind: 'c8k-extract', ...o.identity, extractor: 'runExtractConversationFactsCore (force, source default), gbrain\'s default extraction model', brains: rows.length,
     pages_processed: rows.reduce((n, r) => n + r.pages_processed, 0), pages_failed: rows.reduce((n, r) => n + r.pages_failed, 0), extraction_errors: rows.filter(r => r.error).length,
     facts: per.reduce((a, b) => a + b, 0), facts_world: rows.reduce((n, r) => n + r.world, 0), facts_per_history: { min: Math.min(...per), mean: mean(per), max: Math.max(...per) },
-    histories_without_facts: per.filter(x => x === 0).length };
+    histories_without_facts: per.filter(x => x === 0).length,
+    safe_chunks_repair: { command: 'gbrain repair safe-chunks --source default (preview), then --apply', previewed: rows.reduce((n, r) => n + (r.safe_chunks?.previewed ?? 0), 0),
+      applied: rows.reduce((n, r) => n + (r.safe_chunks?.applied ?? 0), 0), failed: rows.reduce((n, r) => n + (r.safe_chunks?.failed ?? 0), 0),
+      pages_pending_after: rows.reduce((n, r) => n + (r.safe_chunks?.pending_after ?? 0), 0), brains_not_repaired: rows.filter(r => !r.safe_chunks).length } };
 }
 
 /** The determinism questions: the first `n` question ids by SHA-256 of the seed and the id. */
@@ -281,20 +286,23 @@ export function retrievalChecks(d: C8kDecision, corpus: Corpus, ev: ReturnType<t
     const factsOf = (r: EvidenceRow) => factRows(resultRows(r.blocks));
     const factTokens = rows.map(r => factsOf(r).reduce((n, x) => n + tokens(x), 0));
     const factCap = Math.floor(d.construction.query_budget * FACTS_BLOCK_SHARE);
+    const safeIndexPending = rows.filter(r => Array.isArray(r.degraded) && (r.degraded as Array<{ stage?: string }>).some(s => s?.stage === 'safe_index_pending')).length;
     const factsOver = arm.id === 'A3' || arm.id === 'A4' ? rows.filter((r, i) => factTokens[i] > factCap || factsOf(r).length > FACTS_BLOCK_MAX_ROWS).length : 0;
-    let outside = 0;
+    let outside = 0, receipts = 0;
     for (const r of rows) for (const x of resultRows(r.blocks)) {
       if (typeof x.slug !== 'string' || factRows([x]).length) continue;
+      if (x.type === 'extract_receipt' && x.slug.startsWith('extracts/')) { receipts++; continue; }
       const s = idx.of(x.slug);
       if (!s || s.conversation !== r.haystack_id) outside++;
     }
-    perArm[arm.id] = { rows: rows.length, questions: ids.size, tool_errors: errors, rows_outside_history: outside, budget_used_over_cap: overBudget, not_cap_only: notCapOnly,
+    perArm[arm.id] = { rows: rows.length, questions: ids.size, tool_errors: errors, safe_index_pending: safeIndexPending, rows_outside_history: outside, extract_receipt_rows: receipts, budget_used_over_cap: overBudget, not_cap_only: notCapOnly,
       facts: { questions_with_facts: factTokens.filter(t => t > 0).length, rows_mean: mean(rows.map(r => factsOf(r).length)), tokens_max: Math.max(0, ...factTokens), over_share_or_rows: factsOver, cap_tokens: factCap },
       budget_used_mean: mean(rows.flatMap(r => r.delivery?.budget_used != null ? [Number(r.delivery.budget_used)] : [])), result_rows_mean: mean(rows.map(r => resultRows(r.blocks).length)),
       notices: count(rows.flatMap(r => r.notices)) };
     if (rows.length !== qIds.size || ids.size !== qIds.size || [...ids].some(id => !qIds.has(id))) problems.push(`${arm.id}: ${rows.length} results for ${ids.size} of ${qIds.size} questions`);
     if (errors) problems.push(`${arm.id}: ${errors} tool results are errors`);
     if (outside) problems.push(`${arm.id}: ${outside} rows name a page outside the question's history`);
+    if (safeIndexPending) problems.push(`${arm.id}: ${safeIndexPending} results report safe_index_pending (a page is withheld from remote readers; the safe-chunks repair did not finish)`);
     if (overBudget) problems.push(`${arm.id}: ${overBudget} results do not report budget_used at most ${d.construction.query_budget}`);
     if (notCapOnly) problems.push(`${arm.id}: ${notCapOnly} results do not report auto_packing cap_only`);
     if (factsOver) problems.push(`${arm.id}: ${factsOver} results carry facts over ${factCap} tokens or ${FACTS_BLOCK_MAX_ROWS} rows`);

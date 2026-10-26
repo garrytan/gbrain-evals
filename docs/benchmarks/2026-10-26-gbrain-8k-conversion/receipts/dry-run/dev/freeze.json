@@ -1,6 +1,6 @@
 {
   "kind": "c8k-freeze",
-  "commit": "6f82a94e00d20c096267999fcf71948872463aab",
+  "commit": "cf3ec433f4fffda60d00076bae7361100c632cc4",
   "version": "0.60.461.0",
   "keyless": true,
   "embedding": "hash@1536 (keyless control)",
@@ -9,11 +9,11 @@
   "repeat_rows": 20,
   "dispatch": "dispatchToolCall(query) with the stdio server's options (c8k-product.ts stdioDispatchOpts)",
   "service_ms_mean_by_arm": {
-    "A0": 244.425,
-    "A1": 193.524,
-    "A2": 183.72899999999998,
-    "A3": 186.37800000000007,
-    "A4": 204.05799999999988,
-    "R5": 169.89
+    "A0": 242.706,
+    "A1": 206.61700000000002,
+    "A2": 194.21399999999994,
+    "A3": 192.01199999999997,
+    "A4": 206.4870000000001,
+    "R5": 166.99700000000004
   }
 }

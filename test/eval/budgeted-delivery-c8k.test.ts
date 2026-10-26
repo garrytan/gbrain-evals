@@ -63,8 +63,11 @@ describe('the committed decision directory', () => {
     expect(dev.steps.reduce((n, s) => n + s.estimate_usd, 0)).toBeCloseTo(dev.estimate_usd, 6);
   });
 
-  test('the committed file is not ready for custody until the commit and the access log are filled', () => {
-    expect(() => assertFilled(D)).toThrow(/gbrain.commit.*access_log_before/);
+  test('measures the wave PR head; not ready for custody until the access log is filled', () => {
+    expect(D.gbrain.commit).toBe('cf3ec433f4fffda60d00076bae7361100c632cc4');
+    expect(JSON.parse(readFileSync(join(DIR, 'manifests/campaign.json'), 'utf8')).parameters.gbrain_sha).toBe(D.gbrain.commit);
+    expect(() => assertFilled(D)).toThrow(/access_log_before/);
+    expect(() => assertFilled({ ...D, gbrain: { ...D.gbrain, commit: 'fill-at-freeze' } })).toThrow(/gbrain.commit/);
     const filled = structuredClone(D) as C8kDecision;
     filled.gbrain.commit = 'a'.repeat(40);
     filled.sealed.access_log_before.entries = filled.sealed.access_log_before.entries.map(e => e.action === 'fill-at-custody' ? { action: 'score', decision_id: e.decision_id } : e);

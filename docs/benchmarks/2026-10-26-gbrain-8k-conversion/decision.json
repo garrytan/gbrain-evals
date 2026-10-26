@@ -168,10 +168,10 @@
   },
   "gbrain": {
     "repository": "garrytan/gbrain",
-    "commit": "fill-at-freeze",
-    "version": "fill-at-freeze",
-    "wave_branch_head_at_registration": "6f82a94e00d20c096267999fcf71948872463aab (capy/gbra205-8k-conversion, v0.60.461.0 base); the keyless dry run ran here",
-    "loaded_as": "a copied --gbrain overlay of a checkout at this commit (eval/runner/gbrain-under-test.ts)"
+    "commit": "cf3ec433f4fffda60d00076bae7361100c632cc4",
+    "version": "0.60.461.0",
+    "loaded_as": "a copied --gbrain overlay of a checkout at this commit (eval/runner/gbrain-under-test.ts)",
+    "measured": "the head of the wave PR #7610 (branch capy/gbra205-8k-conversion), not a merge commit: 6f82a94 plus a documentation fold and an export golden, src/ identical. If /ship or a master merge later changes src/, the result names this commit and the shipped one separately. The keyless dry run ran here."
   },
   "construction": {
     "brains": "One on-disk PGLite brain per history inside the custody root; each session imported as a conversation page dated with its ISO event time (memory-qa renderSessionPage, as the shootout, E2 and H1 import), source default (c8k-product.ts importHistory).",
@@ -186,7 +186,8 @@
     "brain_settings_basis": "E2 and H1's query-path pins (QUERY_PATH_PINS), plus the single-principal facts posture gbrain bootstrap writes when the key is unset (core/bootstrap/verify.ts ensureDefaultVisibilityPosture). Without it extracted facts are private and a stdio agent, a remote caller, never sees them, so F3 and F4 would measure nothing.",
     "extraction": {
       "implementation": "runExtractConversationFactsCore(engine, { force: true, sourceId: 'default' }) once per brain after the import (src/commands/extract-conversation-facts.ts), the bulk path of `gbrain extract-conversation-facts`",
-      "model": "gbrain's default extraction model: with an Anthropic key the measured default anthropic:claude-haiku-5-5 (FACTS_EXTRACTION_MEASURED_DEFAULTS)"
+      "model": "gbrain's default extraction model: with an Anthropic key the measured default anthropic:claude-haiku-5-5 (FACTS_EXTRACTION_MEASURED_DEFAULTS)",
+      "safe_chunks_repair": "After extraction, per brain: gbrain's operator remedy for the doctor's safe_index_pending check, `gbrain repair safe-chunks --source default` (preview) then `--apply`, embedding as normal, run in process through runRepairCommand (c8k-product.ts repairSafeChunks). safe-chunks is not preview-bound, so the preview prints no --expect hash. Extraction's extract_receipt page is never chunked at the pin; without the repair every remote query reports safe_index_pending. Gate 1 checks that no result reports that stage. After the repair the receipt (a short page of extraction counts) is retrievable like any page; gate 1 counts its rows (extract_receipt_rows) instead of refusing them as outside the history."
     },
     "embedding": {
       "model": "openai:text-embedding-3-large",

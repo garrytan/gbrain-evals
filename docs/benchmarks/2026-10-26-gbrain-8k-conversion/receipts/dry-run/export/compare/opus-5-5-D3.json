@@ -3,14 +3,14 @@
     {
       "side": "A",
       "path": "opus-5-5.A2.json",
-      "sha256": "d86420f4f5bb84f91d25e48d40683c9ed5fac018c231960bdd0972b2dba88855",
+      "sha256": "1314c7ea8ef43461778ddad421e237da7f137a8a22750ecdb6c2e0aa5f803ed2",
       "rows": 60,
       "skipped_summary_rows": 0
     },
     {
       "side": "B",
       "path": "opus-5-5.A3.json",
-      "sha256": "90beeffa5ebb4f5dd16327a224bbe12d575f38972eec592f0c31b6214c347397",
+      "sha256": "cf1908359c892e78eafc2938badf979b4ce388e3c422f74e616d09ebc931bb89",
       "rows": 60,
       "skipped_summary_rows": 0
     }
@@ -67,36 +67,36 @@
         "stats": {
           "n_pairs": 60,
           "n_clusters": 12,
-          "mean_a": 0.5166666666666667,
+          "mean_a": 0.48333333333333334,
           "mean_b": 0.4166666666666667,
-          "delta": -0.1,
-          "se_cluster": 0.07177405625652734,
-          "se_iid": 0.06152487898779871,
-          "design_effect": 1.3609226594301227,
-          "effective_n": 44.08773678963109,
+          "delta": -0.06666666666666667,
+          "se_cluster": 0.05124707431905383,
+          "se_iid": 0.05757170261178307,
+          "design_effect": 0.7923553719008255,
+          "effective_n": 75.72359843546293,
           "ci95": [
-            -0.23333333333333334,
+            -0.15,
             0.03333333333333333
           ],
-          "p_two_sided": 0.2734375,
-          "p_greater": 0.94140625,
-          "p_less": 0.13671875,
+          "p_two_sided": 0.359375,
+          "p_greater": 0.9453125,
+          "p_less": 0.1796875,
           "p_method": "exact-sign-flip"
         },
         "mcnemar": {
-          "losses": 10,
+          "losses": 8,
           "wins": 4,
           "both_pass": 21,
-          "both_fail": 25,
-          "discordant": 14,
-          "p_two_sided": 0.1795654296875
+          "both_fail": 27,
+          "discordant": 12,
+          "p_two_sided": 0.3876953125
         },
         "power": {
           "alpha": 0.05,
           "power": 0.8,
-          "mde": 0.20108113510496667,
+          "mde": 0.14357304592140535,
           "min_one_sided_discordant": 6,
-          "note": "with 60 pairs in 12 clusters, a two-sided 0.05 test has 80% power for an absolute change of about 0.2011; the observed delta is below that size, so a null result here is not evidence of no effect; an exact McNemar test needs at least 6 wins with zero losses to reach 0.05; clustering inflates variance by 1.36x (effective n about 44.1 of 60)"
+          "note": "with 60 pairs in 12 clusters, a two-sided 0.05 test has 80% power for an absolute change of about 0.1436; the observed delta is below that size, so a null result here is not evidence of no effect; an exact McNemar test needs at least 6 wins with zero losses to reach 0.05"
         },
         "direction": "higher"
       },

@@ -2,10 +2,10 @@
 
 This is a preregistration, not a result. It fixes the question, the arms, the readers, the judge, the metric, the
 decision rule, the spending cap and what each outcome means for gbrain's defaults before any sealed file is copied
-into a custody root. **Status: draft.** Nothing in it runs until (1) the gbrain wave PR that adds the flags has
-merged and its merge commit is written below, (2) the spend is approved, (3) the use of sealed confirmation v2's
+into a custody root. **Status: draft.** Nothing in it runs until (1) the gbrain commit measured is written below
+(the wave PR's head, see "The question"), (2) the spend is approved, (3) the use of sealed confirmation v2's
 last opening is approved, and (4) the machine-readable files and the keyless dry run listed under "Before custody"
-are committed in this pull request. (2) and (3) were approved on 2026-10-26 (see "Approvals and spend"); (4) is in
+are committed in this pull request. (1) is written; (2) and (3) were approved on 2026-10-26 (see "Approvals and spend"); (4) is in
 this pull request. Owner thread: GBRA-205.
 
 ## Why this exists
@@ -34,10 +34,15 @@ The question is whether these change answers on questions nobody tuned on, read 
 
 ## The question
 
-At gbrain `<wave merge commit>` (to be filled before custody), on sealed confirmation v2, with an explicit query
+At gbrain `cf3ec433f4fffda60d00076bae7361100c632cc4` (v0.60.461.0), on sealed confirmation v2, with an explicit query
 budget of 5,500 gbrain tokens for an 8,000-token reader budget and the evidence read as the agent receives it: **does
 each flag, added in order, answer more held-out questions than the configuration before it, without losing a
 question kind or abstention?**
+
+**Measured commit.** The commit above is the head of the wave PR (#7610, branch `capy/gbra205-8k-conversion`), not a
+merge commit: 6f82a94 plus a documentation fold and an export golden, with `src/` identical. If `/ship` or a master
+merge later changes `src/` before the flags ship, the result names the measured commit and the shipped one
+separately; this run measures the one above.
 
 ## Sealed set and opening
 
@@ -59,6 +64,14 @@ agent receives.
 Each brain also sets `facts.default_visibility = world`, the single-principal posture `gbrain bootstrap` writes
 when the key is unset. Without it extracted facts are private, and a stdio agent (a remote caller in gbrain's trust
 model) never sees them, so F3 and F4 would measure nothing. Every other brain setting is E2 and H1's query-path pins.
+
+After extraction, each brain gets gbrain's own operator remedy for the doctor's `safe_index_pending` check:
+`gbrain repair safe-chunks` (preview), then `--apply`, embedding as normal (safe-chunks is not preview-bound, so
+the preview prints no `--expect` hash). Extraction writes an `extract_receipt` page that is never chunked, and
+until it is re-sealed every remote query reports `safe_index_pending` and carries a degraded-recall block. The
+brain the arms read is therefore "the imported histories, extraction, and the doctor-recommended safe-chunks repair".
+Once re-sealed, the receipt (a short page of extraction counts) is retrievable like any page, so it can appear as a
+row in any arm's result, as it would for an agent on a repaired brain.
 
 | Arm | Keys on | Call |
 |---|---|---|
@@ -113,7 +126,9 @@ one pair at a time.
 1. **Gate after retrieval**, before any reader call: every arm has one tool result per question; A0's results are
    byte-identical between the freeze and a repeat call on 20 questions chosen by seed (retrieval is deterministic at
    the pin); every A1–A4 result reports `delivery.budget_used` at most 5,500 and `auto_packing: cap_only`; facts in
-   A3 and A4 take at most 22% of the budget; no row of any arm names a page outside the persona's history.
+   A3 and A4 take at most 22% of the budget; no row of any arm names a page outside the persona's history (the brain's own extraction receipt is counted, not
+   refused); no result
+   of any arm reports the `safe_index_pending` degraded stage.
 2. **Final gate** after the readers: every context re-renders to the bytes the reader got; every arm has one row per
    question; cuts are counted per arm.
 3. **Verdict per comparison** (H1's rule, Holm-adjusted):
@@ -168,6 +183,10 @@ reading's rows of the same kind and runs the committed family and verdict functi
 before custody. If any comparison's simulated P(pass) under the development effects is below 20%, the
 preregistration says so plainly; the run still goes ahead only on the owner's approval.
 
+**Known limitation: the abstention pool is small.** dev100 holds only about 4 abstention questions (LongMemEval-S has
+30 in 500), so the simulation draws sealed v2's 40 abstention questions from very few development pairs and its
+guard 8 estimates are noisy. The design is unchanged; the limitation is reported with the power output.
+
 ## Custody
 
 The chain runs on the owner's Mac under `~/Private/gbrain-heldout-custody/c8k-sealed-v2/`, with H1's custody steps:
@@ -211,9 +230,9 @@ the paid cells; no agent does.
 
 ## Before custody (this pull request)
 
-1. **Open.** The gbrain wave merged; its merge commit written above and into `decision.json` (`gbrain.commit`,
-   now `fill-at-freeze`; the harness refuses every sealed step until it is a commit), and the custodian's reading of
-   the access log written into `decision.json` (`sealed.access_log_before`, 29 of 35 lines `fill-at-custody`).
+1. **Half done.** The measured commit is written above and into `decision.json` (`gbrain.commit`, the wave PR's head
+   `cf3ec433`). Still open: the custodian's reading of the access log written into `decision.json`
+   (`sealed.access_log_before`, 29 of 35 lines `fill-at-custody`); the harness refuses every sealed step until then.
 2. **Done.** Harness (`eval/runner/budgeted-delivery/c8k.ts`, `c8k-product.ts`, `c8k-run.sh`): the live
    product-path arms through the stdio dispatch, the product-text renderer, the extraction step, R5, `decision.json`,
    `family.json` (Holm over D1–D4, plus the R5 non-inferiority interval), the campaign and cells, the verdict function
@@ -225,6 +244,20 @@ the paid cells; no agent does.
 5. **Done.** The owner's approvals (spend, last opening), above and in the changelog.
 
 ## Changelog
+
+### 2026-10-26: safe-chunks repair, measured commit
+
+Before any sealed file was copied or any paid cell ran.
+
+- Spec change 5, construction: each brain's state is "extraction plus the doctor-recommended safe-chunks repair"
+  (`gbrain repair safe-chunks` preview, then `--apply`), and gate 1 checks that no result reports
+  `safe_index_pending`. The extraction receipt page is never chunked at the pin, so without the repair every arm's
+  evidence would carry a degraded-recall block. After the repair the receipt is a retrievable page; gate 1 counts
+  its rows (`extract_receipt_rows`) instead of refusing them as outside the history. The underlying gbrain bug (the receipt writer stores the page without
+  chunking it) is fixed outside this decision.
+- The measured commit is the wave PR's head `cf3ec433`, not a merge commit ("The question").
+- Power: the small development abstention pool is recorded as a known limitation.
+- The keyless dry run was repeated at `cf3ec433` for both cells; receipts replaced.
 
 ### 2026-10-26: harness, keyless dry run, approvals
 

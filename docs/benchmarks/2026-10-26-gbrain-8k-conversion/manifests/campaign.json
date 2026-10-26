@@ -5,7 +5,7 @@
   "cap_usd": 300,
   "ledger": ".budget/gbrain-8k-conversion.sqlite",
   "parameters": {
-    "gbrain_sha": "fill-at-freeze",
+    "gbrain_sha": "cf3ec433f4fffda60d00076bae7361100c632cc4",
     "query_budget": 5500,
     "harness_budget_tokens": 8000
   },

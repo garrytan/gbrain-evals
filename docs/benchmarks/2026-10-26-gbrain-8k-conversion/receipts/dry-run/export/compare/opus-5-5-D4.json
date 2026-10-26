@@ -3,14 +3,14 @@
     {
       "side": "A",
       "path": "opus-5-5.A3.json",
-      "sha256": "90beeffa5ebb4f5dd16327a224bbe12d575f38972eec592f0c31b6214c347397",
+      "sha256": "cf1908359c892e78eafc2938badf979b4ce388e3c422f74e616d09ebc931bb89",
       "rows": 60,
       "skipped_summary_rows": 0
     },
     {
       "side": "B",
       "path": "opus-5-5.A4.json",
-      "sha256": "6cb028f5a36ea71a0ab52ba4f244fdce2135bb5fba2ac39092f92960fec0d204",
+      "sha256": "8c8f63454a461204797eeb7cb553a4f94b39be7c577ae91d53a9a6c12bf5f691",
       "rows": 60,
       "skipped_summary_rows": 0
     }

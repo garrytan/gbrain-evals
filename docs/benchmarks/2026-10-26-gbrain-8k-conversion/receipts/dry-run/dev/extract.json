@@ -1,6 +1,6 @@
 {
   "kind": "c8k-extract",
-  "commit": "6f82a94e00d20c096267999fcf71948872463aab",
+  "commit": "cf3ec433f4fffda60d00076bae7361100c632cc4",
   "version": "0.60.461.0",
   "keyless": true,
   "embedding": "hash@1536 (keyless control)",
@@ -16,5 +16,13 @@
     "mean": 223.28,
     "max": 279
   },
-  "histories_without_facts": 0
+  "histories_without_facts": 0,
+  "safe_chunks_repair": {
+    "command": "gbrain repair safe-chunks --source default (preview), then --apply",
+    "previewed": 100,
+    "applied": 100,
+    "failed": 0,
+    "pages_pending_after": 0,
+    "brains_not_repaired": 0
+  }
 }
