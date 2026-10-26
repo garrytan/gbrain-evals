@@ -6,11 +6,14 @@
  */
 import { describe, expect, test } from 'bun:test';
 import { createHash } from 'node:crypto';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { Database } from 'bun:sqlite';
 import { join, resolve } from 'node:path';
 import { assertFilled, decideC8k, determinismQuestions, loadDecision, type C8kDecision } from '../../eval/runner/budgeted-delivery/c8k.ts';
 import { BRAIN_SETTINGS, C8K_ARMS, C8K_KEYS, HARNESS_BUDGET_TOKENS, QUERY_BUDGET, READER_TEMPLATE_SHA256, RECIPE_HASH, RENDERER_VERSION, renderContext } from '../../eval/runner/budgeted-delivery/c8k-product.ts';
 import { stubFacts } from '../../eval/runner/budgeted-delivery/stub-proxy.ts';
+import { cachingRerankTransport, installRetrievalCache, rerankKey, retrievalCacheReceipt, type RetrievalCacheModules } from '../../eval/runner/budgeted-delivery/c8k-retrieval-cache.ts';
 import { READER_TEMPLATE } from '../../eval/runner/memory-qa/qa.ts';
 import { loadCampaign } from '../../eval/runner/shootout-cell.ts';
 import { loadFamily } from '../../eval/runner/stats/gates.ts';
@@ -223,3 +226,61 @@ describe('keyless helpers', () => {
     expect(determinismQuestions(qs, 20, 1)).not.toEqual(a);
   });
 });
+
+describe('the freeze retrieval cache (spec change 6)', () => {
+  const URL_ = 'http://127.0.0.1:4001/cell/voyage/v1/rerank';
+  const body = (query: string, model = 'rerank-2.5') => JSON.stringify({ query, documents: ['a', 'b'], model, top_k: 2 });
+  /** A provider whose scores drift on every call, as the real reranker's floats do. */
+  const noisy = () => { let n = 0; const calls: string[] = []; return { calls, fn: async (u: string, init: RequestInit) => { calls.push(String(init.body)); n++; return new Response(JSON.stringify({ data: [{ index: 0, relevance_score: 0.5 + n / 1e4 }] }), { status: 200, headers: { 'content-type': 'application/json' } }); } }; };
+  test('the key is provider, endpoint, model and the full body; the proxy port is not part of it', () => {
+    const k = rerankKey(URL_, body('q'));
+    expect(k).toMatchObject({ provider: 'voyage', endpoint: '/cell/voyage/v1/rerank', model: 'rerank-2.5' });
+    expect(rerankKey('http://127.0.0.1:5999/cell/voyage/v1/rerank', body('q')).key).toBe(k.key);
+    for (const other of [rerankKey(URL_, body('q2')).key, rerankKey(URL_, body('q', 'rerank-2.5-lite')).key, rerankKey('http://127.0.0.1:4001/cell/voyage/v1/other', body('q')).key]) expect(other).not.toBe(k.key);
+  });
+  test('an identical request returns the first response\'s bytes; a different body calls the provider', async () => {
+    const db = new Database(':memory:');
+    const p = noisy(), counts = { hits: 0, misses: 0, bypassed: 0, uncached_errors: 0 };
+    const t = cachingRerankTransport(db, p.fn, counts);
+    const first = await (await t(URL_, { method: 'POST', body: body('q') })).text();
+    const again = await (await t(URL_, { method: 'POST', body: body('q') })).text();
+    const other = await (await t(URL_, { method: 'POST', body: body('q2') })).text();
+    expect(again).toBe(first);
+    expect(other).not.toBe(first);
+    expect(p.calls).toHaveLength(2);
+    expect(counts).toEqual({ hits: 1, misses: 2, bypassed: 0, uncached_errors: 0 });
+  });
+  test('a failed response is passed through and never stored', async () => {
+    const db = new Database(':memory:');
+    let n = 0;
+    const counts = { hits: 0, misses: 0, bypassed: 0, uncached_errors: 0 };
+    const t = cachingRerankTransport(db, async () => (++n === 1 ? new Response('busy', { status: 429 }) : new Response('{"data":[]}', { status: 200 })), counts);
+    expect((await t(URL_, { method: 'POST', body: body('q') })).status).toBe(429);
+    expect((await t(URL_, { method: 'POST', body: body('q') })).status).toBe(200);
+    expect(n).toBe(2);
+    expect(counts.uncached_errors).toBe(1);
+  });
+  test('install wires both seams, close uninstalls them, and the receipt sums every process', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'c8k-retrieval-cache-'));
+    try {
+      let rerankSeam: unknown = 'unset', embedReal: unknown = 'unset', uninstalled = 0;
+      class FakeEmbeddingCache { constructor(readonly path: string) {} open() {} close() {} stats() { return { hits: 5, misses: 2, bypassed: 0, infra_faults: 0 }; } canonicalSha256() { return 'e'.repeat(64); } }
+      const m: RetrievalCacheModules = { EmbeddingCache: FakeEmbeddingCache, installEmbedCache: (_c, o) => { embedReal = o.realTransport; return { model: 'openai:text-embedding-3-large', dims: 1536, uninstall: () => { uninstalled++; } }; }, setRerankTransport: fn => { rerankSeam = fn; } };
+      const hash = async () => ({});
+      const p = noisy();
+      for (let run = 0; run < 2; run++) {
+        const c = installRetrievalCache(m, dir, { embedTransport: hash, fetchImpl: p.fn });
+        expect(embedReal).toBe(hash);
+        expect(typeof rerankSeam).toBe('function');
+        await (rerankSeam as (u: string, i: RequestInit) => Promise<Response>)(URL_, { method: 'POST', body: body('q') });
+        c.close();
+        expect(rerankSeam).toBeNull();
+      }
+      expect(uninstalled).toBe(2);
+      expect(p.calls).toHaveLength(1);
+      const r = retrievalCacheReceipt(m, dir);
+      expect(r).toMatchObject({ spec_change: 6, processes: 2, embed: { hits: 10, misses: 4, models: ['openai:text-embedding-3-large@1536'] }, rerank: { hits: 1, misses: 1, rows: 1 } });
+    } finally { rmSync(dir, { recursive: true, force: true }); }
+  });
+});
+

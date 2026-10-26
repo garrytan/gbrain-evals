@@ -125,7 +125,7 @@ one pair at a time.
 
 1. **Gate after retrieval**, before any reader call: every arm has one tool result per question; A0's results are
    byte-identical between the freeze and a repeat call on 20 questions chosen by seed (retrieval is deterministic at
-   the pin); every A1–A4 result reports `delivery.budget_used` at most 5,500 and `auto_packing: cap_only`; facts in
+   the pin given the cell's retrieval response cache, spec change 6); every A1–A4 result reports `delivery.budget_used` at most 5,500 and `auto_packing: cap_only`; facts in
    A3 and A4 take at most 22% of the budget; no row of any arm names a page outside the persona's history (the brain's own extraction receipt is counted, not
    refused); no result
    of any arm reports the `safe_index_pending` degraded stage.
@@ -244,6 +244,30 @@ the paid cells; no agent does.
 5. **Done.** The owner's approvals (spend, last opening), above and in the changelog.
 
 ## Changelog
+
+### 2026-10-26: retrieval response cache before the paid freeze reruns
+
+Before any reader call of the paid development reading; nothing held-out has run.
+
+- Spec change 6, construction: the freeze runs behind a retrieval response cache scoped to its cell. The paid
+  development freeze failed gate 1 three times (0, 10 and 9 of 20 A0 repeats byte-identical). The stored repeat
+  blocks showed why: every mismatch had the same retrieved rows with scores differing in the third or fourth decimal,
+  and in 4 of 11 near-tied rows swapped or one row entered or left the set (once also changing which blocks came
+  back). Real embeddings and the Voyage reranker do not return bit-identical floats for identical requests; the
+  keyless runs (hash vectors, reranker off) never met this. Gate 1 stays as written. Embedding calls go through H1's
+  cache (gbrain's `EmbeddingCache` / `installEmbedCache`, as the H1 / E2 freeze in
+  `eval/runner/evidence-delivery/freeze.ts` ran it), keyed provider, model, dimensions, side and the text's SHA-256,
+  one value of an embedding request. Rerank calls go through gbrain's rerank transport seam into a cache keyed by
+  provider, endpoint path, model and the full request body, storing the first 2xx response's bytes. One cache serves
+  every arm and the repeat in a cell, so a query embeds once and every arm sees the same vectors and rerank scores,
+  which also keeps provider noise out of the paired comparisons. It lives in the cell's directory inside the custody
+  root (`<cell>/cache/retrieval`), is never shared between the development and held-out cells and is never
+  committed; the freeze receipt records its hit and miss counts and content hashes. Chat (readers, judge) and
+  extraction calls stay uncached. Code: `budgeted-delivery/c8k-retrieval-cache.ts`.
+- Harness, before the second freeze: one warm-up call per brain takes the once-per-brain `behavior_changes`
+  disclosure (a brain imported over an hour before its first stdio call gets it, and it had landed in 99 brains'
+  first A0 result), and gate 1 refuses any arm result that carries it. Freeze repeat rows now store their blocks, for
+  diagnosis.
 
 ### 2026-10-26: development caps re-split before the paid development reading
 

@@ -206,6 +206,7 @@
       "seed": 20261026,
       "rule": "the first 20 question ids by SHA-256 of '20261026\\u0000<id>'; A0 is called again on each after every arm ran, and the text blocks must be byte-identical"
     },
+    "retrieval_cache": "Spec change 6: the freeze runs behind one retrieval response cache per cell (<cell>/cache/retrieval in the custody root, never shared between the development and held-out cells, never committed). Embeddings: H1's EmbeddingCache via installEmbedCache, key provider:model@dims#query:sha256(text). Rerank: gbrain's rerank transport seam, key sha256 of [provider, endpoint path, model, full request body], the first 2xx response's bytes returned on a hit. Chat and extraction calls are uncached. The freeze receipt records hits, misses and content hashes (c8k-retrieval-cache.ts).",
     "renderer": {
       "version": "c8k-product-text-v1",
       "recipe_hash": "3feadd3d59999b6423ae5e2656622ed2b722600bd517345f2f9c438b55011a94",

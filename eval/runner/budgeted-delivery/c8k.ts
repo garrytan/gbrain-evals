@@ -44,6 +44,7 @@ import {
   armById, brainName, clearArmKeys, factCounts, factRows, importHistory, loadProductModules, openBrain, queryArm, renderContext, repairSafeChunks, resultRows, setArmKeys, stdioDispatchOpts,
   type EvidenceRow, type ProductModules,
 } from './c8k-product.ts';
+import { installRetrievalCache, retrievalCacheReceipt, type RetrievalCacheModules } from './c8k-retrieval-cache.ts';
 
 type Row = Record<string, any>;
 
@@ -103,21 +104,27 @@ export function assertFilled(d: C8kDecision): void {
 // ─── gbrain under test ────────────────────────────────────────────
 
 /** The build under test, checked against the decision's pin, with its gateway configured: hash vectors when keyless, the lease proxy's base URLs otherwise. */
-export async function productUnderTest(spec: string, d: C8kDecision, keyless: boolean): Promise<{ gut: GbrainUnderTest; m: ProductModules; identity: Row }> {
+export async function productUnderTest(spec: string, d: C8kDecision, keyless: boolean): Promise<{ gut: GbrainUnderTest; m: ProductModules; identity: Row; cache: RetrievalCache }> {
   const gut = resolveGbrainUnderTest(spec);
   if (!gut.overlay) throw new Error('--gbrain <checkout>@<commit> is required: the pinned dependency predates the GBRA-205 keys');
   if (gut.overlay.build.commit !== d.gbrain.commit) throw new Error(`--gbrain resolved to ${gut.overlay.build.commit}; the decision pins ${d.gbrain.commit}`);
   if (gut.overlay.checkout_dirty) throw new Error('the gbrain checkout has local changes; the overlay copies the commit only, so clean it first');
-  const gateway = await importGbrain<{ configureGateway: (c: Record<string, unknown>) => void; __setEmbedTransportForTests: (fn: unknown) => void }>(gut, 'src/core/ai/gateway.ts');
+  const gateway = await importGbrain<{ configureGateway: (c: Record<string, unknown>) => void; __setEmbedTransportForTests: (fn: unknown) => void; __setRerankTransportForTests: RetrievalCacheModules['setRerankTransport'] }>(gut, 'src/core/ai/gateway.ts');
   if (keyless) {
     for (const k of ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'VOYAGE_API_KEY']) process.env[k] = 'keyless-dry-run';
     process.env.GBRAIN_MODEL_DISCOVERY = 'off';
   }
   gateway.configureGateway({ embedding_model: 'openai:text-embedding-3-large', embedding_dimensions: 1536, env: process.env, ...(process.env.VOYAGE_BASE_URL ? { base_urls: { voyage: process.env.VOYAGE_BASE_URL } } : {}) });
-  if (keyless) gateway.__setEmbedTransportForTests(async (p: { values: string[] }) => ({ embeddings: p.values.map(v => hashEmbed(v, 1536)), values: p.values, warnings: [], usage: { tokens: 0 } }));
+  const hashTransport = async (p: { values: string[] }) => ({ embeddings: p.values.map(v => hashEmbed(v, 1536)), values: p.values, warnings: [], usage: { tokens: 0 } });
+  if (keyless) gateway.__setEmbedTransportForTests(hashTransport);
   const m = await loadProductModules(<T,>(rel: string) => importGbrain<T>(gut, rel));
-  return { gut, m, identity: { commit: gut.overlay.build.commit, version: gut.version, keyless, embedding: keyless ? 'hash@1536 (keyless control)' : 'openai:text-embedding-3-large@1536' } };
+  const ec = await importGbrain<Pick<RetrievalCacheModules, 'EmbeddingCache' | 'installEmbedCache'>>(gut, 'src/eval/shared/embed-cache.ts');
+  const cache: RetrievalCache = { modules: { EmbeddingCache: ec.EmbeddingCache, installEmbedCache: ec.installEmbedCache, setRerankTransport: gateway.__setRerankTransportForTests }, embedTransport: keyless ? hashTransport : undefined };
+  return { gut, m, cache, identity: { commit: gut.overlay.build.commit, version: gut.version, keyless, embedding: keyless ? 'hash@1536 (keyless control)' : 'openai:text-embedding-3-large@1536' } };
 }
+
+/** The freeze's retrieval response cache (c8k-retrieval-cache.ts, spec change 6): H1's embedding cache and a rerank response cache. */
+export interface RetrievalCache { modules: RetrievalCacheModules; embedTransport?: unknown }
 
 // ─── corpus ───────────────────────────────────────────────────────
 
@@ -218,39 +225,43 @@ export function determinismQuestions(questions: ReadonlyArray<{ id: string }>, n
  * arm in order: keys written and read back, one query per question, keys deleted and checked unset. Then A0 again on
  * the history's determinism questions. Writes <evidence>/<brain>.ndjson atomically, so a rerun resumes per history.
  */
-export async function runFreeze(o: { custodyRoot: string; decision: C8kDecision; corpus: Corpus; brains: string; evidence: string; m: ProductModules; identity: Row }) {
-  checkCustodyPaths(o.custodyRoot, [['evidence directory', o.evidence]]);
+export async function runFreeze(o: { custodyRoot: string; decision: C8kDecision; corpus: Corpus; brains: string; evidence: string; m: ProductModules; identity: Row; cache: RetrievalCache }) {
+  const cacheDir = join(dirname(o.evidence), 'cache', 'retrieval');
+  checkCustodyPaths(o.custodyRoot, [['evidence directory', o.evidence], ['retrieval cache', cacheDir]]);
   mkdirSync(o.evidence, { recursive: true });
-  const repeat = new Set(determinismQuestions(o.corpus.questions, o.decision.construction.determinism.questions, o.decision.construction.determinism.seed));
-  for (const conv of personas(o.corpus)) {
-    const name = brainName(conv.id);
-    const out = join(o.evidence, `${name}.ndjson`);
-    if (existsSync(out)) continue;
-    const dir = brainPath(o.brains, conv.id);
-    const e = await openBrain(o.m, dir);
-    const opts = stdioDispatchOpts(o.m, dir);
-    const qs = o.corpus.questions.filter(q => q.conversation === conv.id);
-    const rows: Row[] = [];
-    try {
-      await clearArmKeys(e);
-      await o.m.dispatchToolCall(e, 'query', { query: 'warm-up', limit: 1, expand: false }, opts);
-      for (const arm of C8K_ARMS) {
-        const keys = await setArmKeys(e, arm);
-        for (const q of qs) rows.push({ kind: 'evidence', ...await queryArm(o.m, e, opts, arm, q, keys) });
+  const installed = installRetrievalCache(o.cache.modules, cacheDir, { embedTransport: o.cache.embedTransport });
+  try {
+    const repeat = new Set(determinismQuestions(o.corpus.questions, o.decision.construction.determinism.questions, o.decision.construction.determinism.seed));
+    for (const conv of personas(o.corpus)) {
+      const name = brainName(conv.id);
+      const out = join(o.evidence, `${name}.ndjson`);
+      if (existsSync(out)) continue;
+      const dir = brainPath(o.brains, conv.id);
+      const e = await openBrain(o.m, dir);
+      const opts = stdioDispatchOpts(o.m, dir);
+      const qs = o.corpus.questions.filter(q => q.conversation === conv.id);
+      const rows: Row[] = [];
+      try {
         await clearArmKeys(e);
-      }
-      const a0 = armById('A0');
-      for (const q of qs.filter(x => repeat.has(x.id))) {
-        const r = await queryArm(o.m, e, opts, a0, q, await setArmKeys(e, a0));
-        rows.push({ kind: 'repeat', question_id: q.id, arm: 'A0', text_sha256: r.text_sha256, is_error: r.is_error });
-      }
-    } finally { await e.disconnect(); }
-    writeFileSync(`${out}.tmp`, rows.map(r => JSON.stringify(r)).join('\n') + '\n');
-    renameSync(`${out}.tmp`, out);
-  }
+        await o.m.dispatchToolCall(e, 'query', { query: 'warm-up', limit: 1, expand: false }, opts);
+        for (const arm of C8K_ARMS) {
+          const keys = await setArmKeys(e, arm);
+          for (const q of qs) rows.push({ kind: 'evidence', ...await queryArm(o.m, e, opts, arm, q, keys) });
+          await clearArmKeys(e);
+        }
+        const a0 = armById('A0');
+        for (const q of qs.filter(x => repeat.has(x.id))) {
+          const r = await queryArm(o.m, e, opts, a0, q, await setArmKeys(e, a0));
+          rows.push({ kind: 'repeat', question_id: q.id, arm: 'A0', text_sha256: r.text_sha256, is_error: r.is_error, blocks: r.blocks });
+        }
+      } finally { await e.disconnect(); }
+      writeFileSync(`${out}.tmp`, rows.map(r => JSON.stringify(r)).join('\n') + '\n');
+      renameSync(`${out}.tmp`, out);
+    }
+  } finally { installed.close(); }
   const all = readEvidence(o.evidence);
   return { kind: 'c8k-freeze', ...o.identity, histories: readdirSync(o.evidence).filter(f => f.endsWith('.ndjson')).length, evidence_rows: all.evidence.length, repeat_rows: all.repeats.length,
-    dispatch: 'dispatchToolCall(query) with the stdio server\'s options (c8k-product.ts stdioDispatchOpts)', service_ms_mean_by_arm: Object.fromEntries(C8K_ARMS.map(a => [a.id, mean(all.evidence.filter(r => r.arm === a.id).map(r => r.service_ms))])) };
+    dispatch: 'dispatchToolCall(query) with the stdio server\'s options (c8k-product.ts stdioDispatchOpts)', retrieval_cache: retrievalCacheReceipt(o.cache.modules, cacheDir), service_ms_mean_by_arm: Object.fromEntries(C8K_ARMS.map(a => [a.id, mean(all.evidence.filter(r => r.arm === a.id).map(r => r.service_ms))])) };
 }
 
 export function readEvidence(dir: string): { evidence: EvidenceRow[]; repeats: Row[]; sha256: string } {
@@ -664,7 +675,7 @@ if (import.meta.main) {
     else if (step === 'extract') { const p = await product(); const n = Number(one('--shards') ?? 1), k = Number(one('--shard') ?? 0);
       if (!(Number.isInteger(n) && n >= 1 && Number.isInteger(k) && k >= 0 && k < n)) throw new Error('--shard k --shards n needs 0 <= k < n');
       result = await runExtract({ custodyRoot, corpus: corpus(), brains: resolve(need('--brains')), m: p.m, identity: p.identity, shard: n > 1 ? { k, n } : undefined }); }
-    else if (step === 'freeze') { const p = await product(); result = await runFreeze({ custodyRoot, decision, corpus: corpus(), brains: resolve(need('--brains')), evidence: resolve(need('--evidence-dir')), m: p.m, identity: p.identity }); }
+    else if (step === 'freeze') { const p = await product(); result = await runFreeze({ custodyRoot, decision, corpus: corpus(), brains: resolve(need('--brains')), evidence: resolve(need('--evidence-dir')), m: p.m, identity: p.identity, cache: p.cache }); }
     else if (step === 'gate') {
       const p = await product();
       const g = runGate({ decision, decisionSha: sha256, corpus: corpus(), evidence: resolve(need('--evidence-dir')), readers: one('--readers-dir'), phase: need('--phase') as 'retrieval' | 'final', log: log ?? need('--access-log'), tokens: p.m.resultTokens, gbrain: p.identity, roles: dev ? ['development'] : undefined });
