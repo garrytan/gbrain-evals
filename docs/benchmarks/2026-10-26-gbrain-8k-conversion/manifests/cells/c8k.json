@@ -8,9 +8,9 @@
     {
       "id": "c8k-dev-import",
       "benchmark": "lme-s",
-      "lease_usd": 1,
+      "lease_usd": 4,
       "local": true,
-      "lease_basis": "estimate $0.50: the dev100 haystacks (about 100 x 115,000 tokens) embedded once with text-embedding-3-large",
+      "lease_basis": "estimate $2: the dev100 haystacks (about 12.2M tokens measured by the keyless run) embedded once with text-embedding-3-large ($0.13/M; the proxy reserves at bytes/3)",
       "command": "bash eval/runner/budgeted-delivery/c8k-run.sh cell dev-import",
       "pass": [
         "OPENAI_API_KEY"
@@ -20,9 +20,9 @@
     {
       "id": "c8k-dev-extract",
       "benchmark": "lme-s",
-      "lease_usd": 16,
+      "lease_usd": 13,
       "local": true,
-      "lease_basis": "estimate $15: conversation fact extraction over the dev100 haystacks with gbrain's default extraction model (claude-haiku-5-5), facts embedded",
+      "lease_basis": "estimate $5: conversation fact extraction over the dev100 haystacks (about 11,000 segment calls, about 28M input tokens measured keyless) with claude-haiku-5-5, facts embedded, then the safe-chunks repair",
       "command": "bash eval/runner/budgeted-delivery/c8k-run.sh cell dev-extract",
       "pass": [
         "ANTHROPIC_API_KEY",
@@ -33,9 +33,9 @@
     {
       "id": "c8k-dev-freeze",
       "benchmark": "lme-s",
-      "lease_usd": 1,
+      "lease_usd": 2,
       "local": true,
-      "lease_basis": "estimate $0.50: about 620 queries (6 arms x 100 plus repeats), query embeddings and Voyage reranks",
+      "lease_basis": "estimate $1: about 620 queries (6 arms x 100 plus repeats), query embeddings and Voyage reranks",
       "command": "bash eval/runner/budgeted-delivery/c8k-run.sh cell dev-freeze",
       "pass": [
         "OPENAI_API_KEY",
@@ -48,7 +48,7 @@
       "benchmark": "lme-s",
       "lease_usd": 36,
       "local": true,
-      "lease_basis": "estimate $35: 600 gpt-4o-2024-08-06 and 600 claude-sonnet-5-5 calls at up to 8,000 context tokens",
+      "lease_basis": "estimate $25: 600 gpt-4o-2024-08-06 and 600 claude-sonnet-5-5 calls at about 7,400 context tokens",
       "command": "bash eval/runner/budgeted-delivery/c8k-run.sh cell dev-read",
       "pass": [
         "ANTHROPIC_API_KEY",
@@ -59,9 +59,9 @@
     {
       "id": "c8k-dev-score",
       "benchmark": "lme-s",
-      "lease_usd": 6,
+      "lease_usd": 5,
       "local": true,
-      "lease_basis": "estimate $4: 1,200 gpt-4o-2024-08-06 judge calls (12 answer files x 100)",
+      "lease_basis": "estimate $2: 1,200 gpt-4o-2024-08-06 judge calls (12 answer files x 100)",
       "command": "bash eval/runner/budgeted-delivery/c8k-run.sh cell dev-score",
       "pass": [
         "OPENAI_API_KEY"

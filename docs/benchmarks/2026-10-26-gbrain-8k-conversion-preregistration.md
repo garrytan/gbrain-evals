@@ -210,8 +210,8 @@ tokens).
 | Opus 5.5 and gpt-6.1-sol readers | 1,200 calls each | $80 | $115 |
 | Judge | 3,600 gpt-4o calls | $5 | $12 |
 | **Held-out total** | | **$143** | **$240** |
-| Development reading | dev100 import, extraction and freeze ($16), 6 arms × 100 × 2 readers ($35), judge ($4) | $55 | $60 |
-| **Program** | | **$198** | **$300** |
+| Development reading | dev100 import ($4 cap), extraction ($13), freeze ($2), 6 arms × 100 × 2 readers ($36), judge ($5) | $35 | $60 |
+| **Program** | | **$178** | **$300** |
 
 The program cap asked for was $400 (held-out $300 plus development $100). The owner approved **$300 for both
 together** (below), so the lease caps above were cut to fit it; no estimate changed. Every step is a local lease cell
@@ -244,6 +244,13 @@ the paid cells; no agent does.
 5. **Done.** The owner's approvals (spend, last opening), above and in the changelog.
 
 ## Changelog
+
+### 2026-10-26: development caps re-split before the paid development reading
+
+The keyless dev100 run measured the development volumes: about 12.2M tokens of haystack text to embed (about $1.60,
+reserved at bytes/3), so the $1 import cap could not hold. Within the same $60 development cap the step caps are now
+import $4, extraction $13, freeze $2, readers $36, judge $5, and the estimates follow the measured volumes ($35 in
+all). Nothing held-out changed.
 
 ### 2026-10-26: safe-chunks repair, measured commit
 

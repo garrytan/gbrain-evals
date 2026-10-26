@@ -71,7 +71,7 @@ export interface C8kDecision {
   readers: { primary: string; replay: string[]; max_tokens: number; development: string[] };
   answer_arms: C8kAnswerArm[];
   rule: C8kRule;
-  development: { benchmark: string; limit: number; seed: number; judge: string };
+  development: { benchmark: string; limit: number; seed: number; judge: string; budget: { estimate_usd: number; cap_usd: number; steps: Array<{ id: string; estimate_usd: number; cap_usd: number }> } };
   budget: { estimate_usd: number; cap_usd: number; steps: Array<{ id: string; estimate_usd: number; cap_usd: number }> };
 }
 
@@ -575,17 +575,19 @@ export function runDecide(o: { decision: C8kDecision; decisionSha: string; gate:
 
 // ─── budget ───────────────────────────────────────────────────────
 
-export function budgetSummary(d: C8kDecision, status: Row, prefix = 'c8k-') {
+/** Spend per step against its estimate and cap: the held-out steps, or the development reading's (`development`). */
+export function budgetSummary(d: C8kDecision, status: Row, development = false, prefix = 'c8k-') {
+  const budget = development ? d.development.budget : d.budget;
   const leases = (status.leases ?? []) as Array<{ cell: string; usd: number; status: string; actual_usd?: number }>;
-  const steps = d.budget.steps.map(st => {
+  const steps = budget.steps.map(st => {
     const ls = leases.filter(l => l.cell === `${prefix}${st.id}`);
     const spent = ls.reduce((n, l) => n + (l.status === 'settled' ? l.actual_usd ?? 0 : l.status === 'abandoned' ? l.usd : 0), 0);
     return { id: st.id, estimate_usd: st.estimate_usd, cap_usd: st.cap_usd, leases: ls.length, reserved_usd: ls.reduce((n, l) => n + l.usd, 0), spent_usd: spent,
       open_leases: ls.filter(l => l.status !== 'settled' && l.status !== 'abandoned').length, alert_over_twice_estimate: spent > 2 * st.estimate_usd };
   });
   const spent = steps.reduce((n, s) => n + s.spent_usd, 0);
-  return { kind: 'c8k-budget', decision_id: d.decision_id, campaign_id: status.campaign_id, cap_usd: status.cap_usd, committed_usd: status.committed_usd, remaining_usd: status.remaining_usd,
-    estimate_usd: d.budget.estimate_usd, spent_usd: spent, alert_over_twice_estimate: spent > 2 * d.budget.estimate_usd, steps };
+  return { kind: 'c8k-budget', scope: development ? 'development' : 'held-out', decision_id: d.decision_id, campaign_id: status.campaign_id, cap_usd: status.cap_usd, committed_usd: status.committed_usd, remaining_usd: status.remaining_usd,
+    estimate_usd: budget.estimate_usd, step_caps_usd: budget.cap_usd, spent_usd: spent, alert_over_twice_estimate: spent > 2 * budget.estimate_usd, steps };
 }
 
 // ─── export ───────────────────────────────────────────────────────
@@ -668,7 +670,7 @@ if (import.meta.main) {
     else if (step === 'dev-score') result = await devScore({ custodyRoot, decision, corpus: corpus(), answersDir: resolve(need('--answers-dir')), outDir: resolve(need('--out-dir')), cache: resolve(one('--qa-cache') ?? join(custodyRoot, 'cache', 'qa')) });
     else if (step === 'dev-summary') result = devSummary(decision, corpus(), resolve(need('--scores-dir')), resolve(need('--readers-dir')), resolve(need('--evidence-dir')));
     else if (step === 'decide') result = runDecide({ decision, decisionSha: sha256, gate: readJson(need('--gate')), compareDir: need('--compare-dir'), scoresDir: need('--scores-dir'), answersDir: need('--answers-dir'), log: log ?? need('--access-log') });
-    else if (step === 'budget') result = budgetSummary(decision, readJson(need('--status')), one('--cell-prefix') ?? 'c8k-');
+    else if (step === 'budget') result = budgetSummary(decision, readJson(need('--status')), dev);
     else if (step === 'return-log') result = returnLog({ decision, from: need('--from'), to: need('--to') });
     else if (step === 'export') result = runExport({ custodyRoot, corpus: corpus(), runs: resolve(need('--runs')), out: resolve(need('--export-dir')) });
     else throw new Error(`unknown step ${step}; see the header of eval/runner/budgeted-delivery/c8k.ts`);

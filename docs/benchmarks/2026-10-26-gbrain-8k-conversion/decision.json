@@ -681,35 +681,36 @@
     "slice": "memory-qa selectQuestions (stratified by kind, SHA-256 of seed and id), --limit 100 --seed 42: the shootout's, E1's and E2's slice",
     "campaign": "docs/benchmarks/2026-10-26-gbrain-8k-conversion/manifests/campaign.json (the same campaign and ledger as the held-out cells, so one $300 cap covers both)",
     "budget": {
-      "estimate_usd": 55,
+      "estimate_usd": 35,
       "cap_usd": 60,
       "steps": [
         {
           "id": "dev-import",
-          "estimate_usd": 0.5,
-          "cap_usd": 1
+          "estimate_usd": 2,
+          "cap_usd": 4
         },
         {
           "id": "dev-extract",
-          "estimate_usd": 15,
-          "cap_usd": 16
+          "estimate_usd": 5,
+          "cap_usd": 13
         },
         {
           "id": "dev-freeze",
-          "estimate_usd": 0.5,
-          "cap_usd": 1
+          "estimate_usd": 1,
+          "cap_usd": 2
         },
         {
           "id": "dev-read",
-          "estimate_usd": 35,
+          "estimate_usd": 25,
           "cap_usd": 36
         },
         {
           "id": "dev-score",
-          "estimate_usd": 4,
-          "cap_usd": 6
+          "estimate_usd": 2,
+          "cap_usd": 5
         }
-      ]
+      ],
+      "basis": "Re-split before the paid run from the keyless dev100 run's measured volumes (2026-10-26): about 12.2M tokens of haystack text to embed (about $1.60 at text-embedding-3-large, reserved at bytes/3, so the first $1 import cap could not hold), about 28M extraction input tokens at claude-haiku-5-5, 1,200 reader calls at about 7,400 context tokens, 1,200 judge calls. Same $60 cap."
     }
   },
   "budget": {

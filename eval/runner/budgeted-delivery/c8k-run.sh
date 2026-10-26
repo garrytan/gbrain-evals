@@ -125,7 +125,7 @@ if [ "$MODE" = dev ]; then
   run_cell dev-score
   dev dev-summary --corpus "$V/corpus.json" --scores-dir "$V/scores" --readers-dir "$V/readers" --evidence-dir "$V/evidence" --out "$V/dev-summary.json" > /dev/null
   bun eval/runner/shootout-cell.ts status --campaign "$CAMPAIGN" --state "$C8K_ROOT/state" > "$V/ledger-status.json"
-  c8k budget --development --status "$V/ledger-status.json" --cell-prefix c8k-dev- --out "$V/ledger-summary.json" > /dev/null
+  c8k budget --development --status "$V/ledger-status.json" --out "$V/ledger-summary.json" > /dev/null
   log "development reading done: $V/dev-summary.json"
   exit 0
 fi
