@@ -1424,7 +1424,7 @@ if (import.meta.main) {
       if (json) console.log(JSON.stringify({ ok: !messages.length, pin_table: pinMessages.length ? 'mismatch' : 'ok', receipts: results.map(r => ({ receipt: rel(r.receipt), ok: r.ok, notes: r.notes, messages: r.messages })), ...(pinMessages.length ? { pin_messages: pinMessages } : {}) }, null, 2));
       else {
         for (const m of messages) emit(m, false);
-        if (!messages.length) console.log(`scoreboard check: ok (pin table ok; ${receipts.length ? results.map(r => `${rel(r.receipt)}: ${r.notes.join(', ')}`).join('; ') : 'no scoreboard receipts committed yet'})`);
+        if (!messages.length) console.log(`scoreboard check: ok (pin table ok; ${results.length ? results.map(r => `${rel(r.receipt)}: ${r.notes.join(', ')}`).join('; ') : 'no scoreboard receipts committed yet'})`);
       }
       process.exit(messages.length ? Math.max(...messages.map(exitCode)) : 0);
     } else if (command === 'render') {
