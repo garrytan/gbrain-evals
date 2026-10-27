@@ -56,8 +56,8 @@ a local copy. When the full receipt is released, `check --commit› recomputes i
 | Results branch | `evals/q1-scoreboard-results` |
 | Published path | `published/q1-scoreboard/SHA256SUMS` (aggregates only, A25) |
 | Full receipt | sealed in custody until F6 closes, or as Garry decides |
-| Commit | pending |
-| `SHA256SUMS` sha256 | pending |
+| Commit | `f15e73025cc38779528808e670db80909e538547` |
+| `SHA256SUMS` sha256 | `9a955a32d90895c27e3e41151e517e2db2371f249186eb86fae9faeb9bb884b5` |
 
 ## Report sections, in order
 

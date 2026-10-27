@@ -4,8 +4,8 @@
   "published": {
     "branch": "evals/q1-scoreboard-results",
     "path": "published/q1-scoreboard",
-    "commit": null,
-    "sha256": "55fa128b83ce8b5a561adfe88ddfd59db2b9da8a681f89e4184148892f0e9364",
+    "commit": "f15e73025cc38779528808e670db80909e538547",
+    "sha256": "9a955a32d90895c27e3e41151e517e2db2371f249186eb86fae9faeb9bb884b5",
     "url": "https://github.com/garrytan/gbrain-evals/tree/evals/q1-scoreboard-results/published/q1-scoreboard",
     "aggregates_only": true
   },
