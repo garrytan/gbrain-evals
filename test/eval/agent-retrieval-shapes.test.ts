@@ -244,7 +244,7 @@ describe('agent-retrieval-shapes against deliberately broken adapters', () => {
       const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
       embedCalls.push(url);
       throw new Error(`unexpected network call to ${url}`);
-    }) as typeof fetch;
+    }) as unknown as typeof fetch;
     gw.configureGateway({ embedding_model: 'ollama:qwen3-embedding:8b', embedding_dimensions: 4096, env: {} });
     try {
       const r = await runAgentRetrievalShapes({ gut, families: ['E10'] });

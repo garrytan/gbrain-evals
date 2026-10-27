@@ -26,10 +26,12 @@ export const PATTERNS: RegExp[] = [
   /\bcognee\b/gi, /\bbasic[ _-]memory\b/gi, /\bmempal(?:ace)?\b/gi, new RegExp(String.raw`\b${'vector'}${'ize'}-io\b`, 'gi'), new RegExp(String.raw`\b${'Hind'}${'sight'}\b`, 'g'), new RegExp(String.raw`\b${'hind'}${'sight'}[-_](?:api|client|server|benchmarks|system)\b`, 'g'),
 ];
 
+const combined = (caseless: boolean) => new RegExp(PATTERNS.filter(p => p.flags.includes('i') === caseless).map(p => `(?:${p.source})`).join('|'), caseless ? 'gi' : 'g');
+const CASELESS = combined(true);
+const CASED = combined(false);
+
 export function countNames(text: string): number {
-  let n = 0;
-  for (const p of PATTERNS) n += (text.match(p) ?? []).length;
-  return n;
+  return (text.match(CASELESS) ?? []).length + (text.match(CASED) ?? []).length;
 }
 
 const KIND_HINT = 'describe the system by its kind id from eval/systems/kinds.json (for example ext-extract-first, ext-memory-bank); product names belong only in docs/comparison-systems.md';

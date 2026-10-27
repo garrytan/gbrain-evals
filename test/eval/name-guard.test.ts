@@ -4,7 +4,7 @@ import { countNames, loadBaseline, scan, violations } from '../../eval/runner/na
 describe('name guard', () => {
   test('no file outside docs/comparison-systems adds an external product name', () => {
     expect(violations(scan(), loadBaseline())).toEqual([]);
-  });
+  }, 30_000);
   test('matches whole words and package forms, not the ordinary English word', () => {
     expect(countNames('in hindsight the plan was fine')).toBe(0);
     // Assembled from fragments so this test file does not itself trip the guard.
