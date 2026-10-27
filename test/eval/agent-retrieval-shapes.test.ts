@@ -7,7 +7,7 @@
 import { describe, expect, test } from 'bun:test';
 import { registryEntry } from '../../eval/registry.ts';
 import { assertScorerRejectsFakeSystems } from '../../eval/runner/mutation-kit.ts';
-import { resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
+import { importGbrain, resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
 import {
   ARS_CHUNK_CAP_CHARS, ARS_DEFAULT_SEED, deriveArsGold, generateArsLedger, generateArsWorld, pageKey, resolveVariant, parseRendered, renderPage,
   type ArsGold, type ArsProbe, type ArsSurface,
@@ -234,6 +234,26 @@ describe('agent-retrieval-shapes against deliberately broken adapters', () => {
     expect(r.harnessError).toBeNull();
     expect(r.families!.find(f => f.family === 'E10')!.headline.search).toEqual({ passed: 0, total: 9 });
     expect(r.acc.summary().errors.filter(e => e.origin === 'sut')).toHaveLength(9);
+  }, 180_000);
+
+  test('a gateway configured earlier in the process does not reach the hermetic run: keyword path, no embedding call', async () => {
+    const gw = await importGbrain<{ configureGateway: (c: Record<string, unknown>) => void; resetGateway: () => void }>(gut, 'src/core/ai/gateway.ts');
+    const real = globalThis.fetch;
+    const embedCalls: string[] = [];
+    globalThis.fetch = (async (input: string | URL | Request) => {
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+      embedCalls.push(url);
+      throw new Error(`unexpected network call to ${url}`);
+    }) as typeof fetch;
+    gw.configureGateway({ embedding_model: 'ollama:qwen3-embedding:8b', embedding_dimensions: 4096, env: {} });
+    try {
+      const r = await runAgentRetrievalShapes({ gut, families: ['E10'] });
+      expect(r.harnessError).toBeNull();
+      expect(embedCalls).toEqual([]);
+    } finally {
+      globalThis.fetch = real;
+      gw.resetGateway();
+    }
   }, 180_000);
 
   test('the registry row is report-only, hermetic and free', () => {
