@@ -1,22 +1,23 @@
 # graph-pipeline shim
 
-This directory runs [graph-pipeline](https://github.com/topoteretes/cognee) 1.6.2 behind the shootout's shim protocol
-([PROTOCOL.md](../PROTOCOL.md)). graph-pipeline turns documents into a knowledge graph: `add` stores the text, `cognify`
+This directory runs graph-pipeline at its pinned release (the
+[comparison table](../../../docs/comparison-systems.md#systems-in-the-open-source-comparison) names the project and its
+pin) behind the shootout's shim protocol ([PROTOCOL.md](../PROTOCOL.md)). graph-pipeline turns documents into a knowledge graph: `add` stores the text, `cognify`
 chunks it, has an LLM extract entities and relationships, writes summaries and embeds everything. The shim exposes
 that pipeline as `/ingest` and graph-pipeline's hybrid retrieval as `/retrieve`, with no answer generation.
 
-The facts behind every setting are in [capability.json](capability.json), checked against the v1.6.2 wheel and tag
+The facts behind every setting are in [capability.json](capability.json), checked against the pinned wheel and tag
 (`ba3631f`).
 
 ## What it runs
 
 - **One namespace, one graph-pipeline dataset.** Datasets are isolated by graph-pipeline's default access control, which gives each
   dataset its own graph and vector store.
-- **Ingest follows graph-pipeline's own BEAM code** (`cognee/eval_framework/beam/local_ingest.py`). Each session becomes one
+- **Ingest follows graph-pipeline's own BEAM code** (the package's `eval_framework/beam/local_ingest.py`). Each session becomes one
   JSON-list document with one turn pair per item, headed `Session`, `Turn` and `Time anchor`, and the shim runs
   `add` then `cognify(chunker=JsonListChunker, extractor="llm")` for that session before answering. Ingest is
   synchronous, so `/finish` returns at once.
-- **Retrieve follows graph-pipeline's reported BEAM configuration**: `cognee.search(query_type=HYBRID_COMPLETION,
+- **Retrieve follows graph-pipeline's reported BEAM configuration**: `search(query_type=HYBRID_COMPLETION,
   only_context=True, verbose=True)`. The shim returns graph-pipeline's ranked chunks, then entities, then facts, in the order
   graph-pipeline renders them into its own context string (kept in `raw.context`).
   - `vendor-default`: `top_k` 15, which graph-pipeline caps to 10 chunks, 10 entities and 10 facts.
@@ -25,7 +26,7 @@ The facts behind every setting are in [capability.json](capability.json), checke
 - **Provenance**: each session's graph-pipeline Data id is pinned (`uuid5(ns, source_id)`) and labelled with the source id,
   so chunk items cite exactly one session. Entity and fact items come from the merged graph and report
   `unavailable`.
-- **Delete**: `cognee.forget(data_id=..., dataset=...)`.
+- **Delete**: `forget(data_id=..., dataset=...)`.
 - **Models**: `SHIM_CONFIG=recipe` keeps graph-pipeline's defaults (`openai/gpt-5.6-luna` for every LLM stage,
   `text-embedding-3-large` at 3,072 dimensions). `SHIM_CONFIG=common` sets `gpt-4.1-mini` and
   `text-embedding-3-large` at 1,536 dimensions. Both pin `GRAPH_EXTRACTOR=llm`, so a missing key fails loudly

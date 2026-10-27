@@ -1,0 +1,37 @@
+{
+  "slug": "contracts/2026-09-22-qfl-a3",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: record\nTitle: Amendment No. 3 to the Quarrendon Master Subscription Agreement\nDate: Written on 2026-09-22.\nWriter: June Osei-Lark\nVoice: formal legal drafting\nFormat: formal numbered sections and a signature block\nLength: about 412 words\nDate style in the body: undefined\nTypos: none\n\nBrief:\nAmendment No. 3 to the Quarrendon Master Subscription Agreement. Parties: Pemberline Systems and Quarrendon Freight Lines. Drafted 2026-09-08. Effective date 2027-01-01 (signed 2026-09-22; state both dates and keep them distinct). Terms this document sets: subscribed seats = 230. Executed: include a signature block signed on 2026-09-22 by both parties (customer signatory plus June Osei-Lark for Pemberline). It changes earlier paperwork for this customer; refer to the earlier agreement generically.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Ilse Varga: North team lead\n- Dana Okafor: Account manager, North team\n- Marcus Lindqvist: Account manager, North team\n- Thea Ramaswell: Director of Yard Operations\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Quarrendon Freight Lines: truckload freight carrier, Upper Midwest; main contact Thea Ramaswell, Director of Yard Operations; codes/nicknames QFL, Q-Freight\n- Brackenwater Freight Co.: less-than-truckload freight, Great Lakes; codes/nicknames BWF, Bracken\n- Tamsin Cold Chain: refrigerated warehousing, Pacific Northwest; codes/nicknames TCC\n- Thornbury Cloth Co. (renamed from Orrin Mills on 2026-01-12): textile mill, Carolinas; codes/nicknames TCC\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2026-09-22 (background only; don't restate unless the brief asks):\n- Quarrendon Freight Lines: managed by Dana Okafor\n- Brackenwater Freight Co.: managed by Marcus Lindqvist\n- Tamsin Cold Chain: managed by Dana Okafor\n- Thornbury Cloth Co.: managed by Marcus Lindqvist",
+      "response_text": "# Amendment No. 3 to the Quarrendon Master Subscription Agreement\n\n**Drafted:** 2026-09-08  \n**Executed:** 2026-09-22  \n**Effective Date:** 2027-01-01\n\n## 1. Parties and Purpose\n\nThis Amendment No. 3 (“Amendment”) is entered into by Pemberline Systems (“Pemberline”) and Quarrendon Freight Lines (“Customer”). This Amendment modifies the earlier master subscription agreement between the parties, together with the applicable subscription paperwork previously entered into under that agreement (collectively, the “Agreement”), solely as set forth below.\n\nThe subscription addressed by this Amendment is for Pemberline Dock, Pemberline’s yard and dock scheduling software.\n\n## 2. Subscribed Seats\n\nEffective 2027-01-01, Customer’s subscribed seat count for Pemberline Dock shall be **230 seats**.\n\nThis seat count supersedes any different subscribed seat count stated in the earlier Agreement or applicable subscription paperwork for the subscription addressed herein. The revised count shall govern from the Effective Date and shall not be construed as taking effect on the date of drafting or execution.\n\n## 3. Execution and Effective Date\n\nThe parties execute this Amendment on 2026-09-22. Notwithstanding execution on that date, the change specified in Section 2 becomes effective only on 2027-01-01.\n\nThe drafting date of 2026-09-08 identifies preparation of this Amendment and does not establish an earlier effective date. Execution authorizes the parties to prepare the corresponding subscription administration update before the Effective Date without accelerating the seat-count change.\n\n## 4. Administrative Implementation\n\nPemberline shall record the revised subscribed seat count against Quarrendon Freight Lines in its subscription administration records for implementation on the Effective Date.\n\nCustomer’s operational preparation may include reviewing named-user access for yard coordinators, dock schedulers, and shift supervisors, including the morning dispatch desk and evening receiving desk. Such preparation does not itself change the subscribed seat count before 2027-01-01. User access reviews and scheduling assignments remain operational activities and do not amend this instrument.\n\n## 5. Continuing Effect of Agreement\n\nExcept for the subscribed seat count expressly amended herein, the Agreement remains unchanged and continues in effect according to its terms.\n\nIf a provision of this Amendment conflicts with earlier subscription paperwork concerning the subscribed seat count addressed herein, this Amendment controls from the Effective Date. No other provision is modified by this Amendment.\n\n## 6. Signatures\n\nThe undersigned execute this Amendment on behalf of their respective parties.\n\n**Pemberline Systems**\n\nSignature: /s/ June Osei-Lark  \nName: June Osei-Lark  \nTitle: Deal desk and contracts manager  \nDate signed: 2026-09-22\n\n**Quarrendon Freight Lines**\n\nSignature: /s/ Thea Ramaswell  \nName: Thea Ramaswell  \nTitle: Director of Yard Operations  \nDate signed: 2026-09-22",
+      "usage": {
+        "input_tokens": 1125,
+        "output_tokens": 615,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.0084,
+      "provider_meta": {
+        "id": "resp_0e47fc811239ae6d016acfae27850087d1955b2a4096a52c7e",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1125,
+          "input_tokens_details": {
+            "cache_write_tokens": 1122,
+            "cached_tokens": 0
+          },
+          "output_tokens": 615,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 1740
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

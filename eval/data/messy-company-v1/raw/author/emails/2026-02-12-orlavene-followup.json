@@ -1,0 +1,41 @@
+{
+  "slug": "emails/2026-02-12-orlavene-followup",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: email\nTitle: Following up: Orlavene Health\nDate: Written on 2026-02-12.\nWriter: Ruth Calloway\nVoice: polished and businesslike\nFormat: an email thread with From/To/Date headers and quoted earlier replies (> lines)\nLength: about 300 words\nDate style in the body: US short (6/2/25)\nTypos: none\n\nBrief:\nRuth follows up with Orlavene Health's supply chain director after yesterday's meeting.\n\nUse these names or codes at least once each, as written: \"Orlavene\".\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Nadia Fennimore: Strategic account manager\n- Gideon Sato: Strategic account manager\n- Mateo Quiroga: Head of Procurement\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Vantorre Group: diversified industrial manufacturer, Northeast; main contact Mateo Quiroga, Head of Procurement; codes/nicknames VTG, VTRG\n- Vantorre Mobility: electric fleet services subsidiary, Northeast; subsidiary of Vantorre Group; codes/nicknames VTM, VMob\n- Orlavine Medical Supply: medical supply distributor, Mountain West; codes/nicknames OMS\n- Quillfeather Outfitters: outdoor gear retailer, Mountain West; codes/nicknames QFO\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2026-02-12 (background only; don't restate unless the brief asks):\n- Vantorre Group: managed by Nadia Fennimore\n- Vantorre Mobility: managed by Gideon Sato\n- Orlavine Medical Supply: not stated on any shared page (do not say who manages it)\n- Quillfeather Outfitters: managed by Strategic Accounts pod (pooled account)",
+      "response_text": "# Following up: Orlavene Health\n\n**From:** Ruth Calloway <rcalloway@pemberline.com>  \n**To:** Marcus Vance <mvance@orlavenehealth.org>  \n**Date:** 2/12/26  \n**Subject:** Re: Following up: Orlavene Health  \n\nMarcus,\n\nThank you for making the time for us yesterday afternoon. It was a pleasure walking through your current dock operations and learning more about the receiving bottlenecks at the West Pavilion medical center.\n\nAs promised, I am sending over the technical overview for our Gatehouse Check-In workflow and the automated carrier detention alert configuration. Based on what you shared regarding the 5:00 AM courier congestion at Doors 1 through 4, configuring separate appointment pools for cold-chain pharmacy deliveries versus general linen and dietary stock should immediately clear the staging lane on 14th Street. \n\nI also asked our solutions engineering team to mock up a sample view of the Daily Dock Utilization report tailored to Orlavene's shift handoff schedule at 6:30 AM and 2:30 PM. You will find that PDF attached alongside our standard security whitepaper.\n\nIf your team is available next Thursday, 2/19/26, I would welcome the opportunity to run a thirty-minute live sandbox session for your receiving leads so they can see how a yard marshal reassigns a late refrigerated straight truck in Pemberline Dock. Please let me know what window works best on your calendar.\n\nBest regards,\n\n**Ruth Calloway**  \nChief Revenue Officer  \nPemberline Systems  \n\n> **From:** Marcus Vance <mvance@orlavenehealth.org>  \n> **To:** Ruth Calloway <rcalloway@pemberline.com>  \n> **Date:** 2/11/26  \n> **Subject:** Following up: Orlavene Health  \n> \n> Hi Ruth,\n> \n> Good meeting with you today. If you can send over the documentation on the carrier check-in alerts and the shift handoff reports we discussed for the West Pavilion receiving bays, I will circulate them with my hospital logistics managers ahead of our internal planning review on 2/17/26.\n> \n> Thanks,  \n> **Marcus Vance**  \n> Director of Supply Chain  \n> Orlavene Health",
+      "usage": {
+        "input_tokens": 1071,
+        "output_tokens": 509,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.007232,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1071,
+          "candidatesTokenCount": 509,
+          "totalTokenCount": 1580,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1071
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 509
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

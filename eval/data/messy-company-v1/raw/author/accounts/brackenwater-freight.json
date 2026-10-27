@@ -1,0 +1,37 @@
+{
+  "slug": "accounts/brackenwater-freight",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: profile\nTitle: Brackenwater Freight Co.\nDate: Written on 2026-09-30.\nWriter: Ilse Varga\nVoice: hurried, lots of fragments\nFormat: a header block of key fields as a table, then short sections\nLength: about 314 words\nDate style in the body: casual (Jun 2nd, Monday the 2nd)\nTypos: a few natural typos and one or two sloppy abbreviations (never in names or required phrases)\n\nBrief:\nAccount profile, last updated 2026-09-30. LTL carrier around the Great Lakes, HQ Toledo. CRM code BWF; Dana sometimes wrote \"Bracken\". Owner history: Dana Okafor (start date not recorded; she had it before the North team was formed) until September 15, 2025; Marcus Lindqvist since then. 64 seats; current term ends November 30, 2026.\n\nUse these names or codes at least once each, as written: \"BWF\", \"Bracken\".\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Ilse Varga: North team lead\n- Dana Okafor: Account manager, North team\n- Marcus Lindqvist: Account manager, North team\n- Thea Ramaswell: Director of Yard Operations\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Quarrendon Freight Lines: truckload freight carrier, Upper Midwest; main contact Thea Ramaswell, Director of Yard Operations; codes/nicknames QFL, Q-Freight\n- Brackenwater Freight Co.: less-than-truckload freight, Great Lakes; codes/nicknames BWF, Bracken\n- Tamsin Cold Chain: refrigerated warehousing, Pacific Northwest; codes/nicknames TCC\n- Thornbury Cloth Co. (renamed from Orrin Mills on 2026-01-12): textile mill, Carolinas; codes/nicknames TCC\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2026-09-30 (background only; don't restate unless the brief asks):\n- Quarrendon Freight Lines: managed by Dana Okafor\n- Brackenwater Freight Co.: managed by Marcus Lindqvist\n- Tamsin Cold Chain: managed by Dana Okafor\n- Thornbury Cloth Co.: managed by Marcus Lindqvist",
+      "response_text": "# Brackenwater Freight Co.\n\n| Field | Detail |\n|---|---|\n| Last updated | Sep 30th, 2026 |\n| Business | LTL carrier around the Great Lakes |\n| HQ | Toledo |\n| CRM code | BWF |\n| Other name in notes | Dana Okafor sometimes wrote “Bracken” |\n| Current owner | Marcus Lindqvist, since Sep 15th, 2025 |\n| Previous owner | Dana Okafor, until Sep 15th, 2025. Start date not recorded; she had it before the North team was formed. |\n| Product | Pemberline Dock |\n| Seats | 64 |\n| Current term ends | Nov 30th, 2026 |\n\n## Operating picture\n\nMostly cross-dock coordination. Toledo morning inbound wave, then outbound staging for Great Lakes routes. Dispatch wants the board readable at a glance; warehouse folks want fewer calls asking whether a trailer is actually at the door.\n\nDoor 12 keeps coming up. Appointment marked arrived, trailer still in the holding lane, supervisor assumes unloading has started. Not a scheduling-capacity issue. Status sequence getting skipped during shift handoff. Added this to the walkthrough list.\n\n## Recent noise\n\nSep 24th call: afternoon dispatcher had two browser tabs open on different dates. Entered a late arrival against yesterday’s appointment, then thought the update had vanished. Reproduced with a training record. Date banner visible, but easy to miss on the smaller dispatch monitor.\n\nTicket BWF-218: printed door list clipping the final column. Landscape works; portrait doesnt. Screenshot attached to the support thread. Marcus Lindqvist sending the actual printer settings rather than another photo of the paper.\n\nAlso a request for a “missed slot” report. Need to separate genuinely missed appointments from drivers waiting outside the gate. Otherwise the Monday recap is going to look worse than the yard felt.\n\n## Next bits\n\n- Marcus Lindqvist: check the arrival workflow with the afternoon shift. Ten minutes, not another full demo.\n- Support: review print layout against the Toledo desk setup.\n- Pull a sample missed-slot export before the next call. Include appointment time, gate arrival, door assignment.\n- Renewal prep ahead of Nov 30th. Seat count is 64; keep the usage pull seperate from the shift roster.\n- Follow-up email still in drafts. Needs the screenshot attached, then send.",
+      "usage": {
+        "input_tokens": 1137,
+        "output_tokens": 496,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.007234,
+      "provider_meta": {
+        "id": "resp_0279d7112f39c136016acfae1a4d6487d1b4eabeaa544b0105",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1137,
+          "input_tokens_details": {
+            "cache_write_tokens": 1134,
+            "cached_tokens": 0
+          },
+          "output_tokens": 496,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 1633
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

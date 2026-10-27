@@ -1,0 +1,37 @@
+{
+  "slug": "agent-notes/2026-08-03-strategic-digest",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: agent-note\nTitle: Moss: Strategic digest 8/3\nDate: Written on 2026-08-03.\nWriter: Moss (Ruth Calloway's AI assistant)\nVoice: an AI assistant: neat, factual, a little stiff\nFormat: a short assistant memo with a \"what changed\" list\nLength: about 267 words\nDate style in the body: day-month (2 Jun 2025)\nTypos: a few natural typos and one or two sloppy abbreviations (never in names or required phrases)\n\nBrief:\nMoss's digest on the day of the Hartford Sev 1.\n\nRequired phrases:\n- Use the exact phrase \"Gideon's biggest account\" once, referring to Vantorre Group. Don't put the account's name in the same sentence; the reader should work it out.\n- Use the exact phrase \"the account Gideon runs\" once, but vaguely: the writer does not say which account it is, and nothing nearby (name, location, numbers, products) may identify one. Keep that sentence generic, like a passing comment.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Nadia Fennimore: Strategic account manager\n- Gideon Sato: Strategic account manager\n- Mateo Quiroga: Head of Procurement\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Vantorre Group: diversified industrial manufacturer, Northeast; main contact Mateo Quiroga, Head of Procurement; codes/nicknames VTG, VTRG\n- Vantorre Mobility: electric fleet services subsidiary, Northeast; subsidiary of Vantorre Group; codes/nicknames VTM, VMob\n- Orlavine Medical Supply: medical supply distributor, Mountain West; codes/nicknames OMS\n- Quillfeather Outfitters: outdoor gear retailer, Mountain West; codes/nicknames QFO\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2026-08-03 (background only; don't restate unless the brief asks):\n- Vantorre Group: managed by Gideon Sato\n- Vantorre Mobility: managed by Gideon Sato\n- Orlavine Medical Supply: not stated on any shared page (do not say who manages it)\n- Quillfeather Outfitters: managed by Strategic Accounts pod (pooled account)",
+      "response_text": "# Moss: Strategic digest 8/3\n\n**3 Aug 2026 — Prepared for Ruth Calloway**\n\nHartford Sev 1 is the immediate priority. The incident thread now separates appointment-board failures from gate check-in reports; those were initially being counted together. No recovery time has been circulated.\n\n## What changed\n\n- **Hartford:** The morning dispatcher reported that door assignments disappeared after a board refresh. Door 14 remained visible on the printed shift sheet but showed as unassigned on screen. Operations is retaining the printout and recording subsequent moves by hand. The duplicate check-in complaint is still being investigated separately.\n- **Hosting escalation:** Odile Brandt at Carrowmere Cloud has been asked to check the relevant service logs. The request includes the refresh timestamps and two screenshots, rather than the full dispatcher chat. A follow-up is queued for when the log extract arrives.\n- **Vantorre Group:** Mateo Quiroga asked for a short explanation suitable for forwarding to procurement colleagues. This is Gideon's biggest account. The draft response describes the visible scheduling disruption without presenting the gate reports as a proven consequence.\n- **Internal queue:** The incident summary and customer-facing draft are now linked from the same thread. One screenshot had yesterday's date in its filename; the attachment label has been corrected, but the original file remains availble.\n\n## Next actions\n\nPrepare Ruth's next brief around observed behavior, the manual workaround, and the next technical update. Ask the dispatcher whether the afternoon shift can read the handwritten door changes before replacing the printed sheet. Keep the vendor log request moving; no ETA yet.\n\n## Separate carry-forward\n\nA routine follow-up remains open for the account Gideon runs.\n\nThe unrelated digest edits can wait untill tomorrow.",
+      "usage": {
+        "input_tokens": 1115,
+        "output_tokens": 434,
+        "thinking_tokens": 76
+      },
+      "cost_usd": 0.00657,
+      "provider_meta": {
+        "id": "resp_04941bd50d76d379016acfaeb9e17887d196d032c835755dd4",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1115,
+          "input_tokens_details": {
+            "cache_write_tokens": 1112,
+            "cached_tokens": 0
+          },
+          "output_tokens": 434,
+          "output_tokens_details": {
+            "reasoning_tokens": 76
+          },
+          "total_tokens": 1549
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

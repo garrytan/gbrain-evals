@@ -1,0 +1,78 @@
+{
+  "slug": "accounts/vantorre-mobility",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2026-10-02",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Vantorre Mobility",
+        "line": 6
+      },
+      {
+        "oid": "e2",
+        "surface": "Vantorre Group",
+        "line": 11
+      },
+      {
+        "oid": "e3",
+        "surface": "VTM",
+        "line": 13
+      },
+      {
+        "oid": "e4",
+        "surface": "VMob",
+        "line": 13
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": [
+      {
+        "account": "vantorre-mobility",
+        "question": "According to this page alone, who manages Vantorre Mobility, in what role, and from/until when?"
+      }
+    ]
+  },
+  "prompt_user_sha256": "94868c902f1d61e45c0ec75368270fd3de01ed9a18629ae064ef6cd6879660f6",
+  "response_text": "{\n  \"date_used\": \"2026-10-02\",\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"vantorre-mobility\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"vantorre-mobility\"\n    },\n    {\n      \"oid\": \"e4\",\n      \"entity\": \"vantorre-mobility\"\n    }\n  ],\n  \"ownership\": [\n    {\n      \"account\": \"vantorre-mobility\",\n      \"owner\": \"Gideon Sato\",\n      \"role\": \"primary\",\n      \"start\": null,\n      \"end\": null,\n      \"line\": 14\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2026-10-02",
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "vantorre-mobility"
+      },
+      {
+        "oid": "e2",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e3",
+        "entity": "vantorre-mobility"
+      },
+      {
+        "oid": "e4",
+        "entity": "vantorre-mobility"
+      }
+    ],
+    "ownership": [
+      {
+        "account": "vantorre-mobility",
+        "owner": "Gideon Sato",
+        "role": "primary",
+        "start": null,
+        "end": null,
+        "line": 14
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2984,
+    "output_tokens": 205,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.008018
+}

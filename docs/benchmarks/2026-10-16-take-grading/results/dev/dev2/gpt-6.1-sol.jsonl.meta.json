@@ -1,0 +1,19 @@
+{
+  "model": "openai:gpt-6.1-sol",
+  "split": "dev",
+  "started_at": "2026-10-17T02:13:35.418Z",
+  "gbrain_commit": "6c3e6fe05e53a05025bf8f0ab671c799b4d7568c",
+  "preregistration": null,
+  "bun": "1.4.3",
+  "prompt_version": "hybrid-evidence-v2",
+  "prompt_sha256": "5efce3d138930f29cee858296d24c6a4f4b0ee8a39bd90d3aa3d4647b750d6c0",
+  "threshold": 0.95,
+  "fixtures_sha256": "08218f73520f8f52058938a4741177ea0319c141269d688bff9dbb0f1ceeb9c7",
+  "harness_sha256": "54c60727485b6e62490426da1f138623a226d2cb397e373269421c50ac3dfee8",
+  "max_usd": 0.25,
+  "concurrency": 4,
+  "fixtures": 118,
+  "finished_at": "2026-10-17T02:14:53.188Z",
+  "spent_usd": 0.1823260000000001,
+  "budget_stop": false
+}

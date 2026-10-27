@@ -1,0 +1,33 @@
+{
+ "agent-retrieval-shapes": {
+  "deliveries": 90,
+  "with_conversation_results": 90,
+  "insertions": 0,
+  "deliveries_with_insertions": 0,
+  "unit_auto": 90
+ },
+ "cat39-deletion-audit": {
+  "deliveries": 90,
+  "with_conversation_results": 90,
+  "insertions": 0,
+  "deliveries_with_insertions": 0,
+  "unit_auto": 90
+ },
+ "n14-large-page-fidelity": {
+  "deliveries": 123,
+  "with_conversation_results": 123,
+  "insertions": 0,
+  "deliveries_with_insertions": 0,
+  "unit_auto": 123
+ },
+ "n6-visibility-fuzz": {
+  "deliveries": 3314,
+  "with_conversation_results": 0,
+  "insertions": 0,
+  "deliveries_with_insertions": 0,
+  "unit_window": 536,
+  "unit_section": 536,
+  "unit_page": 1706,
+  "unit_auto": 536
+ }
+}

@@ -1,0 +1,662 @@
+/**
+ * messy-company-v1 world plan: the ground truth written before any page.
+ *
+ * Everything here is invented. Pemberline Systems sells a yard and dock
+ * scheduling product ("Pemberline Dock") to 16 customer accounts in four
+ * account clusters. Gold labels for every lane are derived from this file by
+ * `oracle.ts`; pages are written by non-Claude models from briefs built in
+ * `pages.ts`, and a verification pass checks the labels against the text.
+ *
+ * Conventions:
+ * - Dates are ISO `YYYY-MM-DD`. An ownership stint is [start, end): the new
+ *   owner owns the account from `start` inclusive, the old owner through
+ *   the day before. `start: null` is an unknown start; `end: null` is open.
+ * - A record value applies from its `effective` date, never its `signed` date.
+ *   Drafts and unsigned versions never govern.
+ */
+
+export type Split = 'dev' | 'heldout';
+export type ClusterId = 'north' | 'central' | 'coastal' | 'strategic';
+export type Attr = 'seats' | 'price_per_seat' | 'discount_pct' | 'renewal_date' | 'sla_tier' | 'notice_days' | 'payment_terms_days';
+
+export interface Person {
+  id: string;
+  name: string;
+  first: string;
+  pronoun: 'she' | 'he' | 'it';
+  initials: string;
+  kind: 'employee' | 'contact' | 'vendor' | 'agent';
+  role: string;
+  org: string;
+  team?: string;
+}
+
+export interface Team { id: string; name: string; short: string; cluster: ClusterId; lead: string }
+
+export interface Alias {
+  surface: string;
+  kind: 'canonical' | 'short' | 'code' | 'ticker' | 'nickname' | 'former_name' | 'new_name' | 'misspelling';
+  /** A surface that also names another entity (code collision, shared family name). */
+  collides_with?: string[];
+  valid_from?: string;
+  valid_to?: string;
+  note?: string;
+}
+
+export interface Account {
+  id: string;
+  name: string;
+  cluster: ClusterId;
+  industry: string;
+  descriptors: string[];
+  region: string;
+  parent?: string;
+  contact?: string;
+  renamed?: { on: string; to: string; former: string };
+  aliases: Alias[];
+}
+
+/** A company that is not a customer account: look-alikes, vendors, ourselves. */
+export interface OtherEntity { id: string; name: string; kind: 'self' | 'vendor' | 'competitor' | 'prospect'; split: Split | 'both'; aliases: Alias[]; note: string }
+
+export interface Stint {
+  id: string;
+  account: string;
+  owner: string;
+  role: 'primary' | 'acting' | 'team' | 'overlap';
+  start: string | null;
+  start_bound?: string;
+  end: string | null;
+  /** 'private_only': every page that states this stint is visibility: private. */
+  evidence_visibility: 'public' | 'private_only';
+  note?: string;
+}
+
+export interface HandoffCorrection {
+  id: string;
+  announced_on: string;
+  corrected_on: string;
+  announced: string;
+  corrected: string;
+  stint_ids: string[];
+}
+
+export interface RecordSet { scope: string[]; attr: Attr; value: string | number }
+
+export interface RecordDoc {
+  id: string;
+  accounts: string[];
+  kind: 'msa' | 'order_form' | 'amendment' | 'renewal' | 'draft_amendment' | 'redline' | 'draft_order_form';
+  title: string;
+  status: 'signed' | 'draft' | 'unsigned';
+  /** Whether the page carries `status:` in its frontmatter. */
+  status_in_frontmatter: boolean;
+  drafted: string;
+  signed: string | null;
+  effective: string | null;
+  sets: RecordSet[];
+  supersedes?: string[];
+  long?: { min_chars: number; deep_clause_attr: Attr; forbidden_words: string[] };
+  note?: string;
+}
+
+export interface WorldEvent {
+  id: string;
+  accounts: string[];
+  date: string;
+  type: 'signing' | 'meeting' | 'escalation' | 'handoff' | 'rebrand' | 'incident' | 'leave';
+  summary: string;
+  participants: string[];
+}
+
+export interface Claim {
+  id: string;
+  account: string;
+  attr: Attr | 'decision_maker' | 'arr' | 'monthly_fee' | 'renewal_quarter' | 'go_live' | 'site_count';
+  value: string | number;
+  /** The date the claim is about (as stated in the source). */
+  as_of: string;
+  correct: boolean;
+  note: string;
+}
+
+export interface ClaimPair { id: string; a: string; b: string; relation: 'change' | 'contradiction' | 'compatible'; note: string }
+
+export interface Retraction { id: string; account: string; attr: Attr; wrong: string | number; correct: string | number; note: string }
+
+export const WORLD_ID = 'messy-company-v1';
+export const TODAY = '2026-10-14';
+
+export const SPLIT_OF: Record<ClusterId, Split> = { north: 'dev', central: 'dev', coastal: 'heldout', strategic: 'heldout' };
+
+export const SELF: OtherEntity = {
+  id: 'pemberline', name: 'Pemberline Systems', kind: 'self', split: 'both',
+  aliases: [{ surface: 'Pemberline', kind: 'short' }, { surface: 'Pemberline Dock', kind: 'nickname', note: 'the product, not the company' }],
+  note: 'The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.',
+};
+
+export const TEAMS: Team[] = [
+  { id: 'team-north', name: 'North team', short: 'North', cluster: 'north', lead: 'ilse-varga' },
+  { id: 'team-central', name: 'Central team', short: 'Central', cluster: 'central', lead: 'hollis-mbeki' },
+  { id: 'team-coastal', name: 'Coastal team', short: 'Coastal', cluster: 'coastal', lead: 'bettina-kroll' },
+  { id: 'team-strategic', name: 'Strategic Accounts pod', short: 'Strategic', cluster: 'strategic', lead: 'ruth-calloway' },
+];
+
+export const PEOPLE: Person[] = [
+  { id: 'ruth-calloway', name: 'Ruth Calloway', first: 'Ruth', pronoun: 'she', initials: 'RC', kind: 'employee', role: 'Chief Revenue Officer; runs the Strategic Accounts pod', org: 'pemberline', team: 'team-strategic' },
+  { id: 'anselm-grieve', name: 'Anselm Grieve', first: 'Anselm', pronoun: 'he', initials: 'AG', kind: 'employee', role: 'CFO; approves discounts over 10%', org: 'pemberline' },
+  { id: 'june-osei', name: 'June Osei-Lark', first: 'June', pronoun: 'she', initials: 'JOL', kind: 'employee', role: 'Deal desk and contracts manager', org: 'pemberline' },
+  { id: 'moss', name: 'Moss', first: 'Moss', pronoun: 'it', initials: 'Moss', kind: 'agent', role: "Ruth's AI assistant; writes agent notes", org: 'pemberline' },
+  { id: 'ilse-varga', name: 'Ilse Varga', first: 'Ilse', pronoun: 'she', initials: 'IV', kind: 'employee', role: 'North team lead', org: 'pemberline', team: 'team-north' },
+  { id: 'dana-okafor', name: 'Dana Okafor', first: 'Dana', pronoun: 'she', initials: 'DO', kind: 'employee', role: 'Account manager, North team', org: 'pemberline', team: 'team-north' },
+  { id: 'marcus-lindqvist', name: 'Marcus Lindqvist', first: 'Marcus', pronoun: 'he', initials: 'ML', kind: 'employee', role: 'Account manager, North team', org: 'pemberline', team: 'team-north' },
+  { id: 'hollis-mbeki', name: 'Hollis Mbeki', first: 'Hollis', pronoun: 'he', initials: 'HM', kind: 'employee', role: 'Central team lead', org: 'pemberline', team: 'team-central' },
+  { id: 'pree-sundaram', name: 'Priyanka "Pree" Sundaram', first: 'Pree', pronoun: 'she', initials: 'PS', kind: 'employee', role: 'Account manager, Central team', org: 'pemberline', team: 'team-central' },
+  { id: 'tobias-rendle', name: 'Tobias Rendle', first: 'Tobias', pronoun: 'he', initials: 'TR', kind: 'employee', role: 'Account manager, Central team', org: 'pemberline', team: 'team-central' },
+  { id: 'bettina-kroll', name: 'Bettina Kroll', first: 'Bettina', pronoun: 'she', initials: 'BK', kind: 'employee', role: 'Coastal team lead', org: 'pemberline', team: 'team-coastal' },
+  { id: 'sofia-marchetti', name: 'Sofia Marchetti', first: 'Sofia', pronoun: 'she', initials: 'SM', kind: 'employee', role: 'Account manager, Coastal team', org: 'pemberline', team: 'team-coastal' },
+  { id: 'kwame-adjei', name: 'Kwame Adjei-Rowe', first: 'Kwame', pronoun: 'he', initials: 'KAR', kind: 'employee', role: 'Account manager, Coastal team', org: 'pemberline', team: 'team-coastal' },
+  { id: 'nadia-fennimore', name: 'Nadia Fennimore', first: 'Nadia', pronoun: 'she', initials: 'NF', kind: 'employee', role: 'Strategic account manager', org: 'pemberline', team: 'team-strategic' },
+  { id: 'gideon-sato', name: 'Gideon Sato', first: 'Gideon', pronoun: 'he', initials: 'GS', kind: 'employee', role: 'Strategic account manager', org: 'pemberline', team: 'team-strategic' },
+  { id: 'thea-ramaswell', name: 'Thea Ramaswell', first: 'Thea', pronoun: 'she', initials: 'TRa', kind: 'contact', role: 'Director of Yard Operations', org: 'quarrendon' },
+  { id: 'lev-arkadin', name: 'Lev Arkadin', first: 'Lev', pronoun: 'he', initials: 'LA', kind: 'contact', role: 'Procurement lead', org: 'tansley-parcel' },
+  { id: 'corinne-ashdown', name: 'Corinne Ashdown', first: 'Corinne', pronoun: 'she', initials: 'CA', kind: 'contact', role: 'VP Operations', org: 'saltmarsh' },
+  { id: 'mateo-quiroga', name: 'Mateo Quiroga', first: 'Mateo', pronoun: 'he', initials: 'MQ', kind: 'contact', role: 'Head of Procurement', org: 'vantorre-group' },
+  { id: 'felix-duarte', name: 'Felix Duarte', first: 'Felix', pronoun: 'he', initials: 'FD', kind: 'vendor', role: "Account executive at Stoneharrow Billing, Pemberline's billing vendor", org: 'stoneharrow' },
+  { id: 'odile-brandt', name: 'Odile Brandt', first: 'Odile', pronoun: 'she', initials: 'OB', kind: 'vendor', role: "Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor", org: 'carrowmere' },
+];
+
+export const ACCOUNTS: Account[] = [
+  // ── North cluster (dev) ──────────────────────────────────────────
+  {
+    id: 'quarrendon', name: 'Quarrendon Freight Lines', cluster: 'north', industry: 'truckload freight carrier',
+    descriptors: ['freight', 'trucking'], region: 'Upper Midwest', contact: 'thea-ramaswell',
+    aliases: [
+      { surface: 'Quarrendon Freight Lines', kind: 'canonical' },
+      { surface: 'Quarrendon', kind: 'short' },
+      { surface: 'QFL', kind: 'code', note: 'CRM code; one letter off Quillfeather\'s QFO (heldout)' },
+      { surface: 'Q-Freight', kind: 'nickname' },
+    ],
+  },
+  {
+    id: 'brackenwater', name: 'Brackenwater Freight Co.', cluster: 'north', industry: 'less-than-truckload freight',
+    descriptors: ['freight', 'LTL'], region: 'Great Lakes',
+    aliases: [
+      { surface: 'Brackenwater Freight Co.', kind: 'canonical' },
+      { surface: 'Brackenwater', kind: 'short' },
+      { surface: 'BWF', kind: 'code' },
+      { surface: 'Bracken', kind: 'nickname' },
+    ],
+  },
+  {
+    id: 'tamsin', name: 'Tamsin Cold Chain', cluster: 'north', industry: 'refrigerated warehousing',
+    descriptors: ['cold-chain', 'cold storage'], region: 'Pacific Northwest',
+    aliases: [
+      { surface: 'Tamsin Cold Chain', kind: 'canonical' },
+      { surface: 'Tamsin', kind: 'short' },
+      { surface: 'TCC', kind: 'code', collides_with: ['orrin'], note: 'Tamsin\'s CRM code since 2025; Thornbury Cloth Co. (the renamed Orrin Mills) also gets abbreviated TCC from 2026-01-12' },
+    ],
+  },
+  {
+    id: 'orrin', name: 'Orrin Mills', cluster: 'north', industry: 'textile mill',
+    descriptors: ['textile', 'mill'], region: 'Carolinas',
+    renamed: { on: '2026-01-12', to: 'Thornbury Cloth Co.', former: 'Orrin Mills' },
+    aliases: [
+      { surface: 'Orrin Mills', kind: 'former_name', valid_to: '2026-01-12', note: 'name until the rebrand; people keep using it afterwards' },
+      { surface: 'Orrin', kind: 'short' },
+      { surface: 'ORM', kind: 'code', valid_to: '2026-01-12' },
+      { surface: 'Thornbury Cloth Co.', kind: 'new_name', valid_from: '2026-01-12' },
+      { surface: 'Thornbury', kind: 'short', valid_from: '2026-01-12' },
+      { surface: 'TCC', kind: 'code', valid_from: '2026-01-12', collides_with: ['tamsin'], note: 'collides with Tamsin Cold Chain' },
+    ],
+  },
+  // ── Central cluster (dev) ────────────────────────────────────────
+  {
+    id: 'tansley-parcel', name: 'Tansley Parcel', cluster: 'central', industry: 'regional parcel delivery',
+    descriptors: ['parcel', 'delivery'], region: 'South Central', contact: 'lev-arkadin',
+    aliases: [
+      { surface: 'Tansley Parcel', kind: 'canonical' },
+      { surface: 'Tansley', kind: 'short', note: 'look-alike of Tansleigh' },
+      { surface: 'TPCL', kind: 'ticker', note: 'ticker-style code used in the board deck' },
+      { surface: 'TP', kind: 'code', collides_with: ['tansleigh'], note: 'chat shorthand; also used for Tansleigh Packaging' },
+    ],
+  },
+  {
+    id: 'tansleigh', name: 'Tansleigh Packaging', cluster: 'central', industry: 'corrugated packaging manufacturer',
+    descriptors: ['packaging'], region: 'Ohio Valley',
+    aliases: [
+      { surface: 'Tansleigh Packaging', kind: 'canonical' },
+      { surface: 'Tansleigh', kind: 'short', note: 'look-alike of Tansley' },
+      { surface: 'TSP', kind: 'code' },
+      { surface: 'TP', kind: 'code', collides_with: ['tansley-parcel'], note: 'chat shorthand; also used for Tansley Parcel' },
+      { surface: 'Tansley Packaging', kind: 'misspelling', collides_with: ['tansley-parcel'], note: 'common misspelling that mixes the two names' },
+    ],
+  },
+  {
+    id: 'marrow-fieldworks', name: 'Marrow Fieldworks', cluster: 'central', industry: 'agricultural equipment dealer network',
+    descriptors: ['ag equipment', 'dealer'], region: 'Plains',
+    aliases: [
+      { surface: 'Marrow Fieldworks', kind: 'canonical' },
+      { surface: 'Fieldworks', kind: 'short' },
+      { surface: 'MFW', kind: 'code' },
+      { surface: 'Marrow', kind: 'short', collides_with: ['marrow-agrisupply'], note: 'family name shared by parent and subsidiary' },
+    ],
+  },
+  {
+    id: 'marrow-agrisupply', name: 'Marrow Agrisupply', cluster: 'central', industry: 'farm supply retail chain',
+    descriptors: ['ag', 'farm supply'], region: 'Plains', parent: 'marrow-fieldworks',
+    aliases: [
+      { surface: 'Marrow Agrisupply', kind: 'canonical' },
+      { surface: 'Agrisupply', kind: 'short' },
+      { surface: 'MAS', kind: 'code' },
+      { surface: 'Marrow Agri', kind: 'nickname' },
+      { surface: 'Marrow', kind: 'short', collides_with: ['marrow-fieldworks'], note: 'family name shared by parent and subsidiary' },
+    ],
+  },
+  // ── Coastal cluster (heldout) ────────────────────────────────────
+  {
+    id: 'pellucid', name: 'Pellucid Harbor Logistics', cluster: 'coastal', industry: 'port drayage and terminal logistics',
+    descriptors: ['port', 'harbor'], region: 'Gulf Coast',
+    aliases: [
+      { surface: 'Pellucid Harbor Logistics', kind: 'canonical' },
+      { surface: 'Pellucid', kind: 'short' },
+      { surface: 'Pellucid Harbor', kind: 'short' },
+      { surface: 'PHL', kind: 'code', collides_with: ['covey-lark'], note: 'Pellucid\'s CRM code; Pellow Home Living (the renamed Covey & Lark) is also abbreviated PHL from 2026-02-16' },
+    ],
+  },
+  {
+    id: 'driftmoor', name: 'Driftmoor Marine Freight', cluster: 'coastal', industry: 'marine freight and barge operator',
+    descriptors: ['port', 'marine'], region: 'Puget Sound',
+    aliases: [
+      { surface: 'Driftmoor Marine Freight', kind: 'canonical' },
+      { surface: 'Driftmoor', kind: 'short' },
+      { surface: 'DMF', kind: 'code' },
+    ],
+  },
+  {
+    id: 'saltmarsh', name: 'Saltmarsh Provisions', cluster: 'coastal', industry: 'regional grocery distributor',
+    descriptors: ['grocery', 'distribution'], region: 'Lowcountry', contact: 'corinne-ashdown',
+    aliases: [
+      { surface: 'Saltmarsh Provisions', kind: 'canonical' },
+      { surface: 'Saltmarsh', kind: 'short' },
+      { surface: 'SMP', kind: 'code' },
+    ],
+  },
+  {
+    id: 'covey-lark', name: 'Covey & Lark Retail', cluster: 'coastal', industry: 'home goods retailer',
+    descriptors: ['retail', 'home goods'], region: 'Mid-Atlantic',
+    renamed: { on: '2026-02-16', to: 'Pellow Home Living', former: 'Covey & Lark Retail' },
+    aliases: [
+      { surface: 'Covey & Lark Retail', kind: 'former_name', valid_to: '2026-02-16' },
+      { surface: 'Covey & Lark', kind: 'short' },
+      { surface: 'Covey', kind: 'nickname' },
+      { surface: 'CLR', kind: 'code', valid_to: '2026-02-16' },
+      { surface: 'Pellow Home Living', kind: 'new_name', valid_from: '2026-02-16' },
+      { surface: 'Pellow', kind: 'short', valid_from: '2026-02-16', note: 'look-alike of Pellucid' },
+      { surface: 'PHL', kind: 'code', valid_from: '2026-02-16', collides_with: ['pellucid'], note: 'collides with Pellucid Harbor Logistics' },
+    ],
+  },
+  // ── Strategic cluster (heldout) ──────────────────────────────────
+  {
+    id: 'vantorre-group', name: 'Vantorre Group', cluster: 'strategic', industry: 'diversified industrial manufacturer',
+    descriptors: ['industrial', 'manufacturing'], region: 'Northeast', contact: 'mateo-quiroga',
+    aliases: [
+      { surface: 'Vantorre Group', kind: 'canonical' },
+      { surface: 'VTG', kind: 'code' },
+      { surface: 'VTRG', kind: 'ticker', note: 'ticker-style code in the board deck' },
+      { surface: 'Vantorre', kind: 'short', collides_with: ['vantorre-mobility'], note: 'family name shared by parent and subsidiary' },
+    ],
+  },
+  {
+    id: 'vantorre-mobility', name: 'Vantorre Mobility', cluster: 'strategic', industry: 'electric fleet services subsidiary',
+    descriptors: ['fleet', 'EV'], region: 'Northeast', parent: 'vantorre-group',
+    aliases: [
+      { surface: 'Vantorre Mobility', kind: 'canonical' },
+      { surface: 'VTM', kind: 'code' },
+      { surface: 'VMob', kind: 'nickname' },
+      { surface: 'Vantorre', kind: 'short', collides_with: ['vantorre-group'], note: 'family name shared by parent and subsidiary' },
+    ],
+  },
+  {
+    id: 'orlavine', name: 'Orlavine Medical Supply', cluster: 'strategic', industry: 'medical supply distributor',
+    descriptors: ['medical', 'healthcare'], region: 'Mountain West',
+    aliases: [
+      { surface: 'Orlavine Medical Supply', kind: 'canonical' },
+      { surface: 'Orlavine', kind: 'short', note: 'look-alike of Orlavene Health, a prospect that is not an account' },
+      { surface: 'OMS', kind: 'code' },
+    ],
+  },
+  {
+    id: 'quillfeather', name: 'Quillfeather Outfitters', cluster: 'strategic', industry: 'outdoor gear retailer',
+    descriptors: ['outdoor', 'retail'], region: 'Mountain West',
+    aliases: [
+      { surface: 'Quillfeather Outfitters', kind: 'canonical' },
+      { surface: 'Quillfeather', kind: 'short' },
+      { surface: 'QFO', kind: 'code' },
+    ],
+  },
+];
+
+export const OTHERS: OtherEntity[] = [
+  SELF,
+  { id: 'quarendon-freightways', name: 'Quarendon Freightways', kind: 'competitor', split: 'dev', aliases: [{ surface: 'Quarendon Freightways', kind: 'canonical' }, { surface: 'Quarendon', kind: 'short', note: 'one r; look-alike of Quarrendon' }], note: 'A trucking company that is not a customer; it uses a competitor\'s yard software. Look-alike of Quarrendon Freight Lines.' },
+  { id: 'stoneharrow', name: 'Stoneharrow Billing', kind: 'vendor', split: 'dev', aliases: [{ surface: 'Stoneharrow Billing', kind: 'canonical' }, { surface: 'Stoneharrow', kind: 'short' }], note: 'Pemberline\'s billing and invoicing vendor. Pemberline is the customer here.' },
+  { id: 'orlavene-health', name: 'Orlavene Health', kind: 'prospect', split: 'heldout', aliases: [{ surface: 'Orlavene Health', kind: 'canonical' }, { surface: 'Orlavene', kind: 'short', note: 'look-alike of Orlavine' }], note: 'A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.' },
+  { id: 'carrowmere', name: 'Carrowmere Cloud', kind: 'vendor', split: 'heldout', aliases: [{ surface: 'Carrowmere Cloud', kind: 'canonical' }, { surface: 'Carrowmere', kind: 'short' }], note: 'Pemberline\'s hosting vendor. Pemberline is the customer here.' },
+];
+
+export const STINTS: Stint[] = [
+  // Quarrendon: handoff Marcus -> Dana; Marcus's belated note says he kept it through June; Ilse acting during Dana's leave.
+  { id: 's-qfl-marcus', account: 'quarrendon', owner: 'marcus-lindqvist', role: 'primary', start: '2025-01-06', end: '2025-06-02', evidence_visibility: 'public' },
+  { id: 's-qfl-dana', account: 'quarrendon', owner: 'dana-okafor', role: 'primary', start: '2025-06-02', end: null, evidence_visibility: 'public' },
+  { id: 's-qfl-marcus-overlap', account: 'quarrendon', owner: 'marcus-lindqvist', role: 'overlap', start: '2025-06-02', end: '2025-07-01', evidence_visibility: 'public', note: 'Marcus\'s belated note (2025-07-14) says he kept working Quarrendon through June 30 to close the Q2 expansion, overlapping Dana\'s official start.' },
+  { id: 's-qfl-ilse-acting', account: 'quarrendon', owner: 'ilse-varga', role: 'acting', start: '2026-02-02', end: '2026-03-16', evidence_visibility: 'public', note: 'Acting cover during Dana\'s leave; Dana stays owner of record.' },
+  // Brackenwater: Dana since before records start; handoff to Marcus.
+  { id: 's-bwf-dana', account: 'brackenwater', owner: 'dana-okafor', role: 'primary', start: null, start_bound: 'before 2025-01-06', end: '2025-09-15', evidence_visibility: 'public', note: 'Unknown start: Dana has had it since before the North team was formed.' },
+  { id: 's-bwf-marcus', account: 'brackenwater', owner: 'marcus-lindqvist', role: 'primary', start: '2025-09-15', end: null, evidence_visibility: 'public' },
+  // Tamsin: Marcus -> Dana (inherited); October announcement to move it back to Marcus was corrected.
+  { id: 's-tcc-marcus', account: 'tamsin', owner: 'marcus-lindqvist', role: 'primary', start: '2025-01-06', end: '2025-04-14', evidence_visibility: 'public' },
+  { id: 's-tcc-dana', account: 'tamsin', owner: 'dana-okafor', role: 'primary', start: '2025-04-14', end: null, evidence_visibility: 'public', note: 'Inherited from Marcus. A 2025-10-01 announcement moved Tamsin to Marcus; the 2025-10-03 correction kept it with Dana.' },
+  { id: 's-tcc-ilse-acting', account: 'tamsin', owner: 'ilse-varga', role: 'acting', start: '2026-02-02', end: '2026-03-16', evidence_visibility: 'public' },
+  // Orrin / Thornbury: Dana -> Marcus (the account the correction actually moved).
+  { id: 's-orm-dana', account: 'orrin', owner: 'dana-okafor', role: 'primary', start: '2025-01-06', end: '2025-10-06', evidence_visibility: 'public' },
+  { id: 's-orm-marcus', account: 'orrin', owner: 'marcus-lindqvist', role: 'primary', start: '2025-10-06', end: null, evidence_visibility: 'public' },
+  // Tansley Parcel: Pree throughout.
+  { id: 's-tpx-pree', account: 'tansley-parcel', owner: 'pree-sundaram', role: 'primary', start: '2025-01-06', end: null, evidence_visibility: 'public' },
+  // Tansleigh: Hollis -> Tobias; Tobias's stint is stated only on a private page.
+  { id: 's-tsp-hollis', account: 'tansleigh', owner: 'hollis-mbeki', role: 'primary', start: '2025-01-06', end: '2025-05-19', evidence_visibility: 'public' },
+  { id: 's-tsp-tobias', account: 'tansleigh', owner: 'tobias-rendle', role: 'primary', start: '2025-05-19', end: null, evidence_visibility: 'private_only', note: 'Only Hollis\'s private 1:1 notes state the assignment.' },
+  // Marrow Fieldworks: Pree -> Tobias; Hollis acting during Tobias's PTO.
+  { id: 's-mfw-pree', account: 'marrow-fieldworks', owner: 'pree-sundaram', role: 'primary', start: '2025-01-06', end: '2026-01-05', evidence_visibility: 'public' },
+  { id: 's-mfw-tobias', account: 'marrow-fieldworks', owner: 'tobias-rendle', role: 'primary', start: '2026-01-05', end: null, evidence_visibility: 'public' },
+  { id: 's-mfw-hollis-acting', account: 'marrow-fieldworks', owner: 'hollis-mbeki', role: 'acting', start: '2026-07-06', end: '2026-07-27', evidence_visibility: 'public' },
+  // Marrow Agrisupply: pooled Central team ownership.
+  { id: 's-mas-team', account: 'marrow-agrisupply', owner: 'team-central', role: 'team', start: '2025-01-06', end: null, evidence_visibility: 'public' },
+  // Pellucid: Bettina -> Kwame; Bettina's belated note claims she ran it through Nov 21.
+  { id: 's-phl-bettina', account: 'pellucid', owner: 'bettina-kroll', role: 'primary', start: '2025-01-06', end: '2025-11-03', evidence_visibility: 'public' },
+  { id: 's-phl-kwame', account: 'pellucid', owner: 'kwame-adjei', role: 'primary', start: '2025-11-03', end: null, evidence_visibility: 'public' },
+  { id: 's-phl-bettina-overlap', account: 'pellucid', owner: 'bettina-kroll', role: 'overlap', start: '2025-11-03', end: '2025-11-22', evidence_visibility: 'public', note: 'Bettina\'s belated note (2025-12-08) says she kept running Pellucid through Nov 21 for the terminal cutover.' },
+  // Driftmoor: Sofia (unknown start) -> Kwame.
+  { id: 's-dmf-sofia', account: 'driftmoor', owner: 'sofia-marchetti', role: 'primary', start: null, start_bound: 'before 2025-01-06', end: '2025-04-07', evidence_visibility: 'public' },
+  { id: 's-dmf-kwame', account: 'driftmoor', owner: 'kwame-adjei', role: 'primary', start: '2025-04-07', end: null, evidence_visibility: 'public' },
+  // Saltmarsh: Sofia (unknown start) -> Bettina.
+  { id: 's-smp-sofia', account: 'saltmarsh', owner: 'sofia-marchetti', role: 'primary', start: null, start_bound: 'before 2025-01-06', end: '2025-10-06', evidence_visibility: 'public' },
+  { id: 's-smp-bettina', account: 'saltmarsh', owner: 'bettina-kroll', role: 'primary', start: '2025-10-06', end: null, evidence_visibility: 'public' },
+  // Covey & Lark / Pellow: Sofia throughout; Bettina acting during Sofia's leave.
+  { id: 's-clr-sofia', account: 'covey-lark', owner: 'sofia-marchetti', role: 'primary', start: '2025-01-06', end: null, evidence_visibility: 'public' },
+  { id: 's-clr-bettina-acting', account: 'covey-lark', owner: 'bettina-kroll', role: 'acting', start: '2026-05-04', end: '2026-06-15', evidence_visibility: 'public' },
+  // Vantorre Group: Nadia -> Gideon; announced for Apr 20, corrected to May 4.
+  { id: 's-vtg-nadia', account: 'vantorre-group', owner: 'nadia-fennimore', role: 'primary', start: '2025-01-06', end: '2026-05-04', evidence_visibility: 'public' },
+  { id: 's-vtg-gideon', account: 'vantorre-group', owner: 'gideon-sato', role: 'primary', start: '2026-05-04', end: null, evidence_visibility: 'public', note: 'Announced 2026-04-13 as effective Apr 20; corrected 2026-04-16 to May 4.' },
+  // Vantorre Mobility: Gideon, unknown start, open-ended.
+  { id: 's-vtm-gideon', account: 'vantorre-mobility', owner: 'gideon-sato', role: 'primary', start: null, start_bound: 'before 2025-01-06', end: null, evidence_visibility: 'public' },
+  // Orlavine: Nadia -> Gideon; Gideon's stint is stated only on a private page.
+  { id: 's-oms-nadia', account: 'orlavine', owner: 'nadia-fennimore', role: 'primary', start: '2025-01-06', end: '2025-08-11', evidence_visibility: 'public' },
+  { id: 's-oms-gideon', account: 'orlavine', owner: 'gideon-sato', role: 'primary', start: '2025-08-11', end: null, evidence_visibility: 'private_only', note: 'Only Ruth\'s private note states the move.' },
+  // Quillfeather: pooled Strategic pod ownership.
+  { id: 's-qfo-team', account: 'quillfeather', owner: 'team-strategic', role: 'team', start: '2025-01-06', end: null, evidence_visibility: 'public' },
+];
+
+export const HANDOFF_CORRECTIONS: HandoffCorrection[] = [
+  { id: 'hc-north-oct', announced_on: '2025-10-01', corrected_on: '2025-10-03', announced: 'Tamsin Cold Chain moves from Dana to Marcus effective Oct 6, 2025', corrected: 'Tamsin stays with Dana; Marcus takes Orrin Mills from Dana effective Oct 6, 2025', stint_ids: ['s-tcc-dana', 's-orm-dana', 's-orm-marcus'] },
+  { id: 'hc-strategic-apr', announced_on: '2026-04-13', corrected_on: '2026-04-16', announced: 'Vantorre Group moves from Nadia to Gideon effective Apr 20, 2026', corrected: 'Same move, effective May 4, 2026 (Nadia keeps it through the Q2 steering committee)', stint_ids: ['s-vtg-nadia', 's-vtg-gideon'] },
+];
+
+const LONG_FORBIDDEN = ['renew', 'renewal', 'renewing', 'cancel', 'cancellation', 'terminate', 'termination', 'notice period', 'opt out', 'opt-out', 'non-renewal', 'expire', 'expiry', 'expiration'];
+
+export const RECORDS: RecordDoc[] = [
+  // ── Quarrendon ──
+  {
+    id: 'r-qfl-msa', accounts: ['quarrendon'], kind: 'msa', title: 'Master Subscription Agreement: Pemberline Systems and Quarrendon Freight Lines', status: 'signed', status_in_frontmatter: true,
+    drafted: '2025-03-10', signed: '2025-03-28', effective: '2025-04-01',
+    sets: [
+      { scope: ['quarrendon'], attr: 'seats', value: 140 }, { scope: ['quarrendon'], attr: 'price_per_seat', value: 1850 },
+      { scope: ['quarrendon'], attr: 'discount_pct', value: 12 }, { scope: ['quarrendon'], attr: 'renewal_date', value: '2026-03-31' },
+      { scope: ['quarrendon'], attr: 'sla_tier', value: 'Tier 2' }, { scope: ['quarrendon'], attr: 'notice_days', value: 120 },
+      { scope: ['quarrendon'], attr: 'payment_terms_days', value: 45 },
+    ],
+    long: { min_chars: 22000, deep_clause_attr: 'notice_days', forbidden_words: LONG_FORBIDDEN },
+    note: 'Long agreement. The clause that decides how far ahead Quarrendon must say it does not want another year sits deep inside, phrased as a written election against continuation, with no renew/cancel/terminate wording.',
+  },
+  { id: 'r-qfl-a1', accounts: ['quarrendon'], kind: 'amendment', title: 'Amendment No. 1 to the Quarrendon Master Subscription Agreement', status: 'signed', status_in_frontmatter: false, drafted: '2025-08-11', signed: '2025-08-19', effective: '2025-09-01', sets: [{ scope: ['quarrendon'], attr: 'seats', value: 185 }], supersedes: ['r-qfl-msa'] },
+  { id: 'r-qfl-a2-draft', accounts: ['quarrendon'], kind: 'draft_amendment', title: 'Amendment No. 2 (DRAFT) to the Quarrendon Master Subscription Agreement', status: 'draft', status_in_frontmatter: true, drafted: '2025-12-03', signed: null, effective: null, sets: [{ scope: ['quarrendon'], attr: 'discount_pct', value: 15 }], note: 'Never signed; finance refused the 15% discount.' },
+  { id: 'r-qfl-renewal-2026', accounts: ['quarrendon'], kind: 'renewal', title: 'Renewal Order Form 2026: Quarrendon Freight Lines', status: 'signed', status_in_frontmatter: true, drafted: '2026-03-02', signed: '2026-03-20', effective: '2026-04-01', sets: [{ scope: ['quarrendon'], attr: 'price_per_seat', value: 1920 }, { scope: ['quarrendon'], attr: 'discount_pct', value: 10 }, { scope: ['quarrendon'], attr: 'renewal_date', value: '2027-03-31' }], supersedes: ['r-qfl-msa'] },
+  { id: 'r-qfl-a3', accounts: ['quarrendon'], kind: 'amendment', title: 'Amendment No. 3 to the Quarrendon Master Subscription Agreement', status: 'signed', status_in_frontmatter: true, drafted: '2026-09-08', signed: '2026-09-22', effective: '2027-01-01', sets: [{ scope: ['quarrendon'], attr: 'seats', value: 230 }], supersedes: ['r-qfl-a1'], note: 'Future-effective: signed in September 2026, effective 2027-01-01.' },
+  // ── Brackenwater ──
+  { id: 'r-bwf-of-2024', accounts: ['brackenwater'], kind: 'order_form', title: 'Order Form: Brackenwater Freight Co. (2024-2025 term)', status: 'signed', status_in_frontmatter: true, drafted: '2024-11-01', signed: '2024-11-12', effective: '2024-12-01', sets: [{ scope: ['brackenwater'], attr: 'seats', value: 60 }, { scope: ['brackenwater'], attr: 'price_per_seat', value: 1700 }, { scope: ['brackenwater'], attr: 'discount_pct', value: 8 }, { scope: ['brackenwater'], attr: 'renewal_date', value: '2025-11-30' }] },
+  { id: 'r-bwf-redline', accounts: ['brackenwater'], kind: 'redline', title: 'Brackenwater renewal: customer redline', status: 'unsigned', status_in_frontmatter: false, drafted: '2025-10-28', signed: null, effective: null, sets: [{ scope: ['brackenwater'], attr: 'seats', value: 75 }, { scope: ['brackenwater'], attr: 'discount_pct', value: 15 }], note: 'Customer redline, never countersigned. No status in frontmatter; the body says it is unsigned.' },
+  { id: 'r-bwf-renewal-2025', accounts: ['brackenwater'], kind: 'renewal', title: 'Renewal Order Form: Brackenwater Freight Co. (2025-2026 term)', status: 'signed', status_in_frontmatter: false, drafted: '2025-11-10', signed: '2025-11-21', effective: '2025-12-01', sets: [{ scope: ['brackenwater'], attr: 'seats', value: 64 }, { scope: ['brackenwater'], attr: 'price_per_seat', value: 1760 }, { scope: ['brackenwater'], attr: 'discount_pct', value: 8 }, { scope: ['brackenwater'], attr: 'renewal_date', value: '2026-11-30' }], supersedes: ['r-bwf-of-2024'] },
+  // ── Tamsin ──
+  { id: 'r-tcc-of-2025', accounts: ['tamsin'], kind: 'order_form', title: 'Order Form: Tamsin Cold Chain', status: 'signed', status_in_frontmatter: true, drafted: '2025-05-12', signed: '2025-05-30', effective: '2025-06-01', sets: [{ scope: ['tamsin'], attr: 'seats', value: 48 }, { scope: ['tamsin'], attr: 'price_per_seat', value: 1980 }, { scope: ['tamsin'], attr: 'discount_pct', value: 5 }, { scope: ['tamsin'], attr: 'renewal_date', value: '2026-05-31' }, { scope: ['tamsin'], attr: 'sla_tier', value: 'Tier 1' }] },
+  { id: 'r-tcc-renewal-2026', accounts: ['tamsin'], kind: 'renewal', title: 'Renewal Order Form: Tamsin Cold Chain (2026-2027)', status: 'signed', status_in_frontmatter: true, drafted: '2026-05-11', signed: '2026-05-27', effective: '2026-06-01', sets: [{ scope: ['tamsin'], attr: 'seats', value: 52 }, { scope: ['tamsin'], attr: 'renewal_date', value: '2027-05-31' }], supersedes: ['r-tcc-of-2025'] },
+  // ── Orrin / Thornbury ──
+  { id: 'r-orm-of-2025', accounts: ['orrin'], kind: 'order_form', title: 'Order Form: Orrin Mills', status: 'signed', status_in_frontmatter: true, drafted: '2025-02-03', signed: '2025-02-14', effective: '2025-03-01', sets: [{ scope: ['orrin'], attr: 'seats', value: 36 }, { scope: ['orrin'], attr: 'price_per_seat', value: 1650 }, { scope: ['orrin'], attr: 'discount_pct', value: 0 }, { scope: ['orrin'], attr: 'renewal_date', value: '2026-02-28' }] },
+  { id: 'r-orm-unsigned-2026', accounts: ['orrin'], kind: 'draft_order_form', title: 'Thornbury Cloth Co. renewal order form (for review)', status: 'unsigned', status_in_frontmatter: false, drafted: '2026-02-10', signed: null, effective: null, sets: [{ scope: ['orrin'], attr: 'seats', value: 44 }, { scope: ['orrin'], attr: 'price_per_seat', value: 1650 }], note: 'Version sent for review; no status in frontmatter. Superseded by the signed renewal at 40 seats.' },
+  { id: 'r-orm-renewal-2026', accounts: ['orrin'], kind: 'renewal', title: 'Renewal Order Form: Thornbury Cloth Co. (formerly Orrin Mills)', status: 'signed', status_in_frontmatter: true, drafted: '2026-02-17', signed: '2026-02-24', effective: '2026-03-01', sets: [{ scope: ['orrin'], attr: 'seats', value: 40 }, { scope: ['orrin'], attr: 'price_per_seat', value: 1700 }, { scope: ['orrin'], attr: 'renewal_date', value: '2027-02-28' }], supersedes: ['r-orm-of-2025'] },
+  // ── Tansley Parcel ──
+  { id: 'r-tpx-msa', accounts: ['tansley-parcel'], kind: 'msa', title: 'Subscription Agreement: Tansley Parcel', status: 'signed', status_in_frontmatter: true, drafted: '2025-01-08', signed: '2025-01-20', effective: '2025-02-01', sets: [{ scope: ['tansley-parcel'], attr: 'seats', value: 110 }, { scope: ['tansley-parcel'], attr: 'price_per_seat', value: 1800 }, { scope: ['tansley-parcel'], attr: 'discount_pct', value: 10 }, { scope: ['tansley-parcel'], attr: 'renewal_date', value: '2026-01-31' }, { scope: ['tansley-parcel'], attr: 'payment_terms_days', value: 30 }] },
+  { id: 'r-tpx-a1', accounts: ['tansley-parcel'], kind: 'amendment', title: 'Amendment 1: Tansley Parcel volume discount', status: 'signed', status_in_frontmatter: false, drafted: '2025-06-02', signed: '2025-06-10', effective: '2025-07-01', sets: [{ scope: ['tansley-parcel'], attr: 'discount_pct', value: 14 }], supersedes: ['r-tpx-msa'] },
+  { id: 'r-tpx-renewal-2026', accounts: ['tansley-parcel'], kind: 'renewal', title: 'Renewal Order Form: Tansley Parcel 2026', status: 'signed', status_in_frontmatter: true, drafted: '2026-01-05', signed: '2026-01-15', effective: '2026-02-01', sets: [{ scope: ['tansley-parcel'], attr: 'seats', value: 120 }, { scope: ['tansley-parcel'], attr: 'price_per_seat', value: 1850 }, { scope: ['tansley-parcel'], attr: 'renewal_date', value: '2027-01-31' }], supersedes: ['r-tpx-msa'], note: 'Discount is not restated; the 14% from Amendment 1 carries.' },
+  // ── Tansleigh ──
+  { id: 'r-tsp-of-2025', accounts: ['tansleigh'], kind: 'order_form', title: 'Order Form: Tansleigh Packaging', status: 'signed', status_in_frontmatter: true, drafted: '2025-02-20', signed: '2025-03-03', effective: '2025-03-15', sets: [{ scope: ['tansleigh'], attr: 'seats', value: 30 }, { scope: ['tansleigh'], attr: 'price_per_seat', value: 1750 }, { scope: ['tansleigh'], attr: 'discount_pct', value: 0 }, { scope: ['tansleigh'], attr: 'renewal_date', value: '2026-03-14' }] },
+  { id: 'r-tsp-renewal-2026', accounts: ['tansleigh'], kind: 'renewal', title: 'Renewal Order Form: Tansleigh Packaging 2026', status: 'signed', status_in_frontmatter: false, drafted: '2026-02-26', signed: '2026-03-10', effective: '2026-03-15', sets: [{ scope: ['tansleigh'], attr: 'seats', value: 34 }, { scope: ['tansleigh'], attr: 'renewal_date', value: '2027-03-14' }], supersedes: ['r-tsp-of-2025'] },
+  // ── Marrow (parent MSA with affiliate schedule; partial override for the subsidiary) ──
+  {
+    id: 'r-mfw-msa', accounts: ['marrow-fieldworks', 'marrow-agrisupply'], kind: 'msa', title: 'Master Subscription Agreement: Marrow Fieldworks and Covered Affiliates', status: 'signed', status_in_frontmatter: true, drafted: '2025-03-24', signed: '2025-04-08', effective: '2025-05-01',
+    sets: [
+      { scope: ['marrow-fieldworks'], attr: 'seats', value: 90 }, { scope: ['marrow-agrisupply'], attr: 'seats', value: 25 },
+      { scope: ['marrow-fieldworks', 'marrow-agrisupply'], attr: 'price_per_seat', value: 1800 },
+      { scope: ['marrow-fieldworks', 'marrow-agrisupply'], attr: 'discount_pct', value: 10 },
+      { scope: ['marrow-fieldworks', 'marrow-agrisupply'], attr: 'renewal_date', value: '2026-04-30' },
+      { scope: ['marrow-fieldworks', 'marrow-agrisupply'], attr: 'sla_tier', value: 'Tier 2' },
+    ],
+  },
+  { id: 'r-mfw-affiliate-a1', accounts: ['marrow-agrisupply'], kind: 'amendment', title: 'Affiliate Amendment: Marrow Agrisupply', status: 'signed', status_in_frontmatter: true, drafted: '2025-09-22', signed: '2025-10-02', effective: '2025-10-15', sets: [{ scope: ['marrow-agrisupply'], attr: 'seats', value: 40 }, { scope: ['marrow-agrisupply'], attr: 'sla_tier', value: 'Tier 1' }], supersedes: ['r-mfw-msa'], note: 'Partial override: only Agrisupply\'s seats and SLA change; every other term of the parent MSA still applies to Agrisupply.' },
+  { id: 'r-mfw-renewal-2026', accounts: ['marrow-fieldworks', 'marrow-agrisupply'], kind: 'renewal', title: 'Renewal Order Form: Marrow Fieldworks 2026', status: 'signed', status_in_frontmatter: true, drafted: '2026-04-06', signed: '2026-04-22', effective: '2026-05-01', sets: [{ scope: ['marrow-fieldworks'], attr: 'seats', value: 95 }, { scope: ['marrow-fieldworks', 'marrow-agrisupply'], attr: 'price_per_seat', value: 1880 }, { scope: ['marrow-fieldworks', 'marrow-agrisupply'], attr: 'renewal_date', value: '2027-04-30' }], supersedes: ['r-mfw-msa'], note: 'Leaves Agrisupply\'s seats and SLA as set by the affiliate amendment.' },
+  // ── Pellucid ──
+  { id: 'r-phl-msa', accounts: ['pellucid'], kind: 'msa', title: 'Master Subscription Agreement: Pellucid Harbor Logistics', status: 'signed', status_in_frontmatter: true, drafted: '2025-02-10', signed: '2025-02-26', effective: '2025-03-01', sets: [{ scope: ['pellucid'], attr: 'seats', value: 130 }, { scope: ['pellucid'], attr: 'price_per_seat', value: 1900 }, { scope: ['pellucid'], attr: 'discount_pct', value: 11 }, { scope: ['pellucid'], attr: 'renewal_date', value: '2026-02-28' }, { scope: ['pellucid'], attr: 'payment_terms_days', value: 30 }] },
+  { id: 'r-phl-a1-unsigned', accounts: ['pellucid'], kind: 'draft_amendment', title: 'Amendment 1 (unsigned): Pellucid Harbor Logistics seat expansion', status: 'unsigned', status_in_frontmatter: true, drafted: '2025-12-15', signed: null, effective: null, sets: [{ scope: ['pellucid'], attr: 'seats', value: 150 }], note: 'Sent, never signed; the renewal settled at 145.' },
+  { id: 'r-phl-renewal-2026', accounts: ['pellucid'], kind: 'renewal', title: 'Renewal Order Form: Pellucid Harbor Logistics 2026', status: 'signed', status_in_frontmatter: false, drafted: '2026-02-02', signed: '2026-02-19', effective: '2026-03-01', sets: [{ scope: ['pellucid'], attr: 'seats', value: 145 }, { scope: ['pellucid'], attr: 'price_per_seat', value: 1950 }, { scope: ['pellucid'], attr: 'renewal_date', value: '2027-02-28' }], supersedes: ['r-phl-msa'] },
+  { id: 'r-phl-a2', accounts: ['pellucid'], kind: 'amendment', title: 'Amendment 2: Pellucid Harbor Logistics pricing', status: 'signed', status_in_frontmatter: true, drafted: '2026-09-14', signed: '2026-09-29', effective: '2027-03-01', sets: [{ scope: ['pellucid'], attr: 'price_per_seat', value: 2010 }, { scope: ['pellucid'], attr: 'discount_pct', value: 9 }], supersedes: ['r-phl-renewal-2026', 'r-phl-msa'], note: 'Future-effective: signed 2026-09-29, effective 2027-03-01.' },
+  // ── Driftmoor ──
+  { id: 'r-dmf-of-2025', accounts: ['driftmoor'], kind: 'order_form', title: 'Order Form: Driftmoor Marine Freight 2025', status: 'signed', status_in_frontmatter: true, drafted: '2024-11-25', signed: '2024-12-09', effective: '2025-01-01', sets: [{ scope: ['driftmoor'], attr: 'seats', value: 55 }, { scope: ['driftmoor'], attr: 'price_per_seat', value: 1820 }, { scope: ['driftmoor'], attr: 'discount_pct', value: 6 }, { scope: ['driftmoor'], attr: 'renewal_date', value: '2025-12-31' }] },
+  { id: 'r-dmf-renewal-2026', accounts: ['driftmoor'], kind: 'renewal', title: 'Renewal Order Form: Driftmoor Marine Freight 2026', status: 'signed', status_in_frontmatter: true, drafted: '2025-12-01', signed: '2025-12-17', effective: '2026-01-01', sets: [{ scope: ['driftmoor'], attr: 'seats', value: 58 }, { scope: ['driftmoor'], attr: 'price_per_seat', value: 1880 }, { scope: ['driftmoor'], attr: 'renewal_date', value: '2026-12-31' }], supersedes: ['r-dmf-of-2025'] },
+  // ── Saltmarsh ──
+  { id: 'r-smp-of-2025', accounts: ['saltmarsh'], kind: 'order_form', title: 'Order Form: Saltmarsh Provisions', status: 'signed', status_in_frontmatter: true, drafted: '2025-06-09', signed: '2025-06-25', effective: '2025-07-01', sets: [{ scope: ['saltmarsh'], attr: 'seats', value: 70 }, { scope: ['saltmarsh'], attr: 'price_per_seat', value: 1780 }, { scope: ['saltmarsh'], attr: 'discount_pct', value: 7 }, { scope: ['saltmarsh'], attr: 'renewal_date', value: '2026-06-30' }] },
+  { id: 'r-smp-a1', accounts: ['saltmarsh'], kind: 'amendment', title: 'Amendment 1: Saltmarsh Provisions retention concession', status: 'signed', status_in_frontmatter: false, drafted: '2025-10-13', signed: '2025-10-20', effective: '2025-11-01', sets: [{ scope: ['saltmarsh'], attr: 'discount_pct', value: 10 }], supersedes: ['r-smp-of-2025'] },
+  { id: 'r-smp-renewal-2026', accounts: ['saltmarsh'], kind: 'renewal', title: 'Renewal Order Form: Saltmarsh Provisions 2026', status: 'signed', status_in_frontmatter: true, drafted: '2026-06-01', signed: '2026-06-18', effective: '2026-07-01', sets: [{ scope: ['saltmarsh'], attr: 'price_per_seat', value: 1840 }, { scope: ['saltmarsh'], attr: 'renewal_date', value: '2027-06-30' }], supersedes: ['r-smp-of-2025'], note: 'Seats and the 10% discount carry over unchanged.' },
+  // ── Covey & Lark / Pellow ──
+  { id: 'r-clr-of-2025', accounts: ['covey-lark'], kind: 'order_form', title: 'Order Form: Covey & Lark Retail', status: 'signed', status_in_frontmatter: true, drafted: '2025-02-27', signed: '2025-03-12', effective: '2025-04-01', sets: [{ scope: ['covey-lark'], attr: 'seats', value: 42 }, { scope: ['covey-lark'], attr: 'price_per_seat', value: 1700 }, { scope: ['covey-lark'], attr: 'discount_pct', value: 0 }, { scope: ['covey-lark'], attr: 'renewal_date', value: '2026-03-31' }] },
+  { id: 'r-clr-draft-2026', accounts: ['covey-lark'], kind: 'draft_order_form', title: 'Pellow Home Living renewal order form v2', status: 'draft', status_in_frontmatter: false, drafted: '2026-03-09', signed: null, effective: null, sets: [{ scope: ['covey-lark'], attr: 'seats', value: 50 }], note: 'Draft with no status in frontmatter; superseded by the signed renewal at 46.' },
+  { id: 'r-clr-renewal-2026', accounts: ['covey-lark'], kind: 'renewal', title: 'Renewal Order Form: Pellow Home Living (formerly Covey & Lark Retail)', status: 'signed', status_in_frontmatter: true, drafted: '2026-03-16', signed: '2026-03-25', effective: '2026-04-01', sets: [{ scope: ['covey-lark'], attr: 'seats', value: 46 }, { scope: ['covey-lark'], attr: 'price_per_seat', value: 1760 }, { scope: ['covey-lark'], attr: 'renewal_date', value: '2027-03-31' }], supersedes: ['r-clr-of-2025'] },
+  // ── Vantorre (long parent MSA with affiliate schedule; Mobility partial override) ──
+  {
+    id: 'r-vtg-msa', accounts: ['vantorre-group', 'vantorre-mobility'], kind: 'msa', title: 'Enterprise Master Subscription Agreement: Vantorre Group and Affiliates', status: 'signed', status_in_frontmatter: true,
+    drafted: '2025-06-02', signed: '2025-06-30', effective: '2025-07-01',
+    sets: [
+      { scope: ['vantorre-group'], attr: 'seats', value: 260 }, { scope: ['vantorre-mobility'], attr: 'seats', value: 40 },
+      { scope: ['vantorre-group', 'vantorre-mobility'], attr: 'price_per_seat', value: 1950 },
+      { scope: ['vantorre-group', 'vantorre-mobility'], attr: 'discount_pct', value: 15 },
+      { scope: ['vantorre-group', 'vantorre-mobility'], attr: 'renewal_date', value: '2026-06-30' },
+      { scope: ['vantorre-group', 'vantorre-mobility'], attr: 'sla_tier', value: 'Tier 1' },
+      { scope: ['vantorre-group', 'vantorre-mobility'], attr: 'notice_days', value: 90 },
+      { scope: ['vantorre-group', 'vantorre-mobility'], attr: 'payment_terms_days', value: 60 },
+    ],
+    long: { min_chars: 22000, deep_clause_attr: 'notice_days', forbidden_words: LONG_FORBIDDEN },
+    note: 'Long agreement; the deciding clause on how far ahead Vantorre must elect against another term sits deep inside with no renew/cancel/terminate wording.',
+  },
+  { id: 'r-vtm-a1', accounts: ['vantorre-mobility'], kind: 'amendment', title: 'Affiliate Amendment: Vantorre Mobility', status: 'signed', status_in_frontmatter: false, drafted: '2025-11-03', signed: '2025-11-18', effective: '2025-12-01', sets: [{ scope: ['vantorre-mobility'], attr: 'seats', value: 48 }, { scope: ['vantorre-mobility'], attr: 'sla_tier', value: 'Tier 1 Plus' }], supersedes: ['r-vtg-msa'], note: 'Partial override for the subsidiary only.' },
+  { id: 'r-vtg-renewal-2026', accounts: ['vantorre-group', 'vantorre-mobility'], kind: 'renewal', title: 'Renewal Order Form: Vantorre Group 2026', status: 'signed', status_in_frontmatter: true, drafted: '2026-06-08', signed: '2026-06-24', effective: '2026-07-01', sets: [{ scope: ['vantorre-group'], attr: 'seats', value: 280 }, { scope: ['vantorre-group', 'vantorre-mobility'], attr: 'price_per_seat', value: 2000 }, { scope: ['vantorre-group', 'vantorre-mobility'], attr: 'renewal_date', value: '2027-06-30' }], supersedes: ['r-vtg-msa'] },
+  { id: 'r-vtg-a2-draft', accounts: ['vantorre-group'], kind: 'draft_amendment', title: 'Amendment 2 (draft): Vantorre Group discount', status: 'draft', status_in_frontmatter: true, drafted: '2026-08-14', signed: null, effective: null, sets: [{ scope: ['vantorre-group'], attr: 'discount_pct', value: 18 }] },
+  // ── Orlavine ──
+  { id: 'r-oms-of-2025', accounts: ['orlavine'], kind: 'order_form', title: 'Order Form: Orlavine Medical Supply', status: 'signed', status_in_frontmatter: true, drafted: '2025-09-15', signed: '2025-09-29', effective: '2025-10-01', sets: [{ scope: ['orlavine'], attr: 'seats', value: 50 }, { scope: ['orlavine'], attr: 'price_per_seat', value: 1900 }, { scope: ['orlavine'], attr: 'discount_pct', value: 5 }, { scope: ['orlavine'], attr: 'renewal_date', value: '2026-09-30' }] },
+  { id: 'r-oms-renewal-2026', accounts: ['orlavine'], kind: 'renewal', title: 'Renewal Order Form: Orlavine Medical Supply 2026', status: 'signed', status_in_frontmatter: false, drafted: '2026-09-08', signed: '2026-09-24', effective: '2026-10-01', sets: [{ scope: ['orlavine'], attr: 'price_per_seat', value: 1960 }, { scope: ['orlavine'], attr: 'renewal_date', value: '2027-09-30' }], supersedes: ['r-oms-of-2025'] },
+  // ── Quillfeather ──
+  { id: 'r-qfo-of-2025', accounts: ['quillfeather'], kind: 'order_form', title: 'Order Form: Quillfeather Outfitters', status: 'signed', status_in_frontmatter: true, drafted: '2025-07-21', signed: '2025-08-05', effective: '2025-08-15', sets: [{ scope: ['quillfeather'], attr: 'seats', value: 25 }, { scope: ['quillfeather'], attr: 'price_per_seat', value: 1700 }, { scope: ['quillfeather'], attr: 'discount_pct', value: 0 }, { scope: ['quillfeather'], attr: 'renewal_date', value: '2026-08-14' }] },
+  { id: 'r-qfo-renewal-2026', accounts: ['quillfeather'], kind: 'renewal', title: 'Renewal Order Form: Quillfeather Outfitters 2026', status: 'signed', status_in_frontmatter: true, drafted: '2026-07-27', signed: '2026-08-10', effective: '2026-08-15', sets: [{ scope: ['quillfeather'], attr: 'price_per_seat', value: 1740 }, { scope: ['quillfeather'], attr: 'renewal_date', value: '2027-08-14' }], supersedes: ['r-qfo-of-2025'] },
+];
+
+export const EVENTS: WorldEvent[] = [
+  // North
+  { id: 'e-qfl-msa-signed', accounts: ['quarrendon'], date: '2025-03-28', type: 'signing', summary: 'Quarrendon signs the Master Subscription Agreement', participants: ['marcus-lindqvist', 'thea-ramaswell', 'june-osei'] },
+  { id: 'e-qfl-handoff', accounts: ['quarrendon'], date: '2025-06-02', type: 'handoff', summary: 'Quarrendon moves from Marcus to Dana', participants: ['marcus-lindqvist', 'dana-okafor', 'ilse-varga'] },
+  { id: 'e-qfl-qbr-2025', accounts: ['quarrendon'], date: '2025-07-22', type: 'meeting', summary: 'Quarrendon quarterly business review in Duluth', participants: ['dana-okafor', 'thea-ramaswell'] },
+  { id: 'e-qfl-sev1', accounts: ['quarrendon'], date: '2025-11-04', type: 'escalation', summary: 'Sev 1 escalation: dock schedule sync outage at Quarrendon\'s Superior terminal', participants: ['dana-okafor', 'thea-ramaswell', 'ilse-varga'] },
+  { id: 'e-qfl-exec-call', accounts: ['quarrendon'], date: '2025-11-06', type: 'meeting', summary: 'Executive call with Quarrendon after the Sev 1', participants: ['ruth-calloway', 'dana-okafor', 'thea-ramaswell'] },
+  { id: 'e-qfl-renewal-signed', accounts: ['quarrendon'], date: '2026-03-20', type: 'signing', summary: 'Quarrendon signs the 2026 renewal order form', participants: ['ilse-varga', 'thea-ramaswell', 'june-osei'] },
+  { id: 'e-qfl-a3-signed', accounts: ['quarrendon'], date: '2026-09-22', type: 'signing', summary: 'Quarrendon signs Amendment No. 3 (seats to 230 from Jan 1, 2027)', participants: ['dana-okafor', 'thea-ramaswell'] },
+  { id: 'e-bwf-handoff', accounts: ['brackenwater'], date: '2025-09-15', type: 'handoff', summary: 'Brackenwater moves from Dana to Marcus', participants: ['dana-okafor', 'marcus-lindqvist'] },
+  { id: 'e-bwf-renewal-signed', accounts: ['brackenwater'], date: '2025-11-21', type: 'signing', summary: 'Brackenwater signs its 2025-2026 renewal', participants: ['marcus-lindqvist'] },
+  { id: 'e-bwf-billing-dispute', accounts: ['brackenwater'], date: '2026-01-20', type: 'escalation', summary: 'Brackenwater escalates a double-billed invoice', participants: ['marcus-lindqvist', 'felix-duarte'] },
+  { id: 'e-tcc-kickoff', accounts: ['tamsin'], date: '2025-04-22', type: 'meeting', summary: 'Tamsin kickoff with Dana after she inherits the account', participants: ['dana-okafor'] },
+  { id: 'e-tcc-sensor-incident', accounts: ['tamsin'], date: '2025-08-12', type: 'incident', summary: 'Reefer temperature-sensor feed drops for 6 hours at Tamsin\'s Tacoma site', participants: ['dana-okafor'] },
+  { id: 'e-tcc-renewal-signed', accounts: ['tamsin'], date: '2026-05-27', type: 'signing', summary: 'Tamsin signs its 2026-2027 renewal', participants: ['dana-okafor'] },
+  { id: 'e-orm-handoff', accounts: ['orrin'], date: '2025-10-06', type: 'handoff', summary: 'Orrin Mills moves from Dana to Marcus (per the Oct 3 correction)', participants: ['dana-okafor', 'marcus-lindqvist', 'ilse-varga'] },
+  { id: 'e-orm-rebrand', accounts: ['orrin'], date: '2026-01-12', type: 'rebrand', summary: 'Orrin Mills renames itself Thornbury Cloth Co.', participants: ['marcus-lindqvist'] },
+  { id: 'e-orm-renewal-signed', accounts: ['orrin'], date: '2026-02-24', type: 'signing', summary: 'Thornbury Cloth Co. signs its renewal at 40 seats', participants: ['marcus-lindqvist'] },
+  { id: 'e-dana-leave', accounts: ['quarrendon', 'tamsin'], date: '2026-02-02', type: 'leave', summary: 'Dana starts leave; Ilse covers Quarrendon and Tamsin until Mar 16', participants: ['dana-okafor', 'ilse-varga'] },
+  // Central
+  { id: 'e-tpx-msa-signed', accounts: ['tansley-parcel'], date: '2025-01-20', type: 'signing', summary: 'Tansley Parcel signs its subscription agreement', participants: ['pree-sundaram', 'lev-arkadin'] },
+  { id: 'e-tpx-api-outage', accounts: ['tansley-parcel'], date: '2025-09-03', type: 'escalation', summary: 'Tansley Parcel escalates a carrier-API outage that stalled label printing', participants: ['pree-sundaram', 'lev-arkadin', 'hollis-mbeki'] },
+  { id: 'e-tpx-qbr', accounts: ['tansley-parcel'], date: '2025-10-14', type: 'meeting', summary: 'Tansley Parcel QBR in Fort Worth', participants: ['pree-sundaram', 'lev-arkadin'] },
+  { id: 'e-tpx-renewal-signed', accounts: ['tansley-parcel'], date: '2026-01-15', type: 'signing', summary: 'Tansley Parcel signs the 2026 renewal', participants: ['pree-sundaram', 'lev-arkadin'] },
+  { id: 'e-tsp-renewal-signed', accounts: ['tansleigh'], date: '2026-03-10', type: 'signing', summary: 'Tansleigh Packaging signs its 2026 renewal', participants: ['june-osei'] },
+  { id: 'e-tsp-onsite', accounts: ['tansleigh'], date: '2025-07-16', type: 'meeting', summary: 'On-site visit at Tansleigh\'s Zanesville plant', participants: ['tobias-rendle'] },
+  { id: 'e-mfw-msa-signed', accounts: ['marrow-fieldworks', 'marrow-agrisupply'], date: '2025-04-08', type: 'signing', summary: 'Marrow Fieldworks signs the MSA covering its affiliates', participants: ['pree-sundaram', 'june-osei'] },
+  { id: 'e-mas-affiliate-signed', accounts: ['marrow-agrisupply'], date: '2025-10-02', type: 'signing', summary: 'Marrow Agrisupply affiliate amendment signed (40 seats, Tier 1)', participants: ['hollis-mbeki', 'june-osei'] },
+  { id: 'e-mfw-handoff', accounts: ['marrow-fieldworks'], date: '2026-01-05', type: 'handoff', summary: 'Marrow Fieldworks moves from Pree to Tobias', participants: ['pree-sundaram', 'tobias-rendle', 'hollis-mbeki'] },
+  { id: 'e-mfw-renewal-signed', accounts: ['marrow-fieldworks', 'marrow-agrisupply'], date: '2026-04-22', type: 'signing', summary: 'Marrow Fieldworks signs the 2026 renewal', participants: ['tobias-rendle'] },
+  { id: 'e-mas-store-rollout', accounts: ['marrow-agrisupply'], date: '2026-06-09', type: 'escalation', summary: 'Marrow Agrisupply escalates slow rollout to its new stores', participants: ['hollis-mbeki', 'pree-sundaram'] },
+  // Coastal
+  { id: 'e-phl-msa-signed', accounts: ['pellucid'], date: '2025-02-26', type: 'signing', summary: 'Pellucid signs its MSA', participants: ['bettina-kroll'] },
+  { id: 'e-phl-handoff', accounts: ['pellucid'], date: '2025-11-03', type: 'handoff', summary: 'Pellucid moves from Bettina to Kwame', participants: ['bettina-kroll', 'kwame-adjei'] },
+  { id: 'e-phl-cutover', accounts: ['pellucid'], date: '2025-11-20', type: 'meeting', summary: 'Pellucid terminal cutover weekend wrap-up', participants: ['bettina-kroll', 'kwame-adjei'] },
+  { id: 'e-phl-renewal-signed', accounts: ['pellucid'], date: '2026-02-19', type: 'signing', summary: 'Pellucid signs its 2026 renewal at 145 seats', participants: ['kwame-adjei'] },
+  { id: 'e-phl-a2-signed', accounts: ['pellucid'], date: '2026-09-29', type: 'signing', summary: 'Pellucid signs Amendment 2 (price change from Mar 1, 2027)', participants: ['kwame-adjei'] },
+  { id: 'e-dmf-handoff', accounts: ['driftmoor'], date: '2025-04-07', type: 'handoff', summary: 'Driftmoor moves from Sofia to Kwame', participants: ['sofia-marchetti', 'kwame-adjei'] },
+  { id: 'e-dmf-barge-outage', accounts: ['driftmoor'], date: '2025-08-26', type: 'escalation', summary: 'Driftmoor escalates missed barge slot notifications', participants: ['kwame-adjei'] },
+  { id: 'e-dmf-renewal-signed', accounts: ['driftmoor'], date: '2025-12-17', type: 'signing', summary: 'Driftmoor signs its 2026 renewal', participants: ['kwame-adjei'] },
+  { id: 'e-smp-of-signed', accounts: ['saltmarsh'], date: '2025-06-25', type: 'signing', summary: 'Saltmarsh signs its order form', participants: ['sofia-marchetti', 'corinne-ashdown'] },
+  { id: 'e-smp-handoff', accounts: ['saltmarsh'], date: '2025-10-06', type: 'handoff', summary: 'Saltmarsh moves from Sofia to Bettina', participants: ['sofia-marchetti', 'bettina-kroll'] },
+  { id: 'e-smp-churn-risk', accounts: ['saltmarsh'], date: '2025-10-15', type: 'escalation', summary: 'Corinne Ashdown flags Saltmarsh as a churn risk over dock no-shows', participants: ['bettina-kroll', 'corinne-ashdown'] },
+  { id: 'e-smp-renewal-signed', accounts: ['saltmarsh'], date: '2026-06-18', type: 'signing', summary: 'Saltmarsh signs its 2026 renewal', participants: ['bettina-kroll', 'corinne-ashdown'] },
+  { id: 'e-clr-rebrand', accounts: ['covey-lark'], date: '2026-02-16', type: 'rebrand', summary: 'Covey & Lark Retail renames itself Pellow Home Living', participants: ['sofia-marchetti'] },
+  { id: 'e-clr-renewal-signed', accounts: ['covey-lark'], date: '2026-03-25', type: 'signing', summary: 'Pellow Home Living signs its renewal at 46 seats', participants: ['sofia-marchetti'] },
+  { id: 'e-sofia-leave', accounts: ['covey-lark'], date: '2026-05-04', type: 'leave', summary: 'Sofia starts leave; Bettina covers Pellow Home Living until Jun 15', participants: ['sofia-marchetti', 'bettina-kroll'] },
+  // Strategic
+  { id: 'e-vtg-msa-signed', accounts: ['vantorre-group', 'vantorre-mobility'], date: '2025-06-30', type: 'signing', summary: 'Vantorre Group signs the enterprise MSA', participants: ['nadia-fennimore', 'mateo-quiroga', 'ruth-calloway'] },
+  { id: 'e-vtm-a1-signed', accounts: ['vantorre-mobility'], date: '2025-11-18', type: 'signing', summary: 'Vantorre Mobility affiliate amendment signed (48 seats, Tier 1 Plus)', participants: ['gideon-sato'] },
+  { id: 'e-vtg-steering', accounts: ['vantorre-group'], date: '2026-04-28', type: 'meeting', summary: 'Vantorre Q2 steering committee', participants: ['nadia-fennimore', 'gideon-sato', 'mateo-quiroga'] },
+  { id: 'e-vtg-handoff', accounts: ['vantorre-group'], date: '2026-05-04', type: 'handoff', summary: 'Vantorre Group moves from Nadia to Gideon', participants: ['nadia-fennimore', 'gideon-sato', 'ruth-calloway'] },
+  { id: 'e-vtg-renewal-signed', accounts: ['vantorre-group', 'vantorre-mobility'], date: '2026-06-24', type: 'signing', summary: 'Vantorre Group signs the 2026 renewal order form', participants: ['gideon-sato', 'mateo-quiroga'] },
+  { id: 'e-vtg-sev1', accounts: ['vantorre-group'], date: '2026-08-03', type: 'escalation', summary: 'Sev 1 at Vantorre\'s Hartford plant: gate kiosks offline', participants: ['gideon-sato', 'ruth-calloway'] },
+  { id: 'e-oms-of-signed', accounts: ['orlavine'], date: '2025-09-29', type: 'signing', summary: 'Orlavine signs its first order form', participants: ['june-osei'] },
+  { id: 'e-oms-renewal-signed', accounts: ['orlavine'], date: '2026-09-24', type: 'signing', summary: 'Orlavine signs its 2026 renewal', participants: ['june-osei'] },
+  { id: 'e-orlavene-prospect-mtg', accounts: [], date: '2026-02-11', type: 'meeting', summary: 'Ruth meets Orlavene Health (a prospect, not Orlavine)', participants: ['ruth-calloway'] },
+  { id: 'e-qfo-of-signed', accounts: ['quillfeather'], date: '2025-08-05', type: 'signing', summary: 'Quillfeather signs its order form', participants: ['nadia-fennimore'] },
+  { id: 'e-qfo-renewal-signed', accounts: ['quillfeather'], date: '2026-08-10', type: 'signing', summary: 'Quillfeather signs its 2026 renewal', participants: ['gideon-sato'] },
+];
+
+/** Statements that pages make about values. `correct` is judged against the governing record or the world. */
+export const CLAIMS: Claim[] = [
+  // North
+  { id: 'c-bwf-renewal-contract', account: 'brackenwater', attr: 'renewal_date', value: '2026-11-30', as_of: '2025-11-21', correct: true, note: 'Renewal order form' },
+  { id: 'c-bwf-renewal-crm', account: 'brackenwater', attr: 'renewal_date', value: '2026-12-31', as_of: '2026-02-10', correct: false, note: 'CRM note gets the renewal date wrong' },
+  { id: 'c-bwf-arr-weekly', account: 'brackenwater', attr: 'arr', value: 'about $104k', as_of: '2025-12-08', correct: true, note: '64 x 1760 x 0.92 = $103,629' },
+  { id: 'c-bwf-seats-2025', account: 'brackenwater', attr: 'seats', value: 64, as_of: '2025-12-01', correct: true, note: 'Seats after the 2025 renewal' },
+  { id: 'c-bwf-seats-2024', account: 'brackenwater', attr: 'seats', value: 60, as_of: '2024-12-01', correct: true, note: 'Seats under the 2024 order form' },
+  { id: 'c-qfl-discount-call', account: 'quarrendon', attr: 'discount_pct', value: 12, as_of: '2026-04-09', correct: false, note: 'Call summary misstates: discount is 10% from 2026-04-01' },
+  { id: 'c-qfl-discount-renewal', account: 'quarrendon', attr: 'discount_pct', value: 10, as_of: '2026-04-01', correct: true, note: 'Renewal order form' },
+  { id: 'c-qfl-seats-a1', account: 'quarrendon', attr: 'seats', value: 185, as_of: '2025-09-01', correct: true, note: 'Amendment No. 1' },
+  { id: 'c-qfl-seats-msa', account: 'quarrendon', attr: 'seats', value: 140, as_of: '2025-04-01', correct: true, note: 'MSA' },
+  { id: 'c-qfl-monthly', account: 'quarrendon', attr: 'monthly_fee', value: 'roughly $25k a month', as_of: '2025-10-01', correct: true, note: '185 x 1850 x 0.88 / 12 = $25,098' },
+  { id: 'c-qfl-arr', account: 'quarrendon', attr: 'arr', value: 'just over $300k', as_of: '2025-10-01', correct: true, note: '185 x 1850 x 0.88 = $301,180' },
+  { id: 'c-tcc-decider-dana', account: 'tamsin', attr: 'decision_maker', value: 'the COO, Ines Barrow', as_of: '2025-05-02', correct: true, note: 'Dana\'s CRM note' },
+  { id: 'c-tcc-decider-marcus', account: 'tamsin', attr: 'decision_maker', value: 'the CFO, Pavel Ruud', as_of: '2025-03-10', correct: false, note: 'Marcus\'s older note names a different decision maker; Dana\'s note after kickoff says the COO decides' },
+  { id: 'c-orm-renewal-q1', account: 'orrin', attr: 'renewal_quarter', value: 'Q1 2026', as_of: '2025-09-02', correct: true, note: 'Compatible with 2026-02-28' },
+  { id: 'c-orm-renewal-date', account: 'orrin', attr: 'renewal_date', value: '2026-02-28', as_of: '2025-03-01', correct: true, note: 'Order form' },
+  // Central
+  { id: 'c-tpx-seats-lev', account: 'tansley-parcel', attr: 'seats', value: 125, as_of: '2026-03-03', correct: false, note: 'Lev\'s email says 125 seats; the 2026 renewal says 120' },
+  { id: 'c-tpx-seats-renewal', account: 'tansley-parcel', attr: 'seats', value: 120, as_of: '2026-02-01', correct: true, note: 'Renewal order form' },
+  { id: 'c-tpx-discount-msa', account: 'tansley-parcel', attr: 'discount_pct', value: 10, as_of: '2025-02-01', correct: true, note: 'MSA' },
+  { id: 'c-tpx-discount-a1', account: 'tansley-parcel', attr: 'discount_pct', value: 14, as_of: '2025-07-01', correct: true, note: 'Amendment 1' },
+  { id: 'c-mas-seats-msa', account: 'marrow-agrisupply', attr: 'seats', value: 25, as_of: '2025-05-01', correct: true, note: 'Parent MSA affiliate schedule' },
+  { id: 'c-mas-seats-a1', account: 'marrow-agrisupply', attr: 'seats', value: 40, as_of: '2025-10-15', correct: true, note: 'Affiliate amendment' },
+  { id: 'c-mas-sla-weekly', account: 'marrow-agrisupply', attr: 'sla_tier', value: 'Tier 2', as_of: '2026-05-11', correct: false, note: 'A weekly update says Agrisupply is on Tier 2 like the parent; the affiliate amendment made it Tier 1' },
+  { id: 'c-mfw-golive-a', account: 'marrow-fieldworks', attr: 'go_live', value: 'June 2025', as_of: '2025-06-16', correct: true, note: 'Weekly update' },
+  { id: 'c-mfw-golive-b', account: 'marrow-fieldworks', attr: 'go_live', value: 'mid-June 2025, the week of the 16th', as_of: '2025-06-20', correct: true, note: 'Compatible with June 2025' },
+  // Coastal
+  { id: 'c-dmf-renewal-contract', account: 'driftmoor', attr: 'renewal_date', value: '2026-12-31', as_of: '2026-01-01', correct: true, note: 'Renewal order form' },
+  { id: 'c-dmf-renewal-weekly', account: 'driftmoor', attr: 'renewal_date', value: '2027-01-31', as_of: '2026-03-16', correct: false, note: 'A weekly update states the wrong renewal date' },
+  { id: 'c-smp-renewal-contract', account: 'saltmarsh', attr: 'renewal_date', value: '2026-06-30', as_of: '2025-07-01', correct: true, note: 'Order form' },
+  { id: 'c-smp-renewal-crm', account: 'saltmarsh', attr: 'renewal_date', value: '2026-07-31', as_of: '2025-12-02', correct: false, note: 'CRM note gets the renewal date wrong' },
+  { id: 'c-smp-discount-of', account: 'saltmarsh', attr: 'discount_pct', value: 7, as_of: '2025-07-01', correct: true, note: 'Order form' },
+  { id: 'c-smp-discount-a1', account: 'saltmarsh', attr: 'discount_pct', value: 10, as_of: '2025-11-01', correct: true, note: 'Amendment 1' },
+  { id: 'c-phl-seats-call', account: 'pellucid', attr: 'seats', value: 150, as_of: '2026-03-05', correct: false, note: 'Call summary misstates seats using the unsigned draft number' },
+  { id: 'c-phl-seats-renewal', account: 'pellucid', attr: 'seats', value: 145, as_of: '2026-03-01', correct: true, note: 'Renewal order form' },
+  { id: 'c-phl-arr', account: 'pellucid', attr: 'arr', value: 'about $252k', as_of: '2026-03-01', correct: true, note: '145 x 1950 x 0.89 = $251,647' },
+  { id: 'c-phl-monthly', account: 'pellucid', attr: 'monthly_fee', value: 'about $21k a month', as_of: '2026-03-10', correct: true, note: '$251,647 / 12 = $20,971' },
+  { id: 'c-clr-sites-a', account: 'covey-lark', attr: 'site_count', value: '9 distribution sites', as_of: '2025-05-06', correct: true, note: 'Account profile' },
+  { id: 'c-clr-sites-b', account: 'covey-lark', attr: 'site_count', value: '11 sites after the two Delaware openings', as_of: '2026-04-20', correct: true, note: 'A dated change, not a contradiction' },
+  // Strategic
+  { id: 'c-vtg-notice-call', account: 'vantorre-group', attr: 'notice_days', value: 60, as_of: '2026-07-09', correct: false, note: 'Call summary says 60 days; the MSA says 90' },
+  { id: 'c-vtg-notice-msa', account: 'vantorre-group', attr: 'notice_days', value: 90, as_of: '2025-07-01', correct: true, note: 'MSA deep clause' },
+  { id: 'c-vtg-decider-nadia', account: 'vantorre-group', attr: 'decision_maker', value: 'Mateo Quiroga, Head of Procurement', as_of: '2025-06-12', correct: true, note: 'Nadia\'s note' },
+  { id: 'c-vtg-decider-gideon', account: 'vantorre-group', attr: 'decision_maker', value: 'the new COO, Hanne Lisberg, now signs off', as_of: '2026-05-20', correct: true, note: 'A dated change after a reorg, not a contradiction' },
+  { id: 'c-vtm-seats-a1', account: 'vantorre-mobility', attr: 'seats', value: 48, as_of: '2025-12-01', correct: true, note: 'Affiliate amendment' },
+  { id: 'c-vtm-seats-msa', account: 'vantorre-mobility', attr: 'seats', value: 40, as_of: '2025-07-01', correct: true, note: 'MSA affiliate schedule' },
+  { id: 'c-oms-seats-gideon', account: 'orlavine', attr: 'seats', value: 50, as_of: '2026-09-24', correct: true, note: 'Seats unchanged at renewal' },
+  { id: 'c-oms-seats-ruth', account: 'orlavine', attr: 'seats', value: 55, as_of: '2026-09-30', correct: false, note: 'Moss\'s agent note says 55 seats; the order forms say 50' },
+  { id: 'c-qfo-renewal-q3', account: 'quillfeather', attr: 'renewal_quarter', value: 'Q3 2026', as_of: '2026-03-02', correct: true, note: 'Compatible with 2026-08-14' },
+  { id: 'c-qfo-renewal-date', account: 'quillfeather', attr: 'renewal_date', value: '2026-08-14', as_of: '2025-08-15', correct: true, note: 'Order form' },
+];
+
+export const CLAIM_PAIRS: ClaimPair[] = [
+  { id: 'cp-bwf-renewal', a: 'c-bwf-renewal-contract', b: 'c-bwf-renewal-crm', relation: 'contradiction', note: 'Same term, two renewal dates; the signed order form is right.' },
+  { id: 'cp-bwf-arr-seats', a: 'c-bwf-arr-weekly', b: 'c-bwf-seats-2025', relation: 'compatible', note: 'About $104k ARR matches 64 seats at $1,760 less 8%.' },
+  { id: 'cp-bwf-seats', a: 'c-bwf-seats-2024', b: 'c-bwf-seats-2025', relation: 'change', note: '60 seats in the 2024 term, 64 after the 2025 renewal.' },
+  { id: 'cp-qfl-discount', a: 'c-qfl-discount-renewal', b: 'c-qfl-discount-call', relation: 'contradiction', note: 'The call summary repeats the old 12%; the renewal set 10%.' },
+  { id: 'cp-qfl-seats', a: 'c-qfl-seats-msa', b: 'c-qfl-seats-a1', relation: 'change', note: '140 under the MSA, 185 from Amendment No. 1.' },
+  { id: 'cp-qfl-arr-monthly', a: 'c-qfl-arr', b: 'c-qfl-monthly', relation: 'compatible', note: 'Annual and monthly statements of the same fee.' },
+  { id: 'cp-tcc-decider', a: 'c-tcc-decider-marcus', b: 'c-tcc-decider-dana', relation: 'contradiction', note: 'Two notes name different decision makers with no reorg in between; Dana\'s later kickoff note is right.' },
+  { id: 'cp-orm-renewal', a: 'c-orm-renewal-date', b: 'c-orm-renewal-q1', relation: 'compatible', note: 'Feb 28, 2026 is in Q1 2026.' },
+  { id: 'cp-tpx-seats', a: 'c-tpx-seats-renewal', b: 'c-tpx-seats-lev', relation: 'contradiction', note: 'Lev says 125; the order form says 120 and nothing changed it.' },
+  { id: 'cp-tpx-discount', a: 'c-tpx-discount-msa', b: 'c-tpx-discount-a1', relation: 'change', note: '10% under the MSA, 14% from Amendment 1.' },
+  { id: 'cp-mas-seats', a: 'c-mas-seats-msa', b: 'c-mas-seats-a1', relation: 'change', note: '25 under the parent MSA, 40 from the affiliate amendment.' },
+  { id: 'cp-mas-sla', a: 'c-mas-sla-weekly', b: 'c-mas-seats-a1', relation: 'contradiction', note: 'The weekly update says Tier 2; the affiliate amendment set Agrisupply to Tier 1 (same record as the seat change).' },
+  { id: 'cp-mfw-golive', a: 'c-mfw-golive-a', b: 'c-mfw-golive-b', relation: 'compatible', note: 'Same go-live at two precisions.' },
+  { id: 'cp-dmf-renewal', a: 'c-dmf-renewal-contract', b: 'c-dmf-renewal-weekly', relation: 'contradiction', note: 'The weekly update is wrong.' },
+  { id: 'cp-smp-renewal', a: 'c-smp-renewal-contract', b: 'c-smp-renewal-crm', relation: 'contradiction', note: 'The CRM note is wrong.' },
+  { id: 'cp-smp-discount', a: 'c-smp-discount-of', b: 'c-smp-discount-a1', relation: 'change', note: '7% under the order form, 10% from Amendment 1.' },
+  { id: 'cp-phl-seats', a: 'c-phl-seats-renewal', b: 'c-phl-seats-call', relation: 'contradiction', note: 'The call summary uses the unsigned draft\'s 150.' },
+  { id: 'cp-phl-arr-monthly', a: 'c-phl-arr', b: 'c-phl-monthly', relation: 'compatible', note: 'Annual and monthly statements of the same fee.' },
+  { id: 'cp-clr-sites', a: 'c-clr-sites-a', b: 'c-clr-sites-b', relation: 'change', note: 'Two new sites opened.' },
+  { id: 'cp-vtg-notice', a: 'c-vtg-notice-msa', b: 'c-vtg-notice-call', relation: 'contradiction', note: 'The call summary says 60 days; the MSA says 90.' },
+  { id: 'cp-vtg-decider', a: 'c-vtg-decider-nadia', b: 'c-vtg-decider-gideon', relation: 'change', note: 'A reorg moved sign-off to the new COO.' },
+  { id: 'cp-vtm-seats', a: 'c-vtm-seats-msa', b: 'c-vtm-seats-a1', relation: 'change', note: '40 under the MSA schedule, 48 from the affiliate amendment.' },
+  { id: 'cp-oms-seats', a: 'c-oms-seats-gideon', b: 'c-oms-seats-ruth', relation: 'contradiction', note: 'The agent note says 55; the order forms say 50.' },
+  { id: 'cp-qfo-renewal', a: 'c-qfo-renewal-date', b: 'c-qfo-renewal-q3', relation: 'compatible', note: 'Aug 14, 2026 is in Q3 2026.' },
+];
+
+export const RETRACTIONS: Retraction[] = [
+  { id: 'rt-qfl-seats', account: 'quarrendon', attr: 'seats', wrong: 180, correct: 185, note: 'Dana posts 180 in chat, then corrects to 185.' },
+  { id: 'rt-tpx-renewal', account: 'tansley-parcel', attr: 'renewal_date', wrong: '2027-02-28', correct: '2027-01-31', note: 'Pree emails the wrong renewal date, then retracts.' },
+  { id: 'rt-smp-discount', account: 'saltmarsh', attr: 'discount_pct', wrong: 12, correct: 10, note: 'Bettina posts 12%, then says to ignore it: 10%.' },
+  { id: 'rt-vtg-seats', account: 'vantorre-group', attr: 'seats', wrong: 300, correct: 280, note: 'Gideon\'s note says 300 seats, then a follow-up says ignore that, it is 280.' },
+];
+
+export function accountById(id: string): Account {
+  const a = ACCOUNTS.find(x => x.id === id);
+  if (!a) throw new Error(`unknown account ${id}`);
+  return a;
+}
+export function personById(id: string): Person {
+  const p = PEOPLE.find(x => x.id === id);
+  if (!p) throw new Error(`unknown person ${id}`);
+  return p;
+}
+export function displayName(accountId: string, date: string | null): string {
+  const a = accountById(accountId);
+  if (a.renamed && date && date >= a.renamed.on) return a.renamed.to;
+  return a.name;
+}

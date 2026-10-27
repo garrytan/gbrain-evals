@@ -1,0 +1,122 @@
+{
+ "version": "model-ladder-hard-v1",
+ "mode": "hard",
+ "seed": 1,
+ "knob_schema": 1,
+ "knobs": {},
+ "knob_digest": "fixture",
+ "max_turns": 8,
+ "today": "2026-10-01",
+ "principal": {
+  "name": "Avery Stone",
+  "role": "operator"
+ },
+ "entities": [
+  {
+   "id": "acct-1",
+   "name": "Quorvane Systems",
+   "aliases": [
+    "QRV-01"
+   ]
+  },
+  {
+   "id": "acct-2",
+   "name": "Telmiro Labs",
+   "aliases": [
+    "Telmiro"
+   ]
+  },
+  {
+   "id": "acct-3",
+   "name": "Quorvane Analytics",
+   "aliases": [
+    "QRV-02"
+   ]
+  }
+ ],
+ "docs": [],
+ "tasks": [
+  {
+   "id": "H1-01",
+   "family": "H1",
+   "variant": "set",
+   "answer_kind": "set",
+   "accounts": [],
+   "question": "Which accounts have an open escalated ticket?",
+   "gold": {
+    "members": [
+     {
+      "id": "acct-1",
+      "names": [
+       "Quorvane Systems",
+       "QRV-01"
+      ]
+     },
+     {
+      "id": "acct-2",
+      "names": [
+       "Telmiro Labs",
+       "Telmiro"
+      ]
+     }
+    ],
+    "evidence": [
+     "tickets/t1"
+    ]
+   },
+   "relevant": [
+    "tickets/t1"
+   ]
+  },
+  {
+   "id": "H2-01",
+   "family": "H2",
+   "variant": "owner",
+   "answer_kind": "value",
+   "accounts": [
+    "acct-1"
+   ],
+   "question": "Who owned Quorvane Systems on 2026-07-01?",
+   "gold": {
+    "answer": [
+     "Rania Haddad"
+    ],
+    "wrong": [
+     "Omar Selim"
+    ],
+    "evidence": [
+     "notes/n1"
+    ]
+   },
+   "relevant": [
+    "notes/n1"
+   ]
+  },
+  {
+   "id": "H5-01",
+   "family": "H5",
+   "variant": "terms",
+   "answer_kind": "value",
+   "accounts": [
+    "acct-2"
+   ],
+   "sessions": [
+    "s1",
+    "s2",
+    "s3",
+    "s4"
+   ],
+   "question": "What payment terms apply to Telmiro Labs now?",
+   "gold": {
+    "answer": [
+     "net 45"
+    ],
+    "wrong": [
+     "net 30"
+    ],
+    "evidence": []
+   },
+   "relevant": []
+  }
+ ]
+}

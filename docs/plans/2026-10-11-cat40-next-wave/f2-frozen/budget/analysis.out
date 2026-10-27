@@ -1,0 +1,36 @@
+
+## M: 3180 recorded agent search/query calls (278 with no replayable hit); calls with a long non-conversation hit: 165
+- paths: {'auto': 2658, 'cap': 497, 'explicit': 25}; long-hit calls by path: {'auto': 131, 'cap': 31, 'explicit': 3}
+
+| variant | long covered | short covered | short lost vs chunk | payload rise H2-H4 (pooled) | payload rise all families | cells H2-H4 with rise > 25% |
+|---|---|---|---|---|---|---|
+| chunk | 3/82 (3.7%) | 195/195 | 0 | - | - | - |
+| today | 3/82 (3.7%) | 195/195 | 0 | - | - | - |
+| window | 3/82 (3.7%) | 195/195 | 0 | +1.1% | +1.9% | 0/180 |
+| section | 78/82 (95.1%) | 195/195 | 0 | +8.2% | +7.5% | 31/180 |
+| page | 78/82 (95.1%) | 195/195 | 0 | +8.2% | +7.5% | 31/180 |
+- window: long covered by path: auto 3/69, cap 0/11, explicit 0/2
+- section: long covered by path: auto 69/69, cap 9/11, explicit 0/2
+- page: long covered by path: auto 69/69, cap 9/11, explicit 0/2
+
+## dev: 1545 recorded agent search/query calls (127 with no replayable hit); calls with a long non-conversation hit: 72
+- paths: {'auto': 1348, 'cap': 197}; long-hit calls by path: {'auto': 58, 'cap': 14}
+
+| variant | long covered | short covered | short lost vs chunk | payload rise H2-H4 (pooled) | payload rise all families | cells H2-H4 with rise > 25% |
+|---|---|---|---|---|---|---|
+| chunk | 0/35 (0.0%) | 127/127 | 0 | - | - | - |
+| today | 0/35 (0.0%) | 127/127 | 0 | - | - | - |
+| window | 0/35 (0.0%) | 127/127 | 0 | +0.8% | +1.8% | 0/90 |
+| section | 34/35 (97.1%) | 127/127 | 0 | +8.3% | +7.3% | 13/90 |
+| page | 34/35 (97.1%) | 127/127 | 0 | +8.3% | +7.3% | 13/90 |
+- window: long covered by path: auto 0/27, cap 0/8
+- section: long covered by path: auto 27/27, cap 7/8
+- page: long covered by path: auto 27/27, cap 7/8
+
+## Rule (recorded before these numbers)
+
+- window: long 3/82 > chunk 3/82: False; short lost 0: True; > 90.6%: False; payload +1.1% <= 25%: True (strict 16.4% sensitivity: True)
+- section: long 78/82 > chunk 3/82: True; short lost 0: True; > 90.6%: True; payload +8.2% <= 25%: True (strict 16.4% sensitivity: True)
+- page: long 78/82 > chunk 3/82: True; short lost 0: True; > 90.6%: True; payload +8.2% <= 25%: True (strict 16.4% sensitivity: True)
+- PICK: section (passing: ['section', 'page'])
+- dev check: long 34/35 vs chunk 0/35, short lost 0, payload +8.3% -> no contradiction

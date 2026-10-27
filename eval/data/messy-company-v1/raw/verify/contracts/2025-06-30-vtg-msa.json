@@ -1,0 +1,525 @@
+{
+  "slug": "contracts/2025-06-30-vtg-msa",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2025-06-30",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Vantorre Group",
+        "line": 7
+      },
+      {
+        "oid": "e2",
+        "surface": "Vantorre Group",
+        "line": 16
+      },
+      {
+        "oid": "e3",
+        "surface": "Vantorre Mobility",
+        "line": 16
+      },
+      {
+        "oid": "e4",
+        "surface": "Vantorre Group",
+        "line": 16
+      },
+      {
+        "oid": "e5",
+        "surface": "Vantorre Mobility",
+        "line": 16
+      },
+      {
+        "oid": "e6",
+        "surface": "Vantorre Mobility",
+        "line": 22
+      },
+      {
+        "oid": "e7",
+        "surface": "VTG",
+        "line": 22
+      },
+      {
+        "oid": "e8",
+        "surface": "VTRG",
+        "line": 22
+      },
+      {
+        "oid": "e9",
+        "surface": "Vantorre Group",
+        "line": 22
+      },
+      {
+        "oid": "e10",
+        "surface": "VTM",
+        "line": 22
+      },
+      {
+        "oid": "e11",
+        "surface": "VMob",
+        "line": 22
+      },
+      {
+        "oid": "e12",
+        "surface": "Vantorre Mobility",
+        "line": 22
+      },
+      {
+        "oid": "e13",
+        "surface": "Vantorre Group",
+        "line": 38
+      },
+      {
+        "oid": "e14",
+        "surface": "Vantorre Mobility",
+        "line": 38
+      },
+      {
+        "oid": "e15",
+        "surface": "Vantorre Group",
+        "line": 46
+      },
+      {
+        "oid": "e16",
+        "surface": "Vantorre Mobility",
+        "line": 46
+      },
+      {
+        "oid": "e17",
+        "surface": "Vantorre Group",
+        "line": 56
+      },
+      {
+        "oid": "e18",
+        "surface": "Vantorre Mobility",
+        "line": 56
+      },
+      {
+        "oid": "e19",
+        "surface": "Vantorre Group",
+        "line": 58
+      },
+      {
+        "oid": "e20",
+        "surface": "Vantorre Mobility",
+        "line": 58
+      },
+      {
+        "oid": "e21",
+        "surface": "Vantorre Group",
+        "line": 68
+      },
+      {
+        "oid": "e22",
+        "surface": "Vantorre Mobility",
+        "line": 68
+      },
+      {
+        "oid": "e23",
+        "surface": "VTG",
+        "line": 70
+      },
+      {
+        "oid": "e24",
+        "surface": "VMob",
+        "line": 70
+      },
+      {
+        "oid": "e25",
+        "surface": "Vantorre Group",
+        "line": 80
+      },
+      {
+        "oid": "e26",
+        "surface": "Vantorre Mobility",
+        "line": 80
+      },
+      {
+        "oid": "e27",
+        "surface": "Carrowmere Cloud",
+        "line": 112
+      },
+      {
+        "oid": "e28",
+        "surface": "Vantorre Group",
+        "line": 224
+      },
+      {
+        "oid": "e29",
+        "surface": "Vantorre Mobility",
+        "line": 224
+      },
+      {
+        "oid": "e30",
+        "surface": "Vantorre Group",
+        "line": 244
+      },
+      {
+        "oid": "e31",
+        "surface": "Vantorre Mobility",
+        "line": 244
+      },
+      {
+        "oid": "e32",
+        "surface": "Vantorre Group",
+        "line": 244
+      },
+      {
+        "oid": "e33",
+        "surface": "Vantorre Mobility",
+        "line": 244
+      },
+      {
+        "oid": "e34",
+        "surface": "Vantorre Group",
+        "line": 268
+      },
+      {
+        "oid": "e35",
+        "surface": "Vantorre Mobility",
+        "line": 268
+      },
+      {
+        "oid": "e36",
+        "surface": "Vantorre Group",
+        "line": 270
+      },
+      {
+        "oid": "e37",
+        "surface": "Vantorre Mobility",
+        "line": 270
+      },
+      {
+        "oid": "e38",
+        "surface": "Vantorre Group",
+        "line": 280
+      },
+      {
+        "oid": "e39",
+        "surface": "Vantorre Mobility",
+        "line": 280
+      },
+      {
+        "oid": "e40",
+        "surface": "Vantorre Group",
+        "line": 292
+      },
+      {
+        "oid": "e41",
+        "surface": "Vantorre Mobility",
+        "line": 292
+      },
+      {
+        "oid": "e42",
+        "surface": "Vantorre Group",
+        "line": 301
+      },
+      {
+        "oid": "e43",
+        "surface": "Vantorre Mobility",
+        "line": 301
+      },
+      {
+        "oid": "e44",
+        "surface": "Vantorre Group",
+        "line": 306
+      },
+      {
+        "oid": "e45",
+        "surface": "Vantorre Mobility",
+        "line": 306
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": [],
+    "record": {
+      "question": "Is this document signed, an unsigned version, or a draft? Judge from the body text, not the title alone. Give its signed date and effective date if stated, and the value of each of these terms it sets.",
+      "terms": [
+        "seats",
+        "price_per_seat",
+        "discount_pct",
+        "renewal_date",
+        "sla_tier",
+        "notice_days",
+        "payment_terms_days"
+      ],
+      "deciding_question": "Which line states how many days ahead a party must act so that the agreement does not continue into another period, and how many days?"
+    }
+  },
+  "prompt_user_sha256": "039ebd5fa4438970822e444857ce5df76c6d161182581bf1eb5f04c40ef3e35f",
+  "response_text": "{\n  \"date_used\": \"2025-06-30\",\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"vantorre-mobility\"\n    },\n    {\n      \"oid\": \"e4\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e5\",\n      \"entity\": \"vantorre-mobility\"\n    },\n    {\n      \"oid\": \"e6\",\n      \"entity\": \"vantorre-mobility\"\n    },\n    {\n      \"oid\": \"e7\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e8\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e9\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e10\",\n      \"entity\": \"vantorre-mobility\"\n    },\n    {\n      \"oid\": \"e11\",\n      \"entity\": \"vantorre-mobility\"\n    },\n    {\n      \"oid\": \"e12\",\n      \"entity\": \"vantorre-mobility\"\n    },\n    {\n      \"oid\": \"e13\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e14\",\n      \"entity\": \"vantorre-mobility\"\n    },\n    {\n      \"oid\": \"e15\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e16\",\n      \"entity\": \"vantorre-mobility\"\n    },\n    {\n      \"oid\": \"e17\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e18\",\n      \"entity\": \"vantorre-mobility\"\n    },\n    {\n      \"oid\": \"e19\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e20\",\n      \"entity\": \"vantorre-mobility\"\n    },\n    {\n      \"oid\": \"e21\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e22\",\n      \"entity\": \"vantorre-mobility\"\n    },\n    {\n      \"oid\": \"e23\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e24\",\n      \"entity\": \"vantorre-mobility\"\n    },\n    {\n      \"oid\": \"e25\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e26\",\n      \"entity\": \"vantorre-mobility\"\n    },\n    {\n      \"oid\": \"e27\",\n      \"entity\": \"carrowmere\"\n    },\n    {\n      \"oid\": \"e28\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e29\",\n      \"entity\": \"vantorre-mobility\"\n    },\n    {\n      \"oid\": \"e30\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e31\",\n      \"entity\": \"vantorre-mobility\"\n    },\n    {\n      \"oid\": \"e32\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e33\",\n      \"entity\": \"vantorre-mobility\"\n    },\n    {\n      \"oid\": \"e34\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e35\",\n      \"entity\": \"vantorre-mobility\"\n    },\n    {\n      \"oid\": \"e36\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e37\",\n      \"entity\": \"vantorre-mobility\"\n    },\n    {\n      \"oid\": \"e38\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e39\",\n      \"entity\": \"vantorre-mobility\"\n    },\n    {\n      \"oid\": \"e40\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e41\",\n      \"entity\": \"vantorre-mobility\"\n    },\n    {\n      \"oid\": \"e42\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e43\",\n      \"entity\": \"vantorre-mobility\"\n    },\n    {\n      \"oid\": \"e44\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e45\",\n      \"entity\": \"vantorre-mobility\"\n    }\n  ],\n  \"record\": {\n    \"status\": \"signed\",\n    \"status_evidence_line\": 11,\n    \"signed_date\": \"2025-06-30\",\n    \"effective_date\": \"2025-07-01\",\n    \"terms\": [\n      {\n        \"term\": \"seats\",\n        \"applies_to\": [\n          \"vantorre-group\"\n        ],\n        \"value\": \"260\",\n        \"line\": 46\n      },\n      {\n        \"term\": \"seats\",\n        \"applies_to\": [\n          \"vantorre-mobility\"\n        ],\n        \"value\": \"40\",\n        \"line\": 46\n      },\n      {\n        \"term\": \"price_per_seat\",\n        \"applies_to\": [\n          \"vantorre-group\",\n          \"vantorre-mobility\"\n        ],\n        \"value\": \"USD 1,950\",\n        \"line\": 56\n      },\n      {\n        \"term\": \"discount_pct\",\n        \"applies_to\": [\n          \"vantorre-group\",\n          \"vantorre-mobility\"\n        ],\n        \"value\": \"15%\",\n        \"line\": 58\n      },\n      {\n        \"term\": \"renewal_date\",\n        \"applies_to\": [\n          \"vantorre-group\",\n          \"vantorre-mobility\"\n        ],\n        \"value\": \"2026-06-30\",\n        \"line\": 38\n      },\n      {\n        \"term\": \"sla_tier\",\n        \"applies_to\": [\n          \"vantorre-group\",\n          \"vantorre-mobility\"\n        ],\n        \"value\": \"Tier 1\",\n        \"line\": 80\n      },\n      {\n        \"term\": \"notice_days\",\n        \"applies_to\": [\n          \"vantorre-group\",\n          \"vantorre-mobility\"\n        ],\n        \"value\": \"90\",\n        \"line\": 224\n      },\n      {\n        \"term\": \"payment_terms_days\",\n        \"applies_to\": [\n          \"vantorre-group\",\n          \"vantorre-mobility\"\n        ],\n        \"value\": \"60\",\n        \"line\": 68\n      }\n    ],\n    \"deciding_line\": 224,\n    \"deciding_days\": 90\n  }\n}",
+  "parsed": {
+    "date_used": "2025-06-30",
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e2",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e3",
+        "entity": "vantorre-mobility"
+      },
+      {
+        "oid": "e4",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e5",
+        "entity": "vantorre-mobility"
+      },
+      {
+        "oid": "e6",
+        "entity": "vantorre-mobility"
+      },
+      {
+        "oid": "e7",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e8",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e9",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e10",
+        "entity": "vantorre-mobility"
+      },
+      {
+        "oid": "e11",
+        "entity": "vantorre-mobility"
+      },
+      {
+        "oid": "e12",
+        "entity": "vantorre-mobility"
+      },
+      {
+        "oid": "e13",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e14",
+        "entity": "vantorre-mobility"
+      },
+      {
+        "oid": "e15",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e16",
+        "entity": "vantorre-mobility"
+      },
+      {
+        "oid": "e17",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e18",
+        "entity": "vantorre-mobility"
+      },
+      {
+        "oid": "e19",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e20",
+        "entity": "vantorre-mobility"
+      },
+      {
+        "oid": "e21",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e22",
+        "entity": "vantorre-mobility"
+      },
+      {
+        "oid": "e23",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e24",
+        "entity": "vantorre-mobility"
+      },
+      {
+        "oid": "e25",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e26",
+        "entity": "vantorre-mobility"
+      },
+      {
+        "oid": "e27",
+        "entity": "carrowmere"
+      },
+      {
+        "oid": "e28",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e29",
+        "entity": "vantorre-mobility"
+      },
+      {
+        "oid": "e30",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e31",
+        "entity": "vantorre-mobility"
+      },
+      {
+        "oid": "e32",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e33",
+        "entity": "vantorre-mobility"
+      },
+      {
+        "oid": "e34",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e35",
+        "entity": "vantorre-mobility"
+      },
+      {
+        "oid": "e36",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e37",
+        "entity": "vantorre-mobility"
+      },
+      {
+        "oid": "e38",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e39",
+        "entity": "vantorre-mobility"
+      },
+      {
+        "oid": "e40",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e41",
+        "entity": "vantorre-mobility"
+      },
+      {
+        "oid": "e42",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e43",
+        "entity": "vantorre-mobility"
+      },
+      {
+        "oid": "e44",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e45",
+        "entity": "vantorre-mobility"
+      }
+    ],
+    "record": {
+      "status": "signed",
+      "status_evidence_line": 11,
+      "signed_date": "2025-06-30",
+      "effective_date": "2025-07-01",
+      "terms": [
+        {
+          "term": "seats",
+          "applies_to": [
+            "vantorre-group"
+          ],
+          "value": "260",
+          "line": 46
+        },
+        {
+          "term": "seats",
+          "applies_to": [
+            "vantorre-mobility"
+          ],
+          "value": "40",
+          "line": 46
+        },
+        {
+          "term": "price_per_seat",
+          "applies_to": [
+            "vantorre-group",
+            "vantorre-mobility"
+          ],
+          "value": "USD 1,950",
+          "line": 56
+        },
+        {
+          "term": "discount_pct",
+          "applies_to": [
+            "vantorre-group",
+            "vantorre-mobility"
+          ],
+          "value": "15%",
+          "line": 58
+        },
+        {
+          "term": "renewal_date",
+          "applies_to": [
+            "vantorre-group",
+            "vantorre-mobility"
+          ],
+          "value": "2026-06-30",
+          "line": 38
+        },
+        {
+          "term": "sla_tier",
+          "applies_to": [
+            "vantorre-group",
+            "vantorre-mobility"
+          ],
+          "value": "Tier 1",
+          "line": 80
+        },
+        {
+          "term": "notice_days",
+          "applies_to": [
+            "vantorre-group",
+            "vantorre-mobility"
+          ],
+          "value": "90",
+          "line": 224
+        },
+        {
+          "term": "payment_terms_days",
+          "applies_to": [
+            "vantorre-group",
+            "vantorre-mobility"
+          ],
+          "value": "60",
+          "line": 68
+        }
+      ],
+      "deciding_line": 224,
+      "deciding_days": 90
+    }
+  },
+  "usage": {
+    "input_tokens": 12477,
+    "output_tokens": 1829,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.043244
+}

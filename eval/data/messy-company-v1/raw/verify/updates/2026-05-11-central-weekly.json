@@ -1,0 +1,94 @@
+{
+  "slug": "updates/2026-05-11-central-weekly",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2026-05-11",
+    "owner_phrases": [
+      {
+        "mid": "updates/2026-05-11-central-weekly#m1",
+        "phrase": "the Central team's ag account",
+        "lines": [
+          12
+        ]
+      },
+      {
+        "mid": "updates/2026-05-11-central-weekly#m2",
+        "phrase": "Tobias's packaging account",
+        "lines": [
+          14
+        ]
+      }
+    ],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Marrow Fieldworks",
+        "line": 10
+      },
+      {
+        "oid": "e2",
+        "surface": "Marrow Agrisupply",
+        "line": 12
+      }
+    ],
+    "claims": [
+      {
+        "cid": "c-mas-sla-weekly",
+        "question": "What does the page say about Marrow Agrisupply's sla tier?"
+      }
+    ],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "1423fd49c71db7c05894bd02f4c1f3cea6a8529dfe62d1eb4521cbf8dfcaa572",
+  "response_text": "{\n  \"date_used\": \"2026-05-11\",\n  \"owner_phrases\": [\n    {\n      \"mid\": \"updates/2026-05-11-central-weekly#m1\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\n        \"marrow-agrisupply\"\n      ],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"Marrow Agrisupply is a pooled Central team account with descriptor 'ag' and is mentioned in the preceding sentence.\"\n    },\n    {\n      \"mid\": \"updates/2026-05-11-central-weekly#m2\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\n        \"tansleigh\"\n      ],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"Tobias Rendle is the primary owner of Tansleigh Packaging (descriptor: packaging) on 2026-05-11.\"\n    }\n  ],\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"marrow-fieldworks\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"marrow-agrisupply\"\n    }\n  ],\n  \"claims\": [\n    {\n      \"cid\": \"c-mas-sla-weekly\",\n      \"stated\": true,\n      \"value\": \"SLA Tier 2\",\n      \"line\": 12\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2026-05-11",
+    "owner_phrases": [
+      {
+        "mid": "updates/2026-05-11-central-weekly#m1",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "marrow-agrisupply"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "Marrow Agrisupply is a pooled Central team account with descriptor 'ag' and is mentioned in the preceding sentence."
+      },
+      {
+        "mid": "updates/2026-05-11-central-weekly#m2",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "tansleigh"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "Tobias Rendle is the primary owner of Tansleigh Packaging (descriptor: packaging) on 2026-05-11."
+      }
+    ],
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "marrow-fieldworks"
+      },
+      {
+        "oid": "e2",
+        "entity": "marrow-agrisupply"
+      }
+    ],
+    "claims": [
+      {
+        "cid": "c-mas-sla-weekly",
+        "stated": true,
+        "value": "SLA Tier 2",
+        "line": 12
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2906,
+    "output_tokens": 405,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.009862
+}

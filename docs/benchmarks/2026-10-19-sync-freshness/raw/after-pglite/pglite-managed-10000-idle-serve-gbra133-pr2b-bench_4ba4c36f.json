@@ -1,0 +1,219 @@
+{
+ "schema": "gbrain-sync-freshness/1",
+ "kind": "idle",
+ "cell": "pglite-managed-10000-idle-serve-gbra133-pr2b-bench_4ba4c36f",
+ "label": "gbra133-pr2b-bench@4ba4c36f",
+ "gbrain_rev": "4ba4c36f",
+ "at": "2026-10-20T02:31:16.103Z",
+ "params": {
+  "engine": "pglite",
+  "mode": "managed",
+  "pages": 10000,
+  "commit": "single",
+  "trigger": "serve",
+  "reps": 10,
+  "rtt_ms": 0,
+  "measured_rtt_ms": null,
+  "interval_s": null,
+  "scenario": "idle",
+  "probe_ms": 100,
+  "timeout_s": 300,
+  "keyless": true,
+  "embed": null,
+  "detection": "watch",
+  "jitter_ms": 0,
+  "sources": [
+   "bench"
+  ],
+  "source_pages": null,
+  "residents": [
+   "serve"
+  ]
+ },
+ "machine": {
+  "cores": 4,
+  "cpu_model": "AMD EPYC",
+  "ram_gb": 16,
+  "kernel": "6.1.158+",
+  "bun": "1.4.3"
+ },
+ "build": {
+  "engine": "pglite",
+  "mode": "managed",
+  "pages": 10000,
+  "sources": [
+   "bench"
+  ],
+  "rev": "4ba4c36f",
+  "built_at": "2026-10-19T22:45:54.004Z",
+  "cloned_from": "pglite-classic-10000-4ba4c36f",
+  "clone_ms": 1748.9,
+  "activate_ms": 2396.5,
+  "first_managed_sync": {
+   "ms": 1824.45849609375,
+   "runs": 1
+  },
+  "links_settled": {
+   "ms": 776.2,
+   "runs": 1,
+   "last": "Extract --stale: 0 link(s) created, 0 removed, 0 timeline entr(ies) from 0 page(s). | Actionable: 0 page(s) still need link/timeline extraction; 0 page(s) due for the mention pass. Extraction is complete (raw stale totals are not a completion signal)."
+  }
+ },
+ "notes": [
+  "serve on-commit watcher enabled 712.8 ms after spawn",
+  "idle: residents serve on one brain with sync.on_commit=true and 1 source(s), no commits; tx from pg_stat_database (the sampler connects to the postgres database, so it is not counted), backends from pg_stat_activity each second, CPU from /proc (resident plus live children)"
+ ],
+ "get_page": {
+  "n": 0,
+  "p50": null,
+  "p95": null,
+  "max": null,
+  "min": null,
+  "mean": null,
+  "cv": null
+ },
+ "search": {
+  "n": 0,
+  "p50": null,
+  "p95": null,
+  "max": null,
+  "min": null,
+  "mean": null,
+  "cv": null
+ },
+ "exit": {
+  "n": 0,
+  "p50": null,
+  "p95": null,
+  "max": null,
+  "min": null,
+  "mean": null,
+  "cv": null
+ },
+ "phases": {},
+ "idle": {
+  "windows": [
+   {
+    "window_s": 30,
+    "cpu_s_per_min": {
+     "serve": 2.038
+    }
+   },
+   {
+    "window_s": 30,
+    "cpu_s_per_min": {
+     "serve": 1.418
+    }
+   },
+   {
+    "window_s": 30,
+    "cpu_s_per_min": {
+     "serve": 1.199
+    }
+   },
+   {
+    "window_s": 30,
+    "cpu_s_per_min": {
+     "serve": 1.279
+    }
+   },
+   {
+    "window_s": 30,
+    "cpu_s_per_min": {
+     "serve": 1.099
+    }
+   },
+   {
+    "window_s": 30,
+    "cpu_s_per_min": {
+     "serve": 1.119
+    }
+   },
+   {
+    "window_s": 30,
+    "cpu_s_per_min": {
+     "serve": 0.999
+    }
+   },
+   {
+    "window_s": 30,
+    "cpu_s_per_min": {
+     "serve": 1.159
+    }
+   },
+   {
+    "window_s": 30,
+    "cpu_s_per_min": {
+     "serve": 1.139
+    }
+   },
+   {
+    "window_s": 30,
+    "cpu_s_per_min": {
+     "serve": 1.299
+    }
+   }
+  ],
+  "tx_per_window": {
+   "n": 0,
+   "p50": null,
+   "p95": null,
+   "max": null,
+   "min": null,
+   "mean": null,
+   "cv": null
+  },
+  "rows_returned_per_window": {
+   "n": 0,
+   "p50": null,
+   "p95": null,
+   "max": null,
+   "min": null,
+   "mean": null,
+   "cv": null
+  },
+  "rows_written_per_window": {
+   "n": 0,
+   "p50": null,
+   "p95": null,
+   "max": null,
+   "min": null,
+   "mean": null,
+   "cv": null
+  },
+  "backends_median": {
+   "n": 0,
+   "p50": null,
+   "p95": null,
+   "max": null,
+   "min": null,
+   "mean": null,
+   "cv": null
+  },
+  "backends_max": {
+   "n": 0,
+   "p50": null,
+   "p95": null,
+   "max": null,
+   "min": null,
+   "mean": null,
+   "cv": null
+  },
+  "cpu_s_per_min": {
+   "serve": {
+    "n": 10,
+    "p50": 1.2,
+    "p95": 1.8,
+    "max": 2,
+    "min": 1,
+    "mean": 1.3,
+    "cv": 0.23
+   }
+  }
+ },
+ "detection_observed": {
+  "bench": "watch (serve)"
+ },
+ "failures": 0,
+ "reps": []
+}

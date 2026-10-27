@@ -1,0 +1,108 @@
+{
+ "schema": "gbrain-evals.mirror.managed-sync-catchup/v1",
+ "measured_by": "gbrain scripts/bench/managed-sync-catchup.ts (toxiproxy 57 ms, Docker Postgres pg16, Ubicloud standard-16, Ubuntu 24.04)",
+ "heads": {
+  "master": "b5f12b12e (v0.60.117.0)",
+  "wave": "capy/next-wave-g3-g6-g7 d6d9d5956",
+  "correction": "9d013e52d (v0.60.111.0 code)"
+ },
+ "targets": {
+  "G3_first_commit_s": "<= 15",
+  "G6_busy_p95_over_idle_ms": "<= 1000",
+  "G7_open_loop_ratio": ">= 0.5"
+ },
+ "runs": {
+  "master": [
+   {
+    "first_commit_s": 19.0,
+    "idle_steady_pages_per_min": 374.1,
+    "open_loop_ratio": 0.651,
+    "open_loop_write_p95_ms": 4702.7,
+    "open_loop_failed": 0,
+    "closed_loop_idle_p95_ms": 3169.9,
+    "closed_loop_busy_p95_ms": 3689.5,
+    "closed_loop_failed": 0
+   },
+   {
+    "first_commit_s": 19.3,
+    "idle_steady_pages_per_min": 379.1,
+    "open_loop_ratio": 0.609,
+    "open_loop_write_p95_ms": 4728.4,
+    "open_loop_failed": 0,
+    "closed_loop_idle_p95_ms": 3155.9,
+    "closed_loop_busy_p95_ms": 3750.1,
+    "closed_loop_failed": 0
+   },
+   {
+    "first_commit_s": 19.6,
+    "idle_steady_pages_per_min": 369.6,
+    "open_loop_ratio": 0.634,
+    "open_loop_write_p95_ms": 4224.7,
+    "open_loop_failed": 0,
+    "closed_loop_idle_p95_ms": 3204.9,
+    "closed_loop_busy_p95_ms": 5485.1,
+    "closed_loop_failed": 1
+   }
+  ],
+  "wave": [
+   {
+    "first_commit_s": 15.6,
+    "idle_steady_pages_per_min": 391.7,
+    "open_loop_ratio": 0.554,
+    "open_loop_write_p95_ms": 8571.6,
+    "open_loop_failed": 0,
+    "closed_loop_idle_p95_ms": 3143,
+    "closed_loop_busy_p95_ms": 3664.8,
+    "closed_loop_failed": 0
+   },
+   {
+    "first_commit_s": 15.6,
+    "idle_steady_pages_per_min": 370,
+    "open_loop_ratio": 0.644,
+    "open_loop_write_p95_ms": 4468.6,
+    "open_loop_failed": 0,
+    "closed_loop_idle_p95_ms": 3159.1,
+    "closed_loop_busy_p95_ms": 3679.8,
+    "closed_loop_failed": 0
+   },
+   {
+    "first_commit_s": 15.5,
+    "idle_steady_pages_per_min": 393.1,
+    "open_loop_ratio": 0.601,
+    "open_loop_write_p95_ms": 4385.8,
+    "open_loop_failed": 0,
+    "closed_loop_idle_p95_ms": 3153.2,
+    "closed_loop_busy_p95_ms": 3925.3,
+    "closed_loop_failed": 0
+   }
+  ],
+  "correction": [
+   {
+    "first_commit_s": 18.1,
+    "idle_steady_pages_per_min": 386.9,
+    "open_loop_ratio": 0.606,
+    "open_loop_write_p95_ms": 8535.6,
+    "open_loop_failed": 0
+   },
+   {
+    "first_commit_s": 18.3,
+    "idle_steady_pages_per_min": 391.8,
+    "open_loop_ratio": 0.632,
+    "open_loop_write_p95_ms": 5788.4,
+    "open_loop_failed": 0
+   },
+   {
+    "first_commit_s": 18.5,
+    "idle_steady_pages_per_min": 380.6,
+    "open_loop_ratio": 0.623,
+    "open_loop_write_p95_ms": 6063,
+    "open_loop_failed": 0
+   }
+  ]
+ },
+ "verdicts": {
+  "G3": "missed (15.5-15.6 s)",
+  "G6": "met on the wave; master missed once",
+  "G7": "met on both; the v0.60.111.0 45% row corrected"
+ }
+}

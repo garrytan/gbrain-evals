@@ -1,0 +1,81 @@
+{
+  "passed": true,
+  "problems": [],
+  "problem_count": 0,
+  "stats": {
+    "cell_b_rows": 100,
+    "cell_a_rows": 100,
+    "over_budget": {
+      "auto-b_native": 100,
+      "auto-b_pseudo": 100
+    },
+    "spilled_rows": {
+      "auto-b_native": 100,
+      "auto-b_pseudo": 100
+    },
+    "parity_equal": 100,
+    "parity_mismatch": 0,
+    "arms": {
+      "fixed-evidence.native.b8000.main": {
+        "rows": 100,
+        "cut_rows": 0,
+        "reused": 0
+      },
+      "fixed-evidence.chunk-dated.b8000.main": {
+        "rows": 100,
+        "cut_rows": 100,
+        "reused": 0
+      },
+      "fixed-evidence.chunk-undated-twin.b8000.main": {
+        "rows": 100,
+        "cut_rows": 0,
+        "reused": 86
+      },
+      "fixed-evidence.chunk-dated-pseudo.b8000.sonnet-5-5": {
+        "rows": 100,
+        "cut_rows": 100,
+        "reused": 0
+      },
+      "fixed-evidence.rehydrated.b8000.main": {
+        "rows": 100,
+        "cut_rows": 0,
+        "reused": 0
+      },
+      "fixed-evidence.rehydrated.b8000.sonnet-5-5": {
+        "rows": 100,
+        "cut_rows": 0,
+        "reused": 0
+      },
+      "fixed-evidence.query-auto.b8000.main": {
+        "rows": 100,
+        "cut_rows": 100,
+        "reused": 0
+      },
+      "fixed-evidence.query-auto-default.b8000.main": {
+        "rows": 100,
+        "cut_rows": 100,
+        "reused": 0
+      },
+      "fixed-evidence.query-auto-pseudo.b8000.sonnet-5-5": {
+        "rows": 100,
+        "cut_rows": 100,
+        "reused": 0
+      },
+      "fixed-evidence.query-auto-pseudo-as-native.b8000.sonnet-5-5": {
+        "rows": 100,
+        "cut_rows": 0,
+        "reused": 0
+      },
+      "fixed-evidence.query-auto-l5-pseudo.b8000.sonnet-5-5": {
+        "rows": 100,
+        "cut_rows": 0,
+        "reused": 0
+      },
+      "fixed-evidence.query-rehydrated.b8000.sonnet-5-5": {
+        "rows": 100,
+        "cut_rows": 100,
+        "reused": 0
+      }
+    }
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "slug": "notes/2025-05-19-hollis-1on1-tobias",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2025-05-19",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Tansleigh Packaging",
+        "line": 9
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": [
+      {
+        "account": "tansleigh",
+        "question": "According to this page alone, who manages Tansleigh Packaging, in what role, and from/until when?"
+      }
+    ]
+  },
+  "prompt_user_sha256": "720fe6a0e0f46f591aecce717fa4132db20af851c36a1559d2abcc710966e2f6",
+  "response_text": "{\n  \"date_used\": \"2025-05-19\",\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"tansleigh\"\n    }\n  ],\n  \"ownership\": [\n    {\n      \"account\": \"tansleigh\",\n      \"owner\": \"Tobias Rendle\",\n      \"role\": \"primary\",\n      \"start\": \"2025-05-19\",\n      \"end\": null,\n      \"line\": 9\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-05-19",
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "tansleigh"
+      }
+    ],
+    "ownership": [
+      {
+        "account": "tansleigh",
+        "owner": "Tobias Rendle",
+        "role": "primary",
+        "start": "2025-05-19",
+        "end": null,
+        "line": 9
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2896,
+    "output_tokens": 135,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.007142
+}

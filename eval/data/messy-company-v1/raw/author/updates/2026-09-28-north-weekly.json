@@ -1,0 +1,41 @@
+{
+  "slug": "updates/2026-09-28-north-weekly",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: weekly\nTitle: North weekly 28 Sept 2026\nDate: Written on 2026-09-28.\nWriter: Ilse Varga\nVoice: chatty, a bit rambling\nFormat: undefined\nLength: about -6 words\nDate style in the body: undefined\nTypos: none\n\nBrief:\nIlse's update. Quarrendon signed Amendment No. 3 on Sept 22 (230 seats from January 1). Brackenwater term ends Nov 30.\n\nRequired phrases:\n- Use the exact phrase \"Dana's biggest account\" once, referring to Quarrendon Freight Lines. Don't put the account's name in the same sentence; the reader should work it out.\n- Use the exact phrase \"Marcus's LTL account\" once, referring to Brackenwater Freight Co.. Don't put the account's name in the same sentence; the reader should work it out.\n- Use the exact phrase \"Marcus's expense account\" once, in the sense of: his corporate expense reporting account. It must not be about a customer account.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Ilse Varga: North team lead\n- Dana Okafor: Account manager, North team\n- Marcus Lindqvist: Account manager, North team\n- Thea Ramaswell: Director of Yard Operations\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Quarrendon Freight Lines: truckload freight carrier, Upper Midwest; main contact Thea Ramaswell, Director of Yard Operations; codes/nicknames QFL, Q-Freight\n- Brackenwater Freight Co.: less-than-truckload freight, Great Lakes; codes/nicknames BWF, Bracken\n- Tamsin Cold Chain: refrigerated warehousing, Pacific Northwest; codes/nicknames TCC\n- Thornbury Cloth Co. (renamed from Orrin Mills on 2026-01-12): textile mill, Carolinas; codes/nicknames TCC\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2026-09-28 (background only; don't restate unless the brief asks):\n- Quarrendon Freight Lines: managed by Dana Okafor\n- Brackenwater Freight Co.: managed by Marcus Lindqvist\n- Tamsin Cold Chain: managed by Dana Okafor\n- Thornbury Cloth Co.: managed by Marcus Lindqvist",
+      "response_text": "# North weekly 28 Sept 2026\n\nHappy Monday everyone, hope people stayed dry over the weekend—the rain here did a number on my basement window well, so if I vanish for twenty minutes this afternoon it is because the hardware store finally called me back about the sump pump float.\n\nMain thing to celebrate from last week: Quarrendon Freight Lines signed Amendment No. 3 on Sept 22, which puts them at 230 seats starting January 1. June Osei-Lark already got the countersigned PDF filed away on Wednesday morning, and Thea Ramaswell sent over a very nice note about how the second shift at their Eau Claire yard finally stopped keeping the backup paper clipboards by Door 14. It is always a massive relief to get the ink dry on Dana's biggest account before the October rush starts eating everyone's calendar. Dana is still chasing down one weird bug for them (ticket #PD-8841, the gate kiosk printer at their Duluth terminal cuts off the last two digits of the trailer number when a driver checks in with a 53-foot dry van), so if anyone in support sees that ticket floating around, please give it a nudge.\n\nOver on the Great Lakes side, the current term for Brackenwater Freight Co. ends Nov 30. We are getting into the window where we need their winter dock schedule locked down before lake-effect snow starts messing up their cross-dock turns in Toledo. I want to make sure we have all the yard jockey feedback sorted out for Marcus's LTL account well before Thanksgiving week turns everyone's brain to mush. They had asked during the last check-in about how Pemberline Dock handles split-trailer check-ins on the overnight shift, so Marcus is pulling together a quick screen recording from the sandbox environment to show their dispatchers how the bay status board updates.\n\nIn other news, Tamsin Cold Chain had a minor panic on Thursday afternoon when a reefer carrier showed up three hours early at their Tacoma facility and the guard shack tablet froze on the temperature log screen, though it turned out their own Wi-Fi repeater by the south fence had just been unplugged by a maintenance crew. And Thornbury Cloth Co. is still asking if we can rename the old \"Orrin_South_Gate\" export report in their automated Monday morning email—apparently it is still annoying their new plant controller every single week.\n\nLastly, a quick admin note from finance: Marcus's expense account got locked on Friday morning because the receipt photo from his Avis rental at O'Hare was just a blurry picture of his knee, so he has to re-upload the actual PDF invoice before noon tomorrow or the system will kick back his whole September mileage report. Check your own drafts in the portal if you travelled this month!",
+      "usage": {
+        "input_tokens": 1219,
+        "output_tokens": 590,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.008338,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1219,
+          "candidatesTokenCount": 590,
+          "totalTokenCount": 1809,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1219
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 590
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

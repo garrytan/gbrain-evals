@@ -1,0 +1,69 @@
+{
+  "slug": "accounts/quillfeather-outfitters",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2026-10-02",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Quillfeather Outfitters",
+        "line": 6
+      },
+      {
+        "oid": "e2",
+        "surface": "Quillfeather Outfitters",
+        "line": 10
+      },
+      {
+        "oid": "e3",
+        "surface": "QFO",
+        "line": 10
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": [
+      {
+        "account": "quillfeather",
+        "question": "According to this page alone, who manages Quillfeather Outfitters, in what role, and from/until when?"
+      }
+    ]
+  },
+  "prompt_user_sha256": "a47732c33ed89277b3dac040d1c37f34f0453006f7638892a1358c00116465fb",
+  "response_text": "{\n  \"date_used\": \"2026-10-02\",\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"quillfeather\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"quillfeather\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"quillfeather\"\n    }\n  ],\n  \"ownership\": [\n    {\n      \"account\": \"quillfeather\",\n      \"owner\": \"Strategic Accounts pod\",\n      \"role\": \"team\",\n      \"start\": null,\n      \"end\": null,\n      \"line\": 15\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2026-10-02",
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "quillfeather"
+      },
+      {
+        "oid": "e2",
+        "entity": "quillfeather"
+      },
+      {
+        "oid": "e3",
+        "entity": "quillfeather"
+      }
+    ],
+    "ownership": [
+      {
+        "account": "quillfeather",
+        "owner": "Strategic Accounts pod",
+        "role": "team",
+        "start": null,
+        "end": null,
+        "line": 15
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2757,
+    "output_tokens": 171,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.007224
+}

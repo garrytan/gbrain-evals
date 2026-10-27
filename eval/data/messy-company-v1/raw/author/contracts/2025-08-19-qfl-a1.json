@@ -1,0 +1,37 @@
+{
+  "slug": "contracts/2025-08-19-qfl-a1",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: record\nTitle: Amendment No. 1 to the Quarrendon Master Subscription Agreement\nDate: Written on 2025-08-19.\nWriter: June Osei-Lark\nVoice: formal legal drafting\nFormat: formal numbered sections and a signature block\nLength: about 485 words\nDate style in the body: undefined\nTypos: none\n\nBrief:\nAmendment No. 1 to the Quarrendon Master Subscription Agreement. Parties: Pemberline Systems and Quarrendon Freight Lines. Drafted 2025-08-11. Effective date 2025-09-01 (signed 2025-08-19; state both dates and keep them distinct). Terms this document sets: subscribed seats = 185. Executed: include a signature block signed on 2025-08-19 by both parties (customer signatory plus June Osei-Lark for Pemberline). It changes earlier paperwork for this customer; refer to the earlier agreement generically.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Ilse Varga: North team lead\n- Dana Okafor: Account manager, North team\n- Marcus Lindqvist: Account manager, North team\n- Thea Ramaswell: Director of Yard Operations\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Quarrendon Freight Lines: truckload freight carrier, Upper Midwest; main contact Thea Ramaswell, Director of Yard Operations; codes/nicknames QFL, Q-Freight\n- Brackenwater Freight Co.: less-than-truckload freight, Great Lakes; codes/nicknames BWF, Bracken\n- Tamsin Cold Chain: refrigerated warehousing, Pacific Northwest; codes/nicknames TCC\n- Orrin Mills: textile mill, Carolinas; codes/nicknames ORM\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2025-08-19 (background only; don't restate unless the brief asks):\n- Quarrendon Freight Lines: managed by Dana Okafor\n- Brackenwater Freight Co.: managed by Dana Okafor\n- Tamsin Cold Chain: managed by Dana Okafor\n- Orrin Mills: managed by Dana Okafor",
+      "response_text": "# Amendment No. 1 to the Quarrendon Master Subscription Agreement\n\n**Written:** 2025-08-19  \n**Drafted:** 2025-08-11  \n**Execution Date:** 2025-08-19  \n**Effective Date:** 2025-09-01\n\n## 1. Parties and Purpose\n\nThis Amendment No. 1 (“Amendment”) is entered into by Pemberline Systems and Quarrendon Freight Lines (each a “Party” and together the “Parties”). This Amendment modifies the earlier master subscription agreement and related subscription paperwork between the Parties concerning Quarrendon Freight Lines’ use of Pemberline Dock (collectively, the “Agreement”).\n\nThe Parties intend this Amendment to establish the subscribed seat quantity applicable from the Effective Date. References in this Amendment to the Agreement are generic references to the Parties’ earlier agreement and do not designate a separate or replacement subscription.\n\n## 2. Amendment to Subscribed Seats\n\nEffective 2025-09-01, the subscribed seat quantity for Quarrendon Freight Lines under the Agreement shall be **185 seats**.\n\nThe quantity stated in this Section replaces any different subscribed seat quantity appearing in the earlier Agreement or related subscription paperwork for Quarrendon Freight Lines. It shall be the controlling subscribed seat quantity for purposes of administering the Pemberline Dock subscription from the Effective Date.\n\nThis Amendment addresses subscribed seats only. It does not establish a separate subscription for any yard, dock, shift, or operating location.\n\n## 3. Execution and Effective Date\n\nThe Parties executed this Amendment on **2025-08-19**. The seat amendment set forth in Section 2 takes effect on **2025-09-01**, not on the execution date.\n\nExecution before the Effective Date permits the Parties to prepare their subscription records for the change. Such preparation does not accelerate the Effective Date or apply the amended seat quantity to an earlier period. The distinction between execution and effectiveness shall govern any administrative reference to this Amendment.\n\n## 4. Administrative Implementation\n\nPemberline Systems shall record the amended quantity against the Quarrendon Freight Lines subscription. Quarrendon Freight Lines shall coordinate its user roster so that personnel administering dock appointments and yard scheduling can identify the subscription to which this Amendment applies.\n\nFor implementation purposes, the user roster should distinguish individual users from shared operational labels, including dispatch desk and receiving shift labels. Any roster cleanup undertaken in preparation for the Effective Date is an administrative activity and does not itself modify the Agreement.\n\n## 5. Continuing Effect of Agreement\n\nExcept for the subscribed seat quantity expressly amended herein, the Agreement remains unchanged and continues in effect. This Amendment does not restate or replace the remaining provisions of the Agreement.\n\nIf a provision of the earlier subscription paperwork conflicts with Section 2 concerning subscribed seat quantity from the Effective Date, Section 2 controls. The Parties shall otherwise read this Amendment together with the Agreement.\n\n## 6. Execution\n\nBy signing below, the Parties execute this Amendment on the date shown. Their signatures acknowledge the distinct Effective Date stated above.\n\n**For Pemberline Systems**\n\nSigned: /s/ June Osei-Lark  \nName: June Osei-Lark  \nTitle: Deal desk and contracts manager  \nDate signed: 2025-08-19\n\n**For Quarrendon Freight Lines**\n\nSigned: /s/ Thea Ramaswell  \nName: Thea Ramaswell  \nTitle: Director of Yard Operations  \nDate signed: 2025-08-19",
+      "usage": {
+        "input_tokens": 1106,
+        "output_tokens": 709,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.009302,
+      "provider_meta": {
+        "id": "resp_0371caa0fd5b206a016acfae22518c87d182d220bbbb7ab061",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1106,
+          "input_tokens_details": {
+            "cache_write_tokens": 1103,
+            "cached_tokens": 0
+          },
+          "output_tokens": 709,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 1815
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

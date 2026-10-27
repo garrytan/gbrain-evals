@@ -9,7 +9,7 @@ Every returned item carried exact provenance (one note per session).
 
 ## What ran
 
-- Shim: `eval/systems/markdown-notes` at the lane branch (markdown-notes 0.23.2), on the integration branch
+- Shim: `eval/systems/markdown-notes` at the lane branch (the pinned markdown-notes package), on the integration branch
   `capy/oss-memory-shootout` harness. The live conformance suite (`SHIM_URL=… bun test
   test/eval/systems-conformance.test.ts`) passed 11/11 for the recipe configuration before the pilots, and 21/21 on the current integration branch after policy knobs moved under `settings`; `protocol_check.py` passed 26/26.
 - Runner: `bun eval/runner/memory-qa/run.ts --benchmark <b> --system <shim URL> --qa reader --context native

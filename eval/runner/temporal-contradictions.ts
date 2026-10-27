@@ -18,6 +18,9 @@
  *   wrong_closure_rate  applied closures whose person, per the ledger, still worked at the
  *                       ended employer on the close date, over applied closures (0 when none)
  *   late_closures       applied closures dated after the ledger's end of that job (reported)
+ *   late_upper_bound    late closures the build discloses as an upper bound: every end transition on the close date
+ *                       was written by the nightly check (producer dream), the rule gbrain's relationship note uses
+ *                       for "ended: works_at x (by <date>)" (gbrain W5; 0 on builds before it)
  *   asof_exact          get_links(person, works_at, as_of) equals the ledger's employers, over
  *                       the dated and out-of-order people; compared with the e1 arm
  *   undated_closures    proposals on undated people that would close a relationship
@@ -102,6 +105,15 @@ async function openBrain(gut: GbrainUnderTest, world: TemporalEdgesWorld, t: Phr
   return { engine, op };
 }
 
+/** gbrain W5: the closure's end is an upper bound when every end transition on its date came from the nightly check (the relationship note's rule). */
+export async function closureIsUpperBound(engine: { executeRaw<T>(sql: string, params?: unknown[]): Promise<T[]> }, c: { person: string; ending: string; close_date: string }): Promise<boolean> {
+  const [row] = await engine.executeRaw<{ dream: boolean; other: boolean }>(
+    `SELECT bool_or(x.producer = 'dream') AS dream, bool_or(x.producer IS DISTINCT FROM 'dream') AS other
+       FROM link_transitions x JOIN pages f ON f.id = x.from_page_id JOIN pages t ON t.id = x.to_page_id
+      WHERE f.slug = $1 AND t.slug = $2 AND x.link_type = 'works_at' AND x.kind = 'end' AND x.occurred_on = $3::date`, [c.person, c.ending, c.close_date]);
+  return row?.dream === true && row.other !== true;
+}
+
 async function asofExact(brain: Brain, world: TemporalEdgesWorld): Promise<{ n: number; exact: number }> {
   let n = 0, exact = 0;
   for (const a of world.asof_probes) {
@@ -116,7 +128,7 @@ async function asofExact(brain: Brain, world: TemporalEdgesWorld): Promise<{ n: 
 
 export interface ModelRun {
   model: string; run: number; seed: number; phase_status: string; phase_detail: string; totals: Record<string, number>;
-  applied: number; wrong: number; late: number; undated_closures: number; statuses: Record<string, number>;
+  applied: number; wrong: number; late: number; late_upper_bound: number; undated_closures: number; statuses: Record<string, number>;
   asof_n: number; asof_exact: number; error?: string;
 }
 
@@ -175,7 +187,7 @@ async function main(): Promise<void> {
         if (modelRuns.some(r => r.model === model && r.run === run && r.seed === world.seed)) continue;
         gateway.configureGateway({ chat_model: model, env: { ...keys } });
         const brain = await openBrain(gut, world, t);
-        const row: ModelRun = { model, run, seed: world.seed, phase_status: '', phase_detail: '', totals: {}, applied: 0, wrong: 0, late: 0, undated_closures: 0, statuses: {}, asof_n: 0, asof_exact: 0 };
+        const row: ModelRun = { model, run, seed: world.seed, phase_status: '', phase_detail: '', totals: {}, applied: 0, wrong: 0, late: 0, late_upper_bound: 0, undated_closures: 0, statuses: {}, asof_n: 0, asof_exact: 0 };
         try {
           await brain.engine.setConfig('dream.edge_contradictions.mode', 'apply');
           await brain.engine.setConfig('models.dream.edge_contradictions', model);
@@ -194,9 +206,11 @@ async function main(): Promise<void> {
             if (subLedgerOf(person.slug) === 'undated' && (p.status === 'proposed' || p.status === 'applied')) row.undated_closures++;
             if (p.status !== 'applied' || !p.ending || !p.close_date) continue;
             row.applied++;
-            const j = judgeClosure(person, { person: p.person, ending: p.ending, close_date: p.close_date.slice(0, 10), status: p.status });
+            const closure = { person: p.person, ending: p.ending, close_date: p.close_date.slice(0, 10), status: p.status };
+            const j = judgeClosure(person, closure);
             if (j.wrong) row.wrong++;
             if (j.late) row.late++;
+            if (j.late && await closureIsUpperBound(brain.engine, closure)) row.late_upper_bound++;
           }
           const a2 = await asofExact(brain, world);
           row.asof_n = a2.n; row.asof_exact = a2.exact;
@@ -220,7 +234,7 @@ async function main(): Promise<void> {
       const rs = result.modelRuns.filter(r => r.model === model && r.run === i + 1);
       const applied = rs.reduce((s, r) => s + r.applied, 0), wrong = rs.reduce((s, r) => s + r.wrong, 0);
       const asof = rs.reduce((s, r) => s + r.asof_exact, 0) / Math.max(1, rs.reduce((s, r) => s + r.asof_n, 0));
-      return { run: i + 1, applied, wrong, late: rs.reduce((s, r) => s + r.late, 0), wrong_closure_rate: applied ? wrong / applied : 0,
+      return { run: i + 1, applied, wrong, late: rs.reduce((s, r) => s + r.late, 0), late_upper_bound: rs.reduce((s, r) => s + r.late_upper_bound, 0), wrong_closure_rate: applied ? wrong / applied : 0,
         asof_exact: asof, asof_delta_vs_e1: asof - e1Rate, undated_closures: rs.reduce((s, r) => s + r.undated_closures, 0),
         judge_errors: rs.reduce((s, r) => s + (r.totals.errors ?? 0), 0), harness_errors: rs.filter(r => r.error).length };
     });

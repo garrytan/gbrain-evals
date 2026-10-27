@@ -1,0 +1,37 @@
+{
+  "slug": "tickets/2025-11-04-qfl-sev1",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: ticket\nTitle: SUP-4471: Dock schedule sync outage (Superior)\nDate: Written on 2025-11-04.\nWriter: Dana Okafor\nVoice: terse and practical\nFormat: a ticket with a fields table and a timestamped update log\nLength: about 202 words\nDate style in the body: mixed: some ISO, some casual\nTypos: a few natural typos and one or two sloppy abbreviations (never in names or required phrases)\n\nBrief:\nSupport ticket fields as a table (ID, severity Sev 1, opened, customer, terminal, status), then a timeline of updates on Nov 4, 2025, and resolution.\n\nUse these names or codes at least once each, as written: \"QFL\".\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Ilse Varga: North team lead\n- Dana Okafor: Account manager, North team\n- Marcus Lindqvist: Account manager, North team\n- Thea Ramaswell: Director of Yard Operations\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Quarrendon Freight Lines: truckload freight carrier, Upper Midwest; main contact Thea Ramaswell, Director of Yard Operations; codes/nicknames QFL, Q-Freight\n- Brackenwater Freight Co.: less-than-truckload freight, Great Lakes; codes/nicknames BWF, Bracken\n- Tamsin Cold Chain: refrigerated warehousing, Pacific Northwest; codes/nicknames TCC\n- Orrin Mills: textile mill, Carolinas; codes/nicknames ORM\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2025-11-04 (background only; don't restate unless the brief asks):\n- Quarrendon Freight Lines: managed by Dana Okafor\n- Brackenwater Freight Co.: managed by Marcus Lindqvist\n- Tamsin Cold Chain: managed by Dana Okafor\n- Orrin Mills: managed by Marcus Lindqvist",
+      "response_text": "# SUP-4471: Dock schedule sync outage (Superior)\n\n| Field | Value |\n|---|---|\n| ID | SUP-4471 |\n| Severity | Sev 1 |\n| Opened | 2025-11-04 06:42 |\n| Customer | Quarrendon Freight Lines (QFL) |\n| Terminal | Superior |\n| Status | Resolved |\n\n## Update log — Nov 4, 2025\n\n**06:42** — Thea Ramaswell reported stale appointments in Pemberline Dock. Superior dispatch could save changes, but the gate screen still showed the overnight schedule. Door 7 had two trucks queued against the same slot. Asked dispatch to hold reassignment and use the printed arrival sheet.\n\n**06:51** — Reproduced with appointment SUP-11834. Changed door 7 to door 9; dispatch view updated, gate view did not. No missing appointments found. Sync worker showed repeated retries after a malformed trailer reference.\n\n**07:08** — Engineering isolated the stuck message. Paused the worker, removed that message from the active queue, then restarted processing. Backlog draining; gate screen still lagging. Sent Thea a quick ETA check-in, no restart needed at the terminal.\n\n**07:26** — Queue clear. Dispatch tested three door changes and one cancellation. All reached the gate screen. Recieved confirmation from the morning shift that the duplicate queue at door 7 was cleared.\n\n**07:41** — Thea confirmed normal scheduling. Closed incident.\n\n## Resolution\n\nMalformed trailer reference blocked schedule sync. Worker restarted after message isolation; appointments retained. Eng follow-up: add validation and a bad-message bypass. Attach retry trace and dispatch screenshots to the follow-up tkt.",
+      "usage": {
+        "input_tokens": 1061,
+        "output_tokens": 361,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.005732,
+      "provider_meta": {
+        "id": "resp_0e599c89cd80fb19016acfae3f942487d1b281d1ac4f570fa9",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1061,
+          "input_tokens_details": {
+            "cache_write_tokens": 1058,
+            "cached_tokens": 0
+          },
+          "output_tokens": 361,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 1422
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

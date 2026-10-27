@@ -1,0 +1,8 @@
+{
+  "run_id": "e1-facts-locomo-a1-37c3abda",
+  "lease_usd": 6,
+  "committed_usd": 2.5852199100000113,
+  "requests": 2771,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0
+}

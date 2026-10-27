@@ -1,0 +1,77 @@
+{
+  "slug": "meetings/2025-08-05-quillfeather-signing-call",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2025-08-05",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Quillfeather",
+        "line": 6
+      },
+      {
+        "oid": "e2",
+        "surface": "Quillfeather Outfitters",
+        "line": 9
+      },
+      {
+        "oid": "e3",
+        "surface": "QFO",
+        "line": 9
+      },
+      {
+        "oid": "e4",
+        "surface": "Quillfeather Outfitters",
+        "line": 12
+      }
+    ],
+    "claims": [],
+    "events": [
+      {
+        "eid": "e-qfo-of-signed",
+        "question": "Does the page describe this: \"Quillfeather signs its order form\"? If so, on what date does the text place it?"
+      }
+    ],
+    "ownership": []
+  },
+  "prompt_user_sha256": "42e8723cbbf403517db90c819f4494c8d1b7fe3585eb316ec09324e00f83d579",
+  "response_text": "{\n  \"date_used\": \"2025-08-05\",\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\"oid\": \"e1\", \"entity\": \"quillfeather\"},\n    {\"oid\": \"e2\", \"entity\": \"quillfeather\"},\n    {\"oid\": \"e3\", \"entity\": \"quillfeather\"},\n    {\"oid\": \"e4\", \"entity\": \"quillfeather\"}\n  ],\n  \"events\": [\n    {\n      \"eid\": \"e-qfo-of-signed\",\n      \"present\": true,\n      \"date\": \"2025-08-05\",\n      \"line\": 12\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-08-05",
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "quillfeather"
+      },
+      {
+        "oid": "e2",
+        "entity": "quillfeather"
+      },
+      {
+        "oid": "e3",
+        "entity": "quillfeather"
+      },
+      {
+        "oid": "e4",
+        "entity": "quillfeather"
+      }
+    ],
+    "events": [
+      {
+        "eid": "e-qfo-of-signed",
+        "present": true,
+        "date": "2025-08-05",
+        "line": 12
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2754,
+    "output_tokens": 199,
+    "thinking_tokens": 43
+  },
+  "cost_usd": 0.007498
+}

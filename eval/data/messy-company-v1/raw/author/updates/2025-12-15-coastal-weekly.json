@@ -1,0 +1,41 @@
+{
+  "slug": "updates/2025-12-15-coastal-weekly",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: weekly\nTitle: Coastal weekly Dec 15\nDate: Written on 2025-12-15.\nWriter: Moss (Ruth Calloway's AI assistant)\nVoice: an AI assistant: neat, factual, a little stiff\nFormat: a weekly update with a short status table and notes\nLength: about 443 words\nDate style in the body: ISO (2025-06-02)\nTypos: one or two small natural typos (never in names or required phrases)\n\nBrief:\nMoss compiles this team weekly from the team lead's notes; write it as Moss's compiled update. Bettina's update; her expense account is locked again.\n\nRequired phrases:\n- Use the exact phrase \"Kwame's biggest account\" once, referring to Pellucid Harbor Logistics. Don't put the account's name in the same sentence; the reader should work it out.\n- Use the exact phrase \"the grocery account Bettina took over\" once, referring to Saltmarsh Provisions. Don't put the account's name in the same sentence; the reader should work it out.\n- Use the exact phrase \"Bettina's expense account\" once, in the sense of: her corporate expense reporting account. It must not be about a customer account.\n- Use the exact phrase \"the account Kwame runs\" once, but vaguely: the writer does not say which account it is, and nothing nearby (name, location, numbers, products) may identify one. Keep that sentence generic, like a passing comment.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Bettina Kroll: Coastal team lead\n- Sofia Marchetti: Account manager, Coastal team\n- Kwame Adjei-Rowe: Account manager, Coastal team\n- Corinne Ashdown: VP Operations\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Pellucid Harbor Logistics: port drayage and terminal logistics, Gulf Coast; codes/nicknames PHL\n- Driftmoor Marine Freight: marine freight and barge operator, Puget Sound; codes/nicknames DMF\n- Saltmarsh Provisions: regional grocery distributor, Lowcountry; main contact Corinne Ashdown, VP Operations; codes/nicknames SMP\n- Covey & Lark Retail: home goods retailer, Mid-Atlantic; codes/nicknames Covey, CLR\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2025-12-15 (background only; don't restate unless the brief asks):\n- Pellucid Harbor Logistics: managed by Kwame Adjei-Rowe\n- Driftmoor Marine Freight: managed by Kwame Adjei-Rowe\n- Saltmarsh Provisions: managed by Bettina Kroll\n- Covey & Lark Retail: managed by Sofia Marchetti",
+      "response_text": "# Coastal weekly Dec 15\n\n**Date:** 2025-12-15  \n**Source:** Compiled from field notes submitted by Bettina Kroll (Coastal team lead) for Ruth Calloway.\n\n### Account Status Table\n\n| Customer | Owner | Operational Status | Open Ticket / Action |\n| :--- | :--- | :--- | :--- |\n| Pellucid Harbor Logistics (PHL) | Kwame Adjei-Rowe | Yellow | PD-4491: Gate 7 RFID reader timeout |\n| Saltmarsh Provisions (SMP) | Bettina Kroll | Green | Cold-storage Door 12 rules updated |\n| Covey & Lark Retail (CLR) | Sofia Marchetti | Green | Holiday overflow yard map active |\n| Driftmoor Marine Freight (DMF) | Kwame Adjei-Rowe | Green | Barge slip 3 manifest import verified |\n\n### Team & Operational Notes\n\n**Gulf Coast Operations**  \nPellucid Harbor Logistics reported intermittent latency on the Pemberline Dock gate check-in module at the Houston terminal during the 05:00 shift change on 2025-12-12. Drivers from three drayage carriers had to be checked in via paper clipboards at Gate 7. Because this issue is affecting Kwame's biggest account, Tier 2 support escalated ticket PD-4491 directly to the integrations queue and Odile Brandt at Carrowmere Cloud was notified to check regional host metrics. A patch for the local cache sync is scheduled for deployment on 2025-12-16 at 02:00.\n\n**Lowcountry & Mid-Atlantic Operations**  \nCorinne Ashdown at Saltmarsh Provisions requested an adjustment to how Pemberline Dock handles late refrigerated trailers at the Beaufort distribution center. On 2025-12-11, Bettina Kroll updated the dock door assignment logic for the grocery account Bettina took over, ensuring that delayed produce loads automatically route to Doors 11 and 12 without overriding the morning dry-goods schedule. Corinne Ashdown confirmed on 2025-12-14 that the weekend receiving shifts ran without yard congestion.\n\nAt Covey & Lark Retail, Sofia Marchetti completed the seasonal configuration review for the Baltimore facility on 2025-12-10. The night yard host noted that the new Drop Lot B status board is clearing carrier detention alerts much faster than last quarter. Driftmoor Marine Freight had no operational incidents to report following the Puget Sound tide table sync on 2025-12-11.\n\n**Administrative & Internal Items**  \nBettina's expense account is locked again in the finance portal following the mileage submission from her December site visits, and she has asked accounting to reset the pin before the 2025-12-19 payroll cutoff. \n\nSofia Marchetti is preparing the standard quarterly slide deck templates for the team to review on 2025-12-17. During the morning standup, there was also a brief mention of a scheduling question on the account Kwame runs, which will be followed up by email later this week. \n\nNo additional escalations were logged in the Coastal pod notes for this reporting priod.",
+      "usage": {
+        "input_tokens": 1288,
+        "output_tokens": 705,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.009626,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1288,
+          "candidatesTokenCount": 705,
+          "totalTokenCount": 1993,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1288
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 705
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

@@ -1,0 +1,122 @@
+{
+  "slug": "updates/2026-09-21-central-weekly",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2026-09-21",
+    "owner_phrases": [
+      {
+        "mid": "updates/2026-09-21-central-weekly#m1",
+        "phrase": "Pree's biggest account",
+        "lines": [
+          12
+        ]
+      },
+      {
+        "mid": "updates/2026-09-21-central-weekly#m2",
+        "phrase": "the account Tobias runs",
+        "lines": [
+          18
+        ]
+      },
+      {
+        "mid": "updates/2026-09-21-central-weekly#m3",
+        "phrase": "Tobias's dealer account",
+        "lines": [
+          13
+        ]
+      }
+    ],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Tansley Parcel",
+        "line": 12
+      },
+      {
+        "oid": "e2",
+        "surface": "Marrow Fieldworks",
+        "line": 13
+      },
+      {
+        "oid": "e3",
+        "surface": "Marrow Agrisupply",
+        "line": 14
+      },
+      {
+        "oid": "e4",
+        "surface": "Stoneharrow Billing",
+        "line": 20
+      },
+      {
+        "oid": "e5",
+        "surface": "Tansleigh Packaging",
+        "line": 22
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "80820d1a7a70822f9ce2e8df5e0723eae7c27019ce0fcd9e497827b773943069",
+  "response_text": "{\n  \"date_used\": \"2026-09-21\",\n  \"owner_phrases\": [\n    {\n      \"mid\": \"updates/2026-09-21-central-weekly#m1\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\n        \"tansley-parcel\"\n      ],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"Pree's only primary account on 2026-09-21 is Tansley Parcel, and the bullet is explicitly about Tansley Parcel.\"\n    },\n    {\n      \"mid\": \"updates/2026-09-21-central-weekly#m2\",\n      \"refers_to_customer_account\": false,\n      \"accounts\": [],\n      \"reading\": \"ambiguous: could be more than one account\",\n      \"note\": \"On 2026-09-21, Tobias Rendle is the primary owner of both Tansleigh Packaging and Marrow Fieldworks, and line 18 provides no disambiguating detail.\"\n    },\n    {\n      \"mid\": \"updates/2026-09-21-central-weekly#m3\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\n        \"marrow-fieldworks\"\n      ],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"Tobias owns Marrow Fieldworks (an agricultural equipment dealer network) and the bullet is about Marrow Fieldworks.\"\n    }\n  ],\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"tansley-parcel\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"marrow-fieldworks\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"marrow-agrisupply\"\n    },\n    {\n      \"oid\": \"e4\",\n      \"entity\": \"stoneharrow\"\n    },\n    {\n      \"oid\": \"e5\",\n      \"entity\": \"tansleigh\"\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2026-09-21",
+    "owner_phrases": [
+      {
+        "mid": "updates/2026-09-21-central-weekly#m1",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "tansley-parcel"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "Pree's only primary account on 2026-09-21 is Tansley Parcel, and the bullet is explicitly about Tansley Parcel."
+      },
+      {
+        "mid": "updates/2026-09-21-central-weekly#m2",
+        "refers_to_customer_account": false,
+        "accounts": [],
+        "reading": "ambiguous: could be more than one account",
+        "note": "On 2026-09-21, Tobias Rendle is the primary owner of both Tansleigh Packaging and Marrow Fieldworks, and line 18 provides no disambiguating detail."
+      },
+      {
+        "mid": "updates/2026-09-21-central-weekly#m3",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "marrow-fieldworks"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "Tobias owns Marrow Fieldworks (an agricultural equipment dealer network) and the bullet is about Marrow Fieldworks."
+      }
+    ],
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "tansley-parcel"
+      },
+      {
+        "oid": "e2",
+        "entity": "marrow-fieldworks"
+      },
+      {
+        "oid": "e3",
+        "entity": "marrow-agrisupply"
+      },
+      {
+        "oid": "e4",
+        "entity": "stoneharrow"
+      },
+      {
+        "oid": "e5",
+        "entity": "tansleigh"
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 3336,
+    "output_tokens": 546,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.012132
+}

@@ -1,0 +1,78 @@
+{
+  "slug": "accounts/driftmoor-marine-freight",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2026-10-01",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Driftmoor Marine Freight",
+        "line": 6
+      },
+      {
+        "oid": "e2",
+        "surface": "DMF",
+        "line": 10
+      },
+      {
+        "oid": "e3",
+        "surface": "DMF",
+        "line": 17
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": [
+      {
+        "account": "driftmoor",
+        "question": "According to this page alone, who manages Driftmoor Marine Freight, in what role, and from/until when?"
+      }
+    ]
+  },
+  "prompt_user_sha256": "59964bea1574d53e49d721471d4fcd42a5ce77dcc726fafb640a059e7f5d7b2c",
+  "response_text": "{\n  \"date_used\": \"2026-10-01\",\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"driftmoor\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"driftmoor\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"driftmoor\",\n      \"note\": \"Ticket prefix for Driftmoor Marine Freight\"\n    }\n  ],\n  \"ownership\": [\n    {\n      \"account\": \"driftmoor\",\n      \"owner\": \"Sofia Marchetti\",\n      \"role\": \"primary\",\n      \"start\": null,\n      \"end\": \"2025-04-07\",\n      \"line\": 12\n    },\n    {\n      \"account\": \"driftmoor\",\n      \"owner\": \"Kwame Adjei-Rowe\",\n      \"role\": \"primary\",\n      \"start\": \"2025-04-07\",\n      \"end\": null,\n      \"line\": 12\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2026-10-01",
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "driftmoor"
+      },
+      {
+        "oid": "e2",
+        "entity": "driftmoor"
+      },
+      {
+        "oid": "e3",
+        "entity": "driftmoor",
+        "note": "Ticket prefix for Driftmoor Marine Freight"
+      }
+    ],
+    "ownership": [
+      {
+        "account": "driftmoor",
+        "owner": "Sofia Marchetti",
+        "role": "primary",
+        "start": null,
+        "end": "2025-04-07",
+        "line": 12
+      },
+      {
+        "account": "driftmoor",
+        "owner": "Kwame Adjei-Rowe",
+        "role": "primary",
+        "start": "2025-04-07",
+        "end": null,
+        "line": 12
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2830,
+    "output_tokens": 265,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.00831
+}

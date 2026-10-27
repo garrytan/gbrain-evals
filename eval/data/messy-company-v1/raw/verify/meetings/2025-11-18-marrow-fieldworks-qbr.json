@@ -1,0 +1,65 @@
+{
+  "slug": "meetings/2025-11-18-marrow-fieldworks-qbr",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2025-11-18",
+    "owner_phrases": [
+      {
+        "mid": "meetings/2025-11-18-marrow-fieldworks-qbr#m1",
+        "phrase": "Pree's dealer account",
+        "lines": [
+          16
+        ]
+      }
+    ],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Marrow Fieldworks",
+        "line": 6
+      },
+      {
+        "oid": "e2",
+        "surface": "Marrow Fieldworks",
+        "line": 9
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "69a1f0379ceed31ac376b6c98863243b797d5e5ad4dc5901f7494d3ac107a47e",
+  "response_text": "{\n  \"date_used\": \"2025-11-18\",\n  \"owner_phrases\": [\n    {\n      \"mid\": \"meetings/2025-11-18-marrow-fieldworks-qbr#m1\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\n        \"marrow-fieldworks\"\n      ],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"On 2025-11-18, Pree owns marrow-fieldworks (agricultural equipment dealer network) and tansley-parcel; 'dealer account' and the QBR context identify marrow-fieldworks.\"\n    }\n  ],\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"marrow-fieldworks\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"marrow-fieldworks\"\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-11-18",
+    "owner_phrases": [
+      {
+        "mid": "meetings/2025-11-18-marrow-fieldworks-qbr#m1",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "marrow-fieldworks"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "On 2025-11-18, Pree owns marrow-fieldworks (agricultural equipment dealer network) and tansley-parcel; 'dealer account' and the QBR context identify marrow-fieldworks."
+      }
+    ],
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "marrow-fieldworks"
+      },
+      {
+        "oid": "e2",
+        "entity": "marrow-fieldworks"
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 3392,
+    "output_tokens": 255,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.009334
+}

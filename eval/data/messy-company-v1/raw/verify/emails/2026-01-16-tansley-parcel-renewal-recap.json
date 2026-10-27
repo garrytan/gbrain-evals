@@ -1,0 +1,70 @@
+{
+  "slug": "emails/2026-01-16-tansley-parcel-renewal-recap",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2026-01-16",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Tansley Parcel",
+        "line": 6
+      },
+      {
+        "oid": "e2",
+        "surface": "Tansley Parcel",
+        "line": 19
+      }
+    ],
+    "claims": [],
+    "events": [
+      {
+        "eid": "e-tpx-renewal-signed",
+        "question": "Does the page describe this: \"Tansley Parcel signs the 2026 renewal\"? If so, on what date does the text place it?"
+      }
+    ],
+    "ownership": [],
+    "retraction": {
+      "question": "A value for Tansley Parcel's renewal date is stated and then corrected. What was first stated, what was the corrected value, and on which lines?"
+    }
+  },
+  "prompt_user_sha256": "928f6f6e17088331afa6ac044289d410c2251eb5ab26c778847b8ade9d4836af",
+  "response_text": "{\n  \"date_used\": \"2026-01-15\",\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"tansley-parcel\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"tansley-parcel\"\n    }\n  ],\n  \"events\": [\n    {\n      \"eid\": \"e-tpx-renewal-signed\",\n      \"present\": true,\n      \"date\": \"2026-01-15\",\n      \"line\": 19\n    }\n  ],\n  \"retraction\": {\n    \"first_value\": \"2027-02-28\",\n    \"corrected_value\": \"2027-01-31\",\n    \"lines\": [\n      11,\n      13,\n      19\n    ]\n  }\n}",
+  "parsed": {
+    "date_used": "2026-01-15",
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "tansley-parcel"
+      },
+      {
+        "oid": "e2",
+        "entity": "tansley-parcel"
+      }
+    ],
+    "events": [
+      {
+        "eid": "e-tpx-renewal-signed",
+        "present": true,
+        "date": "2026-01-15",
+        "line": 19
+      }
+    ],
+    "retraction": {
+      "first_value": "2027-02-28",
+      "corrected_value": "2027-01-31",
+      "lines": [
+        11,
+        13,
+        19
+      ]
+    }
+  },
+  "usage": {
+    "input_tokens": 3079,
+    "output_tokens": 222,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.008378
+}

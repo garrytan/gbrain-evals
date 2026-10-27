@@ -1,0 +1,37 @@
+{
+  "slug": "contracts/2024-11-12-bwf-of-2024",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: record\nTitle: Order Form: Brackenwater Freight Co. (2024-2025 term)\nDate: Written on 2024-11-12.\nWriter: June Osei-Lark\nVoice: formal legal drafting\nFormat: formal numbered sections and a signature block\nLength: about 513 words\nDate style in the body: undefined\nTypos: none\n\nBrief:\nOrder Form: Brackenwater Freight Co. (2024-2025 term). Parties: Pemberline Systems and Brackenwater Freight Co.. Drafted 2024-11-01. Effective date 2024-12-01 (signed 2024-11-12; state both dates and keep them distinct). Terms this document sets: subscribed seats = 60; price per seat per year (USD) = 1700; discount (%) = 8; end of the current term (renewal date) = 2025-11-30. Executed: include a signature block signed on 2024-11-12 by both parties (customer signatory plus June Osei-Lark for Pemberline).\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Ilse Varga: North team lead\n- Dana Okafor: Account manager, North team\n- Marcus Lindqvist: Account manager, North team\n- Thea Ramaswell: Director of Yard Operations\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Quarrendon Freight Lines: truckload freight carrier, Upper Midwest; main contact Thea Ramaswell, Director of Yard Operations; codes/nicknames QFL, Q-Freight\n- Brackenwater Freight Co.: less-than-truckload freight, Great Lakes; codes/nicknames BWF, Bracken\n- Tamsin Cold Chain: refrigerated warehousing, Pacific Northwest; codes/nicknames TCC\n- Orrin Mills: textile mill, Carolinas; codes/nicknames ORM\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2024-11-12 (background only; don't restate unless the brief asks):\n- Quarrendon Freight Lines: managed by nobody stated (do not say who manages it)\n- Brackenwater Freight Co.: managed by Dana Okafor\n- Tamsin Cold Chain: managed by nobody stated (do not say who manages it)\n- Orrin Mills: managed by nobody stated (do not say who manages it)",
+      "response_text": "# Order Form: Brackenwater Freight Co. (2024-2025 term)\n\n## 1. Parties and Record\n\nThis Order Form is between Pemberline Systems and Brackenwater Freight Co. for the subscription specified below. The subscribed product is Pemberline Dock, Pemberline Systems’ yard and dock scheduling software.\n\nThis instrument was drafted on 2024-11-01. The executed record was prepared on 2024-11-12 by June Osei-Lark, Deal desk and contracts manager, for inclusion in the order file. Brackenwater Freight Co. is identified in the associated setup materials by the abbreviations BWF and Bracken; those abbreviations refer to the same customer named in this instrument.\n\n## 2. Execution and Effective Date\n\nBoth parties signed this Order Form on 2024-11-12. The effective date is 2024-12-01.\n\nThe execution date records the parties’ signatures. The effective date identifies the commencement of the subscription described herein. These dates are distinct; execution on 2024-11-12 does not replace or advance the stated effective date.\n\nThe signature block below forms part of this executed record.\n\n## 3. Subscription and Commercial Schedule\n\nThe subscription is recorded as follows:\n\n| Item | Order specification |\n|---|---|\n| Customer | Brackenwater Freight Co. |\n| Supplier | Pemberline Systems |\n| Product | Pemberline Dock |\n| Subscribed seats | 60 |\n| Price per seat per year | USD 1,700 |\n| Discount | 8% |\n| Effective date | 2024-12-01 |\n| End of current term / renewal date | 2025-11-30 |\n\nThe annual per-seat price and the discount are stated separately. The discount applicable to this order is eight percent. The subscribed quantity is sixty seats.\n\nThe end of the current term, recorded as the renewal date, is 2025-11-30. That date is separate from both the drafting date and the execution date.\n\n## 4. Operational Identification\n\nBrackenwater Freight Co. operates in less-than-truckload freight in the Great Lakes region. The implementation worksheet accompanying the order file identifies the receiving desk, outbound dispatch desk, and evening yard desk as the initial points for collection of user details.\n\nThe worksheet includes a sample scheduling sequence for Door 14: an inbound trailer arrival, a receiving appointment, and an outbound door reassignment. It also includes a second-shift example in which dispatch moves a delayed pickup from the active door list to the next available appointment slot.\n\nThese entries describe the operational examples collected for setup review. They do not alter the subscribed seat quantity, annual per-seat price, discount, effective date, or term-end date stated in Section 3.\n\n## 5. Administrative Handling\n\nThe order file includes this executed instrument and the setup worksheet titled “BWF Door Schedule — Initial Review.” The worksheet contains a column for shift designation and a separate column for the email address used at sign-in.\n\nThe receiving desk is collecting spelling corrections for the user list. Outbound dispatch is reviewing the Door 14 example against its paper appointment board. The evening yard desk is marking entries that represent shared desk labels rather than individual users. These administrative tasks concern setup preparation only.\n\n## 6. Signatures\n\n**For Brackenwater Freight Co.**\n\nSigned: /s/ Lena Morcant  \nName: Lena Morcant  \nDate signed: 2024-11-12\n\n**For Pemberline Systems**\n\nSigned: /s/ June Osei-Lark  \nName: June Osei-Lark  \nTitle: Deal desk and contracts manager  \nDate signed: 2024-11-12",
+      "usage": {
+        "input_tokens": 1148,
+        "output_tokens": 861,
+        "thinking_tokens": 98
+      },
+      "cost_usd": 0.010906,
+      "provider_meta": {
+        "id": "resp_09a9fe38219a64e8016acfae1d42a087d1a2239beeb586dd31",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1148,
+          "input_tokens_details": {
+            "cache_write_tokens": 1145,
+            "cached_tokens": 0
+          },
+          "output_tokens": 861,
+          "output_tokens_details": {
+            "reasoning_tokens": 98
+          },
+          "total_tokens": 2009
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

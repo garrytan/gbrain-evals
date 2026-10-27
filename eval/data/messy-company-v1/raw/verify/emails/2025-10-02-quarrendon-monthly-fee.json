@@ -1,0 +1,77 @@
+{
+  "slug": "emails/2025-10-02-quarrendon-monthly-fee",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2025-10-02",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Quarrendon",
+        "line": 6
+      },
+      {
+        "oid": "e2",
+        "surface": "Quarrendon Freight Lines",
+        "line": 14
+      },
+      {
+        "oid": "e3",
+        "surface": "Stoneharrow Billing",
+        "line": 14
+      },
+      {
+        "oid": "e4",
+        "surface": "QFL",
+        "line": 17
+      }
+    ],
+    "claims": [
+      {
+        "cid": "c-qfl-monthly",
+        "question": "What does the page say about Quarrendon Freight Lines's monthly fee?"
+      }
+    ],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "ef46a3ca01392cb371a860a482323f5a0d5307953c63b4b5009b180adcea45a9",
+  "response_text": "{\n  \"date_used\": \"2025-10-02\",\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\"oid\": \"e1\", \"entity\": \"quarrendon\"},\n    {\"oid\": \"e2\", \"entity\": \"quarrendon\"},\n    {\"oid\": \"e3\", \"entity\": \"stoneharrow\"},\n    {\"oid\": \"e4\", \"entity\": \"quarrendon\"}\n  ],\n  \"claims\": [\n    {\n      \"cid\": \"c-qfl-monthly\",\n      \"stated\": true,\n      \"value\": \"Quarrendon Freight Lines will move to monthly invoicing at roughly $25k a month.\",\n      \"line\": 14\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-10-02",
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "quarrendon"
+      },
+      {
+        "oid": "e2",
+        "entity": "quarrendon"
+      },
+      {
+        "oid": "e3",
+        "entity": "stoneharrow"
+      },
+      {
+        "oid": "e4",
+        "entity": "quarrendon"
+      }
+    ],
+    "claims": [
+      {
+        "cid": "c-qfl-monthly",
+        "stated": true,
+        "value": "Quarrendon Freight Lines will move to monthly invoicing at roughly $25k a month.",
+        "line": 14
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2593,
+    "output_tokens": 162,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.006806
+}

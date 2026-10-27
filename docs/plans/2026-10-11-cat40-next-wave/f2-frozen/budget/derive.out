@@ -1,0 +1,6 @@
+claude-sonnet-5-5: 60 cells, agent $29.90, input-side $27.39 over 46.8M tokens = $0.585/M; search-result re-reads 25.1M tokens (53.7% of input-side tokens) = $14.70
+claude-opus-5-5: 60 cells, agent $47.42, input-side $42.65 over 40.8M tokens = $1.047/M; search-result re-reads 19.5M tokens (47.8% of input-side tokens) = $20.39
+gpt-6.1-sol: 60 cells, agent $15.72, input-side $15.12 over 25.5M tokens = $0.593/M; search-result re-reads 31.7M tokens (124.3% of input-side tokens) = $18.80
+chars per cl100k token, recorded search results: 3.195 (33675613 chars)
+share of agent cost spent re-reading search results (H2-H4 gbrain arm): 57.9%
+headroom: per-arm cap 1.15 x price -> 15.0%; X = 15.0% / share = 25.9%

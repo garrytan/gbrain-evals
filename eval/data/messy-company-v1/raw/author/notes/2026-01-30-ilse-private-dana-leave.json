@@ -1,0 +1,37 @@
+{
+  "slug": "notes/2026-01-30-ilse-private-dana-leave",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: private-note (a private page only the writer sees)\nTitle: Private: Dana leave logistics\nDate: Written on 2026-01-30.\nWriter: Ilse Varga\nVoice: terse and practical\nFormat: private notes in first person, bullets\nLength: about 265 words\nDate style in the body: day-month (2 Jun 2025)\nTypos: a few natural typos and one or two sloppy abbreviations (never in names or required phrases)\n\nBrief:\nIlse's private note: HR details for Dana's leave (Feb 2 to Mar 13), payroll questions, and that Dana's benefits account needs her dependent added. Ilse will run the Quarrendon renewal while Dana is out.\n\nRequired phrases:\n- Use the exact phrase \"Dana's benefits account\" once, in the sense of: her HR benefits portal account. It must not be about a customer account.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Ilse Varga: North team lead\n- Dana Okafor: Account manager, North team\n- Marcus Lindqvist: Account manager, North team\n- Thea Ramaswell: Director of Yard Operations\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Quarrendon Freight Lines: truckload freight carrier, Upper Midwest; main contact Thea Ramaswell, Director of Yard Operations; codes/nicknames QFL, Q-Freight\n- Brackenwater Freight Co.: less-than-truckload freight, Great Lakes; codes/nicknames BWF, Bracken\n- Tamsin Cold Chain: refrigerated warehousing, Pacific Northwest; codes/nicknames TCC\n- Thornbury Cloth Co. (renamed from Orrin Mills on 2026-01-12): textile mill, Carolinas; codes/nicknames TCC\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2026-01-30 (background only; don't restate unless the brief asks):\n- Quarrendon Freight Lines: managed by Dana Okafor\n- Brackenwater Freight Co.: managed by Marcus Lindqvist\n- Tamsin Cold Chain: managed by Dana Okafor\n- Thornbury Cloth Co.: managed by Marcus Lindqvist",
+      "response_text": "# Private: Dana leave logistics\n\n- 30 Jan 2026 — I need the HR loose ends done today, not sitting in my inbox over the weekend. Dana Okafor is on leave from 2 Feb 2026 to 13 Mar 2026. I’ll keep the leave paperwork separate from the North team handoff.\n\n- Dana's benefits account needs her dependent added. I need to ask HR which portal step is still missing: dependent details, supporting document, or final submission. Don’t assume saving the form means it went through. Get the confirmation back to Dana before leave starts.\n\n- Payroll qs for HR: does the leave entry cover the whole period, and does Dana need to submit anything separately? Also ask how any correction would show on her payslip. I don’t want to give her a guess based on the last leave request I dealt with.\n\n- I’ll run the Quarrendon Freight Lines renewal while Dana is out. Today: collect the latest renewal thread, working document, and open questions. I need June Osei-Lark to point me to the current contracts copy so I’m not editing an old attachment.\n\n- For Thea Ramaswell, I’ll keep renewal questions in one thread. Separate the Pemberline Dock issue about drivers arriving before their booked window; the yard team needs an answer on that without hunting through contract emails.\n\n- Handoff checklist: where the weekly arrival report lives, which screenshots explain the early-arrival complaint, and whether the draft reply is still waiting on product input. Check the attachements actually open.\n\n- Put a reminder on 13 Mar 2026 to review outstanding items, not to assume Dana is available that day. I’ll tidy the renewal notes as I go. Less backtracking later.",
+      "usage": {
+        "input_tokens": 1108,
+        "output_tokens": 363,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.005846,
+      "provider_meta": {
+        "id": "resp_0b22580a837a1167016acfae3e1ac887d1b6097c091ce48c52",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1108,
+          "input_tokens_details": {
+            "cache_write_tokens": 1105,
+            "cached_tokens": 0
+          },
+          "output_tokens": 363,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 1471
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

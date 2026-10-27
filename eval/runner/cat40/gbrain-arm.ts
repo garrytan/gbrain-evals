@@ -11,11 +11,24 @@
  * through a local proxy that forwards them via the paid-request guard and
  * attributes their cost to the run holding the slot. A run that writes leaves
  * its slot to be restored from the post-build snapshot before the next run.
+ *
+ * Failures of the harness itself raise HarnessError (loop.ts): an MCP server
+ * that exits, a closed pipe, a response timeout or malformed JSON-RPC, and a
+ * failed restore. Tool results the server marks `isError` stay text for the
+ * agent. Restores run as asynchronous subprocesses so they never block other
+ * cells, and a slot whose restore or health check fails is quarantined by
+ * GbrainPool (plan 2026-10-05, ENG-F10, ENG-F13).
+ *
+ * GbrainFsArm (`gbrain-fs`, exploratory, Hard development world only) serves this arm's tools on the same slot
+ * plus the fs arm's read tools over the corpus files; see the end of this file.
  */
-import { spawn, execFileSync, type ChildProcessWithoutNullStreams } from 'node:child_process';
-import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { spawn, execFile, execFileSync, type ChildProcessWithoutNullStreams } from 'node:child_process';
+import { existsSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { readdir, rm } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
-import type { Arm, ToolSpec } from './loop.ts';
+import { promisify } from 'node:util';
+import { HarnessError, type Arm, type ToolSpec } from './loop.ts';
+import { FsArm, type ArmName, type FileStore, type FsArmOptions } from './arms.ts';
 import type { LadderWorld } from '../../generators/model-ladder-gen.ts';
 import { renderDoc } from '../../generators/model-ladder-gen.ts';
 import { runCli, type RunEnv } from '../lifecycle/drivers.ts';
@@ -26,7 +39,14 @@ export const GBRAIN_EMBED_MODEL = 'openai:text-embedding-3-large';
 export const STAGED_SOURCE_ADD_DOCS = 6000;
 export const STAGED_SYNC_BATCH = 5000;
 export const SERVE_BOOT_TIMEOUT_SECONDS = 0;
+/** How long the build's one warm server start may take to answer initialize. */
+export const WARM_BOOT_TIMEOUT_MS = 1_800_000;
+/** Server starts the pre-snapshot warm boot makes at most while queued persistence effects remain. */
+export const WARM_BOOT_ATTEMPTS = 3;
+/** Gap between drain-status samples while the warm boot holds its server open. */
+export const WARM_BOOT_DRAIN_POLL_MS = 5_000;
 const CORPUS_TAG = 'cat40-corpus';
+const execFileAsync = promisify(execFile);
 
 // ─── Metering proxy ─────────────────────────────────────────────────
 
@@ -35,27 +55,44 @@ export { MeteringProxy, newMeter, type Meter } from '../metering-proxy.ts';
 
 // ─── Minimal MCP stdio client ───────────────────────────────────────
 
+type Pending = { resolve: (m: Record<string, unknown>) => void; reject: (e: Error) => void };
+
 export class McpClient {
   private proc: ChildProcessWithoutNullStreams | null = null;
   private buf = '';
   private id = 1;
-  private pending = new Map<number, (m: Record<string, unknown>) => void>();
+  private pending = new Map<number, Pending>();
+  private exited: string | null = null;
   instructions = '';
   serverVersion = '';
   tools: Array<{ name: string; description?: string; inputSchema?: Record<string, unknown>; annotations?: Record<string, unknown> }> = [];
   stderr: string[] = [];
+  /** Response timeout of a tools/call; past it the call throws HarnessError. */
+  callTimeoutMs = 300_000;
   constructor(private run: RunEnv, private args: string[]) {}
+  /** True while the server process is running and its stdin is open. */
+  get alive(): boolean { return !!this.proc && !this.exited && this.proc.stdin.writable; }
+  private failAll(e: HarnessError) { for (const [, p] of this.pending) p.reject(e); this.pending.clear(); }
+  private stderrTail() { return this.stderr.length ? `; stderr: ${this.stderr.slice(-5).join(' | ').slice(0, 800)}` : ''; }
   private request(method: string, params: Record<string, unknown>, timeoutMs = 300_000): Promise<Record<string, unknown>> {
     const id = this.id++;
     return new Promise((resolve, reject) => {
-      const t = setTimeout(() => { this.pending.delete(id); reject(new Error(`MCP timeout: ${method}`)); }, timeoutMs);
-      this.pending.set(id, m => { clearTimeout(t); resolve(m); });
-      this.proc!.stdin.write(JSON.stringify({ jsonrpc: '2.0', id, method, params }) + '\n');
+      const proc = this.proc;
+      if (!proc || this.exited || !proc.stdin.writable) { reject(new HarnessError(`MCP transport closed before ${method}${this.exited ? ` (${this.exited})` : ''}${this.stderrTail()}`)); return; }
+      const t = setTimeout(() => { this.pending.delete(id); reject(new HarnessError(`MCP timeout: ${method} got no response in ${timeoutMs / 1000} s`)); }, timeoutMs);
+      this.pending.set(id, { resolve: m => { clearTimeout(t); resolve(m); }, reject: e => { clearTimeout(t); reject(e); } });
+      proc.stdin.write(JSON.stringify({ jsonrpc: '2.0', id, method, params }) + '\n', err => {
+        if (!err) return;
+        const p = this.pending.get(id);
+        this.pending.delete(id);
+        p?.reject(new HarnessError(`MCP write failed (${method}): ${err.message}`));
+      });
     });
   }
-  async start() {
+  async start(initTimeoutMs = 180_000) {
     const proc = spawn('bun', [join(this.run.buildDir, 'src/cli.ts'), 'serve', ...this.args], { env: this.run.env, cwd: this.run.env.GBRAIN_HOME });
     this.proc = proc;
+    this.exited = null;
     proc.stdout.setEncoding('utf8');
     proc.stdout.on('data', (c: string) => {
       this.buf += c;
@@ -63,34 +100,47 @@ export class McpClient {
       while ((nl = this.buf.indexOf('\n')) >= 0) {
         const line = this.buf.slice(0, nl).trim();
         this.buf = this.buf.slice(nl + 1);
-        try {
-          const m = JSON.parse(line);
-          if (m.id === undefined && m.method === 'notifications/tools/list_changed') { this.relisting = this.relist(); continue; }
-          const cb = this.pending.get(m.id); if (cb) { this.pending.delete(m.id); cb(m); }
-        } catch { /* not JSON-RPC */ }
+        let m: Record<string, unknown>;
+        try { m = JSON.parse(line); } catch { continue; /* not JSON-RPC */ }
+        if (m && typeof m === 'object' && m.id === undefined && m.method === 'notifications/tools/list_changed') { this.relisting = this.relist(); continue; }
+        const p = m && typeof m === 'object' ? this.pending.get(m.id as number) : undefined;
+        if (!p) continue;
+        this.pending.delete(m.id as number);
+        if (!('result' in m) && !('error' in m)) p.reject(new HarnessError(`malformed JSON-RPC response (no result or error): ${line.slice(0, 300)}`));
+        else p.resolve(m);
       }
     });
     proc.stderr.setEncoding('utf8');
     proc.stderr.on('data', (c: string) => { this.stderr.push(...c.split('\n').filter(Boolean)); if (this.stderr.length > 300) this.stderr.splice(0, this.stderr.length - 300); });
-    proc.on('exit', () => { for (const [, cb] of this.pending) cb({ error: { message: 'mcp server exited' } }); this.pending.clear(); });
-    const init = await this.request('initialize', { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'gbrain-evals-cat40', version: '1' } }, 180_000);
+    proc.stdin.on('error', (e: Error) => this.failAll(new HarnessError(`MCP stdin failed: ${e.message}${this.stderrTail()}`)));
+    proc.on('error', (e: Error) => { this.exited ??= `failed: ${e.message}`; this.failAll(new HarnessError(`MCP server failed: ${e.message}${this.stderrTail()}`)); });
+    // 'close' fires after stderr is drained, so the failure carries the server's last stderr lines.
+    proc.on('exit', (code, signal) => { this.exited = `exit ${code ?? signal}`; });
+    proc.on('close', (code, signal) => { this.exited ??= `exit ${code ?? signal}`; this.failAll(new HarnessError(`MCP server exited (${this.exited})${this.stderrTail()}`)); });
+    const init = await this.request('initialize', { protocolVersion: '2025-06-18', capabilities: {}, clientInfo: { name: 'gbrain-evals-cat40', version: '1' } }, initTimeoutMs);
+    if (init.error) throw new HarnessError(`MCP initialize failed: ${JSON.stringify(init.error).slice(0, 500)}`);
     const r = (init.result ?? {}) as Record<string, unknown>;
     this.instructions = String(r.instructions ?? '');
     this.serverVersion = String((r.serverInfo as Record<string, unknown> | undefined)?.version ?? '');
-    this.proc.stdin.write(JSON.stringify({ jsonrpc: '2.0', method: 'notifications/initialized' }) + '\n');
+    proc.stdin.write(JSON.stringify({ jsonrpc: '2.0', method: 'notifications/initialized' }) + '\n');
     await this.relist();
   }
   /** Bumped whenever the listed tools change (tools/list_changed, or a request_tools call that revealed tools). */
   toolsVersion = 0;
   private relisting: Promise<void> | null = null;
   private async relist() {
-    const list = await this.request('tools/list', {});
-    const tools = ((list.result as Record<string, unknown>)?.tools ?? []) as McpClient['tools'];
+    const tools = await this.listTools();
     if (this.tools.length && tools.map(t => t.name).join() !== this.tools.map(t => t.name).join()) this.toolsVersion++;
     this.tools = tools;
   }
+  /** One `tools/list` round trip (no model spend). */
+  async listTools(timeoutMs = 300_000): Promise<McpClient['tools']> {
+    const list = await this.request('tools/list', {}, timeoutMs);
+    if (list.error) throw new HarnessError(`MCP tools/list failed: ${JSON.stringify(list.error).slice(0, 500)}`);
+    return ((list.result as Record<string, unknown>)?.tools ?? []) as McpClient['tools'];
+  }
   async call(name: string, args: Record<string, unknown>): Promise<string> {
-    const m = await this.request('tools/call', { name, arguments: args });
+    const m = await this.request('tools/call', { name, arguments: args }, this.callTimeoutMs);
     // The server may send tools/list_changed before or after the response; request_tools always re-lists.
     if (name === 'request_tools') this.relisting = this.relist();
     await this.relisting;
@@ -103,6 +153,7 @@ export class McpClient {
     const p = this.proc;
     if (!p) return;
     this.proc = null;
+    if (p.exitCode !== null || p.signalCode !== null) return;
     await new Promise<void>(resolve => {
       const t = setTimeout(() => { p.kill('SIGKILL'); resolve(); }, 20_000);
       p.once('exit', () => { clearTimeout(t); resolve(); });
@@ -129,14 +180,26 @@ export function directGitPath(root: string): string | undefined {
   return `${bin}:${path}`;
 }
 
-export interface SlotBuild { slot: string; dir: string; steps: Array<{ step: string; code: number; ms: number; tail: string }>; meter: Meter; ms: number; pages?: unknown; coverage?: SlotCoverage; allowance?: { reserved_usd: number; usd: number; requests: number; charged_reservations: number } }
+export interface SlotBuild {
+  slot: string; dir: string; steps: Array<{ step: string; code: number; ms: number; tail: string }>; meter: Meter; ms: number; pages?: unknown; coverage?: SlotCoverage; allowance?: { reserved_usd: number; usd: number; requests: number; charged_reservations: number };
+  /** `gbrain config set` pairs applied before the import (`--gbrain-build-config`); the snapshot carries them. */
+  build_config?: Record<string, string>;
+  /** gbrain's owner-phrase links and validity windows in the snapshot (null: the build has no such column or table). */
+  owner_phrases?: OwnerPhraseCounts;
+}
+
+export interface OwnerPhraseCounts { links: number | null; windows: number | null }
 
 /**
  * gbrain's mention-index coverage for a built slot (entity-recall plan 2026-10-04, E-T7). gbrain reports it as
  * `coverage: {state, pending_pages, last_pass_at}` on `entity` cards and misses; `supported: false` records a
  * build that predates the field, whose slots are not checked.
  */
-export interface SlotCoverage { supported: boolean; state: string | null; pending: number | null; last_pass_at: string | null }
+export interface SlotCoverage {
+  supported: boolean; state: string | null; pending: number | null; last_pass_at: string | null;
+  /** Rows of gbrain's persistence_effects still queued when the snapshot was taken (null: the build has no such table; absent: built before this record). */
+  queued_effects?: number | null;
+}
 /** A name no Cat 40 world uses, so the `entity` probe is a miss, which still carries `coverage`. */
 export const COVERAGE_PROBE_NAME = 'cat40 coverage probe';
 
@@ -151,21 +214,112 @@ export function parseCoverage(text: string): SlotCoverage {
 
 /** Why a slot's recorded coverage does not allow a round to start; null when it does or when the build has no coverage. */
 export function coverageProblem(c: SlotCoverage): string | null {
+  if (typeof c.queued_effects === 'number' && c.queued_effects > 0) return `${c.queued_effects} persistence effects were still queued at snapshot, so every restore stalls its first tool call while gbrain drains them`;
   if (!c.supported) return null;
   if (c.state === 'complete' && c.pending === 0) return null;
   return `mention coverage ${c.state ?? 'unknown'} with ${c.pending ?? 'unknown'} pending pages`;
+}
+
+/**
+ * Points a slot's Voyage base URL at this process's metering proxy, and sets the advertised MCP surface when one is
+ * given. The build writes the proxy's port into the snapshot's config.json, and each process's proxy listens on a new
+ * port, so without this a slot started by a later process (cells run, latency replay, a restore) reranked against a
+ * dead port (`degraded_recall rerank_failed`; Cat 40 Hard R0, T0b root cause 2026-10-08). Runs on every start.
+ * Returns whether it changed the file.
+ */
+export function refreshProviderBaseUrls(home: string, voyageBase: string, advertised: string | null = null): boolean {
+  const cfgPath = join(home, '.gbrain', 'config.json');
+  if (!existsSync(cfgPath)) return false;
+  const cfg = JSON.parse(readFileSync(cfgPath, 'utf8'));
+  let changed = false;
+  if (cfg.provider_base_urls?.voyage && cfg.provider_base_urls.voyage !== voyageBase) { cfg.provider_base_urls = { ...cfg.provider_base_urls, voyage: voyageBase }; changed = true; }
+  if (advertised && cfg.mcp?.advertised_surface !== advertised) { cfg.mcp = { ...(cfg.mcp ?? {}), advertised_surface: advertised }; changed = true; }
+  if (changed) writeFileSync(cfgPath, JSON.stringify(cfg, null, 2));
+  return changed;
+}
+
+type ProbeSlot = { id: string; client: { call(name: string, args: Record<string, unknown>): Promise<string> } | null; restore(): Promise<void> };
+type ProbeProxy = { bind(slot: string, key: string): void; unbind(slot: string, key?: string): void; finalize(key: string, timeoutMs?: number): Promise<{ byModel: Record<string, { requests: number }> }> };
+
+/**
+ * One search per started slot must reach a reranker through this process's proxy; otherwise fail closed before any
+ * cell runs (from GBRA-39's #76, Cat 40 Hard R0). Each slot is restored after its probe.
+ */
+export async function rerankProbe(slots: ProbeSlot[], proxy: ProbeProxy, query: string): Promise<void> {
+  for (const s of slots) {
+    const key = `rerank-probe:${s.id}`;
+    proxy.bind(s.id, key);
+    try { await s.client!.call('search', { query }); }
+    finally { proxy.unbind(s.id, key); }
+    const m = await proxy.finalize(key, 30_000);
+    const reranks = Object.entries(m.byModel).filter(([k]) => /rerank/i.test(k)).reduce((n, [, v]) => n + v.requests, 0);
+    if (!reranks) throw new HarnessError(`gbrain ${s.id}: a probe search made no rerank request (provider calls: ${JSON.stringify(m.byModel)}); the reranker is unreachable or off, so the arm would run degraded. Fix the provider endpoint, or pass --gbrain-config search.reranker.enabled=false to measure without reranking on purpose and say so in the preregistration.`);
+    await s.restore();
+  }
+}
+
+/** Keys that take effect only when the mention pass runs, so they belong to the slot build, never to a restore. */
+export const BUILD_TIME_CONFIG_KEYS = ['mentions.owner_phrases'];
+
+/**
+ * A `key=value[,key=value]` config list (`--gbrain-config`, `--gbrain-build-config`). A comma-separated value keeps
+ * its commas (`entity.record_types=contract,amendment`): a piece without `=` continues the value before it.
+ */
+export function parseConfigPairs(flagName: string, value: string | undefined): Array<[string, string]> {
+  const out: Array<[string, string]> = [];
+  for (const piece of (value ?? '').split(',').filter(Boolean)) {
+    const i = piece.indexOf('=');
+    if (i > 0) out.push([piece.slice(0, i), piece.slice(i + 1)]);
+    else if (i < 0 && out.length) out[out.length - 1][1] += `,${piece}`;
+    else throw new Error(`${flagName} expects key=value pairs separated by commas, got "${piece}"`);
+  }
+  return out;
+}
+
+const isOn = (v: string | undefined) => v !== undefined && /^(true|1|on|yes)$/i.test(v.trim());
+
+export interface RestoreProbeRecord { slot: string; config: Record<string, string>; owner_phrases: OwnerPhraseCounts }
+type RestoreProbeSlot = { id: string; config: Array<[string, string]>; buildConfig: Array<[string, string]>; stop(): Promise<void>; start(): Promise<void>; configGet(key: string): Promise<string>; ownerPhraseCounts(): Promise<OwnerPhraseCounts> };
+
+/**
+ * After restore and before any cell: every run and build config key reads back as set, and the slot's owner-phrase
+ * links match its build. A slot built with `mentions.owner_phrases` on must hold at least one owner-phrase link (an
+ * F5 arm on a slot without them would measure nothing); a slot built without it must hold none. Each slot's server
+ * is stopped for the reads (PGLite has one writer) and started again.
+ */
+export async function restoreProbe(slots: RestoreProbeSlot[]): Promise<RestoreProbeRecord[]> {
+  return Promise.all(slots.map(async s => {
+    await s.stop();
+    const expected = new Map([...s.buildConfig, ...s.config]);
+    const config: Record<string, string> = {};
+    for (const [key, want] of expected) {
+      config[key] = await s.configGet(key);
+      if (config[key] !== want) throw new HarnessError(`gbrain ${s.id}: config ${key} reads back "${config[key]}" after restore, the arm set "${want}"`);
+    }
+    const owner_phrases = await s.ownerPhraseCounts();
+    const f5 = isOn(expected.get('mentions.owner_phrases'));
+    if (f5 && !owner_phrases.links) throw new HarnessError(`gbrain ${s.id}: built with mentions.owner_phrases on but holds ${owner_phrases.links ?? 'no'} owner-phrase links, so an F5 arm would measure nothing; check the build's extract step and the gbrain commit (F5 needs the owner-phrase pass)`);
+    if (!f5 && owner_phrases.links) throw new HarnessError(`gbrain ${s.id}: built without mentions.owner_phrases but holds ${owner_phrases.links} owner-phrase links; use the F5-off slot family`);
+    await s.start();
+    return { slot: s.id, config, owner_phrases };
+  }));
 }
 
 export class GbrainSlot {
   client: McpClient | null = null;
   readonly dir: string;
   readonly run: RunEnv;
+  readonly voyageBase: string;
   /** `gbrain config set` pairs applied after every restore (the snapshot does not carry them). */
   config: Array<[string, string]> = [];
+  /** `gbrain config set` pairs applied once, before the import (`--gbrain-build-config`); the snapshot carries them. */
+  buildConfig: Array<[string, string]> = [];
   /** `advertised`: the brain's mcp.advertised_surface (tools listed; the callable set stays `surface`). Null leaves it unset. */
-  constructor(readonly id: string, root: string, readonly buildDir: string, proxyPort: number, readonly surface: string, readonly advertised: string | null = null) {
+  /** `keyless`: the slot's processes get no provider keys (the $0 scripted smoke on keyword-only slots). */
+  constructor(readonly id: string, root: string, readonly buildDir: string, readonly proxyPort: number, readonly surface: string, readonly advertised: string | null = null, readonly keyless = false) {
     this.dir = join(root, id);
     const base = `http://127.0.0.1:${proxyPort}/${id}`;
+    this.voyageBase = `${base}/voyage/v1`;
     this.run = {
       buildDir,
       env: {
@@ -174,43 +328,61 @@ export class GbrainSlot {
         // `gbrain serve` exits when its boot has not completed within 60 s (serve.ts). On a 52,000-page PGLite
         // brain it already answers tool calls but its boot runs past that deadline, so it exited mid-session. 0 disables it.
         GBRAIN_SERVE_BOOT_TIMEOUT_SECONDS: String(SERVE_BOOT_TIMEOUT_SECONDS),
-        OPENAI_API_KEY: process.env.OPENAI_API_KEY, ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY, VOYAGE_API_KEY: process.env.VOYAGE_API_KEY,
+        ...(keyless ? {} : { OPENAI_API_KEY: process.env.OPENAI_API_KEY, ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY, VOYAGE_API_KEY: process.env.VOYAGE_API_KEY }),
         ANTHROPIC_BASE_URL: `${base}/anthropic`, OPENAI_BASE_URL: `${base}/openai`,
       },
     };
   }
   get snapshot() { return `${this.dir}.tar`; }
 
-  async build(world: LadderWorld, proxy: MeteringProxy, analyze: boolean): Promise<SlotBuild> {
+  /**
+   * `render` turns a document into its Markdown file (default: the Cat 40 renderer). `embed: false` skips the
+   * embedding step for a keyless (hermetic) brain, which then searches by keyword only.
+   */
+  async build<D extends { id: string; type: string }>(world: { docs: D[] }, proxy: MeteringProxy, analyze: boolean, opts: { render?: (d: D) => string; embed?: boolean } = {}): Promise<SlotBuild> {
+    const render = opts.render ?? ((d: D) => renderDoc(d as unknown as LadderWorld['docs'][number]));
     const t0 = Date.now();
     const meterKey = `build:${this.id}`;
     proxy.bind(this.id, meterKey);
     rmSync(this.dir, { recursive: true, force: true });
     const vault = join(this.dir, 'vault');
     for (const d of ['home', 'uh', 'vault']) mkdirSync(join(this.dir, d), { recursive: true });
-    const writeDocs = (docs: LadderWorld['docs']) => { for (const doc of docs) {
+    const writeDocs = (docs: D[]) => { for (const doc of docs) {
       const p = join(vault, `${doc.id}.md`);
       mkdirSync(dirname(p), { recursive: true });
-      writeFileSync(p, renderDoc(doc));
+      writeFileSync(p, render(doc));
     } };
     const git = (args: string[]) => execFileSync('git', ['-C', vault, '-c', 'user.name=cat40', '-c', 'user.email=cat40@example.invalid', ...args], { stdio: 'pipe' });
     // `gbrain sources add` hashes every file into a manifest and refuses one over 1 MiB (source-lifecycle.ts),
-    // about 8,000 files. A larger corpus registers the source with the policy files only, then adds the rest
+    // about 8,000 files. A larger corpus registers the source with the policy files only (or, in Hard worlds, which have none, the first sync batch), then adds the rest
     // in synced batches. The final corpus commit is tagged so restore resets to it.
     const staged = world.docs.length > STAGED_SOURCE_ADD_DOCS;
-    writeDocs(staged ? world.docs.filter(d => d.type === 'policy') : world.docs);
-    git(['init', '-q']); git(['add', '-A']); git(['commit', '-q', '-m', staged ? 'policies' : 'corpus']);
+    const policies = world.docs.filter(d => d.type === 'policy');
+    const initialDocs = !staged ? world.docs : policies.length ? policies : world.docs.slice(0, STAGED_SYNC_BATCH);
+    writeDocs(initialDocs);
+    git(['init', '-q']); git(['add', '-A']); git(['commit', '-q', '-m', staged ? 'first batch' : 'corpus']);
     const steps: SlotBuild['steps'] = [];
     const op = async (step: string, args: string[]) => {
-      const r = await runCli(this.run, args, 3_600_000);
+      let r = await runCli(this.run, args, 3_600_000);
       steps.push({ step, code: r.code, ms: r.ms, tail: (r.stdout + '\n' + r.stderr).split('\n').filter(l => l.trim()).slice(-8).join('\n') });
+      // A provider 5xx on one chunk fails the whole embed, and gbrain quarantines that page for the rest of the
+      // process. A fresh process retries only the stale chunks, so one retry absorbs a transient provider error.
+      if (r.code !== 0 && args[0] === 'embed' && /failed to embed/.test(r.stdout + r.stderr)) {
+        r = await runCli(this.run, args, 3_600_000);
+        steps.push({ step: `${step}-retry`, code: r.code, ms: r.ms, tail: (r.stdout + '\n' + r.stderr).split('\n').filter(l => l.trim()).slice(-8).join('\n') });
+      }
       if (r.code !== 0) throw new Error(`gbrain ${step} failed (exit ${r.code}): ${steps.at(-1)!.tail}`);
     };
     await op('init', ['init', '--pglite', '--path', join(this.dir, 'home', 'brain.pglite'), '--embedding-model', GBRAIN_EMBED_MODEL, '--non-interactive']);
     const cfgPath = join(this.dir, 'home', '.gbrain', 'config.json');
     const cfg = JSON.parse(readFileSync(cfgPath, 'utf8'));
-    cfg.provider_base_urls = { ...(cfg.provider_base_urls ?? {}), voyage: `http://127.0.0.1:${proxy.port}/${this.id}/voyage/v1` };
+    cfg.provider_base_urls = { ...(cfg.provider_base_urls ?? {}), voyage: this.voyageBase };
     writeFileSync(cfgPath, JSON.stringify(cfg, null, 2));
+    for (const [key, value] of this.buildConfig) {
+      const t = Date.now();
+      await this.configSet(key, value);
+      steps.push({ step: `config-set ${key}`, code: 0, ms: Date.now() - t, tail: `${key}=${value}` });
+    }
     const operatorAnalyze = (step: string) => {
       // gbrain does not ANALYZE after a bulk import on PGLite (no autovacuum), so the planner sees empty
       // tables and the graph-signal join in every search runs as a pages x pages nested loop (~50 s at
@@ -227,7 +399,8 @@ export class GbrainSlot {
       // The import slows as tables grow with stale planner statistics (2.3 docs/s at 13k pages, about 7 after
       // an ANALYZE), and a sync is hard-killed after an hour. So the corpus arrives in batches, each synced and
       // followed by an operator ANALYZE (only when analyze is on), the way a growing company brain is maintained.
-      const rest = world.docs.filter(d => d.type !== 'policy');
+      const firstIds = new Set(initialDocs.map(d => d.id));
+      const rest = world.docs.filter(d => !firstIds.has(d.id));
       for (let i = 0, k = 1; i < rest.length; i += STAGED_SYNC_BATCH, k++) {
         writeDocs(rest.slice(i, i + STAGED_SYNC_BATCH));
         git(['add', '-A']); git(['commit', '-q', '-m', `corpus batch ${k}`]);
@@ -244,15 +417,17 @@ export class GbrainSlot {
     // Builds that gate paid backfills (agent-first operator wave) refuse with exit 3 until `--yes`; older builds
     // reject that flag, so it is passed only after a confirmation_required refusal.
     const embedArgs = ['embed', '--stale', ...(staged ? ['--catch-up'] : [])];
-    const first = await runCli(this.run, embedArgs, 3_600_000);
-    if (first.code === 3 && /confirmation_required|needs the user's approval/.test(first.stdout + first.stderr)) {
+    const first = opts.embed === false ? null : await runCli(this.run, embedArgs, 3_600_000);
+    if (!first) steps.push({ step: 'embed-skipped', code: 0, ms: 0, tail: 'keyless brain: no embedding step (keyword search only)' });
+    else if (first.code === 3 && /confirmation_required|needs the user's approval/.test(first.stdout + first.stderr)) {
       steps.push({ step: 'embed-consent-refused', code: 3, ms: first.ms, tail: 'confirmation_required; rerun with --yes (evaluator-authorized build spend)' });
       await op('embed', [...embedArgs, '--yes']);
     } else {
       steps.push({ step: 'embed', code: first.code, ms: first.ms, tail: (first.stdout + '\n' + first.stderr).split('\n').filter(l => l.trim()).slice(-8).join('\n') });
-      if (first.code !== 0) throw new Error(`gbrain embed failed (exit ${first.code}): ${steps.at(-1)!.tail}`);
+      if (first.code !== 0 && /failed to embed/.test(first.stdout + first.stderr)) await op('embed-retry', embedArgs);
+      else if (first.code !== 0) throw new Error(`gbrain embed failed (exit ${first.code}): ${steps.at(-1)!.tail}`);
     }
-    if (staged) {
+    if (staged && first) {
       await op('embed-verify', ['embed', '--stale', '--dry-run']);
       const left = steps.at(-1)!.tail.match(/Would embed (\d+) stale chunks/);
       if (left && Number(left[1]) > 0) throw new Error(`gbrain ${this.id}: ${left[1]} chunks still unembedded after embed --catch-up`);
@@ -260,10 +435,112 @@ export class GbrainSlot {
     if (analyze) operatorAnalyze('operator-analyze');
     proxy.unbind(this.id);
     const meter = await proxy.finalize(meterKey);
+    const warmStart = Date.now();
+    const warm = await this.warmBoot();
+    steps.push({ step: 'warm-boot', code: 0, ms: Date.now() - warmStart, tail: `${warm.attempts} server start(s), each answering one read-only tool call before stopping; queued persistence effects at snapshot: ${warm.queued_effects ?? 'no persistence_effects table'}` });
     execFileSync('tar', ['-C', this.dir, '-cf', this.snapshot, 'home']);
-    const coverage = await this.probeCoverage();
+    const coverage = { ...await this.probeCoverage(), queued_effects: warm.queued_effects };
     writeFileSync(this.coverageFile, JSON.stringify(coverage, null, 2) + '\n');
-    return { slot: this.id, dir: this.dir, steps, meter, ms: Date.now() - t0, coverage };
+    return { slot: this.id, dir: this.dir, steps, meter, ms: Date.now() - t0, coverage, build_config: Object.fromEntries(this.buildConfig), owner_phrases: await this.ownerPhraseCounts() };
+  }
+
+  /**
+   * The server start before the snapshot, the way an installed brain has already been opened once. The first start
+   * on a freshly imported large brain does one-time work: gbrain's persistence consumer drains the import's queued
+   * effects (about 47,000 at 55,000 pages, 230-290 s), holding the event loop until it is done. Since gbrain #6390
+   * the server answers initialize before that work, so the start waits for the reply to one read-only tool call (an
+   * `entity` miss, no model call), which the server sends only once the work is done. The effects still queued are
+   * counted after each stop; while any remain the start repeats, at most WARM_BOOT_ATTEMPTS times. A gbrain whose
+   * drain yields to the event loop answers that call while the drain still runs, so the start then stays open until
+   * the server reports no drain in progress (`holdWhileDraining`).
+   */
+  async warmBoot(): Promise<{ attempts: number; queued_effects: number | null }> {
+    let attempts = 0, queued: number | null = null;
+    do {
+      attempts++;
+      const deadline = Date.now() + WARM_BOOT_TIMEOUT_MS;
+      const warm = new McpClient(this.run, ['--surface', this.surface]);
+      warm.callTimeoutMs = WARM_BOOT_TIMEOUT_MS;
+      try {
+        await warm.start(WARM_BOOT_TIMEOUT_MS);
+        await warm.call('entity', { name: COVERAGE_PROBE_NAME });
+        await this.holdWhileDraining(deadline);
+      } finally { await warm.close(); }
+      queued = await this.queuedEffects();
+    } while (queued && attempts < WARM_BOOT_ATTEMPTS);
+    return { attempts, queued_effects: queued };
+  }
+
+  /**
+   * Keeps the warm server running until two consecutive status samples, WARM_BOOT_DRAIN_POLL_MS apart, show no effects
+   * drain in progress, or until the deadline. A build whose status cannot say (one that answers tool calls only after
+   * its drain) is not held. The stop still counts the queued effects, so a drain cut short starts the server again.
+   */
+  async holdWhileDraining(deadline: number): Promise<void> {
+    for (let idle = 0; ;) {
+      const draining = await this.drainInProgress();
+      if (draining === null) return;
+      idle = draining ? 0 : idle + 1;
+      if (idle === 2 || Date.now() + WARM_BOOT_DRAIN_POLL_MS > deadline) return;
+      await new Promise(r => setTimeout(r, WARM_BOOT_DRAIN_POLL_MS));
+    }
+  }
+
+  /** Whether the running server's persistence consumer reports an effects drain (`gbrain sources writer status --json`); null when it cannot say. */
+  async drainInProgress(): Promise<boolean | null> {
+    const r = await runCli(this.run, ['sources', 'writer', 'status', '--json'], 120_000);
+    if (r.code !== 0) return null;
+    try {
+      const ingress = (JSON.parse(r.stdout) as { local_process_ingress?: unknown }).local_process_ingress;
+      return ingress && typeof ingress === 'object' ? 'draining' in ingress : null;
+    } catch { return null; }
+  }
+
+  /** Rows of gbrain's persistence_effects still queued in the stopped slot's brain; null when the build has no such table. */
+  async queuedEffects(): Promise<number | null> {
+    const pglite = join(this.buildDir, 'node_modules/@electric-sql/pglite/dist');
+    const script = `const { PGlite } = await import(${JSON.stringify(`${pglite}/index.js`)}); const { vector } = await import(${JSON.stringify(`${pglite}/vector/index.js`)}); const { pg_trgm } = await import(${JSON.stringify(`${pglite}/contrib/pg_trgm.js`)}); const db = await PGlite.create({ dataDir: ${JSON.stringify(join(this.dir, 'home', 'brain.pglite'))}, extensions: { vector, pg_trgm } }); const [{ ok }] = (await db.query("SELECT to_regclass('persistence_effects') IS NOT NULL AS ok")).rows; const n = ok ? (await db.query("SELECT count(*)::int AS n FROM persistence_effects WHERE state = 'queued'")).rows[0].n : null; await db.close(); process.stdout.write(JSON.stringify(n));`;
+    const { stdout } = await execFileAsync('bun', ['-e', script], { encoding: 'utf8' });
+    return JSON.parse(stdout.trim()) as number | null;
+  }
+
+  /** Owner-phrase links and windows in the stopped slot's brain; null where the build has no such column or table. */
+  async ownerPhraseCounts(): Promise<OwnerPhraseCounts> {
+    const pglite = join(this.buildDir, 'node_modules/@electric-sql/pglite/dist');
+    const script = `const { PGlite } = await import(${JSON.stringify(`${pglite}/index.js`)}); const { vector } = await import(${JSON.stringify(`${pglite}/vector/index.js`)}); const { pg_trgm } = await import(${JSON.stringify(`${pglite}/contrib/pg_trgm.js`)}); const db = await PGlite.create({ dataDir: ${JSON.stringify(join(this.dir, 'home', 'brain.pglite'))}, extensions: { vector, pg_trgm } }); const one = async q => (await db.query(q)).rows[0]; const { col } = await one("SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'links' AND column_name = 'link_kind') AS col"); const { tbl } = await one("SELECT to_regclass('owner_phrase_windows') IS NOT NULL AS tbl"); const links = col ? (await one("SELECT count(*)::int AS n FROM links WHERE link_kind = 'owner_phrase'")).n : null; const windows = tbl ? (await one('SELECT count(*)::int AS n FROM owner_phrase_windows')).n : null; await db.close(); process.stdout.write(JSON.stringify({ links, windows }));`;
+    const { stdout } = await execFileAsync('bun', ['-e', script], { encoding: 'utf8' });
+    return JSON.parse(stdout.trim()) as OwnerPhraseCounts;
+  }
+
+  /** `gbrain config set <key> <value>` on the stopped slot; an empty value unsets the key (gbrain's default), since `config set` takes no empty value. */
+  async configSet(key: string, value: string): Promise<void> {
+    const r = await runCli(this.run, value === '' ? ['config', 'unset', key] : ['config', 'set', key, value], 120_000);
+    if (r.code !== 0 && !(value === '' && /Config key not found/.test(r.stdout + r.stderr))) {
+      throw new Error(`gbrain ${this.id}: config ${value === '' ? 'unset' : 'set'} ${key} failed (exit ${r.code}): ${(r.stdout + r.stderr).trim().split('\n').slice(-3).join(' ')}`);
+    }
+  }
+
+  /** `gbrain config get <key>` on the stopped slot, trimmed; an unset key reads back as the empty string. */
+  async configGet(key: string): Promise<string> {
+    const r = await runCli(this.run, ['config', 'get', key], 120_000);
+    if (r.code !== 0 && /Config key not found/.test(r.stdout + r.stderr)) return '';
+    if (r.code !== 0) throw new HarnessError(`gbrain ${this.id}: config get ${key} failed (exit ${r.code}): ${(r.stdout + r.stderr).trim().split('\n').slice(-3).join(' ')}`);
+    return r.stdout.trim();
+  }
+
+  /**
+   * Simulated elapsed time on the stopped slot's brain (gbrain reads Date.now() and takes no clock): facts created at
+   * or after `since` get `created_at`, and `valid_from` when it is at or after `since`, set to `at`. gbrain's managed-writer
+   * trigger refuses operator writes to facts, so this one statement runs with triggers off (session_replication_role
+   * replica). Returns the ids it moved.
+   */
+  async backdateFactsSince(since: string, at: string): Promise<number[]> {
+    if (this.client) throw new Error(`gbrain ${this.id}: stop the server before backdating facts`);
+    const pglite = join(this.buildDir, 'node_modules/@electric-sql/pglite/dist');
+    const sql = 'UPDATE facts SET created_at = $2::timestamptz, valid_from = CASE WHEN valid_from >= $1::timestamptz THEN $2::timestamptz ELSE valid_from END WHERE created_at >= $1::timestamptz RETURNING id';
+    const script = `const { PGlite } = await import(${JSON.stringify(`${pglite}/index.js`)}); const { vector } = await import(${JSON.stringify(`${pglite}/vector/index.js`)}); const { pg_trgm } = await import(${JSON.stringify(`${pglite}/contrib/pg_trgm.js`)}); const db = await PGlite.create({ dataDir: ${JSON.stringify(join(this.dir, 'home', 'brain.pglite'))}, extensions: { vector, pg_trgm } }); await db.exec('SET session_replication_role = replica'); const r = await db.query(${JSON.stringify(sql)}, [${JSON.stringify(since)}, ${JSON.stringify(at)}]); await db.close(); process.stdout.write(JSON.stringify(r.rows.map(x => Number(x.id))));`;
+    const { stdout } = await execFileAsync('bun', ['-e', script], { encoding: 'utf8' });
+    return JSON.parse(stdout.trim()) as number[];
   }
 
   /** Written beside the snapshot by `build`; the round preflight reads it. */
@@ -278,54 +555,105 @@ export class GbrainSlot {
   }
 
   async start() {
-    if (this.advertised) {
-      const cfgPath = join(this.dir, 'home', '.gbrain', 'config.json');
-      const cfg = JSON.parse(readFileSync(cfgPath, 'utf8'));
-      cfg.mcp = { ...(cfg.mcp ?? {}), advertised_surface: this.advertised };
-      writeFileSync(cfgPath, JSON.stringify(cfg, null, 2));
-    }
+    refreshProviderBaseUrls(join(this.dir, 'home'), this.voyageBase, this.advertised);
     this.client = new McpClient(this.run, ['--surface', this.surface]);
     await this.client.start();
   }
   async stop() { await this.client?.close(); this.client = null; }
+  /** Restore the post-build snapshot and start a new server. Asynchronous subprocesses only; any failure is a HarnessError. */
   async restore() {
-    await this.stop();
-    // gbrain records the checkout's device and inode and refuses managed writes when they change
-    // ("The physical checkout identity changed"), so the vault directory is never recreated: git
-    // resets its content to the corpus commit. Only the database home is replaced from the snapshot,
-    // inside the existing directory.
-    const vault = join(this.dir, 'vault');
-    const git = (args: string[]) => execFileSync('git', ['-C', vault, ...args], { stdio: 'pipe', encoding: 'utf8' }).trim();
-    const corpus = git(['tag', '--list', CORPUS_TAG]) ? CORPUS_TAG : git(['rev-list', '--max-parents=0', 'HEAD']).split('\n')[0];
-    git(['reset', '-q', '--hard', corpus]);
-    // Keep gbrain's ownership marker (.gbrain-owner.json): it is untracked and records the checkout identity.
-    git(['clean', '-qfdx', '-e', '.gbrain-owner*']);
-    const home = join(this.dir, 'home');
-    for (const entry of readdirSync(home).sort()) rmSync(join(home, entry), { recursive: true, force: true });
-    execFileSync('tar', ['-C', this.dir, '-xf', this.snapshot, 'home']);
-    for (const [key, value] of this.config) {
-      const r = await runCli(this.run, ['config', 'set', key, value], 120_000);
-      if (r.code !== 0) throw new Error(`gbrain ${this.id}: config set ${key} failed (exit ${r.code}): ${(r.stdout + r.stderr).trim().split('\n').slice(-3).join(' ')}`);
+    try {
+      await this.stop();
+      // gbrain records the checkout's device and inode and refuses managed writes when they change
+      // ("The physical checkout identity changed"), so the vault directory is never recreated: git
+      // resets its content to the corpus commit. Only the database home is replaced from the snapshot,
+      // inside the existing directory.
+      const vault = join(this.dir, 'vault');
+      const git = async (args: string[]) => (await execFileAsync('git', ['-C', vault, ...args], { encoding: 'utf8', maxBuffer: 64 << 20 })).stdout.trim();
+      const corpus = (await git(['tag', '--list', CORPUS_TAG])) ? CORPUS_TAG : (await git(['rev-list', '--max-parents=0', 'HEAD'])).split('\n')[0];
+      await git(['reset', '-q', '--hard', corpus]);
+      // Keep gbrain's ownership marker (.gbrain-owner.json): it is untracked and records the checkout identity.
+      await git(['clean', '-qfdx', '-e', '.gbrain-owner*']);
+      const home = join(this.dir, 'home');
+      for (const entry of (await readdir(home)).sort()) await rm(join(home, entry), { recursive: true, force: true });
+      await execFileAsync('tar', ['-C', this.dir, '-xf', this.snapshot, 'home'], { maxBuffer: 64 << 20 });
+      for (const [key, value] of this.config) await this.configSet(key, value);
+      await this.start();
+    } catch (e) {
+      throw new HarnessError(`gbrain ${this.id} restore: ${(e as Error).message}`);
     }
-    await this.start();
+  }
+  /** Why the slot cannot take a cell (null when healthy): its server must run and list tools (one round trip, no model spend). */
+  async healthCheck(): Promise<string | null> {
+    if (!this.client) return 'MCP client not started';
+    if (!this.client.alive) return 'MCP server not running';
+    try { return (await this.client.listTools(60_000)).length ? null : 'MCP server lists no tools'; }
+    catch (e) { return (e as Error).message; }
   }
   /** A fresh harness session: a new server process on the same brain. */
   async newSession() { await this.stop(); await this.start(); }
   hasSnapshot() { return existsSync(this.snapshot); }
 }
 
-export class GbrainPool {
-  private free: GbrainSlot[] = [];
-  private waiters: Array<(s: GbrainSlot) => void> = [];
-  constructor(readonly slots: GbrainSlot[]) { this.free = [...slots]; }
-  acquire(): Promise<GbrainSlot> {
+/** Rejects cells waiting for a gbrain slot once quarantines leave fewer healthy slots than the step needs. */
+export class SlotQuarantineError extends Error {
+  constructor(message: string) { super(message); this.name = 'SlotQuarantineError'; }
+}
+
+/** What the pool needs from a slot (GbrainSlot; tests use fakes). */
+export interface PoolSlot {
+  readonly id: string;
+  restore(): Promise<void>;
+  /** Null when healthy, else the reason. */
+  healthCheck(): Promise<string | null>;
+}
+
+/**
+ * Hands each slot to one cell at a time. A quarantined slot (failed restore or health check, ENG-F10) is never
+ * handed out again. Once fewer than `minHealthy` slots remain healthy, every waiting and later `acquire`
+ * rejects with SlotQuarantineError, so the step halts instead of running on a contaminated or shrunken pool.
+ */
+export class GbrainPool<S extends PoolSlot = GbrainSlot> {
+  private free: S[] = [];
+  private waiters: Array<{ resolve: (s: S) => void; reject: (e: Error) => void }> = [];
+  /** Quarantined slot ids and why. */
+  readonly quarantined = new Map<string, string>();
+  /** Healthy slots the step needs (default 1). */
+  minHealthy: number;
+  constructor(readonly slots: S[], options: { minHealthy?: number } = {}) { this.free = [...slots]; this.minHealthy = options.minHealthy ?? 1; }
+  /** Slots not quarantined (free or in use). */
+  get healthy(): number { return this.slots.length - this.quarantined.size; }
+  /** The error waiting cells get, or null while enough healthy slots remain. */
+  shortfall(): SlotQuarantineError | null {
+    if (this.healthy >= this.minHealthy) return null;
+    const why = [...this.quarantined].map(([id, r]) => `${id}: ${r}`).join('; ');
+    return new SlotQuarantineError(`${this.healthy} healthy gbrain slots of ${this.slots.length}, the step needs ${this.minHealthy}; quarantined: ${why}`);
+  }
+  acquire(): Promise<S> {
+    const short = this.shortfall();
+    if (short) return Promise.reject(short);
     const s = this.free.shift();
     if (s) return Promise.resolve(s);
-    return new Promise(resolve => this.waiters.push(resolve));
+    return new Promise((resolve, reject) => this.waiters.push({ resolve, reject }));
   }
-  release(s: GbrainSlot) {
+  release(s: S) {
+    if (this.quarantined.has(s.id)) return;
     const w = this.waiters.shift();
-    if (w) w(s); else this.free.push(s);
+    if (w) w.resolve(s); else this.free.push(s);
+  }
+  quarantine(s: S, reason: string) {
+    this.quarantined.set(s.id, reason);
+    this.free = this.free.filter(x => x !== s);
+    const short = this.shortfall();
+    if (short) for (const w of this.waiters.splice(0)) w.reject(short);
+  }
+  /** Restore and health-check a slot a cell is done with: release it when healthy, else quarantine it. Returns the failure reason, or null. */
+  async restoreOrQuarantine(s: S): Promise<string | null> {
+    let reason: string | null;
+    try { await s.restore(); reason = await s.healthCheck(); }
+    catch (e) { reason = `restore failed: ${(e as Error).message}`; }
+    if (reason) this.quarantine(s, reason); else this.release(s);
+    return reason;
   }
 }
 
@@ -361,4 +689,47 @@ export class GbrainArm implements Arm {
   toolsVersion() { return this.client.toolsVersion; }
   writeTools() { return this.client.tools.filter(t => t.annotations?.readOnlyHint !== true).map(t => t.name); }
   call(name: string, args: Record<string, unknown>) { return this.client.call(name, args); }
+}
+
+// ─── gbrain-fs (exploratory, development world only; plan 2026-10-07-cat40-hard-fix C16) ───
+
+/** Arms a cell can run: the frozen arm set plus the exploratory `gbrain-fs`, kept out of arms.ts so the freeze hash of the counted arms is unchanged. */
+export type CellArm = ArmName | 'gbrain-fs';
+
+/** The arm name a cell records: gbrain cells carry `--gbrain-label`, gbrain-fs cells that label plus `+fs`, so the two never mix. */
+export function cellLabel(arm: CellArm, gbrainLabel: string): string {
+  return arm === 'gbrain' ? gbrainLabel : arm === 'gbrain-fs' ? `${gbrainLabel}+fs` : arm;
+}
+
+/** The fs arm's read tools gbrain-fs serves beside gbrain's tools; write_file is not served, so notes live only in gbrain. */
+export const GBRAIN_FS_READ_TOOLS = ['list_dir', 'grep', 'read_file'];
+export const GBRAIN_FS_HINT = 'The raw Markdown files behind the gbrain are also readable with list_dir, grep and read_file; they are read-only, so save notes with the gbrain tools.';
+
+/** Refuses a gbrain tool list that already serves one of the fs read tools (the agent could not tell the two apart). */
+export function assertNoGbrainFsCollision(gbrainTools: string[]): void {
+  const clash = gbrainTools.filter(t => GBRAIN_FS_READ_TOOLS.includes(t));
+  if (clash.length) throw new Error(`gbrain-fs: the gbrain server serves ${clash.join(', ')}, which collides with the fs read tool of the same name; withhold it with --gbrain-drop-tools ${clash.join(',')} or drop the gbrain-fs arm`);
+}
+
+/**
+ * Exploratory arm: every tool, instruction and slot of the `gbrain` arm, plus the fs arm's read tools (the same
+ * limits as the fs arm) over the same corpus files. Writes go through gbrain's write tools only.
+ */
+export class GbrainFsArm implements Arm {
+  readonly name = 'gbrain-fs';
+  private gbrain: GbrainArm;
+  private fs: FsArm;
+  constructor(slot: GbrainSlot, files: FileStore, fsOptions: FsArmOptions = {}) {
+    this.gbrain = new GbrainArm(slot);
+    this.fs = new FsArm('fs', files, fsOptions);
+  }
+  systemHint() { return `${this.gbrain.systemHint()}\n${GBRAIN_FS_HINT}`; }
+  tools(): ToolSpec[] {
+    const gbrain = this.gbrain.tools();
+    assertNoGbrainFsCollision(gbrain.map(t => t.name));
+    return [...gbrain, ...this.fs.tools().filter(t => GBRAIN_FS_READ_TOOLS.includes(t.name))];
+  }
+  toolsVersion() { return this.gbrain.toolsVersion(); }
+  writeTools() { return this.gbrain.writeTools(); }
+  call(name: string, args: Record<string, unknown>) { return GBRAIN_FS_READ_TOOLS.includes(name) ? this.fs.call(name, args) : this.gbrain.call(name, args); }
 }

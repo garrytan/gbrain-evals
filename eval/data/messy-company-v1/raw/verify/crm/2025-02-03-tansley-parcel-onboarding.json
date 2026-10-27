@@ -1,0 +1,49 @@
+{
+  "slug": "crm/2025-02-03-tansley-parcel-onboarding",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2025-02-03",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Tansley Parcel",
+        "line": 6
+      }
+    ],
+    "claims": [
+      {
+        "cid": "c-tpx-discount-msa",
+        "question": "What does the page say about Tansley Parcel's discount pct?"
+      }
+    ],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "7368e30e4ed8293490019c4cd4f353eeb7a1359affd19a67b70e279ca3ea7b1a",
+  "response_text": "{\n  \"date_used\": \"2025-02-03\",\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"tansley-parcel\"\n    }\n  ],\n  \"claims\": [\n    {\n      \"cid\": \"c-tpx-discount-msa\",\n      \"stated\": true,\n      \"value\": \"10% discount\",\n      \"line\": 10\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-02-03",
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "tansley-parcel"
+      }
+    ],
+    "claims": [
+      {
+        "cid": "c-tpx-discount-msa",
+        "stated": true,
+        "value": "10% discount",
+        "line": 10
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2707,
+    "output_tokens": 118,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.006594
+}

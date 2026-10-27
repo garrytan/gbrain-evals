@@ -1,0 +1,2 @@
+{"rule":"owner-phrase-sample-v1","seed_sha256":"42ae5e4320ec6866","source":"default","pages":226,"windows":22,"population":6,"unresolved":94,"ambiguous":2,"refused":"fewer than 22 owner-phrase links derivable; no sample written"}
+exit 3

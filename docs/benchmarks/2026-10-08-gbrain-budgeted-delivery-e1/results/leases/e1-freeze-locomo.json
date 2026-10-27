@@ -1,0 +1,8 @@
+{
+  "run_id": "e1-freeze-locomo-a1-dd34a870",
+  "lease_usd": 2,
+  "committed_usd": 0.7683787999999991,
+  "requests": 1848,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0
+}

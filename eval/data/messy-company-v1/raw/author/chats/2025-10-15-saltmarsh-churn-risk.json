@@ -1,0 +1,37 @@
+{
+  "slug": "chats/2025-10-15-saltmarsh-churn-risk",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: chat\nTitle: #coastal-team, Oct 15\nDate: Written on 2025-10-15.\nWriter: Bettina Kroll\nVoice: polished and businesslike\nFormat: a chat log with [HH:MM] timestamps and lowercase usernames\nLength: about 304 words\nDate style in the body: mixed: some ISO, some casual\nTypos: one or two small natural typos (never in names or required phrases)\n\nBrief:\nSlack log: Corinne Ashdown flagged Saltmarsh as a churn risk today over dock appointment no-shows. Corinne's account in Pemberline Dock also lost its admin rights.\n\nRequired phrases:\n- Use the exact phrase \"Bettina's grocery account\" once, referring to Saltmarsh Provisions. Don't put the account's name in the same sentence; the reader should work it out.\n- Use the exact phrase \"Corinne's account\" once, in the sense of: her user login in the product. It must not be about a customer account.\n- Use the exact phrase \"Corinne's admin account\" once, in the sense of: her administrator login in the product. It must not be about a customer account.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Bettina Kroll: Coastal team lead\n- Sofia Marchetti: Account manager, Coastal team\n- Kwame Adjei-Rowe: Account manager, Coastal team\n- Corinne Ashdown: VP Operations\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Pellucid Harbor Logistics: port drayage and terminal logistics, Gulf Coast; codes/nicknames PHL\n- Driftmoor Marine Freight: marine freight and barge operator, Puget Sound; codes/nicknames DMF\n- Saltmarsh Provisions: regional grocery distributor, Lowcountry; main contact Corinne Ashdown, VP Operations; codes/nicknames SMP\n- Covey & Lark Retail: home goods retailer, Mid-Atlantic; codes/nicknames Covey, CLR\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2025-10-15 (background only; don't restate unless the brief asks):\n- Pellucid Harbor Logistics: managed by Bettina Kroll\n- Driftmoor Marine Freight: managed by Kwame Adjei-Rowe\n- Saltmarsh Provisions: managed by Bettina Kroll\n- Covey & Lark Retail: managed by Sofia Marchetti",
+      "response_text": "# #coastal-team, Oct 15\n\n[09:08] bettina.kroll: Corinne Ashdown flagged Saltmarsh Provisions as a churn risk today over dock appointment no-shows. The immediate complaint is the morning receiving queue: booked carriers are not arriving, while the dock team holds doors open and turns away drivers asking for an earlier slot.\n\n[09:10] bettina.kroll: Corinne cited door 6 yesterday afternoon and doors 3–4 this morning. Please keep those examples separate in the incident notes. We need to distinguish an actual carrier no-show from an appointment that was moved but still appeared on the printed shift sheet.\n\n[09:13] sofia.marchetti: Understood. Bettina's grocery account needs a clean comparison between the appointment history and the receiving desk's paper log. I can line those up before lunch if someone sends the sheet from this morning.\n\n[09:16] bettina.kroll: Thank you. There is also an access issue: Corinne's account in Pemberline Dock lost its admin rights. She can sign in and see the schedule, but cannot open user administration or change the receiving supervisor's permissions.\n\n[09:19] kwame.adjei-rowe: I have opened ticket PD-4827 for the access issue. The screenshots show the administration option missing, rather than a failed sign-in. Support is checking the role history for 2025-10-15; I have asked them not to reset the login while they investigate.\n\n[09:23] bettina.kroll: Please include that Corinne's admin account was working during yesterday's shift handoff. Restoring access and explaining the no-shows are separate tasks; neither should wait for the other.\n\n[10:04] sofia.marchetti: The receiving desk sent the scan. Two handwritten arrival times are difficult to read, so I have requested a clearer copy rather than guessing. The appointment export is attached to the ticket for comparision.\n\n[10:11] bettina.kroll: I will call Corinne at 11:30 today. Please post any findings here by 11:15, including which door, scheduled arrival, actual arrival if recorded, and whether a reschedule appears in the history.",
+      "usage": {
+        "input_tokens": 1146,
+        "output_tokens": 472,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.007012,
+      "provider_meta": {
+        "id": "resp_0ae1c9679611c55a016acfae7f5b9c87d18804c1c55a5c8e27",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1146,
+          "input_tokens_details": {
+            "cache_write_tokens": 1143,
+            "cached_tokens": 0
+          },
+          "output_tokens": 472,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 1618
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

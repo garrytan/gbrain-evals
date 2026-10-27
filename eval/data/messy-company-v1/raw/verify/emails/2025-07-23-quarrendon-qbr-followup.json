@@ -1,0 +1,81 @@
+{
+  "slug": "emails/2025-07-23-quarrendon-qbr-followup",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2025-07-23",
+    "owner_phrases": [
+      {
+        "mid": "emails/2025-07-23-quarrendon-qbr-followup#m1",
+        "phrase": "Thea's account",
+        "lines": [
+          14
+        ]
+      },
+      {
+        "mid": "emails/2025-07-23-quarrendon-qbr-followup#m2",
+        "phrase": "Thea's admin account",
+        "lines": [
+          15
+        ]
+      }
+    ],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Quarrendon Freight Lines",
+        "line": 12
+      }
+    ],
+    "claims": [],
+    "events": [
+      {
+        "eid": "e-qfl-qbr-2025",
+        "question": "Does the page describe this: \"Quarrendon quarterly business review in Duluth\"? If so, on what date does the text place it?"
+      }
+    ],
+    "ownership": []
+  },
+  "prompt_user_sha256": "61e88c1d1839ba42832d3d9b4acbaf2703a67fa7ad9c1949d633c5faa4dc7cd3",
+  "response_text": "{\n  \"date_used\": \"2025-07-23\",\n  \"owner_phrases\": [\n    {\n      \"mid\": \"emails/2025-07-23-quarrendon-qbr-followup#m1\",\n      \"refers_to_customer_account\": false,\n      \"accounts\": [],\n      \"reading\": \"not about a customer account (a login, device, HR/expense account, a narrative 'account of', a vendor relationship, an employer)\",\n      \"note\": \"Refers to Thea's locked Pemberline Dock user login.\"\n    },\n    {\n      \"mid\": \"emails/2025-07-23-quarrendon-qbr-followup#m2\",\n      \"refers_to_customer_account\": false,\n      \"accounts\": [],\n      \"reading\": \"not about a customer account (a login, device, HR/expense account, a narrative 'account of', a vendor relationship, an employer)\",\n      \"note\": \"Refers to Thea's administrator login.\"\n    }\n  ],\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"quarrendon\"\n    }\n  ],\n  \"events\": [\n    {\n      \"eid\": \"e-qfl-qbr-2025\",\n      \"present\": true,\n      \"date\": \"2025-07-22\",\n      \"line\": 12\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-07-23",
+    "owner_phrases": [
+      {
+        "mid": "emails/2025-07-23-quarrendon-qbr-followup#m1",
+        "refers_to_customer_account": false,
+        "accounts": [],
+        "reading": "not about a customer account (a login, device, HR/expense account, a narrative 'account of', a vendor relationship, an employer)",
+        "note": "Refers to Thea's locked Pemberline Dock user login."
+      },
+      {
+        "mid": "emails/2025-07-23-quarrendon-qbr-followup#m2",
+        "refers_to_customer_account": false,
+        "accounts": [],
+        "reading": "not about a customer account (a login, device, HR/expense account, a narrative 'account of', a vendor relationship, an employer)",
+        "note": "Refers to Thea's administrator login."
+      }
+    ],
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "quarrendon"
+      }
+    ],
+    "events": [
+      {
+        "eid": "e-qfl-qbr-2025",
+        "present": true,
+        "date": "2025-07-22",
+        "line": 12
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 3073,
+    "output_tokens": 367,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.009816
+}

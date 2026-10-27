@@ -369,7 +369,7 @@ if (import.meta.main) {
         finished_at: new Date().toISOString(),
       });
     } catch { /* receipt write failed too — exit code carries the failure */ }
-    process.stderr.write(`[cat23] FATAL: ${e?.stack ?? e}\n`);
+    process.stderr.write(`[cat23] FATAL: ${e?.message ?? e}\n${e?.stack ?? ''}\n`);
     process.exit(1);
   }
 }

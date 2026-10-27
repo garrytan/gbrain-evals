@@ -1,0 +1,69 @@
+{
+  "slug": "notes/2026-01-30-ilse-private-dana-leave",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2026-01-30",
+    "owner_phrases": [
+      {
+        "mid": "notes/2026-01-30-ilse-private-dana-leave#m1",
+        "phrase": "Dana's benefits account",
+        "lines": [
+          11
+        ]
+      }
+    ],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Quarrendon Freight Lines",
+        "line": 15
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": [
+      {
+        "account": "quarrendon",
+        "question": "According to this page alone, who manages Quarrendon Freight Lines, in what role, and from/until when?"
+      }
+    ]
+  },
+  "prompt_user_sha256": "ec8f70003d837fd569cdcde3976f2dfd868daca32ebba83e5280bb46dbcda9ed",
+  "response_text": "{\n  \"date_used\": \"2026-01-30\",\n  \"owner_phrases\": [\n    {\n      \"mid\": \"notes/2026-01-30-ilse-private-dana-leave#m1\",\n      \"refers_to_customer_account\": false,\n      \"accounts\": [],\n      \"reading\": \"not about a customer account (a login, device, HR/expense account, a narrative 'account of', a vendor relationship, an employer)\",\n      \"note\": \"Refers to Dana's personal HR/employee benefits portal account.\"\n    }\n  ],\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"quarrendon\"\n    }\n  ],\n  \"ownership\": [\n    {\n      \"account\": \"quarrendon\",\n      \"owner\": \"Dana Okafor\",\n      \"role\": \"primary\",\n      \"start\": null,\n      \"end\": null,\n      \"line\": 15\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2026-01-30",
+    "owner_phrases": [
+      {
+        "mid": "notes/2026-01-30-ilse-private-dana-leave#m1",
+        "refers_to_customer_account": false,
+        "accounts": [],
+        "reading": "not about a customer account (a login, device, HR/expense account, a narrative 'account of', a vendor relationship, an employer)",
+        "note": "Refers to Dana's personal HR/employee benefits portal account."
+      }
+    ],
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "quarrendon"
+      }
+    ],
+    "ownership": [
+      {
+        "account": "quarrendon",
+        "owner": "Dana Okafor",
+        "role": "primary",
+        "start": null,
+        "end": null,
+        "line": 15
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 3150,
+    "output_tokens": 259,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.00889
+}

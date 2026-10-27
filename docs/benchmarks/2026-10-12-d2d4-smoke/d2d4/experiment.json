@@ -1,0 +1,34 @@
+{
+  "schema": "cat40-experiment-v1",
+  "gbrain_commit": "44a9a77ae412bbb7220a0ed408845d79e6975846",
+  "slot_commit": "44a9a77ae412bbb7220a0ed408845d79e6975846",
+  "world_digest": "79094a8a2cbb6725cae37da8a97bb16b64d7941186f5682e209ecc644b8ab510",
+  "models": [
+    "claude-opus-5-5",
+    "claude-sonnet-5-5",
+    "gpt-6.1-sol"
+  ],
+  "arms": [
+    "gbrain"
+  ],
+  "label": "d2d4",
+  "flags": {
+    "--models": "claude-opus-5-5,claude-sonnet-5-5,gpt-6.1-sol",
+    "--arms": "gbrain",
+    "--world": "eval/data/model-ladder-wide-dev/world.json",
+    "--gbrain": "/workspace/gbrain@44a9a77ae",
+    "--gbrain-root": "~/.capy/work/cat40/gbrain-d2d4",
+    "--gbrain-label": "d2d4",
+    "--surface": "full",
+    "--advertised": "starter",
+    "--slots": "1",
+    "--families": "H",
+    "--tasks": "H01,H02,H03,H04,H05,H06,H07,H08,H09,H10",
+    "--transcripts": true,
+    "--judge": "none",
+    "--max-tool-chars": "none",
+    "--budget-ledger": ".budget/d2d4-smoke.sqlite",
+    "--out": "eval/reports/cat40/d2d4-smoke/d2d4"
+  },
+  "budget_run_id": "cat40-model-ladder-2026-10-12T21-39-11-384Z-44bb02e1"
+}

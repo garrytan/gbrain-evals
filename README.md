@@ -12,13 +12,22 @@ describes gbrain as this repository pins it today; the changelog at the bottom r
 
 | Item | Value |
 |---|---|
-| Pinned product | gbrain master [`a865f8f`](https://github.com/garrytan/gbrain/tree/a865f8f8b7c95b9f8c30690702797bafcfef537a) (v0.60.104.0), declared as `gbrain` in `package.json` |
+| Pinned product | gbrain [`7a6bdd357`](https://github.com/garrytan/gbrain/tree/7a6bdd3579a3c35d57c63790b428a746fe2f3df7), release v0.60.454.0, declared as `gbrain` in `package.json` |
 | Fixed-purpose aliases | `gbrain-cues` (`939232f`) and `gbrain-reader` (`e78f1c3`), used only by the experiments that name them |
-| This repository | gbrain-evals v0.10.45 (`VERSION`) |
+| This repository | gbrain-evals v0.10.129 (`VERSION`) |
 
-This repository installs gbrain master `a865f8f`. Some results below were measured at earlier commits; each names
-its commit. The search modes have been identical since v0.48.4.0, so retrieval results from those commits describe
-the installed modes.
+This repository installs gbrain v0.60.454.0 (`7a6bdd357`). Some results below were measured at earlier commits; each
+names its commit, and every commit named below is in the release's history except `a7cb37b`, the September 29 branch
+commit whose retrieval the reader replay row froze. The search modes held the same values from v0.48.4.0 through
+v0.60.169.0. Since then the default reranker became Voyage `rerank-3-lite` (was `rerank-2.5`, v0.60.223.0),
+`tokenmax` stopped expanding queries (v0.60.250.0), and every mode turned on result-time collapse and rank priors
+(`search.collapse`, `search.rank_priors`, v0.60.332.0): same-slug twins in other sources, merge stubs and copies of
+one document fold into one result row, and organization, OCR and date priors adjust the ranking after the reranker. On
+300 LongMemEval-S questions the reranker and expansion changes each kept retrieval within their preregistered margins
+([reranker addendum](docs/benchmarks/2026-10-13-rerank3-addendum-preregistration.md),
+[expansion latency](docs/benchmarks/2026-10-14-expansion-latency-preregistration.md)); collapse and rank priors have no
+such check here. Retrieval results measured before v0.60.223.0 used `rerank-2.5`, and results measured before
+v0.60.332.0 ran without collapse or rank priors.
 
 ## What gbrain does
 
@@ -36,6 +45,10 @@ save, find, update and forget what it knows. The parts that matter for an agent:
   behind each hit, within a token budget, so a question that needs two old chats gets both.
 - **Memory that stays correct.** An updated value replaces the old one everywhere and keeps it as history; `forget`
   removes a claim from every recall surface; private pages stay out of what agent callers can read.
+- **Memory that says where it came from.** Everything an agent reads back is labelled by its source: your notes,
+  something you told your agent, something an agent wrote, or outside content such as an email. A write gate flags
+  instruction-like text, and a purge removes a claim from every store, with a record of what was removed.
+  [What the labels change](docs/benchmarks/2026-10-08-memory-trust-results-paid.md).
 - **Built to be run by an agent.** Every error and notice tells the agent what to do next and whether it must ask
   the user first, so agents do not spend money or repair data without consent.
 - **A write path you can measure.** Agent sessions become readable memory pages, and timeline events are extracted
@@ -53,31 +66,42 @@ save, find, update and forget what it knows. The parts that matter for an agent:
 | Relationship retrieval on reworded one-hop questions, recall at five | **0.411 → 0.537**, 19 better, 0 worse | `3a284ae` | [N9](docs/benchmarks/2026-10-01-n9-multi-hop.md) |
 | Questions chaining two or three relations (multi-relation planner) | **24 better, 0 worse** held-out; +27 points strict all-hit@10 | v0.60.60.0 | [Held-out program](docs/benchmarks/2026-10-05-heldout-program.md) |
 | Meeting attendance from a documented `## Attendees` list | **132 of 132** attendees stored, 0 false; "who attended" recall at five 32% → 80% | `c5fb0201` | [Attendance world](docs/benchmarks/2026-10-06-attendance-world.md) |
+| Answers on 72 BEAM conversations, question-ranked facts plus pages at 8,000 tokens, against a memory-bank server at the same budget | **70.5 vs 66.5** points (+4.0, lower bound +2.6, ahead at the 3.5-point margin); 0.75× its cost per correct answer at 20 reads | `71b6d85` (gbrain #6445) | [Wave 2 results](docs/benchmarks/2026-10-13-memory-proof-wave-2-results.md) |
+| A query that quotes a saved turn word for word (LongMemEval-S, 500 questions) | **500 of 500** return the conversation as a clean read (was 429; the rest lacked a rerank score or lost a search arm); strict recall@10 unchanged at 496 | `fecc7827` (#6391, merged as `f05943e65`) | [Verbatim probe](docs/benchmarks/2026-10-09-verbatim-probe-preregistration.md) |
+| Vector search inside a 10% source or visibility scope, 1M to 2M chunks on Postgres | recall@50 **0.96 to 0.99** (was 0.52 to 0.77); a topic-coherent 10% source scope still reaches only 0.78 | `2e84d234e` (#6380) | [Scoped vector search](docs/benchmarks/2026-10-09-hnsw-scale.md) |
 | Returning only the right facts (PrecisionMemBench, tight adaptive + reranker) | **0.586 precision**, 0.825 recall | `2efaaf8f` | [Refresh](docs/benchmarks/2026-09-09-retrieval-refresh.md) |
-| Serving the new value after an update | **388 of 388** probes, never stale | `739e5cc` | [N1](docs/benchmarks/2026-10-01-n1-knowledge-update.md) |
-| Nothing left behind after `forget` | **0** prohibited outputs, 6 of 6 reinstatements | `739e5cc` | [N5](docs/benchmarks/2026-10-01-n5-forget-residue.md) |
-| Private pages reaching agent callers or remote callers | **0**, in process and on Postgres over real HTTP (155 of 155 cells, 5 kinds of caller); proactive recall gated in CI | `a865f8f` (Postgres over HTTP: `c5fb0201`) | [N6 on Postgres](docs/benchmarks/2026-10-06-n6-postgres-http.md), [N8 gate](docs/benchmarks/2026-10-06-n8-privacy-gate.md) |
-| Keeping speaker and time across chat export formats | **28 of 28** formats | `a865f8f` | [N12](docs/benchmarks/2026-10-01-n12-format-fidelity.md), [re-pin](docs/benchmarks/2026-10-06-followups-repin.md) |
-| Finding contradicting notes | **149 of 150** conflicts with the default judge model | `739e5cc` | [N2](docs/benchmarks/2026-10-01-n2-contradiction-surfacing.md) |
+| Serving the new value after an update | **388 of 388** probes, never stale, on PGLite and Postgres through the CLI and MCP | `77cf8e111` | [N1](docs/benchmarks/2026-10-01-n1-knowledge-update.md), [re-pin](docs/benchmarks/2026-10-11-wave14-repin.md) |
+| Nothing left behind after `forget` | **0** prohibited outputs, 6 of 6 reinstatements | `77cf8e111` | [N5](docs/benchmarks/2026-10-01-n5-forget-residue.md), [re-pin](docs/benchmarks/2026-10-11-wave14-repin.md) |
+| Private pages reaching agent callers or remote callers | **0**, in process and on Postgres over real HTTP (155 of 155 cells, 5 kinds of caller); proactive recall gated in CI | `77cf8e111` | [N6 on Postgres](docs/benchmarks/2026-10-06-n6-postgres-http.md), [N8 gate](docs/benchmarks/2026-10-06-n8-privacy-gate.md), [re-pin](docs/benchmarks/2026-10-11-wave14-repin.md) |
+| An attacker's false claim from an email or a relayed tool result, adopted in a later session (Opus 5.5, Sonnet 5.5, GPT-6.1 Sol) | **1.5% to 5%** of sessions with trust labels shown, 5.1% to 10.6% with them stripped; **0 of 360** instruction-worded injections followed per model; Cats 37 to 39 pass every keyless contract at the pin | `c2f10ee8` to `5b9c814b` (shipped as `d4dc2d4d8`); keyless at `77cf8e111` | [Memory trust](docs/benchmarks/2026-10-08-memory-trust-results-paid.md), [re-pin](docs/benchmarks/2026-10-11-wave14-repin.md) |
+| Keeping speaker and time across chat export formats | **29 of 29** formats | `77cf8e111` | [N12](docs/benchmarks/2026-10-01-n12-format-fidelity.md), [re-pin](docs/benchmarks/2026-10-11-wave14-repin.md) |
+| Finding contradicting notes | **146 of 150** conflicts with the default judge model (`claude-haiku-4-5`), 0 of 40 dated changes and 4 of 51 compatible pairs flagged; 149 at `48ed5e8` with the same prompt, the difference is sampling | `77cf8e111` | [N2](docs/benchmarks/2026-10-01-n2-contradiction-surfacing.md), [re-pin](docs/benchmarks/2026-10-11-wave14-repin.md#the-paid-n2-judge-arm) |
 | Contradiction judge on current models | **150 of 150** conflicts and **0 of 251** compatible pairs flagged, for each of four current models (Opus 5.5 the top Anthropic one); cheapest passing model $0.21 per 1,000 pairs | `c5fb0201` | [N2 judges](docs/benchmarks/2026-10-06-n2-judges.md) |
 | Attributing someone else's claim to the page holder (takes classifier) | **0 of 123** cases on Sonnet 5.5, GPT-6.1 Sol and Opus 5.5 (3 with Claude Haiku 4.5); the classifier is not yet graduated | `c5fb0201` | [Takes-bootstrap](docs/benchmarks/2026-10-06-takes-bootstrap-frontier.md) |
 | Real agents (Claude Code, Codex) spending or destroying data without consent | **0** violations in 66 safety sessions; 96 of 102 tasks finished | v0.60.46.0 | [Cat 41](docs/benchmarks/2026-10-03-agent-operator.md) |
-| Company-knowledge tasks on five frontier models | **95.6%** success; **0 of 100** finance-only leaks into context | `51f865d78` | [Cat 40](docs/benchmarks/2026-10-02-model-ladder.md) |
+| Hard company questions answered by agents, against plain files with `grep` (Cat 40 Hard confirmation: two 50,000-document worlds, Opus 5.5, Sonnet 5.5, GPT-6.1 Sol, reranking verified in every gbrain slot) | gbrain ahead by **+7.7 points** (95% CI +2.7 to +12.7) on a fresh world and **+13.0** (+7.7 to +18.3) on a sealed one, for every model; behind on the fresh world's conflicting-source family (47 against 56 of 60) | `3e4ff61ce` (shipped as v0.60.174.0, `0df9f2ee7`) | [Cat 40 Hard confirmation](docs/benchmarks/2026-10-10-model-ladder-hard-confirmation.md) |
+| Hard company questions after the Cat 40 next wave (four new 50,000-document worlds, two generators; Opus 5.5, Sonnet 5.5, GPT-6.1 Sol) | What ships, Part 1 without F5: gbrain ahead of plain files by **+10.67 points** (95% CI +7.00 to +14.50) on two sealed worlds. The pre-wave baseline is also ahead: **+8.50** (+4.83 to +12.33) on two public worlds and **+11.83** (+8.00 to +15.83) on the sealed ones. Against that baseline, the shipped configuration is level on sealed (−1.17, −4.33 to +2.00) and was level with control in development. The public build with F5 measured +12.50 (+9.17 to +15.83) against files and +4.00 against the baseline. That build is **not shipped (F5 failed its precision ship condition)**, and its gain came from F5 | `4e10136b4` (F5 off on sealed), baseline `09d21554d` | [Cat 40 next-wave confirmation](docs/benchmarks/2026-10-15-cat40-next-confirm/README.md) |
+| Finance-only text reaching an agent's context in permission runs (Cat 40, five frontier models) | **0 of 100** (plain files 100, plain Postgres 97 with 4 leaked answers); the world's 95.6% success figure is retired ([why](docs/benchmarks/2026-10-02-model-ladder.md#retired-2026-10-12)) | `51f865d78` | [Cat 40](docs/benchmarks/2026-10-02-model-ladder.md) |
 | Timeline events extracted from meetings and chats | **37 and 38 of 38**, 0.04 wrong per page | `b9ee931` | [`auto_chronicle`](docs/benchmarks/2026-10-04-auto-chronicle-rerun.md) |
 | Managed Postgres catch-up 57 ms from the database (10,000-file backlog) | **367.9 pages/min** steady, **33.6 min** for the backlog (was 174.8 pages/min and 74.5 min on the same rig); a page save 2.5 s instead of 8.6 s | v0.60.111.0 (#6279) | [Lanes and foreground](docs/benchmarks/2026-10-07-managed-sync-lanes-foreground.md) |
 | A managed Postgres catch-up when one write cannot finish preparing (15,000 entries, heavy fact adoption, 57 ms, transaction-mode pooler) | Drains in **2 passes (91 min, pool 10)** and 3 passes (pool 3), with **0** failed fence receipts and **0** watchdog stops; v0.60.105.0 never drained (102 pages in 47.6 min). A stuck write is held in **240 s**; a table lock still pins 9 of 10 connections | v0.60.112.0 (#6298; 15,000-entry runs at `846bea442`) | [Preparation stall](docs/benchmarks/2026-10-08-managed-sync-preparation-stall.md) |
 | A managed Postgres sync behind a transaction-mode pooler whose round trip never completes | Wedges with **one process and no lanes** (backend `ClientRead`, consumer parked 135 s, zero commits) on v0.60.110.0 and on #6298's head; **0 wedges in 2 h 49 min** of the two-consumer shape (4,951 pages); fixed by the bounded settle in v0.60.114.0 | v0.60.110.0 → v0.60.117.0 | [ClientRead wedge](docs/benchmarks/2026-10-08-managed-sync-clientread-wedge.md) |
+| A single-file commit becoming searchable through a running `gbrain serve` with `sync.on_commit` on (10,000 synthetic pages, local database, 4 vCPUs) | **0.60 s** p50 (p95 0.61 s, n = 40) on Postgres in watch mode, was 3.7 s managed and never on classic sources; poll mode 2.15 s p50, p95 3.20 s; vector for hybrid search 0.3 s later on managed, about 6 s later on classic; after a 30 s embedding outage PGLite left about 3% of a 1,000-chunk backlog unembedded | v0.60.316.0 (#7079) | [Sync freshness](docs/benchmarks/2026-10-19-sync-freshness.md) |
+| The first managed sync after activating a classic brain already synced to HEAD (synthetic pages, local database, 4 vCPUs) | Converges in **1 pass** on every run: Postgres 10,000 pages 13.2 s p50 (n = 3, 2,487 statements), PGLite 10,000 pages 12.9 s (n = 3), Postgres 100,000 pages **129.6 s** (n = 1, 23,243 statements). v0.60.316.0 took 1.6 s, 1.8 s and 7.1 s but compared no files, because its commit replay range was empty | v0.60.320.0 (#7053, PR head `426c4ef5`) | [Sync freshness](docs/benchmarks/2026-10-19-sync-freshness.md#first-managed-sync-after-activating-a-classic-brain-gbrain-v0603200-6712-pr-4b) |
 | Malformed facts/takes tables repaired by a model without a wrong cell (held-out set, model tier only) | **96.0%** repaired, **0** wrong cells (gpt-6.1-sol and claude-opus-5-5, the measured defaults); every other case held | v0.60.102.0 ([`5b58910`](https://github.com/garrytan/gbrain/commit/5b5891069)) | [Fence repair Tier 3](docs/benchmarks/2026-10-06-fence-repair-tier3.md) |
+| A file whose frontmatter `slug:` names another page: duplicate to merge, stray line to delete, or a case for a person (model judgment) | **0** harmful answers in 432 pair runs (no duplicate split, no merge of two different things); true duplicates recognised **92.0%** (Opus 5.5), 85.3% (gpt-6.1-sol), 80.0% (Sonnet 5.5), the rest deferred to a person | gbrain #6377 (`ac6e0868`) | [Slug-conflict judgment](docs/benchmarks/2026-10-09-content-repair-judgment.md) |
+| A forecasting take graded by a model, among verdicts confident enough to apply (≥ 0.95) | **0** wrong in 496 applied verdicts by gpt-6.1-sol (upper bound 0.6%, bar 1%), which resolved 99.2% of resolvable takes and held back on all 250 unresolvable ones; Opus 5.5 and Sonnet 5.5 rarely reach 0.95 (2 and 121 applied, Sonnet 1 wrong) | gbrain #6882 (`d99b84694`) | [Take grading](docs/benchmarks/2026-10-16-take-grading.md) |
+| A forecast journal over synthetic holders of known skill (private, trusted local only) | Shrunk accuracy ranks holders in their true order, median Spearman ρ **0.905** (bar 0.80); who-was-right set-F1 **1.000**; every open, overdue and undated prediction counted exactly; **8/8** remote probes see none of it | gbrain #6886 (`65ed40ec6`), v0.60.286.0 | [Forecast journal](docs/benchmarks/2026-10-17-forecast-journal.md) |
+| Graph walks (`traverseGraph`, `traversePathsDetailed`) on fictional graphs of 10,000 to 1,000,000 pages: Postgres with breadth-first walks against HydraDB as the walk engine | Postgres faster at every size, same answer on all 54,842 compared calls: warm p95 **1.44 s vs 6.28 s** at 100,000 pages and **3.45 s vs 6.28 s** at 1,000,000; HydraDB faster only on deep `both` walks (2.7x at depth 3); production HydraDB routing not built | gbrain #6934 (`fc1121cae58`) | [Graph backend](docs/benchmarks/2026-10-17-graph-backend.md) |
 | Useful material kept when a session becomes a memory page | **88.1%** judged (judge calibration awaiting a person's review); 74.9% with quoted evidence | Cat 35 run | [Cat 35](docs/benchmarks/2026-08-16-brainbench-cat35-transcript-distill.md) |
 
-All 28 earlier reproductions in the [bug ledger](docs/benchmarks/2026-10-01-wave-bugs.md) pass at `a865f8f`. N1-7, the
-gbrain bug the move to `c5fb0201` brought (acknowledged ontology observations lost after a maintenance sweep and a page
-rewrite), is fixed in this pin by gbrain #6265: its repro and the N1 CI slice pass, also on one loaded core
-([re-pin report](docs/benchmarks/2026-10-06-followups-repin.md)). Rows marked `c5fb0201` were measured in the October
-round at the previous pin (the paid runs, the attendance world and the Postgres-over-HTTP privacy cells). Of these only
-the Postgres privacy cells write ontology observations, the data N1-7 lost; the same fuzz in process was rerun at
-`a865f8f` with 0 leaks. The correctness rows come from keyless checks on synthetic worlds with
-generated answer keys, rerun at every pin.
+All 29 reproductions in the [bug ledger](docs/benchmarks/2026-10-01-wave-bugs.md) pass at `77cf8e111`, including
+N1-7's (fixed by gbrain #6265) and Cat7-1's, whose entry stays open under its stricter closure rule (see known limits).
+The memory trust findings with keyless repros (37-1, 37-2 and 37-5 in the
+[memory trust ledger](docs/benchmarks/2026-10-07-memory-trust-bugs.md)) pass too
+([re-pin report](docs/benchmarks/2026-10-11-wave14-repin.md)). Rows marked `c5fb0201` were measured in the October
+round at an earlier pin (the paid runs and the attendance world). The correctness rows come from keyless checks on
+synthetic worlds with generated answer keys, rerun at every pin.
 
 Settings that change these numbers are in [settings by workload](docs/settings.md). Two matter most: keep autocut off
 for questions that need several conversations (451 against 384 of 470), and leave query expansion off, since it adds
@@ -169,25 +193,46 @@ system 84.97% with the same reader model. Judges,
 prompts and retrieval budgets differ, so this is context, not a ranking. Published results across systems range from
 81.6% to 96.1%.
 
+**A memory-bank server on sealed BEAM: gbrain ahead by 2.6 points, cheaper only at low read volume.** In a matched,
+preregistered test with the same reader, judge and context budget on sealed BEAM conversations (1,080 questions at
+100k, 500k and 1M tokens), gbrain's pages plus extracted facts answered 67.0% against 64.4% for a memory-bank server
+with background extraction and reflection (+2.64 points, one-sided 95% bounds +0.90 and +4.41). Its cost per correct
+answer was 0.63 of the server's at 20 reads per stored conversation and level at 200. The server keeps an edge on
+event ordering and temporal reasoning, and on LongMemEval-S (84.5% against 80.3% for gbrain's pages alone). gbrain
+ran its freeze build `d7467d1cf`, whose retrieval was checked equivalent at `d7d7686de`; both are in the pin's
+history. [Sealed results](docs/benchmarks/2026-10-09-memory-proof-wave-sealed-results.md).
+
 **Returning only what matters: gbrain's tight mode is more precise than every memory product in the
 PrecisionMemBench table except the benchmark author's own belief store.** Its mean precision is 0.586, against 0.22,
 0.09 and 0.06 for three hosted memory products listed upstream; the author's belief store scores 1.00. Upstream rows may use different
 denominators and machines.
 
+**Memory over long conversations: ahead of a memory-bank server on BEAM, behind its earlier answers on LongMemEval-S.**
+On 72 BEAM conversations (1,440 questions), gbrain's question-ranked facts-plus-pages lane scores 70.5 against 66.5 for
+a memory-bank server with background extraction, both at 8,000 tokens of context and judged jointly and blind. The gap is
++4.0 points, with a lower bound of +2.6. gbrain costs 0.75 times as much per correct answer at 20 reads per stored
+conversation. On LongMemEval-S, gbrain trails that server's earlier answers by 3.25 points, but those answers were
+scored on more context than the budget (p95 9,373 tokens), so the row decides nothing.
+[Wave 2 results](docs/benchmarks/2026-10-13-memory-proof-wave-2-results.md).
+
 **Concept search: level with a vector store, when both are reranked.** gbrain 130 of 181, vectors with the same
 reranker 128.
 
-**Agent tasks: as good as plain files at the frontier, safer with restricted data, ahead of the alternatives on
-mid-tier models.** On five frontier models gbrain and plain Markdown files with `grep` both finish 95.6% of tasks,
-at the ceiling (the oracle scores 97.6%). gbrain puts finance-only text into the agent's context in 0 of 100
-permission runs; files do in 100, and plain Postgres in 97 (with 4 leaked answers). gbrain costs about twice as much
-per task as files. On the earlier six-model set, gbrain finished 75.7% against 72.8% for files, and was clearly
-ahead of plain Postgres (+9.7 points) and a model provider's built-in memory tool (+12.3).
+**Agent tasks: ahead of plain files on hard company questions, and safer with restricted data.** In Cat 40 Hard's
+preregistered confirmation (two 50,000-document worlds, a 16-turn cap, Opus 5.5, Sonnet 5.5 and GPT-6.1 Sol, with
+reranking verified in every gbrain slot), agents using gbrain answered more questions correctly than the same agents
+with plain Markdown files and `grep`: +7.7 points (95% CI +2.7 to +12.7) on a fresh world and +13.0 (+7.7 to +18.3)
+on a sealed one, for every model. gbrain trails files on the fresh world's conflicting-source family and gives more
+confidently wrong answers. On the earlier, easier Cat 40 world, gbrain puts finance-only text into the agent's context
+in 0 of 100 permission runs; files do in 100, and plain Postgres in 97 (with 4 leaked answers). That world's success
+figures are retired: gbrain ran without its reranker in those cells and the world sits at its ceiling, so the frontier
+tie (95.6% each) and the older six-model lead no longer describe gbrain
+([why](docs/benchmarks/2026-10-02-model-ladder.md#retired-2026-10-12)).
 
 ## Known limits
 
 - At the pin, a timeline read on a 1,000-page brain takes about 0.075 ms against 0.045 ms before the Foundations 1
-  release (ledger entry Cat7-1, open).
+  release (ledger entry Cat7-1, open; 0.075 and 0.078 ms on the two hosts measured at `77cf8e111`).
 - At the pin, `auto_chronicle` (on by default) writes planned follow-ups as events on their future dates; turn it
   off there, or use v0.60.49.0 or later.
 - Open loops cover Gmail only, and a commitment fulfilled by reply does not close.
@@ -235,15 +280,31 @@ The run writes a scorecard and individual rankings to `eval/reports/multi-adapte
 corpus already in the repository. Vector and hybrid adapters make paid embedding calls; this runner does not ship a
 warm embedding cache.
 
+To run gbrain on the public agent-memory benchmark harness (LongMemEval-S, LoCoMo10, PersonaMem, LifeBench, BEAM and
+PrecisionMemBench) under an audited protocol, follow the [harness quickstart](docs/benchmarks/harness-quickstart.md). Its
+first step is a keyless plumbing check through the real gbrain adapter.
+
 The agent benchmarks run like this:
+
+**Cat 40 Hard** asks the same agents harder questions about a larger, messier
+company: sets and counts over 10 to 40 accounts, values that changed several
+times with backdated corrections, customers with look-alike names, documents
+that disagree by authority, and facts that must survive five conversations.
+It is tuned on plain files until frontier models finish about half, then
+measured on a held-out world at about 4,000 and about 50,000 documents.
+[Operator guide](docs/benchmarks/cat40-hard/RUNBOOK.md),
+[world and scoring contract](docs/benchmarks/cat40-hard/WORLD_SCHEMA.md).
 
 ```sh
 # Cat 41: a candidate gbrain commit, its gate, and the Cat 40 instruction check
 # (Docker, ANTHROPIC_API_KEY, OPENAI_API_KEY; about $80 for both)
 eval/runner/cat41/after-pass.sh <gbrain checkout> <commit>
 
-# Cat 40 without spending: the scripted, hermetic arms
+# Cat 40 v1 without spending: the scripted, hermetic arms
 bun eval/runner/cat40-model-ladder.ts --scripted --arms fs,memory,oracle --out $(mktemp -d)
+
+# Cat 40 Hard without spending: every family through the scripted arms, plus the freeze-rule table
+scripts/cat40-hard.sh hello
 ```
 
 For the full pinned configuration matrix, prerequisites, output paths and spending controls, follow the
@@ -277,6 +338,17 @@ beside a dated correction (audit of September 28, 2026, plus later follow-ups):
   [Report](docs/benchmarks/2026-04-19-brainbench-multi-adapter.md).
 - **Cat 35's 88.1%** is judge-only; evidence-verified retention is 74.9%.
   [Report](docs/benchmarks/2026-08-16-brainbench-cat35-transcript-distill.md).
+- **Cat 40 agent-task results from October 2 to 7 measured gbrain without its reranker.** Restored harness slots
+  kept a closed metering-proxy port for Voyage, so every rerank request failed and gbrain returned unreranked results.
+  That covers the frontier tie with plain files (0 of 500 gbrain cells reranked), the six-model cost-wave set, the
+  entity-recall rounds, the fix-wave development ladders, the 52,000-document tier, most of the release ladder, the
+  F1/F10 instruction A/B in the Cat 41 report, the registration-surface cell, the P8 surface development runs and the
+  fix wave 11 and 12 smokes. Comparisons between gbrain builds that shared the condition stay internally valid. The
+  F1/F10 same-window pair for `b3f4e8b` reranked on one side only and does not support its conclusion as stated. The
+  fix wave's held-out check reranked (1691 of 1800 cells) and is unaffected. Fixed in gbrain-evals #76 and #109.
+  [Cat 40 correction](docs/benchmarks/2026-10-02-model-ladder.md#correction-2026-10-09),
+  [Cat 41 correction](docs/benchmarks/2026-10-03-agent-operator.md#correction-2026-10-09),
+  [audit](docs/benchmarks/2026-10-08-program-primary-hard/root-cause/restore-audit.json).
 - **The May snapshot's Category 18b to 29 rows** came from runners written before the August audit; Cat 29's +4.00
   synthesis lift also scored the same single-answer call twice.
   [Report](docs/benchmarks/2026-05-23-v0.40.6.0-snapshot.md).
@@ -301,11 +373,485 @@ Code is MIT licensed. Dataset and vendored benchmark attribution is recorded in 
 
 ## Changelog
 
+### 2026-10-25: Re-pin to gbrain `7a6bdd357`; repository row names v0.10.129
+
+gbrain-evals v0.10.129. The pinned product row changes from `6e1086492` (v0.60.324.0) to `7a6bdd357` (v0.60.454.0). On pages over 1 MiB, gbrain
+now keeps links, mentions, timeline, fences, conversation facts and synopses per segment, cuts forced chunks at sentence
+ends and imports a new transcript session as one page (large pages Wave B PR 4, gbrain #7316); a git-canonical page that
+turns private and then world again gets its file back (gbrain #7586). `src/core/search/mode.ts` changed between the two
+commits: gbrain v0.60.332.0 added `collapse` and `rank_priors` to every mode bundle, both on (gbrain changelog,
+0.60.332.0), so the search-mode sentences under the table now name them and say that earlier retrieval results ran
+without them. Every commit that paragraph names is still in the release's history except `a7cb37b`. No result row on
+this page changes. The repository row names v0.10.129 (was v0.10.128).
+
+### 2026-10-21: Repository row names v0.10.128
+
+gbrain-evals v0.10.128 adds the gbrain#7195 measurements to the [agent retrieval shapes report](docs/benchmarks/2026-10-20-agent-retrieval-shapes.md). The repository row names v0.10.128 (was v0.10.127).
+
+### 2026-10-20: Repository row names v0.10.127
+
+gbrain-evals v0.10.127 adds the gbrain#7186 measurements to the [agent retrieval shapes report](docs/benchmarks/2026-10-20-agent-retrieval-shapes.md). The repository row names v0.10.127 (was v0.10.126).
+
+### 2026-10-20: Repository row names v0.10.126
+
+gbrain-evals v0.10.126 adds the report-only [agent retrieval shapes](docs/benchmarks/2026-10-20-agent-retrieval-shapes.md) category (ARS). The repository row names v0.10.126 (was v0.10.125).
+
+### 2026-10-20: Sync freshness rows; repository row names v0.10.125
+
+gbrain-evals v0.10.125 adds the two sync freshness rows below (GBRA-133) and the PR 2b section of the [sync freshness report](docs/benchmarks/2026-10-19-sync-freshness.md): no-op round trips on managed Postgres and search latency during a sync. The repository row names v0.10.125 (was v0.10.124).
+
+#### First managed sync after activation row
+
+New row in Current results: the first managed sync after activating a classic brain, on gbrain v0.60.320.0 (#6712 PR 4b,
+#7053), mirrored from GBRA-133 in
+[the sync freshness report](docs/benchmarks/2026-10-19-sync-freshness.md#first-managed-sync-after-activating-a-classic-brain-gbrain-v0603200-6712-pr-4b).
+Every run converged in one pass: Postgres 100,000 pages took 129.6 s and 23,243 statements (n = 1); 10,000 pages took
+about 13 s on both engines (n = 3). No other row changes.
+
+#### Sync freshness row
+
+New row in Current results: how fast a commit becomes searchable through a running `gbrain serve` after gbrain
+v0.60.316.0 (#7079) added the commit notifier, mirrored from GBRA-133 PR 2b.6 in
+[the sync freshness report](docs/benchmarks/2026-10-19-sync-freshness.md): 0.60 s p50 in watch mode on Postgres (was
+3.7 s on managed brains and never on classic ones), 2.15 s p50 in poll mode, and a PGLite embedding gap after a provider
+outage. No other row changes.
+
+### 2026-10-20: Re-pin to gbrain `6e1086492`; repository row names v0.10.124
+
+gbrain-evals v0.10.124. The pinned product row changes from `f717b1a5b` (v0.60.299.0) to `6e1086492` (v0.60.324.0),
+which adds `append_page`, upload sessions for pages larger than one request, and segmented `edit_page` (large pages Wave
+B PR 3, gbrain #7104). `src/core/search/mode.ts` is identical at both commits, so the search-mode sentences stand, and
+every commit the paragraph under the table names is still in the release's history except `a7cb37b`. This release also
+records the N14 run at Wave B PR 3 ([report](docs/benchmarks/2026-10-20-n14-large-page-fidelity-wave-b3.md)). No result
+row on this page changes. The repository row names v0.10.124 (was v0.10.123).
+
+### 2026-10-18: Re-pin to gbrain `f717b1a5b`; repository row names v0.10.123
+
+gbrain-evals v0.10.123. The pinned product row changes from `77cf8e111` (v0.60.169.0) to `f717b1a5b` (v0.60.299.0), which
+turns segmented page storage on by default (large pages Wave B). The paragraph under the table now lists only `a7cb37b` as
+a named commit outside the release's history: the other three it listed shipped before v0.60.299.0. It also says the
+search modes changed after v0.60.169.0, with the Voyage `rerank-3-lite` default and `tokenmax` without expansion, and
+cites the two addenda that checked them. This release also records the N14 run at the switch-on
+([report](docs/benchmarks/2026-10-18-n14-large-page-fidelity-wave-b2.md)). No result row on this page changes. The
+repository row names v0.10.123 (was v0.10.122).
+
+### 2026-10-18: Graph backend row (HydraDB vs Postgres); repository row names v0.10.122
+
+Current results gains a graph-walk row from the [graph backend benchmark](docs/benchmarks/2026-10-17-graph-backend.md)
+(GBRA-123, preregistered): gbrain's breadth-first walks on Postgres (#6934, `fc1121cae58`) answer faster than HydraDB
+at 10,000, 100,000 and 1,000,000 pages with identical answers, so production HydraDB routing is not built. No existing
+number changed. The repository row names v0.10.122 (was v0.10.121).
+
+### 2026-10-17: W11 confirms gbrain W4 on sealed material; repository row names v0.10.121
+
+gbrain-evals v0.10.121 records the custodian's W11 run on gbrain v0.60.289.0: the weekly belief diff scores set-F1 1.0
+on three fresh seeds with fresh wording, with exact before and after on 28 of 28 re-scores and correct cause and
+evidence on 108 of 108 changes. The repository row names v0.10.121 (was v0.10.120).
+
+### 2026-10-17: W11 sealed-confirmation preregistration for gbrain W4; repository row names v0.10.120
+
+gbrain-evals v0.10.120 preregisters W11, the sealed confirmation of gbrain W4's weekly belief diff on a fresh seed and
+fresh wording minted in custody, with a $0 harness that ports W4's own probe. The repository row names v0.10.120 (was
+v0.10.119).
+
+### 2026-10-17: Living pages decided on prior; repository row names v0.10.119
+
+gbrain-evals v0.10.119 records the living-pages verdict for gbrain W9: with no owner data, W9 is not built in V1 and W10
+is dropped with it, because the build threshold (1,387 reads per changed page-day) is far above any known personal-brain
+read rate. The repository row names v0.10.119 (was v0.10.118).
+
+### 2026-10-17: Living-pages preregistration; repository row names v0.10.118
+
+gbrain-evals v0.10.118 preregisters the living-pages build decision for gbrain W9: a refreshed page beats anchored
+retrieval only above about 1,387 reads per change once review time is priced, and the owner's ratio is read from two
+aggregate queries. The repository row names v0.10.118 (was v0.10.117).
+
+### 2026-10-17: Forecast-journal row; repository row names v0.10.117
+
+gbrain-evals v0.10.117 mirrors the $0 forecast-journal gate for gbrain #6886 (wave 4b W7, shipped in v0.60.286.0): on
+synthetic holders of known skill the journal ranks them in their true order (median ρ 0.905), counts every open
+prediction exactly, and stays invisible to remote callers. New row after the take-grading row. The repository row names
+v0.10.117 (was v0.10.116).
+
+### 2026-10-17: P1 E2 rerun on gbrain W5; repository row names v0.10.116
+
+gbrain-evals v0.10.116 records the custodian's P1 E2 rerun on gbrain v0.60.273.0 (W5): every late closure is disclosed
+as an upper bound, and Opus 5.5, Sonnet 5.5 and GPT-6.1 Sol keep `apply` (0 wrong and 0 undated closures, as-of
+exact 0.392 to 0.397). The repository row names v0.10.116 (was v0.10.115).
+
+### 2026-10-17: Take grading shipped in gbrain v0.60.282.0; repository row names v0.10.115
+
+gbrain #6882 merged as `4e698e9d9` (v0.60.282.0), so gpt-6.1-sol is gbrain's measured take-grading judge for prompt
+`hybrid-evidence-v2`; the take-grading report and its `verdict.json` name the release. The report also records the
+auto-resolve follow-ups decided on October 16. The repository row names v0.10.115 (was v0.10.114).
+
+### 2026-10-17: Take-grading row; repository row names v0.10.114
+
+gbrain-evals v0.10.114 records the take-grading eval for gbrain #6882 (wave 4b W6, `d99b84694`): among the verdicts the
+auto-resolve rule would apply, gpt-6.1-sol applied 496 with none wrong (one-sided 95% upper bound 0.6%, under the
+preregistered 1%), so it is gbrain's measured take-grading judge; Opus 5.5 and Sonnet 5.5 do not qualify. New row
+after the slug-conflict row. The repository row names v0.10.114 (was v0.10.113).
+
+### 2026-10-16: Repository row names v0.10.113
+
+gbrain-evals v0.10.113 records N6 on gbrain's weekly belief diff (`delta {beliefs: true}`) at the v0.60.273.0 release
+(`6c3e6fe0`, #6866): 0 leaks and 0 oracles in process and over Postgres HTTP, with real-history signal on both
+(measured through `--gbrain`; the pin is unchanged), and adds the P1 E2 rerun preregistration for gbrain W5. No result
+row on this page changes. The repository row names v0.10.113 (was v0.10.112).
+
+### 2026-10-16: Repository row names v0.10.112
+
+gbrain-evals v0.10.112 records N6 on gbrain's recorded-time reads (`known_as_of`) at the v0.60.267.0 release (`933a7677`,
+#6850): 0 leaks and 0 oracles in process and over Postgres HTTP, with real-history signal on both (measured through
+`--gbrain`; the pin is unchanged). No result row on this page changes. The repository row names v0.10.112 (was v0.10.111).
+
+### 2026-10-16: Repository row names v0.10.111
+
+gbrain-evals v0.10.111 records N1 with gbrain's belief ledger on, at the v0.60.265.0 release (`09943580e`, #6806):
+388 of 388 current values and 0 stale with the ledger off and on (measured through `--gbrain`; the pin is unchanged). No
+result row on this page changes. The repository row names v0.10.111 (was v0.10.110).
+
+### 2026-10-16: Repository row names v0.10.110
+
+gbrain-evals v0.10.110 records the LHF wave 2 plan, its reviews and measured verdicts (gbrain v0.60.259.0, #6822), and
+the preregistered attendance paraphrase gate, which failed (measured through `--gbrain`; the pin is unchanged). No
+result row on this page changes. The repository row names v0.10.110 (was v0.10.109).
+
+### 2026-10-15: Repository row names v0.10.109
+
+gbrain-evals v0.10.109 records an exploratory N14 run of segmented page storage (large pages Wave B PR 1, gbrain
+v0.60.252.0, measured through `--gbrain`; the pin is unchanged). No result row on this page changes. The repository row
+names v0.10.109 (was v0.10.108).
+
+### 2026-10-15: Repository row names v0.10.108
+
+gbrain-evals v0.10.108 records the D9 check of remote `find_contradictions` on gbrain v0.60.250.0: N6 now seeds a
+stored contradiction report and finds 0 leaks, and N2's compatible-pair rule still holds, so its wave 14 number carries
+forward. No result row on this page changes. The repository row names v0.10.108 (was v0.10.107).
+
+### 2026-10-15: Repository row names v0.10.107
+
+gbrain-evals v0.10.107 records the D7 Cat 41 brief scenarios. In 48 native Claude Code and Codex sessions on gbrain
+v0.60.247.0, the pushed brief cut time to the first correct output by 6% against a preregistered 20%. So it shows no
+time-saved signal, and the brief stays off by default; this is development evidence only. No result row on this page
+changes. The repository row names v0.10.107 (was v0.10.106).
+
+### 2026-10-15: Repository row names v0.10.106
+
+gbrain-evals v0.10.106 records the D6 proactive-brief development v2 run. On the T0 carrier with gbrain v0.60.247.0,
+with session-1 facts aged or crowded out of hot memory, the brief cut session-2 tool calls by 6% against a
+preregistered 20%, so it shows no time-saved signal; success held at 72 of 72 in both arms. This is development
+evidence only. No result row on this page changes. The repository row names v0.10.106 (was v0.10.105).
+
+### 2026-10-15: Cat 40 next-wave confirmation; repository row names v0.10.105
+
+gbrain-evals v0.10.105 adds the Cat 40 next-wave development record, preregistration and confirmation. A new row under
+Current results reports what ships: Part 1 without F5 ahead of plain files by +10.67 points on two sealed worlds, the
+pre-wave baseline ahead on both generators, and the public build with F5 marked not shipped because F5 failed its
+precision ship condition. The repository row names v0.10.105 (was v0.10.104).
+
+### 2026-10-15: Repository row names v0.10.104
+
+gbrain-evals v0.10.104 adds the N14 large-page fidelity rerun after large pages Wave A (gbrain `44eb049`, measured
+through `--gbrain`; the pin is unchanged). No result row on this page changes. The repository row names v0.10.104 (was
+v0.10.103).
+
+### 2026-10-14: Repository row names v0.10.103
+
+gbrain-evals v0.10.103 records the D6 proactive-brief development run. On the T0 carrier with gbrain v0.60.240.0,
+brief-on and brief-off both finished 70 of 72 paired tasks, so it shows no improvement signal; this is development
+evidence only. No result row on this page changes. The repository row names v0.10.103 (was v0.10.102).
+
+### 2026-10-14: Repository row names v0.10.102
+
+gbrain-evals v0.10.102 records the D5 brief re-smoke on gbrain #6703, which passes, and makes the Cat 40 runner scrub
+machine paths from the files it writes. No result row on this page changes. The repository row names v0.10.102 (was
+v0.10.101).
+
+### 2026-10-14: Repository row names v0.10.101
+
+gbrain-evals v0.10.101 records the Cat 40 smoke for gbrain #6703's `context_pack` `counterparty` and `intent`
+parameters. No result row on this page changes. The repository row names v0.10.101 (was v0.10.100).
+
+### 2026-10-14: Repository row names v0.10.100
+
+gbrain-evals v0.10.100 adds BrainBench N14, large-page fidelity, and its hermetic baseline on gbrain master `c71fe74`.
+The category is report-only and held until gbrain ships a large-page API. No result row on this page changes. The
+repository row names v0.10.100 (was v0.10.99).
+
+### 2026-10-14: Repository row names v0.10.99
+
+gbrain-evals v0.10.99 adds the query-expansion latency result: on 300 LongMemEval-S questions, `query` without
+expansion on `tokenmax` keeps retrieval quality within the preregistered margins at about a ninth of the latency. No
+result row on this page changes. The repository row names v0.10.99 (was v0.10.98).
+
+### 2026-10-14: Repository row names v0.10.98
+
+gbrain-evals v0.10.98 records the F5 owner-phrase run on messy-company-v1. No result on this page changed. The
+repository row names v0.10.98 (was v0.10.97).
+
+### 2026-10-14: Repository row names v0.10.97
+
+gbrain-evals v0.10.97 adds the messy-company-v1 dataset. No result on this page changed. The repository row names
+v0.10.97 (was v0.10.96).
+
+### 2026-10-14: Cat 41 fifth-run report corrected; repository row names v0.10.96
+
+gbrain-evals v0.10.96. The [fifth Cat 41 setup report](docs/benchmarks/2026-10-14-cat41-setup-run5.md) had compared
+install-guide reading times measured two different ways. Measured one way, they are 14.4, 16.9 and 10.2 s against
+the fourth run's 14.5, 6.9 and 8.2 s. The report also gained a descriptive appendix. No verdict and no result row on
+this page changes. The repository row names v0.10.96 (was v0.10.95).
+
+### 2026-10-14: Cat 41 setup fifth run; repository row names v0.10.95
+
+gbrain-evals v0.10.95. On gbrain v0.60.219.0, with the fourth run's design unchanged, first push is met for the first
+time: the hook printed the preference into all 3 fresh Claude Code sessions, and every agent kept it in gbrain only.
+Consent is met (no provider request). Wired recall misses by 0.2 s (60.2 s against 60 s), and faster setup misses
+(2.8%) ([report](docs/benchmarks/2026-10-14-cat41-setup-run5.md)). No result row on this page changes. The repository
+row names v0.10.95 (was v0.10.93, since v0.10.94 did not update it).
+
+### 2026-10-13: Repository row names v0.10.93
+
+gbrain-evals v0.10.93 adds the reranker-settings addendum: on 300 LongMemEval-S questions, Voyage `rerank-3-lite` at
+the shipped 50 × 1,400 shape keeps retrieval quality within the preregistered margins and cuts rerank cost 60%, with
+about the same latency. No result row on this page changes. The repository row names v0.10.93 (was v0.10.92).
+
+### 2026-10-13: receipt source-tree hash fix; repository row names v0.10.92
+
+gbrain-evals v0.10.92 hashes the source tree for receipts from git's index, reading only changed files, so the
+first receipt in a test no longer hashes 1.7 GB. No result on this page changes. The repository row names v0.10.92 (was v0.10.91).
+
+### 2026-10-13: Cat 41 setup fourth run; repository row names v0.10.91
+
+gbrain-evals v0.10.91. With a world-visible preference as the first-push item, gbrain v0.60.208.0's hook printed it
+into all 3 fresh Claude Code sessions. First push still met its target in only 1 of 3 runs, because two agents also
+saved the preference to Claude Code's own memory. Wired recall (55.5 s) and consent (no provider request) are met,
+and faster setup (20.7%) is missed ([report](docs/benchmarks/2026-10-13-cat41-setup-run4.md)). No result row on this
+page changes. The repository row names v0.10.91 (was v0.10.89, since v0.10.90 did not update it).
+
+### 2026-10-13: Cat 41 setup on v0.60.208.0; repository row names v0.10.89
+
+gbrain-evals v0.10.89. On gbrain v0.60.208.0 setup meets wired recall (54.3 s against 60 s) and consent (no provider
+request in any run). It misses first push (0/3: every agent saved the locker code as a private fact, which push never
+carries). The faster-setup claim misses as scored and holds on reading (28.1%)
+([report](docs/benchmarks/2026-10-13-cat41-setup-v208.md)). No result row on this page changes. The repository row
+names v0.10.89 (was v0.10.88).
+
+### 2026-10-13: W1 guidance smoke; repository row names v0.10.88
+
+gbrain-evals v0.10.88 adds the W1 guidance smoke (A12g): with the gbrain plugin installed natively, Opus 5.5 passed 2 of
+5 sessions and Fable 5.1 5 of 5, so the `recall` `question` guidance stays parked
+([report](docs/benchmarks/2026-10-13-w1-guidance-smoke.md)). No result row on this page changes. The repository row
+names v0.10.88 (was v0.10.86; v0.10.87 did not update it).
+
+### 2026-10-13: Cat 41 setup re-measure; repository row names v0.10.86
+
+gbrain-evals v0.10.86. On gbrain v0.60.203.0 setup still misses wired recall (67.8 s against 60 s), first push (0/3)
+and consent, and meets the faster-setup threshold as scored (26.5%) but not on reading (19%, a frozen date-rule miss)
+([report](docs/benchmarks/2026-10-13-cat41-setup-remeasure.md)). The repository row names v0.10.86 (was v0.10.85).
+
+### 2026-10-13: Memory proof wave 2 results; repository row names v0.10.85
+
+gbrain-evals v0.10.85 adds the wave 2 BEAM row to current results and a memory comparison to how gbrain compares. Both are measured at gbrain
+`71b6d85` (#6445): `combined-v2` passes gates 1, 2 and 3, and adaptive W5 passes its gate at factor 1.50. No other row
+changes. The repository row names v0.10.85 (was v0.10.84). The installed-pin note says `71b6d85` ships in gbrain
+v0.60.202.0 (#6445), with W5 on by default at factor 1.50 and the W1 `question` guidance deferred (was: #6445 has not
+merged).
+
+### 2026-10-13: Repository row names v0.10.84
+
+gbrain-evals v0.10.84 adds the reranker-settings verdict on LongMemEval-S: none of 18 cheaper rerank settings holds
+strict recall@10 within 2 questions of the shipped 50 × 1,400 `rerank-2.5` setting on 300 questions, so the default
+stays. No result row on this page changes. The repository row names v0.10.84 (was v0.10.83).
+
+### 2026-10-12: BEAM-1M S1 fixes; repository row names v0.10.83
+
+gbrain-evals v0.10.83. The memory-qa harness now reranks by default and fails closed without the reranker (+4.5
+points strict recall at 5 on BEAM-1M dev, a harness change rather than a product change), and the S1 report records
+the diverse pool and wider reading staying off ([report](docs/benchmarks/2026-10-12-beam-1m-s1-fixes.md)). The
+repository row names v0.10.83 (was v0.10.82).
+
+### 2026-10-12: Cat 41 scripted user v7 and setup re-measure preregistration; repository row names v0.10.82
+
+gbrain-evals v0.10.82. Cat 41's scripted user now answers a closing question the same way in every install arm, the
+October 12 setup runs are re-scored under v7 beside their unchanged report, and the setup re-measure is preregistered
+against the same targets. The repository row names v0.10.82 (was v0.10.81).
+
+### 2026-10-12: Low-hanging-fruit wave paid gates; repository row names v0.10.81
+
+gbrain-evals v0.10.81 records the paid gates of the low-hanging-fruit wave
+([report](docs/benchmarks/2026-10-12-lhf-wave.md)). No current-results row changes, because the results gate gbrain
+defaults rather than score a release. The repository row names v0.10.81 (was v0.10.80).
+
+### 2026-10-12: Cat 41 `gbrain setup claude-code` TTHW; repository row names v0.10.80
+
+gbrain-evals v0.10.80. The wave 2 setup measurement on v0.60.184.0 misses its wired-recall (83.8 s against 60 s),
+first-push (0/3) and consent targets as written and meets the faster-setup threshold as scored (35%, 23% like-for-like)
+([report](docs/benchmarks/2026-10-12-cat41-setup-tthw.md)). The repository row names v0.10.80 (was v0.10.79).
+
+### 2026-10-12: Cat 40 warm boot waits for the persistence drain; repository row names v0.10.79
+
+gbrain-evals v0.10.79. The Cat 40 warm boot no longer snapshots a slot while gbrain is still draining persistence
+effects, and the D2/D4 notice smoke is recorded ([verdict](docs/benchmarks/2026-10-12-d2d4-smoke/VERDICT.md)). The
+repository row names v0.10.79 (was v0.10.78).
+
+### 2026-10-12: Retire the Cat 40 v1 success headline; repository row names v0.10.78
+
+gbrain-evals v0.10.78. The Cat 40 results row no longer reports 95.6% success on five frontier models: gbrain ran
+without its reranker in all 500 of those cells (gbrain-evals #110) and the world is at its ceiling, so the tie and the
+older six-model lead are retired without a rerun. The row keeps the permission result (0 of 100 finance-only leaks into
+context), which does not depend on reranking. A new row reports the Cat 40 Hard confirmation (+7.7 and +13.0 points
+over plain files on a fresh and a sealed world, reranking verified), and "How gbrain compares" describes agent tasks
+from it. The repository row names v0.10.78 (was v0.10.77).
+
 ### 2026-10-12: Q1 scoreboard headline block, pending
 
 New block at the top of "How gbrain compares": the Q1 scoreboard's six-column headline table between the
 `scoreboard:headline` markers, every cell pending until the sealed waves settle. `bun eval/runner/scoreboard.ts
 render` replaces it from the campaign receipt. No existing result changed.
+
+### 2026-10-11: T0b sealed confirmation; repository row names v0.10.77
+
+gbrain-evals v0.10.77. The custodian-sealed T0b confirmation reports the shipped stack (v0.60.174.0) failing 5 of 576
+runs where v0.60.106.0 fails 271, verdict `10x` under `t0b-score-v2` and `improvement` under `t0b-score-v1`
+([report](docs/benchmarks/2026-10-11-t0b-sealed-confirmation.md)). The repository row names v0.10.77 (was v0.10.76).
+
+### 2026-10-11: Pin gbrain v0.60.169.0 (`77cf8e111`); repository row names v0.10.76
+
+gbrain-evals v0.10.76. The pin moves from `8a3eedeac` (v0.60.126.0) to the release v0.60.169.0, `77cf8e111`, after a
+paired keyless regression check that found no gbrain regression ([re-pin report](docs/benchmarks/2026-10-11-wave14-repin.md)).
+The rows rerun at every pin now name `77cf8e111`: N1 (388 of 388, unchanged), N5 (0 prohibited outputs, unchanged),
+the privacy row (0 leaks, 155 of 155 Postgres cells, unchanged) and N12, which reads 29 of 29 formats instead of 28 of
+28 because gbrain registered one more chat pattern (`plain-role-no-time`) and N12 now covers it. The bug-ledger
+sentence counts 29 repros and adds the three memory trust repros. The Cat7-1 limit adds its measurement at the pin.
+Features the old pin predated now appear, each on evidence measured at a commit in the new pin's history: memory
+trust labels (a capability and a results row from the paid run at `c2f10ee8` to `5b9c814b`, with Cats 37 to 39
+passing keyless at the pin), the verbatim-quote probe (`fecc7827`, 500 of 500 clean against 429), scoped vector
+search at 1M to 2M chunks (`2e84d234e`) and the matched BEAM comparison with a memory-bank server (`d7467d1cf`). The
+N2 row moves to `77cf8e111` after its paid judge arm was rerun with Garry's approval ($7.07): it reads 146 of 150
+instead of 149 of 150, with the same judge model and prompt. Three conflicts the earlier run caught were called
+changes over time, which is sampling variation at the provider's default temperature (exact McNemar p = 0.25). It
+also flags 4 of 51 compatible pairs instead of 6. The repository row names v0.10.76 (was v0.10.75).
+
+### 2026-10-11: Repository row names v0.10.75
+
+gbrain-evals v0.10.75 adds the Cat 40 Hard fix wave's plan, development record, confirmation preregistration and
+results, and records that the sealed Hard world has now run once. No result row on this page changes. The repository
+row names v0.10.75 (was v0.10.74).
+
+### 2026-10-11: Repository row names v0.10.74
+
+gbrain-evals v0.10.74 adds Cat 40 Hard: the tier, its calibration record, the October 7 held-out result and the fix
+wave's confirmation, where gbrain v0.60.139.0 is ahead of plain files on a fresh and a sealed world (+7.7 and +13.0
+points). No result row on this page changes. The repository row names v0.10.74 (was v0.10.73).
+
+### 2026-10-11: Repository row names v0.10.73
+
+gbrain-evals v0.10.73 folds in two contributor fixes: the Bash 3.2 resume-args guard in the phase 1 run script and
+the shared judge's rejection of non-finite scores. No result row on this page changes. The repository row names
+v0.10.73 (was v0.10.72).
+
+### 2026-10-11: Repository row names v0.10.72
+
+gbrain-evals v0.10.72 publishes the memory proof wave: the preregistration and addenda, the harness, and the sealed
+BEAM results ([report](docs/benchmarks/2026-10-09-memory-proof-wave-sealed-results.md)) for the build that shipped as
+gbrain #6066 (v0.60.164.0). No result row or capability on this page changes. The repository row names v0.10.72 (was
+v0.10.71).
+
+### 2026-10-10: Repository row names v0.10.71
+
+gbrain-evals v0.10.71 adds the H1 results ([report](docs/benchmarks/2026-10-10-gbrain-budgeted-delivery-h1.md)): on
+sealed confirmation v2, `depth_first` packing lost to the shipped `cap_only` at an explicit 5,500-token budget (122
+against 145 of 200), so gbrain's explicit-budget default does not change. No result row or capability on this page
+changes: the page states no explicit-budget packing result, and calls without a budget are unaffected. The repository
+row names v0.10.71 (was v0.10.70).
+
+### 2026-10-10: Repository row names v0.10.70
+
+gbrain-evals v0.10.70 adds the preregistration of H1, the held-out test of `depth_first` packing against the shipped
+`cap_only` on sealed confirmation v2 ([preregistration](docs/benchmarks/2026-10-10-gbrain-budgeted-delivery-h1-preregistration.md)).
+It is not a result, so no result row on this page changes. The repository row names v0.10.70 (was v0.10.69).
+
+### 2026-10-10: Repository row names v0.10.69
+
+gbrain-evals v0.10.69 adds T0b generator v2 (unique short codes), scorer `t0b-score-v2`, custodian-sealed seed and world
+tooling, and preregistration amendment 5 for the sealed confirmation of the shipped stack. No paid cells. The
+repository row names v0.10.69 (was v0.10.68).
+
+### 2026-10-10: Repository row names v0.10.68
+
+gbrain-evals v0.10.68 adds the T0b namesake diagnostic: the 11 namesake-flagged runs left on the alias-stack arms are
+scorer false positives, with no conflation and no wrong-entity resolution by gbrain. The repository row names v0.10.68
+(was v0.10.67).
+
+### 2026-10-09: Repository row names v0.10.67
+
+gbrain-evals v0.10.67 adds the memory trust categories (Cats 37 to 39), their preregistration and the paid run for
+gbrain #6396 (merged as `d4dc2d4d8`, v0.60.139.0, the #5575 memory trust feature): the [paid report](docs/benchmarks/2026-10-08-memory-trust-results-paid.md).
+No result row on this page changes, because the pin is still `8a3eedeac`, which predates the feature. The repository
+row names v0.10.67 (was v0.10.66).
+
+### 2026-10-09: Repository row names v0.10.66
+
+gbrain-evals v0.10.66 adds the verbatim-probe paired verdict for gbrain #6391 (merged as `f05943e65` in v0.60.138.0):
+the verbatim-quote probe: 71 questions gained a clean read and none lost one (429 to 500 of 500, exact McNemar p = 8.5e-22), with strict recall@10 unchanged at 496 of 500. No result row on this page changes, because the pin is still `8a3eedeac`. The repository row names v0.10.66
+(was v0.10.65).
+
+### 2026-10-09: Repository row names v0.10.65
+
+gbrain-evals v0.10.65 adds the HNSW scale report, mirrored from gbrain #6380 (merged as `2e84d234e` in v0.60.135.0):
+at 1M to 2M chunks, pooled vector attempts that scan 20,000 tuples lift random 10% scope recall@50 from 0.52 to 0.77
+to 0.96 to 0.99, and topic-coherent selective sources remain a gap. No result row on this page changes, because the
+pin is still `8a3eedeac`. The repository row names v0.10.65 (was v0.10.64).
+
+### 2026-10-09: Repository row names v0.10.64
+
+gbrain-evals v0.10.64 adds the T0b alias-stack report: short-code aliases (gbrain #6271 at `f24ca6afe`) on top of
+Candidate 1 cut failures from 18 to 4 of 72 on fresh seeds (`improvement`) and from 25 to 11 of 144 on development seeds
+(`inconclusive`). The repository row names v0.10.64 (was v0.10.63).
+
+### 2026-10-09: Slug-conflict judgment added to current results
+
+gbrain-evals v0.10.63 (the repository row names it; was v0.10.62). New row: gbrain #6377 (`ac6e0868`, branch `capy/gbra72-content-repair`) adds a content-repair lane whose model tier judges a file whose frontmatter `slug:` names another page. On 48 synthetic pairs over three runs, `claude-opus-5-5`, `gpt-6.1-sol` and `claude-sonnet-5-5` gave no harmful answer (no `remove_slug` on a true duplicate, no `merge_into` of two different things, no wrong canonical), removed every stray slug and deferred every ambiguous pair; they recognised 92.0%, 85.3% and 80.0% of true duplicates and deferred the rest. All three qualify; Opus 5.5 leads gbrain's `CONTENT_REPAIR_MEASURED_MODELS`. Details in [the judgment report](docs/benchmarks/2026-10-09-content-repair-judgment.md) and [its preregistration](docs/benchmarks/2026-10-09-content-repair-judgment-preregistration.md).
+### 2026-10-09: Repository row names v0.10.62
+
+gbrain-evals v0.10.62 adds the budgeted delivery E2 report (how `auto` should pack an explicit token budget; development
+data). The repository row names v0.10.62 (was v0.10.59).
+
+### 2026-10-09: Pin gbrain `8a3eedeac`; repository row names v0.10.59
+
+gbrain-evals v0.10.59. The pin moves from `fc548317f` (v0.60.122.0) to `8a3eedeac` (v0.60.126.0), the merge of gbrain #6362,
+which puts the newest dated mentions of each entity on `context_pack` cards, on by default, as measured in the
+[Candidate 1 report](docs/benchmarks/2026-10-09-candidate-1-newer-mentions.md). The repository row names v0.10.59
+(was v0.10.57).
+
+### 2026-10-09: Repository row names v0.10.57
+
+gbrain-evals v0.10.57 adds the evidence brief confirmation (wave 1 A6). The repository row names v0.10.57 (was v0.10.56).
+
+### 2026-10-09: Cat 40 rows note gbrain ran without its reranker; repository row names v0.10.56
+
+gbrain-evals v0.10.56 adds dated corrections to the Cat 40 results that ran gbrain without reranking (restored harness slots kept a closed metering-proxy port; fixed in #76 and #109). The Cat 40 results row now says gbrain's reranker failed in all 500 cells, the agent-tasks comparison says both sets measured gbrain with the reranker off, and Corrections gains a bullet listing the affected runs. The numbers are unchanged. The repository row names v0.10.56 (was v0.10.55).
+
+### 2026-10-08: Repository row names v0.10.55
+
+gbrain-evals v0.10.55 adds the T0b root-cause report, a measurement of gbrain master v0.60.122.0 on the T0b protocol, and harness fixes so restored gbrain slots search with the reranker. The repository row names v0.10.55 (was v0.10.54). Results rows keep the commits they were measured at, so no row changes.
+
+### 2026-10-08: Repository row names v0.10.54
+
+gbrain-evals v0.10.54 adds the harder program primary (T0b): its preregistration with three calibration rounds and its development baseline at gbrain v0.60.106.0. The repository row names v0.10.54 (was v0.10.53). Results rows keep the commits they were measured at, so no row changes.
+
+### 2026-10-08: Pin gbrain `fc548317f`; repository row names v0.10.53
+
+gbrain-evals v0.10.53. The pin moves from `61624308b` (v0.60.120.0) to `fc548317f` (v0.60.122.0), the merge of gbrain #6350, which ships the eval-only evidence brief builder the wave 1 evidence architecture pilot measured. The repository row names v0.10.53 (was v0.10.52).
+
+### 2026-10-08: Repository row names v0.10.52
+
+gbrain-evals v0.10.52 adds the program primary (T0) preregistration and its development baseline at gbrain v0.60.106.0, and the power work (PW). The repository row names v0.10.52 (was v0.10.51). Results rows keep the commits they were measured at, so no row changes.
+
+### 2026-10-08: Pin gbrain `61624308b`; repository row names v0.10.51
+
+gbrain-evals v0.10.51. The pin moves from `a865f8f` (v0.60.104.0) to `61624308b` (v0.60.120.0), the merge of gbrain #6343 (Q2 parser gaps: the line-grammar guards and diagnostics, settings-bound link extraction, and the held-out-confirmed link-typing units U1, U3 and U4). The repository row names v0.10.51 (was v0.10.45; the 0.10.46 to 0.10.50 releases did not restamp it). This release adds the Q2 preregistration, harness, custodian runbook and held-out verdicts (typed relation lines stay opt-in). Results rows keep the commits they were measured at, so no row changes.
 
 ### 2026-10-08: ClientRead wedge row; repository row names v0.10.45
 

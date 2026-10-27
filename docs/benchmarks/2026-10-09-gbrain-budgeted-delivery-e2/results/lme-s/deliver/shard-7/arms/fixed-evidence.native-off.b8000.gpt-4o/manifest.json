@@ -1,0 +1,15 @@
+{
+  "kind": "memory-qa-manifest",
+  "schema_version": 1,
+  "run_config_hash": "9662709e359b6ee40faa805e4468393c475424f37e13e837ebdf897438c3f7eb",
+  "expected": [
+    "3b6f954b",
+    "75499fd8",
+    "2ce6a0f2",
+    "982b5123_abs",
+    "852ce960",
+    "fca762bc"
+  ],
+  "expected_sha256": "96dd7603da0664eb9f32bb879810950dc5a9a17650c2bfe8ee24ea02f7f2d6f0",
+  "created_at": "2026-10-09T15:05:26.953Z"
+}

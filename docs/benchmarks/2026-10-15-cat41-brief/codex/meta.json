@@ -1,0 +1,62 @@
+{
+  "label": "d7-codex",
+  "gbrain": {
+    "requested": "gbrain@47f052af0c7f92f259daa9b1b51bb90370dcf520",
+    "ref": "47f052af0c7f92f259daa9b1b51bb90370dcf520",
+    "commit": "47f052af0c7f92f259daa9b1b51bb90370dcf520",
+    "tree": "93155b5adb8020d4e2ac89b4a8a9c13952f8b8e4",
+    "version": "0.60.247.0",
+    "checkout_dirty": false,
+    "verified": {
+      "copy_tree": "93155b5adb8020d4e2ac89b4a8a9c13952f8b8e4",
+      "tree_matches": true,
+      "symlinks_under_src": 0,
+      "dir_is_realpath": true,
+      "cli_version": "0.60.247.0",
+      "cli_version_matches": true
+    },
+    "copied_not_symlinked": true
+  },
+  "image": "gbrain-evals-cat41:v1",
+  "pins": {
+    "claude_code": "2.1.285",
+    "codex": "0.160.0",
+    "bun": "1.4.2",
+    "node": "24.18.0"
+  },
+  "models": {
+    "claude": "claude-opus-5-5",
+    "codex": "gpt-6.1-sol"
+  },
+  "repeat": 1,
+  "harnesses": [
+    "codex"
+  ],
+  "scenarios": [
+    "d7_reply_20261222_off",
+    "d7_reply_20261222_on",
+    "d7_prep_20261222_off",
+    "d7_prep_20261222_on",
+    "d7_task_start_20261222_off",
+    "d7_task_start_20261222_on",
+    "d7_negative_20261222_off",
+    "d7_negative_20261222_on"
+  ],
+  "docs_base": "https://raw.githubusercontent.com/garrytan/gbrain/47f052af0c7f92f259daa9b1b51bb90370dcf520",
+  "install_spec": "github:garrytan/gbrain#47f052af0c7f92f259daa9b1b51bb90370dcf520",
+  "budget_run_id": "cat41-agent-operator-2026-10-15T18-25-29-722Z-a288fb4c",
+  "tool_result_cap": "none (harness defaults; the evaluator adds no per-tool-result cap)",
+  "seed": {
+    "pages": 6,
+    "facts": 3
+  },
+  "preregistration": {
+    "preregistration": "docs/benchmarks/2026-10-15-cat41-brief-preregistration.md",
+    "preregistration_commit": "7918b48c6b8cad667529abfecb6f5e5756dbea56",
+    "runner_commit": "7918b48c6b8cad667529abfecb6f5e5756dbea56",
+    "worktree_clean_for_preregistration": true,
+    "on_origin": true,
+    "attested_at": "2026-10-15T18:25:50.155Z"
+  },
+  "started_at": "2026-10-15T18:25:50.190Z"
+}

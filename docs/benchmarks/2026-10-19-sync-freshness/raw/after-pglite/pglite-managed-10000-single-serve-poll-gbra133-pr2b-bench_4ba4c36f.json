@@ -1,0 +1,796 @@
+{
+ "schema": "gbrain-sync-freshness/1",
+ "kind": "latency",
+ "cell": "pglite-managed-10000-single-serve-poll-gbra133-pr2b-bench_4ba4c36f",
+ "label": "gbra133-pr2b-bench@4ba4c36f",
+ "gbrain_rev": "4ba4c36f",
+ "at": "2026-10-19T23:01:56.698Z",
+ "params": {
+  "engine": "pglite",
+  "mode": "managed",
+  "pages": 10000,
+  "commit": "single",
+  "trigger": "serve",
+  "reps": 40,
+  "rtt_ms": 0,
+  "measured_rtt_ms": null,
+  "interval_s": null,
+  "scenario": "plain",
+  "probe_ms": 100,
+  "timeout_s": 300,
+  "keyless": true,
+  "embed": null,
+  "detection": "poll",
+  "jitter_ms": 3000,
+  "sources": [
+   "bench"
+  ],
+  "source_pages": null,
+  "residents": null
+ },
+ "machine": {
+  "cores": 4,
+  "cpu_model": "AMD EPYC",
+  "ram_gb": 16,
+  "kernel": "6.1.158+",
+  "bun": "1.4.3"
+ },
+ "build": {
+  "engine": "pglite",
+  "mode": "managed",
+  "pages": 10000,
+  "sources": [
+   "bench"
+  ],
+  "rev": "4ba4c36f",
+  "built_at": "2026-10-19T22:45:54.004Z",
+  "cloned_from": "pglite-classic-10000-4ba4c36f",
+  "clone_ms": 1748.9,
+  "activate_ms": 2396.5,
+  "first_managed_sync": {
+   "ms": 1824.45849609375,
+   "runs": 1
+  },
+  "links_settled": {
+   "ms": 776.2,
+   "runs": 1,
+   "last": "Extract --stale: 0 link(s) created, 0 removed, 0 timeline entr(ies) from 0 page(s). | Actionable: 0 page(s) still need link/timeline extraction; 0 page(s) due for the mention pass. Extraction is complete (raw stale totals are not a completion signal)."
+  }
+ },
+ "notes": [
+  "serve on-commit watcher enabled 761.9 ms after spawn"
+ ],
+ "get_page": {
+  "n": 40,
+  "p50": 2344.9,
+  "p95": 3719.8,
+  "max": 3790.9,
+  "min": 784.1,
+  "mean": 2291.4,
+  "cv": 0.449
+ },
+ "search": {
+  "n": 40,
+  "p50": 1926.9,
+  "p95": 3526.1,
+  "max": 3790.9,
+  "min": 387.9,
+  "mean": 1992.5,
+  "cv": 0.522
+ },
+ "exit": {
+  "n": 0,
+  "p50": null,
+  "p95": null,
+  "max": null,
+  "min": null,
+  "mean": null,
+  "cv": null
+ },
+ "phases": {
+  "first_line": {
+   "n": 40,
+   "p50": 1523.9,
+   "p95": 2899.2,
+   "max": 2992,
+   "min": 0.2,
+   "mean": 1442.3,
+   "cv": 0.697
+  },
+  "serve_job_started": {
+   "n": 40,
+   "p50": 1523.9,
+   "p95": 2899.2,
+   "max": 2992,
+   "min": 0.2,
+   "mean": 1442.3,
+   "cv": 0.697
+  }
+ },
+ "detection_observed": {
+  "bench": "poll (serve)"
+ },
+ "failures": 0,
+ "reps": [
+  {
+   "rep": 0,
+   "sha": "6ae3968c7ecb",
+   "token": "zqiugaujstwp",
+   "files": 1,
+   "get_ms": 1436.7,
+   "search_ms": 1436.7,
+   "first_hit_ms": 1436.7,
+   "commit_git_ms": 114.5,
+   "source": "mcp",
+   "phases": {
+    "first_line": 432.3,
+    "serve_job_started": 432.3
+   },
+   "probes": 6,
+   "probe_ms_mean": 216.1
+  },
+  {
+   "rep": 1,
+   "sha": "b5acb9c89da5",
+   "token": "zqmhvqqrijro",
+   "files": 1,
+   "get_ms": 1014.6,
+   "search_ms": 1014.6,
+   "first_hit_ms": 1014.6,
+   "commit_git_ms": 115.5,
+   "source": "mcp",
+   "phases": {
+    "first_line": 119.2,
+    "serve_job_started": 119.2
+   },
+   "probes": 3,
+   "probe_ms_mean": 337.4
+  },
+  {
+   "rep": 2,
+   "sha": "1485c4096c04",
+   "token": "zqdytbrujkjh",
+   "files": 1,
+   "get_ms": 1888.7,
+   "search_ms": 1498.1,
+   "first_hit_ms": 1498.1,
+   "commit_git_ms": 120.9,
+   "source": "mcp",
+   "phases": {
+    "first_line": 1076.9,
+    "serve_job_started": 1076.9
+   },
+   "probes": 13,
+   "probe_ms_mean": 104
+  },
+  {
+   "rep": 3,
+   "sha": "64d7ebfe2d0a",
+   "token": "zqvnyohqubjb",
+   "files": 1,
+   "get_ms": 2274.9,
+   "search_ms": 1811.3,
+   "first_hit_ms": 1811.3,
+   "commit_git_ms": 113.4,
+   "source": "mcp",
+   "phases": {
+    "first_line": 1368.8,
+    "serve_job_started": 1368.8
+   },
+   "probes": 16,
+   "probe_ms_mean": 97.9
+  },
+  {
+   "rep": 4,
+   "sha": "8e8ce956e3da",
+   "token": "zqcqvbftyiwi",
+   "files": 1,
+   "get_ms": 3643.9,
+   "search_ms": 3228.3,
+   "first_hit_ms": 3228.3,
+   "commit_git_ms": 118.5,
+   "source": "mcp",
+   "phases": {
+    "first_line": 2791.1,
+    "serve_job_started": 2791.1
+   },
+   "probes": 30,
+   "probe_ms_mean": 74.2
+  },
+  {
+   "rep": 5,
+   "sha": "d309dbed2c85",
+   "token": "zqiwcewkiffw",
+   "files": 1,
+   "get_ms": 2487.5,
+   "search_ms": 2119.1,
+   "first_hit_ms": 2119.1,
+   "commit_git_ms": 91.8,
+   "source": "mcp",
+   "phases": {
+    "first_line": 1673.4,
+    "serve_job_started": 1673.4
+   },
+   "probes": 19,
+   "probe_ms_mean": 78.2
+  },
+  {
+   "rep": 6,
+   "sha": "802d4f35f30d",
+   "token": "zqvijktiakgr",
+   "files": 1,
+   "get_ms": 784.1,
+   "search_ms": 423.9,
+   "first_hit_ms": 423.9,
+   "commit_git_ms": 107.3,
+   "source": "mcp",
+   "phases": {
+    "first_line": 0.2,
+    "serve_job_started": 0.2
+   },
+   "probes": 2,
+   "probe_ms_mean": 391.4
+  },
+  {
+   "rep": 7,
+   "sha": "388c73301235",
+   "token": "zqdguwrzkdmd",
+   "files": 1,
+   "get_ms": 1541.8,
+   "search_ms": 1191.6,
+   "first_hit_ms": 1191.6,
+   "commit_git_ms": 101.5,
+   "source": "mcp",
+   "phases": {
+    "first_line": 773,
+    "serve_job_started": 773
+   },
+   "probes": 10,
+   "probe_ms_mean": 113.6
+  },
+  {
+   "rep": 8,
+   "sha": "1cc788b8b41a",
+   "token": "zqoteejzwitl",
+   "files": 1,
+   "get_ms": 1187.3,
+   "search_ms": 829.2,
+   "first_hit_ms": 829.2,
+   "commit_git_ms": 122,
+   "source": "mcp",
+   "phases": {
+    "first_line": 381.3,
+    "serve_job_started": 381.3
+   },
+   "probes": 6,
+   "probe_ms_mean": 163.6
+  },
+  {
+   "rep": 9,
+   "sha": "9c5b8f4ba70c",
+   "token": "zqzsyahygfal",
+   "files": 1,
+   "get_ms": 1431.6,
+   "search_ms": 1084.8,
+   "first_hit_ms": 1084.8,
+   "commit_git_ms": 93.1,
+   "source": "mcp",
+   "phases": {
+    "first_line": 683.6,
+    "serve_job_started": 683.6
+   },
+   "probes": 9,
+   "probe_ms_mean": 118.2
+  },
+  {
+   "rep": 10,
+   "sha": "c7c609ee6651",
+   "token": "zqdalttbdblr",
+   "files": 1,
+   "get_ms": 2898.1,
+   "search_ms": 1962.8,
+   "first_hit_ms": 1962.8,
+   "commit_git_ms": 103,
+   "source": "mcp",
+   "phases": {
+    "first_line": 1584.6,
+    "serve_job_started": 1584.6
+   },
+   "probes": 18,
+   "probe_ms_mean": 108.4
+  },
+  {
+   "rep": 11,
+   "sha": "2c3854c4d8ca",
+   "token": "zqqraneykhog",
+   "files": 1,
+   "get_ms": 3697.9,
+   "search_ms": 3305.7,
+   "first_hit_ms": 3305.7,
+   "commit_git_ms": 109.7,
+   "source": "mcp",
+   "phases": {
+    "first_line": 2742.5,
+    "serve_job_started": 2742.5
+   },
+   "probes": 30,
+   "probe_ms_mean": 77.9
+  },
+  {
+   "rep": 12,
+   "sha": "4dbaa913caba",
+   "token": "zqgxrdwmgjry",
+   "files": 1,
+   "get_ms": 3072.3,
+   "search_ms": 2656.2,
+   "first_hit_ms": 2656.2,
+   "commit_git_ms": 117.9,
+   "source": "mcp",
+   "phases": {
+    "first_line": 2145.4,
+    "serve_job_started": 2145.4
+   },
+   "probes": 24,
+   "probe_ms_mean": 76.1
+  },
+  {
+   "rep": 13,
+   "sha": "6241f1395ea4",
+   "token": "zqxavrfmulgf",
+   "files": 1,
+   "get_ms": 1081.9,
+   "search_ms": 697.5,
+   "first_hit_ms": 697.5,
+   "commit_git_ms": 75.3,
+   "source": "mcp",
+   "phases": {
+    "first_line": 304.5,
+    "serve_job_started": 304.5
+   },
+   "probes": 5,
+   "probe_ms_mean": 182.3
+  },
+  {
+   "rep": 14,
+   "sha": "7494a9ad1b22",
+   "token": "zqdyioklzdtg",
+   "files": 1,
+   "get_ms": 2309.4,
+   "search_ms": 1891,
+   "first_hit_ms": 1891,
+   "commit_git_ms": 111.5,
+   "source": "mcp",
+   "phases": {
+    "first_line": 1463.2,
+    "serve_job_started": 1463.2
+   },
+   "probes": 17,
+   "probe_ms_mean": 88.7
+  },
+  {
+   "rep": 15,
+   "sha": "b2018ee1b073",
+   "token": "zqsvjesdphzx",
+   "files": 1,
+   "get_ms": 3195.3,
+   "search_ms": 2776.2,
+   "first_hit_ms": 2776.2,
+   "commit_git_ms": 109.9,
+   "source": "mcp",
+   "phases": {
+    "first_line": 2346.2,
+    "serve_job_started": 2346.2
+   },
+   "probes": 26,
+   "probe_ms_mean": 76.4
+  },
+  {
+   "rep": 16,
+   "sha": "2604e558a870",
+   "token": "zqehohgsbyln",
+   "files": 1,
+   "get_ms": 2632.4,
+   "search_ms": 2230.7,
+   "first_hit_ms": 2230.7,
+   "commit_git_ms": 120.5,
+   "source": "mcp",
+   "phases": {
+    "first_line": 1798.7,
+    "serve_job_started": 1798.7
+   },
+   "probes": 20,
+   "probe_ms_mean": 86.8
+  },
+  {
+   "rep": 17,
+   "sha": "ae25787889be",
+   "token": "zqrdkllqbikv",
+   "files": 1,
+   "get_ms": 3378.3,
+   "search_ms": 3002.1,
+   "first_hit_ms": 3002.1,
+   "commit_git_ms": 118,
+   "source": "mcp",
+   "phases": {
+    "first_line": 2564.5,
+    "serve_job_started": 2564.5
+   },
+   "probes": 28,
+   "probe_ms_mean": 72.5
+  },
+  {
+   "rep": 18,
+   "sha": "c73f19c93468",
+   "token": "zqehkgjvpjzb",
+   "files": 1,
+   "get_ms": 3716.5,
+   "search_ms": 3342.3,
+   "first_hit_ms": 3342.3,
+   "commit_git_ms": 117.1,
+   "source": "mcp",
+   "phases": {
+    "first_line": 2897.1,
+    "serve_job_started": 2897.1
+   },
+   "probes": 31,
+   "probe_ms_mean": 70.7
+  },
+  {
+   "rep": 19,
+   "sha": "9a5550f107c3",
+   "token": "zqqwbchwadsb",
+   "files": 1,
+   "get_ms": 3461.4,
+   "search_ms": 3123.2,
+   "first_hit_ms": 3123.2,
+   "commit_git_ms": 105,
+   "source": "mcp",
+   "phases": {
+    "first_line": 2645.7,
+    "serve_job_started": 2645.7
+   },
+   "probes": 29,
+   "probe_ms_mean": 71.1
+  },
+  {
+   "rep": 20,
+   "sha": "3b00f4448756",
+   "token": "zqctzlqojbul",
+   "files": 1,
+   "get_ms": 1164,
+   "search_ms": 829,
+   "first_hit_ms": 829,
+   "commit_git_ms": 119.3,
+   "source": "mcp",
+   "phases": {
+    "first_line": 400.2,
+    "serve_job_started": 400.2
+   },
+   "probes": 6,
+   "probe_ms_mean": 158.7
+  },
+  {
+   "rep": 21,
+   "sha": "594195882c8d",
+   "token": "zqbjyghqhcwf",
+   "files": 1,
+   "get_ms": 3286.4,
+   "search_ms": 3286.4,
+   "first_hit_ms": 3286.4,
+   "commit_git_ms": 117.8,
+   "source": "mcp",
+   "phases": {
+    "first_line": 2465.6,
+    "serve_job_started": 2465.6
+   },
+   "probes": 26,
+   "probe_ms_mean": 76.4
+  },
+  {
+   "rep": 22,
+   "sha": "9c93086da1eb",
+   "token": "zqrsrdolvwhm",
+   "files": 1,
+   "get_ms": 3512.6,
+   "search_ms": 3512.6,
+   "first_hit_ms": 3512.6,
+   "commit_git_ms": 113.2,
+   "source": "mcp",
+   "phases": {
+    "first_line": 2854.3,
+    "serve_job_started": 2854.3
+   },
+   "probes": 30,
+   "probe_ms_mean": 65.8
+  },
+  {
+   "rep": 23,
+   "sha": "441d75536194",
+   "token": "zqplxupwqxmc",
+   "files": 1,
+   "get_ms": 3790.9,
+   "search_ms": 3790.9,
+   "first_hit_ms": 3790.9,
+   "commit_git_ms": 105.4,
+   "source": "mcp",
+   "phases": {
+    "first_line": 2992,
+    "serve_job_started": 2992
+   },
+   "probes": 31,
+   "probe_ms_mean": 71.1
+  },
+  {
+   "rep": 24,
+   "sha": "88aabba5d2d3",
+   "token": "zqbbnronampd",
+   "files": 1,
+   "get_ms": 898.6,
+   "search_ms": 513.3,
+   "first_hit_ms": 513.3,
+   "commit_git_ms": 111.3,
+   "source": "mcp",
+   "phases": {
+    "first_line": 77.3,
+    "serve_job_started": 77.3
+   },
+   "probes": 3,
+   "probe_ms_mean": 283.1
+  },
+  {
+   "rep": 25,
+   "sha": "1d509a234314",
+   "token": "zqndbenuwnhn",
+   "files": 1,
+   "get_ms": 1083.5,
+   "search_ms": 738.9,
+   "first_hit_ms": 738.9,
+   "commit_git_ms": 117.8,
+   "source": "mcp",
+   "phases": {
+    "first_line": 294.9,
+    "serve_job_started": 294.9
+   },
+   "probes": 5,
+   "probe_ms_mean": 185.4
+  },
+  {
+   "rep": 26,
+   "sha": "e1723325d8b3",
+   "token": "zqxouynfeefd",
+   "files": 1,
+   "get_ms": 2975.7,
+   "search_ms": 2975.7,
+   "first_hit_ms": 2975.7,
+   "commit_git_ms": 116.8,
+   "source": "mcp",
+   "phases": {
+    "first_line": 2161.3,
+    "serve_job_started": 2161.3
+   },
+   "probes": 23,
+   "probe_ms_mean": 80
+  },
+  {
+   "rep": 27,
+   "sha": "9b16feea8d9b",
+   "token": "zqvglmkkjurz",
+   "files": 1,
+   "get_ms": 3056.5,
+   "search_ms": 3056.5,
+   "first_hit_ms": 3056.5,
+   "commit_git_ms": 117.1,
+   "source": "mcp",
+   "phases": {
+    "first_line": 2264.7,
+    "serve_job_started": 2264.7
+   },
+   "probes": 24,
+   "probe_ms_mean": 75.9
+  },
+  {
+   "rep": 28,
+   "sha": "c481748dd211",
+   "token": "zqndbgwsozav",
+   "files": 1,
+   "get_ms": 1316.8,
+   "search_ms": 1316.8,
+   "first_hit_ms": 1316.8,
+   "commit_git_ms": 111.4,
+   "source": "mcp",
+   "phases": {
+    "first_line": 651.3,
+    "serve_job_started": 651.3
+   },
+   "probes": 8,
+   "probe_ms_mean": 119.8
+  },
+  {
+   "rep": 29,
+   "sha": "5be95d6ded7e",
+   "token": "zqalwddluwvc",
+   "files": 1,
+   "get_ms": 1377.3,
+   "search_ms": 999.7,
+   "first_hit_ms": 999.7,
+   "commit_git_ms": 100.1,
+   "source": "mcp",
+   "phases": {
+    "first_line": 574.5,
+    "serve_job_started": 574.5
+   },
+   "probes": 8,
+   "probe_ms_mean": 132
+  },
+  {
+   "rep": 30,
+   "sha": "7d8895440b4a",
+   "token": "zqcvcexcksdo",
+   "files": 1,
+   "get_ms": 1390.7,
+   "search_ms": 983.5,
+   "first_hit_ms": 983.5,
+   "commit_git_ms": 106.2,
+   "source": "mcp",
+   "phases": {
+    "first_line": 482.2,
+    "serve_job_started": 482.2
+   },
+   "probes": 7,
+   "probe_ms_mean": 162.4
+  },
+  {
+   "rep": 31,
+   "sha": "f16decdc15ef",
+   "token": "zqtfqkhupixp",
+   "files": 1,
+   "get_ms": 811.8,
+   "search_ms": 387.9,
+   "first_hit_ms": 387.9,
+   "commit_git_ms": 110.8,
+   "source": "mcp",
+   "phases": {
+    "first_line": 3.8,
+    "serve_job_started": 3.8
+   },
+   "probes": 2,
+   "probe_ms_mean": 405.3
+  },
+  {
+   "rep": 32,
+   "sha": "b7951546b085",
+   "token": "zqanllbfxcql",
+   "files": 1,
+   "get_ms": 3477.4,
+   "search_ms": 2697.2,
+   "first_hit_ms": 2697.2,
+   "commit_git_ms": 107.4,
+   "source": "mcp",
+   "phases": {
+    "first_line": 2268,
+    "serve_job_started": 2268
+   },
+   "probes": 25,
+   "probe_ms_mean": 91.1
+  },
+  {
+   "rep": 33,
+   "sha": "3f5e787ed8d2",
+   "token": "zqvkoqtekpqj",
+   "files": 1,
+   "get_ms": 2809.3,
+   "search_ms": 2335.6,
+   "first_hit_ms": 2335.6,
+   "commit_git_ms": 120,
+   "source": "mcp",
+   "phases": {
+    "first_line": 1869.2,
+    "serve_job_started": 1869.2
+   },
+   "probes": 21,
+   "probe_ms_mean": 92.5
+  },
+  {
+   "rep": 34,
+   "sha": "b52069959793",
+   "token": "zqstjwfhbnsj",
+   "files": 1,
+   "get_ms": 2116,
+   "search_ms": 1712.7,
+   "first_hit_ms": 1712.7,
+   "commit_git_ms": 104.2,
+   "source": "mcp",
+   "phases": {
+    "first_line": 1273,
+    "serve_job_started": 1273
+   },
+   "probes": 15,
+   "probe_ms_mean": 95.7
+  },
+  {
+   "rep": 35,
+   "sha": "95a1c13c8391",
+   "token": "zqttfetysvir",
+   "files": 1,
+   "get_ms": 2881.4,
+   "search_ms": 2366.6,
+   "first_hit_ms": 2366.6,
+   "commit_git_ms": 121.7,
+   "source": "mcp",
+   "phases": {
+    "first_line": 1866.4,
+    "serve_job_started": 1866.4
+   },
+   "probes": 21,
+   "probe_ms_mean": 88.6
+  },
+  {
+   "rep": 36,
+   "sha": "781a74c73c2a",
+   "token": "zqtilltkhfpr",
+   "files": 1,
+   "get_ms": 1586.4,
+   "search_ms": 1586.4,
+   "first_hit_ms": 1586.4,
+   "commit_git_ms": 123.3,
+   "source": "mcp",
+   "phases": {
+    "first_line": 789.1,
+    "serve_job_started": 789.1
+   },
+   "probes": 9,
+   "probe_ms_mean": 133.9
+  },
+  {
+   "rep": 37,
+   "sha": "d588ede5577d",
+   "token": "zqmkizayopez",
+   "files": 1,
+   "get_ms": 3783.1,
+   "search_ms": 3783.1,
+   "first_hit_ms": 3783.1,
+   "commit_git_ms": 120.2,
+   "source": "mcp",
+   "phases": {
+    "first_line": 2939.3,
+    "serve_job_started": 2939.3
+   },
+   "probes": 31,
+   "probe_ms_mean": 71.1
+  },
+  {
+   "rep": 38,
+   "sha": "0a9a3f9758ed",
+   "token": "zqabvcjxrzhd",
+   "files": 1,
+   "get_ms": 821.8,
+   "search_ms": 821.8,
+   "first_hit_ms": 821.8,
+   "commit_git_ms": 118.2,
+   "source": "mcp",
+   "phases": {
+    "first_line": 18.3,
+    "serve_job_started": 18.3
+   },
+   "probes": 2,
+   "probe_ms_mean": 410.3
+  },
+  {
+   "rep": 39,
+   "sha": "88b1c909ba61",
+   "token": "zqfazhfmiypw",
+   "files": 1,
+   "get_ms": 2380.4,
+   "search_ms": 2380.4,
+   "first_hit_ms": 2380.4,
+   "commit_git_ms": 117,
+   "source": "mcp",
+   "phases": {
+    "first_line": 1652.4,
+    "serve_job_started": 1652.4
+   },
+   "probes": 18,
+   "probe_ms_mean": 84.5
+  }
+ ]
+}

@@ -1,0 +1,3743 @@
+{
+  "version": "d7-smoke-v1",
+  "gbrain": {
+    "requested": "gbrain@47f052af0c7f92f259daa9b1b51bb90370dcf520",
+    "ref": "47f052af0c7f92f259daa9b1b51bb90370dcf520",
+    "commit": "47f052af0c7f92f259daa9b1b51bb90370dcf520",
+    "tree": "93155b5adb8020d4e2ac89b4a8a9c13952f8b8e4",
+    "version": "0.60.247.0",
+    "checkout_dirty": false,
+    "verified": {
+      "copy_tree": "93155b5adb8020d4e2ac89b4a8a9c13952f8b8e4",
+      "tree_matches": true,
+      "symlinks_under_src": 0,
+      "dir_is_realpath": true,
+      "cli_version": "0.60.247.0",
+      "cli_version_matches": true
+    },
+    "copied_not_symlinked": true
+  },
+  "at": "2026-10-15T17:56:36.881Z",
+  "rows": [
+    {
+      "id": "d7_reply_20261222_off",
+      "harness": "claude",
+      "setup_error": null,
+      "crash": null,
+      "setup": {
+        "condition": "aged",
+        "arm": "off",
+        "backdated": {
+          "facts": 8,
+          "timeline": 4,
+          "versions": 12
+        },
+        "crowd_facts": null,
+        "setup_exit": 0,
+        "setup_states": [
+          "configured",
+          "connection-verified",
+          "native-pending"
+        ]
+      },
+      "hooks": [
+        {
+          "event": "session-start",
+          "ms": 906,
+          "rc": 0,
+          "bytes": 162,
+          "brief": null,
+          "hot_memory_facts": [],
+          "other_injected_facts": []
+        },
+        {
+          "event": "user-prompt",
+          "ms": 213,
+          "rc": 0,
+          "bytes": 304,
+          "brief": null,
+          "hot_memory_facts": [],
+          "other_injected_facts": []
+        }
+      ],
+      "harness_requests": 1,
+      "brief_reached_model": null,
+      "replay": {
+        "cutoff_ms": 300,
+        "switch_on": false,
+        "turn_context": [
+          {
+            "ms": 119,
+            "brief_items": 0
+          },
+          {
+            "ms": 26,
+            "brief_items": 0
+          },
+          {
+            "ms": 40,
+            "brief_items": 0
+          },
+          {
+            "ms": 18,
+            "brief_items": 0
+          },
+          {
+            "ms": 20,
+            "brief_items": 0
+          }
+        ],
+        "brief_alone": [
+          {
+            "ms": 26,
+            "brief_items": 2
+          },
+          {
+            "ms": 18,
+            "brief_items": 2
+          },
+          {
+            "ms": 22,
+            "brief_items": 2
+          },
+          {
+            "ms": 15,
+            "brief_items": 2
+          },
+          {
+            "ms": 25,
+            "brief_items": 2
+          }
+        ]
+      },
+      "gate_check_replay": null,
+      "heartbeat": [
+        {
+          "event": "session-start",
+          "outcome": "ok",
+          "ms": 687
+        },
+        {
+          "event": "user-prompt",
+          "outcome": "ok",
+          "ms": 102
+        }
+      ]
+    },
+    {
+      "id": "d7_reply_20261222_on",
+      "harness": "claude",
+      "setup_error": null,
+      "crash": null,
+      "setup": {
+        "condition": "aged",
+        "arm": "on",
+        "backdated": {
+          "facts": 8,
+          "timeline": 4,
+          "versions": 12
+        },
+        "crowd_facts": null,
+        "setup_exit": 0,
+        "setup_states": [
+          "configured",
+          "connection-verified",
+          "native-pending"
+        ]
+      },
+      "hooks": [
+        {
+          "event": "session-start",
+          "ms": 754,
+          "rc": 0,
+          "bytes": 162,
+          "brief": null,
+          "hot_memory_facts": [],
+          "other_injected_facts": []
+        },
+        {
+          "event": "user-prompt",
+          "ms": 181,
+          "rc": 0,
+          "bytes": 879,
+          "brief": {
+            "chars": 496,
+            "items": [
+              {
+                "id": "F9",
+                "slug": "people/felix-draxler",
+                "class": {
+                  "id": "F9",
+                  "carries": [
+                    "corrected"
+                  ],
+                  "stale": false,
+                  "namesake": false,
+                  "other_counterparty": false,
+                  "false_push": false
+                }
+              },
+              {
+                "id": "Et5",
+                "slug": "people/felix-draxler",
+                "class": {
+                  "id": "Et5",
+                  "carries": [
+                    "commitment"
+                  ],
+                  "stale": false,
+                  "namesake": false,
+                  "other_counterparty": false,
+                  "false_push": false
+                }
+              }
+            ]
+          },
+          "hot_memory_facts": [],
+          "other_injected_facts": []
+        }
+      ],
+      "harness_requests": 1,
+      "brief_reached_model": true,
+      "replay": {
+        "cutoff_ms": 300,
+        "switch_on": true,
+        "turn_context": [
+          {
+            "ms": 169,
+            "brief_items": 2
+          },
+          {
+            "ms": 59,
+            "brief_items": 2
+          },
+          {
+            "ms": 46,
+            "brief_items": 2
+          },
+          {
+            "ms": 67,
+            "brief_items": 2
+          },
+          {
+            "ms": 46,
+            "brief_items": 2
+          }
+        ],
+        "brief_alone": [
+          {
+            "ms": 31,
+            "brief_items": 2
+          },
+          {
+            "ms": 25,
+            "brief_items": 2
+          },
+          {
+            "ms": 26,
+            "brief_items": 2
+          },
+          {
+            "ms": 19,
+            "brief_items": 2
+          },
+          {
+            "ms": 17,
+            "brief_items": 2
+          }
+        ]
+      },
+      "gate_check_replay": null,
+      "heartbeat": [
+        {
+          "event": "session-start",
+          "outcome": "ok",
+          "ms": 648
+        },
+        {
+          "event": "user-prompt",
+          "outcome": "ok",
+          "ms": 87
+        }
+      ]
+    },
+    {
+      "id": "d7_reply_20261222_pull",
+      "harness": "claude",
+      "setup_error": null,
+      "crash": null,
+      "setup": {
+        "condition": "aged",
+        "arm": "pull",
+        "backdated": {
+          "facts": 8,
+          "timeline": 4,
+          "versions": 12
+        },
+        "crowd_facts": null,
+        "setup_exit": 0,
+        "setup_states": [
+          "configured",
+          "connection-verified",
+          "native-pending"
+        ]
+      },
+      "hooks": [],
+      "harness_requests": 1,
+      "brief_reached_model": null,
+      "replay": {
+        "cutoff_ms": 300,
+        "switch_on": false,
+        "turn_context": [
+          {
+            "ms": 181,
+            "brief_items": 0
+          },
+          {
+            "ms": 44,
+            "brief_items": 0
+          },
+          {
+            "ms": 27,
+            "brief_items": 0
+          },
+          {
+            "ms": 22,
+            "brief_items": 0
+          },
+          {
+            "ms": 28,
+            "brief_items": 0
+          }
+        ],
+        "brief_alone": [
+          {
+            "ms": 73,
+            "brief_items": 2
+          },
+          {
+            "ms": 30,
+            "brief_items": 2
+          },
+          {
+            "ms": 19,
+            "brief_items": 2
+          },
+          {
+            "ms": 16,
+            "brief_items": 2
+          },
+          {
+            "ms": 15,
+            "brief_items": 2
+          }
+        ]
+      },
+      "gate_check_replay": null,
+      "heartbeat": []
+    },
+    {
+      "id": "d7_prep_20261222_off",
+      "harness": "claude",
+      "setup_error": null,
+      "crash": null,
+      "setup": {
+        "condition": "crowded",
+        "arm": "off",
+        "backdated": null,
+        "crowd_facts": 40,
+        "setup_exit": 0,
+        "setup_states": [
+          "configured",
+          "connection-verified",
+          "native-pending"
+        ]
+      },
+      "hooks": [
+        {
+          "event": "session-start",
+          "ms": 1266,
+          "rc": 0,
+          "bytes": 1915,
+          "brief": null,
+          "hot_memory_facts": [],
+          "other_injected_facts": []
+        },
+        {
+          "event": "user-prompt",
+          "ms": 318,
+          "rc": 0,
+          "bytes": 1991,
+          "brief": null,
+          "hot_memory_facts": [],
+          "other_injected_facts": []
+        }
+      ],
+      "harness_requests": 1,
+      "brief_reached_model": null,
+      "replay": {
+        "cutoff_ms": 300,
+        "switch_on": false,
+        "turn_context": [
+          {
+            "ms": 226,
+            "brief_items": 0
+          },
+          {
+            "ms": 60,
+            "brief_items": 0
+          },
+          {
+            "ms": 52,
+            "brief_items": 0
+          },
+          {
+            "ms": 71,
+            "brief_items": 0
+          },
+          {
+            "ms": 57,
+            "brief_items": 0
+          }
+        ],
+        "brief_alone": [
+          {
+            "ms": 110,
+            "brief_items": 2
+          },
+          {
+            "ms": 32,
+            "brief_items": 2
+          },
+          {
+            "ms": 20,
+            "brief_items": 2
+          },
+          {
+            "ms": 27,
+            "brief_items": 2
+          },
+          {
+            "ms": 71,
+            "brief_items": 2
+          }
+        ]
+      },
+      "gate_check_replay": null,
+      "heartbeat": [
+        {
+          "event": "session-start",
+          "outcome": "ok",
+          "ms": 1096
+        },
+        {
+          "event": "user-prompt",
+          "outcome": "ok",
+          "ms": 120
+        }
+      ]
+    },
+    {
+      "id": "d7_reply_20261222_off",
+      "harness": "codex",
+      "setup_error": null,
+      "crash": null,
+      "setup": {
+        "condition": "aged",
+        "arm": "off",
+        "backdated": {
+          "facts": 8,
+          "timeline": 4,
+          "versions": 12
+        },
+        "crowd_facts": null,
+        "setup_exit": 0,
+        "setup_states": [
+          "configured",
+          "connection-verified",
+          "native-verified"
+        ]
+      },
+      "hooks": [
+        {
+          "event": "session-start",
+          "ms": 185,
+          "rc": 0,
+          "bytes": 0,
+          "brief": null,
+          "hot_memory_facts": [],
+          "other_injected_facts": []
+        },
+        {
+          "event": "user-prompt",
+          "ms": 216,
+          "rc": 0,
+          "bytes": 304,
+          "brief": null,
+          "hot_memory_facts": [],
+          "other_injected_facts": []
+        }
+      ],
+      "harness_requests": 6,
+      "brief_reached_model": null,
+      "replay": {
+        "cutoff_ms": 300,
+        "switch_on": false,
+        "turn_context": [
+          {
+            "ms": 288,
+            "brief_items": 0
+          },
+          {
+            "ms": 88,
+            "brief_items": 0
+          },
+          {
+            "ms": 58,
+            "brief_items": 0
+          },
+          {
+            "ms": 33,
+            "brief_items": 0
+          },
+          {
+            "ms": 90,
+            "brief_items": 0
+          }
+        ],
+        "brief_alone": [
+          {
+            "ms": 99,
+            "brief_items": 2
+          },
+          {
+            "ms": 76,
+            "brief_items": 2
+          },
+          {
+            "ms": 27,
+            "brief_items": 2
+          },
+          {
+            "ms": 67,
+            "brief_items": 2
+          },
+          {
+            "ms": 91,
+            "brief_items": 2
+          }
+        ]
+      },
+      "gate_check_replay": null,
+      "heartbeat": [
+        {
+          "event": "session-start",
+          "outcome": "ok",
+          "ms": 61
+        },
+        {
+          "event": "user-prompt",
+          "outcome": "ok",
+          "ms": 98
+        }
+      ]
+    },
+    {
+      "id": "d7_prep_20261222_on",
+      "harness": "claude",
+      "setup_error": null,
+      "crash": null,
+      "setup": {
+        "condition": "crowded",
+        "arm": "on",
+        "backdated": null,
+        "crowd_facts": 40,
+        "setup_exit": 0,
+        "setup_states": [
+          "configured",
+          "connection-verified",
+          "native-pending"
+        ]
+      },
+      "hooks": [
+        {
+          "event": "session-start",
+          "ms": 867,
+          "rc": 0,
+          "bytes": 1751,
+          "brief": null,
+          "hot_memory_facts": [],
+          "other_injected_facts": []
+        },
+        {
+          "event": "user-prompt",
+          "ms": 236,
+          "rc": 0,
+          "bytes": 2575,
+          "brief": {
+            "chars": 505,
+            "items": [
+              {
+                "id": "F3",
+                "slug": "people/kofi-okafor",
+                "class": {
+                  "id": "F3",
+                  "carries": [
+                    "new_date"
+                  ],
+                  "stale": false,
+                  "namesake": false,
+                  "other_counterparty": false,
+                  "false_push": false
+                }
+              },
+              {
+                "id": "Et1",
+                "slug": "people/kofi-okafor",
+                "class": {
+                  "id": "Et1",
+                  "carries": [
+                    "commitment"
+                  ],
+                  "stale": false,
+                  "namesake": false,
+                  "other_counterparty": false,
+                  "false_push": false
+                }
+              }
+            ]
+          },
+          "hot_memory_facts": [],
+          "other_injected_facts": []
+        }
+      ],
+      "harness_requests": 1,
+      "brief_reached_model": true,
+      "replay": {
+        "cutoff_ms": 300,
+        "switch_on": true,
+        "turn_context": [
+          {
+            "ms": 332,
+            "brief_items": 0
+          },
+          {
+            "ms": 107,
+            "brief_items": 2
+          },
+          {
+            "ms": 84,
+            "brief_items": 2
+          },
+          {
+            "ms": 37,
+            "brief_items": 2
+          },
+          {
+            "ms": 50,
+            "brief_items": 2
+          }
+        ],
+        "brief_alone": [
+          {
+            "ms": 97,
+            "brief_items": 2
+          },
+          {
+            "ms": 18,
+            "brief_items": 2
+          },
+          {
+            "ms": 36,
+            "brief_items": 2
+          },
+          {
+            "ms": 14,
+            "brief_items": 2
+          },
+          {
+            "ms": 34,
+            "brief_items": 2
+          }
+        ]
+      },
+      "gate_check_replay": null,
+      "heartbeat": [
+        {
+          "event": "session-start",
+          "outcome": "ok",
+          "ms": 767
+        },
+        {
+          "event": "user-prompt",
+          "outcome": "ok",
+          "ms": 109
+        }
+      ]
+    },
+    {
+      "id": "d7_reply_20261222_on",
+      "harness": "codex",
+      "setup_error": null,
+      "crash": null,
+      "setup": {
+        "condition": "aged",
+        "arm": "on",
+        "backdated": {
+          "facts": 8,
+          "timeline": 4,
+          "versions": 12
+        },
+        "crowd_facts": null,
+        "setup_exit": 0,
+        "setup_states": [
+          "configured",
+          "connection-verified",
+          "native-verified"
+        ]
+      },
+      "hooks": [
+        {
+          "event": "session-start",
+          "ms": 323,
+          "rc": 0,
+          "bytes": 162,
+          "brief": null,
+          "hot_memory_facts": [],
+          "other_injected_facts": []
+        },
+        {
+          "event": "user-prompt",
+          "ms": 202,
+          "rc": 0,
+          "bytes": 879,
+          "brief": {
+            "chars": 496,
+            "items": [
+              {
+                "id": "F9",
+                "slug": "people/felix-draxler",
+                "class": {
+                  "id": "F9",
+                  "carries": [
+                    "corrected"
+                  ],
+                  "stale": false,
+                  "namesake": false,
+                  "other_counterparty": false,
+                  "false_push": false
+                }
+              },
+              {
+                "id": "Et5",
+                "slug": "people/felix-draxler",
+                "class": {
+                  "id": "Et5",
+                  "carries": [
+                    "commitment"
+                  ],
+                  "stale": false,
+                  "namesake": false,
+                  "other_counterparty": false,
+                  "false_push": false
+                }
+              }
+            ]
+          },
+          "hot_memory_facts": [],
+          "other_injected_facts": []
+        }
+      ],
+      "harness_requests": 6,
+      "brief_reached_model": true,
+      "replay": {
+        "cutoff_ms": 300,
+        "switch_on": true,
+        "turn_context": [
+          {
+            "ms": 339,
+            "brief_items": 0
+          },
+          {
+            "ms": 63,
+            "brief_items": 2
+          },
+          {
+            "ms": 74,
+            "brief_items": 2
+          },
+          {
+            "ms": 42,
+            "brief_items": 2
+          },
+          {
+            "ms": 31,
+            "brief_items": 2
+          }
+        ],
+        "brief_alone": [
+          {
+            "ms": 109,
+            "brief_items": 2
+          },
+          {
+            "ms": 54,
+            "brief_items": 2
+          },
+          {
+            "ms": 28,
+            "brief_items": 2
+          },
+          {
+            "ms": 15,
+            "brief_items": 2
+          },
+          {
+            "ms": 9,
+            "brief_items": 2
+          }
+        ]
+      },
+      "gate_check_replay": null,
+      "heartbeat": [
+        {
+          "event": "session-start",
+          "outcome": "ok",
+          "ms": 80
+        },
+        {
+          "event": "user-prompt",
+          "outcome": "ok",
+          "ms": 101
+        }
+      ]
+    },
+    {
+      "id": "d7_prep_20261222_pull",
+      "harness": "claude",
+      "setup_error": null,
+      "crash": null,
+      "setup": {
+        "condition": "crowded",
+        "arm": "pull",
+        "backdated": null,
+        "crowd_facts": 40,
+        "setup_exit": 0,
+        "setup_states": [
+          "configured",
+          "connection-verified",
+          "native-pending"
+        ]
+      },
+      "hooks": [],
+      "harness_requests": 1,
+      "brief_reached_model": null,
+      "replay": {
+        "cutoff_ms": 300,
+        "switch_on": false,
+        "turn_context": [
+          {
+            "ms": 322,
+            "brief_items": 0
+          },
+          {
+            "ms": 62,
+            "brief_items": 0
+          },
+          {
+            "ms": 94,
+            "brief_items": 0
+          },
+          {
+            "ms": 129,
+            "brief_items": 0
+          },
+          {
+            "ms": 55,
+            "brief_items": 0
+          }
+        ],
+        "brief_alone": [
+          {
+            "ms": 115,
+            "brief_items": 2
+          },
+          {
+            "ms": 46,
+            "brief_items": 2
+          },
+          {
+            "ms": 26,
+            "brief_items": 2
+          },
+          {
+            "ms": 38,
+            "brief_items": 2
+          },
+          {
+            "ms": 46,
+            "brief_items": 2
+          }
+        ]
+      },
+      "gate_check_replay": null,
+      "heartbeat": []
+    },
+    {
+      "id": "d7_task_start_20261222_off",
+      "harness": "claude",
+      "setup_error": null,
+      "crash": null,
+      "setup": {
+        "condition": "aged",
+        "arm": "off",
+        "backdated": {
+          "facts": 8,
+          "timeline": 4,
+          "versions": 12
+        },
+        "crowd_facts": null,
+        "setup_exit": 0,
+        "setup_states": [
+          "configured",
+          "connection-verified",
+          "native-pending"
+        ]
+      },
+      "hooks": [
+        {
+          "event": "session-start",
+          "ms": 1225,
+          "rc": 0,
+          "bytes": 162,
+          "brief": null,
+          "hot_memory_facts": [],
+          "other_injected_facts": []
+        },
+        {
+          "event": "user-prompt",
+          "ms": 244,
+          "rc": 0,
+          "bytes": 303,
+          "brief": null,
+          "hot_memory_facts": [],
+          "other_injected_facts": []
+        }
+      ],
+      "harness_requests": 1,
+      "brief_reached_model": null,
+      "replay": {
+        "cutoff_ms": 300,
+        "switch_on": false,
+        "turn_context": [
+          {
+            "ms": 265,
+            "brief_items": 0
+          },
+          {
+            "ms": 88,
+            "brief_items": 0
+          },
+          {
+            "ms": 31,
+            "brief_items": 0
+          },
+          {
+            "ms": 65,
+            "brief_items": 0
+          },
+          {
+            "ms": 79,
+            "brief_items": 0
+          }
+        ],
+        "brief_alone": [
+          {
+            "ms": 88,
+            "brief_items": 2
+          },
+          {
+            "ms": 34,
+            "brief_items": 2
+          },
+          {
+            "ms": 40,
+            "brief_items": 2
+          },
+          {
+            "ms": 23,
+            "brief_items": 2
+          },
+          {
+            "ms": 41,
+            "brief_items": 2
+          }
+        ]
+      },
+      "gate_check_replay": {
+        "cutoff_ms": 300,
+        "switch_on": false,
+        "turn_context": [
+          {
+            "ms": 257,
+            "brief_items": 0
+          },
+          {
+            "ms": 101,
+            "brief_items": 0
+          },
+          {
+            "ms": 68,
+            "brief_items": 0
+          },
+          {
+            "ms": 21,
+            "brief_items": 0
+          },
+          {
+            "ms": 77,
+            "brief_items": 0
+          }
+        ],
+        "brief_alone": [
+          {
+            "ms": 41,
+            "brief_items": 0
+          },
+          {
+            "ms": 18,
+            "brief_items": 0
+          },
+          {
+            "ms": 15,
+            "brief_items": 0
+          },
+          {
+            "ms": 9,
+            "brief_items": 0
+          },
+          {
+            "ms": 31,
+            "brief_items": 0
+          }
+        ]
+      },
+      "heartbeat": [
+        {
+          "event": "session-start",
+          "outcome": "ok",
+          "ms": 1002
+        },
+        {
+          "event": "user-prompt",
+          "outcome": "ok",
+          "ms": 142
+        }
+      ]
+    },
+    {
+      "id": "d7_task_start_20261222_off",
+      "harness": "codex",
+      "setup_error": null,
+      "crash": null,
+      "setup": {
+        "condition": "aged",
+        "arm": "off",
+        "backdated": {
+          "facts": 8,
+          "timeline": 4,
+          "versions": 12
+        },
+        "crowd_facts": null,
+        "setup_exit": 0,
+        "setup_states": [
+          "configured",
+          "connection-verified",
+          "native-verified"
+        ]
+      },
+      "hooks": [
+        {
+          "event": "session-start",
+          "ms": 277,
+          "rc": 0,
+          "bytes": 0,
+          "brief": null,
+          "hot_memory_facts": [],
+          "other_injected_facts": []
+        },
+        {
+          "event": "user-prompt",
+          "ms": 397,
+          "rc": 0,
+          "bytes": 303,
+          "brief": null,
+          "hot_memory_facts": [],
+          "other_injected_facts": []
+        }
+      ],
+      "harness_requests": 6,
+      "brief_reached_model": null,
+      "replay": {
+        "cutoff_ms": 300,
+        "switch_on": false,
+        "turn_context": [
+          {
+            "ms": 165,
+            "brief_items": 0
+          },
+          {
+            "ms": 35,
+            "brief_items": 0
+          },
+          {
+            "ms": 31,
+            "brief_items": 0
+          },
+          {
+            "ms": 21,
+            "brief_items": 0
+          },
+          {
+            "ms": 34,
+            "brief_items": 0
+          }
+        ],
+        "brief_alone": [
+          {
+            "ms": 42,
+            "brief_items": 2
+          },
+          {
+            "ms": 27,
+            "brief_items": 2
+          },
+          {
+            "ms": 33,
+            "brief_items": 2
+          },
+          {
+            "ms": 13,
+            "brief_items": 2
+          },
+          {
+            "ms": 43,
+            "brief_items": 2
+          }
+        ]
+      },
+      "gate_check_replay": {
+        "cutoff_ms": 300,
+        "switch_on": false,
+        "turn_context": [
+          {
+            "ms": 182,
+            "brief_items": 0
+          },
+          {
+            "ms": 79,
+            "brief_items": 0
+          },
+          {
+            "ms": 42,
+            "brief_items": 0
+          },
+          {
+            "ms": 30,
+            "brief_items": 0
+          },
+          {
+            "ms": 22,
+            "brief_items": 0
+          }
+        ],
+        "brief_alone": [
+          {
+            "ms": 27,
+            "brief_items": 0
+          },
+          {
+            "ms": 15,
+            "brief_items": 0
+          },
+          {
+            "ms": 9,
+            "brief_items": 0
+          },
+          {
+            "ms": 6,
+            "brief_items": 0
+          },
+          {
+            "ms": 7,
+            "brief_items": 0
+          }
+        ]
+      },
+      "heartbeat": [
+        {
+          "event": "session-start",
+          "outcome": "ok",
+          "ms": 56
+        },
+        {
+          "event": "user-prompt",
+          "outcome": "ok",
+          "ms": 153
+        }
+      ]
+    },
+    {
+      "id": "d7_task_start_20261222_on",
+      "harness": "claude",
+      "setup_error": null,
+      "crash": null,
+      "setup": {
+        "condition": "aged",
+        "arm": "on",
+        "backdated": {
+          "facts": 8,
+          "timeline": 4,
+          "versions": 12
+        },
+        "crowd_facts": null,
+        "setup_exit": 0,
+        "setup_states": [
+          "configured",
+          "connection-verified",
+          "native-pending"
+        ]
+      },
+      "hooks": [
+        {
+          "event": "session-start",
+          "ms": 1402,
+          "rc": 0,
+          "bytes": 162,
+          "brief": null,
+          "hot_memory_facts": [],
+          "other_injected_facts": []
+        },
+        {
+          "event": "user-prompt",
+          "ms": 322,
+          "rc": 0,
+          "bytes": 882,
+          "brief": {
+            "chars": 500,
+            "items": [
+              {
+                "id": "F11",
+                "slug": "people/niko-galloway",
+                "class": {
+                  "id": "F11",
+                  "carries": [
+                    "corrected"
+                  ],
+                  "stale": false,
+                  "namesake": false,
+                  "other_counterparty": false,
+                  "false_push": false
+                }
+              },
+              {
+                "id": "Et7",
+                "slug": "people/niko-galloway",
+                "class": {
+                  "id": "Et7",
+                  "carries": [
+                    "commitment"
+                  ],
+                  "stale": false,
+                  "namesake": false,
+                  "other_counterparty": false,
+                  "false_push": false
+                }
+              }
+            ]
+          },
+          "hot_memory_facts": [],
+          "other_injected_facts": []
+        }
+      ],
+      "harness_requests": 1,
+      "brief_reached_model": true,
+      "replay": {
+        "cutoff_ms": 300,
+        "switch_on": true,
+        "turn_context": [
+          {
+            "ms": 262,
+            "brief_items": 2
+          },
+          {
+            "ms": 127,
+            "brief_items": 2
+          },
+          {
+            "ms": 96,
+            "brief_items": 2
+          },
+          {
+            "ms": 66,
+            "brief_items": 2
+          },
+          {
+            "ms": 41,
+            "brief_items": 2
+          }
+        ],
+        "brief_alone": [
+          {
+            "ms": 24,
+            "brief_items": 2
+          },
+          {
+            "ms": 38,
+            "brief_items": 2
+          },
+          {
+            "ms": 35,
+            "brief_items": 2
+          },
+          {
+            "ms": 29,
+            "brief_items": 2
+          },
+          {
+            "ms": 8,
+            "brief_items": 2
+          }
+        ]
+      },
+      "gate_check_replay": {
+        "cutoff_ms": 300,
+        "switch_on": true,
+        "turn_context": [
+          {
+            "ms": 218,
+            "brief_items": 0
+          },
+          {
+            "ms": 103,
+            "brief_items": 0
+          },
+          {
+            "ms": 38,
+            "brief_items": 0
+          },
+          {
+            "ms": 73,
+            "brief_items": 0
+          },
+          {
+            "ms": 63,
+            "brief_items": 0
+          }
+        ],
+        "brief_alone": [
+          {
+            "ms": 32,
+            "brief_items": 0
+          },
+          {
+            "ms": 30,
+            "brief_items": 0
+          },
+          {
+            "ms": 17,
+            "brief_items": 0
+          },
+          {
+            "ms": 8,
+            "brief_items": 0
+          },
+          {
+            "ms": 5,
+            "brief_items": 0
+          }
+        ]
+      },
+      "heartbeat": [
+        {
+          "event": "session-start",
+          "outcome": "ok",
+          "ms": 1239
+        },
+        {
+          "event": "user-prompt",
+          "outcome": "ok",
+          "ms": 188
+        }
+      ]
+    },
+    {
+      "id": "d7_prep_20261222_off",
+      "harness": "codex",
+      "setup_error": null,
+      "crash": null,
+      "setup": {
+        "condition": "crowded",
+        "arm": "off",
+        "backdated": null,
+        "crowd_facts": 40,
+        "setup_exit": 0,
+        "setup_states": [
+          "configured",
+          "connection-verified",
+          "native-verified"
+        ]
+      },
+      "hooks": [
+        {
+          "event": "session-start",
+          "ms": 254,
+          "rc": 0,
+          "bytes": 1915,
+          "brief": null,
+          "hot_memory_facts": [],
+          "other_injected_facts": []
+        },
+        {
+          "event": "user-prompt",
+          "ms": 196,
+          "rc": 0,
+          "bytes": 1991,
+          "brief": null,
+          "hot_memory_facts": [],
+          "other_injected_facts": []
+        }
+      ],
+      "harness_requests": 6,
+      "brief_reached_model": null,
+      "replay": {
+        "cutoff_ms": 300,
+        "switch_on": false,
+        "turn_context": [
+          {
+            "ms": 251,
+            "brief_items": 0
+          },
+          {
+            "ms": 92,
+            "brief_items": 0
+          },
+          {
+            "ms": 32,
+            "brief_items": 0
+          },
+          {
+            "ms": 56,
+            "brief_items": 0
+          },
+          {
+            "ms": 83,
+            "brief_items": 0
+          }
+        ],
+        "brief_alone": [
+          {
+            "ms": 86,
+            "brief_items": 2
+          },
+          {
+            "ms": 30,
+            "brief_items": 2
+          },
+          {
+            "ms": 63,
+            "brief_items": 2
+          },
+          {
+            "ms": 19,
+            "brief_items": 2
+          },
+          {
+            "ms": 42,
+            "brief_items": 2
+          }
+        ]
+      },
+      "gate_check_replay": null,
+      "heartbeat": [
+        {
+          "event": "session-start",
+          "outcome": "ok",
+          "ms": 90
+        },
+        {
+          "event": "user-prompt",
+          "outcome": "ok",
+          "ms": 97
+        }
+      ]
+    },
+    {
+      "id": "d7_task_start_20261222_pull",
+      "harness": "claude",
+      "setup_error": null,
+      "crash": null,
+      "setup": {
+        "condition": "aged",
+        "arm": "pull",
+        "backdated": {
+          "facts": 8,
+          "timeline": 4,
+          "versions": 12
+        },
+        "crowd_facts": null,
+        "setup_exit": 0,
+        "setup_states": [
+          "configured",
+          "connection-verified",
+          "native-pending"
+        ]
+      },
+      "hooks": [],
+      "harness_requests": 1,
+      "brief_reached_model": null,
+      "replay": {
+        "cutoff_ms": 300,
+        "switch_on": false,
+        "turn_context": [
+          {
+            "ms": 229,
+            "brief_items": 0
+          },
+          {
+            "ms": 80,
+            "brief_items": 0
+          },
+          {
+            "ms": 50,
+            "brief_items": 0
+          },
+          {
+            "ms": 28,
+            "brief_items": 0
+          },
+          {
+            "ms": 28,
+            "brief_items": 0
+          }
+        ],
+        "brief_alone": [
+          {
+            "ms": 42,
+            "brief_items": 2
+          },
+          {
+            "ms": 46,
+            "brief_items": 2
+          },
+          {
+            "ms": 18,
+            "brief_items": 2
+          },
+          {
+            "ms": 32,
+            "brief_items": 2
+          },
+          {
+            "ms": 33,
+            "brief_items": 2
+          }
+        ]
+      },
+      "gate_check_replay": {
+        "cutoff_ms": 300,
+        "switch_on": false,
+        "turn_context": [
+          {
+            "ms": 155,
+            "brief_items": 0
+          },
+          {
+            "ms": 37,
+            "brief_items": 0
+          },
+          {
+            "ms": 65,
+            "brief_items": 0
+          },
+          {
+            "ms": 51,
+            "brief_items": 0
+          },
+          {
+            "ms": 26,
+            "brief_items": 0
+          }
+        ],
+        "brief_alone": [
+          {
+            "ms": 19,
+            "brief_items": 0
+          },
+          {
+            "ms": 12,
+            "brief_items": 0
+          },
+          {
+            "ms": 45,
+            "brief_items": 0
+          },
+          {
+            "ms": 8,
+            "brief_items": 0
+          },
+          {
+            "ms": 8,
+            "brief_items": 0
+          }
+        ]
+      },
+      "heartbeat": []
+    },
+    {
+      "id": "d7_negative_20261222_off",
+      "harness": "claude",
+      "setup_error": null,
+      "crash": null,
+      "setup": {
+        "condition": "crowded",
+        "arm": "off",
+        "backdated": null,
+        "crowd_facts": 40,
+        "setup_exit": 0,
+        "setup_states": [
+          "configured",
+          "connection-verified",
+          "native-pending"
+        ]
+      },
+      "hooks": [
+        {
+          "event": "session-start",
+          "ms": 1332,
+          "rc": 0,
+          "bytes": 1909,
+          "brief": null,
+          "hot_memory_facts": [],
+          "other_injected_facts": []
+        },
+        {
+          "event": "user-prompt",
+          "ms": 298,
+          "rc": 0,
+          "bytes": 1987,
+          "brief": null,
+          "hot_memory_facts": [],
+          "other_injected_facts": []
+        }
+      ],
+      "harness_requests": 1,
+      "brief_reached_model": null,
+      "replay": {
+        "cutoff_ms": 300,
+        "switch_on": false,
+        "turn_context": [
+          {
+            "ms": 267,
+            "brief_items": 0
+          },
+          {
+            "ms": 60,
+            "brief_items": 0
+          },
+          {
+            "ms": 48,
+            "brief_items": 0
+          },
+          {
+            "ms": 69,
+            "brief_items": 0
+          },
+          {
+            "ms": 30,
+            "brief_items": 0
+          }
+        ],
+        "brief_alone": [
+          {
+            "ms": 34,
+            "brief_items": 0
+          },
+          {
+            "ms": 25,
+            "brief_items": 0
+          },
+          {
+            "ms": 32,
+            "brief_items": 0
+          },
+          {
+            "ms": 26,
+            "brief_items": 0
+          },
+          {
+            "ms": 16,
+            "brief_items": 0
+          }
+        ]
+      },
+      "gate_check_replay": null,
+      "heartbeat": [
+        {
+          "event": "session-start",
+          "outcome": "ok",
+          "ms": 1211
+        },
+        {
+          "event": "user-prompt",
+          "outcome": "ok",
+          "ms": 120
+        }
+      ]
+    },
+    {
+      "id": "d7_task_start_20261222_on",
+      "harness": "codex",
+      "setup_error": null,
+      "crash": null,
+      "setup": {
+        "condition": "aged",
+        "arm": "on",
+        "backdated": {
+          "facts": 8,
+          "timeline": 4,
+          "versions": 12
+        },
+        "crowd_facts": null,
+        "setup_exit": 0,
+        "setup_states": [
+          "configured",
+          "connection-verified",
+          "native-verified"
+        ]
+      },
+      "hooks": [
+        {
+          "event": "session-start",
+          "ms": 153,
+          "rc": 0,
+          "bytes": 0,
+          "brief": null,
+          "hot_memory_facts": [],
+          "other_injected_facts": []
+        },
+        {
+          "event": "user-prompt",
+          "ms": 741,
+          "rc": 0,
+          "bytes": 882,
+          "brief": {
+            "chars": 500,
+            "items": [
+              {
+                "id": "F11",
+                "slug": "people/niko-galloway",
+                "class": {
+                  "id": "F11",
+                  "carries": [
+                    "corrected"
+                  ],
+                  "stale": false,
+                  "namesake": false,
+                  "other_counterparty": false,
+                  "false_push": false
+                }
+              },
+              {
+                "id": "Et7",
+                "slug": "people/niko-galloway",
+                "class": {
+                  "id": "Et7",
+                  "carries": [
+                    "commitment"
+                  ],
+                  "stale": false,
+                  "namesake": false,
+                  "other_counterparty": false,
+                  "false_push": false
+                }
+              }
+            ]
+          },
+          "hot_memory_facts": [],
+          "other_injected_facts": []
+        }
+      ],
+      "harness_requests": 6,
+      "brief_reached_model": true,
+      "replay": {
+        "cutoff_ms": 300,
+        "switch_on": true,
+        "turn_context": [
+          {
+            "ms": 268,
+            "brief_items": 2
+          },
+          {
+            "ms": 173,
+            "brief_items": 2
+          },
+          {
+            "ms": 93,
+            "brief_items": 2
+          },
+          {
+            "ms": 110,
+            "brief_items": 2
+          },
+          {
+            "ms": 98,
+            "brief_items": 2
+          }
+        ],
+        "brief_alone": [
+          {
+            "ms": 40,
+            "brief_items": 2
+          },
+          {
+            "ms": 46,
+            "brief_items": 2
+          },
+          {
+            "ms": 23,
+            "brief_items": 2
+          },
+          {
+            "ms": 34,
+            "brief_items": 2
+          },
+          {
+            "ms": 19,
+            "brief_items": 2
+          }
+        ]
+      },
+      "gate_check_replay": {
+        "cutoff_ms": 300,
+        "switch_on": true,
+        "turn_context": [
+          {
+            "ms": 285,
+            "brief_items": 0
+          },
+          {
+            "ms": 99,
+            "brief_items": 0
+          },
+          {
+            "ms": 30,
+            "brief_items": 0
+          },
+          {
+            "ms": 56,
+            "brief_items": 0
+          },
+          {
+            "ms": 39,
+            "brief_items": 0
+          }
+        ],
+        "brief_alone": [
+          {
+            "ms": 21,
+            "brief_items": 0
+          },
+          {
+            "ms": 46,
+            "brief_items": 0
+          },
+          {
+            "ms": 7,
+            "brief_items": 0
+          },
+          {
+            "ms": 18,
+            "brief_items": 0
+          },
+          {
+            "ms": 5,
+            "brief_items": 0
+          }
+        ]
+      },
+      "heartbeat": [
+        {
+          "event": "session-start",
+          "outcome": "ok",
+          "ms": 18
+        },
+        {
+          "event": "user-prompt",
+          "outcome": "ok",
+          "ms": 481
+        }
+      ]
+    },
+    {
+      "id": "d7_negative_20261222_on",
+      "harness": "claude",
+      "setup_error": null,
+      "crash": null,
+      "setup": {
+        "condition": "crowded",
+        "arm": "on",
+        "backdated": null,
+        "crowd_facts": 40,
+        "setup_exit": 0,
+        "setup_states": [
+          "configured",
+          "connection-verified",
+          "native-pending"
+        ]
+      },
+      "hooks": [
+        {
+          "event": "session-start",
+          "ms": 797,
+          "rc": 0,
+          "bytes": 1909,
+          "brief": null,
+          "hot_memory_facts": [],
+          "other_injected_facts": []
+        },
+        {
+          "event": "user-prompt",
+          "ms": 212,
+          "rc": 0,
+          "bytes": 1987,
+          "brief": null,
+          "hot_memory_facts": [],
+          "other_injected_facts": []
+        }
+      ],
+      "harness_requests": 1,
+      "brief_reached_model": null,
+      "replay": {
+        "cutoff_ms": 300,
+        "switch_on": true,
+        "turn_context": [
+          {
+            "ms": 197,
+            "brief_items": 0
+          },
+          {
+            "ms": 88,
+            "brief_items": 0
+          },
+          {
+            "ms": 99,
+            "brief_items": 0
+          },
+          {
+            "ms": 58,
+            "brief_items": 0
+          },
+          {
+            "ms": 33,
+            "brief_items": 0
+          }
+        ],
+        "brief_alone": [
+          {
+            "ms": 20,
+            "brief_items": 0
+          },
+          {
+            "ms": 27,
+            "brief_items": 0
+          },
+          {
+            "ms": 24,
+            "brief_items": 0
+          },
+          {
+            "ms": 8,
+            "brief_items": 0
+          },
+          {
+            "ms": 10,
+            "brief_items": 0
+          }
+        ]
+      },
+      "gate_check_replay": null,
+      "heartbeat": [
+        {
+          "event": "session-start",
+          "outcome": "ok",
+          "ms": 678
+        },
+        {
+          "event": "user-prompt",
+          "outcome": "ok",
+          "ms": 101
+        }
+      ]
+    },
+    {
+      "id": "d7_prep_20261222_on",
+      "harness": "codex",
+      "setup_error": null,
+      "crash": null,
+      "setup": {
+        "condition": "crowded",
+        "arm": "on",
+        "backdated": null,
+        "crowd_facts": 40,
+        "setup_exit": 0,
+        "setup_states": [
+          "configured",
+          "connection-verified",
+          "native-verified"
+        ]
+      },
+      "hooks": [
+        {
+          "event": "session-start",
+          "ms": 473,
+          "rc": 0,
+          "bytes": 1915,
+          "brief": null,
+          "hot_memory_facts": [],
+          "other_injected_facts": []
+        },
+        {
+          "event": "user-prompt",
+          "ms": 464,
+          "rc": 0,
+          "bytes": 2575,
+          "brief": {
+            "chars": 505,
+            "items": [
+              {
+                "id": "F3",
+                "slug": "people/kofi-okafor",
+                "class": {
+                  "id": "F3",
+                  "carries": [
+                    "new_date"
+                  ],
+                  "stale": false,
+                  "namesake": false,
+                  "other_counterparty": false,
+                  "false_push": false
+                }
+              },
+              {
+                "id": "Et1",
+                "slug": "people/kofi-okafor",
+                "class": {
+                  "id": "Et1",
+                  "carries": [
+                    "commitment"
+                  ],
+                  "stale": false,
+                  "namesake": false,
+                  "other_counterparty": false,
+                  "false_push": false
+                }
+              }
+            ]
+          },
+          "hot_memory_facts": [],
+          "other_injected_facts": []
+        }
+      ],
+      "harness_requests": 6,
+      "brief_reached_model": true,
+      "replay": {
+        "cutoff_ms": 300,
+        "switch_on": true,
+        "turn_context": [
+          {
+            "ms": 328,
+            "brief_items": 0
+          },
+          {
+            "ms": 137,
+            "brief_items": 2
+          },
+          {
+            "ms": 92,
+            "brief_items": 2
+          },
+          {
+            "ms": 175,
+            "brief_items": 2
+          },
+          {
+            "ms": 143,
+            "brief_items": 2
+          }
+        ],
+        "brief_alone": [
+          {
+            "ms": 185,
+            "brief_items": 2
+          },
+          {
+            "ms": 51,
+            "brief_items": 2
+          },
+          {
+            "ms": 27,
+            "brief_items": 2
+          },
+          {
+            "ms": 56,
+            "brief_items": 2
+          },
+          {
+            "ms": 63,
+            "brief_items": 2
+          }
+        ]
+      },
+      "gate_check_replay": null,
+      "heartbeat": [
+        {
+          "event": "session-start",
+          "outcome": "ok",
+          "ms": 179
+        },
+        {
+          "event": "user-prompt",
+          "outcome": "ok",
+          "ms": 290
+        }
+      ]
+    },
+    {
+      "id": "d7_negative_20261222_pull",
+      "harness": "claude",
+      "setup_error": null,
+      "crash": null,
+      "setup": {
+        "condition": "crowded",
+        "arm": "pull",
+        "backdated": null,
+        "crowd_facts": 40,
+        "setup_exit": 0,
+        "setup_states": [
+          "configured",
+          "connection-verified",
+          "native-pending"
+        ]
+      },
+      "hooks": [],
+      "harness_requests": 1,
+      "brief_reached_model": null,
+      "replay": {
+        "cutoff_ms": 300,
+        "switch_on": false,
+        "turn_context": [
+          {
+            "ms": 140,
+            "brief_items": 0
+          },
+          {
+            "ms": 47,
+            "brief_items": 0
+          },
+          {
+            "ms": 51,
+            "brief_items": 0
+          },
+          {
+            "ms": 40,
+            "brief_items": 0
+          },
+          {
+            "ms": 26,
+            "brief_items": 0
+          }
+        ],
+        "brief_alone": [
+          {
+            "ms": 30,
+            "brief_items": 0
+          },
+          {
+            "ms": 35,
+            "brief_items": 0
+          },
+          {
+            "ms": 29,
+            "brief_items": 0
+          },
+          {
+            "ms": 21,
+            "brief_items": 0
+          },
+          {
+            "ms": 12,
+            "brief_items": 0
+          }
+        ]
+      },
+      "gate_check_replay": null,
+      "heartbeat": []
+    },
+    {
+      "id": "d7_reply_20261226_off",
+      "harness": "claude",
+      "setup_error": null,
+      "crash": null,
+      "setup": {
+        "condition": "crowded",
+        "arm": "off",
+        "backdated": null,
+        "crowd_facts": 40,
+        "setup_exit": 0,
+        "setup_states": [
+          "configured",
+          "connection-verified",
+          "native-pending"
+        ]
+      },
+      "hooks": [
+        {
+          "event": "session-start",
+          "ms": 778,
+          "rc": 0,
+          "bytes": 1921,
+          "brief": null,
+          "hot_memory_facts": [],
+          "other_injected_facts": []
+        },
+        {
+          "event": "user-prompt",
+          "ms": 216,
+          "rc": 0,
+          "bytes": 2008,
+          "brief": null,
+          "hot_memory_facts": [],
+          "other_injected_facts": []
+        }
+      ],
+      "harness_requests": 1,
+      "brief_reached_model": null,
+      "replay": {
+        "cutoff_ms": 300,
+        "switch_on": false,
+        "turn_context": [
+          {
+            "ms": 223,
+            "brief_items": 0
+          },
+          {
+            "ms": 96,
+            "brief_items": 0
+          },
+          {
+            "ms": 55,
+            "brief_items": 0
+          },
+          {
+            "ms": 49,
+            "brief_items": 0
+          },
+          {
+            "ms": 52,
+            "brief_items": 0
+          }
+        ],
+        "brief_alone": [
+          {
+            "ms": 77,
+            "brief_items": 2
+          },
+          {
+            "ms": 65,
+            "brief_items": 2
+          },
+          {
+            "ms": 22,
+            "brief_items": 2
+          },
+          {
+            "ms": 45,
+            "brief_items": 2
+          },
+          {
+            "ms": 24,
+            "brief_items": 2
+          }
+        ]
+      },
+      "gate_check_replay": null,
+      "heartbeat": [
+        {
+          "event": "session-start",
+          "outcome": "ok",
+          "ms": 684
+        },
+        {
+          "event": "user-prompt",
+          "outcome": "ok",
+          "ms": 100
+        }
+      ]
+    },
+    {
+      "id": "d7_reply_20261226_on",
+      "harness": "claude",
+      "setup_error": null,
+      "crash": null,
+      "setup": {
+        "condition": "crowded",
+        "arm": "on",
+        "backdated": null,
+        "crowd_facts": 40,
+        "setup_exit": 0,
+        "setup_states": [
+          "configured",
+          "connection-verified",
+          "native-pending"
+        ]
+      },
+      "hooks": [
+        {
+          "event": "session-start",
+          "ms": 1142,
+          "rc": 0,
+          "bytes": 1921,
+          "brief": null,
+          "hot_memory_facts": [],
+          "other_injected_facts": []
+        },
+        {
+          "event": "user-prompt",
+          "ms": 263,
+          "rc": 0,
+          "bytes": 2596,
+          "brief": {
+            "chars": 509,
+            "items": [
+              {
+                "id": "F2",
+                "slug": "people/petra-lindqvist",
+                "class": {
+                  "id": "F2",
+                  "carries": [
+                    "corrected"
+                  ],
+                  "stale": false,
+                  "namesake": false,
+                  "other_counterparty": false,
+                  "false_push": false
+                }
+              },
+              {
+                "id": "Et1",
+                "slug": "people/petra-lindqvist",
+                "class": {
+                  "id": "Et1",
+                  "carries": [
+                    "commitment"
+                  ],
+                  "stale": false,
+                  "namesake": false,
+                  "other_counterparty": false,
+                  "false_push": false
+                }
+              }
+            ]
+          },
+          "hot_memory_facts": [],
+          "other_injected_facts": []
+        }
+      ],
+      "harness_requests": 1,
+      "brief_reached_model": true,
+      "replay": {
+        "cutoff_ms": 300,
+        "switch_on": true,
+        "turn_context": [
+          {
+            "ms": 176,
+            "brief_items": 2
+          },
+          {
+            "ms": 54,
+            "brief_items": 2
+          },
+          {
+            "ms": 55,
+            "brief_items": 2
+          },
+          {
+            "ms": 56,
+            "brief_items": 2
+          },
+          {
+            "ms": 43,
+            "brief_items": 2
+          }
+        ],
+        "brief_alone": [
+          {
+            "ms": 21,
+            "brief_items": 2
+          },
+          {
+            "ms": 14,
+            "brief_items": 2
+          },
+          {
+            "ms": 16,
+            "brief_items": 2
+          },
+          {
+            "ms": 13,
+            "brief_items": 2
+          },
+          {
+            "ms": 10,
+            "brief_items": 2
+          }
+        ]
+      },
+      "gate_check_replay": null,
+      "heartbeat": [
+        {
+          "event": "session-start",
+          "outcome": "ok",
+          "ms": 942
+        },
+        {
+          "event": "user-prompt",
+          "outcome": "ok",
+          "ms": 130
+        }
+      ]
+    },
+    {
+      "id": "d7_reply_20261226_pull",
+      "harness": "claude",
+      "setup_error": null,
+      "crash": null,
+      "setup": {
+        "condition": "crowded",
+        "arm": "pull",
+        "backdated": null,
+        "crowd_facts": 40,
+        "setup_exit": 0,
+        "setup_states": [
+          "configured",
+          "connection-verified",
+          "native-pending"
+        ]
+      },
+      "hooks": [],
+      "harness_requests": 1,
+      "brief_reached_model": null,
+      "replay": {
+        "cutoff_ms": 300,
+        "switch_on": false,
+        "turn_context": [
+          {
+            "ms": 221,
+            "brief_items": 0
+          },
+          {
+            "ms": 75,
+            "brief_items": 0
+          },
+          {
+            "ms": 44,
+            "brief_items": 0
+          },
+          {
+            "ms": 46,
+            "brief_items": 0
+          },
+          {
+            "ms": 32,
+            "brief_items": 0
+          }
+        ],
+        "brief_alone": [
+          {
+            "ms": 85,
+            "brief_items": 2
+          },
+          {
+            "ms": 45,
+            "brief_items": 2
+          },
+          {
+            "ms": 18,
+            "brief_items": 2
+          },
+          {
+            "ms": 28,
+            "brief_items": 2
+          },
+          {
+            "ms": 19,
+            "brief_items": 2
+          }
+        ]
+      },
+      "gate_check_replay": null,
+      "heartbeat": []
+    },
+    {
+      "id": "d7_prep_20261226_off",
+      "harness": "claude",
+      "setup_error": null,
+      "crash": null,
+      "setup": {
+        "condition": "aged",
+        "arm": "off",
+        "backdated": {
+          "facts": 8,
+          "timeline": 4,
+          "versions": 12
+        },
+        "crowd_facts": null,
+        "setup_exit": 0,
+        "setup_states": [
+          "configured",
+          "connection-verified",
+          "native-pending"
+        ]
+      },
+      "hooks": [
+        {
+          "event": "session-start",
+          "ms": 1101,
+          "rc": 0,
+          "bytes": 162,
+          "brief": null,
+          "hot_memory_facts": [],
+          "other_injected_facts": []
+        },
+        {
+          "event": "user-prompt",
+          "ms": 192,
+          "rc": 0,
+          "bytes": 297,
+          "brief": null,
+          "hot_memory_facts": [],
+          "other_injected_facts": []
+        }
+      ],
+      "harness_requests": 1,
+      "brief_reached_model": null,
+      "replay": {
+        "cutoff_ms": 300,
+        "switch_on": false,
+        "turn_context": [
+          {
+            "ms": 172,
+            "brief_items": 0
+          },
+          {
+            "ms": 52,
+            "brief_items": 0
+          },
+          {
+            "ms": 45,
+            "brief_items": 0
+          },
+          {
+            "ms": 29,
+            "brief_items": 0
+          },
+          {
+            "ms": 31,
+            "brief_items": 0
+          }
+        ],
+        "brief_alone": [
+          {
+            "ms": 50,
+            "brief_items": 2
+          },
+          {
+            "ms": 17,
+            "brief_items": 2
+          },
+          {
+            "ms": 49,
+            "brief_items": 2
+          },
+          {
+            "ms": 44,
+            "brief_items": 2
+          },
+          {
+            "ms": 40,
+            "brief_items": 2
+          }
+        ]
+      },
+      "gate_check_replay": null,
+      "heartbeat": [
+        {
+          "event": "session-start",
+          "outcome": "ok",
+          "ms": 948
+        },
+        {
+          "event": "user-prompt",
+          "outcome": "ok",
+          "ms": 94
+        }
+      ]
+    },
+    {
+      "id": "d7_prep_20261226_on",
+      "harness": "claude",
+      "setup_error": null,
+      "crash": null,
+      "setup": {
+        "condition": "aged",
+        "arm": "on",
+        "backdated": {
+          "facts": 8,
+          "timeline": 4,
+          "versions": 12
+        },
+        "crowd_facts": null,
+        "setup_exit": 0,
+        "setup_states": [
+          "configured",
+          "connection-verified",
+          "native-pending"
+        ]
+      },
+      "hooks": [
+        {
+          "event": "session-start",
+          "ms": 928,
+          "rc": 0,
+          "bytes": 0,
+          "brief": null,
+          "hot_memory_facts": [],
+          "other_injected_facts": []
+        },
+        {
+          "event": "user-prompt",
+          "ms": 203,
+          "rc": 0,
+          "bytes": 882,
+          "brief": {
+            "chars": 506,
+            "items": [
+              {
+                "id": "F8",
+                "slug": "people/ines-rahman",
+                "class": {
+                  "id": "F8",
+                  "carries": [
+                    "new_date"
+                  ],
+                  "stale": false,
+                  "namesake": false,
+                  "other_counterparty": false,
+                  "false_push": false
+                }
+              },
+              {
+                "id": "Et5",
+                "slug": "people/ines-rahman",
+                "class": {
+                  "id": "Et5",
+                  "carries": [
+                    "commitment"
+                  ],
+                  "stale": false,
+                  "namesake": false,
+                  "other_counterparty": false,
+                  "false_push": false
+                }
+              }
+            ]
+          },
+          "hot_memory_facts": [],
+          "other_injected_facts": []
+        }
+      ],
+      "harness_requests": 1,
+      "brief_reached_model": true,
+      "replay": {
+        "cutoff_ms": 300,
+        "switch_on": true,
+        "turn_context": [
+          {
+            "ms": 308,
+            "brief_items": 2
+          },
+          {
+            "ms": 73,
+            "brief_items": 2
+          },
+          {
+            "ms": 84,
+            "brief_items": 2
+          },
+          {
+            "ms": 64,
+            "brief_items": 2
+          },
+          {
+            "ms": 104,
+            "brief_items": 2
+          }
+        ],
+        "brief_alone": [
+          {
+            "ms": 19,
+            "brief_items": 2
+          },
+          {
+            "ms": 51,
+            "brief_items": 2
+          },
+          {
+            "ms": 15,
+            "brief_items": 2
+          },
+          {
+            "ms": 20,
+            "brief_items": 2
+          },
+          {
+            "ms": 12,
+            "brief_items": 2
+          }
+        ]
+      },
+      "gate_check_replay": null,
+      "heartbeat": [
+        {
+          "event": "session-start",
+          "outcome": "ok",
+          "ms": 799
+        },
+        {
+          "event": "user-prompt",
+          "outcome": "ok",
+          "ms": 95
+        }
+      ]
+    },
+    {
+      "id": "d7_prep_20261226_pull",
+      "harness": "claude",
+      "setup_error": null,
+      "crash": null,
+      "setup": {
+        "condition": "aged",
+        "arm": "pull",
+        "backdated": {
+          "facts": 8,
+          "timeline": 4,
+          "versions": 12
+        },
+        "crowd_facts": null,
+        "setup_exit": 0,
+        "setup_states": [
+          "configured",
+          "connection-verified",
+          "native-pending"
+        ]
+      },
+      "hooks": [],
+      "harness_requests": 1,
+      "brief_reached_model": null,
+      "replay": {
+        "cutoff_ms": 300,
+        "switch_on": false,
+        "turn_context": [
+          {
+            "ms": 171,
+            "brief_items": 0
+          },
+          {
+            "ms": 64,
+            "brief_items": 0
+          },
+          {
+            "ms": 33,
+            "brief_items": 0
+          },
+          {
+            "ms": 44,
+            "brief_items": 0
+          },
+          {
+            "ms": 52,
+            "brief_items": 0
+          }
+        ],
+        "brief_alone": [
+          {
+            "ms": 73,
+            "brief_items": 2
+          },
+          {
+            "ms": 44,
+            "brief_items": 2
+          },
+          {
+            "ms": 30,
+            "brief_items": 2
+          },
+          {
+            "ms": 31,
+            "brief_items": 2
+          },
+          {
+            "ms": 52,
+            "brief_items": 2
+          }
+        ]
+      },
+      "gate_check_replay": null,
+      "heartbeat": []
+    },
+    {
+      "id": "d7_task_start_20261226_off",
+      "harness": "claude",
+      "setup_error": null,
+      "crash": null,
+      "setup": {
+        "condition": "crowded",
+        "arm": "off",
+        "backdated": null,
+        "crowd_facts": 40,
+        "setup_exit": 0,
+        "setup_states": [
+          "configured",
+          "connection-verified",
+          "native-pending"
+        ]
+      },
+      "hooks": [
+        {
+          "event": "session-start",
+          "ms": 1320,
+          "rc": 0,
+          "bytes": 1929,
+          "brief": null,
+          "hot_memory_facts": [],
+          "other_injected_facts": []
+        },
+        {
+          "event": "user-prompt",
+          "ms": 301,
+          "rc": 0,
+          "bytes": 2003,
+          "brief": null,
+          "hot_memory_facts": [],
+          "other_injected_facts": []
+        }
+      ],
+      "harness_requests": 1,
+      "brief_reached_model": null,
+      "replay": {
+        "cutoff_ms": 300,
+        "switch_on": false,
+        "turn_context": [
+          {
+            "ms": 321,
+            "brief_items": 0
+          },
+          {
+            "ms": 103,
+            "brief_items": 0
+          },
+          {
+            "ms": 55,
+            "brief_items": 0
+          },
+          {
+            "ms": 39,
+            "brief_items": 0
+          },
+          {
+            "ms": 67,
+            "brief_items": 0
+          }
+        ],
+        "brief_alone": [
+          {
+            "ms": 71,
+            "brief_items": 2
+          },
+          {
+            "ms": 32,
+            "brief_items": 2
+          },
+          {
+            "ms": 33,
+            "brief_items": 2
+          },
+          {
+            "ms": 37,
+            "brief_items": 2
+          },
+          {
+            "ms": 26,
+            "brief_items": 2
+          }
+        ]
+      },
+      "gate_check_replay": {
+        "cutoff_ms": 300,
+        "switch_on": false,
+        "turn_context": [
+          {
+            "ms": 318,
+            "brief_items": 0
+          },
+          {
+            "ms": 102,
+            "brief_items": 0
+          },
+          {
+            "ms": 40,
+            "brief_items": 0
+          },
+          {
+            "ms": 79,
+            "brief_items": 0
+          },
+          {
+            "ms": 98,
+            "brief_items": 0
+          }
+        ],
+        "brief_alone": [
+          {
+            "ms": 47,
+            "brief_items": 0
+          },
+          {
+            "ms": 17,
+            "brief_items": 0
+          },
+          {
+            "ms": 18,
+            "brief_items": 0
+          },
+          {
+            "ms": 31,
+            "brief_items": 0
+          },
+          {
+            "ms": 19,
+            "brief_items": 0
+          }
+        ]
+      },
+      "heartbeat": [
+        {
+          "event": "session-start",
+          "outcome": "ok",
+          "ms": 1188
+        },
+        {
+          "event": "user-prompt",
+          "outcome": "ok",
+          "ms": 171
+        }
+      ]
+    },
+    {
+      "id": "d7_task_start_20261226_on",
+      "harness": "claude",
+      "setup_error": null,
+      "crash": null,
+      "setup": {
+        "condition": "crowded",
+        "arm": "on",
+        "backdated": null,
+        "crowd_facts": 40,
+        "setup_exit": 0,
+        "setup_states": [
+          "configured",
+          "connection-verified",
+          "native-pending"
+        ]
+      },
+      "hooks": [
+        {
+          "event": "session-start",
+          "ms": 1212,
+          "rc": 0,
+          "bytes": 1929,
+          "brief": null,
+          "hot_memory_facts": [],
+          "other_injected_facts": []
+        },
+        {
+          "event": "user-prompt",
+          "ms": 425,
+          "rc": 0,
+          "bytes": 2564,
+          "brief": {
+            "chars": 482,
+            "items": [
+              {
+                "id": "F6",
+                "slug": "people/yusuf-quist",
+                "class": {
+                  "id": "F6",
+                  "carries": [
+                    "corrected"
+                  ],
+                  "stale": false,
+                  "namesake": false,
+                  "other_counterparty": false,
+                  "false_push": false
+                }
+              },
+              {
+                "id": "Et3",
+                "slug": "people/yusuf-quist",
+                "class": {
+                  "id": "Et3",
+                  "carries": [
+                    "commitment"
+                  ],
+                  "stale": false,
+                  "namesake": false,
+                  "other_counterparty": false,
+                  "false_push": false
+                }
+              }
+            ]
+          },
+          "hot_memory_facts": [],
+          "other_injected_facts": []
+        }
+      ],
+      "harness_requests": 1,
+      "brief_reached_model": true,
+      "replay": {
+        "cutoff_ms": 300,
+        "switch_on": true,
+        "turn_context": [
+          {
+            "ms": 301,
+            "brief_items": 2
+          },
+          {
+            "ms": 157,
+            "brief_items": 2
+          },
+          {
+            "ms": 74,
+            "brief_items": 2
+          },
+          {
+            "ms": 87,
+            "brief_items": 2
+          },
+          {
+            "ms": 78,
+            "brief_items": 2
+          }
+        ],
+        "brief_alone": [
+          {
+            "ms": 65,
+            "brief_items": 2
+          },
+          {
+            "ms": 35,
+            "brief_items": 2
+          },
+          {
+            "ms": 30,
+            "brief_items": 2
+          },
+          {
+            "ms": 43,
+            "brief_items": 2
+          },
+          {
+            "ms": 15,
+            "brief_items": 2
+          }
+        ]
+      },
+      "gate_check_replay": {
+        "cutoff_ms": 300,
+        "switch_on": true,
+        "turn_context": [
+          {
+            "ms": 293,
+            "brief_items": 0
+          },
+          {
+            "ms": 84,
+            "brief_items": 0
+          },
+          {
+            "ms": 34,
+            "brief_items": 0
+          },
+          {
+            "ms": 89,
+            "brief_items": 0
+          },
+          {
+            "ms": 79,
+            "brief_items": 0
+          }
+        ],
+        "brief_alone": [
+          {
+            "ms": 19,
+            "brief_items": 0
+          },
+          {
+            "ms": 7,
+            "brief_items": 0
+          },
+          {
+            "ms": 6,
+            "brief_items": 0
+          },
+          {
+            "ms": 15,
+            "brief_items": 0
+          },
+          {
+            "ms": 14,
+            "brief_items": 0
+          }
+        ]
+      },
+      "heartbeat": [
+        {
+          "event": "session-start",
+          "outcome": "ok",
+          "ms": 920
+        },
+        {
+          "event": "user-prompt",
+          "outcome": "ok",
+          "ms": 208
+        }
+      ]
+    },
+    {
+      "id": "d7_task_start_20261226_pull",
+      "harness": "claude",
+      "setup_error": null,
+      "crash": null,
+      "setup": {
+        "condition": "crowded",
+        "arm": "pull",
+        "backdated": null,
+        "crowd_facts": 40,
+        "setup_exit": 0,
+        "setup_states": [
+          "configured",
+          "connection-verified",
+          "native-pending"
+        ]
+      },
+      "hooks": [],
+      "harness_requests": 1,
+      "brief_reached_model": null,
+      "replay": {
+        "cutoff_ms": 300,
+        "switch_on": false,
+        "turn_context": [
+          {
+            "ms": 168,
+            "brief_items": 0
+          },
+          {
+            "ms": 78,
+            "brief_items": 0
+          },
+          {
+            "ms": 26,
+            "brief_items": 0
+          },
+          {
+            "ms": 23,
+            "brief_items": 0
+          },
+          {
+            "ms": 22,
+            "brief_items": 0
+          }
+        ],
+        "brief_alone": [
+          {
+            "ms": 121,
+            "brief_items": 2
+          },
+          {
+            "ms": 28,
+            "brief_items": 2
+          },
+          {
+            "ms": 15,
+            "brief_items": 2
+          },
+          {
+            "ms": 14,
+            "brief_items": 2
+          },
+          {
+            "ms": 14,
+            "brief_items": 2
+          }
+        ]
+      },
+      "gate_check_replay": {
+        "cutoff_ms": 300,
+        "switch_on": false,
+        "turn_context": [
+          {
+            "ms": 155,
+            "brief_items": 0
+          },
+          {
+            "ms": 37,
+            "brief_items": 0
+          },
+          {
+            "ms": 27,
+            "brief_items": 0
+          },
+          {
+            "ms": 35,
+            "brief_items": 0
+          },
+          {
+            "ms": 22,
+            "brief_items": 0
+          }
+        ],
+        "brief_alone": [
+          {
+            "ms": 43,
+            "brief_items": 0
+          },
+          {
+            "ms": 10,
+            "brief_items": 0
+          },
+          {
+            "ms": 5,
+            "brief_items": 0
+          },
+          {
+            "ms": 7,
+            "brief_items": 0
+          },
+          {
+            "ms": 7,
+            "brief_items": 0
+          }
+        ]
+      },
+      "heartbeat": []
+    },
+    {
+      "id": "d7_negative_20261226_off",
+      "harness": "claude",
+      "setup_error": null,
+      "crash": null,
+      "setup": {
+        "condition": "aged",
+        "arm": "off",
+        "backdated": {
+          "facts": 8,
+          "timeline": 4,
+          "versions": 12
+        },
+        "crowd_facts": null,
+        "setup_exit": 0,
+        "setup_states": [
+          "configured",
+          "connection-verified",
+          "native-pending"
+        ]
+      },
+      "hooks": [
+        {
+          "event": "session-start",
+          "ms": 1045,
+          "rc": 0,
+          "bytes": 162,
+          "brief": null,
+          "hot_memory_facts": [],
+          "other_injected_facts": []
+        },
+        {
+          "event": "user-prompt",
+          "ms": 193,
+          "rc": 0,
+          "bytes": 306,
+          "brief": null,
+          "hot_memory_facts": [],
+          "other_injected_facts": []
+        }
+      ],
+      "harness_requests": 1,
+      "brief_reached_model": null,
+      "replay": {
+        "cutoff_ms": 300,
+        "switch_on": false,
+        "turn_context": [
+          {
+            "ms": 163,
+            "brief_items": 0
+          },
+          {
+            "ms": 81,
+            "brief_items": 0
+          },
+          {
+            "ms": 58,
+            "brief_items": 0
+          },
+          {
+            "ms": 49,
+            "brief_items": 0
+          },
+          {
+            "ms": 59,
+            "brief_items": 0
+          }
+        ],
+        "brief_alone": [
+          {
+            "ms": 93,
+            "brief_items": 0
+          },
+          {
+            "ms": 39,
+            "brief_items": 0
+          },
+          {
+            "ms": 43,
+            "brief_items": 0
+          },
+          {
+            "ms": 40,
+            "brief_items": 0
+          },
+          {
+            "ms": 34,
+            "brief_items": 0
+          }
+        ]
+      },
+      "gate_check_replay": null,
+      "heartbeat": [
+        {
+          "event": "session-start",
+          "outcome": "ok",
+          "ms": 903
+        },
+        {
+          "event": "user-prompt",
+          "outcome": "ok",
+          "ms": 60
+        }
+      ]
+    },
+    {
+      "id": "d7_negative_20261226_on",
+      "harness": "claude",
+      "setup_error": null,
+      "crash": null,
+      "setup": {
+        "condition": "aged",
+        "arm": "on",
+        "backdated": {
+          "facts": 8,
+          "timeline": 4,
+          "versions": 12
+        },
+        "crowd_facts": null,
+        "setup_exit": 0,
+        "setup_states": [
+          "configured",
+          "connection-verified",
+          "native-pending"
+        ]
+      },
+      "hooks": [
+        {
+          "event": "session-start",
+          "ms": 938,
+          "rc": 0,
+          "bytes": 0,
+          "brief": null,
+          "hot_memory_facts": [],
+          "other_injected_facts": []
+        },
+        {
+          "event": "user-prompt",
+          "ms": 260,
+          "rc": 0,
+          "bytes": 306,
+          "brief": null,
+          "hot_memory_facts": [],
+          "other_injected_facts": []
+        }
+      ],
+      "harness_requests": 1,
+      "brief_reached_model": null,
+      "replay": {
+        "cutoff_ms": 300,
+        "switch_on": true,
+        "turn_context": [
+          {
+            "ms": 139,
+            "brief_items": 0
+          },
+          {
+            "ms": 72,
+            "brief_items": 0
+          },
+          {
+            "ms": 31,
+            "brief_items": 0
+          },
+          {
+            "ms": 33,
+            "brief_items": 0
+          },
+          {
+            "ms": 28,
+            "brief_items": 0
+          }
+        ],
+        "brief_alone": [
+          {
+            "ms": 28,
+            "brief_items": 0
+          },
+          {
+            "ms": 13,
+            "brief_items": 0
+          },
+          {
+            "ms": 11,
+            "brief_items": 0
+          },
+          {
+            "ms": 9,
+            "brief_items": 0
+          },
+          {
+            "ms": 20,
+            "brief_items": 0
+          }
+        ]
+      },
+      "gate_check_replay": null,
+      "heartbeat": [
+        {
+          "event": "session-start",
+          "outcome": "ok",
+          "ms": 821
+        },
+        {
+          "event": "user-prompt",
+          "outcome": "ok",
+          "ms": 131
+        }
+      ]
+    },
+    {
+      "id": "d7_negative_20261226_pull",
+      "harness": "claude",
+      "setup_error": null,
+      "crash": null,
+      "setup": {
+        "condition": "aged",
+        "arm": "pull",
+        "backdated": {
+          "facts": 8,
+          "timeline": 4,
+          "versions": 12
+        },
+        "crowd_facts": null,
+        "setup_exit": 0,
+        "setup_states": [
+          "configured",
+          "connection-verified",
+          "native-pending"
+        ]
+      },
+      "hooks": [],
+      "harness_requests": 1,
+      "brief_reached_model": null,
+      "replay": {
+        "cutoff_ms": 300,
+        "switch_on": false,
+        "turn_context": [
+          {
+            "ms": 99,
+            "brief_items": 0
+          },
+          {
+            "ms": 24,
+            "brief_items": 0
+          },
+          {
+            "ms": 21,
+            "brief_items": 0
+          },
+          {
+            "ms": 27,
+            "brief_items": 0
+          },
+          {
+            "ms": 22,
+            "brief_items": 0
+          }
+        ],
+        "brief_alone": [
+          {
+            "ms": 25,
+            "brief_items": 0
+          },
+          {
+            "ms": 17,
+            "brief_items": 0
+          },
+          {
+            "ms": 14,
+            "brief_items": 0
+          },
+          {
+            "ms": 18,
+            "brief_items": 0
+          },
+          {
+            "ms": 13,
+            "brief_items": 0
+          }
+        ]
+      },
+      "gate_check_replay": null,
+      "heartbeat": []
+    },
+    {
+      "id": "d7_negative_20261222_off",
+      "harness": "codex",
+      "setup_error": null,
+      "crash": null,
+      "setup": {
+        "condition": "crowded",
+        "arm": "off",
+        "backdated": null,
+        "crowd_facts": 40,
+        "setup_exit": 0,
+        "setup_states": [
+          "configured",
+          "connection-verified",
+          "native-verified"
+        ]
+      },
+      "hooks": [
+        {
+          "event": "session-start",
+          "ms": 185,
+          "rc": 0,
+          "bytes": 1909,
+          "brief": null,
+          "hot_memory_facts": [],
+          "other_injected_facts": []
+        },
+        {
+          "event": "user-prompt",
+          "ms": 203,
+          "rc": 0,
+          "bytes": 1987,
+          "brief": null,
+          "hot_memory_facts": [],
+          "other_injected_facts": []
+        }
+      ],
+      "harness_requests": 6,
+      "brief_reached_model": null,
+      "replay": {
+        "cutoff_ms": 300,
+        "switch_on": false,
+        "turn_context": [
+          {
+            "ms": 129,
+            "brief_items": 0
+          },
+          {
+            "ms": 33,
+            "brief_items": 0
+          },
+          {
+            "ms": 31,
+            "brief_items": 0
+          },
+          {
+            "ms": 27,
+            "brief_items": 0
+          },
+          {
+            "ms": 22,
+            "brief_items": 0
+          }
+        ],
+        "brief_alone": [
+          {
+            "ms": 44,
+            "brief_items": 0
+          },
+          {
+            "ms": 18,
+            "brief_items": 0
+          },
+          {
+            "ms": 17,
+            "brief_items": 0
+          },
+          {
+            "ms": 14,
+            "brief_items": 0
+          },
+          {
+            "ms": 11,
+            "brief_items": 0
+          }
+        ]
+      },
+      "gate_check_replay": null,
+      "heartbeat": [
+        {
+          "event": "session-start",
+          "outcome": "ok",
+          "ms": 72
+        },
+        {
+          "event": "user-prompt",
+          "outcome": "ok",
+          "ms": 103
+        }
+      ]
+    },
+    {
+      "id": "d7_negative_20261222_on",
+      "harness": "codex",
+      "setup_error": null,
+      "crash": null,
+      "setup": {
+        "condition": "crowded",
+        "arm": "on",
+        "backdated": null,
+        "crowd_facts": 40,
+        "setup_exit": 0,
+        "setup_states": [
+          "configured",
+          "connection-verified",
+          "native-verified"
+        ]
+      },
+      "hooks": [
+        {
+          "event": "session-start",
+          "ms": 116,
+          "rc": 0,
+          "bytes": 1909,
+          "brief": null,
+          "hot_memory_facts": [],
+          "other_injected_facts": []
+        },
+        {
+          "event": "user-prompt",
+          "ms": 148,
+          "rc": 0,
+          "bytes": 1987,
+          "brief": null,
+          "hot_memory_facts": [],
+          "other_injected_facts": []
+        }
+      ],
+      "harness_requests": 6,
+      "brief_reached_model": null,
+      "replay": {
+        "cutoff_ms": 300,
+        "switch_on": true,
+        "turn_context": [
+          {
+            "ms": 152,
+            "brief_items": 0
+          },
+          {
+            "ms": 54,
+            "brief_items": 0
+          },
+          {
+            "ms": 37,
+            "brief_items": 0
+          },
+          {
+            "ms": 40,
+            "brief_items": 0
+          },
+          {
+            "ms": 37,
+            "brief_items": 0
+          }
+        ],
+        "brief_alone": [
+          {
+            "ms": 23,
+            "brief_items": 0
+          },
+          {
+            "ms": 17,
+            "brief_items": 0
+          },
+          {
+            "ms": 17,
+            "brief_items": 0
+          },
+          {
+            "ms": 8,
+            "brief_items": 0
+          },
+          {
+            "ms": 11,
+            "brief_items": 0
+          }
+        ]
+      },
+      "gate_check_replay": null,
+      "heartbeat": [
+        {
+          "event": "session-start",
+          "outcome": "ok",
+          "ms": 40
+        },
+        {
+          "event": "user-prompt",
+          "outcome": "ok",
+          "ms": 70
+        }
+      ]
+    }
+  ]
+}

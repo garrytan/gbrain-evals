@@ -1,0 +1,41 @@
+{
+  "slug": "meetings/2026-08-10-quillfeather-renewal",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: meeting\nTitle: Quillfeather renewal\nDate: Written on 2026-08-10.\nWriter: Gideon Sato\nVoice: hurried, lots of fragments\nFormat: loose call notes, half sentences, an action list at the end\nLength: about 386 words\nDate style in the body: casual (Jun 2nd, Monday the 2nd)\nTypos: a few natural typos and one or two sloppy abbreviations (never in names or required phrases)\n\nBrief:\nGideon (pod rotation): renewal signed today, $1,740 per seat, through Aug 14, 2027.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Nadia Fennimore: Strategic account manager\n- Gideon Sato: Strategic account manager\n- Mateo Quiroga: Head of Procurement\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Vantorre Group: diversified industrial manufacturer, Northeast; main contact Mateo Quiroga, Head of Procurement; codes/nicknames VTG, VTRG\n- Vantorre Mobility: electric fleet services subsidiary, Northeast; subsidiary of Vantorre Group; codes/nicknames VTM, VMob\n- Orlavine Medical Supply: medical supply distributor, Mountain West; codes/nicknames OMS\n- Quillfeather Outfitters: outdoor gear retailer, Mountain West; codes/nicknames QFO\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2026-08-10 (background only; don't restate unless the brief asks):\n- Vantorre Group: managed by Gideon Sato\n- Vantorre Mobility: managed by Gideon Sato\n- Orlavine Medical Supply: not stated on any shared page (do not say who manages it)\n- Quillfeather Outfitters: managed by Strategic Accounts pod (pooled account)",
+      "response_text": "# Quillfeather renewal\n\n**Date:** Mon Aug 10th  \n**Attendees:** me (covering pod rotation this wk), June Osei-Lark, QFO ops + purchasing (Travis from Boise DC, Hannah from legal/purchasing)\n\nQuick sync to get the final signature over the line before their fiscal cutoff. Travis joined from the yard office on his cell, huge amount of backup beeping in the background—apparently Door 9 and Door 10 at the Boise annex have a busted leveler and three LTL reefers were idling right outside his window.\n\n**Commercials / Paperwork**\n- Renewal signed today during the call (Hannah pushed the DocuSign thru while we were talking, June confirmed it hit the inbox).\n- Locked at $1,740 per seat.\n- Term runs through Aug 14, 2027.\n- June already flipped the opp stage in CRM, just waiting on the countersigned PDF to finish generating so we can attach to the record.\n\n**Ops / Product stuff from Travis**\n- Pre-fall fleece and tent inventory starting to land at the Ogden cross-dock and Boise annex. Yard congestion is already nasty on Tuesday mornings.\n- Carrier portal gripe: drivers from Alpine Freight keep booking the 06:00 drop slots as live unloads instead of drop-and-hook, which blocks out two hours on the Pemberline Dock calendar board instead of 15 mins.\n- Told him that's a carrier group permission setting in the admin tab—he has \"allow carrier override on appointment type\" checked for the Alpine profile.\n- Also asked about ticket #PD-44912 (exporting the Gate Detention Summary report to CSV drops the leading zero on trailer numbers starting with 0). Said eng has it slated for the Thursday night patch, nothing blocking their weekend shift.\n- He wants a 20 min refresher for the new night shift clerk (Marcus) who keeps manually deleting no-show appointments instead of marking them `Missed - Carrier Fault`, which messes up their weekly KPI deck for leadership.\n\n**Action items**\n- [ ] **June Osei-Lark:** upload countersigned PDF to the QFO folder once DocuSign finishes processing.\n- [ ] **Me:** send Travis the 2-min Loom video on locking carrier appointment types so Alpine Freight stops eating the 6am live unload capacity.\n- [ ] **Me:** check on #PD-44912 Friday morning the 14th to make sure the CSV leading zero fix actually shipped.\n- [ ] **Pod (whoever has rotation next wk, Nadia Fennimore maybe?):** set up 20-min training with Marcus on the night shift before Wednesday the 19th.",
+      "usage": {
+        "input_tokens": 1075,
+        "output_tokens": 586,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.00801,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1075,
+          "candidatesTokenCount": 586,
+          "totalTokenCount": 1661,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1075
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 586
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

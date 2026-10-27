@@ -1,0 +1,77 @@
+{
+  "slug": "emails/2026-06-18-saltmarsh-renewal-signed",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2026-06-18",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Saltmarsh",
+        "line": 6
+      },
+      {
+        "oid": "e2",
+        "surface": "Saltmarsh Provisions",
+        "line": 13
+      },
+      {
+        "oid": "e3",
+        "surface": "SMP",
+        "line": 32
+      },
+      {
+        "oid": "e4",
+        "surface": "Saltmarsh Provisions",
+        "line": 43
+      }
+    ],
+    "claims": [],
+    "events": [
+      {
+        "eid": "e-smp-renewal-signed",
+        "question": "Does the page describe this: \"Saltmarsh signs its 2026 renewal\"? If so, on what date does the text place it?"
+      }
+    ],
+    "ownership": []
+  },
+  "prompt_user_sha256": "771afdff1e378a9c32933b5125385d9cc51ec09f5ece3e05f1b30be6bbfd93bb",
+  "response_text": "{\n  \"date_used\": \"2026-06-18\",\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"saltmarsh\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"saltmarsh\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"saltmarsh\"\n    },\n    {\n      \"oid\": \"e4\",\n      \"entity\": \"saltmarsh\"\n    }\n  ],\n  \"events\": [\n    {\n      \"eid\": \"e-smp-renewal-signed\",\n      \"present\": true,\n      \"date\": \"2026-06-18\",\n      \"line\": 15\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2026-06-18",
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "saltmarsh"
+      },
+      {
+        "oid": "e2",
+        "entity": "saltmarsh"
+      },
+      {
+        "oid": "e3",
+        "entity": "saltmarsh"
+      },
+      {
+        "oid": "e4",
+        "entity": "saltmarsh"
+      }
+    ],
+    "events": [
+      {
+        "eid": "e-smp-renewal-signed",
+        "present": true,
+        "date": "2026-06-18",
+        "line": 15
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 3047,
+    "output_tokens": 172,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.007814
+}

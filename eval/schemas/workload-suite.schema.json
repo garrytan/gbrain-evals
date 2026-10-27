@@ -1,0 +1,152 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://brainbench.dev/schemas/workload-suite.schema.json",
+  "title": "Workload suite bundle manifest and record shapes (memory proof wave, B1 to B4)",
+  "description": "The manifest at the root, with $defs for every record stream: documents.jsonl and queries.jsonl follow the public agent-memory benchmark harness's Document and Query dataclasses; scorer-labels.jsonl is scorer-only; schedule.jsonl orders the corrections suite.",
+  "type": "object",
+  "required": ["suite", "version", "seed", "smoke", "counts", "approx_tokens", "timestamp_provenance", "files", "digest", "command"],
+  "additionalProperties": false,
+  "properties": {
+    "suite": { "enum": ["passing-details", "corrections", "time-relationships", "beliefs"] },
+    "version": { "type": "string" },
+    "seed": { "type": "integer" },
+    "smoke": { "type": "boolean" },
+    "counts": {
+      "type": "object",
+      "required": ["documents", "queries", "labels", "users", "by_category"],
+      "additionalProperties": false,
+      "properties": {
+        "documents": { "type": "integer" },
+        "queries": { "type": "integer" },
+        "labels": { "type": "integer" },
+        "users": { "type": "integer" },
+        "by_category": { "type": "object", "additionalProperties": { "type": "integer" } }
+      }
+    },
+    "approx_tokens": {
+      "type": "object",
+      "required": ["total", "per_user_max", "per_user_mean"],
+      "additionalProperties": false,
+      "properties": {
+        "total": { "type": "integer" },
+        "per_user_max": { "type": "integer" },
+        "per_user_mean": { "type": "integer" }
+      }
+    },
+    "timestamp_provenance": { "type": "string" },
+    "files": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["sha256", "bytes"],
+        "additionalProperties": false,
+        "properties": { "sha256": { "type": "string" }, "bytes": { "type": "integer" } }
+      }
+    },
+    "digest": { "type": "string" },
+    "command": { "type": "string" }
+  },
+  "$defs": {
+    "message": {
+      "type": "object",
+      "required": ["role", "content"],
+      "additionalProperties": false,
+      "properties": { "role": { "enum": ["user", "assistant"] }, "content": { "type": "string" } }
+    },
+    "document": {
+      "type": "object",
+      "required": ["id", "content", "user_id", "timestamp", "messages", "context"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "content": { "type": "string" },
+        "user_id": { "type": "string" },
+        "timestamp": { "type": "string" },
+        "messages": { "type": "array", "items": { "$ref": "#/$defs/message" } },
+        "context": { "type": "string" }
+      }
+    },
+    "query": {
+      "type": "object",
+      "required": ["id", "query", "gold_ids", "gold_answers", "user_id", "meta"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "type": "string" },
+        "query": { "type": "string" },
+        "gold_ids": { "type": "array", "items": { "type": "string" } },
+        "gold_answers": { "type": "array", "items": { "type": "string" } },
+        "user_id": { "type": "string" },
+        "meta": {
+          "type": "object",
+          "required": ["query_timestamp", "category"],
+          "additionalProperties": { "type": ["string", "number", "boolean"] },
+          "properties": { "query_timestamp": { "type": "string" }, "category": { "type": "string" } }
+        }
+      }
+    },
+    "gold": {
+      "oneOf": [
+        {
+          "type": "object", "required": ["kind", "value"], "additionalProperties": false,
+          "properties": { "kind": { "const": "value" }, "value": { "type": "string" }, "stale": { "type": "array", "items": { "type": "string" } } }
+        },
+        {
+          "type": "object", "required": ["kind", "values", "universe"], "additionalProperties": false,
+          "properties": { "kind": { "const": "set" }, "values": { "type": "array", "items": { "type": "string" } }, "universe": { "type": "array", "items": { "type": "string" } } }
+        },
+        { "type": "object", "required": ["kind"], "additionalProperties": false, "properties": { "kind": { "const": "none" } } },
+        {
+          "type": "object", "required": ["kind", "from", "to"], "additionalProperties": false,
+          "properties": { "kind": { "const": "change" }, "from": { "type": "string" }, "to": { "type": "string" } }
+        },
+        {
+          "type": "object", "required": ["kind", "verdict"], "additionalProperties": false,
+          "properties": { "kind": { "const": "verdict" }, "verdict": { "enum": ["yes", "no", "not yet"] } }
+        }
+      ]
+    },
+    "scorer_label": {
+      "type": "object",
+      "required": ["query_id", "suite", "category", "spec", "gold", "oracle_doc_ids", "needles", "distractors", "negative"],
+      "additionalProperties": false,
+      "properties": {
+        "query_id": { "type": "string" },
+        "suite": { "enum": ["passing-details", "corrections", "time-relationships", "beliefs"] },
+        "category": { "type": "string" },
+        "spec": { "type": "object" },
+        "gold": { "$ref": "#/$defs/gold" },
+        "oracle_doc_ids": { "type": "array", "items": { "type": "string" } },
+        "needles": {
+          "type": "array",
+          "items": {
+            "type": "object", "required": ["doc_id", "text", "value"], "additionalProperties": false,
+            "properties": { "doc_id": { "type": "string" }, "text": { "type": "string" }, "value": { "type": "string" } }
+          }
+        },
+        "distractors": {
+          "type": "array",
+          "items": {
+            "type": "object", "required": ["doc_id", "value", "kind"], "additionalProperties": false,
+            "properties": { "doc_id": { "type": "string" }, "value": { "type": "string" }, "kind": { "type": "string" } }
+          }
+        },
+        "negative": { "type": "boolean" }
+      }
+    },
+    "schedule_op": {
+      "type": "object",
+      "required": ["unit", "seq", "op"],
+      "properties": {
+        "unit": { "type": "string" },
+        "seq": { "type": "integer" },
+        "op": { "enum": ["ingest", "probe", "correct", "write"] },
+        "doc_ids": { "type": "array", "items": { "type": "string" } },
+        "query_id": { "type": "string" },
+        "checkpoint": { "enum": [0, 1, 5] },
+        "item_id": { "type": "string" },
+        "index": { "type": "integer" },
+        "doc_id": { "type": "string" }
+      }
+    }
+  }
+}

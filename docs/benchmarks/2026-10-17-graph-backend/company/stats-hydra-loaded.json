@@ -1,0 +1,1 @@
+{"containers":[{"name":"gb-hydra","mem":"2.817GiB / 62.79GiB"},{"name":"gb-hydra-indexer","mem":"3.15GiB / 62.79GiB"},{"name":"gb-minio","mem":"1.165GiB / 62.79GiB"},{"name":"gb-pg","mem":"3.346GiB / 62.79GiB"}],"minio_bytes":15744335025,"hydra_cache_bytes":1041008831,"indexer_cache_bytes":0,"pg_data_bytes":4156625948}

@@ -1,0 +1,124 @@
+{
+  "slug": "contracts/2025-02-14-orm-of-2025",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2025-02-14",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Orrin Mills",
+        "line": 7
+      },
+      {
+        "oid": "e2",
+        "surface": "ORM",
+        "line": 9
+      },
+      {
+        "oid": "e3",
+        "surface": "Orrin Mills",
+        "line": 16
+      },
+      {
+        "oid": "e4",
+        "surface": "Stoneharrow Billing",
+        "line": 34
+      },
+      {
+        "oid": "e5",
+        "surface": "Orrin Mills",
+        "line": 40
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": [],
+    "record": {
+      "question": "Is this document signed, an unsigned version, or a draft? Judge from the body text, not the title alone. Give its signed date and effective date if stated, and the value of each of these terms it sets.",
+      "terms": [
+        "seats",
+        "price_per_seat",
+        "discount_pct",
+        "renewal_date"
+      ]
+    }
+  },
+  "prompt_user_sha256": "92b96a5fe3b5fbf39a7790d88b3443e1b735a0fe79484ca3cc98bc8274c5a33f",
+  "response_text": "{\n  \"date_used\": \"2025-02-14\",\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\"oid\": \"e1\", \"entity\": \"orrin\"},\n    {\"oid\": \"e2\", \"entity\": \"orrin\"},\n    {\"oid\": \"e3\", \"entity\": \"orrin\"},\n    {\"oid\": \"e4\", \"entity\": \"stoneharrow\"},\n    {\"oid\": \"e5\", \"entity\": \"orrin\"}\n  ],\n  \"record\": {\n    \"status\": \"signed\",\n    \"status_evidence_line\": 41,\n    \"signed_date\": \"2025-02-14\",\n    \"effective_date\": \"2025-03-01\",\n    \"terms\": [\n      {\n        \"term\": \"seats\",\n        \"applies_to\": [\"orrin\"],\n        \"value\": \"36\",\n        \"line\": 23\n      },\n      {\n        \"term\": \"price_per_seat\",\n        \"applies_to\": [\"orrin\"],\n        \"value\": \"$1,650.00 USD per year\",\n        \"line\": 24\n      },\n      {\n        \"term\": \"discount_pct\",\n        \"applies_to\": [\"orrin\"],\n        \"value\": \"0%\",\n        \"line\": 25\n      },\n      {\n        \"term\": \"renewal_date\",\n        \"applies_to\": [\"orrin\"],\n        \"value\": \"2026-02-28\",\n        \"line\": 30\n      }\n    ],\n    \"deciding_line\": 30,\n    \"deciding_days\": null\n  }\n}",
+  "parsed": {
+    "date_used": "2025-02-14",
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "orrin"
+      },
+      {
+        "oid": "e2",
+        "entity": "orrin"
+      },
+      {
+        "oid": "e3",
+        "entity": "orrin"
+      },
+      {
+        "oid": "e4",
+        "entity": "stoneharrow"
+      },
+      {
+        "oid": "e5",
+        "entity": "orrin"
+      }
+    ],
+    "record": {
+      "status": "signed",
+      "status_evidence_line": 41,
+      "signed_date": "2025-02-14",
+      "effective_date": "2025-03-01",
+      "terms": [
+        {
+          "term": "seats",
+          "applies_to": [
+            "orrin"
+          ],
+          "value": "36",
+          "line": 23
+        },
+        {
+          "term": "price_per_seat",
+          "applies_to": [
+            "orrin"
+          ],
+          "value": "$1,650.00 USD per year",
+          "line": 24
+        },
+        {
+          "term": "discount_pct",
+          "applies_to": [
+            "orrin"
+          ],
+          "value": "0%",
+          "line": 25
+        },
+        {
+          "term": "renewal_date",
+          "applies_to": [
+            "orrin"
+          ],
+          "value": "2026-02-28",
+          "line": 30
+        }
+      ],
+      "deciding_line": 30,
+      "deciding_days": null
+    }
+  },
+  "usage": {
+    "input_tokens": 3294,
+    "output_tokens": 533,
+    "thinking_tokens": 184
+  },
+  "cost_usd": 0.011918
+}

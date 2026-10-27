@@ -1,0 +1,151 @@
+{
+  "slug": "agent-notes/north-account-cheatsheet",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "none (undated page)",
+    "owner_phrases": [
+      {
+        "mid": "agent-notes/north-account-cheatsheet#m1",
+        "phrase": "Dana's biggest account",
+        "lines": [
+          11
+        ]
+      },
+      {
+        "mid": "agent-notes/north-account-cheatsheet#m2",
+        "phrase": "the Northwest one Dana inherited",
+        "lines": [
+          18
+        ]
+      }
+    ],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Quarrendon Freight Lines",
+        "line": 17
+      },
+      {
+        "oid": "e2",
+        "surface": "QFL",
+        "line": 17
+      },
+      {
+        "oid": "e3",
+        "surface": "Q-Freight",
+        "line": 17
+      },
+      {
+        "oid": "e4",
+        "surface": "Quarendon Freightways",
+        "line": 17
+      },
+      {
+        "oid": "e5",
+        "surface": "Tamsin Cold Chain",
+        "line": 18
+      },
+      {
+        "oid": "e6",
+        "surface": "TCC",
+        "line": 18
+      },
+      {
+        "oid": "e7",
+        "surface": "Brackenwater Freight Co.",
+        "line": 19
+      },
+      {
+        "oid": "e8",
+        "surface": "BWF",
+        "line": 19
+      },
+      {
+        "oid": "e9",
+        "surface": "Bracken",
+        "line": 19
+      },
+      {
+        "oid": "e10",
+        "surface": "Stoneharrow Billing",
+        "line": 23
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "d81d5670e09856831bc465b2baacf6609bbec1874cdba4826bbe67b06cbfb2fe",
+  "response_text": "{\n  \"date_used\": null,\n  \"owner_phrases\": [\n    {\n      \"mid\": \"agent-notes/north-account-cheatsheet#m1\",\n      \"refers_to_customer_account\": false,\n      \"accounts\": [],\n      \"reading\": \"ambiguous: could be more than one account\",\n      \"note\": \"The page is undated and does not identify or rank Dana's accounts by size, so her biggest account cannot be determined.\"\n    },\n    {\n      \"mid\": \"agent-notes/north-account-cheatsheet#m2\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\n        \"tamsin\"\n      ],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"The phrase appears in the Tamsin Cold Chain note; its Pacific Northwest location and Dana's inheritance of the account match the reference sheet.\"\n    }\n  ],\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"quarrendon\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"quarrendon\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"quarrendon\"\n    },\n    {\n      \"oid\": \"e4\",\n      \"entity\": \"quarendon-freightways\"\n    },\n    {\n      \"oid\": \"e5\",\n      \"entity\": \"tamsin\"\n    },\n    {\n      \"oid\": \"e6\",\n      \"entity\": \"tamsin\"\n    },\n    {\n      \"oid\": \"e7\",\n      \"entity\": \"brackenwater\"\n    },\n    {\n      \"oid\": \"e8\",\n      \"entity\": \"brackenwater\"\n    },\n    {\n      \"oid\": \"e9\",\n      \"entity\": \"brackenwater\"\n    },\n    {\n      \"oid\": \"e10\",\n      \"entity\": \"stoneharrow\"\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": null,
+    "owner_phrases": [
+      {
+        "mid": "agent-notes/north-account-cheatsheet#m1",
+        "refers_to_customer_account": false,
+        "accounts": [],
+        "reading": "ambiguous: could be more than one account",
+        "note": "The page is undated and does not identify or rank Dana's accounts by size, so her biggest account cannot be determined."
+      },
+      {
+        "mid": "agent-notes/north-account-cheatsheet#m2",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "tamsin"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "The phrase appears in the Tamsin Cold Chain note; its Pacific Northwest location and Dana's inheritance of the account match the reference sheet."
+      }
+    ],
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "quarrendon"
+      },
+      {
+        "oid": "e2",
+        "entity": "quarrendon"
+      },
+      {
+        "oid": "e3",
+        "entity": "quarrendon"
+      },
+      {
+        "oid": "e4",
+        "entity": "quarendon-freightways"
+      },
+      {
+        "oid": "e5",
+        "entity": "tamsin"
+      },
+      {
+        "oid": "e6",
+        "entity": "tamsin"
+      },
+      {
+        "oid": "e7",
+        "entity": "brackenwater"
+      },
+      {
+        "oid": "e8",
+        "entity": "brackenwater"
+      },
+      {
+        "oid": "e9",
+        "entity": "brackenwater"
+      },
+      {
+        "oid": "e10",
+        "entity": "stoneharrow"
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 3134,
+    "output_tokens": 491,
+    "thinking_tokens": 54
+  },
+  "cost_usd": 0.011178
+}

@@ -1,0 +1,152 @@
+{
+  "inputs": [
+    {
+      "side": "A",
+      "path": "sonnet-5-5.off-l5.json",
+      "sha256": "ae1bbb0a9500540fc892d4bd5f82ec9e8105ffcfa7e4002ce71f93a98811a3fd",
+      "rows": 200,
+      "skipped_summary_rows": 0
+    },
+    {
+      "side": "B",
+      "path": "sonnet-5-5.depth_first.json",
+      "sha256": "438eb9692e3b94ee2f2818e1bcde6f1c49d34809bf221c3b82c34dff179df64a",
+      "rows": 200,
+      "skipped_summary_rows": 0
+    }
+  ],
+  "family": {
+    "schema_version": 1,
+    "family_id": "budgeted-delivery-h1-descriptive",
+    "registered_at": "2026-10-10",
+    "description": "Budgeted delivery H1 descriptive references, all report-only: depth_first against off (today's uncapped auto), off on the first five hits against cap_only and depth_first, and depth_first against cap_only under claude-opus-5-5 and gpt-6.1-sol on the same frozen contexts. They decide nothing, so no multiplicity correction applies.",
+    "alpha": 0.05,
+    "seed": 20261010,
+    "draws": 20000,
+    "min_clusters": 10,
+    "id_field": "question_id",
+    "comparisons": [
+      {
+        "id": "answer_accuracy",
+        "metric": "answer_correct",
+        "gate": "exploratory",
+        "direction": "higher",
+        "cluster_by": "haystack_id",
+        "description": "Descriptive. Judged answer correctness over all 200 questions, B minus A."
+      },
+      {
+        "id": "packed_recall_all",
+        "metric": "recall_all",
+        "gate": "exploratory",
+        "direction": "higher",
+        "cluster_by": "haystack_id",
+        "description": "Descriptive. Every gold chat among the chats the reader saw, over the 160 answerable questions."
+      }
+    ],
+    "exclude_when": []
+  },
+  "preregistered": true,
+  "decision": {
+    "family_id": "budgeted-delivery-h1-descriptive",
+    "verdict": "report_only",
+    "reasons": [],
+    "alpha": 0.05,
+    "holm_family": [],
+    "comparisons": [
+      {
+        "id": "answer_accuracy",
+        "metric": "answer_correct",
+        "gate": "exploratory",
+        "status": "report_only",
+        "reasons": [
+          "McNemar treats items as independent; the clustered sign-flip p-value is the primary test here"
+        ],
+        "n_pairs": 200,
+        "n_clusters": 40,
+        "n_excluded": 0,
+        "stats": {
+          "n_pairs": 200,
+          "n_clusters": 40,
+          "mean_a": 0.75,
+          "mean_b": 0.61,
+          "delta": -0.14,
+          "se_cluster": 0.03218536058361683,
+          "se_iid": 0.03402629784040011,
+          "design_effect": 0.8947204415954424,
+          "effective_n": 223.53350912980724,
+          "ci95": [
+            -0.2,
+            -0.075
+          ],
+          "p_two_sided": 0.00024998750062496874,
+          "p_greater": 0.999950002499875,
+          "p_less": 0.000199990000499975,
+          "p_method": "monte-carlo-sign-flip"
+        },
+        "mcnemar": {
+          "losses": 39,
+          "wins": 11,
+          "both_pass": 111,
+          "both_fail": 39,
+          "discordant": 50,
+          "p_two_sided": 0.00009021490107130603
+        },
+        "power": {
+          "alpha": 0.05,
+          "power": 0.8,
+          "mde": 0.09017003047431578,
+          "min_one_sided_discordant": 6,
+          "note": "with 200 pairs in 40 clusters, a two-sided 0.05 test has 80% power for an absolute change of about 0.0902; the observed delta is at least that size; an exact McNemar test needs at least 6 wins with zero losses to reach 0.05"
+        },
+        "direction": "higher"
+      },
+      {
+        "id": "packed_recall_all",
+        "metric": "recall_all",
+        "gate": "exploratory",
+        "status": "report_only",
+        "reasons": [
+          "McNemar treats items as independent; the clustered sign-flip p-value is the primary test here"
+        ],
+        "n_pairs": 160,
+        "n_clusters": 40,
+        "n_excluded": 40,
+        "stats": {
+          "n_pairs": 160,
+          "n_clusters": 40,
+          "mean_a": 0.975,
+          "mean_b": 0.475,
+          "delta": -0.5,
+          "se_cluster": 0.03100868364730211,
+          "se_iid": 0.03965257928590721,
+          "design_effect": 0.6115384615384614,
+          "effective_n": 261.63522012578625,
+          "ci95": [
+            -0.55625,
+            -0.4375
+          ],
+          "p_two_sided": 0.00004999750012499375,
+          "p_greater": 1,
+          "p_less": 0.00004999750012499375,
+          "p_method": "monte-carlo-sign-flip"
+        },
+        "mcnemar": {
+          "losses": 80,
+          "wins": 0,
+          "both_pass": 76,
+          "both_fail": 4,
+          "discordant": 80,
+          "p_two_sided": 1.6543612251060553e-24
+        },
+        "power": {
+          "alpha": 0.05,
+          "power": 0.8,
+          "mde": 0.0868734697621785,
+          "min_one_sided_discordant": 6,
+          "note": "with 160 pairs in 40 clusters, a two-sided 0.05 test has 80% power for an absolute change of about 0.0869; the observed delta is at least that size; an exact McNemar test needs at least 6 wins with zero losses to reach 0.05"
+        },
+        "direction": "higher"
+      }
+    ]
+  }
+}

@@ -24,6 +24,7 @@
  *   bun eval/runner/sealed-confirmation.ts answer --questions <q.json> --run <dir>/run-hybrid.jsonl --out <hyp.jsonl> --cap-usd 5
  *   bun eval/runner/sealed-confirmation.ts score --run <run.jsonl> --labels <private labels.json> \
  *     --purpose "release decision X" --decision-id <id> [--questions <q.json> --judge --cap-usd 2] --out <report.json>
+ *     [--custody-root <dir>: refuse a report, spend ledger or response cache outside it, before the labels are opened]
  *   bun eval/runner/sealed-confirmation.ts solvability --questions <q.json> --labels <labels.json> --out <private.jsonl> --cap-usd 10
  *
  * Evidence-delivery decisions (a committed decision file names the gbrain
@@ -34,7 +35,7 @@
  *   decide           --manifest <m> --decision <d.json> --compare <compare.ts --json output> --answers <a.jsonl,b.jsonl> --out <decision.json>
  *
  * --manifest defaults to eval/data/sealed-confirmation-v1/manifest.json.
- * --access-log defaults to access-log.jsonl next to the labels file.
+ * --access-log defaults to GBRAIN_EVALS_CUSTODY_LOG, else access-log.jsonl next to the labels file.
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
@@ -196,8 +197,16 @@ async function cmdScore(a: Args) {
   const labelsPath = a.need('--labels');
   const runRows = readJsonl<any>(runPath).filter(r => r.record_type !== 'meta') as RunRow[];
   const topK = Number(a.get('--top-k') ?? 5);
+  const custodyRoot = a.get('--custody-root');
+  if (custodyRoot) {
+    const { checkCustodyPaths } = await import('./memory-qa/sealed-profile.ts');
+    const out = a.get('--out');
+    if (!out) throw new Error('--custody-root needs --out inside it');
+    const spend = a.get('--spend') ?? join(dirname(resolve(out)), 'spend.jsonl');
+    checkCustodyPaths(custodyRoot, [['report', out], ['spend ledger', spend], ['response cache', join(dirname(resolve(spend)), 'llm-cache')]]);
+  }
   const labels = openLabels(labelsPath, manifest, {
-    path: a.get('--access-log') ?? join(dirname(resolve(labelsPath)), 'access-log.jsonl'), action: 'score',
+    path: a.get('--access-log') ?? process.env.GBRAIN_EVALS_CUSTODY_LOG ?? join(dirname(resolve(labelsPath)), 'access-log.jsonl'), action: 'score',
     purpose: a.get('--purpose') ?? '', decision_id: a.get('--decision-id') ?? null, run_sha256: sha256File(runPath),
   });
   const { summary, rows } = scoreRetrieval(runRows, labels.labels, topK);
@@ -502,7 +511,7 @@ function cmdValidate(a: Args) {
 
 const numOrNull = (s: string | null) => (s === null ? null : Number(s));
 
-const OWN_FLAGS = new Set(['--questions', '--labels', '--manifest', '--out', '--out-dir', '--run', '--adapters', '--top-k', '--cap-usd', '--spend', '--purpose', '--decision-id', '--access-log', '--decision', '--evidence-dir', '--embed-cache', '--gbrain-dir', '--arm', '--concurrency', '--compare', '--answers', '--shard']);
+const OWN_FLAGS = new Set(['--questions', '--labels', '--manifest', '--out', '--out-dir', '--run', '--adapters', '--top-k', '--cap-usd', '--spend', '--purpose', '--decision-id', '--access-log', '--decision', '--evidence-dir', '--embed-cache', '--gbrain-dir', '--arm', '--concurrency', '--compare', '--answers', '--shard', '--custody-root']);
 const OWN_SWITCHES = new Set(['--judge', '--no-commitment', '--smoke']);
 
 class Args {

@@ -1,0 +1,3 @@
+primary sealed: wave - fs +10.67 pp [+7.00, +14.50] over 200 tasks (ahead)
+general claim: False
+D3 wrong values wave - baseline -0.67 pp [-2.67, +1.33] passes=False; Sol watch {'wave_wrong_cells': 1.0, 'baseline_wrong_cells': 1.0, 'flag': False}

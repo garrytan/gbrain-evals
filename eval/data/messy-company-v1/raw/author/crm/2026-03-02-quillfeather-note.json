@@ -1,0 +1,41 @@
+{
+  "slug": "crm/2026-03-02-quillfeather-note",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: crm\nTitle: CRM: Quillfeather\nDate: Written on 2026-03-02.\nWriter: Gideon Sato\nVoice: hurried, lots of fragments\nFormat: a short CRM note in two paragraphs\nLength: about 190 words\nDate style in the body: casual (Jun 2nd, Monday the 2nd)\nTypos: one or two small natural typos (never in names or required phrases)\n\nBrief:\nGideon (on pod rotation) notes: renewal comes up in Q3 2026; store hours feature request.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Nadia Fennimore: Strategic account manager\n- Gideon Sato: Strategic account manager\n- Mateo Quiroga: Head of Procurement\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Vantorre Group: diversified industrial manufacturer, Northeast; main contact Mateo Quiroga, Head of Procurement; codes/nicknames VTG, VTRG\n- Vantorre Mobility: electric fleet services subsidiary, Northeast; subsidiary of Vantorre Group; codes/nicknames VTM, VMob\n- Orlavine Medical Supply: medical supply distributor, Mountain West; codes/nicknames OMS\n- Quillfeather Outfitters: outdoor gear retailer, Mountain West; codes/nicknames QFO\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2026-03-02 (background only; don't restate unless the brief asks):\n- Vantorre Group: managed by Nadia Fennimore\n- Vantorre Mobility: managed by Gideon Sato\n- Orlavine Medical Supply: not stated on any shared page (do not say who manages it)\n- Quillfeather Outfitters: managed by Strategic Accounts pod (pooled account)",
+      "response_text": "# CRM: Quillfeather\n\nQuick log from Monday the 2nd—taking the pod rotation for QFO this week. Spoke with Benji in their Provo dispatch office after the morning rush. He was still dealing with a jackknifed flatbed blocking Bay 4 at the Ogden cross-dock, so we kept it super brief. Just making sure this is flagged at the top of the record: the Quillfeather Outfitters renewal comes up in Q3 2026. No commercial pushback from Benji today, mostly operational noise, plus he mentioned his yard crew is finally using the new dwell-time CSV export without complaining.\n\nMain thing he wanted me to log is a store hours feature request for Pemberline Dock. Right now their regional drivers doing storefront drops in Bozeman and Jackson Hole can accidentally book dock appointments outside retail receiving hours, because the store calendar defaults to the main warehouse 24/6 template. Causes a mess when a rig shows up at 5 AM and nobody's their to unlock the back gate. I linked his screenshot to ticket #PD-4491 and told him product is looking at location-level blackout windows. Need whoever catches the next pod rotation on Friday the 6th to follow up with him on that ticket.",
+      "usage": {
+        "input_tokens": 1062,
+        "output_tokens": 264,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.004764,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1062,
+          "candidatesTokenCount": 264,
+          "totalTokenCount": 1326,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1062
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 264
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

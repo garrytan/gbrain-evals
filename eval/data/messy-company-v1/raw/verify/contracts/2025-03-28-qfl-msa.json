@@ -1,0 +1,242 @@
+{
+  "slug": "contracts/2025-03-28-qfl-msa",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2025-03-28",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Quarrendon Freight Lines",
+        "line": 7
+      },
+      {
+        "oid": "e2",
+        "surface": "Quarrendon Freight Lines",
+        "line": 11
+      },
+      {
+        "oid": "e3",
+        "surface": "QFL",
+        "line": 11
+      },
+      {
+        "oid": "e4",
+        "surface": "QFL",
+        "line": 125
+      },
+      {
+        "oid": "e5",
+        "surface": "Quarrendon Freight Lines",
+        "line": 163
+      },
+      {
+        "oid": "e6",
+        "surface": "QFL",
+        "line": 163
+      },
+      {
+        "oid": "e7",
+        "surface": "Q-Freight",
+        "line": 163
+      },
+      {
+        "oid": "e8",
+        "surface": "Stoneharrow Billing",
+        "line": 263
+      },
+      {
+        "oid": "e9",
+        "surface": "Quarrendon Freight Lines",
+        "line": 280
+      },
+      {
+        "oid": "e10",
+        "surface": "Quarrendon Freight Lines",
+        "line": 281
+      },
+      {
+        "oid": "e11",
+        "surface": "Quarrendon Freight Lines",
+        "line": 311
+      },
+      {
+        "oid": "e12",
+        "surface": "Quarrendon Freight Lines",
+        "line": 315
+      },
+      {
+        "oid": "e13",
+        "surface": "QFL",
+        "line": 315
+      },
+      {
+        "oid": "e14",
+        "surface": "Q-Freight",
+        "line": 315
+      },
+      {
+        "oid": "e15",
+        "surface": "Quarrendon Freight Lines",
+        "line": 353
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": [],
+    "record": {
+      "question": "Is this document signed, an unsigned version, or a draft? Judge from the body text, not the title alone. Give its signed date and effective date if stated, and the value of each of these terms it sets.",
+      "terms": [
+        "seats",
+        "price_per_seat",
+        "discount_pct",
+        "renewal_date",
+        "sla_tier",
+        "notice_days",
+        "payment_terms_days"
+      ],
+      "deciding_question": "Which line states how many days ahead a party must act so that the agreement does not continue into another period, and how many days?"
+    }
+  },
+  "prompt_user_sha256": "367e9e1dee748022974fe085287881cc9051140f049cb3419553135f45d260ad",
+  "response_text": "{\n  \"date_used\": \"2025-03-28\",\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\"oid\": \"e1\", \"entity\": \"quarrendon\"},\n    {\"oid\": \"e2\", \"entity\": \"quarrendon\"},\n    {\"oid\": \"e3\", \"entity\": \"quarrendon\"},\n    {\"oid\": \"e4\", \"entity\": \"quarrendon\"},\n    {\"oid\": \"e5\", \"entity\": \"quarrendon\"},\n    {\"oid\": \"e6\", \"entity\": \"quarrendon\"},\n    {\"oid\": \"e7\", \"entity\": \"quarrendon\"},\n    {\"oid\": \"e8\", \"entity\": \"stoneharrow\"},\n    {\"oid\": \"e9\", \"entity\": \"quarrendon\"},\n    {\"oid\": \"e10\", \"entity\": \"quarrendon\"},\n    {\"oid\": \"e11\", \"entity\": \"quarrendon\"},\n    {\"oid\": \"e12\", \"entity\": \"quarrendon\"},\n    {\"oid\": \"e13\", \"entity\": \"quarrendon\"},\n    {\"oid\": \"e14\", \"entity\": \"quarrendon\"},\n    {\"oid\": \"e15\", \"entity\": \"quarrendon\"}\n  ],\n  \"record\": {\n    \"status\": \"signed\",\n    \"status_evidence_line\": 348,\n    \"signed_date\": \"2025-03-28\",\n    \"effective_date\": \"2025-04-01\",\n    \"terms\": [\n      {\n        \"term\": \"seats\",\n        \"applies_to\": [\"quarrendon\"],\n        \"value\": \"140 named-user seats\",\n        \"line\": 331\n      },\n      {\n        \"term\": \"price_per_seat\",\n        \"applies_to\": [\"quarrendon\"],\n        \"value\": \"$1,628.00 USD per seat per year net; $1,850.00 USD list price\",\n        \"line\": 65\n      },\n      {\n        \"term\": \"discount_pct\",\n        \"applies_to\": [\"quarrendon\"],\n        \"value\": \"12%\",\n        \"line\": 65\n      },\n      {\n        \"term\": \"renewal_date\",\n        \"applies_to\": [\"quarrendon\"],\n        \"value\": \"2026-04-01, following the initial period ending 2026-03-31; automatic continuation for successive twelve-month periods unless timely elected against\",\n        \"line\": 247\n      },\n      {\n        \"term\": \"sla_tier\",\n        \"applies_to\": [\"quarrendon\"],\n        \"value\": \"Tier 2\",\n        \"line\": 91\n      },\n      {\n        \"term\": \"notice_days\",\n        \"applies_to\": [\"quarrendon\"],\n        \"value\": \"At least 120 calendar days prior to the close of the then-current period\",\n        \"line\": 247\n      },\n      {\n        \"term\": \"payment_terms_days\",\n        \"applies_to\": [\"quarrendon\"],\n        \"value\": \"45 calendar days from invoice date (Net 45)\",\n        \"line\": 79\n      }\n    ],\n    \"deciding_line\": 247,\n    \"deciding_days\": 120\n  }\n}",
+  "parsed": {
+    "date_used": "2025-03-28",
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "quarrendon"
+      },
+      {
+        "oid": "e2",
+        "entity": "quarrendon"
+      },
+      {
+        "oid": "e3",
+        "entity": "quarrendon"
+      },
+      {
+        "oid": "e4",
+        "entity": "quarrendon"
+      },
+      {
+        "oid": "e5",
+        "entity": "quarrendon"
+      },
+      {
+        "oid": "e6",
+        "entity": "quarrendon"
+      },
+      {
+        "oid": "e7",
+        "entity": "quarrendon"
+      },
+      {
+        "oid": "e8",
+        "entity": "stoneharrow"
+      },
+      {
+        "oid": "e9",
+        "entity": "quarrendon"
+      },
+      {
+        "oid": "e10",
+        "entity": "quarrendon"
+      },
+      {
+        "oid": "e11",
+        "entity": "quarrendon"
+      },
+      {
+        "oid": "e12",
+        "entity": "quarrendon"
+      },
+      {
+        "oid": "e13",
+        "entity": "quarrendon"
+      },
+      {
+        "oid": "e14",
+        "entity": "quarrendon"
+      },
+      {
+        "oid": "e15",
+        "entity": "quarrendon"
+      }
+    ],
+    "record": {
+      "status": "signed",
+      "status_evidence_line": 348,
+      "signed_date": "2025-03-28",
+      "effective_date": "2025-04-01",
+      "terms": [
+        {
+          "term": "seats",
+          "applies_to": [
+            "quarrendon"
+          ],
+          "value": "140 named-user seats",
+          "line": 331
+        },
+        {
+          "term": "price_per_seat",
+          "applies_to": [
+            "quarrendon"
+          ],
+          "value": "$1,628.00 USD per seat per year net; $1,850.00 USD list price",
+          "line": 65
+        },
+        {
+          "term": "discount_pct",
+          "applies_to": [
+            "quarrendon"
+          ],
+          "value": "12%",
+          "line": 65
+        },
+        {
+          "term": "renewal_date",
+          "applies_to": [
+            "quarrendon"
+          ],
+          "value": "2026-04-01, following the initial period ending 2026-03-31; automatic continuation for successive twelve-month periods unless timely elected against",
+          "line": 247
+        },
+        {
+          "term": "sla_tier",
+          "applies_to": [
+            "quarrendon"
+          ],
+          "value": "Tier 2",
+          "line": 91
+        },
+        {
+          "term": "notice_days",
+          "applies_to": [
+            "quarrendon"
+          ],
+          "value": "At least 120 calendar days prior to the close of the then-current period",
+          "line": 247
+        },
+        {
+          "term": "payment_terms_days",
+          "applies_to": [
+            "quarrendon"
+          ],
+          "value": "45 calendar days from invoice date (Net 45)",
+          "line": 79
+        }
+      ],
+      "deciding_line": 247,
+      "deciding_days": 120
+    }
+  },
+  "usage": {
+    "input_tokens": 16448,
+    "output_tokens": 749,
+    "thinking_tokens": 52
+  },
+  "cost_usd": 0.040386
+}

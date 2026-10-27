@@ -1,0 +1,144 @@
+{
+ "note": "estimates from provider usage counts at list price, not metered invoices; excludes one $0.0001 tokenizer calibration call",
+ "total_usd": 6.325,
+ "by_phase": {
+  "build|voyage-embed|voyage-4": {
+   "calls": 14311,
+   "tokens_in": 38943502,
+   "tokens_out": 0,
+   "usd": 2.33661
+  },
+  "capture|anthropic|claude-haiku-4-5-20251001": {
+   "calls": 600,
+   "tokens_in": 216380,
+   "tokens_out": 32319,
+   "usd": 0.37797
+  },
+  "capture|voyage-embed|voyage-4": {
+   "calls": 1798,
+   "tokens_in": 32741,
+   "tokens_out": 0,
+   "usd": 0.00196
+  },
+  "cell:10x1400.r25lite|voyage|rerank-2.5-lite": {
+   "calls": 600,
+   "tokens_in": 3701170,
+   "tokens_out": 0,
+   "usd": 0.07402
+  },
+  "cell:10x1400.r25|voyage|rerank-2.5": {
+   "calls": 600,
+   "tokens_in": 3701170,
+   "tokens_out": 0,
+   "usd": 0.18506
+  },
+  "cell:10x512.r25lite|voyage|rerank-2.5-lite": {
+   "calls": 600,
+   "tokens_in": 3056361,
+   "tokens_out": 0,
+   "usd": 0.06113
+  },
+  "cell:10x512.r25|voyage|rerank-2.5": {
+   "calls": 600,
+   "tokens_in": 3056361,
+   "tokens_out": 0,
+   "usd": 0.15282
+  },
+  "cell:10x768.r25lite|voyage|rerank-2.5-lite": {
+   "calls": 91,
+   "tokens_in": 582501,
+   "tokens_out": 0,
+   "usd": 0.01165
+  },
+  "cell:10x768.r25|voyage|rerank-2.5": {
+   "calls": 91,
+   "tokens_in": 582501,
+   "tokens_out": 0,
+   "usd": 0.02913
+  },
+  "cell:15x1400.r25lite|voyage|rerank-2.5-lite": {
+   "calls": 600,
+   "tokens_in": 5525031,
+   "tokens_out": 0,
+   "usd": 0.1105
+  },
+  "cell:15x1400.r25|voyage|rerank-2.5": {
+   "calls": 600,
+   "tokens_in": 5525031,
+   "tokens_out": 0,
+   "usd": 0.27625
+  },
+  "cell:15x512.r25lite|voyage|rerank-2.5-lite": {
+   "calls": 600,
+   "tokens_in": 4570639,
+   "tokens_out": 0,
+   "usd": 0.09141
+  },
+  "cell:15x512.r25|voyage|rerank-2.5": {
+   "calls": 600,
+   "tokens_in": 4570639,
+   "tokens_out": 0,
+   "usd": 0.22853
+  },
+  "cell:15x768.r25lite|voyage|rerank-2.5-lite": {
+   "calls": 128,
+   "tokens_in": 1213812,
+   "tokens_out": 0,
+   "usd": 0.02428
+  },
+  "cell:15x768.r25|voyage|rerank-2.5": {
+   "calls": 128,
+   "tokens_in": 1213812,
+   "tokens_out": 0,
+   "usd": 0.06069
+  },
+  "cell:25x1400.r25lite|voyage|rerank-2.5-lite": {
+   "calls": 600,
+   "tokens_in": 9167366,
+   "tokens_out": 0,
+   "usd": 0.18335
+  },
+  "cell:25x1400.r25|voyage|rerank-2.5": {
+   "calls": 600,
+   "tokens_in": 9167366,
+   "tokens_out": 0,
+   "usd": 0.45837
+  },
+  "cell:25x512.r25lite|voyage|rerank-2.5-lite": {
+   "calls": 600,
+   "tokens_in": 7594373,
+   "tokens_out": 0,
+   "usd": 0.15189
+  },
+  "cell:25x512.r25|voyage|rerank-2.5": {
+   "calls": 600,
+   "tokens_in": 7594373,
+   "tokens_out": 0,
+   "usd": 0.37972
+  },
+  "cell:25x768.r25lite|voyage|rerank-2.5-lite": {
+   "calls": 205,
+   "tokens_in": 3191583,
+   "tokens_out": 0,
+   "usd": 0.06383
+  },
+  "cell:25x768.r25|voyage|rerank-2.5": {
+   "calls": 205,
+   "tokens_in": 3191583,
+   "tokens_out": 0,
+   "usd": 0.15958
+  },
+  "cell:ref.50x1400.r25|voyage|rerank-2.5": {
+   "calls": 600,
+   "tokens_in": 18125399,
+   "tokens_out": 0,
+   "usd": 0.90627
+  },
+  "install|voyage-embed|voyage-4": {
+   "calls": 2,
+   "tokens_in": 0,
+   "tokens_out": 0,
+   "usd": 0.0
+  }
+ }
+}

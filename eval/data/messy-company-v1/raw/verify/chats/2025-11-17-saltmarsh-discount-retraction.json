@@ -1,0 +1,67 @@
+{
+  "slug": "chats/2025-11-17-saltmarsh-discount-retraction",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2025-11-17",
+    "owner_phrases": [
+      {
+        "mid": "chats/2025-11-17-saltmarsh-discount-retraction#m1",
+        "phrase": "Sofia's old grocery account",
+        "lines": [
+          8
+        ]
+      }
+    ],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Saltmarsh Provisions",
+        "line": 10
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": [],
+    "retraction": {
+      "question": "A value for Saltmarsh Provisions's discount pct is stated and then corrected. What was first stated, what was the corrected value, and on which lines?"
+    }
+  },
+  "prompt_user_sha256": "c45a6b47a857511e7009acdf24dcbf0926b9e5024556cc0fc3eac0c49ee479c9",
+  "response_text": "{\n  \"date_used\": \"2025-11-17\",\n  \"owner_phrases\": [\n    {\n      \"mid\": \"chats/2025-11-17-saltmarsh-discount-retraction#m1\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\"saltmarsh\"],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"Saltmarsh is the grocery account formerly owned by Sofia; Corinne Ashdown is its VP Operations.\"\n    }\n  ],\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"saltmarsh\"\n    }\n  ],\n  \"retraction\": {\n    \"first_value\": \"12%\",\n    \"corrected_value\": \"10%\",\n    \"lines\": [10, 12]\n  }\n}",
+  "parsed": {
+    "date_used": "2025-11-17",
+    "owner_phrases": [
+      {
+        "mid": "chats/2025-11-17-saltmarsh-discount-retraction#m1",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "saltmarsh"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "Saltmarsh is the grocery account formerly owned by Sofia; Corinne Ashdown is its VP Operations."
+      }
+    ],
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "saltmarsh"
+      }
+    ],
+    "retraction": {
+      "first_value": "12%",
+      "corrected_value": "10%",
+      "lines": [
+        10,
+        12
+      ]
+    }
+  },
+  "usage": {
+    "input_tokens": 2482,
+    "output_tokens": 199,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.006954
+}

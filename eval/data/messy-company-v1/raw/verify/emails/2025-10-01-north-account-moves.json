@@ -1,0 +1,36 @@
+{
+  "slug": "emails/2025-10-01-north-account-moves",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2025-10-01",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Tamsin Cold Chain",
+        "line": 11
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "753ece29224a5df11d0bd9a8ee0672a0a560659f94e16f996674dd86d8d5fdcc",
+  "response_text": "{\n  \"date_used\": \"2025-10-01\",\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"tamsin\"\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-10-01",
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "tamsin"
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2753,
+    "output_tokens": 60,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.006106
+}

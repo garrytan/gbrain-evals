@@ -26,11 +26,11 @@ import type { OperationContext } from 'gbrain/operations';
 import { applyEvalConfig, evalConfigRecord, type AppliedEvalConfig } from './eval-config.ts';
 import { importGbrain, overlaySummary, productIdentityFor, type GbrainUnderTest } from './gbrain-under-test.ts';
 import { gbrainPin } from './gbrain-version.ts';
-import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, noModelSpend, sourceTreeIdentity, type Receipt } from './receipt.ts';
+import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, noModelSpend, sourceTreeIdentity, verdictFromGates, type GateOutcome, type Receipt, type RunAccounting } from './receipt.ts';
 import { McpHttpDriver, runCli, type RunEnv } from './lifecycle/drivers.ts';
 import { startFakeEmbedder } from './lifecycle/fake-embedder.ts';
 import { freePort } from './lifecycle/slice.ts';
-import { appendAccessLog } from './sealed-confirmation-lib.ts';
+import { custodyTemplatesInput, type CustodyTemplates } from './sealed-confirmation-lib.ts';
 import type { GoldEdge, RichPage } from './world-v1-gold.ts';
 
 export interface StoredEdge extends GoldEdge { origin: string }
@@ -239,48 +239,47 @@ export function argValue(argv: readonly string[], flag: string): string | undefi
   return argv.find(a => a.startsWith(`${flag}=`))?.slice(flag.length + 1);
 }
 
-export interface CustodyInput { parsed: { id: string; templates: unknown }; sha256: string }
+export type CustodyInput = CustodyTemplates;
 
 /**
- * Custodian (held-out) mode, as eval/runner/temporal-edges.ts runs it:
- * `--phrasing-file <custody path> --decision-id <id> --purpose <text> --seeds <held-out seeds>`.
- * The access log beside the file gets a line before the content is used, and
- * callers record only the file's SHA-256. Without a phrasing file only dev
- * seeds run; held-out seeds belong to the custodian.
+ * Custodian (held-out) mode, shared with every sealed runner (sealed-confirmation-lib.ts custodyTemplatesInput):
+ * `--phrasing-file <custody path> --decision-id <id> --purpose <text> --output <dir>` (plus `--work <dir>` for runners
+ * that keep brains), roots outside every git worktree, checked before the access-log line and before the file is read.
+ * Callers record only the file's SHA-256. Without a phrasing file only dev seeds run.
  */
-export function custodyInput(argv: readonly string[], seeds: readonly number[], devSeeds: readonly number[]): CustodyInput | null {
-  const phrasingFile = argValue(argv, '--phrasing-file');
-  if (phrasingFile) {
-    const decisionId = argValue(argv, '--decision-id');
-    const purpose = argValue(argv, '--purpose');
-    if (!decisionId || !purpose) throw new Error('custodian mode needs --decision-id and --purpose, recorded in the access log before the phrasing file is read');
-    const bytes = readFileSync(phrasingFile);
-    const sha256 = createHash('sha256').update(bytes).digest('hex');
-    appendAccessLog(join(dirname(phrasingFile), 'access-log.jsonl'), { action: 'open', purpose, decision_id: decisionId, labels_sha256: sha256, run_sha256: null });
-    const parsed = JSON.parse(bytes.toString('utf8')) as { id: string; templates: unknown };
-    return { parsed, sha256 };
-  }
-  if (!seeds.every(s => devSeeds.includes(s))) throw new Error(`only dev seeds ${devSeeds.join(', ')} run here; held-out seeds belong to the custodian`);
-  return null;
+export function custodyInput(argv: readonly string[], seeds: readonly number[], devSeeds: readonly number[], o: { needsWork?: boolean } = {}): CustodyInput | null {
+  return custodyTemplatesInput(argv, seeds, devSeeds, o);
 }
 
-/** The receipt every P5 runner writes: rows under data.rows; a run-level failure makes the run an error (exit 3). */
+/**
+ * The receipt every P5 and Q2 runner writes: rows under data.rows; a run-level failure makes the run an error (exit 3).
+ * Execution status (run_status) is kept apart from gate outcomes: `gates` carries each gate's outcome, bar and
+ * denominators, and the verdict follows from them (pass only when every gate passed). A receipt that measures one arm
+ * and evaluates no gate gets verdict `partial` and an empty gate list, never `pass`.
+ */
 export function p5Receipt(o: {
   category: string; gut: GbrainUnderTest; startedAt: string; basis: string;
   rows: ReadonlyArray<Record<string, unknown>>; summary: unknown; harnessError: string | null;
   /** Who failed when harnessError is set: the harness (default) or the system under test. */
   errorOrigin?: 'harness' | 'sut';
   resolvedConfig: Record<string, unknown>; hashes?: Record<string, string>;
+  gates?: GateOutcome[];
+  /** Planned, attempted, scored and error units; default: every row planned and scored. */
+  accounting?: Omit<RunAccounting, 'source' | 'misses'> & { misses?: number | null };
 }): Receipt {
   const n = o.rows.length;
+  const acc = o.accounting ?? { planned: n, attempted: n, scored: o.harnessError ? 0 : n, errors: 0 };
+  const gates = o.gates ?? [];
   return {
     ...noModelSpend(o.basis),
     schema_version: RECEIPT_SCHEMA_VERSION,
     benchmark_version: BENCHMARK_VERSION,
     category: o.category,
     run_status: o.harnessError ? 'error' : 'completed',
-    ...(o.harnessError ? {} : { verdict: 'pass' as const }),
-    n_total: n, n_scored: n, completion_rate: o.harnessError ? 0 : 1,
+    ...(o.harnessError ? {} : { verdict: verdictFromGates(gates) }),
+    gates,
+    n_total: acc.planned, n_scored: acc.scored, completion_rate: o.harnessError ? 0 : acc.planned ? acc.scored / acc.planned : 1,
+    accounting: { planned: acc.planned, attempted: acc.attempted, scored: acc.scored, errors: acc.errors, misses: acc.misses ?? null, source: 'runner' },
     errors: o.harnessError ? [{ probe_id: 'run', origin: o.errorOrigin ?? 'harness', message: o.harnessError }] : [],
     publishable: !o.harnessError,
     gbrain_version: o.gut.version,
@@ -290,6 +289,6 @@ export function p5Receipt(o: {
     ...(o.hashes ? { hashes: o.hashes } : {}),
     started_at: o.startedAt,
     finished_at: new Date().toISOString(),
-    data: { summary: o.summary, rows: o.rows, harness_error: o.harnessError },
+    data: { summary: o.summary, rows: o.rows, harness_error: o.harnessError, ...(gates.length ? {} : { gate_note: 'this receipt measures one arm and evaluates no gate; the Q2 decision tools (eval/runner/q2/) compare arms and write gate outcomes' }) },
   } as Receipt;
 }

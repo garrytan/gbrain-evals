@@ -1,0 +1,705 @@
+{
+  "schema_version": 1,
+  "run": "autoplan-20261015220653",
+  "status": "complete",
+  "required_phases": [
+    "ceo",
+    "dx",
+    "eng"
+  ],
+  "phases": {
+    "design": {
+      "skipped": "no UI scope detected",
+      "native": {
+        "status": "skipped"
+      },
+      "outside": {
+        "status": "skipped"
+      }
+    },
+    "ceo": {
+      "snapshot": "2ea3b35280d7f37a6d2ac5843bc6089f3c3ac7b02ffd288e073cbb190c36810c",
+      "snapshot_dir": "local audit notes (not committed): autoplan-ceo-opoa5f",
+      "snapshot_path": "local audit notes (not committed): ceo-implementation.md",
+      "methodology": "local audit notes (not committed): methodology.md",
+      "opened_at": "2026-10-15T22:57:05.567Z",
+      "sections": {
+        "loaded": [
+          "review-sections"
+        ],
+        "skipped": [],
+        "checklist": true
+      },
+      "native": {
+        "status": "completed",
+        "attempts": [
+          {
+            "attempt": "autoplan-20261015220653-a7",
+            "state": "submitted",
+            "prompt": "local audit notes (not committed): ceo-native-prompt.md",
+            "result": "docs/plans/2026-10-15-lhf-wave-2/reviews/ceo-native.md",
+            "estimate_usd": 0,
+            "dispatched_at": "2026-10-15T22:57:05.574Z",
+            "terminal_at": "2026-10-15T23:04:29.621Z"
+          }
+        ],
+        "attempt": "autoplan-20261015220653-a7",
+        "model": "anthropic/claude-opus-5-5",
+        "provider": "host-subagent",
+        "output": "ceo-native.md",
+        "result_sha256": "320b445a8f71014b7546ff6f57183f7199e34433eff3ec14a9560e4a45cfcf46",
+        "findings": 11,
+        "usage": {
+          "usd": "unknown"
+        },
+        "receipt": "verified",
+        "findings_source": "fence",
+        "reviewed_sha256": "2ea3b35280d7f37a6d2ac5843bc6089f3c3ac7b02ffd288e073cbb190c36810c"
+      },
+      "outside": {
+        "status": "completed",
+        "attempts": [
+          {
+            "attempt": "autoplan-20261015220653-a8",
+            "state": "submitted",
+            "prompt": "local audit notes (not committed): ceo-outside-prompt.md",
+            "result": "docs/plans/2026-10-15-lhf-wave-2/reviews/ceo-outside.md",
+            "estimate_usd": 0,
+            "dispatched_at": "2026-10-15T22:57:05.575Z",
+            "terminal_at": "2026-10-15T23:04:29.772Z"
+          }
+        ],
+        "attempt": "autoplan-20261015220653-a8",
+        "model": "openai/gpt-6-astra",
+        "provider": "unknown",
+        "output": "ceo-outside.md",
+        "result_sha256": "75e4efd1e6fea6aa4aa57b1264a5012bb5d28464b2e0093a2211fd275e3b6656",
+        "findings": 4,
+        "usage": {
+          "usd": "unknown"
+        },
+        "receipt": "verified",
+        "findings_source": "fence",
+        "reviewed_sha256": "2ea3b35280d7f37a6d2ac5843bc6089f3c3ac7b02ffd288e073cbb190c36810c"
+      },
+      "prompts": {
+        "native": "local audit notes (not committed): ceo-native-prompt.md",
+        "outside": "local audit notes (not committed): ceo-outside-prompt.md",
+        "nativeResult": "docs/plans/2026-10-15-lhf-wave-2/reviews/ceo-native.md",
+        "outsideResult": "docs/plans/2026-10-15-lhf-wave-2/reviews/ceo-outside.md"
+      },
+      "consensus": {
+        "confirmed": 1,
+        "disagree": 0,
+        "new": 3,
+        "native_only": 10,
+        "coverage": "both"
+      },
+      "closed_at": "2026-10-15T23:04:29.778Z"
+    },
+    "dx": {
+      "snapshot": "2ea3b35280d7f37a6d2ac5843bc6089f3c3ac7b02ffd288e073cbb190c36810c",
+      "snapshot_dir": "local audit notes (not committed): autoplan-dx-BDxSx6",
+      "snapshot_path": "local audit notes (not committed): dx-implementation.md",
+      "methodology": "local audit notes (not committed): methodology.md",
+      "opened_at": "2026-10-15T23:04:30.001Z",
+      "sections": {
+        "loaded": [
+          "review-sections"
+        ],
+        "skipped": [],
+        "checklist": true
+      },
+      "native": {
+        "status": "completed",
+        "attempts": [
+          {
+            "attempt": "autoplan-20261015220653-a9",
+            "state": "submitted",
+            "prompt": "local audit notes (not committed): dx-native-prompt.md",
+            "result": "docs/plans/2026-10-15-lhf-wave-2/reviews/dx-native.md",
+            "estimate_usd": 0,
+            "dispatched_at": "2026-10-15T23:04:30.008Z",
+            "terminal_at": "2026-10-15T23:10:04.837Z"
+          }
+        ],
+        "attempt": "autoplan-20261015220653-a9",
+        "model": "anthropic/claude-opus-5-5",
+        "provider": "host-subagent",
+        "output": "dx-native.md",
+        "result_sha256": "8e43e668447797125f6e6190f626267e5cc5034bbddc2f3ca85dfc86579e376c",
+        "findings": 9,
+        "usage": {
+          "usd": "unknown"
+        },
+        "receipt": "verified",
+        "findings_source": "fence",
+        "reviewed_sha256": "2ea3b35280d7f37a6d2ac5843bc6089f3c3ac7b02ffd288e073cbb190c36810c"
+      },
+      "outside": {
+        "status": "completed",
+        "attempts": [
+          {
+            "attempt": "autoplan-20261015220653-a10",
+            "state": "submitted",
+            "prompt": "local audit notes (not committed): dx-outside-prompt.md",
+            "result": "docs/plans/2026-10-15-lhf-wave-2/reviews/dx-outside.md",
+            "estimate_usd": 0,
+            "dispatched_at": "2026-10-15T23:04:30.009Z",
+            "terminal_at": "2026-10-15T23:10:04.942Z"
+          }
+        ],
+        "attempt": "autoplan-20261015220653-a10",
+        "model": "openai/gpt-6-astra",
+        "provider": "unknown",
+        "output": "dx-outside.md",
+        "result_sha256": "56173781eaf2c3ceacc5154503dd6802b70a45bd021d80f1523f5f5f1de32f54",
+        "findings": 4,
+        "usage": {
+          "usd": "unknown"
+        },
+        "receipt": "verified",
+        "findings_source": "fence",
+        "reviewed_sha256": "2ea3b35280d7f37a6d2ac5843bc6089f3c3ac7b02ffd288e073cbb190c36810c"
+      },
+      "prompts": {
+        "native": "local audit notes (not committed): dx-native-prompt.md",
+        "outside": "local audit notes (not committed): dx-outside-prompt.md",
+        "nativeResult": "docs/plans/2026-10-15-lhf-wave-2/reviews/dx-native.md",
+        "outsideResult": "docs/plans/2026-10-15-lhf-wave-2/reviews/dx-outside.md"
+      },
+      "consensus": {
+        "confirmed": 0,
+        "disagree": 0,
+        "new": 4,
+        "native_only": 9,
+        "coverage": "both"
+      },
+      "closed_at": "2026-10-15T23:10:04.944Z"
+    },
+    "eng": {
+      "snapshot": "2ea3b35280d7f37a6d2ac5843bc6089f3c3ac7b02ffd288e073cbb190c36810c",
+      "snapshot_dir": "local audit notes (not committed): autoplan-eng-2mm153",
+      "snapshot_path": "local audit notes (not committed): eng-implementation.md",
+      "methodology": "local audit notes (not committed): methodology.md",
+      "opened_at": "2026-10-15T23:10:05.083Z",
+      "sections": {
+        "loaded": [
+          "review-sections"
+        ],
+        "skipped": [],
+        "checklist": true
+      },
+      "native": {
+        "status": "completed",
+        "attempts": [
+          {
+            "attempt": "autoplan-20261015220653-a11",
+            "state": "submitted",
+            "prompt": "local audit notes (not committed): eng-native-prompt.md",
+            "result": "docs/plans/2026-10-15-lhf-wave-2/reviews/eng-native.md",
+            "estimate_usd": 0,
+            "dispatched_at": "2026-10-15T23:10:05.086Z",
+            "terminal_at": "2026-10-15T23:22:13.608Z"
+          }
+        ],
+        "attempt": "autoplan-20261015220653-a11",
+        "model": "anthropic/claude-opus-5-5",
+        "provider": "host-subagent",
+        "output": "eng-native.md",
+        "result_sha256": "c50bb7de728bcaf5d3b3d01353505a9fa04089b55eb9ca34c08d66ca92dde086",
+        "findings": 14,
+        "usage": {
+          "usd": "unknown"
+        },
+        "receipt": "verified",
+        "findings_source": "fence",
+        "reviewed_sha256": "2ea3b35280d7f37a6d2ac5843bc6089f3c3ac7b02ffd288e073cbb190c36810c"
+      },
+      "outside": {
+        "status": "completed",
+        "attempts": [
+          {
+            "attempt": "autoplan-20261015220653-a12",
+            "state": "submitted",
+            "prompt": "local audit notes (not committed): eng-outside-prompt.md",
+            "result": "docs/plans/2026-10-15-lhf-wave-2/reviews/eng-outside.md",
+            "estimate_usd": 0,
+            "dispatched_at": "2026-10-15T23:10:05.087Z",
+            "terminal_at": "2026-10-15T23:22:13.690Z"
+          }
+        ],
+        "attempt": "autoplan-20261015220653-a12",
+        "model": "openai/gpt-6-astra",
+        "provider": "unknown",
+        "output": "eng-outside.md",
+        "result_sha256": "c23720da2dd8d1602e631f82f809261b1ea9d3e8053e7bbfe7a30bc6c55f93cb",
+        "findings": 9,
+        "usage": {
+          "usd": "unknown"
+        },
+        "receipt": "verified",
+        "findings_source": "fence",
+        "reviewed_sha256": "2ea3b35280d7f37a6d2ac5843bc6089f3c3ac7b02ffd288e073cbb190c36810c"
+      },
+      "prompts": {
+        "native": "local audit notes (not committed): eng-native-prompt.md",
+        "outside": "local audit notes (not committed): eng-outside-prompt.md",
+        "nativeResult": "docs/plans/2026-10-15-lhf-wave-2/reviews/eng-native.md",
+        "outsideResult": "docs/plans/2026-10-15-lhf-wave-2/reviews/eng-outside.md"
+      },
+      "consensus": {
+        "confirmed": 2,
+        "disagree": 0,
+        "new": 7,
+        "native_only": 12,
+        "coverage": "both"
+      },
+      "closed_at": "2026-10-15T23:22:13.694Z"
+    }
+  },
+  "artifacts": {
+    "plan.md": {
+      "path": "plan.md",
+      "sha256": "e46f893d3c33c6f6d9cb5ae6eef6c84fa72a406dec5f645f23213a78c5e3cbdd"
+    },
+    "review-record.md": {
+      "path": "review-record.md",
+      "sha256": "a808294e929bf3e19f46e3e29ea58c648b4e44e52f07fcf0fb83e020e5ad34c2"
+    },
+    "findings.jsonl": {
+      "path": "findings.jsonl",
+      "sha256": "f0276b49d781ac33e55a8756462fea3bfda67953fca2a99d7f0185058c9c2ba7"
+    },
+    "tasks.jsonl": {
+      "path": "tasks.jsonl",
+      "sha256": "438ecb3ff1f03b41a888203a639769e07308f36e3887bb4ca86d29f5e05820bc"
+    },
+    "decisions.jsonl": {
+      "path": "decisions.jsonl",
+      "sha256": "fef9f054953354ee109a074a4457c5592891396ed311118c3360ca4696e3a1e7"
+    },
+    "timing.json": {
+      "path": "timing.json",
+      "sha256": "f9cf46bf60c11db55f11e438b6304b042faabdbfede128600284eeec868a2359"
+    },
+    "ceo-native.md": {
+      "path": "ceo-native.md",
+      "sha256": "320b445a8f71014b7546ff6f57183f7199e34433eff3ec14a9560e4a45cfcf46"
+    },
+    "ceo-outside.md": {
+      "path": "ceo-outside.md",
+      "sha256": "75e4efd1e6fea6aa4aa57b1264a5012bb5d28464b2e0093a2211fd275e3b6656"
+    },
+    "dx-native.md": {
+      "path": "dx-native.md",
+      "sha256": "8e43e668447797125f6e6190f626267e5cc5034bbddc2f3ca85dfc86579e376c"
+    },
+    "dx-outside.md": {
+      "path": "dx-outside.md",
+      "sha256": "56173781eaf2c3ceacc5154503dd6802b70a45bd021d80f1523f5f5f1de32f54"
+    },
+    "eng-native.md": {
+      "path": "eng-native.md",
+      "sha256": "c50bb7de728bcaf5d3b3d01353505a9fa04089b55eb9ca34c08d66ca92dde086"
+    },
+    "eng-outside.md": {
+      "path": "eng-outside.md",
+      "sha256": "c23720da2dd8d1602e631f82f809261b1ea9d3e8053e7bbfe7a30bc6c55f93cb"
+    },
+    "gate.json": {
+      "path": "gate.json",
+      "sha256": "301bf74eef31bf6bf271486d7ab39457a42c4abffc5195cd1c64165b2ba5e488"
+    },
+    "ceo-consensus.md": {
+      "path": "ceo-consensus.md",
+      "sha256": "80171aabb4d50ae190e91e56ff747106d681dfcf98de3521b8ad47f4266dee16"
+    },
+    "ceo-consensus.json": {
+      "path": "ceo-consensus.json",
+      "sha256": "3d148e3aff4d30b1485b17a6062372e3bd1f6e7c45bf2fc3ab8cc068e5c56399"
+    },
+    "dx-consensus.md": {
+      "path": "dx-consensus.md",
+      "sha256": "34157fd96f5ec967cbc3909e9e77c49601c3f7365fcca923c1ae8d86be0a0296"
+    },
+    "dx-consensus.json": {
+      "path": "dx-consensus.json",
+      "sha256": "9925a3354bfd2e0f8294a1afece7bec7b4f78de4c112a07ef9bae660b19126e3"
+    },
+    "eng-consensus.md": {
+      "path": "eng-consensus.md",
+      "sha256": "854d4929694498d217daa3ec8fbb71ed700098fca36f202546c8b840aedceab4"
+    },
+    "eng-consensus.json": {
+      "path": "eng-consensus.json",
+      "sha256": "63af36bed68ed9fbbaa4c6bf1a87d0f14cdbcb8cbb2ff846a0e35b255660fc3c"
+    }
+  },
+  "revision": 22,
+  "out": "local audit notes (not committed): autoplan",
+  "plan_source": "local audit notes (not committed): plan-source.v1.md",
+  "active_plan": "local audit notes (not committed): plan-active.md",
+  "restore": "local audit notes (not committed): restore.md",
+  "scope": {
+    "ui": false,
+    "dx": true,
+    "ui_matches": 1,
+    "dx_matches": 8,
+    "developer_tool": false,
+    "agent_primary": true,
+    "sources": {
+      "ui": "flag",
+      "dx": "flag"
+    },
+    "ui_evidence": {
+      "terms": [
+        {
+          "term": "form",
+          "count": 1
+        }
+      ],
+      "visual": [],
+      "files": []
+    },
+    "dx_terms": [
+      {
+        "term": "CLI",
+        "count": 1
+      },
+      {
+        "term": "command",
+        "count": 1
+      },
+      {
+        "term": "import",
+        "count": 1
+      },
+      {
+        "term": "MCP",
+        "count": 5
+      }
+    ],
+    "cli_flags": [
+      "--no-ui",
+      "--agent-primary"
+    ],
+    "marker": [
+      "--no-ui",
+      "--agent-primary"
+    ],
+    "pin": null
+  },
+  "phase_order": [
+    "ceo",
+    "dx",
+    "eng"
+  ],
+  "outside_enabled": true,
+  "attempt_counter": 12,
+  "spend_cap_usd": null,
+  "session_kind": "unattended",
+  "host": "gstack-autoplan",
+  "history": [
+    {
+      "event": "reopened",
+      "phase": "ceo",
+      "gate_rev": 1,
+      "reason": "revise v1",
+      "at": "2026-10-15T22:56:58.019Z",
+      "previous": {
+        "snapshot": "6fa9d38bfc024b00e8503e41313d327403736c9f865b87ef3dc5083abc1ba736",
+        "snapshot_dir": "local audit notes (not committed): autoplan-ceo-HRpepn",
+        "snapshot_path": "local audit notes (not committed): ceo-implementation.md",
+        "methodology": "local audit notes (not committed): methodology.md",
+        "opened_at": "2026-10-15T22:06:53.811Z",
+        "sections": {
+          "loaded": [
+            "review-sections"
+          ],
+          "skipped": [],
+          "checklist": true
+        },
+        "native": {
+          "status": "completed",
+          "attempts": [
+            {
+              "attempt": "autoplan-20261015220653-a1",
+              "state": "submitted",
+              "prompt": "local audit notes (not committed): ceo-native-prompt.md",
+              "result": "docs/plans/2026-10-15-lhf-wave-2/reviews/ceo-native.r1.md",
+              "estimate_usd": 0,
+              "dispatched_at": "2026-10-15T22:06:53.816Z",
+              "terminal_at": "2026-10-15T22:18:31.348Z"
+            }
+          ],
+          "attempt": "autoplan-20261015220653-a1",
+          "model": "anthropic/claude-opus-5-5",
+          "provider": "host-subagent",
+          "output": "ceo-native.md",
+          "result_sha256": "1fe4d8cc2b84386610014054e7c9b37c4a1f0e5f74fbe05f3619e95eafcadaef",
+          "findings": 20,
+          "usage": {
+            "usd": "unknown"
+          },
+          "receipt": "verified",
+          "findings_source": "fence",
+          "reviewed_sha256": "6fa9d38bfc024b00e8503e41313d327403736c9f865b87ef3dc5083abc1ba736"
+        },
+        "outside": {
+          "status": "completed",
+          "attempts": [
+            {
+              "attempt": "autoplan-20261015220653-a2",
+              "state": "submitted",
+              "prompt": "local audit notes (not committed): ceo-outside-prompt.md",
+              "result": "docs/plans/2026-10-15-lhf-wave-2/reviews/ceo-outside.r1.md",
+              "estimate_usd": 0,
+              "dispatched_at": "2026-10-15T22:06:53.817Z",
+              "terminal_at": "2026-10-15T22:18:31.475Z"
+            }
+          ],
+          "attempt": "autoplan-20261015220653-a2",
+          "model": "openai/gpt-6-astra",
+          "provider": "unknown",
+          "output": "ceo-outside.md",
+          "result_sha256": "8684b2a32d8fc9805c8b1e860ed3d420a002f89bc3177ffe2bfef5b7b653786a",
+          "findings": 7,
+          "usage": {
+            "usd": "unknown"
+          },
+          "receipt": "verified",
+          "findings_source": "fence",
+          "reviewed_sha256": "6fa9d38bfc024b00e8503e41313d327403736c9f865b87ef3dc5083abc1ba736"
+        },
+        "prompts": {
+          "native": "local audit notes (not committed): ceo-native-prompt.md",
+          "outside": "local audit notes (not committed): ceo-outside-prompt.md",
+          "nativeResult": "docs/plans/2026-10-15-lhf-wave-2/reviews/ceo-native.r1.md",
+          "outsideResult": "docs/plans/2026-10-15-lhf-wave-2/reviews/ceo-outside.r1.md"
+        },
+        "consensus": {
+          "confirmed": 1,
+          "disagree": 0,
+          "new": 6,
+          "native_only": 19,
+          "coverage": "both"
+        },
+        "closed_at": "2026-10-15T22:18:31.479Z"
+      }
+    },
+    {
+      "event": "reopened",
+      "phase": "dx",
+      "gate_rev": 1,
+      "reason": "revise v1",
+      "at": "2026-10-15T22:56:58.019Z",
+      "previous": {
+        "snapshot": "6fa9d38bfc024b00e8503e41313d327403736c9f865b87ef3dc5083abc1ba736",
+        "snapshot_dir": "local audit notes (not committed): autoplan-dx-DLH3Tr",
+        "snapshot_path": "local audit notes (not committed): dx-implementation.md",
+        "methodology": "local audit notes (not committed): methodology.md",
+        "opened_at": "2026-10-15T22:18:31.624Z",
+        "sections": {
+          "loaded": [
+            "review-sections"
+          ],
+          "skipped": [],
+          "checklist": true
+        },
+        "native": {
+          "status": "completed",
+          "attempts": [
+            {
+              "attempt": "autoplan-20261015220653-a3",
+              "state": "submitted",
+              "prompt": "local audit notes (not committed): dx-native-prompt.md",
+              "result": "docs/plans/2026-10-15-lhf-wave-2/reviews/dx-native.r1.md",
+              "estimate_usd": 0,
+              "dispatched_at": "2026-10-15T22:18:31.630Z",
+              "terminal_at": "2026-10-15T22:30:38.392Z"
+            }
+          ],
+          "attempt": "autoplan-20261015220653-a3",
+          "model": "anthropic/claude-opus-5-5",
+          "provider": "host-subagent",
+          "output": "dx-native.md",
+          "result_sha256": "c2fbfaa4372ae677b6287e21d02e794380bf1078e0cd5c587b9d84eb3d6d4235",
+          "findings": 14,
+          "usage": {
+            "usd": "unknown"
+          },
+          "receipt": "verified",
+          "findings_source": "fence",
+          "reviewed_sha256": "6fa9d38bfc024b00e8503e41313d327403736c9f865b87ef3dc5083abc1ba736"
+        },
+        "outside": {
+          "status": "completed",
+          "attempts": [
+            {
+              "attempt": "autoplan-20261015220653-a4",
+              "state": "submitted",
+              "prompt": "local audit notes (not committed): dx-outside-prompt.md",
+              "result": "docs/plans/2026-10-15-lhf-wave-2/reviews/dx-outside.r1.md",
+              "estimate_usd": 0,
+              "dispatched_at": "2026-10-15T22:18:31.631Z",
+              "terminal_at": "2026-10-15T22:30:38.537Z"
+            }
+          ],
+          "attempt": "autoplan-20261015220653-a4",
+          "model": "openai/gpt-6-astra",
+          "provider": "unknown",
+          "output": "dx-outside.md",
+          "result_sha256": "e871cf039107472ac40c1d43756fdea68634130b7d254e8fb4806e17535ec0e3",
+          "findings": 9,
+          "usage": {
+            "usd": "unknown"
+          },
+          "receipt": "verified",
+          "findings_source": "fence",
+          "reviewed_sha256": "6fa9d38bfc024b00e8503e41313d327403736c9f865b87ef3dc5083abc1ba736"
+        },
+        "prompts": {
+          "native": "local audit notes (not committed): dx-native-prompt.md",
+          "outside": "local audit notes (not committed): dx-outside-prompt.md",
+          "nativeResult": "docs/plans/2026-10-15-lhf-wave-2/reviews/dx-native.r1.md",
+          "outsideResult": "docs/plans/2026-10-15-lhf-wave-2/reviews/dx-outside.r1.md"
+        },
+        "consensus": {
+          "confirmed": 3,
+          "disagree": 0,
+          "new": 6,
+          "native_only": 11,
+          "coverage": "both"
+        },
+        "closed_at": "2026-10-15T22:30:38.546Z"
+      }
+    },
+    {
+      "event": "reopened",
+      "phase": "eng",
+      "gate_rev": 1,
+      "reason": "revise v1",
+      "at": "2026-10-15T22:56:58.020Z",
+      "previous": {
+        "snapshot": "6fa9d38bfc024b00e8503e41313d327403736c9f865b87ef3dc5083abc1ba736",
+        "snapshot_dir": "local audit notes (not committed): autoplan-eng-Waljm9",
+        "snapshot_path": "local audit notes (not committed): eng-implementation.md",
+        "methodology": "local audit notes (not committed): methodology.md",
+        "opened_at": "2026-10-15T22:30:38.775Z",
+        "sections": {
+          "loaded": [
+            "review-sections"
+          ],
+          "skipped": [],
+          "checklist": true
+        },
+        "native": {
+          "status": "completed",
+          "attempts": [
+            {
+              "attempt": "autoplan-20261015220653-a5",
+              "state": "submitted",
+              "prompt": "local audit notes (not committed): eng-native-prompt.md",
+              "result": "docs/plans/2026-10-15-lhf-wave-2/reviews/eng-native.r1.md",
+              "estimate_usd": 0,
+              "dispatched_at": "2026-10-15T22:30:38.778Z",
+              "terminal_at": "2026-10-15T22:52:13.907Z"
+            }
+          ],
+          "attempt": "autoplan-20261015220653-a5",
+          "model": "anthropic/claude-opus-5-5",
+          "provider": "host-subagent",
+          "output": "eng-native.md",
+          "result_sha256": "5911910d5d6367abc105082281aad78230fcecc505c5f0cb26f88e405235bd33",
+          "findings": 17,
+          "usage": {
+            "usd": "unknown"
+          },
+          "receipt": "verified",
+          "findings_source": "fence",
+          "reviewed_sha256": "6fa9d38bfc024b00e8503e41313d327403736c9f865b87ef3dc5083abc1ba736"
+        },
+        "outside": {
+          "status": "completed",
+          "attempts": [
+            {
+              "attempt": "autoplan-20261015220653-a6",
+              "state": "submitted",
+              "prompt": "local audit notes (not committed): eng-outside-prompt.md",
+              "result": "docs/plans/2026-10-15-lhf-wave-2/reviews/eng-outside.r1.md",
+              "estimate_usd": 0,
+              "dispatched_at": "2026-10-15T22:30:38.779Z",
+              "terminal_at": "2026-10-15T22:52:13.998Z"
+            }
+          ],
+          "attempt": "autoplan-20261015220653-a6",
+          "model": "openai/gpt-6-astra",
+          "provider": "unknown",
+          "output": "eng-outside.md",
+          "result_sha256": "b2b79819abcc8a20b314d9ad1fea77cb4fe470fc42936951e5b37703564edd8e",
+          "findings": 15,
+          "usage": {
+            "usd": "unknown"
+          },
+          "receipt": "verified",
+          "findings_source": "fence",
+          "reviewed_sha256": "6fa9d38bfc024b00e8503e41313d327403736c9f865b87ef3dc5083abc1ba736"
+        },
+        "prompts": {
+          "native": "local audit notes (not committed): eng-native-prompt.md",
+          "outside": "local audit notes (not committed): eng-outside-prompt.md",
+          "nativeResult": "docs/plans/2026-10-15-lhf-wave-2/reviews/eng-native.r1.md",
+          "outsideResult": "docs/plans/2026-10-15-lhf-wave-2/reviews/eng-outside.r1.md"
+        },
+        "consensus": {
+          "confirmed": 2,
+          "disagree": 0,
+          "new": 13,
+          "native_only": 15,
+          "coverage": "both"
+        },
+        "closed_at": "2026-10-15T22:52:14.002Z"
+      }
+    }
+  ],
+  "created_at": "2026-10-15T22:06:53.756Z",
+  "updated_at": "2026-10-15T23:24:13.512Z",
+  "deviations": [
+    "autoplan guard: not enforced by this host; publication order is unverified (GUARD_NOT_INSTALLED)"
+  ],
+  "gstack_version": "1.91.101.0",
+  "plan_input": "docs/plans/2026-10-15-lhf-wave-2/PLAN.md",
+  "scope_flags": {
+    "ui": false,
+    "developerTool": false,
+    "agentPrimary": true
+  },
+  "native_model": "anthropic/claude-opus-5-5",
+  "outside_model": "openai/gpt-6-astra",
+  "gate_rev": 2,
+  "gate": {
+    "rev": 2,
+    "items": 1,
+    "written_at": "2026-10-15T23:22:13.695Z",
+    "answered_at": "2026-10-15T23:24:13.407Z",
+    "reply": "all",
+    "gate_rev": 2,
+    "plan": "a",
+    "overrides": [],
+    "answered_by": "human"
+  },
+  "counts": {
+    "decisions": 9,
+    "decisions_pending": 8,
+    "findings": 51,
+    "tasks": 10
+  },
+  "plan_revision": 1,
+  "plan_reality": {
+    "plan_sha256": "2ea3b35280d7f37a6d2ac5843bc6089f3c3ac7b02ffd288e073cbb190c36810c",
+    "checker": "plan-reality/2",
+    "verdict": "incomplete",
+    "line": "PLAN_REALITY: phase=plan rows=0/7 missing=premise-table,already-done,surface-check,binding-decisions,numbers,deferred-asks,pr-count verdict=incomplete; PLAN_REALITY: scope=plan unreceipted_numbers=43 unquoted=2 verdict=incomplete"
+  }
+}

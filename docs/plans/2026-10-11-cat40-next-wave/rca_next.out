@@ -1,0 +1,210 @@
+
+# World M: world world, 55838 documents, 600 canonical cells
+cells per arm and model: {'fs/Opus': 100, 'fs/Sonnet': 100, 'fs/Sol': 100, 'gbrain/Opus': 100, 'gbrain/Sonnet': 100, 'gbrain/Sol': 100}
+deciding sentence shown in a tool result, H4 items answered right (check of the shown test): gbrain 194/194, fs 200/200
+scorer agreement: 0 failed submitted values-cells where every item re-scored as right (expected 0)
+
+## 1. Wrong answers (submitted, not successful)
+- gbrain said_wrong cells by model: Sonnet 15, Opus 7, Sol 0
+- fs said_wrong cells by model: Sonnet 7, Opus 1, Sol 6
+- gbrain: 32 wrong submitted cells of 300; 22 named a listed wrong value (said_wrong)
+- fs: 17 wrong submitted cells of 300; 14 named a listed wrong value (said_wrong)
+
+Failed items by class (an H1 cell counts as one item):
+
+| Class | gbrain | fs | gbrain by model (So/Op/Sol) | fs by model (So/Op/Sol) | gbrain by family (H1..H5) | fs by family (H1..H5) |
+|---|---|---|---|---|---|---|
+| (a) superseded or older value (an authoritative record of the account, no longer in force) | 22 | 20 | 16/6/0 | 7/3/10 | 0/6/3/13/0 | 0/5/0/2/13 |
+| (a_future) executed amendment applied before its effective date | 0 | 0 | 0/0/0 | 0/0/0 | 0/0/0/0/0 | 0/0/0/0/0 |
+| (b) alias or entity confusion (a value of another account) | 0 | 0 | 0/0/0 | 0/0/0 | 0/0/0/0/0 | 0/0/0/0/0 |
+| (c) set or count error (H1) | 10 | 3 | 2/3/5 | 1/1/1 | 10/0/0/0/0 | 3/0/0/0/0 |
+| (d) value in no document or session | 0 | 0 | 0/0/0 | 0/0/0 | 0/0/0/0/0 | 0/0/0/0/0 |
+| (e) generated summary or agent-note text taken as evidence | 1 | 0 | 1/0/0 | 0/0/0 | 0/1/0/0/0 | 0/0/0/0/0 |
+| (g) lower-authority claim (unsigned draft or hearsay email) | 3 | 0 | 2/1/0 | 0/0/0 | 0/0/0/3/0 | 0/0/0/0/0 |
+| (f) other (no parseable value, formatting, or an unclassified value) | 0 | 0 | 0/0/0 | 0/0/0 | 0/0/0/0/0 | 0/0/0/0/0 |
+
+Tool that first returned the wrong value, and whether that result also carried the source document (classes a, a_future, b, e, g):
+
+| Arm | Class | items | first carrier tools | carrier result names the source doc | right doc seen in the cell |
+|---|---|---|---|---|---|
+| gbrain | a | 22 | search 16, context_pack 2, get_page 2, get_backlinks 2 | 20/22 | 12/22 |
+| gbrain | e | 1 | search 1 | 1/1 | 0/1 |
+| gbrain | g | 3 | context_pack 2, get_backlinks 1 | 3/3 | 1/3 |
+| fs | a | 20 | read_file 15, grep 5 | 3/20 | 3/7 |
+
+Source document type of class a/b/e/g wrong values: {'gbrain': {'amendment': 11, 'contract': 11, 'email': 3, 'agent-note': 1}, 'fs': {'amendment': 5, 'crm': 5, 'email': 5, 'session': 3, 'contract': 2}}
+
+H1 set/count error shapes: {'gbrain': {'count high': 3, 'missing+extra': 1, '+extra': 2, 'unparseable': 3, 'missing': 1}, 'fs': {'missing': 3}}
+
+Answered without the deciding document (a failed item whose evidence document never appeared in the cell), abstained items, and late submits:
+
+| Arm | failed items with evidence | answered without seeing it | abstained items | wrong cells submitted at turn 14-16 | all submitted cells at turn 14-16 |
+|---|---|---|---|---|---|
+| gbrain | 36 | 15 | 0 | 4/32 | 14/268 (success 10) |
+| fs | 10 | 4 | 0 | 5/17 | 24/230 (success 19) |
+- gbrain: answered without seeing the deciding document, by family {'H1': 2, 'H2': 5, 'H4': 8}; wrong submitted cells median turn 8.0
+- fs: answered without seeing the deciding document, by family {'H2': 3, 'H4': 1}; wrong submitted cells median turn 12
+
+## 2. H4 paired by task and model
+cells: fs wins 11, gbrain wins 2, both 45, neither 2
+tasks where fs wins (count of models): {'H4-02': 1, 'H4-03': 1, 'H4-04': 1, 'H4-08': 1, 'H4-09': 1, 'H4-10': 1, 'H4-11': 1, 'H4-13': 1, 'H4-17': 1, 'H4-18': 1, 'H4-19': 1}
+fs-win cells by model: {'Sonnet': 6, 'Opus': 5} ; gbrain-win cells: [('H4-11', 'Sonnet'), ('H4-12', 'Sonnet')] ; fs-win cells on those tasks: [('H4-11', 'Opus')]
+tasks where gbrain wins (count of models): {'H4-11': 1, 'H4-12': 1}
+
+H4 items right by variant (all models):
+
+| Variant | gbrain right | fs right |
+|---|---|---|
+| amended | 28/30 | 28/30 |
+| amended+long | 16/21 | 20/21 |
+| contract_holds | 24/24 | 24/24 |
+| contract_holds+long | 25/27 | 25/27 |
+| future_effective | 32/33 | 32/33 |
+| future_effective+long | 17/18 | 17/18 |
+| later_effective_wins | 41/42 | 40/42 |
+| later_effective_wins+long | 11/15 | 14/15 |
+
+Where gbrain diverges on the cells fs wins (one count per failed item of a gbrain H4 cell that lost where fs on the same model succeeded):
+
+- search miss: deciding document never returned: 7
+- deciding document returned but its deciding sentence never shown, answered class a: 4
+-   of these, a result naming the document was clipped in the transcript (shown status uncertain): 2
+- deciding document returned but its deciding sentence never shown, answered class g: 1
+- deciding sentence shown, answered class a: 1
+- deciding document length by outcome: {('long', 'seen'): 6, ('short', 'never returned'): 4, ('long', 'never returned'): 3}; long ones 30185..38962 characters; failed items whose deciding document was opened with get_page: 0
+- failed items by (variant, class, deciding doc seen): {'amended+long/a/True': 3, 'amended/a/False': 2, 'later_effective_wins+long/a/True': 2, 'future_effective/a/False': 1, 'contract_holds+long/g/True': 1, 'contract_holds+long/g/False': 1, 'later_effective_wins+long/a/False': 1, 'amended+long/a/False': 1, 'future_effective+long/g/False': 1}
+- executed contract and amendments of each item seen by gbrain in those cells: mean 0.86, all seen in 29/39 items
+- tool calls on those cells: gbrain median 19, fs median 28; turns: gbrain median 8, fs median 10
+- deciding document listed by an entity or context_pack result: 0/39 items in those cells
+- all gbrain H4 cells, results that list documents of an asked account: context_pack: 88 results, 4.2 of the account's documents each, deciding document in 8; get_backlinks: 62 results, 7.8 of the account's documents each, deciding document in 25; entity: 0 results, 0.0 of the account's documents each, deciding document in 0
+- gbrain get_page calls on documents over 20,000 characters in H4: 52, deciding sentence in the result 52, clipped in the transcript 5
+- accounts asked in H4: median 29.0 documents each
+- all H4 cells: tool calls median gbrain 18.0, fs 25.0
+- gbrain search calls in those cells: {'hybrid': 53, 'no types filter': 62, 'no date filter': 126, 'keyword': 73, 'types filter': 64}
+
+## 4. Paired cells by family (same model and task)
+
+| Family | gbrain wins, fs loses | fs wins, gbrain loses | both | neither |
+|---|---|---|---|---|
+| H1 | 8 | 1 | 10 | 41 |
+| H2 | 13 | 5 | 41 | 1 |
+| H3 | 11 | 2 | 46 | 1 |
+| H4 | 2 | 11 | 45 | 2 |
+| H5 | 8 | 0 | 52 | 0 |
+
+pooled successes: gbrain 236/300, fs 213/300, difference +7.7 points; by family gbrain/fs: H1 18/11, H2 54/46, H3 57/48, H4 47/56, H5 60/52
+
+# Development world: world r3, 55440 documents, 300 canonical cells
+cells per arm and model: {'fs/Opus': 50, 'fs/Sonnet': 50, 'fs/Sol': 50, 'gbrain/Opus': 50, 'gbrain/Sonnet': 50, 'gbrain/Sol': 50}
+deciding sentence shown in a tool result, H4 items answered right (check of the shown test): gbrain 107/108, fs 102/102
+scorer agreement: 0 failed submitted values-cells where every item re-scored as right (expected 0)
+
+## 1. Wrong answers (submitted, not successful)
+- gbrain said_wrong cells by model: Sonnet 5, Opus 1, Sol 0
+- fs said_wrong cells by model: Sonnet 0, Opus 0, Sol 1
+- gbrain: 7 wrong submitted cells of 150; 6 named a listed wrong value (said_wrong)
+- fs: 1 wrong submitted cells of 150; 1 named a listed wrong value (said_wrong)
+
+Failed items by class (an H1 cell counts as one item):
+
+| Class | gbrain | fs | gbrain by model (So/Op/Sol) | fs by model (So/Op/Sol) | gbrain by family (H1..H5) | fs by family (H1..H5) |
+|---|---|---|---|---|---|---|
+| (a) superseded or older value (an authoritative record of the account, no longer in force) | 6 | 2 | 5/1/0 | 0/0/2 | 0/4/0/2/0 | 0/0/0/0/2 |
+| (a_future) executed amendment applied before its effective date | 0 | 0 | 0/0/0 | 0/0/0 | 0/0/0/0/0 | 0/0/0/0/0 |
+| (b) alias or entity confusion (a value of another account) | 0 | 0 | 0/0/0 | 0/0/0 | 0/0/0/0/0 | 0/0/0/0/0 |
+| (c) set or count error (H1) | 1 | 0 | 0/0/1 | 0/0/0 | 1/0/0/0/0 | 0/0/0/0/0 |
+| (d) value in no document or session | 0 | 0 | 0/0/0 | 0/0/0 | 0/0/0/0/0 | 0/0/0/0/0 |
+| (e) generated summary or agent-note text taken as evidence | 1 | 0 | 1/0/0 | 0/0/0 | 0/1/0/0/0 | 0/0/0/0/0 |
+| (g) lower-authority claim (unsigned draft or hearsay email) | 0 | 0 | 0/0/0 | 0/0/0 | 0/0/0/0/0 | 0/0/0/0/0 |
+| (f) other (no parseable value, formatting, or an unclassified value) | 0 | 0 | 0/0/0 | 0/0/0 | 0/0/0/0/0 | 0/0/0/0/0 |
+
+Tool that first returned the wrong value, and whether that result also carried the source document (classes a, a_future, b, e, g):
+
+| Arm | Class | items | first carrier tools | carrier result names the source doc | right doc seen in the cell |
+|---|---|---|---|---|---|
+| gbrain | a | 6 | search 5, get_page 1 | 6/6 | 3/6 |
+| gbrain | e | 1 | search 1 | 1/1 | 0/1 |
+| fs | a | 2 | read_file 2 | 0/2 | 0/0 |
+
+Source document type of class a/b/e/g wrong values: {'gbrain': {'contract': 2, 'amendment': 2, 'agent-note': 1, 'email': 2}, 'fs': {'session': 2}}
+
+H1 set/count error shapes: {'gbrain': {'count high': 1}, 'fs': {}}
+
+Answered without the deciding document (a failed item whose evidence document never appeared in the cell), abstained items, and late submits:
+
+| Arm | failed items with evidence | answered without seeing it | abstained items | wrong cells submitted at turn 14-16 | all submitted cells at turn 14-16 |
+|---|---|---|---|---|---|
+| gbrain | 8 | 4 | 0 | 0/7 | 4/132 (success 4) |
+| fs | 0 | 0 | 0 | 0/1 | 11/112 (success 11) |
+- gbrain: answered without seeing the deciding document, by family {'H2': 4}; wrong submitted cells median turn 8
+- fs: answered without seeing the deciding document, by family {}; wrong submitted cells median turn 5
+
+## 2. H4 paired by task and model
+cells: fs wins 2, gbrain wins 2, both 25, neither 1
+tasks where fs wins (count of models): {'H4-07': 1, 'H4-08': 1}
+fs-win cells by model: {'Opus': 1, 'Sonnet': 1} ; gbrain-win cells: [('H4-02', 'Opus'), ('H4-08', 'Opus')] ; fs-win cells on those tasks: [('H4-08', 'Sonnet')]
+tasks where gbrain wins (count of models): {'H4-02': 1, 'H4-08': 1}
+
+H4 items right by variant (all models):
+
+| Variant | gbrain right | fs right |
+|---|---|---|
+| amended | 17/18 | 17/18 |
+| amended+long | 10/12 | 10/12 |
+| contract_holds | 18/18 | 16/18 |
+| contract_holds+long | 8/9 | 8/9 |
+| future_effective | 14/15 | 12/15 |
+| future_effective+long | 15/15 | 15/15 |
+| later_effective_wins | 23/24 | 21/24 |
+| later_effective_wins+long | 3/3 | 3/3 |
+
+Where gbrain diverges on the cells fs wins (one count per failed item of a gbrain H4 cell that lost where fs on the same model succeeded):
+
+- deciding document returned but its deciding sentence never shown, answered class a: 1
+- turn budget (turn cap): 1
+- deciding document length by outcome: {('long', 'seen'): 1}; long ones 26818..26818 characters; failed items whose deciding document was opened with get_page: 0
+- failed items by (variant, class, deciding doc seen): {'amended+long/a/True': 1}
+- executed contract and amendments of each item seen by gbrain in those cells: mean 1.00, all seen in 4/4 items
+- tool calls on those cells: gbrain median 32.0, fs median 26.0; turns: gbrain median 13.5, fs median 11.0
+- deciding document listed by an entity or context_pack result: 0/8 items in those cells
+- all gbrain H4 cells, results that list documents of an asked account: context_pack: 46 results, 4.5 of the account's documents each, deciding document in 3; get_backlinks: 23 results, 7.4 of the account's documents each, deciding document in 8; entity: 0 results, 0.0 of the account's documents each, deciding document in 0
+- gbrain get_page calls on documents over 20,000 characters in H4: 22, deciding sentence in the result 22, clipped in the transcript 5
+- accounts asked in H4: median 29.5 documents each
+- all H4 cells: tool calls median gbrain 16.5, fs 25.0
+- gbrain search calls in those cells: {'keyword': 32, 'types filter': 20, 'no date filter': 45, 'no types filter': 25, 'hybrid': 13}
+
+## 4. Paired cells by family (same model and task)
+
+| Family | gbrain wins, fs loses | fs wins, gbrain loses | both | neither |
+|---|---|---|---|---|
+| H1 | 6 | 2 | 6 | 16 |
+| H2 | 4 | 3 | 22 | 1 |
+| H3 | 8 | 0 | 22 | 0 |
+| H4 | 2 | 2 | 25 | 1 |
+| H5 | 1 | 0 | 29 | 0 |
+
+pooled successes: gbrain 125/150, fs 111/150, difference +9.3 points; by family gbrain/fs: H1 12/8, H2 26/25, H3 30/22, H4 27/27, H5 30/29
+
+## Headroom ceiling on World M
+gbrain failed cells by cause (a cell with mixed item classes is listed under its combination): {'turn cap or no answer': 32, 'a': 18, 'c': 10, 'a+g': 2, 'e': 1, 'g': 1}
+
+## Headroom ceiling on Development world
+gbrain failed cells by cause (a cell with mixed item classes is listed under its combination): {'turn cap or no answer': 18, 'a': 5, 'e': 1, 'c': 1}
+
+## Ceiling gains (points of pooled gbrain − fs, every listed cause fixed in every cell where it is the only cause)
+- turn cap or no answer (T) on M: 32 cells (+10.7 points ceiling); 1 of them where fs succeeded (+0.3 points, fs-matched bound)
+- turn cap or no answer (T) on dev: 18 cells (+12.0 points ceiling); 2 of them where fs succeeded (+1.3 points, fs-matched bound)
+- superseded/older value (a, a_future) on M: 18 cells (+6.0 points ceiling); 14 of them where fs succeeded (+4.7 points, fs-matched bound)
+- superseded/older value (a, a_future) on dev: 5 cells (+3.3 points ceiling); 3 of them where fs succeeded (+2.0 points, fs-matched bound)
+- lower-authority or agent-note (g, e) on M: 2 cells (+0.7 points ceiling); 2 of them where fs succeeded (+0.7 points, fs-matched bound)
+- lower-authority or agent-note (g, e) on dev: 1 cells (+0.7 points ceiling); 1 of them where fs succeeded (+0.7 points, fs-matched bound)
+- set/count (c) on M: 10 cells (+3.3 points ceiling); 0 of them where fs succeeded (+0.0 points, fs-matched bound)
+- set/count (c) on dev: 1 cells (+0.7 points ceiling); 1 of them where fs succeeded (+0.7 points, fs-matched bound)
+- entity confusion (b) on M: 0 cells (+0.0 points ceiling); 0 of them where fs succeeded (+0.0 points, fs-matched bound)
+- entity confusion (b) on dev: 0 cells (+0.0 points ceiling); 0 of them where fs succeeded (+0.0 points, fs-matched bound)
+- T + a on M: 50 cells (+16.7 points ceiling); 15 of them where fs succeeded (+5.0 points, fs-matched bound)
+- T + a on dev: 23 cells (+15.3 points ceiling); 5 of them where fs succeeded (+3.3 points, fs-matched bound)
+- T + c on M: 42 cells (+14.0 points ceiling); 1 of them where fs succeeded (+0.3 points, fs-matched bound)
+- T + c on dev: 19 cells (+12.7 points ceiling); 3 of them where fs succeeded (+2.0 points, fs-matched bound)
+- a + g/e on M: 22 cells (+7.3 points ceiling); 18 of them where fs succeeded (+6.0 points, fs-matched bound)
+- a + g/e on dev: 6 cells (+4.0 points ceiling); 4 of them where fs succeeded (+2.7 points, fs-matched bound)

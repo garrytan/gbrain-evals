@@ -1,0 +1,37 @@
+{
+  "slug": "meetings/2026-07-09-vantorre-renewal-debrief",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: meeting\nTitle: Vantorre renewal debrief\nDate: Written on 2026-07-09.\nWriter: Gideon Sato\nVoice: hurried, lots of fragments\nFormat: meeting notes with attendees, bullets and action items\nLength: about 290 words\nDate style in the body: US long (June 2, 2025)\nTypos: one or two small natural typos (never in names or required phrases)\n\nBrief:\nGideon's call summary with Mateo. He writes that Vantorre has to give 60 days' notice if they don't want another year (state it plainly; it is wrong).\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Nadia Fennimore: Strategic account manager\n- Gideon Sato: Strategic account manager\n- Mateo Quiroga: Head of Procurement\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Vantorre Group: diversified industrial manufacturer, Northeast; main contact Mateo Quiroga, Head of Procurement; codes/nicknames VTG, VTRG\n- Vantorre Mobility: electric fleet services subsidiary, Northeast; subsidiary of Vantorre Group; codes/nicknames VTM, VMob\n- Orlavine Medical Supply: medical supply distributor, Mountain West; codes/nicknames OMS\n- Quillfeather Outfitters: outdoor gear retailer, Mountain West; codes/nicknames QFO\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2026-07-09 (background only; don't restate unless the brief asks):\n- Vantorre Group: managed by Gideon Sato\n- Vantorre Mobility: managed by Gideon Sato\n- Orlavine Medical Supply: not stated on any shared page (do not say who manages it)\n- Quillfeather Outfitters: managed by Strategic Accounts pod (pooled account)",
+      "response_text": "# Vantorre renewal debrief\n\nJuly 9, 2026\n\n**Attendees:** Mateo Quiroga, Head of Procurement, Vantorre Group; me, Strategic Accounts, Pemberline Systems  \n**Topic:** Pemberline Dock renewal prep. Quick call, mostly procurement questions and the receiving team's loose ends.\n\n## Call notes\n\n- Vantorre Group has to give 60 days' notice if they don't want another year. Told Mateo to put that in the procurement checklist so it doesn't disappear behind the plant purchasing queue.\n- Mateo wants the renewal material in one email. Not separate threads for the product questions and the paperwork. Said he spent part of yesterday hunting through forwarded messages with identical subject lines.\n- Receiving issue still irritating people: at the Northeast plant, the afternoon dispatcher moves a booking from door 4 to door 6, but the printed arrival sheet still shows the old door. Driver then walks to the wrong window. Need an actual example, not another screenshot of the calendar after everything is corrected.\n- Mateo will ask the receiving supervisor for the booking reference and the time the sheet was printed. Apparently the printer beside the check-in window is also streaking, which made the last example hard to read.\n- Keep Vantorre Mobility out of this email chain. Mateo wants the Vantorre Group discussion readable without subsidiary questions mixed into every reply.\n- No pricing discussion on this call. Main ask was less back-and-forth and a clean list of what procurement needs to do.\n\n## Actions\n\n- **Me:** Send recap and request the original arrival-sheet PDF. Include door numbers in the subject so receiving can find it.\n- **Mateo:** Collect the booking example; send procurement's outstanding questions together.\n- **Me:** Reproduce the door-change/print sequence before opening a support ticket. Check print preview too.\n- **Me:** Get the paperwork packet togehter. Leave room for Mateo's questions; don't send another half-finished bundle.",
+      "usage": {
+        "input_tokens": 1023,
+        "output_tokens": 515,
+        "thinking_tokens": 109
+      },
+      "cost_usd": 0.007196,
+      "provider_meta": {
+        "id": "resp_08d358ae02e32017016acfaedba9f087d198695a14de284863",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1023,
+          "input_tokens_details": {
+            "cache_write_tokens": 0,
+            "cached_tokens": 0
+          },
+          "output_tokens": 515,
+          "output_tokens_details": {
+            "reasoning_tokens": 109
+          },
+          "total_tokens": 1538
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

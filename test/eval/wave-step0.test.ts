@@ -278,7 +278,12 @@ describe('bug ledger', () => {
     expect(reviewedAgain.filter(e => e.review_history?.at(-1)?.date !== '2026-10-03').map(e => e.id)).toEqual([]);
     const foundOn20261006 = ['N6-2'];
     const foundOn20261007 = ['N1-7', 'N6-3'];
-    const firstWave = ledger.entries.filter(e => !['N7-8', 'N12-9', 'Cat7-1', ...foundOn20261004, ...foundOn20261006, ...foundOn20261007].includes(e.id));
+    const foundOn20261014 = ['N14-1', 'N14-2', 'N14-3', 'N14-4'];
+    const foundOn20261018 = ['N14-5'];
+    expect(ledger.entries.filter(e => foundOn20261018.includes(e.id)).map(e => e.review_history?.[0]?.date ?? e.review?.date)).toEqual(['2026-10-18']);
+    const foundOn20261020 = ['ARS-1', 'ARS-2', 'ARS-3', 'ARS-4', 'ARS-5', 'ARS-6', 'ARS-7', 'ARS-13', 'ARS-14', 'ARS-15'];
+    expect(ledger.entries.filter(e => foundOn20261020.includes(e.id)).map(e => e.review_history?.[0]?.date ?? e.review?.date)).toEqual(foundOn20261020.map(() => '2026-10-20'));
+    const firstWave = ledger.entries.filter(e => !['N7-8', 'N12-9', 'Cat7-1', ...foundOn20261004, ...foundOn20261006, ...foundOn20261007, ...foundOn20261014, ...foundOn20261018, ...foundOn20261020].includes(e.id));
     expect(firstWave.filter(e => e.review_history?.[0]?.date !== '2026-10-02').map(e => e.id)).toEqual([]);
     expect(ledger.entries.filter(e => e.status === 'fixed' && !e.fixing_commit).map(e => e.id)).toEqual([]);
   });

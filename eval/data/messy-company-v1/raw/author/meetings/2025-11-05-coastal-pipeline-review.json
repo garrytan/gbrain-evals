@@ -1,0 +1,37 @@
+{
+  "slug": "meetings/2025-11-05-coastal-pipeline-review",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: meeting\nTitle: Coastal pipeline review\nDate: The page was filed on 2025-11-05, but it records something that happened on 2025-10-30. State 2025-10-30 in the body as the meeting date; do not mention 2025-11-05.\nWriter: Sofia Marchetti\nVoice: polished and businesslike\nFormat: meeting notes with attendees, bullets and action items\nLength: about 418 words\nDate style in the body: day-month (2 Jun 2025)\nTypos: none\n\nBrief:\nMeeting notes filed on Nov 5, but the body says these are notes from the pipeline call on Thursday October 30, 2025. State the Oct 30 date clearly.\n\nRequired phrases:\n- Use the exact phrase \"Kwame's port account\" once, referring to Driftmoor Marine Freight. Don't put the account's name in the same sentence; the reader should work it out.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Bettina Kroll: Coastal team lead\n- Sofia Marchetti: Account manager, Coastal team\n- Kwame Adjei-Rowe: Account manager, Coastal team\n- Corinne Ashdown: VP Operations\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Pellucid Harbor Logistics: port drayage and terminal logistics, Gulf Coast; codes/nicknames PHL\n- Driftmoor Marine Freight: marine freight and barge operator, Puget Sound; codes/nicknames DMF\n- Saltmarsh Provisions: regional grocery distributor, Lowcountry; main contact Corinne Ashdown, VP Operations; codes/nicknames SMP\n- Covey & Lark Retail: home goods retailer, Mid-Atlantic; codes/nicknames Covey, CLR\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2025-10-30 (background only; don't restate unless the brief asks):\n- Pellucid Harbor Logistics: managed by Bettina Kroll\n- Driftmoor Marine Freight: managed by Kwame Adjei-Rowe\n- Saltmarsh Provisions: managed by Bettina Kroll\n- Covey & Lark Retail: managed by Sofia Marchetti",
+      "response_text": "# Coastal pipeline review\n\n**Meeting date:** Thursday, 30 Oct 2025  \n**Meeting:** Coastal pipeline call  \n**Attendees:** Bettina Kroll, Sofia Marchetti, Kwame Adjei-Rowe, June Osei-Lark\n\n## Summary\n\nThe call focused on operational blockers affecting the Coastal pipeline. Discussion stayed with scheduling workflows, buyer follow-up and materials needed for the next conversations. No pricing decisions were made during the call.\n\nBettina asked that the next round of demonstrations use customer-specific arrival patterns rather than the standard sample yard. June will review the resulting proposal language for consistency with what Pemberline Dock actually supports.\n\n## Account discussion\n\n### Pellucid Harbor Logistics\n\n- The dispatch team wants a clearer view of trucks arriving before their assigned windows. In the walkthrough, an early arrival at door 6 appeared beside an on-time appointment without enough visual distinction for the gate clerk.\n- The next demonstration should include a Gulf Coast morning sequence: overnight arrivals, a shift handover and two trailers competing for the same unload window.\n- Bettina will obtain a redacted dispatch sheet so the team can reproduce the sequence without using driver phone numbers.\n\n### Driftmoor Marine Freight\n\n- Kwame described a mismatch between the barge arrival board and the dock appointment view. The operations contact wants to hold a tentative unloading slot while the vessel arrival remains subject to change.\n- Bettina asked, “Can we use Kwame's port account to test the tentative-slot walkthrough before the next coastal demo?”\n- The group agreed to show the distinction between a provisional appointment and a committed door assignment, including what the afternoon dispatcher sees when the arrival moves.\n- Kwame will send the current screen sequence and the specific point where dispatch loses track of the revised time.\n\n### Saltmarsh Provisions\n\n- Corinne Ashdown wants the receiving supervisor to see late inbound loads before allocating the next wave of grocery deliveries.\n- The proposed demonstration will follow a chilled load arriving at door 3 during the early shift, with a delayed unload pushing the following appointment.\n- Bettina will ask Corinne Ashdown whether the supervisor works primarily from the appointment board or an exported receiving report.\n\n### Covey & Lark Retail\n\n- The warehouse team requested a simpler explanation of how rescheduling affects the door view. The last walkthrough moved too quickly between the yard queue and appointment details.\n- I will prepare a shorter sequence using one inbound home-goods trailer, one occupied door and a single reschedule.\n\n## Action items\n\n- **Bettina:** Collect the dispatch example and confirm the Saltmarsh Provisions demonstration workflow.\n- **Kwame:** Send the revised-arrival screen sequence.\n- **Sofia:** Rework the Covey & Lark Retail walkthrough.\n- **June:** Review proposal wording after the demonstration outlines are circulated.",
+      "usage": {
+        "input_tokens": 1097,
+        "output_tokens": 574,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.007934,
+      "provider_meta": {
+        "id": "resp_0519b7ef6ec69ef2016acfaea3598887d1bca39096de55bcad",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1097,
+          "input_tokens_details": {
+            "cache_write_tokens": 1094,
+            "cached_tokens": 0
+          },
+          "output_tokens": 574,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 1671
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

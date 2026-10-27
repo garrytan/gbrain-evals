@@ -1,0 +1,334 @@
+{
+  "schema": "cat40-receipt-v1",
+  "version": "cat40-v1",
+  "judge_prompt": "cat40-hard-claims-v1",
+  "hard": {
+    "identity": {
+      "seed": 20262051,
+      "scale": "large",
+      "mode": "hard",
+      "version": "model-ladder-hard-v2",
+      "knob_digest": "37a16085e0fbf2e92072b2e7cf00468d43451dd4fb35bb1232ebbf79d3027434"
+    },
+    "max_turns": 16,
+    "tool_limits": "hard",
+    "scorer": "cat40-hard-score-v2",
+    "judge_prompt": "cat40-hard-claims-v1",
+    "settings_digest": "e90efa3a334f7a073a38eeebbb33effd294e319267d10287dd56628b7a2a87f3",
+    "code": {
+      "eval/generators/model-ladder-hard.ts": "574be4e1f5c0305b46407c35e10d898c25034d684089ac7ad4b03b015ddf6804",
+      "eval/generators/hard/schema.ts": "c8bee1b1a2eb3debc71c08ecc41046cacbfe79fed4948d0d874b36ea38a13f59",
+      "eval/generators/hard/semantics.ts": "943cf770348e81e527214be33b15e7f304865419149a3eabf05d6776ae5dcb33",
+      "eval/generators/hard/render.ts": "e9dae9373f3c3de7b91cf8fa85e5959360928c57f72534894cfaf1ce8e47f240",
+      "eval/generators/hard/rng.ts": "d0f4b78272e811ab559a1f086d4637a6f414e82c6a6deeffc3b9f1a4e2dce08d",
+      "eval/generators/hard/validate.ts": "049265b5dde2026104e5ff922b5837dc41fdd7ee35a02c531393c6bfd9b0ed13",
+      "eval/runner/cat40/hard.ts": "da06dcf87ba033d0388453af7ab73752be3de66c72e31582b0fb79c62caf040e",
+      "eval/runner/cat40/score-hard.ts": "83ba80902417c6a7627482c37b14b6f1d216fc67328dce10146214860a9d414b",
+      "eval/runner/cat40/judge-hard.ts": "4546497537199b18aeae947ea230762c22dddc6d5ec8b3816c53db58d561c955",
+      "eval/runner/cat40/score.ts": "8a44805190566cdc8ed22caf46c566ac12073db25a0f105d69b6f4222e06174d",
+      "eval/runner/cat40/loop.ts": "95dac3aeaee89fb1ee94d1c8cb9899f2939a18c6fac9dfd55dcd6ffd4e75e332",
+      "eval/runner/cat40/arms.ts": "18014eb897343332075dccd57435d1f28e1a896074625a38d8091e1efde37d40",
+      "eval/runner/cat40/hard-grep.ts": "4319257f2a6ec2226a14c670b3774cc8f001790a74255753dd7fcea2afa26a53",
+      "eval/runner/cat40/hard-grep-worker.ts": "39d080f4917f5ec8478053d15e0a23cc6a5d6b4cd53baf400c0ae7c89096af69",
+      "eval/runner/cat40/pg-arm.ts": "4a1bb6ce87ca6aa52f3cc139afcc77f25498bdbbd9b29ccec09c8c8b1c750d05"
+    },
+    "runner_commit": "06a46d951c627296c64e3234c291ca88614ed30c",
+    "attempts_path": "attempts.jsonl",
+    "max_retries": 2,
+    "quarantined": {},
+    "pg_setup_embed_usd": 0
+  },
+  "world": {
+    "path": "eval/reports/cat40/next-confirm/p2/world/world.json",
+    "scale": "large",
+    "digest": "885b294f9cf6dcdfd3a21daf9b8f3ae46ab6ddcf949d7c0e3d0f3fcf86b50281",
+    "seed": 20262051,
+    "docs": 55213,
+    "tasks": 100
+  },
+  "evals_commit": "06a46d951c627296c64e3234c291ca88614ed30c",
+  "evals_dirty": false,
+  "gbrain": {
+    "slot_ref": null,
+    "slot_commit": "4e10136b4b7b79cb99408dca1136d3350f5de5e4",
+    "label": "gbrain",
+    "commit": "4e10136b4b7b79cb99408dca1136d3350f5de5e4",
+    "version": "0.60.189.0",
+    "tree": "c96932a1955377184aff134098ea5855c0582270",
+    "verified": {
+      "copy_tree": "c96932a1955377184aff134098ea5855c0582270",
+      "tree_matches": true,
+      "symlinks_under_src": 0,
+      "dir_is_realpath": true,
+      "cli_version": "0.60.189.0",
+      "cli_version_matches": true
+    },
+    "surface": "starter",
+    "advertised_surface": null,
+    "tool_overrides": {
+      "descriptions_file": null,
+      "descriptions_sha256": null,
+      "dropped": []
+    },
+    "instructions_override": null,
+    "served_instructions_sha256": null,
+    "config": {},
+    "build_config": {
+      "mentions.owner_phrases": "true"
+    },
+    "keyless_slots": false,
+    "slot_dir": "<slots>/slots-4e10136b4b7b-885b294f-noanalyze-bcd94eb6c3",
+    "restore_probe": [
+      {
+        "slot": "slot3",
+        "config": {
+          "mentions.owner_phrases": "true"
+        },
+        "owner_phrases": {
+          "links": 18629,
+          "windows": 6724
+        }
+      }
+    ],
+    "rerank_probe": "passed",
+    "operator_analyze": false,
+    "serve_boot_timeout_s": 0,
+    "staged_build": {
+      "sync_batch_docs": 5000
+    }
+  },
+  "mode": "build-slots",
+  "order": "task",
+  "complete": true,
+  "cells_planned": 0,
+  "slot_builds": [
+    {
+      "slot": "slot3",
+      "dir": "<slots>/slots-4e10136b4b7b-885b294f-noanalyze-bcd94eb6c3/slot3",
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 4619,
+          "tail": "If `claude` is not found: install Claude Code first, or use the per-harness blocks in that doc.\nMore: bulk-load notes `gbrain import <dir>` · scale up `gbrain migrate --to postgres --plan` · health `gbrain doctor`\n  Setting up brain schema (v243)...\n  238 migration(s) applied\n[init] Migrations: 14 recorded as not needed on a new brain; 5 setup migration(s) pending (0.11.0, 0.14.0, 0.22.4, 0.28.0, 0.53.0). Finish setup: gbrain apply-migrations --yes --no-autopilot-install\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: <slots>/slots-4e10136b4b7b-885b294f-noanalyze-bcd94eb6c3/slot3/home/.gbrain/content/82428e74-2bbc-4866-88ab-0118a28412dc/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)"
+        },
+        {
+          "step": "config-set mentions.owner_phrases",
+          "code": 0,
+          "ms": 1604,
+          "tail": "mentions.owner_phrases=true"
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 1132,
+          "tail": "  \"source_id\": \"vault\",\n  \"local_path\": \"<slots>/slots-4e10136b4b7b-885b294f-noanalyze-bcd94eb6c3/slot3/vault\",\n  \"source_incarnation\": \"96eaa10c-aab5-44d9-867b-e44411bea897\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"eea0e6eb-19af-4fb5-b41d-fd6e6f0e7867\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}"
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 591,
+          "tail": "Default source set to \"vault\"."
+        },
+        {
+          "step": "sync-1",
+          "code": 0,
+          "ms": 234461,
+          "tail": "[sync-watchdog] parent alive 180s elapsed, deadline in ~3420s (extends while progressing)\n[sync] 8069/10000 processed (8069 written, 0 waived this run) · 2676.9 pages/min · indexing ETA 44s\n[sync] 8471/10000 processed (8471 written, 0 waived this run) · 2663 pages/min · indexing ETA 35s\n[sync] 8891/10000 processed (8891 written, 0 waived this run) · 2655.8 pages/min · indexing ETA 26s\n[sync] 9324/10000 processed (9324 written, 0 waived this run) · 2653 pages/min · indexing ETA 16s\n[sync] 9694/10000 processed (9694 written, 0 waived this run) · 2633.3 pages/min · indexing ETA 7s\n[sync] 9000 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree."
+        },
+        {
+          "step": "sync-2",
+          "code": 0,
+          "ms": 113090,
+          "tail": "[sync-watchdog] parent alive 60s elapsed, deadline in ~3540s (extends while progressing)\n[sync] 2861/5000 processed (2861 written, 0 waived this run) · 2828.7 pages/min · indexing ETA 46s\n[sync] 3329/5000 processed (3329 written, 0 waived this run) · 2825 pages/min · indexing ETA 36s\n[sync] 3813/5000 processed (3813 written, 0 waived this run) · 2834.6 pages/min · indexing ETA 26s\n[sync] 4303/5000 processed (4303 written, 0 waived this run) · 2846.1 pages/min · indexing ETA 15s\n[sync] 4739/5000 processed (4739 written, 0 waived this run) · 2823 pages/min · indexing ETA 6s\n[sync] 13000 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree."
+        },
+        {
+          "step": "sync-3",
+          "code": 0,
+          "ms": 121275,
+          "tail": "[sync] 3100/5000 processed (3100 written, 0 waived this run) · 2602.2 pages/min · indexing ETA 44s\n[sync] 3531/5000 processed (3531 written, 0 waived this run) · 2600.1 pages/min · indexing ETA 34s\n[sync] 3984/5000 processed (3984 written, 0 waived this run) · 2612.9 pages/min · indexing ETA 24s\n[sync] 4440/5000 processed (4440 written, 0 waived this run) · 2624.8 pages/min · indexing ETA 13s\n[sync] 4881/5000 processed (4881 written, 0 waived this run) · 2626.4 pages/min · indexing ETA 3s\n[sync-watchdog] parent alive 120s elapsed, deadline in ~3480s (extends while progressing)\n[sync] 17000 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree."
+        },
+        {
+          "step": "sync-4",
+          "code": 0,
+          "ms": 123239,
+          "tail": "[sync] 3124/5000 processed (3124 written, 0 waived this run) · 2612.3 pages/min · indexing ETA 44s\n[sync] 3556/5000 processed (3556 written, 0 waived this run) · 2608.9 pages/min · indexing ETA 34s\n[sync] 3975/5000 processed (3975 written, 0 waived this run) · 2598.3 pages/min · indexing ETA 24s\n[sync] 4424/5000 processed (4424 written, 0 waived this run) · 2607.6 pages/min · indexing ETA 14s\n[sync] 4837/5000 processed (4837 written, 0 waived this run) · 2595.9 pages/min · indexing ETA 4s\n[sync-watchdog] parent alive 120s elapsed, deadline in ~3480s (extends while progressing)\n[sync] 21000 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree."
+        },
+        {
+          "step": "sync-5",
+          "code": 0,
+          "ms": 129935,
+          "tail": "[sync] 2916/5000 processed (2916 written, 0 waived this run) · 2429.2 pages/min · indexing ETA 52s\n[sync] 3327/5000 processed (3327 written, 0 waived this run) · 2433.4 pages/min · indexing ETA 42s\n[sync] 3762/5000 processed (3762 written, 0 waived this run) · 2452.4 pages/min · indexing ETA 31s\n[sync] 4190/5000 processed (4190 written, 0 waived this run) · 2463.6 pages/min · indexing ETA 20s\n[sync] 4610/5000 processed (4610 written, 0 waived this run) · 2468.4 pages/min · indexing ETA 10s\n[sync-watchdog] parent alive 120s elapsed, deadline in ~3480s (extends while progressing)\n[sync] 25000 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree."
+        },
+        {
+          "step": "sync-6",
+          "code": 0,
+          "ms": 130645,
+          "tail": "[sync] 2996/5000 processed (2996 written, 0 waived this run) · 2491.3 pages/min · indexing ETA 49s\n[sync] 3362/5000 processed (3362 written, 0 waived this run) · 2455.2 pages/min · indexing ETA 41s\n[sync] 3774/5000 processed (3774 written, 0 waived this run) · 2456.9 pages/min · indexing ETA 30s\n[sync] 4182/5000 processed (4182 written, 0 waived this run) · 2455.9 pages/min · indexing ETA 20s\n[sync] 4609/5000 processed (4609 written, 0 waived this run) · 2463.8 pages/min · indexing ETA 10s\n[sync-watchdog] parent alive 120s elapsed, deadline in ~3480s (extends while progressing)\n[sync] 29000 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree."
+        },
+        {
+          "step": "sync-7",
+          "code": 0,
+          "ms": 131874,
+          "tail": "[sync] 3285/5000 processed (3285 written, 0 waived this run) · 2432.7 pages/min · indexing ETA 43s\n[sync] 3670/5000 processed (3670 written, 0 waived this run) · 2418.4 pages/min · indexing ETA 33s\n[sync] 4110/5000 processed (4110 written, 0 waived this run) · 2439.9 pages/min · indexing ETA 22s\n[sync] 4547/5000 processed (4547 written, 0 waived this run) · 2456.3 pages/min · indexing ETA 12s\n[sync-watchdog] parent alive 120s elapsed, deadline in ~3480s (extends while progressing)\n[sync] 4947/5000 processed (4947 written, 0 waived this run) · 2423.6 pages/min · indexing ETA 2s\n[sync] 33000 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree."
+        },
+        {
+          "step": "sync-8",
+          "code": 0,
+          "ms": 170271,
+          "tail": "[sync-watchdog] parent alive 120s elapsed, deadline in ~3480s (extends while progressing)\n[sync] 3736/5000 processed (3736 written, 0 waived this run) · 1850.5 pages/min · indexing ETA 41s\n[sync] 4055/5000 processed (4055 written, 0 waived this run) · 1855.2 pages/min · indexing ETA 31s\n[sync] 4381/5000 processed (4381 written, 0 waived this run) · 1862.2 pages/min · indexing ETA 20s\n[sync] 4710/5000 processed (4710 written, 0 waived this run) · 1869.5 pages/min · indexing ETA 10s\n[sync] 37000 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree.\n  → embed-backfill not queued; manual drain required: `gbrain embed --stale --source vault`."
+        },
+        {
+          "step": "sync-9",
+          "code": 0,
+          "ms": 147187,
+          "tail": "[sync] 3252/5000 processed (3252 written, 0 waived this run) · 2140.3 pages/min · indexing ETA 50s\n[sync] 3641/5000 processed (3641 written, 0 waived this run) · 2159.4 pages/min · indexing ETA 38s\n[sync] 4067/5000 processed (4067 written, 0 waived this run) · 2194.8 pages/min · indexing ETA 26s\n[sync-watchdog] parent alive 120s elapsed, deadline in ~3480s (extends while progressing)\n[sync] 4448/5000 processed (4448 written, 0 waived this run) · 2181.3 pages/min · indexing ETA 16s\n[sync] 4804/5000 processed (4804 written, 0 waived this run) · 2177.7 pages/min · indexing ETA 6s\n[sync] 41000 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree."
+        },
+        {
+          "step": "sync-10",
+          "code": 0,
+          "ms": 129261,
+          "tail": "[sync] 2863/5000 processed (2863 written, 0 waived this run) · 2421.9 pages/min · indexing ETA 53s\n[sync] 3264/5000 processed (3264 written, 0 waived this run) · 2419.3 pages/min · indexing ETA 44s\n[sync] 3689/5000 processed (3689 written, 0 waived this run) · 2433.5 pages/min · indexing ETA 33s\n[sync] 4124/5000 processed (4124 written, 0 waived this run) · 2450.9 pages/min · indexing ETA 22s\n[sync] 4577/5000 processed (4577 written, 0 waived this run) · 2474.8 pages/min · indexing ETA 11s\n[sync-watchdog] parent alive 120s elapsed, deadline in ~3480s (extends while progressing)\n[sync] 45000 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree."
+        },
+        {
+          "step": "sync-11",
+          "code": 0,
+          "ms": 15491,
+          "tail": "  213 chunks created\n  Links: 0 created, 0 removed across 1000 page(s); 44213 page(s) still owe extraction — run 'gbrain extract --stale'.\nManaged sync synced: 213 entries this run (213 written, 0 waived), 909.6 pages/min.\n[sync-watchdog] hard deadline armed: 3600s + 30s grace (default:non-tty); extends while the sync keeps progressing (stops after 900s without progress); disable with --no-hard-deadline\n[sync] managed catch-up: 213 entries frozen, 213 remaining; one write request per page (bulk off: PGLite publishes without network round trips; bulk applies to Postgres).\n[sync] 1/213 processed (1 written, 0 waived this run) · 82.3 pages/min · indexing ETA 2m35s\n[sync] 44213 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree."
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 218494,
+          "tail": "Extract --stale: 0 link(s) created, 0 removed, 0 timeline entr(ies) from 44213 page(s).\nMentions: 44235 link(s) added, 0 removed from 55213 page(s)."
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 918,
+          "tail": "confirmation_required; rerun with --yes (evaluator-authorized build spend)"
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 1789394,
+          "tail": "[embed.pages] 73784/74086 (99%)\n[embed.pages] 73839/74086 (99%)\n[embed.pages] 73892/74086 (99%)\n[embed.pages] 73943/74086 (99%)\n[embed.pages] 74001/74086 (99%)\n[embed.pages] 74060/74086 (99%)\n[embed.pages] 74086/74086 (100%)\n[embed.pages] 74086/74086 (100%) done"
+        },
+        {
+          "step": "embed-verify",
+          "code": 0,
+          "ms": 1037,
+          "tail": "[dry-run] Would embed 0 chunks (0 stale found)"
+        },
+        {
+          "step": "warm-boot",
+          "code": 0,
+          "ms": 16606,
+          "tail": "1 server start(s), each answering one read-only tool call before stopping; queued persistence effects at snapshot: 0"
+        }
+      ],
+      "meter": {
+        "usd": 2.7121900000000485,
+        "requests": 57694,
+        "unpriced": 0,
+        "byModel": {
+          "openai:text-embedding-3-large": {
+            "usd": 2.7121900000000485,
+            "requests": 57693
+          }
+        }
+      },
+      "ms": 3502179,
+      "coverage": {
+        "supported": true,
+        "state": "complete",
+        "pending": 0,
+        "last_pass_at": "2026-10-14T07:25:37.849Z",
+        "queued_effects": 0
+      },
+      "build_config": {
+        "mentions.owner_phrases": "true"
+      },
+      "owner_phrases": {
+        "links": 18629,
+        "windows": 6724
+      },
+      "allowance": {
+        "reserved_usd": 4,
+        "usd": 2.7121900000000485,
+        "requests": 57693,
+        "charged_reservations": 0
+      }
+    }
+  ],
+  "models": [],
+  "arms": [
+    "gbrain"
+  ],
+  "families": [
+    "H1",
+    "H2",
+    "H3",
+    "H4",
+    "H5"
+  ],
+  "repeats": 1,
+  "max_tool_chars": null,
+  "argv": [
+    "--build-slots",
+    "--world",
+    "eval/reports/cat40/next-confirm/p2/world/world.json",
+    "--gbrain-repo",
+    "../gbrain",
+    "--gbrain-ref",
+    "4e10136b4b7b79cb99408dca1136d3350f5de5e4",
+    "--gbrain-root",
+    "<slots>",
+    "--slots",
+    "5",
+    "--no-pglite-analyze",
+    "--gbrain-build-config",
+    "mentions.owner_phrases=true",
+    "--slot-build-allowance-usd",
+    "4",
+    "--budget-ledger",
+    ".budget/cat40-next-confirm-public.sqlite",
+    "--out",
+    "eval/reports/cat40/next-confirm/p2/slots-wave/b3",
+    "--budget-usd",
+    "4",
+    "--build-slot-ids",
+    "3"
+  ],
+  "budget_run_id": "cat40-slot-build-2026-10-14T06-58-12-200Z-84690b03",
+  "resumed": false,
+  "proxy_unattributed": {
+    "slot:slot3": {
+      "usd": 0.00000117,
+      "requests": 1,
+      "unpriced": 0,
+      "byModel": {
+        "openai:text-embedding-3-large": {
+          "usd": 0.00000117,
+          "requests": 1
+        }
+      }
+    }
+  },
+  "failed_cells_proxy_usd": 0,
+  "cost": {
+    "usd": 2.712455,
+    "input_tokens": 20868265,
+    "output_tokens": 0,
+    "basis": "budget ledger cat40-slot-build-2026-10-14T06-58-12-200Z-84690b03: 4 paid requests, 0 charged at their reservation because usage was unavailable",
+    "ledger": ".budget/cat40-next-confirm-public.sqlite",
+    "program_cap_usd": 1700,
+    "overshoot_usd": 0,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 1,
+      "max": 6487.5
+    }
+  },
+  "finished_at": "2026-10-14T07:56:56.669Z"
+}

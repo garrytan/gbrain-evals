@@ -1,0 +1,87 @@
+{
+  "slug": "crm/2025-07-01-saltmarsh-onboarding",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2025-07-01",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Saltmarsh",
+        "line": 6
+      },
+      {
+        "oid": "e2",
+        "surface": "Saltmarsh Provisions",
+        "line": 9
+      },
+      {
+        "oid": "e3",
+        "surface": "SMP",
+        "line": 9
+      },
+      {
+        "oid": "e4",
+        "surface": "Saltmarsh Provisions",
+        "line": 11
+      }
+    ],
+    "claims": [
+      {
+        "cid": "c-smp-discount-of",
+        "question": "What does the page say about Saltmarsh Provisions's discount pct?"
+      },
+      {
+        "cid": "c-smp-renewal-contract",
+        "question": "What does the page say about Saltmarsh Provisions's renewal date?"
+      }
+    ],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "2192a11669287ce88329b120f91a064603727120ec594ddc50960f9d451c2cc1",
+  "response_text": "{\n  \"date_used\": \"2025-07-01\",\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\"oid\": \"e1\", \"entity\": \"saltmarsh\"},\n    {\"oid\": \"e2\", \"entity\": \"saltmarsh\"},\n    {\"oid\": \"e3\", \"entity\": \"saltmarsh\"},\n    {\"oid\": \"e4\", \"entity\": \"saltmarsh\"}\n  ],\n  \"claims\": [\n    {\n      \"cid\": \"c-smp-discount-of\",\n      \"stated\": true,\n      \"value\": \"7%\",\n      \"line\": 11\n    },\n    {\n      \"cid\": \"c-smp-renewal-contract\",\n      \"stated\": true,\n      \"value\": \"2026-06-30\",\n      \"line\": 11\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-07-01",
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "saltmarsh"
+      },
+      {
+        "oid": "e2",
+        "entity": "saltmarsh"
+      },
+      {
+        "oid": "e3",
+        "entity": "saltmarsh"
+      },
+      {
+        "oid": "e4",
+        "entity": "saltmarsh"
+      }
+    ],
+    "claims": [
+      {
+        "cid": "c-smp-discount-of",
+        "stated": true,
+        "value": "7%",
+        "line": 11
+      },
+      {
+        "cid": "c-smp-renewal-contract",
+        "stated": true,
+        "value": "2026-06-30",
+        "line": 11
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2646,
+    "output_tokens": 189,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.007182
+}

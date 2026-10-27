@@ -1,0 +1,144 @@
+{
+  "slug": "updates/2025-08-04-coastal-weekly",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2025-08-04",
+    "owner_phrases": [
+      {
+        "mid": "updates/2025-08-04-coastal-weekly#m1",
+        "phrase": "Kwame's port account",
+        "lines": [
+          25
+        ]
+      },
+      {
+        "mid": "updates/2025-08-04-coastal-weekly#m2",
+        "phrase": "her biggest customer",
+        "lines": [
+          23
+        ]
+      }
+    ],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Saltmarsh Provisions",
+        "line": 10
+      },
+      {
+        "oid": "e2",
+        "surface": "Saltmarsh Provisions",
+        "line": 14
+      },
+      {
+        "oid": "e3",
+        "surface": "Driftmoor Marine Freight",
+        "line": 15
+      },
+      {
+        "oid": "e4",
+        "surface": "Pellucid Harbor Logistics",
+        "line": 16
+      },
+      {
+        "oid": "e5",
+        "surface": "Covey & Lark Retail",
+        "line": 17
+      },
+      {
+        "oid": "e6",
+        "surface": "Saltmarsh Provisions",
+        "line": 21
+      },
+      {
+        "oid": "e7",
+        "surface": "Driftmoor Marine Freight",
+        "line": 25
+      },
+      {
+        "oid": "e8",
+        "surface": "Pellucid Harbor Logistics",
+        "line": 27
+      },
+      {
+        "oid": "e9",
+        "surface": "Covey & Lark Retail",
+        "line": 29
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "349186ae7db80b75f6d310c4bb51f75ac22cee7d2f121b67b68cd9c19c2ed0f4",
+  "response_text": "{\n  \"date_used\": \"2025-08-04\",\n  \"owner_phrases\": [\n    {\n      \"mid\": \"updates/2025-08-04-coastal-weekly#m1\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\n        \"driftmoor\"\n      ],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"On 2025-08-04, Kwame Adjei-Rowe owns Driftmoor Marine Freight (a port/marine account), and the paragraph is under the Driftmoor Marine Freight heading.\"\n    },\n    {\n      \"mid\": \"updates/2025-08-04-coastal-weekly#m2\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\n        \"saltmarsh\"\n      ],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"Refers to Saltmarsh Provisions, owned by Sofia Marchetti on 2025-08-04 and the subject of the section.\"\n    }\n  ],\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"saltmarsh\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"saltmarsh\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"driftmoor\"\n    },\n    {\n      \"oid\": \"e4\",\n      \"entity\": \"pellucid\"\n    },\n    {\n      \"oid\": \"e5\",\n      \"entity\": \"covey-lark\"\n    },\n    {\n      \"oid\": \"e6\",\n      \"entity\": \"saltmarsh\"\n    },\n    {\n      \"oid\": \"e7\",\n      \"entity\": \"driftmoor\"\n    },\n    {\n      \"oid\": \"e8\",\n      \"entity\": \"pellucid\"\n    },\n    {\n      \"oid\": \"e9\",\n      \"entity\": \"covey-lark\"\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-08-04",
+    "owner_phrases": [
+      {
+        "mid": "updates/2025-08-04-coastal-weekly#m1",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "driftmoor"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "On 2025-08-04, Kwame Adjei-Rowe owns Driftmoor Marine Freight (a port/marine account), and the paragraph is under the Driftmoor Marine Freight heading."
+      },
+      {
+        "mid": "updates/2025-08-04-coastal-weekly#m2",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "saltmarsh"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "Refers to Saltmarsh Provisions, owned by Sofia Marchetti on 2025-08-04 and the subject of the section."
+      }
+    ],
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "saltmarsh"
+      },
+      {
+        "oid": "e2",
+        "entity": "saltmarsh"
+      },
+      {
+        "oid": "e3",
+        "entity": "driftmoor"
+      },
+      {
+        "oid": "e4",
+        "entity": "pellucid"
+      },
+      {
+        "oid": "e5",
+        "entity": "covey-lark"
+      },
+      {
+        "oid": "e6",
+        "entity": "saltmarsh"
+      },
+      {
+        "oid": "e7",
+        "entity": "driftmoor"
+      },
+      {
+        "oid": "e8",
+        "entity": "pellucid"
+      },
+      {
+        "oid": "e9",
+        "entity": "covey-lark"
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 3413,
+    "output_tokens": 534,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.012166
+}

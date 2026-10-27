@@ -1,0 +1,111 @@
+{
+  "meta": {
+    "fixtures_sha256": "ad271efc7fb94cc53170984619bb9a9346c9ca98fdec826e6d8e66046a9fd44a",
+    "cohorts": 20,
+    "predictions": 5622,
+    "topics_scored": 800,
+    "horizons_written": 5602,
+    "horizons_unparsed": 20,
+    "as_of": "2026-10-16T00:00:00Z",
+    "bun": "1.4.3"
+  },
+  "result": {
+    "rho_shrunk": [
+      0.7412587412587412,
+      0.986013986013986,
+      0.8531468531468531,
+      0.8861659824480079,
+      0.958041958041958,
+      0.9230769230769231,
+      0.8741258741258742,
+      0.958041958041958,
+      0.9230769230769231,
+      0.9370629370629371,
+      0.9370629370629371,
+      0.9071817764981583,
+      0.9020979020979021,
+      0.8741258741258742,
+      0.8741258741258742,
+      0.8391608391608392,
+      0.9211923058649253,
+      0.965034965034965,
+      0.7482517482517482,
+      0.8881118881118881
+    ],
+    "rho_raw": [
+      0.7342657342657343,
+      0.993006993006993,
+      0.9370629370629371,
+      0.8861659824480079,
+      0.9562186292818426,
+      0.9020979020979021,
+      0.8671328671328671,
+      0.958041958041958,
+      0.9230769230769231,
+      0.9352028352316922,
+      0.9090909090909091,
+      0.9071817764981583,
+      0.9020979020979021,
+      0.8951048951048951,
+      0.8741258741258742,
+      0.8161133356141733,
+      0.9281975705483088,
+      0.9300699300699301,
+      0.7482517482517482,
+      0.9001765118147749
+    ],
+    "median_rho_shrunk": 0.9046398392980302,
+    "median_rho_raw": 0.9046398392980302,
+    "share_rho_shrunk_at_least_min": 0.9,
+    "set_f1_macro": 1,
+    "denominator_mismatches": [],
+    "low_n_mismatches": [],
+    "labelling_mismatches": [],
+    "remote_probes": [
+      {
+        "probe": "remote takes_list unchanged by horizons, no journal fields",
+        "pass": true,
+        "detail": "61297 bytes"
+      },
+      {
+        "probe": "remote takes_search unchanged by horizons, no journal fields",
+        "pass": true,
+        "detail": "7812 bytes"
+      },
+      {
+        "probe": "remote takes_scorecard {} unchanged, no groups or journal",
+        "pass": true,
+        "detail": "{\"total_bets\":232,\"resolved\":204,\"correct\":126,\"incorrect\":78,\"partial\":0,\"accuracy\":0.6176470588235294,\"brier\":0.2644485294351389,\"partial_rate\":0,\"unresolvable_count\":0,\"unresolvable_rate\":0,\"mcp_resolved\":0}"
+      },
+      {
+        "probe": "local takes_scorecard {} unchanged by horizons",
+        "pass": true,
+        "detail": "210 bytes"
+      },
+      {
+        "probe": "remote takes_scorecard {group_by: holder} refused",
+        "pass": true,
+        "detail": "scorecard_group_by_local_only"
+      },
+      {
+        "probe": "remote takes_scorecard {group_by: source} refused",
+        "pass": true,
+        "detail": "scorecard_group_by_local_only"
+      },
+      {
+        "probe": "remote takes_scorecard {min_n: 5} refused",
+        "pass": true,
+        "detail": "scorecard_group_by_local_only"
+      },
+      {
+        "probe": "no MCP op reads the journal or horizons",
+        "pass": true,
+        "detail": "none"
+      }
+    ]
+  },
+  "decision": {
+    "pass": true,
+    "failed": []
+  }
+}

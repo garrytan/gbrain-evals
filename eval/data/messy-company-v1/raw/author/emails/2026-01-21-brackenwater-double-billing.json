@@ -1,0 +1,37 @@
+{
+  "slug": "emails/2026-01-21-brackenwater-double-billing",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: email\nTitle: Brackenwater double invoice\nDate: Written on 2026-01-21.\nWriter: Marcus Lindqvist\nVoice: hurried, lots of fragments\nFormat: an email thread with From/To/Date headers and quoted earlier replies (> lines)\nLength: about -119 words\nDate style in the body: undefined\nTypos: a few natural typos and one or two sloppy abbreviations (never in names or required phrases)\n\nBrief:\nEmail thread: Brackenwater escalated a double-billed January invoice yesterday (Jan 20). Marcus asks Felix Duarte at Stoneharrow Billing, our billing vendor, to fix it. Felix replies that our Stoneharrow account had a duplicate run.\n\nRequired phrases:\n- Use the exact phrase \"Marcus's LTL account\" once, referring to Brackenwater Freight Co.. Don't put the account's name in the same sentence; the reader should work it out.\n- Use the exact phrase \"our Stoneharrow account\" once, in the sense of: Pemberline's own customer account at the billing vendor. It must not be about a customer account.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Ilse Varga: North team lead\n- Dana Okafor: Account manager, North team\n- Marcus Lindqvist: Account manager, North team\n- Thea Ramaswell: Director of Yard Operations\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Quarrendon Freight Lines: truckload freight carrier, Upper Midwest; main contact Thea Ramaswell, Director of Yard Operations; codes/nicknames QFL, Q-Freight\n- Brackenwater Freight Co.: less-than-truckload freight, Great Lakes; codes/nicknames BWF, Bracken\n- Tamsin Cold Chain: refrigerated warehousing, Pacific Northwest; codes/nicknames TCC\n- Thornbury Cloth Co. (renamed from Orrin Mills on 2026-01-12): textile mill, Carolinas; codes/nicknames TCC\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2026-01-21 (background only; don't restate unless the brief asks):\n- Quarrendon Freight Lines: managed by Dana Okafor\n- Brackenwater Freight Co.: managed by Marcus Lindqvist\n- Tamsin Cold Chain: managed by Dana Okafor\n- Thornbury Cloth Co.: managed by Marcus Lindqvist",
+      "response_text": "Subject: Brackenwater double invoice\n\nFrom: Felix Duarte  \nTo: Marcus Lindqvist  \nDate: 2026-01-21\n\nFound it. Duplicate run against Pemberline Systems in Stoneharrow Billing. Same January invoice generated twice.\n\nMarcus's LTL account got both copies. I'll remove the duplicate and send the corrected statement. Pls hold off forwarding either PDF for now.\n\n> From: Marcus Lindqvist  \n> To: Felix Duarte  \n> Date: 2026-01-21\n>\n> Felix — Brackenwater Freight Co. escalated yesterday, Jan 20. Double-billed January invoice. Their AP clerk has both PDFs queued; caught it matching invoice totals this morning.\n>\n> Can you check our Stoneharrow account and fix the extra invoice? Need corrected statement, not another resend. They're asking which copy to pay. Attachements coming separately — mail client hanging again. Thx.",
+      "usage": {
+        "input_tokens": 1152,
+        "output_tokens": 306,
+        "thinking_tokens": 109
+      },
+      "cost_usd": 0.005364,
+      "provider_meta": {
+        "id": "resp_00ad0f2d9045a8cc016acfae34eb7087d1a2ed22ed6a5010d6",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1152,
+          "input_tokens_details": {
+            "cache_write_tokens": 1149,
+            "cached_tokens": 0
+          },
+          "output_tokens": 306,
+          "output_tokens_details": {
+            "reasoning_tokens": 109
+          },
+          "total_tokens": 1458
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

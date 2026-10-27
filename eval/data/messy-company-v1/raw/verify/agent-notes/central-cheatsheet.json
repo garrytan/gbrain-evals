@@ -1,0 +1,86 @@
+{
+  "slug": "agent-notes/central-cheatsheet",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "none (undated page)",
+    "owner_phrases": [
+      {
+        "mid": "agent-notes/central-cheatsheet#m1",
+        "phrase": "the account Tobias runs",
+        "lines": [
+          9
+        ]
+      },
+      {
+        "mid": "agent-notes/central-cheatsheet#m2",
+        "phrase": "the Central team's ag account",
+        "lines": [
+          12
+        ]
+      },
+      {
+        "mid": "agent-notes/central-cheatsheet#m3",
+        "phrase": "Tobias's packaging account",
+        "lines": [
+          16
+        ]
+      }
+    ],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Marrow Agrisupply",
+        "line": 11
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "4539d9703fc3c9d6645f15b4ce50f8a5a200ae6390182b84a76e377a3a0bc19f",
+  "response_text": "{\n  \"date_used\": null,\n  \"owner_phrases\": [\n    {\n      \"mid\": \"agent-notes/central-cheatsheet#m1\",\n      \"refers_to_customer_account\": false,\n      \"accounts\": [],\n      \"reading\": \"ambiguous: could be more than one account\",\n      \"note\": \"The page is undated, and Tobias Rendle is primary owner of both tansleigh (from 2025-05-19) and marrow-fieldworks (from 2026-01-05), with nothing on line 9 to distinguish between them.\"\n    },\n    {\n      \"mid\": \"agent-notes/central-cheatsheet#m2\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\n        \"marrow-agrisupply\"\n      ],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"Under the heading 'Marrow Agrisupply', refers to marrow-agrisupply, which is owned by the Central team (pooled) and has descriptor 'ag'.\"\n    },\n    {\n      \"mid\": \"agent-notes/central-cheatsheet#m3\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\n        \"tansleigh\"\n      ],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"Tansleigh Packaging (tansleigh) is the only packaging account and is owned by Tobias Rendle from 2025-05-19.\"\n    }\n  ],\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"marrow-agrisupply\"\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": null,
+    "owner_phrases": [
+      {
+        "mid": "agent-notes/central-cheatsheet#m1",
+        "refers_to_customer_account": false,
+        "accounts": [],
+        "reading": "ambiguous: could be more than one account",
+        "note": "The page is undated, and Tobias Rendle is primary owner of both tansleigh (from 2025-05-19) and marrow-fieldworks (from 2026-01-05), with nothing on line 9 to distinguish between them."
+      },
+      {
+        "mid": "agent-notes/central-cheatsheet#m2",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "marrow-agrisupply"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "Under the heading 'Marrow Agrisupply', refers to marrow-agrisupply, which is owned by the Central team (pooled) and has descriptor 'ag'."
+      },
+      {
+        "mid": "agent-notes/central-cheatsheet#m3",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "tansleigh"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "Tansleigh Packaging (tansleigh) is the only packaging account and is owned by Tobias Rendle from 2025-05-19."
+      }
+    ],
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "marrow-agrisupply"
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2810,
+    "output_tokens": 437,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.00999
+}

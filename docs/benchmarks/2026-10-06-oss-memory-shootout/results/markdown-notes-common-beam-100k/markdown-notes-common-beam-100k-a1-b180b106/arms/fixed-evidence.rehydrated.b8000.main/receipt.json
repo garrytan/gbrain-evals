@@ -135,10 +135,10 @@
       "protocol": 1,
       "system": "markdown-notes",
       "versions": {
-        "package": "basic-memory==0.23.2",
+        "package": "see comparison-systems table: markdown-notes",
         "lock_sha256": "e1a14a1931815cba5ed2acdfab355e1c01b87c157678eac626a184138ab16807",
         "image": null,
-        "vendor_benchmark_code": "basicmachines-co/basic-memory@c0bd87c6d5a4a58034b1d6c8c5018e443b0bd048 (tag v0.23.2), benchmarks/src/basic_memory_benchmarks/{converters/locomo_to_corpus.py,providers/bm_local.py,scoring/qa.py}",
+        "vendor_benchmark_code": "see comparison-systems table: markdown-notes (vendor benchmark code at commit c0bd87c6d5a4a58034b1d6c8c5018e443b0bd048: the benchmarks package's converters/locomo_to_corpus.py, providers/bm_local.py and scoring/qa.py)",
         "resolved_dependencies": "uv.lock pins every transitive dependency to markdown-notes's own uv.lock at the tag; prereleases resolved: fastmcp==4.0.0b1 and fastmcp-slim==4.0.0b1 (markdown-notes requires fastmcp==4.0.0b1), opentelemetry-instrumentation==0.63b1 and opentelemetry-semantic-conventions==0.63b1"
       },
       "configs": {
@@ -173,7 +173,7 @@
       },
       "delete": "native",
       "delete_notes": "delete_note MCP tool on the session's note removes the file and its index rows. Nothing is derived across notes, so no residue is expected.",
-      "readiness": "synchronous: /finish runs `bm reindex --search --embeddings -p <ns>` (the vendor benchmark's command), which returns after full-text indexing and embedding. Completeness is `known` when its summary reports 0 embedding errors and `bm status --json` counts as many files as were written, else `degraded`. The vendor's `bm status --json` readiness poll has no readiness field to read at 0.23.2 (its helper returns None and proceeds).",
+      "readiness": "synchronous: /finish runs `bm reindex --search --embeddings -p <ns>` (the vendor benchmark's command), which returns after full-text indexing and embedding. Completeness is `known` when its summary reports 0 embedding errors and `bm status --json` counts as many files as were written, else `degraded`. The vendor's `bm status --json` readiness poll has no readiness field to read at the pinned release (its helper returns None and proceeds).",
       "namespace": "project: one markdown-notes project per namespace, named <ns>, rooted at /data/notes/<ns>",
       "parallel_namespaces": false,
       "retrieval_policies": {
@@ -204,7 +204,7 @@
       "agent_surface": {
         "kind": "vendor-mcp",
         "transport": "stdio",
-        "version": "bm mcp (markdown-notes 0.23.2, fastmcp 4.0.0b1, mcp 2.0.0)"
+        "version": "bm mcp (markdown-notes at the pinned release, fastmcp 4.0.0b1, mcp 2.0.0)"
       },
       "deviations_from_vendor_code": [
         "Sessions arrive one at a time through /ingest and are written as notes in the vendor converter's format; the vendor converter writes a whole dataset first. Indexing happens at /finish with the vendor's reindex command.",
@@ -220,10 +220,10 @@
       "system": "markdown-notes",
       "config": "common",
       "versions": {
-        "package": "basic-memory==0.23.2",
+        "package": "see comparison-systems table: markdown-notes",
         "lock_sha256": "e1a14a1931815cba5ed2acdfab355e1c01b87c157678eac626a184138ab16807",
         "image": null,
-        "vendor_benchmark_code": "basicmachines-co/basic-memory@c0bd87c6d5a4a58034b1d6c8c5018e443b0bd048 (tag v0.23.2), benchmarks/src/basic_memory_benchmarks/{converters/locomo_to_corpus.py,providers/bm_local.py,scoring/qa.py}",
+        "vendor_benchmark_code": "see comparison-systems table: markdown-notes (vendor benchmark code at commit c0bd87c6d5a4a58034b1d6c8c5018e443b0bd048: the benchmarks package's converters/locomo_to_corpus.py, providers/bm_local.py and scoring/qa.py)",
         "resolved_dependencies": "uv.lock pins every transitive dependency to markdown-notes's own uv.lock at the tag; prereleases resolved: fastmcp==4.0.0b1 and fastmcp-slim==4.0.0b1 (markdown-notes requires fastmcp==4.0.0b1), opentelemetry-instrumentation==0.63b1 and opentelemetry-semantic-conventions==0.63b1"
       },
       "health": {

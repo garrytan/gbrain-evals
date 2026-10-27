@@ -1,0 +1,37 @@
+{
+  "slug": "accounts/pellucid-harbor-logistics",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: profile\nTitle: Pellucid Harbor Logistics\nDate: Written on 2026-10-01.\nWriter: Bettina Kroll\nVoice: hurried, lots of fragments\nFormat: a header block of key fields as a table, then short sections\nLength: about 293 words\nDate style in the body: casual (Jun 2nd, Monday the 2nd)\nTypos: a few natural typos and one or two sloppy abbreviations (never in names or required phrases)\n\nBrief:\nAccount profile, updated 2026-10-01. Port drayage and terminal logistics on the Gulf Coast (Mobile and Gulfport). Code PHL. Owner history: Bettina Kroll until November 3, 2025; Kwame Adjei-Rowe since November 3, 2025. 145 seats.\n\nUse these names or codes at least once each, as written: \"PHL\", \"Pellucid Harbor\".\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Bettina Kroll: Coastal team lead\n- Sofia Marchetti: Account manager, Coastal team\n- Kwame Adjei-Rowe: Account manager, Coastal team\n- Corinne Ashdown: VP Operations\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Pellucid Harbor Logistics: port drayage and terminal logistics, Gulf Coast; codes/nicknames PHL\n- Driftmoor Marine Freight: marine freight and barge operator, Puget Sound; codes/nicknames DMF\n- Saltmarsh Provisions: regional grocery distributor, Lowcountry; main contact Corinne Ashdown, VP Operations; codes/nicknames SMP\n- Pellow Home Living (renamed from Covey & Lark Retail on 2026-02-16): home goods retailer, Mid-Atlantic; codes/nicknames Covey, PHL\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2026-10-01 (background only; don't restate unless the brief asks):\n- Pellucid Harbor Logistics: managed by Kwame Adjei-Rowe\n- Driftmoor Marine Freight: managed by Kwame Adjei-Rowe\n- Saltmarsh Provisions: managed by Bettina Kroll\n- Pellow Home Living: managed by Sofia Marchetti",
+      "response_text": "# Pellucid Harbor Logistics\n\n| Field | Detail |\n|---|---|\n| Updated | Oct 1st, 2026 |\n| Code | PHL |\n| Business | Port drayage and terminal logistics |\n| Locations | Gulf Coast — Mobile and Gulfport |\n| Product | Pemberline Dock |\n| Seats | 145 |\n| Current owner | Kwame Adjei-Rowe, since Nov 3rd, 2025 |\n| Previous owner | Bettina Kroll, until Nov 3rd, 2025 |\n\n## Working picture\n\nPellucid Harbor moves containers between terminal pickup lanes and off-port staging. Mobile desk starts early; Gulfport afternoon crew inherits the appointment changes. Lots of same-day reshuffling when a container clears later than expected. Dispatch wants the board readable without opening every appointment. Fair complaint.\n\nMain friction: drivers arriving with the original slot printed on their dispatch sheet after the desk has moved it. Yard clerk checks the gate list, driver checks paper, both think the other is wrong. Not really a capacity problem. More a stale-copy problem.\n\n## Current loose ends\n\n- Mobile, door 4: two appointments looked stacked after a reassignment. Ticket DOCK-4827 has screenshots from the morning board. Need the exact sequence, not another screenshot of the final state.\n- Gulfport: overnight dispatcher says the “Tomorrow — Terminal Pulls” report sometimes includes completed moves. Checking whether the saved filter was changed or the status update landed late.\n- Driver notes: “bring chassis” gets buried below the reference numbers. Asked for one example with the full note intact; recieved a cropped phone photo instead.\n\n## Next up\n\nKwame Adjei-Rowe to walk through the Mobile reassignment with dispatch. Ten minutes on screen should do it. Ask them to use a dummy appointment, not a live inbound move.\n\nI’ll pull the report filter screenshots and attach them before that call. Also tidy the duplicate site labels — “Gulfport Yard” versus “Gulfport staging.” Same place, confusing in exports.\n\nQuick ops note: avoid shift handoff for screen shares. Everyone dissapears to the gate window. Morning slot better.",
+      "usage": {
+        "input_tokens": 1114,
+        "output_tokens": 451,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.006738,
+      "provider_meta": {
+        "id": "resp_05ee416d38fe1268016acfae78d48487d1a45ece90faf61a46",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1114,
+          "input_tokens_details": {
+            "cache_write_tokens": 1111,
+            "cached_tokens": 0
+          },
+          "output_tokens": 451,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 1565
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

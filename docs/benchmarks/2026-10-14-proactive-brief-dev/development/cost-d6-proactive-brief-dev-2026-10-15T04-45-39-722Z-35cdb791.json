@@ -1,0 +1,14 @@
+{
+  "usd": 27.848936,
+  "input_tokens": 21723445,
+  "output_tokens": 520288,
+  "basis": "budget ledger d6-proactive-brief-dev-2026-10-15T04-45-39-722Z-35cdb791: 2950 paid requests, 3 charged at their reservation because usage was unavailable",
+  "ledger": ".budget/d6-brief-dev.sqlite",
+  "program_cap_usd": 45,
+  "overshoot_usd": 0,
+  "event_loop_lag_ms": {
+    "p50": 0,
+    "p99": 0,
+    "max": 2186.4
+  }
+}

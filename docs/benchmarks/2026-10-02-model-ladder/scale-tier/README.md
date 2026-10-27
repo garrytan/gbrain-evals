@@ -10,6 +10,10 @@ The gap shrinks as models get stronger. GPT-6.1 Sol scored 92% with gbrain and 9
 
 Read this as a measured loss at this scale, not as proof that grep wins everywhere. Each task names its account by a unique name or code, and tool output was uncapped. Those two conditions let an exact `grep` pull the right handful of lines out of 52,000 files. The losses below point at specific gbrain behaviors that can be fixed. Several are about permissions and write-back rather than retrieval.
 
+<a id="correction-2026-10-09"></a>
+
+> **Correction, 2026-10-09: the gbrain arm searched without its reranker.** Each restored slot brain kept the slot build's metering-proxy port in its Voyage URL, and that port was closed when the cells ran, so every rerank request failed and gbrain quietly returned unreranked results (fixed in gbrain-evals #76, commit `7709a70`, and #109). None of the 200 gbrain cells' metered calls include a rerank request ([audit](../../2026-10-08-program-primary-hard/root-cause/restore-audit.json)). The −16-point gap to plain files therefore measures gbrain at release with a failed reranker, on top of the ledger stall the [Cat 40 report correction](../../2026-10-02-model-ladder.md#correction-2026-10-09) also describes; the file, Postgres, memory and oracle arms have no reranker to lose. The original numbers stay as measured. The current measurement at this scale is Cat 40 Hard (gbrain-evals [#76](https://github.com/garrytan/gbrain-evals/pull/76)), whose own held-out gbrain arm also ran without reranking and says so.
+
 ## What the agent had to do
 
 The corpus is the fictional Acme Example Inc. from the [protocol](../../2026-10-02-model-ladder-protocol.md). The 50 tasks and their 100 planted accounts are the same as in v1, document for document. The large world adds 1,250 distractor accounts, each with a contract, a CRM record and 28 to 40 routine emails, meetings and tickets, plus 3,000 more team updates. That makes 52,028 documents and 41.5 MB of Markdown. The extra accounts never reuse a value that the v1 world uses. That rule covers gold answers, wrong values, canaries, account base names and account codes, and it is checked by `test/eval/cat40-model-ladder-large.test.ts`.
@@ -126,3 +130,7 @@ Files here: [`results.jsonl`](results.jsonl) (one line per cell, sha256 `5782038
 ## Limits
 
 One repeat per cell, and four models clustered near the top of the capability index. The world is synthetic and written by us, and its account names and codes are unique by construction, which helps exact search. The memory arm covers 30 of 50 tasks. Family D (surviving failure) is not in v1.
+
+## Changelog
+
+- 2026-10-09: [Correction](#correction-2026-10-09) added: the gbrain arm ran without reranking in all 200 cells (stale metering-proxy port in restored slots; fixed in gbrain-evals #76 and #109). Original numbers unchanged.

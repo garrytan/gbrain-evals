@@ -1,0 +1,45 @@
+{
+  "slug": "emails/2025-10-20-saltmarsh-concession-approved",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2025-10-20",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Saltmarsh",
+        "line": 6
+      },
+      {
+        "oid": "e2",
+        "surface": "Saltmarsh Provisions",
+        "line": 10
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "3251f368028791cc0a85b3f969b8517c9767dfe6d4f7bfa50abb8bef87065993",
+  "response_text": "{\n  \"date_used\": \"2025-10-20\",\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"saltmarsh\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"saltmarsh\"\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-10-20",
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "saltmarsh"
+      },
+      {
+        "oid": "e2",
+        "entity": "saltmarsh"
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2604,
+    "output_tokens": 83,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.006038
+}

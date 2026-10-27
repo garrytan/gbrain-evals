@@ -1,0 +1,49 @@
+{
+  "slug": "crm/2025-05-02-tamsin-dana-note",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2025-05-02",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Tamsin Cold Chain",
+        "line": 6
+      }
+    ],
+    "claims": [
+      {
+        "cid": "c-tcc-decider-dana",
+        "question": "What does the page say about Tamsin Cold Chain's decision maker?"
+      }
+    ],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "7a889d347470c692abca5790304a48c247471af925be2c545cd7ef34795bfb32",
+  "response_text": "{\n  \"date_used\": \"2025-05-02\",\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"tamsin\"\n    }\n  ],\n  \"claims\": [\n    {\n      \"cid\": \"c-tcc-decider-dana\",\n      \"stated\": true,\n      \"value\": \"The real decision maker is the COO, Ines Barrow (the CFO only signs off on budget).\",\n      \"line\": 6\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-05-02",
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "tamsin"
+      }
+    ],
+    "claims": [
+      {
+        "cid": "c-tcc-decider-dana",
+        "stated": true,
+        "value": "The real decision maker is the COO, Ines Barrow (the CFO only signs off on budget).",
+        "line": 6
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2839,
+    "output_tokens": 131,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.006988
+}

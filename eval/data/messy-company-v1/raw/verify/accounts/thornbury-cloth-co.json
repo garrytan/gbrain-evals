@@ -1,0 +1,123 @@
+{
+  "slug": "accounts/thornbury-cloth-co",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2026-09-30",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Thornbury Cloth Co.",
+        "line": 6
+      },
+      {
+        "oid": "e2",
+        "surface": "Orrin Mills",
+        "line": 6
+      },
+      {
+        "oid": "e3",
+        "surface": "Thornbury Cloth Co.",
+        "line": 10
+      },
+      {
+        "oid": "e4",
+        "surface": "Orrin Mills",
+        "line": 10
+      },
+      {
+        "oid": "e5",
+        "surface": "TCC",
+        "line": 11
+      },
+      {
+        "oid": "e6",
+        "surface": "ORM",
+        "line": 11
+      },
+      {
+        "oid": "e7",
+        "surface": "Orrin Mills",
+        "line": 22
+      },
+      {
+        "oid": "e8",
+        "surface": "Thornbury",
+        "line": 23
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": [
+      {
+        "account": "orrin",
+        "question": "According to this page alone, who manages Orrin Mills, in what role, and from/until when?"
+      }
+    ]
+  },
+  "prompt_user_sha256": "ca5c01f9ae1421b61fa76987dc723486d504f62556bcc972d760e792b3fd33e9",
+  "response_text": "{\n  \"date_used\": \"2026-09-30\",\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\"oid\": \"e1\", \"entity\": \"orrin\"},\n    {\"oid\": \"e2\", \"entity\": \"orrin\"},\n    {\"oid\": \"e3\", \"entity\": \"orrin\"},\n    {\"oid\": \"e4\", \"entity\": \"orrin\"},\n    {\"oid\": \"e5\", \"entity\": \"orrin\"},\n    {\"oid\": \"e6\", \"entity\": \"orrin\"},\n    {\"oid\": \"e7\", \"entity\": \"orrin\"},\n    {\"oid\": \"e8\", \"entity\": \"orrin\"}\n  ],\n  \"ownership\": [\n    {\n      \"account\": \"orrin\",\n      \"owner\": \"Marcus Lindqvist\",\n      \"role\": \"primary\",\n      \"start\": \"2025-10-06\",\n      \"end\": null,\n      \"line\": 14\n    },\n    {\n      \"account\": \"orrin\",\n      \"owner\": \"Dana Okafor\",\n      \"role\": \"primary\",\n      \"start\": \"2025-01-06\",\n      \"end\": \"2025-10-06\",\n      \"line\": 15\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2026-09-30",
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "orrin"
+      },
+      {
+        "oid": "e2",
+        "entity": "orrin"
+      },
+      {
+        "oid": "e3",
+        "entity": "orrin"
+      },
+      {
+        "oid": "e4",
+        "entity": "orrin"
+      },
+      {
+        "oid": "e5",
+        "entity": "orrin"
+      },
+      {
+        "oid": "e6",
+        "entity": "orrin"
+      },
+      {
+        "oid": "e7",
+        "entity": "orrin"
+      },
+      {
+        "oid": "e8",
+        "entity": "orrin"
+      }
+    ],
+    "ownership": [
+      {
+        "account": "orrin",
+        "owner": "Marcus Lindqvist",
+        "role": "primary",
+        "start": "2025-10-06",
+        "end": null,
+        "line": 14
+      },
+      {
+        "account": "orrin",
+        "owner": "Dana Okafor",
+        "role": "primary",
+        "start": "2025-01-06",
+        "end": "2025-10-06",
+        "line": 15
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2925,
+    "output_tokens": 279,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.00864
+}

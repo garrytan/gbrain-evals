@@ -1,0 +1,35 @@
+{
+  "dataset": "locomo",
+  "split": "locomo10",
+  "provider": "gbrain",
+  "mode": "rag",
+  "lane": "combined",
+  "seal": "dev",
+  "target_tokens": 8000,
+  "models": {
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash"
+  },
+  "budget_usd": 24,
+  "questions": {
+    "units": [
+      "conv-44",
+      "conv-42"
+    ]
+  },
+  "k": 10,
+  "provider_config": {
+    "embedding_model": "voyage:voyage-4",
+    "embedding_dimensions": 1024,
+    "lane": "combined",
+    "extraction_model": "openai:gpt-6-luna",
+    "facts_limit": 100,
+    "facts_tokens": 585,
+    "token_budget": 7316
+  },
+  "note": "memory proof wave dev gbrain-locomo-locomo10-rag-combined-f600 8000-token target; knobs from the sweep's auto-tune rows that passed the delivered-context gate (the sweep skipped the run because 2 of 60 sampled questions fail retrieval: image-intent queries report vector_arm_failed on a text-only voyage-4 brain)",
+  "gbrain_credentials": [
+    "voyage",
+    "openai"
+  ]
+}

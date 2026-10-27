@@ -1,0 +1,45 @@
+{
+  "cell_id": "beam-100k-full-context-rag-cf0370830f86",
+  "runs": [
+    {
+      "run_id": "harness-cell:beam-100k-full-context-rag-cf0370830f86-2026-10-05T15-10-57-345Z-51be350d",
+      "ledger": ".budget/mpw-dev-local.sqlite",
+      "usd": 11.548118,
+      "requests": 295,
+      "started_at": "2026-10-05T15:19:45.308Z",
+      "stub": false
+    }
+  ],
+  "metered_by_label": {
+    "total": {
+      "requests": 295,
+      "refused": 0,
+      "reserved_usd": 160.85585849999998,
+      "actual_usd": 11.548117500000007,
+      "input_tokens": 12533402,
+      "output_tokens": 422083
+    },
+    "byLabel": {
+      "harness": {
+        "requests": 295,
+        "refused": 0,
+        "reserved_usd": 160.85585849999998,
+        "actual_usd": 11.548117500000007,
+        "input_tokens": 12533402,
+        "output_tokens": 422083
+      }
+    },
+    "byProvider": {
+      "gemini": {
+        "requests": 295,
+        "refused": 0,
+        "reserved_usd": 160.85585849999998,
+        "actual_usd": 11.548117500000007,
+        "input_tokens": 12533402,
+        "output_tokens": 422083
+      }
+    },
+    "exhausted": false
+  },
+  "unmetered": []
+}

@@ -1,0 +1,37 @@
+{
+  "slug": "emails/2026-01-16-tansley-parcel-renewal-recap",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: email\nTitle: Tansley Parcel renewal recap\nDate: Written on 2026-01-16.\nWriter: Priyanka \"Pree\" Sundaram\nVoice: dry and slightly sarcastic\nFormat: an email thread with From/To/Date headers and quoted earlier replies (> lines)\nLength: about 122 words\nDate style in the body: ISO (2025-06-02)\nTypos: none\n\nBrief:\nEmail thread. Pree's first email recaps yesterday's renewal (signed Jan 15): 120 seats at $1,850, and she writes the next renewal date as February 28, 2027. Twenty minutes later she replies to her own email: ignore my earlier note, the renewal date is January 31, 2027.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Hollis Mbeki: Central team lead\n- Priyanka \"Pree\" Sundaram: Account manager, Central team\n- Tobias Rendle: Account manager, Central team\n- Lev Arkadin: Procurement lead\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Tansley Parcel: regional parcel delivery, South Central; main contact Lev Arkadin, Procurement lead; codes/nicknames TPCL, TP\n- Tansleigh Packaging: corrugated packaging manufacturer, Ohio Valley; codes/nicknames TSP, TP\n- Marrow Fieldworks: agricultural equipment dealer network, Plains; codes/nicknames MFW\n- Marrow Agrisupply: farm supply retail chain, Plains; subsidiary of Marrow Fieldworks; codes/nicknames MAS, Marrow Agri\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2026-01-16 (background only; don't restate unless the brief asks):\n- Tansley Parcel: managed by Priyanka \"Pree\" Sundaram\n- Tansleigh Packaging: not stated on any shared page (do not say who manages it)\n- Marrow Fieldworks: managed by Tobias Rendle\n- Marrow Agrisupply: managed by Central team (pooled account)",
+      "response_text": "Subject: Tansley Parcel renewal recap  \nFrom: Priyanka \"Pree\" Sundaram  \nTo: June Osei-Lark; Hollis Mbeki  \nDate: 2026-01-16 09:20\n\nIgnore my earlier note: the next renewal date is 2027-01-31, not 2027-02-28. Apparently I gave February a promotion.\n\nJune, please use 2027-01-31 for the billing handoff. Everything else below stands.\n\n> From: Priyanka \"Pree\" Sundaram  \n> To: June Osei-Lark; Hollis Mbeki  \n> Date: 2026-01-16 09:00\n>\n> Tansley Parcel signed the Pemberline Dock renewal yesterday, 2026-01-15: 120 seats at $1,850 per seat per year. Next renewal: 2027-02-28.\n>\n> Lev Arkadin has the signed copy. He also asked whether the morning dispatch report can stop splitting door 6 across two pages. A modest ambition.\n>\n> I'll reproduce that with the South Central shift export and send support the sample.",
+      "usage": {
+        "input_tokens": 1080,
+        "output_tokens": 248,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.00464,
+      "provider_meta": {
+        "id": "resp_03c54da309b22c0d016acfae665b7087d19401e5077b3ae82b",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1080,
+          "input_tokens_details": {
+            "cache_write_tokens": 1077,
+            "cached_tokens": 0
+          },
+          "output_tokens": 248,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 1328
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

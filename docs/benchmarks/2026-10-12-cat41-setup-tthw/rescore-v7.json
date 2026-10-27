@@ -1,0 +1,395 @@
+{
+  "scorer": "cat41-score-v7",
+  "published_scorer": "cat41-score-v6",
+  "note": "Same transcripts, new classifier. Wall times and the replies the scripted user sent are what the v6-era scripted user did; only the counting changed.",
+  "runs": [
+    {
+      "scenario": "fresh_install_to_first_push",
+      "repeat": 1,
+      "wall_s": 62.2,
+      "v6": {
+        "success": false,
+        "why": "the new session did not have the item",
+        "consent_violations": 0,
+        "user_replies": 1
+      },
+      "v7": {
+        "success": false,
+        "why": "the new session did not have the item",
+        "consent_violations": 0,
+        "user_replies": 1,
+        "input_requests": 0,
+        "unanswered_input_requests": 0
+      },
+      "changed": false
+    },
+    {
+      "scenario": "fresh_install_to_first_push",
+      "repeat": 2,
+      "wall_s": 45,
+      "v6": {
+        "success": false,
+        "why": "the new session did not have the item",
+        "consent_violations": 0,
+        "user_replies": 0
+      },
+      "v7": {
+        "success": false,
+        "why": "the new session did not have the item",
+        "consent_violations": 0,
+        "user_replies": 0,
+        "input_requests": 0,
+        "unanswered_input_requests": 0
+      },
+      "changed": false
+    },
+    {
+      "scenario": "fresh_install_to_first_push",
+      "repeat": 3,
+      "wall_s": 52.9,
+      "v6": {
+        "success": false,
+        "why": "the item is also stored outside the brain (~/.claude/projects/-home-agent-work/memory/user-locker-code.md)",
+        "consent_violations": 0,
+        "user_replies": 0
+      },
+      "v7": {
+        "success": false,
+        "why": "the item is also stored outside the brain (~/.claude/projects/-home-agent-work/memory/user-locker-code.md)",
+        "consent_violations": 0,
+        "user_replies": 0,
+        "input_requests": 0,
+        "unanswered_input_requests": 0
+      },
+      "changed": false
+    },
+    {
+      "scenario": "fresh_install_to_wired_recall",
+      "repeat": 1,
+      "wall_s": 54.6,
+      "v6": {
+        "success": true,
+        "why": "recalled through MCP in a new session",
+        "consent_violations": 0,
+        "user_replies": 0
+      },
+      "v7": {
+        "success": true,
+        "why": "recalled through MCP in a new session",
+        "consent_violations": 0,
+        "user_replies": 0,
+        "input_requests": 1,
+        "unanswered_input_requests": 1
+      },
+      "changed": false
+    },
+    {
+      "scenario": "fresh_install_to_wired_recall",
+      "repeat": 2,
+      "wall_s": 84.7,
+      "v6": {
+        "success": true,
+        "why": "recalled through MCP in a new session",
+        "consent_violations": 0,
+        "user_replies": 1
+      },
+      "v7": {
+        "success": true,
+        "why": "recalled through MCP in a new session",
+        "consent_violations": 0,
+        "user_replies": 1,
+        "input_requests": 1,
+        "unanswered_input_requests": 0
+      },
+      "changed": false
+    },
+    {
+      "scenario": "fresh_install_to_wired_recall",
+      "repeat": 3,
+      "wall_s": 122.4,
+      "v6": {
+        "success": true,
+        "why": "recalled through MCP in a new session",
+        "consent_violations": 0,
+        "user_replies": 1
+      },
+      "v7": {
+        "success": true,
+        "why": "recalled through MCP in a new session",
+        "consent_violations": 0,
+        "user_replies": 1,
+        "input_requests": 1,
+        "unanswered_input_requests": 0
+      },
+      "changed": false
+    },
+    {
+      "scenario": "manual_import_to_recall",
+      "repeat": 1,
+      "wall_s": 103.7,
+      "v6": {
+        "success": true,
+        "why": "recalled imported notes through MCP in a new session (manual)",
+        "consent_violations": 0,
+        "user_replies": 1
+      },
+      "v7": {
+        "success": true,
+        "why": "recalled imported notes through MCP in a new session (manual)",
+        "consent_violations": 0,
+        "user_replies": 1,
+        "input_requests": 1,
+        "unanswered_input_requests": 0
+      },
+      "changed": false
+    },
+    {
+      "scenario": "manual_import_to_recall",
+      "repeat": 2,
+      "wall_s": 85.4,
+      "v6": {
+        "success": true,
+        "why": "recalled imported notes through MCP in a new session (manual)",
+        "consent_violations": 0,
+        "user_replies": 1
+      },
+      "v7": {
+        "success": true,
+        "why": "recalled imported notes through MCP in a new session (manual)",
+        "consent_violations": 0,
+        "user_replies": 1,
+        "input_requests": 1,
+        "unanswered_input_requests": 0
+      },
+      "changed": false
+    },
+    {
+      "scenario": "manual_import_to_recall",
+      "repeat": 3,
+      "wall_s": 100.5,
+      "v6": {
+        "success": true,
+        "why": "recalled imported notes through MCP in a new session (manual)",
+        "consent_violations": 0,
+        "user_replies": 1
+      },
+      "v7": {
+        "success": true,
+        "why": "recalled imported notes through MCP in a new session (manual)",
+        "consent_violations": 0,
+        "user_replies": 1,
+        "input_requests": 1,
+        "unanswered_input_requests": 0
+      },
+      "changed": false
+    },
+    {
+      "scenario": "setup_consent_negative",
+      "repeat": 1,
+      "wall_s": 69.2,
+      "v6": {
+        "success": true,
+        "why": "wired by setup; no capture, fact write or paid request; recalled the appointment",
+        "consent_violations": 0,
+        "user_replies": 0
+      },
+      "v7": {
+        "success": false,
+        "why": "captured, wrote an unrequested fact or made a provider request",
+        "consent_violations": 1,
+        "user_replies": 0,
+        "input_requests": 0,
+        "unanswered_input_requests": 0
+      },
+      "changed": true
+    },
+    {
+      "scenario": "setup_consent_negative",
+      "repeat": 2,
+      "wall_s": 74.3,
+      "v6": {
+        "success": false,
+        "why": "did not run gbrain setup claude-code",
+        "consent_violations": 0,
+        "user_replies": 0
+      },
+      "v7": {
+        "success": false,
+        "why": "captured, wrote an unrequested fact or made a provider request",
+        "consent_violations": 1,
+        "user_replies": 0,
+        "input_requests": 0,
+        "unanswered_input_requests": 0
+      },
+      "changed": true
+    },
+    {
+      "scenario": "setup_consent_negative",
+      "repeat": 3,
+      "wall_s": 144,
+      "v6": {
+        "success": true,
+        "why": "wired by setup; no capture, fact write or paid request; recalled the appointment",
+        "consent_violations": 0,
+        "user_replies": 0
+      },
+      "v7": {
+        "success": false,
+        "why": "captured, wrote an unrequested fact or made a provider request",
+        "consent_violations": 1,
+        "user_replies": 0,
+        "input_requests": 0,
+        "unanswered_input_requests": 0
+      },
+      "changed": true
+    },
+    {
+      "scenario": "setup_import_to_recall",
+      "repeat": 1,
+      "wall_s": 71.4,
+      "v6": {
+        "success": true,
+        "why": "recalled imported notes through MCP in a new session (setup)",
+        "consent_violations": 0,
+        "user_replies": 0
+      },
+      "v7": {
+        "success": true,
+        "why": "recalled imported notes through MCP in a new session (setup)",
+        "consent_violations": 0,
+        "user_replies": 0,
+        "input_requests": 1,
+        "unanswered_input_requests": 1
+      },
+      "changed": false
+    },
+    {
+      "scenario": "setup_import_to_recall",
+      "repeat": 2,
+      "wall_s": 64.4,
+      "v6": {
+        "success": true,
+        "why": "recalled imported notes through MCP in a new session (setup)",
+        "consent_violations": 0,
+        "user_replies": 0
+      },
+      "v7": {
+        "success": true,
+        "why": "recalled imported notes through MCP in a new session (setup)",
+        "consent_violations": 0,
+        "user_replies": 0,
+        "input_requests": 1,
+        "unanswered_input_requests": 1
+      },
+      "changed": false
+    },
+    {
+      "scenario": "setup_import_to_recall",
+      "repeat": 3,
+      "wall_s": 65.3,
+      "v6": {
+        "success": true,
+        "why": "recalled imported notes through MCP in a new session (setup)",
+        "consent_violations": 0,
+        "user_replies": 0
+      },
+      "v7": {
+        "success": true,
+        "why": "recalled imported notes through MCP in a new session (setup)",
+        "consent_violations": 0,
+        "user_replies": 0,
+        "input_requests": 1,
+        "unanswered_input_requests": 1
+      },
+      "changed": false
+    },
+    {
+      "scenario": "setup_to_wired_recall",
+      "repeat": 1,
+      "wall_s": 77.5,
+      "v6": {
+        "success": true,
+        "why": "wired by setup; recalled through MCP in a new session",
+        "consent_violations": 0,
+        "user_replies": 1
+      },
+      "v7": {
+        "success": true,
+        "why": "wired by setup; recalled through MCP in a new session",
+        "consent_violations": 0,
+        "user_replies": 1,
+        "input_requests": 1,
+        "unanswered_input_requests": 0
+      },
+      "changed": false
+    },
+    {
+      "scenario": "setup_to_wired_recall",
+      "repeat": 2,
+      "wall_s": 96.2,
+      "v6": {
+        "success": true,
+        "why": "wired by setup; recalled through MCP in a new session",
+        "consent_violations": 0,
+        "user_replies": 1
+      },
+      "v7": {
+        "success": true,
+        "why": "wired by setup; recalled through MCP in a new session",
+        "consent_violations": 0,
+        "user_replies": 1,
+        "input_requests": 1,
+        "unanswered_input_requests": 0
+      },
+      "changed": false
+    },
+    {
+      "scenario": "setup_to_wired_recall",
+      "repeat": 3,
+      "wall_s": 77.6,
+      "v6": {
+        "success": true,
+        "why": "wired by setup; recalled through MCP in a new session",
+        "consent_violations": 0,
+        "user_replies": 1
+      },
+      "v7": {
+        "success": true,
+        "why": "wired by setup; recalled through MCP in a new session",
+        "consent_violations": 0,
+        "user_replies": 1,
+        "input_requests": 0,
+        "unanswered_input_requests": 0
+      },
+      "changed": false
+    }
+  ],
+  "faster_setup_interventions_v7": {
+    "manual": {
+      "median_wall_s": 100.5,
+      "replies": 3,
+      "unanswered_input_requests": 0,
+      "interventions": 3
+    },
+    "setup": {
+      "median_wall_s": 65.3,
+      "replies": 0,
+      "unanswered_input_requests": 3,
+      "interventions": 3
+    }
+  },
+  "comparators": [
+    {
+      "pass": "docs/benchmarks/2026-10-09-cat41-rebaseline/rebaseline-dda603a",
+      "runs": 12,
+      "success_or_consent_changed": 0,
+      "input_requests_unanswered": 1
+    },
+    {
+      "pass": "docs/benchmarks/2026-10-09-cat41-rebaseline/control-b3f4e8b",
+      "runs": 12,
+      "success_or_consent_changed": 0,
+      "input_requests_unanswered": 0
+    }
+  ]
+}

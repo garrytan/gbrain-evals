@@ -1,0 +1,37 @@
+{
+  "slug": "tickets/2025-12-02-mfw-dealer-portal-sso",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: ticket\nTitle: SUP-4630: dealer portal SSO loop\nDate: Written on 2025-12-02.\nWriter: Priyanka \"Pree\" Sundaram\nVoice: hurried, lots of fragments\nFormat: a ticket with a fields table and a timestamped update log\nLength: about 66 words\nDate style in the body: undefined\nTypos: a few natural typos and one or two sloppy abbreviations (never in names or required phrases)\n\nBrief:\nTicket for Marrow Fieldworks dealers stuck in an SSO login loop. Fields table and updates.\n\nUse these names or codes at least once each, as written: \"MFW\".\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Hollis Mbeki: Central team lead\n- Priyanka \"Pree\" Sundaram: Account manager, Central team\n- Tobias Rendle: Account manager, Central team\n- Lev Arkadin: Procurement lead\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Tansley Parcel: regional parcel delivery, South Central; main contact Lev Arkadin, Procurement lead; codes/nicknames TPCL, TP\n- Tansleigh Packaging: corrugated packaging manufacturer, Ohio Valley; codes/nicknames TSP, TP\n- Marrow Fieldworks: agricultural equipment dealer network, Plains; codes/nicknames MFW\n- Marrow Agrisupply: farm supply retail chain, Plains; subsidiary of Marrow Fieldworks; codes/nicknames MAS, Marrow Agri\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2025-12-02 (background only; don't restate unless the brief asks):\n- Tansley Parcel: managed by Priyanka \"Pree\" Sundaram\n- Tansleigh Packaging: not stated on any shared page (do not say who manages it)\n- Marrow Fieldworks: managed by Priyanka \"Pree\" Sundaram\n- Marrow Agrisupply: managed by Central team (pooled account)",
+      "response_text": "# SUP-4630: dealer portal SSO loop\n\n| Field | Value |\n|---|---|\n| Date | 2025-12-02 |\n| Customer | Marrow Fieldworks (MFW) |\n| Status | Investigating |\n| Impact | Dealers stuck in SSO login loop |\n\n## Updates\n- **09:12** — Dealer at west parts counter bounced back to login. Third atempt. Same in private window.\n- **09:24** — Grabbed redirect trace; callback repeats. Sent to eng.\n- **09:37** — Asked dealer to pause retries. Checking cookie handoff nxt. No workaround yet.",
+      "usage": {
+        "input_tokens": 1063,
+        "output_tokens": 137,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.003496,
+      "provider_meta": {
+        "id": "resp_0de4c41127d78280016acfae6e62dc87d1a6ed07a4352b86df",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1063,
+          "input_tokens_details": {
+            "cache_write_tokens": 1060,
+            "cached_tokens": 0
+          },
+          "output_tokens": 137,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 1200
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

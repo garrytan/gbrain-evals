@@ -1,9 +1,9 @@
-"""markdown-notes 0.23.2 behind shim protocol v1 (eval/systems/PROTOCOL.md).
+"""markdown-notes, at the pinned release, behind shim protocol v1 (eval/systems/PROTOCOL.md).
 
-Ingestion follows markdown-notes's own LoCoMo benchmark (basicmachines-co/basic-memory, benchmarks/, tag v0.23.2):
+Ingestion follows markdown-notes's own LoCoMo benchmark (the vendor repository's benchmarks/ at the pinned tag):
 one Markdown note per session in a project directory, `bm project add`, `bm reindex --search --embeddings -p`, then
-`search_notes` (hybrid, JSON output) over a warm `bm mcp` stdio session. markdown-notes is AGPL-3.0; it runs unmodified
-in this container and no vendor code is copied here. README.md lists every deviation from the vendor benchmark.
+`search_notes` (hybrid, JSON output) over a warm `bm mcp` stdio session. markdown-notes runs unmodified in this container
+and no vendor code is copied here (docs/comparison-systems.md records its license). README.md lists every deviation from the vendor benchmark.
 """
 from __future__ import annotations
 
@@ -142,7 +142,7 @@ class McpSession:
         return parsed if isinstance(parsed, dict) else {"result": parsed}
 
 
-class BasicMemoryAdapter(Adapter):
+class MarkdownNotesAdapter(Adapter):
     def __init__(self) -> None:
         NOTES.mkdir(parents=True, exist_ok=True)
         META.mkdir(parents=True, exist_ok=True)
@@ -286,4 +286,4 @@ class BasicMemoryAdapter(Adapter):
 
 
 if __name__ == "__main__":
-    serve(BasicMemoryAdapter())
+    serve(MarkdownNotesAdapter())

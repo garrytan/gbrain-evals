@@ -1,0 +1,37 @@
+{
+  "slug": "updates/2025-10-20-central-weekly",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: weekly\nTitle: Central weekly Oct 20\nDate: Written on 2025-10-20.\nWriter: Hollis Mbeki\nVoice: terse and practical\nFormat: a weekly update with a section per topic and bullets\nLength: about 266 words\nDate style in the body: mixed: some ISO, some casual\nTypos: one or two small natural typos (never in names or required phrases)\n\nBrief:\nHollis's update. Agrisupply on Tier 1 now. Tansley Parcel QBR went well.\n\nRequired phrases:\n- Use the exact phrase \"the team's farm supply account\" once, referring to Marrow Agrisupply. Don't put the account's name in the same sentence; the reader should work it out.\n- Use the exact phrase \"the account Pree runs\" once, but vaguely: the writer does not say which account it is, and nothing nearby (name, location, numbers, products) may identify one. Keep that sentence generic, like a passing comment.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Hollis Mbeki: Central team lead\n- Priyanka \"Pree\" Sundaram: Account manager, Central team\n- Tobias Rendle: Account manager, Central team\n- Lev Arkadin: Procurement lead\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Tansley Parcel: regional parcel delivery, South Central; main contact Lev Arkadin, Procurement lead; codes/nicknames TPCL, TP\n- Tansleigh Packaging: corrugated packaging manufacturer, Ohio Valley; codes/nicknames TSP, TP\n- Marrow Fieldworks: agricultural equipment dealer network, Plains; codes/nicknames MFW\n- Marrow Agrisupply: farm supply retail chain, Plains; subsidiary of Marrow Fieldworks; codes/nicknames MAS, Marrow Agri\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2025-10-20 (background only; don't restate unless the brief asks):\n- Tansley Parcel: managed by Priyanka \"Pree\" Sundaram\n- Tansleigh Packaging: not stated on any shared page (do not say who manages it)\n- Marrow Fieldworks: managed by Priyanka \"Pree\" Sundaram\n- Marrow Agrisupply: managed by Central team (pooled account)",
+      "response_text": "# Central weekly Oct 20\n\nWritten 2025-10-20\n\n## Marrow Agrisupply\n- On Tier 1 now. Updated the Central queue view this morning; new items should land there rather than sit in the general intake list.\n- The team's farm supply account needs a cleaner shift handoff, not another walkthrough of the whole scheduler.\n- Friday's snag: the receiving supervisor moved a fertilizer delivery from door 4 to door 6, but the afternoon crew worked from an earlier printed schedule. Driver waited at the wrong door until someone checked the live board.\n- I'll pull the event history and attach it to ticket CS-4821. Need the print timestamp visible in the screenshot before we send it back.\n- Keep the next check-in focused on changed appointments and who prints the final sheet. Still waiting for the updated recieving checklist.\n\n## Tansley Parcel\n- QBR went well. Lev Arkadin stayed for the operational review and asked useful questions about late-arrival reporting.\n- The overnight team wants a report that separates trucks arriving late from appointments moved after the shift started. Current export makes those look too similar at a glance.\n- I'll send the annotated “Arrival Exceptions” sample on Oct 22. Highlight the two rows discussed in the QBR rather than resend the full deck.\n- Small follow-up: replace the blurry door-board screenshot. It was readable on the call, less so in the PDF.\n\n## Loose ends\n- No new concerns on the account Pree runs.\n- Queue cleanup on 2025-10-23: merge duplicate screenshot requests, leave the original driver note attached.\n- Before Friday, check that the revised handoff sheet opens properly on the break-room tablet. Last week's copy needed sideways scrolling.",
+      "usage": {
+        "input_tokens": 1134,
+        "output_tokens": 360,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.005868,
+      "provider_meta": {
+        "id": "resp_0870f13c6cf5e47a016acfae73d2cc87d19b5760c510431b6a",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1134,
+          "input_tokens_details": {
+            "cache_write_tokens": 1131,
+            "cached_tokens": 0
+          },
+          "output_tokens": 360,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 1494
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

@@ -1,0 +1,113 @@
+{
+  "slug": "tickets/2026-01-20-bwf-invoice-dispute",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2026-01-20",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Brackenwater",
+        "line": 6
+      },
+      {
+        "oid": "e2",
+        "surface": "Brackenwater Freight Co.",
+        "line": 10
+      },
+      {
+        "oid": "e3",
+        "surface": "BWF",
+        "line": 10
+      },
+      {
+        "oid": "e4",
+        "surface": "Stoneharrow Billing",
+        "line": 13
+      },
+      {
+        "oid": "e5",
+        "surface": "Brackenwater Freight Co.",
+        "line": 18
+      },
+      {
+        "oid": "e6",
+        "surface": "Stoneharrow Billing",
+        "line": 18
+      },
+      {
+        "oid": "e7",
+        "surface": "Stoneharrow Billing",
+        "line": 21
+      },
+      {
+        "oid": "e8",
+        "surface": "BWF",
+        "line": 24
+      }
+    ],
+    "claims": [],
+    "events": [
+      {
+        "eid": "e-bwf-billing-dispute",
+        "question": "Does the page describe this: \"Brackenwater escalates a double-billed invoice\"? If so, on what date does the text place it?"
+      }
+    ],
+    "ownership": []
+  },
+  "prompt_user_sha256": "7e832afe927fea16d2dedc1fbb053c536ff61453d695348e7c93f6677c2fd36f",
+  "response_text": "{\n  \"date_used\": \"2026-01-20\",\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\"oid\": \"e1\", \"entity\": \"brackenwater\"},\n    {\"oid\": \"e2\", \"entity\": \"brackenwater\"},\n    {\"oid\": \"e3\", \"entity\": \"brackenwater\"},\n    {\"oid\": \"e4\", \"entity\": \"stoneharrow\"},\n    {\"oid\": \"e5\", \"entity\": \"brackenwater\"},\n    {\"oid\": \"e6\", \"entity\": \"stoneharrow\"},\n    {\"oid\": \"e7\", \"entity\": \"stoneharrow\"},\n    {\"oid\": \"e8\", \"entity\": \"brackenwater\"}\n  ],\n  \"events\": [\n    {\n      \"eid\": \"e-bwf-billing-dispute\",\n      \"present\": true,\n      \"date\": \"2026-01-20\",\n      \"line\": 18\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2026-01-20",
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "brackenwater"
+      },
+      {
+        "oid": "e2",
+        "entity": "brackenwater"
+      },
+      {
+        "oid": "e3",
+        "entity": "brackenwater"
+      },
+      {
+        "oid": "e4",
+        "entity": "stoneharrow"
+      },
+      {
+        "oid": "e5",
+        "entity": "brackenwater"
+      },
+      {
+        "oid": "e6",
+        "entity": "stoneharrow"
+      },
+      {
+        "oid": "e7",
+        "entity": "stoneharrow"
+      },
+      {
+        "oid": "e8",
+        "entity": "brackenwater"
+      }
+    ],
+    "events": [
+      {
+        "eid": "e-bwf-billing-dispute",
+        "present": true,
+        "date": "2026-01-20",
+        "line": 18
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2972,
+    "output_tokens": 215,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.008094
+}

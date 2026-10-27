@@ -1,0 +1,95 @@
+{
+  "slug": "emails/2025-11-06-quarrendon-exec-call",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2025-11-06",
+    "owner_phrases": [
+      {
+        "mid": "emails/2025-11-06-quarrendon-exec-call#m1",
+        "phrase": "Dana's freight account",
+        "lines": [
+          16
+        ]
+      },
+      {
+        "mid": "emails/2025-11-06-quarrendon-exec-call#m2",
+        "phrase": "Thea's company",
+        "lines": [
+          26
+        ]
+      }
+    ],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Stoneharrow Billing",
+        "line": 15
+      }
+    ],
+    "claims": [],
+    "events": [
+      {
+        "eid": "e-qfl-exec-call",
+        "question": "Does the page describe this: \"Executive call with Quarrendon after the Sev 1\"? If so, on what date does the text place it?"
+      },
+      {
+        "eid": "e-qfl-sev1",
+        "question": "Does the page describe this: \"Sev 1 escalation: dock schedule sync outage at Quarrendon's Superior terminal\"? If so, on what date does the text place it?"
+      }
+    ],
+    "ownership": []
+  },
+  "prompt_user_sha256": "5c511adce434233976d5aafdaedb1137fb88bc19b82b784f4c89841b01033eef",
+  "response_text": "{\n  \"date_used\": \"2025-11-06\",\n  \"owner_phrases\": [\n    {\n      \"mid\": \"emails/2025-11-06-quarrendon-exec-call#m1\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\"quarrendon\"],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"Dana owns Quarrendon on this date; the freight descriptor and Thea's involvement identify that account.\"\n    },\n    {\n      \"mid\": \"emails/2025-11-06-quarrendon-exec-call#m2\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\"quarrendon\"],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"Thea is Director of Yard Operations at Quarrendon Freight Lines, so her company is that customer account.\"\n    }\n  ],\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"stoneharrow\"\n    }\n  ],\n  \"events\": [\n    {\n      \"eid\": \"e-qfl-exec-call\",\n      \"present\": true,\n      \"date\": \"2025-11-06\",\n      \"line\": 12\n    },\n    {\n      \"eid\": \"e-qfl-sev1\",\n      \"present\": false,\n      \"date\": null,\n      \"line\": 14\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-11-06",
+    "owner_phrases": [
+      {
+        "mid": "emails/2025-11-06-quarrendon-exec-call#m1",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "quarrendon"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "Dana owns Quarrendon on this date; the freight descriptor and Thea's involvement identify that account."
+      },
+      {
+        "mid": "emails/2025-11-06-quarrendon-exec-call#m2",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "quarrendon"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "Thea is Director of Yard Operations at Quarrendon Freight Lines, so her company is that customer account."
+      }
+    ],
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "stoneharrow"
+      }
+    ],
+    "events": [
+      {
+        "eid": "e-qfl-exec-call",
+        "present": true,
+        "date": "2025-11-06",
+        "line": 12
+      },
+      {
+        "eid": "e-qfl-sev1",
+        "present": false,
+        "date": null,
+        "line": 14
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 3097,
+    "output_tokens": 398,
+    "thinking_tokens": 59
+  },
+  "cost_usd": 0.010174
+}

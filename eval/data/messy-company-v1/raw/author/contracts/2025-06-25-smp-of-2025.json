@@ -1,0 +1,41 @@
+{
+  "slug": "contracts/2025-06-25-smp-of-2025",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: record\nTitle: Order Form: Saltmarsh Provisions\nDate: Written on 2025-06-25.\nWriter: June Osei-Lark\nVoice: formal legal drafting\nFormat: formal numbered sections and a signature block\nLength: about 345 words\nDate style in the body: undefined\nTypos: none\n\nBrief:\nOrder Form: Saltmarsh Provisions. Parties: Pemberline Systems and Saltmarsh Provisions. Drafted 2025-06-09. Effective date 2025-07-01 (signed 2025-06-25; state both dates and keep them distinct). Terms this document sets: subscribed seats = 70; price per seat per year (USD) = 1780; discount (%) = 7; end of the current term (renewal date) = 2026-06-30. Executed: include a signature block signed on 2025-06-25 by both parties (customer signatory plus June Osei-Lark for Pemberline).\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Bettina Kroll: Coastal team lead\n- Sofia Marchetti: Account manager, Coastal team\n- Kwame Adjei-Rowe: Account manager, Coastal team\n- Corinne Ashdown: VP Operations\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Pellucid Harbor Logistics: port drayage and terminal logistics, Gulf Coast; codes/nicknames PHL\n- Driftmoor Marine Freight: marine freight and barge operator, Puget Sound; codes/nicknames DMF\n- Saltmarsh Provisions: regional grocery distributor, Lowcountry; main contact Corinne Ashdown, VP Operations; codes/nicknames SMP\n- Covey & Lark Retail: home goods retailer, Mid-Atlantic; codes/nicknames Covey, CLR\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2025-06-25 (background only; don't restate unless the brief asks):\n- Pellucid Harbor Logistics: managed by Bettina Kroll\n- Driftmoor Marine Freight: managed by Kwame Adjei-Rowe\n- Saltmarsh Provisions: managed by Sofia Marchetti\n- Covey & Lark Retail: managed by Sofia Marchetti",
+      "response_text": "# Order Form: Saltmarsh Provisions\n\n**Document Reference:** OF-SMP-2025-06  \n**Drafted Date:** 2025-06-09  \n**Execution Date:** 2025-06-25  \n**Effective Date:** 2025-07-01  \n\nThis Order Form (\"Order Form\") is entered into by and between **Pemberline Systems** (\"Provider\") and **Saltmarsh Provisions** (\"Customer,\" internal account code SMP). Although executed by the parties on the Execution Date of 2025-06-25, the subscription rights and obligations set forth herein shall commence on the Effective Date of 2025-07-01.\n\n### 1. Subscription Services and Scope\n1.1 **Software:** Provider grants Customer a non-exclusive, non-transferable right to access and use the Pemberline Dock yard and dock scheduling software platform during the Order Form Term.  \n1.2 **Operational Deployment:** The provisioned environment shall be configured to support Customer’s Lowcountry regional grocery distribution centers, including the dry goods receiving bays (Dock Doors 1 through 14) and the refrigerated cross-docking apron at the Beaufort depot, as well as the carrier check-in kiosk at the North Charleston cold storage annex.\n\n### 2. Commercial Terms and Pricing\n2.1 **Subscribed Seats:** 70 seats.  \n2.2 **Standard List Rate:** $1,780 USD per seat per year.  \n2.3 **Applicable Discount:** 7% off the Standard List Rate.  \n2.4 **Fee Calculation:** Fees are calculated on an annual per-seat basis in accordance with the subscribed seat count, list rate, and discount stated in Sections 2.1 through 2.3 above.\n\n### 3. Term and Renewal\n3.1 **Order Form Term:** The subscription term governed by this Order Form commences on the Effective Date of 2025-07-01 and continues through the end of the current term (renewal date) on 2026-06-30, at 11:59 PM Eastern Time.\n\n### 4. Administrative Contacts\n4.1 **Customer Operational Notices:** Corinne Ashdown, VP Operations, Saltmarsh Provisions (routing: Beaufort main gate house administration office).  \n4.2 **Billing and Provisioning:** All seat provisioning tickets (referencing onboarding batch #SMP-8841 for third-shift yard spotters and daytime dispatchers) shall be directed to Provider’s Deal Desk upon execution.\n\n---\n\n### 5. Execution\n\nIN WITNESS WHEREOF, the duly authorized representatives of the parties have executed this Order Form on 2025-06-25.\n\n**SALTMARSH PROVISIONS**  \nSignature: _/s/ Corinne Ashdown_  \nName: Corinne Ashdown  \nTitle: VP Operations  \nDate Signed: 2025-06-25  \n\n**PEMBERLINE SYSTEMS**  \nSignature: _/s/ June Osei-Lark_  \nName: June Osei-Lark  \nTitle: Deal Desk and Contracts Manager  \nDate Signed: 2025-06-25",
+      "usage": {
+        "input_tokens": 1181,
+        "output_tokens": 709,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.009452,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1181,
+          "candidatesTokenCount": 709,
+          "totalTokenCount": 1890,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1181
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 709
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

@@ -1,0 +1,141 @@
+{
+  "slug": "contracts/2024-12-09-dmf-of-2025",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2024-12-09",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Driftmoor Marine Freight",
+        "line": 7
+      },
+      {
+        "oid": "e2",
+        "surface": "Driftmoor Marine Freight",
+        "line": 11
+      },
+      {
+        "oid": "e3",
+        "surface": "DMF",
+        "line": 13
+      },
+      {
+        "oid": "e4",
+        "surface": "Driftmoor Marine Freight",
+        "line": 13
+      },
+      {
+        "oid": "e5",
+        "surface": "Driftmoor Marine Freight",
+        "line": 58
+      },
+      {
+        "oid": "e6",
+        "surface": "Driftmoor Marine Freight",
+        "line": 72
+      },
+      {
+        "oid": "e7",
+        "surface": "Driftmoor Marine Freight",
+        "line": 89
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": [],
+    "record": {
+      "question": "Is this document signed, an unsigned version, or a draft? Judge from the body text, not the title alone. Give its signed date and effective date if stated, and the value of each of these terms it sets.",
+      "terms": [
+        "seats",
+        "price_per_seat",
+        "discount_pct",
+        "renewal_date"
+      ]
+    }
+  },
+  "prompt_user_sha256": "2ab8cf64eba7ed1f29358abe30f8807d6c9890df5988db53dcd8aadc99568a26",
+  "response_text": "{\n  \"date_used\": \"2024-12-09\",\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"driftmoor\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"driftmoor\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"driftmoor\"\n    },\n    {\n      \"oid\": \"e4\",\n      \"entity\": \"driftmoor\"\n    },\n    {\n      \"oid\": \"e5\",\n      \"entity\": \"driftmoor\"\n    },\n    {\n      \"oid\": \"e6\",\n      \"entity\": \"driftmoor\"\n    },\n    {\n      \"oid\": \"e7\",\n      \"entity\": \"driftmoor\"\n    }\n  ],\n  \"record\": {\n    \"status\": \"signed\",\n    \"status_evidence_line\": 19,\n    \"signed_date\": \"2024-12-09\",\n    \"effective_date\": \"2025-01-01\",\n    \"terms\": [\n      {\n        \"term\": \"seats\",\n        \"applies_to\": [\n          \"driftmoor\"\n        ],\n        \"value\": \"55\",\n        \"line\": 32\n      },\n      {\n        \"term\": \"price_per_seat\",\n        \"applies_to\": [\n          \"driftmoor\"\n        ],\n        \"value\": \"$1,820.00\",\n        \"line\": 33\n      },\n      {\n        \"term\": \"discount_pct\",\n        \"applies_to\": [\n          \"driftmoor\"\n        ],\n        \"value\": \"6%\",\n        \"line\": 34\n      },\n      {\n        \"term\": \"renewal_date\",\n        \"applies_to\": [\n          \"driftmoor\"\n        ],\n        \"value\": \"2025-12-31\",\n        \"line\": 36\n      }\n    ],\n    \"deciding_line\": 19,\n    \"deciding_days\": null\n  }\n}",
+  "parsed": {
+    "date_used": "2024-12-09",
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "driftmoor"
+      },
+      {
+        "oid": "e2",
+        "entity": "driftmoor"
+      },
+      {
+        "oid": "e3",
+        "entity": "driftmoor"
+      },
+      {
+        "oid": "e4",
+        "entity": "driftmoor"
+      },
+      {
+        "oid": "e5",
+        "entity": "driftmoor"
+      },
+      {
+        "oid": "e6",
+        "entity": "driftmoor"
+      },
+      {
+        "oid": "e7",
+        "entity": "driftmoor"
+      }
+    ],
+    "record": {
+      "status": "signed",
+      "status_evidence_line": 19,
+      "signed_date": "2024-12-09",
+      "effective_date": "2025-01-01",
+      "terms": [
+        {
+          "term": "seats",
+          "applies_to": [
+            "driftmoor"
+          ],
+          "value": "55",
+          "line": 32
+        },
+        {
+          "term": "price_per_seat",
+          "applies_to": [
+            "driftmoor"
+          ],
+          "value": "$1,820.00",
+          "line": 33
+        },
+        {
+          "term": "discount_pct",
+          "applies_to": [
+            "driftmoor"
+          ],
+          "value": "6%",
+          "line": 34
+        },
+        {
+          "term": "renewal_date",
+          "applies_to": [
+            "driftmoor"
+          ],
+          "value": "2025-12-31",
+          "line": 36
+        }
+      ],
+      "deciding_line": 19,
+      "deciding_days": null
+    }
+  },
+  "usage": {
+    "input_tokens": 4511,
+    "output_tokens": 518,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.014202
+}

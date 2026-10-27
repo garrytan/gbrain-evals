@@ -1,0 +1,43 @@
+{
+ "benches": [
+  {
+   "benchmark": "lme-s",
+   "freeze": [
+    "docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/results/lme-s/freeze/shard-0/retrievals/rows.ndjson.gz",
+    "docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/results/lme-s/freeze/shard-1/retrievals/rows.ndjson.gz",
+    "docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/results/lme-s/freeze/shard-2/retrievals/rows.ndjson.gz",
+    "docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/results/lme-s/freeze/shard-3/retrievals/rows.ndjson.gz",
+    "docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/results/lme-s/freeze/shard-4/retrievals/rows.ndjson.gz",
+    "docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/results/lme-s/freeze/shard-5/retrievals/rows.ndjson.gz",
+    "docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/results/lme-s/freeze/shard-6/retrievals/rows.ndjson.gz",
+    "docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/results/lme-s/freeze/shard-7/retrievals/rows.ndjson.gz"
+   ],
+   "cluster": "question"
+  },
+  {
+   "benchmark": "locomo",
+   "freeze": [
+    "docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/results/locomo/freeze/shard-0/retrievals/rows.ndjson.gz",
+    "docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/results/locomo/freeze/shard-1/retrievals/rows.ndjson.gz",
+    "docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/results/locomo/freeze/shard-2/retrievals/rows.ndjson.gz"
+   ],
+   "cluster": "conversation"
+  },
+  {
+   "benchmark": "beam-100k",
+   "freeze": [
+    "docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/results/beam-100k/freeze/shard-0/retrievals/rows.ndjson.gz",
+    "docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/results/beam-100k/freeze/shard-1/retrievals/rows.ndjson.gz",
+    "docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/results/beam-100k/freeze/shard-2/retrievals/rows.ndjson.gz",
+    "docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/results/beam-100k/freeze/shard-3/retrievals/rows.ndjson.gz",
+    "docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/results/beam-100k/freeze/shard-4/retrievals/rows.ndjson.gz",
+    "docs/benchmarks/2026-10-09-gbrain-budgeted-delivery-e2/results/beam-100k/freeze/shard-5/retrievals/rows.ndjson.gz"
+   ],
+   "cluster": "conversation"
+  }
+ ],
+ "slice": {
+  "limit": 100,
+  "seed": 42
+ }
+}

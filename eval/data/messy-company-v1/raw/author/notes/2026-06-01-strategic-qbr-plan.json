@@ -1,0 +1,37 @@
+{
+  "slug": "notes/2026-06-01-strategic-qbr-plan",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: note\nTitle: Strategic QBR plan, summer 2026\nDate: Written on 2026-06-01.\nWriter: Ruth Calloway\nVoice: hurried, lots of fragments\nFormat: a short internal note\nLength: about 115 words\nDate style in the body: US short (6/2/25)\nTypos: none\n\nBrief:\nRuth's planning doc: QBR calendar, a small table.\n\nRequired phrases:\n- Use the exact phrase \"Gideon's biggest account\" once, referring to Vantorre Group. Don't put the account's name in the same sentence; the reader should work it out.\n- Use the exact phrase \"Gideon's fleet account\" once, referring to Vantorre Mobility. Don't put the account's name in the same sentence; the reader should work it out.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Nadia Fennimore: Strategic account manager\n- Gideon Sato: Strategic account manager\n- Mateo Quiroga: Head of Procurement\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Vantorre Group: diversified industrial manufacturer, Northeast; main contact Mateo Quiroga, Head of Procurement; codes/nicknames VTG, VTRG\n- Vantorre Mobility: electric fleet services subsidiary, Northeast; subsidiary of Vantorre Group; codes/nicknames VTM, VMob\n- Orlavine Medical Supply: medical supply distributor, Mountain West; codes/nicknames OMS\n- Quillfeather Outfitters: outdoor gear retailer, Mountain West; codes/nicknames QFO\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2026-06-01 (background only; don't restate unless the brief asks):\n- Vantorre Group: managed by Gideon Sato\n- Vantorre Mobility: managed by Gideon Sato\n- Orlavine Medical Supply: not stated on any shared page (do not say who manages it)\n- Quillfeather Outfitters: managed by Strategic Accounts pod (pooled account)",
+      "response_text": "# Strategic QBR plan, summer 2026\n\n6/1/26 — Calendar draft. Hold these slots; agendas still rough.\n\n| Target date | Account | Prep |\n|---|---|---|\n| 6/16/26 | Vantorre Group | Mateo Quiroga: procurement questions, dock utilization |\n| 6/23/26 | Vantorre Mobility | Overnight arrivals, gate queue |\n| 7/7/26 | Orlavine Medical Supply | Receiving exceptions |\n| 7/14/26 | Quillfeather Outfitters | Summer inbound volume |\n\nFirst row: Gideon's biggest account. Need the door 12 rescheduling example, not another dashboard tour.\n\nSecond row: Gideon's fleet account. Keep separate from the parent discussion; different receiving headaches.\n\nAsk Gideon for arrival screenshots by Friday. June to collect contract questions before invitations go out. Pull Pemberline Dock exception reports Tuesday morning. Leave ten minutes for customer complaints; last-minute carrier changes keep swallowing the agenda.",
+      "usage": {
+        "input_tokens": 1064,
+        "output_tokens": 211,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.004238,
+      "provider_meta": {
+        "id": "resp_00dade38694988d5016acfaee1aa8c87d18fc10da23fb6d9ba",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1064,
+          "input_tokens_details": {
+            "cache_write_tokens": 1061,
+            "cached_tokens": 0
+          },
+          "output_tokens": 211,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 1275
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

@@ -1,0 +1,342 @@
+{
+  "slug": "contracts/2025-04-08-mfw-msa",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2025-04-08",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Marrow Fieldworks",
+        "line": 7
+      },
+      {
+        "oid": "e2",
+        "surface": "Marrow Fieldworks",
+        "line": 15
+      },
+      {
+        "oid": "e3",
+        "surface": "Marrow Agrisupply",
+        "line": 15
+      },
+      {
+        "oid": "e4",
+        "surface": "Marrow Agrisupply",
+        "line": 15
+      },
+      {
+        "oid": "e5",
+        "surface": "Marrow Fieldworks",
+        "line": 15
+      },
+      {
+        "oid": "e6",
+        "surface": "Marrow Fieldworks",
+        "line": 17
+      },
+      {
+        "oid": "e7",
+        "surface": "Marrow Agrisupply",
+        "line": 17
+      },
+      {
+        "oid": "e8",
+        "surface": "Marrow Fieldworks",
+        "line": 25
+      },
+      {
+        "oid": "e9",
+        "surface": "Marrow Agrisupply",
+        "line": 25
+      },
+      {
+        "oid": "e10",
+        "surface": "Marrow Fieldworks",
+        "line": 33
+      },
+      {
+        "oid": "e11",
+        "surface": "Marrow Agrisupply",
+        "line": 34
+      },
+      {
+        "oid": "e12",
+        "surface": "Marrow Fieldworks",
+        "line": 36
+      },
+      {
+        "oid": "e13",
+        "surface": "Marrow Agrisupply",
+        "line": 36
+      },
+      {
+        "oid": "e14",
+        "surface": "Marrow Agrisupply",
+        "line": 42
+      },
+      {
+        "oid": "e15",
+        "surface": "Marrow Fieldworks",
+        "line": 44
+      },
+      {
+        "oid": "e16",
+        "surface": "Marrow Fieldworks",
+        "line": 44
+      },
+      {
+        "oid": "e17",
+        "surface": "Marrow Agrisupply",
+        "line": 44
+      },
+      {
+        "oid": "e18",
+        "surface": "Marrow Agrisupply",
+        "line": 44
+      },
+      {
+        "oid": "e19",
+        "surface": "Marrow Fieldworks",
+        "line": 44
+      },
+      {
+        "oid": "e20",
+        "surface": "Marrow Fieldworks",
+        "line": 58
+      },
+      {
+        "oid": "e21",
+        "surface": "Marrow Agrisupply",
+        "line": 58
+      },
+      {
+        "oid": "e22",
+        "surface": "Marrow Fieldworks",
+        "line": 74
+      },
+      {
+        "oid": "e23",
+        "surface": "Marrow Agrisupply",
+        "line": 74
+      },
+      {
+        "oid": "e24",
+        "surface": "Marrow Fieldworks",
+        "line": 92
+      },
+      {
+        "oid": "e25",
+        "surface": "Marrow Agrisupply",
+        "line": 92
+      },
+      {
+        "oid": "e26",
+        "surface": "Marrow Fieldworks",
+        "line": 103
+      },
+      {
+        "oid": "e27",
+        "surface": "Marrow Agrisupply",
+        "line": 103
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": [],
+    "record": {
+      "question": "Is this document signed, an unsigned version, or a draft? Judge from the body text, not the title alone. Give its signed date and effective date if stated, and the value of each of these terms it sets.",
+      "terms": [
+        "seats",
+        "price_per_seat",
+        "discount_pct",
+        "renewal_date",
+        "sla_tier"
+      ]
+    }
+  },
+  "prompt_user_sha256": "90e44a087e5b1e6f87922f5b3751c4f84c21c902a95b656c3f0c1ba34b72f350",
+  "response_text": "{\n  \"date_used\": \"2025-04-08\",\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"marrow-fieldworks\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"marrow-fieldworks\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"marrow-agrisupply\"\n    },\n    {\n      \"oid\": \"e4\",\n      \"entity\": \"marrow-agrisupply\"\n    },\n    {\n      \"oid\": \"e5\",\n      \"entity\": \"marrow-fieldworks\"\n    },\n    {\n      \"oid\": \"e6\",\n      \"entity\": \"marrow-fieldworks\"\n    },\n    {\n      \"oid\": \"e7\",\n      \"entity\": \"marrow-agrisupply\"\n    },\n    {\n      \"oid\": \"e8\",\n      \"entity\": \"marrow-fieldworks\"\n    },\n    {\n      \"oid\": \"e9\",\n      \"entity\": \"marrow-agrisupply\"\n    },\n    {\n      \"oid\": \"e10\",\n      \"entity\": \"marrow-fieldworks\"\n    },\n    {\n      \"oid\": \"e11\",\n      \"entity\": \"marrow-agrisupply\"\n    },\n    {\n      \"oid\": \"e12\",\n      \"entity\": \"marrow-fieldworks\"\n    },\n    {\n      \"oid\": \"e13\",\n      \"entity\": \"marrow-agrisupply\"\n    },\n    {\n      \"oid\": \"e14\",\n      \"entity\": \"marrow-agrisupply\"\n    },\n    {\n      \"oid\": \"e15\",\n      \"entity\": \"marrow-fieldworks\"\n    },\n    {\n      \"oid\": \"e16\",\n      \"entity\": \"marrow-fieldworks\"\n    },\n    {\n      \"oid\": \"e17\",\n      \"entity\": \"marrow-agrisupply\"\n    },\n    {\n      \"oid\": \"e18\",\n      \"entity\": \"marrow-agrisupply\"\n    },\n    {\n      \"oid\": \"e19\",\n      \"entity\": \"marrow-fieldworks\"\n    },\n    {\n      \"oid\": \"e20\",\n      \"entity\": \"marrow-fieldworks\"\n    },\n    {\n      \"oid\": \"e21\",\n      \"entity\": \"marrow-agrisupply\"\n    },\n    {\n      \"oid\": \"e22\",\n      \"entity\": \"marrow-fieldworks\"\n    },\n    {\n      \"oid\": \"e23\",\n      \"entity\": \"marrow-agrisupply\"\n    },\n    {\n      \"oid\": \"e24\",\n      \"entity\": \"marrow-fieldworks\"\n    },\n    {\n      \"oid\": \"e25\",\n      \"entity\": \"marrow-agrisupply\"\n    },\n    {\n      \"oid\": \"e26\",\n      \"entity\": \"marrow-fieldworks\"\n    },\n    {\n      \"oid\": \"e27\",\n      \"entity\": \"marrow-agrisupply\"\n    }\n  ],\n  \"record\": {\n    \"status\": \"signed\",\n    \"status_evidence_line\": 98,\n    \"signed_date\": \"2025-04-08\",\n    \"effective_date\": \"2025-05-01\",\n    \"terms\": [\n      {\n        \"term\": \"seats\",\n        \"applies_to\": [\n          \"marrow-fieldworks\"\n        ],\n        \"value\": \"90\",\n        \"line\": 33\n      },\n      {\n        \"term\": \"seats\",\n        \"applies_to\": [\n          \"marrow-agrisupply\"\n        ],\n        \"value\": \"25\",\n        \"line\": 34\n      },\n      {\n        \"term\": \"price_per_seat\",\n        \"applies_to\": [\n          \"marrow-fieldworks\",\n          \"marrow-agrisupply\"\n        ],\n        \"value\": \"1800\",\n        \"line\": 33\n      },\n      {\n        \"term\": \"discount_pct\",\n        \"applies_to\": [\n          \"marrow-fieldworks\",\n          \"marrow-agrisupply\"\n        ],\n        \"value\": \"10%\",\n        \"line\": 33\n      },\n      {\n        \"term\": \"renewal_date\",\n        \"applies_to\": [\n          \"marrow-fieldworks\",\n          \"marrow-agrisupply\"\n        ],\n        \"value\": \"2026-04-30\",\n        \"line\": 25\n      },\n      {\n        \"term\": \"sla_tier\",\n        \"applies_to\": [\n          \"marrow-fieldworks\",\n          \"marrow-agrisupply\"\n        ],\n        \"value\": \"Tier 2\",\n        \"line\": 33\n      }\n    ],\n    \"deciding_line\": null,\n    \"deciding_days\": null\n  }\n}",
+  "parsed": {
+    "date_used": "2025-04-08",
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "marrow-fieldworks"
+      },
+      {
+        "oid": "e2",
+        "entity": "marrow-fieldworks"
+      },
+      {
+        "oid": "e3",
+        "entity": "marrow-agrisupply"
+      },
+      {
+        "oid": "e4",
+        "entity": "marrow-agrisupply"
+      },
+      {
+        "oid": "e5",
+        "entity": "marrow-fieldworks"
+      },
+      {
+        "oid": "e6",
+        "entity": "marrow-fieldworks"
+      },
+      {
+        "oid": "e7",
+        "entity": "marrow-agrisupply"
+      },
+      {
+        "oid": "e8",
+        "entity": "marrow-fieldworks"
+      },
+      {
+        "oid": "e9",
+        "entity": "marrow-agrisupply"
+      },
+      {
+        "oid": "e10",
+        "entity": "marrow-fieldworks"
+      },
+      {
+        "oid": "e11",
+        "entity": "marrow-agrisupply"
+      },
+      {
+        "oid": "e12",
+        "entity": "marrow-fieldworks"
+      },
+      {
+        "oid": "e13",
+        "entity": "marrow-agrisupply"
+      },
+      {
+        "oid": "e14",
+        "entity": "marrow-agrisupply"
+      },
+      {
+        "oid": "e15",
+        "entity": "marrow-fieldworks"
+      },
+      {
+        "oid": "e16",
+        "entity": "marrow-fieldworks"
+      },
+      {
+        "oid": "e17",
+        "entity": "marrow-agrisupply"
+      },
+      {
+        "oid": "e18",
+        "entity": "marrow-agrisupply"
+      },
+      {
+        "oid": "e19",
+        "entity": "marrow-fieldworks"
+      },
+      {
+        "oid": "e20",
+        "entity": "marrow-fieldworks"
+      },
+      {
+        "oid": "e21",
+        "entity": "marrow-agrisupply"
+      },
+      {
+        "oid": "e22",
+        "entity": "marrow-fieldworks"
+      },
+      {
+        "oid": "e23",
+        "entity": "marrow-agrisupply"
+      },
+      {
+        "oid": "e24",
+        "entity": "marrow-fieldworks"
+      },
+      {
+        "oid": "e25",
+        "entity": "marrow-agrisupply"
+      },
+      {
+        "oid": "e26",
+        "entity": "marrow-fieldworks"
+      },
+      {
+        "oid": "e27",
+        "entity": "marrow-agrisupply"
+      }
+    ],
+    "record": {
+      "status": "signed",
+      "status_evidence_line": 98,
+      "signed_date": "2025-04-08",
+      "effective_date": "2025-05-01",
+      "terms": [
+        {
+          "term": "seats",
+          "applies_to": [
+            "marrow-fieldworks"
+          ],
+          "value": "90",
+          "line": 33
+        },
+        {
+          "term": "seats",
+          "applies_to": [
+            "marrow-agrisupply"
+          ],
+          "value": "25",
+          "line": 34
+        },
+        {
+          "term": "price_per_seat",
+          "applies_to": [
+            "marrow-fieldworks",
+            "marrow-agrisupply"
+          ],
+          "value": "1800",
+          "line": 33
+        },
+        {
+          "term": "discount_pct",
+          "applies_to": [
+            "marrow-fieldworks",
+            "marrow-agrisupply"
+          ],
+          "value": "10%",
+          "line": 33
+        },
+        {
+          "term": "renewal_date",
+          "applies_to": [
+            "marrow-fieldworks",
+            "marrow-agrisupply"
+          ],
+          "value": "2026-04-30",
+          "line": 25
+        },
+        {
+          "term": "sla_tier",
+          "applies_to": [
+            "marrow-fieldworks",
+            "marrow-agrisupply"
+          ],
+          "value": "Tier 2",
+          "line": 33
+        }
+      ],
+      "deciding_line": null,
+      "deciding_days": null
+    }
+  },
+  "usage": {
+    "input_tokens": 5715,
+    "output_tokens": 1265,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.02408
+}

@@ -1,0 +1,97 @@
+{
+  "slug": "updates/2025-07-28-north-weekly",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2025-07-28",
+    "owner_phrases": [
+      {
+        "mid": "updates/2025-07-28-north-weekly#m1",
+        "phrase": "Dana's freight account",
+        "lines": [
+          16
+        ]
+      },
+      {
+        "mid": "updates/2025-07-28-north-weekly#m2",
+        "phrase": "her biggest customer",
+        "lines": [
+          11
+        ]
+      },
+      {
+        "mid": "updates/2025-07-28-north-weekly#m3",
+        "phrase": "Dana's account of the QBR",
+        "lines": [
+          12
+        ]
+      }
+    ],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Quarrendon Freight Lines",
+        "line": 11
+      }
+    ],
+    "claims": [],
+    "events": [
+      {
+        "eid": "e-qfl-qbr-2025",
+        "question": "Does the page describe this: \"Quarrendon quarterly business review in Duluth\"? If so, on what date does the text place it?"
+      }
+    ],
+    "ownership": []
+  },
+  "prompt_user_sha256": "9862981bd8e1f8e109b10039490966647dcdd63b44c2a55d7446c68cb1bce3d2",
+  "response_text": "{\n  \"date_used\": \"2025-07-22\",\n  \"owner_phrases\": [\n    {\n      \"mid\": \"updates/2025-07-28-north-weekly#m1\",\n      \"refers_to_customer_account\": false,\n      \"accounts\": [],\n      \"reading\": \"ambiguous: could be more than one account\",\n      \"note\": \"Dana owned both Quarrendon and Brackenwater on this date, and both are freight accounts. The expense reference does not specify which.\"\n    },\n    {\n      \"mid\": \"updates/2025-07-28-north-weekly#m2\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\"quarrendon\"],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"The sentence identifies the on-site customer as Quarrendon Freight Lines; 'her' refers to Dana.\"\n    },\n    {\n      \"mid\": \"updates/2025-07-28-north-weekly#m3\",\n      \"refers_to_customer_account\": false,\n      \"accounts\": [],\n      \"reading\": \"not about a customer account (a login, device, HR/expense account, a narrative 'account of', a vendor relationship, an employer)\",\n      \"note\": \"This means Dana's narrative recap of the QBR, not a customer account.\"\n    }\n  ],\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"quarrendon\"\n    }\n  ],\n  \"events\": [\n    {\n      \"eid\": \"e-qfl-qbr-2025\",\n      \"present\": true,\n      \"date\": \"2025-07-22\",\n      \"line\": 11\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-07-22",
+    "owner_phrases": [
+      {
+        "mid": "updates/2025-07-28-north-weekly#m1",
+        "refers_to_customer_account": false,
+        "accounts": [],
+        "reading": "ambiguous: could be more than one account",
+        "note": "Dana owned both Quarrendon and Brackenwater on this date, and both are freight accounts. The expense reference does not specify which."
+      },
+      {
+        "mid": "updates/2025-07-28-north-weekly#m2",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "quarrendon"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "The sentence identifies the on-site customer as Quarrendon Freight Lines; 'her' refers to Dana."
+      },
+      {
+        "mid": "updates/2025-07-28-north-weekly#m3",
+        "refers_to_customer_account": false,
+        "accounts": [],
+        "reading": "not about a customer account (a login, device, HR/expense account, a narrative 'account of', a vendor relationship, an employer)",
+        "note": "This means Dana's narrative recap of the QBR, not a customer account."
+      }
+    ],
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "quarrendon"
+      }
+    ],
+    "events": [
+      {
+        "eid": "e-qfl-qbr-2025",
+        "present": true,
+        "date": "2025-07-22",
+        "line": 11
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2886,
+    "output_tokens": 452,
+    "thinking_tokens": 60
+  },
+  "cost_usd": 0.010292
+}

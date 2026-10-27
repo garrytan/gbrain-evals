@@ -1,0 +1,160 @@
+{
+  "slug": "updates/2025-10-06-coastal-weekly",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2025-10-06",
+    "owner_phrases": [
+      {
+        "mid": "updates/2025-10-06-coastal-weekly#m1",
+        "phrase": "the account Sofia runs",
+        "lines": [
+          18
+        ]
+      },
+      {
+        "mid": "updates/2025-10-06-coastal-weekly#m2",
+        "phrase": "the grocery account Bettina took over",
+        "lines": [
+          15
+        ]
+      },
+      {
+        "mid": "updates/2025-10-06-coastal-weekly#m3",
+        "phrase": "Sofia's old grocery account",
+        "lines": [
+          14
+        ]
+      }
+    ],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Saltmarsh Provisions",
+        "line": 13
+      },
+      {
+        "oid": "e2",
+        "surface": "SMP",
+        "line": 13
+      },
+      {
+        "oid": "e3",
+        "surface": "Covey & Lark Retail",
+        "line": 18
+      },
+      {
+        "oid": "e4",
+        "surface": "CLR",
+        "line": 18
+      },
+      {
+        "oid": "e5",
+        "surface": "Pellucid Harbor Logistics",
+        "line": 19
+      },
+      {
+        "oid": "e6",
+        "surface": "PHL",
+        "line": 19
+      },
+      {
+        "oid": "e7",
+        "surface": "Driftmoor Marine Freight",
+        "line": 20
+      },
+      {
+        "oid": "e8",
+        "surface": "DMF",
+        "line": 20
+      },
+      {
+        "oid": "e9",
+        "surface": "Carrowmere Cloud",
+        "line": 23
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "970bc3518c9d42dc6c531524efa88069c68eaf67a2987087def72cc8509959c9",
+  "response_text": "{\n  \"date_used\": \"2025-10-06\",\n  \"owner_phrases\": [\n    {\n      \"mid\": \"updates/2025-10-06-coastal-weekly#m1\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\"covey-lark\"],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"The phrase appears within the Covey & Lark Retail update, identifying the account Sofia runs.\"\n    },\n    {\n      \"mid\": \"updates/2025-10-06-coastal-weekly#m2\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\"saltmarsh\"],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"Saltmarsh is the grocery account Bettina took over effective October 6, 2025.\"\n    },\n    {\n      \"mid\": \"updates/2025-10-06-coastal-weekly#m3\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\"saltmarsh\"],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"The handover describes Saltmarsh, Sofia's former grocery account, transferred to Bettina that day.\"\n    }\n  ],\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"saltmarsh\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"saltmarsh\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"covey-lark\"\n    },\n    {\n      \"oid\": \"e4\",\n      \"entity\": \"covey-lark\"\n    },\n    {\n      \"oid\": \"e5\",\n      \"entity\": \"pellucid\"\n    },\n    {\n      \"oid\": \"e6\",\n      \"entity\": \"pellucid\"\n    },\n    {\n      \"oid\": \"e7\",\n      \"entity\": \"driftmoor\"\n    },\n    {\n      \"oid\": \"e8\",\n      \"entity\": \"driftmoor\"\n    },\n    {\n      \"oid\": \"e9\",\n      \"entity\": \"carrowmere\"\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-10-06",
+    "owner_phrases": [
+      {
+        "mid": "updates/2025-10-06-coastal-weekly#m1",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "covey-lark"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "The phrase appears within the Covey & Lark Retail update, identifying the account Sofia runs."
+      },
+      {
+        "mid": "updates/2025-10-06-coastal-weekly#m2",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "saltmarsh"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "Saltmarsh is the grocery account Bettina took over effective October 6, 2025."
+      },
+      {
+        "mid": "updates/2025-10-06-coastal-weekly#m3",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "saltmarsh"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "The handover describes Saltmarsh, Sofia's former grocery account, transferred to Bettina that day."
+      }
+    ],
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "saltmarsh"
+      },
+      {
+        "oid": "e2",
+        "entity": "saltmarsh"
+      },
+      {
+        "oid": "e3",
+        "entity": "covey-lark"
+      },
+      {
+        "oid": "e4",
+        "entity": "covey-lark"
+      },
+      {
+        "oid": "e5",
+        "entity": "pellucid"
+      },
+      {
+        "oid": "e6",
+        "entity": "pellucid"
+      },
+      {
+        "oid": "e7",
+        "entity": "driftmoor"
+      },
+      {
+        "oid": "e8",
+        "entity": "driftmoor"
+      },
+      {
+        "oid": "e9",
+        "entity": "carrowmere"
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 3334,
+    "output_tokens": 538,
+    "thinking_tokens": 31
+  },
+  "cost_usd": 0.012048
+}

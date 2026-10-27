@@ -1,0 +1,12 @@
+s-o1.jsonl {'qrel': True, 'filt': False, 'degraded_call': False, 'caveat': True, 'answers': True, 'PASS': False, 'skills': [], 'tool_calls': 6} 
+s-o2.jsonl {'qrel': True, 'filt': True, 'degraded_call': False, 'caveat': True, 'answers': True, 'PASS': False, 'skills': [], 'tool_calls': 6} 
+s-o3.jsonl {'qrel': True, 'filt': True, 'degraded_call': True, 'caveat': True, 'answers': True, 'PASS': True, 'skills': [], 'tool_calls': 7} 
+s-o4.jsonl {'qrel': True, 'filt': True, 'degraded_call': True, 'caveat': True, 'answers': True, 'PASS': True, 'skills': [], 'tool_calls': 7} 
+s-o5.jsonl {'qrel': True, 'filt': True, 'degraded_call': False, 'caveat': True, 'answers': True, 'PASS': False, 'skills': [], 'tool_calls': 6} 
+==> strict pass 2 of 5
+s-f1.jsonl {'qrel': True, 'filt': True, 'degraded_call': True, 'caveat': True, 'answers': False, 'PASS': True, 'skills': [], 'tool_calls': 10} 
+s-f2.jsonl {'qrel': True, 'filt': True, 'degraded_call': True, 'caveat': True, 'answers': False, 'PASS': True, 'skills': [], 'tool_calls': 9} 
+s-f3.jsonl {'qrel': True, 'filt': True, 'degraded_call': True, 'caveat': True, 'answers': False, 'PASS': True, 'skills': [], 'tool_calls': 7} 
+s-f4.jsonl {'qrel': True, 'filt': True, 'degraded_call': True, 'caveat': True, 'answers': False, 'PASS': True, 'skills': [], 'tool_calls': 13} 
+s-f5.jsonl {'qrel': True, 'filt': True, 'degraded_call': True, 'caveat': True, 'answers': False, 'PASS': True, 'skills': [], 'tool_calls': 7} 
+==> strict pass 5 of 5

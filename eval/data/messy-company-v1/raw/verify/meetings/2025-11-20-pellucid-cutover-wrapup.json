@@ -1,0 +1,77 @@
+{
+  "slug": "meetings/2025-11-20-pellucid-cutover-wrapup",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2025-11-20",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Pellucid",
+        "line": 6
+      },
+      {
+        "oid": "e2",
+        "surface": "Pellucid Harbor Logistics",
+        "line": 11
+      },
+      {
+        "oid": "e3",
+        "surface": "PHL",
+        "line": 11
+      },
+      {
+        "oid": "e4",
+        "surface": "PHL",
+        "line": 17
+      }
+    ],
+    "claims": [],
+    "events": [
+      {
+        "eid": "e-phl-cutover",
+        "question": "Does the page describe this: \"Pellucid terminal cutover weekend wrap-up\"? If so, on what date does the text place it?"
+      }
+    ],
+    "ownership": []
+  },
+  "prompt_user_sha256": "9e160fe84dfd504e2aae0f54191b595637887f55a8c7f21ba16680cc0f51ecd0",
+  "response_text": "{\n  \"date_used\": \"2025-11-20\",\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\"oid\": \"e1\", \"entity\": \"pellucid\"},\n    {\"oid\": \"e2\", \"entity\": \"pellucid\"},\n    {\"oid\": \"e3\", \"entity\": \"pellucid\"},\n    {\"oid\": \"e4\", \"entity\": \"pellucid\"}\n  ],\n  \"events\": [\n    {\n      \"eid\": \"e-phl-cutover\",\n      \"present\": true,\n      \"date\": \"2025-11-20\",\n      \"line\": 7\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-11-20",
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "pellucid"
+      },
+      {
+        "oid": "e2",
+        "entity": "pellucid"
+      },
+      {
+        "oid": "e3",
+        "entity": "pellucid"
+      },
+      {
+        "oid": "e4",
+        "entity": "pellucid"
+      }
+    ],
+    "events": [
+      {
+        "eid": "e-phl-cutover",
+        "present": true,
+        "date": "2025-11-20",
+        "line": 7
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2721,
+    "output_tokens": 262,
+    "thinking_tokens": 115
+  },
+  "cost_usd": 0.008062
+}

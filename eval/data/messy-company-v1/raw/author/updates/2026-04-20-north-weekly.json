@@ -1,0 +1,37 @@
+{
+  "slug": "updates/2026-04-20-north-weekly",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: weekly\nTitle: North weekly Apr 20\nDate: Written on 2026-04-20.\nWriter: Ilse Varga\nVoice: polished and businesslike\nFormat: a weekly update with a section per topic and bullets\nLength: about 300 words\nDate style in the body: US long (June 2, 2025)\nTypos: none\n\nBrief:\nIlse's update. Dana is back. Tamsin renewal is next. Thornbury (the old Orrin Mills) is settled at 40 seats.\n\nUse these names or codes at least once each, as written: \"TCC\".\n\nRequired phrases:\n- Use the exact phrase \"Dana's renewal\" once, referring to Tamsin Cold Chain. Don't put the account's name in the same sentence; the reader should work it out.\n- Use the exact phrase \"Marcus's textile account\" once, referring to Thornbury Cloth Co.. Don't put the account's name in the same sentence; the reader should work it out.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Ilse Varga: North team lead\n- Dana Okafor: Account manager, North team\n- Marcus Lindqvist: Account manager, North team\n- Thea Ramaswell: Director of Yard Operations\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Quarrendon Freight Lines: truckload freight carrier, Upper Midwest; main contact Thea Ramaswell, Director of Yard Operations; codes/nicknames QFL, Q-Freight\n- Brackenwater Freight Co.: less-than-truckload freight, Great Lakes; codes/nicknames BWF, Bracken\n- Tamsin Cold Chain: refrigerated warehousing, Pacific Northwest; codes/nicknames TCC\n- Thornbury Cloth Co. (renamed from Orrin Mills on 2026-01-12): textile mill, Carolinas; codes/nicknames TCC\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2026-04-20 (background only; don't restate unless the brief asks):\n- Quarrendon Freight Lines: managed by Dana Okafor\n- Brackenwater Freight Co.: managed by Marcus Lindqvist\n- Tamsin Cold Chain: managed by Dana Okafor\n- Thornbury Cloth Co.: managed by Marcus Lindqvist",
+      "response_text": "# North weekly Apr 20\n\nApril 20, 2026\n\n## Team coverage\n\n- Dana Okafor is back and has picked up the open North follow-ups. We reviewed the handover list this morning, including the refrigerated receiving workflow and the outstanding appointment-export question.\n- I have cleared the temporary coverage reminders from the team calendar. The remaining work is attached to the individual tickets rather than the handover thread, so we do not carry duplicate tasks into this week.\n\n## Tamsin Cold Chain — renewal next\n\n- Tamsin Cold Chain is next in the renewal queue. Dana's renewal is the immediate priority this week.\n- The operations discussion is focused on the early receiving shift: dispatch wants late-arriving refrigerated loads visible without reopening yesterday’s appointment board. Dana will walk through the current Pemberline Dock view with the receiving supervisor and collect two examples from the overnight log.\n- The working checklist is labeled “TCC — refrigerated receiving.” Please use the full company name in meeting titles; the abbreviation also appears in the textile notes.\n- I will review the renewal preparation notes after the workflow call, with particular attention to unresolved product questions that could distract from the commercial discussion.\n\n## Thornbury Cloth Co. — seat count settled\n\n- Thornbury Cloth Co., the old Orrin Mills, is settled at 40 seats. The company was renamed on January 12, 2026.\n- Marcus's textile account no longer needs another seat-count pass.\n- Marcus Lindqvist is cleaning up the remaining Orrin Mills references in the operational contact sheet. The receiving desk still uses an older printed quick-start guide beside the gate terminal; the replacement should show the current company name.\n- The next product follow-up is the afternoon shift’s dock-door filter. Marcus will ask the shift lead to capture the selected filters before refreshing the board, then add that screenshot to the support thread.",
+      "usage": {
+        "input_tokens": 1130,
+        "output_tokens": 386,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.00612,
+      "provider_meta": {
+        "id": "resp_054f649f4f7b60a7016acfae49b88c87d1af430c9c5982fdd3",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1130,
+          "input_tokens_details": {
+            "cache_write_tokens": 1127,
+            "cached_tokens": 0
+          },
+          "output_tokens": 386,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 1516
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

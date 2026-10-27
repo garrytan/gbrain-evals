@@ -1,0 +1,22 @@
+{
+  "schema": "cat40-experiment-v1",
+  "gbrain_commit": "e657589458cc3ab05d54df439495839c5aed7d19",
+  "slot_commit": "e657589458cc3ab05d54df439495839c5aed7d19",
+  "world_digest": "79094a8a2cbb6725cae37da8a97bb16b64d7941186f5682e209ecc644b8ab510",
+  "models": [],
+  "arms": [
+    "gbrain"
+  ],
+  "label": "gbrain",
+  "flags": {
+    "--build-slots": true,
+    "--gbrain": "gbrain@e657589458cc3ab05d54df439495839c5aed7d19",
+    "--gbrain-root": "<slots>/gbrain-d5",
+    "--world": "eval/data/model-ladder-wide-dev/world.json",
+    "--slots": "1",
+    "--slot-build-allowance-usd": "0.5",
+    "--budget-ledger": ".budget/d5-brief-smoke.sqlite",
+    "--out": "eval/reports/cat40/d5-brief-smoke/slots-d5"
+  },
+  "budget_run_id": "cat40-slot-build-2026-10-14T20-12-38-804Z-909375af"
+}

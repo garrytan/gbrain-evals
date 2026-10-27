@@ -1,0 +1,356 @@
+{
+ "schema": "gbrain-sync-freshness/1",
+ "kind": "idle",
+ "cell": "postgres-managed-10000-s3-idle-serve+jobs+autopilot-gbra133-pr2b-bench_4ba4c36f",
+ "label": "gbra133-pr2b-bench@4ba4c36f",
+ "gbrain_rev": "4ba4c36f",
+ "at": "2026-10-19T23:46:00.251Z",
+ "params": {
+  "engine": "postgres",
+  "mode": "managed",
+  "pages": 10000,
+  "commit": "single",
+  "trigger": "serve+jobs+autopilot",
+  "reps": 10,
+  "rtt_ms": 0,
+  "measured_rtt_ms": 0.4,
+  "interval_s": 60,
+  "scenario": "idle",
+  "probe_ms": 100,
+  "timeout_s": 300,
+  "keyless": true,
+  "embed": null,
+  "detection": "watch",
+  "jitter_ms": 0,
+  "sources": [
+   "bench",
+   "bench2",
+   "bench3"
+  ],
+  "source_pages": 1000,
+  "residents": [
+   "serve",
+   "jobs",
+   "autopilot"
+  ]
+ },
+ "machine": {
+  "cores": 4,
+  "cpu_model": "AMD EPYC",
+  "ram_gb": 16,
+  "kernel": "6.1.158+",
+  "bun": "1.4.3"
+ },
+ "build": {
+  "engine": "postgres",
+  "mode": "managed",
+  "pages": 10000,
+  "sources": [
+   "bench",
+   "bench2",
+   "bench3"
+  ],
+  "source_pages": 1000,
+  "rev": "4ba4c36f",
+  "built_at": "2026-10-19T23:31:57.360Z",
+  "cloned_from": "postgres-classic-10000-s3x1000-4ba4c36f",
+  "clone_ms": 1959.1,
+  "activate_ms": 3110.8,
+  "first_managed_sync": {
+   "ms": 1638.373046875,
+   "runs": 1
+  },
+  "first_managed_sync_bench2": {
+   "ms": 1006.826416015625,
+   "runs": 1
+  },
+  "first_managed_sync_bench3": {
+   "ms": 1122.197021484375,
+   "runs": 1
+  },
+  "links_settled": {
+   "ms": 524.2,
+   "runs": 1,
+   "last": "Extract --stale: 0 link(s) created, 0 removed, 0 timeline entr(ies) from 0 page(s). | Actionable: 0 page(s) still need link/timeline extraction; 0 page(s) due for the mention pass. Extraction is complete (raw stale totals are not a completion signal)."
+  },
+  "links_settled_bench2": {
+   "ms": 440,
+   "runs": 1,
+   "last": "Extract --stale: 0 link(s) created, 0 removed, 0 timeline entr(ies) from 0 page(s). | Actionable: 0 page(s) still need link/timeline extraction; 0 page(s) due for the mention pass. Extraction is complete (raw stale totals are not a completion signal)."
+  },
+  "links_settled_bench3": {
+   "ms": 407.4,
+   "runs": 1,
+   "last": "Extract --stale: 0 link(s) created, 0 removed, 0 timeline entr(ies) from 0 page(s). | Actionable: 0 page(s) still need link/timeline extraction; 0 page(s) due for the mention pass. Extraction is complete (raw stale totals are not a completion signal)."
+  }
+ },
+ "notes": [
+  "serve on-commit watcher enabled 461.9 ms after spawn",
+  "idle: residents serve+jobs+autopilot on one brain with sync.on_commit=true and 3 source(s), no commits; tx from pg_stat_database (the sampler connects to the postgres database, so it is not counted), backends from pg_stat_activity each second, CPU from /proc (resident plus live children)"
+ ],
+ "get_page": {
+  "n": 0,
+  "p50": null,
+  "p95": null,
+  "max": null,
+  "min": null,
+  "mean": null,
+  "cv": null
+ },
+ "search": {
+  "n": 0,
+  "p50": null,
+  "p95": null,
+  "max": null,
+  "min": null,
+  "mean": null,
+  "cv": null
+ },
+ "exit": {
+  "n": 0,
+  "p50": null,
+  "p95": null,
+  "max": null,
+  "min": null,
+  "mean": null,
+  "cv": null
+ },
+ "phases": {},
+ "backends_by_app": [
+  {
+   "app": "gbrain jobs:125012:c7bc7d0c",
+   "state": "idle",
+   "n": 10
+  },
+  {
+   "app": "gbrain jobs:125069:b5eb4f27",
+   "state": "idle",
+   "n": 9
+  },
+  {
+   "app": "gbrain autopilot:125013:264c1d73",
+   "state": "idle",
+   "n": 6
+  },
+  {
+   "app": "gbrain serve:124946:be37fe17",
+   "state": "idle",
+   "n": 6
+  }
+ ],
+ "idle": {
+  "windows": [
+   {
+    "window_s": 30.1,
+    "cpu_s_per_min": {
+     "serve": 1.756,
+     "jobs": 0.439,
+     "autopilot": 0.718
+    },
+    "tx": 163,
+    "rows_returned": 78477,
+    "rows_written": 11,
+    "backends_median": 31,
+    "backends_max": 31
+   },
+   {
+    "window_s": 30.1,
+    "cpu_s_per_min": {
+     "serve": 1.955,
+     "jobs": 1.217,
+     "autopilot": 1.856
+    },
+    "tx": 301,
+    "rows_returned": 208003,
+    "rows_written": 19,
+    "backends_median": 27,
+    "backends_max": 31
+   },
+   {
+    "window_s": 30.1,
+    "cpu_s_per_min": {
+     "serve": 1.716,
+     "jobs": 0.459,
+     "autopilot": 0.978
+    },
+    "tx": 362,
+    "rows_returned": 170333,
+    "rows_written": 78,
+    "backends_median": 31,
+    "backends_max": 31
+   },
+   {
+    "window_s": 30.1,
+    "cpu_s_per_min": {
+     "serve": 1.776,
+     "jobs": 1.197,
+     "autopilot": 1.895
+    },
+    "tx": 182,
+    "rows_returned": 6408,
+    "rows_written": 13,
+    "backends_median": 27,
+    "backends_max": 31
+   },
+   {
+    "window_s": 30.1,
+    "cpu_s_per_min": {
+     "serve": 1.756,
+     "jobs": 0.459,
+     "autopilot": 0.718
+    },
+    "tx": 476,
+    "rows_returned": 371596,
+    "rows_written": 71,
+    "backends_median": 31,
+    "backends_max": 31
+   },
+   {
+    "window_s": 30.1,
+    "cpu_s_per_min": {
+     "serve": 1.935,
+     "jobs": 1.396,
+     "autopilot": 1.855
+    },
+    "tx": 161,
+    "rows_returned": 3578,
+    "rows_written": 11,
+    "backends_median": 27,
+    "backends_max": 31
+   },
+   {
+    "window_s": 30.1,
+    "cpu_s_per_min": {
+     "serve": 1.556,
+     "jobs": 0.419,
+     "autopilot": 0.758
+    },
+    "tx": 493,
+    "rows_returned": 373295,
+    "rows_written": 36,
+    "backends_median": 31,
+    "backends_max": 31
+   },
+   {
+    "window_s": 30.1,
+    "cpu_s_per_min": {
+     "serve": 1.835,
+     "jobs": 1.237,
+     "autopilot": 1.655
+    },
+    "tx": 161,
+    "rows_returned": 3440,
+    "rows_written": 11,
+    "backends_median": 27,
+    "backends_max": 31
+   },
+   {
+    "window_s": 30.1,
+    "cpu_s_per_min": {
+     "serve": 1.695,
+     "jobs": 0.459,
+     "autopilot": 0.778
+    },
+    "tx": 494,
+    "rows_returned": 370344,
+    "rows_written": 37,
+    "backends_median": 31,
+    "backends_max": 31
+   },
+   {
+    "window_s": 30.1,
+    "cpu_s_per_min": {
+     "serve": 1.696,
+     "jobs": 1.297,
+     "autopilot": 1.716
+    },
+    "tx": 190,
+    "rows_returned": 3890,
+    "rows_written": 12,
+    "backends_median": 27,
+    "backends_max": 31
+   }
+  ],
+  "tx_per_window": {
+   "n": 10,
+   "p50": 245.5,
+   "p95": 493.6,
+   "max": 494,
+   "min": 161,
+   "mean": 298.3,
+   "cv": 0.491
+  },
+  "rows_returned_per_window": {
+   "n": 10,
+   "p50": 124405,
+   "p95": 372530.5,
+   "max": 373295,
+   "min": 3440,
+   "mean": 158936.4,
+   "cv": 1.029
+  },
+  "rows_written_per_window": {
+   "n": 10,
+   "p50": 16,
+   "p95": 74.9,
+   "max": 78,
+   "min": 11,
+   "mean": 29.9,
+   "cv": 0.855
+  },
+  "backends_median": {
+   "n": 10,
+   "p50": 29,
+   "p95": 31,
+   "max": 31,
+   "min": 27,
+   "mean": 29,
+   "cv": 0.073
+  },
+  "backends_max": {
+   "n": 10,
+   "p50": 31,
+   "p95": 31,
+   "max": 31,
+   "min": 31,
+   "mean": 31,
+   "cv": 0
+  },
+  "cpu_s_per_min": {
+   "serve": {
+    "n": 10,
+    "p50": 1.8,
+    "p95": 1.9,
+    "max": 2,
+    "min": 1.6,
+    "mean": 1.8,
+    "cv": 0.067
+   },
+   "jobs": {
+    "n": 10,
+    "p50": 0.8,
+    "p95": 1.4,
+    "max": 1.4,
+    "min": 0.4,
+    "mean": 0.9,
+    "cv": 0.509
+   },
+   "autopilot": {
+    "n": 10,
+    "p50": 1.3,
+    "p95": 1.9,
+    "max": 1.9,
+    "min": 0.7,
+    "mean": 1.3,
+    "cv": 0.417
+   }
+  }
+ },
+ "detection_observed": {
+  "bench": "watch (serve)",
+  "bench2": "watch (serve)",
+  "bench3": "watch (serve)"
+ },
+ "failures": 0,
+ "reps": []
+}

@@ -1,0 +1,29 @@
+{
+  "ledger": "~/.capy/work/mpw2/retune-rejudge/ledger.sqlite",
+  "state": "sqlite",
+  "totals": {
+    "program_cap_usd": 2.5,
+    "committed_usd": 1.051113,
+    "reconciled_usd": 1.051113,
+    "open_reservations_usd": 0,
+    "remaining_usd": 1.448887,
+    "requests": 367,
+    "overshoot_usd": 0
+  },
+  "run": null,
+  "runs": 1,
+  "open_runs": 0,
+  "last_cap_change": {
+    "program_cap_usd": 2.5,
+    "kind": "open",
+    "reason": "memory proof wave 2 adaptive W5 re-tune LongMemEval-S joint re-judge (go addendum)",
+    "by": "user@cox.local",
+    "at": "2026-10-12T17:31:45.573Z"
+  },
+  "size_bytes": 372736,
+  "read_ms": 3.63,
+  "hints": [
+    "both files present: a real legacy ledger.json beside the SQLite ledger is an interrupted migration; if the totals match run `migrate --finish`, otherwise stop and ask the user",
+    "cap mismatch: unset --program-cap-usd / BRAINBENCH_PROGRAM_CAP_USD to use the recorded cap; run `set-cap` only with the user's authorization"
+  ]
+}

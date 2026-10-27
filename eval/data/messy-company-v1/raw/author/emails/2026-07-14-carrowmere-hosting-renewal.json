@@ -1,0 +1,37 @@
+{
+  "slug": "emails/2026-07-14-carrowmere-hosting-renewal",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: email\nTitle: Carrowmere Cloud: your renewal\nDate: Written on 2026-07-14.\nWriter: Odile Brandt\nVoice: chatty, a bit rambling\nFormat: an email thread with From/To/Date headers and quoted earlier replies (> lines)\nLength: about 115 words\nDate style in the body: undefined\nTypos: a few natural typos and one or two sloppy abbreviations (never in names or required phrases)\n\nBrief:\nOdile Brandt from Carrowmere Cloud (our hosting vendor) writes to Bettina about our hosting renewal; she says we are one of the accounts she personally manages (\"Odile's account\" as she jokes). Bettina asks about our Carrowmere account's reserved capacity.\n\nRequired phrases:\n- Use the exact phrase \"Odile's account\" once, in the sense of: Pemberline as the vendor's customer, managed by Odile. It must not be about a customer account.\n- Use the exact phrase \"our Carrowmere account\" once, in the sense of: Pemberline's own customer account at the hosting vendor. It must not be about a customer account.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Bettina Kroll: Coastal team lead\n- Sofia Marchetti: Account manager, Coastal team\n- Kwame Adjei-Rowe: Account manager, Coastal team\n- Corinne Ashdown: VP Operations\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Pellucid Harbor Logistics: port drayage and terminal logistics, Gulf Coast; codes/nicknames PHL\n- Driftmoor Marine Freight: marine freight and barge operator, Puget Sound; codes/nicknames DMF\n- Saltmarsh Provisions: regional grocery distributor, Lowcountry; main contact Corinne Ashdown, VP Operations; codes/nicknames SMP\n- Pellow Home Living (renamed from Covey & Lark Retail on 2026-02-16): home goods retailer, Mid-Atlantic; codes/nicknames Covey, PHL\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2026-07-14 (background only; don't restate unless the brief asks):\n- Pellucid Harbor Logistics: managed by Kwame Adjei-Rowe\n- Driftmoor Marine Freight: managed by Kwame Adjei-Rowe\n- Saltmarsh Provisions: managed by Bettina Kroll\n- Pellow Home Living: managed by Sofia Marchetti",
+      "response_text": "From: Odile Brandt\nTo: Bettina Kroll\nDate: 2026-07-14\nSubject: Carrowmere Cloud: your renewal\n\nHi Bettina,\n\nYep, Pemberline Systems is one of the accounts I personally manage here at Carrowmere Cloud—your joke below made me laugh.\n\nI'm pulling together the hosting renewal paperwork. Also chasing the capacity question; the usage export got stuck agian, so I'm getting a fresh copy rather than sending you that fairly useless blank attachment. Will send it seperately, prob. after lunch.\n\nCheers,\nOdile\n\n> From: Bettina Kroll\n> To: Odile Brandt\n> Date: 2026-07-14\n>\n> Hi Odile—so we're officially “Odile's account,” then?\n>\n> Before the renewal paperwork, could you check the reserved capacity on our Carrowmere account? The overnight import queue looked busy Tuesday. Thx!",
+      "usage": {
+        "input_tokens": 1159,
+        "output_tokens": 199,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.004308,
+      "provider_meta": {
+        "id": "resp_079f693691b30e5a016acfae9edfe487d1ad5c08c83ec64b5d",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1159,
+          "input_tokens_details": {
+            "cache_write_tokens": 1156,
+            "cached_tokens": 0
+          },
+          "output_tokens": 199,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 1358
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

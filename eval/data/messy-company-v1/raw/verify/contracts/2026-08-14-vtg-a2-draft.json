@@ -1,0 +1,151 @@
+{
+  "slug": "contracts/2026-08-14-vtg-a2-draft",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2026-08-14",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Vantorre Group",
+        "line": 7
+      },
+      {
+        "oid": "e2",
+        "surface": "Vantorre Group",
+        "line": 16
+      },
+      {
+        "oid": "e3",
+        "surface": "Vantorre Group",
+        "line": 26
+      },
+      {
+        "oid": "e4",
+        "surface": "Vantorre Group",
+        "line": 34
+      },
+      {
+        "oid": "e5",
+        "surface": "Vantorre Group",
+        "line": 34
+      },
+      {
+        "oid": "e6",
+        "surface": "Vantorre Group",
+        "line": 36
+      },
+      {
+        "oid": "e7",
+        "surface": "VTG",
+        "line": 38
+      },
+      {
+        "oid": "e8",
+        "surface": "VTRG",
+        "line": 38
+      },
+      {
+        "oid": "e9",
+        "surface": "Vantorre Group",
+        "line": 38
+      },
+      {
+        "oid": "e10",
+        "surface": "Vantorre Group",
+        "line": 92
+      },
+      {
+        "oid": "e11",
+        "surface": "Vantorre Group",
+        "line": 116
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": [],
+    "record": {
+      "question": "Is this document signed, an unsigned version, or a draft? Judge from the body text, not the title alone. Give its signed date and effective date if stated, and the value of each of these terms it sets.",
+      "terms": [
+        "discount_pct"
+      ]
+    }
+  },
+  "prompt_user_sha256": "42d954eb6203a597e960ad43e31fc6cda01ab1b83c3d986022679eab7f4ff74b",
+  "response_text": "{\n  \"date_used\": \"2026-08-14\",\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e4\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e5\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e6\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e7\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e8\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e9\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e10\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e11\",\n      \"entity\": \"vantorre-group\"\n    }\n  ],\n  \"record\": {\n    \"status\": \"draft\",\n    \"status_evidence_line\": 20,\n    \"signed_date\": null,\n    \"effective_date\": null,\n    \"terms\": [\n      {\n        \"term\": \"discount_pct\",\n        \"applies_to\": [\n          \"vantorre-group\"\n        ],\n        \"value\": \"18%\",\n        \"line\": 26\n      }\n    ],\n    \"deciding_line\": 26,\n    \"deciding_days\": null\n  }\n}",
+  "parsed": {
+    "date_used": "2026-08-14",
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e2",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e3",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e4",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e5",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e6",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e7",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e8",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e9",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e10",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e11",
+        "entity": "vantorre-group"
+      }
+    ],
+    "record": {
+      "status": "draft",
+      "status_evidence_line": 20,
+      "signed_date": null,
+      "effective_date": null,
+      "terms": [
+        {
+          "term": "discount_pct",
+          "applies_to": [
+            "vantorre-group"
+          ],
+          "value": "18%",
+          "line": 26
+        }
+      ],
+      "deciding_line": 26,
+      "deciding_days": null
+    }
+  },
+  "usage": {
+    "input_tokens": 5053,
+    "output_tokens": 464,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.014746
+}

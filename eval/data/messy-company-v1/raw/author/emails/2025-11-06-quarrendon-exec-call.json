@@ -1,0 +1,41 @@
+{
+  "slug": "emails/2025-11-06-quarrendon-exec-call",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: email\nTitle: Summary: exec call after the Sev 1\nDate: Written on 2025-11-06.\nWriter: Ruth Calloway\nVoice: hurried, lots of fragments\nFormat: an email thread with From/To/Date headers and quoted earlier replies (> lines)\nLength: about 229 words\nDate style in the body: mixed: some ISO, some casual\nTypos: a few natural typos and one or two sloppy abbreviations (never in names or required phrases)\n\nBrief:\nRuth summarizes today's exec call with Thea after Tuesday's Sev 1 (Nov 4): root cause, credits, a weekly check-in until year end.\n\nRequired phrases:\n- Use the exact phrase \"Dana's freight account\" once, referring to Quarrendon Freight Lines. Don't put the account's name in the same sentence; the reader should work it out.\n- Use the exact phrase \"Thea's company\" once, meaning Quarrendon Freight Lines (contact employer). Don't add a gloss explaining it.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Ilse Varga: North team lead\n- Dana Okafor: Account manager, North team\n- Marcus Lindqvist: Account manager, North team\n- Thea Ramaswell: Director of Yard Operations\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Quarrendon Freight Lines: truckload freight carrier, Upper Midwest; main contact Thea Ramaswell, Director of Yard Operations; codes/nicknames QFL, Q-Freight\n- Brackenwater Freight Co.: less-than-truckload freight, Great Lakes; codes/nicknames BWF, Bracken\n- Tamsin Cold Chain: refrigerated warehousing, Pacific Northwest; codes/nicknames TCC\n- Orrin Mills: textile mill, Carolinas; codes/nicknames ORM\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2025-11-06 (background only; don't restate unless the brief asks):\n- Quarrendon Freight Lines: managed by Dana Okafor\n- Brackenwater Freight Co.: managed by Marcus Lindqvist\n- Tamsin Cold Chain: managed by Dana Okafor\n- Orrin Mills: managed by Marcus Lindqvist",
+      "response_text": "# Summary: exec call after the Sev 1\n\n**From:** Ruth Calloway <rcalloway@pemberline.com>\n**To:** Ilse Varga <ivarga@pemberline.com>, Dana Okafor <dokafor@pemberline.com>, June Osei-Lark <josei-lark@pemberline.com>\n**Date:** 2025-11-06 14:42\n\nQuick dump from the exec call w/ Thea Ramaswell just now re: Tuesday's Sev 1 (Nov 4). \n\n* **Root cause:** Walked through the postmortem for #INC-8841. Stale webhook worker locked up the gate-in queue after the 2025-11-04 morning deploy. 18 reefers idling on County Rd M outside the Oshkosh yard, dock doors 4 through 19 blind for three hrs. 2nd shift clerks had to run paper clipboards. Thea wasn't thrilled obv, but accepted eng's explanation on the hotfix.\n* **Credits:** They want service credits on the next invoice for the downtime. June—looping you in to check the paper and calc what's standard here, then get w/ Stoneharrow Billing so we don't botch the credit memo.\n* **Cadence:** Agreed to a weekly 15-min check-in from next Tues until year end. We need eyes on Dana's freight account every single week through peak season so nothing else slips.\n\nDana, send the calendar holds for the wkly syncs today pls. Also Thea wants the raw CSV export for the dropped gate-ins before 5pm CT.\n\n—Ruth\n\n> **From:** Ilse Varga <ivarga@pemberline.com>\n> **To:** Ruth Calloway <rcalloway@pemberline.com>, Dana Okafor <dokafor@pemberline.com>\n> **Date:** Nov 6, 2025 at 11:15 AM\n>\n> Hey Ruth, how are we feeling before the 1pm? Thea's company got hit right during the 06:00 shift change on 2025-11-04 and her Oshkosh terminal manager was ready to chew glass yesterday. Let me know if I need to jump on.",
+      "usage": {
+        "input_tokens": 1185,
+        "output_tokens": 523,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.0076,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1185,
+          "candidatesTokenCount": 523,
+          "totalTokenCount": 1708,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1185
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 523
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

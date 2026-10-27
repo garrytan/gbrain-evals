@@ -1,0 +1,70 @@
+{
+  "slug": "notes/2026-01-15-hr-benefits-reminder",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2026-01-15",
+    "owner_phrases": [
+      {
+        "mid": "notes/2026-01-15-hr-benefits-reminder#m1",
+        "phrase": "Nadia's benefits account",
+        "lines": [
+          10
+        ]
+      },
+      {
+        "mid": "notes/2026-01-15-hr-benefits-reminder#m2",
+        "phrase": "Gideon's laptop",
+        "lines": [
+          11
+        ]
+      },
+      {
+        "mid": "notes/2026-01-15-hr-benefits-reminder#m3",
+        "phrase": "Nadia's LinkedIn account",
+        "lines": [
+          10
+        ]
+      }
+    ],
+    "entity_occurrences": [],
+    "claims": [],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "3bcea8994af4dc76e85ffa8ca24de279944fea14835207f952a203bb845ee472",
+  "response_text": "{\n  \"date_used\": \"2026-01-15\",\n  \"owner_phrases\": [\n    {\n      \"mid\": \"notes/2026-01-15-hr-benefits-reminder#m1\",\n      \"refers_to_customer_account\": false,\n      \"accounts\": [],\n      \"reading\": \"not about a customer account (a login, device, HR/expense account, a narrative 'account of', a vendor relationship, an employer)\",\n      \"note\": \"Nadia's personal benefits account needs a beneficiary update.\"\n    },\n    {\n      \"mid\": \"notes/2026-01-15-hr-benefits-reminder#m2\",\n      \"refers_to_customer_account\": false,\n      \"accounts\": [],\n      \"reading\": \"not about a customer account (a login, device, HR/expense account, a narrative 'account of', a vendor relationship, an employer)\",\n      \"note\": \"Gideon's laptop is an IT device due for replacement.\"\n    },\n    {\n      \"mid\": \"notes/2026-01-15-hr-benefits-reminder#m3\",\n      \"refers_to_customer_account\": false,\n      \"accounts\": [],\n      \"reading\": \"not about a customer account (a login, device, HR/expense account, a narrative 'account of', a vendor relationship, an employer)\",\n      \"note\": \"Nadia's LinkedIn account is her personal social media account.\"\n    }\n  ],\n  \"extra_owner_phrases\": []\n}",
+  "parsed": {
+    "date_used": "2026-01-15",
+    "owner_phrases": [
+      {
+        "mid": "notes/2026-01-15-hr-benefits-reminder#m1",
+        "refers_to_customer_account": false,
+        "accounts": [],
+        "reading": "not about a customer account (a login, device, HR/expense account, a narrative 'account of', a vendor relationship, an employer)",
+        "note": "Nadia's personal benefits account needs a beneficiary update."
+      },
+      {
+        "mid": "notes/2026-01-15-hr-benefits-reminder#m2",
+        "refers_to_customer_account": false,
+        "accounts": [],
+        "reading": "not about a customer account (a login, device, HR/expense account, a narrative 'account of', a vendor relationship, an employer)",
+        "note": "Gideon's laptop is an IT device due for replacement."
+      },
+      {
+        "mid": "notes/2026-01-15-hr-benefits-reminder#m3",
+        "refers_to_customer_account": false,
+        "accounts": [],
+        "reading": "not about a customer account (a login, device, HR/expense account, a narrative 'account of', a vendor relationship, an employer)",
+        "note": "Nadia's LinkedIn account is her personal social media account."
+      }
+    ],
+    "extra_owner_phrases": []
+  },
+  "usage": {
+    "input_tokens": 2487,
+    "output_tokens": 317,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.008144
+}

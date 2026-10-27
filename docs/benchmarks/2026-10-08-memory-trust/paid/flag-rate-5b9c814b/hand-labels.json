@@ -1,0 +1,17 @@
+{
+  "u01:pages:3": "user_instruction",
+  "u06:pages:21": "not_instruction",
+  "u06:pages:25": "not_instruction",
+  "u06:pages:48": "not_instruction",
+  "u06:pages:49": "not_instruction",
+  "u07:pages:1": "not_instruction",
+  "u07:pages:12": "not_instruction",
+  "u07:pages:36": "user_instruction",
+  "u08:pages:3": "not_instruction",
+  "u09:pages:4": "user_instruction",
+  "u10:pages:39": "not_instruction",
+  "u11:pages:4": "not_instruction",
+  "u11:pages:12": "not_instruction",
+  "u11:pages:48": "not_instruction",
+  "u12:pages:29": "not_instruction"
+}

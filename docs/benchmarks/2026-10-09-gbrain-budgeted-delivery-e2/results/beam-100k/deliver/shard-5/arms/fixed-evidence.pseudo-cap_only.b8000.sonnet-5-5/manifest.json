@@ -1,0 +1,29 @@
+{
+  "kind": "memory-qa-manifest",
+  "schema_version": 1,
+  "run_config_hash": "83d9476d98906ea4d104c2eb83fe2f1d89b99bdbfcc317db8c00797bca80de6b",
+  "expected": [
+    "100k-4:abstention:0",
+    "100k-4:abstention:1",
+    "100k-4:contradiction_resolution:0",
+    "100k-4:contradiction_resolution:1",
+    "100k-4:event_ordering:0",
+    "100k-4:event_ordering:1",
+    "100k-4:information_extraction:0",
+    "100k-4:information_extraction:1",
+    "100k-4:instruction_following:0",
+    "100k-4:instruction_following:1",
+    "100k-4:knowledge_update:0",
+    "100k-4:knowledge_update:1",
+    "100k-4:multi_session_reasoning:0",
+    "100k-4:multi_session_reasoning:1",
+    "100k-4:preference_following:0",
+    "100k-4:preference_following:1",
+    "100k-4:summarization:0",
+    "100k-4:summarization:1",
+    "100k-4:temporal_reasoning:0",
+    "100k-4:temporal_reasoning:1"
+  ],
+  "expected_sha256": "f6ee457d207c82ccd81b8c8f9640bea1a2d424f7931426e9bcd3bfcf83141921",
+  "created_at": "2026-10-09T14:45:48.886Z"
+}

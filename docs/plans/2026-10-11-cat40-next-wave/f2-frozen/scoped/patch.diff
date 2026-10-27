@@ -1,0 +1,15 @@
+662c662
+<   let unit: DeliveredUnit = plan.unit === 'auto' ? 'page' : plan.unit;
+---
+>   let unit: DeliveredUnit = plan.unit === 'auto' ? ((((globalThis as any).__f2Long?.(page.slug)) ? (globalThis as any).__f2Unit : undefined) ?? 'page') : plan.unit;
+810c810,813
+<     remaining = enrichBlock(b, remaining, tokenizer, omitTok);
+---
+>     const cap = (globalThis as any).__f2Long?.(b.hit.slug) ? (globalThis as any).__f2CapTokens : undefined;
+>     if (typeof cap !== 'number') { remaining = enrichBlock(b, remaining, tokenizer, omitTok); continue; }
+>     const allow = Math.min(remaining, Math.max(0, cap - floorOf(b, tokenizer).tokens));
+>     remaining -= allow - enrichBlock(b, allow, tokenizer, omitTok);
+1036c1039
+<     const signal = auto ? conversationSignal(h) : null;
+---
+>     const signal = auto ? (conversationSignal(h) ?? ((globalThis as any).__f2Long?.(h.slug) ? ('f2_long' as any) : null)) : null;

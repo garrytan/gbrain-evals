@@ -1,0 +1,8 @@
+LongMemEval-S slice auto8k_l25: n 100 mean 1.149 median 1.147 p99 1.226 max 1.226 above-1.15 45
+LongMemEval-S slice auto24k_l25: n 100 mean 1.150 median 1.154 p99 1.226 max 1.226 above-1.15 53
+LongMemEval-S slice auto8k_l5: n 100 mean 1.152 median 1.150 p99 1.288 max 1.288 above-1.15 49
+LongMemEval-S slice: max ratio 1.288; provisional budget floor_100(8000 / (1.288 x 1.02)) = 6000
+LoCoMo dev auto8k_l25: n 587 mean 1.019 median 1.012 p99 1.058 max 1.062 above-1.15 0
+LoCoMo dev auto24k_l25: n 587 mean 1.024 median 1.018 p99 1.056 max 1.058 above-1.15 0
+LoCoMo dev auto8k_l5: n 587 mean 1.025 median 1.023 p99 1.078 max 1.091 above-1.15 0
+LoCoMo dev: max ratio 1.091; provisional budget floor_100(8000 / (1.091 x 1.02)) = 7100

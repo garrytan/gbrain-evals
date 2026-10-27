@@ -1,0 +1,41 @@
+{
+  "slug": "chats/2025-11-17-saltmarsh-discount-retraction",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: chat\nTitle: #coastal-team, Nov 17\nDate: Written on 2025-11-17.\nWriter: Bettina Kroll\nVoice: polished and businesslike\nFormat: a chat log with [HH:MM] timestamps and lowercase usernames\nLength: about 78 words\nDate style in the body: undefined\nTypos: a few natural typos and one or two sloppy abbreviations (never in names or required phrases)\n\nBrief:\nSlack log. Bettina posts that the Saltmarsh discount is 12% now; a few minutes later: ignore my earlier note, it's 10.\n\nRequired phrases:\n- Use the exact phrase \"Sofia's old grocery account\" once, referring to Saltmarsh Provisions. Don't put the account's name in the same sentence; the reader should work it out.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Bettina Kroll: Coastal team lead\n- Sofia Marchetti: Account manager, Coastal team\n- Kwame Adjei-Rowe: Account manager, Coastal team\n- Corinne Ashdown: VP Operations\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Pellucid Harbor Logistics: port drayage and terminal logistics, Gulf Coast; codes/nicknames PHL\n- Driftmoor Marine Freight: marine freight and barge operator, Puget Sound; codes/nicknames DMF\n- Saltmarsh Provisions: regional grocery distributor, Lowcountry; main contact Corinne Ashdown, VP Operations; codes/nicknames SMP\n- Covey & Lark Retail: home goods retailer, Mid-Atlantic; codes/nicknames Covey, CLR\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2025-11-17 (background only; don't restate unless the brief asks):\n- Pellucid Harbor Logistics: managed by Kwame Adjei-Rowe\n- Driftmoor Marine Freight: managed by Kwame Adjei-Rowe\n- Saltmarsh Provisions: managed by Bettina Kroll\n- Covey & Lark Retail: managed by Sofia Marchetti",
+      "response_text": "# #coastal-team, Nov 17\n\n[14:18] bkroll: Good afternoon team. Quick update on Sofia's old grocery account before our sync—Corinne Ashdown flagged a recurring check-in delay at their Savannah cold-storage facility (Dock 4, early shift). I am reviewing the gate kiosk logs from wkd traffic. \n\n[14:19] bkroll: Also, for the record, the Saltmarsh Provisions discount is 12% now.\n\n[14:24] bkroll: Apologies, please ignore my earlier note, it's 10%. Misread the draft worksheet from June Osei-Lark. Thx.",
+      "usage": {
+        "input_tokens": 1135,
+        "output_tokens": 152,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.00379,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1135,
+          "candidatesTokenCount": 152,
+          "totalTokenCount": 1287,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1135
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 152
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

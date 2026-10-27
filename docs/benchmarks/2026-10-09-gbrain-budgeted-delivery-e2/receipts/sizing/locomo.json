@@ -1,0 +1,45 @@
+{
+  "benchmark": "locomo",
+  "questions": 587,
+  "b_pseudo_primary": {
+    "name": "b_pseudo_primary",
+    "grid": "b8",
+    "variants": [
+      "off",
+      "cap_only",
+      "breadth_capped",
+      "depth_first"
+    ],
+    "rendering": "pseudo",
+    "budget": 6400,
+    "steps": [
+      {
+        "budget": 7500,
+        "r_max": 1.2181915177380636,
+        "next": 6400
+      },
+      {
+        "budget": 6400,
+        "r_max": 1.2241675785524464,
+        "next": 6400
+      }
+    ],
+    "margin": 1.02,
+    "harness_budget": 8000,
+    "samples": 2348,
+    "ratio": {
+      "max": 1.2241675785524464,
+      "p50": 1.1659549526919535,
+      "p90": 1.2014719411223551,
+      "p99": 1.2123202001250781,
+      "mean": 1.173537058739912
+    },
+    "verification": {
+      "overflow": 587,
+      "overflow_from_gbrain_overrun": 587,
+      "overflow_within_budget": 0,
+      "passed": true,
+      "gbrain_over_budget": 587
+    }
+  }
+}

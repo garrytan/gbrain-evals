@@ -1,0 +1,189 @@
+{
+  "slug": "updates/2025-04-28-north-weekly",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2025-04-28",
+    "owner_phrases": [
+      {
+        "mid": "updates/2025-04-28-north-weekly#m1",
+        "phrase": "the Northwest one Dana inherited",
+        "lines": [
+          19
+        ]
+      },
+      {
+        "mid": "updates/2025-04-28-north-weekly#m2",
+        "phrase": "Marcus's freight account",
+        "lines": [
+          21
+        ]
+      },
+      {
+        "mid": "updates/2025-04-28-north-weekly#m3",
+        "phrase": "Dana's benefits account",
+        "lines": [
+          27
+        ]
+      }
+    ],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Tamsin Cold Chain",
+        "line": 12
+      },
+      {
+        "oid": "e2",
+        "surface": "Quarrendon Freight Lines",
+        "line": 13
+      },
+      {
+        "oid": "e3",
+        "surface": "Brackenwater Freight Co.",
+        "line": 14
+      },
+      {
+        "oid": "e4",
+        "surface": "Orrin Mills",
+        "line": 15
+      },
+      {
+        "oid": "e5",
+        "surface": "Tamsin Cold Chain",
+        "line": 19
+      },
+      {
+        "oid": "e6",
+        "surface": "Quarrendon Freight Lines",
+        "line": 21
+      },
+      {
+        "oid": "e7",
+        "surface": "Quarrendon Freight Lines",
+        "line": 21
+      },
+      {
+        "oid": "e8",
+        "surface": "Brackenwater Freight Co.",
+        "line": 23
+      },
+      {
+        "oid": "e9",
+        "surface": "Orrin Mills",
+        "line": 23
+      },
+      {
+        "oid": "e10",
+        "surface": "Brackenwater",
+        "line": 23
+      },
+      {
+        "oid": "e11",
+        "surface": "Orrin Mills",
+        "line": 23
+      }
+    ],
+    "claims": [],
+    "events": [
+      {
+        "eid": "e-tcc-kickoff",
+        "question": "Does the page describe this: \"Tamsin kickoff with Dana after she inherits the account\"? If so, on what date does the text place it?"
+      }
+    ],
+    "ownership": []
+  },
+  "prompt_user_sha256": "e917cafd91b2e2f12490cf8cbb422ba99ee54bd1be7f441c6264a7fc0001dc04",
+  "response_text": "{\n  \"date_used\": \"2025-04-28\",\n  \"owner_phrases\": [\n    {\n      \"mid\": \"updates/2025-04-28-north-weekly#m1\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\"tamsin\"],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"The Tamsin section identifies Dana's inherited Northwest cold-storage account; Dana became its primary owner on 2025-04-14.\"\n    },\n    {\n      \"mid\": \"updates/2025-04-28-north-weekly#m2\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\"quarrendon\"],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"The Quarrendon section names Marcus's freight account, matching his primary ownership on this date.\"\n    },\n    {\n      \"mid\": \"updates/2025-04-28-north-weekly#m3\",\n      \"refers_to_customer_account\": false,\n      \"accounts\": [],\n      \"reading\": \"not about a customer account (a login, device, HR/expense account, a narrative 'account of', a vendor relationship, an employer)\",\n      \"note\": \"This is Dana's personal benefits portal account, locked pending a People Ops password reset.\"\n    }\n  ],\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\"oid\": \"e1\", \"entity\": \"tamsin\"},\n    {\"oid\": \"e2\", \"entity\": \"quarrendon\"},\n    {\"oid\": \"e3\", \"entity\": \"brackenwater\"},\n    {\"oid\": \"e4\", \"entity\": \"orrin\"},\n    {\"oid\": \"e5\", \"entity\": \"tamsin\"},\n    {\"oid\": \"e6\", \"entity\": \"quarrendon\"},\n    {\"oid\": \"e7\", \"entity\": \"quarrendon\"},\n    {\"oid\": \"e8\", \"entity\": \"brackenwater\"},\n    {\"oid\": \"e9\", \"entity\": \"orrin\"},\n    {\"oid\": \"e10\", \"entity\": \"brackenwater\"},\n    {\"oid\": \"e11\", \"entity\": \"orrin\"}\n  ],\n  \"events\": [\n    {\n      \"eid\": \"e-tcc-kickoff\",\n      \"present\": true,\n      \"date\": \"2025-04-22\",\n      \"line\": 19\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-04-28",
+    "owner_phrases": [
+      {
+        "mid": "updates/2025-04-28-north-weekly#m1",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "tamsin"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "The Tamsin section identifies Dana's inherited Northwest cold-storage account; Dana became its primary owner on 2025-04-14."
+      },
+      {
+        "mid": "updates/2025-04-28-north-weekly#m2",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "quarrendon"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "The Quarrendon section names Marcus's freight account, matching his primary ownership on this date."
+      },
+      {
+        "mid": "updates/2025-04-28-north-weekly#m3",
+        "refers_to_customer_account": false,
+        "accounts": [],
+        "reading": "not about a customer account (a login, device, HR/expense account, a narrative 'account of', a vendor relationship, an employer)",
+        "note": "This is Dana's personal benefits portal account, locked pending a People Ops password reset."
+      }
+    ],
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "tamsin"
+      },
+      {
+        "oid": "e2",
+        "entity": "quarrendon"
+      },
+      {
+        "oid": "e3",
+        "entity": "brackenwater"
+      },
+      {
+        "oid": "e4",
+        "entity": "orrin"
+      },
+      {
+        "oid": "e5",
+        "entity": "tamsin"
+      },
+      {
+        "oid": "e6",
+        "entity": "quarrendon"
+      },
+      {
+        "oid": "e7",
+        "entity": "quarrendon"
+      },
+      {
+        "oid": "e8",
+        "entity": "brackenwater"
+      },
+      {
+        "oid": "e9",
+        "entity": "orrin"
+      },
+      {
+        "oid": "e10",
+        "entity": "brackenwater"
+      },
+      {
+        "oid": "e11",
+        "entity": "orrin"
+      }
+    ],
+    "events": [
+      {
+        "eid": "e-tcc-kickoff",
+        "present": true,
+        "date": "2025-04-22",
+        "line": 19
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 3574,
+    "output_tokens": 593,
+    "thinking_tokens": 42
+  },
+  "cost_usd": 0.013078
+}

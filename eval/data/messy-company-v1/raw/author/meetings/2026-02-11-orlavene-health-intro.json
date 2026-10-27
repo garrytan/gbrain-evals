@@ -1,0 +1,37 @@
+{
+  "slug": "meetings/2026-02-11-orlavene-health-intro",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: meeting\nTitle: Intro: Orlavene Health\nDate: Written on 2026-02-11.\nWriter: Ruth Calloway\nVoice: hurried, lots of fragments\nFormat: loose call notes, half sentences, an action list at the end\nLength: about 240 words\nDate style in the body: US long (June 2, 2025)\nTypos: none\n\nBrief:\nRuth's notes from an intro meeting with Orlavene Health, a hospital group prospect in Denver (not a customer). Use \"Orlavene\" several times.\n\nUse these names or codes at least once each, as written: \"Orlavene\", \"Orlavene Health\".\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Nadia Fennimore: Strategic account manager\n- Gideon Sato: Strategic account manager\n- Mateo Quiroga: Head of Procurement\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Vantorre Group: diversified industrial manufacturer, Northeast; main contact Mateo Quiroga, Head of Procurement; codes/nicknames VTG, VTRG\n- Vantorre Mobility: electric fleet services subsidiary, Northeast; subsidiary of Vantorre Group; codes/nicknames VTM, VMob\n- Orlavine Medical Supply: medical supply distributor, Mountain West; codes/nicknames OMS\n- Quillfeather Outfitters: outdoor gear retailer, Mountain West; codes/nicknames QFO\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2026-02-11 (background only; don't restate unless the brief asks):\n- Vantorre Group: managed by Nadia Fennimore\n- Vantorre Mobility: managed by Gideon Sato\n- Orlavine Medical Supply: not stated on any shared page (do not say who manages it)\n- Quillfeather Outfitters: managed by Strategic Accounts pod (pooled account)",
+      "response_text": "# Intro: Orlavene Health\n\nFebruary 11, 2026\n\nIntro call. Orlavene Health, hospital group in Denver. Prospect, not a customer. No signed agreement. Mostly receiving-team questions; less interest in the yard map than I expected.\n\nOrlavene described the morning pinch at the central receiving dock: linen truck, food delivery, then medical supplies all arriving around shift change. Door 2 gets treated as the overflow door, except nobody tells the driver when the assignment changes. Driver waits outside, receiving calls security, security calls receiving. Lots of phone tag.\n\nWalked through Pemberline Dock. Appointment board first, then door assignment and arrival status. They wanted to see what a receiving clerk actually clicks with a truck already waiting. Skipped the broader overview. Used a sample food-service delivery; moved it from Door 1 to Door 2 and showed the updated board.\n\nOrlavene asked about deliveries that arrive without an appointment. Also whether the afternoon team could see why a morning booking moved. Need a tighter follow-up demo around those two situations, not another tour of every screen.\n\nPricing question came late. Explained per seat per year. No numbers discussed. They need to work out who would use it: receiving desk, shift leads, possibly security. Not everyone who gets a delivery notification.\n\nName looks close to Orlavine Medical Supply. Different company. Keep Orlavene Health on the invite.\n\n## Actions\n\n- Send recap and ask for a sample receiving schedule.\n- Build demo: unplanned arrival, door change, afternoon handoff.\n- Ask Orlavene which receiving staff should join the next call.",
+      "usage": {
+        "input_tokens": 1035,
+        "output_tokens": 337,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.00544,
+      "provider_meta": {
+        "id": "resp_065698902dfd65e1016acfaed8987c87d1a8f99a4aaeecb5f1",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1035,
+          "input_tokens_details": {
+            "cache_write_tokens": 1032,
+            "cached_tokens": 0
+          },
+          "output_tokens": 337,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 1372
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

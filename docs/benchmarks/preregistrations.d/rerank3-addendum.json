@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "experiments": [
+    {
+      "id": "2026-10-13-rerank3-addendum",
+      "preregistration": "docs/benchmarks/2026-10-13-rerank3-addendum-preregistration.md",
+      "results": ["docs/benchmarks/2026-10-13-rerank3-addendum/results/**"]
+    }
+  ]
+}

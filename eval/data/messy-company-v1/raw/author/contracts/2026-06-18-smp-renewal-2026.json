@@ -1,0 +1,37 @@
+{
+  "slug": "contracts/2026-06-18-smp-renewal-2026",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: record\nTitle: Renewal Order Form: Saltmarsh Provisions 2026\nDate: Written on 2026-06-18.\nWriter: June Osei-Lark\nVoice: formal legal drafting\nFormat: formal numbered sections and a signature block\nLength: about 196 words\nDate style in the body: undefined\nTypos: none\n\nBrief:\nRenewal Order Form: Saltmarsh Provisions 2026. Parties: Pemberline Systems and Saltmarsh Provisions. Drafted 2026-06-01. Effective date 2026-07-01 (signed 2026-06-18; state both dates and keep them distinct). Terms this document sets: price per seat per year (USD) = 1840; end of the current term (renewal date) = 2027-06-30. Executed: include a signature block signed on 2026-06-18 by both parties (customer signatory plus June Osei-Lark for Pemberline). It changes earlier paperwork for this customer; refer to the earlier agreement generically. Seats and the 10% discount carry over unchanged.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Bettina Kroll: Coastal team lead\n- Sofia Marchetti: Account manager, Coastal team\n- Kwame Adjei-Rowe: Account manager, Coastal team\n- Corinne Ashdown: VP Operations\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Pellucid Harbor Logistics: port drayage and terminal logistics, Gulf Coast; codes/nicknames PHL\n- Driftmoor Marine Freight: marine freight and barge operator, Puget Sound; codes/nicknames DMF\n- Saltmarsh Provisions: regional grocery distributor, Lowcountry; main contact Corinne Ashdown, VP Operations; codes/nicknames SMP\n- Pellow Home Living (renamed from Covey & Lark Retail on 2026-02-16): home goods retailer, Mid-Atlantic; codes/nicknames Covey, PHL\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2026-06-18 (background only; don't restate unless the brief asks):\n- Pellucid Harbor Logistics: managed by Kwame Adjei-Rowe\n- Driftmoor Marine Freight: managed by Kwame Adjei-Rowe\n- Saltmarsh Provisions: managed by Bettina Kroll\n- Pellow Home Living: managed by Sofia Marchetti",
+      "response_text": "# Renewal Order Form: Saltmarsh Provisions 2026\n\n## 1. Parties and Document Dates\nThis Renewal Order Form is entered into by Pemberline Systems and Saltmarsh Provisions for continued use of Pemberline Dock. It was drafted on 2026-06-01 and executed on 2026-06-18. Its effective date is 2026-07-01; execution does not alter that effective date.\n\n## 2. Subscription Price\nEffective 2026-07-01, the price per seat per year shall be USD 1,840. The existing seat quantity and the existing 10% discount shall carry over unchanged from the earlier agreement.\n\n## 3. Current Term\nThe end of the current term, constituting the renewal date for purposes of this Order Form, shall be 2027-06-30.\n\n## 4. Modification of Earlier Agreement\nThis Order Form modifies the earlier agreement between the parties solely as expressly provided herein. In the event of conflict concerning the price or term date stated above, this Order Form shall govern. All other provisions of the earlier agreement remain unchanged.\n\n## 5. Execution\nThe parties execute this Order Form through the signatories below.\n\n**For Saltmarsh Provisions**  \nSigned: /s/ Corinne Ashdown  \nTitle: VP Operations  \nDate signed: 2026-06-18\n\n**For Pemberline Systems**  \nSigned: /s/ June Osei-Lark  \nTitle: Deal desk and contracts manager  \nDate signed: 2026-06-18",
+      "usage": {
+        "input_tokens": 1155,
+        "output_tokens": 327,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.00558,
+      "provider_meta": {
+        "id": "resp_05c79c9843fa6ebf016acfae8dd6e487d19d5f35ed7c9e4197",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1155,
+          "input_tokens_details": {
+            "cache_write_tokens": 1152,
+            "cached_tokens": 0
+          },
+          "output_tokens": 327,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 1482
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

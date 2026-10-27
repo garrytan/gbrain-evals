@@ -19,6 +19,8 @@
  *      data rows; no capture row with zero retrieved slugs.
  *   5. gold/*.json: parse; a single-`_example` stub fails (every gold file is
  *      generated since 0.10.1).
+ *   6. messy-company-v1: every data file matches its sha256 in MANIFEST.json
+ *      and no data file is missing from it (the dataset is frozen).
  *
  * Usage: bun eval/runner/validate-data.ts [--quiet]
  */
@@ -28,6 +30,7 @@ import { existsSync, readFileSync, readdirSync, statSync } from 'fs';
 import { join, relative } from 'path';
 import { canonicalJson, renderCalendarIcs } from '../generators/amara-life-gen.ts';
 import { buildSkeleton } from '../generators/amara-life.ts';
+import { checkManifest } from '../generators/messy-company/manifest.ts';
 
 const sha256Hex = (bytes: string | Buffer) => createHash('sha256').update(bytes).digest('hex');
 
@@ -264,10 +267,16 @@ export function checkGold(goldDir = join(REPO_ROOT, 'eval/data/gold')): CheckRes
   return { check: 'gold', failures, warnings };
 }
 
+// ─── 6. messy-company-v1 ────────────────────────────────────────────
+
+export function checkMessyCompany(root = join(REPO_ROOT, 'eval/data/messy-company-v1')): CheckResult {
+  return { check: 'messy-company-v1', failures: checkManifest(root), warnings: [] };
+}
+
 // ─── CLI ────────────────────────────────────────────────────────────
 
 export function runAllChecks(): CheckResult[] {
-  return [checkSyntheticV1(), checkAmaraLife(), checkQrels(), checkBaseline(), checkMultimodalFixtures(), checkGold()];
+  return [checkSyntheticV1(), checkAmaraLife(), checkQrels(), checkBaseline(), checkMultimodalFixtures(), checkGold(), checkMessyCompany()];
 }
 
 if (import.meta.main) {

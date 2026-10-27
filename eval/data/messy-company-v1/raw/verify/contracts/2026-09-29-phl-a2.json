@@ -1,0 +1,106 @@
+{
+  "slug": "contracts/2026-09-29-phl-a2",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2026-09-29",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Pellucid Harbor Logistics",
+        "line": 7
+      },
+      {
+        "oid": "e2",
+        "surface": "Pellucid Harbor Logistics",
+        "line": 14
+      },
+      {
+        "oid": "e3",
+        "surface": "PHL",
+        "line": 46
+      },
+      {
+        "oid": "e4",
+        "surface": "PHL",
+        "line": 50
+      },
+      {
+        "oid": "e5",
+        "surface": "Pellucid Harbor Logistics",
+        "line": 73
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": [],
+    "record": {
+      "question": "Is this document signed, an unsigned version, or a draft? Judge from the body text, not the title alone. Give its signed date and effective date if stated, and the value of each of these terms it sets.",
+      "terms": [
+        "price_per_seat",
+        "discount_pct"
+      ]
+    }
+  },
+  "prompt_user_sha256": "24631d46670cc221068fb787888cdea20785ff208d3a8fa12faa3f7b71604f51",
+  "response_text": "{\n  \"date_used\": \"2026-09-29\",\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\"oid\": \"e1\", \"entity\": \"pellucid\"},\n    {\"oid\": \"e2\", \"entity\": \"pellucid\"},\n    {\"oid\": \"e3\", \"entity\": \"pellucid\"},\n    {\"oid\": \"e4\", \"entity\": \"pellucid\"},\n    {\"oid\": \"e5\", \"entity\": \"pellucid\"}\n  ],\n  \"record\": {\n    \"status\": \"signed\",\n    \"status_evidence_line\": 36,\n    \"signed_date\": \"2026-09-29\",\n    \"effective_date\": \"2027-03-01\",\n    \"terms\": [\n      {\n        \"term\": \"price_per_seat\",\n        \"applies_to\": [\"pellucid\"],\n        \"value\": \"$2,010 USD per seat per year\",\n        \"line\": 42\n      },\n      {\n        \"term\": \"discount_pct\",\n        \"applies_to\": [\"pellucid\"],\n        \"value\": \"9%\",\n        \"line\": 44\n      }\n    ],\n    \"deciding_line\": 36,\n    \"deciding_days\": 153\n  }\n}",
+  "parsed": {
+    "date_used": "2026-09-29",
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "pellucid"
+      },
+      {
+        "oid": "e2",
+        "entity": "pellucid"
+      },
+      {
+        "oid": "e3",
+        "entity": "pellucid"
+      },
+      {
+        "oid": "e4",
+        "entity": "pellucid"
+      },
+      {
+        "oid": "e5",
+        "entity": "pellucid"
+      }
+    ],
+    "record": {
+      "status": "signed",
+      "status_evidence_line": 36,
+      "signed_date": "2026-09-29",
+      "effective_date": "2027-03-01",
+      "terms": [
+        {
+          "term": "price_per_seat",
+          "applies_to": [
+            "pellucid"
+          ],
+          "value": "$2,010 USD per seat per year",
+          "line": 42
+        },
+        {
+          "term": "discount_pct",
+          "applies_to": [
+            "pellucid"
+          ],
+          "value": "9%",
+          "line": 44
+        }
+      ],
+      "deciding_line": 36,
+      "deciding_days": 153
+    }
+  },
+  "usage": {
+    "input_tokens": 4193,
+    "output_tokens": 373,
+    "thinking_tokens": 102
+  },
+  "cost_usd": 0.012116
+}

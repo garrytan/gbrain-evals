@@ -1,0 +1,37 @@
+{
+  "slug": "tickets/2026-06-09-mas-new-stores",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: ticket\nTitle: SUP-5102: Agrisupply new store onboarding\nDate: Written on 2026-06-09.\nWriter: Priyanka \"Pree\" Sundaram\nVoice: polished and businesslike\nFormat: a ticket with a fields table and a timestamped update log\nLength: about 175 words\nDate style in the body: casual (Jun 2nd, Monday the 2nd)\nTypos: a few natural typos and one or two sloppy abbreviations (never in names or required phrases)\n\nBrief:\nTicket for onboarding six new Marrow Agrisupply stores, opened June 9, 2026. Fields table and updates.\n\nUse these names or codes at least once each, as written: \"MAS\".\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Hollis Mbeki: Central team lead\n- Priyanka \"Pree\" Sundaram: Account manager, Central team\n- Tobias Rendle: Account manager, Central team\n- Lev Arkadin: Procurement lead\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Tansley Parcel: regional parcel delivery, South Central; main contact Lev Arkadin, Procurement lead; codes/nicknames TPCL, TP\n- Tansleigh Packaging: corrugated packaging manufacturer, Ohio Valley; codes/nicknames TSP, TP\n- Marrow Fieldworks: agricultural equipment dealer network, Plains; codes/nicknames MFW\n- Marrow Agrisupply: farm supply retail chain, Plains; subsidiary of Marrow Fieldworks; codes/nicknames MAS, Marrow Agri\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2026-06-09 (background only; don't restate unless the brief asks):\n- Tansley Parcel: managed by Priyanka \"Pree\" Sundaram\n- Tansleigh Packaging: not stated on any shared page (do not say who manages it)\n- Marrow Fieldworks: managed by Tobias Rendle\n- Marrow Agrisupply: managed by Central team (pooled account)",
+      "response_text": "# SUP-5102: Agrisupply new store onboarding\n\n| Field | Detail |\n|---|---|\n| Opened | Jun 9th, 2026 |\n| Account | Marrow Agrisupply |\n| Code | MAS |\n| Product | Pemberline Dock |\n| Scope | Onboarding six new stores |\n| Status | In progress |\n| Next checkpoint | Jun 10th, morning receiving shift |\n\n## Update log\n\n**Jun 9th, 9:10 a.m.** — Opened onboarding ticket for six new Marrow Agrisupply stores. Received the receiving-team roster and store address sheet. Working labels are North Creek, Elm Junction, Prairie Bend, Mill Crossing, West Ridge, and South Fork; these match the supplied sheet.\n\n**Jun 9th, 10:35 a.m.** — Created the store setup checklist. North Creek and Elm Junction need separate appointment windows for bagged feed and palletized garden stock. Prairie Bend’s door 2 is marked unavailable during the morning forklift inspection. Added that restriction before importing the schedue.\n\n**Jun 9th, 1:20 p.m.** — Test appointments saved successfully at four stores. West Ridge has a duplicate receiving contact; South Fork’s notification email bounced. Requested corrected details and held those two invites.\n\n**Jun 9th, 3:45 p.m.** — Sent screenshots of the appointment view and a short receiving checklist. Remaining follow-up: contact corrections, invite resend, and final config review before tomorrow’s shift. Recieved acknowledgement from the store coordinator.",
+      "usage": {
+        "input_tokens": 1073,
+        "output_tokens": 326,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.005406,
+      "provider_meta": {
+        "id": "resp_00f812bfa65d36ba016acfae6eac4087d1a8187e9957990c13",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1073,
+          "input_tokens_details": {
+            "cache_write_tokens": 1070,
+            "cached_tokens": 0
+          },
+          "output_tokens": 326,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 1399
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

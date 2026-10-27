@@ -57,6 +57,43 @@ export type RunStatus = 'completed' | 'error' | 'skipped' | 'not_run';
 export type ReceiptVerdict = 'pass' | 'partial' | 'fail';
 export type FailureOrigin = 'sut' | 'harness' | 'dependency' | 'judge';
 
+/**
+ * Gate outcome, kept apart from execution status: a run can complete and still fail, be insufficient, or not reach a
+ * gate. `failed_threshold` names the bar that failed (or the floor an insufficient run missed).
+ */
+export type GateOutcomeStatus = 'pass' | 'fail' | 'insufficient' | 'not_run' | 'blocked';
+export const GATE_OUTCOMES: readonly GateOutcomeStatus[] = ['pass', 'fail', 'insufficient', 'not_run', 'blocked'];
+export interface GateDenominators { planned: number; attempted: number; scored: number; errors: number }
+export interface GateOutcome {
+  gate: string;
+  outcome: GateOutcomeStatus;
+  /** The preregistered bar in words, e.g. "Wilson upper bound of wrong mints <= 2 per 100,000 list lines". */
+  threshold: string;
+  observed: number | null;
+  denominators: GateDenominators;
+  failed_threshold?: string;
+  reason?: string;
+}
+
+/** The receipt verdict a set of gates implies: pass only when every gate passed; any fail, insufficient or blocked gate fails; otherwise partial. */
+export function verdictFromGates(gates: readonly GateOutcome[]): ReceiptVerdict {
+  if (gates.length && gates.every(g => g.outcome === 'pass')) return 'pass';
+  if (gates.some(g => g.outcome === 'fail' || g.outcome === 'insufficient' || g.outcome === 'blocked')) return 'fail';
+  return 'partial';
+}
+
+export function validateGateOutcomes(gates: unknown): string[] {
+  if (!Array.isArray(gates)) return ['gates must be an array'];
+  const v: string[] = [];
+  for (const g of gates as Array<Record<string, unknown>>) {
+    const d = g?.denominators as Record<string, unknown> | undefined;
+    if (typeof g?.gate !== 'string' || !GATE_OUTCOMES.includes(g.outcome as GateOutcomeStatus) || typeof g.threshold !== 'string') v.push(`gates[]: ${String(g?.gate)} needs gate, outcome (${GATE_OUTCOMES.join('|')}) and threshold`);
+    else if (!d || !['planned', 'attempted', 'scored', 'errors'].every(k => typeof d[k] === 'number' && (d[k] as number) >= 0)) v.push(`gates[]: ${g.gate} needs planned, attempted, scored and errors denominators`);
+    else if ((g.outcome === 'fail' || g.outcome === 'insufficient') && typeof g.failed_threshold !== 'string') v.push(`gates[]: ${g.gate} is ${g.outcome} and must name failed_threshold`);
+  }
+  return v;
+}
+
 export interface ProbeError {
   probe_id: string;
   origin: FailureOrigin;
@@ -70,9 +107,19 @@ export interface JudgeProvenance {
   seed?: number;
 }
 
+/**
+ * How `SourceTreeIdentity.sha256` was computed. `git-index-blob-v1` (written since v0.10.92): sha256 over
+ * (name, git blob id) of every file, with blob ids from git's index for files `git status` reports unchanged and
+ * computed from disk for the rest. `legacy-full-read`: sha256 over (name, size, bytes) of every file read from disk;
+ * receipts written before v0.10.92 carry no `scheme` and use it. Hashes from different schemes are not comparable.
+ */
+export type SourceTreeScheme = 'legacy-full-read' | 'git-index-blob-v1';
+
 export interface SourceTreeIdentity {
-  /** sha256 over (name, size, bytes) of every file in `git ls-files -co --exclude-standard`, read from disk. */
+  /** sha256 over every file in `git ls-files -co --exclude-standard` as it sits on disk, computed as `scheme` says. */
   sha256: string | null;
+  /** Absent on receipts written before v0.10.92; read it with `sourceTreeScheme`. */
+  scheme?: 'git-index-blob-v1';
   files: number;
   git_head: string | null;
   /** True when the working tree differs from git_head; the hash covers the dirty content. */
@@ -162,6 +209,8 @@ export interface Receipt {
   latency_ms?: LatencySummary | null;
   delivered_tokens?: DeliveredTokens | null;
   execution?: ExecutionIdentity;
+  /** Gate outcomes, separate from run_status (execution). */
+  gates?: GateOutcome[];
 }
 
 const RUN_STATUSES: RunStatus[] = ['completed', 'error', 'skipped', 'not_run'];
@@ -207,6 +256,7 @@ export function validateReceipt(obj: unknown): string[] {
     }
   }
   if (typeof r.started_at !== 'string' || typeof r.finished_at !== 'string') v.push('started_at/finished_at missing');
+  if (r.gates !== undefined) v.push(...validateGateOutcomes(r.gates));
   if (r.schema_version === RECEIPT_SCHEMA_VERSION) v.push(...validateV2(r, false));
   return v;
 }
@@ -223,6 +273,11 @@ export function validateStoredReceipt(obj: unknown): string[] {
   return v;
 }
 
+/** The scheme a stored source-tree hash used; a receipt without one used the legacy full read. */
+export function sourceTreeScheme(tree: SourceTreeIdentity): SourceTreeScheme {
+  return tree.scheme ?? 'legacy-full-read';
+}
+
 const nonNegative = (value: unknown) => typeof value === 'number' && Number.isFinite(value) && value >= 0;
 const nullableString = (value: unknown) => value === null || typeof value === 'string';
 
@@ -234,6 +289,7 @@ function validateV2(r: Record<string, unknown>, requireAll: boolean): string[] {
   const product = execution?.product;
   if (check('execution') && (!tree || !nullableString(tree.sha256) || !nonNegative(tree.files) || !nullableString(tree.git_head)
     || !(tree.dirty === null || typeof tree.dirty === 'boolean'))) v.push('v2 execution.source_tree requires sha256, files, git_head, dirty');
+  if (tree && !(tree.scheme === undefined || tree.scheme === 'git-index-blob-v1')) v.push('v2 execution.source_tree.scheme must be git-index-blob-v1 or absent (legacy full read)');
   if (check('execution') && (!product || !['gbrain', 'gbrain-cues', 'gbrain-reader'].includes(product.package as string) || !nullableString(product.declared_pin)
     || !nullableString(product.declared_sha) || !nullableString(product.version) || !nullableString(product.package_sha256)
     || !nullableString(product.loaded_git_head))) v.push('v2 execution.product requires package, declared_pin, declared_sha, version, package_sha256, loaded_git_head');
@@ -262,32 +318,53 @@ function validateV2(r: Record<string, unknown>, requireAll: boolean): string[] {
 const REPO_ROOT = resolve(import.meta.dir, '../..');
 const identityCache = new Map<string, unknown>();
 
-function gitText(cwd: string, args: string[]): string | null {
-  try { return execFileSync('git', ['-C', cwd, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim(); }
-  catch { return null; }
+/** A git command's output, or null when it fails. The file listing passed 1 MB (execFileSync's default buffer) as the repo grew, so the buffer is raised. */
+function gitText(cwd: string, args: string[], trim = true): string | null {
+  try {
+    const out = execFileSync('git', ['-C', cwd, ...args], { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], maxBuffer: 256 * 1024 * 1024 });
+    return trim ? out.trim() : out;
+  } catch { return null; }
 }
 
-/** Hash the evals tree as it sits on disk: tracked plus untracked non-ignored files, dirty edits included. */
+/**
+ * Hash the evals tree as it sits on disk: tracked plus untracked non-ignored files, dirty edits included.
+ * Only files that differ from git's index are read, so the cost follows the edit, not the 1.7 GB of committed
+ * artifacts. A result is cached only when every git call succeeded; a failed or interrupted call is reported, not kept.
+ */
 export function sourceTreeIdentity(root = REPO_ROOT): SourceTreeIdentity {
   const key = `tree:${root}`;
   if (identityCache.has(key)) return identityCache.get(key) as SourceTreeIdentity;
-  let identity: SourceTreeIdentity;
   const listing = gitText(root, ['ls-files', '-z', '-co', '--exclude-standard']);
-  if (listing === null) {
-    identity = { sha256: null, files: 0, git_head: null, dirty: null, error: 'not a git checkout; source tree not hashed' };
-  } else {
-    const hash = createHash('sha256');
-    const files = [...new Set(listing.split('\0').filter(Boolean))].sort();
-    for (const name of files) {
-      const path = join(root, name);
-      if (!existsSync(path) || !lstatSync(path).isFile()) { hash.update(`${Buffer.byteLength(name)}:${name}:deleted:`); continue; }
-      const bytes = readFileSync(path);
-      hash.update(`${Buffer.byteLength(name)}:${name}:${bytes.length}:`);
-      hash.update(bytes);
-    }
-    const status = gitText(root, ['status', '--porcelain', '--untracked-files=normal']);
-    identity = { sha256: hash.digest('hex'), files: files.length, git_head: gitText(root, ['rev-parse', 'HEAD']), dirty: status === null ? null : status !== '' };
+  if (listing === null) return { sha256: null, scheme: 'git-index-blob-v1', files: 0, git_head: null, dirty: null, error: 'not a git checkout; source tree not hashed' };
+  const files = [...new Set(listing.split('\0').filter(Boolean))].sort();
+  const staged = gitText(root, ['ls-files', '-z', '-s'], false);
+  const status = gitText(root, ['status', '-z', '--porcelain=v1', '--untracked-files=all'], false);
+  const head = gitText(root, ['rev-parse', 'HEAD']);
+  if (staged === null || status === null) return { sha256: null, scheme: 'git-index-blob-v1', files: files.length, git_head: head, dirty: null, error: 'git index or status unreadable; source tree not hashed' };
+  const indexBlob = new Map<string, string>();
+  for (const entry of staged.split('\0').filter(Boolean)) {
+    const [meta, name] = entry.split('\t');
+    const [mode, blob, stage] = meta.split(' ');
+    if (stage === '0' && (mode === '100644' || mode === '100755')) indexBlob.set(name, blob);
   }
+  const changed = new Set<string>();
+  const entries = status.split('\0');
+  for (let i = 0; i < entries.length; i++) {
+    if (!entries[i]) continue;
+    changed.add(entries[i].slice(3));
+    if (/[RC]/.test(entries[i].slice(0, 2))) changed.add(entries[++i]);
+  }
+  const hash = createHash('sha256');
+  for (const name of files) {
+    const path = join(root, name);
+    let blob = changed.has(name) ? undefined : indexBlob.get(name);
+    if (blob === undefined && existsSync(path) && lstatSync(path).isFile()) {
+      const bytes = readFileSync(path);
+      blob = createHash('sha1').update(`blob ${bytes.length}\0`).update(bytes).digest('hex');
+    }
+    hash.update(`${Buffer.byteLength(name)}:${name}:${blob ?? 'deleted'}:`);
+  }
+  const identity: SourceTreeIdentity = { sha256: hash.digest('hex'), scheme: 'git-index-blob-v1', files: files.length, git_head: head, dirty: status !== '' };
   identityCache.set(key, identity);
   return identity;
 }
@@ -379,9 +456,12 @@ function scrubString(value: string, prefixes: ReadonlyArray<readonly [string, st
   return out;
 }
 
-/** Rewrite checkout, home and temp paths in every string of a JSON value. */
-export function scrubMachinePaths<T>(value: T, root = REPO_ROOT, home = homedir(), tmp = tmpdir()): T {
-  const pairs: Array<[string, string]> = [[`${root}/`, ''], [root, '.']];
+/**
+ * Rewrite checkout, home and temp paths in every string of a JSON value. `extra` prefix pairs (a runner's own
+ * known paths, such as a gbrain checkout) apply first, longest prefix first.
+ */
+export function scrubMachinePaths<T>(value: T, root = REPO_ROOT, home = homedir(), tmp = tmpdir(), extra: ReadonlyArray<readonly [string, string]> = []): T {
+  const pairs: Array<readonly [string, string]> = [...[...extra].sort((a, b) => b[0].length - a[0].length), [`${root}/`, ''], [root, '.']];
   if (tmp) pairs.push([`${tmp}/`, '<tmp>/'], ['/tmp/', '<tmp>/']);
   if (home) pairs.push([`${home}/`, '~/']);
   const prefixes = pairs.filter(([prefix]) => prefix.length > 1);

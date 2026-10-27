@@ -1,0 +1,37 @@
+{
+  "slug": "updates/2025-06-16-central-weekly",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: weekly\nTitle: Central weekly — June 16\nDate: Written on 2025-06-16.\nWriter: Hollis Mbeki\nVoice: polished and businesslike\nFormat: a weekly update with a section per topic and bullets\nLength: about 464 words\nDate style in the body: ISO (2025-06-02)\nTypos: one or two small natural typos (never in names or required phrases)\n\nBrief:\nHollis's update. Marrow Fieldworks goes live in June 2025. Tansley Parcel discount amendment signed June 10. Tobias is ramping.\n\nRequired phrases:\n- Use the exact phrase \"Tobias's new account\" once, referring to Tansleigh Packaging. This page must not reveal which account that is or who manages it: no account name, location, or detail that identifies it in that sentence or paragraph.\n- Use the exact phrase \"Pree's dealer account\" once, referring to Marrow Fieldworks. Don't put the account's name in the same sentence; the reader should work it out.\n- Use the exact phrase \"the account Pree runs\" once, but vaguely: the writer does not say which account it is, and nothing nearby (name, location, numbers, products) may identify one. Keep that sentence generic, like a passing comment.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Hollis Mbeki: Central team lead\n- Priyanka \"Pree\" Sundaram: Account manager, Central team\n- Tobias Rendle: Account manager, Central team\n- Lev Arkadin: Procurement lead\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Tansley Parcel: regional parcel delivery, South Central; main contact Lev Arkadin, Procurement lead; codes/nicknames TPCL, TP\n- Tansleigh Packaging: corrugated packaging manufacturer, Ohio Valley; codes/nicknames TSP, TP\n- Marrow Fieldworks: agricultural equipment dealer network, Plains; codes/nicknames MFW\n- Marrow Agrisupply: farm supply retail chain, Plains; subsidiary of Marrow Fieldworks; codes/nicknames MAS, Marrow Agri\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2025-06-16 (background only; don't restate unless the brief asks):\n- Tansley Parcel: managed by Priyanka \"Pree\" Sundaram\n- Tansleigh Packaging: not stated on any shared page (do not say who manages it)\n- Marrow Fieldworks: managed by Priyanka \"Pree\" Sundaram\n- Marrow Agrisupply: managed by Central team (pooled account)",
+      "response_text": "# Central weekly — June 16\n\nWritten on 2025-06-16.\n\n## Marrow Fieldworks — June launch\n\n- Marrow Fieldworks goes live in 2025-06. This week’s work is focused on making the first operating shift straightforward: checking the appointment import, walking through an early arrival, and making sure the receiving desk can find the day’s exceptions without opening several separate views.\n- Pree's dealer account needs one more rehearsal of the late-truck workflow before launch. The test should start with a driver arriving after the planned window and end with the receiving clerk moving the appointment without losing the original arrival note.\n- The door labels in the rehearsal file still mix “Door 4” and “D04.” I have asked the implementation team to use the labels posted above the physical doors, then rerun the daily schedule export. This is a small cleanup, but it matters when a shift lead is reading a printed sheet at the desk.\n- Next step: capture the revised rehearsal results in the launch checklist and keep unresolved items visible at the top, rather than buried beneath completed setup tasks.\n\n## Tansley Parcel — amendment and follow-through\n\n- The Tansley Parcel discount amendment was signed on 2025-06-10. June Osei-Lark has been asked to keep the signed copy with the contract materials and check that the billing handoff points to that version.\n- Lev Arkadin recieved the follow-up note. The immediate task is to close the loop on the document exchange, not reopen the commercial discussion.\n- The operations conversation remains separate from the amendment. Dispatch reported that a rescheduled afternoon collection was difficult to distinguish from the original booking in the exported schedule. We are assembling a reproduction using a booking moved between two windows on the same day.\n- I will review the reproduction before it goes to support. Include the original window, the revised window, and the export timestamp so the team can compare the screen and file without another round of questions.\n\n## Tobias — ramping\n\n- Tobias is ramping. We worked through the weekly preparation routine: read the last meeting notes, pull out unresolved questions, and draft an agenda that starts with the customer’s open items.\n- Tobias's new account is part of that preparation work. The next step is a concise agenda and a short list of questions for review.\n- The useful improvement this week was separating decisions from observations in the notes. That makes the follow-up easier to write and avoids turning every comment into an action item.\n\n## General follow-through\n\n- There was also a brief check-in on the account Pree runs. Nothing further to add here this week.\n- I am clearing the remaining internal review comments and carrying unfinished items into the next weekly checklist. Please add replies to the existing threads rather than starting parallel ones; two nearly identical subject lines made Friday’s cleanup slower than it needed to be.",
+      "usage": {
+        "input_tokens": 1199,
+        "output_tokens": 708,
+        "thinking_tokens": 118
+      },
+      "cost_usd": 0.009478,
+      "provider_meta": {
+        "id": "resp_07b7d3446ad913a9016acfadfb48d087d194bde54fcc1fc907",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1199,
+          "input_tokens_details": {
+            "cache_write_tokens": 1196,
+            "cached_tokens": 0
+          },
+          "output_tokens": 708,
+          "output_tokens_details": {
+            "reasoning_tokens": 118
+          },
+          "total_tokens": 1907
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

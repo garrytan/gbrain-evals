@@ -1,0 +1,37 @@
+{
+  "slug": "agent-notes/2025-12-01-strategic-digest",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: agent-note\nTitle: Moss: Strategic digest 12/1\nDate: Written on 2025-12-01.\nWriter: Moss (Ruth Calloway's AI assistant)\nVoice: an AI assistant: neat, factual, a little stiff\nFormat: an assistant-written digest with headings and bullets, addressed to Ruth\nLength: about 93 words\nDate style in the body: undefined\nTypos: none\n\nBrief:\nMoss's digest. Mobility amendment live today.\n\nRequired phrases:\n- Use the exact phrase \"Gideon's fleet account\" once, referring to Vantorre Mobility. Don't put the account's name in the same sentence; the reader should work it out.\n- Use the exact phrase \"Gideon's medical account\" once, referring to Orlavine Medical Supply. This page must not reveal which account that is or who manages it: no account name, location, or detail that identifies it in that sentence or paragraph.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Nadia Fennimore: Strategic account manager\n- Gideon Sato: Strategic account manager\n- Mateo Quiroga: Head of Procurement\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Vantorre Group: diversified industrial manufacturer, Northeast; main contact Mateo Quiroga, Head of Procurement; codes/nicknames VTG, VTRG\n- Vantorre Mobility: electric fleet services subsidiary, Northeast; subsidiary of Vantorre Group; codes/nicknames VTM, VMob\n- Orlavine Medical Supply: medical supply distributor, Mountain West; codes/nicknames OMS\n- Quillfeather Outfitters: outdoor gear retailer, Mountain West; codes/nicknames QFO\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2025-12-01 (background only; don't restate unless the brief asks):\n- Vantorre Group: managed by Nadia Fennimore\n- Vantorre Mobility: managed by Gideon Sato\n- Orlavine Medical Supply: not stated on any shared page (do not say who manages it)\n- Quillfeather Outfitters: managed by Strategic Accounts pod (pooled account)",
+      "response_text": "# Moss: Strategic digest 12/1\n\nRuth,\n\n## Today — 2025-12-01\n- Vantorre Mobility’s amendment is live today.\n- Gideon's fleet account is the priority for the morning check. June Osei-Lark will check the amendment packet against the signed copy.\n- The dispatch team reported duplicate arrival entries at dock door 6 during the early shift. I have queued a comparison of the arrival log and the appointment export before your afternoon review.\n\n## Separate reminder\n- Gideon's medical account remains on your review list.\n\n## Next steps\n- Gather the dispatch screenshots.\n- Route the duplicate-entry example for product triage.",
+      "usage": {
+        "input_tokens": 1087,
+        "output_tokens": 208,
+        "thinking_tokens": 67
+      },
+      "cost_usd": 0.004254,
+      "provider_meta": {
+        "id": "resp_06349b7836694d79016acfaeb4a6e887d19685fcad01cd5c6f",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1087,
+          "input_tokens_details": {
+            "cache_write_tokens": 1084,
+            "cached_tokens": 0
+          },
+          "output_tokens": 208,
+          "output_tokens_details": {
+            "reasoning_tokens": 67
+          },
+          "total_tokens": 1295
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "slug": "emails/2025-10-02-mas-affiliate-amendment-signed",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2025-10-02",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Marrow Agrisupply",
+        "line": 9
+      },
+      {
+        "oid": "e2",
+        "surface": "Marrow Agrisupply",
+        "line": 11
+      }
+    ],
+    "claims": [],
+    "events": [
+      {
+        "eid": "e-mas-affiliate-signed",
+        "question": "Does the page describe this: \"Marrow Agrisupply affiliate amendment signed (40 seats, Tier 1)\"? If so, on what date does the text place it?"
+      }
+    ],
+    "ownership": []
+  },
+  "prompt_user_sha256": "8ed16fc2bb5459f7ce4c477d4a4679d5a74ee60de6ed057ab99d51fb04ac92ae",
+  "response_text": "{\n  \"date_used\": \"2025-10-02\",\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"marrow-agrisupply\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"marrow-agrisupply\"\n    }\n  ],\n  \"events\": [\n    {\n      \"eid\": \"e-mas-affiliate-signed\",\n      \"present\": true,\n      \"date\": \"2025-10-02\",\n      \"line\": 11\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-10-02",
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "marrow-agrisupply"
+      },
+      {
+        "oid": "e2",
+        "entity": "marrow-agrisupply"
+      }
+    ],
+    "events": [
+      {
+        "eid": "e-mas-affiliate-signed",
+        "present": true,
+        "date": "2025-10-02",
+        "line": 11
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2845,
+    "output_tokens": 152,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.00721
+}

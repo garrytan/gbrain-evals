@@ -313,4 +313,24 @@ describe('in-process mode (Cat 40 callers)', () => {
       expect(up.seen).toHaveLength(0);
     } finally { proxy.stop(); }
   });
+  test('a request the provider rejects before generating (413, a prompt over the context window) is metered at $0; a 5xx keeps its reservation', async () => {
+    let status = 413;
+    const up = fakeUpstream(() => Response.json({ type: 'error', error: { type: status === 413 ? 'request_too_large' : 'invalid_request_error', message: status === 413 ? 'Request exceeds the maximum size' : 'prompt is too long: 210000 tokens > 200000 maximum' } }, { status }));
+    const proxy = new MeteringProxy({ fetchImpl: up.fetchImpl });
+    proxy.start();
+    const body = { model: 'claude-sonnet-4-6', max_tokens: 1000, messages: [{ role: 'user', content: 'x'.repeat(3000) }] };
+    const call = () => fetch(`http://127.0.0.1:${proxy.port}/slot0/anthropic/v1/messages`, { method: 'POST', body: JSON.stringify(body) });
+    try {
+      expect((await call()).status).toBe(413);
+      status = 400;
+      expect((await call()).status).toBe(400);
+      const rejected = await proxy.finalize('slot:slot0');
+      expect(rejected).toMatchObject({ usd: 0, requests: 2, unpriced: 0 });
+      status = 500;
+      expect((await call()).status).toBe(500);
+      const failed = await proxy.finalize('slot:slot0');
+      expect(failed.usd).toBeCloseTo(reservationUsd(priceRequest('https://api.anthropic.com/v1/messages', body)!), 9);
+      expect(failed.unpriced).toBe(1);
+    } finally { proxy.stop(); }
+  });
 });

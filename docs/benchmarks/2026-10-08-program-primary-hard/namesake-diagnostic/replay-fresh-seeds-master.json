@@ -1,0 +1,315 @@
+{
+ "gbrain": {
+  "ref": "dda603ac9e152be45afd6f4edd3789bc11e000b8",
+  "commit": "dda603ac9e152be45afd6f4edd3789bc11e000b8",
+  "tree": "4d3f4292cb9dc69586c6b3ed8d31be6c78383cc2"
+ },
+ "rows": [
+  {
+   "key": "h124371926-t1|claude-sonnet-5-5|baseline|1",
+   "task": "h124371926-t1",
+   "reader": "claude-sonnet-5-5",
+   "contact": "Petra Torvik",
+   "contact_slug": "people/petra-torvik",
+   "namesake": {
+    "name": "Petra Rahman",
+    "slug": "people/petra-rahman",
+    "daily": "notes/daily/2026-10-12",
+    "line": "Petra Rahman (THL) asked about 45 seats; I owe Petra a sandbox account for their team.",
+    "item": "a sandbox account for their team"
+   },
+   "hits": [
+    "namesake commitment: a sandbox account for their team"
+   ],
+   "scored_unsupported": true,
+   "lines": [
+    "- In July she asked about a sandbox for another team. That could be an expansion angle."
+   ],
+   "hook_carries": {
+    "page": false,
+    "name": false,
+    "daily": false
+   },
+   "first_carrier": {
+    "index": 2,
+    "name": "search",
+    "args": {
+     "query": "THI call Petra procurement lead"
+    },
+    "recorded_chars": 11753,
+    "replay_chars": 14324,
+    "carries": {
+     "page": true,
+     "name": true,
+     "daily": false
+    }
+   },
+   "trace": [
+    {
+     "name": "context_pack",
+     "args": {
+      "entities": "Petra Torvik, THI"
+     },
+     "recorded_chars": 7350,
+     "replay_chars": 5558,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     },
+     "resolved_people": [
+      "people/petra-torvik",
+      "people/ayla-wexler"
+     ]
+    },
+    {
+     "name": "entity",
+     "args": {
+      "name": "Petra Torvik"
+     },
+     "recorded_chars": 7402,
+     "replay_chars": 5237,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     },
+     "resolved_people": [
+      "people/petra-torvik",
+      "people/ayla-wexler",
+      "people/ayla-w"
+     ]
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "THI call Petra procurement lead"
+     },
+     "recorded_chars": 11753,
+     "replay_chars": 14324,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "meetings/2026-10-23-thalura-pricing-review"
+     },
+     "recorded_chars": 1178,
+     "replay_chars": 1178,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "inbox/2026-10-12-torvik-reschedule"
+     },
+     "recorded_chars": 1125,
+     "replay_chars": 1125,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "deals/thalura-insurance"
+     },
+     "recorded_chars": 1125,
+     "replay_chars": 1125,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "meetings/2026-10-13-thalura-call"
+     },
+     "recorded_chars": 1121,
+     "replay_chars": 1121,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "inbox/2026-09-23-torvik-procurement-handoff"
+     },
+     "recorded_chars": 1161,
+     "replay_chars": 1161,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "Calla Valdez"
+     },
+     "recorded_chars": 10378,
+     "replay_chars": 10687,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    }
+   ]
+  },
+  {
+   "key": "h868827636-t2|claude-opus-5-5|baseline|1",
+   "task": "h868827636-t2",
+   "reader": "claude-opus-5-5",
+   "contact": "Noor Morales",
+   "contact_slug": "people/noor-morales",
+   "namesake": {
+    "name": "Noor Ishikawa",
+    "slug": "people/noor-ishikawa",
+    "daily": "notes/daily/2026-10-09",
+    "line": "Noor Ishikawa (XEF) asked about 60 seats; I owe Noor the migration runbook.",
+    "item": "the migration runbook"
+   },
+   "hits": [],
+   "scored_unsupported": false,
+   "lines": [
+    "- Don't mix it up with **Xerovik Foods (XEF)**. That's a different prospect with a similar name and a different Noor (Noor Ishikawa): 60 seats at $14."
+   ],
+   "hook_carries": {
+    "page": false,
+    "name": false,
+    "daily": false
+   },
+   "first_carrier": {
+    "index": 1,
+    "name": "search",
+    "args": {
+     "query": "Xerovik Logistics procurement call"
+    },
+    "recorded_chars": 12814,
+    "replay_chars": 12259,
+    "carries": {
+     "page": true,
+     "name": true,
+     "daily": false
+    }
+   },
+   "trace": [
+    {
+     "name": "context_pack",
+     "args": {
+      "entities": "Noor Morales, Xerovik Logistics"
+     },
+     "recorded_chars": 11492,
+     "replay_chars": 9552,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     },
+     "resolved_people": [
+      "people/noor-morales",
+      "people/bram-brandt",
+      "people/lior-eskildsen"
+     ]
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "Xerovik Logistics procurement call"
+     },
+     "recorded_chars": 12814,
+     "replay_chars": 12259,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "inbox/2026-10-11-morales-reschedule"
+     },
+     "recorded_chars": 1132,
+     "replay_chars": 1132,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "inbox/2026-09-21-morales-procurement-handoff"
+     },
+     "recorded_chars": 1163,
+     "replay_chars": 1163,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "Xerovik benchmark results monorepo",
+      "limit": 8
+     },
+     "recorded_chars": 4719,
+     "replay_chars": 4843,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "Kofi Petrov",
+      "limit": 5
+     },
+     "recorded_chars": 2483,
+     "replay_chars": 2907,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "people/noor-morales"
+     },
+     "recorded_chars": 2259,
+     "replay_chars": 993,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    }
+   ]
+  }
+ ]
+}

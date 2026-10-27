@@ -1,0 +1,372 @@
+{
+ "schema": "gbrain-sync-freshness/1",
+ "kind": "fairness",
+ "cell": "postgres-managed-10000-s3-fairness-serve-gbra133-pr2b-bench_4ba4c36f",
+ "label": "gbra133-pr2b-bench@4ba4c36f",
+ "gbrain_rev": "4ba4c36f",
+ "at": "2026-10-19T23:33:45.300Z",
+ "params": {
+  "engine": "postgres",
+  "mode": "managed",
+  "pages": 10000,
+  "commit": "single",
+  "trigger": "serve",
+  "reps": 10,
+  "rtt_ms": 0,
+  "measured_rtt_ms": 0.3,
+  "interval_s": null,
+  "scenario": "fairness",
+  "probe_ms": 100,
+  "timeout_s": 300,
+  "keyless": true,
+  "embed": null,
+  "detection": "watch",
+  "jitter_ms": 0,
+  "sources": [
+   "bench",
+   "bench2",
+   "bench3"
+  ],
+  "source_pages": 1000,
+  "residents": [
+   "serve"
+  ]
+ },
+ "machine": {
+  "cores": 4,
+  "cpu_model": "AMD EPYC",
+  "ram_gb": 16,
+  "kernel": "6.1.158+",
+  "bun": "1.4.3"
+ },
+ "build": {
+  "engine": "postgres",
+  "mode": "managed",
+  "pages": 10000,
+  "sources": [
+   "bench",
+   "bench2",
+   "bench3"
+  ],
+  "source_pages": 1000,
+  "rev": "4ba4c36f",
+  "built_at": "2026-10-19T23:31:57.360Z",
+  "cloned_from": "postgres-classic-10000-s3x1000-4ba4c36f",
+  "clone_ms": 1959.1,
+  "activate_ms": 3110.8,
+  "first_managed_sync": {
+   "ms": 1638.373046875,
+   "runs": 1
+  },
+  "first_managed_sync_bench2": {
+   "ms": 1006.826416015625,
+   "runs": 1
+  },
+  "first_managed_sync_bench3": {
+   "ms": 1122.197021484375,
+   "runs": 1
+  },
+  "links_settled": {
+   "ms": 524.2,
+   "runs": 1,
+   "last": "Extract --stale: 0 link(s) created, 0 removed, 0 timeline entr(ies) from 0 page(s). | Actionable: 0 page(s) still need link/timeline extraction; 0 page(s) due for the mention pass. Extraction is complete (raw stale totals are not a completion signal)."
+  },
+  "links_settled_bench2": {
+   "ms": 440,
+   "runs": 1,
+   "last": "Extract --stale: 0 link(s) created, 0 removed, 0 timeline entr(ies) from 0 page(s). | Actionable: 0 page(s) still need link/timeline extraction; 0 page(s) due for the mention pass. Extraction is complete (raw stale totals are not a completion signal)."
+  },
+  "links_settled_bench3": {
+   "ms": 407.4,
+   "runs": 1,
+   "last": "Extract --stale: 0 link(s) created, 0 removed, 0 timeline entr(ies) from 0 page(s). | Actionable: 0 page(s) still need link/timeline extraction; 0 page(s) due for the mention pass. Extraction is complete (raw stale totals are not a completion signal)."
+  }
+ },
+ "notes": [
+  "serve on-commit watcher enabled 518.2 ms after spawn"
+ ],
+ "get_page": {
+  "n": 10,
+  "p50": 5290.8,
+  "p95": 6168.3,
+  "max": 6800.5,
+  "min": 5100.5,
+  "mean": 5413.8,
+  "cv": 0.092
+ },
+ "search": {
+  "n": 10,
+  "p50": 5290.8,
+  "p95": 6168.3,
+  "max": 6800.5,
+  "min": 5100.5,
+  "mean": 5413.8,
+  "cv": 0.092
+ },
+ "exit": {
+  "n": 0,
+  "p50": null,
+  "p95": null,
+  "max": null,
+  "min": null,
+  "mean": null,
+  "cv": null
+ },
+ "phases": {
+  "spread_ms": {
+   "n": 10,
+   "p50": 4620.6,
+   "p95": 5412.8,
+   "max": 5973.1,
+   "min": 4428.5,
+   "mean": 4731.9,
+   "cv": 0.094
+  },
+  "all_visible_after_first_commit_ms": {
+   "n": 10,
+   "p50": 5489.1,
+   "p95": 6406.8,
+   "max": 7027.1,
+   "min": 5369.1,
+   "mean": 5631.5,
+   "cv": 0.089
+  }
+ },
+ "detection_observed": {
+  "bench": "watch (serve)",
+  "bench2": "watch (serve)",
+  "bench3": "watch (serve)"
+ },
+ "per_source": {
+  "bench": {
+   "n": 10,
+   "p50": 669.8,
+   "p95": 787.3,
+   "max": 827.4,
+   "min": 613.3,
+   "mean": 681.9,
+   "cv": 0.094
+  },
+  "bench2": {
+   "n": 10,
+   "p50": 2281.5,
+   "p95": 3163.8,
+   "max": 3755.6,
+   "min": 2165.4,
+   "mean": 2431.2,
+   "cv": 0.195
+  },
+  "bench3": {
+   "n": 10,
+   "p50": 5290.8,
+   "p95": 6168.3,
+   "max": 6800.5,
+   "min": 5100.5,
+   "mean": 5413.8,
+   "cv": 0.092
+  }
+ },
+ "failures": 0,
+ "reps": [
+  {
+   "rep": 0,
+   "sha": "c8907cc8816b",
+   "token": "zqctzfnrdifx",
+   "files": 3,
+   "get_ms": 6800.5,
+   "search_ms": 6800.5,
+   "first_hit_ms": 827.4,
+   "commit_git_ms": 226.6,
+   "source": "engine",
+   "phases": {
+    "spread_ms": 5973.1,
+    "all_visible_after_first_commit_ms": 7027.1
+   },
+   "per_source": {
+    "bench": 827.4,
+    "bench2": 3755.6,
+    "bench3": 6800.5
+   }
+  },
+  {
+   "rep": 1,
+   "sha": "7f59eee51446",
+   "token": "zqrtulnggnue",
+   "files": 3,
+   "get_ms": 5192.5,
+   "search_ms": 5192.5,
+   "first_hit_ms": 639.2,
+   "commit_git_ms": 220.5,
+   "source": "engine",
+   "phases": {
+    "spread_ms": 4553.3,
+    "all_visible_after_first_commit_ms": 5413
+   },
+   "per_source": {
+    "bench": 639.2,
+    "bench2": 2170.8,
+    "bench3": 5192.5
+   }
+  },
+  {
+   "rep": 2,
+   "sha": "9903769d5576",
+   "token": "zqdmwtmjcaiq",
+   "files": 3,
+   "get_ms": 5197,
+   "search_ms": 5197,
+   "first_hit_ms": 738.4,
+   "commit_git_ms": 198.7,
+   "source": "engine",
+   "phases": {
+    "spread_ms": 4458.6,
+    "all_visible_after_first_commit_ms": 5395.7
+   },
+   "per_source": {
+    "bench": 738.4,
+    "bench2": 2377.2,
+    "bench3": 5197
+   }
+  },
+  {
+   "rep": 3,
+   "sha": "8444d64fb0f9",
+   "token": "zqfcuxppxxdm",
+   "files": 3,
+   "get_ms": 5395.6,
+   "search_ms": 5395.6,
+   "first_hit_ms": 667.6,
+   "commit_git_ms": 253.1,
+   "source": "engine",
+   "phases": {
+    "spread_ms": 4728,
+    "all_visible_after_first_commit_ms": 5648.6
+   },
+   "per_source": {
+    "bench": 667.6,
+    "bench2": 2284.7,
+    "bench3": 5395.6
+   }
+  },
+  {
+   "rep": 4,
+   "sha": "7bb5434c5569",
+   "token": "zqgrvxyjvswn",
+   "files": 3,
+   "get_ms": 5100.5,
+   "search_ms": 5100.5,
+   "first_hit_ms": 672,
+   "commit_git_ms": 268.6,
+   "source": "engine",
+   "phases": {
+    "spread_ms": 4428.5,
+    "all_visible_after_first_commit_ms": 5369.1
+   },
+   "per_source": {
+    "bench": 672,
+    "bench2": 2278.2,
+    "bench3": 5100.5
+   }
+  },
+  {
+   "rep": 5,
+   "sha": "5406ccd499df",
+   "token": "zqzrdnovixgk",
+   "files": 3,
+   "get_ms": 5292.2,
+   "search_ms": 5292.2,
+   "first_hit_ms": 649.7,
+   "commit_git_ms": 250.5,
+   "source": "engine",
+   "phases": {
+    "spread_ms": 4642.5,
+    "all_visible_after_first_commit_ms": 5542.7
+   },
+   "per_source": {
+    "bench": 649.7,
+    "bench2": 2165.4,
+    "bench3": 5292.2
+   }
+  },
+  {
+   "rep": 6,
+   "sha": "f48056056811",
+   "token": "zqondwapkmqt",
+   "files": 3,
+   "get_ms": 5185.8,
+   "search_ms": 5185.8,
+   "first_hit_ms": 613.3,
+   "commit_git_ms": 196.1,
+   "source": "engine",
+   "phases": {
+    "spread_ms": 4572.5,
+    "all_visible_after_first_commit_ms": 5381.9
+   },
+   "per_source": {
+    "bench": 613.3,
+    "bench2": 2248.8,
+    "bench3": 5185.8
+   }
+  },
+  {
+   "rep": 7,
+   "sha": "0dd1dfcf3c36",
+   "token": "zqrlbcrqdvdl",
+   "files": 3,
+   "get_ms": 5390.4,
+   "search_ms": 5390.4,
+   "first_hit_ms": 699.3,
+   "commit_git_ms": 167.9,
+   "source": "engine",
+   "phases": {
+    "spread_ms": 4691.1,
+    "all_visible_after_first_commit_ms": 5558.3
+   },
+   "per_source": {
+    "bench": 699.3,
+    "bench2": 2440.5,
+    "bench3": 5390.4
+   }
+  },
+  {
+   "rep": 8,
+   "sha": "eb8038e41074",
+   "token": "zqltrzvqzzgu",
+   "files": 3,
+   "get_ms": 5294.1,
+   "search_ms": 5294.1,
+   "first_hit_ms": 695.4,
+   "commit_git_ms": 199.7,
+   "source": "engine",
+   "phases": {
+    "spread_ms": 4598.7,
+    "all_visible_after_first_commit_ms": 5493.8
+   },
+   "per_source": {
+    "bench": 695.4,
+    "bench2": 2334.3,
+    "bench3": 5294.1
+   }
+  },
+  {
+   "rep": 9,
+   "sha": "6099b1e0f2f6",
+   "token": "zqoszpvdozxu",
+   "files": 3,
+   "get_ms": 5289.3,
+   "search_ms": 5289.3,
+   "first_hit_ms": 616.8,
+   "commit_git_ms": 195.1,
+   "source": "engine",
+   "phases": {
+    "spread_ms": 4672.5,
+    "all_visible_after_first_commit_ms": 5484.4
+   },
+   "per_source": {
+    "bench": 616.8,
+    "bench2": 2256.5,
+    "bench3": 5289.3
+   }
+  }
+ ]
+}

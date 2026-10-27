@@ -1,0 +1,21 @@
+{
+  "experiment": "Living pages (gbrain wave 4b W9): build decision by the read/write break-even",
+  "preregistration": "docs/benchmarks/2026-10-17-living-pages-preregistration.md (gbrain-evals v0.10.118, 50d0dd25)",
+  "decided": "2026-10-17",
+  "basis": "prior; no owner data",
+  "owner_data": "none. The owner declined to supply production-brain counts, so queries A and B were never run and r_obs is unknown.",
+  "r_obs": null,
+  "r_star_floor": 8.214999757770943,
+  "r_star_prior": 1387.125145882957,
+  "pricing_priors": {
+    "review_minutes_per_proposal": 0.5,
+    "usd_per_review_minute": 2,
+    "living_refresh_usd": 0.017
+  },
+  "w9": "not built in V1",
+  "w10": "dropped with W9",
+  "reason": "The build threshold is 1,387 reads per changed page-day. Nothing known about a personal brain's read rate comes close: a personal brain's reads are made by its owner and the owner's agents, and every changed page-day would need well over a thousand reads of that content for a reviewed refresh to pay back. Without review cost the threshold would still be 23.2 (8.2 at the cheapest measured refresh), but propose mode always carries review.",
+  "reopen_condition": "Reopen if aggregate telemetry from a hosted brain shows r_obs >= the threshold (1,387 reads per changed page-day at the preregistered pricing), measured with the preregistration's queries A and B or their hosted equivalents.",
+  "cost_usd": 0,
+  "decided_by": "GBRA-108 (GBrain Minder) on 2026-10-17, under the crew rule not to request production-brain data"
+}

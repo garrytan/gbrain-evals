@@ -1,0 +1,12 @@
+{"arm":"C-layer","tier":"personal","pass":"cal1","calls":440,"skipped":0,"failed":0,"wall_ms":67917,"calls_per_s":6.4785034621782875}
+{"arm":"C-layer","tier":"personal","pass":"cal2","calls":440,"skipped":0,"failed":0,"wall_ms":69481,"calls_per_s":6.332665515701139}
+{"arm":"C-perdepth","tier":"personal","pass":"cal1","calls":440,"skipped":0,"failed":0,"wall_ms":127588,"calls_per_s":3.448590526819725}
+{"arm":"C-perdepth","tier":"personal","pass":"cal2","calls":440,"skipped":0,"failed":0,"wall_ms":132013,"calls_per_s":3.3330046904353443}
+{"arm":"A","tier":"personal","pass":"cold","calls":11000,"skipped":0,"failed":0,"wall_ms":392412,"calls_per_s":28.03172809661229}
+{"arm":"A","tier":"personal","pass":"warm","calls":11000,"skipped":0,"failed":0,"wall_ms":384236,"calls_per_s":28.62822459339975}
+{"arm":"B","tier":"personal","pass":"cold","calls":11000,"skipped":0,"failed":0,"wall_ms":383592,"calls_per_s":28.67631134984383}
+{"arm":"B","tier":"personal","pass":"warm","calls":11000,"skipped":0,"failed":0,"wall_ms":381303,"calls_per_s":28.848460096579196}
+{"arm":"BL","tier":"personal","pass":"cold","calls":11000,"skipped":0,"failed":0,"wall_ms":466461,"calls_per_s":23.581806361207228}
+{"arm":"BL","tier":"personal","pass":"warm","calls":11000,"skipped":0,"failed":0,"wall_ms":469224,"calls_per_s":23.442949954118955}
+{"arm":"C","tier":"personal","pass":"cold","calls":11000,"skipped":0,"failed":0,"wall_ms":1546250,"calls_per_s":7.113987305590494}
+{"arm":"C","tier":"personal","pass":"warm","calls":11000,"skipped":0,"failed":0,"wall_ms":1559296,"calls_per_s":7.054466042755348}

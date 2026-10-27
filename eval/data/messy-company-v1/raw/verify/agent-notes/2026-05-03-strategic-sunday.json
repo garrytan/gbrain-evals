@@ -1,0 +1,74 @@
+{
+  "slug": "agent-notes/2026-05-03-strategic-sunday",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2026-05-03",
+    "owner_phrases": [
+      {
+        "mid": "agent-notes/2026-05-03-strategic-sunday#m1",
+        "phrase": "Nadia's industrial account",
+        "lines": [
+          10
+        ]
+      }
+    ],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Vantorre Group",
+        "line": 10
+      },
+      {
+        "oid": "e2",
+        "surface": "VTG",
+        "line": 13
+      },
+      {
+        "oid": "e3",
+        "surface": "Vantorre Mobility",
+        "line": 16
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "65a5c24a421d1bf9969aef5f0984be5106e1af41b0bb7e815918a605af93d2a9",
+  "response_text": "{\n  \"date_used\": \"2026-05-03\",\n  \"owner_phrases\": [\n    {\n      \"mid\": \"agent-notes/2026-05-03-strategic-sunday#m1\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\n        \"vantorre-group\"\n      ],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"Refers to Vantorre Group, which Nadia Fennimore owns until 2026-05-04 and has descriptor 'industrial'.\"\n    }\n  ],\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"vantorre-mobility\"\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2026-05-03",
+    "owner_phrases": [
+      {
+        "mid": "agent-notes/2026-05-03-strategic-sunday#m1",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "vantorre-group"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "Refers to Vantorre Group, which Nadia Fennimore owns until 2026-05-04 and has descriptor 'industrial'."
+      }
+    ],
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e2",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e3",
+        "entity": "vantorre-mobility"
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2876,
+    "output_tokens": 259,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.008342
+}

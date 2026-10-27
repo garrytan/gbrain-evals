@@ -1,0 +1,215 @@
+{
+  "decision_id": "p1-e2-w5-heldout-2026-10-16",
+  "stage": "held-out",
+  "preregistration": "docs/benchmarks/2026-10-16-p1-e2-w5-rerun-preregistration.md (gbrain-evals 3a9360b86dd51f1f04d838045c5ef17f39e983bc)",
+  "verdict": "C1 and C2 pass: W5 upper-bound disclosure confirmed on held-out material; all three models keep apply certification on the W5 build",
+  "build": "6c3e6fe05e53a05025bf8f0ab671c799b4d7568c",
+  "build_version": "0.60.273.0",
+  "harness": "gbrain-evals 3a9360b86dd51f1f04d838045c5ef17f39e983bc (temporal-contradictions)",
+  "held_out_material": "phrasing set C joins-only ledger (dated, out-of-order and undated sub-ledgers), seeds 11, 13, 17",
+  "material_sha256_measured": "366116cb0d58fe93c10ca18711b8f123524101512bdd26af0ddedad7d2db52fa",
+  "material_sha256_e2_attempt2_receipt": "366116cb0d58fe93c10ca18711b8f123524101512bdd26af0ddedad7d2db52fa",
+  "e2_attempt2_receipt_sha256": "6918d5a06103a3ac496a655f8f49bdd7c37e2ef39996e9841a273d404df0006d",
+  "header_written_before_first_cell_at": "2026-10-17T03:51:59.983131+00:00",
+  "models": [
+    "anthropic:claude-opus-5-5",
+    "anthropic:claude-sonnet-5-5",
+    "openai:gpt-6.1-sol"
+  ],
+  "runs": 3,
+  "seeds": [
+    11,
+    13,
+    17
+  ],
+  "gates": {
+    "C1": {
+      "rule": "late_upper_bound == late in every run of every counted model",
+      "pass": true
+    },
+    "C2": {
+      "rule": "per model, every run: wrong closures <= 1%, 0 undated closures, as-of exact >= 0.361 (E2 value; ties pass)",
+      "pass_by_model": {
+        "anthropic:claude-opus-5-5": true,
+        "anthropic:claude-sonnet-5-5": true,
+        "openai:gpt-6.1-sol": true
+      }
+    }
+  },
+  "late_closures_reported": {
+    "w5_per_run": {
+      "anthropic:claude-opus-5-5": "48 of 75",
+      "anthropic:claude-sonnet-5-5": "48 of 74",
+      "openai:gpt-6.1-sol": "48 of 75"
+    },
+    "e2_r2_per_run": "41 of 66",
+    "note": "reported, not gated; W5 applies more closures per run on this build (74-75 vs 66), so the count and denominator both moved"
+  },
+  "e1_arm_asof_exact": 0.2601626016260163,
+  "certification": {
+    "anthropic:claude-opus-5-5": {
+      "c2_pass": true,
+      "c1_pass": true,
+      "valid": true,
+      "runs": [
+        {
+          "run": 1,
+          "applied": 75,
+          "wrong": 0,
+          "late": 48,
+          "late_upper_bound": 48,
+          "wrong_closure_rate": 0,
+          "asof_exact": 0.3967479674796748,
+          "undated_closures": 0,
+          "judge_errors": 0,
+          "harness_errors": 0
+        },
+        {
+          "run": 2,
+          "applied": 75,
+          "wrong": 0,
+          "late": 48,
+          "late_upper_bound": 48,
+          "wrong_closure_rate": 0,
+          "asof_exact": 0.3967479674796748,
+          "undated_closures": 0,
+          "judge_errors": 0,
+          "harness_errors": 0
+        },
+        {
+          "run": 3,
+          "applied": 75,
+          "wrong": 0,
+          "late": 48,
+          "late_upper_bound": 48,
+          "wrong_closure_rate": 0,
+          "asof_exact": 0.3967479674796748,
+          "undated_closures": 0,
+          "judge_errors": 0,
+          "harness_errors": 0
+        }
+      ]
+    },
+    "anthropic:claude-sonnet-5-5": {
+      "c2_pass": true,
+      "c1_pass": true,
+      "valid": true,
+      "runs": [
+        {
+          "run": 1,
+          "applied": 74,
+          "wrong": 0,
+          "late": 48,
+          "late_upper_bound": 48,
+          "wrong_closure_rate": 0,
+          "asof_exact": 0.39186991869918697,
+          "undated_closures": 0,
+          "judge_errors": 1,
+          "harness_errors": 0
+        },
+        {
+          "run": 2,
+          "applied": 75,
+          "wrong": 0,
+          "late": 48,
+          "late_upper_bound": 48,
+          "wrong_closure_rate": 0,
+          "asof_exact": 0.3967479674796748,
+          "undated_closures": 0,
+          "judge_errors": 0,
+          "harness_errors": 0
+        },
+        {
+          "run": 3,
+          "applied": 75,
+          "wrong": 0,
+          "late": 48,
+          "late_upper_bound": 48,
+          "wrong_closure_rate": 0,
+          "asof_exact": 0.3967479674796748,
+          "undated_closures": 0,
+          "judge_errors": 0,
+          "harness_errors": 0
+        }
+      ]
+    },
+    "openai:gpt-6.1-sol": {
+      "c2_pass": true,
+      "c1_pass": true,
+      "valid": true,
+      "runs": [
+        {
+          "run": 1,
+          "applied": 75,
+          "wrong": 0,
+          "late": 48,
+          "late_upper_bound": 48,
+          "wrong_closure_rate": 0,
+          "asof_exact": 0.3967479674796748,
+          "undated_closures": 0,
+          "judge_errors": 0,
+          "harness_errors": 0
+        },
+        {
+          "run": 2,
+          "applied": 75,
+          "wrong": 0,
+          "late": 48,
+          "late_upper_bound": 48,
+          "wrong_closure_rate": 0,
+          "asof_exact": 0.3967479674796748,
+          "undated_closures": 0,
+          "judge_errors": 0,
+          "harness_errors": 0
+        },
+        {
+          "run": 3,
+          "applied": 75,
+          "wrong": 0,
+          "late": 48,
+          "late_upper_bound": 48,
+          "wrong_closure_rate": 0,
+          "asof_exact": 0.3967479674796748,
+          "undated_closures": 0,
+          "judge_errors": 0,
+          "harness_errors": 0
+        }
+      ]
+    }
+  },
+  "proposal_statuses_all_runs": {
+    "anthropic:claude-opus-5-5": {
+      "applied": 225,
+      "undated_unresolved": 47,
+      "stale": 57,
+      "compatible": 7
+    },
+    "anthropic:claude-sonnet-5-5": {
+      "applied": 224,
+      "compatible": 42,
+      "stale": 57,
+      "error": 1,
+      "undated_unresolved": 12
+    },
+    "openai:gpt-6.1-sol": {
+      "applied": 225,
+      "compatible": 39,
+      "stale": 57,
+      "undated_unresolved": 15
+    }
+  },
+  "disclosures": [
+    "anthropic:claude-sonnet-5-5 seed 11 run 1: phase status partial with 1 judge error (20 applied of 21 proposals); not a harness error, so no rerun under the preregistration",
+    "harness_errors 0 for every model run; no reruns were needed",
+    "the harness built-in certified flag uses the E2 rule (as-of delta vs e1 >= 0.10); the gates above apply the preregistered W5 rule (as-of exact >= 0.361); both pass"
+  ],
+  "cost": {
+    "usd": 2.4001,
+    "input_tokens": 349071,
+    "output_tokens": 109526,
+    "budget_usd_cap": 8,
+    "overshoot_usd": 0,
+    "basis": "separate eval budget ledger on the custody host (not the Q1 ledgers)"
+  },
+  "row_level_output": "stays in custody"
+}

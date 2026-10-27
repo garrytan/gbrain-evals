@@ -1,0 +1,37 @@
+{
+  "pass": "cal2 (warm)",
+  "results": {
+    "traverseGraph": {
+      "layer": {
+        "p95_ms": 1964.455,
+        "p50_ms": 235.527,
+        "n": 80,
+        "errors": 0
+      },
+      "perdepth": {
+        "p95_ms": 1944.306,
+        "p50_ms": 249.147,
+        "n": 80,
+        "errors": 0
+      }
+    },
+    "traversePaths": {
+      "layer": {
+        "p95_ms": 239.637,
+        "p50_ms": 3.75,
+        "n": 360,
+        "errors": 0
+      },
+      "perdepth": {
+        "p95_ms": 1127.065,
+        "p50_ms": 12.145,
+        "n": 360,
+        "errors": 0
+      }
+    }
+  },
+  "choice": {
+    "traverseGraph": "perdepth",
+    "traversePaths": "layer"
+  }
+}

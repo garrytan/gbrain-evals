@@ -1,0 +1,203 @@
+{
+  "kind": "memory-qa-arm",
+  "schema_version": 1,
+  "benchmark": "beam-1m",
+  "split": "dev",
+  "run_status": "complete",
+  "invalid_reasons": [],
+  "started_at": "2026-10-13T00:47:51.107Z",
+  "finished_at": "2026-10-13T00:52:42.169Z",
+  "run_config_hash": "20eb2294ccdcc19fbea92acfc9c10b32022c52d0878b4a70b560a2db2f52a560",
+  "product": {
+    "package": "gbrain",
+    "declared_pin": "github:garrytan/gbrain#77cf8e1116e9af67c1983adcbb3223b96f0991a5",
+    "declared_sha": "77cf8e1116e9af67c1983adcbb3223b96f0991a5",
+    "version": "0.60.169.0",
+    "package_sha256": "043ccd7bb15a0d6e6d19341c4b843fcc63718037f275bbb9287960b05c85eb5e",
+    "loaded_git_head": null
+  },
+  "overlay": null,
+  "arm_config": {},
+  "search_pins": {
+    "search.mode": "balanced",
+    "search.autocut": "false",
+    "search.reranker.enabled": "true"
+  },
+  "retrieval_path": "frozen ranked lists replayed from docs/benchmarks/2026-10-12-beam-1m-s1-fixes/arms/r-div",
+  "retrieved_from": [
+    {
+      "path": "docs/benchmarks/2026-10-12-beam-1m-s1-fixes/arms/r-div/shard-0/rows.ndjson.gz",
+      "sha256": "3bdcff29ee3eaaefc69955af152dab8f8bed90b07483795269a95525c5852031"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-12-beam-1m-s1-fixes/arms/r-div/shard-1/rows.ndjson.gz",
+      "sha256": "379cb0cfb1a50f80b39d73ebcedcc72d50fb61f1f4568fcd996066445fe88f64"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-12-beam-1m-s1-fixes/arms/r-div/shard-10/rows.ndjson.gz",
+      "sha256": "7d74e834e760231745e69c79ae3ab6509b112b95ebc70c8cb4e811f518530fd9"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-12-beam-1m-s1-fixes/arms/r-div/shard-2/rows.ndjson.gz",
+      "sha256": "94d7fae5bee90efc6e053b854ee23c670df5accaca6c05ab8b630a57db61a76e"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-12-beam-1m-s1-fixes/arms/r-div/shard-3/rows.ndjson.gz",
+      "sha256": "5841b90a67ef35c39caa0a10e5f9a228f8c99e771ea23d1f13686e9e4585bf7b"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-12-beam-1m-s1-fixes/arms/r-div/shard-4/rows.ndjson.gz",
+      "sha256": "5a1695c6b22363c6e85970ad656f7b9920bb2ec65e29d8a49d51ad85c130aa75"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-12-beam-1m-s1-fixes/arms/r-div/shard-5/rows.ndjson.gz",
+      "sha256": "f5ae82834b2a50592fec43fe80108ce977c5080000634a9da9205cd329719440"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-12-beam-1m-s1-fixes/arms/r-div/shard-6/rows.ndjson.gz",
+      "sha256": "7546f54f3e741ad4a28fdc8904ffe0cc5384ef273a44cb27c72b504461ed7014"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-12-beam-1m-s1-fixes/arms/r-div/shard-7/rows.ndjson.gz",
+      "sha256": "00ee2a3348767f124f222cb05131abc5f1a52d2426e27d5d1fed09e12b5ebce9"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-12-beam-1m-s1-fixes/arms/r-div/shard-8/rows.ndjson.gz",
+      "sha256": "805452051139df8517eb75a819de9fabf043f731d0a6289f8e02cfd3b1950256"
+    },
+    {
+      "path": "docs/benchmarks/2026-10-12-beam-1m-s1-fixes/arms/r-div/shard-9/rows.ndjson.gz",
+      "sha256": "1147d2720908b3b1a0f971ede1420d87e25817421369e0d9f1c444fbedfae973"
+    }
+  ],
+  "search_knobs": {
+    "limit": null,
+    "poolDepth": null,
+    "maxPerSession": null
+  },
+  "reranker": {
+    "applies": false
+  },
+  "reading": {
+    "breadth_sessions": 10,
+    "budget_tokens": null,
+    "max_output_tokens": 4096
+  },
+  "embedding": {
+    "mode": "real",
+    "model": "openai:text-embedding-3-large",
+    "dims": 1536,
+    "cache_stats": null
+  },
+  "dataset": {
+    "name": "BEAM 1m",
+    "files": [
+      {
+        "path": "eval/decisions/datasets/beam-b2da22e.json",
+        "sha256": "cb154a2f1d245fcb19e4c35ddf604978604823d04b292b37f083db5c68c491b6"
+      }
+    ],
+    "revision": "b2da22e",
+    "license": "CC BY-SA 4.0"
+  },
+  "selection": {
+    "categories": null,
+    "limit": null,
+    "seed": 42,
+    "shard": {
+      "index": 9,
+      "count": 11
+    },
+    "conversations": 1,
+    "questions_expected": 20
+  },
+  "counts": {
+    "rows": 20,
+    "scored": 18,
+    "errors": 0,
+    "abstention": 2
+  },
+  "summary": {
+    "recall_all_at_5": 0.3333333333333333,
+    "recall_any_at_5": 1,
+    "recall_all_at_10": 0.4444444444444444,
+    "ndcg_at_10": 0.6245696830519776,
+    "latency_p50_ms": null,
+    "latency_p95_ms": null,
+    "qa_score": 0.7206944444444445,
+    "qa_rows": 20,
+    "qa_errors": 0
+  },
+  "facts": null,
+  "qa": {
+    "mode": "reader",
+    "reader": "openai:gpt-6.1-sol",
+    "judge": "openai:gpt-4.1-mini",
+    "runs": 1,
+    "sessions": 10,
+    "budgetTokens": null,
+    "thinkModel": "anthropic:claude-sonnet-5-5",
+    "context": "sessions",
+    "maxTokens": 4096,
+    "reader_prompt": "LongMemEval step-by-step reading prompt, sessions in date order",
+    "temperature_sent": {
+      "reader": "none (provider default)",
+      "judge": 0
+    },
+    "session_order": "chronological (BEAM Month-DD-YYYY dates compared as dates since 2026-10-08; other formats as strings)",
+    "judge_prompts": "per-rubric-item yes/no"
+  },
+  "usage": {
+    "schema": "usage-receipt/v1",
+    "by_role": {
+      "judge": {
+        "records": 69,
+        "provider_calls": 69,
+        "cache_hits": 0,
+        "errors": 0,
+        "retries": 0,
+        "usage_missing": 0,
+        "input_total": 51630,
+        "input_uncached": 51630,
+        "cache_read": 0,
+        "cache_write": 0,
+        "output_total": 69,
+        "reasoning": 0
+      },
+      "reader": {
+        "records": 20,
+        "provider_calls": 20,
+        "cache_hits": 0,
+        "errors": 0,
+        "retries": 0,
+        "usage_missing": 0,
+        "input_total": 283090,
+        "input_uncached": 60,
+        "cache_read": 0,
+        "cache_write": 283030,
+        "output_total": 9552,
+        "reasoning": 709
+      }
+    }
+  },
+  "fidelity": {
+    "embedding_deferred_pages": 0,
+    "reranked_queries": 0,
+    "rerank_provider_requests": null
+  },
+  "cost": {
+    "usd": 0.823977,
+    "input_tokens": 334720,
+    "output_tokens": 9621,
+    "basis": "budget ledger s1-s3w-gpt61sol-2026-10-13T00-43-27-103Z-39a98dcb: 89 paid requests, 0 charged at their reservation because usage was unavailable",
+    "ledger": ".budget/s1-beam-1m-2026-10-12b.sqlite",
+    "program_cap_usd": 59,
+    "overshoot_usd": 0,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 0,
+      "max": 61.9
+    }
+  },
+  "rows_file": "rows.ndjson"
+}

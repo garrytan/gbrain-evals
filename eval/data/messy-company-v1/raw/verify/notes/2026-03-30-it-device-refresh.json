@@ -1,0 +1,56 @@
+{
+  "slug": "notes/2026-03-30-it-device-refresh",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2026-03-30",
+    "owner_phrases": [
+      {
+        "mid": "notes/2026-03-30-it-device-refresh#m1",
+        "phrase": "Bettina's laptop",
+        "lines": [
+          9
+        ]
+      },
+      {
+        "mid": "notes/2026-03-30-it-device-refresh#m2",
+        "phrase": "Kwame's Okta account",
+        "lines": [
+          10
+        ]
+      }
+    ],
+    "entity_occurrences": [],
+    "claims": [],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "d57acf26f7dbb6d52115e54717caf0f0578ac4277322776a3da165d8a309509a",
+  "response_text": "{\n  \"date_used\": \"2026-03-30\",\n  \"owner_phrases\": [\n    {\n      \"mid\": \"notes/2026-03-30-it-device-refresh#m1\",\n      \"refers_to_customer_account\": false,\n      \"accounts\": [],\n      \"reading\": \"not about a customer account (a login, device, HR/expense account, a narrative 'account of', a vendor relationship, an employer)\",\n      \"note\": \"Refers to Bettina's physical laptop device for an IT refresh.\"\n    },\n    {\n      \"mid\": \"notes/2026-03-30-it-device-refresh#m2\",\n      \"refers_to_customer_account\": false,\n      \"accounts\": [],\n      \"reading\": \"not about a customer account (a login, device, HR/expense account, a narrative 'account of', a vendor relationship, an employer)\",\n      \"note\": \"Refers to Kwame's Okta login account needing an MFA reset.\"\n    }\n  ],\n  \"extra_owner_phrases\": []\n}",
+  "parsed": {
+    "date_used": "2026-03-30",
+    "owner_phrases": [
+      {
+        "mid": "notes/2026-03-30-it-device-refresh#m1",
+        "refers_to_customer_account": false,
+        "accounts": [],
+        "reading": "not about a customer account (a login, device, HR/expense account, a narrative 'account of', a vendor relationship, an employer)",
+        "note": "Refers to Bettina's physical laptop device for an IT refresh."
+      },
+      {
+        "mid": "notes/2026-03-30-it-device-refresh#m2",
+        "refers_to_customer_account": false,
+        "accounts": [],
+        "reading": "not about a customer account (a login, device, HR/expense account, a narrative 'account of', a vendor relationship, an employer)",
+        "note": "Refers to Kwame's Okta login account needing an MFA reset."
+      }
+    ],
+    "extra_owner_phrases": []
+  },
+  "usage": {
+    "input_tokens": 2585,
+    "output_tokens": 268,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.00785
+}

@@ -1,0 +1,41 @@
+{
+  "slug": "updates/2025-04-28-north-weekly",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: weekly\nTitle: North weekly 4/28\nDate: Written on 2025-04-28.\nWriter: Ilse Varga\nVoice: chatty, a bit rambling\nFormat: a weekly update with a short status table and notes\nLength: about 490 words\nDate style in the body: day-month (2 Jun 2025)\nTypos: none\n\nBrief:\nIlse's update. Tamsin kickoff happened Apr 22 and went well. Quarrendon MSA is signed and live since Apr 1. Open enrollment reminder for benefits.\n\nRequired phrases:\n- Use the exact phrase \"the Northwest one Dana inherited\" once, referring to Tamsin Cold Chain. Don't put the account's name in the same sentence; the reader should work it out.\n- Use the exact phrase \"Marcus's freight account\" once, referring to Quarrendon Freight Lines. Don't put the account's name in the same sentence; the reader should work it out.\n- Use the exact phrase \"Dana's benefits account\" once, in the sense of: her HR benefits portal account, which needs a password reset. It must not be about a customer account.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Ilse Varga: North team lead\n- Dana Okafor: Account manager, North team\n- Marcus Lindqvist: Account manager, North team\n- Thea Ramaswell: Director of Yard Operations\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Quarrendon Freight Lines: truckload freight carrier, Upper Midwest; main contact Thea Ramaswell, Director of Yard Operations; codes/nicknames QFL, Q-Freight\n- Brackenwater Freight Co.: less-than-truckload freight, Great Lakes; codes/nicknames BWF, Bracken\n- Tamsin Cold Chain: refrigerated warehousing, Pacific Northwest; codes/nicknames TCC\n- Orrin Mills: textile mill, Carolinas; codes/nicknames ORM\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2025-04-28 (background only; don't restate unless the brief asks):\n- Quarrendon Freight Lines: managed by Marcus Lindqvist\n- Brackenwater Freight Co.: managed by Dana Okafor\n- Tamsin Cold Chain: managed by Dana Okafor\n- Orrin Mills: managed by Dana Okafor",
+      "response_text": "# North weekly 4/28\n\nHappy Monday team! Hope everyone stayed dry over the weekend—it poured nonstop here from Friday evening right through Sunday afternoon, and my dog is currently refusing to step on the wet grass in the backyard, which made getting to my desk on time a fun little adventure. Anyway, grabbing my second coffee and dropping our quick rundown for the week of 28 Apr 2025 before we jump into the afternoon standup.\n\n| Customer | Status | Operational Notes |\n| :--- | :--- | :--- |\n| Tamsin Cold Chain | Green | Kickoff completed 22 Apr 2025. Building out reefer door profiles for Tacoma. |\n| Quarrendon Freight Lines | Green | MSA signed and live since 1 Apr 2025. Sorting out Gate 4 tablet issue. |\n| Brackenwater Freight Co. | Yellow | Waiting on Dock 12-18 door schedule CSV from their Toledo yard lead. |\n| Orrin Mills | Green | Quiet week, just tweaking the Detention Summary Report export columns. |\n\n### Account Notes & Follow-ups\n\n**Tamsin Cold Chain:** Huge shoutout on the kickoff call on 22 Apr 2025—it went really well! For the Northwest one Dana inherited, the cold storage supervisors were actually super prepared and brought a full spreadsheet of their carrier arrival windows and pre-cool buffer rules to the first session. Usually we have to chase people for two weeks just to get their shift handover times, so having their Tacoma night-shift lead walk us through how they stage refrigerated trailers on Doors 1 through 9 was a dream. We are setting up the temperature check prompts in Pemberline Dock this week and will do a quick sandbox walkthrough with their dispatchers on 1 May 2025.\n\n**Quarrendon Freight Lines:** Just to make sure it is officially logged on the wiki page, the Quarrendon Freight Lines MSA is signed and live since 1 Apr 2025. On Marcus's freight account, Thea Ramaswell sent over a note on Friday afternoon about the ruggedized tablets at their St. Paul terminal—specifically at Gate 4, where the overnight yard jockeys are getting logged out of Pemberline Dock every time the Wi-Fi switches between the main warehouse access point and the guard shack repeater. We logged ticket #PD-8841 with support to check session persistence settings so drivers are not idling at the barrier waiting for a fresh login code during the 04:00 shift change.\n\n**Brackenwater Freight Co. & Orrin Mills:** Pretty quiet on both fronts. Brackenwater still owes us the updated door mapping for Toledo after they repainted the west apron lanes, and Orrin Mills just asked if we could move the carrier SCAC column to the far left on their weekly Detention Summary Report.\n\n### Team Housekeeping\n\nOne last thing before I forget! Please remember that open enrollment for company benefits closes on 2 May 2025. Do not leave it until Friday afternoon when HR is already offline. Make sure you can actually log into the portal today—Dana's benefits account got locked out this morning after two bad security question guesses and she is currently waiting on People Ops to push a password reset link. Go check your dental elections now!",
+      "usage": {
+        "input_tokens": 1220,
+        "output_tokens": 701,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.00945,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1220,
+          "candidatesTokenCount": 701,
+          "totalTokenCount": 1921,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1220
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 701
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

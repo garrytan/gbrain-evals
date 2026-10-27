@@ -42,7 +42,8 @@ import { freePort } from './lifecycle/slice.ts';
 import { runCli, type RunEnv } from './lifecycle/drivers.ts';
 import {
   controlSeen, echoCredit, isDenial, isTargeted, loadGbrain, makeCallers, normalizeForOracle, oracleView, parseToolResult, presence,
-  scanLeaks, seed, synthesizeParams, targetTitle, variantsFor, type CallOutcome,
+  knownAsOfBreakdown, knownAsOfOutcome, scanLeaks, seed, synthesizeParams, targetTitle, variantsFor, type CallOutcome, type KnownAsOfOutcome,
+  beliefsBreakdown, beliefsOutcome, beliefsView, type BeliefsOutcome,
 } from './n6-visibility-fuzz.ts';
 import { attestPreregistration, type Attestation } from './prereg.ts';
 import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, noModelSpend, sourceTreeIdentity, writeReceipt, type Receipt } from './receipt.ts';
@@ -103,6 +104,13 @@ export interface ProbeRow {
   control: boolean;
   evidence?: string;
   error?: string;
+  /** known_as_of variants: what the trusted local caller and this principal got back. */
+  kao_local?: KnownAsOfOutcome;
+  kao_remote?: KnownAsOfOutcome;
+  /** beliefs variants: outcomes, and whether the trusted caller's change list itself carried protected content. */
+  bel_local?: BeliefsOutcome;
+  bel_remote?: BeliefsOutcome;
+  bel_signal?: boolean;
 }
 
 export interface RefusalRow {
@@ -354,6 +362,8 @@ async function runPgHttpHermetic(opts: PgHttpOptions) {
     await engine.connect({ database_url: dbUrl, poolSize: 4 });
     const config = { engine: 'postgres', database_url: dbUrl } as unknown as OperationContext['config'];
     const seedErrors = await seed(g, engine, ledger, config);
+    await new Promise(resolve => setTimeout(resolve, 50));
+    const knownAsOf = new Date().toISOString();
     const local = makeCallers(g, engine, config).local;
     const opByName = (n: string) => g.operations.find(o => o.name === n)!;
     const pres = await presence(engine, ledger, local, opByName('get_page'), opByName);
@@ -391,11 +401,12 @@ async function runPgHttpHermetic(opts: PgHttpOptions) {
         for (const unit of units) {
           const titles = 'cls' in unit && unit.cls ? { p: targetTitle(ledger, unit.cls.protected), t: targetTitle(ledger, unit.cls.twin), g: targetTitle(ledger, unit.cls.ghost, unit.cls.protected) } : { p: unit.protected ? targetTitle(ledger, unit.protected) : undefined, t: undefined, g: undefined };
           for (const v of variantsFor(op.params)) {
-            const prot = synthesizeParams(op.params, unit.protected, { ...v, title: titles.p });
+            const at = v.recordedTime ? knownAsOf : undefined;
+            const prot = synthesizeParams(op.params, unit.protected, { ...v, title: titles.p, knownAsOf: at });
             if (!prot.params) { unsupported[op.name] = prot.unsupported; continue; }
             const cls = 'cls' in unit ? unit.cls : undefined;
-            const gh = cls ? synthesizeParams(op.params, cls.ghost, { ...v, title: titles.g }).params : undefined;
-            const tw = cls ? synthesizeParams(op.params, cls.twin, { ...v, title: titles.t }).params : undefined;
+            const gh = cls ? synthesizeParams(op.params, cls.ghost, { ...v, title: titles.g, knownAsOf: at }).params : undefined;
+            const tw = cls ? synthesizeParams(op.params, cls.twin, { ...v, title: titles.t, knownAsOf: at }).params : undefined;
             tasks.push({ principal, op, unit, variantId: v.id, scope: v.scope, prot: prot.params, ghost: gh, twin: tw, replayKey: `${op.name}:${unit.id}:${v.id}` });
           }
         }
@@ -427,7 +438,9 @@ async function runPgHttpHermetic(opts: PgHttpOptions) {
       const localHit = scanFor(lo.prot, gold, [], echoCredit(t.prot, t.ghost, lo.ghost?.raw, gold.markers));
       const localDetected = !!(localHit.content || localHit.existence);
       const pr = (await http(t.principal, t.op.name, t.prot))!;
-      const base = { phase, principal: t.principal, op: t.op.name, target: t.unit.id, variant: t.variantId };
+      const belHit = t.variantId === 'beliefs' ? scanFor(beliefsView(lo.prot), gold, []) : null;
+      const base = { phase, principal: t.principal, op: t.op.name, target: t.unit.id, variant: t.variantId, ...(t.variantId.startsWith('known_as_of') ? { kao_local: knownAsOfOutcome(lo.prot), kao_remote: knownAsOfOutcome(pr) } : {}),
+        ...(belHit ? { bel_local: beliefsOutcome(lo.prot), bel_remote: beliefsOutcome(pr), bel_signal: !!(belHit.content || belHit.existence) } : {}) };
       if (!pr.exposed) { rows.push({ ...base, status: 'not_exposed', control: false }); return; }
       if (pr.timed_out) { rows.push({ ...base, status: 'harness_error', control: false, error: `${pr.error_code}: ${pr.raw.slice(0, 160)}` }); return; }
       const gr = await http(t.principal, t.op.name, t.ghost);
@@ -542,6 +555,10 @@ async function runPgHttpHermetic(opts: PgHttpOptions) {
     const handshakeAccepted = handshakeRefusals.filter(r => !r.refused || r.canary);
     const verdict = verdictFor(cells, { total: calls, harness_errors: harnessErrors });
     if (handshakeAccepted.length) { verdict.pass = false; verdict.failures.push(`${handshakeAccepted.length} handshake requests (initialize, tools/list) accepted or carrying a canary`); }
+    const kaoBreakdown = knownAsOfBreakdown(rows);
+    if (kaoBreakdown.probes && !kaoBreakdown.real_history_signal) { verdict.pass = false; verdict.failures.push(`none of ${kaoBreakdown.probes} known_as_of probes read recorded history with signal, so they test nothing`); }
+    const belBreakdown = beliefsBreakdown(rows);
+    if (belBreakdown.probes && !belBreakdown.real_history_signal) { verdict.pass = false; verdict.failures.push(`none of ${belBreakdown.probes} beliefs probes carried protected content in the trusted caller's change list with signal, so they test nothing`); }
     if (!expiringValidBefore) { verdict.pass = false; verdict.failures.push('the expiring token never worked before expiry, so its refusal proves nothing'); }
 
     const optional = Object.entries(OPTIONAL_OPS).map(([op, surface]) => {
@@ -593,6 +610,8 @@ async function runPgHttpHermetic(opts: PgHttpOptions) {
           refused_calls: refusals.filter(r => r.refused).length, refusal_calls: refusals.length,
           pool: { samples: samples.length, max_server_connections: maxConnections, max_active: maxActive, condition_met: poolConditionMet },
           phase_ms: phaseTimes,
+          known_as_of: kaoBreakdown,
+          beliefs: belBreakdown,
         },
         controls: { owner_reads_beta_only_page: ownerBetaSeen, expiring_token_valid_before_expiry: expiringValidBefore, presence: pres.checks },
         cells,

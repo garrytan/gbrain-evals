@@ -1,0 +1,58 @@
+{
+  "slug": "meetings/2025-04-22-tamsin-kickoff",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2025-04-22",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Tamsin",
+        "line": 6
+      },
+      {
+        "oid": "e2",
+        "surface": "Tamsin Cold Chain",
+        "line": 9
+      }
+    ],
+    "claims": [],
+    "events": [
+      {
+        "eid": "e-tcc-kickoff",
+        "question": "Does the page describe this: \"Tamsin kickoff with Dana after she inherits the account\"? If so, on what date does the text place it?"
+      }
+    ],
+    "ownership": []
+  },
+  "prompt_user_sha256": "c43ff7b2449296fc6008882d056a2b33d649d2e4e5702778895f51e3bbad6f7e",
+  "response_text": "{\n  \"date_used\": \"2025-04-22\",\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"tamsin\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"tamsin\"\n    }\n  ],\n  \"events\": [\n    {\n      \"eid\": \"e-tcc-kickoff\",\n      \"present\": true,\n      \"date\": \"2025-04-22\",\n      \"line\": 9\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-04-22",
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "tamsin"
+      },
+      {
+        "oid": "e2",
+        "entity": "tamsin"
+      }
+    ],
+    "events": [
+      {
+        "eid": "e-tcc-kickoff",
+        "present": true,
+        "date": "2025-04-22",
+        "line": 9
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 3031,
+    "output_tokens": 145,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.007512
+}

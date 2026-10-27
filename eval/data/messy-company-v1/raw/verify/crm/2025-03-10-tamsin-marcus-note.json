@@ -1,0 +1,59 @@
+{
+  "slug": "crm/2025-03-10-tamsin-marcus-note",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2025-03-10",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Tamsin Cold Chain",
+        "line": 6
+      },
+      {
+        "oid": "e2",
+        "surface": "TCC",
+        "line": 6
+      }
+    ],
+    "claims": [
+      {
+        "cid": "c-tcc-decider-marcus",
+        "question": "What does the page say about Tamsin Cold Chain's decision maker?"
+      }
+    ],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "439c407753ca8c2d420042dd7660a0680bc76ccb5fdcad60858cb8e6695869ab",
+  "response_text": "{\n  \"date_used\": \"2025-03-10\",\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"tamsin\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"tamsin\"\n    }\n  ],\n  \"claims\": [\n    {\n      \"cid\": \"c-tcc-decider-marcus\",\n      \"stated\": true,\n      \"value\": \"Pavel Ruud, CFO, is the decision maker.\",\n      \"line\": 8\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-03-10",
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "tamsin"
+      },
+      {
+        "oid": "e2",
+        "entity": "tamsin"
+      }
+    ],
+    "claims": [
+      {
+        "cid": "c-tcc-decider-marcus",
+        "stated": true,
+        "value": "Pavel Ruud, CFO, is the decision maker.",
+        "line": 8
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2631,
+    "output_tokens": 136,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.006622
+}

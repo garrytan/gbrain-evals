@@ -103,6 +103,9 @@ describe('flags and the paid guard', () => {
   test('parses the shared flags and refuses paid work without both flags', async () => {
     expect(parseN9Args(['--seed', '7', '--output', '/tmp/x'])).toMatchObject({ seeds: [7], outputDir: '/tmp/x', paidArgv: null });
     expect(() => parseN9Args(['--bogus'])).toThrow('unknown option');
+    expect(parseN9Args(['--extra-split', 'heldout-paraphrase=/tmp/h.jsonl']).extraSplits).toEqual([{ split: 'heldout-paraphrase', path: '/tmp/h.jsonl' }]);
+    expect(() => parseN9Args(['--extra-split', 'one-hop-template=/tmp/h.jsonl'])).toThrow('--extra-split');
+    expect(() => parseN9Args(['--extra-split', 'no-path'])).toThrow('--extra-split');
     await expect(runN9({ paidArgv: ['--paid'] })).rejects.toThrow(PaidArmRefusal);
   });
 });

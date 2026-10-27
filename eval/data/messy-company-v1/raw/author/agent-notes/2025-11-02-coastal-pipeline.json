@@ -1,0 +1,41 @@
+{
+  "slug": "agent-notes/2025-11-02-coastal-pipeline",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: agent-note\nTitle: Moss: Coastal digest (Sun 11/2)\nDate: Written on 2025-11-02.\nWriter: Moss (Ruth Calloway's AI assistant)\nVoice: an AI assistant: neat, factual, a little stiff\nFormat: an assistant-written digest with headings and bullets, addressed to Ruth\nLength: about 55 words\nDate style in the body: ISO (2025-06-02)\nTypos: none\n\nBrief:\nMoss's Sunday digest for Ruth. Pellucid changes hands tomorrow.\n\nRequired phrases:\n- Use the exact phrase \"Kwame's port account\" once, referring to Driftmoor Marine Freight. Don't put the account's name in the same sentence; the reader should work it out.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Bettina Kroll: Coastal team lead\n- Sofia Marchetti: Account manager, Coastal team\n- Kwame Adjei-Rowe: Account manager, Coastal team\n- Corinne Ashdown: VP Operations\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Pellucid Harbor Logistics: port drayage and terminal logistics, Gulf Coast; codes/nicknames PHL\n- Driftmoor Marine Freight: marine freight and barge operator, Puget Sound; codes/nicknames DMF\n- Saltmarsh Provisions: regional grocery distributor, Lowcountry; main contact Corinne Ashdown, VP Operations; codes/nicknames SMP\n- Covey & Lark Retail: home goods retailer, Mid-Atlantic; codes/nicknames Covey, CLR\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2025-11-02 (background only; don't restate unless the brief asks):\n- Pellucid Harbor Logistics: managed by Bettina Kroll\n- Driftmoor Marine Freight: managed by Kwame Adjei-Rowe\n- Saltmarsh Provisions: managed by Bettina Kroll\n- Covey & Lark Retail: managed by Sofia Marchetti",
+      "response_text": "### Coastal Digest — 2025-11-02\n\nGood evening, Ruth.\n\n* **Pellucid Harbor Logistics:** Account ownership changes hands tomorrow, 2025-11-03. The terminal 4 drayage gate export is queued for the morning handoff.\n* **Puget Sound Operations:** Kwame's port account logged ticket #4419 regarding barge slip 7 schedule sync. Driftmoor Marine Freight requested a patched manifest CSV before the 06:00 shift.",
+      "usage": {
+        "input_tokens": 1125,
+        "output_tokens": 118,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.00343,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1125,
+          "candidatesTokenCount": 118,
+          "totalTokenCount": 1243,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1125
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 118
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

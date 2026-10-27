@@ -1,0 +1,37 @@
+{
+  "slug": "tickets/2025-08-26-dmf-barge-slot-notifications",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: ticket\nTitle: SUP-3988: barge slot notifications not sent\nDate: Written on 2025-08-26.\nWriter: Kwame Adjei-Rowe\nVoice: friendly and organized\nFormat: a ticket with a fields table and a timestamped update log\nLength: about 292 words\nDate style in the body: US short (6/2/25)\nTypos: none\n\nBrief:\nTicket opened Aug 26, 2025. Fields table and updates.\n\nUse these names or codes at least once each, as written: \"DMF\".\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Bettina Kroll: Coastal team lead\n- Sofia Marchetti: Account manager, Coastal team\n- Kwame Adjei-Rowe: Account manager, Coastal team\n- Corinne Ashdown: VP Operations\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Pellucid Harbor Logistics: port drayage and terminal logistics, Gulf Coast; codes/nicknames PHL\n- Driftmoor Marine Freight: marine freight and barge operator, Puget Sound; codes/nicknames DMF\n- Saltmarsh Provisions: regional grocery distributor, Lowcountry; main contact Corinne Ashdown, VP Operations; codes/nicknames SMP\n- Covey & Lark Retail: home goods retailer, Mid-Atlantic; codes/nicknames Covey, CLR\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2025-08-26 (background only; don't restate unless the brief asks):\n- Pellucid Harbor Logistics: managed by Bettina Kroll\n- Driftmoor Marine Freight: managed by Kwame Adjei-Rowe\n- Saltmarsh Provisions: managed by Sofia Marchetti\n- Covey & Lark Retail: managed by Sofia Marchetti",
+      "response_text": "# SUP-3988: barge slot notifications not sent\n\n| Field | Details |\n|---|---|\n| Opened | 8/26/25 |\n| Customer | Driftmoor Marine Freight |\n| Customer code | DMF |\n| Product | Pemberline Dock |\n| Status | Investigating |\n| Area | Barge scheduling / outbound notifications |\n| Reported impact | Dispatch did not receive notifications for two changed barge slots |\n| Next check | Compare notification events for original bookings and subsequent slot changes |\n\n## Issue\n\nThe morning dispatcher reported that two barge slot changes appeared on the scheduling board but did not generate the expected email notifications. Dispatch caught the changes while checking the berth view before the shift handoff; the printed arrival sheet still showed the earlier times.\n\nThe affected bookings are at the south landing, berth 2. Both were moved from the morning window into the afternoon. No duplicate bookings or missing slot records were visible during the screen share.\n\n## Update log\n\n**8/26/25, 9:10 AM** — Opened after the dispatcher forwarded screenshots of the board and the shared dispatch inbox. Asked the team to keep the original messages intact and send booking references rather than forwarding another screenshot of the arrival sheet.\n\n**8/26/25, 9:42 AM** — Compared bookings B-1842 and B-1847 with an unchanged booking from the same shift. Recipient addresses match. The dispatcher also checked junk mail and the inbox rules folder; neither notification was there. Thanks to the morning crew for checking between radio calls.\n\n**8/26/25, 10:25 AM** — Reproduced a slot-time edit on a test booking. The board saved the new time, but no corresponding notification appeared in the event view. Initial booking notifications are appearing normally in the same test.\n\n**8/26/25, 11:05 AM** — Sent the reproduction steps and booking references to support engineering. Dispatch will use the board during handoff and call the berth coordinator for today’s changes. Next update after the event trace review.",
+      "usage": {
+        "input_tokens": 1019,
+        "output_tokens": 427,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.006308,
+      "provider_meta": {
+        "id": "resp_0bd948bcf5fa6423016acfaea768b887d1bd61f2de2456efd0",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1019,
+          "input_tokens_details": {
+            "cache_write_tokens": 0,
+            "cached_tokens": 0
+          },
+          "output_tokens": 427,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 1446
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

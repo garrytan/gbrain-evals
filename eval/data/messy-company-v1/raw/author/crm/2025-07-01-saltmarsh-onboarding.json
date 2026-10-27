@@ -1,0 +1,41 @@
+{
+  "slug": "crm/2025-07-01-saltmarsh-onboarding",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: crm\nTitle: CRM: Saltmarsh onboarding\nDate: Written on 2025-07-01.\nWriter: Sofia Marchetti\nVoice: chatty, a bit rambling\nFormat: undefined\nLength: about 4 words\nDate style in the body: ISO (2025-06-02)\nTypos: none\n\nBrief:\nSofia's CRM note: live today, 70 seats, 7% discount, renewal June 30, 2026.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Bettina Kroll: Coastal team lead\n- Sofia Marchetti: Account manager, Coastal team\n- Kwame Adjei-Rowe: Account manager, Coastal team\n- Corinne Ashdown: VP Operations\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Pellucid Harbor Logistics: port drayage and terminal logistics, Gulf Coast; codes/nicknames PHL\n- Driftmoor Marine Freight: marine freight and barge operator, Puget Sound; codes/nicknames DMF\n- Saltmarsh Provisions: regional grocery distributor, Lowcountry; main contact Corinne Ashdown, VP Operations; codes/nicknames SMP\n- Covey & Lark Retail: home goods retailer, Mid-Atlantic; codes/nicknames Covey, CLR\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2025-07-01 (background only; don't restate unless the brief asks):\n- Pellucid Harbor Logistics: managed by Bettina Kroll\n- Driftmoor Marine Freight: managed by Kwame Adjei-Rowe\n- Saltmarsh Provisions: managed by Sofia Marchetti\n- Covey & Lark Retail: managed by Sofia Marchetti",
+      "response_text": "# CRM: Saltmarsh onboarding\n\n**Date:** 2025-07-01  \n**Account:** Saltmarsh Provisions (SMP)  \n\nYay, Saltmarsh Provisions is officially live today on 2025-07-01! We got all 70 seats provisioned this morning, with the 7% discount locked in, and the renewal date is set for 2026-06-30. \n\nCorinne Ashdown was on the early call while the Savannah Cold Storage yard was taking its first 05:30 produce trucks at Dock Doors 4 through 9, and honestly it went way smoother than I expected for a Tuesday before a holiday weekend. One gate guard on the first shift, Ronnie, kept trying to sort the `Carrier_Arrival_Queue_v2` report by trailer length instead of appointment window and accidentally bumped a boiled-peanut vendor out of Door 6, so I opened ticket #4812 to get his view permissions locked down before the afternoon wave hits. Corinne said she'll send me the final dock clerk roster for the Charleston dry warehouse after lunch so I can help her import their shift templates tomorrow.",
+      "usage": {
+        "input_tokens": 1058,
+        "output_tokens": 254,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.004656,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1058,
+          "candidatesTokenCount": 254,
+          "totalTokenCount": 1312,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1058
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 254
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

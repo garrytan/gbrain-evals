@@ -1,0 +1,41 @@
+{
+  "slug": "crm/2025-07-08-tansley-parcel-discount-note",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: crm\nTitle: CRM: Tansley Parcel volume discount\nDate: Written on 2025-07-08.\nWriter: Priyanka \"Pree\" Sundaram\nVoice: friendly and organized\nFormat: undefined\nLength: about 53 words\nDate style in the body: undefined\nTypos: none\n\nBrief:\nPree's CRM note: Amendment 1 is in effect from July 1; discount now 14%.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Hollis Mbeki: Central team lead\n- Priyanka \"Pree\" Sundaram: Account manager, Central team\n- Tobias Rendle: Account manager, Central team\n- Lev Arkadin: Procurement lead\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Tansley Parcel: regional parcel delivery, South Central; main contact Lev Arkadin, Procurement lead; codes/nicknames TPCL, TP\n- Tansleigh Packaging: corrugated packaging manufacturer, Ohio Valley; codes/nicknames TSP, TP\n- Marrow Fieldworks: agricultural equipment dealer network, Plains; codes/nicknames MFW\n- Marrow Agrisupply: farm supply retail chain, Plains; subsidiary of Marrow Fieldworks; codes/nicknames MAS, Marrow Agri\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2025-07-08 (background only; don't restate unless the brief asks):\n- Tansley Parcel: managed by Priyanka \"Pree\" Sundaram\n- Tansleigh Packaging: not stated on any shared page (do not say who manages it)\n- Marrow Fieldworks: managed by Priyanka \"Pree\" Sundaram\n- Marrow Agrisupply: managed by Central team (pooled account)",
+      "response_text": "# CRM: Tansley Parcel volume discount\n\n**Date:** 2025-07-08  \n**Author:** Priyanka \"Pree\" Sundaram  \n**Account:** Tansley Parcel (TPCL)\n\nQuick update on the billing record for Tansley Parcel: Amendment 1 is officially in effect from July 1, and their volume discount is now 14%. \n\nLev Arkadin confirmed their Tulsa hub night shift is finally done manually logging Dock 6 arrivals, so I'm sending him the updated gate check-in export tomorrow morning!",
+      "usage": {
+        "input_tokens": 1057,
+        "output_tokens": 122,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.003334,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1057,
+          "candidatesTokenCount": 122,
+          "totalTokenCount": 1179,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1057
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 122
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

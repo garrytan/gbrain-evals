@@ -1,0 +1,132 @@
+{
+  "slug": "updates/2025-11-10-north-weekly",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2025-11-10",
+    "owner_phrases": [
+      {
+        "mid": "updates/2025-11-10-north-weekly#m1",
+        "phrase": "Dana's freight account",
+        "lines": [
+          11
+        ]
+      },
+      {
+        "mid": "updates/2025-11-10-north-weekly#m2",
+        "phrase": "the account Marcus runs",
+        "lines": [
+          18
+        ]
+      },
+      {
+        "mid": "updates/2025-11-10-north-weekly#m3",
+        "phrase": "Marcus's LTL account",
+        "lines": [
+          15
+        ]
+      },
+      {
+        "mid": "updates/2025-11-10-north-weekly#m4",
+        "phrase": "the account Dana runs",
+        "lines": [
+          20
+        ]
+      }
+    ],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Quarrendon Freight Lines",
+        "line": 9
+      },
+      {
+        "oid": "e2",
+        "surface": "Brackenwater Freight Co.",
+        "line": 13
+      }
+    ],
+    "claims": [],
+    "events": [
+      {
+        "eid": "e-qfl-sev1",
+        "question": "Does the page describe this: \"Sev 1 escalation: dock schedule sync outage at Quarrendon's Superior terminal\"? If so, on what date does the text place it?"
+      },
+      {
+        "eid": "e-qfl-exec-call",
+        "question": "Does the page describe this: \"Executive call with Quarrendon after the Sev 1\"? If so, on what date does the text place it?"
+      }
+    ],
+    "ownership": []
+  },
+  "prompt_user_sha256": "18d0082cce414d3951926a8e9f3bccbb29eceb86f459d6dbe068e56c102f8388",
+  "response_text": "{\n  \"date_used\": \"2025-11-10\",\n  \"owner_phrases\": [\n    {\n      \"mid\": \"updates/2025-11-10-north-weekly#m1\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\n        \"quarrendon\"\n      ],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"On 2025-11-10 Dana owns Quarrendon (freight) and Tamsin (cold-chain), and this is under the Quarrendon Freight Lines section.\"\n    },\n    {\n      \"mid\": \"updates/2025-11-10-north-weekly#m2\",\n      \"refers_to_customer_account\": false,\n      \"accounts\": [],\n      \"reading\": \"ambiguous: could be more than one account\",\n      \"note\": \"On 2025-11-10 Marcus owns both Brackenwater and Orrin, and the 'Loose ends' section provides no clue to pick between them.\"\n    },\n    {\n      \"mid\": \"updates/2025-11-10-north-weekly#m3\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\n        \"brackenwater\"\n      ],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"On 2025-11-10 Marcus owns Brackenwater (LTL) and Orrin (textile), and this is under the Brackenwater Freight Co. section.\"\n    },\n    {\n      \"mid\": \"updates/2025-11-10-north-weekly#m4\",\n      \"refers_to_customer_account\": false,\n      \"accounts\": [],\n      \"reading\": \"ambiguous: could be more than one account\",\n      \"note\": \"On 2025-11-10 Dana owns both Quarrendon and Tamsin, and the 'Loose ends' section provides no clue to pick between them.\"\n    }\n  ],\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"quarrendon\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"brackenwater\"\n    }\n  ],\n  \"events\": [\n    {\n      \"eid\": \"e-qfl-sev1\",\n      \"present\": true,\n      \"date\": \"2025-11-04\",\n      \"line\": 10\n    },\n    {\n      \"eid\": \"e-qfl-exec-call\",\n      \"present\": true,\n      \"date\": \"2025-11-06\",\n      \"line\": 10\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-11-10",
+    "owner_phrases": [
+      {
+        "mid": "updates/2025-11-10-north-weekly#m1",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "quarrendon"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "On 2025-11-10 Dana owns Quarrendon (freight) and Tamsin (cold-chain), and this is under the Quarrendon Freight Lines section."
+      },
+      {
+        "mid": "updates/2025-11-10-north-weekly#m2",
+        "refers_to_customer_account": false,
+        "accounts": [],
+        "reading": "ambiguous: could be more than one account",
+        "note": "On 2025-11-10 Marcus owns both Brackenwater and Orrin, and the 'Loose ends' section provides no clue to pick between them."
+      },
+      {
+        "mid": "updates/2025-11-10-north-weekly#m3",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "brackenwater"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "On 2025-11-10 Marcus owns Brackenwater (LTL) and Orrin (textile), and this is under the Brackenwater Freight Co. section."
+      },
+      {
+        "mid": "updates/2025-11-10-north-weekly#m4",
+        "refers_to_customer_account": false,
+        "accounts": [],
+        "reading": "ambiguous: could be more than one account",
+        "note": "On 2025-11-10 Dana owns both Quarrendon and Tamsin, and the 'Loose ends' section provides no clue to pick between them."
+      }
+    ],
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "quarrendon"
+      },
+      {
+        "oid": "e2",
+        "entity": "brackenwater"
+      }
+    ],
+    "events": [
+      {
+        "eid": "e-qfl-sev1",
+        "present": true,
+        "date": "2025-11-04",
+        "line": 10
+      },
+      {
+        "eid": "e-qfl-exec-call",
+        "present": true,
+        "date": "2025-11-06",
+        "line": 10
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 3208,
+    "output_tokens": 706,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.013476
+}

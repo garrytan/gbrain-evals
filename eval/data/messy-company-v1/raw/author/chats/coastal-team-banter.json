@@ -1,0 +1,41 @@
+{
+  "slug": "chats/coastal-team-banter",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: chat\nTitle: #coastal-random (export)\nDate: UNDATED. Do not include any date, year, month name, weekday, or relative date reference (\"yesterday\", \"last week\") anywhere in the document.\nWriter: Sofia Marchetti\nVoice: dry and slightly sarcastic\nFormat: a chat log with [HH:MM] timestamps and lowercase usernames\nLength: about -56 words\nDate style in the body: undefined (ignore: undated)\nTypos: a few natural typos and one or two sloppy abbreviations (never in names or required phrases)\n\nBrief:\nAn undated Slack export: weather, a boat photo, Kwame's travel account not booking flights, two work comments. No dates, weekdays, months or years.\n\nRequired phrases:\n- Use the exact phrase \"Kwame's port account\" once, but vaguely: the writer does not say which account it is, and nothing nearby (name, location, numbers, products) may identify one. Keep that sentence generic, like a passing comment.\n- Use the exact phrase \"Sofia's retail account\" once, referring to Covey & Lark Retail. Don't put the account's name in the same sentence; the reader should work it out.\n- Use the exact phrase \"Kwame's travel account\" once, in the sense of: his corporate travel booking login. It must not be about a customer account.\n- Use the exact phrase \"Sofia's Zoom account\" once, in the sense of: her video-call login. It must not be about a customer account.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Bettina Kroll: Coastal team lead\n- Sofia Marchetti: Account manager, Coastal team\n- Kwame Adjei-Rowe: Account manager, Coastal team\n- Corinne Ashdown: VP Operations\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Pellucid Harbor Logistics: port drayage and terminal logistics, Gulf Coast; codes/nicknames PHL\n- Driftmoor Marine Freight: marine freight and barge operator, Puget Sound; codes/nicknames DMF\n- Saltmarsh Provisions: regional grocery distributor, Lowcountry; main contact Corinne Ashdown, VP Operations; codes/nicknames SMP\n- Covey & Lark Retail: home goods retailer, Mid-Atlantic; codes/nicknames Covey, CLR, PHL\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what (background only; don't restate unless the brief asks):\n(This page is undated. Do not state who manages which account.)",
+      "response_text": "# #coastal-random (export)\n\n[09:12] **sofia.marchetti**: sideways rain on my window. love the coast.\n[09:14] **kwame.adjei-rowe**: `[uploaded image: IMG_4019_tugboat_fog.jpg]`\n[09:15] **sofia.marchetti**: thrillng.\n[09:16] **bettina.kroll**: why is Kwame's travel account rejecting the Delta airfare to SAV? Concur just spins.\n[09:17] **sofia.marchetti**: bc IT hates us. also Covey & Lark Retail has a driver stuck at Door 4B in Hagerstown yelling at the guard shack over a barcode scanner.\n[09:18] **bettina.kroll**: Did someone use Sofia's Zoom account for the onboarding webinar? And I thought the Door 4B scanner fix for Sofia's retail account was already in ticket #8812.\n[09:19] **sofia.marchetti**: def not fixed. at least Kwame's port account is quiet for once.",
+      "usage": {
+        "input_tokens": 1227,
+        "output_tokens": 262,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.005074,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1227,
+          "candidatesTokenCount": 262,
+          "totalTokenCount": 1489,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1227
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 262
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

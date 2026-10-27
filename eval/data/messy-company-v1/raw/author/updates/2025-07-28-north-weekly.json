@@ -1,0 +1,41 @@
+{
+  "slug": "updates/2025-07-28-north-weekly",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: weekly\nTitle: North weekly — 28 Jul\nDate: Written on 2025-07-28.\nWriter: Ilse Varga\nVoice: friendly and organized\nFormat: undefined\nLength: about 241 words\nDate style in the body: undefined\nTypos: a few natural typos and one or two sloppy abbreviations (never in names or required phrases)\n\nBrief:\nIlse's update after the Quarrendon QBR in Duluth on July 22. Mention Dana wrote up how the QBR went.\n\nRequired phrases:\n- Use the exact phrase \"Dana's freight account\" once, but vaguely: the writer does not say which account it is, and nothing nearby (name, location, numbers, products) may identify one. Keep that sentence generic, like a passing comment.\n- Use the exact phrase \"her biggest customer\" once, referring to Quarrendon Freight Lines. Don't put the account's name in the same sentence; the reader should work it out.\n- Use the exact phrase \"Dana's account of the QBR\" once, in the sense of: her write-up / version of how the QBR went. It must not be about a customer account.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Ilse Varga: North team lead\n- Dana Okafor: Account manager, North team\n- Marcus Lindqvist: Account manager, North team\n- Thea Ramaswell: Director of Yard Operations\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Quarrendon Freight Lines: truckload freight carrier, Upper Midwest; main contact Thea Ramaswell, Director of Yard Operations; codes/nicknames QFL, Q-Freight\n- Brackenwater Freight Co.: less-than-truckload freight, Great Lakes; codes/nicknames BWF, Bracken\n- Tamsin Cold Chain: refrigerated warehousing, Pacific Northwest; codes/nicknames TCC\n- Orrin Mills: textile mill, Carolinas; codes/nicknames ORM\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2025-07-28 (background only; don't restate unless the brief asks):\n- Quarrendon Freight Lines: managed by Dana Okafor\n- Brackenwater Freight Co.: managed by Dana Okafor\n- Tamsin Cold Chain: managed by Dana Okafor\n- Orrin Mills: managed by Dana Okafor",
+      "response_text": "# North weekly — 28 Jul\n\nHappy Monday everyone! Hope you all stayed dry over the weekend. Here is the quick rundown for North this week.\n\n**Field visits & recaps**\n* Dana Okafor and I were in Duluth on July 22 for the Quarrendon Freight Lines QBR with Thea Ramaswell. We spent a solid hour walking the east yard before sitting down. It was so good to finally do an on-site with her biggest customer, especially since the second-shift gate clerks had a bunch of live examples to show us at Door 14.\n* If you want the full breakdown of what Thea brought up about the carrier check-in kiosks and the Detention Summary CSV, Dana's account of the QBR is already linked in the team channel—def worth a read before our Tuesday sync.\n\n**Housekeeping & tickets**\n* **Support queue:** Ticket #4812 (carrier portal timeout when printing gate passes) has a fix going out in Thursday's patch. Marcus Lindqvist is double-checking the staging build this aftn.\n* **Admin:** Please get your July mileage and receipt PDFs uploaded by Weds so I can approve them before Friday. I also still need to review the travel expenses from Dana's freight account before the month closes out.\n* **PTO:** Marcus is out Friday afternoon for a dentist appt. \n\nLet me know if you need anything bumped up in the queue for tomorrow's standup!\n\n— Ilse",
+      "usage": {
+        "input_tokens": 1219,
+        "output_tokens": 321,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.005648,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1219,
+          "candidatesTokenCount": 321,
+          "totalTokenCount": 1540,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1219
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 321
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

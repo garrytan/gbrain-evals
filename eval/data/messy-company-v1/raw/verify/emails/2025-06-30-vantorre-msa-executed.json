@@ -1,0 +1,162 @@
+{
+  "slug": "emails/2025-06-30-vantorre-msa-executed",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2025-06-30",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Vantorre",
+        "line": 6
+      },
+      {
+        "oid": "e2",
+        "surface": "Vantorre",
+        "line": 11
+      },
+      {
+        "oid": "e3",
+        "surface": "Vantorre",
+        "line": 15
+      },
+      {
+        "oid": "e4",
+        "surface": "Vantorre Group",
+        "line": 15
+      },
+      {
+        "oid": "e5",
+        "surface": "Vantorre Mobility",
+        "line": 15
+      },
+      {
+        "oid": "e6",
+        "surface": "VTG",
+        "line": 20
+      },
+      {
+        "oid": "e7",
+        "surface": "VMob",
+        "line": 21
+      },
+      {
+        "oid": "e8",
+        "surface": "VTRG",
+        "line": 22
+      },
+      {
+        "oid": "e9",
+        "surface": "Vantorre",
+        "line": 31
+      },
+      {
+        "oid": "e10",
+        "surface": "Vantorre",
+        "line": 33
+      },
+      {
+        "oid": "e11",
+        "surface": "Vantorre Group",
+        "line": 38
+      },
+      {
+        "oid": "e12",
+        "surface": "Vantorre Mobility",
+        "line": 38
+      },
+      {
+        "oid": "e13",
+        "surface": "Vantorre Group",
+        "line": 48
+      }
+    ],
+    "claims": [],
+    "events": [
+      {
+        "eid": "e-vtg-msa-signed",
+        "question": "Does the page describe this: \"Vantorre Group signs the enterprise MSA\"? If so, on what date does the text place it?"
+      }
+    ],
+    "ownership": []
+  },
+  "prompt_user_sha256": "0e9dfcccf9fcf97b526da9692cb36b7b8e80d3eb65efd67a4f718e3ed47fe67b",
+  "response_text": "{\n  \"date_used\": \"2025-06-30\",\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"none\",\n      \"note\": \"The enterprise MSA covers both Vantorre Group and Vantorre Mobility; this mention does not identify one account.\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"none\",\n      \"note\": \"The enterprise MSA covers both Vantorre Group and Vantorre Mobility; this mention does not identify one account.\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"none\",\n      \"note\": \"This names the shared enterprise MSA, explicitly covering both accounts.\"\n    },\n    {\n      \"oid\": \"e4\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e5\",\n      \"entity\": \"vantorre-mobility\"\n    },\n    {\n      \"oid\": \"e6\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e7\",\n      \"entity\": \"vantorre-mobility\"\n    },\n    {\n      \"oid\": \"e8\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e9\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e10\",\n      \"entity\": \"none\",\n      \"note\": \"The subject concerns the shared MSA for both Vantorre Group and Vantorre Mobility.\"\n    },\n    {\n      \"oid\": \"e11\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e12\",\n      \"entity\": \"vantorre-mobility\"\n    },\n    {\n      \"oid\": \"e13\",\n      \"entity\": \"vantorre-group\"\n    }\n  ],\n  \"events\": [\n    {\n      \"eid\": \"e-vtg-msa-signed\",\n      \"present\": true,\n      \"date\": \"2025-06-30\",\n      \"line\": 15\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-06-30",
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "none",
+        "note": "The enterprise MSA covers both Vantorre Group and Vantorre Mobility; this mention does not identify one account."
+      },
+      {
+        "oid": "e2",
+        "entity": "none",
+        "note": "The enterprise MSA covers both Vantorre Group and Vantorre Mobility; this mention does not identify one account."
+      },
+      {
+        "oid": "e3",
+        "entity": "none",
+        "note": "This names the shared enterprise MSA, explicitly covering both accounts."
+      },
+      {
+        "oid": "e4",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e5",
+        "entity": "vantorre-mobility"
+      },
+      {
+        "oid": "e6",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e7",
+        "entity": "vantorre-mobility"
+      },
+      {
+        "oid": "e8",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e9",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e10",
+        "entity": "none",
+        "note": "The subject concerns the shared MSA for both Vantorre Group and Vantorre Mobility."
+      },
+      {
+        "oid": "e11",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e12",
+        "entity": "vantorre-mobility"
+      },
+      {
+        "oid": "e13",
+        "entity": "vantorre-group"
+      }
+    ],
+    "events": [
+      {
+        "eid": "e-vtg-msa-signed",
+        "present": true,
+        "date": "2025-06-30",
+        "line": 15
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 3432,
+    "output_tokens": 512,
+    "thinking_tokens": 52
+  },
+  "cost_usd": 0.011984
+}

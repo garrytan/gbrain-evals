@@ -1,0 +1,142 @@
+{
+  "slug": "contracts/2025-06-25-smp-of-2025",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2025-06-25",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Saltmarsh Provisions",
+        "line": 7
+      },
+      {
+        "oid": "e2",
+        "surface": "SMP",
+        "line": 9
+      },
+      {
+        "oid": "e3",
+        "surface": "Saltmarsh Provisions",
+        "line": 14
+      },
+      {
+        "oid": "e4",
+        "surface": "SMP",
+        "line": 14
+      },
+      {
+        "oid": "e5",
+        "surface": "Saltmarsh Provisions",
+        "line": 30
+      },
+      {
+        "oid": "e6",
+        "surface": "SMP",
+        "line": 31
+      },
+      {
+        "oid": "e7",
+        "surface": "Saltmarsh Provisions",
+        "line": 39
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": [],
+    "record": {
+      "question": "Is this document signed, an unsigned version, or a draft? Judge from the body text, not the title alone. Give its signed date and effective date if stated, and the value of each of these terms it sets.",
+      "terms": [
+        "seats",
+        "price_per_seat",
+        "discount_pct",
+        "renewal_date"
+      ]
+    }
+  },
+  "prompt_user_sha256": "582d41d40730955f98652ae34b312a717cf34807c6670ab9020b155e005a4cfc",
+  "response_text": "{\n  \"date_used\": \"2025-06-25\",\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\"oid\": \"e1\", \"entity\": \"saltmarsh\"},\n    {\"oid\": \"e2\", \"entity\": \"saltmarsh\"},\n    {\"oid\": \"e3\", \"entity\": \"saltmarsh\"},\n    {\"oid\": \"e4\", \"entity\": \"saltmarsh\"},\n    {\"oid\": \"e5\", \"entity\": \"saltmarsh\"},\n    {\"oid\": \"e6\", \"entity\": \"saltmarsh\"},\n    {\"oid\": \"e7\", \"entity\": \"saltmarsh\"}\n  ],\n  \"record\": {\n    \"status\": \"signed\",\n    \"status_evidence_line\": 37,\n    \"signed_date\": \"2025-06-25\",\n    \"effective_date\": \"2025-07-01\",\n    \"terms\": [\n      {\n        \"term\": \"seats\",\n        \"applies_to\": [\"saltmarsh\"],\n        \"value\": \"70\",\n        \"line\": 21\n      },\n      {\n        \"term\": \"price_per_seat\",\n        \"applies_to\": [\"saltmarsh\"],\n        \"value\": \"$1,780 USD per seat per year (standard list rate)\",\n        \"line\": 22\n      },\n      {\n        \"term\": \"discount_pct\",\n        \"applies_to\": [\"saltmarsh\"],\n        \"value\": \"7%\",\n        \"line\": 23\n      },\n      {\n        \"term\": \"renewal_date\",\n        \"applies_to\": [\"saltmarsh\"],\n        \"value\": \"2026-06-30\",\n        \"line\": 27\n      }\n    ],\n    \"deciding_line\": 37,\n    \"deciding_days\": null\n  }\n}",
+  "parsed": {
+    "date_used": "2025-06-25",
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "saltmarsh"
+      },
+      {
+        "oid": "e2",
+        "entity": "saltmarsh"
+      },
+      {
+        "oid": "e3",
+        "entity": "saltmarsh"
+      },
+      {
+        "oid": "e4",
+        "entity": "saltmarsh"
+      },
+      {
+        "oid": "e5",
+        "entity": "saltmarsh"
+      },
+      {
+        "oid": "e6",
+        "entity": "saltmarsh"
+      },
+      {
+        "oid": "e7",
+        "entity": "saltmarsh"
+      }
+    ],
+    "record": {
+      "status": "signed",
+      "status_evidence_line": 37,
+      "signed_date": "2025-06-25",
+      "effective_date": "2025-07-01",
+      "terms": [
+        {
+          "term": "seats",
+          "applies_to": [
+            "saltmarsh"
+          ],
+          "value": "70",
+          "line": 21
+        },
+        {
+          "term": "price_per_seat",
+          "applies_to": [
+            "saltmarsh"
+          ],
+          "value": "$1,780 USD per seat per year (standard list rate)",
+          "line": 22
+        },
+        {
+          "term": "discount_pct",
+          "applies_to": [
+            "saltmarsh"
+          ],
+          "value": "7%",
+          "line": 23
+        },
+        {
+          "term": "renewal_date",
+          "applies_to": [
+            "saltmarsh"
+          ],
+          "value": "2026-06-30",
+          "line": 27
+        }
+      ],
+      "deciding_line": 37,
+      "deciding_days": null
+    }
+  },
+  "usage": {
+    "input_tokens": 3318,
+    "output_tokens": 509,
+    "thinking_tokens": 116
+  },
+  "cost_usd": 0.011726
+}

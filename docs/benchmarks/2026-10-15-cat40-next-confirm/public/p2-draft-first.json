@@ -1,0 +1,251 @@
+{
+ "definition": "draft-led item: account contract+amendment docs referencing it by name/code/nickname, newest doc date first (ties by id), first is a DRAFT amendment",
+ "draft_led_tasks": 17,
+ "draft_led_items": 24,
+ "h4_items": 66,
+ "arms": {
+  "control": {
+   "firing": {
+    "all": {
+     "h4_cells": 60,
+     "cells_served_draft_first": 0
+    },
+    "model|claude-sonnet-5-5": {
+     "h4_cells": 20,
+     "cells_served_draft_first": 0
+    },
+    "long|False": {
+     "h4_cells": 18,
+     "cells_served_draft_first": 0
+    },
+    "draft_task|True": {
+     "h4_cells": 51,
+     "cells_served_draft_first": 0
+    },
+    "model|claude-opus-5-5": {
+     "h4_cells": 20,
+     "cells_served_draft_first": 0
+    },
+    "model|gpt-6.1-sol": {
+     "h4_cells": 20,
+     "cells_served_draft_first": 0
+    },
+    "long|True": {
+     "h4_cells": 42,
+     "cells_served_draft_first": 0
+    },
+    "draft_task|False": {
+     "h4_cells": 9,
+     "cells_served_draft_first": 0
+    }
+   },
+   "harm": {
+    "draft_tasks:all": {
+     "n": 51,
+     "wrong": 8,
+     "success": 43,
+     "ctl_wrong": 8,
+     "ctl_success": 43
+    },
+    "draft_tasks:claude-opus-5-5": {
+     "n": 17,
+     "wrong": 4,
+     "success": 13,
+     "ctl_wrong": 4,
+     "ctl_success": 13
+    },
+    "draft_tasks:claude-sonnet-5-5": {
+     "n": 17,
+     "wrong": 4,
+     "success": 13,
+     "ctl_wrong": 4,
+     "ctl_success": 13
+    },
+    "draft_tasks:gpt-6.1-sol": {
+     "n": 17,
+     "wrong": 0,
+     "success": 17,
+     "ctl_wrong": 0,
+     "ctl_success": 17
+    },
+    "other_tasks:all": {
+     "n": 9,
+     "wrong": 3,
+     "success": 6,
+     "ctl_wrong": 3,
+     "ctl_success": 6
+    },
+    "other_tasks:claude-opus-5-5": {
+     "n": 3,
+     "wrong": 1,
+     "success": 2,
+     "ctl_wrong": 1,
+     "ctl_success": 2
+    },
+    "other_tasks:claude-sonnet-5-5": {
+     "n": 3,
+     "wrong": 2,
+     "success": 1,
+     "ctl_wrong": 2,
+     "ctl_success": 1
+    },
+    "other_tasks:gpt-6.1-sol": {
+     "n": 3,
+     "wrong": 0,
+     "success": 3,
+     "ctl_wrong": 0,
+     "ctl_success": 3
+    }
+   }
+  },
+  "wave": {
+   "firing": {
+    "all": {
+     "rows_with_records": 273,
+     "rows_with_draft": 79,
+     "draft_first": 71,
+     "h4_cells": 60,
+     "cells_served_draft_first": 40
+    },
+    "model|claude-sonnet-5-5": {
+     "rows_with_records": 114,
+     "rows_with_draft": 33,
+     "draft_first": 29,
+     "h4_cells": 20,
+     "cells_served_draft_first": 17
+    },
+    "long|False": {
+     "rows_with_records": 79,
+     "rows_with_draft": 22,
+     "draft_first": 22,
+     "h4_cells": 18,
+     "cells_served_draft_first": 12
+    },
+    "draft_task|True": {
+     "rows_with_records": 233,
+     "rows_with_draft": 77,
+     "draft_first": 71,
+     "h4_cells": 51,
+     "cells_served_draft_first": 40
+    },
+    "model|claude-opus-5-5": {
+     "rows_with_records": 114,
+     "rows_with_draft": 33,
+     "draft_first": 29,
+     "h4_cells": 20,
+     "cells_served_draft_first": 17
+    },
+    "model|gpt-6.1-sol": {
+     "h4_cells": 20,
+     "cells_served_draft_first": 6,
+     "rows_with_records": 45,
+     "rows_with_draft": 13,
+     "draft_first": 13
+    },
+    "long|True": {
+     "rows_with_records": 194,
+     "h4_cells": 42,
+     "cells_served_draft_first": 28,
+     "rows_with_draft": 57,
+     "draft_first": 49
+    },
+    "draft_task|False": {
+     "rows_with_records": 40,
+     "h4_cells": 9,
+     "cells_served_draft_first": 0,
+     "rows_with_draft": 2
+    }
+   },
+   "harm": {
+    "draft_tasks:all": {
+     "n": 51,
+     "wrong": 0,
+     "success": 51,
+     "ctl_wrong": 8,
+     "ctl_success": 43
+    },
+    "draft_tasks:claude-opus-5-5": {
+     "n": 17,
+     "wrong": 0,
+     "success": 17,
+     "ctl_wrong": 4,
+     "ctl_success": 13
+    },
+    "draft_tasks:claude-sonnet-5-5": {
+     "n": 17,
+     "wrong": 0,
+     "success": 17,
+     "ctl_wrong": 4,
+     "ctl_success": 13
+    },
+    "draft_tasks:gpt-6.1-sol": {
+     "n": 17,
+     "wrong": 0,
+     "success": 17,
+     "ctl_wrong": 0,
+     "ctl_success": 17
+    },
+    "other_tasks:all": {
+     "n": 9,
+     "wrong": 0,
+     "success": 9,
+     "ctl_wrong": 3,
+     "ctl_success": 6
+    },
+    "other_tasks:claude-opus-5-5": {
+     "n": 3,
+     "wrong": 0,
+     "success": 3,
+     "ctl_wrong": 1,
+     "ctl_success": 2
+    },
+    "other_tasks:claude-sonnet-5-5": {
+     "n": 3,
+     "wrong": 0,
+     "success": 3,
+     "ctl_wrong": 2,
+     "ctl_success": 1
+    },
+    "other_tasks:gpt-6.1-sol": {
+     "n": 3,
+     "wrong": 0,
+     "success": 3,
+     "ctl_wrong": 0,
+     "ctl_success": 3
+    }
+   }
+  }
+ },
+ "harm_on_served_draft_first_cells": {
+  "wave": {
+   "all": {
+    "n": 40,
+    "wrong": 0,
+    "ctl_wrong": 8,
+    "success": 40,
+    "ctl_success": 32
+   },
+   "claude-sonnet-5-5": {
+    "n": 17,
+    "wrong": 0,
+    "ctl_wrong": 4,
+    "success": 17,
+    "ctl_success": 13
+   },
+   "claude-opus-5-5": {
+    "n": 17,
+    "wrong": 0,
+    "ctl_wrong": 4,
+    "success": 17,
+    "ctl_success": 13
+   },
+   "gpt-6.1-sol": {
+    "n": 6,
+    "wrong": 0,
+    "ctl_wrong": 0,
+    "success": 6,
+    "ctl_success": 6
+   }
+  }
+ }
+}

@@ -1,0 +1,86 @@
+{
+  "slug": "emails/2026-07-14-carrowmere-hosting-renewal",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2026-07-14",
+    "owner_phrases": [
+      {
+        "mid": "emails/2026-07-14-carrowmere-hosting-renewal#m1",
+        "phrase": "Odile's account",
+        "lines": [
+          24
+        ]
+      },
+      {
+        "mid": "emails/2026-07-14-carrowmere-hosting-renewal#m2",
+        "phrase": "our Carrowmere account",
+        "lines": [
+          26
+        ]
+      }
+    ],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Carrowmere Cloud",
+        "line": 9
+      },
+      {
+        "oid": "e2",
+        "surface": "Carrowmere Cloud",
+        "line": 13
+      },
+      {
+        "oid": "e3",
+        "surface": "Carrowmere",
+        "line": 26
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "1c52370f4a329e4156d46f59135ea5255dc5f9ebcfc3c20a8895001dc07f1c05",
+  "response_text": "{\n  \"date_used\": \"2026-07-14\",\n  \"owner_phrases\": [\n    {\n      \"mid\": \"emails/2026-07-14-carrowmere-hosting-renewal#m1\",\n      \"refers_to_customer_account\": false,\n      \"accounts\": [],\n      \"reading\": \"not about a customer account (a login, device, HR/expense account, a narrative 'account of', a vendor relationship, an employer)\",\n      \"note\": \"Refers to Pemberline Systems being managed by Odile at vendor Carrowmere Cloud.\"\n    },\n    {\n      \"mid\": \"emails/2026-07-14-carrowmere-hosting-renewal#m2\",\n      \"refers_to_customer_account\": false,\n      \"accounts\": [],\n      \"reading\": \"not about a customer account (a login, device, HR/expense account, a narrative 'account of', a vendor relationship, an employer)\",\n      \"note\": \"Refers to Pemberline's hosting account with their vendor Carrowmere Cloud.\"\n    }\n  ],\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"carrowmere\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"carrowmere\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"carrowmere\"\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2026-07-14",
+    "owner_phrases": [
+      {
+        "mid": "emails/2026-07-14-carrowmere-hosting-renewal#m1",
+        "refers_to_customer_account": false,
+        "accounts": [],
+        "reading": "not about a customer account (a login, device, HR/expense account, a narrative 'account of', a vendor relationship, an employer)",
+        "note": "Refers to Pemberline Systems being managed by Odile at vendor Carrowmere Cloud."
+      },
+      {
+        "mid": "emails/2026-07-14-carrowmere-hosting-renewal#m2",
+        "refers_to_customer_account": false,
+        "accounts": [],
+        "reading": "not about a customer account (a login, device, HR/expense account, a narrative 'account of', a vendor relationship, an employer)",
+        "note": "Refers to Pemberline's hosting account with their vendor Carrowmere Cloud."
+      }
+    ],
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "carrowmere"
+      },
+      {
+        "oid": "e2",
+        "entity": "carrowmere"
+      },
+      {
+        "oid": "e3",
+        "entity": "carrowmere"
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2924,
+    "output_tokens": 360,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.009448
+}

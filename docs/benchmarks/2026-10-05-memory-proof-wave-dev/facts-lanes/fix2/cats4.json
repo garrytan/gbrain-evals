@@ -1,0 +1,378 @@
+{
+ "per_category": {
+  "on": {
+   "abstention": [
+    0.736,
+    36
+   ],
+   "contradiction_resolution": [
+    0.767,
+    36
+   ],
+   "event_ordering": [
+    0.429,
+    36
+   ],
+   "information_extraction": [
+    0.807,
+    36
+   ],
+   "instruction_following": [
+    0.723,
+    36
+   ],
+   "knowledge_update": [
+    0.562,
+    36
+   ],
+   "multi_session_reasoning": [
+    0.634,
+    36
+   ],
+   "preference_following": [
+    0.918,
+    36
+   ],
+   "summarization": [
+    0.515,
+    36
+   ],
+   "temporal_reasoning": [
+    0.438,
+    36
+   ],
+   "ALL": [
+    0.6529,
+    360
+   ]
+  },
+  "off": {
+   "abstention": [
+    0.736,
+    36
+   ],
+   "contradiction_resolution": [
+    0.774,
+    36
+   ],
+   "event_ordering": [
+    0.433,
+    36
+   ],
+   "information_extraction": [
+    0.811,
+    36
+   ],
+   "instruction_following": [
+    0.736,
+    36
+   ],
+   "knowledge_update": [
+    0.604,
+    36
+   ],
+   "multi_session_reasoning": [
+    0.621,
+    36
+   ],
+   "preference_following": [
+    0.911,
+    36
+   ],
+   "summarization": [
+    0.508,
+    36
+   ],
+   "temporal_reasoning": [
+    0.493,
+    36
+   ],
+   "ALL": [
+    0.6627,
+    360
+   ]
+  }
+ },
+ "per_split": {
+  "on": {
+   "100k": {
+    "abstention": [
+     1.0,
+     8
+    ],
+    "contradiction_resolution": [
+     0.75,
+     8
+    ],
+    "event_ordering": [
+     0.506,
+     8
+    ],
+    "information_extraction": [
+     0.622,
+     8
+    ],
+    "instruction_following": [
+     0.75,
+     8
+    ],
+    "knowledge_update": [
+     0.25,
+     8
+    ],
+    "multi_session_reasoning": [
+     0.756,
+     8
+    ],
+    "preference_following": [
+     1.0,
+     8
+    ],
+    "summarization": [
+     0.503,
+     8
+    ],
+    "temporal_reasoning": [
+     0.312,
+     8
+    ],
+    "ALL": [
+     0.645,
+     80
+    ]
+   },
+   "500k": {
+    "abstention": [
+     0.714,
+     14
+    ],
+    "contradiction_resolution": [
+     0.795,
+     14
+    ],
+    "event_ordering": [
+     0.397,
+     14
+    ],
+    "information_extraction": [
+     0.815,
+     14
+    ],
+    "instruction_following": [
+     0.714,
+     14
+    ],
+    "knowledge_update": [
+     0.661,
+     14
+    ],
+    "multi_session_reasoning": [
+     0.549,
+     14
+    ],
+    "preference_following": [
+     0.929,
+     14
+    ],
+    "summarization": [
+     0.575,
+     14
+    ],
+    "temporal_reasoning": [
+     0.571,
+     14
+    ],
+    "ALL": [
+     0.672,
+     140
+    ]
+   },
+   "1m": {
+    "abstention": [
+     0.607,
+     14
+    ],
+    "contradiction_resolution": [
+     0.75,
+     14
+    ],
+    "event_ordering": [
+     0.417,
+     14
+    ],
+    "information_extraction": [
+     0.903,
+     14
+    ],
+    "instruction_following": [
+     0.717,
+     14
+    ],
+    "knowledge_update": [
+     0.643,
+     14
+    ],
+    "multi_session_reasoning": [
+     0.649,
+     14
+    ],
+    "preference_following": [
+     0.86,
+     14
+    ],
+    "summarization": [
+     0.461,
+     14
+    ],
+    "temporal_reasoning": [
+     0.375,
+     14
+    ],
+    "ALL": [
+     0.6383,
+     140
+    ]
+   }
+  },
+  "off": {
+   "100k": {
+    "abstention": [
+     0.875,
+     8
+    ],
+    "contradiction_resolution": [
+     0.688,
+     8
+    ],
+    "event_ordering": [
+     0.468,
+     8
+    ],
+    "information_extraction": [
+     0.703,
+     8
+    ],
+    "instruction_following": [
+     0.75,
+     8
+    ],
+    "knowledge_update": [
+     0.25,
+     8
+    ],
+    "multi_session_reasoning": [
+     0.787,
+     8
+    ],
+    "preference_following": [
+     1.0,
+     8
+    ],
+    "summarization": [
+     0.568,
+     8
+    ],
+    "temporal_reasoning": [
+     0.344,
+     8
+    ],
+    "ALL": [
+     0.6433,
+     80
+    ]
+   },
+   "500k": {
+    "abstention": [
+     0.714,
+     14
+    ],
+    "contradiction_resolution": [
+     0.812,
+     14
+    ],
+    "event_ordering": [
+     0.411,
+     14
+    ],
+    "information_extraction": [
+     0.78,
+     14
+    ],
+    "instruction_following": [
+     0.679,
+     14
+    ],
+    "knowledge_update": [
+     0.661,
+     14
+    ],
+    "multi_session_reasoning": [
+     0.47,
+     14
+    ],
+    "preference_following": [
+     0.952,
+     14
+    ],
+    "summarization": [
+     0.537,
+     14
+    ],
+    "temporal_reasoning": [
+     0.643,
+     14
+    ],
+    "ALL": [
+     0.6659,
+     140
+    ]
+   },
+   "1m": {
+    "abstention": [
+     0.679,
+     14
+    ],
+    "contradiction_resolution": [
+     0.786,
+     14
+    ],
+    "event_ordering": [
+     0.434,
+     14
+    ],
+    "information_extraction": [
+     0.903,
+     14
+    ],
+    "instruction_following": [
+     0.786,
+     14
+    ],
+    "knowledge_update": [
+     0.75,
+     14
+    ],
+    "multi_session_reasoning": [
+     0.677,
+     14
+    ],
+    "preference_following": [
+     0.818,
+     14
+    ],
+    "summarization": [
+     0.444,
+     14
+    ],
+    "temporal_reasoning": [
+     0.429,
+     14
+    ],
+    "ALL": [
+     0.6706,
+     140
+    ]
+   }
+  }
+ }
+}

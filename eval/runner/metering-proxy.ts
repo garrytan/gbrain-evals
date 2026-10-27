@@ -12,7 +12,8 @@
  *   in-process (Cat 40, chronicle, P4 stream, P8): the client is a gbrain
  *     child process of this harness. Its credentials are forwarded and the
  *     process-wide paid-request guard (or a slot allowance) reserves each
- *     request, as before the extraction.
+ *     request, as before the extraction. A 4xx answer without usage is
+ *     metered at $0, as in lease mode.
  *   lease (the shootout cell, `policy` set): the proxy holds a lease run in
  *     its own ledger (`BudgetRun.openLease`) and enforces it itself. It strips
  *     inbound credentials and injects the real key from its own environment,
@@ -93,7 +94,9 @@
  */
 import { timingSafeEqual } from 'node:crypto';
 import { appendFileSync, readFileSync } from 'node:fs';
-import { BudgetExceededError, BudgetRun, ledgerStatus, priceRequest, reservationUsd, usageCost, type BudgetAllowance } from './budget-ledger.ts';
+import { BudgetExceededError, BudgetRun, ledgerStatus, priceRequest, reservationUsd, sseUsage, usageCost, type BudgetAllowance } from './budget-ledger.ts';
+
+export { sseUsage };
 import { findLeaks } from './systems/sanitize.ts';
 
 export const UPSTREAM: Record<string, string> = { anthropic: 'https://api.anthropic.com', openai: 'https://api.openai.com', voyage: 'https://api.voyageai.com' };
@@ -341,24 +344,6 @@ export const HARNESS_CLASSES = new Set(['reader', 'judge', 'agent']);
 const json = (status: number, kind: string, message: string) =>
   new Response(JSON.stringify({ error: { kind, type: kind, message: `metering proxy: ${message}` } }), { status, headers: { 'content-type': 'application/json' } });
 
-/** Provider usage from a server-sent-events body: OpenAI `usage` chunks and `response.completed`, Anthropic `message_start` and `message_delta`. */
-export function sseUsage(text: string): Record<string, unknown> | null {
-  const merged: Record<string, unknown> = {};
-  let found = false;
-  for (const line of text.split('\n')) {
-    if (!line.startsWith('data:')) continue;
-    const data = line.slice(5).trim();
-    if (!data || data === '[DONE]') continue;
-    let obj: any;
-    try { obj = JSON.parse(data); } catch { continue; }
-    for (const u of [obj?.usage, obj?.response?.usage, obj?.message?.usage]) {
-      if (!u || typeof u !== 'object') continue;
-      for (const [k, v] of Object.entries(u)) if (typeof v === 'number' || (v && typeof v === 'object')) { merged[k] = v; found = true; }
-    }
-  }
-  return found ? merged : null;
-}
-
 /** The output-token field a request uses, by provider and route. */
 function outputField(provider: ProviderName, route: string): string | null {
   if (provider === 'anthropic') return 'max_tokens';
@@ -388,7 +373,9 @@ export class MeteringProxy {
   private seq = 0;
   private inflight = new Map<string, number>();
   private waiters = new Map<string, Array<() => void>>();
+  /** `transform` (in-process mode) rewrites a response body after it is metered: a mutant that drops a model's output, for example. */
   constructor(private options: { fetchImpl?: typeof fetch; hostname?: string; port?: number; upstream?: Partial<Record<ProviderName, string>>; policy?: LeasePolicy; controlToken?: string | null;
+    transform?: (slot: string, target: string, text: string) => string;
     /** Provider routes answer only requests that present this token (credential, `x-proxy-cell` or a `/_t/<token>` prefix). */
     cellToken?: string | null;
     /** With a cell token: also admit requests from this machine (loopback, Docker bridges). */
@@ -396,7 +383,8 @@ export class MeteringProxy {
   get port(): number { return this.server!.port as number; }
   /** Charge the slot's provider requests to `key` (a cell id) from now on, labeled with the brain and phase when given. */
   bind(slot: string, key: string, tag: { brain?: string | null; phase?: Phase | null } = {}) { this.bindings.set(slot, { key, brain: tag.brain ?? null, phase: tag.phase ?? null }); }
-  unbind(slot: string) { this.bindings.delete(slot); }
+  /** With `key`, only drops the binding if it is still that key: a released slot may already be bound to the next cell. */
+  unbind(slot: string, key?: string) { if (key === undefined || this.bindings.get(slot)?.key === key) this.bindings.delete(slot); }
   /** Label the slot's later requests with a phase (commit, background, query) until it changes; a binding's own phase wins. */
   setPhase(slot: string, phase: Phase | null) { if (phase) this.phases.set(slot, phase); else this.phases.delete(slot); }
   private meter(key: string): Meter { let m = this.meters.get(key); if (!m) this.meters.set(key, m = newMeter()); return m; }
@@ -538,12 +526,14 @@ export class MeteringProxy {
     const text = await res.text();
     if (price) {
       let cost: ReturnType<typeof usageCost> = null;
-      try { cost = usageCost(price, JSON.parse(text)); } catch { cost = null; }
+      try { cost = (res.headers.get('content-type') ?? '').includes('event-stream') ? usageCost(price, { usage: sseUsage(text) }) : usageCost(price, JSON.parse(text)); } catch { cost = null; }
+      // A 4xx without usage (a 413, a prompt over the context window) settles at $0, as in lease mode and the paid-request guard.
+      if (!cost && res.status >= 400 && res.status < 500) cost = { usd: 0, input_tokens: 0, output_tokens: 0 };
       this.charge(key, prov, price.model, cost ? cost.usd : reservationUsd(price), !cost);
     } else this.charge(key, prov, null, 0, false);
     const out = new Headers(res.headers);
     for (const h of ['content-encoding', 'content-length', 'transfer-encoding']) out.delete(h);
-    return new Response(text, { status: res.status, headers: out });
+    return new Response(this.options.transform ? this.options.transform(slot, target, text) : text, { status: res.status, headers: out });
   }
 
   /** Lease mode: allowlist, tripwire, output cap, price, reserve, inject the key, forward, settle. Every refusal happens before forwarding. */

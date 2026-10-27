@@ -1,0 +1,119 @@
+{
+ "runs": [
+  {
+   "phase": "answer",
+   "usd": 4.6043702,
+   "requests": 1401,
+   "run_id": "workload-beliefs-answer-2026-10-05T16-59-11-181Z-4e55e5a6",
+   "by_label": {
+    "comparator": {
+     "requests": 1251,
+     "refused": 0,
+     "reserved_usd": 13.377364949999995,
+     "actual_usd": 1.056298200000001,
+     "input_tokens": 4094056,
+     "output_tokens": 736983
+    },
+    "reader": {
+     "requests": 150,
+     "refused": 0,
+     "reserved_usd": 3.7054820000000004,
+     "actual_usd": 3.548072,
+     "input_tokens": 1704111,
+     "output_tokens": 13985
+    }
+   },
+   "at": "2026-10-05T17:23:20.698Z",
+   "stub": false
+  },
+  {
+   "phase": "answer",
+   "usd": 16.08582867,
+   "requests": 10346,
+   "run_id": "workload-beliefs-answer-2026-10-05T16-53-26-450Z-e8f1cc37",
+   "by_label": {
+    "gbrain": {
+     "requests": 10196,
+     "refused": 0,
+     "reserved_usd": 127.62924336999937,
+     "actual_usd": 12.098254669999712,
+     "input_tokens": 5465235,
+     "output_tokens": 375701
+    },
+    "reader": {
+     "requests": 150,
+     "refused": 0,
+     "reserved_usd": 4.2820079999999985,
+     "actual_usd": 3.9875739999999977,
+     "input_tokens": 1870087,
+     "output_tokens": 24740
+    }
+   },
+   "at": "2026-10-05T19:08:07.964Z",
+   "stub": false
+  },
+  {
+   "phase": "sweep",
+   "usd": 19.27328,
+   "requests": 228,
+   "run_id": "workload-beliefs-sweep-2026-10-05T19-08-44-049Z-dc736824",
+   "by_label": {
+    "reader": {
+     "requests": 228,
+     "refused": 0,
+     "reserved_usd": 40.09168549999997,
+     "actual_usd": 19.27328,
+     "input_tokens": 2407572,
+     "output_tokens": 17617
+    }
+   },
+   "at": "2026-10-05T19:11:06.928Z",
+   "stub": false
+  },
+  {
+   "phase": "score",
+   "usd": 0.065856,
+   "requests": 172,
+   "run_id": "workload-beliefs-score-2026-10-05T19-11-08-290Z-84f63717",
+   "by_label": {
+    "judge": {
+     "requests": 172,
+     "refused": 0,
+     "reserved_usd": 3.544145,
+     "actual_usd": 0.06585600000000001,
+     "input_tokens": 25943,
+     "output_tokens": 1397
+    }
+   },
+   "at": "2026-10-05T19:14:57.120Z",
+   "stub": false
+  },
+  {
+   "phase": "sweep",
+   "usd": 1.215764,
+   "requests": 76,
+   "run_id": "workload-beliefs-sweep-2026-10-05T20-05-23-257Z-c5489daa",
+   "by_label": {
+    "reader": {
+     "requests": 76,
+     "refused": 0,
+     "reserved_usd": 5.187517500000002,
+     "actual_usd": 1.2157640000000003,
+     "input_tokens": 598902,
+     "output_tokens": 1796
+    }
+   },
+   "at": "2026-10-05T20:05:50.505Z",
+   "stub": false
+  },
+  {
+   "phase": "score",
+   "usd": 0,
+   "requests": 0,
+   "run_id": "workload-beliefs-score-2026-10-05T20-09-14-827Z-94605f8b",
+   "by_label": {},
+   "at": "2026-10-05T20:09:14.977Z",
+   "stub": false
+  }
+ ]
+}

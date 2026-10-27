@@ -1,0 +1,41 @@
+{
+  "slug": "updates/2025-10-06-coastal-weekly",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: weekly\nTitle: Coastal weekly Oct 6\nDate: Written on 2025-10-06.\nWriter: Moss (Ruth Calloway's AI assistant)\nVoice: an AI assistant: neat, factual, a little stiff\nFormat: a weekly update with a section per topic and bullets\nLength: about 432 words\nDate style in the body: US long (June 2, 2025)\nTypos: none\n\nBrief:\nMoss compiles this team weekly from the team lead's notes; write it as Moss's compiled update. Bettina's update on the day she takes over Saltmarsh.\n\nRequired phrases:\n- Use the exact phrase \"the account Sofia runs\" once, referring to Covey & Lark Retail. Don't put the account's name in the same sentence; the reader should work it out.\n- Use the exact phrase \"the grocery account Bettina took over\" once, referring to Saltmarsh Provisions. Don't put the account's name in the same sentence; the reader should work it out.\n- Use the exact phrase \"Sofia's old grocery account\" once, referring to Saltmarsh Provisions. Don't put the account's name in the same sentence; the reader should work it out.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Bettina Kroll: Coastal team lead\n- Sofia Marchetti: Account manager, Coastal team\n- Kwame Adjei-Rowe: Account manager, Coastal team\n- Corinne Ashdown: VP Operations\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Pellucid Harbor Logistics: port drayage and terminal logistics, Gulf Coast; codes/nicknames PHL\n- Driftmoor Marine Freight: marine freight and barge operator, Puget Sound; codes/nicknames DMF\n- Saltmarsh Provisions: regional grocery distributor, Lowcountry; main contact Corinne Ashdown, VP Operations; codes/nicknames SMP\n- Covey & Lark Retail: home goods retailer, Mid-Atlantic; codes/nicknames Covey, CLR\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2025-10-06 (background only; don't restate unless the brief asks):\n- Pellucid Harbor Logistics: managed by Bettina Kroll\n- Driftmoor Marine Freight: managed by Kwame Adjei-Rowe\n- Saltmarsh Provisions: managed by Bettina Kroll\n- Covey & Lark Retail: managed by Sofia Marchetti",
+      "response_text": "# Coastal weekly Oct 6\n\n**Date:** October 6, 2025  \n**Compiled for:** Ruth Calloway  \n**Source:** Raw notes submitted by Bettina Kroll, Coastal Team Lead\n\n### Account Transitions and Coverage\n* **Saltmarsh Provisions (SMP):** Effective today, October 6, 2025, Bettina Kroll has assumed direct management of the account.\n* **Handover execution:** Sofia Marchetti transferred her open task list, gatehouse maps, and historical call logs for the Lowcountry distribution centers this morning. All active support threads for Sofia's old grocery account have been reassigned in the queue to reflect the new primary owner.\n* **Customer introduction:** An introductory call with Corinne Ashdown, VP Operations, is scheduled for October 8, 2025. The agenda covers cold-storage Door 9 reefers and a recurring yard-check discrepancy on the 4:00 AM receiving shift. This call is the immediate operational priority for the grocery account Bettina took over.\n\n### Active Account Operations\n* **Covey & Lark Retail (CLR):** The Mid-Atlantic distribution center in Hagerstown reported a browser timeout on the carrier self-scheduling portal during peak afternoon check-ins. Sofia Marchetti logged ticket #PD-8841 with engineering to review the appointment-slot lock timer for the furniture bays. Engineering deployed a configuration patch at 11:30 AM today, and the afternoon receiving shift on the account Sofia runs processed thirty-two dry vans through Doors 14 through 22 without further lockups.\n* **Pellucid Harbor Logistics (PHL):** Bettina Kroll reviewed the September yard dwell report with the terminal dispatcher in Mobile. Chassis pool turn times at Gate 3 improved by eleven minutes following the recent barcode scanner firmware update. A follow-up check on the night-shift gate kiosks is set for October 13, 2025.\n* **Driftmoor Marine Freight (DMF):** Kwame Adjei-Rowe is coordinating with the Tacoma barge terminal supervisor on a custom CSV export for tide-window dock assignments. The site requested that the \"Vessel ETA\" column appear adjacent to the staging lane assignment on the morning yard sheet.\n\n### Infrastructure and Vendor Notes\n* **Carrowmere Cloud:** Odile Brandt notified Pemberline Systems that scheduled maintenance on the US-East database cluster will occur on October 12, 2025, between 2:00 AM and 3:00 AM Eastern. No downtime is expected for Pemberline Dock users, though automated nightly reports may queue for up to fifteen minutes.\n\n### Next Steps for Week of October 6, 2025\n* Bettina Kroll to complete the onboarding checklist and audit the active gate-tablet roster for the Charleston warehouse prior to Wednesday's meeting with Corinne Ashdown.\n* Sofia Marchetti to monitor ticket #PD-8841 through October 9, 2025, and confirm with the Hagerstown dock clerk that appointment confirmations are syncing to the guardhouse monitor.\n* Kwame Adjei-Rowe to deliver the sample CSV layout for Tacoma terminal review by October 10, 2025.",
+      "usage": {
+        "input_tokens": 1221,
+        "output_tokens": 685,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.009292,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1221,
+          "candidatesTokenCount": 685,
+          "totalTokenCount": 1906,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1221
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 685
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

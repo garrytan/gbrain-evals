@@ -1,0 +1,155 @@
+{
+  "verdict": "PASS",
+  "failures": {},
+  "found_table": [
+    {
+      "case": "C1a-partial-override-amended-term",
+      "W-O": "123456789",
+      "W-E": "123456789",
+      "B-O": ".2345789",
+      "B-E": ".2345789"
+    },
+    {
+      "case": "C1b-partial-override-unchanged-term",
+      "W-O": "123456789",
+      "W-E": "123456789",
+      "B-O": ".2345789",
+      "B-E": ".2345789"
+    },
+    {
+      "case": "C2-future-validity",
+      "W-O": "123456789",
+      "W-E": "123456789",
+      "B-O": ".2345789",
+      "B-E": ".2345789"
+    },
+    {
+      "case": "C3-no-lexical-overlap",
+      "W-O": "12345p6p78p9p",
+      "W-E": "12345p6p78p9p",
+      "B-O": ".2345p78p9p",
+      "B-E": ".2345p78p9p"
+    },
+    {
+      "case": "C4-summary-only-evidence",
+      "W-O": ".23456789",
+      "W-E": ".23456789",
+      "B-O": ".2345789",
+      "B-E": ".2345789"
+    },
+    {
+      "case": "C5-long-page-repeated-terms",
+      "W-O": "12345p67p89",
+      "W-E": "12345p67p89",
+      "B-O": ".2345789",
+      "B-E": ".2345789"
+    },
+    {
+      "case": "C6a-missing-date",
+      "W-O": ".23456789",
+      "W-E": ".23456789",
+      "B-O": ".2345789",
+      "B-E": ".2345789"
+    },
+    {
+      "case": "C6b-conflicting-dates",
+      "W-O": ".23456789",
+      "W-E": ".23456789",
+      "B-O": ".2345789",
+      "B-E": ".2345789"
+    },
+    {
+      "case": "C7-draft-without-status",
+      "W-O": "123456789",
+      "W-E": "123456789",
+      "B-O": ".2345789",
+      "B-E": ".2345789"
+    }
+  ],
+  "draft_first": {
+    "W-O": {
+      "S1": "draft-first",
+      "S2": "draft-first",
+      "S3": "draft-first"
+    },
+    "W-E": {
+      "S1": "draft-first",
+      "S2": "draft-first",
+      "S3": "draft-first"
+    },
+    "B-O": {
+      "S1": "neither",
+      "S2": "draft-first",
+      "S3": "draft-first"
+    },
+    "B-E": {
+      "S1": "neither",
+      "S2": "draft-first",
+      "S3": "draft-first"
+    }
+  },
+  "owner_phrases": {
+    "W-O": {
+      "links": 0,
+      "windows": 0
+    },
+    "W-E": {
+      "links": 0,
+      "windows": 0
+    },
+    "B-O": {
+      "links": 0,
+      "windows": null
+    },
+    "B-E": {
+      "links": 0,
+      "windows": null
+    }
+  },
+  "instructions_sha256": {
+    "W-O": "e32c470e18f9",
+    "W-E": "e32c470e18f9",
+    "B-O": "6e5170cc82b3",
+    "B-E": "6e5170cc82b3"
+  },
+  "builds": {
+    "W-O": {
+      "commit": "a798de1f966dcce401546170b9c1882b1fb56904",
+      "config": {
+        "entity.names_references": "true",
+        "entity.record_types": "contract,amendment",
+        "entity.row_page_status": "true",
+        "search.long_page_unit": "section",
+        "search.long_page_min_chars": "20000",
+        "mcp.instructions_governing_rule": "in_effect"
+      },
+      "build_config": {
+        "mentions.owner_phrases": "true"
+      }
+    },
+    "W-E": {
+      "commit": "a798de1f966dcce401546170b9c1882b1fb56904",
+      "config": {
+        "entity.names_references": "true",
+        "entity.record_types": "contract,amendment",
+        "entity.row_page_status": "true",
+        "search.long_page_unit": "section",
+        "search.long_page_min_chars": "20000",
+        "mcp.instructions_governing_rule": "in_effect"
+      },
+      "build_config": {
+        "mentions.owner_phrases": "true"
+      }
+    },
+    "B-O": {
+      "commit": "09d21554d7ab75cc5643a7f5a0e7f163aa4dae5b",
+      "config": {},
+      "build_config": {}
+    },
+    "B-E": {
+      "commit": "09d21554d7ab75cc5643a7f5a0e7f163aa4dae5b",
+      "config": {},
+      "build_config": {}
+    }
+  }
+}

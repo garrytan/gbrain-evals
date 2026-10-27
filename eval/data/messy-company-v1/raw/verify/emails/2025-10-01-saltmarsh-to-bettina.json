@@ -1,0 +1,166 @@
+{
+  "slug": "emails/2025-10-01-saltmarsh-to-bettina",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2025-10-01",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Saltmarsh",
+        "line": 6
+      },
+      {
+        "oid": "e2",
+        "surface": "Saltmarsh",
+        "line": 12
+      },
+      {
+        "oid": "e3",
+        "surface": "Saltmarsh Provisions",
+        "line": 16
+      },
+      {
+        "oid": "e4",
+        "surface": "SMP",
+        "line": 18
+      },
+      {
+        "oid": "e5",
+        "surface": "Covey & Lark Retail",
+        "line": 20
+      },
+      {
+        "oid": "e6",
+        "surface": "SMP",
+        "line": 20
+      },
+      {
+        "oid": "e7",
+        "surface": "Saltmarsh",
+        "line": 37
+      },
+      {
+        "oid": "e8",
+        "surface": "Covey",
+        "line": 37
+      },
+      {
+        "oid": "e9",
+        "surface": "SMP",
+        "line": 41
+      },
+      {
+        "oid": "e10",
+        "surface": "Covey & Lark Retail",
+        "line": 41
+      }
+    ],
+    "claims": [],
+    "events": [
+      {
+        "eid": "e-smp-handoff",
+        "question": "Does the page describe this: \"Saltmarsh moves from Sofia to Bettina\"? If so, on what date does the text place it?"
+      }
+    ],
+    "ownership": [
+      {
+        "account": "saltmarsh",
+        "question": "According to this page alone, who manages Saltmarsh Provisions, in what role, and from/until when?"
+      },
+      {
+        "account": "covey-lark",
+        "question": "According to this page alone, who manages Covey & Lark Retail, in what role, and from/until when?"
+      }
+    ]
+  },
+  "prompt_user_sha256": "afb4f85f4617e81f0717cace6acf077c218fe4062316b201917178e0f5019e72",
+  "response_text": "{\n  \"date_used\": \"2025-10-06\",\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\"oid\": \"e1\", \"entity\": \"saltmarsh\"},\n    {\"oid\": \"e2\", \"entity\": \"saltmarsh\"},\n    {\"oid\": \"e3\", \"entity\": \"saltmarsh\"},\n    {\"oid\": \"e4\", \"entity\": \"saltmarsh\"},\n    {\"oid\": \"e5\", \"entity\": \"covey-lark\"},\n    {\"oid\": \"e6\", \"entity\": \"saltmarsh\"},\n    {\"oid\": \"e7\", \"entity\": \"saltmarsh\"},\n    {\"oid\": \"e8\", \"entity\": \"covey-lark\"},\n    {\"oid\": \"e9\", \"entity\": \"saltmarsh\"},\n    {\"oid\": \"e10\", \"entity\": \"covey-lark\"}\n  ],\n  \"events\": [\n    {\n      \"eid\": \"e-smp-handoff\",\n      \"present\": true,\n      \"date\": \"2025-10-06\",\n      \"line\": 16\n    }\n  ],\n  \"ownership\": [\n    {\n      \"account\": \"saltmarsh\",\n      \"owner\": \"Sofia Marchetti\",\n      \"role\": \"primary\",\n      \"start\": null,\n      \"end\": \"2025-10-06\",\n      \"line\": 16\n    },\n    {\n      \"account\": \"saltmarsh\",\n      \"owner\": \"Bettina Kroll\",\n      \"role\": \"primary\",\n      \"start\": \"2025-10-06\",\n      \"end\": null,\n      \"line\": 16\n    },\n    {\n      \"account\": \"covey-lark\",\n      \"owner\": \"Sofia Marchetti\",\n      \"role\": \"primary\",\n      \"start\": null,\n      \"end\": null,\n      \"line\": 20\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-10-06",
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "saltmarsh"
+      },
+      {
+        "oid": "e2",
+        "entity": "saltmarsh"
+      },
+      {
+        "oid": "e3",
+        "entity": "saltmarsh"
+      },
+      {
+        "oid": "e4",
+        "entity": "saltmarsh"
+      },
+      {
+        "oid": "e5",
+        "entity": "covey-lark"
+      },
+      {
+        "oid": "e6",
+        "entity": "saltmarsh"
+      },
+      {
+        "oid": "e7",
+        "entity": "saltmarsh"
+      },
+      {
+        "oid": "e8",
+        "entity": "covey-lark"
+      },
+      {
+        "oid": "e9",
+        "entity": "saltmarsh"
+      },
+      {
+        "oid": "e10",
+        "entity": "covey-lark"
+      }
+    ],
+    "events": [
+      {
+        "eid": "e-smp-handoff",
+        "present": true,
+        "date": "2025-10-06",
+        "line": 16
+      }
+    ],
+    "ownership": [
+      {
+        "account": "saltmarsh",
+        "owner": "Sofia Marchetti",
+        "role": "primary",
+        "start": null,
+        "end": "2025-10-06",
+        "line": 16
+      },
+      {
+        "account": "saltmarsh",
+        "owner": "Bettina Kroll",
+        "role": "primary",
+        "start": "2025-10-06",
+        "end": null,
+        "line": 16
+      },
+      {
+        "account": "covey-lark",
+        "owner": "Sofia Marchetti",
+        "role": "primary",
+        "start": null,
+        "end": null,
+        "line": 20
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 3239,
+    "output_tokens": 501,
+    "thinking_tokens": 83
+  },
+  "cost_usd": 0.011488
+}

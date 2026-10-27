@@ -1,0 +1,99 @@
+{
+  "cell_id": "locomo-locomo10-gbrain-rag-ac535fd2f1e0",
+  "scheduled": 322,
+  "answered_receipts": 289,
+  "judged_receipts": 289,
+  "score": {
+    "scheduled": 322,
+    "counts": {
+      "answered": 276,
+      "abstention": 12,
+      "answer_failure": 0,
+      "retrieval_failure": 0,
+      "judge_failure": 1,
+      "incomplete_ingest": 0,
+      "missing": 33
+    },
+    "judged": 288,
+    "correct": 257,
+    "accuracy": 0.7981366459627329,
+    "mean_score": 0.7981366459627329,
+    "complete": false,
+    "missing_ids": [
+      "conv-44_q90",
+      "conv-44_q91",
+      "conv-44_q92",
+      "conv-44_q93",
+      "conv-44_q94",
+      "conv-44_q95",
+      "conv-44_q96",
+      "conv-44_q97",
+      "conv-44_q98",
+      "conv-44_q99",
+      "conv-44_q100",
+      "conv-44_q101",
+      "conv-44_q102",
+      "conv-44_q103",
+      "conv-44_q104",
+      "conv-44_q105",
+      "conv-44_q106",
+      "conv-44_q107",
+      "conv-44_q108",
+      "conv-44_q109",
+      "conv-44_q110",
+      "conv-44_q111",
+      "conv-44_q112",
+      "conv-44_q113",
+      "conv-44_q114",
+      "conv-44_q115",
+      "conv-44_q116",
+      "conv-44_q117",
+      "conv-44_q118",
+      "conv-44_q119",
+      "conv-44_q120",
+      "conv-44_q121",
+      "conv-44_q122"
+    ],
+    "judge_failure_ids": [
+      "conv-44_q88"
+    ],
+    "incomplete_ingest_ids": []
+  },
+  "delivered_context": {
+    "target": 8000,
+    "n": 289,
+    "mean": 8100.1,
+    "p95": 8143.0,
+    "tolerance": 0.1,
+    "ok": true,
+    "reason": "within \u00b110% of target",
+    "inserted_kinds": {
+      "rendered": 289
+    },
+    "tokenizer": "cl100k_base"
+  },
+  "remote_budget_clamp": {
+    "fired": false,
+    "questions": []
+  },
+  "leak_check": {
+    "checked_prompts": 289,
+    "policy": "pre-dispatch identifier check on every answer prompt"
+  },
+  "timestamp_provenance": {
+    "rule": {
+      "provenance": "observed_session_time",
+      "source": "conversation['<session>_date_time']"
+    },
+    "counts": {
+      "observed_session_time": 57
+    }
+  },
+  "gates": {
+    "complete": false,
+    "no_answer_or_retrieval_failures": true,
+    "delivered_context": true,
+    "no_remote_clamp": true
+  },
+  "ok": false
+}

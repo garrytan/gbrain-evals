@@ -46,6 +46,10 @@ function makeFakeEngine(responses: Record<string, unknown> = {}): {
         return async (...args: unknown[]) => {
           calls.push({ method: prop, args });
           if (prop in responses) return responses[prop];
+          // Config reads (gbrain's trust read policy, v0.60.139.0+) expect a string or null.
+          if (prop === 'getConfig') return null;
+          // Raw SQL reads (get_page's trust and hidden-page check, v0.60.299.0) expect an array of rows.
+          if (prop === 'executeRaw') return [];
           if (prop === 'readPageSnapshot' && ('getPage' in responses || '__default__' in responses)) {
             const page = 'getPage' in responses ? responses.getPage : responses.__default__;
             return page ? { page: { id: 1, slug: args[0], source_id: 'default', frontmatter: {}, compiled_truth: '', timeline: '', ...(page as Record<string, unknown>) }, tags: responses.getTags ?? [], revision: null } : null;

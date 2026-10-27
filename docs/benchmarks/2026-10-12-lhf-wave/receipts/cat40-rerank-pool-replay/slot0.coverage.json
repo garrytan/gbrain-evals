@@ -1,0 +1,8 @@
+{
+  "supported": true,
+  "state": "complete",
+  "pending": 0,
+  "last_pass_at": "2026-10-12T21:13:30.119Z",
+  "queued_effects": 0,
+  "drained_by": "GBRA-81 one-off drain (no provider requests), 2026-10-12T21:51:29.366Z"
+}

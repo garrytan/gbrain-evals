@@ -1,0 +1,85 @@
+
+## M: 244 frozen calls, 277 (call, deciding page) pairs
+- check: replayed chunk unit agrees with the recorded result on 267/277 pairs (recorded has the sentence in 188)
+
+### M, shared budget (6,000 tokens)
+
+| stratum | unit | pairs | deciding sentence delivered | delivered unit (as reported) | block chars median / p90 | call chars median / p90 | ms median |
+|---|---|---|---|---|---|---|---|
+| long (>= 20k chars) | chunk | 82 | 3/82 (3.7%) | {'none': 82} | 2800 / 2937 | 9758 / 17738 | 17 |
+| long (>= 20k chars) | window | 82 | 3/82 (3.7%) | {'window': 82} | 5582 / 5842 | 15263 / 22754 | 22 |
+| long (>= 20k chars) | section | 82 | 50/82 (61.0%) | {'section': 82} | 21566 / 30717 | 28846 / 31746 | 24 |
+| long (>= 20k chars) | page | 82 | 50/82 (61.0%) | {'page': 82} | 21566 / 30717 | 28846 / 31746 | 24 |
+| short | chunk | 195 | 195/195 (100.0%) | {'none': 195} | 265 / 546 | 7404 / 20044 | 19 |
+| short | window | 195 | 194/195 (99.5%) | {'window': 194} | 265 / 542 | 9705 / 21871 | 24 |
+| short | section | 195 | 194/195 (99.5%) | {'section': 194} | 265 / 542 | 14841 / 24667 | 24 |
+| short | page | 195 | 194/195 (99.5%) | {'page': 194} | 265 / 542 | 14841 / 24667 | 24 |
+
+### M, isolated budget (6,000 tokens)
+
+| stratum | unit | pairs | deciding sentence delivered | delivered unit (as reported) | block chars median / p90 | call chars median / p90 | ms median |
+|---|---|---|---|---|---|---|---|
+| long (>= 20k chars) | chunk | 82 | 3/82 (3.7%) | {'none': 82} | 2800 / 2937 | 2800 / 2937 | 2 |
+| long (>= 20k chars) | window | 82 | 3/82 (3.7%) | {'window': 82} | 5592 / 5842 | 5592 / 5842 | 4 |
+| long (>= 20k chars) | section | 82 | 82/82 (100.0%) | {'section': 82} | 32154 / 32662 | 32154 / 32662 | 5 |
+| long (>= 20k chars) | page | 82 | 82/82 (100.0%) | {'page': 82} | 32154 / 32662 | 32154 / 32662 | 5 |
+| short | chunk | 195 | 195/195 (100.0%) | {'none': 195} | 265 / 546 | 265 / 546 | 1 |
+| short | window | 195 | 195/195 (100.0%) | {'window': 195} | 265 / 546 | 265 / 546 | 3 |
+| short | section | 195 | 195/195 (100.0%) | {'section': 195} | 265 / 546 | 265 / 546 | 3 |
+| short | page | 195 | 195/195 (100.0%) | {'page': 195} | 265 / 546 | 265 / 546 | 3 |
+
+- long shared pairs from transcript-clipped hit lists: 16; deciding page beyond the 50-hit cap: 0
+- long shared, complete hit lists only, chunk: 3/66
+- long shared, complete hit lists only, window: 3/66
+- long shared, complete hit lists only, section: 47/66
+- long shared, complete hit lists only, page: 47/66
+- long shared chunk by model (covered/total): 6.1 0/16, opus 0/22, sonnet 3/44
+- long shared window by model (covered/total): 6.1 0/16, opus 0/22, sonnet 3/44
+- long shared section by model (covered/total): 6.1 6/16, opus 15/22, sonnet 29/44
+- long shared page by model (covered/total): 6.1 6/16, opus 15/22, sonnet 29/44
+
+## dev: 139 frozen calls, 162 (call, deciding page) pairs
+- check: replayed chunk unit agrees with the recorded result on 159/162 pairs (recorded has the sentence in 124)
+
+### dev, shared budget (6,000 tokens)
+
+| stratum | unit | pairs | deciding sentence delivered | delivered unit (as reported) | block chars median / p90 | call chars median / p90 | ms median |
+|---|---|---|---|---|---|---|---|
+| long (>= 20k chars) | chunk | 35 | 0/35 (0.0%) | {'none': 35} | 2764 / 2989 | 10133 / 23852 | 12 |
+| long (>= 20k chars) | window | 35 | 0/35 (0.0%) | {'window': 35} | 5601 / 5771 | 14589 / 23265 | 17 |
+| long (>= 20k chars) | section | 35 | 16/35 (45.7%) | {'section': 35} | 16686 / 27690 | 27298 / 30641 | 19 |
+| long (>= 20k chars) | page | 35 | 16/35 (45.7%) | {'page': 35} | 16686 / 27690 | 27298 / 30641 | 18 |
+| short | chunk | 127 | 127/127 (100.0%) | {'none': 127} | 446 / 543 | 7675 / 15536 | 13 |
+| short | window | 127 | 126/127 (99.2%) | {'window': 126} | 446 / 543 | 9767 / 20995 | 18 |
+| short | section | 127 | 126/127 (99.2%) | {'section': 126} | 446 / 543 | 16899 / 28266 | 18 |
+| short | page | 127 | 126/127 (99.2%) | {'page': 126} | 446 / 543 | 16899 / 28266 | 18 |
+
+### dev, isolated budget (6,000 tokens)
+
+| stratum | unit | pairs | deciding sentence delivered | delivered unit (as reported) | block chars median / p90 | call chars median / p90 | ms median |
+|---|---|---|---|---|---|---|---|
+| long (>= 20k chars) | chunk | 35 | 0/35 (0.0%) | {'none': 35} | 2764 / 2989 | 2764 / 2989 | 1 |
+| long (>= 20k chars) | window | 35 | 0/35 (0.0%) | {'window': 35} | 5621 / 5771 | 5621 / 5771 | 3 |
+| long (>= 20k chars) | section | 35 | 35/35 (100.0%) | {'section': 35} | 30186 / 32525 | 30186 / 32525 | 4 |
+| long (>= 20k chars) | page | 35 | 35/35 (100.0%) | {'page': 35} | 30186 / 32525 | 30186 / 32525 | 4 |
+| short | chunk | 127 | 127/127 (100.0%) | {'none': 127} | 446 / 543 | 446 / 543 | 1 |
+| short | window | 127 | 127/127 (100.0%) | {'window': 127} | 446 / 543 | 446 / 543 | 3 |
+| short | section | 127 | 127/127 (100.0%) | {'section': 127} | 446 / 543 | 446 / 543 | 2 |
+| short | page | 127 | 127/127 (100.0%) | {'page': 127} | 446 / 543 | 446 / 543 | 3 |
+
+- long shared pairs from transcript-clipped hit lists: 3; deciding page beyond the 50-hit cap: 0
+- long shared, complete hit lists only, chunk: 0/32
+- long shared, complete hit lists only, window: 0/32
+- long shared, complete hit lists only, section: 16/32
+- long shared, complete hit lists only, page: 16/32
+- long shared chunk by model (covered/total): 6.1 0/9, opus 0/10, sonnet 0/16
+- long shared window by model (covered/total): 6.1 0/9, opus 0/10, sonnet 0/16
+- long shared section by model (covered/total): 6.1 4/9, opus 3/10, sonnet 9/16
+- long shared page by model (covered/total): 6.1 4/9, opus 3/10, sonnet 9/16
+
+## Rule (DECISION-RULE.md, recorded before these numbers)
+
+- window: long 3/82 (3.7%) vs chunk 3/82 (3.7%) -> beats chunk False; short 194/195 vs chunk 195/195 -> not lower False; selector bar > 90.6% -> False; median call chars 15263
+- section: long 50/82 (61.0%) vs chunk 3/82 (3.7%) -> beats chunk True; short 194/195 vs chunk 195/195 -> not lower False; selector bar > 90.6% -> False; median call chars 28846
+- page: long 50/82 (61.0%) vs chunk 3/82 (3.7%) -> beats chunk True; short 194/195 vs chunk 195/195 -> not lower False; selector bar > 90.6% -> False; median call chars 28846
+- PICK: none (no unit passes rules 1 and 2)

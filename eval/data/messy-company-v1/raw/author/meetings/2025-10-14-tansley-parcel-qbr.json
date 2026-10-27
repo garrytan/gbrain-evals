@@ -1,0 +1,41 @@
+{
+  "slug": "meetings/2025-10-14-tansley-parcel-qbr",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: meeting\nTitle: Tansley Parcel QBR (Fort Worth)\nDate: Written on 2025-10-14.\nWriter: Priyanka \"Pree\" Sundaram\nVoice: terse and practical\nFormat: meeting notes with attendees, bullets and action items\nLength: about 249 words\nDate style in the body: day-month (2 Jun 2025)\nTypos: none\n\nBrief:\nPree's QBR notes. Lev's company is adding two depots next spring.\n\nRequired phrases:\n- Use the exact phrase \"Lev's company\" once, meaning Tansley Parcel (contact employer). Don't add a gloss explaining it.\n- Use the exact phrase \"Lev's admin account\" once, in the sense of: his administrator login in the product. It must not be about a customer account.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Hollis Mbeki: Central team lead\n- Priyanka \"Pree\" Sundaram: Account manager, Central team\n- Tobias Rendle: Account manager, Central team\n- Lev Arkadin: Procurement lead\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Tansley Parcel: regional parcel delivery, South Central; main contact Lev Arkadin, Procurement lead; codes/nicknames TPCL, TP\n- Tansleigh Packaging: corrugated packaging manufacturer, Ohio Valley; codes/nicknames TSP, TP\n- Marrow Fieldworks: agricultural equipment dealer network, Plains; codes/nicknames MFW\n- Marrow Agrisupply: farm supply retail chain, Plains; subsidiary of Marrow Fieldworks; codes/nicknames MAS, Marrow Agri\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2025-10-14 (background only; don't restate unless the brief asks):\n- Tansley Parcel: managed by Priyanka \"Pree\" Sundaram\n- Tansleigh Packaging: not stated on any shared page (do not say who manages it)\n- Marrow Fieldworks: managed by Priyanka \"Pree\" Sundaram\n- Marrow Agrisupply: managed by Central team (pooled account)",
+      "response_text": "# Tansley Parcel QBR (Fort Worth)\n\n**Date:** 14 Oct 2025  \n**Attendees:** Lev Arkadin (Procurement Lead, TPCL), Darla Vance (Fort Worth Yard Ops, TPCL), Pree (Pemberline)\n\n## Ops & Product Usage\n* Fort Worth site (Doors 1–28) handling early morning sort well, but evening cross-dock shift (18:00–02:00) still has manual overrides on Doors 14 and 15 when linehaul trailers arrive early from Waco.\n* Darla flagged that the Gate Turnaround Report is including bobtail drop-offs in the dwell time average. Ticket #48109 open with support to filter out tractor-only check-ins.\n* Permissions cleanup: Lev's admin account in Pemberline Dock is still getting spammed with SMS alerts for late carrier arrivals at the Waco yard. Removed his number from the shift escalation group during the call; Darla will take those alerts going forward.\n* Driver kiosk at the North Gate lost Wi-Fi twice last week during heavy rain. Local IT is running a hardline by 24 Oct 2025; no action needed on our side.\n\n## Upcoming Changes\n* Lev's company is adding two depots next spring (Abilene and Tyler). \n* Groundbreaking on Abilene is done; Tyler lease closes in November. \n* Both sites will run the standard Pemberline Dock check-in flow with license plate cameras at the guard shack. Lev wants to review hardware specs for the kiosk tablets before they place their Q4 equipment order.\n\n## Action Items\n* **Pree:** Check status on Ticket #48109 (bobtail filter) and reply to Darla by 17 Oct 2025.\n* **Pree:** Send updated kiosk tablet spec sheet to Lev.\n* **Darla:** Send CSV of seasonal carrier SCACs for the November peak upload by 31 Oct 2025.",
+      "usage": {
+        "input_tokens": 1145,
+        "output_tokens": 436,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.00665,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1145,
+          "candidatesTokenCount": 436,
+          "totalTokenCount": 1581,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1145
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 436
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

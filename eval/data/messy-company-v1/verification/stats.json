@@ -1,0 +1,37 @@
+{
+  "by_lane": {
+    "entity-mentions": {
+      "items": 1172,
+      "disagreements": 63
+    },
+    "ownership": {
+      "items": 47,
+      "disagreements": 14
+    },
+    "owner-phrases": {
+      "items": 192,
+      "disagreements": 3
+    },
+    "timeline": {
+      "items": 60,
+      "disagreements": 5
+    },
+    "changes": {
+      "items": 32,
+      "disagreements": 3
+    },
+    "document-status": {
+      "items": 41,
+      "disagreements": 0
+    },
+    "governing-records": {
+      "items": 196,
+      "disagreements": 3
+    }
+  },
+  "total": {
+    "items": 1740,
+    "disagreements": 91
+  },
+  "extra_owner_phrase_reports": 3
+}

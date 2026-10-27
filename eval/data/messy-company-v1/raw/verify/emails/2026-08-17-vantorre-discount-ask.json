@@ -1,0 +1,36 @@
+{
+  "slug": "emails/2026-08-17-vantorre-discount-ask",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2026-08-17",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Vantorre Group",
+        "line": 11
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "6ac4066c54b9d7fc9b083b8125f12c5bbd88d8c6ceb055375f90c540d6f16795",
+  "response_text": "{\n  \"date_used\": \"2026-08-17\",\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"vantorre-group\"\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2026-08-17",
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "vantorre-group"
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2638,
+    "output_tokens": 61,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.005886
+}

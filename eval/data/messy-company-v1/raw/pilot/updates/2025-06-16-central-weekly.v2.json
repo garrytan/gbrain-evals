@@ -1,0 +1,37 @@
+{
+  "slug": "updates/2025-06-16-central-weekly",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "86103a3b62dcfe2b44d58e99384be715b34dd78018063c6b360d8974a7c15572",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: weekly\nTitle: Central weekly — June 16\nDate: Written on 2025-06-16.\nWriter: Hollis Mbeki\nVoice: polished and businesslike\nFormat: a weekly update with a section per topic and bullets\nLength: about 464 words\nDate style in the body: ISO (2025-06-02)\nTypos: one or two small natural typos (never in names or required phrases)\n\nBrief:\nHollis's update. Marrow Fieldworks goes live in June 2025. Tansley Parcel discount amendment signed June 10. Tobias is ramping.\n\nRequired phrases:\n- Use the exact phrase \"Tobias's new account\" once, referring to Tansleigh Packaging. This page must not reveal which account that is or who manages it: no account name, location, or detail that identifies it in that sentence or paragraph.\n- Use the exact phrase \"Pree's dealer account\" once, referring to Marrow Fieldworks. Don't put the account's name in the same sentence; the reader should work it out.\n- Use the exact phrase \"the account Pree runs\" once, but vaguely: the writer does not say which account it is, and nothing nearby (name, location, numbers, products) may identify one. Keep that sentence generic, like a passing comment.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Hollis Mbeki: Central team lead\n- Priyanka \"Pree\" Sundaram: Account manager, Central team\n- Tobias Rendle: Account manager, Central team\n- Lev Arkadin: Procurement lead\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Tansley Parcel: regional parcel delivery, South Central; main contact Lev Arkadin, Procurement lead; codes/nicknames TPCL, TP\n- Tansleigh Packaging: corrugated packaging manufacturer, Ohio Valley; codes/nicknames TSP, TP\n- Marrow Fieldworks: agricultural equipment dealer network, Plains; codes/nicknames MFW\n- Marrow Agrisupply: farm supply retail chain, Plains; subsidiary of Marrow Fieldworks; codes/nicknames MAS, Marrow Agri\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2025-06-16 (background only; don't restate unless the brief asks):\n- Tansley Parcel: managed by Priyanka \"Pree\" Sundaram\n- Tansleigh Packaging: not stated on any shared page (do not say who manages it)\n- Marrow Fieldworks: managed by Priyanka \"Pree\" Sundaram\n- Marrow Agrisupply: managed by Central team (pooled account)",
+      "response_text": "# Central weekly — June 16\n\n*2025-06-16*\n\n## Summary\n- The main priorities this week are June go-live readiness, closing the loop on signed paperwork, and giving Tobias enough structured practice to build confidence without creating unnecessary handoffs.\n- Please keep action items short and operational: the next step, the person taking it, and the dependency. Several recent threads required a second read to distinguish a customer request from an internal suggestion.\n\n## Marrow Fieldworks: June readiness\n- Marrow Fieldworks goes live in June 2025. This week’s focus is the practical handoff from preparation to daily use: checking the operator walkthrough, reviewing the support route, and making sure outstanding questions have a clear destination.\n- Pree's dealer account needs a clean final-readiness discussion rather than another broad status meeting. Please bring specific blockers and proposed resolutions so we can use the time for decisions.\n- For the walkthrough, start with the ordinary day: finding the schedule, making an adjustment, and knowing where to ask for help. Leave unusual scenarios until the basic flow is clear.\n- Keep screenshots consistent with the walkthrough sequence. A few extra minutes checking labels now should prevent people from following an older example during the live session.\n- Any remaining training feedback should distinguish a usability issue from a request for a different operating process. Both matter, but they need different follow-up.\n\n## Tansley Parcel: signed amendment\n- The Tansley Parcel discount amendment was signed on 2025-06-10. The immediate task is to finish the administrative follow-through and keep the signed version easy to find.\n- Please use the full account name in internal handoffs. Short labels are convenient in conversation but less useful when someone is searching attachments or matching a document to a request.\n- Before forwarding paperwork, check the attachment itself rather than relying on the email subject. We should avoid sending an earlier draft simply because it sits at the top of a long thread.\n- Keep any remaining document questions together for June Osei-Lark rather than spreading them across separate messages.\n\n## Tobias: ramp\n- Tobias is ramping. The emphasis remains on observing complete conversations, practicing concise recaps, and getting comfortable asking a clarifying question before proposing a next step.\n- Tobias's new account will be part of the ramp discussion.\n- For practice reviews, use one example at a time. A focused review of a single follow-up note is more useful than a long list of general advice.\n- Please leave room for questions after shadowing sessions; the useful ones often surface once the call has ended.\n\n## Team coordination\n- A brief check-in on the account Pree runs would be useful.\n- Keep calendar holds current and flag scheduling conflicts early. We can usually accomodate a change more easily before invitations have circulated.\n- Carry unfinished actions into the next update with a clear next step, not just “ongoing.”",
+      "usage": {
+        "input_tokens": 1143,
+        "output_tokens": 653,
+        "thinking_tokens": 60
+      },
+      "cost_usd": 0.008816,
+      "provider_meta": {
+        "id": "resp_0b56d278e7f8ec1b016acfadd08ba487d1bcac2381be8847df",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1143,
+          "input_tokens_details": {
+            "cache_write_tokens": 1140,
+            "cached_tokens": 0
+          },
+          "output_tokens": 653,
+          "output_tokens_details": {
+            "reasoning_tokens": 60
+          },
+          "total_tokens": 1796
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

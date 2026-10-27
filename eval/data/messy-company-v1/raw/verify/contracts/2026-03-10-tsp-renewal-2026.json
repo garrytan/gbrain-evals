@@ -1,0 +1,114 @@
+{
+  "slug": "contracts/2026-03-10-tsp-renewal-2026",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2026-03-10",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Tansleigh Packaging",
+        "line": 6
+      },
+      {
+        "oid": "e2",
+        "surface": "Tansleigh Packaging",
+        "line": 10
+      },
+      {
+        "oid": "e3",
+        "surface": "Tansleigh Packaging",
+        "line": 18
+      },
+      {
+        "oid": "e4",
+        "surface": "Tansleigh Packaging",
+        "line": 18
+      },
+      {
+        "oid": "e5",
+        "surface": "Tansleigh Packaging",
+        "line": 20
+      },
+      {
+        "oid": "e6",
+        "surface": "Tansleigh Packaging",
+        "line": 34
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": [],
+    "record": {
+      "question": "Is this document signed, an unsigned version, or a draft? Judge from the body text, not the title alone. Give its signed date and effective date if stated, and the value of each of these terms it sets.",
+      "terms": [
+        "seats",
+        "renewal_date"
+      ]
+    }
+  },
+  "prompt_user_sha256": "d140df1ed218749b1926f73e1ffea92440569c2237db3e2c7beea617cef5e359",
+  "response_text": "{\n  \"date_used\": \"2026-03-10\",\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"tansleigh\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"tansleigh\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"tansleigh\"\n    },\n    {\n      \"oid\": \"e4\",\n      \"entity\": \"tansleigh\"\n    },\n    {\n      \"oid\": \"e5\",\n      \"entity\": \"tansleigh\"\n    },\n    {\n      \"oid\": \"e6\",\n      \"entity\": \"tansleigh\"\n    }\n  ],\n  \"record\": {\n    \"status\": \"signed\",\n    \"status_evidence_line\": 10,\n    \"signed_date\": \"2026-03-10\",\n    \"effective_date\": \"2026-03-15\",\n    \"terms\": [\n      {\n        \"term\": \"seats\",\n        \"applies_to\": [\n          \"tansleigh\"\n        ],\n        \"value\": \"34\",\n        \"line\": 18\n      },\n      {\n        \"term\": \"renewal_date\",\n        \"applies_to\": [\n          \"tansleigh\"\n        ],\n        \"value\": \"2027-03-14\",\n        \"line\": 24\n      }\n    ],\n    \"deciding_line\": 28,\n    \"deciding_days\": null\n  }\n}",
+  "parsed": {
+    "date_used": "2026-03-10",
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "tansleigh"
+      },
+      {
+        "oid": "e2",
+        "entity": "tansleigh"
+      },
+      {
+        "oid": "e3",
+        "entity": "tansleigh"
+      },
+      {
+        "oid": "e4",
+        "entity": "tansleigh"
+      },
+      {
+        "oid": "e5",
+        "entity": "tansleigh"
+      },
+      {
+        "oid": "e6",
+        "entity": "tansleigh"
+      }
+    ],
+    "record": {
+      "status": "signed",
+      "status_evidence_line": 10,
+      "signed_date": "2026-03-10",
+      "effective_date": "2026-03-15",
+      "terms": [
+        {
+          "term": "seats",
+          "applies_to": [
+            "tansleigh"
+          ],
+          "value": "34",
+          "line": 18
+        },
+        {
+          "term": "renewal_date",
+          "applies_to": [
+            "tansleigh"
+          ],
+          "value": "2027-03-14",
+          "line": 24
+        }
+      ],
+      "deciding_line": 28,
+      "deciding_days": null
+    }
+  },
+  "usage": {
+    "input_tokens": 3497,
+    "output_tokens": 393,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.010924
+}

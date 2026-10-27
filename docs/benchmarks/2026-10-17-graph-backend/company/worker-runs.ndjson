@@ -1,0 +1,6 @@
+{"arm":"A","tier":"company","pass":"cold","calls":2200,"skipped":0,"failed":0,"wall_ms":1432374,"calls_per_s":1.535911746874371}
+{"arm":"A","tier":"company","pass":"warm","calls":2200,"skipped":0,"failed":0,"wall_ms":1426775,"calls_per_s":1.5419394547615233}
+{"arm":"B","tier":"company","pass":"cold","calls":4400,"skipped":0,"failed":0,"wall_ms":2898152,"calls_per_s":1.5182086982914254}
+{"arm":"B","tier":"company","pass":"warm","calls":4400,"skipped":0,"failed":0,"wall_ms":2845951,"calls_per_s":1.54605610813882}
+{"arm":"C","tier":"company","pass":"cold","calls":4400,"skipped":0,"failed":0,"wall_ms":3703522,"calls_per_s":1.1880582853468422}
+{"arm":"C","tier":"company","pass":"warm","calls":4400,"skipped":0,"failed":0,"wall_ms":3654613,"calls_per_s":1.2039577644412671}

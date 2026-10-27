@@ -1,0 +1,37 @@
+{
+  "slug": "meetings/2025-07-15-vantorre-kickoff",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: meeting\nTitle: Vantorre kickoff\nDate: Written on 2025-07-15.\nWriter: Nadia Fennimore\nVoice: polished and businesslike\nFormat: loose call notes, half sentences, an action list at the end\nLength: about 215 words\nDate style in the body: ISO (2025-06-02)\nTypos: one or two small natural typos (never in names or required phrases)\n\nBrief:\nNadia's kickoff notes with Mateo's team: Hartford first, Albany in Q4.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Nadia Fennimore: Strategic account manager\n- Gideon Sato: Strategic account manager\n- Mateo Quiroga: Head of Procurement\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Vantorre Group: diversified industrial manufacturer, Northeast; main contact Mateo Quiroga, Head of Procurement; codes/nicknames VTG, VTRG\n- Vantorre Mobility: electric fleet services subsidiary, Northeast; subsidiary of Vantorre Group; codes/nicknames VTM, VMob\n- Orlavine Medical Supply: medical supply distributor, Mountain West; codes/nicknames OMS\n- Quillfeather Outfitters: outdoor gear retailer, Mountain West; codes/nicknames QFO\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2025-07-15 (background only; don't restate unless the brief asks):\n- Vantorre Group: managed by Nadia Fennimore\n- Vantorre Mobility: managed by Gideon Sato\n- Orlavine Medical Supply: managed by Nadia Fennimore\n- Quillfeather Outfitters: managed by Strategic Accounts pod (pooled account)",
+      "response_text": "# Vantorre kickoff\n\n2025-07-15\n\nKickoff with Mateo Quiroga and the Vantorre Group procurement and Hartford operations team. Agreed sequence: Hartford first; Albany in Q4. Keep the initial Pemberline Dock setup focused on Hartford receiving rather than bringing both sites into the same working session.\n\n**Discussion**\n- Hartford’s morning inbound queue is the immediate pain point. Drivers arriving before the receiving desk opens; appointment details then copied from email into the shift spreadsheet.\n- Operations walked through doors 3 and 4, where pallet deliveries overlap with returns collection. Need separate appointment labels so the desk can distinguish unloading from pickup without opening every booking.\n- Mateo asked for one clear view of the day’s exceptions: late arrivals, missing references, and loads moved between doors. A printable “Hartford Daily Exceptions” report would help the afternoon handover.\n- Procurement wants supplier booking instructions reviewed before distribution. Current draft says “delivery reference,” while Hartford staff use “PO reference”; settle the wording before the walkthrough.\n- Albany discussion deliberately brief. Q4 remains the next phase; capture differences in receiving hours and door naming during the Hartford work.\n- Small snag in the sample upload: two rows used the same refernce. Operations will send a cleaned file.\n\n**Actions**\n- I’ll circulate the Hartford walkthrough agenda and revised booking instructions.\n- Mateo to gather procurement comments into one reply.\n- Hartford operations to send the door list, receiving hours, and corrected sample file.\n- Add Albany requirements to the Q4 preparation list.",
+      "usage": {
+        "input_tokens": 996,
+        "output_tokens": 317,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.005162,
+      "provider_meta": {
+        "id": "resp_076679a996eabb5e016acfaed839a487d1a7ffde584fe004dd",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 996,
+          "input_tokens_details": {
+            "cache_write_tokens": 0,
+            "cached_tokens": 0
+          },
+          "output_tokens": 317,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 1313
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

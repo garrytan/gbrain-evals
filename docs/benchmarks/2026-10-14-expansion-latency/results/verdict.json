@@ -1,0 +1,566 @@
+{
+ "reference": "A1",
+ "n_questions": 300,
+ "recommended": "B",
+ "rule": "fastest acceptable arm by end-to-end p50 (frozen providers); within 5% of it, the cheaper; none faster than the reference = keep the default",
+ "arms": [
+  {
+   "arm": "A1",
+   "n": 300,
+   "r10": 299,
+   "r5": 287,
+   "ndcg": 0.9569192882467572,
+   "qClean": 300,
+   "pClean": 300,
+   "found": 300,
+   "invalid": 0,
+   "invalidShare": 0,
+   "types": {
+    "single-session-user": 42,
+    "multi-session": 80,
+    "knowledge-update": 47,
+    "single-session-preference": 18,
+    "temporal-reasoning": 79,
+    "single-session-assistant": 33
+   },
+   "skipped": {
+    "real": 0,
+    "probe": 0,
+    "share": 0
+   },
+   "expansionNotApplied": 0,
+   "expP50": 1542.6199229992926,
+   "expP95": 1760.3516270015389,
+   "stageExpP50": 1528,
+   "stageExpP95": 1754,
+   "e2eP50": 2022.2641308593752,
+   "e2eP95": 2292.253630859375,
+   "e2eRealP50": 1997.2756718750002,
+   "e2eRealP95": 2264.691224609375,
+   "usdPer1k": 0.6305916666666666,
+   "ref_on_same": {
+    "n": 300,
+    "r10": 299,
+    "ndcg": 0.9569192882467572,
+    "e2eP50": 2022.2641308593752
+   },
+   "onlyArm": 0,
+   "onlyRef": 0,
+   "mcnemar_p": 1,
+   "typeLoss": {
+    "single-session-user": 0,
+    "multi-session": 0,
+    "knowledge-update": 0,
+    "single-session-preference": 0,
+    "temporal-reasoning": 0,
+    "single-session-assistant": 0
+   },
+   "checks": {
+    "strict10": true,
+    "types": true,
+    "ndcg": true,
+    "clean": true,
+    "valid": true
+   },
+   "acceptable": null,
+   "screen": false,
+   "noise_rerun": false
+  },
+  {
+   "arm": "A2",
+   "n": 300,
+   "r10": 298,
+   "r5": 287,
+   "ndcg": 0.9581957852755162,
+   "qClean": 300,
+   "pClean": 300,
+   "found": 300,
+   "invalid": 0,
+   "invalidShare": 0,
+   "types": {
+    "single-session-user": 42,
+    "multi-session": 80,
+    "knowledge-update": 46,
+    "single-session-preference": 18,
+    "temporal-reasoning": 79,
+    "single-session-assistant": 33
+   },
+   "skipped": {
+    "real": 0,
+    "probe": 0,
+    "share": 0
+   },
+   "expansionNotApplied": 0,
+   "expP50": 1549.8751920005307,
+   "expP95": 1792.3179259998724,
+   "stageExpP50": 1534,
+   "stageExpP95": 1779,
+   "e2eP50": 1962.665974609375,
+   "e2eP95": 2260.358400390625,
+   "e2eRealP50": 1917.211796875,
+   "e2eRealP95": 2239.4299375,
+   "usdPer1k": 0.631825,
+   "ref_on_same": {
+    "n": 300,
+    "r10": 299,
+    "ndcg": 0.9569192882467572,
+    "e2eP50": 2022.2641308593752
+   },
+   "onlyArm": 0,
+   "onlyRef": 1,
+   "mcnemar_p": 1,
+   "typeLoss": {
+    "single-session-user": 0,
+    "multi-session": 0,
+    "knowledge-update": 1,
+    "single-session-preference": 0,
+    "temporal-reasoning": 0,
+    "single-session-assistant": 0
+   },
+   "checks": {
+    "strict10": true,
+    "types": true,
+    "ndcg": true,
+    "clean": true,
+    "valid": true
+   },
+   "acceptable": true,
+   "screen": false,
+   "noise_rerun": true
+  },
+  {
+   "arm": "B",
+   "n": 300,
+   "r10": 298,
+   "r5": 285,
+   "ndcg": 0.957663777678203,
+   "qClean": 300,
+   "pClean": 300,
+   "found": 300,
+   "invalid": 0,
+   "invalidShare": 0,
+   "types": {
+    "single-session-user": 42,
+    "multi-session": 80,
+    "knowledge-update": 46,
+    "single-session-preference": 18,
+    "temporal-reasoning": 79,
+    "single-session-assistant": 33
+   },
+   "skipped": {
+    "real": 0,
+    "probe": 0,
+    "share": 0
+   },
+   "expansionNotApplied": 0,
+   "expP50": 0,
+   "expP95": 0,
+   "stageExpP50": 0,
+   "stageExpP95": 0,
+   "e2eP50": 227.299,
+   "e2eP95": 383.54455859375,
+   "e2eRealP50": 207.705,
+   "e2eRealP95": 351.745,
+   "usdPer1k": 0,
+   "ref_on_same": {
+    "n": 300,
+    "r10": 299,
+    "ndcg": 0.9569192882467572,
+    "e2eP50": 2022.2641308593752
+   },
+   "onlyArm": 0,
+   "onlyRef": 1,
+   "mcnemar_p": 1,
+   "typeLoss": {
+    "single-session-user": 0,
+    "multi-session": 0,
+    "knowledge-update": 1,
+    "single-session-preference": 0,
+    "temporal-reasoning": 0,
+    "single-session-assistant": 0
+   },
+   "checks": {
+    "strict10": true,
+    "types": true,
+    "ndcg": true,
+    "clean": true,
+    "valid": true
+   },
+   "acceptable": true,
+   "screen": false,
+   "noise_rerun": false
+  },
+  {
+   "arm": "C-haiku-5-5",
+   "n": 300,
+   "r10": 298,
+   "r5": 287,
+   "ndcg": 0.9588691166614585,
+   "qClean": 300,
+   "pClean": 300,
+   "found": 300,
+   "invalid": 0,
+   "invalidShare": 0,
+   "types": {
+    "single-session-user": 42,
+    "multi-session": 80,
+    "knowledge-update": 46,
+    "single-session-preference": 18,
+    "temporal-reasoning": 79,
+    "single-session-assistant": 33
+   },
+   "skipped": {
+    "real": 0,
+    "probe": 0,
+    "share": 0
+   },
+   "expansionNotApplied": 0,
+   "expP50": 1397.9583159992471,
+   "expP95": 2358.3406870001927,
+   "stageExpP50": 1382,
+   "stageExpP95": 2347,
+   "e2eP50": 1852.694658203125,
+   "e2eP95": 2863.36027734375,
+   "e2eRealP50": 1836.51967578125,
+   "e2eRealP95": 3084.738296875,
+   "usdPer1k": 0.097639,
+   "ref_on_same": {
+    "n": 300,
+    "r10": 299,
+    "ndcg": 0.9569192882467572,
+    "e2eP50": 2022.2641308593752
+   },
+   "onlyArm": 0,
+   "onlyRef": 1,
+   "mcnemar_p": 1,
+   "typeLoss": {
+    "single-session-user": 0,
+    "multi-session": 0,
+    "knowledge-update": 1,
+    "single-session-preference": 0,
+    "temporal-reasoning": 0,
+    "single-session-assistant": 0
+   },
+   "checks": {
+    "strict10": true,
+    "types": true,
+    "ndcg": true,
+    "clean": true,
+    "valid": true
+   },
+   "acceptable": true,
+   "screen": false,
+   "noise_rerun": false
+  },
+  {
+   "arm": "C-gpt-6-luna",
+   "n": 300,
+   "r10": 298,
+   "r5": 285,
+   "ndcg": 0.9581023882753467,
+   "qClean": 300,
+   "pClean": 300,
+   "found": 300,
+   "invalid": 0,
+   "invalidShare": 0,
+   "types": {
+    "single-session-user": 42,
+    "multi-session": 80,
+    "knowledge-update": 46,
+    "single-session-preference": 18,
+    "temporal-reasoning": 79,
+    "single-session-assistant": 33
+   },
+   "skipped": {
+    "real": 0,
+    "probe": 0,
+    "share": 0
+   },
+   "expansionNotApplied": 0,
+   "expP50": 2523.354226999916,
+   "expP95": 3884.7786309998482,
+   "stageExpP50": 2873,
+   "stageExpP95": 4521,
+   "e2eP50": 3333.351828125,
+   "e2eP95": 5005.73944921875,
+   "e2eRealP50": 3576.987755859375,
+   "e2eRealP95": 5124.25173046875,
+   "usdPer1k": 0.07708016666666662,
+   "ref_on_same": {
+    "n": 300,
+    "r10": 299,
+    "ndcg": 0.9569192882467572,
+    "e2eP50": 2022.2641308593752
+   },
+   "onlyArm": 0,
+   "onlyRef": 1,
+   "mcnemar_p": 1,
+   "typeLoss": {
+    "single-session-user": 0,
+    "multi-session": 0,
+    "knowledge-update": 1,
+    "single-session-preference": 0,
+    "temporal-reasoning": 0,
+    "single-session-assistant": 0
+   },
+   "checks": {
+    "strict10": true,
+    "types": true,
+    "ndcg": true,
+    "clean": true,
+    "valid": true
+   },
+   "acceptable": true,
+   "screen": false,
+   "noise_rerun": false
+  },
+  {
+   "arm": "C-gemini-3.8-flash",
+   "n": 90,
+   "r10": 88,
+   "r5": 84,
+   "ndcg": 0.9570173682072283,
+   "qClean": 90,
+   "pClean": 90,
+   "found": 90,
+   "invalid": 0,
+   "invalidShare": 0,
+   "types": {
+    "single-session-user": 13,
+    "multi-session": 24,
+    "knowledge-update": 13,
+    "single-session-preference": 5,
+    "temporal-reasoning": 23,
+    "single-session-assistant": 10
+   },
+   "skipped": {
+    "real": 0,
+    "probe": 0,
+    "share": 0
+   },
+   "expansionNotApplied": 0,
+   "expP50": 4615.219401000068,
+   "expP95": 6458.708517000079,
+   "stageExpP50": 4703,
+   "stageExpP95": 6523,
+   "e2eP50": 5133.147357421875,
+   "e2eP95": 7003.81512890625,
+   "e2eRealP50": 5619.311400390625,
+   "e2eRealP95": 7344.462529296875,
+   "usdPer1k": 1.553683333333334,
+   "ref_on_same": {
+    "n": 90,
+    "r10": 90,
+    "ndcg": 0.9621852335192662,
+    "e2eP50": 2012.9252050781251
+   },
+   "onlyArm": 0,
+   "onlyRef": 2,
+   "mcnemar_p": 0.5,
+   "typeLoss": {
+    "single-session-user": 0,
+    "multi-session": 0,
+    "knowledge-update": 1,
+    "single-session-preference": 0,
+    "temporal-reasoning": 1,
+    "single-session-assistant": 0
+   },
+   "checks": {
+    "strict10": true,
+    "types": true,
+    "ndcg": false,
+    "clean": true,
+    "valid": true
+   },
+   "acceptable": false,
+   "screen": true,
+   "noise_rerun": false
+  },
+  {
+   "arm": "D-short",
+   "n": 300,
+   "r10": 299,
+   "r5": 287,
+   "ndcg": 0.9569192882467572,
+   "qClean": 300,
+   "pClean": 300,
+   "found": 300,
+   "invalid": 0,
+   "invalidShare": 0,
+   "types": {
+    "single-session-user": 42,
+    "multi-session": 80,
+    "knowledge-update": 47,
+    "single-session-preference": 18,
+    "temporal-reasoning": 79,
+    "single-session-assistant": 33
+   },
+   "skipped": {
+    "real": 1,
+    "probe": 0,
+    "share": 0.0016666666666666668
+   },
+   "expansionNotApplied": 0,
+   "expP50": 1542.6199229992926,
+   "expP95": 1760.3516270015389,
+   "stageExpP50": 1528,
+   "stageExpP95": 1754,
+   "e2eP50": 2022.2641308593752,
+   "e2eP95": 2292.253630859375,
+   "e2eRealP50": 1995.9962558593752,
+   "e2eRealP95": 2264.691224609375,
+   "usdPer1k": 0.6296433333333333,
+   "ref_on_same": {
+    "n": 300,
+    "r10": 299,
+    "ndcg": 0.9569192882467572,
+    "e2eP50": 2022.2641308593752
+   },
+   "onlyArm": 0,
+   "onlyRef": 0,
+   "mcnemar_p": 1,
+   "typeLoss": {
+    "single-session-user": 0,
+    "multi-session": 0,
+    "knowledge-update": 0,
+    "single-session-preference": 0,
+    "temporal-reasoning": 0,
+    "single-session-assistant": 0
+   },
+   "checks": {
+    "strict10": true,
+    "types": true,
+    "ndcg": true,
+    "clean": true,
+    "valid": true
+   },
+   "acceptable": true,
+   "screen": false,
+   "noise_rerun": false
+  },
+  {
+   "arm": "D-long",
+   "n": 300,
+   "r10": 299,
+   "r5": 287,
+   "ndcg": 0.9569192882467572,
+   "qClean": 300,
+   "pClean": 300,
+   "found": 300,
+   "invalid": 0,
+   "invalidShare": 0,
+   "types": {
+    "single-session-user": 42,
+    "multi-session": 80,
+    "knowledge-update": 47,
+    "single-session-preference": 18,
+    "temporal-reasoning": 79,
+    "single-session-assistant": 33
+   },
+   "skipped": {
+    "real": 20,
+    "probe": 296,
+    "share": 0.5266666666666666
+   },
+   "expansionNotApplied": 0,
+   "expP50": 0,
+   "expP95": 1695.0721570011228,
+   "stageExpP50": 0,
+   "stageExpP95": 1684,
+   "e2eP50": 401.16498046874995,
+   "e2eP95": 2191.493783203125,
+   "e2eRealP50": 1983.956099609375,
+   "e2eRealP95": 2254.4897578125,
+   "usdPer1k": 0.28018166666666655,
+   "ref_on_same": {
+    "n": 300,
+    "r10": 299,
+    "ndcg": 0.9569192882467572,
+    "e2eP50": 2022.2641308593752
+   },
+   "onlyArm": 0,
+   "onlyRef": 0,
+   "mcnemar_p": 1,
+   "typeLoss": {
+    "single-session-user": 0,
+    "multi-session": 0,
+    "knowledge-update": 0,
+    "single-session-preference": 0,
+    "temporal-reasoning": 0,
+    "single-session-assistant": 0
+   },
+   "checks": {
+    "strict10": true,
+    "types": true,
+    "ndcg": true,
+    "clean": true,
+    "valid": true
+   },
+   "acceptable": true,
+   "screen": false,
+   "noise_rerun": false
+  },
+  {
+   "arm": "D-short+long",
+   "n": 300,
+   "r10": 299,
+   "r5": 287,
+   "ndcg": 0.9569192882467572,
+   "qClean": 300,
+   "pClean": 300,
+   "found": 300,
+   "invalid": 0,
+   "invalidShare": 0,
+   "types": {
+    "single-session-user": 42,
+    "multi-session": 80,
+    "knowledge-update": 47,
+    "single-session-preference": 18,
+    "temporal-reasoning": 79,
+    "single-session-assistant": 33
+   },
+   "skipped": {
+    "real": 21,
+    "probe": 296,
+    "share": 0.5283333333333333
+   },
+   "expansionNotApplied": 0,
+   "expP50": 0,
+   "expP95": 1695.0721570011228,
+   "stageExpP50": 0,
+   "stageExpP95": 1684,
+   "e2eP50": 400.938794921875,
+   "e2eP95": 2191.493783203125,
+   "e2eRealP50": 1977.2847753906249,
+   "e2eRealP95": 2254.4897578125,
+   "usdPer1k": 0.27923333333333317,
+   "ref_on_same": {
+    "n": 300,
+    "r10": 299,
+    "ndcg": 0.9569192882467572,
+    "e2eP50": 2022.2641308593752
+   },
+   "onlyArm": 0,
+   "onlyRef": 0,
+   "mcnemar_p": 1,
+   "typeLoss": {
+    "single-session-user": 0,
+    "multi-session": 0,
+    "knowledge-update": 0,
+    "single-session-preference": 0,
+    "temporal-reasoning": 0,
+    "single-session-assistant": 0
+   },
+   "checks": {
+    "strict10": true,
+    "types": true,
+    "ndcg": true,
+    "clean": true,
+    "valid": true
+   },
+   "acceptable": true,
+   "screen": false,
+   "noise_rerun": false
+  }
+ ]
+}

@@ -1,0 +1,37 @@
+{
+  "slug": "agent-notes/2025-10-05-coastal-sunday",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: agent-note\nTitle: Moss: Sunday prep (Coastal)\nDate: Written on 2025-10-05.\nWriter: Moss (Ruth Calloway's AI assistant)\nVoice: an AI assistant: neat, factual, a little stiff\nFormat: an assistant-written digest with headings and bullets, addressed to Ruth\nLength: about 341 words\nDate style in the body: mixed: some ISO, some casual\nTypos: one or two small natural typos (never in names or required phrases)\n\nBrief:\nMoss tells Ruth that Saltmarsh changes hands tomorrow.\n\nRequired phrases:\n- Use the exact phrase \"Sofia's grocery account\" once, referring to Saltmarsh Provisions. Don't put the account's name in the same sentence; the reader should work it out.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Bettina Kroll: Coastal team lead\n- Sofia Marchetti: Account manager, Coastal team\n- Kwame Adjei-Rowe: Account manager, Coastal team\n- Corinne Ashdown: VP Operations\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Pellucid Harbor Logistics: port drayage and terminal logistics, Gulf Coast; codes/nicknames PHL\n- Driftmoor Marine Freight: marine freight and barge operator, Puget Sound; codes/nicknames DMF\n- Saltmarsh Provisions: regional grocery distributor, Lowcountry; main contact Corinne Ashdown, VP Operations; codes/nicknames SMP\n- Covey & Lark Retail: home goods retailer, Mid-Atlantic; codes/nicknames Covey, CLR\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2025-10-05 (background only; don't restate unless the brief asks):\n- Pellucid Harbor Logistics: managed by Bettina Kroll\n- Driftmoor Marine Freight: managed by Kwame Adjei-Rowe\n- Saltmarsh Provisions: managed by Sofia Marchetti\n- Covey & Lark Retail: managed by Sofia Marchetti",
+      "response_text": "# Moss: Sunday prep (Coastal)\n\n**To:** Ruth Calloway  \n**Written:** 2025-10-05  \n**Focus:** Monday handoff and operational follow-through\n\n## Saltmarsh handoff\n\nSaltmarsh Provisions changes hands tomorrow, Monday, October 6. Sofia's grocery account is the priority for your morning review.\n\nThe immediate concern is continuity around the receiving schedule, rather than a broad introduction to Pemberline Dock. Corinne Ashdown needs a clear route for questions when the early receiving shift begins moving appointments between doors.\n\nFor the handoff packet, I suggest keeping these items together:\n\n- The receiving-board screenshot showing the overlap at door 4, with the appointment drawer open rather than the weekly calendar alone.\n- The example in which a produce arrival was moved after the gate clerk had already printed the driver slip.\n- The open question about whether dispatch should edit the appointment note or add a separate arrival comment.\n- A short contact note identifying Corinne Ashdown as VP Operations and the main contact for Saltmarsh Provisions.\n\n## Monday morning sequence\n\nRuth, please put the handoff ahead of the broader Coastal review. A ten-minute pass through the receiving examples should be more useful than rereading the full activity history.\n\nSuggested order:\n\n1. Open the latest receiving-board capture.\n2. Check that the door number and arrival time remain visible in the cropped image.\n3. Read the unresolved workflow question aloud before moving to next steps.\n4. Leave a single follow-up list for the incoming account manager, without duplicating the older checklist.\n\nThe screen capture needs a cleaner filename; “final-latest-2” is not helpful when someone is searching during a gate queue.\n\n## Items to keep out of the main discussion\n\n- General dashboard feedback can wait until the receiving issue has been walked through.\n- The duplicate screenshot of the empty afternoon board adds no useful context.\n- The driver-slip example should stay attached, but the unrelated printer-margin complaint does not need meeting time.\n\n## Your prep\n\nFor Oct. 6, keep the Saltmarsh Provisions notes at the top of the Coastal folder. The remaining housekeeping is small: remove the duplicate image, fix the checklist’s missing checkbox, and make the follow-up list easier to scan before the morning reveiw.",
+      "usage": {
+        "input_tokens": 1061,
+        "output_tokens": 512,
+        "thinking_tokens": 39
+      },
+      "cost_usd": 0.007242,
+      "provider_meta": {
+        "id": "resp_0fa48867825aa0fe016acfae7a479487d194103d6d632a3cc6",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1061,
+          "input_tokens_details": {
+            "cache_write_tokens": 1058,
+            "cached_tokens": 0
+          },
+          "output_tokens": 512,
+          "output_tokens_details": {
+            "reasoning_tokens": 39
+          },
+          "total_tokens": 1573
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

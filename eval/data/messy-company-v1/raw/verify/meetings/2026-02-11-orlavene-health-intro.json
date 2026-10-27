@@ -1,0 +1,103 @@
+{
+  "slug": "meetings/2026-02-11-orlavene-health-intro",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2026-02-11",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Orlavene Health",
+        "line": 6
+      },
+      {
+        "oid": "e2",
+        "surface": "Orlavene Health",
+        "line": 10
+      },
+      {
+        "oid": "e3",
+        "surface": "Orlavene",
+        "line": 12
+      },
+      {
+        "oid": "e4",
+        "surface": "Orlavene",
+        "line": 16
+      },
+      {
+        "oid": "e5",
+        "surface": "Orlavine Medical Supply",
+        "line": 20
+      },
+      {
+        "oid": "e6",
+        "surface": "Orlavene Health",
+        "line": 20
+      },
+      {
+        "oid": "e7",
+        "surface": "Orlavene",
+        "line": 26
+      }
+    ],
+    "claims": [],
+    "events": [
+      {
+        "eid": "e-orlavene-prospect-mtg",
+        "question": "Does the page describe this: \"Ruth meets Orlavene Health (a prospect, not Orlavine)\"? If so, on what date does the text place it?"
+      }
+    ],
+    "ownership": []
+  },
+  "prompt_user_sha256": "c33c176eb71a47da37e6c1c8da7ea4982dfd8dfdc6b4981ff523975e25afdb8a",
+  "response_text": "{\n  \"date_used\": \"2026-02-11\",\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"orlavene-health\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"orlavene-health\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"orlavene-health\"\n    },\n    {\n      \"oid\": \"e4\",\n      \"entity\": \"orlavene-health\"\n    },\n    {\n      \"oid\": \"e5\",\n      \"entity\": \"orlavine\"\n    },\n    {\n      \"oid\": \"e6\",\n      \"entity\": \"orlavene-health\"\n    },\n    {\n      \"oid\": \"e7\",\n      \"entity\": \"orlavene-health\"\n    }\n  ],\n  \"events\": [\n    {\n      \"eid\": \"e-orlavene-prospect-mtg\",\n      \"present\": true,\n      \"date\": \"2026-02-11\",\n      \"line\": 10\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2026-02-11",
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "orlavene-health"
+      },
+      {
+        "oid": "e2",
+        "entity": "orlavene-health"
+      },
+      {
+        "oid": "e3",
+        "entity": "orlavene-health"
+      },
+      {
+        "oid": "e4",
+        "entity": "orlavene-health"
+      },
+      {
+        "oid": "e5",
+        "entity": "orlavine"
+      },
+      {
+        "oid": "e6",
+        "entity": "orlavene-health"
+      },
+      {
+        "oid": "e7",
+        "entity": "orlavene-health"
+      }
+    ],
+    "events": [
+      {
+        "eid": "e-orlavene-prospect-mtg",
+        "present": true,
+        "date": "2026-02-11",
+        "line": 10
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 3138,
+    "output_tokens": 285,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.009126
+}

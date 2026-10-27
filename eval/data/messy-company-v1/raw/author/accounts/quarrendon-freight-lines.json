@@ -1,0 +1,41 @@
+{
+  "slug": "accounts/quarrendon-freight-lines",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: profile\nTitle: Quarrendon Freight Lines\nDate: Written on 2026-09-30.\nWriter: Ilse Varga\nVoice: hurried, lots of fragments\nFormat: a header block of key fields as a table, then short sections\nLength: about 115 words\nDate style in the body: ISO (2025-06-02)\nTypos: none\n\nBrief:\nAccount profile page, last updated 2026-09-30. Truckload carrier, HQ Duluth, terminals in Superior and Fargo. Main contact Thea Ramaswell (Director of Yard Operations). CRM code QFL; people also say \"Q-Freight\". Owner history: Marcus Lindqvist from Jan 6, 2025; Dana Okafor from June 2, 2025 (current). Current contract: 185 seats, renewal date March 31, 2027. Note that Amendment No. 3 takes seats to 230 on January 1, 2027.\n\nUse these names or codes at least once each, as written: \"QFL\", \"Q-Freight\".\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Ilse Varga: North team lead\n- Dana Okafor: Account manager, North team\n- Marcus Lindqvist: Account manager, North team\n- Thea Ramaswell: Director of Yard Operations\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Quarrendon Freight Lines: truckload freight carrier, Upper Midwest; main contact Thea Ramaswell, Director of Yard Operations; codes/nicknames QFL, Q-Freight\n- Brackenwater Freight Co.: less-than-truckload freight, Great Lakes; codes/nicknames BWF, Bracken\n- Tamsin Cold Chain: refrigerated warehousing, Pacific Northwest; codes/nicknames TCC\n- Thornbury Cloth Co. (renamed from Orrin Mills on 2026-01-12): textile mill, Carolinas; codes/nicknames TCC\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2026-09-30 (background only; don't restate unless the brief asks):\n- Quarrendon Freight Lines: managed by Dana Okafor\n- Brackenwater Freight Co.: managed by Marcus Lindqvist\n- Tamsin Cold Chain: managed by Dana Okafor\n- Thornbury Cloth Co.: managed by Marcus Lindqvist",
+      "response_text": "# Quarrendon Freight Lines\n\n| Field | Value |\n| --- | --- |\n| CRM Code | QFL (also called \"Q-Freight\") |\n| Last Updated | 2026-09-30 |\n| Main Contact | Thea Ramaswell, Director of Yard Operations |\n| Current Owner | Dana Okafor (since 2025-06-02) |\n| Previous Owner | Marcus Lindqvist (from 2025-01-06) |\n| Active Seats | 185 |\n| Renewal Date | 2027-03-31 |\n\n### Footprint\nTruckload carrier, HQ in Duluth. Terminals in Superior and Fargo. Heavy cross-docking on third shift.\n\n### Contract Notes\nAmendment No. 3 takes seats to 230 on 2027-01-01.\n\n### Ops & Open Items\nThea flagged lag on the `Gate_Dwell_Daily` report at the Superior yard (Bay 14 check-ins). Ticket #4912 open with support. Dana following up Thursday before the Fargo winter schedule lock.",
+      "usage": {
+        "input_tokens": 1231,
+        "output_tokens": 258,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.005042,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1231,
+          "candidatesTokenCount": 258,
+          "totalTokenCount": 1489,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1231
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 258
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

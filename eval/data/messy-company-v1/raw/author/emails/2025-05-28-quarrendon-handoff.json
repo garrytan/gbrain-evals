@@ -1,0 +1,41 @@
+{
+  "slug": "emails/2025-05-28-quarrendon-handoff",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: email\nTitle: Quarrendon handoff: Marcus to Dana\nDate: Written on 2025-05-28.\nWriter: Ilse Varga\nVoice: terse and practical\nFormat: undefined\nLength: about 149 words\nDate style in the body: undefined\nTypos: a few natural typos and one or two sloppy abbreviations (never in names or required phrases)\n\nBrief:\nIlse announces that Quarrendon Freight Lines moves from Marcus to Dana effective Monday June 2, 2025. Marcus will brief Dana and Thea Ramaswell. Quoted reply from Dana saying she'll take it from the 2nd.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Ilse Varga: North team lead\n- Dana Okafor: Account manager, North team\n- Marcus Lindqvist: Account manager, North team\n- Thea Ramaswell: Director of Yard Operations\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Quarrendon Freight Lines: truckload freight carrier, Upper Midwest; main contact Thea Ramaswell, Director of Yard Operations; codes/nicknames QFL, Q-Freight\n- Brackenwater Freight Co.: less-than-truckload freight, Great Lakes; codes/nicknames BWF, Bracken\n- Tamsin Cold Chain: refrigerated warehousing, Pacific Northwest; codes/nicknames TCC\n- Orrin Mills: textile mill, Carolinas; codes/nicknames ORM\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2025-05-28 (background only; don't restate unless the brief asks):\n- Quarrendon Freight Lines: managed by Marcus Lindqvist\n- Brackenwater Freight Co.: managed by Dana Okafor\n- Tamsin Cold Chain: managed by Dana Okafor\n- Orrin Mills: managed by Dana Okafor",
+      "response_text": "**From:** Ilse Varga  \n**To:** Marcus Lindqvist, Dana Okafor  \n**Date:** May 28, 2025  \n**Subject:** Quarrendon handoff: Marcus to Dana  \n\nMoving Quarrendon Freight Lines from Marcus to Dana effective Monday June 2, 2025. \n\nMarcus, pls get a 30m sync on the cal before Friday so you can brief Dana on open items—specifically the Duluth terminal Gate 3 kiosk glitch (tkt #4419) and the custom CSV export for the 2nd shift yard jockeys. You'll also need to brief Thea Ramaswell on the switch so she knows who to ping starting Mon morning. Make sure Dana is copied on the Weekly Detention Summary thread before you sign off on Friday. \n\nLet me know when the intro to Thea goes out.\n\n—Ilse\n\n> **From:** Dana Okafor  \n> **To:** Ilse Varga, Marcus Lindqvist  \n> **Date:** May 28, 2025  \n> **Subject:** Re: Quarrendon handoff: Marcus to Dana  \n> \n> Copy that. I'll take it from the 2nd. Marcus, I put a hold on your cal for Thu at 2pm to go over the Duluth gate ticket.",
+      "usage": {
+        "input_tokens": 1098,
+        "output_tokens": 296,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.005156,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1098,
+          "candidatesTokenCount": 296,
+          "totalTokenCount": 1394,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1098
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 296
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

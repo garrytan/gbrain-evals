@@ -1,0 +1,41 @@
+{
+  "slug": "emails/2026-03-11-tansleigh-renewal-executed",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: email\nTitle: Executed: Tansleigh Packaging renewal\nDate: Written on 2026-03-11.\nWriter: June Osei-Lark\nVoice: hurried, lots of fragments\nFormat: a single email with a forwarded message below\nLength: about 154 words\nDate style in the body: US short (6/2/25)\nTypos: none\n\nBrief:\nJune confirms the Tansleigh renewal was signed yesterday (March 10): 34 seats, through March 14, 2027. Do not say who the account manager is.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Hollis Mbeki: Central team lead\n- Priyanka \"Pree\" Sundaram: Account manager, Central team\n- Tobias Rendle: Account manager, Central team\n- Lev Arkadin: Procurement lead\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Tansley Parcel: regional parcel delivery, South Central; main contact Lev Arkadin, Procurement lead; codes/nicknames TPCL, TP\n- Tansleigh Packaging: corrugated packaging manufacturer, Ohio Valley; codes/nicknames TSP, TP\n- Marrow Fieldworks: agricultural equipment dealer network, Plains; codes/nicknames MFW\n- Marrow Agrisupply: farm supply retail chain, Plains; subsidiary of Marrow Fieldworks; codes/nicknames MAS, Marrow Agri\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2026-03-11 (background only; don't restate unless the brief asks):\n- Tansley Parcel: managed by Priyanka \"Pree\" Sundaram\n- Tansleigh Packaging: not stated on any shared page (do not say who manages it)\n- Marrow Fieldworks: managed by Tobias Rendle\n- Marrow Agrisupply: managed by Central team (pooled account)",
+      "response_text": "# Executed: Tansleigh Packaging renewal\n\n**From:** June Osei-Lark  \n**Date:** 3/11/26  \n**Subject:** Executed: Tansleigh Packaging renewal  \n\nAll,\n\nTSP renewal countersigned yesterday, 3/10/26. \n\nDetails for provisioning:\n- 34 seats of Pemberline Dock\n- Term runs through 3/14/27\n\nCountersigned PDF is in the deal folder. Sending the invoice request over to Felix Duarte at Stoneharrow Billing as soon as I clear my queue. \n\nAlso—see forwarded note from their shipping office below. Can someone in support look at Ticket #4912 before their second shift starts at 2pm?\n\n—June\n\n***\n\n**Forwarded message**  \n**From:** Carla Vance <cvance@tansleighpkg.com>  \n**Date:** 3/10/26  \n**To:** Deal Desk <dealdesk@pemberline.com>  \n**Subject:** Re: Renewal order form - TSP  \n\nAttached is the signed copy. \n\nQuick side question while I have you: our Marietta plant is still getting a phantom lock on Dock Door 6 every time a flatbed checks in at the guard shack. Ticket #4912 is open from Monday. Yard jockeys are having to clear the slot manually on the tablet. Thanks!",
+      "usage": {
+        "input_tokens": 1087,
+        "output_tokens": 300,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.005174,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1087,
+          "candidatesTokenCount": 300,
+          "totalTokenCount": 1387,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1087
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 300
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

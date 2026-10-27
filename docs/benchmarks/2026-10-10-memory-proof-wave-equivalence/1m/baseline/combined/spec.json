@@ -1,0 +1,41 @@
+{
+  "dataset": "beam",
+  "split": "1m",
+  "mode": "rag",
+  "seal": "dev",
+  "target_tokens": 8000,
+  "models": {
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash"
+  },
+  "k": 10,
+  "questions": {
+    "units": [
+      "1",
+      "6",
+      "16",
+      "21",
+      "22",
+      "25",
+      "26"
+    ]
+  },
+  "provider": "gbrain",
+  "lane": "combined",
+  "budget_usd": 9,
+  "provider_config": {
+    "embedding_model": "voyage:voyage-4",
+    "embedding_dimensions": 1024,
+    "lane": "combined",
+    "extraction_model": "openai:gpt-6-luna",
+    "facts_limit": 100,
+    "page_split": "exchanges",
+    "facts_tokens": 600,
+    "token_budget": 7500
+  },
+  "gbrain_credentials": [
+    "voyage",
+    "openai"
+  ],
+  "note": "memory proof wave #6066 equivalence check, public dev conversations, beam 1m, gbrain combined lane at the sealed configuration"
+}

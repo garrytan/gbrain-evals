@@ -1,0 +1,77 @@
+{
+  "slug": "accounts/pellucid-harbor-logistics",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2026-10-01",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Pellucid Harbor Logistics",
+        "line": 6
+      },
+      {
+        "oid": "e2",
+        "surface": "PHL",
+        "line": 11
+      },
+      {
+        "oid": "e3",
+        "surface": "Pellucid Harbor",
+        "line": 21
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": [
+      {
+        "account": "pellucid",
+        "question": "According to this page alone, who manages Pellucid Harbor Logistics, in what role, and from/until when?"
+      }
+    ]
+  },
+  "prompt_user_sha256": "0b53a7b436df732e1f7a8630fb1c6011772ddcd535577e8d6203804f67b4aa7d",
+  "response_text": "{\n  \"date_used\": \"2026-10-01\",\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"pellucid\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"pellucid\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"pellucid\"\n    }\n  ],\n  \"ownership\": [\n    {\n      \"account\": \"pellucid\",\n      \"owner\": \"Bettina Kroll\",\n      \"role\": \"primary\",\n      \"start\": null,\n      \"end\": \"2025-11-03\",\n      \"line\": 17\n    },\n    {\n      \"account\": \"pellucid\",\n      \"owner\": \"Kwame Adjei-Rowe\",\n      \"role\": \"primary\",\n      \"start\": \"2025-11-03\",\n      \"end\": null,\n      \"line\": 16\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2026-10-01",
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "pellucid"
+      },
+      {
+        "oid": "e2",
+        "entity": "pellucid"
+      },
+      {
+        "oid": "e3",
+        "entity": "pellucid"
+      }
+    ],
+    "ownership": [
+      {
+        "account": "pellucid",
+        "owner": "Bettina Kroll",
+        "role": "primary",
+        "start": null,
+        "end": "2025-11-03",
+        "line": 17
+      },
+      {
+        "account": "pellucid",
+        "owner": "Kwame Adjei-Rowe",
+        "role": "primary",
+        "start": "2025-11-03",
+        "end": null,
+        "line": 16
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 3160,
+    "output_tokens": 258,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.0089
+}

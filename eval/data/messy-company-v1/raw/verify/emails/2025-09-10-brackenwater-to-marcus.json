@@ -1,0 +1,109 @@
+{
+  "slug": "emails/2025-09-10-brackenwater-to-marcus",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2025-09-10",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Brackenwater",
+        "line": 6
+      },
+      {
+        "oid": "e2",
+        "surface": "Brackenwater",
+        "line": 11
+      },
+      {
+        "oid": "e3",
+        "surface": "Brackenwater Freight Co.",
+        "line": 15
+      },
+      {
+        "oid": "e4",
+        "surface": "BWF",
+        "line": 17
+      },
+      {
+        "oid": "e5",
+        "surface": "Brackenwater",
+        "line": 17
+      }
+    ],
+    "claims": [],
+    "events": [
+      {
+        "eid": "e-bwf-handoff",
+        "question": "Does the page describe this: \"Brackenwater moves from Dana to Marcus\"? If so, on what date does the text place it?"
+      }
+    ],
+    "ownership": [
+      {
+        "account": "brackenwater",
+        "question": "According to this page alone, who manages Brackenwater Freight Co., in what role, and from/until when?"
+      }
+    ]
+  },
+  "prompt_user_sha256": "f0f0b8598afb775f671baac447c02974549304a74b530ebaa4cf0afb6dcd81c6",
+  "response_text": "{\n  \"date_used\": \"2025-09-15\",\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\"oid\": \"e1\", \"entity\": \"brackenwater\"},\n    {\"oid\": \"e2\", \"entity\": \"brackenwater\"},\n    {\"oid\": \"e3\", \"entity\": \"brackenwater\"},\n    {\"oid\": \"e4\", \"entity\": \"brackenwater\"},\n    {\"oid\": \"e5\", \"entity\": \"brackenwater\"}\n  ],\n  \"events\": [\n    {\n      \"eid\": \"e-bwf-handoff\",\n      \"present\": true,\n      \"date\": \"2025-09-15\",\n      \"line\": 15\n    }\n  ],\n  \"ownership\": [\n    {\n      \"account\": \"brackenwater\",\n      \"owner\": \"Dana Okafor\",\n      \"role\": \"primary\",\n      \"start\": null,\n      \"end\": \"2025-09-15\",\n      \"line\": 17\n    },\n    {\n      \"account\": \"brackenwater\",\n      \"owner\": \"Marcus Lindqvist\",\n      \"role\": \"primary\",\n      \"start\": \"2025-09-15\",\n      \"end\": null,\n      \"line\": 15\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-09-15",
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "brackenwater"
+      },
+      {
+        "oid": "e2",
+        "entity": "brackenwater"
+      },
+      {
+        "oid": "e3",
+        "entity": "brackenwater"
+      },
+      {
+        "oid": "e4",
+        "entity": "brackenwater"
+      },
+      {
+        "oid": "e5",
+        "entity": "brackenwater"
+      }
+    ],
+    "events": [
+      {
+        "eid": "e-bwf-handoff",
+        "present": true,
+        "date": "2025-09-15",
+        "line": 15
+      }
+    ],
+    "ownership": [
+      {
+        "account": "brackenwater",
+        "owner": "Dana Okafor",
+        "role": "primary",
+        "start": null,
+        "end": "2025-09-15",
+        "line": 17
+      },
+      {
+        "account": "brackenwater",
+        "owner": "Marcus Lindqvist",
+        "role": "primary",
+        "start": "2025-09-15",
+        "end": null,
+        "line": 15
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 3041,
+    "output_tokens": 389,
+    "thinking_tokens": 105
+  },
+  "cost_usd": 0.009972
+}

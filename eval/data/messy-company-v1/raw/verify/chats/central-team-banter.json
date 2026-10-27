@@ -1,0 +1,74 @@
+{
+  "slug": "chats/central-team-banter",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "none (undated page)",
+    "owner_phrases": [
+      {
+        "mid": "chats/central-team-banter#m1",
+        "phrase": "Pree's parcel account",
+        "lines": [
+          23
+        ]
+      },
+      {
+        "mid": "chats/central-team-banter#m2",
+        "phrase": "Tobias's dealer account",
+        "lines": [
+          25
+        ]
+      },
+      {
+        "mid": "chats/central-team-banter#m3",
+        "phrase": "Pree's Okta account",
+        "lines": [
+          19
+        ]
+      }
+    ],
+    "entity_occurrences": [],
+    "claims": [],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "04fb5cf3ea043ff92393c3c36c8800f2f93b57655b9c9a5458927451f1b2b78d",
+  "response_text": "{\n  \"date_used\": null,\n  \"owner_phrases\": [\n    {\n      \"mid\": \"chats/central-team-banter#m1\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\"tansley-parcel\"],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"Pree's parcel account matches Tansley Parcel; the call with its procurement lead Lev Arkadin confirms the match.\"\n    },\n    {\n      \"mid\": \"chats/central-team-banter#m2\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\"marrow-fieldworks\"],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"The dealer descriptor, tractor-bay alerts, and Plains depots identify Marrow Fieldworks, which Tobias owns in the recorded history. The page is undated.\"\n    },\n    {\n      \"mid\": \"chats/central-team-banter#m3\",\n      \"refers_to_customer_account\": false,\n      \"accounts\": [],\n      \"reading\": \"not about a customer account (a login, device, HR/expense account, a narrative 'account of', a vendor relationship, an employer)\",\n      \"note\": \"This is Pree's own Okta login account, with a YubiKey and MFA access problem.\"\n    }\n  ],\n  \"extra_owner_phrases\": []\n}",
+  "parsed": {
+    "date_used": null,
+    "owner_phrases": [
+      {
+        "mid": "chats/central-team-banter#m1",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "tansley-parcel"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "Pree's parcel account matches Tansley Parcel; the call with its procurement lead Lev Arkadin confirms the match."
+      },
+      {
+        "mid": "chats/central-team-banter#m2",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "marrow-fieldworks"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "The dealer descriptor, tractor-bay alerts, and Plains depots identify Marrow Fieldworks, which Tobias owns in the recorded history. The page is undated."
+      },
+      {
+        "mid": "chats/central-team-banter#m3",
+        "refers_to_customer_account": false,
+        "accounts": [],
+        "reading": "not about a customer account (a login, device, HR/expense account, a narrative 'account of', a vendor relationship, an employer)",
+        "note": "This is Pree's own Okta login account, with a YubiKey and MFA access problem."
+      }
+    ],
+    "extra_owner_phrases": []
+  },
+  "usage": {
+    "input_tokens": 3046,
+    "output_tokens": 317,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.009262
+}

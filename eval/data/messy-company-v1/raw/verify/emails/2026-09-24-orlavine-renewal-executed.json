@@ -1,0 +1,117 @@
+{
+  "slug": "emails/2026-09-24-orlavine-renewal-executed",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2026-09-24",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Orlavine",
+        "line": 6
+      },
+      {
+        "oid": "e2",
+        "surface": "Orlavine",
+        "line": 11
+      },
+      {
+        "oid": "e3",
+        "surface": "Orlavine Medical Supply",
+        "line": 15
+      },
+      {
+        "oid": "e4",
+        "surface": "OMS",
+        "line": 17
+      },
+      {
+        "oid": "e5",
+        "surface": "Orlavine",
+        "line": 31
+      },
+      {
+        "oid": "e6",
+        "surface": "Orlavine Medical Supply",
+        "line": 35
+      },
+      {
+        "oid": "e7",
+        "surface": "Orlavene Health",
+        "line": 37
+      }
+    ],
+    "claims": [
+      {
+        "cid": "c-oms-seats-gideon",
+        "question": "What does the page say about Orlavine Medical Supply's seats?"
+      }
+    ],
+    "events": [
+      {
+        "eid": "e-oms-renewal-signed",
+        "question": "Does the page describe this: \"Orlavine signs its 2026 renewal\"? If so, on what date does the text place it?"
+      }
+    ],
+    "ownership": []
+  },
+  "prompt_user_sha256": "10aee83d96f032e1120754de21883e2c1924c9b826170a1cbc88be945ea60368",
+  "response_text": "{\n  \"date_used\": \"2026-09-24\",\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\"oid\": \"e1\", \"entity\": \"orlavine\"},\n    {\"oid\": \"e2\", \"entity\": \"orlavine\"},\n    {\"oid\": \"e3\", \"entity\": \"orlavine\"},\n    {\"oid\": \"e4\", \"entity\": \"orlavine\"},\n    {\"oid\": \"e5\", \"entity\": \"orlavine\"},\n    {\"oid\": \"e6\", \"entity\": \"orlavine\"},\n    {\"oid\": \"e7\", \"entity\": \"orlavene-health\"}\n  ],\n  \"claims\": [\n    {\n      \"cid\": \"c-oms-seats-gideon\",\n      \"stated\": true,\n      \"value\": \"The total seat count is unchanged at 50 seats for Pemberline Dock. The executed rate is $1,960 per seat effective 10/1/26.\",\n      \"line\": 17\n    }\n  ],\n  \"events\": [\n    {\n      \"eid\": \"e-oms-renewal-signed\",\n      \"present\": true,\n      \"date\": \"2026-09-24\",\n      \"line\": 15\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2026-09-24",
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "orlavine"
+      },
+      {
+        "oid": "e2",
+        "entity": "orlavine"
+      },
+      {
+        "oid": "e3",
+        "entity": "orlavine"
+      },
+      {
+        "oid": "e4",
+        "entity": "orlavine"
+      },
+      {
+        "oid": "e5",
+        "entity": "orlavine"
+      },
+      {
+        "oid": "e6",
+        "entity": "orlavine"
+      },
+      {
+        "oid": "e7",
+        "entity": "orlavene-health"
+      }
+    ],
+    "claims": [
+      {
+        "cid": "c-oms-seats-gideon",
+        "stated": true,
+        "value": "The total seat count is unchanged at 50 seats for Pemberline Dock. The executed rate is $1,960 per seat effective 10/1/26.",
+        "line": 17
+      }
+    ],
+    "events": [
+      {
+        "eid": "e-oms-renewal-signed",
+        "present": true,
+        "date": "2026-09-24",
+        "line": 15
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 3116,
+    "output_tokens": 389,
+    "thinking_tokens": 108
+  },
+  "cost_usd": 0.010122
+}

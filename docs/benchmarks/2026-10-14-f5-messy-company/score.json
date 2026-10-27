@@ -1,0 +1,1419 @@
+{
+ "rule_sha256": "6ca46ba4a25e09dd87a3b0ca298f406ab077e71fb06145f83e40703b5fce0b11",
+ "population": 6,
+ "sample": 6,
+ "correct": 6,
+ "precision": 1,
+ "wilson95": [
+  0.6096657120978346,
+  1
+ ],
+ "verdict": "FAIL (population below 22) (Wilson lower 0.610 < 0.85)",
+ "per_link": [
+  {
+   "doc": "agent-notes/2025-12-01-strategic-digest",
+   "split": "heldout",
+   "phrase": "Gideon's medical account",
+   "account_page": "accounts/orlavine-medical-supply",
+   "account": "orlavine",
+   "origin": "notes/2025-08-08-ruth-private-orlavine",
+   "gold_id": "agent-notes/2025-12-01-strategic-digest#m2",
+   "gold_reason": "unique_owned_match",
+   "gold_window_relation": "inside_open_ended",
+   "gold_should_link": true,
+   "gold_should_link_public": false,
+   "gold_intended": [
+    "orlavine"
+   ],
+   "adjudication_note": null,
+   "verdict": "correct",
+   "same_doc_gold_rows": []
+  },
+  {
+   "doc": "chats/2026-02-17-phl-collision",
+   "split": "heldout",
+   "phrase": "Sofia's retail account",
+   "account_page": "accounts/pellow-home-living",
+   "account": "covey-lark",
+   "origin": null,
+   "gold_id": "chats/2026-02-17-phl-collision#m1",
+   "gold_reason": "unique_owned_match",
+   "gold_window_relation": "inside_open_ended",
+   "gold_should_link": true,
+   "gold_should_link_public": true,
+   "gold_intended": [
+    "covey-lark"
+   ],
+   "adjudication_note": null,
+   "verdict": "correct",
+   "same_doc_gold_rows": []
+  },
+  {
+   "doc": "emails/2025-11-06-quarrendon-exec-call",
+   "split": "dev",
+   "phrase": "Dana's freight account",
+   "account_page": "accounts/quarrendon-freight-lines",
+   "account": "quarrendon",
+   "origin": null,
+   "gold_id": "emails/2025-11-06-quarrendon-exec-call#m1",
+   "gold_reason": "unique_owned_match",
+   "gold_window_relation": "inside_open_ended",
+   "gold_should_link": true,
+   "gold_should_link_public": true,
+   "gold_intended": [
+    "quarrendon"
+   ],
+   "adjudication_note": null,
+   "verdict": "correct",
+   "same_doc_gold_rows": []
+  },
+  {
+   "doc": "updates/2026-03-16-coastal-weekly",
+   "split": "heldout",
+   "phrase": "Sofia's retail account",
+   "account_page": "accounts/pellow-home-living",
+   "account": "covey-lark",
+   "origin": null,
+   "gold_id": "updates/2026-03-16-coastal-weekly#m2",
+   "gold_reason": "unique_owned_match",
+   "gold_window_relation": "inside_open_ended",
+   "gold_should_link": true,
+   "gold_should_link_public": true,
+   "gold_intended": [
+    "covey-lark"
+   ],
+   "adjudication_note": null,
+   "verdict": "correct",
+   "same_doc_gold_rows": []
+  },
+  {
+   "doc": "updates/2026-05-11-central-weekly",
+   "split": "dev",
+   "phrase": "Tobias's packaging account",
+   "account_page": "accounts/tansleigh-packaging",
+   "account": "tansleigh",
+   "origin": "notes/2025-05-19-hollis-1on1-tobias",
+   "gold_id": "updates/2026-05-11-central-weekly#m2",
+   "gold_reason": "unique_owned_match",
+   "gold_window_relation": "inside_open_ended",
+   "gold_should_link": true,
+   "gold_should_link_public": false,
+   "gold_intended": [
+    "tansleigh"
+   ],
+   "adjudication_note": null,
+   "verdict": "correct",
+   "same_doc_gold_rows": []
+  },
+  {
+   "doc": "updates/2026-05-11-coastal-weekly",
+   "split": "heldout",
+   "phrase": "Sofia's retail account",
+   "account_page": "accounts/pellow-home-living",
+   "account": "covey-lark",
+   "origin": null,
+   "gold_id": "updates/2026-05-11-coastal-weekly#m2",
+   "gold_reason": "unique_owned_match",
+   "gold_window_relation": "inside_open_ended",
+   "gold_should_link": true,
+   "gold_should_link_public": true,
+   "gold_intended": [
+    "covey-lark"
+   ],
+   "adjudication_note": null,
+   "verdict": "correct",
+   "same_doc_gold_rows": []
+  }
+ ],
+ "remote": {
+  "visible_links": 4,
+  "private_only_gold_rows": 9,
+  "remote_links_on_private_only_rows": 0,
+  "hidden_from_remote": [
+   {
+    "doc": "agent-notes/2025-12-01-strategic-digest",
+    "phrase": "Gideon's medical account",
+    "gold_should_link_public": false
+   },
+   {
+    "doc": "updates/2026-05-11-central-weekly",
+    "phrase": "Tobias's packaging account",
+    "gold_should_link_public": false
+   }
+  ]
+ },
+ "scorer_reports": [
+  {
+   "lane": "owner-phrases",
+   "split": "dev",
+   "view": "full",
+   "metrics": [
+    {
+     "name": "candidates",
+     "k": 101,
+     "n": 101,
+     "rate": 1,
+     "ci95": [
+      0.9633593536001439,
+      1
+     ]
+    },
+    {
+     "name": "link recall (should_link, right accounts)",
+     "k": 2,
+     "n": 66,
+     "rate": 0.030303030303030304,
+     "ci95": [
+      0.008349910198653748,
+      0.10392521911709715
+     ]
+    },
+    {
+     "name": "link precision (emitted links that are right)",
+     "k": 2,
+     "n": 2,
+     "rate": 1,
+     "ci95": [
+      0.34238022750665303,
+      1
+     ]
+    },
+    {
+     "name": "false links on should_link=false",
+     "k": 0,
+     "n": 35,
+     "rate": 0,
+     "ci95": [
+      6.938893903907228e-18,
+      0.09890099232440402
+     ],
+     "note": "lower is better"
+    },
+    {
+     "name": "wrong-account links on should_link=true",
+     "k": 0,
+     "n": 66,
+     "rate": 0,
+     "ci95": [
+      0,
+      0.05500255701354129
+     ],
+     "note": "lower is better"
+    }
+   ],
+   "breakdown": {
+    "reason (correct decision)": [
+     {
+      "name": "acting_cover",
+      "k": 0,
+      "n": 4,
+      "rate": 0,
+      "ci95": [
+       0,
+       0.4898908364545973
+      ]
+     },
+     {
+      "name": "ambiguous_two_owned [no-link]",
+      "k": 9,
+      "n": 9,
+      "rate": 1,
+      "ci95": [
+       0.7008549515804559,
+       1
+      ]
+     },
+     {
+      "name": "contact_employer",
+      "k": 0,
+      "n": 2,
+      "rate": 0,
+      "ci95": [
+       0,
+       0.6576197724933469
+      ]
+     },
+     {
+      "name": "contact_login [no-link]",
+      "k": 4,
+      "n": 4,
+      "rate": 1,
+      "ci95": [
+       0.5101091635454027,
+       1
+      ]
+     },
+     {
+      "name": "former_owner_cued",
+      "k": 0,
+      "n": 4,
+      "rate": 0,
+      "ci95": [
+       0,
+       0.4898908364545973
+      ]
+     },
+     {
+      "name": "inherited_region",
+      "k": 0,
+      "n": 3,
+      "rate": 0,
+      "ci95": [
+       5.551115123125783e-17,
+       0.5614970317550454
+      ]
+     },
+     {
+      "name": "largest_by_acv",
+      "k": 0,
+      "n": 8,
+      "rate": 0,
+      "ci95": [
+       0,
+       0.32440756488388023
+      ]
+     },
+     {
+      "name": "narrative_account [no-link]",
+      "k": 1,
+      "n": 1,
+      "rate": 1,
+      "ci95": [
+       0.20654931437723745,
+       1
+      ]
+     },
+     {
+      "name": "nonowner_object [no-link]",
+      "k": 14,
+      "n": 14,
+      "rate": 1,
+      "ci95": [
+       0.7846891972623643,
+       1
+      ]
+     },
+     {
+      "name": "renewal_window",
+      "k": 0,
+      "n": 2,
+      "rate": 0,
+      "ci95": [
+       0,
+       0.6576197724933469
+      ]
+     },
+     {
+      "name": "team_owner",
+      "k": 0,
+      "n": 5,
+      "rate": 0,
+      "ci95": [
+       0,
+       0.43448246478317476
+      ]
+     },
+     {
+      "name": "undated_ambiguous [no-link]",
+      "k": 4,
+      "n": 4,
+      "rate": 1,
+      "ci95": [
+       0.5101091635454027,
+       1
+      ]
+     },
+     {
+      "name": "undated_unique",
+      "k": 0,
+      "n": 5,
+      "rate": 0,
+      "ci95": [
+       0,
+       0.43448246478317476
+      ]
+     },
+     {
+      "name": "unique_owned_match",
+      "k": 2,
+      "n": 33,
+      "rate": 0.06060606060606061,
+      "ci95": [
+       0.016780883087191875,
+       0.1960624480864781
+      ]
+     },
+     {
+      "name": "vendor_relationship [no-link]",
+      "k": 3,
+      "n": 3,
+      "rate": 1,
+      "ci95": [
+       0.4385029682449546,
+       1
+      ]
+     }
+    ],
+    "window_relation (correct decision)": [
+     {
+      "name": "acting_window",
+      "k": 0,
+      "n": 4,
+      "rate": 0,
+      "ci95": [
+       0,
+       0.4898908364545973
+      ]
+     },
+     {
+      "name": "after_window",
+      "k": 0,
+      "n": 4,
+      "rate": 0,
+      "ci95": [
+       0,
+       0.4898908364545973
+      ]
+     },
+     {
+      "name": "inside",
+      "k": 0,
+      "n": 7,
+      "rate": 0,
+      "ci95": [
+       5.551115123125783e-17,
+       0.35433043506668743
+      ]
+     },
+     {
+      "name": "inside_open_ended",
+      "k": 2,
+      "n": 38,
+      "rate": 0.05263157894736842,
+      "ci95": [
+       0.014554208147292413,
+       0.17285462131770377
+      ]
+     },
+     {
+      "name": "inside_unknown_start",
+      "k": 0,
+      "n": 1,
+      "rate": 0,
+      "ci95": [
+       0,
+       0.7934506856227626
+      ]
+     },
+     {
+      "name": "last_day",
+      "k": 0,
+      "n": 1,
+      "rate": 0,
+      "ci95": [
+       0,
+       0.7934506856227626
+      ]
+     },
+     {
+      "name": "n/a",
+      "k": 29,
+      "n": 31,
+      "rate": 0.9354838709677419,
+      "ci95": [
+       0.7928136326370188,
+       0.9821252164780854
+      ]
+     },
+     {
+      "name": "start_day",
+      "k": 0,
+      "n": 4,
+      "rate": 0,
+      "ci95": [
+       0,
+       0.4898908364545973
+      ]
+     },
+     {
+      "name": "undated",
+      "k": 6,
+      "n": 11,
+      "rate": 0.5454545454545454,
+      "ci95": [
+       0.280091537409322,
+       0.7872872837754024
+      ]
+     }
+    ]
+   },
+   "extra": {
+    "links_not_on_candidates": 4
+   }
+  },
+  {
+   "lane": "owner-phrases",
+   "split": "dev",
+   "view": "public",
+   "metrics": [
+    {
+     "name": "candidates",
+     "k": 101,
+     "n": 101,
+     "rate": 1,
+     "ci95": [
+      0.9633593536001439,
+      1
+     ]
+    },
+    {
+     "name": "link recall (should_link, right accounts)",
+     "k": 1,
+     "n": 61,
+     "rate": 0.01639344262295082,
+     "ci95": [
+      0.002899730799299824,
+      0.08718860044641587
+     ]
+    },
+    {
+     "name": "link precision (emitted links that are right)",
+     "k": 1,
+     "n": 1,
+     "rate": 1,
+     "ci95": [
+      0.20654931437723745,
+      1
+     ]
+    },
+    {
+     "name": "false links on should_link=false",
+     "k": 0,
+     "n": 40,
+     "rate": 0,
+     "ci95": [
+      0,
+      0.08762160119728664
+     ],
+     "note": "lower is better"
+    },
+    {
+     "name": "wrong-account links on should_link=true",
+     "k": 0,
+     "n": 61,
+     "rate": 0,
+     "ci95": [
+      0,
+      0.05924386789811283
+     ],
+     "note": "lower is better"
+    }
+   ],
+   "breakdown": {
+    "reason (correct decision)": [
+     {
+      "name": "acting_cover",
+      "k": 0,
+      "n": 4,
+      "rate": 0,
+      "ci95": [
+       0,
+       0.4898908364545973
+      ]
+     },
+     {
+      "name": "ambiguous_two_owned [no-link]",
+      "k": 9,
+      "n": 9,
+      "rate": 1,
+      "ci95": [
+       0.7008549515804559,
+       1
+      ]
+     },
+     {
+      "name": "contact_employer",
+      "k": 0,
+      "n": 2,
+      "rate": 0,
+      "ci95": [
+       0,
+       0.6576197724933469
+      ]
+     },
+     {
+      "name": "contact_login [no-link]",
+      "k": 4,
+      "n": 4,
+      "rate": 1,
+      "ci95": [
+       0.5101091635454027,
+       1
+      ]
+     },
+     {
+      "name": "former_owner_cued",
+      "k": 0,
+      "n": 3,
+      "rate": 0,
+      "ci95": [
+       5.551115123125783e-17,
+       0.5614970317550454
+      ]
+     },
+     {
+      "name": "former_owner_cued [no-link]",
+      "k": 1,
+      "n": 1,
+      "rate": 1,
+      "ci95": [
+       0.20654931437723745,
+       1
+      ]
+     },
+     {
+      "name": "inherited_region",
+      "k": 0,
+      "n": 3,
+      "rate": 0,
+      "ci95": [
+       5.551115123125783e-17,
+       0.5614970317550454
+      ]
+     },
+     {
+      "name": "largest_by_acv",
+      "k": 0,
+      "n": 8,
+      "rate": 0,
+      "ci95": [
+       0,
+       0.32440756488388023
+      ]
+     },
+     {
+      "name": "narrative_account [no-link]",
+      "k": 1,
+      "n": 1,
+      "rate": 1,
+      "ci95": [
+       0.20654931437723745,
+       1
+      ]
+     },
+     {
+      "name": "nonowner_object [no-link]",
+      "k": 14,
+      "n": 14,
+      "rate": 1,
+      "ci95": [
+       0.7846891972623643,
+       1
+      ]
+     },
+     {
+      "name": "renewal_window",
+      "k": 0,
+      "n": 2,
+      "rate": 0,
+      "ci95": [
+       0,
+       0.6576197724933469
+      ]
+     },
+     {
+      "name": "team_owner",
+      "k": 0,
+      "n": 5,
+      "rate": 0,
+      "ci95": [
+       0,
+       0.43448246478317476
+      ]
+     },
+     {
+      "name": "undated_ambiguous [no-link]",
+      "k": 4,
+      "n": 4,
+      "rate": 1,
+      "ci95": [
+       0.5101091635454027,
+       1
+      ]
+     },
+     {
+      "name": "undated_unique",
+      "k": 0,
+      "n": 4,
+      "rate": 0,
+      "ci95": [
+       0,
+       0.4898908364545973
+      ]
+     },
+     {
+      "name": "undated_unique [no-link]",
+      "k": 1,
+      "n": 1,
+      "rate": 1,
+      "ci95": [
+       0.20654931437723745,
+       1
+      ]
+     },
+     {
+      "name": "unique_owned_match",
+      "k": 1,
+      "n": 30,
+      "rate": 0.03333333333333333,
+      "ci95": [
+       0.005908590381612455,
+       0.16670390991409173
+      ]
+     },
+     {
+      "name": "unique_owned_match [no-link]",
+      "k": 3,
+      "n": 3,
+      "rate": 1,
+      "ci95": [
+       0.4385029682449546,
+       1
+      ]
+     },
+     {
+      "name": "vendor_relationship [no-link]",
+      "k": 3,
+      "n": 3,
+      "rate": 1,
+      "ci95": [
+       0.4385029682449546,
+       1
+      ]
+     }
+    ],
+    "window_relation (correct decision)": [
+     {
+      "name": "acting_window",
+      "k": 0,
+      "n": 4,
+      "rate": 0,
+      "ci95": [
+       0,
+       0.4898908364545973
+      ]
+     },
+     {
+      "name": "after_window",
+      "k": 1,
+      "n": 4,
+      "rate": 0.25,
+      "ci95": [
+       0.04558726080970055,
+       0.6993581574175981
+      ]
+     },
+     {
+      "name": "inside",
+      "k": 0,
+      "n": 7,
+      "rate": 0,
+      "ci95": [
+       5.551115123125783e-17,
+       0.35433043506668743
+      ]
+     },
+     {
+      "name": "inside_open_ended",
+      "k": 4,
+      "n": 38,
+      "rate": 0.10526315789473684,
+      "ci95": [
+       0.04170257347553526,
+       0.24130521722887316
+      ]
+     },
+     {
+      "name": "inside_unknown_start",
+      "k": 0,
+      "n": 1,
+      "rate": 0,
+      "ci95": [
+       0,
+       0.7934506856227626
+      ]
+     },
+     {
+      "name": "last_day",
+      "k": 0,
+      "n": 1,
+      "rate": 0,
+      "ci95": [
+       0,
+       0.7934506856227626
+      ]
+     },
+     {
+      "name": "n/a",
+      "k": 29,
+      "n": 31,
+      "rate": 0.9354838709677419,
+      "ci95": [
+       0.7928136326370188,
+       0.9821252164780854
+      ]
+     },
+     {
+      "name": "start_day",
+      "k": 0,
+      "n": 4,
+      "rate": 0,
+      "ci95": [
+       0,
+       0.4898908364545973
+      ]
+     },
+     {
+      "name": "undated",
+      "k": 7,
+      "n": 11,
+      "rate": 0.6363636363636364,
+      "ci95": [
+       0.35380117450784887,
+       0.8483352890463243
+      ]
+     }
+    ]
+   },
+   "extra": {
+    "links_not_on_candidates": 3
+   }
+  },
+  {
+   "lane": "owner-phrases",
+   "split": "heldout",
+   "view": "full",
+   "metrics": [
+    {
+     "name": "candidates",
+     "k": 90,
+     "n": 90,
+     "rate": 1,
+     "ci95": [
+      0.9590643744356734,
+      1
+     ]
+    },
+    {
+     "name": "link recall (should_link, right accounts)",
+     "k": 4,
+     "n": 58,
+     "rate": 0.06896551724137931,
+     "ci95": [
+      0.027144247017578338,
+      0.1643366631438035
+     ]
+    },
+    {
+     "name": "link precision (emitted links that are right)",
+     "k": 4,
+     "n": 4,
+     "rate": 1,
+     "ci95": [
+      0.5101091635454027,
+      1
+     ]
+    },
+    {
+     "name": "false links on should_link=false",
+     "k": 0,
+     "n": 32,
+     "rate": 0,
+     "ci95": [
+      0,
+      0.1071791982550706
+     ],
+     "note": "lower is better"
+    },
+    {
+     "name": "wrong-account links on should_link=true",
+     "k": 0,
+     "n": 58,
+     "rate": 0,
+     "ci95": [
+      0,
+      0.062117855787202914
+     ],
+     "note": "lower is better"
+    }
+   ],
+   "breakdown": {
+    "reason (correct decision)": [
+     {
+      "name": "acting_cover",
+      "k": 0,
+      "n": 2,
+      "rate": 0,
+      "ci95": [
+       0,
+       0.6576197724933469
+      ]
+     },
+     {
+      "name": "ambiguous_two_owned [no-link]",
+      "k": 7,
+      "n": 7,
+      "rate": 1,
+      "ci95": [
+       0.6456695649333126,
+       1
+      ]
+     },
+     {
+      "name": "contact_employer",
+      "k": 0,
+      "n": 2,
+      "rate": 0,
+      "ci95": [
+       0,
+       0.6576197724933469
+      ]
+     },
+     {
+      "name": "contact_login [no-link]",
+      "k": 4,
+      "n": 4,
+      "rate": 1,
+      "ci95": [
+       0.5101091635454027,
+       1
+      ]
+     },
+     {
+      "name": "former_owner_cued",
+      "k": 0,
+      "n": 5,
+      "rate": 0,
+      "ci95": [
+       0,
+       0.43448246478317476
+      ]
+     },
+     {
+      "name": "inherited_region",
+      "k": 0,
+      "n": 1,
+      "rate": 0,
+      "ci95": [
+       0,
+       0.7934506856227626
+      ]
+     },
+     {
+      "name": "largest_by_acv",
+      "k": 0,
+      "n": 6,
+      "rate": 0,
+      "ci95": [
+       2.7755575615628914e-17,
+       0.3903342879021653
+      ]
+     },
+     {
+      "name": "narrative_account [no-link]",
+      "k": 2,
+      "n": 2,
+      "rate": 1,
+      "ci95": [
+       0.34238022750665303,
+       1
+      ]
+     },
+     {
+      "name": "nonowner_object [no-link]",
+      "k": 12,
+      "n": 12,
+      "rate": 1,
+      "ci95": [
+       0.7575059933447592,
+       1
+      ]
+     },
+     {
+      "name": "team_owner",
+      "k": 0,
+      "n": 2,
+      "rate": 0,
+      "ci95": [
+       0,
+       0.6576197724933469
+      ]
+     },
+     {
+      "name": "undated_ambiguous [no-link]",
+      "k": 5,
+      "n": 5,
+      "rate": 1,
+      "ci95": [
+       0.5655175352168251,
+       1
+      ]
+     },
+     {
+      "name": "undated_unique",
+      "k": 0,
+      "n": 5,
+      "rate": 0,
+      "ci95": [
+       0,
+       0.43448246478317476
+      ]
+     },
+     {
+      "name": "unique_owned_match",
+      "k": 4,
+      "n": 35,
+      "rate": 0.11428571428571428,
+      "ci95": [
+       0.04535179333097357,
+       0.2595146864621381
+      ]
+     },
+     {
+      "name": "vendor_relationship [no-link]",
+      "k": 2,
+      "n": 2,
+      "rate": 1,
+      "ci95": [
+       0.34238022750665303,
+       1
+      ]
+     }
+    ],
+    "window_relation (correct decision)": [
+     {
+      "name": "acting_window",
+      "k": 0,
+      "n": 2,
+      "rate": 0,
+      "ci95": [
+       0,
+       0.6576197724933469
+      ]
+     },
+     {
+      "name": "after_window",
+      "k": 0,
+      "n": 5,
+      "rate": 0,
+      "ci95": [
+       0,
+       0.43448246478317476
+      ]
+     },
+     {
+      "name": "belated_overlap",
+      "k": 0,
+      "n": 1,
+      "rate": 0,
+      "ci95": [
+       0,
+       0.7934506856227626
+      ]
+     },
+     {
+      "name": "inside",
+      "k": 0,
+      "n": 5,
+      "rate": 0,
+      "ci95": [
+       0,
+       0.43448246478317476
+      ]
+     },
+     {
+      "name": "inside_open_ended",
+      "k": 4,
+      "n": 25,
+      "rate": 0.16,
+      "ci95": [
+       0.0640345145667644,
+       0.3465362160717886
+      ]
+     },
+     {
+      "name": "inside_unknown_start",
+      "k": 0,
+      "n": 7,
+      "rate": 0,
+      "ci95": [
+       5.551115123125783e-17,
+       0.35433043506668743
+      ]
+     },
+     {
+      "name": "last_day",
+      "k": 0,
+      "n": 2,
+      "rate": 0,
+      "ci95": [
+       0,
+       0.6576197724933469
+      ]
+     },
+     {
+      "name": "n/a",
+      "k": 24,
+      "n": 26,
+      "rate": 0.9230769230769231,
+      "ci95": [
+       0.7585844622837095,
+       0.9786449115277238
+      ]
+     },
+     {
+      "name": "start_day",
+      "k": 0,
+      "n": 4,
+      "rate": 0,
+      "ci95": [
+       0,
+       0.4898908364545973
+      ]
+     },
+     {
+      "name": "undated",
+      "k": 8,
+      "n": 13,
+      "rate": 0.6153846153846154,
+      "ci95": [
+       0.355228915126657,
+       0.8229029220223743
+      ]
+     }
+    ]
+   },
+   "extra": {
+    "links_not_on_candidates": 2
+   }
+  },
+  {
+   "lane": "owner-phrases",
+   "split": "heldout",
+   "view": "public",
+   "metrics": [
+    {
+     "name": "candidates",
+     "k": 90,
+     "n": 90,
+     "rate": 1,
+     "ci95": [
+      0.9590643744356734,
+      1
+     ]
+    },
+    {
+     "name": "link recall (should_link, right accounts)",
+     "k": 3,
+     "n": 54,
+     "rate": 0.05555555555555555,
+     "ci95": [
+      0.0190732684546909,
+      0.15107214318166143
+     ]
+    },
+    {
+     "name": "link precision (emitted links that are right)",
+     "k": 3,
+     "n": 3,
+     "rate": 1,
+     "ci95": [
+      0.4385029682449546,
+      1
+     ]
+    },
+    {
+     "name": "false links on should_link=false",
+     "k": 0,
+     "n": 36,
+     "rate": 0,
+     "ci95": [
+      0,
+      0.09641862859446367
+     ],
+     "note": "lower is better"
+    },
+    {
+     "name": "wrong-account links on should_link=true",
+     "k": 0,
+     "n": 54,
+     "rate": 0,
+     "ci95": [
+      0,
+      0.0664135880908964
+     ],
+     "note": "lower is better"
+    }
+   ],
+   "breakdown": {
+    "reason (correct decision)": [
+     {
+      "name": "acting_cover",
+      "k": 0,
+      "n": 2,
+      "rate": 0,
+      "ci95": [
+       0,
+       0.6576197724933469
+      ]
+     },
+     {
+      "name": "ambiguous_two_owned [no-link]",
+      "k": 7,
+      "n": 7,
+      "rate": 1,
+      "ci95": [
+       0.6456695649333126,
+       1
+      ]
+     },
+     {
+      "name": "contact_employer",
+      "k": 0,
+      "n": 2,
+      "rate": 0,
+      "ci95": [
+       0,
+       0.6576197724933469
+      ]
+     },
+     {
+      "name": "contact_login [no-link]",
+      "k": 4,
+      "n": 4,
+      "rate": 1,
+      "ci95": [
+       0.5101091635454027,
+       1
+      ]
+     },
+     {
+      "name": "former_owner_cued",
+      "k": 0,
+      "n": 5,
+      "rate": 0,
+      "ci95": [
+       0,
+       0.43448246478317476
+      ]
+     },
+     {
+      "name": "inherited_region",
+      "k": 0,
+      "n": 1,
+      "rate": 0,
+      "ci95": [
+       0,
+       0.7934506856227626
+      ]
+     },
+     {
+      "name": "largest_by_acv",
+      "k": 0,
+      "n": 6,
+      "rate": 0,
+      "ci95": [
+       2.7755575615628914e-17,
+       0.3903342879021653
+      ]
+     },
+     {
+      "name": "narrative_account [no-link]",
+      "k": 2,
+      "n": 2,
+      "rate": 1,
+      "ci95": [
+       0.34238022750665303,
+       1
+      ]
+     },
+     {
+      "name": "nonowner_object [no-link]",
+      "k": 12,
+      "n": 12,
+      "rate": 1,
+      "ci95": [
+       0.7575059933447592,
+       1
+      ]
+     },
+     {
+      "name": "team_owner",
+      "k": 0,
+      "n": 2,
+      "rate": 0,
+      "ci95": [
+       0,
+       0.6576197724933469
+      ]
+     },
+     {
+      "name": "undated_ambiguous [no-link]",
+      "k": 5,
+      "n": 5,
+      "rate": 1,
+      "ci95": [
+       0.5655175352168251,
+       1
+      ]
+     },
+     {
+      "name": "undated_unique",
+      "k": 0,
+      "n": 5,
+      "rate": 0,
+      "ci95": [
+       0,
+       0.43448246478317476
+      ]
+     },
+     {
+      "name": "unique_owned_match",
+      "k": 3,
+      "n": 31,
+      "rate": 0.0967741935483871,
+      "ci95": [
+       0.03346464416319736,
+       0.24899938443392836
+      ]
+     },
+     {
+      "name": "unique_owned_match [no-link]",
+      "k": 4,
+      "n": 4,
+      "rate": 1,
+      "ci95": [
+       0.5101091635454027,
+       1
+      ]
+     },
+     {
+      "name": "vendor_relationship [no-link]",
+      "k": 2,
+      "n": 2,
+      "rate": 1,
+      "ci95": [
+       0.34238022750665303,
+       1
+      ]
+     }
+    ],
+    "window_relation (correct decision)": [
+     {
+      "name": "acting_window",
+      "k": 0,
+      "n": 2,
+      "rate": 0,
+      "ci95": [
+       0,
+       0.6576197724933469
+      ]
+     },
+     {
+      "name": "after_window",
+      "k": 0,
+      "n": 5,
+      "rate": 0,
+      "ci95": [
+       0,
+       0.43448246478317476
+      ]
+     },
+     {
+      "name": "belated_overlap",
+      "k": 0,
+      "n": 1,
+      "rate": 0,
+      "ci95": [
+       0,
+       0.7934506856227626
+      ]
+     },
+     {
+      "name": "inside",
+      "k": 1,
+      "n": 5,
+      "rate": 0.2,
+      "ci95": [
+       0.03622410863243014,
+       0.6244653702374747
+      ]
+     },
+     {
+      "name": "inside_open_ended",
+      "k": 6,
+      "n": 25,
+      "rate": 0.24,
+      "ci95": [
+       0.11496313693401444,
+       0.4342968335542908
+      ]
+     },
+     {
+      "name": "inside_unknown_start",
+      "k": 0,
+      "n": 7,
+      "rate": 0,
+      "ci95": [
+       5.551115123125783e-17,
+       0.35433043506668743
+      ]
+     },
+     {
+      "name": "last_day",
+      "k": 0,
+      "n": 2,
+      "rate": 0,
+      "ci95": [
+       0,
+       0.6576197724933469
+      ]
+     },
+     {
+      "name": "n/a",
+      "k": 24,
+      "n": 26,
+      "rate": 0.9230769230769231,
+      "ci95": [
+       0.7585844622837095,
+       0.9786449115277238
+      ]
+     },
+     {
+      "name": "start_day",
+      "k": 0,
+      "n": 4,
+      "rate": 0,
+      "ci95": [
+       0,
+       0.4898908364545973
+      ]
+     },
+     {
+      "name": "undated",
+      "k": 8,
+      "n": 13,
+      "rate": 0.6153846153846154,
+      "ci95": [
+       0.355228915126657,
+       0.8229029220223743
+      ]
+     }
+    ]
+   },
+   "extra": {
+    "links_not_on_candidates": 1
+   }
+  }
+ ]
+}

@@ -1,0 +1,41 @@
+{
+  "slug": "notes/2026-01-29-it-laptop-swap",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: note\nTitle: IT: device swaps before February\nDate: Written on 2026-01-29.\nWriter: Ilse Varga\nVoice: polished and businesslike\nFormat: undefined\nLength: about 46 words\nDate style in the body: undefined\nTypos: a few natural typos and one or two sloppy abbreviations (never in names or required phrases)\n\nBrief:\nAn IT checklist note: swap Dana's laptop before her leave starts, reset Marcus's Okta account, new monitors.\n\nRequired phrases:\n- Use the exact phrase \"Dana's laptop\" once, in the sense of: her work computer. It must not be about a customer account.\n- Use the exact phrase \"Marcus's Okta account\" once, in the sense of: his single sign-on login. It must not be about a customer account.\n- Use the exact phrase \"Marcus's LinkedIn account\" once, in the sense of: his social media profile. It must not be about a customer account.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Ilse Varga: North team lead\n- Dana Okafor: Account manager, North team\n- Marcus Lindqvist: Account manager, North team\n- Thea Ramaswell: Director of Yard Operations\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Quarrendon Freight Lines: truckload freight carrier, Upper Midwest; main contact Thea Ramaswell, Director of Yard Operations; codes/nicknames QFL, Q-Freight\n- Brackenwater Freight Co.: less-than-truckload freight, Great Lakes; codes/nicknames BWF, Bracken\n- Tamsin Cold Chain: refrigerated warehousing, Pacific Northwest; codes/nicknames TCC\n- Thornbury Cloth Co. (renamed from Orrin Mills on 2026-01-12): textile mill, Carolinas; codes/nicknames TCC\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2026-01-29 (background only; don't restate unless the brief asks):\n- Quarrendon Freight Lines: managed by Dana Okafor\n- Brackenwater Freight Co.: managed by Marcus Lindqvist\n- Tamsin Cold Chain: managed by Dana Okafor\n- Thornbury Cloth Co.: managed by Marcus Lindqvist",
+      "response_text": "**IT: device swaps before February**\n*2026-01-29*\n\nQuick IT checklist for the North pod before Feb:\n* Swap Dana's laptop before her leave starts (battery dies mid-shift).\n* Reset Marcus's Okta account (2FA token sync issue) and help recover Marcus's LinkedIn account.\n* Unbox the 2 new Dell monitors at desk 4B.",
+      "usage": {
+        "input_tokens": 1196,
+        "output_tokens": 96,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.003352,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1196,
+          "candidatesTokenCount": 96,
+          "totalTokenCount": 1292,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1196
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 96
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

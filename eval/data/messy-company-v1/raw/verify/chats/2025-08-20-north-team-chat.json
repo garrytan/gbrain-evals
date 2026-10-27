@@ -1,0 +1,76 @@
+{
+  "slug": "chats/2025-08-20-north-team-chat",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2025-08-20",
+    "owner_phrases": [
+      {
+        "mid": "chats/2025-08-20-north-team-chat#m1",
+        "phrase": "Marcus's old freight account",
+        "lines": [
+          18
+        ]
+      }
+    ],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Quarrendon Freight Lines",
+        "line": 10
+      },
+      {
+        "oid": "e2",
+        "surface": "Q-Freight",
+        "line": 10
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": [],
+    "retraction": {
+      "question": "A value for Quarrendon Freight Lines's seats is stated and then corrected. What was first stated, what was the corrected value, and on which lines?"
+    }
+  },
+  "prompt_user_sha256": "d846cec982ae8c509b526fc3d93bb55c719953facc50780cf6797ad50c3e5fc5",
+  "response_text": "{\n  \"date_used\": \"2025-08-20\",\n  \"owner_phrases\": [\n    {\n      \"mid\": \"chats/2025-08-20-north-team-chat#m1\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\n        \"quarrendon\"\n      ],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"Marcus used to own Quarrendon Freight Lines (a freight account) until 2025-06-02, and the message directly responds to Dana correcting Quarrendon's seat count from 180 to 185.\"\n    }\n  ],\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"quarrendon\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"quarrendon\"\n    }\n  ],\n  \"retraction\": {\n    \"first_value\": \"180\",\n    \"corrected_value\": \"185\",\n    \"lines\": [\n      10,\n      16\n    ]\n  }\n}",
+  "parsed": {
+    "date_used": "2025-08-20",
+    "owner_phrases": [
+      {
+        "mid": "chats/2025-08-20-north-team-chat#m1",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "quarrendon"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "Marcus used to own Quarrendon Freight Lines (a freight account) until 2025-06-02, and the message directly responds to Dana correcting Quarrendon's seat count from 180 to 185."
+      }
+    ],
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "quarrendon"
+      },
+      {
+        "oid": "e2",
+        "entity": "quarrendon"
+      }
+    ],
+    "retraction": {
+      "first_value": "180",
+      "corrected_value": "185",
+      "lines": [
+        10,
+        16
+      ]
+    }
+  },
+  "usage": {
+    "input_tokens": 3075,
+    "output_tokens": 304,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.00919
+}

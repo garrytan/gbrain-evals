@@ -1,0 +1,44 @@
+{
+  "schema": "gbrain-sync-activation/1",
+  "cell": "pglite-managed-10000-single-manual-before-v316-r1",
+  "label": "before-v316-r1",
+  "gbrain_rev": "4ba4c36f",
+  "brain_rev": "4ba4c36f",
+  "at": "2026-10-20T03:21:38.395Z",
+  "params": {
+    "engine": "pglite",
+    "pages": 10000,
+    "max_passes": 10
+  },
+  "machine": {
+    "cores": 4,
+    "cpu_model": "AMD EPYC",
+    "ram_gb": 16,
+    "kernel": "6.1.158+",
+    "bun": "1.4.3"
+  },
+  "build": {
+    "engine": "pglite",
+    "mode": "managed",
+    "pages": 10000,
+    "sources": [
+      "bench"
+    ],
+    "rev": "4ba4c36f",
+    "built_at": "2026-10-20T03:21:32.511Z",
+    "cloned_from": "pglite-classic-10000-4ba4c36f",
+    "clone_ms": 1696.5,
+    "activate_ms": 2479.4,
+    "first_managed_sync": {
+      "ms": 1696.677978515625,
+      "runs": 1,
+      "statuses": [
+        "up_to_date"
+      ]
+    }
+  },
+  "converged": true,
+  "passes": 1,
+  "wall_ms": 1696.7,
+  "statements": null
+}

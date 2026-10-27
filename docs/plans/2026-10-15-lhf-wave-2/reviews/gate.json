@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "run": "autoplan-20261015220653",
+  "gate_rev": 2,
+  "items": [
+    {
+      "id": "p1",
+      "title": "Plan approval",
+      "kind": "approval",
+      "recommended": "a",
+      "options": [
+        {
+          "key": "a",
+          "text": "approve as-is"
+        },
+        {
+          "key": "b",
+          "text": "approve with the overrides above"
+        },
+        {
+          "key": "c",
+          "text": "interrogate (ask questions; stays pending)"
+        },
+        {
+          "key": "d",
+          "text": "rerun every phase on the current plan, Eng last (to review an edited plan instead: gstack-autoplan revise --out <run dir> --plan <file>)"
+        },
+        {
+          "key": "e",
+          "text": "reject"
+        }
+      ]
+    }
+  ],
+  "title": "/autoplan final approval gate"
+}

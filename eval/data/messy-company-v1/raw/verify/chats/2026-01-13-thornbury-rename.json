@@ -1,0 +1,150 @@
+{
+  "slug": "chats/2026-01-13-thornbury-rename",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2026-01-13",
+    "owner_phrases": [
+      {
+        "mid": "chats/2026-01-13-thornbury-rename#m1",
+        "phrase": "Marcus's mill account",
+        "lines": [
+          19
+        ]
+      }
+    ],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Orrin Mills",
+        "line": 10
+      },
+      {
+        "oid": "e2",
+        "surface": "Thornbury Cloth Co.",
+        "line": 10
+      },
+      {
+        "oid": "e3",
+        "surface": "TCC",
+        "line": 10
+      },
+      {
+        "oid": "e4",
+        "surface": "Tamsin Cold Chain",
+        "line": 10
+      },
+      {
+        "oid": "e5",
+        "surface": "TCC",
+        "line": 13
+      },
+      {
+        "oid": "e6",
+        "surface": "Thornbury Cloth Co.",
+        "line": 16
+      },
+      {
+        "oid": "e7",
+        "surface": "Tamsin Cold Chain",
+        "line": 16
+      },
+      {
+        "oid": "e8",
+        "surface": "TCC",
+        "line": 16
+      },
+      {
+        "oid": "e9",
+        "surface": "Stoneharrow Billing",
+        "line": 22
+      },
+      {
+        "oid": "e10",
+        "surface": "Orrin Mills",
+        "line": 24
+      }
+    ],
+    "claims": [],
+    "events": [
+      {
+        "eid": "e-orm-rebrand",
+        "question": "Does the page describe this: \"Orrin Mills renames itself Thornbury Cloth Co.\"? If so, on what date does the text place it?"
+      }
+    ],
+    "ownership": []
+  },
+  "prompt_user_sha256": "29b47fdee672a9e0b0c160ed482d83f787e72a6bbf7648a4d89a1bb138e78cb7",
+  "response_text": "{\n  \"date_used\": \"2026-01-13\",\n  \"owner_phrases\": [\n    {\n      \"mid\": \"chats/2026-01-13-thornbury-rename#m1\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\n        \"orrin\"\n      ],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"Marcus Lindqvist is the primary owner of orrin (Thornbury Cloth Co., formerly Orrin Mills, a textile mill) on 2026-01-13.\"\n    }\n  ],\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"orrin\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"orrin\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"orrin\"\n    },\n    {\n      \"oid\": \"e4\",\n      \"entity\": \"tamsin\"\n    },\n    {\n      \"oid\": \"e5\",\n      \"entity\": \"orrin\"\n    },\n    {\n      \"oid\": \"e6\",\n      \"entity\": \"orrin\"\n    },\n    {\n      \"oid\": \"e7\",\n      \"entity\": \"tamsin\"\n    },\n    {\n      \"oid\": \"e8\",\n      \"entity\": \"orrin\"\n    },\n    {\n      \"oid\": \"e9\",\n      \"entity\": \"stoneharrow\"\n    },\n    {\n      \"oid\": \"e10\",\n      \"entity\": \"orrin\"\n    }\n  ],\n  \"events\": [\n    {\n      \"eid\": \"e-orm-rebrand\",\n      \"present\": true,\n      \"date\": \"2026-01-12\",\n      \"line\": 10\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2026-01-13",
+    "owner_phrases": [
+      {
+        "mid": "chats/2026-01-13-thornbury-rename#m1",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "orrin"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "Marcus Lindqvist is the primary owner of orrin (Thornbury Cloth Co., formerly Orrin Mills, a textile mill) on 2026-01-13."
+      }
+    ],
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "orrin"
+      },
+      {
+        "oid": "e2",
+        "entity": "orrin"
+      },
+      {
+        "oid": "e3",
+        "entity": "orrin"
+      },
+      {
+        "oid": "e4",
+        "entity": "tamsin"
+      },
+      {
+        "oid": "e5",
+        "entity": "orrin"
+      },
+      {
+        "oid": "e6",
+        "entity": "orrin"
+      },
+      {
+        "oid": "e7",
+        "entity": "tamsin"
+      },
+      {
+        "oid": "e8",
+        "entity": "orrin"
+      },
+      {
+        "oid": "e9",
+        "entity": "stoneharrow"
+      },
+      {
+        "oid": "e10",
+        "entity": "orrin"
+      }
+    ],
+    "events": [
+      {
+        "eid": "e-orm-rebrand",
+        "present": true,
+        "date": "2026-01-12",
+        "line": 10
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 3541,
+    "output_tokens": 490,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.011982
+}

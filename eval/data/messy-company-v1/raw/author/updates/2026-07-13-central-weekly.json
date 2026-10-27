@@ -1,0 +1,41 @@
+{
+  "slug": "updates/2026-07-13-central-weekly",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: weekly\nTitle: Central weekly Jul 13\nDate: Written on 2026-07-13.\nWriter: Moss (Ruth Calloway's AI assistant)\nVoice: an AI assistant: neat, factual, a little stiff\nFormat: a weekly update with a section per topic and bullets\nLength: about 507 words\nDate style in the body: day-month (2 Jun 2025)\nTypos: a few natural typos and one or two sloppy abbreviations (never in names or required phrases)\n\nBrief:\nMoss compiles this team weekly from the team lead's notes; write it as Moss's compiled update. Hollis's update while Tobias is on PTO. His corporate card account got flagged for a duplicate hotel charge.\n\nRequired phrases:\n- Use the exact phrase \"the dealer account Hollis is covering\" once, referring to Marrow Fieldworks. Don't put the account's name in the same sentence; the reader should work it out.\n- Use the exact phrase \"the accounts Hollis is covering\" once, referring to Marrow Fieldworks. Don't put the account's name in the same sentence; the reader should work it out.\n- Use the exact phrase \"Hollis's corporate card account\" once, in the sense of: his company credit card account. It must not be about a customer account.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Hollis Mbeki: Central team lead\n- Priyanka \"Pree\" Sundaram: Account manager, Central team\n- Tobias Rendle: Account manager, Central team\n- Lev Arkadin: Procurement lead\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Tansley Parcel: regional parcel delivery, South Central; main contact Lev Arkadin, Procurement lead; codes/nicknames TPCL, TP\n- Tansleigh Packaging: corrugated packaging manufacturer, Ohio Valley; codes/nicknames TSP, TP\n- Marrow Fieldworks: agricultural equipment dealer network, Plains; codes/nicknames MFW\n- Marrow Agrisupply: farm supply retail chain, Plains; subsidiary of Marrow Fieldworks; codes/nicknames MAS, Marrow Agri\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2026-07-13 (background only; don't restate unless the brief asks):\n- Tansley Parcel: managed by Priyanka \"Pree\" Sundaram\n- Tansleigh Packaging: not stated on any shared page (do not say who manages it)\n- Marrow Fieldworks: managed by Tobias Rendle; Hollis Mbeki is covering as acting AM\n- Marrow Agrisupply: managed by Central team (pooled account)",
+      "response_text": "# Central weekly Jul 13\n\n**Date:** 13 Jul 2026  \n**Compiled for:** Ruth Calloway  \n**Source:** Raw notes provided by Hollis Mbeki (Central team lead)\n\n### Team Availability and Coverage\n* Tobias Rendle remains on PTO through the current week and is scheduled to return on 20 Jul 2026.\n* Hollis Mbeki is serving as acting point of contact for the accounts Hollis is covering during Tobias Rendle's absence.\n* Priyanka \"Pree\" Sundaram is available on standard Central hours; she will be offline for two hours on the afternoon of 15 Jul 2026 for a scheduled medical appt.\n\n### Customer Operational Activity\n* **Marrow Fieldworks (MFW):** On 9 Jul 2026, the Salina tractor depot reported that flatbeds delivering combine headers were failing to auto-assign to oversized bays (Dock Doors 14 and 15) during the 05:00 shift change. Support ticket #PD-88412 was opened with screenshots from the yard tablet. On 10 Jul 2026, Hollis Mbeki conducted a 30-minute screen share with the Salina yard supervisor on the dealer account Hollis is covering to adjust the vehicle length rules inside Pemberline Dock. The 05:00 arrival queue processed without manual overrides on 13 Jul 2026.\n* **Marrow Agrisupply (MAS):** From the Central pooled queue, Hollis Mbeki resolved a login lockout for two seasonal gate clerks at the Enid retail distribution yard on 8 Jul 2026 (ticket #PD-88309). Both clerks had been importing the `Daily_Staging_Manifest_v3` CSV using an outdated bookmark.\n* **Tansley Parcel (TPCL):** Priyanka \"Pree\" Sundaram met with Lev Arkadin on 10 Jul 2026 to review the `Q2_Yard_Turn_Summary` export for the Little Rock hub. Lev Arkadin requested a minor filter adjustment to separate drop-and-hook trailers from live unloads on Doors 4 through 19. Priyanka \"Pree\" Sundaram is configuring the saved view today.\n* **Tansleigh Packaging (TSP):** The Zanesville corrugated plant submitted ticket #PD-88490 on 11 Jul 2026 regarding SMS gate check-in delays for third-party carriers hauling kraft roll stock. Engineering traced the lag to a regional carrier gateway bottleneck that cleared at 16:40 on 11 Jul 2026.\n\n### Internal Administration and Travel\n* Finance placed a temporary hold on Hollis's corporate card account on 10 Jul 2026 after the automated expense audit flagged a duplicate hotel charge from the Courtyard in Wichita ($214.80 posted twice on 26 Jun 2026). Hollis Mbeki obtained the folio correction from the hotel front desk this morning and submitted the reciept to accounting so the card can be restored before July travel bookings.\n* June Osei-Lark distributed the updated folder structure for Q3 customer document repositories on 9 Jul 2026; Central team files have been migrated accordingly.\n\n### Action Items for Week of 13 Jul 2026\n* Hollis Mbeki to check in with the Salina yard supervisor on 15 Jul 2026 to verify that Dock Doors 14 and 15 continue to assign properly under the revised length rules.\n* Priyanka \"Pree\" Sundaram to deliver the revised `Q2_Yard_Turn_Summary` report template to Lev Arkadin by 16 Jul 2026.\n* Hollis Mbeki to compile handover notes on 17 Jul 2026 ahead of Tobias Rendle's return.",
+      "usage": {
+        "input_tokens": 1257,
+        "output_tokens": 840,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.010914,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1257,
+          "candidatesTokenCount": 840,
+          "totalTokenCount": 2097,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1257
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 840
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

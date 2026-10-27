@@ -1,0 +1,37 @@
+{
+  "slug": "contracts/2026-03-10-tsp-renewal-2026",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: record\nTitle: Renewal Order Form: Tansleigh Packaging 2026\nDate: Written on 2026-03-10.\nWriter: June Osei-Lark\nVoice: formal legal drafting\nFormat: formal numbered sections and a signature block\nLength: about 265 words\nDate style in the body: undefined\nTypos: none\n\nBrief:\nRenewal Order Form: Tansleigh Packaging 2026. Parties: Pemberline Systems and Tansleigh Packaging. Drafted 2026-02-26. Effective date 2026-03-15 (signed 2026-03-10; state both dates and keep them distinct). Terms this document sets: subscribed seats = 34; end of the current term (renewal date) = 2027-03-14. Executed: include a signature block signed on 2026-03-10 by both parties (customer signatory plus June Osei-Lark for Pemberline). It changes earlier paperwork for this customer; refer to the earlier agreement generically.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Hollis Mbeki: Central team lead\n- Priyanka \"Pree\" Sundaram: Account manager, Central team\n- Tobias Rendle: Account manager, Central team\n- Lev Arkadin: Procurement lead\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Tansley Parcel: regional parcel delivery, South Central; main contact Lev Arkadin, Procurement lead; codes/nicknames TPCL, TP\n- Tansleigh Packaging: corrugated packaging manufacturer, Ohio Valley; codes/nicknames TSP, TP\n- Marrow Fieldworks: agricultural equipment dealer network, Plains; codes/nicknames MFW\n- Marrow Agrisupply: farm supply retail chain, Plains; subsidiary of Marrow Fieldworks; codes/nicknames MAS, Marrow Agri\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2026-03-10 (background only; don't restate unless the brief asks):\n- Tansley Parcel: managed by Priyanka \"Pree\" Sundaram\n- Tansleigh Packaging: not stated on any shared page (do not say who manages it)\n- Marrow Fieldworks: managed by Tobias Rendle\n- Marrow Agrisupply: managed by Central team (pooled account)",
+      "response_text": "# Renewal Order Form: Tansleigh Packaging 2026\n\n## 1. Parties and Preparation\n\nThis Renewal Order Form is entered into by Pemberline Systems and Tansleigh Packaging for the continued subscription to Pemberline Dock, the yard and dock scheduling software. This Order Form was drafted on 2026-02-26 and executed on 2026-03-10.\n\n## 2. Effective Date\n\nThe effective date of this Order Form is 2026-03-15. The parties’ signatures dated 2026-03-10 record execution of this document and do not alter its effective date.\n\n## 3. Subscribed Seats\n\nEffective 2026-03-15, the number of subscribed seats for Tansleigh Packaging shall be **34**. This seat count replaces the subscribed seat count stated in the earlier agreement for Tansleigh Packaging.\n\nPemberline Systems shall use this quantity when updating the subscription record for Pemberline Dock. Tansleigh Packaging shall identify the users requiring access through its ordinary user-administration workflow.\n\n## 4. Term End and Renewal Date\n\nThe end of the current term, designated as the renewal date for purposes of this Order Form, is **2027-03-14**. This date replaces any different current-term end or renewal date stated in the earlier agreement.\n\n## 5. Effect on Earlier Agreement\n\nThis Order Form modifies the earlier agreement solely as to the subscribed seat count and current-term end date expressly set out above. All other provisions of the earlier agreement remain unchanged. In the event of a conflict concerning either modified item, this Order Form shall control.\n\n## 6. Execution\n\nThe parties have signed this Order Form as follows.\n\n**For Tansleigh Packaging**\n\nSigned: /s/ Mara Ellery  \nName: Mara Ellery  \nTitle: Authorized Signatory  \nDate signed: 2026-03-10  \n\n**For Pemberline Systems**\n\nSigned: /s/ June Osei-Lark  \nName: June Osei-Lark  \nTitle: Deal desk and contracts manager  \nDate signed: 2026-03-10",
+      "usage": {
+        "input_tokens": 1134,
+        "output_tokens": 435,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.006618,
+      "provider_meta": {
+        "id": "resp_051e1df9dade235e016acfae58f6b087d18cd78bc129382c17",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1134,
+          "input_tokens_details": {
+            "cache_write_tokens": 1131,
+            "cached_tokens": 0
+          },
+          "output_tokens": 435,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 1569
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

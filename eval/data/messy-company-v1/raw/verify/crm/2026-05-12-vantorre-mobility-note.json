@@ -1,0 +1,36 @@
+{
+  "slug": "crm/2026-05-12-vantorre-mobility-note",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2026-05-12",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Vantorre Mobility",
+        "line": 6
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "82b798d9cc12e6727e35f35403f799c8176963dd1cbe9ad3d28a35aaf5959b66",
+  "response_text": "{\n  \"date_used\": \"2026-05-12\",\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"vantorre-mobility\"\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2026-05-12",
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "vantorre-mobility"
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2565,
+    "output_tokens": 61,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.00574
+}

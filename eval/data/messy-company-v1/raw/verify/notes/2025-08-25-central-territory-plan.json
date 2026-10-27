@@ -1,0 +1,81 @@
+{
+  "slug": "notes/2025-08-25-central-territory-plan",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2025-08-25",
+    "owner_phrases": [
+      {
+        "mid": "notes/2025-08-25-central-territory-plan#m1",
+        "phrase": "Pree's biggest account",
+        "lines": [
+          11
+        ]
+      },
+      {
+        "mid": "notes/2025-08-25-central-territory-plan#m2",
+        "phrase": "the Central team's ag account",
+        "lines": [
+          11
+        ]
+      }
+    ],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Tansley Parcel",
+        "line": 9
+      },
+      {
+        "oid": "e2",
+        "surface": "Marrow Agrisupply",
+        "line": 9
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "e8c7cb98cb62de6870b7f99ccdbbb981c2e9f0637f975dc9b6108587a1039a34",
+  "response_text": "{\n  \"date_used\": \"2025-08-25\",\n  \"owner_phrases\": [\n    {\n      \"mid\": \"notes/2025-08-25-central-territory-plan#m1\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\n        \"tansley-parcel\"\n      ],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"In the 'Tansley Parcel' column of the table, and Pree owns Tansley Parcel on 2025-08-25.\"\n    },\n    {\n      \"mid\": \"notes/2025-08-25-central-territory-plan#m2\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\n        \"marrow-agrisupply\"\n      ],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"In the 'Marrow Agrisupply' column, and Marrow Agrisupply is the Central team's pooled ag account.\"\n    }\n  ],\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"tansley-parcel\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"marrow-agrisupply\"\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-08-25",
+    "owner_phrases": [
+      {
+        "mid": "notes/2025-08-25-central-territory-plan#m1",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "tansley-parcel"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "In the 'Tansley Parcel' column of the table, and Pree owns Tansley Parcel on 2025-08-25."
+      },
+      {
+        "mid": "notes/2025-08-25-central-territory-plan#m2",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "marrow-agrisupply"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "In the 'Marrow Agrisupply' column, and Marrow Agrisupply is the Central team's pooled ag account."
+      }
+    ],
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "tansley-parcel"
+      },
+      {
+        "oid": "e2",
+        "entity": "marrow-agrisupply"
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2836,
+    "output_tokens": 361,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.009282
+}

@@ -1,0 +1,38 @@
+{
+  "dataset": "beam",
+  "split": "500k",
+  "mode": "rag",
+  "seal": "sealed",
+  "target_tokens": 8000,
+  "models": {
+    "answer": "gemini:gemini-3.8-flash",
+    "judge": "gemini:gemini-3.5-flash"
+  },
+  "k": 10,
+  "questions": {
+    "units": [
+      "18",
+      "19",
+      "20",
+      "22",
+      "23",
+      "24",
+      "25",
+      "26",
+      "27",
+      "29",
+      "30",
+      "32",
+      "33",
+      "34"
+    ]
+  },
+  "budget_usd": 35,
+  "provider": "comparator",
+  "lane": "combined",
+  "provider_config": {
+    "max_tokens": 2845,
+    "max_chunk_tokens": 1626
+  },
+  "note": "memory proof wave 2 confirmation (counted), comparator BEAM regeneration, beam-500k-2"
+}

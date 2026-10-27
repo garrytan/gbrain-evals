@@ -1,0 +1,41 @@
+{
+  "slug": "meetings/2026-04-09-quarrendon-renewal-debrief",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: meeting\nTitle: Quarrendon call: renewal debrief\nDate: Written on 2026-04-09.\nWriter: Dana Okafor\nVoice: terse and practical\nFormat: loose call notes, half sentences, an action list at the end\nLength: about 340 words\nDate style in the body: casual (Jun 2nd, Monday the 2nd)\nTypos: one or two small natural typos (never in names or required phrases)\n\nBrief:\nDana's summary of a call with Thea after the renewal. Dana writes (wrongly) that the discount stays at 12% under the new term. Keep that statement plain, don't hedge it. Also: new per-seat price $1,920 and next renewal March 31, 2027.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Ilse Varga: North team lead\n- Dana Okafor: Account manager, North team\n- Marcus Lindqvist: Account manager, North team\n- Thea Ramaswell: Director of Yard Operations\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Quarrendon Freight Lines: truckload freight carrier, Upper Midwest; main contact Thea Ramaswell, Director of Yard Operations; codes/nicknames QFL, Q-Freight\n- Brackenwater Freight Co.: less-than-truckload freight, Great Lakes; codes/nicknames BWF, Bracken\n- Tamsin Cold Chain: refrigerated warehousing, Pacific Northwest; codes/nicknames TCC\n- Thornbury Cloth Co. (renamed from Orrin Mills on 2026-01-12): textile mill, Carolinas; codes/nicknames TCC\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2026-04-09 (background only; don't restate unless the brief asks):\n- Quarrendon Freight Lines: managed by Dana Okafor\n- Brackenwater Freight Co.: managed by Marcus Lindqvist\n- Tamsin Cold Chain: managed by Dana Okafor\n- Thornbury Cloth Co.: managed by Marcus Lindqvist",
+      "response_text": "# Quarrendon call: renewal debrief\n\n**Date:** Thursday, Apr 9th  \n**Attendees:** Thea Ramaswell (Quarrendon Freight Lines), me\n\nQuick post-renewal check-in with Thea. She was calling from the La Crosse yard—loud background noise, switchers moving trailers off doors 14–18 after the overnight ice storm.\n\n**Commercials & billing**\n- Paperwork all squared away. New per-seat price is $1,920/yr.\n- The discount stays at 12% under the new term.\n- Next renewal is March 31, 2027.\n- Thea asked for the updated vendor remittance sheet from Stoneharrow Billing. Their AP clerk kicked back the first draft invoice because the PO box line looked different from last spring. Need June Osei-Lark or Felix Duarte to send the clean PDF over so QFL can cut the check on their Friday run.\n\n**Ops / Product notes**\n- Duluth terminal: second shift gate clerks are still forgetting to flip bobtail arrivals to \"departed\" when drivers drop paperwork at the window instead of the kiosk. Messing up the `Yard Dwell > 4h` report every Wednesday morning.\n- Ticket #8841 (carrier portal timeout when uploading CSV manifests over 600 rows). Thea says it happened again Tuesday the 7th around 05:30 CT. Not a blocker, they split the file in half, but annoying for her lead dispatcher, Greg.\n- Door 9 sensor integration at Green Bay: they swapped out the physical dock lock hardware last week. Need to update the webhook endpoint in Pemberline Dock settings so the red/green status light syncs properly on the dispatch board.\n- She wants a 20-min refresher training for two new night-shift yard spotters starting Monday the 20th. Doesn't need full admin walkthru, just tablet view, trailer moves, and spotting queue.\n\n**Action items**\n- [ ] **Me:** Ping June Osei-Lark to get the clean Stoneharrow Billing remittance form over to QFL AP today.\n- [ ] **Me:** Check status on #8841 with support—see if eng pulled the logs from Tuesday the 7th.\n- [ ] **Thea:** Send me the new webhook URL from their Green Bay IT guy by Friday the 10th.\n- [ ] **Me:** Send calendar hold for Monday the 20th (afternoon CT, before second shift starts) for the spotter tablet walkthrough.",
+      "usage": {
+        "input_tokens": 1155,
+        "output_tokens": 556,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.00787,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1155,
+          "candidatesTokenCount": 556,
+          "totalTokenCount": 1711,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1155
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 556
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

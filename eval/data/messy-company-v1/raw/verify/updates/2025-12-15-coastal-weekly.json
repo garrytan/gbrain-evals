@@ -1,0 +1,208 @@
+{
+  "slug": "updates/2025-12-15-coastal-weekly",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2025-12-15",
+    "owner_phrases": [
+      {
+        "mid": "updates/2025-12-15-coastal-weekly#m1",
+        "phrase": "Kwame's biggest account",
+        "lines": [
+          23
+        ]
+      },
+      {
+        "mid": "updates/2025-12-15-coastal-weekly#m2",
+        "phrase": "the grocery account Bettina took over",
+        "lines": [
+          26
+        ]
+      },
+      {
+        "mid": "updates/2025-12-15-coastal-weekly#m3",
+        "phrase": "Bettina's expense account",
+        "lines": [
+          31
+        ]
+      },
+      {
+        "mid": "updates/2025-12-15-coastal-weekly#m4",
+        "phrase": "the account Kwame runs",
+        "lines": [
+          33
+        ]
+      }
+    ],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Pellucid Harbor Logistics",
+        "line": 15
+      },
+      {
+        "oid": "e2",
+        "surface": "PHL",
+        "line": 15
+      },
+      {
+        "oid": "e3",
+        "surface": "Saltmarsh Provisions",
+        "line": 16
+      },
+      {
+        "oid": "e4",
+        "surface": "SMP",
+        "line": 16
+      },
+      {
+        "oid": "e5",
+        "surface": "Covey & Lark Retail",
+        "line": 17
+      },
+      {
+        "oid": "e6",
+        "surface": "CLR",
+        "line": 17
+      },
+      {
+        "oid": "e7",
+        "surface": "Driftmoor Marine Freight",
+        "line": 18
+      },
+      {
+        "oid": "e8",
+        "surface": "DMF",
+        "line": 18
+      },
+      {
+        "oid": "e9",
+        "surface": "Pellucid Harbor Logistics",
+        "line": 23
+      },
+      {
+        "oid": "e10",
+        "surface": "Carrowmere Cloud",
+        "line": 23
+      },
+      {
+        "oid": "e11",
+        "surface": "Saltmarsh Provisions",
+        "line": 26
+      },
+      {
+        "oid": "e12",
+        "surface": "Covey & Lark Retail",
+        "line": 28
+      },
+      {
+        "oid": "e13",
+        "surface": "Driftmoor Marine Freight",
+        "line": 28
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "af34d1a1278cc35b2cdfbf9a68e7cc072f113f69b008441e01455cae48048d8c",
+  "response_text": "{\n  \"date_used\": \"2025-12-15\",\n  \"owner_phrases\": [\n    {\n      \"mid\": \"updates/2025-12-15-coastal-weekly#m1\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\"pellucid\"],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"The issue in the same paragraph is explicitly about Pellucid Harbor Logistics, owned by Kwame on this date.\"\n    },\n    {\n      \"mid\": \"updates/2025-12-15-coastal-weekly#m2\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\"saltmarsh\"],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"The paragraph names Saltmarsh Provisions, the grocery distributor Bettina took over.\"\n    },\n    {\n      \"mid\": \"updates/2025-12-15-coastal-weekly#m3\",\n      \"refers_to_customer_account\": false,\n      \"accounts\": [],\n      \"reading\": \"not about a customer account (a login, device, HR/expense account, a narrative 'account of', a vendor relationship, an employer)\",\n      \"note\": \"This is Bettina's personal expense account in the finance portal.\"\n    },\n    {\n      \"mid\": \"updates/2025-12-15-coastal-weekly#m4\",\n      \"refers_to_customer_account\": false,\n      \"accounts\": [],\n      \"reading\": \"ambiguous: could be more than one account\",\n      \"note\": \"Kwame owns both Pellucid and Driftmoor on this date; the scheduling mention does not identify either one.\"\n    }\n  ],\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\"oid\": \"e1\", \"entity\": \"pellucid\"},\n    {\"oid\": \"e2\", \"entity\": \"pellucid\"},\n    {\"oid\": \"e3\", \"entity\": \"saltmarsh\"},\n    {\"oid\": \"e4\", \"entity\": \"saltmarsh\"},\n    {\"oid\": \"e5\", \"entity\": \"covey-lark\"},\n    {\"oid\": \"e6\", \"entity\": \"covey-lark\"},\n    {\"oid\": \"e7\", \"entity\": \"driftmoor\"},\n    {\"oid\": \"e8\", \"entity\": \"driftmoor\"},\n    {\"oid\": \"e9\", \"entity\": \"pellucid\"},\n    {\"oid\": \"e10\", \"entity\": \"carrowmere\"},\n    {\"oid\": \"e11\", \"entity\": \"saltmarsh\"},\n    {\"oid\": \"e12\", \"entity\": \"covey-lark\"},\n    {\"oid\": \"e13\", \"entity\": \"driftmoor\"}\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-12-15",
+    "owner_phrases": [
+      {
+        "mid": "updates/2025-12-15-coastal-weekly#m1",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "pellucid"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "The issue in the same paragraph is explicitly about Pellucid Harbor Logistics, owned by Kwame on this date."
+      },
+      {
+        "mid": "updates/2025-12-15-coastal-weekly#m2",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "saltmarsh"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "The paragraph names Saltmarsh Provisions, the grocery distributor Bettina took over."
+      },
+      {
+        "mid": "updates/2025-12-15-coastal-weekly#m3",
+        "refers_to_customer_account": false,
+        "accounts": [],
+        "reading": "not about a customer account (a login, device, HR/expense account, a narrative 'account of', a vendor relationship, an employer)",
+        "note": "This is Bettina's personal expense account in the finance portal."
+      },
+      {
+        "mid": "updates/2025-12-15-coastal-weekly#m4",
+        "refers_to_customer_account": false,
+        "accounts": [],
+        "reading": "ambiguous: could be more than one account",
+        "note": "Kwame owns both Pellucid and Driftmoor on this date; the scheduling mention does not identify either one."
+      }
+    ],
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "pellucid"
+      },
+      {
+        "oid": "e2",
+        "entity": "pellucid"
+      },
+      {
+        "oid": "e3",
+        "entity": "saltmarsh"
+      },
+      {
+        "oid": "e4",
+        "entity": "saltmarsh"
+      },
+      {
+        "oid": "e5",
+        "entity": "covey-lark"
+      },
+      {
+        "oid": "e6",
+        "entity": "covey-lark"
+      },
+      {
+        "oid": "e7",
+        "entity": "driftmoor"
+      },
+      {
+        "oid": "e8",
+        "entity": "driftmoor"
+      },
+      {
+        "oid": "e9",
+        "entity": "pellucid"
+      },
+      {
+        "oid": "e10",
+        "entity": "carrowmere"
+      },
+      {
+        "oid": "e11",
+        "entity": "saltmarsh"
+      },
+      {
+        "oid": "e12",
+        "entity": "covey-lark"
+      },
+      {
+        "oid": "e13",
+        "entity": "driftmoor"
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 3534,
+    "output_tokens": 604,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.013108
+}

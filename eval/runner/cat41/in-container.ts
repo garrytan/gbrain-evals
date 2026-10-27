@@ -19,7 +19,7 @@
  */
 import { spawn } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { chmodSync, chownSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync, appendFileSync } from 'node:fs';
+import { chmodSync, chownSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync, appendFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { hashEmbedding } from '../lifecycle/fake-embedder.ts';
 import { scenarioById, type Box, type CmdResult, type Followup } from './scenarios.ts';
@@ -46,6 +46,10 @@ function arg(name: string, fallback?: string): string {
 
 // ─── Process helpers ─────────────────────────────────────────────────
 
+/**
+ * Run a command. With `stdoutFile`, stdout streams to that file and `<stdoutFile>.times` receives the arrival time of
+ * each completed line (ms since the process started, one number per line in file order): the D7 timing source.
+ */
 function run(argv: string[], opts: { as?: 'agent' | 'root'; env?: Record<string, string>; cwd?: string; timeoutMs?: number; stdoutFile?: string } = {}): Promise<CmdResult & { timedOut: boolean; ms: number }> {
   const env = { PATH: BASE_PATH, LANG: 'C.UTF-8', TZ: 'UTC', ...opts.env };
   const kv = Object.entries(env).map(([k, v]) => `${k}=${v}`);
@@ -55,11 +59,21 @@ function run(argv: string[], opts: { as?: 'agent' | 'root'; env?: Record<string,
     const p = spawn(full[0], full.slice(1), { cwd: opts.cwd ?? (opts.as === 'root' ? '/' : HOME), stdio: ['ignore', 'pipe', 'pipe'], detached: true });
     let stdout = '', stderr = '';
     let timedOut = false;
+    const lineTimes: number[] = [];
     p.stdout!.setEncoding('utf8'); p.stderr!.setEncoding('utf8');
-    p.stdout!.on('data', (c: string) => { if (opts.stdoutFile) appendFileSync(opts.stdoutFile, c); else stdout += c; });
+    p.stdout!.on('data', (c: string) => {
+      if (!opts.stdoutFile) { stdout += c; return; }
+      appendFileSync(opts.stdoutFile, c);
+      const at = Date.now() - t0;
+      for (let i = 0; i < c.length; i++) if (c.charCodeAt(i) === 10) lineTimes.push(at);
+    });
     p.stderr!.on('data', (c: string) => { stderr += c; if (stderr.length > 200_000) stderr = stderr.slice(-100_000); });
     const timer = setTimeout(() => { timedOut = true; try { process.kill(-p.pid!, 'SIGKILL'); } catch { /* gone */ } }, opts.timeoutMs ?? 300_000);
-    p.on('close', code => { clearTimeout(timer); resolve({ code: code ?? -1, stdout, stderr, timedOut, ms: Date.now() - t0 }); });
+    p.on('close', code => {
+      clearTimeout(timer);
+      if (opts.stdoutFile) writeFileSync(`${opts.stdoutFile}.times`, JSON.stringify(lineTimes));
+      resolve({ code: code ?? -1, stdout, stderr, timedOut, ms: Date.now() - t0 });
+    });
     p.on('error', e => { clearTimeout(timer); resolve({ code: -1, stdout, stderr: `${stderr}\n${e.message}`, timedOut, ms: Date.now() - t0 }); });
   });
 }
@@ -86,6 +100,9 @@ const PRICES: Record<string, { input: number; output: number }> = {
   'gpt-6-luna': { input: 0.2, output: 1.2 },
 };
 const CANNED = 'Idea: run the Tacoma forklift recertification in parallel with the inventory transfer.';
+/** Smoke mode (--fake-harness-provider): the harness's own model calls go to the fake provider, which keeps their bodies. */
+let captureHarness = false;
+const HARNESS_REQUESTS = `${OUT}/harness-requests.jsonl`;
 
 function tokensOf(x: unknown): number { return Math.max(1, Math.ceil(JSON.stringify(x ?? '').length / 4)); }
 
@@ -104,6 +121,7 @@ function startProvider() {
       const anthropic = url.pathname.startsWith('/anthropic');
       const path = url.pathname;
       const model = String(body.model ?? '');
+      if (captureHarness && phase === 'session' && (path.endsWith('/messages') || path.endsWith('/responses'))) appendFileSync(HARNESS_REQUESTS, JSON.stringify({ ts: Date.now(), path, body }) + '\n');
       const rec = (endpoint: ProviderRequest['endpoint'], inTok: number, outTok: number) => {
         const p = PRICES[model.replace(/^openai[:/]/, '')] ?? { input: 1, output: 4 };
         providerLog.push({ ts: Date.now(), phase, provider: anthropic ? 'anthropic' : 'openai', endpoint, model, input_tokens: inTok, output_tokens: outTok, usd: (inTok * p.input + outTok * p.output) / 1e6 });
@@ -126,6 +144,16 @@ function startProvider() {
       }
       if (path.endsWith('/messages')) {
         const inTok = tokensOf(body.messages); rec('messages', inTok, 40);
+        if (body.stream === true) {
+          const ev = (type: string, data: unknown) => `event: ${type}\ndata: ${JSON.stringify({ type, ...data as object })}\n\n`;
+          const sse = ev('message_start', { message: { id: 'msg_cat41', type: 'message', role: 'assistant', model, content: [], stop_reason: null, usage: { input_tokens: inTok, output_tokens: 0 } } })
+            + ev('content_block_start', { index: 0, content_block: { type: 'text', text: '' } })
+            + ev('content_block_delta', { index: 0, delta: { type: 'text_delta', text: CANNED } })
+            + ev('content_block_stop', { index: 0 })
+            + ev('message_delta', { delta: { stop_reason: 'end_turn' }, usage: { output_tokens: 40 } })
+            + ev('message_stop', {});
+          return new Response(sse, { headers: { 'content-type': 'text/event-stream' } });
+        }
         return json({ id: 'msg_cat41', type: 'message', role: 'assistant', model, content: [{ type: 'text', text: CANNED }], stop_reason: 'end_turn', usage: { input_tokens: inTok, output_tokens: 40 } });
       }
       if (path.endsWith('/models')) { rec('models', 0, 0); return json({ object: 'list', data: [{ id: 'text-embedding-3-small', object: 'model' }, { id: 'gpt-6-luna', object: 'model' }] }); }
@@ -148,10 +176,14 @@ if [ -f ${SILENT_FLAG} ] && [ "$stdin_target" = "/dev/null" ] && [ "$1" != "serv
 printf '{"ev":"start","id":"%s","ts":%s,"argv":%s,"stdin":"%s","silent":%s}\\n' "$id" "$(date +%s%3N)" "$argv_json" "$stdin_target" "$silent" >> ${CALL_LOG}
 if $silent; then
   bun /opt/gbrain/src/cli.ts "$@" < <(sleep 86400)
+  rc=$?
+elif [ "$1" = "hook" ]; then
+  bun /opt/gbrain/src/cli.ts "$@" | tee ${LOG_DIR}/hook-$id.out
+  rc=\${PIPESTATUS[0]}
 else
   bun /opt/gbrain/src/cli.ts "$@"
+  rc=$?
 fi
-rc=$?
 printf '{"ev":"end","id":"%s","ts":%s,"rc":%s}\\n' "$id" "$(date +%s%3N)" "$rc" >> ${CALL_LOG}
 exit $rc
 `;
@@ -172,9 +204,10 @@ function readCalls(): WrapperCall[] {
 
 // ─── Box ─────────────────────────────────────────────────────────────
 
-function makeBox(state: { gbrainEnv: Record<string, string>; mcp: Parameters<Box['setMcp']>[0] | undefined; notes: Record<string, unknown>; silent: boolean }): Box {
+function makeBox(harness: Harness, state: { gbrainEnv: Record<string, string>; mcp: Parameters<Box['setMcp']>[0] | undefined; notes: Record<string, unknown>; silent: boolean }): Box {
   return {
     home: HOME,
+    harness,
     providerUrl: `http://127.0.0.1:${PROVIDER_PORT}`,
     notes: state.notes,
     async gb(args, opts = {}) {
@@ -208,6 +241,7 @@ function makeBox(state: { gbrainEnv: Record<string, string>; mcp: Parameters<Box
       return Number(r.stdout.trim()) || p.pid!;
     },
     setGbrainEnv(vars) { Object.assign(state.gbrainEnv, vars); },
+    setAgentEnv(vars) { Object.assign(agentEnv, vars); },
     setSilentStdin(on) { state.silent = on; },
     setMcp(m) { state.mcp = m; },
     note(k, v) { state.notes[k] = v; },
@@ -247,14 +281,19 @@ function makeBox(state: { gbrainEnv: Record<string, string>; mcp: Parameters<Box
 
 // ─── Harness invocation ──────────────────────────────────────────────
 
+/** Env a scenario adds to the harness process (Box.setAgentEnv). */
+const agentEnv: Record<string, string> = {};
+
 function harnessEnv(extra: Record<string, string> = {}): Record<string, string> {
-  return { HOME, PATH: `${HOME}/.bun/bin:${HOME}/.local/bin:${BASE_PATH}`, LANG: 'C.UTF-8', TZ: 'UTC', TERM: 'dumb', MCP_TIMEOUT: '120000', DISABLE_AUTOUPDATER: '1', ...extra };
+  return { HOME, PATH: `${HOME}/.bun/bin:${HOME}/.local/bin:${BASE_PATH}`, LANG: 'C.UTF-8', TZ: 'UTC', TERM: 'dumb', MCP_TIMEOUT: '120000', DISABLE_AUTOUPDATER: '1', ...agentEnv, ...extra };
 }
 
-function writeHarnessConfig(harness: Harness, mcp: Parameters<Box['setMcp']>[0] | undefined) {
+function writeHarnessConfig(harness: Harness, mcp: Parameters<Box['setMcp']>[0] | undefined, keepOwn = false) {
   if (harness === 'claude') {
     mkdirp(`${HOME}/.claude`);
-    writeFileSync(`${HOME}/.claude/settings.json`, JSON.stringify({ apiKeyHelper: 'cat /run/keys/anthropic' }, null, 2));
+    const settings = `${HOME}/.claude/settings.json`;
+    const own = keepOwn && existsSync(settings) ? JSON.parse(readFileSync(settings, 'utf8')) as Record<string, unknown> : {};
+    writeFileSync(settings, JSON.stringify({ ...own, apiKeyHelper: 'cat /run/keys/anthropic' }, null, 2));
     owned(`${HOME}/.claude/settings.json`);
     const servers = !mcp ? {} : mcp.kind === 'stdio'
       ? { gbrain: { command: '/usr/local/bin/gbrain', args: mcp.args } }
@@ -264,6 +303,7 @@ function writeHarnessConfig(harness: Harness, mcp: Parameters<Box['setMcp']>[0] 
     owned(`${HOME}/.cat41/mcp.json`);
   } else {
     mkdirp(`${HOME}/.codex`);
+    if (keepOwn) return;
     const lines: string[] = [];
     if (mcp?.kind === 'stdio') lines.push('[mcp_servers.gbrain]', 'command = "/usr/local/bin/gbrain"', `args = ${JSON.stringify(mcp.args)}`, 'startup_timeout_sec = 120', 'tool_timeout_sec = 600');
     if (mcp?.kind === 'http') lines.push('[mcp_servers.gbrain]', `url = ${JSON.stringify(mcp.url)}`, 'bearer_token_env_var = "GBRAIN_MCP_TOKEN"', 'startup_timeout_sec = 120', 'tool_timeout_sec = 600');
@@ -312,7 +352,16 @@ async function main() {
     setup: {}, sessions: [], wrapper_calls: [], provider_requests: [], probe: {}, harness_versions: {},
   };
   const write = () => writeFileSync(`${OUT}/result.json`, JSON.stringify(result, null, 2));
+  captureHarness = process.argv.includes('--fake-harness-provider');
   try {
+    if (captureHarness) {
+      // Smoke: fake keys only, so no request can reach a real provider.
+      process.env.ANTHROPIC_API_KEY = 'sk-ant-cat41-fake';
+      process.env.OPENAI_API_KEY = 'sk-cat41-fake';
+      agentEnv.ANTHROPIC_BASE_URL = `http://127.0.0.1:${PROVIDER_PORT}/anthropic`;
+      agentEnv.OPENAI_BASE_URL = `http://127.0.0.1:${PROVIDER_PORT}/v1`;
+      result.setup.fake_harness_provider = true;
+    }
     // Harness keys arrive as container env; only the harness reads them, from files (claude apiKeyHelper, codex login).
     mkdirp('/run/keys', 'root');
     for (const [file, name] of [['anthropic', 'ANTHROPIC_API_KEY'], ['openai', 'OPENAI_API_KEY']] as const) {
@@ -327,7 +376,10 @@ async function main() {
     }
     startProvider();
     const state = { gbrainEnv: {} as Record<string, string>, mcp: undefined as Parameters<Box['setMcp']>[0] | undefined, notes: result.setup, silent: false };
-    const box = makeBox(state);
+    const box = makeBox(harness, state);
+    const wrapped = scenario.group !== 'install' && !scenario.id.startsWith('docs_');
+    // The wrapper exists before setup, so a scenario's own `gbrain setup --gbrain-bin /usr/local/bin/gbrain` can verify it.
+    if (wrapped) { writeFileSync('/usr/local/bin/gbrain', WRAPPER); chmodSync('/usr/local/bin/gbrain', 0o755); }
     if (harness === 'codex') {
       mkdirp(`${HOME}/.codex`);
       const login = await run(['bash', '-c', 'codex login --with-api-key < /run/keys/openai'], { as: 'agent', env: { HOME } });
@@ -336,29 +388,40 @@ async function main() {
     state.notes.install_spec = arg('install-spec');
     const t0 = Date.now();
     try { await scenario.setup(box); }
-    catch (e) { result.setup_error = (e as Error).message; write(); return; }
+    catch (e) { result.setup_error = (e as Error).message; write(); await finish(); return; }
     result.setup.setup_ms = Date.now() - t0;
     writeFileSync(ENV_FILE, Object.entries(state.gbrainEnv).map(([k, v]) => `${k}=${JSON.stringify(v)}`).join('\n') + '\n');
     chmodSync(ENV_FILE, 0o644);
     if (state.silent) writeFileSync(SILENT_FLAG, '1');
-    if (scenario.id !== 'fresh_install_to_wired_recall' && !scenario.id.startsWith('docs_')) {
-      writeFileSync('/usr/local/bin/gbrain', WRAPPER); chmodSync('/usr/local/bin/gbrain', 0o755);
+    writeHarnessConfig(harness, state.mcp, scenario.wiresHarness === true);
+    if (captureHarness && harness === 'codex') {
+      // Smoke: Codex's built-in provider ignores OPENAI_BASE_URL, so a custom provider points it at the fake one.
+      const cfg = `${HOME}/.codex/config.toml`;
+      const own = existsSync(cfg) ? readFileSync(cfg, 'utf8') : '';
+      writeFileSync(cfg, `model_provider = "cat41fake"\n${own}\n[model_providers.cat41fake]\nname = "cat41 fake"\nbase_url = "http://127.0.0.1:${PROVIDER_PORT}/v1"\nwire_api = "responses"\nenv_key = "OPENAI_API_KEY"\n`);
+      owned(cfg);
+      agentEnv.OPENAI_API_KEY = 'sk-cat41-fake';
     }
-    writeHarnessConfig(harness, state.mcp);
     writeFileSync(CALL_LOG, '');
+    for (const f of readdirSync(LOG_DIR).sort()) if (f.startsWith('hook-')) rmSync(`${LOG_DIR}/${f}`);
     phase = 'session';
 
-    const ctx = { harness, docsBase: arg('docs-base'), installSpec: arg('install-spec'), gbrainRef: arg('gbrain-ref') };
-    const first = await runHarness(harness, model, scenario.prompt(ctx), { index: 1, resumeId: null, useRegistrations: false, mcp: state.mcp, timeoutMs: scenario.timeoutMs });
+    const ctx = { harness, docsBase: arg('docs-base'), installSpec: arg('install-spec'), gbrainRef: arg('gbrain-ref'), nonce: String(state.notes.nonce ?? '') };
+    const own = scenario.wiresHarness === true;
+    // Smoke: only the first model request matters, so a harness that cannot parse the fake reply stops early.
+    if (captureHarness) (scenario as { timeoutMs: number }).timeoutMs = Math.min(scenario.timeoutMs, 120_000);
+    const first = await runHarness(harness, model, scenario.prompt(ctx), { index: 1, resumeId: null, useRegistrations: own, mcp: state.mcp, timeoutMs: scenario.timeoutMs });
     result.sessions.push(first.rec);
     let last = first;
     let index = 1;
     for (const f of (scenario.followups ?? []) as Followup[]) {
-      if (f.when && !f.when(last.finalText, box)) continue;
-      index++;
-      const next = await runHarness(harness, model, f.prompt, { index, resumeId: f.mode === 'resume' ? last.sessionId : null, useRegistrations: f.useHarnessRegistrations === true, mcp: state.mcp, timeoutMs: scenario.timeoutMs });
-      result.sessions.push(next.rec);
-      last = next;
+      for (let sent = 0; sent < (f.max ?? 1); sent++) {
+        if (f.when && !f.when(last.finalText, box)) break;
+        index++;
+        const next = await runHarness(harness, model, f.prompt, { index, resumeId: f.mode === 'resume' ? last.sessionId : null, useRegistrations: own || f.useHarnessRegistrations === true, mcp: state.mcp, timeoutMs: scenario.timeoutMs });
+        result.sessions.push(next.rec);
+        last = next;
+      }
     }
     write();
     // Stop leftover MCP servers the harness started, keep processes the scenario owns (a user's own serve).
@@ -369,6 +432,10 @@ async function main() {
     await run(['bash', '-c', 'pkill -u agent -f "sleep 86400" || true'], { as: 'root' });
     await new Promise(r => setTimeout(r, 1500));
     result.wrapper_calls = readCalls();
+    result.hook_captures = result.wrapper_calls.filter(c => c.argv[0] === 'hook').map(c => ({
+      id: c.id, event: c.argv.find(x => ['session-start', 'user-prompt', 'stop', 'session-end', 'compact'].includes(x)) ?? '', start_ms: c.start_ms, end_ms: c.end_ms, rc: c.exit_code,
+      stdout: existsSync(`${LOG_DIR}/hook-${c.id}.out`) ? readFileSync(`${LOG_DIR}/hook-${c.id}.out`, 'utf8') : '',
+    }));
     try { result.probe = await scenario.probe(box); }
     catch (e) { result.probe = { probe_error: (e as Error).message }; }
     const sess = providerLog.filter(p => p.phase === 'session');
@@ -382,6 +449,11 @@ async function main() {
     result.crash = (e as Error).stack ?? String(e);
   }
   write();
+  await finish();
+}
+
+/** Hand the output to the host user and exit (the fake provider's server would keep the process alive). */
+async function finish(): Promise<never> {
   const hostUid = arg('host-uid', '');
   if (hostUid) await run(['chown', '-R', `${hostUid}:${hostUid}`, OUT], { as: 'root' });
   process.exit(0);

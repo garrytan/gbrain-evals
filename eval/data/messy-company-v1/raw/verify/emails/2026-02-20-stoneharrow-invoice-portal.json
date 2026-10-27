@@ -1,0 +1,122 @@
+{
+  "slug": "emails/2026-02-20-stoneharrow-invoice-portal",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2026-02-20",
+    "owner_phrases": [
+      {
+        "mid": "emails/2026-02-20-stoneharrow-invoice-portal#m1",
+        "phrase": "Felix's account",
+        "lines": [
+          27
+        ]
+      },
+      {
+        "mid": "emails/2026-02-20-stoneharrow-invoice-portal#m2",
+        "phrase": "our Stoneharrow account",
+        "lines": [
+          29
+        ]
+      }
+    ],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Stoneharrow",
+        "line": 6
+      },
+      {
+        "oid": "e2",
+        "surface": "Stoneharrow",
+        "line": 11
+      },
+      {
+        "oid": "e3",
+        "surface": "Stoneharrow",
+        "line": 25
+      },
+      {
+        "oid": "e4",
+        "surface": "Stoneharrow",
+        "line": 29
+      },
+      {
+        "oid": "e5",
+        "surface": "Stoneharrow",
+        "line": 36
+      },
+      {
+        "oid": "e6",
+        "surface": "Stoneharrow Billing",
+        "line": 40
+      },
+      {
+        "oid": "e7",
+        "surface": "Stoneharrow Billing",
+        "line": 44
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "a38e0f3e75af775bd4823624be547679b35989497378de00a448453a9d4837c5",
+  "response_text": "{\n  \"date_used\": \"2026-02-20\",\n  \"owner_phrases\": [\n    {\n      \"mid\": \"emails/2026-02-20-stoneharrow-invoice-portal#m1\",\n      \"refers_to_customer_account\": false,\n      \"accounts\": [],\n      \"reading\": \"not about a customer account (a login, device, HR/expense account, a narrative 'account of', a vendor relationship, an employer)\",\n      \"note\": \"Refers to Pemberline as Felix's account at its vendor Stoneharrow, not a customer account in the reference sheet.\"\n    },\n    {\n      \"mid\": \"emails/2026-02-20-stoneharrow-invoice-portal#m2\",\n      \"refers_to_customer_account\": false,\n      \"accounts\": [],\n      \"reading\": \"not about a customer account (a login, device, HR/expense account, a narrative 'account of', a vendor relationship, an employer)\",\n      \"note\": \"Refers to Pemberline's billing account with vendor Stoneharrow.\"\n    }\n  ],\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"stoneharrow\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"stoneharrow\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"stoneharrow\"\n    },\n    {\n      \"oid\": \"e4\",\n      \"entity\": \"stoneharrow\"\n    },\n    {\n      \"oid\": \"e5\",\n      \"entity\": \"stoneharrow\"\n    },\n    {\n      \"oid\": \"e6\",\n      \"entity\": \"stoneharrow\"\n    },\n    {\n      \"oid\": \"e7\",\n      \"entity\": \"stoneharrow\"\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2026-02-20",
+    "owner_phrases": [
+      {
+        "mid": "emails/2026-02-20-stoneharrow-invoice-portal#m1",
+        "refers_to_customer_account": false,
+        "accounts": [],
+        "reading": "not about a customer account (a login, device, HR/expense account, a narrative 'account of', a vendor relationship, an employer)",
+        "note": "Refers to Pemberline as Felix's account at its vendor Stoneharrow, not a customer account in the reference sheet."
+      },
+      {
+        "mid": "emails/2026-02-20-stoneharrow-invoice-portal#m2",
+        "refers_to_customer_account": false,
+        "accounts": [],
+        "reading": "not about a customer account (a login, device, HR/expense account, a narrative 'account of', a vendor relationship, an employer)",
+        "note": "Refers to Pemberline's billing account with vendor Stoneharrow."
+      }
+    ],
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "stoneharrow"
+      },
+      {
+        "oid": "e2",
+        "entity": "stoneharrow"
+      },
+      {
+        "oid": "e3",
+        "entity": "stoneharrow"
+      },
+      {
+        "oid": "e4",
+        "entity": "stoneharrow"
+      },
+      {
+        "oid": "e5",
+        "entity": "stoneharrow"
+      },
+      {
+        "oid": "e6",
+        "entity": "stoneharrow"
+      },
+      {
+        "oid": "e7",
+        "entity": "stoneharrow"
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 3392,
+    "output_tokens": 400,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.010784
+}

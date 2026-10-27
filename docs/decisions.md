@@ -113,7 +113,8 @@ Every refusal names what happened, why, the exact next command and a read-only c
 
 Codes: `SPEC_INVALID`, `SPEC_MISSING`, `DATASET_MISSING`, `DATASET_HASH_MISMATCH`, `PAID_FLAGS_MISSING`,
 `BUDGET_CAP`, `OVERLAY_FAILED`, `ARM_FAILED`, `ROWS_MISSING`, `SEALED_SOURCE_IN_DEV`, `NOT_YET_AVAILABLE`, and for
-the held-out stage `CUSTODY_MISSING`, `PREREG_UNCOMMITTED`, `UNDERPOWERED`, `SOURCE_EXHAUSTED`. With `--json` the
+the held-out stage `CUSTODY_MISSING`, `PREREG_UNCOMMITTED`, `UNDERPOWERED`, `SOURCE_EXHAUSTED`; the memory-qa runner adds
+`RERANKER_INACTIVE` (the reranker is on but did not run, so the arm stops instead of reporting unreranked results). With `--json` the
 message is printed as an object. Exit code 3 means stop and ask the user; 2 means run the named fix; 4 means the
 verdict is invalid.
 

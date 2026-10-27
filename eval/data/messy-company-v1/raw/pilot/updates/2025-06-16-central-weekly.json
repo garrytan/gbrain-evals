@@ -1,0 +1,37 @@
+{
+  "slug": "updates/2025-06-16-central-weekly",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "3efb03009080d55e90d059012ec7331d8d94a60f7d2ccde9d21bf6936a71721d",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: weekly\nTitle: Central weekly — June 16\nDate: Written on 2025-06-16.\nWriter: Hollis Mbeki\nVoice: formal and careful\nFormat: a weekly update with a section per topic and bullets\nLength: about 464 words\nDate style in the body: ISO (2025-06-02)\nTypos: one or two small natural typos (never in names or required phrases)\n\nBrief:\nHollis's update. Marrow Fieldworks goes live in June 2025. Tansley Parcel discount amendment signed June 10. Tobias is ramping.\n\nRequired phrases:\n- Use the exact phrase \"Tobias's new account\" once, referring to Tansleigh Packaging. This page must not reveal which account that is or who manages it: no account name, location, or detail that identifies it in that sentence or paragraph.\n- Use the exact phrase \"Pree's dealer account\" once, referring to Marrow Fieldworks. Don't put the account's name in the same sentence; the reader should work it out.\n- Use the exact phrase \"the account Pree runs\" once, but vaguely: the writer does not say which account it is, and nothing nearby (name, location, numbers, products) may identify one. Keep that sentence generic, like a passing comment.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Hollis Mbeki: Central team lead\n- Priyanka \"Pree\" Sundaram: Account manager, Central team\n- Tobias Rendle: Account manager, Central team\n- Lev Arkadin: Procurement lead\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Tansley Parcel: regional parcel delivery, South Central; main contact Lev Arkadin, Procurement lead; codes/nicknames TPCL, TP\n- Tansleigh Packaging: corrugated packaging manufacturer, Ohio Valley; codes/nicknames TSP, TP\n- Marrow Fieldworks: agricultural equipment dealer network, Plains; codes/nicknames MFW\n- Marrow Agrisupply: farm supply retail chain, Plains; subsidiary of Marrow Fieldworks; codes/nicknames MAS, Marrow Agri\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2025-06-16 (background only; don't restate unless the brief asks):\n- Tansley Parcel: managed by Priyanka \"Pree\" Sundaram\n- Tansleigh Packaging: not stated on any shared page (do not say who manages it)\n- Marrow Fieldworks: managed by Priyanka \"Pree\" Sundaram\n- Marrow Agrisupply: managed by Central team (pooled account)",
+      "response_text": "# Central weekly — June 16\n\n- **Written:** 2025-06-16\n- **Author:** Hollis Mbeki\n- **Scope:** Central team priorities, implementation readiness, and documentation discipline.\n\n## Summary\n\n- The principal items this week are the June go-live for Marrow Fieldworks, the signed discount amendment for Tansley Parcel, and Tobias Rendle’s continued ramp. Please keep these as separate workstreams in weekly reporting; progress on one should not be used as evidence of progress on another.\n- This update distinguishes confirmed milestones from follow-up work. Where a date or outcome has not been confirmed, the notes should say so rather than imply that an internal target is a customer commitment.\n- Please carry unresolved items forward explicitly. A shorter update is useful only if it still preserves the questions that require attention.\n\n## Marrow Fieldworks — June go-live\n\n- Marrow Fieldworks goes live in June 2025. The month is the confirmed timing for this update; I am not recording a specific go-live day here.\n- Readiness for Pree's dealer account remains a priority. Please keep the remaining preparation visible and distinguish essential launch work from improvements that can be considered afterward.\n- For the next readiness review, bring a concise list of open questions, the next action for each, and any dependencies requiring coordination. Avoid broad statements such as “all set” unless the supporting checks are recorded.\n- Customer-facing material should remain consistent with the implementation record. If the wording changes, please update the relevant notes rather than leaving competing versions in circulation.\n\n## Tansley Parcel — discount amendment\n\n- The Tansley Parcel discount amendment was signed on 2025-06-10. This is the confirmed milestone to use in subsequent updates.\n- Please reference the signed amendment when checking related documentation. Do not infer a discount percentage, a revised price, or additional commercial changes from the signature milestone alone.\n- Keep any administrative follow-up separate from the status of the amendment itself. A signed document and completed downstream processing are different statements, and our notes should preserve that distinction.\n- Where a question remains, capture it precisely before requesting clarification. This will help avoid repeated exchanges based on slightly different interpretations of the same issue.\n\n## Ramp and support\n\n- Tobias Rendle is ramping. The emphasis should remain on repeatable working habits: clear notes, timely questions, and a reliable distinction between confirmed information and assumptions.\n- Tobias's new account should be discussed through the appropriate internal channels, with shared updates limited to what is necessary.\n- Please make room for questions during the ramp rather than treating uncertainty as a reporting failure. Early clarification is preferable to confident but unsupported language.\n\n## General housekeeping\n\n- Please check shared summaries for consistnecy before posting. Account names should be written in full where abbreviations could cause confusion.\n- A brief check-in on the account Pree runs would be useful.\n- Keep routine follow-up concise, respectful, and explicit about the next action.",
+      "usage": {
+        "input_tokens": 1050,
+        "output_tokens": 679,
+        "thinking_tokens": 69
+      },
+      "cost_usd": 0.00889,
+      "provider_meta": {
+        "id": "resp_032e9cc63b9ca955016acfad9186d087d187013d3239f5e518",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1050,
+          "input_tokens_details": {
+            "cache_write_tokens": 0,
+            "cached_tokens": 1047
+          },
+          "output_tokens": 679,
+          "output_tokens_details": {
+            "reasoning_tokens": 69
+          },
+          "total_tokens": 1729
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

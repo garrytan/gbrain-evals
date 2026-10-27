@@ -1,0 +1,87 @@
+{
+  "slug": "contracts/2026-09-22-qfl-a3",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2026-09-22",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Quarrendon",
+        "line": 7
+      },
+      {
+        "oid": "e2",
+        "surface": "Quarrendon Freight Lines",
+        "line": 15
+      },
+      {
+        "oid": "e3",
+        "surface": "Quarrendon Freight Lines",
+        "line": 33
+      },
+      {
+        "oid": "e4",
+        "surface": "Quarrendon Freight Lines",
+        "line": 54
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": [],
+    "record": {
+      "question": "Is this document signed, an unsigned version, or a draft? Judge from the body text, not the title alone. Give its signed date and effective date if stated, and the value of each of these terms it sets.",
+      "terms": [
+        "seats"
+      ]
+    }
+  },
+  "prompt_user_sha256": "3f407b8d3cb1823e926ea64d82a4e3db49310885f0664e546f72217926d38333",
+  "response_text": "{\n  \"date_used\": \"2026-09-22\",\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"quarrendon\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"quarrendon\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"quarrendon\"\n    },\n    {\n      \"oid\": \"e4\",\n      \"entity\": \"quarrendon\"\n    }\n  ],\n  \"record\": {\n    \"status\": \"signed\",\n    \"status_evidence_line\": 49,\n    \"signed_date\": \"2026-09-22\",\n    \"effective_date\": \"2027-01-01\",\n    \"terms\": [\n      {\n        \"term\": \"seats\",\n        \"applies_to\": [\n          \"quarrendon\"\n        ],\n        \"value\": \"230 seats\",\n        \"line\": 21\n      }\n    ],\n    \"deciding_line\": null,\n    \"deciding_days\": null\n  }\n}",
+  "parsed": {
+    "date_used": "2026-09-22",
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "quarrendon"
+      },
+      {
+        "oid": "e2",
+        "entity": "quarrendon"
+      },
+      {
+        "oid": "e3",
+        "entity": "quarrendon"
+      },
+      {
+        "oid": "e4",
+        "entity": "quarrendon"
+      }
+    ],
+    "record": {
+      "status": "signed",
+      "status_evidence_line": 49,
+      "signed_date": "2026-09-22",
+      "effective_date": "2027-01-01",
+      "terms": [
+        {
+          "term": "seats",
+          "applies_to": [
+            "quarrendon"
+          ],
+          "value": "230 seats",
+          "line": 21
+        }
+      ],
+      "deciding_line": null,
+      "deciding_days": null
+    }
+  },
+  "usage": {
+    "input_tokens": 3684,
+    "output_tokens": 283,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.010198
+}

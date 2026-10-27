@@ -1,0 +1,70 @@
+{
+  "slug": "updates/2026-06-22-coastal-weekly",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2026-06-22",
+    "owner_phrases": [
+      {
+        "mid": "updates/2026-06-22-coastal-weekly#m1",
+        "phrase": "Bettina's grocery account",
+        "lines": [
+          10
+        ]
+      },
+      {
+        "mid": "updates/2026-06-22-coastal-weekly#m2",
+        "phrase": "Kwame's port account",
+        "lines": [
+          12
+        ]
+      }
+    ],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Saltmarsh Provisions",
+        "line": 10
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "7ab003f88483954ad10c2c32c27e976053ca04b7a08f808017c3d47c8579f923",
+  "response_text": "{\n  \"date_used\": \"2026-06-22\",\n  \"owner_phrases\": [\n    {\n      \"mid\": \"updates/2026-06-22-coastal-weekly#m1\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\n        \"saltmarsh\"\n      ],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"Bettina Kroll is the primary owner of Saltmarsh Provisions (descriptor: grocery), which is also explicitly named in the preceding sentence.\"\n    },\n    {\n      \"mid\": \"updates/2026-06-22-coastal-weekly#m2\",\n      \"refers_to_customer_account\": false,\n      \"accounts\": [],\n      \"reading\": \"ambiguous: could be more than one account\",\n      \"note\": \"On 2026-06-22, Kwame Adjei-Rowe is the primary owner of both Pellucid Harbor Logistics and Driftmoor Marine Freight, both of which have the 'port' descriptor, and nothing on the page disambiguates them.\"\n    }\n  ],\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"saltmarsh\"\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2026-06-22",
+    "owner_phrases": [
+      {
+        "mid": "updates/2026-06-22-coastal-weekly#m1",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "saltmarsh"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "Bettina Kroll is the primary owner of Saltmarsh Provisions (descriptor: grocery), which is also explicitly named in the preceding sentence."
+      },
+      {
+        "mid": "updates/2026-06-22-coastal-weekly#m2",
+        "refers_to_customer_account": false,
+        "accounts": [],
+        "reading": "ambiguous: could be more than one account",
+        "note": "On 2026-06-22, Kwame Adjei-Rowe is the primary owner of both Pellucid Harbor Logistics and Driftmoor Marine Freight, both of which have the 'port' descriptor, and nothing on the page disambiguates them."
+      }
+    ],
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "saltmarsh"
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2710,
+    "output_tokens": 330,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.00872
+}

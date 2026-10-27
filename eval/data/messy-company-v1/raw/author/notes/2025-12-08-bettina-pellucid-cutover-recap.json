@@ -1,0 +1,41 @@
+{
+  "slug": "notes/2025-12-08-bettina-pellucid-cutover-recap",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: note\nTitle: Pellucid cutover recap (belated)\nDate: Written on 2025-12-08.\nWriter: Bettina Kroll\nVoice: chatty, a bit rambling\nFormat: undefined\nLength: about -32 words\nDate style in the body: undefined\nTypos: a few natural typos and one or two sloppy abbreviations (never in names or required phrases)\n\nBrief:\nBettina's belated recap: even though the official handoff was November 3, she kept running Pellucid day to day through November 21 to get the terminal cutover done, and Kwame fully took over on November 22.\n\nRequired phrases:\n- Use the exact phrase \"Kwame's Gulf Coast account\" once, referring to Pellucid Harbor Logistics. Don't put the account's name in the same sentence; the reader should work it out.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Bettina Kroll: Coastal team lead\n- Sofia Marchetti: Account manager, Coastal team\n- Kwame Adjei-Rowe: Account manager, Coastal team\n- Corinne Ashdown: VP Operations\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Pellucid Harbor Logistics: port drayage and terminal logistics, Gulf Coast; codes/nicknames PHL\n- Driftmoor Marine Freight: marine freight and barge operator, Puget Sound; codes/nicknames DMF\n- Saltmarsh Provisions: regional grocery distributor, Lowcountry; main contact Corinne Ashdown, VP Operations; codes/nicknames SMP\n- Covey & Lark Retail: home goods retailer, Mid-Atlantic; codes/nicknames Covey, CLR\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2025-12-08 (background only; don't restate unless the brief asks):\n- Pellucid Harbor Logistics: managed by Kwame Adjei-Rowe\n- Driftmoor Marine Freight: managed by Kwame Adjei-Rowe\n- Saltmarsh Provisions: managed by Bettina Kroll\n- Covey & Lark Retail: managed by Sofia Marchetti",
+      "response_text": "# Pellucid cutover recap (belated)\n\n**Date:** 2025-12-08  \n**Author:** Bettina Kroll\n\nOkay I know I owed everyone this note weeks ago, sorry!! Things went sideways right before the holiday and I just kept forgetting to paste my scratchpad into the wiki. \n\nAnyway, just for the historical record on Pellucid Harbor Logistics: even though the official handoff was November 3, I actually kept running PHL day to day through November 21 just to get the terminal cutover across the finish line without muddying the waters mid-migration. Their night dispatcher Hector at the Beaumont barge slip was panicking abt how Pemberline Dock handles chassis pool holds on double-booked gates (ticket #PD-8841 if anyone cares to look at the screenshots, total mess on Gate 4B), and it made zero sense to make them re-explain their weird drayage workarounds to a new face four days before go-live. Plus we still had that lingering CSV import bug on the Berth 2 yard map that neededbabysitting during the 04:00 shift change.\n\nOnce the Friday afternoon drayage wave cleared on Nov 21 and the terminal supervisor signed off on the gate kiosk feeds, I stepped out of the daily standups. Kwame Adjei-Rowe fully took over on November 22. It is officially Kwame's Gulf Coast account now, and he's already dealing with their container yard expansion questions for Q1—honestly glad that's off my plate lol. I muted the #phl-cutover-war-room channel this morning, so ping Kwame if Hector starts emailing about the Gate 4B printer mapping again!",
+      "usage": {
+        "input_tokens": 1147,
+        "output_tokens": 376,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.006054,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1147,
+          "candidatesTokenCount": 376,
+          "totalTokenCount": 1523,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1147
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 376
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

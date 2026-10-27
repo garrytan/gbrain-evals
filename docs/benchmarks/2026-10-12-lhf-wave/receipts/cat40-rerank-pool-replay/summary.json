@@ -1,0 +1,293 @@
+{
+  "schema": "cat40-rerank-pool-replay-v1-summary",
+  "calls": {
+    "planned": 1030,
+    "recorded": 1030,
+    "excluded_op_error_both": 0,
+    "missing_pairs": 0,
+    "missing_pair_examples": []
+  },
+  "arms": {
+    "25": {
+      "calls": 1030,
+      "ok": 1030,
+      "op_error": 0,
+      "harness_error": 0,
+      "rerank_failed": 0,
+      "rerank_missing": 0,
+      "rerank_tokens": 2609230,
+      "rerank_est_tokens": 2265091,
+      "embedding_tokens": 0,
+      "reused_calls": 0,
+      "refused_routes": 0,
+      "gold_calls": 966,
+      "gold_hit5": 0.3696,
+      "complete": true,
+      "valid": true,
+      "invalid_reasons": []
+    },
+    "50": {
+      "calls": 1030,
+      "ok": 1030,
+      "op_error": 0,
+      "harness_error": 0,
+      "rerank_failed": 0,
+      "rerank_missing": 0,
+      "rerank_tokens": 4786415,
+      "rerank_est_tokens": 4136718,
+      "embedding_tokens": 9454,
+      "reused_calls": 0,
+      "refused_routes": 0,
+      "gold_calls": 966,
+      "gold_hit5": 0.3789,
+      "complete": true,
+      "valid": true,
+      "invalid_reasons": []
+    }
+  },
+  "comparison_valid": true,
+  "top20_overlap": {
+    "n": 1030,
+    "mean": 0.772,
+    "min": 0.2,
+    "p10": 0.55,
+    "p25": 0.65,
+    "median": 0.8,
+    "identical": 96,
+    "buckets": {
+      "1.0": 96,
+      "0.90-0.99": 211,
+      "0.75-0.89": 358,
+      "0.50-0.74": 320,
+      "<0.50": 45
+    }
+  },
+  "pool_rows_26_50": {
+    "calls_with_pool_over_25": 1030,
+    "calls_where_any_entered_top20": 933,
+    "rate": 0.9058,
+    "rows_entered": 4211,
+    "mean_rows_entered_per_deep_call": 4.0883,
+    "arm25_rows_from_26_50_in_top20": 42
+  },
+  "prefix": {
+    "checked": 1030,
+    "verified": 1030,
+    "unmapped_docs": 0
+  },
+  "gold_hit5": {
+    "paired_calls": 966,
+    "arm50": 0.3789,
+    "arm25": 0.3696,
+    "discordant": {
+      "arm25_only": 1,
+      "arm50_only": 10
+    },
+    "difference_25_minus_50": {
+      "estimate": -0.009317,
+      "lower_95_one_sided": -0.015528,
+      "resamples": 10000,
+      "seed": 1,
+      "n": 966
+    },
+    "margin": -0.01,
+    "verdict": "inconclusive"
+  },
+  "by_family": {
+    "H1": {
+      "calls": 128,
+      "gold_calls": 128,
+      "hit5_50": 0.0703,
+      "hit5_25": 0.0781,
+      "mean_overlap": 0.6961,
+      "entered_rate_50": 0.8672
+    },
+    "H2": {
+      "calls": 166,
+      "gold_calls": 166,
+      "hit5_50": 0.2289,
+      "hit5_25": 0.2048,
+      "mean_overlap": 0.811,
+      "entered_rate_50": 0.8735
+    },
+    "H3": {
+      "calls": 435,
+      "gold_calls": 435,
+      "hit5_50": 0.5448,
+      "hit5_25": 0.5356,
+      "mean_overlap": 0.7739,
+      "entered_rate_50": 0.9057
+    },
+    "H4": {
+      "calls": 237,
+      "gold_calls": 237,
+      "hit5_50": 0.346,
+      "hit5_25": 0.3376,
+      "mean_overlap": 0.7618,
+      "entered_rate_50": 0.9409
+    },
+    "H5": {
+      "calls": 64,
+      "gold_calls": 0,
+      "hit5_50": null,
+      "hit5_25": null,
+      "mean_overlap": 0.8477,
+      "entered_rate_50": 0.9375
+    }
+  },
+  "upstream": "forward",
+  "fixture": false,
+  "gbrain_commit": "f77f1418caedc2f521e30ba14040134d09310a49",
+  "search_mode": "tokenmax",
+  "counted": true,
+  "stop_reason": null,
+  "slot_commit": "f77f1418caedc2f521e30ba14040134d09310a49",
+  "slot_dir": "<work>/cat40/gbrain/slots-f77f1418caed-6f08629e",
+  "gbrain_version": "0.60.180.0",
+  "gbrain_tree": "585e2fbf12a5809eefb26e2e39785f01c2284a3d",
+  "evals_commit": "cae2b1a62050a6b9cf1a22dfe028558058fa8d51",
+  "world": {
+    "path": "eval/reports/cat40/hard-confirm/main/world/world.json",
+    "digest": "6f08629ed86f8913152d562820088ba914fd6862bb48c7836b866ad363388f78",
+    "docs": 55838,
+    "fixture_of": null
+  },
+  "transcripts": "docs/benchmarks/2026-10-10-model-ladder-hard-confirmation/main-cells/transcripts.jsonl.gz",
+  "label": "gbrain-hard",
+  "calls_recorded": 1030,
+  "calls_with_gold": 966,
+  "arm_config": {
+    "25": [
+      [
+        "search.mode",
+        "tokenmax"
+      ],
+      [
+        "search.reranker.enabled",
+        "true"
+      ],
+      [
+        "search.cache.enabled",
+        "false"
+      ],
+      [
+        "search.reranker.timeout_ms",
+        "15000"
+      ],
+      [
+        "search.reranker.top_n_in",
+        "25"
+      ]
+    ],
+    "50": [
+      [
+        "search.mode",
+        "tokenmax"
+      ],
+      [
+        "search.reranker.enabled",
+        "true"
+      ],
+      [
+        "search.cache.enabled",
+        "false"
+      ],
+      [
+        "search.reranker.timeout_ms",
+        "15000"
+      ],
+      [
+        "search.reranker.top_n_in",
+        "50"
+      ]
+    ]
+  },
+  "modes_digest": {
+    "25": "b0ff2ec3d77fe6bf",
+    "50": "6319db99475b50c6"
+  },
+  "reuse": {
+    "requested": true,
+    "audit_calls": 20,
+    "enabled": false,
+    "audits": [
+      {
+        "key": "25:claude-sonnet-5-5|gbrain-hard|H2-01|0#1#4",
+        "agreed": true,
+        "max_abs_score_diff": 0
+      },
+      {
+        "key": "25:claude-sonnet-5-5|gbrain-hard|H2-01|0#1#5",
+        "agreed": true,
+        "max_abs_score_diff": 0
+      },
+      {
+        "key": "25:claude-sonnet-5-5|gbrain-hard|H2-01|0#1#17",
+        "agreed": true,
+        "max_abs_score_diff": 0
+      },
+      {
+        "key": "25:claude-opus-5-5|gbrain-hard|H3-01|0#1#0",
+        "agreed": true,
+        "max_abs_score_diff": 0
+      },
+      {
+        "key": "25:claude-opus-5-5|gbrain-hard|H3-01|0#1#1",
+        "agreed": false,
+        "max_abs_score_diff": 0
+      }
+    ],
+    "reused": 0,
+    "disabled_reason": "audit 25:claude-opus-5-5|gbrain-hard|H3-01|0#1#1: a reused 25-document answer ordered documents differently from the provider's own answer"
+  },
+  "chunk_index_size": 78487,
+  "fixture_build": null,
+  "estimate": {
+    "calls": 1030,
+    "requests_per_call": 1,
+    "docs_per_request": {
+      "arm50": 50,
+      "arm25": 0
+    },
+    "reuse": true,
+    "tokens_per_doc": 221,
+    "rerank_tokens": 11955056,
+    "embedding_tokens": 11059,
+    "rerank_usd_per_mtok": 0.05,
+    "embedding_usd_per_mtok": 0.13,
+    "replay_usd": 0.5992,
+    "replay_worst_usd": 1.7547,
+    "slot_build_usd": 2.5958,
+    "slot_build_measured_usd": 2.736,
+    "total_usd": 3.3352,
+    "basis": "voyage:rerank-2.5 $0.05/M tokens and openai:text-embedding-3-large $0.13/M (budget-ledger.ts prices); 4 characters per token; 1 rerank requests per call; slot build measured on this world at gbrain 3e4ff61 (docs/benchmarks/2026-10-10-model-ladder-hard-confirmation/main-slots)"
+  },
+  "cost": {
+    "usd": 0.371011,
+    "input_tokens": 7405099,
+    "output_tokens": 0,
+    "basis": "budget ledger cat40-rerank-pool-replay-2026-10-12T21-51-40-969Z-5a989c5a: 3042 paid requests, 0 charged at their reservation because usage was unavailable",
+    "ledger": "<work>/lhf/ledger.sqlite",
+    "program_cap_usd": 30,
+    "overshoot_usd": 0.002522,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 0,
+      "max": 2819.4
+    }
+  },
+  "budget_run_id": "cat40-rerank-pool-replay-2026-10-12T21-51-40-969Z-5a989c5a",
+  "argv": [
+    "--gbrain-repo",
+    "../gbrain",
+    "--gbrain-ref",
+    "f77f1418caedc2f521e30ba14040134d09310a49",
+    "--budget-usd",
+    "1",
+    "--budget-ledger",
+    "<work>/lhf/ledger.sqlite",
+    "--out",
+    "eval/reports/cat40/rerank-pool-replay/run"
+  ],
+  "finished_at": "2026-10-12T22:16:28.292Z"
+}

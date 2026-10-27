@@ -1,0 +1,41 @@
+{
+  "slug": "tickets/2025-11-21-phl-terminal-cutover-issue",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: ticket\nTitle: SUP-4512: gate events missing after cutover\nDate: Written on 2025-11-21.\nWriter: Kwame Adjei-Rowe\nVoice: terse and practical\nFormat: a ticket with a fields table and a timestamped update log\nLength: about 273 words\nDate style in the body: day-month (2 Jun 2025)\nTypos: a few natural typos and one or two sloppy abbreviations (never in names or required phrases)\n\nBrief:\nTicket for Pellucid gate events missing after the terminal cutover.\n\nUse these names or codes at least once each, as written: \"PHL\".\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Bettina Kroll: Coastal team lead\n- Sofia Marchetti: Account manager, Coastal team\n- Kwame Adjei-Rowe: Account manager, Coastal team\n- Corinne Ashdown: VP Operations\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Pellucid Harbor Logistics: port drayage and terminal logistics, Gulf Coast; codes/nicknames PHL\n- Driftmoor Marine Freight: marine freight and barge operator, Puget Sound; codes/nicknames DMF\n- Saltmarsh Provisions: regional grocery distributor, Lowcountry; main contact Corinne Ashdown, VP Operations; codes/nicknames SMP\n- Covey & Lark Retail: home goods retailer, Mid-Atlantic; codes/nicknames Covey, CLR\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2025-11-21 (background only; don't restate unless the brief asks):\n- Pellucid Harbor Logistics: managed by Kwame Adjei-Rowe\n- Driftmoor Marine Freight: managed by Kwame Adjei-Rowe\n- Saltmarsh Provisions: managed by Bettina Kroll\n- Covey & Lark Retail: managed by Sofia Marchetti",
+      "response_text": "# SUP-4512: gate events missing after cutover\n\n| Field | Value |\n| :--- | :--- |\n| **Ticket ID** | SUP-4512 |\n| **Account** | Pellucid Harbor Logistics (PHL) |\n| **Product** | Pemberline Dock |\n| **Component** | Gate Kiosk / OCR Webhook |\n| **Severity** | Sev 2 |\n| **Created** | 21 Nov 2025 |\n| **Status** | Investigating |\n\n### Description\nPost-cutover at Terminal 4 (Bayou East), inbound gate events aren't populating on the yard board. Drivers scan in at Lanes 1–3, barrier arm lifts, but Pemberline Dock never registers the `GATE_IN` payload. Yard clerks are manually assigning doors off paper slips. Started right after the 04:00 cutover window on 21 Nov 2025.\n\n### Update Log\n\n**21 Nov 2025 06:42 CST**\nOpened ticket after call w/ Raylene (night shift lead at PHL). 14 drayage trucks stuck in `EXPECTED` status despite already sitting at Doors 12–26. Grabbed sample chassis IDs (`PHLZ-409182`, `TRLU-882104`) to trace.\n\n**21 Nov 2025 07:15 CST**\nChecked ingest logs. Payloads from the terminal OCR rig are hitting the endpoint, throwing `422 Unprocessable Entity`. Looks like the new terminal controller sends lane IDs as `T4-LN01` instead of the legacy `LN1` string. Dock parser drops the whole event when lane lookup fails.\n\n**21 Nov 2025 08:05 CST**\nPinged Odile Brandt at Carrowmere Cloud just to rule out edge gateway caching from the maintenance window—she confirmed traffic is passing thru clean, def an app-side mapping mismatch on our end.\n\n**21 Nov 2025 08:30 CST**\nUploaded hotfix alias table to staging (`t4_lane_map_v2.json`). Tested w/ three replay payloads from 05:30; all flipped to `YARD_CHECKED` cleanly. Waiting on PHL local IT to approve prod push before the 10:00 vessel discharge rush starts.",
+      "usage": {
+        "input_tokens": 1103,
+        "output_tokens": 534,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.007546,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1103,
+          "candidatesTokenCount": 534,
+          "totalTokenCount": 1637,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1103
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 534
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

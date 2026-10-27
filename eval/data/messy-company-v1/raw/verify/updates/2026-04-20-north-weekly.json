@@ -1,0 +1,126 @@
+{
+  "slug": "updates/2026-04-20-north-weekly",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2026-04-20",
+    "owner_phrases": [
+      {
+        "mid": "updates/2026-04-20-north-weekly#m1",
+        "phrase": "Dana's renewal",
+        "lines": [
+          17
+        ]
+      },
+      {
+        "mid": "updates/2026-04-20-north-weekly#m2",
+        "phrase": "Marcus's textile account",
+        "lines": [
+          25
+        ]
+      }
+    ],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Tamsin Cold Chain",
+        "line": 15
+      },
+      {
+        "oid": "e2",
+        "surface": "Tamsin Cold Chain",
+        "line": 17
+      },
+      {
+        "oid": "e3",
+        "surface": "TCC",
+        "line": 19
+      },
+      {
+        "oid": "e4",
+        "surface": "Thornbury Cloth Co.",
+        "line": 22
+      },
+      {
+        "oid": "e5",
+        "surface": "Thornbury Cloth Co.",
+        "line": 24
+      },
+      {
+        "oid": "e6",
+        "surface": "Orrin Mills",
+        "line": 24
+      },
+      {
+        "oid": "e7",
+        "surface": "Orrin Mills",
+        "line": 26
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "d30bb7fa0589a9fd846967ee000e538f3d9e22241a236759331b917bdab5809e",
+  "response_text": "{\n  \"date_used\": \"2026-04-20\",\n  \"owner_phrases\": [\n    {\n      \"mid\": \"updates/2026-04-20-north-weekly#m1\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\n        \"tamsin\"\n      ],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"Refers to Tamsin Cold Chain's renewal, which is stated in the immediately preceding sentence and owned by Dana Okafor.\"\n    },\n    {\n      \"mid\": \"updates/2026-04-20-north-weekly#m2\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\n        \"orrin\"\n      ],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"Marcus Lindqvist owns Thornbury Cloth Co. (orrin), which is his only textile account and the subject of the section.\"\n    }\n  ],\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"tamsin\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"tamsin\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"tamsin\"\n    },\n    {\n      \"oid\": \"e4\",\n      \"entity\": \"orrin\"\n    },\n    {\n      \"oid\": \"e5\",\n      \"entity\": \"orrin\"\n    },\n    {\n      \"oid\": \"e6\",\n      \"entity\": \"orrin\"\n    },\n    {\n      \"oid\": \"e7\",\n      \"entity\": \"orrin\"\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2026-04-20",
+    "owner_phrases": [
+      {
+        "mid": "updates/2026-04-20-north-weekly#m1",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "tamsin"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "Refers to Tamsin Cold Chain's renewal, which is stated in the immediately preceding sentence and owned by Dana Okafor."
+      },
+      {
+        "mid": "updates/2026-04-20-north-weekly#m2",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "orrin"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "Marcus Lindqvist owns Thornbury Cloth Co. (orrin), which is his only textile account and the subject of the section."
+      }
+    ],
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "tamsin"
+      },
+      {
+        "oid": "e2",
+        "entity": "tamsin"
+      },
+      {
+        "oid": "e3",
+        "entity": "tamsin"
+      },
+      {
+        "oid": "e4",
+        "entity": "orrin"
+      },
+      {
+        "oid": "e5",
+        "entity": "orrin"
+      },
+      {
+        "oid": "e6",
+        "entity": "orrin"
+      },
+      {
+        "oid": "e7",
+        "entity": "orrin"
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 3398,
+    "output_tokens": 462,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.011416
+}

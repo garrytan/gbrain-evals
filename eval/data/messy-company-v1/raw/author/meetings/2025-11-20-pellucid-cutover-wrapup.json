@@ -1,0 +1,41 @@
+{
+  "slug": "meetings/2025-11-20-pellucid-cutover-wrapup",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: meeting\nTitle: Pellucid cutover wrap-up\nDate: Written on 2025-11-20.\nWriter: Bettina Kroll\nVoice: dry and slightly sarcastic\nFormat: meeting notes with attendees, bullets and action items\nLength: about -14 words\nDate style in the body: undefined\nTypos: none\n\nBrief:\nBettina's notes from the cutover wrap-up meeting; Kwame attended.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Bettina Kroll: Coastal team lead\n- Sofia Marchetti: Account manager, Coastal team\n- Kwame Adjei-Rowe: Account manager, Coastal team\n- Corinne Ashdown: VP Operations\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Pellucid Harbor Logistics: port drayage and terminal logistics, Gulf Coast; codes/nicknames PHL\n- Driftmoor Marine Freight: marine freight and barge operator, Puget Sound; codes/nicknames DMF\n- Saltmarsh Provisions: regional grocery distributor, Lowcountry; main contact Corinne Ashdown, VP Operations; codes/nicknames SMP\n- Covey & Lark Retail: home goods retailer, Mid-Atlantic; codes/nicknames Covey, CLR\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2025-11-20 (background only; don't restate unless the brief asks):\n- Pellucid Harbor Logistics: managed by Kwame Adjei-Rowe\n- Driftmoor Marine Freight: managed by Kwame Adjei-Rowe\n- Saltmarsh Provisions: managed by Bettina Kroll\n- Covey & Lark Retail: managed by Sofia Marchetti",
+      "response_text": "# Pellucid cutover wrap-up\n**Date:** November 20, 2025  \n**Attendees:** Kwame Adjei-Rowe, Bettina Kroll\n\n## Notes\n* Pellucid Harbor Logistics (PHL) went live on Pemberline Dock across the East Barge Terminal gates at 04:00 CST. Nobody set anything on fire, which passes for a miracle on the Gulf Coast.\n* First-shift drayage drivers managed to check in at Gate 4 without calling dispatch to complain about the kiosk font size. \n* One hiccup on the 06:30 chassis pool import: the CSV parser choked on a stray carriage return from their legacy yard system, leaving six containers stuck in \"Pending Arrival\" status at Door 12. Kwame cleared the queue manually while drinking lukewarm coffee.\n* Terminal clerks are still printing the `Daily_Yard_Sweep_v2` report to PDF and highlighting it by hand, because old habits die hard, but at least they are pulling it from Pemberline Dock now.\n\n## Action Items\n* **Kwame:** Send the updated Gate 4 barcode scanner cheat sheet to the PHL night-shift supervisor before the 18:00 handoff.\n* **Bettina:** Nag engineering on ticket `PD-8841` so the CSV importer stops fainting every time it sees a trailing space.\n* **Kwame:** Archive the cutover bridge channel on Friday if the Thursday night drayage surge doesn't break the berth scheduler.",
+      "usage": {
+        "input_tokens": 1050,
+        "output_tokens": 334,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.00544,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1050,
+          "candidatesTokenCount": 334,
+          "totalTokenCount": 1384,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1050
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 334
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

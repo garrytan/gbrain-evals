@@ -1,0 +1,7 @@
+# The harness's grading image with no root-owned files left in the bind-mounted repository.
+# Both containers run as root; on Linux, the .pyc files and pytest cache that pytest writes into
+# the mounted checkout are then owned by root, and the harness's next shutil.rmtree of that
+# checkout (as the invoking user) fails with "Permission denied" before grading finishes.
+FROM sdebench-harness-base
+ENV PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS="-p no:cacheprovider"
+WORKDIR /work

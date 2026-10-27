@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "experiments": [
+    {
+      "id": "wave5-d6-proactive-brief-dev",
+      "preregistration": "docs/benchmarks/2026-10-14-proactive-brief-dev-preregistration.md",
+      "results": [
+        "docs/benchmarks/2026-10-14-proactive-brief-dev/**",
+        "docs/benchmarks/2026-10-14-proactive-brief-dev.md"
+      ]
+    }
+  ]
+}

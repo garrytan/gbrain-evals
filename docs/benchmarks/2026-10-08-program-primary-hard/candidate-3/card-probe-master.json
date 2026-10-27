@@ -1,0 +1,708 @@
+{
+ "gbrain": {
+  "ref": "dda603ac",
+  "commit": "dda603ac9e152be45afd6f4edd3789bc11e000b8",
+  "tree": "4d3f4292cb9dc69586c6b3ed8d31be6c78383cc2",
+  "version": "0.60.130.0",
+  "merge": null
+ },
+ "seeds": [
+  20261101,
+  20261102,
+  20261103,
+  20261104,
+  20261105,
+  20261106,
+  20261107,
+  20261108
+ ],
+ "tasks": 24,
+ "tally": {
+  "name": {
+   "call": 0,
+   "hop": 24,
+   "handoff": 24,
+   "reschedule": 24
+  },
+  "code": {
+   "call": 0,
+   "hop": 0,
+   "handoff": 24,
+   "reschedule": 24
+  }
+ },
+ "rows": [
+  {
+   "persona": "h20261101",
+   "task": "h20261101-t1",
+   "form": "name",
+   "entities": "Elodie Udeh, Yarithe Retail",
+   "ms": 912,
+   "chars": 11845,
+   "present": {
+    "call": false,
+    "hop": true,
+    "handoff": true,
+    "reschedule": true
+   }
+  },
+  {
+   "persona": "h20261101",
+   "task": "h20261101-t1",
+   "form": "code",
+   "entities": "Elodie Udeh, YAR",
+   "ms": 523,
+   "chars": 5928,
+   "present": {
+    "call": false,
+    "hop": false,
+    "handoff": true,
+    "reschedule": true
+   }
+  },
+  {
+   "persona": "h20261102",
+   "task": "h20261102-t1",
+   "form": "name",
+   "entities": "Felix Mehta, Gralonex Robotics",
+   "ms": 1447,
+   "chars": 10009,
+   "present": {
+    "call": false,
+    "hop": true,
+    "handoff": true,
+    "reschedule": true
+   }
+  },
+  {
+   "persona": "h20261101",
+   "task": "h20261101-t2",
+   "form": "name",
+   "entities": "Bram Castellan, Ondrenza Logistics",
+   "ms": 786,
+   "chars": 11618,
+   "present": {
+    "call": false,
+    "hop": true,
+    "handoff": true,
+    "reschedule": true
+   }
+  },
+  {
+   "persona": "h20261101",
+   "task": "h20261101-t2",
+   "form": "code",
+   "entities": "Bram Castellan, ONL",
+   "ms": 272,
+   "chars": 6325,
+   "present": {
+    "call": false,
+    "hop": false,
+    "handoff": true,
+    "reschedule": true
+   }
+  },
+  {
+   "persona": "h20261102",
+   "task": "h20261102-t1",
+   "form": "code",
+   "entities": "Felix Mehta, GRR",
+   "ms": 436,
+   "chars": 5672,
+   "present": {
+    "call": false,
+    "hop": false,
+    "handoff": true,
+    "reschedule": true
+   }
+  },
+  {
+   "persona": "h20261103",
+   "task": "h20261103-t1",
+   "form": "name",
+   "entities": "Mira Morales, Orvoria Energy",
+   "ms": 1299,
+   "chars": 11244,
+   "present": {
+    "call": false,
+    "hop": true,
+    "handoff": true,
+    "reschedule": true
+   }
+  },
+  {
+   "persona": "h20261102",
+   "task": "h20261102-t2",
+   "form": "name",
+   "entities": "Vikram Haddad, Dovumbr Logistics",
+   "ms": 505,
+   "chars": 10138,
+   "present": {
+    "call": false,
+    "hop": true,
+    "handoff": true,
+    "reschedule": true
+   }
+  },
+  {
+   "persona": "h20261101",
+   "task": "h20261101-t3",
+   "form": "name",
+   "entities": "Elodie Abara, Thalique Freight",
+   "ms": 626,
+   "chars": 9480,
+   "present": {
+    "call": false,
+    "hop": true,
+    "handoff": true,
+    "reschedule": true
+   }
+  },
+  {
+   "persona": "h20261103",
+   "task": "h20261103-t1",
+   "form": "code",
+   "entities": "Mira Morales, ORE",
+   "ms": 402,
+   "chars": 6148,
+   "present": {
+    "call": false,
+    "hop": false,
+    "handoff": true,
+    "reschedule": true
+   }
+  },
+  {
+   "persona": "h20261101",
+   "task": "h20261101-t3",
+   "form": "code",
+   "entities": "Elodie Abara, THF",
+   "ms": 360,
+   "chars": 4257,
+   "present": {
+    "call": false,
+    "hop": false,
+    "handoff": true,
+    "reschedule": true
+   }
+  },
+  {
+   "persona": "h20261102",
+   "task": "h20261102-t2",
+   "form": "code",
+   "entities": "Vikram Haddad, DOL",
+   "ms": 469,
+   "chars": 4813,
+   "present": {
+    "call": false,
+    "hop": false,
+    "handoff": true,
+    "reschedule": true
+   }
+  },
+  {
+   "persona": "h20261103",
+   "task": "h20261103-t2",
+   "form": "name",
+   "entities": "Arjun Thorne, Branesso Logistics",
+   "ms": 615,
+   "chars": 10793,
+   "present": {
+    "call": false,
+    "hop": true,
+    "handoff": true,
+    "reschedule": true
+   }
+  },
+  {
+   "persona": "h20261103",
+   "task": "h20261103-t2",
+   "form": "code",
+   "entities": "Arjun Thorne, BRL",
+   "ms": 624,
+   "chars": 5597,
+   "present": {
+    "call": false,
+    "hop": false,
+    "handoff": true,
+    "reschedule": true
+   }
+  },
+  {
+   "persona": "h20261102",
+   "task": "h20261102-t3",
+   "form": "name",
+   "entities": "Ruben Sato, Telostra Health",
+   "ms": 808,
+   "chars": 10234,
+   "present": {
+    "call": false,
+    "hop": true,
+    "handoff": true,
+    "reschedule": true
+   }
+  },
+  {
+   "persona": "h20261104",
+   "task": "h20261104-t1",
+   "form": "name",
+   "entities": "Kofi Aziz, Joronex Foods",
+   "ms": 1039,
+   "chars": 10876,
+   "present": {
+    "call": false,
+    "hop": true,
+    "handoff": true,
+    "reschedule": true
+   }
+  },
+  {
+   "persona": "h20261102",
+   "task": "h20261102-t3",
+   "form": "code",
+   "entities": "Ruben Sato, TEH",
+   "ms": 196,
+   "chars": 6769,
+   "present": {
+    "call": false,
+    "hop": false,
+    "handoff": true,
+    "reschedule": true
+   }
+  },
+  {
+   "persona": "h20261103",
+   "task": "h20261103-t3",
+   "form": "name",
+   "entities": "Talia Castellan, Thalellis Energy",
+   "ms": 355,
+   "chars": 13358,
+   "present": {
+    "call": false,
+    "hop": true,
+    "handoff": true,
+    "reschedule": true
+   }
+  },
+  {
+   "persona": "h20261104",
+   "task": "h20261104-t1",
+   "form": "code",
+   "entities": "Kofi Aziz, JOF",
+   "ms": 1495,
+   "chars": 6799,
+   "present": {
+    "call": false,
+    "hop": false,
+    "handoff": true,
+    "reschedule": true
+   }
+  },
+  {
+   "persona": "h20261103",
+   "task": "h20261103-t3",
+   "form": "code",
+   "entities": "Talia Castellan, THE",
+   "ms": 1140,
+   "chars": 5656,
+   "present": {
+    "call": false,
+    "hop": false,
+    "handoff": true,
+    "reschedule": true
+   }
+  },
+  {
+   "persona": "h20261104",
+   "task": "h20261104-t2",
+   "form": "name",
+   "entities": "Vikram Marchetti, Gralenza Analytics",
+   "ms": 222,
+   "chars": 13408,
+   "present": {
+    "call": false,
+    "hop": true,
+    "handoff": true,
+    "reschedule": true
+   }
+  },
+  {
+   "persona": "h20261104",
+   "task": "h20261104-t2",
+   "form": "code",
+   "entities": "Vikram Marchetti, GRA",
+   "ms": 928,
+   "chars": 6438,
+   "present": {
+    "call": false,
+    "hop": false,
+    "handoff": true,
+    "reschedule": true
+   }
+  },
+  {
+   "persona": "h20261104",
+   "task": "h20261104-t3",
+   "form": "name",
+   "entities": "Calla Castellan, Naxumbr Robotics",
+   "ms": 757,
+   "chars": 10489,
+   "present": {
+    "call": false,
+    "hop": true,
+    "handoff": true,
+    "reschedule": true
+   }
+  },
+  {
+   "persona": "h20261104",
+   "task": "h20261104-t3",
+   "form": "code",
+   "entities": "Calla Castellan, NAR",
+   "ms": 325,
+   "chars": 5259,
+   "present": {
+    "call": false,
+    "hop": false,
+    "handoff": true,
+    "reschedule": true
+   }
+  },
+  {
+   "persona": "h20261107",
+   "task": "h20261107-t1",
+   "form": "name",
+   "entities": "Yusuf Valdez, Pralithe Freight",
+   "ms": 1586,
+   "chars": 11348,
+   "present": {
+    "call": false,
+    "hop": true,
+    "handoff": true,
+    "reschedule": true
+   }
+  },
+  {
+   "persona": "h20261107",
+   "task": "h20261107-t1",
+   "form": "code",
+   "entities": "Yusuf Valdez, PRF",
+   "ms": 350,
+   "chars": 8727,
+   "present": {
+    "call": false,
+    "hop": false,
+    "handoff": true,
+    "reschedule": true
+   }
+  },
+  {
+   "persona": "h20261105",
+   "task": "h20261105-t1",
+   "form": "name",
+   "entities": "Mira Sato, Xerellis Foods",
+   "ms": 584,
+   "chars": 11262,
+   "present": {
+    "call": false,
+    "hop": true,
+    "handoff": true,
+    "reschedule": true
+   }
+  },
+  {
+   "persona": "h20261106",
+   "task": "h20261106-t1",
+   "form": "name",
+   "entities": "Ayla Eskildsen, Vesivel Robotics",
+   "ms": 920,
+   "chars": 9899,
+   "present": {
+    "call": false,
+    "hop": true,
+    "handoff": true,
+    "reschedule": true
+   }
+  },
+  {
+   "persona": "h20261107",
+   "task": "h20261107-t2",
+   "form": "name",
+   "entities": "Maren Sato, Voronex Robotics",
+   "ms": 687,
+   "chars": 9784,
+   "present": {
+    "call": false,
+    "hop": true,
+    "handoff": true,
+    "reschedule": true
+   }
+  },
+  {
+   "persona": "h20261105",
+   "task": "h20261105-t1",
+   "form": "code",
+   "entities": "Mira Sato, XEF",
+   "ms": 537,
+   "chars": 5469,
+   "present": {
+    "call": false,
+    "hop": false,
+    "handoff": true,
+    "reschedule": true
+   }
+  },
+  {
+   "persona": "h20261106",
+   "task": "h20261106-t1",
+   "form": "code",
+   "entities": "Ayla Eskildsen, VER",
+   "ms": 553,
+   "chars": 5674,
+   "present": {
+    "call": false,
+    "hop": false,
+    "handoff": true,
+    "reschedule": true
+   }
+  },
+  {
+   "persona": "h20261107",
+   "task": "h20261107-t2",
+   "form": "code",
+   "entities": "Maren Sato, VOR",
+   "ms": 573,
+   "chars": 4608,
+   "present": {
+    "call": false,
+    "hop": false,
+    "handoff": true,
+    "reschedule": true
+   }
+  },
+  {
+   "persona": "h20261105",
+   "task": "h20261105-t2",
+   "form": "name",
+   "entities": "Noor Varga, Iskanta Logistics",
+   "ms": 586,
+   "chars": 9802,
+   "present": {
+    "call": false,
+    "hop": true,
+    "handoff": true,
+    "reschedule": true
+   }
+  },
+  {
+   "persona": "h20261105",
+   "task": "h20261105-t2",
+   "form": "code",
+   "entities": "Noor Varga, ISL",
+   "ms": 351,
+   "chars": 4659,
+   "present": {
+    "call": false,
+    "hop": false,
+    "handoff": true,
+    "reschedule": true
+   }
+  },
+  {
+   "persona": "h20261107",
+   "task": "h20261107-t3",
+   "form": "name",
+   "entities": "Omari Quist, Dovvane Analytics",
+   "ms": 487,
+   "chars": 9373,
+   "present": {
+    "call": false,
+    "hop": true,
+    "handoff": true,
+    "reschedule": true
+   }
+  },
+  {
+   "persona": "h20261106",
+   "task": "h20261106-t2",
+   "form": "name",
+   "entities": "Ruben Udeh, Fenivel Robotics",
+   "ms": 547,
+   "chars": 10681,
+   "present": {
+    "call": false,
+    "hop": true,
+    "handoff": true,
+    "reschedule": true
+   }
+  },
+  {
+   "persona": "h20261105",
+   "task": "h20261105-t3",
+   "form": "name",
+   "entities": "Vikram Wexler, Ondrumbr Foods",
+   "ms": 207,
+   "chars": 10020,
+   "present": {
+    "call": false,
+    "hop": true,
+    "handoff": true,
+    "reschedule": true
+   }
+  },
+  {
+   "persona": "h20261105",
+   "task": "h20261105-t3",
+   "form": "code",
+   "entities": "Vikram Wexler, ONF",
+   "ms": 93,
+   "chars": 4790,
+   "present": {
+    "call": false,
+    "hop": false,
+    "handoff": true,
+    "reschedule": true
+   }
+  },
+  {
+   "persona": "h20261107",
+   "task": "h20261107-t3",
+   "form": "code",
+   "entities": "Omari Quist, DOA",
+   "ms": 284,
+   "chars": 4227,
+   "present": {
+    "call": false,
+    "hop": false,
+    "handoff": true,
+    "reschedule": true
+   }
+  },
+  {
+   "persona": "h20261106",
+   "task": "h20261106-t2",
+   "form": "code",
+   "entities": "Ruben Udeh, FER",
+   "ms": 320,
+   "chars": 5488,
+   "present": {
+    "call": false,
+    "hop": false,
+    "handoff": true,
+    "reschedule": true
+   }
+  },
+  {
+   "persona": "h20261106",
+   "task": "h20261106-t3",
+   "form": "name",
+   "entities": "Petra Varga, Zelellis Media",
+   "ms": 296,
+   "chars": 10091,
+   "present": {
+    "call": false,
+    "hop": true,
+    "handoff": true,
+    "reschedule": true
+   }
+  },
+  {
+   "persona": "h20261106",
+   "task": "h20261106-t3",
+   "form": "code",
+   "entities": "Petra Varga, ZEM",
+   "ms": 279,
+   "chars": 4988,
+   "present": {
+    "call": false,
+    "hop": false,
+    "handoff": true,
+    "reschedule": true
+   }
+  },
+  {
+   "persona": "h20261108",
+   "task": "h20261108-t1",
+   "form": "name",
+   "entities": "Zara Galloway, Xervane Analytics",
+   "ms": 380,
+   "chars": 11518,
+   "present": {
+    "call": false,
+    "hop": true,
+    "handoff": true,
+    "reschedule": true
+   }
+  },
+  {
+   "persona": "h20261108",
+   "task": "h20261108-t1",
+   "form": "code",
+   "entities": "Zara Galloway, XEA",
+   "ms": 431,
+   "chars": 7139,
+   "present": {
+    "call": false,
+    "hop": false,
+    "handoff": true,
+    "reschedule": true
+   }
+  },
+  {
+   "persona": "h20261108",
+   "task": "h20261108-t2",
+   "form": "name",
+   "entities": "Kenji Fairbourne, Naxanta Energy",
+   "ms": 246,
+   "chars": 11488,
+   "present": {
+    "call": false,
+    "hop": true,
+    "handoff": true,
+    "reschedule": true
+   }
+  },
+  {
+   "persona": "h20261108",
+   "task": "h20261108-t2",
+   "form": "code",
+   "entities": "Kenji Fairbourne, NAE",
+   "ms": 204,
+   "chars": 6311,
+   "present": {
+    "call": false,
+    "hop": false,
+    "handoff": true,
+    "reschedule": true
+   }
+  },
+  {
+   "persona": "h20261108",
+   "task": "h20261108-t3",
+   "form": "name",
+   "entities": "Dario Haddad, Muranta Logistics",
+   "ms": 245,
+   "chars": 9485,
+   "present": {
+    "call": false,
+    "hop": true,
+    "handoff": true,
+    "reschedule": true
+   }
+  },
+  {
+   "persona": "h20261108",
+   "task": "h20261108-t3",
+   "form": "code",
+   "entities": "Dario Haddad, MUL",
+   "ms": 45,
+   "chars": 4299,
+   "present": {
+    "call": false,
+    "hop": false,
+    "handoff": true,
+    "reschedule": true
+   }
+  }
+ ]
+}

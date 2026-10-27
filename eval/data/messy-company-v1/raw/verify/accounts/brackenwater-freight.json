@@ -1,0 +1,86 @@
+{
+  "slug": "accounts/brackenwater-freight",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2026-09-30",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Brackenwater Freight Co.",
+        "line": 6
+      },
+      {
+        "oid": "e2",
+        "surface": "BWF",
+        "line": 13
+      },
+      {
+        "oid": "e3",
+        "surface": "Bracken",
+        "line": 14
+      },
+      {
+        "oid": "e4",
+        "surface": "BWF",
+        "line": 31
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": [
+      {
+        "account": "brackenwater",
+        "question": "According to this page alone, who manages Brackenwater Freight Co., in what role, and from/until when?"
+      }
+    ]
+  },
+  "prompt_user_sha256": "5792db0fc66a2cc7db575c8f5e3919865fe7b9ba723f6f81031ac93139a611aa",
+  "response_text": "{\n  \"date_used\": \"2026-09-30\",\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"brackenwater\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"brackenwater\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"brackenwater\"\n    },\n    {\n      \"oid\": \"e4\",\n      \"entity\": \"brackenwater\"\n    }\n  ],\n  \"ownership\": [\n    {\n      \"account\": \"brackenwater\",\n      \"owner\": \"Dana Okafor\",\n      \"role\": \"primary\",\n      \"start\": null,\n      \"end\": \"2025-09-15\",\n      \"line\": 16\n    },\n    {\n      \"account\": \"brackenwater\",\n      \"owner\": \"Marcus Lindqvist\",\n      \"role\": \"primary\",\n      \"start\": \"2025-09-15\",\n      \"end\": null,\n      \"line\": 15\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2026-09-30",
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "brackenwater"
+      },
+      {
+        "oid": "e2",
+        "entity": "brackenwater"
+      },
+      {
+        "oid": "e3",
+        "entity": "brackenwater"
+      },
+      {
+        "oid": "e4",
+        "entity": "brackenwater"
+      }
+    ],
+    "ownership": [
+      {
+        "account": "brackenwater",
+        "owner": "Dana Okafor",
+        "role": "primary",
+        "start": null,
+        "end": "2025-09-15",
+        "line": 16
+      },
+      {
+        "account": "brackenwater",
+        "owner": "Marcus Lindqvist",
+        "role": "primary",
+        "start": "2025-09-15",
+        "end": null,
+        "line": 15
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 3403,
+    "output_tokens": 277,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.009576
+}

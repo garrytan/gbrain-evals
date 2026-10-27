@@ -15,6 +15,9 @@
         "s1",
         "s3"
       ],
+      "rerank": {
+        "state": "off"
+      },
       "error": null,
       "reader_prompt_sha256": "b85808437e40915a899133114fd3e6dfd4eb6744634c21de50119ae6924afe16"
     },
@@ -33,6 +36,9 @@
         "s1",
         "s2"
       ],
+      "rerank": {
+        "state": "off"
+      },
       "error": null,
       "reader_prompt_sha256": "2aa8712b175eb8e9390773932bf9ee95324f6349f3f8e7a67556d41a38c3611f"
     },
@@ -51,6 +57,9 @@
         "s1",
         "s3"
       ],
+      "rerank": {
+        "state": "off"
+      },
       "error": null,
       "reader_prompt_sha256": "5f855af02c1b19c7e55234951b277caf2898710d5234b2279363eae321696806"
     },
@@ -69,6 +78,9 @@
         "s1",
         "s2"
       ],
+      "rerank": {
+        "state": "off"
+      },
       "error": null,
       "reader_prompt_sha256": "b3c6caaa738c18d023cd04a0d7e7df378294d1f18410612de20619fb434010bd"
     },
@@ -87,6 +99,9 @@
         "s1",
         "s3"
       ],
+      "rerank": {
+        "state": "off"
+      },
       "error": null,
       "reader_prompt_sha256": "8c58b99081a96661779ed1db9755b44f2f69b9d83227bda817152747373f6786"
     },
@@ -105,6 +120,9 @@
         "s1",
         "s2"
       ],
+      "rerank": {
+        "state": "off"
+      },
       "error": null,
       "reader_prompt_sha256": "3b159f11a5dddf614f420003c688c566980620ebe2a17ecee0726b5b55b2b5f7"
     },
@@ -123,6 +141,9 @@
         "s3",
         "s1"
       ],
+      "rerank": {
+        "state": "off"
+      },
       "error": null,
       "reader_prompt_sha256": "7b470053439717a0791c3c4584b74f6ceb3804145e3db58b535f8614775d8ca6"
     },
@@ -141,6 +162,9 @@
         "s3",
         "s1"
       ],
+      "rerank": {
+        "state": "off"
+      },
       "error": null,
       "reader_prompt_sha256": "872ad4115a245fc180f2341d4fcc5bd6ffbfe229715c34c08e9f88d17b6edb72"
     }
@@ -154,8 +178,8 @@
     "invalid_reasons": [],
     "search_pins": {
       "search.mode": "balanced",
-      "search.reranker.enabled": "false",
-      "search.autocut": "false"
+      "search.autocut": "false",
+      "search.reranker.enabled": "false"
     },
     "retrieval_path": "hybridSearch (expansion off), chunks reduced to distinct sessions",
     "embedding": {
@@ -188,9 +212,7 @@
     },
     "fidelity": {
       "embedding_deferred_pages": 0,
-      "rerank_missing_queries": 0,
       "reranked_queries": 0,
-      "rerank_degraded_queries": 0,
       "rerank_provider_requests": null
     },
     "rows_file": "rows.ndjson"

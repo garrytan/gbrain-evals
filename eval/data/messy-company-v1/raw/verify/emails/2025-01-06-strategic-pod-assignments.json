@@ -1,0 +1,142 @@
+{
+  "slug": "emails/2025-01-06-strategic-pod-assignments",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2025-01-06",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Vantorre Group",
+        "line": 17
+      },
+      {
+        "oid": "e2",
+        "surface": "Orlavine Medical Supply",
+        "line": 17
+      },
+      {
+        "oid": "e3",
+        "surface": "VTG",
+        "line": 17
+      },
+      {
+        "oid": "e4",
+        "surface": "OMS",
+        "line": 17
+      },
+      {
+        "oid": "e5",
+        "surface": "Vantorre Mobility",
+        "line": 18
+      },
+      {
+        "oid": "e6",
+        "surface": "Quillfeather Outfitters",
+        "line": 19
+      },
+      {
+        "oid": "e7",
+        "surface": "QFO",
+        "line": 21
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": [
+      {
+        "account": "vantorre-group",
+        "question": "According to this page alone, who manages Vantorre Group, in what role, and from/until when?"
+      },
+      {
+        "account": "orlavine",
+        "question": "According to this page alone, who manages Orlavine Medical Supply, in what role, and from/until when?"
+      },
+      {
+        "account": "vantorre-mobility",
+        "question": "According to this page alone, who manages Vantorre Mobility, in what role, and from/until when?"
+      },
+      {
+        "account": "quillfeather",
+        "question": "According to this page alone, who manages Quillfeather Outfitters, in what role, and from/until when?"
+      }
+    ]
+  },
+  "prompt_user_sha256": "f6a4b00667028edd455b11f029d926a89327f809e71cfe19a26c9eb3817f7109",
+  "response_text": "{\n  \"date_used\": \"2025-01-06\",\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\"oid\": \"e1\", \"entity\": \"vantorre-group\"},\n    {\"oid\": \"e2\", \"entity\": \"orlavine\"},\n    {\"oid\": \"e3\", \"entity\": \"vantorre-group\"},\n    {\"oid\": \"e4\", \"entity\": \"orlavine\"},\n    {\"oid\": \"e5\", \"entity\": \"vantorre-mobility\"},\n    {\"oid\": \"e6\", \"entity\": \"quillfeather\"},\n    {\"oid\": \"e7\", \"entity\": \"quillfeather\"}\n  ],\n  \"ownership\": [\n    {\n      \"account\": \"vantorre-group\",\n      \"owner\": \"Nadia Fennimore\",\n      \"role\": \"primary\",\n      \"start\": \"2025-01-06\",\n      \"end\": null,\n      \"line\": 17\n    },\n    {\n      \"account\": \"orlavine\",\n      \"owner\": \"Nadia Fennimore\",\n      \"role\": \"primary\",\n      \"start\": \"2025-01-06\",\n      \"end\": null,\n      \"line\": 17\n    },\n    {\n      \"account\": \"vantorre-mobility\",\n      \"owner\": \"Gideon Sato\",\n      \"role\": \"primary\",\n      \"start\": null,\n      \"end\": null,\n      \"line\": 18\n    },\n    {\n      \"account\": \"quillfeather\",\n      \"owner\": \"Strategic Accounts pod\",\n      \"role\": \"team\",\n      \"start\": null,\n      \"end\": null,\n      \"line\": 19\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-01-06",
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e2",
+        "entity": "orlavine"
+      },
+      {
+        "oid": "e3",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e4",
+        "entity": "orlavine"
+      },
+      {
+        "oid": "e5",
+        "entity": "vantorre-mobility"
+      },
+      {
+        "oid": "e6",
+        "entity": "quillfeather"
+      },
+      {
+        "oid": "e7",
+        "entity": "quillfeather"
+      }
+    ],
+    "ownership": [
+      {
+        "account": "vantorre-group",
+        "owner": "Nadia Fennimore",
+        "role": "primary",
+        "start": "2025-01-06",
+        "end": null,
+        "line": 17
+      },
+      {
+        "account": "orlavine",
+        "owner": "Nadia Fennimore",
+        "role": "primary",
+        "start": "2025-01-06",
+        "end": null,
+        "line": 17
+      },
+      {
+        "account": "vantorre-mobility",
+        "owner": "Gideon Sato",
+        "role": "primary",
+        "start": null,
+        "end": null,
+        "line": 18
+      },
+      {
+        "account": "quillfeather",
+        "owner": "Strategic Accounts pod",
+        "role": "team",
+        "start": null,
+        "end": null,
+        "line": 19
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 3021,
+    "output_tokens": 434,
+    "thinking_tokens": 57
+  },
+  "cost_usd": 0.010382
+}

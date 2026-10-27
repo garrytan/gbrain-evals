@@ -1,0 +1,16 @@
+{"arm":"C-layer","tier":"team","pass":"cal1","calls":440,"skipped":0,"failed":0,"wall_ms":268402,"calls_per_s":1.639332406562495}
+{"arm":"C-layer","tier":"team","pass":"cal2","calls":440,"skipped":0,"failed":0,"wall_ms":267143,"calls_per_s":1.6470550212174597}
+{"arm":"C-perdepth","tier":"team","pass":"cal1","calls":440,"skipped":0,"failed":0,"wall_ms":1184688,"calls_per_s":0.37140578605456864}
+{"event":"machine restart 02:13Z during C-perdepth cal2; containers restarted, partial cal2 rows moved to rows-interrupted-cal2.ndjson"}
+{"arm":"C-layer","tier":"team","pass":"cal1","calls":0,"skipped":440,"failed":0,"wall_ms":0,"calls_per_s":0}
+{"arm":"C-layer","tier":"team","pass":"cal2","calls":0,"skipped":440,"failed":0,"wall_ms":0,"calls_per_s":0}
+{"arm":"C-perdepth","tier":"team","pass":"cal1","calls":0,"skipped":440,"failed":0,"wall_ms":0,"calls_per_s":0}
+{"arm":"C-perdepth","tier":"team","pass":"cal2","calls":440,"skipped":0,"failed":0,"wall_ms":1159030,"calls_per_s":0.3796276403662865}
+{"arm":"A","tier":"team","pass":"cold","calls":2200,"skipped":0,"failed":0,"wall_ms":427933,"calls_per_s":5.140987675143175}
+{"arm":"A","tier":"team","pass":"warm","calls":2200,"skipped":0,"failed":0,"wall_ms":423651,"calls_per_s":5.192953616195026}
+{"arm":"B","tier":"team","pass":"cold","calls":11000,"skipped":0,"failed":0,"wall_ms":2527092,"calls_per_s":4.35282980163688}
+{"arm":"B","tier":"team","pass":"warm","calls":11000,"skipped":0,"failed":0,"wall_ms":2534374,"calls_per_s":4.340321823036196}
+{"arm":"C","tier":"team","pass":"cold","calls":11000,"skipped":0,"failed":0,"wall_ms":6697385,"calls_per_s":1.6424322015852346}
+{"arm":"C","tier":"team","pass":"warm","calls":11000,"skipped":0,"failed":0,"wall_ms":6615515,"calls_per_s":1.6627578748917586}
+{"arm":"B","tier":"team","pass":"tput8","calls":2200,"skipped":0,"failed":0,"wall_ms":159075,"calls_per_s":13.82994934838112}
+{"arm":"C","tier":"team","pass":"tput8","calls":2200,"skipped":0,"failed":0,"wall_ms":921419,"calls_per_s":2.387621752338695}

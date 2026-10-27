@@ -1,0 +1,74 @@
+{
+  "beam:100k": {
+    "document_tokens_cl100k": 2634217,
+    "documents": 170,
+    "judge_calls": 1051,
+    "questions": 400,
+    "task_type": "open",
+    "units": 20
+  },
+  "beam:10m": {
+    "document_tokens_cl100k": 109652017,
+    "documents": 10,
+    "judge_calls": 621,
+    "questions": 200,
+    "task_type": "open",
+    "units": 10
+  },
+  "beam:1m": {
+    "document_tokens_cl100k": 36517787,
+    "documents": 1830,
+    "judge_calls": 2415,
+    "questions": 700,
+    "task_type": "open",
+    "units": 35
+  },
+  "beam:500k": {
+    "document_tokens_cl100k": 17850416,
+    "documents": 962,
+    "judge_calls": 1959,
+    "questions": 700,
+    "task_type": "open",
+    "units": 35
+  },
+  "lifebench:en": {
+    "document_tokens_cl100k": 11757724,
+    "documents": 3605,
+    "judge_calls": 2003,
+    "questions": 2003,
+    "task_type": "open",
+    "units": 10
+  },
+  "locomo:locomo10": {
+    "document_tokens_cl100k": 379721,
+    "documents": 272,
+    "judge_calls": 1540,
+    "questions": 1540,
+    "task_type": "open",
+    "units": 10
+  },
+  "longmemeval:s": {
+    "document_tokens_cl100k": 56624220,
+    "documents": 23867,
+    "judge_calls": 500,
+    "questions": 500,
+    "task_type": "open",
+    "units": 500
+  },
+  "personamem:32k": {
+    "document_tokens_cl100k": 996192,
+    "documents": 195,
+    "judge_calls": 0,
+    "questions": 589,
+    "task_type": "mcq",
+    "units": 37
+  },
+  "precisionmembench:single-turn": {
+    "document_tokens_cl100k": 1479,
+    "documents": 35,
+    "judge_calls": 0,
+    "questions": 77,
+    "task_type": "retrieval",
+    "units": 2
+  }
+}

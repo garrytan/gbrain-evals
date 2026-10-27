@@ -1,0 +1,16 @@
+{
+  "counts": {
+    "stated_event_date": 13,
+    "unknown": 2135
+  },
+  "dataset": "personamem",
+  "dates_passed_to_providers": 0,
+  "documents": 2148,
+  "policy": "Only observed session times reach providers; stated event dates and unknown dates are withheld from both systems.",
+  "rows_sha256": "5790b09b6c3fe1d9daad4b8d94a8ab1006b7acf0aa8f9d9160f47d12b02884db",
+  "rule": {
+    "provenance": "stated_event_date",
+    "source": "first 'Month D, YYYY' match in the session text (an event the text mentions)"
+  },
+  "split": "128k"
+}

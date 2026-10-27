@@ -1,0 +1,159 @@
+{
+  "slug": "contracts/2024-11-12-bwf-of-2024",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2024-11-12",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Brackenwater Freight Co.",
+        "line": 7
+      },
+      {
+        "oid": "e2",
+        "surface": "Brackenwater Freight Co.",
+        "line": 11
+      },
+      {
+        "oid": "e3",
+        "surface": "Brackenwater Freight Co.",
+        "line": 13
+      },
+      {
+        "oid": "e4",
+        "surface": "BWF",
+        "line": 13
+      },
+      {
+        "oid": "e5",
+        "surface": "Bracken",
+        "line": 13
+      },
+      {
+        "oid": "e6",
+        "surface": "Brackenwater Freight Co.",
+        "line": 29
+      },
+      {
+        "oid": "e7",
+        "surface": "Brackenwater Freight Co.",
+        "line": 44
+      },
+      {
+        "oid": "e8",
+        "surface": "BWF",
+        "line": 52
+      },
+      {
+        "oid": "e9",
+        "surface": "Brackenwater Freight Co.",
+        "line": 58
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": [],
+    "record": {
+      "question": "Is this document signed, an unsigned version, or a draft? Judge from the body text, not the title alone. Give its signed date and effective date if stated, and the value of each of these terms it sets.",
+      "terms": [
+        "seats",
+        "price_per_seat",
+        "discount_pct",
+        "renewal_date"
+      ]
+    }
+  },
+  "prompt_user_sha256": "e156278eaf78fa2f559c9e3d66a2cd035fa3c093218f0ce3fc19b2c0fac82b60",
+  "response_text": "{\n  \"date_used\": \"2024-11-12\",\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"brackenwater\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"brackenwater\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"brackenwater\"\n    },\n    {\n      \"oid\": \"e4\",\n      \"entity\": \"brackenwater\"\n    },\n    {\n      \"oid\": \"e5\",\n      \"entity\": \"brackenwater\"\n    },\n    {\n      \"oid\": \"e6\",\n      \"entity\": \"brackenwater\"\n    },\n    {\n      \"oid\": \"e7\",\n      \"entity\": \"brackenwater\"\n    },\n    {\n      \"oid\": \"e8\",\n      \"entity\": \"brackenwater\"\n    },\n    {\n      \"oid\": \"e9\",\n      \"entity\": \"brackenwater\"\n    }\n  ],\n  \"record\": {\n    \"status\": \"signed\",\n    \"status_evidence_line\": 17,\n    \"signed_date\": \"2024-11-12\",\n    \"effective_date\": \"2024-12-01\",\n    \"terms\": [\n      {\n        \"term\": \"seats\",\n        \"applies_to\": [\n          \"brackenwater\"\n        ],\n        \"value\": \"60\",\n        \"line\": 32\n      },\n      {\n        \"term\": \"price_per_seat\",\n        \"applies_to\": [\n          \"brackenwater\"\n        ],\n        \"value\": \"USD 1,700\",\n        \"line\": 33\n      },\n      {\n        \"term\": \"discount_pct\",\n        \"applies_to\": [\n          \"brackenwater\"\n        ],\n        \"value\": \"8%\",\n        \"line\": 34\n      },\n      {\n        \"term\": \"renewal_date\",\n        \"applies_to\": [\n          \"brackenwater\"\n        ],\n        \"value\": \"2025-11-30\",\n        \"line\": 36\n      }\n    ],\n    \"deciding_line\": null,\n    \"deciding_days\": null\n  }\n}",
+  "parsed": {
+    "date_used": "2024-11-12",
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "brackenwater"
+      },
+      {
+        "oid": "e2",
+        "entity": "brackenwater"
+      },
+      {
+        "oid": "e3",
+        "entity": "brackenwater"
+      },
+      {
+        "oid": "e4",
+        "entity": "brackenwater"
+      },
+      {
+        "oid": "e5",
+        "entity": "brackenwater"
+      },
+      {
+        "oid": "e6",
+        "entity": "brackenwater"
+      },
+      {
+        "oid": "e7",
+        "entity": "brackenwater"
+      },
+      {
+        "oid": "e8",
+        "entity": "brackenwater"
+      },
+      {
+        "oid": "e9",
+        "entity": "brackenwater"
+      }
+    ],
+    "record": {
+      "status": "signed",
+      "status_evidence_line": 17,
+      "signed_date": "2024-11-12",
+      "effective_date": "2024-12-01",
+      "terms": [
+        {
+          "term": "seats",
+          "applies_to": [
+            "brackenwater"
+          ],
+          "value": "60",
+          "line": 32
+        },
+        {
+          "term": "price_per_seat",
+          "applies_to": [
+            "brackenwater"
+          ],
+          "value": "USD 1,700",
+          "line": 33
+        },
+        {
+          "term": "discount_pct",
+          "applies_to": [
+            "brackenwater"
+          ],
+          "value": "8%",
+          "line": 34
+        },
+        {
+          "term": "renewal_date",
+          "applies_to": [
+            "brackenwater"
+          ],
+          "value": "2025-11-30",
+          "line": 36
+        }
+      ],
+      "deciding_line": null,
+      "deciding_days": null
+    }
+  },
+  "usage": {
+    "input_tokens": 4091,
+    "output_tokens": 576,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.013942
+}

@@ -1,0 +1,41 @@
+{
+  "slug": "emails/2025-01-06-strategic-pod-assignments",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: email\nTitle: Strategic pod: 2025 assignments\nDate: Written on 2025-01-06.\nWriter: Ruth Calloway\nVoice: chatty, a bit rambling\nFormat: undefined\nLength: about -79 words\nDate style in the body: undefined\nTypos: a few natural typos and one or two sloppy abbreviations (never in names or required phrases)\n\nBrief:\nRuth sets assignments: Nadia owns Vantorre Group and Orlavine Medical Supply; Gideon keeps Vantorre Mobility (as he always has); Quillfeather Outfitters is a pod account worked on rotation.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Nadia Fennimore: Strategic account manager\n- Gideon Sato: Strategic account manager\n- Mateo Quiroga: Head of Procurement\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Vantorre Group: diversified industrial manufacturer, Northeast; main contact Mateo Quiroga, Head of Procurement; codes/nicknames VTG, VTRG\n- Vantorre Mobility: electric fleet services subsidiary, Northeast; subsidiary of Vantorre Group; codes/nicknames VTM, VMob\n- Orlavine Medical Supply: medical supply distributor, Mountain West; codes/nicknames OMS\n- Quillfeather Outfitters: outdoor gear retailer, Mountain West; codes/nicknames QFO\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2025-01-06 (background only; don't restate unless the brief asks):\n- Vantorre Group: managed by Nadia Fennimore\n- Vantorre Mobility: managed by Gideon Sato\n- Orlavine Medical Supply: managed by Nadia Fennimore\n- Quillfeather Outfitters: managed by Strategic Accounts pod (pooled account)",
+      "response_text": "**From:** Ruth Calloway  \n**To:** Nadia Fennimore, Gideon Sato, June Osei-Lark  \n**Date:** Jan 6, 2025  \n**Subject:** Strategic pod: 2025 assignments  \n\nHappy Monday all, hope everyone survived the holidays! I'm still digging out of my inbox and drinking coffee #3, pls forgive any brain fog.\n\nWanted to get our 2025 Strategic Accounts pod assignments down in writing before the 11am standup so June can update the routing tags. \n\nHere is where we're landing:\n\n* **Nadia Fennimore:** You are officially owning both Vantorre Group and Orlavine Medical Supply. (Mateo Quiroga over at VTG already pinged me at 6am about the Gate 4 RFID scanner logs from their Newark yard, so I'll fwd that thread to you in a sec). Also for OMS, let's make sure their night-shift dispatchers in Salt Lake actually got the Pemberline Dock v4.2 patch note bc they were complaining abt the carrier drop-down menu freezing before Xmas.\n* **Gideon Sato:** You're keeping Vantorre Mobility, just as you always have. No reason to mess with what works, especially while they are still re-striping the EV charging bays at the Allentown depot and moving all those morning slot templates around. \n* **Pooled / Pod:** Quillfeather Outfitters is staying a pod account worked on rotation. Since their Ogden warehouse is still buried in post-holiday returns at Doors 12–18, whoever is on the weekly rotation duty just needs to watch the open support tickets (especially #88412 on the bolster trailer turnaround report) and jump on their Wed afternoon check-in. \n\nI'll have Moss spin up the shared calendar rotation for QFO before lunch. See you guys on Zoom shortly!\n\nRuth",
+      "usage": {
+        "input_tokens": 1060,
+        "output_tokens": 412,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.00624,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1060,
+          "candidatesTokenCount": 412,
+          "totalTokenCount": 1472,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1060
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 412
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

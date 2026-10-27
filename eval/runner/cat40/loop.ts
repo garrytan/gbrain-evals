@@ -47,10 +47,32 @@ export interface ToolEvent { name: string; args: Record<string, unknown>; ms: nu
 /** Summed over the run's model calls, normalized by eval/runner/q1/usage.ts: `input` is uncached input for every provider. */
 export interface Usage { input: number; output: number; cache_read: number; cache_write: number; requests: number }
 
+/**
+ * An infrastructure failure, not the agent's: a provider 5xx or 429 after
+ * backoff, or a slot, server, restore or MCP transport failure. Arms throw it
+ * instead of returning the failure to the agent as text. With
+ * `classifyStops` (Hard runs) it ends the session as `harness_error`, the
+ * only stop kind a Hard run retries.
+ */
+export class HarnessError extends Error {
+  constructor(message: string) { super(message); this.name = 'HarnessError'; }
+}
+
+/** A provider's non-2xx answer, after backoff for retryable statuses. */
+export class ProviderError extends Error {
+  constructor(readonly status: number, readonly body: string) { super(`provider error ${status}: ${body.slice(0, 500)}`); this.name = 'ProviderError'; }
+}
+
+/** A provider 400 that says the request exceeds the model's context window. */
+export function isContextOverflow(e: unknown): boolean {
+  return e instanceof ProviderError && e.status === 400 && /context[_ ]length|context window|prompt is too long|too many tokens|maximum context|input is too long|exceeds the context/i.test(e.body);
+}
+
 export interface AgentRun {
   model: string;
   final: SubmitPayload | null;
-  stop: 'submitted' | 'turn_cap' | 'no_tool_call' | 'error';
+  /** `context_overflow` and `harness_error` occur only with `classifyStops` (Hard runs); v1 runs record them as `error`. */
+  stop: 'submitted' | 'turn_cap' | 'no_tool_call' | 'error' | 'context_overflow' | 'harness_error';
   error?: string;
   turns: number;
   tools: ToolEvent[];
@@ -91,6 +113,12 @@ export interface LoopConfig {
   fetchImpl?: typeof fetch;
   /** Test hook: replace the provider with a scripted model. */
   scripted?: ScriptedModel;
+  /**
+   * Hard runs: split failures into `context_overflow` (a provider context-length 400), `harness_error`
+   * (HarnessError from an arm, or a provider 5xx/429 after backoff) and `error` (anything else, such as a
+   * malformed tool call the provider rejects). Off, every failure is `error`, as v1 records it.
+   */
+  classifyStops?: boolean;
   /** The answer tool; default `SUBMIT_TOOL`. It must be named `submit_answer`. */
   submitTool?: ToolSpec;
   /**
@@ -99,7 +127,11 @@ export interface LoopConfig {
    * added, so Cat 40's requests stay byte-identical.
    */
   effort?: string;
+  /** Called once per provider attempt, retries included, with the parsed response or the error (for usage receipts). */
+  onAttempt?: (a: ProviderAttempt) => void;
 }
+
+export interface ProviderAttempt { status: 'ok' | 'error'; response: Record<string, unknown> | null; error: string | null; ms: number }
 
 /** A scripted model returns the next tool call (or a final submit) given the transcript so far. */
 export type ScriptedModel = (history: Array<{ name: string; args: Record<string, unknown>; result: string }>) => { name: string; args: Record<string, unknown> };
@@ -125,17 +157,25 @@ function cap(text: string, max: number | null): { text: string; truncated: boole
   return { text: `${text.slice(0, max)}\n…[truncated: ${text.length - max} more characters]`, truncated: true };
 }
 
-async function postJson(fetchImpl: typeof fetch, url: string, headers: Record<string, string>, body: unknown): Promise<Record<string, unknown>> {
-  let lastErr = '';
+export const RETRYABLE_STATUS = [429, 500, 502, 503, 504, 529];
+
+async function postJson(fetchImpl: typeof fetch, url: string, headers: Record<string, string>, body: unknown, onAttempt?: (a: ProviderAttempt) => void): Promise<Record<string, unknown>> {
+  let last: ProviderError | null = null;
   for (let attempt = 0; attempt < 6; attempt++) {
+    const t = Date.now();
     const res = await fetchImpl(url, { method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: JSON.stringify(body) });
     const text = await res.text();
-    if (res.ok) return JSON.parse(text);
-    lastErr = `${res.status}: ${text.slice(0, 500)}`;
-    if (![429, 500, 502, 503, 504, 529].includes(res.status)) break;
+    if (res.ok) {
+      const json = JSON.parse(text) as Record<string, unknown>;
+      onAttempt?.({ status: 'ok', response: json, error: null, ms: Date.now() - t });
+      return json;
+    }
+    last = new ProviderError(res.status, text);
+    onAttempt?.({ status: 'error', response: null, error: `${res.status}: ${text.slice(0, 500)}`, ms: Date.now() - t });
+    if (!RETRYABLE_STATUS.includes(res.status)) break;
     await new Promise(r => setTimeout(r, Math.min(60_000, 2000 * 2 ** attempt) + Math.random() * 1000));
   }
-  throw new Error(`provider error ${lastErr}`);
+  throw last!;
 }
 
 export async function runAgent(cfg: LoopConfig): Promise<AgentRun> {
@@ -157,7 +197,10 @@ export async function runAgent(cfg: LoopConfig): Promise<AgentRun> {
     let result: string;
     let error: string | undefined;
     try { result = await cfg.arm.call(name, args); }
-    catch (e) { error = (e as Error).message; result = `Error: ${error}`; }
+    catch (e) {
+      if (cfg.classifyStops && e instanceof HarnessError) throw e;
+      error = (e as Error).message; result = `Error: ${error}`;
+    }
     const ms = Date.now() - s;
     run.tool_ms += ms;
     const capped = cap(result, maxChars);
@@ -182,7 +225,10 @@ export async function runAgent(cfg: LoopConfig): Promise<AgentRun> {
     }
   } catch (e) {
     if ((e as Error).name === 'BudgetExceededError') throw e;
-    run.stop = 'error';
+    run.stop = !cfg.classifyStops ? 'error'
+      : isContextOverflow(e) ? 'context_overflow'
+      : e instanceof HarnessError || (e instanceof ProviderError && RETRYABLE_STATUS.includes(e.status)) ? 'harness_error'
+      : 'error';
     run.error = (e as Error).message;
   }
   run.ms = Date.now() - t0;
@@ -234,7 +280,7 @@ async function anthropicLoop(cfg: LoopConfig, run: AgentRun, specs: () => ToolSp
       model: cfg.model, max_tokens: cfg.maxOutputTokens ?? 8192,
       system: [{ type: 'text', text: cfg.system, cache_control: { type: 'ephemeral' } }], tools: currentTools(), messages,
       ...(cfg.effort !== undefined ? { output_config: { effort: cfg.effort } } : {}),
-    });
+    }, cfg.onAttempt);
     run.model_ms += Date.now() - s;
     addUsage(run, normalizeUsage('anthropic', res.usage as object | undefined));
     const content = (res.content ?? []) as Array<Record<string, unknown>>;
@@ -271,7 +317,7 @@ async function openaiLoop(cfg: LoopConfig, run: AgentRun, specs: () => ToolSpec[
     const res = await postJson(fetchImpl, 'https://api.openai.com/v1/responses', headers, {
       model: cfg.model, instructions: cfg.system, input, tools: currentTools(), max_output_tokens: cfg.maxOutputTokens ?? 16_000,
       ...(previous ? { previous_response_id: previous } : {}), ...(cfg.effort !== undefined ? { reasoning: { effort: cfg.effort } } : {}),
-    });
+    }, cfg.onAttempt);
     run.model_ms += Date.now() - s;
     addUsage(run, normalizeUsage('openai', res.usage as object | undefined));
     previous = String(res.id);
@@ -296,4 +342,25 @@ async function openaiLoop(cfg: LoopConfig, run: AgentRun, specs: () => ToolSpec[
     if (submitted) { run.stop = 'submitted'; return; }
     input = outputs;
   }
+}
+
+/** One plain text completion (the claims judges), priced like an agent call. */
+export async function runAgentText(model: string, system: string, user: string): Promise<{ text: string; usd: number }> {
+  if (provider(model) === 'openai') {
+    const res = await fetch('https://api.openai.com/v1/responses', { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
+      body: JSON.stringify({ model, instructions: system, input: user, max_output_tokens: 8000, reasoning: { effort: 'low' } }) });
+    const j = await res.json() as Record<string, unknown>;
+    if (!res.ok) throw new Error(`judge error ${res.status}: ${JSON.stringify(j).slice(0, 300)}`);
+    const text = ((j.output ?? []) as Array<Record<string, unknown>>).filter(o => o.type === 'message').flatMap(o => (o.content as Array<Record<string, unknown>>) ?? []).map(c => String(c.text ?? '')).join('\n');
+    const u = j.usage as Record<string, unknown>;
+    const cached = ((u.input_tokens_details ?? {}) as Record<string, number>).cached_tokens ?? 0;
+    return { text, usd: priceUsage(model, { input: (u.input_tokens as number) - cached, cache_read: cached, cache_write: 0, output: u.output_tokens as number, requests: 1 }) };
+  }
+  const res = await fetch('https://api.anthropic.com/v1/messages', { method: 'POST', headers: { 'content-type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY ?? '', 'anthropic-version': '2023-06-01' },
+    body: JSON.stringify({ model, max_tokens: 4000, system, messages: [{ role: 'user', content: user }] }) });
+  const j = await res.json() as Record<string, unknown>;
+  if (!res.ok) throw new Error(`judge error ${res.status}: ${JSON.stringify(j).slice(0, 300)}`);
+  const text = ((j.content ?? []) as Array<Record<string, unknown>>).filter(c => c.type === 'text').map(c => String(c.text)).join('\n');
+  const u = j.usage as Record<string, number>;
+  return { text, usd: priceUsage(model, { input: u.input_tokens, output: u.output_tokens, cache_read: u.cache_read_input_tokens ?? 0, cache_write: u.cache_creation_input_tokens ?? 0, requests: 1 }) };
 }

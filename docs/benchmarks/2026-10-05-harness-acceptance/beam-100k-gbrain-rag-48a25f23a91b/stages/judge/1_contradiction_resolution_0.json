@@ -1,0 +1,271 @@
+{
+  "cell_id": "beam-100k-gbrain-rag-48a25f23a91b",
+  "query_id": "1_contradiction_resolution_0",
+  "outcome": "answered",
+  "score": 0.5,
+  "correct": true,
+  "judge_model": "gemini:gemini-3.5-flash",
+  "reason": "score=0.500 over 4 rubric items",
+  "rubric": [
+    {
+      "criterion": "LLM response should state: there is contradictory information",
+      "valid": true,
+      "score": 1.0,
+      "reason": "The LLM response clearly states that there is conflicting information, which is semantically equivalent to contradictory information.",
+      "attempts": 1
+    },
+    {
+      "criterion": "LLM response should mention: You said you have never written any Flask routes or handled HTTP requests in this project",
+      "valid": true,
+      "score": 1.0,
+      "reason": "The LLM response complies with the criterion by stating that the user claimed to be starting from scratch on implementing routes and request management.",
+      "attempts": 1
+    },
+    {
+      "criterion": "LLM response should mention: you also mentioned implementing a basic homepage route with Flask",
+      "valid": true,
+      "score": 0.0,
+      "reason": "The LLM response does not mention implementing a basic homepage route with Flask, only mentioning the dashboard and form routes.",
+      "attempts": 1
+    },
+    {
+      "criterion": "LLM response should mention: which statement is correct?",
+      "valid": true,
+      "score": 0.0,
+      "reason": "The LLM response asks the user which statement is correct instead of mentioning or determining which statement is correct.",
+      "attempts": 1
+    }
+  ],
+  "requests": [
+    {
+      "ts": "2026-10-05T07:46:14.554Z",
+      "cell_id": "beam-100k-gbrain-rag-48a25f23a91b",
+      "label": "harness",
+      "tag": "beam-100k-gbrain-rag-48a25f23a91b/judge/q-f79b542784df#0",
+      "provider": "gemini",
+      "model": "gemini-3.5-flash",
+      "kind": "chat",
+      "method": "POST",
+      "path": "/v1beta/models/gemini-3.5-flash:generateContent",
+      "body_sha256": "ef3818b5348d9674e383306bd0cb44365d7b8541a1499de2ba252e966a81ddc6",
+      "stream": false,
+      "reserved_usd": 0.5915175,
+      "actual_usd": 0.003327,
+      "input_tokens": 754,
+      "output_tokens": 244,
+      "status": 200,
+      "refused": false,
+      "settlement": "reconciled",
+      "error": null,
+      "body": {
+        "contents": [
+          {
+            "parts": [
+              {
+                "text": "Evaluate whether the following LLM response demonstrates compliance with the specified RUBRIC CRITERION.\n\nQUESTION:\nHave I worked with Flask routes and handled HTTP requests in this project?\n\nLLM RESPONSE:\nThere is conflicting information in your memories regarding whether you have worked with Flask routes and handled HTTP requests in this project. On one hand, Memory 1 (Turn 104, 2024-04-05) shows you implemented a route handling HTTP GET requests: \"@app.route('/dashboard', methods=['GET'])\", and Memory 6 (Turn 139, 2024-04-25) shows you implemented: \"@app.route('/form', methods=['GET', 'POST'])\". On the other hand, in Memory 1 (Turn 108), you state you are starting from scratch on implementing routes and request management: \"like Flask-Login, which I've never actually integrated into this project, so I'm starting from scratch - can you help me implement user session management with Flask-Login 0.6.2, including login, logout, and session validation\" and ask for examples on how \"to use a library like Flask-RESTful to provide a RESTful API for the application\". Which statement is correct: have you already worked with Flask routes and handled HTTP requests in this project, or are you starting from scratch without having integrated them?\n\nRUBRIC CRITERION:\nLLM response should state: there is contradictory information\n\nSCORING GUIDELINES:\n\nFirst, determine whether the rubric criterion is a POSITIVE requirement (the response SHOULD include something) or a NEGATIVE constraint (the response SHOULD NOT include something).\n\n**For POSITIVE requirements** (response should contain, mention, or demonstrate something):\n- **1.0 (Complete Compliance)**: The required element is present, accurate, and complete.\n- **0.5 (Partial Compliance)**: The required element is partially present, has minor inaccuracies, or is incomplete.\n- **0.0 (No Compliance)**: The required element is missing, incorrect, or the response is entirely off-topic / non-responsive.\n\n**For NEGATIVE constraints** (response should NOT contain or should avoid something):\n- **1.0**: The response is responsive AND the prohibited element is absent.\n- **0.5**: The response is responsive but contains a borderline or ambiguous reference to the prohibited element.\n- **0.0**: The prohibited element is present, OR the response is non-responsive.\n\n**Compound statements** (\"and\"/commas joining multiple required elements): all present=1.0, some=0.5, none=0.0.\n\nEVALUATION RULES:\n1. Semantic tolerance: paraphrases and synonyms are acceptable.\n2. Numeric/date equivalence: \"$68,000\"=\"68k\"=\"sixty-eight thousand dollars\"; \"2 years\"=\"24 months\".\n3. Case/punctuation/whitespace tolerance.\n4. Hedging tolerance: do not penalize \"I think\"/\"probably\"/passive/verbosity if content satisfies the criterion.\n5. Style neutrality: do not penalize tone/format/length unless the criterion requires it.\n6. Responsiveness: completely off-topic or refusal = 0.0.\n7. Independence: evaluate this criterion in isolation.\n8. Specificity: vague generic answers score lower than specific, detailed ones.\n\nReturn JSON: {\"score\": <0.0 or 0.5 or 1.0>, \"reason\": \"<one concise sentence>\"}"
+              }
+            ],
+            "role": "user"
+          }
+        ],
+        "generationConfig": {
+          "temperature": 0.0,
+          "responseMimeType": "application/json",
+          "responseSchema": {
+            "properties": {
+              "score": {
+                "description": "Score: 0.0, 0.5, or 1.0",
+                "type": "NUMBER"
+              },
+              "reason": {
+                "type": "STRING"
+              }
+            },
+            "property_ordering": [
+              "score",
+              "reason"
+            ],
+            "required": [
+              "score",
+              "reason"
+            ],
+            "type": "OBJECT"
+          }
+        }
+      }
+    },
+    {
+      "ts": "2026-10-05T07:46:16.128Z",
+      "cell_id": "beam-100k-gbrain-rag-48a25f23a91b",
+      "label": "harness",
+      "tag": "beam-100k-gbrain-rag-48a25f23a91b/judge/q-f79b542784df#1",
+      "provider": "gemini",
+      "model": "gemini-3.5-flash",
+      "kind": "chat",
+      "method": "POST",
+      "path": "/v1beta/models/gemini-3.5-flash:generateContent",
+      "body_sha256": "c0ce548b5effb2f4d7bfc7c5949defb028ff620768af971f69c446d4d26db81f",
+      "stream": false,
+      "reserved_usd": 0.591546,
+      "actual_usd": 0.007854,
+      "input_tokens": 766,
+      "output_tokens": 745,
+      "status": 200,
+      "refused": false,
+      "settlement": "reconciled",
+      "error": null,
+      "body": {
+        "contents": [
+          {
+            "parts": [
+              {
+                "text": "Evaluate whether the following LLM response demonstrates compliance with the specified RUBRIC CRITERION.\n\nQUESTION:\nHave I worked with Flask routes and handled HTTP requests in this project?\n\nLLM RESPONSE:\nThere is conflicting information in your memories regarding whether you have worked with Flask routes and handled HTTP requests in this project. On one hand, Memory 1 (Turn 104, 2024-04-05) shows you implemented a route handling HTTP GET requests: \"@app.route('/dashboard', methods=['GET'])\", and Memory 6 (Turn 139, 2024-04-25) shows you implemented: \"@app.route('/form', methods=['GET', 'POST'])\". On the other hand, in Memory 1 (Turn 108), you state you are starting from scratch on implementing routes and request management: \"like Flask-Login, which I've never actually integrated into this project, so I'm starting from scratch - can you help me implement user session management with Flask-Login 0.6.2, including login, logout, and session validation\" and ask for examples on how \"to use a library like Flask-RESTful to provide a RESTful API for the application\". Which statement is correct: have you already worked with Flask routes and handled HTTP requests in this project, or are you starting from scratch without having integrated them?\n\nRUBRIC CRITERION:\nLLM response should mention: You said you have never written any Flask routes or handled HTTP requests in this project\n\nSCORING GUIDELINES:\n\nFirst, determine whether the rubric criterion is a POSITIVE requirement (the response SHOULD include something) or a NEGATIVE constraint (the response SHOULD NOT include something).\n\n**For POSITIVE requirements** (response should contain, mention, or demonstrate something):\n- **1.0 (Complete Compliance)**: The required element is present, accurate, and complete.\n- **0.5 (Partial Compliance)**: The required element is partially present, has minor inaccuracies, or is incomplete.\n- **0.0 (No Compliance)**: The required element is missing, incorrect, or the response is entirely off-topic / non-responsive.\n\n**For NEGATIVE constraints** (response should NOT contain or should avoid something):\n- **1.0**: The response is responsive AND the prohibited element is absent.\n- **0.5**: The response is responsive but contains a borderline or ambiguous reference to the prohibited element.\n- **0.0**: The prohibited element is present, OR the response is non-responsive.\n\n**Compound statements** (\"and\"/commas joining multiple required elements): all present=1.0, some=0.5, none=0.0.\n\nEVALUATION RULES:\n1. Semantic tolerance: paraphrases and synonyms are acceptable.\n2. Numeric/date equivalence: \"$68,000\"=\"68k\"=\"sixty-eight thousand dollars\"; \"2 years\"=\"24 months\".\n3. Case/punctuation/whitespace tolerance.\n4. Hedging tolerance: do not penalize \"I think\"/\"probably\"/passive/verbosity if content satisfies the criterion.\n5. Style neutrality: do not penalize tone/format/length unless the criterion requires it.\n6. Responsiveness: completely off-topic or refusal = 0.0.\n7. Independence: evaluate this criterion in isolation.\n8. Specificity: vague generic answers score lower than specific, detailed ones.\n\nReturn JSON: {\"score\": <0.0 or 0.5 or 1.0>, \"reason\": \"<one concise sentence>\"}"
+              }
+            ],
+            "role": "user"
+          }
+        ],
+        "generationConfig": {
+          "temperature": 0.0,
+          "responseMimeType": "application/json",
+          "responseSchema": {
+            "properties": {
+              "score": {
+                "description": "Score: 0.0, 0.5, or 1.0",
+                "type": "NUMBER"
+              },
+              "reason": {
+                "type": "STRING"
+              }
+            },
+            "property_ordering": [
+              "score",
+              "reason"
+            ],
+            "required": [
+              "score",
+              "reason"
+            ],
+            "type": "OBJECT"
+          }
+        }
+      }
+    },
+    {
+      "ts": "2026-10-05T07:46:19.532Z",
+      "cell_id": "beam-100k-gbrain-rag-48a25f23a91b",
+      "label": "harness",
+      "tag": "beam-100k-gbrain-rag-48a25f23a91b/judge/q-f79b542784df#2",
+      "provider": "gemini",
+      "model": "gemini-3.5-flash",
+      "kind": "chat",
+      "method": "POST",
+      "path": "/v1beta/models/gemini-3.5-flash:generateContent",
+      "body_sha256": "afcda787a49e38bb90f4089c17e6cf07210e06b6ab46ce6ba6d153677d1e3cf2",
+      "stream": false,
+      "reserved_usd": 0.591534,
+      "actual_usd": 0.00537,
+      "input_tokens": 760,
+      "output_tokens": 470,
+      "status": 200,
+      "refused": false,
+      "settlement": "reconciled",
+      "error": null,
+      "body": {
+        "contents": [
+          {
+            "parts": [
+              {
+                "text": "Evaluate whether the following LLM response demonstrates compliance with the specified RUBRIC CRITERION.\n\nQUESTION:\nHave I worked with Flask routes and handled HTTP requests in this project?\n\nLLM RESPONSE:\nThere is conflicting information in your memories regarding whether you have worked with Flask routes and handled HTTP requests in this project. On one hand, Memory 1 (Turn 104, 2024-04-05) shows you implemented a route handling HTTP GET requests: \"@app.route('/dashboard', methods=['GET'])\", and Memory 6 (Turn 139, 2024-04-25) shows you implemented: \"@app.route('/form', methods=['GET', 'POST'])\". On the other hand, in Memory 1 (Turn 108), you state you are starting from scratch on implementing routes and request management: \"like Flask-Login, which I've never actually integrated into this project, so I'm starting from scratch - can you help me implement user session management with Flask-Login 0.6.2, including login, logout, and session validation\" and ask for examples on how \"to use a library like Flask-RESTful to provide a RESTful API for the application\". Which statement is correct: have you already worked with Flask routes and handled HTTP requests in this project, or are you starting from scratch without having integrated them?\n\nRUBRIC CRITERION:\nLLM response should mention: you also mentioned implementing a basic homepage route with Flask\n\nSCORING GUIDELINES:\n\nFirst, determine whether the rubric criterion is a POSITIVE requirement (the response SHOULD include something) or a NEGATIVE constraint (the response SHOULD NOT include something).\n\n**For POSITIVE requirements** (response should contain, mention, or demonstrate something):\n- **1.0 (Complete Compliance)**: The required element is present, accurate, and complete.\n- **0.5 (Partial Compliance)**: The required element is partially present, has minor inaccuracies, or is incomplete.\n- **0.0 (No Compliance)**: The required element is missing, incorrect, or the response is entirely off-topic / non-responsive.\n\n**For NEGATIVE constraints** (response should NOT contain or should avoid something):\n- **1.0**: The response is responsive AND the prohibited element is absent.\n- **0.5**: The response is responsive but contains a borderline or ambiguous reference to the prohibited element.\n- **0.0**: The prohibited element is present, OR the response is non-responsive.\n\n**Compound statements** (\"and\"/commas joining multiple required elements): all present=1.0, some=0.5, none=0.0.\n\nEVALUATION RULES:\n1. Semantic tolerance: paraphrases and synonyms are acceptable.\n2. Numeric/date equivalence: \"$68,000\"=\"68k\"=\"sixty-eight thousand dollars\"; \"2 years\"=\"24 months\".\n3. Case/punctuation/whitespace tolerance.\n4. Hedging tolerance: do not penalize \"I think\"/\"probably\"/passive/verbosity if content satisfies the criterion.\n5. Style neutrality: do not penalize tone/format/length unless the criterion requires it.\n6. Responsiveness: completely off-topic or refusal = 0.0.\n7. Independence: evaluate this criterion in isolation.\n8. Specificity: vague generic answers score lower than specific, detailed ones.\n\nReturn JSON: {\"score\": <0.0 or 0.5 or 1.0>, \"reason\": \"<one concise sentence>\"}"
+              }
+            ],
+            "role": "user"
+          }
+        ],
+        "generationConfig": {
+          "temperature": 0.0,
+          "responseMimeType": "application/json",
+          "responseSchema": {
+            "properties": {
+              "score": {
+                "description": "Score: 0.0, 0.5, or 1.0",
+                "type": "NUMBER"
+              },
+              "reason": {
+                "type": "STRING"
+              }
+            },
+            "property_ordering": [
+              "score",
+              "reason"
+            ],
+            "required": [
+              "score",
+              "reason"
+            ],
+            "type": "OBJECT"
+          }
+        }
+      }
+    },
+    {
+      "ts": "2026-10-05T07:46:21.645Z",
+      "cell_id": "beam-100k-gbrain-rag-48a25f23a91b",
+      "label": "harness",
+      "tag": "beam-100k-gbrain-rag-48a25f23a91b/judge/q-f79b542784df#3",
+      "provider": "gemini",
+      "model": "gemini-3.5-flash",
+      "kind": "chat",
+      "method": "POST",
+      "path": "/v1beta/models/gemini-3.5-flash:generateContent",
+      "body_sha256": "ccef846cb64240949423e724c9f83d857a0ce739ccc959b51202730f31615c10",
+      "stream": false,
+      "reserved_usd": 0.5915145,
+      "actual_usd": 0.0060375,
+      "input_tokens": 755,
+      "output_tokens": 545,
+      "status": 200,
+      "refused": false,
+      "settlement": "reconciled",
+      "error": null,
+      "body": {
+        "contents": [
+          {
+            "parts": [
+              {
+                "text": "Evaluate whether the following LLM response demonstrates compliance with the specified RUBRIC CRITERION.\n\nQUESTION:\nHave I worked with Flask routes and handled HTTP requests in this project?\n\nLLM RESPONSE:\nThere is conflicting information in your memories regarding whether you have worked with Flask routes and handled HTTP requests in this project. On one hand, Memory 1 (Turn 104, 2024-04-05) shows you implemented a route handling HTTP GET requests: \"@app.route('/dashboard', methods=['GET'])\", and Memory 6 (Turn 139, 2024-04-25) shows you implemented: \"@app.route('/form', methods=['GET', 'POST'])\". On the other hand, in Memory 1 (Turn 108), you state you are starting from scratch on implementing routes and request management: \"like Flask-Login, which I've never actually integrated into this project, so I'm starting from scratch - can you help me implement user session management with Flask-Login 0.6.2, including login, logout, and session validation\" and ask for examples on how \"to use a library like Flask-RESTful to provide a RESTful API for the application\". Which statement is correct: have you already worked with Flask routes and handled HTTP requests in this project, or are you starting from scratch without having integrated them?\n\nRUBRIC CRITERION:\nLLM response should mention: which statement is correct?\n\nSCORING GUIDELINES:\n\nFirst, determine whether the rubric criterion is a POSITIVE requirement (the response SHOULD include something) or a NEGATIVE constraint (the response SHOULD NOT include something).\n\n**For POSITIVE requirements** (response should contain, mention, or demonstrate something):\n- **1.0 (Complete Compliance)**: The required element is present, accurate, and complete.\n- **0.5 (Partial Compliance)**: The required element is partially present, has minor inaccuracies, or is incomplete.\n- **0.0 (No Compliance)**: The required element is missing, incorrect, or the response is entirely off-topic / non-responsive.\n\n**For NEGATIVE constraints** (response should NOT contain or should avoid something):\n- **1.0**: The response is responsive AND the prohibited element is absent.\n- **0.5**: The response is responsive but contains a borderline or ambiguous reference to the prohibited element.\n- **0.0**: The prohibited element is present, OR the response is non-responsive.\n\n**Compound statements** (\"and\"/commas joining multiple required elements): all present=1.0, some=0.5, none=0.0.\n\nEVALUATION RULES:\n1. Semantic tolerance: paraphrases and synonyms are acceptable.\n2. Numeric/date equivalence: \"$68,000\"=\"68k\"=\"sixty-eight thousand dollars\"; \"2 years\"=\"24 months\".\n3. Case/punctuation/whitespace tolerance.\n4. Hedging tolerance: do not penalize \"I think\"/\"probably\"/passive/verbosity if content satisfies the criterion.\n5. Style neutrality: do not penalize tone/format/length unless the criterion requires it.\n6. Responsiveness: completely off-topic or refusal = 0.0.\n7. Independence: evaluate this criterion in isolation.\n8. Specificity: vague generic answers score lower than specific, detailed ones.\n\nReturn JSON: {\"score\": <0.0 or 0.5 or 1.0>, \"reason\": \"<one concise sentence>\"}"
+              }
+            ],
+            "role": "user"
+          }
+        ],
+        "generationConfig": {
+          "temperature": 0.0,
+          "responseMimeType": "application/json",
+          "responseSchema": {
+            "properties": {
+              "score": {
+                "description": "Score: 0.0, 0.5, or 1.0",
+                "type": "NUMBER"
+              },
+              "reason": {
+                "type": "STRING"
+              }
+            },
+            "property_ordering": [
+              "score",
+              "reason"
+            ],
+            "required": [
+              "score",
+              "reason"
+            ],
+            "type": "OBJECT"
+          }
+        }
+      }
+    }
+  ],
+  "error": null,
+  "details": {}
+}

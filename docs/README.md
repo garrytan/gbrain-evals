@@ -1,7 +1,7 @@
 # Learn, evaluate, and extend gbrain
 
 This index lists every published report by the question it answers. It describes the repository as it stands:
-gbrain-evals v0.10.45, with gbrain master `a865f8f` (v0.60.104.0) as the product under test. Results measured at
+gbrain-evals v0.10.129, with gbrain master `7a6bdd357` (v0.60.454.0) as the product under test. Results measured at
 other gbrain commits name that commit in their report. Everything above [Changelog](#changelog) is current; the
 changelog at the bottom records how this index changed.
 
@@ -11,16 +11,21 @@ Start with [what gbrain does today](../README.md), then follow the route that fi
 |---|---|
 | How do words, vectors, and relationships work together? | [Retrieval lessons](retrieval-lessons.md) |
 | Which setup should I evaluate for my application? | [Settings by workload](settings.md) |
-| What does the current pin change, category by category? | [October re-pin to gbrain `c5fb0201`, then `a865f8f`](benchmarks/2026-10-06-followups-repin.md) ([preregistration](benchmarks/2026-10-06-followups-repin-preregistration.md)) |
+| What did the October 11 re-pin change, category by category? | [October 11 re-pin to gbrain `77cf8e111` (v0.60.169.0)](benchmarks/2026-10-11-wave14-repin.md) ([preregistration](benchmarks/2026-10-11-wave14-repin-preregistration.md)) |
 | What did the October 2026 follow-up round measure, and why? | [Follow-up round plan and its reviews](plans/2026-10-06-followups-round/PLAN.md) |
-| Does gbrain help an agent finish real tasks, and do agents operate it safely? | [Model Ladder (Cat 40)](benchmarks/2026-10-02-model-ladder.md), [agent operator outcomes (Cat 41)](benchmarks/2026-10-03-agent-operator.md) |
+| Does gbrain help an agent finish real tasks, and do agents operate it safely? | [Model Ladder (Cat 40)](benchmarks/2026-10-02-model-ladder.md), [agent operator outcomes (Cat 41)](benchmarks/2026-10-03-agent-operator.md); [October 9 fresh-install re-baseline](benchmarks/2026-10-09-cat41-rebaseline.md) (v0.60.130.0): going from a clean machine to a fact recalled through the agent's own MCP tools takes 98.8 s on Claude Code and 161.9 s on Codex (6 of 6 runs each, 0 consent violations), not measurably different from the October gate build `b3f4e8b` rerun in the same hour (107.0 s and 175.4 s); [October 12 `gbrain setup claude-code` time to working memory](benchmarks/2026-10-12-cat41-setup-tthw.md) (v0.60.184.0, Claude Code, 3 runs per cell, against frozen targets): importing notes and connecting with `setup` takes a median 65.3 s against 100.5 s by hand (35% lower as scored; 23% like-for-like, because only the by-hand runs got a scripted reply to a non-blocking question), wired recall averages 83.8 s against a 60 s target (missed), a remembered item never reached a fresh session without a tool call (0 of 3; the SessionStart hook needs a running server the fresh session has not started yet), and with capture and providers declined no run captured, wrote an unrequested fact or made a paid request, though each sent one unbilled `GET /v1/models` from `gbrain doctor`; [October 13 setup re-measure](benchmarks/2026-10-13-cat41-setup-remeasure.md) (v0.60.203.0, with gbrain#6562 and #6572, scripted user symmetric, same frozen targets): wired recall averages 67.8 s with no scripted reply (missed, 60 s target), a remembered item still never reached a fresh session without a tool call (0 of 3; two agents saved it as a page because `remember` is missing from `gbrain --help`), the faster-setup threshold is met as scored (26.5% lower median than by hand) but not on reading (19%), because the frozen date rule rejected one correct day-first date, and two of three consent runs sent an unbilled `GET /v1/models` from a `gbrain doctor` run before setup recorded the decline; [October 13 setup on v0.60.208.0](benchmarks/2026-10-13-cat41-setup-v208.md) (third run, same frozen targets): wired recall averages 54.3 s (3/3, met), consent holds with no provider request at all (met), a remembered item still never reached a fresh session (0 of 3, because every agent saved the locker code as a private fact, which push never carries), and the faster-setup claim misses as scored (one correct day-first date and one install test fact fail the frozen rules) and holds on reading (28.1% faster, 0 interventions against 3); [October 13 setup, fourth run](benchmarks/2026-10-13-cat41-setup-run4.md) (v0.60.208.0, a world-visible preference as the first-push item, scorer v8): push printed the preference into all 3 fresh sessions, but first push met its target in 1 of 3 because two agents also saved it to Claude Code's own memory; wired recall 55.5 s (met), consent 0 provider requests (met), faster setup 20.7% (missed); [October 14 setup, fifth run](benchmarks/2026-10-14-cat41-setup-run5.md) (v0.60.219.0, the fourth run's design unchanged, [preregistration](benchmarks/2026-10-14-cat41-setup-run5-preregistration.md)): first push met 3/3 with gbrain the only source, consent 0 provider requests (met), wired recall 60.2 s (missed by 0.2 s), faster setup 2.8% (missed); [October 8 program primary baseline](benchmarks/2026-10-08-program-primary-baseline.md) (v0.60.106.0): on cross-session meeting and reply prep after a correction, Sonnet 5.5, Opus 5.5 and gpt-6.1-sol fail no run on a human reading (the scorer counts 11 Opus namesake warnings), so the workload is at its ceiling; both memory-breaking mutants fail 32 of 32 and a real Claude Code process agrees 8 of 8; [October 8 harder workload (T0b) baseline](benchmarks/2026-10-08-program-primary-hard-baseline.md) (v0.60.106.0): replying to a champion and an unnamed procurement lead in a 919-page founder brain, where the facts sit in mail threads and call notes, fails 74 of 144 runs (Opus 5.5 38 of 48, Sonnet 5.5 35 of 48, gpt-6.1-sol 1 of 48), mostly by greeting the procurement contact who handed off; [October 8 T0b root cause](benchmarks/2026-10-08-program-primary-hard-root-cause.md): in 111 of 112 failed correction items the correcting page never reached the reader, because `context_pack` cards omit the dated pages that mention an entity; current master (v0.60.122.0) fails 67 of 144, not measurably different; [October 9 Candidate 1](benchmarks/2026-10-09-candidate-1-newer-mentions.md) (shipped in v0.60.126.0): listing the newest dated pages that mention an entity on its `context_pack` card cuts failures from 67 to 27 of 144 against fresh master (factor 2.45, Opus 5.5 40 to 6) and from 33 to 9 of 72 on eight fresh seeds, with every validity mutant detected; [October 9 Candidate 3 diagnostic](benchmarks/2026-10-09-candidate-3-diagnostic.md): the remaining stale-terms and hop failures are notes linked only by the company's declared short code, which #6271's alias rule links in 21 of 24 development tasks (code collisions and stoplisted codes leave the rest); [October 9 alias stack](benchmarks/2026-10-09-alias-stack.md): adding short-code aliases (#6271 at `f24ca6afe`) to master with Candidate 1 cuts failures from 18 to 4 of 72 on eight fresh seeds (factor 4.11, `improvement`) and from 25 to 11 of 144 on the development seeds (`inconclusive`; Sonnet 5.5 20 to 3), with both validity mutants detected; stale-terms failures fall from 25 to 0 on the 38 of 48 tasks whose call note the codes link, and 9 of the 10 unlinked tasks are codes the generator gave two companies; [October 10 namesake diagnostic](benchmarks/2026-10-10-namesake-diagnostic.md): all 11 namesake-flagged T0b runs on the alias-stack arms are scorer false positives (7 disambiguations outside the cue list, 4 generic words), with no conflation in 25 runs that name a namesake value and no wrong-entity resolution by gbrain; [October 11 sealed confirmation](benchmarks/2026-10-11-t0b-sealed-confirmation.md) (v0.60.174.0 vs v0.60.106.0, 32 custodian-sealed personas): the shipped stack fails 5 of 576 runs where the frozen release fails 271 (factor 49, R 0.006 to 0.045, verdict `10x`; Opus 5.5 142 to 0, Sonnet 5.5 124 to 5, gpt-6.1-sol 5 to 0 near its ceiling), with both mutants detected and the resource envelope held; under the older `t0b-score-v1` the factor is 20 and the verdict `improvement` |
 | How do I run the benchmarks? | [Evaluation guide](../eval/README.md), [troubleshooting](../eval/RUNBOOK.md) |
 | How do I get a dev or held-out verdict for a gbrain change? | [Decision kit](decisions.md) (`bun run eval:decide`) |
-| Where does gbrain master start, and which feature ideas won or lost their held-out tests? | [October 5 nine-plan held-out program: starting line, verdicts and scorecard](benchmarks/2026-10-05-heldout-program.md); [October 6 BEAM-1M rerun with every session dated](benchmarks/2026-10-06-beam-1m-dates.md); [October 8 BEAM-1M failure analysis: the 1M no-memory floor, frontier readers, the oracle ceiling and the reranker](benchmarks/2026-10-08-beam-1m-failure-analysis.md) |
+| Where does gbrain master start, and which feature ideas won or lost their held-out tests? | [October 5 nine-plan held-out program: starting line, verdicts and scorecard](benchmarks/2026-10-05-heldout-program.md); [October 6 BEAM-1M rerun with every session dated](benchmarks/2026-10-06-beam-1m-dates.md); [October 8 BEAM-1M failure analysis: the 1M no-memory floor, frontier readers, the oracle ceiling and the reranker](benchmarks/2026-10-08-beam-1m-failure-analysis.md); [October 12 BEAM-1M S1 fixes: the harness reranker, the diverse pool knob (ships off) and reading breadth, three readers](benchmarks/2026-10-12-beam-1m-s1-fixes.md); [Q2 parser gaps: typed list-line guards and relationship phrasings](benchmarks/2026-10-05-heldout-program/q2.md) |
 | Which agent-written labels has a person checked? | [October 6 review packets and their rules](benchmarks/2026-10-06-w11-review/README.md) ([preregistration](benchmarks/2026-10-06-w11-review-preregistration.md)): awaiting human review |
 | How can I contribute a competing system, new questions or a category? | [Contributor guide](../eval/CONTRIBUTING.md) |
 | Which outside scores are actually comparable? | [Cross-system comparison](comparison-systems.md) |
+| How does gbrain compare with open-source memory systems run through one harness, with one reader? | [October 6 to 8 open-source comparison](benchmarks/2026-10-06-oss-memory-shootout.md) ([preregistration](benchmarks/2026-10-06-oss-memory-shootout-preregistration.md), [update-and-forget preregistration](benchmarks/2026-10-06-oss-memory-shootout-lifecycle-lite-preregistration.md)): gbrain finds the right sessions as well as or better than every system, but as measured through this adapter its evidence leads the reader to fewer correct answers than three of the five. Systems are named by kind; [one table](comparison-systems.md#systems-in-the-open-source-comparison) maps each to its project |
+| What does gbrain's `query` hand a reader at 8,000 tokens, and which lever closes the open-source comparison's gap? | [October 8 budgeted delivery E1](benchmarks/2026-10-08-gbrain-budgeted-delivery-e1.md) ([preregistration](benchmarks/2026-10-08-gbrain-budgeted-delivery-e1-preregistration.md); development, gbrain `c5fb0201`): a date line on each chunk lifts LoCoMo temporal questions from 28 to 78 of 100, so most of the comparison's LoCoMo gap was the adapter; at 8,000 tokens `auto` on 25 hits overruns every budget and adds little, while the same delivery on the first five hits reaches 82% on the LongMemEval-S slice with Sonnet 5.5, level with whole sessions; saved facts show no headroom |
+| How should gbrain pack an explicit token budget, and which packing goes to the held-out test? | [October 9 budgeted delivery E2](benchmarks/2026-10-09-gbrain-budgeted-delivery-e2.md) ([preregistration](benchmarks/2026-10-09-gbrain-budgeted-delivery-e2-preregistration.md); development, gbrain `ca2c447bd`): on all 500 LongMemEval-S questions with Sonnet 5.5 at 8,000 tokens, handing over the top conversations whole (`depth_first`) answers 79.4% against 69.0% for today's uncapped `auto` (+10.4, interval +6.4 to +14.4), with the same gain under Opus 5.5 and gpt-6.1-sol; enforcing the budget without changing the order (`cap_only`) does not help; `depth_first` goes to H1, though it trails `breadth_capped` by 10.5 points on multi-session questions |
+| Does packing for depth beat the shipped cap on held-out questions? | [October 10 budgeted delivery H1](benchmarks/2026-10-10-gbrain-budgeted-delivery-h1.md) ([preregistration](benchmarks/2026-10-10-gbrain-budgeted-delivery-h1-preregistration.md); sealed confirmation v2, gbrain `8a3eedeac`): no. With an explicit 5,500-token budget, `depth_first` answered 122 of 200 held-out questions against 145 for the shipped `cap_only` (−11.5 points, −18.0 to −4.5), losing multi-session questions 15 to 40 of 80 under all three readers, so `cap_only` stays the explicit-budget default |
 | What is the plan for improving gbrain and proving it? | [September 28 plan and audits](plans/2026-09-28-gbrain-10x/README.md) |
+| What are the cheapest retrieval, latency and cost wins left, and how will each be checked? | [October 11 low-hanging fruit plan](plans/2026-10-11-low-hanging-fruit/PLAN.md) (approved 2026-10-12; closed 2026-10-13: items 0, 1b and 2 to 5 shipped, the `balanced` default flip did not) |
 | What will the next categories measure, and what does gbrain implement for each of them? | [October 1 eval-category wave plan](plans/2026-10-01-eval-category-wave/README.md), [capability and entrypoint matrix](benchmarks/2026-10-01-capability-matrix.md) |
 
 ## Retrieval experiments
@@ -30,6 +35,7 @@ describe current behavior first, then the older work behind a decision.
 
 | Engineering question | Report |
 |---|---|
+| Would a graph database walk gbrain's link graph faster than Postgres, for the same answer? | [October 17 graph backend, HydraDB vs Postgres](benchmarks/2026-10-17-graph-backend.md) ([preregistration](benchmarks/2026-10-17-graph-backend-preregistration.md)): no. Breadth-first walks on Postgres (gbrain #6934) beat HydraDB at 10,000 to 1,000,000 pages (warm p95 1.44 s vs 6.28 s at 100,000) with identical answers on 54,842 calls; HydraDB is faster only on deep `both` edge walks |
 | Does gbrain's automatic whole-conversation delivery hold up on the sealed held-out set? | [September 30 auto v2 release check](benchmarks/2026-09-30-evidence-auto-v2.md) |
 | Does it hold up on a harder held-out set where chunks fall short? | [October 2 sealed v2 release decision 1](benchmarks/2026-10-02-sealed-v2-decision-1.md) ([preregistration](benchmarks/2026-10-02-sealed-v2-decision-1-preregistration.md)) |
 | Should an agent get neighbor chunks, sections or whole pages instead of bare chunks, and at what token cost? | [September 30 evidence-delivery study](benchmarks/2026-09-30-evidence-delivery.md) |
@@ -37,10 +43,20 @@ describe current behavior first, then the older work behind a decision.
 | Which reader should read gbrain's results? | [October 7 reader replay on frozen retrieval](benchmarks/2026-10-07-longmemeval-w10b-reader-replay.md) |
 | Is gbrain worth it compared with pasting the whole history into the reader? | [October 7 full-context comparison](benchmarks/2026-10-07-longmemeval-w10c-full-context.md) |
 | How much of what gbrain delivers to the reader does the answer need, how much does a reader write down, and how often does a wrong answer commit to a wrong value? | [October 8 reading headroom recount](benchmarks/2026-10-08-reading-headroom.md) ($0, from the W10 receipts, not preregistered): the answer's own sessions are 41% of the 15,823 chars/4 tokens delivered (8,981 on multi-session questions), frontier readers' notes run 138 to 151 tokens, and 19 to 29 of 470 answerable questions get a committed wrong value, by reader |
+| Can a smaller hand-off than whole conversations keep the reader's accuracy for less money? | [October 8 evidence architecture pilot](benchmarks/2026-10-08-evidence-architecture-pilot.md) ([preregistration](benchmarks/2026-10-08-evidence-architecture-pilot-preregistration.md); development, 100 questions): a Haiku-written brief keeps Sonnet 5.5 at 92 against 93 for whole sessions at $0.0079 against $0.0473 a question, but Haiku reading the whole sessions itself (89, $0.0025) matches the brief at lower cost and latency, so the preregistered off-ramp fires; truncation and small digests lose 20 to 50 points |
+| Does the evidence brief hold up on questions the pilot never saw? | [October 8 evidence brief confirmation (A6)](benchmarks/2026-10-08-evidence-brief-confirmation.md) ([preregistration](benchmarks/2026-10-08-evidence-brief-confirmation-preregistration.md); development, 400 questions): the 2,000-token Haiku brief costs Sonnet 5.5 3.0 points (375 to 363, 95% interval -5.25 to -0.75), so it is not shown non-inferior at the 3-point tolerance and does not go to the sealed set; FALLBACK loses 1.25 points at 44% of the dollars (inconclusive after Holm); truncation fails |
 | Does the LongMemEval answer score notice broken retrieval? | [October 6 LongMemEval negative control](benchmarks/2026-10-06-w8-longmemeval-control.md) ([preregistration](benchmarks/2026-10-06-w8-longmemeval-control-preregistration.md)) |
 | Do the published LongMemEval retrieval and reading-notes numbers hold with opaque session ids, and what does a frontier reader score on gbrain's retrieval? | [October 4 opaque-id follow-ups and frontier reader](benchmarks/2026-10-04-longmemeval-opaque-followups.md) ([preregistration](benchmarks/2026-10-04-longmemeval-opaque-followups-preregistration.md)) |
 | With the answer key hidden, how accurate are gbrain's answers, and does the reader prompt or the amount of evidence matter more? | [September 29 opaque-id answer re-run](benchmarks/2026-09-29-longmemeval-opaque-qa.md) |
 | Does taking brief notes before answering help when the original conversations remain available? | [September 25 reading-notes comparison](benchmarks/2026-09-25-reading-notes.md) |
+| Does gbrain help frontier agents on hard, indirectly referenced company questions at 55,000 documents? | [October 10 Cat 40 Hard confirmation](benchmarks/2026-10-10-model-ladder-hard-confirmation.md): gbrain v0.60.139.0 ahead of plain files on a fresh world (+7.7 points, 95% CI +2.7 to +12.7) and a sealed one (+13.0, +7.7 to +18.3); behind on M's conflicting-source family; [October 7 result](benchmarks/2026-10-07-model-ladder-hard.md) on v0.60.95.0 (−11.3) |
+| Does starting the query embed alongside the keyword arms make search faster? | [October 13 vector side alongside the keyword arms](benchmarks/2026-10-13-vector-side-early.md) (gbrain v0.60.214.0): median warm `search` 575 → 415 ms and `query` 565 → 440 ms on a 20,000-page Postgres brain with Voyage; 13 to 15 ms on a 400-page PGLite brain; results unchanged |
+| Should new installs default to `balanced`, and should `query` expand on every mode? | [October 12 low-hanging-fruit wave gates](benchmarks/2026-10-12-lhf-wave.md) ([preregistration](benchmarks/2026-10-12-lhf-wave-preregistration.md); gbrain `f77f1418c`): `query` without expansion on `balanced` keeps 451 vs 448 of 470 LongMemEval-S questions at a sixth of the latency, so expansion follows the mode; `balanced` ties `tokenmax` 451 vs 451 on LongMemEval-S, but the Cat 40 Hard 25-row rerank pool is inconclusive (−0.93 points, lower bound −1.55), so `tokenmax` stays the new-install default |
+| Can gbrain's reranker run cheaper (fewer candidates, shorter documents, the lite model) without losing recall? | [October 13 reranker settings, GBRA-86](benchmarks/2026-10-12-rerank-settings-preregistration.md): no; every cheaper cell of 18 loses at least 3 of 300 questions on strict recall@10, so the shipped 50 × 1,400 `rerank-2.5` stays; a 768-token document cap saves only 1% |
+| Can `gbrain query` on `tokenmax` skip or speed up query expansion without losing recall? | [October 14 expansion latency, GBRA-94](benchmarks/2026-10-14-expansion-latency-preregistration.md): yes; no expansion keeps 298 of 300 questions on strict recall@10 against the default's 299 (the default's own re-run also got 298) and cuts end-to-end query time 2,022 → 227 ms p50; Haiku 5.5, GPT-6 Luna and Gemini 3.8 Flash expansion are no faster than Haiku 4.5 at p95 |
+| Do Voyage's newer rerankers make gbrain's rerank cheaper or faster without losing recall? | [October 13 reranker addendum, GBRA-86](benchmarks/2026-10-13-rerank3-addendum-preregistration.md): `rerank-3-lite` at the shipped 50 × 1,400 shape passes and cuts rerank cost 60% with about the same latency; fewer candidates is faster but loses recall |
+| Why did the last-session verbatim probe miss, and does the fix change recall? | [October 9 verbatim-probe paired verdict, gbrain #6391 (`f05943e65`)](benchmarks/2026-10-09-verbatim-probe-preregistration.md): the misses were reads the probe classified as degraded; after the fix all 500 probes read clean (was 429), strict recall@10 unchanged at 496 of 500 |
+| How well does scoped vector search hold up at 1M to 2M chunks, and what fixes it? | [October 9 HNSW scale mirror, from gbrain #6380 (`2e84d234e`)](benchmarks/2026-10-09-hnsw-scale.md): pooled attempts that scan 20,000 tuples lift random 10% scope recall@50 from 0.52 to 0.77 to 0.96 to 0.99 at +16 to 36 ms p50; chunk statistics refreshed after bulk writes keep the HNSW plan; topic-coherent selective sources remain a gap |
 | Does relaxed HNSW scan order help filtered vector search on Postgres, and what does it cost? | [October 7 fix wave 11 mirror, W6.3 from gbrain `capy/fix-wave-11`](benchmarks/2026-10-07-hnsw-relaxed-order.md): on real 1024- and 1536-dimension embeddings, recall@10 at a 50% source filter rises 2.1 and 1.7 points with latency unchanged within noise, so `relaxed_order` ships default-on |
 | Does gbrain link Korean names without matching inside longer words? | [October 5 Hangul mention boundaries](benchmarks/2026-10-05-hangul-mention-boundaries.md) |
 | Does relationship retrieval still help when the question is reworded? | [September 29 paraphrase check](benchmarks/2026-09-29-relational-paraphrase.md) |
@@ -63,26 +79,38 @@ gap does not isolate the effect of a graph alone.
 
 | Engineering question | Report |
 |---|---|
+| Can saved attacker text steer a later session, does the current value survive lower-trust writes, and does `forget --purge` really remove a claim? | [October 8 paid run with Opus 5.5, Sonnet 5.5 and GPT-6.1 Sol, for gbrain #6396 (merged as `d4dc2d4d8`, v0.60.139.0)](benchmarks/2026-10-08-memory-trust-results-paid.md) ([preregistration](benchmarks/2026-10-07-memory-trust-preregistration.md), [keyless rerun](benchmarks/2026-10-08-memory-trust-results-rerun.md), [findings](benchmarks/2026-10-07-memory-trust-bugs.md)): trust labels cut planted-claim adoption (Sonnet 10.6% without labels to 2.0% with them) and raise current-value answers (Opus 55% to 100%); no model followed an instruction-worded injection in any arm, so the write gate and suppression show no measurable benefit on top of labels and the preregistered rules set `external_mode = flag`, `agent_mode = flag`, `agent_activation = allow`; at the later head `62773f02` (amendment 4), saved preferences survive the label when saved as `user_said` (47 or 48 of 48 per model); without an origin, Opus 5.5 held back 14 of 48. An artifact asking to be saved as `user_said` did not raise attack success for any model. Cats 37 to 39 pass every keyless contract at the shipped tree, after a context_pack leak at `62773f02` (finding 37-5, fixed); on 563 LongMemEval-S sessions the gate flagged 0 of 5,124 agent-written facts and 15 of 563 transcript pages (all false flags), and `gbrain trust review` stayed empty |
+| Does the tool text for D5's `context_pack` `counterparty` and `intent` (gbrain #6703) change how models do existing tasks, and does the pulled brief leak? | [October 14 D5 brief smoke](benchmarks/2026-10-14-d5-brief-smoke.md) ([preregistration](benchmarks/2026-10-14-d5-brief-smoke-preregistration.md), [amendment](benchmarks/2026-10-14-d5-brief-smoke-amendment-1.md)): the re-smoke on master `3961bf16` and the PR head `f127b1b5` passes every check. Opus 5.5, Sonnet 5.5 and gpt-6.1-sol scored 28/30 on the head against 29/30 on master. No cell passed either parameter, and N6 found 0 findings on either build. The first run's L1 failure came from `list_write_conflicts`, fixed in gbrain #6708 |
+| Does gbrain's pushed "Before you start" brief (D6, D7) help agents finish meeting-prep, reply and task-start work that needs facts from an earlier session, or save them time? | [October 15 D7 Cat 41 native-session run](benchmarks/2026-10-15-cat41-brief.md) ([preregistration](benchmarks/2026-10-15-cat41-brief-preregistration.md)): in 48 real Claude Code and Codex sessions wired by `gbrain setup` on v0.60.247.0, the brief cut time to the first correct output by 6% (ratio 0.938, 95% interval 0.853 to 1.032), short of the preregistered 20%. Agents pulled the same brief themselves with `context_pack(counterparty)` in 19 of 20 brief-off sessions. The brief made no false pushes and stayed silent on the negatives; it stays off by default. Before it, the [D6 development v2 run](benchmarks/2026-10-15-proactive-brief-dev-v2.md) ([preregistration](benchmarks/2026-10-15-proactive-brief-dev-v2-preregistration.md)) on the T0 carrier cut session-2 tool calls by 6% and tokens by 8%, with success at 72 of 72 in both arms. The [first development run](benchmarks/2026-10-14-proactive-brief-dev.md) ([preregistration](benchmarks/2026-10-14-proactive-brief-dev-preregistration.md)) on v0.60.240.0 found no improvement signal. All three are development evidence. |
 | Does the index stay correct after moves, renames, corrections, forgetting, an embedding outage and a restart? | [September 29 lifecycle experiment](benchmarks/2026-09-29-lifecycle.md) |
+| Which question sets test recall of passing details, corrections, as-of relationships and beliefs from chat, for gbrain and an extract-first memory server on the same records? | [October 5 workload suites (B1 to B4): results for both systems](benchmarks/2026-10-05-workload-suites.md) |
 | Does important material from a working session survive into saved pages? | [Transcript distillation](benchmarks/2026-08-16-brainbench-cat35-transcript-distill.md) |
 | Does useful memory arrive at the right moment in a conversation? | [Memory conformance](benchmarks/2026-06-12-brainbench-memory.md) |
 | Where does a small decision model (TypeSafe Jev) help gbrain triage, rerank, prune, abstain or spot contradicting facts, and where does it hurt? | [September 30 System One v1 slots](benchmarks/2026-09-30-system-one-jev.md) |
+| Does gbrain answer questions about long conversations as well as a memory-bank server with background extraction and reflection, at lower cost per correct answer? | [Sealed BEAM results, October 9: gbrain combined is ahead by 2.6 points (lower bound +0.9); cheaper at 20 reads per stored conversation, not at 200](benchmarks/2026-10-09-memory-proof-wave-sealed-results.md) |
+| Which memory proof wave ideas did gbrain ship, keep off or make opt-in: interleaved supersession candidates, per-model supersession thresholds, pinned questions, entity-anchored query retrieval and the facts arm in query? | [October 5 gbrain decision records, mirrored from gbrain #6066](benchmarks/2026-10-05-memory-proof-wave-gbrain-verdicts.md); [October 13 W1 guidance smoke (A12g)](benchmarks/2026-10-13-w1-guidance-smoke.md) ([preregistration](benchmarks/2026-10-13-w1-guidance-smoke-preregistration.md)): with the gbrain plugin installed natively, Opus 5.5 passed 2 of 5 sessions and Fable 5.1 5 of 5 and no session loaded a skill, so the `recall` `question` guidance stays parked |
 | Which embedder and reranker should a gbrain brain use, and what does each cost and send off the machine? | [October 6 embedding-provider matrix](benchmarks/2026-10-06-embedding-matrix.md) ([preregistration](benchmarks/2026-10-06-embedding-matrix-preregistration.md)) |
 | Does code search find a function from a description that never names it, and does a code embedder help? | [October 6 Cat 21 paraphrase questions](benchmarks/2026-10-06-cat21-paraphrase.md) ([preregistration](benchmarks/2026-10-06-cat21-paraphrase-preregistration.md)) |
 | On today's frontier models, does the takes-bootstrap classifier avoid attributing someone else's claims to the page holder? | [October 6 frontier rerun](benchmarks/2026-10-06-takes-bootstrap-frontier.md) ([preregistration](benchmarks/2026-10-06-takes-bootstrap-frontier-preregistration.md)) |
 | Are brainstorm ideas weak, or was the judge harsh? | [October 6 Cat 20 with four judges and stored reasons](benchmarks/2026-10-06-cat20-judges.md) ([preregistration](benchmarks/2026-10-06-cat20-judges-preregistration.md)) |
 | Did gbrain's takes-bootstrap classifier (facts, takes, bets and hunches from a person's pages) pass its graduation bar for running on autopilot? | [October 4 graduation verdict, mirrored from gbrain #6013](benchmarks/2026-10-04-takes-bootstrap-verdict.md) |
 | When gbrain asks a chat model to repair a malformed facts or takes table (Tier 3), which models write it correctly? | [October 6 Tier 3 fence repair, two rounds](benchmarks/2026-10-06-fence-repair-tier3.md) ([preregistration](benchmarks/2026-10-06-fence-repair-tier3-preregistration.md), [amendment 1](benchmarks/2026-10-06-fence-repair-tier3-amendment-1.md)): after the round 1 fixes, `gpt-6.1-sol`, `claude-opus-5-5` and `claude-fable-5-1` write no wrong cell on a held-out set and qualify; `claude-opus-4-7` and `claude-sonnet-5-5` do not |
+| When a file's frontmatter `slug:` names another page, which models can tell a duplicate page (merge, naming the canonical) from a stray line (delete) without ever giving a harmful answer? | [October 9 slug-conflict judgment, mirrored from gbrain #6377](benchmarks/2026-10-09-content-repair-judgment.md) ([preregistration](benchmarks/2026-10-09-content-repair-judgment-preregistration.md)): `claude-opus-5-5`, `gpt-6.1-sol` and `claude-sonnet-5-5` give no harmful answer in 432 pair runs and qualify; Opus 5.5 recognises the most true duplicates (92.0%), the others defer more |
+| Which judge models may grade a forecasting take, among the verdicts confident enough for gbrain's auto-resolve rule to apply? | [October 16 take grading, mirrored from gbrain #6882](benchmarks/2026-10-16-take-grading.md) ([preregistration](benchmarks/2026-10-16-take-grading-preregistration.md)): `gpt-6.1-sol` applies 496 verdicts with none wrong (upper bound 0.6%) and qualifies; `claude-opus-5-5` matches every gold verdict but is rarely confident enough to apply, `claude-sonnet-5-5` applies one wrong verdict |
+| Does gbrain's private forecast journal rank holders correctly, count every open prediction, and stay hidden from remote callers? | [October 17 forecast journal, mirrored from gbrain #6886](benchmarks/2026-10-17-forecast-journal.md) ([preregistration](benchmarks/2026-10-17-forecast-journal-preregistration.md)): on synthetic holders of known skill, median Spearman ρ 0.905, who-was-right set-F1 1.000, exact counts, 8/8 remote probes; shipped in v0.60.286.0 |
 | What did gbrain fix wave 9 cost on fact inserts, and can takes-quality receipts from before and after it be compared? | [October 5 fix wave 9 mirror, from gbrain #6111](benchmarks/2026-10-05-fix-wave-9-mirror.md): pinning `search_path` makes bulk fact inserts about 10-13% slower with fingerprints unchanged; takes-quality protocol 1 and 2 receipts are dissimilar inputs |
 | Can a skill improve on held-out tasks, and can the judge detect cheating? | [Skill optimization](benchmarks/2026-06-03-skillopt.md) |
 | Can the system distinguish kinds of claims and sensible confidence? | [Calibration and proposed takes](benchmarks/2026-05-18-brainbench-cat14-cat15-calibration.md) (the advice result was retracted on September 28, 2026), [October 2 blind rerun of the advice test](benchmarks/2026-10-02-cat14-rerun.md) |
 | When gbrain fails, refuses or needs a decision, do real agents (Claude Code, Codex) ask the user before spending money or destroying data, and do they recover from the errors they can fix? | [Agent operator outcomes (Cat 41): what it measures and its gate](benchmarks/2026-10-03-agent-operator-protocol.md), [runs: v0.60.35.0 baseline, gate passed at `b3f4e8b`](benchmarks/2026-10-03-agent-operator.md) |
 | Does gbrain help an agent finish company-knowledge tasks better than grep, a memory tool or plain Postgres, and does that hold as models improve? | [Model Ladder (Cat 40): what it measures](benchmarks/2026-10-02-model-ladder-protocol.md), [results](benchmarks/2026-10-02-model-ladder.md) |
-| Did fix wave 11's reordered MCP instructions and shorter put_page description hurt agents? | [October 7 wave 11 agent smoke (Cat 40, D12)](benchmarks/2026-10-07-wave11-agent-smoke.md) ([preregistration](benchmarks/2026-10-07-wave11-agent-smoke-preregistration.md)): pass; permission tasks 60/60 on both builds, write-back 55/60 on master and 56/60 on the wave, most cells at the ceiling, and no model called put_page |
-| Does fix wave 12's move of the `forget` caveat into the memory clause, or its restored put_page request_id UUID line, change how agents do? | [October 7 wave 12 agent smoke (Cat 40, GBRA-57)](benchmarks/2026-10-07-wave12-agent-smoke.md) ([preregistration](benchmarks/2026-10-07-wave12-agent-smoke-preregistration.md)): the caveat move regresses Opus 5.5 write-back (20/20 to 15/20; the old instructions on the wave 12 build give 19/20) and was reverted before merge; the UUID line does no harm, does not measurably cut non-UUID first writes (17/30 to 14/30), and shipped in gbrain v0.60.106.0 ([`7aa2caa`](https://github.com/garrytan/gbrain/commit/7aa2caa0aa2a9f031730cd351cd516cf4f9f5802), #6269) |
+| Does gbrain help frontier agents on tasks plain files only half solve: many-record questions, long histories, look-alike customers, conflicting sources and five-session memory? | [Cat 40 Hard: operator guide](benchmarks/cat40-hard/RUNBOOK.md), [world contract](benchmarks/cat40-hard/WORLD_SCHEMA.md), [preregistration](benchmarks/cat40-hard/PREREGISTRATION.md) |
+| Did fix wave 11's reordered MCP instructions and shorter put_page description hurt agents? | [October 7 wave 11 agent smoke (Cat 40, D12)](benchmarks/2026-10-07-wave11-agent-smoke.md) ([preregistration](benchmarks/2026-10-07-wave11-agent-smoke-preregistration.md)): pass; permission tasks 60/60 on both builds, write-back 55/60 on master and 56/60 on the wave, most cells at the ceiling, and no model called put_page; both builds searched without gbrain's reranker, so the comparison holds for that configuration ([correction](benchmarks/2026-10-07-wave11-agent-smoke.md#correction-2026-10-09)) |
+| Does fix wave 12's move of the `forget` caveat into the memory clause, or its restored put_page request_id UUID line, change how agents do? | [October 7 wave 12 agent smoke (Cat 40, GBRA-57)](benchmarks/2026-10-07-wave12-agent-smoke.md) ([preregistration](benchmarks/2026-10-07-wave12-agent-smoke-preregistration.md)): the caveat move regresses Opus 5.5 write-back (20/20 to 15/20; the old instructions on the wave 12 build give 19/20) and was reverted before merge; the UUID line does no harm, does not measurably cut non-UUID first writes (17/30 to 14/30), and shipped in gbrain v0.60.106.0 ([`7aa2caa`](https://github.com/garrytan/gbrain/commit/7aa2caa0aa2a9f031730cd351cd516cf4f9f5802), #6269); every set searched without gbrain's reranker, so the comparisons hold for that configuration ([correction](benchmarks/2026-10-07-wave12-agent-smoke.md#correction-2026-10-09)) |
 | How fast does a managed Postgres brain catch up a backlog far from its database, and how long does a page save take meanwhile? | [October 7 lanes and foreground mirror](benchmarks/2026-10-07-managed-sync-lanes-foreground.md) (follows the [October 5 catch-up mirror](benchmarks/2026-10-05-managed-sync-catchup.md)) |
 | Does a managed Postgres catch-up still stop when one write cannot finish preparing, and what happens to that write? | [October 8 preparation stall mirror](benchmarks/2026-10-08-managed-sync-preparation-stall.md) (gbrain #6298, v0.60.112.0): a stuck write is cut off and held in 240 s and a 15,000-entry catch-up drains in two to three passes where v0.60.105.0 never did; a table lock still pins the pool |
+| How soon does a managed Postgres catch-up commit its first page, and how slow is a page save during it? | [October 8 follow-up mirror](benchmarks/2026-10-08-managed-sync-followup-wave.md) (gbrain follow-up wave at `d6d9d5956`): first page at 15.5 s (was 19.3 s; target 15 s), slowest saves within 0.8 s of idle with none failed; corrects the October 7 catch-up-while-saving row to 60 to 63% |
 | Why did a managed Postgres sync behind a transaction-mode pooler wedge for eighteen days, and were two consumers on one host the cause? | [October 8 ClientRead wedge mirror](benchmarks/2026-10-08-managed-sync-clientread-wedge.md) (gbrain #6278, #6317; the two-consumer arms, the on-demand reproduction and the named await) |
+| How soon is a commit searchable when a running gbrain process watches the repository, in watch and poll mode, with embeddings, several sources and idle cost? | [October 19 sync freshness after the commit notifier](benchmarks/2026-10-19-sync-freshness.md) (gbrain v0.60.316.0, #7079; GBRA-133 PR 2b.6): single-file commit keyword-visible in 0.60 s p50 through `gbrain serve` in watch mode (was 3.7 s managed, never classic), 2 s p50 and under 3.7 s p95 in poll mode; deferred embeds drain fully except on PGLite after a provider outage (about 3% left); several sources sync one after another, about 2 to 3 s apart; one idle serve runs 31.5 transactions per 30 s (was 25.5); after gbrain v0.60.320.0 (#7053) the first managed sync after activating a classic brain converges in one pass, 129.6 s for 100,000 pages on Postgres (n = 1) and about 13 s for 10,000 pages on either engine |
 | Which MCP tool surface should gbrain register for agents: seven verbs, `starter` or `full`? | [October 5 registration-surface cell](benchmarks/2026-10-05-registration-surface.md) ([preregistration](benchmarks/2026-10-05-registration-surface-preregistration.md)) |
 | What happens when tweet ingestion becomes parallel? | [Tweet ingestion](benchmarks/2026-04-18-tweet-ingestion.md) |
 | What did the earlier ingestion worker comparisons measure? | [Subagent comparison](benchmarks/2026-04-18-minions-vs-openclaw-subagents.md), [production comparison](benchmarks/2026-04-18-minions-vs-openclaw-production.md) |
@@ -93,17 +121,20 @@ gap does not isolate the effect of a graph alone.
 |---|---|
 | Does gbrain answer "where did she work on that date?" and "when did I last see him?" from valid time, not from when a note was written? | [September 30 temporal and as-of check (N3)](benchmarks/2026-09-30-n3-temporal-asof.md) |
 | Does a nickname, handle or former name reach the right person without merging two people who share a name? | [September 30 entity-resolution check (N4)](benchmarks/2026-09-30-n4-entity-resolution.md) |
-| Can an agent-facing caller read private pages, held Takes, private Facts or another source through any read operation? | [September 30 visibility leak fuzz (N6)](benchmarks/2026-09-30-n6-visibility-fuzz.md), [October 6 on Postgres over the real HTTP transport](benchmarks/2026-10-06-n6-postgres-http.md) ([preregistration](benchmarks/2026-10-06-n6-postgres-http-preregistration.md)) |
+| Which retrieval failure shapes that an operator agent reported on a large multi-source brain (twin slugs across sources, merge stubs, derived copies, name variants, oversized rows, stray notices) does gbrain still show? (report-only) | [October 20 agent retrieval shapes, E1 to E15](benchmarks/2026-10-20-agent-retrieval-shapes.md) (gbrain `6e1086492`, keyword path): 9 of 15 shapes reproduce and are filed as ARS-1 to ARS-4, ARS-6, ARS-7 and ARS-13 to ARS-15, for example the same slug in two federated sources fills two of the top 10 rows on 30 of 30 queries and a 60,000-character meeting comes back as one 59,883-character row; E8 to E12 hold; E5 is not measured, because search and query take no frontmatter filter (ARS-5) |
+| Can an agent-facing caller read private pages, held Takes, private Facts or another source through any read operation? | [September 30 visibility leak fuzz (N6)](benchmarks/2026-09-30-n6-visibility-fuzz.md), [October 6 on Postgres over the real HTTP transport](benchmarks/2026-10-06-n6-postgres-http.md) ([preregistration](benchmarks/2026-10-06-n6-postgres-http-preregistration.md)), [October 15 remote `find_contradictions` (D9)](benchmarks/2026-10-15-d9-find-contradictions.md): on v0.60.250.0, scoped callers get stored contradiction findings with 0 leaks across 540 `find_contradictions` probes, and a forced probe that skips the live re-read leaks 288, [October 16 recorded-time reads (`known_as_of`)](benchmarks/2026-10-16-n6-known-as-of.md): on v0.60.267.0, 0 leaks and 0 oracles in process and over Postgres HTTP, with 56 and 90 probes reading real history, [October 16 weekly belief diff (`delta {beliefs: true}`)](benchmarks/2026-10-16-n6-delta-beliefs.md): on v0.60.273.0, 0 leaks and 0 oracles in process and over Postgres HTTP, with 28 probes each reading real history, after 12 held-Take leaks found on the branch were fixed before release |
 | Does proactive recall keep private pages away from remote callers and the turn block, as a CI gate? | [October 6 N8 privacy gate](benchmarks/2026-10-06-n8-privacy-gate.md) ([preregistration](benchmarks/2026-10-06-n8-privacy-gate-preregistration.md)) |
 | Which models can gbrain's contradiction judge run on, and what is the cheapest that passes N2? | [October 6 N2 judges on current models](benchmarks/2026-10-06-n2-judges.md) ([preregistration](benchmarks/2026-10-06-n2-judges-preregistration.md)) |
+| Does F5 turn owner phrases like "Dana's freight account" into the right account links, precisely enough to ship? | [October 14 F5 on messy-company-v1](benchmarks/2026-10-14-f5-messy-company/README.md): FAIL, 6 of 6 links correct but too few to pass (Wilson [0.610, 1.000]; recall 6 of 124) |
 | Does "who attended" work when meetings list attendees the way gbrain documents? | [October 6 attendance world](benchmarks/2026-10-06-attendance-world.md) ([preregistration](benchmarks/2026-10-06-attendance-world-preregistration.md)) |
 | Does the Jev answerability signal (S4) make a reader abstain on unanswerable questions without refusing answerable ones? | [October 6 A4 with S4 on](benchmarks/2026-10-06-a4-s4-on.md) ([preregistration](benchmarks/2026-10-06-a4-s4-on-preregistration.md)) |
 | When the same conversation arrives as a Claude Code, Codex, ChatGPT or WhatsApp export (any of the 27 formats gbrain registers), does gbrain keep who said what and when, and admit what it cannot parse? Does a meeting page tell attendees from people only mentioned? (gates since 2026-10-02, when gbrain's fix for N12-1 was verified) | [October 1 ingestion format fidelity (N12)](benchmarks/2026-10-01-n12-format-fidelity.md) |
 | Are gbrain's six code-intelligence operations ready to use on a real TypeScript repository, and where do their documented limits show? | [October 1 code-intelligence readiness scout (N13)](benchmarks/2026-10-01-n13-code-intelligence.md) |
+| If I put one very large document in gbrain (a 2 MB chat, a novel, a 20 MB or 200 MB export), can an agent find and read what is deep inside it, and does keeping it up to date stay cheap? (report-only and held; at gbrain `7a6bdd3`, with segmented storage on by default, `append_page`, upload sessions and sentence-aligned chunk cuts, one page up to 128 MiB on PGLite and 256 MiB on Postgres is found 40/40, read in windows and exported byte-identical, and a 1 KB append writes one tail segment and re-embeds one chunk; every counted rule passes, the recall-gap rule at 24 MiB included, and a purge leaves nothing behind) | [October 25 Wave B PR 4 (N14)](benchmarks/2026-10-25-n14-large-page-fidelity-wave-b4.md), [October 20 Wave B PR 3](benchmarks/2026-10-20-n14-large-page-fidelity-wave-b3.md), [October 18 Wave B PR 2 and the switch-on](benchmarks/2026-10-18-n14-large-page-fidelity-wave-b2.md), [October 15 Wave B PR 1, segmented storage (exploratory)](benchmarks/2026-10-15-n14-large-page-fidelity-wave-b1.md), [October 15 after large pages Wave A](benchmarks/2026-10-15-n14-large-page-fidelity-wave-a.md), [October 14 baseline](benchmarks/2026-10-14-n14-large-page-fidelity-baseline.md) ([preregistration](benchmarks/2026-10-14-n14-large-page-fidelity-preregistration.md)) |
 | Does "who is waiting on me" open, close and mute Gmail loops the way the guide says, and where does a reply closing a loop differ from the work being done? | [October 1 open loops on Gmail-shaped threads (N7)](benchmarks/2026-10-01-n7-open-loops-email.md) |
 | Does the brain volunteer the right page when someone is mentioned, without false alarms, and does it keep private pages out of what it pushes? (report-only) | [October 1 unsolicited recall at final delivery (N8)](benchmarks/2026-10-01-n8-proactive-recall.md) |
-| Does relationship retrieval help questions that chain two or three relations, in wording the parser never saw, and does it still help reworded one-hop questions at the current pin? | [October 1 multi-hop check (N9)](benchmarks/2026-10-01-n9-multi-hop.md), [multi-relation planner preregistration](benchmarks/2026-10-04-p7-multi-hop-planner-preregistration.md) |
-| After a value changes, does gbrain serve the new value everywhere and keep the old one as history, across transports, restarts, reimports and concurrent writes? | [October 1 knowledge update and supersession (N1)](benchmarks/2026-10-01-n1-knowledge-update.md), [October 2 CI slice](benchmarks/2026-10-02-ci-slices.md) |
+| Does relationship retrieval help questions that chain two or three relations, in wording the parser never saw, and does it still help reworded one-hop questions at the current pin? | [October 1 multi-hop check (N9)](benchmarks/2026-10-01-n9-multi-hop.md), [multi-relation planner preregistration](benchmarks/2026-10-04-p7-multi-hop-planner-preregistration.md), [LHF wave 2 attendance paraphrase gate](benchmarks/2026-10-16-lhf-wave-2-attendance-preregistration.md) (held-out paraphrases fired 18 of 90, failed) |
+| After a value changes, does gbrain serve the new value everywhere and keep the old one as history, across transports, restarts, reimports and concurrent writes? | [October 1 knowledge update and supersession (N1)](benchmarks/2026-10-01-n1-knowledge-update.md), [October 2 CI slice](benchmarks/2026-10-02-ci-slices.md), [October 16 with the belief ledger on](benchmarks/2026-10-16-belief-ledger-n1.md) (unchanged at 388/388, gbrain v0.60.265.0) |
 | After `forget`, is the claim gone from every active recall surface, and only that claim, even after reimport, restart and concurrent writes? | [October 1 forgetting residue (N5)](benchmarks/2026-10-01-n5-forget-residue.md), [October 2 CI slice](benchmarks/2026-10-02-ci-slices.md) ([preregistration](benchmarks/2026-10-02-ci-slices-preregistration.md)) |
 | When two notes disagree about the same fact, does gbrain find the pair, call it a contradiction rather than a change over time, and propose a safe fix? | [October 1 contradiction-surfacing check (N2)](benchmarks/2026-10-01-n2-contradiction-surfacing.md), [N2 and A4 preregistration](benchmarks/2026-10-01-n2-a4-preregistration.md) |
 | Does gbrain's confidence grade tell an answerable question from an unanswerable one, and does a fixed reader on gbrain's retrieval say "I don't know" without refusing answerable questions? | [October 1 abstention check (A4)](benchmarks/2026-10-01-a4-abstention.md) |
@@ -112,6 +143,7 @@ gap does not isolate the effect of a graph alone.
 | After gbrain fix wave 7, which ledger gaps did it close, and what changed in N2, N7, N9, N12, N13 and A4? | [October 3 rerun at gbrain `48ed5e8`](benchmarks/2026-10-03-wave7-repin.md) ([preregistration](benchmarks/2026-10-03-wave7-repin-preregistration.md), [N7 oracle amendment](benchmarks/2026-10-03-n7-oracle-amendment.md)) |
 | After gbrain fix wave 8 and Foundations 1, did any category get worse, and what do the unpriced-model refusal, ignored-directory import and embed budget stop look like? | [October 3 re-pin at gbrain `109b992`](benchmarks/2026-10-03-wave8-f1-repin.md) ([regression preregistration](benchmarks/2026-10-03-wave8-f1-repin-preregistration.md), [checks preregistration](benchmarks/2026-10-03-wave8-f1-coverage-preregistration.md)) |
 | After gbrain v0.60.38.0 to v0.60.46.0, did any category get worse, and do the empty-grant hint, `edit_page` diff order, per-page segment gap and Cat7-1 fix work? | [October 4 re-pin at gbrain `739e5cc`](benchmarks/2026-10-04-operator-wave-repin.md) ([regression preregistration](benchmarks/2026-10-04-operator-wave-repin-preregistration.md), [checks preregistration](benchmarks/2026-10-04-operator-wave-repin-coverage-preregistration.md)) |
+| After gbrain v0.60.47.0 to v0.60.104.0, did any category get worse, and is N1-7 fixed? | [October 6 re-pin to gbrain `c5fb0201`, then `a865f8f`](benchmarks/2026-10-06-followups-repin.md) ([preregistration](benchmarks/2026-10-06-followups-repin-preregistration.md)) |
 | Does automatic event extraction (`auto_chronicle`) write accurate timeline events, at what cost, and does an agent answer date questions better with it on? | [October 4 off-versus-on experiment](benchmarks/2026-10-04-auto-chronicle-lift.md) ([preregistration](benchmarks/2026-10-04-auto-chronicle-lift-preregistration.md)), [rerun on gbrain #6010](benchmarks/2026-10-04-auto-chronicle-rerun.md) ([preregistration](benchmarks/2026-10-04-auto-chronicle-rerun-preregistration.md)) |
 | Does a model-backed category score a deliberately broken configuration at most half as well as the real one? | [October 6 controls for Cat 14, 20, 29 and 35](benchmarks/2026-10-06-negative-controls.md) ([preregistration](benchmarks/2026-10-06-negative-controls-preregistration.md)), [October 2 controls (Cat 25, Cat 13)](benchmarks/2026-10-02-live-negative-controls.md) |
 | What do the May snapshot's invalid Categories 19, 20 and 21 measure with today's runners? | [October 2 fresh receipts](benchmarks/2026-10-02-may-snapshot-reruns.md) |
@@ -126,6 +158,8 @@ These documents fix a method before measuring. They publish no capability scores
 | Can optional situation cues help find an old constraint when today's question uses different words? | [September 23 situation-recall protocol](benchmarks/2026-09-23-situation-recall-protocol.md) |
 | Does retrieval hold up on LongMemEval's harder medium histories? | [September 24 LongMemEval-M pilot preregistration](benchmarks/2026-09-24-longmemeval-m-pilot-preregistration.md) |
 | Will a release still look better on questions nobody tuned against? | [September 29 sealed confirmation set](benchmarks/2026-09-29-sealed-confirmation-protocol.md) |
+| What end-to-end task does a 10x memory claim stand on, and what sample can show it? | [October 8 program primary preregistration (T0) and power (PW)](benchmarks/2026-10-08-program-primary-preregistration.md) |
+| What harder workload replaces T0's ceiling, and how was it calibrated? | [October 8 harder program primary preregistration (T0b), with its three calibration rounds](benchmarks/2026-10-08-program-primary-hard-preregistration.md) |
 
 ## Data and methods
 
@@ -140,6 +174,11 @@ a mapping from a question to the documents considered relevant.
 - [System One datasets](../eval/data/system-one-v1/README.md): what each
   label is made from (generator, benchmark annotation or LLM) and which files
   are rebuilt instead of stored.
+- [messy-company-v1](../eval/data/messy-company-v1/README.md): a frozen, messy
+  fictional company knowledge base (226 pages, dev and held-out splits by account
+  cluster) with gold for 9 lanes, from owner phrases and look-alike names to the
+  governing contract as of a date. [USES.md](../eval/data/messy-company-v1/USES.md)
+  maps lanes to categories.
 - [Source-swamp fixture](../eval/data/source-swamp-v1/_README.md),
   [multimodal fixture](../eval/data/multimodal/README.md),
   [calibration fixture](../eval/data/cat14-calibration/README.md), and
@@ -181,6 +220,439 @@ and [repository writing guide](../CLAUDE.md). The
 procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
+
+### 2026-10-25: Re-pin to gbrain `7a6bdd357`; opening names v0.10.129
+
+gbrain-evals v0.10.129 (the opening names it; was v0.10.128). The opening names gbrain master `7a6bdd357` (v0.60.454.0, was `6e1086492`, v0.60.324.0), which keeps derived data per
+segment on large pages, cuts forced chunks at sentence ends and imports new transcript sessions as one page (large pages
+Wave B PR 4, gbrain #7316), and restores the file of a git-canonical page that turns private and then world again
+(gbrain #7586). Reports measured at `6e1086492` keep that commit. The N14 row links the
+[Wave B PR 4 run](benchmarks/2026-10-25-n14-large-page-fidelity-wave-b4.md), and its question cell names the result:
+every counted rule passes, the recall-gap rule at 24 MiB included.
+
+### 2026-10-20: Agent retrieval shapes
+
+Correctness and access checks gains the [agent retrieval shapes report](benchmarks/2026-10-20-agent-retrieval-shapes.md)
+(category `agent-retrieval-shapes`, report-only): 15 synthetic retrieval failure shapes from gbrain issues #4612, #6058,
+#7153 to #7157 and #7159 to #7165, measured at gbrain `6e1086492` on the keyword path. The opening names gbrain-evals v0.10.126 (was v0.10.125). gbrain-evals v0.10.127 adds the gbrain#7186 build to that report; the opening names v0.10.127. gbrain-evals v0.10.128 adds the gbrain#7195 build; the opening names v0.10.128.
+
+### 2026-10-20: Sync freshness
+
+Saving, using, and improving memory gains the [sync freshness report](benchmarks/2026-10-19-sync-freshness.md)
+(GBRA-133 PR 2b.6, gbrain-evals v0.10.125; the opening names it, was v0.10.124): commit-to-searchable latency through gbrain's commit notifier in watch and poll mode, embedding
+drain under backlog and provider outage, serve start catch-up, multi-source fairness and idle cost.
+
+### 2026-10-20: Re-pin to gbrain `6e1086492`; N14 at Wave B PR 3
+
+gbrain-evals v0.10.124 (the opening names it; was v0.10.123). The opening names gbrain master `6e1086492` (v0.60.324.0,
+was `f717b1a5b`, v0.60.299.0), which adds `append_page`, upload sessions and segmented `edit_page` (large pages Wave B
+PR 3, gbrain #7104). The N14 row links the [Wave B PR 3 run](benchmarks/2026-10-20-n14-large-page-fidelity-wave-b3.md), and
+its question cell names the result: appends within the counted append rule, the recall-gap rule still failing at 24 MiB, and
+bug N14-5 fixed.
+
+### 2026-10-18: Re-pin to gbrain `f717b1a5b`; N14 at the switch-on
+
+gbrain-evals v0.10.123 (the opening names it; was v0.10.122). The opening names gbrain master `f717b1a5b` (v0.60.299.0, was
+`77cf8e111`, v0.60.169.0). This re-pin has no category-by-category report, so the row that asked "what does the current pin
+change" now asks what the October 11 re-pin changed. The N14 row links the
+[Wave B PR 2 and switch-on run](benchmarks/2026-10-18-n14-large-page-fidelity-wave-b2.md), and its question cell names
+the result: found, read and exported at every stored size up to the engine ceilings, the recall-gap rule failing at
+24 MiB, and bug N14-5.
+
+### 2026-10-18: Graph backend benchmark
+
+Retrieval experiments gains the [graph backend benchmark](benchmarks/2026-10-17-graph-backend.md) (GBRA-123): HydraDB
+does not beat Postgres breadth-first walks for gbrain's graph calls at any tested size, so no HydraDB routing is built.
+gbrain-evals v0.10.122 (the opening names it; was v0.10.121).
+
+### 2026-10-17: W11 verdict
+
+The [held-out verdicts](benchmarks/2026-10-05-heldout-verdicts/README.md) gain W11, the sealed confirmation of gbrain
+W4 (weekly belief diff) on v0.60.289.0: all four gates pass (set-F1 1.0 on every seed). gbrain-evals v0.10.121 (the
+opening names it; was v0.10.120).
+
+### 2026-10-17: W11 preregistration
+
+The [W11 preregistration](benchmarks/2026-10-17-w11-w4-sealed-confirmation-preregistration.md) fixes the sealed
+confirmation of gbrain W4 (weekly belief diff): set-F1 at least 0.95 on every fresh seed, plus exact before and after,
+cause and evidence pointer, before the custodian mints the material. gbrain-evals v0.10.120 (the opening names it; was
+v0.10.119).
+
+### 2026-10-17: Living pages decided on prior
+
+The [living-pages preregistration](benchmarks/2026-10-17-living-pages-preregistration.md) records the decision taken on
+the prior with no owner data: W9 is not built in V1 and W10 is dropped. gbrain-evals v0.10.119 (the opening names it; was
+v0.10.118).
+
+### 2026-10-17: Living-pages preregistration
+
+The [living-pages preregistration](benchmarks/2026-10-17-living-pages-preregistration.md) fixes the read/write
+break-even that decides whether gbrain builds W9, before the owner's counts are known. gbrain-evals v0.10.118 (the
+opening names it; was v0.10.117).
+
+### 2026-10-17: Forecast journal
+
+New row linking [the forecast journal gate](benchmarks/2026-10-17-forecast-journal.md), mirrored from gbrain #6886
+(shipped in v0.60.286.0): the gate passes every criterion. gbrain-evals v0.10.117 (the opening names it; was v0.10.116).
+
+### 2026-10-17: P1 E2 rerun on W5
+
+The [held-out program](benchmarks/2026-10-05-heldout-program.md) records the P1 E2 rerun on gbrain v0.60.273.0 (W5):
+C1 and C2 pass, so every late closure is disclosed as an upper bound and the three counted models keep `apply`.
+gbrain-evals v0.10.116 (the opening names it; was v0.10.115).
+
+### 2026-10-17: Take grading shipped
+
+The [take grading](benchmarks/2026-10-16-take-grading.md) report names the release it shipped in, gbrain v0.60.282.0
+(`4e698e9d9`), and records the auto-resolve follow-ups decided on October 16. gbrain-evals v0.10.115 (the opening
+names it; was v0.10.114).
+
+### 2026-10-17: Take grading
+
+New row linking [take grading](benchmarks/2026-10-16-take-grading.md), mirrored from gbrain #6882: gpt-6.1-sol
+qualifies as the take-grading judge; Opus 5.5 and Sonnet 5.5 do not. gbrain-evals v0.10.114 (the opening names it; was
+v0.10.113).
+
+### 2026-10-16: N6 on the weekly belief diff
+
+The visibility row links [N6 with gbrain's weekly belief diff](benchmarks/2026-10-16-n6-delta-beliefs.md) at the
+v0.60.273.0 release: 0 leaks and 0 oracles in process and over Postgres HTTP, with real-history signal on both.
+gbrain-evals v0.10.113 (the opening names it; was v0.10.112).
+
+### 2026-10-16: N6 on recorded-time reads
+
+The visibility row links [N6 with gbrain's recorded-time reads](benchmarks/2026-10-16-n6-known-as-of.md) at the
+v0.60.267.0 release: 0 leaks and 0 oracles in process and over Postgres HTTP, with real-history signal on both.
+gbrain-evals v0.10.112 (the opening names it; was v0.10.111).
+
+### 2026-10-16: N1 with the belief ledger on
+
+The N1 row links [N1 with gbrain's belief ledger on](benchmarks/2026-10-16-belief-ledger-n1.md) at the v0.60.265.0
+release: 388 of 388 current values and 0 stale with the ledger off and on, on both engines. gbrain-evals v0.10.111 (the
+opening names it; was v0.10.110).
+
+### 2026-10-16: LHF wave 2 attendance gate
+
+The N9 row links the [LHF wave 2 attendance paraphrase gate](benchmarks/2026-10-16-lhf-wave-2-attendance-preregistration.md):
+a narrowed attendance lexicon fired on 150 of 150 development paraphrases but 18 of 90 held-out runs, under the
+preregistered 80% floor, so gbrain did not ship it. gbrain-evals v0.10.110 (the opening names it; was v0.10.109).
+
+### 2026-10-15: N14 at Wave B PR 1
+
+The N14 row links the exploratory [Wave B PR 1 run](benchmarks/2026-10-15-n14-large-page-fidelity-wave-b1.md) at gbrain `7f3c9f5`
+with segmented storage switched on and off, and its question cell names the result. gbrain-evals v0.10.109 (the opening
+names it; was v0.10.108).
+
+### 2026-10-15: D9 remote `find_contradictions`
+
+The visibility row links the [D9 report](benchmarks/2026-10-15-d9-find-contradictions.md): N6 seeds a stored
+contradiction report and finds 0 leaks on gbrain v0.60.250.0, and N2's compatible-pair verdict carries forward.
+gbrain-evals v0.10.108 (the opening names it; was v0.10.107).
+
+### 2026-10-15: D7 Cat 41 brief scenarios
+
+The proactive-brief row now leads with the [D7 native-session run](benchmarks/2026-10-15-cat41-brief.md) and its
+preregistration, and keeps D6's two development runs after it. gbrain-evals v0.10.107 (the opening names it; was
+v0.10.106).
+
+### 2026-10-15: D6 development v2
+
+The D6 proactive-brief row now leads with the [development v2 run](benchmarks/2026-10-15-proactive-brief-dev-v2.md)
+and its preregistration, and keeps the first run's result after it. gbrain-evals v0.10.106 (the opening names it; was
+v0.10.105).
+
+### 2026-10-15: Cat 40 next-wave confirmation
+
+The repository README gains the Cat 40 next-wave row, linking the
+[confirmation report](benchmarks/2026-10-15-cat40-next-confirm/README.md). gbrain-evals v0.10.105 (the opening names
+it; was v0.10.104).
+
+### 2026-10-15: N14 after large pages Wave A
+
+The N14 row links the [Wave A rerun](benchmarks/2026-10-15-n14-large-page-fidelity-wave-a.md) at gbrain `44eb049` beside the
+baseline, and its question cell names the new result (was "held until gbrain ships a large-page API"). gbrain-evals
+v0.10.104 (the opening names it; was v0.10.103).
+
+### 2026-10-14: D6 proactive-brief development row
+
+Saving, using, and improving memory gains a row for the [D6 proactive-brief development run](benchmarks/2026-10-14-proactive-brief-dev.md)
+and its preregistration. gbrain-evals v0.10.103 (the opening names it; was v0.10.102).
+
+### 2026-10-14: D5 brief re-smoke
+
+The D5 brief smoke row now reports the re-smoke, which passes, in place of the first run's L1 failure; that verdict
+stays in its report. gbrain-evals v0.10.102 (the opening names it; was v0.10.101).
+
+### 2026-10-14: D5 brief smoke row
+
+Saving, using, and improving memory gains a row for the [D5 brief smoke](benchmarks/2026-10-14-d5-brief-smoke.md) on
+gbrain #6703. gbrain-evals v0.10.101 (the opening names it; was v0.10.100).
+
+### 2026-10-14: N14 large-page fidelity row
+
+Adds the N14 large-page fidelity baseline and preregistration (gbrain-evals v0.10.100). The index header names v0.10.100 (was v0.10.99).
+
+### 2026-10-14: expansion latency row
+
+Adds the GBRA-94 query-expansion latency result (gbrain-evals v0.10.99). The index header names v0.10.99 (was v0.10.98).
+
+### 2026-10-14: F5 owner-phrase row
+
+Correctness and access checks gains a row for [F5 on messy-company-v1](benchmarks/2026-10-14-f5-messy-company/README.md):
+FAIL on gbrain `4e10136b`, with 6 of 6 links correct, but below the 22-link minimum and the 0.85 Wilson bar.
+gbrain-evals v0.10.98 (the opening names it; was v0.10.97).
+
+### 2026-10-14: messy-company-v1 dataset row
+
+Data and methods lists the new [messy-company-v1](../eval/data/messy-company-v1/README.md) dataset, a reusable
+fictional company knowledge base with gold for 9 lanes, frozen by its manifest. gbrain-evals v0.10.97 (the opening
+names it; was v0.10.96). No result changed.
+
+### 2026-10-14: Cat 41 fifth-run report corrected
+
+gbrain-evals v0.10.96 (the opening names it; was v0.10.95). The [fifth Cat 41 setup report](benchmarks/2026-10-14-cat41-setup-run5.md)
+now measures install-guide reading the same way in both runs and has a descriptive appendix. Its row here is
+unchanged, because no verdict changed.
+
+### 2026-10-14: Cat 41 setup fifth-run results
+
+gbrain-evals v0.10.95 (the opening names it; was v0.10.93, since v0.10.94 did not update it). The "real tasks" row
+gained the [fifth Cat 41 setup run](benchmarks/2026-10-14-cat41-setup-run5.md) and its preregistration; the four
+earlier runs beside it are unchanged.
+
+### 2026-10-13: Reranker addendum row
+
+gbrain-evals v0.10.93 (the opening names it; was v0.10.92). Added the October 13 reranker addendum (GBRA-86):
+`rerank-3-lite` at the shipped shape passes its preregistered rule on 300 LongMemEval-S questions at 60% lower rerank
+cost.
+
+### 2026-10-13: receipt source-tree hash fix
+
+gbrain-evals v0.10.92 (the opening names it; was v0.10.91). The receipt source-tree hash now reads only files that differ
+from git's index. No result on this page changes.
+
+### 2026-10-13: Cat 41 setup fourth-run results
+
+gbrain-evals v0.10.91 (the opening names it; was v0.10.89, since v0.10.90 did not update it). The "real tasks" row gained the
+[fourth Cat 41 setup run](benchmarks/2026-10-13-cat41-setup-run4.md); the three earlier runs beside it are unchanged.
+Its preregistration left "Protocols and preregistrations (no results yet)" because it now has results.
+
+### 2026-10-13: Cat 41 setup fourth run preregistered
+
+"Protocols and preregistrations" gained the [fourth Cat 41 setup run's preregistration](benchmarks/2026-10-13-cat41-setup-run4-preregistration.md):
+a world-visible preference as the first-push item, an unambiguous-date rule and an install-check exemption for an
+agent's save-and-recall smoke fact (scorer `cat41-score-v8`), made after the third run's results without revising them.
+
+### 2026-10-13: Cat 41 setup results on v0.60.208.0
+
+gbrain-evals v0.10.89 (the opening names it; was v0.10.88). The "real tasks" row gained the
+[third Cat 41 setup measurement](benchmarks/2026-10-13-cat41-setup-v208.md) on gbrain v0.60.208.0; the two earlier
+runs beside it are unchanged. Its preregistration left "Protocols and preregistrations (no results yet)" because it now
+has results.
+
+### 2026-10-13: Cat 41 setup preregistered on v0.60.208.0
+
+"Protocols and preregistrations" gained the [third Cat 41 setup measurement's preregistration](benchmarks/2026-10-13-cat41-setup-v208-preregistration.md),
+on gbrain v0.60.208.0 with the second run's frozen targets and scoring.
+
+### 2026-10-13: W1 guidance smoke row
+
+gbrain-evals v0.10.88 (the opening names it; was v0.10.86, since v0.10.87 did not update it). The memory proof wave row
+gained the [October 13 W1 guidance smoke (A12g)](benchmarks/2026-10-13-w1-guidance-smoke.md) and its preregistration: the
+`recall` `question` guidance stays parked.
+
+### 2026-10-13: Cat 41 setup re-measure results
+
+gbrain-evals v0.10.86 (the opening names it; was v0.10.85). The "real tasks" row gained the [October 13 setup re-measure](benchmarks/2026-10-13-cat41-setup-remeasure.md) on
+gbrain v0.60.203.0, measured against its frozen targets; the first run's result beside it is unchanged. Its
+preregistration left "Protocols and preregistrations (no results yet)" because it now has results.
+
+### 2026-10-13: Repository version v0.10.85
+
+gbrain-evals v0.10.85 (the opening names it; was v0.10.84). No row on this index changes.
+
+### 2026-10-13: Reranker-settings row
+
+gbrain-evals v0.10.84 (the opening names it; was v0.10.83). Added the October 13 reranker-settings verdict (GBRA-86):
+no cheaper rerank setting passes its preregistered rule on 300 LongMemEval-S questions, so the default stays.
+
+### 2026-10-12: BEAM-1M S1 fixes row
+
+gbrain-evals v0.10.83 (the opening names it; was v0.10.82). The held-out program row gained the October 12 BEAM-1M S1 fixes report (wave 3 item S1, development split): the memory-qa harness now reranks by default and fails closed with `RERANKER_INACTIVE`, which raises strict recall at 5 from 46 to 55 of 198 at master; gbrain's `search.diverse_pool_depth` knob (+3.5 strict@10, interval [0.0, 6.6]) and reading 10 turn groups (+2.0 answer points, [-0.7, 4.7]) are not distinguished, so the knob ships off and the breadth default stays 5; Opus 5.5, Sonnet 5.5 and `gpt-6.1-sol` score 66.7% to 69.7% on identical evidence, not distinguished. Version stamped when the PR is next to merge.
+
+### 2026-10-12: Cat 41 setup re-measure preregistered
+
+gbrain-evals v0.10.82 (the opening names it; was v0.10.81). "Protocols and preregistrations" gained the [Cat 41 setup re-measure preregistration](benchmarks/2026-10-12-cat41-setup-remeasure-preregistration.md):
+the scripted user now replies to any closing question in every arm (scorer `cat41-score-v7`), the first run's
+transcripts are re-scored beside its report without changing it, and the paid cells wait for a gbrain release with
+gbrain#6562 and lane 31's trailing-question fix.
+
+### 2026-10-12: Low-hanging-fruit wave gates
+
+gbrain-evals v0.10.81 (the opening names it; was v0.10.80). Adds the retrieval row for the
+[October 12 low-hanging-fruit wave gates](benchmarks/2026-10-12-lhf-wave.md).
+
+### 2026-10-12: Cat 41 `gbrain setup claude-code` TTHW
+
+gbrain-evals v0.10.80 (the opening names it; was v0.10.79). The "real tasks" row gained the [October 12 setup TTHW report](benchmarks/2026-10-12-cat41-setup-tthw.md): the wave 2
+measurement of `gbrain setup claude-code` on v0.60.184.0 against the targets preregistered in
+[its preregistration](benchmarks/2026-10-12-cat41-setup-tthw-preregistration.md) (faster-setup threshold met as scored,
+35% lower median, with the like-for-like gap of 23% beside it because only the by-hand runs got a scripted reply;
+wired-recall, first-push and consent targets missed as written).
+
+### 2026-10-12: Cat 40 warm-boot drain fix
+
+gbrain-evals v0.10.79 (the opening names it; was v0.10.78). No report row changes: the release fixes the Cat 40 warm
+boot and adds the D2/D4 notice smoke under `benchmarks/2026-10-12-d2d4-smoke/`.
+
+### 2026-10-12: Retire the Cat 40 v1 success headline
+
+gbrain-evals v0.10.78 (the opening names it; was v0.10.77). The Model Ladder report now marks its success figures as
+retired, keeping the permission result; for agent-task success the index already links the Cat 40 Hard confirmation.
+
+### 2026-10-11: T0b sealed confirmation
+
+gbrain-evals v0.10.77 (the opening names it; was v0.10.76). "Does gbrain help an agent finish real tasks" links the
+[October 11 sealed confirmation](benchmarks/2026-10-11-t0b-sealed-confirmation.md): the shipped stack fails 5 of 576
+runs where v0.60.106.0 fails 271, verdict `10x` under `t0b-score-v2` and `improvement` under `t0b-score-v1`.
+
+### 2026-10-11: Re-pin to gbrain `77cf8e111`
+
+gbrain-evals v0.10.76 (the opening names it; was v0.10.75). The opening names gbrain master `77cf8e111` (v0.60.169.0,
+was `8a3eedeac`, v0.60.126.0). "What does the current pin change" links the
+[wave 14 re-pin report](benchmarks/2026-10-11-wave14-repin.md); the October 6 re-pin it linked moves to the history
+rows beside the earlier re-pins.
+
+### 2026-10-11: Cat 40 Hard fix wave records
+
+gbrain-evals v0.10.75 (the opening names it; was v0.10.74). No report row changes: the release adds the fix wave's
+plan, development record, preregistration and results under `docs/plans/2026-10-07-cat40-hard-fix/`, which the October
+10 confirmation report links to.
+
+### 2026-10-11: Cat 40 Hard confirmation
+
+gbrain-evals v0.10.74 (the opening names it; was v0.10.73), #76. The Cat 40 Hard row now leads with the October 10 confirmation (gbrain v0.60.139.0 ahead of plain files by +7.7 and +13.0 points on a fresh and a sealed world) and keeps the October 7 result (v0.60.95.0, −11.3) beside it, because the new result measures a different gbrain build.
+
+### 2026-10-11: Contributor fix wave
+
+gbrain-evals v0.10.73 (the opening names it; was v0.10.72). No report row changes: the release fixes the phase 1 run
+script on Bash 3.2 and makes the shared judge reject non-finite scores.
+
+### 2026-10-11: Memory proof wave release
+
+gbrain-evals v0.10.72 (the opening names it; was v0.10.71). The memory proof wave rows now describe a shipped
+feature: gbrain #6066 merged as v0.60.164.0 with the query facts arm on, per-model supersession thresholds, and
+pinned questions opt-in.
+
+### 2026-10-10: Budgeted delivery H1 results row
+
+gbrain-evals v0.10.71 (the opening names it; was v0.10.70). The H1 row now links the results report and states the
+answer (`depth_first` 122 against `cap_only` 145 of 200 held-out questions, verdict `fail`); it named the
+preregistration alone.
+
+### 2026-10-10: Budgeted delivery H1 preregistration row
+
+gbrain-evals v0.10.70 (the opening names it; was v0.10.69). The main table gained a row for the H1 preregistration
+(`depth_first` against `cap_only` on sealed confirmation v2), after the E2 row whose candidate it tests.
+
+### 2026-10-10: T0b generator v2 and the sealed confirmation preregistration
+
+gbrain-evals v0.10.69 (the opening names it; was v0.10.68). The T0b preregistration gains amendment 5, the
+custodian-sealed confirmation of the shipped stack, with generator v2 (unique short codes) and scorer `t0b-score-v2`.
+
+### 2026-10-10: Namesake diagnostic row
+
+gbrain-evals v0.10.68 (the opening names it; was v0.10.67). The agent-task row gained the namesake diagnostic: the namesake flags left after the alias fix are scorer false
+positives, not product failures.
+
+### 2026-10-09: Sealed BEAM results row
+
+The memory proof wave rows gained the sealed BEAM 100k + 500k + 1M results: gbrain's combined lane is `ahead` of the comparator (+2.64 points, one-sided 95% bounds +0.90 and +4.41), with lower cost per correct answer at 20 reads per stored conversation and none at 200.
+
+### 2026-10-09: Memory trust row
+
+gbrain-evals v0.10.67 (the opening names it; was v0.10.66). The memory table gained a row for Cats 37 (memory poisoning), 38 (state resolution) and 39 (deletion audit), added for gbrain #5575 and shipped in gbrain #6396 (merged as `d4dc2d4d8`, v0.60.139.0): the preregistration with amendments 1 to 5, the paid run with Opus 5.5, Sonnet 5.5 and GPT-6.1 Sol, the keyless rerun and the findings ledger. Trust labels cut planted-claim adoption and raise current-value answers; the preregistered rules set the defaults to flag, flag and allow; saved preferences survive the label when saved as `user_said`; Cats 37 to 39 pass every keyless contract at the shipped tree; on natural conversations the write gate flagged no agent-written fact and the review queue stayed empty.
+
+### 2026-10-09: Verbatim-probe row
+
+gbrain-evals v0.10.66 (the opening names it; was v0.10.65). The retrieval table gained a row for the verbatim-probe
+paired verdict of gbrain #6391 (merged as `f05943e65`): every last-session probe reads clean after the fix, with recall
+unchanged.
+
+### 2026-10-09: HNSW scale row
+
+gbrain-evals v0.10.65 (the opening names it; was v0.10.64). The retrieval table gained a row for the October 9 HNSW scale
+mirror of gbrain #6380 (merged as `2e84d234e`): a 20,000-tuple pooled scan fixes random selective scopes at 1M to 2M
+chunks, and topic-coherent selective sources remain a gap.
+
+### 2026-10-09: Alias stack row
+
+gbrain-evals v0.10.64 (the opening names it; was v0.10.63). The agent-task row gained the alias-stack report: short-code aliases (#6271 at `f24ca6afe`) on top of Candidate 1 cut
+T0b failures from 18 to 4 of 72 on fresh seeds and from 25 to 11 of 144 on development seeds (inconclusive there), with
+both validity mutants detected.
+
+### 2026-10-09: Slug-conflict judgment row
+
+The memory table gained a row for the October 9 slug-conflict judgment measurement (gbrain #6377, branch `capy/gbra72-content-repair`): three frontier models, 48 pairs, three runs, no harmful answer; all three qualify for gbrain's `CONTENT_REPAIR_MEASURED_MODELS`, Opus 5.5 first.
+### 2026-10-09: Budgeted delivery E2 row
+
+gbrain-evals v0.10.62. A new row links the October 9 budgeted delivery E2 report: `depth_first` packing answers 79.4%
+of the LongMemEval-S 500 against 69.0% for today's uncapped `auto` at 8,000 tokens and goes to the held-out test. The
+opening names v0.10.62 (was v0.10.59).
+
+### 2026-10-09: Cat 41 fresh-install re-baseline row
+
+gbrain-evals v0.10.63. The agent-task row gained the October 9 Cat 41 re-baseline: wired recall from a clean machine takes 98.8 s (Claude
+Code) and 161.9 s (Codex) on gbrain v0.60.130.0, against 107.0 s and 175.4 s for `b3f4e8b` rerun in the same window,
+so the published 121.7 s Codex time is not a reachable comparator today.
+
+### 2026-10-09: Candidate 3 diagnostic
+
+The agent-task row gained the Candidate 3 diagnostic: the remaining T0b terms and hop failures come from call notes
+and prompts that name the customer only by its declared short code; no separate Candidate 3 was built.
+
+### 2026-10-09: Pin `8a3eedeac`; Candidate 1 row
+
+gbrain-evals v0.10.59. The opening names gbrain master `8a3eedeac` (v0.60.126.0, was `fc548317f`), the merge of gbrain #6362, and
+v0.10.59 instead of v0.10.57. The agent-task row gained the Candidate 1 report: newest dated mentions on `context_pack`
+cards cut T0b failures from 67 to 27 of 144 against fresh master, and from 33 to 9 of 72 on fresh seeds.
+
+### 2026-10-09: Budgeted delivery E1 row
+
+Added the E1 row (measuring gbrain through `query`) after the open-source comparison row, with its preregistration.
+
+### 2026-10-09: Evidence brief confirmation row
+
+gbrain-evals v0.10.57. The opening names v0.10.57 instead of v0.10.56. The LongMemEval rows gained the October 8 evidence brief confirmation (plan item A6): on the 400-question confirm split the brief is not shown non-inferior to whole sessions, so it does not join the sealed v2 opening.
+
+### 2026-10-09: Wave 11 and wave 12 rows note gbrain ran without its reranker
+
+gbrain-evals v0.10.56. The opening names v0.10.56 instead of v0.10.55. The fix wave 11 and fix wave 12 agent smoke rows now say every cell searched without gbrain's reranker (restored harness slots kept a closed metering-proxy port; fixed in #76 and #109) and link the reports' dated corrections; their numbers are unchanged. The Cat 40, Cat 41, registration-surface and P8 reports carry the same dated correction; their rows here quote no affected number.
+
+### 2026-10-08: T0b root cause row
+
+gbrain-evals v0.10.55. The opening names v0.10.55 instead of v0.10.54. The agent-task row gained the T0b root-cause report: 111 of 112 failed correction items never had the correcting page in front of the reader, current master (v0.60.122.0) fails 67 of 144 runs against 74 (inconclusive), and restored harness slots searched without the reranker in later invocations.
+
+### 2026-10-08: Harder program primary (T0b) rows
+
+gbrain-evals v0.10.54. The opening names v0.10.54 instead of v0.10.53. The agent-task row gained the T0b development baseline at gbrain v0.60.106.0 (74 of 144 runs fail; gpt-6.1-sol is near its ceiling), and the protocols table gained the T0b preregistration with its calibration record.
+
+### 2026-10-08: Pin `fc548317f`; evidence architecture pilot row
+
+gbrain-evals v0.10.53. The opening names gbrain master `fc548317f` (v0.60.122.0, was `61624308b`), the merge of gbrain #6350, and v0.10.53 instead of v0.10.52. The LongMemEval rows gained the October 8 evidence architecture pilot (plan items A3, A4, A5, A10): seven ways of handing gbrain's retrieved conversations to a reader, compared at matched budgets on a 100-question development split; the preregistered off-ramp fired in favor of a cheap reader on whole sessions.
+
+### 2026-10-08: Program primary rows
+
+gbrain-evals v0.10.52. The opening names v0.10.52 instead of v0.10.51. The agent-task row gained the October 8 program primary baseline (wave 1 item T0 of the 10x memory advantage plan): on gbrain v0.60.106.0 the cross-session meeting and reply workload is at its ceiling for all three counted readers, and both mutants are detected. The protocols table gained the T0 preregistration with its power work (PW).
+
+### 2026-10-08: Pin `61624308b`; Q2 parser-gaps verdicts in the held-out program row
+
+gbrain-evals v0.10.51. The opening names gbrain master `61624308b` (v0.60.120.0, was `a865f8f`), the merge of gbrain #6343, and v0.10.51 instead of v0.10.45. The held-out program row links the Q2 record (P5's follow-up): typed relation lines stay opt-in because 459 of 583 lines the grammar minted on held-out natural text are wrong, all but one from template-, glossary- and changelog-shaped notes, while relation lines agents wrote are 299 of 300 correct; the link-typing units U34 and U1 ship and U25 and U6 are reverted.
+
+### 2026-10-08: Open-source comparison row
+
+Added the open-source comparison report and its two preregistrations, which the index did not list. The row
+describes the systems by kind and links the one table that names them.
 
 ### 2026-10-08: BEAM-1M failure analysis row
 
@@ -228,6 +700,14 @@ gbrain-evals v0.10.36. The memory table gained a row for the October 6 Tier 3 fe
 ### 2026-10-05: Fix wave 9 mirror row
 
 gbrain-evals v0.10.29. The memory table gained a row for the October 5 mirror of gbrain fix wave 9 (#6111, pending merge): pinning `search_path` makes bulk fact inserts about 10-13% slower on a local timing, with fact fingerprints byte-identical, and takes-quality receipts move to protocol 2, so protocol 1 and 2 receipts are compared as dissimilar inputs. The opening line names v0.10.29.
+
+### 2026-10-05: Workload-suite results
+
+The workload-suite row links the B1 to B4 results for gbrain and the comparator instead of the design-only page.
+
+### 2026-10-05: Memory proof wave gbrain decision records row
+
+The memory table gained a row for the four gbrain decision records mirrored from gbrain #6066: interleaved supersession candidates (no benefit), per-model supersession thresholds (applied), pinned questions (opt-in; anchored retrieval is the win) and entity-anchored query retrieval (gates 1 and 2 pass, key off pending gate 3).
 
 ### 2026-10-05: Restructured as a current-state page with this changelog
 

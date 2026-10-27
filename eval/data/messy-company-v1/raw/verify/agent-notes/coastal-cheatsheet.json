@@ -1,0 +1,220 @@
+{
+  "slug": "agent-notes/coastal-cheatsheet",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "none (undated page)",
+    "owner_phrases": [
+      {
+        "mid": "agent-notes/coastal-cheatsheet#m1",
+        "phrase": "Sofia's grocery account",
+        "lines": [
+          20
+        ]
+      },
+      {
+        "mid": "agent-notes/coastal-cheatsheet#m2",
+        "phrase": "Kwame's biggest account",
+        "lines": [
+          28
+        ]
+      },
+      {
+        "mid": "agent-notes/coastal-cheatsheet#m3",
+        "phrase": "the account Sofia runs",
+        "lines": [
+          29
+        ]
+      }
+    ],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Pellucid Harbor Logistics",
+        "line": 18
+      },
+      {
+        "oid": "e2",
+        "surface": "PHL",
+        "line": 18
+      },
+      {
+        "oid": "e3",
+        "surface": "Driftmoor Marine Freight",
+        "line": 19
+      },
+      {
+        "oid": "e4",
+        "surface": "DMF",
+        "line": 19
+      },
+      {
+        "oid": "e5",
+        "surface": "Saltmarsh Provisions",
+        "line": 20
+      },
+      {
+        "oid": "e6",
+        "surface": "SMP",
+        "line": 20
+      },
+      {
+        "oid": "e7",
+        "surface": "Covey & Lark Retail",
+        "line": 21
+      },
+      {
+        "oid": "e8",
+        "surface": "Covey",
+        "line": 21
+      },
+      {
+        "oid": "e9",
+        "surface": "CLR",
+        "line": 21
+      },
+      {
+        "oid": "e10",
+        "surface": "PHL",
+        "line": 21
+      },
+      {
+        "oid": "e11",
+        "surface": "PHL",
+        "line": 21
+      },
+      {
+        "oid": "e12",
+        "surface": "Covey & Lark Retail",
+        "line": 21
+      },
+      {
+        "oid": "e13",
+        "surface": "Pellucid Harbor Logistics",
+        "line": 21
+      },
+      {
+        "oid": "e14",
+        "surface": "Carrowmere Cloud",
+        "line": 25
+      },
+      {
+        "oid": "e15",
+        "surface": "Orlavene Health",
+        "line": 30
+      },
+      {
+        "oid": "e16",
+        "surface": "Driftmoor Marine Freight",
+        "line": 31
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "28f600c3a3b4442e0bbe4712739311b237f8f230a1bf497e37230d7aaea234b2",
+  "response_text": "{\n  \"date_used\": null,\n  \"owner_phrases\": [\n    {\n      \"mid\": \"agent-notes/coastal-cheatsheet#m1\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\"saltmarsh\"],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"The phrase appears in the Saltmarsh entry, and Saltmarsh is the grocery distributor Sofia previously owned.\"\n    },\n    {\n      \"mid\": \"agent-notes/coastal-cheatsheet#m2\",\n      \"refers_to_customer_account\": false,\n      \"accounts\": [],\n      \"reading\": \"ambiguous: could be more than one account\",\n      \"note\": \"Kwame has owned Pellucid and Driftmoor. The page is undated and provides no account-size comparison to identify his biggest account.\"\n    },\n    {\n      \"mid\": \"agent-notes/coastal-cheatsheet#m3\",\n      \"refers_to_customer_account\": false,\n      \"accounts\": [],\n      \"reading\": \"ambiguous: could be more than one account\",\n      \"note\": \"Sofia has owned Driftmoor, Saltmarsh, and Covey & Lark. With no date or distinguishing account detail, the phrase does not identify one.\"\n    }\n  ],\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"pellucid\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"pellucid\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"driftmoor\"\n    },\n    {\n      \"oid\": \"e4\",\n      \"entity\": \"driftmoor\"\n    },\n    {\n      \"oid\": \"e5\",\n      \"entity\": \"saltmarsh\"\n    },\n    {\n      \"oid\": \"e6\",\n      \"entity\": \"saltmarsh\"\n    },\n    {\n      \"oid\": \"e7\",\n      \"entity\": \"covey-lark\"\n    },\n    {\n      \"oid\": \"e8\",\n      \"entity\": \"covey-lark\"\n    },\n    {\n      \"oid\": \"e9\",\n      \"entity\": \"covey-lark\"\n    },\n    {\n      \"oid\": \"e10\",\n      \"entity\": \"covey-lark\"\n    },\n    {\n      \"oid\": \"e11\",\n      \"entity\": \"none\",\n      \"note\": \"This occurrence explicitly describes a code shared by Covey & Lark and Pellucid, rather than uniquely identifying either company.\"\n    },\n    {\n      \"oid\": \"e12\",\n      \"entity\": \"covey-lark\"\n    },\n    {\n      \"oid\": \"e13\",\n      \"entity\": \"pellucid\"\n    },\n    {\n      \"oid\": \"e14\",\n      \"entity\": \"carrowmere\"\n    },\n    {\n      \"oid\": \"e15\",\n      \"entity\": \"orlavene-health\"\n    },\n    {\n      \"oid\": \"e16\",\n      \"entity\": \"driftmoor\"\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": null,
+    "owner_phrases": [
+      {
+        "mid": "agent-notes/coastal-cheatsheet#m1",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "saltmarsh"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "The phrase appears in the Saltmarsh entry, and Saltmarsh is the grocery distributor Sofia previously owned."
+      },
+      {
+        "mid": "agent-notes/coastal-cheatsheet#m2",
+        "refers_to_customer_account": false,
+        "accounts": [],
+        "reading": "ambiguous: could be more than one account",
+        "note": "Kwame has owned Pellucid and Driftmoor. The page is undated and provides no account-size comparison to identify his biggest account."
+      },
+      {
+        "mid": "agent-notes/coastal-cheatsheet#m3",
+        "refers_to_customer_account": false,
+        "accounts": [],
+        "reading": "ambiguous: could be more than one account",
+        "note": "Sofia has owned Driftmoor, Saltmarsh, and Covey & Lark. With no date or distinguishing account detail, the phrase does not identify one."
+      }
+    ],
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "pellucid"
+      },
+      {
+        "oid": "e2",
+        "entity": "pellucid"
+      },
+      {
+        "oid": "e3",
+        "entity": "driftmoor"
+      },
+      {
+        "oid": "e4",
+        "entity": "driftmoor"
+      },
+      {
+        "oid": "e5",
+        "entity": "saltmarsh"
+      },
+      {
+        "oid": "e6",
+        "entity": "saltmarsh"
+      },
+      {
+        "oid": "e7",
+        "entity": "covey-lark"
+      },
+      {
+        "oid": "e8",
+        "entity": "covey-lark"
+      },
+      {
+        "oid": "e9",
+        "entity": "covey-lark"
+      },
+      {
+        "oid": "e10",
+        "entity": "covey-lark"
+      },
+      {
+        "oid": "e11",
+        "entity": "none",
+        "note": "This occurrence explicitly describes a code shared by Covey & Lark and Pellucid, rather than uniquely identifying either company."
+      },
+      {
+        "oid": "e12",
+        "entity": "covey-lark"
+      },
+      {
+        "oid": "e13",
+        "entity": "pellucid"
+      },
+      {
+        "oid": "e14",
+        "entity": "carrowmere"
+      },
+      {
+        "oid": "e15",
+        "entity": "orlavene-health"
+      },
+      {
+        "oid": "e16",
+        "entity": "driftmoor"
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 3490,
+    "output_tokens": 745,
+    "thinking_tokens": 78
+  },
+  "cost_usd": 0.01443
+}

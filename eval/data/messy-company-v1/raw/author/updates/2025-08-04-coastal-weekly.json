@@ -1,0 +1,37 @@
+{
+  "slug": "updates/2025-08-04-coastal-weekly",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: weekly\nTitle: Coastal weekly, 4 Aug\nDate: Written on 2025-08-04.\nWriter: Bettina Kroll\nVoice: hurried, lots of fragments\nFormat: a weekly update with a short status table and notes\nLength: about 325 words\nDate style in the body: day-month (2 Jun 2025)\nTypos: none\n\nBrief:\nBettina's update. Saltmarsh live since July 1 and is now Sofia's largest customer by contract value.\n\nRequired phrases:\n- Use the exact phrase \"Kwame's port account\" once, referring to Driftmoor Marine Freight. Don't put the account's name in the same sentence; the reader should work it out.\n- Use the exact phrase \"her biggest customer\" once, referring to Saltmarsh Provisions. Don't put the account's name in the same sentence; the reader should work it out.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Bettina Kroll: Coastal team lead\n- Sofia Marchetti: Account manager, Coastal team\n- Kwame Adjei-Rowe: Account manager, Coastal team\n- Corinne Ashdown: VP Operations\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Pellucid Harbor Logistics: port drayage and terminal logistics, Gulf Coast; codes/nicknames PHL\n- Driftmoor Marine Freight: marine freight and barge operator, Puget Sound; codes/nicknames DMF\n- Saltmarsh Provisions: regional grocery distributor, Lowcountry; main contact Corinne Ashdown, VP Operations; codes/nicknames SMP\n- Covey & Lark Retail: home goods retailer, Mid-Atlantic; codes/nicknames Covey, CLR\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2025-08-04 (background only; don't restate unless the brief asks):\n- Pellucid Harbor Logistics: managed by Bettina Kroll\n- Driftmoor Marine Freight: managed by Kwame Adjei-Rowe\n- Saltmarsh Provisions: managed by Sofia Marchetti\n- Covey & Lark Retail: managed by Sofia Marchetti",
+      "response_text": "# Coastal weekly, 4 Aug\n\n4 Aug 2025\n\nShort version: Saltmarsh Provisions live since 1 Jul 2025. Morning bookings holding up; still some cleanup around late arrivals and duplicate trailer references. No need to turn every correction into a meeting.\n\n| Account | Status | This week |\n|---|---|---|\n| Saltmarsh Provisions | Live; receiving team using Pemberline Dock through shift handover | Finish late-arrival walkthrough with Corinne Ashdown |\n| Driftmoor Marine Freight | Barge arrival changes creating extra board edits | Check revised arrival times against gate notes |\n| Pellucid Harbor Logistics | Dispatch report needs a cleaner exception view | Retest filter with yesterday’s bookings |\n| Covey & Lark Retail | Store replenishment bookings mostly routine | Work through recurring-booking questions |\n\n## Notes\n\n**Saltmarsh Provisions.** Sofia Marchetti has the receiving supervisors working from the same board now. Less paper at the window, though the night shift still writes trailer numbers on the back of the unloading sheet before entering them. Door 6 had two nearly identical references on Thursday; one was the tractor number. Corrected, not a second delivery.\n\nThis is now her biggest customer by contract value. Worth keeping the practical follow-up tight. Corinne Ashdown wants the late-arrival steps on one page, with screenshots showing where to move a booking rather than cancel it. Sofia drafting; I will check the wording before it goes over.\n\n**Driftmoor Marine Freight.** Kwame Adjei-Rowe chasing the mismatch between the barge arrival board and gate notes. Kwame's port account needs the revised arrival time visible before dispatch starts calling drivers. Current irritation: a moved booking looks settled on screen, then the gate clerk finds the old time on a printed sheet. Kwame collecting two examples for the product ticket.\n\n**Pellucid Harbor Logistics.** I am retesting the “Unassigned door” filter. Yesterday’s export included a completed move; checking whether that came from the saved view or the export itself.\n\n**Covey & Lark Retail.** Sofia sending a short recurring-booking walkthrough. Include the holiday exception example, not another full demo.\n\nFriday: close the loop on screenshots, gate examples and report retest. Quick replies fine.",
+      "usage": {
+        "input_tokens": 1083,
+        "output_tokens": 477,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.006936,
+      "provider_meta": {
+        "id": "resp_03e2f0e101495e05016acfaeaacc6c87d1adebb8e6fe17ed7d",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1083,
+          "input_tokens_details": {
+            "cache_write_tokens": 1080,
+            "cached_tokens": 0
+          },
+          "output_tokens": 477,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 1560
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

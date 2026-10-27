@@ -1,0 +1,42 @@
+{
+  "cell_id": "beam-100k-comparator-rag-b1bc1d8eee25",
+  "query_id": "1_instruction_following_0",
+  "outcome": "answered",
+  "score": 1.0,
+  "correct": true,
+  "judge_model": "gemini:gemini-3.5-flash",
+  "reason": "score=1.000 over 1 rubric items",
+  "rubric": [
+    {
+      "criterion": "LLM response should contain: code blocks with syntax highlighting",
+      "valid": true,
+      "score": 1.0,
+      "reason": "The response contains multiple code blocks with Python syntax highlighting specified.",
+      "attempts": 1
+    }
+  ],
+  "requests": [
+    {
+      "model": "gemini:gemini-3.5-flash",
+      "prompt": "Evaluate whether the following LLM response demonstrates compliance with the specified RUBRIC CRITERION.\n\nQUESTION:\nCould you show me how to implement a login feature?\n\nLLM RESPONSE:\nHere is how to implement a secure user login feature in Flask using Flask-Login and Werkzeug, tailored to your application setup:\\n\\n### 1. User Model Setup\\nEnsure your `User` model inherits from `UserMixin` and that your `LoginManager` loader is configured:\\n\\n```python\\nfrom flask_login import UserMixin\\nfrom werkzeug.security import check_password_hash\\nfrom project import db, login_manager\\n\\n@login_manager.user_loader\\ndef load_user(user_id):\\n    return User.query.get(int(user_id))\\n\\nclass User(db.Model, UserMixin):\\n    id = db.Column(db.Integer, primary_key=True)\\n    username = db.Column(db.String(80), unique=True, nullable=False)\\n    email = db.Column(db.String(120), unique=True, nullable=False)\\n    password_hash = db.Column(db.String(128), nullable=False)\\n\\n    def check_password(self, password):\\n        return check_password_hash(self.password_hash, password)\\n```\\n\\n### 2. Login Route Implementation\\n\\n```python\\nfrom flask import Blueprint, request, jsonify, session\\nfrom flask_login import login_user, current_user\\nfrom project.models import User\\n\\nauth = Blueprint('auth', __name__)\\n\\n@auth.route('/login', methods=['POST'])\\ndef login():\\n    if current_user.is_authenticated:\\n        return jsonify({'message': 'Already authenticated'}), 200\\n\\n    data = request.get_json() or {}\\n    username = data.get('username')\\n    password = data.get('password')\\n\\n    # Basic input validation\\n    if not username or not password:\\n        return jsonify({'error': 'Username and password are required'}), 400\\n\\n    user = User.query.filter_by(username=username).first()\\n\\n    # Verify credentials with constant-time check to prevent timing attacks\\n    if user is None or not user.check_password(password):\\n        return jsonify({'error': 'Invalid username or password'}), 401\\n\\n    # Log the user in and establish session\\n    remember = data.get('remember', False)\\n    login_user(user, remember=remember)\\n\\n    return jsonify({'message': 'User logged in successfully', 'user_id': user.id}), 200\\n```\\n\\n---\\n\\n### Security Best Practices\\n\\n1. **Generic Authentication Error Messages:** Never specify whether the username or password was incorrect. Always return a generic error like `Invalid username or password` to prevent account enumeration.\\n2. **Strong Password Hashing:** Use strong, salted password hashing algorithms (e.g., PBKDF2/scrypt via Werkzeug, or Argon2 via `Flask-Argon2`).\\n3. **Rate Limiting & Account Lockout:** Implement rate limiting (e.g., using Redis) to temporarily lock accounts or throttle requests after repeated failed attempts (e.g., 5 attempts) to prevent brute-force attacks.\\n4. **Secure Cookie & Session Settings:**\\n   - `SESSION_COOKIE_HTTPONLY = True` (prevents JavaScript/XSS access to session cookies)\\n   - `SESSION_COOKIE_SECURE = True` (ensures cookies are only sent over HTTPS)\\n   - `SESSION_COOKIE_SAMESITE = 'Lax'` or `'Strict'` (mitigates CSRF)\\n5. **CSRF Protection:** Protect non-idempotent endpoints with CSRF tokens using `Flask-WTF` if accepting form posts or session-based API requests from browsers.\\n6. **Transport Layer Security (TLS/HTTPS):** Always enforce HTTPS in production so credentials are encrypted in transit.\n\nRUBRIC CRITERION:\nLLM response should contain: code blocks with syntax highlighting\n\nSCORING GUIDELINES:\n\nFirst, determine whether the rubric criterion is a POSITIVE requirement (the response SHOULD include something) or a NEGATIVE constraint (the response SHOULD NOT include something).\n\n**For POSITIVE requirements** (response should contain, mention, or demonstrate something):\n- **1.0 (Complete Compliance)**: The required element is present, accurate, and complete.\n- **0.5 (Partial Compliance)**: The required element is partially present, has minor inaccuracies, or is incomplete.\n- **0.0 (No Compliance)**: The required element is missing, incorrect, or the response is entirely off-topic / non-responsive.\n\n**For NEGATIVE constraints** (response should NOT contain or should avoid something):\n- **1.0**: The response is responsive AND the prohibited element is absent.\n- **0.5**: The response is responsive but contains a borderline or ambiguous reference to the prohibited element.\n- **0.0**: The prohibited element is present, OR the response is non-responsive.\n\n**Compound statements** (\"and\"/commas joining multiple required elements): all present=1.0, some=0.5, none=0.0.\n\nEVALUATION RULES:\n1. Semantic tolerance: paraphrases and synonyms are acceptable.\n2. Numeric/date equivalence: \"$68,000\"=\"68k\"=\"sixty-eight thousand dollars\"; \"2 years\"=\"24 months\".\n3. Case/punctuation/whitespace tolerance.\n4. Hedging tolerance: do not penalize \"I think\"/\"probably\"/passive/verbosity if content satisfies the criterion.\n5. Style neutrality: do not penalize tone/format/length unless the criterion requires it.\n6. Responsiveness: completely off-topic or refusal = 0.0.\n7. Independence: evaluate this criterion in isolation.\n8. Specificity: vague generic answers score lower than specific, detailed ones.\n\nReturn JSON: {\"score\": <0.0 or 0.5 or 1.0>, \"reason\": \"<one concise sentence>\"}",
+      "prompt_sha256": "a659a51cefbd4ed97095281eb7c9042046543e0b6278af5deca9523f5b4d87e8",
+      "attempts": [
+        {
+          "attempt": 0,
+          "response": {
+            "score": 1.0,
+            "reason": "The response contains multiple code blocks with Python syntax highlighting specified."
+          },
+          "problems": []
+        }
+      ],
+      "valid": true,
+      "response": {
+        "score": 1.0,
+        "reason": "The response contains multiple code blocks with Python syntax highlighting specified."
+      }
+    }
+  ],
+  "error": null,
+  "details": {}
+}

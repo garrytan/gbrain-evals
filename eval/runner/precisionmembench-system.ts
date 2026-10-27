@@ -405,6 +405,7 @@ export async function runPmb(a: PmbArgs): Promise<{ receipt: Record<string, unkn
     if (a.embed === 'hash') {
       const keyEnv = ({ openai: 'OPENAI_API_KEY', voyage: 'VOYAGE_API_KEY', google: 'GOOGLE_GENERATIVE_AI_API_KEY' } as Record<string, string>)[provider] ?? 'OPENAI_API_KEY';
       if (!process.env[keyEnv]) process.env[keyEnv] = 'hash-embed-transport-no-provider-call';
+      process.env.GBRAIN_MODEL_DISCOVERY = 'off';
       gateway.configureGateway({ embedding_model: a.embeddingModel, embedding_dimensions: a.embeddingDims, env: process.env, ...proxyUrls });
       gateway.__setEmbedTransportForTests(async (params: { values: string[] }) => ({ embeddings: params.values.map(v => hashEmbed(v, a.embeddingDims)), values: params.values, warnings: [], usage: { tokens: 0 } }));
     } else {

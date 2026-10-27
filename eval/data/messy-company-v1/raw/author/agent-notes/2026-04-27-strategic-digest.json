@@ -1,0 +1,41 @@
+{
+  "slug": "agent-notes/2026-04-27-strategic-digest",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: agent-note\nTitle: Moss: Strategic digest 4/27\nDate: Written on 2026-04-27.\nWriter: Moss (Ruth Calloway's AI assistant)\nVoice: an AI assistant: neat, factual, a little stiff\nFormat: an assistant-written digest with headings and bullets, addressed to Ruth\nLength: about 124 words\nDate style in the body: undefined\nTypos: a few natural typos and one or two sloppy abbreviations (never in names or required phrases)\n\nBrief:\nMoss's digest: the Vantorre steering committee is tomorrow.\n\nRequired phrases:\n- Use the exact phrase \"Nadia's industrial account\" once, referring to Vantorre Group. Don't put the account's name in the same sentence; the reader should work it out.\n- Use the exact phrase \"Gideon's fleet account\" once, referring to Vantorre Mobility. Don't put the account's name in the same sentence; the reader should work it out.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Nadia Fennimore: Strategic account manager\n- Gideon Sato: Strategic account manager\n- Mateo Quiroga: Head of Procurement\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Vantorre Group: diversified industrial manufacturer, Northeast; main contact Mateo Quiroga, Head of Procurement; codes/nicknames VTG, VTRG\n- Vantorre Mobility: electric fleet services subsidiary, Northeast; subsidiary of Vantorre Group; codes/nicknames VTM, VMob\n- Orlavine Medical Supply: medical supply distributor, Mountain West; codes/nicknames OMS\n- Quillfeather Outfitters: outdoor gear retailer, Mountain West; codes/nicknames QFO\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2026-04-27 (background only; don't restate unless the brief asks):\n- Vantorre Group: managed by Nadia Fennimore\n- Vantorre Mobility: managed by Gideon Sato\n- Orlavine Medical Supply: not stated on any shared page (do not say who manages it)\n- Quillfeather Outfitters: managed by Strategic Accounts pod (pooled account)",
+      "response_text": "# Strategic Digest — 4/27\n\nGood morning, Ruth. Below is your scheduled briefing for the Vantorre steering committee tomorrow.\n\n### Agenda & Open Items\n* **Parent Manufacturing Rollout:** Mateo Quiroga requested the Q1 Dock Door Utilization export before 9:00 AM. Nadia's industrial account flagged two missed carrier check-ins at the Allentown plant (Gate 4, 2nd shift) under ticket #PD-8841.\n* **EV Subsidiary Operations:** Gideon's fleet account is still waiting on the webhook patch for automated charger-bay assignments at the Newark depot. \n* **Pre-Read Materials:** Both slide decks are compiled in the shared drive folder (`VTG_VTM_SteerCo_Apr28`).\n\n### Action Required\n* Please confirm if you require a 15-min sync w/ Nadia Fennimore and Gideon Sato this aftn to review the Allentown gate logs prior to tomorrow's session.",
+      "usage": {
+        "input_tokens": 1161,
+        "output_tokens": 210,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.004422,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1161,
+          "candidatesTokenCount": 210,
+          "totalTokenCount": 1371,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1161
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 210
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

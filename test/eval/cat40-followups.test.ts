@@ -124,9 +124,38 @@ describe('slot builds and preflight (E-4)', () => {
     expect(missingSlotSnapshots(dir, 2)).toEqual([]);
     expect(slotRoot(root, commit, world, false)).toEndWith('-noanalyze');
   });
+  test('a build-config or keyless slot family gets its own directory, and a build-time key is refused at restore time', async () => {
+    const root = tmp(), commit = 'a'.repeat(40);
+    const plain = slotRoot(root, commit, world, true);
+    const f5 = slotRoot(root, commit, world, true, { buildConfig: [['mentions.owner_phrases', 'true']] });
+    expect(f5).not.toBe(plain);
+    expect(f5).toMatch(/-bc[0-9a-f]{8}$/);
+    expect(slotRoot(root, commit, world, true, { buildConfig: [] })).toBe(plain);
+    expect(slotRoot(root, commit, world, true, { buildConfig: [['mentions.owner_phrases', 'true']], keyless: true })).toBe(`${f5}-keyless`);
+    const base = ['--arms', 'gbrain', '--tasks', 'A01', '--out', tmp(), '--gbrain-repo', tmp()];
+    await expect(main(['--models', 'gpt-5.4', ...base, '--gbrain-config', 'mentions.owner_phrases=true', '--budget-usd', '1'])).rejects.toThrow('pass it in --gbrain-build-config');
+    await expect(main(['--models', 'gpt-5.4', ...base, '--keyless-slots', '--budget-usd', '1'])).rejects.toThrow('--keyless-slots builds keyword-only slots');
+  });
 });
 
 describe('gbrain provider-call attribution (E-6)', () => {
+  test('a cell finishing after its released slot was bound to the next cell does not unbind the next cell (from GBRA-39\'s #76)', async () => {
+    const proxy = new MeteringProxy({ fetchImpl: (async () => Response.json({ usage: { prompt_tokens: 10, total_tokens: 10 } })) as unknown as typeof fetch });
+    proxy.start();
+    try {
+      const post = () => fetch(`http://127.0.0.1:${proxy.port}/slot0/openai/v1/embeddings`, { method: 'POST', body: JSON.stringify({ model: 'text-embedding-3-large', input: ['x'] }) });
+      proxy.bind('slot0', 'cell-A');
+      proxy.bind('slot0', 'cell-B');
+      proxy.unbind('slot0', 'cell-A');
+      await post();
+      expect((await proxy.finalize('cell-B')).requests).toBe(1);
+      expect(proxy.meters.get('slot:slot0')).toBeUndefined();
+      proxy.unbind('slot0', 'cell-B');
+      await post();
+      expect(proxy.meters.get('slot:slot0')!.requests).toBe(1);
+    } finally { proxy.stop(); }
+  });
+
   test('a request that finishes after its cell moved on is charged to that cell; a response without usage is charged its reservation', async () => {
     const body = { model: 'text-embedding-3-large', input: ['alpha beta gamma'] };
     const proxy = new MeteringProxy({ fetchImpl: (async (_url: RequestInfo | URL, init?: RequestInit) => {
@@ -152,6 +181,23 @@ describe('gbrain provider-call attribution (E-6)', () => {
       expect(b.usd).toBeCloseTo(reservationUsd(priceRequest('https://api.openai.com/v1/embeddings', { ...body, input: ['fast'] })!), 12);
       await late;
       await post('unbound');
+      expect(proxy.meters.get('slot:slot0')!.requests).toBe(1);
+    } finally { proxy.stop(); }
+  });
+
+  test('a cell finishing after its released slot was bound to the next cell does not unbind the next cell (Cat 40 Hard dev round 1)', async () => {
+    const proxy = new MeteringProxy({ fetchImpl: (async () => Response.json({ usage: { prompt_tokens: 10, total_tokens: 10 } })) as unknown as typeof fetch });
+    proxy.start();
+    try {
+      const post = () => fetch(`http://127.0.0.1:${proxy.port}/slot0/openai/v1/embeddings`, { method: 'POST', body: JSON.stringify({ model: 'text-embedding-3-large', input: ['x'] }) });
+      proxy.bind('slot0', 'cell-A');
+      proxy.bind('slot0', 'cell-B');
+      proxy.unbind('slot0', 'cell-A');
+      await post();
+      expect((await proxy.finalize('cell-B')).requests).toBe(1);
+      expect(proxy.meters.get('slot:slot0')).toBeUndefined();
+      proxy.unbind('slot0', 'cell-B');
+      await post();
       expect(proxy.meters.get('slot:slot0')!.requests).toBe(1);
     } finally { proxy.stop(); }
   });

@@ -1,0 +1,97 @@
+{
+  "slug": "accounts/orlavine-medical-supply",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2025-03-04",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Orlavine Medical Supply",
+        "line": 6
+      },
+      {
+        "oid": "e2",
+        "surface": "OMS",
+        "line": 9
+      },
+      {
+        "oid": "e3",
+        "surface": "Orlavine Medical Supply",
+        "line": 13
+      },
+      {
+        "oid": "e4",
+        "surface": "Orlavene Health",
+        "line": 13
+      },
+      {
+        "oid": "e5",
+        "surface": "OMS",
+        "line": 15
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": [
+      {
+        "account": "orlavine",
+        "question": "According to this page alone, who manages Orlavine Medical Supply, in what role, and from/until when?"
+      }
+    ]
+  },
+  "prompt_user_sha256": "2362db70d6d2c8ef40e5f9e8d75db9ae7bb7fc859603113f75c08511be4feffd",
+  "response_text": "{\n  \"date_used\": \"2025-03-04\",\n  \"extra_owner_phrases\": [\n    {\n      \"line\": 11,\n      \"phrase\": \"I manage this account (Nadia Fennimore, Strategic Accounts).\",\n      \"accounts\": [\"orlavine\"],\n      \"note\": \"Nadia explicitly identifies herself as the account manager for the page's named customer.\"\n    }\n  ],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"orlavine\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"orlavine\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"orlavine\"\n    },\n    {\n      \"oid\": \"e4\",\n      \"entity\": \"orlavene-health\"\n    },\n    {\n      \"oid\": \"e5\",\n      \"entity\": \"orlavine\"\n    }\n  ],\n  \"ownership\": [\n    {\n      \"account\": \"orlavine\",\n      \"owner\": \"Nadia Fennimore\",\n      \"role\": \"primary\",\n      \"start\": null,\n      \"end\": null,\n      \"line\": 11\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-03-04",
+    "extra_owner_phrases": [
+      {
+        "line": 11,
+        "phrase": "I manage this account (Nadia Fennimore, Strategic Accounts).",
+        "accounts": [
+          "orlavine"
+        ],
+        "note": "Nadia explicitly identifies herself as the account manager for the page's named customer."
+      }
+    ],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "orlavine"
+      },
+      {
+        "oid": "e2",
+        "entity": "orlavine"
+      },
+      {
+        "oid": "e3",
+        "entity": "orlavine"
+      },
+      {
+        "oid": "e4",
+        "entity": "orlavene-health"
+      },
+      {
+        "oid": "e5",
+        "entity": "orlavine"
+      }
+    ],
+    "ownership": [
+      {
+        "account": "orlavine",
+        "owner": "Nadia Fennimore",
+        "role": "primary",
+        "start": null,
+        "end": null,
+        "line": 11
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2525,
+    "output_tokens": 314,
+    "thinking_tokens": 48
+  },
+  "cost_usd": 0.00819
+}

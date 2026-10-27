@@ -1,0 +1,25 @@
+{
+ "dataset": "beam",
+ "split": "100k",
+ "mode": "rag",
+ "seal": "dev",
+ "target_tokens": 8000,
+ "models": {
+  "answer": "gemini:gemini-3.8-flash",
+  "judge": "gemini:gemini-3.5-flash"
+ },
+ "k": 10,
+ "questions": {
+  "units": [
+   "3"
+  ]
+ },
+ "budget_usd": 10,
+ "provider": "comparator",
+ "lane": "combined",
+ "provider_config": {
+  "max_tokens": 3129,
+  "max_chunk_tokens": 1788
+ },
+ "note": "memory proof wave 2 confirmation: the comparator's keyless stub-upstream smoke on BEAM-100K dev conversation 3"
+}

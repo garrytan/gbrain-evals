@@ -1,0 +1,41 @@
+{
+  "slug": "emails/2026-01-12-orrin-rebrand-notice",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: email\nTitle: Fwd: Orrin Mills is now Thornbury Cloth Co.\nDate: Written on 2026-01-12.\nWriter: Marcus Lindqvist\nVoice: terse and practical\nFormat: an email thread with From/To/Date headers and quoted earlier replies (> lines)\nLength: about 72 words\nDate style in the body: ISO (2025-06-02)\nTypos: none\n\nBrief:\nMarcus forwards the customer's notice: effective today, January 12, 2026, Orrin Mills operates as Thornbury Cloth Co. Same legal entity, new name, new invoices. He asks June to update the CRM code from ORM to TCC.\n\nUse these names or codes at least once each, as written: \"ORM\", \"TCC\".\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Ilse Varga: North team lead\n- Dana Okafor: Account manager, North team\n- Marcus Lindqvist: Account manager, North team\n- Thea Ramaswell: Director of Yard Operations\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Quarrendon Freight Lines: truckload freight carrier, Upper Midwest; main contact Thea Ramaswell, Director of Yard Operations; codes/nicknames QFL, Q-Freight\n- Brackenwater Freight Co.: less-than-truckload freight, Great Lakes; codes/nicknames BWF, Bracken\n- Tamsin Cold Chain: refrigerated warehousing, Pacific Northwest; codes/nicknames TCC\n- Thornbury Cloth Co. (renamed from Orrin Mills on 2026-01-12): textile mill, Carolinas; codes/nicknames TCC\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2026-01-12 (background only; don't restate unless the brief asks):\n- Quarrendon Freight Lines: managed by Dana Okafor\n- Brackenwater Freight Co.: managed by Marcus Lindqvist\n- Tamsin Cold Chain: managed by Dana Okafor\n- Thornbury Cloth Co.: managed by Marcus Lindqvist",
+      "response_text": "# Fwd: Orrin Mills is now Thornbury Cloth Co.\n\n**From:** Marcus Lindqvist  \n**To:** June Osei-Lark  \n**Date:** 2026-01-12  \n\nJune,\n\nSee below. Effective today, 2026-01-12, Orrin Mills operates as Thornbury Cloth Co. Same legal entity, new name, new invoices. \n\nPlease update the CRM code from ORM to TCC. I'm updating their Gaffney mill gate display labels in Pemberline Dock this afternoon.\n\n—Marcus\n\n> **From:** Accounts Payable <ap@thornburycloth.com>  \n> **To:** Marcus Lindqvist  \n> **Date:** 2026-01-12  \n> **Subject:** Orrin Mills is now Thornbury Cloth Co.  \n>\n> Effective 2026-01-12, Orrin Mills is operating as Thornbury Cloth Co. We remain the same legal entity with the same tax ID, but all future invoices must be issued to the new name.",
+      "usage": {
+        "input_tokens": 1153,
+        "output_tokens": 239,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.004696,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1153,
+          "candidatesTokenCount": 239,
+          "totalTokenCount": 1392,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1153
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 239
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

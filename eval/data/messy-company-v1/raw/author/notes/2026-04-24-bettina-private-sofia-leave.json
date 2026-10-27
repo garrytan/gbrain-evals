@@ -1,0 +1,41 @@
+{
+  "slug": "notes/2026-04-24-bettina-private-sofia-leave",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: private-note (a private page only the writer sees)\nTitle: Private: Sofia leave\nDate: Written on 2026-04-24.\nWriter: Bettina Kroll\nVoice: terse and practical\nFormat: private notes in first person, bullets\nLength: about 87 words\nDate style in the body: undefined\nTypos: none\n\nBrief:\nBettina's private HR note about Sofia's leave: Sofia's benefits account paperwork, return-to-work plan.\n\nRequired phrases:\n- Use the exact phrase \"Sofia's benefits account\" once, in the sense of: her HR benefits portal account. It must not be about a customer account.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Bettina Kroll: Coastal team lead\n- Sofia Marchetti: Account manager, Coastal team\n- Kwame Adjei-Rowe: Account manager, Coastal team\n- Corinne Ashdown: VP Operations\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Pellucid Harbor Logistics: port drayage and terminal logistics, Gulf Coast; codes/nicknames PHL\n- Driftmoor Marine Freight: marine freight and barge operator, Puget Sound; codes/nicknames DMF\n- Saltmarsh Provisions: regional grocery distributor, Lowcountry; main contact Corinne Ashdown, VP Operations; codes/nicknames SMP\n- Pellow Home Living (renamed from Covey & Lark Retail on 2026-02-16): home goods retailer, Mid-Atlantic; codes/nicknames Covey, PHL\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2026-04-24 (background only; don't restate unless the brief asks):\n- Pellucid Harbor Logistics: managed by Kwame Adjei-Rowe\n- Driftmoor Marine Freight: managed by Kwame Adjei-Rowe\n- Saltmarsh Provisions: managed by Bettina Kroll\n- Pellow Home Living: managed by Sofia Marchetti",
+      "response_text": "# Private: Sofia leave\n\n* Follow up with People Ops on Monday re: the missing STD signature page in Sofia's benefits account—portal still flags the upload as incomplete under ticket #HR-409.\n* Return-to-work plan: half-days for the first week back, mornings only, no travel or late dock-cutover calls.\n* Need IT to hold her Slack and email active for self-service paystub access, but mute PagerDuty alerts.\n* Check with Kwame on covering Tuesday morning Coastal standups while she eases back in.\n* Remind myself to order the bakery box before her first Friday back.",
+      "usage": {
+        "input_tokens": 1121,
+        "output_tokens": 139,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.003632,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1121,
+          "candidatesTokenCount": 139,
+          "totalTokenCount": 1260,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1121
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 139
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

@@ -347,8 +347,10 @@ describe('Phase 5 cells (amendment A4, manifests/cells/pmb.json)', () => {
     expect(common).toBeLessThanOrEqual(10);
   });
 
-  test('A4 adds the cells to the campaign; the campaign carries the hash the preregistration records after A7', () => {
+  // Amendment A6b renamed the extract-first cells' chunk-size variable to EXTRACT_FIRST_CHUNK_TURNS (a label, same values),
+  // so the hash moved from 36ba918f (after A6) to f7a22503; rename-a6b.json in the results directory records both.
+  test('A4 adds the cells to the campaign; the campaign carries the hash the preregistration records after A6b', () => {
     expect(campaign().manifest.cells_from).toContain('cells/pmb.json');
-    expect(campaign().sha256).toBe('36ba918f59963a0cc1a6af1cb12ab3a5aa0a48af585e6e5e0b07d41e90db0894');
+    expect(campaign().sha256).toBe('f7a2250390128d870602d629a06055baf4456fe776bd84e2d7a25a29f1f1dbda');
   });
 });

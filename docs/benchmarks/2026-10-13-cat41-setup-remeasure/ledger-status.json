@@ -1,0 +1,29 @@
+{
+  "ledger": "./.budget/cat41-setup-remeasure.sqlite",
+  "state": "sqlite",
+  "totals": {
+    "program_cap_usd": 25,
+    "committed_usd": 6.6472008,
+    "reconciled_usd": 6.6472008,
+    "open_reservations_usd": 0,
+    "remaining_usd": 18.3527992,
+    "requests": 18,
+    "overshoot_usd": 0
+  },
+  "run": null,
+  "runs": 1,
+  "open_runs": 0,
+  "last_cap_change": {
+    "program_cap_usd": 25,
+    "kind": "open",
+    "reason": "GBRA-60 D8 setup TTHW re-measure cap (Garry approved, 2026-10-12)",
+    "by": "user@cox.local",
+    "at": "2026-10-13T08:43:35.246Z"
+  },
+  "size_bytes": 53248,
+  "read_ms": 1.17,
+  "hints": [
+    "both files present: a real legacy ledger.json beside the SQLite ledger is an interrupted migration; if the totals match run `migrate --finish`, otherwise stop and ask the user",
+    "cap mismatch: unset --program-cap-usd / BRAINBENCH_PROGRAM_CAP_USD to use the recorded cap; run `set-cap` only with the user's authorization"
+  ]
+}

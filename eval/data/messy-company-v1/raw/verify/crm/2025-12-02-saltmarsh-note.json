@@ -1,0 +1,58 @@
+{
+  "slug": "crm/2025-12-02-saltmarsh-note",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2025-12-02",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Saltmarsh",
+        "line": 6
+      },
+      {
+        "oid": "e2",
+        "surface": "Saltmarsh Provisions",
+        "line": 9
+      }
+    ],
+    "claims": [
+      {
+        "cid": "c-smp-renewal-crm",
+        "question": "What does the page say about Saltmarsh Provisions's renewal date?"
+      }
+    ],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "68fb2dd967acf61973c492a22e8412588fe60b1bb03ff809838a3740df08325a",
+  "response_text": "{\n  \"date_used\": \"2025-12-02\",\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"saltmarsh\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"saltmarsh\"\n    }\n  ],\n  \"claims\": [\n    {\n      \"cid\": \"c-smp-renewal-crm\",\n      \"stated\": true,\n      \"value\": \"July 31, 2026\",\n      \"line\": 11\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-12-02",
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "saltmarsh"
+      },
+      {
+        "oid": "e2",
+        "entity": "saltmarsh"
+      }
+    ],
+    "claims": [
+      {
+        "cid": "c-smp-renewal-crm",
+        "stated": true,
+        "value": "July 31, 2026",
+        "line": 11
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2644,
+    "output_tokens": 144,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.006728
+}

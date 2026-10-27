@@ -1,0 +1,121 @@
+{
+  "slug": "emails/2025-12-15-marrow-fieldworks-handoff",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2025-12-15",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Marrow Fieldworks",
+        "line": 6
+      },
+      {
+        "oid": "e2",
+        "surface": "Marrow Fieldworks",
+        "line": 12
+      },
+      {
+        "oid": "e3",
+        "surface": "Tansley Parcel",
+        "line": 12
+      },
+      {
+        "oid": "e4",
+        "surface": "Marrow Agrisupply",
+        "line": 12
+      },
+      {
+        "oid": "e5",
+        "surface": "MFW",
+        "line": 22
+      }
+    ],
+    "claims": [],
+    "events": [
+      {
+        "eid": "e-mfw-handoff",
+        "question": "Does the page describe this: \"Marrow Fieldworks moves from Pree to Tobias\"? If so, on what date does the text place it?"
+      }
+    ],
+    "ownership": [
+      {
+        "account": "marrow-fieldworks",
+        "question": "According to this page alone, who manages Marrow Fieldworks, in what role, and from/until when?"
+      },
+      {
+        "account": "marrow-agrisupply",
+        "question": "According to this page alone, who manages Marrow Agrisupply, in what role, and from/until when?"
+      }
+    ]
+  },
+  "prompt_user_sha256": "00a021c0a4804db7f78c527a76a15aa087836cd895b3dd0ade8f56fafa46b001",
+  "response_text": "{\n  \"date_used\": \"2026-01-05\",\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"marrow-fieldworks\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"marrow-fieldworks\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"tansley-parcel\"\n    },\n    {\n      \"oid\": \"e4\",\n      \"entity\": \"marrow-agrisupply\"\n    },\n    {\n      \"oid\": \"e5\",\n      \"entity\": \"marrow-fieldworks\"\n    }\n  ],\n  \"events\": [\n    {\n      \"eid\": \"e-mfw-handoff\",\n      \"present\": true,\n      \"date\": \"2026-01-05\",\n      \"line\": 12\n    }\n  ],\n  \"ownership\": [\n    {\n      \"account\": \"marrow-fieldworks\",\n      \"owner\": \"Priyanka Sundaram\",\n      \"role\": \"primary\",\n      \"start\": null,\n      \"end\": \"2026-01-05\",\n      \"line\": 12\n    },\n    {\n      \"account\": \"marrow-fieldworks\",\n      \"owner\": \"Tobias Rendle\",\n      \"role\": \"primary\",\n      \"start\": \"2026-01-05\",\n      \"end\": null,\n      \"line\": 12\n    },\n    {\n      \"account\": \"marrow-agrisupply\",\n      \"owner\": \"Unspecified team\",\n      \"role\": \"team\",\n      \"start\": null,\n      \"end\": null,\n      \"line\": 12\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2026-01-05",
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "marrow-fieldworks"
+      },
+      {
+        "oid": "e2",
+        "entity": "marrow-fieldworks"
+      },
+      {
+        "oid": "e3",
+        "entity": "tansley-parcel"
+      },
+      {
+        "oid": "e4",
+        "entity": "marrow-agrisupply"
+      },
+      {
+        "oid": "e5",
+        "entity": "marrow-fieldworks"
+      }
+    ],
+    "events": [
+      {
+        "eid": "e-mfw-handoff",
+        "present": true,
+        "date": "2026-01-05",
+        "line": 12
+      }
+    ],
+    "ownership": [
+      {
+        "account": "marrow-fieldworks",
+        "owner": "Priyanka Sundaram",
+        "role": "primary",
+        "start": null,
+        "end": "2026-01-05",
+        "line": 12
+      },
+      {
+        "account": "marrow-fieldworks",
+        "owner": "Tobias Rendle",
+        "role": "primary",
+        "start": "2026-01-05",
+        "end": null,
+        "line": 12
+      },
+      {
+        "account": "marrow-agrisupply",
+        "owner": "Unspecified team",
+        "role": "team",
+        "start": null,
+        "end": null,
+        "line": 12
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2847,
+    "output_tokens": 442,
+    "thinking_tokens": 72
+  },
+  "cost_usd": 0.010114
+}

@@ -1,0 +1,197 @@
+{
+  "schema_version": 1,
+  "run": "autoplan-20261015220653",
+  "gate_rev": 1,
+  "items": [
+    {
+      "id": "d1",
+      "title": "Item 2's FTS prefilter changes results in more ways than 'ops in devops', and the trigram alternative that keeps exact LIKE semantics was dismissed on weak grounds [autoplan-20261015220653-ceo-native-2]",
+      "kind": "auto",
+      "recommended": "a",
+      "phase": "ceo",
+      "why": "one voice (native) recommends changing your stated direction",
+      "changes": "direction",
+      "cost": "b reopens ceo and eng",
+      "options": [
+        {
+          "key": "a",
+          "text": "keep your direction",
+          "changes_plan": false
+        },
+        {
+          "key": "b",
+          "text": "accept the change",
+          "changes_plan": true
+        }
+      ],
+      "origin": "ceo|autoplan-20261015220653-ceo-native-2|2026-10-15T22:18:31.479Z|6fa9d38bfc024b00e8503e41313d327403736c9f865b87ef3dc5083abc1ba736|9aa7c14d1f7b75e2"
+    },
+    {
+      "id": "d2",
+      "title": "Default context_pack compaction breaks frozen v1 fields and budget semantics without an escape hatch [autoplan-20261015220653-ceo-outside-2]",
+      "kind": "auto",
+      "recommended": "a",
+      "phase": "ceo",
+      "why": "one voice (outside) recommends changing your stated direction",
+      "changes": "direction",
+      "cost": "b reopens ceo and eng",
+      "options": [
+        {
+          "key": "a",
+          "text": "keep your direction",
+          "changes_plan": false
+        },
+        {
+          "key": "b",
+          "text": "accept the change",
+          "changes_plan": true
+        }
+      ],
+      "origin": "ceo|autoplan-20261015220653-ceo-outside-2|2026-10-15T22:18:31.479Z|6fa9d38bfc024b00e8503e41313d327403736c9f865b87ef3dc5083abc1ba736|9aa7c14d1f7b75e2"
+    },
+    {
+      "id": "d3",
+      "title": "Item 8b changes context_pack's shape with none of the escape hatches search rows have, and removes frozen v1 fields and redefines budget_used [autoplan-20261015220653-dx-native-3]",
+      "kind": "auto",
+      "recommended": "a",
+      "phase": "dx",
+      "why": "one voice (native) recommends changing your stated direction",
+      "changes": "direction",
+      "cost": "b reopens dx and eng",
+      "options": [
+        {
+          "key": "a",
+          "text": "keep your direction",
+          "changes_plan": false
+        },
+        {
+          "key": "b",
+          "text": "accept the change",
+          "changes_plan": true
+        }
+      ],
+      "origin": "dx|autoplan-20261015220653-dx-native-3|2026-10-15T22:30:38.546Z|6fa9d38bfc024b00e8503e41313d327403736c9f865b87ef3dc5083abc1ba736|9aa7c14d1f7b75e2"
+    },
+    {
+      "id": "d4",
+      "title": "Remote context_pack compaction breaks v1 without a supported full-response escape hatch [autoplan-20261015220653-dx-outside-1]",
+      "kind": "auto",
+      "recommended": "a",
+      "phase": "dx",
+      "why": "one voice (outside) recommends changing your stated direction",
+      "changes": "direction",
+      "cost": "b reopens dx and eng",
+      "options": [
+        {
+          "key": "a",
+          "text": "keep your direction",
+          "changes_plan": false
+        },
+        {
+          "key": "b",
+          "text": "accept the change",
+          "changes_plan": true
+        }
+      ],
+      "origin": "dx|autoplan-20261015220653-dx-outside-1|2026-10-15T22:30:38.546Z|6fa9d38bfc024b00e8503e41313d327403736c9f865b87ef3dc5083abc1ba736|9aa7c14d1f7b75e2"
+    },
+    {
+      "id": "d5",
+      "title": "Item 2's FTS prefilter drops saved facts beyond 'ops in devops' (slug path lexeme people/alice, email/URL lexemes, stopword-only empty tsquery) and changes results the other way via the LIMIT 200 cut; it is a behavior change, not a pure-performance item [autoplan-20261015220653-eng-native-2]",
+      "kind": "auto",
+      "recommended": "a",
+      "phase": "eng",
+      "why": "one voice (native) recommends changing your stated direction",
+      "changes": "direction",
+      "cost": "b reopens eng",
+      "options": [
+        {
+          "key": "a",
+          "text": "keep your direction",
+          "changes_plan": false
+        },
+        {
+          "key": "b",
+          "text": "accept the change",
+          "changes_plan": true
+        }
+      ],
+      "origin": "eng|autoplan-20261015220653-eng-native-2|2026-10-15T22:52:14.002Z|6fa9d38bfc024b00e8503e41313d327403736c9f865b87ef3dc5083abc1ba736|9aa7c14d1f7b75e2"
+    },
+    {
+      "id": "d6",
+      "title": "Item 8b breaks the frozen v1 context_pack schema (cards.summary and open_threads are required) and the budget_used <= budget tests; the only schema conformance case packs a nonexistent entity so it cannot catch this [autoplan-20261015220653-eng-native-3]",
+      "kind": "auto",
+      "recommended": "a",
+      "phase": "eng",
+      "why": "one voice (native) recommends changing your stated direction",
+      "changes": "scope",
+      "cost": "b reopens eng",
+      "options": [
+        {
+          "key": "a",
+          "text": "keep your direction",
+          "changes_plan": false
+        },
+        {
+          "key": "b",
+          "text": "accept the change",
+          "changes_plan": true
+        }
+      ],
+      "origin": "eng|autoplan-20261015220653-eng-native-3|2026-10-15T22:52:14.002Z|6fa9d38bfc024b00e8503e41313d327403736c9f865b87ef3dc5083abc1ba736|9aa7c14d1f7b75e2"
+    },
+    {
+      "id": "d7",
+      "title": "Default remote context_pack compaction breaks frozen v1 fields and budget semantics [autoplan-20261015220653-eng-outside-9]",
+      "kind": "auto",
+      "recommended": "a",
+      "phase": "eng",
+      "why": "one voice (outside) recommends changing your stated direction",
+      "changes": "direction",
+      "cost": "b reopens eng",
+      "options": [
+        {
+          "key": "a",
+          "text": "keep your direction",
+          "changes_plan": false
+        },
+        {
+          "key": "b",
+          "text": "accept the change",
+          "changes_plan": true
+        }
+      ],
+      "origin": "eng|autoplan-20261015220653-eng-outside-9|2026-10-15T22:52:14.002Z|6fa9d38bfc024b00e8503e41313d327403736c9f865b87ef3dc5083abc1ba736|9aa7c14d1f7b75e2"
+    },
+    {
+      "id": "p1",
+      "title": "Plan approval",
+      "kind": "approval",
+      "recommended": "a",
+      "options": [
+        {
+          "key": "a",
+          "text": "approve as-is"
+        },
+        {
+          "key": "b",
+          "text": "approve with the overrides above"
+        },
+        {
+          "key": "c",
+          "text": "interrogate (ask questions; stays pending)"
+        },
+        {
+          "key": "d",
+          "text": "rerun every phase on the current plan, Eng last (to review an edited plan instead: gstack-autoplan revise --out <run dir> --plan <file>)"
+        },
+        {
+          "key": "e",
+          "text": "reject"
+        }
+      ]
+    }
+  ],
+  "title": "/autoplan final approval gate"
+}

@@ -1,0 +1,58 @@
+{
+  "slug": "emails/2025-11-19-vtm-amendment-executed",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2025-11-19",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Vantorre Mobility",
+        "line": 9
+      },
+      {
+        "oid": "e2",
+        "surface": "Vantorre Mobility",
+        "line": 11
+      }
+    ],
+    "claims": [],
+    "events": [
+      {
+        "eid": "e-vtm-a1-signed",
+        "question": "Does the page describe this: \"Vantorre Mobility affiliate amendment signed (48 seats, Tier 1 Plus)\"? If so, on what date does the text place it?"
+      }
+    ],
+    "ownership": []
+  },
+  "prompt_user_sha256": "07d9f57a32394ec07372a856b5dfb43ae6b69e5aebfa5a0d5840547f856d51cb",
+  "response_text": "{\n  \"date_used\": \"2025-11-18\",\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"vantorre-mobility\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"vantorre-mobility\"\n    }\n  ],\n  \"events\": [\n    {\n      \"eid\": \"e-vtm-a1-signed\",\n      \"present\": true,\n      \"date\": \"2025-11-18\",\n      \"line\": 11\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-11-18",
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "vantorre-mobility"
+      },
+      {
+        "oid": "e2",
+        "entity": "vantorre-mobility"
+      }
+    ],
+    "events": [
+      {
+        "eid": "e-vtm-a1-signed",
+        "present": true,
+        "date": "2025-11-18",
+        "line": 11
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2733,
+    "output_tokens": 150,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.006966
+}

@@ -5,8 +5,8 @@ import { join } from 'node:path';
 import type { ParamDef } from 'gbrain/operations';
 import { generateN6World, ledgerFingerprint, N6_CLASSES, N6_DEFAULT_SEED } from '../../eval/generators/n6-visibility-gen.ts';
 import {
-  controlSeen, countOccurrences, deliveredUnits, echoCredit, hasSourceRow, isTargeted, namedSlugs, normalizeForOracle,
-  namingWindow, oracleView, parseToolResult, runN6, scanLeaks, synthesizeParams, targetTitle, variantsFor, type CallOutcome,
+  controlSeen, countOccurrences, deliveredUnits, echoCredit, hasSourceRow, isTargeted, namedSlugs, normalizeForOracle, decodeOpaqueJson,
+  knownAsOfBreakdown, knownAsOfOutcome, namingWindow, oracleView, parseToolResult, runN6, scanLeaks, synthesizeParams, targetTitle, variantsFor, type CallOutcome,
 } from '../../eval/runner/n6-visibility-fuzz.ts';
 import { gbrainSpecFrom, parseGbrainSpec } from '../../eval/runner/gbrain-under-test.ts';
 
@@ -86,6 +86,15 @@ describe('N6 tool-result parsing with gbrain notice blocks', () => {
     expect(normalizeForOracle(oracleView(a), [])).not.toBe(normalizeForOracle(oracleView(c), []));
   });
 
+  test('an opaque cursor that echoes the masked target compares equal; one that differs in anything else does not (N6-4)', () => {
+    const cursor = (slug: string, extra = '') => Buffer.from(JSON.stringify({ v: 1, p: ['2000-01-01T00:00:00.000Z', slug], f: [extra || null] })).toString('base64');
+    const view = (slug: string, extra = '') => ({ data: { next_cursor: { cursor: cursor(slug, extra), slug } } });
+    const mask = ['notes/protected-example', 'notes/ghost-example'];
+    expect(normalizeForOracle(view('notes/protected-example'), mask)).toBe(normalizeForOracle(view('notes/ghost-example'), mask));
+    expect(normalizeForOracle(view('notes/protected-example', 'private row'), mask)).not.toBe(normalizeForOracle(view('notes/ghost-example'), mask));
+    expect(decodeOpaqueJson('not a cursor at all')).toBeNull();
+  });
+
   test('an error body keeps its code', () => {
     expect(parseToolResult({ content: [{ text: JSON.stringify({ error: 'page_not_found' }) }, { text: notice }], isError: true }).error_code).toBe('page_not_found');
   });
@@ -133,6 +142,40 @@ describe('N6 parameter synthesis', () => {
     expect(synthesizeParams(params, target, { enumOverride: ['unit', 'b'] }).params?.unit).toBe('b');
   });
 
+  test('a known_as_of param gets its own recorded-time variants, with diff and include_body on; the base call leaves it out', () => {
+    const versionsParams = { slug: { type: 'string', required: true }, include_body: { type: 'boolean' }, known_as_of: { type: 'string' }, diff: { type: 'boolean' }, source_id: { type: 'string' } } as const;
+    const variants = variantsFor(versionsParams);
+    expect(variants.filter(v => v.recordedTime).map(v => [v.id, v.scope])).toEqual([['known_as_of', 'ambient'], ['known_as_of+source_id=beta', 'foreign']]);
+    expect(synthesizeParams(versionsParams, target).params).toEqual({ slug: target.slug });
+    const at = '2026-10-16T12:00:00.000Z';
+    expect(synthesizeParams(versionsParams, target, { knownAsOf: at }).params).toEqual({ slug: target.slug, include_body: true, known_as_of: at, diff: true });
+    expect(synthesizeParams(versionsParams, target, { knownAsOf: at, scope: 'foreign' }).params?.source_id).toBe('beta');
+    expect(variantsFor(params).some(v => v.recordedTime)).toBe(false);
+    const pageParams = { slug: { type: 'string', required: true }, include_deleted: { type: 'boolean' }, include_quarantined: { type: 'boolean' }, known_as_of: { type: 'string' } } as const;
+    expect(synthesizeParams(pageParams, target, { knownAsOf: at }).params).toEqual({ slug: target.slug, include_deleted: true, known_as_of: at });
+  });
+
+  test('a known_as_of answer is history only when it carries a recorded interval; refusals and coverage cuts are told apart', () => {
+    const ok = (data: unknown): CallOutcome => ({ exposed: true, ok: true, raw: JSON.stringify(data), data });
+    const err = (code: string): CallOutcome => ({ exposed: true, ok: false, error_code: code, raw: JSON.stringify({ error: code }), data: { error: code } });
+    expect(knownAsOfOutcome(ok({ known_as_of: 'x', slug: 'a', recorded_at: '2026-10-16T00:00:00Z', compiled_truth: 'body' }))).toBe('history');
+    expect(knownAsOfOutcome(ok({ known_as_of: 'x', slug: 'a', versions: [{ revision: 1 }] }))).toBe('history');
+    expect(knownAsOfOutcome(ok({ known_as_of: 'x', slug: 'a', versions: [] }))).toBe('other');
+    expect(knownAsOfOutcome(ok({ slug: 'a', compiled_truth: 'current body' }))).toBe('other');
+    expect(knownAsOfOutcome(err('coverage_from'))).toBe('coverage_from');
+    expect(knownAsOfOutcome(err('coverage_gap'))).toBe('coverage_gap');
+    expect(knownAsOfOutcome(err('known_as_of_unproven'))).toBe('unproven');
+    expect(knownAsOfOutcome(err('invalid_params'))).toBe('invalid_params');
+    expect(knownAsOfOutcome(err('page_not_found'))).toBe('refused');
+    expect(knownAsOfOutcome(err('permission_denied'))).toBe('refused');
+    expect(knownAsOfBreakdown([
+      { control: true, kao_local: 'history', kao_remote: 'refused' },
+      { control: true, kao_local: 'coverage_from', kao_remote: 'refused' },
+      { control: false, kao_local: 'history', kao_remote: 'history' },
+      { control: true },
+    ])).toEqual({ probes: 3, with_signal: 2, real_history_signal: 1, trusted_outcomes: { coverage_from: 1, history: 2 }, remote_outcomes: { history: 1, refused: 2 }, signal_by_trusted_outcome: { coverage_from: 1, history: 1 } });
+  });
+
   test('a required param without a rule is unsupported, not guessed', () => {
     expect(synthesizeParams({ revision: { type: 'string', required: true } }, target).unsupported).toContain('revision');
     expect(synthesizeParams({ slug: { type: 'string', required: true } }, null).unsupported).toContain('slug');
@@ -142,6 +185,23 @@ describe('N6 parameter synthesis', () => {
     expect(variantsFor(params).map(v => v.id)).toEqual(['base', 'unit=a', 'unit=b', 'source_id=beta', 'source_id=__all__']);
     expect(isTargeted(params)).toBe(true);
     expect(isTargeted({ limit: { type: 'number' } })).toBe(false);
+  });
+
+  test('an optional question gets its own ranked variant without widening flags; a required one is always filled', () => {
+    const recall: Record<string, ParamDef> = { entity: { type: 'string' }, question: { type: 'string' }, include_expired: { type: 'boolean' }, supersessions: { type: 'boolean' } };
+    expect(variantsFor(recall).map(v => v.id)).toEqual(['base', 'question']);
+    expect(synthesizeParams(recall, target).params).toEqual({ entity: target.slug, include_expired: true, supersessions: true });
+    expect(synthesizeParams(recall, target, { ranked: true }).params).toEqual({ entity: target.slug, question: target.query });
+    const think: Record<string, ParamDef> = { question: { type: 'string', required: true } };
+    expect(variantsFor(think).map(v => v.id)).toEqual(['base']);
+    expect(synthesizeParams(think, target).params).toEqual({ question: target.query });
+  });
+
+  test('an optional counterparty gets its own call naming the target; the base call leaves it out', () => {
+    const pack: Record<string, ParamDef> = { entities: { type: 'string' }, counterparty: { type: 'string' }, intent: { type: 'string', enum: ['meeting', 'reply'] } };
+    expect(variantsFor(pack).map(v => v.id)).toEqual(['base', 'intent=meeting', 'intent=reply', 'counterparty']);
+    expect(synthesizeParams(pack, target).params).toEqual({ entities: target.slug });
+    expect(synthesizeParams(pack, target, { counterparty: true }).params).toEqual({ entities: target.slug, counterparty: target.slug });
   });
 
   test('a hits array names the target with its source', () => {

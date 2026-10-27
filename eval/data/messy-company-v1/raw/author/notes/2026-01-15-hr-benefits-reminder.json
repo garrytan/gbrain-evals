@@ -1,0 +1,41 @@
+{
+  "slug": "notes/2026-01-15-hr-benefits-reminder",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: note\nTitle: HR reminders\nDate: Written on 2026-01-15.\nWriter: Ruth Calloway\nVoice: dry and slightly sarcastic\nFormat: a short internal note\nLength: about 93 words\nDate style in the body: undefined\nTypos: a few natural typos and one or two sloppy abbreviations (never in names or required phrases)\n\nBrief:\nRuth's short note: Nadia's benefits account needs a beneficiary update; Gideon's laptop is due for replacement.\n\nRequired phrases:\n- Use the exact phrase \"Nadia's benefits account\" once, in the sense of: her HR benefits portal account. It must not be about a customer account.\n- Use the exact phrase \"Gideon's laptop\" once, in the sense of: his work computer. It must not be about a customer account.\n- Use the exact phrase \"Nadia's LinkedIn account\" once, in the sense of: her social media profile. It must not be about a customer account.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Nadia Fennimore: Strategic account manager\n- Gideon Sato: Strategic account manager\n- Mateo Quiroga: Head of Procurement\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Vantorre Group: diversified industrial manufacturer, Northeast; main contact Mateo Quiroga, Head of Procurement; codes/nicknames VTG, VTRG\n- Vantorre Mobility: electric fleet services subsidiary, Northeast; subsidiary of Vantorre Group; codes/nicknames VTM, VMob\n- Orlavine Medical Supply: medical supply distributor, Mountain West; codes/nicknames OMS\n- Quillfeather Outfitters: outdoor gear retailer, Mountain West; codes/nicknames QFO\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2026-01-15 (background only; don't restate unless the brief asks):\n- Vantorre Group: managed by Nadia Fennimore\n- Vantorre Mobility: managed by Gideon Sato\n- Orlavine Medical Supply: not stated on any shared page (do not say who manages it)\n- Quillfeather Outfitters: managed by Strategic Accounts pod (pooled account)",
+      "response_text": "# HR reminders\n\nQuick dump from the HR/IT nag list before I forget again:\n\n- Nadia's benefits account is still flagging for a missing beneficiary update. Please log into the portal and click the two buttons so People Ops stops emailing me abt it. (Also, side note from mktg: Nadia's LinkedIn account still has the old Pemberline Dock tagline in the banner—swap that when you have five mins.)\n- Gideon's laptop is officially due for replacement. IT has a new MacBook sitting by the 4th floor lockers; trade it in before the fans on the old one acheive liftoff on a live screen share.",
+      "usage": {
+        "input_tokens": 1156,
+        "output_tokens": 140,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.003712,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1156,
+          "candidatesTokenCount": 140,
+          "totalTokenCount": 1296,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1156
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 140
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

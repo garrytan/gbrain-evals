@@ -1,0 +1,58 @@
+{
+  "slug": "tickets/2025-08-26-dmf-barge-slot-notifications",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2025-08-26",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Driftmoor Marine Freight",
+        "line": 11
+      },
+      {
+        "oid": "e2",
+        "surface": "DMF",
+        "line": 12
+      }
+    ],
+    "claims": [],
+    "events": [
+      {
+        "eid": "e-dmf-barge-outage",
+        "question": "Does the page describe this: \"Driftmoor escalates missed barge slot notifications\"? If so, on what date does the text place it?"
+      }
+    ],
+    "ownership": []
+  },
+  "prompt_user_sha256": "eb452d711e9dd114ccdd8322c490df8155f1d429ca056574c5cbf1664a4368e9",
+  "response_text": "{\n  \"date_used\": \"2025-08-26\",\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"driftmoor\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"driftmoor\"\n    }\n  ],\n  \"events\": [\n    {\n      \"eid\": \"e-dmf-barge-outage\",\n      \"present\": true,\n      \"date\": \"2025-08-26\",\n      \"line\": 10\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-08-26",
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "driftmoor"
+      },
+      {
+        "oid": "e2",
+        "entity": "driftmoor"
+      }
+    ],
+    "events": [
+      {
+        "eid": "e-dmf-barge-outage",
+        "present": true,
+        "date": "2025-08-26",
+        "line": 10
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 3100,
+    "output_tokens": 147,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.00767
+}

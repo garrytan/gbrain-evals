@@ -1,0 +1,41 @@
+{
+  "slug": "tickets/2025-08-12-tamsin-sensor-feed",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: ticket\nTitle: SUP-3920: reefer sensor feed gap, Tacoma\nDate: Written on 2025-08-12.\nWriter: Dana Okafor\nVoice: polished and businesslike\nFormat: a ticket with a fields table and a timestamped update log\nLength: about 230 words\nDate style in the body: US short (6/2/25)\nTypos: none\n\nBrief:\nTicket: the reefer temperature-sensor feed dropped for about 6 hours at Tamsin's Tacoma site on Aug 12, 2025. Fields table and updates.\n\nUse these names or codes at least once each, as written: \"TCC\".\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Ilse Varga: North team lead\n- Dana Okafor: Account manager, North team\n- Marcus Lindqvist: Account manager, North team\n- Thea Ramaswell: Director of Yard Operations\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Quarrendon Freight Lines: truckload freight carrier, Upper Midwest; main contact Thea Ramaswell, Director of Yard Operations; codes/nicknames QFL, Q-Freight\n- Brackenwater Freight Co.: less-than-truckload freight, Great Lakes; codes/nicknames BWF, Bracken\n- Tamsin Cold Chain: refrigerated warehousing, Pacific Northwest; codes/nicknames TCC\n- Orrin Mills: textile mill, Carolinas; codes/nicknames ORM\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2025-08-12 (background only; don't restate unless the brief asks):\n- Quarrendon Freight Lines: managed by Dana Okafor\n- Brackenwater Freight Co.: managed by Dana Okafor\n- Tamsin Cold Chain: managed by Dana Okafor\n- Orrin Mills: managed by Dana Okafor",
+      "response_text": "# SUP-3920: reefer sensor feed gap, Tacoma\n\n| Field | Value |\n| :--- | :--- |\n| **Ticket ID** | SUP-3920 |\n| **Account** | Tamsin Cold Chain (TCC) |\n| **Site** | Tacoma Distribution Facility |\n| **Product** | Pemberline Dock — Yard Telemetry Module |\n| **Created** | 8/12/25 |\n| **Status** | Resolved |\n\n### Update Log\n\n**8/12/25 06:45 PT**\nNight-shift yard lead Derek Vance at Tamsin Cold Chain reported that the reefer temperature-sensor feed for the Tacoma yard stopped updating in Pemberline Dock at approximately 00:15 PT. Yard clerks on the early morning shift had to manually check pulp temperatures at Doors 14 through 28 for eleven staged trailers before clearing outbound dairy loads.\n\n**8/12/25 07:20 PT**\nEscalated to Tier 2 Integrations. Telemetry logs confirm the incoming webhook from the Tacoma gateway went silent at 00:14 PT on 8/12/25 and resumed at 06:18 PT, resulting in an approximately 6-hour gap in sensor readings across the north staging lot.\n\n**8/12/25 09:50 PT**\nIntegrations identified a stalled worker process on ingestion node `us-west-2b` that failed to rotate credentials after TCC's scheduled local firewall maintenance. The worker was restarted at 06:17 PT, which restored the live stream, and cached payloads from the local Tacoma collector have now been backfilled into the historical temperature compliance report (`RPT-TEMP-774`).\n\n**8/12/25 11:30 PT**\nConfirmed with Derek Vance that all staged trailers in Tacoma are displaying live telemetry and the backfilled 00:15–06:18 PT intervals appear cleanly on their audit export. Closing ticket.",
+      "usage": {
+        "input_tokens": 1114,
+        "output_tokens": 447,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.006698,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1114,
+          "candidatesTokenCount": 447,
+          "totalTokenCount": 1561,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1114
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 447
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

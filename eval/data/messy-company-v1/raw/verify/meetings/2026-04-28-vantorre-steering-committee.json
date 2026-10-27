@@ -1,0 +1,85 @@
+{
+  "slug": "meetings/2026-04-28-vantorre-steering-committee",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2026-04-28",
+    "owner_phrases": [
+      {
+        "mid": "meetings/2026-04-28-vantorre-steering-committee#m1",
+        "phrase": "Gideon's account of the meeting",
+        "lines": [
+          20
+        ]
+      }
+    ],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Vantorre",
+        "line": 6
+      },
+      {
+        "oid": "e2",
+        "surface": "VTG",
+        "line": 9
+      },
+      {
+        "oid": "e3",
+        "surface": "Vantorre Group",
+        "line": 11
+      }
+    ],
+    "claims": [],
+    "events": [
+      {
+        "eid": "e-vtg-steering",
+        "question": "Does the page describe this: \"Vantorre Q2 steering committee\"? If so, on what date does the text place it?"
+      }
+    ],
+    "ownership": []
+  },
+  "prompt_user_sha256": "9816510b44c8b3a4db3513e7ea7c389af7da04ed51fc0943275136b84092c719",
+  "response_text": "{\n  \"date_used\": \"2026-04-28\",\n  \"owner_phrases\": [\n    {\n      \"mid\": \"meetings/2026-04-28-vantorre-steering-committee#m1\",\n      \"refers_to_customer_account\": false,\n      \"accounts\": [],\n      \"reading\": \"not about a customer account (a login, device, HR/expense account, a narrative 'account of', a vendor relationship, an employer)\",\n      \"note\": \"Gideon's 'account of the meeting' means his narrative of the meeting, not a customer account.\"\n    }\n  ],\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"vantorre-group\"\n    }\n  ],\n  \"events\": [\n    {\n      \"eid\": \"e-vtg-steering\",\n      \"present\": true,\n      \"date\": \"2026-04-28\",\n      \"line\": 8\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2026-04-28",
+    "owner_phrases": [
+      {
+        "mid": "meetings/2026-04-28-vantorre-steering-committee#m1",
+        "refers_to_customer_account": false,
+        "accounts": [],
+        "reading": "not about a customer account (a login, device, HR/expense account, a narrative 'account of', a vendor relationship, an employer)",
+        "note": "Gideon's 'account of the meeting' means his narrative of the meeting, not a customer account."
+      }
+    ],
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e2",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e3",
+        "entity": "vantorre-group"
+      }
+    ],
+    "events": [
+      {
+        "eid": "e-vtg-steering",
+        "present": true,
+        "date": "2026-04-28",
+        "line": 8
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2856,
+    "output_tokens": 261,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.008322
+}

@@ -1,0 +1,14 @@
+{
+ "cap_usd": 23,
+ "order": [
+  "b",
+  "d",
+  "comb",
+  "t-rerank-off",
+  "t-limit-10",
+  "t-relational-off",
+  "t-graph-off",
+  "t-cr-none",
+  "c-rerank-on"
+ ]
+}

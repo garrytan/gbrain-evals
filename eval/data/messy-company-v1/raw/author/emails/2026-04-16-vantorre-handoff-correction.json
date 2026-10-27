@@ -1,0 +1,41 @@
+{
+  "slug": "emails/2026-04-16-vantorre-handoff-correction",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: email\nTitle: Correction: Vantorre handoff date\nDate: Written on 2026-04-16.\nWriter: Ruth Calloway\nVoice: terse and practical\nFormat: a single email with a forwarded message below\nLength: about 239 words\nDate style in the body: day-month (2 Jun 2025)\nTypos: a few natural typos and one or two sloppy abbreviations (never in names or required phrases)\n\nBrief:\nRuth corrects the date: the Vantorre Group move to Gideon is effective May 4, 2026, not April 20. Nadia keeps it through the Q2 steering committee on April 28.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Nadia Fennimore: Strategic account manager\n- Gideon Sato: Strategic account manager\n- Mateo Quiroga: Head of Procurement\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Vantorre Group: diversified industrial manufacturer, Northeast; main contact Mateo Quiroga, Head of Procurement; codes/nicknames VTG, VTRG\n- Vantorre Mobility: electric fleet services subsidiary, Northeast; subsidiary of Vantorre Group; codes/nicknames VTM, VMob\n- Orlavine Medical Supply: medical supply distributor, Mountain West; codes/nicknames OMS\n- Quillfeather Outfitters: outdoor gear retailer, Mountain West; codes/nicknames QFO\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2026-04-16 (background only; don't restate unless the brief asks):\n- Vantorre Group: managed by Nadia Fennimore\n- Vantorre Mobility: managed by Gideon Sato\n- Orlavine Medical Supply: not stated on any shared page (do not say who manages it)\n- Quillfeather Outfitters: managed by Strategic Accounts pod (pooled account)",
+      "response_text": "**From:** Ruth Calloway  \n**To:** June Osei-Lark; Nadia Fennimore; Gideon Sato  \n**Date:** 16 Apr 2026  \n**Subject:** Correction: Vantorre handoff date  \n\nJune, hold off on the CRM flip.\n\nThe Vantorre Group move to Gideon is effective 4 May 2026, not 20 Apr. Nadia keeps it through the Q2 steering commitee on 28 Apr. \n\nMateo Quiroga wants the 2nd shift gate log export from the Allentown plant (ticket #8841, dock doors 14-18) reviewed at that meeting, and Nadia already built the deck. No sense swapping chairs four days before they look at the yard turn times.\n\nGideon, still join the 28 Apr call to shadow, then take the keys on 4 May. June, pls adjust the territory roster accordingly.\n\n—Ruth\n\n***\n\n**Forwarded message**  \n**From:** June Osei-Lark  \n**To:** Ruth Calloway  \n**Date:** 16 Apr 2026  \n**Subject:** Re: Territory queue for next wk  \n\nRuth,\n\nQuick check before I run the batch update tomorrow afternoon. I have VTG queued to move from Nadia Fennimore over to Gideon Sato effective 20 Apr 2026. \n\nIf that's still the plan, I'll swap the billing routing and main point of contact in the portal on Monday morning so Mateo Quiroga sees the update before their Tuesday dock audit. Let me know if anything shifted.\n\nThanks,  \nJune",
+      "usage": {
+        "input_tokens": 1089,
+        "output_tokens": 356,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.005738,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1089,
+          "candidatesTokenCount": 356,
+          "totalTokenCount": 1445,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1089
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 356
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

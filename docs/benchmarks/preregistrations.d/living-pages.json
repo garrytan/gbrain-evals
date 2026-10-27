@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "experiments": [
+    {
+      "id": "living-pages",
+      "preregistration": "docs/benchmarks/2026-10-17-living-pages-preregistration.md",
+      "results": [
+        "docs/benchmarks/2026-10-17-living-pages/*.json"
+      ]
+    }
+  ]
+}

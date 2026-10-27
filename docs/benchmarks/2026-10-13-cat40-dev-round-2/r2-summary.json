@@ -1,0 +1,372 @@
+{
+ "control": {
+  "all": {
+   "n": 300,
+   "success": 237,
+   "wrong_value": 21,
+   "not_submitted": 32,
+   "usd": 156.23
+  },
+  "by_model": {
+   "claude-opus-5-5": {
+    "n": 100,
+    "success": 80,
+    "wrong_value": 6,
+    "not_submitted": 12,
+    "usd": 81.23
+   },
+   "claude-sonnet-5-5": {
+    "n": 100,
+    "success": 69,
+    "wrong_value": 15,
+    "not_submitted": 12,
+    "usd": 48.98
+   },
+   "gpt-6.1-sol": {
+    "n": 100,
+    "success": 88,
+    "wrong_value": 0,
+    "not_submitted": 8,
+    "usd": 26.02
+   }
+  },
+  "by_family": {
+   "H1": {
+    "n": 60,
+    "success": 19,
+    "wrong_value": 0,
+    "not_submitted": 31,
+    "usd": 55.59
+   },
+   "H2": {
+    "n": 60,
+    "success": 52,
+    "wrong_value": 8,
+    "not_submitted": 0,
+    "usd": 24.08
+   },
+   "H3": {
+    "n": 60,
+    "success": 56,
+    "wrong_value": 3,
+    "not_submitted": 1,
+    "usd": 32.96
+   },
+   "H4": {
+    "n": 60,
+    "success": 50,
+    "wrong_value": 10,
+    "not_submitted": 0,
+    "usd": 26.45
+   },
+   "H5": {
+    "n": 60,
+    "success": 60,
+    "wrong_value": 0,
+    "not_submitted": 0,
+    "usd": 17.15
+   }
+  },
+  "H4_long": {
+   "n": 48,
+   "success": 39,
+   "wrong_value": 9,
+   "not_submitted": 0,
+   "usd": 21.46
+  },
+  "H4_not_long": {
+   "n": 12,
+   "success": 11,
+   "wrong_value": 1,
+   "not_submitted": 0,
+   "usd": 4.99
+  },
+  "control_same_tasks": {
+   "n": 300,
+   "success": 237,
+   "wrong_value": 21,
+   "not_submitted": 32,
+   "usd": 156.23
+  },
+  "control_H4_long": {
+   "n": 48,
+   "success": 39,
+   "wrong_value": 9,
+   "not_submitted": 0,
+   "usd": 21.46
+  },
+  "fs93_same_tasks": {
+   "n": 300,
+   "success": 213,
+   "wrong_value": 14,
+   "not_submitted": 70,
+   "usd": 296.85
+  },
+  "gbrain93_same_tasks": {
+   "n": 300,
+   "success": 236,
+   "wrong_value": 22,
+   "not_submitted": 32,
+   "usd": 173.79
+  },
+  "vs_fs93_pp": [
+   8.0,
+   3.0,
+   13.0
+  ]
+ },
+ "all-on": {
+  "all": {
+   "n": 300,
+   "success": 249,
+   "wrong_value": 9,
+   "not_submitted": 33,
+   "usd": 129.17
+  },
+  "by_model": {
+   "claude-opus-5-5": {
+    "n": 100,
+    "success": 87,
+    "wrong_value": 0,
+    "not_submitted": 10,
+    "usd": 69.59
+   },
+   "claude-sonnet-5-5": {
+    "n": 100,
+    "success": 77,
+    "wrong_value": 6,
+    "not_submitted": 12,
+    "usd": 37.71
+   },
+   "gpt-6.1-sol": {
+    "n": 100,
+    "success": 85,
+    "wrong_value": 3,
+    "not_submitted": 11,
+    "usd": 21.87
+   }
+  },
+  "by_family": {
+   "H1": {
+    "n": 60,
+    "success": 18,
+    "wrong_value": 0,
+    "not_submitted": 33,
+    "usd": 55.37
+   },
+   "H2": {
+    "n": 60,
+    "success": 53,
+    "wrong_value": 7,
+    "not_submitted": 0,
+    "usd": 14.67
+   },
+   "H3": {
+    "n": 60,
+    "success": 59,
+    "wrong_value": 1,
+    "not_submitted": 0,
+    "usd": 29.53
+   },
+   "H4": {
+    "n": 60,
+    "success": 60,
+    "wrong_value": 0,
+    "not_submitted": 0,
+    "usd": 12.91
+   },
+   "H5": {
+    "n": 60,
+    "success": 59,
+    "wrong_value": 1,
+    "not_submitted": 0,
+    "usd": 16.69
+   }
+  },
+  "H4_long": {
+   "n": 48,
+   "success": 48,
+   "wrong_value": 0,
+   "not_submitted": 0,
+   "usd": 10.7
+  },
+  "H4_not_long": {
+   "n": 12,
+   "success": 12,
+   "wrong_value": 0,
+   "not_submitted": 0,
+   "usd": 2.21
+  },
+  "control_same_tasks": {
+   "n": 300,
+   "success": 237,
+   "wrong_value": 21,
+   "not_submitted": 32,
+   "usd": 156.23
+  },
+  "control_H4_long": {
+   "n": 48,
+   "success": 39,
+   "wrong_value": 9,
+   "not_submitted": 0,
+   "usd": 21.46
+  },
+  "fs93_same_tasks": {
+   "n": 300,
+   "success": 213,
+   "wrong_value": 14,
+   "not_submitted": 70,
+   "usd": 296.85
+  },
+  "gbrain93_same_tasks": {
+   "n": 300,
+   "success": 236,
+   "wrong_value": 22,
+   "not_submitted": 32,
+   "usd": 173.79
+  },
+  "vs_control_pp": [
+   4.0,
+   0.3,
+   8.0
+  ],
+  "vs_control_wrong": -12,
+  "vs_control_by_model_success": {
+   "claude-opus-5-5": 7,
+   "claude-sonnet-5-5": 8,
+   "gpt-6.1-sol": -3
+  },
+  "vs_fs93_pp": [
+   12.0,
+   8.3,
+   16.0
+  ]
+ },
+ "f5": {
+  "all": {
+   "n": 300,
+   "success": 236,
+   "wrong_value": 19,
+   "not_submitted": 37,
+   "usd": 148.98
+  },
+  "by_model": {
+   "claude-opus-5-5": {
+    "n": 100,
+    "success": 79,
+    "wrong_value": 3,
+    "not_submitted": 16,
+    "usd": 77.85
+   },
+   "claude-sonnet-5-5": {
+    "n": 100,
+    "success": 68,
+    "wrong_value": 16,
+    "not_submitted": 11,
+    "usd": 46.53
+   },
+   "gpt-6.1-sol": {
+    "n": 100,
+    "success": 89,
+    "wrong_value": 0,
+    "not_submitted": 10,
+    "usd": 24.6
+   }
+  },
+  "by_family": {
+   "H1": {
+    "n": 60,
+    "success": 20,
+    "wrong_value": 0,
+    "not_submitted": 33,
+    "usd": 50.64
+   },
+   "H2": {
+    "n": 60,
+    "success": 49,
+    "wrong_value": 9,
+    "not_submitted": 2,
+    "usd": 23.56
+   },
+   "H3": {
+    "n": 60,
+    "success": 58,
+    "wrong_value": 0,
+    "not_submitted": 2,
+    "usd": 32.69
+   },
+   "H4": {
+    "n": 60,
+    "success": 49,
+    "wrong_value": 10,
+    "not_submitted": 0,
+    "usd": 24.84
+   },
+   "H5": {
+    "n": 60,
+    "success": 60,
+    "wrong_value": 0,
+    "not_submitted": 0,
+    "usd": 17.25
+   }
+  },
+  "H4_long": {
+   "n": 48,
+   "success": 37,
+   "wrong_value": 10,
+   "not_submitted": 0,
+   "usd": 20.09
+  },
+  "H4_not_long": {
+   "n": 12,
+   "success": 12,
+   "wrong_value": 0,
+   "not_submitted": 0,
+   "usd": 4.74
+  },
+  "control_same_tasks": {
+   "n": 300,
+   "success": 237,
+   "wrong_value": 21,
+   "not_submitted": 32,
+   "usd": 156.23
+  },
+  "control_H4_long": {
+   "n": 48,
+   "success": 39,
+   "wrong_value": 9,
+   "not_submitted": 0,
+   "usd": 21.46
+  },
+  "fs93_same_tasks": {
+   "n": 300,
+   "success": 213,
+   "wrong_value": 14,
+   "not_submitted": 70,
+   "usd": 296.85
+  },
+  "gbrain93_same_tasks": {
+   "n": 300,
+   "success": 236,
+   "wrong_value": 22,
+   "not_submitted": 32,
+   "usd": 173.79
+  },
+  "vs_control_pp": [
+   -0.3,
+   -3.7,
+   3.0
+  ],
+  "vs_control_wrong": -2,
+  "vs_control_by_model_success": {
+   "claude-opus-5-5": -1,
+   "claude-sonnet-5-5": -1,
+   "gpt-6.1-sol": 1
+  },
+  "vs_fs93_pp": [
+   7.7,
+   2.7,
+   12.7
+  ]
+ }
+}

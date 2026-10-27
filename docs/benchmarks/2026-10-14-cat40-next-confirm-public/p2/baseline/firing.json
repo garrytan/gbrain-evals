@@ -1,0 +1,82 @@
+{
+  "run": "eval/reports/cat40/next-confirm/p2/baseline",
+  "label": "gbrain-next-baseline",
+  "commit": "09d21554d7ab75cc5643a7f5a0e7f163aa4dae5b",
+  "config": {},
+  "build_config": {},
+  "restore_probe": [
+    {
+      "slot": "slot0",
+      "config": {},
+      "owner_phrases": {
+        "links": 0,
+        "windows": null
+      }
+    },
+    {
+      "slot": "slot1",
+      "config": {},
+      "owner_phrases": {
+        "links": 0,
+        "windows": null
+      }
+    },
+    {
+      "slot": "slot2",
+      "config": {},
+      "owner_phrases": {
+        "links": 0,
+        "windows": null
+      }
+    },
+    {
+      "slot": "slot3",
+      "config": {},
+      "owner_phrases": {
+        "links": 0,
+        "windows": null
+      }
+    },
+    {
+      "slot": "slot4",
+      "config": {},
+      "owner_phrases": {
+        "links": 0,
+        "windows": null
+      }
+    }
+  ],
+  "rerank_probe": "passed",
+  "served_instructions_sha256": "8876e6f1a486355367c85bf9a4e1bb953d83eb7e11463cf49ab67622d4fac0c2",
+  "cells": 300,
+  "calls": {
+    "entity": 387,
+    "search": 3030,
+    "context_pack": 215,
+    "get_page": 911,
+    "get_backlinks": 152,
+    "list_pages": 64,
+    "remember": 323,
+    "recall": 194,
+    "whoami": 46,
+    "forget": 103,
+    "synthesize": 11,
+    "list_skills": 30,
+    "query": 22,
+    "request_tools": 20,
+    "submit_agent": 1
+  },
+  "names_rows": 2533,
+  "names_rows_with_records": 0,
+  "names_rows_with_count": 0,
+  "record_rows": 0,
+  "delivered_units": {},
+  "page_status_rows": 0,
+  "known_as_rows": 0,
+  "owner_phrase_referrer_rows": null,
+  "names_call_ms": {
+    "n": 358,
+    "p50": 197,
+    "p99": 935
+  }
+}

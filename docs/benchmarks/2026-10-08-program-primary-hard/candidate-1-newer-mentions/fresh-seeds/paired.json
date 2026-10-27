@@ -1,0 +1,200 @@
+[
+ {
+  "scope": "claude-opus-5-5",
+  "pairs": 24,
+  "personas": 8,
+  "baseline": {
+   "failures": 17,
+   "clustered": {
+    "rate": 0.7083333333333334,
+    "lower": 0.5297397727954665,
+    "upper": 0.8869268938712003,
+    "clusters": 8
+   }
+  },
+  "candidate": {
+   "failures": 3,
+   "clustered": {
+    "rate": 0.125,
+    "lower": 0,
+    "upper": 0.33233982354467756,
+    "clusters": 8
+   }
+  },
+  "verdict": "improvement",
+  "ratio": {
+   "method": "cond-binomial",
+   "ratio": 0.2,
+   "factor": 5,
+   "baseline_failures": 17,
+   "candidate_failures": 3,
+   "clusters": 8,
+   "lower": 0.03313356155682852,
+   "upper": 0.6101162354799299
+  },
+  "risk_difference": {
+   "diff": -0.5833333333333334,
+   "lower": -0.8303511142534508,
+   "upper": -0.3363155524132159
+  },
+  "non_inferior": true,
+  "kinds": {
+   "baseline": {
+    "stale_date": 9,
+    "stale_correction": 16
+   },
+   "candidate": {
+    "stale_correction": 3
+   }
+  }
+ },
+ {
+  "scope": "claude-sonnet-5-5",
+  "pairs": 24,
+  "personas": 8,
+  "baseline": {
+   "failures": 14,
+   "clustered": {
+    "rate": 0.5833333333333334,
+    "lower": 0.38628131236727337,
+    "upper": 0.7803853542993934,
+    "clusters": 8
+   }
+  },
+  "candidate": {
+   "failures": 6,
+   "clustered": {
+    "rate": 0.25,
+    "lower": 0.002982219079882553,
+    "upper": 0.49701778092011745,
+    "clusters": 8
+   }
+  },
+  "verdict": "inconclusive",
+  "ratio": {
+   "method": "cond-binomial",
+   "ratio": 0.4482758620689655,
+   "factor": 2.230769230769231,
+   "baseline_failures": 14,
+   "candidate_failures": 6,
+   "clusters": 8,
+   "lower": 0.13498564823162829,
+   "upper": 1.1871748463423084
+  },
+  "risk_difference": {
+   "diff": -0.3333333333333333,
+   "lower": -0.6312479863726935,
+   "upper": -0.035418680293973104
+  },
+  "non_inferior": true,
+  "kinds": {
+   "baseline": {
+    "stale_date": 11,
+    "stale_correction": 14,
+    "unsupported": 1
+   },
+   "candidate": {
+    "stale_correction": 6,
+    "missed_commitment": 1
+   }
+  }
+ },
+ {
+  "scope": "gpt-6.1-sol",
+  "pairs": 24,
+  "personas": 8,
+  "baseline": {
+   "failures": 2,
+   "clustered": {
+    "rate": 0.08333333333333333,
+    "lower": 0,
+    "upper": 0.21233416217918977,
+    "clusters": 8
+   }
+  },
+  "candidate": {
+   "failures": 0,
+   "clustered": {
+    "rate": 0,
+    "lower": 0,
+    "upper": 0,
+    "clusters": 8
+   }
+  },
+  "verdict": "inconclusive",
+  "ratio": {
+   "method": "cond-binomial",
+   "ratio": 0.2,
+   "factor": 5,
+   "baseline_failures": 2,
+   "candidate_failures": 0,
+   "clusters": 8,
+   "lower": 0,
+   "upper": 5.324555320336748
+  },
+  "risk_difference": {
+   "diff": -0.08333333333333333,
+   "lower": -0.21233416217918977,
+   "upper": 0.045667495512523124
+  },
+  "non_inferior": false,
+  "kinds": {
+   "baseline": {
+    "stale_correction": 1,
+    "stale_date": 1
+   },
+   "candidate": {}
+  }
+ },
+ {
+  "scope": "pooled",
+  "pairs": 72,
+  "personas": 8,
+  "baseline": {
+   "failures": 33,
+   "clustered": {
+    "rate": 0.4583333333333333,
+    "lower": 0.3425515460680187,
+    "upper": 0.5741151205986479,
+    "clusters": 8
+   }
+  },
+  "candidate": {
+   "failures": 9,
+   "clustered": {
+    "rate": 0.125,
+    "lower": 0.0329419083685778,
+    "upper": 0.2170580916314222,
+    "clusters": 8
+   }
+  },
+  "verdict": "improvement",
+  "ratio": {
+   "method": "cond-binomial",
+   "ratio": 0.2835820895522388,
+   "factor": 3.5263157894736845,
+   "baseline_failures": 33,
+   "candidate_failures": 9,
+   "clusters": 8,
+   "lower": 0.11477705532994263,
+   "upper": 0.5825680357047435
+  },
+  "risk_difference": {
+   "diff": -0.3333333333333333,
+   "lower": -0.41933388589723763,
+   "upper": -0.247332780769429
+  },
+  "non_inferior": true,
+  "kinds": {
+   "baseline": {
+    "stale_date": 21,
+    "stale_correction": 31,
+    "unsupported": 1
+   },
+   "candidate": {
+    "stale_correction": 9,
+    "missed_commitment": 1
+   }
+  }
+ }
+]

@@ -1,0 +1,432 @@
+{
+ "schema": "gbrain-sync-freshness/1",
+ "kind": "embed-drain",
+ "cell": "pglite-managed-10000-single-serve-embed-drain-embed50-fail30000-gbra133-pr2b-bench_4ba4c36f",
+ "label": "gbra133-pr2b-bench@4ba4c36f",
+ "gbrain_rev": "4ba4c36f",
+ "at": "2026-10-20T02:00:02.028Z",
+ "params": {
+  "engine": "pglite",
+  "mode": "managed",
+  "pages": 10000,
+  "commit": "backlog",
+  "trigger": "serve",
+  "reps": 10,
+  "rtt_ms": 0,
+  "measured_rtt_ms": null,
+  "interval_s": null,
+  "scenario": "embed-drain",
+  "probe_ms": 100,
+  "timeout_s": 300,
+  "keyless": false,
+  "embed": {
+   "provider": "loopback OpenAI stub",
+   "latency_ms": 50,
+   "fail_ms_after_commit": 30000
+  },
+  "detection": "watch",
+  "jitter_ms": 0,
+  "sources": [
+   "bench"
+  ],
+  "source_pages": null,
+  "residents": null
+ },
+ "machine": {
+  "cores": 4,
+  "cpu_model": "AMD EPYC",
+  "ram_gb": 16,
+  "kernel": "6.1.158+",
+  "bun": "1.4.3"
+ },
+ "build": {
+  "engine": "pglite",
+  "mode": "managed",
+  "pages": 10000,
+  "sources": [
+   "bench"
+  ],
+  "rev": "4ba4c36f",
+  "built_at": "2026-10-19T23:06:52.534Z",
+  "cloned_from": "pglite-classic-10000-embed-4ba4c36f",
+  "clone_ms": 1987.2,
+  "activate_ms": 2528.8,
+  "first_managed_sync": {
+   "ms": 2011.065185546875,
+   "runs": 1
+  },
+  "links_settled": {
+   "ms": 825,
+   "runs": 1,
+   "last": "Extract --stale: 0 link(s) created, 0 removed, 0 timeline entr(ies) from 0 page(s). | Actionable: 0 page(s) still need link/timeline extraction; 0 page(s) due for the mention pass. Extraction is complete (raw stale totals are not a completion signal)."
+  }
+ },
+ "notes": [
+  "serve on-commit watcher enabled 712 ms after spawn",
+  "embedding stub: {\"requests\":16211,\"calls\":9682,\"inputs\":9682,\"limited\":0,\"failed\":6528}, 50 ms per call, 500 for 30000 ms after each commit"
+ ],
+ "get_page": {
+  "n": 10,
+  "p50": 122455.6,
+  "p95": 138693.7,
+  "max": 141063.8,
+  "min": 101500.8,
+  "mean": 121951.7,
+  "cv": 0.104
+ },
+ "search": {
+  "n": 10,
+  "p50": 6620.7,
+  "p95": 7255.5,
+  "max": 7318.9,
+  "min": 5970.6,
+  "mean": 6582.5,
+  "cv": 0.073
+ },
+ "exit": {
+  "n": 0,
+  "p50": null,
+  "p95": null,
+  "max": null,
+  "min": null,
+  "mean": null,
+  "cv": null
+ },
+ "phases": {
+  "stub_inputs_with_token": {
+   "n": 10,
+   "p50": 969,
+   "p95": 972.1,
+   "max": 973,
+   "min": 963,
+   "mean": 968.2,
+   "cv": 0.003
+  },
+  "stub_requests": {
+   "n": 10,
+   "p50": 1642,
+   "p95": 1676.7,
+   "max": 1687,
+   "min": 1527,
+   "mean": 1621.1,
+   "cv": 0.032
+  },
+  "stub_calls": {
+   "n": 10,
+   "p50": 969,
+   "p95": 972.1,
+   "max": 973,
+   "min": 963,
+   "mean": 968.2,
+   "cv": 0.003
+  },
+  "stub_failed": {
+   "n": 10,
+   "p50": 677.5,
+   "p95": 707.2,
+   "max": 718,
+   "min": 556,
+   "mean": 652.8,
+   "cv": 0.082
+  },
+  "first_line": {
+   "n": 10,
+   "p50": 210.3,
+   "p95": 242.7,
+   "max": 244.5,
+   "min": 170.7,
+   "mean": 207.4,
+   "cv": 0.126
+  },
+  "serve_job_started": {
+   "n": 10,
+   "p50": 210.3,
+   "p95": 242.7,
+   "max": 244.5,
+   "min": 170.7,
+   "mean": 207.4,
+   "cv": 0.126
+  }
+ },
+ "detection_observed": {
+  "bench": "watch (serve)"
+ },
+ "embed_audit": {
+  "per_rep": [
+   {
+    "token": "zqhjjacwqzek",
+    "total": 1000,
+    "embedded": 968
+   },
+   {
+    "token": "zqntfusbjpdo",
+    "total": 1000,
+    "embedded": 970
+   },
+   {
+    "token": "zqrsbxytvzol",
+    "total": 1000,
+    "embedded": 973
+   },
+   {
+    "token": "zqpwwchqmkyo",
+    "total": 1000,
+    "embedded": 965
+   },
+   {
+    "token": "zqunjcqeqaqo",
+    "total": 1000,
+    "embedded": 970
+   },
+   {
+    "token": "zqfjcqbabthp",
+    "total": 1000,
+    "embedded": 966
+   },
+   {
+    "token": "zqnxatcwqwhb",
+    "total": 1000,
+    "embedded": 966
+   },
+   {
+    "token": "zqcmqzbdnecc",
+    "total": 1000,
+    "embedded": 970
+   },
+   {
+    "token": "zqdybvtidxcb",
+    "total": 1000,
+    "embedded": 971
+   },
+   {
+    "token": "zqppwmtrlwsx",
+    "total": 1000,
+    "embedded": 963
+   }
+  ],
+  "source_chunks_missing_vector": 318
+ },
+ "failures": 10,
+ "reps": [
+  {
+   "rep": 0,
+   "sha": "b47d9fc92141",
+   "token": "zqhjjacwqzek",
+   "files": 1000,
+   "get_ms": 123241.1,
+   "search_ms": 5970.6,
+   "first_hit_ms": 926.9,
+   "commit_git_ms": 477.3,
+   "source": "mcp",
+   "phases": {
+    "stub_inputs_with_token": 968,
+    "stub_requests": 1687,
+    "stub_calls": 968,
+    "stub_failed": 718,
+    "first_line": 221.4,
+    "serve_job_started": 221.4
+   },
+   "probes": 879,
+   "probe_ms_mean": 135.1,
+   "error": "the stub embedded 968 of 1000 changed chunks within 300 s"
+  },
+  {
+   "rep": 1,
+   "sha": "e2e1ceb4ae6d",
+   "token": "zqntfusbjpdo",
+   "files": 1000,
+   "get_ms": 130528.2,
+   "search_ms": 6095.7,
+   "first_hit_ms": 955.6,
+   "commit_git_ms": 509.9,
+   "source": "mcp",
+   "phases": {
+    "stub_inputs_with_token": 970,
+    "stub_requests": 1664,
+    "stub_calls": 970,
+    "stub_failed": 694,
+    "first_line": 170.7,
+    "serve_job_started": 170.7
+   },
+   "probes": 804,
+   "probe_ms_mean": 160.6,
+   "error": "the stub embedded 970 of 1000 changed chunks within 300 s"
+  },
+  {
+   "rep": 2,
+   "sha": "1d660be6ca88",
+   "token": "zqrsbxytvzol",
+   "files": 1000,
+   "get_ms": 110212.7,
+   "search_ms": 7177.9,
+   "first_hit_ms": 996.5,
+   "commit_git_ms": 407,
+   "source": "mcp",
+   "phases": {
+    "stub_inputs_with_token": 973,
+    "stub_requests": 1588,
+    "stub_calls": 973,
+    "stub_failed": 615,
+    "first_line": 182.6,
+    "serve_job_started": 182.6
+   },
+   "probes": 840,
+   "probe_ms_mean": 128.4,
+   "error": "the stub embedded 973 of 1000 changed chunks within 300 s"
+  },
+  {
+   "rep": 3,
+   "sha": "89695b5ab326",
+   "token": "zqpwwchqmkyo",
+   "files": 1000,
+   "get_ms": 107276.9,
+   "search_ms": 6495.2,
+   "first_hit_ms": 1011.5,
+   "commit_git_ms": 483.4,
+   "source": "mcp",
+   "phases": {
+    "stub_inputs_with_token": 965,
+    "stub_requests": 1656,
+    "stub_calls": 965,
+    "stub_failed": 691,
+    "first_line": 185.2,
+    "serve_job_started": 185.2
+   },
+   "probes": 837,
+   "probe_ms_mean": 125.9,
+   "error": "the stub embedded 965 of 1000 changed chunks within 300 s"
+  },
+  {
+   "rep": 4,
+   "sha": "f34ee07087de",
+   "token": "zqunjcqeqaqo",
+   "files": 1000,
+   "get_ms": 141063.8,
+   "search_ms": 6934,
+   "first_hit_ms": 1014,
+   "commit_git_ms": 426.4,
+   "source": "mcp",
+   "phases": {
+    "stub_inputs_with_token": 970,
+    "stub_requests": 1581,
+    "stub_calls": 970,
+    "stub_failed": 611,
+    "first_line": 240.4,
+    "serve_job_started": 240.4
+   },
+   "probes": 813,
+   "probe_ms_mean": 171.8,
+   "error": "the stub embedded 970 of 1000 changed chunks within 300 s"
+  },
+  {
+   "rep": 5,
+   "sha": "c3dfb049817b",
+   "token": "zqfjcqbabthp",
+   "files": 1000,
+   "get_ms": 101500.8,
+   "search_ms": 6113.8,
+   "first_hit_ms": 981.8,
+   "commit_git_ms": 500.1,
+   "source": "mcp",
+   "phases": {
+    "stub_inputs_with_token": 966,
+    "stub_requests": 1655,
+    "stub_calls": 966,
+    "stub_failed": 689,
+    "first_line": 182,
+    "serve_job_started": 182
+   },
+   "probes": 831,
+   "probe_ms_mean": 119.1,
+   "error": "the stub embedded 966 of 1000 changed chunks within 300 s"
+  },
+  {
+   "rep": 6,
+   "sha": "f46c06c9c551",
+   "token": "zqnxatcwqwhb",
+   "files": 1000,
+   "get_ms": 120854.2,
+   "search_ms": 6207.7,
+   "first_hit_ms": 879.8,
+   "commit_git_ms": 536.1,
+   "source": "mcp",
+   "phases": {
+    "stub_inputs_with_token": 966,
+    "stub_requests": 1657,
+    "stub_calls": 966,
+    "stub_failed": 691,
+    "first_line": 211.7,
+    "serve_job_started": 211.7
+   },
+   "probes": 839,
+   "probe_ms_mean": 140.7,
+   "error": "the stub embedded 966 of 1000 changed chunks within 300 s"
+  },
+  {
+   "rep": 7,
+   "sha": "87c7b86a9a66",
+   "token": "zqcmqzbdnecc",
+   "files": 1000,
+   "get_ms": 127372.1,
+   "search_ms": 6746.2,
+   "first_hit_ms": 991.1,
+   "commit_git_ms": 450,
+   "source": "mcp",
+   "phases": {
+    "stub_inputs_with_token": 970,
+    "stub_requests": 1567,
+    "stub_calls": 970,
+    "stub_failed": 597,
+    "first_line": 244.5,
+    "serve_job_started": 244.5
+   },
+   "probes": 861,
+   "probe_ms_mean": 146.1,
+   "error": "the stub embedded 970 of 1000 changed chunks within 300 s"
+  },
+  {
+   "rep": 8,
+   "sha": "3ab0cfe69161",
+   "token": "zqdybvtidxcb",
+   "files": 1000,
+   "get_ms": 135796.9,
+   "search_ms": 7318.9,
+   "first_hit_ms": 872.4,
+   "commit_git_ms": 443.9,
+   "source": "mcp",
+   "phases": {
+    "stub_inputs_with_token": 971,
+    "stub_requests": 1527,
+    "stub_calls": 971,
+    "stub_failed": 556,
+    "first_line": 208.9,
+    "serve_job_started": 208.9
+   },
+   "probes": 851,
+   "probe_ms_mean": 158.1,
+   "error": "the stub embedded 971 of 1000 changed chunks within 300 s"
+  },
+  {
+   "rep": 9,
+   "sha": "9dc6fde5a339",
+   "token": "zqppwmtrlwsx",
+   "files": 1000,
+   "get_ms": 121670.1,
+   "search_ms": 6765.2,
+   "first_hit_ms": 992.9,
+   "commit_git_ms": 439.7,
+   "source": "mcp",
+   "phases": {
+    "stub_inputs_with_token": 963,
+    "stub_requests": 1629,
+    "stub_calls": 963,
+    "stub_failed": 666,
+    "first_line": 227,
+    "serve_job_started": 227
+   },
+   "probes": 844,
+   "probe_ms_mean": 141.2,
+   "error": "the stub embedded 963 of 1000 changed chunks within 300 s"
+  }
+ ]
+}

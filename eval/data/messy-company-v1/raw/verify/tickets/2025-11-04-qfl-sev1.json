@@ -1,0 +1,59 @@
+{
+  "slug": "tickets/2025-11-04-qfl-sev1",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2025-11-04",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Quarrendon Freight Lines",
+        "line": 13
+      },
+      {
+        "oid": "e2",
+        "surface": "QFL",
+        "line": 13
+      }
+    ],
+    "claims": [],
+    "events": [
+      {
+        "eid": "e-qfl-sev1",
+        "question": "Does the page describe this: \"Sev 1 escalation: dock schedule sync outage at Quarrendon's Superior terminal\"? If so, on what date does the text place it?"
+      }
+    ],
+    "ownership": []
+  },
+  "prompt_user_sha256": "6f51e10c2ff36450ce6ce11ad73d83c2e16ec04dba5cb20f0fc93e062376b8fc",
+  "response_text": "{\n  \"date_used\": \"2025-11-04\",\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"quarrendon\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"quarrendon\"\n    }\n  ],\n  \"events\": [\n    {\n      \"eid\": \"e-qfl-sev1\",\n      \"present\": true,\n      \"date\": \"2025-11-04\",\n      \"line\": 12\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-11-04",
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "quarrendon"
+      },
+      {
+        "oid": "e2",
+        "entity": "quarrendon"
+      }
+    ],
+    "events": [
+      {
+        "eid": "e-qfl-sev1",
+        "present": true,
+        "date": "2025-11-04",
+        "line": 12
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 3190,
+    "output_tokens": 156,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.00794
+}

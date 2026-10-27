@@ -1,0 +1,19 @@
+{
+  "model": "anthropic:claude-opus-5-5",
+  "split": "dev",
+  "started_at": "2026-10-17T02:08:57.591Z",
+  "gbrain_commit": "6c3e6fe05e53a05025bf8f0ab671c799b4d7568c",
+  "preregistration": null,
+  "bun": "1.4.3",
+  "prompt_version": "hybrid-evidence-v1",
+  "prompt_sha256": "cdfdd208ff1ca66a5b650ee33f4d1298e7a5080d6ccfd86605e0bcd9278aeba8",
+  "threshold": 0.95,
+  "fixtures_sha256": "08218f73520f8f52058938a4741177ea0319c141269d688bff9dbb0f1ceeb9c7",
+  "harness_sha256": "54c60727485b6e62490426da1f138623a226d2cb397e373269421c50ac3dfee8",
+  "max_usd": 1.4,
+  "concurrency": 4,
+  "fixtures": 118,
+  "finished_at": "2026-10-17T02:10:36.782Z",
+  "spent_usd": 0.8790240000000001,
+  "budget_stop": false
+}

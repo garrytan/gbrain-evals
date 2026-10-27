@@ -1,0 +1,36 @@
+{
+  "run_id": "harness-rejudge:longmemeval-s-gbrain-rag-0c561a6a744f+longmemeval-s-gbrain-rag-367592ede32e+longmemeval-s-gbrain-rag-77c9ebfbf567+longmemeval-s-gbrain-rag-95369ca39b74+longmemeval-s-gbrain-rag-a1bbbca-2026-10-11T08-24-24-386Z-e8dece49",
+  "usd": 1.29963,
+  "requests": 458,
+  "metered": {
+    "total": {
+      "requests": 458,
+      "refused": 0,
+      "reserved_usd": 270.4702545000001,
+      "actual_usd": 1.2996300000000014,
+      "input_tokens": 124658,
+      "output_tokens": 123627
+    },
+    "byLabel": {
+      "harness": {
+        "requests": 458,
+        "refused": 0,
+        "reserved_usd": 270.4702545000001,
+        "actual_usd": 1.2996300000000014,
+        "input_tokens": 124658,
+        "output_tokens": 123627
+      }
+    },
+    "byProvider": {
+      "gemini": {
+        "requests": 458,
+        "refused": 0,
+        "reserved_usd": 270.4702545000001,
+        "actual_usd": 1.2996300000000014,
+        "input_tokens": 124658,
+        "output_tokens": 123627
+      }
+    },
+    "exhausted": false
+  }
+}

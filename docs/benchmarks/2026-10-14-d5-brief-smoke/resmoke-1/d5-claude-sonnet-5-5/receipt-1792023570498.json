@@ -1,0 +1,135 @@
+{
+  "schema": "cat40-receipt-v1",
+  "version": "cat40-v1",
+  "judge_prompt": "cat40-claims-v1",
+  "judge": null,
+  "world": {
+    "path": "eval/data/model-ladder-wide-dev/world.json",
+    "scale": "wide",
+    "digest": "79094a8a2cbb6725cae37da8a97bb16b64d7941186f5682e209ecc644b8ab510",
+    "seed": 20261002,
+    "docs": 8807,
+    "tasks": 120,
+    "templates": "A",
+    "templates_file_sha256": null,
+    "strata": {
+      "memory-only": 7,
+      "page-authoring": 2,
+      "hidden-tool": 1
+    }
+  },
+  "evals_commit": "9fe26b5d9d77044db68ad724b52fa5f149426aad",
+  "evals_dirty": false,
+  "gbrain": {
+    "slot_ref": null,
+    "slot_commit": "f127b1b5a028c3723d07e2358bef2dfb9960ce65",
+    "label": "d5",
+    "commit": "f127b1b5a028c3723d07e2358bef2dfb9960ce65",
+    "version": "0.60.232.0",
+    "tree": "cf9f6c793200a1949a36661db96067d34f543484",
+    "verified": {
+      "copy_tree": "cf9f6c793200a1949a36661db96067d34f543484",
+      "tree_matches": true,
+      "symlinks_under_src": 0,
+      "dir_is_realpath": true,
+      "cli_version": "0.60.232.0",
+      "cli_version_matches": true
+    },
+    "surface": "full",
+    "advertised_surface": "starter",
+    "tool_overrides": {
+      "descriptions_file": null,
+      "descriptions_sha256": null,
+      "dropped": []
+    },
+    "instructions_override": null,
+    "served_instructions_sha256": "a369ddd5cc482ce03a5b00e74d7ef1f76f99a85bcfd73323162f19841ab6c822",
+    "operator_analyze": true,
+    "serve_boot_timeout_s": 0,
+    "staged_build": {
+      "sync_batch_docs": 5000
+    }
+  },
+  "mode": "cells",
+  "order": "task",
+  "complete": true,
+  "cells_planned": 10,
+  "slot_builds": [],
+  "models": [
+    "claude-sonnet-5-5"
+  ],
+  "arms": [
+    "gbrain"
+  ],
+  "families": [
+    "A",
+    "B",
+    "C",
+    "E",
+    "F",
+    "H"
+  ],
+  "repeats": 1,
+  "max_tool_chars": null,
+  "argv": [
+    "--models",
+    "claude-sonnet-5-5",
+    "--arms",
+    "gbrain",
+    "--world",
+    "eval/data/model-ladder-wide-dev/world.json",
+    "--gbrain",
+    "gbrain@f127b1b5a028c3723d07e2358bef2dfb9960ce65",
+    "--gbrain-root",
+    "<slots>",
+    "--gbrain-label",
+    "d5",
+    "--surface",
+    "full",
+    "--advertised",
+    "starter",
+    "--slots",
+    "1",
+    "--tasks",
+    "A01,A02,B01,B02,C01,C02,E01,F01,F02,H01",
+    "--repeat",
+    "1",
+    "--transcripts",
+    "--judge",
+    "none",
+    "--max-tool-chars",
+    "none",
+    "--budget-usd",
+    "1.5",
+    "--budget-ledger",
+    ".budget/d5-brief-resmoke.sqlite",
+    "--out",
+    "eval/reports/cat40/d5-brief-resmoke/d5-claude-sonnet-5-5"
+  ],
+  "budget_run_id": "cat40-model-ladder-2026-10-15T00-17-33-766Z-1d6a7d3e",
+  "resumed": false,
+  "proxy_unattributed": {
+    "slot:slot0": {
+      "usd": 0,
+      "requests": 1,
+      "unpriced": 0,
+      "byModel": {}
+    }
+  },
+  "failed_cells_proxy_usd": 0,
+  "cost": {
+    "usd": 0.930141,
+    "input_tokens": 1102865,
+    "output_tokens": 7780,
+    "basis": "budget ledger cat40-model-ladder-2026-10-15T00-17-33-766Z-1d6a7d3e: 79 paid requests, 0 charged at their reservation because usage was unavailable",
+    "ledger": ".budget/d5-brief-resmoke.sqlite",
+    "program_cap_usd": 10,
+    "overshoot_usd": 0,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 5,
+      "max": 535.1
+    }
+  },
+  "finished_at": "2026-10-15T00:19:30.496Z"
+}

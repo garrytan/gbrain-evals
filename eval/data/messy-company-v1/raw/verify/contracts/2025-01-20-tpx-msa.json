@@ -1,0 +1,141 @@
+{
+  "slug": "contracts/2025-01-20-tpx-msa",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2025-01-20",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Tansley Parcel",
+        "line": 7
+      },
+      {
+        "oid": "e2",
+        "surface": "Tansley Parcel",
+        "line": 11
+      },
+      {
+        "oid": "e3",
+        "surface": "Tansley Parcel",
+        "line": 17
+      },
+      {
+        "oid": "e4",
+        "surface": "Tansley Parcel",
+        "line": 29
+      },
+      {
+        "oid": "e5",
+        "surface": "Tansley Parcel",
+        "line": 35
+      },
+      {
+        "oid": "e6",
+        "surface": "Tansley Parcel",
+        "line": 56
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": [],
+    "record": {
+      "question": "Is this document signed, an unsigned version, or a draft? Judge from the body text, not the title alone. Give its signed date and effective date if stated, and the value of each of these terms it sets.",
+      "terms": [
+        "seats",
+        "price_per_seat",
+        "discount_pct",
+        "renewal_date",
+        "payment_terms_days"
+      ]
+    }
+  },
+  "prompt_user_sha256": "6cf6172296681a064ac1a6b32726e228c48b9a7d1c636ceb2f00a2341e70718d",
+  "response_text": "{\n  \"date_used\": \"2025-01-20\",\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"tansley-parcel\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"tansley-parcel\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"tansley-parcel\"\n    },\n    {\n      \"oid\": \"e4\",\n      \"entity\": \"tansley-parcel\"\n    },\n    {\n      \"oid\": \"e5\",\n      \"entity\": \"tansley-parcel\"\n    },\n    {\n      \"oid\": \"e6\",\n      \"entity\": \"tansley-parcel\"\n    }\n  ],\n  \"record\": {\n    \"status\": \"signed\",\n    \"status_evidence_line\": 13,\n    \"signed_date\": \"2025-01-20\",\n    \"effective_date\": \"2025-02-01\",\n    \"terms\": [\n      {\n        \"term\": \"seats\",\n        \"applies_to\": [\n          \"tansley-parcel\"\n        ],\n        \"value\": \"110\",\n        \"line\": 17\n      },\n      {\n        \"term\": \"price_per_seat\",\n        \"applies_to\": [\n          \"tansley-parcel\"\n        ],\n        \"value\": \"1800\",\n        \"line\": 25\n      },\n      {\n        \"term\": \"discount_pct\",\n        \"applies_to\": [\n          \"tansley-parcel\"\n        ],\n        \"value\": \"10\",\n        \"line\": 25\n      },\n      {\n        \"term\": \"renewal_date\",\n        \"applies_to\": [\n          \"tansley-parcel\"\n        ],\n        \"value\": \"2026-01-31\",\n        \"line\": 19\n      },\n      {\n        \"term\": \"payment_terms_days\",\n        \"applies_to\": [\n          \"tansley-parcel\"\n        ],\n        \"value\": \"30\",\n        \"line\": 33\n      }\n    ],\n    \"deciding_line\": null,\n    \"deciding_days\": null\n  }\n}",
+  "parsed": {
+    "date_used": "2025-01-20",
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "tansley-parcel"
+      },
+      {
+        "oid": "e2",
+        "entity": "tansley-parcel"
+      },
+      {
+        "oid": "e3",
+        "entity": "tansley-parcel"
+      },
+      {
+        "oid": "e4",
+        "entity": "tansley-parcel"
+      },
+      {
+        "oid": "e5",
+        "entity": "tansley-parcel"
+      },
+      {
+        "oid": "e6",
+        "entity": "tansley-parcel"
+      }
+    ],
+    "record": {
+      "status": "signed",
+      "status_evidence_line": 13,
+      "signed_date": "2025-01-20",
+      "effective_date": "2025-02-01",
+      "terms": [
+        {
+          "term": "seats",
+          "applies_to": [
+            "tansley-parcel"
+          ],
+          "value": "110",
+          "line": 17
+        },
+        {
+          "term": "price_per_seat",
+          "applies_to": [
+            "tansley-parcel"
+          ],
+          "value": "1800",
+          "line": 25
+        },
+        {
+          "term": "discount_pct",
+          "applies_to": [
+            "tansley-parcel"
+          ],
+          "value": "10",
+          "line": 25
+        },
+        {
+          "term": "renewal_date",
+          "applies_to": [
+            "tansley-parcel"
+          ],
+          "value": "2026-01-31",
+          "line": 19
+        },
+        {
+          "term": "payment_terms_days",
+          "applies_to": [
+            "tansley-parcel"
+          ],
+          "value": "30",
+          "line": 33
+        }
+      ],
+      "deciding_line": null,
+      "deciding_days": null
+    }
+  },
+  "usage": {
+    "input_tokens": 3881,
+    "output_tokens": 576,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.013522
+}

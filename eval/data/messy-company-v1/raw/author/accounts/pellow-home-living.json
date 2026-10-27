@@ -1,0 +1,41 @@
+{
+  "slug": "accounts/pellow-home-living",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: profile\nTitle: Pellow Home Living (formerly Covey & Lark Retail)\nDate: Written on 2026-10-01.\nWriter: Bettina Kroll\nVoice: hurried, lots of fragments\nFormat: undefined\nLength: about 180 words\nDate style in the body: ISO (2025-06-02)\nTypos: a few natural typos and one or two sloppy abbreviations (never in names or required phrases)\n\nBrief:\nAccount profile, updated 2026-10-01. Home goods retailer in the Mid-Atlantic; renamed from Covey & Lark Retail to Pellow Home Living on February 16, 2026. Old code CLR, new code PHL (state both plainly; the new code happens to match Pellucid Harbor Logistics's). Account manager: Sofia Marchetti since January 2025. 46 seats.\n\nUse these names or codes at least once each, as written: \"CLR\", \"PHL\", \"Covey & Lark\", \"Pellow\".\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Bettina Kroll: Coastal team lead\n- Sofia Marchetti: Account manager, Coastal team\n- Kwame Adjei-Rowe: Account manager, Coastal team\n- Corinne Ashdown: VP Operations\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Pellucid Harbor Logistics: port drayage and terminal logistics, Gulf Coast; codes/nicknames PHL\n- Driftmoor Marine Freight: marine freight and barge operator, Puget Sound; codes/nicknames DMF\n- Saltmarsh Provisions: regional grocery distributor, Lowcountry; main contact Corinne Ashdown, VP Operations; codes/nicknames SMP\n- Pellow Home Living (renamed from Covey & Lark Retail on 2026-02-16): home goods retailer, Mid-Atlantic; codes/nicknames Covey, PHL\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2026-10-01 (background only; don't restate unless the brief asks):\n- Pellucid Harbor Logistics: managed by Kwame Adjei-Rowe\n- Driftmoor Marine Freight: managed by Kwame Adjei-Rowe\n- Saltmarsh Provisions: managed by Bettina Kroll\n- Pellow Home Living: managed by Sofia Marchetti",
+      "response_text": "# Pellow Home Living (formerly Covey & Lark Retail)\n\n**Updated:** 2026-10-01 by Bettina Kroll\n\nQuick update to the acct profile so ppl stop pinging me in Slack. \n\n* **Account:** Pellow Home Living (renamed from Covey & Lark Retail on 2026-02-16). Still shows up as just Covey & Lark or Pellow in some of the older yard reports.\n* **Sector / Region:** Home goods retailer, Mid-Atlantic. \n* **Codes:** Old code CLR, new code PHL. (Yes PHL is also the code for Pellucid Harbor Logistics, watch the dropdowns when filing tix).\n* **AM:** Sofia Marchetti (since 2025-01).\n* **Footprint:** 46 seats on Pemberline Dock.\n\n**Ops / Current:**\nMain DC in Hagerstown (Doors 1-18) plus the smaller cross-dock outside Wilmington. 2nd shift yard lead at Hagerstown (D. Vance) opened ZD-88412 yesterday bc upholstery LTL carriers keep booking into the parcel drop slots on Door 4 after 16:00. Sofia is jumping on a call w/ their warehouse sup tmrw morning to help lock down the carrier group permissions and fix the \"Late Arrival - Gate B\" export template.",
+      "usage": {
+        "input_tokens": 1203,
+        "output_tokens": 304,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.005446,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1203,
+          "candidatesTokenCount": 304,
+          "totalTokenCount": 1507,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1203
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 304
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

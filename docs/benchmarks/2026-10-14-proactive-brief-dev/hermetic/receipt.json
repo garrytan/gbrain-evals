@@ -1,0 +1,484 @@
+{
+ "schema": "t0-receipt/v1",
+ "runner": "t0-program-primary-v1",
+ "verdict": "report-only",
+ "gbrain_evals_head": "ff546416837b91ceaaf70d93dce0e1d6f4659562",
+ "finished_at": "2026-10-15T04:43:35.852Z",
+ "data": {
+  "metrics": {
+   "forced_drop_detected": null,
+   "stale_correction_detected": null,
+   "scored_fraction": 1,
+   "harness_errors": 0,
+   "brief_guard_misses": 0,
+   "brief_development_signal": "no improvement signal (development evidence only)"
+  },
+  "summary": {
+   "failure_kinds": [
+    "missed_commitment",
+    "stale_date",
+    "stale_correction",
+    "unsupported",
+    "execution_error"
+   ],
+   "rows": [
+    {
+     "arm": "brief-off",
+     "reader": "scripted",
+     "runs": 4,
+     "failures": 0,
+     "failure_rate": 0,
+     "complete": 4,
+     "by_kind": {
+      "missed_commitment": 0,
+      "stale_date": 0,
+      "stale_correction": 0,
+      "unsupported": 0,
+      "execution_error": 0
+     },
+     "clustered": {
+      "rate": 0,
+      "lower": 0,
+      "upper": 1,
+      "clusters": 1
+     },
+     "other_scorers": {
+      "v1_failures": 0,
+      "v3_posthoc_failures": 0
+     },
+     "by_task_kind": {
+      "prep": {
+       "runs": 2,
+       "failures": 0
+      },
+      "reply": {
+       "runs": 2,
+       "failures": 0
+      }
+     },
+     "by_correction_kind": {
+      "role": {
+       "runs": 0,
+       "failures": 0
+      },
+      "seats": {
+       "runs": 2,
+       "failures": 0
+      },
+      "price": {
+       "runs": 2,
+       "failures": 0
+      }
+     },
+     "omissions": {
+      "date": 0,
+      "correction": 0
+     },
+     "capture": {
+      "any_write": 4,
+      "commitment": 4,
+      "new_date": 4,
+      "corrected": 4
+     },
+     "push": {
+      "s2_user_prompt_ok": 4,
+      "s2_session_start_ok": 4
+     },
+     "envelope": {
+      "cell_wall_ms": {
+       "p50": 9927,
+       "p95": 10018
+      },
+      "session2_wall_ms": {
+       "p50": 28,
+       "p95": 32
+      },
+      "tokens_per_cell": {
+       "input_mean": 0,
+       "output_mean": 0
+      },
+      "usd_per_cell": {
+       "reader_mean": 0,
+       "gbrain_internal_mean": 0,
+       "total_mean": 0,
+       "total_sum": 0
+      }
+     }
+    },
+    {
+     "arm": "brief-on",
+     "reader": "scripted",
+     "runs": 4,
+     "failures": 0,
+     "failure_rate": 0,
+     "complete": 4,
+     "by_kind": {
+      "missed_commitment": 0,
+      "stale_date": 0,
+      "stale_correction": 0,
+      "unsupported": 0,
+      "execution_error": 0
+     },
+     "clustered": {
+      "rate": 0,
+      "lower": 0,
+      "upper": 1,
+      "clusters": 1
+     },
+     "other_scorers": {
+      "v1_failures": 0,
+      "v3_posthoc_failures": 0
+     },
+     "by_task_kind": {
+      "prep": {
+       "runs": 2,
+       "failures": 0
+      },
+      "reply": {
+       "runs": 2,
+       "failures": 0
+      }
+     },
+     "by_correction_kind": {
+      "role": {
+       "runs": 0,
+       "failures": 0
+      },
+      "seats": {
+       "runs": 2,
+       "failures": 0
+      },
+      "price": {
+       "runs": 2,
+       "failures": 0
+      }
+     },
+     "omissions": {
+      "date": 0,
+      "correction": 0
+     },
+     "capture": {
+      "any_write": 4,
+      "commitment": 4,
+      "new_date": 4,
+      "corrected": 4
+     },
+     "push": {
+      "s2_user_prompt_ok": 4,
+      "s2_session_start_ok": 4
+     },
+     "envelope": {
+      "cell_wall_ms": {
+       "p50": 10269,
+       "p95": 10293
+      },
+      "session2_wall_ms": {
+       "p50": 27,
+       "p95": 34
+      },
+      "tokens_per_cell": {
+       "input_mean": 0,
+       "output_mean": 0
+      },
+      "usd_per_cell": {
+       "reader_mean": 0,
+       "gbrain_internal_mean": 0,
+       "total_mean": 0,
+       "total_sum": 0
+      }
+     }
+    }
+   ],
+   "mutants": [],
+   "cells": 8
+  },
+  "brief": {
+   "scorer": "t0-score-v3",
+   "cells": 8,
+   "readers": [
+    "scripted"
+   ],
+   "ceilings": [
+    "scripted"
+   ],
+   "pooled": {
+    "primary": {
+     "pairs": 4,
+     "personas": 1,
+     "off_successes": 4,
+     "on_successes": 4,
+     "delta": 0,
+     "lower": null,
+     "upper": null,
+     "discordant": {
+      "on_only": 0,
+      "off_only": 0
+     }
+    },
+    "arms": {
+     "brief-off": {
+      "cells": 4,
+      "successes": 4,
+      "success_rate": 1,
+      "complete": 4,
+      "failure_kinds": {
+       "missed_commitment": 0,
+       "stale_date": 0,
+       "stale_correction": 0,
+       "unsupported": 0,
+       "execution_error": 0
+      },
+      "confident_wrong": {
+       "cells": 0,
+       "rate": 0
+      },
+      "guard": {
+       "fired": 0,
+       "miss": 0,
+       "silent": 4
+      },
+      "brief_chars": {
+       "max": 0,
+       "mean_when_fired": null
+      },
+      "items": {
+       "pushed": 0,
+       "per_fired_session": null,
+       "false_pushes": 0,
+       "false_pushes_per_session": 0,
+       "sessions_with_false_push": 0,
+       "stale": 0,
+       "namesake": 0,
+       "other_counterparty": 0
+      },
+      "opportunity_recall": {
+       "needed_facts": 12,
+       "by_brief": 0,
+       "by_all_injected_context": 1
+      },
+      "per_task": {
+       "s2_tool_calls_mean": 1,
+       "s2_input_tokens_mean": 0,
+       "cell_input_tokens_mean": 0,
+       "usd_mean": 0,
+       "usd_sum": 0
+      }
+     },
+     "brief-on": {
+      "cells": 4,
+      "successes": 4,
+      "success_rate": 1,
+      "complete": 4,
+      "failure_kinds": {
+       "missed_commitment": 0,
+       "stale_date": 0,
+       "stale_correction": 0,
+       "unsupported": 0,
+       "execution_error": 0
+      },
+      "confident_wrong": {
+       "cells": 0,
+       "rate": 0
+      },
+      "guard": {
+       "fired": 4,
+       "miss": 0,
+       "silent": 0
+      },
+      "brief_chars": {
+       "max": 316,
+       "mean_when_fired": 308.25
+      },
+      "items": {
+       "pushed": 4,
+       "per_fired_session": 1,
+       "false_pushes": 0,
+       "false_pushes_per_session": 0,
+       "sessions_with_false_push": 0,
+       "stale": 0,
+       "namesake": 0,
+       "other_counterparty": 0
+      },
+      "opportunity_recall": {
+       "needed_facts": 12,
+       "by_brief": 0.3333333333333333,
+       "by_all_injected_context": 1
+      },
+      "per_task": {
+       "s2_tool_calls_mean": 1,
+       "s2_input_tokens_mean": 0,
+       "cell_input_tokens_mean": 0,
+       "usd_mean": 0,
+       "usd_sum": 0
+      }
+     }
+    },
+    "uptake": {
+     "pushed_facts": 4,
+     "in_deliverable": 4,
+     "rate": 1,
+     "paired_off_in_deliverable": 4,
+     "paired_off_rate": 1
+    }
+   },
+   "checks": {
+    "improvement": false,
+    "guard_misses_within_ceiling": true,
+    "attention_within_cap": true,
+    "false_push_within_ceiling": true,
+    "no_confident_wrong_rise": true
+   },
+   "development_signal": "no improvement signal (development evidence only)",
+   "by_reader": {
+    "scripted": {
+     "primary": {
+      "pairs": 4,
+      "personas": 1,
+      "off_successes": 4,
+      "on_successes": 4,
+      "delta": 0,
+      "lower": null,
+      "upper": null,
+      "discordant": {
+       "on_only": 0,
+       "off_only": 0
+      }
+     },
+     "arms": {
+      "brief-off": {
+       "cells": 4,
+       "successes": 4,
+       "success_rate": 1,
+       "complete": 4,
+       "failure_kinds": {
+        "missed_commitment": 0,
+        "stale_date": 0,
+        "stale_correction": 0,
+        "unsupported": 0,
+        "execution_error": 0
+       },
+       "confident_wrong": {
+        "cells": 0,
+        "rate": 0
+       },
+       "guard": {
+        "fired": 0,
+        "miss": 0,
+        "silent": 4
+       },
+       "brief_chars": {
+        "max": 0,
+        "mean_when_fired": null
+       },
+       "items": {
+        "pushed": 0,
+        "per_fired_session": null,
+        "false_pushes": 0,
+        "false_pushes_per_session": 0,
+        "sessions_with_false_push": 0,
+        "stale": 0,
+        "namesake": 0,
+        "other_counterparty": 0
+       },
+       "opportunity_recall": {
+        "needed_facts": 12,
+        "by_brief": 0,
+        "by_all_injected_context": 1
+       },
+       "per_task": {
+        "s2_tool_calls_mean": 1,
+        "s2_input_tokens_mean": 0,
+        "cell_input_tokens_mean": 0,
+        "usd_mean": 0,
+        "usd_sum": 0
+       }
+      },
+      "brief-on": {
+       "cells": 4,
+       "successes": 4,
+       "success_rate": 1,
+       "complete": 4,
+       "failure_kinds": {
+        "missed_commitment": 0,
+        "stale_date": 0,
+        "stale_correction": 0,
+        "unsupported": 0,
+        "execution_error": 0
+       },
+       "confident_wrong": {
+        "cells": 0,
+        "rate": 0
+       },
+       "guard": {
+        "fired": 4,
+        "miss": 0,
+        "silent": 0
+       },
+       "brief_chars": {
+        "max": 316,
+        "mean_when_fired": 308.25
+       },
+       "items": {
+        "pushed": 4,
+        "per_fired_session": 1,
+        "false_pushes": 0,
+        "false_pushes_per_session": 0,
+        "sessions_with_false_push": 0,
+        "stale": 0,
+        "namesake": 0,
+        "other_counterparty": 0
+       },
+       "opportunity_recall": {
+        "needed_facts": 12,
+        "by_brief": 0.3333333333333333,
+        "by_all_injected_context": 1
+       },
+       "per_task": {
+        "s2_tool_calls_mean": 1,
+        "s2_input_tokens_mean": 0,
+        "cell_input_tokens_mean": 0,
+        "usd_mean": 0,
+        "usd_sum": 0
+       }
+      }
+     },
+     "uptake": {
+      "pushed_facts": 4,
+      "in_deliverable": 4,
+      "rate": 1,
+      "paired_off_in_deliverable": 4,
+      "paired_off_rate": 1
+     }
+    }
+   },
+   "by_kind": {
+    "prep": {
+     "pairs": 2,
+     "personas": 1,
+     "off_successes": 2,
+     "on_successes": 2,
+     "delta": 0,
+     "lower": null,
+     "upper": null,
+     "discordant": {
+      "on_only": 0,
+      "off_only": 0
+     }
+    },
+    "reply": {
+     "pairs": 2,
+     "personas": 1,
+     "off_successes": 2,
+     "on_successes": 2,
+     "delta": 0,
+     "lower": null,
+     "upper": null,
+     "discordant": {
+      "on_only": 0,
+      "off_only": 0
+     }
+    }
+   }
+  }
+ }
+}

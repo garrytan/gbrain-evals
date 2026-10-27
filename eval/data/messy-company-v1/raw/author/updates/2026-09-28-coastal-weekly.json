@@ -1,0 +1,41 @@
+{
+  "slug": "updates/2026-09-28-coastal-weekly",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: weekly\nTitle: Coastal weekly 28 Sep\nDate: Written on 2026-09-28.\nWriter: Bettina Kroll\nVoice: chatty, a bit rambling\nFormat: a weekly update with a short status table and notes\nLength: about 500 words\nDate style in the body: casual (Jun 2nd, Monday the 2nd)\nTypos: one or two small natural typos (never in names or required phrases)\n\nBrief:\nBettina's update. Pellucid signs Amendment 2 tomorrow (pricing from March 2027).\n\nRequired phrases:\n- Use the exact phrase \"the Gulf one Kwame inherited\" once, referring to Pellucid Harbor Logistics. Don't put the account's name in the same sentence; the reader should work it out.\n- Use the exact phrase \"his biggest customer\" once, referring to Pellucid Harbor Logistics. Don't put the account's name in the same sentence; the reader should work it out.\n- Use the exact phrase \"Kwame's port account\" once, but vaguely: the writer does not say which account it is, and nothing nearby (name, location, numbers, products) may identify one. Keep that sentence generic, like a passing comment.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Bettina Kroll: Coastal team lead\n- Sofia Marchetti: Account manager, Coastal team\n- Kwame Adjei-Rowe: Account manager, Coastal team\n- Corinne Ashdown: VP Operations\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Pellucid Harbor Logistics: port drayage and terminal logistics, Gulf Coast; codes/nicknames PHL\n- Driftmoor Marine Freight: marine freight and barge operator, Puget Sound; codes/nicknames DMF\n- Saltmarsh Provisions: regional grocery distributor, Lowcountry; main contact Corinne Ashdown, VP Operations; codes/nicknames SMP\n- Pellow Home Living (renamed from Covey & Lark Retail on 2026-02-16): home goods retailer, Mid-Atlantic; codes/nicknames Covey, PHL\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2026-09-28 (background only; don't restate unless the brief asks):\n- Pellucid Harbor Logistics: managed by Kwame Adjei-Rowe\n- Driftmoor Marine Freight: managed by Kwame Adjei-Rowe\n- Saltmarsh Provisions: managed by Bettina Kroll\n- Pellow Home Living: managed by Sofia Marchetti",
+      "response_text": "# Coastal weekly 28 Sep\n\nHappy Monday the 28th everyone! Posting this a little late because my cat knocked a full mug of Earl Grey into my docking station at 7:45am and I spent forty minutes with a hairdryer trying to save the HDMI port. It lives, mostly, though my second monitor keeps flickering purple whenever I open a spreadsheet. Anyway, end of the month is right on top of us, so here is where the Coastal pod is sitting as of this morning.\n\n| Account | Status | What's happening this week |\n| :--- | :--- | :--- |\n| Pellucid Harbor Logistics | Green | Signing Amendment 2 tomorrow, Tuesday the 29th |\n| Saltmarsh Provisions | Yellow | Chasing ticket #4812 on the cold-storage gate tablet |\n| Pellow Home Living | Green | Yard map cleanup for the East Annex doors |\n| Driftmoor Marine Freight | Green | Quiet week, prepping QBR deck for Oct 8th |\n\n**Notes & rambling:**\n\nFirst off, the big news for the pod: Pellucid Harbor Logistics is finally ready to ink Amendment 2 tomorrow, Sep 29th! The new pricing on that kicks in from March 2027. Honestly I thought we were going to be going back and forth on the redlines until mid-October, so huge relief to get the DocuSign out the door. June Osei-Lark was a total lifesaver getting the final PDF turned around before lunch on Friday the 25th. It has been a marathon getting all the terminal supervisors aligned on the Gulf one Kwame inherited, mostly because their night shift lead at Berth 4 kept asking for custom container statuses we don't actually support out of the box. Once we showed him how to use the standard hold tags in Pemberline Dock, the whole thing calmed right down. Kwame was practically floating on our morning standup since this wraps up the heavy lifting for his biggest customer before the quarter ends. \n\nOver at Saltmarsh Provisions, Corinne Ashdown pinged me twice before 9am about the reefer bays at the Yemassee depot (doors 14 through 19). Apparently the gate kiosk tablet keeps dropping wifi whenever a trailer backs into Bay 14 and blocks the repeater, so drivers are walking into the breakroom in muddy boots to sign in on the dispatch desktop. I have ticket #4812 open with support to see if it's an offline caching bug in the app or just their ancient router finally giving up. I'm jumping on a call with Corinne and her yard lead, Terry, on Wednesday the 30th to look at the logs.\n\nWhat else. Sofia is spending tomorrow afternoon helping Pellow Home Living re-label their overflow lot slots—they repainted the lines over the weekend and now none of the driver SMS directions match the physical stencil numbers. Also, random side note, somebody from product asked me in the hallway on Thursday the 24th for a reference contact at Kwame's port account, and I totally blanked on who to suggest because I was rushing to make a dentist appointment, so I need to circle back on that today.\n\nLastly, Odile Brandt over at Carrowmere Cloud sent a maintenance notice for Saturday Oct 3rd—looks like a ten-minute blip around 2am Eastern, shouldn't bother anyone except maybe the late barge crew at Driftmoor Marine Freight, and we already gave their dispatcher a heads up. Let's have a good week! Ping me if my monitor dies for real and I vanish from Slack.",
+      "usage": {
+        "input_tokens": 1248,
+        "output_tokens": 762,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.010116,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1248,
+          "candidatesTokenCount": 762,
+          "totalTokenCount": 2010,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1248
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 762
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "slug": "updates/2025-12-08-north-weekly",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: weekly\nTitle: North weekly 8 Dec\nDate: Written on 2025-12-08.\nWriter: Ilse Varga\nVoice: friendly and organized\nFormat: a weekly update with a short status table and notes\nLength: about 435 words\nDate style in the body: day-month (2 Jun 2025)\nTypos: a few natural typos and one or two sloppy abbreviations (never in names or required phrases)\n\nBrief:\nIlse's update. Brackenwater renewed (signed Nov 21) and is about $104k ARR now. Finance said no to the 15% Quarrendon discount draft.\n\nRequired phrases:\n- Use the exact phrase \"Marcus's LTL account\" once, referring to Brackenwater Freight Co.. Don't put the account's name in the same sentence; the reader should work it out.\n- Use the exact phrase \"Dana's freight account\" once, referring to Quarrendon Freight Lines. Don't put the account's name in the same sentence; the reader should work it out.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Ilse Varga: North team lead\n- Dana Okafor: Account manager, North team\n- Marcus Lindqvist: Account manager, North team\n- Thea Ramaswell: Director of Yard Operations\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Quarrendon Freight Lines: truckload freight carrier, Upper Midwest; main contact Thea Ramaswell, Director of Yard Operations; codes/nicknames QFL, Q-Freight\n- Brackenwater Freight Co.: less-than-truckload freight, Great Lakes; codes/nicknames BWF, Bracken\n- Tamsin Cold Chain: refrigerated warehousing, Pacific Northwest; codes/nicknames TCC\n- Orrin Mills: textile mill, Carolinas; codes/nicknames ORM\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2025-12-08 (background only; don't restate unless the brief asks):\n- Quarrendon Freight Lines: managed by Dana Okafor\n- Brackenwater Freight Co.: managed by Marcus Lindqvist\n- Tamsin Cold Chain: managed by Dana Okafor\n- Orrin Mills: managed by Marcus Lindqvist",
+      "response_text": "# North weekly 8 Dec\n\nMorning everyone! Hope you all survived the sleet over the weekend. Here is where the North team stands heading into the second week of Dec. \n\n### Quick Status\n\n| Account | Owner | Status | Key Focus / Next Step |\n| :--- | :--- | :--- | :--- |\n| Brackenwater Freight Co. (BWF) | Marcus Lindqvist | Green | Renewal papered (signed 21 Nov 2025). Kicking off winter yard check-in review. |\n| Quarrendon Freight Lines (QFL) | Dana Okafor | Yellow | Reworking pricing proposal with Deal Desk; sorting out Gate 4 kiosk lag. |\n| Tamsin Cold Chain (TCC) | Dana Okafor | Green | Helping night shift leads set up the new reefer temp-check templates. |\n| Orrin Mills (ORM) | Marcus Lindqvist | Green | Quiet week; reviewing their raw-bale receiving doors on Wednesday. |\n\n### Account Notes & Follow-ups\n\n**BWF:** Big shoutout to Marcus for getting the paperwork completely across the finish line before the holiday rush! The renewal was officially signed on 21 Nov 2025 and sits at about $104k ARR now. With the commercial piece tucked away, we are helping their Great Lakes dispatch leads clean up how Pemberline Dock handles cross-dock carrier drop-offs during snow delays. We also fixed a small CSV export bug on the `Driver_Dwell_Summary` report (ticket #PD-8812) for Marcus's LTL account, so their Toledo shift supervisors don't have to manually strip out duplicate trailer IDs anymore.\n\n**Q-Freight:** A quick commercial heads-up here: Finance said no to the 15% discount draft. Anselm Grieve kicked it back on Friday afternoon, so June Osei-Lark is helping us restructure the quote options today before we get back on the phone with Thea Ramaswell. On the operational side, we're still seeing intermittent barcode scanner timeouts at their Saint Paul terminal—specifically Dock Door 14 during the 05:00 shift change when trucks queue up in the sub-zero cold. Dana Okafor is jumping on a screen-share w/ their yard clerk this afternoon to pull browser logs for Dana's freight account so eng can patch it before Friday.\n\n**TCC & ORM:** Pretty smooth sailing on both of these. TCC had a minor question about carrier text-message alerts firing twice when a driver edits their ETA at the guard shack, which turned out to be a toggle setting their new Tacoma clerk bumped by mistake. ORM is prepping for their end-of-year inventory shutdown, so they just want a quick walkthrough on blocking out dock doors in bulk for the last week of the month.\n\n**Housekeeping:** \n* Pls make sure all Q4 call notes are logged by Thursday EOD so Moss doesn't ping Ruth Calloway with blank summaries on Friday morning.\n* Coffee machine on the 4th floor is still making that horrible grinding noise—facilities promised a tech by tomorrow!",
+      "usage": {
+        "input_tokens": 1196,
+        "output_tokens": 664,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.009032,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1196,
+          "candidatesTokenCount": 664,
+          "totalTokenCount": 1860,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1196
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 664
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

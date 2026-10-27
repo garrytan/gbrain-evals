@@ -1,0 +1,37 @@
+{
+  "slug": "emails/2025-10-02-mas-affiliate-amendment-signed",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: email\nTitle: Executed: Marrow Agrisupply affiliate amendment\nDate: Written on 2025-10-02.\nWriter: June Osei-Lark\nVoice: polished and businesslike\nFormat: an email thread with From/To/Date headers and quoted earlier replies (> lines)\nLength: about 20 words\nDate style in the body: undefined\nTypos: a few natural typos and one or two sloppy abbreviations (never in names or required phrases)\n\nBrief:\nJune confirms the affiliate amendment was signed today: Agrisupply goes to 40 seats and SLA Tier 1 from October 15. Everything else stays as in the parent MSA.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Hollis Mbeki: Central team lead\n- Priyanka \"Pree\" Sundaram: Account manager, Central team\n- Tobias Rendle: Account manager, Central team\n- Lev Arkadin: Procurement lead\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Tansley Parcel: regional parcel delivery, South Central; main contact Lev Arkadin, Procurement lead; codes/nicknames TPCL, TP\n- Tansleigh Packaging: corrugated packaging manufacturer, Ohio Valley; codes/nicknames TSP, TP\n- Marrow Fieldworks: agricultural equipment dealer network, Plains; codes/nicknames MFW\n- Marrow Agrisupply: farm supply retail chain, Plains; subsidiary of Marrow Fieldworks; codes/nicknames MAS, Marrow Agri\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2025-10-02 (background only; don't restate unless the brief asks):\n- Tansley Parcel: managed by Priyanka \"Pree\" Sundaram\n- Tansleigh Packaging: not stated on any shared page (do not say who manages it)\n- Marrow Fieldworks: managed by Priyanka \"Pree\" Sundaram\n- Marrow Agrisupply: managed by Central team (pooled account)",
+      "response_text": "From: June Osei-Lark\nTo: Hollis Mbeki\nDate: 2025-10-02\nSubject: Executed: Marrow Agrisupply affiliate amendment\n\nAffiliate amendment signed today: Marrow Agrisupply moves to 40 seats and SLA Tier 1 from October 15. Everything else remains per parent MSA.\n\n> From: Hollis Mbeki\n> To: June Osei-Lark\n> Date: 2025-10-02\n>\n> Pls forward signed attachement when recieved.",
+      "usage": {
+        "input_tokens": 1062,
+        "output_tokens": 242,
+        "thinking_tokens": 124
+      },
+      "cost_usd": 0.004544,
+      "provider_meta": {
+        "id": "resp_0b3bb33389072de5016acfae656a4087d180b42bc431ff39ee",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1062,
+          "input_tokens_details": {
+            "cache_write_tokens": 1059,
+            "cached_tokens": 0
+          },
+          "output_tokens": 242,
+          "output_tokens_details": {
+            "reasoning_tokens": 124
+          },
+          "total_tokens": 1304
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

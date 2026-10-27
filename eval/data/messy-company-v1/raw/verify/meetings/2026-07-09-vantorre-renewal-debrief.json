@@ -1,0 +1,85 @@
+{
+  "slug": "meetings/2026-07-09-vantorre-renewal-debrief",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2026-07-09",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Vantorre",
+        "line": 6
+      },
+      {
+        "oid": "e2",
+        "surface": "Vantorre Group",
+        "line": 10
+      },
+      {
+        "oid": "e3",
+        "surface": "Vantorre Group",
+        "line": 15
+      },
+      {
+        "oid": "e4",
+        "surface": "Vantorre Mobility",
+        "line": 19
+      },
+      {
+        "oid": "e5",
+        "surface": "Vantorre Group",
+        "line": 19
+      }
+    ],
+    "claims": [
+      {
+        "cid": "c-vtg-notice-call",
+        "question": "What does the page say about Vantorre Group's notice days?"
+      }
+    ],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "6ea955a97a87043cdb78329f13c49d52fc9e5b453d60ca8b101f005d8abf00b6",
+  "response_text": "{\n  \"date_used\": \"2026-07-09\",\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e4\",\n      \"entity\": \"vantorre-mobility\"\n    },\n    {\n      \"oid\": \"e5\",\n      \"entity\": \"vantorre-group\"\n    }\n  ],\n  \"claims\": [\n    {\n      \"cid\": \"c-vtg-notice-call\",\n      \"stated\": true,\n      \"value\": \"60 days' notice\",\n      \"line\": 15\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2026-07-09",
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e2",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e3",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e4",
+        "entity": "vantorre-mobility"
+      },
+      {
+        "oid": "e5",
+        "entity": "vantorre-group"
+      }
+    ],
+    "claims": [
+      {
+        "cid": "c-vtg-notice-call",
+        "stated": true,
+        "value": "60 days' notice",
+        "line": 15
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 3124,
+    "output_tokens": 222,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.008468
+}

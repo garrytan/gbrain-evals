@@ -1,0 +1,7 @@
+{"population":6,"correct":6,"precision":1,"wilson95":[0.6096657120978346,1],"verdict":"FAIL (population below 22) (Wilson lower 0.610 < 0.85)","remote":{"visible_links":4,"private_only_gold_rows":9,"remote_links_on_private_only_rows":0,"hidden_from_remote":2}}
+correct | agent-notes/2025-12-01-strategic-digest | Gideon's medical account -> accounts/orlavine-medical-supply | gold agent-notes/2025-12-01-strategic-digest#m2 unique_owned_match inside_open_ended
+correct | chats/2026-02-17-phl-collision | Sofia's retail account -> accounts/pellow-home-living | gold chats/2026-02-17-phl-collision#m1 unique_owned_match inside_open_ended
+correct | emails/2025-11-06-quarrendon-exec-call | Dana's freight account -> accounts/quarrendon-freight-lines | gold emails/2025-11-06-quarrendon-exec-call#m1 unique_owned_match inside_open_ended
+correct | updates/2026-03-16-coastal-weekly | Sofia's retail account -> accounts/pellow-home-living | gold updates/2026-03-16-coastal-weekly#m2 unique_owned_match inside_open_ended
+correct | updates/2026-05-11-central-weekly | Tobias's packaging account -> accounts/tansleigh-packaging | gold updates/2026-05-11-central-weekly#m2 unique_owned_match inside_open_ended
+correct | updates/2026-05-11-coastal-weekly | Sofia's retail account -> accounts/pellow-home-living | gold updates/2026-05-11-coastal-weekly#m2 unique_owned_match inside_open_ended

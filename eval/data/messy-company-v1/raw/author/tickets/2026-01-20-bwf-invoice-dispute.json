@@ -1,0 +1,41 @@
+{
+  "slug": "tickets/2026-01-20-bwf-invoice-dispute",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: ticket\nTitle: BILL-212: Brackenwater duplicate invoice\nDate: Written on 2026-01-20.\nWriter: Marcus Lindqvist\nVoice: chatty, a bit rambling\nFormat: a ticket with a fields table and a timestamped update log\nLength: about 148 words\nDate style in the body: undefined\nTypos: a few natural typos and one or two sloppy abbreviations (never in names or required phrases)\n\nBrief:\nBilling ticket opened Jan 20, 2026 for a duplicated January invoice. Fields table, short thread, resolved Jan 23.\n\nUse these names or codes at least once each, as written: \"BWF\".\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Ilse Varga: North team lead\n- Dana Okafor: Account manager, North team\n- Marcus Lindqvist: Account manager, North team\n- Thea Ramaswell: Director of Yard Operations\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Quarrendon Freight Lines: truckload freight carrier, Upper Midwest; main contact Thea Ramaswell, Director of Yard Operations; codes/nicknames QFL, Q-Freight\n- Brackenwater Freight Co.: less-than-truckload freight, Great Lakes; codes/nicknames BWF, Bracken\n- Tamsin Cold Chain: refrigerated warehousing, Pacific Northwest; codes/nicknames TCC\n- Thornbury Cloth Co. (renamed from Orrin Mills on 2026-01-12): textile mill, Carolinas; codes/nicknames TCC\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2026-01-20 (background only; don't restate unless the brief asks):\n- Quarrendon Freight Lines: managed by Dana Okafor\n- Brackenwater Freight Co.: managed by Marcus Lindqvist\n- Tamsin Cold Chain: managed by Dana Okafor\n- Thornbury Cloth Co.: managed by Marcus Lindqvist",
+      "response_text": "# BILL-212: Brackenwater duplicate invoice\n\n| Field | Value |\n| :--- | :--- |\n| **Account** | Brackenwater Freight Co. (BWF) |\n| **Opened** | 2026-01-20 |\n| **Status** | Resolved (2026-01-23) |\n| **Vendor** | Stoneharrow Billing |\n\n### Update Log\n\n**2026-01-20 09:42**\nHey billing folks, opening this up bc the AP clerk over at Brackenwater Freight Co. just forwarded me two identical PDFs for their Jan invoice (INV-88310 and INV-88311). Both generated at 2am during the batch run, same exact PO number. I checked while I was on the phone helping their Toledo night dispatcher fix a stuck gate status on Door 14 in Pemberline Dock, and yep, the portal def shows two live January invoices. Pinging Felix Duarte at Stoneharrow Billing to see if the sync hiccuped again. Pls don't let auto-dunning fire on the second one!\n\n**2026-01-21 14:15**\nQuick update—Felix Duarte emailed back, said a webhook retry looped in Stoneharrow Billing. He's voiding INV-88311 on their side today.\n\n**2026-01-23 11:04**\nCredit memo posted cleanly and the duplicate is gone from the portal. Sent the clean statement over to BWF AP and they're happy. Closing this out, thx!",
+      "usage": {
+        "input_tokens": 1129,
+        "output_tokens": 365,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.005908,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1129,
+          "candidatesTokenCount": 365,
+          "totalTokenCount": 1494,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1129
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 365
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

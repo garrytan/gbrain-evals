@@ -1,0 +1,106 @@
+{
+  "cell_id": "beam-1m-gbrain-rag-4f0bcbdf6ffa",
+  "scheduled": 80,
+  "answered_receipts": 40,
+  "judged_receipts": 40,
+  "score": {
+    "scheduled": 80,
+    "counts": {
+      "answered": 36,
+      "abstention": 3,
+      "answer_failure": 0,
+      "retrieval_failure": 0,
+      "judge_failure": 1,
+      "incomplete_ingest": 0,
+      "missing": 40
+    },
+    "judged": 39,
+    "correct": 32,
+    "accuracy": 0.4,
+    "mean_score": 0.3552653769841269,
+    "complete": false,
+    "missing_ids": [
+      "22_abstention_0",
+      "22_abstention_1",
+      "22_contradiction_resolution_0",
+      "22_contradiction_resolution_1",
+      "22_event_ordering_0",
+      "22_event_ordering_1",
+      "22_information_extraction_0",
+      "22_information_extraction_1",
+      "22_instruction_following_0",
+      "22_instruction_following_1",
+      "22_knowledge_update_0",
+      "22_knowledge_update_1",
+      "22_multi_session_reasoning_0",
+      "22_multi_session_reasoning_1",
+      "22_preference_following_0",
+      "22_preference_following_1",
+      "22_summarization_0",
+      "22_summarization_1",
+      "22_temporal_reasoning_0",
+      "22_temporal_reasoning_1",
+      "25_abstention_0",
+      "25_abstention_1",
+      "25_contradiction_resolution_0",
+      "25_contradiction_resolution_1",
+      "25_event_ordering_0",
+      "25_event_ordering_1",
+      "25_information_extraction_0",
+      "25_information_extraction_1",
+      "25_instruction_following_0",
+      "25_instruction_following_1",
+      "25_knowledge_update_0",
+      "25_knowledge_update_1",
+      "25_multi_session_reasoning_0",
+      "25_multi_session_reasoning_1",
+      "25_preference_following_0",
+      "25_preference_following_1",
+      "25_summarization_0",
+      "25_summarization_1",
+      "25_temporal_reasoning_0",
+      "25_temporal_reasoning_1"
+    ],
+    "judge_failure_ids": [
+      "21_temporal_reasoning_1"
+    ],
+    "incomplete_ingest_ids": []
+  },
+  "delivered_context": {
+    "target": 8000,
+    "n": 40,
+    "mean": 8053.6,
+    "p95": 8091.0,
+    "tolerance": 0.1,
+    "ok": true,
+    "reason": "within \u00b110% of target",
+    "inserted_kinds": {
+      "rendered": 40
+    },
+    "tokenizer": "cl100k_base"
+  },
+  "remote_budget_clamp": {
+    "fired": false,
+    "questions": []
+  },
+  "leak_check": {
+    "checked_prompts": 40,
+    "policy": "pre-dispatch identifier check on every answer prompt"
+  },
+  "timestamp_provenance": {
+    "rule": {
+      "provenance": "observed_session_time",
+      "source": "the session's time_anchor turn field; flat 10M fallback documents carry none"
+    },
+    "counts": {
+      "observed_session_time": 240
+    }
+  },
+  "gates": {
+    "complete": false,
+    "no_answer_or_retrieval_failures": true,
+    "delivered_context": true,
+    "no_remote_clamp": true
+  },
+  "ok": false
+}

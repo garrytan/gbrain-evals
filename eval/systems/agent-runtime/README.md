@@ -1,29 +1,31 @@
 # agent-runtime: native agent only
 
-agent-runtime 0.34.4 with its local backend has no passive memory API, so agent-runtime cannot take part in Memory QA, update
+agent-runtime at its pinned release, with its local backend, has no passive memory API, so agent-runtime cannot take part in Memory QA, update
 and forget, or PrecisionMemBench. It runs in the shootout only as a native agent on the Cat 40 tasks, in its own
 table, as the plan provides. This directory holds the capability record that says so, a shim that serves it, and the
-pinned agent-runtime App Server a native-agent driver will connect to.
+pinned agent-runtime App Server a native-agent driver will connect to. The
+[comparison table](../../../docs/comparison-systems.md#systems-in-the-open-source-comparison) names the project, its
+pin and its image. Commands below write the vendor's CLI as `<vendor-cli>`; `shim.py` names the executable.
 
 ## What agent-runtime is at this version
 
-The old agent-runtime API server (the Python service with archival memory) is retired. `letta/letta:0.34.4` now contains
-agent-runtime 0.34.4, a Node CLI and App Server (OCI revision label `f898fda`, the `v0.34.4` tag of
-`letta-ai/letta-code`). Its entrypoint refuses the old server's settings. Cloud is the default backend; the local
-backend must be selected (`letta backend local`, `--backend local`).
+The old agent-runtime API server (the Python service with archival memory) is retired. The vendor image at the pin now
+contains a Node CLI and App Server (OCI revision label `f898fda`, the pinned tag of the vendor's CLI repository). Its
+entrypoint refuses the old server's settings. Cloud is the default backend; the local backend must be selected
+(`<vendor-cli> backend local`, `--backend local`).
 
 ## The capability spike
 
 Question: is there a passive memory API, meaning a way to store sessions and ask for ranked evidence without running
-agent-runtime's agent loop? Answer: no. Evidence, from the 0.34.4 bundle and keyless runs on 2026-10-05:
+agent-runtime's agent loop? Answer: no. Evidence, from the pinned bundle and keyless runs on 2026-10-05:
 
-1. **No archival memory locally.** The bundled `letta-client` still has `/v1/agents/{id}/archival-memory` and
+1. **No archival memory locally.** The bundled API client still has `/v1/agents/{id}/archival-memory` and
    `/v1/passages/search`, but those are agent-runtime Cloud routes. The local backend class (`LocalBackend`, extending
    `HeadlessBackend`) implements agents, conversations, messages, runs and memory files, and nothing else. There is
    no embedder.
 2. **Every message write is an agent turn.** `executeConversationTurn` appends the input and runs the model. A
    one-line prompt sent 22,020 input tokens to `gpt-4.1-mini` (metered), almost all of it agent-runtime's system prompt.
-3. **The only passive read is keyword search over raw transcripts.** `agent-runtime messages search` uses full-text search
+3. **The only passive read is keyword search over raw transcripts.** `<vendor-cli> messages search` uses full-text search
    locally (vector and hybrid modes throw an error). It returns whole messages, including agent-runtime's injected system
    reminders, dated by wall clock, so a session cannot carry its own date.
 4. **Memory files can be written passively but not queried.** The App Server's `write_memory_file`,
@@ -38,9 +40,9 @@ delete. Wrapping the agent loop and calling it passive memory QA would misdescri
 ## What runs here
 
 - [Dockerfile](Dockerfile): the vendor image pinned by digest, plus the stdlib shim (the image ships Python 3.11).
-- [shim.py](shim.py): registers the proxy as agent-runtime's OpenAI-compatible and Anthropic providers (`letta connect
-  openai-compatible --base-url $OPENAI_BASE_URL`, `letta connect anthropic --base-url $ANTHROPIC_BASE_URL`), starts
-  the App Server (`letta server --listen ws://0.0.0.0:4500 --ws-auth
+- [shim.py](shim.py): registers the proxy as agent-runtime's OpenAI-compatible and Anthropic providers (`<vendor-cli> connect
+  openai-compatible --base-url $OPENAI_BASE_URL`, `<vendor-cli> connect anthropic --base-url $ANTHROPIC_BASE_URL`),
+  starts the App Server (`<vendor-cli> server --listen ws://0.0.0.0:4500 --ws-auth
   capability-token --backend local`) and serves the protocol. `/health` is true only when the App Server answers an
   `app_server_info` handshake with `backend: local`.
 - [docker-compose.yml](docker-compose.yml): the same sealed network as the other shims. The shim is published on
@@ -48,7 +50,7 @@ delete. Wrapping the agent loop and calling it passive memory QA would misdescri
 - Telemetry and updates off: `LETTA_CODE_TELEM=0`, `DO_NOT_TRACK=1`, `DISABLE_AUTOUPDATER=1`.
 
 Keyless check, from the repository root: `eval/systems/agent-runtime/tests/run_keyless.sh`. On 2026-10-05: 7 of 7 protocol
-checks pass, the container cannot reach the internet directly, the App Server handshake reports agent-runtime 0.34.4,
+checks pass, the container cannot reach the internet directly, the App Server handshake reports the pinned release,
 protocol version 1, backend local, and a headless agent turn made exactly one model call, through the relay to the
 fake provider.
 
@@ -60,13 +62,13 @@ records what agent-runtime does. It needs:
 1. **A connection.** WebSocket to `ws://127.0.0.1:4500/ws` with `Authorization: Bearer <token>` from `./run/token`.
    Send `{"type": "app_server_info", "request_id": ...}` and require `backend: "local"` and `protocol_version: 1`.
    Responses echo `request_id`. Message types are declared in the package's `dist/types/types/protocol_v2.d.ts`.
-2. **Providers through the proxy.** Both verified metered: `letta connect openai-compatible --base-url
-   <proxy>/<slot>/openai/v1` and `letta connect anthropic --api-key <dummy> --base-url <proxy>/<slot>/anthropic`
+2. **Providers through the proxy.** Both verified metered: `<vendor-cli> connect openai-compatible --base-url
+   <proxy>/<slot>/openai/v1` and `<vendor-cli> connect anthropic --api-key <dummy> --base-url <proxy>/<slot>/anthropic`
    (the shim runs both at start). `ANTHROPIC_BASE_URL` alone is ignored, because agent-runtime's model catalog hardcodes
    `https://api.anthropic.com`. Model handles are `openai-compatible/<model>` and `anthropic/<model>`; the catalog
-   at 0.34.4 lists `anthropic/claude-opus-5-5`, `claude-sonnet-5-5` and `claude-fable-5-1`. agent-runtime asks Anthropic for
+   at the pin lists `anthropic/claude-opus-5-5`, `claude-sonnet-5-5` and `claude-fable-5-1`. agent-runtime asks Anthropic for
    64,000 output tokens per turn, above the proxy's default 32,768 cap, so the driver must lower agent-runtime's output
-   limit (`agent-runtime model set --model-settings`) or the cell must raise the proxy cap and budget for the larger
+   limit (`<vendor-cli> model set --model-settings`) or the cell must raise the proxy cap and budget for the larger
    per-turn reservation.
 3. **One fresh agent per task.** `create_agent` (personality `blank` or `memo`, `model`, `pin_global: false`), then
    `enable_memfs`. Delete it afterwards with `agent_delete`, or use a fresh `agent-runtime-home` volume per cell, so no state
@@ -75,7 +77,7 @@ records what agent-runtime does. It needs:
    company documents as memory files with `write_memory_file` (each directory needs a `MEMORY.md` index, and files
    must stay under the size limit in `.memfs.config.json`), or hand them to the agent as attachments or workspace
    files and let it decide what to remember. Finance-only documents need a separate agent or a separate memory
-   directory, because we found no per-document visibility control in the 0.34.4 protocol; record that as the finance capability result.
+   directory, because we found no per-document visibility control in the pinned protocol; record that as the finance capability result.
 5. **Turns.** `conversation_create`, then `input` messages with the task prompt; wait for `turn_finished`, collect
    `stream_delta` events and `conversation_messages_list` for the transcript. Two-session tasks reuse the agent in a
    new conversation. Tool approvals arrive as `can_use_tool`; the driver must answer them by a fixed policy.
@@ -88,7 +90,7 @@ records what agent-runtime does. It needs:
    separately and never ranked against shared-loop arms.
 
 Proposed home for the driver: `eval/runner/cat40/agent-runtime-native.ts` with a canned-transcript test
-(`test/eval/cat40-letta.test.ts`, as the engineering review suggested). Both are outside this lane.
+(`test/eval/cat40-agent-runtime.test.ts`, as the engineering review suggested). Both are outside this lane.
 
 ## Metered smoke, 2026-10-05
 
@@ -107,7 +109,7 @@ one headless agent turn ("Remember: my dog is named Biscuit. Reply with one word
 | Refusals | 0 | 1, before the fix below |
 
 The Anthropic turn first failed twice: with only `ANTHROPIC_BASE_URL` set, agent-runtime tried `api.anthropic.com` and had no
-route; after `letta connect anthropic --base-url`, the proxy refused agent-runtime's request for 64,000 output tokens (cap
+route; after `<vendor-cli> connect anthropic --base-url`, the proxy refused agent-runtime's request for 64,000 output tokens (cap
 32,768). The counted run used `--max-output-tokens 64000` on the proxy, which made the turn's worst-case reservation
 $0.45 on Haiku. Frontier models need a lower agent-runtime output limit to fit a small lease. Haiku was used only to prove the
 route; Cat 40 cells use the newest models.

@@ -1,0 +1,3052 @@
+{
+  "cost": {
+    "usd": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "basis": "hermetic: provider keys stripped, keyword search only; the append-cost embedder is an in-process counting fake (no network)"
+  },
+  "delivered_tokens": {
+    "tokens": 0,
+    "basis": "hermetic: provider keys stripped, keyword search only; the append-cost embedder is an in-process counting fake (no network)"
+  },
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "n14-large-page-fidelity",
+  "run_status": "completed",
+  "verdict": "fail",
+  "n_total": 120,
+  "n_scored": 120,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": true,
+  "gbrain_version": "0.60.252.0",
+  "gbrain_pin": "github:garrytan/gbrain#77cf8e1116e9af67c1983adcbb3223b96f0991a5",
+  "execution": {
+    "source_tree": {
+      "sha256": "021a818c9b9b968e4ac9d8ea3d829ad042e792428580bf33d00e4fc2ef972de5",
+      "scheme": "git-index-blob-v1",
+      "files": 14157,
+      "git_head": "00a1cd35026ae5b0ab913b2b3ec9029893bd46ef",
+      "dirty": false
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#77cf8e1116e9af67c1983adcbb3223b96f0991a5",
+      "declared_sha": "77cf8e1116e9af67c1983adcbb3223b96f0991a5",
+      "version": "0.60.252.0",
+      "package_sha256": "4b33f135cb19d06f4c3f7aba1fb790a539862570b24732c081620bc728d2b250",
+      "loaded_git_head": "7f3c9f5f19862372d056c713942564dd165f62ba"
+    }
+  },
+  "resolved_config": {
+    "engine": "pglite-in-memory, one brain per (document, arm) child process",
+    "decide": "off (no key, fresh GBRAIN_HOME)",
+    "caller": "operation handlers with OperationContext { remote: false, sourceId: default }",
+    "tiers": [
+      "20mb"
+    ],
+    "arms": [
+      "single-page",
+      "managed-parts",
+      "native"
+    ],
+    "docs": "all",
+    "seed": 14,
+    "concurrency": 1,
+    "rss_limit_mb": 6144,
+    "generator_version": "n14-large-page-gen/v1",
+    "tier_sizes": {
+      "20mb": {
+        "conversation": 20000000
+      }
+    },
+    "search": "search op (keyword), limit 10; a hit is a result whose stored chunk (content_chunks.chunk_text by chunk_id) holds the needle answer as a whole token, passage at most 65536 bytes",
+    "egress": "largest JSON-RPC text frame of every operation result; cap 1048576 bytes",
+    "reads": "single-page and managed-parts: get_page {slug} of the hit page; native: get_page {slug, body: window, around_chunk_id}; plus one default get_page of the entry page per arm",
+    "append": "single-page: put_page whole page + 1 KB; managed-parts: put_page new part + hub index; native: append_page when it exists",
+    "append_cost": "embedding inputs and estimated tokens (UTF-8 bytes / 4) sent by runEmbedCore({stale: true}) after the append, counted by a fake embed transport; ratio = embed tokens / appended tokens; null when the page has no chunks",
+    "embed_pass_tiers": [
+      "2mb",
+      "20mb"
+    ],
+    "roundtrip": "export (runExport --slug-prefix) then reassemble the body; sha256 against source body + append",
+    "native_capability": {
+      "present": true,
+      "get_page_body": "{\"type\":\"string\",\"enum\":[\"auto\",\"full\",\"none\",\"outline\",\"window\"],\"description\":\"auto: whole up to 256 KB, else outline + window. none: revision + size.\",\"fullSurfaceOnly\":true}",
+      "append_page": false,
+      "upload_session": false,
+      "evidence": "get_page declares body {\"type\":\"string\",\"enum\":[\"auto\",\"full\",\"none\",\"outline\",\"window\"],\"description\":\"auto: whole up to 256 KB, else outline + window. none: revision + size.\",\"fullSurfaceOnly\":true}"
+    },
+    "thresholds": {
+      "native_keyword_recall_floor": 0.9,
+      "append_embed_ratio_max": 3,
+      "native_recall_gap_points_max": 2,
+      "hybrid_recall_min_decile": 0.95
+    },
+    "gbrain_overlay": {
+      "requested": "gbrain@7f3c9f5f19862372d056c713942564dd165f62ba",
+      "ref": "7f3c9f5f19862372d056c713942564dd165f62ba",
+      "commit": "7f3c9f5f19862372d056c713942564dd165f62ba",
+      "tree": "5c4354433a79e37c2037f8d651094e9df22ebde5",
+      "version": "0.60.252.0",
+      "checkout_dirty": false,
+      "verified": {
+        "copy_tree": "5c4354433a79e37c2037f8d651094e9df22ebde5",
+        "tree_matches": true,
+        "symlinks_under_src": 0,
+        "dir_is_realpath": true,
+        "cli_version": "0.60.252.0",
+        "cli_version_matches": true
+      },
+      "copied_not_symlinked": true
+    },
+    "config_overlay": {
+      "pages.segmented_storage": "on"
+    },
+    "direct_read_agent": "exploratory (Amendment 1): the entry page default get_page also made with remote: true; its frame is reported per arm and is not in the egress count",
+    "hermetic_wall_ms": 473739
+  },
+  "hashes": {
+    "ledger_sha256": "aa3db34222b7e3bbf4978f34286f5e8818c0b7d908b5627caf108e5573364bb3"
+  },
+  "started_at": "2026-10-16T00:10:44.916Z",
+  "finished_at": "2026-10-16T00:18:40.478Z",
+  "data": {
+    "safety": {
+      "crashes": 0,
+      "responses_over_cap": 0,
+      "roundtrip_byte_loss": 2,
+      "presence_failures": 0
+    },
+    "quality": {
+      "native_append_embed_ratio_max": 2.872,
+      "native_recall_gap_points_max": 0
+    },
+    "floor": {
+      "native_keyword_recall_2mb": null
+    },
+    "capability": {
+      "present": true,
+      "get_page_body": "{\"type\":\"string\",\"enum\":[\"auto\",\"full\",\"none\",\"outline\",\"window\"],\"description\":\"auto: whole up to 256 KB, else outline + window. none: revision + size.\",\"fullSurfaceOnly\":true}",
+      "append_page": false,
+      "upload_session": false,
+      "evidence": "get_page declares body {\"type\":\"string\",\"enum\":[\"auto\",\"full\",\"none\",\"outline\",\"window\"],\"description\":\"auto: whole up to 256 KB, else outline + window. none: revision + size.\",\"fullSurfaceOnly\":true}"
+    },
+    "verdict_failures": [
+      "safety.roundtrip_byte_loss=2",
+      "floor.native_keyword_recall_2mb=null"
+    ],
+    "arms": [
+      {
+        "arm": "single-page",
+        "doc": "conversation",
+        "tier": "20mb",
+        "status": "ran",
+        "ingest": {
+          "status": "stored",
+          "chunks": 8896,
+          "pages": 1,
+          "embed_skip": null,
+          "wall_ms": 19271,
+          "rss_peak_mb": 2989,
+          "rss_over_baseline_mb": 2061,
+          "storage": {
+            "body_storage": "segmented",
+            "body_bytes": 19999957,
+            "segment_count": 74,
+            "body_generation": 1
+          },
+          "pending": {
+            "writes": 1,
+            "wait_ms": 2100
+          },
+          "projection": {
+            "sealed_at_reply": false,
+            "sealed": true,
+            "settle_ms": 9682
+          }
+        },
+        "stored_needles": {
+          "hits": 40,
+          "total": 40,
+          "rate": 1
+        },
+        "keyword_recall": {
+          "hits": 40,
+          "total": 40,
+          "rate": 1
+        },
+        "keyword_recall_by_decile": [
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          }
+        ],
+        "min_decile_recall": 1,
+        "delivered_recall": {
+          "hits": 40,
+          "total": 40,
+          "rate": 1
+        },
+        "distractor_preferred": 0,
+        "reads": {
+          "attempted": 40,
+          "contains": 0,
+          "correct": 0,
+          "max_bytes": 0
+        },
+        "direct_read_bytes": null,
+        "direct_read_agent_bytes": null,
+        "max_frame_bytes": 6247,
+        "responses_over_cap": 0,
+        "append": {
+          "status": "ok",
+          "wall_ms": 7141,
+          "embed_inputs": 1,
+          "embed_tokens": 741,
+          "appended_tokens": 258,
+          "embed_ratio": 2.872,
+          "chunks_rewritten": 87,
+          "chunks_deleted": 87,
+          "visible": true,
+          "path": "put_page (whole page rewrite)",
+          "segments": {
+            "generation_before": 1,
+            "generation_after": 2,
+            "live_segments": 74,
+            "segments_at_new_generation": 1,
+            "segment_texts_added": 1,
+            "segment_text_bytes_added": 195406
+          },
+          "projection": {
+            "sealed_at_reply": true,
+            "sealed": true,
+            "settle_ms": 0
+          }
+        },
+        "embed_initial": {
+          "inputs": 8898,
+          "tokens": 5839396,
+          "wall_ms": 116599,
+          "tokens_per_mb": 291969
+        },
+        "roundtrip": "error",
+        "segment_roundtrip": "match",
+        "roundtrip_byte_delta": null
+      },
+      {
+        "arm": "managed-parts",
+        "doc": "conversation",
+        "tier": "20mb",
+        "status": "ran",
+        "ingest": {
+          "status": "stored",
+          "chunks": 8695,
+          "pages": 1030,
+          "embed_skip": null,
+          "wall_ms": 40891,
+          "rss_peak_mb": 1175,
+          "rss_over_baseline_mb": 255,
+          "storage": null
+        },
+        "stored_needles": {
+          "hits": 40,
+          "total": 40,
+          "rate": 1
+        },
+        "keyword_recall": {
+          "hits": 40,
+          "total": 40,
+          "rate": 1
+        },
+        "keyword_recall_by_decile": [
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          }
+        ],
+        "min_decile_recall": 1,
+        "delivered_recall": {
+          "hits": 40,
+          "total": 40,
+          "rate": 1
+        },
+        "distractor_preferred": 0,
+        "reads": {
+          "attempted": 40,
+          "contains": 40,
+          "correct": 40,
+          "max_bytes": 21462
+        },
+        "direct_read_bytes": 65071,
+        "direct_read_agent_bytes": 65071,
+        "max_frame_bytes": 65071,
+        "responses_over_cap": 0,
+        "append": {
+          "status": "ok",
+          "wall_ms": 640,
+          "embed_inputs": 4,
+          "embed_tokens": 3038,
+          "appended_tokens": 258,
+          "embed_ratio": 11.775,
+          "chunks_rewritten": 4,
+          "chunks_deleted": 3,
+          "visible": true,
+          "path": "put_page new part + hub index update"
+        },
+        "embed_initial": {
+          "inputs": 8697,
+          "tokens": 5789726,
+          "wall_ms": 118934,
+          "tokens_per_mb": 289486
+        },
+        "roundtrip": "match",
+        "roundtrip_byte_delta": 0
+      },
+      {
+        "arm": "native",
+        "doc": "conversation",
+        "tier": "20mb",
+        "status": "ran",
+        "ingest": {
+          "status": "stored",
+          "chunks": 8896,
+          "pages": 1,
+          "embed_skip": null,
+          "wall_ms": 18528,
+          "rss_peak_mb": 2866,
+          "rss_over_baseline_mb": 2180,
+          "storage": {
+            "body_storage": "segmented",
+            "body_bytes": 19999957,
+            "segment_count": 74,
+            "body_generation": 1
+          },
+          "pending": {
+            "writes": 1,
+            "wait_ms": 2013
+          },
+          "projection": {
+            "sealed_at_reply": false,
+            "sealed": true,
+            "settle_ms": 9295
+          }
+        },
+        "stored_needles": {
+          "hits": 40,
+          "total": 40,
+          "rate": 1
+        },
+        "keyword_recall": {
+          "hits": 40,
+          "total": 40,
+          "rate": 1
+        },
+        "keyword_recall_by_decile": [
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          }
+        ],
+        "min_decile_recall": 1,
+        "delivered_recall": {
+          "hits": 40,
+          "total": 40,
+          "rate": 1
+        },
+        "distractor_preferred": 0,
+        "reads": {
+          "attempted": 40,
+          "contains": 0,
+          "correct": 0,
+          "max_bytes": 0
+        },
+        "direct_read_bytes": null,
+        "direct_read_agent_bytes": null,
+        "max_frame_bytes": 6247,
+        "responses_over_cap": 0,
+        "append": {
+          "status": "ok",
+          "wall_ms": 7095,
+          "embed_inputs": 1,
+          "embed_tokens": 741,
+          "appended_tokens": 258,
+          "embed_ratio": 2.872,
+          "chunks_rewritten": 87,
+          "chunks_deleted": 87,
+          "visible": true,
+          "path": "put_page (whole page rewrite)",
+          "segments": {
+            "generation_before": 1,
+            "generation_after": 2,
+            "live_segments": 74,
+            "segments_at_new_generation": 1,
+            "segment_texts_added": 1,
+            "segment_text_bytes_added": 195406
+          },
+          "projection": {
+            "sealed_at_reply": true,
+            "sealed": true,
+            "settle_ms": 0
+          }
+        },
+        "embed_initial": {
+          "inputs": 8898,
+          "tokens": 5839396,
+          "wall_ms": 118284,
+          "tokens_per_mb": 291969
+        },
+        "roundtrip": "error",
+        "segment_roundtrip": "match",
+        "roundtrip_byte_delta": null
+      }
+    ],
+    "children": [
+      {
+        "tier": "20mb",
+        "doc": "conversation",
+        "arm": "single-page",
+        "wall_ms": 150902,
+        "rss_peak_mb": 3950,
+        "crash": null,
+        "control": {
+          "hits": 4,
+          "total": 4,
+          "missed": []
+        }
+      },
+      {
+        "tier": "20mb",
+        "doc": "conversation",
+        "arm": "managed-parts",
+        "wall_ms": 168509,
+        "rss_peak_mb": 2220,
+        "crash": null,
+        "control": {
+          "hits": 4,
+          "total": 4,
+          "missed": []
+        }
+      },
+      {
+        "tier": "20mb",
+        "doc": "conversation",
+        "arm": "native",
+        "wall_ms": 151850,
+        "rss_peak_mb": 4048,
+        "crash": null,
+        "control": {
+          "hits": 4,
+          "total": 4,
+          "missed": []
+        }
+      }
+    ],
+    "presence": [
+      {
+        "name": "conversation: sha256",
+        "expected": "baddc481bcabfaad1fea68a62835736387d0578e3e897f88b6c409245d0825df",
+        "actual": "baddc481bcabfaad1fea68a62835736387d0578e3e897f88b6c409245d0825df",
+        "ok": true
+      },
+      {
+        "name": "conversation: bytes",
+        "expected": 20000039,
+        "actual": 20000039,
+        "ok": true
+      },
+      {
+        "name": "conversation: needles and distractors unique, at their offsets, deciles and sections",
+        "expected": 0,
+        "actual": 0,
+        "ok": true
+      },
+      {
+        "name": "conversation: four needles in every decile",
+        "expected": 40,
+        "actual": 40,
+        "ok": true
+      },
+      {
+        "name": "conversation: append needle absent from the document",
+        "expected": 0,
+        "actual": 0,
+        "ok": true
+      },
+      {
+        "name": "conversation: append needle once in the append",
+        "expected": 1,
+        "actual": 1,
+        "ok": true
+      },
+      {
+        "name": "conversation: append is about 1 KB",
+        "expected": "yes",
+        "actual": "yes",
+        "ok": true
+      },
+      {
+        "name": "conversation: control needles unique and absent from the document",
+        "expected": 0,
+        "actual": 0,
+        "ok": true
+      }
+    ],
+    "documents": [
+      {
+        "tier": "20mb",
+        "id": "conversation",
+        "bytes": 20000039,
+        "lines": 194573,
+        "sections": 1029,
+        "sha256": "baddc481bcabfaad1fea68a62835736387d0578e3e897f88b6c409245d0825df",
+        "needles": 40,
+        "append_bytes": 1029
+      }
+    ],
+    "probes": [
+      {
+        "tier": "20mb",
+        "arm": "single-page",
+        "doc": "conversation",
+        "rows": [
+          {
+            "id": "conversation:d0:name",
+            "decile": 0,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d0:number",
+            "decile": 0,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d0:date",
+            "decile": 0,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d0:fact",
+            "decile": 0,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d1:name",
+            "decile": 1,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d1:number",
+            "decile": 1,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d1:fact",
+            "decile": 1,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d1:date",
+            "decile": 1,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d2:fact",
+            "decile": 2,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d2:number",
+            "decile": 2,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d2:name",
+            "decile": 2,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d2:date",
+            "decile": 2,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d3:date",
+            "decile": 3,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d3:number",
+            "decile": 3,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d3:name",
+            "decile": 3,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d3:fact",
+            "decile": 3,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d4:date",
+            "decile": 4,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d4:number",
+            "decile": 4,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d4:fact",
+            "decile": 4,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d4:name",
+            "decile": 4,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d5:number",
+            "decile": 5,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d5:date",
+            "decile": 5,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d5:name",
+            "decile": 5,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d5:fact",
+            "decile": 5,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d6:fact",
+            "decile": 6,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d6:name",
+            "decile": 6,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d6:date",
+            "decile": 6,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d6:number",
+            "decile": 6,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d7:date",
+            "decile": 7,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d7:name",
+            "decile": 7,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d7:fact",
+            "decile": 7,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d7:number",
+            "decile": 7,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d8:name",
+            "decile": 8,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d8:fact",
+            "decile": 8,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d8:date",
+            "decile": 8,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d8:number",
+            "decile": 8,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d9:name",
+            "decile": 9,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d9:number",
+            "decile": 9,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d9:date",
+            "decile": 9,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d9:fact",
+            "decile": 9,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          }
+        ],
+        "reads": [
+          {
+            "id": "conversation:d0:name",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d0:number",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d0:date",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d0:fact",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d1:name",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d1:number",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d1:fact",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d1:date",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d2:fact",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d2:number",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d2:name",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d2:date",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d3:date",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d3:number",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d3:name",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d3:fact",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d4:date",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d4:number",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d4:fact",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d4:name",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d5:number",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d5:date",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d5:name",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d5:fact",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d6:fact",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d6:name",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d6:date",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d6:number",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d7:date",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d7:name",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d7:fact",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d7:number",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d8:name",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d8:fact",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d8:date",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d8:number",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d9:name",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d9:number",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d9:date",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d9:fact",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          }
+        ],
+        "append": {
+          "status": "ok",
+          "chunks_before": 8896,
+          "chunks_after": 8896,
+          "chunks_rewritten": 87,
+          "chunks_deleted": 87,
+          "path": "put_page (whole page rewrite)",
+          "segments": {
+            "generation_before": 1,
+            "generation_after": 2,
+            "live_segments": 74,
+            "segments_at_new_generation": 1,
+            "segment_texts_added": 1,
+            "segment_text_bytes_added": 195406
+          },
+          "pending": null,
+          "projection": {
+            "sealed_at_reply": true,
+            "sealed": true,
+            "settle_ms": 0
+          },
+          "wall_ms": 7141,
+          "embed": {
+            "inputs": 1,
+            "tokens": 741
+          },
+          "appended_tokens": 258,
+          "visible_rank": 1
+        },
+        "roundtrip": {
+          "status": "error",
+          "expected_sha256": "f29cdbbc4114682ee852c2e42885a9525bc9790fed8dbbddc4db525d5cd59baa",
+          "error": "export_failed: export exited with code 1: Error: Export failed: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or changed."
+        },
+        "segment_roundtrip": {
+          "status": "match",
+          "actual_sha256": "f29cdbbc4114682ee852c2e42885a9525bc9790fed8dbbddc4db525d5cd59baa",
+          "byte_delta": 0,
+          "regions": [
+            "truth"
+          ]
+        },
+        "frames": {
+          "count": 48,
+          "max_bytes": 6247,
+          "over_cap": 0,
+          "by_op": {
+            "put_page": {
+              "count": 2,
+              "max_bytes": 6247,
+              "over_cap": 0
+            },
+            "get_write_request": {
+              "count": 1,
+              "max_bytes": 1927,
+              "over_cap": 0
+            },
+            "search": {
+              "count": 45,
+              "max_bytes": 4443,
+              "over_cap": 0
+            }
+          }
+        },
+        "memory": [
+          {
+            "phase": "start",
+            "t_ms": 2,
+            "rss_mb": 928,
+            "max_rss_mb": 1090
+          },
+          {
+            "phase": "ingest",
+            "t_ms": 19273,
+            "rss_mb": 1400,
+            "max_rss_mb": 2989
+          },
+          {
+            "phase": "reads",
+            "t_ms": 23397,
+            "rss_mb": 1263,
+            "max_rss_mb": 2989
+          },
+          {
+            "phase": "append",
+            "t_ms": 147811,
+            "rss_mb": 3654,
+            "max_rss_mb": 3713
+          },
+          {
+            "phase": "export",
+            "t_ms": 148076,
+            "rss_mb": 4056,
+            "max_rss_mb": 4056
+          }
+        ],
+        "ingest": {
+          "status": "stored",
+          "pages": 1,
+          "chunks": 8896,
+          "embed_skip": null,
+          "write_errors": 0,
+          "storage": {
+            "body_storage": "segmented",
+            "body_bytes": 19999957,
+            "segment_count": 74,
+            "body_generation": 1
+          },
+          "pending": {
+            "writes": 1,
+            "wait_ms": 2100
+          },
+          "projection": {
+            "sealed_at_reply": false,
+            "sealed": true,
+            "settle_ms": 9682
+          },
+          "wall_ms": 19271
+        },
+        "direct_read": {
+          "bytes": null,
+          "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+        },
+        "direct_read_agent": {
+          "bytes": null,
+          "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+        },
+        "embed_initial": {
+          "inputs": 8898,
+          "tokens": 5839396,
+          "wall_ms": 116598.70042200001
+        },
+        "embed_error": null
+      },
+      {
+        "tier": "20mb",
+        "arm": "managed-parts",
+        "doc": "conversation",
+        "rows": [
+          {
+            "id": "conversation:d0:name",
+            "decile": 0,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d0:number",
+            "decile": 0,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d0:date",
+            "decile": 0,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d0:fact",
+            "decile": 0,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d1:name",
+            "decile": 1,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d1:number",
+            "decile": 1,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d1:fact",
+            "decile": 1,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d1:date",
+            "decile": 1,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d2:fact",
+            "decile": 2,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d2:number",
+            "decile": 2,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d2:name",
+            "decile": 2,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d2:date",
+            "decile": 2,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d3:date",
+            "decile": 3,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d3:number",
+            "decile": 3,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d3:name",
+            "decile": 3,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d3:fact",
+            "decile": 3,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d4:date",
+            "decile": 4,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d4:number",
+            "decile": 4,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d4:fact",
+            "decile": 4,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d4:name",
+            "decile": 4,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d5:number",
+            "decile": 5,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d5:date",
+            "decile": 5,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d5:name",
+            "decile": 5,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d5:fact",
+            "decile": 5,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d6:fact",
+            "decile": 6,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d6:name",
+            "decile": 6,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d6:date",
+            "decile": 6,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d6:number",
+            "decile": 6,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d7:date",
+            "decile": 7,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d7:name",
+            "decile": 7,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d7:fact",
+            "decile": 7,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d7:number",
+            "decile": 7,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d8:name",
+            "decile": 8,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d8:fact",
+            "decile": 8,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d8:date",
+            "decile": 8,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d8:number",
+            "decile": 8,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d9:name",
+            "decile": 9,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d9:number",
+            "decile": 9,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d9:date",
+            "decile": 9,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d9:fact",
+            "decile": 9,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          }
+        ],
+        "reads": [
+          {
+            "id": "conversation:d0:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 21368,
+            "correct": true
+          },
+          {
+            "id": "conversation:d0:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 20896,
+            "correct": true
+          },
+          {
+            "id": "conversation:d0:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 21101,
+            "correct": true
+          },
+          {
+            "id": "conversation:d0:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 21000,
+            "correct": true
+          },
+          {
+            "id": "conversation:d1:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 21047,
+            "correct": true
+          },
+          {
+            "id": "conversation:d1:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 21029,
+            "correct": true
+          },
+          {
+            "id": "conversation:d1:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 21411,
+            "correct": true
+          },
+          {
+            "id": "conversation:d1:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 21054,
+            "correct": true
+          },
+          {
+            "id": "conversation:d2:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 20958,
+            "correct": true
+          },
+          {
+            "id": "conversation:d2:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 20950,
+            "correct": true
+          },
+          {
+            "id": "conversation:d2:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 21030,
+            "correct": true
+          },
+          {
+            "id": "conversation:d2:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 21427,
+            "correct": true
+          },
+          {
+            "id": "conversation:d3:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 20937,
+            "correct": true
+          },
+          {
+            "id": "conversation:d3:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 20921,
+            "correct": true
+          },
+          {
+            "id": "conversation:d3:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 21069,
+            "correct": true
+          },
+          {
+            "id": "conversation:d3:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 21023,
+            "correct": true
+          },
+          {
+            "id": "conversation:d4:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 20963,
+            "correct": true
+          },
+          {
+            "id": "conversation:d4:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 20927,
+            "correct": true
+          },
+          {
+            "id": "conversation:d4:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 20943,
+            "correct": true
+          },
+          {
+            "id": "conversation:d4:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 20945,
+            "correct": true
+          },
+          {
+            "id": "conversation:d5:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 20913,
+            "correct": true
+          },
+          {
+            "id": "conversation:d5:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 21407,
+            "correct": true
+          },
+          {
+            "id": "conversation:d5:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 21083,
+            "correct": true
+          },
+          {
+            "id": "conversation:d5:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 20987,
+            "correct": true
+          },
+          {
+            "id": "conversation:d6:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 20931,
+            "correct": true
+          },
+          {
+            "id": "conversation:d6:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 20885,
+            "correct": true
+          },
+          {
+            "id": "conversation:d6:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 21008,
+            "correct": true
+          },
+          {
+            "id": "conversation:d6:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 20943,
+            "correct": true
+          },
+          {
+            "id": "conversation:d7:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 21009,
+            "correct": true
+          },
+          {
+            "id": "conversation:d7:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 21027,
+            "correct": true
+          },
+          {
+            "id": "conversation:d7:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 20989,
+            "correct": true
+          },
+          {
+            "id": "conversation:d7:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 21019,
+            "correct": true
+          },
+          {
+            "id": "conversation:d8:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 21462,
+            "correct": true
+          },
+          {
+            "id": "conversation:d8:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 20870,
+            "correct": true
+          },
+          {
+            "id": "conversation:d8:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 20979,
+            "correct": true
+          },
+          {
+            "id": "conversation:d8:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 20971,
+            "correct": true
+          },
+          {
+            "id": "conversation:d9:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 20979,
+            "correct": true
+          },
+          {
+            "id": "conversation:d9:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 21010,
+            "correct": true
+          },
+          {
+            "id": "conversation:d9:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 20859,
+            "correct": true
+          },
+          {
+            "id": "conversation:d9:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 21015,
+            "correct": true
+          }
+        ],
+        "append": {
+          "status": "ok",
+          "chunks_before": 8695,
+          "chunks_after": 8696,
+          "chunks_rewritten": 4,
+          "chunks_deleted": 3,
+          "path": "put_page new part + hub index update",
+          "pending": null,
+          "wall_ms": 640,
+          "embed": {
+            "inputs": 4,
+            "tokens": 3038
+          },
+          "appended_tokens": 258,
+          "visible_rank": 1
+        },
+        "roundtrip": {
+          "status": "match",
+          "expected_sha256": "f29cdbbc4114682ee852c2e42885a9525bc9790fed8dbbddc4db525d5cd59baa",
+          "actual_sha256": "f29cdbbc4114682ee852c2e42885a9525bc9790fed8dbbddc4db525d5cd59baa",
+          "byte_delta": 0
+        },
+        "segment_roundtrip": null,
+        "frames": {
+          "count": 1119,
+          "max_bytes": 65071,
+          "over_cap": 0,
+          "by_op": {
+            "put_page": {
+              "count": 1033,
+              "max_bytes": 8369,
+              "over_cap": 0
+            },
+            "search": {
+              "count": 45,
+              "max_bytes": 21183,
+              "over_cap": 0
+            },
+            "get_page": {
+              "count": 41,
+              "max_bytes": 65071,
+              "over_cap": 0
+            }
+          }
+        },
+        "memory": [
+          {
+            "phase": "start",
+            "t_ms": 2,
+            "rss_mb": 920,
+            "max_rss_mb": 1085
+          },
+          {
+            "phase": "ingest",
+            "t_ms": 40893,
+            "rss_mb": 1086,
+            "max_rss_mb": 1175
+          },
+          {
+            "phase": "reads",
+            "t_ms": 43663,
+            "rss_mb": 1086,
+            "max_rss_mb": 1175
+          },
+          {
+            "phase": "append",
+            "t_ms": 163764,
+            "rss_mb": 1633,
+            "max_rss_mb": 2224
+          },
+          {
+            "phase": "export",
+            "t_ms": 165795,
+            "rss_mb": 1992,
+            "max_rss_mb": 2224
+          }
+        ],
+        "ingest": {
+          "status": "stored",
+          "pages": 1030,
+          "chunks": 8695,
+          "embed_skip": null,
+          "write_errors": 0,
+          "storage": null,
+          "pending": null,
+          "projection": null,
+          "wall_ms": 40891
+        },
+        "direct_read": {
+          "bytes": 65071
+        },
+        "direct_read_agent": {
+          "bytes": 65071
+        },
+        "embed_initial": {
+          "inputs": 8697,
+          "tokens": 5789726,
+          "wall_ms": 118934.04797
+        },
+        "embed_error": null
+      },
+      {
+        "tier": "20mb",
+        "arm": "native",
+        "doc": "conversation",
+        "rows": [
+          {
+            "id": "conversation:d0:name",
+            "decile": 0,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d0:number",
+            "decile": 0,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d0:date",
+            "decile": 0,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d0:fact",
+            "decile": 0,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d1:name",
+            "decile": 1,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d1:number",
+            "decile": 1,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d1:fact",
+            "decile": 1,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d1:date",
+            "decile": 1,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d2:fact",
+            "decile": 2,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d2:number",
+            "decile": 2,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d2:name",
+            "decile": 2,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d2:date",
+            "decile": 2,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d3:date",
+            "decile": 3,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d3:number",
+            "decile": 3,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d3:name",
+            "decile": 3,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d3:fact",
+            "decile": 3,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d4:date",
+            "decile": 4,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d4:number",
+            "decile": 4,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d4:fact",
+            "decile": 4,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d4:name",
+            "decile": 4,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d5:number",
+            "decile": 5,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d5:date",
+            "decile": 5,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d5:name",
+            "decile": 5,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d5:fact",
+            "decile": 5,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d6:fact",
+            "decile": 6,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d6:name",
+            "decile": 6,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d6:date",
+            "decile": 6,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d6:number",
+            "decile": 6,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d7:date",
+            "decile": 7,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d7:name",
+            "decile": 7,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d7:fact",
+            "decile": 7,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d7:number",
+            "decile": 7,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d8:name",
+            "decile": 8,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d8:fact",
+            "decile": 8,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d8:date",
+            "decile": 8,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d8:number",
+            "decile": 8,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d9:name",
+            "decile": 9,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d9:number",
+            "decile": 9,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d9:date",
+            "decile": 9,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d9:fact",
+            "decile": 9,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          }
+        ],
+        "reads": [
+          {
+            "id": "conversation:d0:name",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d0:number",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d0:date",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d0:fact",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d1:name",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d1:number",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d1:fact",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d1:date",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d2:fact",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d2:number",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d2:name",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d2:date",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d3:date",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d3:number",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d3:name",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d3:fact",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d4:date",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d4:number",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d4:fact",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d4:name",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d5:number",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d5:date",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d5:name",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d5:fact",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d6:fact",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d6:name",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d6:date",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d6:number",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d7:date",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d7:name",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d7:fact",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d7:number",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d8:name",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d8:fact",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d8:date",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d8:number",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d9:name",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d9:number",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d9:date",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          },
+          {
+            "id": "conversation:d9:fact",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+          }
+        ],
+        "append": {
+          "status": "ok",
+          "chunks_before": 8896,
+          "chunks_after": 8896,
+          "chunks_rewritten": 87,
+          "chunks_deleted": 87,
+          "path": "put_page (whole page rewrite)",
+          "segments": {
+            "generation_before": 1,
+            "generation_after": 2,
+            "live_segments": 74,
+            "segments_at_new_generation": 1,
+            "segment_texts_added": 1,
+            "segment_text_bytes_added": 195406
+          },
+          "pending": null,
+          "projection": {
+            "sealed_at_reply": true,
+            "sealed": true,
+            "settle_ms": 0
+          },
+          "wall_ms": 7095,
+          "embed": {
+            "inputs": 1,
+            "tokens": 741
+          },
+          "appended_tokens": 258,
+          "visible_rank": 1
+        },
+        "roundtrip": {
+          "status": "error",
+          "expected_sha256": "f29cdbbc4114682ee852c2e42885a9525bc9790fed8dbbddc4db525d5cd59baa",
+          "error": "export_failed: export exited with code 1: Error: Export failed: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or changed."
+        },
+        "segment_roundtrip": {
+          "status": "match",
+          "actual_sha256": "f29cdbbc4114682ee852c2e42885a9525bc9790fed8dbbddc4db525d5cd59baa",
+          "byte_delta": 0,
+          "regions": [
+            "truth"
+          ]
+        },
+        "frames": {
+          "count": 48,
+          "max_bytes": 6247,
+          "over_cap": 0,
+          "by_op": {
+            "put_page": {
+              "count": 2,
+              "max_bytes": 6247,
+              "over_cap": 0
+            },
+            "get_write_request": {
+              "count": 1,
+              "max_bytes": 1927,
+              "over_cap": 0
+            },
+            "search": {
+              "count": 45,
+              "max_bytes": 4443,
+              "over_cap": 0
+            }
+          }
+        },
+        "memory": [
+          {
+            "phase": "start",
+            "t_ms": 1,
+            "rss_mb": 686,
+            "max_rss_mb": 1076
+          },
+          {
+            "phase": "ingest",
+            "t_ms": 18529,
+            "rss_mb": 1405,
+            "max_rss_mb": 2866
+          },
+          {
+            "phase": "reads",
+            "t_ms": 22746,
+            "rss_mb": 1258,
+            "max_rss_mb": 2866
+          },
+          {
+            "phase": "append",
+            "t_ms": 148791,
+            "rss_mb": 3652,
+            "max_rss_mb": 3711
+          },
+          {
+            "phase": "export",
+            "t_ms": 149049,
+            "rss_mb": 4051,
+            "max_rss_mb": 4051
+          }
+        ],
+        "ingest": {
+          "status": "stored",
+          "pages": 1,
+          "chunks": 8896,
+          "embed_skip": null,
+          "write_errors": 0,
+          "storage": {
+            "body_storage": "segmented",
+            "body_bytes": 19999957,
+            "segment_count": 74,
+            "body_generation": 1
+          },
+          "pending": {
+            "writes": 1,
+            "wait_ms": 2013
+          },
+          "projection": {
+            "sealed_at_reply": false,
+            "sealed": true,
+            "settle_ms": 9295
+          },
+          "wall_ms": 18528
+        },
+        "direct_read": {
+          "bytes": null,
+          "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+        },
+        "direct_read_agent": {
+          "bytes": null,
+          "error": "page_body_segmented: rowToPage.compiled_truth: page conversations/rowan-imogen-casimir-juniper (source default) stores its body in segments, and this path reads or writes the whole body as one string. Nothing was read or "
+        },
+        "embed_initial": {
+          "inputs": 8898,
+          "tokens": 5839396,
+          "wall_ms": 118284.41862200001
+        },
+        "embed_error": null
+      }
+    ],
+    "findings": [],
+    "harness_error": null
+  },
+  "accounting": {
+    "planned": 120,
+    "attempted": 120,
+    "scored": 120,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  },
+  "latency_ms": null
+}

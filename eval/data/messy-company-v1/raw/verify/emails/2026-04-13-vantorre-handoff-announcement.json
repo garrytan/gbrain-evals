@@ -1,0 +1,45 @@
+{
+  "slug": "emails/2026-04-13-vantorre-handoff-announcement",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2026-04-13",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Vantorre Group",
+        "line": 9
+      },
+      {
+        "oid": "e2",
+        "surface": "Vantorre Group",
+        "line": 11
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "36781d4e6acfe2d028459bfcaa33a63e52063f87b7262023790bb152e3eb9c0b",
+  "response_text": "{\n  \"date_used\": \"2026-04-13\",\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"vantorre-group\"\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2026-04-13",
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e2",
+        "entity": "vantorre-group"
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2685,
+    "output_tokens": 87,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.00624
+}

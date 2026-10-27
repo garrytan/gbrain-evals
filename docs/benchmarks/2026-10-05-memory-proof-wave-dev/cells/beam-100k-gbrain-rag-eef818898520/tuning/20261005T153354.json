@@ -1,0 +1,22 @@
+{
+  "cell_id": "beam-100k-gbrain-rag-eef818898520",
+  "target": 8000,
+  "questions": 20,
+  "rows": [
+    {
+      "setting": {
+        "facts_tokens": 8000
+      },
+      "target": 8000,
+      "n": 20,
+      "mean": 1796.0,
+      "p95": 1794.0,
+      "tolerance": 0.1,
+      "ok": false,
+      "reason": "mean 1796 outside [7200, 8800]; p95 1794 outside [7200, 8800]",
+      "errors": []
+    }
+  ],
+  "chosen": null,
+  "note": "retrieval-only tuning on an ingested cell; no answer or judge calls"
+}

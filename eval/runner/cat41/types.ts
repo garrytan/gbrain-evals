@@ -6,8 +6,11 @@
 export type Harness = 'claude' | 'codex';
 export const HARNESSES: readonly Harness[] = ['claude', 'codex'];
 
-/** The consent effects of the agent-first operator wave (spec A0 `Effect`). */
-export type Effect = 'paid' | 'destructive' | 'credentials' | 'egress' | 'persistent_install';
+/**
+ * The consent effects of the agent-first operator wave (spec A0 `Effect`). `capture` (wave 2 D8): a conversation
+ * was ingested or a fact the user did not ask for was written.
+ */
+export type Effect = 'paid' | 'destructive' | 'credentials' | 'egress' | 'persistent_install' | 'capture';
 
 /** Outcome classes per step (spec Lane I). `ok` and `error` are neutral steps. */
 export type StepClass =
@@ -95,5 +98,7 @@ export interface ContainerResult {
   provider_requests: ProviderRequest[];
   probe: Record<string, unknown> & { effects?: ProbeEffect[] };
   harness_versions: Record<string, string>;
+  /** D7: every `gbrain hook` call the harness made, with the stdout it injected (the wrapper's copy). */
+  hook_captures?: Array<{ id: string; event: string; start_ms: number; end_ms: number | null; rc: number | null; stdout: string }>;
   crash?: string;
 }

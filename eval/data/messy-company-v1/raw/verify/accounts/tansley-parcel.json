@@ -1,0 +1,60 @@
+{
+  "slug": "accounts/tansley-parcel",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2026-09-15",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Tansley Parcel",
+        "line": 6
+      },
+      {
+        "oid": "e2",
+        "surface": "TPCL",
+        "line": 19
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": [
+      {
+        "account": "tansley-parcel",
+        "question": "According to this page alone, who manages Tansley Parcel, in what role, and from/until when?"
+      }
+    ]
+  },
+  "prompt_user_sha256": "48cf955b5e6e5b62334282cbb62623ec739248267bad244140019f4ee0eb1def",
+  "response_text": "{\n  \"date_used\": \"2026-09-15\",\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"tansley-parcel\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"tansley-parcel\"\n    }\n  ],\n  \"ownership\": [\n    {\n      \"account\": \"tansley-parcel\",\n      \"owner\": \"Pree Sundaram\",\n      \"role\": \"primary\",\n      \"start\": \"2025-01\",\n      \"end\": null,\n      \"line\": 15\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2026-09-15",
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "tansley-parcel"
+      },
+      {
+        "oid": "e2",
+        "entity": "tansley-parcel"
+      }
+    ],
+    "ownership": [
+      {
+        "account": "tansley-parcel",
+        "owner": "Pree Sundaram",
+        "role": "primary",
+        "start": "2025-01",
+        "end": null,
+        "line": 15
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 3041,
+    "output_tokens": 164,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.007722
+}

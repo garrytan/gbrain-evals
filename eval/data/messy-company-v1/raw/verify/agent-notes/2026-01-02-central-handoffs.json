@@ -1,0 +1,88 @@
+{
+  "slug": "agent-notes/2026-01-02-central-handoffs",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2026-01-02",
+    "owner_phrases": [
+      {
+        "mid": "agent-notes/2026-01-02-central-handoffs#m1",
+        "phrase": "Pree's dealer account",
+        "lines": [
+          13
+        ]
+      },
+      {
+        "mid": "agent-notes/2026-01-02-central-handoffs#m2",
+        "phrase": "the account Tobias runs",
+        "lines": [
+          18
+        ]
+      }
+    ],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Marrow Fieldworks",
+        "line": 12
+      },
+      {
+        "oid": "e2",
+        "surface": "Stoneharrow Billing",
+        "line": 17
+      },
+      {
+        "oid": "e3",
+        "surface": "Marrow Agrisupply",
+        "line": 19
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "2fa76266e644a49f18c8c8cca829205948a68ba6226be104de5e49d41948fcb3",
+  "response_text": "{\n  \"date_used\": \"2026-01-05\",\n  \"owner_phrases\": [\n    {\n      \"mid\": \"agent-notes/2026-01-02-central-handoffs#m1\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\"marrow-fieldworks\"],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"The dealer descriptor and pre-handoff context identify Marrow Fieldworks, which Pree owns before the Monday transition.\"\n    },\n    {\n      \"mid\": \"agent-notes/2026-01-02-central-handoffs#m2\",\n      \"refers_to_customer_account\": false,\n      \"accounts\": [],\n      \"reading\": \"ambiguous: could be more than one account\",\n      \"note\": \"Tobias owns both Tansleigh Packaging and Marrow Fieldworks by the scheduled Tuesday meeting; the text does not distinguish them.\"\n    }\n  ],\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"marrow-fieldworks\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"stoneharrow\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"marrow-agrisupply\"\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2026-01-05",
+    "owner_phrases": [
+      {
+        "mid": "agent-notes/2026-01-02-central-handoffs#m1",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "marrow-fieldworks"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "The dealer descriptor and pre-handoff context identify Marrow Fieldworks, which Pree owns before the Monday transition."
+      },
+      {
+        "mid": "agent-notes/2026-01-02-central-handoffs#m2",
+        "refers_to_customer_account": false,
+        "accounts": [],
+        "reading": "ambiguous: could be more than one account",
+        "note": "Tobias owns both Tansleigh Packaging and Marrow Fieldworks by the scheduled Tuesday meeting; the text does not distinguish them."
+      }
+    ],
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "marrow-fieldworks"
+      },
+      {
+        "oid": "e2",
+        "entity": "stoneharrow"
+      },
+      {
+        "oid": "e3",
+        "entity": "marrow-agrisupply"
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2876,
+    "output_tokens": 375,
+    "thinking_tokens": 76
+  },
+  "cost_usd": 0.009502
+}

@@ -1,0 +1,41 @@
+{
+  "slug": "contracts/2026-03-25-clr-renewal-2026",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: record\nTitle: Renewal Order Form: Pellow Home Living (formerly Covey & Lark Retail)\nDate: Written on 2026-03-25.\nWriter: June Osei-Lark\nVoice: formal legal drafting\nFormat: formal numbered sections and a signature block\nLength: about 447 words\nDate style in the body: undefined\nTypos: none\n\nBrief:\nRenewal Order Form: Pellow Home Living (formerly Covey & Lark Retail). Parties: Pemberline Systems and Pellow Home Living. Drafted 2026-03-16. Effective date 2026-04-01 (signed 2026-03-25; state both dates and keep them distinct). Terms this document sets: subscribed seats = 46; price per seat per year (USD) = 1760; end of the current term (renewal date) = 2027-03-31. Executed: include a signature block signed on 2026-03-25 by both parties (customer signatory plus June Osei-Lark for Pemberline). It changes earlier paperwork for this customer; refer to the earlier agreement generically.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Bettina Kroll: Coastal team lead\n- Sofia Marchetti: Account manager, Coastal team\n- Kwame Adjei-Rowe: Account manager, Coastal team\n- Corinne Ashdown: VP Operations\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Pellucid Harbor Logistics: port drayage and terminal logistics, Gulf Coast; codes/nicknames PHL\n- Driftmoor Marine Freight: marine freight and barge operator, Puget Sound; codes/nicknames DMF\n- Saltmarsh Provisions: regional grocery distributor, Lowcountry; main contact Corinne Ashdown, VP Operations; codes/nicknames SMP\n- Pellow Home Living (renamed from Covey & Lark Retail on 2026-02-16): home goods retailer, Mid-Atlantic; codes/nicknames Covey, PHL\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2026-03-25 (background only; don't restate unless the brief asks):\n- Pellucid Harbor Logistics: managed by Kwame Adjei-Rowe\n- Driftmoor Marine Freight: managed by Kwame Adjei-Rowe\n- Saltmarsh Provisions: managed by Bettina Kroll\n- Pellow Home Living: managed by Sofia Marchetti",
+      "response_text": "# Renewal Order Form: Pellow Home Living (formerly Covey & Lark Retail)\n\n**Document Reference:** ROF-PHL-2026-04\n**Drafted Date:** 2026-03-16\n**Execution Date:** 2026-03-25\n**Renewal Effective Date:** 2026-04-01\n\nThis Renewal Order Form (\"Order Form\") is entered into by and between **Pemberline Systems** (\"Provider\") and **Pellow Home Living** (\"Customer\"), formerly known as **Covey & Lark Retail** prior to its corporate name change on 2026-02-16. This Order Form amends and supersedes the commercial terms of the prior subscription agreement and earlier ordering documentation between the parties.\n\n### 1. Precedence and Effect\n1.1. Although executed by both parties on the Execution Date of 2026-03-25, the subscription renewal term and associated pricing governed by this Order Form shall not commence until the Renewal Effective Date of 2026-04-01.\n1.2. Except as expressly modified herein, all underlying terms, conditions, and operational schedules set forth in the earlier agreement between Provider and Customer remain in full force and effect. Any reference to Covey & Lark Retail in earlier paperwork shall hereinafter be deemed a reference to Pellow Home Living.\n\n### 2. Subscription Scope and Commercial Terms\n2.1. **Product:** Pemberline Dock (yard and dock scheduling software).\n2.2. **Subscribed Seats:** 46 seats.\n2.3. **Price per Seat per Year:** $1,760.00 USD.\n2.4. **Total Annual Subscription Fee:** $80,960.00 USD.\n2.5. **Term and Renewal Date:** The renewal term governed by this Order Form commences on the Renewal Effective Date of 2026-04-01 and continues through the end of the current term (renewal date) on 2027-03-31.\n\n### 3. Operational Deployment and Administration\n3.1. The 46 subscribed seats allocated under Section 2.2 are authorized for deployment across Customer's Mid-Atlantic regional distribution centers, including the primary receiving clerks at the Hagerstown cross-dock (Doors 1 through 24) and the second-shift yard spotters at the Fredericksburg upholstery annex.\n3.2. Provider's platform engineering team shall complete the tenant alias migration from the legacy `covey-lark-prod` environment identifier to `pellow-home-prod` during the scheduled maintenance window on Sunday, 2026-03-29, pursuant to internal support ticket DOCK-7741. Automated carrier appointment confirmation emails and the daily *Inbound Container Detention Report* shall display the Pellow Home Living trade name upon completion of the migration.\n3.3. Customer's designated billing contact shall submit all remittance inquiries referencing the updated legal entity name.\n\n---\n\n### 4. Signatures\n\nIN WITNESS WHEREOF, the parties have caused this Renewal Order Form to be executed by their duly authorized representatives on 2026-03-25, to take legal effect on the Renewal Effective Date of 2026-04-01.\n\n**PEMBERLINE SYSTEMS**\n\n* **Signature:** /s/ June Osei-Lark\n* **Name:** June Osei-Lark\n* **Title:** Deal Desk and Contracts Manager\n* **Date Signed:** 2026-03-25\n\n**PELLOW HOME LIVING (formerly Covey & Lark Retail)**\n\n* **Signature:** /s/ Marcus Vance-Sterling\n* **Name:** Marcus Vance-Sterling\n* **Title:** Vice President of Supply Chain & Retail Logistics\n* **Date Signed:** 2026-03-25",
+      "usage": {
+        "input_tokens": 1234,
+        "output_tokens": 844,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.010908,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1234,
+          "candidatesTokenCount": 844,
+          "totalTokenCount": 2078,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1234
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 844
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

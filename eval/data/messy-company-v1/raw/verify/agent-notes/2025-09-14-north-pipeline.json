@@ -1,0 +1,112 @@
+{
+  "slug": "agent-notes/2025-09-14-north-pipeline",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2025-09-14",
+    "owner_phrases": [
+      {
+        "mid": "agent-notes/2025-09-14-north-pipeline#m1",
+        "phrase": "Dana's freight account",
+        "lines": [
+          23
+        ]
+      },
+      {
+        "mid": "agent-notes/2025-09-14-north-pipeline#m2",
+        "phrase": "the Northwest one Dana inherited",
+        "lines": [
+          15
+        ]
+      }
+    ],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Brackenwater Freight Co.",
+        "line": 14
+      },
+      {
+        "oid": "e2",
+        "surface": "Tamsin Cold Chain",
+        "line": 15
+      },
+      {
+        "oid": "e3",
+        "surface": "Quarrendon Freight Lines",
+        "line": 16
+      },
+      {
+        "oid": "e4",
+        "surface": "Orrin Mills",
+        "line": 17
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": [
+      {
+        "account": "brackenwater",
+        "question": "According to this page alone, who manages Brackenwater Freight Co., in what role, and from/until when?"
+      }
+    ]
+  },
+  "prompt_user_sha256": "e5002625abccda6376920c58feddf59fa4f43e9be6d7b11530392ff444df2fd2",
+  "response_text": "{\n  \"date_used\": \"2025-09-14\",\n  \"owner_phrases\": [\n    {\n      \"mid\": \"agent-notes/2025-09-14-north-pipeline#m1\",\n      \"refers_to_customer_account\": false,\n      \"accounts\": [],\n      \"reading\": \"ambiguous: could be more than one account\",\n      \"note\": \"On 2025-09-14, Dana Okafor is the primary owner of both Quarrendon Freight Lines and Brackenwater Freight Co. (which moves to Marcus tomorrow, Sept 15); both have the descriptor 'freight'.\"\n    },\n    {\n      \"mid\": \"agent-notes/2025-09-14-north-pipeline#m2\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\n        \"tamsin\"\n      ],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"Explicitly under the Tamsin Cold Chain bullet; Tamsin is in the Pacific Northwest and Dana took over ownership on 2025-04-14.\"\n    }\n  ],\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"brackenwater\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"tamsin\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"quarrendon\"\n    },\n    {\n      \"oid\": \"e4\",\n      \"entity\": \"orrin\"\n    }\n  ],\n  \"ownership\": [\n    {\n      \"account\": \"brackenwater\",\n      \"owner\": \"Marcus Lindqvist\",\n      \"role\": \"primary\",\n      \"start\": \"2025-09-15\",\n      \"end\": null,\n      \"line\": 14\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-09-14",
+    "owner_phrases": [
+      {
+        "mid": "agent-notes/2025-09-14-north-pipeline#m1",
+        "refers_to_customer_account": false,
+        "accounts": [],
+        "reading": "ambiguous: could be more than one account",
+        "note": "On 2025-09-14, Dana Okafor is the primary owner of both Quarrendon Freight Lines and Brackenwater Freight Co. (which moves to Marcus tomorrow, Sept 15); both have the descriptor 'freight'."
+      },
+      {
+        "mid": "agent-notes/2025-09-14-north-pipeline#m2",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "tamsin"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "Explicitly under the Tamsin Cold Chain bullet; Tamsin is in the Pacific Northwest and Dana took over ownership on 2025-04-14."
+      }
+    ],
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "brackenwater"
+      },
+      {
+        "oid": "e2",
+        "entity": "tamsin"
+      },
+      {
+        "oid": "e3",
+        "entity": "quarrendon"
+      },
+      {
+        "oid": "e4",
+        "entity": "orrin"
+      }
+    ],
+    "ownership": [
+      {
+        "account": "brackenwater",
+        "owner": "Marcus Lindqvist",
+        "role": "primary",
+        "start": "2025-09-15",
+        "end": null,
+        "line": 14
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 3373,
+    "output_tokens": 490,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.011646
+}

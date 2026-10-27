@@ -1,0 +1,309 @@
+{
+  "scorer": "facts-absorb/score.ts at rescore time",
+  "totals": {
+    "sonnet46": {
+      "claims": 529,
+      "recalled": 527,
+      "facts": 868,
+      "supported": 850,
+      "wrong": 0,
+      "unmatched": 18,
+      "attribution_cases": 169,
+      "attribution_correct": 166,
+      "correction_cases": 96,
+      "correction_correct": 94,
+      "recall": 0.996219281663516,
+      "precision": 1,
+      "attribution": 0.9822485207100592,
+      "correction": 0.9791666666666666,
+      "unmatched_rate": 0.020737327188940093
+    },
+    "luna": {
+      "claims": 529,
+      "recalled": 529,
+      "facts": 1043,
+      "supported": 1014,
+      "wrong": 0,
+      "unmatched": 29,
+      "attribution_cases": 169,
+      "attribution_correct": 169,
+      "correction_cases": 96,
+      "correction_correct": 96,
+      "recall": 1,
+      "precision": 1,
+      "attribution": 1,
+      "correction": 1,
+      "unmatched_rate": 0.027804410354745925
+    },
+    "haiku55": {
+      "claims": 529,
+      "recalled": 529,
+      "facts": 843,
+      "supported": 827,
+      "wrong": 0,
+      "unmatched": 16,
+      "attribution_cases": 169,
+      "attribution_correct": 167,
+      "correction_cases": 96,
+      "correction_correct": 96,
+      "recall": 1,
+      "precision": 1,
+      "attribution": 0.9881656804733728,
+      "correction": 1,
+      "unmatched_rate": 0.018979833926453145
+    },
+    "disabled": {
+      "claims": 529,
+      "recalled": 0,
+      "facts": 0,
+      "supported": 0,
+      "wrong": 0,
+      "unmatched": 0,
+      "attribution_cases": 64,
+      "attribution_correct": 64,
+      "correction_cases": 96,
+      "correction_correct": 0,
+      "recall": 0,
+      "precision": 0,
+      "attribution": 1,
+      "correction": 0,
+      "unmatched_rate": 0
+    },
+    "drop": {
+      "claims": 529,
+      "recalled": 0,
+      "facts": 0,
+      "supported": 0,
+      "wrong": 0,
+      "unmatched": 0,
+      "attribution_cases": 64,
+      "attribution_correct": 64,
+      "correction_cases": 96,
+      "correction_correct": 0,
+      "recall": 0,
+      "precision": 0,
+      "attribution": 1,
+      "correction": 0,
+      "unmatched_rate": 0
+    }
+  },
+  "verdicts": [
+    {
+      "label": "luna",
+      "mutant": false,
+      "verdict": {
+        "pass": true,
+        "checks": [
+          {
+            "name": "recall non-inferior",
+            "pass": true,
+            "detail": "0.4 pts [0.0 pts, 1.2 pts] vs margin -5.0 pts"
+          },
+          {
+            "name": "precision non-inferior",
+            "pass": true,
+            "detail": "0.0 pts [0.0 pts, 0.0 pts] vs margin -5.0 pts"
+          },
+          {
+            "name": "attribution no worse",
+            "pass": true,
+            "detail": "1.8 pts [0.0 pts, 4.8 pts] vs tolerance -2.0 pts"
+          },
+          {
+            "name": "correction no worse",
+            "pass": true,
+            "detail": "2.1 pts [0.0 pts, 7.0 pts] vs tolerance -2.0 pts"
+          },
+          {
+            "name": "zero unhandled parse failures",
+            "pass": true,
+            "detail": "0"
+          },
+          {
+            "name": "resolved model at the facts invocation is the requested model",
+            "pass": true,
+            "detail": "true"
+          },
+          {
+            "name": "every inserted fact readable after restart",
+            "pass": true,
+            "detail": "0"
+          },
+          {
+            "name": "every facts-absorb job completed",
+            "pass": true,
+            "detail": "0"
+          },
+          {
+            "name": "natural-prose recall harm check",
+            "pass": true,
+            "detail": "covered items -6.4 pts [-11.6 pts, -1.7 pts] vs harm margin -10.0 pts; judge-failed share 0.0 pts"
+          }
+        ]
+      }
+    },
+    {
+      "label": "haiku55",
+      "mutant": false,
+      "verdict": {
+        "pass": true,
+        "checks": [
+          {
+            "name": "recall non-inferior",
+            "pass": true,
+            "detail": "0.4 pts [0.0 pts, 1.2 pts] vs margin -5.0 pts"
+          },
+          {
+            "name": "precision non-inferior",
+            "pass": true,
+            "detail": "0.0 pts [0.0 pts, 0.0 pts] vs margin -5.0 pts"
+          },
+          {
+            "name": "attribution no worse",
+            "pass": true,
+            "detail": "0.6 pts [-2.3 pts, 4.0 pts] vs tolerance -2.0 pts"
+          },
+          {
+            "name": "correction no worse",
+            "pass": true,
+            "detail": "2.1 pts [0.0 pts, 7.0 pts] vs tolerance -2.0 pts"
+          },
+          {
+            "name": "zero unhandled parse failures",
+            "pass": true,
+            "detail": "0"
+          },
+          {
+            "name": "resolved model at the facts invocation is the requested model",
+            "pass": true,
+            "detail": "true"
+          },
+          {
+            "name": "every inserted fact readable after restart",
+            "pass": true,
+            "detail": "0"
+          },
+          {
+            "name": "every facts-absorb job completed",
+            "pass": true,
+            "detail": "0"
+          },
+          {
+            "name": "natural-prose recall harm check",
+            "pass": true,
+            "detail": "covered items -4.6 pts [-9.0 pts, -0.6 pts] vs harm margin -10.0 pts; judge-failed share 0.0 pts"
+          }
+        ]
+      }
+    },
+    {
+      "label": "disabled",
+      "mutant": true,
+      "verdict": {
+        "pass": false,
+        "checks": [
+          {
+            "name": "recall non-inferior",
+            "pass": false,
+            "detail": "-99.6 pts [-100.0 pts, -98.8 pts] vs margin -5.0 pts"
+          },
+          {
+            "name": "precision non-inferior",
+            "pass": false,
+            "detail": "-100.0 pts [-100.0 pts, -100.0 pts] vs margin -5.0 pts"
+          },
+          {
+            "name": "attribution no worse",
+            "pass": true,
+            "detail": "1.8 pts [0.0 pts, 4.8 pts] vs tolerance -2.0 pts"
+          },
+          {
+            "name": "correction no worse",
+            "pass": false,
+            "detail": "-97.9 pts [-100.0 pts, -93.0 pts] vs tolerance -2.0 pts"
+          },
+          {
+            "name": "zero unhandled parse failures",
+            "pass": true,
+            "detail": "0"
+          },
+          {
+            "name": "resolved model at the facts invocation is the requested model",
+            "pass": true,
+            "detail": "true"
+          },
+          {
+            "name": "every inserted fact readable after restart",
+            "pass": true,
+            "detail": "0"
+          },
+          {
+            "name": "every facts-absorb job completed",
+            "pass": true,
+            "detail": "0"
+          },
+          {
+            "name": "natural-prose recall harm check",
+            "pass": false,
+            "detail": "covered items -75.7 pts [-86.9 pts, -64.4 pts] vs harm margin -10.0 pts; judge-failed share 0.0 pts"
+          }
+        ]
+      }
+    },
+    {
+      "label": "drop",
+      "mutant": true,
+      "verdict": {
+        "pass": false,
+        "checks": [
+          {
+            "name": "recall non-inferior",
+            "pass": false,
+            "detail": "-99.6 pts [-100.0 pts, -98.8 pts] vs margin -5.0 pts"
+          },
+          {
+            "name": "precision non-inferior",
+            "pass": false,
+            "detail": "-100.0 pts [-100.0 pts, -100.0 pts] vs margin -5.0 pts"
+          },
+          {
+            "name": "attribution no worse",
+            "pass": true,
+            "detail": "1.8 pts [0.0 pts, 4.8 pts] vs tolerance -2.0 pts"
+          },
+          {
+            "name": "correction no worse",
+            "pass": false,
+            "detail": "-97.9 pts [-100.0 pts, -93.0 pts] vs tolerance -2.0 pts"
+          },
+          {
+            "name": "zero unhandled parse failures",
+            "pass": true,
+            "detail": "0"
+          },
+          {
+            "name": "resolved model at the facts invocation is the requested model",
+            "pass": true,
+            "detail": "true"
+          },
+          {
+            "name": "every inserted fact readable after restart",
+            "pass": true,
+            "detail": "0"
+          },
+          {
+            "name": "every facts-absorb job completed",
+            "pass": true,
+            "detail": "0"
+          },
+          {
+            "name": "natural-prose recall harm check",
+            "pass": false,
+            "detail": "covered items -75.7 pts [-86.9 pts, -64.4 pts] vs harm margin -10.0 pts; judge-failed share 0.0 pts"
+          }
+        ]
+      }
+    }
+  ],
+  "mutants_fail": true
+}

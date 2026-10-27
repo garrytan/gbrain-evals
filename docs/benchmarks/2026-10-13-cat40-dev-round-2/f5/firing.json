@@ -1,0 +1,215 @@
+{
+  "run": "eval/reports/cat40/dev-next/r2/f5",
+  "label": "gbrain-dev-r2-f5",
+  "commit": "a798de1f966dcce401546170b9c1882b1fb56904",
+  "config": {
+    "entity.names_references": "false",
+    "entity.record_types": "",
+    "entity.row_page_status": "false",
+    "search.long_page_unit": "off",
+    "search.long_page_min_chars": "20000",
+    "mcp.instructions_governing_rule": "newest"
+  },
+  "build_config": {
+    "mentions.owner_phrases": "true"
+  },
+  "restore_probe": [
+    {
+      "slot": "slot0",
+      "config": {
+        "mentions.owner_phrases": "true",
+        "entity.names_references": "false",
+        "entity.record_types": "",
+        "entity.row_page_status": "false",
+        "search.long_page_unit": "off",
+        "search.long_page_min_chars": "20000",
+        "mcp.instructions_governing_rule": "newest"
+      },
+      "owner_phrases": {
+        "links": 18389,
+        "windows": 6721
+      }
+    },
+    {
+      "slot": "slot1",
+      "config": {
+        "mentions.owner_phrases": "true",
+        "entity.names_references": "false",
+        "entity.record_types": "",
+        "entity.row_page_status": "false",
+        "search.long_page_unit": "off",
+        "search.long_page_min_chars": "20000",
+        "mcp.instructions_governing_rule": "newest"
+      },
+      "owner_phrases": {
+        "links": 18389,
+        "windows": 6721
+      }
+    },
+    {
+      "slot": "slot2",
+      "config": {
+        "mentions.owner_phrases": "true",
+        "entity.names_references": "false",
+        "entity.record_types": "",
+        "entity.row_page_status": "false",
+        "search.long_page_unit": "off",
+        "search.long_page_min_chars": "20000",
+        "mcp.instructions_governing_rule": "newest"
+      },
+      "owner_phrases": {
+        "links": 18389,
+        "windows": 6721
+      }
+    },
+    {
+      "slot": "slot3",
+      "config": {
+        "mentions.owner_phrases": "true",
+        "entity.names_references": "false",
+        "entity.record_types": "",
+        "entity.row_page_status": "false",
+        "search.long_page_unit": "off",
+        "search.long_page_min_chars": "20000",
+        "mcp.instructions_governing_rule": "newest"
+      },
+      "owner_phrases": {
+        "links": 18389,
+        "windows": 6721
+      }
+    },
+    {
+      "slot": "slot4",
+      "config": {
+        "mentions.owner_phrases": "true",
+        "entity.names_references": "false",
+        "entity.record_types": "",
+        "entity.row_page_status": "false",
+        "search.long_page_unit": "off",
+        "search.long_page_min_chars": "20000",
+        "mcp.instructions_governing_rule": "newest"
+      },
+      "owner_phrases": {
+        "links": 18389,
+        "windows": 6721
+      }
+    },
+    {
+      "slot": "slot5",
+      "config": {
+        "mentions.owner_phrases": "true",
+        "entity.names_references": "false",
+        "entity.record_types": "",
+        "entity.row_page_status": "false",
+        "search.long_page_unit": "off",
+        "search.long_page_min_chars": "20000",
+        "mcp.instructions_governing_rule": "newest"
+      },
+      "owner_phrases": {
+        "links": 18389,
+        "windows": 6721
+      }
+    },
+    {
+      "slot": "slot6",
+      "config": {
+        "mentions.owner_phrases": "true",
+        "entity.names_references": "false",
+        "entity.record_types": "",
+        "entity.row_page_status": "false",
+        "search.long_page_unit": "off",
+        "search.long_page_min_chars": "20000",
+        "mcp.instructions_governing_rule": "newest"
+      },
+      "owner_phrases": {
+        "links": 18389,
+        "windows": 6721
+      }
+    },
+    {
+      "slot": "slot7",
+      "config": {
+        "mentions.owner_phrases": "true",
+        "entity.names_references": "false",
+        "entity.record_types": "",
+        "entity.row_page_status": "false",
+        "search.long_page_unit": "off",
+        "search.long_page_min_chars": "20000",
+        "mcp.instructions_governing_rule": "newest"
+      },
+      "owner_phrases": {
+        "links": 18389,
+        "windows": 6721
+      }
+    },
+    {
+      "slot": "slot8",
+      "config": {
+        "mentions.owner_phrases": "true",
+        "entity.names_references": "false",
+        "entity.record_types": "",
+        "entity.row_page_status": "false",
+        "search.long_page_unit": "off",
+        "search.long_page_min_chars": "20000",
+        "mcp.instructions_governing_rule": "newest"
+      },
+      "owner_phrases": {
+        "links": 18389,
+        "windows": 6721
+      }
+    },
+    {
+      "slot": "slot9",
+      "config": {
+        "mentions.owner_phrases": "true",
+        "entity.names_references": "false",
+        "entity.record_types": "",
+        "entity.row_page_status": "false",
+        "search.long_page_unit": "off",
+        "search.long_page_min_chars": "20000",
+        "mcp.instructions_governing_rule": "newest"
+      },
+      "owner_phrases": {
+        "links": 18389,
+        "windows": 6721
+      }
+    }
+  ],
+  "rerank_probe": "passed",
+  "served_instructions_sha256": "202e24831d66dc0ebaf04f1ffaaf1e4eda79bfabdcc3e86e628ea80bd6d08ee3",
+  "cells": 300,
+  "calls": {
+    "entity": 364,
+    "search": 3024,
+    "context_pack": 230,
+    "get_page": 1092,
+    "get_backlinks": 133,
+    "query": 33,
+    "list_pages": 62,
+    "remember": 332,
+    "whoami": 37,
+    "recall": 235,
+    "forget": 118,
+    "list_skills": 30,
+    "synthesize": 14,
+    "request_tools": 24,
+    "capture": 3,
+    "edit_page": 1,
+    "resolve_slugs": 1,
+    "submit_agent": 6,
+    "traverse_graph": 40
+  },
+  "names_rows": 2609,
+  "names_rows_with_records": 0,
+  "names_rows_with_count": 0,
+  "record_rows": 0,
+  "delivered_units": {},
+  "page_status_rows": 0,
+  "known_as_rows": 44,
+  "owner_phrase_referrer_rows": 634,
+  "names_call_ms": {
+    "n": 338,
+    "p50": 261,
+    "p99": 1725
+  }
+}

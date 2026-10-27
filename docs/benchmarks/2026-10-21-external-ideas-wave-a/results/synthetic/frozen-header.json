@@ -1,0 +1,60 @@
+{
+  "schema": "gbrain-evals/evidence-delivery-frozen/v1",
+  "created_at": "2026-10-21T21:38:25.782Z",
+  "smoke": false,
+  "decision_manifest_sha256": "20f6f81841f03db04b578f1fc6aac4a245a4c772e87c4ff95f741a85961241c9",
+  "gbrain": {
+    "dir_label": "GBRAIN_DIR",
+    "commit": "cfa1a006b64c5baa199142bf0f0b56a0e3fc6c06",
+    "tree": "f538c94e68ce92922b7ee01721f52448aa91a7fe",
+    "dirty": false,
+    "dirty_sha256": null,
+    "version": "0.60.347.0",
+    "code_sha256": {
+      "src/core/import-file.ts": "a765a45d884b11337c29c72d61fca9fd90f225fce8e8d4b70a2333b1ceeeeed9",
+      "src/core/markdown.ts": "ca49b73191d8845f0019fb18a0caf946cc2f9b45928bd2a2d6c7e31f36ab5f85",
+      "src/core/remote-body.ts": "3913bada8c9c96f93dd31dc15a4167e114174bba3fd5b37f94e80e130d289e27",
+      "src/core/chunkers/recursive.ts": "b6b7c83689c5484a39bd6b8a8cbaa79e7309c838fd291ce99bc00564bb4923ee",
+      "src/core/chunkers/token-estimate.ts": "a4c3d7cccc7fdd52d8c8f7255a67fb45eab4f0011de7ea4b88317bd69c498bb3",
+      "src/core/search/hybrid.ts": "2c321a5bd6bd2116757105913ec694a92b04b1e5829504630ec15e694d21593f",
+      "src/core/search/evidence-delivery.ts": "6776ad20dd4512fb50e8714068d74c6a92cc5dc991a316224e48cdd05080371e",
+      "src/core/search/output-redaction.ts": "d1023a098e29d9568285a6f2c4bb96f9302798d2a8e50f2f921126058c37ee4f",
+      "src/eval/longmemeval/adapter.ts": "3c60448a8f7e379da66eea9d818924f5f3791d095b59290fa6cae564bf18d33b",
+      "src/eval/longmemeval/reader.ts": "118f90fa49cf10c3e0f02edbed4a79c93dae74a8769a851e66014d2659fd1317",
+      "src/eval/longmemeval/sanitize.ts": "f393ab8ee97c4d3cd0b5791169d2d4b5a8d016af0a0cae81c76a947b567bf439",
+      "src/eval/longmemeval/judge.ts": "92bdb6519343bccebb03acba3e0fa5b179b9b30285de3fea614c0f8620d09b41"
+    },
+    "parser_sha256": "ecd56c8a00974372287a9a00b45dc08926e513bdfdf0077ed9ec86aa66af132a",
+    "evidence_code_sha256": "33c23988a60ebd3970ecb26320e33cfc86eec0540cfc26311cf6ef03b3e2cfd7"
+  },
+  "dataset_sha256": "4700d68d3e96a772c0bb45dabbeef7cd39a218db090bf0127792760fdf77599a",
+  "retrieval": {
+    "top_k": 5,
+    "comparator_top_k": 10,
+    "mode": "balanced",
+    "reranker": true,
+    "autocut": false,
+    "expansion": false,
+    "trajectory": false,
+    "embedding": "openai:text-embedding-3-large@1536"
+  },
+  "embed_cache": {
+    "sha256_before": null,
+    "sha256_after": "ba71a78441d730194699cd7b2df0568cf3eab543edc81453b7dbce760aa3e426",
+    "misses": 521
+  },
+  "product_arms": {
+    "auto": {
+      "unit": "auto",
+      "budget_tokens": null
+    },
+    "auto_dates": {
+      "unit": "auto",
+      "budget_tokens": null,
+      "config": {
+        "search.evidence_resolve_dates": "true"
+      }
+    }
+  },
+  "note": "product arms produced by assembleEvidenceForHits at this commit"
+}

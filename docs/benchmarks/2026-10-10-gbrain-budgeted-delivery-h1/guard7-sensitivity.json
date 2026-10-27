@@ -1,0 +1,222 @@
+{
+  "schema": "gbrain-evals/budgeted-delivery-h1-guard7-sensitivity/v1",
+  "analysed_at": "2026-10-10",
+  "stage": "pre-custody, before any sealed file was copied",
+  "decision": "Garry chose C2 on 2026-10-10; it replaced A (the plan's rule) in decision.json before custody.",
+  "sims": 1000,
+  "cluster_bootstrap_draws_for_C": 2000,
+  "variants": {
+    "A": "no kind down by more than max(1 question, 2% of the kind)",
+    "B": "max(1 question, 5% of the kind)",
+    "C": "persona-clustered bootstrap 90% upper bound of the kind difference below zero fails",
+    "C2": "exact one-sided McNemar on the kind's discordant pairs (losses > wins), p < 0.05 fails (committed)",
+    "D": "answerable overall down by no more than max(1, 2% of 160), plus guard 8; no per-kind limit"
+  },
+  "scenarios": {
+    "e2_transfer": {
+      "multi_session_pool_delta_points": 4.132231404958677,
+      "p_superiority_shown": 0.687,
+      "variants": {
+        "A": {
+          "p_pass": 0.646,
+          "p_fail": 0.166,
+          "p_inconclusive": 0.188,
+          "p_guard7_fail": 0.166,
+          "p_guard7_fail_multi_session": 0.159
+        },
+        "B": {
+          "p_pass": 0.682,
+          "p_fail": 0.054,
+          "p_inconclusive": 0.264,
+          "p_guard7_fail": 0.054,
+          "p_guard7_fail_multi_session": 0.051
+        },
+        "C": {
+          "p_pass": 0.686,
+          "p_fail": 0.007,
+          "p_inconclusive": 0.307,
+          "p_guard7_fail": 0.007,
+          "p_guard7_fail_multi_session": 0.007
+        },
+        "C2": {
+          "p_pass": 0.687,
+          "p_fail": 0.004,
+          "p_inconclusive": 0.309,
+          "p_guard7_fail": 0.004,
+          "p_guard7_fail_multi_session": 0.004
+        },
+        "D": {
+          "p_pass": 0.687,
+          "p_fail": 0.001,
+          "p_inconclusive": 0.312,
+          "p_guard7_fail": 0.001,
+          "p_guard7_fail_multi_session": 0.001
+        }
+      }
+    },
+    "ms_no_gain": {
+      "multi_session_pool_delta_points": 0,
+      "p_superiority_shown": 0.391,
+      "variants": {
+        "A": {
+          "p_pass": 0.359,
+          "p_fail": 0.414,
+          "p_inconclusive": 0.227,
+          "p_guard7_fail": 0.414,
+          "p_guard7_fail_multi_session": 0.411
+        },
+        "B": {
+          "p_pass": 0.384,
+          "p_fail": 0.245,
+          "p_inconclusive": 0.371,
+          "p_guard7_fail": 0.245,
+          "p_guard7_fail_multi_session": 0.244
+        },
+        "C": {
+          "p_pass": 0.391,
+          "p_fail": 0.055,
+          "p_inconclusive": 0.554,
+          "p_guard7_fail": 0.055,
+          "p_guard7_fail_multi_session": 0.054
+        },
+        "C2": {
+          "p_pass": 0.391,
+          "p_fail": 0.046,
+          "p_inconclusive": 0.563,
+          "p_guard7_fail": 0.046,
+          "p_guard7_fail_multi_session": 0.046
+        },
+        "D": {
+          "p_pass": 0.391,
+          "p_fail": 0.009,
+          "p_inconclusive": 0.6,
+          "p_guard7_fail": 0.009,
+          "p_guard7_fail_multi_session": 0.009
+        }
+      }
+    },
+    "ms_breadth_wins": {
+      "multi_session_pool_delta_points": -11.570247933884298,
+      "p_superiority_shown": 0.059,
+      "variants": {
+        "A": {
+          "p_pass": 0.01,
+          "p_fail": 0.972,
+          "p_inconclusive": 0.018,
+          "p_guard7_fail": 0.972,
+          "p_guard7_fail_multi_session": 0.971
+        },
+        "B": {
+          "p_pass": 0.037,
+          "p_fail": 0.864,
+          "p_inconclusive": 0.099,
+          "p_guard7_fail": 0.864,
+          "p_guard7_fail_multi_session": 0.864
+        },
+        "C": {
+          "p_pass": 0.055,
+          "p_fail": 0.676,
+          "p_inconclusive": 0.269,
+          "p_guard7_fail": 0.676,
+          "p_guard7_fail_multi_session": 0.67
+        },
+        "C2": {
+          "p_pass": 0.055,
+          "p_fail": 0.608,
+          "p_inconclusive": 0.337,
+          "p_guard7_fail": 0.608,
+          "p_guard7_fail_multi_session": 0.608
+        },
+        "D": {
+          "p_pass": 0.059,
+          "p_fail": 0.088,
+          "p_inconclusive": 0.853,
+          "p_guard7_fail": 0.088,
+          "p_guard7_fail_multi_session": 0.088
+        }
+      }
+    },
+    "ms_loses_5_points": {
+      "multi_session_pool_delta_points": -4.958677685950414,
+      "p_superiority_shown": 0.263,
+      "variants": {
+        "A": {
+          "p_pass": 0.195,
+          "p_fail": 0.69,
+          "p_inconclusive": 0.115,
+          "p_guard7_fail": 0.69,
+          "p_guard7_fail_multi_session": 0.688
+        },
+        "B": {
+          "p_pass": 0.245,
+          "p_fail": 0.446,
+          "p_inconclusive": 0.309,
+          "p_guard7_fail": 0.446,
+          "p_guard7_fail_multi_session": 0.444
+        },
+        "C": {
+          "p_pass": 0.261,
+          "p_fail": 0.19,
+          "p_inconclusive": 0.549,
+          "p_guard7_fail": 0.19,
+          "p_guard7_fail_multi_session": 0.193
+        },
+        "C2": {
+          "p_pass": 0.263,
+          "p_fail": 0.155,
+          "p_inconclusive": 0.582,
+          "p_guard7_fail": 0.155,
+          "p_guard7_fail_multi_session": 0.155
+        },
+        "D": {
+          "p_pass": 0.263,
+          "p_fail": 0.018,
+          "p_inconclusive": 0.719,
+          "p_guard7_fail": 0.018,
+          "p_guard7_fail_multi_session": 0.018
+        }
+      }
+    },
+    "null": {
+      "multi_session_pool_delta_points": 0,
+      "p_superiority_shown": 0.013,
+      "variants": {
+        "A": {
+          "p_pass": 0.01,
+          "p_fail": 0.763,
+          "p_inconclusive": 0.227,
+          "p_guard7_fail": 0.763,
+          "p_guard7_fail_multi_session": 0.437
+        },
+        "B": {
+          "p_pass": 0.011,
+          "p_fail": 0.6,
+          "p_inconclusive": 0.389,
+          "p_guard7_fail": 0.6,
+          "p_guard7_fail_multi_session": 0.244
+        },
+        "C": {
+          "p_pass": 0.013,
+          "p_fail": 0.132,
+          "p_inconclusive": 0.855,
+          "p_guard7_fail": 0.128,
+          "p_guard7_fail_multi_session": 0.048
+        },
+        "C2": {
+          "p_pass": 0.013,
+          "p_fail": 0.108,
+          "p_inconclusive": 0.879,
+          "p_guard7_fail": 0.098,
+          "p_guard7_fail_multi_session": 0.038
+        },
+        "D": {
+          "p_pass": 0.013,
+          "p_fail": 0.366,
+          "p_inconclusive": 0.621,
+          "p_guard7_fail": 0.366,
+          "p_guard7_fail_multi_session": 0.366
+        }
+      }
+    }
+  }
+}

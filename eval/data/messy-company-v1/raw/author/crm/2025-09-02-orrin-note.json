@@ -1,0 +1,41 @@
+{
+  "slug": "crm/2025-09-02-orrin-note",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: crm\nTitle: CRM note: Orrin Mills\nDate: Written on 2025-09-02.\nWriter: Dana Okafor\nVoice: polished and businesslike\nFormat: a short CRM note in two paragraphs\nLength: about 85 words\nDate style in the body: US short (6/2/25)\nTypos: none\n\nBrief:\nDana's CRM note: Orrin Mills renewal comes up in Q1 2026. Plant manager wants more seats for the second shift.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Ilse Varga: North team lead\n- Dana Okafor: Account manager, North team\n- Marcus Lindqvist: Account manager, North team\n- Thea Ramaswell: Director of Yard Operations\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Quarrendon Freight Lines: truckload freight carrier, Upper Midwest; main contact Thea Ramaswell, Director of Yard Operations; codes/nicknames QFL, Q-Freight\n- Brackenwater Freight Co.: less-than-truckload freight, Great Lakes; codes/nicknames BWF, Bracken\n- Tamsin Cold Chain: refrigerated warehousing, Pacific Northwest; codes/nicknames TCC\n- Orrin Mills: textile mill, Carolinas; codes/nicknames ORM\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2025-09-02 (background only; don't restate unless the brief asks):\n- Quarrendon Freight Lines: managed by Dana Okafor\n- Brackenwater Freight Co.: managed by Dana Okafor\n- Tamsin Cold Chain: managed by Dana Okafor\n- Orrin Mills: managed by Dana Okafor",
+      "response_text": "**Account Update – 9/2/25**\n\nCompleted a quarterly check-in with the Spartanburg dye house operations team at Orrin Mills. The plant manager noted that outbound flatbed volume at Docks 4 through 7 has increased significantly since late August, and he wants more seats for the second shift so evening dispatchers can stop sharing terminals in the guard shack.\n\nThe Orrin Mills renewal comes up in Q1 2026. I will send over a formal expansion worksheet by 9/5/25 after reviewing their August gate logs and detention reports.",
+      "usage": {
+        "input_tokens": 1072,
+        "output_tokens": 123,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.003374,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1072,
+          "candidatesTokenCount": 123,
+          "totalTokenCount": 1195,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1072
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 123
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

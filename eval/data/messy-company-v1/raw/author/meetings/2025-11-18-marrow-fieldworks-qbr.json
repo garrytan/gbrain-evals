@@ -1,0 +1,37 @@
+{
+  "slug": "meetings/2025-11-18-marrow-fieldworks-qbr",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: meeting\nTitle: Marrow Fieldworks QBR\nDate: Written on 2025-11-18.\nWriter: Hollis Mbeki\nVoice: terse and practical\nFormat: meeting notes with attendees, bullets and action items\nLength: about 391 words\nDate style in the body: casual (Jun 2nd, Monday the 2nd)\nTypos: a few natural typos and one or two sloppy abbreviations (never in names or required phrases)\n\nBrief:\nHollis's notes from the QBR; Pree presented adoption numbers.\n\nRequired phrases:\n- Use the exact phrase \"Pree's dealer account\" once, referring to Marrow Fieldworks. Don't put the account's name in the same sentence; the reader should work it out.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Hollis Mbeki: Central team lead\n- Priyanka \"Pree\" Sundaram: Account manager, Central team\n- Tobias Rendle: Account manager, Central team\n- Lev Arkadin: Procurement lead\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Tansley Parcel: regional parcel delivery, South Central; main contact Lev Arkadin, Procurement lead; codes/nicknames TPCL, TP\n- Tansleigh Packaging: corrugated packaging manufacturer, Ohio Valley; codes/nicknames TSP, TP\n- Marrow Fieldworks: agricultural equipment dealer network, Plains; codes/nicknames MFW\n- Marrow Agrisupply: farm supply retail chain, Plains; subsidiary of Marrow Fieldworks; codes/nicknames MAS, Marrow Agri\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2025-11-18 (background only; don't restate unless the brief asks):\n- Tansley Parcel: managed by Priyanka \"Pree\" Sundaram\n- Tansleigh Packaging: not stated on any shared page (do not say who manages it)\n- Marrow Fieldworks: managed by Priyanka \"Pree\" Sundaram\n- Marrow Agrisupply: managed by Central team (pooled account)",
+      "response_text": "# Marrow Fieldworks QBR\n\n**Date:** Nov 18th  \n**Attendees:** Hollis Mbeki; Priyanka \"Pree\" Sundaram; Marrow Fieldworks receiving and dealer operations leads\n\n## Adoption review\n\n- Pree presented adoption numbers for Pemberline Dock. Her export covered the last four full weeks; partial activity from this morning stayed out.\n- Weekly active users increased from 31 to 38. Appointment creation moved from 214 to 267 across the same comparison periods.\n- Receiving leads accounted for most of the increase. Dealer counter staff still tend to call the receiving desk rather than enter an appointment themselves.\n- Pree's dealer account needs a cleaner split between counter activity and receiving activity in the next adoption view.\n- The report counted users who opened the schedule but made no changes. Customer asked for those to be separated from people creating or updating appointments.\n- Two shared receiving terminals stayed signed in through shift changes. That makes the user breakdown less useful; it does not explain the appointment increase.\n- No change requested to the weekly report delivery. Tuesday morning still works for the operations review.\n\n## Yard and dock discussion\n\n- At the west receiving yard, Door 3 is being used for both equipment returns and incoming parts pallets. Dispatch keeps booking both against the same opening.\n- Thursday's late parts truck waited behind a returned baler trailer. Receiving moved the parts unload to Door 2, but the schedule was not updated until after unloading.\n- Customer wants a visible “returns only” label during the afternoon window, not another door entry. Pree will check whether the existing schedule configuration covers it.\n- Morning shift is using arrival notes consistently. Afternoon shift is putting trailer details in the carrier field; search results are getting messy.\n- One driver arrived with a screenshot of the previous day's appointment. Gate staff found the right booking by trailer number. Keep that example for the refresher.\n- Mobile view complaint: long arrival notes hide the unload instructions unless staff scroll. Need a repro with the actual note length, not a shortened example.\n\n## Actions\n\n- **Pree:** Send the adoption export with view-only activity seperated; include the calculation notes.\n- **Customer receiving lead:** Send two Door 3 examples and the afternoon shift's current booking steps.\n- **Me:** Review the mobile note repro with support; return a ticket link before the next check-in.\n- **Pree:** Draft a one-page refresher: carrier field, trailer number, arrival notes. Screenshots, no slide deck.\n- **Customer dealer operations lead:** Confirm who can test the revised Door 3 label.\n- Follow-up by Friday the 21st. No need to wait for another QBR to fix the field usage.",
+      "usage": {
+        "input_tokens": 1082,
+        "output_tokens": 561,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.007774,
+      "provider_meta": {
+        "id": "resp_04b5b5d3fbbf4894016acfae6bf4c887d1963a5a6b2b0a4203",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1082,
+          "input_tokens_details": {
+            "cache_write_tokens": 1079,
+            "cached_tokens": 0
+          },
+          "output_tokens": 561,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 1643
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

@@ -180,6 +180,7 @@ export async function runSituationRecallCat13b(options: Cat13bPilotOptions, depe
         configureGateway({ embedding_model: profile.embedding_model, embedding_dimensions: profile.embedding_dimensions, chat_model: profile.generation_model, provider_chat_options: profile.provider_chat_options, env: process.env });
         if (offline) {
           process.env.OPENAI_API_KEY = 'dummy-embed-transport-stubbed';
+          process.env.GBRAIN_MODEL_DISCOVERY = 'off';
           __setEmbedTransportForTests(async params => ({ embeddings: params.values.map(hashEmbed), values: params.values, warnings: [], usage: { tokens: 0 } }));
         } else {
           __setEmbedTransportForTests(null);

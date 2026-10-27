@@ -1,0 +1,154 @@
+{
+  "slug": "agent-notes/strategic-cheatsheet",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "none (undated page)",
+    "owner_phrases": [
+      {
+        "mid": "agent-notes/strategic-cheatsheet#m1",
+        "phrase": "Gideon's fleet account",
+        "lines": [
+          15
+        ]
+      },
+      {
+        "mid": "agent-notes/strategic-cheatsheet#m2",
+        "phrase": "Nadia's industrial account",
+        "lines": [
+          20
+        ]
+      },
+      {
+        "mid": "agent-notes/strategic-cheatsheet#m3",
+        "phrase": "the account Gideon runs",
+        "lines": [
+          10
+        ]
+      },
+      {
+        "mid": "agent-notes/strategic-cheatsheet#m4",
+        "phrase": "Gideon's biggest account",
+        "lines": [
+          11
+        ]
+      }
+    ],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Vantorre Mobility",
+        "line": 13
+      },
+      {
+        "oid": "e2",
+        "surface": "Vantorre Group",
+        "line": 14
+      },
+      {
+        "oid": "e3",
+        "surface": "VTM",
+        "line": 14
+      },
+      {
+        "oid": "e4",
+        "surface": "VMob",
+        "line": 14
+      },
+      {
+        "oid": "e5",
+        "surface": "Vantorre Group",
+        "line": 18
+      },
+      {
+        "oid": "e6",
+        "surface": "VTG",
+        "line": 19
+      },
+      {
+        "oid": "e7",
+        "surface": "VTRG",
+        "line": 19
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "da8a0c99b0402ef9f001f038a5aa3158987c0d0c0f05cdc66c32022654592295",
+  "response_text": "{\n  \"date_used\": null,\n  \"owner_phrases\": [\n    {\n      \"mid\": \"agent-notes/strategic-cheatsheet#m1\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\n        \"vantorre-mobility\"\n      ],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"Under Vantorre Mobility section; Vantorre Mobility is Gideon's fleet account.\"\n    },\n    {\n      \"mid\": \"agent-notes/strategic-cheatsheet#m2\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\n        \"vantorre-group\"\n      ],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"Under Vantorre Group section; Vantorre Group is the industrial account Nadia owned.\"\n    },\n    {\n      \"mid\": \"agent-notes/strategic-cheatsheet#m3\",\n      \"refers_to_customer_account\": false,\n      \"accounts\": [],\n      \"reading\": \"ambiguous: could be more than one account\",\n      \"note\": \"Undated page, and Gideon owns multiple accounts (Vantorre Mobility, Orlavine, Vantorre Group) with no disambiguating context on line 10.\"\n    },\n    {\n      \"mid\": \"agent-notes/strategic-cheatsheet#m4\",\n      \"refers_to_customer_account\": false,\n      \"accounts\": [],\n      \"reading\": \"ambiguous: could be more than one account\",\n      \"note\": \"Neither the page nor the reference sheet specifies which of Gideon's accounts is the biggest.\"\n    }\n  ],\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"vantorre-mobility\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"vantorre-mobility\"\n    },\n    {\n      \"oid\": \"e4\",\n      \"entity\": \"vantorre-mobility\"\n    },\n    {\n      \"oid\": \"e5\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e6\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e7\",\n      \"entity\": \"vantorre-group\"\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": null,
+    "owner_phrases": [
+      {
+        "mid": "agent-notes/strategic-cheatsheet#m1",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "vantorre-mobility"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "Under Vantorre Mobility section; Vantorre Mobility is Gideon's fleet account."
+      },
+      {
+        "mid": "agent-notes/strategic-cheatsheet#m2",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "vantorre-group"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "Under Vantorre Group section; Vantorre Group is the industrial account Nadia owned."
+      },
+      {
+        "mid": "agent-notes/strategic-cheatsheet#m3",
+        "refers_to_customer_account": false,
+        "accounts": [],
+        "reading": "ambiguous: could be more than one account",
+        "note": "Undated page, and Gideon owns multiple accounts (Vantorre Mobility, Orlavine, Vantorre Group) with no disambiguating context on line 10."
+      },
+      {
+        "mid": "agent-notes/strategic-cheatsheet#m4",
+        "refers_to_customer_account": false,
+        "accounts": [],
+        "reading": "ambiguous: could be more than one account",
+        "note": "Neither the page nor the reference sheet specifies which of Gideon's accounts is the biggest."
+      }
+    ],
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "vantorre-mobility"
+      },
+      {
+        "oid": "e2",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e3",
+        "entity": "vantorre-mobility"
+      },
+      {
+        "oid": "e4",
+        "entity": "vantorre-mobility"
+      },
+      {
+        "oid": "e5",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e6",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e7",
+        "entity": "vantorre-group"
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 3099,
+    "output_tokens": 618,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.012378
+}

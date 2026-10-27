@@ -1,0 +1,364 @@
+{
+  "generated_from": [
+    "gpt-6.1-sol.jsonl",
+    "sonnet-5-5.jsonl",
+    "opus-5-5.jsonl"
+  ],
+  "models": [
+    {
+      "model": "openai:gpt-6.1-sol",
+      "split": "counted",
+      "rows": 790,
+      "rule_rows": 750,
+      "applied": 496,
+      "wrong": 0,
+      "wrong_upper": 0.006021579986860649,
+      "qualifies": true,
+      "coverage": 0.992,
+      "abstention": 1,
+      "no_answer": 1,
+      "usd": 1.2275420000000015,
+      "usd_per_call": 0.0015538506329113944,
+      "latency_p50_ms": 2399,
+      "latency_p95_ms": 3199,
+      "by_set": {
+        "resolved_correct": {
+          "n": 250,
+          "applied": 247,
+          "wrong": 0,
+          "verdicts": {
+            "correct": 250
+          }
+        },
+        "resolved_incorrect": {
+          "n": 250,
+          "applied": 249,
+          "wrong": 0,
+          "verdicts": {
+            "incorrect": 250
+          }
+        },
+        "pre_horizon": {
+          "n": 60,
+          "applied": 0,
+          "wrong": 0,
+          "verdicts": {
+            "unresolvable": 60
+          }
+        },
+        "pre_claim": {
+          "n": 40,
+          "applied": 0,
+          "wrong": 0,
+          "verdicts": {
+            "unresolvable": 40
+          }
+        },
+        "no_evidence": {
+          "n": 40,
+          "applied": 0,
+          "wrong": 0,
+          "verdicts": {
+            "unresolvable": 40
+          }
+        },
+        "restatement": {
+          "n": 40,
+          "applied": 0,
+          "wrong": 0,
+          "verdicts": {
+            "unresolvable": 40
+          }
+        },
+        "distractor": {
+          "n": 40,
+          "applied": 0,
+          "wrong": 0,
+          "verdicts": {
+            "unresolvable": 40
+          }
+        },
+        "world_no_evidence": {
+          "n": 30,
+          "applied": 0,
+          "wrong": 0,
+          "verdicts": {
+            "unresolvable": 30
+          }
+        },
+        "partial": {
+          "n": 20,
+          "applied": 18,
+          "wrong": 18,
+          "verdicts": {
+            "incorrect": 18,
+            "correct": 1,
+            "no_answer:parse": 1
+          }
+        },
+        "world_counterfactual": {
+          "n": 20,
+          "applied": 20,
+          "wrong": 0,
+          "verdicts": {
+            "incorrect": 10,
+            "correct": 10
+          }
+        }
+      },
+      "wrong_ids": [],
+      "world_leak": {
+        "n": 20,
+        "applied": 20,
+        "follows_world": 0
+      },
+      "partial": {
+        "incorrect": 18,
+        "correct": 1,
+        "no_answer": 1
+      }
+    },
+    {
+      "model": "anthropic:claude-sonnet-5-5",
+      "split": "counted",
+      "rows": 790,
+      "rule_rows": 750,
+      "applied": 121,
+      "wrong": 1,
+      "wrong_upper": 0.0386041547666563,
+      "qualifies": false,
+      "coverage": 0.24,
+      "abstention": 0.996,
+      "no_answer": 14,
+      "usd": 2.5322340000000003,
+      "usd_per_call": 0.0032053594936708864,
+      "latency_p50_ms": 1744,
+      "latency_p95_ms": 4502,
+      "by_set": {
+        "resolved_correct": {
+          "n": 250,
+          "applied": 40,
+          "wrong": 0,
+          "verdicts": {
+            "correct": 244,
+            "no_answer:parse": 5,
+            "incorrect": 1
+          }
+        },
+        "resolved_incorrect": {
+          "n": 250,
+          "applied": 80,
+          "wrong": 0,
+          "verdicts": {
+            "incorrect": 250
+          }
+        },
+        "pre_horizon": {
+          "n": 60,
+          "applied": 0,
+          "wrong": 0,
+          "verdicts": {
+            "unresolvable": 46,
+            "incorrect": 13,
+            "partial": 1
+          }
+        },
+        "pre_claim": {
+          "n": 40,
+          "applied": 0,
+          "wrong": 0,
+          "verdicts": {
+            "unresolvable": 40
+          }
+        },
+        "no_evidence": {
+          "n": 40,
+          "applied": 0,
+          "wrong": 0,
+          "verdicts": {
+            "unresolvable": 40
+          }
+        },
+        "restatement": {
+          "n": 40,
+          "applied": 0,
+          "wrong": 0,
+          "verdicts": {
+            "unresolvable": 40
+          }
+        },
+        "distractor": {
+          "n": 40,
+          "applied": 0,
+          "wrong": 0,
+          "verdicts": {
+            "unresolvable": 29,
+            "correct": 2,
+            "incorrect": 6,
+            "no_answer:parse": 3
+          }
+        },
+        "world_no_evidence": {
+          "n": 30,
+          "applied": 1,
+          "wrong": 1,
+          "verdicts": {
+            "unresolvable": 18,
+            "incorrect": 10,
+            "no_answer:parse": 1,
+            "correct": 1
+          }
+        },
+        "partial": {
+          "n": 20,
+          "applied": 4,
+          "wrong": 4,
+          "verdicts": {
+            "incorrect": 19,
+            "partial": 1
+          }
+        },
+        "world_counterfactual": {
+          "n": 20,
+          "applied": 0,
+          "wrong": 0,
+          "verdicts": {
+            "no_answer:parse": 5,
+            "incorrect": 7,
+            "correct": 8
+          }
+        }
+      },
+      "wrong_ids": [
+        "counted-world_no_evidence-013"
+      ],
+      "world_leak": {
+        "n": 20,
+        "applied": 0,
+        "follows_world": 0
+      },
+      "partial": {
+        "incorrect": 19,
+        "partial": 1
+      }
+    },
+    {
+      "model": "anthropic:claude-opus-5-5",
+      "split": "counted",
+      "rows": 790,
+      "rule_rows": 750,
+      "applied": 2,
+      "wrong": 0,
+      "wrong_upper": 0.7763932022500211,
+      "qualifies": false,
+      "coverage": 0.004,
+      "abstention": 1,
+      "no_answer": 3,
+      "usd": 5.486548,
+      "usd_per_call": 0.00694499746835443,
+      "latency_p50_ms": 2695,
+      "latency_p95_ms": 4865,
+      "by_set": {
+        "resolved_correct": {
+          "n": 250,
+          "applied": 0,
+          "wrong": 0,
+          "verdicts": {
+            "correct": 250
+          }
+        },
+        "resolved_incorrect": {
+          "n": 250,
+          "applied": 2,
+          "wrong": 0,
+          "verdicts": {
+            "incorrect": 250
+          }
+        },
+        "pre_horizon": {
+          "n": 60,
+          "applied": 0,
+          "wrong": 0,
+          "verdicts": {
+            "unresolvable": 53,
+            "incorrect": 5,
+            "partial": 2
+          }
+        },
+        "pre_claim": {
+          "n": 40,
+          "applied": 0,
+          "wrong": 0,
+          "verdicts": {
+            "unresolvable": 40
+          }
+        },
+        "no_evidence": {
+          "n": 40,
+          "applied": 0,
+          "wrong": 0,
+          "verdicts": {
+            "unresolvable": 40
+          }
+        },
+        "restatement": {
+          "n": 40,
+          "applied": 0,
+          "wrong": 0,
+          "verdicts": {
+            "unresolvable": 39,
+            "incorrect": 1
+          }
+        },
+        "distractor": {
+          "n": 40,
+          "applied": 0,
+          "wrong": 0,
+          "verdicts": {
+            "unresolvable": 40
+          }
+        },
+        "world_no_evidence": {
+          "n": 30,
+          "applied": 0,
+          "wrong": 0,
+          "verdicts": {
+            "unresolvable": 30
+          }
+        },
+        "partial": {
+          "n": 20,
+          "applied": 0,
+          "wrong": 0,
+          "verdicts": {
+            "incorrect": 19,
+            "unresolvable": 1
+          }
+        },
+        "world_counterfactual": {
+          "n": 20,
+          "applied": 0,
+          "wrong": 0,
+          "verdicts": {
+            "incorrect": 6,
+            "correct": 11,
+            "no_answer:parse": 3
+          }
+        }
+      },
+      "wrong_ids": [],
+      "world_leak": {
+        "n": 20,
+        "applied": 0,
+        "follows_world": 0
+      },
+      "partial": {
+        "incorrect": 19,
+        "unresolvable": 1
+      }
+    }
+  ],
+  "measured_models": [
+    "openai:gpt-6.1-sol"
+  ]
+}

@@ -28,23 +28,25 @@
  * lines (`--frame minted`); each minted line in the sample is labeled by two judge models
  * (claude-sonnet-5-5 and gpt-6.1-sol by default), asked whether the author meant the line to state the typed
  * relation or fact the parser read. precision = minted lines both judges call correct / minted lines in the
- * sample; lines the judges disagree on go to <output>/adjudication-queue.jsonl for a person, and
- * `--adjudication <file>` (JSON lines `{ "id": ..., "correct": true|false }`) completes the count.
+ * sample; a line the judges disagree on counts as wrong. There is no adjudication queue, so line text and context
+ * never land in an output directory.
  *
  * Held-out text: documents are split once, by document, into a dev part and a held-out part. LoCoMo uses
  * its committed conversation split (eval/decisions/splits/locomo.json: dev vs sealed conversations); LongMemEval-S
  * sessions and vault files go to dev when sha256("p5-h3-partition-v1", NUL, corpus, NUL, id) falls in its first
  * tenth. Dev runs read only the dev part and draw samples with dev seeds 1-3. The custodian's run reads the
  * held-out part: --phrasing-file <custody path> --decision-id <id> --purpose <text> with
- * `{ "id": ..., "templates": { "sample_seed": n, "sample_size": 300, "frame": "list" } }`; rows then omit line text
- * (the adjudication queue, for the custodian's adjudicator, keeps it).
+ * `{ "id": ..., "templates": { "sample_seed": n, "sample_size": 300, "frame": "list" } }` and explicit --output and
+ * --work outside every git worktree; rows then omit line text, and docs.jsonl and labels.jsonl (line text and
+ * context) live under --work.
  *
  * Usage:
  *   bun eval/runner/line-grammar-junk-audit.ts fetch-vault                       download and verify the vault
  *   bun eval/runner/line-grammar-junk-audit.ts --gbrain <checkout>@<ref> --output <dir> [--corpora lme-s,locomo,blue-book]
  *     [--sample-seed 1] [--sample-size 300] [--frame list|minted] [--judges claude-sonnet-5-5,gpt-6.1-sol]
- *     [--pilot | --limit N] [--no-judge] [--adjudication <file>] [--paid --budget-usd N | --paid --budget-run-id <id>]
- * Resumable: <output>/docs.jsonl holds one line per written page and <output>/labels.jsonl one per (line, judge).
+ *     [--pilot | --limit N] [--no-judge] [--work <dir>] [--paid --budget-usd N | --paid --budget-run-id <id>]
+ * Resumable: <work>/docs.jsonl holds one line per written page and <work>/labels.jsonl one per (line, judge); --work
+ * defaults to --output in dev runs.
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
@@ -186,9 +188,9 @@ export function listLines(text: string): ListLine[] {
 
 // ─── Minting pass ───────────────────────────────────────────────────
 
-export interface MintedLine { id: string; doc: string; corpus: CorpusId; line: number; kind: 'relation' | 'fact'; parsed: string; text: string; context: string; zero_tolerance: ZeroToleranceClass | null }
-interface DocRecord {
-  key: string; corpus: CorpusId; doc: string; list_lines: number; zero_tolerance_list_lines: Record<string, number>;
+export interface MintedLine { id: string; doc: string; corpus: string; line: number; kind: 'relation' | 'fact'; parsed: string; text: string; context: string; zero_tolerance: string | null }
+export interface DocRecord {
+  key: string; corpus: string; doc: string; list_lines: number; zero_tolerance_list_lines: Record<string, number>;
   advisory: { relations: number; facts: number } | null; minted: MintedLine[]; error?: string;
 }
 
@@ -200,7 +202,16 @@ interface Grammar {
   };
 }
 
-async function mintDocs(gut: GbrainUnderTest, docs: readonly AuditDoc[], config: Record<string, string>, checkpoint: Checkpoint<DocRecord>, log: (s: string) => void): Promise<Record<string, unknown>> {
+/** A page to write in the minting pass. */
+export interface MintDoc { id: string; corpus: string; slug: string; content: string }
+
+/**
+ * The minting pass: every page with a list line is written with put_page on one in-memory brain (positive control
+ * first), its minted lines named by the build's parseLineGrammar and cross-checked with the advisory, then deleted.
+ * `classify` gives each list line's zero-tolerance class (default: this runner's five classes).
+ */
+export async function mintDocs(gut: GbrainUnderTest, docs: readonly MintDoc[], config: Record<string, string>, checkpoint: Checkpoint<DocRecord>, log: (s: string) => void,
+  classify: (text: string) => Array<{ line: number; zero_tolerance: string | null }> = listLines, itemClassOf: (content: string) => string | null = itemClass): Promise<Record<string, unknown>> {
   if (!existsSync(join(gut.root, 'src/core/line-grammar.ts'))) throw new Error(`gbrain ${gut.version} has no line grammar (src/core/line-grammar.ts); H3 audits the candidate build`);
   return withHermeticEnv(CATEGORY, async () => {
     const grammar = await importGbrain<Grammar>(gut, 'src/core/line-grammar.ts');
@@ -220,7 +231,7 @@ async function mintDocs(gut: GbrainUnderTest, docs: readonly AuditDoc[], config:
       for (const doc of docs) {
         const key = `${doc.corpus}|${doc.id}`;
         if (checkpoint.has(key)) continue;
-        const list = listLines(doc.content);
+        const list = classify(doc.content);
         const ztList: Record<string, number> = {};
         for (const l of list) if (l.zero_tolerance) ztList[l.zero_tolerance] = (ztList[l.zero_tolerance] ?? 0) + 1;
         const record: DocRecord = { key, corpus: doc.corpus, doc: doc.id, list_lines: list.length, zero_tolerance_list_lines: ztList, advisory: null, minted: [] };
@@ -236,10 +247,10 @@ async function mintDocs(gut: GbrainUnderTest, docs: readonly AuditDoc[], config:
               throw new Error(`put_page reported ${record.advisory.relations} relation(s) and ${record.advisory.facts} fact(s); parseLineGrammar over the stored text found ${parsed.relations.length} and ${parsed.facts.length}`);
             }
             const bodyLines = body.split('\n');
-            const classes = new Map(listLines(body).map(l => [l.line, l.zero_tolerance]));
+            const classes = new Map(classify(body).map(l => [l.line, l.zero_tolerance]));
             const mint = (line: number, kind: MintedLine['kind'], parsedAs: string) => record.minted.push({
               id: `${doc.corpus}:${doc.id}:${line}`, doc: doc.id, corpus: doc.corpus, line, kind, parsed: parsedAs, text: bodyLines[line - 1] ?? '',
-              context: bodyLines.slice(Math.max(0, line - 4), line + 3).join('\n'), zero_tolerance: classes.get(line) ?? itemClass((bodyLines[line - 1] ?? '').replace(/^\s*(?:[-*+]|\d+[.)])\s+/, '')),
+              context: bodyLines.slice(Math.max(0, line - 4), line + 3).join('\n'), zero_tolerance: classes.get(line) ?? itemClassOf((bodyLines[line - 1] ?? '').replace(/^\s*(?:[-*+]|\d+[.)])\s+/, '')),
             });
             for (const r of parsed.relations) mint(r.line, 'relation', `relation type ${r.type}`);
             for (const f of parsed.facts) mint(f.line, 'fact', `fact category ${f.category}`);
@@ -279,7 +290,7 @@ interface LabelRecord { key: string; id: string; judge: string; verdict: 'correc
 
 // ─── Summary ────────────────────────────────────────────────────────
 
-export function summarizeH3(docs: readonly DocRecord[], sampleIds: ReadonlySet<string>, sampledListLines: number, labels: ReadonlyMap<string, Record<string, LabelRecord>>, judges: readonly string[], adjudication: ReadonlyMap<string, boolean>): Record<string, unknown> {
+export function summarizeH3(docs: readonly DocRecord[], sampleIds: ReadonlySet<string>, sampledListLines: number, labels: ReadonlyMap<string, Record<string, LabelRecord>>, judges: readonly string[]): Record<string, unknown> {
   const per = (corpus: string | null) => {
     const ds = docs.filter(d => corpus === null || d.corpus === corpus);
     const list = ds.reduce((a, d) => a + d.list_lines, 0);
@@ -293,19 +304,19 @@ export function summarizeH3(docs: readonly DocRecord[], sampleIds: ReadonlySet<s
   const minted = docs.flatMap(d => d.minted);
   const violations = minted.filter(m => m.zero_tolerance);
   const sampled = minted.filter(m => sampleIds.has(m.id));
-  let agreedCorrect = 0, agreedIncorrect = 0, disagree = 0, unlabeled = 0, adjudicatedCorrect = 0, adjudicated = 0;
+  let agreedCorrect = 0, agreedIncorrect = 0, disagree = 0, unlabeled = 0;
   for (const m of sampled) {
     const ls = labels.get(m.id) ?? {};
     const verdicts = judges.map(j => ls[j]?.verdict ?? null);
     if (verdicts.some(v => v === null)) { unlabeled++; continue; }
     if (verdicts.every(v => v === 'correct')) agreedCorrect++;
     else if (verdicts.every(v => v === 'incorrect')) agreedIncorrect++;
-    else { disagree++; if (adjudication.has(m.id)) { adjudicated++; if (adjudication.get(m.id)) adjudicatedCorrect++; } }
+    else disagree++;
   }
   const n = sampled.length;
   return {
     ...per(null),
-    per_corpus: Object.fromEntries(CORPORA.map(c => [c, per(c)])),
+    per_corpus: Object.fromEntries([...new Set([...CORPORA, ...docs.map(d => d.corpus)])].map(c => [c, per(c)])),
     zero_tolerance: {
       violations: violations.length,
       by_class: violations.reduce((a, m) => ({ ...a, [m.zero_tolerance!]: (a[m.zero_tolerance!] ?? 0) + 1 }), {} as Record<string, number>),
@@ -313,10 +324,9 @@ export function summarizeH3(docs: readonly DocRecord[], sampleIds: ReadonlySet<s
     },
     precision: {
       sampled_list_lines: sampledListLines, minted_in_sample: n, labeled: n - unlabeled, agreed_correct: agreedCorrect, agreed_incorrect: agreedIncorrect,
-      disagreements: disagree, adjudicated, adjudicated_correct: adjudicatedCorrect,
+      disagreements: disagree,
+      // A disagreement counts as wrong: there is no adjudication, so line text never leaves the judges.
       precision_agreed_correct: n && !unlabeled ? agreedCorrect / n : null,
-      precision_adjudicated: n && !unlabeled && adjudicated === disagree ? (agreedCorrect + adjudicatedCorrect) / n : null,
-      pending_adjudication: disagree - adjudicated,
     },
   };
 }
@@ -327,7 +337,7 @@ async function main(argv: string[]): Promise<void> {
   const log = (s: string) => process.stderr.write(`[h3] ${s}\n`);
   if (argv[0] === 'fetch-vault') { await fetchVault(log); return; }
   const sampleSeedFlag = Number(flagValue(argv, '--sample-seed') ?? 1);
-  const custody = custodyInput(argv, [sampleSeedFlag], DEV_SEEDS);
+  const custody = custodyInput(argv, [sampleSeedFlag], DEV_SEEDS, { needsWork: true });
   const sealed = custody ? custody.parsed.templates as { sample_seed: number; sample_size: number; frame?: 'list' | 'minted' } : null;
   if (sealed && (!Number.isInteger(sealed.sample_seed) || !Number.isInteger(sealed.sample_size))) throw new Error('custody file templates need integer sample_seed and sample_size');
   if (sealed && DEV_SEEDS.includes(sealed.sample_seed)) throw new Error(`the held-out sample seed must not be a dev seed (${DEV_SEEDS.join(', ')})`);
@@ -342,7 +352,8 @@ async function main(argv: string[]): Promise<void> {
   const noJudge = argv.includes('--no-judge');
   const config = { ...parseEvalConfig(), 'line_grammar.enabled': 'true' };
   const gut = resolveGbrainUnderTest(gbrainSpecFrom(argv));
-  const output = resolve(flagValue(argv, '--output') ?? join(REPO, 'eval/reports', CATEGORY));
+  const output = resolve(custody?.roots.output ?? flagValue(argv, '--output') ?? join(REPO, 'eval/reports', CATEGORY));
+  const work = resolve(custody?.roots.work ?? flagValue(argv, '--work') ?? output);
   mkdirSync(output, { recursive: true });
   const startedAt = new Date().toISOString();
 
@@ -350,7 +361,7 @@ async function main(argv: string[]): Promise<void> {
   const allDocs = corpora.flatMap(c => loadDocs(c, part));
   const docs = selectUnits(allDocs, d => `${d.corpus}|${d.id}`, { pilot: argv.includes('--pilot'), limit: limitFlag(argv) });
   log(`gbrain ${gut.version}${gut.overlay ? ` ${gut.overlay.build.commit.slice(0, 12)}` : ''}; ${part} part: ${allDocs.length} pages, running ${docs.length}`);
-  const docCheckpoint = new Checkpoint<DocRecord>(join(output, 'docs.jsonl'));
+  const docCheckpoint = new Checkpoint<DocRecord>(join(work, 'docs.jsonl'));
   let harnessError: string | null = null;
   let configRecord: Record<string, unknown> | null = null;
   try { configRecord = await mintDocs(gut, docs, config, docCheckpoint, log); }
@@ -381,7 +392,7 @@ async function main(argv: string[]): Promise<void> {
     }
   }
   const toJudge = minted.filter(m => sampleIds.has(m.id));
-  const labelCheckpoint = new Checkpoint<LabelRecord>(join(output, 'labels.jsonl'));
+  const labelCheckpoint = new Checkpoint<LabelRecord>(join(work, 'labels.jsonl'));
   const pending = noJudge ? [] : toJudge.flatMap(m => judges.map(j => ({ m, j }))).filter(x => !labelCheckpoint.has(`${x.m.id}|${x.j}`) || labelCheckpoint.done.get(`${x.m.id}|${x.j}`)!.verdict === null);
   let paid: PaidSession | null = null;
   let summary: RunSummary | null = null;
@@ -406,12 +417,6 @@ async function main(argv: string[]): Promise<void> {
   }
   const labels = new Map<string, Record<string, LabelRecord>>();
   for (const l of labelCheckpoint.values()) (labels.get(l.id) ?? labels.set(l.id, {}).get(l.id)!)[l.judge] = l;
-  const adjudicationFile = flagValue(argv, '--adjudication');
-  const adjudication = new Map<string, boolean>(adjudicationFile ? readFileSync(adjudicationFile, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l)).map((x: { id: string; correct: boolean }) => [x.id, !!x.correct]) : []);
-  const queue = toJudge.filter(m => { const v = judges.map(j => labels.get(m.id)?.[j]?.verdict); return v.every(x => x) && new Set(v).size > 1; });
-  writeFileSync(join(output, 'adjudication-queue.jsonl'), queue.map(m => JSON.stringify({ id: m.id, kind: m.kind, parsed: m.parsed, line: m.text, context: m.context,
-    judges: Object.fromEntries(judges.map(j => [j, { verdict: labels.get(m.id)?.[j]?.verdict, reason: labels.get(m.id)?.[j]?.reason }])), correct: null })).join('\n') + (queue.length ? '\n' : ''));
-
   const redact = !!sealed;
   const rows = minted.map(m => {
     const ls = labels.get(m.id) ?? {};
@@ -421,12 +426,11 @@ async function main(argv: string[]): Promise<void> {
       id: m.id, cluster: `${m.corpus}:${m.doc}`, corpus: m.corpus, kind: m.kind, zero_tolerance_class: m.zero_tolerance, violation: Number(!!m.zero_tolerance),
       sampled: Number(sampledRow), ...(redact ? {} : { line: m.text, parsed: m.parsed }),
       ...(sampledRow ? { labels: Object.fromEntries(judges.map((j, i) => [j, verdicts[i]])),
-        ...(verdicts.every(v => v) ? { agreed_correct: Number(verdicts.every(v => v === 'correct')), judges_disagree: Number(new Set(verdicts).size > 1) } : {}),
-        ...(adjudication.has(m.id) ? { adjudicated_correct: Number(adjudication.get(m.id)) } : {}) } : {}),
+        ...(verdicts.every(v => v) ? { agreed_correct: Number(verdicts.every(v => v === 'correct')), judges_disagree: Number(new Set(verdicts).size > 1) } : {}) } : {}),
     };
   });
   const docErrors = records.filter(r => r.error);
-  const sum = summarizeH3(records, sampleIds, sampledListLines, labels, judges, adjudication);
+  const sum = summarizeH3(records, sampleIds, sampledListLines, labels, judges);
   const receipt = p5Receipt({
     category: CATEGORY, gut, startedAt, rows, harnessError: harnessError ?? (docErrors.length ? `${docErrors.length} page(s) failed the write or the count cross-check; first: ${docErrors[0].error}` : null),
     summary: { ...sum, judge_usd: [...labels.values()].flatMap(x => Object.values(x)).reduce((a, l) => a + l.usd, 0), label_errors: labelCheckpoint.values().filter(l => l.error).length },
@@ -443,7 +447,7 @@ async function main(argv: string[]): Promise<void> {
   });
   if (summary) receipt.cost = receiptCost(summary);
   writeReceipt(join(output, 'receipt.json'), receipt);
-  log(`receipt: ${join(output, 'receipt.json')}; adjudication queue: ${queue.length} line(s)`);
+  log(`receipt: ${join(output, 'receipt.json')}`);
   if (receipt.run_status === 'error') { console.error(`error: ${(receipt.data as { harness_error: string }).harness_error}`); process.exit(3); }
   process.stdout.write(JSON.stringify(sum, null, 2) + '\n');
 }

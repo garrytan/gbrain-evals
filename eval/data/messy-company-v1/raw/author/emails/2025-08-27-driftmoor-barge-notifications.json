@@ -1,0 +1,37 @@
+{
+  "slug": "emails/2025-08-27-driftmoor-barge-notifications",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: email\nTitle: Re: missed barge slot notifications\nDate: Written on 2025-08-27.\nWriter: Kwame Adjei-Rowe\nVoice: hurried, lots of fragments\nFormat: a single email with a forwarded message below\nLength: about 371 words\nDate style in the body: casual (Jun 2nd, Monday the 2nd)\nTypos: a few natural typos and one or two sloppy abbreviations (never in names or required phrases)\n\nBrief:\nThread: Driftmoor escalated yesterday (Aug 26) that barge slot notifications were not sent. Kwame loops in support and Bettina.\n\nRequired phrases:\n- Use the exact phrase \"Kwame's port account\" once, referring to Driftmoor Marine Freight. Don't put the account's name in the same sentence; the reader should work it out.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Bettina Kroll: Coastal team lead\n- Sofia Marchetti: Account manager, Coastal team\n- Kwame Adjei-Rowe: Account manager, Coastal team\n- Corinne Ashdown: VP Operations\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Pellucid Harbor Logistics: port drayage and terminal logistics, Gulf Coast; codes/nicknames PHL\n- Driftmoor Marine Freight: marine freight and barge operator, Puget Sound; codes/nicknames DMF\n- Saltmarsh Provisions: regional grocery distributor, Lowcountry; main contact Corinne Ashdown, VP Operations; codes/nicknames SMP\n- Covey & Lark Retail: home goods retailer, Mid-Atlantic; codes/nicknames Covey, CLR\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2025-08-27 (background only; don't restate unless the brief asks):\n- Pellucid Harbor Logistics: managed by Bettina Kroll\n- Driftmoor Marine Freight: managed by Kwame Adjei-Rowe\n- Saltmarsh Provisions: managed by Sofia Marchetti\n- Covey & Lark Retail: managed by Sofia Marchetti",
+      "response_text": "**To:** Support; Bettina Kroll  \n**Subject:** Re: missed barge slot notifications  \n**Date:** Aug 27th\n\nLooping in Support + Bettina. Driftmoor Marine Freight escalated yesterday, Aug 26th. Barge slot notifications not sent. Dispatch had the bookings in Pemberline Dock, but nobody on the evening crew got the notices they use to line up trucks for the ramp.\n\nNeed someone on the delivery trail this morning, pls. Not just whether the booking saved.\n\nThree examples in the attached dispatch export: slots at 17:20, 18:00 and 18:40, all against the south ramp. Dispatch says the recipient list was unchanged from Monday. They checked junk folders while we were on the phone. Nothing there either. One driver was already waiting by the weighbridge when the ramp clerk found the revised slot on screen.\n\nI've asked them to leave the affected bookings alone for now. No deleting/recreating to see if that wakes it up. They have screenshots of the slot history and can send the original export rather than another cropped picture.\n\nSupport — can you pull notification creation, queue and delivery events for those three bookings? Also check whether the slot-change action is being recorded separately from the send. Ticket PS-4826 has the booking refs; putting them there rather than scattering them across this thread.\n\nBettina — can you join the callback after we have that first pass? They want an explanation before this evening's loading window. I've said we're looking, not that we've found the cause.\n\nFor today dispatch is phoning the ramp clerk after each change. Clunky, but at least someone is reading it back. Need to know if other notification types are affected before telling them that workaround covers everything.\n\nWill chase the export now. Sorry, typing between calls — the screenshot attachment didnt come through first time.\n\n— Forwarded message —\n\n**From:** Bettina Kroll  \n**To:** Kwame Adjei-Rowe  \n**Date:** Aug 26th  \n**Subject:** Re: missed barge slot notifications\n\nSupport should see this tonight, even if the log pull happens tomorrow.\n\nKwame's port account needs a named person on the investigation before the next loading window. Can you send the booking refs and the last time dispatch definitely received a notice?\n\nAlso ask whether these were new slots or changes to existing ones. That distinction may save a round trip. I'll keep an eye on the thread in the morning.",
+      "usage": {
+        "input_tokens": 1075,
+        "output_tokens": 506,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.00721,
+      "provider_meta": {
+        "id": "resp_09b60997f07308a6016acfae97328087d1a0d98d143f35f303",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1075,
+          "input_tokens_details": {
+            "cache_write_tokens": 1072,
+            "cached_tokens": 0
+          },
+          "output_tokens": 506,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 1581
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

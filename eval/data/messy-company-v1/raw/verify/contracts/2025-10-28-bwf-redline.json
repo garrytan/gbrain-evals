@@ -1,0 +1,151 @@
+{
+  "slug": "contracts/2025-10-28-bwf-redline",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2025-10-28",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Brackenwater",
+        "line": 6
+      },
+      {
+        "oid": "e2",
+        "surface": "Brackenwater Freight Co.",
+        "line": 10
+      },
+      {
+        "oid": "e3",
+        "surface": "Brackenwater Freight Co.",
+        "line": 16
+      },
+      {
+        "oid": "e4",
+        "surface": "BWF",
+        "line": 16
+      },
+      {
+        "oid": "e5",
+        "surface": "Brackenwater Freight Co.",
+        "line": 26
+      },
+      {
+        "oid": "e6",
+        "surface": "BWF",
+        "line": 26
+      },
+      {
+        "oid": "e7",
+        "surface": "Stoneharrow Billing",
+        "line": 44
+      },
+      {
+        "oid": "e8",
+        "surface": "Brackenwater",
+        "line": 44
+      },
+      {
+        "oid": "e9",
+        "surface": "Stoneharrow Billing",
+        "line": 44
+      },
+      {
+        "oid": "e10",
+        "surface": "Brackenwater Freight Co.",
+        "line": 64
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": [],
+    "record": {
+      "question": "Is this document signed, an unsigned version, or a draft? Judge from the body text, not the title alone. Give its signed date and effective date if stated, and the value of each of these terms it sets.",
+      "terms": [
+        "seats",
+        "discount_pct"
+      ]
+    }
+  },
+  "prompt_user_sha256": "2b7e77cb508faedf719aa04af15385b09e7b6daca77855f8d87e6eb925637b5a",
+  "response_text": "{\n  \"date_used\": \"2025-10-28\",\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\"oid\": \"e1\", \"entity\": \"brackenwater\"},\n    {\"oid\": \"e2\", \"entity\": \"brackenwater\"},\n    {\"oid\": \"e3\", \"entity\": \"brackenwater\"},\n    {\"oid\": \"e4\", \"entity\": \"brackenwater\"},\n    {\"oid\": \"e5\", \"entity\": \"brackenwater\"},\n    {\"oid\": \"e6\", \"entity\": \"brackenwater\"},\n    {\"oid\": \"e7\", \"entity\": \"stoneharrow\"},\n    {\"oid\": \"e8\", \"entity\": \"brackenwater\"},\n    {\"oid\": \"e9\", \"entity\": \"stoneharrow\"},\n    {\"oid\": \"e10\", \"entity\": \"brackenwater\"}\n  ],\n  \"record\": {\n    \"status\": \"unsigned\",\n    \"status_evidence_line\": 52,\n    \"signed_date\": null,\n    \"effective_date\": null,\n    \"terms\": [\n      {\n        \"term\": \"seats\",\n        \"applies_to\": [\"brackenwater\"],\n        \"value\": \"75\",\n        \"line\": 24\n      },\n      {\n        \"term\": \"discount_pct\",\n        \"applies_to\": [\"brackenwater\"],\n        \"value\": \"15%\",\n        \"line\": 28\n      }\n    ],\n    \"deciding_line\": 52,\n    \"deciding_days\": null\n  }\n}",
+  "parsed": {
+    "date_used": "2025-10-28",
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "brackenwater"
+      },
+      {
+        "oid": "e2",
+        "entity": "brackenwater"
+      },
+      {
+        "oid": "e3",
+        "entity": "brackenwater"
+      },
+      {
+        "oid": "e4",
+        "entity": "brackenwater"
+      },
+      {
+        "oid": "e5",
+        "entity": "brackenwater"
+      },
+      {
+        "oid": "e6",
+        "entity": "brackenwater"
+      },
+      {
+        "oid": "e7",
+        "entity": "stoneharrow"
+      },
+      {
+        "oid": "e8",
+        "entity": "brackenwater"
+      },
+      {
+        "oid": "e9",
+        "entity": "stoneharrow"
+      },
+      {
+        "oid": "e10",
+        "entity": "brackenwater"
+      }
+    ],
+    "record": {
+      "status": "unsigned",
+      "status_evidence_line": 52,
+      "signed_date": null,
+      "effective_date": null,
+      "terms": [
+        {
+          "term": "seats",
+          "applies_to": [
+            "brackenwater"
+          ],
+          "value": "75",
+          "line": 24
+        },
+        {
+          "term": "discount_pct",
+          "applies_to": [
+            "brackenwater"
+          ],
+          "value": "15%",
+          "line": 28
+        }
+      ],
+      "deciding_line": 52,
+      "deciding_days": null
+    }
+  },
+  "usage": {
+    "input_tokens": 4334,
+    "output_tokens": 388,
+    "thinking_tokens": 52
+  },
+  "cost_usd": 0.012548
+}

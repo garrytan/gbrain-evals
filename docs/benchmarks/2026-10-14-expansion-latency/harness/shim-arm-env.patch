@@ -1,0 +1,33 @@
+--- shim.py.86	2026-10-14 16:02:58.136649747 +0000
++++ shim.py	2026-10-14 16:02:58.152649777 +0000
+@@ -394,7 +394,15 @@
+ 
+     def env(self) -> dict[str, str]:
+         keep = {k: v for k, v in os.environ.items() if not k.startswith("SHIM_")}
+-        return {**keep, "GBRAIN_HOME": HOME, "HOME": HOME, "NO_COLOR": "1"}
++        return {**keep, **self.arm_env(), "GBRAIN_HOME": HOME, "HOME": HOME, "NO_COLOR": "1"}
++
++    @staticmethod
++    def arm_env() -> dict[str, str]:  # GBRA-94: per-arm provider env (expansion model, Google base URL) read from a harness file
++        path = os.environ.get("SHIM_ARM_ENV_FILE")
++        if not path or not os.path.exists(path):
++            return {}
++        with open(path) as f:
++            return json.load(f)
+ 
+     def cli(self, *args: str, timeout_s: float = 600, check: bool = True) -> subprocess.CompletedProcess:
+         r = subprocess.run([GBRAIN, *args], env=self.env(), cwd=WORK, stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=timeout_s)
+@@ -658,10 +666,12 @@
+             raise ShimError("product_error", f"namespace {ns}: config.json differs from the reference install's; the brain is invalid")
+ 
+     def activate(self, ns: str) -> None:
+-        if self.active == ns and self.mcp is not None and self.mcp.proc.poll() is None:
++        arm = self.arm_env()
++        if self.active == ns and self.mcp is not None and self.mcp.proc.poll() is None and getattr(self, "serve_arm", None) == arm:
+             return
+         self.place(ns)
+         self.start_serve()
++        self.serve_arm = arm  # GBRA-94: an arm change restarts serve so gbrain resolves the arm's expansion model at connect
+ 
+     def state(self) -> dict[str, Any]:
+         with open(os.path.join(HOME, "shim", "state.json")) as f:

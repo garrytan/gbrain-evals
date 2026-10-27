@@ -1,0 +1,2830 @@
+{
+ "gbrain": {
+  "ref": "9ac26bea780e15cb660b2f29691613fcad5d0bf6",
+  "commit": "9ac26bea780e15cb660b2f29691613fcad5d0bf6",
+  "tree": "41f95308fc901fbafd95e4f53c14d709d9fdac60",
+  "version": "0.60.130.0"
+ },
+ "seeds": [
+  124371926,
+  196299785,
+  253035751,
+  446884266,
+  500901660,
+  560317357,
+  746355681,
+  868827636
+ ],
+ "summary": {
+  "tasks": 24,
+  "card_has": {
+   "contact": 24,
+   "date": 24,
+   "terms": 17
+  },
+  "declared_codes": 200,
+  "short_aliases": 200,
+  "short_aliases_declared_by_their_page": 200,
+  "false_short_aliases": [],
+  "declared_not_derived": 0,
+  "shared_codes": [
+   {
+    "persona": "h124371926",
+    "code": "MUL",
+    "slugs": [
+     "companies/murostra-logistics",
+     "companies/muroria-logistics"
+    ]
+   },
+   {
+    "persona": "h124371926",
+    "code": "CAF",
+    "slugs": [
+     "companies/caeladyn-freight",
+     "companies/caelquent-foods"
+    ]
+   },
+   {
+    "persona": "h196299785",
+    "code": "CAR",
+    "slugs": [
+     "companies/caelique-robotics",
+     "companies/caelivel-retail"
+    ]
+   },
+   {
+    "persona": "h196299785",
+    "code": "YAA",
+    "slugs": [
+     "companies/yarivel-analytics",
+     "companies/yaranta-analytics"
+    ]
+   },
+   {
+    "persona": "h196299785",
+    "code": "JOF",
+    "slugs": [
+     "companies/joresso-freight",
+     "companies/joradyn-foods"
+    ]
+   },
+   {
+    "persona": "h253035751",
+    "code": "VEF",
+    "slugs": [
+     "companies/vesoria-foods",
+     "companies/vesellis-freight"
+    ]
+   },
+   {
+    "persona": "h446884266",
+    "code": "LUF",
+    "slugs": [
+     "companies/lumtiva-foods",
+     "companies/lumadyn-freight"
+    ]
+   },
+   {
+    "persona": "h500901660",
+    "code": "HYI",
+    "slugs": [
+     "companies/hydithe-insurance",
+     "companies/hydesso-insurance",
+     "companies/hydovik-insurance"
+    ]
+   },
+   {
+    "persona": "h500901660",
+    "code": "JOH",
+    "slugs": [
+     "companies/jormiro-health",
+     "companies/jorumbr-health"
+    ]
+   },
+   {
+    "persona": "h500901660",
+    "code": "JOF",
+    "slugs": [
+     "companies/joralto-foods",
+     "companies/jormiro-freight"
+    ]
+   },
+   {
+    "persona": "h746355681",
+    "code": "ISF",
+    "slugs": [
+     "companies/iskadyn-freight",
+     "companies/iskura-freight"
+    ]
+   },
+   {
+    "persona": "h746355681",
+    "code": "KEL",
+    "slugs": [
+     "companies/kestumbr-logistics",
+     "companies/kestanta-logistics"
+    ]
+   },
+   {
+    "persona": "h746355681",
+    "code": "YAR",
+    "slugs": [
+     "companies/yarmiro-retail",
+     "companies/yarumbr-retail"
+    ]
+   },
+   {
+    "persona": "h868827636",
+    "code": "JOH",
+    "slugs": [
+     "companies/jormiro-health",
+     "companies/jorovik-health"
+    ]
+   }
+  ],
+  "call_note_links_company": 17
+ },
+ "personas": [
+  {
+   "persona": "h124371926",
+   "cards": [
+    {
+     "task": "h124371926-t1",
+     "chars": 12116,
+     "present": {
+      "contact": true,
+      "date": true,
+      "terms": true
+     }
+    },
+    {
+     "task": "h124371926-t2",
+     "chars": 11597,
+     "present": {
+      "contact": true,
+      "date": true,
+      "terms": true
+     }
+    },
+    {
+     "task": "h124371926-t3",
+     "chars": 11600,
+     "present": {
+      "contact": true,
+      "date": true,
+      "terms": false
+     }
+    }
+   ],
+   "declared_codes": 25,
+   "short_aliases": [
+    {
+     "alias_text": "BRL",
+     "alias_norm": "brl",
+     "slug": "companies/branvane-logistics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "CAF",
+     "alias_norm": "caf",
+     "slug": "companies/caeladyn-freight",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "CAI",
+     "alias_norm": "cai",
+     "slug": "companies/caeloria-insurance",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "CAF",
+     "alias_norm": "caf",
+     "slug": "companies/caelquent-foods",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "DOR",
+     "alias_norm": "dor",
+     "slug": "companies/dovanta-retail",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "GRR",
+     "alias_norm": "grr",
+     "slug": "companies/graloria-robotics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "HYM",
+     "alias_norm": "hym",
+     "slug": "companies/hydellis-media",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "HYA",
+     "alias_norm": "hya",
+     "slug": "companies/hydumbr-analytics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "LUI",
+     "alias_norm": "lui",
+     "slug": "companies/lumadyn-insurance",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "LUM",
+     "alias_norm": "lum",
+     "slug": "companies/lumique-media",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "LUR",
+     "alias_norm": "lur",
+     "slug": "companies/lumovik-robotics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "MUE",
+     "alias_norm": "mue",
+     "slug": "companies/murenza-energy",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "MUL",
+     "alias_norm": "mul",
+     "slug": "companies/muroria-logistics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "MUF",
+     "alias_norm": "muf",
+     "slug": "companies/murostra-foods",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "MUL",
+     "alias_norm": "mul",
+     "slug": "companies/murostra-logistics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "TEF",
+     "alias_norm": "tef",
+     "slug": "companies/teltiva-freight",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "TEH",
+     "alias_norm": "teh",
+     "slug": "companies/telumbr-health",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "THI",
+     "alias_norm": "thi",
+     "slug": "companies/thalura-insurance",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "THL",
+     "alias_norm": "thl",
+     "slug": "companies/thalura-logistics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "ULF",
+     "alias_norm": "ulf",
+     "slug": "companies/ulmivel-freight",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "ULA",
+     "alias_norm": "ula",
+     "slug": "companies/ulmovik-analytics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "ULL",
+     "alias_norm": "ull",
+     "slug": "companies/ulmovik-logistics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "VOA",
+     "alias_norm": "voa",
+     "slug": "companies/vorique-analytics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "WYI",
+     "alias_norm": "wyi",
+     "slug": "companies/wynesso-insurance",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "ZER",
+     "alias_norm": "zer",
+     "slug": "companies/zeloria-robotics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    }
+   ],
+   "declared_not_derived": [],
+   "shared_codes": [
+    {
+     "code": "MUL",
+     "slugs": [
+      "companies/murostra-logistics",
+      "companies/muroria-logistics"
+     ]
+    },
+    {
+     "code": "CAF",
+     "slugs": [
+      "companies/caeladyn-freight",
+      "companies/caelquent-foods"
+     ]
+    }
+   ],
+   "task_links": [
+    {
+     "task": "h124371926-t1",
+     "company": "companies/thalura-insurance",
+     "links": [
+      {
+       "from_slug": "inbox/2026-09-23-torvik-procurement-handoff",
+       "to_slug": "companies/thalura-insurance",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-09-23-torvik-procurement-handoff",
+       "to_slug": "people/petra-torvik",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-12-torvik-reschedule",
+       "to_slug": "companies/thalura-insurance",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-12-torvik-reschedule",
+       "to_slug": "people/petra-torvik",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "meetings/2026-10-13-thalura-call",
+       "to_slug": "companies/thalura-insurance",
+       "link_type": "mentions"
+      }
+     ],
+     "call_note_links_company": true
+    },
+    {
+     "task": "h124371926-t2",
+     "company": "companies/ulmovik-logistics",
+     "links": [
+      {
+       "from_slug": "inbox/2026-09-26-sato-procurement-handoff",
+       "to_slug": "companies/ulmovik-logistics",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-09-26-sato-procurement-handoff",
+       "to_slug": "people/mira-sato",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-11-sato-reschedule",
+       "to_slug": "companies/ulmovik-logistics",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-11-sato-reschedule",
+       "to_slug": "people/mira-sato",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "meetings/2026-10-12-ulmovik-call",
+       "to_slug": "companies/ulmovik-logistics",
+       "link_type": "mentions"
+      }
+     ],
+     "call_note_links_company": true
+    },
+    {
+     "task": "h124371926-t3",
+     "company": "companies/murostra-logistics",
+     "links": [
+      {
+       "from_slug": "inbox/2026-09-26-rahman-procurement-handoff",
+       "to_slug": "people/suki-rahman",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-09-rahman-reschedule",
+       "to_slug": "people/suki-rahman",
+       "link_type": "mentions"
+      }
+     ],
+     "call_note_links_company": false
+    }
+   ]
+  },
+  {
+   "persona": "h196299785",
+   "cards": [
+    {
+     "task": "h196299785-t1",
+     "chars": 9919,
+     "present": {
+      "contact": true,
+      "date": true,
+      "terms": false
+     }
+    },
+    {
+     "task": "h196299785-t2",
+     "chars": 10939,
+     "present": {
+      "contact": true,
+      "date": true,
+      "terms": false
+     }
+    },
+    {
+     "task": "h196299785-t3",
+     "chars": 11413,
+     "present": {
+      "contact": true,
+      "date": true,
+      "terms": true
+     }
+    }
+   ],
+   "declared_codes": 25,
+   "short_aliases": [
+    {
+     "alias_text": "BRH",
+     "alias_norm": "brh",
+     "slug": "companies/branovik-health",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "CAF",
+     "alias_norm": "caf",
+     "slug": "companies/caelique-foods",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "CAR",
+     "alias_norm": "car",
+     "slug": "companies/caelique-robotics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "CAR",
+     "alias_norm": "car",
+     "slug": "companies/caelivel-retail",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "CAL",
+     "alias_norm": "cal",
+     "slug": "companies/caelvane-logistics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "DOH",
+     "alias_norm": "doh",
+     "slug": "companies/dovellis-health",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "JOF",
+     "alias_norm": "jof",
+     "slug": "companies/joradyn-foods",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "JOI",
+     "alias_norm": "joi",
+     "slug": "companies/jorellis-insurance",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "JOF",
+     "alias_norm": "jof",
+     "slug": "companies/joresso-freight",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "JOE",
+     "alias_norm": "joe",
+     "slug": "companies/jorivel-energy",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "LUF",
+     "alias_norm": "luf",
+     "slug": "companies/lumvane-freight",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "NAA",
+     "alias_norm": "naa",
+     "slug": "companies/naxovik-analytics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "ONF",
+     "alias_norm": "onf",
+     "slug": "companies/ondrura-freight",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "PRI",
+     "alias_norm": "pri",
+     "slug": "companies/pralumbr-insurance",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "QUR",
+     "alias_norm": "qur",
+     "slug": "companies/quorura-robotics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "ULR",
+     "alias_norm": "ulr",
+     "slug": "companies/ulmovik-robotics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "WYM",
+     "alias_norm": "wym",
+     "slug": "companies/wynquent-media",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "XEA",
+     "alias_norm": "xea",
+     "slug": "companies/xerovik-analytics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "XEH",
+     "alias_norm": "xeh",
+     "slug": "companies/xerovik-health",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "YAA",
+     "alias_norm": "yaa",
+     "slug": "companies/yaranta-analytics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "YAL",
+     "alias_norm": "yal",
+     "slug": "companies/yarique-logistics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "YAA",
+     "alias_norm": "yaa",
+     "slug": "companies/yarivel-analytics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "YAR",
+     "alias_norm": "yar",
+     "slug": "companies/yarivel-retail",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "ZEF",
+     "alias_norm": "zef",
+     "slug": "companies/zelalto-foods",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "ZER",
+     "alias_norm": "zer",
+     "slug": "companies/zelique-retail",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    }
+   ],
+   "declared_not_derived": [],
+   "shared_codes": [
+    {
+     "code": "CAR",
+     "slugs": [
+      "companies/caelique-robotics",
+      "companies/caelivel-retail"
+     ]
+    },
+    {
+     "code": "YAA",
+     "slugs": [
+      "companies/yarivel-analytics",
+      "companies/yaranta-analytics"
+     ]
+    },
+    {
+     "code": "JOF",
+     "slugs": [
+      "companies/joresso-freight",
+      "companies/joradyn-foods"
+     ]
+    }
+   ],
+   "task_links": [
+    {
+     "task": "h196299785-t1",
+     "company": "companies/caelique-robotics",
+     "links": [
+      {
+       "from_slug": "inbox/2026-09-25-quist-procurement-handoff",
+       "to_slug": "people/kenji-quist",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-12-quist-reschedule",
+       "to_slug": "people/kenji-quist",
+       "link_type": "mentions"
+      }
+     ],
+     "call_note_links_company": false
+    },
+    {
+     "task": "h196299785-t2",
+     "company": "companies/yarivel-analytics",
+     "links": [
+      {
+       "from_slug": "inbox/2026-09-23-galloway-procurement-handoff",
+       "to_slug": "people/ayla-galloway",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-11-galloway-reschedule",
+       "to_slug": "people/ayla-galloway",
+       "link_type": "mentions"
+      }
+     ],
+     "call_note_links_company": false
+    },
+    {
+     "task": "h196299785-t3",
+     "company": "companies/xerovik-analytics",
+     "links": [
+      {
+       "from_slug": "inbox/2026-09-25-mehta-procurement-handoff",
+       "to_slug": "companies/xerovik-analytics",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-09-25-mehta-procurement-handoff",
+       "to_slug": "people/ayla-mehta",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-10-mehta-reschedule",
+       "to_slug": "companies/xerovik-analytics",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-10-mehta-reschedule",
+       "to_slug": "people/ayla-mehta",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "meetings/2026-10-10-xerovik-call",
+       "to_slug": "companies/xerovik-analytics",
+       "link_type": "mentions"
+      }
+     ],
+     "call_note_links_company": true
+    }
+   ]
+  },
+  {
+   "persona": "h253035751",
+   "cards": [
+    {
+     "task": "h253035751-t1",
+     "chars": 12631,
+     "present": {
+      "contact": true,
+      "date": true,
+      "terms": true
+     }
+    },
+    {
+     "task": "h253035751-t2",
+     "chars": 12232,
+     "present": {
+      "contact": true,
+      "date": true,
+      "terms": true
+     }
+    },
+    {
+     "task": "h253035751-t3",
+     "chars": 11677,
+     "present": {
+      "contact": true,
+      "date": true,
+      "terms": true
+     }
+    }
+   ],
+   "declared_codes": 25,
+   "short_aliases": [
+    {
+     "alias_text": "CAR",
+     "alias_norm": "car",
+     "slug": "companies/caelari-robotics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "CAE",
+     "alias_norm": "cae",
+     "slug": "companies/caelostra-energy",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "DOF",
+     "alias_norm": "dof",
+     "slug": "companies/dovovik-freight",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "FER",
+     "alias_norm": "fer",
+     "slug": "companies/fenadyn-robotics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "HYH",
+     "alias_norm": "hyh",
+     "slug": "companies/hydostra-health",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "JOR",
+     "alias_norm": "jor",
+     "slug": "companies/jorquent-robotics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "JOH",
+     "alias_norm": "joh",
+     "slug": "companies/jorvane-health",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "JOI",
+     "alias_norm": "joi",
+     "slug": "companies/jorvane-insurance",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "LUF",
+     "alias_norm": "luf",
+     "slug": "companies/lumari-foods",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "MUF",
+     "alias_norm": "muf",
+     "slug": "companies/murura-freight",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "ONR",
+     "alias_norm": "onr",
+     "slug": "companies/ondrithe-retail",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "PRA",
+     "alias_norm": "pra",
+     "slug": "companies/pralenza-analytics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "PRF",
+     "alias_norm": "prf",
+     "slug": "companies/pralenza-foods",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "PRE",
+     "alias_norm": "pre",
+     "slug": "companies/pralmiro-energy",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "QUA",
+     "alias_norm": "qua",
+     "slug": "companies/quorellis-analytics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "QUF",
+     "alias_norm": "quf",
+     "slug": "companies/quorenza-freight",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "VEF",
+     "alias_norm": "vef",
+     "slug": "companies/vesellis-freight",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "VER",
+     "alias_norm": "ver",
+     "slug": "companies/vesique-robotics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "VEF",
+     "alias_norm": "vef",
+     "slug": "companies/vesoria-foods",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "VEM",
+     "alias_norm": "vem",
+     "slug": "companies/vesura-media",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "VOR",
+     "alias_norm": "vor",
+     "slug": "companies/vorique-robotics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "VOF",
+     "alias_norm": "vof",
+     "slug": "companies/vortiva-foods",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "VOL",
+     "alias_norm": "vol",
+     "slug": "companies/vortiva-logistics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "YAH",
+     "alias_norm": "yah",
+     "slug": "companies/yarivel-health",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "ZEA",
+     "alias_norm": "zea",
+     "slug": "companies/zelenza-analytics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    }
+   ],
+   "declared_not_derived": [],
+   "shared_codes": [
+    {
+     "code": "VEF",
+     "slugs": [
+      "companies/vesoria-foods",
+      "companies/vesellis-freight"
+     ]
+    }
+   ],
+   "task_links": [
+    {
+     "task": "h253035751-t1",
+     "company": "companies/pralenza-analytics",
+     "links": [
+      {
+       "from_slug": "inbox/2026-09-22-ferreira-procurement-handoff",
+       "to_slug": "companies/pralenza-analytics",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-09-22-ferreira-procurement-handoff",
+       "to_slug": "people/noor-ferreira",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-10-ferreira-reschedule",
+       "to_slug": "companies/pralenza-analytics",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-10-ferreira-reschedule",
+       "to_slug": "people/noor-ferreira",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "meetings/2026-10-10-pralenza-call",
+       "to_slug": "companies/pralenza-analytics",
+       "link_type": "mentions"
+      }
+     ],
+     "call_note_links_company": true
+    },
+    {
+     "task": "h253035751-t2",
+     "company": "companies/jorvane-health",
+     "links": [
+      {
+       "from_slug": "inbox/2026-09-26-marchetti-procurement-handoff",
+       "to_slug": "companies/jorvane-health",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-09-26-marchetti-procurement-handoff",
+       "to_slug": "people/elodie-marchetti",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-10-marchetti-reschedule",
+       "to_slug": "companies/jorvane-health",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-10-marchetti-reschedule",
+       "to_slug": "people/elodie-marchetti",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "meetings/2026-10-13-jorvane-call",
+       "to_slug": "companies/jorvane-health",
+       "link_type": "mentions"
+      }
+     ],
+     "call_note_links_company": true
+    },
+    {
+     "task": "h253035751-t3",
+     "company": "companies/vortiva-logistics",
+     "links": [
+      {
+       "from_slug": "inbox/2026-09-20-brandt-procurement-handoff",
+       "to_slug": "companies/vortiva-logistics",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-09-20-brandt-procurement-handoff",
+       "to_slug": "people/tobin-brandt",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-11-brandt-reschedule",
+       "to_slug": "companies/vortiva-logistics",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-11-brandt-reschedule",
+       "to_slug": "people/tobin-brandt",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "meetings/2026-10-13-vortiva-call",
+       "to_slug": "companies/vortiva-logistics",
+       "link_type": "mentions"
+      }
+     ],
+     "call_note_links_company": true
+    }
+   ]
+  },
+  {
+   "persona": "h446884266",
+   "cards": [
+    {
+     "task": "h446884266-t1",
+     "chars": 13184,
+     "present": {
+      "contact": true,
+      "date": true,
+      "terms": true
+     }
+    },
+    {
+     "task": "h446884266-t2",
+     "chars": 12504,
+     "present": {
+      "contact": true,
+      "date": true,
+      "terms": true
+     }
+    },
+    {
+     "task": "h446884266-t3",
+     "chars": 11706,
+     "present": {
+      "contact": true,
+      "date": true,
+      "terms": true
+     }
+    }
+   ],
+   "declared_codes": 25,
+   "short_aliases": [
+    {
+     "alias_text": "BRL",
+     "alias_norm": "brl",
+     "slug": "companies/branalto-logistics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "BRE",
+     "alias_norm": "bre",
+     "slug": "companies/branesso-energy",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "BRI",
+     "alias_norm": "bri",
+     "slug": "companies/branoria-insurance",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "BRR",
+     "alias_norm": "brr",
+     "slug": "companies/branumbr-robotics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "DOE",
+     "alias_norm": "doe",
+     "slug": "companies/dovalto-energy",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "DOH",
+     "alias_norm": "doh",
+     "slug": "companies/dovivel-health",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "FEI",
+     "alias_norm": "fei",
+     "slug": "companies/fenquent-insurance",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "FEF",
+     "alias_norm": "fef",
+     "slug": "companies/fenumbr-foods",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "GRI",
+     "alias_norm": "gri",
+     "slug": "companies/gralonex-insurance",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "GRL",
+     "alias_norm": "grl",
+     "slug": "companies/gralostra-logistics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "HYR",
+     "alias_norm": "hyr",
+     "slug": "companies/hydalto-retail",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "KER",
+     "alias_norm": "ker",
+     "slug": "companies/kestellis-retail",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "LUF",
+     "alias_norm": "luf",
+     "slug": "companies/lumadyn-freight",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "LUR",
+     "alias_norm": "lur",
+     "slug": "companies/lumadyn-retail",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "LUF",
+     "alias_norm": "luf",
+     "slug": "companies/lumtiva-foods",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "LUI",
+     "alias_norm": "lui",
+     "slug": "companies/lumtiva-insurance",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "NAH",
+     "alias_norm": "nah",
+     "slug": "companies/naxellis-health",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "ONF",
+     "alias_norm": "onf",
+     "slug": "companies/ondralto-freight",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "ONM",
+     "alias_norm": "onm",
+     "slug": "companies/ondrithe-media",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "ORR",
+     "alias_norm": "orr",
+     "slug": "companies/orvquent-retail",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "PRR",
+     "alias_norm": "prr",
+     "slug": "companies/pralesso-retail",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "TEA",
+     "alias_norm": "tea",
+     "slug": "companies/telellis-analytics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "TER",
+     "alias_norm": "ter",
+     "slug": "companies/telellis-robotics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "VEE",
+     "alias_norm": "vee",
+     "slug": "companies/vesari-energy",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "VEF",
+     "alias_norm": "vef",
+     "slug": "companies/vesellis-freight",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    }
+   ],
+   "declared_not_derived": [],
+   "shared_codes": [
+    {
+     "code": "LUF",
+     "slugs": [
+      "companies/lumtiva-foods",
+      "companies/lumadyn-freight"
+     ]
+    }
+   ],
+   "task_links": [
+    {
+     "task": "h446884266-t1",
+     "company": "companies/telellis-analytics",
+     "links": [
+      {
+       "from_slug": "inbox/2026-09-20-fairbourne-procurement-handoff",
+       "to_slug": "companies/telellis-analytics",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-09-20-fairbourne-procurement-handoff",
+       "to_slug": "people/matteo-fairbourne",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-10-fairbourne-reschedule",
+       "to_slug": "companies/telellis-analytics",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-10-fairbourne-reschedule",
+       "to_slug": "people/matteo-fairbourne",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "meetings/2026-10-13-telellis-call",
+       "to_slug": "companies/telellis-analytics",
+       "link_type": "mentions"
+      }
+     ],
+     "call_note_links_company": true
+    },
+    {
+     "task": "h446884266-t2",
+     "company": "companies/lumtiva-insurance",
+     "links": [
+      {
+       "from_slug": "inbox/2026-09-21-delacroix-procurement-handoff",
+       "to_slug": "companies/lumtiva-insurance",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-09-21-delacroix-procurement-handoff",
+       "to_slug": "people/soren-delacroix",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-10-delacroix-reschedule",
+       "to_slug": "companies/lumtiva-insurance",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-10-delacroix-reschedule",
+       "to_slug": "people/soren-delacroix",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "meetings/2026-10-13-lumtiva-call",
+       "to_slug": "companies/lumtiva-insurance",
+       "link_type": "mentions"
+      }
+     ],
+     "call_note_links_company": true
+    },
+    {
+     "task": "h446884266-t3",
+     "company": "companies/lumadyn-retail",
+     "links": [
+      {
+       "from_slug": "inbox/2026-09-25-wexler-procurement-handoff",
+       "to_slug": "companies/lumadyn-retail",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-09-25-wexler-procurement-handoff",
+       "to_slug": "people/ayla-wexler",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-09-wexler-reschedule",
+       "to_slug": "companies/lumadyn-retail",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-09-wexler-reschedule",
+       "to_slug": "people/ayla-wexler",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "meetings/2026-10-11-lumadyn-call",
+       "to_slug": "companies/lumadyn-retail",
+       "link_type": "mentions"
+      }
+     ],
+     "call_note_links_company": true
+    }
+   ]
+  },
+  {
+   "persona": "h500901660",
+   "cards": [
+    {
+     "task": "h500901660-t1",
+     "chars": 12610,
+     "present": {
+      "contact": true,
+      "date": true,
+      "terms": false
+     }
+    },
+    {
+     "task": "h500901660-t2",
+     "chars": 10693,
+     "present": {
+      "contact": true,
+      "date": true,
+      "terms": false
+     }
+    },
+    {
+     "task": "h500901660-t3",
+     "chars": 10202,
+     "present": {
+      "contact": true,
+      "date": true,
+      "terms": false
+     }
+    }
+   ],
+   "declared_codes": 25,
+   "short_aliases": [
+    {
+     "alias_text": "CAF",
+     "alias_norm": "caf",
+     "slug": "companies/caelellis-freight",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "FEA",
+     "alias_norm": "fea",
+     "slug": "companies/fenique-analytics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "HYI",
+     "alias_norm": "hyi",
+     "slug": "companies/hydesso-insurance",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "HYI",
+     "alias_norm": "hyi",
+     "slug": "companies/hydithe-insurance",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "HYL",
+     "alias_norm": "hyl",
+     "slug": "companies/hydithe-logistics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "HYI",
+     "alias_norm": "hyi",
+     "slug": "companies/hydovik-insurance",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "ISF",
+     "alias_norm": "isf",
+     "slug": "companies/iskesso-freight",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "JOF",
+     "alias_norm": "jof",
+     "slug": "companies/joralto-foods",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "JOA",
+     "alias_norm": "joa",
+     "slug": "companies/jorenza-analytics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "JOF",
+     "alias_norm": "jof",
+     "slug": "companies/jormiro-freight",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "JOH",
+     "alias_norm": "joh",
+     "slug": "companies/jormiro-health",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "JOH",
+     "alias_norm": "joh",
+     "slug": "companies/jorumbr-health",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "JOL",
+     "alias_norm": "jol",
+     "slug": "companies/jorumbr-logistics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "ONH",
+     "alias_norm": "onh",
+     "slug": "companies/ondrellis-health",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "ONI",
+     "alias_norm": "oni",
+     "slug": "companies/ondrovik-insurance",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "ORH",
+     "alias_norm": "orh",
+     "slug": "companies/orvvane-health",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "PRH",
+     "alias_norm": "prh",
+     "slug": "companies/praltiva-health",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "QUL",
+     "alias_norm": "qul",
+     "slug": "companies/quoronex-logistics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "QUA",
+     "alias_norm": "qua",
+     "slug": "companies/quorostra-analytics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "TEM",
+     "alias_norm": "tem",
+     "slug": "companies/telenza-media",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "ULE",
+     "alias_norm": "ule",
+     "slug": "companies/ulmmiro-energy",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "WYI",
+     "alias_norm": "wyi",
+     "slug": "companies/wynvane-insurance",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "XEI",
+     "alias_norm": "xei",
+     "slug": "companies/xerithe-insurance",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "YAE",
+     "alias_norm": "yae",
+     "slug": "companies/yaresso-energy",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "YAH",
+     "alias_norm": "yah",
+     "slug": "companies/yarique-health",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    }
+   ],
+   "declared_not_derived": [],
+   "shared_codes": [
+    {
+     "code": "HYI",
+     "slugs": [
+      "companies/hydithe-insurance",
+      "companies/hydesso-insurance",
+      "companies/hydovik-insurance"
+     ]
+    },
+    {
+     "code": "JOH",
+     "slugs": [
+      "companies/jormiro-health",
+      "companies/jorumbr-health"
+     ]
+    },
+    {
+     "code": "JOF",
+     "slugs": [
+      "companies/joralto-foods",
+      "companies/jormiro-freight"
+     ]
+    }
+   ],
+   "task_links": [
+    {
+     "task": "h500901660-t1",
+     "company": "companies/hydithe-insurance",
+     "links": [
+      {
+       "from_slug": "inbox/2026-09-25-kowalczyk-procurement-handoff",
+       "to_slug": "people/mira-kowalczyk",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-12-kowalczyk-reschedule",
+       "to_slug": "people/mira-kowalczyk",
+       "link_type": "mentions"
+      }
+     ],
+     "call_note_links_company": false
+    },
+    {
+     "task": "h500901660-t2",
+     "company": "companies/jormiro-health",
+     "links": [
+      {
+       "from_slug": "inbox/2026-09-24-castellan-procurement-handoff",
+       "to_slug": "people/niko-castellan",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-11-castellan-reschedule",
+       "to_slug": "people/niko-castellan",
+       "link_type": "mentions"
+      }
+     ],
+     "call_note_links_company": false
+    },
+    {
+     "task": "h500901660-t3",
+     "company": "companies/jorumbr-health",
+     "links": [
+      {
+       "from_slug": "inbox/2026-09-26-quist-procurement-handoff",
+       "to_slug": "people/talia-quist",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-11-quist-reschedule",
+       "to_slug": "people/talia-quist",
+       "link_type": "mentions"
+      }
+     ],
+     "call_note_links_company": false
+    }
+   ]
+  },
+  {
+   "persona": "h560317357",
+   "cards": [
+    {
+     "task": "h560317357-t1",
+     "chars": 13106,
+     "present": {
+      "contact": true,
+      "date": true,
+      "terms": true
+     }
+    },
+    {
+     "task": "h560317357-t2",
+     "chars": 12739,
+     "present": {
+      "contact": true,
+      "date": true,
+      "terms": true
+     }
+    },
+    {
+     "task": "h560317357-t3",
+     "chars": 11865,
+     "present": {
+      "contact": true,
+      "date": true,
+      "terms": true
+     }
+    }
+   ],
+   "declared_codes": 25,
+   "short_aliases": [
+    {
+     "alias_text": "BRF",
+     "alias_norm": "brf",
+     "slug": "companies/branoria-foods",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "DOE",
+     "alias_norm": "doe",
+     "slug": "companies/dovanta-energy",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "FEF",
+     "alias_norm": "fef",
+     "slug": "companies/fenoria-freight",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "GRR",
+     "alias_norm": "grr",
+     "slug": "companies/gralique-robotics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "ISF",
+     "alias_norm": "isf",
+     "slug": "companies/iskanta-freight",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "ISH",
+     "alias_norm": "ish",
+     "slug": "companies/iskanta-health",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "JOR",
+     "alias_norm": "jor",
+     "slug": "companies/jororia-retail",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "LUR",
+     "alias_norm": "lur",
+     "slug": "companies/lumalto-retail",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "LUA",
+     "alias_norm": "lua",
+     "slug": "companies/lumostra-analytics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "NAR",
+     "alias_norm": "nar",
+     "slug": "companies/naxellis-retail",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "NAE",
+     "alias_norm": "nae",
+     "slug": "companies/naxquent-energy",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "ORF",
+     "alias_norm": "orf",
+     "slug": "companies/orvostra-foods",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "QUA",
+     "alias_norm": "qua",
+     "slug": "companies/quorenza-analytics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "QUR",
+     "alias_norm": "qur",
+     "slug": "companies/quortiva-robotics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "TEE",
+     "alias_norm": "tee",
+     "slug": "companies/telenza-energy",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "TEI",
+     "alias_norm": "tei",
+     "slug": "companies/telenza-insurance",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "TER",
+     "alias_norm": "ter",
+     "slug": "companies/telvane-robotics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "THM",
+     "alias_norm": "thm",
+     "slug": "companies/thalesso-media",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "THH",
+     "alias_norm": "thh",
+     "slug": "companies/thalquent-health",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "THR",
+     "alias_norm": "thr",
+     "slug": "companies/thaltiva-robotics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "VOE",
+     "alias_norm": "voe",
+     "slug": "companies/voralto-energy",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "VOH",
+     "alias_norm": "voh",
+     "slug": "companies/vorovik-health",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "VOR",
+     "alias_norm": "vor",
+     "slug": "companies/vorovik-robotics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "XEL",
+     "alias_norm": "xel",
+     "slug": "companies/xeralto-logistics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "ZEA",
+     "alias_norm": "zea",
+     "slug": "companies/zelalto-analytics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    }
+   ],
+   "declared_not_derived": [],
+   "shared_codes": [],
+   "task_links": [
+    {
+     "task": "h560317357-t1",
+     "company": "companies/vorovik-health",
+     "links": [
+      {
+       "from_slug": "inbox/2026-09-24-zeller-procurement-handoff",
+       "to_slug": "companies/vorovik-health",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-09-24-zeller-procurement-handoff",
+       "to_slug": "people/bram-zeller",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-12-zeller-reschedule",
+       "to_slug": "companies/vorovik-health",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-12-zeller-reschedule",
+       "to_slug": "people/bram-zeller",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "meetings/2026-10-11-vorovik-call",
+       "to_slug": "companies/vorovik-health",
+       "link_type": "mentions"
+      }
+     ],
+     "call_note_links_company": true
+    },
+    {
+     "task": "h560317357-t2",
+     "company": "companies/iskanta-health",
+     "links": [
+      {
+       "from_slug": "inbox/2026-09-20-lindqvist-procurement-handoff",
+       "to_slug": "companies/iskanta-health",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-09-20-lindqvist-procurement-handoff",
+       "to_slug": "people/talia-lindqvist",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-09-lindqvist-reschedule",
+       "to_slug": "companies/iskanta-health",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-09-lindqvist-reschedule",
+       "to_slug": "people/talia-lindqvist",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "meetings/2026-10-11-iskanta-call",
+       "to_slug": "companies/iskanta-health",
+       "link_type": "mentions"
+      }
+     ],
+     "call_note_links_company": true
+    },
+    {
+     "task": "h560317357-t3",
+     "company": "companies/telenza-insurance",
+     "links": [
+      {
+       "from_slug": "inbox/2026-09-20-marchetti-procurement-handoff",
+       "to_slug": "companies/telenza-insurance",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-09-20-marchetti-procurement-handoff",
+       "to_slug": "people/ilse-marchetti",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-12-marchetti-reschedule",
+       "to_slug": "companies/telenza-insurance",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-12-marchetti-reschedule",
+       "to_slug": "people/ilse-marchetti",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "meetings/2026-10-13-telenza-call",
+       "to_slug": "companies/telenza-insurance",
+       "link_type": "mentions"
+      }
+     ],
+     "call_note_links_company": true
+    }
+   ]
+  },
+  {
+   "persona": "h746355681",
+   "cards": [
+    {
+     "task": "h746355681-t1",
+     "chars": 12755,
+     "present": {
+      "contact": true,
+      "date": true,
+      "terms": true
+     }
+    },
+    {
+     "task": "h746355681-t2",
+     "chars": 11849,
+     "present": {
+      "contact": true,
+      "date": true,
+      "terms": true
+     }
+    },
+    {
+     "task": "h746355681-t3",
+     "chars": 9434,
+     "present": {
+      "contact": true,
+      "date": true,
+      "terms": false
+     }
+    }
+   ],
+   "declared_codes": 25,
+   "short_aliases": [
+    {
+     "alias_text": "DOL",
+     "alias_norm": "dol",
+     "slug": "companies/dovithe-logistics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "DOH",
+     "alias_norm": "doh",
+     "slug": "companies/dovostra-health",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "GRA",
+     "alias_norm": "gra",
+     "slug": "companies/gralalto-analytics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "ISF",
+     "alias_norm": "isf",
+     "slug": "companies/iskadyn-freight",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "ISH",
+     "alias_norm": "ish",
+     "slug": "companies/iskadyn-health",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "ISF",
+     "alias_norm": "isf",
+     "slug": "companies/iskura-freight",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "KEI",
+     "alias_norm": "kei",
+     "slug": "companies/kestanta-insurance",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "KEL",
+     "alias_norm": "kel",
+     "slug": "companies/kestanta-logistics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "KEL",
+     "alias_norm": "kel",
+     "slug": "companies/kestumbr-logistics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "LUF",
+     "alias_norm": "luf",
+     "slug": "companies/lumvane-foods",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "ONM",
+     "alias_norm": "onm",
+     "slug": "companies/ondralto-media",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "ONF",
+     "alias_norm": "onf",
+     "slug": "companies/ondrique-freight",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "ONR",
+     "alias_norm": "onr",
+     "slug": "companies/ondrique-retail",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "ONL",
+     "alias_norm": "onl",
+     "slug": "companies/ondrmiro-logistics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "TEF",
+     "alias_norm": "tef",
+     "slug": "companies/telura-freight",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "THR",
+     "alias_norm": "thr",
+     "slug": "companies/thalanta-robotics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "ULI",
+     "alias_norm": "uli",
+     "slug": "companies/ulmoria-insurance",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "VER",
+     "alias_norm": "ver",
+     "slug": "companies/vesmiro-robotics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "VEE",
+     "alias_norm": "vee",
+     "slug": "companies/vesostra-energy",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "VOF",
+     "alias_norm": "vof",
+     "slug": "companies/vorostra-freight",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "YAR",
+     "alias_norm": "yar",
+     "slug": "companies/yarmiro-retail",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "YAR",
+     "alias_norm": "yar",
+     "slug": "companies/yarumbr-retail",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "ZEE",
+     "alias_norm": "zee",
+     "slug": "companies/zelellis-energy",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "ZEF",
+     "alias_norm": "zef",
+     "slug": "companies/zelithe-freight",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "ZEL",
+     "alias_norm": "zel",
+     "slug": "companies/zeloria-logistics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    }
+   ],
+   "declared_not_derived": [],
+   "shared_codes": [
+    {
+     "code": "ISF",
+     "slugs": [
+      "companies/iskadyn-freight",
+      "companies/iskura-freight"
+     ]
+    },
+    {
+     "code": "KEL",
+     "slugs": [
+      "companies/kestumbr-logistics",
+      "companies/kestanta-logistics"
+     ]
+    },
+    {
+     "code": "YAR",
+     "slugs": [
+      "companies/yarmiro-retail",
+      "companies/yarumbr-retail"
+     ]
+    }
+   ],
+   "task_links": [
+    {
+     "task": "h746355681-t1",
+     "company": "companies/ondrique-retail",
+     "links": [
+      {
+       "from_slug": "inbox/2026-09-24-osei-procurement-handoff",
+       "to_slug": "companies/ondrique-retail",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-09-24-osei-procurement-handoff",
+       "to_slug": "people/kenji-osei",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-09-osei-reschedule",
+       "to_slug": "companies/ondrique-retail",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-09-osei-reschedule",
+       "to_slug": "people/kenji-osei",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "meetings/2026-10-12-ondrique-call",
+       "to_slug": "companies/ondrique-retail",
+       "link_type": "mentions"
+      }
+     ],
+     "call_note_links_company": true
+    },
+    {
+     "task": "h746355681-t2",
+     "company": "companies/kestanta-insurance",
+     "links": [
+      {
+       "from_slug": "inbox/2026-09-25-okafor-procurement-handoff",
+       "to_slug": "companies/kestanta-insurance",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-09-25-okafor-procurement-handoff",
+       "to_slug": "people/niko-okafor",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-09-okafor-reschedule",
+       "to_slug": "companies/kestanta-insurance",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-09-okafor-reschedule",
+       "to_slug": "people/niko-okafor",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "meetings/2026-10-11-kestanta-call",
+       "to_slug": "companies/kestanta-insurance",
+       "link_type": "mentions"
+      }
+     ],
+     "call_note_links_company": true
+    },
+    {
+     "task": "h746355681-t3",
+     "company": "companies/iskadyn-freight",
+     "links": [
+      {
+       "from_slug": "inbox/2026-09-26-okafor-procurement-handoff",
+       "to_slug": "people/maren-okafor",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-10-okafor-reschedule",
+       "to_slug": "people/maren-okafor",
+       "link_type": "mentions"
+      }
+     ],
+     "call_note_links_company": false
+    }
+   ]
+  },
+  {
+   "persona": "h868827636",
+   "cards": [
+    {
+     "task": "h868827636-t1",
+     "chars": 12908,
+     "present": {
+      "contact": true,
+      "date": true,
+      "terms": true
+     }
+    },
+    {
+     "task": "h868827636-t2",
+     "chars": 11808,
+     "present": {
+      "contact": true,
+      "date": true,
+      "terms": true
+     }
+    },
+    {
+     "task": "h868827636-t3",
+     "chars": 11342,
+     "present": {
+      "contact": true,
+      "date": true,
+      "terms": true
+     }
+    }
+   ],
+   "declared_codes": 25,
+   "short_aliases": [
+    {
+     "alias_text": "BRR",
+     "alias_norm": "brr",
+     "slug": "companies/branonex-robotics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "CAI",
+     "alias_norm": "cai",
+     "slug": "companies/caelostra-insurance",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "HYR",
+     "alias_norm": "hyr",
+     "slug": "companies/hydithe-robotics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "ISA",
+     "alias_norm": "isa",
+     "slug": "companies/iskithe-analytics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "ISF",
+     "alias_norm": "isf",
+     "slug": "companies/iskoria-foods",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "ISL",
+     "alias_norm": "isl",
+     "slug": "companies/iskoria-logistics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "JOH",
+     "alias_norm": "joh",
+     "slug": "companies/jormiro-health",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "JOH",
+     "alias_norm": "joh",
+     "slug": "companies/jorovik-health",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "LUR",
+     "alias_norm": "lur",
+     "slug": "companies/lummiro-robotics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "MUL",
+     "alias_norm": "mul",
+     "slug": "companies/murithe-logistics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "MUH",
+     "alias_norm": "muh",
+     "slug": "companies/murtiva-health",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "MUR",
+     "alias_norm": "mur",
+     "slug": "companies/murtiva-retail",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "NAR",
+     "alias_norm": "nar",
+     "slug": "companies/naxalto-robotics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "NAE",
+     "alias_norm": "nae",
+     "slug": "companies/naxenza-energy",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "NAH",
+     "alias_norm": "nah",
+     "slug": "companies/naxmiro-health",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "NAL",
+     "alias_norm": "nal",
+     "slug": "companies/naxoria-logistics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "PRE",
+     "alias_norm": "pre",
+     "slug": "companies/pralari-energy",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "THL",
+     "alias_norm": "thl",
+     "slug": "companies/thalivel-logistics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "ULA",
+     "alias_norm": "ula",
+     "slug": "companies/ulmesso-analytics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "XEI",
+     "alias_norm": "xei",
+     "slug": "companies/xeradyn-insurance",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "XEA",
+     "alias_norm": "xea",
+     "slug": "companies/xerique-analytics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "XEF",
+     "alias_norm": "xef",
+     "slug": "companies/xerovik-foods",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "XEL",
+     "alias_norm": "xel",
+     "slug": "companies/xerovik-logistics",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "YAM",
+     "alias_norm": "yam",
+     "slug": "companies/yarenza-media",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    },
+    {
+     "alias_text": "ZEE",
+     "alias_norm": "zee",
+     "slug": "companies/zelvane-energy",
+     "origin": "declared",
+     "case_sensitive": true,
+     "declared_by_this_page": true
+    }
+   ],
+   "declared_not_derived": [],
+   "shared_codes": [
+    {
+     "code": "JOH",
+     "slugs": [
+      "companies/jormiro-health",
+      "companies/jorovik-health"
+     ]
+    }
+   ],
+   "task_links": [
+    {
+     "task": "h868827636-t1",
+     "company": "companies/iskoria-foods",
+     "links": [
+      {
+       "from_slug": "inbox/2026-09-26-wexler-procurement-handoff",
+       "to_slug": "companies/iskoria-foods",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-09-26-wexler-procurement-handoff",
+       "to_slug": "people/omari-wexler",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-09-wexler-reschedule",
+       "to_slug": "companies/iskoria-foods",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-09-wexler-reschedule",
+       "to_slug": "people/omari-wexler",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "meetings/2026-10-11-iskoria-call",
+       "to_slug": "companies/iskoria-foods",
+       "link_type": "mentions"
+      }
+     ],
+     "call_note_links_company": true
+    },
+    {
+     "task": "h868827636-t2",
+     "company": "companies/xerovik-logistics",
+     "links": [
+      {
+       "from_slug": "inbox/2026-09-21-morales-procurement-handoff",
+       "to_slug": "companies/xerovik-logistics",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-09-21-morales-procurement-handoff",
+       "to_slug": "people/noor-morales",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-11-morales-reschedule",
+       "to_slug": "companies/xerovik-logistics",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-11-morales-reschedule",
+       "to_slug": "people/noor-morales",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "meetings/2026-10-12-xerovik-call",
+       "to_slug": "companies/xerovik-logistics",
+       "link_type": "mentions"
+      }
+     ],
+     "call_note_links_company": true
+    },
+    {
+     "task": "h868827636-t3",
+     "company": "companies/murtiva-retail",
+     "links": [
+      {
+       "from_slug": "inbox/2026-09-20-brandt-procurement-handoff",
+       "to_slug": "companies/murtiva-retail",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-09-20-brandt-procurement-handoff",
+       "to_slug": "people/ayla-brandt",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-11-brandt-reschedule",
+       "to_slug": "companies/murtiva-retail",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "inbox/2026-10-11-brandt-reschedule",
+       "to_slug": "people/ayla-brandt",
+       "link_type": "mentions"
+      },
+      {
+       "from_slug": "meetings/2026-10-10-murtiva-call",
+       "to_slug": "companies/murtiva-retail",
+       "link_type": "mentions"
+      }
+     ],
+     "call_note_links_company": true
+    }
+   ]
+  }
+ ]
+}

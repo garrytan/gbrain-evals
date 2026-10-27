@@ -1,0 +1,8 @@
+{
+  "run_id": "e1-deliver-beam-100k-a1-884fff5f",
+  "lease_usd": 1,
+  "committed_usd": 0.09668140000000001,
+  "requests": 126,
+  "max_output_tokens": 32768,
+  "cell_exit_code": 0
+}

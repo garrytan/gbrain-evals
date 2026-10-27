@@ -1,0 +1,203 @@
+[
+ {
+  "set": "development-master",
+  "key": "h20261101-t1|claude-opus-5-5|baseline|1",
+  "class": "disambiguation_missed",
+  "lines": [
+   "- **Not included:** Your October 7 daily note says you owe \"Elo\" an updated order form. That's Elodie Petrov at Yarithe Foods, a different account, so I left it out."
+  ]
+ },
+ {
+  "set": "development-master",
+  "key": "h20261101-t1|claude-sonnet-5-5|baseline|1",
+  "class": "generic_phrase",
+  "lines": [
+   "We'll walk through the quote and the rollout plan and timeline at kickoff. Tobin, if you want anything ahead of the call, such as an order form or vendor onboarding details, tell me and I'll send it."
+  ]
+ },
+ {
+  "set": "development-master",
+  "key": "h20261101-t1|claude-opus-5-5|baseline|2",
+  "class": "generic_phrase",
+  "lines": [
+   "Tobin, if procurement needs anything else before the 27th, like a corrected order form, our vendor details or security paperwork, let me know and I'll get it to you."
+  ]
+ },
+ {
+  "set": "development-master",
+  "key": "h20261102-t1|claude-opus-5-5|baseline|1",
+  "class": "disambiguation_missed",
+  "lines": [
+   "- **Left out on purpose:** Your October 8 note says you owe \"Fee\" draft pilot success criteria. That's Felix Draxler at Gralonex Freight, a different prospect, not Felix Mehta."
+  ]
+ },
+ {
+  "set": "development-master",
+  "key": "h20261102-t3|claude-opus-5-5|baseline|2",
+  "class": "disambiguation_caught",
+  "lines": [
+   "**Don't mix this up with:** Telostra Logistics (\"TEL\"). That's a different prospect, with champion Ruben Morales and its own security review on Nov 3."
+  ]
+ },
+ {
+  "set": "development-master",
+  "key": "h20261103-t2|claude-opus-5-5|baseline|1",
+  "class": "disambiguation_caught",
+  "lines": [
+   "- There's a different procurement review tomorrow (Fri Oct 16, 16:00). That one is Branesso **Robotics** with Arjun **Torvik** (80 seats at $19), so don't confuse the two."
+  ]
+ },
+ {
+  "set": "development-master",
+  "key": "h20261103-t2|claude-sonnet-5-5|baseline|1",
+  "class": "disambiguation_caught",
+  "lines": [
+   "- Don't confuse this BRL with Branura Logistics, which is also \"BRL\" in your notes. Branesso Robotics (Arjun *Torvik*) is another near-match, with its own review on Oct 16."
+  ]
+ },
+ {
+  "set": "development-master",
+  "key": "h20261103-t2|claude-opus-5-5|baseline|2",
+  "class": "disambiguation_caught",
+  "lines": [
+   "**Don't mix these up:** Branesso *Robotics* (BRR) also has an \"Arjun\": Arjun Torvik. Their procurement review is tomorrow, Fri Oct 16 at 16:00, for 80 seats at $19. That's a different deal."
+  ]
+ },
+ {
+  "set": "development-master",
+  "key": "h20261103-t2|claude-sonnet-5-5|baseline|2",
+  "class": "disambiguation_caught",
+  "lines": [
+   "- Don't confuse it with the Branesso **Robotics** (BRR) review on Friday, Oct 16 at 16:00. That's a different company, with Arjun Torvik, 80 seats at $19."
+  ]
+ },
+ {
+  "set": "development-master",
+  "key": "h20261105-t1|gpt-6.1-sol|baseline|1",
+  "class": "generic_phrase",
+  "lines": [
+   "*Brain maintenance: one page is pending entity indexing, so reference lists may be incomplete. After this session, the host can refresh them with `gbrain extract --stale --catch-up --brain host --source vault`.*"
+  ]
+ },
+ {
+  "set": "development-master",
+  "key": "h20261108-t2|claude-sonnet-5-5|baseline|1",
+  "class": "disambiguation_caught",
+  "lines": [
+   "- Don't mix this up with Naxanta Health, which is a separate deal at 55 seats and $45."
+  ]
+ },
+ {
+  "set": "development-master",
+  "key": "h20261108-t2|claude-sonnet-5-5|baseline|2",
+  "class": "disambiguation_caught",
+  "lines": [
+   "- Don't confuse NAE with Naxanta Health, a separate prospect with different terms: 55 seats at $45."
+  ]
+ },
+ {
+  "set": "development-alias",
+  "key": "h20261101-t1|claude-sonnet-5-5|baseline|1",
+  "class": "disambiguation_missed",
+  "lines": [
+   "- **Not included:** Your Oct 7 daily note says you owe \"Elo\" an updated order form. That is Elodie Petrov at Yarithe Foods, a different account, so I left it out."
+  ]
+ },
+ {
+  "set": "development-alias",
+  "key": "h20261102-t3|claude-opus-5-5|baseline|2",
+  "class": "disambiguation_caught",
+  "lines": [
+   "- Don't mix them up with **Telostra Logistics (TEL)**. That's a different prospect with a different Ruben (Ruben Morales), 64 seats at $14, and a security review on Nov 3."
+  ]
+ },
+ {
+  "set": "development-alias",
+  "key": "h20261103-t1|claude-opus-5-5|baseline|1",
+  "class": "disambiguation_missed",
+  "lines": [
+   "- **Not for Mira:** your Oct 9 daily note says you owe the data processing addendum to Mira *Yilmaz* at Orvoria Logistics, a different account. So I left it out of this email."
+  ]
+ },
+ {
+  "set": "development-alias",
+  "key": "h20261103-t2|claude-opus-5-5|baseline|1",
+  "class": "disambiguation_caught",
+  "lines": [
+   "**Which BRL this is.** Your notes use \"BRL\" for two companies: Branesso Logistics and Branura Logistics. Arjun Thorne works at **Branesso Logistics**, so this prep is for them. Don't confuse it with **Branesso Robotics (BRR)**. Their champion is Arjun *Torvik*, and their procurement review is tomorrow, Oct 16 at 16:00, quoting 80 seats at $19."
+  ]
+ },
+ {
+  "set": "development-alias",
+  "key": "h20261103-t2|claude-sonnet-5-5|baseline|1",
+  "class": "disambiguation_caught",
+  "lines": [
+   "- Not to be confused with Arjun Torvik at Branesso Robotics, who has a separate review on Oct 16."
+  ]
+ },
+ {
+  "set": "development-alias",
+  "key": "h20261103-t2|claude-opus-5-5|baseline|2",
+  "class": "disambiguation_missed",
+  "lines": [
+   "Prep for BRL, meaning Branesso Logistics, where Arjun Thorne is DevOps Manager. Your notes also use \"BRL\" for Branura Logistics, and there's an Arjun Torvik at Branesso Robotics with a procurement review tomorrow (Oct 16). Neither is this call."
+  ]
+ },
+ {
+  "set": "development-alias",
+  "key": "h20261103-t2|claude-sonnet-5-5|baseline|2",
+  "class": "disambiguation_caught",
+  "lines": [
+   "Don't confuse this with Branesso Robotics. That's a different company, with Arjun Torvik on Oct 16 and a quote of 80 seats at $19."
+  ]
+ },
+ {
+  "set": "development-alias",
+  "key": "h20261107-t3|claude-opus-5-5|baseline|1",
+  "class": "disambiguation_missed",
+  "lines": [
+   "- Don't mix Om up with **Omari Rahman**, who is also called \"Om.\" He's at Dovvane Logistics (DOL), a separate deal: 15 seats at $19, with a security review on Oct 30.",
+   "3. **Possibly not yours to send here: the customer reference list.** Your Oct 7 daily note says \"Omari Rahman (DOL) asked about 15 seats; I owe Om the customer reference list.\" In context, that \"Om\" is most likely the DOL Omari, not Om Quist. Check before you treat it as a DOA item."
+  ]
+ },
+ {
+  "set": "development-alias",
+  "key": "h20261107-t3|claude-sonnet-5-5|baseline|1",
+  "class": "disambiguation_caught",
+  "lines": [
+   "3. **Customer reference list for \"Om.\"** Your Oct 7 daily note says \"I owe Om the customer reference list.\" The note is ambiguous because it's next to a line about Omari Rahman at Dovvane Logistics, who is also called \"Om.\" Check which Om you owe it to. Don't mix up DOA (Analytics) and DOL (Logistics). DOL is a separate deal at 15 seats and $19."
+  ]
+ },
+ {
+  "set": "development-alias",
+  "key": "h20261107-t3|claude-opus-5-5|baseline|2",
+  "class": "disambiguation_missed",
+  "lines": [
+   "**Not DOA:** Your Oct 7 daily note says \"I owe Om the customer reference list.\" In that note, \"Om\" is Omari Rahman of **Dovvane Logistics (DOL)**, a different prospect with a similar name. They're at 15 seats, and their security review is Oct 30. So that list isn't something you owe Om Quist, unless you also promised it to him somewhere I can't see."
+  ]
+ },
+ {
+  "set": "development-alias",
+  "key": "h20261107-t3|claude-sonnet-5-5|baseline|2",
+  "class": "disambiguation_caught",
+  "lines": [
+   "3. **Customer reference list.** Your Oct 7 note says \"I owe Om the customer reference list\". That note also mentions Omari Rahman at Dovvane Logistics (DOL), a different company. \"Om\" could be either, so check which one you meant."
+  ]
+ },
+ {
+  "set": "fresh-seeds-master",
+  "key": "h124371926-t1|claude-sonnet-5-5|baseline|1",
+  "class": "generic_phrase",
+  "lines": [
+   "- In July she asked about a sandbox for another team. That could be an expansion angle."
+  ]
+ },
+ {
+  "set": "fresh-seeds-master",
+  "key": "h868827636-t2|claude-opus-5-5|baseline|1",
+  "class": "disambiguation_caught",
+  "lines": [
+   "- Don't mix it up with **Xerovik Foods (XEF)**. That's a different prospect with a similar name and a different Noor (Noor Ishikawa): 60 seats at $14."
+  ]
+ }
+]

@@ -1,0 +1,29 @@
+{
+  "ledger": "~/cells/ledger.sqlite",
+  "state": "sqlite",
+  "totals": {
+    "program_cap_usd": 39,
+    "committed_usd": 29.414269745,
+    "reconciled_usd": 29.414269745,
+    "open_reservations_usd": 0,
+    "remaining_usd": 9.585730255000001,
+    "requests": 9450,
+    "overshoot_usd": 0.0016208400000000001
+  },
+  "run": null,
+  "runs": 8,
+  "open_runs": 0,
+  "last_cap_change": {
+    "program_cap_usd": 39,
+    "kind": "set_cap",
+    "reason": "Garry approved 2026-10-12: raise stage dev-locomo from $26 to $39; dev cell budgets were sized below the proxy worst-case reservations for in-flight judge calls, so incomplete arms rerun as new cells with larger budgets (reservation headroom only)",
+    "by": "ubi@vm12f3ew",
+    "at": "2026-10-12T11:06:08.312Z"
+  },
+  "size_bytes": 4722688,
+  "read_ms": 7.34,
+  "hints": [
+    "both files present: a real legacy ledger.json beside the SQLite ledger is an interrupted migration; if the totals match run `migrate --finish`, otherwise stop and ask the user",
+    "cap mismatch: unset --program-cap-usd / BRAINBENCH_PROGRAM_CAP_USD to use the recorded cap; run `set-cap` only with the user's authorization"
+  ]
+}

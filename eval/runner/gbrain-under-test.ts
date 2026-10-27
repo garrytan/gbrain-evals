@@ -112,9 +112,9 @@ export function productIdentityFor(gut: GbrainUnderTest): ProductIdentity {
   };
 }
 
-/** Receipt-friendly summary of the overlay (null for the pinned dependency). */
+/** Receipt-friendly summary of the overlay (null for the pinned dependency); `requested` names the ref, never the checkout path. */
 export function overlaySummary(gut: GbrainUnderTest): Record<string, unknown> | null {
   if (!gut.overlay) return null;
-  const { requested, ref, checkout_dirty, build } = gut.overlay;
-  return { requested, ref, commit: build.commit, tree: build.tree, version: build.version, checkout_dirty, verified: build.verified, copied_not_symlinked: true };
+  const { ref, checkout_dirty, build } = gut.overlay;
+  return { requested: `gbrain@${ref}`, ref, commit: build.commit, tree: build.tree, version: build.version, checkout_dirty, verified: build.verified, copied_not_symlinked: true };
 }

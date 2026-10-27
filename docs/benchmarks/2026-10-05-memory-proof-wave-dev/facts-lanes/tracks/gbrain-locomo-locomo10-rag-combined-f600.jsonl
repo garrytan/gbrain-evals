@@ -1,0 +1,3 @@
+{"ts":"2026-10-05T15:46:02.949Z","step":"ingest","code":0,"cell":"locomo-locomo10-gbrain-rag-1f4675bf7a74","tail":"[cell] locomo-locomo10-gbrain-rag-1f4675bf7a74: resuming with $10.00 of $10.00 left; proxy http://127.0.0.1:46787 | [cell] locomo-locomo10-gbrain-rag-1f4675bf7a74 exited 0; receipts in eval/reports/harness-cells/locomo-locomo10-gbrain-rag-1f4675bf7a74 | "}
+{"ts":"2026-10-05T15:50:25.709Z","step":"tune","code":4,"chosen":{"8000":null}}
+{"ts":"2026-10-05T15:50:25.709Z","step":"run","target":8000,"skipped":"no knob setting passed the delivered-context gate on the tuning sample"}

@@ -1,8 +1,9 @@
-"""Protocol v1 shim for graph-pipeline 1.6.2 (see eval/systems/PROTOCOL.md and README.md in this directory).
+"""Protocol v1 shim for graph-pipeline (see eval/systems/PROTOCOL.md and README.md in this directory).
 
-Ingestion follows graph-pipeline's own BEAM ingestion (cognee/eval_framework/beam/local_ingest.py at v1.6.2): each session is
+Ingestion follows graph-pipeline's own BEAM ingestion (the package's eval_framework/beam/local_ingest.py at the pinned
+release): each session is
 one JSON-list document, one turn pair per item, added and cognified one session at a time with `JsonListChunker`.
-Retrieval follows graph-pipeline's reported BEAM configuration (`hybrid_completion`): `cognee.search` with
+Retrieval follows graph-pipeline's reported BEAM configuration (`hybrid_completion`): its `search` with
 `query_type=HYBRID_COMPLETION`, `only_context=True` (no answer generation) and `verbose=True`, so the ranked chunks,
 entities and facts that make up the context come back as separate objects.
 """
@@ -31,7 +32,7 @@ if CONFIG not in CONFIG_ENV:
     raise SystemExit(f"SHIM_CONFIG must be recipe or common, got {CONFIG!r}")
 os.environ.update(CONFIG_ENV[CONFIG])
 
-import cognee  # noqa: E402
+import cognee as graph_pipeline  # noqa: E402
 from cognee import SearchType  # noqa: E402
 from cognee.modules.chunking.JsonListChunker import JsonListChunker  # noqa: E402
 from cognee.modules.retrieval.hybrid.entities import format_entities  # noqa: E402
@@ -56,7 +57,7 @@ def render_session(session: dict[str, Any], session_number: int) -> list[str]:
     return items
 
 
-class CogneeAdapter(Adapter):
+class GraphPipelineAdapter(Adapter):
     def __init__(self) -> None:
         self.loop = asyncio.new_event_loop()
         threading.Thread(target=self.loop.run_forever, daemon=True).start()
@@ -96,11 +97,11 @@ class CogneeAdapter(Adapter):
         return {"ok": True, "config": CONFIG, "resolved": self.resolved_models()}
 
     async def _dataset(self, ns: str) -> Any:
-        return next((d for d in await cognee.datasets.list_datasets() if d.name == ns), None)
+        return next((d for d in await graph_pipeline.datasets.list_datasets() if d.name == ns), None)
 
     async def _reset(self, ns: str) -> None:
         if await self._dataset(ns) is not None:
-            await cognee.forget(dataset=ns)
+            await graph_pipeline.forget(dataset=ns)
 
     def reset(self, ns: str) -> None:
         self.run(self._reset(ns))
@@ -109,8 +110,8 @@ class CogneeAdapter(Adapter):
 
     async def _ingest(self, ns: str, source_id: str, items: list[str]) -> Any:
         data_id = self.data_id(ns, source_id)
-        await cognee.add(DataItem(data=json.dumps(items, ensure_ascii=False), label=source_id, data_id=data_id), dataset_name=ns)
-        return await cognee.cognify(datasets=[ns], chunker=JsonListChunker, extractor="llm")
+        await graph_pipeline.add(DataItem(data=json.dumps(items, ensure_ascii=False), label=source_id, data_id=data_id), dataset_name=ns)
+        return await graph_pipeline.cognify(datasets=[ns], chunker=JsonListChunker, extractor="llm")
 
     def ingest(self, ns: str, session: dict[str, Any]) -> dict[str, Any]:
         number = self.session_counts.get(ns, 0) + 1
@@ -133,12 +134,12 @@ class CogneeAdapter(Adapter):
         dataset = await self._dataset(ns)
         if dataset is None:
             return {}
-        return {str(row.id): row.label for row in await cognee.datasets.list_data(dataset.id) if row.label}
+        return {str(row.id): row.label for row in await graph_pipeline.datasets.list_data(dataset.id) if row.label}
 
     async def _search(self, ns: str, question: str, settings: dict[str, Any]) -> Any:
         if await self._dataset(ns) is None:
             return None
-        return await cognee.search(question, query_type=SearchType.HYBRID_COMPLETION, datasets=[ns], top_k=settings["top_k"],
+        return await graph_pipeline.search(question, query_type=SearchType.HYBRID_COMPLETION, datasets=[ns], top_k=settings["top_k"],
                                    only_context=True, verbose=True,
                                    retriever_specific_config={k: settings[k] for k in LANE_KEYS if k in settings})
 
@@ -184,7 +185,7 @@ class CogneeAdapter(Adapter):
     async def _delete(self, ns: str, source_id: str) -> Any:
         if await self._dataset(ns) is None:
             return None
-        return await cognee.forget(data_id=self.data_id(ns, source_id), dataset=ns)
+        return await graph_pipeline.forget(data_id=self.data_id(ns, source_id), dataset=ns)
 
     def delete_source(self, ns: str, source_id: str) -> dict[str, Any]:
         receipt = self.run(self._delete(ns, source_id))
@@ -195,6 +196,6 @@ class CogneeAdapter(Adapter):
 
 
 if __name__ == "__main__":
-    adapter = CogneeAdapter()
+    adapter = GraphPipelineAdapter()
     print(json.dumps({"shim": "graph-pipeline", "config": CONFIG, "resolved": adapter.resolved_models(), "t": time.time()}), flush=True)
     serve(adapter)

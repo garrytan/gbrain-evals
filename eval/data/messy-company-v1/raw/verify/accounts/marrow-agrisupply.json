@@ -1,0 +1,106 @@
+{
+  "slug": "accounts/marrow-agrisupply",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2026-09-15",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Marrow Agrisupply",
+        "line": 6
+      },
+      {
+        "oid": "e2",
+        "surface": "MAS",
+        "line": 9
+      },
+      {
+        "oid": "e3",
+        "surface": "Marrow Agri",
+        "line": 9
+      },
+      {
+        "oid": "e4",
+        "surface": "Marrow Fieldworks",
+        "line": 10
+      },
+      {
+        "oid": "e5",
+        "surface": "Marrow Agrisupply",
+        "line": 13
+      },
+      {
+        "oid": "e6",
+        "surface": "Marrow Fieldworks",
+        "line": 13
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": [
+      {
+        "account": "marrow-agrisupply",
+        "question": "According to this page alone, who manages Marrow Agrisupply, in what role, and from/until when?"
+      }
+    ]
+  },
+  "prompt_user_sha256": "d2500ff9886fea0ca0b70f2d10f7290c2980181ebb25746c6513b7c1436c87c2",
+  "response_text": "{\n  \"date_used\": \"2026-09-15\",\n  \"extra_owner_phrases\": [\n    {\n      \"line\": 11,\n      \"phrase\": \"Central team pooled account (no single account manager)\",\n      \"accounts\": [\"marrow-agrisupply\"],\n      \"note\": \"Explicitly identifies Marrow Agrisupply as managed by the Central team.\"\n    }\n  ],\n  \"entities\": [\n    {\"oid\": \"e1\", \"entity\": \"marrow-agrisupply\"},\n    {\"oid\": \"e2\", \"entity\": \"marrow-agrisupply\"},\n    {\"oid\": \"e3\", \"entity\": \"marrow-agrisupply\"},\n    {\"oid\": \"e4\", \"entity\": \"marrow-fieldworks\"},\n    {\"oid\": \"e5\", \"entity\": \"marrow-agrisupply\"},\n    {\"oid\": \"e6\", \"entity\": \"marrow-fieldworks\"}\n  ],\n  \"ownership\": [\n    {\n      \"account\": \"marrow-agrisupply\",\n      \"owner\": \"Central team\",\n      \"role\": \"team\",\n      \"start\": null,\n      \"end\": null,\n      \"line\": 11\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2026-09-15",
+    "extra_owner_phrases": [
+      {
+        "line": 11,
+        "phrase": "Central team pooled account (no single account manager)",
+        "accounts": [
+          "marrow-agrisupply"
+        ],
+        "note": "Explicitly identifies Marrow Agrisupply as managed by the Central team."
+      }
+    ],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "marrow-agrisupply"
+      },
+      {
+        "oid": "e2",
+        "entity": "marrow-agrisupply"
+      },
+      {
+        "oid": "e3",
+        "entity": "marrow-agrisupply"
+      },
+      {
+        "oid": "e4",
+        "entity": "marrow-fieldworks"
+      },
+      {
+        "oid": "e5",
+        "entity": "marrow-agrisupply"
+      },
+      {
+        "oid": "e6",
+        "entity": "marrow-fieldworks"
+      }
+    ],
+    "ownership": [
+      {
+        "account": "marrow-agrisupply",
+        "owner": "Central team",
+        "role": "team",
+        "start": null,
+        "end": null,
+        "line": 11
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2807,
+    "output_tokens": 388,
+    "thinking_tokens": 127
+  },
+  "cost_usd": 0.009494
+}

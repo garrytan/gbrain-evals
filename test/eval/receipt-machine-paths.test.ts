@@ -18,6 +18,9 @@ import { MACHINE_LOCAL_PATH, scrubMachinePaths } from '../../eval/runner/receipt
 
 const ROOT = resolve(import.meta.dir, '../..');
 const historical = (JSON.parse(readFileSync(join(import.meta.dir, 'fixtures/historical-machine-local-paths.json'), 'utf8')) as { files: Record<string, string> }).files;
+const historicalCapy = (JSON.parse(readFileSync(join(import.meta.dir, 'fixtures/historical-capy-local-paths.json'), 'utf8')) as { files: Record<string, string> }).files;
+/** Capy machine paths: the /workspace/ checkout root and the agent scratch under ~/.capy/, which home scrubbing turns into `~/.capy/...` and MACHINE_LOCAL_PATH accepts. */
+const CAPY_LOCAL_PATH = /(?:^|[\s"'=(:,\[])(?:\/workspace\/|~\/\.capy\/|\$HOME\/\.capy\/)/;
 
 describe('scrubMachinePaths', () => {
   test('rewrites checkout, home and temp prefixes in nested strings', () => {
@@ -46,10 +49,19 @@ describe('scrubMachinePaths', () => {
       expect(MACHINE_LOCAL_PATH.test(ok)).toBe(false);
     }
   });
+
+  test('the Capy pattern catches checkout and scratch paths that home scrubbing leaves behind', () => {
+    for (const leak of ['"ledger": "/workspace/gbrain-evals/.budget/x.sqlite"', '"--gbrain": "~/.capy/work/gbrain@14ea3e2e"', '"--gbrain-root": "~/.capy/work/cat40/gbrain-d5"', 'root=$HOME/.capy/work/x']) {
+      expect(CAPY_LOCAL_PATH.test(leak)).toBe(true);
+    }
+    for (const ok of ['"gbrain@14ea3e2e"', '"<slots>/gbrain-d5"', '".budget/x.sqlite"', '"~/.cache/x"', 'https://example.com/workspace/x']) {
+      expect(CAPY_LOCAL_PATH.test(ok)).toBe(false);
+    }
+  });
 });
 
 describe('committed receipts', () => {
-  const files = execFileSync('git', ['ls-files', 'docs/benchmarks', 'results', 'baselines', 'qrels'], { cwd: ROOT, encoding: 'utf8' })
+  const files = execFileSync('git', ['ls-files', 'docs/benchmarks', 'results', 'baselines', 'qrels'], { cwd: ROOT, encoding: 'utf8', maxBuffer: 256 * 1024 * 1024 })
     .split('\n').filter(f => /\.(json|ndjson|jsonl|log)$/.test(f));
 
   test('no receipt outside the frozen historical list contains a machine-local path', () => {
@@ -59,6 +71,16 @@ describe('committed receipts', () => {
 
   test('historical receipts with machine-local paths are unchanged', () => {
     const changed = Object.entries(historical).filter(([f, sha]) => createHash('sha256').update(readFileSync(join(ROOT, f))).digest('hex') !== sha);
+    expect(changed).toEqual([]);
+  });
+
+  test('no receipt outside the frozen lists contains a Capy machine path', () => {
+    const offenders = files.filter(f => !(f in historical) && !(f in historicalCapy) && CAPY_LOCAL_PATH.test(readFileSync(join(ROOT, f), 'utf8')));
+    expect(offenders).toEqual([]);
+  });
+
+  test('historical receipts with Capy machine paths are unchanged', () => {
+    const changed = Object.entries(historicalCapy).filter(([f, sha]) => createHash('sha256').update(readFileSync(join(ROOT, f))).digest('hex') !== sha);
     expect(changed).toEqual([]);
   });
 });

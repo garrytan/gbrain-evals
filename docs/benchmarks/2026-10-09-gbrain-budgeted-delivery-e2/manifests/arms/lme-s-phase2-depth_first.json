@@ -1,0 +1,98 @@
+{
+  "policies": {
+    "fixed-evidence": {
+      "budget_tokens": 8000
+    }
+  },
+  "contexts": [
+    "pseudo-off",
+    "pseudo-depth_first",
+    "rank-depth_first",
+    "native-off",
+    "native-depth_first"
+  ],
+  "recipes": {
+    "pseudo-off": {
+      "items": "off-b_pseudo",
+      "render": "pseudo-session"
+    },
+    "pseudo-depth_first": {
+      "items": "depth_first-b_pseudo",
+      "render": "pseudo-session"
+    },
+    "rank-depth_first": {
+      "items": "depth_first-b_pseudo",
+      "render": "pseudo-session-rank"
+    },
+    "native-off": {
+      "items": "off-b_native",
+      "render": "native-dated"
+    },
+    "native-depth_first": {
+      "items": "depth_first-b_native",
+      "render": "native-dated"
+    }
+  },
+  "readers": [
+    {
+      "id": "opus-5-5",
+      "model": "anthropic:claude-opus-5-5",
+      "slice": {
+        "limit": 100,
+        "seed": 42
+      },
+      "contexts": [
+        "pseudo-off",
+        "pseudo-depth_first"
+      ]
+    },
+    {
+      "id": "gpt-6-1-sol",
+      "model": "openai:gpt-6.1-sol",
+      "slice": {
+        "limit": 100,
+        "seed": 42
+      },
+      "contexts": [
+        "pseudo-off",
+        "pseudo-depth_first"
+      ]
+    },
+    {
+      "id": "sonnet-5-5-slice",
+      "model": "anthropic:claude-sonnet-5-5",
+      "slice": {
+        "limit": 100,
+        "seed": 42
+      },
+      "contexts": [
+        "rank-depth_first"
+      ]
+    },
+    {
+      "id": "gpt-4o",
+      "model": "openai:gpt-4o-2024-08-06",
+      "slice": {
+        "limit": 100,
+        "seed": 42
+      },
+      "contexts": [
+        "native-off",
+        "native-depth_first"
+      ]
+    },
+    {
+      "id": "fable-5-1-smoke",
+      "model": "anthropic:claude-fable-5-1",
+      "slice": {
+        "limit": 6,
+        "seed": 42
+      },
+      "contexts": [
+        "pseudo-off",
+        "pseudo-depth_first"
+      ]
+    }
+  ],
+  "judge": "openai:gpt-4o-2024-08-06"
+}

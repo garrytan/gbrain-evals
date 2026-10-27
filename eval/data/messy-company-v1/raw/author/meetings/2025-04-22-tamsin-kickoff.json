@@ -1,0 +1,37 @@
+{
+  "slug": "meetings/2025-04-22-tamsin-kickoff",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: meeting\nTitle: Tamsin kickoff\nDate: Written on 2025-04-22.\nWriter: Dana Okafor\nVoice: friendly and organized\nFormat: undefined\nLength: about 199 words\nDate style in the body: undefined\nTypos: a few natural typos and one or two sloppy abbreviations (never in names or required phrases)\n\nBrief:\nDana's kickoff notes with Tamsin's ops team: sensor feeds, Tacoma first, order form targeted for end of May.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Ilse Varga: North team lead\n- Dana Okafor: Account manager, North team\n- Marcus Lindqvist: Account manager, North team\n- Thea Ramaswell: Director of Yard Operations\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Quarrendon Freight Lines: truckload freight carrier, Upper Midwest; main contact Thea Ramaswell, Director of Yard Operations; codes/nicknames QFL, Q-Freight\n- Brackenwater Freight Co.: less-than-truckload freight, Great Lakes; codes/nicknames BWF, Bracken\n- Tamsin Cold Chain: refrigerated warehousing, Pacific Northwest; codes/nicknames TCC\n- Orrin Mills: textile mill, Carolinas; codes/nicknames ORM\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2025-04-22 (background only; don't restate unless the brief asks):\n- Quarrendon Freight Lines: managed by Marcus Lindqvist\n- Brackenwater Freight Co.: managed by Dana Okafor\n- Tamsin Cold Chain: managed by Dana Okafor\n- Orrin Mills: managed by Dana Okafor",
+      "response_text": "# Tamsin kickoff\n**2025-04-22**\n\nGood kickoff with the Tamsin Cold Chain ops team today. We kept the discussion on sensor feeds and what the Tacoma crew needs during a busy receiving shift. Tacoma first; other sites can wait until we’ve worked through the feed behavior there.\n\n## What we covered\n- Pemberline Dock needs to show door occupancy clearly enough that the shift lead isn’t checking the camera monitor between every appointment.\n- Door 6 was the useful example: a trailer can be physically in place while the sensor still reports the previous state. The team wants to see the last update time, not just an occupied/free label.\n- We’ll start with sample sensor events from Tacoma, including a disconnect and a late-arriving update. Ops will pull these after the morning receiving rush.\n- The overnight crew flagged that a blank status looks like an open door. Worth testing that display before anyone relies on it for scheduling.\n\n## Next steps\n- I’ll send the sample-event checklist and a short recap tomorow.\n- Ops to confirm which Tacoma doors are in the first pass and send the feed field names.\n- Set up a follow-up walkthrough once the samples arrive; keep it to 30 mins.\n\nOrder form targeted for end of May. Still need the Tacoma scope nailed down before that draft goes around.",
+      "usage": {
+        "input_tokens": 1007,
+        "output_tokens": 277,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.004784,
+      "provider_meta": {
+        "id": "resp_0af3a1a1394c381a016acfae36b40487d18ed21ac59d1517a1",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1007,
+          "input_tokens_details": {
+            "cache_write_tokens": 0,
+            "cached_tokens": 0
+          },
+          "output_tokens": 277,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 1284
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

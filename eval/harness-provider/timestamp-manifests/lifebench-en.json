@@ -1,0 +1,15 @@
+{
+  "counts": {
+    "observed_session_time": 3605
+  },
+  "dataset": "lifebench",
+  "dates_passed_to_providers": 3605,
+  "documents": 3605,
+  "policy": "Only observed session times reach providers; stated event dates and unknown dates are withheld from both systems.",
+  "rows_sha256": "27212e76c5b7f4ac64432f42972c2beedbc8bea6b5333e781908661e7311b9d9",
+  "rule": {
+    "provenance": "observed_session_time",
+    "source": "conversation['<session>_date_time']"
+  },
+  "split": "en"
+}

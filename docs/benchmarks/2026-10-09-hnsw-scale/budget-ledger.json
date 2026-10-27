@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "plan_item": "10x memory advantage, wave 3, E5.4.1 real-vector confirmation",
+  "authorized_cap_usd": 30,
+  "hard_stop_usd": 28,
+  "note": "Spent through the gbrain bench's own voyage-4 meter (scripts/bench/hnsw-iterative-scan.ts --corpus dir), not the eval runner ledger: tokens are the provider-reported usage.total_tokens of every call; dollars are tokens x the list price in gbrain src/core/embedding-pricing.ts.",
+  "pricing_sources": [
+    "https://docs.voyageai.com/docs/pricing",
+    "gbrain src/core/embedding-pricing.ts voyage:voyage-4 0.06 USD per 1M tokens"
+  ],
+  "entries": [
+    {
+      "date": "2026-10-09",
+      "provider": "voyage",
+      "model": "voyage-4",
+      "dims": 1024,
+      "purpose": "embed 1,000,000 English Wikipedia chunks (documents) and 100 queries",
+      "document_tokens": 217838741,
+      "query_tokens": 3409,
+      "requests": 10111,
+      "price_per_mtok_usd": 0.06,
+      "usd": 13.0705
+    }
+  ],
+  "total_usd": 13.0705
+}

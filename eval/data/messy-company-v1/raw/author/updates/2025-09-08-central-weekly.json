@@ -1,0 +1,41 @@
+{
+  "slug": "updates/2025-09-08-central-weekly",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: weekly\nTitle: Central weekly 9/8\nDate: Written on 2025-09-08.\nWriter: Hollis Mbeki\nVoice: polished and businesslike\nFormat: a weekly update with a section per topic and bullets\nLength: about 493 words\nDate style in the body: US long (June 2, 2025)\nTypos: none\n\nBrief:\nHollis's update after the Tansley Parcel carrier-API outage escalation (Sept 3).\n\nRequired phrases:\n- Use the exact phrase \"Pree's parcel account\" once, referring to Tansley Parcel. Don't put the account's name in the same sentence; the reader should work it out.\n- Use the exact phrase \"the account Tobias runs\" once, referring to Tansleigh Packaging. This page must not reveal which account that is or who manages it: no account name, location, or detail that identifies it in that sentence or paragraph.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Hollis Mbeki: Central team lead\n- Priyanka \"Pree\" Sundaram: Account manager, Central team\n- Tobias Rendle: Account manager, Central team\n- Lev Arkadin: Procurement lead\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Tansley Parcel: regional parcel delivery, South Central; main contact Lev Arkadin, Procurement lead; codes/nicknames TPCL, TP\n- Tansleigh Packaging: corrugated packaging manufacturer, Ohio Valley; codes/nicknames TSP, TP\n- Marrow Fieldworks: agricultural equipment dealer network, Plains; codes/nicknames MFW\n- Marrow Agrisupply: farm supply retail chain, Plains; subsidiary of Marrow Fieldworks; codes/nicknames MAS, Marrow Agri\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2025-09-08 (background only; don't restate unless the brief asks):\n- Tansley Parcel: managed by Priyanka \"Pree\" Sundaram\n- Tansleigh Packaging: not stated on any shared page (do not say who manages it)\n- Marrow Fieldworks: managed by Priyanka \"Pree\" Sundaram\n- Marrow Agrisupply: managed by Central team (pooled account)",
+      "response_text": "# Central weekly 9/8\n\n**Author:** Hollis Mbeki  \n**Date:** September 8, 2025  \n\n### Carrier-API Outage Escalation (September 3, 2025)\n* On September 3, 2025, an upstream certificate change broke the carrier-API webhook for Pree's parcel account, halting automated gate check-ins across their South Central cross-docks during the Wednesday twilight sort.\n* At Tansley Parcel, yard clerks at the Little Rock and Shreveport hubs had to key in trailer arrivals manually on Docks 14 through 28 for nearly four hours, creating a fifteen-truck queue out to the frontage road.\n* Lev Arkadin escalated the ticket (INC-44912) after linehaul drivers missed three scheduled departure cutoffs and detention logs failed to sync back to their dispatch board.\n* Engineering deployed a hotfix by 11:40 PM CDT on September 3, 2025, and Priyanka \"Pree\" Sundaram delivered the preliminary root-cause summary on September 5, 2025.\n* We are hosting a technical follow-up tomorrow, September 9, 2025, to walk Lev Arkadin and his hub supervisors through our new webhook retry logic and alert thresholds in Pemberline Dock.\n\n### Central Pod Operations & Account Activity\n* **Marrow Fieldworks:** Priyanka \"Pree\" Sundaram completed the Q3 yard workflow review for the Salina and Grand Island equipment depots. Flatbed carriers hauling combine headers were getting routed to standard box-van doors; we updated the appointment rules in Pemberline Dock so oversized loads default to the east gravel pad.\n* **Marrow Agrisupply:** On our pooled queue, we resolved ticket SUP-88201 regarding duplicate SMS gate passes sent to seasonal fertilizer drivers. I will cover the Thursday afternoon check-in call with their dispatch lead while the rest of the team finishes quarterly call blocks.\n* **QBR Preparation:** Tobias Rendle has finalized the slide deck and dock-utilization exports for the account Tobias runs, and we will review the executive summary together on Wednesday afternoon before the customer presentation on September 12, 2025.\n\n### Internal Systems & Cross-Functional Items\n* **Stoneharrow Billing:** Felix Duarte joined our sync on September 4, 2025, to troubleshoot why PO numbers were truncating at twelve characters on automated PDF invoices. A patch is scheduled for September 11, 2025, which June Osei-Lark confirmed will clear the current backlog of manual invoice edits.\n* **Carrier Directory Cleanup:** Several regional dispatchers accidentally selected Quarendon Freightways in the carrier dropdown last week instead of the intended active carrier profile. Support is hiding the inactive look-alike entry in the master lookup table so gate clerks stop sending appointment confirmations to an unmonitored address.\n* **Executive Reporting:** Ruth Calloway asked for a clean rollup of all third-quarter API incidents across the regions by Friday, September 12, 2025. Moss already scraped the initial incident timelines from the engineering channel, and I am editing the Central section today to ensure the operational impact notes are accurate before Anselm Grieve and Ruth Calloway review the packet.",
+      "usage": {
+        "input_tokens": 1170,
+        "output_tokens": 702,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.00936,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1170,
+          "candidatesTokenCount": 702,
+          "totalTokenCount": 1872,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1170
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 702
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

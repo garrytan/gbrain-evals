@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "experiments": [
+    {
+      "id": "cat41-setup-remeasure",
+      "preregistration": "docs/benchmarks/2026-10-12-cat41-setup-remeasure-preregistration.md",
+      "results": [
+        "docs/benchmarks/*-cat41-setup-remeasure/**",
+        "docs/benchmarks/*-cat41-setup-remeasure.md"
+      ]
+    }
+  ]
+}

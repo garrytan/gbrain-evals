@@ -1,0 +1,41 @@
+{
+  "slug": "accounts/orlavine-medical-supply",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: profile\nTitle: Orlavine Medical Supply\nDate: Written on 2025-03-04.\nWriter: Nadia Fennimore\nVoice: polished and businesslike\nFormat: undefined\nLength: about 71 words\nDate style in the body: undefined\nTypos: none\n\nBrief:\nAccount profile, updated 2025-03-04. Medical supply distributor in the Mountain West, HQ Boise. Code OMS. Account manager: Nadia Fennimore. Not to be confused with Orlavene Health (a hospital group, not a customer); say so in one plain sentence. Currently piloting; order form expected in the fall.\n\nUse these names or codes at least once each, as written: \"OMS\".\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Nadia Fennimore: Strategic account manager\n- Gideon Sato: Strategic account manager\n- Mateo Quiroga: Head of Procurement\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Vantorre Group: diversified industrial manufacturer, Northeast; main contact Mateo Quiroga, Head of Procurement; codes/nicknames VTG, VTRG\n- Vantorre Mobility: electric fleet services subsidiary, Northeast; subsidiary of Vantorre Group; codes/nicknames VTM, VMob\n- Orlavine Medical Supply: medical supply distributor, Mountain West; codes/nicknames OMS\n- Quillfeather Outfitters: outdoor gear retailer, Mountain West; codes/nicknames QFO\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2025-03-04 (background only; don't restate unless the brief asks):\n- Vantorre Group: managed by Nadia Fennimore\n- Vantorre Mobility: managed by Gideon Sato\n- Orlavine Medical Supply: managed by Nadia Fennimore\n- Quillfeather Outfitters: managed by Strategic Accounts pod (pooled account)",
+      "response_text": "# Orlavine Medical Supply\n\n**Updated:** 2025-03-04  \n**Account Code:** OMS  \n**HQ:** Boise (Mountain West)  \n**Account Manager:** I manage this account (Nadia Fennimore, Strategic Accounts).  \n\nOrlavine Medical Supply is a regional medical supply distributor. This account is not to be confused with Orlavene Health, which is a hospital group and not a customer.\n\nOMS is currently piloting Pemberline Dock across its cold-chain receiving doors; an order form is expected in the fall.",
+      "usage": {
+        "input_tokens": 1085,
+        "output_tokens": 123,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.0034,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1085,
+          "candidatesTokenCount": 123,
+          "totalTokenCount": 1208,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1085
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 123
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "slug": "accounts/vantorre-group",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: profile\nTitle: Vantorre Group\nDate: Written on 2026-10-02.\nWriter: Ruth Calloway\nVoice: hurried, lots of fragments\nFormat: bulleted fact sheet with a short history section\nLength: about 238 words\nDate style in the body: US long (June 2, 2025)\nTypos: one or two small natural typos (never in names or required phrases)\n\nBrief:\nAccount profile, updated 2026-10-02. Diversified industrial manufacturer in the Northeast, plants in Hartford and Albany. Parent of Vantorre Mobility (separate account). Codes VTG; ticker-style VTRG in board decks. Contact Mateo Quiroga (Head of Procurement). Owner history: Nadia Fennimore until May 4, 2026; Gideon Sato since May 4, 2026. 280 seats.\n\nUse these names or codes at least once each, as written: \"VTG\", \"VTRG\".\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Nadia Fennimore: Strategic account manager\n- Gideon Sato: Strategic account manager\n- Mateo Quiroga: Head of Procurement\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Vantorre Group: diversified industrial manufacturer, Northeast; main contact Mateo Quiroga, Head of Procurement; codes/nicknames VTG, VTRG\n- Vantorre Mobility: electric fleet services subsidiary, Northeast; subsidiary of Vantorre Group; codes/nicknames VTM, VMob\n- Orlavine Medical Supply: medical supply distributor, Mountain West; codes/nicknames OMS\n- Quillfeather Outfitters: outdoor gear retailer, Mountain West; codes/nicknames QFO\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2026-10-02 (background only; don't restate unless the brief asks):\n- Vantorre Group: managed by Gideon Sato\n- Vantorre Mobility: managed by Gideon Sato\n- Orlavine Medical Supply: not stated on any shared page (do not say who manages it)\n- Quillfeather Outfitters: managed by Strategic Accounts pod (pooled account)",
+      "response_text": "# Vantorre Group\n\n*Updated October 2, 2026 — Ruth Calloway*\n\n* **Account:** Vantorre Group\n* **Internal codes:** VTG (standard CRM/billing); VTRG (used in board decks—ticker-style)\n* **Segment / Geo:** Diversified industrial manufacturer, Northeast\n* **Sites on Pemberline Dock:** Hartford and Albany plants\n* **Corporate structure:** Parent of Vantorre Mobility (tracked as a separate account—do not roll up their yard traffic here)\n* **Primary Contact:** Mateo Quiroga, Head of Procurement. (Tough on paper, hates Friday afternoon calls, prefers text if a site is down.)\n* **Footprint:** 280 seats\n* **Current Account Owner:** Gideon Sato (since May 4, 2026)\n* **Previous Account Owner:** Nadia Fennimore (until May 4, 2026)\n\n### Short History & Ops Notes\n\nNadia Fennimore ran this until the spring shuffle on May 4, 2026, when Gideon Sato took over. Handover was mostly smooth except for that lingering EDI parser bug at the Albany facility (Ticket #4418—flatbed check-ins at Gate 4 were duplicating if the driver hit the kiosk screen twice). Support patched it in July. \n\nHartford plant uses Pemberline Dock heavily for raw steel coil deliveries on the morning shift—Doors 1 through 6 only, overhead crane bay. Albany is mostly outbound palletized machinery and custom stamping runs. Mateo Quiroga asked Gideon last month for a custom export of the `Carrier_Dwell_Summary_v2` report because their Hartford third-shift supervisor, Kowalski, still prints paper manifests before the 5:00 AM shift change. Need to get them off the spreadsheets before winter weather hits the Northeast corrider and backs up the yard.",
+      "usage": {
+        "input_tokens": 1160,
+        "output_tokens": 403,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.00635,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1160,
+          "candidatesTokenCount": 403,
+          "totalTokenCount": 1563,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1160
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 403
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

@@ -488,6 +488,7 @@ export async function runCat30(options: Cat30Options = {}): Promise<Cat30RunResu
 
   const isolatedHome = join(tmpdir(), `cat30-gbrain-home-${process.pid}-${Date.now()}`);
   mkdirSync(isolatedHome, { recursive: true });
+  const priorHome = process.env.GBRAIN_HOME;
   process.env.GBRAIN_HOME = isolatedHome;
 
   if (stub) {
@@ -527,6 +528,8 @@ export async function runCat30(options: Cat30Options = {}): Promise<Cat30RunResu
     if (stub) __setChatTransportForTests(null);
     if (engine) await engine.disconnect().catch(() => {});
     rmSync(isolatedHome, { recursive: true, force: true });
+    if (priorHome === undefined) delete process.env.GBRAIN_HOME;
+    else process.env.GBRAIN_HOME = priorHome;
   }
 
   const summary = acc.summary();
@@ -614,7 +617,7 @@ if (import.meta.main) {
         finished_at: new Date().toISOString(),
       });
     } catch { /* receipt write failed too — exit code carries the failure */ }
-    process.stderr.write(`[cat30] FATAL: ${e?.stack ?? e}\n`);
+    process.stderr.write(`[cat30] FATAL: ${e?.message ?? e}\n${e?.stack ?? ''}\n`);
     process.exit(1);
   }
 }

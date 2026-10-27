@@ -38,7 +38,8 @@ export type DecideCode =
   | 'CUSTODY_MISSING'
   | 'PREREG_UNCOMMITTED'
   | 'UNDERPOWERED'
-  | 'SOURCE_EXHAUSTED';
+  | 'SOURCE_EXHAUSTED'
+  | 'RERANKER_INACTIVE';
 
 export interface OperatorMessage {
   code: DecideCode;

@@ -1,0 +1,32 @@
+{
+  "schema": "cat40-experiment-v1",
+  "gbrain_commit": "3961bf165cb212308dcccb1ae8a610041fcd06d6",
+  "slot_commit": "3961bf165cb212308dcccb1ae8a610041fcd06d6",
+  "world_digest": "79094a8a2cbb6725cae37da8a97bb16b64d7941186f5682e209ecc644b8ab510",
+  "models": [
+    "claude-sonnet-5-5"
+  ],
+  "arms": [
+    "gbrain"
+  ],
+  "label": "master",
+  "flags": {
+    "--models": "claude-sonnet-5-5",
+    "--arms": "gbrain",
+    "--world": "eval/data/model-ladder-wide-dev/world.json",
+    "--gbrain": "gbrain@3961bf165cb212308dcccb1ae8a610041fcd06d6",
+    "--gbrain-root": "<slots>",
+    "--gbrain-label": "master",
+    "--surface": "full",
+    "--advertised": "starter",
+    "--slots": "1",
+    "--tasks": "A01,A02,B01,B02,C01,C02,E01,F01,F02,H01",
+    "--repeat": "1",
+    "--transcripts": true,
+    "--judge": "none",
+    "--max-tool-chars": "none",
+    "--budget-ledger": ".budget/d5-brief-resmoke.sqlite",
+    "--out": "eval/reports/cat40/d5-brief-resmoke/master-claude-sonnet-5-5"
+  },
+  "budget_run_id": "cat40-model-ladder-2026-10-15T00-15-35-591Z-acbe9379"
+}

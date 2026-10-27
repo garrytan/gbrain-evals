@@ -1,0 +1,250 @@
+{
+  "slug": "contracts/2026-02-24-orm-renewal-2026",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2026-02-24",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Thornbury Cloth Co.",
+        "line": 7
+      },
+      {
+        "oid": "e2",
+        "surface": "Orrin Mills",
+        "line": 7
+      },
+      {
+        "oid": "e3",
+        "surface": "TCC",
+        "line": 9
+      },
+      {
+        "oid": "e4",
+        "surface": "Thornbury Cloth Co.",
+        "line": 18
+      },
+      {
+        "oid": "e5",
+        "surface": "Orrin Mills",
+        "line": 18
+      },
+      {
+        "oid": "e6",
+        "surface": "Orrin Mills",
+        "line": 20
+      },
+      {
+        "oid": "e7",
+        "surface": "Thornbury Cloth Co.",
+        "line": 20
+      },
+      {
+        "oid": "e8",
+        "surface": "Orrin Mills",
+        "line": 20
+      },
+      {
+        "oid": "e9",
+        "surface": "Thornbury Cloth Co.",
+        "line": 20
+      },
+      {
+        "oid": "e10",
+        "surface": "Orrin Mills",
+        "line": 22
+      },
+      {
+        "oid": "e11",
+        "surface": "Orrin Mills",
+        "line": 62
+      },
+      {
+        "oid": "e12",
+        "surface": "Thornbury Cloth Co.",
+        "line": 62
+      },
+      {
+        "oid": "e13",
+        "surface": "Stoneharrow Billing",
+        "line": 68
+      },
+      {
+        "oid": "e14",
+        "surface": "Stoneharrow Billing",
+        "line": 68
+      },
+      {
+        "oid": "e15",
+        "surface": "Stoneharrow Billing",
+        "line": 70
+      },
+      {
+        "oid": "e16",
+        "surface": "TCC",
+        "line": 70
+      },
+      {
+        "oid": "e17",
+        "surface": "TCC",
+        "line": 70
+      },
+      {
+        "oid": "e18",
+        "surface": "Thornbury Cloth Co.",
+        "line": 73
+      },
+      {
+        "oid": "e19",
+        "surface": "Thornbury Cloth Co.",
+        "line": 100
+      },
+      {
+        "oid": "e20",
+        "surface": "Orrin Mills",
+        "line": 100
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": [],
+    "record": {
+      "question": "Is this document signed, an unsigned version, or a draft? Judge from the body text, not the title alone. Give its signed date and effective date if stated, and the value of each of these terms it sets.",
+      "terms": [
+        "seats",
+        "price_per_seat",
+        "renewal_date"
+      ]
+    }
+  },
+  "prompt_user_sha256": "29d1bc3036ba4efaf41471daa8457fd0b427a3371acda1ed210227773b9cf8ad",
+  "response_text": "{\n  \"date_used\": \"2026-02-24\",\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\"oid\": \"e1\", \"entity\": \"orrin\"},\n    {\"oid\": \"e2\", \"entity\": \"orrin\"},\n    {\"oid\": \"e3\", \"entity\": \"orrin\"},\n    {\"oid\": \"e4\", \"entity\": \"orrin\"},\n    {\"oid\": \"e5\", \"entity\": \"orrin\"},\n    {\"oid\": \"e6\", \"entity\": \"orrin\"},\n    {\"oid\": \"e7\", \"entity\": \"orrin\"},\n    {\"oid\": \"e8\", \"entity\": \"orrin\"},\n    {\"oid\": \"e9\", \"entity\": \"orrin\"},\n    {\"oid\": \"e10\", \"entity\": \"orrin\"},\n    {\"oid\": \"e11\", \"entity\": \"orrin\"},\n    {\"oid\": \"e12\", \"entity\": \"orrin\"},\n    {\"oid\": \"e13\", \"entity\": \"stoneharrow\"},\n    {\"oid\": \"e14\", \"entity\": \"stoneharrow\"},\n    {\"oid\": \"e15\", \"entity\": \"stoneharrow\"},\n    {\"oid\": \"e16\", \"entity\": \"orrin\"},\n    {\"oid\": \"e17\", \"entity\": \"orrin\"},\n    {\"oid\": \"e18\", \"entity\": \"orrin\"},\n    {\"oid\": \"e19\", \"entity\": \"orrin\"},\n    {\"oid\": \"e20\", \"entity\": \"orrin\"}\n  ],\n  \"record\": {\n    \"status\": \"signed\",\n    \"status_evidence_line\": 28,\n    \"signed_date\": \"2026-02-24\",\n    \"effective_date\": \"2026-03-01\",\n    \"terms\": [\n      {\n        \"term\": \"seats\",\n        \"applies_to\": [\"orrin\"],\n        \"value\": \"40\",\n        \"line\": 45\n      },\n      {\n        \"term\": \"price_per_seat\",\n        \"applies_to\": [\"orrin\"],\n        \"value\": \"$1,700 USD per seat per year\",\n        \"line\": 46\n      },\n      {\n        \"term\": \"renewal_date\",\n        \"applies_to\": [\"orrin\"],\n        \"value\": \"2027-02-28\",\n        \"line\": 49\n      }\n    ],\n    \"deciding_line\": 28,\n    \"deciding_days\": null\n  }\n}",
+  "parsed": {
+    "date_used": "2026-02-24",
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "orrin"
+      },
+      {
+        "oid": "e2",
+        "entity": "orrin"
+      },
+      {
+        "oid": "e3",
+        "entity": "orrin"
+      },
+      {
+        "oid": "e4",
+        "entity": "orrin"
+      },
+      {
+        "oid": "e5",
+        "entity": "orrin"
+      },
+      {
+        "oid": "e6",
+        "entity": "orrin"
+      },
+      {
+        "oid": "e7",
+        "entity": "orrin"
+      },
+      {
+        "oid": "e8",
+        "entity": "orrin"
+      },
+      {
+        "oid": "e9",
+        "entity": "orrin"
+      },
+      {
+        "oid": "e10",
+        "entity": "orrin"
+      },
+      {
+        "oid": "e11",
+        "entity": "orrin"
+      },
+      {
+        "oid": "e12",
+        "entity": "orrin"
+      },
+      {
+        "oid": "e13",
+        "entity": "stoneharrow"
+      },
+      {
+        "oid": "e14",
+        "entity": "stoneharrow"
+      },
+      {
+        "oid": "e15",
+        "entity": "stoneharrow"
+      },
+      {
+        "oid": "e16",
+        "entity": "orrin"
+      },
+      {
+        "oid": "e17",
+        "entity": "orrin"
+      },
+      {
+        "oid": "e18",
+        "entity": "orrin"
+      },
+      {
+        "oid": "e19",
+        "entity": "orrin"
+      },
+      {
+        "oid": "e20",
+        "entity": "orrin"
+      }
+    ],
+    "record": {
+      "status": "signed",
+      "status_evidence_line": 28,
+      "signed_date": "2026-02-24",
+      "effective_date": "2026-03-01",
+      "terms": [
+        {
+          "term": "seats",
+          "applies_to": [
+            "orrin"
+          ],
+          "value": "40",
+          "line": 45
+        },
+        {
+          "term": "price_per_seat",
+          "applies_to": [
+            "orrin"
+          ],
+          "value": "$1,700 USD per seat per year",
+          "line": 46
+        },
+        {
+          "term": "renewal_date",
+          "applies_to": [
+            "orrin"
+          ],
+          "value": "2027-02-28",
+          "line": 49
+        }
+      ],
+      "deciding_line": 28,
+      "deciding_days": null
+    }
+  },
+  "usage": {
+    "input_tokens": 5555,
+    "output_tokens": 665,
+    "thinking_tokens": 125
+  },
+  "cost_usd": 0.01776
+}

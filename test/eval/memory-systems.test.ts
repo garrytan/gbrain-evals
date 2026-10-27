@@ -282,7 +282,7 @@ describe('memory-qa with a MemorySystem', () => {
       expect(code, err).toBe(0);
     } finally { upstream.stop(true); }
     expect(seen.length).toBeGreaterThan(0);
-    expect(seen.every(r => r.path === '/harness/voyage/v1/rerank' && r.auth === 'Bearer dummy-key-the-proxy-replaces' && r.model === 'rerank-2.5')).toBe(true);
+    expect(seen.every(r => r.path === '/harness/voyage/v1/rerank' && r.auth === 'Bearer dummy-key-the-proxy-replaces' && r.model === 'rerank-3-lite')).toBe(true);
     const receipt = JSON.parse(readFileSync(join(out, 'receipt.json'), 'utf8'));
     expect(receipt.metering.mode).toBe('lease-proxy');
     expect(receipt.run_status).toBe('complete');

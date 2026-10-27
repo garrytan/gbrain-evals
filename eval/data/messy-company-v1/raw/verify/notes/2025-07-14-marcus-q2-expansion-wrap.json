@@ -1,0 +1,79 @@
+{
+  "slug": "notes/2025-07-14-marcus-q2-expansion-wrap",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2025-07-14",
+    "owner_phrases": [
+      {
+        "mid": "notes/2025-07-14-marcus-q2-expansion-wrap#m1",
+        "phrase": "the account Dana took over in June",
+        "lines": [
+          11
+        ]
+      }
+    ],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Quarrendon Freight Lines",
+        "line": 9
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": [
+      {
+        "account": "quarrendon",
+        "question": "According to this page alone, who manages Quarrendon Freight Lines, in what role, and from/until when?"
+      }
+    ]
+  },
+  "prompt_user_sha256": "98d3a4310c6136bef0bc6897bf56bcf56bcfaf4a59b1a13db5d960dce2d3056f",
+  "response_text": "{\n  \"date_used\": \"2025-07-01\",\n  \"owner_phrases\": [\n    {\n      \"mid\": \"notes/2025-07-14-marcus-q2-expansion-wrap#m1\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\"quarrendon\"],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"The preceding paragraph identifies Quarrendon Freight Lines as the account handed over to Dana in June.\"\n    }\n  ],\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"quarrendon\"\n    }\n  ],\n  \"ownership\": [\n    {\n      \"account\": \"quarrendon\",\n      \"owner\": \"Dana Okafor\",\n      \"role\": \"primary\",\n      \"start\": \"2025-06-02\",\n      \"end\": null,\n      \"line\": 11\n    },\n    {\n      \"account\": \"quarrendon\",\n      \"owner\": \"Marcus Lindqvist\",\n      \"role\": \"overlap\",\n      \"start\": \"2025-06-02\",\n      \"end\": \"2025-07-01\",\n      \"line\": 9\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-07-01",
+    "owner_phrases": [
+      {
+        "mid": "notes/2025-07-14-marcus-q2-expansion-wrap#m1",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "quarrendon"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "The preceding paragraph identifies Quarrendon Freight Lines as the account handed over to Dana in June."
+      }
+    ],
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "quarrendon"
+      }
+    ],
+    "ownership": [
+      {
+        "account": "quarrendon",
+        "owner": "Dana Okafor",
+        "role": "primary",
+        "start": "2025-06-02",
+        "end": null,
+        "line": 11
+      },
+      {
+        "account": "quarrendon",
+        "owner": "Marcus Lindqvist",
+        "role": "overlap",
+        "start": "2025-06-02",
+        "end": "2025-07-01",
+        "line": 9
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2685,
+    "output_tokens": 586,
+    "thinking_tokens": 299
+  },
+  "cost_usd": 0.01123
+}

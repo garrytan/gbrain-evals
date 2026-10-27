@@ -1,6 +1,8 @@
 # markdown-notes shim
 
-This directory runs [markdown-notes](https://github.com/basicmachines-co/basic-memory) `0.23.2` behind the shootout's
+This directory runs markdown-notes at its pinned release (the
+[comparison table](../../../docs/comparison-systems.md#systems-in-the-open-source-comparison) names the project, its
+pin and its license) behind the shootout's
 [shim protocol v1](../PROTOCOL.md). markdown-notes stores notes as Markdown files and indexes them in SQLite with
 full-text search and local vector search (sqlite-vec). Its documented local install needs no API key, so the recipe
 configuration runs end to end without any provider call.
@@ -9,7 +11,7 @@ configuration runs end to end without any provider call.
 
 | Piece | Value |
 |---|---|
-| Package | `basic-memory==0.23.2`, every transitive dependency held to the vendor's own `uv.lock` at tag `v0.23.2` (commit `c0bd87c6`) through `constraint-dependencies` in `pyproject.toml` |
+| Package | the pinned markdown-notes package, every transitive dependency held to the vendor's own `uv.lock` at the pinned tag (commit `c0bd87c6`) through `constraint-dependencies` in `pyproject.toml` |
 | Prereleases | `fastmcp==4.0.0b1` and `fastmcp-slim==4.0.0b1` (markdown-notes requires `fastmcp==4.0.0b1`), plus `opentelemetry-instrumentation` and `opentelemetry-semantic-conventions` `0.63b1` from the vendor lock. uv's default `if-necessary` prerelease mode resolves them; `prerelease = "allow"` is not needed and would pull newer betas |
 | Base image | `python:3.12-slim-bookworm@sha256:54c85f3c…`, uv `0.12.3` by digest |
 | Recipe embedder | FastEmbed `bge-small-en-v1.5` (384 dimensions), baked into the image at build time |
@@ -22,7 +24,7 @@ from `SHIM_IMAGE` when the harness sets it.
 
 ## How the shim maps the protocol
 
-The flow starts from markdown-notes's own LoCoMo benchmark (`benchmarks/` at tag `v0.23.2`): a converter writes one
+The flow starts from markdown-notes's own LoCoMo benchmark (`benchmarks/` at the pinned tag): a converter writes one
 note per session, the `bm-local` provider runs `bm project add` and `bm reindex --search --embeddings -p`, then calls
 `search_notes` with `search_type="hybrid"` and JSON output over a warm `bm mcp` stdio session.
 
@@ -48,7 +50,7 @@ markdown-notes has no reference date in search, so `query_time` is ignored and t
 5. The MCP session starts with the container and serves every project; the vendor starts it after the first ingest.
 6. Item text is the row's `matched_chunk`, prefixed with the note title when the chunk lacks it, as the vendor's
    `assemble_context` does. The vendor's 12,000-character, 10-hit context budget is replaced by the harness packer.
-7. The MCP client is written here from scratch. markdown-notes is AGPL-3.0, so the container runs it unmodified and
+7. The MCP client is written here from scratch. markdown-notes's license is copyleft, so the container runs it unmodified and
    this repository copies none of its code.
 
 ## Build and run

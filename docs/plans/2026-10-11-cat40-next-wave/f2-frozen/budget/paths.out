@@ -1,0 +1,12 @@
+
+M: 3180 recorded agent search/query calls
+   2107  implied auto, no conversation hit: chunk path, no evidence budget   (rows carrying a delivered object: 1 calls)
+    551  implied auto, conversation hit present: auto path, budget 24000   (rows carrying a delivered object: 193 calls)
+    497  implied auto + token_budget: cap path, budget = token_budget   (rows carrying a delivered object: 181 calls)
+     17  explicit chunk: budget 6000   (rows carrying a delivered object: 0 calls)
+      8  explicit page: budget 6000   (rows carrying a delivered object: 4 calls)
+
+dev: 1545 recorded agent search/query calls
+   1059  implied auto, no conversation hit: chunk path, no evidence budget   (rows carrying a delivered object: 0 calls)
+    289  implied auto, conversation hit present: auto path, budget 24000   (rows carrying a delivered object: 114 calls)
+    197  implied auto + token_budget: cap path, budget = token_budget   (rows carrying a delivered object: 79 calls)

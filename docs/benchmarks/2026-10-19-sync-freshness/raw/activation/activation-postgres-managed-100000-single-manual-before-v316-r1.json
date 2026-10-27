@@ -1,0 +1,179 @@
+{
+  "schema": "gbrain-sync-activation/1",
+  "cell": "postgres-managed-100000-single-manual-before-v316-r1",
+  "label": "before-v316-r1",
+  "gbrain_rev": "4ba4c36f",
+  "brain_rev": "4ba4c36f",
+  "at": "2026-10-20T03:40:18.732Z",
+  "params": {
+    "engine": "postgres",
+    "pages": 100000,
+    "max_passes": 6
+  },
+  "machine": {
+    "cores": 4,
+    "cpu_model": "AMD EPYC",
+    "ram_gb": 16,
+    "kernel": "6.1.158+",
+    "bun": "1.4.3"
+  },
+  "build": {
+    "engine": "postgres",
+    "mode": "managed",
+    "pages": 100000,
+    "sources": [
+      "bench"
+    ],
+    "rev": "4ba4c36f",
+    "built_at": "2026-10-20T03:39:58.260Z",
+    "cloned_from": "postgres-classic-100000-4ba4c36f",
+    "clone_ms": 11623.5,
+    "activate_ms": 1662.4,
+    "first_managed_sync": {
+      "ms": 7121.77001953125,
+      "runs": 1,
+      "statuses": [
+        "up_to_date"
+      ]
+    },
+    "first_managed_sync_statements": {
+      "calls": 147,
+      "calls_ex_txn": 127,
+      "total_ms": 1058,
+      "top": [
+        {
+          "query": "SELECT id, slug, source_path, source_uri FROM pages WHERE source_id=$1 AND deleted_at IS NULL AND id > $2 ORDER BY id LIMIT $3",
+          "calls": 11,
+          "total_ms": 526.9
+        },
+        {
+          "query": "SELECT value FROM config WHERE key = $1",
+          "calls": 11,
+          "total_ms": 0.2
+        },
+        {
+          "query": "begin",
+          "calls": 10,
+          "total_ms": 0
+        },
+        {
+          "query": "commit",
+          "calls": 10,
+          "total_ms": 0
+        },
+        {
+          "query": "select b.oid, b.typarray from pg_catalog.pg_type a left join pg_catalog.pg_type b on b.oid = a.typelem where a.typcategory = $1 group by b.oid, b.typarray order by b.oid",
+          "calls": 9,
+          "total_ms": 11.5
+        },
+        {
+          "query": "SELECT $1",
+          "calls": 8,
+          "total_ms": 0
+        },
+        {
+          "query": "SELECT h.completed_keys->$4 AS record FROM op_checkpoints h JOIN sources s ON s.id=h.completed_keys->$5->>$6 AND s.incarnation::text=h.completed_keys->$7->>$8 WHERE h.op=$1 AND ($2::text[] IS NULL OR ",
+          "calls": 5,
+          "total_ms": 0.2
+        },
+        {
+          "query": "SELECT enabled FROM persistence_brain WHERE singleton=$1",
+          "calls": 5,
+          "total_ms": 0.1
+        },
+        {
+          "query": "SELECT key, value FROM config",
+          "calls": 4,
+          "total_ms": 0.1
+        },
+        {
+          "query": "SELECT completed_keys FROM op_checkpoints WHERE op=$1 AND fingerprint=$2",
+          "calls": 3,
+          "total_ms": 0.1
+        },
+        {
+          "query": "SELECT config,incarnation FROM sources WHERE id=$1",
+          "calls": 3,
+          "total_ms": 0.1
+        },
+        {
+          "query": "SELECT s.source_id,s.source_incarnation,s.worktree_id,s.relative_path, s.topology_generation::text AS topology_generation,w.owner_host_id,w.owner_epoch::text AS owner_epoch,w.state, h.local_path,h.coo",
+          "calls": 3,
+          "total_ms": 0.1
+        },
+        {
+          "query": "SET LOCAL statement_timeout = 9996",
+          "calls": 3,
+          "total_ms": 0
+        },
+        {
+          "query": "SELECT id FROM source_ingestion_receipts WHERE source_id=$1 AND source_incarnation=$2::uuid AND profile=$3 LIMIT $4",
+          "calls": 3,
+          "total_ms": 0
+        },
+        {
+          "query": "SELECT key, value FROM config WHERE key = ANY($1::text[])",
+          "calls": 2,
+          "total_ms": 0
+        },
+        {
+          "query": "SET LOCAL statement_timeout = 9999",
+          "calls": 2,
+          "total_ms": 0
+        },
+        {
+          "query": "SELECT incarnation,archived,local_path,last_commit,config FROM sources WHERE id=$1",
+          "calls": 2,
+          "total_ms": 0.1
+        },
+        {
+          "query": "SELECT local_path AS value FROM sources WHERE id = $1",
+          "calls": 2,
+          "total_ms": 0
+        },
+        {
+          "query": "SELECT to_regclass($1) IS NOT NULL AS present",
+          "calls": 2,
+          "total_ms": 0.1
+        },
+        {
+          "query": "SELECT brain_id FROM persistence_brain WHERE singleton=$1",
+          "calls": 2,
+          "total_ms": 0
+        },
+        {
+          "query": "SELECT lane,credential_hash,grant_ceiling,revoked_at FROM persistence_local_writers WHERE id=$1::uuid",
+          "calls": 2,
+          "total_ms": 0
+        },
+        {
+          "query": "SELECT outcome FROM persistence_topology_changes WHERE operation=$1 AND state=$2",
+          "calls": 1,
+          "total_ms": 0
+        },
+        {
+          "query": "SELECT local_path,config FROM sources WHERE id=$1",
+          "calls": 1,
+          "total_ms": 0
+        },
+        {
+          "query": "SELECT id, local_path, archived FROM sources WHERE local_path IS NOT NULL",
+          "calls": 1,
+          "total_ms": 0
+        },
+        {
+          "query": "INSERT INTO minion_jobs(name,queue,status,submission_authority,data,max_attempts,max_stalled,lock_token,lock_until,started_at,remove_on_complete,remove_on_fail) VALUES($5,$1,$6,$7::jsonb,$2::text::jso",
+          "calls": 1,
+          "total_ms": 1.5
+        }
+      ]
+    }
+  },
+  "converged": true,
+  "passes": 1,
+  "wall_ms": 7121.8,
+  "statements": {
+    "calls": 147,
+    "calls_ex_txn": 127
+  }
+}

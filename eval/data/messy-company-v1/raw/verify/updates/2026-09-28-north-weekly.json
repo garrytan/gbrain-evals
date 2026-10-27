@@ -1,0 +1,135 @@
+{
+  "slug": "updates/2026-09-28-north-weekly",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2026-09-28",
+    "owner_phrases": [
+      {
+        "mid": "updates/2026-09-28-north-weekly#m1",
+        "phrase": "Dana's biggest account",
+        "lines": [
+          10
+        ]
+      },
+      {
+        "mid": "updates/2026-09-28-north-weekly#m2",
+        "phrase": "Marcus's LTL account",
+        "lines": [
+          12
+        ]
+      },
+      {
+        "mid": "updates/2026-09-28-north-weekly#m3",
+        "phrase": "Marcus's expense account",
+        "lines": [
+          16
+        ]
+      }
+    ],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Quarrendon Freight Lines",
+        "line": 10
+      },
+      {
+        "oid": "e2",
+        "surface": "Brackenwater Freight Co.",
+        "line": 12
+      },
+      {
+        "oid": "e3",
+        "surface": "Tamsin Cold Chain",
+        "line": 14
+      },
+      {
+        "oid": "e4",
+        "surface": "Thornbury Cloth Co.",
+        "line": 14
+      },
+      {
+        "oid": "e5",
+        "surface": "Orrin",
+        "line": 14
+      }
+    ],
+    "claims": [],
+    "events": [
+      {
+        "eid": "e-qfl-a3-signed",
+        "question": "Does the page describe this: \"Quarrendon signs Amendment No. 3 (seats to 230 from Jan 1, 2027)\"? If so, on what date does the text place it?"
+      }
+    ],
+    "ownership": []
+  },
+  "prompt_user_sha256": "1583b2fd49abb50e3239cf75bb228e90f5e682c1fc4d3686ce45f159338032d4",
+  "response_text": "{\n  \"date_used\": \"2026-09-28\",\n  \"owner_phrases\": [\n    {\n      \"mid\": \"updates/2026-09-28-north-weekly#m1\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\"quarrendon\"],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"The paragraph explicitly identifies Quarrendon as Dana's biggest account.\"\n    },\n    {\n      \"mid\": \"updates/2026-09-28-north-weekly#m2\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\"brackenwater\"],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"The paragraph names Brackenwater, Marcus's LTL customer account on this date.\"\n    },\n    {\n      \"mid\": \"updates/2026-09-28-north-weekly#m3\",\n      \"refers_to_customer_account\": false,\n      \"accounts\": [],\n      \"reading\": \"not about a customer account (a login, device, HR/expense account, a narrative 'account of', a vendor relationship, an employer)\",\n      \"note\": \"This is Marcus's personal expense account for receipts and mileage reimbursement.\"\n    }\n  ],\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"quarrendon\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"brackenwater\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"tamsin\"\n    },\n    {\n      \"oid\": \"e4\",\n      \"entity\": \"orrin\"\n    },\n    {\n      \"oid\": \"e5\",\n      \"entity\": \"orrin\"\n    }\n  ],\n  \"events\": [\n    {\n      \"eid\": \"e-qfl-a3-signed\",\n      \"present\": true,\n      \"date\": \"2026-09-22\",\n      \"line\": 10\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2026-09-28",
+    "owner_phrases": [
+      {
+        "mid": "updates/2026-09-28-north-weekly#m1",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "quarrendon"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "The paragraph explicitly identifies Quarrendon as Dana's biggest account."
+      },
+      {
+        "mid": "updates/2026-09-28-north-weekly#m2",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "brackenwater"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "The paragraph names Brackenwater, Marcus's LTL customer account on this date."
+      },
+      {
+        "mid": "updates/2026-09-28-north-weekly#m3",
+        "refers_to_customer_account": false,
+        "accounts": [],
+        "reading": "not about a customer account (a login, device, HR/expense account, a narrative 'account of', a vendor relationship, an employer)",
+        "note": "This is Marcus's personal expense account for receipts and mileage reimbursement."
+      }
+    ],
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "quarrendon"
+      },
+      {
+        "oid": "e2",
+        "entity": "brackenwater"
+      },
+      {
+        "oid": "e3",
+        "entity": "tamsin"
+      },
+      {
+        "oid": "e4",
+        "entity": "orrin"
+      },
+      {
+        "oid": "e5",
+        "entity": "orrin"
+      }
+    ],
+    "events": [
+      {
+        "eid": "e-qfl-a3-signed",
+        "present": true,
+        "date": "2026-09-22",
+        "line": 10
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 3257,
+    "output_tokens": 500,
+    "thinking_tokens": 39
+  },
+  "cost_usd": 0.011514
+}

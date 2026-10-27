@@ -1,0 +1,78 @@
+
+== beam-100k: 40 questions, 0 errors
+eligible: 40/40 (100.0%); would-skip: 0/40 (0.0%)
+grade/reason: {'not_strong:cosine_below_floor': 40}
+top_cosine: min 0.232 p50 0.549 p90 0.668 max 0.753
+would-skip by kind: {'abstention': '0/4', 'contradiction_resolution': '0/4', 'event_ordering': '0/4', 'information_extraction': '0/4', 'instruction_following': '0/4', 'knowledge_update': '0/4', 'multi_session_reasoning': '0/4', 'preference_following': '0/4', 'summarization': '0/4', 'temporal_reasoning': '0/4'}
+on arm skipped: 0 (would-skip 0)
+rank-1 fused == reranked: 11/40 (27.5%)
+context change, shadow vs shadow (noise): 0/40 (0.0%); mean overlap 1.000
+context change, reranked vs no reranker (all questions): 40/40 (100.0%); mean token overlap 0.493 (page-level 0.667)
+  shadow2 query ms: p50 569 mean 601
+  on query ms: p50 544 mean 583
+  fused query ms: p50 171 mean 172
+
+== beam-500k: 80 questions, 0 errors
+eligible: 80/80 (100.0%); would-skip: 0/80 (0.0%)
+grade/reason: {'not_strong:cosine_below_floor': 80}
+top_cosine: min 0.151 p50 0.567 p90 0.676 max 0.732
+would-skip by kind: {'abstention': '0/8', 'contradiction_resolution': '0/8', 'event_ordering': '0/8', 'information_extraction': '0/8', 'instruction_following': '0/8', 'knowledge_update': '0/8', 'multi_session_reasoning': '0/8', 'preference_following': '0/8', 'summarization': '0/8', 'temporal_reasoning': '0/8'}
+on arm skipped: 0 (would-skip 0)
+rank-1 fused == reranked: 22/80 (27.5%)
+context change, shadow vs shadow (noise): 2/80 (2.5%); mean overlap 0.994
+context change, reranked vs no reranker (all questions): 80/80 (100.0%); mean token overlap 0.436 (page-level 0.577)
+  shadow2 query ms: p50 566 mean 575
+  on query ms: p50 547 mean 551
+  fused query ms: p50 159 mean 161
+
+== lme: 100 questions, 0 errors
+eligible: 100/100 (100.0%); would-skip: 0/100 (0.0%)
+grade/reason: {'not_strong:cosine_below_floor': 100}
+top_cosine: min 0.220 p50 0.457 p90 0.620 max 0.781
+would-skip by kind: {'knowledge-update': '0/13', 'multi-session': '0/27', 'single-session-assistant': '0/13', 'single-session-preference': '0/5', 'single-session-user': '0/13', 'temporal-reasoning': '0/29'}
+on arm skipped: 0 (would-skip 0)
+rank-1 fused == reranked: 71/100 (71.0%)
+context change, shadow vs shadow (noise): 5/100 (5.0%); mean overlap 0.988
+context change, reranked vs no reranker (all questions): 100/100 (100.0%); mean token overlap 0.490 (page-level 0.649)
+  shadow2 query ms: p50 669 mean 728
+  on query ms: p50 660 mean 713
+  fused query ms: p50 209 mean 207
+
+== locomo: 322 questions, 0 errors
+eligible: 322/322 (100.0%); would-skip: 0/322 (0.0%)
+grade/reason: {'not_strong:cosine_below_floor': 322}
+top_cosine: min 0.293 p50 0.527 p90 0.617 max 0.700
+would-skip by kind: {'multi-hop': '0/18', 'open-domain': '0/173', 'single-hop': '0/67', 'temporal': '0/64'}
+on arm skipped: 0 (would-skip 0)
+rank-1 fused == reranked: 192/322 (59.6%)
+context change, shadow vs shadow (noise): 6/322 (1.9%); mean overlap 0.995
+context change, reranked vs no reranker (all questions): 315/322 (97.8%); mean token overlap 0.563 (page-level 0.687)
+  shadow2 query ms: p50 436 mean 443
+  on query ms: p50 436 mean 442
+  fused query ms: p50 67 mean 67
+
+== BEAM pooled: 120 questions, 0 errors
+eligible: 120/120 (100.0%); would-skip: 0/120 (0.0%)
+grade/reason: {'not_strong:cosine_below_floor': 120}
+top_cosine: min 0.151 p50 0.558 p90 0.675 max 0.753
+would-skip by kind: {'abstention': '0/12', 'contradiction_resolution': '0/12', 'event_ordering': '0/12', 'information_extraction': '0/12', 'instruction_following': '0/12', 'knowledge_update': '0/12', 'multi_session_reasoning': '0/12', 'preference_following': '0/12', 'summarization': '0/12', 'temporal_reasoning': '0/12'}
+on arm skipped: 0 (would-skip 0)
+rank-1 fused == reranked: 33/120 (27.5%)
+context change, shadow vs shadow (noise): 2/120 (1.7%); mean overlap 0.996
+context change, reranked vs no reranker (all questions): 120/120 (100.0%); mean token overlap 0.455 (page-level 0.607)
+  shadow2 query ms: p50 566 mean 583
+  on query ms: p50 547 mean 562
+  fused query ms: p50 162 mean 164
+
+== pooled: 542 questions, 0 errors
+eligible: 542/542 (100.0%); would-skip: 0/542 (0.0%)
+grade/reason: {'not_strong:cosine_below_floor': 542}
+top_cosine: min 0.151 p50 0.522 p90 0.630 max 0.781
+would-skip by kind: {'abstention': '0/12', 'contradiction_resolution': '0/12', 'event_ordering': '0/12', 'information_extraction': '0/12', 'instruction_following': '0/12', 'knowledge-update': '0/13', 'knowledge_update': '0/12', 'multi-hop': '0/18', 'multi-session': '0/27', 'multi_session_reasoning': '0/12', 'open-domain': '0/173', 'preference_following': '0/12', 'single-hop': '0/67', 'single-session-assistant': '0/13', 'single-session-preference': '0/5', 'single-session-user': '0/13', 'summarization': '0/12', 'temporal': '0/64', 'temporal-reasoning': '0/29', 'temporal_reasoning': '0/12'}
+on arm skipped: 0 (would-skip 0)
+rank-1 fused == reranked: 296/542 (54.6%)
+context change, shadow vs shadow (noise): 13/542 (2.4%); mean overlap 0.994
+context change, reranked vs no reranker (all questions): 535/542 (98.7%); mean token overlap 0.526 (page-level 0.662)
+  shadow2 query ms: p50 464 mean 527
+  on query ms: p50 469 mean 518
+  fused query ms: p50 71 mean 114

@@ -1,0 +1,149 @@
+{
+  "slug": "updates/2026-07-13-central-weekly",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2026-07-13",
+    "owner_phrases": [
+      {
+        "mid": "updates/2026-07-13-central-weekly#m1",
+        "phrase": "the dealer account Hollis is covering",
+        "lines": [
+          18
+        ]
+      },
+      {
+        "mid": "updates/2026-07-13-central-weekly#m2",
+        "phrase": "the accounts Hollis is covering",
+        "lines": [
+          14
+        ]
+      },
+      {
+        "mid": "updates/2026-07-13-central-weekly#m3",
+        "phrase": "Hollis's corporate card account",
+        "lines": [
+          24
+        ]
+      }
+    ],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Marrow Fieldworks",
+        "line": 18
+      },
+      {
+        "oid": "e2",
+        "surface": "MFW",
+        "line": 18
+      },
+      {
+        "oid": "e3",
+        "surface": "Marrow Agrisupply",
+        "line": 19
+      },
+      {
+        "oid": "e4",
+        "surface": "MAS",
+        "line": 19
+      },
+      {
+        "oid": "e5",
+        "surface": "Tansley Parcel",
+        "line": 20
+      },
+      {
+        "oid": "e6",
+        "surface": "TPCL",
+        "line": 20
+      },
+      {
+        "oid": "e7",
+        "surface": "Tansleigh Packaging",
+        "line": 21
+      },
+      {
+        "oid": "e8",
+        "surface": "TSP",
+        "line": 21
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "7dc12430a4439d041705a115443c6da2692f2777ec545855cf12caab24961e2a",
+  "response_text": "{\n  \"date_used\": \"2026-07-13\",\n  \"owner_phrases\": [\n    {\n      \"mid\": \"updates/2026-07-13-central-weekly#m1\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\"marrow-fieldworks\"],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"The dealer account is Marrow Fieldworks, which Hollis is temporarily covering on this date.\"\n    },\n    {\n      \"mid\": \"updates/2026-07-13-central-weekly#m2\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\"marrow-fieldworks\"],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"Marrow Fieldworks is the only account recorded as under Hollis's acting coverage on this date. The plural wording does not establish additional covered accounts.\"\n    },\n    {\n      \"mid\": \"updates/2026-07-13-central-weekly#m3\",\n      \"refers_to_customer_account\": false,\n      \"accounts\": [],\n      \"reading\": \"not about a customer account (a login, device, HR/expense account, a narrative 'account of', a vendor relationship, an employer)\",\n      \"note\": \"This is Hollis's corporate expense card account, not a customer account.\"\n    }\n  ],\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"marrow-fieldworks\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"marrow-fieldworks\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"marrow-agrisupply\"\n    },\n    {\n      \"oid\": \"e4\",\n      \"entity\": \"marrow-agrisupply\"\n    },\n    {\n      \"oid\": \"e5\",\n      \"entity\": \"tansley-parcel\"\n    },\n    {\n      \"oid\": \"e6\",\n      \"entity\": \"tansley-parcel\"\n    },\n    {\n      \"oid\": \"e7\",\n      \"entity\": \"tansleigh\"\n    },\n    {\n      \"oid\": \"e8\",\n      \"entity\": \"tansleigh\"\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2026-07-13",
+    "owner_phrases": [
+      {
+        "mid": "updates/2026-07-13-central-weekly#m1",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "marrow-fieldworks"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "The dealer account is Marrow Fieldworks, which Hollis is temporarily covering on this date."
+      },
+      {
+        "mid": "updates/2026-07-13-central-weekly#m2",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "marrow-fieldworks"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "Marrow Fieldworks is the only account recorded as under Hollis's acting coverage on this date. The plural wording does not establish additional covered accounts."
+      },
+      {
+        "mid": "updates/2026-07-13-central-weekly#m3",
+        "refers_to_customer_account": false,
+        "accounts": [],
+        "reading": "not about a customer account (a login, device, HR/expense account, a narrative 'account of', a vendor relationship, an employer)",
+        "note": "This is Hollis's corporate expense card account, not a customer account."
+      }
+    ],
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "marrow-fieldworks"
+      },
+      {
+        "oid": "e2",
+        "entity": "marrow-fieldworks"
+      },
+      {
+        "oid": "e3",
+        "entity": "marrow-agrisupply"
+      },
+      {
+        "oid": "e4",
+        "entity": "marrow-agrisupply"
+      },
+      {
+        "oid": "e5",
+        "entity": "tansley-parcel"
+      },
+      {
+        "oid": "e6",
+        "entity": "tansley-parcel"
+      },
+      {
+        "oid": "e7",
+        "entity": "tansleigh"
+      },
+      {
+        "oid": "e8",
+        "entity": "tansleigh"
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 3534,
+    "output_tokens": 797,
+    "thinking_tokens": 290
+  },
+  "cost_usd": 0.015038
+}

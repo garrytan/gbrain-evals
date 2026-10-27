@@ -1,0 +1,32 @@
+{
+  "schema": "cat40-experiment-v1",
+  "gbrain_commit": "e657589458cc3ab05d54df439495839c5aed7d19",
+  "slot_commit": "e657589458cc3ab05d54df439495839c5aed7d19",
+  "world_digest": "79094a8a2cbb6725cae37da8a97bb16b64d7941186f5682e209ecc644b8ab510",
+  "models": [
+    "claude-opus-5-5"
+  ],
+  "arms": [
+    "gbrain"
+  ],
+  "label": "d5",
+  "flags": {
+    "--models": "claude-opus-5-5",
+    "--arms": "gbrain",
+    "--world": "eval/data/model-ladder-wide-dev/world.json",
+    "--gbrain": "gbrain@e657589458cc3ab05d54df439495839c5aed7d19",
+    "--gbrain-root": "<slots>/gbrain-d5",
+    "--gbrain-label": "d5",
+    "--surface": "full",
+    "--advertised": "starter",
+    "--slots": "1",
+    "--tasks": "A01,A02,B01,B02,C01,C02,E01,F01,F02,H01",
+    "--repeat": "1",
+    "--transcripts": true,
+    "--judge": "none",
+    "--max-tool-chars": "none",
+    "--budget-ledger": ".budget/d5-brief-smoke.sqlite",
+    "--out": "eval/reports/cat40/d5-brief-smoke/d5-claude-opus-5-5"
+  },
+  "budget_run_id": "cat40-model-ladder-2026-10-14T20-34-50-207Z-83e5064e"
+}

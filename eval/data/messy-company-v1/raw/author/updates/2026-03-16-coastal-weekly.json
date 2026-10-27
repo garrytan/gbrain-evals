@@ -1,0 +1,37 @@
+{
+  "slug": "updates/2026-03-16-coastal-weekly",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: weekly\nTitle: Coastal weekly 3/16\nDate: Written on 2026-03-16.\nWriter: Bettina Kroll\nVoice: friendly and organized\nFormat: a weekly update with a short status table and notes\nLength: about 262 words\nDate style in the body: mixed: some ISO, some casual\nTypos: one or two small natural typos (never in names or required phrases)\n\nBrief:\nBettina's update. She writes that Driftmoor's renewal date is January 31, 2027 (state it plainly; it is wrong). Pellow renewal in progress.\n\nRequired phrases:\n- Use the exact phrase \"Kwame's Puget Sound account\" once, referring to Driftmoor Marine Freight. Don't put the account's name in the same sentence; the reader should work it out.\n- Use the exact phrase \"Sofia's retail account\" once, referring to Pellow Home Living. Don't put the account's name in the same sentence; the reader should work it out.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Bettina Kroll: Coastal team lead\n- Sofia Marchetti: Account manager, Coastal team\n- Kwame Adjei-Rowe: Account manager, Coastal team\n- Corinne Ashdown: VP Operations\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Pellucid Harbor Logistics: port drayage and terminal logistics, Gulf Coast; codes/nicknames PHL\n- Driftmoor Marine Freight: marine freight and barge operator, Puget Sound; codes/nicknames DMF\n- Saltmarsh Provisions: regional grocery distributor, Lowcountry; main contact Corinne Ashdown, VP Operations; codes/nicknames SMP\n- Pellow Home Living (renamed from Covey & Lark Retail on 2026-02-16): home goods retailer, Mid-Atlantic; codes/nicknames Covey, PHL\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2026-03-16 (background only; don't restate unless the brief asks):\n- Pellucid Harbor Logistics: managed by Kwame Adjei-Rowe\n- Driftmoor Marine Freight: managed by Kwame Adjei-Rowe\n- Saltmarsh Provisions: managed by Bettina Kroll\n- Pellow Home Living: managed by Sofia Marchetti",
+      "response_text": "# Coastal weekly 3/16\n\nWritten 2026-03-16 · Coastal team\n\nMorning all — a short roundup before the afternoon queue review. Most of this week’s work is clearing operational snags before they become another spreadsheet on the dispatch desk.\n\n| Customer | Status | Next step |\n|---|---|---|\n| Driftmoor Marine Freight | Renewal date is January 31, 2027. Tuesday’s berth-to-yard handoff still needs a closer look. | Recheck the overnight appointment export against the dispatch log. |\n| Pellow Home Living | Renewal in progress. | Finish the open questions list for June Osei-Lark. |\n| Saltmarsh Provisions | Early-shift dock sequence under review. | Walk through door 6 exceptions with Corinne Ashdown. |\n| Pellucid Harbor Logistics | Duplicate arrivals reported in the morning queue. | Reproduce using the two dispatch screenshots received Friday. |\n\n## Notes\n\n**Driftmoor Marine Freight:** The dispatch team flagged three appointments that appeared under the previous day after an overnight move. I’ve put the timestamps and screenshots in ticket COAST-318. Kwame's Puget Sound account needs the export checked before we call this a display-only issue. We’ll compare the local-time view with the downloaded file on Mar 17.\n\n**Pellow Home Living:** The renewal questions are collected in the working notes; the remaining cleanup is mostly naming. Sofia's retail account still has “Covey” in two saved report titles. The rename from Covey & Lark Retail took effect on 2026-02-16, so I’ll tidy those labels before the next walkthrough.\n\n**Saltmarsh Provisions:** Corinne asked for a simpler view of trucks waiting through shift change. I’ll bring a door-by-door example, not the full activity dump.\n\nFriday follow-up: please add screenshots to the tickets before lunch — easier to triage without hunting through seperate chat threads.",
+      "usage": {
+        "input_tokens": 1128,
+        "output_tokens": 401,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.006266,
+      "provider_meta": {
+        "id": "resp_0cf3f5b4c9adb435016acfaeae1ee887d1affd8acec29311a8",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1128,
+          "input_tokens_details": {
+            "cache_write_tokens": 1125,
+            "cached_tokens": 0
+          },
+          "output_tokens": 401,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 1529
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

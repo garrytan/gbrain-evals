@@ -1,0 +1,6 @@
+{ "turns": [
+  { "role": "user", "content": "Can you draft a schedule template for the workshop?" },
+  { "role": "assistant", "content": "Here is a template:\n\n- [Time] - [Session title]\n- [Time] - [Break]\n- [Time] - [Session title]\n- [Speaker]: [Bio]\n\nFill in each slot when the agenda is final." },
+  { "role": "user", "content": "And a vocabulary list for the onboarding doc?" },
+  { "role": "assistant", "content": "- [noun] Sprint: a fixed work period\n- [verb] Ship: release to users\n- [informal] Dogfood: use your own product" }
+] }

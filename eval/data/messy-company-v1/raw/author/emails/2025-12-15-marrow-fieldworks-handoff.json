@@ -1,0 +1,41 @@
+{
+  "slug": "emails/2025-12-15-marrow-fieldworks-handoff",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: email\nTitle: Marrow Fieldworks moving to Tobias\nDate: Written on 2025-12-15.\nWriter: Hollis Mbeki\nVoice: terse and practical\nFormat: an email thread with From/To/Date headers and quoted earlier replies (> lines)\nLength: about -45 words\nDate style in the body: undefined\nTypos: a few natural typos and one or two sloppy abbreviations (never in names or required phrases)\n\nBrief:\nHollis: effective January 5, 2026, Marrow Fieldworks moves from Pree to Tobias. Pree keeps Tansley Parcel. Marrow Agrisupply stays a team account.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Hollis Mbeki: Central team lead\n- Priyanka \"Pree\" Sundaram: Account manager, Central team\n- Tobias Rendle: Account manager, Central team\n- Lev Arkadin: Procurement lead\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Tansley Parcel: regional parcel delivery, South Central; main contact Lev Arkadin, Procurement lead; codes/nicknames TPCL, TP\n- Tansleigh Packaging: corrugated packaging manufacturer, Ohio Valley; codes/nicknames TSP, TP\n- Marrow Fieldworks: agricultural equipment dealer network, Plains; codes/nicknames MFW\n- Marrow Agrisupply: farm supply retail chain, Plains; subsidiary of Marrow Fieldworks; codes/nicknames MAS, Marrow Agri\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2025-12-15 (background only; don't restate unless the brief asks):\n- Tansley Parcel: managed by Priyanka \"Pree\" Sundaram\n- Tansleigh Packaging: not stated on any shared page (do not say who manages it)\n- Marrow Fieldworks: managed by Priyanka \"Pree\" Sundaram\n- Marrow Agrisupply: managed by Central team (pooled account)",
+      "response_text": "# Marrow Fieldworks moving to Tobias\n\n**From:** Hollis Mbeki\n**To:** Priyanka Sundaram, Tobias Rendle\n**Date:** 2025-12-15\n\nQuick confirm on the Q1 territory shuffle. Effective January 5, 2026, Marrow Fieldworks moves from Pree to Tobias. Pree keeps Tansley Parcel. Marrow Agrisupply stays a team account.\n\nPree, pls loop Tobias in on ticket #4419 (Salina yard gate 3 barcode scanner drop-offs) before the holiday break so he's not walking in cold.\n\n--Hollis\n\n> **From:** Tobias Rendle\n> **To:** Hollis Mbeki, Priyanka Sundaram\n> **Date:** 2025-12-15\n> \n> Do we have a finalized start date for the MFW handoff yet? Want to get the Salina and Enid dispatchers on my cal.",
+      "usage": {
+        "input_tokens": 1102,
+        "output_tokens": 209,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.004294,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1102,
+          "candidatesTokenCount": 209,
+          "totalTokenCount": 1311,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1102
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 209
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

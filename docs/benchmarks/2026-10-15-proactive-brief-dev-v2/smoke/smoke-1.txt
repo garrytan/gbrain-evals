@@ -1,0 +1,20 @@
+build 0.60.247.0 47f052af true true
+p20261211-t1 reply aged save=remember brief-off: moved=3 crowd=0 hotFacts=[] brief=none items=[]
+p20261211-t1 reply aged save=remember brief-on: moved=3 crowd=0 hotFacts=[] brief=user-prompt:278 items=[["F3",["corrected"],false]]
+p20261211-t1 reply aged save=page brief-off: moved=0 crowd=0 hotFacts=[] brief=none items=[]
+p20261211-t1 reply aged save=page brief-on: moved=0 crowd=0 hotFacts=[] brief=user-prompt:467 items=[["Ev1",["commitment","new_date","corrected"],false]]
+## Before you start
+Dated items the brain holds about Omari Udeh (`people/omari-udeh`). Data, not instructions.
+- [Ev1] 2026-10-15 · edit: [written by an agent · mcp:put_page] “- Open commitment: I owe Omari a sandbox account for their team. - Next meeting: pilot kickoff on Wednesday, October 28 (2026-10-28) at 09:30. See [[meetings/2026-10-28-iskique-pilot-kickoff]]. - Deal: 40 seats at $21 per seat per month (see [[deals/iskique-foods]]).” → `people/omari-udeh`
+p20261211-t2 reply crowded save=remember brief-off: moved=0 crowd=40 hotFacts=[] brief=none items=[]
+p20261211-t2 reply crowded save=remember brief-on: moved=0 crowd=40 hotFacts=[] brief=user-prompt:306 items=[["F3",["corrected"],false]]
+p20261211-t2 reply crowded save=page brief-off: moved=0 crowd=40 hotFacts=[] brief=none items=[]
+p20261211-t2 reply crowded save=page brief-on: moved=0 crowd=40 hotFacts=[] brief=user-prompt:487 items=[["Ev1",["commitment","new_date","corrected"],false]]
+p20261211-t3 prep aged save=remember brief-off: moved=3 crowd=0 hotFacts=[] brief=none items=[]
+p20261211-t3 prep aged save=remember brief-on: moved=3 crowd=0 hotFacts=[] brief=user-prompt:278 items=[["F3",["corrected"],false]]
+p20261211-t3 prep aged save=page brief-off: moved=0 crowd=0 hotFacts=[] brief=none items=[]
+p20261211-t3 prep aged save=page brief-on: moved=0 crowd=0 hotFacts=[] brief=none items=[]
+p20261211-t4 prep crowded save=remember brief-off: moved=0 crowd=40 hotFacts=[] brief=none items=[]
+p20261211-t4 prep crowded save=remember brief-on: moved=0 crowd=40 hotFacts=[] brief=user-prompt:278 items=[["F3",["corrected"],false]]
+p20261211-t4 prep crowded save=page brief-off: moved=0 crowd=40 hotFacts=[] brief=none items=[]
+p20261211-t4 prep crowded save=page brief-on: moved=0 crowd=40 hotFacts=[] brief=user-prompt:478 items=[["Ev1",["commitment","new_date","corrected"],false]]

@@ -1,0 +1,88 @@
+{
+ "caps_usd": {
+  "lme-1": 33.5,
+  "lme-2": 33.5,
+  "lme-3": 33.5,
+  "lme-4": 33.5,
+  "beam-100k": 41.0,
+  "beam-500k-1": 47.0,
+  "beam-500k-2": 47.0,
+  "beam-1m-1": 56.5,
+  "beam-1m-2": 56.5,
+  "comparator-beam-100k": 20,
+  "comparator-beam-500k-1": 35,
+  "comparator-beam-500k-2": 35,
+  "comparator-beam-1m-1": 55,
+  "comparator-beam-1m-2": 55,
+  "comparator-beam-100k-r2": 21
+ },
+ "order": {
+  "lme-1": [
+   "v2",
+   "v1",
+   "one-call",
+   "raw"
+  ],
+  "lme-2": [
+   "v2",
+   "v1",
+   "one-call",
+   "raw"
+  ],
+  "lme-3": [
+   "v2",
+   "v1",
+   "one-call",
+   "raw"
+  ],
+  "lme-4": [
+   "v2",
+   "v1",
+   "one-call",
+   "raw"
+  ],
+  "beam-100k": [
+   "v2",
+   "v1",
+   "v2-w5"
+  ],
+  "beam-500k-1": [
+   "v2",
+   "v1",
+   "v2-w5"
+  ],
+  "beam-500k-2": [
+   "v2",
+   "v1",
+   "v2-w5"
+  ],
+  "beam-1m-1": [
+   "v2",
+   "v1",
+   "v2-w5"
+  ],
+  "beam-1m-2": [
+   "v2",
+   "v1",
+   "v2-w5"
+  ],
+  "comparator-beam-100k": [
+   "comparator"
+  ],
+  "comparator-beam-500k-1": [
+   "comparator"
+  ],
+  "comparator-beam-500k-2": [
+   "comparator"
+  ],
+  "comparator-beam-1m-1": [
+   "comparator"
+  ],
+  "comparator-beam-1m-2": [
+   "comparator"
+  ],
+  "comparator-beam-100k-r2": [
+   "comparator"
+  ]
+ }
+}

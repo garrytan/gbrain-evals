@@ -137,7 +137,7 @@ describe('N2 on PGLite through gbrain\'s probe (small world)', () => {
     expect(r.safety!.applied_mutations).toBe(0);
     expect(r.safety!.judge_errors_counted_as_verdicts).toBe(0);
     expect(r.candidate!.conflicts_total).toBe(6);
-    expect(r.find_contradictions!.local_default_scope_cli).toMatchObject({ returned: 0 });
+    expect(r.find_contradictions!.local_default_scope_cli).toMatchObject({ returned: r.find_contradictions!.stored_findings, total_visible: r.find_contradictions!.stored_findings });
     expect((r.find_contradictions!.local_bare_cli as { returned: number }).returned).toBeGreaterThan(0);
     expect((r.date_signal as { undated_shown_with_a_date: number }).undated_shown_with_a_date).toBe(0);
   }, 120_000);

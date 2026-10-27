@@ -1,0 +1,6393 @@
+{
+  "cost": {
+    "usd": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "basis": "hermetic: provider and TypeSafe keys stripped, keyword search only; no model and no paid request"
+  },
+  "delivered_tokens": {
+    "tokens": 0,
+    "basis": "hermetic: provider and TypeSafe keys stripped, keyword search only; no model and no paid request"
+  },
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "agent-retrieval-shapes",
+  "run_status": "completed",
+  "verdict": "fail",
+  "n_total": 361,
+  "n_scored": 361,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": true,
+  "gbrain_version": "0.60.348.0",
+  "gbrain_pin": "github:garrytan/gbrain#6e1086492dbded0059fcfabc627b846ced7855f4",
+  "execution": {
+    "source_tree": {
+      "sha256": "251f87579ea130139561463b3c3d6b07a727c65df4f7077badeba9dcbae391aa",
+      "scheme": "git-index-blob-v1",
+      "files": 14444,
+      "git_head": "a6fd45ff099582697b460eb59b970b6bc95b6cd9",
+      "dirty": false
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#6e1086492dbded0059fcfabc627b846ced7855f4",
+      "declared_sha": "6e1086492dbded0059fcfabc627b846ced7855f4",
+      "version": "0.60.348.0",
+      "package_sha256": "19fbd3256b4dace4ac60b958927350048c7f2a190ffe4f43d6dd6b4abaea618f",
+      "loaded_git_head": "c0b30d713899826f26f3ad00825361aec9cb99b2"
+    }
+  },
+  "resolved_config": {
+    "engine": "pglite-in-memory",
+    "decide": "off (no key, fresh GBRAIN_HOME)",
+    "caller": "operation handlers with OperationContext { remote: false, sourceId: default }",
+    "sources": [
+      "default",
+      "source-a (federated, added with sources_add)",
+      "source-b (federated, added with sources_add)"
+    ],
+    "search_path": "search and query with limit 20 and each probe's own params, scored on the distinct pages of the first 10 rows; no embedding key (keyword only), no reranker, no expansion",
+    "entity_path": "entity { name } (card lookup, zero LLM); mention extraction never run",
+    "seed": 20261020,
+    "families": "all",
+    "generator_version": "agent-retrieval-shapes-gen/1.0.0",
+    "ledger_sha256": "902d6385664b2096f4da995810e212a9ab0cbf0e20551fc7ccebd53f5c6bbebc",
+    "oracle": "eval/generators/agent-retrieval-shapes-gen.ts deriveArsGold: re-parses the rendered pages; throws when it disagrees with the design",
+    "chunk_cap_chars": 6000,
+    "e14_state": "image pages written by importImageFile (noEmbed), then text_projection_revision cleared by SQL (the unsealed state; no hermetic operation produces it)",
+    "gbrain_overlay": {
+      "requested": "gbrain@HEAD",
+      "ref": "HEAD",
+      "commit": "c0b30d713899826f26f3ad00825361aec9cb99b2",
+      "tree": "6032e266a6786d12687cb5b63eb75cf5889698a6",
+      "version": "0.60.348.0",
+      "checkout_dirty": false,
+      "verified": {
+        "copy_tree": "6032e266a6786d12687cb5b63eb75cf5889698a6",
+        "tree_matches": true,
+        "symlinks_under_src": 0,
+        "dir_is_realpath": true,
+        "cli_version": "0.60.348.0",
+        "cli_version_matches": true
+      },
+      "copied_not_symlinked": true
+    },
+    "verdict_meaning": "pass only when every measured family passes every headline and negative probe on every surface; report-only, nothing gates (registry promotion rules)"
+  },
+  "hashes": {
+    "ledger_sha256": "902d6385664b2096f4da995810e212a9ab0cbf0e20551fc7ccebd53f5c6bbebc",
+    "gold_fingerprint": "ff70e30aee48ecfea25cca8b19219f40d94fb0bc681fb56f796702faf6932945"
+  },
+  "started_at": "2026-10-21T19:32:55.498Z",
+  "finished_at": "2026-10-21T19:33:22.976Z",
+  "latency_ms": {
+    "p50": 10.902044999998907,
+    "p95": 23.001694999999017,
+    "n": 361,
+    "basis": "wall time of each search, query and entity call (seeding excluded)"
+  },
+  "data": {
+    "families": [
+      {
+        "family": "E1",
+        "shape": "twin collapse across two federated sources",
+        "issue": "#4612",
+        "status": "measured",
+        "headline": {
+          "search": {
+            "passed": 30,
+            "total": 30
+          },
+          "query": {
+            "passed": 30,
+            "total": 30
+          }
+        },
+        "negatives": {
+          "passed": 6,
+          "total": 6
+        },
+        "variants": {
+          "default": {
+            "search": {
+              "passed": 30,
+              "total": 30
+            },
+            "query": {
+              "passed": 30,
+              "total": 30
+            }
+          },
+          "single-source-control": {
+            "search": {
+              "passed": 3,
+              "total": 3
+            },
+            "query": {
+              "passed": 3,
+              "total": 3
+            }
+          }
+        },
+        "metrics": {
+          "queries_with_duplicate_slug_in_top10": {
+            "search": {
+              "n": 0,
+              "of": 30
+            },
+            "query": {
+              "n": 0,
+              "of": 30
+            }
+          },
+          "hit_at_1_target_or_twin": {
+            "search": {
+              "n": 30,
+              "of": 30
+            },
+            "query": {
+              "n": 30,
+              "of": 30
+            }
+          }
+        }
+      },
+      {
+        "family": "E2",
+        "shape": "merge-redirect stub above its target",
+        "issue": "#7153",
+        "status": "measured",
+        "headline": {
+          "search": {
+            "passed": 15,
+            "total": 15
+          },
+          "query": {
+            "passed": 15,
+            "total": 15
+          }
+        },
+        "negatives": {
+          "passed": 0,
+          "total": 0
+        },
+        "variants": {
+          "same-title": {
+            "search": {
+              "passed": 10,
+              "total": 10
+            },
+            "query": {
+              "passed": 10,
+              "total": 10
+            }
+          },
+          "renamed-stub": {
+            "search": {
+              "passed": 5,
+              "total": 5
+            },
+            "query": {
+              "passed": 5,
+              "total": 5
+            }
+          }
+        },
+        "metrics": {
+          "stub_above_target": {
+            "search": {
+              "n": 0,
+              "of": 15
+            },
+            "query": {
+              "n": 0,
+              "of": 15
+            }
+          }
+        }
+      },
+      {
+        "family": "E3",
+        "shape": "derived copies of one document crowd the top results",
+        "issue": "#7154",
+        "status": "measured",
+        "headline": {
+          "search": {
+            "passed": 0,
+            "total": 6
+          },
+          "query": {
+            "passed": 0,
+            "total": 6
+          }
+        },
+        "negatives": {
+          "passed": 0,
+          "total": 0
+        },
+        "variants": {
+          "default": {
+            "search": {
+              "passed": 0,
+              "total": 6
+            },
+            "query": {
+              "passed": 0,
+              "total": 6
+            }
+          }
+        },
+        "metrics": {
+          "answer_rank_1": {
+            "search": {
+              "n": 0,
+              "of": 6
+            },
+            "query": {
+              "n": 0,
+              "of": 6
+            }
+          },
+          "family_over_one_of_top5": {
+            "search": {
+              "n": 0,
+              "of": 6
+            },
+            "query": {
+              "n": 0,
+              "of": 6
+            }
+          }
+        }
+      },
+      {
+        "family": "E4",
+        "shape": "founder page above the company a product query describes",
+        "issue": "#7155",
+        "status": "measured",
+        "headline": {
+          "search": {
+            "passed": 6,
+            "total": 6
+          },
+          "query": {
+            "passed": 6,
+            "total": 6
+          }
+        },
+        "negatives": {
+          "passed": 0,
+          "total": 0
+        },
+        "variants": {
+          "default": {
+            "search": {
+              "passed": 6,
+              "total": 6
+            },
+            "query": {
+              "passed": 6,
+              "total": 6
+            }
+          },
+          "types-company": {
+            "search": {
+              "passed": 6,
+              "total": 6
+            },
+            "query": {
+              "passed": 6,
+              "total": 6
+            }
+          }
+        },
+        "metrics": {}
+      },
+      {
+        "family": "E5",
+        "shape": "frontmatter fields as the only discriminator",
+        "issue": "#7159",
+        "status": "measured",
+        "headline": {
+          "search": {
+            "passed": 8,
+            "total": 8
+          },
+          "query": {
+            "passed": 8,
+            "total": 8
+          }
+        },
+        "negatives": {
+          "passed": 2,
+          "total": 2
+        },
+        "variants": {
+          "baseline": {
+            "search": {
+              "passed": 1,
+              "total": 8
+            },
+            "query": {
+              "passed": 1,
+              "total": 8
+            }
+          },
+          "filter": {
+            "search": {
+              "passed": 8,
+              "total": 8
+            },
+            "query": {
+              "passed": 8,
+              "total": 8
+            }
+          },
+          "filter-empty": {
+            "search": {
+              "passed": 1,
+              "total": 1
+            },
+            "query": {
+              "passed": 1,
+              "total": 1
+            }
+          }
+        },
+        "metrics": {}
+      },
+      {
+        "family": "E6",
+        "shape": "entity name variants beyond N4 (honorific, surname, diminutive, reversed)",
+        "issue": "#7160",
+        "status": "measured",
+        "headline": {
+          "entity": {
+            "passed": 0,
+            "total": 24
+          }
+        },
+        "negatives": {
+          "passed": 1,
+          "total": 2
+        },
+        "variants": {
+          "honorific": {
+            "entity": {
+              "passed": 0,
+              "total": 6
+            }
+          },
+          "surname": {
+            "entity": {
+              "passed": 0,
+              "total": 6
+            }
+          },
+          "diminutive": {
+            "entity": {
+              "passed": 0,
+              "total": 6
+            }
+          },
+          "reversed": {
+            "entity": {
+              "passed": 0,
+              "total": 6
+            }
+          },
+          "ambiguous-surname": {
+            "entity": {
+              "passed": 0,
+              "total": 1
+            }
+          },
+          "no-referent": {
+            "entity": {
+              "passed": 1,
+              "total": 1
+            }
+          }
+        },
+        "metrics": {
+          "resolved_right": {
+            "n": 0,
+            "of": 24
+          },
+          "resolved_to_wrong_page": {
+            "n": 0,
+            "of": 26
+          },
+          "misses_suggesting_index_or_digest": {
+            "n": 19,
+            "of": 26
+          }
+        }
+      },
+      {
+        "family": "E7",
+        "shape": "title-prefixed duplicate person stub",
+        "issue": "#7160",
+        "status": "measured",
+        "headline": {
+          "entity": {
+            "passed": 0,
+            "total": 4
+          }
+        },
+        "negatives": {
+          "passed": 0,
+          "total": 0
+        },
+        "variants": {
+          "prefixed": {
+            "entity": {
+              "passed": 0,
+              "total": 4
+            }
+          },
+          "full-name-control": {
+            "entity": {
+              "passed": 4,
+              "total": 4
+            }
+          }
+        },
+        "metrics": {
+          "resolved_right": {
+            "n": 0,
+            "of": 4
+          },
+          "resolved_to_wrong_page": {
+            "n": 4,
+            "of": 8
+          },
+          "misses_suggesting_index_or_digest": {
+            "n": 0,
+            "of": 8
+          },
+          "doctor": {
+            "ran": true,
+            "pairs": 4,
+            "flagged_pairs": 0,
+            "checks_naming_a_stub": []
+          }
+        }
+      },
+      {
+        "family": "E8",
+        "shape": "a name that appears only in raw notes",
+        "issue": "#7161",
+        "status": "measured",
+        "headline": {
+          "entity": {
+            "passed": 2,
+            "total": 2
+          }
+        },
+        "negatives": {
+          "passed": 1,
+          "total": 1
+        },
+        "variants": {
+          "raw-only": {
+            "entity": {
+              "passed": 2,
+              "total": 2
+            }
+          },
+          "nowhere": {
+            "entity": {
+              "passed": 1,
+              "total": 1
+            }
+          }
+        },
+        "metrics": {
+          "mention_pages_named": [
+            {
+              "probe": "E8:raw-only:0",
+              "named": 3,
+              "of": 50
+            },
+            {
+              "probe": "E8:raw-only:1",
+              "named": 3,
+              "of": 5
+            }
+          ]
+        }
+      },
+      {
+        "family": "E9",
+        "shape": "short OCR image pages above the person a name query names",
+        "issue": "#7162",
+        "status": "measured",
+        "headline": {
+          "search": {
+            "passed": 6,
+            "total": 6
+          },
+          "query": {
+            "passed": 6,
+            "total": 6
+          }
+        },
+        "negatives": {
+          "passed": 0,
+          "total": 0
+        },
+        "variants": {
+          "default": {
+            "search": {
+              "passed": 6,
+              "total": 6
+            },
+            "query": {
+              "passed": 6,
+              "total": 6
+            }
+          }
+        },
+        "metrics": {}
+      },
+      {
+        "family": "E10",
+        "shape": "identifier lookups (phone, mail, hex id)",
+        "issue": "#7163",
+        "status": "measured",
+        "headline": {
+          "search": {
+            "passed": 9,
+            "total": 9
+          },
+          "query": {
+            "passed": 9,
+            "total": 9
+          }
+        },
+        "negatives": {
+          "passed": 0,
+          "total": 0
+        },
+        "variants": {
+          "phone": {
+            "search": {
+              "passed": 3,
+              "total": 3
+            },
+            "query": {
+              "passed": 3,
+              "total": 3
+            }
+          },
+          "mail": {
+            "search": {
+              "passed": 3,
+              "total": 3
+            },
+            "query": {
+              "passed": 3,
+              "total": 3
+            }
+          },
+          "hex": {
+            "search": {
+              "passed": 3,
+              "total": 3
+            },
+            "query": {
+              "passed": 3,
+              "total": 3
+            }
+          }
+        },
+        "metrics": {}
+      },
+      {
+        "family": "E11",
+        "shape": "\"when did X start Y\" with an undated stub and a dated page",
+        "issue": "#6058",
+        "status": "measured",
+        "headline": {
+          "search": {
+            "passed": 6,
+            "total": 6
+          },
+          "query": {
+            "passed": 6,
+            "total": 6
+          }
+        },
+        "negatives": {
+          "passed": 0,
+          "total": 0
+        },
+        "variants": {
+          "default": {
+            "search": {
+              "passed": 6,
+              "total": 6
+            },
+            "query": {
+              "passed": 6,
+              "total": 6
+            }
+          }
+        },
+        "metrics": {}
+      },
+      {
+        "family": "E12",
+        "shape": "score monotonic in rank order",
+        "issue": "#7156",
+        "status": "measured",
+        "headline": {
+          "search": {
+            "passed": 324,
+            "total": 324
+          }
+        },
+        "negatives": {
+          "passed": 0,
+          "total": 0
+        },
+        "variants": {},
+        "metrics": {
+          "monotonic_lists": {
+            "passed": 324,
+            "total": 324
+          },
+          "violations": [],
+          "note": "keyword path only; no reranker runs in the hermetic arm"
+        }
+      },
+      {
+        "family": "E13",
+        "shape": "returned chunk size on a 60,000-character meeting",
+        "issue": "#7164",
+        "status": "measured",
+        "headline": {
+          "search": {
+            "passed": 0,
+            "total": 1
+          },
+          "query": {
+            "passed": 0,
+            "total": 1
+          }
+        },
+        "negatives": {
+          "passed": 0,
+          "total": 0
+        },
+        "variants": {
+          "default": {
+            "search": {
+              "passed": 0,
+              "total": 1
+            },
+            "query": {
+              "passed": 0,
+              "total": 1
+            }
+          },
+          "return-unit-chunk": {
+            "search": {
+              "passed": 1,
+              "total": 1
+            },
+            "query": {
+              "passed": 1,
+              "total": 1
+            }
+          }
+        },
+        "metrics": {
+          "max_returned_chars_this_family": {
+            "search": 59883,
+            "query": 59883
+          },
+          "max_returned_chars_whole_run": 59883,
+          "max_stored_chunk_chars": 2702,
+          "cap_chars": 6000
+        }
+      },
+      {
+        "family": "E14",
+        "shape": "projection_pending notice on queries it cannot affect",
+        "issue": "#7165",
+        "status": "measured",
+        "headline": {
+          "search": {
+            "passed": 0,
+            "total": 3
+          },
+          "query": {
+            "passed": 0,
+            "total": 3
+          }
+        },
+        "negatives": {
+          "passed": 0,
+          "total": 0
+        },
+        "variants": {
+          "unscoped": {
+            "search": {
+              "passed": 0,
+              "total": 3
+            },
+            "query": {
+              "passed": 0,
+              "total": 3
+            }
+          },
+          "types-note": {
+            "search": {
+              "passed": 3,
+              "total": 3
+            },
+            "query": {
+              "passed": 3,
+              "total": 3
+            }
+          }
+        },
+        "metrics": {
+          "projection_state": {
+            "reachable": true,
+            "detail": "5 image pages unsealed by SQL; a search scoped to types [image] reports projection_pending"
+          }
+        }
+      },
+      {
+        "family": "E15",
+        "shape": "known-item paraphrase questions",
+        "issue": "#7157",
+        "status": "measured",
+        "headline": {
+          "search": {
+            "passed": 48,
+            "total": 50
+          },
+          "query": {
+            "passed": 48,
+            "total": 50
+          }
+        },
+        "negatives": {
+          "passed": 0,
+          "total": 0
+        },
+        "variants": {
+          "default": {
+            "search": {
+              "passed": 48,
+              "total": 50
+            },
+            "query": {
+              "passed": 48,
+              "total": 50
+            }
+          }
+        },
+        "metrics": {
+          "search_query_identical_top10": {
+            "n": 50,
+            "of": 50
+          },
+          "ranking": {
+            "search": {
+              "n": 50,
+              "hit_at_1": 0.96,
+              "hit_at_5": 1,
+              "hit_at_10": 1,
+              "mrr": 0.9733333333333333
+            },
+            "query": {
+              "n": 50,
+              "hit_at_1": 0.96,
+              "hit_at_5": 1,
+              "hit_at_10": 1,
+              "mrr": 0.9733333333333333
+            }
+          }
+        }
+      }
+    ],
+    "hermetic_wall_ms": 25531,
+    "ledger_counts": {
+      "pages": 621,
+      "images": 5,
+      "probes": 199
+    },
+    "presence": [
+      {
+        "name": "pages in source-a",
+        "ok": true,
+        "expected": 45,
+        "actual": 45
+      },
+      {
+        "name": "pages in source-b",
+        "ok": true,
+        "expected": 45,
+        "actual": 45
+      },
+      {
+        "name": "pages in default",
+        "ok": true,
+        "expected": 536,
+        "actual": 536
+      },
+      {
+        "name": "gold pages readable by exact slug (get_page)",
+        "ok": true,
+        "expected": 266,
+        "actual": 266
+      },
+      {
+        "name": "image pages written by importImageFile",
+        "ok": true,
+        "expected": 5,
+        "actual": 5
+      }
+    ],
+    "seed_report": {
+      "writes": 621,
+      "write_errors": [],
+      "images": 5,
+      "image_errors": [],
+      "sources_added": [
+        "source-a",
+        "source-b"
+      ]
+    },
+    "extras": {
+      "monotonic": {
+        "checked": 324,
+        "ok": 324,
+        "violations": []
+      },
+      "max_returned_chars": 59883,
+      "e14_state": {
+        "reachable": true,
+        "detail": "5 image pages unsealed by SQL; a search scoped to types [image] reports projection_pending"
+      },
+      "doctor": {
+        "ran": true,
+        "pairs": 4,
+        "flagged_pairs": 0,
+        "checks_naming_a_stub": []
+      },
+      "stored_chunk_max_chars": 2702,
+      "e15_identical_top10": {
+        "n": 50,
+        "of": 50
+      }
+    },
+    "not_measured": [
+      {
+        "family": "all",
+        "what": "vector and hybrid ranking",
+        "reason": "the hermetic arm has no embedding key; every search and query runs on the keyword path. A paid arm (requirePaidArm, startPaidRun) is follow-up work."
+      },
+      {
+        "family": "E12",
+        "what": "score after reranking (the case gbrain#7156 reports)",
+        "reason": "the reranker calls a paid provider; the hermetic arm checks monotonic score on the keyword path, where no reranker runs."
+      },
+      {
+        "family": "E15",
+        "what": "query --expand",
+        "reason": "expansion calls a chat model; query is measured without it."
+      },
+      {
+        "family": "E8",
+        "what": "mention coverage after extraction",
+        "reason": "mention extraction is never run, on purpose: the shape is a name that only raw notes carry while coverage is pending."
+      }
+    ],
+    "findings": [
+      {
+        "id": "ARS-3",
+        "classification": "feature-gap",
+        "surface": "search / query",
+        "expected": "the page that answers the question ranks first and the transcript, summary and diarized copies take at most 1 of the top 5",
+        "actual": "headline pass search 0/6, query 0/6 (default)",
+        "repro": "bun eval/runner/agent-retrieval-shapes.ts --families E3"
+      },
+      {
+        "id": "ARS-6",
+        "classification": "feature-gap",
+        "surface": "entity",
+        "expected": "each variant of a person with empty aliases resolves to that person, none resolves to a wrong page, and no miss suggests an index or digest page",
+        "actual": "headline pass entity 0/24 (honorific, surname, diminutive, reversed); wrong page {\"n\":0,\"of\":26}, index or digest suggested {\"n\":19,\"of\":26}",
+        "repro": "bun eval/runner/agent-retrieval-shapes.ts --families E6"
+      },
+      {
+        "id": "ARS-7",
+        "classification": "feature-gap",
+        "surface": "entity; run_doctor",
+        "expected": "\"Mayor <Surname>-Example\" resolves to the canonical person page, not the short people/mayor-<surname>-example stub, and a doctor check flags the pair",
+        "actual": "headline pass entity 0/4 (prefixed); doctor flags 0 of 4 pairs",
+        "repro": "bun eval/runner/agent-retrieval-shapes.ts --families E7"
+      },
+      {
+        "id": "ARS-13",
+        "classification": "feature-gap",
+        "surface": "search / query (return_unit auto)",
+        "expected": "no returned row carries more than 6,000 characters",
+        "actual": "headline pass search 0/1, query 0/1 (default); largest returned row 59883 characters, largest stored chunk 2702",
+        "repro": "bun eval/runner/agent-retrieval-shapes.ts --families E13"
+      },
+      {
+        "id": "ARS-14",
+        "classification": "feature-gap",
+        "surface": "search / query response meta degraded",
+        "expected": "a text query that cannot match an unprojected image page reports no projection_pending stage",
+        "actual": "headline pass search 0/3, query 0/3 (unscoped)",
+        "repro": "bun eval/runner/agent-retrieval-shapes.ts --families E14"
+      },
+      {
+        "id": "ARS-15",
+        "classification": "feature-gap",
+        "surface": "search / query",
+        "expected": "the page each paraphrased question describes ranks first (hit@1), with query at least as good as search",
+        "actual": "headline pass search 48/50, query 48/50 (default); {\"search\":{\"n\":50,\"hit_at_1\":0.96,\"hit_at_5\":1,\"hit_at_10\":1,\"mrr\":0.9733333333333333},\"query\":{\"n\":50,\"hit_at_1\":0.96,\"hit_at_5\":1,\"hit_at_10\":1,\"mrr\":0.9733333333333333}}; search and query return the same top 10 for {\"n\":50,\"of\":50}",
+        "repro": "bun eval/runner/agent-retrieval-shapes.ts --families E15"
+      }
+    ],
+    "failures": [
+      {
+        "probe_id": "E3:family:0",
+        "surface": "search",
+        "rank": 2,
+        "detail": {
+          "ranked_above_target": [],
+          "family_in_top5": 1
+        }
+      },
+      {
+        "probe_id": "E3:family:0",
+        "surface": "query",
+        "rank": 2,
+        "detail": {
+          "ranked_above_target": [],
+          "family_in_top5": 1
+        }
+      },
+      {
+        "probe_id": "E3:family:1",
+        "surface": "search",
+        "rank": 2,
+        "detail": {
+          "ranked_above_target": [],
+          "family_in_top5": 1
+        }
+      },
+      {
+        "probe_id": "E3:family:1",
+        "surface": "query",
+        "rank": 2,
+        "detail": {
+          "ranked_above_target": [],
+          "family_in_top5": 1
+        }
+      },
+      {
+        "probe_id": "E3:family:2",
+        "surface": "search",
+        "rank": 2,
+        "detail": {
+          "ranked_above_target": [],
+          "family_in_top5": 1
+        }
+      },
+      {
+        "probe_id": "E3:family:2",
+        "surface": "query",
+        "rank": 2,
+        "detail": {
+          "ranked_above_target": [],
+          "family_in_top5": 1
+        }
+      },
+      {
+        "probe_id": "E3:family:3",
+        "surface": "search",
+        "rank": 2,
+        "detail": {
+          "ranked_above_target": [],
+          "family_in_top5": 1
+        }
+      },
+      {
+        "probe_id": "E3:family:3",
+        "surface": "query",
+        "rank": 2,
+        "detail": {
+          "ranked_above_target": [],
+          "family_in_top5": 1
+        }
+      },
+      {
+        "probe_id": "E3:family:4",
+        "surface": "search",
+        "rank": 2,
+        "detail": {
+          "ranked_above_target": [],
+          "family_in_top5": 1
+        }
+      },
+      {
+        "probe_id": "E3:family:4",
+        "surface": "query",
+        "rank": 2,
+        "detail": {
+          "ranked_above_target": [],
+          "family_in_top5": 1
+        }
+      },
+      {
+        "probe_id": "E3:family:5",
+        "surface": "search",
+        "rank": 2,
+        "detail": {
+          "ranked_above_target": [],
+          "family_in_top5": 1
+        }
+      },
+      {
+        "probe_id": "E3:family:5",
+        "surface": "query",
+        "rank": 2,
+        "detail": {
+          "ranked_above_target": [],
+          "family_in_top5": 1
+        }
+      },
+      {
+        "probe_id": "E5:baseline:0",
+        "surface": "search",
+        "rank": null,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E5:baseline:0",
+        "surface": "query",
+        "rank": null,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E5:baseline:1",
+        "surface": "search",
+        "rank": null,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E5:baseline:1",
+        "surface": "query",
+        "rank": null,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E5:baseline:2",
+        "surface": "search",
+        "rank": null,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E5:baseline:2",
+        "surface": "query",
+        "rank": null,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E5:baseline:3",
+        "surface": "search",
+        "rank": null,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E5:baseline:3",
+        "surface": "query",
+        "rank": null,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E5:baseline:4",
+        "surface": "search",
+        "rank": null,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E5:baseline:4",
+        "surface": "query",
+        "rank": null,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E5:baseline:5",
+        "surface": "search",
+        "rank": null,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E5:baseline:5",
+        "surface": "query",
+        "rank": null,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E5:baseline:6",
+        "surface": "search",
+        "rank": null,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E5:baseline:6",
+        "surface": "query",
+        "rank": null,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E6:honorific:0",
+        "surface": "entity",
+        "rank": null,
+        "detail": {
+          "resolved": null,
+          "wrong": false,
+          "forbidden_suggested": [
+            "default:indexes/people-index",
+            "default:digests/weekly-digest-2026-09-28"
+          ]
+        }
+      },
+      {
+        "probe_id": "E6:surname:0",
+        "surface": "entity",
+        "rank": null,
+        "detail": {
+          "resolved": null,
+          "wrong": false,
+          "forbidden_suggested": [
+            "default:digests/weekly-digest-2026-09-28",
+            "default:indexes/people-index"
+          ]
+        }
+      },
+      {
+        "probe_id": "E6:diminutive:0",
+        "surface": "entity",
+        "rank": null,
+        "detail": {
+          "resolved": null,
+          "wrong": false,
+          "forbidden_suggested": []
+        }
+      },
+      {
+        "probe_id": "E6:reversed:0",
+        "surface": "entity",
+        "rank": null,
+        "detail": {
+          "resolved": null,
+          "wrong": false,
+          "forbidden_suggested": [
+            "default:digests/weekly-digest-2026-09-28",
+            "default:indexes/people-index"
+          ]
+        }
+      },
+      {
+        "probe_id": "E6:honorific:1",
+        "surface": "entity",
+        "rank": null,
+        "detail": {
+          "resolved": null,
+          "wrong": false,
+          "forbidden_suggested": [
+            "default:indexes/people-index",
+            "default:digests/weekly-digest-2026-09-28"
+          ]
+        }
+      },
+      {
+        "probe_id": "E6:surname:1",
+        "surface": "entity",
+        "rank": null,
+        "detail": {
+          "resolved": null,
+          "wrong": false,
+          "forbidden_suggested": [
+            "default:digests/weekly-digest-2026-09-28",
+            "default:indexes/people-index"
+          ]
+        }
+      },
+      {
+        "probe_id": "E6:diminutive:1",
+        "surface": "entity",
+        "rank": null,
+        "detail": {
+          "resolved": null,
+          "wrong": false,
+          "forbidden_suggested": []
+        }
+      },
+      {
+        "probe_id": "E6:reversed:1",
+        "surface": "entity",
+        "rank": null,
+        "detail": {
+          "resolved": null,
+          "wrong": false,
+          "forbidden_suggested": [
+            "default:digests/weekly-digest-2026-09-28",
+            "default:indexes/people-index"
+          ]
+        }
+      },
+      {
+        "probe_id": "E6:honorific:2",
+        "surface": "entity",
+        "rank": null,
+        "detail": {
+          "resolved": null,
+          "wrong": false,
+          "forbidden_suggested": [
+            "default:indexes/people-index",
+            "default:digests/weekly-digest-2026-09-28"
+          ]
+        }
+      },
+      {
+        "probe_id": "E6:surname:2",
+        "surface": "entity",
+        "rank": null,
+        "detail": {
+          "resolved": null,
+          "wrong": false,
+          "forbidden_suggested": [
+            "default:digests/weekly-digest-2026-09-28",
+            "default:indexes/people-index"
+          ]
+        }
+      },
+      {
+        "probe_id": "E6:diminutive:2",
+        "surface": "entity",
+        "rank": null,
+        "detail": {
+          "resolved": null,
+          "wrong": false,
+          "forbidden_suggested": []
+        }
+      },
+      {
+        "probe_id": "E6:reversed:2",
+        "surface": "entity",
+        "rank": null,
+        "detail": {
+          "resolved": null,
+          "wrong": false,
+          "forbidden_suggested": [
+            "default:digests/weekly-digest-2026-09-28",
+            "default:indexes/people-index"
+          ]
+        }
+      },
+      {
+        "probe_id": "E6:honorific:3",
+        "surface": "entity",
+        "rank": null,
+        "detail": {
+          "resolved": null,
+          "wrong": false,
+          "forbidden_suggested": [
+            "default:indexes/people-index",
+            "default:digests/weekly-digest-2026-09-28"
+          ]
+        }
+      },
+      {
+        "probe_id": "E6:surname:3",
+        "surface": "entity",
+        "rank": null,
+        "detail": {
+          "resolved": null,
+          "wrong": false,
+          "forbidden_suggested": [
+            "default:digests/weekly-digest-2026-09-28",
+            "default:indexes/people-index"
+          ]
+        }
+      },
+      {
+        "probe_id": "E6:diminutive:3",
+        "surface": "entity",
+        "rank": null,
+        "detail": {
+          "resolved": null,
+          "wrong": false,
+          "forbidden_suggested": []
+        }
+      },
+      {
+        "probe_id": "E6:reversed:3",
+        "surface": "entity",
+        "rank": null,
+        "detail": {
+          "resolved": null,
+          "wrong": false,
+          "forbidden_suggested": [
+            "default:digests/weekly-digest-2026-09-28",
+            "default:indexes/people-index"
+          ]
+        }
+      },
+      {
+        "probe_id": "E6:honorific:4",
+        "surface": "entity",
+        "rank": null,
+        "detail": {
+          "resolved": null,
+          "wrong": false,
+          "forbidden_suggested": [
+            "default:indexes/people-index",
+            "default:digests/weekly-digest-2026-09-28"
+          ]
+        }
+      },
+      {
+        "probe_id": "E6:surname:4",
+        "surface": "entity",
+        "rank": null,
+        "detail": {
+          "resolved": null,
+          "wrong": false,
+          "forbidden_suggested": [
+            "default:digests/weekly-digest-2026-09-28",
+            "default:indexes/people-index"
+          ]
+        }
+      },
+      {
+        "probe_id": "E6:diminutive:4",
+        "surface": "entity",
+        "rank": null,
+        "detail": {
+          "resolved": null,
+          "wrong": false,
+          "forbidden_suggested": []
+        }
+      },
+      {
+        "probe_id": "E6:reversed:4",
+        "surface": "entity",
+        "rank": null,
+        "detail": {
+          "resolved": null,
+          "wrong": false,
+          "forbidden_suggested": [
+            "default:digests/weekly-digest-2026-09-28",
+            "default:indexes/people-index"
+          ]
+        }
+      },
+      {
+        "probe_id": "E6:honorific:5",
+        "surface": "entity",
+        "rank": null,
+        "detail": {
+          "resolved": null,
+          "wrong": false,
+          "forbidden_suggested": [
+            "default:indexes/people-index",
+            "default:digests/weekly-digest-2026-09-28"
+          ]
+        }
+      },
+      {
+        "probe_id": "E6:surname:5",
+        "surface": "entity",
+        "rank": null,
+        "detail": {
+          "resolved": null,
+          "wrong": false,
+          "forbidden_suggested": [
+            "default:digests/weekly-digest-2026-09-28",
+            "default:indexes/people-index"
+          ]
+        }
+      },
+      {
+        "probe_id": "E6:diminutive:5",
+        "surface": "entity",
+        "rank": null,
+        "detail": {
+          "resolved": null,
+          "wrong": false,
+          "forbidden_suggested": []
+        }
+      },
+      {
+        "probe_id": "E6:reversed:5",
+        "surface": "entity",
+        "rank": null,
+        "detail": {
+          "resolved": null,
+          "wrong": false,
+          "forbidden_suggested": [
+            "default:digests/weekly-digest-2026-09-28",
+            "default:indexes/people-index"
+          ]
+        }
+      },
+      {
+        "probe_id": "E6:ambiguous-surname",
+        "surface": "entity",
+        "rank": null,
+        "detail": {
+          "resolved": null,
+          "wrong": false,
+          "forbidden_suggested": [
+            "default:digests/weekly-digest-2026-09-28",
+            "default:indexes/people-index"
+          ]
+        }
+      },
+      {
+        "probe_id": "E7:prefixed:0",
+        "surface": "entity",
+        "rank": null,
+        "detail": {
+          "resolved": "default:people/mayor-kulourk-example",
+          "wrong": true,
+          "forbidden_suggested": []
+        }
+      },
+      {
+        "probe_id": "E7:prefixed:1",
+        "surface": "entity",
+        "rank": null,
+        "detail": {
+          "resolved": "default:people/dr-viglux-example",
+          "wrong": true,
+          "forbidden_suggested": []
+        }
+      },
+      {
+        "probe_id": "E7:prefixed:2",
+        "surface": "entity",
+        "rank": null,
+        "detail": {
+          "resolved": "default:people/senator-brourar-example",
+          "wrong": true,
+          "forbidden_suggested": []
+        }
+      },
+      {
+        "probe_id": "E7:prefixed:3",
+        "surface": "entity",
+        "rank": null,
+        "detail": {
+          "resolved": "default:people/ceo-draiwask-example",
+          "wrong": true,
+          "forbidden_suggested": []
+        }
+      },
+      {
+        "probe_id": "E13:default",
+        "surface": "search",
+        "rank": 1,
+        "detail": {
+          "max_chars": 59883,
+          "page_returned": true
+        }
+      },
+      {
+        "probe_id": "E13:default",
+        "surface": "query",
+        "rank": 1,
+        "detail": {
+          "max_chars": 59883,
+          "page_returned": true
+        }
+      },
+      {
+        "probe_id": "E15:known:28",
+        "surface": "search",
+        "rank": 3,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:28",
+        "surface": "query",
+        "rank": 3,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:32",
+        "surface": "search",
+        "rank": 3,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:32",
+        "surface": "query",
+        "rank": 3,
+        "detail": {}
+      },
+      {
+        "probe_id": "E14:unscoped:0",
+        "surface": "search",
+        "rank": null,
+        "detail": {
+          "stages": [
+            "embed_unavailable",
+            "projection_pending"
+          ]
+        }
+      },
+      {
+        "probe_id": "E14:unscoped:0",
+        "surface": "query",
+        "rank": null,
+        "detail": {
+          "stages": [
+            "embed_unavailable",
+            "projection_pending"
+          ]
+        }
+      },
+      {
+        "probe_id": "E14:unscoped:1",
+        "surface": "search",
+        "rank": null,
+        "detail": {
+          "stages": [
+            "embed_unavailable",
+            "projection_pending"
+          ]
+        }
+      },
+      {
+        "probe_id": "E14:unscoped:1",
+        "surface": "query",
+        "rank": null,
+        "detail": {
+          "stages": [
+            "embed_unavailable",
+            "projection_pending"
+          ]
+        }
+      },
+      {
+        "probe_id": "E14:unscoped:2",
+        "surface": "search",
+        "rank": null,
+        "detail": {
+          "stages": [
+            "embed_unavailable",
+            "projection_pending"
+          ]
+        }
+      },
+      {
+        "probe_id": "E14:unscoped:2",
+        "surface": "query",
+        "rank": null,
+        "detail": {
+          "stages": [
+            "embed_unavailable",
+            "projection_pending"
+          ]
+        }
+      }
+    ],
+    "rows": [
+      {
+        "probe_id": "E1:twin:0",
+        "family": "E1",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:0",
+        "family": "E1",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:single-source:0",
+        "family": "E1",
+        "variant": "single-source-control",
+        "surface": "search",
+        "negative": true,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:single-source:0",
+        "family": "E1",
+        "variant": "single-source-control",
+        "surface": "query",
+        "negative": true,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:1",
+        "family": "E1",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:1",
+        "family": "E1",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:single-source:1",
+        "family": "E1",
+        "variant": "single-source-control",
+        "surface": "search",
+        "negative": true,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:single-source:1",
+        "family": "E1",
+        "variant": "single-source-control",
+        "surface": "query",
+        "negative": true,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:2",
+        "family": "E1",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:2",
+        "family": "E1",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:single-source:2",
+        "family": "E1",
+        "variant": "single-source-control",
+        "surface": "search",
+        "negative": true,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:single-source:2",
+        "family": "E1",
+        "variant": "single-source-control",
+        "surface": "query",
+        "negative": true,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:3",
+        "family": "E1",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:3",
+        "family": "E1",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:4",
+        "family": "E1",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:4",
+        "family": "E1",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:5",
+        "family": "E1",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:5",
+        "family": "E1",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:6",
+        "family": "E1",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:6",
+        "family": "E1",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:7",
+        "family": "E1",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:7",
+        "family": "E1",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:8",
+        "family": "E1",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:8",
+        "family": "E1",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:9",
+        "family": "E1",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:9",
+        "family": "E1",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:10",
+        "family": "E1",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:10",
+        "family": "E1",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:11",
+        "family": "E1",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:11",
+        "family": "E1",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:12",
+        "family": "E1",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:12",
+        "family": "E1",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:13",
+        "family": "E1",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:13",
+        "family": "E1",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:14",
+        "family": "E1",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:14",
+        "family": "E1",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:15",
+        "family": "E1",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:15",
+        "family": "E1",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:16",
+        "family": "E1",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:16",
+        "family": "E1",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:17",
+        "family": "E1",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:17",
+        "family": "E1",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:18",
+        "family": "E1",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:18",
+        "family": "E1",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:19",
+        "family": "E1",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:19",
+        "family": "E1",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:20",
+        "family": "E1",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:20",
+        "family": "E1",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:21",
+        "family": "E1",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:21",
+        "family": "E1",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:22",
+        "family": "E1",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:22",
+        "family": "E1",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:23",
+        "family": "E1",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:23",
+        "family": "E1",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:24",
+        "family": "E1",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:24",
+        "family": "E1",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:25",
+        "family": "E1",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:25",
+        "family": "E1",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:26",
+        "family": "E1",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:26",
+        "family": "E1",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:27",
+        "family": "E1",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:27",
+        "family": "E1",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:28",
+        "family": "E1",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:28",
+        "family": "E1",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:29",
+        "family": "E1",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E1:twin:29",
+        "family": "E1",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "hit1": true,
+          "duplicated_slugs": []
+        }
+      },
+      {
+        "probe_id": "E2:same-title:0",
+        "family": "E2",
+        "variant": "same-title",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E2:same-title:0",
+        "family": "E2",
+        "variant": "same-title",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E2:same-title:1",
+        "family": "E2",
+        "variant": "same-title",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E2:same-title:1",
+        "family": "E2",
+        "variant": "same-title",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E2:same-title:2",
+        "family": "E2",
+        "variant": "same-title",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E2:same-title:2",
+        "family": "E2",
+        "variant": "same-title",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E2:same-title:3",
+        "family": "E2",
+        "variant": "same-title",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E2:same-title:3",
+        "family": "E2",
+        "variant": "same-title",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E2:same-title:4",
+        "family": "E2",
+        "variant": "same-title",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E2:same-title:4",
+        "family": "E2",
+        "variant": "same-title",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E2:same-title:5",
+        "family": "E2",
+        "variant": "same-title",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E2:same-title:5",
+        "family": "E2",
+        "variant": "same-title",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E2:same-title:6",
+        "family": "E2",
+        "variant": "same-title",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E2:same-title:6",
+        "family": "E2",
+        "variant": "same-title",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E2:same-title:7",
+        "family": "E2",
+        "variant": "same-title",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E2:same-title:7",
+        "family": "E2",
+        "variant": "same-title",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E2:same-title:8",
+        "family": "E2",
+        "variant": "same-title",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E2:same-title:8",
+        "family": "E2",
+        "variant": "same-title",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E2:same-title:9",
+        "family": "E2",
+        "variant": "same-title",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E2:same-title:9",
+        "family": "E2",
+        "variant": "same-title",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E2:renamed-stub:10",
+        "family": "E2",
+        "variant": "renamed-stub",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E2:renamed-stub:10",
+        "family": "E2",
+        "variant": "renamed-stub",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E2:renamed-stub:11",
+        "family": "E2",
+        "variant": "renamed-stub",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E2:renamed-stub:11",
+        "family": "E2",
+        "variant": "renamed-stub",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E2:renamed-stub:12",
+        "family": "E2",
+        "variant": "renamed-stub",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E2:renamed-stub:12",
+        "family": "E2",
+        "variant": "renamed-stub",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E2:renamed-stub:13",
+        "family": "E2",
+        "variant": "renamed-stub",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E2:renamed-stub:13",
+        "family": "E2",
+        "variant": "renamed-stub",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E2:renamed-stub:14",
+        "family": "E2",
+        "variant": "renamed-stub",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E2:renamed-stub:14",
+        "family": "E2",
+        "variant": "renamed-stub",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E3:family:0",
+        "family": "E3",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": 2,
+        "detail": {
+          "ranked_above_target": [],
+          "family_in_top5": 1
+        }
+      },
+      {
+        "probe_id": "E3:family:0",
+        "family": "E3",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": 2,
+        "detail": {
+          "ranked_above_target": [],
+          "family_in_top5": 1
+        }
+      },
+      {
+        "probe_id": "E3:family:1",
+        "family": "E3",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": 2,
+        "detail": {
+          "ranked_above_target": [],
+          "family_in_top5": 1
+        }
+      },
+      {
+        "probe_id": "E3:family:1",
+        "family": "E3",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": 2,
+        "detail": {
+          "ranked_above_target": [],
+          "family_in_top5": 1
+        }
+      },
+      {
+        "probe_id": "E3:family:2",
+        "family": "E3",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": 2,
+        "detail": {
+          "ranked_above_target": [],
+          "family_in_top5": 1
+        }
+      },
+      {
+        "probe_id": "E3:family:2",
+        "family": "E3",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": 2,
+        "detail": {
+          "ranked_above_target": [],
+          "family_in_top5": 1
+        }
+      },
+      {
+        "probe_id": "E3:family:3",
+        "family": "E3",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": 2,
+        "detail": {
+          "ranked_above_target": [],
+          "family_in_top5": 1
+        }
+      },
+      {
+        "probe_id": "E3:family:3",
+        "family": "E3",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": 2,
+        "detail": {
+          "ranked_above_target": [],
+          "family_in_top5": 1
+        }
+      },
+      {
+        "probe_id": "E3:family:4",
+        "family": "E3",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": 2,
+        "detail": {
+          "ranked_above_target": [],
+          "family_in_top5": 1
+        }
+      },
+      {
+        "probe_id": "E3:family:4",
+        "family": "E3",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": 2,
+        "detail": {
+          "ranked_above_target": [],
+          "family_in_top5": 1
+        }
+      },
+      {
+        "probe_id": "E3:family:5",
+        "family": "E3",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": 2,
+        "detail": {
+          "ranked_above_target": [],
+          "family_in_top5": 1
+        }
+      },
+      {
+        "probe_id": "E3:family:5",
+        "family": "E3",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": 2,
+        "detail": {
+          "ranked_above_target": [],
+          "family_in_top5": 1
+        }
+      },
+      {
+        "probe_id": "E4:org:0",
+        "family": "E4",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E4:org:0",
+        "family": "E4",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E4:org-typed:0",
+        "family": "E4",
+        "variant": "types-company",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E4:org-typed:0",
+        "family": "E4",
+        "variant": "types-company",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E4:org:1",
+        "family": "E4",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E4:org:1",
+        "family": "E4",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E4:org-typed:1",
+        "family": "E4",
+        "variant": "types-company",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E4:org-typed:1",
+        "family": "E4",
+        "variant": "types-company",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E4:org:2",
+        "family": "E4",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E4:org:2",
+        "family": "E4",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E4:org-typed:2",
+        "family": "E4",
+        "variant": "types-company",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E4:org-typed:2",
+        "family": "E4",
+        "variant": "types-company",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E4:org:3",
+        "family": "E4",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E4:org:3",
+        "family": "E4",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E4:org-typed:3",
+        "family": "E4",
+        "variant": "types-company",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E4:org-typed:3",
+        "family": "E4",
+        "variant": "types-company",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E4:org:4",
+        "family": "E4",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E4:org:4",
+        "family": "E4",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E4:org-typed:4",
+        "family": "E4",
+        "variant": "types-company",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E4:org-typed:4",
+        "family": "E4",
+        "variant": "types-company",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E4:org:5",
+        "family": "E4",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E4:org:5",
+        "family": "E4",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E4:org-typed:5",
+        "family": "E4",
+        "variant": "types-company",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E4:org-typed:5",
+        "family": "E4",
+        "variant": "types-company",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E5:baseline:0",
+        "family": "E5",
+        "variant": "baseline",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": null,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E5:baseline:0",
+        "family": "E5",
+        "variant": "baseline",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": null,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E5:filter:0",
+        "family": "E5",
+        "variant": "filter",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E5:filter:0",
+        "family": "E5",
+        "variant": "filter",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E5:baseline:1",
+        "family": "E5",
+        "variant": "baseline",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": null,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E5:baseline:1",
+        "family": "E5",
+        "variant": "baseline",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": null,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E5:filter:1",
+        "family": "E5",
+        "variant": "filter",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E5:filter:1",
+        "family": "E5",
+        "variant": "filter",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E5:baseline:2",
+        "family": "E5",
+        "variant": "baseline",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": null,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E5:baseline:2",
+        "family": "E5",
+        "variant": "baseline",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": null,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E5:filter:2",
+        "family": "E5",
+        "variant": "filter",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E5:filter:2",
+        "family": "E5",
+        "variant": "filter",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E5:baseline:3",
+        "family": "E5",
+        "variant": "baseline",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": null,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E5:baseline:3",
+        "family": "E5",
+        "variant": "baseline",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": null,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E5:filter:3",
+        "family": "E5",
+        "variant": "filter",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E5:filter:3",
+        "family": "E5",
+        "variant": "filter",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E5:baseline:4",
+        "family": "E5",
+        "variant": "baseline",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": null,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E5:baseline:4",
+        "family": "E5",
+        "variant": "baseline",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": null,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E5:filter:4",
+        "family": "E5",
+        "variant": "filter",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E5:filter:4",
+        "family": "E5",
+        "variant": "filter",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E5:baseline:5",
+        "family": "E5",
+        "variant": "baseline",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": null,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E5:baseline:5",
+        "family": "E5",
+        "variant": "baseline",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": null,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E5:filter:5",
+        "family": "E5",
+        "variant": "filter",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E5:filter:5",
+        "family": "E5",
+        "variant": "filter",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E5:baseline:6",
+        "family": "E5",
+        "variant": "baseline",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": null,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E5:baseline:6",
+        "family": "E5",
+        "variant": "baseline",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": null,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E5:filter:6",
+        "family": "E5",
+        "variant": "filter",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E5:filter:6",
+        "family": "E5",
+        "variant": "filter",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E5:baseline:7",
+        "family": "E5",
+        "variant": "baseline",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E5:baseline:7",
+        "family": "E5",
+        "variant": "baseline",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E5:filter:7",
+        "family": "E5",
+        "variant": "filter",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E5:filter:7",
+        "family": "E5",
+        "variant": "filter",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E5:filter-empty",
+        "family": "E5",
+        "variant": "filter-empty",
+        "surface": "search",
+        "negative": true,
+        "status": "scored",
+        "pass": true,
+        "rank": null,
+        "detail": {
+          "rows": 0
+        }
+      },
+      {
+        "probe_id": "E5:filter-empty",
+        "family": "E5",
+        "variant": "filter-empty",
+        "surface": "query",
+        "negative": true,
+        "status": "scored",
+        "pass": true,
+        "rank": null,
+        "detail": {
+          "rows": 0
+        }
+      },
+      {
+        "probe_id": "E6:honorific:0",
+        "family": "E6",
+        "variant": "honorific",
+        "surface": "entity",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": null,
+        "detail": {
+          "resolved": null,
+          "wrong": false,
+          "forbidden_suggested": [
+            "default:indexes/people-index",
+            "default:digests/weekly-digest-2026-09-28"
+          ]
+        }
+      },
+      {
+        "probe_id": "E6:surname:0",
+        "family": "E6",
+        "variant": "surname",
+        "surface": "entity",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": null,
+        "detail": {
+          "resolved": null,
+          "wrong": false,
+          "forbidden_suggested": [
+            "default:digests/weekly-digest-2026-09-28",
+            "default:indexes/people-index"
+          ]
+        }
+      },
+      {
+        "probe_id": "E6:diminutive:0",
+        "family": "E6",
+        "variant": "diminutive",
+        "surface": "entity",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": null,
+        "detail": {
+          "resolved": null,
+          "wrong": false,
+          "forbidden_suggested": []
+        }
+      },
+      {
+        "probe_id": "E6:reversed:0",
+        "family": "E6",
+        "variant": "reversed",
+        "surface": "entity",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": null,
+        "detail": {
+          "resolved": null,
+          "wrong": false,
+          "forbidden_suggested": [
+            "default:digests/weekly-digest-2026-09-28",
+            "default:indexes/people-index"
+          ]
+        }
+      },
+      {
+        "probe_id": "E6:honorific:1",
+        "family": "E6",
+        "variant": "honorific",
+        "surface": "entity",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": null,
+        "detail": {
+          "resolved": null,
+          "wrong": false,
+          "forbidden_suggested": [
+            "default:indexes/people-index",
+            "default:digests/weekly-digest-2026-09-28"
+          ]
+        }
+      },
+      {
+        "probe_id": "E6:surname:1",
+        "family": "E6",
+        "variant": "surname",
+        "surface": "entity",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": null,
+        "detail": {
+          "resolved": null,
+          "wrong": false,
+          "forbidden_suggested": [
+            "default:digests/weekly-digest-2026-09-28",
+            "default:indexes/people-index"
+          ]
+        }
+      },
+      {
+        "probe_id": "E6:diminutive:1",
+        "family": "E6",
+        "variant": "diminutive",
+        "surface": "entity",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": null,
+        "detail": {
+          "resolved": null,
+          "wrong": false,
+          "forbidden_suggested": []
+        }
+      },
+      {
+        "probe_id": "E6:reversed:1",
+        "family": "E6",
+        "variant": "reversed",
+        "surface": "entity",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": null,
+        "detail": {
+          "resolved": null,
+          "wrong": false,
+          "forbidden_suggested": [
+            "default:digests/weekly-digest-2026-09-28",
+            "default:indexes/people-index"
+          ]
+        }
+      },
+      {
+        "probe_id": "E6:honorific:2",
+        "family": "E6",
+        "variant": "honorific",
+        "surface": "entity",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": null,
+        "detail": {
+          "resolved": null,
+          "wrong": false,
+          "forbidden_suggested": [
+            "default:indexes/people-index",
+            "default:digests/weekly-digest-2026-09-28"
+          ]
+        }
+      },
+      {
+        "probe_id": "E6:surname:2",
+        "family": "E6",
+        "variant": "surname",
+        "surface": "entity",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": null,
+        "detail": {
+          "resolved": null,
+          "wrong": false,
+          "forbidden_suggested": [
+            "default:digests/weekly-digest-2026-09-28",
+            "default:indexes/people-index"
+          ]
+        }
+      },
+      {
+        "probe_id": "E6:diminutive:2",
+        "family": "E6",
+        "variant": "diminutive",
+        "surface": "entity",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": null,
+        "detail": {
+          "resolved": null,
+          "wrong": false,
+          "forbidden_suggested": []
+        }
+      },
+      {
+        "probe_id": "E6:reversed:2",
+        "family": "E6",
+        "variant": "reversed",
+        "surface": "entity",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": null,
+        "detail": {
+          "resolved": null,
+          "wrong": false,
+          "forbidden_suggested": [
+            "default:digests/weekly-digest-2026-09-28",
+            "default:indexes/people-index"
+          ]
+        }
+      },
+      {
+        "probe_id": "E6:honorific:3",
+        "family": "E6",
+        "variant": "honorific",
+        "surface": "entity",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": null,
+        "detail": {
+          "resolved": null,
+          "wrong": false,
+          "forbidden_suggested": [
+            "default:indexes/people-index",
+            "default:digests/weekly-digest-2026-09-28"
+          ]
+        }
+      },
+      {
+        "probe_id": "E6:surname:3",
+        "family": "E6",
+        "variant": "surname",
+        "surface": "entity",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": null,
+        "detail": {
+          "resolved": null,
+          "wrong": false,
+          "forbidden_suggested": [
+            "default:digests/weekly-digest-2026-09-28",
+            "default:indexes/people-index"
+          ]
+        }
+      },
+      {
+        "probe_id": "E6:diminutive:3",
+        "family": "E6",
+        "variant": "diminutive",
+        "surface": "entity",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": null,
+        "detail": {
+          "resolved": null,
+          "wrong": false,
+          "forbidden_suggested": []
+        }
+      },
+      {
+        "probe_id": "E6:reversed:3",
+        "family": "E6",
+        "variant": "reversed",
+        "surface": "entity",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": null,
+        "detail": {
+          "resolved": null,
+          "wrong": false,
+          "forbidden_suggested": [
+            "default:digests/weekly-digest-2026-09-28",
+            "default:indexes/people-index"
+          ]
+        }
+      },
+      {
+        "probe_id": "E6:honorific:4",
+        "family": "E6",
+        "variant": "honorific",
+        "surface": "entity",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": null,
+        "detail": {
+          "resolved": null,
+          "wrong": false,
+          "forbidden_suggested": [
+            "default:indexes/people-index",
+            "default:digests/weekly-digest-2026-09-28"
+          ]
+        }
+      },
+      {
+        "probe_id": "E6:surname:4",
+        "family": "E6",
+        "variant": "surname",
+        "surface": "entity",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": null,
+        "detail": {
+          "resolved": null,
+          "wrong": false,
+          "forbidden_suggested": [
+            "default:digests/weekly-digest-2026-09-28",
+            "default:indexes/people-index"
+          ]
+        }
+      },
+      {
+        "probe_id": "E6:diminutive:4",
+        "family": "E6",
+        "variant": "diminutive",
+        "surface": "entity",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": null,
+        "detail": {
+          "resolved": null,
+          "wrong": false,
+          "forbidden_suggested": []
+        }
+      },
+      {
+        "probe_id": "E6:reversed:4",
+        "family": "E6",
+        "variant": "reversed",
+        "surface": "entity",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": null,
+        "detail": {
+          "resolved": null,
+          "wrong": false,
+          "forbidden_suggested": [
+            "default:digests/weekly-digest-2026-09-28",
+            "default:indexes/people-index"
+          ]
+        }
+      },
+      {
+        "probe_id": "E6:honorific:5",
+        "family": "E6",
+        "variant": "honorific",
+        "surface": "entity",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": null,
+        "detail": {
+          "resolved": null,
+          "wrong": false,
+          "forbidden_suggested": [
+            "default:indexes/people-index",
+            "default:digests/weekly-digest-2026-09-28"
+          ]
+        }
+      },
+      {
+        "probe_id": "E6:surname:5",
+        "family": "E6",
+        "variant": "surname",
+        "surface": "entity",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": null,
+        "detail": {
+          "resolved": null,
+          "wrong": false,
+          "forbidden_suggested": [
+            "default:digests/weekly-digest-2026-09-28",
+            "default:indexes/people-index"
+          ]
+        }
+      },
+      {
+        "probe_id": "E6:diminutive:5",
+        "family": "E6",
+        "variant": "diminutive",
+        "surface": "entity",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": null,
+        "detail": {
+          "resolved": null,
+          "wrong": false,
+          "forbidden_suggested": []
+        }
+      },
+      {
+        "probe_id": "E6:reversed:5",
+        "family": "E6",
+        "variant": "reversed",
+        "surface": "entity",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": null,
+        "detail": {
+          "resolved": null,
+          "wrong": false,
+          "forbidden_suggested": [
+            "default:digests/weekly-digest-2026-09-28",
+            "default:indexes/people-index"
+          ]
+        }
+      },
+      {
+        "probe_id": "E6:ambiguous-surname",
+        "family": "E6",
+        "variant": "ambiguous-surname",
+        "surface": "entity",
+        "negative": true,
+        "status": "scored",
+        "pass": false,
+        "rank": null,
+        "detail": {
+          "resolved": null,
+          "wrong": false,
+          "forbidden_suggested": [
+            "default:digests/weekly-digest-2026-09-28",
+            "default:indexes/people-index"
+          ]
+        }
+      },
+      {
+        "probe_id": "E6:no-referent",
+        "family": "E6",
+        "variant": "no-referent",
+        "surface": "entity",
+        "negative": true,
+        "status": "scored",
+        "pass": true,
+        "rank": null,
+        "detail": {
+          "resolved": null,
+          "wrong": false,
+          "forbidden_suggested": []
+        }
+      },
+      {
+        "probe_id": "E7:prefixed:0",
+        "family": "E7",
+        "variant": "prefixed",
+        "surface": "entity",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": null,
+        "detail": {
+          "resolved": "default:people/mayor-kulourk-example",
+          "wrong": true,
+          "forbidden_suggested": []
+        }
+      },
+      {
+        "probe_id": "E7:full-name:0",
+        "family": "E7",
+        "variant": "full-name-control",
+        "surface": "entity",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": null,
+        "detail": {
+          "resolved": "default:people/elin-kulourk-example",
+          "wrong": false,
+          "forbidden_suggested": []
+        }
+      },
+      {
+        "probe_id": "E7:prefixed:1",
+        "family": "E7",
+        "variant": "prefixed",
+        "surface": "entity",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": null,
+        "detail": {
+          "resolved": "default:people/dr-viglux-example",
+          "wrong": true,
+          "forbidden_suggested": []
+        }
+      },
+      {
+        "probe_id": "E7:full-name:1",
+        "family": "E7",
+        "variant": "full-name-control",
+        "surface": "entity",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": null,
+        "detail": {
+          "resolved": "default:people/dario-viglux-example",
+          "wrong": false,
+          "forbidden_suggested": []
+        }
+      },
+      {
+        "probe_id": "E7:prefixed:2",
+        "family": "E7",
+        "variant": "prefixed",
+        "surface": "entity",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": null,
+        "detail": {
+          "resolved": "default:people/senator-brourar-example",
+          "wrong": true,
+          "forbidden_suggested": []
+        }
+      },
+      {
+        "probe_id": "E7:full-name:2",
+        "family": "E7",
+        "variant": "full-name-control",
+        "surface": "entity",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": null,
+        "detail": {
+          "resolved": "default:people/lena-brourar-example",
+          "wrong": false,
+          "forbidden_suggested": []
+        }
+      },
+      {
+        "probe_id": "E7:prefixed:3",
+        "family": "E7",
+        "variant": "prefixed",
+        "surface": "entity",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": null,
+        "detail": {
+          "resolved": "default:people/ceo-draiwask-example",
+          "wrong": true,
+          "forbidden_suggested": []
+        }
+      },
+      {
+        "probe_id": "E7:full-name:3",
+        "family": "E7",
+        "variant": "full-name-control",
+        "surface": "entity",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": null,
+        "detail": {
+          "resolved": "default:people/ada-draiwask-example",
+          "wrong": false,
+          "forbidden_suggested": []
+        }
+      },
+      {
+        "probe_id": "E8:raw-only:0",
+        "family": "E8",
+        "variant": "raw-only",
+        "surface": "entity",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": null,
+        "detail": {
+          "found": false,
+          "mention_pages_named": 3,
+          "mention_pages": 50
+        }
+      },
+      {
+        "probe_id": "E8:raw-only:1",
+        "family": "E8",
+        "variant": "raw-only",
+        "surface": "entity",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": null,
+        "detail": {
+          "found": false,
+          "mention_pages_named": 3,
+          "mention_pages": 5
+        }
+      },
+      {
+        "probe_id": "E8:nowhere",
+        "family": "E8",
+        "variant": "nowhere",
+        "surface": "entity",
+        "negative": true,
+        "status": "scored",
+        "pass": true,
+        "rank": null,
+        "detail": {
+          "found": false,
+          "named": []
+        }
+      },
+      {
+        "probe_id": "E9:name:0",
+        "family": "E9",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E9:name:0",
+        "family": "E9",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E9:name:1",
+        "family": "E9",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E9:name:1",
+        "family": "E9",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E9:name:2",
+        "family": "E9",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E9:name:2",
+        "family": "E9",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E9:name:3",
+        "family": "E9",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E9:name:3",
+        "family": "E9",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E9:name:4",
+        "family": "E9",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E9:name:4",
+        "family": "E9",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E9:name:5",
+        "family": "E9",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E9:name:5",
+        "family": "E9",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E10:phone:0",
+        "family": "E10",
+        "variant": "phone",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E10:phone:0",
+        "family": "E10",
+        "variant": "phone",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E10:phone:1",
+        "family": "E10",
+        "variant": "phone",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E10:phone:1",
+        "family": "E10",
+        "variant": "phone",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E10:phone:2",
+        "family": "E10",
+        "variant": "phone",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E10:phone:2",
+        "family": "E10",
+        "variant": "phone",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E10:mail:0",
+        "family": "E10",
+        "variant": "mail",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E10:mail:0",
+        "family": "E10",
+        "variant": "mail",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E10:mail:1",
+        "family": "E10",
+        "variant": "mail",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E10:mail:1",
+        "family": "E10",
+        "variant": "mail",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E10:mail:2",
+        "family": "E10",
+        "variant": "mail",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E10:mail:2",
+        "family": "E10",
+        "variant": "mail",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E10:hex:0",
+        "family": "E10",
+        "variant": "hex",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E10:hex:0",
+        "family": "E10",
+        "variant": "hex",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E10:hex:1",
+        "family": "E10",
+        "variant": "hex",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E10:hex:1",
+        "family": "E10",
+        "variant": "hex",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E10:hex:2",
+        "family": "E10",
+        "variant": "hex",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E10:hex:2",
+        "family": "E10",
+        "variant": "hex",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E11:when:0",
+        "family": "E11",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E11:when:0",
+        "family": "E11",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E11:when:1",
+        "family": "E11",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E11:when:1",
+        "family": "E11",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E11:when:2",
+        "family": "E11",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E11:when:2",
+        "family": "E11",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E11:when:3",
+        "family": "E11",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E11:when:3",
+        "family": "E11",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E11:when:4",
+        "family": "E11",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E11:when:4",
+        "family": "E11",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E11:when:5",
+        "family": "E11",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E11:when:5",
+        "family": "E11",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "ranked_above_target": []
+        }
+      },
+      {
+        "probe_id": "E13:default",
+        "family": "E13",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": 1,
+        "detail": {
+          "max_chars": 59883,
+          "page_returned": true
+        }
+      },
+      {
+        "probe_id": "E13:default",
+        "family": "E13",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": 1,
+        "detail": {
+          "max_chars": 59883,
+          "page_returned": true
+        }
+      },
+      {
+        "probe_id": "E13:return-unit-chunk",
+        "family": "E13",
+        "variant": "return-unit-chunk",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "max_chars": 2508,
+          "page_returned": true
+        }
+      },
+      {
+        "probe_id": "E13:return-unit-chunk",
+        "family": "E13",
+        "variant": "return-unit-chunk",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {
+          "max_chars": 2508,
+          "page_returned": true
+        }
+      },
+      {
+        "probe_id": "E15:known:0",
+        "family": "E15",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:0",
+        "family": "E15",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:1",
+        "family": "E15",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:1",
+        "family": "E15",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:2",
+        "family": "E15",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:2",
+        "family": "E15",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:3",
+        "family": "E15",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:3",
+        "family": "E15",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:4",
+        "family": "E15",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:4",
+        "family": "E15",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:5",
+        "family": "E15",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:5",
+        "family": "E15",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:6",
+        "family": "E15",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:6",
+        "family": "E15",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:7",
+        "family": "E15",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:7",
+        "family": "E15",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:8",
+        "family": "E15",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:8",
+        "family": "E15",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:9",
+        "family": "E15",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:9",
+        "family": "E15",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:10",
+        "family": "E15",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:10",
+        "family": "E15",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:11",
+        "family": "E15",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:11",
+        "family": "E15",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:12",
+        "family": "E15",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:12",
+        "family": "E15",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:13",
+        "family": "E15",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:13",
+        "family": "E15",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:14",
+        "family": "E15",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:14",
+        "family": "E15",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:15",
+        "family": "E15",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:15",
+        "family": "E15",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:16",
+        "family": "E15",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:16",
+        "family": "E15",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:17",
+        "family": "E15",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:17",
+        "family": "E15",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:18",
+        "family": "E15",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:18",
+        "family": "E15",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:19",
+        "family": "E15",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:19",
+        "family": "E15",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:20",
+        "family": "E15",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:20",
+        "family": "E15",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:21",
+        "family": "E15",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:21",
+        "family": "E15",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:22",
+        "family": "E15",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:22",
+        "family": "E15",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:23",
+        "family": "E15",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:23",
+        "family": "E15",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:24",
+        "family": "E15",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:24",
+        "family": "E15",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:25",
+        "family": "E15",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:25",
+        "family": "E15",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:26",
+        "family": "E15",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:26",
+        "family": "E15",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:27",
+        "family": "E15",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:27",
+        "family": "E15",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:28",
+        "family": "E15",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": 3,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:28",
+        "family": "E15",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": 3,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:29",
+        "family": "E15",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:29",
+        "family": "E15",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:30",
+        "family": "E15",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:30",
+        "family": "E15",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:31",
+        "family": "E15",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:31",
+        "family": "E15",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:32",
+        "family": "E15",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": 3,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:32",
+        "family": "E15",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": 3,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:33",
+        "family": "E15",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:33",
+        "family": "E15",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:34",
+        "family": "E15",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:34",
+        "family": "E15",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:35",
+        "family": "E15",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:35",
+        "family": "E15",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:36",
+        "family": "E15",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:36",
+        "family": "E15",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:37",
+        "family": "E15",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:37",
+        "family": "E15",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:38",
+        "family": "E15",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:38",
+        "family": "E15",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:39",
+        "family": "E15",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:39",
+        "family": "E15",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:40",
+        "family": "E15",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:40",
+        "family": "E15",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:41",
+        "family": "E15",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:41",
+        "family": "E15",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:42",
+        "family": "E15",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:42",
+        "family": "E15",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:43",
+        "family": "E15",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:43",
+        "family": "E15",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:44",
+        "family": "E15",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:44",
+        "family": "E15",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:45",
+        "family": "E15",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:45",
+        "family": "E15",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:46",
+        "family": "E15",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:46",
+        "family": "E15",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:47",
+        "family": "E15",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:47",
+        "family": "E15",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:48",
+        "family": "E15",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:48",
+        "family": "E15",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:49",
+        "family": "E15",
+        "variant": "default",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E15:known:49",
+        "family": "E15",
+        "variant": "default",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": 1,
+        "detail": {}
+      },
+      {
+        "probe_id": "E14:unscoped:0",
+        "family": "E14",
+        "variant": "unscoped",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": null,
+        "detail": {
+          "stages": [
+            "embed_unavailable",
+            "projection_pending"
+          ]
+        }
+      },
+      {
+        "probe_id": "E14:unscoped:0",
+        "family": "E14",
+        "variant": "unscoped",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": null,
+        "detail": {
+          "stages": [
+            "embed_unavailable",
+            "projection_pending"
+          ]
+        }
+      },
+      {
+        "probe_id": "E14:typed:0",
+        "family": "E14",
+        "variant": "types-note",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": null,
+        "detail": {
+          "stages": [
+            "embed_unavailable",
+            "keyword_zero"
+          ]
+        }
+      },
+      {
+        "probe_id": "E14:typed:0",
+        "family": "E14",
+        "variant": "types-note",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": null,
+        "detail": {
+          "stages": [
+            "embed_unavailable",
+            "keyword_zero"
+          ]
+        }
+      },
+      {
+        "probe_id": "E14:unscoped:1",
+        "family": "E14",
+        "variant": "unscoped",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": null,
+        "detail": {
+          "stages": [
+            "embed_unavailable",
+            "projection_pending"
+          ]
+        }
+      },
+      {
+        "probe_id": "E14:unscoped:1",
+        "family": "E14",
+        "variant": "unscoped",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": null,
+        "detail": {
+          "stages": [
+            "embed_unavailable",
+            "projection_pending"
+          ]
+        }
+      },
+      {
+        "probe_id": "E14:typed:1",
+        "family": "E14",
+        "variant": "types-note",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": null,
+        "detail": {
+          "stages": [
+            "embed_unavailable",
+            "keyword_zero"
+          ]
+        }
+      },
+      {
+        "probe_id": "E14:typed:1",
+        "family": "E14",
+        "variant": "types-note",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": null,
+        "detail": {
+          "stages": [
+            "embed_unavailable",
+            "keyword_zero"
+          ]
+        }
+      },
+      {
+        "probe_id": "E14:unscoped:2",
+        "family": "E14",
+        "variant": "unscoped",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": null,
+        "detail": {
+          "stages": [
+            "embed_unavailable",
+            "projection_pending"
+          ]
+        }
+      },
+      {
+        "probe_id": "E14:unscoped:2",
+        "family": "E14",
+        "variant": "unscoped",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": false,
+        "rank": null,
+        "detail": {
+          "stages": [
+            "embed_unavailable",
+            "projection_pending"
+          ]
+        }
+      },
+      {
+        "probe_id": "E14:typed:2",
+        "family": "E14",
+        "variant": "types-note",
+        "surface": "search",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": null,
+        "detail": {
+          "stages": [
+            "embed_unavailable",
+            "keyword_zero"
+          ]
+        }
+      },
+      {
+        "probe_id": "E14:typed:2",
+        "family": "E14",
+        "variant": "types-note",
+        "surface": "query",
+        "negative": false,
+        "status": "scored",
+        "pass": true,
+        "rank": null,
+        "detail": {
+          "stages": [
+            "embed_unavailable",
+            "keyword_zero"
+          ]
+        }
+      }
+    ],
+    "harness_error": null
+  },
+  "accounting": {
+    "planned": 361,
+    "attempted": 361,
+    "scored": 361,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  }
+}

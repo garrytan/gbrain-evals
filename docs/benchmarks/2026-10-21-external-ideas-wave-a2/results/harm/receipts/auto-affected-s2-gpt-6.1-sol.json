@@ -1,0 +1,39 @@
+{
+  "cell": "auto-affected-s2-gpt-6.1-sol",
+  "done": true,
+  "questions": 217,
+  "rows": 217,
+  "failures": {},
+  "official_correct": 209,
+  "framed_correct": 210,
+  "reader_usage": {
+    "input_tokens": 2778399,
+    "output_tokens": 19409,
+    "batch_usd": 3.6120972,
+    "list_usd": 6.787451600000001
+  },
+  "estimate": {
+    "requests": 217,
+    "mean_input_tokens": 12992,
+    "expected_usd": 3.8833989999999945,
+    "worst_usd": 18.19121400000009
+  },
+  "cost": {
+    "usd": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "basis": "budget ledger external-ideas-wave-a-answer-2026-10-23T11-39-20-629Z-dc51de94: 0 paid requests, 0 charged at their reservation because usage was unavailable",
+    "ledger": "<lane>/ledger.sqlite",
+    "program_cap_usd": 220,
+    "overshoot_usd": 0,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 35,
+      "max": 35.2
+    }
+  },
+  "batch_factor": {
+    "factor": 0.5,
+    "confirmed": true
+  }
+}

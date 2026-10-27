@@ -1,0 +1,144 @@
+{
+  "schema": "mpw-cell-v1",
+  "cell_id": "beam-100k-comparator-rag-274a50370f03",
+  "identity": {
+    "schema": "mpw-cell-v1",
+    "dataset": "beam",
+    "split": "100k",
+    "dataset_manifest_sha256": "99cc9a7fde6f86f26d56fe09fe7fc393348791378652a98c5dd9b8e6c75ddb9e",
+    "schedule_sha256": "13ba44a299c1e8a5804783cdd4215cee749252bebb38e4a49550b1ba40cf6f52",
+    "pins": {
+      "harness_commit": "f618ed7b1f0eb9cad7b42e876f91a42f0eadb150",
+      "harness_lock_sha256": "6b6ace4f721ae10bf66214a8a617c3c6e97a930e91c163728835691994a07b8f",
+      "torch": "2.10.0+cpu",
+      "comparator_lock_sha256": "49a0e4f35e81e50ea9706e1ef0bf6b660f2b3a82fd27c0e98fc059648f5249b7"
+    },
+    "provider": "comparator",
+    "provider_config": {
+      "max_tokens": 3129,
+      "max_chunk_tokens": 1788
+    },
+    "gbrain_credentials": null,
+    "mode": "rag",
+    "lane": "combined",
+    "seal": "dev",
+    "k": 10,
+    "target_tokens": 8000,
+    "models": {
+      "answer": "gemini:gemini-3.8-flash",
+      "judge": "gemini:gemini-3.5-flash"
+    },
+    "prompt_revision": "10218989f3b38595115476189ecb7df099260840ae948bc24a7caa9327bb84d8",
+    "scorer_revision": "8b5c364a680af748bb904485009625d93160f01ebe1d37195a6839eb5dd0c804",
+    "wrapper_revision": "7d191c89aabc55c73f8c5251900421425467ab4a38f894a6bd7e58c6f3033b7a",
+    "budget_usd": 10
+  },
+  "spec": {
+    "dataset": "beam",
+    "split": "100k",
+    "mode": "rag",
+    "seal": "dev",
+    "target_tokens": 8000,
+    "models": {
+      "answer": "gemini:gemini-3.8-flash",
+      "judge": "gemini:gemini-3.5-flash"
+    },
+    "k": 10,
+    "questions": {
+      "units": [
+        "3"
+      ]
+    },
+    "budget_usd": 10,
+    "provider": "comparator",
+    "lane": "combined",
+    "provider_config": {
+      "max_tokens": 3129,
+      "max_chunk_tokens": 1788
+    },
+    "note": "memory proof wave 2 confirmation: the comparator's keyless stub-upstream smoke on BEAM-100K dev conversation 3"
+  },
+  "resolved": {
+    "dataset": "beam",
+    "split": "100k",
+    "task_type": "open",
+    "isolation_unit": "conversation",
+    "schedule": [
+      "3_abstention_0",
+      "3_abstention_1",
+      "3_contradiction_resolution_0",
+      "3_contradiction_resolution_1",
+      "3_event_ordering_0",
+      "3_event_ordering_1",
+      "3_information_extraction_0",
+      "3_information_extraction_1",
+      "3_instruction_following_0",
+      "3_instruction_following_1",
+      "3_knowledge_update_0",
+      "3_knowledge_update_1",
+      "3_multi_session_reasoning_0",
+      "3_multi_session_reasoning_1",
+      "3_preference_following_0",
+      "3_preference_following_1",
+      "3_summarization_0",
+      "3_summarization_1",
+      "3_temporal_reasoning_0",
+      "3_temporal_reasoning_1"
+    ],
+    "schedule_sha256": "13ba44a299c1e8a5804783cdd4215cee749252bebb38e4a49550b1ba40cf6f52",
+    "dataset_manifest_sha256": "99cc9a7fde6f86f26d56fe09fe7fc393348791378652a98c5dd9b8e6c75ddb9e",
+    "questions": 20,
+    "units": [
+      "3"
+    ],
+    "documents": 6,
+    "document_tokens_cl100k": 118670,
+    "document_tokens_by_unit": {
+      "3": 118670
+    },
+    "timestamp_provenance": {
+      "rule": {
+        "provenance": "observed_session_time",
+        "source": "the session's time_anchor turn field; flat 10M fallback documents carry none"
+      },
+      "counts": {
+        "observed_session_time": 6
+      }
+    },
+    "dataset_judge_model": "gemini:gemini-3.5-flash",
+    "judge_calls": 48,
+    "prompt_revision": "10218989f3b38595115476189ecb7df099260840ae948bc24a7caa9327bb84d8",
+    "scorer_revision": "8b5c364a680af748bb904485009625d93160f01ebe1d37195a6839eb5dd0c804",
+    "wrapper_revision": "7d191c89aabc55c73f8c5251900421425467ab4a38f894a6bd7e58c6f3033b7a"
+  },
+  "planned_at": "2026-10-12T16:02:40.758Z",
+  "estimate": {
+    "usd": 0.6466,
+    "lines": [
+      {
+        "stage": "ingest: comparator extraction",
+        "tokens_in": 728634,
+        "tokens_out": 86629,
+        "usd": 0.16127252999999997,
+        "basis": "118670 document tokens x 6.14 in / x 0.73 out (extraction passes)"
+      },
+      {
+        "stage": "answer",
+        "tokens_in": 167000,
+        "tokens_out": 44000,
+        "usd": 0.29025,
+        "basis": "20 questions x 1 call(s) x (8000 context + 350 prompt) in, 2200 out"
+      },
+      {
+        "stage": "judge",
+        "tokens_in": 35040,
+        "tokens_out": 15840,
+        "usd": 0.19512,
+        "basis": "48 judge calls x 730 in / 330 out"
+      }
+    ],
+    "unpriced": [],
+    "note": "list-price estimate from token volumes; the run is enforced by the metering proxy, not by this number"
+  },
+  "reproduce": "bun run harness:cell run eval/harness-provider/cells/mpw2/confirm-smoke/comparator-beam-100k-dev3.json"
+}

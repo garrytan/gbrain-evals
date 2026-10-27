@@ -136,6 +136,216 @@
       ]
     },
     {
+      "id": "ARS-1",
+      "category": "agent-retrieval-shapes",
+      "classification": "feature-gap",
+      "contract": "None stated: gbrain keys result slots on (source_id, slug) on purpose and has no source-agnostic collapse stage (gbrain#4612).",
+      "gbrain_sha": "6e1086492dbded0059fcfabc627b846ced7855f4",
+      "surface": "search / query with source_id __all__",
+      "repro": "bun eval/runner/agent-retrieval-shapes.ts --families E1",
+      "expected": "a slug held by both sources takes one of the top 10 rows and ranks first for its own title words",
+      "actual": "headline pass search 0/30, query 0/30 (default); duplicate slug in the top 10: {\"search\":{\"n\":30,\"of\":30},\"query\":{\"n\":30,\"of\":30}}",
+      "status": "open",
+      "review": {
+        "date": "2026-10-20",
+        "gbrain_sha": "6e1086492dbded0059fcfabc627b846ced7855f4",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-20-agent-retrieval-shapes/receipt.json"
+        ],
+        "note": "found by this run (gbrain#4612)"
+      }
+    },
+    {
+      "id": "ARS-2",
+      "category": "agent-retrieval-shapes",
+      "classification": "feature-gap",
+      "contract": "None stated: gbrain does not claim to collapse or demote merge-redirect stubs (gbrain#7153).",
+      "gbrain_sha": "6e1086492dbded0059fcfabc627b846ced7855f4",
+      "surface": "search / query",
+      "repro": "bun eval/runner/agent-retrieval-shapes.ts --families E2",
+      "expected": "the target ranks above the stub whose body says \"This page has been merged into [[target]]\", or the stub is collapsed onto it",
+      "actual": "headline pass search 5/15, query 5/15 (same-title, renamed-stub)",
+      "status": "open",
+      "review": {
+        "date": "2026-10-20",
+        "gbrain_sha": "6e1086492dbded0059fcfabc627b846ced7855f4",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-20-agent-retrieval-shapes/receipt.json"
+        ],
+        "note": "found by this run (gbrain#7153)"
+      }
+    },
+    {
+      "id": "ARS-3",
+      "category": "agent-retrieval-shapes",
+      "classification": "feature-gap",
+      "contract": "None stated: gbrain has no document-family collapse for pages that share an origin (gbrain#7154).",
+      "gbrain_sha": "6e1086492dbded0059fcfabc627b846ced7855f4",
+      "surface": "search / query",
+      "repro": "bun eval/runner/agent-retrieval-shapes.ts --families E3",
+      "expected": "the page that answers the question ranks first and the transcript, summary and diarized copies take at most 1 of the top 5",
+      "actual": "headline pass search 0/6, query 0/6 (default)",
+      "status": "open",
+      "review": {
+        "date": "2026-10-20",
+        "gbrain_sha": "6e1086492dbded0059fcfabc627b846ced7855f4",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-20-agent-retrieval-shapes/receipt.json"
+        ],
+        "note": "found by this run (gbrain#7154)"
+      }
+    },
+    {
+      "id": "ARS-4",
+      "category": "agent-retrieval-shapes",
+      "classification": "feature-gap",
+      "contract": "None stated: gbrain has no entity-type prior for descriptive organization queries (gbrain#7155).",
+      "gbrain_sha": "6e1086492dbded0059fcfabc627b846ced7855f4",
+      "surface": "search / query",
+      "repro": "bun eval/runner/agent-retrieval-shapes.ts --families E4",
+      "expected": "the company page ranks first for a product-description query that names no person, without --types",
+      "actual": "headline pass search 0/6, query 0/6 (default)",
+      "status": "open",
+      "review": {
+        "date": "2026-10-20",
+        "gbrain_sha": "6e1086492dbded0059fcfabc627b846ced7855f4",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-20-agent-retrieval-shapes/receipt.json"
+        ],
+        "note": "found by this run (gbrain#7155)"
+      }
+    },
+    {
+      "id": "ARS-5",
+      "category": "agent-retrieval-shapes",
+      "classification": "feature-gap",
+      "contract": "None stated: search, query and list_pages take no frontmatter-field filter (gbrain#7159); the probes pass a where parameter only when the operation declares one.",
+      "gbrain_sha": "6e1086492dbded0059fcfabc627b846ced7855f4",
+      "surface": "search / query params",
+      "repro": "bun eval/runner/agent-retrieval-shapes.ts --families E5",
+      "expected": "a where: {partner, cycle, outcome} filter returns the one interview whose frontmatter matches",
+      "actual": "capability gap: search and query declare no where (frontmatter filter) parameter at this build; without a filter the right interview ranks first search 1/8, query 1/8 (baseline)",
+      "status": "open",
+      "review": {
+        "date": "2026-10-20",
+        "gbrain_sha": "6e1086492dbded0059fcfabc627b846ced7855f4",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-20-agent-retrieval-shapes/receipt.json"
+        ],
+        "note": "found by this run (gbrain#7159)"
+      }
+    },
+    {
+      "id": "ARS-6",
+      "category": "agent-retrieval-shapes",
+      "classification": "feature-gap",
+      "contract": "None stated: the entity op resolves \"Name, alias or slug\" (alias, exact slug, exact title, slug suffix); variant generation is what gbrain#7160 asks for.",
+      "gbrain_sha": "6e1086492dbded0059fcfabc627b846ced7855f4",
+      "surface": "entity",
+      "repro": "bun eval/runner/agent-retrieval-shapes.ts --families E6",
+      "expected": "each variant of a person with empty aliases resolves to that person, none resolves to a wrong page, and no miss suggests an index or digest page",
+      "actual": "headline pass entity 0/24 (honorific, surname, diminutive, reversed); wrong page {\"n\":0,\"of\":26}, index or digest suggested {\"n\":19,\"of\":26}",
+      "status": "open",
+      "review": {
+        "date": "2026-10-20",
+        "gbrain_sha": "6e1086492dbded0059fcfabc627b846ced7855f4",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-20-agent-retrieval-shapes/receipt.json"
+        ],
+        "note": "found by this run (gbrain#7160)"
+      }
+    },
+    {
+      "id": "ARS-7",
+      "category": "agent-retrieval-shapes",
+      "classification": "feature-gap",
+      "contract": "None stated: the entity op prefers an exact title, and no doctor check looks for title-prefixed person duplicates (gbrain#7160).",
+      "gbrain_sha": "6e1086492dbded0059fcfabc627b846ced7855f4",
+      "surface": "entity; run_doctor",
+      "repro": "bun eval/runner/agent-retrieval-shapes.ts --families E7",
+      "expected": "\"Mayor <Surname>-Example\" resolves to the canonical person page, not the short people/mayor-<surname>-example stub, and a doctor check flags the pair",
+      "actual": "headline pass entity 0/4 (prefixed); doctor flags 0 of 4 pairs",
+      "status": "open",
+      "review": {
+        "date": "2026-10-20",
+        "gbrain_sha": "6e1086492dbded0059fcfabc627b846ced7855f4",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-20-agent-retrieval-shapes/receipt.json"
+        ],
+        "note": "found by this run (gbrain#7160)"
+      }
+    },
+    {
+      "id": "ARS-13",
+      "category": "agent-retrieval-shapes",
+      "classification": "feature-gap",
+      "contract": "The chunker caps a stored chunk at 6,000 characters (src/core/chunkers/recursive.ts, maxChars); return_unit auto returns whole conversations by design, and gbrain#7164 asks for a cap on returned text.",
+      "gbrain_sha": "6e1086492dbded0059fcfabc627b846ced7855f4",
+      "surface": "search / query (return_unit auto)",
+      "repro": "bun eval/runner/agent-retrieval-shapes.ts --families E13",
+      "expected": "no returned row carries more than 6,000 characters",
+      "actual": "headline pass search 0/1, query 0/1 (default); largest returned row 59883 characters, largest stored chunk 2702",
+      "status": "open",
+      "review": {
+        "date": "2026-10-20",
+        "gbrain_sha": "6e1086492dbded0059fcfabc627b846ced7855f4",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-20-agent-retrieval-shapes/receipt.json"
+        ],
+        "note": "found by this run (gbrain#7164)"
+      }
+    },
+    {
+      "id": "ARS-14",
+      "category": "agent-retrieval-shapes",
+      "classification": "feature-gap",
+      "contract": "None stated: the readiness probe covers the caller's whole visible scope, narrowed only by --types (src/core/search/projection-readiness.ts); gbrain#7165 asks to scope it to the query.",
+      "gbrain_sha": "6e1086492dbded0059fcfabc627b846ced7855f4",
+      "surface": "search / query response meta degraded",
+      "repro": "bun eval/runner/agent-retrieval-shapes.ts --families E14",
+      "expected": "a text query that cannot match an unprojected image page reports no projection_pending stage",
+      "actual": "headline pass search 0/3, query 0/3 (unscoped)",
+      "status": "open",
+      "review": {
+        "date": "2026-10-20",
+        "gbrain_sha": "6e1086492dbded0059fcfabc627b846ced7855f4",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-20-agent-retrieval-shapes/receipt.json"
+        ],
+        "note": "found by this run (gbrain#7165)"
+      }
+    },
+    {
+      "id": "ARS-15",
+      "category": "agent-retrieval-shapes",
+      "classification": "feature-gap",
+      "contract": "None stated: keyword search cannot match words a question paraphrases; query without --expand ranks like search on the keyword path (gbrain#7157).",
+      "gbrain_sha": "6e1086492dbded0059fcfabc627b846ced7855f4",
+      "surface": "search / query",
+      "repro": "bun eval/runner/agent-retrieval-shapes.ts --families E15",
+      "expected": "the page each paraphrased question describes ranks first (hit@1), with query at least as good as search",
+      "actual": "headline pass search 48/50, query 48/50 (default); {\"search\":{\"n\":50,\"hit_at_1\":0.96,\"hit_at_5\":1,\"hit_at_10\":1,\"mrr\":0.9733333333333333},\"query\":{\"n\":50,\"hit_at_1\":0.96,\"hit_at_5\":1,\"hit_at_10\":1,\"mrr\":0.9733333333333333}}; search and query return the same top 10 for {\"n\":50,\"of\":50}",
+      "status": "open",
+      "review": {
+        "date": "2026-10-20",
+        "gbrain_sha": "6e1086492dbded0059fcfabc627b846ced7855f4",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-20-agent-retrieval-shapes/receipt.json"
+        ],
+        "note": "found by this run (gbrain#7157)"
+      }
+    },
+    {
       "id": "N1-1",
       "category": "knowledge-update",
       "classification": "bug",
@@ -2105,6 +2315,165 @@
       "fixing_commit": "48ed5e8233f617479df989998560840747af0425"
     },
     {
+      "id": "N14-1",
+      "category": "large-page-fidelity",
+      "classification": "feature-gap",
+      "status": "closed",
+      "gbrain_sha": "c71fe7436e673db819c1be4532504b861e14ad50",
+      "contract": "gbrain does not claim search over pages above content_sanity.bytes_block (500 KB default, src/core/content-sanity.ts DEFAULT_BYTES_BLOCK); such a page lands with frontmatter embed_skip and is never chunked",
+      "surface": "put_page -> content sanity (embed_skip, PAGE_OVERSIZED)",
+      "repro": "bun eval/runner/n14-large-page-fidelity.ts --tier 2mb --arms single-page --gbrain <gbrain checkout>@c71fe7436e673db819c1be4532504b861e14ad50",
+      "expected": "a stored page is keyword-searchable: a query for a planted needle returns the chunk that holds it",
+      "actual": "the conversation document (2mb) is stored with embed_skip=oversized and 0 chunks; keyword needle recall@10 0/40 while every needle is in the stored body (40/40)",
+      "review": {
+        "date": "2026-10-15",
+        "gbrain_sha": "44eb0493ff2776f04d6616b1a526657702f7544a",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-15-n14-large-page-fidelity-wave-a/2mb/receipt.json"
+        ],
+        "note": "at 44eb049 each 2 MB document stored as one page is chunked (906, 803 and 656 chunks) with keyword recall@10 40/40 in every decile; the upgrade-path case re-chunks a page an older gbrain stored with embed_skip oversized (reindex --oversized, marker removed, 40/40)"
+      },
+      "fixing_pr": "garrytan/gbrain#6733",
+      "reason": "Closed by large pages Wave A (garrytan/gbrain#6733, v0.60.242.0): content_sanity.bytes_block defaults to the 24 MiB page ceiling and an embed_skip page keeps its chunks, so a 2 MB page is chunked and keyword-searchable.",
+      "review_history": [
+        {
+          "date": "2026-10-14",
+          "gbrain_sha": "c71fe7436e673db819c1be4532504b861e14ad50",
+          "evidence": "rerun",
+          "receipts": [
+            "docs/benchmarks/2026-10-14-n14-large-page-fidelity-baseline/2mb/receipt.json"
+          ],
+          "note": "found by this run"
+        }
+      ]
+    },
+    {
+      "id": "N14-2",
+      "category": "large-page-fidelity",
+      "classification": "feature-gap",
+      "status": "closed",
+      "gbrain_sha": "c71fe7436e673db819c1be4532504b861e14ad50",
+      "contract": "gbrain documents a 5 MB per-page write limit (MAX_FILE_SIZE, src/core/import-screen.ts; file_too_large / request_too_large in src/core/error-registry.ts) and tells the user to split the file",
+      "surface": "put_page -> persistence preparation (request_too_large)",
+      "repro": "bun eval/runner/n14-large-page-fidelity.ts --tier 20mb --arms single-page --gbrain <gbrain checkout>@c71fe7436e673db819c1be4532504b861e14ad50",
+      "expected": "one large document can be written as one page",
+      "actual": "put_page of the 20mb conversation refused with request_too_large; keyword recall 0/40",
+      "review": {
+        "date": "2026-10-18",
+        "gbrain_sha": "f717b1a5b1c71871c5b6530e98bd1d540a38c70d",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-18-n14-large-page-fidelity-wave-b2/pglite/large/receipt.json",
+          "docs/benchmarks/2026-10-18-n14-large-page-fidelity-wave-b2/postgres/large/receipt.json"
+        ],
+        "note": "at f717b1a (pages.segmented_storage on by default, Wave B PR 2 and the switch-on) the file import stores one document as one page up to the engine ceiling: 100 MiB and 128 MiB on PGLite, 100 MiB to 256 MiB including the 200 MB chat on Postgres, each found 40/40 and exported byte-identical; 200 MB and 256 MiB on PGLite and 260 MiB on Postgres are refused file_too_large at the documented ceilings; put_page stays limited to 24 MiB per call by design (request_too_large)"
+      },
+      "review_history": [
+        {
+          "date": "2026-10-14",
+          "gbrain_sha": "c71fe7436e673db819c1be4532504b861e14ad50",
+          "evidence": "rerun",
+          "receipts": [
+            "docs/benchmarks/2026-10-14-n14-large-page-fidelity-baseline/20mb/receipt.json"
+          ],
+          "note": "found by this run"
+        },
+        {
+          "date": "2026-10-15",
+          "gbrain_sha": "44eb0493ff2776f04d6616b1a526657702f7544a",
+          "evidence": "rerun",
+          "receipts": [
+            "docs/benchmarks/2026-10-15-n14-large-page-fidelity-wave-a/20mb/receipt.json",
+            "docs/benchmarks/2026-10-15-n14-large-page-fidelity-wave-a/200mb/receipt.json"
+          ],
+          "note": "partly closed by garrytan/gbrain#6733 (24 MiB ceiling): the 20 MB chat is now stored as one page (8,855 chunks, 40/40); the 200 MB chat is still refused with request_too_large, so writing one document over 24 MiB stays a gap for large pages Wave B"
+        },
+        {
+          "date": "2026-10-15",
+          "gbrain_sha": "7f3c9f5f19862372d056c713942564dd165f62ba",
+          "evidence": "rerun",
+          "receipts": [
+            "docs/benchmarks/2026-10-15-n14-large-page-fidelity-wave-b1/on/200mb/receipt.json",
+            "docs/benchmarks/2026-10-15-n14-large-page-fidelity-wave-b1/on/200mb-import/receipt.json"
+          ],
+          "note": "still open at Wave B PR 1 (garrytan/gbrain#6787, exploratory run with pages.segmented_storage=on): put_page still refuses the 200 MB chat with request_too_large at the 24 MiB single-string ceiling, and the streamed file import refuses it with file_too_large because PGLite's segmented ceiling is 128 MiB; Postgres (256 MiB) was not run"
+        }
+      ],
+      "fixing_pr": "garrytan/gbrain#6963",
+      "fixing_commit": "f717b1a5b1c71871c5b6530e98bd1d540a38c70d",
+      "reason": "Closed by large pages Wave B (garrytan/gbrain#6900 and the switch-on garrytan/gbrain#6963, v0.60.299.0): a page over 24 MiB is written through the file import (gbrain import or sync) and stored in segments up to 128 MiB on PGLite and 256 MiB on Postgres; put_page keeps its documented 24 MiB per-call limit."
+    },
+    {
+      "id": "N14-3",
+      "category": "large-page-fidelity",
+      "classification": "feature-gap",
+      "status": "closed",
+      "gbrain_sha": "c71fe7436e673db819c1be4532504b861e14ad50",
+      "contract": "get_page has no windowed read and no response budget at this commit (params slug, include_content, content_only; src/core/ops/pages.ts get_page); nothing claims a bounded response",
+      "surface": "get_page (default parameters)",
+      "repro": "bun eval/runner/n14-large-page-fidelity.ts --tier 2mb --arms single-page --gbrain <gbrain checkout>@c71fe7436e673db819c1be4532504b861e14ad50",
+      "expected": "a read of a large page returns a bounded window (frame at most 1048576 bytes) with a way to page",
+      "actual": "a default get_page of the stored 2mb conversation page returns a 2042154-byte frame (1.9x the 1 MiB cap)",
+      "review": {
+        "date": "2026-10-15",
+        "gbrain_sha": "44eb0493ff2776f04d6616b1a526657702f7544a",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-15-n14-large-page-fidelity-wave-a/2mb/receipt.json",
+          "docs/benchmarks/2026-10-15-n14-large-page-fidelity-wave-a/20mb/receipt.json"
+        ],
+        "note": "at 44eb049 windowed reads around a hit chunk are correct for 40 of 40 needles on every document, largest 20,871 bytes; the agent-facing default get_page is 23,579 to 35,647 bytes; a trusted local default get_page still returns the whole page (2,042,049 bytes at 2 MB, 20,390,606 at 20 MB)"
+      },
+      "fixing_pr": "garrytan/gbrain#6707",
+      "reason": "Closed by large pages Wave A part 1 (garrytan/gbrain#6707, v0.60.231.0): get_page takes body auto|full|none|outline|window with around_chunk_id and cursors; an agent-facing default read returns an outline plus the first window above 256 KB. A trusted local default read still returns the full page by design.",
+      "review_history": [
+        {
+          "date": "2026-10-14",
+          "gbrain_sha": "c71fe7436e673db819c1be4532504b861e14ad50",
+          "evidence": "rerun",
+          "receipts": [
+            "docs/benchmarks/2026-10-14-n14-large-page-fidelity-baseline/2mb/receipt.json"
+          ],
+          "note": "found by this run"
+        }
+      ]
+    },
+    {
+      "id": "N14-4",
+      "category": "large-page-fidelity",
+      "classification": "bug",
+      "status": "fixed",
+      "gbrain_sha": "c71fe7436e673db819c1be4532504b861e14ad50",
+      "contract": "src/core/error-registry.ts registers queue_capacity as retryable (\"The bounded queue is full; existing requests keep their place\"); a page over MAX_FILE_SIZE is refused with request_too_large and split advice (src/core/persistence/page-prepare.ts)",
+      "surface": "put_page -> persistence admission (src/core/persistence/journal.ts intent-bytes check against persistence.limits principalIntentBytes, 32 MiB default)",
+      "repro": "bun eval/runner/n14-large-page-fidelity.ts --tier 200mb --arms single-page --gbrain <gbrain checkout>@c71fe7436e673db819c1be4532504b861e14ad50",
+      "expected": "a single page larger than the per-request intent-byte cap is refused as too large (request_too_large, not retryable), as the 20 MB page is",
+      "actual": "put_page of the 200mb conversation on an empty brain returned queue_capacity (write capacity exhausted), a retryable code for a request no amount of waiting can admit; keyword recall 0/40",
+      "review": {
+        "date": "2026-10-15",
+        "gbrain_sha": "44eb0493ff2776f04d6616b1a526657702f7544a",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-15-n14-large-page-fidelity-wave-a/200mb/receipt.json"
+        ],
+        "note": "at 44eb049 put_page of the 200 MB chat on an empty brain is refused with request_too_large (not retryable) before the write journal, on the single-page and native arms"
+      },
+      "fixing_pr": "garrytan/gbrain#6733",
+      "fixing_commit": "44eb0493ff2776f04d6616b1a526657702f7544a",
+      "review_history": [
+        {
+          "date": "2026-10-14",
+          "gbrain_sha": "c71fe7436e673db819c1be4532504b861e14ad50",
+          "evidence": "rerun",
+          "receipts": [
+            "docs/benchmarks/2026-10-14-n14-large-page-fidelity-baseline/200mb/receipt.json"
+          ],
+          "note": "found by this run"
+        }
+      ]
+    },
+    {
       "id": "Cat7-1",
       "category": "pglite-latency",
       "classification": "bug",
@@ -2316,6 +2685,49 @@
       ],
       "fixing_pr": "garrytan/gbrain#6010 (merged as b9ee931, v0.60.49.0)",
       "fixing_commit": "b9ee931b97a3c5bcc6a2045954b05c2880cb0021"
+    },
+    {
+      "id": "N14-5",
+      "category": "large-page-fidelity",
+      "classification": "bug",
+      "status": "fixed",
+      "gbrain_sha": "f717b1a5b1c71871c5b6530e98bd1d540a38c70d",
+      "contract": "delete_page with purge: true 'removes the row, chunks, links and raw data immediately' (src/core/ops/pages.ts, delete_page description), and Wave B purge deletes the purged page's segment texts in the purge transaction ('purge never waits for GC', src/core/facts/purge.ts purgeSegmentStorage; src/core/persistence/page-purge.ts deletePageWithSegments)",
+      "surface": "delete_page purge: true -> deletePageWithSegments (src/core/persistence/page-purge.ts), on a segmented page restored after a forget_fact",
+      "repro": "bun eval/runner/n14-large-page-fidelity.ts --tier 2mb --arms native --lifecycle --gbrain <gbrain checkout>@f717b1a5b1c71871c5b6530e98bd1d540a38c70d",
+      "expected": "after a committed purge, no segment text holding the purged page's body remains in page_segment_texts",
+      "actual": "on a segmented page with a facts fence, forget_fact (which writes a new body generation) followed by delete_page and restore_page leaves one earlier segment text with no manifest row (160,368 bytes on the 2 MB chat). The purge deletes only the texts the page's manifest still references, so that text, holding 6 of the page's 42 planted answers, stays in page_segment_texts after the purge reports success, until the source-wide segment GC runs past its 1 h grace (sweepSegments({graceMs: 0}) removes it). Without the forget, or without the delete and restore, the purge leaves nothing (2 MB probes). Reproduced by the lifecycle on all three 2 MB documents, the 20 MB chat and the 24 MiB chat, on PGLite and Postgres.",
+      "review": {
+        "date": "2026-10-20",
+        "gbrain_sha": "6e1086492dbded0059fcfabc627b846ced7855f4",
+        "evidence": "rerun",
+        "receipts": [
+          "docs/benchmarks/2026-10-20-n14-large-page-fidelity-wave-b3/pglite/2mb/receipt.json",
+          "docs/benchmarks/2026-10-20-n14-large-page-fidelity-wave-b3/pglite/20mb/receipt.json",
+          "docs/benchmarks/2026-10-20-n14-large-page-fidelity-wave-b3/pglite/24mib/receipt.json",
+          "docs/benchmarks/2026-10-20-n14-large-page-fidelity-wave-b3/pglite/large/receipt.json",
+          "docs/benchmarks/2026-10-20-n14-large-page-fidelity-wave-b3/postgres/2mb/receipt.json",
+          "docs/benchmarks/2026-10-20-n14-large-page-fidelity-wave-b3/postgres/large/receipt.json"
+        ],
+        "note": "at 6e10864 (Wave B PR 3 and the large-pages hardening, #7081) the same lifecycle (forget_fact, delete_page, restore_page, purge) leaves no unreferenced segment text and no needle answer in any chunk or segment text after the purge, before any sweep: 0 texts (0 bytes) on all three 2 MB documents, the 20 MB and 24 MiB chats and 100 MiB to 256 MiB stored chats, on PGLite and Postgres"
+      },
+      "review_history": [
+        {
+          "date": "2026-10-18",
+          "gbrain_sha": "f717b1a5b1c71871c5b6530e98bd1d540a38c70d",
+          "evidence": "rerun",
+          "receipts": [
+            "docs/benchmarks/2026-10-18-n14-large-page-fidelity-wave-b2/pglite/2mb/receipt.json",
+            "docs/benchmarks/2026-10-18-n14-large-page-fidelity-wave-b2/pglite/20mb/receipt.json",
+            "docs/benchmarks/2026-10-18-n14-large-page-fidelity-wave-b2/pglite/24mib/receipt.json",
+            "docs/benchmarks/2026-10-18-n14-large-page-fidelity-wave-b2/postgres/2mb/receipt.json"
+          ],
+          "note": "found by this run"
+        }
+      ],
+      "fixing_pr": "garrytan/gbrain#7081",
+      "fixing_commit": "2e9df779862bac480cc409304bc76dea02b39b20",
+      "reason": "Fixed by the large-pages hardening (garrytan/gbrain#7081, v0.60.315.0): a page purge deletes the unreferenced segment texts that hold the page's claims, in both stored forms (LPH h3, 6a3584f95; review round 2, 8c787f692)."
     }
   ]
 }

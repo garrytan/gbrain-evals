@@ -1,0 +1,4 @@
+load {"split":"all","pages":226,"imported":226,"skipped_private":0,"errors":[],"read_back_ok":226}
+sweep {"i":0,"ms":1005,"mentions_state":"complete","mentions_remaining":0,"owner":{"state":"complete","scanned":226,"created":6,"removed":0,"links":6,"documents":6,"unresolved":94,"ambiguous":2,"windows":22}}
+sweep {"i":1,"ms":14,"mentions_state":"complete","mentions_remaining":0,"owner":{"state":"complete","scanned":0,"created":0,"removed":0,"links":6,"documents":6,"unresolved":94,"ambiguous":2,"windows":22}}
+export {"pages":[{"n":226}],"cfg":"true","trusted":6,"remote":4,"windows":22}

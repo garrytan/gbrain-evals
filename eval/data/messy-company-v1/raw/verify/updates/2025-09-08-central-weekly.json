@@ -1,0 +1,121 @@
+{
+  "slug": "updates/2025-09-08-central-weekly",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2025-09-08",
+    "owner_phrases": [
+      {
+        "mid": "updates/2025-09-08-central-weekly#m1",
+        "phrase": "Pree's parcel account",
+        "lines": [
+          12
+        ]
+      },
+      {
+        "mid": "updates/2025-09-08-central-weekly#m2",
+        "phrase": "the account Tobias runs",
+        "lines": [
+          21
+        ]
+      }
+    ],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Tansley Parcel",
+        "line": 13
+      },
+      {
+        "oid": "e2",
+        "surface": "Marrow Fieldworks",
+        "line": 19
+      },
+      {
+        "oid": "e3",
+        "surface": "Marrow Agrisupply",
+        "line": 20
+      },
+      {
+        "oid": "e4",
+        "surface": "Stoneharrow Billing",
+        "line": 24
+      },
+      {
+        "oid": "e5",
+        "surface": "Quarendon Freightways",
+        "line": 25
+      }
+    ],
+    "claims": [],
+    "events": [
+      {
+        "eid": "e-tpx-api-outage",
+        "question": "Does the page describe this: \"Tansley Parcel escalates a carrier-API outage that stalled label printing\"? If so, on what date does the text place it?"
+      }
+    ],
+    "ownership": []
+  },
+  "prompt_user_sha256": "cbed3d949de5ba66ae8b85ffc92fe0d8f729c79441b530fe55f617369d55bf19",
+  "response_text": "{\n  \"date_used\": \"2025-09-03\",\n  \"owner_phrases\": [\n    {\n      \"mid\": \"updates/2025-09-08-central-weekly#m1\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\"tansley-parcel\"],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"Pree owned Tansley Parcel on this date; the parcel descriptor and the next line identify the account.\"\n    },\n    {\n      \"mid\": \"updates/2025-09-08-central-weekly#m2\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\"tansleigh\"],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"Tansleigh Packaging was the only account Tobias owned on this date.\"\n    }\n  ],\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"tansley-parcel\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"marrow-fieldworks\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"marrow-agrisupply\"\n    },\n    {\n      \"oid\": \"e4\",\n      \"entity\": \"stoneharrow\"\n    },\n    {\n      \"oid\": \"e5\",\n      \"entity\": \"quarendon-freightways\"\n    }\n  ],\n  \"events\": [\n    {\n      \"eid\": \"e-tpx-api-outage\",\n      \"present\": false,\n      \"date\": null,\n      \"line\": 12\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-09-03",
+    "owner_phrases": [
+      {
+        "mid": "updates/2025-09-08-central-weekly#m1",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "tansley-parcel"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "Pree owned Tansley Parcel on this date; the parcel descriptor and the next line identify the account."
+      },
+      {
+        "mid": "updates/2025-09-08-central-weekly#m2",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "tansleigh"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "Tansleigh Packaging was the only account Tobias owned on this date."
+      }
+    ],
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "tansley-parcel"
+      },
+      {
+        "oid": "e2",
+        "entity": "marrow-fieldworks"
+      },
+      {
+        "oid": "e3",
+        "entity": "marrow-agrisupply"
+      },
+      {
+        "oid": "e4",
+        "entity": "stoneharrow"
+      },
+      {
+        "oid": "e5",
+        "entity": "quarendon-freightways"
+      }
+    ],
+    "events": [
+      {
+        "eid": "e-tpx-api-outage",
+        "present": false,
+        "date": null,
+        "line": 12
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 3340,
+    "output_tokens": 466,
+    "thinking_tokens": 86
+  },
+  "cost_usd": 0.01134
+}

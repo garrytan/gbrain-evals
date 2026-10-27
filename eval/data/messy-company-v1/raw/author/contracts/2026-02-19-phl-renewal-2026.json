@@ -1,0 +1,41 @@
+{
+  "slug": "contracts/2026-02-19-phl-renewal-2026",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: record\nTitle: Renewal Order Form: Pellucid Harbor Logistics 2026\nDate: Written on 2026-02-19.\nWriter: June Osei-Lark\nVoice: formal legal drafting\nFormat: formal numbered sections and a signature block\nLength: about 472 words\nDate style in the body: undefined\nTypos: none\n\nBrief:\nRenewal Order Form: Pellucid Harbor Logistics 2026. Parties: Pemberline Systems and Pellucid Harbor Logistics. Drafted 2026-02-02. Effective date 2026-03-01 (signed 2026-02-19; state both dates and keep them distinct). Terms this document sets: subscribed seats = 145; price per seat per year (USD) = 1950; end of the current term (renewal date) = 2027-02-28. Executed: include a signature block signed on 2026-02-19 by both parties (customer signatory plus June Osei-Lark for Pemberline). It changes earlier paperwork for this customer; refer to the earlier agreement generically.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Bettina Kroll: Coastal team lead\n- Sofia Marchetti: Account manager, Coastal team\n- Kwame Adjei-Rowe: Account manager, Coastal team\n- Corinne Ashdown: VP Operations\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Pellucid Harbor Logistics: port drayage and terminal logistics, Gulf Coast; codes/nicknames PHL\n- Driftmoor Marine Freight: marine freight and barge operator, Puget Sound; codes/nicknames DMF\n- Saltmarsh Provisions: regional grocery distributor, Lowcountry; main contact Corinne Ashdown, VP Operations; codes/nicknames SMP\n- Pellow Home Living (renamed from Covey & Lark Retail on 2026-02-16): home goods retailer, Mid-Atlantic; codes/nicknames Covey, PHL\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2026-02-19 (background only; don't restate unless the brief asks):\n- Pellucid Harbor Logistics: managed by Kwame Adjei-Rowe\n- Driftmoor Marine Freight: managed by Kwame Adjei-Rowe\n- Saltmarsh Provisions: managed by Bettina Kroll\n- Pellow Home Living: managed by Sofia Marchetti",
+      "response_text": "# Renewal Order Form: Pellucid Harbor Logistics 2026\n\n**Document Status:** Executed  \n**Drafted Date:** 2026-02-02  \n**Execution Date:** 2026-02-19  \n**Renewal Effective Date:** 2026-03-01  \n\nThis Renewal Order Form (\"Order Form\") is entered into by and between Pemberline Systems (\"Provider\") and Pellucid Harbor Logistics (\"Customer\"), collectively referred to herein as the \"Parties.\" This Order Form was initially drafted on 2026-02-02, is executed by the Parties on 2026-02-19 (\"Execution Date\"), and shall become legally effective on 2026-03-01 (\"Renewal Effective Date\"). \n\n## 1. Reference to Prior Agreement\n\n1.1. This Order Form amends, modifies, and supersedes the commercial terms of the prior subscription agreement and any earlier order forms previously executed between the Parties governing Customer's access to the Pemberline Dock platform (collectively, the \"Prior Agreement\"). \n\n1.2. Except as expressly modified by the terms set forth in this Order Form, all terms, conditions, representations, and operational covenants contained in the Prior Agreement shall remain in full force and effect. In the event of a conflict between the terms of the Prior Agreement and this Order Form, the terms of this Order Form shall govern with respect to the Renewal Term defined herein.\n\n## 2. Subscription Scope and Operational Deployment\n\n2.1. Provider shall continue to provision access to the Pemberline Dock yard and dock scheduling software for Customer's Gulf Coast port drayage and terminal logistics operations, including the East Basin container yard, Gate 4 chassis staging lanes, and the Bayport Cross-Dock facility (Doors 1 through 38).\n\n2.2. Authorised users under this Order Form include Customer's terminal dispatchers, gate clerks, and night-shift yard hostler coordinators generating automated gate-pass manifests and daily dwell-time exception reports.\n\n## 3. Renewal Term\n\n3.1. Notwithstanding the Execution Date of 2026-02-19, the subscription term governed by this Order Form shall commence on the Renewal Effective Date of 2026-03-01 and shall continue through 2027-02-28 (\"End of Current Term\" or \"Renewal Date\"), unless terminated earlier in accordance with the provisions of the Prior Agreement.\n\n## 4. Commercial Terms and Fees\n\n4.1. During the Renewal Term, Customer's subscription to Pemberline Dock shall be governed by the following seat allocation and pricing schedule:\n\n* **Product:** Pemberline Dock (Enterprise Yard & Dock Scheduling)\n* **Subscribed Seats:** 145\n* **Price per Seat per Year (USD):** $1,950.00\n* **Total Annual Subscription Fee (USD):** $282,750.00\n\n4.2. All fees are stated and payable in United States Dollars (USD). Invoicing and remittance shall be processed via wire transfer or ACH to the remittance account designated on Provider's invoice, referencing Customer Account Code PHL and Procurement Routing Ticket #PHL-8841-R.\n\n## 5. Entirety of Execution\n\n5.1. The signatories below warrant that they are duly authorised to bind their respective entities to the obligations set forth in this Order Form as of the Execution Date.\n\n---\n\n### Signature Block\n\n**FOR PELLUCID HARBOR LOGISTICS (\"CUSTOMER\")**\n\n* **Signature:** _/s/ Harlan Vance_\n* **Printed Name:** Harlan Vance\n* **Title:** Director of Terminal Operations\n* **Date Signed:** 2026-02-19\n\n**FOR PEMBERLINE SYSTEMS (\"PROVIDER\")**\n\n* **Signature:** _/s/ June Osei-Lark_\n* **Printed Name:** June Osei-Lark\n* **Title:** Deal Desk and Contracts Manager\n* **Date Signed:** 2026-02-19",
+      "usage": {
+        "input_tokens": 1233,
+        "output_tokens": 879,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.011256,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1233,
+          "candidatesTokenCount": 879,
+          "totalTokenCount": 2112,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1233
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 879
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

@@ -22,6 +22,7 @@ import {
   latencySummary,
   productIdentity,
   sourceTreeIdentity,
+  sourceTreeScheme,
   upgradeReceipt,
   validateStoredReceipt,
   type Receipt,
@@ -219,6 +220,26 @@ describe('receipt schema v2', () => {
     expect(upgradeReceipt(upgraded)).toEqual(upgraded);
   });
 
+  test('new receipts record the git-index-blob-v1 scheme; a legacy receipt without one still validates and loads', () => {
+    const fresh = upgradeReceipt(makeReceipt()).execution!.source_tree;
+    expect(fresh.scheme).toBe('git-index-blob-v1');
+    expect(sourceTreeScheme(fresh)).toBe('git-index-blob-v1');
+    const upgraded = upgradeReceipt(makeReceipt());
+    const legacy: Receipt = { ...upgraded, execution: { ...upgraded.execution!, source_tree: { sha256: 'a'.repeat(64), files: 12, git_head: 'b'.repeat(40), dirty: false } } };
+    expect(validateStoredReceipt(legacy)).toEqual([]);
+    expect(sourceTreeScheme(legacy.execution!.source_tree)).toBe('legacy-full-read');
+    const dir = mkdtempSync(join(tmpdir(), 'receipt-legacy-'));
+    try {
+      const path = join(dir, 'receipt.json');
+      writeFileSync(path, JSON.stringify(legacy));
+      const loaded = loadReceipt(path);
+      expect(loaded).toEqual(legacy);
+      expect(sourceTreeScheme(loaded.execution!.source_tree)).toBe('legacy-full-read');
+    } finally { rmSync(dir, { recursive: true, force: true }); }
+    const unknown = { ...legacy, execution: { ...legacy.execution!, source_tree: { ...legacy.execution!.source_tree, scheme: 'other' } } };
+    expect(validateStoredReceipt(unknown)).toContain('v2 execution.source_tree.scheme must be git-index-blob-v1 or absent (legacy full read)');
+  });
+
   test('the source-tree hash covers uncommitted edits', () => {
     const root = mkdtempSync(join(tmpdir(), 'receipt-tree-'));
     try {
@@ -248,6 +269,53 @@ describe('receipt schema v2', () => {
       expect(tree.sha256).toBeNull();
       expect(tree.error).toContain('not a git checkout');
     } finally { rmSync(root, { recursive: true, force: true }); }
+  });
+
+  test('a touched but unchanged file keeps the hash, and a content edit changes it', () => {
+    const root = mkdtempSync(join(tmpdir(), 'receipt-touch-'));
+    try {
+      execFileSync('git', ['init', '-q', root]);
+      writeFileSync(join(root, 'a.ts'), 'one');
+      execFileSync('git', ['-C', root, 'add', '.']);
+      execFileSync('git', ['-C', root, '-c', 'user.name=t', '-c', 'user.email=t@example.invalid', 'commit', '-qm', 'x']);
+      const clean = sourceTreeIdentity(root);
+      const touched = mkdtempSync(join(tmpdir(), 'receipt-touch-copy-'));
+      execFileSync('cp', ['-r', `${root}/.`, touched]);
+      execFileSync('touch', [join(touched, 'a.ts')]);
+      expect(sourceTreeIdentity(touched)).toEqual(clean);
+      const edited = mkdtempSync(join(tmpdir(), 'receipt-touch-edit-'));
+      execFileSync('cp', ['-r', `${root}/.`, edited]);
+      writeFileSync(join(edited, 'a.ts'), 'onf');
+      expect(sourceTreeIdentity(edited).sha256).not.toBe(clean.sha256);
+      rmSync(touched, { recursive: true, force: true });
+      rmSync(edited, { recursive: true, force: true });
+    } finally { rmSync(root, { recursive: true, force: true }); }
+  });
+
+  test('a failed git call is reported and not cached', () => {
+    const root = mkdtempSync(join(tmpdir(), 'receipt-gitfail-'));
+    const bin = mkdtempSync(join(tmpdir(), 'receipt-gitfail-bin-'));
+    const path = process.env.PATH;
+    try {
+      execFileSync('git', ['init', '-q', root]);
+      writeFileSync(join(root, 'a.ts'), 'one');
+      execFileSync('git', ['-C', root, 'add', '.']);
+      execFileSync('git', ['-C', root, '-c', 'user.name=t', '-c', 'user.email=t@example.invalid', 'commit', '-qm', 'x']);
+      writeFileSync(join(bin, 'fail-status'), '');
+      writeFileSync(join(bin, 'git'), `#!/bin/sh\ncase " $* " in *" status "*) [ -e ${JSON.stringify(join(bin, 'fail-status'))} ] && exit 1;; esac\nexec ${JSON.stringify(Bun.which('git'))} "$@"\n`, { mode: 0o755 });
+      process.env.PATH = `${bin}:${path}`;
+      const failed = sourceTreeIdentity(root);
+      expect([failed.sha256, failed.dirty]).toEqual([null, null]);
+      expect(failed.error).toContain('status unreadable');
+      rmSync(join(bin, 'fail-status'));
+      const retried = sourceTreeIdentity(root);
+      expect(retried.sha256).toMatch(/^[a-f0-9]{64}$/);
+      expect(retried.dirty).toBe(false);
+    } finally {
+      process.env.PATH = path;
+      rmSync(root, { recursive: true, force: true });
+      rmSync(bin, { recursive: true, force: true });
+    }
   });
 
   test('a cue receipt records the gbrain-cues package', () => {

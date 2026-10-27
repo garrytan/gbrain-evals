@@ -1,0 +1,37 @@
+{
+  "slug": "contracts/2025-10-20-smp-a1",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: record\nTitle: Amendment 1: Saltmarsh Provisions retention concession\nDate: Written on 2025-10-20.\nWriter: June Osei-Lark\nVoice: formal legal drafting\nFormat: formal numbered sections and a signature block\nLength: about 231 words\nDate style in the body: undefined\nTypos: none\n\nBrief:\nAmendment 1: Saltmarsh Provisions retention concession. Parties: Pemberline Systems and Saltmarsh Provisions. Drafted 2025-10-13. Effective date 2025-11-01 (signed 2025-10-20; state both dates and keep them distinct). Terms this document sets: discount (%) = 10. Executed: include a signature block signed on 2025-10-20 by both parties (customer signatory plus June Osei-Lark for Pemberline). It changes earlier paperwork for this customer; refer to the earlier agreement generically.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Bettina Kroll: Coastal team lead\n- Sofia Marchetti: Account manager, Coastal team\n- Kwame Adjei-Rowe: Account manager, Coastal team\n- Corinne Ashdown: VP Operations\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Pellucid Harbor Logistics: port drayage and terminal logistics, Gulf Coast; codes/nicknames PHL\n- Driftmoor Marine Freight: marine freight and barge operator, Puget Sound; codes/nicknames DMF\n- Saltmarsh Provisions: regional grocery distributor, Lowcountry; main contact Corinne Ashdown, VP Operations; codes/nicknames SMP\n- Covey & Lark Retail: home goods retailer, Mid-Atlantic; codes/nicknames Covey, CLR\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2025-10-20 (background only; don't restate unless the brief asks):\n- Pellucid Harbor Logistics: managed by Bettina Kroll\n- Driftmoor Marine Freight: managed by Kwame Adjei-Rowe\n- Saltmarsh Provisions: managed by Bettina Kroll\n- Covey & Lark Retail: managed by Sofia Marchetti",
+      "response_text": "# Amendment 1: Saltmarsh Provisions retention concession\n\n## 1. Parties and Record Dates\n\nThis Amendment 1 is entered into by Pemberline Systems and Saltmarsh Provisions and amends the earlier agreement between those parties concerning Pemberline Dock (the “Agreement”).\n\nThis Amendment was drafted on 2025-10-13 and executed by both parties on 2025-10-20. Its effective date is 2025-11-01. The execution date and effective date are distinct; execution does not accelerate the commencement of the concession.\n\n## 2. Retention Concession\n\nEffective 2025-11-01, Pemberline Systems grants Saltmarsh Provisions a retention discount of **10%** on the per-seat annual charges for Pemberline Dock under the Agreement. The discount shall be reflected in the applicable billing calculation as a retention concession.\n\nThis Amendment changes the pricing provisions of the earlier paperwork solely to give effect to that discount. It does not establish a new seat quantity or replace the Agreement.\n\n## 3. Continuing Effect\n\nExcept as expressly amended herein, the Agreement remains unchanged and in effect. In the event of a conflict concerning the retention discount, this Amendment controls. Operational arrangements for yard arrivals and dock scheduling remain governed by the Agreement.\n\n## 4. Execution\n\nBy signing below, the parties accept this Amendment, including its effective date of 2025-11-01.\n\n**For Saltmarsh Provisions**\n\nSignature: /s/ Corinne Ashdown  \nName: Corinne Ashdown  \nTitle: VP Operations  \nDate signed: 2025-10-20\n\n**For Pemberline Systems**\n\nSignature: /s/ June Osei-Lark  \nName: June Osei-Lark  \nTitle: Deal desk and contracts manager  \nDate signed: 2025-10-20",
+      "usage": {
+        "input_tokens": 1098,
+        "output_tokens": 381,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.006006,
+      "provider_meta": {
+        "id": "resp_011407eb1aef2ce1016acfae87fe3c87d1baec8af7d66ee121",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1098,
+          "input_tokens_details": {
+            "cache_write_tokens": 1095,
+            "cached_tokens": 0
+          },
+          "output_tokens": 381,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 1479
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

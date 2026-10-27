@@ -1,0 +1,2 @@
+492a493
+>         self.cli("config", "set", "search.cache.enabled", "false")  # GBRA-86: semantic cache off so repeated cell queries recompute

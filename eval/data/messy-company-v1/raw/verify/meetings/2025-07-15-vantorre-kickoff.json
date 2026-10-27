@@ -1,0 +1,45 @@
+{
+  "slug": "meetings/2025-07-15-vantorre-kickoff",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2025-07-15",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Vantorre",
+        "line": 6
+      },
+      {
+        "oid": "e2",
+        "surface": "Vantorre Group",
+        "line": 10
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "cdb1a9579440a82106d2ed3ab25b13543e6485ec37840bd220acdf6f7823dd27",
+  "response_text": "{\n  \"date_used\": \"2025-07-15\",\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"vantorre-group\"\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-07-15",
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e2",
+        "entity": "vantorre-group"
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2867,
+    "output_tokens": 87,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.006604
+}

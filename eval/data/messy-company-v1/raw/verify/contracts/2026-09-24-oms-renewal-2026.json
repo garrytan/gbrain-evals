@@ -1,0 +1,124 @@
+{
+  "slug": "contracts/2026-09-24-oms-renewal-2026",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2026-09-24",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Orlavine Medical Supply",
+        "line": 6
+      },
+      {
+        "oid": "e2",
+        "surface": "Orlavine Medical Supply",
+        "line": 17
+      },
+      {
+        "oid": "e3",
+        "surface": "OMS",
+        "line": 42
+      },
+      {
+        "oid": "e4",
+        "surface": "Carrowmere Cloud",
+        "line": 56
+      },
+      {
+        "oid": "e5",
+        "surface": "OMS",
+        "line": 62
+      },
+      {
+        "oid": "e6",
+        "surface": "Orlavine Medical Supply",
+        "line": 71
+      },
+      {
+        "oid": "e7",
+        "surface": "Orlavine Medical Supply",
+        "line": 76
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": [],
+    "record": {
+      "question": "Is this document signed, an unsigned version, or a draft? Judge from the body text, not the title alone. Give its signed date and effective date if stated, and the value of each of these terms it sets.",
+      "terms": [
+        "price_per_seat",
+        "renewal_date"
+      ]
+    }
+  },
+  "prompt_user_sha256": "3209fad5d3b02b9f2f98371101fb9f5307a3b6e4ce00f762b15c86b696042c96",
+  "response_text": "{\n  \"date_used\": \"2026-09-24\",\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\"oid\": \"e1\", \"entity\": \"orlavine\"},\n    {\"oid\": \"e2\", \"entity\": \"orlavine\"},\n    {\"oid\": \"e3\", \"entity\": \"orlavine\"},\n    {\"oid\": \"e4\", \"entity\": \"carrowmere\"},\n    {\"oid\": \"e5\", \"entity\": \"orlavine\"},\n    {\"oid\": \"e6\", \"entity\": \"orlavine\"},\n    {\"oid\": \"e7\", \"entity\": \"orlavine\"}\n  ],\n  \"record\": {\n    \"status\": \"signed\",\n    \"status_evidence_line\": 83,\n    \"signed_date\": \"2026-09-24\",\n    \"effective_date\": \"2026-10-01\",\n    \"terms\": [\n      {\n        \"term\": \"price_per_seat\",\n        \"applies_to\": [\"orlavine\"],\n        \"value\": \"USD $1,960 per seat per year\",\n        \"line\": 38\n      },\n      {\n        \"term\": \"renewal_date\",\n        \"applies_to\": [\"orlavine\"],\n        \"value\": \"2027-09-30\",\n        \"line\": 48\n      }\n    ],\n    \"deciding_line\": 17,\n    \"deciding_days\": null\n  }\n}",
+  "parsed": {
+    "date_used": "2026-09-24",
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "orlavine"
+      },
+      {
+        "oid": "e2",
+        "entity": "orlavine"
+      },
+      {
+        "oid": "e3",
+        "entity": "orlavine"
+      },
+      {
+        "oid": "e4",
+        "entity": "carrowmere"
+      },
+      {
+        "oid": "e5",
+        "entity": "orlavine"
+      },
+      {
+        "oid": "e6",
+        "entity": "orlavine"
+      },
+      {
+        "oid": "e7",
+        "entity": "orlavine"
+      }
+    ],
+    "record": {
+      "status": "signed",
+      "status_evidence_line": 83,
+      "signed_date": "2026-09-24",
+      "effective_date": "2026-10-01",
+      "terms": [
+        {
+          "term": "price_per_seat",
+          "applies_to": [
+            "orlavine"
+          ],
+          "value": "USD $1,960 per seat per year",
+          "line": 38
+        },
+        {
+          "term": "renewal_date",
+          "applies_to": [
+            "orlavine"
+          ],
+          "value": "2027-09-30",
+          "line": 48
+        }
+      ],
+      "deciding_line": 17,
+      "deciding_days": null
+    }
+  },
+  "usage": {
+    "input_tokens": 4739,
+    "output_tokens": 485,
+    "thinking_tokens": 169
+  },
+  "cost_usd": 0.014328
+}

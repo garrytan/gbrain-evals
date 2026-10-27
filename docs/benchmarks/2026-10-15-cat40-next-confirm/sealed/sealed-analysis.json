@@ -1,0 +1,671 @@
+{
+ "resamples": 10000,
+ "seed": 1,
+ "arms": {
+  "wave": "gbrain-next-wave",
+  "baseline": "gbrain-next-baseline",
+  "fs": "fs"
+ },
+ "primary": {
+  "sealed": {
+   "delta_pp": 10.67,
+   "ci95": [
+    7.0,
+    14.5
+   ],
+   "tasks": 200,
+   "cells": 600,
+   "a_count": 382.0,
+   "b_count": 318.0,
+   "wording": "ahead",
+   "per_world": {
+    "S1": {
+     "delta_pp": 13.33,
+     "ci95": [
+      8.0,
+      18.67
+     ],
+     "tasks": 100,
+     "cells": 300,
+     "a_count": 195.0,
+     "b_count": 155.0
+    },
+    "S2": {
+     "delta_pp": 8.0,
+     "ci95": [
+      3.0,
+      13.33
+     ],
+     "tasks": 100,
+     "cells": 300,
+     "a_count": 187.0,
+     "b_count": 163.0
+    }
+   }
+  }
+ },
+ "secondary": {
+  "all": {
+   "wave_vs_baseline_success": {
+    "delta_pp": -1.17,
+    "ci95": [
+     -4.33,
+     2.0
+    ],
+    "tasks": 200,
+    "cells": 600,
+    "a_count": 382.0,
+    "b_count": 389.0
+   },
+   "wave_vs_baseline_wrong_value": {
+    "delta_pp": -0.67,
+    "ci95": [
+     -2.67,
+     1.33
+    ],
+    "tasks": 200,
+    "cells": 600,
+    "a_count": 38.0,
+    "b_count": 42.0
+   },
+   "wave_vs_baseline_wrong_submitted": {
+    "delta_pp": -1.17,
+    "ci95": [
+     -3.5,
+     1.17
+    ],
+    "tasks": 200,
+    "cells": 600,
+    "a_count": 51.0,
+    "b_count": 58.0
+   },
+   "wave_vs_baseline_not_submitted": {
+    "delta_pp": 2.33,
+    "ci95": [
+     -0.33,
+     5.17
+    ],
+    "tasks": 200,
+    "cells": 600,
+    "a_count": 167.0,
+    "b_count": 153.0
+   },
+   "wave_vs_baseline_turn_cap": {
+    "delta_pp": 2.33,
+    "ci95": [
+     -0.33,
+     5.17
+    ],
+    "tasks": 200,
+    "cells": 600,
+    "a_count": 165.0,
+    "b_count": 151.0
+   },
+   "wave_vs_baseline_success:claude-opus-5-5": {
+    "delta_pp": -3.5,
+    "ci95": [
+     -8.5,
+     1.5
+    ],
+    "tasks": 200,
+    "cells": 200,
+    "a_count": 130.0,
+    "b_count": 137.0
+   },
+   "wave_vs_baseline_wrong_value:claude-opus-5-5": {
+    "delta_pp": 1.5,
+    "ci95": [
+     -1.0,
+     4.0
+    ],
+    "tasks": 200,
+    "cells": 200,
+    "a_count": 6.0,
+    "b_count": 3.0
+   },
+   "wave_vs_baseline_success:claude-sonnet-5-5": {
+    "delta_pp": 0.0,
+    "ci95": [
+     -6.5,
+     6.5
+    ],
+    "tasks": 200,
+    "cells": 200,
+    "a_count": 88.0,
+    "b_count": 88.0
+   },
+   "wave_vs_baseline_wrong_value:claude-sonnet-5-5": {
+    "delta_pp": -3.5,
+    "ci95": [
+     -8.5,
+     1.5
+    ],
+    "tasks": 200,
+    "cells": 200,
+    "a_count": 31.0,
+    "b_count": 38.0
+   },
+   "wave_vs_baseline_success:gpt-6.1-sol": {
+    "delta_pp": 0.0,
+    "ci95": [
+     -3.5,
+     3.5
+    ],
+    "tasks": 200,
+    "cells": 200,
+    "a_count": 164.0,
+    "b_count": 164.0
+   },
+   "wave_vs_baseline_wrong_value:gpt-6.1-sol": {
+    "delta_pp": 0.0,
+    "ci95": [
+     -1.5,
+     1.5
+    ],
+    "tasks": 200,
+    "cells": 200,
+    "a_count": 1.0,
+    "b_count": 1.0
+   },
+   "wave_vs_fs_success:H1": {
+    "delta_pp": 9.17,
+    "ci95": [
+     5.0,
+     14.17
+    ],
+    "tasks": 40,
+    "cells": 120,
+    "a_count": 11.0,
+    "b_count": 0.0
+   },
+   "wave_vs_baseline_success:H1": {
+    "delta_pp": 0.0,
+    "ci95": [
+     -5.0,
+     5.0
+    ],
+    "tasks": 40,
+    "cells": 120,
+    "a_count": 11.0,
+    "b_count": 11.0
+   },
+   "wave_vs_fs_success:H2": {
+    "delta_pp": 4.17,
+    "ci95": [
+     -3.33,
+     11.67
+    ],
+    "tasks": 40,
+    "cells": 120,
+    "a_count": 88.0,
+    "b_count": 83.0
+   },
+   "wave_vs_baseline_success:H2": {
+    "delta_pp": -4.17,
+    "ci95": [
+     -10.0,
+     1.67
+    ],
+    "tasks": 40,
+    "cells": 120,
+    "a_count": 88.0,
+    "b_count": 93.0
+   },
+   "wave_vs_fs_success:H3": {
+    "delta_pp": 37.5,
+    "ci95": [
+     29.17,
+     45.83
+    ],
+    "tasks": 40,
+    "cells": 120,
+    "a_count": 66.0,
+    "b_count": 21.0
+   },
+   "wave_vs_baseline_success:H3": {
+    "delta_pp": 1.67,
+    "ci95": [
+     -6.67,
+     9.17
+    ],
+    "tasks": 40,
+    "cells": 120,
+    "a_count": 66.0,
+    "b_count": 64.0
+   },
+   "wave_vs_fs_success:H4": {
+    "delta_pp": 3.33,
+    "ci95": [
+     -5.83,
+     12.5
+    ],
+    "tasks": 40,
+    "cells": 120,
+    "a_count": 99.0,
+    "b_count": 95.0
+   },
+   "wave_vs_baseline_success:H4": {
+    "delta_pp": -6.67,
+    "ci95": [
+     -15.83,
+     2.5
+    ],
+    "tasks": 40,
+    "cells": 120,
+    "a_count": 99.0,
+    "b_count": 107.0
+   },
+   "wave_vs_fs_success:H5": {
+    "delta_pp": -0.83,
+    "ci95": [
+     -3.33,
+     1.67
+    ],
+    "tasks": 40,
+    "cells": 120,
+    "a_count": 118.0,
+    "b_count": 119.0
+   },
+   "wave_vs_baseline_success:H5": {
+    "delta_pp": 3.33,
+    "ci95": [
+     -0.83,
+     7.5
+    ],
+    "tasks": 40,
+    "cells": 120,
+    "a_count": 118.0,
+    "b_count": 114.0
+   },
+   "wave_vs_fs_success:H4+long": {
+    "delta_pp": null,
+    "ci95": null,
+    "tasks": 0,
+    "cells": 0,
+    "a_count": 0.0,
+    "b_count": 0.0
+   },
+   "wave_vs_baseline_success:H4+long": {
+    "delta_pp": null,
+    "ci95": null,
+    "tasks": 0,
+    "cells": 0,
+    "a_count": 0.0,
+    "b_count": 0.0
+   },
+   "wave_vs_fs_success:H4-not-long": {
+    "delta_pp": 3.33,
+    "ci95": [
+     -5.83,
+     12.5
+    ],
+    "tasks": 40,
+    "cells": 120,
+    "a_count": 99.0,
+    "b_count": 95.0
+   },
+   "wave_vs_baseline_success:H4-not-long": {
+    "delta_pp": -6.67,
+    "ci95": [
+     -15.83,
+     2.5
+    ],
+    "tasks": 40,
+    "cells": 120,
+    "a_count": 99.0,
+    "b_count": 107.0
+   },
+   "wave_vs_fs_success:claude-opus-5-5": {
+    "delta_pp": 14.5,
+    "ci95": [
+     8.0,
+     21.0
+    ],
+    "tasks": 200,
+    "cells": 200,
+    "a_count": 130.0,
+    "b_count": 101.0
+   },
+   "wave_vs_fs_success:claude-sonnet-5-5": {
+    "delta_pp": 3.0,
+    "ci95": [
+     -4.0,
+     10.0
+    ],
+    "tasks": 200,
+    "cells": 200,
+    "a_count": 88.0,
+    "b_count": 82.0
+   },
+   "wave_vs_fs_success:gpt-6.1-sol": {
+    "delta_pp": 14.5,
+    "ci95": [
+     9.5,
+     19.5
+    ],
+    "tasks": 200,
+    "cells": 200,
+    "a_count": 164.0,
+    "b_count": 135.0
+   }
+  },
+  "sealed": {
+   "wave_vs_baseline_success": {
+    "delta_pp": -1.17,
+    "ci95": [
+     -4.33,
+     2.0
+    ],
+    "tasks": 200,
+    "cells": 600,
+    "a_count": 382.0,
+    "b_count": 389.0
+   },
+   "wave_vs_baseline_wrong_value": {
+    "delta_pp": -0.67,
+    "ci95": [
+     -2.67,
+     1.33
+    ],
+    "tasks": 200,
+    "cells": 600,
+    "a_count": 38.0,
+    "b_count": 42.0
+   },
+   "wave_vs_baseline_wrong_submitted": {
+    "delta_pp": -1.17,
+    "ci95": [
+     -3.5,
+     1.17
+    ],
+    "tasks": 200,
+    "cells": 600,
+    "a_count": 51.0,
+    "b_count": 58.0
+   },
+   "wave_vs_baseline_not_submitted": {
+    "delta_pp": 2.33,
+    "ci95": [
+     -0.33,
+     5.17
+    ],
+    "tasks": 200,
+    "cells": 600,
+    "a_count": 167.0,
+    "b_count": 153.0
+   },
+   "wave_vs_baseline_turn_cap": {
+    "delta_pp": 2.33,
+    "ci95": [
+     -0.33,
+     5.17
+    ],
+    "tasks": 200,
+    "cells": 600,
+    "a_count": 165.0,
+    "b_count": 151.0
+   },
+   "wave_vs_baseline_success:claude-opus-5-5": {
+    "delta_pp": -3.5,
+    "ci95": [
+     -8.5,
+     1.5
+    ],
+    "tasks": 200,
+    "cells": 200,
+    "a_count": 130.0,
+    "b_count": 137.0
+   },
+   "wave_vs_baseline_wrong_value:claude-opus-5-5": {
+    "delta_pp": 1.5,
+    "ci95": [
+     -1.0,
+     4.0
+    ],
+    "tasks": 200,
+    "cells": 200,
+    "a_count": 6.0,
+    "b_count": 3.0
+   },
+   "wave_vs_baseline_success:claude-sonnet-5-5": {
+    "delta_pp": 0.0,
+    "ci95": [
+     -6.5,
+     6.5
+    ],
+    "tasks": 200,
+    "cells": 200,
+    "a_count": 88.0,
+    "b_count": 88.0
+   },
+   "wave_vs_baseline_wrong_value:claude-sonnet-5-5": {
+    "delta_pp": -3.5,
+    "ci95": [
+     -8.5,
+     1.5
+    ],
+    "tasks": 200,
+    "cells": 200,
+    "a_count": 31.0,
+    "b_count": 38.0
+   },
+   "wave_vs_baseline_success:gpt-6.1-sol": {
+    "delta_pp": 0.0,
+    "ci95": [
+     -3.5,
+     3.5
+    ],
+    "tasks": 200,
+    "cells": 200,
+    "a_count": 164.0,
+    "b_count": 164.0
+   },
+   "wave_vs_baseline_wrong_value:gpt-6.1-sol": {
+    "delta_pp": 0.0,
+    "ci95": [
+     -1.5,
+     1.5
+    ],
+    "tasks": 200,
+    "cells": 200,
+    "a_count": 1.0,
+    "b_count": 1.0
+   },
+   "wave_vs_fs_success:H1": {
+    "delta_pp": 9.17,
+    "ci95": [
+     5.0,
+     14.17
+    ],
+    "tasks": 40,
+    "cells": 120,
+    "a_count": 11.0,
+    "b_count": 0.0
+   },
+   "wave_vs_baseline_success:H1": {
+    "delta_pp": 0.0,
+    "ci95": [
+     -5.0,
+     5.0
+    ],
+    "tasks": 40,
+    "cells": 120,
+    "a_count": 11.0,
+    "b_count": 11.0
+   },
+   "wave_vs_fs_success:H2": {
+    "delta_pp": 4.17,
+    "ci95": [
+     -3.33,
+     11.67
+    ],
+    "tasks": 40,
+    "cells": 120,
+    "a_count": 88.0,
+    "b_count": 83.0
+   },
+   "wave_vs_baseline_success:H2": {
+    "delta_pp": -4.17,
+    "ci95": [
+     -10.0,
+     1.67
+    ],
+    "tasks": 40,
+    "cells": 120,
+    "a_count": 88.0,
+    "b_count": 93.0
+   },
+   "wave_vs_fs_success:H3": {
+    "delta_pp": 37.5,
+    "ci95": [
+     29.17,
+     45.83
+    ],
+    "tasks": 40,
+    "cells": 120,
+    "a_count": 66.0,
+    "b_count": 21.0
+   },
+   "wave_vs_baseline_success:H3": {
+    "delta_pp": 1.67,
+    "ci95": [
+     -6.67,
+     9.17
+    ],
+    "tasks": 40,
+    "cells": 120,
+    "a_count": 66.0,
+    "b_count": 64.0
+   },
+   "wave_vs_fs_success:H4": {
+    "delta_pp": 3.33,
+    "ci95": [
+     -5.83,
+     12.5
+    ],
+    "tasks": 40,
+    "cells": 120,
+    "a_count": 99.0,
+    "b_count": 95.0
+   },
+   "wave_vs_baseline_success:H4": {
+    "delta_pp": -6.67,
+    "ci95": [
+     -15.83,
+     2.5
+    ],
+    "tasks": 40,
+    "cells": 120,
+    "a_count": 99.0,
+    "b_count": 107.0
+   },
+   "wave_vs_fs_success:H5": {
+    "delta_pp": -0.83,
+    "ci95": [
+     -3.33,
+     1.67
+    ],
+    "tasks": 40,
+    "cells": 120,
+    "a_count": 118.0,
+    "b_count": 119.0
+   },
+   "wave_vs_baseline_success:H5": {
+    "delta_pp": 3.33,
+    "ci95": [
+     -0.83,
+     7.5
+    ],
+    "tasks": 40,
+    "cells": 120,
+    "a_count": 118.0,
+    "b_count": 114.0
+   },
+   "wave_vs_fs_success:H4+long": {
+    "delta_pp": null,
+    "ci95": null,
+    "tasks": 0,
+    "cells": 0,
+    "a_count": 0.0,
+    "b_count": 0.0
+   },
+   "wave_vs_baseline_success:H4+long": {
+    "delta_pp": null,
+    "ci95": null,
+    "tasks": 0,
+    "cells": 0,
+    "a_count": 0.0,
+    "b_count": 0.0
+   },
+   "wave_vs_fs_success:H4-not-long": {
+    "delta_pp": 3.33,
+    "ci95": [
+     -5.83,
+     12.5
+    ],
+    "tasks": 40,
+    "cells": 120,
+    "a_count": 99.0,
+    "b_count": 95.0
+   },
+   "wave_vs_baseline_success:H4-not-long": {
+    "delta_pp": -6.67,
+    "ci95": [
+     -15.83,
+     2.5
+    ],
+    "tasks": 40,
+    "cells": 120,
+    "a_count": 99.0,
+    "b_count": 107.0
+   },
+   "wave_vs_fs_success:claude-opus-5-5": {
+    "delta_pp": 14.5,
+    "ci95": [
+     8.0,
+     21.0
+    ],
+    "tasks": 200,
+    "cells": 200,
+    "a_count": 130.0,
+    "b_count": 101.0
+   },
+   "wave_vs_fs_success:claude-sonnet-5-5": {
+    "delta_pp": 3.0,
+    "ci95": [
+     -4.0,
+     10.0
+    ],
+    "tasks": 200,
+    "cells": 200,
+    "a_count": 88.0,
+    "b_count": 82.0
+   },
+   "wave_vs_fs_success:gpt-6.1-sol": {
+    "delta_pp": 14.5,
+    "ci95": [
+     9.5,
+     19.5
+    ],
+    "tasks": 200,
+    "cells": 200,
+    "a_count": 164.0,
+    "b_count": 135.0
+   }
+  }
+ },
+ "general_claim": false,
+ "d3_wrong_value_effect": {
+  "delta_pp": -0.67,
+  "ci95": [
+   -2.67,
+   1.33
+  ],
+  "passes": false
+ },
+ "sol_watch": {
+  "wave_wrong_cells": 1.0,
+  "baseline_wrong_cells": 1.0,
+  "flag": false
+ }
+}

@@ -1,0 +1,59 @@
+{
+  "slug": "emails/2026-06-29-tobias-pto-coverage",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2026-06-29",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Marrow Fieldworks",
+        "line": 11
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": [
+      {
+        "account": "marrow-fieldworks",
+        "question": "According to this page alone, who manages Marrow Fieldworks, in what role, and from/until when?"
+      }
+    ]
+  },
+  "prompt_user_sha256": "8569d352f16f4d387c26e956e56a6ec7f3a46f9bc346b992a4520093623df5ac",
+  "response_text": "{\n  \"date_used\": \"2026-06-29\",\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"marrow-fieldworks\"\n    }\n  ],\n  \"ownership\": [\n    {\n      \"account\": \"marrow-fieldworks\",\n      \"owner\": \"Tobias Rendle\",\n      \"role\": \"primary\",\n      \"start\": null,\n      \"end\": null,\n      \"line\": 11\n    },\n    {\n      \"account\": \"marrow-fieldworks\",\n      \"owner\": null,\n      \"role\": \"acting\",\n      \"start\": \"2026-07-06\",\n      \"end\": \"2026-07-27\",\n      \"line\": 11\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2026-06-29",
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "marrow-fieldworks"
+      }
+    ],
+    "ownership": [
+      {
+        "account": "marrow-fieldworks",
+        "owner": "Tobias Rendle",
+        "role": "primary",
+        "start": null,
+        "end": null,
+        "line": 11
+      },
+      {
+        "account": "marrow-fieldworks",
+        "owner": null,
+        "role": "acting",
+        "start": "2026-07-06",
+        "end": "2026-07-27",
+        "line": 11
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2780,
+    "output_tokens": 205,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.00761
+}

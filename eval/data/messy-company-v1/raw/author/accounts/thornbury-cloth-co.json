@@ -1,0 +1,41 @@
+{
+  "slug": "accounts/thornbury-cloth-co",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: profile\nTitle: Thornbury Cloth Co. (formerly Orrin Mills)\nDate: Written on 2026-09-30.\nWriter: Ilse Varga\nVoice: dry and slightly sarcastic\nFormat: a header block of key fields as a table, then short sections\nLength: about 166 words\nDate style in the body: undefined\nTypos: a few natural typos and one or two sloppy abbreviations (never in names or required phrases)\n\nBrief:\nAccount profile, last updated 2026-09-30. Textile mill in the Carolinas; renamed itself from Orrin Mills to Thornbury Cloth Co. on January 12, 2026. Old CRM code ORM; new code TCC (yes, the same letters Tamsin Cold Chain uses; just state both codes plainly without commentary). Owner history: Dana Okafor from Jan 6, 2025 to October 6, 2025; Marcus Lindqvist since October 6, 2025. 40 seats.\n\nUse these names or codes at least once each, as written: \"ORM\", \"TCC\", \"Orrin Mills\", \"Thornbury\".\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Ilse Varga: North team lead\n- Dana Okafor: Account manager, North team\n- Marcus Lindqvist: Account manager, North team\n- Thea Ramaswell: Director of Yard Operations\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Quarrendon Freight Lines: truckload freight carrier, Upper Midwest; main contact Thea Ramaswell, Director of Yard Operations; codes/nicknames QFL, Q-Freight\n- Brackenwater Freight Co.: less-than-truckload freight, Great Lakes; codes/nicknames BWF, Bracken\n- Tamsin Cold Chain: refrigerated warehousing, Pacific Northwest; codes/nicknames TCC\n- Thornbury Cloth Co. (renamed from Orrin Mills on 2026-01-12): textile mill, Carolinas; codes/nicknames TCC\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2026-09-30 (background only; don't restate unless the brief asks):\n- Quarrendon Freight Lines: managed by Dana Okafor\n- Brackenwater Freight Co.: managed by Marcus Lindqvist\n- Tamsin Cold Chain: managed by Dana Okafor\n- Thornbury Cloth Co.: managed by Marcus Lindqvist",
+      "response_text": "# Thornbury Cloth Co. (formerly Orrin Mills)\n\n| Field | Value |\n| :--- | :--- |\n| **Account Name** | Thornbury Cloth Co. (renamed from Orrin Mills on January 12, 2026) |\n| **CRM Code** | TCC (old code: ORM) |\n| **Industry / Region** | Textile mill, Carolinas |\n| **Seats** | 40 |\n| **Account Owner** | Marcus Lindqvist (since October 6, 2025) |\n| **Prior Owner** | Dana Okafor (Jan 6, 2025 – October 6, 2025) |\n| **Last Updated** | 2026-09-30 |\n\n### Operations & Setup\nRunning Pemberline Dock across their weaving and dye-house yards. Still predominantly booking cotton bale drops on Doors 1–4 via manual overrides bc the night shift dispatcher, Jerry, refuses to trust auto-slotting after the labor day incident. \n\n### Open Issues\n* **ZD-8814:** Gatehouse kiosk at the south lot keeps caching the old Orrin Mills logo on printed gate passes. Drivers don't care, plant mgr cares deeply.\n* **Reporting:** Thornbury leadership requested a custom export for dye-lot dwell times; Marcus Lindqvist told them to just filter the standard `Yard_Dwell_v3` csv for now.",
+      "usage": {
+        "input_tokens": 1235,
+        "output_tokens": 316,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.00563,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1235,
+          "candidatesTokenCount": 316,
+          "totalTokenCount": 1551,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1235
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 316
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

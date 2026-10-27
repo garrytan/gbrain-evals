@@ -1,0 +1,244 @@
+{
+ "schema": "gbrain-sync-freshness/1",
+ "kind": "idle",
+ "cell": "pglite-managed-10000-s3-idle-serve-gbra133-pr2b-bench_4ba4c36f",
+ "label": "gbra133-pr2b-bench@4ba4c36f",
+ "gbrain_rev": "4ba4c36f",
+ "at": "2026-10-20T02:37:23.944Z",
+ "params": {
+  "engine": "pglite",
+  "mode": "managed",
+  "pages": 10000,
+  "commit": "single",
+  "trigger": "serve",
+  "reps": 10,
+  "rtt_ms": 0,
+  "measured_rtt_ms": null,
+  "interval_s": null,
+  "scenario": "idle",
+  "probe_ms": 100,
+  "timeout_s": 300,
+  "keyless": true,
+  "embed": null,
+  "detection": "watch",
+  "jitter_ms": 0,
+  "sources": [
+   "bench",
+   "bench2",
+   "bench3"
+  ],
+  "source_pages": 1000,
+  "residents": [
+   "serve"
+  ]
+ },
+ "machine": {
+  "cores": 4,
+  "cpu_model": "AMD EPYC",
+  "ram_gb": 16,
+  "kernel": "6.1.158+",
+  "bun": "1.4.3"
+ },
+ "build": {
+  "engine": "pglite",
+  "mode": "managed",
+  "pages": 10000,
+  "sources": [
+   "bench",
+   "bench2",
+   "bench3"
+  ],
+  "source_pages": 1000,
+  "rev": "4ba4c36f",
+  "built_at": "2026-10-19T23:36:04.546Z",
+  "cloned_from": "pglite-classic-10000-s3x1000-4ba4c36f",
+  "clone_ms": 1865.5,
+  "activate_ms": 5242.8,
+  "first_managed_sync": {
+   "ms": 1837.765869140625,
+   "runs": 1
+  },
+  "first_managed_sync_bench2": {
+   "ms": 1191.751708984375,
+   "runs": 1
+  },
+  "first_managed_sync_bench3": {
+   "ms": 1294.1337890625,
+   "runs": 1
+  },
+  "links_settled": {
+   "ms": 833.6,
+   "runs": 1,
+   "last": "Extract --stale: 0 link(s) created, 0 removed, 0 timeline entr(ies) from 0 page(s). | Actionable: 0 page(s) still need link/timeline extraction; 0 page(s) due for the mention pass. Extraction is complete (raw stale totals are not a completion signal)."
+  },
+  "links_settled_bench2": {
+   "ms": 744.1,
+   "runs": 1,
+   "last": "Extract --stale: 0 link(s) created, 0 removed, 0 timeline entr(ies) from 0 page(s). | Actionable: 0 page(s) still need link/timeline extraction; 0 page(s) due for the mention pass. Extraction is complete (raw stale totals are not a completion signal)."
+  },
+  "links_settled_bench3": {
+   "ms": 694.4,
+   "runs": 1,
+   "last": "Extract --stale: 0 link(s) created, 0 removed, 0 timeline entr(ies) from 0 page(s). | Actionable: 0 page(s) still need link/timeline extraction; 0 page(s) due for the mention pass. Extraction is complete (raw stale totals are not a completion signal)."
+  }
+ },
+ "notes": [
+  "serve on-commit watcher enabled 749 ms after spawn",
+  "idle: residents serve on one brain with sync.on_commit=true and 3 source(s), no commits; tx from pg_stat_database (the sampler connects to the postgres database, so it is not counted), backends from pg_stat_activity each second, CPU from /proc (resident plus live children)"
+ ],
+ "get_page": {
+  "n": 0,
+  "p50": null,
+  "p95": null,
+  "max": null,
+  "min": null,
+  "mean": null,
+  "cv": null
+ },
+ "search": {
+  "n": 0,
+  "p50": null,
+  "p95": null,
+  "max": null,
+  "min": null,
+  "mean": null,
+  "cv": null
+ },
+ "exit": {
+  "n": 0,
+  "p50": null,
+  "p95": null,
+  "max": null,
+  "min": null,
+  "mean": null,
+  "cv": null
+ },
+ "phases": {},
+ "idle": {
+  "windows": [
+   {
+    "window_s": 30,
+    "cpu_s_per_min": {
+     "serve": 1.718
+    }
+   },
+   {
+    "window_s": 30,
+    "cpu_s_per_min": {
+     "serve": 2.058
+    }
+   },
+   {
+    "window_s": 30,
+    "cpu_s_per_min": {
+     "serve": 1.898
+    }
+   },
+   {
+    "window_s": 30,
+    "cpu_s_per_min": {
+     "serve": 1.858
+    }
+   },
+   {
+    "window_s": 30,
+    "cpu_s_per_min": {
+     "serve": 1.678
+    }
+   },
+   {
+    "window_s": 30,
+    "cpu_s_per_min": {
+     "serve": 1.778
+    }
+   },
+   {
+    "window_s": 30,
+    "cpu_s_per_min": {
+     "serve": 1.638
+    }
+   },
+   {
+    "window_s": 30,
+    "cpu_s_per_min": {
+     "serve": 1.818
+    }
+   },
+   {
+    "window_s": 30,
+    "cpu_s_per_min": {
+     "serve": 1.658
+    }
+   },
+   {
+    "window_s": 30,
+    "cpu_s_per_min": {
+     "serve": 2.018
+    }
+   }
+  ],
+  "tx_per_window": {
+   "n": 0,
+   "p50": null,
+   "p95": null,
+   "max": null,
+   "min": null,
+   "mean": null,
+   "cv": null
+  },
+  "rows_returned_per_window": {
+   "n": 0,
+   "p50": null,
+   "p95": null,
+   "max": null,
+   "min": null,
+   "mean": null,
+   "cv": null
+  },
+  "rows_written_per_window": {
+   "n": 0,
+   "p50": null,
+   "p95": null,
+   "max": null,
+   "min": null,
+   "mean": null,
+   "cv": null
+  },
+  "backends_median": {
+   "n": 0,
+   "p50": null,
+   "p95": null,
+   "max": null,
+   "min": null,
+   "mean": null,
+   "cv": null
+  },
+  "backends_max": {
+   "n": 0,
+   "p50": null,
+   "p95": null,
+   "max": null,
+   "min": null,
+   "mean": null,
+   "cv": null
+  },
+  "cpu_s_per_min": {
+   "serve": {
+    "n": 10,
+    "p50": 1.8,
+    "p95": 2,
+    "max": 2.1,
+    "min": 1.6,
+    "mean": 1.8,
+    "cv": 0.081
+   }
+  }
+ },
+ "detection_observed": {
+  "bench": "watch (serve)",
+  "bench2": "watch (serve)",
+  "bench3": "watch (serve)"
+ },
+ "failures": 0,
+ "reps": []
+}

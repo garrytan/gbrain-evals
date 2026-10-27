@@ -1,0 +1,45 @@
+{
+  "slug": "tickets/2025-12-02-mfw-dealer-portal-sso",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2025-12-02",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Marrow Fieldworks",
+        "line": 11
+      },
+      {
+        "oid": "e2",
+        "surface": "MFW",
+        "line": 11
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "54403996a48402fa4f8ca4e70f32b9cc05709a69b7b83e41e4b637ef87d650a6",
+  "response_text": "{\n  \"date_used\": \"2025-12-02\",\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"marrow-fieldworks\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"marrow-fieldworks\"\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-12-02",
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "marrow-fieldworks"
+      },
+      {
+        "oid": "e2",
+        "entity": "marrow-fieldworks"
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2809,
+    "output_tokens": 89,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.006508
+}

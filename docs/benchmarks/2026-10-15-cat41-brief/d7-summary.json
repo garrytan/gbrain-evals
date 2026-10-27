@@ -1,0 +1,1209 @@
+{
+  "version": "d7-summary-v1",
+  "cells": 48,
+  "scored": 48,
+  "not_scored": [],
+  "verdict": "no time-saved signal (development evidence only)",
+  "checks": {
+    "time_saved": false,
+    "success_non_inferior": false,
+    "hot_memory_control_valid": true,
+    "no_brief_without_hooks_on": true,
+    "attention_within_cap": true,
+    "false_push_within_ceiling": true,
+    "no_confident_wrong_rise": true
+  },
+  "pooled": {
+    "time": {
+      "pairs": 15,
+      "personas": 15,
+      "off_total": 264659,
+      "on_total": 248307,
+      "ratio": 0.9382148349385435,
+      "lower": 0.8530797278294392,
+      "upper": 1.03184645796958
+    },
+    "success": {
+      "pairs": 15,
+      "personas": 15,
+      "off_successes": 14,
+      "on_successes": 15,
+      "delta": 0.06666666666666667,
+      "lower": -0.07631911252784716,
+      "upper": 0.20965244586118048,
+      "discordant": {
+        "on_only": 1,
+        "off_only": 0
+      }
+    },
+    "tool_calls": {
+      "pairs": 15,
+      "personas": 15,
+      "off_total": 88,
+      "on_total": 79,
+      "ratio": 0.8977272727272727,
+      "lower": 0.7475052390781952,
+      "upper": 1.0795269157915268
+    },
+    "turns_to_correct": {
+      "pairs": 15,
+      "personas": 15,
+      "off_total": 87,
+      "on_total": 78,
+      "ratio": 0.896551724137931,
+      "lower": 0.7411332131786368,
+      "upper": 1.0859927632584059
+    },
+    "tool_calls_to_correct": {
+      "pairs": 15,
+      "personas": 15,
+      "off_total": 88,
+      "on_total": 79,
+      "ratio": 0.8977272727272727,
+      "lower": 0.7475052390781952,
+      "upper": 1.0795269157915268
+    },
+    "model_wait_ms": {
+      "pairs": 15,
+      "personas": 15,
+      "off_total": 215211,
+      "on_total": 211700,
+      "ratio": 0.9836857781433105,
+      "lower": 0.8548803870509004,
+      "upper": 1.1318984495928313
+    },
+    "model_wait_ms_per_request": {
+      "off": {
+        "requests": 87,
+        "median": 1672,
+        "max": 10480
+      },
+      "on": {
+        "requests": 78,
+        "median": 1662,
+        "max": 11212
+      }
+    },
+    "input_tokens": {
+      "pairs": 15,
+      "personas": 15,
+      "off_total": 1424380,
+      "on_total": 1373069,
+      "ratio": 0.9639766073660119,
+      "lower": 0.8616810911319182,
+      "upper": 1.07841628822065
+    },
+    "reached_correct": {
+      "off": 14,
+      "on": 13
+    }
+  },
+  "delivered_only": {
+    "label": "diagnostic only: positive pairs whose on cell got the full brief",
+    "time": {
+      "pairs": 15,
+      "personas": 15,
+      "off_total": 264659,
+      "on_total": 248307,
+      "ratio": 0.9382148349385435,
+      "lower": 0.8530797278294392,
+      "upper": 1.03184645796958
+    },
+    "success": {
+      "pairs": 15,
+      "personas": 15,
+      "off_successes": 14,
+      "on_successes": 15,
+      "delta": 0.06666666666666667,
+      "lower": -0.07631911252784716,
+      "upper": 0.20965244586118048,
+      "discordant": {
+        "on_only": 1,
+        "off_only": 0
+      }
+    },
+    "tool_calls": {
+      "pairs": 15,
+      "personas": 15,
+      "off_total": 88,
+      "on_total": 79,
+      "ratio": 0.8977272727272727,
+      "lower": 0.7475052390781952,
+      "upper": 1.0795269157915268
+    },
+    "turns_to_correct": {
+      "pairs": 15,
+      "personas": 15,
+      "off_total": 87,
+      "on_total": 78,
+      "ratio": 0.896551724137931,
+      "lower": 0.7411332131786368,
+      "upper": 1.0859927632584059
+    },
+    "tool_calls_to_correct": {
+      "pairs": 15,
+      "personas": 15,
+      "off_total": 88,
+      "on_total": 79,
+      "ratio": 0.8977272727272727,
+      "lower": 0.7475052390781952,
+      "upper": 1.0795269157915268
+    },
+    "model_wait_ms": {
+      "pairs": 15,
+      "personas": 15,
+      "off_total": 215211,
+      "on_total": 211700,
+      "ratio": 0.9836857781433105,
+      "lower": 0.8548803870509004,
+      "upper": 1.1318984495928313
+    },
+    "model_wait_ms_per_request": {
+      "off": {
+        "requests": 87,
+        "median": 1672,
+        "max": 10480
+      },
+      "on": {
+        "requests": 78,
+        "median": 1662,
+        "max": 11212
+      }
+    },
+    "input_tokens": {
+      "pairs": 15,
+      "personas": 15,
+      "off_total": 1424380,
+      "on_total": 1373069,
+      "ratio": 0.9639766073660119,
+      "lower": 0.8616810911319182,
+      "upper": 1.07841628822065
+    },
+    "reached_correct": {
+      "off": 14,
+      "on": 13
+    }
+  },
+  "by_kind": {
+    "prep": {
+      "time": {
+        "pairs": 5,
+        "personas": 5,
+        "off_total": 84759,
+        "on_total": 86559,
+        "ratio": 1.021236682830142,
+        "lower": 0.9110522395430131,
+        "upper": 1.1447467677681367
+      },
+      "success": {
+        "pairs": 5,
+        "personas": 5,
+        "off_successes": 5,
+        "on_successes": 5,
+        "delta": 0,
+        "lower": 0,
+        "upper": 0,
+        "discordant": {
+          "on_only": 0,
+          "off_only": 0
+        }
+      },
+      "tool_calls": {
+        "pairs": 5,
+        "personas": 5,
+        "off_total": 31,
+        "on_total": 31,
+        "ratio": 1,
+        "lower": 0.6916185277955407,
+        "upper": 1.4458837636802355
+      },
+      "turns_to_correct": {
+        "pairs": 5,
+        "personas": 5,
+        "off_total": 29,
+        "on_total": 30,
+        "ratio": 1.0344827586206897,
+        "lower": 0.6602761247578701,
+        "upper": 1.6189373887312717
+      },
+      "tool_calls_to_correct": {
+        "pairs": 5,
+        "personas": 5,
+        "off_total": 31,
+        "on_total": 31,
+        "ratio": 1,
+        "lower": 0.6916185277955407,
+        "upper": 1.4458837636802355
+      },
+      "model_wait_ms": {
+        "pairs": 5,
+        "personas": 5,
+        "off_total": 67047,
+        "on_total": 73578,
+        "ratio": 1.0974092800572732,
+        "lower": 0.8973139969728979,
+        "upper": 1.3421227548652486
+      },
+      "model_wait_ms_per_request": {
+        "off": {
+          "requests": 29,
+          "median": 1557,
+          "max": 9888
+        },
+        "on": {
+          "requests": 30,
+          "median": 1560,
+          "max": 8962
+        }
+      },
+      "input_tokens": {
+        "pairs": 5,
+        "personas": 5,
+        "off_total": 487978,
+        "on_total": 531748,
+        "ratio": 1.0896966666530048,
+        "lower": 0.8924150432159098,
+        "upper": 1.330590103832727
+      },
+      "reached_correct": {
+        "off": 5,
+        "on": 3
+      }
+    },
+    "reply": {
+      "time": {
+        "pairs": 5,
+        "personas": 5,
+        "off_total": 82081,
+        "on_total": 79040,
+        "ratio": 0.9629512311009856,
+        "lower": 0.7634103876231371,
+        "upper": 1.2146487959236558
+      },
+      "success": {
+        "pairs": 5,
+        "personas": 5,
+        "off_successes": 5,
+        "on_successes": 5,
+        "delta": 0,
+        "lower": 0,
+        "upper": 0,
+        "discordant": {
+          "on_only": 0,
+          "off_only": 0
+        }
+      },
+      "tool_calls": {
+        "pairs": 5,
+        "personas": 5,
+        "off_total": 25,
+        "on_total": 24,
+        "ratio": 0.96,
+        "lower": 0.6106057045512243,
+        "upper": 1.511788197556089
+      },
+      "turns_to_correct": {
+        "pairs": 5,
+        "personas": 5,
+        "off_total": 27,
+        "on_total": 24,
+        "ratio": 0.8888888888888888,
+        "lower": 0.5460341406127696,
+        "upper": 1.4536069253357249
+      },
+      "tool_calls_to_correct": {
+        "pairs": 5,
+        "personas": 5,
+        "off_total": 25,
+        "on_total": 24,
+        "ratio": 0.96,
+        "lower": 0.6106057045512243,
+        "upper": 1.511788197556089
+      },
+      "model_wait_ms": {
+        "pairs": 5,
+        "personas": 5,
+        "off_total": 63747,
+        "on_total": 67405,
+        "ratio": 1.0573830925376881,
+        "lower": 0.6915185546861294,
+        "upper": 1.6168156949539882
+      },
+      "model_wait_ms_per_request": {
+        "off": {
+          "requests": 27,
+          "median": 1189,
+          "max": 10142
+        },
+        "on": {
+          "requests": 24,
+          "median": 1915,
+          "max": 10399
+        }
+      },
+      "input_tokens": {
+        "pairs": 5,
+        "personas": 5,
+        "off_total": 430652,
+        "on_total": 424157,
+        "ratio": 0.9849182170290629,
+        "lower": 0.9168812336446658,
+        "upper": 1.058003908393058
+      },
+      "reached_correct": {
+        "off": 5,
+        "on": 5
+      }
+    },
+    "task_start": {
+      "time": {
+        "pairs": 5,
+        "personas": 5,
+        "off_total": 97819,
+        "on_total": 82708,
+        "ratio": 0.8455208088408183,
+        "lower": 0.6879298365509795,
+        "upper": 1.0392146632816224
+      },
+      "success": {
+        "pairs": 5,
+        "personas": 5,
+        "off_successes": 4,
+        "on_successes": 5,
+        "delta": 0.2,
+        "lower": -0.355289021039548,
+        "upper": 0.755289021039548,
+        "discordant": {
+          "on_only": 1,
+          "off_only": 0
+        }
+      },
+      "tool_calls": {
+        "pairs": 5,
+        "personas": 5,
+        "off_total": 32,
+        "on_total": 24,
+        "ratio": 0.75,
+        "lower": 0.5339076641948192,
+        "upper": 1.064386338273796
+      },
+      "turns_to_correct": {
+        "pairs": 5,
+        "personas": 5,
+        "off_total": 31,
+        "on_total": 24,
+        "ratio": 0.7741935483870968,
+        "lower": 0.5783255533644298,
+        "upper": 1.0460168465420352
+      },
+      "tool_calls_to_correct": {
+        "pairs": 5,
+        "personas": 5,
+        "off_total": 32,
+        "on_total": 24,
+        "ratio": 0.75,
+        "lower": 0.5339076641948192,
+        "upper": 1.064386338273796
+      },
+      "model_wait_ms": {
+        "pairs": 5,
+        "personas": 5,
+        "off_total": 84417,
+        "on_total": 70717,
+        "ratio": 0.8377104137792151,
+        "lower": 0.6994177887535408,
+        "upper": 1.0033492986697279
+      },
+      "model_wait_ms_per_request": {
+        "off": {
+          "requests": 31,
+          "median": 2010,
+          "max": 10480
+        },
+        "on": {
+          "requests": 24,
+          "median": 1894,
+          "max": 11212
+        }
+      },
+      "input_tokens": {
+        "pairs": 5,
+        "personas": 5,
+        "off_total": 505750,
+        "on_total": 417164,
+        "ratio": 0.8248423133959466,
+        "lower": 0.6378561482049709,
+        "upper": 1.0666435207256706
+      },
+      "reached_correct": {
+        "off": 4,
+        "on": 5
+      }
+    }
+  },
+  "by_model": {
+    "claude-opus-5-5": {
+      "time": {
+        "pairs": 6,
+        "personas": 6,
+        "off_total": 120928,
+        "on_total": 107764,
+        "ratio": 0.8911418364646732,
+        "lower": 0.7112292981319893,
+        "upper": 1.116566172087046
+      },
+      "success": {
+        "pairs": 6,
+        "personas": 6,
+        "off_successes": 5,
+        "on_successes": 6,
+        "delta": 0.16666666666666666,
+        "lower": -0.26176363927271185,
+        "upper": 0.5950969726060451,
+        "discordant": {
+          "on_only": 1,
+          "off_only": 0
+        }
+      },
+      "tool_calls": {
+        "pairs": 6,
+        "personas": 6,
+        "off_total": 35,
+        "on_total": 30,
+        "ratio": 0.8571428571428571,
+        "lower": 0.5727702964284977,
+        "upper": 1.2887316217687375
+      },
+      "turns_to_correct": {
+        "pairs": 6,
+        "personas": 6,
+        "off_total": 40,
+        "on_total": 36,
+        "ratio": 0.9,
+        "lower": 0.6574825984015357,
+        "upper": 1.235353982530936
+      },
+      "tool_calls_to_correct": {
+        "pairs": 6,
+        "personas": 6,
+        "off_total": 35,
+        "on_total": 30,
+        "ratio": 0.8571428571428571,
+        "lower": 0.5727702964284977,
+        "upper": 1.2887316217687375
+      },
+      "model_wait_ms": {
+        "pairs": 6,
+        "personas": 6,
+        "off_total": 101491,
+        "on_total": 91612,
+        "ratio": 0.9026613197229311,
+        "lower": 0.7110068650616254,
+        "upper": 1.1459781387340902
+      },
+      "model_wait_ms_per_request": {
+        "off": {
+          "requests": 40,
+          "median": 1625,
+          "max": 10480
+        },
+        "on": {
+          "requests": 36,
+          "median": 1615.5,
+          "max": 11212
+        }
+      },
+      "input_tokens": {
+        "pairs": 6,
+        "personas": 6,
+        "off_total": 545430,
+        "on_total": 531061,
+        "ratio": 0.973655647837486,
+        "lower": 0.7081235854534094,
+        "upper": 1.3387569445049672
+      },
+      "reached_correct": {
+        "off": 5,
+        "on": 6
+      }
+    },
+    "claude-sonnet-5-5": {
+      "time": {
+        "pairs": 6,
+        "personas": 6,
+        "off_total": 85214,
+        "on_total": 82651,
+        "ratio": 0.96992278264135,
+        "lower": 0.9118146351548742,
+        "upper": 1.0317344231592351
+      },
+      "success": {
+        "pairs": 6,
+        "personas": 6,
+        "off_successes": 6,
+        "on_successes": 6,
+        "delta": 0,
+        "lower": 0,
+        "upper": 0,
+        "discordant": {
+          "on_only": 0,
+          "off_only": 0
+        }
+      },
+      "tool_calls": {
+        "pairs": 6,
+        "personas": 6,
+        "off_total": 30,
+        "on_total": 24,
+        "ratio": 0.8,
+        "lower": 0.6267752651180366,
+        "upper": 1.0294864640458783
+      },
+      "turns_to_correct": {
+        "pairs": 6,
+        "personas": 6,
+        "off_total": 34,
+        "on_total": 26,
+        "ratio": 0.7647058823529411,
+        "lower": 0.5944459801417162,
+        "upper": 0.9925243337643884
+      },
+      "tool_calls_to_correct": {
+        "pairs": 6,
+        "personas": 6,
+        "off_total": 30,
+        "on_total": 24,
+        "ratio": 0.8,
+        "lower": 0.6267752651180366,
+        "upper": 1.0294864640458783
+      },
+      "model_wait_ms": {
+        "pairs": 6,
+        "personas": 6,
+        "off_total": 70389,
+        "on_total": 67277,
+        "ratio": 0.9557885465058461,
+        "lower": 0.8858824542317532,
+        "upper": 1.0312116936013458
+      },
+      "model_wait_ms_per_request": {
+        "off": {
+          "requests": 34,
+          "median": 1155.5,
+          "max": 9128
+        },
+        "on": {
+          "requests": 26,
+          "median": 1358.5,
+          "max": 8714
+        }
+      },
+      "input_tokens": {
+        "pairs": 6,
+        "personas": 6,
+        "off_total": 458999,
+        "on_total": 452331,
+        "ratio": 0.9854727352347172,
+        "lower": 0.9088810065484723,
+        "upper": 1.068518910708764
+      },
+      "reached_correct": {
+        "off": 6,
+        "on": 5
+      }
+    },
+    "gpt-6.1-sol": {
+      "time": {
+        "pairs": 3,
+        "personas": 3,
+        "off_total": 58517,
+        "on_total": 57892,
+        "ratio": 0.9893193430968779,
+        "lower": 0.6297064027149792,
+        "upper": 1.554300446965511
+      },
+      "success": {
+        "pairs": 3,
+        "personas": 3,
+        "off_successes": 3,
+        "on_successes": 3,
+        "delta": 0,
+        "lower": 0,
+        "upper": 0,
+        "discordant": {
+          "on_only": 0,
+          "off_only": 0
+        }
+      },
+      "tool_calls": {
+        "pairs": 3,
+        "personas": 3,
+        "off_total": 23,
+        "on_total": 25,
+        "ratio": 1.0869565217391304,
+        "lower": 0.4892427543582431,
+        "upper": 2.4066904453713938
+      },
+      "turns_to_correct": {
+        "pairs": 3,
+        "personas": 3,
+        "off_total": 13,
+        "on_total": 16,
+        "ratio": 1.2307692307692308,
+        "lower": 0.2944191895492698,
+        "upper": 5.073810449586342
+      },
+      "tool_calls_to_correct": {
+        "pairs": 3,
+        "personas": 3,
+        "off_total": 23,
+        "on_total": 25,
+        "ratio": 1.0869565217391304,
+        "lower": 0.4892427543582431,
+        "upper": 2.4066904453713938
+      },
+      "model_wait_ms": {
+        "pairs": 3,
+        "personas": 3,
+        "off_total": 43331,
+        "on_total": 52811,
+        "ratio": 1.218781011285223,
+        "lower": 0.46086147194090704,
+        "upper": 3.223139902728539
+      },
+      "model_wait_ms_per_request": {
+        "off": {
+          "requests": 13,
+          "median": 3205,
+          "max": 7040
+        },
+        "on": {
+          "requests": 16,
+          "median": 3279,
+          "max": 6303
+        }
+      },
+      "input_tokens": {
+        "pairs": 3,
+        "personas": 3,
+        "off_total": 419951,
+        "on_total": 389677,
+        "ratio": 0.9279106371933868,
+        "lower": 0.6163078483259165,
+        "upper": 1.3970588111796023
+      },
+      "reached_correct": {
+        "off": 3,
+        "on": 2
+      }
+    }
+  },
+  "by_condition": {
+    "aged": {
+      "time": {
+        "pairs": 8,
+        "personas": 8,
+        "off_total": 145772,
+        "on_total": 139665,
+        "ratio": 0.9581058090717011,
+        "lower": 0.8482609477210392,
+        "upper": 1.082175265992591
+      },
+      "success": {
+        "pairs": 8,
+        "personas": 8,
+        "off_successes": 8,
+        "on_successes": 8,
+        "delta": 0,
+        "lower": 0,
+        "upper": 0,
+        "discordant": {
+          "on_only": 0,
+          "off_only": 0
+        }
+      },
+      "tool_calls": {
+        "pairs": 8,
+        "personas": 8,
+        "off_total": 49,
+        "on_total": 46,
+        "ratio": 0.9387755102040817,
+        "lower": 0.6972301239651256,
+        "upper": 1.265666733318315
+      },
+      "turns_to_correct": {
+        "pairs": 8,
+        "personas": 8,
+        "off_total": 49,
+        "on_total": 44,
+        "ratio": 0.8979591836734694,
+        "lower": 0.6468059247443364,
+        "upper": 1.2494981996420642
+      },
+      "tool_calls_to_correct": {
+        "pairs": 8,
+        "personas": 8,
+        "off_total": 49,
+        "on_total": 46,
+        "ratio": 0.9387755102040817,
+        "lower": 0.6972301239651256,
+        "upper": 1.265666733318315
+      },
+      "model_wait_ms": {
+        "pairs": 8,
+        "personas": 8,
+        "off_total": 118933,
+        "on_total": 118694,
+        "ratio": 0.9979904652199137,
+        "lower": 0.8127194658572678,
+        "upper": 1.2254966533644132
+      },
+      "model_wait_ms_per_request": {
+        "off": {
+          "requests": 49,
+          "median": 1781,
+          "max": 10480
+        },
+        "on": {
+          "requests": 44,
+          "median": 1660.5,
+          "max": 11212
+        }
+      },
+      "input_tokens": {
+        "pairs": 8,
+        "personas": 8,
+        "off_total": 799163,
+        "on_total": 777649,
+        "ratio": 0.9730793342534627,
+        "lower": 0.8298811808036705,
+        "upper": 1.1409867405516887
+      },
+      "reached_correct": {
+        "off": 8,
+        "on": 8
+      }
+    },
+    "crowded": {
+      "time": {
+        "pairs": 7,
+        "personas": 7,
+        "off_total": 118887,
+        "on_total": 108642,
+        "ratio": 0.9138257336798808,
+        "lower": 0.7517738840222496,
+        "upper": 1.1108102471504409
+      },
+      "success": {
+        "pairs": 7,
+        "personas": 7,
+        "off_successes": 6,
+        "on_successes": 7,
+        "delta": 0.14285714285714285,
+        "lower": -0.20670169302068975,
+        "upper": 0.49241597873497545,
+        "discordant": {
+          "on_only": 1,
+          "off_only": 0
+        }
+      },
+      "tool_calls": {
+        "pairs": 7,
+        "personas": 7,
+        "off_total": 39,
+        "on_total": 33,
+        "ratio": 0.8461538461538461,
+        "lower": 0.6342577802474969,
+        "upper": 1.134043254163217
+      },
+      "turns_to_correct": {
+        "pairs": 7,
+        "personas": 7,
+        "off_total": 38,
+        "on_total": 34,
+        "ratio": 0.8947368421052632,
+        "lower": 0.6864956564495891,
+        "upper": 1.169711978609654
+      },
+      "tool_calls_to_correct": {
+        "pairs": 7,
+        "personas": 7,
+        "off_total": 39,
+        "on_total": 33,
+        "ratio": 0.8461538461538461,
+        "lower": 0.6342577802474969,
+        "upper": 1.134043254163217
+      },
+      "model_wait_ms": {
+        "pairs": 7,
+        "personas": 7,
+        "off_total": 96278,
+        "on_total": 93006,
+        "ratio": 0.9660150813269905,
+        "lower": 0.7429812732788357,
+        "upper": 1.2560013447207898
+      },
+      "model_wait_ms_per_request": {
+        "off": {
+          "requests": 38,
+          "median": 1250.5,
+          "max": 10176
+        },
+        "on": {
+          "requests": 34,
+          "median": 1835.5,
+          "max": 9093
+        }
+      },
+      "input_tokens": {
+        "pairs": 7,
+        "personas": 7,
+        "off_total": 625217,
+        "on_total": 595420,
+        "ratio": 0.9523413470842923,
+        "lower": 0.7660152248367615,
+        "upper": 1.1839896709024615
+      },
+      "reached_correct": {
+        "off": 6,
+        "on": 5
+      }
+    }
+  },
+  "negative": {
+    "pairs": 5,
+    "briefs_on": 0,
+    "confident_wrong": {
+      "off": 4,
+      "on": 4
+    }
+  },
+  "pull": [
+    {
+      "key": "negative|20261222|claude|claude-sonnet-5-5|1",
+      "success": false,
+      "time_to_correct_ms": 2862,
+      "off_time_ms": 3258,
+      "pull_brief_calls": 1
+    },
+    {
+      "key": "negative|20261226|claude|claude-sonnet-5-5|1",
+      "success": false,
+      "time_to_correct_ms": 2398,
+      "off_time_ms": 3586,
+      "pull_brief_calls": 1
+    },
+    {
+      "key": "prep|20261222|claude|claude-sonnet-5-5|1",
+      "success": true,
+      "time_to_correct_ms": 12073,
+      "off_time_ms": 12498,
+      "pull_brief_calls": 1
+    },
+    {
+      "key": "prep|20261226|claude|claude-sonnet-5-5|1",
+      "success": true,
+      "time_to_correct_ms": 14041,
+      "off_time_ms": 15062,
+      "pull_brief_calls": 1
+    },
+    {
+      "key": "reply|20261222|claude|claude-sonnet-5-5|1",
+      "success": true,
+      "time_to_correct_ms": 13144,
+      "off_time_ms": 15723,
+      "pull_brief_calls": 1
+    },
+    {
+      "key": "reply|20261226|claude|claude-sonnet-5-5|1",
+      "success": true,
+      "time_to_correct_ms": 13446,
+      "off_time_ms": 13832,
+      "pull_brief_calls": 1
+    },
+    {
+      "key": "task_start|20261222|claude|claude-sonnet-5-5|1",
+      "success": true,
+      "time_to_correct_ms": 15193,
+      "off_time_ms": 15162,
+      "pull_brief_calls": 1
+    },
+    {
+      "key": "task_start|20261226|claude|claude-sonnet-5-5|1",
+      "success": true,
+      "time_to_correct_ms": 13713,
+      "off_time_ms": 12937,
+      "pull_brief_calls": 1
+    }
+  ],
+  "pull_brief_by_arm": {
+    "off": {
+      "cells": 20,
+      "cells_that_pulled": 19
+    },
+    "on": {
+      "cells": 20,
+      "cells_that_pulled": 15
+    },
+    "pull": {
+      "cells": 8,
+      "cells_that_pulled": 8
+    }
+  },
+  "control": {
+    "aged": {
+      "cells": 19,
+      "hot_memory_carried_a_needed_fact": 0,
+      "valid": true
+    },
+    "crowded": {
+      "cells": 17,
+      "hot_memory_carried_a_needed_fact": 0,
+      "valid": true
+    }
+  },
+  "brief": {
+    "sessions_on": 20,
+    "items": 30,
+    "false_pushes": 0,
+    "stale_items": 0,
+    "max_chars": 509,
+    "fired_on_positive": 15,
+    "positive_on_cells": 15,
+    "brief_reached_model": 0
+  },
+  "diagnostics": {
+    "surfaced": 15,
+    "acted_on": 15,
+    "repeated_stale": {
+      "off": 0,
+      "on": 0
+    },
+    "confident_wrong": {
+      "off": 5,
+      "on": 4,
+      "pull": 2
+    }
+  },
+  "latency": {
+    "cutoff_ms": 300,
+    "user_prompt_hook_ms": [
+      140,
+      167,
+      168,
+      177,
+      179,
+      179,
+      180,
+      185,
+      187,
+      190,
+      194,
+      194,
+      196,
+      196,
+      200,
+      202,
+      204,
+      204,
+      212,
+      215,
+      217,
+      218,
+      219,
+      222,
+      225,
+      225,
+      226,
+      231,
+      232,
+      234,
+      237,
+      237,
+      252,
+      252,
+      262,
+      285,
+      289,
+      289,
+      338,
+      366
+    ],
+    "replay_cold_turn_context_ms": [
+      118,
+      161,
+      115,
+      196,
+      143,
+      176,
+      150,
+      202,
+      126,
+      236,
+      98,
+      102,
+      161,
+      153,
+      116,
+      264,
+      234,
+      230,
+      134,
+      197,
+      102,
+      229,
+      118,
+      290,
+      117,
+      276,
+      92,
+      125,
+      124,
+      208,
+      126,
+      306,
+      174,
+      241,
+      98,
+      266,
+      113,
+      192,
+      183,
+      162,
+      113,
+      82,
+      134,
+      156,
+      165,
+      256,
+      146,
+      119
+    ],
+    "replay_cold_brief_dropped": 0,
+    "replay_cold_on_cells_ms": [
+      196,
+      176,
+      202,
+      153,
+      264,
+      230,
+      197,
+      229,
+      290,
+      208,
+      306,
+      241,
+      266,
+      192,
+      162
+    ],
+    "live_vs_possible": [
+      {
+        "id": "d7_prep_20261222_on",
+        "harness": "codex",
+        "live": 2,
+        "possible": 2,
+        "hook_ms": 196
+      },
+      {
+        "id": "d7_reply_20261222_on",
+        "harness": "codex",
+        "live": 2,
+        "possible": 2,
+        "hook_ms": 215
+      },
+      {
+        "id": "d7_task_start_20261222_on",
+        "harness": "codex",
+        "live": 2,
+        "possible": 2,
+        "hook_ms": 196
+      },
+      {
+        "id": "d7_prep_20261222_on",
+        "harness": "claude",
+        "live": 2,
+        "possible": 2,
+        "hook_ms": 177
+      },
+      {
+        "id": "d7_prep_20261226_on",
+        "harness": "claude",
+        "live": 2,
+        "possible": 2,
+        "hook_ms": 194
+      },
+      {
+        "id": "d7_reply_20261222_on",
+        "harness": "claude",
+        "live": 2,
+        "possible": 2,
+        "hook_ms": 194
+      },
+      {
+        "id": "d7_reply_20261226_on",
+        "harness": "claude",
+        "live": 2,
+        "possible": 2,
+        "hook_ms": 231
+      },
+      {
+        "id": "d7_task_start_20261222_on",
+        "harness": "claude",
+        "live": 2,
+        "possible": 2,
+        "hook_ms": 204
+      },
+      {
+        "id": "d7_task_start_20261226_on",
+        "harness": "claude",
+        "live": 2,
+        "possible": 2,
+        "hook_ms": 222
+      },
+      {
+        "id": "d7_prep_20261222_on",
+        "harness": "claude",
+        "live": 2,
+        "possible": 2,
+        "hook_ms": 212
+      },
+      {
+        "id": "d7_prep_20261226_on",
+        "harness": "claude",
+        "live": 2,
+        "possible": 2,
+        "hook_ms": 366
+      },
+      {
+        "id": "d7_reply_20261222_on",
+        "harness": "claude",
+        "live": 2,
+        "possible": 2,
+        "hook_ms": 338
+      },
+      {
+        "id": "d7_reply_20261226_on",
+        "harness": "claude",
+        "live": 2,
+        "possible": 2,
+        "hook_ms": 219
+      },
+      {
+        "id": "d7_task_start_20261222_on",
+        "harness": "claude",
+        "live": 2,
+        "possible": 2,
+        "hook_ms": 226
+      },
+      {
+        "id": "d7_task_start_20261226_on",
+        "harness": "claude",
+        "live": 2,
+        "possible": 2,
+        "hook_ms": 200
+      }
+    ]
+  },
+  "cost_usd": 3.7912587
+}

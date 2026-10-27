@@ -1,4 +1,4 @@
-# temporal-graph (graphiti-core 0.30.2, not Zep Cloud) on Neo4j 5.26 behind the shootout shim (eval/systems/PROTOCOL.md).
+# temporal-graph (the open-source library, not the hosted service) on Neo4j 5.26 behind the shootout shim (eval/systems/PROTOCOL.md).
 #
 #   SHIM_CONFIG=recipe|common  PROXY_URL=http://<metering proxy host:port>  docker compose up -d --build
 #

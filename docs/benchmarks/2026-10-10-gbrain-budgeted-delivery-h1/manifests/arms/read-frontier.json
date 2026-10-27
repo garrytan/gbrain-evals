@@ -1,0 +1,40 @@
+{
+  "policies": {
+    "fixed-evidence": {
+      "budget_tokens": 8000
+    }
+  },
+  "contexts": [
+    "pseudo-cap_only",
+    "pseudo-depth_first"
+  ],
+  "recipes": {
+    "pseudo-cap_only": {
+      "items": "cap_only-b_pseudo",
+      "render": "pseudo-session"
+    },
+    "pseudo-depth_first": {
+      "items": "depth_first-b_pseudo",
+      "render": "pseudo-session"
+    }
+  },
+  "readers": [
+    {
+      "id": "opus-5-5",
+      "model": "anthropic:claude-opus-5-5",
+      "contexts": [
+        "pseudo-cap_only",
+        "pseudo-depth_first"
+      ]
+    },
+    {
+      "id": "gpt-6-1-sol",
+      "model": "openai:gpt-6.1-sol",
+      "contexts": [
+        "pseudo-cap_only",
+        "pseudo-depth_first"
+      ]
+    }
+  ],
+  "judge": "none"
+}

@@ -1,0 +1,4 @@
+{"engine":"postgres","cell":"idle-10k","n":60,"resp_p50":44.3,"resp_p95":53.6,"resp_max":54.4,"service_p50":44.8,"service_p95":53.7,"cpu_p50":15.1}
+{"engine":"postgres","cell":"during-commit100","n":77,"resp_p50":37.7,"resp_p95":95.5,"resp_max":113.9,"service_p50":38.2,"service_p95":86.1,"cpu_p50":24.5,"sync_ms":[6500,6499,6250],"max_loop_lag_cpu_ms":[28,27,27],"ticks":[1214,1224,1169]}
+{"engine":"postgres","cell":"during-first-sync","n":306,"resp_p50":65.4,"resp_p95":121.4,"resp_max":279.1,"service_p50":64.7,"service_p95":117,"cpu_p50":42.2,"sync_ms":76500,"max_loop_lag_cpu_ms":96,"ticks":13922}
+{"engine":"postgres","cell":"idle-after","n":60,"resp_p50":49,"resp_p95":60,"resp_max":62.6,"service_p50":49.1,"service_p95":60.5,"cpu_p50":12.8}

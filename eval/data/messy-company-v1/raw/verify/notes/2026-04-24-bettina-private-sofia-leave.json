@@ -1,0 +1,42 @@
+{
+  "slug": "notes/2026-04-24-bettina-private-sofia-leave",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2026-04-24",
+    "owner_phrases": [
+      {
+        "mid": "notes/2026-04-24-bettina-private-sofia-leave#m1",
+        "phrase": "Sofia's benefits account",
+        "lines": [
+          9
+        ]
+      }
+    ],
+    "entity_occurrences": [],
+    "claims": [],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "dd62b6a1de895f091ab741372b8890265fdc539b1394b8329709a4d7c3e34648",
+  "response_text": "{\n  \"date_used\": \"2026-04-24\",\n  \"owner_phrases\": [\n    {\n      \"mid\": \"notes/2026-04-24-bettina-private-sofia-leave#m1\",\n      \"refers_to_customer_account\": false,\n      \"accounts\": [],\n      \"reading\": \"not about a customer account (a login, device, HR/expense account, a narrative 'account of', a vendor relationship, an employer)\",\n      \"note\": \"Sofia's benefits account is an HR account concerning an incomplete benefits document upload.\"\n    }\n  ],\n  \"extra_owner_phrases\": []\n}",
+  "parsed": {
+    "date_used": "2026-04-24",
+    "owner_phrases": [
+      {
+        "mid": "notes/2026-04-24-bettina-private-sofia-leave#m1",
+        "refers_to_customer_account": false,
+        "accounts": [],
+        "reading": "not about a customer account (a login, device, HR/expense account, a narrative 'account of', a vendor relationship, an employer)",
+        "note": "Sofia's benefits account is an HR account concerning an incomplete benefits document upload."
+      }
+    ],
+    "extra_owner_phrases": []
+  },
+  "usage": {
+    "input_tokens": 2395,
+    "output_tokens": 139,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.00618
+}

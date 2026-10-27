@@ -1,0 +1,144 @@
+Date: unknown
+user: Our discount stacking is wrong - two 50%-off coupons on a $100 item zero it out instead of leaving $25. And finance says even when it's not zero, mixed coupons don't match their model.
+assistant: apply_discounts sums the percentages and applies once, so 50% + 50% = 100% off. I'll make them compound sequentially, applying each to the running amount - that gives $25 for the two-50%-off case.
+user: That's only half of it. With a percent coupon plus a fixed-dollar coupon, the result depends on which order they were entered, and customers were ordering them to their advantage.
+assistant: So the order needs to be fixed rather than submission order. Should the fixed-dollar amount come off first, or the percentage?
+user: Percent first, always. Then the fixed amount.
+assistant: Got it - apply all percent discounts first (compounding), then fixed-amount ones, ignoring submission order. So $10-off + 50%-off on $100 is 50 then minus 10 = $40 either way. Deterministic: percent before fixed.
+
+---
+
+Date: unknown
+Git commit: Fix OrderedMultiDict equality to compare values against plain mappings
+OrderedMultiDict.__eq__ has a branch for comparing against a non-OMD
+mapping (anything with a keys() method, e.g. a dict). That branch
+computes other[selfk] == self[selfk] but throws the result away, so it
+only checks that every key of self exists in other and never compares
+the values. As a result an OMD compares equal to any same-keyed mapping
+regardless of the values:
+
+    >>> omd = OMD([('a', 1), ('b', 2)])
+    >>> omd == {'a': 999, 'b': 2}
+    True   # should be False
+
+The existing test_eq doesn't catch this because its dict case is written
+as d == omd, which dispatches to dict.__eq__ rather than OMD.__eq__; the
+buggy branch is only reached with the OMD on the left.
+
+Compare the values and return False on mismatch. The same __eq__ is
+duplicated in urlutils.OrderedMultiDict (used by QueryParamDict), so it's
+fixed there too. Added regression tests for both.
+
+---
+
+Date: unknown
+user: Hey @dev2, have you or anyone else run into issues chaining `boltons.urlutils.URL.navigate()`? I'm getting a `TypeError` when I try to do `my_url.navigate('/foo').navigate('/bar')`.
+assistant: Ah, yeah, I think I've seen that reported before, though I haven't debugged it myself yet. Is it something about the return type of the first `navigate()` call not being a proper `URL` object itself, or perhaps how `query_params` are being handled in the intermediate step?
+user: That's exactly what I'm suspecting. It seems like the object returned by the first `navigate()` call isn't fully compatible for the second call. Specifically, the `query_params` attribute of the intermediate object doesn't seem to be an `OrderedMultiDict` in a way the next `navigate` expects, leading to the `TypeError`.
+assistant: Right, I recall we had a subtle bug with `OrderedMultiDict` equality comparisons a while back, where it wouldn't correctly compare against plain dicts. Could be a similar underlying issue if `navigate` is doing some implicit conversion or reconstruction that loses the `OrderedMultiDict` type. Does the `TypeError` happen when accessing `query_params` or when *setting* it during the internal processing of the second `navigate`?
+user: It's when the second `navigate` tries to re-parse or merge parameters using the intermediate object's state. It expects methods specific to `OrderedMultiDict` but gets a plain `dict` or similar mapping. It makes me wonder if the `__str__` representation of the intermediate `URL` isn't round-tripping perfectly with `URL.__init__` when its components, especially query params, are re-parsed.
+assistant: Hmm, if it's about re-parsing the string representation, the `__str__` method should be producing a fully valid URL string. But the internal state, especially `query_params`, *must* remain an `OrderedMultiDict` throughout to properly support multi-value query arguments. It sounds like `navigate` might be implicitly converting `query_params` to a standard dict somewhere during its internal processing or when constructing the new `URL` object. We should definitely add a dedicated test for this specific chaining behavior, perhaps expanding on that 'TODO test' we have in `test_urlutils.py` to cover this edge case.
+user: Exactly! A simple `my_url.navigate(...).query_params` works fine, but chaining the *next* `navigate` on the result fails. I'm thinking the fix would involve explicitly ensuring that the `query_params` of any *new* `URL` instance created by `navigate` is always an `OrderedMultiDict`, even if it's constructed from intermediate parts that might be plain dicts. Maybe `URL.from_parts` needs to be more robust there.
+assistant: Yeah, that makes perfect sense. It's a common pattern to pass `dict`-like objects around for parameters, but `URL` needs the `OrderedMultiDict` behavior for its query handling. We could ensure any dict passed into `URL` or `URL.from_parts` for `query_params` is immediately wrapped or converted to an `OrderedMultiDict` if it isn't already. I'll take a look at the `navigate` implementation and `URL.__init__` to confirm where that type conversion might be implicitly happening.
+user: Cool, thanks! I'll try to put together a test case in `test_urlutils.py` that specifically reproduces this `TypeError` when chaining, which we can then use to validate the fix.
+
+---
+
+Date: unknown
+user: Hey Ben, I was looking at `test_dictutils.py` and specifically the `test_orderedmultidict_pickle` case. It reminded me of a bug we had with OMD pickling a while back. What was the exact issue again with Python 3 and OMD's state?
+assistant: Oh, yeah, that was a fun one. The core of it was `OrderedMultiDict` on Python 3 not always pickling correctly because `__getstate__` wasn't explicitly defined, or rather, not being correctly picked up. We actually addressed that in `0341ab3`, and then explicitly added `__getstate__` to `through_methods` in `75cd86b`, which helped streamline that and other special method handling.
+user: Right, `through_methods`. I remember `bpo-26579` now, that's the Python CPython issue context, I think. So the `through_methods` mechanism basically helps `OrderedMultiDict` delegate certain operations to its internal `_data` structure, correct? For `__getstate__`, was the problem that Python 3's default pickling mechanism couldn't correctly infer the state for OMD's internal list of items?
+assistant: Exactly. Without an explicit `__getstate__` (or `__slots__` with specific configuration), Python's default pickler might just try to pickle `__dict__`. But `OrderedMultiDict` fundamentally stores its state as a list of `(key, value)` pairs, not just in `__dict__`. Adding `__getstate__` explicitly ensures that we always serialize *that* list, which is the canonical representation of OMD's content, making it truly picklable under Python 3.
+user: Got it. So it’s similar to how `OrderedMultiDict` handles its `__eq__` method, where it needs specific logic to compare the order and multiple values for keys, rather than just relying on a simple `dict` comparison. These custom data structures really need careful attention to all these dunder methods, like the fix in `c463d16` for equality.
+assistant: Absolutely. It highlights why `OrderedMultiDict` exists in the first place, offering richer semantics than a plain dict. The same attention went into adding `__ior__` support, like in `46599bc`. You can't just slap a `|=` on it and expect it to do the right thing without careful consideration of how to merge values for existing keys, respecting the 'multi' aspect and order.
+user: That makes sense. For `__ior__` and pickling, do we have solid test cases covering scenarios like an empty `OrderedMultiDict` being updated, or pickling an OMD that has multiple values for the same key? Or even an OMD with empty values? I'm thinking about the `OneToOne.update` fix with empty iterables from `6cac49c` – another example where empty inputs tripped things up.
+assistant: We definitely aim for that level of coverage. For `__ior__`, there are specific tests that assert correct multi-value merging and item order preservation. And `test_orderedmultidict_pickle` has several variants, including OMDs with multiple values and empty inputs. The `OneToOne.update` fix was a good reminder to always double-check those edge cases, so it influences our approach to testing other custom methods in `dictutils` too.
+user: Good to know. It feels like `boltons` has a solid track record of catching these subtle data structure behaviors, especially with things like `OrderedMultiDict` and its list-of-tuples internal representation. It's a testament to good test coverage and understanding the Python data model deeply.
+assistant: Agreed. It's an ongoing process. Every time we add a new feature, like `__ior__`, or encounter a nuance like the Python 3 pickling behavior, we learn and strengthen the overall robustness of the library. That's why these explicit fixes and additions, even for dunder methods, are so critical for a utility library aiming for broad use.
+
+---
+
+Date: unknown
+user: Hey Ben, just merged your `listutils` tests. Looks good. I was actually just wrestling with `BarrelList` again last week. That `insert` behavior can be a bit surprising. Did those new tests cover the case where you try to `insert` an item *before* the effective start of the list?
+assistant: Yeah, that's exactly what 25e6d6b addressed. We had a subtle bug where `insert(0, item)` would behave differently than expected if the internal list was empty or if its `start` index wasn't 0. The new `test_insert_before_start` in `test_listutils.py` specifically targets that. It's a tricky class to test comprehensively due to its internal segment management.
+user: Right, I recall that. It's almost like it's trying to be a deque and a list simultaneously, but with the 'barreling' behavior adding another layer. How do you even go about sorting something like that? I saw a commit about fixing `barrellist sort with multiple lists` – that sounds like a nightmare.
+assistant: It was, definitely. f9c4f30 was a pretty critical fix. The issue was that `BarrelList` internally manages multiple segments. When you call `sort()`, it needs to collect all items, sort them, and then re-distribute them correctly back into potentially new segments, while maintaining the overall `BarrelList` structure and `start`/`end` indices. The previous implementation could get out of sync if there were gaps or overlapping logic in its segment handling during the sort.
+user: So, if you had `[[1, 2], [], [3, 4]]` as internal segments, sorting that would mean flattening to `[1, 2, 3, 4]`, sorting (which might not change it here), and then what? Re-segmenting it, potentially differently? That sounds like a lot of state to manage correctly in a test.
+assistant: Exactly. The `sort` implementation basically converts to a flat list, sorts, then rebuilds. The trick is ensuring the rebuild correctly handles the `start` and `end` pointers and any internal segment boundaries. We added a few tests in `test_listutils.py`, like `test_barrel_list_sort_multiple_segments`, specifically for that scenario. It's designed to ensure that even with sparse or discontiguous segments, the final `BarrelList` looks and behaves like a sorted flat list.
+user: Good to know those edge cases are covered. I also noticed you cleaned up the `if __name__ == "__main__":` block in `listutils` as part of d297d73. Moving away from those ad-hoc examples to dedicated unit tests is a good call for maintainability, especially for something as nuanced as `BarrelList`.
+assistant: Definitely. That `main` block was mostly for early development and examples. Formalizing the tests in `test_listutils.py` makes it much easier to catch regressions and understand intended behavior. It also aligns better with how other `boltons` modules are tested. Plus, it tidied up the module a bit, which was a nice side effect of the `pyupgrade` pass earlier too, as seen in 675afd8.
+
+---
+
+Date: unknown
+user: Hey, I was just looking at the `mathutils.py` changes for `ceil` and `floor` from `b6f61b8`. I noticed the `bisect_left`/`bisect_right` usage in there. What was the core motivation for that change? I thought we had a pretty straightforward implementation before, albeit maybe a bit verbose.
+assistant: Yeah, that was the big re-implementation. The old approach had some subtle correctness issues, especially around negative numbers and edge cases with certain floats, which `issue #36` highlighted. The `bisect` approach, while maybe less intuitive initially, actually provides a much more robust and mathematically sound way to find the 'next' integer boundary for arbitrary comparable types, not just floats. It aligns better with how `math.ceil` and `math.floor` are conceptually defined for real numbers.
+user: Right, I vaguely remember `issue #36` now. So it wasn't strictly a performance play, more about correctness and generality? I recall `fb5b262` mentioning 'simpler, more like stdlib'. Did that refactor happen *after* the `bisect` switch, or was it a separate cleanup?
+assistant: Good question. The 'simpler, more like stdlib' part in `fb5b262` was a subsequent refinement, after the `bisect` implementation landed. Once we had the robust core via `bisect`, we could then simplify the surrounding logic and unify the `ceil`/`floor` implementations more, making them mirror the standard library's behavior and input/output expectations closely. It was about stripping away some of the conditional logic that the `bisect` call made redundant.
+user: Makes sense. I'm looking at `mathutils_test.py` now, specifically the `TestMathUtils` class. I see a lot of parameterized tests for `ceil_func` and `floor_func` in `b175ab7` that got updated again in `fb5b262`. Were there any tricky test cases that surfaced with the `bisect` approach or the 'stdlib-like' refactor?
+assistant: Absolutely. The preparation in `b175ab7` was crucial to really pin down the behavior. We added specific tests for values like `-0.5`, `0.0`, `0.5`, `float('inf')`, `float('-inf')`, and especially numbers very close to integers, both positive and negative, like `3.00000000000000001` and `2.9999999999999999`. The `bisect` method correctly handles the precision boundaries where a naive `int()` cast followed by an adjustment might fail or become ambiguous.
+user: That's exactly what I was wondering about. Did we consider adding any `decimal.Decimal` cases to `TestMathUtils`? `bisect` should theoretically work with anything comparable, but `Decimal` has its own precision characteristics that sometimes trip things up.
+assistant: We did briefly consider `Decimal`, but ultimately decided against it for the core `mathutils` functions in `boltons`. The primary focus has been on `float` and standard numeric types. While `bisect` *does* work with `Decimal`, `mathutils.py` traditionally operates more in the realm of generic, duck-typed numeric operations where `float` is the common denominator. Adding `Decimal` would bring in a different set of precision concerns that might overly complicate the `ceil`/`floor` functions themselves, rather than testing the `bisect` mechanism's generality.
+user: Fair enough, keeping it focused. So, if someone needed `Decimal` support for `ceil`/`floor`, they'd probably use `decimal.Context.ceil()` or `floor()` directly. One last thing – any performance regressions from switching to `bisect` for common float inputs? It feels like a slightly heavier hammer than a direct cast and conditional.
+assistant: For most typical `float` inputs, especially small, positive ones, the difference is negligible. `bisect` is highly optimized in C, and for a short list (which is implicitly generated or handled internally in this context), it's very fast. We did some quick benchmarking, and the correctness gains far outweighed any micro-optimizations we might get from a simpler, but potentially less robust, `float`-specific approach. The `bisect` approach really shines for its extensibility to other comparable types, even if `float` is the most common.
+
+---
+
+Date: unknown
+user: Hey Beth, I was playing around with `iterutils.research` the other day, specifically trying to use the `enter` parameter for some custom graph traversal logic. I noticed that with a sufficiently complex `enter` callable, especially one that might re-evaluate parts of the structure, performance can dip if you revisit the same subgraphs.
+assistant: Yeah, that's a common observation with `research` if you're hitting the same nodes repeatedly. Did you try enabling the `cache` option? That's exactly what it's for, to memoize traversal decisions on already visited objects.
+user: I did, but it got me thinking about how that `cache` interacts with the custom `enter` function. If my `enter` callable is doing some really granular inspection or its behavior depends on something beyond just the object's identity, how does the caching mechanism decide what's a 'hit'? Is it purely `id()` based, or does it try to factor in the `enter` callable itself?
+assistant: Good question. The `cache` option for `research` (and `remap` too) primarily uses the object's `id()` as the key. So, if your `enter` function's logic produces different outcomes for the *same object identity* based on some external state or context, the cache won't detect that change. It's designed to memoize the decision of whether or not to descend into an *already visited object*, not to cache the arbitrary output of your `enter` function.
+user: Okay, that clarifies it. It's for preventing redundant graph traversal rather than generic function output memoization. I was briefly worried about scenarios where an `enter` callable might be stateful or dynamically change its criteria for the same object. So, for expensive calculations within `enter` itself, it'd still be on us to memoize that internally, or wrap the `enter` callable.
+assistant: Exactly. If the `enter` function's *computation* is expensive, independent of whether the object has been visited, you'd want `functools.lru_cache` on your `enter` method, or some similar internal memoization. The `research` cache optimizes the *traversal path* through the object graph.
+user: Makes perfect sense now. Shifting gears slightly, remember the `partition` function? When we extended it to accept multiple predicates, how did we decide on the evaluation order for those? Is it strictly sequential based on the list of predicates passed in, determining which bucket an item lands in?
+assistant: Yes, absolutely. For `iterutils.partition`, the order of the predicates in the list is paramount. An item is evaluated against each predicate in turn, and it gets assigned to the bucket corresponding to the *first* predicate that returns `True`. Any item that doesn't satisfy any of the provided predicates goes into the final 'remainder' bucket.
+user: And that prioritization is explicitly covered in the tests, right? To ensure that if an item could theoretically satisfy multiple predicates, it consistently lands in the bucket of the first matching one, not some arbitrary or unstable order.
+assistant: Definitely. `test_iterutils.py` has specific test cases for `partition` with multiple overlapping predicates. We made sure to verify that the output buckets directly correspond to the input predicate order, including the strict first-match priority. It's critical for the predictability of the function.
+
+---
+
+Date: unknown
+user: Hey Ben, I was poking around `bench_omd.py` again, specifically looking at how we set up the test data for the `OrderedMultiDict` benchmarks. We've had all those `pyupgrade` runs, and Python 2 is long gone, but some parts still feel a bit 'transitional' to me.
+assistant: Yeah, I know what you mean. The initial `Python 3 fixes` commit and dropping 2.6/2.7 support was really just about getting things *working* without major breaks. What specifically caught your eye in the data generation logic?
+user: Well, take a look at how we prepare some of the key-value pairs in functions like `_generate_test_data`. There are a few `list(map(...))` and `list(zip(...))` constructions. It seems like in many cases, especially when passed directly into a constructor that accepts an iterable, the `list()` wrapping might be unnecessary. We could just pass the `map` or `zip` iterator directly.
+assistant: Hmm, you're right. `pyupgrade --py3-plus` would usually leave those alone because it's syntactically valid in both Python 2 (where `map`/`zip` returned lists) and Python 3. My guess is it was originally added for Python 2 compatibility, and we just kept it for consistency or maybe out of habit during the migration. Do you think it'd have a noticeable impact on the benchmark itself, beyond just memory usage?
+user: Potentially, yes. Especially for the larger dataset sizes where we're generating thousands of items. Creating an intermediate list of that magnitude, only for it to be immediately iterated over by the `OrderedMultiDict` constructor, feels redundant. It might slightly skew the `OMD` construction time by including the list materialization overhead.
+assistant: That's a fair point. We're trying to benchmark `OMD` and `OMI` operations, not Python's built-in list creation. If we remove the `list()` wrapper, the `OrderedMultiDict` constructor would directly consume the iterator. Have you checked if any downstream logic in `_run_bench_omd` or `_run_bench_omi` explicitly expects a list object from `_generate_test_data` for later operations, like slicing or repeated iteration?
+user: I did a quick scan. For most of the `OMD` benchmarks, the generated data is used right away to construct the dictionary, or iterated over once. It doesn't seem like we're slicing it or accessing by index later, which would necessitate a materialized list. So, an iterator should be perfectly fine and more efficient.
+assistant: Okay, I'm onboard with that then. It's a clean Python 3 idiomatic change. Just to be safe, maybe we should add a quick assertion within `_run_bench_omd` right after construction, to ensure `len(my_omd) == expected_data_size` if we make that change. That way, we're absolutely sure we didn't accidentally alter the actual data *count* being benchmarked due to some subtle iterator exhaustion or an unexpected side effect.
+user: Good call, that's a solid sanity check. We definitely want to be sure the benchmark payload remains identical in size and content. I'll put together a PR, stripping out those explicit `list()` calls where they're not strictly needed and adding that `len()` assertion for the affected `OrderedMultiDict` benchmarks.
+assistant: Sounds good, Alex. It's important to keep refining these benchmarks now that we're firmly in the Python 3 era. The original Python 2.6/2.7 deprecation and subsequent `pyupgrade` passes got us most of the way, but these subtle cleanups still matter for both accuracy and code readability.
+
+---
+
+Date: unknown
+user: Hey, I was just looking through `test_queueutils.py` again, specifically the `test_float_priority_ordering` test, and it got me thinking about the float priority support we added with `90e7426`.
+assistant: Oh yeah, the one that enabled floating point values for `PriorityQueue` priorities. What about it? Does it seem robust enough for edge cases?
+user: That's exactly it. The current test cases cover basic ordering, but what about really close float values? Or the implications of how floats compare, where `0.1 + 0.2` isn't strictly `0.3`? Does that subtle difference potentially affect the dequeue order in a way we should explicitly test for?
+assistant: That's a good point. The `PriorityQueue` implementation uses standard Python object comparison for priorities, so it would just use the exact float comparison results. We don't have any `math.isclose` or epsilon-based logic within the queue itself. So if `p1 != p2` due to float precision, the queue will treat them as distinct priorities.
+user: Right, which is generally fine for the contract of a min-heap. But in `test_float_priority_ordering`, we're mostly testing clearly distinct values. I'm wondering if we should add a case where we push items with priorities like `0.1 + 0.2` and `0.3` and then explicitly assert that the queue correctly pulls out the 'actual' minimum based on *its* internal float comparison, even if a human might expect them to be equal.
+assistant: I see what you mean. We'd be testing the `PriorityQueue`'s behavior under the hood with exact float comparisons, rather than asserting that it *treats* them as equal. That would be a good test of the contract with Python's float semantics. It's a bit more subtle than a typical 'priority X comes before priority Y' test.
+user: Exactly. And it also highlights how the `PriorityQueue` handles insertion stability for equal priority values. If `0.1 + 0.2` and `0.3` aren't *strictly* equal, then we don't have a stability guarantee for them as 'equal' items. It clarifies expectations.
+assistant: Yeah, that clarifies things for anyone using float priorities. We can add a test case in `test_float_priority_ordering` that specifically constructs priorities like that, then pushes them and asserts the precise order. We could even explicitly `assertNotEqual` the raw float priorities in the test setup to highlight the point, then check the queue's output.
+user: That's a neat idea for the test itself! Makes the intent super clear. I'm imagining a little setup where we `q.put((0.1+0.2, 'item_A'))` and `q.put((0.3, 'item_B'))`, confirm `(0.1+0.2) != 0.3`, then verify `q.get()` returns the item corresponding to the slightly smaller float. Just to be sure the heap sorts it as distinct.
+assistant: Sounds like a solid plan. It would definitely round out the coverage for float priorities. The recent `pyupgrade --py3-plus` pass (`675afd8`) cleaned up a lot of the test syntax too, so adding new, precise assertions should be pretty straightforward now with f-strings and clearer syntax for messages.
+user: Oh right, I forgot about that syntax cleanup. That should make it easier to write this specific kind of test without too much boilerplate. I'll draft something and open a PR later today to add that more nuanced float comparison test to `test_float_priority_ordering`.
+assistant: Awesome, I'll keep an eye out for it. Good catch on that detail; it's the kind of thing that can trip up users if not explicitly covered in tests and documentation.
+
+---
+
+Date: unknown
+Git commit: Fix barrellist sort with multiple lists
+
+---
+
+Date: unknown
+Git commit: fix(strutils): bytes2human rolls over at exact powers of 1024
+bytes2human(1024) returned '1024B' instead of '1K' (and 1048576 ->
+'1024K' instead of '1M'), because the unit-selection loop compared the
+value with '<=' against each boundary and so stopped one unit too early
+at an exact power of 1024. Use '<' so exact boundaries advance to the
+next unit. Sub-boundary, mid-range and negative values are unchanged.
+
+Adds a regression test (proven to fail on the old code) and a doctest.

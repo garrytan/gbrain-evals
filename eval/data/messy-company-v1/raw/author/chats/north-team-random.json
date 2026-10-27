@@ -1,0 +1,41 @@
+{
+  "slug": "chats/north-team-random",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: chat\nTitle: #north-random (export, no date)\nDate: UNDATED. Do not include any date, year, month name, weekday, or relative date reference (\"yesterday\", \"last week\") anywhere in the document.\nWriter: Marcus Lindqvist\nVoice: terse and practical\nFormat: a chat log with [HH:MM] timestamps and lowercase usernames\nLength: about 365 words\nDate style in the body: mixed: some ISO, some casual (ignore: undated)\nTypos: one or two small natural typos (never in names or required phrases)\n\nBrief:\nAn undated Slack export from the North team's random channel: lunch orders, a fantasy football argument, someone asking whether Dana's Slack account is broken because her status is stuck, and a passing comment about one account. Do not include any dates or weekdays.\n\nRequired phrases:\n- Use the exact phrase \"Dana's freight account\" once, but vaguely: the writer does not say which account it is, and nothing nearby (name, location, numbers, products) may identify one. Keep that sentence generic, like a passing comment.\n- Use the exact phrase \"Dana's Slack account\" once, in the sense of: her login on the chat tool. It must not be about a customer account.\n- Use the exact phrase \"Marcus's freight account\" once, but vaguely: the writer does not say which account it is, and nothing nearby (name, location, numbers, products) may identify one. Keep that sentence generic, like a passing comment.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Ilse Varga: North team lead\n- Dana Okafor: Account manager, North team\n- Marcus Lindqvist: Account manager, North team\n- Thea Ramaswell: Director of Yard Operations\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Quarrendon Freight Lines: truckload freight carrier, Upper Midwest; main contact Thea Ramaswell, Director of Yard Operations; codes/nicknames QFL, Q-Freight\n- Brackenwater Freight Co.: less-than-truckload freight, Great Lakes; codes/nicknames BWF, Bracken\n- Tamsin Cold Chain: refrigerated warehousing, Pacific Northwest; codes/nicknames TCC\n- Orrin Mills: textile mill, Carolinas; codes/nicknames ORM, TCC\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what (background only; don't restate unless the brief asks):\n(This page is undated. Do not state who manages which account.)",
+      "response_text": "# #north-random (export, no date)\n\n[11:42] marcus.lindqvist: putting in the sandwich run to Rizzo's. cutoff in 10 mins.\n\n[11:43] ilse.varga: turkey club on sourdough, no tomato. thanks.\n\n[11:44] june.osei-lark: if i'm in this channel do i get a sandwich or is it strictly north pod\n\n[11:44] marcus.lindqvist: if you walk over to the 4th floor desk to grab it, sure.\n\n[11:45] june.osei-lark: spicy italian, extra peppers. you're a saint. also ilse you still haven't accepted my trade offer.\n\n[11:46] ilse.varga: because a backup tight end and a kicker with a groin strain for my WR1 is highway robbery, june.\n\n[11:47] june.osei-lark: he's getting red zone targets! look at the snap count!\n\n[11:47] marcus.lindqvist: kicking both of you out of the league if you veto my waiver claim again. anyone hear from dana on food?\n\n[11:48] ilse.varga: is Dana's Slack account broken? her status has been stuck on the little palm tree icon with \"In a huddle\" for like six hours.\n\n[11:49] marcus.lindqvist: desktop client cache bug probably. i'll just get her the usual pesto chicken wrap.\n\n[11:50] dana.okafor: wait i'm here! sorry, phone app wasn't syncing and i couldn't clear the huddle thing. yes to the pesto wrap please.\n\n[11:51] june.osei-lark: speaking of huddles, who left the screen share running in Zoom Room B? there was a massive spreadsheet open from Marcus's freight account just sitting on the big monitor.\n\n[11:52] marcus.lindqvist: not me. i haven't been in B at all.\n\n[11:52] dana.okafor: oh shoot that might have been my laptop before the dongle died.\n\n[11:53] marcus.lindqvist: yeah that was probably Dana's freight account then. i closed the window when i walked past to grab coffee anyway.\n\n[11:54] dana.okafor: thank you, that room's HDMI cable is possessed.\n\n[11:55] ilse.varga: IT has ticket #4092 open to replace the hub in there, just don't unplug the main power brick under the table or the polycom resets.\n\n[11:56] marcus.lindqvist: alright order placed. total was $58.40, Venmo requests going out. june don't make me chase you for $14 like with the taco order.\n\n[11:57] june.osei-lark: paid! and ilse i'm sweetening the pot with my #2 running back, check the app.\n\n[11:58] ilse.varga: still a hard no.\n\n[11:58] marcus.lindqvist: heading out to pick up, back in 15.",
+      "usage": {
+        "input_tokens": 1235,
+        "output_tokens": 745,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.00992,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1235,
+          "candidatesTokenCount": 745,
+          "totalTokenCount": 1980,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1235
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 745
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

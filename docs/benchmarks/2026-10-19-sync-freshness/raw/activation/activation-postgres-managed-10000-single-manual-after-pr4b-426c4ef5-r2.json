@@ -1,0 +1,179 @@
+{
+  "schema": "gbrain-sync-activation/1",
+  "cell": "postgres-managed-10000-single-manual-after-pr4b-426c4ef5-r2",
+  "label": "after-pr4b-426c4ef5-r2",
+  "gbrain_rev": "426c4ef5",
+  "brain_rev": "4ba4c36f",
+  "at": "2026-10-20T03:22:18.455Z",
+  "params": {
+    "engine": "postgres",
+    "pages": 10000,
+    "max_passes": 10
+  },
+  "machine": {
+    "cores": 4,
+    "cpu_model": "AMD EPYC",
+    "ram_gb": 16,
+    "kernel": "6.1.158+",
+    "bun": "1.4.3"
+  },
+  "build": {
+    "engine": "postgres",
+    "mode": "managed",
+    "pages": 10000,
+    "sources": [
+      "bench"
+    ],
+    "rev": "4ba4c36f",
+    "built_at": "2026-10-20T03:22:00.812Z",
+    "cloned_from": "postgres-classic-10000-4ba4c36f",
+    "clone_ms": 1606.7,
+    "activate_ms": 1682.2,
+    "first_managed_sync": {
+      "ms": 14290.255615234375,
+      "runs": 1,
+      "statuses": [
+        "up_to_date"
+      ]
+    },
+    "first_managed_sync_statements": {
+      "calls": 2487,
+      "calls_ex_txn": 2256,
+      "total_ms": 1364.8,
+      "top": [
+        {
+          "query": "begin",
+          "calls": 212,
+          "total_ms": 0.3
+        },
+        {
+          "query": "SELECT $3 FROM gbrain_cycle_locks WHERE id=$1 AND acquisition_token=$2::uuid AND ttl_expires_at > now() FOR SHARE",
+          "calls": 202,
+          "total_ms": 8.4
+        },
+        {
+          "query": "SELECT enabled FROM persistence_brain WHERE singleton=$1",
+          "calls": 103,
+          "total_ms": 2.1
+        },
+        {
+          "query": "SELECT key, value FROM config",
+          "calls": 103,
+          "total_ms": 1.6
+        },
+        {
+          "query": "SELECT s.source_id,s.source_incarnation,s.worktree_id,s.relative_path, s.topology_generation::text AS topology_generation,w.owner_host_id,w.owner_epoch::text AS owner_epoch,w.state, h.local_path,h.coo",
+          "calls": 103,
+          "total_ms": 3.8
+        },
+        {
+          "query": "SELECT local_path AS value FROM sources WHERE id = $1",
+          "calls": 102,
+          "total_ms": 1.5
+        },
+        {
+          "query": "INSERT INTO op_checkpoints(op,fingerprint,completed_keys,updated_at) VALUES($1,$2,jsonb_build_array($3::text::jsonb),now()) ON CONFLICT (op,fingerprint) DO UPDATE SET completed_keys=EXCLUDED.completed",
+          "calls": 102,
+          "total_ms": 23.5
+        },
+        {
+          "query": "SELECT to_regclass($1) IS NOT NULL AS present",
+          "calls": 102,
+          "total_ms": 1
+        },
+        {
+          "query": "SELECT revoked_at,credential_hash,lane,grant_ceiling FROM persistence_local_writers WHERE id=$1::uuid",
+          "calls": 101,
+          "total_ms": 2.5
+        },
+        {
+          "query": "WITH wanted AS ( SELECT v.slug AS batch_slug, v.source_id AS batch_source_id, v.n AS batch_n, p.id AS batch_page_id, COALESCE(sum(octet_length(p.compiled_truth) + COALESCE(octet_length(p.timeline), $5",
+          "calls": 100,
+          "total_ms": 598.3
+        },
+        {
+          "query": "SELECT lane,revoked_at,grant_ceiling FROM persistence_local_writers WHERE id=$1::uuid",
+          "calls": 100,
+          "total_ms": 2.3
+        },
+        {
+          "query": "SELECT id,slug,source_path,deleted_at FROM pages WHERE source_id=$1 AND source_path=ANY($2::text[])",
+          "calls": 100,
+          "total_ms": 108.1
+        },
+        {
+          "query": "SELECT DISTINCT page_id FROM takes WHERE page_id=ANY($1::bigint[])",
+          "calls": 100,
+          "total_ms": 0.7
+        },
+        {
+          "query": "SELECT id,chunker_version FROM pages WHERE id=ANY($1::bigint[]) AND deleted_at IS NULL AND body_storage IS DISTINCT FROM $2",
+          "calls": 100,
+          "total_ms": 31
+        },
+        {
+          "query": "SELECT config FROM sources WHERE id = $1",
+          "calls": 100,
+          "total_ms": 1.7
+        },
+        {
+          "query": "SELECT brain_id FROM persistence_brain WHERE singleton=$1",
+          "calls": 100,
+          "total_ms": 1.7
+        },
+        {
+          "query": "SELECT p.source_id,p.source_incarnation,s.local_path AS source_root, h.local_path AS worktree_root,b.relative_path FROM shared_skill_packs p JOIN sources s ON s.id=p.source_id AND s.incarnation=p.sour",
+          "calls": 100,
+          "total_ms": 2.2
+        },
+        {
+          "query": "SELECT content_hash,slug FROM page_purges WHERE source_id=$1 ORDER BY purged_at DESC LIMIT $2",
+          "calls": 100,
+          "total_ms": 1.6
+        },
+        {
+          "query": "SELECT page_id,id,date::text AS date,source,summary,detail FROM timeline_entries WHERE page_id=ANY($1::bigint[]) AND event_page_id IS NULL ORDER BY page_id,date,id",
+          "calls": 100,
+          "total_ms": 1.2
+        },
+        {
+          "query": "SELECT id, knowledge_revision::text AS revision FROM pages WHERE source_id=$1 AND deleted_at IS NULL AND id=ANY($2::int[]) FOR SHARE",
+          "calls": 100,
+          "total_ms": 42.7
+        },
+        {
+          "query": "INSERT INTO op_checkpoints(op,fingerprint,completed_keys) SELECT $1, entry->>$3, jsonb_build_array(entry->$4) FROM jsonb_array_elements($2::text::jsonb) AS entry ON CONFLICT(op,fingerprint) DO UPDATE ",
+          "calls": 87,
+          "total_ms": 402.8
+        },
+        {
+          "query": "SELECT value FROM config WHERE key = $1",
+          "calls": 23,
+          "total_ms": 0.2
+        },
+        {
+          "query": "commit",
+          "calls": 19,
+          "total_ms": 0
+        },
+        {
+          "query": "INSERT INTO op_checkpoints(op,fingerprint,completed_keys) SELECT $1, entry->>$3, jsonb_build_array(entry->$4) FROM jsonb_array_elements($2::text::jsonb) AS entry ON CONFLICT(op,fingerprint) DO UPDATE ",
+          "calls": 13,
+          "total_ms": 52.2
+        },
+        {
+          "query": "select b.oid, b.typarray from pg_catalog.pg_type a left join pg_catalog.pg_type b on b.oid = a.typelem where a.typcategory = $1 group by b.oid, b.typarray order by b.oid",
+          "calls": 10,
+          "total_ms": 12
+        }
+      ]
+    }
+  },
+  "converged": true,
+  "passes": 1,
+  "wall_ms": 14290.3,
+  "statements": {
+    "calls": 2487,
+    "calls_ex_txn": 2256
+  }
+}

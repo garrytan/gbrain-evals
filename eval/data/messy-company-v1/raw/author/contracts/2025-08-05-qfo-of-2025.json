@@ -1,0 +1,41 @@
+{
+  "slug": "contracts/2025-08-05-qfo-of-2025",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: record\nTitle: Order Form: Quillfeather Outfitters\nDate: Written on 2025-08-05.\nWriter: June Osei-Lark\nVoice: formal legal drafting\nFormat: formal numbered sections and a signature block\nLength: about 119 words\nDate style in the body: undefined\nTypos: none\n\nBrief:\nOrder Form: Quillfeather Outfitters. Parties: Pemberline Systems and Quillfeather Outfitters. Drafted 2025-07-21. Effective date 2025-08-15 (signed 2025-08-05; state both dates and keep them distinct). Terms this document sets: subscribed seats = 25; price per seat per year (USD) = 1700; discount (%) = 0; end of the current term (renewal date) = 2026-08-14. Executed: include a signature block signed on 2025-08-05 by both parties (customer signatory plus June Osei-Lark for Pemberline).\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Nadia Fennimore: Strategic account manager\n- Gideon Sato: Strategic account manager\n- Mateo Quiroga: Head of Procurement\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Vantorre Group: diversified industrial manufacturer, Northeast; main contact Mateo Quiroga, Head of Procurement; codes/nicknames VTG, VTRG\n- Vantorre Mobility: electric fleet services subsidiary, Northeast; subsidiary of Vantorre Group; codes/nicknames VTM, VMob\n- Orlavine Medical Supply: medical supply distributor, Mountain West; codes/nicknames OMS\n- Quillfeather Outfitters: outdoor gear retailer, Mountain West; codes/nicknames QFO\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2025-08-05 (background only; don't restate unless the brief asks):\n- Vantorre Group: managed by Nadia Fennimore\n- Vantorre Mobility: managed by Gideon Sato\n- Orlavine Medical Supply: managed by Nadia Fennimore\n- Quillfeather Outfitters: managed by Strategic Accounts pod (pooled account)",
+      "response_text": "# Order Form: Quillfeather Outfitters\n\n**1. Parties and Dates.** This Order Form, drafted on 2025-07-21, is entered into between Pemberline Systems (\"Provider\") and Quillfeather Outfitters (\"Customer\"). This Order Form is signed and executed on 2025-08-05, with a distinct Effective Date of 2025-08-15.\n\n**2. Subscription Terms.** Customer subscribes to Pemberline Dock for the Salt Lake City receiving terminal under the following commercial terms:\n- **Subscribed Seats:** 25\n- **Price per Seat per Year (USD):** $1,700\n- **Discount (%):** 0%\n- **End of Current Term (Renewal Date):** 2026-08-14\n\n**3. Execution.** Executed as of 2025-08-05 by the authorized representatives below:\n\n**Quillfeather Outfitters**\nBy: /s/ Harlan Vance\nName: Harlan Vance\nTitle: VP of Supply Chain\nDate: 2025-08-05\n\n**Pemberline Systems**\nBy: /s/ June Osei-Lark\nName: June Osei-Lark\nTitle: Deal Desk and Contracts Manager\nDate: 2025-08-05",
+      "usage": {
+        "input_tokens": 1166,
+        "output_tokens": 296,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.005292,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1166,
+          "candidatesTokenCount": 296,
+          "totalTokenCount": 1462,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1166
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 296
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

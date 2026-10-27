@@ -1,0 +1,86 @@
+{
+  "slug": "emails/2025-04-10-tamsin-moves-to-dana",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2025-04-10",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Tamsin Cold Chain",
+        "line": 7
+      },
+      {
+        "oid": "e2",
+        "surface": "Tamsin Cold Chain",
+        "line": 10
+      },
+      {
+        "oid": "e3",
+        "surface": "Quarrendon Freight Lines",
+        "line": 10
+      },
+      {
+        "oid": "e4",
+        "surface": "Tamsin",
+        "line": 12
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": [
+      {
+        "account": "tamsin",
+        "question": "According to this page alone, who manages Tamsin Cold Chain, in what role, and from/until when?"
+      }
+    ]
+  },
+  "prompt_user_sha256": "195863f64b76e3eccb7242c0eb476181cc17bf7bb6c29ba0206994f6aaa7fcda",
+  "response_text": "{\n  \"date_used\": \"2025-04-10\",\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"tamsin\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"tamsin\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"quarrendon\"\n    },\n    {\n      \"oid\": \"e4\",\n      \"entity\": \"tamsin\"\n    }\n  ],\n  \"ownership\": [\n    {\n      \"account\": \"tamsin\",\n      \"owner\": \"Marcus Lindqvist\",\n      \"role\": \"primary\",\n      \"start\": null,\n      \"end\": \"2025-04-14\",\n      \"line\": 10\n    },\n    {\n      \"account\": \"tamsin\",\n      \"owner\": \"Dana Okafor\",\n      \"role\": \"primary\",\n      \"start\": \"2025-04-14\",\n      \"end\": null,\n      \"line\": 10\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-04-10",
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "tamsin"
+      },
+      {
+        "oid": "e2",
+        "entity": "tamsin"
+      },
+      {
+        "oid": "e3",
+        "entity": "quarrendon"
+      },
+      {
+        "oid": "e4",
+        "entity": "tamsin"
+      }
+    ],
+    "ownership": [
+      {
+        "account": "tamsin",
+        "owner": "Marcus Lindqvist",
+        "role": "primary",
+        "start": null,
+        "end": "2025-04-14",
+        "line": 10
+      },
+      {
+        "account": "tamsin",
+        "owner": "Dana Okafor",
+        "role": "primary",
+        "start": "2025-04-14",
+        "end": null,
+        "line": 10
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2888,
+    "output_tokens": 277,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.008546
+}

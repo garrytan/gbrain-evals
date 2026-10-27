@@ -1,0 +1,95 @@
+{
+  "cases": [
+    {
+      "id": "C1a-partial-override-amended-term",
+      "accounts": [
+        "Acme Example Freight"
+      ],
+      "query": "Acme Example Freight licensed seats",
+      "deciding_page": "contracts/acme-amendment-1"
+    },
+    {
+      "id": "C1b-partial-override-unchanged-term",
+      "accounts": [
+        "Acme Example Freight"
+      ],
+      "query": "Acme Example Freight payment terms",
+      "deciding_page": "contracts/acme-msa-2025"
+    },
+    {
+      "id": "C2-future-validity",
+      "accounts": [
+        "Globex Example Health"
+      ],
+      "query": "Globex Example Health uptime commitment",
+      "deciding_page": "contracts/globex-order-2025"
+    },
+    {
+      "id": "C3-no-lexical-overlap",
+      "accounts": [
+        "Initech Example Software"
+      ],
+      "query": "Initech Example Software termination notice period",
+      "deciding_page": "contracts/initech-services-agreement",
+      "deciding_passage": "ninety days of written warning"
+    },
+    {
+      "id": "C4-summary-only-evidence",
+      "accounts": [
+        "Umbrella Example Labs"
+      ],
+      "query": "Umbrella Example Labs renewal date",
+      "deciding_page": "meetings/2025-06-12-umbrella-qbr"
+    },
+    {
+      "id": "C5-long-page-repeated-terms",
+      "accounts": [
+        "Vandelay Example Imports"
+      ],
+      "query": "Vandelay Example Imports liability cap",
+      "deciding_page": "contracts/vandelay-master-agreement",
+      "deciding_passage": "the aggregate cap is USD 750,000",
+      "passage": true
+    },
+    {
+      "id": "C6a-missing-date",
+      "accounts": [
+        "Acme Example Freight"
+      ],
+      "query": "Acme Example Freight billing contact",
+      "deciding_page": "notes/acme-billing-contact"
+    },
+    {
+      "id": "C6b-conflicting-dates",
+      "accounts": [
+        "Globex Example Health"
+      ],
+      "query": "Globex Example Health invoice dispute",
+      "deciding_page": "mail/globex-invoice-dispute"
+    },
+    {
+      "id": "C7-draft-without-status",
+      "accounts": [
+        "Initech Example Software"
+      ],
+      "query": "Initech Example Software payment terms",
+      "deciding_page": "contracts/initech-services-agreement",
+      "draft_page": "contracts/initech-amendment-3-draft"
+    }
+  ],
+  "hidden": [
+    {
+      "slug": "notes/vandelay-board-pricing",
+      "marker": "board-only discount ladder"
+    }
+  ],
+  "statuses_E": {
+    "contracts/acme-msa-2025": "executed",
+    "contracts/acme-amendment-1": "executed",
+    "contracts/globex-order-2025": "executed",
+    "contracts/globex-amendment-2": "executed",
+    "contracts/initech-services-agreement": "executed",
+    "contracts/initech-amendment-3-draft": "draft",
+    "contracts/vandelay-master-agreement": "executed"
+  }
+}

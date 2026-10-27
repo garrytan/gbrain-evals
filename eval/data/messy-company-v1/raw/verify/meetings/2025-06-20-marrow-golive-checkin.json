@@ -1,0 +1,49 @@
+{
+  "slug": "meetings/2025-06-20-marrow-golive-checkin",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2025-06-20",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Marrow Fieldworks",
+        "line": 6
+      }
+    ],
+    "claims": [
+      {
+        "cid": "c-mfw-golive-b",
+        "question": "What does the page say about Marrow Fieldworks's go live?"
+      }
+    ],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "98153c69e9652d85017dbc7507fdc748369379b74919ceb04318d6c33ebe7097",
+  "response_text": "{\n  \"date_used\": \"2025-06-20\",\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"marrow-fieldworks\"\n    }\n  ],\n  \"claims\": [\n    {\n      \"cid\": \"c-mfw-golive-b\",\n      \"stated\": true,\n      \"value\": \"Go-live happened mid-June 2025, week of the 16th, at 9 dealerships first.\",\n      \"line\": 9\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-06-20",
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "marrow-fieldworks"
+      }
+    ],
+    "claims": [
+      {
+        "cid": "c-mfw-golive-b",
+        "stated": true,
+        "value": "Go-live happened mid-June 2025, week of the 16th, at 9 dealerships first.",
+        "line": 9
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2751,
+    "output_tokens": 140,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.006902
+}

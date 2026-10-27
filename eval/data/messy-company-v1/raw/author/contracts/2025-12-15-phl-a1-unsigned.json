@@ -1,0 +1,41 @@
+{
+  "slug": "contracts/2025-12-15-phl-a1-unsigned",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: record\nTitle: Amendment 1 (unsigned): Pellucid Harbor Logistics seat expansion\nDate: Written on 2025-12-15.\nWriter: June Osei-Lark\nVoice: formal legal drafting\nFormat: formal numbered sections and a signature block\nLength: about 468 words\nDate style in the body: ISO (2025-06-02)\nTypos: none\n\nBrief:\nAmendment 1 (unsigned): Pellucid Harbor Logistics seat expansion. Parties: Pemberline Systems and Pellucid Harbor Logistics. Drafted 2025-12-15. Terms this document sets: subscribed seats = 150. This version was never countersigned: the body must make clear it is unsigned (blank or missing signature lines, a note such as \"unsigned\" or \"for review\"). Do not call it a draft.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Bettina Kroll: Coastal team lead\n- Sofia Marchetti: Account manager, Coastal team\n- Kwame Adjei-Rowe: Account manager, Coastal team\n- Corinne Ashdown: VP Operations\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Pellucid Harbor Logistics: port drayage and terminal logistics, Gulf Coast; codes/nicknames PHL\n- Driftmoor Marine Freight: marine freight and barge operator, Puget Sound; codes/nicknames DMF\n- Saltmarsh Provisions: regional grocery distributor, Lowcountry; main contact Corinne Ashdown, VP Operations; codes/nicknames SMP\n- Covey & Lark Retail: home goods retailer, Mid-Atlantic; codes/nicknames Covey, CLR\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2025-12-15 (background only; don't restate unless the brief asks):\n- Pellucid Harbor Logistics: managed by Kwame Adjei-Rowe\n- Driftmoor Marine Freight: managed by Kwame Adjei-Rowe\n- Saltmarsh Provisions: managed by Bettina Kroll\n- Covey & Lark Retail: managed by Sofia Marchetti",
+      "response_text": "# Amendment 1 (unsigned): Pellucid Harbor Logistics seat expansion\n\n**Document Status:** Unsigned — For Review Only  \n**Preparation Date:** 2025-12-15  \n**Reference:** PHL-AMD-001  \n\nThis Amendment 1 (\"Amendment\") to the Master Subscription Agreement is prepared on 2025-12-15 by and between **Pemberline Systems** (\"Provider\"), a Delaware corporation, and **Pellucid Harbor Logistics** (\"Customer\"), regarding Customer's licensed use of the Pemberline Dock yard and dock scheduling software platform.\n\n### 1. Purpose and Scope\n1.1. The parties desire to modify the existing subscription terms governing Customer's access to Pemberline Dock across its Gulf Coast port drayage and terminal logistics operations, specifically to accommodate expanded gate clerk and yard jockey scheduling across Berth 4, Berth 7, and the East Container Yard at the Port of Mobile facility.\n\n1.2. Except as expressly modified by the numbered sections of this Amendment, all terms, conditions, definitions, and schedules of the underlying Master Subscription Agreement between Provider and Customer shall remain in full force and effect without modification.\n\n### 2. Modification of Subscribed Seats\n2.1. Upon full execution of this Amendment by authorized representatives of both parties, Customer's total allotment of subscribed seats for the Pemberline Dock platform shall be amended and set as follows:\n\n* **Subscribed Seats:** 150\n\n2.2. The 150 subscribed seats stated in Section 2.1 represent the total aggregate seat count authorized for Customer's named users across all active terminal profiles, including night-shift dispatchers, inbound drayage coordinators, and chassis yard supervisors. This figure replaces and supersedes the total seat quantity stated in the prior order form.\n\n### 3. Provisioning and Operational Allocation\n3.1. Provider shall configure the additional seat capacity within the production tenant (`phl-gulf-prod`) and enable the corresponding user role permissions for the Terminal B gatehouse kiosks and the West Gate Twic-check lanes following receipt of a fully countersigned copy of this Amendment.\n\n3.2. Customer's designated system administrator shall remain responsible for deactivating credentials for seasonal drayage contractors and reassigning named user licenses within the 150 subscribed seats ceiling via the Pemberline Dock administration console.\n\n### 4. Effectiveness and Execution\n4.1. This Amendment shall have no binding legal effect unless and until executed by authorized signatories of both Pemberline Systems and Pellucid Harbor Logistics. \n\n4.2. This instrument may be executed by electronic signature and in one or more counterparts, each of which shall be deemed an original when countersigned.\n\n***\n\n### Signature Block (Unsigned — Pending Execution)\n\n**IN WITNESS WHEREOF**, the parties have caused this Amendment 1 to be prepared for execution by their duly authorized representatives.\n\n**PEMBERLINE SYSTEMS**\n\nSignature: `________________________________________` *(Unsigned)*\n\nPrinted Name: `_____________________________________`\n\nTitle: `____________________________________________`\n\nDate: `_____________________________________________`\n\n<br>\n\n**PELLUCID HARBOR LOGISTICS**\n\nSignature: `________________________________________` *(Unsigned)*\n\nPrinted Name: `_____________________________________`\n\nTitle: `____________________________________________`\n\nDate: `_____________________________________________`",
+      "usage": {
+        "input_tokens": 1142,
+        "output_tokens": 698,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.009264,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1142,
+          "candidatesTokenCount": 698,
+          "totalTokenCount": 1840,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1142
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 698
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

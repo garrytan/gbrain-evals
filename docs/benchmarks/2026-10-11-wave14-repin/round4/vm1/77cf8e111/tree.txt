@@ -1,0 +1,7 @@
+45660771dae722810d3ced5df040f3381e396f9f
+    "gbrain": "github:garrytan/gbrain#77cf8e1116e9af67c1983adcbb3223b96f0991a5",
+    "gbrain",
+  "version": "0.60.169.0",
+16
+1.4.2
+model name	: AMD EPYC 9454P 48-Core Processor

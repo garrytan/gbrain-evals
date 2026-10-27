@@ -1,0 +1,150 @@
+{
+  "slug": "contracts/2026-02-10-orm-unsigned-2026",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2026-02-10",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Thornbury Cloth Co.",
+        "line": 6
+      },
+      {
+        "oid": "e2",
+        "surface": "Thornbury Cloth Co.",
+        "line": 10
+      },
+      {
+        "oid": "e3",
+        "surface": "Thornbury Cloth Co.",
+        "line": 12
+      },
+      {
+        "oid": "e4",
+        "surface": "Orrin Mills",
+        "line": 12
+      },
+      {
+        "oid": "e5",
+        "surface": "Thornbury Cloth Co.",
+        "line": 12
+      },
+      {
+        "oid": "e6",
+        "surface": "Orrin Mills",
+        "line": 12
+      },
+      {
+        "oid": "e7",
+        "surface": "Thornbury Cloth Co.",
+        "line": 29
+      },
+      {
+        "oid": "e8",
+        "surface": "TCC",
+        "line": 29
+      },
+      {
+        "oid": "e9",
+        "surface": "Orrin Mills",
+        "line": 31
+      },
+      {
+        "oid": "e10",
+        "surface": "Thornbury Cloth Co.",
+        "line": 56
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": [],
+    "record": {
+      "question": "Is this document signed, an unsigned version, or a draft? Judge from the body text, not the title alone. Give its signed date and effective date if stated, and the value of each of these terms it sets.",
+      "terms": [
+        "seats",
+        "price_per_seat"
+      ]
+    }
+  },
+  "prompt_user_sha256": "7a299f45eed53f8c7e19ec5bd9baa2a807f194182d85bde9a8b8a64e842658ab",
+  "response_text": "{\n  \"date_used\": \"2026-02-10\",\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"orrin\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"orrin\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"orrin\"\n    },\n    {\n      \"oid\": \"e4\",\n      \"entity\": \"orrin\"\n    },\n    {\n      \"oid\": \"e5\",\n      \"entity\": \"orrin\"\n    },\n    {\n      \"oid\": \"e6\",\n      \"entity\": \"orrin\"\n    },\n    {\n      \"oid\": \"e7\",\n      \"entity\": \"orrin\"\n    },\n    {\n      \"oid\": \"e8\",\n      \"entity\": \"orrin\"\n    },\n    {\n      \"oid\": \"e9\",\n      \"entity\": \"orrin\"\n    },\n    {\n      \"oid\": \"e10\",\n      \"entity\": \"orrin\"\n    }\n  ],\n  \"record\": {\n    \"status\": \"unsigned\",\n    \"status_evidence_line\": 43,\n    \"signed_date\": null,\n    \"effective_date\": null,\n    \"terms\": [\n      {\n        \"term\": \"seats\",\n        \"applies_to\": [\n          \"orrin\"\n        ],\n        \"value\": \"44\",\n        \"line\": 22\n      },\n      {\n        \"term\": \"price_per_seat\",\n        \"applies_to\": [\n          \"orrin\"\n        ],\n        \"value\": \"USD 1,650\",\n        \"line\": 23\n      }\n    ],\n    \"deciding_line\": 43,\n    \"deciding_days\": null\n  }\n}",
+  "parsed": {
+    "date_used": "2026-02-10",
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "orrin"
+      },
+      {
+        "oid": "e2",
+        "entity": "orrin"
+      },
+      {
+        "oid": "e3",
+        "entity": "orrin"
+      },
+      {
+        "oid": "e4",
+        "entity": "orrin"
+      },
+      {
+        "oid": "e5",
+        "entity": "orrin"
+      },
+      {
+        "oid": "e6",
+        "entity": "orrin"
+      },
+      {
+        "oid": "e7",
+        "entity": "orrin"
+      },
+      {
+        "oid": "e8",
+        "entity": "orrin"
+      },
+      {
+        "oid": "e9",
+        "entity": "orrin"
+      },
+      {
+        "oid": "e10",
+        "entity": "orrin"
+      }
+    ],
+    "record": {
+      "status": "unsigned",
+      "status_evidence_line": 43,
+      "signed_date": null,
+      "effective_date": null,
+      "terms": [
+        {
+          "term": "seats",
+          "applies_to": [
+            "orrin"
+          ],
+          "value": "44",
+          "line": 22
+        },
+        {
+          "term": "price_per_seat",
+          "applies_to": [
+            "orrin"
+          ],
+          "value": "USD 1,650",
+          "line": 23
+        }
+      ],
+      "deciding_line": 43,
+      "deciding_days": null
+    }
+  },
+  "usage": {
+    "input_tokens": 3869,
+    "output_tokens": 461,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.012348
+}

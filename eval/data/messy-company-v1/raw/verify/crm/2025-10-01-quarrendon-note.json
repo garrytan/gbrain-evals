@@ -1,0 +1,58 @@
+{
+  "slug": "crm/2025-10-01-quarrendon-note",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2025-10-01",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Quarrendon",
+        "line": 6
+      },
+      {
+        "oid": "e2",
+        "surface": "Quarrendon Freight Lines",
+        "line": 9
+      }
+    ],
+    "claims": [
+      {
+        "cid": "c-qfl-arr",
+        "question": "What does the page say about Quarrendon Freight Lines's arr?"
+      }
+    ],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "9f8fe885b37150cadc957f3552e7dd16c5e5cdec4b26d604be4fefa9dfbcdc15",
+  "response_text": "{\n  \"date_used\": \"2025-10-01\",\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"quarrendon\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"quarrendon\"\n    }\n  ],\n  \"claims\": [\n    {\n      \"cid\": \"c-qfl-arr\",\n      \"stated\": true,\n      \"value\": \"Just over $300k after the 185-seat amendment.\",\n      \"line\": 11\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-10-01",
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "quarrendon"
+      },
+      {
+        "oid": "e2",
+        "entity": "quarrendon"
+      }
+    ],
+    "claims": [
+      {
+        "cid": "c-qfl-arr",
+        "stated": true,
+        "value": "Just over $300k after the 185-seat amendment.",
+        "line": 11
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2835,
+    "output_tokens": 151,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.00718
+}

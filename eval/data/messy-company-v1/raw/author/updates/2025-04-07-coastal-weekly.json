@@ -1,0 +1,41 @@
+{
+  "slug": "updates/2025-04-07-coastal-weekly",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: weekly\nTitle: Coastal weekly Apr 7\nDate: Written on 2025-04-07.\nWriter: Bettina Kroll\nVoice: polished and businesslike\nFormat: undefined\nLength: about 238 words\nDate style in the body: undefined\nTypos: none\n\nBrief:\nBettina's update on the day Driftmoor moves to Kwame.\n\nRequired phrases:\n- Use the exact phrase \"Kwame's port account\" once, referring to Driftmoor Marine Freight. Don't put the account's name in the same sentence; the reader should work it out.\n- Use the exact phrase \"Sofia's old marine account\" once, referring to Driftmoor Marine Freight. Don't put the account's name in the same sentence; the reader should work it out.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Bettina Kroll: Coastal team lead\n- Sofia Marchetti: Account manager, Coastal team\n- Kwame Adjei-Rowe: Account manager, Coastal team\n- Corinne Ashdown: VP Operations\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Pellucid Harbor Logistics: port drayage and terminal logistics, Gulf Coast; codes/nicknames PHL\n- Driftmoor Marine Freight: marine freight and barge operator, Puget Sound; codes/nicknames DMF\n- Saltmarsh Provisions: regional grocery distributor, Lowcountry; main contact Corinne Ashdown, VP Operations; codes/nicknames SMP\n- Covey & Lark Retail: home goods retailer, Mid-Atlantic; codes/nicknames Covey, CLR\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2025-04-07 (background only; don't restate unless the brief asks):\n- Pellucid Harbor Logistics: managed by Bettina Kroll\n- Driftmoor Marine Freight: managed by Kwame Adjei-Rowe\n- Saltmarsh Provisions: managed by Sofia Marchetti\n- Covey & Lark Retail: managed by Sofia Marchetti",
+      "response_text": "# Coastal weekly Apr 7\n\n**Author:** Bettina Kroll  \n**Date:** April 7, 2025  \n\n### Account Reassignment: Driftmoor Marine Freight\nEffective today, April 7, Driftmoor Marine Freight officially moves to Kwame Adjei-Rowe. All active tickets and contact records in the CRM have been updated to reflect the transition. \n\nSofia Marchetti completed the final handover walkthrough this morning, focusing on the Puget Sound barge terminal configurations in Pemberline Dock. We have one lingering support item from Sofia's old marine account: Ticket #4819, which involves a timestamp mismatch on the Automated Gate Check-in Report for the second shift at Slip 4. Engineering expects to deploy a patch during Tuesday's maintenance window. \n\nTo ensure continuity for the terminal dispatchers, Kwame's port account is scheduled for a recurring biweekly sync starting this Thursday at 10:00 AM PT. He will introduce himself to the Tacoma yard lead, Hector Vance, and review their upcoming summer barge schedule adjustments.\n\n### Other Coastal Operations\n* **Saltmarsh Provisions:** Sofia is working with Corinne Ashdown, VP Operations, to finalize the cold-storage dock door rules at their Savannah facility. They are re-sequencing doors 12 through 18 to separate reefers from dry van traffic during the 04:00–08:00 receiving peak.\n* **Pellucid Harbor Logistics:** I am reviewing the Q1 Carrier Turn-Time Summary with their Gulfport gate supervisors tomorrow afternoon. We are tracking a twelve-minute reduction in drayage queue times at Gate B since the March workflow update.",
+      "usage": {
+        "input_tokens": 1124,
+        "output_tokens": 355,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.005798,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1124,
+          "candidatesTokenCount": 355,
+          "totalTokenCount": 1479,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1124
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 355
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

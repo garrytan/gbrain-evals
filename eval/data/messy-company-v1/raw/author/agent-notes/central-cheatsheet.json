@@ -1,0 +1,37 @@
+{
+  "slug": "agent-notes/central-cheatsheet",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: agent-note\nTitle: Moss: Central cheat sheet\nDate: UNDATED. Do not include any date, year, month name, weekday, or relative date reference (\"yesterday\", \"last week\") anywhere in the document.\nWriter: Moss (Ruth Calloway's AI assistant)\nVoice: an AI assistant: neat, factual, a little stiff\nFormat: undefined\nLength: about 26 words\nDate style in the body: undefined (ignore: undated)\nTypos: a few natural typos and one or two sloppy abbreviations (never in names or required phrases)\n\nBrief:\nUndated cheat sheet Moss keeps for Ruth on the Central team. No dates anywhere.\n\nRequired phrases:\n- Use the exact phrase \"the account Tobias runs\" once, but vaguely: the writer does not say which account it is, and nothing nearby (name, location, numbers, products) may identify one. Keep that sentence generic, like a passing comment.\n- Use the exact phrase \"the Central team's ag account\" once, referring to Marrow Agrisupply. Don't put the account's name in the same sentence; the reader should work it out.\n- Use the exact phrase \"Tobias's packaging account\" once, referring to Tansleigh Packaging. This page must not reveal which account that is or who manages it: no account name, location, or detail that identifies it in that sentence or paragraph.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Hollis Mbeki: Central team lead\n- Priyanka \"Pree\" Sundaram: Account manager, Central team\n- Tobias Rendle: Account manager, Central team\n- Lev Arkadin: Procurement lead\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Tansley Parcel: regional parcel delivery, South Central; main contact Lev Arkadin, Procurement lead; codes/nicknames TPCL, TP\n- Tansleigh Packaging: corrugated packaging manufacturer, Ohio Valley; codes/nicknames TSP, TP\n- Marrow Fieldworks: agricultural equipment dealer network, Plains; codes/nicknames MFW\n- Marrow Agrisupply: farm supply retail chain, Plains; subsidiary of Marrow Fieldworks; codes/nicknames MAS, Marrow Agri\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what (background only; don't restate unless the brief asks):\n(This page is undated. Do not state who manages which account.)",
+      "response_text": "# Moss: Central cheat sheet\n\nFor Ruth Calloway.\n\nReveiw the account Tobias runs.\n\n## Marrow Agrisupply\nChek the Central team's ag account: door 4 msg.\n\n---\n\nTobias's packaging account: req pending.",
+      "usage": {
+        "input_tokens": 1145,
+        "output_tokens": 246,
+        "thinking_tokens": 188
+      },
+      "cost_usd": 0.00475,
+      "provider_meta": {
+        "id": "resp_0d3ddbdd53a26d67016acfae51a8e887d1b02922c914f869d8",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1145,
+          "input_tokens_details": {
+            "cache_write_tokens": 1142,
+            "cached_tokens": 0
+          },
+          "output_tokens": 246,
+          "output_tokens_details": {
+            "reasoning_tokens": 188
+          },
+          "total_tokens": 1391
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

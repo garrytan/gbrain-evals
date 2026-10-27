@@ -1,0 +1,117 @@
+{
+  "schema": "p8-write-cost-v1",
+  "gbrain": {
+    "repo": "/workspace/gbrain",
+    "commit": "1935c74a9e217b276c7bbf3075ddd3c220e96a09",
+    "version": "0.60.110.0"
+  },
+  "embedding_model": "openai:text-embedding-3-large",
+  "dataset": "LongMemEval-S cleaned (98d7416c), first distinct sessions",
+  "arms": [
+    {
+      "arm": "on",
+      "extraction_model_setting": null,
+      "resolved_extraction_models": [
+        "anthropic:claude-sonnet-4-6"
+      ],
+      "pages": 1000,
+      "messages": 10313,
+      "facts_remembered": 991,
+      "write_errors": 2,
+      "put_page_ms": {
+        "p50": 100,
+        "p95": 239
+      },
+      "remember_ms": {
+        "p50": 317,
+        "p95": 757
+      },
+      "write_wall_s": 504.256,
+      "settled_after_write_s": 10.004,
+      "jobs_queued_at_settle": {
+        "facts-absorb": {
+          "total": 996,
+          "waiting": 996,
+          "failed": 0,
+          "dead": 0
+        }
+      },
+      "job_drain_s": 9736.467,
+      "jobs_after_drain": {
+        "facts-absorb": {
+          "total": 996,
+          "waiting": 0,
+          "failed": 0,
+          "dead": 0
+        }
+      },
+      "commit_path_generative_attempts": 0,
+      "generative_calls": 999,
+      "embedding_calls": 8120,
+      "embedding_tokens": 2569749,
+      "calls_by_cause": {
+        "embedding:openai:text-embedding-3-large effect=embedding": {
+          "calls": 998,
+          "input_tokens": 2402237,
+          "output_tokens": 0
+        },
+        "embedding:openai:text-embedding-3-large": {
+          "calls": 991,
+          "input_tokens": 22059,
+          "output_tokens": 0
+        },
+        "chat:anthropic:claude-sonnet-4-6 effect=facts-absorb": {
+          "calls": 999,
+          "input_tokens": 2746497,
+          "output_tokens": 490825
+        },
+        "embedding:openai:text-embedding-3-large effect=facts-absorb": {
+          "calls": 6131,
+          "input_tokens": 145453,
+          "output_tokens": 0
+        }
+      },
+      "usd": 15.9359,
+      "usd_by_model": {
+        "openai:text-embedding-3-large": {
+          "usd": 0.3340673699999984,
+          "requests": 8120
+        },
+        "anthropic:claude-sonnet-4-6": {
+          "usd": 15.601866000000005,
+          "requests": 877
+        }
+      },
+      "unpriced_requests": 0,
+      "undrained_requests": 0,
+      "per_1000_messages": {
+        "usd": 1.5452,
+        "generative_calls": 96.868,
+        "embedding_tokens": 249175.7006
+      },
+      "per_1000_pages": {
+        "usd": 15.9359,
+        "generative_calls": 999,
+        "embedding_tokens": 2569749
+      }
+    }
+  ],
+  "budget": {
+    "run_id": "p8-write-cost-2026-10-08T15-29-23-191Z-08ed3728",
+    "budget_usd": 17,
+    "reserved_usd": 16,
+    "actual_usd": 15.935933499999907,
+    "charged_reservations": 0,
+    "requests": 1,
+    "input_tokens": 5316247,
+    "output_tokens": 490825,
+    "overshoot_usd": 0,
+    "ledger_path": "~/.capy/work/r2/budget/ledger.sqlite",
+    "program_cap_usd": 40,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 0,
+      "max": 44.6
+    }
+  }
+}

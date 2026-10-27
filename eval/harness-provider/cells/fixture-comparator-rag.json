@@ -1,0 +1,15 @@
+{
+  "note": "Keyless plumbing check: the pinned comparator server behind the opaque-id wrapper, end to end on the committed fixture, every model request answered by the local stub upstream. Not benchmark evidence.",
+  "dataset": "fixture",
+  "split": "tiny",
+  "provider": "comparator",
+  "mode": "rag",
+  "lane": "combined",
+  "seal": "fixture",
+  "target_tokens": null,
+  "models": { "answer": "openai:gpt-6-luna", "judge": "openai:gpt-6-luna" },
+  "budget_usd": 1,
+  "questions": {},
+  "k": 10,
+  "provider_config": { "max_tokens": 2000, "max_chunk_tokens": 1000 }
+}

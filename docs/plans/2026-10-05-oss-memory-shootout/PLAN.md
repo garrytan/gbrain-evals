@@ -9,7 +9,7 @@ When an agent needs memory, an engineer can choose gbrain or one of six popular 
 evidence, lets a fixed reader answer correctly, keeps facts current, forgets on request and helps an agent finish
 real work, at what ingest cost, query cost and latency? We lack a matched, reproducible comparison of these six
 open-source releases against gbrain. Vendor numbers use their own harness, reader, judge and budget
-([comparison page](../../comparison-systems.md)), and extract-first's and Zep's headline scores describe their managed
+([comparison page](../../comparison-systems.md)), and the headline scores of extract-first and of the hosted service built on temporal-graph describe managed
 platforms, not the open-source code. The Agent Memory Benchmark (AMB) is related prior work with its own adapters;
 we reuse its contracts where they fit and cite it, rather than rebuild what exists.
 
@@ -22,19 +22,20 @@ for choosing a memory system, not a single leaderboard.
 Versions checked 2026-10-05. Phase 0 turns each row into a **capability record**: install command and extras,
 resolved dependency lock and image digest, every model role (extraction, small model, embedder and dimensions,
 reranker), background jobs and their readiness signal, namespace and provenance mechanism, and MCP wrapper identity.
-A later version is a new run, never an edit.
+A later version is a new run, never an edit. The pins and licenses of the six systems are in the comparison
+[table](../../comparison-systems.md#systems-in-the-open-source-comparison).
 
 | System | Pin | License | Design | Backend | Write / read API | Provenance to source session | Agent (Cat 40) surface |
 |---|---|---|---|---|---|---|---|
 | gbrain | repo pin `739e5cc` (v0.60.46.0) and master frozen at one SHA on the preregistration date | MIT | Markdown + index, hybrid search, typed links | PGLite | existing in-process path, refactored behind the new interface | page = session | `gbrain serve --surface starter` |
-| temporal-graph (OSS, not Zep) | `graphiti-core` 0.30.2; MCP `mcp-v1.1.0` | Apache-2.0 | temporal knowledge graph, facts with validity windows | Neo4j 5.26 | `add_episode(reference_time=…)`, `search_` | edge and node `episodes` | vendor MCP over HTTP |
-| graph-pipeline | `cognee` 1.6.2; `cognee-mcp` 0.5.6 | Apache-2.0 | knowledge graph with `recall` routing | SQLite + LanceDB + Kuzu | `add` + `cognify`, `recall(only_context=True)` | chunk `data_id` / evidence references (verify) | vendor MCP |
-| extract-first (OSS, not the platform) | `mem0ai` 2.2.1 | Apache-2.0 | LLM-extracted memories | Qdrant | `add(messages, metadata)`, `search` | per-memory metadata | harness MCP wrapper over the same SDK (OpenMemory is being sunset) |
-| agent-runtime | agent-runtime 0.34.4 App Server, local backend | Apache-2.0 | stateful agent with memory blocks and archival memory | local | archival insert / search, if Phase 0 proves it | passage tags (verify) | native agent-runtime agent, separate table |
-| markdown-notes | `basic-memory` 0.23.2 | AGPL-3.0 | Markdown notes, SQLite FTS, local semantic search + reranker | SQLite | write note, `search_notes` | one note per session | vendor MCP (stdio) |
-| memory-bank | server and `hindsight-client` 0.10.2 | MIT | memory banks, `retain` / `recall` / `reflect`, observations | Postgres + pgvector | `retain(…, timestamp, document_id)`, `recall` | `document_id`, `chunk_id` | vendor MCP (`/mcp/{bank}`) |
+| temporal-graph (OSS, not the hosted service) | library and vendor MCP server, see [table](../../comparison-systems.md#systems-in-the-open-source-comparison) | see [table](../../comparison-systems.md#systems-in-the-open-source-comparison) | temporal knowledge graph, facts with validity windows | Neo4j 5.26 | `add_episode(reference_time=…)`, `search_` | edge and node `episodes` | vendor MCP over HTTP |
+| graph-pipeline | package and vendor MCP server, see [table](../../comparison-systems.md#systems-in-the-open-source-comparison) | see [table](../../comparison-systems.md#systems-in-the-open-source-comparison) | knowledge graph with `recall` routing | SQLite + LanceDB + Kuzu | `add` + `cognify`, `recall(only_context=True)` | chunk `data_id` / evidence references (verify) | vendor MCP |
+| extract-first (OSS, not the platform) | package, see [table](../../comparison-systems.md#systems-in-the-open-source-comparison) | see [table](../../comparison-systems.md#systems-in-the-open-source-comparison) | LLM-extracted memories | Qdrant | `add(messages, metadata)`, `search` | per-memory metadata | harness MCP wrapper over the same SDK (the vendor's MCP server is being sunset) |
+| agent-runtime | App Server, local backend, see [table](../../comparison-systems.md#systems-in-the-open-source-comparison) | see [table](../../comparison-systems.md#systems-in-the-open-source-comparison) | stateful agent with memory blocks and archival memory | local | archival insert / search, if Phase 0 proves it | passage tags (verify) | native agent-runtime agent, separate table |
+| markdown-notes | package, see [table](../../comparison-systems.md#systems-in-the-open-source-comparison) | see [table](../../comparison-systems.md#systems-in-the-open-source-comparison) | Markdown notes, SQLite FTS, local semantic search + reranker | SQLite | write note, `search_notes` | one note per session | vendor MCP (stdio) |
+| memory-bank | server and Python client, see [table](../../comparison-systems.md#systems-in-the-open-source-comparison) | see [table](../../comparison-systems.md#systems-in-the-open-source-comparison) | memory banks, `retain` / `recall` / `reflect`, observations | Postgres + pgvector | `retain(…, timestamp, document_id)`, `recall` | `document_id`, `chunk_id` | vendor MCP (`/mcp/{bank}`) |
 
-agent-runtime stays in scope either way. If Phase 0 finds no passive memory API at 0.34.4, agent-runtime runs only as a native agent
+agent-runtime stays in scope either way. If Phase 0 finds no passive memory API at the pin, agent-runtime runs only as a native agent
 on the Cat 40 tasks, in its own table, because its agent loop is not the harness loop.
 
 ## Categories, in priority order
@@ -93,8 +94,8 @@ the reviews proposed are listed under [Decisions for Garry](#decisions-for-garry
    least 10 independent clusters: the LongMemEval-S 100 slice and PrecisionMemBench. LoCoMo and BEAM dev are
    descriptive, with cluster counts and ranges, and the report says so.
 8. **Adapters start from vendor code.** Each adapter begins from the vendor's own published benchmark ingestion where
-   it exists (extract-first `memory-benchmarks`, memory-bank `hindsight-benchmarks` and its AMB provider, graph-pipeline's eval framework,
-   markdown-notes's LoCoMo benchmark, Zep's LoCoMo harness for temporal-graph), pinned by commit, with every deviation listed.
+   it exists (extract-first's benchmark repository, memory-bank's benchmark repository and its AMB provider, graph-pipeline's eval
+   framework, markdown-notes's LoCoMo benchmark, the hosted service's LoCoMo harness for temporal-graph), pinned by commit, with every deviation listed.
 9. **Vendors can check our work.** With Garry's approval (decision D4), each adapter and capability record is posted
    to the vendor's repository before the counted run; corrections that arrive before the freeze are applied, later
    ones get an amendment and new cells, and silence is not endorsement.
@@ -182,7 +183,7 @@ success, cost and finance capability. The finding says where gbrain loses. Ties 
 | agent-runtime has no passive memory API | native-agent table only |
 | Provenance is coarse (merged facts, graph tags) | report retrieval as not measurable rather than guess |
 | Vendor disputes | vendor code as the starting point, published capability records, review window |
-| markdown-notes is AGPL-3.0 | run unmodified in its own container; copy no code |
+| markdown-notes has a copyleft license | run unmodified in its own container; copy no code |
 
 ## Decisions for Garry
 
@@ -210,7 +211,7 @@ CEO phase, 2026-10-05. Claude voice: 25 findings (3 critical, 7 high). GPT-6 Ast
 10 high). Both voices independently found: the sealed-split collision, the unequal evidence path (gbrain's reader
 got harness-rehydrated sessions), the unenforceable cap and roughly 3x cost underestimate, undefined vendor defaults,
 Cat 40 at the ceiling on a spent world, the house model policy, and the need to reuse vendor and AMB ingestion code.
-Every one is fixed above. Astra alone found the raw-id leak path through vendor metadata, the OpenMemory sunset, the
+Every one is fixed above. Astra alone found the raw-id leak path through vendor metadata, the sunset of extract-first's MCP server, the
 agent-runtime runtime mismatch, the fixed-denominator gap and the LoCoMo key concern; Claude alone found the ingest
 quiescence and event-time checks, the measured dataset sizes, and the proxy's localhost binding.
 

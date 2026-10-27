@@ -1,0 +1,32 @@
+{
+ "links": [
+  {
+   "slug": "chats/2026-02-17-phl-collision",
+   "surface": "Sofia's retail account",
+   "accounts": [
+    "covey-lark"
+   ]
+  },
+  {
+   "slug": "emails/2025-11-06-quarrendon-exec-call",
+   "surface": "Dana's freight account",
+   "accounts": [
+    "quarrendon"
+   ]
+  },
+  {
+   "slug": "updates/2026-03-16-coastal-weekly",
+   "surface": "Sofia's retail account",
+   "accounts": [
+    "covey-lark"
+   ]
+  },
+  {
+   "slug": "updates/2026-05-11-coastal-weekly",
+   "surface": "Sofia's retail account",
+   "accounts": [
+    "covey-lark"
+   ]
+  }
+ ]
+}

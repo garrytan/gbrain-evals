@@ -1,0 +1,976 @@
+{
+ "needed_docs_per_task_family": {
+  "H1": 30,
+  "H2": 13,
+  "H3": 25,
+  "H4": 19
+ },
+ "rounds": [
+  "r1",
+  "r2"
+ ],
+ "f5": {
+  "seen_share": {
+   "all": {
+    "cells": 600,
+    "tasks": 100,
+    "arm_num": 423,
+    "ctl_num": 422,
+    "den": 522,
+    "arm_pct": 81.0,
+    "ctl_pct": 80.8,
+    "delta_pp": 0.2,
+    "ci95": [
+     -3.3,
+     3.6
+    ]
+   },
+   "H1": {
+    "cells": 120,
+    "tasks": 20,
+    "arm_num": 111,
+    "ctl_num": 114,
+    "den": 180,
+    "arm_pct": 61.7,
+    "ctl_pct": 63.3,
+    "delta_pp": -1.7,
+    "ci95": [
+     -10.3,
+     6.6
+    ]
+   },
+   "H2": {
+    "cells": 120,
+    "tasks": 20,
+    "arm_num": 67,
+    "ctl_num": 64,
+    "den": 78,
+    "arm_pct": 85.9,
+    "ctl_pct": 82.1,
+    "delta_pp": 3.8,
+    "ci95": [
+     -4.2,
+     11.9
+    ]
+   },
+   "H3": {
+    "cells": 120,
+    "tasks": 20,
+    "arm_num": 142,
+    "ctl_num": 138,
+    "den": 150,
+    "arm_pct": 94.7,
+    "ctl_pct": 92.0,
+    "delta_pp": 2.7,
+    "ci95": [
+     -0.7,
+     6.5
+    ]
+   },
+   "H4": {
+    "cells": 120,
+    "tasks": 20,
+    "arm_num": 103,
+    "ctl_num": 106,
+    "den": 114,
+    "arm_pct": 90.4,
+    "ctl_pct": 93.0,
+    "delta_pp": -2.6,
+    "ci95": [
+     -7.9,
+     2.2
+    ]
+   },
+   "claude-opus-5-5": {
+    "cells": 200,
+    "tasks": 100,
+    "arm_num": 137,
+    "ctl_num": 138,
+    "den": 174,
+    "arm_pct": 78.7,
+    "ctl_pct": 79.3,
+    "delta_pp": -0.6,
+    "ci95": [
+     -8.1,
+     7.0
+    ]
+   },
+   "claude-sonnet-5-5": {
+    "cells": 200,
+    "tasks": 100,
+    "arm_num": 129,
+    "ctl_num": 126,
+    "den": 174,
+    "arm_pct": 74.1,
+    "ctl_pct": 72.4,
+    "delta_pp": 1.7,
+    "ci95": [
+     -5.6,
+     9.5
+    ]
+   },
+   "gpt-6.1-sol": {
+    "cells": 200,
+    "tasks": 100,
+    "arm_num": 157,
+    "ctl_num": 158,
+    "den": 174,
+    "arm_pct": 90.2,
+    "ctl_pct": 90.8,
+    "delta_pp": -0.6,
+    "ci95": [
+     -1.9,
+     0.0
+    ]
+   },
+   "H1-H3": {
+    "cells": 360,
+    "tasks": 60,
+    "arm_num": 320,
+    "ctl_num": 316,
+    "den": 408,
+    "arm_pct": 78.4,
+    "ctl_pct": 77.5,
+    "delta_pp": 1.0,
+    "ci95": [
+     -3.2,
+     5.2
+    ]
+   },
+   "round r1": {
+    "cells": 300,
+    "tasks": 100,
+    "arm_num": 211,
+    "ctl_num": 207,
+    "den": 261,
+    "arm_pct": 80.8,
+    "ctl_pct": 79.3,
+    "delta_pp": 1.5,
+    "ci95": [
+     -3.2,
+     6.0
+    ]
+   },
+   "round r2": {
+    "cells": 300,
+    "tasks": 100,
+    "arm_num": 212,
+    "ctl_num": 215,
+    "den": 261,
+    "arm_pct": 81.2,
+    "ctl_pct": 82.4,
+    "delta_pp": -1.1,
+    "ci95": [
+     -6.0,
+     3.6
+    ]
+   }
+  },
+  "seen_signs": {
+   "all": {
+    "better": 24,
+    "worse": 23,
+    "tied": 277,
+    "sign_test_p_two_sided": 1.0
+   },
+   "H1": {
+    "better": 9,
+    "worse": 10,
+    "tied": 47,
+    "sign_test_p_two_sided": 1.0
+   },
+   "H2": {
+    "better": 7,
+    "worse": 5,
+    "tied": 54,
+    "sign_test_p_two_sided": 0.7744
+   },
+   "H3": {
+    "better": 5,
+    "worse": 2,
+    "tied": 95,
+    "sign_test_p_two_sided": 0.4531
+   },
+   "H4": {
+    "better": 3,
+    "worse": 6,
+    "tied": 81,
+    "sign_test_p_two_sided": 0.5078
+   },
+   "claude-opus-5-5": {
+    "better": 7,
+    "worse": 7,
+    "tied": 94,
+    "sign_test_p_two_sided": 1.0
+   },
+   "claude-sonnet-5-5": {
+    "better": 15,
+    "worse": 13,
+    "tied": 80,
+    "sign_test_p_two_sided": 0.8506
+   },
+   "gpt-6.1-sol": {
+    "better": 2,
+    "worse": 3,
+    "tied": 103,
+    "sign_test_p_two_sided": 1.0
+   },
+   "H1-H3": {
+    "better": 21,
+    "worse": 17,
+    "tied": 196,
+    "sign_test_p_two_sided": 0.6271
+   },
+   "round r1": {
+    "better": 11,
+    "worse": 9,
+    "tied": 142,
+    "sign_test_p_two_sided": 0.8238
+   },
+   "round r2": {
+    "better": 13,
+    "worse": 14,
+    "tied": 135,
+    "sign_test_p_two_sided": 1.0
+   }
+  },
+  "success": {
+   "all": {
+    "cells": 600,
+    "tasks": 100,
+    "arm_num": 479,
+    "ctl_num": 475,
+    "den": 600,
+    "arm_pct": 79.8,
+    "ctl_pct": 79.2,
+    "delta_pp": 0.7,
+    "ci95": [
+     -1.5,
+     2.8
+    ]
+   },
+   "H1": {
+    "cells": 120,
+    "tasks": 20,
+    "arm_num": 40,
+    "ctl_num": 39,
+    "den": 120,
+    "arm_pct": 33.3,
+    "ctl_pct": 32.5,
+    "delta_pp": 0.8,
+    "ci95": [
+     -2.5,
+     4.2
+    ]
+   },
+   "H2": {
+    "cells": 120,
+    "tasks": 20,
+    "arm_num": 104,
+    "ctl_num": 101,
+    "den": 120,
+    "arm_pct": 86.7,
+    "ctl_pct": 84.2,
+    "delta_pp": 2.5,
+    "ci95": [
+     -4.2,
+     9.2
+    ]
+   },
+   "H3": {
+    "cells": 120,
+    "tasks": 20,
+    "arm_num": 115,
+    "ctl_num": 114,
+    "den": 120,
+    "arm_pct": 95.8,
+    "ctl_pct": 95.0,
+    "delta_pp": 0.8,
+    "ci95": [
+     -4.2,
+     5.8
+    ]
+   },
+   "H4": {
+    "cells": 120,
+    "tasks": 20,
+    "arm_num": 100,
+    "ctl_num": 101,
+    "den": 120,
+    "arm_pct": 83.3,
+    "ctl_pct": 84.2,
+    "delta_pp": -0.8,
+    "ci95": [
+     -6.7,
+     5.0
+    ]
+   },
+   "H5": {
+    "cells": 120,
+    "tasks": 20,
+    "arm_num": 120,
+    "ctl_num": 120,
+    "den": 120,
+    "arm_pct": 100.0,
+    "ctl_pct": 100.0,
+    "delta_pp": 0.0,
+    "ci95": [
+     0.0,
+     0.0
+    ]
+   },
+   "claude-opus-5-5": {
+    "cells": 200,
+    "tasks": 100,
+    "arm_num": 157,
+    "ctl_num": 164,
+    "den": 200,
+    "arm_pct": 78.5,
+    "ctl_pct": 82.0,
+    "delta_pp": -3.5,
+    "ci95": [
+     -8.0,
+     1.0
+    ]
+   },
+   "claude-sonnet-5-5": {
+    "cells": 200,
+    "tasks": 100,
+    "arm_num": 143,
+    "ctl_num": 134,
+    "den": 200,
+    "arm_pct": 71.5,
+    "ctl_pct": 67.0,
+    "delta_pp": 4.5,
+    "ci95": [
+     -0.5,
+     10.0
+    ]
+   },
+   "gpt-6.1-sol": {
+    "cells": 200,
+    "tasks": 100,
+    "arm_num": 179,
+    "ctl_num": 177,
+    "den": 200,
+    "arm_pct": 89.5,
+    "ctl_pct": 88.5,
+    "delta_pp": 1.0,
+    "ci95": [
+     0.0,
+     2.5
+    ]
+   }
+  },
+  "wrong_value": {
+   "all": {
+    "cells": 600,
+    "tasks": 100,
+    "arm_num": 34,
+    "ctl_num": 42,
+    "den": 600,
+    "arm_pct": 5.7,
+    "ctl_pct": 7.0,
+    "delta_pp": -1.3,
+    "ci95": [
+     -3.0,
+     0.3
+    ]
+   },
+   "H1": {
+    "cells": 120,
+    "tasks": 20,
+    "arm_num": 0,
+    "ctl_num": 0,
+    "den": 120,
+    "arm_pct": 0.0,
+    "ctl_pct": 0.0,
+    "delta_pp": 0.0,
+    "ci95": [
+     0.0,
+     0.0
+    ]
+   },
+   "H2": {
+    "cells": 120,
+    "tasks": 20,
+    "arm_num": 14,
+    "ctl_num": 18,
+    "den": 120,
+    "arm_pct": 11.7,
+    "ctl_pct": 15.0,
+    "delta_pp": -3.3,
+    "ci95": [
+     -9.2,
+     1.7
+    ]
+   },
+   "H3": {
+    "cells": 120,
+    "tasks": 20,
+    "arm_num": 1,
+    "ctl_num": 5,
+    "den": 120,
+    "arm_pct": 0.8,
+    "ctl_pct": 4.2,
+    "delta_pp": -3.3,
+    "ci95": [
+     -6.7,
+     -0.8
+    ]
+   },
+   "H4": {
+    "cells": 120,
+    "tasks": 20,
+    "arm_num": 19,
+    "ctl_num": 19,
+    "den": 120,
+    "arm_pct": 15.8,
+    "ctl_pct": 15.8,
+    "delta_pp": 0.0,
+    "ci95": [
+     -5.8,
+     5.8
+    ]
+   },
+   "H5": {
+    "cells": 120,
+    "tasks": 20,
+    "arm_num": 0,
+    "ctl_num": 0,
+    "den": 120,
+    "arm_pct": 0.0,
+    "ctl_pct": 0.0,
+    "delta_pp": 0.0,
+    "ci95": [
+     0.0,
+     0.0
+    ]
+   },
+   "claude-opus-5-5": {
+    "cells": 200,
+    "tasks": 100,
+    "arm_num": 7,
+    "ctl_num": 9,
+    "den": 200,
+    "arm_pct": 3.5,
+    "ctl_pct": 4.5,
+    "delta_pp": -1.0,
+    "ci95": [
+     -4.0,
+     2.0
+    ]
+   },
+   "claude-sonnet-5-5": {
+    "cells": 200,
+    "tasks": 100,
+    "arm_num": 27,
+    "ctl_num": 32,
+    "den": 200,
+    "arm_pct": 13.5,
+    "ctl_pct": 16.0,
+    "delta_pp": -2.5,
+    "ci95": [
+     -7.0,
+     2.0
+    ]
+   },
+   "gpt-6.1-sol": {
+    "cells": 200,
+    "tasks": 100,
+    "arm_num": 0,
+    "ctl_num": 1,
+    "den": 200,
+    "arm_pct": 0.0,
+    "ctl_pct": 0.5,
+    "delta_pp": -0.5,
+    "ci95": [
+     -1.5,
+     0.0
+    ]
+   }
+  }
+ },
+ "all-on": {
+  "seen_share": {
+   "all": {
+    "cells": 600,
+    "tasks": 100,
+    "arm_num": 448,
+    "ctl_num": 422,
+    "den": 522,
+    "arm_pct": 85.8,
+    "ctl_pct": 80.8,
+    "delta_pp": 5.0,
+    "ci95": [
+     0.0,
+     10.4
+    ]
+   },
+   "H1": {
+    "cells": 120,
+    "tasks": 20,
+    "arm_num": 120,
+    "ctl_num": 114,
+    "den": 180,
+    "arm_pct": 66.7,
+    "ctl_pct": 63.3,
+    "delta_pp": 3.3,
+    "ci95": [
+     -10.0,
+     17.9
+    ]
+   },
+   "H2": {
+    "cells": 120,
+    "tasks": 20,
+    "arm_num": 72,
+    "ctl_num": 64,
+    "den": 78,
+    "arm_pct": 92.3,
+    "ctl_pct": 82.1,
+    "delta_pp": 10.3,
+    "ci95": [
+     -1.9,
+     23.3
+    ]
+   },
+   "H3": {
+    "cells": 120,
+    "tasks": 20,
+    "arm_num": 142,
+    "ctl_num": 138,
+    "den": 150,
+    "arm_pct": 94.7,
+    "ctl_pct": 92.0,
+    "delta_pp": 2.7,
+    "ci95": [
+     0.0,
+     6.0
+    ]
+   },
+   "H4": {
+    "cells": 120,
+    "tasks": 20,
+    "arm_num": 114,
+    "ctl_num": 106,
+    "den": 114,
+    "arm_pct": 100.0,
+    "ctl_pct": 93.0,
+    "delta_pp": 7.0,
+    "ci95": [
+     2.5,
+     12.2
+    ]
+   },
+   "claude-opus-5-5": {
+    "cells": 200,
+    "tasks": 100,
+    "arm_num": 147,
+    "ctl_num": 138,
+    "den": 174,
+    "arm_pct": 84.5,
+    "ctl_pct": 79.3,
+    "delta_pp": 5.2,
+    "ci95": [
+     -3.9,
+     14.7
+    ]
+   },
+   "claude-sonnet-5-5": {
+    "cells": 200,
+    "tasks": 100,
+    "arm_num": 141,
+    "ctl_num": 126,
+    "den": 174,
+    "arm_pct": 81.0,
+    "ctl_pct": 72.4,
+    "delta_pp": 8.6,
+    "ci95": [
+     1.1,
+     16.9
+    ]
+   },
+   "gpt-6.1-sol": {
+    "cells": 200,
+    "tasks": 100,
+    "arm_num": 160,
+    "ctl_num": 158,
+    "den": 174,
+    "arm_pct": 92.0,
+    "ctl_pct": 90.8,
+    "delta_pp": 1.1,
+    "ci95": [
+     -3.5,
+     6.9
+    ]
+   },
+   "H1-H3": {
+    "cells": 360,
+    "tasks": 60,
+    "arm_num": 334,
+    "ctl_num": 316,
+    "den": 408,
+    "arm_pct": 81.9,
+    "ctl_pct": 77.5,
+    "delta_pp": 4.4,
+    "ci95": [
+     -1.8,
+     11.3
+    ]
+   },
+   "round r1": {
+    "cells": 300,
+    "tasks": 100,
+    "arm_num": 224,
+    "ctl_num": 207,
+    "den": 261,
+    "arm_pct": 85.8,
+    "ctl_pct": 79.3,
+    "delta_pp": 6.5,
+    "ci95": [
+     0.8,
+     12.3
+    ]
+   },
+   "round r2": {
+    "cells": 300,
+    "tasks": 100,
+    "arm_num": 224,
+    "ctl_num": 215,
+    "den": 261,
+    "arm_pct": 85.8,
+    "ctl_pct": 82.4,
+    "delta_pp": 3.4,
+    "ci95": [
+     -2.8,
+     10.4
+    ]
+   }
+  },
+  "seen_signs": {
+   "all": {
+    "better": 38,
+    "worse": 15,
+    "tied": 271,
+    "sign_test_p_two_sided": 0.0022
+   },
+   "H1": {
+    "better": 12,
+    "worse": 10,
+    "tied": 44,
+    "sign_test_p_two_sided": 0.8318
+   },
+   "H2": {
+    "better": 11,
+    "worse": 2,
+    "tied": 53,
+    "sign_test_p_two_sided": 0.0225
+   },
+   "H3": {
+    "better": 7,
+    "worse": 3,
+    "tied": 92,
+    "sign_test_p_two_sided": 0.3438
+   },
+   "H4": {
+    "better": 8,
+    "worse": 0,
+    "tied": 82,
+    "sign_test_p_two_sided": 0.0078
+   },
+   "claude-opus-5-5": {
+    "better": 10,
+    "worse": 6,
+    "tied": 92,
+    "sign_test_p_two_sided": 0.4545
+   },
+   "claude-sonnet-5-5": {
+    "better": 26,
+    "worse": 7,
+    "tied": 75,
+    "sign_test_p_two_sided": 0.0013
+   },
+   "gpt-6.1-sol": {
+    "better": 2,
+    "worse": 2,
+    "tied": 104,
+    "sign_test_p_two_sided": 1.0
+   },
+   "H1-H3": {
+    "better": 30,
+    "worse": 15,
+    "tied": 189,
+    "sign_test_p_two_sided": 0.0357
+   },
+   "round r1": {
+    "better": 20,
+    "worse": 7,
+    "tied": 135,
+    "sign_test_p_two_sided": 0.0192
+   },
+   "round r2": {
+    "better": 18,
+    "worse": 8,
+    "tied": 136,
+    "sign_test_p_two_sided": 0.0755
+   }
+  },
+  "success": {
+   "all": {
+    "cells": 600,
+    "tasks": 100,
+    "arm_num": 504,
+    "ctl_num": 475,
+    "den": 600,
+    "arm_pct": 84.0,
+    "ctl_pct": 79.2,
+    "delta_pp": 4.8,
+    "ci95": [
+     2.0,
+     7.8
+    ]
+   },
+   "H1": {
+    "cells": 120,
+    "tasks": 20,
+    "arm_num": 41,
+    "ctl_num": 39,
+    "den": 120,
+    "arm_pct": 34.2,
+    "ctl_pct": 32.5,
+    "delta_pp": 1.7,
+    "ci95": [
+     -4.2,
+     7.5
+    ]
+   },
+   "H2": {
+    "cells": 120,
+    "tasks": 20,
+    "arm_num": 108,
+    "ctl_num": 101,
+    "den": 120,
+    "arm_pct": 90.0,
+    "ctl_pct": 84.2,
+    "delta_pp": 5.8,
+    "ci95": [
+     -2.5,
+     15.0
+    ]
+   },
+   "H3": {
+    "cells": 120,
+    "tasks": 20,
+    "arm_num": 116,
+    "ctl_num": 114,
+    "den": 120,
+    "arm_pct": 96.7,
+    "ctl_pct": 95.0,
+    "delta_pp": 1.7,
+    "ci95": [
+     -0.8,
+     5.0
+    ]
+   },
+   "H4": {
+    "cells": 120,
+    "tasks": 20,
+    "arm_num": 120,
+    "ctl_num": 101,
+    "den": 120,
+    "arm_pct": 100.0,
+    "ctl_pct": 84.2,
+    "delta_pp": 15.8,
+    "ci95": [
+     8.3,
+     24.2
+    ]
+   },
+   "H5": {
+    "cells": 120,
+    "tasks": 20,
+    "arm_num": 119,
+    "ctl_num": 120,
+    "den": 120,
+    "arm_pct": 99.2,
+    "ctl_pct": 100.0,
+    "delta_pp": -0.8,
+    "ci95": [
+     -2.5,
+     0.0
+    ]
+   },
+   "claude-opus-5-5": {
+    "cells": 200,
+    "tasks": 100,
+    "arm_num": 172,
+    "ctl_num": 164,
+    "den": 200,
+    "arm_pct": 86.0,
+    "ctl_pct": 82.0,
+    "delta_pp": 4.0,
+    "ci95": [
+     0.5,
+     7.5
+    ]
+   },
+   "claude-sonnet-5-5": {
+    "cells": 200,
+    "tasks": 100,
+    "arm_num": 159,
+    "ctl_num": 134,
+    "den": 200,
+    "arm_pct": 79.5,
+    "ctl_pct": 67.0,
+    "delta_pp": 12.5,
+    "ci95": [
+     6.5,
+     19.0
+    ]
+   },
+   "gpt-6.1-sol": {
+    "cells": 200,
+    "tasks": 100,
+    "arm_num": 173,
+    "ctl_num": 177,
+    "den": 200,
+    "arm_pct": 86.5,
+    "ctl_pct": 88.5,
+    "delta_pp": -2.0,
+    "ci95": [
+     -5.0,
+     0.5
+    ]
+   }
+  },
+  "wrong_value": {
+   "all": {
+    "cells": 600,
+    "tasks": 100,
+    "arm_num": 15,
+    "ctl_num": 42,
+    "den": 600,
+    "arm_pct": 2.5,
+    "ctl_pct": 7.0,
+    "delta_pp": -4.5,
+    "ci95": [
+     -7.3,
+     -1.8
+    ]
+   },
+   "H1": {
+    "cells": 120,
+    "tasks": 20,
+    "arm_num": 0,
+    "ctl_num": 0,
+    "den": 120,
+    "arm_pct": 0.0,
+    "ctl_pct": 0.0,
+    "delta_pp": 0.0,
+    "ci95": [
+     0.0,
+     0.0
+    ]
+   },
+   "H2": {
+    "cells": 120,
+    "tasks": 20,
+    "arm_num": 12,
+    "ctl_num": 18,
+    "den": 120,
+    "arm_pct": 10.0,
+    "ctl_pct": 15.0,
+    "delta_pp": -5.0,
+    "ci95": [
+     -14.2,
+     3.3
+    ]
+   },
+   "H3": {
+    "cells": 120,
+    "tasks": 20,
+    "arm_num": 2,
+    "ctl_num": 5,
+    "den": 120,
+    "arm_pct": 1.7,
+    "ctl_pct": 4.2,
+    "delta_pp": -2.5,
+    "ci95": [
+     -5.8,
+     0.8
+    ]
+   },
+   "H4": {
+    "cells": 120,
+    "tasks": 20,
+    "arm_num": 0,
+    "ctl_num": 19,
+    "den": 120,
+    "arm_pct": 0.0,
+    "ctl_pct": 15.8,
+    "delta_pp": -15.8,
+    "ci95": [
+     -24.2,
+     -8.3
+    ]
+   },
+   "H5": {
+    "cells": 120,
+    "tasks": 20,
+    "arm_num": 1,
+    "ctl_num": 0,
+    "den": 120,
+    "arm_pct": 0.8,
+    "ctl_pct": 0.0,
+    "delta_pp": 0.8,
+    "ci95": [
+     0.0,
+     2.5
+    ]
+   },
+   "claude-opus-5-5": {
+    "cells": 200,
+    "tasks": 100,
+    "arm_num": 0,
+    "ctl_num": 9,
+    "den": 200,
+    "arm_pct": 0.0,
+    "ctl_pct": 4.5,
+    "delta_pp": -4.5,
+    "ci95": [
+     -7.5,
+     -2.0
+    ]
+   },
+   "claude-sonnet-5-5": {
+    "cells": 200,
+    "tasks": 100,
+    "arm_num": 11,
+    "ctl_num": 32,
+    "den": 200,
+    "arm_pct": 5.5,
+    "ctl_pct": 16.0,
+    "delta_pp": -10.5,
+    "ci95": [
+     -17.0,
+     -4.5
+    ]
+   },
+   "gpt-6.1-sol": {
+    "cells": 200,
+    "tasks": 100,
+    "arm_num": 4,
+    "ctl_num": 1,
+    "den": 200,
+    "arm_pct": 2.0,
+    "ctl_pct": 0.5,
+    "delta_pp": 1.5,
+    "ci95": [
+     -0.5,
+     4.5
+    ]
+   }
+  }
+ }
+}

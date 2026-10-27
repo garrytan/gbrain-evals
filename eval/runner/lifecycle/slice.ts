@@ -12,6 +12,11 @@ import { createServer, type AddressInfo } from 'node:net';
  *   once per cell and every slot must be effectively off (presence).
  * - A git vault is the default source, so page writes land as Markdown files
  *   and a full sync can reimport them.
+ * - `EVAL_BELIEF_LEDGER=1` runs `gbrain beliefs enable --source vault` right
+ *   after the vault becomes the default source, before any page is written,
+ *   so every write of the cell goes through gbrain's belief ledger (the
+ *   ledger-on arm of the W1 belief ledger probe 40). With any other value
+ *   the cell never runs it.
  * - `primary` is the transport under test (trusted local CLI, stdio MCP or
  *   HTTP MCP with an OAuth client bound to the vault). `trusted()` runs reads
  *   as the trusted local CLI caller. A PGLite database admits one process,
@@ -198,6 +203,10 @@ export class SliceCell {
     }
     const def = await this.operator('sources-default', ['sources', 'default', 'vault']);
     if (def.code !== 0) throw new Error(`sources default failed: ${this.operatorLog.at(-1)!.tail}`);
+    if (process.env.EVAL_BELIEF_LEDGER === '1') {
+      const on = await this.operator('beliefs-enable', ['beliefs', 'enable', '--source', 'vault']);
+      if (on.code !== 0) throw new Error(`beliefs enable failed: ${this.operatorLog.at(-1)!.tail}`);
+    }
 
     const decide = await this.operator('decide-status', ['decide', 'status', '--json']);
     try {

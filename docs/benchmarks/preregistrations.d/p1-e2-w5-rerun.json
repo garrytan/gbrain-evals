@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "experiments": [
+    {
+      "id": "p1-e2-w5-rerun",
+      "preregistration": "docs/benchmarks/2026-10-16-p1-e2-w5-rerun-preregistration.md",
+      "results": [
+        "docs/benchmarks/2026-10-05-heldout-verdicts/p1-e2-w5-heldout-*.json"
+      ]
+    }
+  ]
+}

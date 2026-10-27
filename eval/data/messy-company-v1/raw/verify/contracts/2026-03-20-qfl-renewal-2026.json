@@ -1,0 +1,96 @@
+{
+  "slug": "contracts/2026-03-20-qfl-renewal-2026",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2026-03-20",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Quarrendon Freight Lines",
+        "line": 7
+      },
+      {
+        "oid": "e2",
+        "surface": "Quarrendon Freight Lines",
+        "line": 11
+      },
+      {
+        "oid": "e3",
+        "surface": "Quarrendon Freight Lines",
+        "line": 34
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": [],
+    "record": {
+      "question": "Is this document signed, an unsigned version, or a draft? Judge from the body text, not the title alone. Give its signed date and effective date if stated, and the value of each of these terms it sets.",
+      "terms": [
+        "price_per_seat",
+        "discount_pct",
+        "renewal_date"
+      ]
+    }
+  },
+  "prompt_user_sha256": "24e26a655906e5ec54d8383843d4c6bd20b25aadfadb97549f1a16aeb129eaec",
+  "response_text": "{\n  \"date_used\": \"2026-03-20\",\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"quarrendon\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"quarrendon\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"quarrendon\"\n    }\n  ],\n  \"record\": {\n    \"status\": \"signed\",\n    \"status_evidence_line\": 11,\n    \"signed_date\": \"2026-03-20\",\n    \"effective_date\": \"2026-04-01\",\n    \"terms\": [\n      {\n        \"term\": \"price_per_seat\",\n        \"applies_to\": [\n          \"quarrendon\"\n        ],\n        \"value\": \"USD 1,920\",\n        \"line\": 19\n      },\n      {\n        \"term\": \"discount_pct\",\n        \"applies_to\": [\n          \"quarrendon\"\n        ],\n        \"value\": \"10%\",\n        \"line\": 19\n      },\n      {\n        \"term\": \"renewal_date\",\n        \"applies_to\": [\n          \"quarrendon\"\n        ],\n        \"value\": \"2027-03-31\",\n        \"line\": 19\n      }\n    ],\n    \"deciding_line\": 23,\n    \"deciding_days\": null\n  }\n}",
+  "parsed": {
+    "date_used": "2026-03-20",
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "quarrendon"
+      },
+      {
+        "oid": "e2",
+        "entity": "quarrendon"
+      },
+      {
+        "oid": "e3",
+        "entity": "quarrendon"
+      }
+    ],
+    "record": {
+      "status": "signed",
+      "status_evidence_line": 11,
+      "signed_date": "2026-03-20",
+      "effective_date": "2026-04-01",
+      "terms": [
+        {
+          "term": "price_per_seat",
+          "applies_to": [
+            "quarrendon"
+          ],
+          "value": "USD 1,920",
+          "line": 19
+        },
+        {
+          "term": "discount_pct",
+          "applies_to": [
+            "quarrendon"
+          ],
+          "value": "10%",
+          "line": 19
+        },
+        {
+          "term": "renewal_date",
+          "applies_to": [
+            "quarrendon"
+          ],
+          "value": "2027-03-31",
+          "line": 19
+        }
+      ],
+      "deciding_line": 23,
+      "deciding_days": null
+    }
+  },
+  "usage": {
+    "input_tokens": 3274,
+    "output_tokens": 379,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.010338
+}

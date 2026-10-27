@@ -1,0 +1,640 @@
+[
+  {
+    "key": "rv:contracts/2025-03-28-qfl-msa:renewal_date:quarrendon",
+    "decision": "keep",
+    "note": "Clause 16.1 (line 247) sets the Initial Period through 3/31/26, and clause 3.2 (line 67) says the same; renewal_date is the term end date in every record. The verifier gave the first day of the next period.",
+    "label": {
+      "line": 247
+    }
+  },
+  {
+    "key": "rv:contracts/2025-05-30-tcc-of-2025:price_per_seat:tamsin",
+    "decision": "keep",
+    "note": "Line 29 states the list price of $1,980 per seat per year and line 31 the 5% discount. price_per_seat is the list price in every record, with discount_pct separate; the verifier reported the net price on line 32.",
+    "label": {
+      "line": 29
+    }
+  },
+  {
+    "key": "rv:contracts/2026-05-27-tcc-renewal-2026:renewal_date:tamsin",
+    "decision": "keep",
+    "note": "Line 11: \"The renewal term continues through 2027-05-31.\" The verifier gave the effective date.",
+    "label": {
+      "line": 11
+    }
+  },
+  {
+    "key": "cl:crm/2025-03-10-tamsin-marcus-note:c-tcc-decider-marcus",
+    "decision": "keep",
+    "note": "Line 8 names Pavel Ruud, CFO, as decision maker; the verifier agreed in substance and differed only in wording."
+  },
+  {
+    "key": "cl:meetings/2025-06-20-marrow-golive-checkin:c-mfw-golive-b",
+    "decision": "keep",
+    "note": "Line 9: go-live mid-June 2025, week of the 16th; same value as planned, different wording."
+  },
+  {
+    "key": "cl:updates/2025-06-16-central-weekly:c-mfw-golive-a",
+    "decision": "keep",
+    "note": "Line 12: \"Marrow Fieldworks goes live in 2025-06\", which is June 2025; wording difference only."
+  },
+  {
+    "key": "ev:emails/2025-11-06-quarrendon-exec-call:e-qfl-sev1",
+    "decision": "keep",
+    "note": "Lines 12-14 describe \"Tuesday's Sev 1 (Nov 4)\" after the 2025-11-04 deploy at Quarrendon; the event and date are present."
+  },
+  {
+    "key": "ev:emails/2025-09-04-tpx-outage-rca:e-tpx-api-outage",
+    "decision": "keep",
+    "note": "Pree writes to Lev Arkadin (Tansley Parcel) with the RCA for the 3 Sep 2025 carrier webhook outage (lines 16-18). The page describes stalled gate check-ins, not label printing, so the event matches by account, date and type, not by every summary detail."
+  },
+  {
+    "key": "ev:updates/2025-09-08-central-weekly:e-tpx-api-outage",
+    "decision": "keep",
+    "note": "Lines 11-14: carrier-API outage at Tansley Parcel on September 3, 2025, escalated by Lev Arkadin. The page gives a different root cause (certificate change) from the RCA email (retry loop); both describe the same event."
+  },
+  {
+    "key": "ev:tickets/2026-06-09-mas-new-stores:e-mas-store-rollout",
+    "decision": "drop",
+    "note": "The ticket is a routine onboarding log for six new stores opened Jun 9; nothing in it is an escalation or a complaint about a slow rollout. The author drifted from the brief, so this page is not evidence for the event (the 2026-06-09 chat still is)."
+  },
+  {
+    "key": "ev:notes/2025-12-08-bettina-pellucid-cutover-recap:e-phl-cutover",
+    "decision": "drop",
+    "note": "The note says Bettina ran Pellucid through the cutover until Nov 21 and stepped out that day; it never mentions the Nov 20 wrap-up meeting. Not evidence for the event; it remains evidence for the s-phl-bettina-overlap stint."
+  },
+  {
+    "key": "own:emails/2025-10-03-correction-north-moves:tamsin",
+    "decision": "keep",
+    "note": "Line 13 keeps Tamsin with Dana. The page does not restate her 2025-04-14 start, which is why the date-strict comparison failed; the owner matches."
+  },
+  {
+    "key": "own:notes/2026-01-30-ilse-private-dana-leave:quarrendon",
+    "decision": "keep",
+    "note": "The author (who runs \"the North team handoff\", i.e. the North lead) writes \"I'll run the Quarrendon Freight Lines renewal while Dana is out\", with leave 2 Feb to 13 Mar 2026. That states acting cover; Dana stays owner of record, which is what the verifier reported. The 2026-03-16 end is the first working day after the leave ends."
+  },
+  {
+    "key": "own:accounts/marrow-agrisupply:marrow-agrisupply",
+    "decision": "keep",
+    "note": "Line 11: Central team pooled account since January 2025; verifier agreed on the team owner and only lacked the exact start date."
+  },
+  {
+    "key": "own:accounts/tansleigh-packaging:tansleigh",
+    "decision": "keep",
+    "note": "Page dated 2025-04-02: the author \"took over as AM back in Jan 2025 (on top of the Central team lead stuff)\". The Central team lead is Hollis Mbeki, so the owner is identified by role, not name."
+  },
+  {
+    "key": "own:accounts/tansley-parcel:tansley-parcel",
+    "decision": "keep",
+    "note": "Pree Sundaram primary since January 2025; verifier agreed, with a month-only start."
+  },
+  {
+    "key": "own:emails/2025-12-15-marrow-fieldworks-handoff:marrow-agrisupply",
+    "decision": "keep",
+    "note": "Line 12: \"Marrow Agrisupply stays a team account\", in a Central-team email; the team is Central."
+  },
+  {
+    "key": "own:notes/2025-05-19-hollis-1on1-tobias:tansleigh",
+    "decision": "keep",
+    "note": "Hollis's private 1:1 note: \"As of today, Tobias Rendle owns Tansleigh Packaging\" (2025-05-19). That states the Tobias start and, by handover from the author, the end of Hollis's stint."
+  },
+  {
+    "key": "own:notes/2025-07-17-tansleigh-onsite:tansleigh",
+    "decision": "drop",
+    "note": "\"Now that I am managing Tansleigh Packaging\" in an unsigned private note with no name, role or date cue that identifies the author. The text does not say who owns the account, so it is not ownership evidence. Hollis's 1:1 note stays the only evidence, as the world plan intended."
+  },
+  {
+    "key": "own:accounts/pellow-home-living:covey-lark",
+    "decision": "keep",
+    "note": "Sofia Marchetti is primary; verifier agreed and lacked only the start date."
+  },
+  {
+    "key": "own:accounts/saltmarsh-provisions:saltmarsh",
+    "decision": "keep",
+    "note": "Line 16: Sofia through October 6, 2025, and \"I took over the relationship on October 6, 2025\". The Sofia stint and the handoff date are explicit; the second owner is the first-person author (named in the 2025-10-01 handoff email)."
+  },
+  {
+    "key": "own:emails/2025-10-01-saltmarsh-to-bettina:covey-lark",
+    "decision": "keep",
+    "note": "Line 20 says Sofia keeps Covey & Lark; the owner matches and the page does not restate the start date."
+  },
+  {
+    "key": "own:accounts/orlavine-medical-supply:orlavine",
+    "decision": "keep",
+    "note": "Page dated 2025-03-04, inside Nadia's stint: \"I manage this account (Nadia Fennimore, Strategic Accounts)\". The start date is not stated; the owner matches."
+  },
+  {
+    "key": "own:accounts/quillfeather-outfitters:quillfeather",
+    "decision": "keep",
+    "note": "Strategic Accounts pod owns Quillfeather; verifier agreed in substance."
+  },
+  {
+    "key": "own:emails/2025-01-06-strategic-pod-assignments:quillfeather",
+    "decision": "keep",
+    "note": "Strategic Accounts pod assignment; verifier agreed in substance."
+  },
+  {
+    "key": "op:updates/2026-03-02-north-weekly#m1",
+    "decision": "keep",
+    "note": "Dana owns both Quarrendon and Tamsin, but the text pins one: renewal paperwork with June, \"target for signature is before the 20th\". Quarrendon's renewal was drafted 2026-03-02 and signed 2026-03-20 (term ends 2026-03-31); Tamsin's renewal is not drafted until May. The renewal window resolves it to Quarrendon."
+  },
+  {
+    "key": "op:agent-notes/2026-01-02-central-handoffs#m2",
+    "decision": "drop",
+    "note": "\"the account Tobias runs\" describes a Tuesday 6 Jan 2026 conflict. On the page date (Jan 2) Tobias runs only Tansleigh, but the same page says Marrow Fieldworks changes hands on Jan 5, after which Tobias runs both. Page-date and event-date readings give different answers, so no clear label."
+  },
+  {
+    "key": "op:updates/2026-05-11-coastal-weekly#m1",
+    "decision": "keep",
+    "note": "\"covering\" means acting cover. On 2026-05-11 Bettina is acting owner only for Pellow Home Living (Sofia on leave from May 4); she owns Saltmarsh as primary, not as cover. The surface is plural but only one account is covered."
+  },
+  {
+    "key": "xop:accounts/marrow-agrisupply:11:Central team pooled account (no single account manager)",
+    "decision": "reject",
+    "note": "A first-person ownership statement on the account's own page, not an owner phrase that names an account through its owner. The ownership lane already covers it."
+  },
+  {
+    "key": "xop:accounts/tansleigh-packaging:12:I took over as AM back in Jan 2025",
+    "decision": "reject",
+    "note": "A first-person ownership statement on the account's own page, not an owner phrase that names an account through its owner. The ownership lane already covers it."
+  },
+  {
+    "key": "xop:accounts/orlavine-medical-supply:11:I manage this account (Nadia Fennimore, Strategic Accounts).",
+    "decision": "reject",
+    "note": "A first-person ownership statement on the account's own page, not an owner phrase that names an account through its owner. The ownership lane already covers it."
+  },
+  {
+    "key": "ent:agent-notes/2025-10-05-north-sunday:e6",
+    "decision": "relabel",
+    "note": "\"Tamsin Cold Chain (TCC)\" in October 2025, before the Orrin Mills rename.",
+    "label": {
+      "entity": "tamsin"
+    }
+  },
+  {
+    "key": "ent:agent-notes/2025-10-05-north-sunday:e7",
+    "decision": "relabel",
+    "note": "Same bullet: \"the scheduled Monday morning digest for TCC\" continues the Tamsin item.",
+    "label": {
+      "entity": "tamsin"
+    }
+  },
+  {
+    "key": "ent:agent-notes/north-account-cheatsheet:e6",
+    "decision": "relabel",
+    "note": "\"Tamsin Cold Chain (TCC)\".",
+    "label": {
+      "entity": "tamsin"
+    }
+  },
+  {
+    "key": "ent:chats/2026-01-13-thornbury-rename:e3",
+    "decision": "relabel",
+    "note": "\"Orrin Mills renamed itself Thornbury Cloth Co.... The new code is TCC\" — the new code of the mill.",
+    "label": {
+      "entity": "orrin"
+    }
+  },
+  {
+    "key": "ent:chats/2026-01-13-thornbury-rename:e5",
+    "decision": "relabel",
+    "note": "TCC in the invoice filename; line 16 says the invoice belongs to Thornbury Cloth Co. The speaker first misread it as the cold-chain account.",
+    "label": {
+      "entity": "orrin"
+    }
+  },
+  {
+    "key": "ent:chats/2026-01-13-thornbury-rename:e8",
+    "decision": "relabel",
+    "note": "\"TCC on this invoice means the mill.\"",
+    "label": {
+      "entity": "orrin"
+    }
+  },
+  {
+    "key": "ent:contracts/2025-05-30-tcc-of-2025:e2",
+    "decision": "relabel",
+    "note": "Document reference OF-TCC-2025-0512 on the Tamsin Cold Chain order form (2025).",
+    "label": {
+      "entity": "tamsin"
+    }
+  },
+  {
+    "key": "ent:contracts/2026-02-10-orm-unsigned-2026:e8",
+    "decision": "relabel",
+    "note": "Thornbury Cloth Co. renewal draft: \"The abbreviation TCC shall not be used as the sole customer identifier\" refers to the mill's code.",
+    "label": {
+      "entity": "orrin"
+    }
+  },
+  {
+    "key": "ent:contracts/2026-02-24-orm-renewal-2026:e3",
+    "decision": "relabel",
+    "note": "Reference PEM-ROF-2026-0217-TCC on the Thornbury Cloth Co. renewal.",
+    "label": {
+      "entity": "orrin"
+    }
+  },
+  {
+    "key": "ent:contracts/2026-02-24-orm-renewal-2026:e16",
+    "decision": "relabel",
+    "note": "Customer Code TCC on the Thornbury Cloth Co. renewal invoice clause.",
+    "label": {
+      "entity": "orrin"
+    }
+  },
+  {
+    "key": "ent:contracts/2026-02-24-orm-renewal-2026:e17",
+    "decision": "relabel",
+    "note": "Order reference suffix TCC on the Thornbury Cloth Co. renewal.",
+    "label": {
+      "entity": "orrin"
+    }
+  },
+  {
+    "key": "ent:crm/2025-03-10-tamsin-marcus-note:e2",
+    "decision": "relabel",
+    "note": "\"Tamsin Cold Chain (TCC)\".",
+    "label": {
+      "entity": "tamsin"
+    }
+  },
+  {
+    "key": "ent:updates/2025-12-08-north-weekly:e6",
+    "decision": "relabel",
+    "note": "\"Tamsin Cold Chain (TCC)\" table row.",
+    "label": {
+      "entity": "tamsin"
+    }
+  },
+  {
+    "key": "ent:updates/2025-12-08-north-weekly:e11",
+    "decision": "relabel",
+    "note": "\"TCC & ORM\" in December 2025: before the January 2026 rename, ORM is Orrin Mills and TCC is Tamsin.",
+    "label": {
+      "entity": "tamsin"
+    }
+  },
+  {
+    "key": "ent:updates/2025-12-08-north-weekly:e13",
+    "decision": "relabel",
+    "note": "\"TCC had a minor question ... their new Tacoma clerk\" — Tacoma is Tamsin's site.",
+    "label": {
+      "entity": "tamsin"
+    }
+  },
+  {
+    "key": "ent:updates/2026-04-20-north-weekly:e3",
+    "decision": "relabel",
+    "note": "Checklist labeled \"TCC — refrigerated receiving\": the cold-chain account.",
+    "label": {
+      "entity": "tamsin"
+    }
+  },
+  {
+    "key": "ent:chats/2025-07-02-tp-confusion:e2",
+    "decision": "keep",
+    "note": "Pree asks whether the TP in Tobias's ticket is Tansley Parcel; Tobias and Hollis answer that it is Tansleigh Packaging. The TP she quotes is that ticket's TP."
+  },
+  {
+    "key": "ent:chats/2025-07-02-tp-confusion:e6",
+    "decision": "relabel",
+    "note": "\"stop putting just TP in the triage queue\": talks about the abbreviation itself, not a reference to one account.",
+    "label": {
+      "entity": "none"
+    }
+  },
+  {
+    "key": "ent:chats/2025-07-02-tp-confusion:e9",
+    "decision": "relabel",
+    "note": "\"whenever someone writes TP in the subject line\": talks about the abbreviation itself.",
+    "label": {
+      "entity": "none"
+    }
+  },
+  {
+    "key": "ent:contracts/2025-03-03-tsp-of-2025:e5",
+    "decision": "relabel",
+    "note": "\"Customer Account Code: TSP / TP\" on the Tansleigh Packaging order form.",
+    "label": {
+      "entity": "tansleigh"
+    }
+  },
+  {
+    "key": "ent:chats/2026-04-23-marrow-renewal-chat:e1",
+    "decision": "relabel",
+    "note": "The \"Marrow\" header on the Apr 22 renewal task; Hollis answers \"the parent, Marrow Fieldworks\".",
+    "label": {
+      "entity": "marrow-fieldworks"
+    }
+  },
+  {
+    "key": "ent:chats/2026-04-23-marrow-renewal-chat:e2",
+    "decision": "relabel",
+    "note": "June's question quotes the same header; Hollis resolves it to Marrow Fieldworks.",
+    "label": {
+      "entity": "marrow-fieldworks"
+    }
+  },
+  {
+    "key": "ent:crm/2026-04-23-marrow-renewal-note:e1",
+    "decision": "relabel",
+    "note": "Title of a CRM note whose Account field is Marrow Fieldworks.",
+    "label": {
+      "entity": "marrow-fieldworks"
+    }
+  },
+  {
+    "key": "ent:meetings/2025-04-08-marrow-msa-signing-call:e1",
+    "decision": "relabel",
+    "note": "\"Marrow MSA signing call\" with attendees from Marrow Fieldworks; the text names only Fieldworks as the party.",
+    "label": {
+      "entity": "marrow-fieldworks"
+    }
+  },
+  {
+    "key": "ent:updates/2025-02-10-central-weekly:e13",
+    "decision": "drop",
+    "note": "\"The Marrow MSA draft\" under a heading naming both Marrow Fieldworks and Marrow Agrisupply: a family-wide reference to one agreement that covers both, with no single gold account."
+  },
+  {
+    "key": "ent:accounts/pellow-home-living:e9",
+    "decision": "relabel",
+    "note": "\"(Yes PHL is also the code for Pellucid Harbor Logistics...)\" — this occurrence names Pellucid, not the page's account.",
+    "label": {
+      "entity": "pellucid"
+    }
+  },
+  {
+    "key": "ent:agent-notes/2026-05-18-coastal-coverage:e3",
+    "decision": "relabel",
+    "note": "\"the two PHL references\": talks about the shorthand itself.",
+    "label": {
+      "entity": "none"
+    }
+  },
+  {
+    "key": "ent:agent-notes/coastal-cheatsheet:e2",
+    "decision": "relabel",
+    "note": "\"Pellucid Harbor Logistics (PHL)\".",
+    "label": {
+      "entity": "pellucid"
+    }
+  },
+  {
+    "key": "ent:agent-notes/coastal-cheatsheet:e10",
+    "decision": "relabel",
+    "note": "\"Covey & Lark Retail (Covey / CLR / PHL)\".",
+    "label": {
+      "entity": "covey-lark"
+    }
+  },
+  {
+    "key": "ent:agent-notes/coastal-cheatsheet:e11",
+    "decision": "relabel",
+    "note": "\"collide on the \\\"PHL\\\" code between\" the two companies: talks about the code itself.",
+    "label": {
+      "entity": "none"
+    }
+  },
+  {
+    "key": "ent:chats/2026-02-17-phl-collision:e3",
+    "decision": "relabel",
+    "note": "\"filtering \\\"PHL\\\" now returns both\": talks about the code itself.",
+    "label": {
+      "entity": "none"
+    }
+  },
+  {
+    "key": "ent:chats/2026-02-17-phl-collision:e6",
+    "decision": "relabel",
+    "note": "\"PHL with the Mid-Atlantic home goods appointments is Pellow.\"",
+    "label": {
+      "entity": "covey-lark"
+    }
+  },
+  {
+    "key": "ent:chats/2026-02-17-phl-collision:e9",
+    "decision": "relabel",
+    "note": "Joke gloss \"PHL means please hunt labels\": talks about the code itself.",
+    "label": {
+      "entity": "none"
+    }
+  },
+  {
+    "key": "ent:contracts/2025-12-15-phl-a1-unsigned:e2",
+    "decision": "relabel",
+    "note": "Reference PHL-AMD-001 on \"Amendment 1 (unsigned): Pellucid Harbor Logistics seat expansion\".",
+    "label": {
+      "entity": "pellucid"
+    }
+  },
+  {
+    "key": "ent:contracts/2026-02-19-phl-renewal-2026:e3",
+    "decision": "relabel",
+    "note": "Customer Account Code PHL on the Pellucid Harbor Logistics 2026 renewal.",
+    "label": {
+      "entity": "pellucid"
+    }
+  },
+  {
+    "key": "ent:contracts/2026-02-19-phl-renewal-2026:e4",
+    "decision": "relabel",
+    "note": "Ticket #PHL-8841-R on the Pellucid renewal.",
+    "label": {
+      "entity": "pellucid"
+    }
+  },
+  {
+    "key": "ent:contracts/2026-03-25-clr-renewal-2026:e3",
+    "decision": "relabel",
+    "note": "Reference ROF-PHL-2026-04 on the Pellow Home Living (formerly Covey & Lark) renewal.",
+    "label": {
+      "entity": "covey-lark"
+    }
+  },
+  {
+    "key": "ent:contracts/2026-09-29-phl-a2:e3",
+    "decision": "relabel",
+    "note": "Routing code PHL-AP-DOCK-02 at the Port of Galveston on the Pellucid Amendment 2.",
+    "label": {
+      "entity": "pellucid"
+    }
+  },
+  {
+    "key": "ent:contracts/2026-09-29-phl-a2:e4",
+    "decision": "relabel",
+    "note": "Report_ID PHL_DRAY_404 on the Pellucid Amendment 2.",
+    "label": {
+      "entity": "pellucid"
+    }
+  },
+  {
+    "key": "ent:emails/2026-03-10-pellucid-monthly-fee:e6",
+    "decision": "relabel",
+    "note": "\"flipping PHL to monthly\" in the Pellucid monthly-fee email.",
+    "label": {
+      "entity": "pellucid"
+    }
+  },
+  {
+    "key": "ent:emails/2026-04-24-sofia-leave-coverage:e4",
+    "decision": "relabel",
+    "note": "\"use the full account name in subject lines, not PHL\": talks about the code itself.",
+    "label": {
+      "entity": "none"
+    }
+  },
+  {
+    "key": "ent:meetings/2025-11-20-pellucid-cutover-wrapup:e3",
+    "decision": "relabel",
+    "note": "\"Pellucid Harbor Logistics (PHL) went live\".",
+    "label": {
+      "entity": "pellucid"
+    }
+  },
+  {
+    "key": "ent:meetings/2025-11-20-pellucid-cutover-wrapup:e4",
+    "decision": "relabel",
+    "note": "\"the PHL night-shift supervisor\" in the Pellucid cutover meeting.",
+    "label": {
+      "entity": "pellucid"
+    }
+  },
+  {
+    "key": "ent:notes/2025-12-08-bettina-pellucid-cutover-recap:e3",
+    "decision": "relabel",
+    "note": "\"I actually kept running PHL\" right after naming Pellucid Harbor Logistics.",
+    "label": {
+      "entity": "pellucid"
+    }
+  },
+  {
+    "key": "ent:updates/2025-10-06-coastal-weekly:e6",
+    "decision": "relabel",
+    "note": "\"Pellucid Harbor Logistics (PHL)\".",
+    "label": {
+      "entity": "pellucid"
+    }
+  },
+  {
+    "key": "ent:updates/2025-12-15-coastal-weekly:e2",
+    "decision": "relabel",
+    "note": "\"Pellucid Harbor Logistics (PHL)\" table row.",
+    "label": {
+      "entity": "pellucid"
+    }
+  },
+  {
+    "key": "ent:agent-notes/2025-07-07-strategic-digest:e1",
+    "decision": "drop",
+    "note": "\"The Vantorre MSA is live\", followed by sections for both Vantorre Group and Vantorre Mobility: a family-wide reference to the enterprise MSA, with no single gold account."
+  },
+  {
+    "key": "ent:agent-notes/2026-04-27-strategic-digest:e1",
+    "decision": "drop",
+    "note": "\"the Vantorre steering committee\" whose agenda covers both the parent rollout and the EV subsidiary: family-wide."
+  },
+  {
+    "key": "ent:contracts/2025-09-29-oms-of-2025:e8",
+    "decision": "keep",
+    "note": "OMS-TEST-014 is a sample appointment ID on the Orlavine order form; OMS is Orlavine's account code here, the same as other code-prefixed IDs in the corpus."
+  },
+  {
+    "key": "ent:emails/2025-06-12-vantorre-decision-maker:e1",
+    "decision": "relabel",
+    "note": "Subject \"Vantorre: who signs\"; the quoted question is about the MSA decision \"at Vantorre Group\", answered with Mateo Quiroga.",
+    "label": {
+      "entity": "vantorre-group"
+    }
+  },
+  {
+    "key": "ent:emails/2025-06-12-vantorre-decision-maker:e3",
+    "decision": "relabel",
+    "note": "Quoted subject of the same thread about Vantorre Group.",
+    "label": {
+      "entity": "vantorre-group"
+    }
+  },
+  {
+    "key": "ent:emails/2025-06-30-vantorre-msa-executed:e1",
+    "decision": "drop",
+    "note": "\"Executed: Vantorre enterprise MSA\"; line 15 says the MSA \"covers both Vantorre Group and Vantorre Mobility under the single paper\". Family-wide."
+  },
+  {
+    "key": "ent:emails/2025-06-30-vantorre-msa-executed:e2",
+    "decision": "drop",
+    "note": "Subject line of the same family-wide MSA email."
+  },
+  {
+    "key": "ent:emails/2025-06-30-vantorre-msa-executed:e3",
+    "decision": "drop",
+    "note": "\"The Vantorre enterprise MSA ... Covers both Vantorre Group and Vantorre Mobility\": family-wide."
+  },
+  {
+    "key": "ent:emails/2025-06-30-vantorre-msa-executed:e9",
+    "decision": "drop",
+    "note": "The email domain in mquiroga@vantorre.com is shared by the family; an address is not a mention of one account."
+  },
+  {
+    "key": "ent:emails/2025-06-30-vantorre-msa-executed:e10",
+    "decision": "drop",
+    "note": "\"Pemberline Systems / Vantorre — Final MSA for signature\": the same family-wide enterprise MSA."
+  },
+  {
+    "key": "ent:emails/2026-04-16-vantorre-handoff-correction:e1",
+    "decision": "relabel",
+    "note": "Subject \"Correction: Vantorre handoff date\"; the body: \"The Vantorre Group move to Gideon is effective 4 May 2026\".",
+    "label": {
+      "entity": "vantorre-group"
+    }
+  },
+  {
+    "key": "ent:emails/2026-05-20-vantorre-reorg:e1",
+    "decision": "relabel",
+    "note": "Subject \"Vantorre reorg\"; the body: \"Following Vantorre Group's reorg\".",
+    "label": {
+      "entity": "vantorre-group"
+    }
+  },
+  {
+    "key": "ent:emails/2026-06-24-vantorre-renewal-executed:e1",
+    "decision": "relabel",
+    "note": "\"Executed: Vantorre renewal\"; the body: \"The Vantorre Group renewal order form is fully executed\".",
+    "label": {
+      "entity": "vantorre-group"
+    }
+  },
+  {
+    "key": "ent:emails/2026-06-24-vantorre-renewal-executed:e2",
+    "decision": "relabel",
+    "note": "Subject line of the same Vantorre Group renewal email.",
+    "label": {
+      "entity": "vantorre-group"
+    }
+  },
+  {
+    "key": "ent:meetings/2025-07-15-vantorre-kickoff:e1",
+    "decision": "relabel",
+    "note": "\"Kickoff with Mateo Quiroga and the Vantorre Group procurement and Hartford operations team\".",
+    "label": {
+      "entity": "vantorre-group"
+    }
+  },
+  {
+    "key": "ent:meetings/2026-04-28-vantorre-steering-committee:e1",
+    "decision": "relabel",
+    "note": "\"steering call with Vantorre Group\"; attendee Mateo Quiroga (VTG).",
+    "label": {
+      "entity": "vantorre-group"
+    }
+  },
+  {
+    "key": "ent:meetings/2026-07-09-vantorre-renewal-debrief:e1",
+    "decision": "relabel",
+    "note": "Debrief with Mateo Quiroga of Vantorre Group; \"Keep Vantorre Mobility out of this email chain\".",
+    "label": {
+      "entity": "vantorre-group"
+    }
+  }
+]

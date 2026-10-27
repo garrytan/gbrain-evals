@@ -1,0 +1,37 @@
+{
+  "slug": "agent-notes/strategic-cheatsheet",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: agent-note\nTitle: Moss: Strategic cheat sheet\nDate: UNDATED. Do not include any date, year, month name, weekday, or relative date reference (\"yesterday\", \"last week\") anywhere in the document.\nWriter: Moss (Ruth Calloway's AI assistant)\nVoice: an AI assistant: neat, factual, a little stiff\nFormat: an assistant-written digest with headings and bullets, addressed to Ruth\nLength: about 118 words\nDate style in the body: undefined (ignore: undated)\nTypos: a few natural typos and one or two sloppy abbreviations (never in names or required phrases)\n\nBrief:\nUndated cheat sheet Moss keeps for Ruth on the Strategic pod. No dates anywhere.\n\nRequired phrases:\n- Use the exact phrase \"Gideon's fleet account\" once, referring to Vantorre Mobility. Don't put the account's name in the same sentence; the reader should work it out.\n- Use the exact phrase \"Nadia's industrial account\" once, referring to Vantorre Group. Don't put the account's name in the same sentence; the reader should work it out.\n- Use the exact phrase \"the account Gideon runs\" once, but vaguely: the writer does not say which account it is, and nothing nearby (name, location, numbers, products) may identify one. Keep that sentence generic, like a passing comment.\n- Use the exact phrase \"Gideon's biggest account\" once, but vaguely: the writer does not say which account it is, and nothing nearby (name, location, numbers, products) may identify one. Keep that sentence generic, like a passing comment.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Nadia Fennimore: Strategic account manager\n- Gideon Sato: Strategic account manager\n- Mateo Quiroga: Head of Procurement\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Vantorre Group: diversified industrial manufacturer, Northeast; main contact Mateo Quiroga, Head of Procurement; codes/nicknames VTG, VTRG\n- Vantorre Mobility: electric fleet services subsidiary, Northeast; subsidiary of Vantorre Group; codes/nicknames VTM, VMob\n- Orlavine Medical Supply: medical supply distributor, Mountain West; codes/nicknames OMS\n- Quillfeather Outfitters: outdoor gear retailer, Mountain West; codes/nicknames QFO\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what (background only; don't restate unless the brief asks):\n(This page is undated. Do not state who manages which account.)",
+      "response_text": "# Moss: Strategic cheat sheet\n\nRuth — compact reference for the Strategic pod.\n\n## General reminders\n- Keep the account Gideon runs on the discussion list.\n- Leave room to discuss Gideon's biggest account.\n\n## Vantorre Mobility\n- Northeast electric fleet services subsidiary of Vantorre Group; codes VTM and VMob.\n- Gideon's fleet account needs a clearer gate-exception summary.\n- Dock-door filter drops Door 4 from the dispatcher export; capture a screenshot and repro steps.\n\n## Vantorre Group\n- Northeast diversified industrial manufacturer; codes VTG and VTRG.\n- Nadia's industrial account has a procurement question queued.\n- Mateo Quiroga, Head of Procurement, needs the corrected reciept attachment.\n\n## Routing\n- June Osei-Lark: contract wording.\n- Anselm Grieve: discounts over 10%.\n- Export ticket: attach the missing colum example; incl. browser details.",
+      "usage": {
+        "input_tokens": 1170,
+        "output_tokens": 264,
+        "thinking_tokens": 68
+      },
+      "cost_usd": 0.00498,
+      "provider_meta": {
+        "id": "resp_0f7532aa1f625e20016acfaeba411487d1a701b280ee23ee03",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1170,
+          "input_tokens_details": {
+            "cache_write_tokens": 1167,
+            "cached_tokens": 0
+          },
+          "output_tokens": 264,
+          "output_tokens_details": {
+            "reasoning_tokens": 68
+          },
+          "total_tokens": 1434
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

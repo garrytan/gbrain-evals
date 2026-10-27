@@ -1,0 +1,37 @@
+{
+  "slug": "notes/2025-08-08-ruth-private-orlavine",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: private-note (a private page only the writer sees)\nTitle: Private: Orlavine move\nDate: Written on 2025-08-08.\nWriter: Ruth Calloway\nVoice: hurried, lots of fragments\nFormat: private notes in first person, bullets\nLength: about 37 words\nDate style in the body: undefined\nTypos: a few natural typos and one or two sloppy abbreviations (never in names or required phrases)\n\nBrief:\nRuth's private note: Orlavine Medical Supply moves from Nadia to Gideon on Monday August 11, 2025. She is not announcing it until after the comp conversation with Nadia.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Nadia Fennimore: Strategic account manager\n- Gideon Sato: Strategic account manager\n- Mateo Quiroga: Head of Procurement\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Vantorre Group: diversified industrial manufacturer, Northeast; main contact Mateo Quiroga, Head of Procurement; codes/nicknames VTG, VTRG\n- Vantorre Mobility: electric fleet services subsidiary, Northeast; subsidiary of Vantorre Group; codes/nicknames VTM, VMob\n- Orlavine Medical Supply: medical supply distributor, Mountain West; codes/nicknames OMS\n- Quillfeather Outfitters: outdoor gear retailer, Mountain West; codes/nicknames QFO\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2025-08-08 (background only; don't restate unless the brief asks):\n- Vantorre Group: managed by Nadia Fennimore\n- Vantorre Mobility: managed by Gideon Sato\n- Orlavine Medical Supply: managed by Nadia Fennimore\n- Quillfeather Outfitters: managed by Strategic Accounts pod (pooled account)",
+      "response_text": "# Private: Orlavine move\n\n- 2025-08-08 — Orlavine Medical Supply moves from Nadia Fennimore to Gideon Sato Monday August 11, 2025.\n- I'm not annoucing until after comp conversation with Nadia Fennimore.\n- Prep handoff re: dock-door labels. Check calender first.",
+      "usage": {
+        "input_tokens": 1022,
+        "output_tokens": 77,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.002814,
+      "provider_meta": {
+        "id": "resp_02b87e4edef84cd8016acfaede771c87d18f28175c5e66b6b1",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1022,
+          "input_tokens_details": {
+            "cache_write_tokens": 0,
+            "cached_tokens": 0
+          },
+          "output_tokens": 77,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 1099
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

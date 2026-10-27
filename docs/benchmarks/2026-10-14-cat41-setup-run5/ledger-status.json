@@ -1,0 +1,39 @@
+{
+  "ledger": "./.budget/cat41-setup-run5.sqlite",
+  "state": "sqlite",
+  "totals": {
+    "program_cap_usd": 10,
+    "committed_usd": 6.5590656,
+    "reconciled_usd": 6.5590656,
+    "open_reservations_usd": 0,
+    "remaining_usd": 3.4409343999999997,
+    "requests": 18,
+    "overshoot_usd": 0
+  },
+  "run": {
+    "run_id": "cat41-agent-operator-2026-10-14T03-16-31-194Z-8ef4222a",
+    "runner": "cat41-agent-operator",
+    "budget_usd": 10,
+    "estimate_usd": null,
+    "started_at": "2026-10-14T03:16:31.195Z",
+    "finished_at": null,
+    "committed_usd": 6.5590655999999985,
+    "overshoot_usd": 0,
+    "remaining_usd": 3.4409344000000015
+  },
+  "runs": 1,
+  "open_runs": 1,
+  "last_cap_change": {
+    "program_cap_usd": 10,
+    "kind": "open",
+    "reason": "GBRA-60 D8 setup TTHW run 5",
+    "by": "user@cox.local",
+    "at": "2026-10-14T03:16:31.172Z"
+  },
+  "size_bytes": 53248,
+  "read_ms": 0.92,
+  "hints": [
+    "both files present: a real legacy ledger.json beside the SQLite ledger is an interrupted migration; if the totals match run `migrate --finish`, otherwise stop and ask the user",
+    "cap mismatch: unset --program-cap-usd / BRAINBENCH_PROGRAM_CAP_USD to use the recorded cap; run `set-cap` only with the user's authorization"
+  ]
+}

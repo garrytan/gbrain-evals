@@ -1,0 +1,41 @@
+{
+  "slug": "contracts/2025-05-30-tcc-of-2025",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: record\nTitle: Order Form: Tamsin Cold Chain\nDate: Written on 2025-05-30.\nWriter: June Osei-Lark\nVoice: formal legal drafting\nFormat: formal numbered sections and a signature block\nLength: about 591 words\nDate style in the body: undefined\nTypos: none\n\nBrief:\nOrder Form: Tamsin Cold Chain. Parties: Pemberline Systems and Tamsin Cold Chain. Drafted 2025-05-12. Effective date 2025-06-01 (signed 2025-05-30; state both dates and keep them distinct). Terms this document sets: subscribed seats = 48; price per seat per year (USD) = 1980; discount (%) = 5; end of the current term (renewal date) = 2026-05-31; support SLA tier = Tier 1. Executed: include a signature block signed on 2025-05-30 by both parties (customer signatory plus June Osei-Lark for Pemberline).\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Ilse Varga: North team lead\n- Dana Okafor: Account manager, North team\n- Marcus Lindqvist: Account manager, North team\n- Thea Ramaswell: Director of Yard Operations\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Quarrendon Freight Lines: truckload freight carrier, Upper Midwest; main contact Thea Ramaswell, Director of Yard Operations; codes/nicknames QFL, Q-Freight\n- Brackenwater Freight Co.: less-than-truckload freight, Great Lakes; codes/nicknames BWF, Bracken\n- Tamsin Cold Chain: refrigerated warehousing, Pacific Northwest; codes/nicknames TCC\n- Orrin Mills: textile mill, Carolinas; codes/nicknames ORM\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2025-05-30 (background only; don't restate unless the brief asks):\n- Quarrendon Freight Lines: managed by Marcus Lindqvist\n- Brackenwater Freight Co.: managed by Dana Okafor\n- Tamsin Cold Chain: managed by Dana Okafor\n- Orrin Mills: managed by Dana Okafor",
+      "response_text": "# Order Form: Tamsin Cold Chain\n\n**Document Reference:** OF-TCC-2025-0512  \n**Date Drafted:** 2025-05-12  \n**Date Signed:** 2025-05-30  \n**Effective Date:** 2025-06-01  \n\nThis Order Form (\"Order Form\") is entered into by and between Pemberline Systems (\"Provider\") and Tamsin Cold Chain (\"Customer\"), referred to collectively as the \"Parties.\" Although drafted on 2025-05-12 and executed by both Parties on 2025-05-30, the rights, obligations, and subscription access granted hereunder shall commence solely on the Effective Date of 2025-06-01.\n\n### 1. Definitions and Scope of Use\n1.1 **Service.** Provider grants Customer a non-exclusive, non-transferable right to access and use the Pemberline Dock yard and dock scheduling software platform (\"Service\") during the Subscription Term, solely for Customer's internal refrigerated warehousing and cold-storage yard operations across its Pacific Northwest facilities, including the Auburn, Tacoma, and Pasco distribution centers.  \n1.2 **Permitted Operational Use.** A \"Subscribed Seat\" authorizes one named user—including gate house clerks, cold-dock coordinators, blast-freezer staging supervisors, and yard hostler dispatchers—to log into the Service to schedule carrier appointments, monitor reefer pre-cool status at doors C-01 through C-36, generate the Daily Reefer Dwell & Shore Power Report, and manage trailer movements across designated yard slips.\n\n### 2. Subscription Term\n2.1 **Term Dates.** The subscription term governed by this Order Form shall commence on the Effective Date of 2025-06-01 and shall continue through 2026-05-31 (\"End of Current Term\" and \"Renewal Date\"), distinct from the execution date of 2025-05-30.  \n2.2 **Provisioning Window.** Provider shall complete tenant configuration and Single Sign-On (SSO) directory synchronization prior to the 04:00 PDT morning receiving shift on 2025-06-01, ensuring no interruption to carrier check-in at the Auburn North Gate.\n\n### 3. Commercial Schedule and Pricing\n3.1 **Subscription Fees.** The commercial terms for the Subscription Term are established as follows:\n\n* **Product:** Pemberline Dock (Enterprise Yard & Cold-Storage Scheduling)\n* **Subscribed Seats:** 48\n* **List Price per Seat per Year:** $1,980.00 USD\n* **Gross Annual Subscription Fee:** $95,040.00 USD\n* **Applicable Discount:** 5% ($4,752.00 USD)\n* **Net Price per Seat per Year:** $1,881.00 USD\n* **Total Net Annual Subscription Fee:** $90,288.00 USD\n\n3.2 **Invoicing and Payment.** Provider shall issue the annual invoice for the Total Net Annual Subscription Fee upon the Effective Date (2025-06-01) via Provider's billing agent, Stoneharrow Billing. Customer shall remit full payment in United States Dollars via ACH or wire transfer to the account designated on the invoice. All fees are exclusive of applicable Washington and Oregon state or local sales and use taxes.\n\n### 4. Support Services and Service Level Agreement\n4.1 **Support SLA Tier.** Customer is enrolled in **Tier 1** Support for the duration of the Subscription Term.  \n4.2 **Incident Handling.** Under Tier 1 Support, Customer's designated system administrators may submit support tickets via the Pemberline customer portal or by email for issues affecting dock appointment locks, carrier EDI 214 status updates, or gate kiosk barcode scanners (including pre-go-live configuration ticket #PD-88412 regarding temperature-threshold alerts on Tacoma Dock B). Provider shall respond to and remediate incidents in accordance with the response targets defined in the standard Tier 1 Support Schedule.\n\n### 5. Entire Agreement and Execution\n5.1 **Precedence.** This Order Form, drafted on 2025-05-12, sets forth the complete commercial agreement between Pemberline Systems and Tamsin Cold Chain for the period from 2025-06-01 through 2026-05-31. In the event of any conflict between this Order Form and any generalized terms of service, the terms of this Order Form shall govern.\n\n**IN WITNESS WHEREOF**, the Parties have caused this Order Form to be executed by their duly authorized representatives on 2025-05-30, to take effect on the Effective Date of 2025-06-01.\n\n---\n\n**FOR TAMSIN COLD CHAIN:**\n\nSignature: _/s/ Henrik Lindahl_  \nName: Henrik Lindahl  \nTitle: Vice President of Cold Storage Operations  \nDate Signed: 2025-05-30  \n\n**FOR PEMBERLINE SYSTEMS:**\n\nSignature: _/s/ June Osei-Lark_  \nName: June Osei-Lark  \nTitle: Deal Desk and Contracts Manager  \nDate Signed: 2025-05-30",
+      "usage": {
+        "input_tokens": 1204,
+        "output_tokens": 1172,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.014128,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1204,
+          "candidatesTokenCount": 1172,
+          "totalTokenCount": 2376,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1204
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1172
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

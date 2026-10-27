@@ -1,0 +1,39 @@
+{
+  "ledger": ".budget/ledger.sqlite",
+  "state": "sqlite",
+  "totals": {
+    "program_cap_usd": 30,
+    "committed_usd": 7.06506,
+    "reconciled_usd": 7.06506,
+    "open_reservations_usd": 0,
+    "remaining_usd": 22.93494,
+    "requests": 2774,
+    "overshoot_usd": 0
+  },
+  "run": {
+    "run_id": "n2-paid-77cf8e111-2026-10-11T14-58-42-249Z-6ae6e164",
+    "runner": "n2-paid-77cf8e111",
+    "budget_usd": 30,
+    "estimate_usd": 10,
+    "started_at": "2026-10-11T14:58:42.255Z",
+    "finished_at": "2026-10-11T15:43:22.669Z",
+    "committed_usd": 7.065059999999994,
+    "overshoot_usd": 0,
+    "remaining_usd": 22.934940000000005
+  },
+  "runs": 1,
+  "open_runs": 0,
+  "last_cap_change": {
+    "program_cap_usd": 30,
+    "kind": "open",
+    "reason": "Paid N2 judge arm at gbrain 77cf8e111 (wave 14 re-pin), approved by Garry with a $30 cap",
+    "by": "user@cox.local",
+    "at": "2026-10-11T14:58:42.196Z"
+  },
+  "size_bytes": 1089536,
+  "read_ms": 2.32,
+  "hints": [
+    "both files present: a real legacy ledger.json beside the SQLite ledger is an interrupted migration; if the totals match run `migrate --finish`, otherwise stop and ask the user",
+    "cap mismatch: unset --program-cap-usd / BRAINBENCH_PROGRAM_CAP_USD to use the recorded cap; run `set-cap` only with the user's authorization"
+  ]
+}

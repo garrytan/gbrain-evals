@@ -1,0 +1,72 @@
+{
+  "slug": "agent-notes/2025-12-01-strategic-digest",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2025-12-01",
+    "owner_phrases": [
+      {
+        "mid": "agent-notes/2025-12-01-strategic-digest#m1",
+        "phrase": "Gideon's fleet account",
+        "lines": [
+          12
+        ]
+      },
+      {
+        "mid": "agent-notes/2025-12-01-strategic-digest#m2",
+        "phrase": "Gideon's medical account",
+        "lines": [
+          16
+        ]
+      }
+    ],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Vantorre Mobility",
+        "line": 11
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "8568d523814af86222ba139d3ba6287fb08561d3435a1700e9b8f89814a4839f",
+  "response_text": "{\n  \"date_used\": \"2025-12-01\",\n  \"owner_phrases\": [\n    {\n      \"mid\": \"agent-notes/2025-12-01-strategic-digest#m1\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\n        \"vantorre-mobility\"\n      ],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"On 2025-12-01, Gideon Sato owns vantorre-mobility (descriptors: fleet, EV) and orlavine (medical, healthcare). 'Gideon's fleet account' uniquely matches vantorre-mobility.\"\n    },\n    {\n      \"mid\": \"agent-notes/2025-12-01-strategic-digest#m2\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\n        \"orlavine\"\n      ],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"On 2025-12-01, Gideon Sato is the primary owner of orlavine (descriptors: medical, healthcare).\"\n    }\n  ],\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"vantorre-mobility\"\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-12-01",
+    "owner_phrases": [
+      {
+        "mid": "agent-notes/2025-12-01-strategic-digest#m1",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "vantorre-mobility"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "On 2025-12-01, Gideon Sato owns vantorre-mobility (descriptors: fleet, EV) and orlavine (medical, healthcare). 'Gideon's fleet account' uniquely matches vantorre-mobility."
+      },
+      {
+        "mid": "agent-notes/2025-12-01-strategic-digest#m2",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "orlavine"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "On 2025-12-01, Gideon Sato is the primary owner of orlavine (descriptors: medical, healthcare)."
+      }
+    ],
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "vantorre-mobility"
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2767,
+    "output_tokens": 350,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.009034
+}

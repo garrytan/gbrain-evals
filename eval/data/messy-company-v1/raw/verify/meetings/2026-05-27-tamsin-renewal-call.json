@@ -1,0 +1,58 @@
+{
+  "slug": "meetings/2026-05-27-tamsin-renewal-call",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2026-05-27",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Tamsin",
+        "line": 6
+      },
+      {
+        "oid": "e2",
+        "surface": "Tamsin Cold Chain",
+        "line": 10
+      }
+    ],
+    "claims": [],
+    "events": [
+      {
+        "eid": "e-tcc-renewal-signed",
+        "question": "Does the page describe this: \"Tamsin signs its 2026-2027 renewal\"? If so, on what date does the text place it?"
+      }
+    ],
+    "ownership": []
+  },
+  "prompt_user_sha256": "336f4af2646bef703cce7e49af5bdfc5df4289d473a17fb78973c9c944b12cdf",
+  "response_text": "{\n  \"date_used\": \"2026-05-27\",\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"tamsin\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"tamsin\"\n    }\n  ],\n  \"events\": [\n    {\n      \"eid\": \"e-tcc-renewal-signed\",\n      \"present\": true,\n      \"date\": \"2026-05-27\",\n      \"line\": 10\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2026-05-27",
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "tamsin"
+      },
+      {
+        "oid": "e2",
+        "entity": "tamsin"
+      }
+    ],
+    "events": [
+      {
+        "eid": "e-tcc-renewal-signed",
+        "present": true,
+        "date": "2026-05-27",
+        "line": 10
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2894,
+    "output_tokens": 147,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.007258
+}

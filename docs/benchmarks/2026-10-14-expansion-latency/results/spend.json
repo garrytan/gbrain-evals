@@ -1,0 +1,18 @@
+{
+ "note": "estimates from provider usage counts at list price, not metered invoices; includes the 3-haystack pilot",
+ "total_usd": 4.7097,
+ "by_phase_model": {
+  "arm:anthropic:claude-haiku-4-5-20251001": 0.7649,
+  "arm:anthropic:claude-haiku-5-5": 0.0591,
+  "arm:google:gemini-3.8-flash": 0.2895,
+  "arm:openai:gpt-6-luna": 0.0467,
+  "arm:voyage:rerank-2.5": 0.779,
+  "arm:voyage:voyage-4": 0.0041,
+  "build:voyage:voyage-4": 2.3576,
+  "install:voyage:voyage-4": 0.0,
+  "warmup:voyage:rerank-2.5": 0.4085,
+  "warmup:voyage:voyage-4": 0.0003
+ },
+ "cap_usd": 5,
+ "proxy_stop_usd": 4.9
+}

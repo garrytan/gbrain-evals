@@ -1,0 +1,125 @@
+{
+  "run": "eval/reports/cat40/next-confirm/s2/wave",
+  "label": "gbrain-next-wave",
+  "commit": "4e10136b4b7b79cb99408dca1136d3350f5de5e4",
+  "config": {
+    "entity.names_references": "true",
+    "entity.record_types": "contract,amendment",
+    "entity.row_page_status": "true",
+    "search.long_page_unit": "section",
+    "search.long_page_min_chars": "20000",
+    "mcp.instructions_governing_rule": "in_effect"
+  },
+  "build_config": {},
+  "restore_probe": [
+    {
+      "slot": "slot0",
+      "config": {
+        "entity.names_references": "true",
+        "entity.record_types": "contract,amendment",
+        "entity.row_page_status": "true",
+        "search.long_page_unit": "section",
+        "search.long_page_min_chars": "20000",
+        "mcp.instructions_governing_rule": "in_effect"
+      },
+      "owner_phrases": {
+        "links": 0,
+        "windows": 0
+      }
+    },
+    {
+      "slot": "slot1",
+      "config": {
+        "entity.names_references": "true",
+        "entity.record_types": "contract,amendment",
+        "entity.row_page_status": "true",
+        "search.long_page_unit": "section",
+        "search.long_page_min_chars": "20000",
+        "mcp.instructions_governing_rule": "in_effect"
+      },
+      "owner_phrases": {
+        "links": 0,
+        "windows": 0
+      }
+    },
+    {
+      "slot": "slot2",
+      "config": {
+        "entity.names_references": "true",
+        "entity.record_types": "contract,amendment",
+        "entity.row_page_status": "true",
+        "search.long_page_unit": "section",
+        "search.long_page_min_chars": "20000",
+        "mcp.instructions_governing_rule": "in_effect"
+      },
+      "owner_phrases": {
+        "links": 0,
+        "windows": 0
+      }
+    },
+    {
+      "slot": "slot3",
+      "config": {
+        "entity.names_references": "true",
+        "entity.record_types": "contract,amendment",
+        "entity.row_page_status": "true",
+        "search.long_page_unit": "section",
+        "search.long_page_min_chars": "20000",
+        "mcp.instructions_governing_rule": "in_effect"
+      },
+      "owner_phrases": {
+        "links": 0,
+        "windows": 0
+      }
+    },
+    {
+      "slot": "slot4",
+      "config": {
+        "entity.names_references": "true",
+        "entity.record_types": "contract,amendment",
+        "entity.row_page_status": "true",
+        "search.long_page_unit": "section",
+        "search.long_page_min_chars": "20000",
+        "mcp.instructions_governing_rule": "in_effect"
+      },
+      "owner_phrases": {
+        "links": 0,
+        "windows": 0
+      }
+    }
+  ],
+  "rerank_probe": "passed",
+  "served_instructions_sha256": "3bb1d6aafd23b4f2032cd1b30f71eb69b56a092f67c239c6e51233b64558c7f7",
+  "cells": 300,
+  "calls": {
+    "entity": 312,
+    "get_page": 2035,
+    "get_backlinks": 291,
+    "search": 3488,
+    "context_pack": 211,
+    "list_pages": 41,
+    "query": 29,
+    "remember": 260,
+    "recall": 135,
+    "forget": 83,
+    "list_skills": 17,
+    "resolve_slugs": 14,
+    "whoami": 6,
+    "synthesize": 2,
+    "request_tools": 2,
+    "submit_agent": 1
+  },
+  "names_rows": 1555,
+  "names_rows_with_records": 534,
+  "names_rows_with_count": 1555,
+  "record_rows": 909,
+  "delivered_units": {},
+  "page_status_rows": 0,
+  "known_as_rows": 0,
+  "owner_phrase_referrer_rows": null,
+  "names_call_ms": {
+    "n": 265,
+    "p50": 277,
+    "p99": 1207
+  }
+}

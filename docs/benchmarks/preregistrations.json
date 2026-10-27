@@ -10,6 +10,40 @@
         "docs/benchmarks/2026-10-06-followups-repin/*.txt",
         "docs/benchmarks/2026-10-06-followups-repin/*.json"
       ]
+    },
+    {
+      "id": "s1-beam-1m-fixes",
+      "preregistration": "docs/benchmarks/2026-10-12-beam-1m-s1-fixes-preregistration.md",
+      "results": [
+        "docs/benchmarks/2026-10-12-beam-1m-s1-fixes/**",
+        "docs/benchmarks/2026-10-12-beam-1m-s1-fixes.md"
+      ]
+    },
+    {
+      "id": "n14-large-page-fidelity",
+      "preregistration": "docs/benchmarks/2026-10-14-n14-large-page-fidelity-preregistration.md",
+      "results": [
+        "docs/benchmarks/2026-10-14-n14-large-page-fidelity-baseline/**",
+        "docs/benchmarks/2026-10-14-n14-large-page-fidelity-baseline.md",
+        "docs/benchmarks/2026-10-15-n14-large-page-fidelity-wave-a/**",
+        "docs/benchmarks/2026-10-15-n14-large-page-fidelity-wave-a.md",
+        "docs/benchmarks/2026-10-15-n14-large-page-fidelity-wave-b1/**",
+        "docs/benchmarks/2026-10-15-n14-large-page-fidelity-wave-b1.md",
+        "docs/benchmarks/2026-10-18-n14-large-page-fidelity-wave-b2/**",
+        "docs/benchmarks/2026-10-18-n14-large-page-fidelity-wave-b2.md",
+        "docs/benchmarks/2026-10-20-n14-large-page-fidelity-wave-b3/**",
+        "docs/benchmarks/2026-10-20-n14-large-page-fidelity-wave-b3.md",
+        "docs/benchmarks/2026-10-25-n14-large-page-fidelity-wave-b4/**",
+        "docs/benchmarks/2026-10-25-n14-large-page-fidelity-wave-b4.md"
+      ]
+    },
+    {
+      "id": "cat40-next-wave-confirmation",
+      "preregistration": "docs/plans/2026-10-11-cat40-next-wave/PREREG.md",
+      "results": [
+        "docs/benchmarks/2026-10-14-cat40-next-confirm-public/**",
+        "docs/benchmarks/2026-10-15-cat40-next-confirm/**"
+      ]
     }
   ]
 }

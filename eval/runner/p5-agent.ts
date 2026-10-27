@@ -128,6 +128,22 @@ export class AgentBrain {
     const out = execFileSync('bun', ['-e', script], { env: { ...this.run.env }, cwd: this.run.env.GBRAIN_HOME, encoding: 'utf8', maxBuffer: 512 * 1024 * 1024 });
     return JSON.parse(out) as StoredPage[];
   }
+  /**
+   * Extraction state for the immediate-answer cell: live pages, pages whose links were never extracted or are older
+   * than the page (links_extracted_at null or before updated_at), and stored edges by type. The server must be stopped.
+   */
+  extractionState(): { pages: number; pages_pending_link_extraction: number; edges: number; edges_by_type: Record<string, number> } {
+    const script = `
+      const { PGLiteEngine } = await import(${JSON.stringify(join(this.buildDir, 'src/core/pglite-engine.ts'))});
+      const cfg = JSON.parse(await Bun.file(${JSON.stringify(join(this.run.env.GBRAIN_HOME!, '.gbrain', 'config.json'))}).text());
+      const e = new PGLiteEngine(); await e.connect({ database_path: cfg.database_path });
+      const [p] = await e.executeRaw("SELECT count(*)::int AS pages, count(*) FILTER (WHERE links_extracted_at IS NULL OR links_extracted_at < updated_at)::int AS pending FROM pages WHERE deleted_at IS NULL");
+      const t = await e.executeRaw('SELECT coalesce(l.link_type, \\'untyped\\') AS type, count(*)::int AS n FROM links l JOIN pages f ON f.id = l.from_page_id JOIN pages t ON t.id = l.to_page_id WHERE f.deleted_at IS NULL AND t.deleted_at IS NULL GROUP BY 1');
+      await e.disconnect();
+      process.stdout.write(JSON.stringify({ p, t }));`;
+    const r = JSON.parse(execFileSync('bun', ['-e', script], { env: { ...this.run.env }, cwd: this.run.env.GBRAIN_HOME, encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 })) as { p: { pages: number; pending: number }; t: Array<{ type: string; n: number }> };
+    return { pages: r.p.pages, pages_pending_link_extraction: r.p.pending, edges: r.t.reduce((a, x) => a + x.n, 0), edges_by_type: Object.fromEntries(r.t.map(x => [x.type, x.n])) };
+  }
   /** Stored edges (from, to, type). */
   readEdges(): Array<{ from: string; to: string; type: string }> {
     const script = `

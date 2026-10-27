@@ -1,0 +1,69 @@
+{
+  "slug": "emails/2025-08-27-driftmoor-barge-notifications",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2025-08-27",
+    "owner_phrases": [
+      {
+        "mid": "emails/2025-08-27-driftmoor-barge-notifications#m1",
+        "phrase": "Kwame's port account",
+        "lines": [
+          35
+        ]
+      }
+    ],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Driftmoor Marine Freight",
+        "line": 10
+      }
+    ],
+    "claims": [],
+    "events": [
+      {
+        "eid": "e-dmf-barge-outage",
+        "question": "Does the page describe this: \"Driftmoor escalates missed barge slot notifications\"? If so, on what date does the text place it?"
+      }
+    ],
+    "ownership": []
+  },
+  "prompt_user_sha256": "0964e883b45e16acb65a11999b6967a546319d9e7331e6c1dbbd182cb741222b",
+  "response_text": "{\n  \"date_used\": \"2025-08-26\",\n  \"owner_phrases\": [\n    {\n      \"mid\": \"emails/2025-08-27-driftmoor-barge-notifications#m1\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\n        \"driftmoor\"\n      ],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"In August 2025, Kwame Adjei-Rowe owned Driftmoor Marine Freight (descriptor: port), which is also explicitly named in the thread.\"\n    }\n  ],\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"driftmoor\"\n    }\n  ],\n  \"events\": [\n    {\n      \"eid\": \"e-dmf-barge-outage\",\n      \"present\": true,\n      \"date\": \"2025-08-26\",\n      \"line\": 10\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-08-26",
+    "owner_phrases": [
+      {
+        "mid": "emails/2025-08-27-driftmoor-barge-notifications#m1",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "driftmoor"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "In August 2025, Kwame Adjei-Rowe owned Driftmoor Marine Freight (descriptor: port), which is also explicitly named in the thread."
+      }
+    ],
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "driftmoor"
+      }
+    ],
+    "events": [
+      {
+        "eid": "e-dmf-barge-outage",
+        "present": true,
+        "date": "2025-08-26",
+        "line": 10
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 3241,
+    "output_tokens": 273,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.009212
+}

@@ -1,0 +1,106 @@
+{
+  "slug": "contracts/2025-08-05-qfo-of-2025",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2025-08-05",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Quillfeather Outfitters",
+        "line": 7
+      },
+      {
+        "oid": "e2",
+        "surface": "Quillfeather Outfitters",
+        "line": 9
+      },
+      {
+        "oid": "e3",
+        "surface": "Quillfeather Outfitters",
+        "line": 19
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": [],
+    "record": {
+      "question": "Is this document signed, an unsigned version, or a draft? Judge from the body text, not the title alone. Give its signed date and effective date if stated, and the value of each of these terms it sets.",
+      "terms": [
+        "seats",
+        "price_per_seat",
+        "discount_pct",
+        "renewal_date"
+      ]
+    }
+  },
+  "prompt_user_sha256": "06a7411f90674b6a0b4ea228488dbe8bfb1f0db989fb61b41198b6099305410b",
+  "response_text": "{\n  \"date_used\": \"2025-08-05\",\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\"oid\": \"e1\", \"entity\": \"quillfeather\"},\n    {\"oid\": \"e2\", \"entity\": \"quillfeather\"},\n    {\"oid\": \"e3\", \"entity\": \"quillfeather\"}\n  ],\n  \"record\": {\n    \"status\": \"signed\",\n    \"status_evidence_line\": 9,\n    \"signed_date\": \"2025-08-05\",\n    \"effective_date\": \"2025-08-15\",\n    \"terms\": [\n      {\n        \"term\": \"seats\",\n        \"applies_to\": [\"quillfeather\"],\n        \"value\": \"25\",\n        \"line\": 12\n      },\n      {\n        \"term\": \"price_per_seat\",\n        \"applies_to\": [\"quillfeather\"],\n        \"value\": \"$1,700 USD per year\",\n        \"line\": 13\n      },\n      {\n        \"term\": \"discount_pct\",\n        \"applies_to\": [\"quillfeather\"],\n        \"value\": \"0%\",\n        \"line\": 14\n      },\n      {\n        \"term\": \"renewal_date\",\n        \"applies_to\": [\"quillfeather\"],\n        \"value\": \"2026-08-14\",\n        \"line\": 15\n      }\n    ],\n    \"deciding_line\": 9,\n    \"deciding_days\": null\n  }\n}",
+  "parsed": {
+    "date_used": "2025-08-05",
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "quillfeather"
+      },
+      {
+        "oid": "e2",
+        "entity": "quillfeather"
+      },
+      {
+        "oid": "e3",
+        "entity": "quillfeather"
+      }
+    ],
+    "record": {
+      "status": "signed",
+      "status_evidence_line": 9,
+      "signed_date": "2025-08-05",
+      "effective_date": "2025-08-15",
+      "terms": [
+        {
+          "term": "seats",
+          "applies_to": [
+            "quillfeather"
+          ],
+          "value": "25",
+          "line": 12
+        },
+        {
+          "term": "price_per_seat",
+          "applies_to": [
+            "quillfeather"
+          ],
+          "value": "$1,700 USD per year",
+          "line": 13
+        },
+        {
+          "term": "discount_pct",
+          "applies_to": [
+            "quillfeather"
+          ],
+          "value": "0%",
+          "line": 14
+        },
+        {
+          "term": "renewal_date",
+          "applies_to": [
+            "quillfeather"
+          ],
+          "value": "2026-08-14",
+          "line": 15
+        }
+      ],
+      "deciding_line": 9,
+      "deciding_days": null
+    }
+  },
+  "usage": {
+    "input_tokens": 2747,
+    "output_tokens": 415,
+    "thinking_tokens": 85
+  },
+  "cost_usd": 0.009644
+}

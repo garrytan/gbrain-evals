@@ -1,0 +1,41 @@
+{
+  "slug": "emails/2025-10-01-saltmarsh-to-bettina",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: email\nTitle: Saltmarsh: I'm taking it over\nDate: Written on 2025-10-01.\nWriter: Bettina Kroll\nVoice: friendly and organized\nFormat: an email thread with From/To/Date headers and quoted earlier replies (> lines)\nLength: about 268 words\nDate style in the body: US short (6/2/25)\nTypos: a few natural typos and one or two sloppy abbreviations (never in names or required phrases)\n\nBrief:\nBettina tells the team that she is taking Saltmarsh Provisions over from Sofia herself effective October 6, 2025, because of churn risk. Sofia keeps Covey & Lark.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Bettina Kroll: Coastal team lead\n- Sofia Marchetti: Account manager, Coastal team\n- Kwame Adjei-Rowe: Account manager, Coastal team\n- Corinne Ashdown: VP Operations\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Pellucid Harbor Logistics: port drayage and terminal logistics, Gulf Coast; codes/nicknames PHL\n- Driftmoor Marine Freight: marine freight and barge operator, Puget Sound; codes/nicknames DMF\n- Saltmarsh Provisions: regional grocery distributor, Lowcountry; main contact Corinne Ashdown, VP Operations; codes/nicknames SMP\n- Covey & Lark Retail: home goods retailer, Mid-Atlantic; codes/nicknames Covey, CLR\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2025-10-01 (background only; don't restate unless the brief asks):\n- Pellucid Harbor Logistics: managed by Bettina Kroll\n- Driftmoor Marine Freight: managed by Kwame Adjei-Rowe\n- Saltmarsh Provisions: managed by Sofia Marchetti\n- Covey & Lark Retail: managed by Sofia Marchetti",
+      "response_text": "# Saltmarsh: I'm taking it over\n\n**From:** Bettina Kroll  \n**To:** Sofia Marchetti, Kwame Adjei-Rowe  \n**Cc:** Ruth Calloway  \n**Date:** 10/1/25  \n**Subject:** Re: Saltmarsh: I'm taking it over\n\nHi team,\n\nQuick update following my 1:1 with Sofia this morning. Effective 10/6/25, I am stepping in to take over Saltmarsh Provisions from Sofia myself. \n\nRight now the churn risk on SMP is just too high after the reefer bay backups at their North Charleston facility last Tuesday. Corinne Ashdown escalated twice about the Gatehouse Kiosk check-in lag on Doors 12–18, and they need daily hand-holding while eng works on ticket #4419. \n\nSofia will keep Covey & Lark Retail so she can focus 100% on getting their Hagerstown DC ready for holiday peak without SMP eating up her entire calendar. \n\n**Transition checklist before 10/6/25:**\n- **Sofia:** Send me your raw notes from the 9/29/25 call with Corinne Ashdown and the latest Carrier Detention export CSV.\n- **Me:** Intro email to Corinne on Friday morning and take over the Monday 8am dock walk-through call.\n- **Kwame:** Nothing changes on your end, just flagging in case Corinne's night dispatcher calls the main Coastal support line by mistake again.\n\nThanks Sofia for flagging the heat on this one early! Let me know if you need anything else before Friday.\n\nBest,  \nBettina\n\n---\n\n> **From:** Sofia Marchetti  \n> **To:** Bettina Kroll  \n> **Date:** 10/1/25  \n> **Subject:** Saltmarsh / Covey bandwidth\n> \n> Hey Bettina,\n> \n> Ahead of our 1:1, wanted to put this in writing. Corinne Ashdown just sent another thread about the North Charleston reefers sitting idle at the guard shack. Between SMP blowing up my inbox and the Covey & Lark Retail seasonal prep, I'm worried I'm going to drop a ball. Can we talk about options at 10?\n> \n> Sofia",
+      "usage": {
+        "input_tokens": 1101,
+        "output_tokens": 506,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.007262,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1101,
+          "candidatesTokenCount": 506,
+          "totalTokenCount": 1607,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1101
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 506
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

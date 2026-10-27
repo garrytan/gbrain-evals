@@ -1,0 +1,108 @@
+{
+  "slug": "agent-notes/2025-09-15-strategic-digest",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2025-09-15",
+    "owner_phrases": [
+      {
+        "mid": "agent-notes/2025-09-15-strategic-digest#m1",
+        "phrase": "the account Gideon took over in August",
+        "lines": [
+          16
+        ]
+      },
+      {
+        "mid": "agent-notes/2025-09-15-strategic-digest#m2",
+        "phrase": "the account Nadia runs",
+        "lines": [
+          17
+        ]
+      }
+    ],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Quillfeather Outfitters",
+        "line": 18
+      },
+      {
+        "oid": "e2",
+        "surface": "QFO",
+        "line": 18
+      },
+      {
+        "oid": "e3",
+        "surface": "QFO",
+        "line": 18
+      },
+      {
+        "oid": "e4",
+        "surface": "Carrowmere Cloud",
+        "line": 19
+      },
+      {
+        "oid": "e5",
+        "surface": "Orlavene Health",
+        "line": 24
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "8d03d3043d7373cf244fb2eb168acb55fec0fdbb791d22a7ad678d5d774ae87f",
+  "response_text": "{\n  \"date_used\": \"2025-09-15\",\n  \"owner_phrases\": [\n    {\n      \"mid\": \"agent-notes/2025-09-15-strategic-digest#m1\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\"orlavine\"],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"Gideon took over Orlavine Medical Supply on 2025-08-11.\"\n    },\n    {\n      \"mid\": \"agent-notes/2025-09-15-strategic-digest#m2\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\"vantorre-group\"],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"On 2025-09-15, Nadia owned Vantorre Group; her ownership of Orlavine had ended in August.\"\n    }\n  ],\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"quillfeather\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"quillfeather\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"quillfeather\"\n    },\n    {\n      \"oid\": \"e4\",\n      \"entity\": \"carrowmere\"\n    },\n    {\n      \"oid\": \"e5\",\n      \"entity\": \"orlavene-health\"\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-09-15",
+    "owner_phrases": [
+      {
+        "mid": "agent-notes/2025-09-15-strategic-digest#m1",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "orlavine"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "Gideon took over Orlavine Medical Supply on 2025-08-11."
+      },
+      {
+        "mid": "agent-notes/2025-09-15-strategic-digest#m2",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "vantorre-group"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "On 2025-09-15, Nadia owned Vantorre Group; her ownership of Orlavine had ended in August."
+      }
+    ],
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "quillfeather"
+      },
+      {
+        "oid": "e2",
+        "entity": "quillfeather"
+      },
+      {
+        "oid": "e3",
+        "entity": "quillfeather"
+      },
+      {
+        "oid": "e4",
+        "entity": "carrowmere"
+      },
+      {
+        "oid": "e5",
+        "entity": "orlavene-health"
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2880,
+    "output_tokens": 421,
+    "thinking_tokens": 72
+  },
+  "cost_usd": 0.00997
+}

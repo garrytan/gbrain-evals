@@ -1,0 +1,37 @@
+{
+  "slug": "crm/2025-10-01-quarrendon-note",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: crm\nTitle: CRM note: Quarrendon account health\nDate: Written on 2025-10-01.\nWriter: Dana Okafor\nVoice: polished and businesslike\nFormat: a terse CRM activity note with a few key: value fields\nLength: about 89 words\nDate style in the body: US long (June 2, 2025)\nTypos: none\n\nBrief:\nDana's CRM note: Quarrendon ARR is just over $300k after the 185-seat amendment. Health is green. Thea wants a Fargo rollout.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Ilse Varga: North team lead\n- Dana Okafor: Account manager, North team\n- Marcus Lindqvist: Account manager, North team\n- Thea Ramaswell: Director of Yard Operations\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Quarrendon Freight Lines: truckload freight carrier, Upper Midwest; main contact Thea Ramaswell, Director of Yard Operations; codes/nicknames QFL, Q-Freight\n- Brackenwater Freight Co.: less-than-truckload freight, Great Lakes; codes/nicknames BWF, Bracken\n- Tamsin Cold Chain: refrigerated warehousing, Pacific Northwest; codes/nicknames TCC\n- Orrin Mills: textile mill, Carolinas; codes/nicknames ORM\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2025-10-01 (background only; don't restate unless the brief asks):\n- Quarrendon Freight Lines: managed by Dana Okafor\n- Brackenwater Freight Co.: managed by Marcus Lindqvist\n- Tamsin Cold Chain: managed by Dana Okafor\n- Orrin Mills: managed by Dana Okafor",
+      "response_text": "# CRM note: Quarrendon account health\n\nDate: October 1, 2025  \nAccount: Quarrendon Freight Lines  \nHealth: Green  \nARR: Just over $300k after the 185-seat amendment.\n\nActivity: Thea Ramaswell wants a Fargo rollout of Pemberline Dock. Discussion focused on early-shift arrivals, dispatcher access, and keeping door assignments visible during the morning handoff. Thea flagged duplicate trailer entries on the inbound board as the main item to address before rollout planning.\n\nNext steps: Send Thea a Fargo setup checklist, collect shift coverage details, and review the duplicate-entry examples with support.",
+      "usage": {
+        "input_tokens": 1021,
+        "output_tokens": 134,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.003382,
+      "provider_meta": {
+        "id": "resp_05c03767fef30673016acfae2d818c87d185d07de3902c2272",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1021,
+          "input_tokens_details": {
+            "cache_write_tokens": 0,
+            "cached_tokens": 0
+          },
+          "output_tokens": 134,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 1155
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "slug": "chats/north-team-random",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "3efb03009080d55e90d059012ec7331d8d94a60f7d2ccde9d21bf6936a71721d",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: chat\nTitle: #north-random (export, no date)\nDate: UNDATED. Do not include any date, year, month name, weekday, or relative date reference (\"yesterday\", \"last week\") anywhere in the document.\nWriter: Marcus Lindqvist\nVoice: terse and practical\nFormat: a chat log with [HH:MM] timestamps and lowercase usernames\nLength: about 365 words\nDate style in the body: mixed: some ISO, some casual (ignore: undated)\nTypos: one or two small natural typos (never in names or required phrases)\n\nBrief:\nAn undated Slack export from the North team's random channel: lunch orders, a fantasy football argument, someone asking whether Dana's Slack account is broken because her status is stuck, and a passing comment about one account. Do not include any dates or weekdays.\n\nRequired phrases:\n- Use the exact phrase \"Dana's freight account\" once, but vaguely: the writer does not say which account it is, and nothing nearby (name, location, numbers, products) may identify one. Keep that sentence generic, like a passing comment.\n- Use the exact phrase \"Dana's Slack account\" once, in the sense of: her login on the chat tool. It must not be about a customer account.\n- Use the exact phrase \"Marcus's freight account\" once, but vaguely: the writer does not say which account it is, and nothing nearby (name, location, numbers, products) may identify one. Keep that sentence generic, like a passing comment.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Ilse Varga: North team lead\n- Dana Okafor: Account manager, North team\n- Marcus Lindqvist: Account manager, North team\n- Thea Ramaswell: Director of Yard Operations\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Quarrendon Freight Lines: truckload freight carrier, Upper Midwest; main contact Thea Ramaswell, Director of Yard Operations; codes/nicknames QFL, Q-Freight\n- Brackenwater Freight Co.: less-than-truckload freight, Great Lakes; codes/nicknames BWF, Bracken\n- Tamsin Cold Chain: refrigerated warehousing, Pacific Northwest; codes/nicknames TCC\n- Orrin Mills: textile mill, Carolinas; codes/nicknames ORM, TCC\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what (background only; don't restate unless the brief asks):\n(This page is undated. Do not state who manages which account.)",
+      "response_text": "# #north-random (export, no date)\n\n[11:42] marcus.lindqvist: putting in the sandwich order from the corner deli. cutoff in ten mins.\n\n[11:43] ilse.varga: turkey club on sourdough for me, no tomato. thanks marcus.\n\n[11:44] marcus.lindqvist: got it.\n\n[11:45] ilse.varga: also you are crazy for offering a backup tight end for my WR2 in the league. rejected.\n\n[11:46] marcus.lindqvist: he gets red zone targets. your roster is half on IR anyway.\n\n[11:47] ilse.varga: still a robbery.\n\n[11:48] marcus.lindqvist: anyone hear from dana on lunch? her little status icon has said \"stepping out for coffee\" for hours. is Dana's Slack account broken or is she actually AFK?\n\n[11:50] ilse.varga: desktop app probably froze again. she was typing in a thread earlier while the coffee icon was still up.\n\n[11:51] marcus.lindqvist: classic. i'll just get her the usual pesto chicken panini then so she doesnt starve.\n\n[11:52] ilse.varga: safe bet.\n\n[11:54] dana.okafor: wait i'm here! sorry, app was totally glitched out, had to force quit twice. yes to the panini please.\n\n[11:55] marcus.lindqvist: already in the cart.\n\n[11:56] dana.okafor: lifesaver. also ilse do not trade with him, he fleeced me on a running back swap and i'm still bottom of the standings.\n\n[11:57] marcus.lindqvist: it was a fair trade at the time, not my fault the guy pulled a hamstring.\n\n[11:58] ilse.varga: exactly why i hit decline. btw before we all eat, reminder to pull your slide screenshots for the deck review.\n\n[11:59] marcus.lindqvist: yeah i grabbed the slide for Marcus's freight account already, just need to crop the header.\n\n[12:00] dana.okafor: nice. i still need to drop in the blurb for Dana's freight account after i finish eating, shouldn't take long.\n\n[12:01] ilse.varga: cool, no rush, just need the deck clean before the afternoon sync.\n\n[12:02] marcus.lindqvist: order is placed. receipt is in the expense folder. i'll walk over and grab the bags in twenty.\n\n[12:03] dana.okafor: thank you!! clearing my cache now so my status stops lying to everyone.\n\n[12:04] marcus.lindqvist: send me a real counteroffer for that WR while you're at it.\n\n[12:05] ilse.varga: not happening, go get the sandwiches.",
+      "usage": {
+        "input_tokens": 1076,
+        "output_tokens": 699,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.009142,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1076,
+          "candidatesTokenCount": 699,
+          "totalTokenCount": 1775,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1076
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 699
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

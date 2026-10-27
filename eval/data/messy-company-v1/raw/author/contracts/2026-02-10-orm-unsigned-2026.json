@@ -1,0 +1,37 @@
+{
+  "slug": "contracts/2026-02-10-orm-unsigned-2026",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: record\nTitle: Thornbury Cloth Co. renewal order form (for review)\nDate: Written on 2026-02-10.\nWriter: June Osei-Lark\nVoice: formal legal drafting\nFormat: formal numbered sections and a signature block\nLength: about 435 words\nDate style in the body: undefined\nTypos: none\n\nBrief:\nThornbury Cloth Co. renewal order form (for review). Parties: Pemberline Systems and Thornbury Cloth Co.. Drafted 2026-02-10. Terms this document sets: subscribed seats = 44; price per seat per year (USD) = 1650. This version was never countersigned: the body must make clear it is unsigned (blank or missing signature lines, a note such as \"unsigned\" or \"for review\"). Do not call it a draft.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Ilse Varga: North team lead\n- Dana Okafor: Account manager, North team\n- Marcus Lindqvist: Account manager, North team\n- Thea Ramaswell: Director of Yard Operations\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Quarrendon Freight Lines: truckload freight carrier, Upper Midwest; main contact Thea Ramaswell, Director of Yard Operations; codes/nicknames QFL, Q-Freight\n- Brackenwater Freight Co.: less-than-truckload freight, Great Lakes; codes/nicknames BWF, Bracken\n- Tamsin Cold Chain: refrigerated warehousing, Pacific Northwest; codes/nicknames TCC\n- Thornbury Cloth Co. (renamed from Orrin Mills on 2026-01-12): textile mill, Carolinas; codes/nicknames TCC\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2026-02-10 (background only; don't restate unless the brief asks):\n- Quarrendon Freight Lines: managed by Dana Okafor; Ilse Varga is covering as acting AM\n- Brackenwater Freight Co.: managed by Marcus Lindqvist\n- Tamsin Cold Chain: managed by Dana Okafor; Ilse Varga is covering as acting AM\n- Thornbury Cloth Co.: managed by Marcus Lindqvist",
+      "response_text": "# Thornbury Cloth Co. renewal order form (for review)\n\n## 1. Parties and Preparation\n\nThis renewal order form identifies Pemberline Systems as the supplier and Thornbury Cloth Co. as the customer for the subscription described below. Prepared on 2026-02-10 for review.\n\nThornbury Cloth Co. was renamed from Orrin Mills on 2026-01-12. The customer name used in this form is Thornbury Cloth Co.; references to Orrin Mills in supporting administrative records shall be reviewed for consistency with that name.\n\n## 2. Subscription and Price\n\nThe product covered by this renewal order form is **Pemberline Dock**, Pemberline Systems’ yard and dock scheduling software.\n\nThe subscription particulars set out in this version are:\n\n| Particular | Value |\n|---|---:|\n| Subscribed seats | 44 |\n| Price per seat per year | USD 1,650 |\n\nThe stated price is expressed in United States dollars and on a per-seat, per-year basis. The seat quantity refers to subscribed seats, not dock doors, scheduled vehicle arrivals, or individual appointment records.\n\n## 3. Customer Identification Review\n\nThe customer name shall appear as Thornbury Cloth Co. in the order heading, subscription record, and associated billing review materials. The abbreviation TCC shall not be used as the sole customer identifier in those materials.\n\nFor the review copy, the administrative checklist includes comparison of the customer name on the subscription worksheet with the name displayed in the customer record. Any remaining Orrin Mills labels in the worksheet header or exported report footer are to be listed for correction before the form is circulated for signature.\n\n## 4. Operational Review Notes\n\nThe accompanying seat worksheet is to distinguish named users from shared workstation labels. In particular, the entries labeled “Receiving Desk” and “Evening Dispatch” require review against the personnel list used by the mill’s receiving office.\n\nThe dock scheduling review packet includes a sample receiving-board export for Door 4 and the afternoon shift. That export is included to assist the customer’s review of user access and appointment visibility; it does not establish a separate subscription quantity.\n\nComments concerning duplicate driver entries, appointment notes cut off in the printed receiving board, or former customer-name labels should be returned with the relevant worksheet row or report page identified.\n\n## 5. Execution Status\n\n**Unsigned — for review.** This version was never countersigned. Neither signature block below has been completed.\n\nThe preparation date identifies when this form was prepared; it is not a signature date. The blank signature fields are retained for review and do not represent execution by either party.\n\n## 6. Signature Block\n\n**Pemberline Systems**\n\nAuthorized signature: ______________________________  \nPrinted name: ____________________________________  \nTitle: ___________________________________________  \nDate: ____________________________________________\n\n**Thornbury Cloth Co.**\n\nAuthorized signature: ______________________________  \nPrinted name: ____________________________________  \nTitle: ___________________________________________  \nDate: ____________________________________________",
+      "usage": {
+        "input_tokens": 1116,
+        "output_tokens": 652,
+        "thinking_tokens": 51
+      },
+      "cost_usd": 0.008752,
+      "provider_meta": {
+        "id": "resp_0551f79fdba886b2016acfae22b92887d18005b5a4258ce6be",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1116,
+          "input_tokens_details": {
+            "cache_write_tokens": 1113,
+            "cached_tokens": 0
+          },
+          "output_tokens": 652,
+          "output_tokens_details": {
+            "reasoning_tokens": 51
+          },
+          "total_tokens": 1768
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

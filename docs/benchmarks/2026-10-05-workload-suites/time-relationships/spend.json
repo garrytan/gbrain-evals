@@ -1,0 +1,190 @@
+{
+ "runs": [
+  {
+   "phase": "answer",
+   "usd": 6.80847005,
+   "requests": 4161,
+   "run_id": "workload-time-relationships-answer-smoke20-2026-10-05T16-31-17-062Z-821142bf",
+   "by_label": {
+    "gbrain": {
+     "requests": 3531,
+     "refused": 0,
+     "reserved_usd": 30.29031718000021,
+     "actual_usd": 4.768985249999979,
+     "input_tokens": 1248634,
+     "output_tokens": 182452
+    },
+    "reader": {
+     "requests": 40,
+     "refused": 0,
+     "reserved_usd": 1.261536,
+     "actual_usd": 1.4395099999999998,
+     "input_tokens": 671025,
+     "output_tokens": 9746
+    },
+    "comparator": {
+     "requests": 590,
+     "refused": 0,
+     "reserved_usd": 6.303470099999996,
+     "actual_usd": 0.5999747999999995,
+     "input_tokens": 1906196,
+     "output_tokens": 523409
+    }
+   },
+   "at": "2026-10-05T17:31:14.060Z",
+   "stub": false
+  },
+  {
+   "phase": "answer",
+   "usd": 0,
+   "requests": 0,
+   "run_id": "workload-time-relationships-answer-2026-10-05T17-32-22-082Z-bbfc7a47",
+   "by_label": {},
+   "at": "2026-10-05T17:32:46.298Z",
+   "stub": false
+  },
+  {
+   "phase": "answer",
+   "usd": 25.25143704,
+   "requests": 2478,
+   "run_id": "workload-time-relationships-answer-2026-10-05T17-34-09-166Z-f839fb0b",
+   "by_label": {
+    "gbrain": {
+     "requests": 1770,
+     "refused": 0,
+     "reserved_usd": 113.78510354000024,
+     "actual_usd": 0.5135050400000004,
+     "input_tokens": 6130895,
+     "output_tokens": 19054
+    },
+    "reader": {
+     "requests": 708,
+     "refused": 0,
+     "reserved_usd": 21.993438000000022,
+     "actual_usd": 24.737932,
+     "input_tokens": 11547696,
+     "output_tokens": 164254
+    }
+   },
+   "at": "2026-10-05T18:27:28.592Z",
+   "stub": false
+  },
+  {
+   "phase": "score",
+   "usd": 0.082616,
+   "requests": 174,
+   "run_id": "workload-time-relationships-score-2026-10-05T18-28-13-363Z-f439f419",
+   "by_label": {
+    "judge": {
+     "requests": 174,
+     "refused": 0,
+     "reserved_usd": 3.5878574999999993,
+     "actual_usd": 0.08261599999999997,
+     "input_tokens": 27208,
+     "output_tokens": 2820
+    }
+   },
+   "at": "2026-10-05T18:33:10.829Z",
+   "stub": false
+  },
+  {
+   "phase": "answer",
+   "usd": 8.462922,
+   "requests": 374,
+   "run_id": "workload-time-relationships-answer-2026-10-05T18-46-59-595Z-7dce9aa1",
+   "by_label": {
+    "reader": {
+     "requests": 374,
+     "refused": 0,
+     "reserved_usd": 7.656704000000003,
+     "actual_usd": 8.462921999999994,
+     "input_tokens": 3870706,
+     "output_tokens": 72151
+    }
+   },
+   "at": "2026-10-05T19:23:51.755Z",
+   "stub": false
+  },
+  {
+   "phase": "sweep",
+   "usd": 48.301232,
+   "requests": 570,
+   "run_id": "workload-time-relationships-sweep-2026-10-05T19-24-22-417Z-d55bf2a4",
+   "by_label": {
+    "reader": {
+     "requests": 570,
+     "refused": 0,
+     "reserved_usd": 93.64130049999997,
+     "actual_usd": 48.30123200000002,
+     "input_tokens": 5885326,
+     "output_tokens": 80738
+    }
+   },
+   "at": "2026-10-05T19:30:37.181Z",
+   "stub": false
+  },
+  {
+   "phase": "score",
+   "usd": 0.103948,
+   "requests": 220,
+   "run_id": "workload-time-relationships-score-2026-10-05T19-30-38-616Z-32357654",
+   "by_label": {
+    "judge": {
+     "requests": 220,
+     "refused": 0,
+     "reserved_usd": 4.5331325000000025,
+     "actual_usd": 0.10394799999999992,
+     "input_tokens": 33534,
+     "output_tokens": 3688
+    }
+   },
+   "at": "2026-10-05T19:36:19.758Z",
+   "stub": false
+  },
+  {
+   "phase": "score",
+   "usd": 0,
+   "requests": 0,
+   "run_id": "workload-time-relationships-score-2026-10-05T19-52-45-608Z-ca7b018d",
+   "by_label": {},
+   "at": "2026-10-05T19:52:46.121Z",
+   "stub": false
+  },
+  {
+   "phase": "sweep",
+   "usd": 2.91568,
+   "requests": 190,
+   "run_id": "workload-time-relationships-sweep-2026-10-05T20-07-58-388Z-cd204df9",
+   "by_label": {
+    "reader": {
+     "requests": 190,
+     "refused": 0,
+     "reserved_usd": 12.347292500000005,
+     "actual_usd": 2.915679999999998,
+     "input_tokens": 1431220,
+     "output_tokens": 5324
+    }
+   },
+   "at": "2026-10-05T20:09:13.373Z",
+   "stub": false
+  },
+  {
+   "phase": "score",
+   "usd": 0.003334,
+   "requests": 9,
+   "run_id": "workload-time-relationships-score-2026-10-05T20-09-18-817Z-3b6f5b50",
+   "by_label": {
+    "judge": {
+     "requests": 9,
+     "refused": 0,
+     "reserved_usd": 0.18478250000000002,
+     "actual_usd": 0.003334,
+     "input_tokens": 1182,
+     "output_tokens": 97
+    }
+   },
+   "at": "2026-10-05T20:09:35.302Z",
+   "stub": false
+  }
+ ]
+}

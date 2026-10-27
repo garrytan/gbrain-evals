@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "experiments": [
+    {
+      "id": "d5-brief-smoke",
+      "preregistration": "docs/benchmarks/2026-10-14-d5-brief-smoke-preregistration.md",
+      "results": [
+        "docs/benchmarks/2026-10-14-d5-brief-smoke/**",
+        "docs/benchmarks/2026-10-14-d5-brief-smoke.md"
+      ]
+    }
+  ]
+}

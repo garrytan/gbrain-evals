@@ -19,9 +19,14 @@
  *   bun eval/runner/shootout-cell.ts init    --campaign <manifest.json> --state <dir>
  *   bun eval/runner/shootout-cell.ts reserve --campaign <manifest.json> --state <dir> --cell <id>
  *   bun eval/runner/shootout-cell.ts launch  --campaign <manifest.json> --state <dir> --cell <id> [--dry-run]
+ *     (a cell marked `local: true` runs the same remote step on this host instead of a VM: its own lease proxy on a
+ *     port derived from the lease, the command in this checkout, the lease summary written into the results directory)
  *   bun eval/runner/shootout-cell.ts settle  --campaign <manifest.json> --state <dir> --lease <id>
  *   bun eval/runner/shootout-cell.ts abandon --campaign <manifest.json> --state <dir> --lease <id> --reason <text> [--unstarted --log <launch log>]
  *   bun eval/runner/shootout-cell.ts status  --campaign <manifest.json> --state <dir>
+ *   bun eval/runner/shootout-cell.ts raise-cap --campaign <manifest.json> --state <dir> --reason <text>
+ *     (after the user raises the campaign's cap_usd in the manifest: the ledger's program cap and the campaign run's
+ *     budget move up to it; never down)
  *   bun eval/runner/shootout-cell.ts hash    --campaign <manifest.json>   (the hash a preregistration records)
  *   bun eval/runner/shootout-cell.ts resume  --campaign <manifest.json> --state <dir> --cell <id> [--from-campaign <manifest.json> --from-state <dir>]
  *                                            (Q1 campaigns: rerun what a cell lacks, from its pulled checkpoint and realization)
@@ -65,13 +70,15 @@
  *             lacks. An answered question is never asked again (A22).
  *   metering  the VM's proxy gets the cell token, the campaign's per-route
  *             output caps and the cell's share of each provider's limits.
+ *     (SHOOTOUT_KEYLESS_UPSTREAM=http://host:port points the lease proxy's providers at a keyless stand-in such as
+ *     budgeted-delivery/stub-proxy.ts, for dry runs; the lease summary records it)
  */
 import { createHash, randomUUID } from 'node:crypto';
 import { appendFileSync, copyFileSync, cpSync, existsSync, mkdirSync, readdirSync, readFileSync, renameSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { homedir } from 'node:os';
 import { execFileSync } from 'node:child_process';
-import { BudgetRun, initLedger, ledgerStatus } from './budget-ledger.ts';
+import { BudgetRun, initLedger, ledgerStatus, setProgramCap, setRunBudget } from './budget-ledger.ts';
 import { DEFAULT_MAX_OUTPUT_TOKENS, DEFAULT_ROUTE_CAPS, type ProviderLimits, type ProviderName } from './metering-proxy.ts';
 import { refuse, ScoreboardError } from './q1/scoreboard-errors.ts';
 import { BEAM10M_MANIFEST } from './memory-qa/beam10m-corpus.ts';
@@ -112,6 +119,8 @@ export interface CellSpec {
   vm?: { size?: string; location?: string; storage_gib?: number };
   /** Local environment variables forwarded to the VM; the proxy alone reads them. */
   pass?: string[];
+  /** Run on this host instead of a VM (reader replays over results already on the host): same lease, proxy and settlement. */
+  local?: boolean;
   /** Wall-clock limit for the whole cell; it reaches the VM (cell command stopped, exit 124) and the launcher. */
   timeout_hours?: number;
   /** Q1: the spend block the cell belongs to (campaign `blocks`). */
@@ -587,9 +596,10 @@ export class Campaign {
     return out;
   }
 
-  /** The ubi-runner invocation for a lease: provision, sync, set up, run the cell remotely, pull its output, destroy. */
+  /** The ubi-runner invocation for a lease: provision, sync, set up, run the cell remotely, pull its output, destroy. A local cell runs the remote step here. */
   launchArgv(l: LeaseState, opts: { vm?: string | null; restore?: RemotePayload['restore']; restoreFrom?: string } = {}): string[] {
     const c = this.cell(l.cell);
+    if (c.local) return this.localArgv(l, localPort(l.lease_id), opts.restore);
     const payload = Buffer.from(JSON.stringify(this.payload(l, opts.restore))).toString('base64');
     const push = this.custodyPush(l.cell);
     let pushArgs: string[] = [];
@@ -615,7 +625,7 @@ export class Campaign {
   /** `run --local`: the same remote command on this machine, writing straight into the lease's results directory (no VM, no pull). */
   localArgv(l: LeaseState, port: number, restore?: RemotePayload['restore']): string[] {
     const payload = { ...this.payload(l, restore), out: this.resultsDir(l) };
-    return [process.execPath, join(REPO_ROOT, 'eval/runner/shootout-cell.ts'), 'remote', '--port', String(port), '--cell-b64', Buffer.from(JSON.stringify(payload)).toString('base64')];
+    return [process.execPath, join(REPO_ROOT, 'eval/runner/shootout-cell.ts'), 'remote', '--cell-b64', Buffer.from(JSON.stringify(payload)).toString('base64'), '--port', String(port)];
   }
 
   /**
@@ -782,6 +792,17 @@ export class Campaign {
     this.run().settle(l.entry_id, { usd: 0 });
     this.append({ event: 'abandoned', lease_id: leaseId, at: new Date().toISOString(), reason, unstarted: { evidence } });
     return this.lease(leaseId);
+  }
+
+  /** Move the ledger's program cap and the campaign run's budget up to the manifest's cap_usd (a cap the user raised). */
+  raiseCap(reason: string) {
+    const s = this.state();
+    if (!reason.trim()) throw new Error('raise-cap needs --reason');
+    const cap = this.manifest.cap_usd;
+    const before = ledgerStatus({ ledgerPath: s.ledger, runId: s.run_id });
+    const program = (before.totals?.program_cap_usd ?? 0) < cap ? setProgramCap({ ledgerPath: s.ledger, programCapUsd: cap, reason }) : null;
+    const run = setRunBudget({ ledgerPath: s.ledger, runId: s.run_id, budgetUsd: cap });
+    return { cap_usd: cap, program, run };
   }
 
   status() {
@@ -968,10 +989,13 @@ export async function runRemote(payload: RemotePayload, opts: { port?: number; p
       requests: s.run ? BudgetRun.runRequests(ledger, payload.lease_id) : null, max_output_tokens: s.run ? BudgetRun.leaseMaxOutputTokens(ledger, payload.lease_id) ?? DEFAULT_MAX_OUTPUT_TOKENS : null, cell_exit_code: code,
       ...(payload.timeout_hours !== undefined ? { timeout_hours: payload.timeout_hours, timed_out: timedOut } : {}), ...(stoppedBy ? { stopped_by: stoppedBy } : {}),
       ...(payload.row_pull_every ? { checkpoint_rows: checkpointRows } : {}), ...(realization ? { realization_id: realization.realization_id, realization_status: realization.status } : {}),
-      ...(payload.restore ? { restored_from: restored, ...(restored ? {} : { resumed_from_checkpoint: true }) } : {}) }, null, 2) + '\n');
+      ...(payload.restore ? { restored_from: restored, ...(restored ? {} : { resumed_from_checkpoint: true }) } : {}), ...(opts.upstream ? { keyless_upstream: true } : {}) }, null, 2) + '\n');
   }
   return code ?? 1;
 }
+
+/** A local cell's proxy port, derived from its lease id so concurrent local cells do not collide (9000 to 9899). */
+export const localPort = (leaseId: string) => 9000 + parseInt(createHash('sha256').update(leaseId).digest('hex').slice(0, 6), 16) % 900;
 
 /**
  * The launcher's executor: runs ubi-runner, stops it BACKSTOP_HOURS after the
@@ -1012,7 +1036,9 @@ if (import.meta.main) {
   try {
     const cmd = argv[0];
     if (cmd === 'remote') {
-      process.exit(await runRemote(JSON.parse(Buffer.from(one('--cell-b64') ?? '', 'base64').toString('utf8')), { port: one('--port') ? Number(one('--port')) : undefined }));
+      const keyless = process.env.SHOOTOUT_KEYLESS_UPSTREAM;
+      const upstream = keyless ? Object.fromEntries(['openai', 'anthropic', 'voyage'].map(p => [p, keyless])) : undefined;
+      process.exit(await runRemote(JSON.parse(Buffer.from(one('--cell-b64') ?? '', 'base64').toString('utf8')), { port: one('--port') ? Number(one('--port')) : undefined, upstream }));
     }
     if (cmd === 'hash') {
       const loaded = loadCampaign(one('--campaign') ?? '');
@@ -1053,6 +1079,7 @@ if (import.meta.main) {
     else if (cmd === 'settle') print(c.settle(one('--lease') ?? ''));
     else if (cmd === 'abandon') print(c.abandon(one('--lease') ?? '', one('--reason') ?? '', argv.includes('--unstarted') ? { log: one('--log') ?? '' } : undefined));
     else if (cmd === 'status') print(c.status());
+    else if (cmd === 'raise-cap') print(c.raiseCap(one('--reason') ?? ''));
     else throw new Error(`unknown command ${cmd}`);
   } catch (e) {
     if (e instanceof ScoreboardError) {

@@ -1,0 +1,65 @@
+{
+  "budget_run": {
+    "run_id": "coding-spike-2026-10-05T15-05-46-427Z-61180c03",
+    "budget_usd": 8,
+    "reserved_usd": 23.41891431,
+    "actual_usd": 1.969810125,
+    "charged_reservations": 0,
+    "requests": 873,
+    "input_tokens": 6468819,
+    "output_tokens": 144852,
+    "overshoot_usd": 7.200000000000007e-7,
+    "ledger_path": ".budget/mpw-dev-coding.sqlite",
+    "program_cap_usd": 25,
+    "event_loop_lag_ms": null,
+    "event_loop_lag_unavailable": "no lag monitor: the run was not started through startPaidRun"
+  },
+  "metered": {
+    "total": {
+      "requests": 873,
+      "refused": 0,
+      "reserved_usd": 23.418914309999987,
+      "actual_usd": 1.9698101249999995,
+      "input_tokens": 6468819,
+      "output_tokens": 144852
+    },
+    "byLabel": {
+      "agent": {
+        "requests": 146,
+        "refused": 0,
+        "reserved_usd": 23.387090249999996,
+        "actual_usd": 1.948426725,
+        "input_tokens": 6112429,
+        "output_tokens": 144852
+      },
+      "gbrain": {
+        "requests": 727,
+        "refused": 0,
+        "reserved_usd": 0.031824059999999994,
+        "actual_usd": 0.0213834,
+        "input_tokens": 356390,
+        "output_tokens": 0
+      }
+    },
+    "byProvider": {
+      "gemini": {
+        "requests": 146,
+        "refused": 0,
+        "reserved_usd": 23.387090249999996,
+        "actual_usd": 1.948426725,
+        "input_tokens": 6112429,
+        "output_tokens": 144852
+      },
+      "voyage": {
+        "requests": 727,
+        "refused": 0,
+        "reserved_usd": 0.031824059999999994,
+        "actual_usd": 0.0213834,
+        "input_tokens": 356390,
+        "output_tokens": 0
+      }
+    },
+    "exhausted": false
+  },
+  "unmetered": []
+}

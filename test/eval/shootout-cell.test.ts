@@ -8,6 +8,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { BudgetRun, closeLedgers, ledgerStatus } from '../../eval/runner/budget-ledger.ts';
 import { Campaign, runRemote, type CampaignManifest } from '../../eval/runner/shootout-cell.ts';
+import { freePort } from '../../eval/runner/lifecycle/slice.ts';
 
 const ROOT = resolve(import.meta.dir, '../..');
 const tmp = mkdtempSync(join(tmpdir(), 'shootout-cell-'));
@@ -167,7 +168,7 @@ describe('cell files and parameters', () => {
 describe('remote cell', () => {
   test('starts a strict lease proxy (cell token, no local trust), hands the cell dummy keys, the token and proxy URLs, and writes the lease summary', async () => {
     const out = join(tmp, 'remote-out');
-    const port = 23000 + Math.floor(Math.random() * 10000);
+    const port = await freePort(0);
     const prev = process.env.OPENAI_API_KEY;
     process.env.OPENAI_API_KEY = 'placeholder-real-key';
     try {

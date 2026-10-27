@@ -1,0 +1,37 @@
+{
+  "slug": "updates/2026-06-22-coastal-weekly",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: weekly\nTitle: Coastal weekly Jun 22\nDate: Written on 2026-06-22.\nWriter: Moss (Ruth Calloway's AI assistant)\nVoice: an AI assistant: neat, factual, a little stiff\nFormat: undefined\nLength: about 75 words\nDate style in the body: undefined\nTypos: none\n\nBrief:\nMoss compiles this team weekly from the team lead's notes; write it as Moss's compiled update. Bettina's update after the Saltmarsh renewal; Sofia is back.\n\nRequired phrases:\n- Use the exact phrase \"Bettina's grocery account\" once, referring to Saltmarsh Provisions. Don't put the account's name in the same sentence; the reader should work it out.\n- Use the exact phrase \"Kwame's port account\" once, but vaguely: the writer does not say which account it is, and nothing nearby (name, location, numbers, products) may identify one. Keep that sentence generic, like a passing comment.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Bettina Kroll: Coastal team lead\n- Sofia Marchetti: Account manager, Coastal team\n- Kwame Adjei-Rowe: Account manager, Coastal team\n- Corinne Ashdown: VP Operations\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Pellucid Harbor Logistics: port drayage and terminal logistics, Gulf Coast; codes/nicknames PHL\n- Driftmoor Marine Freight: marine freight and barge operator, Puget Sound; codes/nicknames DMF\n- Saltmarsh Provisions: regional grocery distributor, Lowcountry; main contact Corinne Ashdown, VP Operations; codes/nicknames SMP\n- Pellow Home Living (renamed from Covey & Lark Retail on 2026-02-16): home goods retailer, Mid-Atlantic; codes/nicknames Covey, PHL\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2026-06-22 (background only; don't restate unless the brief asks):\n- Pellucid Harbor Logistics: managed by Kwame Adjei-Rowe\n- Driftmoor Marine Freight: managed by Kwame Adjei-Rowe\n- Saltmarsh Provisions: managed by Bettina Kroll\n- Pellow Home Living: managed by Sofia Marchetti",
+      "response_text": "# Coastal weekly Jun 22\n\n2026-06-22 · Compiled from Bettina Kroll’s team-lead notes.\n\n- **Post-renewal:** Saltmarsh Provisions has moved into routine follow-up. Bettina's grocery account needs the morning receiving report checked; Corinne Ashdown flagged a duplicate arrival against dock door 4. Bettina will review the export before Tuesday’s shift.\n- **Coverage:** Sofia Marchetti is back and clearing the callback queue, starting with a rescheduling question.\n- **Other follow-up:** Kwame's port account remains on the follow-up list.",
+      "usage": {
+        "input_tokens": 1127,
+        "output_tokens": 127,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.003524,
+      "provider_meta": {
+        "id": "resp_0141732b315134a7016acfaeafdf8c87d1bbaec679438e80cb",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1127,
+          "input_tokens_details": {
+            "cache_write_tokens": 1124,
+            "cached_tokens": 0
+          },
+          "output_tokens": 127,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 1254
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

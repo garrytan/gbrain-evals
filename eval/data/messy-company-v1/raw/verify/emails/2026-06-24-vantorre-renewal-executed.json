@@ -1,0 +1,95 @@
+{
+  "slug": "emails/2026-06-24-vantorre-renewal-executed",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2026-06-24",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Vantorre",
+        "line": 6
+      },
+      {
+        "oid": "e2",
+        "surface": "Vantorre",
+        "line": 11
+      },
+      {
+        "oid": "e3",
+        "surface": "Vantorre Group",
+        "line": 15
+      },
+      {
+        "oid": "e4",
+        "surface": "VTRG",
+        "line": 22
+      },
+      {
+        "oid": "e5",
+        "surface": "Vantorre Group",
+        "line": 33
+      },
+      {
+        "oid": "e6",
+        "surface": "Vantorre Group",
+        "line": 44
+      }
+    ],
+    "claims": [],
+    "events": [
+      {
+        "eid": "e-vtg-renewal-signed",
+        "question": "Does the page describe this: \"Vantorre Group signs the 2026 renewal order form\"? If so, on what date does the text place it?"
+      }
+    ],
+    "ownership": []
+  },
+  "prompt_user_sha256": "07186ae9d9761770efe6dc9ef4d6e9e02ab984eaa3fe65cc8359e7b51d07e684",
+  "response_text": "{\n  \"date_used\": \"2026-06-24\",\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\"oid\": \"e1\", \"entity\": \"vantorre-group\"},\n    {\"oid\": \"e2\", \"entity\": \"vantorre-group\"},\n    {\"oid\": \"e3\", \"entity\": \"vantorre-group\"},\n    {\"oid\": \"e4\", \"entity\": \"vantorre-group\"},\n    {\"oid\": \"e5\", \"entity\": \"vantorre-group\"},\n    {\"oid\": \"e6\", \"entity\": \"vantorre-group\"}\n  ],\n  \"events\": [\n    {\n      \"eid\": \"e-vtg-renewal-signed\",\n      \"present\": true,\n      \"date\": \"2026-06-24\",\n      \"line\": 15\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2026-06-24",
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e2",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e3",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e4",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e5",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e6",
+        "entity": "vantorre-group"
+      }
+    ],
+    "events": [
+      {
+        "eid": "e-vtg-renewal-signed",
+        "present": true,
+        "date": "2026-06-24",
+        "line": 15
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2983,
+    "output_tokens": 255,
+    "thinking_tokens": 69
+  },
+  "cost_usd": 0.008516
+}

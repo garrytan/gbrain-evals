@@ -1,0 +1,81 @@
+{
+  "slug": "crm/2026-04-23-marrow-renewal-note",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2026-04-23",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Marrow",
+        "line": 6
+      },
+      {
+        "oid": "e2",
+        "surface": "Marrow Fieldworks",
+        "line": 10
+      },
+      {
+        "oid": "e3",
+        "surface": "Marrow Agrisupply",
+        "line": 13
+      },
+      {
+        "oid": "e4",
+        "surface": "Fieldworks",
+        "line": 15
+      },
+      {
+        "oid": "e5",
+        "surface": "MFW",
+        "line": 17
+      },
+      {
+        "oid": "e6",
+        "surface": "Marrow Agrisupply",
+        "line": 17
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "09e4f6a5b8f60b286f24ba5d626736c1ac137d5902dd35b17bf3361fbe1d6054",
+  "response_text": "{\n  \"date_used\": \"2026-04-23\",\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"marrow-fieldworks\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"marrow-fieldworks\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"marrow-agrisupply\"\n    },\n    {\n      \"oid\": \"e4\",\n      \"entity\": \"marrow-fieldworks\"\n    },\n    {\n      \"oid\": \"e5\",\n      \"entity\": \"marrow-fieldworks\"\n    },\n    {\n      \"oid\": \"e6\",\n      \"entity\": \"marrow-agrisupply\"\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2026-04-23",
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "marrow-fieldworks"
+      },
+      {
+        "oid": "e2",
+        "entity": "marrow-fieldworks"
+      },
+      {
+        "oid": "e3",
+        "entity": "marrow-agrisupply"
+      },
+      {
+        "oid": "e4",
+        "entity": "marrow-fieldworks"
+      },
+      {
+        "oid": "e5",
+        "entity": "marrow-fieldworks"
+      },
+      {
+        "oid": "e6",
+        "entity": "marrow-agrisupply"
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 3026,
+    "output_tokens": 199,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.008042
+}

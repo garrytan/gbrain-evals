@@ -1,0 +1,137 @@
+{
+  "slug": "agent-notes/2025-10-05-north-sunday",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2025-10-05",
+    "owner_phrases": [
+      {
+        "mid": "agent-notes/2025-10-05-north-sunday#m1",
+        "phrase": "Dana's textile account",
+        "lines": [
+          16
+        ]
+      }
+    ],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Orrin Mills",
+        "line": 16
+      },
+      {
+        "oid": "e2",
+        "surface": "ORM",
+        "line": 16
+      },
+      {
+        "oid": "e3",
+        "surface": "Quarrendon Freight Lines",
+        "line": 17
+      },
+      {
+        "oid": "e4",
+        "surface": "QFL",
+        "line": 17
+      },
+      {
+        "oid": "e5",
+        "surface": "Tamsin Cold Chain",
+        "line": 18
+      },
+      {
+        "oid": "e6",
+        "surface": "TCC",
+        "line": 18
+      },
+      {
+        "oid": "e7",
+        "surface": "TCC",
+        "line": 18
+      },
+      {
+        "oid": "e8",
+        "surface": "Stoneharrow Billing",
+        "line": 19
+      },
+      {
+        "oid": "e9",
+        "surface": "ORM",
+        "line": 23
+      },
+      {
+        "oid": "e10",
+        "surface": "Quarrendon Freight Lines",
+        "line": 24
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "4b02f3b5269aae675ef69a8b99d07f0c5186598babfe638a6c3200903f87463d",
+  "response_text": "{\n  \"date_used\": \"2025-10-05\",\n  \"owner_phrases\": [\n    {\n      \"mid\": \"agent-notes/2025-10-05-north-sunday#m1\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\"orrin\"],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"Dana owns Orrin Mills on 2025-10-05; its textile descriptor and the explicit identification on line 16 resolve the phrase.\"\n    }\n  ],\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"orrin\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"orrin\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"quarrendon\"\n    },\n    {\n      \"oid\": \"e4\",\n      \"entity\": \"quarrendon\"\n    },\n    {\n      \"oid\": \"e5\",\n      \"entity\": \"tamsin\"\n    },\n    {\n      \"oid\": \"e6\",\n      \"entity\": \"tamsin\"\n    },\n    {\n      \"oid\": \"e7\",\n      \"entity\": \"tamsin\"\n    },\n    {\n      \"oid\": \"e8\",\n      \"entity\": \"stoneharrow\"\n    },\n    {\n      \"oid\": \"e9\",\n      \"entity\": \"orrin\"\n    },\n    {\n      \"oid\": \"e10\",\n      \"entity\": \"quarrendon\"\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-10-05",
+    "owner_phrases": [
+      {
+        "mid": "agent-notes/2025-10-05-north-sunday#m1",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "orrin"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "Dana owns Orrin Mills on 2025-10-05; its textile descriptor and the explicit identification on line 16 resolve the phrase."
+      }
+    ],
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "orrin"
+      },
+      {
+        "oid": "e2",
+        "entity": "orrin"
+      },
+      {
+        "oid": "e3",
+        "entity": "quarrendon"
+      },
+      {
+        "oid": "e4",
+        "entity": "quarrendon"
+      },
+      {
+        "oid": "e5",
+        "entity": "tamsin"
+      },
+      {
+        "oid": "e6",
+        "entity": "tamsin"
+      },
+      {
+        "oid": "e7",
+        "entity": "tamsin"
+      },
+      {
+        "oid": "e8",
+        "entity": "stoneharrow"
+      },
+      {
+        "oid": "e9",
+        "entity": "orrin"
+      },
+      {
+        "oid": "e10",
+        "entity": "quarrendon"
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 3262,
+    "output_tokens": 402,
+    "thinking_tokens": 46
+  },
+  "cost_usd": 0.010544
+}

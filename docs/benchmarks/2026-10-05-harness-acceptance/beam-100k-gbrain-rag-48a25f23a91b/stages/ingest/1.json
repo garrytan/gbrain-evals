@@ -1,0 +1,36 @@
+{
+  "cell_id": "beam-100k-gbrain-rag-48a25f23a91b",
+  "unit": "1",
+  "ok": true,
+  "documents": 6,
+  "ingest_ms": 18858.4,
+  "barrier_ms": 15618.6,
+  "error": null,
+  "provider_receipt": {
+    "template_copy_s": 0.205,
+    "child_start_s": 0.927,
+    "write_path": "put_page",
+    "pages": 6,
+    "write_s": 2.107,
+    "barrier_ms": 15618.6,
+    "barrier": {
+      "polls": 10,
+      "pages": 6,
+      "missing_embeddings": 0,
+      "stale_pages": 0,
+      "embed_coverage": 1
+    },
+    "server": {
+      "name": "gbrain",
+      "version": "0.60.46.0"
+    },
+    "gbrain": {
+      "cli": "node_modules/gbrain/src/cli.ts",
+      "version": "gbrain 0.60.46.0",
+      "template_build_s": 7.83,
+      "config": {
+        "search.return_budget_max_remote": "200000"
+      }
+    }
+  }
+}

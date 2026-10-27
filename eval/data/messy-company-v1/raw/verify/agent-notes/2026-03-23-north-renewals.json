@@ -1,0 +1,69 @@
+{
+  "slug": "agent-notes/2026-03-23-north-renewals",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2026-03-23",
+    "owner_phrases": [
+      {
+        "mid": "agent-notes/2026-03-23-north-renewals#m1",
+        "phrase": "Dana's biggest account",
+        "lines": [
+          10
+        ]
+      }
+    ],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Quarrendon Freight Lines",
+        "line": 10
+      }
+    ],
+    "claims": [],
+    "events": [
+      {
+        "eid": "e-qfl-renewal-signed",
+        "question": "Does the page describe this: \"Quarrendon signs the 2026 renewal order form\"? If so, on what date does the text place it?"
+      }
+    ],
+    "ownership": []
+  },
+  "prompt_user_sha256": "487b035df75f7bb944aef540bef0f04e8fab9b15e7bd52181c3b35580a88b30a",
+  "response_text": "{\n  \"date_used\": \"2026-03-23\",\n  \"owner_phrases\": [\n    {\n      \"mid\": \"agent-notes/2026-03-23-north-renewals#m1\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\n        \"quarrendon\"\n      ],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"Refers back to Quarrendon Freight Lines, which was just stated as having its renewal signed in the first sentence of line 10, and Dana Okafor is its primary owner.\"\n    }\n  ],\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"quarrendon\"\n    }\n  ],\n  \"events\": [\n    {\n      \"eid\": \"e-qfl-renewal-signed\",\n      \"present\": true,\n      \"date\": \"2026-03-20\",\n      \"line\": 10\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2026-03-23",
+    "owner_phrases": [
+      {
+        "mid": "agent-notes/2026-03-23-north-renewals#m1",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "quarrendon"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "Refers back to Quarrendon Freight Lines, which was just stated as having its renewal signed in the first sentence of line 10, and Dana Okafor is its primary owner."
+      }
+    ],
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "quarrendon"
+      }
+    ],
+    "events": [
+      {
+        "eid": "e-qfl-renewal-signed",
+        "present": true,
+        "date": "2026-03-20",
+        "line": 10
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2839,
+    "output_tokens": 276,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.008438
+}

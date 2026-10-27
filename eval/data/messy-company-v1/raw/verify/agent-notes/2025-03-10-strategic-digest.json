@@ -1,0 +1,138 @@
+{
+  "slug": "agent-notes/2025-03-10-strategic-digest",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2025-03-10",
+    "owner_phrases": [
+      {
+        "mid": "agent-notes/2025-03-10-strategic-digest#m1",
+        "phrase": "the account Gideon runs",
+        "lines": [
+          13
+        ]
+      },
+      {
+        "mid": "agent-notes/2025-03-10-strategic-digest#m2",
+        "phrase": "Nadia's medical account",
+        "lines": [
+          14
+        ]
+      },
+      {
+        "mid": "agent-notes/2025-03-10-strategic-digest#m3",
+        "phrase": "the Strategic pod's outdoor account",
+        "lines": [
+          15
+        ]
+      },
+      {
+        "mid": "agent-notes/2025-03-10-strategic-digest#m4",
+        "phrase": "the account Nadia runs",
+        "lines": [
+          19
+        ]
+      }
+    ],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Vantorre Group",
+        "line": 12
+      },
+      {
+        "oid": "e2",
+        "surface": "Vantorre Mobility",
+        "line": 13
+      },
+      {
+        "oid": "e3",
+        "surface": "Orlavine Medical Supply",
+        "line": 14
+      },
+      {
+        "oid": "e4",
+        "surface": "Quillfeather Outfitters",
+        "line": 15
+      },
+      {
+        "oid": "e5",
+        "surface": "Carrowmere Cloud",
+        "line": 20
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "9a9a2a9ca88442e2c4b364f1c6076c4d68f9df24249045bba4ed11760b9d7fa7",
+  "response_text": "{\n  \"date_used\": \"2025-03-10\",\n  \"owner_phrases\": [\n    {\n      \"mid\": \"agent-notes/2025-03-10-strategic-digest#m1\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\"vantorre-mobility\"],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"The phrase occurs in the Vantorre Mobility update; Gideon owns that account on this date.\"\n    },\n    {\n      \"mid\": \"agent-notes/2025-03-10-strategic-digest#m2\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\"orlavine\"],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"The medical descriptor and Orlavine update identify Nadia's Orlavine Medical Supply account.\"\n    },\n    {\n      \"mid\": \"agent-notes/2025-03-10-strategic-digest#m3\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\"quillfeather\"],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"Quillfeather is the outdoor account owned by the Strategic Accounts pod as a pooled team account.\"\n    },\n    {\n      \"mid\": \"agent-notes/2025-03-10-strategic-digest#m4\",\n      \"refers_to_customer_account\": false,\n      \"accounts\": [],\n      \"reading\": \"ambiguous: could be more than one account\",\n      \"note\": \"Nadia owns both Vantorre Group and Orlavine on this date; the slide-deck sentence does not distinguish them.\"\n    }\n  ],\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"vantorre-mobility\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"orlavine\"\n    },\n    {\n      \"oid\": \"e4\",\n      \"entity\": \"quillfeather\"\n    },\n    {\n      \"oid\": \"e5\",\n      \"entity\": \"carrowmere\"\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-03-10",
+    "owner_phrases": [
+      {
+        "mid": "agent-notes/2025-03-10-strategic-digest#m1",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "vantorre-mobility"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "The phrase occurs in the Vantorre Mobility update; Gideon owns that account on this date."
+      },
+      {
+        "mid": "agent-notes/2025-03-10-strategic-digest#m2",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "orlavine"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "The medical descriptor and Orlavine update identify Nadia's Orlavine Medical Supply account."
+      },
+      {
+        "mid": "agent-notes/2025-03-10-strategic-digest#m3",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "quillfeather"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "Quillfeather is the outdoor account owned by the Strategic Accounts pod as a pooled team account."
+      },
+      {
+        "mid": "agent-notes/2025-03-10-strategic-digest#m4",
+        "refers_to_customer_account": false,
+        "accounts": [],
+        "reading": "ambiguous: could be more than one account",
+        "note": "Nadia owns both Vantorre Group and Orlavine on this date; the slide-deck sentence does not distinguish them."
+      }
+    ],
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e2",
+        "entity": "vantorre-mobility"
+      },
+      {
+        "oid": "e3",
+        "entity": "orlavine"
+      },
+      {
+        "oid": "e4",
+        "entity": "quillfeather"
+      },
+      {
+        "oid": "e5",
+        "entity": "carrowmere"
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2915,
+    "output_tokens": 521,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.01104
+}

@@ -57,3 +57,7 @@ GBRAIN_SYNC_LANES=12 bun scripts/bench/managed-sync-catchup.ts --files 1500 --de
 ```
 
 No provider keys are needed.
+
+## Changelog
+
+- **2026-10-08:** The catch-up-while-saving row (45% of idle, one run) was low; three more runs of the same code measured 60.6 to 63.2%, so that target was met. See [the follow-up report](2026-10-08-managed-sync-followup-wave.md).

@@ -1,0 +1,12 @@
+{"gbrain_version":"0.60.169.0","calls":2000,"p50_ms":0.0799,"p90_ms":0.0964,"limit_ms":0.075}
+exit 1
+{"gbrain_version":"0.60.169.0","calls":2000,"p50_ms":0.0783,"p90_ms":0.0943,"limit_ms":0.075}
+exit 1
+{"gbrain_version":"0.60.169.0","calls":2000,"p50_ms":0.0816,"p90_ms":0.0976,"limit_ms":0.075}
+exit 1
+{"gbrain_version":"0.60.169.0","calls":2000,"p50_ms":0.1199,"p90_ms":0.1388,"limit_ms":0.075}
+exit 1
+{"gbrain_version":"0.60.169.0","calls":2000,"p50_ms":0.083,"p90_ms":0.103,"limit_ms":0.075}
+exit 1
+{"gbrain_version":"0.60.169.0","calls":2000,"p50_ms":0.0797,"p90_ms":0.096,"limit_ms":0.075}
+exit 1

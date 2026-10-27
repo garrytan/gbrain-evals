@@ -1,0 +1,181 @@
+{
+  "slug": "chats/2025-07-02-tp-confusion",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2025-07-02",
+    "owner_phrases": [
+      {
+        "mid": "chats/2025-07-02-tp-confusion#m1",
+        "phrase": "Hollis's old packaging account",
+        "lines": [
+          22
+        ]
+      },
+      {
+        "mid": "chats/2025-07-02-tp-confusion#m2",
+        "phrase": "Pree's Zoom account",
+        "lines": [
+          26
+        ]
+      }
+    ],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "TP",
+        "line": 9
+      },
+      {
+        "oid": "e2",
+        "surface": "TP",
+        "line": 12
+      },
+      {
+        "oid": "e3",
+        "surface": "Tansley Parcel",
+        "line": 12
+      },
+      {
+        "oid": "e4",
+        "surface": "Tansley Packaging",
+        "line": 15
+      },
+      {
+        "oid": "e5",
+        "surface": "Tansleigh Packaging",
+        "line": 18
+      },
+      {
+        "oid": "e6",
+        "surface": "TP",
+        "line": 19
+      },
+      {
+        "oid": "e7",
+        "surface": "TPCL",
+        "line": 19
+      },
+      {
+        "oid": "e8",
+        "surface": "TSP",
+        "line": 19
+      },
+      {
+        "oid": "e9",
+        "surface": "TP",
+        "line": 22
+      },
+      {
+        "oid": "e10",
+        "surface": "Tansley Parcel",
+        "line": 22
+      },
+      {
+        "oid": "e11",
+        "surface": "Tansleigh Packaging",
+        "line": 25
+      },
+      {
+        "oid": "e12",
+        "surface": "Quarendon Freightways",
+        "line": 25
+      },
+      {
+        "oid": "e13",
+        "surface": "Marrow Agrisupply",
+        "line": 26
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "ba7ad45418e0edb541ddcb5e6acfa505a75099924d8e041327858dbe11ddf230",
+  "response_text": "{\n  \"date_used\": \"2025-07-02\",\n  \"owner_phrases\": [\n    {\n      \"mid\": \"chats/2025-07-02-tp-confusion#m1\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\"tansleigh\"],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"Tansleigh Packaging is the packaging account Hollis previously owned.\"\n    },\n    {\n      \"mid\": \"chats/2025-07-02-tp-confusion#m2\",\n      \"refers_to_customer_account\": false,\n      \"accounts\": [],\n      \"reading\": \"not about a customer account (a login, device, HR/expense account, a narrative 'account of', a vendor relationship, an employer)\",\n      \"note\": \"This is Pree's Zoom login, not ownership of Marrow Agrisupply.\"\n    }\n  ],\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"tansleigh\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"tansley-parcel\",\n      \"note\": \"Pree tentatively interprets TP as Tansley Parcel; Tobias subsequently corrects her interpretation.\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"tansley-parcel\"\n    },\n    {\n      \"oid\": \"e4\",\n      \"entity\": \"tansleigh\"\n    },\n    {\n      \"oid\": \"e5\",\n      \"entity\": \"tansleigh\"\n    },\n    {\n      \"oid\": \"e6\",\n      \"entity\": \"none\",\n      \"note\": \"Discusses the ambiguous abbreviation generally, rather than identifying one company.\"\n    },\n    {\n      \"oid\": \"e7\",\n      \"entity\": \"tansley-parcel\"\n    },\n    {\n      \"oid\": \"e8\",\n      \"entity\": \"tansleigh\"\n    },\n    {\n      \"oid\": \"e9\",\n      \"entity\": \"none\",\n      \"note\": \"Discusses TP in subject lines generally; Pree's automatic interpretation does not establish a unique referent.\"\n    },\n    {\n      \"oid\": \"e10\",\n      \"entity\": \"tansley-parcel\"\n    },\n    {\n      \"oid\": \"e11\",\n      \"entity\": \"tansleigh\"\n    },\n    {\n      \"oid\": \"e12\",\n      \"entity\": \"quarendon-freightways\"\n    },\n    {\n      \"oid\": \"e13\",\n      \"entity\": \"marrow-agrisupply\"\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-07-02",
+    "owner_phrases": [
+      {
+        "mid": "chats/2025-07-02-tp-confusion#m1",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "tansleigh"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "Tansleigh Packaging is the packaging account Hollis previously owned."
+      },
+      {
+        "mid": "chats/2025-07-02-tp-confusion#m2",
+        "refers_to_customer_account": false,
+        "accounts": [],
+        "reading": "not about a customer account (a login, device, HR/expense account, a narrative 'account of', a vendor relationship, an employer)",
+        "note": "This is Pree's Zoom login, not ownership of Marrow Agrisupply."
+      }
+    ],
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "tansleigh"
+      },
+      {
+        "oid": "e2",
+        "entity": "tansley-parcel",
+        "note": "Pree tentatively interprets TP as Tansley Parcel; Tobias subsequently corrects her interpretation."
+      },
+      {
+        "oid": "e3",
+        "entity": "tansley-parcel"
+      },
+      {
+        "oid": "e4",
+        "entity": "tansleigh"
+      },
+      {
+        "oid": "e5",
+        "entity": "tansleigh"
+      },
+      {
+        "oid": "e6",
+        "entity": "none",
+        "note": "Discusses the ambiguous abbreviation generally, rather than identifying one company."
+      },
+      {
+        "oid": "e7",
+        "entity": "tansley-parcel"
+      },
+      {
+        "oid": "e8",
+        "entity": "tansleigh"
+      },
+      {
+        "oid": "e9",
+        "entity": "none",
+        "note": "Discusses TP in subject lines generally; Pree's automatic interpretation does not establish a unique referent."
+      },
+      {
+        "oid": "e10",
+        "entity": "tansley-parcel"
+      },
+      {
+        "oid": "e11",
+        "entity": "tansleigh"
+      },
+      {
+        "oid": "e12",
+        "entity": "quarendon-freightways"
+      },
+      {
+        "oid": "e13",
+        "entity": "marrow-agrisupply"
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 3434,
+    "output_tokens": 685,
+    "thinking_tokens": 104
+  },
+  "cost_usd": 0.013718
+}

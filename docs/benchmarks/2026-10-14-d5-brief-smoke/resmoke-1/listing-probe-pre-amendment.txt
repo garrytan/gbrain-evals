@@ -1,0 +1,2 @@
+master {"surface":"full","advertised":"starter","listed":35,"context_pack":true,"props":["entities","budget_tokens","since","session_id","include_private","min_trust","include_quarantined"]}
+d5 {"surface":"full","advertised":"starter","listed":35,"context_pack":true,"props":["entities","budget_tokens","since","session_id","include_private","min_trust","include_quarantined","counterparty","intent"]}

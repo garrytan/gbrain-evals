@@ -1,0 +1,37 @@
+{
+  "slug": "accounts/tamsin-cold-chain",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: profile\nTitle: Tamsin Cold Chain\nDate: Written on 2026-09-30.\nWriter: Ilse Varga\nVoice: dry and slightly sarcastic\nFormat: a header block of key fields as a table, then short sections\nLength: about 140 words\nDate style in the body: undefined\nTypos: a few natural typos and one or two sloppy abbreviations (never in names or required phrases)\n\nBrief:\nAccount profile, last updated 2026-09-30. Refrigerated warehousing in the Pacific Northwest (Tacoma, Spokane, Portland). CRM code TCC. Owner history: Marcus Lindqvist until April 14, 2025; Dana Okafor since April 14, 2025. Mention that an October 2025 announcement said Tamsin would move to Marcus, but a correction two days later kept it with Dana. 52 seats, SLA Tier 1.\n\nUse these names or codes at least once each, as written: \"TCC\".\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Ilse Varga: North team lead\n- Dana Okafor: Account manager, North team\n- Marcus Lindqvist: Account manager, North team\n- Thea Ramaswell: Director of Yard Operations\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Quarrendon Freight Lines: truckload freight carrier, Upper Midwest; main contact Thea Ramaswell, Director of Yard Operations; codes/nicknames QFL, Q-Freight\n- Brackenwater Freight Co.: less-than-truckload freight, Great Lakes; codes/nicknames BWF, Bracken\n- Tamsin Cold Chain: refrigerated warehousing, Pacific Northwest; codes/nicknames TCC\n- Thornbury Cloth Co. (renamed from Orrin Mills on 2026-01-12): textile mill, Carolinas; codes/nicknames TCC\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2026-09-30 (background only; don't restate unless the brief asks):\n- Quarrendon Freight Lines: managed by Dana Okafor\n- Brackenwater Freight Co.: managed by Marcus Lindqvist\n- Tamsin Cold Chain: managed by Dana Okafor\n- Thornbury Cloth Co.: managed by Marcus Lindqvist",
+      "response_text": "# Tamsin Cold Chain\n\n| Field | Detail |\n|---|---|\n| Last updated | 2026-09-30 |\n| CRM code | TCC |\n| Business | Refrigerated warehousing |\n| Locations | Tacoma, Spokane, Portland — Pacific Northwest |\n| Product | Pemberline Dock |\n| Seats | 52 |\n| SLA | Tier 1 |\n| Owner history | Marcus Lindqvist until April 14, 2025; Dana Okafor since April 14, 2025 |\n\n## Ownership wrinkle\n\nAn October 2025 announcement said Tamsin Cold Chain would move to Marcus Lindqvist. A correction two days later kept it with Dana Okafor. A brief excursion into unnecessary excitement.\n\n## Floor notes\n\nTacoma’s early shift wants the door 6 appointment list printed before the first reefer arrives. Spokane reported duplicate arrival notifications; ticket PD-4817 has screenshots, including the driver's understandably terse reply. Portland still labels overflow appointments “temp,” which is certianly descriptive.\n\n## Next up\n\nDana Okafor will check notification behavior with the Spokane dispatcher. I’ll tidy the Tacoma export colums before Thurs. Coffee optional; legible door numbers less so.",
+      "usage": {
+        "input_tokens": 1132,
+        "output_tokens": 253,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.004794,
+      "provider_meta": {
+        "id": "resp_06ca032ad547c951016acfae1a4ff087d1ab0b95526eb669aa",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1132,
+          "input_tokens_details": {
+            "cache_write_tokens": 1129,
+            "cached_tokens": 0
+          },
+          "output_tokens": 253,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 1385
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

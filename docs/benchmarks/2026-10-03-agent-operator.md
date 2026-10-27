@@ -39,6 +39,44 @@ Spend: $16.38 for the baseline pass (harness-reported cost for Claude Code,
 list prices for Codex tokens), plus $4.83 for a 34-run smoke pass and $32.17 for the Cat 40 check. gbrain's own
 model calls went to a fake provider and cost nothing.
 
+<a id="correction-2026-10-09"></a>
+
+> **Correction, 2026-10-09: some Cat 40 F1/F10 runs searched without gbrain's reranker.** The Cat 40 runner kept the
+> slot-building process's metering-proxy port in each gbrain slot's Voyage URL, so cells run in a later process sent
+> every rerank request to a closed port and gbrain quietly returned unreranked results. gbrain-evals #76 (commit
+> `7709a70`) and #109 fixed it. The Cat 41 sessions (Claude Code, Codex) used a fake provider and are not affected.
+> The original numbers below stay as measured. Cells whose metered gbrain calls include a rerank request
+> ([audit](2026-10-08-program-primary-hard/root-cause/restore-audit.json)):
+>
+> | Cat 40 run | Cells that reranked |
+> |---|---|
+> | `f1f10-cat40-baseline-master` (baseline `566a242`, 218/300) | 300 of 300 |
+> | `f1f10-cat40-after-7d16702` (candidate `7d16702`, 204/300) | 300 of 300 |
+> | `f1f10-instruction-ab/runs/` (VC, V0, V1, V3, V5, T0, the night baseline rerun and both fixed-ledger runs) | 0 of 100 in each, 0 of 900 |
+> | `f1f10-cat40-base-same-window-b3f4e8b` (same-window baseline, 202/300) | 0 of 300 |
+> | `f1f10-cat40-after-b3f4e8b` (final candidate `b3f4e8b`, 205/300) | 300 of 300 |
+>
+> What this changes:
+> - **The baseline against `7d16702` (218 to 204 of 300)** reranked on both sides and stands.
+> - **The instruction A/B stays internally valid.** Its variants and the night baseline rerun all ran without
+>   reranking, so "no text variant restores the morning's score" and "the candidate text is within noise of the
+>   baseline (44 to 51 against 46)" hold for gbrain without its reranker. So does the fixed-ledger tie (46 and 46 of
+>   100).
+> - **The drift explanation is weaker than stated.** The morning baseline (59/100) and the candidate (48/100) reranked;
+>   the night rerun (46/100) did not. The 13-point drop between the two baseline runs therefore mixes model drift with
+>   the lost reranker. The first-call filter rate (12% to 25%) is measured before any gbrain output, so model behavior
+>   did move, but how much of the 13 points it explains is not established.
+> - **The confirmation pass's same-window pair is confounded.** The candidate reranked in 300 of 300 cells and the
+>   baseline in 0 of 300, so "+1.0 point; the candidate passes the rule" does not support its conclusion as stated.
+>   The rule was report-only. The like-for-like evidence for `b3f4e8b` against `566a242` is the fixed-ledger pair:
+>   `gpt-5.4-mini` only, neither side reranked, 46 against 46 of 100.
+>
+> For scale, the only measurement of the reranker's effect comes from a different world and tier. On the Cat 40 Hard
+> development world (50 tasks), Sonnet 5.5 on gbrain `8e11aa1f3` finished 21 of 50 tasks with reranking and 19 of 50
+> without; paired, reranking won 7 tasks and lost 5, which is within noise (gbrain-evals
+> [#76](https://github.com/garrytan/gbrain-evals/pull/76), `docs/benchmarks/2026-10-07-model-ladder-hard.md`). It is
+> context, not a correction factor for these runs.
+
 ## The concrete case
 
 The user says: *"gbrain's doctor says my brain's health score is low. Can you
@@ -472,3 +510,7 @@ Artifacts in [`2026-10-03-agent-operator/baseline-master-566a242/`](2026-10-03-a
 `summary.json` and `summary.md` (cells and totals), `scores.jsonl` (every step
 of every run), `overhead.json`, `meta.json`, and `runs.tar.gz` (raw
 transcripts, the gbrain call log, the provider log and probes for each run).
+
+## Changelog
+
+- 2026-10-09: [Correction](#correction-2026-10-09) added: the instruction A/B runs and the confirmation pass's same-window baseline searched without gbrain's reranker (stale metering-proxy port in restored slots; fixed in gbrain-evals #76 and #109), so the same-window pair for `b3f4e8b` and the drift explanation mix conditions. Original numbers unchanged.

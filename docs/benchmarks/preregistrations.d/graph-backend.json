@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "experiments": [
+    {
+      "id": "2026-10-17-graph-backend",
+      "preregistration": "docs/benchmarks/2026-10-17-graph-backend-preregistration.md",
+      "results": [
+        "docs/benchmarks/2026-10-17-graph-backend/**",
+        "docs/benchmarks/2026-10-17-graph-backend.md"
+      ]
+    }
+  ]
+}

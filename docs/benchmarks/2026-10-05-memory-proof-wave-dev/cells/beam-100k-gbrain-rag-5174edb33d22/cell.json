@@ -1,0 +1,250 @@
+{
+  "schema": "mpw-cell-v1",
+  "cell_id": "beam-100k-gbrain-rag-5174edb33d22",
+  "identity": {
+    "schema": "mpw-cell-v1",
+    "dataset": "beam",
+    "split": "100k",
+    "dataset_manifest_sha256": "722c8c0c993ba8bfc8c165721f6ba499e2e0e0a7c9e9286537a948a091c25f95",
+    "schedule_sha256": "27a2e286916808a1b43ea3ccf84b51bfd363945b1242cd9a9440a4ec149e1a71",
+    "pins": {
+      "harness_commit": "f618ed7b1f0eb9cad7b42e876f91a42f0eadb150",
+      "harness_lock_sha256": "6b6ace4f721ae10bf66214a8a617c3c6e97a930e91c163728835691994a07b8f",
+      "torch": "2.10.0+cpu",
+      "gbrain": {
+        "version": "0.60.94.0",
+        "declared_pin": "github:garrytan/gbrain#739e5cc89ca43b9b9351f0f203c7b12a7c0c571c",
+        "loaded_git_head": "94e9e8875484b2b814526e6acc1ef5c66940af3a",
+        "package_sha256": "fd9e8aa0db62a527bf4231e837b4712238e92df0db471592a495d94bd132ef33"
+      }
+    },
+    "provider": "gbrain",
+    "provider_config": {
+      "embedding_model": "voyage:voyage-4",
+      "embedding_dimensions": 1024,
+      "lane": "combined",
+      "extraction_model": "openai:gpt-6-luna",
+      "facts_limit": 100,
+      "page_split": "exchanges",
+      "search_config": {
+        "search.temporal_fact_reserve": "true"
+      },
+      "facts_tokens": 600,
+      "token_budget": 7500
+    },
+    "gbrain_credentials": [
+      "voyage",
+      "openai"
+    ],
+    "mode": "rag",
+    "lane": "combined",
+    "seal": "dev",
+    "k": 10,
+    "target_tokens": 8000,
+    "models": {
+      "answer": "gemini:gemini-3.8-flash",
+      "judge": "gemini:gemini-3.5-flash"
+    },
+    "prompt_revision": "9c547715f4a3d5bd3c41cb8888939c61c83fc70085856d4479d6cfc47b73f4f4",
+    "scorer_revision": "a424debbf1ac5f36ab733cde8a3beac01858579b4986460b2a0b00a8e3d7d48a",
+    "wrapper_revision": "3cdc54a5f56922a62eba56b5ea5698124a66e4f1c839a07491a4430cab502144",
+    "budget_usd": 12
+  },
+  "spec": {
+    "dataset": "beam",
+    "split": "100k",
+    "provider": "gbrain",
+    "mode": "rag",
+    "lane": "combined",
+    "seal": "dev",
+    "target_tokens": 8000,
+    "models": {
+      "answer": "gemini:gemini-3.8-flash",
+      "judge": "gemini:gemini-3.5-flash"
+    },
+    "budget_usd": 12,
+    "questions": {
+      "units": [
+        "3",
+        "11",
+        "12",
+        "15"
+      ]
+    },
+    "k": 10,
+    "provider_config": {
+      "embedding_model": "voyage:voyage-4",
+      "embedding_dimensions": 1024,
+      "lane": "combined",
+      "extraction_model": "openai:gpt-6-luna",
+      "facts_limit": 100,
+      "page_split": "exchanges",
+      "search_config": {
+        "search.temporal_fact_reserve": "true"
+      },
+      "facts_tokens": 600,
+      "token_budget": 7500
+    },
+    "note": "memory proof wave dev gbrain-94e9-beam-100k-combined-exch-f600-tfr-dg-default 8000-token target",
+    "gbrain_credentials": [
+      "voyage",
+      "openai"
+    ]
+  },
+  "resolved": {
+    "dataset": "beam",
+    "split": "100k",
+    "task_type": "open",
+    "isolation_unit": "conversation",
+    "schedule": [
+      "3_abstention_0",
+      "3_abstention_1",
+      "3_contradiction_resolution_0",
+      "3_contradiction_resolution_1",
+      "3_event_ordering_0",
+      "3_event_ordering_1",
+      "3_information_extraction_0",
+      "3_information_extraction_1",
+      "3_instruction_following_0",
+      "3_instruction_following_1",
+      "3_knowledge_update_0",
+      "3_knowledge_update_1",
+      "3_multi_session_reasoning_0",
+      "3_multi_session_reasoning_1",
+      "3_preference_following_0",
+      "3_preference_following_1",
+      "3_summarization_0",
+      "3_summarization_1",
+      "3_temporal_reasoning_0",
+      "3_temporal_reasoning_1",
+      "11_abstention_0",
+      "11_abstention_1",
+      "11_contradiction_resolution_0",
+      "11_contradiction_resolution_1",
+      "11_event_ordering_0",
+      "11_event_ordering_1",
+      "11_information_extraction_0",
+      "11_information_extraction_1",
+      "11_instruction_following_0",
+      "11_instruction_following_1",
+      "11_knowledge_update_0",
+      "11_knowledge_update_1",
+      "11_multi_session_reasoning_0",
+      "11_multi_session_reasoning_1",
+      "11_preference_following_0",
+      "11_preference_following_1",
+      "11_summarization_0",
+      "11_summarization_1",
+      "11_temporal_reasoning_0",
+      "11_temporal_reasoning_1",
+      "12_abstention_0",
+      "12_abstention_1",
+      "12_contradiction_resolution_0",
+      "12_contradiction_resolution_1",
+      "12_event_ordering_0",
+      "12_event_ordering_1",
+      "12_information_extraction_0",
+      "12_information_extraction_1",
+      "12_instruction_following_0",
+      "12_instruction_following_1",
+      "12_knowledge_update_0",
+      "12_knowledge_update_1",
+      "12_multi_session_reasoning_0",
+      "12_multi_session_reasoning_1",
+      "12_preference_following_0",
+      "12_preference_following_1",
+      "12_summarization_0",
+      "12_summarization_1",
+      "12_temporal_reasoning_0",
+      "12_temporal_reasoning_1",
+      "15_abstention_0",
+      "15_abstention_1",
+      "15_contradiction_resolution_0",
+      "15_contradiction_resolution_1",
+      "15_event_ordering_0",
+      "15_event_ordering_1",
+      "15_information_extraction_0",
+      "15_information_extraction_1",
+      "15_instruction_following_0",
+      "15_instruction_following_1",
+      "15_knowledge_update_0",
+      "15_knowledge_update_1",
+      "15_multi_session_reasoning_0",
+      "15_multi_session_reasoning_1",
+      "15_preference_following_0",
+      "15_preference_following_1",
+      "15_summarization_0",
+      "15_summarization_1",
+      "15_temporal_reasoning_0",
+      "15_temporal_reasoning_1"
+    ],
+    "schedule_sha256": "27a2e286916808a1b43ea3ccf84b51bfd363945b1242cd9a9440a4ec149e1a71",
+    "dataset_manifest_sha256": "722c8c0c993ba8bfc8c165721f6ba499e2e0e0a7c9e9286537a948a091c25f95",
+    "questions": 80,
+    "units": [
+      "11",
+      "12",
+      "15",
+      "3"
+    ],
+    "documents": 34,
+    "document_tokens_cl100k": 579786,
+    "document_tokens_by_unit": {
+      "3": 118670,
+      "11": 183646,
+      "12": 182497,
+      "15": 94973
+    },
+    "timestamp_provenance": {
+      "rule": {
+        "provenance": "observed_session_time",
+        "source": "the session's time_anchor turn field; flat 10M fallback documents carry none"
+      },
+      "counts": {
+        "observed_session_time": 34
+      }
+    },
+    "dataset_judge_model": "gemini:gemini-3.5-flash",
+    "judge_calls": 215,
+    "prompt_revision": "9c547715f4a3d5bd3c41cb8888939c61c83fc70085856d4479d6cfc47b73f4f4",
+    "scorer_revision": "a424debbf1ac5f36ab733cde8a3beac01858579b4986460b2a0b00a8e3d7d48a",
+    "wrapper_revision": "3cdc54a5f56922a62eba56b5ea5698124a66e4f1c839a07491a4430cab502144"
+  },
+  "planned_at": "2026-10-06T16:24:06.487Z",
+  "estimate": {
+    "usd": 2.0906,
+    "lines": [
+      {
+        "stage": "ingest: gbrain embeddings",
+        "tokens_in": 921860,
+        "tokens_out": 0,
+        "usd": 0.0553115844,
+        "basis": "579786 cl100k document tokens x 1.59 (provider tokenizer and chunk overlap)"
+      },
+      {
+        "stage": "retrieve: gbrain query embeddings",
+        "tokens_in": 5120,
+        "tokens_out": 0,
+        "usd": 0.0003072,
+        "basis": "64 tokens per question"
+      },
+      {
+        "stage": "answer",
+        "tokens_in": 668000,
+        "tokens_out": 176000,
+        "usd": 1.161,
+        "basis": "80 questions x 1 call(s) x (8000 context + 350 prompt) in, 2200 out"
+      },
+      {
+        "stage": "judge",
+        "tokens_in": 156950,
+        "tokens_out": 70950,
+        "usd": 0.873975,
+        "basis": "215 judge calls x 730 in / 330 out"
+      }
+    ],
+    "unpriced": [],
+    "note": "list-price estimate from token volumes; the run is enforced by the metering proxy, not by this number"
+  },
+  "reproduce": "bun run harness:cell run eval/harness-provider/cells/dev/gbrain-94e9-beam-100k-combined-exch-f600-tfr-dg-default-8000.json"
+}

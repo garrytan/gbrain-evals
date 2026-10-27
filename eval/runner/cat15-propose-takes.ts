@@ -12,7 +12,8 @@
  *     structurally impossible. The eval measures whether that prompt, run
  *     against the extract model, finds the gradeable claims a human labeled
  *     in the fixture pages. The empty-vs-unparseable discriminator
- *     (isWellFormedEmptyExtraction) is also gbrain's production code.
+ *     (extractorOutcome, which replaced isWellFormedEmptyExtraction in gbrain
+ *     #6782) is also gbrain's production code.
  *
  *   SEEDED / STUBBED (legitimately):
  *     - Fixture pages + hand-labeled .gradeable-claims.json ground truth ship
@@ -53,7 +54,7 @@ import {
   EXTRACT_TAKES_PROMPT,
   PROPOSE_TAKES_PROMPT_VERSION,
   PROPOSE_TAKES_MAX_TOKENS,
-  isWellFormedEmptyExtraction,
+  extractorOutcome,
 } from '../../node_modules/gbrain/src/core/cycle/propose-takes.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
 import {
@@ -250,9 +251,10 @@ async function extractClaims(pageBody: string, client?: Anthropic): Promise<Extr
       // fall through to the well-formed-empty discriminator
     }
   }
-  // gbrain's production discriminator: a cleanly-parsed `[]` is a genuine
-  // "no gradeable claims" result; anything else unparseable is misbehavior.
-  return { claims: [], raw_text: raw, parse_failed: !isWellFormedEmptyExtraction(raw) };
+  // gbrain's production discriminator: a reply whose first JSON value is a
+  // clean `[]` is a genuine "no gradeable claims" result; anything else
+  // unparseable is misbehavior.
+  return { claims: [], raw_text: raw, parse_failed: extractorOutcome(raw).kind !== 'valid_empty' };
 }
 
 // ─── Matcher judge ──────────────────────────────────────────────────

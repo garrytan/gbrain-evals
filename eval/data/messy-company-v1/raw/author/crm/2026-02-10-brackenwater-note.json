@@ -1,0 +1,41 @@
+{
+  "slug": "crm/2026-02-10-brackenwater-note",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: crm\nTitle: CRM note: Brackenwater\nDate: Written on 2026-02-10.\nWriter: Marcus Lindqvist\nVoice: polished and businesslike\nFormat: undefined\nLength: about 44 words\nDate style in the body: undefined\nTypos: a few natural typos and one or two sloppy abbreviations (never in names or required phrases)\n\nBrief:\nMarcus's CRM note after the billing dispute was resolved. He writes the renewal date as December 31, 2026 (this is his mistake; just state it plainly).\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Ilse Varga: North team lead\n- Dana Okafor: Account manager, North team\n- Marcus Lindqvist: Account manager, North team\n- Thea Ramaswell: Director of Yard Operations\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Quarrendon Freight Lines: truckload freight carrier, Upper Midwest; main contact Thea Ramaswell, Director of Yard Operations; codes/nicknames QFL, Q-Freight\n- Brackenwater Freight Co.: less-than-truckload freight, Great Lakes; codes/nicknames BWF, Bracken\n- Tamsin Cold Chain: refrigerated warehousing, Pacific Northwest; codes/nicknames TCC\n- Thornbury Cloth Co. (renamed from Orrin Mills on 2026-01-12): textile mill, Carolinas; codes/nicknames TCC\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2026-02-10 (background only; don't restate unless the brief asks):\n- Quarrendon Freight Lines: managed by Dana Okafor; Ilse Varga is covering as acting AM\n- Brackenwater Freight Co.: managed by Marcus Lindqvist\n- Tamsin Cold Chain: managed by Dana Okafor; Ilse Varga is covering as acting AM\n- Thornbury Cloth Co.: managed by Marcus Lindqvist",
+      "response_text": "**2026-02-10 – Billing Dispute Resolution**\n\nRecent billing dispute with Brackenwater Freight Co. is now fully resolved following invoice reconciliation with Stoneharrow Billing. AP confirmed wire release this morning. The renewal date is December 31, 2026. Will f/u w/ Toledo terminal ops next week regarding Gate 4 check-in logs.",
+      "usage": {
+        "input_tokens": 1120,
+        "output_tokens": 86,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.0031,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1120,
+          "candidatesTokenCount": 86,
+          "totalTokenCount": 1206,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1120
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 86
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

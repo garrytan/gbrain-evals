@@ -1,0 +1,150 @@
+{
+  "slug": "contracts/2025-12-17-dmf-renewal-2026",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2025-12-17",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Driftmoor Marine Freight",
+        "line": 7
+      },
+      {
+        "oid": "e2",
+        "surface": "Driftmoor Marine Freight",
+        "line": 11
+      },
+      {
+        "oid": "e3",
+        "surface": "Driftmoor Marine Freight",
+        "line": 11
+      },
+      {
+        "oid": "e4",
+        "surface": "Driftmoor Marine Freight",
+        "line": 15
+      },
+      {
+        "oid": "e5",
+        "surface": "DMF",
+        "line": 37
+      },
+      {
+        "oid": "e6",
+        "surface": "Driftmoor Marine Freight",
+        "line": 37
+      },
+      {
+        "oid": "e7",
+        "surface": "Driftmoor Marine Freight",
+        "line": 53
+      },
+      {
+        "oid": "e8",
+        "surface": "Driftmoor Marine Freight",
+        "line": 93
+      },
+      {
+        "oid": "e9",
+        "surface": "Driftmoor Marine Freight",
+        "line": 104
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": [],
+    "record": {
+      "question": "Is this document signed, an unsigned version, or a draft? Judge from the body text, not the title alone. Give its signed date and effective date if stated, and the value of each of these terms it sets.",
+      "terms": [
+        "seats",
+        "price_per_seat",
+        "renewal_date"
+      ]
+    }
+  },
+  "prompt_user_sha256": "1cb7ed8af1372ac8bb9260258dfbc28b591bd1635f9f34ef5d134a4f73166065",
+  "response_text": "{\n  \"date_used\": \"2025-12-17\",\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"driftmoor\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"driftmoor\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"driftmoor\"\n    },\n    {\n      \"oid\": \"e4\",\n      \"entity\": \"driftmoor\"\n    },\n    {\n      \"oid\": \"e5\",\n      \"entity\": \"driftmoor\"\n    },\n    {\n      \"oid\": \"e6\",\n      \"entity\": \"driftmoor\"\n    },\n    {\n      \"oid\": \"e7\",\n      \"entity\": \"driftmoor\"\n    },\n    {\n      \"oid\": \"e8\",\n      \"entity\": \"driftmoor\"\n    },\n    {\n      \"oid\": \"e9\",\n      \"entity\": \"driftmoor\"\n    }\n  ],\n  \"record\": {\n    \"status\": \"signed\",\n    \"status_evidence_line\": 13,\n    \"signed_date\": \"2025-12-17\",\n    \"effective_date\": \"2026-01-01\",\n    \"terms\": [\n      {\n        \"term\": \"seats\",\n        \"applies_to\": [\n          \"driftmoor\"\n        ],\n        \"value\": \"58 seats\",\n        \"line\": 19\n      },\n      {\n        \"term\": \"price_per_seat\",\n        \"applies_to\": [\n          \"driftmoor\"\n        ],\n        \"value\": \"USD 1,880 per seat per year\",\n        \"line\": 21\n      },\n      {\n        \"term\": \"renewal_date\",\n        \"applies_to\": [\n          \"driftmoor\"\n        ],\n        \"value\": \"2026-12-31\",\n        \"line\": 23\n      }\n    ],\n    \"deciding_line\": null,\n    \"deciding_days\": null\n  }\n}",
+  "parsed": {
+    "date_used": "2025-12-17",
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "driftmoor"
+      },
+      {
+        "oid": "e2",
+        "entity": "driftmoor"
+      },
+      {
+        "oid": "e3",
+        "entity": "driftmoor"
+      },
+      {
+        "oid": "e4",
+        "entity": "driftmoor"
+      },
+      {
+        "oid": "e5",
+        "entity": "driftmoor"
+      },
+      {
+        "oid": "e6",
+        "entity": "driftmoor"
+      },
+      {
+        "oid": "e7",
+        "entity": "driftmoor"
+      },
+      {
+        "oid": "e8",
+        "entity": "driftmoor"
+      },
+      {
+        "oid": "e9",
+        "entity": "driftmoor"
+      }
+    ],
+    "record": {
+      "status": "signed",
+      "status_evidence_line": 13,
+      "signed_date": "2025-12-17",
+      "effective_date": "2026-01-01",
+      "terms": [
+        {
+          "term": "seats",
+          "applies_to": [
+            "driftmoor"
+          ],
+          "value": "58 seats",
+          "line": 19
+        },
+        {
+          "term": "price_per_seat",
+          "applies_to": [
+            "driftmoor"
+          ],
+          "value": "USD 1,880 per seat per year",
+          "line": 21
+        },
+        {
+          "term": "renewal_date",
+          "applies_to": [
+            "driftmoor"
+          ],
+          "value": "2026-12-31",
+          "line": 23
+        }
+      ],
+      "deciding_line": null,
+      "deciding_days": null
+    }
+  },
+  "usage": {
+    "input_tokens": 5121,
+    "output_tokens": 518,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.015422
+}

@@ -1,9 +1,8 @@
-"""memory-bank 0.10.2 shim (protocol v1, see eval/systems/PROTOCOL.md).
+"""memory-bank shim (protocol v1, see eval/systems/PROTOCOL.md).
 
-Starts from the vendor's own benchmark ingestion, AMB's `hindsight-http` provider
-(vectorize-io/agent-memory-benchmark@f618ed7, src/memory_bench/memory/hindsight.py). Deviations are listed in
-capability.json and README.md. The memory-bank server runs in its own pinned image; this process only speaks
-the public HTTP API through hindsight-client 0.10.2.
+Starts from the vendor's own benchmark ingestion, the HTTP provider of the vendor's agent memory benchmark (AMB, commit
+f618ed7). Deviations are listed in capability.json and README.md. The memory-bank server runs in its own pinned image;
+this process only speaks the public HTTP API through the vendor's pinned Python client.
 """
 from __future__ import annotations
 
@@ -19,11 +18,11 @@ from typing import Any
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "_shim"))
 from shim import Adapter, Item, ShimError, serve  # noqa: E402
 
-from hindsight_client import Hindsight  # noqa: E402
+from hindsight_client import Hindsight as MemoryBankClient  # noqa: E402
 from hindsight_client_api.exceptions import ApiException, NotFoundException  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-HINDSIGHT_URL = os.environ.get("HINDSIGHT_URL", "http://memory-bank:8888")
+MEMORY_BANK_URL = os.environ.get("MEMORY_BANK_URL", "http://memory-bank:8888")
 CONFIG = os.environ.get("SHIM_CONFIG", "recipe")
 LLM_PROVIDER = os.environ.get("SHIM_LLM_PROVIDER", "openai")
 INGEST_TIMEOUT_S = float(os.environ.get("SHIM_INGEST_TIMEOUT_S", "900"))
@@ -61,7 +60,7 @@ def _fact_text(r: Any) -> str:
     return "\n".join(lines)
 
 
-class HindsightAdapter(Adapter):
+class MemoryBankAdapter(Adapter):
     def __init__(self) -> None:
         with open(os.path.join(HERE, "capability.json")) as f:
             self.record = json.load(f)
@@ -72,8 +71,8 @@ class HindsightAdapter(Adapter):
         self.client = self._run(self._make_client())
         self.banks: set[str] = set()
 
-    async def _make_client(self) -> Hindsight:
-        return Hindsight(base_url=HINDSIGHT_URL, timeout=600.0)
+    async def _make_client(self) -> MemoryBankClient:
+        return MemoryBankClient(base_url=MEMORY_BANK_URL, timeout=600.0)
 
     def _run(self, coro: Any, timeout: float | None = None) -> Any:
         """All vendor calls share one event loop, since the client's aiohttp session is bound to it."""
@@ -205,4 +204,4 @@ class HindsightAdapter(Adapter):
 
 
 if __name__ == "__main__":
-    serve(HindsightAdapter())
+    serve(MemoryBankAdapter())

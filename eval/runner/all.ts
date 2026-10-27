@@ -10,6 +10,13 @@
  *   bun eval/runner/all.ts --tier paid --paid --budget-run-id <id>   # provider-backed runners only
  *   bun eval/runner/all.ts --tier all --paid --budget-run-id <id>    # both
  *   bun eval/runner/all.ts --only N3,entity-resolution               # a subset (ids or legacy aliases)
+ *   bun eval/runner/all.ts --shard 2/3                               # one of 3 balanced parts of the selection (CI)
+ *
+ * **Shards:** `--shard k/n` runs one of n parts of the selection, balanced by
+ * the measured seconds in brainbench-shard-weights.json (exclusive categories
+ * count in full, shared ones divided by the concurrency). With
+ * BRAINBENCH_BOUND_S set (the step's `timeout`), the run ends by printing its
+ * elapsed time as a share of that bound, and adds the line to the job summary.
  *
  * **Paid guard:** a selection that includes any K or P category refuses to
  * start without both `--paid` and `--budget-run-id <id>` naming an open run
@@ -61,7 +68,8 @@
 
 import { spawn } from 'child_process';
 import { randomUUID } from 'node:crypto';
-import { writeFileSync, mkdirSync, existsSync, statSync } from 'fs';
+import { appendFileSync, writeFileSync, mkdirSync, existsSync, statSync } from 'fs';
+import shardWeights from './brainbench-shard-weights.json' with { type: 'json' };
 import { basename, join } from 'path';
 import { loadReceipt, receiptPath, type Receipt } from './receipt.ts';
 import { REGISTRY, registryEntry, tiersFor, type CategoryEntry, type GateStatus, type PromotionRules, type RegistryTier, type TierSelection } from '../registry.ts';
@@ -192,6 +200,45 @@ export function selectCategories(tier: TierSelection, only: ReadonlySet<string> 
     }
   }
   return { dispatch, notRun };
+}
+
+/** `--shard k/n` (1-based), or null without the flag. */
+export function parseShard(argv: string[]): { index: number; count: number } | null {
+  const eq = argv.find(a => a.startsWith('--shard='));
+  const i = argv.indexOf('--shard');
+  const raw = eq ? eq.slice('--shard='.length) : i >= 0 ? argv[i + 1] : undefined;
+  if (raw === undefined) return null;
+  const m = /^(\d+)\/(\d+)$/.exec(raw);
+  const index = m ? Number(m[1]) : NaN, count = m ? Number(m[2]) : NaN;
+  if (!(count >= 1 && index >= 1 && index <= count)) throw new Error(`--shard must be k/n with 1 <= k <= n (got ${JSON.stringify(raw)})`);
+  return { index, count };
+}
+
+/** Measured seconds per category id; a category without one counts as the slowest measured. */
+export const SHARD_SECONDS: Readonly<Record<string, number>> = shardWeights.seconds;
+
+/**
+ * Splits the selection into `count` parts by expected wall time, longest first onto the part that would finish
+ * earliest: an exclusive category adds its seconds, a shared one its seconds over the concurrency. Deterministic.
+ */
+export function shardPlan<T extends { id: string; exclusive?: boolean }>(items: readonly T[], count: number, concurrency: number,
+  seconds: Readonly<Record<string, number>> = SHARD_SECONDS): T[][] {
+  const fallback = Math.max(...Object.values(seconds));
+  const weight = (item: T) => seconds[item.id] ?? fallback;
+  const parts = Array.from({ length: count }, () => ({ items: [] as T[], wall: 0 }));
+  const ordered = [...items].sort((a, b) => weight(b) - weight(a) || a.id.localeCompare(b.id));
+  for (const item of ordered) {
+    const cost = item.exclusive ? weight(item) : weight(item) / concurrency;
+    const target = parts.reduce((best, part) => (part.wall + cost < best.wall + cost ? part : best));
+    target.items.push(item); target.wall += cost;
+  }
+  const position = new Map(items.map((item, i) => [item, i]));
+  return parts.map(part => part.items.sort((a, b) => position.get(a)! - position.get(b)!));
+}
+
+/** The run's elapsed time as a share of its bound, for the log and the job summary. */
+export function boundUse(label: string, elapsedMs: number, boundSeconds: number): string {
+  return `${label}: ${Math.round(elapsedMs / 1000)} s of its ${boundSeconds} s bound (${Math.round(100 * elapsedMs / (boundSeconds * 1000))}%)\n`;
 }
 
 // ─── Receipt-driven status (WS0 outcome contract) ─────────────────────
@@ -475,20 +522,26 @@ export function paidGuard(argv: readonly string[], dispatch: readonly Dispatched
 
 async function main() {
   const argv = process.argv.slice(2);
+  const started = Date.now();
   const tier = parseTier(argv);
-  const { dispatch, notRun } = selectCategories(tier, parseOnly(argv));
+  const shard = parseShard(argv);
+  const selection = selectCategories(tier, parseOnly(argv));
+  const notRun = selection.notRun;
+  const parsedConcurrency = parseInt(process.env.BRAINBENCH_CONCURRENCY ?? String(DEFAULT_CONCURRENCY), 10);
+  const concurrency = Number.isFinite(parsedConcurrency) && parsedConcurrency > 0 ? parsedConcurrency : DEFAULT_CONCURRENCY;
+  let dispatch = selection.dispatch;
+  if (shard) {
+    const parts = shardPlan(dispatch, shard.count, concurrency);
+    parts.forEach((part, k) => { if (k !== shard.index - 1) for (const c of part) notRun.push({ id: c.id, name: c.name, tier: c.tier, reason: `runs in shard ${k + 1}/${shard.count}` }); });
+    dispatch = parts[shard.index - 1]!;
+  }
   Object.assign(process.env, paidGuard(argv, dispatch));
-  const concurrency = parseInt(process.env.BRAINBENCH_CONCURRENCY ?? String(DEFAULT_CONCURRENCY), 10);
 
   // eslint-disable-next-line no-console
   console.log(`BrainBench tier "${tier}": dispatching ${dispatch.length} of ${CATEGORIES.length} categories, concurrency=${concurrency}`);
   printNotRun(notRun);
 
-  const runs = await runSchedule(
-    dispatch,
-    Number.isFinite(concurrency) && concurrency > 0 ? concurrency : DEFAULT_CONCURRENCY,
-    runCatSubprocess,
-  );
+  const runs = await runSchedule(dispatch, concurrency, runCatSubprocess);
 
   const reportDir = 'eval/reports';
   if (!existsSync(reportDir)) mkdirSync(reportDir, { recursive: true });
@@ -505,6 +558,13 @@ async function main() {
       `; ${notRun.length} not run.`,
   );
   printNotRun(notRun);
+  const bound = Number(process.env.BRAINBENCH_BOUND_S);
+  if (bound > 0) {
+    const use = boundUse(`BrainBench ${tier}${shard ? ` shard ${shard.index}/${shard.count}` : ''}`, Date.now() - started, bound);
+    // eslint-disable-next-line no-console
+    console.log(use.trimEnd());
+    if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, use);
+  }
 
   // Exit policy (WS0): failures always fail the run. Skips also fail it
   // unless explicitly acknowledged with BRAINBENCH_ALLOW_SKIP=1.

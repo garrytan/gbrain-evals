@@ -1,0 +1,58 @@
+{
+  "slug": "crm/2025-05-06-covey-lark-profile-note",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2025-05-06",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Covey & Lark",
+        "line": 6
+      },
+      {
+        "oid": "e2",
+        "surface": "Covey & Lark Retail",
+        "line": 9
+      }
+    ],
+    "claims": [
+      {
+        "cid": "c-clr-sites-a",
+        "question": "What does the page say about Covey & Lark Retail's site count?"
+      }
+    ],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "08b27687a2750b59745dd9133ffceb29251a74465b59559b7949659e6936a619",
+  "response_text": "{\n  \"date_used\": \"2025-05-06\",\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"covey-lark\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"covey-lark\"\n    }\n  ],\n  \"claims\": [\n    {\n      \"cid\": \"c-clr-sites-a\",\n      \"stated\": true,\n      \"value\": \"9 distribution sites\",\n      \"line\": 10\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-05-06",
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "covey-lark"
+      },
+      {
+        "oid": "e2",
+        "entity": "covey-lark"
+      }
+    ],
+    "claims": [
+      {
+        "cid": "c-clr-sites-a",
+        "stated": true,
+        "value": "9 distribution sites",
+        "line": 10
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2744,
+    "output_tokens": 141,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.006898
+}

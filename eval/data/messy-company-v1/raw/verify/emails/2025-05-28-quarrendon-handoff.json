@@ -1,0 +1,91 @@
+{
+  "slug": "emails/2025-05-28-quarrendon-handoff",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2025-05-28",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Quarrendon",
+        "line": 9
+      },
+      {
+        "oid": "e2",
+        "surface": "Quarrendon Freight Lines",
+        "line": 11
+      },
+      {
+        "oid": "e3",
+        "surface": "Quarrendon",
+        "line": 22
+      }
+    ],
+    "claims": [],
+    "events": [
+      {
+        "eid": "e-qfl-handoff",
+        "question": "Does the page describe this: \"Quarrendon moves from Marcus to Dana\"? If so, on what date does the text place it?"
+      }
+    ],
+    "ownership": [
+      {
+        "account": "quarrendon",
+        "question": "According to this page alone, who manages Quarrendon Freight Lines, in what role, and from/until when?"
+      }
+    ]
+  },
+  "prompt_user_sha256": "8a043178114f8b815769b5a4ae91342f098923170db53a02c3f2aeae95e92fdb",
+  "response_text": "{\n  \"date_used\": \"2025-06-02\",\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"quarrendon\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"quarrendon\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"quarrendon\"\n    }\n  ],\n  \"events\": [\n    {\n      \"eid\": \"e-qfl-handoff\",\n      \"present\": true,\n      \"date\": \"2025-06-02\",\n      \"line\": 11\n    }\n  ],\n  \"ownership\": [\n    {\n      \"account\": \"quarrendon\",\n      \"owner\": \"Marcus Lindqvist\",\n      \"role\": \"primary\",\n      \"start\": null,\n      \"end\": \"2025-06-02\",\n      \"line\": 11\n    },\n    {\n      \"account\": \"quarrendon\",\n      \"owner\": \"Dana Okafor\",\n      \"role\": \"primary\",\n      \"start\": \"2025-06-02\",\n      \"end\": null,\n      \"line\": 11\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-06-02",
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "quarrendon"
+      },
+      {
+        "oid": "e2",
+        "entity": "quarrendon"
+      },
+      {
+        "oid": "e3",
+        "entity": "quarrendon"
+      }
+    ],
+    "events": [
+      {
+        "eid": "e-qfl-handoff",
+        "present": true,
+        "date": "2025-06-02",
+        "line": 11
+      }
+    ],
+    "ownership": [
+      {
+        "account": "quarrendon",
+        "owner": "Marcus Lindqvist",
+        "role": "primary",
+        "start": null,
+        "end": "2025-06-02",
+        "line": 11
+      },
+      {
+        "account": "quarrendon",
+        "owner": "Dana Okafor",
+        "role": "primary",
+        "start": "2025-06-02",
+        "end": null,
+        "line": 11
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2826,
+    "output_tokens": 348,
+    "thinking_tokens": 81
+  },
+  "cost_usd": 0.009132
+}

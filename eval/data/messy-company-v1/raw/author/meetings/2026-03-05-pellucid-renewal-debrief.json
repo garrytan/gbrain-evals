@@ -1,0 +1,37 @@
+{
+  "slug": "meetings/2026-03-05-pellucid-renewal-debrief",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: meeting\nTitle: Pellucid renewal debrief\nDate: Written on 2026-03-05.\nWriter: Kwame Adjei-Rowe\nVoice: polished and businesslike\nFormat: meeting notes with attendees, bullets and action items\nLength: about 126 words\nDate style in the body: undefined\nTypos: none\n\nBrief:\nKwame's call summary. He writes (wrongly) that Pellucid renewed at 150 seats. Keep that plain. Also: $1,950 per seat, next renewal Feb 28, 2027.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Bettina Kroll: Coastal team lead\n- Sofia Marchetti: Account manager, Coastal team\n- Kwame Adjei-Rowe: Account manager, Coastal team\n- Corinne Ashdown: VP Operations\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Pellucid Harbor Logistics: port drayage and terminal logistics, Gulf Coast; codes/nicknames PHL\n- Driftmoor Marine Freight: marine freight and barge operator, Puget Sound; codes/nicknames DMF\n- Saltmarsh Provisions: regional grocery distributor, Lowcountry; main contact Corinne Ashdown, VP Operations; codes/nicknames SMP\n- Pellow Home Living (renamed from Covey & Lark Retail on 2026-02-16): home goods retailer, Mid-Atlantic; codes/nicknames Covey, PHL\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2026-03-05 (background only; don't restate unless the brief asks):\n- Pellucid Harbor Logistics: managed by Kwame Adjei-Rowe\n- Driftmoor Marine Freight: managed by Kwame Adjei-Rowe\n- Saltmarsh Provisions: managed by Bettina Kroll\n- Pellow Home Living: managed by Sofia Marchetti",
+      "response_text": "# Pellucid renewal debrief\n\n**Date:** March 5, 2026  \n**Attendees:** Bettina Kroll, June Osei-Lark, me\n\n## Call summary\n- Pellucid Harbor Logistics renewed Pemberline Dock at 150 seats, at $1,950 per seat per year.\n- Next renewal: Feb 28, 2027.\n- The discussion focused on morning gate congestion and dispatchers moving appointments between dock doors during shift handover.\n- Pellucid requested a clearer way to distinguish rescheduled arrivals from new bookings in the daily dock report. Door 6 was the example: two dispatchers interpreted the same moved appointment differently.\n\n## Action items\n- I will send the renewal recap and request an anonymized copy of the morning dispatch report.\n- June will prepare the contract handoff.\n- Bettina will review the report example with me before we submit the product feedback.",
+      "usage": {
+        "input_tokens": 1036,
+        "output_tokens": 188,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.003952,
+      "provider_meta": {
+        "id": "resp_0bac1f368d2cc21a016acfaea4933487d1ab23796f950eab43",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1036,
+          "input_tokens_details": {
+            "cache_write_tokens": 1033,
+            "cached_tokens": 0
+          },
+          "output_tokens": 188,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 1224
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

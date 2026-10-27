@@ -1,0 +1,61 @@
+{
+  "experiment": "Forecast journal (gbrain wave 4b W7): does the private journal rank holders, answer who was right, keep the unresolved denominator, and stay invisible to remote callers",
+  "measured": "2026-10-17 at gbrain 65ed40ec6 (7.4 s); rerun 2026-10-17 at the release merge commit d28cbaeee with identical results",
+  "preregistration": "docs/benchmarks/2026-10-17-forecast-journal-preregistration.md (gbrain evals/forecast-journal/PREREGISTRATION.md, frozen in 65ed40ec6 before any scored run)",
+  "gbrain_commit": "65ed40ec6055a356f88405994ddf6aabfe643d62",
+  "gbrain_branch": "capy/w7-forecast-journal",
+  "gbrain_pull_request": "https://github.com/garrytan/gbrain/pull/6886",
+  "gbrain_shipped_in": {
+    "version": "0.60.286.0",
+    "merge_commit": "d28cbaeee399a0f717a625541003fa6c34080ef0",
+    "pull_request": "https://github.com/garrytan/gbrain/pull/6886",
+    "note": "merged 2026-10-17; take_horizons (migration v251), gbrain takes journal and trusted-local takes_scorecard {group_by, min_n}; remote callers asking for either are refused with scorecard_group_by_local_only"
+  },
+  "harness": "gbrain evals/forecast-journal/ (fixtures.ts, score.ts, harness.ts), unchanged from 65ed40ec6 to d28cbaeee",
+  "fixtures_sha256": "ad271efc7fb94cc53170984619bb9a9346c9ca98fdec826e6d8e66046a9fd44a",
+  "runtime": "in-memory PGLite, Bun 1.4.3, no key, no network",
+  "cost_usd": 0,
+  "criteria": {
+    "median_rho_shrunk": {
+      "threshold": ">= 0.80",
+      "result": 0.9046398392980302,
+      "pass": true
+    },
+    "set_f1_macro": {
+      "threshold": ">= 0.95",
+      "result": 1,
+      "pass": true
+    },
+    "denominator": {
+      "threshold": "exact",
+      "mismatches": 0,
+      "pass": true
+    },
+    "low_n": {
+      "threshold": "exact",
+      "mismatches": 0,
+      "pass": true
+    },
+    "labelling": {
+      "threshold": "exact",
+      "mismatches": 0,
+      "pass": true
+    },
+    "remote_probes": {
+      "threshold": "all pass",
+      "passed": 8,
+      "of": 8,
+      "pass": true
+    }
+  },
+  "reported": {
+    "median_rho_raw": 0.9046398392980302,
+    "share_rho_shrunk_at_least_0_80": 0.9,
+    "lowest_rho_shrunk": [
+      0.7412587412587412,
+      0.7482517482517482
+    ]
+  },
+  "decision": "PASS",
+  "scope": "synthetic placeholder holders and topics only; the rho criterion is a diagnostic of shrinkage, not a ranking of any real person, which stays deferred behind an independently adjudicated gate"
+}

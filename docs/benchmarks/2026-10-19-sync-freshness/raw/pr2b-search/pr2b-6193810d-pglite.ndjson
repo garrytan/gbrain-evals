@@ -1,0 +1,4 @@
+{"engine":"pglite","cell":"idle-10k","n":60,"resp_p50":69.3,"resp_p95":77.2,"resp_max":78.7,"service_p50":69.6,"service_p95":77.1,"cpu_p50":66.1}
+{"engine":"pglite","cell":"during-commit100","n":246,"resp_p50":53.5,"resp_p95":156.6,"resp_max":827.7,"service_p50":47.7,"service_p95":83.2,"cpu_p50":48,"sync_ms":[21750,20250,19500],"max_loop_lag_cpu_ms":[232,783,220],"ticks":[1274,1268,1254]}
+{"engine":"pglite","cell":"during-first-sync","n":1261,"resp_p50":65.2,"resp_p95":103.2,"resp_max":1782.7,"service_p50":61.1,"service_p95":82.9,"cpu_p50":60,"sync_ms":315251,"max_loop_lag_cpu_ms":1490,"ticks":22156}
+{"engine":"pglite","cell":"idle-after","n":60,"resp_p50":84.1,"resp_p95":93.5,"resp_max":96.7,"service_p50":84.7,"service_p95":94.2,"cpu_p50":83.3}

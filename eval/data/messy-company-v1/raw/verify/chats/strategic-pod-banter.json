@@ -1,0 +1,70 @@
+{
+  "slug": "chats/strategic-pod-banter",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "none (undated page)",
+    "owner_phrases": [
+      {
+        "mid": "chats/strategic-pod-banter#m1",
+        "phrase": "Gideon's Okta account",
+        "lines": [
+          17
+        ]
+      },
+      {
+        "mid": "chats/strategic-pod-banter#m2",
+        "phrase": "the Strategic pod's outdoor account",
+        "lines": [
+          17
+        ]
+      }
+    ],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Quillfeather Outfitters",
+        "line": 17
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "c3b541e8df2505030dc2ac5d70bcd3a6edddbeda7bc94f2ce4ebc83b238a3ca9",
+  "response_text": "{\n  \"date_used\": null,\n  \"owner_phrases\": [\n    {\n      \"mid\": \"chats/strategic-pod-banter#m1\",\n      \"refers_to_customer_account\": false,\n      \"accounts\": [],\n      \"reading\": \"not about a customer account (a login, device, HR/expense account, a narrative 'account of', a vendor relationship, an employer)\",\n      \"note\": \"Gideon's Okta account is his own single sign-on login, which IT is being asked to reset.\"\n    },\n    {\n      \"mid\": \"chats/strategic-pod-banter#m2\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\n        \"quillfeather\"\n      ],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"Quillfeather is the Strategic Accounts pod's pooled outdoor account, and the next sentence explicitly names Quillfeather Outfitters.\"\n    }\n  ],\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"quillfeather\"\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": null,
+    "owner_phrases": [
+      {
+        "mid": "chats/strategic-pod-banter#m1",
+        "refers_to_customer_account": false,
+        "accounts": [],
+        "reading": "not about a customer account (a login, device, HR/expense account, a narrative 'account of', a vendor relationship, an employer)",
+        "note": "Gideon's Okta account is his own single sign-on login, which IT is being asked to reset."
+      },
+      {
+        "mid": "chats/strategic-pod-banter#m2",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "quillfeather"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "Quillfeather is the Strategic Accounts pod's pooled outdoor account, and the next sentence explicitly names Quillfeather Outfitters."
+      }
+    ],
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "quillfeather"
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2570,
+    "output_tokens": 259,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.00773
+}

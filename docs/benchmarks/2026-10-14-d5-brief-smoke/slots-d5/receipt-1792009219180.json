@@ -1,0 +1,232 @@
+{
+  "schema": "cat40-receipt-v1",
+  "version": "cat40-v1",
+  "judge_prompt": "cat40-claims-v1",
+  "judge": "gpt-5.4-mini",
+  "world": {
+    "path": "eval/data/model-ladder-wide-dev/world.json",
+    "scale": "wide",
+    "digest": "79094a8a2cbb6725cae37da8a97bb16b64d7941186f5682e209ecc644b8ab510",
+    "seed": 20261002,
+    "docs": 8807,
+    "tasks": 120,
+    "templates": "A",
+    "templates_file_sha256": null,
+    "strata": {
+      "memory-only": 80,
+      "page-authoring": 20,
+      "hidden-tool": 20
+    }
+  },
+  "evals_commit": "2fc29c11aec2f66783f106abd8a4d75aec50dd40",
+  "evals_dirty": false,
+  "gbrain": {
+    "slot_ref": null,
+    "slot_commit": "e657589458cc3ab05d54df439495839c5aed7d19",
+    "label": "gbrain",
+    "commit": "e657589458cc3ab05d54df439495839c5aed7d19",
+    "version": "0.60.230.0",
+    "tree": "c7aae1d41069dbe57fb351501e069330d002ca1e",
+    "verified": {
+      "copy_tree": "c7aae1d41069dbe57fb351501e069330d002ca1e",
+      "tree_matches": true,
+      "symlinks_under_src": 0,
+      "dir_is_realpath": true,
+      "cli_version": "0.60.230.0",
+      "cli_version_matches": true
+    },
+    "surface": "starter",
+    "advertised_surface": null,
+    "tool_overrides": {
+      "descriptions_file": null,
+      "descriptions_sha256": null,
+      "dropped": []
+    },
+    "instructions_override": null,
+    "served_instructions_sha256": null,
+    "operator_analyze": true,
+    "serve_boot_timeout_s": 0,
+    "staged_build": {
+      "sync_batch_docs": 5000
+    }
+  },
+  "mode": "build-slots",
+  "order": "task",
+  "complete": true,
+  "cells_planned": 0,
+  "slot_builds": [
+    {
+      "slot": "slot0",
+      "dir": "<slots>/gbrain-d5/slots-e657589458cc-79094a8a/slot0",
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3286,
+          "tail": "More: bulk-load notes `gbrain import <dir>` · scale up `gbrain migrate --to postgres --plan` · health `gbrain doctor`\n[models] OpenAI account offers gpt-6.1-sol but src/core/model-pricing.ts has no row for it — staying on the newest PRICED family so budget caps keep working. Add the pricing row to adopt it.\n  Setting up brain schema (v243)...\n  238 migration(s) applied\n[init] Migrations: 14 recorded as not needed on a new brain; 5 setup migration(s) pending (0.11.0, 0.14.0, 0.22.4, 0.28.0, 0.53.0). Finish setup: gbrain apply-migrations --yes --no-autopilot-install\nFresh brain setup approves following the packaged memory skills: prose only, existing memory/discovery tools, no scripts, paid services, capture or editor grants.\n[init] Content: <slots>/gbrain-d5/slots-e657589458cc-79094a8a/slot0/home/.gbrain/content/c30fa79e-4170-4db3-99ec-3a1ae69ecb75/default (content_directory; ready). Optional: initialize Git explicitly; configure an off-host backup separately.\n[init] Using schema pack: gbrain-base-v2 (override with --schema-pack <name>)"
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 437,
+          "tail": "  \"source_id\": \"vault\",\n  \"local_path\": \"<slots>/gbrain-d5/slots-e657589458cc-79094a8a/slot0/vault\",\n  \"source_incarnation\": \"d23369d6-1fd2-43b6-8f7e-57980dcecdb4\",\n  \"invalidated_requests\": 0,\n  \"request_id\": \"086ef34c-7864-43ec-a723-b0a73b59a104\",\n  \"state\": \"committed\",\n  \"retry_after_ms\": null\n}"
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 373,
+          "tail": "Default source set to \"vault\"."
+        },
+        {
+          "step": "sync-1",
+          "code": 0,
+          "ms": 97589,
+          "tail": "[sync] 2726/5002 processed (2726 written, 0 waived this run) · 3245.8 pages/min · indexing ETA 43s\n[sync-watchdog] parent alive 60s elapsed, deadline in ~3540s (extends while progressing)\n[sync] 3314/5002 processed (3314 written, 0 waived this run) · 3292.4 pages/min · indexing ETA 31s\n[sync] 3832/5002 processed (3832 written, 0 waived this run) · 3265.6 pages/min · indexing ETA 22s\n[sync] 4353/5002 processed (4353 written, 0 waived this run) · 3247.8 pages/min · indexing ETA 12s\n[sync] 4859/5002 processed (4859 written, 0 waived this run) · 3224.1 pages/min · indexing ETA 3s\n[sync] 4002 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree."
+        },
+        {
+          "step": "operator-analyze-1",
+          "code": 0,
+          "ms": 1397,
+          "tail": "ANALYZE"
+        },
+        {
+          "step": "sync-2",
+          "code": 0,
+          "ms": 81787,
+          "tail": "[sync] 1364/3805 processed (1364 written, 0 waived this run) · 2685.7 pages/min · indexing ETA 55s\n[sync] 1896/3805 processed (1896 written, 0 waived this run) · 2810.5 pages/min · indexing ETA 41s\n[sync] 2392/3805 processed (2392 written, 0 waived this run) · 2843.1 pages/min · indexing ETA 30s\n[sync-watchdog] parent alive 60s elapsed, deadline in ~3540s (extends while progressing)\n[sync] 2925/3805 processed (2925 written, 0 waived this run) · 2901.2 pages/min · indexing ETA 19s\n[sync] 3482/3805 processed (3482 written, 0 waived this run) · 2962.9 pages/min · indexing ETA 7s\n[sync] 6807 page(s) have un-extracted edges — run 'gbrain extract --stale'\n[sync] Skipped automatic .gitignore maintenance for the managed worktree."
+        },
+        {
+          "step": "operator-analyze-2",
+          "code": 0,
+          "ms": 1624,
+          "tail": "ANALYZE"
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 21404,
+          "tail": "Extract --stale: 0 link(s) created, 0 removed, 0 timeline entr(ies) from 6807 page(s).\nMentions: 8989 link(s) added, 0 removed from 8807 page(s)."
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 341,
+          "tail": "confirmation_required; rerun with --yes (evaluator-authorized build spend)"
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 230236,
+          "tail": "[embed.pages] 9171/9510 (96%)\n[embed.pages] 9232/9510 (97%)\n[embed.pages] 9290/9510 (97%)\n[embed.pages] 9350/9510 (98%)\n[embed.pages] 9410/9510 (98%)\n[embed.pages] 9470/9510 (99%)\n[embed.pages] 9510/9510 (100%)\n[embed.pages] 9510/9510 (100%) done"
+        },
+        {
+          "step": "embed-verify",
+          "code": 0,
+          "ms": 448,
+          "tail": "[dry-run] Would embed 0 chunks (0 stale found)"
+        },
+        {
+          "step": "operator-analyze",
+          "code": 0,
+          "ms": 1570,
+          "tail": "ANALYZE"
+        },
+        {
+          "step": "warm-boot",
+          "code": 0,
+          "ms": 12308,
+          "tail": "1 server start(s), each answering one read-only tool call before stopping; queued persistence effects at snapshot: 0"
+        }
+      ],
+      "meter": {
+        "usd": 0.20934029999999934,
+        "requests": 8814,
+        "unpriced": 0,
+        "byModel": {
+          "openai:text-embedding-3-large": {
+            "usd": 0.20934029999999934,
+            "requests": 8813
+          }
+        }
+      },
+      "ms": 454616,
+      "coverage": {
+        "supported": true,
+        "state": "complete",
+        "pending": 0,
+        "last_pass_at": "2026-10-14T20:16:07.908Z",
+        "queued_effects": 0
+      },
+      "allowance": {
+        "reserved_usd": 0.5,
+        "usd": 0.20934029999999934,
+        "requests": 8813,
+        "charged_reservations": 0
+      }
+    }
+  ],
+  "models": [],
+  "arms": [
+    "gbrain"
+  ],
+  "families": [
+    "A",
+    "B",
+    "C",
+    "E",
+    "F",
+    "H"
+  ],
+  "repeats": 1,
+  "max_tool_chars": null,
+  "argv": [
+    "--build-slots",
+    "--gbrain",
+    "gbrain@e657589458cc3ab05d54df439495839c5aed7d19",
+    "--gbrain-root",
+    "<slots>/gbrain-d5",
+    "--world",
+    "eval/data/model-ladder-wide-dev/world.json",
+    "--slots",
+    "1",
+    "--slot-build-allowance-usd",
+    "0.5",
+    "--budget-usd",
+    "0.6",
+    "--budget-ledger",
+    ".budget/d5-brief-smoke.sqlite",
+    "--out",
+    "eval/reports/cat40/d5-brief-smoke/slots-d5"
+  ],
+  "budget_run_id": "cat40-slot-build-2026-10-14T20-12-38-804Z-909375af",
+  "resumed": false,
+  "proxy_unattributed": {
+    "slot:slot0": {
+      "usd": 0.00000117,
+      "requests": 1,
+      "unpriced": 0,
+      "byModel": {
+        "openai:text-embedding-3-large": {
+          "usd": 0.00000117,
+          "requests": 1
+        }
+      }
+    }
+  },
+  "failed_cells_proxy_usd": 0,
+  "cost": {
+    "usd": 0.209406,
+    "input_tokens": 1613503,
+    "output_tokens": 0,
+    "basis": "budget ledger cat40-slot-build-2026-10-14T20-12-38-804Z-909375af: 4 paid requests, 0 charged at their reservation because usage was unavailable",
+    "ledger": ".budget/d5-brief-smoke.sqlite",
+    "program_cap_usd": 10,
+    "overshoot_usd": 0,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 0,
+      "max": 1768
+    }
+  },
+  "finished_at": "2026-10-14T20:20:19.180Z"
+}

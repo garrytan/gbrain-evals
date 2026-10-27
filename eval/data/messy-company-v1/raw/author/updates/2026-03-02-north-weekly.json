@@ -1,0 +1,41 @@
+{
+  "slug": "updates/2026-03-02-north-weekly",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: weekly\nTitle: North weekly 3/2/26\nDate: Written on 2026-03-02.\nWriter: Moss (Ruth Calloway's AI assistant)\nVoice: an AI assistant: neat, factual, a little stiff\nFormat: a weekly update with a section per topic and bullets\nLength: about -9 words\nDate style in the body: undefined\nTypos: a few natural typos and one or two sloppy abbreviations (never in names or required phrases)\n\nBrief:\nMoss compiles this team weekly from the team lead's notes; write it as Moss's compiled update. Ilse's update. Quarrendon renewal paperwork is with June; target signature before the 20th.\n\nRequired phrases:\n- Use the exact phrase \"Dana's renewal\" once, referring to Quarrendon Freight Lines. Don't put the account's name in the same sentence; the reader should work it out.\n- Use the exact phrase \"the cold-chain account Ilse is covering\" once, referring to Tamsin Cold Chain. Don't put the account's name in the same sentence; the reader should work it out.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Ilse Varga: North team lead\n- Dana Okafor: Account manager, North team\n- Marcus Lindqvist: Account manager, North team\n- Thea Ramaswell: Director of Yard Operations\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Quarrendon Freight Lines: truckload freight carrier, Upper Midwest; main contact Thea Ramaswell, Director of Yard Operations; codes/nicknames QFL, Q-Freight\n- Brackenwater Freight Co.: less-than-truckload freight, Great Lakes; codes/nicknames BWF, Bracken\n- Tamsin Cold Chain: refrigerated warehousing, Pacific Northwest; codes/nicknames TCC\n- Thornbury Cloth Co. (renamed from Orrin Mills on 2026-01-12): textile mill, Carolinas; codes/nicknames TCC\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2026-03-02 (background only; don't restate unless the brief asks):\n- Quarrendon Freight Lines: managed by Dana Okafor; Ilse Varga is covering as acting AM\n- Brackenwater Freight Co.: managed by Marcus Lindqvist\n- Tamsin Cold Chain: managed by Dana Okafor; Ilse Varga is covering as acting AM\n- Thornbury Cloth Co.: managed by Marcus Lindqvist",
+      "response_text": "# North weekly 3/2/26\n\nCompiled from Ilse Varga's weekly team notes for Ruth Calloway.\n\n### Commercial & Renewals\n* Dana's renewal paperwork is currently with June Osei-Lark for review; the target for signature is before the 20th.\n* For the cold-chain account Ilse is covering, the warehouse ops team requested a custom CSV export for reefer temp logs at Bay 4 and Bay 5 during the graveyard shift.\n\n### Operational & Support Notes\n* **Quarrendon Freight Lines:** Thea Ramaswell reported that the gate kiosk at the Duluth yard dropped connection twice during the 05:00 carrier check-in window. Support ticket #4819 is open to check the Pemberline Dock local cache setting.\n* **Brackenwater Freight Co.:** Marcus Lindqvist completed the training session for the Toledo night dispatchers on the new Detention Summary Rpt. \n* **Thornbury Cloth Co.:** Marcus Lindqvist is sched. to review the updated yard map for the Spartanburg mill on Wednesday, specifically the staging lanes by Dock 9. \n* **Tamsin Cold Chain:** Ilse Varga cleared the backlog of carrier portal password resets from last wk.\n\n### Internal & Admin\n* Ilse Varga noted that two inbound emails from drivers at Quarendon Freightways were routed to the North queue by mistake; these were closed out as they are not a Pemberline Systems customer.\n* Felix Duarte at Stoneharrow Billing sent the updated invoice batch template; Ilse forwarded it to June Osei-Lark for filing.",
+      "usage": {
+        "input_tokens": 1247,
+        "output_tokens": 348,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.005974,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1247,
+          "candidatesTokenCount": 348,
+          "totalTokenCount": 1595,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1247
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 348
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

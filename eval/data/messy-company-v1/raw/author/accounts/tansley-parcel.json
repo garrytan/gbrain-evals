@@ -1,0 +1,37 @@
+{
+  "slug": "accounts/tansley-parcel",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: profile\nTitle: Tansley Parcel\nDate: Written on 2026-09-15.\nWriter: Hollis Mbeki\nVoice: friendly and organized\nFormat: a header block of key fields as a table, then short sections\nLength: about 155 words\nDate style in the body: undefined\nTypos: a few natural typos and one or two sloppy abbreviations (never in names or required phrases)\n\nBrief:\nAccount profile, updated 2026-09-15. Regional parcel carrier in Texas and Oklahoma, HQ Fort Worth, 14 depots. Contact Lev Arkadin (procurement). Codes: TPCL in the board deck, TPX in old exports. Account manager: Pree Sundaram since January 2025. 120 seats, renewal January 31, 2027.\n\nUse these names or codes at least once each, as written: \"TPCL\".\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Hollis Mbeki: Central team lead\n- Priyanka \"Pree\" Sundaram: Account manager, Central team\n- Tobias Rendle: Account manager, Central team\n- Lev Arkadin: Procurement lead\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Tansley Parcel: regional parcel delivery, South Central; main contact Lev Arkadin, Procurement lead; codes/nicknames TPCL, TP\n- Tansleigh Packaging: corrugated packaging manufacturer, Ohio Valley; codes/nicknames TSP, TP\n- Marrow Fieldworks: agricultural equipment dealer network, Plains; codes/nicknames MFW\n- Marrow Agrisupply: farm supply retail chain, Plains; subsidiary of Marrow Fieldworks; codes/nicknames MAS, Marrow Agri\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2026-09-15 (background only; don't restate unless the brief asks):\n- Tansley Parcel: managed by Priyanka \"Pree\" Sundaram\n- Tansleigh Packaging: not stated on any shared page (do not say who manages it)\n- Marrow Fieldworks: managed by Tobias Rendle\n- Marrow Agrisupply: managed by Central team (pooled account)",
+      "response_text": "# Tansley Parcel\n\n| Field | Details |\n|---|---|\n| Updated | 2026-09-15 |\n| Business | Regional parcel carrier serving Texas and Oklahoma |\n| Headquarters | Fort Worth |\n| Footprint | 14 depots |\n| Procurement contact | Lev Arkadin |\n| Account manager | Pree Sundaram, since January 2025 |\n| Product | Pemberline Dock |\n| Seats | 120 |\n| Renewal | January 31, 2027 |\n| Codes | TPCL in the board deck; TPX in old exports |\n\n## Operating notes\n\nMorning parcel dispatch is the busy window. Fort Worth dispatch flagged a confusing door change on Tuesday: a driver still had door 6 on the printed sheet after the scheduler moved the arrival to door 8. The live board looked right; the printout needs another look.\n\n## Follow-up\n\nPree Sundaram is collecting the shift timestamp and a sample printout for support. Lev Arkadin asked for the seat roster in spreadsheet form, with inactive users seperate from active dispatch staff.\n\n## Next check-in\n\nBring the revised roster and print-preview screenshots. Quick ops check first; renewal prep afterward. Also check the depot labels—two abbreviations looked inconsistant in the export.",
+      "usage": {
+        "input_tokens": 1104,
+        "output_tokens": 311,
+        "thinking_tokens": 49
+      },
+      "cost_usd": 0.005318,
+      "provider_meta": {
+        "id": "resp_0e7b7029a5192323016acfae4d7e6487d1bfc665bb46472e83",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1104,
+          "input_tokens_details": {
+            "cache_write_tokens": 1101,
+            "cached_tokens": 0
+          },
+          "output_tokens": 311,
+          "output_tokens_details": {
+            "reasoning_tokens": 49
+          },
+          "total_tokens": 1415
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

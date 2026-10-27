@@ -1,0 +1,20 @@
+session o1 rc=0
+spent after o1: 0.1970
+session o2 rc=0
+spent after o2: 0.3876
+session o3 rc=0
+spent after o3: 0.5936
+session o4 rc=0
+spent after o4: 0.7799
+session o5 rc=0
+spent after o5: 0.9688
+session f1 rc=0
+spent after f1: 1.4768
+session f2 rc=0
+spent after f2: 1.9479
+session f3 rc=0
+spent after f3: 2.4269
+session f4 rc=0
+spent after f4: 2.9687
+session f5 rc=0
+spent after f5: 3.4309

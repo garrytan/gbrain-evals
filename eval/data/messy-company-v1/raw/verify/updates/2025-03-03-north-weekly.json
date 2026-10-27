@@ -1,0 +1,120 @@
+{
+  "slug": "updates/2025-03-03-north-weekly",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2025-03-03",
+    "owner_phrases": [
+      {
+        "mid": "updates/2025-03-03-north-weekly#m1",
+        "phrase": "Dana's biggest customer",
+        "lines": [
+          12
+        ]
+      },
+      {
+        "mid": "updates/2025-03-03-north-weekly#m2",
+        "phrase": "Marcus's freight account",
+        "lines": [
+          11
+        ]
+      },
+      {
+        "mid": "updates/2025-03-03-north-weekly#m3",
+        "phrase": "the account Dana runs",
+        "lines": [
+          14
+        ]
+      },
+      {
+        "mid": "updates/2025-03-03-north-weekly#m4",
+        "phrase": "Dana's textile account",
+        "lines": [
+          10
+        ]
+      }
+    ],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Orrin Mills",
+        "line": 10
+      },
+      {
+        "oid": "e2",
+        "surface": "Quarrendon Freight Lines",
+        "line": 11
+      },
+      {
+        "oid": "e3",
+        "surface": "Brackenwater Freight Co.",
+        "line": 12
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "6834fba3b39d6710f6007888b3409f62020273be840cf0854a1b195d21863843",
+  "response_text": "{\n  \"date_used\": \"2025-03-03\",\n  \"owner_phrases\": [\n    {\n      \"mid\": \"updates/2025-03-03-north-weekly#m1\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\n        \"brackenwater\"\n      ],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"Refers to Brackenwater Freight Co. in the same bullet, which Dana Okafor owned on 2025-03-03.\"\n    },\n    {\n      \"mid\": \"updates/2025-03-03-north-weekly#m2\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\n        \"quarrendon\"\n      ],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"Refers to Quarrendon Freight Lines in the same bullet, Marcus's freight account on 2025-03-03.\"\n    },\n    {\n      \"mid\": \"updates/2025-03-03-north-weekly#m3\",\n      \"refers_to_customer_account\": false,\n      \"accounts\": [],\n      \"reading\": \"ambiguous: could be more than one account\",\n      \"note\": \"On 2025-03-03, Dana Okafor owned both Orrin Mills and Brackenwater Freight Co., and line 14 gives no context to pick one.\"\n    },\n    {\n      \"mid\": \"updates/2025-03-03-north-weekly#m4\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\n        \"orrin\"\n      ],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"Refers to Orrin Mills in the same bullet, Dana's textile mill account on 2025-03-03.\"\n    }\n  ],\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"orrin\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"quarrendon\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"brackenwater\"\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-03-03",
+    "owner_phrases": [
+      {
+        "mid": "updates/2025-03-03-north-weekly#m1",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "brackenwater"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "Refers to Brackenwater Freight Co. in the same bullet, which Dana Okafor owned on 2025-03-03."
+      },
+      {
+        "mid": "updates/2025-03-03-north-weekly#m2",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "quarrendon"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "Refers to Quarrendon Freight Lines in the same bullet, Marcus's freight account on 2025-03-03."
+      },
+      {
+        "mid": "updates/2025-03-03-north-weekly#m3",
+        "refers_to_customer_account": false,
+        "accounts": [],
+        "reading": "ambiguous: could be more than one account",
+        "note": "On 2025-03-03, Dana Okafor owned both Orrin Mills and Brackenwater Freight Co., and line 14 gives no context to pick one."
+      },
+      {
+        "mid": "updates/2025-03-03-north-weekly#m4",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "orrin"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "Refers to Orrin Mills in the same bullet, Dana's textile mill account on 2025-03-03."
+      }
+    ],
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "orrin"
+      },
+      {
+        "oid": "e2",
+        "entity": "quarrendon"
+      },
+      {
+        "oid": "e3",
+        "entity": "brackenwater"
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 3179,
+    "output_tokens": 611,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.012468
+}

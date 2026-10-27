@@ -61,7 +61,7 @@ import { registryEntry } from '../registry.ts';
 import { evaluatePromotion } from './promotion.ts';
 import { budgetOptionsFrom, receiptCost, startPaidRun } from './budget-ledger.ts';
 import { PaidArmRefusal, paidRequested, requirePaidArm } from './paid-arm.ts';
-import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, latencySummary, noModelSpend, receiptPath, sourceTreeIdentity, writeReceipt, type Receipt } from './receipt.ts';
+import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, latencySummary, noModelSpend, receiptPath, scrubMachinePaths, sourceTreeIdentity, writeReceipt, type Receipt } from './receipt.ts';
 import {
   N1_DEFAULT_SEED, N1_GENERATOR_VERSION, ROUNDS, fenceRowsAt, generateN1World, n1ExposureProbes, n1Probes, ontologyObservationsAt, privateTokens, renderEntityPage,
   type ExposureProbe, type GoldState, type N1Ledger, type N1Probe, type N1World, type Round,
@@ -523,7 +523,7 @@ async function main(): Promise<void> {
       errors: paid.pairs.filter(p => p.status === 'error').length,
     };
     const paidOut = output ? join(output, 'receipt-paid.json') : receiptPath(`${CATEGORY}-paid`);
-    writeReceipt(paidOut, {
+    writeReceipt(paidOut, scrubMachinePaths({
       schema_version: RECEIPT_SCHEMA_VERSION, benchmark_version: BENCHMARK_VERSION, category: `${CATEGORY}-paid`,
       run_status: summary.errors || summary.degraded_dedup ? 'error' : 'completed', ...(summary.errors || summary.degraded_dedup ? {} : { verdict: 'pass' as const }),
       n_total: paid.pairs.length, n_scored: paid.pairs.length - summary.errors, completion_rate: paid.pairs.length ? (paid.pairs.length - summary.errors) / paid.pairs.length : 0,
@@ -534,7 +534,7 @@ async function main(): Promise<void> {
       resolved_config: { arm: 'implicit supersession through remember (report-only, preregistered)', embedding_model: PAID_EMBEDDING_MODEL, budget_run_id: paid.run_id, engine: 'pglite-in-memory, unmanaged, trusted local handlers', seed, ledger_sha256: world.fingerprint, gbrain_overlay: overlaySummary(gut) },
       started_at: startedAt, finished_at: new Date().toISOString(),
       data: { summary, pairs: paid.pairs },
-    });
+    }));
     log(`paid arm: ${summary.value_change_superseded} of ${summary.value_change_pairs} value changes superseded implicitly; ${summary.unrelated_controls_superseded} of ${summary.unrelated_controls} unrelated controls superseded; ${summary.near_duplicate_controls_deduped} of ${summary.near_duplicate_controls} near duplicates deduplicated; cost $${paid.cost.usd.toFixed(4)}`);
     log(`receipt: ${paidOut}`);
     process.exit(0);
@@ -633,7 +633,7 @@ async function main(): Promise<void> {
       cells: result.cells.map(c => ({ ...c, calls: { primary: c.calls.primary, trusted: c.calls.trusted } })),
     },
   };
-  writeReceipt(outPath, receipt);
+  writeReceipt(outPath, scrubMachinePaths(receipt));
   const outcome = evaluatePromotion(entry.promotion!, receipt);
 
   log(`\nverdict: ${runStatus === 'error' ? `error (${harnessErrors.map(e => e.message).join('; ').slice(0, 400)})` : verdict}`);

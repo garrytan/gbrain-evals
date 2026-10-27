@@ -1,0 +1,2336 @@
+{
+ "version": "d7-worlds-v1",
+ "generator": "program-primary-v1",
+ "seeds": [
+  20261222,
+  20261226
+ ],
+ "worlds": [
+  {
+   "seed": 20261222,
+   "persona": "p20261222",
+   "principal": {
+    "name": "Joaquin Zeller",
+    "first": "Joaquin"
+   },
+   "docs": {
+    "people/kofi-okafor": "---\ntitle: \"Kofi Okafor\"\ntype: person\ndate: 2026-09-22\n---\n# Kofi Okafor\n\nKofi Okafor is Head of Data at [[companies/telquent-freight|Telquent Freight]]. Kofi is evaluating our internal developer portal for their engineering team.\n\n## Current\n\n- Next meeting: technical deep dive on Tuesday, October 20 (2026-10-20) at 13:30. See [[meetings/2026-10-20-telquent-technical-deep-dive]].\n- Deal: 25 seats at $19 per seat per month (see [[deals/telquent-freight]]).\n- Done 2026-10-02: sent Kofi the security questionnaire.\n\n## Timeline\n\n- 2026-09-14: first call; intro through a mutual investor.\n- 2026-10-02: sent the security questionnaire.\n",
+    "people/kofi-abara": "---\ntitle: \"Kofi Abara\"\ntype: person\ndate: 2026-09-25\n---\n# Kofi Abara\n\nKofi Abara is Tooling Lead at [[companies/jorithe-media|Jorithe Media]]. Trialing our internal developer portal on one team.\n\n## Current\n\n- Next meeting: procurement review on Monday, October 19 (2026-10-19) at 10:00. See [[meetings/2026-10-19-jorithe-procurement-review]].\n- Deal: 12 seats at $26 per seat per month (see [[deals/jorithe-media]]).\n- Open: I owe Kofi the data processing addendum.\n",
+    "companies/telquent-freight": "---\ntitle: \"Telquent Freight\"\ntype: company\ndate: 2026-09-22\n---\n# Telquent Freight\n\nProspect for our internal developer portal. Main contact: [[people/kofi-okafor|Kofi Okafor]] (Head of Data).\n",
+    "companies/jorithe-media": "---\ntitle: \"Jorithe Media\"\ntype: company\ndate: 2026-09-25\n---\n# Jorithe Media\n\nTrial customer. Contact: [[people/kofi-abara|Kofi Abara]].\n",
+    "deals/telquent-freight": "---\ntitle: \"Telquent Freight deal\"\ntype: deal\ndate: 2026-10-01\n---\n# Telquent Freight deal\n\nStage: proposal sent. Champion: [[people/kofi-okafor|Kofi Okafor]].\n\nTerms quoted: 25 seats at $19 per seat per month, annual contract, billed quarterly.\n\nNext step: technical deep dive on Tuesday, October 20.\n",
+    "deals/jorithe-media": "---\ntitle: \"Jorithe Media deal\"\ntype: deal\ndate: 2026-10-02\n---\n# Jorithe Media deal\n\nStage: trial. Contact: [[people/kofi-abara|Kofi Abara]].\n\nTerms discussed: 12 seats at $26 per seat per month.\n",
+    "meetings/2026-10-20-telquent-technical-deep-dive": "---\ntitle: \"Telquent Freight technical deep dive\"\ntype: meeting\ndate: 2026-10-20\n---\n# Telquent Freight technical deep dive\n\nWhen: Tuesday, October 20 (2026-10-20), 13:30\nWith: [[people/kofi-okafor|Kofi Okafor]] (Head of Data)\n\nAgenda:\n- Walk through the quote (25 seats at $19 per seat per month).\n- Rollout plan and timeline.\n",
+    "meetings/2026-10-19-jorithe-procurement-review": "---\ntitle: \"Jorithe Media procurement review\"\ntype: meeting\ndate: 2026-10-19\n---\n# Jorithe Media procurement review\n\nWhen: Monday, October 19 (2026-10-19)\nWith: [[people/kofi-abara|Kofi Abara]]\n\nAgenda:\n- Trial results.\n- The data processing addendum (I owe this).\n",
+    "people/idris-thorne": "---\ntitle: \"Idris Thorne\"\ntype: person\ndate: 2026-09-22\n---\n# Idris Thorne\n\nIdris Thorne is DevOps Manager at [[companies/kestmiro-logistics|Kestmiro Logistics]]. Idris is evaluating our internal developer portal for their engineering team.\n\n## Current\n\n- Next meeting: design partner sync on Wednesday, October 21 (2026-10-21) at 09:30. See [[meetings/2026-10-21-kestmiro-design-partner-sync]].\n- Deal: 60 seats at $22 per seat per month (see [[deals/kestmiro-logistics]]).\n- Done 2026-10-02: sent Idris the security questionnaire.\n\n## Timeline\n\n- 2026-09-14: first call; intro through a mutual investor.\n- 2026-10-02: sent the security questionnaire.\n",
+    "people/idris-rahman": "---\ntitle: \"Idris Rahman\"\ntype: person\ndate: 2026-09-25\n---\n# Idris Rahman\n\nIdris Rahman is Platform Lead at [[companies/gralostra-media|Gralostra Media]]. Trialing our internal developer portal on one team.\n\n## Current\n\n- Next meeting: contract walkthrough on Monday, November 2 (2026-11-02) at 16:00. See [[meetings/2026-11-02-gralostra-contract-walkthrough]].\n- Deal: 48 seats at $9 per seat per month (see [[deals/gralostra-media]]).\n- Open: I owe Idris our benchmark results on their monorepo.\n",
+    "companies/kestmiro-logistics": "---\ntitle: \"Kestmiro Logistics\"\ntype: company\ndate: 2026-09-22\n---\n# Kestmiro Logistics\n\nProspect for our internal developer portal. Main contact: [[people/idris-thorne|Idris Thorne]] (DevOps Manager).\n",
+    "companies/gralostra-media": "---\ntitle: \"Gralostra Media\"\ntype: company\ndate: 2026-09-25\n---\n# Gralostra Media\n\nTrial customer. Contact: [[people/idris-rahman|Idris Rahman]].\n",
+    "deals/kestmiro-logistics": "---\ntitle: \"Kestmiro Logistics deal\"\ntype: deal\ndate: 2026-10-01\n---\n# Kestmiro Logistics deal\n\nStage: proposal sent. Champion: [[people/idris-thorne|Idris Thorne]].\n\nTerms quoted: 60 seats at $22 per seat per month, annual contract, billed quarterly.\n\nNext step: design partner sync on Wednesday, October 21.\n",
+    "deals/gralostra-media": "---\ntitle: \"Gralostra Media deal\"\ntype: deal\ndate: 2026-10-02\n---\n# Gralostra Media deal\n\nStage: trial. Contact: [[people/idris-rahman|Idris Rahman]].\n\nTerms discussed: 48 seats at $9 per seat per month.\n",
+    "meetings/2026-10-21-kestmiro-design-partner-sync": "---\ntitle: \"Kestmiro Logistics design partner sync\"\ntype: meeting\ndate: 2026-10-21\n---\n# Kestmiro Logistics design partner sync\n\nWhen: Wednesday, October 21 (2026-10-21), 09:30\nWith: [[people/idris-thorne|Idris Thorne]] (DevOps Manager)\n\nAgenda:\n- Walk through the quote (60 seats at $22 per seat per month).\n- Rollout plan and timeline.\n",
+    "meetings/2026-11-02-gralostra-contract-walkthrough": "---\ntitle: \"Gralostra Media contract walkthrough\"\ntype: meeting\ndate: 2026-11-02\n---\n# Gralostra Media contract walkthrough\n\nWhen: Monday, November 2 (2026-11-02)\nWith: [[people/idris-rahman|Idris Rahman]]\n\nAgenda:\n- Trial results.\n- Our benchmark results on their monorepo (I owe this).\n",
+    "people/felix-draxler": "---\ntitle: \"Felix Draxler\"\ntype: person\ndate: 2026-09-22\n---\n# Felix Draxler\n\nFelix Draxler is Release Manager at [[companies/vorenza-retail|Vorenza Retail]]. Felix is evaluating our internal developer portal for their engineering team.\n\n## Current\n\n- Next meeting: rollout planning call on Thursday, October 22 (2026-10-22) at 11:00. See [[meetings/2026-10-22-vorenza-rollout-planning-call]].\n- Deal: 80 seats at $38 per seat per month (see [[deals/vorenza-retail]]).\n- Done 2026-10-02: sent Felix the security questionnaire.\n\n## Timeline\n\n- 2026-09-14: first call; intro through a mutual investor.\n- 2026-10-02: sent the security questionnaire.\n",
+    "people/felix-torvik": "---\ntitle: \"Felix Torvik\"\ntype: person\ndate: 2026-09-25\n---\n# Felix Torvik\n\nFelix Torvik is Director of Engineering at [[companies/thalonex-energy|Thalonex Energy]]. Trialing our internal developer portal on one team.\n\n## Current\n\n- Next meeting: security review on Tuesday, November 10 (2026-11-10) at 13:30. See [[meetings/2026-11-10-thalonex-security-review]].\n- Deal: 90 seats at $45 per seat per month (see [[deals/thalonex-energy]]).\n- Open: I owe Felix a sandbox account for their team.\n",
+    "companies/vorenza-retail": "---\ntitle: \"Vorenza Retail\"\ntype: company\ndate: 2026-09-22\n---\n# Vorenza Retail\n\nProspect for our internal developer portal. Main contact: [[people/felix-draxler|Felix Draxler]] (Release Manager).\n",
+    "companies/thalonex-energy": "---\ntitle: \"Thalonex Energy\"\ntype: company\ndate: 2026-09-25\n---\n# Thalonex Energy\n\nTrial customer. Contact: [[people/felix-torvik|Felix Torvik]].\n",
+    "deals/vorenza-retail": "---\ntitle: \"Vorenza Retail deal\"\ntype: deal\ndate: 2026-10-01\n---\n# Vorenza Retail deal\n\nStage: proposal sent. Champion: [[people/felix-draxler|Felix Draxler]].\n\nTerms quoted: 80 seats at $38 per seat per month, annual contract, billed quarterly.\n\nNext step: rollout planning call on Thursday, October 22.\n",
+    "deals/thalonex-energy": "---\ntitle: \"Thalonex Energy deal\"\ntype: deal\ndate: 2026-10-02\n---\n# Thalonex Energy deal\n\nStage: trial. Contact: [[people/felix-torvik|Felix Torvik]].\n\nTerms discussed: 90 seats at $45 per seat per month.\n",
+    "meetings/2026-10-22-vorenza-rollout-planning-call": "---\ntitle: \"Vorenza Retail rollout planning call\"\ntype: meeting\ndate: 2026-10-22\n---\n# Vorenza Retail rollout planning call\n\nWhen: Thursday, October 22 (2026-10-22), 11:00\nWith: [[people/felix-draxler|Felix Draxler]] (Release Manager)\n\nAgenda:\n- Walk through the quote (80 seats at $38 per seat per month).\n- Rollout plan and timeline.\n",
+    "meetings/2026-11-10-thalonex-security-review": "---\ntitle: \"Thalonex Energy security review\"\ntype: meeting\ndate: 2026-11-10\n---\n# Thalonex Energy security review\n\nWhen: Tuesday, November 10 (2026-11-10)\nWith: [[people/felix-torvik|Felix Torvik]]\n\nAgenda:\n- Trial results.\n- A sandbox account for their team (I owe this).\n",
+    "people/niko-galloway": "---\ntitle: \"Niko Galloway\"\ntype: person\ndate: 2026-09-22\n---\n# Niko Galloway\n\nNiko Galloway is SRE Lead at [[companies/ondrura-logistics|Ondrura Logistics]]. Niko is evaluating our internal developer portal for their engineering team.\n\n## Current\n\n- Next meeting: pricing review on Friday, October 16 (2026-10-16) at 11:00. See [[meetings/2026-10-16-ondrura-pricing-review]].\n- Deal: 150 seats at $21 per seat per month (see [[deals/ondrura-logistics]]).\n- Done 2026-10-02: sent Niko the product roadmap deck.\n\n## Timeline\n\n- 2026-09-14: first call; intro through a mutual investor.\n- 2026-10-02: sent the product roadmap deck.\n",
+    "people/niko-abara": "---\ntitle: \"Niko Abara\"\ntype: person\ndate: 2026-09-25\n---\n# Niko Abara\n\nNiko Abara is Head of IT at [[companies/fenellis-energy|Fenellis Energy]]. Trialing our internal developer portal on one team.\n\n## Current\n\n- Next meeting: pilot kickoff on Wednesday, November 4 (2026-11-04) at 14:00. See [[meetings/2026-11-04-fenellis-pilot-kickoff]].\n- Deal: 64 seats at $35 per seat per month (see [[deals/fenellis-energy]]).\n- Open: I owe Niko the updated order form.\n",
+    "companies/ondrura-logistics": "---\ntitle: \"Ondrura Logistics\"\ntype: company\ndate: 2026-09-22\n---\n# Ondrura Logistics\n\nProspect for our internal developer portal. Main contact: [[people/niko-galloway|Niko Galloway]] (SRE Lead).\n",
+    "companies/fenellis-energy": "---\ntitle: \"Fenellis Energy\"\ntype: company\ndate: 2026-09-25\n---\n# Fenellis Energy\n\nTrial customer. Contact: [[people/niko-abara|Niko Abara]].\n",
+    "deals/ondrura-logistics": "---\ntitle: \"Ondrura Logistics deal\"\ntype: deal\ndate: 2026-10-01\n---\n# Ondrura Logistics deal\n\nStage: proposal sent. Champion: [[people/niko-galloway|Niko Galloway]].\n\nTerms quoted: 150 seats at $21 per seat per month, annual contract, billed quarterly.\n\nNext step: pricing review on Friday, October 16.\n",
+    "deals/fenellis-energy": "---\ntitle: \"Fenellis Energy deal\"\ntype: deal\ndate: 2026-10-02\n---\n# Fenellis Energy deal\n\nStage: trial. Contact: [[people/niko-abara|Niko Abara]].\n\nTerms discussed: 64 seats at $35 per seat per month.\n",
+    "meetings/2026-10-16-ondrura-pricing-review": "---\ntitle: \"Ondrura Logistics pricing review\"\ntype: meeting\ndate: 2026-10-16\n---\n# Ondrura Logistics pricing review\n\nWhen: Friday, October 16 (2026-10-16), 11:00\nWith: [[people/niko-galloway|Niko Galloway]] (SRE Lead)\n\nAgenda:\n- Walk through the quote (150 seats at $21 per seat per month).\n- Rollout plan and timeline.\n",
+    "meetings/2026-11-04-fenellis-pilot-kickoff": "---\ntitle: \"Fenellis Energy pilot kickoff\"\ntype: meeting\ndate: 2026-11-04\n---\n# Fenellis Energy pilot kickoff\n\nWhen: Wednesday, November 4 (2026-11-04)\nWith: [[people/niko-abara|Niko Abara]]\n\nAgenda:\n- Trial results.\n- The updated order form (I owe this).\n",
+    "people/matteo-valdez": "---\ntitle: \"Matteo Valdez\"\ntype: person\ndate: 2026-08-30\n---\n# Matteo Valdez\n\nMatteo Valdez is a recruiter at [[companies/yaranta-partners|Yaranta Partners]].\n\n- Last spoke 2026-10-07.\n",
+    "companies/yaranta-partners": "---\ntitle: \"Yaranta Partners\"\ntype: company\ndate: 2026-08-30\n---\n# Yaranta Partners\n\nWorks with us occasionally. Contact: [[people/matteo-valdez|Matteo Valdez]].\n",
+    "people/tobin-varga": "---\ntitle: \"Tobin Varga\"\ntype: person\ndate: 2026-08-30\n---\n# Tobin Varga\n\nTobin Varga is a advisor from [[companies/graltiva-advisory|Graltiva Advisory]].\n\n- Last spoke 2026-09-18.\n",
+    "companies/graltiva-advisory": "---\ntitle: \"Graltiva Advisory\"\ntype: company\ndate: 2026-08-30\n---\n# Graltiva Advisory\n\nWorks with us occasionally. Contact: [[people/tobin-varga|Tobin Varga]].\n",
+    "people/zara-haddad": "---\ntitle: \"Zara Haddad\"\ntype: person\ndate: 2026-08-30\n---\n# Zara Haddad\n\nZara Haddad is a recruiter at [[companies/caelenza-advisory|Caelenza Advisory]].\n\n- Last spoke 2026-09-04.\n",
+    "companies/caelenza-advisory": "---\ntitle: \"Caelenza Advisory\"\ntype: company\ndate: 2026-08-30\n---\n# Caelenza Advisory\n\nWorks with us occasionally. Contact: [[people/zara-haddad|Zara Haddad]].\n",
+    "people/yusuf-ishikawa": "---\ntitle: \"Yusuf Ishikawa\"\ntype: person\ndate: 2026-08-30\n---\n# Yusuf Ishikawa\n\nYusuf Ishikawa is a principal at [[companies/dovtiva-partners|Dovtiva Partners]].\n\n- Last spoke 2026-09-26.\n",
+    "companies/dovtiva-partners": "---\ntitle: \"Dovtiva Partners\"\ntype: company\ndate: 2026-08-30\n---\n# Dovtiva Partners\n\nSeed investor in our company. Contact: [[people/yusuf-ishikawa|Yusuf Ishikawa]].\n",
+    "companies/wynique-labs": "---\ntitle: \"Wynique Labs\"\ntype: company\ndate: 2026-01-10\n---\n# Wynique Labs\n\nMy company. We build a internal developer portal for engineering teams. I am founder and head of engineering.\n",
+    "notes/daily/2026-10-13": "---\ntitle: \"Daily note 2026-10-13\"\ntype: note\ndate: 2026-10-13\n---\n# 2026-10-13\n\n- Quick sync with Idris Thorne confirmed the design partner sync for Wednesday, October 21; they are still looking at 60 seats.\n- Caught up with Zara Haddad about the next raise.\n- Board deck draft is in progress; numbers due Friday.\n- Customer support queue is under control this week.\n",
+    "notes/daily/2026-10-12": "---\ntitle: \"Daily note 2026-10-12\"\ntype: note\ndate: 2026-10-12\n---\n# 2026-10-12\n\n- Quick sync with Niko Galloway confirmed the pricing review for Friday, October 16; they are still looking at 150 seats.\n- Quick sync with Kofi Okafor confirmed the technical deep dive for Tuesday, October 20; they are still looking at 25 seats.\n- Investor update went out; two replies asking about churn.\n- Tried a new on-call rotation; feedback is mixed.\n",
+    "notes/daily/2026-10-11": "---\ntitle: \"Daily note 2026-10-11\"\ntype: note\ndate: 2026-10-11\n---\n# 2026-10-11\n\n- Idris Rahman (Gralostra Media) asked about 48 seats; I owe Idris our benchmark results on their monorepo.\n- Caught up with Matteo Valdez about a board seat.\n- Spent the morning on hiring loops; two strong backend candidates.\n- Tried a new on-call rotation; feedback is mixed.\n",
+    "notes/daily/2026-10-10": "---\ntitle: \"Daily note 2026-10-10\"\ntype: note\ndate: 2026-10-10\n---\n# 2026-10-10\n\n- Felix Torvik (Thalonex Energy) asked about 90 seats; I owe Felix a sandbox account for their team.\n- Niko Abara (Fenellis Energy) asked about 64 seats; I owe Niko the updated order form.\n- Reviewed the SOC 2 audit timeline with our auditor.\n- Spent the morning on hiring loops; two strong backend candidates.\n",
+    "notes/daily/2026-10-09": "---\ntitle: \"Daily note 2026-10-09\"\ntype: note\ndate: 2026-10-09\n---\n# 2026-10-09\n\n- Kofi Abara (Jorithe Media) asked about 12 seats; I owe Kofi the data processing addendum.\n- Caught up with Tobin Varga about the next raise.\n- Board deck draft is in progress; numbers due Friday.\n- Spent the morning on hiring loops; two strong backend candidates.\n",
+    "notes/daily/2026-10-08": "---\ntitle: \"Daily note 2026-10-08\"\ntype: note\ndate: 2026-10-08\n---\n# 2026-10-08\n\n- Caught up with Yusuf Ishikawa about the next raise.\n- Quick sync with Felix Draxler confirmed the rollout planning call for Thursday, October 22; they are still looking at 80 seats.\n- Investor update went out; two replies asking about churn.\n- Need to renew the office lease before the end of the year.\n",
+    "notes/daily/2026-10-07": "---\ntitle: \"Daily note 2026-10-07\"\ntype: note\ndate: 2026-10-07\n---\n# 2026-10-07\n\n- Board deck draft is in progress; numbers due Friday.\n- Emailed Zara Haddad a short update on our roadmap.\n- Customer support queue is under control this week.\n",
+    "notes/daily/2026-10-06": "---\ntitle: \"Daily note 2026-10-06\"\ntype: note\ndate: 2026-10-06\n---\n# 2026-10-06\n\n- Spent the morning on hiring loops; two strong backend candidates.\n- Emailed Yusuf Ishikawa a short update on our roadmap.\n- Wrote the job description for a developer advocate.\n",
+    "notes/daily/2026-10-05": "---\ntitle: \"Daily note 2026-10-05\"\ntype: note\ndate: 2026-10-05\n---\n# 2026-10-05\n\n- Tried a new on-call rotation; feedback is mixed.\n- Emailed Kofi Abara a short update on our roadmap.\n- Customer support queue is under control this week.\n",
+    "notes/daily/2026-10-04": "---\ntitle: \"Daily note 2026-10-04\"\ntype: note\ndate: 2026-10-04\n---\n# 2026-10-04\n\n- Board deck draft is in progress; numbers due Friday.\n- Emailed Tobin Varga a short update on our roadmap.\n- Customer support queue is under control this week.\n",
+    "notes/daily/2026-10-03": "---\ntitle: \"Daily note 2026-10-03\"\ntype: note\ndate: 2026-10-03\n---\n# 2026-10-03\n\n- Coffee chat about open-source licensing.\n- Emailed Felix Torvik a short update on our roadmap.\n- Discussed the Q4 roadmap with the engineering leads.\n",
+    "notes/daily/2026-10-02": "---\ntitle: \"Daily note 2026-10-02\"\ntype: note\ndate: 2026-10-02\n---\n# 2026-10-02\n\n- Tried a new on-call rotation; feedback is mixed.\n- Emailed Zara Haddad a short update on our roadmap.\n- Discussed the Q4 roadmap with the engineering leads.\n",
+    "notes/daily/2026-10-01": "---\ntitle: \"Daily note 2026-10-01\"\ntype: note\ndate: 2026-10-01\n---\n# 2026-10-01\n\n- Reviewed the SOC 2 audit timeline with our auditor.\n- Emailed Idris Rahman a short update on our roadmap.\n- Need to renew the office lease before the end of the year.\n",
+    "notes/daily/2026-09-30": "---\ntitle: \"Daily note 2026-09-30\"\ntype: note\ndate: 2026-09-30\n---\n# 2026-09-30\n\n- Reviewed the SOC 2 audit timeline with our auditor.\n- Emailed Felix Draxler a short update on our roadmap.\n- Customer support queue is under control this week.\n",
+    "notes/daily/2026-09-29": "---\ntitle: \"Daily note 2026-09-29\"\ntype: note\ndate: 2026-09-29\n---\n# 2026-09-29\n\n- Board deck draft is in progress; numbers due Friday.\n- Emailed Kofi Abara a short update on our roadmap.\n- Ran the weekly metrics review with the team.\n",
+    "notes/daily/2026-09-28": "---\ntitle: \"Daily note 2026-09-28\"\ntype: note\ndate: 2026-09-28\n---\n# 2026-09-28\n\n- Spent the morning on hiring loops; two strong backend candidates.\n- Emailed Kofi Abara a short update on our roadmap.\n- Ran the weekly metrics review with the team.\n",
+    "notes/daily/2026-09-27": "---\ntitle: \"Daily note 2026-09-27\"\ntype: note\ndate: 2026-09-27\n---\n# 2026-09-27\n\n- Board deck draft is in progress; numbers due Friday.\n- Emailed Matteo Valdez a short update on our roadmap.\n- Ran the weekly metrics review with the team.\n",
+    "notes/daily/2026-09-26": "---\ntitle: \"Daily note 2026-09-26\"\ntype: note\ndate: 2026-09-26\n---\n# 2026-09-26\n\n- Board deck draft is in progress; numbers due Friday.\n- Emailed Felix Draxler a short update on our roadmap.\n- Discussed the Q4 roadmap with the engineering leads.\n",
+    "notes/daily/2026-09-25": "---\ntitle: \"Daily note 2026-09-25\"\ntype: note\ndate: 2026-09-25\n---\n# 2026-09-25\n\n- Reviewed the SOC 2 audit timeline with our auditor.\n- Emailed Felix Draxler a short update on our roadmap.\n- Customer support queue is under control this week.\n",
+    "notes/daily/2026-09-24": "---\ntitle: \"Daily note 2026-09-24\"\ntype: note\ndate: 2026-09-24\n---\n# 2026-09-24\n\n- Ran the weekly metrics review with the team.\n- Emailed Felix Draxler a short update on our roadmap.\n- Fixed the flaky integration test in the billing service.\n",
+    "notes/daily/2026-09-23": "---\ntitle: \"Daily note 2026-09-23\"\ntype: note\ndate: 2026-09-23\n---\n# 2026-09-23\n\n- Customer support queue is under control this week.\n- Emailed Kofi Abara a short update on our roadmap.\n- Board deck draft is in progress; numbers due Friday.\n",
+    "notes/daily/2026-09-22": "---\ntitle: \"Daily note 2026-09-22\"\ntype: note\ndate: 2026-09-22\n---\n# 2026-09-22\n\n- Ran the weekly metrics review with the team.\n- Emailed Felix Torvik a short update on our roadmap.\n- Wrote the job description for a developer advocate.\n",
+    "notes/daily/2026-09-21": "---\ntitle: \"Daily note 2026-09-21\"\ntype: note\ndate: 2026-09-21\n---\n# 2026-09-21\n\n- Board deck draft is in progress; numbers due Friday.\n- Emailed Matteo Valdez a short update on our roadmap.\n- Reviewed the SOC 2 audit timeline with our auditor.\n",
+    "notes/daily/2026-09-20": "---\ntitle: \"Daily note 2026-09-20\"\ntype: note\ndate: 2026-09-20\n---\n# 2026-09-20\n\n- Fixed the flaky integration test in the billing service.\n- Emailed Kofi Abara a short update on our roadmap.\n- Coffee chat about open-source licensing.\n",
+    "notes/daily/2026-09-19": "---\ntitle: \"Daily note 2026-09-19\"\ntype: note\ndate: 2026-09-19\n---\n# 2026-09-19\n\n- Need to renew the office lease before the end of the year.\n- Emailed Kofi Okafor a short update on our roadmap.\n- Reviewed the SOC 2 audit timeline with our auditor.\n",
+    "notes/daily/2026-09-18": "---\ntitle: \"Daily note 2026-09-18\"\ntype: note\ndate: 2026-09-18\n---\n# 2026-09-18\n\n- Ran the weekly metrics review with the team.\n- Emailed Niko Abara a short update on our roadmap.\n- Spent the morning on hiring loops; two strong backend candidates.\n",
+    "notes/daily/2026-09-17": "---\ntitle: \"Daily note 2026-09-17\"\ntype: note\ndate: 2026-09-17\n---\n# 2026-09-17\n\n- Fixed the flaky integration test in the billing service.\n- Emailed Tobin Varga a short update on our roadmap.\n- Fixed the flaky integration test in the billing service.\n",
+    "notes/daily/2026-09-16": "---\ntitle: \"Daily note 2026-09-16\"\ntype: note\ndate: 2026-09-16\n---\n# 2026-09-16\n\n- Wrote the job description for a developer advocate.\n- Emailed Niko Galloway a short update on our roadmap.\n- Tried a new on-call rotation; feedback is mixed.\n",
+    "notes/daily/2026-09-15": "---\ntitle: \"Daily note 2026-09-15\"\ntype: note\ndate: 2026-09-15\n---\n# 2026-09-15\n\n- Discussed the Q4 roadmap with the engineering leads.\n- Emailed Yusuf Ishikawa a short update on our roadmap.\n- Discussed the Q4 roadmap with the engineering leads.\n",
+    "notes/daily/2026-09-14": "---\ntitle: \"Daily note 2026-09-14\"\ntype: note\ndate: 2026-09-14\n---\n# 2026-09-14\n\n- Coffee chat about open-source licensing.\n- Emailed Kofi Abara a short update on our roadmap.\n- Fixed the flaky integration test in the billing service.\n",
+    "inbox/2026-10-12-digest": "---\ntitle: \"Inbox digest 2026-10-12\"\ntype: digest\ndate: 2026-10-12\n---\n# Inbox digest 2026-10-12\n\n- Felix Torvik (Thalonex Energy): confirming receipt.\n- Niko Abara (Fenellis Energy): following up on last week.\n- Tobin Varga (Graltiva Advisory): sharing an article.\n- Yusuf Ishikawa (Dovtiva Partners): following up on last week.\n",
+    "inbox/2026-10-09-digest": "---\ntitle: \"Inbox digest 2026-10-09\"\ntype: digest\ndate: 2026-10-09\n---\n# Inbox digest 2026-10-09\n\n- Kofi Okafor (Telquent Freight): confirming receipt.\n- Idris Rahman (Gralostra Media): confirming receipt.\n- Felix Draxler (Vorenza Retail): confirming receipt.\n- Idris Thorne (Kestmiro Logistics): sharing an article.\n"
+   },
+   "contacts": [
+    {
+     "task": "p20261222-t1",
+     "slug": "people/kofi-okafor",
+     "name": "Kofi Okafor",
+     "kind": "prep",
+     "lines": [
+      {
+       "what": "correction",
+       "text": "Correction: the price in my notes is wrong: we quoted $14 per seat, not $19."
+      },
+      {
+       "what": "commitment",
+       "text": "I promised Kofi I'd send the customer reference list before our technical deep dive."
+      },
+      {
+       "what": "date",
+       "text": "Our technical deep dive moved from Tuesday, October 20 to Thursday, October 29, same time."
+      }
+     ],
+     "gold": {
+      "commitment": {
+       "label": "the customer reference list",
+       "patterns": [
+        "reference list",
+        "list of (?:customer )?references"
+       ]
+      },
+      "new_date": {
+       "label": "2026-10-29",
+       "patterns": [
+        "\\boct(?:ober)?\\.?\\s+0?29(?:st|nd|rd|th)?\\b",
+        "\\b0?29(?:st|nd|rd|th)?\\s+(?:of\\s+)?oct(?:ober)?\\.?(?![a-z])",
+        "\\b0?10/0?29\\b(?!/\\d{3})",
+        "\\b2026-10-29\\b"
+       ]
+      },
+      "old_date": {
+       "label": "2026-10-20",
+       "patterns": [
+        "\\boct(?:ober)?\\.?\\s+0?20(?:st|nd|rd|th)?\\b",
+        "\\b0?20(?:st|nd|rd|th)?\\s+(?:of\\s+)?oct(?:ober)?\\.?(?![a-z])",
+        "\\b0?10/0?20\\b(?!/\\d{3})",
+        "\\b2026-10-20\\b"
+       ]
+      },
+      "corrected": {
+       "label": "$14 per seat",
+       "patterns": [
+        "\\$14(?:\\.00)?\\s*(?:/|per|a|each)\\s*(?:seat|user|licen[cs]e)",
+        "\\$14(?:\\.00)?\\s*(?:/|per)\\s*(?:seat|user)?\\s*(?:/|per)?\\s*(?:mo|month)"
+       ]
+      },
+      "stale": {
+       "label": "$19 per seat",
+       "patterns": [
+        "\\$19(?:\\.00)?\\s*(?:/|per|a|each)\\s*(?:seat|user|licen[cs]e)",
+        "\\$19(?:\\.00)?\\s*(?:/|per)\\s*(?:seat|user)?\\s*(?:/|per)?\\s*(?:mo|month)"
+       ]
+      },
+      "namesake": [
+       {
+        "label": "Jorithe Media",
+        "patterns": [
+         "(?<![a-z])Jorithe(?![a-z])"
+        ]
+       },
+       {
+        "label": "namesake meeting 2026-10-19",
+        "patterns": [
+         "\\boct(?:ober)?\\.?\\s+0?19(?:st|nd|rd|th)?\\b",
+         "\\b0?19(?:st|nd|rd|th)?\\s+(?:of\\s+)?oct(?:ober)?\\.?(?![a-z])",
+         "\\b0?10/0?19\\b(?!/\\d{3})",
+         "\\b2026-10-19\\b"
+        ]
+       },
+       {
+        "label": "namesake 12 seats",
+        "patterns": [
+         "\\b12[- ]?(?:seats?|licen[cs]es?|users?)\\b"
+        ]
+       },
+       {
+        "label": "namesake $26 per seat",
+        "patterns": [
+         "\\$26(?:\\.00)?\\s*(?:/|per|a|each)\\s*(?:seat|user|licen[cs]e)",
+         "\\$26(?:\\.00)?\\s*(?:/|per)\\s*(?:seat|user)?\\s*(?:/|per)?\\s*(?:mo|month)"
+        ]
+       },
+       {
+        "label": "namesake commitment: the data processing addendum",
+        "patterns": [
+         "data processing addendum",
+         "\\bdpa\\b"
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "task": "p20261222-t2",
+     "slug": "people/idris-thorne",
+     "name": "Idris Thorne",
+     "kind": "prep",
+     "lines": [
+      {
+       "what": "date",
+       "text": "Our design partner sync moved from Wednesday, October 21 to Friday, October 30, same time."
+      },
+      {
+       "what": "commitment",
+       "text": "I promised Idris I'd send the revised statement of work before our design partner sync."
+      },
+      {
+       "what": "correction",
+       "text": "Correction: the quote in my notes is wrong: it's 15 seats, not 60."
+      }
+     ],
+     "gold": {
+      "commitment": {
+       "label": "the revised statement of work",
+       "patterns": [
+        "revised (?:statement of work|sow)",
+        "statement of work"
+       ]
+      },
+      "new_date": {
+       "label": "2026-10-30",
+       "patterns": [
+        "\\boct(?:ober)?\\.?\\s+0?30(?:st|nd|rd|th)?\\b",
+        "\\b0?30(?:st|nd|rd|th)?\\s+(?:of\\s+)?oct(?:ober)?\\.?(?![a-z])",
+        "\\b0?10/0?30\\b(?!/\\d{3})",
+        "\\b2026-10-30\\b"
+       ]
+      },
+      "old_date": {
+       "label": "2026-10-21",
+       "patterns": [
+        "\\boct(?:ober)?\\.?\\s+0?21(?:st|nd|rd|th)?\\b",
+        "\\b0?21(?:st|nd|rd|th)?\\s+(?:of\\s+)?oct(?:ober)?\\.?(?![a-z])",
+        "\\b0?10/0?21\\b(?!/\\d{3})",
+        "\\b2026-10-21\\b"
+       ]
+      },
+      "corrected": {
+       "label": "15 seats",
+       "patterns": [
+        "\\b15[- ]?(?:seats?|licen[cs]es?|users?)\\b"
+       ]
+      },
+      "stale": {
+       "label": "60 seats",
+       "patterns": [
+        "\\b60[- ]?(?:seats?|licen[cs]es?|users?)\\b"
+       ]
+      },
+      "namesake": [
+       {
+        "label": "Gralostra Media",
+        "patterns": [
+         "(?<![a-z])Gralostra(?![a-z])"
+        ]
+       },
+       {
+        "label": "namesake meeting 2026-11-02",
+        "patterns": [
+         "\\bnov(?:ember)?\\.?\\s+0?2(?:st|nd|rd|th)?\\b",
+         "\\b0?2(?:st|nd|rd|th)?\\s+(?:of\\s+)?nov(?:ember)?\\.?(?![a-z])",
+         "\\b0?11/0?2\\b(?!/\\d{3})",
+         "\\b2026-11-02\\b"
+        ]
+       },
+       {
+        "label": "namesake 48 seats",
+        "patterns": [
+         "\\b48[- ]?(?:seats?|licen[cs]es?|users?)\\b"
+        ]
+       },
+       {
+        "label": "namesake $9 per seat",
+        "patterns": [
+         "\\$9(?:\\.00)?\\s*(?:/|per|a|each)\\s*(?:seat|user|licen[cs]e)",
+         "\\$9(?:\\.00)?\\s*(?:/|per)\\s*(?:seat|user)?\\s*(?:/|per)?\\s*(?:mo|month)"
+        ]
+       },
+       {
+        "label": "namesake commitment: our benchmark results on their monorepo",
+        "patterns": [
+         "benchmark results",
+         "benchmarks? (?:on|for|from) (?:their|your|the) monorepo"
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "task": "p20261222-t3",
+     "slug": "people/felix-draxler",
+     "name": "Felix Draxler",
+     "kind": "reply",
+     "lines": [
+      {
+       "what": "date",
+       "text": "Our rollout planning call moved from Thursday, October 22 to Wednesday, October 28, same time."
+      },
+      {
+       "what": "commitment",
+       "text": "I promised Felix I'd send the pricing one-pager before our rollout planning call."
+      },
+      {
+       "what": "correction",
+       "text": "Correction: the price in my notes is wrong: we quoted $18 per seat, not $38."
+      }
+     ],
+     "gold": {
+      "commitment": {
+       "label": "the pricing one-pager",
+       "patterns": [
+        "pricing one[- ]pager",
+        "one[- ]pager"
+       ]
+      },
+      "new_date": {
+       "label": "2026-10-28",
+       "patterns": [
+        "\\boct(?:ober)?\\.?\\s+0?28(?:st|nd|rd|th)?\\b",
+        "\\b0?28(?:st|nd|rd|th)?\\s+(?:of\\s+)?oct(?:ober)?\\.?(?![a-z])",
+        "\\b0?10/0?28\\b(?!/\\d{3})",
+        "\\b2026-10-28\\b"
+       ]
+      },
+      "old_date": {
+       "label": "2026-10-22",
+       "patterns": [
+        "\\boct(?:ober)?\\.?\\s+0?22(?:st|nd|rd|th)?\\b",
+        "\\b0?22(?:st|nd|rd|th)?\\s+(?:of\\s+)?oct(?:ober)?\\.?(?![a-z])",
+        "\\b0?10/0?22\\b(?!/\\d{3})",
+        "\\b2026-10-22\\b"
+       ]
+      },
+      "corrected": {
+       "label": "$18 per seat",
+       "patterns": [
+        "\\$18(?:\\.00)?\\s*(?:/|per|a|each)\\s*(?:seat|user|licen[cs]e)",
+        "\\$18(?:\\.00)?\\s*(?:/|per)\\s*(?:seat|user)?\\s*(?:/|per)?\\s*(?:mo|month)"
+       ]
+      },
+      "stale": {
+       "label": "$38 per seat",
+       "patterns": [
+        "\\$38(?:\\.00)?\\s*(?:/|per|a|each)\\s*(?:seat|user|licen[cs]e)",
+        "\\$38(?:\\.00)?\\s*(?:/|per)\\s*(?:seat|user)?\\s*(?:/|per)?\\s*(?:mo|month)"
+       ]
+      },
+      "namesake": [
+       {
+        "label": "Thalonex Energy",
+        "patterns": [
+         "(?<![a-z])Thalonex(?![a-z])"
+        ]
+       },
+       {
+        "label": "namesake meeting 2026-11-10",
+        "patterns": [
+         "\\bnov(?:ember)?\\.?\\s+0?10(?:st|nd|rd|th)?\\b",
+         "\\b0?10(?:st|nd|rd|th)?\\s+(?:of\\s+)?nov(?:ember)?\\.?(?![a-z])",
+         "\\b0?11/0?10\\b(?!/\\d{3})",
+         "\\b2026-11-10\\b"
+        ]
+       },
+       {
+        "label": "namesake 90 seats",
+        "patterns": [
+         "\\b90[- ]?(?:seats?|licen[cs]es?|users?)\\b"
+        ]
+       },
+       {
+        "label": "namesake $45 per seat",
+        "patterns": [
+         "\\$45(?:\\.00)?\\s*(?:/|per|a|each)\\s*(?:seat|user|licen[cs]e)",
+         "\\$45(?:\\.00)?\\s*(?:/|per)\\s*(?:seat|user)?\\s*(?:/|per)?\\s*(?:mo|month)"
+        ]
+       },
+       {
+        "label": "namesake commitment: a sandbox account for their team",
+        "patterns": [
+         "sandbox"
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "task": "p20261222-t4",
+     "slug": "people/niko-galloway",
+     "name": "Niko Galloway",
+     "kind": "reply",
+     "lines": [
+      {
+       "what": "commitment",
+       "text": "I promised Niko I'd send the draft pilot success criteria before our pricing review."
+      },
+      {
+       "what": "date",
+       "text": "Our pricing review moved from Friday, October 16 to Friday, October 23, same time."
+      },
+      {
+       "what": "correction",
+       "text": "Correction: the price in my notes is wrong: we quoted $16 per seat, not $21."
+      }
+     ],
+     "gold": {
+      "commitment": {
+       "label": "the draft pilot success criteria",
+       "patterns": [
+        "success criteria"
+       ]
+      },
+      "new_date": {
+       "label": "2026-10-23",
+       "patterns": [
+        "\\boct(?:ober)?\\.?\\s+0?23(?:st|nd|rd|th)?\\b",
+        "\\b0?23(?:st|nd|rd|th)?\\s+(?:of\\s+)?oct(?:ober)?\\.?(?![a-z])",
+        "\\b0?10/0?23\\b(?!/\\d{3})",
+        "\\b2026-10-23\\b"
+       ]
+      },
+      "old_date": {
+       "label": "2026-10-16",
+       "patterns": [
+        "\\boct(?:ober)?\\.?\\s+0?16(?:st|nd|rd|th)?\\b",
+        "\\b0?16(?:st|nd|rd|th)?\\s+(?:of\\s+)?oct(?:ober)?\\.?(?![a-z])",
+        "\\b0?10/0?16\\b(?!/\\d{3})",
+        "\\b2026-10-16\\b"
+       ]
+      },
+      "corrected": {
+       "label": "$16 per seat",
+       "patterns": [
+        "\\$16(?:\\.00)?\\s*(?:/|per|a|each)\\s*(?:seat|user|licen[cs]e)",
+        "\\$16(?:\\.00)?\\s*(?:/|per)\\s*(?:seat|user)?\\s*(?:/|per)?\\s*(?:mo|month)"
+       ]
+      },
+      "stale": {
+       "label": "$21 per seat",
+       "patterns": [
+        "\\$21(?:\\.00)?\\s*(?:/|per|a|each)\\s*(?:seat|user|licen[cs]e)",
+        "\\$21(?:\\.00)?\\s*(?:/|per)\\s*(?:seat|user)?\\s*(?:/|per)?\\s*(?:mo|month)"
+       ]
+      },
+      "namesake": [
+       {
+        "label": "Fenellis Energy",
+        "patterns": [
+         "(?<![a-z])Fenellis(?![a-z])"
+        ]
+       },
+       {
+        "label": "namesake meeting 2026-11-04",
+        "patterns": [
+         "\\bnov(?:ember)?\\.?\\s+0?4(?:st|nd|rd|th)?\\b",
+         "\\b0?4(?:st|nd|rd|th)?\\s+(?:of\\s+)?nov(?:ember)?\\.?(?![a-z])",
+         "\\b0?11/0?4\\b(?!/\\d{3})",
+         "\\b2026-11-04\\b"
+        ]
+       },
+       {
+        "label": "namesake 64 seats",
+        "patterns": [
+         "\\b64[- ]?(?:seats?|licen[cs]es?|users?)\\b"
+        ]
+       },
+       {
+        "label": "namesake $35 per seat",
+        "patterns": [
+         "\\$35(?:\\.00)?\\s*(?:/|per|a|each)\\s*(?:seat|user|licen[cs]e)",
+         "\\$35(?:\\.00)?\\s*(?:/|per)\\s*(?:seat|user)?\\s*(?:/|per)?\\s*(?:mo|month)"
+        ]
+       },
+       {
+        "label": "namesake commitment: the updated order form",
+        "patterns": [
+         "order form"
+        ]
+       }
+      ]
+     }
+    }
+   ],
+   "scenarios": [
+    {
+     "kind": "reply",
+     "task": "p20261222-t3",
+     "counterparty": {
+      "slug": "people/felix-draxler",
+      "name": "Felix Draxler"
+     },
+     "condition": "aged",
+     "prompt": "Felix Draxler just emailed me: \"Hi Joaquin, looking forward to our rollout planning call. Anything we should prepare on our side?\" Draft my reply. Confirm when we're meeting, restate where things stand, and cover anything I owe them.",
+     "crowd": [
+      {
+       "entity": "people/kofi-okafor",
+       "fact": "Kofi Okafor prefers async updates over calls."
+      },
+      {
+       "entity": "people/kofi-abara",
+       "fact": "Kofi Abara prefers async updates over calls."
+      },
+      {
+       "entity": "people/idris-thorne",
+       "fact": "Idris Thorne prefers async updates over calls."
+      },
+      {
+       "entity": "people/idris-rahman",
+       "fact": "Idris Rahman prefers async updates over calls."
+      },
+      {
+       "entity": "people/niko-galloway",
+       "fact": "Niko Galloway prefers async updates over calls."
+      },
+      {
+       "entity": "people/niko-abara",
+       "fact": "Niko Abara prefers async updates over calls."
+      },
+      {
+       "entity": "people/matteo-valdez",
+       "fact": "Matteo Valdez prefers async updates over calls."
+      },
+      {
+       "entity": "people/tobin-varga",
+       "fact": "Tobin Varga prefers async updates over calls."
+      },
+      {
+       "entity": "people/zara-haddad",
+       "fact": "Zara Haddad prefers async updates over calls."
+      },
+      {
+       "entity": "people/yusuf-ishikawa",
+       "fact": "Yusuf Ishikawa prefers async updates over calls."
+      },
+      {
+       "entity": "people/kofi-okafor",
+       "fact": "Kofi Okafor asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/kofi-abara",
+       "fact": "Kofi Abara asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/idris-thorne",
+       "fact": "Idris Thorne asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/idris-rahman",
+       "fact": "Idris Rahman asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/niko-galloway",
+       "fact": "Niko Galloway asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/niko-abara",
+       "fact": "Niko Abara asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/matteo-valdez",
+       "fact": "Matteo Valdez asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/tobin-varga",
+       "fact": "Tobin Varga asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/zara-haddad",
+       "fact": "Zara Haddad asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/yusuf-ishikawa",
+       "fact": "Yusuf Ishikawa asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/kofi-okafor",
+       "fact": "Kofi Okafor is moving their team to a new office building."
+      },
+      {
+       "entity": "people/kofi-abara",
+       "fact": "Kofi Abara is moving their team to a new office building."
+      },
+      {
+       "entity": "people/idris-thorne",
+       "fact": "Idris Thorne is moving their team to a new office building."
+      },
+      {
+       "entity": "people/idris-rahman",
+       "fact": "Idris Rahman is moving their team to a new office building."
+      },
+      {
+       "entity": "people/niko-galloway",
+       "fact": "Niko Galloway is moving their team to a new office building."
+      },
+      {
+       "entity": "people/niko-abara",
+       "fact": "Niko Abara is moving their team to a new office building."
+      },
+      {
+       "entity": "people/matteo-valdez",
+       "fact": "Matteo Valdez is moving their team to a new office building."
+      },
+      {
+       "entity": "people/tobin-varga",
+       "fact": "Tobin Varga is moving their team to a new office building."
+      },
+      {
+       "entity": "people/zara-haddad",
+       "fact": "Zara Haddad is moving their team to a new office building."
+      },
+      {
+       "entity": "people/yusuf-ishikawa",
+       "fact": "Yusuf Ishikawa is moving their team to a new office building."
+      },
+      {
+       "entity": "people/kofi-okafor",
+       "fact": "Kofi Okafor likes short written summaries before any review."
+      },
+      {
+       "entity": "people/kofi-abara",
+       "fact": "Kofi Abara likes short written summaries before any review."
+      },
+      {
+       "entity": "people/idris-thorne",
+       "fact": "Idris Thorne likes short written summaries before any review."
+      },
+      {
+       "entity": "people/idris-rahman",
+       "fact": "Idris Rahman likes short written summaries before any review."
+      },
+      {
+       "entity": "people/niko-galloway",
+       "fact": "Niko Galloway likes short written summaries before any review."
+      },
+      {
+       "entity": "people/niko-abara",
+       "fact": "Niko Abara likes short written summaries before any review."
+      },
+      {
+       "entity": "people/matteo-valdez",
+       "fact": "Matteo Valdez likes short written summaries before any review."
+      },
+      {
+       "entity": "people/tobin-varga",
+       "fact": "Tobin Varga likes short written summaries before any review."
+      },
+      {
+       "entity": "people/zara-haddad",
+       "fact": "Zara Haddad likes short written summaries before any review."
+      },
+      {
+       "entity": "people/yusuf-ishikawa",
+       "fact": "Yusuf Ishikawa likes short written summaries before any review."
+      }
+     ]
+    },
+    {
+     "kind": "prep",
+     "task": "p20261222-t1",
+     "counterparty": {
+      "slug": "people/kofi-okafor",
+      "name": "Kofi Okafor"
+     },
+     "condition": "crowded",
+     "prompt": "Prep me for my next meeting with Kofi Okafor: who they are now, when we're meeting, where things stand, and anything I owe them.",
+     "crowd": [
+      {
+       "entity": "people/idris-thorne",
+       "fact": "Idris Thorne prefers async updates over calls."
+      },
+      {
+       "entity": "people/idris-rahman",
+       "fact": "Idris Rahman prefers async updates over calls."
+      },
+      {
+       "entity": "people/felix-draxler",
+       "fact": "Felix Draxler prefers async updates over calls."
+      },
+      {
+       "entity": "people/felix-torvik",
+       "fact": "Felix Torvik prefers async updates over calls."
+      },
+      {
+       "entity": "people/niko-galloway",
+       "fact": "Niko Galloway prefers async updates over calls."
+      },
+      {
+       "entity": "people/niko-abara",
+       "fact": "Niko Abara prefers async updates over calls."
+      },
+      {
+       "entity": "people/matteo-valdez",
+       "fact": "Matteo Valdez prefers async updates over calls."
+      },
+      {
+       "entity": "people/tobin-varga",
+       "fact": "Tobin Varga prefers async updates over calls."
+      },
+      {
+       "entity": "people/zara-haddad",
+       "fact": "Zara Haddad prefers async updates over calls."
+      },
+      {
+       "entity": "people/yusuf-ishikawa",
+       "fact": "Yusuf Ishikawa prefers async updates over calls."
+      },
+      {
+       "entity": "people/idris-thorne",
+       "fact": "Idris Thorne asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/idris-rahman",
+       "fact": "Idris Rahman asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/felix-draxler",
+       "fact": "Felix Draxler asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/felix-torvik",
+       "fact": "Felix Torvik asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/niko-galloway",
+       "fact": "Niko Galloway asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/niko-abara",
+       "fact": "Niko Abara asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/matteo-valdez",
+       "fact": "Matteo Valdez asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/tobin-varga",
+       "fact": "Tobin Varga asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/zara-haddad",
+       "fact": "Zara Haddad asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/yusuf-ishikawa",
+       "fact": "Yusuf Ishikawa asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/idris-thorne",
+       "fact": "Idris Thorne is moving their team to a new office building."
+      },
+      {
+       "entity": "people/idris-rahman",
+       "fact": "Idris Rahman is moving their team to a new office building."
+      },
+      {
+       "entity": "people/felix-draxler",
+       "fact": "Felix Draxler is moving their team to a new office building."
+      },
+      {
+       "entity": "people/felix-torvik",
+       "fact": "Felix Torvik is moving their team to a new office building."
+      },
+      {
+       "entity": "people/niko-galloway",
+       "fact": "Niko Galloway is moving their team to a new office building."
+      },
+      {
+       "entity": "people/niko-abara",
+       "fact": "Niko Abara is moving their team to a new office building."
+      },
+      {
+       "entity": "people/matteo-valdez",
+       "fact": "Matteo Valdez is moving their team to a new office building."
+      },
+      {
+       "entity": "people/tobin-varga",
+       "fact": "Tobin Varga is moving their team to a new office building."
+      },
+      {
+       "entity": "people/zara-haddad",
+       "fact": "Zara Haddad is moving their team to a new office building."
+      },
+      {
+       "entity": "people/yusuf-ishikawa",
+       "fact": "Yusuf Ishikawa is moving their team to a new office building."
+      },
+      {
+       "entity": "people/idris-thorne",
+       "fact": "Idris Thorne likes short written summaries before any review."
+      },
+      {
+       "entity": "people/idris-rahman",
+       "fact": "Idris Rahman likes short written summaries before any review."
+      },
+      {
+       "entity": "people/felix-draxler",
+       "fact": "Felix Draxler likes short written summaries before any review."
+      },
+      {
+       "entity": "people/felix-torvik",
+       "fact": "Felix Torvik likes short written summaries before any review."
+      },
+      {
+       "entity": "people/niko-galloway",
+       "fact": "Niko Galloway likes short written summaries before any review."
+      },
+      {
+       "entity": "people/niko-abara",
+       "fact": "Niko Abara likes short written summaries before any review."
+      },
+      {
+       "entity": "people/matteo-valdez",
+       "fact": "Matteo Valdez likes short written summaries before any review."
+      },
+      {
+       "entity": "people/tobin-varga",
+       "fact": "Tobin Varga likes short written summaries before any review."
+      },
+      {
+       "entity": "people/zara-haddad",
+       "fact": "Zara Haddad likes short written summaries before any review."
+      },
+      {
+       "entity": "people/yusuf-ishikawa",
+       "fact": "Yusuf Ishikawa likes short written summaries before any review."
+      }
+     ]
+    },
+    {
+     "kind": "task_start",
+     "task": "p20261222-t4",
+     "counterparty": {
+      "slug": "people/niko-galloway",
+      "name": "Niko Galloway"
+     },
+     "condition": "aged",
+     "prompt": "Help me get started on my follow-up for Niko Galloway: work out what I owe them and by when, then write the short cover email I'll send with it.",
+     "crowd": [
+      {
+       "entity": "people/kofi-okafor",
+       "fact": "Kofi Okafor prefers async updates over calls."
+      },
+      {
+       "entity": "people/kofi-abara",
+       "fact": "Kofi Abara prefers async updates over calls."
+      },
+      {
+       "entity": "people/idris-thorne",
+       "fact": "Idris Thorne prefers async updates over calls."
+      },
+      {
+       "entity": "people/idris-rahman",
+       "fact": "Idris Rahman prefers async updates over calls."
+      },
+      {
+       "entity": "people/felix-draxler",
+       "fact": "Felix Draxler prefers async updates over calls."
+      },
+      {
+       "entity": "people/felix-torvik",
+       "fact": "Felix Torvik prefers async updates over calls."
+      },
+      {
+       "entity": "people/matteo-valdez",
+       "fact": "Matteo Valdez prefers async updates over calls."
+      },
+      {
+       "entity": "people/tobin-varga",
+       "fact": "Tobin Varga prefers async updates over calls."
+      },
+      {
+       "entity": "people/zara-haddad",
+       "fact": "Zara Haddad prefers async updates over calls."
+      },
+      {
+       "entity": "people/yusuf-ishikawa",
+       "fact": "Yusuf Ishikawa prefers async updates over calls."
+      },
+      {
+       "entity": "people/kofi-okafor",
+       "fact": "Kofi Okafor asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/kofi-abara",
+       "fact": "Kofi Abara asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/idris-thorne",
+       "fact": "Idris Thorne asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/idris-rahman",
+       "fact": "Idris Rahman asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/felix-draxler",
+       "fact": "Felix Draxler asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/felix-torvik",
+       "fact": "Felix Torvik asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/matteo-valdez",
+       "fact": "Matteo Valdez asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/tobin-varga",
+       "fact": "Tobin Varga asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/zara-haddad",
+       "fact": "Zara Haddad asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/yusuf-ishikawa",
+       "fact": "Yusuf Ishikawa asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/kofi-okafor",
+       "fact": "Kofi Okafor is moving their team to a new office building."
+      },
+      {
+       "entity": "people/kofi-abara",
+       "fact": "Kofi Abara is moving their team to a new office building."
+      },
+      {
+       "entity": "people/idris-thorne",
+       "fact": "Idris Thorne is moving their team to a new office building."
+      },
+      {
+       "entity": "people/idris-rahman",
+       "fact": "Idris Rahman is moving their team to a new office building."
+      },
+      {
+       "entity": "people/felix-draxler",
+       "fact": "Felix Draxler is moving their team to a new office building."
+      },
+      {
+       "entity": "people/felix-torvik",
+       "fact": "Felix Torvik is moving their team to a new office building."
+      },
+      {
+       "entity": "people/matteo-valdez",
+       "fact": "Matteo Valdez is moving their team to a new office building."
+      },
+      {
+       "entity": "people/tobin-varga",
+       "fact": "Tobin Varga is moving their team to a new office building."
+      },
+      {
+       "entity": "people/zara-haddad",
+       "fact": "Zara Haddad is moving their team to a new office building."
+      },
+      {
+       "entity": "people/yusuf-ishikawa",
+       "fact": "Yusuf Ishikawa is moving their team to a new office building."
+      },
+      {
+       "entity": "people/kofi-okafor",
+       "fact": "Kofi Okafor likes short written summaries before any review."
+      },
+      {
+       "entity": "people/kofi-abara",
+       "fact": "Kofi Abara likes short written summaries before any review."
+      },
+      {
+       "entity": "people/idris-thorne",
+       "fact": "Idris Thorne likes short written summaries before any review."
+      },
+      {
+       "entity": "people/idris-rahman",
+       "fact": "Idris Rahman likes short written summaries before any review."
+      },
+      {
+       "entity": "people/felix-draxler",
+       "fact": "Felix Draxler likes short written summaries before any review."
+      },
+      {
+       "entity": "people/felix-torvik",
+       "fact": "Felix Torvik likes short written summaries before any review."
+      },
+      {
+       "entity": "people/matteo-valdez",
+       "fact": "Matteo Valdez likes short written summaries before any review."
+      },
+      {
+       "entity": "people/tobin-varga",
+       "fact": "Tobin Varga likes short written summaries before any review."
+      },
+      {
+       "entity": "people/zara-haddad",
+       "fact": "Zara Haddad likes short written summaries before any review."
+      },
+      {
+       "entity": "people/yusuf-ishikawa",
+       "fact": "Yusuf Ishikawa likes short written summaries before any review."
+      }
+     ],
+     "gate_check_prompt": "Help me get started on what I owe Niko Galloway: work out what it is and by when, then write the short cover email I'll send with it."
+    },
+    {
+     "kind": "negative",
+     "task": "p20261222-t2",
+     "counterparty": {
+      "slug": "people/idris-rahman",
+      "name": "Idris Rahman"
+     },
+     "condition": "crowded",
+     "prompt": "Idris Rahman just emailed me: \"Hi Joaquin, quick check-in: anything new on your side since we last spoke?\" Draft my reply.",
+     "crowd": [
+      {
+       "entity": "people/kofi-okafor",
+       "fact": "Kofi Okafor prefers async updates over calls."
+      },
+      {
+       "entity": "people/kofi-abara",
+       "fact": "Kofi Abara prefers async updates over calls."
+      },
+      {
+       "entity": "people/felix-draxler",
+       "fact": "Felix Draxler prefers async updates over calls."
+      },
+      {
+       "entity": "people/felix-torvik",
+       "fact": "Felix Torvik prefers async updates over calls."
+      },
+      {
+       "entity": "people/niko-galloway",
+       "fact": "Niko Galloway prefers async updates over calls."
+      },
+      {
+       "entity": "people/niko-abara",
+       "fact": "Niko Abara prefers async updates over calls."
+      },
+      {
+       "entity": "people/matteo-valdez",
+       "fact": "Matteo Valdez prefers async updates over calls."
+      },
+      {
+       "entity": "people/tobin-varga",
+       "fact": "Tobin Varga prefers async updates over calls."
+      },
+      {
+       "entity": "people/zara-haddad",
+       "fact": "Zara Haddad prefers async updates over calls."
+      },
+      {
+       "entity": "people/yusuf-ishikawa",
+       "fact": "Yusuf Ishikawa prefers async updates over calls."
+      },
+      {
+       "entity": "people/kofi-okafor",
+       "fact": "Kofi Okafor asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/kofi-abara",
+       "fact": "Kofi Abara asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/felix-draxler",
+       "fact": "Felix Draxler asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/felix-torvik",
+       "fact": "Felix Torvik asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/niko-galloway",
+       "fact": "Niko Galloway asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/niko-abara",
+       "fact": "Niko Abara asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/matteo-valdez",
+       "fact": "Matteo Valdez asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/tobin-varga",
+       "fact": "Tobin Varga asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/zara-haddad",
+       "fact": "Zara Haddad asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/yusuf-ishikawa",
+       "fact": "Yusuf Ishikawa asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/kofi-okafor",
+       "fact": "Kofi Okafor is moving their team to a new office building."
+      },
+      {
+       "entity": "people/kofi-abara",
+       "fact": "Kofi Abara is moving their team to a new office building."
+      },
+      {
+       "entity": "people/felix-draxler",
+       "fact": "Felix Draxler is moving their team to a new office building."
+      },
+      {
+       "entity": "people/felix-torvik",
+       "fact": "Felix Torvik is moving their team to a new office building."
+      },
+      {
+       "entity": "people/niko-galloway",
+       "fact": "Niko Galloway is moving their team to a new office building."
+      },
+      {
+       "entity": "people/niko-abara",
+       "fact": "Niko Abara is moving their team to a new office building."
+      },
+      {
+       "entity": "people/matteo-valdez",
+       "fact": "Matteo Valdez is moving their team to a new office building."
+      },
+      {
+       "entity": "people/tobin-varga",
+       "fact": "Tobin Varga is moving their team to a new office building."
+      },
+      {
+       "entity": "people/zara-haddad",
+       "fact": "Zara Haddad is moving their team to a new office building."
+      },
+      {
+       "entity": "people/yusuf-ishikawa",
+       "fact": "Yusuf Ishikawa is moving their team to a new office building."
+      },
+      {
+       "entity": "people/kofi-okafor",
+       "fact": "Kofi Okafor likes short written summaries before any review."
+      },
+      {
+       "entity": "people/kofi-abara",
+       "fact": "Kofi Abara likes short written summaries before any review."
+      },
+      {
+       "entity": "people/felix-draxler",
+       "fact": "Felix Draxler likes short written summaries before any review."
+      },
+      {
+       "entity": "people/felix-torvik",
+       "fact": "Felix Torvik likes short written summaries before any review."
+      },
+      {
+       "entity": "people/niko-galloway",
+       "fact": "Niko Galloway likes short written summaries before any review."
+      },
+      {
+       "entity": "people/niko-abara",
+       "fact": "Niko Abara likes short written summaries before any review."
+      },
+      {
+       "entity": "people/matteo-valdez",
+       "fact": "Matteo Valdez likes short written summaries before any review."
+      },
+      {
+       "entity": "people/tobin-varga",
+       "fact": "Tobin Varga likes short written summaries before any review."
+      },
+      {
+       "entity": "people/zara-haddad",
+       "fact": "Zara Haddad likes short written summaries before any review."
+      },
+      {
+       "entity": "people/yusuf-ishikawa",
+       "fact": "Yusuf Ishikawa likes short written summaries before any review."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "seed": 20261226,
+   "persona": "p20261226",
+   "principal": {
+    "name": "Niko Aziz",
+    "first": "Niko"
+   },
+   "docs": {
+    "people/petra-lindqvist": "---\ntitle: \"Petra Lindqvist\"\ntype: person\ndate: 2026-09-22\n---\n# Petra Lindqvist\n\nPetra Lindqvist is Release Manager at [[companies/caelura-health|Caelura Health]]. Petra is evaluating our remote build cache for their engineering team.\n\n## Current\n\n- Next meeting: pricing review on Monday, October 19 (2026-10-19) at 14:00. See [[meetings/2026-10-19-caelura-pricing-review]].\n- Deal: 12 seats at $38 per seat per month (see [[deals/caelura-health]]).\n- Done 2026-10-02: sent Petra the trial extension.\n\n## Timeline\n\n- 2026-09-14: first call; intro through a mutual investor.\n- 2026-10-02: sent the trial extension.\n",
+    "people/petra-petrov": "---\ntitle: \"Petra Petrov\"\ntype: person\ndate: 2026-09-25\n---\n# Petra Petrov\n\nPetra Petrov is DevOps Manager at [[companies/iskostra-media|Iskostra Media]]. Trialing our remote build cache on one team.\n\n## Current\n\n- Next meeting: rollout planning call on Friday, October 16 (2026-10-16) at 11:00. See [[meetings/2026-10-16-iskostra-rollout-planning-call]].\n- Deal: 25 seats at $32 per seat per month (see [[deals/iskostra-media]]).\n- Open: I owe Petra the revised statement of work.\n",
+    "companies/caelura-health": "---\ntitle: \"Caelura Health\"\ntype: company\ndate: 2026-09-22\n---\n# Caelura Health\n\nProspect for our remote build cache. Main contact: [[people/petra-lindqvist|Petra Lindqvist]] (Release Manager).\n",
+    "companies/iskostra-media": "---\ntitle: \"Iskostra Media\"\ntype: company\ndate: 2026-09-25\n---\n# Iskostra Media\n\nTrial customer. Contact: [[people/petra-petrov|Petra Petrov]].\n",
+    "deals/caelura-health": "---\ntitle: \"Caelura Health deal\"\ntype: deal\ndate: 2026-10-01\n---\n# Caelura Health deal\n\nStage: proposal sent. Champion: [[people/petra-lindqvist|Petra Lindqvist]].\n\nTerms quoted: 12 seats at $38 per seat per month, annual contract, billed quarterly.\n\nNext step: pricing review on Monday, October 19.\n",
+    "deals/iskostra-media": "---\ntitle: \"Iskostra Media deal\"\ntype: deal\ndate: 2026-10-02\n---\n# Iskostra Media deal\n\nStage: trial. Contact: [[people/petra-petrov|Petra Petrov]].\n\nTerms discussed: 25 seats at $32 per seat per month.\n",
+    "meetings/2026-10-19-caelura-pricing-review": "---\ntitle: \"Caelura Health pricing review\"\ntype: meeting\ndate: 2026-10-19\n---\n# Caelura Health pricing review\n\nWhen: Monday, October 19 (2026-10-19), 14:00\nWith: [[people/petra-lindqvist|Petra Lindqvist]] (Release Manager)\n\nAgenda:\n- Walk through the quote (12 seats at $38 per seat per month).\n- Rollout plan and timeline.\n",
+    "meetings/2026-10-16-iskostra-rollout-planning-call": "---\ntitle: \"Iskostra Media rollout planning call\"\ntype: meeting\ndate: 2026-10-16\n---\n# Iskostra Media rollout planning call\n\nWhen: Friday, October 16 (2026-10-16)\nWith: [[people/petra-petrov|Petra Petrov]]\n\nAgenda:\n- Trial results.\n- The revised statement of work (I owe this).\n",
+    "people/yusuf-quist": "---\ntitle: \"Yusuf Quist\"\ntype: person\ndate: 2026-09-22\n---\n# Yusuf Quist\n\nYusuf Quist is Head of Data at [[companies/caelovik-health|Caelovik Health]]. Yusuf is evaluating our remote build cache for their engineering team.\n\n## Current\n\n- Next meeting: roadmap session on Monday, October 26 (2026-10-26) at 10:00. See [[meetings/2026-10-26-caelovik-roadmap-session]].\n- Deal: 80 seats at $29 per seat per month (see [[deals/caelovik-health]]).\n- Done 2026-10-02: sent Yusuf the product roadmap deck.\n\n## Timeline\n\n- 2026-09-14: first call; intro through a mutual investor.\n- 2026-10-02: sent the product roadmap deck.\n",
+    "people/yusuf-okafor": "---\ntitle: \"Yusuf Okafor\"\ntype: person\ndate: 2026-09-25\n---\n# Yusuf Okafor\n\nYusuf Okafor is Platform Lead at [[companies/telumbr-retail|Telumbr Retail]]. Trialing our remote build cache on one team.\n\n## Current\n\n- Next meeting: security review on Monday, November 9 (2026-11-09) at 10:00. See [[meetings/2026-11-09-telumbr-security-review]].\n- Deal: 40 seats at $35 per seat per month (see [[deals/telumbr-retail]]).\n- Open: I owe Yusuf the customer reference list.\n",
+    "companies/caelovik-health": "---\ntitle: \"Caelovik Health\"\ntype: company\ndate: 2026-09-22\n---\n# Caelovik Health\n\nProspect for our remote build cache. Main contact: [[people/yusuf-quist|Yusuf Quist]] (Head of Data).\n",
+    "companies/telumbr-retail": "---\ntitle: \"Telumbr Retail\"\ntype: company\ndate: 2026-09-25\n---\n# Telumbr Retail\n\nTrial customer. Contact: [[people/yusuf-okafor|Yusuf Okafor]].\n",
+    "deals/caelovik-health": "---\ntitle: \"Caelovik Health deal\"\ntype: deal\ndate: 2026-10-01\n---\n# Caelovik Health deal\n\nStage: proposal sent. Champion: [[people/yusuf-quist|Yusuf Quist]].\n\nTerms quoted: 80 seats at $29 per seat per month, annual contract, billed quarterly.\n\nNext step: roadmap session on Monday, October 26.\n",
+    "deals/telumbr-retail": "---\ntitle: \"Telumbr Retail deal\"\ntype: deal\ndate: 2026-10-02\n---\n# Telumbr Retail deal\n\nStage: trial. Contact: [[people/yusuf-okafor|Yusuf Okafor]].\n\nTerms discussed: 40 seats at $35 per seat per month.\n",
+    "meetings/2026-10-26-caelovik-roadmap-session": "---\ntitle: \"Caelovik Health roadmap session\"\ntype: meeting\ndate: 2026-10-26\n---\n# Caelovik Health roadmap session\n\nWhen: Monday, October 26 (2026-10-26), 10:00\nWith: [[people/yusuf-quist|Yusuf Quist]] (Head of Data)\n\nAgenda:\n- Walk through the quote (80 seats at $29 per seat per month).\n- Rollout plan and timeline.\n",
+    "meetings/2026-11-09-telumbr-security-review": "---\ntitle: \"Telumbr Retail security review\"\ntype: meeting\ndate: 2026-11-09\n---\n# Telumbr Retail security review\n\nWhen: Monday, November 9 (2026-11-09)\nWith: [[people/yusuf-okafor|Yusuf Okafor]]\n\nAgenda:\n- Trial results.\n- The customer reference list (I owe this).\n",
+    "people/ines-rahman": "---\ntitle: \"Ines Rahman\"\ntype: person\ndate: 2026-09-22\n---\n# Ines Rahman\n\nInes Rahman is Director of IT at [[companies/branesso-media|Branesso Media]]. Ines is evaluating our remote build cache for their engineering team.\n\n## Current\n\n- Next meeting: design partner sync on Friday, October 23 (2026-10-23) at 14:00. See [[meetings/2026-10-23-branesso-design-partner-sync]].\n- Deal: 15 seats at $16 per seat per month (see [[deals/branesso-media]]).\n- Done 2026-10-02: sent Ines the trial extension.\n\n## Timeline\n\n- 2026-09-14: first call; intro through a mutual investor.\n- 2026-10-02: sent the trial extension.\n",
+    "people/ines-quist": "---\ntitle: \"Ines Quist\"\ntype: person\ndate: 2026-09-25\n---\n# Ines Quist\n\nInes Quist is Director of Engineering at [[companies/xerenza-retail|Xerenza Retail]]. Trialing our remote build cache on one team.\n\n## Current\n\n- Next meeting: procurement review on Tuesday, October 20 (2026-10-20) at 09:30. See [[meetings/2026-10-20-xerenza-procurement-review]].\n- Deal: 90 seats at $21 per seat per month (see [[deals/xerenza-retail]]).\n- Open: I owe Ines a sandbox account for their team.\n",
+    "companies/branesso-media": "---\ntitle: \"Branesso Media\"\ntype: company\ndate: 2026-09-22\n---\n# Branesso Media\n\nProspect for our remote build cache. Main contact: [[people/ines-rahman|Ines Rahman]] (Director of IT).\n",
+    "companies/xerenza-retail": "---\ntitle: \"Xerenza Retail\"\ntype: company\ndate: 2026-09-25\n---\n# Xerenza Retail\n\nTrial customer. Contact: [[people/ines-quist|Ines Quist]].\n",
+    "deals/branesso-media": "---\ntitle: \"Branesso Media deal\"\ntype: deal\ndate: 2026-10-01\n---\n# Branesso Media deal\n\nStage: proposal sent. Champion: [[people/ines-rahman|Ines Rahman]].\n\nTerms quoted: 15 seats at $16 per seat per month, annual contract, billed quarterly.\n\nNext step: design partner sync on Friday, October 23.\n",
+    "deals/xerenza-retail": "---\ntitle: \"Xerenza Retail deal\"\ntype: deal\ndate: 2026-10-02\n---\n# Xerenza Retail deal\n\nStage: trial. Contact: [[people/ines-quist|Ines Quist]].\n\nTerms discussed: 90 seats at $21 per seat per month.\n",
+    "meetings/2026-10-23-branesso-design-partner-sync": "---\ntitle: \"Branesso Media design partner sync\"\ntype: meeting\ndate: 2026-10-23\n---\n# Branesso Media design partner sync\n\nWhen: Friday, October 23 (2026-10-23), 14:00\nWith: [[people/ines-rahman|Ines Rahman]] (Director of IT)\n\nAgenda:\n- Walk through the quote (15 seats at $16 per seat per month).\n- Rollout plan and timeline.\n",
+    "meetings/2026-10-20-xerenza-procurement-review": "---\ntitle: \"Xerenza Retail procurement review\"\ntype: meeting\ndate: 2026-10-20\n---\n# Xerenza Retail procurement review\n\nWhen: Tuesday, October 20 (2026-10-20)\nWith: [[people/ines-quist|Ines Quist]]\n\nAgenda:\n- Trial results.\n- A sandbox account for their team (I owe this).\n",
+    "people/talia-galloway": "---\ntitle: \"Talia Galloway\"\ntype: person\ndate: 2026-09-22\n---\n# Talia Galloway\n\nTalia Galloway is SRE Lead at [[companies/ondronex-media|Ondronex Media]]. Talia is evaluating our remote build cache for their engineering team.\n\n## Current\n\n- Next meeting: contract walkthrough on Wednesday, October 21 (2026-10-21) at 16:00. See [[meetings/2026-10-21-ondronex-contract-walkthrough]].\n- Deal: 60 seats at $26 per seat per month (see [[deals/ondronex-media]]).\n- Done 2026-10-02: sent Talia the product roadmap deck.\n\n## Timeline\n\n- 2026-09-14: first call; intro through a mutual investor.\n- 2026-10-02: sent the product roadmap deck.\n",
+    "people/talia-holmgren": "---\ntitle: \"Talia Holmgren\"\ntype: person\ndate: 2026-09-25\n---\n# Talia Holmgren\n\nTalia Holmgren is Tooling Lead at [[companies/ondrmiro-health|Ondrmiro Health]]. Trialing our remote build cache on one team.\n\n## Current\n\n- Next meeting: technical deep dive on Thursday, October 22 (2026-10-22) at 09:30. See [[meetings/2026-10-22-ondrmiro-technical-deep-dive]].\n- Deal: 48 seats at $28 per seat per month (see [[deals/ondrmiro-health]]).\n- Open: I owe Talia the pricing one-pager.\n",
+    "companies/ondronex-media": "---\ntitle: \"Ondronex Media\"\ntype: company\ndate: 2026-09-22\n---\n# Ondronex Media\n\nProspect for our remote build cache. Main contact: [[people/talia-galloway|Talia Galloway]] (SRE Lead).\n",
+    "companies/ondrmiro-health": "---\ntitle: \"Ondrmiro Health\"\ntype: company\ndate: 2026-09-25\n---\n# Ondrmiro Health\n\nTrial customer. Contact: [[people/talia-holmgren|Talia Holmgren]].\n",
+    "deals/ondronex-media": "---\ntitle: \"Ondronex Media deal\"\ntype: deal\ndate: 2026-10-01\n---\n# Ondronex Media deal\n\nStage: proposal sent. Champion: [[people/talia-galloway|Talia Galloway]].\n\nTerms quoted: 60 seats at $26 per seat per month, annual contract, billed quarterly.\n\nNext step: contract walkthrough on Wednesday, October 21.\n",
+    "deals/ondrmiro-health": "---\ntitle: \"Ondrmiro Health deal\"\ntype: deal\ndate: 2026-10-02\n---\n# Ondrmiro Health deal\n\nStage: trial. Contact: [[people/talia-holmgren|Talia Holmgren]].\n\nTerms discussed: 48 seats at $28 per seat per month.\n",
+    "meetings/2026-10-21-ondronex-contract-walkthrough": "---\ntitle: \"Ondronex Media contract walkthrough\"\ntype: meeting\ndate: 2026-10-21\n---\n# Ondronex Media contract walkthrough\n\nWhen: Wednesday, October 21 (2026-10-21), 16:00\nWith: [[people/talia-galloway|Talia Galloway]] (SRE Lead)\n\nAgenda:\n- Walk through the quote (60 seats at $26 per seat per month).\n- Rollout plan and timeline.\n",
+    "meetings/2026-10-22-ondrmiro-technical-deep-dive": "---\ntitle: \"Ondrmiro Health technical deep dive\"\ntype: meeting\ndate: 2026-10-22\n---\n# Ondrmiro Health technical deep dive\n\nWhen: Thursday, October 22 (2026-10-22)\nWith: [[people/talia-holmgren|Talia Holmgren]]\n\nAgenda:\n- Trial results.\n- The pricing one-pager (I owe this).\n",
+    "people/wren-ferreira": "---\ntitle: \"Wren Ferreira\"\ntype: person\ndate: 2026-08-30\n---\n# Wren Ferreira\n\nWren Ferreira is a advisor from [[companies/gralumbr-ventures|Gralumbr Ventures]].\n\n- Last spoke 2026-09-12.\n",
+    "companies/gralumbr-ventures": "---\ntitle: \"Gralumbr Ventures\"\ntype: company\ndate: 2026-08-30\n---\n# Gralumbr Ventures\n\nWorks with us occasionally. Contact: [[people/wren-ferreira|Wren Ferreira]].\n",
+    "people/rania-nakashima": "---\ntitle: \"Rania Nakashima\"\ntype: person\ndate: 2026-08-30\n---\n# Rania Nakashima\n\nRania Nakashima is a principal at [[companies/pralenza-advisory|Pralenza Advisory]].\n\n- Last spoke 2026-10-02.\n",
+    "companies/pralenza-advisory": "---\ntitle: \"Pralenza Advisory\"\ntype: company\ndate: 2026-08-30\n---\n# Pralenza Advisory\n\nSeed investor in our company. Contact: [[people/rania-nakashima|Rania Nakashima]].\n",
+    "people/calla-zeller": "---\ntitle: \"Calla Zeller\"\ntype: person\ndate: 2026-08-30\n---\n# Calla Zeller\n\nCalla Zeller is a partner at [[companies/kestenza-advisory|Kestenza Advisory]].\n\n- Last spoke 2026-09-11.\n",
+    "companies/kestenza-advisory": "---\ntitle: \"Kestenza Advisory\"\ntype: company\ndate: 2026-08-30\n---\n# Kestenza Advisory\n\nSeed investor in our company. Contact: [[people/calla-zeller|Calla Zeller]].\n",
+    "people/kenji-wexler": "---\ntitle: \"Kenji Wexler\"\ntype: person\ndate: 2026-08-30\n---\n# Kenji Wexler\n\nKenji Wexler is a advisor from [[companies/jorique-ventures|Jorique Ventures]].\n\n- Last spoke 2026-09-08.\n",
+    "companies/jorique-ventures": "---\ntitle: \"Jorique Ventures\"\ntype: company\ndate: 2026-08-30\n---\n# Jorique Ventures\n\nWorks with us occasionally. Contact: [[people/kenji-wexler|Kenji Wexler]].\n",
+    "companies/muradyn-labs": "---\ntitle: \"Muradyn Labs\"\ntype: company\ndate: 2026-01-10\n---\n# Muradyn Labs\n\nMy company. We build a remote build cache for engineering teams. I am founder and head of engineering.\n",
+    "notes/daily/2026-10-13": "---\ntitle: \"Daily note 2026-10-13\"\ntype: note\ndate: 2026-10-13\n---\n# 2026-10-13\n\n- Quick sync with Petra Lindqvist confirmed the pricing review for Monday, October 19; they are still looking at 12 seats.\n- Caught up with Wren Ferreira about customer intros.\n- Ran the weekly metrics review with the team.\n- Ran the weekly metrics review with the team.\n",
+    "notes/daily/2026-10-12": "---\ntitle: \"Daily note 2026-10-12\"\ntype: note\ndate: 2026-10-12\n---\n# 2026-10-12\n\n- Caught up with Rania Nakashima about customer intros.\n- Caught up with Calla Zeller about a board seat.\n- Fixed the flaky integration test in the billing service.\n- Wrote the job description for a developer advocate.\n",
+    "notes/daily/2026-10-11": "---\ntitle: \"Daily note 2026-10-11\"\ntype: note\ndate: 2026-10-11\n---\n# 2026-10-11\n\n- Quick sync with Ines Rahman confirmed the design partner sync for Friday, October 23; they are still looking at 15 seats.\n- Quick sync with Yusuf Quist confirmed the roadmap session for Monday, October 26; they are still looking at 80 seats.\n- Board deck draft is in progress; numbers due Friday.\n- Tried a new on-call rotation; feedback is mixed.\n",
+    "notes/daily/2026-10-10": "---\ntitle: \"Daily note 2026-10-10\"\ntype: note\ndate: 2026-10-10\n---\n# 2026-10-10\n\n- Quick sync with Talia Galloway confirmed the contract walkthrough for Wednesday, October 21; they are still looking at 60 seats.\n- Petra Petrov (Iskostra Media) asked about 25 seats; I owe Petra the revised statement of work.\n- Wrote the job description for a developer advocate.\n- Ran the weekly metrics review with the team.\n",
+    "notes/daily/2026-10-09": "---\ntitle: \"Daily note 2026-10-09\"\ntype: note\ndate: 2026-10-09\n---\n# 2026-10-09\n\n- Caught up with Kenji Wexler about pricing strategy.\n- Yusuf Okafor (Telumbr Retail) asked about 40 seats; I owe Yusuf the customer reference list.\n- Coffee chat about open-source licensing.\n- Discussed the Q4 roadmap with the engineering leads.\n",
+    "notes/daily/2026-10-08": "---\ntitle: \"Daily note 2026-10-08\"\ntype: note\ndate: 2026-10-08\n---\n# 2026-10-08\n\n- Talia Holmgren (Ondrmiro Health) asked about 48 seats; I owe Talia the pricing one-pager.\n- Ines Quist (Xerenza Retail) asked about 90 seats; I owe Ines a sandbox account for their team.\n- Wrote the job description for a developer advocate.\n- Coffee chat about open-source licensing.\n",
+    "notes/daily/2026-10-07": "---\ntitle: \"Daily note 2026-10-07\"\ntype: note\ndate: 2026-10-07\n---\n# 2026-10-07\n\n- Customer support queue is under control this week.\n- Emailed Talia Galloway a short update on our roadmap.\n- Wrote the job description for a developer advocate.\n",
+    "notes/daily/2026-10-06": "---\ntitle: \"Daily note 2026-10-06\"\ntype: note\ndate: 2026-10-06\n---\n# 2026-10-06\n\n- Need to renew the office lease before the end of the year.\n- Emailed Calla Zeller a short update on our roadmap.\n- Tried a new on-call rotation; feedback is mixed.\n",
+    "notes/daily/2026-10-05": "---\ntitle: \"Daily note 2026-10-05\"\ntype: note\ndate: 2026-10-05\n---\n# 2026-10-05\n\n- Customer support queue is under control this week.\n- Emailed Kenji Wexler a short update on our roadmap.\n- Fixed the flaky integration test in the billing service.\n",
+    "notes/daily/2026-10-04": "---\ntitle: \"Daily note 2026-10-04\"\ntype: note\ndate: 2026-10-04\n---\n# 2026-10-04\n\n- Spent the morning on hiring loops; two strong backend candidates.\n- Emailed Ines Rahman a short update on our roadmap.\n- Spent the morning on hiring loops; two strong backend candidates.\n",
+    "notes/daily/2026-10-03": "---\ntitle: \"Daily note 2026-10-03\"\ntype: note\ndate: 2026-10-03\n---\n# 2026-10-03\n\n- Reviewed the SOC 2 audit timeline with our auditor.\n- Emailed Wren Ferreira a short update on our roadmap.\n- Board deck draft is in progress; numbers due Friday.\n",
+    "notes/daily/2026-10-02": "---\ntitle: \"Daily note 2026-10-02\"\ntype: note\ndate: 2026-10-02\n---\n# 2026-10-02\n\n- Reviewed the SOC 2 audit timeline with our auditor.\n- Emailed Wren Ferreira a short update on our roadmap.\n- Discussed the Q4 roadmap with the engineering leads.\n",
+    "notes/daily/2026-10-01": "---\ntitle: \"Daily note 2026-10-01\"\ntype: note\ndate: 2026-10-01\n---\n# 2026-10-01\n\n- Wrote the job description for a developer advocate.\n- Emailed Yusuf Quist a short update on our roadmap.\n- Wrote the job description for a developer advocate.\n",
+    "notes/daily/2026-09-30": "---\ntitle: \"Daily note 2026-09-30\"\ntype: note\ndate: 2026-09-30\n---\n# 2026-09-30\n\n- Fixed the flaky integration test in the billing service.\n- Emailed Petra Lindqvist a short update on our roadmap.\n- Tried a new on-call rotation; feedback is mixed.\n",
+    "notes/daily/2026-09-29": "---\ntitle: \"Daily note 2026-09-29\"\ntype: note\ndate: 2026-09-29\n---\n# 2026-09-29\n\n- Coffee chat about open-source licensing.\n- Emailed Ines Rahman a short update on our roadmap.\n- Coffee chat about open-source licensing.\n",
+    "notes/daily/2026-09-28": "---\ntitle: \"Daily note 2026-09-28\"\ntype: note\ndate: 2026-09-28\n---\n# 2026-09-28\n\n- Investor update went out; two replies asking about churn.\n- Emailed Petra Lindqvist a short update on our roadmap.\n- Investor update went out; two replies asking about churn.\n",
+    "notes/daily/2026-09-27": "---\ntitle: \"Daily note 2026-09-27\"\ntype: note\ndate: 2026-09-27\n---\n# 2026-09-27\n\n- Customer support queue is under control this week.\n- Emailed Rania Nakashima a short update on our roadmap.\n- Reviewed the SOC 2 audit timeline with our auditor.\n",
+    "notes/daily/2026-09-26": "---\ntitle: \"Daily note 2026-09-26\"\ntype: note\ndate: 2026-09-26\n---\n# 2026-09-26\n\n- Tried a new on-call rotation; feedback is mixed.\n- Emailed Rania Nakashima a short update on our roadmap.\n- Need to renew the office lease before the end of the year.\n",
+    "notes/daily/2026-09-25": "---\ntitle: \"Daily note 2026-09-25\"\ntype: note\ndate: 2026-09-25\n---\n# 2026-09-25\n\n- Need to renew the office lease before the end of the year.\n- Emailed Yusuf Quist a short update on our roadmap.\n- Customer support queue is under control this week.\n",
+    "notes/daily/2026-09-24": "---\ntitle: \"Daily note 2026-09-24\"\ntype: note\ndate: 2026-09-24\n---\n# 2026-09-24\n\n- Investor update went out; two replies asking about churn.\n- Emailed Petra Petrov a short update on our roadmap.\n- Tried a new on-call rotation; feedback is mixed.\n",
+    "notes/daily/2026-09-23": "---\ntitle: \"Daily note 2026-09-23\"\ntype: note\ndate: 2026-09-23\n---\n# 2026-09-23\n\n- Coffee chat about open-source licensing.\n- Emailed Ines Quist a short update on our roadmap.\n- Investor update went out; two replies asking about churn.\n",
+    "notes/daily/2026-09-22": "---\ntitle: \"Daily note 2026-09-22\"\ntype: note\ndate: 2026-09-22\n---\n# 2026-09-22\n\n- Tried a new on-call rotation; feedback is mixed.\n- Emailed Rania Nakashima a short update on our roadmap.\n- Reviewed the SOC 2 audit timeline with our auditor.\n",
+    "notes/daily/2026-09-21": "---\ntitle: \"Daily note 2026-09-21\"\ntype: note\ndate: 2026-09-21\n---\n# 2026-09-21\n\n- Board deck draft is in progress; numbers due Friday.\n- Emailed Calla Zeller a short update on our roadmap.\n- Customer support queue is under control this week.\n",
+    "notes/daily/2026-09-20": "---\ntitle: \"Daily note 2026-09-20\"\ntype: note\ndate: 2026-09-20\n---\n# 2026-09-20\n\n- Reviewed the SOC 2 audit timeline with our auditor.\n- Emailed Calla Zeller a short update on our roadmap.\n- Tried a new on-call rotation; feedback is mixed.\n",
+    "notes/daily/2026-09-19": "---\ntitle: \"Daily note 2026-09-19\"\ntype: note\ndate: 2026-09-19\n---\n# 2026-09-19\n\n- Wrote the job description for a developer advocate.\n- Emailed Yusuf Quist a short update on our roadmap.\n- Investor update went out; two replies asking about churn.\n",
+    "notes/daily/2026-09-18": "---\ntitle: \"Daily note 2026-09-18\"\ntype: note\ndate: 2026-09-18\n---\n# 2026-09-18\n\n- Discussed the Q4 roadmap with the engineering leads.\n- Emailed Yusuf Quist a short update on our roadmap.\n- Wrote the job description for a developer advocate.\n",
+    "notes/daily/2026-09-17": "---\ntitle: \"Daily note 2026-09-17\"\ntype: note\ndate: 2026-09-17\n---\n# 2026-09-17\n\n- Tried a new on-call rotation; feedback is mixed.\n- Emailed Yusuf Okafor a short update on our roadmap.\n- Investor update went out; two replies asking about churn.\n",
+    "notes/daily/2026-09-16": "---\ntitle: \"Daily note 2026-09-16\"\ntype: note\ndate: 2026-09-16\n---\n# 2026-09-16\n\n- Coffee chat about open-source licensing.\n- Emailed Ines Quist a short update on our roadmap.\n- Investor update went out; two replies asking about churn.\n",
+    "notes/daily/2026-09-15": "---\ntitle: \"Daily note 2026-09-15\"\ntype: note\ndate: 2026-09-15\n---\n# 2026-09-15\n\n- Ran the weekly metrics review with the team.\n- Emailed Yusuf Okafor a short update on our roadmap.\n- Fixed the flaky integration test in the billing service.\n",
+    "notes/daily/2026-09-14": "---\ntitle: \"Daily note 2026-09-14\"\ntype: note\ndate: 2026-09-14\n---\n# 2026-09-14\n\n- Ran the weekly metrics review with the team.\n- Emailed Ines Quist a short update on our roadmap.\n- Need to renew the office lease before the end of the year.\n",
+    "inbox/2026-10-12-digest": "---\ntitle: \"Inbox digest 2026-10-12\"\ntype: digest\ndate: 2026-10-12\n---\n# Inbox digest 2026-10-12\n\n- Calla Zeller (Kestenza Advisory): sharing an article.\n- Yusuf Okafor (Telumbr Retail): confirming receipt.\n- Ines Quist (Xerenza Retail): following up on last week.\n- Kenji Wexler (Jorique Ventures): following up on last week.\n",
+    "inbox/2026-10-09-digest": "---\ntitle: \"Inbox digest 2026-10-09\"\ntype: digest\ndate: 2026-10-09\n---\n# Inbox digest 2026-10-09\n\n- Yusuf Okafor (Telumbr Retail): asking for a quick call.\n- Ines Quist (Xerenza Retail): sharing an article.\n- Talia Galloway (Ondronex Media): sharing an article.\n- Talia Holmgren (Ondrmiro Health): confirming receipt.\n"
+   },
+   "contacts": [
+    {
+     "task": "p20261226-t1",
+     "slug": "people/petra-lindqvist",
+     "name": "Petra Lindqvist",
+     "kind": "reply",
+     "lines": [
+      {
+       "what": "date",
+       "text": "Our pricing review moved from Monday, October 19 to Tuesday, October 27, same time."
+      },
+      {
+       "what": "correction",
+       "text": "Correction: the price in my notes is wrong: we quoted $42 per seat, not $38."
+      },
+      {
+       "what": "commitment",
+       "text": "I promised Petra I'd send the security architecture diagram before our pricing review."
+      }
+     ],
+     "gold": {
+      "commitment": {
+       "label": "the security architecture diagram",
+       "patterns": [
+        "architecture diagram"
+       ]
+      },
+      "new_date": {
+       "label": "2026-10-27",
+       "patterns": [
+        "\\boct(?:ober)?\\.?\\s+0?27(?:st|nd|rd|th)?\\b",
+        "\\b0?27(?:st|nd|rd|th)?\\s+(?:of\\s+)?oct(?:ober)?\\.?(?![a-z])",
+        "\\b0?10/0?27\\b(?!/\\d{3})",
+        "\\b2026-10-27\\b"
+       ]
+      },
+      "old_date": {
+       "label": "2026-10-19",
+       "patterns": [
+        "\\boct(?:ober)?\\.?\\s+0?19(?:st|nd|rd|th)?\\b",
+        "\\b0?19(?:st|nd|rd|th)?\\s+(?:of\\s+)?oct(?:ober)?\\.?(?![a-z])",
+        "\\b0?10/0?19\\b(?!/\\d{3})",
+        "\\b2026-10-19\\b"
+       ]
+      },
+      "corrected": {
+       "label": "$42 per seat",
+       "patterns": [
+        "\\$42(?:\\.00)?\\s*(?:/|per|a|each)\\s*(?:seat|user|licen[cs]e)",
+        "\\$42(?:\\.00)?\\s*(?:/|per)\\s*(?:seat|user)?\\s*(?:/|per)?\\s*(?:mo|month)"
+       ]
+      },
+      "stale": {
+       "label": "$38 per seat",
+       "patterns": [
+        "\\$38(?:\\.00)?\\s*(?:/|per|a|each)\\s*(?:seat|user|licen[cs]e)",
+        "\\$38(?:\\.00)?\\s*(?:/|per)\\s*(?:seat|user)?\\s*(?:/|per)?\\s*(?:mo|month)"
+       ]
+      },
+      "namesake": [
+       {
+        "label": "Iskostra Media",
+        "patterns": [
+         "(?<![a-z])Iskostra(?![a-z])"
+        ]
+       },
+       {
+        "label": "namesake meeting 2026-10-16",
+        "patterns": [
+         "\\boct(?:ober)?\\.?\\s+0?16(?:st|nd|rd|th)?\\b",
+         "\\b0?16(?:st|nd|rd|th)?\\s+(?:of\\s+)?oct(?:ober)?\\.?(?![a-z])",
+         "\\b0?10/0?16\\b(?!/\\d{3})",
+         "\\b2026-10-16\\b"
+        ]
+       },
+       {
+        "label": "namesake 25 seats",
+        "patterns": [
+         "\\b25[- ]?(?:seats?|licen[cs]es?|users?)\\b"
+        ]
+       },
+       {
+        "label": "namesake $32 per seat",
+        "patterns": [
+         "\\$32(?:\\.00)?\\s*(?:/|per|a|each)\\s*(?:seat|user|licen[cs]e)",
+         "\\$32(?:\\.00)?\\s*(?:/|per)\\s*(?:seat|user)?\\s*(?:/|per)?\\s*(?:mo|month)"
+        ]
+       },
+       {
+        "label": "namesake commitment: the revised statement of work",
+        "patterns": [
+         "revised (?:statement of work|sow)",
+         "statement of work"
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "task": "p20261226-t2",
+     "slug": "people/yusuf-quist",
+     "name": "Yusuf Quist",
+     "kind": "reply",
+     "lines": [
+      {
+       "what": "commitment",
+       "text": "I promised Yusuf I'd send the migration runbook before our roadmap session."
+      },
+      {
+       "what": "date",
+       "text": "Our roadmap session moved from Monday, October 26 to Wednesday, November 4, same time."
+      },
+      {
+       "what": "correction",
+       "text": "Correction: the price in my notes is wrong: we quoted $11 per seat, not $29."
+      }
+     ],
+     "gold": {
+      "commitment": {
+       "label": "the migration runbook",
+       "patterns": [
+        "migration runbook",
+        "runbook"
+       ]
+      },
+      "new_date": {
+       "label": "2026-11-04",
+       "patterns": [
+        "\\bnov(?:ember)?\\.?\\s+0?4(?:st|nd|rd|th)?\\b",
+        "\\b0?4(?:st|nd|rd|th)?\\s+(?:of\\s+)?nov(?:ember)?\\.?(?![a-z])",
+        "\\b0?11/0?4\\b(?!/\\d{3})",
+        "\\b2026-11-04\\b"
+       ]
+      },
+      "old_date": {
+       "label": "2026-10-26",
+       "patterns": [
+        "\\boct(?:ober)?\\.?\\s+0?26(?:st|nd|rd|th)?\\b",
+        "\\b0?26(?:st|nd|rd|th)?\\s+(?:of\\s+)?oct(?:ober)?\\.?(?![a-z])",
+        "\\b0?10/0?26\\b(?!/\\d{3})",
+        "\\b2026-10-26\\b"
+       ]
+      },
+      "corrected": {
+       "label": "$11 per seat",
+       "patterns": [
+        "\\$11(?:\\.00)?\\s*(?:/|per|a|each)\\s*(?:seat|user|licen[cs]e)",
+        "\\$11(?:\\.00)?\\s*(?:/|per)\\s*(?:seat|user)?\\s*(?:/|per)?\\s*(?:mo|month)"
+       ]
+      },
+      "stale": {
+       "label": "$29 per seat",
+       "patterns": [
+        "\\$29(?:\\.00)?\\s*(?:/|per|a|each)\\s*(?:seat|user|licen[cs]e)",
+        "\\$29(?:\\.00)?\\s*(?:/|per)\\s*(?:seat|user)?\\s*(?:/|per)?\\s*(?:mo|month)"
+       ]
+      },
+      "namesake": [
+       {
+        "label": "Telumbr Retail",
+        "patterns": [
+         "(?<![a-z])Telumbr(?![a-z])"
+        ]
+       },
+       {
+        "label": "namesake meeting 2026-11-09",
+        "patterns": [
+         "\\bnov(?:ember)?\\.?\\s+0?9(?:st|nd|rd|th)?\\b",
+         "\\b0?9(?:st|nd|rd|th)?\\s+(?:of\\s+)?nov(?:ember)?\\.?(?![a-z])",
+         "\\b0?11/0?9\\b(?!/\\d{3})",
+         "\\b2026-11-09\\b"
+        ]
+       },
+       {
+        "label": "namesake 40 seats",
+        "patterns": [
+         "\\b40[- ]?(?:seats?|licen[cs]es?|users?)\\b"
+        ]
+       },
+       {
+        "label": "namesake $35 per seat",
+        "patterns": [
+         "\\$35(?:\\.00)?\\s*(?:/|per|a|each)\\s*(?:seat|user|licen[cs]e)",
+         "\\$35(?:\\.00)?\\s*(?:/|per)\\s*(?:seat|user)?\\s*(?:/|per)?\\s*(?:mo|month)"
+        ]
+       },
+       {
+        "label": "namesake commitment: the customer reference list",
+        "patterns": [
+         "reference list",
+         "list of (?:customer )?references"
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "task": "p20261226-t3",
+     "slug": "people/ines-rahman",
+     "name": "Ines Rahman",
+     "kind": "prep",
+     "lines": [
+      {
+       "what": "commitment",
+       "text": "I promised Ines I'd send the data processing addendum before our design partner sync."
+      },
+      {
+       "what": "correction",
+       "text": "Correction: Ines's title in my notes is wrong: Ines is VP of Procurement, not Director of IT."
+      },
+      {
+       "what": "date",
+       "text": "Our design partner sync moved from Friday, October 23 to Wednesday, October 28, same time."
+      }
+     ],
+     "gold": {
+      "commitment": {
+       "label": "the data processing addendum",
+       "patterns": [
+        "data processing addendum",
+        "\\bdpa\\b"
+       ]
+      },
+      "new_date": {
+       "label": "2026-10-28",
+       "patterns": [
+        "\\boct(?:ober)?\\.?\\s+0?28(?:st|nd|rd|th)?\\b",
+        "\\b0?28(?:st|nd|rd|th)?\\s+(?:of\\s+)?oct(?:ober)?\\.?(?![a-z])",
+        "\\b0?10/0?28\\b(?!/\\d{3})",
+        "\\b2026-10-28\\b"
+       ]
+      },
+      "old_date": {
+       "label": "2026-10-23",
+       "patterns": [
+        "\\boct(?:ober)?\\.?\\s+0?23(?:st|nd|rd|th)?\\b",
+        "\\b0?23(?:st|nd|rd|th)?\\s+(?:of\\s+)?oct(?:ober)?\\.?(?![a-z])",
+        "\\b0?10/0?23\\b(?!/\\d{3})",
+        "\\b2026-10-23\\b"
+       ]
+      },
+      "corrected": {
+       "label": "VP of Procurement",
+       "patterns": [
+        "(?<![a-z])(?:VP\\s+of\\s+Procurement|(?:vice\\s+president|v\\.p\\.)\\s+of\\s+Procurement)(?![a-z])"
+       ]
+      },
+      "stale": {
+       "label": "Director of IT",
+       "patterns": [
+        "(?<![a-z])(?:Director\\s+of\\s+IT)(?![a-z])"
+       ]
+      },
+      "namesake": [
+       {
+        "label": "Xerenza Retail",
+        "patterns": [
+         "(?<![a-z])Xerenza(?![a-z])"
+        ]
+       },
+       {
+        "label": "namesake meeting 2026-10-20",
+        "patterns": [
+         "\\boct(?:ober)?\\.?\\s+0?20(?:st|nd|rd|th)?\\b",
+         "\\b0?20(?:st|nd|rd|th)?\\s+(?:of\\s+)?oct(?:ober)?\\.?(?![a-z])",
+         "\\b0?10/0?20\\b(?!/\\d{3})",
+         "\\b2026-10-20\\b"
+        ]
+       },
+       {
+        "label": "namesake 90 seats",
+        "patterns": [
+         "\\b90[- ]?(?:seats?|licen[cs]es?|users?)\\b"
+        ]
+       },
+       {
+        "label": "namesake $21 per seat",
+        "patterns": [
+         "\\$21(?:\\.00)?\\s*(?:/|per|a|each)\\s*(?:seat|user|licen[cs]e)",
+         "\\$21(?:\\.00)?\\s*(?:/|per)\\s*(?:seat|user)?\\s*(?:/|per)?\\s*(?:mo|month)"
+        ]
+       },
+       {
+        "label": "namesake commitment: a sandbox account for their team",
+        "patterns": [
+         "sandbox"
+        ]
+       }
+      ]
+     }
+    },
+    {
+     "task": "p20261226-t4",
+     "slug": "people/talia-galloway",
+     "name": "Talia Galloway",
+     "kind": "prep",
+     "lines": [
+      {
+       "what": "correction",
+       "text": "Correction: the price in my notes is wrong: we quoted $19 per seat, not $26."
+      },
+      {
+       "what": "commitment",
+       "text": "I promised Talia I'd send the updated order form before our contract walkthrough."
+      },
+      {
+       "what": "date",
+       "text": "Our contract walkthrough moved from Wednesday, October 21 to Friday, October 30, same time."
+      }
+     ],
+     "gold": {
+      "commitment": {
+       "label": "the updated order form",
+       "patterns": [
+        "order form"
+       ]
+      },
+      "new_date": {
+       "label": "2026-10-30",
+       "patterns": [
+        "\\boct(?:ober)?\\.?\\s+0?30(?:st|nd|rd|th)?\\b",
+        "\\b0?30(?:st|nd|rd|th)?\\s+(?:of\\s+)?oct(?:ober)?\\.?(?![a-z])",
+        "\\b0?10/0?30\\b(?!/\\d{3})",
+        "\\b2026-10-30\\b"
+       ]
+      },
+      "old_date": {
+       "label": "2026-10-21",
+       "patterns": [
+        "\\boct(?:ober)?\\.?\\s+0?21(?:st|nd|rd|th)?\\b",
+        "\\b0?21(?:st|nd|rd|th)?\\s+(?:of\\s+)?oct(?:ober)?\\.?(?![a-z])",
+        "\\b0?10/0?21\\b(?!/\\d{3})",
+        "\\b2026-10-21\\b"
+       ]
+      },
+      "corrected": {
+       "label": "$19 per seat",
+       "patterns": [
+        "\\$19(?:\\.00)?\\s*(?:/|per|a|each)\\s*(?:seat|user|licen[cs]e)",
+        "\\$19(?:\\.00)?\\s*(?:/|per)\\s*(?:seat|user)?\\s*(?:/|per)?\\s*(?:mo|month)"
+       ]
+      },
+      "stale": {
+       "label": "$26 per seat",
+       "patterns": [
+        "\\$26(?:\\.00)?\\s*(?:/|per|a|each)\\s*(?:seat|user|licen[cs]e)",
+        "\\$26(?:\\.00)?\\s*(?:/|per)\\s*(?:seat|user)?\\s*(?:/|per)?\\s*(?:mo|month)"
+       ]
+      },
+      "namesake": [
+       {
+        "label": "Ondrmiro Health",
+        "patterns": [
+         "(?<![a-z])Ondrmiro(?![a-z])"
+        ]
+       },
+       {
+        "label": "namesake meeting 2026-10-22",
+        "patterns": [
+         "\\boct(?:ober)?\\.?\\s+0?22(?:st|nd|rd|th)?\\b",
+         "\\b0?22(?:st|nd|rd|th)?\\s+(?:of\\s+)?oct(?:ober)?\\.?(?![a-z])",
+         "\\b0?10/0?22\\b(?!/\\d{3})",
+         "\\b2026-10-22\\b"
+        ]
+       },
+       {
+        "label": "namesake 48 seats",
+        "patterns": [
+         "\\b48[- ]?(?:seats?|licen[cs]es?|users?)\\b"
+        ]
+       },
+       {
+        "label": "namesake $28 per seat",
+        "patterns": [
+         "\\$28(?:\\.00)?\\s*(?:/|per|a|each)\\s*(?:seat|user|licen[cs]e)",
+         "\\$28(?:\\.00)?\\s*(?:/|per)\\s*(?:seat|user)?\\s*(?:/|per)?\\s*(?:mo|month)"
+        ]
+       },
+       {
+        "label": "namesake commitment: the pricing one-pager",
+        "patterns": [
+         "pricing one[- ]pager",
+         "one[- ]pager"
+        ]
+       }
+      ]
+     }
+    }
+   ],
+   "scenarios": [
+    {
+     "kind": "reply",
+     "task": "p20261226-t1",
+     "counterparty": {
+      "slug": "people/petra-lindqvist",
+      "name": "Petra Lindqvist"
+     },
+     "condition": "crowded",
+     "prompt": "Petra Lindqvist just emailed me: \"Hi Niko, looking forward to our pricing review. Anything we should prepare on our side?\" Draft my reply. Confirm when we're meeting, restate where things stand, and cover anything I owe them.",
+     "crowd": [
+      {
+       "entity": "people/yusuf-quist",
+       "fact": "Yusuf Quist prefers async updates over calls."
+      },
+      {
+       "entity": "people/yusuf-okafor",
+       "fact": "Yusuf Okafor prefers async updates over calls."
+      },
+      {
+       "entity": "people/ines-rahman",
+       "fact": "Ines Rahman prefers async updates over calls."
+      },
+      {
+       "entity": "people/ines-quist",
+       "fact": "Ines Quist prefers async updates over calls."
+      },
+      {
+       "entity": "people/talia-galloway",
+       "fact": "Talia Galloway prefers async updates over calls."
+      },
+      {
+       "entity": "people/talia-holmgren",
+       "fact": "Talia Holmgren prefers async updates over calls."
+      },
+      {
+       "entity": "people/wren-ferreira",
+       "fact": "Wren Ferreira prefers async updates over calls."
+      },
+      {
+       "entity": "people/rania-nakashima",
+       "fact": "Rania Nakashima prefers async updates over calls."
+      },
+      {
+       "entity": "people/calla-zeller",
+       "fact": "Calla Zeller prefers async updates over calls."
+      },
+      {
+       "entity": "people/kenji-wexler",
+       "fact": "Kenji Wexler prefers async updates over calls."
+      },
+      {
+       "entity": "people/yusuf-quist",
+       "fact": "Yusuf Quist asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/yusuf-okafor",
+       "fact": "Yusuf Okafor asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/ines-rahman",
+       "fact": "Ines Rahman asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/ines-quist",
+       "fact": "Ines Quist asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/talia-galloway",
+       "fact": "Talia Galloway asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/talia-holmgren",
+       "fact": "Talia Holmgren asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/wren-ferreira",
+       "fact": "Wren Ferreira asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/rania-nakashima",
+       "fact": "Rania Nakashima asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/calla-zeller",
+       "fact": "Calla Zeller asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/kenji-wexler",
+       "fact": "Kenji Wexler asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/yusuf-quist",
+       "fact": "Yusuf Quist is moving their team to a new office building."
+      },
+      {
+       "entity": "people/yusuf-okafor",
+       "fact": "Yusuf Okafor is moving their team to a new office building."
+      },
+      {
+       "entity": "people/ines-rahman",
+       "fact": "Ines Rahman is moving their team to a new office building."
+      },
+      {
+       "entity": "people/ines-quist",
+       "fact": "Ines Quist is moving their team to a new office building."
+      },
+      {
+       "entity": "people/talia-galloway",
+       "fact": "Talia Galloway is moving their team to a new office building."
+      },
+      {
+       "entity": "people/talia-holmgren",
+       "fact": "Talia Holmgren is moving their team to a new office building."
+      },
+      {
+       "entity": "people/wren-ferreira",
+       "fact": "Wren Ferreira is moving their team to a new office building."
+      },
+      {
+       "entity": "people/rania-nakashima",
+       "fact": "Rania Nakashima is moving their team to a new office building."
+      },
+      {
+       "entity": "people/calla-zeller",
+       "fact": "Calla Zeller is moving their team to a new office building."
+      },
+      {
+       "entity": "people/kenji-wexler",
+       "fact": "Kenji Wexler is moving their team to a new office building."
+      },
+      {
+       "entity": "people/yusuf-quist",
+       "fact": "Yusuf Quist likes short written summaries before any review."
+      },
+      {
+       "entity": "people/yusuf-okafor",
+       "fact": "Yusuf Okafor likes short written summaries before any review."
+      },
+      {
+       "entity": "people/ines-rahman",
+       "fact": "Ines Rahman likes short written summaries before any review."
+      },
+      {
+       "entity": "people/ines-quist",
+       "fact": "Ines Quist likes short written summaries before any review."
+      },
+      {
+       "entity": "people/talia-galloway",
+       "fact": "Talia Galloway likes short written summaries before any review."
+      },
+      {
+       "entity": "people/talia-holmgren",
+       "fact": "Talia Holmgren likes short written summaries before any review."
+      },
+      {
+       "entity": "people/wren-ferreira",
+       "fact": "Wren Ferreira likes short written summaries before any review."
+      },
+      {
+       "entity": "people/rania-nakashima",
+       "fact": "Rania Nakashima likes short written summaries before any review."
+      },
+      {
+       "entity": "people/calla-zeller",
+       "fact": "Calla Zeller likes short written summaries before any review."
+      },
+      {
+       "entity": "people/kenji-wexler",
+       "fact": "Kenji Wexler likes short written summaries before any review."
+      }
+     ]
+    },
+    {
+     "kind": "prep",
+     "task": "p20261226-t3",
+     "counterparty": {
+      "slug": "people/ines-rahman",
+      "name": "Ines Rahman"
+     },
+     "condition": "aged",
+     "prompt": "Prep me for my next meeting with Ines Rahman: who they are now, when we're meeting, where things stand, and anything I owe them.",
+     "crowd": [
+      {
+       "entity": "people/petra-lindqvist",
+       "fact": "Petra Lindqvist prefers async updates over calls."
+      },
+      {
+       "entity": "people/petra-petrov",
+       "fact": "Petra Petrov prefers async updates over calls."
+      },
+      {
+       "entity": "people/yusuf-quist",
+       "fact": "Yusuf Quist prefers async updates over calls."
+      },
+      {
+       "entity": "people/yusuf-okafor",
+       "fact": "Yusuf Okafor prefers async updates over calls."
+      },
+      {
+       "entity": "people/talia-galloway",
+       "fact": "Talia Galloway prefers async updates over calls."
+      },
+      {
+       "entity": "people/talia-holmgren",
+       "fact": "Talia Holmgren prefers async updates over calls."
+      },
+      {
+       "entity": "people/wren-ferreira",
+       "fact": "Wren Ferreira prefers async updates over calls."
+      },
+      {
+       "entity": "people/rania-nakashima",
+       "fact": "Rania Nakashima prefers async updates over calls."
+      },
+      {
+       "entity": "people/calla-zeller",
+       "fact": "Calla Zeller prefers async updates over calls."
+      },
+      {
+       "entity": "people/kenji-wexler",
+       "fact": "Kenji Wexler prefers async updates over calls."
+      },
+      {
+       "entity": "people/petra-lindqvist",
+       "fact": "Petra Lindqvist asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/petra-petrov",
+       "fact": "Petra Petrov asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/yusuf-quist",
+       "fact": "Yusuf Quist asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/yusuf-okafor",
+       "fact": "Yusuf Okafor asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/talia-galloway",
+       "fact": "Talia Galloway asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/talia-holmgren",
+       "fact": "Talia Holmgren asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/wren-ferreira",
+       "fact": "Wren Ferreira asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/rania-nakashima",
+       "fact": "Rania Nakashima asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/calla-zeller",
+       "fact": "Calla Zeller asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/kenji-wexler",
+       "fact": "Kenji Wexler asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/petra-lindqvist",
+       "fact": "Petra Lindqvist is moving their team to a new office building."
+      },
+      {
+       "entity": "people/petra-petrov",
+       "fact": "Petra Petrov is moving their team to a new office building."
+      },
+      {
+       "entity": "people/yusuf-quist",
+       "fact": "Yusuf Quist is moving their team to a new office building."
+      },
+      {
+       "entity": "people/yusuf-okafor",
+       "fact": "Yusuf Okafor is moving their team to a new office building."
+      },
+      {
+       "entity": "people/talia-galloway",
+       "fact": "Talia Galloway is moving their team to a new office building."
+      },
+      {
+       "entity": "people/talia-holmgren",
+       "fact": "Talia Holmgren is moving their team to a new office building."
+      },
+      {
+       "entity": "people/wren-ferreira",
+       "fact": "Wren Ferreira is moving their team to a new office building."
+      },
+      {
+       "entity": "people/rania-nakashima",
+       "fact": "Rania Nakashima is moving their team to a new office building."
+      },
+      {
+       "entity": "people/calla-zeller",
+       "fact": "Calla Zeller is moving their team to a new office building."
+      },
+      {
+       "entity": "people/kenji-wexler",
+       "fact": "Kenji Wexler is moving their team to a new office building."
+      },
+      {
+       "entity": "people/petra-lindqvist",
+       "fact": "Petra Lindqvist likes short written summaries before any review."
+      },
+      {
+       "entity": "people/petra-petrov",
+       "fact": "Petra Petrov likes short written summaries before any review."
+      },
+      {
+       "entity": "people/yusuf-quist",
+       "fact": "Yusuf Quist likes short written summaries before any review."
+      },
+      {
+       "entity": "people/yusuf-okafor",
+       "fact": "Yusuf Okafor likes short written summaries before any review."
+      },
+      {
+       "entity": "people/talia-galloway",
+       "fact": "Talia Galloway likes short written summaries before any review."
+      },
+      {
+       "entity": "people/talia-holmgren",
+       "fact": "Talia Holmgren likes short written summaries before any review."
+      },
+      {
+       "entity": "people/wren-ferreira",
+       "fact": "Wren Ferreira likes short written summaries before any review."
+      },
+      {
+       "entity": "people/rania-nakashima",
+       "fact": "Rania Nakashima likes short written summaries before any review."
+      },
+      {
+       "entity": "people/calla-zeller",
+       "fact": "Calla Zeller likes short written summaries before any review."
+      },
+      {
+       "entity": "people/kenji-wexler",
+       "fact": "Kenji Wexler likes short written summaries before any review."
+      }
+     ]
+    },
+    {
+     "kind": "task_start",
+     "task": "p20261226-t2",
+     "counterparty": {
+      "slug": "people/yusuf-quist",
+      "name": "Yusuf Quist"
+     },
+     "condition": "crowded",
+     "prompt": "Help me get started on my follow-up for Yusuf Quist: work out what I owe them and by when, then write the short cover email I'll send with it.",
+     "crowd": [
+      {
+       "entity": "people/petra-lindqvist",
+       "fact": "Petra Lindqvist prefers async updates over calls."
+      },
+      {
+       "entity": "people/petra-petrov",
+       "fact": "Petra Petrov prefers async updates over calls."
+      },
+      {
+       "entity": "people/ines-rahman",
+       "fact": "Ines Rahman prefers async updates over calls."
+      },
+      {
+       "entity": "people/ines-quist",
+       "fact": "Ines Quist prefers async updates over calls."
+      },
+      {
+       "entity": "people/talia-galloway",
+       "fact": "Talia Galloway prefers async updates over calls."
+      },
+      {
+       "entity": "people/talia-holmgren",
+       "fact": "Talia Holmgren prefers async updates over calls."
+      },
+      {
+       "entity": "people/wren-ferreira",
+       "fact": "Wren Ferreira prefers async updates over calls."
+      },
+      {
+       "entity": "people/rania-nakashima",
+       "fact": "Rania Nakashima prefers async updates over calls."
+      },
+      {
+       "entity": "people/calla-zeller",
+       "fact": "Calla Zeller prefers async updates over calls."
+      },
+      {
+       "entity": "people/kenji-wexler",
+       "fact": "Kenji Wexler prefers async updates over calls."
+      },
+      {
+       "entity": "people/petra-lindqvist",
+       "fact": "Petra Lindqvist asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/petra-petrov",
+       "fact": "Petra Petrov asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/ines-rahman",
+       "fact": "Ines Rahman asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/ines-quist",
+       "fact": "Ines Quist asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/talia-galloway",
+       "fact": "Talia Galloway asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/talia-holmgren",
+       "fact": "Talia Holmgren asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/wren-ferreira",
+       "fact": "Wren Ferreira asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/rania-nakashima",
+       "fact": "Rania Nakashima asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/calla-zeller",
+       "fact": "Calla Zeller asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/kenji-wexler",
+       "fact": "Kenji Wexler asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/petra-lindqvist",
+       "fact": "Petra Lindqvist is moving their team to a new office building."
+      },
+      {
+       "entity": "people/petra-petrov",
+       "fact": "Petra Petrov is moving their team to a new office building."
+      },
+      {
+       "entity": "people/ines-rahman",
+       "fact": "Ines Rahman is moving their team to a new office building."
+      },
+      {
+       "entity": "people/ines-quist",
+       "fact": "Ines Quist is moving their team to a new office building."
+      },
+      {
+       "entity": "people/talia-galloway",
+       "fact": "Talia Galloway is moving their team to a new office building."
+      },
+      {
+       "entity": "people/talia-holmgren",
+       "fact": "Talia Holmgren is moving their team to a new office building."
+      },
+      {
+       "entity": "people/wren-ferreira",
+       "fact": "Wren Ferreira is moving their team to a new office building."
+      },
+      {
+       "entity": "people/rania-nakashima",
+       "fact": "Rania Nakashima is moving their team to a new office building."
+      },
+      {
+       "entity": "people/calla-zeller",
+       "fact": "Calla Zeller is moving their team to a new office building."
+      },
+      {
+       "entity": "people/kenji-wexler",
+       "fact": "Kenji Wexler is moving their team to a new office building."
+      },
+      {
+       "entity": "people/petra-lindqvist",
+       "fact": "Petra Lindqvist likes short written summaries before any review."
+      },
+      {
+       "entity": "people/petra-petrov",
+       "fact": "Petra Petrov likes short written summaries before any review."
+      },
+      {
+       "entity": "people/ines-rahman",
+       "fact": "Ines Rahman likes short written summaries before any review."
+      },
+      {
+       "entity": "people/ines-quist",
+       "fact": "Ines Quist likes short written summaries before any review."
+      },
+      {
+       "entity": "people/talia-galloway",
+       "fact": "Talia Galloway likes short written summaries before any review."
+      },
+      {
+       "entity": "people/talia-holmgren",
+       "fact": "Talia Holmgren likes short written summaries before any review."
+      },
+      {
+       "entity": "people/wren-ferreira",
+       "fact": "Wren Ferreira likes short written summaries before any review."
+      },
+      {
+       "entity": "people/rania-nakashima",
+       "fact": "Rania Nakashima likes short written summaries before any review."
+      },
+      {
+       "entity": "people/calla-zeller",
+       "fact": "Calla Zeller likes short written summaries before any review."
+      },
+      {
+       "entity": "people/kenji-wexler",
+       "fact": "Kenji Wexler likes short written summaries before any review."
+      }
+     ],
+     "gate_check_prompt": "Help me get started on what I owe Yusuf Quist: work out what it is and by when, then write the short cover email I'll send with it."
+    },
+    {
+     "kind": "negative",
+     "task": "p20261226-t4",
+     "counterparty": {
+      "slug": "people/talia-holmgren",
+      "name": "Talia Holmgren"
+     },
+     "condition": "aged",
+     "prompt": "Talia Holmgren just emailed me: \"Hi Niko, quick check-in: anything new on your side since we last spoke?\" Draft my reply.",
+     "crowd": [
+      {
+       "entity": "people/petra-lindqvist",
+       "fact": "Petra Lindqvist prefers async updates over calls."
+      },
+      {
+       "entity": "people/petra-petrov",
+       "fact": "Petra Petrov prefers async updates over calls."
+      },
+      {
+       "entity": "people/yusuf-quist",
+       "fact": "Yusuf Quist prefers async updates over calls."
+      },
+      {
+       "entity": "people/yusuf-okafor",
+       "fact": "Yusuf Okafor prefers async updates over calls."
+      },
+      {
+       "entity": "people/ines-rahman",
+       "fact": "Ines Rahman prefers async updates over calls."
+      },
+      {
+       "entity": "people/ines-quist",
+       "fact": "Ines Quist prefers async updates over calls."
+      },
+      {
+       "entity": "people/wren-ferreira",
+       "fact": "Wren Ferreira prefers async updates over calls."
+      },
+      {
+       "entity": "people/rania-nakashima",
+       "fact": "Rania Nakashima prefers async updates over calls."
+      },
+      {
+       "entity": "people/calla-zeller",
+       "fact": "Calla Zeller prefers async updates over calls."
+      },
+      {
+       "entity": "people/kenji-wexler",
+       "fact": "Kenji Wexler prefers async updates over calls."
+      },
+      {
+       "entity": "people/petra-lindqvist",
+       "fact": "Petra Lindqvist asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/petra-petrov",
+       "fact": "Petra Petrov asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/yusuf-quist",
+       "fact": "Yusuf Quist asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/yusuf-okafor",
+       "fact": "Yusuf Okafor asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/ines-rahman",
+       "fact": "Ines Rahman asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/ines-quist",
+       "fact": "Ines Quist asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/wren-ferreira",
+       "fact": "Wren Ferreira asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/rania-nakashima",
+       "fact": "Rania Nakashima asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/calla-zeller",
+       "fact": "Calla Zeller asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/kenji-wexler",
+       "fact": "Kenji Wexler asked to be copied on the engineering newsletter."
+      },
+      {
+       "entity": "people/petra-lindqvist",
+       "fact": "Petra Lindqvist is moving their team to a new office building."
+      },
+      {
+       "entity": "people/petra-petrov",
+       "fact": "Petra Petrov is moving their team to a new office building."
+      },
+      {
+       "entity": "people/yusuf-quist",
+       "fact": "Yusuf Quist is moving their team to a new office building."
+      },
+      {
+       "entity": "people/yusuf-okafor",
+       "fact": "Yusuf Okafor is moving their team to a new office building."
+      },
+      {
+       "entity": "people/ines-rahman",
+       "fact": "Ines Rahman is moving their team to a new office building."
+      },
+      {
+       "entity": "people/ines-quist",
+       "fact": "Ines Quist is moving their team to a new office building."
+      },
+      {
+       "entity": "people/wren-ferreira",
+       "fact": "Wren Ferreira is moving their team to a new office building."
+      },
+      {
+       "entity": "people/rania-nakashima",
+       "fact": "Rania Nakashima is moving their team to a new office building."
+      },
+      {
+       "entity": "people/calla-zeller",
+       "fact": "Calla Zeller is moving their team to a new office building."
+      },
+      {
+       "entity": "people/kenji-wexler",
+       "fact": "Kenji Wexler is moving their team to a new office building."
+      },
+      {
+       "entity": "people/petra-lindqvist",
+       "fact": "Petra Lindqvist likes short written summaries before any review."
+      },
+      {
+       "entity": "people/petra-petrov",
+       "fact": "Petra Petrov likes short written summaries before any review."
+      },
+      {
+       "entity": "people/yusuf-quist",
+       "fact": "Yusuf Quist likes short written summaries before any review."
+      },
+      {
+       "entity": "people/yusuf-okafor",
+       "fact": "Yusuf Okafor likes short written summaries before any review."
+      },
+      {
+       "entity": "people/ines-rahman",
+       "fact": "Ines Rahman likes short written summaries before any review."
+      },
+      {
+       "entity": "people/ines-quist",
+       "fact": "Ines Quist likes short written summaries before any review."
+      },
+      {
+       "entity": "people/wren-ferreira",
+       "fact": "Wren Ferreira likes short written summaries before any review."
+      },
+      {
+       "entity": "people/rania-nakashima",
+       "fact": "Rania Nakashima likes short written summaries before any review."
+      },
+      {
+       "entity": "people/calla-zeller",
+       "fact": "Calla Zeller likes short written summaries before any review."
+      },
+      {
+       "entity": "people/kenji-wexler",
+       "fact": "Kenji Wexler likes short written summaries before any review."
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

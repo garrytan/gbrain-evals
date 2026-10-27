@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "experiments": [
+    {
+      "id": "w11-w4-sealed-confirmation",
+      "preregistration": "docs/benchmarks/2026-10-17-w11-w4-sealed-confirmation-preregistration.md",
+      "results": [
+        "docs/benchmarks/2026-10-05-heldout-verdicts/w11-w4-heldout-*.json"
+      ]
+    }
+  ]
+}

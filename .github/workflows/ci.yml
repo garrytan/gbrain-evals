@@ -49,20 +49,50 @@ jobs:
       - name: Retrieval regression gate (qrels + baseline, keyword-only)
         run: bun scripts/generate-v0.41-launch.ts --check
 
-      # Every keyless category through all.ts (--tier offline). Status comes
-      # from each runner's receipt and gate (Cats 1, 2, 3 and 10 gate on
-      # regressions), so a score regression fails this step through all.ts's
-      # exit code. The N1 and N5 CI slices (knowledge-update-ci,
-      # forget-residue-ci) run here on PGLite through the gbrain CLI. Cat 34 needs an external gbrain checkout and records a
-      # skip here; BRAINBENCH_ALLOW_SKIP acknowledges receipt-declared skips.
-      - name: "BrainBench offline tier (all.ts --tier offline)"
-        run: BRAINBENCH_ALLOW_SKIP=1 timeout 900 bun run eval:brainbench
-
       - name: Upload reports on failure
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: eval-reports
+          path: eval/reports/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  # Every keyless category through all.ts (--tier offline), in three shards
+  # balanced by measured seconds (eval/runner/brainbench-shard-weights.json).
+  # One job took about 800 s of its 900 s bound on 2026-10-23 runners; each
+  # shard keeps that bound and writes its share of it to the job summary.
+  # Status comes from each runner's receipt and gate (Cats 1, 2, 3 and 10 gate
+  # on regressions), so a score regression fails the shard through all.ts's
+  # exit code. The N1 and N5 CI slices (knowledge-update-ci,
+  # forget-residue-ci) run on PGLite through the gbrain CLI. Cat 34 needs an
+  # external gbrain checkout and records a skip; BRAINBENCH_ALLOW_SKIP
+  # acknowledges receipt-declared skips.
+  brainbench:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: 1.4.2
+
+      - name: Install (frozen lockfile)
+        run: bun install --frozen-lockfile
+
+      - name: "BrainBench offline tier, shard ${{ matrix.shard }}/3 (all.ts --tier offline)"
+        run: BRAINBENCH_ALLOW_SKIP=1 BRAINBENCH_BOUND_S=900 timeout 900 bun run eval:brainbench --shard ${{ matrix.shard }}/3
+
+      - name: Upload reports on failure
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: eval-reports-brainbench-${{ matrix.shard }}
           path: eval/reports/
           if-no-files-found: ignore
           retention-days: 14
@@ -142,3 +172,36 @@ jobs:
 
       - name: gitleaks on docs/benchmarks/**/receipts and scoreboard receipts
         run: bash scripts/scan-receipts.sh
+
+  # The pinned agent-memory benchmark harness (eval/harness-provider/): CPU-only
+  # install, the Python wrapper tests (scorer conformance, projection and leak
+  # checks, gbrain provider isolation), the metering proxy's per-process
+  # zero-balance tests and the keyless launcher fixture. Everything talks to
+  # local stubs; no secrets. MPW_REQUIRE_HARNESS=1 turns a missing venv into a
+  # failure instead of a skip.
+  harness:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      MPW_REQUIRE_HARNESS: '1'
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: 1.4.2
+
+      - name: Install uv 0.12.3
+        run: pipx install uv==0.12.3
+
+      - name: Install (frozen lockfile)
+        run: bun install --frozen-lockfile
+
+      - name: Install the pinned harness (CPU wheels)
+        run: bun run harness:setup
+
+      - name: Harness wrapper tests (pytest)
+        run: bun run harness:test
+
+      - name: Metering proxy and launcher tests
+        run: bun test test/eval/harness-metering-proxy.test.ts test/eval/harness-cell.test.ts test/eval/harness-cell-e2e.test.ts

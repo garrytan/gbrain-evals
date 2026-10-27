@@ -1,0 +1,133 @@
+{
+  "slug": "updates/2026-01-05-central-weekly",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2026-01-05",
+    "owner_phrases": [
+      {
+        "mid": "updates/2026-01-05-central-weekly#m1",
+        "phrase": "Tobias's dealer account",
+        "lines": [
+          18
+        ]
+      },
+      {
+        "mid": "updates/2026-01-05-central-weekly#m2",
+        "phrase": "Pree's old dealer account",
+        "lines": [
+          18
+        ]
+      },
+      {
+        "mid": "updates/2026-01-05-central-weekly#m3",
+        "phrase": "the account Pree runs",
+        "lines": [
+          20
+        ]
+      }
+    ],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Marrow Fieldworks",
+        "line": 12
+      },
+      {
+        "oid": "e2",
+        "surface": "Tansley Parcel",
+        "line": 13
+      },
+      {
+        "oid": "e3",
+        "surface": "Marrow Agrisupply",
+        "line": 14
+      },
+      {
+        "oid": "e4",
+        "surface": "Marrow Fieldworks",
+        "line": 18
+      },
+      {
+        "oid": "e5",
+        "surface": "Tansley Parcel",
+        "line": 20
+      },
+      {
+        "oid": "e6",
+        "surface": "Marrow Agrisupply",
+        "line": 24
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "0fb17b0455c8cf2c5cddc273e01a1557c91268500f195f1f8cfb97cbf45b772e",
+  "response_text": "{\n  \"date_used\": \"2026-01-05\",\n  \"owner_phrases\": [\n    {\n      \"mid\": \"updates/2026-01-05-central-weekly#m1\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\"marrow-fieldworks\"],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"The dealer account is Marrow Fieldworks, whose transition to Tobias is explicitly described.\"\n    },\n    {\n      \"mid\": \"updates/2026-01-05-central-weekly#m2\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\"marrow-fieldworks\"],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"Pree's former dealer account is Marrow Fieldworks, handed off to Tobias on this date.\"\n    },\n    {\n      \"mid\": \"updates/2026-01-05-central-weekly#m3\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\"tansley-parcel\"],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"The phrase continues the paragraph about Pree's Tansley Parcel renewal.\"\n    }\n  ],\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"marrow-fieldworks\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"tansley-parcel\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"marrow-agrisupply\"\n    },\n    {\n      \"oid\": \"e4\",\n      \"entity\": \"marrow-fieldworks\"\n    },\n    {\n      \"oid\": \"e5\",\n      \"entity\": \"tansley-parcel\"\n    },\n    {\n      \"oid\": \"e6\",\n      \"entity\": \"marrow-agrisupply\"\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2026-01-05",
+    "owner_phrases": [
+      {
+        "mid": "updates/2026-01-05-central-weekly#m1",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "marrow-fieldworks"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "The dealer account is Marrow Fieldworks, whose transition to Tobias is explicitly described."
+      },
+      {
+        "mid": "updates/2026-01-05-central-weekly#m2",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "marrow-fieldworks"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "Pree's former dealer account is Marrow Fieldworks, handed off to Tobias on this date."
+      },
+      {
+        "mid": "updates/2026-01-05-central-weekly#m3",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "tansley-parcel"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "The phrase continues the paragraph about Pree's Tansley Parcel renewal."
+      }
+    ],
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "marrow-fieldworks"
+      },
+      {
+        "oid": "e2",
+        "entity": "tansley-parcel"
+      },
+      {
+        "oid": "e3",
+        "entity": "marrow-agrisupply"
+      },
+      {
+        "oid": "e4",
+        "entity": "marrow-fieldworks"
+      },
+      {
+        "oid": "e5",
+        "entity": "tansley-parcel"
+      },
+      {
+        "oid": "e6",
+        "entity": "marrow-agrisupply"
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 3086,
+    "output_tokens": 444,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.010612
+}

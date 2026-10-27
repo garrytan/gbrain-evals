@@ -1,0 +1,2229 @@
+{
+ "gbrain": {
+  "ref": "9ac26bea780e15cb660b2f29691613fcad5d0bf6",
+  "commit": "9ac26bea780e15cb660b2f29691613fcad5d0bf6",
+  "tree": "41f95308fc901fbafd95e4f53c14d709d9fdac60"
+ },
+ "rows": [
+  {
+   "key": "h20261101-t1|claude-sonnet-5-5|baseline|1",
+   "task": "h20261101-t1",
+   "reader": "claude-sonnet-5-5",
+   "contact": "Elodie Udeh",
+   "contact_slug": "people/elodie-udeh",
+   "namesake": {
+    "name": "Elodie Petrov",
+    "slug": "people/elodie-petrov",
+    "daily": "notes/daily/2026-10-07",
+    "line": "Elodie Petrov (YAF) asked about 50 seats; I owe Elo the updated order form.",
+    "item": "the updated order form"
+   },
+   "hits": [
+    "namesake commitment: the updated order form"
+   ],
+   "scored_unsupported": true,
+   "lines": [
+    "- **Not included:** Your Oct 7 daily note says you owe \"Elo\" an updated order form. That is Elodie Petrov at Yarithe Foods, a different account, so I left it out."
+   ],
+   "hook_carries": {
+    "page": false,
+    "name": false,
+    "daily": false
+   },
+   "first_carrier": {
+    "index": 10,
+    "name": "search",
+    "args": {
+     "query": "sandbox account Yarithe"
+    },
+    "recorded_chars": 11680,
+    "replay_chars": 11350,
+    "carries": {
+     "page": true,
+     "name": true,
+     "daily": false
+    }
+   },
+   "trace": [
+    {
+     "name": "context_pack",
+     "args": {
+      "entities": "Elodie Udeh, Yarithe Retail"
+     },
+     "recorded_chars": 13251,
+     "replay_chars": 11393,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     },
+     "resolved_people": [
+      "people/elodie-udeh",
+      "people/wren-rahman",
+      "people/joaquin-haddad"
+     ]
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "people/elodie-udeh",
+      "include_content": true
+     },
+     "recorded_chars": 3859,
+     "replay_chars": 2104,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "companies/yarithe-retail",
+      "include_content": true
+     },
+     "recorded_chars": 1664,
+     "replay_chars": 1664,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "meetings/2026-10-12-yarithe-call"
+     },
+     "recorded_chars": 1121,
+     "replay_chars": 1121,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "inbox/2026-10-11-udeh-reschedule"
+     },
+     "recorded_chars": 1116,
+     "replay_chars": 1116,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "inbox/2026-09-23-udeh-procurement-handoff"
+     },
+     "recorded_chars": 1154,
+     "replay_chars": 1154,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "meetings/2026-10-22-yarithe-pilot-kickoff"
+     },
+     "recorded_chars": 1167,
+     "replay_chars": 1167,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "deals/yarithe-retail"
+     },
+     "recorded_chars": 1109,
+     "replay_chars": 1109,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "meetings/2026-10-05-yarithe-technical-review"
+     },
+     "recorded_chars": 1201,
+     "replay_chars": 1201,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "Tobin Morales"
+     },
+     "recorded_chars": 10636,
+     "replay_chars": 12251,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "sandbox account Yarithe"
+     },
+     "recorded_chars": 11680,
+     "replay_chars": 11350,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "SOC 2 bridge letter"
+     },
+     "recorded_chars": 10421,
+     "replay_chars": 10538,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    }
+   ]
+  },
+  {
+   "key": "h20261102-t3|claude-opus-5-5|baseline|2",
+   "task": "h20261102-t3",
+   "reader": "claude-opus-5-5",
+   "contact": "Ruben Sato",
+   "contact_slug": "people/ruben-sato",
+   "namesake": {
+    "name": "Ruben Morales",
+    "slug": "people/ruben-morales",
+    "daily": "notes/daily/2026-10-09",
+    "line": "Ruben Morales (TEL) asked about 64 seats; I owe Ruben the migration runbook.",
+    "item": "the migration runbook"
+   },
+   "hits": [],
+   "scored_unsupported": false,
+   "lines": [
+    "- Don't mix them up with **Telostra Logistics (TEL)**. That's a different prospect with a different Ruben (Ruben Morales), 64 seats at $14, and a security review on Nov 3."
+   ],
+   "hook_carries": {
+    "page": false,
+    "name": false,
+    "daily": false
+   },
+   "first_carrier": {
+    "index": 10,
+    "name": "search",
+    "args": {
+     "query": "Niko Valdez"
+    },
+    "recorded_chars": 10053,
+    "replay_chars": 13207,
+    "carries": {
+     "page": true,
+     "name": true,
+     "daily": false
+    }
+   },
+   "trace": [
+    {
+     "name": "context_pack",
+     "args": {
+      "entities": "Ruben Sato,Telostra Health"
+     },
+     "recorded_chars": 13389,
+     "replay_chars": 11507,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     },
+     "resolved_people": [
+      "people/ruben-sato",
+      "people/petra-lindqvist",
+      "people/dario-haddad"
+     ]
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "companies/telostra-health"
+     },
+     "recorded_chars": 2878,
+     "replay_chars": 1227,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "people/ruben-sato"
+     },
+     "recorded_chars": 1490,
+     "replay_chars": 1871,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_backlinks",
+     "args": {
+      "slug": "companies/telostra-health",
+      "group": "page"
+     },
+     "recorded_chars": 13740,
+     "replay_chars": 13371,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "meetings/2026-10-20-telostra-security-review"
+     },
+     "recorded_chars": 1179,
+     "replay_chars": 1179,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "inbox/2026-10-11-sato-reschedule"
+     },
+     "recorded_chars": 1118,
+     "replay_chars": 1118,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "meetings/2026-10-11-telostra-call"
+     },
+     "recorded_chars": 1124,
+     "replay_chars": 1124,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "meetings/2026-10-07-telostra-technical-review"
+     },
+     "recorded_chars": 1200,
+     "replay_chars": 1200,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "deals/telostra-health"
+     },
+     "recorded_chars": 1113,
+     "replay_chars": 1113,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "inbox/2026-09-21-sato-procurement-handoff"
+     },
+     "recorded_chars": 1150,
+     "replay_chars": 1150,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "Niko Valdez"
+     },
+     "recorded_chars": 10053,
+     "replay_chars": 13207,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "Telostra statement of work SOC 2 bridge letter"
+     },
+     "recorded_chars": 10681,
+     "replay_chars": 12189,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "bridge letter",
+      "match": "keyword"
+     },
+     "recorded_chars": 902,
+     "replay_chars": 902,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "statement of work",
+      "match": "keyword"
+     },
+     "recorded_chars": 1565,
+     "replay_chars": 224,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    }
+   ]
+  },
+  {
+   "key": "h20261103-t1|claude-opus-5-5|baseline|1",
+   "task": "h20261103-t1",
+   "reader": "claude-opus-5-5",
+   "contact": "Mira Morales",
+   "contact_slug": "people/mira-morales",
+   "namesake": {
+    "name": "Mira Yilmaz",
+    "slug": "people/mira-yilmaz",
+    "daily": "notes/daily/2026-10-09",
+    "line": "Mira Yilmaz (ORL) asked about 15 seats; I owe Mira the data processing addendum.",
+    "item": "the data processing addendum"
+   },
+   "hits": [
+    "namesake commitment: the data processing addendum"
+   ],
+   "scored_unsupported": true,
+   "lines": [
+    "- **Not for Mira:** your Oct 9 daily note says you owe the data processing addendum to Mira *Yilmaz* at Orvoria Logistics, a different account. So I left it out of this email."
+   ],
+   "hook_carries": {
+    "page": false,
+    "name": false,
+    "daily": false
+   },
+   "first_carrier": {
+    "index": 0,
+    "name": "context_pack",
+    "args": {
+     "entities": "people/mira-morales,companies/orvoria-energy"
+    },
+    "recorded_chars": 14574,
+    "replay_chars": 12683,
+    "carries": {
+     "page": false,
+     "name": true,
+     "daily": true
+    },
+    "resolved_people": [
+     "people/mira-morales",
+     "people/selma-castellan",
+     "people/odette-petrov"
+    ]
+   },
+   "trace": [
+    {
+     "name": "context_pack",
+     "args": {
+      "entities": "people/mira-morales,companies/orvoria-energy"
+     },
+     "recorded_chars": 14574,
+     "replay_chars": 12683,
+     "carries": {
+      "page": false,
+      "name": true,
+      "daily": true
+     },
+     "resolved_people": [
+      "people/mira-morales",
+      "people/selma-castellan",
+      "people/odette-petrov"
+     ]
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "people/mira-morales"
+     },
+     "recorded_chars": 3148,
+     "replay_chars": 979,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "companies/orvoria-energy"
+     },
+     "recorded_chars": 1217,
+     "replay_chars": 1217,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "meetings/2026-10-13-orvoria-call"
+     },
+     "recorded_chars": 1128,
+     "replay_chars": 2022,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "inbox/2026-10-12-morales-reschedule"
+     },
+     "recorded_chars": 1133,
+     "replay_chars": 1133,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "inbox/2026-09-24-morales-procurement-handoff"
+     },
+     "recorded_chars": 1164,
+     "replay_chars": 1164,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "meetings/2026-10-01-orvoria-technical-review"
+     },
+     "recorded_chars": 1202,
+     "replay_chars": 1202,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "notes/daily/2026-10-09"
+     },
+     "recorded_chars": 1072,
+     "replay_chars": 1072,
+     "carries": {
+      "page": false,
+      "name": true,
+      "daily": true
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "deals/orvoria-energy"
+     },
+     "recorded_chars": 1114,
+     "replay_chars": 1114,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "meetings/2026-10-21-orvoria-security-review"
+     },
+     "recorded_chars": 1180,
+     "replay_chars": 1180,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "statement of work Orvoria sent"
+     },
+     "recorded_chars": 11734,
+     "replay_chars": 13089,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "pricing one-pager"
+     },
+     "recorded_chars": 12947,
+     "replay_chars": 12209,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "Emil Varga"
+     },
+     "recorded_chars": 10660,
+     "replay_chars": 12123,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    }
+   ]
+  },
+  {
+   "key": "h20261103-t2|claude-opus-5-5|baseline|1",
+   "task": "h20261103-t2",
+   "reader": "claude-opus-5-5",
+   "contact": "Arjun Thorne",
+   "contact_slug": "people/arjun-thorne",
+   "namesake": {
+    "name": "Arjun Torvik",
+    "slug": "people/arjun-torvik",
+    "daily": "notes/daily/2026-10-12",
+    "line": "Arjun Torvik (BRR) asked about 80 seats; I owe Arjun the security architecture diagram.",
+    "item": "the security architecture diagram"
+   },
+   "hits": [],
+   "scored_unsupported": false,
+   "lines": [
+    "**Which BRL this is.** Your notes use \"BRL\" for two companies: Branesso Logistics and Branura Logistics. Arjun Thorne works at **Branesso Logistics**, so this prep is for them. Don't confuse it with **Branesso Robotics (BRR)**. Their champion is Arjun *Torvik*, and their procurement review is tomorrow, Oct 16 at 16:00, quoting 80 seats at $19."
+   ],
+   "hook_carries": {
+    "page": false,
+    "name": false,
+    "daily": false
+   },
+   "first_carrier": {
+    "index": 1,
+    "name": "search",
+    "args": {
+     "query": "Branesso Logistics call procurement"
+    },
+    "recorded_chars": 15326,
+    "replay_chars": 15239,
+    "carries": {
+     "page": true,
+     "name": true,
+     "daily": false
+    }
+   },
+   "trace": [
+    {
+     "name": "context_pack",
+     "args": {
+      "entities": "Arjun Thorne, Branesso Logistics"
+     },
+     "recorded_chars": 12713,
+     "replay_chars": 11647,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     },
+     "resolved_people": [
+      "people/arjun-thorne",
+      "people/anouk-zeller",
+      "people/mira-torvik"
+     ]
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "Branesso Logistics call procurement"
+     },
+     "recorded_chars": 15326,
+     "replay_chars": 15239,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "meetings/2026-10-04-branesso-technical-review"
+     },
+     "recorded_chars": 1209,
+     "replay_chars": 1209,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "deals/branesso-logistics"
+     },
+     "recorded_chars": 1134,
+     "replay_chars": 1134,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "Niko Eskildsen"
+     },
+     "recorded_chars": 10160,
+     "replay_chars": 11824,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "BRL quote order form pricing seats",
+      "match": "keyword"
+     },
+     "recorded_chars": 224,
+     "replay_chars": 224,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "meetings/2026-10-26-branesso-procurement-review"
+     },
+     "recorded_chars": 1203,
+     "replay_chars": 1203,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "people/arjun-thorne"
+     },
+     "recorded_chars": 2242,
+     "replay_chars": 986,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "Branesso migration runbook order form sent"
+     },
+     "recorded_chars": 12463,
+     "replay_chars": 12377,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    }
+   ]
+  },
+  {
+   "key": "h20261103-t2|claude-sonnet-5-5|baseline|1",
+   "task": "h20261103-t2",
+   "reader": "claude-sonnet-5-5",
+   "contact": "Arjun Thorne",
+   "contact_slug": "people/arjun-thorne",
+   "namesake": {
+    "name": "Arjun Torvik",
+    "slug": "people/arjun-torvik",
+    "daily": "notes/daily/2026-10-12",
+    "line": "Arjun Torvik (BRR) asked about 80 seats; I owe Arjun the security architecture diagram.",
+    "item": "the security architecture diagram"
+   },
+   "hits": [],
+   "scored_unsupported": false,
+   "lines": [
+    "- Not to be confused with Arjun Torvik at Branesso Robotics, who has a separate review on Oct 16."
+   ],
+   "hook_carries": {
+    "page": false,
+    "name": false,
+    "daily": false
+   },
+   "first_carrier": {
+    "index": 2,
+    "name": "search",
+    "args": {
+     "query": "BRL procurement call"
+    },
+    "recorded_chars": 14384,
+    "replay_chars": 16046,
+    "carries": {
+     "page": true,
+     "name": true,
+     "daily": false
+    }
+   },
+   "trace": [
+    {
+     "name": "context_pack",
+     "args": {
+      "entities": "Arjun Thorne, BRL"
+     },
+     "recorded_chars": 12000,
+     "replay_chars": 10778,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     },
+     "resolved_people": [
+      "people/arjun-thorne",
+      "people/anouk-zeller",
+      "people/mira-torvik"
+     ]
+    },
+    {
+     "name": "entity",
+     "args": {
+      "name": "Arjun Thorne"
+     },
+     "recorded_chars": 9628,
+     "replay_chars": 7015,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     },
+     "resolved_people": [
+      "people/arjun-thorne",
+      "people/anouk-zeller",
+      "people/anou"
+     ]
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "BRL procurement call"
+     },
+     "recorded_chars": 14384,
+     "replay_chars": 16046,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "inbox/2026-09-20-thorne-procurement-handoff"
+     },
+     "recorded_chars": 1165,
+     "replay_chars": 1165,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "meetings/2026-10-26-branesso-procurement-review"
+     },
+     "recorded_chars": 1203,
+     "replay_chars": 1203,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "deals/branesso-logistics"
+     },
+     "recorded_chars": 1134,
+     "replay_chars": 1134,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "meetings/2026-10-13-branesso-call"
+     },
+     "recorded_chars": 1106,
+     "replay_chars": 1106,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "Niko Eskildsen"
+     },
+     "recorded_chars": 10160,
+     "replay_chars": 11824,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "migration runbook"
+     },
+     "recorded_chars": 12373,
+     "replay_chars": 12588,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    }
+   ]
+  },
+  {
+   "key": "h20261103-t2|claude-opus-5-5|baseline|2",
+   "task": "h20261103-t2",
+   "reader": "claude-opus-5-5",
+   "contact": "Arjun Thorne",
+   "contact_slug": "people/arjun-thorne",
+   "namesake": {
+    "name": "Arjun Torvik",
+    "slug": "people/arjun-torvik",
+    "daily": "notes/daily/2026-10-12",
+    "line": "Arjun Torvik (BRR) asked about 80 seats; I owe Arjun the security architecture diagram.",
+    "item": "the security architecture diagram"
+   },
+   "hits": [
+    "namesake meeting 2026-10-16"
+   ],
+   "scored_unsupported": true,
+   "lines": [
+    "Prep for BRL, meaning Branesso Logistics, where Arjun Thorne is DevOps Manager. Your notes also use \"BRL\" for Branura Logistics, and there's an Arjun Torvik at Branesso Robotics with a procurement review tomorrow (Oct 16). Neither is this call."
+   ],
+   "hook_carries": {
+    "page": false,
+    "name": false,
+    "daily": false
+   },
+   "first_carrier": {
+    "index": 1,
+    "name": "search",
+    "args": {
+     "query": "BRL procurement call"
+    },
+    "recorded_chars": 15278,
+    "replay_chars": 16046,
+    "carries": {
+     "page": true,
+     "name": true,
+     "daily": false
+    }
+   },
+   "trace": [
+    {
+     "name": "context_pack",
+     "args": {
+      "entities": "Arjun Thorne, BRL"
+     },
+     "recorded_chars": 12059,
+     "replay_chars": 10778,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     },
+     "resolved_people": [
+      "people/arjun-thorne",
+      "people/anouk-zeller",
+      "people/mira-torvik"
+     ]
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "BRL procurement call"
+     },
+     "recorded_chars": 15278,
+     "replay_chars": 16046,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "inbox/2026-09-20-thorne-procurement-handoff"
+     },
+     "recorded_chars": 1165,
+     "replay_chars": 1165,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "Niko Eskildsen"
+     },
+     "recorded_chars": 10160,
+     "replay_chars": 11824,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "Branesso order form runbook send"
+     },
+     "recorded_chars": 12890,
+     "replay_chars": 12374,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    }
+   ]
+  },
+  {
+   "key": "h20261103-t2|claude-sonnet-5-5|baseline|2",
+   "task": "h20261103-t2",
+   "reader": "claude-sonnet-5-5",
+   "contact": "Arjun Thorne",
+   "contact_slug": "people/arjun-thorne",
+   "namesake": {
+    "name": "Arjun Torvik",
+    "slug": "people/arjun-torvik",
+    "daily": "notes/daily/2026-10-12",
+    "line": "Arjun Torvik (BRR) asked about 80 seats; I owe Arjun the security architecture diagram.",
+    "item": "the security architecture diagram"
+   },
+   "hits": [],
+   "scored_unsupported": false,
+   "lines": [
+    "Don't confuse this with Branesso Robotics. That's a different company, with Arjun Torvik on Oct 16 and a quote of 80 seats at $19."
+   ],
+   "hook_carries": {
+    "page": false,
+    "name": false,
+    "daily": false
+   },
+   "first_carrier": {
+    "index": 2,
+    "name": "search",
+    "args": {
+     "query": "BRL call procurement"
+    },
+    "recorded_chars": 14069,
+    "replay_chars": 16509,
+    "carries": {
+     "page": true,
+     "name": true,
+     "daily": false
+    }
+   },
+   "trace": [
+    {
+     "name": "context_pack",
+     "args": {
+      "entities": "Arjun Thorne, BRL"
+     },
+     "recorded_chars": 12065,
+     "replay_chars": 10778,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     },
+     "resolved_people": [
+      "people/arjun-thorne",
+      "people/anouk-zeller",
+      "people/mira-torvik"
+     ]
+    },
+    {
+     "name": "entity",
+     "args": {
+      "name": "Arjun Thorne"
+     },
+     "recorded_chars": 9668,
+     "replay_chars": 7015,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     },
+     "resolved_people": [
+      "people/arjun-thorne",
+      "people/anouk-zeller",
+      "people/anou"
+     ]
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "BRL call procurement"
+     },
+     "recorded_chars": 14069,
+     "replay_chars": 16509,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "inbox/2026-10-09-thorne-reschedule"
+     },
+     "recorded_chars": 1143,
+     "replay_chars": 1143,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "inbox/2026-09-20-thorne-procurement-handoff"
+     },
+     "recorded_chars": 1165,
+     "replay_chars": 1165,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "meetings/2026-10-26-branesso-procurement-review"
+     },
+     "recorded_chars": 1203,
+     "replay_chars": 1203,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "deals/branesso-logistics"
+     },
+     "recorded_chars": 1134,
+     "replay_chars": 1134,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "meetings/2026-10-13-branesso-call"
+     },
+     "recorded_chars": 1106,
+     "replay_chars": 1106,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "Niko Eskildsen"
+     },
+     "recorded_chars": 10160,
+     "replay_chars": 11824,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    }
+   ]
+  },
+  {
+   "key": "h20261107-t3|claude-opus-5-5|baseline|1",
+   "task": "h20261107-t3",
+   "reader": "claude-opus-5-5",
+   "contact": "Omari Quist",
+   "contact_slug": "people/omari-quist",
+   "namesake": {
+    "name": "Omari Rahman",
+    "slug": "people/omari-rahman",
+    "daily": "notes/daily/2026-10-07",
+    "line": "Omari Rahman (DOL) asked about 15 seats; I owe Om the customer reference list.",
+    "item": "the customer reference list"
+   },
+   "hits": [
+    "namesake 15 seats",
+    "namesake commitment: the customer reference list"
+   ],
+   "scored_unsupported": true,
+   "lines": [
+    "- Don't mix Om up with **Omari Rahman**, who is also called \"Om.\" He's at Dovvane Logistics (DOL), a separate deal: 15 seats at $19, with a security review on Oct 30.",
+    "3. **Possibly not yours to send here: the customer reference list.** Your Oct 7 daily note says \"Omari Rahman (DOL) asked about 15 seats; I owe Om the customer reference list.\" In context, that \"Om\" is most likely the DOL Omari, not Om Quist. Check before you treat it as a DOA item."
+   ],
+   "hook_carries": {
+    "page": false,
+    "name": false,
+    "daily": false
+   },
+   "first_carrier": {
+    "index": 1,
+    "name": "context_pack",
+    "args": {
+     "entities": "companies/dovvane-analytics,people/omari-quist"
+    },
+    "recorded_chars": 13429,
+    "replay_chars": 11633,
+    "carries": {
+     "page": false,
+     "name": true,
+     "daily": true
+    },
+    "resolved_people": [
+     "people/omari-quist",
+     "people/wren-osei",
+     "people/hana-varga"
+    ]
+   },
+   "trace": [
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "companies/dovvane-analytics"
+     },
+     "recorded_chars": 1977,
+     "replay_chars": 1220,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "context_pack",
+     "args": {
+      "entities": "companies/dovvane-analytics,people/omari-quist"
+     },
+     "recorded_chars": 13429,
+     "replay_chars": 11633,
+     "carries": {
+      "page": false,
+      "name": true,
+      "daily": true
+     },
+     "resolved_people": [
+      "people/omari-quist",
+      "people/wren-osei",
+      "people/hana-varga"
+     ]
+    },
+    {
+     "name": "get_backlinks",
+     "args": {
+      "slug": "companies/dovvane-analytics",
+      "group": "page"
+     },
+     "recorded_chars": 11781,
+     "replay_chars": 11409,
+     "carries": {
+      "page": false,
+      "name": true,
+      "daily": true
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "meetings/2026-10-22-dovvane-pricing-review"
+     },
+     "recorded_chars": 1178,
+     "replay_chars": 1178,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "inbox/2026-10-12-quist-reschedule"
+     },
+     "recorded_chars": 1120,
+     "replay_chars": 1120,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "meetings/2026-10-10-dovvane-call"
+     },
+     "recorded_chars": 1123,
+     "replay_chars": 1123,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "inbox/2026-09-24-quist-procurement-handoff"
+     },
+     "recorded_chars": 1155,
+     "replay_chars": 1155,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "deals/dovvane-analytics"
+     },
+     "recorded_chars": 1125,
+     "replay_chars": 1125,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "meetings/2026-10-01-dovvane-technical-review"
+     },
+     "recorded_chars": 1192,
+     "replay_chars": 1192,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "notes/daily/2026-10-07"
+     },
+     "recorded_chars": 1056,
+     "replay_chars": 1056,
+     "carries": {
+      "page": false,
+      "name": true,
+      "daily": true
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "people/omari-quist"
+     },
+     "recorded_chars": 1474,
+     "replay_chars": 1738,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "Felix Rahman"
+     },
+     "recorded_chars": 9850,
+     "replay_chars": 12475,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "Omari Rahman DOL"
+     },
+     "recorded_chars": 11884,
+     "replay_chars": 11451,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": true
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "Dovvane pricing one-pager quote spreadsheet numbers"
+     },
+     "recorded_chars": 12622,
+     "replay_chars": 12156,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "security architecture diagram"
+     },
+     "recorded_chars": 11634,
+     "replay_chars": 10842,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    }
+   ]
+  },
+  {
+   "key": "h20261107-t3|claude-sonnet-5-5|baseline|1",
+   "task": "h20261107-t3",
+   "reader": "claude-sonnet-5-5",
+   "contact": "Omari Quist",
+   "contact_slug": "people/omari-quist",
+   "namesake": {
+    "name": "Omari Rahman",
+    "slug": "people/omari-rahman",
+    "daily": "notes/daily/2026-10-07",
+    "line": "Omari Rahman (DOL) asked about 15 seats; I owe Om the customer reference list.",
+    "item": "the customer reference list"
+   },
+   "hits": [],
+   "scored_unsupported": false,
+   "lines": [
+    "3. **Customer reference list for \"Om.\"** Your Oct 7 daily note says \"I owe Om the customer reference list.\" The note is ambiguous because it's next to a line about Omari Rahman at Dovvane Logistics, who is also called \"Om.\" Check which Om you owe it to. Don't mix up DOA (Analytics) and DOL (Logistics). DOL is a separate deal at 15 seats and $19."
+   ],
+   "hook_carries": {
+    "page": false,
+    "name": false,
+    "daily": false
+   },
+   "first_carrier": {
+    "index": 0,
+    "name": "context_pack",
+    "args": {
+     "entities": "Dovvane Analytics, Omari Quist"
+    },
+    "recorded_chars": 12683,
+    "replay_chars": 10722,
+    "carries": {
+     "page": false,
+     "name": true,
+     "daily": true
+    },
+    "resolved_people": [
+     "people/wren-osei",
+     "people/hana-varga",
+     "people/omari-quist"
+    ]
+   },
+   "trace": [
+    {
+     "name": "context_pack",
+     "args": {
+      "entities": "Dovvane Analytics, Omari Quist"
+     },
+     "recorded_chars": 12683,
+     "replay_chars": 10722,
+     "carries": {
+      "page": false,
+      "name": true,
+      "daily": true
+     },
+     "resolved_people": [
+      "people/wren-osei",
+      "people/hana-varga",
+      "people/omari-quist"
+     ]
+    },
+    {
+     "name": "entity",
+     "args": {
+      "name": "Dovvane Analytics"
+     },
+     "recorded_chars": 12319,
+     "replay_chars": 10276,
+     "carries": {
+      "page": false,
+      "name": true,
+      "daily": true
+     },
+     "resolved_people": [
+      "people/wren-osei",
+      "people/hana-varga",
+      "people/omari-quist"
+     ]
+    },
+    {
+     "name": "entity",
+     "args": {
+      "name": "Omari Quist"
+     },
+     "recorded_chars": 6971,
+     "replay_chars": 5842,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     },
+     "resolved_people": [
+      "people/omari-quist",
+      "people/wren-osei",
+      "people/wren"
+     ]
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "Dovvane Analytics call procurement"
+     },
+     "recorded_chars": 15744,
+     "replay_chars": 15746,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "meetings/2026-10-22-dovvane-pricing-review"
+     },
+     "recorded_chars": 1178,
+     "replay_chars": 1178,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "deals/dovvane-analytics"
+     },
+     "recorded_chars": 1125,
+     "replay_chars": 1125,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "meetings/2026-10-10-dovvane-call"
+     },
+     "recorded_chars": 1123,
+     "replay_chars": 1123,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "inbox/2026-09-24-quist-procurement-handoff"
+     },
+     "recorded_chars": 1155,
+     "replay_chars": 1155,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "meetings/2026-10-01-dovvane-technical-review"
+     },
+     "recorded_chars": 1192,
+     "replay_chars": 1192,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "notes/daily/2026-10-07"
+     },
+     "recorded_chars": 1056,
+     "replay_chars": 1056,
+     "carries": {
+      "page": false,
+      "name": true,
+      "daily": true
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "Felix Rahman"
+     },
+     "recorded_chars": 9850,
+     "replay_chars": 11643,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    }
+   ]
+  },
+  {
+   "key": "h20261107-t3|claude-opus-5-5|baseline|2",
+   "task": "h20261107-t3",
+   "reader": "claude-opus-5-5",
+   "contact": "Omari Quist",
+   "contact_slug": "people/omari-quist",
+   "namesake": {
+    "name": "Omari Rahman",
+    "slug": "people/omari-rahman",
+    "daily": "notes/daily/2026-10-07",
+    "line": "Omari Rahman (DOL) asked about 15 seats; I owe Om the customer reference list.",
+    "item": "the customer reference list"
+   },
+   "hits": [
+    "namesake meeting 2026-10-30",
+    "namesake 15 seats",
+    "namesake commitment: the customer reference list"
+   ],
+   "scored_unsupported": true,
+   "lines": [
+    "**Not DOA:** Your Oct 7 daily note says \"I owe Om the customer reference list.\" In that note, \"Om\" is Omari Rahman of **Dovvane Logistics (DOL)**, a different prospect with a similar name. They're at 15 seats, and their security review is Oct 30. So that list isn't something you owe Om Quist, unless you also promised it to him somewhere I can't see."
+   ],
+   "hook_carries": {
+    "page": false,
+    "name": false,
+    "daily": false
+   },
+   "first_carrier": {
+    "index": 0,
+    "name": "context_pack",
+    "args": {
+     "entities": "Dovvane Analytics,Omari Quist"
+    },
+    "recorded_chars": 12618,
+    "replay_chars": 10722,
+    "carries": {
+     "page": false,
+     "name": true,
+     "daily": true
+    },
+    "resolved_people": [
+     "people/wren-osei",
+     "people/hana-varga",
+     "people/omari-quist"
+    ]
+   },
+   "trace": [
+    {
+     "name": "context_pack",
+     "args": {
+      "entities": "Dovvane Analytics,Omari Quist"
+     },
+     "recorded_chars": 12618,
+     "replay_chars": 10722,
+     "carries": {
+      "page": false,
+      "name": true,
+      "daily": true
+     },
+     "resolved_people": [
+      "people/wren-osei",
+      "people/hana-varga",
+      "people/omari-quist"
+     ]
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "companies/dovvane-analytics"
+     },
+     "recorded_chars": 2871,
+     "replay_chars": 1220,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "people/omari-quist"
+     },
+     "recorded_chars": 1494,
+     "replay_chars": 981,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "meetings/2026-10-22-dovvane-pricing-review"
+     },
+     "recorded_chars": 1178,
+     "replay_chars": 1178,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "inbox/2026-10-12-quist-reschedule"
+     },
+     "recorded_chars": 1120,
+     "replay_chars": 1120,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "meetings/2026-10-10-dovvane-call"
+     },
+     "recorded_chars": 1123,
+     "replay_chars": 1123,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "deals/dovvane-analytics"
+     },
+     "recorded_chars": 1125,
+     "replay_chars": 1125,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "inbox/2026-09-24-quist-procurement-handoff"
+     },
+     "recorded_chars": 1155,
+     "replay_chars": 1155,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "meetings/2026-10-01-dovvane-technical-review"
+     },
+     "recorded_chars": 1192,
+     "replay_chars": 1192,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "notes/daily/2026-10-07"
+     },
+     "recorded_chars": 1056,
+     "replay_chars": 1056,
+     "carries": {
+      "page": false,
+      "name": true,
+      "daily": true
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "Omari Rahman DOL"
+     },
+     "recorded_chars": 11904,
+     "replay_chars": 11451,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": true
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "Felix Rahman"
+     },
+     "recorded_chars": 9850,
+     "replay_chars": 11737,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "pricing one-pager DOA sent"
+     },
+     "recorded_chars": 14616,
+     "replay_chars": 14089,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "security architecture diagram"
+     },
+     "recorded_chars": 11680,
+     "replay_chars": 10831,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    },
+    {
+     "name": "query",
+     "args": {
+      "query": "DOA Dovvane Analytics pricing review, one-pager, procurement, Felix",
+      "since": "2026-10-08",
+      "expand": false
+     },
+     "recorded_chars": 29289,
+     "replay_chars": 9864,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    }
+   ]
+  },
+  {
+   "key": "h20261107-t3|claude-sonnet-5-5|baseline|2",
+   "task": "h20261107-t3",
+   "reader": "claude-sonnet-5-5",
+   "contact": "Omari Quist",
+   "contact_slug": "people/omari-quist",
+   "namesake": {
+    "name": "Omari Rahman",
+    "slug": "people/omari-rahman",
+    "daily": "notes/daily/2026-10-07",
+    "line": "Omari Rahman (DOL) asked about 15 seats; I owe Om the customer reference list.",
+    "item": "the customer reference list"
+   },
+   "hits": [],
+   "scored_unsupported": false,
+   "lines": [
+    "3. **Customer reference list.** Your Oct 7 note says \"I owe Om the customer reference list\". That note also mentions Omari Rahman at Dovvane Logistics (DOL), a different company. \"Om\" could be either, so check which one you meant."
+   ],
+   "hook_carries": {
+    "page": false,
+    "name": false,
+    "daily": false
+   },
+   "first_carrier": {
+    "index": 2,
+    "name": "context_pack",
+    "args": {
+     "entities": "Dovvane Analytics, Omari Quist"
+    },
+    "recorded_chars": 12507,
+    "replay_chars": 10722,
+    "carries": {
+     "page": false,
+     "name": true,
+     "daily": true
+    },
+    "resolved_people": [
+     "people/wren-osei",
+     "people/hana-varga",
+     "people/omari-quist"
+    ]
+   },
+   "trace": [
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "companies/dovvane-analytics"
+     },
+     "recorded_chars": 1977,
+     "replay_chars": 1220,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "entity",
+     "args": {
+      "name": "Omari Quist"
+     },
+     "recorded_chars": 7760,
+     "replay_chars": 5842,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     },
+     "resolved_people": [
+      "people/omari-quist",
+      "people/wren-osei",
+      "people/wren"
+     ]
+    },
+    {
+     "name": "context_pack",
+     "args": {
+      "entities": "Dovvane Analytics, Omari Quist"
+     },
+     "recorded_chars": 12507,
+     "replay_chars": 10722,
+     "carries": {
+      "page": false,
+      "name": true,
+      "daily": true
+     },
+     "resolved_people": [
+      "people/wren-osei",
+      "people/hana-varga",
+      "people/omari-quist"
+     ]
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "meetings/2026-10-22-dovvane-pricing-review"
+     },
+     "recorded_chars": 1178,
+     "replay_chars": 1178,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "deals/dovvane-analytics"
+     },
+     "recorded_chars": 1125,
+     "replay_chars": 1125,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "inbox/2026-10-12-quist-reschedule"
+     },
+     "recorded_chars": 1120,
+     "replay_chars": 1120,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "inbox/2026-09-24-quist-procurement-handoff"
+     },
+     "recorded_chars": 1155,
+     "replay_chars": 1155,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "meetings/2026-10-10-dovvane-call"
+     },
+     "recorded_chars": 1123,
+     "replay_chars": 1123,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "meetings/2026-10-01-dovvane-technical-review"
+     },
+     "recorded_chars": 1192,
+     "replay_chars": 1192,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     }
+    },
+    {
+     "name": "get_page",
+     "args": {
+      "slug": "notes/daily/2026-10-07"
+     },
+     "recorded_chars": 1056,
+     "replay_chars": 1056,
+     "carries": {
+      "page": false,
+      "name": true,
+      "daily": true
+     }
+    },
+    {
+     "name": "entity",
+     "args": {
+      "name": "Felix Rahman"
+     },
+     "recorded_chars": 611,
+     "replay_chars": 291,
+     "carries": {
+      "page": false,
+      "name": false,
+      "daily": false
+     },
+     "resolved_people": []
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "Felix Rahman procurement"
+     },
+     "recorded_chars": 10502,
+     "replay_chars": 13655,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "pricing one-pager"
+     },
+     "recorded_chars": 12315,
+     "replay_chars": 12232,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "customer reference list"
+     },
+     "recorded_chars": 11169,
+     "replay_chars": 12910,
+     "carries": {
+      "page": false,
+      "name": true,
+      "daily": true
+     }
+    },
+    {
+     "name": "search",
+     "args": {
+      "query": "security architecture diagram"
+     },
+     "recorded_chars": 11618,
+     "replay_chars": 10831,
+     "carries": {
+      "page": true,
+      "name": true,
+      "daily": false
+     }
+    }
+   ]
+  }
+ ]
+}

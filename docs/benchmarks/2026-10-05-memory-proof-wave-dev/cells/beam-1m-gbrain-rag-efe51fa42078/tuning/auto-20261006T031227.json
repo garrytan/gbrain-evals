@@ -1,0 +1,39 @@
+{
+  "cell_id": "beam-1m-gbrain-rag-efe51fa42078",
+  "mode": "auto",
+  "base": {
+    "facts_tokens": 600,
+    "token_budget": 7500
+  },
+  "sample": 140,
+  "targets": {
+    "8000": {
+      "chosen": {
+        "facts_tokens": 600,
+        "token_budget": 7500
+      },
+      "closest": {
+        "facts_tokens": 600,
+        "token_budget": 7500
+      },
+      "rows": [
+        {
+          "setting": {
+            "facts_tokens": 600,
+            "token_budget": 7500
+          },
+          "target": 8000,
+          "n": 140,
+          "mean": 8139.1,
+          "p95": 8194.0,
+          "tolerance": 0.1,
+          "ok": true,
+          "reason": "within \u00b110% of target",
+          "errors": [],
+          "entity_anchored": []
+        }
+      ]
+    }
+  },
+  "note": "retrieval-only tuning on an ingested store; no answer or judge calls; knobs scaled together"
+}

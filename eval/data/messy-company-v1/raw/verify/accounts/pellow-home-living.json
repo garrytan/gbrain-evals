@@ -1,0 +1,133 @@
+{
+  "slug": "accounts/pellow-home-living",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2026-10-01",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Pellow Home Living",
+        "line": 6
+      },
+      {
+        "oid": "e2",
+        "surface": "Covey & Lark Retail",
+        "line": 6
+      },
+      {
+        "oid": "e3",
+        "surface": "Pellow Home Living",
+        "line": 12
+      },
+      {
+        "oid": "e4",
+        "surface": "Covey & Lark Retail",
+        "line": 12
+      },
+      {
+        "oid": "e5",
+        "surface": "Covey & Lark",
+        "line": 12
+      },
+      {
+        "oid": "e6",
+        "surface": "Pellow",
+        "line": 12
+      },
+      {
+        "oid": "e7",
+        "surface": "CLR",
+        "line": 14
+      },
+      {
+        "oid": "e8",
+        "surface": "PHL",
+        "line": 14
+      },
+      {
+        "oid": "e9",
+        "surface": "PHL",
+        "line": 14
+      },
+      {
+        "oid": "e10",
+        "surface": "Pellucid Harbor Logistics",
+        "line": 14
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": [
+      {
+        "account": "covey-lark",
+        "question": "According to this page alone, who manages Covey & Lark Retail, in what role, and from/until when?"
+      }
+    ]
+  },
+  "prompt_user_sha256": "29d90376a7f097ff7dadfef0549e4f308bdddcc7fffa7bda9cb51d32531cd4e0",
+  "response_text": "{\n  \"date_used\": \"2026-10-01\",\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\"oid\": \"e1\", \"entity\": \"covey-lark\"},\n    {\"oid\": \"e2\", \"entity\": \"covey-lark\"},\n    {\"oid\": \"e3\", \"entity\": \"covey-lark\"},\n    {\"oid\": \"e4\", \"entity\": \"covey-lark\"},\n    {\"oid\": \"e5\", \"entity\": \"covey-lark\"},\n    {\"oid\": \"e6\", \"entity\": \"covey-lark\"},\n    {\"oid\": \"e7\", \"entity\": \"covey-lark\"},\n    {\"oid\": \"e8\", \"entity\": \"covey-lark\"},\n    {\"oid\": \"e9\", \"entity\": \"pellucid\"},\n    {\"oid\": \"e10\", \"entity\": \"pellucid\"}\n  ],\n  \"ownership\": [\n    {\n      \"account\": \"covey-lark\",\n      \"owner\": \"Sofia Marchetti\",\n      \"role\": \"primary\",\n      \"start\": null,\n      \"end\": null,\n      \"line\": 15\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2026-10-01",
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "covey-lark"
+      },
+      {
+        "oid": "e2",
+        "entity": "covey-lark"
+      },
+      {
+        "oid": "e3",
+        "entity": "covey-lark"
+      },
+      {
+        "oid": "e4",
+        "entity": "covey-lark"
+      },
+      {
+        "oid": "e5",
+        "entity": "covey-lark"
+      },
+      {
+        "oid": "e6",
+        "entity": "covey-lark"
+      },
+      {
+        "oid": "e7",
+        "entity": "covey-lark"
+      },
+      {
+        "oid": "e8",
+        "entity": "covey-lark"
+      },
+      {
+        "oid": "e9",
+        "entity": "pellucid"
+      },
+      {
+        "oid": "e10",
+        "entity": "pellucid"
+      }
+    ],
+    "ownership": [
+      {
+        "account": "covey-lark",
+        "owner": "Sofia Marchetti",
+        "role": "primary",
+        "start": null,
+        "end": null,
+        "line": 15
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2868,
+    "output_tokens": 350,
+    "thinking_tokens": 87
+  },
+  "cost_usd": 0.009236
+}

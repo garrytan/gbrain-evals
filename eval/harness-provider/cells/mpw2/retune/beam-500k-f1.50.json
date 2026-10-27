@@ -1,0 +1,62 @@
+{
+ "dataset": "beam",
+ "split": "500k",
+ "provider": "gbrain",
+ "mode": "rag",
+ "lane": "combined-v2",
+ "seal": "dev",
+ "target_tokens": 8000,
+ "models": {
+  "answer": "gemini:gemini-3.8-flash",
+  "judge": "gemini:gemini-3.5-flash"
+ },
+ "budget_usd": 7,
+ "questions": {
+  "units": [
+   "12",
+   "21",
+   "28",
+   "31"
+  ]
+ },
+ "k": 10,
+ "provider_config": {
+  "embedding_model": "voyage:voyage-4",
+  "embedding_dimensions": 1024,
+  "facts_limit": 100,
+  "page_split": "exchanges",
+  "gbrain_config": {
+   "extraction.date_grounding": "true",
+   "facts.attribution": "true",
+   "facts.supersession_thresholds": "{\"voyage:voyage-4@1024\": 0.95}"
+  },
+  "extraction_source": "measured_default",
+  "lane": "combined-v2",
+  "search_config": {
+   "search.mode": "tokenmax",
+   "search.reranker.enabled": "true",
+   "search.reranker.model": "voyage:rerank-2.5",
+   "search.reranker.gate": "off",
+   "search.reranker.gate_min_gap": "0.05",
+   "search.query_facts_arm": "true",
+   "search.temporal_fact_reserve": "false",
+   "search.evidence_date_header": "false",
+   "search.entity_anchoring": "false",
+   "recall.question_admission": "reserve",
+   "search.tokenBudget": "10000000",
+   "search.page_rank_cut": "whole_pages",
+   "search.page_rank_cut_factor": "1.5"
+  },
+  "facts_tokens": 600,
+  "delivered_tokens": 8100
+ },
+ "gbrain_credentials": [
+  "voyage",
+  "anthropic"
+ ],
+ "note": "memory proof wave 2 adaptive W5 re-tune, beam-500k arm f1.50: see the go and adaptive W5 pin addenda (2026-10-12)",
+ "reuse_store": {
+  "store_id": "gbrain-beam-500k-8222a93c39c3",
+  "reason": "dev store from gbrain fe9e0397b; the diff to 71b6d85 touches no ingest, extraction, embedding, schema or migration code (2026-10-12 adaptive W5 pin addendum)"
+ }
+}

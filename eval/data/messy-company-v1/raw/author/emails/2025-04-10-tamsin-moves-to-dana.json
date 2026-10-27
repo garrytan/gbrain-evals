@@ -1,0 +1,37 @@
+{
+  "slug": "emails/2025-04-10-tamsin-moves-to-dana",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: email\nTitle: Tamsin Cold Chain moving to Dana\nDate: Written on 2025-04-10.\nWriter: Ilse Varga\nVoice: terse and practical\nFormat: undefined\nLength: about 24 words\nDate style in the body: undefined\nTypos: a few natural typos and one or two sloppy abbreviations (never in names or required phrases)\n\nBrief:\nIlse emails the North team: starting Monday April 14, 2025, Tamsin Cold Chain moves from Marcus to Dana, so Marcus can focus on Quarrendon's expansion. Dana should set up a kickoff with Tamsin in the next two weeks. Short reply from Marcus offering handoff notes.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Ilse Varga: North team lead\n- Dana Okafor: Account manager, North team\n- Marcus Lindqvist: Account manager, North team\n- Thea Ramaswell: Director of Yard Operations\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Quarrendon Freight Lines: truckload freight carrier, Upper Midwest; main contact Thea Ramaswell, Director of Yard Operations; codes/nicknames QFL, Q-Freight\n- Brackenwater Freight Co.: less-than-truckload freight, Great Lakes; codes/nicknames BWF, Bracken\n- Tamsin Cold Chain: refrigerated warehousing, Pacific Northwest; codes/nicknames TCC\n- Orrin Mills: textile mill, Carolinas; codes/nicknames ORM\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2025-04-10 (background only; don't restate unless the brief asks):\n- Quarrendon Freight Lines: managed by Marcus Lindqvist\n- Brackenwater Freight Co.: managed by Dana Okafor\n- Tamsin Cold Chain: managed by Marcus Lindqvist\n- Orrin Mills: managed by Dana Okafor",
+      "response_text": "To: North team  \nSubject: Tamsin Cold Chain moving to Dana  \nDate: 2025-04-10\n\nStarting Monday, April 14, 2025, Tamsin Cold Chain moves from Marcus Lindqvist to Dana Okafor, freeing Marcus Lindqvist for Quarrendon Freight Lines expansion.\n\nDana Okafor: pls scheudle Tamsin kickoff within two weeks; cover door 4 delays.\n\n**Marcus Lindqvist replied:**  \nCan send handoff notes and the delay reprot.",
+      "usage": {
+        "input_tokens": 1049,
+        "output_tokens": 180,
+        "thinking_tokens": 65
+      },
+      "cost_usd": 0.003898,
+      "provider_meta": {
+        "id": "resp_024959fa25767c99016acfae3187d087d19db689ff3520d6d6",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1049,
+          "input_tokens_details": {
+            "cache_write_tokens": 1046,
+            "cached_tokens": 0
+          },
+          "output_tokens": 180,
+          "output_tokens_details": {
+            "reasoning_tokens": 65
+          },
+          "total_tokens": 1229
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

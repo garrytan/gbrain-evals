@@ -1,0 +1,41 @@
+{
+  "slug": "emails/2026-06-18-saltmarsh-renewal-signed",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: email\nTitle: Saltmarsh renewal signed\nDate: Written on 2026-06-18.\nWriter: Bettina Kroll\nVoice: friendly and organized\nFormat: a single email with a forwarded message below\nLength: about 366 words\nDate style in the body: day-month (2 Jun 2025)\nTypos: a few natural typos and one or two sloppy abbreviations (never in names or required phrases)\n\nBrief:\nBettina and Corinne exchange thanks: renewal signed today, $1,840 per seat, through June 30, 2027.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Bettina Kroll: Coastal team lead\n- Sofia Marchetti: Account manager, Coastal team\n- Kwame Adjei-Rowe: Account manager, Coastal team\n- Corinne Ashdown: VP Operations\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Pellucid Harbor Logistics: port drayage and terminal logistics, Gulf Coast; codes/nicknames PHL\n- Driftmoor Marine Freight: marine freight and barge operator, Puget Sound; codes/nicknames DMF\n- Saltmarsh Provisions: regional grocery distributor, Lowcountry; main contact Corinne Ashdown, VP Operations; codes/nicknames SMP\n- Pellow Home Living (renamed from Covey & Lark Retail on 2026-02-16): home goods retailer, Mid-Atlantic; codes/nicknames Covey, PHL\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2026-06-18 (background only; don't restate unless the brief asks):\n- Pellucid Harbor Logistics: managed by Kwame Adjei-Rowe\n- Driftmoor Marine Freight: managed by Kwame Adjei-Rowe\n- Saltmarsh Provisions: managed by Bettina Kroll\n- Pellow Home Living: managed by Sofia Marchetti",
+      "response_text": "**Subject:** Saltmarsh renewal signed\n**From:** Bettina Kroll\n**To:** Corinne Ashdown; June Osei-Lark\n**Date:** 18 Jun 2026\n\nHi Corinne,\n\nThank you so much for turning the paperwork around so quickly! It is always a genuine pleasure working with you and the whole Saltmarsh Provisions crew. \n\nConfirming on our end that the Pemberline Dock renewal is officially signed today, 18 Jun 2026, at $1,840 per seat, running through 30 Jun 2027. I've copied June Osei-Lark on our deal desk so she can file the executed PDF and get the billing schedule updated in the system.\n\nTo make sure we keep things moving on the operational pieces you flagged below:\n- **Ticket #DK-9041 (Beaufort cross-dock):** I already pinged support about the gate tablet lag during the 05:00 produce rush. We're pulling the device logs from Dock Doors 4 through 9 to see why the check-in timestamps were hanging on Tuesday.\n- **Carrier No-Show Summary report:** I'll set up a quick 20-min screenshare next wk for your new night dispatcher, Darnell, so he knows how to filter out the reefers that arrive inside the grace window before exporting the CSV.\n- **Holiday blackout windows:** Send over the July 4th yard hours whenever you have them finalized and I'll help load the templates into the scheduler.\n\nThanks again for everything, Corinne. Looking forward to another smooth year ahead!\n\nBest,\nBettina\n\n---\n\n**From:** Corinne Ashdown <cashdown@saltmarshprovisions.com>\n**To:** Bettina Kroll <bkroll@pemberline.com>\n**Date:** 18 Jun 2026\n**Subject:** Re: SMP / Pemberline Dock renewal doc\n\nBettina,\n\nJust finished countersigning in the portal—you should have the completed copy in your inbox now. Big thanks to you for making this whole process painless as usual, and for getting the final numbers sorted out before I head to Savannah for our warehouse audit tomorrow. \n\nOnce we're past the weekend, let's get that training call on the books for Darnell. He's still manually keying in the detention notes for the poultry loads on Door 6 because he couldn't find the bulk-edit button in the yard view last night. Also, let me know what your engineers find on #DK-9041 when you can.\n\nAppreciate all your help!\n\nCorinne Ashdown\nVP Operations, Saltmarsh Provisions",
+      "usage": {
+        "input_tokens": 1107,
+        "output_tokens": 580,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.008014,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1107,
+          "candidatesTokenCount": 580,
+          "totalTokenCount": 1687,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1107
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 580
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "slug": "emails/2025-12-04-quarrendon-discount-pushback",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2025-12-04",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Quarrendon Freight Lines",
+        "line": 12
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "5cb7a7087e3a8c9514e4362d20ee5b9bd535f3584fb34b324c35b7f97f99ffe8",
+  "response_text": "{\n  \"date_used\": \"2025-12-04\",\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"quarrendon\"\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-12-04",
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "quarrendon"
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2726,
+    "output_tokens": 60,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.006052
+}

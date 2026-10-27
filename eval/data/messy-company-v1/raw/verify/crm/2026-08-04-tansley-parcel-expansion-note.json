@@ -1,0 +1,46 @@
+{
+  "slug": "crm/2026-08-04-tansley-parcel-expansion-note",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2026-08-04",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Tansley Parcel",
+        "line": 6
+      },
+      {
+        "oid": "e2",
+        "surface": "TPCL",
+        "line": 6
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "c745cf9fef95fb0feb84eb4c75ede42d4d0aa2018fc86744d5fda1c7b7a70491",
+  "response_text": "{\n  \"date_used\": \"2026-08-04\",\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"tansley-parcel\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"tansley-parcel\"\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2026-08-04",
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "tansley-parcel"
+      },
+      {
+        "oid": "e2",
+        "entity": "tansley-parcel"
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2455,
+    "output_tokens": 84,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.00575
+}

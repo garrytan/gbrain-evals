@@ -1,0 +1,371 @@
+{
+  "version": "t0-program-primary-v1",
+  "scorer": "t0-score-v2",
+  "delivery": {
+    "version": "t0-delivery-v1",
+    "harness": "Claude Code hook protocol, emulated by the evaluator (injected-context path)",
+    "context_sources": {
+      "session_start": "`gbrain hook session-start` stdout: MEMORY.md digest of the workspace (none here), push, backup and status notes, the context pack over IPC (`context_pack`) and always-loaded core memory; src/commands/hook.ts hookSessionStart",
+      "user_prompt_submit": "`gbrain hook user-prompt` hookSpecificOutput.additionalContext: reflex pointers, volunteered pages and hot facts assembled by serve over IPC (`turn_context`); src/commands/hook.ts hookUserPrompt",
+      "not_emulated": "Stop (push debounce, opt-in ambient writeback) and SessionEnd (transcript capture into the dream corpus) are not fired; the dream cycle and autopilot do not run between sessions, so captured transcripts could not reach session 2 at this release without them"
+    },
+    "timing": {
+      "order": "per session: serve started (stdio MCP initialize answered) -> settle -> SessionStart -> UserPromptSubmit for the one user prompt -> model loop",
+      "settle_ms_after_initialize": 4000,
+      "session_start_self_deadline_ms": 1500,
+      "user_prompt_self_deadline_ms": 800,
+      "ipc_deadlines_ms": {
+        "turn_context_client": 600,
+        "turn_context_server": 400,
+        "context_pack_client": 1000,
+        "context_pack_server": 600
+      },
+      "harness_timeout_ms": {
+        "session_start": 5000,
+        "user_prompt_submit": 3000
+      },
+      "source": "src/commands/hook.ts SESSION_START_DEADLINE_MS / USER_PROMPT_DEADLINE_MS; src/core/context/resolve-ipc.ts:84-101; src/core/bootstrap/host-specs.ts CLAUDE_HOOK_DEFAULT_TIMEOUT_SECS"
+    },
+    "byte_cap": {
+      "hook_output_chars": 10000,
+      "memory_digest_bytes": 3072,
+      "prior_context_bytes": 32768,
+      "source": "src/core/bootstrap/host-specs.ts CLAUDE_HOOK_OUTPUT_CAP_CHARS; src/commands/hook.ts DIGEST_MEMORY_CAP_BYTES, PRIOR_CONTEXT_MAX_BYTES"
+    },
+    "session_reset": "each session is a new conversation with a new session_id and a new `gbrain serve` process (Claude Code spawns a stdio MCP server per session); no transcript, no transcript_path (the user-prompt window is the one prompt)",
+    "persistence": "the brain (PGLite data directory and vault checkout) persists from session 1 to session 2 unchanged; nothing is restored between sessions in the baseline arm",
+    "startup_maintenance": "serve boot runs its own startup sweep and session-cursor GC (src/mcp/server.ts); the harness waits settle_ms_after_initialize before SessionStart; GBRAIN_SKIP_STARTUP_HOOKS=1 disables only update checks; no autopilot, dream cycle or extraction drain runs between sessions",
+    "workspace": "an empty, non-git workspace directory per session (no MEMORY.md, no bootstrap manifest)",
+    "surface": "starter: the surface `gbrain bootstrap` registers for Claude Code at this release (src/core/mcp-registration.ts REGISTRATION_SURFACE)",
+    "rendering": "hook text is prepended to the user turn inside <system-reminder> blocks labelled \"SessionStart hook additional context\" and \"UserPromptSubmit hook additional context\", the way Claude Code renders hook context"
+  },
+  "world_digest": "1c26c1b9122eb1df063a53fecd0aa8d08aec686151851c2b6b8dfbc3a884e315",
+  "seeds": [
+    20261211,
+    20261213,
+    20261214,
+    20261215,
+    20261216,
+    20261217
+  ],
+  "readers": [
+    "claude-opus-5-5",
+    "claude-sonnet-5-5",
+    "gpt-6.1-sol"
+  ],
+  "arms": [
+    "brief-off",
+    "brief-on"
+  ],
+  "repeat": 1,
+  "gbrain": {
+    "requested": "<gbrain checkout>@47f052af0c7f92f259daa9b1b51bb90370dcf520",
+    "commit": "47f052af0c7f92f259daa9b1b51bb90370dcf520",
+    "tree": "93155b5adb8020d4e2ac89b4a8a9c13952f8b8e4",
+    "version": "0.60.247.0",
+    "verified": {
+      "copy_tree": "93155b5adb8020d4e2ac89b4a8a9c13952f8b8e4",
+      "tree_matches": true,
+      "symlinks_under_src": 0,
+      "dir_is_realpath": true,
+      "cli_version": "0.60.247.0",
+      "cli_version_matches": true
+    },
+    "frozen_release": false
+  },
+  "surface": "starter",
+  "max_turns": 20,
+  "reader_settings": "provider defaults (no extended thinking requested; OpenAI reasoning effort default); max output 8192 (Anthropic) / 16000 (OpenAI) tokens per call",
+  "resolved_config": {
+    "decide": "provider keys present (paid arm)",
+    "hermetic": false,
+    "stripped_keys": []
+  },
+  "bun": "1.4.2",
+  "builds": {
+    "p20261211": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3140
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 396
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 332
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 2719
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 413
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 267
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 1858
+        },
+        {
+          "step": "warm-boot",
+          "code": 0,
+          "ms": 6345
+        }
+      ],
+      "usd": 0.0007081100000000001,
+      "ms": 16139
+    },
+    "p20261213": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 2987
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 409
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 356
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 2914
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 383
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 292
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 1548
+        },
+        {
+          "step": "warm-boot",
+          "code": 0,
+          "ms": 6283
+        }
+      ],
+      "usd": 0.0007095400000000001,
+      "ms": 15782
+    },
+    "p20261214": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 2918
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 421
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 355
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 2888
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 421
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 269
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 1728
+        },
+        {
+          "step": "warm-boot",
+          "code": 0,
+          "ms": 6381
+        }
+      ],
+      "usd": 0.00070486,
+      "ms": 16018
+    },
+    "p20261215": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3125
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 436
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 380
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 2837
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 382
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 267
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 1859
+        },
+        {
+          "step": "warm-boot",
+          "code": 0,
+          "ms": 6290
+        }
+      ],
+      "usd": 0.0006910800000000002,
+      "ms": 16183
+    },
+    "p20261216": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 3148
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 424
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 358
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 2912
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 435
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 282
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 4322
+        },
+        {
+          "step": "warm-boot",
+          "code": 0,
+          "ms": 6436
+        }
+      ],
+      "usd": 0.0007009599999999998,
+      "ms": 18930
+    },
+    "p20261217": {
+      "steps": [
+        {
+          "step": "init",
+          "code": 0,
+          "ms": 2543
+        },
+        {
+          "step": "sources-add",
+          "code": 0,
+          "ms": 412
+        },
+        {
+          "step": "sources-default",
+          "code": 0,
+          "ms": 390
+        },
+        {
+          "step": "sync",
+          "code": 0,
+          "ms": 2898
+        },
+        {
+          "step": "extract",
+          "code": 0,
+          "ms": 379
+        },
+        {
+          "step": "embed-consent-refused",
+          "code": 3,
+          "ms": 292
+        },
+        {
+          "step": "embed",
+          "code": 0,
+          "ms": 1603
+        },
+        {
+          "step": "warm-boot",
+          "code": 0,
+          "ms": 6294
+        }
+      ],
+      "usd": 0.0007147400000000002,
+      "ms": 15412
+    }
+  },
+  "preregistration_attestation": {
+    "preregistration": "docs/benchmarks/2026-10-15-proactive-brief-dev-v2-preregistration.md",
+    "preregistration_commit": "3952fb335c0f2380287b94a417e791d87d033dda",
+    "runner_commit": "3952fb335c0f2380287b94a417e791d87d033dda",
+    "worktree_clean_for_preregistration": true,
+    "on_origin": true,
+    "attested_at": "2026-10-15T15:45:07.815Z"
+  }
+}

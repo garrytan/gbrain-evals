@@ -1,0 +1,41 @@
+{
+  "slug": "meetings/2026-04-28-vantorre-steering-committee",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: meeting\nTitle: Vantorre Q2 steering committee\nDate: Written on 2026-04-28.\nWriter: Nadia Fennimore\nVoice: friendly and organized\nFormat: loose call notes, half sentences, an action list at the end\nLength: about 210 words\nDate style in the body: casual (Jun 2nd, Monday the 2nd)\nTypos: one or two small natural typos (never in names or required phrases)\n\nBrief:\nNadia's notes from the steering committee; Gideon attended as incoming AM.\n\nRequired phrases:\n- Use the exact phrase \"Gideon's account of the meeting\" once, in the sense of: his own version / summary of how the meeting went. It must not be about a customer account.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Nadia Fennimore: Strategic account manager\n- Gideon Sato: Strategic account manager\n- Mateo Quiroga: Head of Procurement\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Vantorre Group: diversified industrial manufacturer, Northeast; main contact Mateo Quiroga, Head of Procurement; codes/nicknames VTG, VTRG\n- Vantorre Mobility: electric fleet services subsidiary, Northeast; subsidiary of Vantorre Group; codes/nicknames VTM, VMob\n- Orlavine Medical Supply: medical supply distributor, Mountain West; codes/nicknames OMS\n- Quillfeather Outfitters: outdoor gear retailer, Mountain West; codes/nicknames QFO\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2026-04-28 (background only; don't restate unless the brief asks):\n- Vantorre Group: managed by Nadia Fennimore\n- Vantorre Mobility: managed by Gideon Sato\n- Orlavine Medical Supply: not stated on any shared page (do not say who manages it)\n- Quillfeather Outfitters: managed by Strategic Accounts pod (pooled account)",
+      "response_text": "# Vantorre Q2 steering committee\n\n**Date:** Tuesday, Apr 28th\n**Attendees:** Mateo Quiroga (VTG), Gideon Sato (joining as incoming AM!), me\n\nQuick notes from today's steering call with Vantorre Group. Super productive session—Mateo was in a good mood despite the rain flooding their Bridgeport yard yesterday. \n\n* **Intro & Transition:** Introduced Gideon as incoming AM. Mateo welcomed him, joked about making him memorize the gate codes at Plant 4. \n* **Yard & Dock Ops:** \n  * Bridgeport West bays (Doors 12–18) having intermittent barcode scanner lag during the 6am shift change. Ticket #4819 is open.\n  * Carrier check-in kiosk at Gate B got clipped by a flatbed mirror on Friday the 24th; hardware is fine, just waiting on their local IT to remount it.\n  * Mateo happy with the new Detention Dwell Report in Pemberline Dock—said it already saved him an argument with a regional LTL carrier on Monday the 27th.\n* **Q2 Priorities:** Rolling out the updated driver SMS alerts to the Scranton depot before May 15th. Need to make sure the bilingual templates are toggled on first.\n\nGideon's account of the meeting is over in the #strat-pod Slack channel if anyone wants his take on the Scranton timeline, he caught a few extra details on the shift supervisor training that I missed while pulling up the ticket dashboard.\n\n**Action Items:**\n* [ ] **Me:** Escalate Ticket #4819 with support before Thursday the 30th (morning shift is getting frustrated).\n* [ ] **Gideon:** Send Mateo the Scranton SMS template preview deck by Friday, May 1st.\n* [ ] **Mateo:** Confirm which plant manager is leading the Scranton yard walk on May 12th.",
+      "usage": {
+        "input_tokens": 1107,
+        "output_tokens": 405,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.006264,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1107,
+          "candidatesTokenCount": 405,
+          "totalTokenCount": 1512,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1107
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 405
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

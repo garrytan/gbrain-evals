@@ -1,0 +1,76 @@
+{
+  "slug": "tickets/2026-06-09-mas-new-stores",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2026-06-09",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Agrisupply",
+        "line": 6
+      },
+      {
+        "oid": "e2",
+        "surface": "Marrow Agrisupply",
+        "line": 11
+      },
+      {
+        "oid": "e3",
+        "surface": "MAS",
+        "line": 12
+      },
+      {
+        "oid": "e4",
+        "surface": "Marrow Agrisupply",
+        "line": 20
+      }
+    ],
+    "claims": [],
+    "events": [
+      {
+        "eid": "e-mas-store-rollout",
+        "question": "Does the page describe this: \"Marrow Agrisupply escalates slow rollout to its new stores\"? If so, on what date does the text place it?"
+      }
+    ],
+    "ownership": []
+  },
+  "prompt_user_sha256": "2aff27476f4944016143df05a83b256d4c4ce145d2854b4128b391d7106cc0a8",
+  "response_text": "{\n  \"date_used\": \"2026-06-09\",\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"marrow-agrisupply\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"marrow-agrisupply\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"marrow-agrisupply\"\n    },\n    {\n      \"oid\": \"e4\",\n      \"entity\": \"marrow-agrisupply\"\n    }\n  ],\n  \"events\": [\n    {\n      \"eid\": \"e-mas-store-rollout\",\n      \"present\": false,\n      \"date\": null,\n      \"line\": 20\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2026-06-09",
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "marrow-agrisupply"
+      },
+      {
+        "oid": "e2",
+        "entity": "marrow-agrisupply"
+      },
+      {
+        "oid": "e3",
+        "entity": "marrow-agrisupply"
+      },
+      {
+        "oid": "e4",
+        "entity": "marrow-agrisupply"
+      }
+    ],
+    "events": [
+      {
+        "eid": "e-mas-store-rollout",
+        "present": false,
+        "date": null,
+        "line": 20
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 3175,
+    "output_tokens": 199,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.00834
+}

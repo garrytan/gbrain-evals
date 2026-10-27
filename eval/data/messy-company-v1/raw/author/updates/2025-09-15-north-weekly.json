@@ -1,0 +1,37 @@
+{
+  "slug": "updates/2025-09-15-north-weekly",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: weekly\nTitle: North weekly 2025-09-15\nDate: Written on 2025-09-15.\nWriter: Ilse Varga\nVoice: terse and practical\nFormat: a weekly update with a section per topic and bullets\nLength: about 431 words\nDate style in the body: day-month (2 Jun 2025)\nTypos: none\n\nBrief:\nIlse's update on the day Brackenwater moves to Marcus. Quarrendon's 185-seat amendment is live since Sept 1.\n\nRequired phrases:\n- Use the exact phrase \"Dana's freight account\" once, referring to Quarrendon Freight Lines. Don't put the account's name in the same sentence; the reader should work it out.\n- Use the exact phrase \"Marcus's freight account\" once, referring to Brackenwater Freight Co.. Don't put the account's name in the same sentence; the reader should work it out.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Ilse Varga: North team lead\n- Dana Okafor: Account manager, North team\n- Marcus Lindqvist: Account manager, North team\n- Thea Ramaswell: Director of Yard Operations\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Quarrendon Freight Lines: truckload freight carrier, Upper Midwest; main contact Thea Ramaswell, Director of Yard Operations; codes/nicknames QFL, Q-Freight\n- Brackenwater Freight Co.: less-than-truckload freight, Great Lakes; codes/nicknames BWF, Bracken\n- Tamsin Cold Chain: refrigerated warehousing, Pacific Northwest; codes/nicknames TCC\n- Orrin Mills: textile mill, Carolinas; codes/nicknames ORM\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2025-09-15 (background only; don't restate unless the brief asks):\n- Quarrendon Freight Lines: managed by Dana Okafor\n- Brackenwater Freight Co.: managed by Marcus Lindqvist\n- Tamsin Cold Chain: managed by Dana Okafor\n- Orrin Mills: managed by Dana Okafor",
+      "response_text": "# North weekly 2025-09-15\n\nWritten 15 Sep 2025\n\n## Brackenwater Freight Co. — handoff today\n\n- Brackenwater Freight Co. moves to Marcus Lindqvist today, 15 Sep 2025. Handoff notes, open support threads and the next yard check-in are in the North folder.\n- Marcus's freight account has one operational loose end: the afternoon dispatcher is still writing trailer numbers in the appointment notes instead of the trailer field.\n- Marcus will walk through that with the dispatch desk before the next afternoon shift. Use the two appointments from door 6 as examples; both were searchable by carrier but not by trailer.\n- I have sent the current contact list and the last call notes. The shared mailbox thread includes the screenshot showing where the field sits in Pemberline Dock.\n- Keep the handoff practical. The dispatch desk needs a clear next contact and an answer on trailer search, not another introductory presentation.\n\n## Quarrendon Freight Lines — amendment live\n\n- The 185-seat amendment has been live since 1 Sep 2025. Dana Okafor is checking the remaining user invitations against Thea Ramaswell’s shift roster.\n- Dana's freight account needs the night-shift supervisors included in the roster check, not just the daytime office users.\n- Thea flagged two invitations sent to old shared inboxes. Dana will replace those addresses and ask the supervisors to complete sign-in before the next roster review.\n- Door 12 remains the useful test case for appointment changes: dispatch adjusts the arrival time, the yard desk checks the board, and the receiving supervisor checks the shift view.\n- Thea wants the “Tomorrow by door” report sorted by appointment time. Dana will send a saved-view screenshot rather than another exported spreadsheet.\n\n## Support follow-through\n\n- Ticket ND-2841: a moved appointment stays visible in the old door filter until the dispatcher refreshes the board. Support has the screen recording from the afternoon shift.\n- I will ask support for the reproduction result on 16 Sep 2025. Until then, the yard desk is refreshing after a door change and checking the appointment detail before calling a driver forward.\n- Ticket ND-2846: invitation emails are being overlooked in a shared inbox. Dana will test the replacement addresses first; no bulk resend until those land.\n\n## This week\n\n- Marcus: close the Brackenwater Freight Co. trailer-field walkthrough and put the dispatch desk’s response in the handoff thread.\n- Dana: finish the Quarrendon Freight Lines roster check with Thea and send the saved report view.\n- Me: chase the board-refresh reproduction and remove the duplicate screenshots from the North folder. Keep the annotated version; it shows the filter state before and after the move.",
+      "usage": {
+        "input_tokens": 1094,
+        "output_tokens": 567,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.007858,
+      "provider_meta": {
+        "id": "resp_0d2dc444ca32ea49016acfae44480c87d19c836aee2ee23767",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1094,
+          "input_tokens_details": {
+            "cache_write_tokens": 1091,
+            "cached_tokens": 0
+          },
+          "output_tokens": 567,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 1661
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

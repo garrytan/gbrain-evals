@@ -33,6 +33,7 @@ const EXPECTED_SCHEMAS = [
   'evidence-contract.schema.json',
   'cat35-receipt.schema.json',
   'cat36-corpus.schema.json',
+  'workload-suite.schema.json',
 ];
 
 // Every canonical gold file is generated from the amara-life skeleton. The

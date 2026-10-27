@@ -1,0 +1,3601 @@
+{
+  "dataset": "messy-company-v1",
+  "hash_scheme": "sha256 of each file's bytes; data_sha256 is sha256 over \"<sha256>  <path>\\n\" lines in path order; the dataset hash is sha256 of this file",
+  "files": [
+    {
+      "path": "corpus/dev/accounts/brackenwater-freight.md",
+      "sha256": "998fe0d9ff4cebf21a6902f41b0628a7cb23685664504dcf3c61cd4dbfa3b4c5",
+      "bytes": 2319
+    },
+    {
+      "path": "corpus/dev/accounts/marrow-agrisupply.md",
+      "sha256": "e96e47486dcf1e6a80af8741155c731c02a094e9fdddd749ea1009a5419088b6",
+      "bytes": 1090
+    },
+    {
+      "path": "corpus/dev/accounts/marrow-fieldworks.md",
+      "sha256": "bda1bf4de19aefaff62e21eb115704ff6cb96277df6ef200ecbf89514c4ab046",
+      "bytes": 1355
+    },
+    {
+      "path": "corpus/dev/accounts/quarrendon-freight-lines.md",
+      "sha256": "05a85ebb88a54270fdd25cdffaf941f0c7c176295b3caa97370ee9fe691e1eff",
+      "bytes": 829
+    },
+    {
+      "path": "corpus/dev/accounts/tamsin-cold-chain.md",
+      "sha256": "b61ba5f08c67e9ae375cd5544b387d9ba250f5c01f620a2561d27e3ee0110d47",
+      "bytes": 1152
+    },
+    {
+      "path": "corpus/dev/accounts/tansleigh-packaging.md",
+      "sha256": "3df5ac55306a4933cf721832922820f5bcb4fdd89270292d16b274da71bee4ce",
+      "bytes": 951
+    },
+    {
+      "path": "corpus/dev/accounts/tansley-parcel.md",
+      "sha256": "bc58dddf6ac1ccfc2e59d6d6358095b8135ec4372ef0757c19a019b3d905ba1d",
+      "bytes": 1190
+    },
+    {
+      "path": "corpus/dev/accounts/thornbury-cloth-co.md",
+      "sha256": "c3909366253d4da03de32034f0f6221c190012a8af138f68461609dad62bf273",
+      "bytes": 1155
+    },
+    {
+      "path": "corpus/dev/agent-notes/2025-09-14-north-pipeline.md",
+      "sha256": "ec0a3fcd8ab9d9a5980665065bf7fb2050ef153513cc746a5fdb5a2330e309e9",
+      "bytes": 2109
+    },
+    {
+      "path": "corpus/dev/agent-notes/2025-10-05-north-sunday.md",
+      "sha256": "3f0b05eb91f0afc219aa5f42a9d49b867ec384cf62b3eed8785bdbe9fd446248",
+      "bytes": 2371
+    },
+    {
+      "path": "corpus/dev/agent-notes/2026-01-02-central-handoffs.md",
+      "sha256": "54d082a6610b00e4cc6449b8a412bf1973e577ce88cb75a7426e9d684261d08d",
+      "bytes": 1508
+    },
+    {
+      "path": "corpus/dev/agent-notes/2026-03-23-north-renewals.md",
+      "sha256": "40682e3473bd874ac26a2e2fd958108898f0d157be2ab0c18bf1608cab1ab803",
+      "bytes": 367
+    },
+    {
+      "path": "corpus/dev/agent-notes/central-cheatsheet.md",
+      "sha256": "c564d60f37ef6d018dca9091563a46ea4007dda082fbf7c78e3c4f32c7f17e26",
+      "bytes": 252
+    },
+    {
+      "path": "corpus/dev/agent-notes/north-account-cheatsheet.md",
+      "sha256": "9183d51283e8a03e2fb4538bc67be7eb913c51e9f95de0c2643e889be93825b5",
+      "bytes": 1878
+    },
+    {
+      "path": "corpus/dev/chats/2025-07-02-tp-confusion.md",
+      "sha256": "405f3792ac7e64e02d4a9646d61d7f704c60cfd5e92f9d86ac3e2da8d34951ed",
+      "bytes": 2316
+    },
+    {
+      "path": "corpus/dev/chats/2025-08-20-north-team-chat.md",
+      "sha256": "aa5c9573bd65c0cb8b0abfb8d44fd6524c1147dece8fadc541130503e0151354",
+      "bytes": 1016
+    },
+    {
+      "path": "corpus/dev/chats/2025-09-03-tpx-outage-war-room.md",
+      "sha256": "53a7af486932e31505ee87c4a37fb80376a12f4e0475e5aff1c60bbf01b5aecc",
+      "bytes": 670
+    },
+    {
+      "path": "corpus/dev/chats/2025-11-04-qfl-sev1-war-room.md",
+      "sha256": "f506ad8a374ab5f4c6e5e8cbcb6fd4867a159ae20a17ccd8b25cf84c379907af",
+      "bytes": 1985
+    },
+    {
+      "path": "corpus/dev/chats/2026-01-13-thornbury-rename.md",
+      "sha256": "32da843b5aa6dda58baca7f9f9a747ee17910a18b4dd0a85e917c48c56c76775",
+      "bytes": 1764
+    },
+    {
+      "path": "corpus/dev/chats/2026-04-23-marrow-renewal-chat.md",
+      "sha256": "343c148724a761dbaff64f8ad3b9a8a2efbfce74e96055c5fda56549086459c0",
+      "bytes": 409
+    },
+    {
+      "path": "corpus/dev/chats/2026-06-09-mas-store-rollout.md",
+      "sha256": "9c0c06bdede7f8a7db75e9a12c498f9bfd8e1acc9bbf90f6a95bca5ae8ab3422",
+      "bytes": 2155
+    },
+    {
+      "path": "corpus/dev/chats/central-team-banter.md",
+      "sha256": "e6c5ab16f461dca184da58a9e23c716ca085728511662181c806f1bfeccf1d43",
+      "bytes": 1781
+    },
+    {
+      "path": "corpus/dev/chats/north-team-random.md",
+      "sha256": "e4db3a9d3970dbac1910f026ac0f6882bf0a36b501930401094dbde1c3bb8b7e",
+      "bytes": 2344
+    },
+    {
+      "path": "corpus/dev/contracts/2024-11-12-bwf-of-2024.md",
+      "sha256": "eac13e2475b140bba79a6916119b1ffa08e1a26af0696af377c0417dbe3593eb",
+      "bytes": 3608
+    },
+    {
+      "path": "corpus/dev/contracts/2025-01-20-tpx-msa.md",
+      "sha256": "1e14fe6cfdec90b980b334d205edd61f2f3588ec51d3232d4e6f07ddcd86c27b",
+      "bytes": 3240
+    },
+    {
+      "path": "corpus/dev/contracts/2025-02-14-orm-of-2025.md",
+      "sha256": "d00ee831b60f633c6464ded4295d7380af28784570ce329e89d886aebb031cb1",
+      "bytes": 2348
+    },
+    {
+      "path": "corpus/dev/contracts/2025-03-03-tsp-of-2025.md",
+      "sha256": "5e52678fa399c37e3bf51324d51b63ac6755ca9099188e80a528834e599bf55c",
+      "bytes": 6649
+    },
+    {
+      "path": "corpus/dev/contracts/2025-03-28-qfl-msa.md",
+      "sha256": "9612d30ec72ebdbf54f99e433d07a1e19ad1a27c80cefe104d3a2da01d61c829",
+      "bytes": 58320
+    },
+    {
+      "path": "corpus/dev/contracts/2025-04-08-mfw-msa.md",
+      "sha256": "7120c88383682761413d8efec46d5e3350917c640a2e9f93f94a33759f48791f",
+      "bytes": 7719
+    },
+    {
+      "path": "corpus/dev/contracts/2025-05-30-tcc-of-2025.md",
+      "sha256": "da2dc398b6313626cb41eae09a59ed769d15bfb12b2357398685186cfca1bb69",
+      "bytes": 4540
+    },
+    {
+      "path": "corpus/dev/contracts/2025-06-10-tpx-a1.md",
+      "sha256": "ca101a00ad21cd188e360804ab41203c1e34af8ce8165abf21b160b4f311c0ab",
+      "bytes": 5170
+    },
+    {
+      "path": "corpus/dev/contracts/2025-08-19-qfl-a1.md",
+      "sha256": "07dc285a49b4b4e2199301ea457c807ca93939f2b45f74b697d2ab49de87e73a",
+      "bytes": 3719
+    },
+    {
+      "path": "corpus/dev/contracts/2025-10-02-mfw-affiliate-a1.md",
+      "sha256": "661eaa7537e73f9788ff239cffe21ec2ef08c028609d065af81f6c4533ed8d2f",
+      "bytes": 4599
+    },
+    {
+      "path": "corpus/dev/contracts/2025-10-28-bwf-redline.md",
+      "sha256": "e8d09c5462eecc93769f1f1e6d88fcfa8ebc220414572b9f1b2253a394f66f1c",
+      "bytes": 7020
+    },
+    {
+      "path": "corpus/dev/contracts/2025-11-21-bwf-renewal-2025.md",
+      "sha256": "1000d9107a1fa4b3d74b07112921596f9c05a474eea9b40d55c4f430b8cb19ad",
+      "bytes": 4338
+    },
+    {
+      "path": "corpus/dev/contracts/2025-12-03-qfl-a2-draft.md",
+      "sha256": "641ad752d5540741dad19dab7b56029ef1851ad0b1222648a179691e0c2ed9ee",
+      "bytes": 9810
+    },
+    {
+      "path": "corpus/dev/contracts/2026-01-15-tpx-renewal-2026.md",
+      "sha256": "7f3a02dd96883c258d3592ff30fe1d715c9afae6b89bff8c57d6bfb02e095b16",
+      "bytes": 5826
+    },
+    {
+      "path": "corpus/dev/contracts/2026-02-10-orm-unsigned-2026.md",
+      "sha256": "a8591c0d6f9117aa22afe8e116df68fdb081a910eb4bf93991706fe9a3bf7027",
+      "bytes": 3340
+    },
+    {
+      "path": "corpus/dev/contracts/2026-02-24-orm-renewal-2026.md",
+      "sha256": "d64fc356a410e1392bdb30c8b52b51861037795aabf09c89d003d2183a6d332a",
+      "bytes": 9592
+    },
+    {
+      "path": "corpus/dev/contracts/2026-03-10-tsp-renewal-2026.md",
+      "sha256": "bb92e57e8f3effe4f4212bbad58775c9a6ede392bc8302a601a058fe10cf04e3",
+      "bytes": 1969
+    },
+    {
+      "path": "corpus/dev/contracts/2026-03-20-qfl-renewal-2026.md",
+      "sha256": "e241520b45c13af4c165d6bb61f4cf4dd64af08854817c493a6e121b85a2dd29",
+      "bytes": 1443
+    },
+    {
+      "path": "corpus/dev/contracts/2026-04-22-mfw-renewal-2026.md",
+      "sha256": "6fa97cffcf1c7f7d6318014fa8d897da24b3cb9a8e7b5c222668b40ddf8a96c0",
+      "bytes": 6861
+    },
+    {
+      "path": "corpus/dev/contracts/2026-05-27-tcc-renewal-2026.md",
+      "sha256": "44d915b7bbd27e6cb9b2b90fdafa0a78a0d95dbd9383dbcb1bccd67f98a4eec8",
+      "bytes": 974
+    },
+    {
+      "path": "corpus/dev/contracts/2026-09-22-qfl-a3.md",
+      "sha256": "78b199fef3e016e824dc56e780bd30eb15663e4ca0e5b9a9874353101acca8a9",
+      "bytes": 3159
+    },
+    {
+      "path": "corpus/dev/crm/2025-02-03-tansley-parcel-onboarding.md",
+      "sha256": "f66e18278715f228813f5765006cb0e876ae24a6067d0de7b07a4bfc5f39ed51",
+      "bytes": 252
+    },
+    {
+      "path": "corpus/dev/crm/2025-03-10-tamsin-marcus-note.md",
+      "sha256": "544f2c4748c30707a430688cb6a99e2cb7bc2a6eff0a5c245f5cd00332756765",
+      "bytes": 926
+    },
+    {
+      "path": "corpus/dev/crm/2025-05-02-tamsin-dana-note.md",
+      "sha256": "d49c8e0657450f1212bddf37d8d0603b48353d5ebee1d7144af5f79c89aab4e7",
+      "bytes": 1067
+    },
+    {
+      "path": "corpus/dev/crm/2025-07-08-tansley-parcel-discount-note.md",
+      "sha256": "96db8a695849e66e9c7ce93299422eda8893f087c2f9723441c8870bbd2ee4b4",
+      "bytes": 532
+    },
+    {
+      "path": "corpus/dev/crm/2025-09-02-orrin-note.md",
+      "sha256": "2ab2b773b9c6b289feb25ae9a0da047f526d5251ed5ced3c9216cb3f4136e918",
+      "bytes": 592
+    },
+    {
+      "path": "corpus/dev/crm/2025-10-01-quarrendon-note.md",
+      "sha256": "51e35fc666d1939fcd42dc022a190ca2e25000f60877c500da2b8c07e42b7492",
+      "bytes": 690
+    },
+    {
+      "path": "corpus/dev/crm/2026-02-10-brackenwater-note.md",
+      "sha256": "12ef1453c503830df1c2266597a0b167919b480f0a5b419722ee8acd25f2d513",
+      "bytes": 402
+    },
+    {
+      "path": "corpus/dev/crm/2026-04-23-marrow-renewal-note.md",
+      "sha256": "fe53828aa2bcbba0e56d16fd4f69191310f0ec03a62dea0fea358652ccc56e1d",
+      "bytes": 1115
+    },
+    {
+      "path": "corpus/dev/crm/2026-08-04-tansley-parcel-expansion-note.md",
+      "sha256": "8c422354e1d0f617c6f76db6446ae998a5d965902fb0def095b7830aae740645",
+      "bytes": 374
+    },
+    {
+      "path": "corpus/dev/emails/2025-01-06-central-book-of-business.md",
+      "sha256": "0945ca9694816b86ff2173b81bbb2a4aee0b3f5c3d527590346f54162b82444a",
+      "bytes": 1221
+    },
+    {
+      "path": "corpus/dev/emails/2025-04-10-tamsin-moves-to-dana.md",
+      "sha256": "4ed60a2cc5b22b0456f62d9bf28fbf2b2e31a038536ff861e1459921be4ff502",
+      "bytes": 477
+    },
+    {
+      "path": "corpus/dev/emails/2025-05-28-quarrendon-handoff.md",
+      "sha256": "73523f33691e11921825355779d4e85b255de7b3bba401bb40e56557e676888f",
+      "bytes": 1048
+    },
+    {
+      "path": "corpus/dev/emails/2025-07-23-quarrendon-qbr-followup.md",
+      "sha256": "2e9508bd5f6ca241a39efd1effcb5bddb4cd129ad876509259907a06a9679cbf",
+      "bytes": 1027
+    },
+    {
+      "path": "corpus/dev/emails/2025-09-04-tpx-outage-rca.md",
+      "sha256": "0002520c59ca74a27b854683bfb777f41769c848e822eec94f006c18ef0176fd",
+      "bytes": 2569
+    },
+    {
+      "path": "corpus/dev/emails/2025-09-10-brackenwater-to-marcus.md",
+      "sha256": "8886952642563c5b259f555e6ecac26229e42b22cf879a9d5cbf43ce88388912",
+      "bytes": 1822
+    },
+    {
+      "path": "corpus/dev/emails/2025-10-01-north-account-moves.md",
+      "sha256": "cc3cf0adcc5152435100c924a6d590e51d6e07ee22f6d3db8910b27f6ccacdfa",
+      "bytes": 454
+    },
+    {
+      "path": "corpus/dev/emails/2025-10-02-mas-affiliate-amendment-signed.md",
+      "sha256": "e82b0475f583545df95b532fc0b18d8c0d4fb12ee063982c678be44e2abd2dad",
+      "bytes": 461
+    },
+    {
+      "path": "corpus/dev/emails/2025-10-02-quarrendon-monthly-fee.md",
+      "sha256": "8b1ab61e8dbfca6fd4af0c4dde3f2ee052de80768fb0951add53fdb47be6929f",
+      "bytes": 435
+    },
+    {
+      "path": "corpus/dev/emails/2025-10-03-correction-north-moves.md",
+      "sha256": "ff105800f5b0d477ebebe3ff4c1c61f70cc738ed0597ad94c26c12b1093287e7",
+      "bytes": 2648
+    },
+    {
+      "path": "corpus/dev/emails/2025-11-06-quarrendon-exec-call.md",
+      "sha256": "0f067f70003030fe5ac2edf7db8878aa23aee197cac2b2460815a7a9c31b9271",
+      "bytes": 1723
+    },
+    {
+      "path": "corpus/dev/emails/2025-12-04-quarrendon-discount-pushback.md",
+      "sha256": "3fccefe58d69ec78b505992111b8d548c2c67ec388203461b52132f50a39df8d",
+      "bytes": 453
+    },
+    {
+      "path": "corpus/dev/emails/2025-12-15-marrow-fieldworks-handoff.md",
+      "sha256": "029d258056e1cd03688c5aeb1ad0c881345fd28f06cf2c9ae94fc361e74bf1fd",
+      "bytes": 751
+    },
+    {
+      "path": "corpus/dev/emails/2026-01-12-orrin-rebrand-notice.md",
+      "sha256": "9f2d566ad33343b2e5e973bbe3cf01111c98990f916f96ef59da46d3b6d01c3b",
+      "bytes": 843
+    },
+    {
+      "path": "corpus/dev/emails/2026-01-16-tansley-parcel-renewal-recap.md",
+      "sha256": "e62047aa9ca7780d815540c46a03819bb7f3a3abe958ef40dcd4092a69af70a2",
+      "bytes": 887
+    },
+    {
+      "path": "corpus/dev/emails/2026-01-21-brackenwater-double-billing.md",
+      "sha256": "9e4e8cb04970dff1b7f9d4d4cea1b5eff78fbe5c3d231aba890e64ad7a009c71",
+      "bytes": 898
+    },
+    {
+      "path": "corpus/dev/emails/2026-01-26-dana-leave-coverage.md",
+      "sha256": "7d29ec78b94d5fbde50fa41836a86b1702966812580e824a7e3b12d013c96312",
+      "bytes": 829
+    },
+    {
+      "path": "corpus/dev/emails/2026-02-20-stoneharrow-invoice-portal.md",
+      "sha256": "c59a50b36de722152ac9fb0053310d4910a601ca1bff378487166295133ce391",
+      "bytes": 2620
+    },
+    {
+      "path": "corpus/dev/emails/2026-03-03-lev-seat-count.md",
+      "sha256": "4c45f18cef9096e71c87c7cf4b6033e62efd3ea24c99e8d5a769bfdcc3486e0e",
+      "bytes": 381
+    },
+    {
+      "path": "corpus/dev/emails/2026-03-11-tansleigh-renewal-executed.md",
+      "sha256": "412a7aa5b35c6e5813ccc1566fa6a0f53dc06e8cf6c0a2f2744f63d71cfc166f",
+      "bytes": 1148
+    },
+    {
+      "path": "corpus/dev/emails/2026-06-29-tobias-pto-coverage.md",
+      "sha256": "4eb14be0076b001c2d866a8c9be8f960ba71d114a8566a3932ed1dc8ee1ba5bd",
+      "bytes": 466
+    },
+    {
+      "path": "corpus/dev/meetings/2025-04-08-marrow-msa-signing-call.md",
+      "sha256": "72a3d1e88d3fcb3f4aa136f03c71f3f22bf93943b3d0d225eca932b27c829346",
+      "bytes": 2664
+    },
+    {
+      "path": "corpus/dev/meetings/2025-04-22-tamsin-kickoff.md",
+      "sha256": "678f003e7936683a96170e529a1732b0d6873dd8fadf00afcb37d0e99506c4ea",
+      "bytes": 1367
+    },
+    {
+      "path": "corpus/dev/meetings/2025-06-20-marrow-golive-checkin.md",
+      "sha256": "7ef450cd55d643c2be5784b12a350ce6772c29665661a5572b21169b91371026",
+      "bytes": 380
+    },
+    {
+      "path": "corpus/dev/meetings/2025-07-22-quarrendon-qbr.md",
+      "sha256": "9ce192a36c7c54fd1c6f96dc5dead8ca59a20f8a79e4e681a487532e478d251b",
+      "bytes": 1321
+    },
+    {
+      "path": "corpus/dev/meetings/2025-09-12-north-pipeline-review.md",
+      "sha256": "b31a040c433be9eecff0eb66ff26a2d42558ce73f5ccc59dcc0991140c08ade6",
+      "bytes": 1940
+    },
+    {
+      "path": "corpus/dev/meetings/2025-10-14-tansley-parcel-qbr.md",
+      "sha256": "513ce7c1d9d5f848ee62332110f255794274a336b69a9646eefe7816bd534e13",
+      "bytes": 1707
+    },
+    {
+      "path": "corpus/dev/meetings/2025-11-18-marrow-fieldworks-qbr.md",
+      "sha256": "11d8bec23607b5f221dffcfdeffa81fbb9605de8331140619a6ab2702121f37c",
+      "bytes": 2853
+    },
+    {
+      "path": "corpus/dev/meetings/2026-04-09-quarrendon-renewal-debrief.md",
+      "sha256": "c4f80dc7bcbb1aec30564bf6a22c3298cd08bc6121e0d02d07eaf5578bba7e9a",
+      "bytes": 2225
+    },
+    {
+      "path": "corpus/dev/meetings/2026-04-22-marrow-renewal-call.md",
+      "sha256": "4bfef3dc40ffc404759e8c171e8efc5d5debab407f9f7a2e0a7048ac8536117a",
+      "bytes": 1455
+    },
+    {
+      "path": "corpus/dev/meetings/2026-05-27-tamsin-renewal-call.md",
+      "sha256": "80b6a8a7a08b3c1da84d7b8b467498211a900679dc516a1d6576d1eed4253c6d",
+      "bytes": 792
+    },
+    {
+      "path": "corpus/dev/notes/2025-05-19-hollis-1on1-tobias.md",
+      "sha256": "566a2476884f041ef7ca743e82821ffefb4ec6168862bc294c0dec63d00d66bd",
+      "bytes": 1196
+    },
+    {
+      "path": "corpus/dev/notes/2025-07-14-marcus-q2-expansion-wrap.md",
+      "sha256": "6ea948f3b5036e5e51a22dd838fa0b5b84cb91ce7f3098aca2d9d8f3730748a8",
+      "bytes": 931
+    },
+    {
+      "path": "corpus/dev/notes/2025-07-17-tansleigh-onsite.md",
+      "sha256": "3528eadefc2b92976cc5043a6a9ebc371f5c62928ce8ae715e4e1eed77a30d90",
+      "bytes": 1513
+    },
+    {
+      "path": "corpus/dev/notes/2025-08-11-quarendon-freightways-intel.md",
+      "sha256": "a77b722a63d144a018ac9df43866c97639dc5bd3795aea0026c328f4c0706186",
+      "bytes": 1146
+    },
+    {
+      "path": "corpus/dev/notes/2025-08-25-central-territory-plan.md",
+      "sha256": "b0b263e9cd9f6c9db23cb3a1237069e0f397fa523167517a94ca202b475db768",
+      "bytes": 291
+    },
+    {
+      "path": "corpus/dev/notes/2025-11-03-hr-open-enrollment.md",
+      "sha256": "1b9e9f0c322f60a6f3aa25c98c3b1a1d72c6cecf5cea65ac417d9c1e8193b2a8",
+      "bytes": 673
+    },
+    {
+      "path": "corpus/dev/notes/2026-01-29-it-laptop-swap.md",
+      "sha256": "7a195e019f6c8bc49102534cfb9b11cde121441563d9bf32c69c65506c39a855",
+      "bytes": 390
+    },
+    {
+      "path": "corpus/dev/notes/2026-01-30-ilse-private-dana-leave.md",
+      "sha256": "ebc4834fabd015794138eb8e2a847eb5c43a5adac6cbf82a7a3b7aa10880dae8",
+      "bytes": 1753
+    },
+    {
+      "path": "corpus/dev/tickets/2025-08-12-tamsin-sensor-feed.md",
+      "sha256": "972e92d99f566023557cbdb92364a93be1fea3c6b772bd2fb93b548b63f5dd58",
+      "bytes": 1672
+    },
+    {
+      "path": "corpus/dev/tickets/2025-11-04-qfl-sev1.md",
+      "sha256": "980cd7e16c3bffcbd94a2fbe7d6f0c5f03384ff5c4be3e4a7364ccd59d2f21bf",
+      "bytes": 1668
+    },
+    {
+      "path": "corpus/dev/tickets/2025-12-02-mfw-dealer-portal-sso.md",
+      "sha256": "9694b6a18385a68d0da0f2aaf9592c45d93922943765d870afe86551992afe31",
+      "bytes": 559
+    },
+    {
+      "path": "corpus/dev/tickets/2026-01-20-bwf-invoice-dispute.md",
+      "sha256": "515f44c971aa08b4cef69822f5fe37f8442aa01d1c4b01087887f8c66f3442bf",
+      "bytes": 1240
+    },
+    {
+      "path": "corpus/dev/tickets/2026-03-17-tsp-label-printer.md",
+      "sha256": "d0f2f27baed3f96d80edc1dc61180ab54dcb6af6b56391834af40bae4109e8b1",
+      "bytes": 355
+    },
+    {
+      "path": "corpus/dev/tickets/2026-06-09-mas-new-stores.md",
+      "sha256": "ea345e9dc1ffc7525bc5e338b30ac2a63987aac4f4c4c8971836996335c39a87",
+      "bytes": 1485
+    },
+    {
+      "path": "corpus/dev/updates/2025-02-10-central-weekly.md",
+      "sha256": "23c6c4ecca50eea54e6cbfb8a656792b33db17205d92b826d424896c35305df0",
+      "bytes": 1680
+    },
+    {
+      "path": "corpus/dev/updates/2025-03-03-north-weekly.md",
+      "sha256": "7a36453f90bf1cc09957c6daf2f844d2c2af49b030723f55711d4b3f1fa204a5",
+      "bytes": 1158
+    },
+    {
+      "path": "corpus/dev/updates/2025-04-28-north-weekly.md",
+      "sha256": "c3f6f600f6dc36ce0557f75e374c5abfad4d0fe17398b4c64bd65787944374cc",
+      "bytes": 3135
+    },
+    {
+      "path": "corpus/dev/updates/2025-06-02-north-weekly.md",
+      "sha256": "035b7cde6aabd11502993f21bc053ba77503a661707d7e4448b83a2f40c73fc4",
+      "bytes": 1795
+    },
+    {
+      "path": "corpus/dev/updates/2025-06-16-central-weekly.md",
+      "sha256": "6581a35e55ebe69c56042f58344307edcb795791aa1dc9cbdffb612f78e26ae9",
+      "bytes": 3066
+    },
+    {
+      "path": "corpus/dev/updates/2025-07-28-north-weekly.md",
+      "sha256": "662c713584bb0946ffd02a25b8bea8b64f9ce4dee3aa4abe6a2c7bc5e2e9f691",
+      "bytes": 1390
+    },
+    {
+      "path": "corpus/dev/updates/2025-09-08-central-weekly.md",
+      "sha256": "c2647645657ee2c055715db3387411dc5039d9a70e66cb91097fc18d5785522c",
+      "bytes": 3156
+    },
+    {
+      "path": "corpus/dev/updates/2025-09-15-north-weekly.md",
+      "sha256": "c4a1d4693877547abea14a478915877da279bd4b5d9647e1ef30866f4d0021df",
+      "bytes": 2815
+    },
+    {
+      "path": "corpus/dev/updates/2025-10-06-north-weekly.md",
+      "sha256": "5df91669cb29ec334ee35e9cf6c527a4822963e5f66249beca14a13764c598a4",
+      "bytes": 237
+    },
+    {
+      "path": "corpus/dev/updates/2025-10-20-central-weekly.md",
+      "sha256": "a45030f5b27b6e28b34d41f572bd6a4bd171d14f5e624c466d4689049e9f346b",
+      "bytes": 1765
+    },
+    {
+      "path": "corpus/dev/updates/2025-11-10-north-weekly.md",
+      "sha256": "7a49f9d7ea515456f2d9249c966eca89a506f35cb657af59ee19b8099dbbb119",
+      "bytes": 653
+    },
+    {
+      "path": "corpus/dev/updates/2025-12-08-north-weekly.md",
+      "sha256": "6bdc48666d83202d6d68becfb83ca09abd4743b1a81fced0ab1e86e30a32683b",
+      "bytes": 2802
+    },
+    {
+      "path": "corpus/dev/updates/2026-01-05-central-weekly.md",
+      "sha256": "c30efa8c0677fab97cc6d147a89e865a0941d7a77fd1b769c98b8f2d176124d5",
+      "bytes": 1808
+    },
+    {
+      "path": "corpus/dev/updates/2026-02-09-north-weekly.md",
+      "sha256": "24a8975321d98a8ad9bed7066893711c0dc65640192ed8b3b408e1d9036d2be4",
+      "bytes": 2017
+    },
+    {
+      "path": "corpus/dev/updates/2026-03-02-north-weekly.md",
+      "sha256": "58a5e0808a07edc6693ab5d5019eca4276abd06856acedc5c2d7b9a7cc4314df",
+      "bytes": 1499
+    },
+    {
+      "path": "corpus/dev/updates/2026-04-20-north-weekly.md",
+      "sha256": "ef11af532a2399ed42afe5f060345d2ecf26d1278ed907f40bcc189baaf50eeb",
+      "bytes": 2047
+    },
+    {
+      "path": "corpus/dev/updates/2026-05-11-central-weekly.md",
+      "sha256": "433141f804f07e3a3d96f61724000d7151c13d279a0e08221e986ca650f07df5",
+      "bytes": 395
+    },
+    {
+      "path": "corpus/dev/updates/2026-07-13-central-weekly.md",
+      "sha256": "0bd16414b9f66c8a1d8c18c0f9bb5fd90a8776aac3c79d62fec20b0cca79fab3",
+      "bytes": 3199
+    },
+    {
+      "path": "corpus/dev/updates/2026-09-21-central-weekly.md",
+      "sha256": "1b0bf48154d1b0d9cf452d4b5d42b7f863e1b821ab63d1c97ab080bf7f05fa8c",
+      "bytes": 1704
+    },
+    {
+      "path": "corpus/dev/updates/2026-09-28-north-weekly.md",
+      "sha256": "4081609878b0b4f6bf6705d7dfecf1e9f66e9444e0ab10f69da121bfee73c57e",
+      "bytes": 2781
+    },
+    {
+      "path": "corpus/heldout/accounts/driftmoor-marine-freight.md",
+      "sha256": "3e26140bedf80f8b60134ea639a0e54ff6c04ff183d924276e921589b047d6b8",
+      "bytes": 1017
+    },
+    {
+      "path": "corpus/heldout/accounts/orlavine-medical-supply.md",
+      "sha256": "8dc2c51e003100a5f80de7a76fbba8dc55a9598686e0aa0bfa9bb12c44865a43",
+      "bytes": 556
+    },
+    {
+      "path": "corpus/heldout/accounts/pellow-home-living.md",
+      "sha256": "661bc069a9bd611c879362a87a522701804dcd915c09eb8db7501df30c9f927d",
+      "bytes": 1138
+    },
+    {
+      "path": "corpus/heldout/accounts/pellucid-harbor-logistics.md",
+      "sha256": "ef573175d1ade0c0bb321b1ea76456075e11791d3b18878407f5e042ad52a583",
+      "bytes": 2134
+    },
+    {
+      "path": "corpus/heldout/accounts/quillfeather-outfitters.md",
+      "sha256": "333eb8dbcbbe14760d72b655bc33e85a2582a9acd15c08475297929e4e6ec7aa",
+      "bytes": 779
+    },
+    {
+      "path": "corpus/heldout/accounts/saltmarsh-provisions.md",
+      "sha256": "a6d0e00a15eb83f12cab97b72db63ef3dbc145e229ca9f87f6f11412048743d2",
+      "bytes": 1390
+    },
+    {
+      "path": "corpus/heldout/accounts/vantorre-group.md",
+      "sha256": "8861599676c5ed915ca6c61acd6efe5ca402d4e2c2d347d47670a3aae3e23a4e",
+      "bytes": 1690
+    },
+    {
+      "path": "corpus/heldout/accounts/vantorre-mobility.md",
+      "sha256": "c08cd5a4dcc32ba6a6e9b580fc6e40744860fe7ec69a45e6f99af9605469ff6e",
+      "bytes": 1409
+    },
+    {
+      "path": "corpus/heldout/agent-notes/2025-03-10-strategic-digest.md",
+      "sha256": "1971d1e6ec9b9b2b558cd6e81dbf964d829852f18e5834b7c16f808d25d98495",
+      "bytes": 1482
+    },
+    {
+      "path": "corpus/heldout/agent-notes/2025-07-07-strategic-digest.md",
+      "sha256": "b3b8528ee90725d1fe95e880f3a9950a990c959099d0889993cd2c16c67c7964",
+      "bytes": 460
+    },
+    {
+      "path": "corpus/heldout/agent-notes/2025-09-15-strategic-digest.md",
+      "sha256": "e1abab9a229847cab9ae2c2903899eff5784f50acd9c151399b2ff1e73703b8e",
+      "bytes": 1614
+    },
+    {
+      "path": "corpus/heldout/agent-notes/2025-10-05-coastal-sunday.md",
+      "sha256": "c176963a2338cd5efd2a76bafdc56cea35f07c12918891a07b198d159740db65",
+      "bytes": 2418
+    },
+    {
+      "path": "corpus/heldout/agent-notes/2025-11-02-coastal-pipeline.md",
+      "sha256": "0d6d50f97c91b2f626531126a54cc52291a70d821ed03ea4c3f2dceecfe9e128",
+      "bytes": 481
+    },
+    {
+      "path": "corpus/heldout/agent-notes/2025-12-01-strategic-digest.md",
+      "sha256": "32235101b88f051b41c272b61bc5aa9832d4f857629c417b98bfef14754c1ea7",
+      "bytes": 701
+    },
+    {
+      "path": "corpus/heldout/agent-notes/2026-04-27-strategic-digest.md",
+      "sha256": "9ac2ff3d33434d26440bbbb920a08dd3f087e413f0d6f2eb22790ee40a5d791c",
+      "bytes": 906
+    },
+    {
+      "path": "corpus/heldout/agent-notes/2026-05-03-strategic-sunday.md",
+      "sha256": "f73e7fb881a931e1ca7411a038a05ae50399197260c8cd554e4776d57cd0ccbc",
+      "bytes": 1180
+    },
+    {
+      "path": "corpus/heldout/agent-notes/2026-05-04-strategic-digest.md",
+      "sha256": "c4ada6a4d61090def4c0f0104988721c05140aeadad7f8d5a1707c9c959ac14b",
+      "bytes": 711
+    },
+    {
+      "path": "corpus/heldout/agent-notes/2026-05-18-coastal-coverage.md",
+      "sha256": "67695d9d18c33d4c6728daf57d88e71b81c02e118a888727ff20463ab67f26bb",
+      "bytes": 2574
+    },
+    {
+      "path": "corpus/heldout/agent-notes/2026-08-03-strategic-digest.md",
+      "sha256": "7725eb161e059c1ef439aeec2ccddbbdf7b52d803acfb9a25597cdece9ce54ba",
+      "bytes": 1945
+    },
+    {
+      "path": "corpus/heldout/agent-notes/2026-09-30-strategic-digest.md",
+      "sha256": "e64f2a100a498a59b9584d068895d27a51382d9adfffa8b26293773294dfba61",
+      "bytes": 2481
+    },
+    {
+      "path": "corpus/heldout/agent-notes/coastal-cheatsheet.md",
+      "sha256": "9e32167d35b674e2bdb2c647905939574824509da49d69462b9ba44efcc809a2",
+      "bytes": 2909
+    },
+    {
+      "path": "corpus/heldout/agent-notes/strategic-cheatsheet.md",
+      "sha256": "49c1982ec12fe48550d9184c89fda96e90540b13b2045ad68905d6a3fd432ec7",
+      "bytes": 924
+    },
+    {
+      "path": "corpus/heldout/chats/2025-10-15-saltmarsh-churn-risk.md",
+      "sha256": "2a18b5dcd7253206e0d75f3839c183a5983d1aa3a2d51603b8ed94969cca463e",
+      "bytes": 2114
+    },
+    {
+      "path": "corpus/heldout/chats/2025-11-17-saltmarsh-discount-retraction.md",
+      "sha256": "a77c303675fb8701adf43d0349826fe91c9e0a415b4ec8ff0b5a81e4496e675b",
+      "bytes": 568
+    },
+    {
+      "path": "corpus/heldout/chats/2026-02-17-phl-collision.md",
+      "sha256": "ab0aa8908c7830369dd889f5a5797cb7e0e11d35b3d62ac83f318d4a84495c32",
+      "bytes": 818
+    },
+    {
+      "path": "corpus/heldout/chats/2026-07-01-vantorre-seats-retraction.md",
+      "sha256": "75ec8a72dbc87bbff0be952b9a1424fb1d043f740f25d16688c13dba9a1a66f0",
+      "bytes": 1356
+    },
+    {
+      "path": "corpus/heldout/chats/2026-08-03-vtg-sev1-war-room.md",
+      "sha256": "c48118c52d4b7e3dc4672c00147cf668ba1af421e6670a46476dc6aa48c32f04",
+      "bytes": 1575
+    },
+    {
+      "path": "corpus/heldout/chats/coastal-team-banter.md",
+      "sha256": "28580d7d53aa885efa6ccf48acfe4045a6dc36a0a3e7c9fe5b8c819598e492bb",
+      "bytes": 825
+    },
+    {
+      "path": "corpus/heldout/chats/strategic-pod-banter.md",
+      "sha256": "fe9cdc00157353e874bc37d56f51ceb4dbb24aa1dec170971a249e214bbb7d2b",
+      "bytes": 1010
+    },
+    {
+      "path": "corpus/heldout/contracts/2024-12-09-dmf-of-2025.md",
+      "sha256": "89d9bf39c4252a225ebd5d5508cffda69ed29c7f88fb4428d7135a113968e657",
+      "bytes": 5977
+    },
+    {
+      "path": "corpus/heldout/contracts/2025-02-26-phl-msa.md",
+      "sha256": "5b36ef9af4d582442e1c85e2fded455175b4b1056cfc8d6fd2d3be0b9e8ab28a",
+      "bytes": 5174
+    },
+    {
+      "path": "corpus/heldout/contracts/2025-03-12-clr-of-2025.md",
+      "sha256": "981d7c1337bb5da3679d6a738c551e554d3fd0faec859fcdf4212d4421fafdda",
+      "bytes": 3683
+    },
+    {
+      "path": "corpus/heldout/contracts/2025-06-25-smp-of-2025.md",
+      "sha256": "8fc640e0a2c90248c668ba453361bc30e69af4d74aaddf68d7d09287f2e40e0b",
+      "bytes": 2675
+    },
+    {
+      "path": "corpus/heldout/contracts/2025-06-30-vtg-msa.md",
+      "sha256": "14c4eb60295d7bc8adea44012978c4aab129c0f560053d1158ed538372816f9d",
+      "bytes": 34187
+    },
+    {
+      "path": "corpus/heldout/contracts/2025-08-05-qfo-of-2025.md",
+      "sha256": "b143773f03394a05042a6d244c980ec54ee4ba831ac023562d9d2b99a169fe1e",
+      "bytes": 1015
+    },
+    {
+      "path": "corpus/heldout/contracts/2025-09-29-oms-of-2025.md",
+      "sha256": "2a7d3472eb103c2677ad067914355572928575ed1260f97db14a45c1859ac23c",
+      "bytes": 5872
+    },
+    {
+      "path": "corpus/heldout/contracts/2025-10-20-smp-a1.md",
+      "sha256": "37d90d1215441e42065ac379216f8dee91d7e895bfba3b322733a6167d0cc8fd",
+      "bytes": 1784
+    },
+    {
+      "path": "corpus/heldout/contracts/2025-11-18-vtm-a1.md",
+      "sha256": "e4713b5ff859956bdc6d8cecb420a03ddab62349a9328f3095c0b79caf5ab960",
+      "bytes": 1164
+    },
+    {
+      "path": "corpus/heldout/contracts/2025-12-15-phl-a1-unsigned.md",
+      "sha256": "3ffdb0b502ba8b0afc8f9f7b7eda56a289304529f281af01ad19f0c64b74bde9",
+      "bytes": 3585
+    },
+    {
+      "path": "corpus/heldout/contracts/2025-12-17-dmf-renewal-2026.md",
+      "sha256": "bab3596defc54d48928d7714697532b978a17455f4b242e95e4cc9f21e4acc2e",
+      "bytes": 8114
+    },
+    {
+      "path": "corpus/heldout/contracts/2026-02-19-phl-renewal-2026.md",
+      "sha256": "bb57f63a04f0b3a52d6ce4f687d2f24fb08b6f0ddb78dd5631f9f6c4898be8f9",
+      "bytes": 3594
+    },
+    {
+      "path": "corpus/heldout/contracts/2026-03-09-clr-draft-2026.md",
+      "sha256": "d66beca83457bfd28c710345cf80459141bf89df717ce3a9ef0d4819cc9bd1a2",
+      "bytes": 6673
+    },
+    {
+      "path": "corpus/heldout/contracts/2026-03-25-clr-renewal-2026.md",
+      "sha256": "475fa09a671e3d1111de78ce40d431e6b6903d8b248a1b3fdca1c2a73fd3404e",
+      "bytes": 3342
+    },
+    {
+      "path": "corpus/heldout/contracts/2026-06-18-smp-renewal-2026.md",
+      "sha256": "dd6d485d8f97945294c255fc12f4454bd7a985bd2d0647aefefae91df5f4b1ed",
+      "bytes": 1420
+    },
+    {
+      "path": "corpus/heldout/contracts/2026-06-24-vtg-renewal-2026.md",
+      "sha256": "aa1a6e7164e4a063f6fd2e2f57dd3b46e95d516c74d119b0cc28873aa77e1090",
+      "bytes": 4566
+    },
+    {
+      "path": "corpus/heldout/contracts/2026-08-10-qfo-renewal-2026.md",
+      "sha256": "eb9dabf7ff392d6c06ff18f234f365243f48c120ac7f3c291a6c9a5732953284",
+      "bytes": 1504
+    },
+    {
+      "path": "corpus/heldout/contracts/2026-08-14-vtg-a2-draft.md",
+      "sha256": "417ede3809b1e21c457c461e13c4752c5d7925a82c08b07348de4d377daa3b65",
+      "bytes": 7575
+    },
+    {
+      "path": "corpus/heldout/contracts/2026-09-24-oms-renewal-2026.md",
+      "sha256": "1ea0b04a6ebbb34ba8672624f35199681de0f8196dab030415156d2e9fe88cfc",
+      "bytes": 9105
+    },
+    {
+      "path": "corpus/heldout/contracts/2026-09-29-phl-a2.md",
+      "sha256": "9bdefd82723b5d337bdfdc334ef1a14538a8048859f858bec16776b7562d1460",
+      "bytes": 6864
+    },
+    {
+      "path": "corpus/heldout/crm/2025-05-06-covey-lark-profile-note.md",
+      "sha256": "6a1734ecc56741498b791fdd2f34c811796e8326727c82639506d1759ba9236e",
+      "bytes": 900
+    },
+    {
+      "path": "corpus/heldout/crm/2025-07-01-saltmarsh-onboarding.md",
+      "sha256": "4beb7ca7017f0df5370c45af46fe01d9ae814c81506a2a38c2387d7a01d2a476",
+      "bytes": 1056
+    },
+    {
+      "path": "corpus/heldout/crm/2025-10-06-orlavine-onboarding.md",
+      "sha256": "3bd35b481f46f9ac85fdbabf343f98833ab0ae6dca65679fb81a3bf88248fae4",
+      "bytes": 1140
+    },
+    {
+      "path": "corpus/heldout/crm/2025-12-02-saltmarsh-note.md",
+      "sha256": "a7a56ab1e16d26722a11ec486e6c7d4f9bef613f0366be94e9e203ccf86f933a",
+      "bytes": 477
+    },
+    {
+      "path": "corpus/heldout/crm/2026-01-05-driftmoor-renewal-note.md",
+      "sha256": "2559e222f859f9df1b95ceb41c0603c443592c298095038b44d3a49c29dda18a",
+      "bytes": 1150
+    },
+    {
+      "path": "corpus/heldout/crm/2026-03-02-quillfeather-note.md",
+      "sha256": "caeeb7120db84dca08d5ade446b619f7f7e6c220b3601f3af13d81fdd6647920",
+      "bytes": 1239
+    },
+    {
+      "path": "corpus/heldout/crm/2026-04-20-pellow-expansion.md",
+      "sha256": "958ca16959b03137f6962c74578a281a1d9d6dd9339858177a1eefb77b607ffd",
+      "bytes": 989
+    },
+    {
+      "path": "corpus/heldout/crm/2026-05-12-vantorre-mobility-note.md",
+      "sha256": "d1f151ee84f23a326af2922f571c175355d9b1577d58848272c4ddf912d6c131",
+      "bytes": 645
+    },
+    {
+      "path": "corpus/heldout/emails/2025-01-06-strategic-pod-assignments.md",
+      "sha256": "53cf4fe9d000febde30d8718dff678db50e2cdbbe0a8b4b97fa41f44a6bce9e8",
+      "bytes": 1718
+    },
+    {
+      "path": "corpus/heldout/emails/2025-04-02-driftmoor-to-kwame.md",
+      "sha256": "a92e30c69803459b6d900b3dfdaaf2c0bb53e44dcb2e7d6f1c516677da41212b",
+      "bytes": 758
+    },
+    {
+      "path": "corpus/heldout/emails/2025-06-12-vantorre-decision-maker.md",
+      "sha256": "c57022c73abfd04cdef4e1f638dde1d8f4660a1d24a222e4a0bde32c97c91ffb",
+      "bytes": 1470
+    },
+    {
+      "path": "corpus/heldout/emails/2025-06-30-vantorre-msa-executed.md",
+      "sha256": "b7ce7f4e820e58f034850015b22a10b7c46d54a34c285977c3b3bb73f8c5f671",
+      "bytes": 2557
+    },
+    {
+      "path": "corpus/heldout/emails/2025-08-27-driftmoor-barge-notifications.md",
+      "sha256": "cb57b6dad70f372879aff2bf801b07ef6df21dce7cf726807ed125d6b332c3f1",
+      "bytes": 2491
+    },
+    {
+      "path": "corpus/heldout/emails/2025-10-01-saltmarsh-to-bettina.md",
+      "sha256": "7340e857d2d52cc0fab105e3817ab2b87152fdb5891acc8919c05c640f9d99d4",
+      "bytes": 1872
+    },
+    {
+      "path": "corpus/heldout/emails/2025-10-20-saltmarsh-concession-approved.md",
+      "sha256": "c7f1d2b01860786a15b495f4b6dff89e36438d594076571f7005fedbe472fc95",
+      "bytes": 547
+    },
+    {
+      "path": "corpus/heldout/emails/2025-10-28-pellucid-to-kwame.md",
+      "sha256": "3ac0e76b2abc8900eda34ab24b7f104ae84de616356298276c4df26bb5ad207b",
+      "bytes": 714
+    },
+    {
+      "path": "corpus/heldout/emails/2025-11-19-vtm-amendment-executed.md",
+      "sha256": "42908f3a67ff44c62a2f406363baf25c0e29a785b1710d16700276c7e4fefb79",
+      "bytes": 595
+    },
+    {
+      "path": "corpus/heldout/emails/2026-02-12-orlavene-followup.md",
+      "sha256": "e89b165d06ce9c006f11260a76f02407a35b49e9245e7a24b97c140bde4f9126",
+      "bytes": 2122
+    },
+    {
+      "path": "corpus/heldout/emails/2026-02-16-covey-lark-rebrand.md",
+      "sha256": "76ecab64f34b1038d1f9eb5dafacd3ce0d7300262acef4fac0f78827087a5ae0",
+      "bytes": 1153
+    },
+    {
+      "path": "corpus/heldout/emails/2026-03-10-pellucid-monthly-fee.md",
+      "sha256": "bb4a716f51a4f3005352f64e86facfe865373d99e85a9561831596fc94a3ee00",
+      "bytes": 1803
+    },
+    {
+      "path": "corpus/heldout/emails/2026-04-13-vantorre-handoff-announcement.md",
+      "sha256": "d325954f483b1415244db0160d61e38759b30b0fde5f2c5c2e987aa42a5e7f8d",
+      "bytes": 683
+    },
+    {
+      "path": "corpus/heldout/emails/2026-04-16-vantorre-handoff-correction.md",
+      "sha256": "1cc7da30a99b9cf41b281ca7c373259971467ccb43481f327d7880ee855932e0",
+      "bytes": 1323
+    },
+    {
+      "path": "corpus/heldout/emails/2026-04-24-sofia-leave-coverage.md",
+      "sha256": "e34322b738affaed0c649220fa45a60374172bf04d3bf839b4df792741ecc483",
+      "bytes": 1657
+    },
+    {
+      "path": "corpus/heldout/emails/2026-05-20-vantorre-reorg.md",
+      "sha256": "4a423bc35623a2a873c4d69dd4f42575ba0f00cbcdd472f0098a2d4d5abab0b3",
+      "bytes": 630
+    },
+    {
+      "path": "corpus/heldout/emails/2026-06-18-saltmarsh-renewal-signed.md",
+      "sha256": "decf690ec574e33c9120d260d065a20172a02a0929c311af396809bfc6c9a9df",
+      "bytes": 2305
+    },
+    {
+      "path": "corpus/heldout/emails/2026-06-24-vantorre-renewal-executed.md",
+      "sha256": "da16f57a3a0f7eeb327b6aec68eeb172edf8b50a2699fc35e14931405f2258a5",
+      "bytes": 1594
+    },
+    {
+      "path": "corpus/heldout/emails/2026-07-14-carrowmere-hosting-renewal.md",
+      "sha256": "c127ec822b37dc46ff13f61d73b704d286d953f19e72a08a8ab83d68e31a7341",
+      "bytes": 859
+    },
+    {
+      "path": "corpus/heldout/emails/2026-08-17-vantorre-discount-ask.md",
+      "sha256": "000e1c92594cacdb66636aad7b22c716dc4c211aa01263c9993308ea33c3527a",
+      "bytes": 651
+    },
+    {
+      "path": "corpus/heldout/emails/2026-09-24-orlavine-renewal-executed.md",
+      "sha256": "d05aa4b15b11b7dd37118c6a7cb2de30e94da935bf9b10921c78b61ad4c23aee",
+      "bytes": 1942
+    },
+    {
+      "path": "corpus/heldout/meetings/2025-07-15-vantorre-kickoff.md",
+      "sha256": "a38389559d0984d3ea8189c4efc2b49d3bdd4018b645b82fd8cc6e9a0b17c7fa",
+      "bytes": 1759
+    },
+    {
+      "path": "corpus/heldout/meetings/2025-08-05-quillfeather-signing-call.md",
+      "sha256": "a5d0438ef3ae134e6ac2633c79aeb93490fab3aaf454d14641152f8adafeaec3",
+      "bytes": 1311
+    },
+    {
+      "path": "corpus/heldout/meetings/2025-10-16-saltmarsh-rescue-call.md",
+      "sha256": "53bcf6622ad6d1a93432020c4f87bb4e950772bfd6abdf6b2ffa06a1cc0eb332",
+      "bytes": 1200
+    },
+    {
+      "path": "corpus/heldout/meetings/2025-11-05-coastal-pipeline-review.md",
+      "sha256": "daf370e70f97cdee86a37a89fb7f9d5117c984da39c5614dfef81ae69601f4c9",
+      "bytes": 3066
+    },
+    {
+      "path": "corpus/heldout/meetings/2025-11-20-pellucid-cutover-wrapup.md",
+      "sha256": "2ba2449e49d42983a8f86cab90a60c2d7b56950d8922b2a4aff968fd9000ccbe",
+      "bytes": 1350
+    },
+    {
+      "path": "corpus/heldout/meetings/2026-02-11-orlavene-health-intro.md",
+      "sha256": "df682ef5afc84974522fc4cbb0b7d874529e461a6d6b74522605e5a57c20d6f2",
+      "bytes": 1706
+    },
+    {
+      "path": "corpus/heldout/meetings/2026-03-05-pellucid-renewal-debrief.md",
+      "sha256": "e9eb498a80ff1e257baf5e6e9c4c0ce490d7a893f8139d630500ddcd092f3c97",
+      "bytes": 897
+    },
+    {
+      "path": "corpus/heldout/meetings/2026-04-28-vantorre-steering-committee.md",
+      "sha256": "d51c6398e5fcc1d1b8d8d0a84fdb8368dd79866c9a4d9a626a3a2dd2ca45f69d",
+      "bytes": 1719
+    },
+    {
+      "path": "corpus/heldout/meetings/2026-07-09-vantorre-renewal-debrief.md",
+      "sha256": "fade9eaa43c81d1e15bcf779f144beac4d70d70b735d0c0dc3d4df20ce8bb8c5",
+      "bytes": 2035
+    },
+    {
+      "path": "corpus/heldout/meetings/2026-08-10-quillfeather-renewal.md",
+      "sha256": "2136838aad8e3d09bfb0e838a31afa3a3e41f29c90d604c7c39c2ea05c2d0b61",
+      "bytes": 2473
+    },
+    {
+      "path": "corpus/heldout/notes/2025-08-08-ruth-private-orlavine.md",
+      "sha256": "4f1117148e2ba2cba4f6bac66a65ec7186bc8c276cc9f024bac3730ca3bab7be",
+      "bytes": 352
+    },
+    {
+      "path": "corpus/heldout/notes/2025-12-08-bettina-pellucid-cutover-recap.md",
+      "sha256": "346fb4c865b39b0e1f30d050587cbc489be4894be9a6156041659b667a9474fc",
+      "bytes": 1598
+    },
+    {
+      "path": "corpus/heldout/notes/2026-01-15-hr-benefits-reminder.md",
+      "sha256": "e771df0e65cbaec7ac58409e55cc71fb1b293b1e9229129444fb35516ca17a8b",
+      "bytes": 643
+    },
+    {
+      "path": "corpus/heldout/notes/2026-03-30-it-device-refresh.md",
+      "sha256": "2d64ee1507b4a02b0d66fa07e877508cf3ebf3c8ff686d4e8e75f291502bcdb6",
+      "bytes": 220
+    },
+    {
+      "path": "corpus/heldout/notes/2026-04-24-bettina-private-sofia-leave.md",
+      "sha256": "6bdea710a169198cd755d11fc916d603d220be55d9eeb184d38fb3d8589e3229",
+      "bytes": 654
+    },
+    {
+      "path": "corpus/heldout/notes/2026-06-01-strategic-qbr-plan.md",
+      "sha256": "7b5d392630b54626399df9b7a86adc2aee4f5499fe087ede388712c0cbebc669",
+      "bytes": 978
+    },
+    {
+      "path": "corpus/heldout/tickets/2025-08-26-dmf-barge-slot-notifications.md",
+      "sha256": "45f74d46bf467564ec76fb15cd4d8cd6a8037d8cc426f3df833bac58d9ae0e76",
+      "bytes": 2100
+    },
+    {
+      "path": "corpus/heldout/tickets/2025-11-21-phl-terminal-cutover-issue.md",
+      "sha256": "3b607ec4fd5b150ec320a2e32c2eea5769f418266697d61056baae8a178d0fd1",
+      "bytes": 1817
+    },
+    {
+      "path": "corpus/heldout/tickets/2025-11-25-vtm-charger-sync.md",
+      "sha256": "bcc5733ed8804b6575981189f953032ca73ec2e36ea07fa2c20f1397571e5ff0",
+      "bytes": 725
+    },
+    {
+      "path": "corpus/heldout/tickets/2026-08-03-vtg-hartford-kiosks.md",
+      "sha256": "f574e8bff6b3e44b2605a9b039bcbcd77f6ad43d2723052c61cd97ef21d2c703",
+      "bytes": 320
+    },
+    {
+      "path": "corpus/heldout/updates/2025-02-03-coastal-weekly.md",
+      "sha256": "9da2c7a354d6f4fd78cb7ed0af878f86855990fff97acc81e774206bc7dbe4f9",
+      "bytes": 889
+    },
+    {
+      "path": "corpus/heldout/updates/2025-04-07-coastal-weekly.md",
+      "sha256": "79e26f01789b7f4b9da006a14f0a8a8cad1091673277109f87366e85b56e2284",
+      "bytes": 1632
+    },
+    {
+      "path": "corpus/heldout/updates/2025-08-04-coastal-weekly.md",
+      "sha256": "b04a1333bd30f389543b5f28bae21aeee0dd3a7ed351dcf29766c325ade88b00",
+      "bytes": 2358
+    },
+    {
+      "path": "corpus/heldout/updates/2025-10-06-coastal-weekly.md",
+      "sha256": "7ad2dc5e5acf85676aa1046cedf46d880c0d54b93c4dbaa35f24941339218252",
+      "bytes": 3021
+    },
+    {
+      "path": "corpus/heldout/updates/2025-11-03-coastal-weekly.md",
+      "sha256": "10127ba108ac7328e85af508fd424aa780fa581107079523f4bbec8dfef7fc9b",
+      "bytes": 2307
+    },
+    {
+      "path": "corpus/heldout/updates/2025-12-15-coastal-weekly.md",
+      "sha256": "5709138ec31cba0dac9d29fb6e33a5d9fa4d39c77ce2d945a5342c4febb01b6a",
+      "bytes": 2884
+    },
+    {
+      "path": "corpus/heldout/updates/2026-03-16-coastal-weekly.md",
+      "sha256": "3a5e978abd5ddeca4a9c0042b936b1be398a1a3c992a7030c3b1f4c820565617",
+      "bytes": 1917
+    },
+    {
+      "path": "corpus/heldout/updates/2026-05-11-coastal-weekly.md",
+      "sha256": "ac1af5a0c9b769d4dea12a438fa6732323cef42df2f7be9f54cc3e575c22d871",
+      "bytes": 2047
+    },
+    {
+      "path": "corpus/heldout/updates/2026-06-22-coastal-weekly.md",
+      "sha256": "588bd2472d3bf233e01c03a74487ec9e7dc728b48f780cd3cdf85e6487f6dcb3",
+      "bytes": 610
+    },
+    {
+      "path": "corpus/heldout/updates/2026-09-28-coastal-weekly.md",
+      "sha256": "2701f07264973ce5c5a484b5b2ddd88263b60df79ba927ebe5308a7dc7f3e38e",
+      "bytes": 3307
+    },
+    {
+      "path": "labels/agent-tasks/dev.jsonl",
+      "sha256": "17bc00cfcbdc1dfa2aca9c93c9de66e0097fd94cf28dfe4d07df042631f7757e",
+      "bytes": 8220
+    },
+    {
+      "path": "labels/agent-tasks/heldout.jsonl",
+      "sha256": "43e417f25453c9a9247cf1f2d2e9130669ff842bb0e512e3e46167ef01a3db4b",
+      "bytes": 8198
+    },
+    {
+      "path": "labels/aliases/dev.jsonl",
+      "sha256": "21ec5dd153043c9b3e6a4b5b65f2dfba9a86be8e81ababdf507fe96936cabf8e",
+      "bytes": 28341
+    },
+    {
+      "path": "labels/aliases/heldout.jsonl",
+      "sha256": "6c5627fdfe9a26368adfe1084f04b932fd2a98d51a79d232182f7e2b93c5b266",
+      "bytes": 26174
+    },
+    {
+      "path": "labels/changes/dev.jsonl",
+      "sha256": "13610a87ab81600301f58a46c8e453fb62bcff3f8123f198ac78cd4ce284cbb8",
+      "bytes": 7055
+    },
+    {
+      "path": "labels/changes/heldout.jsonl",
+      "sha256": "7d83cc72884d94114e06d8a27744b17229d8bed0874bb41c1f13e2fde905dc75",
+      "bytes": 5558
+    },
+    {
+      "path": "labels/document-status/dev.jsonl",
+      "sha256": "d0e26242e69795dc4f4c7d71cf8cda7e607d9810ceb3c2a17e9ec410dae20c4a",
+      "bytes": 6849
+    },
+    {
+      "path": "labels/document-status/heldout.jsonl",
+      "sha256": "bcf80db8ffb948fd9f6901f5accb1daf77775036558dfd5153862a9dbbb59b0f",
+      "bytes": 6619
+    },
+    {
+      "path": "labels/entity-mentions/dev.jsonl",
+      "sha256": "1ba47b0ba8053dd39d1695f2a6bed2658dd8a7cab783b032b95194da4bc34658",
+      "bytes": 202874
+    },
+    {
+      "path": "labels/entity-mentions/heldout.jsonl",
+      "sha256": "31316c66be5c0ee4d688546a18f301a96ee064f43235ccc469101ced7ea64fec",
+      "bytes": 186332
+    },
+    {
+      "path": "labels/governing-records/dev.jsonl",
+      "sha256": "f5a5a59cd5474044cfb67bf6cdf437e507899ba17fd3934178bee9ce63fbb036",
+      "bytes": 106362
+    },
+    {
+      "path": "labels/governing-records/heldout.jsonl",
+      "sha256": "0308af7a5d6d3993a9d1c0abab661ec12d75135e52050a5f4ee1f6c8343c337c",
+      "bytes": 100439
+    },
+    {
+      "path": "labels/owner-phrases/dev.jsonl",
+      "sha256": "3c7c25dcd0a1e3ac49165979e3aba0b7d466daac33b2146da134f9d3129eb1a8",
+      "bytes": 49178
+    },
+    {
+      "path": "labels/owner-phrases/heldout.jsonl",
+      "sha256": "29b3d61acf7d06dae4ac462bf7b3657954da0961b25dd000c5d0884613b41118",
+      "bytes": 44682
+    },
+    {
+      "path": "labels/ownership/dev.jsonl",
+      "sha256": "cb6cd3e15d87ba255f509e38f6c0c148940487e33eb721c2a9f310871f635503",
+      "bytes": 10575
+    },
+    {
+      "path": "labels/ownership/heldout.jsonl",
+      "sha256": "4004ea4d19e8ffa14b865b75c6d869418a47e97fa76607eb62352a7f6ac86daa",
+      "bytes": 8472
+    },
+    {
+      "path": "labels/timeline/dev.jsonl",
+      "sha256": "82c7849d80c4fc9fe336ea158def2b1725abf8a3bd44cac7224e616fc2f4a452",
+      "bytes": 10984
+    },
+    {
+      "path": "labels/timeline/heldout.jsonl",
+      "sha256": "5c5c5b578dfc4c63ccfe5c04734692ad574ba5c31f190d7fecaf16a9468cd907",
+      "bytes": 8778
+    },
+    {
+      "path": "plan/PLAN.sha256",
+      "sha256": "9961c275bb3ba8ceff480d4f89b81050c8257f016d22a55d1d027458a9ba08ec",
+      "bytes": 154
+    },
+    {
+      "path": "plan/pages.json",
+      "sha256": "1775e31076630a9529ad67cf092e98f1af5a2af1a13f1afeeeedbb175ea14021",
+      "bytes": 338673
+    },
+    {
+      "path": "plan/world.json",
+      "sha256": "f44069857ea87416b4f05590d5233907a2248e9e9082b4ab5389a5dc4727d83d",
+      "bytes": 99597
+    },
+    {
+      "path": "prompts/author-system.md",
+      "sha256": "400aee6b9c4f6a8854d459a51e4319b2384ad221429d2ef20aaefaf84fcdf5e5",
+      "bytes": 1999
+    },
+    {
+      "path": "prompts/verify-system.md",
+      "sha256": "9f946ef0475379be697bf74afac06a66a2fdcd4ce30ddd77c0b27f49d1c63d36",
+      "bytes": 2817
+    },
+    {
+      "path": "raw/author/accounts/brackenwater-freight.json",
+      "sha256": "b2825d4e55b056eaec9b0e510231ada2a3f057c74baf4fe81dab348f71c9a36a",
+      "bytes": 5869
+    },
+    {
+      "path": "raw/author/accounts/driftmoor-marine-freight.json",
+      "sha256": "101286a6ea9f8906c4f871593c685abd189b2c26ee2629bcdc87b19327c1ba25",
+      "bytes": 4339
+    },
+    {
+      "path": "raw/author/accounts/marrow-agrisupply.json",
+      "sha256": "3c65e2cf2767107fda75057716c886dfc187eb6aad656e638b53d41e18a1ff67",
+      "bytes": 4517
+    },
+    {
+      "path": "raw/author/accounts/marrow-fieldworks.json",
+      "sha256": "a821eb2406a2051023bca209502f300aba0ae92542325982117edfbb2bc87e81",
+      "bytes": 4754
+    },
+    {
+      "path": "raw/author/accounts/orlavine-medical-supply.json",
+      "sha256": "64200c0ca802d3c2d40e32f2ef0f597f8c6195d201d5efa7f3cd57eec29e1f84",
+      "bytes": 3829
+    },
+    {
+      "path": "raw/author/accounts/pellow-home-living.json",
+      "sha256": "caaf62891a7796e9f949113de512354fbc57bfd101d058cc5155d0f5adccf183",
+      "bytes": 4628
+    },
+    {
+      "path": "raw/author/accounts/pellucid-harbor-logistics.json",
+      "sha256": "fc19d16379f5b482cda53824d1b2ecd2d5dc9454490a98249f535c4309db0e6c",
+      "bytes": 5556
+    },
+    {
+      "path": "raw/author/accounts/quarrendon-freight-lines.json",
+      "sha256": "58a7455cb5b87cfd8283ca1c6db0f59f4a3a8177710965d64665c4ee86b20431",
+      "bytes": 4401
+    },
+    {
+      "path": "raw/author/accounts/quillfeather-outfitters.json",
+      "sha256": "41e6cf9a00c19389275454d5bbcc58d4e250f0a74a17377d074c9eaf4199a5a3",
+      "bytes": 3965
+    },
+    {
+      "path": "raw/author/accounts/saltmarsh-provisions.json",
+      "sha256": "88b296fef8099e803761fa4210ae6c33dce745dc8937e0b0371c3b1aabc590c9",
+      "bytes": 4817
+    },
+    {
+      "path": "raw/author/accounts/tamsin-cold-chain.json",
+      "sha256": "e2367d3f19840a992268834bb223e4c9e79dce1f90e9d45cb3f2a2b1fb8d71b9",
+      "bytes": 4686
+    },
+    {
+      "path": "raw/author/accounts/tansleigh-packaging.json",
+      "sha256": "0690f93fdb39e2e5c2d7cbfd6d368a47d89a50001a47be630ff2cd1eda0fd981",
+      "bytes": 4393
+    },
+    {
+      "path": "raw/author/accounts/tansley-parcel.json",
+      "sha256": "94de6bfded2346da2bc553562854b41fce3737a6db900e07aef1ea8d54b086e2",
+      "bytes": 4664
+    },
+    {
+      "path": "raw/author/accounts/thornbury-cloth-co.json",
+      "sha256": "3b09db84fbbeef5e9bf56f40c9f9ab5126139fcada35267f80f801d20a3e5e5e",
+      "bytes": 4787
+    },
+    {
+      "path": "raw/author/accounts/vantorre-group.json",
+      "sha256": "193a564154f8206815bf2625043611980459c1c952e59cc3fd95a4e23d68692b",
+      "bytes": 5169
+    },
+    {
+      "path": "raw/author/accounts/vantorre-mobility.json",
+      "sha256": "29555175fcac3bf3a81a1d2d572ca5f09e3c42f2e33cb213a65606e8c94c7d89",
+      "bytes": 4807
+    },
+    {
+      "path": "raw/author/agent-notes/2025-03-10-strategic-digest.json",
+      "sha256": "240ecf7ba1cb6d7228e30001810622db9d01dfa404c83abfc4147a0941b74899",
+      "bytes": 5449
+    },
+    {
+      "path": "raw/author/agent-notes/2025-07-07-strategic-digest.json",
+      "sha256": "a39690ab0ad36207b470d0f99737ffd09da0e0a4c80e2dc2b427d944c8f1c1c5",
+      "bytes": 4079
+    },
+    {
+      "path": "raw/author/agent-notes/2025-09-14-north-pipeline.json",
+      "sha256": "9841d7d89fb6d06b6c2fb49b6413c1c28d0fbcfc29247a7564d73fa166bc576c",
+      "bytes": 5766
+    },
+    {
+      "path": "raw/author/agent-notes/2025-09-15-strategic-digest.json",
+      "sha256": "8a9d3c97a7f3e7c859896e0caa3de89d00607e33364a112a2d4c13e96da041f6",
+      "bytes": 5357
+    },
+    {
+      "path": "raw/author/agent-notes/2025-10-05-coastal-sunday.json",
+      "sha256": "5e32fe43df5538a0da56ea875c73571a56f2d2884cce4c9c6743c88c4e507eca",
+      "bytes": 5769
+    },
+    {
+      "path": "raw/author/agent-notes/2025-10-05-north-sunday.json",
+      "sha256": "74e29465b40d2b8227203f9d43aed81ae3d0d5e3b0cbaca340bec1c26f7b07dc",
+      "bytes": 5683
+    },
+    {
+      "path": "raw/author/agent-notes/2025-11-02-coastal-pipeline.json",
+      "sha256": "405a9d4d5424ced2030a6436cf4cfc5c33da4a0414197fe7574ce9d88ed2131b",
+      "bytes": 3771
+    },
+    {
+      "path": "raw/author/agent-notes/2025-12-01-strategic-digest.json",
+      "sha256": "4a949905d38abb203d7464b0e801a397eabac24c12155a6a875761a29ab09be5",
+      "bytes": 4209
+    },
+    {
+      "path": "raw/author/agent-notes/2026-01-02-central-handoffs.json",
+      "sha256": "889a0c3bb23b5dfeaf5fe8eb89e6f33c03ab56790fda6b101b1f67063f81b3f6",
+      "bytes": 5274
+    },
+    {
+      "path": "raw/author/agent-notes/2026-03-23-north-renewals.json",
+      "sha256": "124be55dbbbb60924d3dacb358a4a9a6f1af69c5c5b17b8ccedce94c11a8f365",
+      "bytes": 3769
+    },
+    {
+      "path": "raw/author/agent-notes/2026-04-27-strategic-digest.json",
+      "sha256": "d0d5b733ef59b95a1e9e1ac0b4e10ca2167e84823dc32e4ba2cd76d671ab60ba",
+      "bytes": 4475
+    },
+    {
+      "path": "raw/author/agent-notes/2026-05-03-strategic-sunday.json",
+      "sha256": "0fbe9d0533b53c1c88c7e8a4223f35579d313fbf76291c7c0424e6193b7be361",
+      "bytes": 4392
+    },
+    {
+      "path": "raw/author/agent-notes/2026-05-04-strategic-digest.json",
+      "sha256": "9d9a3b6d5154700cd16fb37cd36862114ed80a1f4c77a4251324e69dda5bc2cd",
+      "bytes": 4167
+    },
+    {
+      "path": "raw/author/agent-notes/2026-05-18-coastal-coverage.json",
+      "sha256": "4ad65ccae2a4069070e2e77019d70cbbc060e24c7edf5d8e17214dd33578310b",
+      "bytes": 6217
+    },
+    {
+      "path": "raw/author/agent-notes/2026-08-03-strategic-digest.json",
+      "sha256": "36a1e242ee6bda88bd8610e8f565a4b4261943b81309e4b092b885244994ea62",
+      "bytes": 5527
+    },
+    {
+      "path": "raw/author/agent-notes/2026-09-30-strategic-digest.json",
+      "sha256": "1fdd44d42ec2dd9afaabd08832c49aec9ce7074abe4be689e4b1d40b15519234",
+      "bytes": 6149
+    },
+    {
+      "path": "raw/author/agent-notes/central-cheatsheet.json",
+      "sha256": "485aa4ddb823e0d29c4fd76aed5257702a66b8387664e869fe85840cc7ca8613",
+      "bytes": 4095
+    },
+    {
+      "path": "raw/author/agent-notes/coastal-cheatsheet.json",
+      "sha256": "664becf4d421ff5a0eb41001fc809bf1e7028f3f117332e48063b0acbe037d9d",
+      "bytes": 6792
+    },
+    {
+      "path": "raw/author/agent-notes/north-account-cheatsheet.json",
+      "sha256": "47f89adf27eca579d6ddf4cd19ae78d8a0edaf623aba46ca6ec02608e8364b77",
+      "bytes": 5640
+    },
+    {
+      "path": "raw/author/agent-notes/strategic-cheatsheet.json",
+      "sha256": "90cce73c33bcaceb774cddf7a47a5ecfb86a63e6b2f7a88caeb5347c359e60a2",
+      "bytes": 4911
+    },
+    {
+      "path": "raw/author/chats/2025-07-02-tp-confusion.json",
+      "sha256": "88d94e4876aec8c75e4d949cb8e29d8675b675901972fccf039750a697cd6eba",
+      "bytes": 6236
+    },
+    {
+      "path": "raw/author/chats/2025-08-20-north-team-chat.json",
+      "sha256": "929eeb22cb9a3b689513f44f24f63a6c6149138970f27acae118d3479a8706e4",
+      "bytes": 4474
+    },
+    {
+      "path": "raw/author/chats/2025-09-03-tpx-outage-war-room.json",
+      "sha256": "02537c878e4ef852c8f12712dcc016207c3f3db1831be822b2280ca49213b402",
+      "bytes": 4302
+    },
+    {
+      "path": "raw/author/chats/2025-10-15-saltmarsh-churn-risk.json",
+      "sha256": "f22083d3202a1712c7155367b540c10a01a3fb3e77ec13567e5cf193e7012fd4",
+      "bytes": 5781
+    },
+    {
+      "path": "raw/author/chats/2025-11-04-qfl-sev1-war-room.json",
+      "sha256": "a18191d95fd62b7de16d61668863a7be536ce2c163f866803374c1fe2d3115d1",
+      "bytes": 5693
+    },
+    {
+      "path": "raw/author/chats/2025-11-17-saltmarsh-discount-retraction.json",
+      "sha256": "e07aefeea5cead711a0f3b6411b34428887eea6ca4b16dd0b9f9a3ab5d68cf97",
+      "bytes": 3944
+    },
+    {
+      "path": "raw/author/chats/2026-01-13-thornbury-rename.json",
+      "sha256": "43f72e4e039328ead9bf21b8e4b1505c639c59dea25b8eefa8ddbc9b66474058",
+      "bytes": 5346
+    },
+    {
+      "path": "raw/author/chats/2026-02-17-phl-collision.json",
+      "sha256": "47b9ec90bb45ff005d5338fd0eacc52dc60ac86afd9f8cf22fa0ca41a63d5e62",
+      "bytes": 4292
+    },
+    {
+      "path": "raw/author/chats/2026-04-23-marrow-renewal-chat.json",
+      "sha256": "7c293619293d62a56b1d9be0c0789640c210edc035b3c963b26c30fa48759dbb",
+      "bytes": 4060
+    },
+    {
+      "path": "raw/author/chats/2026-06-09-mas-store-rollout.json",
+      "sha256": "2f4d0bf3e6a2dc4030fcdfed85b1f252e9f99f24bf1316d5118838fa4b53d51c",
+      "bytes": 5683
+    },
+    {
+      "path": "raw/author/chats/2026-07-01-vantorre-seats-retraction.json",
+      "sha256": "e9fa3689dc915241ffc5193877688cd5fb7450cd2bd2bc294a4bbb5964f2044c",
+      "bytes": 4773
+    },
+    {
+      "path": "raw/author/chats/2026-08-03-vtg-sev1-war-room.json",
+      "sha256": "8858e718e7fb9c14feddd49a807d8ffe4f7547c5161e2e3159b5863c3f7a9fbc",
+      "bytes": 5349
+    },
+    {
+      "path": "raw/author/chats/central-team-banter.json",
+      "sha256": "7397fedd592c1e646de90e1fb72f418ce9affab3e3cec06253aff5a8feac2ce4",
+      "bytes": 11360
+    },
+    {
+      "path": "raw/author/chats/coastal-team-banter.json",
+      "sha256": "e291295f84220553473d2388c029dc93f00890f64cdab45c4ef618925eb0112d",
+      "bytes": 4731
+    },
+    {
+      "path": "raw/author/chats/north-team-random.json",
+      "sha256": "301f964efa051e5b58fcf2bf05b3e677eb6cd77615f3760d011bec7dd88a336d",
+      "bytes": 6356
+    },
+    {
+      "path": "raw/author/chats/strategic-pod-banter.json",
+      "sha256": "2fd145a583f75c42b40aae489937d7e730fa3357e4387afac19d01a388bc7fb3",
+      "bytes": 4351
+    },
+    {
+      "path": "raw/author/contracts/2024-11-12-bwf-of-2024.json",
+      "sha256": "69c48980bd651f9e2cb3c876dcd6c2fda416902ee16b774b9b1afd9fcd6454ac",
+      "bytes": 7164
+    },
+    {
+      "path": "raw/author/contracts/2024-12-09-dmf-of-2025.json",
+      "sha256": "c9f0481fe05817d78d4b7214a4a3d2dd3e0a812b91da6f6c0625814097aef216",
+      "bytes": 9506
+    },
+    {
+      "path": "raw/author/contracts/2025-01-20-tpx-msa.json",
+      "sha256": "600b640ea6f48d916130066714aa730f0120e7b6289f7f00a2862b905a0703fd",
+      "bytes": 6776
+    },
+    {
+      "path": "raw/author/contracts/2025-02-14-orm-of-2025.json",
+      "sha256": "f247c7d16721c914041001005e0b4edfe0489a5495d73c24fe7c29fac8f0e1b3",
+      "bytes": 5817
+    },
+    {
+      "path": "raw/author/contracts/2025-02-26-phl-msa.json",
+      "sha256": "33743bc8a452bf97e5fb9a94616456cf7bd07c579c428237cddeeff18b45b53c",
+      "bytes": 8727
+    },
+    {
+      "path": "raw/author/contracts/2025-03-03-tsp-of-2025.json",
+      "sha256": "c592ae41749fe94b960689744c893899d3be1b48229b3d86f7ccf441cea70dbe",
+      "bytes": 10255
+    },
+    {
+      "path": "raw/author/contracts/2025-03-12-clr-of-2025.json",
+      "sha256": "c4d24b291e74fa12b7032a2d87ee0ed63e3b69c408f26cddd2af1fd9b6f3a827",
+      "bytes": 7104
+    },
+    {
+      "path": "raw/author/contracts/2025-03-28-qfl-msa.json",
+      "sha256": "37f5bb93efc37d1b5e45fb4d13ff72041a7764e015dfa1f17a6fe22e74e73d0e",
+      "bytes": 63910
+    },
+    {
+      "path": "raw/author/contracts/2025-04-08-mfw-msa.json",
+      "sha256": "5b6d5acb96a92ef97627892771bfa9c04f776fb78e2773434e770c821b9979f5",
+      "bytes": 11682
+    },
+    {
+      "path": "raw/author/contracts/2025-05-30-tcc-of-2025.json",
+      "sha256": "d535a413d892cd0c06b595bc2ea42415ffd2f46ccb9fff0b462898b5f4d7ee83",
+      "bytes": 8058
+    },
+    {
+      "path": "raw/author/contracts/2025-06-10-tpx-a1.json",
+      "sha256": "4fbeb0bf3c1de450423fd45092f3c64f121361bc1f1d9a38aad60f5acbccfad6",
+      "bytes": 8756
+    },
+    {
+      "path": "raw/author/contracts/2025-06-25-smp-of-2025.json",
+      "sha256": "4d6a5da3cfb634eab8ef66edd50baf2042df4b2bbcdea985b281cc91b3d392fe",
+      "bytes": 6130
+    },
+    {
+      "path": "raw/author/contracts/2025-06-30-vtg-msa.json",
+      "sha256": "a2ade2d9e1d9e7e868d1927a01c159fd3938d88441990da66e003df9c36e446c",
+      "bytes": 39958
+    },
+    {
+      "path": "raw/author/contracts/2025-08-05-qfo-of-2025.json",
+      "sha256": "962c972a02d585036fd7ed617751e17f2c2886b20b7f88c0c6d9605023a3c50a",
+      "bytes": 4449
+    },
+    {
+      "path": "raw/author/contracts/2025-08-19-qfl-a1.json",
+      "sha256": "cc78448e892364951454cb3c5aebc96f2a560da34743bf9e5c9e07267463af51",
+      "bytes": 7180
+    },
+    {
+      "path": "raw/author/contracts/2025-09-29-oms-of-2025.json",
+      "sha256": "b14bd0fba322f2635df0782df35bdeb374204dee4313fe12361169d5d9278079",
+      "bytes": 9364
+    },
+    {
+      "path": "raw/author/contracts/2025-10-02-mfw-affiliate-a1.json",
+      "sha256": "5fe5abec7e2394553c7fccf2b89ad014768aba7c2fb664a03d6d2d7eea8a63a4",
+      "bytes": 8311
+    },
+    {
+      "path": "raw/author/contracts/2025-10-20-smp-a1.json",
+      "sha256": "a0ee2be3ebde13413e47707ac3cb2545138856b9fad4f902e0fe808eb552ef0d",
+      "bytes": 5191
+    },
+    {
+      "path": "raw/author/contracts/2025-10-28-bwf-redline.json",
+      "sha256": "06d4dd927644181de744a74335403b80d7e3ce63104fd05139630cb9fcba06d5",
+      "bytes": 10450
+    },
+    {
+      "path": "raw/author/contracts/2025-11-18-vtm-a1.json",
+      "sha256": "6757cfd89686bf9d45dcfe1a8abc76ec55ebb294fb0f452c4a125120a7f4945d",
+      "bytes": 4786
+    },
+    {
+      "path": "raw/author/contracts/2025-11-21-bwf-renewal-2025.json",
+      "sha256": "1bbb5bb00bfb173f64e9d71b8a961302b2c08772b0319e097c082142efb9784c",
+      "bytes": 7946
+    },
+    {
+      "path": "raw/author/contracts/2025-12-03-qfl-a2-draft.json",
+      "sha256": "81038d8bd22746ef904f382628c2f448ce236aa84eabec6e90341aabd1b1f65e",
+      "bytes": 13605
+    },
+    {
+      "path": "raw/author/contracts/2025-12-15-phl-a1-unsigned.json",
+      "sha256": "bdc4fc2099ba9ccba19e2f0eb275b9fd4139167e10da851099004b94880dc3f8",
+      "bytes": 6960
+    },
+    {
+      "path": "raw/author/contracts/2025-12-17-dmf-renewal-2026.json",
+      "sha256": "92c3b9756387b4dfaf7cbd8dffc209e4bec89f8a44c98d5f562cf729bbc8ec0d",
+      "bytes": 11711
+    },
+    {
+      "path": "raw/author/contracts/2026-01-15-tpx-renewal-2026.json",
+      "sha256": "878200042453cabb14954b44ebb99de47a1164766caeaa33992dead99cd5e84f",
+      "bytes": 9597
+    },
+    {
+      "path": "raw/author/contracts/2026-02-10-orm-unsigned-2026.json",
+      "sha256": "178effa519ac77f9258d8c3ff7068062445ebfbd347aa9f7ea889b24876301fc",
+      "bytes": 6850
+    },
+    {
+      "path": "raw/author/contracts/2026-02-19-phl-renewal-2026.json",
+      "sha256": "4e598feb18a2124bb43636d7dc0c2c5c5ba4ffd434aec37cde8bac2417d9cde0",
+      "bytes": 7245
+    },
+    {
+      "path": "raw/author/contracts/2026-02-24-orm-renewal-2026.json",
+      "sha256": "017f47e3e437dccdc003fdb5d50a57b971931291b08e2586567af96fc3d269fc",
+      "bytes": 13388
+    },
+    {
+      "path": "raw/author/contracts/2026-03-09-clr-draft-2026.json",
+      "sha256": "6f51539aa0c0cb384791b20325baa6c59e54266c395d19e9fbf76023146dde2b",
+      "bytes": 10022
+    },
+    {
+      "path": "raw/author/contracts/2026-03-10-tsp-renewal-2026.json",
+      "sha256": "48e222347611b07311bf45f4f53fdbeb50eca3a9450b81782a46c3d8df6a7ff2",
+      "bytes": 5548
+    },
+    {
+      "path": "raw/author/contracts/2026-03-20-qfl-renewal-2026.json",
+      "sha256": "bd5da5e073c3ab4f01b9352b1ffd89b34a97254da52374089a9faf89d8263f3c",
+      "bytes": 5015
+    },
+    {
+      "path": "raw/author/contracts/2026-03-25-clr-renewal-2026.json",
+      "sha256": "9ad3031002fb20cb413e33c9e01b11b6345cfbaa208c810eeeebccb17670bc4e",
+      "bytes": 6960
+    },
+    {
+      "path": "raw/author/contracts/2026-04-22-mfw-renewal-2026.json",
+      "sha256": "d893a7d6300b0af37afb290aee802b18f0cec751431019f65f51817e488d7a31",
+      "bytes": 10816
+    },
+    {
+      "path": "raw/author/contracts/2026-05-27-tcc-renewal-2026.json",
+      "sha256": "6731174ccdd032d04afd0210e978115a0e878f61c477ad7890342a0d5830dcfc",
+      "bytes": 4532
+    },
+    {
+      "path": "raw/author/contracts/2026-06-18-smp-renewal-2026.json",
+      "sha256": "79a1bc36098d45b43e7231fd0e850f21b896b27b12a326343be1c3ec7d2cadad",
+      "bytes": 4974
+    },
+    {
+      "path": "raw/author/contracts/2026-06-24-vtg-renewal-2026.json",
+      "sha256": "d61232cd3e66f2d439111e42c9bbbcf5275808fd08263c13751e208e7f00e715",
+      "bytes": 8269
+    },
+    {
+      "path": "raw/author/contracts/2026-08-10-qfo-renewal-2026.json",
+      "sha256": "81ebf7a4215cd7af5411d5a7f9828ee5bb2b041170d97e4ec98ba661f38afcfb",
+      "bytes": 5044
+    },
+    {
+      "path": "raw/author/contracts/2026-08-14-vtg-a2-draft.json",
+      "sha256": "be372890755913c525c2afc2b6932f9b6af1d14ecca59c5a79cd36e6fdfbe48e",
+      "bytes": 10904
+    },
+    {
+      "path": "raw/author/contracts/2026-09-22-qfl-a3.json",
+      "sha256": "2df67bd989afe5cdab36edb7849077f9be3bc1dc32c6f45a2329de7dd131e391",
+      "bytes": 6667
+    },
+    {
+      "path": "raw/author/contracts/2026-09-24-oms-renewal-2026.json",
+      "sha256": "a5f40b1d5934a01112b84490f35bc30cb7e04584572f9fd32cfd9804ed9b4b35",
+      "bytes": 12737
+    },
+    {
+      "path": "raw/author/contracts/2026-09-29-phl-a2.json",
+      "sha256": "d324c172e353f0ead5b7b9a34baf48ed69130080223a581b6478edb79947ecb4",
+      "bytes": 10456
+    },
+    {
+      "path": "raw/author/crm/2025-02-03-tansley-parcel-onboarding.json",
+      "sha256": "33f9b47b6aba152d6e49d0aea9f515c5afc237c8257dd9622d24f6394a383efc",
+      "bytes": 3419
+    },
+    {
+      "path": "raw/author/crm/2025-03-10-tamsin-marcus-note.json",
+      "sha256": "1e808309a653662c9e7575c96d42b4012054d9db8a61727bd199f6cf2cc2a066",
+      "bytes": 4018
+    },
+    {
+      "path": "raw/author/crm/2025-05-02-tamsin-dana-note.json",
+      "sha256": "6616a76ad1b7d2c5fc9b73951958c84807721a3d8b6254ad7e3826b8a88e14aa",
+      "bytes": 4184
+    },
+    {
+      "path": "raw/author/crm/2025-05-06-covey-lark-profile-note.json",
+      "sha256": "8a5f2ed86afbe63743e3eb2fefab51ce78f7e94d5e3802dd5249fb37b4e455c8",
+      "bytes": 3890
+    },
+    {
+      "path": "raw/author/crm/2025-07-01-saltmarsh-onboarding.json",
+      "sha256": "63dc665bcf99b267fe0d2cb3384b125a0cc97131aa392aaf269a83c90de0e037",
+      "bytes": 4047
+    },
+    {
+      "path": "raw/author/crm/2025-07-08-tansley-parcel-discount-note.json",
+      "sha256": "33f85d63c57afa77814fb25d0196ddb151920b8cef01c98723cc1029c3935051",
+      "bytes": 3657
+    },
+    {
+      "path": "raw/author/crm/2025-09-02-orrin-note.json",
+      "sha256": "a518e0cbd656de17d13bf5fcdfb993a1389576602bcdd4ea5b932a1d12f9c9f2",
+      "bytes": 3644
+    },
+    {
+      "path": "raw/author/crm/2025-10-01-quarrendon-note.json",
+      "sha256": "9493c59d98101a6e08c8b4448b34d7e1f3287b6e65ae5b3cf4095ecedb6a0ab0",
+      "bytes": 3751
+    },
+    {
+      "path": "raw/author/crm/2025-10-06-orlavine-onboarding.json",
+      "sha256": "e80ec8b504f8d386f0332fb275873ba6b45f70a13ebeb00041f35df243b88c27",
+      "bytes": 4433
+    },
+    {
+      "path": "raw/author/crm/2025-12-02-saltmarsh-note.json",
+      "sha256": "43a2af1fb05ce8f52cddc03246681b38b9bfdd932e0af32f2b49de616cee986b",
+      "bytes": 3559
+    },
+    {
+      "path": "raw/author/crm/2026-01-05-driftmoor-renewal-note.json",
+      "sha256": "d9d1130ae8e4568fe8399cc8374c4d9fd5450e42154bac492763c6674ce26468",
+      "bytes": 4220
+    },
+    {
+      "path": "raw/author/crm/2026-02-10-brackenwater-note.json",
+      "sha256": "ae9faec6b205c93a2c8b3a13bc6e3d6103f48603e96464ca8768b39a835498a8",
+      "bytes": 3696
+    },
+    {
+      "path": "raw/author/crm/2026-03-02-quillfeather-note.json",
+      "sha256": "627d3e13b24e1b2e86991a5af398c2d12b809dc1879ca98d89234c0a74a3b0a4",
+      "bytes": 4370
+    },
+    {
+      "path": "raw/author/crm/2026-04-20-pellow-expansion.json",
+      "sha256": "781c1100271acc52b6dcca220f810d3e40f660600eefd52a236cb894a48db031",
+      "bytes": 4094
+    },
+    {
+      "path": "raw/author/crm/2026-04-23-marrow-renewal-note.json",
+      "sha256": "fe14d53cbc09a0539e83beea51577ddeb7a034c5903d1c868cdfe5edf4461b90",
+      "bytes": 4352
+    },
+    {
+      "path": "raw/author/crm/2026-05-12-vantorre-mobility-note.json",
+      "sha256": "ca20b4471d12767a5ca6d2545c30befd9b1acdd708f6b36ed4caa5fbeede50bb",
+      "bytes": 3707
+    },
+    {
+      "path": "raw/author/crm/2026-08-04-tansley-parcel-expansion-note.json",
+      "sha256": "e1d8e9bdc0b1fdb87a5a364af7891a5d6dd29d7ed9f7f37e5f92eb13d5c36548",
+      "bytes": 3517
+    },
+    {
+      "path": "raw/author/emails/2025-01-06-central-book-of-business.json",
+      "sha256": "a8cfa912237d66ed01f0d1808d37ecec772e914878c641071599e92c91d80b23",
+      "bytes": 4564
+    },
+    {
+      "path": "raw/author/emails/2025-01-06-strategic-pod-assignments.json",
+      "sha256": "ce58ef22df9cc9912283e194913d3df01737a4a28b4a90d515c1d53269e7feef",
+      "bytes": 4917
+    },
+    {
+      "path": "raw/author/emails/2025-04-02-driftmoor-to-kwame.json",
+      "sha256": "25fb692649a6ab06d67625571e0831a3eca5a8edf2f42b599979b1fc325a8f5b",
+      "bytes": 3882
+    },
+    {
+      "path": "raw/author/emails/2025-04-10-tamsin-moves-to-dana.json",
+      "sha256": "b9d132aed7b9d0f0eaed43f4abcd1464abb34ad20a8cb78b02c0eb3fc00300cd",
+      "bytes": 3718
+    },
+    {
+      "path": "raw/author/emails/2025-05-28-quarrendon-handoff.json",
+      "sha256": "134302f08eb917ea23c3fd4447548957c60707a5c821e6f174d624c763b88837",
+      "bytes": 4273
+    },
+    {
+      "path": "raw/author/emails/2025-06-12-vantorre-decision-maker.json",
+      "sha256": "30cce504c73ce8005717b58795fa09b79fa7b1dacbabb97772549cd297c9a21f",
+      "bytes": 4513
+    },
+    {
+      "path": "raw/author/emails/2025-06-30-vantorre-msa-executed.json",
+      "sha256": "50d27c4711a113690bceeebcac6dd772d6ad1d8e0219176e908a93784e7e74b5",
+      "bytes": 5754
+    },
+    {
+      "path": "raw/author/emails/2025-07-23-quarrendon-qbr-followup.json",
+      "sha256": "9440aefee6cc756c1f31ad357729629cf26bedac31a1ad30f079e6a7dafe021d",
+      "bytes": 4415
+    },
+    {
+      "path": "raw/author/emails/2025-08-27-driftmoor-barge-notifications.json",
+      "sha256": "6fc178f637bca1f0cfe55588190b889ef55d11bec75febde735bd4041ff3b444",
+      "bytes": 5871
+    },
+    {
+      "path": "raw/author/emails/2025-09-04-tpx-outage-rca.json",
+      "sha256": "334048e8b6248b845582061695b6df698af576496634bb2b822d7b4fff9f08f4",
+      "bytes": 5804
+    },
+    {
+      "path": "raw/author/emails/2025-09-10-brackenwater-to-marcus.json",
+      "sha256": "00cf90e4942b6bbc67d76e763e77762c3448f87ec7051ff3c6c49f75f99180e8",
+      "bytes": 5133
+    },
+    {
+      "path": "raw/author/emails/2025-10-01-north-account-moves.json",
+      "sha256": "1feb7dd4227b4f35cb6117ce0b7c42dbd8e29c6ac45e24f906dc41871c84ea24",
+      "bytes": 3711
+    },
+    {
+      "path": "raw/author/emails/2025-10-01-saltmarsh-to-bettina.json",
+      "sha256": "c4cc76f32f02fb14af141b5a44edcd1eb613a2824677e9021c25ce438c469366",
+      "bytes": 5142
+    },
+    {
+      "path": "raw/author/emails/2025-10-02-mas-affiliate-amendment-signed.json",
+      "sha256": "32f440b7954bbb1855f8f7dd6b436a8d4409b9adc4b045bf9de3c193e6bea5e9",
+      "bytes": 3789
+    },
+    {
+      "path": "raw/author/emails/2025-10-02-quarrendon-monthly-fee.json",
+      "sha256": "a26f21feafbba972d82d4e7679cb18aca74c9ed518703a5e3c5e7d6629f6203f",
+      "bytes": 3625
+    },
+    {
+      "path": "raw/author/emails/2025-10-03-correction-north-moves.json",
+      "sha256": "eb101ad88d3ac3adb492dea1091839934dc975b4530fb5244e3ebfcbda802905",
+      "bytes": 5927
+    },
+    {
+      "path": "raw/author/emails/2025-10-20-saltmarsh-concession-approved.json",
+      "sha256": "a851c557252700dbef78b2a32e4a3c08d7fcc04ae1151bcf693d6088626aca39",
+      "bytes": 3596
+    },
+    {
+      "path": "raw/author/emails/2025-10-28-pellucid-to-kwame.json",
+      "sha256": "72baf25a00e5260a2f1ccbc4ea281b58b405a86904dd7429c5770ab30011343f",
+      "bytes": 3855
+    },
+    {
+      "path": "raw/author/emails/2025-11-06-quarrendon-exec-call.json",
+      "sha256": "7126dc79176c05b31fb28ee7d0d7691685f4025c56143cc4302819b897f7bd59",
+      "bytes": 5313
+    },
+    {
+      "path": "raw/author/emails/2025-11-19-vtm-amendment-executed.json",
+      "sha256": "55d59e441e15a45f56d9ad2e11f94c169cd9c097a10346930828d47fe746eb60",
+      "bytes": 3701
+    },
+    {
+      "path": "raw/author/emails/2025-12-04-quarrendon-discount-pushback.json",
+      "sha256": "125890f5c4577b09ae3eeb0c4a449e34d70d739b7dd5e1d5350667d2cbb811d7",
+      "bytes": 3494
+    },
+    {
+      "path": "raw/author/emails/2025-12-15-marrow-fieldworks-handoff.json",
+      "sha256": "ae67699078b1b121da5ca770e457dfffb0634d7e67cfba011c21993bd49c720e",
+      "bytes": 4098
+    },
+    {
+      "path": "raw/author/emails/2026-01-12-orrin-rebrand-notice.json",
+      "sha256": "42afeabc3fcac05aa26daba588f163b07ca5c2e65e94a32f2e785d731dafa203",
+      "bytes": 4214
+    },
+    {
+      "path": "raw/author/emails/2026-01-16-tansley-parcel-renewal-recap.json",
+      "sha256": "c95e489ae5ccfc8874968ac251c953e296fbe55407ceb03147dd4334fe26eba2",
+      "bytes": 4248
+    },
+    {
+      "path": "raw/author/emails/2026-01-21-brackenwater-double-billing.json",
+      "sha256": "b7b5875b16ded8de71ca3afc5ee563f0843b7b32e5689f41b5543a17798c7082",
+      "bytes": 4635
+    },
+    {
+      "path": "raw/author/emails/2026-01-26-dana-leave-coverage.json",
+      "sha256": "7257ab9097c6271a29cfdf8c7af20677594a81c31f209deaab198e032e9958a8",
+      "bytes": 4286
+    },
+    {
+      "path": "raw/author/emails/2026-02-12-orlavene-followup.json",
+      "sha256": "509e2f6771a1a0d15214182e1efca9a425a5945d91e800020dd598bf4f2d427b",
+      "bytes": 5327
+    },
+    {
+      "path": "raw/author/emails/2026-02-16-covey-lark-rebrand.json",
+      "sha256": "f98f4936e38e15c469c83941dd5117cba89b014b0bf8de418ac0c8f065bef0bf",
+      "bytes": 4442
+    },
+    {
+      "path": "raw/author/emails/2026-02-20-stoneharrow-invoice-portal.json",
+      "sha256": "f632cbbd74e5a08d07e7c6d5102be8313614c09f84cc782859ef758efba5c1c4",
+      "bytes": 6379
+    },
+    {
+      "path": "raw/author/emails/2026-03-03-lev-seat-count.json",
+      "sha256": "774ca195752e13c4cd048fdfee8c9c2a8f44da08a70b728b84b759d32f951dcf",
+      "bytes": 3491
+    },
+    {
+      "path": "raw/author/emails/2026-03-10-pellucid-monthly-fee.json",
+      "sha256": "4255024b1caf85ed2f5fe3da053049b9c503ff4ef706bfec05d7086544d50481",
+      "bytes": 4969
+    },
+    {
+      "path": "raw/author/emails/2026-03-11-tansleigh-renewal-executed.json",
+      "sha256": "0d38753c6a1980007704ba96c995c84dbf0b9be312b2b4f2623cf685abaf1d7f",
+      "bytes": 4388
+    },
+    {
+      "path": "raw/author/emails/2026-04-13-vantorre-handoff-announcement.json",
+      "sha256": "70d523ce1eed94ae5c69438ae99645ed0063b69b711b7fbdbf64113889331d18",
+      "bytes": 3787
+    },
+    {
+      "path": "raw/author/emails/2026-04-16-vantorre-handoff-correction.json",
+      "sha256": "12a6eed2bbf6c6dfd24e403706480d380bbaa9033dc990a701465ebf379ecf42",
+      "bytes": 4585
+    },
+    {
+      "path": "raw/author/emails/2026-04-24-sofia-leave-coverage.json",
+      "sha256": "4744fc91f05914538b1824bf830a2dd3524118edfcf6a2072c8e87556440f7ec",
+      "bytes": 4864
+    },
+    {
+      "path": "raw/author/emails/2026-05-20-vantorre-reorg.json",
+      "sha256": "d3eb6ca5a4cddc2df9376eda03a6312a91d8beeba25d53ae2f54742c7a7cda2a",
+      "bytes": 3912
+    },
+    {
+      "path": "raw/author/emails/2026-06-18-saltmarsh-renewal-signed.json",
+      "sha256": "82b4b4b562277badb1c4aa80b74d6ff3a3942900608cebb73b8b61e8fa0569ce",
+      "bytes": 5535
+    },
+    {
+      "path": "raw/author/emails/2026-06-24-vantorre-renewal-executed.json",
+      "sha256": "6ea95ce62ac7014e22f342e04c5258fd66053f06c43efdaec86f2d75759d8ce9",
+      "bytes": 4734
+    },
+    {
+      "path": "raw/author/emails/2026-06-29-tobias-pto-coverage.json",
+      "sha256": "08070420d93b168f35b9e8de268c352decf0e5dd9421980c63d4d516ff7f1a3a",
+      "bytes": 3663
+    },
+    {
+      "path": "raw/author/emails/2026-07-14-carrowmere-hosting-renewal.json",
+      "sha256": "81b61bee0456dbe05ca71ee281f2d4ccfd7ef85a6344efa630d0097308bdbf61",
+      "bytes": 4566
+    },
+    {
+      "path": "raw/author/emails/2026-08-17-vantorre-discount-ask.json",
+      "sha256": "d365c56ee538700fba2f12a610d6f34e92e0f3310d80ac6126ed467ac015e9a1",
+      "bytes": 3706
+    },
+    {
+      "path": "raw/author/emails/2026-09-24-orlavine-renewal-executed.json",
+      "sha256": "cc8113a7f94a652cf5d35aeeaeabd2ac37baa2add87d4019d208cf850cdd7d25",
+      "bytes": 5239
+    },
+    {
+      "path": "raw/author/meetings/2025-04-08-marrow-msa-signing-call.json",
+      "sha256": "6fb90c9bf94889f892ed3d2b1fd49ff0f80ccfd29527536f7c9c9c02e3eb9d8a",
+      "bytes": 5977
+    },
+    {
+      "path": "raw/author/meetings/2025-04-22-tamsin-kickoff.json",
+      "sha256": "dfca320b62c4adfe7f6ff8daa65f9dabeafa35e802ddbe044efbb84fedd670de",
+      "bytes": 4451
+    },
+    {
+      "path": "raw/author/meetings/2025-06-20-marrow-golive-checkin.json",
+      "sha256": "93a1eadcc5b2a3bcd1890f70fbc3e1ffa9a0e4dbb5d76e8487e6f17bdc5bc8d9",
+      "bytes": 3577
+    },
+    {
+      "path": "raw/author/meetings/2025-07-15-vantorre-kickoff.json",
+      "sha256": "18b7e1b2d008874f70094721ac1c85ec135d946f8f6e017dc4a0f30556f07e59",
+      "bytes": 4823
+    },
+    {
+      "path": "raw/author/meetings/2025-07-22-quarrendon-qbr.json",
+      "sha256": "573a41bac586d7f9569314a22bc78261a93159ce2e46c984a73acb00bd3708c6",
+      "bytes": 4513
+    },
+    {
+      "path": "raw/author/meetings/2025-08-05-quillfeather-signing-call.json",
+      "sha256": "dd2ff870820007b396dff3b6971737a0b6c4ae56b2e1df9028fb502e7a69bd04",
+      "bytes": 4368
+    },
+    {
+      "path": "raw/author/meetings/2025-09-12-north-pipeline-review.json",
+      "sha256": "ce15f3fecc15739983da6f9cbe05918b6578583f02c3b1bb0a18a3191e9626ac",
+      "bytes": 5568
+    },
+    {
+      "path": "raw/author/meetings/2025-10-14-tansley-parcel-qbr.json",
+      "sha256": "e4db5475779e981d78cd56ccbf62a764800d5212a4487774a74e1f7646bb839c",
+      "bytes": 5182
+    },
+    {
+      "path": "raw/author/meetings/2025-10-16-saltmarsh-rescue-call.json",
+      "sha256": "c854ba2afce19ba212dad22d6bf0946b290a2153a6567701260371fee6f4da6b",
+      "bytes": 4551
+    },
+    {
+      "path": "raw/author/meetings/2025-11-05-coastal-pipeline-review.json",
+      "sha256": "ba69bd3bdad814aadaabe98be9bd3e20e6005c28457afb178caa2e8a6d9fcaa8",
+      "bytes": 6524
+    },
+    {
+      "path": "raw/author/meetings/2025-11-18-marrow-fieldworks-qbr.json",
+      "sha256": "8447a48618a62359547532d7dd3e0c1ae6be0501f5cd5feaca2c8f10ddfd250a",
+      "bytes": 6277
+    },
+    {
+      "path": "raw/author/meetings/2025-11-20-pellucid-cutover-wrapup.json",
+      "sha256": "94a0f307924454ecc03169bb729a9a7be18d43efa1619085aa1e5702f705fb7a",
+      "bytes": 4390
+    },
+    {
+      "path": "raw/author/meetings/2026-02-11-orlavene-health-intro.json",
+      "sha256": "380ffc85daf9abdb18b1663f0958279914e955a606ed24e923b38a01f2b6ae28",
+      "bytes": 4921
+    },
+    {
+      "path": "raw/author/meetings/2026-03-05-pellucid-renewal-debrief.json",
+      "sha256": "edd5a1a1c3bf37261b4027daedc4e75f26372d0e1a3d84ecbf2d967ec4539a7a",
+      "bytes": 4023
+    },
+    {
+      "path": "raw/author/meetings/2026-04-09-quarrendon-renewal-debrief.json",
+      "sha256": "2bda2c091e54cf0ea51eb46effb95b852f72cd25045e9f9dd0c71872e0b2a30e",
+      "bytes": 5608
+    },
+    {
+      "path": "raw/author/meetings/2026-04-22-marrow-renewal-call.json",
+      "sha256": "7048d47f4823b89bf3d1a388052d090a4157b416f9eb8ad99116439d4a459c80",
+      "bytes": 4666
+    },
+    {
+      "path": "raw/author/meetings/2026-04-28-vantorre-steering-committee.json",
+      "sha256": "b6253c9dff692f17faf4cc4a80d43cce365d09fc41efd78ea7642398085e8e0a",
+      "bytes": 5087
+    },
+    {
+      "path": "raw/author/meetings/2026-05-27-tamsin-renewal-call.json",
+      "sha256": "5858857485a4bd72d0770af12b2eeda8bd85d4330053d6546621b1ac1a2fc7a7",
+      "bytes": 3823
+    },
+    {
+      "path": "raw/author/meetings/2026-07-09-vantorre-renewal-debrief.json",
+      "sha256": "078b060a1959402e2c075282aa5a84e90e593a6275209698a73683c0a57eea62",
+      "bytes": 5221
+    },
+    {
+      "path": "raw/author/meetings/2026-08-10-quillfeather-renewal.json",
+      "sha256": "6b72bd4d74bcc24d4085d1620c46f1790f0fdfc905fa6f58f6031d1b29331a8c",
+      "bytes": 5674
+    },
+    {
+      "path": "raw/author/notes/2025-05-19-hollis-1on1-tobias.json",
+      "sha256": "a769586fbc456f7063fdca4bb732faf330263b756e8faddc5233fc20b8fef930",
+      "bytes": 4509
+    },
+    {
+      "path": "raw/author/notes/2025-07-14-marcus-q2-expansion-wrap.json",
+      "sha256": "fc8f3ee4680e3bd1ab459ca8a4f45fa4e60045ba86e06b241f3ce652c89765ea",
+      "bytes": 4462
+    },
+    {
+      "path": "raw/author/notes/2025-07-17-tansleigh-onsite.json",
+      "sha256": "b77169071006376b9daf68fb310dde4eb1cea0b60ab02c3822146f0a42ef25b2",
+      "bytes": 4811
+    },
+    {
+      "path": "raw/author/notes/2025-08-08-ruth-private-orlavine.json",
+      "sha256": "aa7c25235529ffd6ccdf007b61ab7a155c14dc798ba54f1a8692e834a5cf8a34",
+      "bytes": 3524
+    },
+    {
+      "path": "raw/author/notes/2025-08-11-quarendon-freightways-intel.json",
+      "sha256": "1dbb1d8e3840a6ff6f3430b13659337f31e57a92f677c719632b5fedc8e9e8f4",
+      "bytes": 4593
+    },
+    {
+      "path": "raw/author/notes/2025-08-25-central-territory-plan.json",
+      "sha256": "883be0c95c3e315d8ea75765603d7fb20b315d0857b92eca94adb8d50208ef4a",
+      "bytes": 3794
+    },
+    {
+      "path": "raw/author/notes/2025-11-03-hr-open-enrollment.json",
+      "sha256": "2e63452016d2144d8522282c8efc06eea641777118d010b65752db81aab20d2d",
+      "bytes": 4260
+    },
+    {
+      "path": "raw/author/notes/2025-12-08-bettina-pellucid-cutover-recap.json",
+      "sha256": "2ff10a282eae6ae23a194eb636a9d873d4909ef092e3a7880a1cad7537d00b79",
+      "bytes": 5021
+    },
+    {
+      "path": "raw/author/notes/2026-01-15-hr-benefits-reminder.json",
+      "sha256": "c26a3ed96b136c8457eecafa99fe0a4819df4504df2feca4d26ccb37d7aad5f2",
+      "bytes": 4233
+    },
+    {
+      "path": "raw/author/notes/2026-01-29-it-laptop-swap.json",
+      "sha256": "aa4dc0355c379c8e27666831fff3f308d39bd055e7c8e983de9240ae1a57f6fa",
+      "bytes": 3997
+    },
+    {
+      "path": "raw/author/notes/2026-01-30-ilse-private-dana-leave.json",
+      "sha256": "48b52e7bfb2292a42ab007925cee3b538ab6a95be1c8963852f9aba25a4bcf13",
+      "bytes": 5233
+    },
+    {
+      "path": "raw/author/notes/2026-03-30-it-device-refresh.json",
+      "sha256": "c91537a0df3f3517c306f45bee5affe2545cb162b5b98a1d040149b2316f6bc4",
+      "bytes": 3584
+    },
+    {
+      "path": "raw/author/notes/2026-04-24-bettina-private-sofia-leave.json",
+      "sha256": "849a9e7a4f18f1365278b817fa351cdc36c2a5f5a2b60594deb67c001ee33448",
+      "bytes": 3944
+    },
+    {
+      "path": "raw/author/notes/2026-06-01-strategic-qbr-plan.json",
+      "sha256": "dd837fb86f9974e2d3dc7ea91edda93e357fd2874ded304e4d576d70819edb52",
+      "bytes": 4310
+    },
+    {
+      "path": "raw/author/tickets/2025-08-12-tamsin-sensor-feed.json",
+      "sha256": "187d1a62b8d40c2e99c76404fa84d5a34d61c371a1a64e3c5b6a71aa1e1a1167",
+      "bytes": 4876
+    },
+    {
+      "path": "raw/author/tickets/2025-08-26-dmf-barge-slot-notifications.json",
+      "sha256": "9f0e3df3601f91e9bf1cd0a57e66930f004ed78768775760599787df315442e5",
+      "bytes": 5179
+    },
+    {
+      "path": "raw/author/tickets/2025-11-04-qfl-sev1.json",
+      "sha256": "e8844033954f472db7224e4d1e612e1200f3c9ce222788186b180bf998cabe8b",
+      "bytes": 4938
+    },
+    {
+      "path": "raw/author/tickets/2025-11-21-phl-terminal-cutover-issue.json",
+      "sha256": "70771102695cc228d7641eeb95f882d79ee2db6fc7fd895bf76dc70b28f5d1c6",
+      "bytes": 5045
+    },
+    {
+      "path": "raw/author/tickets/2025-11-25-vtm-charger-sync.json",
+      "sha256": "a374629794e068032b7bca3d53b65b0b0d869abbff7cd4d52ad6a4037c7c733e",
+      "bytes": 4059
+    },
+    {
+      "path": "raw/author/tickets/2025-12-02-mfw-dealer-portal-sso.json",
+      "sha256": "0d2dfcdd65863ab36f5c9843fa763c217e7d99200edccd1194bbf35744432d95",
+      "bytes": 3870
+    },
+    {
+      "path": "raw/author/tickets/2026-01-20-bwf-invoice-dispute.json",
+      "sha256": "238e2ee00ca5fb6b18fac8473fb9a46071ac2cf7ff29940579b2f380792e1fc1",
+      "bytes": 4567
+    },
+    {
+      "path": "raw/author/tickets/2026-03-17-tsp-label-printer.json",
+      "sha256": "7879c9c646fe90fbd0e7a9dca54854c8edebf5f1ec37a34a26cf31010cf590fe",
+      "bytes": 3705
+    },
+    {
+      "path": "raw/author/tickets/2026-06-09-mas-new-stores.json",
+      "sha256": "f2b320046de0d0f1cfe26944494896ace085941d631b46c348950a7e023741e0",
+      "bytes": 4819
+    },
+    {
+      "path": "raw/author/tickets/2026-08-03-vtg-hartford-kiosks.json",
+      "sha256": "b76582e6a60aff4e65f8a8add4d9f52e21bd7e3bad2a75225b22c018725fb919",
+      "bytes": 3454
+    },
+    {
+      "path": "raw/author/updates/2025-02-03-coastal-weekly.json",
+      "sha256": "0ff1a0df167d94a7706e8012aa7c1b96548fd876ac8cbe39db98da82b6e1eccd",
+      "bytes": 4825
+    },
+    {
+      "path": "raw/author/updates/2025-02-10-central-weekly.json",
+      "sha256": "a5d2f270873b72f0aaad30619b2581602d74d8dc1e5dbd00ad8e4a1848cd29ce",
+      "bytes": 5512
+    },
+    {
+      "path": "raw/author/updates/2025-03-03-north-weekly.json",
+      "sha256": "0e4f273c52b8e615dadde070aa76811f076e5e25e566a9db7c1800dd1d6c98aa",
+      "bytes": 5051
+    },
+    {
+      "path": "raw/author/updates/2025-04-07-coastal-weekly.json",
+      "sha256": "6c211f3d51983c988a573123f43b2ec9dbc6d468e13f48fc4f72e77e8fa48649",
+      "bytes": 4984
+    },
+    {
+      "path": "raw/author/updates/2025-04-28-north-weekly.json",
+      "sha256": "1d005c15dc1b3637047ebc59762a599c9d4f70d499ab210920514368313ee4db",
+      "bytes": 6832
+    },
+    {
+      "path": "raw/author/updates/2025-06-02-north-weekly.json",
+      "sha256": "a9158b4d61aa17abf7826fa2a41ff14984e33a529bc857c1549278572aa8f4ac",
+      "bytes": 5341
+    },
+    {
+      "path": "raw/author/updates/2025-06-16-central-weekly.json",
+      "sha256": "87109e00a1044c3ed81c2b2f77ba6a0b91aa11c5fc6ee36e77096f993644de22",
+      "bytes": 6993
+    },
+    {
+      "path": "raw/author/updates/2025-07-28-north-weekly.json",
+      "sha256": "10937e5574a3063ee7f6c43ad0a50dc3f5dfc440255f205093e26d0bd501c79e",
+      "bytes": 5103
+    },
+    {
+      "path": "raw/author/updates/2025-08-04-coastal-weekly.json",
+      "sha256": "b26f94327f554893396cb608bd20b7a25a65b5567895326f9e0781aca7cdc23f",
+      "bytes": 5771
+    },
+    {
+      "path": "raw/author/updates/2025-09-08-central-weekly.json",
+      "sha256": "06e680a5b28c5e7deaa47a41689fd8d38c2224939950549f22ffd1de6d310497",
+      "bytes": 6775
+    },
+    {
+      "path": "raw/author/updates/2025-09-15-north-weekly.json",
+      "sha256": "45f5834243f020da1cbd21bfc2f49caea7cd448735a41f6349d8f4de6a0689ba",
+      "bytes": 6258
+    },
+    {
+      "path": "raw/author/updates/2025-10-06-coastal-weekly.json",
+      "sha256": "c2249533d9614bab9fe1310e0b6ff2f05727155f0cd61a1e8a3dafbec2c8006c",
+      "bytes": 6758
+    },
+    {
+      "path": "raw/author/updates/2025-10-06-north-weekly.json",
+      "sha256": "db4bdb8cec2505af2f379ef4d1fb203902ddac929734d3e0ad4249007bb3209d",
+      "bytes": 3855
+    },
+    {
+      "path": "raw/author/updates/2025-10-20-central-weekly.json",
+      "sha256": "d4bbc50bcd8dd6d87eb436aff77eed7b521d7b1afa76a84074aa8514cd304a3e",
+      "bytes": 5398
+    },
+    {
+      "path": "raw/author/updates/2025-11-03-coastal-weekly.json",
+      "sha256": "d6f1607fdb9887d8b695ca0d21406359dc46d1a4f79876aa05217e30b04a7acf",
+      "bytes": 6106
+    },
+    {
+      "path": "raw/author/updates/2025-11-10-north-weekly.json",
+      "sha256": "8d825dfef61520e4e578856d6cbbe8088e173a4bb62cdf622b024c42d613e4f7",
+      "bytes": 4603
+    },
+    {
+      "path": "raw/author/updates/2025-12-08-north-weekly.json",
+      "sha256": "26cb2e1c0c1f6fac4bf836f9e425cea64afd83a186ddbdc26ce66a81db95d531",
+      "bytes": 6397
+    },
+    {
+      "path": "raw/author/updates/2025-12-15-coastal-weekly.json",
+      "sha256": "65435de24e91c1986f7d43b2b86f42d2e683d0eeda1874e5b7e01ca852d1a3a4",
+      "bytes": 6913
+    },
+    {
+      "path": "raw/author/updates/2026-01-05-central-weekly.json",
+      "sha256": "e4eff618f2c90dd40b4f972f60ceffc01ea7ae4dd3232734e5882d82057077d3",
+      "bytes": 5527
+    },
+    {
+      "path": "raw/author/updates/2026-02-09-north-weekly.json",
+      "sha256": "aececa42e96e41220cfb927ef326e43954638f2cb901bf8145a564bb45b98284",
+      "bytes": 5858
+    },
+    {
+      "path": "raw/author/updates/2026-03-02-north-weekly.json",
+      "sha256": "0cdc047b876ecc091c93539ff1e263e219438df43b62ea58f589c8037b98f9c0",
+      "bytes": 5311
+    },
+    {
+      "path": "raw/author/updates/2026-03-16-coastal-weekly.json",
+      "sha256": "5e5251fb8a6b89e31f1195e69fa910bab4f880360a25ad42bfff4dfefd0e507a",
+      "bytes": 5485
+    },
+    {
+      "path": "raw/author/updates/2026-04-20-north-weekly.json",
+      "sha256": "4756e72141f8edc3a90adc2931daf278437951b2c8ccb2832767c122646b07cb",
+      "bytes": 5597
+    },
+    {
+      "path": "raw/author/updates/2026-05-11-central-weekly.json",
+      "sha256": "5e141858374c26f4be2ee91a2e71d5b4a3a7ea8e431c1a10d2211bb1dd273165",
+      "bytes": 4058
+    },
+    {
+      "path": "raw/author/updates/2026-05-11-coastal-weekly.json",
+      "sha256": "649b60daa92ffd9a07f879a78970fc81ad87207dd09270d88422bd46d2564435",
+      "bytes": 5895
+    },
+    {
+      "path": "raw/author/updates/2026-06-22-coastal-weekly.json",
+      "sha256": "36dfc77a36fef34445c649d17171f14c7cc8ecc84223bd40213b3e5f0c72c020",
+      "bytes": 4160
+    },
+    {
+      "path": "raw/author/updates/2026-07-13-central-weekly.json",
+      "sha256": "1b191db6adafed695702108c854a13649e757b21e123338e33754a359e92fd6a",
+      "bytes": 7218
+    },
+    {
+      "path": "raw/author/updates/2026-09-21-central-weekly.json",
+      "sha256": "3f0b899de8cf3348fae5c74103bd37baef9a04e445f7b57ae9095164282218d3",
+      "bytes": 5394
+    },
+    {
+      "path": "raw/author/updates/2026-09-28-coastal-weekly.json",
+      "sha256": "dd369254b70381c0032777b50d4eabadb57fd6bebb9ff8fa5a119440d855e75b",
+      "bytes": 7106
+    },
+    {
+      "path": "raw/author/updates/2026-09-28-north-weekly.json",
+      "sha256": "8fe29cb3d337d343f510e7a91b9f640384a4c92ec85dd38294b2ba0f1b63f7cc",
+      "bytes": 6421
+    },
+    {
+      "path": "raw/pilot/chats/2025-11-04-qfl-sev1-war-room.json",
+      "sha256": "95b4f12ff15d3e9421bfc4087e4335001897419c3d7e8ab1f80b4bb5896d9d53",
+      "bytes": 5816
+    },
+    {
+      "path": "raw/pilot/chats/north-team-random.json",
+      "sha256": "41fc67860c4ed60b795029d042735d444c74dcb458be97cc8276765776dd08a5",
+      "bytes": 6260
+    },
+    {
+      "path": "raw/pilot/emails/2025-10-03-correction-north-moves.json",
+      "sha256": "9507f1ef59bfb2e9efda2dd1fb9d6adc40e219a9f4d72d3ad3c9d8a2d54491b6",
+      "bytes": 5764
+    },
+    {
+      "path": "raw/pilot/updates/2025-06-16-central-weekly.json",
+      "sha256": "f50345384e57c201b4f37df19090393f0c4853fcb2cbe81155e3ce3601b7ea22",
+      "bytes": 7257
+    },
+    {
+      "path": "raw/pilot/updates/2025-06-16-central-weekly.v2.json",
+      "sha256": "747165cc86fc8b746da2127ca06c62b8b997e8d43c390a014502761d78e9013e",
+      "bytes": 7069
+    },
+    {
+      "path": "raw/verify/accounts/brackenwater-freight.json",
+      "sha256": "d171a9d05d619658fa73ee2d15fb8ad475d425008dfa8b624d0704dd1bc7aa47",
+      "bytes": 2588
+    },
+    {
+      "path": "raw/verify/accounts/driftmoor-marine-freight.json",
+      "sha256": "0da57988b50c97913dbd2f7431216f9b38f8ecdf2839bf04fc3abc3c1a59b8dc",
+      "bytes": 2460
+    },
+    {
+      "path": "raw/verify/accounts/marrow-agrisupply.json",
+      "sha256": "b8e18349c873c0474ab21beae26d1f3796f926709e6c5c7af5a2c925cec906d2",
+      "bytes": 3208
+    },
+    {
+      "path": "raw/verify/accounts/marrow-fieldworks.json",
+      "sha256": "f65515818d1ae970f60ba03dff00a108822f8856c34de078e99b2729f01de414",
+      "bytes": 3187
+    },
+    {
+      "path": "raw/verify/accounts/orlavine-medical-supply.json",
+      "sha256": "f9f851e40def5bc3b14bc66ef701aa7ccb11ff693f4209cc5389d72280cb87ff",
+      "bytes": 3031
+    },
+    {
+      "path": "raw/verify/accounts/pellow-home-living.json",
+      "sha256": "82ea7e2cf97bed97319bc62b2187c86655f4df0a2599bf611ef6f20416522bb8",
+      "bytes": 3432
+    },
+    {
+      "path": "raw/verify/accounts/pellucid-harbor-logistics.json",
+      "sha256": "8ce29ac40f5c453013d55034d6e1e606dca76d41f51cf1824fc29c29132424ff",
+      "bytes": 2332
+    },
+    {
+      "path": "raw/verify/accounts/quarrendon-freight-lines.json",
+      "sha256": "c6fd088559d9c8ef7b8c7b788a1fa48a9c2d302152abb2e83667a2a21a905e22",
+      "bytes": 2408
+    },
+    {
+      "path": "raw/verify/accounts/quillfeather-outfitters.json",
+      "sha256": "29f8c1ba010836421ab5b2cd0ed31f88d5f753b0d9a0f44d98eed714968fab5e",
+      "bytes": 1988
+    },
+    {
+      "path": "raw/verify/accounts/saltmarsh-provisions.json",
+      "sha256": "8e3a8463ca24d7b1db3b96e846afdc710e21bbebb487f83b4cc623e46c192978",
+      "bytes": 2374
+    },
+    {
+      "path": "raw/verify/accounts/tamsin-cold-chain.json",
+      "sha256": "e430555f1b6a5d856b0ca626f78c69a6a4d4ba14f09aba4bb858bcd3ae061109",
+      "bytes": 2285
+    },
+    {
+      "path": "raw/verify/accounts/tansleigh-packaging.json",
+      "sha256": "3b616901b85885dc6c39b94e673f63aafe265f9afb8cc312c40512afb58f8f70",
+      "bytes": 3098
+    },
+    {
+      "path": "raw/verify/accounts/tansley-parcel.json",
+      "sha256": "3722c18f11a53a79aa6fb77d46cac3deb2ca3c2bafc25f090462a9ca3496dacb",
+      "bytes": 1727
+    },
+    {
+      "path": "raw/verify/accounts/thornbury-cloth-co.json",
+      "sha256": "6d3c214fc3526bf7fda5f6d8e799ccdee5bf11395cff6df09271b715d49ce7fc",
+      "bytes": 3290
+    },
+    {
+      "path": "raw/verify/accounts/vantorre-group.json",
+      "sha256": "96a45510d2b7dc8a9059ca7be56c4c24a5b1263de02f655f305e9dbd55260b1f",
+      "bytes": 2807
+    },
+    {
+      "path": "raw/verify/accounts/vantorre-mobility.json",
+      "sha256": "fc4b2a638939e8f9fb0e7772c368a89bcc21177cb3c129f95b54bfd2b1e2f365",
+      "bytes": 2224
+    },
+    {
+      "path": "raw/verify/agent-notes/2025-03-10-strategic-digest.json",
+      "sha256": "5acd1cb50f48e0986c78fac392ba831801740debd412fcf35025bdc933166199",
+      "bytes": 5575
+    },
+    {
+      "path": "raw/verify/agent-notes/2025-07-07-strategic-digest.json",
+      "sha256": "6c5717871e84f38089d621264cd1d4a4c488c56c9fcc83df8742991453e46598",
+      "bytes": 4575
+    },
+    {
+      "path": "raw/verify/agent-notes/2025-09-14-north-pipeline.json",
+      "sha256": "05b5f0d18cb5650f9239054c30318bff692a2ea3f6c44eff453c4eafd23971b8",
+      "bytes": 4331
+    },
+    {
+      "path": "raw/verify/agent-notes/2025-09-15-strategic-digest.json",
+      "sha256": "03d5581a1f55863b30b39ce8f57e00d24b019a24b02d955ae5d27b92290ab9cb",
+      "bytes": 3708
+    },
+    {
+      "path": "raw/verify/agent-notes/2025-10-05-coastal-sunday.json",
+      "sha256": "a70947dab824ad466b476cec523763811043869f527f85dd7ad5f2d38dc7bd0c",
+      "bytes": 2730
+    },
+    {
+      "path": "raw/verify/agent-notes/2025-10-05-north-sunday.json",
+      "sha256": "50f8b09c3e67ec3f252dc67ecab8c88de02e6cc5cc23a2c96602bf031c17b6c5",
+      "bytes": 3999
+    },
+    {
+      "path": "raw/verify/agent-notes/2025-11-02-coastal-pipeline.json",
+      "sha256": "fc613b763377bb3996fb82b3123152088ddf0fbe1156209d5c1049b5db97b788",
+      "bytes": 2238
+    },
+    {
+      "path": "raw/verify/agent-notes/2025-12-01-strategic-digest.json",
+      "sha256": "88823583e3b67525636c49cd575a151bc4b94de2de0149f76814670d3f606d72",
+      "bytes": 3041
+    },
+    {
+      "path": "raw/verify/agent-notes/2026-01-02-central-handoffs.json",
+      "sha256": "69b2238522aade9fcec5622042568780b5573e392c6d3b90cf37df69e9f9c377",
+      "bytes": 3390
+    },
+    {
+      "path": "raw/verify/agent-notes/2026-03-23-north-renewals.json",
+      "sha256": "a107cc300fbd2c47296cb02d5e2e01373c9b7255a3e1c9df151b9e264bccb701",
+      "bytes": 2596
+    },
+    {
+      "path": "raw/verify/agent-notes/2026-04-27-strategic-digest.json",
+      "sha256": "daa4bf9682fe05166d0828b72a305dcfb27fe7de96e690e41edb3e030061763b",
+      "bytes": 3685
+    },
+    {
+      "path": "raw/verify/agent-notes/2026-05-03-strategic-sunday.json",
+      "sha256": "a72f6646313feda8b36eed0f89fa2e363f3292f97bbb7967dff9a9059769c482",
+      "bytes": 2463
+    },
+    {
+      "path": "raw/verify/agent-notes/2026-05-04-strategic-digest.json",
+      "sha256": "fe5e542aacad389779589ec33412d7430b88e486afd7e827db0d8f1d208a1304",
+      "bytes": 2982
+    },
+    {
+      "path": "raw/verify/agent-notes/2026-05-18-coastal-coverage.json",
+      "sha256": "be820baf0f2b0ae113fcffc24e43855f41847790494a94f5e53d0eb2e2bd7836",
+      "bytes": 4789
+    },
+    {
+      "path": "raw/verify/agent-notes/2026-08-03-strategic-digest.json",
+      "sha256": "c8a7892140eac77ae8f62b1975c140cc51fa56cfe99884c0ea1ef4286383cf05",
+      "bytes": 3555
+    },
+    {
+      "path": "raw/verify/agent-notes/2026-09-30-strategic-digest.json",
+      "sha256": "310aeeba23b24f0b442acab4306668b88f1b493ccadbb9837f2d565e28712259",
+      "bytes": 5739
+    },
+    {
+      "path": "raw/verify/agent-notes/central-cheatsheet.json",
+      "sha256": "e9d6e9f5e9c2890e8da47195ea036b4fa0171bbde8b0b977dc7cb54e24793be4",
+      "bytes": 3909
+    },
+    {
+      "path": "raw/verify/agent-notes/coastal-cheatsheet.json",
+      "sha256": "df8ecfc110635d7827efc8fb5bae542aeea20dde76cc2ddee1732ab79dfe9bac",
+      "bytes": 7476
+    },
+    {
+      "path": "raw/verify/agent-notes/north-account-cheatsheet.json",
+      "sha256": "4b5e0db571b157b8224a93d81445b9b0bd83a495cf7362b97ba3bda1b4019a63",
+      "bytes": 5024
+    },
+    {
+      "path": "raw/verify/agent-notes/strategic-cheatsheet.json",
+      "sha256": "a4ff4705eaae220948de33a1f20b34a6fb60571d02d5ee4ce1df93b6ece10125",
+      "bytes": 5904
+    },
+    {
+      "path": "raw/verify/chats/2025-07-02-tp-confusion.json",
+      "sha256": "97621463873fb6c9255649a523f3a77a16bea5de1144ba9e07503c6d3acd6c5b",
+      "bytes": 6283
+    },
+    {
+      "path": "raw/verify/chats/2025-08-20-north-team-chat.json",
+      "sha256": "1679a6b6a9d61c08f58be3710532f60f3c26decf0a5fc447dd089e140b7fd179",
+      "bytes": 2790
+    },
+    {
+      "path": "raw/verify/chats/2025-09-03-tpx-outage-war-room.json",
+      "sha256": "ed40a2ad92367a62f6d563c9ef7242c09103a9bf7b60c89d6d56aa1a07fc7735",
+      "bytes": 3691
+    },
+    {
+      "path": "raw/verify/chats/2025-10-15-saltmarsh-churn-risk.json",
+      "sha256": "165e84efbfc738a6cd4b185ade9809a4605652ad4d31d79abd2e9f87ff249ba3",
+      "bytes": 4326
+    },
+    {
+      "path": "raw/verify/chats/2025-11-04-qfl-sev1-war-room.json",
+      "sha256": "a9c64a3ccbdb10585b541f8054cc29411a4cae7bbc4de2a7741ae00be0cfb23b",
+      "bytes": 4164
+    },
+    {
+      "path": "raw/verify/chats/2025-11-17-saltmarsh-discount-retraction.json",
+      "sha256": "0b67fbf9f0cb3241118ff417a9773138b1287043f77c8fc050c7ca5d239532a2",
+      "bytes": 2410
+    },
+    {
+      "path": "raw/verify/chats/2026-01-13-thornbury-rename.json",
+      "sha256": "0d2fc5c39a0ec549d897130186eae0023a2dc15e1f4b6d57b40f8032c6161497",
+      "bytes": 4481
+    },
+    {
+      "path": "raw/verify/chats/2026-02-17-phl-collision.json",
+      "sha256": "fed97f1aa19fdaa2e3c194f55a53a257b62e21eb9cdd2d77d67bfa821f2b6027",
+      "bytes": 4178
+    },
+    {
+      "path": "raw/verify/chats/2026-04-23-marrow-renewal-chat.json",
+      "sha256": "f72501cce3463440b7cebb025e54083971cbe28777f55cbaac7a086980400fd3",
+      "bytes": 3208
+    },
+    {
+      "path": "raw/verify/chats/2026-06-09-mas-store-rollout.json",
+      "sha256": "78a814594bfeb201dd72d9a76304f5f47a904b584bb7e33f790bbd23f9321b71",
+      "bytes": 2814
+    },
+    {
+      "path": "raw/verify/chats/2026-07-01-vantorre-seats-retraction.json",
+      "sha256": "6be2e08a213f0ffc65c16d177f703a8981ce997fcdf5d76e015335f1b267bc41",
+      "bytes": 2430
+    },
+    {
+      "path": "raw/verify/chats/2026-08-03-vtg-sev1-war-room.json",
+      "sha256": "94a46dddee3071209d139f83060a230c4f96ffc97eaa61e27e5ad3bb0dc05a6c",
+      "bytes": 4675
+    },
+    {
+      "path": "raw/verify/chats/central-team-banter.json",
+      "sha256": "b67df878db50450fbb98c7594b0af5997ec8a3d1d46a840b77cdeb1b0bb2c898",
+      "bytes": 3515
+    },
+    {
+      "path": "raw/verify/chats/coastal-team-banter.json",
+      "sha256": "18a6f71726110e0c319edef7c1a7fa17f4c5b2491ade010c62597b3b639b8694",
+      "bytes": 4367
+    },
+    {
+      "path": "raw/verify/chats/north-team-random.json",
+      "sha256": "d718616b17fe8588e7fe711bd54d795c8b2baee5af76fdc5d90211bcb19c4ed1",
+      "bytes": 3331
+    },
+    {
+      "path": "raw/verify/chats/strategic-pod-banter.json",
+      "sha256": "16d065668253d5edd6c5804e0de8c8c490552406f737fe8884048c8aa3c0459e",
+      "bytes": 2928
+    },
+    {
+      "path": "raw/verify/contracts/2024-11-12-bwf-of-2024.json",
+      "sha256": "9d76842bfd58bd28b69fb80b5d80699e134f6d5121fee3c835bee989f856342c",
+      "bytes": 5077
+    },
+    {
+      "path": "raw/verify/contracts/2024-12-09-dmf-of-2025.json",
+      "sha256": "341fe7438168ac63ac66c2c28fe6937702cad0e66085efc99881322325b200b8",
+      "bytes": 4545
+    },
+    {
+      "path": "raw/verify/contracts/2025-01-20-tpx-msa.json",
+      "sha256": "20900dc1c0096e21ef025f49530dffe3edd3a9e7945a72b0a68b3d795d36af76",
+      "bytes": 4740
+    },
+    {
+      "path": "raw/verify/contracts/2025-02-14-orm-of-2025.json",
+      "sha256": "38d704b7433a315322e381310b923aa32810eba85f23c6cd379a00189d5b2fce",
+      "bytes": 3850
+    },
+    {
+      "path": "raw/verify/contracts/2025-02-26-phl-msa.json",
+      "sha256": "84685ac7c9af2e907490fae99cb42b8f1d9a07e4dd9b2a4a0a7b28585b408495",
+      "bytes": 4620
+    },
+    {
+      "path": "raw/verify/contracts/2025-03-03-tsp-of-2025.json",
+      "sha256": "57a9132e8bd1c26685ad525fd5b2fc3a6dbcf9ad65f5a2cf4501c6fea005a1fd",
+      "bytes": 4767
+    },
+    {
+      "path": "raw/verify/contracts/2025-03-12-clr-of-2025.json",
+      "sha256": "2679a14f7374097facc2339b259bf3f4d6f45838be2b5471b715de9db0f86f2a",
+      "bytes": 4745
+    },
+    {
+      "path": "raw/verify/contracts/2025-03-28-qfl-msa.json",
+      "sha256": "229b8ee41289de39166a6f5a1a7269800970dbe5d7233a272f331da56257421a",
+      "bytes": 7965
+    },
+    {
+      "path": "raw/verify/contracts/2025-04-08-mfw-msa.json",
+      "sha256": "8ce44c7a19af1635f8b47cd32e5709c32613077daf2d6d43c9602a7faedc81f1",
+      "bytes": 10775
+    },
+    {
+      "path": "raw/verify/contracts/2025-05-30-tcc-of-2025.json",
+      "sha256": "e2a7b1b45d343cf52fc07f435599f59eea9ee9803c2513670064d706d49ad254",
+      "bytes": 4425
+    },
+    {
+      "path": "raw/verify/contracts/2025-06-10-tpx-a1.json",
+      "sha256": "1e95b8f9b5cf9160c8ef5030b5a1c19e0a8f09f55887f2d7aaf6c93a2caa6e66",
+      "bytes": 3130
+    },
+    {
+      "path": "raw/verify/contracts/2025-06-25-smp-of-2025.json",
+      "sha256": "8c7c71f0db8dcf7093e74de2872d3368bd9e64211ea9c0477addb5f6ac8de7fd",
+      "bytes": 4396
+    },
+    {
+      "path": "raw/verify/contracts/2025-06-30-vtg-msa.json",
+      "sha256": "243e73118f809a4e68c106fd4e8306abc57fd382e47e6e8c98cee911e6ed9016",
+      "bytes": 16145
+    },
+    {
+      "path": "raw/verify/contracts/2025-08-05-qfo-of-2025.json",
+      "sha256": "4b11a26dad159e13fd0be61acd3b203e48056646b17e3988180bbbdafb720b14",
+      "bytes": 3557
+    },
+    {
+      "path": "raw/verify/contracts/2025-08-19-qfl-a1.json",
+      "sha256": "2349f0e8ef929bc8d120a46e98ad40b72e673be7cb196255bd4caf61d751c78c",
+      "bytes": 3717
+    },
+    {
+      "path": "raw/verify/contracts/2025-09-29-oms-of-2025.json",
+      "sha256": "c78da7a0326761b683c2c06a3dab87b6b38396ca3364689e05fdad1fe6866a96",
+      "bytes": 5128
+    },
+    {
+      "path": "raw/verify/contracts/2025-10-02-mfw-affiliate-a1.json",
+      "sha256": "795c0148aff75229ec6e5e2ecc5e49d845ee6824936f7ff9e4a199cc84d60f03",
+      "bytes": 7216
+    },
+    {
+      "path": "raw/verify/contracts/2025-10-20-smp-a1.json",
+      "sha256": "f9ddcce8ff7067d4e7d00a6043bba378a25ed49c1aed392499e317bb53fbffba",
+      "bytes": 2726
+    },
+    {
+      "path": "raw/verify/contracts/2025-10-28-bwf-redline.json",
+      "sha256": "05cebd246ce69eefbd25455f215eb38ced6f1b69c23fe247d243c911c0a7731d",
+      "bytes": 4321
+    },
+    {
+      "path": "raw/verify/contracts/2025-11-18-vtm-a1.json",
+      "sha256": "934582be9bafe9c5e3c195534d37fbc8eb70e07817bdf59412a61bef0d6c98cf",
+      "bytes": 3782
+    },
+    {
+      "path": "raw/verify/contracts/2025-11-21-bwf-renewal-2025.json",
+      "sha256": "c1619c0a4e2e2b5e87f1a12b6a58b33c3e01bec17a8097958d0b9199b96a40cb",
+      "bytes": 4137
+    },
+    {
+      "path": "raw/verify/contracts/2025-12-03-qfl-a2-draft.json",
+      "sha256": "f3f57225cafd3dcb9eedd46cece6ab77a0ef7e4edecd863689e72206a687aa99",
+      "bytes": 6305
+    },
+    {
+      "path": "raw/verify/contracts/2025-12-15-phl-a1-unsigned.json",
+      "sha256": "af9db00d2a0884efa89a80633bb8f8dcbba4eae67c0e68ba87c5c8d12a2acfe7",
+      "bytes": 2992
+    },
+    {
+      "path": "raw/verify/contracts/2025-12-17-dmf-renewal-2026.json",
+      "sha256": "b7e6fe66bae7cc748c32750662e8f62882fdb9b8d6d08ee8507fdcba9359f21e",
+      "bytes": 4733
+    },
+    {
+      "path": "raw/verify/contracts/2026-01-15-tpx-renewal-2026.json",
+      "sha256": "26bc3c86d0ac1837aa30cf638214a7cf32b3e038414d37b484893a852c60244a",
+      "bytes": 4569
+    },
+    {
+      "path": "raw/verify/contracts/2026-02-10-orm-unsigned-2026.json",
+      "sha256": "192d72bf06f27a7c0744bccb2b7a8309687ae35978335b4d90a9a005bf081b3b",
+      "bytes": 4357
+    },
+    {
+      "path": "raw/verify/contracts/2026-02-19-phl-renewal-2026.json",
+      "sha256": "0e31ec4cc81b0a8ec2104a95e6b6f6930cd3a4331519cbbbfb3734b18e891126",
+      "bytes": 3697
+    },
+    {
+      "path": "raw/verify/contracts/2026-02-24-orm-renewal-2026.json",
+      "sha256": "715fa93c653add6c5805d2e7dc1b800ee872b56f2ea981c873ed0d2db34444f3",
+      "bytes": 6682
+    },
+    {
+      "path": "raw/verify/contracts/2026-03-09-clr-draft-2026.json",
+      "sha256": "7f8e448453cf00382a50fe45abe8cf99a2b548c0c4aafbedfa8c7ab86aa77e0c",
+      "bytes": 3641
+    },
+    {
+      "path": "raw/verify/contracts/2026-03-10-tsp-renewal-2026.json",
+      "sha256": "3a2a78e22f404513509164bb2d449a1e27d13e30b6798079260c93a59be649f1",
+      "bytes": 3561
+    },
+    {
+      "path": "raw/verify/contracts/2026-03-20-qfl-renewal-2026.json",
+      "sha256": "4eb43c86c8a64da3fd3ac241532b7f64b868d4207517d664b12c9f6821a8a5d7",
+      "bytes": 3272
+    },
+    {
+      "path": "raw/verify/contracts/2026-03-25-clr-renewal-2026.json",
+      "sha256": "9bf00a2529f07a650db36d88b19be83eda5145410e45659f362435accac19d97",
+      "bytes": 5140
+    },
+    {
+      "path": "raw/verify/contracts/2026-04-22-mfw-renewal-2026.json",
+      "sha256": "31e8566ae0d3ccf8d3deebf5b2dfc9d46003bf980f57a05073bff19848ee65e1",
+      "bytes": 8717
+    },
+    {
+      "path": "raw/verify/contracts/2026-05-27-tcc-renewal-2026.json",
+      "sha256": "12691d3a0605e37afeea6762b63714ecb90b712c5a15332620c99ddd53646290",
+      "bytes": 3183
+    },
+    {
+      "path": "raw/verify/contracts/2026-06-18-smp-renewal-2026.json",
+      "sha256": "89f3a904f095ec305d595f3decba56ee1b6a30615417ecb0d00b613610b7404e",
+      "bytes": 2888
+    },
+    {
+      "path": "raw/verify/contracts/2026-06-24-vtg-renewal-2026.json",
+      "sha256": "8f489b4b15dfa9ad6ee4060005a41d991c0a7b8e0b621b249a3718c3cc1f33be",
+      "bytes": 8957
+    },
+    {
+      "path": "raw/verify/contracts/2026-08-10-qfo-renewal-2026.json",
+      "sha256": "2c41c3d1dbfd270d8b7390eda01ab3f3feebaee576c963e92a59aad6c927433f",
+      "bytes": 2920
+    },
+    {
+      "path": "raw/verify/contracts/2026-08-14-vtg-a2-draft.json",
+      "sha256": "f6b3cb2a81e48be3661e66441bdac872f019d45afa3f204aa46afc55cd3ce5aa",
+      "bytes": 4477
+    },
+    {
+      "path": "raw/verify/contracts/2026-09-22-qfl-a3.json",
+      "sha256": "61a7820a1ab8fcd260e8d9bc6f89122e2c9c77a31770445355919414de50d8b2",
+      "bytes": 2733
+    },
+    {
+      "path": "raw/verify/contracts/2026-09-24-oms-renewal-2026.json",
+      "sha256": "86d00f667a218869faf02c82090a9cbcdba1ae31186e69bee0ce24726f9f3fdc",
+      "bytes": 3720
+    },
+    {
+      "path": "raw/verify/contracts/2026-09-29-phl-a2.json",
+      "sha256": "52796ae96e7824e71b0faa87da9c10225f79dc427594503ac954c7a28a6896e9",
+      "bytes": 3261
+    },
+    {
+      "path": "raw/verify/crm/2025-02-03-tansley-parcel-onboarding.json",
+      "sha256": "fc4613ddb06877e46ab7acef14b45027164ae0ce2f2578a1d8611f60dfe5782c",
+      "bytes": 1359
+    },
+    {
+      "path": "raw/verify/crm/2025-03-10-tamsin-marcus-note.json",
+      "sha256": "8306a259b5ac79158d7526c938913aa95f70dad0ccb308f6c7c9f15d6cc79b54",
+      "bytes": 1681
+    },
+    {
+      "path": "raw/verify/crm/2025-05-02-tamsin-dana-note.json",
+      "sha256": "8e73af4156e48d79e1e90f7c35b7c97bd36613b3aedb6b6d9be3d4fad8c8a8d1",
+      "bytes": 1482
+    },
+    {
+      "path": "raw/verify/crm/2025-05-06-covey-lark-profile-note.json",
+      "sha256": "f9b21d3ca6ccffacd1313e5014db39a52f30abdd6401e9b784dbe99e1091c532",
+      "bytes": 1591
+    },
+    {
+      "path": "raw/verify/crm/2025-07-01-saltmarsh-onboarding.json",
+      "sha256": "89818039401278d35b88df765681bee5cb95621a02f2903242b23ee0971602fc",
+      "bytes": 2418
+    },
+    {
+      "path": "raw/verify/crm/2025-07-08-tansley-parcel-discount-note.json",
+      "sha256": "27c5a46b4c96313211dc7b378c2be3c0c3c7addfe468441339c130884c23832a",
+      "bytes": 2043
+    },
+    {
+      "path": "raw/verify/crm/2025-09-02-orrin-note.json",
+      "sha256": "6e231fe9abe6328a10bec77e79dff5cb3546dadf4925be9d9b877bba6291b835",
+      "bytes": 1667
+    },
+    {
+      "path": "raw/verify/crm/2025-10-01-quarrendon-note.json",
+      "sha256": "ee92e5174810cd59379a75f84f3dff6599654421a3ee8112ecb7b7a4df9d839d",
+      "bytes": 1621
+    },
+    {
+      "path": "raw/verify/crm/2025-10-06-orlavine-onboarding.json",
+      "sha256": "b868e7cbab50be98857444ecc3e5dce585ab4f9af8734526cbc3d5c7f62b9cfe",
+      "bytes": 1584
+    },
+    {
+      "path": "raw/verify/crm/2025-12-02-saltmarsh-note.json",
+      "sha256": "bc42efd559b8e1866d5e0f0e1a75a387db7ae52ff2b93af71702c25f2468b486",
+      "bytes": 1577
+    },
+    {
+      "path": "raw/verify/crm/2026-01-05-driftmoor-renewal-note.json",
+      "sha256": "5b5af2b5d1d4726a9e9d06573141ea419be3a947dc7bc1f1c85c18b37666ae1e",
+      "bytes": 1421
+    },
+    {
+      "path": "raw/verify/crm/2026-02-10-brackenwater-note.json",
+      "sha256": "843b0a459fc43decda2949b542d4b5023063c1bd5eca887a961357c48d4b3f01",
+      "bytes": 1677
+    },
+    {
+      "path": "raw/verify/crm/2026-03-02-quillfeather-note.json",
+      "sha256": "6db8248fbe02c2d2a6c4f72e12aa9a70d1159f79164cc002f8205879ffe80308",
+      "bytes": 1976
+    },
+    {
+      "path": "raw/verify/crm/2026-04-20-pellow-expansion.json",
+      "sha256": "94fe4a01d029b44d5bbf93a1aa87bb0aa13311479fd8b12fd74efbbe64c84a3b",
+      "bytes": 1388
+    },
+    {
+      "path": "raw/verify/crm/2026-04-23-marrow-renewal-note.json",
+      "sha256": "57e0e8aa31d8ace3977c64f10d9a3288a5e3b0c8c239dd67d3dbc880eae1f0e9",
+      "bytes": 2145
+    },
+    {
+      "path": "raw/verify/crm/2026-05-12-vantorre-mobility-note.json",
+      "sha256": "739f030580ee95e35cd6918077b4310fd78202651850e5d24396f3360fd570c6",
+      "bytes": 913
+    },
+    {
+      "path": "raw/verify/crm/2026-08-04-tansley-parcel-expansion-note.json",
+      "sha256": "1bc4e0fe822d3510c08498de5e544406454bd1a4af4ba3ca2d390abc3876c023",
+      "bytes": 1207
+    },
+    {
+      "path": "raw/verify/emails/2025-01-06-central-book-of-business.json",
+      "sha256": "739b5bdd2a918109a5e1ba7d8c74e70d4483976e6acc2d75477a6351de9947f3",
+      "bytes": 5292
+    },
+    {
+      "path": "raw/verify/emails/2025-01-06-strategic-pod-assignments.json",
+      "sha256": "0588fd972c275c16265063a00efcc40937a6ffd46c4df7b9fd31254b2b382982",
+      "bytes": 4508
+    },
+    {
+      "path": "raw/verify/emails/2025-04-02-driftmoor-to-kwame.json",
+      "sha256": "7f8faff88f410a8a33c29eb8351685a15b3e2e59f2f5f4f895d0d592546d4209",
+      "bytes": 3030
+    },
+    {
+      "path": "raw/verify/emails/2025-04-10-tamsin-moves-to-dana.json",
+      "sha256": "e293c1b02dec7854f5154ba981b028e9df2f53959017571ff92074eb47549257",
+      "bytes": 2547
+    },
+    {
+      "path": "raw/verify/emails/2025-05-28-quarrendon-handoff.json",
+      "sha256": "61bcf12027093b954829d9f8c85b01e1f06481dbcd3649ab83e8c3d4de86482d",
+      "bytes": 2904
+    },
+    {
+      "path": "raw/verify/emails/2025-06-12-vantorre-decision-maker.json",
+      "sha256": "060042c9d554bd77648d78e065283e3fc16f8c296087fa064f13abe7b33f5ca3",
+      "bytes": 2236
+    },
+    {
+      "path": "raw/verify/emails/2025-06-30-vantorre-msa-executed.json",
+      "sha256": "9e085f9b41bf7717872b96811e76585349e8e777adae5281883f74582f9a650e",
+      "bytes": 5221
+    },
+    {
+      "path": "raw/verify/emails/2025-07-23-quarrendon-qbr-followup.json",
+      "sha256": "155e565c068bf167d2789d18f640240d3cef8acca3c7cfa7050235a350c41573",
+      "bytes": 3329
+    },
+    {
+      "path": "raw/verify/emails/2025-08-27-driftmoor-barge-notifications.json",
+      "sha256": "516e56e8275db3a7e25ce7868af077bcfaaad078177634fb39457944ed14f007",
+      "bytes": 2563
+    },
+    {
+      "path": "raw/verify/emails/2025-09-04-tpx-outage-rca.json",
+      "sha256": "f5203c2edc84291527b686e344cf271840f2592166250fae40402b534b137aed",
+      "bytes": 1725
+    },
+    {
+      "path": "raw/verify/emails/2025-09-10-brackenwater-to-marcus.json",
+      "sha256": "68aa98e8bc389c90b47d4c949d7a8a10aa2bd0a40c64838196a8d891459c5fbc",
+      "bytes": 3299
+    },
+    {
+      "path": "raw/verify/emails/2025-10-01-north-account-moves.json",
+      "sha256": "f9100730c89f4561cec1972bc8b6cad6a136926ea8e16d77455c2a4eb31ef295",
+      "bytes": 893
+    },
+    {
+      "path": "raw/verify/emails/2025-10-01-saltmarsh-to-bettina.json",
+      "sha256": "cc7699a280ed158273ed72b02e4c2b2ad14179d3c7c4d247d04b658a06364281",
+      "bytes": 4820
+    },
+    {
+      "path": "raw/verify/emails/2025-10-02-mas-affiliate-amendment-signed.json",
+      "sha256": "85974b088001f5524b3b453dce6c0e2b54ea8f9657be3944f338ba9062bdbae1",
+      "bytes": 1718
+    },
+    {
+      "path": "raw/verify/emails/2025-10-02-quarrendon-monthly-fee.json",
+      "sha256": "570318ae850b3ecdb3c31f2f279fa8c23ee9824cb1036e94a026f506903ea0fe",
+      "bytes": 2170
+    },
+    {
+      "path": "raw/verify/emails/2025-10-03-correction-north-moves.json",
+      "sha256": "fb32a1fe75aa18e9e31ddd39f063e292dd0ac6c145aabca98d63e6b91a63a2e0",
+      "bytes": 5142
+    },
+    {
+      "path": "raw/verify/emails/2025-10-20-saltmarsh-concession-approved.json",
+      "sha256": "bce16951083cfe1b32eb76a6aa4b2f9330df93d847e60810a0f81010601ffa2e",
+      "bytes": 1140
+    },
+    {
+      "path": "raw/verify/emails/2025-10-28-pellucid-to-kwame.json",
+      "sha256": "08096e7e057517080c360edddf0ea485c1cadb4f8f1ff68d690d392d96e08a1e",
+      "bytes": 2658
+    },
+    {
+      "path": "raw/verify/emails/2025-11-06-quarrendon-exec-call.json",
+      "sha256": "9d47288ca5978231f43dbc71d0d241fe429697b669f99c12ecb3c47921e05f01",
+      "bytes": 3809
+    },
+    {
+      "path": "raw/verify/emails/2025-11-19-vtm-amendment-executed.json",
+      "sha256": "ba5cd3e5d2f4d1e487851a4266d45cd33e1242f6d2aeb364a139cf3946dd9a59",
+      "bytes": 1695
+    },
+    {
+      "path": "raw/verify/emails/2025-12-04-quarrendon-discount-pushback.json",
+      "sha256": "780a4ec729d402c412a65f01f45e16f84093026e139492bcc76ee8b8110de497",
+      "bytes": 917
+    },
+    {
+      "path": "raw/verify/emails/2025-12-15-marrow-fieldworks-handoff.json",
+      "sha256": "553f330295e4af2053255bc42f9bd1bb82957ed207431e74fa305684f7cd27df",
+      "bytes": 4031
+    },
+    {
+      "path": "raw/verify/emails/2026-01-12-orrin-rebrand-notice.json",
+      "sha256": "19f41f7676d16cfb08b06e31e8c8c41a365221b2d1da10281cc3735351e817ab",
+      "bytes": 3260
+    },
+    {
+      "path": "raw/verify/emails/2026-01-16-tansley-parcel-renewal-recap.json",
+      "sha256": "7f7bceb2429af0d415ebae1aba92265021b050accbef9c31478373bfad89f4f2",
+      "bytes": 2184
+    },
+    {
+      "path": "raw/verify/emails/2026-01-21-brackenwater-double-billing.json",
+      "sha256": "37129ab322ded100352dc19df7198c5b17078af1ef79ac63ab563236195f5952",
+      "bytes": 4230
+    },
+    {
+      "path": "raw/verify/emails/2026-01-26-dana-leave-coverage.json",
+      "sha256": "1d971459b0d3cbd1652dddc20a10c3803d56ac601a5ae43087cbe27112f061b0",
+      "bytes": 3818
+    },
+    {
+      "path": "raw/verify/emails/2026-02-12-orlavene-followup.json",
+      "sha256": "78fb71b3ff2818d1d898d356e276b63d43d60187dc95c37524757801ecb9c9ff",
+      "bytes": 1847
+    },
+    {
+      "path": "raw/verify/emails/2026-02-16-covey-lark-rebrand.json",
+      "sha256": "f2b2df04a6bfd5007f1fc0224278efa800918ab28c73d88e8fca746b1d7eb06b",
+      "bytes": 3533
+    },
+    {
+      "path": "raw/verify/emails/2026-02-20-stoneharrow-invoice-portal.json",
+      "sha256": "31c64fa9af545c103ef5fa324f8885fd99b37b94f0559f3223e45f7235e3961a",
+      "bytes": 4445
+    },
+    {
+      "path": "raw/verify/emails/2026-03-03-lev-seat-count.json",
+      "sha256": "8e703fb44843e07654e61ce0ac10d195b504dc01b0f49ed2492a9648b2141922",
+      "bytes": 1371
+    },
+    {
+      "path": "raw/verify/emails/2026-03-10-pellucid-monthly-fee.json",
+      "sha256": "0d41b1f270b63993482e265e9826e92f5d1841e4cc589e58d3cab84eee34232c",
+      "bytes": 2548
+    },
+    {
+      "path": "raw/verify/emails/2026-03-11-tansleigh-renewal-executed.json",
+      "sha256": "32ed3c4b9766810f0caac857570e470daad542fea8828971c61ca3acee42e391",
+      "bytes": 2307
+    },
+    {
+      "path": "raw/verify/emails/2026-04-13-vantorre-handoff-announcement.json",
+      "sha256": "d00c34b95c8ca98fa25f40c600786ca03d81160a9250b616fd1b758c40530c4e",
+      "bytes": 1158
+    },
+    {
+      "path": "raw/verify/emails/2026-04-16-vantorre-handoff-correction.json",
+      "sha256": "0fdecbd2d6affe585357195d5e60e5f18527533718e3d24c14ef38fd521eb7cb",
+      "bytes": 2930
+    },
+    {
+      "path": "raw/verify/emails/2026-04-24-sofia-leave-coverage.json",
+      "sha256": "f9221c504d3d92849273c520096c2a6d5eb15197563197c78cbc7f459837c6fe",
+      "bytes": 3344
+    },
+    {
+      "path": "raw/verify/emails/2026-05-20-vantorre-reorg.json",
+      "sha256": "73e47494c28e70ff8c0c67a55d5da39cfdb16c0dd3625bbf8557ca99451edd0d",
+      "bytes": 2839
+    },
+    {
+      "path": "raw/verify/emails/2026-06-18-saltmarsh-renewal-signed.json",
+      "sha256": "d94432fb67ed02df6b0c16b1194639946f160633acaf11fcb36514ea99eb851d",
+      "bytes": 2165
+    },
+    {
+      "path": "raw/verify/emails/2026-06-24-vantorre-renewal-executed.json",
+      "sha256": "bc8bc3e1846aa86b440f51fd98b732a4d58bbc376af598cd5e5c157c59f3e6d2",
+      "bytes": 2567
+    },
+    {
+      "path": "raw/verify/emails/2026-06-29-tobias-pto-coverage.json",
+      "sha256": "6b899f827ac867d7e1d2c5ca6cf9427dcdd1f97ab9fd4a64fa94f6d8dd14e67a",
+      "bytes": 1898
+    },
+    {
+      "path": "raw/verify/emails/2026-07-14-carrowmere-hosting-renewal.json",
+      "sha256": "4655d27eb2535042aacf107efd1687566d91b0bfeaded8c8ff3f74be9190174c",
+      "bytes": 3445
+    },
+    {
+      "path": "raw/verify/emails/2026-08-17-vantorre-discount-ask.json",
+      "sha256": "bde7c71bb6f32c35681ad199b914c9408e660bbfac2340977507bfb077e340a9",
+      "bytes": 908
+    },
+    {
+      "path": "raw/verify/emails/2026-09-24-orlavine-renewal-executed.json",
+      "sha256": "eb97f9995427aeb753107bbf8f9d21735fb1cad178aede22e510d1968ef68fe6",
+      "bytes": 3388
+    },
+    {
+      "path": "raw/verify/meetings/2025-04-08-marrow-msa-signing-call.json",
+      "sha256": "8e34b5b7a367b546b4e74a56afda3feb791603918a1f275607995eb8e5711d1d",
+      "bytes": 3758
+    },
+    {
+      "path": "raw/verify/meetings/2025-04-22-tamsin-kickoff.json",
+      "sha256": "9e65687e188bd6fd3b625ace2a0352a8bf1a613d18df1b49f613abb0d24a287d",
+      "bytes": 1612
+    },
+    {
+      "path": "raw/verify/meetings/2025-06-20-marrow-golive-checkin.json",
+      "sha256": "b18b398a9c878ea5c71be61e421d8faa301bc0075473c40f732163f01e60b985",
+      "bytes": 1475
+    },
+    {
+      "path": "raw/verify/meetings/2025-07-15-vantorre-kickoff.json",
+      "sha256": "ab8024e3bdeab0b7d4f3e50fbfa9e7966b7617105170f78b7b9e88e9a41bb602",
+      "bytes": 1142
+    },
+    {
+      "path": "raw/verify/meetings/2025-07-22-quarrendon-qbr.json",
+      "sha256": "ed6200f20b42521689115c7f127f62b979c0051deef4a4549d835976cf308f97",
+      "bytes": 1696
+    },
+    {
+      "path": "raw/verify/meetings/2025-08-05-quillfeather-signing-call.json",
+      "sha256": "71f13e1b9aff65c871f638d660e2f404392ba42d083be6f155db181365d01f32",
+      "bytes": 2102
+    },
+    {
+      "path": "raw/verify/meetings/2025-09-12-north-pipeline-review.json",
+      "sha256": "d209d0d0139641a8ff2a0d110ab1c094bf0ecf692c1b0fdf3bf6d534ee775b24",
+      "bytes": 3555
+    },
+    {
+      "path": "raw/verify/meetings/2025-10-14-tansley-parcel-qbr.json",
+      "sha256": "3669012cf5c5dc47d35e0e6bcbce9d73ba359760c8c87af462e3b67e17d6c247",
+      "bytes": 3743
+    },
+    {
+      "path": "raw/verify/meetings/2025-10-16-saltmarsh-rescue-call.json",
+      "sha256": "47f37d5ece60895921800e167c91fe94f296cbdda9ca06cada9c95d287c07801",
+      "bytes": 1918
+    },
+    {
+      "path": "raw/verify/meetings/2025-11-05-coastal-pipeline-review.json",
+      "sha256": "9c84ba89705efd71ce8193a4182777063ae5f0b3559c5a075570dbf14c8bced2",
+      "bytes": 3364
+    },
+    {
+      "path": "raw/verify/meetings/2025-11-18-marrow-fieldworks-qbr.json",
+      "sha256": "e04319f4b27ed99dc63d414f8c723805578719e8af1bbe9c9f8f49738c296c24",
+      "bytes": 2376
+    },
+    {
+      "path": "raw/verify/meetings/2025-11-20-pellucid-cutover-wrapup.json",
+      "sha256": "aac9de4295aafc502a41b1797519222a7bea5d10e89c607f8cc6b09e40ade20d",
+      "bytes": 2049
+    },
+    {
+      "path": "raw/verify/meetings/2026-02-11-orlavene-health-intro.json",
+      "sha256": "cddf463b65f095facb4dcef1f823dbde2601616b5081a67c37381e8357212c13",
+      "bytes": 2901
+    },
+    {
+      "path": "raw/verify/meetings/2026-03-05-pellucid-renewal-debrief.json",
+      "sha256": "85f6d38d6a2d92f1f5b8849f902f81343f70b93f501452f850cda8a9cf397faa",
+      "bytes": 1866
+    },
+    {
+      "path": "raw/verify/meetings/2026-04-09-quarrendon-renewal-debrief.json",
+      "sha256": "943f3141fc2f292fb909e988344c9ec1a529ac7d7cafcd890a7335b42c34f8a6",
+      "bytes": 2550
+    },
+    {
+      "path": "raw/verify/meetings/2026-04-22-marrow-renewal-call.json",
+      "sha256": "26247ac7640c3b7400811e886173967947a72604d9fa524e5efaf4828135bd54",
+      "bytes": 1972
+    },
+    {
+      "path": "raw/verify/meetings/2026-04-28-vantorre-steering-committee.json",
+      "sha256": "e310c8c0ee0d90b8e524e86245923c3927b4e8e65bce4d88d96fbf37d4831ff9",
+      "bytes": 3018
+    },
+    {
+      "path": "raw/verify/meetings/2026-05-27-tamsin-renewal-call.json",
+      "sha256": "5f69b4358101d39489a5025d8daadef4dab26327c6a43171559134c7c3a8cb85",
+      "bytes": 1620
+    },
+    {
+      "path": "raw/verify/meetings/2026-07-09-vantorre-renewal-debrief.json",
+      "sha256": "d4b3bf30c278b516751241cbcb47336f2b20eac74f5a2b350d842c2215bf3485",
+      "bytes": 2344
+    },
+    {
+      "path": "raw/verify/meetings/2026-08-10-quillfeather-renewal.json",
+      "sha256": "7a07089a94e0cfee1ca58dc704facb9b85d79471a688b0893b6a51a792937586",
+      "bytes": 1930
+    },
+    {
+      "path": "raw/verify/notes/2025-05-19-hollis-1on1-tobias.json",
+      "sha256": "2a82fdd90d07070fab6953db6139606283488bde4d3edc00cd991c4325fbf7e8",
+      "bytes": 1494
+    },
+    {
+      "path": "raw/verify/notes/2025-07-14-marcus-q2-expansion-wrap.json",
+      "sha256": "e9b085e94fc5b783bc1d1393c199d2bbe4caa255aca450a19b95cde6297af2ab",
+      "bytes": 2970
+    },
+    {
+      "path": "raw/verify/notes/2025-07-17-tansleigh-onsite.json",
+      "sha256": "ca72d4517064a396d4020a5672545e7070e4d644ce34fdbdec442952379b71c4",
+      "bytes": 2488
+    },
+    {
+      "path": "raw/verify/notes/2025-08-08-ruth-private-orlavine.json",
+      "sha256": "c5995af75cb4c9583aa0e7dcc5ee64569bcbb4cef8f45f56796d8bfff58f0697",
+      "bytes": 2095
+    },
+    {
+      "path": "raw/verify/notes/2025-08-11-quarendon-freightways-intel.json",
+      "sha256": "e86503fe00756afbff14a84e0eeb959be2b4467cbddaca698c020efbab2ba4fe",
+      "bytes": 1951
+    },
+    {
+      "path": "raw/verify/notes/2025-08-25-central-territory-plan.json",
+      "sha256": "64f4c05676a6faa5fd94e4dc1c3bf1b54cdbce70e7c8c1f35effee4b1dc3fdc5",
+      "bytes": 3138
+    },
+    {
+      "path": "raw/verify/notes/2025-11-03-hr-open-enrollment.json",
+      "sha256": "02ceb9f5a1b71271c5d125949a2d9047d34351d328550136a194210ebd5089bd",
+      "bytes": 2687
+    },
+    {
+      "path": "raw/verify/notes/2025-12-08-bettina-pellucid-cutover-recap.json",
+      "sha256": "a00e0f7a13a7f18bb5d60ab91f4da8edb453868130e58fd3efe1d1175d0ba68a",
+      "bytes": 3923
+    },
+    {
+      "path": "raw/verify/notes/2026-01-15-hr-benefits-reminder.json",
+      "sha256": "740efe80ea1c39343556ef4c7b5cdd0a60e34ae6d2285bd1849039dd84e2b671",
+      "bytes": 3486
+    },
+    {
+      "path": "raw/verify/notes/2026-01-29-it-laptop-swap.json",
+      "sha256": "47ed3ae8fe3179491ddbf12216fb99c5835b11afc89083413cbe3a23eeea4b4a",
+      "bytes": 3356
+    },
+    {
+      "path": "raw/verify/notes/2026-01-30-ilse-private-dana-leave.json",
+      "sha256": "c8ec87020143ce6dbd6dca2eb6cb6b779382f26428e78b4dde5e920ecfc5ac16",
+      "bytes": 2554
+    },
+    {
+      "path": "raw/verify/notes/2026-03-30-it-device-refresh.json",
+      "sha256": "13b4dcd0f114399e55f11aaa1d448af91bd7362c6466736d16f1330cae05760b",
+      "bytes": 2545
+    },
+    {
+      "path": "raw/verify/notes/2026-04-24-bettina-private-sofia-leave.json",
+      "sha256": "529bb721930379f04b6df358a33a3ed2e3d534ac7f3c0af252f1704a9f9645ba",
+      "bytes": 1749
+    },
+    {
+      "path": "raw/verify/notes/2026-06-01-strategic-qbr-plan.json",
+      "sha256": "63842465032e44f36a9077aa78d39d055c4387bce3e9f04b88390cae5eecb993",
+      "bytes": 3716
+    },
+    {
+      "path": "raw/verify/tickets/2025-08-12-tamsin-sensor-feed.json",
+      "sha256": "e701d79cc3e42f836f24ca5ad8f6b644d0383a7152be5ce537637bd27391c4ff",
+      "bytes": 2084
+    },
+    {
+      "path": "raw/verify/tickets/2025-08-26-dmf-barge-slot-notifications.json",
+      "sha256": "9f3ec1d937d3323efc67d9d1af1dcc4727768417d974640353f56dd04cd9077d",
+      "bytes": 1655
+    },
+    {
+      "path": "raw/verify/tickets/2025-11-04-qfl-sev1.json",
+      "sha256": "217988264b97d4955d8ed8e54359209f33767325b1996dd3a214b77a6035223b",
+      "bytes": 1704
+    },
+    {
+      "path": "raw/verify/tickets/2025-11-21-phl-terminal-cutover-issue.json",
+      "sha256": "b9ae9f3645787aed411d0e20fd212cb54f87d91ece84a88144e66dd75e865e27",
+      "bytes": 1773
+    },
+    {
+      "path": "raw/verify/tickets/2025-11-25-vtm-charger-sync.json",
+      "sha256": "0aa1fe237501337f0cab2afa8c01883148bc9d8a0793854b0f1d509a0ee091e5",
+      "bytes": 1461
+    },
+    {
+      "path": "raw/verify/tickets/2025-12-02-mfw-dealer-portal-sso.json",
+      "sha256": "9b5e06c23afcbfd903d52049a1a34920459fa64d5d4ff534f2c78643c9f147c2",
+      "bytes": 1157
+    },
+    {
+      "path": "raw/verify/tickets/2026-01-20-bwf-invoice-dispute.json",
+      "sha256": "74816524f1ffb22a68482726ce1fe1a4868531af95dbbeafe5125d6e07c1e8d1",
+      "bytes": 3003
+    },
+    {
+      "path": "raw/verify/tickets/2026-03-17-tsp-label-printer.json",
+      "sha256": "fe225b3fd31ae698884a0e3712ca5461df7544da5bacd45f378d54d4b4d920b2",
+      "bytes": 1415
+    },
+    {
+      "path": "raw/verify/tickets/2026-06-09-mas-new-stores.json",
+      "sha256": "40267c711c381469eb62b542b3bab1d2c93918be04282f93e62249b152fa9372",
+      "bytes": 2158
+    },
+    {
+      "path": "raw/verify/tickets/2026-08-03-vtg-hartford-kiosks.json",
+      "sha256": "60714b6f3da9d5a637deeb40b974ef51234aa57c0968f7530b6ae0abb5c2a27a",
+      "bytes": 1393
+    },
+    {
+      "path": "raw/verify/updates/2025-02-03-coastal-weekly.json",
+      "sha256": "d54a635fb996813d67fd440b3e9e4f203c017cfeac5a47b2a7d45ed15d91e9b5",
+      "bytes": 4930
+    },
+    {
+      "path": "raw/verify/updates/2025-02-10-central-weekly.json",
+      "sha256": "6b293c434dcffb9fbfe42f9891c95e0f287025e06d3522aa42b74245fb382d30",
+      "bytes": 6616
+    },
+    {
+      "path": "raw/verify/updates/2025-03-03-north-weekly.json",
+      "sha256": "5d962408394144e810d07d557e86ac12c62700938ff34b5b950c983fd1c91c89",
+      "bytes": 4999
+    },
+    {
+      "path": "raw/verify/updates/2025-04-07-coastal-weekly.json",
+      "sha256": "7217f35b6d37088adb239bca26bb5f35e8e206834078ae30f03465351746961b",
+      "bytes": 3570
+    },
+    {
+      "path": "raw/verify/updates/2025-04-28-north-weekly.json",
+      "sha256": "7246d5184623981968334ca708dab55e644feac1837d9e5d89b5ee1251c0c92f",
+      "bytes": 6456
+    },
+    {
+      "path": "raw/verify/updates/2025-06-02-north-weekly.json",
+      "sha256": "44e7ea87cd5d082608f2de5be890f981ddc2bac3ae96ab25ee67fb2106070fff",
+      "bytes": 3305
+    },
+    {
+      "path": "raw/verify/updates/2025-06-16-central-weekly.json",
+      "sha256": "3b0c5beb0f8bb3971da199248eacc05f31128ca27ce79fd9a26a9a78405b0311",
+      "bytes": 4981
+    },
+    {
+      "path": "raw/verify/updates/2025-07-28-north-weekly.json",
+      "sha256": "9c81c26f347335a8f92d3beee13759822c37f340c377a6c8c309fe0e3d43a815",
+      "bytes": 4202
+    },
+    {
+      "path": "raw/verify/updates/2025-08-04-coastal-weekly.json",
+      "sha256": "9276f14c3d193ff6e8877913df9b6ab8e24dae03a058b5e8b6eea04b5608e32f",
+      "bytes": 4876
+    },
+    {
+      "path": "raw/verify/updates/2025-09-08-central-weekly.json",
+      "sha256": "a8c0002f8e1ce8b7995b891f87c0596829b34c701a5392e153237c0cdb04daf6",
+      "bytes": 4282
+    },
+    {
+      "path": "raw/verify/updates/2025-09-15-north-weekly.json",
+      "sha256": "e2850a7f680c19a833ed06e697b63897ad982dab46a3edc65e51f3a0e014712b",
+      "bytes": 3890
+    },
+    {
+      "path": "raw/verify/updates/2025-10-06-coastal-weekly.json",
+      "sha256": "c2a4a64c3356d69d7e39f9766dd36d7582ed9a4ef74e8b34527d740c969c0a64",
+      "bytes": 5508
+    },
+    {
+      "path": "raw/verify/updates/2025-10-06-north-weekly.json",
+      "sha256": "4cbb163fb4cb7e01b73dd66da3a94e2cac670dbd5ecea878f840714cb74e845e",
+      "bytes": 3347
+    },
+    {
+      "path": "raw/verify/updates/2025-10-20-central-weekly.json",
+      "sha256": "7df63c3827e564a3cbe355ddc14f3985ae0de392d692b43a6ff0d226d89207b2",
+      "bytes": 3188
+    },
+    {
+      "path": "raw/verify/updates/2025-11-03-coastal-weekly.json",
+      "sha256": "c4a86166f794d63388416cd3da1e21fa283eff3cdfdc19357baa5eced154a705",
+      "bytes": 5245
+    },
+    {
+      "path": "raw/verify/updates/2025-11-10-north-weekly.json",
+      "sha256": "04091ae0e196b9b5a15784abca3ffec67ec1fed941c5b1e94a4bb4358e7c95d2",
+      "bytes": 5849
+    },
+    {
+      "path": "raw/verify/updates/2025-12-08-north-weekly.json",
+      "sha256": "3d9d8436ce4b1382dc6cd591f4492c570430aab8e41b7fab409e6ec202e9cae0",
+      "bytes": 5857
+    },
+    {
+      "path": "raw/verify/updates/2025-12-15-coastal-weekly.json",
+      "sha256": "a59f7f83666b6d77ec06785e6cd651a65100dbe791dd00b5ed46df1394594b3a",
+      "bytes": 7110
+    },
+    {
+      "path": "raw/verify/updates/2026-01-05-central-weekly.json",
+      "sha256": "8fe15706e5f018fa1544e76317521a30d67a7b3f213b265414b879b8cbc89b73",
+      "bytes": 4892
+    },
+    {
+      "path": "raw/verify/updates/2026-02-09-north-weekly.json",
+      "sha256": "2c66e173400053c362164fb2a9cf848d71d5801b950c7e73a633823e0de4227b",
+      "bytes": 4648
+    },
+    {
+      "path": "raw/verify/updates/2026-03-02-north-weekly.json",
+      "sha256": "14ad02a69a078e9bd12cc77292b9a5048d7471ed8c9f5f29bca330c80f1835a4",
+      "bytes": 3925
+    },
+    {
+      "path": "raw/verify/updates/2026-03-16-coastal-weekly.json",
+      "sha256": "be77b13fe0a199e589dceb81b408257fe9f9f8c119512376cfb2731c40a89eab",
+      "bytes": 5304
+    },
+    {
+      "path": "raw/verify/updates/2026-04-20-north-weekly.json",
+      "sha256": "091b529f1efb1ea193636e30a8e86c6deeb27916e8196441fc3515defd220d4c",
+      "bytes": 4219
+    },
+    {
+      "path": "raw/verify/updates/2026-05-11-central-weekly.json",
+      "sha256": "7637359fc321f1f8caeacde2a69d6028a8d1a887c4d17f8b4092270046e917ec",
+      "bytes": 3592
+    },
+    {
+      "path": "raw/verify/updates/2026-05-11-coastal-weekly.json",
+      "sha256": "86f51d6777fbc2813681177ddd26fc15cf85756579cf7b2d3008b6b40bff08c6",
+      "bytes": 5210
+    },
+    {
+      "path": "raw/verify/updates/2026-06-22-coastal-weekly.json",
+      "sha256": "337d4edbd1b84879d53ed2e1b79920b5e69a470f08883ef32a97b345d7adb9fe",
+      "bytes": 3028
+    },
+    {
+      "path": "raw/verify/updates/2026-07-13-central-weekly.json",
+      "sha256": "50ce7d030e008a5ddb673381d24457c42d9928374ab2547837e780c8fcf992cc",
+      "bytes": 5590
+    },
+    {
+      "path": "raw/verify/updates/2026-09-21-central-weekly.json",
+      "sha256": "27b920879bb6a1bacfa54495fd28bec69a6e82d2bc5bf6f1c16280f6db9ebe48",
+      "bytes": 4819
+    },
+    {
+      "path": "raw/verify/updates/2026-09-28-coastal-weekly.json",
+      "sha256": "6c5d52c6ecaad8af893fc3fe7472fc186cd3a7455024e86d83215301a554e883",
+      "bytes": 5572
+    },
+    {
+      "path": "raw/verify/updates/2026-09-28-north-weekly.json",
+      "sha256": "c5c1c1a2d936d79871d0b19c094d67c3a1f3688b96fca94e7068b7970328c85a",
+      "bytes": 5097
+    },
+    {
+      "path": "verification/adjudications.json",
+      "sha256": "d5b7a796a6f488762b21dc1e9e64b29024ecac654d5c8e415c771abb9140ce6c",
+      "bytes": 23890
+    },
+    {
+      "path": "verification/disagreements.json",
+      "sha256": "9a94b96456eb4134ce751eb8d9048f61a460f97886111ab15c0c5f59937b6236",
+      "bytes": 79790
+    },
+    {
+      "path": "verification/stats.json",
+      "sha256": "451834068a94fb1f8cdc221713bf4e9d2c09ba11709e29562813a5125b832a0c",
+      "bytes": 635
+    },
+    {
+      "path": "cost/ledger.jsonl",
+      "sha256": "c9f51b8ca25d1f72bc2c9e9394e4813c95420a3e1328c48cea76760835fda6f4",
+      "bytes": 101012
+    }
+  ],
+  "counts": {
+    "pages": {
+      "dev": 118,
+      "heldout": 108
+    },
+    "labels": {
+      "agent-tasks": {
+        "dev": 22,
+        "heldout": 22
+      },
+      "aliases": {
+        "dev": 52,
+        "heldout": 45
+      },
+      "changes": {
+        "dev": 14,
+        "heldout": 12
+      },
+      "document-status": {
+        "dev": 21,
+        "heldout": 20
+      },
+      "entity-mentions": {
+        "dev": 613,
+        "heldout": 551
+      },
+      "governing-records": {
+        "dev": 164,
+        "heldout": 156
+      },
+      "owner-phrases": {
+        "dev": 101,
+        "heldout": 90
+      },
+      "ownership": {
+        "dev": 19,
+        "heldout": 16
+      },
+      "timeline": {
+        "dev": 29,
+        "heldout": 27
+      }
+    }
+  },
+  "data_sha256": "a5822b063fc1ee141cfc3352f07489e43085e2168fa989aa4d2df1f58aa3896f"
+}

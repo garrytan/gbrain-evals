@@ -1,0 +1,37 @@
+{
+  "slug": "accounts/driftmoor-marine-freight",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: profile\nTitle: Driftmoor Marine Freight\nDate: Written on 2026-10-01.\nWriter: Bettina Kroll\nVoice: hurried, lots of fragments\nFormat: undefined\nLength: about 126 words\nDate style in the body: undefined\nTypos: a few natural typos and one or two sloppy abbreviations (never in names or required phrases)\n\nBrief:\nAccount profile, updated 2026-10-01. Marine freight and barge operator in Puget Sound, HQ Everett. Code DMF. Owner history: Sofia Marchetti (start not recorded) until April 7, 2025; Kwame Adjei-Rowe since. 58 seats, term to December 31, 2026.\n\nUse these names or codes at least once each, as written: \"DMF\".\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Bettina Kroll: Coastal team lead\n- Sofia Marchetti: Account manager, Coastal team\n- Kwame Adjei-Rowe: Account manager, Coastal team\n- Corinne Ashdown: VP Operations\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Pellucid Harbor Logistics: port drayage and terminal logistics, Gulf Coast; codes/nicknames PHL\n- Driftmoor Marine Freight: marine freight and barge operator, Puget Sound; codes/nicknames DMF\n- Saltmarsh Provisions: regional grocery distributor, Lowcountry; main contact Corinne Ashdown, VP Operations; codes/nicknames SMP\n- Pellow Home Living (renamed from Covey & Lark Retail on 2026-02-16): home goods retailer, Mid-Atlantic; codes/nicknames Covey, PHL\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2026-10-01 (background only; don't restate unless the brief asks):\n- Pellucid Harbor Logistics: managed by Kwame Adjei-Rowe\n- Driftmoor Marine Freight: managed by Kwame Adjei-Rowe\n- Saltmarsh Provisions: managed by Bettina Kroll\n- Pellow Home Living: managed by Sofia Marchetti",
+      "response_text": "# Driftmoor Marine Freight\n\nUpdated 2026-10-01.\n\n- **Code:** DMF\n- **Business:** Marine freight and barge operator in Puget Sound. HQ Everett.\n- **Owner history:** Sofia Marchetti (start not recorded) until April 7, 2025; Kwame Adjei-Rowe since.\n- **Pemberline Dock:** 58 seats. Term to December 31, 2026.\n\nOps notes, quick pass: morning dispatch juggling barge arrivals against truck pickup slots. Everett gate team wants the “Today — inbound” view pinned; too much scrolling with wet gloves, apparently. Fair complaint.\n\nOpen item: duplicate arrival showing against door 4 after dispatcher moved a booking. Ticket DMF-184. Need original booking timestamp, not another cropped screenshot. Kwame Adjei-Rowe chasing that this aft.\n\nAlso check night-shift handoff report. Two pickup notes missing trailer refs; prob. pasted into the wrong field. Clean that up before next walkthrough. Calender invite still needs the gate supervisor added.",
+      "usage": {
+        "input_tokens": 1089,
+        "output_tokens": 225,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.004428,
+      "provider_meta": {
+        "id": "resp_05d1b9a0cc64765b016acfae76e83487d190585086ed027591",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1089,
+          "input_tokens_details": {
+            "cache_write_tokens": 1086,
+            "cached_tokens": 0
+          },
+          "output_tokens": 225,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 1314
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

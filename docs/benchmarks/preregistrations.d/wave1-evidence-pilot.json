@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "experiments": [
+    {
+      "id": "wave1-evidence-architecture-pilot",
+      "preregistration": "docs/benchmarks/2026-10-08-evidence-architecture-pilot-preregistration.md",
+      "results": [
+        "docs/benchmarks/2026-10-08-evidence-architecture-pilot/**",
+        "docs/benchmarks/2026-10-08-evidence-architecture-pilot.md"
+      ]
+    }
+  ]
+}

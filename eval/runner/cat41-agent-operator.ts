@@ -16,7 +16,9 @@
  *   bun eval/runner/cat41-agent-operator.ts run --gbrain <checkout>@<ref> --label baseline \
  *     [--harnesses claude,codex] [--scenarios all|id,id] [--repeat 3] [--concurrency 3] \
  *     [--claude-model claude-opus-5-5] [--codex-model gpt-6.1-sol] [--out eval/reports/cat41/<label>] \
- *     --paid (--budget-usd <n> | --budget-run-id <id>)
+ *     --paid (--budget-usd <n> | --budget-run-id <id>) [--preregistration <committed, pushed .md>]
+ *   (`all` skips the opt-in wave 2 TTHW scenarios; name them in --scenarios. A scenario limited to some harnesses
+ *   runs only on those.)
  *   # re-score a pass from its raw results ($0)
  *   bun eval/runner/cat41-agent-operator.ts score --out <dir>
  *   # token overhead of initialize instructions + tools/list per surface ($0)
@@ -30,6 +32,7 @@ import { join, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
 import { mkdtempSync } from 'node:fs';
 import { SCENARIOS, scenarioById, SEED_FACTS, SEED_PAGES, type Scenario } from './cat41/scenarios.ts';
+import { D7_RELEASE, D7_SCENARIOS } from './cat41/brief-scenarios.ts';
 import { classifyRun, gateMetrics, summarize, SCORER_VERSION, type CellSummary, type OverheadRow, type RunScore } from './cat41/classify.ts';
 import { registryEntry } from '../registry.ts';
 import { evaluatePromotion, describeOutcome } from './promotion.ts';
@@ -40,6 +43,7 @@ import { BudgetRun, CHAT_PRICE_OVERRIDES, budgetOptionsFrom, receiptCost } from 
 import { requirePaidArm } from './paid-arm.ts';
 import { McpClient } from './cat40/gbrain-arm.ts';
 import { runCli } from './lifecycle/drivers.ts';
+import { attestPreregistration } from './prereg.ts';
 
 export const CAT41_VERSION = 'cat41-v1';
 export const IMAGE = 'gbrain-evals-cat41:v1';
@@ -74,7 +78,8 @@ export function fillCosts(r: ContainerResult): ContainerResult {
   return r;
 }
 
-function dockerRun(args: { scenario: string; harness: Harness; model: string; repeat: number; buildDir: string; out: string; docsBase: string; installSpec: string; gbrainRef: string; timeoutMs: number }): Promise<{ code: number; stderr: string }> {
+/** One container run. `extra`: driver flags passed through (the D7 smoke's `--fake-harness-provider`). */
+export function dockerRun(args: { scenario: string; harness: Harness; model: string; repeat: number; buildDir: string; out: string; docsBase: string; installSpec: string; gbrainRef: string; timeoutMs: number; extra?: string[] }): Promise<{ code: number; stderr: string }> {
   mkdirSync(args.out, { recursive: true });
   const name = `cat41-${args.scenario}-${args.harness}-${args.repeat}-${process.pid}`.replace(/_/g, '-');
   const uid = process.getuid?.() ?? 1000;
@@ -83,7 +88,7 @@ function dockerRun(args: { scenario: string; harness: Harness; model: string; re
     '-v', `${args.buildDir}:/opt/gbrain:ro`, '-v', `${join(REPO, 'eval/runner')}:/opt/runner:ro`, '-v', `${args.out}:/out`,
     IMAGE, 'bun', '/opt/runner/cat41/in-container.ts',
     '--scenario', args.scenario, '--harness', args.harness, '--model', args.model, '--repeat', String(args.repeat),
-    '--docs-base', args.docsBase, '--install-spec', args.installSpec, '--gbrain-ref', args.gbrainRef, '--host-uid', String(uid)];
+    '--docs-base', args.docsBase, '--install-spec', args.installSpec, '--gbrain-ref', args.gbrainRef, '--host-uid', String(uid), ...(args.extra ?? [])];
   return new Promise(resolvePromise => {
     const p = spawn('docker', argv, { stdio: ['ignore', 'ignore', 'pipe'], env: process.env });
     let stderr = '';
@@ -121,7 +126,7 @@ export function scoreDir(out: string): { scores: RunScore[]; cells: CellSummary[
     if (!prev || attempt > prev.attempt) latest.set(key, { score, attempt });
   }
   const scores = [...latest.values()].map(x => x.score).sort((a, b) => a.scenario.localeCompare(b.scenario) || a.harness.localeCompare(b.harness) || a.repeat - b.repeat);
-  return { scores, cells: summarize(SCENARIOS, scores) };
+  return { scores, cells: summarize([...SCENARIOS, ...D7_SCENARIOS], scores) };
 }
 
 function table(cells: CellSummary[]): string {
@@ -172,7 +177,7 @@ async function cmdRun(argv: string[]) {
   if (!spec) throw new Error('--gbrain <checkout>@<ref> is required');
   const label = flag(argv, 'label', 'run')!;
   const harnesses = (flag(argv, 'harnesses', HARNESSES.join(','))!).split(',') as Harness[];
-  const scenarioIds = flag(argv, 'scenarios', 'all') === 'all' ? SCENARIOS.map(s => s.id) : flag(argv, 'scenarios')!.split(',');
+  const scenarioIds = flag(argv, 'scenarios', 'all') === 'all' ? SCENARIOS.filter(s => !s.optIn).map(s => s.id) : flag(argv, 'scenarios')!.split(',');
   const scenarios = scenarioIds.map(scenarioById);
   const repeat = Number(flag(argv, 'repeat', '3'));
   const concurrency = Number(flag(argv, 'concurrency', '3'));
@@ -186,9 +191,15 @@ async function cmdRun(argv: string[]) {
   const installSpec = flag(argv, 'install-spec', `github:garrytan/gbrain#${commit}`)!;
 
   const jobs: Array<{ s: Scenario; h: Harness; r: number }> = [];
-  for (const s of scenarios) for (const h of harnesses) for (let r = 1; r <= repeat; r++) jobs.push({ s, h, r });
-  const estimate = jobs.reduce((a, j) => a + ESTIMATE_USD[j.h], 0);
+  for (const s of scenarios) for (const h of harnesses) for (let r = 1; r <= repeat; r++) if (!s.harnesses || s.harnesses.includes(h)) jobs.push({ s, h, r });
+  const estimate = jobs.filter(j => !existsSync(join(out, 'runs', `${j.s.id}--${j.h}--r${j.r}-a0`, 'result.json'))).reduce((a, j) => a + ESTIMATE_USD[j.h], 0);
   requirePaidArm(argv, { arm: 'cat41 agent sessions', estimateUsd: estimate, ledgerPath: budgetOptionsFrom(argv).ledgerPath });
+  const prereg = flag(argv, 'preregistration');
+  if (scenarioIds.some(id => id.startsWith('d7_')) && argv.includes('--paid')) {
+    if (!prereg) throw new Error('paid D7 sessions need --preregistration <the committed, frozen D7 preregistration>');
+    if (commit !== D7_RELEASE.commit) throw new Error(`paid D7 sessions run only on gbrain ${D7_RELEASE.version} (${D7_RELEASE.commit}); got ${commit}`);
+  }
+  const attestation = prereg ? attestPreregistration(prereg, REPO) : null;
   const opts = budgetOptionsFrom(argv);
   const budget = opts.runId ? BudgetRun.join({ runId: opts.runId, ledgerPath: opts.ledgerPath, programCapUsd: opts.programCapUsd }) : BudgetRun.open({ runner: 'cat41-agent-operator', budgetUsd: opts.budgetUsd!, estimateUsd: estimate, ledgerPath: opts.ledgerPath, programCapUsd: opts.programCapUsd });
 
@@ -196,6 +207,7 @@ async function cmdRun(argv: string[]) {
     label, gbrain: overlaySummary(gut), image: IMAGE, pins: PINS, models, repeat, harnesses, scenarios: scenarioIds,
     docs_base: docsBase, install_spec: installSpec, budget_run_id: budget.runId, tool_result_cap: 'none (harness defaults; the evaluator adds no per-tool-result cap)',
     seed: { pages: Object.keys(SEED_PAGES).length, facts: SEED_FACTS.length },
+    ...(attestation ? { preregistration: attestation } : {}),
   };
   writeFileSync(join(out, 'meta.json'), JSON.stringify(publishable({ ...meta, started_at: new Date().toISOString() }), null, 2));
   console.log(`[cat41] ${jobs.length} runs (${scenarios.length} scenarios x ${harnesses.join('+')} x ${repeat}) against gbrain ${gut.version} @ ${commit.slice(0, 12)} -> ${out}`);

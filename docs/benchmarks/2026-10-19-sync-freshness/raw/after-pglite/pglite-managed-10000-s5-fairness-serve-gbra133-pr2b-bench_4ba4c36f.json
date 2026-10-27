@@ -1,0 +1,434 @@
+{
+ "schema": "gbrain-sync-freshness/1",
+ "kind": "fairness",
+ "cell": "pglite-managed-10000-s5-fairness-serve-gbra133-pr2b-bench_4ba4c36f",
+ "label": "gbra133-pr2b-bench@4ba4c36f",
+ "gbrain_rev": "4ba4c36f",
+ "at": "2026-10-20T02:25:08.112Z",
+ "params": {
+  "engine": "pglite",
+  "mode": "managed",
+  "pages": 10000,
+  "commit": "single",
+  "trigger": "serve",
+  "reps": 10,
+  "rtt_ms": 0,
+  "measured_rtt_ms": null,
+  "interval_s": null,
+  "scenario": "fairness",
+  "probe_ms": 100,
+  "timeout_s": 300,
+  "keyless": true,
+  "embed": null,
+  "detection": "watch",
+  "jitter_ms": 0,
+  "sources": [
+   "bench",
+   "bench2",
+   "bench3",
+   "bench4",
+   "bench5"
+  ],
+  "source_pages": 1000,
+  "residents": [
+   "serve"
+  ]
+ },
+ "machine": {
+  "cores": 4,
+  "cpu_model": "AMD EPYC",
+  "ram_gb": 16,
+  "kernel": "6.1.158+",
+  "bun": "1.4.3"
+ },
+ "build": {
+  "engine": "pglite",
+  "mode": "managed",
+  "pages": 10000,
+  "sources": [
+   "bench",
+   "bench2",
+   "bench3",
+   "bench4",
+   "bench5"
+  ],
+  "source_pages": 1000,
+  "rev": "4ba4c36f",
+  "built_at": "2026-10-20T02:22:52.641Z",
+  "cloned_from": "pglite-classic-10000-s5x1000-4ba4c36f",
+  "clone_ms": 2265.4,
+  "activate_ms": 7771.2,
+  "first_managed_sync": {
+   "ms": 1851.74267578125,
+   "runs": 1
+  },
+  "first_managed_sync_bench2": {
+   "ms": 1210.221923828125,
+   "runs": 1
+  },
+  "first_managed_sync_bench3": {
+   "ms": 1196.629638671875,
+   "runs": 1
+  },
+  "first_managed_sync_bench4": {
+   "ms": 1247.996826171875,
+   "runs": 1
+  },
+  "first_managed_sync_bench5": {
+   "ms": 1244.640625,
+   "runs": 1
+  },
+  "links_settled": {
+   "ms": 840.4,
+   "runs": 1,
+   "last": "Extract --stale: 0 link(s) created, 0 removed, 0 timeline entr(ies) from 0 page(s). | Actionable: 0 page(s) still need link/timeline extraction; 0 page(s) due for the mention pass. Extraction is complete (raw stale totals are not a completion signal)."
+  },
+  "links_settled_bench2": {
+   "ms": 630.7,
+   "runs": 1,
+   "last": "Extract --stale: 0 link(s) created, 0 removed, 0 timeline entr(ies) from 0 page(s). | Actionable: 0 page(s) still need link/timeline extraction; 0 page(s) due for the mention pass. Extraction is complete (raw stale totals are not a completion signal)."
+  },
+  "links_settled_bench3": {
+   "ms": 655.2,
+   "runs": 1,
+   "last": "Extract --stale: 0 link(s) created, 0 removed, 0 timeline entr(ies) from 0 page(s). | Actionable: 0 page(s) still need link/timeline extraction; 0 page(s) due for the mention pass. Extraction is complete (raw stale totals are not a completion signal)."
+  },
+  "links_settled_bench4": {
+   "ms": 671.8,
+   "runs": 1,
+   "last": "Extract --stale: 0 link(s) created, 0 removed, 0 timeline entr(ies) from 0 page(s). | Actionable: 0 page(s) still need link/timeline extraction; 0 page(s) due for the mention pass. Extraction is complete (raw stale totals are not a completion signal)."
+  },
+  "links_settled_bench5": {
+   "ms": 654.2,
+   "runs": 1,
+   "last": "Extract --stale: 0 link(s) created, 0 removed, 0 timeline entr(ies) from 0 page(s). | Actionable: 0 page(s) still need link/timeline extraction; 0 page(s) due for the mention pass. Extraction is complete (raw stale totals are not a completion signal)."
+  }
+ },
+ "notes": [
+  "serve on-commit watcher enabled 706.4 ms after spawn"
+ ],
+ "get_page": {
+  "n": 10,
+  "p50": 5262.1,
+  "p95": 10170.9,
+  "max": 10681.6,
+  "min": 4862.7,
+  "mean": 6637.6,
+  "cv": 0.329
+ },
+ "search": {
+  "n": 10,
+  "p50": 5262.1,
+  "p95": 10170.9,
+  "max": 10681.6,
+  "min": 4862.7,
+  "mean": 6637.6,
+  "cv": 0.329
+ },
+ "exit": {
+  "n": 0,
+  "p50": null,
+  "p95": null,
+  "max": null,
+  "min": null,
+  "mean": null,
+  "cv": null
+ },
+ "phases": {
+  "spread_ms": {
+   "n": 10,
+   "p50": 4592.1,
+   "p95": 8491.7,
+   "max": 8878.1,
+   "min": 4141.9,
+   "mean": 5730.1,
+   "cv": 0.321
+  },
+  "all_visible_after_first_commit_ms": {
+   "n": 10,
+   "p50": 5637.1,
+   "p95": 10502.8,
+   "max": 10941.8,
+   "min": 5306.9,
+   "mean": 7034.4,
+   "cv": 0.306
+  }
+ },
+ "detection_observed": {
+  "bench": "watch (serve)",
+  "bench2": "watch (serve)",
+  "bench3": "watch (serve)",
+  "bench4": "watch (serve)",
+  "bench5": "watch (serve)"
+ },
+ "per_source": {
+  "bench": {
+   "n": 10,
+   "p50": 719.6,
+   "p95": 1679.3,
+   "max": 1803.5,
+   "min": 621.8,
+   "mean": 907.5,
+   "cv": 0.453
+  },
+  "bench2": {
+   "n": 10,
+   "p50": 1710.5,
+   "p95": 3028.3,
+   "max": 3549,
+   "min": 1488.3,
+   "mean": 1989.7,
+   "cv": 0.322
+  },
+  "bench3": {
+   "n": 10,
+   "p50": 2443.6,
+   "p95": 4564,
+   "max": 4846.9,
+   "min": 2003.3,
+   "mean": 2806,
+   "cv": 0.348
+  },
+  "bench4": {
+   "n": 10,
+   "p50": 3319.7,
+   "p95": 7229.7,
+   "max": 7738.2,
+   "min": 2393.8,
+   "mean": 4152.6,
+   "cv": 0.45
+  },
+  "bench5": {
+   "n": 10,
+   "p50": 5262.1,
+   "p95": 10170.9,
+   "max": 10681.6,
+   "min": 4862.7,
+   "mean": 6637.6,
+   "cv": 0.329
+  }
+ },
+ "failures": 0,
+ "reps": [
+  {
+   "rep": 0,
+   "sha": "c7cd771f7915",
+   "token": "zqwqotssxtkp",
+   "files": 5,
+   "get_ms": 9546.8,
+   "search_ms": 9546.8,
+   "first_hit_ms": 1527.4,
+   "commit_git_ms": 419.4,
+   "source": "mcp",
+   "phases": {
+    "spread_ms": 8019.4,
+    "all_visible_after_first_commit_ms": 9966.2
+   },
+   "per_source": {
+    "bench": 1527.4,
+    "bench2": 3549,
+    "bench3": 4218.3,
+    "bench4": 6608.1,
+    "bench5": 9546.8
+   }
+  },
+  {
+   "rep": 1,
+   "sha": "bc0c4261c8b6",
+   "token": "zqpkxbvvmamc",
+   "files": 5,
+   "get_ms": 5029,
+   "search_ms": 5029,
+   "first_hit_ms": 686,
+   "commit_git_ms": 436.7,
+   "source": "mcp",
+   "phases": {
+    "spread_ms": 4343,
+    "all_visible_after_first_commit_ms": 5465.7
+   },
+   "per_source": {
+    "bench": 686,
+    "bench2": 1582.6,
+    "bench3": 2436,
+    "bench4": 2770.1,
+    "bench5": 5029
+   }
+  },
+  {
+   "rep": 2,
+   "sha": "c543ab665f57",
+   "token": "zqdzmfhzrqwk",
+   "files": 5,
+   "get_ms": 10681.6,
+   "search_ms": 10681.6,
+   "first_hit_ms": 1803.5,
+   "commit_git_ms": 260.2,
+   "source": "mcp",
+   "phases": {
+    "spread_ms": 8878.1,
+    "all_visible_after_first_commit_ms": 10941.8
+   },
+   "per_source": {
+    "bench": 1803.5,
+    "bench2": 2391.9,
+    "bench3": 4846.9,
+    "bench4": 7738.2,
+    "bench5": 10681.6
+   }
+  },
+  {
+   "rep": 3,
+   "sha": "649534369d9f",
+   "token": "zqvpdmtyqoej",
+   "files": 5,
+   "get_ms": 4918.1,
+   "search_ms": 4918.1,
+   "first_hit_ms": 737.3,
+   "commit_git_ms": 442.9,
+   "source": "mcp",
+   "phases": {
+    "spread_ms": 4180.8,
+    "all_visible_after_first_commit_ms": 5361
+   },
+   "per_source": {
+    "bench": 737.3,
+    "bench2": 1543.1,
+    "bench3": 2016.4,
+    "bench4": 2594.1,
+    "bench5": 4918.1
+   }
+  },
+  {
+   "rep": 4,
+   "sha": "667cc438bf44",
+   "token": "zqowdgtjifaf",
+   "files": 5,
+   "get_ms": 7688.2,
+   "search_ms": 7688.2,
+   "first_hit_ms": 903.6,
+   "commit_git_ms": 360.6,
+   "source": "mcp",
+   "phases": {
+    "spread_ms": 6784.6,
+    "all_visible_after_first_commit_ms": 8048.8
+   },
+   "per_source": {
+    "bench": 903.6,
+    "bench2": 1960.7,
+    "bench3": 2528.5,
+    "bench4": 4936.1,
+    "bench5": 7688.2
+   }
+  },
+  {
+   "rep": 5,
+   "sha": "cfcf3e3b2ab8",
+   "token": "zqtshuhhlona",
+   "files": 5,
+   "get_ms": 5277.1,
+   "search_ms": 5277.1,
+   "first_hit_ms": 718.3,
+   "commit_git_ms": 404.1,
+   "source": "mcp",
+   "phases": {
+    "spread_ms": 4558.8,
+    "all_visible_after_first_commit_ms": 5681.3
+   },
+   "per_source": {
+    "bench": 718.3,
+    "bench2": 1580,
+    "bench3": 2249.4,
+    "bench4": 2762.2,
+    "bench5": 5277.1
+   }
+  },
+  {
+   "rep": 6,
+   "sha": "9a0a044296c8",
+   "token": "zqmxsgdrfoup",
+   "files": 5,
+   "get_ms": 8081.6,
+   "search_ms": 8081.6,
+   "first_hit_ms": 671.5,
+   "commit_git_ms": 431.3,
+   "source": "mcp",
+   "phases": {
+    "spread_ms": 7410.1,
+    "all_visible_after_first_commit_ms": 8512.9
+   },
+   "per_source": {
+    "bench": 671.5,
+    "bench2": 2380.8,
+    "bench3": 3133.5,
+    "bench4": 5084.5,
+    "bench5": 8081.6
+   }
+  },
+  {
+   "rep": 7,
+   "sha": "4c1a2e397952",
+   "token": "zqcpozavakhe",
+   "files": 5,
+   "get_ms": 5044.1,
+   "search_ms": 5044.1,
+   "first_hit_ms": 685,
+   "commit_git_ms": 422,
+   "source": "mcp",
+   "phases": {
+    "spread_ms": 4359.1,
+    "all_visible_after_first_commit_ms": 5466.2
+   },
+   "per_source": {
+    "bench": 685,
+    "bench2": 1636.3,
+    "bench3": 2451.1,
+    "bench4": 2969.7,
+    "bench5": 5044.1
+   }
+  },
+  {
+   "rep": 8,
+   "sha": "c9cf52f84561",
+   "token": "zqhabjlvawbe",
+   "files": 5,
+   "get_ms": 5247.1,
+   "search_ms": 5247.1,
+   "first_hit_ms": 621.8,
+   "commit_git_ms": 345.8,
+   "source": "mcp",
+   "phases": {
+    "spread_ms": 4625.3,
+    "all_visible_after_first_commit_ms": 5592.8
+   },
+   "per_source": {
+    "bench": 621.8,
+    "bench2": 1784.7,
+    "bench3": 2176.7,
+    "bench4": 3669.6,
+    "bench5": 5247.1
+   }
+  },
+  {
+   "rep": 9,
+   "sha": "e5922abe7abf",
+   "token": "zqmsxwmqxpmq",
+   "files": 5,
+   "get_ms": 4862.7,
+   "search_ms": 4862.7,
+   "first_hit_ms": 720.8,
+   "commit_git_ms": 444.2,
+   "source": "mcp",
+   "phases": {
+    "spread_ms": 4141.9,
+    "all_visible_after_first_commit_ms": 5306.9
+   },
+   "per_source": {
+    "bench": 720.8,
+    "bench2": 1488.3,
+    "bench3": 2003.3,
+    "bench4": 2393.8,
+    "bench5": 4862.7
+   }
+  }
+ ]
+}

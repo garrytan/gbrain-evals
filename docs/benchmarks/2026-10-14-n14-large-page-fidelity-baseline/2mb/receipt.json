@@ -1,0 +1,5843 @@
+{
+  "cost": {
+    "usd": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "basis": "hermetic: provider keys stripped, keyword search only; the append-cost embedder is an in-process counting fake (no network)"
+  },
+  "delivered_tokens": {
+    "tokens": 0,
+    "basis": "hermetic: provider keys stripped, keyword search only; the append-cost embedder is an in-process counting fake (no network)"
+  },
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "n14-large-page-fidelity",
+  "run_status": "completed",
+  "verdict": "fail",
+  "n_total": 360,
+  "n_scored": 240,
+  "completion_rate": 0.6666666666666666,
+  "errors": [],
+  "publishable": true,
+  "gbrain_version": "0.60.225.0",
+  "gbrain_pin": "github:garrytan/gbrain#77cf8e1116e9af67c1983adcbb3223b96f0991a5",
+  "execution": {
+    "source_tree": {
+      "sha256": "843702c82ebd6b416a79eae6a9658980513771d18fae3932ece9279fc518d8e4",
+      "scheme": "git-index-blob-v1",
+      "files": 12871,
+      "git_head": "28c12a27326404b968f5dd65b02cf01feb48508d",
+      "dirty": true
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#77cf8e1116e9af67c1983adcbb3223b96f0991a5",
+      "declared_sha": "77cf8e1116e9af67c1983adcbb3223b96f0991a5",
+      "version": "0.60.225.0",
+      "package_sha256": "2c1c308b79139a1d2f4ae9e8929d12d690034e80223a3231ef9249f0c43509cd",
+      "loaded_git_head": "c71fe7436e673db819c1be4532504b861e14ad50"
+    }
+  },
+  "resolved_config": {
+    "engine": "pglite-in-memory, one brain per (document, arm) child process",
+    "decide": "off (no key, fresh GBRAIN_HOME)",
+    "caller": "operation handlers with OperationContext { remote: false, sourceId: default }",
+    "tiers": [
+      "2mb"
+    ],
+    "arms": [
+      "single-page",
+      "managed-parts",
+      "native"
+    ],
+    "docs": "all",
+    "seed": 14,
+    "concurrency": 2,
+    "rss_limit_mb": 6144,
+    "generator_version": "n14-large-page-gen/v1",
+    "tier_sizes": {
+      "2mb": {
+        "conversation": 2000000,
+        "project-log": 2000000,
+        "book": 1500000
+      }
+    },
+    "search": "search op (keyword), limit 10; a hit is a result whose stored chunk (content_chunks.chunk_text by chunk_id) holds the needle answer as a whole token, passage at most 65536 bytes",
+    "egress": "largest JSON-RPC text frame of every operation result; cap 1048576 bytes",
+    "reads": "single-page and managed-parts: get_page {slug} of the hit page; native: get_page {slug, body: window, around_chunk_id}; plus one default get_page of the entry page per arm",
+    "append": "single-page: put_page whole page + 1 KB; managed-parts: put_page new part + hub index; native: append_page when it exists",
+    "append_cost": "embedding inputs and estimated tokens (UTF-8 bytes / 4) sent by runEmbedCore({stale: true}) after the append, counted by a fake embed transport; ratio = embed tokens / appended tokens; null when the page has no chunks",
+    "embed_pass_tiers": [
+      "2mb",
+      "20mb"
+    ],
+    "roundtrip": "export (runExport --slug-prefix) then reassemble the body; sha256 against source body + append",
+    "native_capability": {
+      "present": false,
+      "get_page_body": null,
+      "append_page": false,
+      "upload_session": false,
+      "evidence": "get_page declares no body parameter; no append_page op"
+    },
+    "thresholds": {
+      "native_keyword_recall_floor": 0.9,
+      "append_embed_ratio_max": 3,
+      "native_recall_gap_points_max": 2,
+      "hybrid_recall_min_decile": 0.95
+    },
+    "gbrain_overlay": {
+      "requested": "gbrain@c71fe7436e673db819c1be4532504b861e14ad50",
+      "ref": "c71fe7436e673db819c1be4532504b861e14ad50",
+      "commit": "c71fe7436e673db819c1be4532504b861e14ad50",
+      "tree": "5ca3b272b2968676ec0c715acbe2a560193d2087",
+      "version": "0.60.225.0",
+      "checkout_dirty": false,
+      "verified": {
+        "copy_tree": "5ca3b272b2968676ec0c715acbe2a560193d2087",
+        "tree_matches": true,
+        "symlinks_under_src": 0,
+        "dir_is_realpath": true,
+        "cli_version": "0.60.225.0",
+        "cli_version_matches": true
+      },
+      "copied_not_symlinked": true
+    },
+    "hermetic_wall_ms": 45091
+  },
+  "hashes": {
+    "ledger_sha256": "c09ed85562906f0fd9d959eed907d85743c544085711d31ff5e0490ece1fb436"
+  },
+  "started_at": "2026-10-14T18:56:33.661Z",
+  "finished_at": "2026-10-14T18:57:20.683Z",
+  "data": {
+    "safety": {
+      "crashes": 0,
+      "responses_over_cap": 3,
+      "roundtrip_byte_loss": 0,
+      "presence_failures": 0
+    },
+    "quality": {
+      "native_append_embed_ratio_max": null,
+      "native_recall_gap_points_max": null
+    },
+    "floor": {
+      "native_keyword_recall_2mb": null
+    },
+    "capability": {
+      "present": false,
+      "get_page_body": null,
+      "append_page": false,
+      "upload_session": false,
+      "evidence": "get_page declares no body parameter; no append_page op"
+    },
+    "verdict_failures": [
+      "safety.responses_over_cap=3",
+      "quality.native_append_embed_ratio_max=null",
+      "quality.native_recall_gap_points_max=null",
+      "floor.native_keyword_recall_2mb=null"
+    ],
+    "arms": [
+      {
+        "arm": "native",
+        "doc": "conversation",
+        "tier": "2mb",
+        "status": "capability_absent",
+        "ingest": {
+          "status": "capability_absent",
+          "chunks": 0,
+          "pages": 0,
+          "embed_skip": null,
+          "wall_ms": null,
+          "rss_peak_mb": null,
+          "rss_over_baseline_mb": null
+        },
+        "stored_needles": {
+          "hits": 0,
+          "total": 40,
+          "rate": 0
+        },
+        "keyword_recall": {
+          "hits": 0,
+          "total": 40,
+          "rate": 0
+        },
+        "keyword_recall_by_decile": [
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          }
+        ],
+        "min_decile_recall": 0,
+        "delivered_recall": {
+          "hits": 0,
+          "total": 40,
+          "rate": 0
+        },
+        "distractor_preferred": 0,
+        "reads": {
+          "attempted": 0,
+          "contains": 0,
+          "correct": 0,
+          "max_bytes": null
+        },
+        "direct_read_bytes": null,
+        "max_frame_bytes": 0,
+        "responses_over_cap": 0,
+        "append": null,
+        "embed_initial": null,
+        "roundtrip": "not_run",
+        "roundtrip_byte_delta": null
+      },
+      {
+        "arm": "native",
+        "doc": "project-log",
+        "tier": "2mb",
+        "status": "capability_absent",
+        "ingest": {
+          "status": "capability_absent",
+          "chunks": 0,
+          "pages": 0,
+          "embed_skip": null,
+          "wall_ms": null,
+          "rss_peak_mb": null,
+          "rss_over_baseline_mb": null
+        },
+        "stored_needles": {
+          "hits": 0,
+          "total": 40,
+          "rate": 0
+        },
+        "keyword_recall": {
+          "hits": 0,
+          "total": 40,
+          "rate": 0
+        },
+        "keyword_recall_by_decile": [
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          }
+        ],
+        "min_decile_recall": 0,
+        "delivered_recall": {
+          "hits": 0,
+          "total": 40,
+          "rate": 0
+        },
+        "distractor_preferred": 0,
+        "reads": {
+          "attempted": 0,
+          "contains": 0,
+          "correct": 0,
+          "max_bytes": null
+        },
+        "direct_read_bytes": null,
+        "max_frame_bytes": 0,
+        "responses_over_cap": 0,
+        "append": null,
+        "embed_initial": null,
+        "roundtrip": "not_run",
+        "roundtrip_byte_delta": null
+      },
+      {
+        "arm": "native",
+        "doc": "book",
+        "tier": "2mb",
+        "status": "capability_absent",
+        "ingest": {
+          "status": "capability_absent",
+          "chunks": 0,
+          "pages": 0,
+          "embed_skip": null,
+          "wall_ms": null,
+          "rss_peak_mb": null,
+          "rss_over_baseline_mb": null
+        },
+        "stored_needles": {
+          "hits": 0,
+          "total": 40,
+          "rate": 0
+        },
+        "keyword_recall": {
+          "hits": 0,
+          "total": 40,
+          "rate": 0
+        },
+        "keyword_recall_by_decile": [
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          }
+        ],
+        "min_decile_recall": 0,
+        "delivered_recall": {
+          "hits": 0,
+          "total": 40,
+          "rate": 0
+        },
+        "distractor_preferred": 0,
+        "reads": {
+          "attempted": 0,
+          "contains": 0,
+          "correct": 0,
+          "max_bytes": null
+        },
+        "direct_read_bytes": null,
+        "max_frame_bytes": 0,
+        "responses_over_cap": 0,
+        "append": null,
+        "embed_initial": null,
+        "roundtrip": "not_run",
+        "roundtrip_byte_delta": null
+      },
+      {
+        "arm": "single-page",
+        "doc": "conversation",
+        "tier": "2mb",
+        "status": "ran",
+        "ingest": {
+          "status": "stored",
+          "chunks": 0,
+          "pages": 1,
+          "embed_skip": "oversized",
+          "wall_ms": 1029,
+          "rss_peak_mb": 1045,
+          "rss_over_baseline_mb": 13
+        },
+        "stored_needles": {
+          "hits": 40,
+          "total": 40,
+          "rate": 1
+        },
+        "keyword_recall": {
+          "hits": 0,
+          "total": 40,
+          "rate": 0
+        },
+        "keyword_recall_by_decile": [
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          }
+        ],
+        "min_decile_recall": 0,
+        "delivered_recall": {
+          "hits": 0,
+          "total": 40,
+          "rate": 0
+        },
+        "distractor_preferred": 0,
+        "reads": {
+          "attempted": 0,
+          "contains": 0,
+          "correct": 0,
+          "max_bytes": null
+        },
+        "direct_read_bytes": 2042154,
+        "max_frame_bytes": 2042154,
+        "responses_over_cap": 1,
+        "append": {
+          "status": "ok",
+          "wall_ms": 866,
+          "embed_inputs": 0,
+          "embed_tokens": 0,
+          "appended_tokens": 261,
+          "embed_ratio": null,
+          "chunks_rewritten": 0,
+          "chunks_deleted": 0,
+          "visible": false,
+          "path": "put_page (whole page rewrite)"
+        },
+        "embed_initial": {
+          "inputs": 2,
+          "tokens": 1076,
+          "wall_ms": 75,
+          "tokens_per_mb": 538
+        },
+        "roundtrip": "match",
+        "roundtrip_byte_delta": 0
+      },
+      {
+        "arm": "managed-parts",
+        "doc": "conversation",
+        "tier": "2mb",
+        "status": "ran",
+        "ingest": {
+          "status": "stored",
+          "chunks": 754,
+          "pages": 366,
+          "embed_skip": null,
+          "wall_ms": 12754,
+          "rss_peak_mb": 982,
+          "rss_over_baseline_mb": 7
+        },
+        "stored_needles": {
+          "hits": 40,
+          "total": 40,
+          "rate": 1
+        },
+        "keyword_recall": {
+          "hits": 40,
+          "total": 40,
+          "rate": 1
+        },
+        "keyword_recall_by_decile": [
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          }
+        ],
+        "min_decile_recall": 1,
+        "delivered_recall": {
+          "hits": 40,
+          "total": 40,
+          "rate": 1
+        },
+        "distractor_preferred": 0,
+        "reads": {
+          "attempted": 40,
+          "contains": 40,
+          "correct": 40,
+          "max_bytes": 7176
+        },
+        "direct_read_bytes": 23901,
+        "max_frame_bytes": 23901,
+        "responses_over_cap": 0,
+        "append": {
+          "status": "ok",
+          "wall_ms": 295,
+          "embed_inputs": 2,
+          "embed_tokens": 558,
+          "appended_tokens": 261,
+          "embed_ratio": 2.138,
+          "chunks_rewritten": 2,
+          "chunks_deleted": 1,
+          "visible": true,
+          "path": "put_page new part + hub index update"
+        },
+        "embed_initial": {
+          "inputs": 756,
+          "tokens": 552504,
+          "wall_ms": 8183,
+          "tokens_per_mb": 276237
+        },
+        "roundtrip": "match",
+        "roundtrip_byte_delta": 0
+      },
+      {
+        "arm": "single-page",
+        "doc": "project-log",
+        "tier": "2mb",
+        "status": "ran",
+        "ingest": {
+          "status": "stored",
+          "chunks": 0,
+          "pages": 1,
+          "embed_skip": "oversized",
+          "wall_ms": 939,
+          "rss_peak_mb": 1064,
+          "rss_over_baseline_mb": 430
+        },
+        "stored_needles": {
+          "hits": 40,
+          "total": 40,
+          "rate": 1
+        },
+        "keyword_recall": {
+          "hits": 0,
+          "total": 40,
+          "rate": 0
+        },
+        "keyword_recall_by_decile": [
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          }
+        ],
+        "min_decile_recall": 0,
+        "delivered_recall": {
+          "hits": 0,
+          "total": 40,
+          "rate": 0
+        },
+        "distractor_preferred": 0,
+        "reads": {
+          "attempted": 0,
+          "contains": 0,
+          "correct": 0,
+          "max_bytes": null
+        },
+        "direct_read_bytes": 2049651,
+        "max_frame_bytes": 2049651,
+        "responses_over_cap": 1,
+        "append": {
+          "status": "ok",
+          "wall_ms": 826,
+          "embed_inputs": 0,
+          "embed_tokens": 0,
+          "appended_tokens": 250,
+          "embed_ratio": null,
+          "chunks_rewritten": 0,
+          "chunks_deleted": 0,
+          "visible": false,
+          "path": "put_page (whole page rewrite)"
+        },
+        "embed_initial": {
+          "inputs": 2,
+          "tokens": 1041,
+          "wall_ms": 61,
+          "tokens_per_mb": 520
+        },
+        "roundtrip": "match",
+        "roundtrip_byte_delta": 0
+      },
+      {
+        "arm": "managed-parts",
+        "doc": "project-log",
+        "tier": "2mb",
+        "status": "ran",
+        "ingest": {
+          "status": "stored",
+          "chunks": 824,
+          "pages": 366,
+          "embed_skip": null,
+          "wall_ms": 12520,
+          "rss_peak_mb": 992,
+          "rss_over_baseline_mb": 363
+        },
+        "stored_needles": {
+          "hits": 40,
+          "total": 40,
+          "rate": 1
+        },
+        "keyword_recall": {
+          "hits": 40,
+          "total": 40,
+          "rate": 1
+        },
+        "keyword_recall_by_decile": [
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          }
+        ],
+        "min_decile_recall": 1,
+        "delivered_recall": {
+          "hits": 40,
+          "total": 40,
+          "rate": 1
+        },
+        "distractor_preferred": 0,
+        "reads": {
+          "attempted": 40,
+          "contains": 40,
+          "correct": 40,
+          "max_bytes": 7664
+        },
+        "direct_read_bytes": 18020,
+        "max_frame_bytes": 36878,
+        "responses_over_cap": 0,
+        "append": {
+          "status": "ok",
+          "wall_ms": 250,
+          "embed_inputs": 4,
+          "embed_tokens": 1390,
+          "appended_tokens": 250,
+          "embed_ratio": 5.56,
+          "chunks_rewritten": 4,
+          "chunks_deleted": 2,
+          "visible": true,
+          "path": "put_page new part + hub index update"
+        },
+        "embed_initial": {
+          "inputs": 826,
+          "tokens": 551019,
+          "wall_ms": 8915,
+          "tokens_per_mb": 275449
+        },
+        "roundtrip": "match",
+        "roundtrip_byte_delta": 0
+      },
+      {
+        "arm": "single-page",
+        "doc": "book",
+        "tier": "2mb",
+        "status": "ran",
+        "ingest": {
+          "status": "stored",
+          "chunks": 0,
+          "pages": 1,
+          "embed_skip": "oversized",
+          "wall_ms": 727,
+          "rss_peak_mb": 1055,
+          "rss_over_baseline_mb": 458
+        },
+        "stored_needles": {
+          "hits": 40,
+          "total": 40,
+          "rate": 1
+        },
+        "keyword_recall": {
+          "hits": 0,
+          "total": 40,
+          "rate": 0
+        },
+        "keyword_recall_by_decile": [
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          }
+        ],
+        "min_decile_recall": 0,
+        "delivered_recall": {
+          "hits": 0,
+          "total": 40,
+          "rate": 0
+        },
+        "distractor_preferred": 0,
+        "reads": {
+          "attempted": 0,
+          "contains": 0,
+          "correct": 0,
+          "max_bytes": null
+        },
+        "direct_read_bytes": 1510597,
+        "max_frame_bytes": 1510597,
+        "responses_over_cap": 1,
+        "append": {
+          "status": "ok",
+          "wall_ms": 603,
+          "embed_inputs": 0,
+          "embed_tokens": 0,
+          "appended_tokens": 268,
+          "embed_ratio": null,
+          "chunks_rewritten": 0,
+          "chunks_deleted": 0,
+          "visible": false,
+          "path": "put_page (whole page rewrite)"
+        },
+        "embed_initial": {
+          "inputs": 2,
+          "tokens": 1106,
+          "wall_ms": 48,
+          "tokens_per_mb": 737
+        },
+        "roundtrip": "match",
+        "roundtrip_byte_delta": 0
+      },
+      {
+        "arm": "managed-parts",
+        "doc": "book",
+        "tier": "2mb",
+        "status": "ran",
+        "ingest": {
+          "status": "stored",
+          "chunks": 667,
+          "pages": 42,
+          "embed_skip": null,
+          "wall_ms": 2765,
+          "rss_peak_mb": 1162,
+          "rss_over_baseline_mb": 324
+        },
+        "stored_needles": {
+          "hits": 40,
+          "total": 40,
+          "rate": 1
+        },
+        "keyword_recall": {
+          "hits": 40,
+          "total": 40,
+          "rate": 1
+        },
+        "keyword_recall_by_decile": [
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          }
+        ],
+        "min_decile_recall": 1,
+        "delivered_recall": {
+          "hits": 40,
+          "total": 40,
+          "rate": 1
+        },
+        "distractor_preferred": 0,
+        "reads": {
+          "attempted": 40,
+          "contains": 40,
+          "correct": 40,
+          "max_bytes": 38615
+        },
+        "direct_read_bytes": 2943,
+        "max_frame_bytes": 38615,
+        "responses_over_cap": 0,
+        "append": {
+          "status": "ok",
+          "wall_ms": 213,
+          "embed_inputs": 2,
+          "embed_tokens": 744,
+          "appended_tokens": 268,
+          "embed_ratio": 2.776,
+          "chunks_rewritten": 2,
+          "chunks_deleted": 1,
+          "visible": true,
+          "path": "put_page new part + hub index update"
+        },
+        "embed_initial": {
+          "inputs": 669,
+          "tokens": 434820,
+          "wall_ms": 5503,
+          "tokens_per_mb": 289779
+        },
+        "roundtrip": "match",
+        "roundtrip_byte_delta": 0
+      }
+    ],
+    "children": [
+      {
+        "tier": "2mb",
+        "doc": "conversation",
+        "arm": "single-page",
+        "wall_ms": 6065,
+        "rss_peak_mb": 1184,
+        "crash": null,
+        "control": {
+          "hits": 4,
+          "total": 4,
+          "missed": []
+        }
+      },
+      {
+        "tier": "2mb",
+        "doc": "conversation",
+        "arm": "managed-parts",
+        "wall_ms": 26386,
+        "rss_peak_mb": 1470,
+        "crash": null,
+        "control": {
+          "hits": 4,
+          "total": 4,
+          "missed": []
+        }
+      },
+      {
+        "tier": "2mb",
+        "doc": "project-log",
+        "arm": "single-page",
+        "wall_ms": 5457,
+        "rss_peak_mb": 1194,
+        "crash": null,
+        "control": {
+          "hits": 4,
+          "total": 4,
+          "missed": []
+        }
+      },
+      {
+        "tier": "2mb",
+        "doc": "project-log",
+        "arm": "managed-parts",
+        "wall_ms": 26291,
+        "rss_peak_mb": 1406,
+        "crash": null,
+        "control": {
+          "hits": 4,
+          "total": 4,
+          "missed": []
+        }
+      },
+      {
+        "tier": "2mb",
+        "doc": "book",
+        "arm": "single-page",
+        "wall_ms": 4814,
+        "rss_peak_mb": 994,
+        "crash": null,
+        "control": {
+          "hits": 4,
+          "total": 4,
+          "missed": []
+        }
+      },
+      {
+        "tier": "2mb",
+        "doc": "book",
+        "arm": "managed-parts",
+        "wall_ms": 12848,
+        "rss_peak_mb": 1137,
+        "crash": null,
+        "control": {
+          "hits": 4,
+          "total": 4,
+          "missed": []
+        }
+      }
+    ],
+    "presence": [
+      {
+        "name": "conversation: sha256",
+        "expected": "8b256c8db859641297878c1565ac517cc9d745b1c136693af010a7cde3e16e74",
+        "actual": "8b256c8db859641297878c1565ac517cc9d745b1c136693af010a7cde3e16e74",
+        "ok": true
+      },
+      {
+        "name": "conversation: bytes",
+        "expected": 2000112,
+        "actual": 2000112,
+        "ok": true
+      },
+      {
+        "name": "conversation: needles and distractors unique, at their offsets, deciles and sections",
+        "expected": 0,
+        "actual": 0,
+        "ok": true
+      },
+      {
+        "name": "conversation: four needles in every decile",
+        "expected": 40,
+        "actual": 40,
+        "ok": true
+      },
+      {
+        "name": "conversation: append needle absent from the document",
+        "expected": 0,
+        "actual": 0,
+        "ok": true
+      },
+      {
+        "name": "conversation: append needle once in the append",
+        "expected": 1,
+        "actual": 1,
+        "ok": true
+      },
+      {
+        "name": "conversation: append is about 1 KB",
+        "expected": "yes",
+        "actual": "yes",
+        "ok": true
+      },
+      {
+        "name": "conversation: control needles unique and absent from the document",
+        "expected": 0,
+        "actual": 0,
+        "ok": true
+      },
+      {
+        "name": "project-log: sha256",
+        "expected": "229d8aafccca988270f454212115ed587fa5b0514a577d099a81f6348605cca9",
+        "actual": "229d8aafccca988270f454212115ed587fa5b0514a577d099a81f6348605cca9",
+        "ok": true
+      },
+      {
+        "name": "project-log: bytes",
+        "expected": 2000437,
+        "actual": 2000437,
+        "ok": true
+      },
+      {
+        "name": "project-log: needles and distractors unique, at their offsets, deciles and sections",
+        "expected": 0,
+        "actual": 0,
+        "ok": true
+      },
+      {
+        "name": "project-log: four needles in every decile",
+        "expected": 40,
+        "actual": 40,
+        "ok": true
+      },
+      {
+        "name": "project-log: append needle absent from the document",
+        "expected": 0,
+        "actual": 0,
+        "ok": true
+      },
+      {
+        "name": "project-log: append needle once in the append",
+        "expected": 1,
+        "actual": 1,
+        "ok": true
+      },
+      {
+        "name": "project-log: append is about 1 KB",
+        "expected": "yes",
+        "actual": "yes",
+        "ok": true
+      },
+      {
+        "name": "project-log: control needles unique and absent from the document",
+        "expected": 0,
+        "actual": 0,
+        "ok": true
+      },
+      {
+        "name": "book: sha256",
+        "expected": "3c8bbdc78703f73e84a0fa6ae4f0443727adefe705667ce6e0eea67994afe9b4",
+        "actual": "3c8bbdc78703f73e84a0fa6ae4f0443727adefe705667ce6e0eea67994afe9b4",
+        "ok": true
+      },
+      {
+        "name": "book: bytes",
+        "expected": 1500522,
+        "actual": 1500522,
+        "ok": true
+      },
+      {
+        "name": "book: needles and distractors unique, at their offsets, deciles and sections",
+        "expected": 0,
+        "actual": 0,
+        "ok": true
+      },
+      {
+        "name": "book: four needles in every decile",
+        "expected": 40,
+        "actual": 40,
+        "ok": true
+      },
+      {
+        "name": "book: append needle absent from the document",
+        "expected": 0,
+        "actual": 0,
+        "ok": true
+      },
+      {
+        "name": "book: append needle once in the append",
+        "expected": 1,
+        "actual": 1,
+        "ok": true
+      },
+      {
+        "name": "book: append is about 1 KB",
+        "expected": "yes",
+        "actual": "yes",
+        "ok": true
+      },
+      {
+        "name": "book: control needles unique and absent from the document",
+        "expected": 0,
+        "actual": 0,
+        "ok": true
+      }
+    ],
+    "documents": [
+      {
+        "tier": "2mb",
+        "id": "conversation",
+        "bytes": 2000112,
+        "lines": 20258,
+        "sections": 365,
+        "sha256": "8b256c8db859641297878c1565ac517cc9d745b1c136693af010a7cde3e16e74",
+        "needles": 40,
+        "append_bytes": 1041
+      },
+      {
+        "tier": "2mb",
+        "id": "project-log",
+        "bytes": 2000437,
+        "lines": 23888,
+        "sections": 365,
+        "sha256": "229d8aafccca988270f454212115ed587fa5b0514a577d099a81f6348605cca9",
+        "needles": 40,
+        "append_bytes": 997
+      },
+      {
+        "tier": "2mb",
+        "id": "book",
+        "bytes": 1500522,
+        "lines": 4321,
+        "sections": 41,
+        "sha256": "3c8bbdc78703f73e84a0fa6ae4f0443727adefe705667ce6e0eea67994afe9b4",
+        "needles": 40,
+        "append_bytes": 1070
+      }
+    ],
+    "probes": [
+      {
+        "tier": "2mb",
+        "arm": "single-page",
+        "doc": "conversation",
+        "rows": [
+          {
+            "id": "conversation:d0:name",
+            "decile": 0,
+            "type": "name",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "conversation:d0:number",
+            "decile": 0,
+            "type": "number",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d0:date",
+            "decile": 0,
+            "type": "date",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "conversation:d0:fact",
+            "decile": 0,
+            "type": "fact",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "conversation:d1:name",
+            "decile": 1,
+            "type": "name",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d1:number",
+            "decile": 1,
+            "type": "number",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "conversation:d1:fact",
+            "decile": 1,
+            "type": "fact",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "conversation:d1:date",
+            "decile": 1,
+            "type": "date",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "conversation:d2:fact",
+            "decile": 2,
+            "type": "fact",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "conversation:d2:number",
+            "decile": 2,
+            "type": "number",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d2:name",
+            "decile": 2,
+            "type": "name",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d2:date",
+            "decile": 2,
+            "type": "date",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d3:date",
+            "decile": 3,
+            "type": "date",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "conversation:d3:number",
+            "decile": 3,
+            "type": "number",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "conversation:d3:name",
+            "decile": 3,
+            "type": "name",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "conversation:d3:fact",
+            "decile": 3,
+            "type": "fact",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "conversation:d4:date",
+            "decile": 4,
+            "type": "date",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d4:number",
+            "decile": 4,
+            "type": "number",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d4:fact",
+            "decile": 4,
+            "type": "fact",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "conversation:d4:name",
+            "decile": 4,
+            "type": "name",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "conversation:d5:number",
+            "decile": 5,
+            "type": "number",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d5:date",
+            "decile": 5,
+            "type": "date",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "conversation:d5:name",
+            "decile": 5,
+            "type": "name",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d5:fact",
+            "decile": 5,
+            "type": "fact",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "conversation:d6:fact",
+            "decile": 6,
+            "type": "fact",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "conversation:d6:name",
+            "decile": 6,
+            "type": "name",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d6:date",
+            "decile": 6,
+            "type": "date",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d6:number",
+            "decile": 6,
+            "type": "number",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d7:date",
+            "decile": 7,
+            "type": "date",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d7:name",
+            "decile": 7,
+            "type": "name",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d7:fact",
+            "decile": 7,
+            "type": "fact",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "conversation:d7:number",
+            "decile": 7,
+            "type": "number",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d8:name",
+            "decile": 8,
+            "type": "name",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d8:fact",
+            "decile": 8,
+            "type": "fact",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "conversation:d8:date",
+            "decile": 8,
+            "type": "date",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "conversation:d8:number",
+            "decile": 8,
+            "type": "number",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "conversation:d9:name",
+            "decile": 9,
+            "type": "name",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "conversation:d9:number",
+            "decile": 9,
+            "type": "number",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "conversation:d9:date",
+            "decile": 9,
+            "type": "date",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "conversation:d9:fact",
+            "decile": 9,
+            "type": "fact",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          }
+        ],
+        "reads": [
+          {
+            "id": "conversation:d0:name",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d0:number",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d0:date",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d0:fact",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d1:name",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d1:number",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d1:fact",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d1:date",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d2:fact",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d2:number",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d2:name",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d2:date",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d3:date",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d3:number",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d3:name",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d3:fact",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d4:date",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d4:number",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d4:fact",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d4:name",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d5:number",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d5:date",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d5:name",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d5:fact",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d6:fact",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d6:name",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d6:date",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d6:number",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d7:date",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d7:name",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d7:fact",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d7:number",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d8:name",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d8:fact",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d8:date",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d8:number",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d9:name",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d9:number",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d9:date",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d9:fact",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          }
+        ],
+        "append": {
+          "status": "ok",
+          "chunks_before": 0,
+          "chunks_after": 0,
+          "chunks_rewritten": 0,
+          "chunks_deleted": 0,
+          "path": "put_page (whole page rewrite)",
+          "wall_ms": 866,
+          "embed": {
+            "inputs": 0,
+            "tokens": 0
+          },
+          "appended_tokens": 261,
+          "visible_rank": null
+        },
+        "roundtrip": {
+          "status": "match",
+          "expected_sha256": "b681e99367d943eee7db196576676891f17f485f927c3afbbfcf03928109cd27",
+          "actual_sha256": "b681e99367d943eee7db196576676891f17f485f927c3afbbfcf03928109cd27",
+          "byte_delta": 0
+        },
+        "frames": {
+          "count": 49,
+          "max_bytes": 2042154,
+          "over_cap": 1,
+          "by_op": {
+            "put_page": {
+              "count": 3,
+              "max_bytes": 6003,
+              "over_cap": 0
+            },
+            "search": {
+              "count": 45,
+              "max_bytes": 3013,
+              "over_cap": 0
+            },
+            "get_page": {
+              "count": 1,
+              "max_bytes": 2042154,
+              "over_cap": 1
+            }
+          }
+        },
+        "memory": [
+          {
+            "phase": "start",
+            "t_ms": 1,
+            "rss_mb": 1032,
+            "max_rss_mb": 1032
+          },
+          {
+            "phase": "ingest",
+            "t_ms": 1030,
+            "rss_mb": 934,
+            "max_rss_mb": 1045
+          },
+          {
+            "phase": "reads",
+            "t_ms": 1681,
+            "rss_mb": 790,
+            "max_rss_mb": 1045
+          },
+          {
+            "phase": "append",
+            "t_ms": 2644,
+            "rss_mb": 1184,
+            "max_rss_mb": 1185
+          },
+          {
+            "phase": "export",
+            "t_ms": 2693,
+            "rss_mb": 1227,
+            "max_rss_mb": 1227
+          }
+        ],
+        "ingest": {
+          "status": "stored",
+          "pages": 1,
+          "chunks": 0,
+          "embed_skip": "oversized",
+          "write_errors": 0,
+          "wall_ms": 1029
+        },
+        "direct_read": {
+          "bytes": 2042154
+        },
+        "embed_initial": {
+          "inputs": 2,
+          "tokens": 1076,
+          "wall_ms": 75.3486899999998
+        },
+        "embed_error": null
+      },
+      {
+        "tier": "2mb",
+        "arm": "managed-parts",
+        "doc": "conversation",
+        "rows": [
+          {
+            "id": "conversation:d0:name",
+            "decile": 0,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d0:number",
+            "decile": 0,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d0:date",
+            "decile": 0,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d0:fact",
+            "decile": 0,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d1:name",
+            "decile": 1,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d1:number",
+            "decile": 1,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d1:fact",
+            "decile": 1,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d1:date",
+            "decile": 1,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d2:fact",
+            "decile": 2,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d2:number",
+            "decile": 2,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d2:name",
+            "decile": 2,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d2:date",
+            "decile": 2,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d3:date",
+            "decile": 3,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d3:number",
+            "decile": 3,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d3:name",
+            "decile": 3,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d3:fact",
+            "decile": 3,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d4:date",
+            "decile": 4,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d4:number",
+            "decile": 4,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d4:fact",
+            "decile": 4,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d4:name",
+            "decile": 4,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d5:number",
+            "decile": 5,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d5:date",
+            "decile": 5,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d5:name",
+            "decile": 5,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d5:fact",
+            "decile": 5,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d6:fact",
+            "decile": 6,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d6:name",
+            "decile": 6,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d6:date",
+            "decile": 6,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d6:number",
+            "decile": 6,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d7:date",
+            "decile": 7,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d7:name",
+            "decile": 7,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d7:fact",
+            "decile": 7,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d7:number",
+            "decile": 7,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d8:name",
+            "decile": 8,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d8:fact",
+            "decile": 8,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d8:date",
+            "decile": 8,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d8:number",
+            "decile": 8,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d9:name",
+            "decile": 9,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d9:number",
+            "decile": 9,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d9:date",
+            "decile": 9,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d9:fact",
+            "decile": 9,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          }
+        ],
+        "reads": [
+          {
+            "id": "conversation:d0:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6741,
+            "correct": true
+          },
+          {
+            "id": "conversation:d0:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6746,
+            "correct": true
+          },
+          {
+            "id": "conversation:d0:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6870,
+            "correct": true
+          },
+          {
+            "id": "conversation:d0:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6784,
+            "correct": true
+          },
+          {
+            "id": "conversation:d1:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6723,
+            "correct": true
+          },
+          {
+            "id": "conversation:d1:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6790,
+            "correct": true
+          },
+          {
+            "id": "conversation:d1:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6731,
+            "correct": true
+          },
+          {
+            "id": "conversation:d1:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6788,
+            "correct": true
+          },
+          {
+            "id": "conversation:d2:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6709,
+            "correct": true
+          },
+          {
+            "id": "conversation:d2:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6748,
+            "correct": true
+          },
+          {
+            "id": "conversation:d2:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6741,
+            "correct": true
+          },
+          {
+            "id": "conversation:d2:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6780,
+            "correct": true
+          },
+          {
+            "id": "conversation:d3:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6631,
+            "correct": true
+          },
+          {
+            "id": "conversation:d3:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6731,
+            "correct": true
+          },
+          {
+            "id": "conversation:d3:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6732,
+            "correct": true
+          },
+          {
+            "id": "conversation:d3:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6866,
+            "correct": true
+          },
+          {
+            "id": "conversation:d4:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6772,
+            "correct": true
+          },
+          {
+            "id": "conversation:d4:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6750,
+            "correct": true
+          },
+          {
+            "id": "conversation:d4:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6705,
+            "correct": true
+          },
+          {
+            "id": "conversation:d4:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6766,
+            "correct": true
+          },
+          {
+            "id": "conversation:d5:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6662,
+            "correct": true
+          },
+          {
+            "id": "conversation:d5:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6805,
+            "correct": true
+          },
+          {
+            "id": "conversation:d5:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6794,
+            "correct": true
+          },
+          {
+            "id": "conversation:d5:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6670,
+            "correct": true
+          },
+          {
+            "id": "conversation:d6:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6784,
+            "correct": true
+          },
+          {
+            "id": "conversation:d6:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6757,
+            "correct": true
+          },
+          {
+            "id": "conversation:d6:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6698,
+            "correct": true
+          },
+          {
+            "id": "conversation:d6:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6677,
+            "correct": true
+          },
+          {
+            "id": "conversation:d7:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6752,
+            "correct": true
+          },
+          {
+            "id": "conversation:d7:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6726,
+            "correct": true
+          },
+          {
+            "id": "conversation:d7:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6855,
+            "correct": true
+          },
+          {
+            "id": "conversation:d7:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6754,
+            "correct": true
+          },
+          {
+            "id": "conversation:d8:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6653,
+            "correct": true
+          },
+          {
+            "id": "conversation:d8:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 7176,
+            "correct": true
+          },
+          {
+            "id": "conversation:d8:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6748,
+            "correct": true
+          },
+          {
+            "id": "conversation:d8:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6844,
+            "correct": true
+          },
+          {
+            "id": "conversation:d9:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6854,
+            "correct": true
+          },
+          {
+            "id": "conversation:d9:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6819,
+            "correct": true
+          },
+          {
+            "id": "conversation:d9:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6846,
+            "correct": true
+          },
+          {
+            "id": "conversation:d9:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6783,
+            "correct": true
+          }
+        ],
+        "append": {
+          "status": "ok",
+          "chunks_before": 754,
+          "chunks_after": 755,
+          "chunks_rewritten": 2,
+          "chunks_deleted": 1,
+          "path": "put_page new part + hub index update",
+          "wall_ms": 295,
+          "embed": {
+            "inputs": 2,
+            "tokens": 558
+          },
+          "appended_tokens": 261,
+          "visible_rank": 1
+        },
+        "roundtrip": {
+          "status": "match",
+          "expected_sha256": "b681e99367d943eee7db196576676891f17f485f927c3afbbfcf03928109cd27",
+          "actual_sha256": "b681e99367d943eee7db196576676891f17f485f927c3afbbfcf03928109cd27",
+          "byte_delta": 0
+        },
+        "frames": {
+          "count": 455,
+          "max_bytes": 23901,
+          "over_cap": 0,
+          "by_op": {
+            "put_page": {
+              "count": 369,
+              "max_bytes": 8357,
+              "over_cap": 0
+            },
+            "search": {
+              "count": 45,
+              "max_bytes": 6879,
+              "over_cap": 0
+            },
+            "get_page": {
+              "count": 41,
+              "max_bytes": 23901,
+              "over_cap": 0
+            }
+          }
+        },
+        "memory": [
+          {
+            "phase": "start",
+            "t_ms": 1,
+            "rss_mb": 975,
+            "max_rss_mb": 975
+          },
+          {
+            "phase": "ingest",
+            "t_ms": 12755,
+            "rss_mb": 768,
+            "max_rss_mb": 982
+          },
+          {
+            "phase": "reads",
+            "t_ms": 14092,
+            "rss_mb": 852,
+            "max_rss_mb": 982
+          },
+          {
+            "phase": "append",
+            "t_ms": 22686,
+            "rss_mb": 1260,
+            "max_rss_mb": 1470
+          },
+          {
+            "phase": "export",
+            "t_ms": 23160,
+            "rss_mb": 1272,
+            "max_rss_mb": 1470
+          }
+        ],
+        "ingest": {
+          "status": "stored",
+          "pages": 366,
+          "chunks": 754,
+          "embed_skip": null,
+          "write_errors": 0,
+          "wall_ms": 12754
+        },
+        "direct_read": {
+          "bytes": 23901
+        },
+        "embed_initial": {
+          "inputs": 756,
+          "tokens": 552504,
+          "wall_ms": 8182.8643090000005
+        },
+        "embed_error": null
+      },
+      {
+        "tier": "2mb",
+        "arm": "single-page",
+        "doc": "project-log",
+        "rows": [
+          {
+            "id": "project-log:d0:number",
+            "decile": 0,
+            "type": "number",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d0:fact",
+            "decile": 0,
+            "type": "fact",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "project-log:d0:date",
+            "decile": 0,
+            "type": "date",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "project-log:d0:name",
+            "decile": 0,
+            "type": "name",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "project-log:d1:fact",
+            "decile": 1,
+            "type": "fact",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "project-log:d1:number",
+            "decile": 1,
+            "type": "number",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "project-log:d1:name",
+            "decile": 1,
+            "type": "name",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d1:date",
+            "decile": 1,
+            "type": "date",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "project-log:d2:number",
+            "decile": 2,
+            "type": "number",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d2:fact",
+            "decile": 2,
+            "type": "fact",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "project-log:d2:date",
+            "decile": 2,
+            "type": "date",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d2:name",
+            "decile": 2,
+            "type": "name",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "project-log:d3:date",
+            "decile": 3,
+            "type": "date",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "project-log:d3:fact",
+            "decile": 3,
+            "type": "fact",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "project-log:d3:name",
+            "decile": 3,
+            "type": "name",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d3:number",
+            "decile": 3,
+            "type": "number",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 2
+          },
+          {
+            "id": "project-log:d4:name",
+            "decile": 4,
+            "type": "name",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d4:number",
+            "decile": 4,
+            "type": "number",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "project-log:d4:fact",
+            "decile": 4,
+            "type": "fact",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d4:date",
+            "decile": 4,
+            "type": "date",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "project-log:d5:fact",
+            "decile": 5,
+            "type": "fact",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "project-log:d5:number",
+            "decile": 5,
+            "type": "number",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d5:date",
+            "decile": 5,
+            "type": "date",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "project-log:d5:name",
+            "decile": 5,
+            "type": "name",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "project-log:d6:number",
+            "decile": 6,
+            "type": "number",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d6:name",
+            "decile": 6,
+            "type": "name",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "project-log:d6:date",
+            "decile": 6,
+            "type": "date",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d6:fact",
+            "decile": 6,
+            "type": "fact",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "project-log:d7:date",
+            "decile": 7,
+            "type": "date",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d7:number",
+            "decile": 7,
+            "type": "number",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d7:name",
+            "decile": 7,
+            "type": "name",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "project-log:d7:fact",
+            "decile": 7,
+            "type": "fact",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "project-log:d8:name",
+            "decile": 8,
+            "type": "name",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d8:number",
+            "decile": 8,
+            "type": "number",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "project-log:d8:fact",
+            "decile": 8,
+            "type": "fact",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "project-log:d8:date",
+            "decile": 8,
+            "type": "date",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "project-log:d9:date",
+            "decile": 9,
+            "type": "date",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d9:fact",
+            "decile": 9,
+            "type": "fact",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "project-log:d9:name",
+            "decile": 9,
+            "type": "name",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d9:number",
+            "decile": 9,
+            "type": "number",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          }
+        ],
+        "reads": [
+          {
+            "id": "project-log:d0:number",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "project-log:d0:fact",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "project-log:d0:date",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "project-log:d0:name",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "project-log:d1:fact",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "project-log:d1:number",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "project-log:d1:name",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "project-log:d1:date",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "project-log:d2:number",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "project-log:d2:fact",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "project-log:d2:date",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "project-log:d2:name",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "project-log:d3:date",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "project-log:d3:fact",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "project-log:d3:name",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "project-log:d3:number",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "project-log:d4:name",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "project-log:d4:number",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "project-log:d4:fact",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "project-log:d4:date",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "project-log:d5:fact",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "project-log:d5:number",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "project-log:d5:date",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "project-log:d5:name",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "project-log:d6:number",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "project-log:d6:name",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "project-log:d6:date",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "project-log:d6:fact",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "project-log:d7:date",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "project-log:d7:number",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "project-log:d7:name",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "project-log:d7:fact",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "project-log:d8:name",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "project-log:d8:number",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "project-log:d8:fact",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "project-log:d8:date",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "project-log:d9:date",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "project-log:d9:fact",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "project-log:d9:name",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "project-log:d9:number",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          }
+        ],
+        "append": {
+          "status": "ok",
+          "chunks_before": 0,
+          "chunks_after": 0,
+          "chunks_rewritten": 0,
+          "chunks_deleted": 0,
+          "path": "put_page (whole page rewrite)",
+          "wall_ms": 826,
+          "embed": {
+            "inputs": 0,
+            "tokens": 0
+          },
+          "appended_tokens": 250,
+          "visible_rank": null
+        },
+        "roundtrip": {
+          "status": "match",
+          "expected_sha256": "da8a09b4225299d012926229bc9143b89f53d11371eb49a3665a12e54a592c7d",
+          "actual_sha256": "da8a09b4225299d012926229bc9143b89f53d11371eb49a3665a12e54a592c7d",
+          "byte_delta": 0
+        },
+        "frames": {
+          "count": 49,
+          "max_bytes": 2049651,
+          "over_cap": 1,
+          "by_op": {
+            "put_page": {
+              "count": 3,
+              "max_bytes": 2666,
+              "over_cap": 0
+            },
+            "search": {
+              "count": 45,
+              "max_bytes": 3326,
+              "over_cap": 0
+            },
+            "get_page": {
+              "count": 1,
+              "max_bytes": 2049651,
+              "over_cap": 1
+            }
+          }
+        },
+        "memory": [
+          {
+            "phase": "start",
+            "t_ms": 1,
+            "rss_mb": 634,
+            "max_rss_mb": 1064
+          },
+          {
+            "phase": "ingest",
+            "t_ms": 940,
+            "rss_mb": 928,
+            "max_rss_mb": 1064
+          },
+          {
+            "phase": "reads",
+            "t_ms": 1674,
+            "rss_mb": 892,
+            "max_rss_mb": 1064
+          },
+          {
+            "phase": "append",
+            "t_ms": 2579,
+            "rss_mb": 1155,
+            "max_rss_mb": 1155
+          },
+          {
+            "phase": "export",
+            "t_ms": 2624,
+            "rss_mb": 1198,
+            "max_rss_mb": 1198
+          }
+        ],
+        "ingest": {
+          "status": "stored",
+          "pages": 1,
+          "chunks": 0,
+          "embed_skip": "oversized",
+          "write_errors": 0,
+          "wall_ms": 939
+        },
+        "direct_read": {
+          "bytes": 2049651
+        },
+        "embed_initial": {
+          "inputs": 2,
+          "tokens": 1041,
+          "wall_ms": 61.223572999999305
+        },
+        "embed_error": null
+      },
+      {
+        "tier": "2mb",
+        "arm": "managed-parts",
+        "doc": "project-log",
+        "rows": [
+          {
+            "id": "project-log:d0:number",
+            "decile": 0,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d0:fact",
+            "decile": 0,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d0:date",
+            "decile": 0,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d0:name",
+            "decile": 0,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d1:fact",
+            "decile": 1,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d1:number",
+            "decile": 1,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d1:name",
+            "decile": 1,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d1:date",
+            "decile": 1,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d2:number",
+            "decile": 2,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d2:fact",
+            "decile": 2,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d2:date",
+            "decile": 2,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d2:name",
+            "decile": 2,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d3:date",
+            "decile": 3,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d3:fact",
+            "decile": 3,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d3:name",
+            "decile": 3,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d3:number",
+            "decile": 3,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 10
+          },
+          {
+            "id": "project-log:d4:name",
+            "decile": 4,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d4:number",
+            "decile": 4,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d4:fact",
+            "decile": 4,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d4:date",
+            "decile": 4,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d5:fact",
+            "decile": 5,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d5:number",
+            "decile": 5,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d5:date",
+            "decile": 5,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d5:name",
+            "decile": 5,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d6:number",
+            "decile": 6,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d6:name",
+            "decile": 6,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d6:date",
+            "decile": 6,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d6:fact",
+            "decile": 6,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d7:date",
+            "decile": 7,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d7:number",
+            "decile": 7,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d7:name",
+            "decile": 7,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d7:fact",
+            "decile": 7,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d8:name",
+            "decile": 8,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d8:number",
+            "decile": 8,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d8:fact",
+            "decile": 8,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d8:date",
+            "decile": 8,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d9:date",
+            "decile": 9,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d9:fact",
+            "decile": 9,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d9:name",
+            "decile": 9,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "project-log:d9:number",
+            "decile": 9,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          }
+        ],
+        "reads": [
+          {
+            "id": "project-log:d0:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6692,
+            "correct": true
+          },
+          {
+            "id": "project-log:d0:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 7106,
+            "correct": true
+          },
+          {
+            "id": "project-log:d0:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 7415,
+            "correct": true
+          },
+          {
+            "id": "project-log:d0:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6606,
+            "correct": true
+          },
+          {
+            "id": "project-log:d1:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6946,
+            "correct": true
+          },
+          {
+            "id": "project-log:d1:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6657,
+            "correct": true
+          },
+          {
+            "id": "project-log:d1:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6320,
+            "correct": true
+          },
+          {
+            "id": "project-log:d1:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 5923,
+            "correct": true
+          },
+          {
+            "id": "project-log:d2:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 7608,
+            "correct": true
+          },
+          {
+            "id": "project-log:d2:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6768,
+            "correct": true
+          },
+          {
+            "id": "project-log:d2:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6590,
+            "correct": true
+          },
+          {
+            "id": "project-log:d2:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6615,
+            "correct": true
+          },
+          {
+            "id": "project-log:d3:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6286,
+            "correct": true
+          },
+          {
+            "id": "project-log:d3:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6823,
+            "correct": true
+          },
+          {
+            "id": "project-log:d3:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6488,
+            "correct": true
+          },
+          {
+            "id": "project-log:d3:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6738,
+            "correct": true
+          },
+          {
+            "id": "project-log:d4:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6582,
+            "correct": true
+          },
+          {
+            "id": "project-log:d4:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 7098,
+            "correct": true
+          },
+          {
+            "id": "project-log:d4:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6842,
+            "correct": true
+          },
+          {
+            "id": "project-log:d4:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6688,
+            "correct": true
+          },
+          {
+            "id": "project-log:d5:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6902,
+            "correct": true
+          },
+          {
+            "id": "project-log:d5:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6316,
+            "correct": true
+          },
+          {
+            "id": "project-log:d5:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6818,
+            "correct": true
+          },
+          {
+            "id": "project-log:d5:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6640,
+            "correct": true
+          },
+          {
+            "id": "project-log:d6:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6779,
+            "correct": true
+          },
+          {
+            "id": "project-log:d6:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6954,
+            "correct": true
+          },
+          {
+            "id": "project-log:d6:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6745,
+            "correct": true
+          },
+          {
+            "id": "project-log:d6:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6744,
+            "correct": true
+          },
+          {
+            "id": "project-log:d7:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6472,
+            "correct": true
+          },
+          {
+            "id": "project-log:d7:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 5965,
+            "correct": true
+          },
+          {
+            "id": "project-log:d7:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 7664,
+            "correct": true
+          },
+          {
+            "id": "project-log:d7:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6615,
+            "correct": true
+          },
+          {
+            "id": "project-log:d8:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6448,
+            "correct": true
+          },
+          {
+            "id": "project-log:d8:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6830,
+            "correct": true
+          },
+          {
+            "id": "project-log:d8:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6898,
+            "correct": true
+          },
+          {
+            "id": "project-log:d8:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 7154,
+            "correct": true
+          },
+          {
+            "id": "project-log:d9:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6703,
+            "correct": true
+          },
+          {
+            "id": "project-log:d9:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 7131,
+            "correct": true
+          },
+          {
+            "id": "project-log:d9:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6569,
+            "correct": true
+          },
+          {
+            "id": "project-log:d9:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 6944,
+            "correct": true
+          }
+        ],
+        "append": {
+          "status": "ok",
+          "chunks_before": 824,
+          "chunks_after": 826,
+          "chunks_rewritten": 4,
+          "chunks_deleted": 2,
+          "path": "put_page new part + hub index update",
+          "wall_ms": 250,
+          "embed": {
+            "inputs": 4,
+            "tokens": 1390
+          },
+          "appended_tokens": 250,
+          "visible_rank": 1
+        },
+        "roundtrip": {
+          "status": "match",
+          "expected_sha256": "da8a09b4225299d012926229bc9143b89f53d11371eb49a3665a12e54a592c7d",
+          "actual_sha256": "da8a09b4225299d012926229bc9143b89f53d11371eb49a3665a12e54a592c7d",
+          "byte_delta": 0
+        },
+        "frames": {
+          "count": 455,
+          "max_bytes": 36878,
+          "over_cap": 0,
+          "by_op": {
+            "put_page": {
+              "count": 369,
+              "max_bytes": 2530,
+              "over_cap": 0
+            },
+            "search": {
+              "count": 45,
+              "max_bytes": 36878,
+              "over_cap": 0
+            },
+            "get_page": {
+              "count": 41,
+              "max_bytes": 18020,
+              "over_cap": 0
+            }
+          }
+        },
+        "memory": [
+          {
+            "phase": "start",
+            "t_ms": 1,
+            "rss_mb": 629,
+            "max_rss_mb": 992
+          },
+          {
+            "phase": "ingest",
+            "t_ms": 12521,
+            "rss_mb": 793,
+            "max_rss_mb": 992
+          },
+          {
+            "phase": "reads",
+            "t_ms": 13743,
+            "rss_mb": 787,
+            "max_rss_mb": 992
+          },
+          {
+            "phase": "append",
+            "t_ms": 23043,
+            "rss_mb": 1149,
+            "max_rss_mb": 1407
+          },
+          {
+            "phase": "export",
+            "t_ms": 23498,
+            "rss_mb": 1145,
+            "max_rss_mb": 1407
+          }
+        ],
+        "ingest": {
+          "status": "stored",
+          "pages": 366,
+          "chunks": 824,
+          "embed_skip": null,
+          "write_errors": 0,
+          "wall_ms": 12520
+        },
+        "direct_read": {
+          "bytes": 18020
+        },
+        "embed_initial": {
+          "inputs": 826,
+          "tokens": 551019,
+          "wall_ms": 8915.171522
+        },
+        "embed_error": null
+      },
+      {
+        "tier": "2mb",
+        "arm": "single-page",
+        "doc": "book",
+        "rows": [
+          {
+            "id": "book:d0:date",
+            "decile": 0,
+            "type": "date",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "book:d0:fact",
+            "decile": 0,
+            "type": "fact",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "book:d0:name",
+            "decile": 0,
+            "type": "name",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "book:d0:number",
+            "decile": 0,
+            "type": "number",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "book:d1:name",
+            "decile": 1,
+            "type": "name",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "book:d1:fact",
+            "decile": 1,
+            "type": "fact",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "book:d1:date",
+            "decile": 1,
+            "type": "date",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "book:d1:number",
+            "decile": 1,
+            "type": "number",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "book:d2:date",
+            "decile": 2,
+            "type": "date",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "book:d2:number",
+            "decile": 2,
+            "type": "number",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "book:d2:fact",
+            "decile": 2,
+            "type": "fact",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "book:d2:name",
+            "decile": 2,
+            "type": "name",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "book:d3:name",
+            "decile": 3,
+            "type": "name",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "book:d3:date",
+            "decile": 3,
+            "type": "date",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "book:d3:fact",
+            "decile": 3,
+            "type": "fact",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "book:d3:number",
+            "decile": 3,
+            "type": "number",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "book:d4:date",
+            "decile": 4,
+            "type": "date",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "book:d4:name",
+            "decile": 4,
+            "type": "name",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "book:d4:fact",
+            "decile": 4,
+            "type": "fact",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "book:d4:number",
+            "decile": 4,
+            "type": "number",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "book:d5:number",
+            "decile": 5,
+            "type": "number",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "book:d5:fact",
+            "decile": 5,
+            "type": "fact",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "book:d5:date",
+            "decile": 5,
+            "type": "date",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "book:d5:name",
+            "decile": 5,
+            "type": "name",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "book:d6:number",
+            "decile": 6,
+            "type": "number",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "book:d6:fact",
+            "decile": 6,
+            "type": "fact",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "book:d6:name",
+            "decile": 6,
+            "type": "name",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "book:d6:date",
+            "decile": 6,
+            "type": "date",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "book:d7:fact",
+            "decile": 7,
+            "type": "fact",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "book:d7:number",
+            "decile": 7,
+            "type": "number",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "book:d7:date",
+            "decile": 7,
+            "type": "date",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "book:d7:name",
+            "decile": 7,
+            "type": "name",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "book:d8:name",
+            "decile": 8,
+            "type": "name",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "book:d8:date",
+            "decile": 8,
+            "type": "date",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "book:d8:fact",
+            "decile": 8,
+            "type": "fact",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "book:d8:number",
+            "decile": 8,
+            "type": "number",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "book:d9:date",
+            "decile": 9,
+            "type": "date",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "book:d9:fact",
+            "decile": 9,
+            "type": "fact",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "book:d9:number",
+            "decile": 9,
+            "type": "number",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "book:d9:name",
+            "decile": 9,
+            "type": "name",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          }
+        ],
+        "reads": [
+          {
+            "id": "book:d0:date",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "book:d0:fact",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "book:d0:name",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "book:d0:number",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "book:d1:name",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "book:d1:fact",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "book:d1:date",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "book:d1:number",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "book:d2:date",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "book:d2:number",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "book:d2:fact",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "book:d2:name",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "book:d3:name",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "book:d3:date",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "book:d3:fact",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "book:d3:number",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "book:d4:date",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "book:d4:name",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "book:d4:fact",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "book:d4:number",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "book:d5:number",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "book:d5:fact",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "book:d5:date",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "book:d5:name",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "book:d6:number",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "book:d6:fact",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "book:d6:name",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "book:d6:date",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "book:d7:fact",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "book:d7:number",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "book:d7:date",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "book:d7:name",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "book:d8:name",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "book:d8:date",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "book:d8:fact",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "book:d8:number",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "book:d9:date",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "book:d9:fact",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "book:d9:number",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "book:d9:name",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          }
+        ],
+        "append": {
+          "status": "ok",
+          "chunks_before": 0,
+          "chunks_after": 0,
+          "chunks_rewritten": 0,
+          "chunks_deleted": 0,
+          "path": "put_page (whole page rewrite)",
+          "wall_ms": 603,
+          "embed": {
+            "inputs": 0,
+            "tokens": 0
+          },
+          "appended_tokens": 268,
+          "visible_rank": null
+        },
+        "roundtrip": {
+          "status": "match",
+          "expected_sha256": "f3ea2efa9482dcc5c979d9f40cf4945102b8cbc1570c261e8d2bc6c70c343ed7",
+          "actual_sha256": "f3ea2efa9482dcc5c979d9f40cf4945102b8cbc1570c261e8d2bc6c70c343ed7",
+          "byte_delta": 0
+        },
+        "frames": {
+          "count": 49,
+          "max_bytes": 1510597,
+          "over_cap": 1,
+          "by_op": {
+            "put_page": {
+              "count": 3,
+              "max_bytes": 3239,
+              "over_cap": 0
+            },
+            "search": {
+              "count": 45,
+              "max_bytes": 2939,
+              "over_cap": 0
+            },
+            "get_page": {
+              "count": 1,
+              "max_bytes": 1510597,
+              "over_cap": 1
+            }
+          }
+        },
+        "memory": [
+          {
+            "phase": "start",
+            "t_ms": 1,
+            "rss_mb": 597,
+            "max_rss_mb": 1055
+          },
+          {
+            "phase": "ingest",
+            "t_ms": 729,
+            "rss_mb": 806,
+            "max_rss_mb": 1055
+          },
+          {
+            "phase": "reads",
+            "t_ms": 1259,
+            "rss_mb": 684,
+            "max_rss_mb": 1055
+          },
+          {
+            "phase": "append",
+            "t_ms": 1936,
+            "rss_mb": 970,
+            "max_rss_mb": 1055
+          },
+          {
+            "phase": "export",
+            "t_ms": 1975,
+            "rss_mb": 1004,
+            "max_rss_mb": 1055
+          }
+        ],
+        "ingest": {
+          "status": "stored",
+          "pages": 1,
+          "chunks": 0,
+          "embed_skip": "oversized",
+          "write_errors": 0,
+          "wall_ms": 727
+        },
+        "direct_read": {
+          "bytes": 1510597
+        },
+        "embed_initial": {
+          "inputs": 2,
+          "tokens": 1106,
+          "wall_ms": 47.717315999999755
+        },
+        "embed_error": null
+      },
+      {
+        "tier": "2mb",
+        "arm": "managed-parts",
+        "doc": "book",
+        "rows": [
+          {
+            "id": "book:d0:date",
+            "decile": 0,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "book:d0:fact",
+            "decile": 0,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "book:d0:name",
+            "decile": 0,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "book:d0:number",
+            "decile": 0,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 6
+          },
+          {
+            "id": "book:d1:name",
+            "decile": 1,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "book:d1:fact",
+            "decile": 1,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "book:d1:date",
+            "decile": 1,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "book:d1:number",
+            "decile": 1,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "book:d2:date",
+            "decile": 2,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "book:d2:number",
+            "decile": 2,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "book:d2:fact",
+            "decile": 2,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "book:d2:name",
+            "decile": 2,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "book:d3:name",
+            "decile": 3,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "book:d3:date",
+            "decile": 3,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "book:d3:fact",
+            "decile": 3,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "book:d3:number",
+            "decile": 3,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 6
+          },
+          {
+            "id": "book:d4:date",
+            "decile": 4,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "book:d4:name",
+            "decile": 4,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "book:d4:fact",
+            "decile": 4,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "book:d4:number",
+            "decile": 4,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "book:d5:number",
+            "decile": 5,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "book:d5:fact",
+            "decile": 5,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "book:d5:date",
+            "decile": 5,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "book:d5:name",
+            "decile": 5,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "book:d6:number",
+            "decile": 6,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "book:d6:fact",
+            "decile": 6,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "book:d6:name",
+            "decile": 6,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "book:d6:date",
+            "decile": 6,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "book:d7:fact",
+            "decile": 7,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "book:d7:number",
+            "decile": 7,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "book:d7:date",
+            "decile": 7,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "book:d7:name",
+            "decile": 7,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "book:d8:name",
+            "decile": 8,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "book:d8:date",
+            "decile": 8,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "book:d8:fact",
+            "decile": 8,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "book:d8:number",
+            "decile": 8,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 6
+          },
+          {
+            "id": "book:d9:date",
+            "decile": 9,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "book:d9:fact",
+            "decile": 9,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "book:d9:number",
+            "decile": 9,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "book:d9:name",
+            "decile": 9,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          }
+        ],
+        "reads": [
+          {
+            "id": "book:d0:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 38345,
+            "correct": true
+          },
+          {
+            "id": "book:d0:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 37394,
+            "correct": true
+          },
+          {
+            "id": "book:d0:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 38067,
+            "correct": true
+          },
+          {
+            "id": "book:d0:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 37865,
+            "correct": true
+          },
+          {
+            "id": "book:d1:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 37785,
+            "correct": true
+          },
+          {
+            "id": "book:d1:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 37785,
+            "correct": true
+          },
+          {
+            "id": "book:d1:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 38015,
+            "correct": true
+          },
+          {
+            "id": "book:d1:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 37772,
+            "correct": true
+          },
+          {
+            "id": "book:d2:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 38066,
+            "correct": true
+          },
+          {
+            "id": "book:d2:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 38066,
+            "correct": true
+          },
+          {
+            "id": "book:d2:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 37501,
+            "correct": true
+          },
+          {
+            "id": "book:d2:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 38381,
+            "correct": true
+          },
+          {
+            "id": "book:d3:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 37965,
+            "correct": true
+          },
+          {
+            "id": "book:d3:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 37965,
+            "correct": true
+          },
+          {
+            "id": "book:d3:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 37923,
+            "correct": true
+          },
+          {
+            "id": "book:d3:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 38128,
+            "correct": true
+          },
+          {
+            "id": "book:d4:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 37995,
+            "correct": true
+          },
+          {
+            "id": "book:d4:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 37670,
+            "correct": true
+          },
+          {
+            "id": "book:d4:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 37670,
+            "correct": true
+          },
+          {
+            "id": "book:d4:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 37994,
+            "correct": true
+          },
+          {
+            "id": "book:d5:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 37525,
+            "correct": true
+          },
+          {
+            "id": "book:d5:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 37929,
+            "correct": true
+          },
+          {
+            "id": "book:d5:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 37929,
+            "correct": true
+          },
+          {
+            "id": "book:d5:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 38136,
+            "correct": true
+          },
+          {
+            "id": "book:d6:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 37874,
+            "correct": true
+          },
+          {
+            "id": "book:d6:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 37668,
+            "correct": true
+          },
+          {
+            "id": "book:d6:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 37944,
+            "correct": true
+          },
+          {
+            "id": "book:d6:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 37944,
+            "correct": true
+          },
+          {
+            "id": "book:d7:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 37811,
+            "correct": true
+          },
+          {
+            "id": "book:d7:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 38140,
+            "correct": true
+          },
+          {
+            "id": "book:d7:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 38140,
+            "correct": true
+          },
+          {
+            "id": "book:d7:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 37996,
+            "correct": true
+          },
+          {
+            "id": "book:d8:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 38615,
+            "correct": true
+          },
+          {
+            "id": "book:d8:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 37521,
+            "correct": true
+          },
+          {
+            "id": "book:d8:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 37629,
+            "correct": true
+          },
+          {
+            "id": "book:d8:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 37629,
+            "correct": true
+          },
+          {
+            "id": "book:d9:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 38352,
+            "correct": true
+          },
+          {
+            "id": "book:d9:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 37033,
+            "correct": true
+          },
+          {
+            "id": "book:d9:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 38122,
+            "correct": true
+          },
+          {
+            "id": "book:d9:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 38127,
+            "correct": true
+          }
+        ],
+        "append": {
+          "status": "ok",
+          "chunks_before": 667,
+          "chunks_after": 668,
+          "chunks_rewritten": 2,
+          "chunks_deleted": 1,
+          "path": "put_page new part + hub index update",
+          "wall_ms": 213,
+          "embed": {
+            "inputs": 2,
+            "tokens": 744
+          },
+          "appended_tokens": 268,
+          "visible_rank": 1
+        },
+        "roundtrip": {
+          "status": "match",
+          "expected_sha256": "f3ea2efa9482dcc5c979d9f40cf4945102b8cbc1570c261e8d2bc6c70c343ed7",
+          "actual_sha256": "f3ea2efa9482dcc5c979d9f40cf4945102b8cbc1570c261e8d2bc6c70c343ed7",
+          "byte_delta": 0
+        },
+        "frames": {
+          "count": 131,
+          "max_bytes": 38615,
+          "over_cap": 0,
+          "by_op": {
+            "put_page": {
+              "count": 45,
+              "max_bytes": 3095,
+              "over_cap": 0
+            },
+            "search": {
+              "count": 45,
+              "max_bytes": 22759,
+              "over_cap": 0
+            },
+            "get_page": {
+              "count": 41,
+              "max_bytes": 38615,
+              "over_cap": 0
+            }
+          }
+        },
+        "memory": [
+          {
+            "phase": "start",
+            "t_ms": 1,
+            "rss_mb": 838,
+            "max_rss_mb": 1162
+          },
+          {
+            "phase": "ingest",
+            "t_ms": 2766,
+            "rss_mb": 717,
+            "max_rss_mb": 1162
+          },
+          {
+            "phase": "reads",
+            "t_ms": 3890,
+            "rss_mb": 784,
+            "max_rss_mb": 1162
+          },
+          {
+            "phase": "append",
+            "t_ms": 9718,
+            "rss_mb": 910,
+            "max_rss_mb": 1162
+          },
+          {
+            "phase": "export",
+            "t_ms": 9842,
+            "rss_mb": 925,
+            "max_rss_mb": 1162
+          }
+        ],
+        "ingest": {
+          "status": "stored",
+          "pages": 42,
+          "chunks": 667,
+          "embed_skip": null,
+          "write_errors": 0,
+          "wall_ms": 2765
+        },
+        "direct_read": {
+          "bytes": 2943
+        },
+        "embed_initial": {
+          "inputs": 669,
+          "tokens": 434820,
+          "wall_ms": 5503.457579
+        },
+        "embed_error": null
+      }
+    ],
+    "findings": [
+      {
+        "id": "N14-1",
+        "classification": "feature-gap",
+        "surface": "put_page -> content sanity (embed_skip, PAGE_OVERSIZED)",
+        "actual": "the conversation document (2mb) is stored with embed_skip=oversized and 0 chunks; keyword needle recall@10 0/40 while every needle is in the stored body (40/40)",
+        "repro": "bun eval/runner/n14-large-page-fidelity.ts --tier 2mb --arms single-page --gbrain <gbrain checkout>@c71fe7436e673db819c1be4532504b861e14ad50"
+      },
+      {
+        "id": "N14-3",
+        "classification": "feature-gap",
+        "surface": "get_page (default parameters)",
+        "actual": "a default get_page of the stored 2mb conversation page returns a 2042154-byte frame (1.9x the 1 MiB cap)",
+        "repro": "bun eval/runner/n14-large-page-fidelity.ts --tier 2mb --arms single-page --gbrain <gbrain checkout>@c71fe7436e673db819c1be4532504b861e14ad50"
+      }
+    ],
+    "harness_error": null
+  },
+  "accounting": {
+    "planned": 360,
+    "attempted": 240,
+    "scored": 240,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  },
+  "latency_ms": null
+}

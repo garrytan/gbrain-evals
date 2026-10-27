@@ -1,0 +1,77 @@
+{
+  "slug": "chats/central-team-banter",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: chat\nTitle: #central-random (export)\nDate: UNDATED. Do not include any date, year, month name, weekday, or relative date reference (\"yesterday\", \"last week\") anywhere in the document.\nWriter: Tobias Rendle\nVoice: hurried, lots of fragments\nFormat: a chat log with [HH:MM] timestamps and lowercase usernames\nLength: about 308 words\nDate style in the body: ISO (2025-06-02) (ignore: undated)\nTypos: none\n\nBrief:\nAn undated Slack export: coffee machine, a pet photo, Pree locked out of her Okta account, and two quick work comments. No dates, weekdays, months or years anywhere.\n\nRequired phrases:\n- Use the exact phrase \"Pree's parcel account\" once, referring to Tansley Parcel. Don't put the account's name in the same sentence; the reader should work it out.\n- Use the exact phrase \"Tobias's dealer account\" once, referring to Marrow Fieldworks. Don't put the account's name in the same sentence; the reader should work it out.\n- Use the exact phrase \"Pree's Okta account\" once, in the sense of: her single sign-on login. It must not be about a customer account.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Hollis Mbeki: Central team lead\n- Priyanka \"Pree\" Sundaram: Account manager, Central team\n- Tobias Rendle: Account manager, Central team\n- Lev Arkadin: Procurement lead\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Tansley Parcel: regional parcel delivery, South Central; main contact Lev Arkadin, Procurement lead; codes/nicknames TPCL, TP\n- Tansleigh Packaging: corrugated packaging manufacturer, Ohio Valley; codes/nicknames TSP, TP\n- Marrow Fieldworks: agricultural equipment dealer network, Plains; codes/nicknames MFW\n- Marrow Agrisupply: farm supply retail chain, Plains; subsidiary of Marrow Fieldworks; codes/nicknames MAS, Marrow Agri\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what (background only; don't restate unless the brief asks):\n(This page is undated. Do not state who manages which account.)",
+      "response_text": "# #central-random (export)\n\n[09:12] tobias.rendle: coffee machine on 4 is dead again. blinking red wrench icon, zero water pressure. \n\n[09:13] hollis.mbeki: did you empty the grounds drawer? usually just jammed on the sensor.\n\n[09:14] tobias.rendle: pulled it out, rinsed the tray, slammed it back. nothing. walking down to 3 for drip.\n\n[09:16] priyanka.sundaram: `[IMG_4402.jpg]`\n[09:16] priyanka.sundaram: Barnaby protesting the rain. refused to step off the porch rug, now sitting on my foot.\n\n[09:17] hollis.mbeki: look at those ears. solid decision making honestly.\n\n[09:18] tobias.rendle: 10/10 good boy. also @priyanka.sundaram did you see the ticket from Lev Arkadin about the South Central hub gate printers?\n\n[09:19] priyanka.sundaram: no?? i cannot get into Zendesk or Slack on my laptop, typing this on my phone. fat-fingered my YubiKey pin three times before coffee.\n\n[09:20] tobias.rendle: classic. ping IT helpdesk?\n\n[09:21] hollis.mbeki: i just messaged Sam in IT to reset Pree's Okta account. should push a temporary verify prompt to your mobile app in two minutes.\n\n[09:22] priyanka.sundaram: lifesaver. what is the printer issue?\n\n[09:23] tobias.rendle: thermal printheads cutting off the bottom barcode on the yard pass PDF for Pree's parcel account. Gate 4 guard has to type the trailer numbers by hand. i grabbed the ticket (#88412) and sent Lev the margin fix macro for Pemberline Dock.\n\n[09:25] priyanka.sundaram: thank you!! back in on desktop now. owes you a pastry.\n\n[09:26] hollis.mbeki: while we are doing quick favors—someone from the Plains ag equipment network called the main support line asking for the CSV upload template for combine delivery slots. \n\n[09:27] hollis.mbeki: i forwarded the voicemail to you regarding Tobias's dealer account. \n\n[09:28] tobias.rendle: got the audio file. that is the yard supervisor at the Kearney branch, always forgets the column headers for oversized loads. firing over the template now.",
+      "usage": {
+        "input_tokens": 1183,
+        "output_tokens": 591,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.008276,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1183,
+          "candidatesTokenCount": 591,
+          "totalTokenCount": 1774,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1183
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 591
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": [
+        "This page must be undated, but it contains \"10/10\". Remove every date, year, month, weekday and relative date."
+      ]
+    },
+    {
+      "attempt": 2,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: chat\nTitle: #central-random (export)\nDate: UNDATED. Do not include any date, year, month name, weekday, or relative date reference (\"yesterday\", \"last week\") anywhere in the document.\nWriter: Tobias Rendle\nVoice: hurried, lots of fragments\nFormat: a chat log with [HH:MM] timestamps and lowercase usernames\nLength: about 308 words\nDate style in the body: ISO (2025-06-02) (ignore: undated)\nTypos: none\n\nBrief:\nAn undated Slack export: coffee machine, a pet photo, Pree locked out of her Okta account, and two quick work comments. No dates, weekdays, months or years anywhere.\n\nRequired phrases:\n- Use the exact phrase \"Pree's parcel account\" once, referring to Tansley Parcel. Don't put the account's name in the same sentence; the reader should work it out.\n- Use the exact phrase \"Tobias's dealer account\" once, referring to Marrow Fieldworks. Don't put the account's name in the same sentence; the reader should work it out.\n- Use the exact phrase \"Pree's Okta account\" once, in the sense of: her single sign-on login. It must not be about a customer account.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Hollis Mbeki: Central team lead\n- Priyanka \"Pree\" Sundaram: Account manager, Central team\n- Tobias Rendle: Account manager, Central team\n- Lev Arkadin: Procurement lead\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Tansley Parcel: regional parcel delivery, South Central; main contact Lev Arkadin, Procurement lead; codes/nicknames TPCL, TP\n- Tansleigh Packaging: corrugated packaging manufacturer, Ohio Valley; codes/nicknames TSP, TP\n- Marrow Fieldworks: agricultural equipment dealer network, Plains; codes/nicknames MFW\n- Marrow Agrisupply: farm supply retail chain, Plains; subsidiary of Marrow Fieldworks; codes/nicknames MAS, Marrow Agri\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what (background only; don't restate unless the brief asks):\n(This page is undated. Do not state who manages which account.)\n\nYour previous draft had these problems. Fix them all in a fresh full draft:\n- This page must be undated, but it contains \"10/10\". Remove every date, year, month, weekday and relative date.",
+      "response_text": "# #central-random (export)\n\n[09:12] tobias.rendle: 4th floor espresso machine throwing Error 07 again. Grounds drawer completely jammed.\n\n[09:13] hollis.mbeki: did you jiggle the little plastic chute on the left?\n\n[09:14] tobias.rendle: tried. zero luck. walking down to 3rd for drip, grab your mugs if you want a top-up.\n\n[09:16] hollis.mbeki: `barnaby_mud_boots.jpg`\n\n[09:17] hollis.mbeki: speaking of messes. he found the one drainage ditch in the park with standing water.\n\n[09:18] tobias.rendle: the ears!! solid gold.\n\n[09:22] tobias.rendle: hey @hollis.mbeki text from Pree—she is completely locked out of everything after the laptop reboot. Something broke with Pree's Okta account and her YubiKey isn't registering at all.\n\n[09:23] hollis.mbeki: ugh. did she call the IT helpdesk line?\n\n[09:24] tobias.rendle: on hold right now. she asked me to pull a gate log CSV before her call with Lev Arkadin. Need the Gate 4 turn-time export for Pree's parcel account before the 10am check-in.\n\n[09:26] hollis.mbeki: got it. Tell her I'm pinging IT in `#help-it-ops` to bump her ticket. While you're in the reporting tool, can you check if the webhook patch fixed the tractor-bay alerts on Tobias's dealer account?\n\n[09:27] tobias.rendle: yeah already checked the Plains depots. West yard Door 2 still double-booking when flatbeds check in early at the kiosk, so I flagged it on ticket #8841 for support.\n\n[09:28] hollis.mbeki: nice.\n\n[09:29] priyanka.sundaram: I'M IN.\n\n[09:30] priyanka.sundaram: helpdesk reset my MFA token. grabbing that CSV myself now, thanks @tobias.rendle! And Barnaby is innocent, look at that face.\n\n[09:31] tobias.rendle: welcome back to the grid. 3rd floor coffee pot is half full if you need fuel.",
+      "usage": {
+        "input_tokens": 1231,
+        "output_tokens": 568,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.008142,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1231,
+          "candidatesTokenCount": 568,
+          "totalTokenCount": 1799,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1231
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 568
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

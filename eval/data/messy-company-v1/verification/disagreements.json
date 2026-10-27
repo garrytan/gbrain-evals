@@ -1,0 +1,2217 @@
+[
+  {
+    "key": "ent:agent-notes/2025-10-05-north-sunday:e6",
+    "lane": "entity-mentions",
+    "slug": "agent-notes/2025-10-05-north-sunday",
+    "split": "dev",
+    "planned": {
+      "surface": "TCC",
+      "line": 18,
+      "entity": null,
+      "candidates": [
+        "tamsin",
+        "orrin"
+      ],
+      "intent": null
+    },
+    "verifier": {
+      "oid": "e6",
+      "entity": "tamsin"
+    },
+    "agree": false,
+    "context": "17| * **Quarrendon Freight Lines (QFL) dock door ticket:** Thea Ramaswell submitted ticket #PD-4492 on 4 Oct 2025 regarding Pemberline Dock gatehouse kiosk alerts at their Eau Claire yard. Drivers arriving for the 04:00 shift at Dock Doors 14 through 18 were not receiving SMS bay assignments when checking in via tablet. Support applied a patch to the SMS gateway routing table at 19:30 on 4 Oct 2025, and Thea Ramaswell confirmed the 04:00 shift on 5 Oct 2025 cleared the gate without manual intervention.\n18| * **Tamsin Cold Chain (TCC) report export:** An automated alert flagged a stalled CSV export on the \"Reefer Dwell & Plug-In Duration\" report for the Tacoma facility at 22:15 on 3 Oct 2025. The job timed out because a yard clerk selected an unfiltered date range dating back to 12 Jan 2025. Engineering cleared the queue, and the scheduled Monday morning digest for TCC will run as normal at 06:00 on 6 Oct 2025.\n19| * **Internal billing vendor sync:** Felix Duarte at Stoneharrow Billing sent an automated reminder on 3 Oct 2025 regarding the sandbox credential rotation for Pemberline Systems' internal invoice portal. June Osei-Lark acknowledged the ticket and scheduled the token update with Finance for 8 Oct 2025.",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "ent:agent-notes/2025-10-05-north-sunday:e7",
+    "lane": "entity-mentions",
+    "slug": "agent-notes/2025-10-05-north-sunday",
+    "split": "dev",
+    "planned": {
+      "surface": "TCC",
+      "line": 18,
+      "entity": null,
+      "candidates": [
+        "tamsin",
+        "orrin"
+      ],
+      "intent": null
+    },
+    "verifier": {
+      "oid": "e7",
+      "entity": "tamsin"
+    },
+    "agree": false,
+    "context": "17| * **Quarrendon Freight Lines (QFL) dock door ticket:** Thea Ramaswell submitted ticket #PD-4492 on 4 Oct 2025 regarding Pemberline Dock gatehouse kiosk alerts at their Eau Claire yard. Drivers arriving for the 04:00 shift at Dock Doors 14 through 18 were not receiving SMS bay assignments when checking in via tablet. Support applied a patch to the SMS gateway routing table at 19:30 on 4 Oct 2025, and Thea Ramaswell confirmed the 04:00 shift on 5 Oct 2025 cleared the gate without manual intervention.\n18| * **Tamsin Cold Chain (TCC) report export:** An automated alert flagged a stalled CSV export on the \"Reefer Dwell & Plug-In Duration\" report for the Tacoma facility at 22:15 on 3 Oct 2025. The job timed out because a yard clerk selected an unfiltered date range dating back to 12 Jan 2025. Engineering cleared the queue, and the scheduled Monday morning digest for TCC will run as normal at 06:00 on 6 Oct 2025.\n19| * **Internal billing vendor sync:** Felix Duarte at Stoneharrow Billing sent an automated reminder on 3 Oct 2025 regarding the sandbox credential rotation for Pemberline Systems' internal invoice portal. June Osei-Lark acknowledged the ticket and scheduled the token update with Finance for 8 Oct 2025.",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "ent:agent-notes/north-account-cheatsheet:e6",
+    "lane": "entity-mentions",
+    "slug": "agent-notes/north-account-cheatsheet",
+    "split": "dev",
+    "planned": {
+      "surface": "TCC",
+      "line": 18,
+      "entity": null,
+      "candidates": [
+        "tamsin",
+        "orrin"
+      ],
+      "intent": null
+    },
+    "verifier": {
+      "oid": "e6",
+      "entity": "tamsin"
+    },
+    "agree": false,
+    "context": "17| * **Quarrendon Freight Lines (QFL / Q-Freight):** Upper Midwest truckload carrier. Main contact is Thea Ramaswell (Director of Yard Operations). Thea logged ticket #4419 regarding gatehouse barcode scanners failing to read trailer tags at Door 14 during the third shift. (Note: Do not confuse with Quarendon Freightways, which is not a Pemberline Systems customer and uses competitor yard software.)\n18| * **Tamsin Cold Chain (TCC):** Pacific Northwest refrigerated warehousing. The reefer temp-check workflow in Pemberline Dock is throwing a timeout error when drivers check in at the Tacoma yard. Support is patching the form for the Northwest one Dana inherited.\n19| * **Brackenwater Freight Co. (BWF / Bracken):** Great Lakes LTL freight. Cross-dock dispatchers requested a custom export for carrier detention logs.",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "ent:chats/2026-01-13-thornbury-rename:e3",
+    "lane": "entity-mentions",
+    "slug": "chats/2026-01-13-thornbury-rename",
+    "split": "dev",
+    "planned": {
+      "surface": "TCC",
+      "line": 10,
+      "entity": null,
+      "candidates": [
+        "tamsin",
+        "orrin"
+      ],
+      "intent": "mixed"
+    },
+    "verifier": {
+      "oid": "e3",
+      "entity": "orrin"
+    },
+    "agree": false,
+    "context": "9| Marcus Lindqvist  10:42 AM\n10| Orrin Mills renamed itself Thornbury Cloth Co. yesterday, 2026-01-12, and I have already managed to confuse myself before finishing my coffee. The new code is TCC. Which is also Tamsin Cold Chain. Excellent little Tuesday puzzle.\n11| ",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "ent:chats/2026-01-13-thornbury-rename:e5",
+    "lane": "entity-mentions",
+    "slug": "chats/2026-01-13-thornbury-rename",
+    "split": "dev",
+    "planned": {
+      "surface": "TCC",
+      "line": 13,
+      "entity": null,
+      "candidates": [
+        "tamsin",
+        "orrin"
+      ],
+      "intent": "mixed"
+    },
+    "verifier": {
+      "oid": "e5",
+      "entity": "orrin"
+    },
+    "agree": false,
+    "context": "12| Ilse Varga  10:43 AM\n13| Is this about the invoice attachment you just sent? I saw TCC in the filename and thought refrigerated warehouse, not textile mill.\n14| ",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "ent:chats/2026-01-13-thornbury-rename:e8",
+    "lane": "entity-mentions",
+    "slug": "chats/2026-01-13-thornbury-rename",
+    "split": "dev",
+    "planned": {
+      "surface": "TCC",
+      "line": 16,
+      "entity": null,
+      "candidates": [
+        "tamsin",
+        "orrin"
+      ],
+      "intent": "mixed"
+    },
+    "verifier": {
+      "oid": "e8",
+      "entity": "orrin"
+    },
+    "agree": false,
+    "context": "15| Marcus Lindqvist  10:44 AM\n16| Yes, exactly. I opened it expecting the cold-chain billing thread, then saw the mill address in the Carolinas. The invoice belongs to Thornbury Cloth Co. Not Tamsin Cold Chain. TCC on this invoice means the mill.\n17| ",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "rv:contracts/2025-03-28-qfl-msa:renewal_date:quarrendon",
+    "lane": "governing-records",
+    "slug": "contracts/2025-03-28-qfl-msa",
+    "split": "dev",
+    "planned": {
+      "attr": "renewal_date",
+      "value": "2026-03-31",
+      "scope": [
+        "quarrendon"
+      ]
+    },
+    "verifier": [
+      {
+        "term": "renewal_date",
+        "applies_to": [
+          "quarrendon"
+        ],
+        "value": "2026-04-01, following the initial period ending 2026-03-31; automatic continuation for successive twelve-month periods unless timely elected against",
+        "line": 247
+      }
+    ],
+    "agree": false,
+    "adjudicated": "keep"
+  },
+  {
+    "key": "ent:contracts/2025-05-30-tcc-of-2025:e2",
+    "lane": "entity-mentions",
+    "slug": "contracts/2025-05-30-tcc-of-2025",
+    "split": "dev",
+    "planned": {
+      "surface": "TCC",
+      "line": 9,
+      "entity": null,
+      "candidates": [
+        "tamsin",
+        "orrin"
+      ],
+      "intent": null
+    },
+    "verifier": {
+      "oid": "e2",
+      "entity": "tamsin"
+    },
+    "agree": false,
+    "context": "8| \n9| **Document Reference:** OF-TCC-2025-0512  \n10| **Date Drafted:** 2025-05-12  ",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "rv:contracts/2025-05-30-tcc-of-2025:price_per_seat:tamsin",
+    "lane": "governing-records",
+    "slug": "contracts/2025-05-30-tcc-of-2025",
+    "split": "dev",
+    "planned": {
+      "attr": "price_per_seat",
+      "value": 1980,
+      "scope": [
+        "tamsin"
+      ]
+    },
+    "verifier": [
+      {
+        "term": "price_per_seat",
+        "applies_to": [
+          "tamsin"
+        ],
+        "value": "$1,881.00 USD per year (net)",
+        "line": 32
+      }
+    ],
+    "agree": false,
+    "adjudicated": "keep"
+  },
+  {
+    "key": "ent:contracts/2026-02-10-orm-unsigned-2026:e8",
+    "lane": "entity-mentions",
+    "slug": "contracts/2026-02-10-orm-unsigned-2026",
+    "split": "dev",
+    "planned": {
+      "surface": "TCC",
+      "line": 29,
+      "entity": null,
+      "candidates": [
+        "tamsin",
+        "orrin"
+      ],
+      "intent": null
+    },
+    "verifier": {
+      "oid": "e8",
+      "entity": "orrin"
+    },
+    "agree": false,
+    "context": "28| \n29| The customer name shall appear as Thornbury Cloth Co. in the order heading, subscription record, and associated billing review materials. The abbreviation TCC shall not be used as the sole customer identifier in those materials.\n30| ",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "ent:contracts/2026-02-24-orm-renewal-2026:e3",
+    "lane": "entity-mentions",
+    "slug": "contracts/2026-02-24-orm-renewal-2026",
+    "split": "dev",
+    "planned": {
+      "surface": "TCC",
+      "line": 9,
+      "entity": null,
+      "candidates": [
+        "tamsin",
+        "orrin"
+      ],
+      "intent": null
+    },
+    "verifier": {
+      "oid": "e3",
+      "entity": "orrin"
+    },
+    "agree": false,
+    "context": "8| \n9| **Document Reference:** PEM-ROF-2026-0217-TCC  \n10| **Drafted Date:** 2/17/26  ",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "ent:contracts/2026-02-24-orm-renewal-2026:e16",
+    "lane": "entity-mentions",
+    "slug": "contracts/2026-02-24-orm-renewal-2026",
+    "split": "dev",
+    "planned": {
+      "surface": "TCC",
+      "line": 70,
+      "entity": null,
+      "candidates": [
+        "tamsin",
+        "orrin"
+      ],
+      "intent": null
+    },
+    "verifier": {
+      "oid": "e16",
+      "entity": "orrin"
+    },
+    "agree": false,
+    "context": "69| \n70| **5.2 Invoicing Schedule and Remittance.** The Total Annual Subscription Fee of $68,000 USD (representing 40 subscribed seats at $1,700 USD per seat per year) shall be invoiced upon the Effective Date of 3/1/26. All payments shall be remitted in United States Dollars via Automated Clearing House (ACH) or wire transfer to the remittance account specified on the Stoneharrow Billing invoice, referencing Customer Code **TCC** and Order Reference **PEM-ROF-2026-0217-TCC**.\n71| ",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "ent:contracts/2026-02-24-orm-renewal-2026:e17",
+    "lane": "entity-mentions",
+    "slug": "contracts/2026-02-24-orm-renewal-2026",
+    "split": "dev",
+    "planned": {
+      "surface": "TCC",
+      "line": 70,
+      "entity": null,
+      "candidates": [
+        "tamsin",
+        "orrin"
+      ],
+      "intent": null
+    },
+    "verifier": {
+      "oid": "e17",
+      "entity": "orrin"
+    },
+    "agree": false,
+    "context": "69| \n70| **5.2 Invoicing Schedule and Remittance.** The Total Annual Subscription Fee of $68,000 USD (representing 40 subscribed seats at $1,700 USD per seat per year) shall be invoiced upon the Effective Date of 3/1/26. All payments shall be remitted in United States Dollars via Automated Clearing House (ACH) or wire transfer to the remittance account specified on the Stoneharrow Billing invoice, referencing Customer Code **TCC** and Order Reference **PEM-ROF-2026-0217-TCC**.\n71| ",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "rv:contracts/2026-05-27-tcc-renewal-2026:renewal_date:tamsin",
+    "lane": "governing-records",
+    "slug": "contracts/2026-05-27-tcc-renewal-2026",
+    "split": "dev",
+    "planned": {
+      "attr": "renewal_date",
+      "value": "2027-05-31",
+      "scope": [
+        "tamsin"
+      ]
+    },
+    "verifier": [
+      {
+        "term": "renewal_date",
+        "applies_to": [
+          "tamsin"
+        ],
+        "value": "2026-06-01",
+        "line": 11
+      }
+    ],
+    "agree": false,
+    "adjudicated": "keep"
+  },
+  {
+    "key": "ent:crm/2025-03-10-tamsin-marcus-note:e2",
+    "lane": "entity-mentions",
+    "slug": "crm/2025-03-10-tamsin-marcus-note",
+    "split": "dev",
+    "planned": {
+      "surface": "TCC",
+      "line": 6,
+      "entity": null,
+      "candidates": [
+        "tamsin",
+        "orrin"
+      ],
+      "intent": null
+    },
+    "verifier": {
+      "oid": "e2",
+      "entity": "tamsin"
+    },
+    "agree": false,
+    "context": "5| ---\n6| **Account:** Tamsin Cold Chain (TCC)\n7| **Status:** Active Pilot",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "cl:crm/2025-03-10-tamsin-marcus-note:c-tcc-decider-marcus",
+    "lane": "changes",
+    "slug": "crm/2025-03-10-tamsin-marcus-note",
+    "split": "dev",
+    "planned": {
+      "value": "the CFO, Pavel Ruud",
+      "attr": "decision_maker"
+    },
+    "verifier": {
+      "cid": "c-tcc-decider-marcus",
+      "stated": true,
+      "value": "Pavel Ruud, CFO, is the decision maker.",
+      "line": 8
+    },
+    "agree": false,
+    "context": "6| **Account:** Tamsin Cold Chain (TCC)\n7| **Status:** Active Pilot\n8| **Decision Maker:** Pavel Ruud, CFO\n9| **Site:** Tacoma Cold Storage (Doors 4–9, grave shift)\n10| ",
+    "adjudicated": "keep"
+  },
+  {
+    "key": "own:emails/2025-10-03-correction-north-moves:tamsin",
+    "lane": "ownership",
+    "slug": "emails/2025-10-03-correction-north-moves",
+    "split": "dev",
+    "planned": [
+      {
+        "id": "s-tcc-dana",
+        "owner": "dana-okafor",
+        "role": "primary",
+        "start": "2025-04-14",
+        "end": null
+      }
+    ],
+    "verifier": [
+      {
+        "account": "tamsin",
+        "owner": "Dana Okafor",
+        "role": "primary",
+        "start": null,
+        "end": null,
+        "line": 13
+      }
+    ],
+    "agree": false,
+    "adjudicated": "keep"
+  },
+  {
+    "key": "ev:emails/2025-11-06-quarrendon-exec-call:e-qfl-sev1",
+    "lane": "timeline",
+    "slug": "emails/2025-11-06-quarrendon-exec-call",
+    "split": "dev",
+    "planned": {
+      "date": "2025-11-04",
+      "summary": "Sev 1 escalation: dock schedule sync outage at Quarrendon's Superior terminal"
+    },
+    "verifier": {
+      "eid": "e-qfl-sev1",
+      "present": false,
+      "date": null,
+      "line": 14
+    },
+    "agree": false,
+    "context": "12| Quick dump from the exec call w/ Thea Ramaswell just now re: Tuesday's Sev 1 (Nov 4). \n13| \n14| * **Root cause:** Walked through the postmortem for #INC-8841. Stale webhook worker locked up the gate-in queue after the 2025-11-04 morning deploy. 18 reefers idling on County Rd M outside the Oshkosh yard, dock doors 4 through 19 blind for three hrs. 2nd shift clerks had to run paper clipboards. Thea wasn't thrilled obv, but accepted eng's explanation on the hotfix.\n15| * **Credits:** They want service credits on the next invoice for the downtime. June—looping you in to check the paper and calc what's standard here, then get w/ Stoneharrow Billing so we don't botch the credit memo.\n16| * **Cadence:** Agreed to a weekly 15-min check-in from next Tues until year end. We need eyes on Dana's freight account every single week through peak season so nothing else slips.",
+    "adjudicated": "keep"
+  },
+  {
+    "key": "own:notes/2026-01-30-ilse-private-dana-leave:quarrendon",
+    "lane": "ownership",
+    "slug": "notes/2026-01-30-ilse-private-dana-leave",
+    "split": "dev",
+    "planned": [
+      {
+        "id": "s-qfl-ilse-acting",
+        "owner": "ilse-varga",
+        "role": "acting",
+        "start": "2026-02-02",
+        "end": "2026-03-16"
+      }
+    ],
+    "verifier": [
+      {
+        "account": "quarrendon",
+        "owner": "Dana Okafor",
+        "role": "primary",
+        "start": null,
+        "end": null,
+        "line": 15
+      }
+    ],
+    "agree": false,
+    "adjudicated": "keep"
+  },
+  {
+    "key": "ent:updates/2025-12-08-north-weekly:e6",
+    "lane": "entity-mentions",
+    "slug": "updates/2025-12-08-north-weekly",
+    "split": "dev",
+    "planned": {
+      "surface": "TCC",
+      "line": 16,
+      "entity": null,
+      "candidates": [
+        "tamsin",
+        "orrin"
+      ],
+      "intent": null
+    },
+    "verifier": {
+      "oid": "e6",
+      "entity": "tamsin"
+    },
+    "agree": false,
+    "context": "15| | Quarrendon Freight Lines (QFL) | Dana Okafor | Yellow | Reworking pricing proposal with Deal Desk; sorting out Gate 4 kiosk lag. |\n16| | Tamsin Cold Chain (TCC) | Dana Okafor | Green | Helping night shift leads set up the new reefer temp-check templates. |\n17| | Orrin Mills (ORM) | Marcus Lindqvist | Green | Quiet week; reviewing their raw-bale receiving doors on Wednesday. |",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "ent:updates/2025-12-08-north-weekly:e11",
+    "lane": "entity-mentions",
+    "slug": "updates/2025-12-08-north-weekly",
+    "split": "dev",
+    "planned": {
+      "surface": "TCC",
+      "line": 25,
+      "entity": null,
+      "candidates": [
+        "tamsin",
+        "orrin"
+      ],
+      "intent": null
+    },
+    "verifier": {
+      "oid": "e11",
+      "entity": "tamsin"
+    },
+    "agree": false,
+    "context": "24| \n25| **TCC & ORM:** Pretty smooth sailing on both of these. TCC had a minor question about carrier text-message alerts firing twice when a driver edits their ETA at the guard shack, which turned out to be a toggle setting their new Tacoma clerk bumped by mistake. ORM is prepping for their end-of-year inventory shutdown, so they just want a quick walkthrough on blocking out dock doors in bulk for the last week of the month.\n26| ",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "ent:updates/2025-12-08-north-weekly:e13",
+    "lane": "entity-mentions",
+    "slug": "updates/2025-12-08-north-weekly",
+    "split": "dev",
+    "planned": {
+      "surface": "TCC",
+      "line": 25,
+      "entity": null,
+      "candidates": [
+        "tamsin",
+        "orrin"
+      ],
+      "intent": null
+    },
+    "verifier": {
+      "oid": "e13",
+      "entity": "tamsin"
+    },
+    "agree": false,
+    "context": "24| \n25| **TCC & ORM:** Pretty smooth sailing on both of these. TCC had a minor question about carrier text-message alerts firing twice when a driver edits their ETA at the guard shack, which turned out to be a toggle setting their new Tacoma clerk bumped by mistake. ORM is prepping for their end-of-year inventory shutdown, so they just want a quick walkthrough on blocking out dock doors in bulk for the last week of the month.\n26| ",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "op:updates/2026-03-02-north-weekly#m1",
+    "lane": "owner-phrases",
+    "slug": "updates/2026-03-02-north-weekly",
+    "split": "dev",
+    "planned": {
+      "surface": "Dana's renewal",
+      "accounts": [
+        "quarrendon"
+      ],
+      "reason": "renewal_window"
+    },
+    "verifier": {
+      "mid": "updates/2026-03-02-north-weekly#m1",
+      "refers_to_customer_account": false,
+      "accounts": [],
+      "reading": "ambiguous: could be more than one account",
+      "note": "Dana is primary owner of both Quarrendon and Tamsin on this date; the renewal text does not identify which account."
+    },
+    "agree": false,
+    "context": "9| \n10| ### Commercial & Renewals\n11| * Dana's renewal paperwork is currently with June Osei-Lark for review; the target for signature is before the 20th.\n12| * For the cold-chain account Ilse is covering, the warehouse ops team requested a custom CSV export for reefer temp logs at Bay 4 and Bay 5 during the graveyard shift.\n13| ",
+    "adjudicated": "keep"
+  },
+  {
+    "key": "ent:updates/2026-04-20-north-weekly:e3",
+    "lane": "entity-mentions",
+    "slug": "updates/2026-04-20-north-weekly",
+    "split": "dev",
+    "planned": {
+      "surface": "TCC",
+      "line": 19,
+      "entity": null,
+      "candidates": [
+        "tamsin",
+        "orrin"
+      ],
+      "intent": "mixed"
+    },
+    "verifier": {
+      "oid": "e3",
+      "entity": "tamsin"
+    },
+    "agree": false,
+    "context": "18| - The operations discussion is focused on the early receiving shift: dispatch wants late-arriving refrigerated loads visible without reopening yesterday’s appointment board. Dana will walk through the current Pemberline Dock view with the receiving supervisor and collect two examples from the overnight log.\n19| - The working checklist is labeled “TCC — refrigerated receiving.” Please use the full company name in meeting titles; the abbreviation also appears in the textile notes.\n20| - I will review the renewal preparation notes after the workflow call, with particular attention to unresolved product questions that could distract from the commercial discussion.",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "xop:accounts/marrow-agrisupply:11:Central team pooled account (no single account manager)",
+    "lane": "owner-phrases",
+    "slug": "accounts/marrow-agrisupply",
+    "split": "dev",
+    "planned": null,
+    "verifier": {
+      "line": 11,
+      "phrase": "Central team pooled account (no single account manager)",
+      "accounts": [
+        "marrow-agrisupply"
+      ],
+      "note": "Explicitly identifies Marrow Agrisupply as managed by the Central team."
+    },
+    "agree": false,
+    "context": "9| **Account code:** MAS (though half the floor still calls it \"Marrow Agri\" in Slack)  \n10| **Parent:** Marrow Fieldworks  \n11| **Ownership:** Central team pooled account (no single account manager) since January 2025.\n12| \n13| Marrow Agrisupply is the farm supply retail chain under the Marrow Fieldworks umbrella, mostly moving pallets of baler twine, fencing, and calf starter across the Plains. ",
+    "adjudicated": "reject"
+  },
+  {
+    "key": "own:accounts/marrow-agrisupply:marrow-agrisupply",
+    "lane": "ownership",
+    "slug": "accounts/marrow-agrisupply",
+    "split": "dev",
+    "planned": [
+      {
+        "id": "s-mas-team",
+        "owner": "team-central",
+        "role": "team",
+        "start": "2025-01-06",
+        "end": null
+      }
+    ],
+    "verifier": [
+      {
+        "account": "marrow-agrisupply",
+        "owner": "Central team",
+        "role": "team",
+        "start": null,
+        "end": null,
+        "line": 11
+      }
+    ],
+    "agree": false,
+    "adjudicated": "keep"
+  },
+  {
+    "key": "xop:accounts/tansleigh-packaging:12:I took over as AM back in Jan 2025",
+    "lane": "owner-phrases",
+    "slug": "accounts/tansleigh-packaging",
+    "split": "dev",
+    "planned": null,
+    "verifier": {
+      "line": 12,
+      "phrase": "I took over as AM back in Jan 2025",
+      "accounts": [
+        "tansleigh"
+      ],
+      "note": "The unnamed author says they became the account manager in January 2025 and also serve as Central team lead."
+    },
+    "agree": false,
+    "context": "10| **Seats:** 30\n11| \n12| Quick update on the wiki page for Tansleigh Packaging since I took over as AM back in Jan 2025 (on top of the Central team lead stuff, pray for my calendar lol). \n13| \n14| They're a corrugated packaging manufacturer out in the Ohio Valley with their main plant in Zanesville. Note for anyone pulling tickets: Tansleigh Packaging and Tansley Parcel are completely unrelated companies. Ppl mix them up in Slack all the time so watch the account code—use TSP for these guys.",
+    "adjudicated": "reject"
+  },
+  {
+    "key": "own:accounts/tansleigh-packaging:tansleigh",
+    "lane": "ownership",
+    "slug": "accounts/tansleigh-packaging",
+    "split": "dev",
+    "planned": [
+      {
+        "id": "s-tsp-hollis",
+        "owner": "hollis-mbeki",
+        "role": "primary",
+        "start": "2025-01-06",
+        "end": "2025-05-19"
+      }
+    ],
+    "verifier": [
+      {
+        "account": "tansleigh",
+        "owner": null,
+        "role": "primary",
+        "start": null,
+        "end": null,
+        "line": 12
+      }
+    ],
+    "agree": false,
+    "adjudicated": "keep"
+  },
+  {
+    "key": "own:accounts/tansley-parcel:tansley-parcel",
+    "lane": "ownership",
+    "slug": "accounts/tansley-parcel",
+    "split": "dev",
+    "planned": [
+      {
+        "id": "s-tpx-pree",
+        "owner": "pree-sundaram",
+        "role": "primary",
+        "start": "2025-01-06",
+        "end": null
+      }
+    ],
+    "verifier": [
+      {
+        "account": "tansley-parcel",
+        "owner": "Pree Sundaram",
+        "role": "primary",
+        "start": "2025-01",
+        "end": null,
+        "line": 15
+      }
+    ],
+    "agree": false,
+    "adjudicated": "keep"
+  },
+  {
+    "key": "op:agent-notes/2026-01-02-central-handoffs#m2",
+    "lane": "owner-phrases",
+    "slug": "agent-notes/2026-01-02-central-handoffs",
+    "split": "dev",
+    "planned": {
+      "surface": "the account Tobias runs",
+      "accounts": [
+        "tansleigh"
+      ],
+      "reason": "unique_owned_match"
+    },
+    "verifier": {
+      "mid": "agent-notes/2026-01-02-central-handoffs#m2",
+      "refers_to_customer_account": false,
+      "accounts": [],
+      "reading": "ambiguous: could be more than one account",
+      "note": "Tobias owns both Tansleigh Packaging and Marrow Fieldworks by the scheduled Tuesday meeting; the text does not distinguish them."
+    },
+    "agree": false,
+    "context": "16| \n17| * **Billing & Admin:** June Osei-Lark and Felix Duarte at Stoneharrow Billing resolved the Dec batch-export error that was holding up seat-usage logs. Everything is synced for the 8 Jan 2026 audit run.\n18| * **Scheduling:** Hollis Mbeki moved the weekly Central standup by 30 mins on Tuesday 6 Jan 2026 to clear a calendar conflict with the account Tobias runs. \n19| * **Pooled Queue:** Marrow Agrisupply logged a feature request (FR-882) asking for custom pallet-jack icons on the Pemberline Dock yard map for their seasonal fertilizer sheds. Support routed this to the product backlog for Q2 revw.\n20| ",
+    "adjudicated": "drop"
+  },
+  {
+    "key": "ent:chats/2025-07-02-tp-confusion:e2",
+    "lane": "entity-mentions",
+    "slug": "chats/2025-07-02-tp-confusion",
+    "split": "dev",
+    "planned": {
+      "surface": "TP",
+      "line": 12,
+      "entity": "tansleigh",
+      "candidates": [
+        "tansley-parcel",
+        "tansleigh"
+      ],
+      "intent": "tansleigh"
+    },
+    "verifier": {
+      "oid": "e2",
+      "entity": "tansley-parcel",
+      "note": "Pree tentatively interprets TP as Tansley Parcel; Tobias subsequently corrects her interpretation."
+    },
+    "agree": false,
+    "context": "11| **Priyanka \"Pree\" Sundaram** [09:15 AM]\n12| wait TP as in Tansley Parcel?? bc Lev Arkadin literally just slacked me abt a yard jockey login thing at the Tulsa hub and didnt say a word abt Door 6 freezing up, im panicking a lil bit here, did they open a sev2 without telling me??\n13| ",
+    "adjudicated": "keep"
+  },
+  {
+    "key": "ent:chats/2025-07-02-tp-confusion:e6",
+    "lane": "entity-mentions",
+    "slug": "chats/2025-07-02-tp-confusion",
+    "split": "dev",
+    "planned": {
+      "surface": "TP",
+      "line": 19,
+      "entity": "tansleigh",
+      "candidates": [
+        "tansley-parcel",
+        "tansleigh"
+      ],
+      "intent": "tansleigh"
+    },
+    "verifier": {
+      "oid": "e6",
+      "entity": "none",
+      "note": "Discusses the ambiguous abbreviation generally, rather than identifying one company."
+    },
+    "agree": false,
+    "context": "18| Tansleigh Packaging*\n19| and guys pls stop putting just TP in the triage queue, we do this every single tuesday lol. use TPCL or TSP so support doesnt page the wrong on-call\n20| ",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "ent:chats/2025-07-02-tp-confusion:e9",
+    "lane": "entity-mentions",
+    "slug": "chats/2025-07-02-tp-confusion",
+    "split": "dev",
+    "planned": {
+      "surface": "TP",
+      "line": 22,
+      "entity": "tansleigh",
+      "candidates": [
+        "tansley-parcel",
+        "tansleigh"
+      ],
+      "intent": "tansleigh"
+    },
+    "verifier": {
+      "oid": "e9",
+      "entity": "none",
+      "note": "Discusses TP in subject lines generally; Pree's automatic interpretation does not establish a unique referent."
+    },
+    "agree": false,
+    "context": "21| **Priyanka \"Pree\" Sundaram** [09:18 AM]\n22| omg thank u Hollis, my heart rate just dropped back to normal. seriously tho whenever someone writes TP in the subject line my brain auto-fills Tansley Parcel and i start digging thru my emails like a maniac thinking i missed an outage alert. anyway while im here, whoever has a free sec today can we look at the training deck for Hollis's old packaging account? the slide on dock-door auto-assign still has the 2023 UI screenshots with the ugly grey buttons and it looks super dated\n23| ",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "ent:chats/2026-04-23-marrow-renewal-chat:e1",
+    "lane": "entity-mentions",
+    "slug": "chats/2026-04-23-marrow-renewal-chat",
+    "split": "dev",
+    "planned": {
+      "surface": "Marrow",
+      "line": 8,
+      "entity": null,
+      "candidates": [
+        "marrow-fieldworks",
+        "marrow-agrisupply"
+      ],
+      "intent": "mixed"
+    },
+    "verifier": {
+      "oid": "e1",
+      "entity": "marrow-fieldworks"
+    },
+    "agree": false,
+    "context": "7| \n8| [09:14] june: hey quick q on that renewal sig from yest (Apr 22)—i'm closing out the CRM task for Tobias's dealer account and it just says \"Marrow\" in the header lol. does \"Marrow\" mean the parent or Agrisupply??\n9| ",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "ent:chats/2026-04-23-marrow-renewal-chat:e2",
+    "lane": "entity-mentions",
+    "slug": "chats/2026-04-23-marrow-renewal-chat",
+    "split": "dev",
+    "planned": {
+      "surface": "Marrow",
+      "line": 8,
+      "entity": null,
+      "candidates": [
+        "marrow-fieldworks",
+        "marrow-agrisupply"
+      ],
+      "intent": "mixed"
+    },
+    "verifier": {
+      "oid": "e2",
+      "entity": "marrow-fieldworks"
+    },
+    "agree": false,
+    "context": "7| \n8| [09:14] june: hey quick q on that renewal sig from yest (Apr 22)—i'm closing out the CRM task for Tobias's dealer account and it just says \"Marrow\" in the header lol. does \"Marrow\" mean the parent or Agrisupply??\n9| ",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "ent:contracts/2025-03-03-tsp-of-2025:e5",
+    "lane": "entity-mentions",
+    "slug": "contracts/2025-03-03-tsp-of-2025",
+    "split": "dev",
+    "planned": {
+      "surface": "TP",
+      "line": 33,
+      "entity": null,
+      "candidates": [
+        "tansley-parcel",
+        "tansleigh"
+      ],
+      "intent": null
+    },
+    "verifier": {
+      "oid": "e5",
+      "entity": "tansleigh"
+    },
+    "agree": false,
+    "context": "32| * **Subscribed Product:** Pemberline Dock (Enterprise Yard & Dock Scheduling Platform)\n33| * **Customer Account Code:** TSP / TP\n34| * **Subscribed Seats:** 30",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "ent:crm/2026-04-23-marrow-renewal-note:e1",
+    "lane": "entity-mentions",
+    "slug": "crm/2026-04-23-marrow-renewal-note",
+    "split": "dev",
+    "planned": {
+      "surface": "Marrow",
+      "line": 6,
+      "entity": null,
+      "candidates": [
+        "marrow-fieldworks",
+        "marrow-agrisupply"
+      ],
+      "intent": null
+    },
+    "verifier": {
+      "oid": "e1",
+      "entity": "marrow-fieldworks"
+    },
+    "agree": false,
+    "context": "5| ---\n6| # CRM note: Marrow renewal\n7| ",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "ev:emails/2025-09-04-tpx-outage-rca:e-tpx-api-outage",
+    "lane": "timeline",
+    "slug": "emails/2025-09-04-tpx-outage-rca",
+    "split": "dev",
+    "planned": {
+      "date": "2025-09-03",
+      "summary": "Tansley Parcel escalates a carrier-API outage that stalled label printing"
+    },
+    "verifier": {
+      "eid": "e-tpx-api-outage",
+      "present": false,
+      "date": null,
+      "line": 18
+    },
+    "agree": false,
+    "context": "16| Hope you are surviving the Thursday morning rush! And more importantly, hope the Tulsa yard is back to breathing normally today after yesterday's chaos. I promised I would get you the root-cause write-up from our platform folks as soon as they finished their post-mortem coffee, so here is the full scoop on what happened on 3 Sep 2025.\n17| \n18| Basically, at 06:14 CDT yesterday, a routine worker node patch in our US-Central cluster introduced a bad retry loop on the carrier webhook listener inside Pemberline Dock. Whenever an inbound manifest ping timed out—which happens plenty during the 6am shift change—instead of backing off, the service fired immediate duplicate retries. That flooded the queue and locked up the live gate check-in screen for Tansley Parcel until engineering rolled the patch back at 07:48 CDT (ticket #INC-8841). \n19| \n20| I know that ninety-four minutes right at morning dispatch meant your guards at Doors 12 through 18 had to go back to clipboards and radio checks while five linehaul rigs backed up onto the service road. Nobody wants to be out in that humidity squinting at paper BOLs. To make sure this doesn't bite us again, engineering has already capped retry concurrency and split the webhook queue off from the main dock board service.",
+    "adjudicated": "keep"
+  },
+  {
+    "key": "own:emails/2025-12-15-marrow-fieldworks-handoff:marrow-agrisupply",
+    "lane": "ownership",
+    "slug": "emails/2025-12-15-marrow-fieldworks-handoff",
+    "split": "dev",
+    "planned": [
+      {
+        "id": "s-mas-team",
+        "owner": "team-central",
+        "role": "team",
+        "start": "2025-01-06",
+        "end": null
+      }
+    ],
+    "verifier": [
+      {
+        "account": "marrow-agrisupply",
+        "owner": "Unspecified team",
+        "role": "team",
+        "start": null,
+        "end": null,
+        "line": 12
+      }
+    ],
+    "agree": false,
+    "adjudicated": "keep"
+  },
+  {
+    "key": "ent:meetings/2025-04-08-marrow-msa-signing-call:e1",
+    "lane": "entity-mentions",
+    "slug": "meetings/2025-04-08-marrow-msa-signing-call",
+    "split": "dev",
+    "planned": {
+      "surface": "Marrow",
+      "line": 6,
+      "entity": null,
+      "candidates": [
+        "marrow-fieldworks",
+        "marrow-agrisupply"
+      ],
+      "intent": null
+    },
+    "verifier": {
+      "oid": "e1",
+      "entity": "marrow-fieldworks"
+    },
+    "agree": false,
+    "context": "5| ---\n6| # Marrow MSA signing call\n7| ",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "cl:meetings/2025-06-20-marrow-golive-checkin:c-mfw-golive-b",
+    "lane": "changes",
+    "slug": "meetings/2025-06-20-marrow-golive-checkin",
+    "split": "dev",
+    "planned": {
+      "value": "mid-June 2025, the week of the 16th",
+      "attr": "go_live"
+    },
+    "verifier": {
+      "cid": "c-mfw-golive-b",
+      "stated": true,
+      "value": "Go-live happened mid-June 2025, week of the 16th, at 9 dealerships first.",
+      "line": 9
+    },
+    "agree": false,
+    "context": "7| 2025-06-20\n8| \n9| Go-live happened mid-June 2025, week of the 16th, at 9 dealerships first. So, mostly moving!\n10| \n11| Issues:",
+    "adjudicated": "keep"
+  },
+  {
+    "key": "own:notes/2025-05-19-hollis-1on1-tobias:tansleigh",
+    "lane": "ownership",
+    "slug": "notes/2025-05-19-hollis-1on1-tobias",
+    "split": "dev",
+    "planned": [
+      {
+        "id": "s-tsp-hollis",
+        "owner": "hollis-mbeki",
+        "role": "primary",
+        "start": "2025-01-06",
+        "end": "2025-05-19"
+      },
+      {
+        "id": "s-tsp-tobias",
+        "owner": "tobias-rendle",
+        "role": "primary",
+        "start": "2025-05-19",
+        "end": null
+      }
+    ],
+    "verifier": [
+      {
+        "account": "tansleigh",
+        "owner": "Tobias Rendle",
+        "role": "primary",
+        "start": "2025-05-19",
+        "end": null,
+        "line": 9
+      }
+    ],
+    "agree": false,
+    "adjudicated": "keep"
+  },
+  {
+    "key": "own:notes/2025-07-17-tansleigh-onsite:tansleigh",
+    "lane": "ownership",
+    "slug": "notes/2025-07-17-tansleigh-onsite",
+    "split": "dev",
+    "planned": [
+      {
+        "id": "s-tsp-tobias",
+        "owner": "tobias-rendle",
+        "role": "primary",
+        "start": "2025-05-19",
+        "end": null
+      }
+    ],
+    "verifier": [
+      {
+        "account": "tansleigh",
+        "owner": null,
+        "role": "unclear",
+        "start": null,
+        "end": null,
+        "line": 18
+      }
+    ],
+    "agree": false,
+    "adjudicated": "drop"
+  },
+  {
+    "key": "ev:tickets/2026-06-09-mas-new-stores:e-mas-store-rollout",
+    "lane": "timeline",
+    "slug": "tickets/2026-06-09-mas-new-stores",
+    "split": "dev",
+    "planned": {
+      "date": "2026-06-09",
+      "summary": "Marrow Agrisupply escalates slow rollout to its new stores"
+    },
+    "verifier": {
+      "eid": "e-mas-store-rollout",
+      "present": false,
+      "date": null,
+      "line": 20
+    },
+    "agree": false,
+    "context": "18| ## Update log\n19| \n20| **Jun 9th, 9:10 a.m.** — Opened onboarding ticket for six new Marrow Agrisupply stores. Received the receiving-team roster and store address sheet. Working labels are North Creek, Elm Junction, Prairie Bend, Mill Crossing, West Ridge, and South Fork; these match the supplied sheet.\n21| \n22| **Jun 9th, 10:35 a.m.** — Created the store setup checklist. North Creek and Elm Junction need separate appointment windows for bagged feed and palletized garden stock. Prairie Bend’s door 2 is marked unavailable during the morning forklift inspection. Added that restriction before importing the schedue.",
+    "adjudicated": "drop"
+  },
+  {
+    "key": "ent:updates/2025-02-10-central-weekly:e13",
+    "lane": "entity-mentions",
+    "slug": "updates/2025-02-10-central-weekly",
+    "split": "dev",
+    "planned": {
+      "surface": "Marrow",
+      "line": 24,
+      "entity": null,
+      "candidates": [
+        "marrow-fieldworks",
+        "marrow-agrisupply"
+      ],
+      "intent": null
+    },
+    "verifier": {
+      "oid": "e13",
+      "entity": "marrow-fieldworks"
+    },
+    "agree": false,
+    "context": "23| * **Tansleigh Packaging:** The Ohio Valley corrugated facility is adjusting its Tuesday morning receiving windows to stop flatbeds from queuing onto County Road 9. Hollis's packaging account requested a custom CSV export for dock doors 12 through 16 to track bale-unloading durations. \n24| * **Marrow Fieldworks & Marrow Agrisupply:** The Marrow MSA draft is currently in progress with June Osei-Lark reviewing the redlines from Friday. Meanwhile, on the retail side, the Central team's ag account reported a formatting glitch in the automated Weekly Yard Detention PDF when fertilizer tankers hold overnight at the Salina store. Tobias Rendle is reproducing the report filter in staging today and will send the corrected template by 12 Feb 2025.\n25| ",
+    "adjudicated": "drop"
+  },
+  {
+    "key": "cl:updates/2025-06-16-central-weekly:c-mfw-golive-a",
+    "lane": "changes",
+    "slug": "updates/2025-06-16-central-weekly",
+    "split": "dev",
+    "planned": {
+      "value": "June 2025",
+      "attr": "go_live"
+    },
+    "verifier": {
+      "cid": "c-mfw-golive-a",
+      "stated": true,
+      "value": "Marrow Fieldworks goes live in 2025-06.",
+      "line": 12
+    },
+    "agree": false,
+    "context": "10| ## Marrow Fieldworks — June launch\n11| \n12| - Marrow Fieldworks goes live in 2025-06. This week’s work is focused on making the first operating shift straightforward: checking the appointment import, walking through an early arrival, and making sure the receiving desk can find the day’s exceptions without opening several separate views.\n13| - Pree's dealer account needs one more rehearsal of the late-truck workflow before launch. The test should start with a driver arriving after the planned window and end with the receiving clerk moving the appointment without losing the original arrival note.\n14| - The door labels in the rehearsal file still mix “Door 4” and “D04.” I have asked the implementation team to use the labels posted above the physical doors, then rerun the daily schedule export. This is a small cleanup, but it matters when a shift lead is reading a printed sheet at the desk.",
+    "adjudicated": "keep"
+  },
+  {
+    "key": "ev:updates/2025-09-08-central-weekly:e-tpx-api-outage",
+    "lane": "timeline",
+    "slug": "updates/2025-09-08-central-weekly",
+    "split": "dev",
+    "planned": {
+      "date": "2025-09-03",
+      "summary": "Tansley Parcel escalates a carrier-API outage that stalled label printing"
+    },
+    "verifier": {
+      "eid": "e-tpx-api-outage",
+      "present": false,
+      "date": null,
+      "line": 12
+    },
+    "agree": false,
+    "context": "10| \n11| ### Carrier-API Outage Escalation (September 3, 2025)\n12| * On September 3, 2025, an upstream certificate change broke the carrier-API webhook for Pree's parcel account, halting automated gate check-ins across their South Central cross-docks during the Wednesday twilight sort.\n13| * At Tansley Parcel, yard clerks at the Little Rock and Shreveport hubs had to key in trailer arrivals manually on Docks 14 through 28 for nearly four hours, creating a fifteen-truck queue out to the frontage road.\n14| * Lev Arkadin escalated the ticket (INC-44912) after linehaul drivers missed three scheduled departure cutoffs and detention logs failed to sync back to their dispatch board.",
+    "adjudicated": "keep"
+  },
+  {
+    "key": "ent:accounts/pellow-home-living:e9",
+    "lane": "entity-mentions",
+    "slug": "accounts/pellow-home-living",
+    "split": "heldout",
+    "planned": {
+      "surface": "PHL",
+      "line": 14,
+      "entity": "covey-lark",
+      "candidates": [
+        "pellucid",
+        "covey-lark"
+      ],
+      "intent": "covey-lark"
+    },
+    "verifier": {
+      "oid": "e9",
+      "entity": "pellucid"
+    },
+    "agree": false,
+    "context": "13| * **Sector / Region:** Home goods retailer, Mid-Atlantic. \n14| * **Codes:** Old code CLR, new code PHL. (Yes PHL is also the code for Pellucid Harbor Logistics, watch the dropdowns when filing tix).\n15| * **AM:** Sofia Marchetti (since 2025-01).",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "own:accounts/pellow-home-living:covey-lark",
+    "lane": "ownership",
+    "slug": "accounts/pellow-home-living",
+    "split": "heldout",
+    "planned": [
+      {
+        "id": "s-clr-sofia",
+        "owner": "sofia-marchetti",
+        "role": "primary",
+        "start": "2025-01-06",
+        "end": null
+      }
+    ],
+    "verifier": [
+      {
+        "account": "covey-lark",
+        "owner": "Sofia Marchetti",
+        "role": "primary",
+        "start": null,
+        "end": null,
+        "line": 15
+      }
+    ],
+    "agree": false,
+    "adjudicated": "keep"
+  },
+  {
+    "key": "own:accounts/saltmarsh-provisions:saltmarsh",
+    "lane": "ownership",
+    "slug": "accounts/saltmarsh-provisions",
+    "split": "heldout",
+    "planned": [
+      {
+        "id": "s-smp-sofia",
+        "owner": "sofia-marchetti",
+        "role": "primary",
+        "start": null,
+        "end": "2025-10-06"
+      },
+      {
+        "id": "s-smp-bettina",
+        "owner": "bettina-kroll",
+        "role": "primary",
+        "start": "2025-10-06",
+        "end": null
+      }
+    ],
+    "verifier": [
+      {
+        "account": "saltmarsh",
+        "owner": "Sofia Marchetti",
+        "role": "primary",
+        "start": null,
+        "end": "2025-10-06",
+        "line": 16
+      },
+      {
+        "account": "saltmarsh",
+        "owner": null,
+        "role": "primary",
+        "start": "2025-10-06",
+        "end": null,
+        "line": 16
+      }
+    ],
+    "agree": false,
+    "adjudicated": "keep"
+  },
+  {
+    "key": "ent:agent-notes/2026-05-18-coastal-coverage:e3",
+    "lane": "entity-mentions",
+    "slug": "agent-notes/2026-05-18-coastal-coverage",
+    "split": "heldout",
+    "planned": {
+      "surface": "PHL",
+      "line": 16,
+      "entity": null,
+      "candidates": [
+        "pellucid",
+        "covey-lark"
+      ],
+      "intent": null
+    },
+    "verifier": {
+      "oid": "e3",
+      "entity": "none",
+      "note": "Refers to the shorthand 'PHL' itself as shared between two accounts (covey-lark and pellucid), not a single entity."
+    },
+    "agree": false,
+    "context": "15| - Saltmarsh Provisions has a separate operational follow-up with Corinne Ashdown. Nothing in that thread needs to be folded into the retail handoff.\n16| - I have separated the two PHL references in the digest below. The shorthand is appearing in both the retail notes and the port-logistics search results.\n17| ",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "ent:agent-notes/coastal-cheatsheet:e2",
+    "lane": "entity-mentions",
+    "slug": "agent-notes/coastal-cheatsheet",
+    "split": "heldout",
+    "planned": {
+      "surface": "PHL",
+      "line": 18,
+      "entity": null,
+      "candidates": [
+        "pellucid",
+        "covey-lark"
+      ],
+      "intent": null
+    },
+    "verifier": {
+      "oid": "e2",
+      "entity": "pellucid"
+    },
+    "agree": false,
+    "context": "17| **Active Customer Footprint (Coastal)**\n18| * **Pellucid Harbor Logistics (PHL):** Port drayage and terminal logistics, Gulf Coast. Primary friction point is chassis pool validation at Gate 4 during shift change. Ticket #4419 remains open regarding the `Yard_Dwell_Summary` report timing out when filtered by container length.\n19| * **Driftmoor Marine Freight (DMF):** Marine freight and barge operator, Puget Sound. Utilizing Pemberline Dock for slip and ramp scheduling. Tide-table import macro failed on Terminal B; engineering provided a manual CSV patch for the night dispatcher.",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "ent:agent-notes/coastal-cheatsheet:e10",
+    "lane": "entity-mentions",
+    "slug": "agent-notes/coastal-cheatsheet",
+    "split": "heldout",
+    "planned": {
+      "surface": "PHL",
+      "line": 21,
+      "entity": null,
+      "candidates": [
+        "pellucid",
+        "covey-lark"
+      ],
+      "intent": null
+    },
+    "verifier": {
+      "oid": "e10",
+      "entity": "covey-lark"
+    },
+    "agree": false,
+    "context": "20| * **Saltmarsh Provisions (SMP):** Regional grocery distributor, Lowcountry. Main contact is Corinne Ashdown, VP Operations. Cold-storage bays (Doors 12–18) require strict pre-cooling check-ins before reefers are assigned a dock door. Corinne Ashdown requested an alert whenever a carrier misses a reefer temp check on Sofia's grocery account.\n21| * **Covey & Lark Retail (Covey / CLR / PHL):** Home goods retailer, Mid-Atlantic. Note: internal systems occasionally collide on the \"PHL\" code between Covey & Lark Retail and Pellucid Harbor Logistics; verify org ID before running bulk seat audits.\n22| ",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "ent:agent-notes/coastal-cheatsheet:e11",
+    "lane": "entity-mentions",
+    "slug": "agent-notes/coastal-cheatsheet",
+    "split": "heldout",
+    "planned": {
+      "surface": "PHL",
+      "line": 21,
+      "entity": null,
+      "candidates": [
+        "pellucid",
+        "covey-lark"
+      ],
+      "intent": null
+    },
+    "verifier": {
+      "oid": "e11",
+      "entity": "none",
+      "note": "This occurrence explicitly describes a code shared by Covey & Lark and Pellucid, rather than uniquely identifying either company."
+    },
+    "agree": false,
+    "context": "20| * **Saltmarsh Provisions (SMP):** Regional grocery distributor, Lowcountry. Main contact is Corinne Ashdown, VP Operations. Cold-storage bays (Doors 12–18) require strict pre-cooling check-ins before reefers are assigned a dock door. Corinne Ashdown requested an alert whenever a carrier misses a reefer temp check on Sofia's grocery account.\n21| * **Covey & Lark Retail (Covey / CLR / PHL):** Home goods retailer, Mid-Atlantic. Note: internal systems occasionally collide on the \"PHL\" code between Covey & Lark Retail and Pellucid Harbor Logistics; verify org ID before running bulk seat audits.\n22| ",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "ent:chats/2026-02-17-phl-collision:e3",
+    "lane": "entity-mentions",
+    "slug": "chats/2026-02-17-phl-collision",
+    "split": "heldout",
+    "planned": {
+      "surface": "PHL",
+      "line": 9,
+      "entity": null,
+      "candidates": [
+        "pellucid",
+        "covey-lark"
+      ],
+      "intent": "mixed"
+    },
+    "verifier": {
+      "oid": "e3",
+      "entity": "none",
+      "note": "Used as a filter string that returns both covey-lark and pellucid"
+    },
+    "agree": false,
+    "context": "8| \n9| [09:12] kwame: Yesterday’s rename from Covey & Lark Retail to Pellow Home Living has improved the morning report: filtering “PHL” now returns both Pellow Home Living and Pellucid Harbor Logistics. Two businesses, one acronym. Efficient.\n10| ",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "ent:chats/2026-02-17-phl-collision:e6",
+    "lane": "entity-mentions",
+    "slug": "chats/2026-02-17-phl-collision",
+    "split": "heldout",
+    "planned": {
+      "surface": "PHL",
+      "line": 11,
+      "entity": null,
+      "candidates": [
+        "pellucid",
+        "covey-lark"
+      ],
+      "intent": "mixed"
+    },
+    "verifier": {
+      "oid": "e6",
+      "entity": "covey-lark"
+    },
+    "agree": false,
+    "context": "10| \n11| [09:14] sofia: PHL with the Mid-Atlantic home goods appointments is Pellow. The Gulf Coast terminal rows are Pellucid Harbor Logistics.\n12| ",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "ent:chats/2026-02-17-phl-collision:e9",
+    "lane": "entity-mentions",
+    "slug": "chats/2026-02-17-phl-collision",
+    "split": "heldout",
+    "planned": {
+      "surface": "PHL",
+      "line": 17,
+      "entity": null,
+      "candidates": [
+        "pellucid",
+        "covey-lark"
+      ],
+      "intent": "mixed"
+    },
+    "verifier": {
+      "oid": "e9",
+      "entity": "none",
+      "note": "Refers to the ambiguous acronym itself as a joke ('please hunt labels')"
+    },
+    "agree": false,
+    "context": "16| \n17| [09:18] kwame: I’ll fix the terminal view. Until then, PHL means “please hunt labels.”\n18| ",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "ent:contracts/2025-12-15-phl-a1-unsigned:e2",
+    "lane": "entity-mentions",
+    "slug": "contracts/2025-12-15-phl-a1-unsigned",
+    "split": "heldout",
+    "planned": {
+      "surface": "PHL",
+      "line": 11,
+      "entity": null,
+      "candidates": [
+        "pellucid",
+        "covey-lark"
+      ],
+      "intent": null
+    },
+    "verifier": {
+      "oid": "e2",
+      "entity": "pellucid"
+    },
+    "agree": false,
+    "context": "10| **Preparation Date:** 2025-12-15  \n11| **Reference:** PHL-AMD-001  \n12| ",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "ent:contracts/2026-02-19-phl-renewal-2026:e3",
+    "lane": "entity-mentions",
+    "slug": "contracts/2026-02-19-phl-renewal-2026",
+    "split": "heldout",
+    "planned": {
+      "surface": "PHL",
+      "line": 40,
+      "entity": null,
+      "candidates": [
+        "pellucid",
+        "covey-lark"
+      ],
+      "intent": null
+    },
+    "verifier": {
+      "oid": "e3",
+      "entity": "pellucid"
+    },
+    "agree": false,
+    "context": "39| \n40| 4.2. All fees are stated and payable in United States Dollars (USD). Invoicing and remittance shall be processed via wire transfer or ACH to the remittance account designated on Provider's invoice, referencing Customer Account Code PHL and Procurement Routing Ticket #PHL-8841-R.\n41| ",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "ent:contracts/2026-02-19-phl-renewal-2026:e4",
+    "lane": "entity-mentions",
+    "slug": "contracts/2026-02-19-phl-renewal-2026",
+    "split": "heldout",
+    "planned": {
+      "surface": "PHL",
+      "line": 40,
+      "entity": null,
+      "candidates": [
+        "pellucid",
+        "covey-lark"
+      ],
+      "intent": null
+    },
+    "verifier": {
+      "oid": "e4",
+      "entity": "pellucid"
+    },
+    "agree": false,
+    "context": "39| \n40| 4.2. All fees are stated and payable in United States Dollars (USD). Invoicing and remittance shall be processed via wire transfer or ACH to the remittance account designated on Provider's invoice, referencing Customer Account Code PHL and Procurement Routing Ticket #PHL-8841-R.\n41| ",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "ent:contracts/2026-03-25-clr-renewal-2026:e3",
+    "lane": "entity-mentions",
+    "slug": "contracts/2026-03-25-clr-renewal-2026",
+    "split": "heldout",
+    "planned": {
+      "surface": "PHL",
+      "line": 9,
+      "entity": null,
+      "candidates": [
+        "pellucid",
+        "covey-lark"
+      ],
+      "intent": null
+    },
+    "verifier": {
+      "oid": "e3",
+      "entity": "covey-lark"
+    },
+    "agree": false,
+    "context": "8| \n9| **Document Reference:** ROF-PHL-2026-04\n10| **Drafted Date:** 2026-03-16",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "ent:contracts/2026-09-29-phl-a2:e3",
+    "lane": "entity-mentions",
+    "slug": "contracts/2026-09-29-phl-a2",
+    "split": "heldout",
+    "planned": {
+      "surface": "PHL",
+      "line": 46,
+      "entity": null,
+      "candidates": [
+        "pellucid",
+        "covey-lark"
+      ],
+      "intent": null
+    },
+    "verifier": {
+      "oid": "e3",
+      "entity": "pellucid"
+    },
+    "agree": false,
+    "context": "45| \n46| **4.3.** **Currency and Invoicing.** All monetary amounts stated in this Amendment are denominated in United States Dollars (USD). Invoices referencing the amended pricing set forth in this Section 4 shall be directed to Customer's accounts payable registry at the Port of Galveston terminal office, referencing vendor portal routing code `PHL-AP-DOCK-02`, and shall be issued in accordance with the billing schedule governed by the Prior Agreement.\n47| ",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "ent:contracts/2026-09-29-phl-a2:e4",
+    "lane": "entity-mentions",
+    "slug": "contracts/2026-09-29-phl-a2",
+    "split": "heldout",
+    "planned": {
+      "surface": "PHL",
+      "line": 50,
+      "entity": null,
+      "candidates": [
+        "pellucid",
+        "covey-lark"
+      ],
+      "intent": null
+    },
+    "verifier": {
+      "oid": "e4",
+      "entity": "pellucid"
+    },
+    "agree": false,
+    "context": "49| \n50| **5.1.** The pricing set forth in Section 4 applies to Customer's existing production tenant (`phl-gulf-prod-01`) hosted via Pemberline's designated cloud infrastructure provider, including standard access to the Gatehouse Check-In Module, the Automated Bolster & Chassis Manifest export (`Report_ID: PHL_DRAY_404`), and the TWIC badge verification log fields configured under implementation ticket `DOCK-8819`.\n51| ",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "own:emails/2025-10-01-saltmarsh-to-bettina:covey-lark",
+    "lane": "ownership",
+    "slug": "emails/2025-10-01-saltmarsh-to-bettina",
+    "split": "heldout",
+    "planned": [
+      {
+        "id": "s-clr-sofia",
+        "owner": "sofia-marchetti",
+        "role": "primary",
+        "start": "2025-01-06",
+        "end": null
+      }
+    ],
+    "verifier": [
+      {
+        "account": "covey-lark",
+        "owner": "Sofia Marchetti",
+        "role": "primary",
+        "start": null,
+        "end": null,
+        "line": 20
+      }
+    ],
+    "agree": false,
+    "adjudicated": "keep"
+  },
+  {
+    "key": "ent:emails/2026-03-10-pellucid-monthly-fee:e6",
+    "lane": "entity-mentions",
+    "slug": "emails/2026-03-10-pellucid-monthly-fee",
+    "split": "heldout",
+    "planned": {
+      "surface": "PHL",
+      "line": 37,
+      "entity": null,
+      "candidates": [
+        "pellucid",
+        "covey-lark"
+      ],
+      "intent": null
+    },
+    "verifier": {
+      "oid": "e6",
+      "entity": "pellucid"
+    },
+    "agree": false,
+    "context": "36| \n37| Can you confirm you're okay with flipping PHL to monthly, and let me know the rough monthly figure I should plug into the draft amendment for them?\n38| ",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "ent:emails/2026-04-24-sofia-leave-coverage:e4",
+    "lane": "entity-mentions",
+    "slug": "emails/2026-04-24-sofia-leave-coverage",
+    "split": "heldout",
+    "planned": {
+      "surface": "PHL",
+      "line": 18,
+      "entity": null,
+      "candidates": [
+        "pellucid",
+        "covey-lark"
+      ],
+      "intent": null
+    },
+    "verifier": {
+      "oid": "e4",
+      "entity": "covey-lark"
+    },
+    "agree": false,
+    "context": "17| \n18| I’ll handle customer replies and keep the running notes in the Pellow Home Living handover page. Please use the full account name in subject lines, not PHL. Too easy to grab the wrong thread when rushing.\n19| ",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "ent:meetings/2025-11-20-pellucid-cutover-wrapup:e3",
+    "lane": "entity-mentions",
+    "slug": "meetings/2025-11-20-pellucid-cutover-wrapup",
+    "split": "heldout",
+    "planned": {
+      "surface": "PHL",
+      "line": 11,
+      "entity": null,
+      "candidates": [
+        "pellucid",
+        "covey-lark"
+      ],
+      "intent": null
+    },
+    "verifier": {
+      "oid": "e3",
+      "entity": "pellucid"
+    },
+    "agree": false,
+    "context": "10| ## Notes\n11| * Pellucid Harbor Logistics (PHL) went live on Pemberline Dock across the East Barge Terminal gates at 04:00 CST. Nobody set anything on fire, which passes for a miracle on the Gulf Coast.\n12| * First-shift drayage drivers managed to check in at Gate 4 without calling dispatch to complain about the kiosk font size. ",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "ent:meetings/2025-11-20-pellucid-cutover-wrapup:e4",
+    "lane": "entity-mentions",
+    "slug": "meetings/2025-11-20-pellucid-cutover-wrapup",
+    "split": "heldout",
+    "planned": {
+      "surface": "PHL",
+      "line": 17,
+      "entity": null,
+      "candidates": [
+        "pellucid",
+        "covey-lark"
+      ],
+      "intent": null
+    },
+    "verifier": {
+      "oid": "e4",
+      "entity": "pellucid"
+    },
+    "agree": false,
+    "context": "16| ## Action Items\n17| * **Kwame:** Send the updated Gate 4 barcode scanner cheat sheet to the PHL night-shift supervisor before the 18:00 handoff.\n18| * **Bettina:** Nag engineering on ticket `PD-8841` so the CSV importer stops fainting every time it sees a trailing space.",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "ent:notes/2025-12-08-bettina-pellucid-cutover-recap:e3",
+    "lane": "entity-mentions",
+    "slug": "notes/2025-12-08-bettina-pellucid-cutover-recap",
+    "split": "heldout",
+    "planned": {
+      "surface": "PHL",
+      "line": 13,
+      "entity": null,
+      "candidates": [
+        "pellucid",
+        "covey-lark"
+      ],
+      "intent": null
+    },
+    "verifier": {
+      "oid": "e3",
+      "entity": "pellucid"
+    },
+    "agree": false,
+    "context": "12| \n13| Anyway, just for the historical record on Pellucid Harbor Logistics: even though the official handoff was November 3, I actually kept running PHL day to day through November 21 just to get the terminal cutover across the finish line without muddying the waters mid-migration. Their night dispatcher Hector at the Beaumont barge slip was panicking abt how Pemberline Dock handles chassis pool holds on double-booked gates (ticket #PD-8841 if anyone cares to look at the screenshots, total mess on Gate 4B), and it made zero sense to make them re-explain their weird drayage workarounds to a new face four days before go-live. Plus we still had that lingering CSV import bug on the Berth 2 yard map that neededbabysitting during the 04:00 shift change.\n14| ",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "ev:notes/2025-12-08-bettina-pellucid-cutover-recap:e-phl-cutover",
+    "lane": "timeline",
+    "slug": "notes/2025-12-08-bettina-pellucid-cutover-recap",
+    "split": "heldout",
+    "planned": {
+      "date": "2025-11-20",
+      "summary": "Pellucid terminal cutover weekend wrap-up"
+    },
+    "verifier": {
+      "eid": "e-phl-cutover",
+      "present": true,
+      "date": "2025-11-21",
+      "line": 15
+    },
+    "agree": false,
+    "context": "13| Anyway, just for the historical record on Pellucid Harbor Logistics: even though the official handoff was November 3, I actually kept running PHL day to day through November 21 just to get the terminal cutover across the finish line without muddying the waters mid-migration. Their night dispatcher Hector at the Beaumont barge slip was panicking abt how Pemberline Dock handles chassis pool holds on double-booked gates (ticket #PD-8841 if anyone cares to look at the screenshots, total mess on Gate 4B), and it made zero sense to make them re-explain their weird drayage workarounds to a new face four days before go-live. Plus we still had that lingering CSV import bug on the Berth 2 yard map that neededbabysitting during the 04:00 shift change.\n14| \n15| Once the Friday afternoon drayage wave cleared on Nov 21 and the terminal supervisor signed off on the gate kiosk feeds, I stepped out of the daily standups. Kwame Adjei-Rowe fully took over on November 22. It is officially Kwame's Gulf Coast account now, and he's already dealing with their container yard expansion questions for Q1—honestly glad that's off my plate lol. I muted the #phl-cutover-war-room channel this morning, so ping Kwame if Hector starts emailing about the Gate 4B printer mapping again!\n16| ",
+    "adjudicated": "drop"
+  },
+  {
+    "key": "ent:updates/2025-10-06-coastal-weekly:e6",
+    "lane": "entity-mentions",
+    "slug": "updates/2025-10-06-coastal-weekly",
+    "split": "heldout",
+    "planned": {
+      "surface": "PHL",
+      "line": 19,
+      "entity": null,
+      "candidates": [
+        "pellucid",
+        "covey-lark"
+      ],
+      "intent": null
+    },
+    "verifier": {
+      "oid": "e6",
+      "entity": "pellucid"
+    },
+    "agree": false,
+    "context": "18| * **Covey & Lark Retail (CLR):** The Mid-Atlantic distribution center in Hagerstown reported a browser timeout on the carrier self-scheduling portal during peak afternoon check-ins. Sofia Marchetti logged ticket #PD-8841 with engineering to review the appointment-slot lock timer for the furniture bays. Engineering deployed a configuration patch at 11:30 AM today, and the afternoon receiving shift on the account Sofia runs processed thirty-two dry vans through Doors 14 through 22 without further lockups.\n19| * **Pellucid Harbor Logistics (PHL):** Bettina Kroll reviewed the September yard dwell report with the terminal dispatcher in Mobile. Chassis pool turn times at Gate 3 improved by eleven minutes following the recent barcode scanner firmware update. A follow-up check on the night-shift gate kiosks is set for October 13, 2025.\n20| * **Driftmoor Marine Freight (DMF):** Kwame Adjei-Rowe is coordinating with the Tacoma barge terminal supervisor on a custom CSV export for tide-window dock assignments. The site requested that the \"Vessel ETA\" column appear adjacent to the staging lane assignment on the morning yard sheet.",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "ent:updates/2025-12-15-coastal-weekly:e2",
+    "lane": "entity-mentions",
+    "slug": "updates/2025-12-15-coastal-weekly",
+    "split": "heldout",
+    "planned": {
+      "surface": "PHL",
+      "line": 15,
+      "entity": null,
+      "candidates": [
+        "pellucid",
+        "covey-lark"
+      ],
+      "intent": null
+    },
+    "verifier": {
+      "oid": "e2",
+      "entity": "pellucid"
+    },
+    "agree": false,
+    "context": "14| | :--- | :--- | :--- | :--- |\n15| | Pellucid Harbor Logistics (PHL) | Kwame Adjei-Rowe | Yellow | PD-4491: Gate 7 RFID reader timeout |\n16| | Saltmarsh Provisions (SMP) | Bettina Kroll | Green | Cold-storage Door 12 rules updated |",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "op:updates/2026-05-11-coastal-weekly#m1",
+    "lane": "owner-phrases",
+    "slug": "updates/2026-05-11-coastal-weekly",
+    "split": "heldout",
+    "planned": {
+      "surface": "the accounts Bettina is covering",
+      "accounts": [
+        "covey-lark"
+      ],
+      "reason": "acting_cover"
+    },
+    "verifier": {
+      "mid": "updates/2026-05-11-coastal-weekly#m1",
+      "refers_to_customer_account": true,
+      "accounts": [
+        "saltmarsh",
+        "covey-lark"
+      ],
+      "reading": "names the account(s) via who owns/covers/used to own them",
+      "note": "Bettina is Saltmarsh's primary owner and is acting cover for Pellow Home Living on this date."
+    },
+    "agree": false,
+    "context": "20| ### Operational Notes\n21| \n22| * **Coverage:** Bettina Kroll is handling all incoming queue items for the accounts Bettina is covering. On Friday May 8, the Hagerstown distribution center reported that second-shift receivers were locked out of the live yard board after a browser update. Support cleared the cached credentials, and Sofia's retail account has now resumed normal dock scheduling for the morning LTL arrivals.\n23| * **Saltmarsh Provisions:** Corinne Ashdown requested an adjustment to the detention alert threshold on the reefers queue at the Charleston depot. Bettina Kroll configured the 45-minute warning rule in the sandbox environment and will demonstrate it during Thursday's check-in.\n24| * **Gulf & Sound Updates:** Kwame Adjei-Rowe noted that Pellucid Harbor Logistics completed driver kiosk training at Gate B without issues. Driftmoor Marine Freight asked whether the `Vessel_Tide_Sync` report can be automated before Memorial Day weekend; Kwame is checking with product engineering.",
+    "adjudicated": "keep"
+  },
+  {
+    "key": "xop:accounts/orlavine-medical-supply:11:I manage this account (Nadia Fennimore, Strategic Accounts).",
+    "lane": "owner-phrases",
+    "slug": "accounts/orlavine-medical-supply",
+    "split": "heldout",
+    "planned": null,
+    "verifier": {
+      "line": 11,
+      "phrase": "I manage this account (Nadia Fennimore, Strategic Accounts).",
+      "accounts": [
+        "orlavine"
+      ],
+      "note": "Nadia explicitly identifies herself as the account manager for the page's named customer."
+    },
+    "agree": false,
+    "context": "9| **Account Code:** OMS  \n10| **HQ:** Boise (Mountain West)  \n11| **Account Manager:** I manage this account (Nadia Fennimore, Strategic Accounts).  \n12| \n13| Orlavine Medical Supply is a regional medical supply distributor. This account is not to be confused with Orlavene Health, which is a hospital group and not a customer.",
+    "adjudicated": "reject"
+  },
+  {
+    "key": "own:accounts/orlavine-medical-supply:orlavine",
+    "lane": "ownership",
+    "slug": "accounts/orlavine-medical-supply",
+    "split": "heldout",
+    "planned": [
+      {
+        "id": "s-oms-nadia",
+        "owner": "nadia-fennimore",
+        "role": "primary",
+        "start": "2025-01-06",
+        "end": "2025-08-11"
+      }
+    ],
+    "verifier": [
+      {
+        "account": "orlavine",
+        "owner": "Nadia Fennimore",
+        "role": "primary",
+        "start": null,
+        "end": null,
+        "line": 11
+      }
+    ],
+    "agree": false,
+    "adjudicated": "keep"
+  },
+  {
+    "key": "own:accounts/quillfeather-outfitters:quillfeather",
+    "lane": "ownership",
+    "slug": "accounts/quillfeather-outfitters",
+    "split": "heldout",
+    "planned": [
+      {
+        "id": "s-qfo-team",
+        "owner": "team-strategic",
+        "role": "team",
+        "start": "2025-01-06",
+        "end": null
+      }
+    ],
+    "verifier": [
+      {
+        "account": "quillfeather",
+        "owner": "Strategic Accounts pod",
+        "role": "team",
+        "start": null,
+        "end": null,
+        "line": 15
+      }
+    ],
+    "agree": false,
+    "adjudicated": "keep"
+  },
+  {
+    "key": "ent:agent-notes/2025-07-07-strategic-digest:e1",
+    "lane": "entity-mentions",
+    "slug": "agent-notes/2025-07-07-strategic-digest",
+    "split": "heldout",
+    "planned": {
+      "surface": "Vantorre",
+      "line": 9,
+      "entity": null,
+      "candidates": [
+        "vantorre-group",
+        "vantorre-mobility"
+      ],
+      "intent": null
+    },
+    "verifier": {
+      "oid": "e1",
+      "entity": "vantorre-group",
+      "note": "Refers to the Vantorre MSA, with signing packet filed under Vantorre Group (parent company)."
+    },
+    "agree": false,
+    "context": "8| \n9| The Vantorre MSA is live.\n10| ",
+    "adjudicated": "drop"
+  },
+  {
+    "key": "ent:agent-notes/2026-04-27-strategic-digest:e1",
+    "lane": "entity-mentions",
+    "slug": "agent-notes/2026-04-27-strategic-digest",
+    "split": "heldout",
+    "planned": {
+      "surface": "Vantorre",
+      "line": 8,
+      "entity": null,
+      "candidates": [
+        "vantorre-group",
+        "vantorre-mobility"
+      ],
+      "intent": null
+    },
+    "verifier": {
+      "oid": "e1",
+      "entity": "none",
+      "note": "Vantorre is a shared name for the parent and subsidiary, and the steering committee briefing covers both without uniquely identifying one."
+    },
+    "agree": false,
+    "context": "7| \n8| Good morning, Ruth. Below is your scheduled briefing for the Vantorre steering committee tomorrow.\n9| ",
+    "adjudicated": "drop"
+  },
+  {
+    "key": "ent:contracts/2025-09-29-oms-of-2025:e8",
+    "lane": "entity-mentions",
+    "slug": "contracts/2025-09-29-oms-of-2025",
+    "split": "heldout",
+    "planned": {
+      "surface": "OMS",
+      "line": 63,
+      "entity": "orlavine",
+      "candidates": [
+        "orlavine"
+      ],
+      "intent": null
+    },
+    "verifier": {
+      "oid": "e8",
+      "entity": "none",
+      "note": "Part of sample appointment reference code OMS-TEST-014"
+    },
+    "agree": false,
+    "context": "62| \n63| The proposed “Daily Door Queue” report shall show the appointment reference, carrier name, scheduled arrival, assigned door, and arrival status. A sample appointment, OMS-TEST-014, is marked as a training entry so that receiving personnel do not mistake it for an actual inbound load.\n64| ",
+    "adjudicated": "keep"
+  },
+  {
+    "key": "own:emails/2025-01-06-strategic-pod-assignments:quillfeather",
+    "lane": "ownership",
+    "slug": "emails/2025-01-06-strategic-pod-assignments",
+    "split": "heldout",
+    "planned": [
+      {
+        "id": "s-qfo-team",
+        "owner": "team-strategic",
+        "role": "team",
+        "start": "2025-01-06",
+        "end": null
+      }
+    ],
+    "verifier": [
+      {
+        "account": "quillfeather",
+        "owner": "Strategic Accounts pod",
+        "role": "team",
+        "start": null,
+        "end": null,
+        "line": 19
+      }
+    ],
+    "agree": false,
+    "adjudicated": "keep"
+  },
+  {
+    "key": "ent:emails/2025-06-12-vantorre-decision-maker:e1",
+    "lane": "entity-mentions",
+    "slug": "emails/2025-06-12-vantorre-decision-maker",
+    "split": "heldout",
+    "planned": {
+      "surface": "Vantorre",
+      "line": 9,
+      "entity": null,
+      "candidates": [
+        "vantorre-group",
+        "vantorre-mobility"
+      ],
+      "intent": null
+    },
+    "verifier": {
+      "oid": "e1",
+      "entity": "vantorre-group"
+    },
+    "agree": false,
+    "context": "8| Date: 2025-06-12\n9| Subject: Vantorre: who signs\n10| ",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "ent:emails/2025-06-12-vantorre-decision-maker:e3",
+    "lane": "entity-mentions",
+    "slug": "emails/2025-06-12-vantorre-decision-maker",
+    "split": "heldout",
+    "planned": {
+      "surface": "Vantorre",
+      "line": 24,
+      "entity": null,
+      "candidates": [
+        "vantorre-group",
+        "vantorre-mobility"
+      ],
+      "intent": null
+    },
+    "verifier": {
+      "oid": "e3",
+      "entity": "vantorre-group"
+    },
+    "agree": false,
+    "context": "23| > Date: 2025-06-11\n24| > Subject: Re: Vantorre: who signs\n25| >",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "ent:emails/2025-06-30-vantorre-msa-executed:e1",
+    "lane": "entity-mentions",
+    "slug": "emails/2025-06-30-vantorre-msa-executed",
+    "split": "heldout",
+    "planned": {
+      "surface": "Vantorre",
+      "line": 6,
+      "entity": null,
+      "candidates": [
+        "vantorre-group",
+        "vantorre-mobility"
+      ],
+      "intent": null
+    },
+    "verifier": {
+      "oid": "e1",
+      "entity": "none",
+      "note": "The enterprise MSA covers both Vantorre Group and Vantorre Mobility; this mention does not identify one account."
+    },
+    "agree": false,
+    "context": "5| ---\n6| # Executed: Vantorre enterprise MSA\n7| ",
+    "adjudicated": "drop"
+  },
+  {
+    "key": "ent:emails/2025-06-30-vantorre-msa-executed:e2",
+    "lane": "entity-mentions",
+    "slug": "emails/2025-06-30-vantorre-msa-executed",
+    "split": "heldout",
+    "planned": {
+      "surface": "Vantorre",
+      "line": 11,
+      "entity": null,
+      "candidates": [
+        "vantorre-group",
+        "vantorre-mobility"
+      ],
+      "intent": null
+    },
+    "verifier": {
+      "oid": "e2",
+      "entity": "none",
+      "note": "The enterprise MSA covers both Vantorre Group and Vantorre Mobility; this mention does not identify one account."
+    },
+    "agree": false,
+    "context": "10| **Date:** 6/30/25, 4:48 PM  \n11| **Subject:** Executed: Vantorre enterprise MSA  \n12| ",
+    "adjudicated": "drop"
+  },
+  {
+    "key": "ent:emails/2025-06-30-vantorre-msa-executed:e3",
+    "lane": "entity-mentions",
+    "slug": "emails/2025-06-30-vantorre-msa-executed",
+    "split": "heldout",
+    "planned": {
+      "surface": "Vantorre",
+      "line": 15,
+      "entity": null,
+      "candidates": [
+        "vantorre-group",
+        "vantorre-mobility"
+      ],
+      "intent": null
+    },
+    "verifier": {
+      "oid": "e3",
+      "entity": "none",
+      "note": "This names the shared enterprise MSA, explicitly covering both accounts."
+    },
+    "agree": false,
+    "context": "14| \n15| Finally across the line. The Vantorre enterprise MSA was signed today, 6/30/25, effective 7/1/25. Covers both Vantorre Group and Vantorre Mobility under the single paper. \n16| ",
+    "adjudicated": "drop"
+  },
+  {
+    "key": "ent:emails/2025-06-30-vantorre-msa-executed:e9",
+    "lane": "entity-mentions",
+    "slug": "emails/2025-06-30-vantorre-msa-executed",
+    "split": "heldout",
+    "planned": {
+      "surface": "Vantorre",
+      "line": 31,
+      "entity": null,
+      "candidates": [
+        "vantorre-group",
+        "vantorre-mobility"
+      ],
+      "intent": null
+    },
+    "verifier": {
+      "oid": "e9",
+      "entity": "vantorre-group"
+    },
+    "agree": false,
+    "context": "30| **---------- Forwarded message ---------**  \n31| **From:** Mateo Quiroga <mquiroga@vantorre.com>  \n32| **Date:** 6/30/25, 4:39 PM  ",
+    "adjudicated": "drop"
+  },
+  {
+    "key": "ent:emails/2025-06-30-vantorre-msa-executed:e10",
+    "lane": "entity-mentions",
+    "slug": "emails/2025-06-30-vantorre-msa-executed",
+    "split": "heldout",
+    "planned": {
+      "surface": "Vantorre",
+      "line": 33,
+      "entity": null,
+      "candidates": [
+        "vantorre-group",
+        "vantorre-mobility"
+      ],
+      "intent": null
+    },
+    "verifier": {
+      "oid": "e10",
+      "entity": "none",
+      "note": "The subject concerns the shared MSA for both Vantorre Group and Vantorre Mobility."
+    },
+    "agree": false,
+    "context": "32| **Date:** 6/30/25, 4:39 PM  \n33| **Subject:** RE: Pemberline Systems / Vantorre — Final MSA for signature  \n34| **To:** June Osei-Lark <joseilark@pemberline.com>  ",
+    "adjudicated": "drop"
+  },
+  {
+    "key": "ent:emails/2026-04-16-vantorre-handoff-correction:e1",
+    "lane": "entity-mentions",
+    "slug": "emails/2026-04-16-vantorre-handoff-correction",
+    "split": "heldout",
+    "planned": {
+      "surface": "Vantorre",
+      "line": 9,
+      "entity": null,
+      "candidates": [
+        "vantorre-group",
+        "vantorre-mobility"
+      ],
+      "intent": null
+    },
+    "verifier": {
+      "oid": "e1",
+      "entity": "vantorre-group"
+    },
+    "agree": false,
+    "context": "8| **Date:** 16 Apr 2026  \n9| **Subject:** Correction: Vantorre handoff date  \n10| ",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "ent:emails/2026-05-20-vantorre-reorg:e1",
+    "lane": "entity-mentions",
+    "slug": "emails/2026-05-20-vantorre-reorg",
+    "split": "heldout",
+    "planned": {
+      "surface": "Vantorre",
+      "line": 9,
+      "entity": null,
+      "candidates": [
+        "vantorre-group",
+        "vantorre-mobility"
+      ],
+      "intent": null
+    },
+    "verifier": {
+      "oid": "e1",
+      "entity": "vantorre-group"
+    },
+    "agree": false,
+    "context": "8| Date: 2026-05-20  \n9| Subject: Vantorre reorg\n10| ",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "ent:emails/2026-06-24-vantorre-renewal-executed:e1",
+    "lane": "entity-mentions",
+    "slug": "emails/2026-06-24-vantorre-renewal-executed",
+    "split": "heldout",
+    "planned": {
+      "surface": "Vantorre",
+      "line": 6,
+      "entity": null,
+      "candidates": [
+        "vantorre-group",
+        "vantorre-mobility"
+      ],
+      "intent": null
+    },
+    "verifier": {
+      "oid": "e1",
+      "entity": "vantorre-group"
+    },
+    "agree": false,
+    "context": "5| ---\n6| # Executed: Vantorre renewal\n7| ",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "ent:emails/2026-06-24-vantorre-renewal-executed:e2",
+    "lane": "entity-mentions",
+    "slug": "emails/2026-06-24-vantorre-renewal-executed",
+    "split": "heldout",
+    "planned": {
+      "surface": "Vantorre",
+      "line": 11,
+      "entity": null,
+      "candidates": [
+        "vantorre-group",
+        "vantorre-mobility"
+      ],
+      "intent": null
+    },
+    "verifier": {
+      "oid": "e2",
+      "entity": "vantorre-group"
+    },
+    "agree": false,
+    "context": "10| **Date:** 24 Jun 2026  \n11| **Subject:** Executed: Vantorre renewal  \n12| ",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "ent:meetings/2025-07-15-vantorre-kickoff:e1",
+    "lane": "entity-mentions",
+    "slug": "meetings/2025-07-15-vantorre-kickoff",
+    "split": "heldout",
+    "planned": {
+      "surface": "Vantorre",
+      "line": 6,
+      "entity": null,
+      "candidates": [
+        "vantorre-group",
+        "vantorre-mobility"
+      ],
+      "intent": null
+    },
+    "verifier": {
+      "oid": "e1",
+      "entity": "vantorre-group"
+    },
+    "agree": false,
+    "context": "5| ---\n6| # Vantorre kickoff\n7| ",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "ent:meetings/2026-04-28-vantorre-steering-committee:e1",
+    "lane": "entity-mentions",
+    "slug": "meetings/2026-04-28-vantorre-steering-committee",
+    "split": "heldout",
+    "planned": {
+      "surface": "Vantorre",
+      "line": 6,
+      "entity": null,
+      "candidates": [
+        "vantorre-group",
+        "vantorre-mobility"
+      ],
+      "intent": null
+    },
+    "verifier": {
+      "oid": "e1",
+      "entity": "vantorre-group"
+    },
+    "agree": false,
+    "context": "5| ---\n6| # Vantorre Q2 steering committee\n7| ",
+    "adjudicated": "relabel"
+  },
+  {
+    "key": "ent:meetings/2026-07-09-vantorre-renewal-debrief:e1",
+    "lane": "entity-mentions",
+    "slug": "meetings/2026-07-09-vantorre-renewal-debrief",
+    "split": "heldout",
+    "planned": {
+      "surface": "Vantorre",
+      "line": 6,
+      "entity": null,
+      "candidates": [
+        "vantorre-group",
+        "vantorre-mobility"
+      ],
+      "intent": null
+    },
+    "verifier": {
+      "oid": "e1",
+      "entity": "vantorre-group"
+    },
+    "agree": false,
+    "context": "5| ---\n6| # Vantorre renewal debrief\n7| ",
+    "adjudicated": "relabel"
+  }
+]

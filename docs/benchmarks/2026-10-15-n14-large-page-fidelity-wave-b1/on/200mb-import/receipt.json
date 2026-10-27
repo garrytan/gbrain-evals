@@ -1,0 +1,1085 @@
+{
+  "cost": {
+    "usd": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "basis": "hermetic: provider keys stripped, keyword search only; the append-cost embedder is an in-process counting fake (no network)"
+  },
+  "delivered_tokens": {
+    "tokens": 0,
+    "basis": "hermetic: provider keys stripped, keyword search only; the append-cost embedder is an in-process counting fake (no network)"
+  },
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "n14-large-page-fidelity",
+  "run_status": "completed",
+  "verdict": "fail",
+  "n_total": 40,
+  "n_scored": 40,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": true,
+  "gbrain_version": "0.60.252.0",
+  "gbrain_pin": "github:garrytan/gbrain#77cf8e1116e9af67c1983adcbb3223b96f0991a5",
+  "execution": {
+    "source_tree": {
+      "sha256": "021a818c9b9b968e4ac9d8ea3d829ad042e792428580bf33d00e4fc2ef972de5",
+      "scheme": "git-index-blob-v1",
+      "files": 14157,
+      "git_head": "00a1cd35026ae5b0ab913b2b3ec9029893bd46ef",
+      "dirty": false
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#77cf8e1116e9af67c1983adcbb3223b96f0991a5",
+      "declared_sha": "77cf8e1116e9af67c1983adcbb3223b96f0991a5",
+      "version": "0.60.252.0",
+      "package_sha256": "4b33f135cb19d06f4c3f7aba1fb790a539862570b24732c081620bc728d2b250",
+      "loaded_git_head": "7f3c9f5f19862372d056c713942564dd165f62ba"
+    }
+  },
+  "resolved_config": {
+    "engine": "pglite-in-memory, one brain per (document, arm) child process",
+    "decide": "off (no key, fresh GBRAIN_HOME)",
+    "caller": "operation handlers with OperationContext { remote: false, sourceId: default }",
+    "tiers": [
+      "200mb"
+    ],
+    "arms": [
+      "native"
+    ],
+    "docs": "all",
+    "seed": 14,
+    "concurrency": 1,
+    "rss_limit_mb": 6144,
+    "generator_version": "n14-large-page-gen/v1",
+    "tier_sizes": {
+      "200mb": {
+        "conversation": 200000000
+      }
+    },
+    "search": "search op (keyword), limit 10; a hit is a result whose stored chunk (content_chunks.chunk_text by chunk_id) holds the needle answer as a whole token, passage at most 65536 bytes",
+    "egress": "largest JSON-RPC text frame of every operation result; cap 1048576 bytes",
+    "reads": "single-page and managed-parts: get_page {slug} of the hit page; native: get_page {slug, body: window, around_chunk_id}; plus one default get_page of the entry page per arm",
+    "append": "single-page: put_page whole page + 1 KB; managed-parts: put_page new part + hub index; native: append_page when it exists",
+    "append_cost": "embedding inputs and estimated tokens (UTF-8 bytes / 4) sent by runEmbedCore({stale: true}) after the append, counted by a fake embed transport; ratio = embed tokens / appended tokens; null when the page has no chunks",
+    "embed_pass_tiers": [
+      "2mb",
+      "20mb"
+    ],
+    "roundtrip": "export (runExport --slug-prefix) then reassemble the body; sha256 against source body + append",
+    "native_capability": {
+      "present": true,
+      "get_page_body": "{\"type\":\"string\",\"enum\":[\"auto\",\"full\",\"none\",\"outline\",\"window\"],\"description\":\"auto: whole up to 256 KB, else outline + window. none: revision + size.\",\"fullSurfaceOnly\":true}",
+      "append_page": false,
+      "upload_session": false,
+      "evidence": "get_page declares body {\"type\":\"string\",\"enum\":[\"auto\",\"full\",\"none\",\"outline\",\"window\"],\"description\":\"auto: whole up to 256 KB, else outline + window. none: revision + size.\",\"fullSurfaceOnly\":true}"
+    },
+    "thresholds": {
+      "native_keyword_recall_floor": 0.9,
+      "append_embed_ratio_max": 3,
+      "native_recall_gap_points_max": 2,
+      "hybrid_recall_min_decile": 0.95
+    },
+    "gbrain_overlay": {
+      "requested": "gbrain@7f3c9f5f19862372d056c713942564dd165f62ba",
+      "ref": "7f3c9f5f19862372d056c713942564dd165f62ba",
+      "commit": "7f3c9f5f19862372d056c713942564dd165f62ba",
+      "tree": "5c4354433a79e37c2037f8d651094e9df22ebde5",
+      "version": "0.60.252.0",
+      "checkout_dirty": false,
+      "verified": {
+        "copy_tree": "5c4354433a79e37c2037f8d651094e9df22ebde5",
+        "tree_matches": true,
+        "symlinks_under_src": 0,
+        "dir_is_realpath": true,
+        "cli_version": "0.60.252.0",
+        "cli_version_matches": true
+      },
+      "copied_not_symlinked": true
+    },
+    "config_overlay": {
+      "pages.segmented_storage": "on"
+    },
+    "native_ingest": "importFromFile(engine, file, <slug>.md, { noEmbed: true, bodyPolicy: readPageBodyPolicy(engine) }); the append re-imports the whole file",
+    "direct_read_agent": "exploratory (Amendment 1): the entry page default get_page also made with remote: true; its frame is reported per arm and is not in the egress count",
+    "hermetic_wall_ms": 27472
+  },
+  "hashes": {
+    "ledger_sha256": "3b390e29422d38420d87a6afc65f8ba424b84717ab36f343bb6e6952d117dc10"
+  },
+  "started_at": "2026-10-16T00:19:13.910Z",
+  "finished_at": "2026-10-16T00:19:43.214Z",
+  "data": {
+    "safety": {
+      "crashes": 0,
+      "responses_over_cap": 0,
+      "roundtrip_byte_loss": 0,
+      "presence_failures": 0
+    },
+    "quality": {
+      "native_append_embed_ratio_max": null,
+      "native_recall_gap_points_max": null
+    },
+    "floor": {
+      "native_keyword_recall_2mb": null
+    },
+    "capability": {
+      "present": true,
+      "get_page_body": "{\"type\":\"string\",\"enum\":[\"auto\",\"full\",\"none\",\"outline\",\"window\"],\"description\":\"auto: whole up to 256 KB, else outline + window. none: revision + size.\",\"fullSurfaceOnly\":true}",
+      "append_page": false,
+      "upload_session": false,
+      "evidence": "get_page declares body {\"type\":\"string\",\"enum\":[\"auto\",\"full\",\"none\",\"outline\",\"window\"],\"description\":\"auto: whole up to 256 KB, else outline + window. none: revision + size.\",\"fullSurfaceOnly\":true}"
+    },
+    "verdict_failures": [
+      "quality.native_append_embed_ratio_max=null",
+      "quality.native_recall_gap_points_max=null",
+      "floor.native_keyword_recall_2mb=null"
+    ],
+    "arms": [
+      {
+        "arm": "native",
+        "doc": "conversation",
+        "tier": "200mb",
+        "status": "ran",
+        "ingest": {
+          "status": "refused",
+          "code": "file_too_large",
+          "chunks": 0,
+          "pages": 0,
+          "embed_skip": null,
+          "wall_ms": 530,
+          "rss_peak_mb": 1207,
+          "rss_over_baseline_mb": 12,
+          "storage": null
+        },
+        "stored_needles": {
+          "hits": 0,
+          "total": 40,
+          "rate": 0
+        },
+        "keyword_recall": {
+          "hits": 0,
+          "total": 40,
+          "rate": 0
+        },
+        "keyword_recall_by_decile": [
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          },
+          {
+            "hits": 0,
+            "total": 4,
+            "rate": 0
+          }
+        ],
+        "min_decile_recall": 0,
+        "delivered_recall": {
+          "hits": 0,
+          "total": 40,
+          "rate": 0
+        },
+        "distractor_preferred": 0,
+        "reads": {
+          "attempted": 0,
+          "contains": 0,
+          "correct": 0,
+          "max_bytes": null
+        },
+        "direct_read_bytes": null,
+        "direct_read_agent_bytes": null,
+        "max_frame_bytes": 3019,
+        "responses_over_cap": 0,
+        "append": {
+          "status": "refused",
+          "code": "file_too_large",
+          "wall_ms": 505,
+          "embed_inputs": null,
+          "embed_tokens": null,
+          "appended_tokens": 251,
+          "embed_ratio": null,
+          "chunks_rewritten": 0,
+          "chunks_deleted": 0,
+          "visible": false,
+          "path": "importFromFile re-import of the whole file (segment-aware)"
+        },
+        "embed_initial": null,
+        "roundtrip": "not_stored",
+        "roundtrip_byte_delta": null
+      }
+    ],
+    "children": [
+      {
+        "tier": "200mb",
+        "doc": "conversation",
+        "arm": "native",
+        "wall_ms": 4772,
+        "rss_peak_mb": 1948,
+        "crash": null,
+        "control": {
+          "hits": 4,
+          "total": 4,
+          "missed": []
+        }
+      }
+    ],
+    "presence": [
+      {
+        "name": "conversation: sha256",
+        "expected": "36ae8889acdac12f10ca65cf55db447719ffc51baf9ef5a0a7699fb062e1c7f0",
+        "actual": "36ae8889acdac12f10ca65cf55db447719ffc51baf9ef5a0a7699fb062e1c7f0",
+        "ok": true
+      },
+      {
+        "name": "conversation: bytes",
+        "expected": 200000076,
+        "actual": 200000076,
+        "ok": true
+      },
+      {
+        "name": "conversation: needles and distractors unique, at their offsets, deciles and sections",
+        "expected": 0,
+        "actual": 0,
+        "ok": true
+      },
+      {
+        "name": "conversation: four needles in every decile",
+        "expected": 40,
+        "actual": 40,
+        "ok": true
+      },
+      {
+        "name": "conversation: append needle absent from the document",
+        "expected": 0,
+        "actual": 0,
+        "ok": true
+      },
+      {
+        "name": "conversation: append needle once in the append",
+        "expected": 1,
+        "actual": 1,
+        "ok": true
+      },
+      {
+        "name": "conversation: append is about 1 KB",
+        "expected": "yes",
+        "actual": "yes",
+        "ok": true
+      },
+      {
+        "name": "conversation: control needles unique and absent from the document",
+        "expected": 0,
+        "actual": 0,
+        "ok": true
+      }
+    ],
+    "documents": [
+      {
+        "tier": "200mb",
+        "id": "conversation",
+        "bytes": 200000076,
+        "lines": 1924638,
+        "sections": 2899,
+        "sha256": "36ae8889acdac12f10ca65cf55db447719ffc51baf9ef5a0a7699fb062e1c7f0",
+        "needles": 40,
+        "append_bytes": 1001
+      }
+    ],
+    "probes": [
+      {
+        "tier": "200mb",
+        "arm": "native",
+        "doc": "conversation",
+        "rows": [
+          {
+            "id": "conversation:d0:name",
+            "decile": 0,
+            "type": "name",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "conversation:d0:number",
+            "decile": 0,
+            "type": "number",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d0:date",
+            "decile": 0,
+            "type": "date",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "conversation:d0:fact",
+            "decile": 0,
+            "type": "fact",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d1:name",
+            "decile": 1,
+            "type": "name",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "conversation:d1:number",
+            "decile": 1,
+            "type": "number",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d1:fact",
+            "decile": 1,
+            "type": "fact",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "conversation:d1:date",
+            "decile": 1,
+            "type": "date",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "conversation:d2:fact",
+            "decile": 2,
+            "type": "fact",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "conversation:d2:number",
+            "decile": 2,
+            "type": "number",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "conversation:d2:name",
+            "decile": 2,
+            "type": "name",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "conversation:d2:date",
+            "decile": 2,
+            "type": "date",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d3:date",
+            "decile": 3,
+            "type": "date",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "conversation:d3:number",
+            "decile": 3,
+            "type": "number",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d3:name",
+            "decile": 3,
+            "type": "name",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "conversation:d3:fact",
+            "decile": 3,
+            "type": "fact",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "conversation:d4:date",
+            "decile": 4,
+            "type": "date",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d4:number",
+            "decile": 4,
+            "type": "number",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "conversation:d4:fact",
+            "decile": 4,
+            "type": "fact",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "conversation:d4:name",
+            "decile": 4,
+            "type": "name",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d5:number",
+            "decile": 5,
+            "type": "number",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d5:date",
+            "decile": 5,
+            "type": "date",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "conversation:d5:name",
+            "decile": 5,
+            "type": "name",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "conversation:d5:fact",
+            "decile": 5,
+            "type": "fact",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "conversation:d6:fact",
+            "decile": 6,
+            "type": "fact",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "conversation:d6:name",
+            "decile": 6,
+            "type": "name",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d6:date",
+            "decile": 6,
+            "type": "date",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d6:number",
+            "decile": 6,
+            "type": "number",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "conversation:d7:date",
+            "decile": 7,
+            "type": "date",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d7:name",
+            "decile": 7,
+            "type": "name",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d7:fact",
+            "decile": 7,
+            "type": "fact",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "conversation:d7:number",
+            "decile": 7,
+            "type": "number",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d8:name",
+            "decile": 8,
+            "type": "name",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "conversation:d8:fact",
+            "decile": 8,
+            "type": "fact",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "conversation:d8:date",
+            "decile": 8,
+            "type": "date",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "conversation:d8:number",
+            "decile": 8,
+            "type": "number",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d9:name",
+            "decile": 9,
+            "type": "name",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "conversation:d9:number",
+            "decile": 9,
+            "type": "number",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d9:date",
+            "decile": 9,
+            "type": "date",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          },
+          {
+            "id": "conversation:d9:fact",
+            "decile": 9,
+            "type": "fact",
+            "hit_rank": null,
+            "delivered_rank": null,
+            "distractor_rank": null,
+            "n_results": 0
+          }
+        ],
+        "reads": [
+          {
+            "id": "conversation:d0:name",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d0:number",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d0:date",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d0:fact",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d1:name",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d1:number",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d1:fact",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d1:date",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d2:fact",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d2:number",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d2:name",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d2:date",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d3:date",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d3:number",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d3:name",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d3:fact",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d4:date",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d4:number",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d4:fact",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d4:name",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d5:number",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d5:date",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d5:name",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d5:fact",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d6:fact",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d6:name",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d6:date",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d6:number",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d7:date",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d7:name",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d7:fact",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d7:number",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d8:name",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d8:fact",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d8:date",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d8:number",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d9:name",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d9:number",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d9:date",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          },
+          {
+            "id": "conversation:d9:fact",
+            "attempted": false,
+            "contains": false,
+            "bytes": null,
+            "correct": false
+          }
+        ],
+        "append": {
+          "status": "refused",
+          "code": "file_too_large",
+          "message": "File too large (200001077 bytes, max 25165824).",
+          "chunks_before": 0,
+          "chunks_after": 0,
+          "chunks_rewritten": 0,
+          "chunks_deleted": 0,
+          "path": "importFromFile re-import of the whole file (segment-aware)",
+          "pending": null,
+          "wall_ms": 505,
+          "embed": null,
+          "appended_tokens": 251,
+          "visible_rank": null
+        },
+        "roundtrip": {
+          "status": "not_stored",
+          "expected_sha256": "59021a9dd58194324336eabbae61ac8e3d3674d78c56809d6e1b0cfc304472e6"
+        },
+        "segment_roundtrip": null,
+        "frames": {
+          "count": 46,
+          "max_bytes": 3019,
+          "over_cap": 0,
+          "by_op": {
+            "put_page": {
+              "count": 1,
+              "max_bytes": 2430,
+              "over_cap": 0
+            },
+            "search": {
+              "count": 45,
+              "max_bytes": 3019,
+              "over_cap": 0
+            }
+          }
+        },
+        "memory": [
+          {
+            "phase": "start",
+            "t_ms": 1,
+            "rss_mb": 1195,
+            "max_rss_mb": 1195
+          },
+          {
+            "phase": "ingest",
+            "t_ms": 532,
+            "rss_mb": 1195,
+            "max_rss_mb": 1207
+          },
+          {
+            "phase": "reads",
+            "t_ms": 885,
+            "rss_mb": 994,
+            "max_rss_mb": 1207
+          },
+          {
+            "phase": "append",
+            "t_ms": 1402,
+            "rss_mb": 1568,
+            "max_rss_mb": 1568
+          },
+          {
+            "phase": "export",
+            "t_ms": 1792,
+            "rss_mb": 1948,
+            "max_rss_mb": 1948
+          }
+        ],
+        "ingest": {
+          "status": "refused",
+          "code": "file_too_large",
+          "message": "File too large (200000076 bytes, max 25165824).",
+          "pages": 0,
+          "chunks": 0,
+          "embed_skip": null,
+          "write_errors": 1,
+          "storage": null,
+          "pending": null,
+          "projection": null,
+          "wall_ms": 530
+        },
+        "direct_read": {
+          "bytes": null,
+          "error": "page_not_found: Page not found: conversations/rowan-imogen-casimir-juniper"
+        },
+        "direct_read_agent": {
+          "bytes": null,
+          "error": "page_not_found: Page not found: conversations/rowan-imogen-casimir-juniper"
+        },
+        "embed_initial": null,
+        "embed_error": null
+      }
+    ],
+    "findings": [],
+    "harness_error": null
+  },
+  "accounting": {
+    "planned": 40,
+    "attempted": 40,
+    "scored": 40,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  },
+  "latency_ms": null
+}

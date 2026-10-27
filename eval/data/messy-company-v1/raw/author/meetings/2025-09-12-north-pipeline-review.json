@@ -1,0 +1,37 @@
+{
+  "slug": "meetings/2025-09-12-north-pipeline-review",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: meeting\nTitle: North pipeline review notes\nDate: The page was filed on 2025-09-12, but it records something that happened on 2025-09-16. State 2025-09-16 in the body as the meeting date; do not mention 2025-09-12.\nWriter: Marcus Lindqvist\nVoice: chatty, a bit rambling\nFormat: loose call notes, half sentences, an action list at the end\nLength: about 251 words\nDate style in the body: casual (Jun 2nd, Monday the 2nd)\nTypos: one or two small natural typos (never in names or required phrases)\n\nBrief:\nMeeting notes. The page was created ahead of time on Sept 12, but the body says these are notes from the pipeline review held on Tuesday September 16, 2025 (after the Brackenwater handoff). State the Sept 16 meeting date clearly in the body.\n\nRequired phrases:\n- Use the exact phrase \"Dana's freight account\" once, referring to Quarrendon Freight Lines. Don't put the account's name in the same sentence; the reader should work it out.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Ilse Varga: North team lead\n- Dana Okafor: Account manager, North team\n- Marcus Lindqvist: Account manager, North team\n- Thea Ramaswell: Director of Yard Operations\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Quarrendon Freight Lines: truckload freight carrier, Upper Midwest; main contact Thea Ramaswell, Director of Yard Operations; codes/nicknames QFL, Q-Freight\n- Brackenwater Freight Co.: less-than-truckload freight, Great Lakes; codes/nicknames BWF, Bracken\n- Tamsin Cold Chain: refrigerated warehousing, Pacific Northwest; codes/nicknames TCC\n- Orrin Mills: textile mill, Carolinas; codes/nicknames ORM\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2025-09-16 (background only; don't restate unless the brief asks):\n- Quarrendon Freight Lines: managed by Dana Okafor\n- Brackenwater Freight Co.: managed by Marcus Lindqvist\n- Tamsin Cold Chain: managed by Dana Okafor\n- Orrin Mills: managed by Dana Okafor",
+      "response_text": "# North pipeline review notes\n\nMeeting date: Tuesday, September 16, 2025 — after the Brackenwater handoff.\n\nIlse Varga kicked us off with the North board, then we spent longer than intended on the yard screenshots. Usual story: the neat little opportunity row hides six separate conversations about who actually moves trailers at 5 a.m.\n\n**Brackenwater Freight Co.** — handoff done, and I’ve got the follow-up. Dispatch wants the Pemberline Dock walkthrough to start with the overnight queue, not the dashboard tour. Fair enough. Their supervisor had circled door 8 in three screenshots because a held trailer looked ready to unload. Need to reproduce that with the same filter settings; could be the status label, could be yesterday’s saved view. I’ll send a short recap before asking them for another call.\n\n**Quarrendon Freight Lines** — Thea Ramaswell wants to see the shift-change handover in one screen. Specifically, late arrivals still waiting versus trailers already assigned a door. Dana Okafor has the screenshot list.\n\nIlse’s comment: “Dana's freight account needs the operational story first, not another feature parade.”\n\nThat landed. We’d drifted into showing buttons rather than answering the actual question.\n\n**Tamsin Cold Chain** — discussion stayed on refrigerated arrivals and how dispatch spots a missed appointment without opening every row. Dana checking which example they want for the next walkthrough.\n\n**Orrin Mills** — quieter today. Dana to chase the annotated schedule; we still need the overlap example, not just “Tuesday gets busy.”\n\n## Actions\n\n- Me: reproduce Brackenwater’s door 8 view; send recap.\n- Dana: collect shift-change screenshots and the Orrin Mills example.\n- Ilse: tidy the North board labels. One duplicate still there, annoyingly.\n- Me: fix the walkthrough order before the next cal.",
+      "usage": {
+        "input_tokens": 1147,
+        "output_tokens": 393,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.006224,
+      "provider_meta": {
+        "id": "resp_028c7fc491f87c2b016acfae389a0087d1af34bf9dcce3708e",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1147,
+          "input_tokens_details": {
+            "cache_write_tokens": 1144,
+            "cached_tokens": 0
+          },
+          "output_tokens": 393,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 1540
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

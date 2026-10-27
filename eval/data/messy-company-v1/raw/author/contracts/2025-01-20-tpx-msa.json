@@ -1,0 +1,37 @@
+{
+  "slug": "contracts/2025-01-20-tpx-msa",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: record\nTitle: Subscription Agreement: Tansley Parcel\nDate: Written on 2025-01-20.\nWriter: June Osei-Lark\nVoice: formal legal drafting\nFormat: formal numbered sections and a signature block\nLength: about 466 words\nDate style in the body: undefined\nTypos: none\n\nBrief:\nSubscription Agreement: Tansley Parcel. Parties: Pemberline Systems and Tansley Parcel. Drafted 2025-01-08. Effective date 2025-02-01 (signed 2025-01-20; state both dates and keep them distinct). Terms this document sets: subscribed seats = 110; price per seat per year (USD) = 1800; discount (%) = 10; end of the current term (renewal date) = 2026-01-31; payment terms (net days) = 30. Executed: include a signature block signed on 2025-01-20 by both parties (customer signatory plus June Osei-Lark for Pemberline).\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Hollis Mbeki: Central team lead\n- Priyanka \"Pree\" Sundaram: Account manager, Central team\n- Tobias Rendle: Account manager, Central team\n- Lev Arkadin: Procurement lead\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Tansley Parcel: regional parcel delivery, South Central; main contact Lev Arkadin, Procurement lead; codes/nicknames TPCL, TP\n- Tansleigh Packaging: corrugated packaging manufacturer, Ohio Valley; codes/nicknames TSP, TP\n- Marrow Fieldworks: agricultural equipment dealer network, Plains; codes/nicknames MFW\n- Marrow Agrisupply: farm supply retail chain, Plains; subsidiary of Marrow Fieldworks; codes/nicknames MAS, Marrow Agri\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2025-01-20 (background only; don't restate unless the brief asks):\n- Tansley Parcel: managed by Priyanka \"Pree\" Sundaram\n- Tansleigh Packaging: managed by Hollis Mbeki\n- Marrow Fieldworks: managed by Priyanka \"Pree\" Sundaram\n- Marrow Agrisupply: managed by Central team (pooled account)",
+      "response_text": "# Subscription Agreement: Tansley Parcel\n\n## 1. Parties and Record Dates\n\nThis Subscription Agreement is entered into by Pemberline Systems and Tansley Parcel for the subscription to Pemberline Dock described below. Pemberline Dock is Pemberline Systems’ yard and dock scheduling software.\n\nThis Agreement was drafted on 2025-01-08. This executed record was written on 2025-01-20. Both parties signed this Agreement on 2025-01-20. The effective date is 2025-02-01; the execution date and effective date are distinct.\n\n## 2. Subscription and Term\n\nTansley Parcel subscribes to 110 seats of Pemberline Dock. The subscription is priced per seat per year.\n\nThe current subscription term begins on 2025-02-01 and ends on 2026-01-31. The end of the current term, recorded as the renewal date, is 2026-01-31.\n\nThe subscribed quantity shall be recorded as 110 seats in the subscription record, billing worksheet, and access-allocation register. Operational lists identifying users by shift or location shall refer to that subscribed quantity rather than treat each shift roster as a separate subscription.\n\n## 3. Price and Discount\n\nThe price per seat per year is USD 1,800. A discount of 10% applies to the subscription.\n\nFor 110 seats, the annual amount before discount is USD 198,000. The discount is USD 19,800, resulting in a discounted annual subscription amount of USD 178,200.\n\nThe billing worksheet shall display the seat quantity, annual unit price, discount percentage, and discounted annual amount as separate entries so that Tansley Parcel may reconcile the invoice against this Agreement.\n\n## 4. Payment Terms\n\nPayment terms are net 30 days. Invoice preparation shall use the subscription particulars set out in Sections 2 and 3.\n\nProcurement correspondence concerning invoice routing shall identify Tansley Parcel by its full name. Lev Arkadin, Procurement lead, is the customer contact for the administrative exchange of billing instructions and subscription paperwork.\n\n## 5. Operational Administration\n\nThe implementation file shall distinguish the seat-allocation register from dock-door and appointment records. For example, a dispatch supervisor listed on an evening-shift roster is a user entry; a door label such as “Door 4 — outbound parcels” is an operational scheduling entry.\n\nRoutine setup correspondence shall identify the relevant site, shift, and scheduling task. Requests concerning an appointment moved from an afternoon loading window to an evening window shall include the appointment reference, rather than rely solely on a driver’s name.\n\nThese administrative descriptions support preparation of the working records and do not replace the subscription quantity, price, discount, term dates, or payment terms stated above.\n\n## 6. Execution\n\nThe parties execute this Agreement on 2025-01-20 for a subscription effective on 2025-02-01.\n\n**For Pemberline Systems**\n\nSigned: /s/ June Osei-Lark  \nName: June Osei-Lark  \nTitle: Deal desk and contracts manager  \nDate signed: 2025-01-20  \n\n**For Tansley Parcel**\n\nSigned: /s/ Lev Arkadin  \nName: Lev Arkadin  \nTitle: Procurement lead  \nDate signed: 2025-01-20",
+      "usage": {
+        "input_tokens": 1138,
+        "output_tokens": 751,
+        "thinking_tokens": 64
+      },
+      "cost_usd": 0.009786,
+      "provider_meta": {
+        "id": "resp_0a47fd30029bab09016acfae563bd487d18a680d6b866bbfe6",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1138,
+          "input_tokens_details": {
+            "cache_write_tokens": 1135,
+            "cached_tokens": 0
+          },
+          "output_tokens": 751,
+          "output_tokens_details": {
+            "reasoning_tokens": 64
+          },
+          "total_tokens": 1889
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

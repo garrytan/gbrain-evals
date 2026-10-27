@@ -1,0 +1,41 @@
+{
+  "slug": "emails/2025-09-04-tpx-outage-rca",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: email\nTitle: RCA: carrier API outage (Sept 3)\nDate: Written on 2025-09-04.\nWriter: Priyanka \"Pree\" Sundaram\nVoice: chatty, a bit rambling\nFormat: an email thread with From/To/Date headers and quoted earlier replies (> lines)\nLength: about 335 words\nDate style in the body: day-month (2 Jun 2025)\nTypos: none\n\nBrief:\nPree sends Lev the root-cause summary of yesterday's outage, with a credit offer.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Hollis Mbeki: Central team lead\n- Priyanka \"Pree\" Sundaram: Account manager, Central team\n- Tobias Rendle: Account manager, Central team\n- Lev Arkadin: Procurement lead\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Tansley Parcel: regional parcel delivery, South Central; main contact Lev Arkadin, Procurement lead; codes/nicknames TPCL, TP\n- Tansleigh Packaging: corrugated packaging manufacturer, Ohio Valley; codes/nicknames TSP, TP\n- Marrow Fieldworks: agricultural equipment dealer network, Plains; codes/nicknames MFW\n- Marrow Agrisupply: farm supply retail chain, Plains; subsidiary of Marrow Fieldworks; codes/nicknames MAS, Marrow Agri\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2025-09-04 (background only; don't restate unless the brief asks):\n- Tansley Parcel: managed by Priyanka \"Pree\" Sundaram\n- Tansleigh Packaging: not stated on any shared page (do not say who manages it)\n- Marrow Fieldworks: managed by Priyanka \"Pree\" Sundaram\n- Marrow Agrisupply: managed by Central team (pooled account)",
+      "response_text": "# RCA: carrier API outage (Sept 3)\n\n**From:** Priyanka \"Pree\" Sundaram <psundaram@pemberline.com>\n**To:** Lev Arkadin <larkadin@tansleyparcel.com>\n**Cc:** Hollis Mbeki <hmbeki@pemberline.com>\n**Date:** 4 Sep 2025, 09:42 CDT\n**Subject:** Re: RCA: carrier API outage (Sept 3)\n\nHi Lev,\n\nHope you are surviving the Thursday morning rush! And more importantly, hope the Tulsa yard is back to breathing normally today after yesterday's chaos. I promised I would get you the root-cause write-up from our platform folks as soon as they finished their post-mortem coffee, so here is the full scoop on what happened on 3 Sep 2025.\n\nBasically, at 06:14 CDT yesterday, a routine worker node patch in our US-Central cluster introduced a bad retry loop on the carrier webhook listener inside Pemberline Dock. Whenever an inbound manifest ping timed out—which happens plenty during the 6am shift change—instead of backing off, the service fired immediate duplicate retries. That flooded the queue and locked up the live gate check-in screen for Tansley Parcel until engineering rolled the patch back at 07:48 CDT (ticket #INC-8841). \n\nI know that ninety-four minutes right at morning dispatch meant your guards at Doors 12 through 18 had to go back to clipboards and radio checks while five linehaul rigs backed up onto the service road. Nobody wants to be out in that humidity squinting at paper BOLs. To make sure this doesn't bite us again, engineering has already capped retry concurrency and split the webhook queue off from the main dock board service.\n\nBecause we obviously dropped the ball during your peak window, Hollis and I spoke with June Osei-Lark on our side this morning, and we want to put a goodwill service credit on your next invoice. Just reply with a quick thumbs-up if you are good with us applying that credit, and I will have June get it squared away with Stoneharrow Billing today.\n\nLet me know if your ops director wants to hop on a fifteen-minute call to grill our engineers on the fix—happy to set that up!\n\nBest,\nPree\n\n---\n\n> **From:** Lev Arkadin <larkadin@tansleyparcel.com>\n> **To:** Priyanka \"Pree\" Sundaram <psundaram@pemberline.com>\n> **Date:** 3 Sep 2025, 16:15 CDT\n> **Subject:** Carrier API outage (Sept 3)\n>\n> Pree,\n>\n> Screens are finally green again at Tulsa, but my morning shift lead is still digging out from the gate backlog. Send over the actual RCA when you have it, plus whatever you guys are doing to make this right on the billing side.\n>\n> —Lev",
+      "usage": {
+        "input_tokens": 1087,
+        "output_tokens": 650,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.008674,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1087,
+          "candidatesTokenCount": 650,
+          "totalTokenCount": 1737,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1087
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 650
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

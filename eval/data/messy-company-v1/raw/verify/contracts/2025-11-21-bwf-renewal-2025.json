@@ -1,0 +1,123 @@
+{
+  "slug": "contracts/2025-11-21-bwf-renewal-2025",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2025-11-21",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Brackenwater Freight Co.",
+        "line": 6
+      },
+      {
+        "oid": "e2",
+        "surface": "Brackenwater Freight Co.",
+        "line": 10
+      },
+      {
+        "oid": "e3",
+        "surface": "Brackenwater Freight Co.",
+        "line": 50
+      },
+      {
+        "oid": "e4",
+        "surface": "Brackenwater Freight Co.",
+        "line": 58
+      },
+      {
+        "oid": "e5",
+        "surface": "Brackenwater Freight Co.",
+        "line": 61
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": [],
+    "record": {
+      "question": "Is this document signed, an unsigned version, or a draft? Judge from the body text, not the title alone. Give its signed date and effective date if stated, and the value of each of these terms it sets.",
+      "terms": [
+        "seats",
+        "price_per_seat",
+        "discount_pct",
+        "renewal_date"
+      ]
+    }
+  },
+  "prompt_user_sha256": "bf6032855cacfbb7eb809ae2b49e566097ef447ae7e811d5c53ffb83e0abe13f",
+  "response_text": "{\n  \"date_used\": \"2025-11-21\",\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"brackenwater\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"brackenwater\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"brackenwater\"\n    },\n    {\n      \"oid\": \"e4\",\n      \"entity\": \"brackenwater\"\n    },\n    {\n      \"oid\": \"e5\",\n      \"entity\": \"brackenwater\"\n    }\n  ],\n  \"record\": {\n    \"status\": \"signed\",\n    \"status_evidence_line\": 56,\n    \"signed_date\": \"2025-11-21\",\n    \"effective_date\": \"2025-12-01\",\n    \"terms\": [\n      {\n        \"term\": \"seats\",\n        \"applies_to\": [\n          \"brackenwater\"\n        ],\n        \"value\": \"64\",\n        \"line\": 22\n      },\n      {\n        \"term\": \"price_per_seat\",\n        \"applies_to\": [\n          \"brackenwater\"\n        ],\n        \"value\": \"USD 1,760\",\n        \"line\": 30\n      },\n      {\n        \"term\": \"discount_pct\",\n        \"applies_to\": [\n          \"brackenwater\"\n        ],\n        \"value\": \"8%\",\n        \"line\": 30\n      },\n      {\n        \"term\": \"renewal_date\",\n        \"applies_to\": [\n          \"brackenwater\"\n        ],\n        \"value\": \"2026-11-30\",\n        \"line\": 38\n      }\n    ],\n    \"deciding_line\": 44,\n    \"deciding_days\": null\n  }\n}",
+  "parsed": {
+    "date_used": "2025-11-21",
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "brackenwater"
+      },
+      {
+        "oid": "e2",
+        "entity": "brackenwater"
+      },
+      {
+        "oid": "e3",
+        "entity": "brackenwater"
+      },
+      {
+        "oid": "e4",
+        "entity": "brackenwater"
+      },
+      {
+        "oid": "e5",
+        "entity": "brackenwater"
+      }
+    ],
+    "record": {
+      "status": "signed",
+      "status_evidence_line": 56,
+      "signed_date": "2025-11-21",
+      "effective_date": "2025-12-01",
+      "terms": [
+        {
+          "term": "seats",
+          "applies_to": [
+            "brackenwater"
+          ],
+          "value": "64",
+          "line": 22
+        },
+        {
+          "term": "price_per_seat",
+          "applies_to": [
+            "brackenwater"
+          ],
+          "value": "USD 1,760",
+          "line": 30
+        },
+        {
+          "term": "discount_pct",
+          "applies_to": [
+            "brackenwater"
+          ],
+          "value": "8%",
+          "line": 30
+        },
+        {
+          "term": "renewal_date",
+          "applies_to": [
+            "brackenwater"
+          ],
+          "value": "2026-11-30",
+          "line": 38
+        }
+      ],
+      "deciding_line": 44,
+      "deciding_days": null
+    }
+  },
+  "usage": {
+    "input_tokens": 4102,
+    "output_tokens": 478,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.012984
+}

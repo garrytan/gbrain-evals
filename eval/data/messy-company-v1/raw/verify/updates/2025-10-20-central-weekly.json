@@ -1,0 +1,79 @@
+{
+  "slug": "updates/2025-10-20-central-weekly",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2025-10-20",
+    "owner_phrases": [
+      {
+        "mid": "updates/2025-10-20-central-weekly#m1",
+        "phrase": "the team's farm supply account",
+        "lines": [
+          12
+        ]
+      },
+      {
+        "mid": "updates/2025-10-20-central-weekly#m2",
+        "phrase": "the account Pree runs",
+        "lines": [
+          24
+        ]
+      }
+    ],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Marrow Agrisupply",
+        "line": 10
+      },
+      {
+        "oid": "e2",
+        "surface": "Tansley Parcel",
+        "line": 17
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "e15cf6edf9544b32b740ac72bfba42a4ec7284b0d510c79690ccbed9dbbb8d85",
+  "response_text": "{\n  \"date_used\": \"2025-10-20\",\n  \"owner_phrases\": [\n    {\n      \"mid\": \"updates/2025-10-20-central-weekly#m1\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\n        \"marrow-agrisupply\"\n      ],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"Marrow Agrisupply is a pooled Central team farm supply account, and the line appears under the Marrow Agrisupply section.\"\n    },\n    {\n      \"mid\": \"updates/2025-10-20-central-weekly#m2\",\n      \"refers_to_customer_account\": false,\n      \"accounts\": [],\n      \"reading\": \"ambiguous: could be more than one account\",\n      \"note\": \"On 2025-10-20, Pree was primary owner of both tansley-parcel and marrow-fieldworks, and line 24 under 'Loose ends' gives no context to distinguish between them.\"\n    }\n  ],\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"marrow-agrisupply\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"tansley-parcel\"\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-10-20",
+    "owner_phrases": [
+      {
+        "mid": "updates/2025-10-20-central-weekly#m1",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "marrow-agrisupply"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "Marrow Agrisupply is a pooled Central team farm supply account, and the line appears under the Marrow Agrisupply section."
+      },
+      {
+        "mid": "updates/2025-10-20-central-weekly#m2",
+        "refers_to_customer_account": false,
+        "accounts": [],
+        "reading": "ambiguous: could be more than one account",
+        "note": "On 2025-10-20, Pree was primary owner of both tansley-parcel and marrow-fieldworks, and line 24 under 'Loose ends' gives no context to distinguish between them."
+      }
+    ],
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "marrow-agrisupply"
+      },
+      {
+        "oid": "e2",
+        "entity": "tansley-parcel"
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 3206,
+    "output_tokens": 353,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.009942
+}

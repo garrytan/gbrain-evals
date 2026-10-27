@@ -1,0 +1,37 @@
+{
+  "slug": "emails/2026-02-16-covey-lark-rebrand",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: email\nTitle: Covey & Lark is now Pellow Home Living\nDate: Written on 2026-02-16.\nWriter: Sofia Marchetti\nVoice: hurried, lots of fragments\nFormat: a single email with a forwarded message below\nLength: about 161 words\nDate style in the body: US short (6/2/25)\nTypos: a few natural typos and one or two sloppy abbreviations (never in names or required phrases)\n\nBrief:\nSofia forwards the customer's notice: from today Covey & Lark Retail is Pellow Home Living. She asks June to change the CRM code from CLR to PHL.\n\nUse these names or codes at least once each, as written: \"CLR\", \"PHL\".\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Bettina Kroll: Coastal team lead\n- Sofia Marchetti: Account manager, Coastal team\n- Kwame Adjei-Rowe: Account manager, Coastal team\n- Corinne Ashdown: VP Operations\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Pellucid Harbor Logistics: port drayage and terminal logistics, Gulf Coast; codes/nicknames PHL\n- Driftmoor Marine Freight: marine freight and barge operator, Puget Sound; codes/nicknames DMF\n- Saltmarsh Provisions: regional grocery distributor, Lowcountry; main contact Corinne Ashdown, VP Operations; codes/nicknames SMP\n- Pellow Home Living (renamed from Covey & Lark Retail on 2026-02-16): home goods retailer, Mid-Atlantic; codes/nicknames Covey, PHL\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2026-02-16 (background only; don't restate unless the brief asks):\n- Pellucid Harbor Logistics: managed by Kwame Adjei-Rowe\n- Driftmoor Marine Freight: managed by Kwame Adjei-Rowe\n- Saltmarsh Provisions: managed by Bettina Kroll\n- Pellow Home Living: managed by Sofia Marchetti",
+      "response_text": "To: June Osei-Lark  \nDate: 2/16/26  \nSubject: Covey & Lark is now Pellow Home Living\n\nJune — forwarding the notice below. From today, Covey & Lark Retail is Pellow Home Living. Please change the CRM code from CLR to PHL. Name field too, pls.\n\nCaught this between calls. Their receiving team already has the new name on the morning appointment sheet, but the Pemberline Dock export still says Covey & Lark Retail. Confused the desk at door 6; driver was sent around to the office to check his paperwork. Same delivery, just the old heading.\n\nI'll pick up the export label issue with support. Can you do the CRM bit today and ping me when it's done? Need it sorted before I send the followup.\n\n---------- Forwarded message ----------  \nFrom: Receiving Office, Pellow Home Living  \nDate: 2/16/26  \nSubject: Company name change — effective today\n\nHi Sofia,\n\nEffective today, Covey & Lark Retail is Pellow Home Living. Please udpate your records and use the new name on appointment confirmations.\n\nReceiving contacts and delivery instructions remain unchanged. Thanks!",
+      "usage": {
+        "input_tokens": 1073,
+        "output_tokens": 248,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.004626,
+      "provider_meta": {
+        "id": "resp_0025f04a470bc1eb016acfae9bdfdc87d1bb891341a0996169",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1073,
+          "input_tokens_details": {
+            "cache_write_tokens": 1070,
+            "cached_tokens": 0
+          },
+          "output_tokens": 248,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 1321
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

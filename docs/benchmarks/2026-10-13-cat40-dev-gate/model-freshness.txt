@@ -1,0 +1,22 @@
+warning: anthropic:claude-fable-5-1 is Fable: smoke tests only, never paid counted cells, practice rounds or held-out runs (Opus 5.5 is the top counted Anthropic model)
+{
+  "newest": {
+    "opus": "claude-opus-5-5",
+    "sonnet": "claude-sonnet-5-5",
+    "fable": "claude-fable-5-1",
+    "gpt": "gpt-6.1-sol"
+  },
+  "called": [
+    "anthropic:claude-opus-5-5",
+    "anthropic:claude-sonnet-5-5",
+    "anthropic:claude-fable-5-1",
+    "openai:gpt-6.1-sol",
+    "openai:gpt-6-luna",
+    "openai:gpt-5.4",
+    "openai:gpt-4o-2024-08-06"
+  ],
+  "warnings": [
+    "anthropic:claude-fable-5-1 is Fable: smoke tests only, never paid counted cells, practice rounds or held-out runs (Opus 5.5 is the top counted Anthropic model)"
+  ],
+  "blocking": []
+}

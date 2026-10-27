@@ -224,7 +224,7 @@ if [[ "$COMPLETE" -ne 1 ]]; then
     echo "Workers PIDs: ${pids[*]}"
 
     # Wait for all workers in this batch to finish (or die).
-    for pid in "${pids[@]}"; do
+    for pid in ${pids[@]+"${pids[@]}"}; do
       wait "$pid" 2>/dev/null || true
     done
 

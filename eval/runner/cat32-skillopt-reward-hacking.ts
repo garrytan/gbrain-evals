@@ -525,7 +525,7 @@ if (import.meta.main) {
         finished_at: new Date().toISOString(),
       });
     } catch { /* receipt write failed too */ }
-    process.stderr.write(`[cat32] FATAL: ${e?.stack ?? e}\n`);
+    process.stderr.write(`[cat32] FATAL: ${e?.message ?? e}\n${e?.stack ?? ''}\n`);
     process.exit(1);
   }
 }

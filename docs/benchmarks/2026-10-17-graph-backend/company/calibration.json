@@ -1,0 +1,38 @@
+{
+  "pass": "cal2 (warm)",
+  "results": {
+    "traverseGraph": {
+      "layer": {
+        "p95_ms": 7029.687,
+        "p50_ms": 1522.316,
+        "n": 80,
+        "errors": 0
+      },
+      "perdepth": {
+        "p95_ms": 21829.118,
+        "p50_ms": 10384.169,
+        "n": 80,
+        "errors": 0
+      }
+    },
+    "traversePaths": {
+      "layer": {
+        "p95_ms": 421.598,
+        "p50_ms": 5.773,
+        "n": 360,
+        "errors": 0
+      },
+      "perdepth": {
+        "p95_ms": 5940.831,
+        "p50_ms": 9.221,
+        "n": 360,
+        "errors": 0
+      }
+    }
+  },
+  "choice": {
+    "traverseGraph": "layer",
+    "traversePaths": "layer"
+  },
+  "source": "Team tier calibration, reused at the Company tier (the choice was fixed before the counted Team run); no Company calibration ran"
+}

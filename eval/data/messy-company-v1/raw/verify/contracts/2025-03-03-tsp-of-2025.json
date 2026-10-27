@@ -1,0 +1,160 @@
+{
+  "slug": "contracts/2025-03-03-tsp-of-2025",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2025-03-03",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Tansleigh Packaging",
+        "line": 7
+      },
+      {
+        "oid": "e2",
+        "surface": "TSP",
+        "line": 9
+      },
+      {
+        "oid": "e3",
+        "surface": "Tansleigh Packaging",
+        "line": 14
+      },
+      {
+        "oid": "e4",
+        "surface": "TSP",
+        "line": 33
+      },
+      {
+        "oid": "e5",
+        "surface": "TP",
+        "line": 33
+      },
+      {
+        "oid": "e6",
+        "surface": "Tansleigh",
+        "line": 46
+      },
+      {
+        "oid": "e7",
+        "surface": "Stoneharrow Billing",
+        "line": 54
+      },
+      {
+        "oid": "e8",
+        "surface": "Tansleigh Packaging",
+        "line": 57
+      },
+      {
+        "oid": "e9",
+        "surface": "Tansleigh Packaging",
+        "line": 78
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": [],
+    "record": {
+      "question": "Is this document signed, an unsigned version, or a draft? Judge from the body text, not the title alone. Give its signed date and effective date if stated, and the value of each of these terms it sets.",
+      "terms": [
+        "seats",
+        "price_per_seat",
+        "discount_pct",
+        "renewal_date"
+      ]
+    }
+  },
+  "prompt_user_sha256": "5b9589219ea3e2bb3155009ed41777fb0d45c6770ab6d3ed0e749536013823b6",
+  "response_text": "{\n  \"date_used\": \"2025-03-03\",\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\"oid\": \"e1\", \"entity\": \"tansleigh\"},\n    {\"oid\": \"e2\", \"entity\": \"tansleigh\"},\n    {\"oid\": \"e3\", \"entity\": \"tansleigh\"},\n    {\"oid\": \"e4\", \"entity\": \"tansleigh\"},\n    {\"oid\": \"e5\", \"entity\": \"tansleigh\"},\n    {\"oid\": \"e6\", \"entity\": \"tansleigh\"},\n    {\"oid\": \"e7\", \"entity\": \"stoneharrow\"},\n    {\"oid\": \"e8\", \"entity\": \"tansleigh\"},\n    {\"oid\": \"e9\", \"entity\": \"tansleigh\"}\n  ],\n  \"record\": {\n    \"status\": \"signed\",\n    \"status_evidence_line\": 76,\n    \"signed_date\": \"2025-03-03\",\n    \"effective_date\": \"2025-03-15\",\n    \"terms\": [\n      {\n        \"term\": \"seats\",\n        \"applies_to\": [\"tansleigh\"],\n        \"value\": \"30\",\n        \"line\": 34\n      },\n      {\n        \"term\": \"price_per_seat\",\n        \"applies_to\": [\"tansleigh\"],\n        \"value\": \"$1,750.00 USD per year\",\n        \"line\": 35\n      },\n      {\n        \"term\": \"discount_pct\",\n        \"applies_to\": [\"tansleigh\"],\n        \"value\": \"0%\",\n        \"line\": 36\n      },\n      {\n        \"term\": \"renewal_date\",\n        \"applies_to\": [\"tansleigh\"],\n        \"value\": \"2026-03-14\",\n        \"line\": 48\n      }\n    ],\n    \"deciding_line\": 14,\n    \"deciding_days\": null\n  }\n}",
+  "parsed": {
+    "date_used": "2025-03-03",
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "tansleigh"
+      },
+      {
+        "oid": "e2",
+        "entity": "tansleigh"
+      },
+      {
+        "oid": "e3",
+        "entity": "tansleigh"
+      },
+      {
+        "oid": "e4",
+        "entity": "tansleigh"
+      },
+      {
+        "oid": "e5",
+        "entity": "tansleigh"
+      },
+      {
+        "oid": "e6",
+        "entity": "tansleigh"
+      },
+      {
+        "oid": "e7",
+        "entity": "stoneharrow"
+      },
+      {
+        "oid": "e8",
+        "entity": "tansleigh"
+      },
+      {
+        "oid": "e9",
+        "entity": "tansleigh"
+      }
+    ],
+    "record": {
+      "status": "signed",
+      "status_evidence_line": 76,
+      "signed_date": "2025-03-03",
+      "effective_date": "2025-03-15",
+      "terms": [
+        {
+          "term": "seats",
+          "applies_to": [
+            "tansleigh"
+          ],
+          "value": "30",
+          "line": 34
+        },
+        {
+          "term": "price_per_seat",
+          "applies_to": [
+            "tansleigh"
+          ],
+          "value": "$1,750.00 USD per year",
+          "line": 35
+        },
+        {
+          "term": "discount_pct",
+          "applies_to": [
+            "tansleigh"
+          ],
+          "value": "0%",
+          "line": 36
+        },
+        {
+          "term": "renewal_date",
+          "applies_to": [
+            "tansleigh"
+          ],
+          "value": "2026-03-14",
+          "line": 48
+        }
+      ],
+      "deciding_line": 14,
+      "deciding_days": null
+    }
+  },
+  "usage": {
+    "input_tokens": 4492,
+    "output_tokens": 571,
+    "thinking_tokens": 150
+  },
+  "cost_usd": 0.014694
+}

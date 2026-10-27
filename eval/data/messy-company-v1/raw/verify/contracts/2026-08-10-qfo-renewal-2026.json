@@ -1,0 +1,88 @@
+{
+  "slug": "contracts/2026-08-10-qfo-renewal-2026",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2026-08-10",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Quillfeather Outfitters",
+        "line": 7
+      },
+      {
+        "oid": "e2",
+        "surface": "Quillfeather Outfitters",
+        "line": 14
+      },
+      {
+        "oid": "e3",
+        "surface": "Quillfeather Outfitters",
+        "line": 25
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": [],
+    "record": {
+      "question": "Is this document signed, an unsigned version, or a draft? Judge from the body text, not the title alone. Give its signed date and effective date if stated, and the value of each of these terms it sets.",
+      "terms": [
+        "price_per_seat",
+        "renewal_date"
+      ]
+    }
+  },
+  "prompt_user_sha256": "8d0b2373f01658f5d14e57b10c8531e5b9e0d5b2d682f461ce687b83be8ecf59",
+  "response_text": "{\n  \"date_used\": \"2026-08-10\",\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\"oid\": \"e1\", \"entity\": \"quillfeather\"},\n    {\"oid\": \"e2\", \"entity\": \"quillfeather\"},\n    {\"oid\": \"e3\", \"entity\": \"quillfeather\"}\n  ],\n  \"record\": {\n    \"status\": \"signed\",\n    \"status_evidence_line\": 23,\n    \"signed_date\": \"2026-08-10\",\n    \"effective_date\": \"2026-08-15\",\n    \"terms\": [\n      {\n        \"term\": \"price_per_seat\",\n        \"applies_to\": [\"quillfeather\"],\n        \"value\": \"USD 1,740 per seat per year\",\n        \"line\": 20\n      },\n      {\n        \"term\": \"renewal_date\",\n        \"applies_to\": [\"quillfeather\"],\n        \"value\": \"2027-08-14\",\n        \"line\": 17\n      }\n    ],\n    \"deciding_line\": 23,\n    \"deciding_days\": null\n  }\n}",
+  "parsed": {
+    "date_used": "2026-08-10",
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "quillfeather"
+      },
+      {
+        "oid": "e2",
+        "entity": "quillfeather"
+      },
+      {
+        "oid": "e3",
+        "entity": "quillfeather"
+      }
+    ],
+    "record": {
+      "status": "signed",
+      "status_evidence_line": 23,
+      "signed_date": "2026-08-10",
+      "effective_date": "2026-08-15",
+      "terms": [
+        {
+          "term": "price_per_seat",
+          "applies_to": [
+            "quillfeather"
+          ],
+          "value": "USD 1,740 per seat per year",
+          "line": 20
+        },
+        {
+          "term": "renewal_date",
+          "applies_to": [
+            "quillfeather"
+          ],
+          "value": "2027-08-14",
+          "line": 17
+        }
+      ],
+      "deciding_line": 23,
+      "deciding_days": null
+    }
+  },
+  "usage": {
+    "input_tokens": 2860,
+    "output_tokens": 396,
+    "thinking_tokens": 139
+  },
+  "cost_usd": 0.00968
+}

@@ -1,0 +1,95 @@
+{
+  "slug": "meetings/2026-04-09-quarrendon-renewal-debrief",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2026-04-09",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Quarrendon",
+        "line": 6
+      },
+      {
+        "oid": "e2",
+        "surface": "Quarrendon Freight Lines",
+        "line": 9
+      },
+      {
+        "oid": "e3",
+        "surface": "Stoneharrow Billing",
+        "line": 17
+      },
+      {
+        "oid": "e4",
+        "surface": "QFL",
+        "line": 17
+      },
+      {
+        "oid": "e5",
+        "surface": "Stoneharrow Billing",
+        "line": 26
+      },
+      {
+        "oid": "e6",
+        "surface": "QFL",
+        "line": 26
+      }
+    ],
+    "claims": [
+      {
+        "cid": "c-qfl-discount-call",
+        "question": "What does the page say about Quarrendon Freight Lines's discount pct?"
+      }
+    ],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "8a11e16074256222500b50b0d6871e5f8694f753ee8679c33e26b51dac902ddf",
+  "response_text": "{\n  \"date_used\": \"2026-04-09\",\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\"oid\": \"e1\", \"entity\": \"quarrendon\"},\n    {\"oid\": \"e2\", \"entity\": \"quarrendon\"},\n    {\"oid\": \"e3\", \"entity\": \"stoneharrow\"},\n    {\"oid\": \"e4\", \"entity\": \"quarrendon\"},\n    {\"oid\": \"e5\", \"entity\": \"stoneharrow\"},\n    {\"oid\": \"e6\", \"entity\": \"quarrendon\"}\n  ],\n  \"claims\": [\n    {\n      \"cid\": \"c-qfl-discount-call\",\n      \"stated\": true,\n      \"value\": \"The discount stays at 12% under the new term.\",\n      \"line\": 15\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2026-04-09",
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "quarrendon"
+      },
+      {
+        "oid": "e2",
+        "entity": "quarrendon"
+      },
+      {
+        "oid": "e3",
+        "entity": "stoneharrow"
+      },
+      {
+        "oid": "e4",
+        "entity": "quarrendon"
+      },
+      {
+        "oid": "e5",
+        "entity": "stoneharrow"
+      },
+      {
+        "oid": "e6",
+        "entity": "quarrendon"
+      }
+    ],
+    "claims": [
+      {
+        "cid": "c-qfl-discount-call",
+        "stated": true,
+        "value": "The discount stays at 12% under the new term.",
+        "line": 15
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 3124,
+    "output_tokens": 188,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.008128
+}

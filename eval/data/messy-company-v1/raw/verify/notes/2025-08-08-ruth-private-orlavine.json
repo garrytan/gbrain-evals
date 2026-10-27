@@ -1,0 +1,68 @@
+{
+  "slug": "notes/2025-08-08-ruth-private-orlavine",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2025-08-08",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Orlavine",
+        "line": 7
+      },
+      {
+        "oid": "e2",
+        "surface": "Orlavine Medical Supply",
+        "line": 9
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": [
+      {
+        "account": "orlavine",
+        "question": "According to this page alone, who manages Orlavine Medical Supply, in what role, and from/until when?"
+      }
+    ]
+  },
+  "prompt_user_sha256": "b4e1b736b7675a8a99bf73712015da99f050c2012b676d8b9b4e77325a44c730",
+  "response_text": "{\n  \"date_used\": \"2025-08-08\",\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"orlavine\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"orlavine\"\n    }\n  ],\n  \"ownership\": [\n    {\n      \"account\": \"orlavine\",\n      \"owner\": \"Nadia Fennimore\",\n      \"role\": \"primary\",\n      \"start\": null,\n      \"end\": \"2025-08-11\",\n      \"line\": 9\n    },\n    {\n      \"account\": \"orlavine\",\n      \"owner\": \"Gideon Sato\",\n      \"role\": \"primary\",\n      \"start\": \"2025-08-11\",\n      \"end\": null,\n      \"line\": 9\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-08-08",
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "orlavine"
+      },
+      {
+        "oid": "e2",
+        "entity": "orlavine"
+      }
+    ],
+    "ownership": [
+      {
+        "account": "orlavine",
+        "owner": "Nadia Fennimore",
+        "role": "primary",
+        "start": null,
+        "end": "2025-08-11",
+        "line": 9
+      },
+      {
+        "account": "orlavine",
+        "owner": "Gideon Sato",
+        "role": "primary",
+        "start": "2025-08-11",
+        "end": null,
+        "line": 9
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2616,
+    "output_tokens": 225,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.007482
+}

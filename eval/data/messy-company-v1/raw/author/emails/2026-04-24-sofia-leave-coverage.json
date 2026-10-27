@@ -1,0 +1,37 @@
+{
+  "slug": "emails/2026-04-24-sofia-leave-coverage",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: email\nTitle: Coverage while Sofia is out\nDate: Written on 2026-04-24.\nWriter: Bettina Kroll\nVoice: hurried, lots of fragments\nFormat: a single email with a forwarded message below\nLength: about 247 words\nDate style in the body: casual (Jun 2nd, Monday the 2nd)\nTypos: one or two small natural typos (never in names or required phrases)\n\nBrief:\nBettina: Sofia is on leave May 4 through June 12, 2026, back June 15. Bettina covers Pellow Home Living as acting AM; Sofia remains the owner.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Bettina Kroll: Coastal team lead\n- Sofia Marchetti: Account manager, Coastal team\n- Kwame Adjei-Rowe: Account manager, Coastal team\n- Corinne Ashdown: VP Operations\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Pellucid Harbor Logistics: port drayage and terminal logistics, Gulf Coast; codes/nicknames PHL\n- Driftmoor Marine Freight: marine freight and barge operator, Puget Sound; codes/nicknames DMF\n- Saltmarsh Provisions: regional grocery distributor, Lowcountry; main contact Corinne Ashdown, VP Operations; codes/nicknames SMP\n- Pellow Home Living (renamed from Covey & Lark Retail on 2026-02-16): home goods retailer, Mid-Atlantic; codes/nicknames Covey, PHL\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2026-04-24 (background only; don't restate unless the brief asks):\n- Pellucid Harbor Logistics: managed by Kwame Adjei-Rowe\n- Driftmoor Marine Freight: managed by Kwame Adjei-Rowe\n- Saltmarsh Provisions: managed by Bettina Kroll\n- Pellow Home Living: managed by Sofia Marchetti",
+      "response_text": "To: Sofia Marchetti; Kwame Adjei-Rowe  \nSubject: Coverage while Sofia is out  \nDate: Apr 24th, 2026\n\nHi both—\n\nQuick coverage note before I disappear into the afternoon queue.\n\nSofia is on leave May 4th through Jun 12th, 2026, back Jun 15th. I’ll cover Pellow Home Living as acting AM during that window. Sofia remains the owner. Coverage only—not an ownership change.\n\nSofia, please send the open-items list before you log off next Friday. Especially the receiving supervisor’s screenshots from door 7, the duplicate appointment issue on the early shift, and whatever came back on the “Inbound arrivals by hour” export. I found two versions in the shared folder; one still has the old Covey & Lark Retail header. Will clean that up.\n\nI’ll handle customer replies and keep the running notes in the Pellow Home Living handover page. Please use the full account name in subject lines, not PHL. Too easy to grab the wrong thread when rushing.\n\nKwame—if something lands with you by accident, forward it straight over. No need to untangle it first.\n\nNeed the latest contact list too. The number on last week’s dock walk-through invite bounced me into a warehouse voicemail loop. Fun.\n\nWill sort the calender holds Monday.\n\n---\n\n**Forwarded message**  \nFrom: Sofia Marchetti  \nTo: Bettina Kroll  \nDate: Apr 24th, 2026  \nSubject: Pellow Home Living handover bits\n\nThanks. I’ll send the list Friday. Door 7 screenshots are in the support thread; export example still coming from the morning receiving team. I’ve asked them to include the selected date range this time.",
+      "usage": {
+        "input_tokens": 1053,
+        "output_tokens": 366,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.005766,
+      "provider_meta": {
+        "id": "resp_0346cbc4ecb9a650016acfae9c3a3487d1a1b8bd8e8ec6cfe2",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1053,
+          "input_tokens_details": {
+            "cache_write_tokens": 1050,
+            "cached_tokens": 0
+          },
+          "output_tokens": 366,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 1419
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

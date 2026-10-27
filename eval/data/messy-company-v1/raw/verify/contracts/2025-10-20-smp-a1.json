@@ -1,0 +1,87 @@
+{
+  "slug": "contracts/2025-10-20-smp-a1",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2025-10-20",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Saltmarsh Provisions",
+        "line": 6
+      },
+      {
+        "oid": "e2",
+        "surface": "Saltmarsh Provisions",
+        "line": 10
+      },
+      {
+        "oid": "e3",
+        "surface": "Saltmarsh Provisions",
+        "line": 16
+      },
+      {
+        "oid": "e4",
+        "surface": "Saltmarsh Provisions",
+        "line": 28
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": [],
+    "record": {
+      "question": "Is this document signed, an unsigned version, or a draft? Judge from the body text, not the title alone. Give its signed date and effective date if stated, and the value of each of these terms it sets.",
+      "terms": [
+        "discount_pct"
+      ]
+    }
+  },
+  "prompt_user_sha256": "ae33ae088b6e33358c355aa3de7063c67319b1510129a91462eeb6bae1bec128",
+  "response_text": "{\n  \"date_used\": \"2025-10-20\",\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"saltmarsh\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"saltmarsh\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"saltmarsh\"\n    },\n    {\n      \"oid\": \"e4\",\n      \"entity\": \"saltmarsh\"\n    }\n  ],\n  \"record\": {\n    \"status\": \"signed\",\n    \"status_evidence_line\": 12,\n    \"signed_date\": \"2025-10-20\",\n    \"effective_date\": \"2025-11-01\",\n    \"terms\": [\n      {\n        \"term\": \"discount_pct\",\n        \"applies_to\": [\n          \"saltmarsh\"\n        ],\n        \"value\": \"10%\",\n        \"line\": 16\n      }\n    ],\n    \"deciding_line\": 16,\n    \"deciding_days\": null\n  }\n}",
+  "parsed": {
+    "date_used": "2025-10-20",
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "saltmarsh"
+      },
+      {
+        "oid": "e2",
+        "entity": "saltmarsh"
+      },
+      {
+        "oid": "e3",
+        "entity": "saltmarsh"
+      },
+      {
+        "oid": "e4",
+        "entity": "saltmarsh"
+      }
+    ],
+    "record": {
+      "status": "signed",
+      "status_evidence_line": 12,
+      "signed_date": "2025-10-20",
+      "effective_date": "2025-11-01",
+      "terms": [
+        {
+          "term": "discount_pct",
+          "applies_to": [
+            "saltmarsh"
+          ],
+          "value": "10%",
+          "line": 16
+        }
+      ],
+      "deciding_line": 16,
+      "deciding_days": null
+    }
+  },
+  "usage": {
+    "input_tokens": 3174,
+    "output_tokens": 280,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.009148
+}

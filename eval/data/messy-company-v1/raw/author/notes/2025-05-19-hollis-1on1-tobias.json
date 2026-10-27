@@ -1,0 +1,37 @@
+{
+  "slug": "notes/2025-05-19-hollis-1on1-tobias",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: private-note (a private page only the writer sees)\nTitle: Private: 1:1 with Tobias\nDate: Written on 2025-05-19.\nWriter: Hollis Mbeki\nVoice: polished and businesslike\nFormat: private notes in first person, bullets\nLength: about 169 words\nDate style in the body: mixed: some ISO, some casual\nTypos: a few natural typos and one or two sloppy abbreviations (never in names or required phrases)\n\nBrief:\nHollis's private 1:1 notes: as of today Tobias owns Tansleigh Packaging. Hollis is not announcing it to the wider team until Tobias's ramp plan is approved. Also career goals and a training plan.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Hollis Mbeki: Central team lead\n- Priyanka \"Pree\" Sundaram: Account manager, Central team\n- Tobias Rendle: Account manager, Central team\n- Lev Arkadin: Procurement lead\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Tansley Parcel: regional parcel delivery, South Central; main contact Lev Arkadin, Procurement lead; codes/nicknames TPCL, TP\n- Tansleigh Packaging: corrugated packaging manufacturer, Ohio Valley; codes/nicknames TSP, TP\n- Marrow Fieldworks: agricultural equipment dealer network, Plains; codes/nicknames MFW\n- Marrow Agrisupply: farm supply retail chain, Plains; subsidiary of Marrow Fieldworks; codes/nicknames MAS, Marrow Agri\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2025-05-19 (background only; don't restate unless the brief asks):\n- Tansley Parcel: managed by Priyanka \"Pree\" Sundaram\n- Tansleigh Packaging: managed by Tobias Rendle\n- Marrow Fieldworks: managed by Priyanka \"Pree\" Sundaram\n- Marrow Agrisupply: managed by Central team (pooled account)",
+      "response_text": "# Private: 1:1 with Tobias\n\n- **2025-05-19:** As of today, Tobias Rendle owns Tansleigh Packaging. I am keeping this private and will not announce it to the wider team until his ramp plan is approved.\n- Tobias wants to progress toward more complex manufacturing work, with particular emphasis on operational discovery rather than simply running product walkthroughs. I asked him to bring two examples of questions that changed a customer's scheduling decision.\n- For training, I want him to rehearse a Pemberline Dock session covering recurring appointments, late arrivals, and dock-door reassignment. We used an example involving a delayed corrugated load at door 6 during the afternoon shift; he handled the reassignment well but skipped the dispatcher notification.\n- By Friday, May 23, I will review his draft ramp plan. He will add a practice agenda, a short discovery checklist, and time for follow-up notes. The sequence needs a little more work before approval.\n- I also asked for a cleaner handoff summary—less backgound, more next actions. We'll revisit the training excercise at our next mtg.",
+      "usage": {
+        "input_tokens": 1068,
+        "output_tokens": 235,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.004486,
+      "provider_meta": {
+        "id": "resp_00f6c47f35352471016acfae6c733c87d1836154cb7fb2ca46",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1068,
+          "input_tokens_details": {
+            "cache_write_tokens": 1065,
+            "cached_tokens": 0
+          },
+          "output_tokens": 235,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 1303
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

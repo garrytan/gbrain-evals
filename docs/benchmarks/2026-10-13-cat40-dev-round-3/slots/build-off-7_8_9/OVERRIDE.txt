@@ -1,0 +1,1 @@
+exit 1 after a complete receipt (complete=true, write/restore/rerank probes passed on slots 7-9, 0 queued effects); the only error is a transient ECONNRESET on one slot7 embedding request that was retried; accepted 2026-10-13

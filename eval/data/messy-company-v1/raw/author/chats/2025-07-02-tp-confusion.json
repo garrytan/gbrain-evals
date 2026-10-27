@@ -1,0 +1,41 @@
+{
+  "slug": "chats/2025-07-02-tp-confusion",
+  "model": "gemini:gemini-4-argon",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "gemini:gemini-4-argon",
+      "prompt_user": "Document kind: chat\nTitle: #central-team, Jul 2\nDate: Written on 2025-07-02.\nWriter: Priyanka \"Pree\" Sundaram\nVoice: chatty, a bit rambling\nFormat: undefined\nLength: about 1 words\nDate style in the body: undefined\nTypos: a few natural typos and one or two sloppy abbreviations (never in names or required phrases)\n\nBrief:\nSlack log. Someone writes \"TP\" for a support escalation and people argue whether that is Tansley Parcel or Tansleigh Packaging (it turns out to be Tansleigh). Someone also misspells it as \"Tansley Packaging\". Include \"TP\" at least twice and \"Tansley Packaging\" once.\n\nUse these names or codes at least once each, as written: \"TP\", \"Tansley Packaging\".\n\nRequired phrases:\n- Use the exact phrase \"Hollis's old packaging account\" once, referring to Tansleigh Packaging. This page must not reveal which account that is or who manages it: no account name, location, or detail that identifies it in that sentence or paragraph.\n- Use the exact phrase \"Pree's Zoom account\" once, in the sense of: her video-call login. It must not be about a customer account.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Hollis Mbeki: Central team lead\n- Priyanka \"Pree\" Sundaram: Account manager, Central team\n- Tobias Rendle: Account manager, Central team\n- Lev Arkadin: Procurement lead\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Tansley Parcel: regional parcel delivery, South Central; main contact Lev Arkadin, Procurement lead; codes/nicknames TPCL, TP\n- Tansleigh Packaging: corrugated packaging manufacturer, Ohio Valley; codes/nicknames TSP, TP\n- Marrow Fieldworks: agricultural equipment dealer network, Plains; codes/nicknames MFW\n- Marrow Agrisupply: farm supply retail chain, Plains; subsidiary of Marrow Fieldworks; codes/nicknames MAS, Marrow Agri\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2025-07-02 (background only; don't restate unless the brief asks):\n- Tansley Parcel: managed by Priyanka \"Pree\" Sundaram\n- Tansleigh Packaging: not stated on any shared page (do not say who manages it)\n- Marrow Fieldworks: managed by Priyanka \"Pree\" Sundaram\n- Marrow Agrisupply: managed by Central team (pooled account)",
+      "response_text": "**#central-team** — Jul 2, 2025\n\n**Tobias Rendle** [09:14 AM]\nhey who grabbed the Tier 2 support escalation for TP? ticket #88412, gatehouse tablet at Door 6 freezing on the BOL barcode scan. theyve got three reefers idling on the apron since 6am central\n\n**Priyanka \"Pree\" Sundaram** [09:15 AM]\nwait TP as in Tansley Parcel?? bc Lev Arkadin literally just slacked me abt a yard jockey login thing at the Tulsa hub and didnt say a word abt Door 6 freezing up, im panicking a lil bit here, did they open a sev2 without telling me??\n\n**Tobias Rendle** [09:16 AM]\nno no sorry!! not parcel. i meant Tansley Packaging, the corrugated folks\n\n**Hollis Mbeki** [09:17 AM]\nTansleigh Packaging*\nand guys pls stop putting just TP in the triage queue, we do this every single tuesday lol. use TPCL or TSP so support doesnt page the wrong on-call\n\n**Priyanka \"Pree\" Sundaram** [09:18 AM]\nomg thank u Hollis, my heart rate just dropped back to normal. seriously tho whenever someone writes TP in the subject line my brain auto-fills Tansley Parcel and i start digging thru my emails like a maniac thinking i missed an outage alert. anyway while im here, whoever has a free sec today can we look at the training deck for Hollis's old packaging account? the slide on dock-door auto-assign still has the 2023 UI screenshots with the ugly grey buttons and it looks super dated\n\n**Tobias Rendle** [09:20 AM]\nmy bad my bad, typing w one hand while eating a bagel. it IS Tansleigh Packaging on #88412. their night shift lead said the scanner app hangs whenever a driver from Quarendon Freightways pulls up with a split manifest, which is weird bc it worked fine yesterday.\nalso @Priyanka \"Pree\" Sundaram are u still logged into the shared webinar room? support wants to spin up a screen share for the gatehouse clerk and Pree's Zoom account is currently hosting the recurring Marrow Agrisupply office hours link so it wont let me start a second meeting on the team license\n\n**Priyanka \"Pree\" Sundaram** [09:21 AM]\noh shoot yeah!! sorry, i left the room open after the 8am check-in w the Wichita store dispatcher bc he wanted to test his mic, killing it rn! go ahead and hop on, im gonna go grab more iced coffee before my head explodes from the acronym soup today lol",
+      "usage": {
+        "input_tokens": 1232,
+        "output_tokens": 598,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.008444,
+      "provider_meta": {
+        "finishReason": "STOP",
+        "usage": {
+          "promptTokenCount": 1232,
+          "candidatesTokenCount": 598,
+          "totalTokenCount": 1830,
+          "promptTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 1232
+            }
+          ],
+          "candidatesTokensDetails": [
+            {
+              "modality": "TEXT",
+              "tokenCount": 598
+            }
+          ]
+        },
+        "modelVersion": "gemini-4-argon"
+      },
+      "checks": []
+    }
+  ]
+}

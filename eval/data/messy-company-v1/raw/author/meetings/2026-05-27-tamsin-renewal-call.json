@@ -1,0 +1,37 @@
+{
+  "slug": "meetings/2026-05-27-tamsin-renewal-call",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: meeting\nTitle: Tamsin renewal call\nDate: Written on 2026-05-27.\nWriter: Dana Okafor\nVoice: dry and slightly sarcastic\nFormat: undefined\nLength: about 112 words\nDate style in the body: undefined\nTypos: none\n\nBrief:\nDana's notes: Tamsin signed the renewal today, 52 seats, through May 31, 2027.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Ilse Varga: North team lead\n- Dana Okafor: Account manager, North team\n- Marcus Lindqvist: Account manager, North team\n- Thea Ramaswell: Director of Yard Operations\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Quarrendon Freight Lines: truckload freight carrier, Upper Midwest; main contact Thea Ramaswell, Director of Yard Operations; codes/nicknames QFL, Q-Freight\n- Brackenwater Freight Co.: less-than-truckload freight, Great Lakes; codes/nicknames BWF, Bracken\n- Tamsin Cold Chain: refrigerated warehousing, Pacific Northwest; codes/nicknames TCC\n- Thornbury Cloth Co. (renamed from Orrin Mills on 2026-01-12): textile mill, Carolinas; codes/nicknames TCC\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2026-05-27 (background only; don't restate unless the brief asks):\n- Quarrendon Freight Lines: managed by Dana Okafor\n- Brackenwater Freight Co.: managed by Marcus Lindqvist\n- Tamsin Cold Chain: managed by Dana Okafor\n- Thornbury Cloth Co.: managed by Marcus Lindqvist",
+      "response_text": "# Tamsin renewal call\n\nMay 27, 2026\n\nTamsin Cold Chain signed the Pemberline Dock renewal today: 52 seats, through May 31, 2027. Paperwork is done. A pleasant change from discussing paperwork.\n\nThe call then moved to the overnight receiving queue at the Tacoma warehouse. Dispatch reported that drivers arriving for door 6 keep being sent to door 4 after a shift handoff. The appointment is correct; the printed receiving sheet is stale. Apparently paper remains committed to its own version of events.\n\nNext steps:\n- Send the signed renewal to June Osei-Lark.\n- Ask dispatch for yesterday’s receiving sheet and the corresponding appointment IDs.\n- Check the saved report filters before blaming the door assignment logic.",
+      "usage": {
+        "input_tokens": 1010,
+        "output_tokens": 159,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.00361,
+      "provider_meta": {
+        "id": "resp_09dd721e4ec43ff9016acfae39982487d19c0230bf16be6f02",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1010,
+          "input_tokens_details": {
+            "cache_write_tokens": 0,
+            "cached_tokens": 0
+          },
+          "output_tokens": 159,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 1169
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

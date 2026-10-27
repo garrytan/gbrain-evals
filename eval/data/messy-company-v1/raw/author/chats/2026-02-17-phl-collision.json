@@ -1,0 +1,37 @@
+{
+  "slug": "chats/2026-02-17-phl-collision",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: chat\nTitle: #coastal-team, Feb 17\nDate: Written on 2026-02-17.\nWriter: Kwame Adjei-Rowe\nVoice: dry and slightly sarcastic\nFormat: a chat log with [HH:MM] timestamps and lowercase usernames\nLength: about 116 words\nDate style in the body: ISO (2025-06-02)\nTypos: none\n\nBrief:\nSlack log: the day after the rename, a report filter for \"PHL\" pulls both Pellucid Harbor Logistics and Pellow Home Living. Kwame and Sofia sort out which PHL is which. Use \"PHL\" at least three times with clear referents.\n\nUse these names or codes at least once each, as written: \"PHL\", \"Pellow\".\n\nRequired phrases:\n- Use the exact phrase \"Sofia's retail account\" once, referring to Pellow Home Living. Don't put the account's name in the same sentence; the reader should work it out.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Bettina Kroll: Coastal team lead\n- Sofia Marchetti: Account manager, Coastal team\n- Kwame Adjei-Rowe: Account manager, Coastal team\n- Corinne Ashdown: VP Operations\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Pellucid Harbor Logistics: port drayage and terminal logistics, Gulf Coast; codes/nicknames PHL\n- Driftmoor Marine Freight: marine freight and barge operator, Puget Sound; codes/nicknames DMF\n- Saltmarsh Provisions: regional grocery distributor, Lowcountry; main contact Corinne Ashdown, VP Operations; codes/nicknames SMP\n- Pellow Home Living (renamed from Covey & Lark Retail on 2026-02-16): home goods retailer, Mid-Atlantic; codes/nicknames Covey, PHL\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2026-02-17 (background only; don't restate unless the brief asks):\n- Pellucid Harbor Logistics: managed by Kwame Adjei-Rowe\n- Driftmoor Marine Freight: managed by Kwame Adjei-Rowe\n- Saltmarsh Provisions: managed by Bettina Kroll\n- Pellow Home Living: managed by Sofia Marchetti",
+      "response_text": "### #coastal-team, Feb 17\n2026-02-17\n\n[09:12] kwame: Yesterday’s rename from Covey & Lark Retail to Pellow Home Living has improved the morning report: filtering “PHL” now returns both Pellow Home Living and Pellucid Harbor Logistics. Two businesses, one acronym. Efficient.\n\n[09:14] sofia: PHL with the Mid-Atlantic home goods appointments is Pellow. The Gulf Coast terminal rows are Pellucid Harbor Logistics.\n\n[09:15] kwame: Right. Sofia's retail account is the one showing the lamp delivery at door 6, then. Not the container pickup.\n\n[09:16] sofia: Correct. I’ll relabel the saved retail view with the full name and check tomorrow’s export.\n\n[09:18] kwame: I’ll fix the terminal view. Until then, PHL means “please hunt labels.”",
+      "usage": {
+        "input_tokens": 1125,
+        "output_tokens": 196,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.00421,
+      "provider_meta": {
+        "id": "resp_0884fd5243b4b300016acfae7f989887d1b108e79c11b0bf9b",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1125,
+          "input_tokens_details": {
+            "cache_write_tokens": 1122,
+            "cached_tokens": 0
+          },
+          "output_tokens": 196,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 1321
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

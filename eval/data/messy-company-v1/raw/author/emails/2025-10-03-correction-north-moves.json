@@ -1,0 +1,37 @@
+{
+  "slug": "emails/2025-10-03-correction-north-moves",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: email\nTitle: Correction: North account moves\nDate: Written on 2025-10-03.\nWriter: Ilse Varga\nVoice: polished and businesslike\nFormat: an email thread with From/To/Date headers and quoted earlier replies (> lines)\nLength: about 392 words\nDate style in the body: mixed: some ISO, some casual\nTypos: a few natural typos and one or two sloppy abbreviations (never in names or required phrases)\n\nBrief:\nIlse corrects her October 1 email: Tamsin Cold Chain stays with Dana. The account moving to Marcus on October 6 is Orrin Mills, not Tamsin. She apologizes for the confusion.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Ilse Varga: North team lead\n- Dana Okafor: Account manager, North team\n- Marcus Lindqvist: Account manager, North team\n- Thea Ramaswell: Director of Yard Operations\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Quarrendon Freight Lines: truckload freight carrier, Upper Midwest; main contact Thea Ramaswell, Director of Yard Operations; codes/nicknames QFL, Q-Freight\n- Brackenwater Freight Co.: less-than-truckload freight, Great Lakes; codes/nicknames BWF, Bracken\n- Tamsin Cold Chain: refrigerated warehousing, Pacific Northwest; codes/nicknames TCC\n- Orrin Mills: textile mill, Carolinas; codes/nicknames ORM\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2025-10-03 (background only; don't restate unless the brief asks):\n- Quarrendon Freight Lines: managed by Dana Okafor\n- Brackenwater Freight Co.: managed by Marcus Lindqvist\n- Tamsin Cold Chain: managed by Dana Okafor\n- Orrin Mills: managed by Dana Okafor",
+      "response_text": "From: Ilse Varga  \nTo: Dana Okafor; Marcus Lindqvist  \nDate: 2025-10-03  \nSubject: Correction: North account moves\n\nDana, Marcus,\n\nPlease disregard the account name in my October 1 email below. **Tamsin Cold Chain stays with Dana Okafor. Orrin Mills is the account moving to Marcus Lindqvist on October 6.**\n\nI apologize for the confusion, particularly because the earlier message prompted preparation for the wrong handoff. There is no change to the Tamsin Cold Chain coverage.\n\nDana, please keep the Tuesday check-in for Tamsin Cold Chain on your calender. The receiving supervisor wants to walk through the overnight appointment list, specifically the refrigerated arrivals that are appearing under the previous shift after midnight. Keep the screenshots from doors 4 and 5 together with the support ticket; the second screenshot shows the date filter more clearly.\n\nFor Orrin Mills, please send Marcus the open-items summary before Monday. The useful pieces are the loading-office contact list, the notes from the last scheduling walkthrough, and the saved “Morning Dispatch Exceptions” report. Please include the example where a trailer booked for door 7 was moved to door 9 but the printed worksheet still showed the original assignment.\n\nMarcus, please use that example for the first follow-up rather than asking the mill team to reproduce everything again. They have already sent two sets of screenshots. Once you recieve the notes, check that the report opens correctly and flag any missing attachments in this thread.\n\nI will correct the North coverage sheet and replace the handoff reminder this afternoon. Please remove the Tamsin Cold Chain transfer task from your Monday prep list; keep the Orrin Mills task.\n\nThank you both for catching this before the customer-facing introductions went out.\n\nIlse\n\n> From: Marcus Lindqvist  \n> To: Ilse Varga; Dana Okafor  \n> Date: 2025-10-02  \n> Subject: Re: North account moves\n>\n> Ilse,\n>\n> Before I send an introduction, could you check the account name? The prep folder contains Orrin Mills loading-office notes, but your email says Tamsin Cold Chain. I have left the introduction draft unsent.\n>\n> The Orrin Mills report attachment also appears to be missing. Dana, pls include it when the handoff is ready.\n>\n> Marcus\n>\n> From: Ilse Varga  \n> To: Dana Okafor; Marcus Lindqvist  \n> Date: October 1, 2025  \n> Subject: North account moves\n>\n> Dana, Marcus,\n>\n> Tamsin Cold Chain will move to Marcus Lindqvist on October 6. Please prepare the open-items summary and contact notes for Monday’s handoff.\n>\n> Ilse",
+      "usage": {
+        "input_tokens": 1049,
+        "output_tokens": 646,
+        "thinking_tokens": 68
+      },
+      "cost_usd": 0.008558,
+      "provider_meta": {
+        "id": "resp_0b838d96d39b2923016acfae3327f087d1a11893accb869ef1",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1049,
+          "input_tokens_details": {
+            "cache_write_tokens": 1046,
+            "cached_tokens": 0
+          },
+          "output_tokens": 646,
+          "output_tokens_details": {
+            "reasoning_tokens": 68
+          },
+          "total_tokens": 1695
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

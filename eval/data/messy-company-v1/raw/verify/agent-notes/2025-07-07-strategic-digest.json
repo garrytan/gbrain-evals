@@ -1,0 +1,105 @@
+{
+  "slug": "agent-notes/2025-07-07-strategic-digest",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2025-07-07",
+    "owner_phrases": [
+      {
+        "mid": "agent-notes/2025-07-07-strategic-digest#m1",
+        "phrase": "Nadia's biggest account",
+        "lines": [
+          12
+        ]
+      },
+      {
+        "mid": "agent-notes/2025-07-07-strategic-digest#m2",
+        "phrase": "Gideon's fleet account",
+        "lines": [
+          15
+        ]
+      },
+      {
+        "mid": "agent-notes/2025-07-07-strategic-digest#m3",
+        "phrase": "Nadia's account of the signing dinner",
+        "lines": [
+          18
+        ]
+      }
+    ],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Vantorre",
+        "line": 9
+      },
+      {
+        "oid": "e2",
+        "surface": "Vantorre Group",
+        "line": 11
+      },
+      {
+        "oid": "e3",
+        "surface": "Vantorre Mobility",
+        "line": 14
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "f62c592366cf74343ef873e0e65f4385d6bf80788f52465c8dda1653df3d1684",
+  "response_text": "{\n  \"date_used\": \"2025-07-07\",\n  \"owner_phrases\": [\n    {\n      \"mid\": \"agent-notes/2025-07-07-strategic-digest#m1\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\n        \"vantorre-group\"\n      ],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"Under the Vantorre Group heading; Nadia is primary owner of vantorre-group on 2025-07-07.\"\n    },\n    {\n      \"mid\": \"agent-notes/2025-07-07-strategic-digest#m2\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\n        \"vantorre-mobility\"\n      ],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"Under the Vantorre Mobility heading; Gideon owns vantorre-mobility (descriptor: fleet).\"\n    },\n    {\n      \"mid\": \"agent-notes/2025-07-07-strategic-digest#m3\",\n      \"refers_to_customer_account\": false,\n      \"accounts\": [],\n      \"reading\": \"not about a customer account (a login, device, HR/expense account, a narrative 'account of', a vendor relationship, an employer)\",\n      \"note\": \"Refers to a narrative report ('account of the signing dinner'), not a customer account.\"\n    }\n  ],\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"vantorre-group\",\n      \"note\": \"Refers to the Vantorre MSA, with signing packet filed under Vantorre Group (parent company).\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"vantorre-mobility\"\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-07-07",
+    "owner_phrases": [
+      {
+        "mid": "agent-notes/2025-07-07-strategic-digest#m1",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "vantorre-group"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "Under the Vantorre Group heading; Nadia is primary owner of vantorre-group on 2025-07-07."
+      },
+      {
+        "mid": "agent-notes/2025-07-07-strategic-digest#m2",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "vantorre-mobility"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "Under the Vantorre Mobility heading; Gideon owns vantorre-mobility (descriptor: fleet)."
+      },
+      {
+        "mid": "agent-notes/2025-07-07-strategic-digest#m3",
+        "refers_to_customer_account": false,
+        "accounts": [],
+        "reading": "not about a customer account (a login, device, HR/expense account, a narrative 'account of', a vendor relationship, an employer)",
+        "note": "Refers to a narrative report ('account of the signing dinner'), not a customer account."
+      }
+    ],
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "vantorre-group",
+        "note": "Refers to the Vantorre MSA, with signing packet filed under Vantorre Group (parent company)."
+      },
+      {
+        "oid": "e2",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e3",
+        "entity": "vantorre-mobility"
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2845,
+    "output_tokens": 512,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.01081
+}

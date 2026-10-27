@@ -1,0 +1,298 @@
+{
+  "scorer_version": 1,
+  "decision_rule": {
+    "maxHardFailures": 0,
+    "minTrueDuplicateAccuracy": 0.8
+  },
+  "files": [
+    "gpt-6.1-sol-run1.jsonl",
+    "gpt-6.1-sol-run2.jsonl",
+    "gpt-6.1-sol-run3.jsonl",
+    "opus-5-5-run1.jsonl",
+    "opus-5-5-run2.jsonl",
+    "opus-5-5-run3.jsonl",
+    "sonnet-5-5-run1.jsonl",
+    "sonnet-5-5-run2.jsonl",
+    "sonnet-5-5-run3.jsonl"
+  ],
+  "models": [
+    {
+      "model": "anthropic:claude-opus-5-5",
+      "runs": 3,
+      "n": 144,
+      "hard_failures": 0,
+      "hard_failure_ids": {},
+      "true_duplicate": {
+        "n": 75,
+        "by_action": {
+          "merge_into": 69,
+          "remove_slug": 0,
+          "needs_human": 6,
+          "none": 0
+        },
+        "best": 69,
+        "acceptable": 6,
+        "hard_failures": 0,
+        "guesses": 0,
+        "no_answer": 0,
+        "merge_canonical": 69,
+        "accuracy": 0.92,
+        "accuracy_ci": [
+          0.8362520958331641,
+          0.9628198758670685
+        ],
+        "wrong_canonical": 0,
+        "per_run_accuracy": [
+          0.92,
+          0.92,
+          0.92
+        ]
+      },
+      "stray_slug": {
+        "n": 30,
+        "by_action": {
+          "merge_into": 0,
+          "remove_slug": 30,
+          "needs_human": 0,
+          "none": 0
+        },
+        "best": 30,
+        "acceptable": 0,
+        "hard_failures": 0,
+        "guesses": 0,
+        "no_answer": 0
+      },
+      "adversarial": {
+        "n": 24,
+        "by_action": {
+          "merge_into": 0,
+          "remove_slug": 18,
+          "needs_human": 6,
+          "none": 0
+        },
+        "best": 18,
+        "acceptable": 6,
+        "hard_failures": 0,
+        "guesses": 0,
+        "no_answer": 0
+      },
+      "ambiguous": {
+        "n": 15,
+        "by_action": {
+          "merge_into": 0,
+          "remove_slug": 0,
+          "needs_human": 15,
+          "none": 0
+        },
+        "best": 15,
+        "acceptable": 0,
+        "hard_failures": 0,
+        "guesses": 0,
+        "no_answer": 0
+      },
+      "needs_human_rate": 0.1875,
+      "no_answer": {
+        "n": 0,
+        "by_failure": {}
+      },
+      "cost": {
+        "usd_total": 1.262280000000001,
+        "usd_per_pair": 0.00876583333333334,
+        "input_tokens": 175035,
+        "output_tokens": 28107
+      },
+      "latency_ms": {
+        "p50": 3020,
+        "p95": 6400.249999999999
+      },
+      "meets_rule": true
+    },
+    {
+      "model": "openai:gpt-6.1-sol",
+      "runs": 3,
+      "n": 144,
+      "hard_failures": 0,
+      "hard_failure_ids": {},
+      "true_duplicate": {
+        "n": 75,
+        "by_action": {
+          "merge_into": 64,
+          "remove_slug": 0,
+          "needs_human": 11,
+          "none": 0
+        },
+        "best": 64,
+        "acceptable": 11,
+        "hard_failures": 0,
+        "guesses": 0,
+        "no_answer": 0,
+        "merge_canonical": 64,
+        "accuracy": 0.8533333333333334,
+        "accuracy_ci": [
+          0.7561523205206842,
+          0.9160828302747497
+        ],
+        "wrong_canonical": 0,
+        "per_run_accuracy": [
+          0.84,
+          0.84,
+          0.88
+        ]
+      },
+      "stray_slug": {
+        "n": 30,
+        "by_action": {
+          "merge_into": 0,
+          "remove_slug": 30,
+          "needs_human": 0,
+          "none": 0
+        },
+        "best": 30,
+        "acceptable": 0,
+        "hard_failures": 0,
+        "guesses": 0,
+        "no_answer": 0
+      },
+      "adversarial": {
+        "n": 24,
+        "by_action": {
+          "merge_into": 0,
+          "remove_slug": 21,
+          "needs_human": 3,
+          "none": 0
+        },
+        "best": 21,
+        "acceptable": 3,
+        "hard_failures": 0,
+        "guesses": 0,
+        "no_answer": 0
+      },
+      "ambiguous": {
+        "n": 15,
+        "by_action": {
+          "merge_into": 0,
+          "remove_slug": 0,
+          "needs_human": 15,
+          "none": 0
+        },
+        "best": 15,
+        "acceptable": 0,
+        "hard_failures": 0,
+        "guesses": 0,
+        "no_answer": 0
+      },
+      "needs_human_rate": 0.2013888888888889,
+      "no_answer": {
+        "n": 0,
+        "by_failure": {}
+      },
+      "cost": {
+        "usd_total": 0.313438,
+        "usd_per_pair": 0.002176652777777778,
+        "input_tokens": 122574,
+        "output_tokens": 6829
+      },
+      "latency_ms": {
+        "p50": 2743.5,
+        "p95": 7269.649999999999
+      },
+      "meets_rule": true
+    },
+    {
+      "model": "anthropic:claude-sonnet-5-5",
+      "runs": 3,
+      "n": 144,
+      "hard_failures": 0,
+      "hard_failure_ids": {},
+      "true_duplicate": {
+        "n": 75,
+        "by_action": {
+          "merge_into": 60,
+          "remove_slug": 0,
+          "needs_human": 15,
+          "none": 0
+        },
+        "best": 60,
+        "acceptable": 15,
+        "hard_failures": 0,
+        "guesses": 0,
+        "no_answer": 0,
+        "merge_canonical": 60,
+        "accuracy": 0.8,
+        "accuracy_ci": [
+          0.6958871707434741,
+          0.8748785233281208
+        ],
+        "wrong_canonical": 0,
+        "per_run_accuracy": [
+          0.84,
+          0.8,
+          0.76
+        ]
+      },
+      "stray_slug": {
+        "n": 30,
+        "by_action": {
+          "merge_into": 0,
+          "remove_slug": 30,
+          "needs_human": 0,
+          "none": 0
+        },
+        "best": 30,
+        "acceptable": 0,
+        "hard_failures": 0,
+        "guesses": 0,
+        "no_answer": 0
+      },
+      "adversarial": {
+        "n": 24,
+        "by_action": {
+          "merge_into": 0,
+          "remove_slug": 19,
+          "needs_human": 5,
+          "none": 0
+        },
+        "best": 19,
+        "acceptable": 5,
+        "hard_failures": 0,
+        "guesses": 0,
+        "no_answer": 0
+      },
+      "ambiguous": {
+        "n": 15,
+        "by_action": {
+          "merge_into": 0,
+          "remove_slug": 0,
+          "needs_human": 15,
+          "none": 0
+        },
+        "best": 15,
+        "acceptable": 0,
+        "hard_failures": 0,
+        "guesses": 0,
+        "no_answer": 0
+      },
+      "needs_human_rate": 0.24305555555555555,
+      "no_answer": {
+        "n": 0,
+        "by_failure": {}
+      },
+      "cost": {
+        "usd_total": 0.4722319999999998,
+        "usd_per_pair": 0.0032793888888888877,
+        "input_tokens": 174891,
+        "output_tokens": 12245
+      },
+      "latency_ms": {
+        "p50": 1614,
+        "p95": 2443
+      },
+      "meets_rule": true
+    }
+  ],
+  "measured_models": [
+    "anthropic:claude-opus-5-5",
+    "openai:gpt-6.1-sol",
+    "anthropic:claude-sonnet-5-5"
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "policies": {
+    "fixed-evidence": {
+      "budget_tokens": 8000
+    }
+  },
+  "contexts": [],
+  "readers": []
+}

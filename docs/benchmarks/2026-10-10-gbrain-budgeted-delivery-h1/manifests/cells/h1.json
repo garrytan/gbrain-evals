@@ -1,0 +1,59 @@
+{
+  "kind": "oss-shootout-cells",
+  "schema_version": 1,
+  "system": "gbrain-query",
+  "config": "h1",
+  "notes": "Budgeted delivery H1 on sealed confirmation v2. Every cell is local to the custodian's Mac: eval/runner/budgeted-delivery/h1-run.sh reserves and launches them with the campaign state inside the custody root (H1_ROOT), and each cell command is a step of the same script, so its rows, caches and the lease proxy's ledger and usage log stay under that root. The ledger named here holds only lease reservations and settlements.",
+  "cells": [
+    {
+      "id": "h1-freeze",
+      "benchmark": "custody",
+      "lease_usd": 5,
+      "local": true,
+      "lease_basis": "estimate $1.50: 40 histories of about 143,000 tokens embedded once with text-embedding-3-large (about $0.75) and about 240 reranked queries with readiness probes (about $0.15), with headroom; lease about 3x (Garry 2026-10-10)",
+      "command": "bash eval/runner/budgeted-delivery/h1-run.sh cell freeze",
+      "pass": ["OPENAI_API_KEY", "VOYAGE_API_KEY"],
+      "timeout_hours": 3
+    },
+    {
+      "id": "h1-deliver",
+      "benchmark": "custody",
+      "lease_usd": 0.5,
+      "local": true,
+      "lease_basis": "no provider call expected (hash vectors, reranker off, every frozen chunk's text checked)",
+      "command": "bash eval/runner/budgeted-delivery/h1-run.sh cell deliver",
+      "pass": ["OPENAI_API_KEY"],
+      "timeout_hours": 2
+    },
+    {
+      "id": "h1-read-sonnet",
+      "benchmark": "custody",
+      "lease_usd": 57,
+      "local": true,
+      "lease_basis": "estimate $19: 800 claude-sonnet-5-5 calls (4 contexts x 200 questions) at E2's measured means, about 9,300 to 11,000 input and 400 to 440 output tokens, about $0.023 each; lease 3x (Garry 2026-10-10)",
+      "command": "bash eval/runner/budgeted-delivery/h1-run.sh cell read-sonnet",
+      "pass": ["ANTHROPIC_API_KEY"],
+      "timeout_hours": 4
+    },
+    {
+      "id": "h1-read-frontier",
+      "benchmark": "custody",
+      "lease_usd": 74.5,
+      "local": true,
+      "lease_basis": "estimate $24.50: 400 claude-opus-5-5 calls at about $0.047 and 400 gpt-6.1-sol calls at about $0.015 (E2 phase 2 means); lease about 3x (Garry 2026-10-10)",
+      "command": "bash eval/runner/budgeted-delivery/h1-run.sh cell read-frontier",
+      "pass": ["ANTHROPIC_API_KEY", "OPENAI_API_KEY"],
+      "timeout_hours": 4
+    },
+    {
+      "id": "h1-score",
+      "benchmark": "custody",
+      "lease_usd": 8,
+      "local": true,
+      "lease_basis": "estimate $2: 1,600 gpt-4o-2024-08-06 judge calls (8 arms x 200) at about $0.0012 (decision 1 measured 400 calls for $0.47); lease about 4x",
+      "command": "bash eval/runner/budgeted-delivery/h1-run.sh cell score",
+      "pass": ["OPENAI_API_KEY"],
+      "timeout_hours": 2
+    }
+  ]
+}

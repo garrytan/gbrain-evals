@@ -1,0 +1,37 @@
+{
+  "slug": "contracts/2025-03-12-clr-of-2025",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: record\nTitle: Order Form: Covey & Lark Retail\nDate: Written on 2025-03-12.\nWriter: June Osei-Lark\nVoice: formal legal drafting\nFormat: formal numbered sections and a signature block\nLength: about 537 words\nDate style in the body: undefined\nTypos: none\n\nBrief:\nOrder Form: Covey & Lark Retail. Parties: Pemberline Systems and Covey & Lark Retail. Drafted 2025-02-27. Effective date 2025-04-01 (signed 2025-03-12; state both dates and keep them distinct). Terms this document sets: subscribed seats = 42; price per seat per year (USD) = 1700; discount (%) = 0; end of the current term (renewal date) = 2026-03-31. Executed: include a signature block signed on 2025-03-12 by both parties (customer signatory plus June Osei-Lark for Pemberline).\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Bettina Kroll: Coastal team lead\n- Sofia Marchetti: Account manager, Coastal team\n- Kwame Adjei-Rowe: Account manager, Coastal team\n- Corinne Ashdown: VP Operations\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Pellucid Harbor Logistics: port drayage and terminal logistics, Gulf Coast; codes/nicknames PHL\n- Driftmoor Marine Freight: marine freight and barge operator, Puget Sound; codes/nicknames DMF\n- Saltmarsh Provisions: regional grocery distributor, Lowcountry; main contact Corinne Ashdown, VP Operations; codes/nicknames SMP\n- Covey & Lark Retail: home goods retailer, Mid-Atlantic; codes/nicknames Covey, CLR\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2025-03-12 (background only; don't restate unless the brief asks):\n- Pellucid Harbor Logistics: managed by Bettina Kroll\n- Driftmoor Marine Freight: managed by Sofia Marchetti\n- Saltmarsh Provisions: managed by Sofia Marchetti\n- Covey & Lark Retail: managed by Sofia Marchetti",
+      "response_text": "# Order Form: Covey & Lark Retail\n\n## 1. Document Identification\n\nThis Order Form is entered into by Pemberline Systems and Covey & Lark Retail for the subscription identified below. The initial draft was prepared on 2025-02-27. This executed record was written on 2025-03-12 and signed by both parties on 2025-03-12.\n\nThe effective date is 2025-04-01. The date of execution and the effective date are distinct; execution on 2025-03-12 does not change the effective date stated in this Order Form.\n\n## 2. Parties and Product\n\nPemberline Systems is the supplier of Pemberline Dock, a yard and dock scheduling software product. Covey & Lark Retail is the subscribing customer and is a home goods retailer operating in the Mid-Atlantic.\n\nThe product subscribed under this Order Form is Pemberline Dock. References to “Covey” or “CLR” in the associated implementation worksheet identify Covey & Lark Retail. Those abbreviations do not identify a separate contracting party.\n\n## 3. Subscription and Pricing\n\nThe subscription established by this Order Form consists of the following:\n\n| Item | Order |\n|---|---:|\n| Subscribed seats | 42 |\n| Price per seat per year, USD | $1,700 |\n| Discount | 0% |\n| Effective date | 2025-04-01 |\n| End of current term / renewal date | 2026-03-31 |\n\nThe annual subscription amount calculated from the stated seat quantity and annual seat price is USD $71,400. No discount is applied to that calculation. The subscribed quantity is 42 seats; the operational notes below do not alter that quantity or establish separate subscriptions for individual receiving locations.\n\n## 4. Term Identification\n\nThe current subscription term begins on 2025-04-01 and ends on 2026-03-31. For purposes of this Order Form, 2026-03-31 is also the renewal date.\n\nThe signature dates record the parties’ execution of this document. They are not substituted for the subscription commencement date, the end of the current term, or the renewal date.\n\n## 5. Operational Record\n\nThe implementation worksheet accompanying this order identifies the first receiving schedule to be configured as “Morning Inbound — Home Goods.” The customer’s preparation notes distinguish booked deliveries from unscheduled arrivals and identify dock doors 3 and 4 as the initial examples for configuration review.\n\nThe receiving team has requested that appointment descriptions distinguish palletized shelving from boxed lighting fixtures. A sample delivery entry includes a carrier reference, a trailer identifier, an expected arrival window, and a receiving-door assignment. These entries are working examples for configuration and are not additional commercial line items.\n\nThe customer’s internal roster worksheet separates receiving supervisors, yard coordinators, and scheduling personnel. Duplicate entries arising from employees appearing on both morning and afternoon shift lists are to be reconciled before the roster is used for setup. The subscribed seat quantity remains as stated in Section 3.\n\n## 6. Execution Record\n\nThe executed copy is filed under “CLR — Order Form — 2025-03-12.” The implementation worksheet and receiving examples are maintained separately for setup work. The signatures below record execution by both parties on 2025-03-12.\n\n### For Pemberline Systems\n\n**Signed:** /s/ June Osei-Lark  \n**Name:** June Osei-Lark  \n**Title:** Deal desk and contracts manager  \n**Date signed:** 2025-03-12  \n\n### For Covey & Lark Retail\n\n**Signed:** /s/ Helena Voss  \n**Name:** Helena Voss  \n**Title:** Director of Retail Operations  \n**Date signed:** 2025-03-12",
+      "usage": {
+        "input_tokens": 1109,
+        "output_tokens": 841,
+        "thinking_tokens": 58
+      },
+      "cost_usd": 0.010628,
+      "provider_meta": {
+        "id": "resp_072906636c8f47a6016acfae84c1dc87d1b23dae1947e9ffcb",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1109,
+          "input_tokens_details": {
+            "cache_write_tokens": 1106,
+            "cached_tokens": 0
+          },
+          "output_tokens": 841,
+          "output_tokens_details": {
+            "reasoning_tokens": 58
+          },
+          "total_tokens": 1950
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

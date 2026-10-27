@@ -1,12 +1,12 @@
 {
   "system": "extract-first",
   "versions": {
-    "package": "mem0ai[nlp]==2.2.1 + fastembed + en_core_web_sm 3.8.0",
+    "package": "see comparison-systems table: extract-first (with the nlp extra), plus fastembed and en_core_web_sm 3.8.0",
     "lock_sha256": null,
     "image": null,
-    "vendor_benchmark_code": "mem0ai/memory-benchmarks@4b61c5d31b9c668a12b4f5e78064248a02c82d2b, benchmarks/locomo/run.py (ingest_conversation, session_to_chunks, process_question), benchmarks/longmemeval/run.py and benchmarks/beam/run.py (CHUNK_SIZE), benchmarks/common/mem0_client.py",
+    "vendor_benchmark_code": "see comparison-systems table: extract-first (vendor benchmark code at commit 4b61c5d31b9c668a12b4f5e78064248a02c82d2b: benchmarks/locomo/run.py (ingest_conversation, session_to_chunks, process_question), benchmarks/longmemeval/run.py and benchmarks/beam/run.py (CHUNK_SIZE), and the shared client module in benchmarks/common/)",
     "backend": "qdrant/qdrant:v1.19.2@sha256:b7b0444c4c351c970b98e90a6f89c2ee4287c65b44e52b4cb503fa5b2aa927ad (server, matching qdrant-client 1.19.1 in uv.lock)",
-    "resolved_dependencies": "uv.lock resolved 2026-10-05 with exclude-newer and no prereleases: qdrant-client 1.19.1, openai 3.24.0, spacy 3.8.16, fastembed 0.8.1, posthog 7.62.1. pip install mem0ai resolves the same way; extract-first's poetry.lock is not used by its hatch build."
+    "resolved_dependencies": "uv.lock resolved 2026-10-05 with exclude-newer and no prereleases: qdrant-client 1.19.1, openai 3.24.0, spacy 3.8.16, fastembed 0.8.1, posthog 7.62.1. a plain pip install of the package resolves the same way; extract-first's poetry.lock is not used by its hatch build."
   },
   "configs": {
     "recipe": {
@@ -17,7 +17,7 @@
         "dims": 1536,
         "reranker": null
       },
-      "notes": "documented self-hosted install: Memory.from_config with the OpenAI LLM and embedder left at SDK defaults (llms/openai.py sets gpt-5-mini, embeddings/openai.py sets text-embedding-3-small), Qdrant server, mem0ai[nlp] with en_core_web_sm for entity extraction and BM25 lemmatization, fastembed for Qdrant BM25 sparse vectors (docs/migration/oss-v2-to-v3.mdx). One LLM call per add (the v3 additive pipeline), no update or delete calls. No reranker is configured and search(rerank=False) is the default. Note: memory-benchmarks' own OSS server defaults to gpt-4o-mini (docker/mem0/main.py LLM_MODEL); the SDK default is gpt-5-mini, which this record follows as the plan does. The recipe sets is_reasoning_model=True on the LLM config: extract-first 2.2.1's reasoning-model list (llms/base.py _is_reasoning_model) matches only the exact name gpt-5, so with its own default gpt-5-mini it sends temperature=0.1, which OpenAI rejects with HTTP 400 on every extraction call (seen in the 2026-10-05 metered smoke). is_reasoning_model is extract-first's documented override for this; it drops temperature and max_tokens."
+      "notes": "documented self-hosted install: Memory.from_config with the OpenAI LLM and embedder left at SDK defaults (llms/openai.py sets gpt-5-mini, embeddings/openai.py sets text-embedding-3-small), Qdrant server, the package's nlp extra with en_core_web_sm for entity extraction and BM25 lemmatization, fastembed for Qdrant BM25 sparse vectors (docs/migration/oss-v2-to-v3.mdx). One LLM call per add (the v3 additive pipeline), no update or delete calls. No reranker is configured and search(rerank=False) is the default. Note: the vendor benchmark code's own OSS server defaults to gpt-4o-mini (its server's main.py LLM_MODEL); the SDK default is gpt-5-mini, which this record follows as the plan does. The recipe sets is_reasoning_model=True on the LLM config: the pinned extract-first release's reasoning-model list (llms/base.py _is_reasoning_model) matches only the exact name gpt-5, so with its own default gpt-5-mini it sends temperature=0.1, which OpenAI rejects with HTTP 400 on every extraction call (seen in the 2026-10-05 metered smoke). is_reasoning_model is extract-first's documented override for this; it drops temperature and max_tokens."
     },
     "common": {
       "model_roles": {
@@ -31,7 +31,7 @@
     }
   },
   "time": "in-text",
-  "time_notes": "Memory.add raises ValueError for any non-null timestamp in OSS 2.2.1 (main.py:818, 'Platform-only temporal parameter'), and Memory.search raises for any non-null reference_date (main.py:1447). The shim puts a system message 'This conversation took place at 1:56 pm on 8 May, 2023.' at the head of every add call. The extraction prompt's '## Observation Date' section, which the prompt calls the only temporal anchor, is always the wall-clock date in OSS (configs/prompts.py _resolve_dates), so relative dates may still resolve against today. The session's ISO date is also stored in memory metadata (session_date) and returned as valid_from.",
+  "time_notes": "Memory.add raises ValueError for any non-null timestamp in the pinned open-source release (main.py:818, 'Platform-only temporal parameter'), and Memory.search raises for any non-null reference_date (main.py:1447). The shim puts a system message 'This conversation took place at 1:56 pm on 8 May, 2023.' at the head of every add call. The extraction prompt's '## Observation Date' section, which the prompt calls the only temporal anchor, is always the wall-clock date in OSS (configs/prompts.py _resolve_dates), so relative dates may still resolve against today. The session's ISO date is also stored in memory metadata (session_date) and returned as valid_from.",
   "provenance": {
     "status": "partial",
     "mechanism": "metadata={'source_id', 'session_date'} on every add; extract-first copies it into each memory it creates and returns it from search. Each memory cites the session whose add created it. The extractor also reads the scope's last 10 raw messages and its 10 nearest existing memories, and a later restatement of the same fact is dropped by hash dedup rather than cited, so the list can be incomplete."
@@ -43,7 +43,7 @@
   "parallel_namespaces": true,
   "parallel_notes": "memory-benchmarks drives one Memory instance from 10 concurrent workers across conversations (FastAPI threadpool, sync endpoints); the shim serializes calls within a namespace.",
   "ingest_chunking": {
-    "env": "MEM0_CHUNK_TURNS",
+    "env": "EXTRACT_FIRST_CHUNK_TURNS",
     "default": 2,
     "vendor_values": {
       "locomo": 1,
@@ -76,10 +76,10 @@
   "agent_surface": {
     "kind": "harness-mcp",
     "transport": "stdio",
-    "version": "not built yet: a harness MCP wrapper over this image's mem0ai 2.2.1 SDK (add, search, get_all, delete), because OpenMemory, extract-first's own MCP server, is being sunset"
+    "version": "not built yet: a harness MCP wrapper over this image's pinned extract-first SDK (add, search, get_all, delete), because extract-first's own MCP server is being sunset"
   },
   "deviations_from_vendor_code": [
-    "memory-benchmarks talks to its own FastAPI server (docker/mem0/main.py) built from extract-first's feat/v3-pipeline branch; the shim calls the pinned mem0ai 2.2.1 SDK in process, with the same Qdrant backend. That server passes user_id to search() as a keyword, which 2.2.1 rejects; the shim uses filters={'user_id'}.",
+    "The vendor benchmark code talks to its own FastAPI server (its server's main.py) built from extract-first's feat/v3-pipeline branch; the shim calls the pinned extract-first SDK in process, with the same Qdrant backend. That server passes user_id to search() as a keyword, which the pinned release rejects; the shim uses filters={'user_id'}.",
     "The session date goes into the messages as a system line. memory-benchmarks sends timestamp=<epoch> to its OSS server, whose AddRequest model has no timestamp field, so in the vendor's own OSS runs the date never reaches extract-first.",
     "Messages keep the harness's role and render content as 'Speaker: text', as session_to_chunks does; when a role is neither user nor assistant the first speaker becomes user and others assistant, the vendor's mapping. Image captions are not sent because the sanitized sessions carry text only.",
     "metadata={'source_id', 'session_date'} is added to every add call for provenance and delete; the vendor sends no metadata.",

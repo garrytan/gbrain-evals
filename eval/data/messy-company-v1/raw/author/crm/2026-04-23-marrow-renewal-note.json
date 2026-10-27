@@ -1,0 +1,37 @@
+{
+  "slug": "crm/2026-04-23-marrow-renewal-note",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: crm\nTitle: CRM note: Marrow renewal\nDate: Written on 2026-04-23.\nWriter: Tobias Rendle\nVoice: polished and businesslike\nFormat: a terse CRM activity note with a few key: value fields\nLength: about 144 words\nDate style in the body: ISO (2025-06-02)\nTypos: one or two small natural typos (never in names or required phrases)\n\nBrief:\nTobias's CRM note: Fieldworks renewed at 95 seats, $1,880, through April 30, 2027. Agrisupply's seats and SLA were not touched by the renewal.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Hollis Mbeki: Central team lead\n- Priyanka \"Pree\" Sundaram: Account manager, Central team\n- Tobias Rendle: Account manager, Central team\n- Lev Arkadin: Procurement lead\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Tansley Parcel: regional parcel delivery, South Central; main contact Lev Arkadin, Procurement lead; codes/nicknames TPCL, TP\n- Tansleigh Packaging: corrugated packaging manufacturer, Ohio Valley; codes/nicknames TSP, TP\n- Marrow Fieldworks: agricultural equipment dealer network, Plains; codes/nicknames MFW\n- Marrow Agrisupply: farm supply retail chain, Plains; subsidiary of Marrow Fieldworks; codes/nicknames MAS, Marrow Agri\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2026-04-23 (background only; don't restate unless the brief asks):\n- Tansley Parcel: managed by Priyanka \"Pree\" Sundaram\n- Tansleigh Packaging: not stated on any shared page (do not say who manages it)\n- Marrow Fieldworks: managed by Tobias Rendle\n- Marrow Agrisupply: managed by Central team (pooled account)",
+      "response_text": "# CRM note: Marrow renewal\n\nDate: 2026-04-23  \nActivity: Renewal completed  \nAccount: Marrow Fieldworks  \nProduct: Pemberline Dock  \nRenewal: 95 seats at $1,880 per seat per year, through 2027-04-30.  \nRelated account: Marrow Agrisupply’s seats and SLA were not touched by this renewal.\n\nOperational notes: The Fieldworks dispatch team requested that the renewal follow-up stay separate from the open scheduling issue at the west receiving entrance. On Tuesday’s afternoon shift, two inbound equipment deliveries appeared against door 4 after dispatch moved one appointment to door 6. The supervisor corrected the board manually; the printed arrival sheet still showed the earlier door assignment.\n\nNext steps: Send the renewal summary to June Osei-Lark for filing. Add the dispatch screenshots and arrival-sheet export to ticket MFW-218, then ask support to reproduce the reassignment sequence. Follow up with dispatch once the corrected printout is availble. Keep the Marrow Agrisupply scheduling questions in the separate support thread.",
+      "usage": {
+        "input_tokens": 1054,
+        "output_tokens": 225,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.004358,
+      "provider_meta": {
+        "id": "resp_08238bf81af83d55016acfae5f1d1487d1920bbf7b82ccac93",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1054,
+          "input_tokens_details": {
+            "cache_write_tokens": 1051,
+            "cached_tokens": 0
+          },
+          "output_tokens": 225,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 1279
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

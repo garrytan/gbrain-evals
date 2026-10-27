@@ -1,0 +1,76 @@
+
+## M, B = 6,000 tokens (277 pairs: 82 long, 195 short)
+
+| variant | long covered | short covered | short pairs lost vs chunk | crowd-out | deciding long block: widened / spilled to chunk | median chars per call (long calls) | median deciding-block chars (long) | median ms |
+|---|---|---|---|---|---|---|---|---|
+| chunk | 3/82 (3.7%) | 195/195 | 0 | - | 0 / 0 | 9758 | 2800 | 19 |
+| today | 3/82 (3.7%) | 195/195 | 0 | - | 0 / 0 | 11804 | 2800 | 21 |
+| scoped-window | 3/82 (3.7%) | 195/195 | 0 | 2 | 81 / 1 | 15980 | 5576 | 22 |
+| scoped-window+cap | 3/82 (3.7%) | 195/195 | 0 | 2 | 81 / 1 | 15980 | 5576 | 21 |
+| scoped-section | 50/82 (61.0%) | 195/195 | 0 | 2 | 81 / 1 | 28846 | 21566 | 22 |
+| scoped-section+cap | 22/82 (26.8%) | 195/195 | 0 | 2 | 81 / 1 | 23267 | 15913 | 22 |
+| scoped-page | 50/82 (61.0%) | 195/195 | 0 | 2 | 81 / 1 | 28846 | 21566 | 22 |
+| scoped-page+cap | 22/82 (26.8%) | 195/195 | 0 | 2 | 81 / 1 | 23267 | 15913 | 22 |
+- scoped-page: uncovered long pairs by cause: {'no earlier long page, isolated covers it': 30, 'earlier long page widened, isolated covers it': 2}
+- scoped-section: uncovered long pairs by cause: {'no earlier long page, isolated covers it': 30, 'earlier long page widened, isolated covers it': 2}
+- scoped-window: uncovered long pairs by cause: {'no earlier long page, isolated covers it': 77, 'earlier long page widened, isolated covers it': 2}
+- scoped-page+cap: uncovered long pairs by cause: {'no earlier long page, isolated covers it': 58, 'earlier long page widened, isolated covers it': 2}
+- scoped-page long by model: 6.1 6/16, opus 15/22, sonnet 29/44
+- scoped-page+cap long by model: 6.1 3/16, opus 5/22, sonnet 14/44
+- long pairs with an earlier-ranked long page in the hit list: 2; from transcript-clipped hit lists: 16
+
+## M, B = 24,000 tokens (277 pairs: 82 long, 195 short)
+
+| variant | long covered | short covered | short pairs lost vs chunk | crowd-out | deciding long block: widened / spilled to chunk | median chars per call (long calls) | median deciding-block chars (long) | median ms |
+|---|---|---|---|---|---|---|---|---|
+| chunk | 3/82 (3.7%) | 195/195 | 0 | - | 0 / 0 | 9758 | 2800 | 19 |
+| today | 3/82 (3.7%) | 195/195 | 0 | - | 0 / 0 | 11804 | 2800 | 22 |
+| scoped-window | 3/82 (3.7%) | 195/195 | 0 | 2 | 82 / 0 | 15980 | 5592 | 22 |
+| scoped-window+cap | 3/82 (3.7%) | 195/195 | 0 | 2 | 82 / 0 | 15980 | 5592 | 23 |
+| scoped-section | 82/82 (100.0%) | 195/195 | 0 | 0 | 82 / 0 | 44001 | 32661 | 23 |
+| scoped-section+cap | 82/82 (100.0%) | 195/195 | 0 | 0 | 82 / 0 | 44001 | 32661 | 23 |
+| scoped-page | 82/82 (100.0%) | 195/195 | 0 | 0 | 82 / 0 | 44001 | 32661 | 23 |
+| scoped-page+cap | 82/82 (100.0%) | 195/195 | 0 | 0 | 82 / 0 | 44001 | 32661 | 22 |
+
+## dev, B = 6,000 tokens (162 pairs: 35 long, 127 short)
+
+| variant | long covered | short covered | short pairs lost vs chunk | crowd-out | deciding long block: widened / spilled to chunk | median chars per call (long calls) | median deciding-block chars (long) | median ms |
+|---|---|---|---|---|---|---|---|---|
+| chunk | 0/35 (0.0%) | 127/127 | 0 | - | 0 / 0 | 10133 | 2764 | 13 |
+| today | 0/35 (0.0%) | 127/127 | 0 | - | 0 / 0 | 12508 | 2764 | 15 |
+| scoped-window | 0/35 (0.0%) | 127/127 | 0 | 1 | 34 / 1 | 15360 | 5601 | 16 |
+| scoped-window+cap | 0/35 (0.0%) | 127/127 | 0 | 1 | 34 / 1 | 15360 | 5601 | 16 |
+| scoped-section | 16/35 (45.7%) | 127/127 | 0 | 1 | 34 / 1 | 27455 | 16686 | 16 |
+| scoped-section+cap | 7/35 (20.0%) | 127/127 | 0 | 1 | 34 / 1 | 24961 | 15966 | 16 |
+| scoped-page | 16/35 (45.7%) | 127/127 | 0 | 1 | 34 / 1 | 27455 | 16686 | 16 |
+| scoped-page+cap | 7/35 (20.0%) | 127/127 | 0 | 1 | 34 / 1 | 24961 | 15966 | 16 |
+- scoped-page: uncovered long pairs by cause: {'no earlier long page, isolated covers it': 18, 'earlier long page widened, isolated covers it': 1}
+- scoped-section: uncovered long pairs by cause: {'no earlier long page, isolated covers it': 18, 'earlier long page widened, isolated covers it': 1}
+- scoped-window: uncovered long pairs by cause: {'no earlier long page, isolated covers it': 34, 'earlier long page widened, isolated covers it': 1}
+- scoped-page+cap: uncovered long pairs by cause: {'no earlier long page, isolated covers it': 27, 'earlier long page widened, isolated covers it': 1}
+- scoped-page long by model: 6.1 4/9, opus 3/10, sonnet 9/16
+- scoped-page+cap long by model: 6.1 1/9, opus 0/10, sonnet 6/16
+- long pairs with an earlier-ranked long page in the hit list: 1; from transcript-clipped hit lists: 3
+
+## dev, B = 24,000 tokens (162 pairs: 35 long, 127 short)
+
+| variant | long covered | short covered | short pairs lost vs chunk | crowd-out | deciding long block: widened / spilled to chunk | median chars per call (long calls) | median deciding-block chars (long) | median ms |
+|---|---|---|---|---|---|---|---|---|
+| chunk | 0/35 (0.0%) | 127/127 | 0 | - | 0 / 0 | 10133 | 2764 | 13 |
+| today | 0/35 (0.0%) | 127/127 | 0 | - | 0 / 0 | 12508 | 2764 | 15 |
+| scoped-window | 0/35 (0.0%) | 127/127 | 0 | 1 | 35 / 0 | 15360 | 5621 | 15 |
+| scoped-window+cap | 0/35 (0.0%) | 127/127 | 0 | 1 | 35 / 0 | 15360 | 5621 | 15 |
+| scoped-section | 35/35 (100.0%) | 127/127 | 0 | 0 | 35 / 0 | 42831 | 30186 | 16 |
+| scoped-section+cap | 35/35 (100.0%) | 127/127 | 0 | 0 | 35 / 0 | 42831 | 30186 | 16 |
+| scoped-page | 35/35 (100.0%) | 127/127 | 0 | 0 | 35 / 0 | 42831 | 30186 | 16 |
+| scoped-page+cap | 35/35 (100.0%) | 127/127 | 0 | 0 | 35 / 0 | 42831 | 30186 | 16 |
+
+## Rule (recorded before these numbers; M, B = 6,000)
+
+- scoped-window: long 3/82 (3.7%) beats chunk False; short lost 0 -> True; > 90.6% False; median chars per long call 15980
+- scoped-window+cap: long 3/82 (3.7%) beats chunk False; short lost 0 -> True; > 90.6% False; median chars per long call 15980
+- scoped-section: long 50/82 (61.0%) beats chunk True; short lost 0 -> True; > 90.6% False; median chars per long call 28846
+- scoped-section+cap: long 22/82 (26.8%) beats chunk True; short lost 0 -> True; > 90.6% False; median chars per long call 23267
+- scoped-page: long 50/82 (61.0%) beats chunk True; short lost 0 -> True; > 90.6% False; median chars per long call 28846
+- scoped-page+cap: long 22/82 (26.8%) beats chunk True; short lost 0 -> True; > 90.6% False; median chars per long call 23267
+- PICK: none

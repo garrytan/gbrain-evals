@@ -1,0 +1,160 @@
+{
+  "decision_id": "w11-w4-heldout-2026-10-17",
+  "stage": "held-out",
+  "preregistration": "docs/benchmarks/2026-10-17-w11-w4-sealed-confirmation-preregistration.md (gbrain-evals 650cdadb552c33130923a6d9f149bd95dd7a528b)",
+  "verdict": "pass",
+  "build": "15b1595140d02edb3581be0b510c183295c79288",
+  "build_version": "0.60.289.0",
+  "gbrain_under_test": {
+    "requested": "gbrain@v0.60.289.0",
+    "ref": "v0.60.289.0",
+    "commit": "15b1595140d02edb3581be0b510c183295c79288",
+    "tree": "a6a7ac89a6d8e1ab9d7ccffd91ee6cb0c370215f",
+    "version": "0.60.289.0",
+    "checkout_dirty": false,
+    "verified": {
+      "copy_tree": "a6a7ac89a6d8e1ab9d7ccffd91ee6cb0c370215f",
+      "tree_matches": true,
+      "symlinks_under_src": 0,
+      "dir_is_realpath": true,
+      "cli_version": "0.60.289.0",
+      "cli_version_matches": true
+    },
+    "copied_not_symlinked": true
+  },
+  "harness": "gbrain-evals 60e2b21f38b6cb534712cc9e839d037e43fa0723 (belief-weekly-probes, belief-weekly-v1)",
+  "engine": "pglite (in-memory, activated managed brain)",
+  "held_out_material": "phrasing set w11-cust-2026-10-17-a (custody file sha256 31b5f86d53173615b892a1300592d467865401fa00507cf7ba2bcb24414d5e9f)",
+  "material_sha256": "31b5f86d53173615b892a1300592d467865401fa00507cf7ba2bcb24414d5e9f",
+  "seeds": [
+    513434030,
+    659296608,
+    824459608
+  ],
+  "weeks_per_seed": 4,
+  "edits_per_week": 10,
+  "gates": {
+    "set_f1": {
+      "rule": "set-F1 >= 0.95 for every seed (four weeks pooled)",
+      "by_seed": {
+        "513434030": 1,
+        "659296608": 1,
+        "824459608": 1
+      },
+      "pass": true
+    },
+    "before_after": {
+      "rule": "every gold re-score reported as changed with its exact before and after, and no other re-score reported",
+      "gold": 28,
+      "exact": 28,
+      "wrong_or_missing": 0,
+      "extra": 0,
+      "pass": true
+    },
+    "cause": {
+      "rule": "every reported change names op put_page and the event type of the ledger event its evidence points at",
+      "checked": 108,
+      "correct": 108,
+      "pass": true
+    },
+    "evidence_pointer": {
+      "rule": "every reported change points at a ledger event on its page, recorded inside the week at the stated time",
+      "checked": 108,
+      "correct": 108,
+      "pass": true
+    }
+  },
+  "tokens_reported": {
+    "note": "reported, never gated: the belief diff beside delta's page list for the same week",
+    "by_seed": [
+      {
+        "seed": 513434030,
+        "weeks": [
+          {
+            "page_list_pages": 5,
+            "page_list_tokens": 266,
+            "belief_diff_tokens": 277
+          },
+          {
+            "page_list_pages": 6,
+            "page_list_tokens": 255,
+            "belief_diff_tokens": 411
+          },
+          {
+            "page_list_pages": 6,
+            "page_list_tokens": 290,
+            "belief_diff_tokens": 431
+          },
+          {
+            "page_list_pages": 8,
+            "page_list_tokens": 340,
+            "belief_diff_tokens": 338
+          }
+        ]
+      },
+      {
+        "seed": 659296608,
+        "weeks": [
+          {
+            "page_list_pages": 5,
+            "page_list_tokens": 238,
+            "belief_diff_tokens": 299
+          },
+          {
+            "page_list_pages": 5,
+            "page_list_tokens": 264,
+            "belief_diff_tokens": 420
+          },
+          {
+            "page_list_pages": 7,
+            "page_list_tokens": 277,
+            "belief_diff_tokens": 238
+          },
+          {
+            "page_list_pages": 7,
+            "page_list_tokens": 390,
+            "belief_diff_tokens": 487
+          }
+        ]
+      },
+      {
+        "seed": 824459608,
+        "weeks": [
+          {
+            "page_list_pages": 6,
+            "page_list_tokens": 366,
+            "belief_diff_tokens": 410
+          },
+          {
+            "page_list_pages": 6,
+            "page_list_tokens": 263,
+            "belief_diff_tokens": 363
+          },
+          {
+            "page_list_pages": 7,
+            "page_list_tokens": 280,
+            "belief_diff_tokens": 348
+          },
+          {
+            "page_list_pages": 7,
+            "page_list_tokens": 280,
+            "belief_diff_tokens": 507
+          }
+        ]
+      }
+    ]
+  },
+  "cost": {
+    "usd": 0,
+    "model_calls": 0
+  },
+  "harness_errors": [],
+  "attestation": {
+    "preregistration": "docs/benchmarks/2026-10-17-w11-w4-sealed-confirmation-preregistration.md",
+    "preregistration_commit": "650cdadb552c33130923a6d9f149bd95dd7a528b",
+    "runner_commit": "60e2b21f38b6cb534712cc9e839d037e43fa0723",
+    "worktree_clean_for_preregistration": true,
+    "on_origin": true,
+    "attested_at": "2026-10-17T18:27:20.106Z"
+  }
+}

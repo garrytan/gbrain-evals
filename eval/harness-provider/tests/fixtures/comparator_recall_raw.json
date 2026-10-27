@@ -1,0 +1,75 @@
+{
+ "results": [
+  {
+   "id": "5df67616-0d68-4474-b610-24b2e555c716",
+   "text": "The user adopted a beagle named Rex in March 2023. | When: March 2023 | Involving: the user (session answer_d61669c7_7)",
+   "type": "world",
+   "entities": ["Rex"],
+   "context": "",
+   "occurred_start": "2023-03-01T00:00:00+00:00",
+   "occurred_end": null,
+   "mentioned_at": "2023-03-05T10:00:00+00:00",
+   "document_id": "answer_d61669c7_7",
+   "metadata": {"doc_id": "answer_d61669c7_7"},
+   "chunk_id": "longmemeval-s-u0a1b2c3_answer~5Fd61669c7~5F7_0",
+   "tags": [],
+   "source_fact_ids": ["9b2f6a0e-1c4d-4e8a-9f3b-7d5e2a1c0b9f"],
+   "scores": {"final": 0.6993, "reranker": 0.6647, "semantic": 0.7368, "keyword": 0.4},
+   "attachments": null
+  },
+  {
+   "id": "ddd1ab3a-1d57-4311-871b-699ae392b9ad",
+   "text": "The user's favourite colour is teal.",
+   "type": "world",
+   "entities": null,
+   "context": "",
+   "occurred_start": null,
+   "occurred_end": null,
+   "mentioned_at": "2023-04-01T10:00:00+00:00",
+   "document_id": "sharegpt_x9Yq3Lm_0",
+   "metadata": {"doc_id": "sharegpt_x9Yq3Lm_0"},
+   "chunk_id": "longmemeval-s-u0a1b2c3_sharegpt~5Fx9Yq3Lm~5F0_0",
+   "tags": [],
+   "source_fact_ids": null,
+   "scores": {"final": 0.0001, "reranker": 0.0001, "semantic": 0.6018, "keyword": null},
+   "attachments": null
+  }
+ ],
+ "trace": null,
+ "entities": null,
+ "chunks": {
+  "longmemeval-s-u0a1b2c3_answer~5Fd61669c7~5F7_0": {
+   "id": "longmemeval-s-u0a1b2c3_answer~5Fd61669c7~5F7_0",
+   "text": "User: I adopted a beagle named Rex in March 2023.\nAssistant: Congratulations!",
+   "chunk_index": 0,
+   "truncated": false,
+   "attachments": [
+    {
+     "id": "a1b2c3d4",
+     "hash": "a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f9",
+     "kind": "image",
+     "media_type": "image/png",
+     "byte_size": 10,
+     "filename": null,
+     "url": "/v1/default/banks/longmemeval-s-u0a1b2c3/chunks/longmemeval-s-u0a1b2c3_answer~5Fd61669c7~5F7_0/attachments/a1b2c3d4"
+    }
+   ]
+  },
+  "longmemeval-s-u0a1b2c3_sharegpt~5Fx9Yq3Lm~5F0_0": {
+   "id": "longmemeval-s-u0a1b2c3_sharegpt~5Fx9Yq3Lm~5F0_0",
+   "text": "User: My favourite colour is teal and I live in Lisbon.",
+   "chunk_index": 0,
+   "truncated": true
+  }
+ },
+ "source_facts": {
+  "9b2f6a0e-1c4d-4e8a-9f3b-7d5e2a1c0b9f": {
+   "id": "9b2f6a0e-1c4d-4e8a-9f3b-7d5e2a1c0b9f",
+   "text": "Rex is a beagle.",
+   "document_id": "answer_d61669c7_7",
+   "chunk_id": "longmemeval-s-u0a1b2c3_answer~5Fd61669c7~5F7_0",
+   "metadata": {"doc_id": "answer_d61669c7_7"}
+  }
+ },
+ "source_facts_truncated": false
+}

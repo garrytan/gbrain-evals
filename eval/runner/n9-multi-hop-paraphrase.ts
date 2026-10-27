@@ -262,6 +262,8 @@ export interface N9Options {
   search?: RelationalSearch;
   /** Another world-v1-shaped corpus (`--corpus`, e.g. eval/data/world-v1-attendees); gold is then regenerated from it, not read from the committed question file. */
   corpusDir?: string;
+  /** Further one-hop splits from Query-shaped JSONL files (`--extra-split <name>=<path>`), e.g. a held-out set kept off the repository. */
+  extraSplits?: Array<{ split: string; path: string }>;
   /** Run each ingestion seed's index in its own process (hermetic arm, default on); results merge in seed order. */
   parallelSeeds?: boolean;
   /** Internal: index one seed and write its rows to `workerOut` instead of scoring. */
@@ -282,6 +284,11 @@ export function parseN9Args(argv: readonly string[]): N9Options {
     else if (flag === '--seeds') o.seeds = value().split(',').map(Number);
     else if (flag === '--output') o.outputDir = value();
     else if (flag === '--corpus') o.corpusDir = value();
+    else if (flag === '--extra-split') {
+      const [split, path] = value().split('=');
+      if (!split || !path || (ONE_HOP_SPLITS as readonly string[]).includes(split)) throw new Error('--extra-split needs <new-split-name>=<path.jsonl>');
+      (o.extraSplits ??= []).push({ split, path });
+    }
     else if (flag === '--record-bugs') o.recordBugs = true;
     else if (flag === '--quiet') o.quiet = true;
     else if (flag === '--serial-seeds') o.parallelSeeds = false;
@@ -331,9 +338,13 @@ async function prepareN9(options: N9Options, paid: boolean) {
   const oneHop: SharedIndexQuery[] = paid ? [] : (() => {
     const templates = buildRelationalQueries(pages).map(q => ({ ...q, split: 'template' as const, template: templateOfText(q.text) }));
     const paraphrases = paraphraseQueries(templates, options.corpusDir);
+    const extra = (options.extraSplits ?? []).flatMap(({ split, path }) => readFileSync(path, 'utf8').split('\n').filter(l => l.trim())
+      .map(l => JSON.parse(l) as SharedIndexQuery & { template?: string })
+      .map(q => ({ ...q, split, template: q.template ?? split, limit: RELATIONAL_LIMIT })));
     return [
       ...templates.map(q => ({ ...q, split: 'one-hop-template', limit: RELATIONAL_LIMIT })),
       ...paraphrases.map(q => ({ ...q, split: 'one-hop-paraphrase', limit: RELATIONAL_LIMIT })),
+      ...extra,
     ];
   })();
   const anchors = [...new Map(questions.map(q => [q.anchor, q.anchor_name])).entries()];
@@ -442,7 +453,7 @@ async function runN9Inner(options: N9Options, paid: boolean): Promise<N9Result> 
   const paidRun = paid ? startPaidRun(CATEGORY, { ...budgetOptionsFrom(options.paidArgv!), estimateUsd: N9_PAID_ESTIMATE_USD, log }) : null;
   let rows: PairedRow[] = [];
   let indices: Array<Record<string, unknown>> = [];
-  const parallel = !paid && options.parallelSeeds !== false && !options.search && options.corpusDir === undefined && seeds.length > 1;
+  const parallel = !paid && options.parallelSeeds !== false && !options.search && options.corpusDir === undefined && !options.extraSplits?.length && seeds.length > 1;
   try {
     if (parallel) {
       log(`Relational OFF/ON: ${seeds.length} ingestion seeds in parallel processes, ${queries.length} paired queries each (${embed})`);
@@ -503,7 +514,8 @@ async function runN9Inner(options: N9Options, paid: boolean): Promise<N9Result> 
   const findings = n9Findings({ gut, capability, bySplit, questions: questions.length });
   if (options.recordBugs) for (const f of findings) upsertBug(f);
 
-  const oneHopRows = rows.filter(r => (ONE_HOP_SPLITS as readonly string[]).includes(r.split));
+  const oneHopSplits = [...ONE_HOP_SPLITS, ...(options.extraSplits ?? []).map(e => e.split)];
+  const oneHopRows = rows.filter(r => oneHopSplits.includes(r.split));
   const data = {
     composed: {
       k: N9_K,
@@ -528,17 +540,17 @@ async function runN9Inner(options: N9Options, paid: boolean): Promise<N9Result> 
     },
     one_hop: oneHopRows.length ? {
       note: 'keyword path; the one-hop paraphrase split is development data (inspected 2026-09-29)',
-      by_split: Object.fromEntries(ONE_HOP_SPLITS.map(s => [s, summarizeRelationalRows(oneHopRows.filter(r => r.split === s))])),
-      by_split_template: Object.fromEntries(ONE_HOP_SPLITS.map(s => [s, Object.fromEntries([...new Set(oneHopRows.map(r => r.template))].sort()
+      by_split: Object.fromEntries(oneHopSplits.map(s => [s, summarizeRelationalRows(oneHopRows.filter(r => r.split === s))])),
+      by_split_template: Object.fromEntries(oneHopSplits.map(s => [s, Object.fromEntries([...new Set(oneHopRows.map(r => r.template))].sort()
         .map(t => [t, summarizeRelationalRows(oneHopRows.filter(r => r.split === s && r.template === t))]))])),
-      funnel: Object.fromEntries(ONE_HOP_SPLITS.map(s => {
+      funnel: Object.fromEntries(oneHopSplits.map(s => {
         const on = oneHopRows.filter(r => r.split === s).map(r => r.on.relational_meta[0] as { kind?: string | null; seeds_resolved?: number; fired?: boolean } | undefined);
         return [s, { n: on.length, parsed: on.filter(m => m?.kind).length, seed_resolved: on.filter(m => (m?.seeds_resolved ?? 0) > 0).length, fired: on.filter(m => m?.fired).length }];
       })),
       per_query: oneHopRows.map(r => {
         const m = r.on.relational_meta[0] as { kind?: string | null; seeds_resolved?: number; fired?: boolean; candidates?: number } | undefined;
         return { seed: r.seed, query_id: r.query_id, split: r.split, template: r.template, text: r.text, relevant: r.relevant,
-          parsed: Boolean(m?.kind), seeds_resolved: m?.seeds_resolved ?? 0, fired: Boolean(m?.fired), candidates: m?.candidates ?? 0,
+          kind: m?.kind ?? null, parsed: Boolean(m?.kind), seeds_resolved: m?.seeds_resolved ?? 0, fired: Boolean(m?.fired), candidates: m?.candidates ?? 0,
           off_pages: r.off.pages.slice(0, RELATIONAL_LIMIT), on_pages: r.on.pages.slice(0, RELATIONAL_LIMIT),
           off: r.off.metrics, on: r.on.metrics, error: r.off.error?.message ?? r.on.error?.message ?? null };
       }),

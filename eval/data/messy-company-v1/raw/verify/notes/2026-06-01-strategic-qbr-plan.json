@@ -1,0 +1,99 @@
+{
+  "slug": "notes/2026-06-01-strategic-qbr-plan",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2026-06-01",
+    "owner_phrases": [
+      {
+        "mid": "notes/2026-06-01-strategic-qbr-plan#m1",
+        "phrase": "Gideon's biggest account",
+        "lines": [
+          17
+        ]
+      },
+      {
+        "mid": "notes/2026-06-01-strategic-qbr-plan#m2",
+        "phrase": "Gideon's fleet account",
+        "lines": [
+          19
+        ]
+      }
+    ],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Vantorre Group",
+        "line": 12
+      },
+      {
+        "oid": "e2",
+        "surface": "Vantorre Mobility",
+        "line": 13
+      },
+      {
+        "oid": "e3",
+        "surface": "Orlavine Medical Supply",
+        "line": 14
+      },
+      {
+        "oid": "e4",
+        "surface": "Quillfeather Outfitters",
+        "line": 15
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "4f8c55bc08516c880bf204062a6d8291f5bea25debb7f20d6e4577b32b2ac673",
+  "response_text": "{\n  \"date_used\": \"2026-06-01\",\n  \"owner_phrases\": [\n    {\n      \"mid\": \"notes/2026-06-01-strategic-qbr-plan#m1\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\n        \"vantorre-group\"\n      ],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"Line 17 explicitly identifies this as 'First row' of the table, which is Vantorre Group (owned by Gideon Sato on 2026-06-01).\"\n    },\n    {\n      \"mid\": \"notes/2026-06-01-strategic-qbr-plan#m2\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\n        \"vantorre-mobility\"\n      ],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"Line 19 identifies this as 'Second row' (Vantorre Mobility), which is also Gideon's account with the 'fleet' descriptor.\"\n    }\n  ],\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"vantorre-group\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"vantorre-mobility\"\n    },\n    {\n      \"oid\": \"e3\",\n      \"entity\": \"orlavine\"\n    },\n    {\n      \"oid\": \"e4\",\n      \"entity\": \"quillfeather\"\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2026-06-01",
+    "owner_phrases": [
+      {
+        "mid": "notes/2026-06-01-strategic-qbr-plan#m1",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "vantorre-group"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "Line 17 explicitly identifies this as 'First row' of the table, which is Vantorre Group (owned by Gideon Sato on 2026-06-01)."
+      },
+      {
+        "mid": "notes/2026-06-01-strategic-qbr-plan#m2",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "vantorre-mobility"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "Line 19 identifies this as 'Second row' (Vantorre Mobility), which is also Gideon's account with the 'fleet' descriptor."
+      }
+    ],
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "vantorre-group"
+      },
+      {
+        "oid": "e2",
+        "entity": "vantorre-mobility"
+      },
+      {
+        "oid": "e3",
+        "entity": "orlavine"
+      },
+      {
+        "oid": "e4",
+        "entity": "quillfeather"
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2955,
+    "output_tokens": 418,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.01009
+}

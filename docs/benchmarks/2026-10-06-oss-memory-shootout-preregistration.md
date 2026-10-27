@@ -13,7 +13,7 @@ Plan: [docs/plans/2026-10-05-oss-memory-shootout/PLAN.md](../plans/2026-10-05-os
 ## The question
 
 When an agent needs memory, an engineer can choose gbrain or an open-source memory system: temporal-graph, graph-pipeline, extract-first, Basic
-Memory or memory-bank (agent-runtime is in scope only as an agent, in P4, because it has no passive memory API at 0.34.4). For
+Memory or memory-bank (agent-runtime is in scope only as an agent, in P4, because it has no passive memory API at its pin). For
 the same conversations, the same reader and the same amount of evidence, which system returns evidence that lets the
 reader answer correctly, how much of the right evidence does it return, and at what cost and latency? The report says
 where gbrain loses as plainly as where it wins.
@@ -31,12 +31,12 @@ configuration hash.
 
 | System | Pinned version | Capability record sha256 | Lock sha256 | Provenance | Time | Parallel namespaces |
 |---|---|---|---|---|---|---|
-| markdown-notes | `basic-memory==0.23.2` | `9bee4c555c01574ab93a9dfcebf9a3560b970286ed1bacf94e5ff661de62df90` | `e1a14a19…ab16807` | exact | in text | no |
-| extract-first (OSS) | `mem0ai[nlp]==2.2.1`, Qdrant 1.19.2 | `6f52b7a4ac246d554359c99b6ade6245b77cb7bcf1a3d305b4ea7d0f6c3f96c8` | `9777b7a8…25680` | partial | in text | yes |
-| temporal-graph (OSS) | `graphiti-core==0.30.2`, Neo4j 5.26.2 | `d972b84d6d7ea0e137d04e4954e4390d7d34d823c4830ac49b908236b470f5ab` | `4ce9b216…bddd1d13` | partial | native | yes |
-| memory-bank | server and client 0.10.2, image `ghcr.io/vectorize-io/hindsight:0.10.2@sha256:d1840062…ab70` | `fe5b7c118722bbabd732c9ce7b0507b646ec6b48a84bcb409e8a564dc262b2f9` | `f54d89df…d6d8` | exact | native | yes |
-| graph-pipeline | `cognee==1.6.2` | `bccc141c3cdc6b95078743ae1c45c7179adaac1267fb60dee00475fadd70b8be` | `59af44d5…5a0d7` | partial | in text | no |
-| agent-runtime (P4 only) | agent-runtime 0.34.4, image `letta/letta:0.34.4@sha256:8ee7fb69…a5c` | `f856cfe1e101df172998f4fc7f888afa328f1cbf5efdd7e0682c97dfac3845a5` | none | unavailable | none | no |
+| markdown-notes | see [table](../comparison-systems.md#systems-in-the-open-source-comparison) | `9bee4c555c01574ab93a9dfcebf9a3560b970286ed1bacf94e5ff661de62df90` | `e1a14a19…ab16807` | exact | in text | no |
+| extract-first (OSS) | see [table](../comparison-systems.md#systems-in-the-open-source-comparison); Qdrant 1.19.2 | `6f52b7a4ac246d554359c99b6ade6245b77cb7bcf1a3d305b4ea7d0f6c3f96c8` | `9777b7a8…25680` | partial | in text | yes |
+| temporal-graph (OSS) | see [table](../comparison-systems.md#systems-in-the-open-source-comparison); Neo4j 5.26.2 | `d972b84d6d7ea0e137d04e4954e4390d7d34d823c4830ac49b908236b470f5ab` | `4ce9b216…bddd1d13` | partial | native | yes |
+| memory-bank | see [table](../comparison-systems.md#systems-in-the-open-source-comparison); image digest `sha256:d1840062…ab70` | `fe5b7c118722bbabd732c9ce7b0507b646ec6b48a84bcb409e8a564dc262b2f9` | `f54d89df…d6d8` | exact | native | yes |
+| graph-pipeline | see [table](../comparison-systems.md#systems-in-the-open-source-comparison) | `bccc141c3cdc6b95078743ae1c45c7179adaac1267fb60dee00475fadd70b8be` | `59af44d5…5a0d7` | partial | in text | no |
+| agent-runtime (P4 only) | see [table](../comparison-systems.md#systems-in-the-open-source-comparison); image digest `sha256:8ee7fb69…a5c` | `f856cfe1e101df172998f4fc7f888afa328f1cbf5efdd7e0682c97dfac3845a5` | none | unavailable | none | no |
 | gbrain, frozen master | `garrytan/gbrain` master at `c5fb0201` (v0.60.95.0), built as a `--gbrain` overlay (`git archive` of the commit, `bun install --frozen-lockfile`, tree verified) | in process | the commit's `bun.lock` | exact | native (shootout recipe) | no |
 | gbrain, repository pin | `739e5cc` (v0.60.46.0), `package.json` | in process | `bun.lock` | exact | native (shootout recipe) | no |
 
@@ -298,7 +298,7 @@ primary comparison favors one system after Holm.
 The Phase 2 pilots (`eval/systems/<name>/PILOT.md` on the vendor lane branches) found three product behaviors that the
 report states as results, and that this run does not tune away:
 
-1. **extract-first, out of the box.** extract-first 2.2.1 treats only the exact model name `gpt-5` as a reasoning model, so with its own
+1. **extract-first, out of the box.** extract-first at its pin treats only the exact model name `gpt-5` as a reasoning model, so with its own
    default `gpt-5-mini` it sends `temperature=0.1`, and OpenAI rejects every extraction call with HTTP 400: the default
    OSS install stores no memories against the current OpenAI API. The recipe arm sets `is_reasoning_model=True`, extract-first's
    documented override, and says so; the report states both facts.
@@ -499,6 +499,43 @@ The hash of each campaign is recomputed after this amendment because cell files,
 name changed; each earlier hash stays recorded above as history. Applied after every counted cell had settled, so no
 lease was reserved under one name and settled under the other.
 
+**A6b (2026-10-08), the remaining names.** Only labels, prose and paths changed. No measurement, row, score, lease
+amount, cell, question or seed changed. A6 kept package names, vendor images, upstream links, vendor file paths, the
+harness's own environment variables and the memory-bank Postgres credentials as dependency facts. Garry's rule of
+2026-10-08 is narrower: names, versions, licenses and links appear only in the
+[systems table](../comparison-systems.md#systems-in-the-open-source-comparison), which now holds every upstream
+identity the records carried.
+
+- **Capability records and receipts.** A field that recorded an upstream identity (`versions.package`,
+  `versions.image`, `versions.vendor_benchmark_code`, `agent_surface.version`) reads
+  `see comparison-systems table: <label>` and keeps any commit or digest it had. Prose fields describe vendor code by
+  kind, the temporal-graph search-recipe key is `recipe`, and a temporal-graph deletion row's `method` reads
+  `remove_episode per episode`. The same strings changed in every receipt that embeds the record.
+- **The harness's own names.** `EXTRACT_FIRST_CHUNK_TURNS`, `MEMORY_BANK_LLM_PROVIDER`, `MEMORY_BANK_URL`,
+  `AGENT_RUNTIME_APP_SERVER_PORT` and `AGENT_RUNTIME_WS_TOKEN_FILE`, the memory-bank stack's Postgres user and database
+  `memory_bank`, and shim classes named by label. Values and behavior are unchanged; the table's former-names column
+  maps each one, and logs written before A6b use the former names.
+- **Kept, because pinning or the vendor software needs them.** Dockerfiles, `pyproject.toml`, `uv.lock`, Python import
+  statements, environment variables the vendor software reads, vendor image references in compose files, the
+  agent-runtime CLI executable and its home directory, and the vendor host the agent-runtime keyless check proves
+  unreachable. Benchmark inputs are unchanged.
+- **Hashes.** [rename-a6b.json](2026-10-06-oss-memory-shootout/rename-a6b.json) records the sha256 of every
+  file A6b changed, before and after. `python3 scripts/verify-a6b-rename.py` checks those hashes and that every JSON,
+  NDJSON and gzipped NDJSON file in both campaigns, the sealed aggregates included, has the same shape and the same
+  numbers, booleans and nulls before and after.
+- **Campaign hashes.** The extract-first cell commands name the renamed chunk variable, so both campaign hashes move;
+  cells and lease totals are unchanged. Memory QA and PrecisionMemBench: `36ba918f59963a0cc1a6af1cb12ab3a5aa0a48af585e6e5e0b07d41e90db0894`
+  to `f7a2250390128d870602d629a06055baf4456fe776bd84e2d7a25a29f1f1dbda` (86 cells, $1,467.50). Update and forget:
+  `ae18af154d2cd2e8e11994618f408fe0d46d6ceb6570acead55ff4ec18488fc1` to
+  `90c4956cc7f033739a071a66c02b472f6bb4b630bc34543c609a3b5a95a8f4bc` (7 cells, $24.37).
+- **Capability records after A6b** (the A6 table above has the frozen and after-A6 values): `markdown-notes`
+  `4eb880c8aeb236786cd2bb1830ee0f5ffab9e9dbd9db7e583dc7c4ec0277f574`, `extract-first`
+  `2e8736dc6313fae0570761bac3caa14b44cbc20a56cc5f4a00b474ad1a3fb9ec`, `temporal-graph`
+  `a5fc713787b03af4cb577677503491804b68e26b6b7e8374ac597af5f5a75f29`, `memory-bank`
+  `e0687e98989940f70d19fe31d2158d299128ad2be648e65264f1c7e25cc059ae`, `graph-pipeline`
+  `5e47f901be9496faa01a7690aac7bdb9dfe53254e767db9fe92740af1e6f2647`, `agent-runtime`
+  `d87468e7b979e866c64c30211e352bfeb1b7094111519ab242f7f5c3fc4bcf1b`. Lock files are unchanged.
+
 **A9 (2026-10-08), the D2 scope.** The arms file `arms/d2-frontier-<benchmark>.json` applied the four frontier readers
 to all four arms of every cell, which costs more than the campaign has left. The plan's D2-A (about $230) meant the
 frontier readers on a 100-question slice on the primary arm. D2 therefore runs, by Garry's choice on 2026-10-08, on
@@ -523,6 +560,13 @@ unchanged and `budget-ledger.ts verify` passes. D2 replays the frozen contexts o
 per reader; they enter no Holm family. Recorded before any D2 call.
 
 ## Changelog
+
+### 2026-10-08: amendment A6b, the remaining names
+
+Added A6b: upstream identities, licenses and links moved from the capability records, receipts, plan, reviews and this
+preregistration into the comparison table; the harness's own environment variables and Postgres credentials are named
+by kind; a hash manifest and a numeric check record that only labels changed. Campaign hashes `36ba918f` to `f7a22503`
+and `ae18af15` to `90c4956c`.
 
 ### 2026-10-08: amendment A9
 

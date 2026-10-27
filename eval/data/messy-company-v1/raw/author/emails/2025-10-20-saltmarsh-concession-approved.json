@@ -1,0 +1,37 @@
+{
+  "slug": "emails/2025-10-20-saltmarsh-concession-approved",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: email\nTitle: Approved: Saltmarsh concession\nDate: Written on 2025-10-20.\nWriter: Anselm Grieve\nVoice: terse and practical\nFormat: undefined\nLength: about 68 words\nDate style in the body: undefined\nTypos: a few natural typos and one or two sloppy abbreviations (never in names or required phrases)\n\nBrief:\nAnselm approves the 10% discount; June has the amendment signed today, effective November 1.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Bettina Kroll: Coastal team lead\n- Sofia Marchetti: Account manager, Coastal team\n- Kwame Adjei-Rowe: Account manager, Coastal team\n- Corinne Ashdown: VP Operations\n- Odile Brandt: Customer success manager at Carrowmere Cloud, Pemberline's hosting vendor\n\nCustomer accounts in this part of the business:\n- Pellucid Harbor Logistics: port drayage and terminal logistics, Gulf Coast; codes/nicknames PHL\n- Driftmoor Marine Freight: marine freight and barge operator, Puget Sound; codes/nicknames DMF\n- Saltmarsh Provisions: regional grocery distributor, Lowcountry; main contact Corinne Ashdown, VP Operations; codes/nicknames SMP\n- Covey & Lark Retail: home goods retailer, Mid-Atlantic; codes/nicknames Covey, CLR\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Orlavene Health: A hospital group Ruth met as a prospect; never signed. Look-alike of Orlavine Medical Supply.\n- Carrowmere Cloud: Pemberline's hosting vendor. Pemberline is the customer here.\n\nWho manages what on 2025-10-20 (background only; don't restate unless the brief asks):\n- Pellucid Harbor Logistics: managed by Bettina Kroll\n- Driftmoor Marine Freight: managed by Kwame Adjei-Rowe\n- Saltmarsh Provisions: managed by Bettina Kroll\n- Covey & Lark Retail: managed by Sofia Marchetti",
+      "response_text": "**Subject: Approved: Saltmarsh concession**  \n**Date: October 20, 2025**  \n**To: June Osei-Lark**\n\nApproved: 10% discount for Saltmarsh Provisions. June, thanks for getting the amendment signed today, effective November 1.\n\nPls send the signed copy to billing and Corinne Ashdown this afternoon. Attach it to the CRM record too; the scan in yesterday’s thread was missing the last page. Check the attachement opens before forwarding. No need for another approval mtg.",
+      "usage": {
+        "input_tokens": 1002,
+        "output_tokens": 116,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.003164,
+      "provider_meta": {
+        "id": "resp_0f7aaa9aa1f6cf1f016acfae9815b487d1ab8c54a91dcd53dc",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1002,
+          "input_tokens_details": {
+            "cache_write_tokens": 0,
+            "cached_tokens": 0
+          },
+          "output_tokens": 116,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 1118
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

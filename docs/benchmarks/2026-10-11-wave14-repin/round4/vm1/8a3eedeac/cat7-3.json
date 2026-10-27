@@ -1,0 +1,286 @@
+{
+  "cost": {
+    "usd": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "basis": "hermetic: no model and no paid request"
+  },
+  "delivered_tokens": {
+    "tokens": 0,
+    "basis": "hermetic: no model and no paid request"
+  },
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "perf",
+  "gbrain_version": "0.60.126.0",
+  "gbrain_pin": "github:garrytan/gbrain#8a3eedeacb6e52da5b413502019692db80c5cc5d",
+  "started_at": "2026-10-11T08:39:14.367Z",
+  "run_status": "completed",
+  "verdict": "pass",
+  "n_total": 26,
+  "n_scored": 26,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": true,
+  "resolved_config": {
+    "engine": "pglite-in-memory",
+    "scales": [
+      1000,
+      10000
+    ],
+    "seed": 42,
+    "warmup_runs": 3,
+    "percentile_method": "linear interpolation (metrics.ts percentile)",
+    "thresholds_defined": [
+      {
+        "op": "search_keyword",
+        "scale": 10000,
+        "metric": "p95_ms",
+        "limit_ms": 200
+      }
+    ],
+    "thresholds_evaluated": 1
+  },
+  "finished_at": "2026-10-11T08:39:54.835Z",
+  "data": {
+    "latency": [
+      {
+        "op": "get_page",
+        "scale": 1000,
+        "p50_ms": 0.3753954999997404,
+        "p95_ms": 0.7913867500000831,
+        "p99_ms": 0.8514782799993917,
+        "count": 50
+      },
+      {
+        "op": "get_links",
+        "scale": 1000,
+        "p50_ms": 0.21739400000024034,
+        "p95_ms": 0.6286339500003123,
+        "p99_ms": 0.8012105299998072,
+        "count": 50
+      },
+      {
+        "op": "get_backlinks",
+        "scale": 1000,
+        "p50_ms": 0.11204450000013821,
+        "p95_ms": 0.6269648000001323,
+        "p99_ms": 0.7549429199998846,
+        "count": 50
+      },
+      {
+        "op": "get_backlinks_hub",
+        "scale": 1000,
+        "p50_ms": 0.6898850000002312,
+        "p95_ms": 0.7166415000002416,
+        "p99_ms": 0.7178194999995139,
+        "count": 20
+      },
+      {
+        "op": "get_timeline",
+        "scale": 1000,
+        "p50_ms": 0.0678210000000945,
+        "p95_ms": 0.32427845000024713,
+        "p99_ms": 0.3502116000002843,
+        "count": 50
+      },
+      {
+        "op": "get_stats",
+        "scale": 1000,
+        "p50_ms": 1.835670499999651,
+        "p95_ms": 2.6343718499997513,
+        "p99_ms": 2.8641623699994856,
+        "count": 10
+      },
+      {
+        "op": "list_pages_50",
+        "scale": 1000,
+        "p50_ms": 1.0640549999998257,
+        "p95_ms": 3.1771522000007746,
+        "p99_ms": 4.45638724000072,
+        "count": 20
+      },
+      {
+        "op": "search_keyword",
+        "scale": 1000,
+        "p50_ms": 0.17292099999986021,
+        "p95_ms": 1.210057499999857,
+        "p99_ms": 1.2220792900000106,
+        "count": 30
+      },
+      {
+        "op": "traverse_paths_d1",
+        "scale": 1000,
+        "p50_ms": 1.4747145000001183,
+        "p95_ms": 2.840840700000398,
+        "p99_ms": 3.2268953400005103,
+        "count": 10
+      },
+      {
+        "op": "traverse_paths_d2",
+        "scale": 1000,
+        "p50_ms": 25.99385200000006,
+        "p95_ms": 30.37902410000019,
+        "p99_ms": 32.19910562000033,
+        "count": 10
+      },
+      {
+        "op": "putPage_single",
+        "scale": 1000,
+        "p50_ms": 0.8181780000004437,
+        "p95_ms": 0.8563285000000178,
+        "p99_ms": 0.9054484699999922,
+        "count": 30
+      },
+      {
+        "op": "get_page",
+        "scale": 10000,
+        "p50_ms": 1.8500405000013416,
+        "p95_ms": 2.168353400002161,
+        "p99_ms": 2.306788269999597,
+        "count": 50
+      },
+      {
+        "op": "get_links",
+        "scale": 10000,
+        "p50_ms": 1.690121999999974,
+        "p95_ms": 2.094444399997883,
+        "p99_ms": 2.1394753999986276,
+        "count": 50
+      },
+      {
+        "op": "get_backlinks",
+        "scale": 10000,
+        "p50_ms": 0.5214690000029805,
+        "p95_ms": 1.0623327499961304,
+        "p99_ms": 1.1697377599980243,
+        "count": 50
+      },
+      {
+        "op": "get_backlinks_hub",
+        "scale": 10000,
+        "p50_ms": 1.047352999998111,
+        "p95_ms": 1.102624449997529,
+        "p99_ms": 1.1187128899972594,
+        "count": 20
+      },
+      {
+        "op": "get_timeline",
+        "scale": 10000,
+        "p50_ms": 0.058947499997884734,
+        "p95_ms": 0.3146969499975967,
+        "p99_ms": 0.330329899998178,
+        "count": 50
+      },
+      {
+        "op": "get_stats",
+        "scale": 10000,
+        "p50_ms": 8.132458499996574,
+        "p95_ms": 8.980132650001178,
+        "p99_ms": 9.12357213000054,
+        "count": 10
+      },
+      {
+        "op": "list_pages_50",
+        "scale": 10000,
+        "p50_ms": 0.9294425000007323,
+        "p95_ms": 1.0210654500016971,
+        "p99_ms": 1.049131490002983,
+        "count": 20
+      },
+      {
+        "op": "search_keyword",
+        "scale": 10000,
+        "p50_ms": 0.1361094999992929,
+        "p95_ms": 1.119128999998793,
+        "p99_ms": 1.1257100999997782,
+        "count": 30
+      },
+      {
+        "op": "traverse_paths_d1",
+        "scale": 10000,
+        "p50_ms": 1.3217120000008435,
+        "p95_ms": 1.9632310000029976,
+        "p99_ms": 1.9658230000003822,
+        "count": 10
+      },
+      {
+        "op": "traverse_paths_d2",
+        "scale": 10000,
+        "p50_ms": 93.85890299999664,
+        "p95_ms": 105.298530750001,
+        "p99_ms": 107.34223815000055,
+        "count": 10
+      },
+      {
+        "op": "putPage_single",
+        "scale": 10000,
+        "p50_ms": 0.7487504999990051,
+        "p95_ms": 0.8361150000022463,
+        "p99_ms": 0.8479243900009169,
+        "count": 30
+      }
+    ],
+    "throughput": [
+      {
+        "op": "putPage_bulk",
+        "scale": 1000,
+        "total_seconds": 1.1468064330000003,
+        "ops_per_sec": 871.9867374514455
+      },
+      {
+        "op": "addLink_bulk",
+        "scale": 1000,
+        "total_seconds": 0.7193151520000002,
+        "ops_per_sec": 3962.101996705888
+      },
+      {
+        "op": "putPage_bulk",
+        "scale": 10000,
+        "total_seconds": 25.755193357,
+        "ops_per_sec": 388.2712065635532
+      },
+      {
+        "op": "addLink_bulk",
+        "scale": 10000,
+        "total_seconds": 6.469380732999998,
+        "ops_per_sec": 4405.367557766833
+      }
+    ],
+    "thresholds": [
+      {
+        "op": "search_keyword",
+        "scale": 10000,
+        "metric": "p95_ms",
+        "limit_ms": 200,
+        "actual_ms": 1.119128999998793,
+        "pass": true
+      }
+    ]
+  },
+  "accounting": {
+    "planned": 26,
+    "attempted": 26,
+    "scored": 26,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  },
+  "latency_ms": null,
+  "execution": {
+    "source_tree": {
+      "sha256": "2e3995d85c83f2f4ffeb7c986f884f5b31f06613fa7cf70e43540bb65c214592",
+      "files": 11106,
+      "git_head": "45660771dae722810d3ced5df040f3381e396f9f",
+      "dirty": true
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#8a3eedeacb6e52da5b413502019692db80c5cc5d",
+      "declared_sha": "8a3eedeacb6e52da5b413502019692db80c5cc5d",
+      "version": "0.60.126.0",
+      "package_sha256": "df6b9cf61f9af1ede31a038f0f204fe809498bf64f95cd7a6a8c05946e5719c5",
+      "loaded_git_head": null
+    }
+  }
+}

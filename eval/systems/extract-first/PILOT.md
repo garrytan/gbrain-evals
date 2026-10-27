@@ -10,7 +10,7 @@ question scored. The recipe needs the runner started with `BUN_CONFIG_HTTP_IDLE_
 
 ## What ran
 
-- Shim: `eval/systems/extract-first` at the lane branch (`mem0ai` 2.2.1, Qdrant 1.19.2), on the integration branch
+- Shim: `eval/systems/extract-first` at the lane branch (the pinned extract-first package, Qdrant 1.19.2), on the integration branch
   `capy/oss-memory-shootout`. The live conformance suite passed: 11/11 against the real proxy before the pilots
   (`conformance-extract-first-recipe`, $0.0069), and 21/21 on the current integration branch against the keyless fake
   provider after the queueing change below. `protocol_check.py` passed 26/26.

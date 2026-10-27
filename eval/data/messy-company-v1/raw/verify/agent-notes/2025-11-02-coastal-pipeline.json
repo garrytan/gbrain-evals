@@ -1,0 +1,65 @@
+{
+  "slug": "agent-notes/2025-11-02-coastal-pipeline",
+  "author": "gemini:gemini-4-argon",
+  "verifier": "openai:gpt-6.1-sol",
+  "questions": {
+    "page_date": "2025-11-02",
+    "owner_phrases": [
+      {
+        "mid": "agent-notes/2025-11-02-coastal-pipeline#m1",
+        "phrase": "Kwame's port account",
+        "lines": [
+          11
+        ]
+      }
+    ],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Pellucid Harbor Logistics",
+        "line": 10
+      },
+      {
+        "oid": "e2",
+        "surface": "Driftmoor Marine Freight",
+        "line": 11
+      }
+    ],
+    "claims": [],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "a0286768ab4ddc4196ba97832bb2307cb838b80ef42500edcbc80f64595a8b49",
+  "response_text": "{\n  \"date_used\": \"2025-11-02\",\n  \"owner_phrases\": [\n    {\n      \"mid\": \"agent-notes/2025-11-02-coastal-pipeline#m1\",\n      \"refers_to_customer_account\": true,\n      \"accounts\": [\"driftmoor\"],\n      \"reading\": \"names the account(s) via who owns/covers/used to own them\",\n      \"note\": \"Kwame owns Driftmoor on this date; the same line names Driftmoor Marine Freight. Pellucid's ownership changes the following day.\"\n    }\n  ],\n  \"extra_owner_phrases\": [],\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"pellucid\"\n    },\n    {\n      \"oid\": \"e2\",\n      \"entity\": \"driftmoor\"\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2025-11-02",
+    "owner_phrases": [
+      {
+        "mid": "agent-notes/2025-11-02-coastal-pipeline#m1",
+        "refers_to_customer_account": true,
+        "accounts": [
+          "driftmoor"
+        ],
+        "reading": "names the account(s) via who owns/covers/used to own them",
+        "note": "Kwame owns Driftmoor on this date; the same line names Driftmoor Marine Freight. Pellucid's ownership changes the following day."
+      }
+    ],
+    "extra_owner_phrases": [],
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "pellucid"
+      },
+      {
+        "oid": "e2",
+        "entity": "driftmoor"
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2426,
+    "output_tokens": 187,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.006722
+}

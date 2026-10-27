@@ -1,0 +1,49 @@
+{
+  "slug": "emails/2026-03-03-lev-seat-count",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2026-03-03",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "Tansley Parcel",
+        "line": 11
+      }
+    ],
+    "claims": [
+      {
+        "cid": "c-tpx-seats-lev",
+        "question": "What does the page say about Tansley Parcel's seats?"
+      }
+    ],
+    "events": [],
+    "ownership": []
+  },
+  "prompt_user_sha256": "d0f8648095de8f01e8647bf6d1d6cefcc025d059dbd470379e4bc1dc31c0dada",
+  "response_text": "{\n  \"date_used\": \"2026-03-03\",\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"tansley-parcel\"\n    }\n  ],\n  \"claims\": [\n    {\n      \"cid\": \"c-tpx-seats-lev\",\n      \"stated\": true,\n      \"value\": \"Tansley Parcel is at 125 seats\",\n      \"line\": 11\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2026-03-03",
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "tansley-parcel"
+      }
+    ],
+    "claims": [
+      {
+        "cid": "c-tpx-seats-lev",
+        "stated": true,
+        "value": "Tansley Parcel is at 125 seats",
+        "line": 11
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2770,
+    "output_tokens": 125,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.00679
+}

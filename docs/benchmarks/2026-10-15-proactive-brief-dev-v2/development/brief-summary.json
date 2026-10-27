@@ -1,0 +1,987 @@
+{
+  "scorer": "t0-score-v3",
+  "design": "d6-dev-v2",
+  "cells": 144,
+  "readers": [
+    "claude-opus-5-5",
+    "claude-sonnet-5-5",
+    "gpt-6.1-sol"
+  ],
+  "ceilings": [
+    "claude-opus-5-5",
+    "claude-sonnet-5-5",
+    "gpt-6.1-sol"
+  ],
+  "pooled": {
+    "success": {
+      "pairs": 72,
+      "personas": 6,
+      "off_successes": 72,
+      "on_successes": 72,
+      "delta": 0,
+      "lower": 0,
+      "upper": 0,
+      "discordant": {
+        "on_only": 0,
+        "off_only": 0
+      }
+    },
+    "efficiency": {
+      "s2_tool_calls": {
+        "pairs": 72,
+        "personas": 6,
+        "off_total": 465,
+        "on_total": 437,
+        "ratio": 0.9397849462365592,
+        "lower": 0.8561080542179423,
+        "upper": 1.0317825086377903
+      },
+      "s2_input_tokens": {
+        "pairs": 72,
+        "personas": 6,
+        "off_total": 4002865,
+        "on_total": 3675844,
+        "ratio": 0.9183032652862387,
+        "lower": 0.8681800133481395,
+        "upper": 0.9713203400357264
+      },
+      "s2_wall_ms": {
+        "pairs": 72,
+        "personas": 6,
+        "off_total": 1176252,
+        "on_total": 1148194,
+        "ratio": 0.9761462679765901,
+        "lower": 0.89822957265611,
+        "upper": 1.0608218492101709
+      }
+    },
+    "arms": {
+      "brief-off": {
+        "cells": 72,
+        "successes": 72,
+        "success_rate": 1,
+        "complete": 71,
+        "failure_kinds": {
+          "missed_commitment": 0,
+          "stale_date": 0,
+          "stale_correction": 0,
+          "unsupported": 0,
+          "execution_error": 0
+        },
+        "confident_wrong": {
+          "cells": 0,
+          "rate": 0
+        },
+        "guard": {
+          "fired": 0,
+          "miss": 0,
+          "silent": 72
+        },
+        "brief_chars": {
+          "max": 0,
+          "mean_when_fired": null
+        },
+        "items": {
+          "pushed": 0,
+          "per_fired_session": null,
+          "false_pushes": 0,
+          "false_pushes_per_session": 0,
+          "sessions_with_false_push": 0,
+          "stale": 0,
+          "namesake": 0,
+          "other_counterparty": 0
+        },
+        "opportunity_recall": {
+          "needed_facts": 216,
+          "by_brief": 0,
+          "by_all_injected_context": 0.013888888888888888
+        },
+        "per_task": {
+          "s2_tool_calls_mean": 6.458333333333333,
+          "s2_input_tokens_mean": 55595.34722222222,
+          "cell_input_tokens_mean": 150451.84722222222,
+          "usd_mean": 0.2081110794444444,
+          "usd_sum": 14.983997719999996
+        }
+      },
+      "brief-on": {
+        "cells": 72,
+        "successes": 72,
+        "success_rate": 1,
+        "complete": 68,
+        "failure_kinds": {
+          "missed_commitment": 0,
+          "stale_date": 0,
+          "stale_correction": 0,
+          "unsupported": 0,
+          "execution_error": 0
+        },
+        "confident_wrong": {
+          "cells": 0,
+          "rate": 0
+        },
+        "guard": {
+          "fired": 72,
+          "miss": 0,
+          "silent": 0
+        },
+        "brief_chars": {
+          "max": 955,
+          "mean_when_fired": 419.3611111111111
+        },
+        "items": {
+          "pushed": 76,
+          "per_fired_session": 1.0555555555555556,
+          "false_pushes": 0,
+          "false_pushes_per_session": 0,
+          "sessions_with_false_push": 0,
+          "stale": 0,
+          "namesake": 0,
+          "other_counterparty": 0
+        },
+        "opportunity_recall": {
+          "needed_facts": 216,
+          "by_brief": 0.6435185185185185,
+          "by_all_injected_context": 0.6574074074074074
+        },
+        "per_task": {
+          "s2_tool_calls_mean": 6.069444444444445,
+          "s2_input_tokens_mean": 51053.38888888889,
+          "cell_input_tokens_mean": 147847.51388888888,
+          "usd_mean": 0.19155697291666662,
+          "usd_sum": 13.792102049999997
+        }
+      }
+    },
+    "uptake": {
+      "pushed_facts": 139,
+      "in_deliverable": 139,
+      "rate": 1,
+      "paired_off_in_deliverable": 139,
+      "paired_off_rate": 1
+    }
+  },
+  "checks": {
+    "time_saved": false,
+    "success_non_inferior": true,
+    "hot_memory_control_valid": true,
+    "guard_misses_within_ceiling": true,
+    "attention_within_cap": true,
+    "false_push_within_ceiling": true,
+    "no_confident_wrong_rise": true
+  },
+  "development_signal": "no time-saved signal (development evidence only)",
+  "success_improvement": false,
+  "control": {
+    "aged": {
+      "cells": 72,
+      "hot_memory_carried_a_needed_fact": 0,
+      "brief_off_failures": 0,
+      "valid": true
+    },
+    "crowded": {
+      "cells": 72,
+      "hot_memory_carried_a_needed_fact": 0,
+      "brief_off_failures": 0,
+      "valid": true
+    }
+  },
+  "firing_by_save_path": {
+    "remember": {
+      "cells": 62,
+      "fired": 62,
+      "rate": 1
+    },
+    "page": {
+      "cells": 10,
+      "fired": 10,
+      "rate": 1
+    },
+    "none": {
+      "cells": 0,
+      "fired": 0,
+      "rate": null
+    }
+  },
+  "guard_saved": {
+    "brief_on_cells_with_a_save": 72,
+    "misses": 0
+  },
+  "by_condition": {
+    "aged": {
+      "success": {
+        "pairs": 36,
+        "personas": 6,
+        "off_successes": 36,
+        "on_successes": 36,
+        "delta": 0,
+        "lower": 0,
+        "upper": 0,
+        "discordant": {
+          "on_only": 0,
+          "off_only": 0
+        }
+      },
+      "efficiency": {
+        "s2_tool_calls": {
+          "pairs": 36,
+          "personas": 6,
+          "off_total": 230,
+          "on_total": 215,
+          "ratio": 0.9347826086956522,
+          "lower": 0.8411535278784227,
+          "upper": 1.0391480304423593
+        },
+        "s2_input_tokens": {
+          "pairs": 36,
+          "personas": 6,
+          "off_total": 1951236,
+          "on_total": 1738741,
+          "ratio": 0.8910972327283835,
+          "lower": 0.8116221421633435,
+          "upper": 0.9783546882958952
+        },
+        "s2_wall_ms": {
+          "pairs": 36,
+          "personas": 6,
+          "off_total": 594255,
+          "on_total": 585669,
+          "ratio": 0.9855516571168943,
+          "lower": 0.8845585339437444,
+          "upper": 1.0980755433757345
+        }
+      },
+      "arms": {
+        "brief-off": {
+          "cells": 36,
+          "successes": 36,
+          "success_rate": 1,
+          "complete": 36,
+          "failure_kinds": {
+            "missed_commitment": 0,
+            "stale_date": 0,
+            "stale_correction": 0,
+            "unsupported": 0,
+            "execution_error": 0
+          },
+          "confident_wrong": {
+            "cells": 0,
+            "rate": 0
+          },
+          "guard": {
+            "fired": 0,
+            "miss": 0,
+            "silent": 36
+          },
+          "brief_chars": {
+            "max": 0,
+            "mean_when_fired": null
+          },
+          "items": {
+            "pushed": 0,
+            "per_fired_session": null,
+            "false_pushes": 0,
+            "false_pushes_per_session": 0,
+            "sessions_with_false_push": 0,
+            "stale": 0,
+            "namesake": 0,
+            "other_counterparty": 0
+          },
+          "opportunity_recall": {
+            "needed_facts": 108,
+            "by_brief": 0,
+            "by_all_injected_context": 0
+          },
+          "per_task": {
+            "s2_tool_calls_mean": 6.388888888888889,
+            "s2_input_tokens_mean": 54201,
+            "cell_input_tokens_mean": 148870.94444444444,
+            "usd_mean": 0.20920368444444445,
+            "usd_sum": 7.5313326400000005
+          }
+        },
+        "brief-on": {
+          "cells": 36,
+          "successes": 36,
+          "success_rate": 1,
+          "complete": 33,
+          "failure_kinds": {
+            "missed_commitment": 0,
+            "stale_date": 0,
+            "stale_correction": 0,
+            "unsupported": 0,
+            "execution_error": 0
+          },
+          "confident_wrong": {
+            "cells": 0,
+            "rate": 0
+          },
+          "guard": {
+            "fired": 36,
+            "miss": 0,
+            "silent": 0
+          },
+          "brief_chars": {
+            "max": 909,
+            "mean_when_fired": 426.4166666666667
+          },
+          "items": {
+            "pushed": 38,
+            "per_fired_session": 1.0555555555555556,
+            "false_pushes": 0,
+            "false_pushes_per_session": 0,
+            "sessions_with_false_push": 0,
+            "stale": 0,
+            "namesake": 0,
+            "other_counterparty": 0
+          },
+          "opportunity_recall": {
+            "needed_facts": 108,
+            "by_brief": 0.6574074074074074,
+            "by_all_injected_context": 0.6574074074074074
+          },
+          "per_task": {
+            "s2_tool_calls_mean": 5.972222222222222,
+            "s2_input_tokens_mean": 48298.36111111111,
+            "cell_input_tokens_mean": 145196.11111111112,
+            "usd_mean": 0.18623589222222214,
+            "usd_sum": 6.704492119999998
+          }
+        }
+      },
+      "uptake": {
+        "pushed_facts": 71,
+        "in_deliverable": 71,
+        "rate": 1,
+        "paired_off_in_deliverable": 71,
+        "paired_off_rate": 1
+      }
+    },
+    "crowded": {
+      "success": {
+        "pairs": 36,
+        "personas": 6,
+        "off_successes": 36,
+        "on_successes": 36,
+        "delta": 0,
+        "lower": 0,
+        "upper": 0,
+        "discordant": {
+          "on_only": 0,
+          "off_only": 0
+        }
+      },
+      "efficiency": {
+        "s2_tool_calls": {
+          "pairs": 36,
+          "personas": 6,
+          "off_total": 235,
+          "on_total": 222,
+          "ratio": 0.9446808510638298,
+          "lower": 0.8220153413819031,
+          "upper": 1.085921132555227
+        },
+        "s2_input_tokens": {
+          "pairs": 36,
+          "personas": 6,
+          "off_total": 2051629,
+          "on_total": 1937103,
+          "ratio": 0.9441780165907189,
+          "lower": 0.8936653915477405,
+          "upper": 0.9975457941355564
+        },
+        "s2_wall_ms": {
+          "pairs": 36,
+          "personas": 6,
+          "off_total": 581997,
+          "on_total": 562525,
+          "ratio": 0.9665427828665784,
+          "lower": 0.8838458858049818,
+          "upper": 1.0569772645647908
+        }
+      },
+      "arms": {
+        "brief-off": {
+          "cells": 36,
+          "successes": 36,
+          "success_rate": 1,
+          "complete": 35,
+          "failure_kinds": {
+            "missed_commitment": 0,
+            "stale_date": 0,
+            "stale_correction": 0,
+            "unsupported": 0,
+            "execution_error": 0
+          },
+          "confident_wrong": {
+            "cells": 0,
+            "rate": 0
+          },
+          "guard": {
+            "fired": 0,
+            "miss": 0,
+            "silent": 36
+          },
+          "brief_chars": {
+            "max": 0,
+            "mean_when_fired": null
+          },
+          "items": {
+            "pushed": 0,
+            "per_fired_session": null,
+            "false_pushes": 0,
+            "false_pushes_per_session": 0,
+            "sessions_with_false_push": 0,
+            "stale": 0,
+            "namesake": 0,
+            "other_counterparty": 0
+          },
+          "opportunity_recall": {
+            "needed_facts": 108,
+            "by_brief": 0,
+            "by_all_injected_context": 0.027777777777777776
+          },
+          "per_task": {
+            "s2_tool_calls_mean": 6.527777777777778,
+            "s2_input_tokens_mean": 56989.694444444445,
+            "cell_input_tokens_mean": 152032.75,
+            "usd_mean": 0.20701847444444443,
+            "usd_sum": 7.45266508
+          }
+        },
+        "brief-on": {
+          "cells": 36,
+          "successes": 36,
+          "success_rate": 1,
+          "complete": 35,
+          "failure_kinds": {
+            "missed_commitment": 0,
+            "stale_date": 0,
+            "stale_correction": 0,
+            "unsupported": 0,
+            "execution_error": 0
+          },
+          "confident_wrong": {
+            "cells": 0,
+            "rate": 0
+          },
+          "guard": {
+            "fired": 36,
+            "miss": 0,
+            "silent": 0
+          },
+          "brief_chars": {
+            "max": 955,
+            "mean_when_fired": 412.30555555555554
+          },
+          "items": {
+            "pushed": 38,
+            "per_fired_session": 1.0555555555555556,
+            "false_pushes": 0,
+            "false_pushes_per_session": 0,
+            "sessions_with_false_push": 0,
+            "stale": 0,
+            "namesake": 0,
+            "other_counterparty": 0
+          },
+          "opportunity_recall": {
+            "needed_facts": 108,
+            "by_brief": 0.6296296296296297,
+            "by_all_injected_context": 0.6574074074074074
+          },
+          "per_task": {
+            "s2_tool_calls_mean": 6.166666666666667,
+            "s2_input_tokens_mean": 53808.416666666664,
+            "cell_input_tokens_mean": 150498.91666666666,
+            "usd_mean": 0.1968780536111111,
+            "usd_sum": 7.087609929999999
+          }
+        }
+      },
+      "uptake": {
+        "pushed_facts": 68,
+        "in_deliverable": 68,
+        "rate": 1,
+        "paired_off_in_deliverable": 68,
+        "paired_off_rate": 1
+      }
+    }
+  },
+  "by_reader": {
+    "claude-opus-5-5": {
+      "success": {
+        "pairs": 24,
+        "personas": 6,
+        "off_successes": 24,
+        "on_successes": 24,
+        "delta": 0,
+        "lower": 0,
+        "upper": 0,
+        "discordant": {
+          "on_only": 0,
+          "off_only": 0
+        }
+      },
+      "efficiency": {
+        "s2_tool_calls": {
+          "pairs": 24,
+          "personas": 6,
+          "off_total": 160,
+          "on_total": 138,
+          "ratio": 0.8625,
+          "lower": 0.7638769829552721,
+          "upper": 0.9748236325580569
+        },
+        "s2_input_tokens": {
+          "pairs": 24,
+          "personas": 6,
+          "off_total": 1557306,
+          "on_total": 1422741,
+          "ratio": 0.9135911632010665,
+          "lower": 0.798176083397866,
+          "upper": 1.0456951561584518
+        },
+        "s2_wall_ms": {
+          "pairs": 24,
+          "personas": 6,
+          "off_total": 439568,
+          "on_total": 420096,
+          "ratio": 0.9557019619262549,
+          "lower": 0.809697399617814,
+          "upper": 1.1280341727326963
+        }
+      },
+      "arms": {
+        "brief-off": {
+          "cells": 24,
+          "successes": 24,
+          "success_rate": 1,
+          "complete": 24,
+          "failure_kinds": {
+            "missed_commitment": 0,
+            "stale_date": 0,
+            "stale_correction": 0,
+            "unsupported": 0,
+            "execution_error": 0
+          },
+          "confident_wrong": {
+            "cells": 0,
+            "rate": 0
+          },
+          "guard": {
+            "fired": 0,
+            "miss": 0,
+            "silent": 24
+          },
+          "brief_chars": {
+            "max": 0,
+            "mean_when_fired": null
+          },
+          "items": {
+            "pushed": 0,
+            "per_fired_session": null,
+            "false_pushes": 0,
+            "false_pushes_per_session": 0,
+            "sessions_with_false_push": 0,
+            "stale": 0,
+            "namesake": 0,
+            "other_counterparty": 0
+          },
+          "opportunity_recall": {
+            "needed_facts": 72,
+            "by_brief": 0,
+            "by_all_injected_context": 0.013888888888888888
+          },
+          "per_task": {
+            "s2_tool_calls_mean": 6.666666666666667,
+            "s2_input_tokens_mean": 64887.75,
+            "cell_input_tokens_mean": 189809.5,
+            "usd_mean": 0.3507344329166668,
+            "usd_sum": 8.417626390000002
+          }
+        },
+        "brief-on": {
+          "cells": 24,
+          "successes": 24,
+          "success_rate": 1,
+          "complete": 24,
+          "failure_kinds": {
+            "missed_commitment": 0,
+            "stale_date": 0,
+            "stale_correction": 0,
+            "unsupported": 0,
+            "execution_error": 0
+          },
+          "confident_wrong": {
+            "cells": 0,
+            "rate": 0
+          },
+          "guard": {
+            "fired": 24,
+            "miss": 0,
+            "silent": 0
+          },
+          "brief_chars": {
+            "max": 909,
+            "mean_when_fired": 376.5416666666667
+          },
+          "items": {
+            "pushed": 26,
+            "per_fired_session": 1.0833333333333333,
+            "false_pushes": 0,
+            "false_pushes_per_session": 0,
+            "sessions_with_false_push": 0,
+            "stale": 0,
+            "namesake": 0,
+            "other_counterparty": 0
+          },
+          "opportunity_recall": {
+            "needed_facts": 72,
+            "by_brief": 0.5694444444444444,
+            "by_all_injected_context": 0.5833333333333334
+          },
+          "per_task": {
+            "s2_tool_calls_mean": 5.75,
+            "s2_input_tokens_mean": 59280.875,
+            "cell_input_tokens_mean": 182557.33333333334,
+            "usd_mean": 0.31774120791666666,
+            "usd_sum": 7.625788989999999
+          }
+        }
+      },
+      "uptake": {
+        "pushed_facts": 41,
+        "in_deliverable": 41,
+        "rate": 1,
+        "paired_off_in_deliverable": 41,
+        "paired_off_rate": 1
+      }
+    },
+    "claude-sonnet-5-5": {
+      "success": {
+        "pairs": 24,
+        "personas": 6,
+        "off_successes": 24,
+        "on_successes": 24,
+        "delta": 0,
+        "lower": 0,
+        "upper": 0,
+        "discordant": {
+          "on_only": 0,
+          "off_only": 0
+        }
+      },
+      "efficiency": {
+        "s2_tool_calls": {
+          "pairs": 24,
+          "personas": 6,
+          "off_total": 110,
+          "on_total": 115,
+          "ratio": 1.0454545454545454,
+          "lower": 0.9214754723334068,
+          "upper": 1.1856476167680048
+        },
+        "s2_input_tokens": {
+          "pairs": 24,
+          "personas": 6,
+          "off_total": 1478187,
+          "on_total": 1332905,
+          "ratio": 0.9017160886951381,
+          "lower": 0.8415501231538012,
+          "upper": 0.966183643963045
+        },
+        "s2_wall_ms": {
+          "pairs": 24,
+          "personas": 6,
+          "off_total": 291875,
+          "on_total": 291384,
+          "ratio": 0.9983177730192719,
+          "lower": 0.863977244919342,
+          "upper": 1.15354702631435
+        }
+      },
+      "arms": {
+        "brief-off": {
+          "cells": 24,
+          "successes": 24,
+          "success_rate": 1,
+          "complete": 24,
+          "failure_kinds": {
+            "missed_commitment": 0,
+            "stale_date": 0,
+            "stale_correction": 0,
+            "unsupported": 0,
+            "execution_error": 0
+          },
+          "confident_wrong": {
+            "cells": 0,
+            "rate": 0
+          },
+          "guard": {
+            "fired": 0,
+            "miss": 0,
+            "silent": 24
+          },
+          "brief_chars": {
+            "max": 0,
+            "mean_when_fired": null
+          },
+          "items": {
+            "pushed": 0,
+            "per_fired_session": null,
+            "false_pushes": 0,
+            "false_pushes_per_session": 0,
+            "sessions_with_false_push": 0,
+            "stale": 0,
+            "namesake": 0,
+            "other_counterparty": 0
+          },
+          "opportunity_recall": {
+            "needed_facts": 72,
+            "by_brief": 0,
+            "by_all_injected_context": 0.013888888888888888
+          },
+          "per_task": {
+            "s2_tool_calls_mean": 4.583333333333333,
+            "s2_input_tokens_mean": 61591.125,
+            "cell_input_tokens_mean": 167816.79166666666,
+            "usd_mean": 0.1787023670833333,
+            "usd_sum": 4.2888568099999995
+          }
+        },
+        "brief-on": {
+          "cells": 24,
+          "successes": 24,
+          "success_rate": 1,
+          "complete": 24,
+          "failure_kinds": {
+            "missed_commitment": 0,
+            "stale_date": 0,
+            "stale_correction": 0,
+            "unsupported": 0,
+            "execution_error": 0
+          },
+          "confident_wrong": {
+            "cells": 0,
+            "rate": 0
+          },
+          "guard": {
+            "fired": 24,
+            "miss": 0,
+            "silent": 0
+          },
+          "brief_chars": {
+            "max": 909,
+            "mean_when_fired": 511.0416666666667
+          },
+          "items": {
+            "pushed": 25,
+            "per_fired_session": 1.0416666666666667,
+            "false_pushes": 0,
+            "false_pushes_per_session": 0,
+            "sessions_with_false_push": 0,
+            "stale": 0,
+            "namesake": 0,
+            "other_counterparty": 0
+          },
+          "opportunity_recall": {
+            "needed_facts": 72,
+            "by_brief": 0.7916666666666666,
+            "by_all_injected_context": 0.8055555555555556
+          },
+          "per_task": {
+            "s2_tool_calls_mean": 4.791666666666667,
+            "s2_input_tokens_mean": 55537.708333333336,
+            "cell_input_tokens_mean": 167838.95833333334,
+            "usd_mean": 0.1723526675,
+            "usd_sum": 4.13646402
+          }
+        }
+      },
+      "uptake": {
+        "pushed_facts": 57,
+        "in_deliverable": 57,
+        "rate": 1,
+        "paired_off_in_deliverable": 57,
+        "paired_off_rate": 1
+      }
+    },
+    "gpt-6.1-sol": {
+      "success": {
+        "pairs": 24,
+        "personas": 6,
+        "off_successes": 24,
+        "on_successes": 24,
+        "delta": 0,
+        "lower": 0,
+        "upper": 0,
+        "discordant": {
+          "on_only": 0,
+          "off_only": 0
+        }
+      },
+      "efficiency": {
+        "s2_tool_calls": {
+          "pairs": 24,
+          "personas": 6,
+          "off_total": 195,
+          "on_total": 184,
+          "ratio": 0.9435897435897436,
+          "lower": 0.8683658171417443,
+          "upper": 1.0256436563236164
+        },
+        "s2_input_tokens": {
+          "pairs": 24,
+          "personas": 6,
+          "off_total": 967372,
+          "on_total": 920198,
+          "ratio": 0.9512348920580708,
+          "lower": 0.9093397193387808,
+          "upper": 0.9950603152783171
+        },
+        "s2_wall_ms": {
+          "pairs": 24,
+          "personas": 6,
+          "off_total": 444809,
+          "on_total": 436714,
+          "ratio": 0.9818011775840867,
+          "lower": 0.8799819444460025,
+          "upper": 1.0954015574507183
+        }
+      },
+      "arms": {
+        "brief-off": {
+          "cells": 24,
+          "successes": 24,
+          "success_rate": 1,
+          "complete": 23,
+          "failure_kinds": {
+            "missed_commitment": 0,
+            "stale_date": 0,
+            "stale_correction": 0,
+            "unsupported": 0,
+            "execution_error": 0
+          },
+          "confident_wrong": {
+            "cells": 0,
+            "rate": 0
+          },
+          "guard": {
+            "fired": 0,
+            "miss": 0,
+            "silent": 24
+          },
+          "brief_chars": {
+            "max": 0,
+            "mean_when_fired": null
+          },
+          "items": {
+            "pushed": 0,
+            "per_fired_session": null,
+            "false_pushes": 0,
+            "false_pushes_per_session": 0,
+            "sessions_with_false_push": 0,
+            "stale": 0,
+            "namesake": 0,
+            "other_counterparty": 0
+          },
+          "opportunity_recall": {
+            "needed_facts": 72,
+            "by_brief": 0,
+            "by_all_injected_context": 0.013888888888888888
+          },
+          "per_task": {
+            "s2_tool_calls_mean": 8.125,
+            "s2_input_tokens_mean": 40307.166666666664,
+            "cell_input_tokens_mean": 93729.25,
+            "usd_mean": 0.09489643833333333,
+            "usd_sum": 2.27751452
+          }
+        },
+        "brief-on": {
+          "cells": 24,
+          "successes": 24,
+          "success_rate": 1,
+          "complete": 20,
+          "failure_kinds": {
+            "missed_commitment": 0,
+            "stale_date": 0,
+            "stale_correction": 0,
+            "unsupported": 0,
+            "execution_error": 0
+          },
+          "confident_wrong": {
+            "cells": 0,
+            "rate": 0
+          },
+          "guard": {
+            "fired": 24,
+            "miss": 0,
+            "silent": 0
+          },
+          "brief_chars": {
+            "max": 955,
+            "mean_when_fired": 370.5
+          },
+          "items": {
+            "pushed": 25,
+            "per_fired_session": 1.0416666666666667,
+            "false_pushes": 0,
+            "false_pushes_per_session": 0,
+            "sessions_with_false_push": 0,
+            "stale": 0,
+            "namesake": 0,
+            "other_counterparty": 0
+          },
+          "opportunity_recall": {
+            "needed_facts": 72,
+            "by_brief": 0.5694444444444444,
+            "by_all_injected_context": 0.5833333333333334
+          },
+          "per_task": {
+            "s2_tool_calls_mean": 7.666666666666667,
+            "s2_input_tokens_mean": 38341.583333333336,
+            "cell_input_tokens_mean": 93146.25,
+            "usd_mean": 0.08457704333333334,
+            "usd_sum": 2.02984904
+          }
+        }
+      },
+      "uptake": {
+        "pushed_facts": 41,
+        "in_deliverable": 41,
+        "rate": 1,
+        "paired_off_in_deliverable": 41,
+        "paired_off_rate": 1
+      }
+    }
+  },
+  "by_kind": {
+    "prep": {
+      "pairs": 36,
+      "personas": 6,
+      "off_successes": 36,
+      "on_successes": 36,
+      "delta": 0,
+      "lower": 0,
+      "upper": 0,
+      "discordant": {
+        "on_only": 0,
+        "off_only": 0
+      }
+    },
+    "reply": {
+      "pairs": 36,
+      "personas": 6,
+      "off_successes": 36,
+      "on_successes": 36,
+      "delta": 0,
+      "lower": 0,
+      "upper": 0,
+      "discordant": {
+        "on_only": 0,
+        "off_only": 0
+      }
+    }
+  }
+}

@@ -1,0 +1,189 @@
+{
+ "beam/100k": {
+  "units": 4,
+  "document_tokens_cl100k": 579786,
+  "windows": 365,
+  "facts_inserted": 1388,
+  "duplicate": 0,
+  "superseded": 0,
+  "failed_windows": 0,
+  "retried_windows": 0,
+  "extract_s": 376.0,
+  "extraction_chat": {
+   "requests": 365,
+   "input_tokens": 927391,
+   "output_tokens": 239079,
+   "usd": 0.2123
+  },
+  "embedding_usd_pages_and_facts": 0.045,
+  "chat_usd_per_1m_doc_tokens": 0.3661,
+  "chat_calls_per_1k_doc_tokens": 0.6295,
+  "facts_per_1k_doc_tokens": 2.394,
+  "by_model": {
+   "embedding:voyage-4": {
+    "requests": 1829,
+    "input_tokens": 749320,
+    "output_tokens": 0,
+    "usd": 0.045
+   },
+   "chat:gpt-6-luna": {
+    "requests": 365,
+    "input_tokens": 927391,
+    "output_tokens": 239079,
+    "usd": 0.2123
+   },
+   "rerank:rerank-2.5": {
+    "requests": 373,
+    "input_tokens": 1991188,
+    "output_tokens": 0,
+    "usd": 0.0996
+   }
+  }
+ },
+ "beam/500k": {
+  "units": 7,
+  "document_tokens_cl100k": 3576673,
+  "windows": 1985,
+  "facts_inserted": 5550,
+  "duplicate": 0,
+  "superseded": 0,
+  "failed_windows": 0,
+  "retried_windows": 0,
+  "extract_s": 1769.5,
+  "extraction_chat": {
+   "requests": 1985,
+   "input_tokens": 5459170,
+   "output_tokens": 1100211,
+   "usd": 1.0886
+  },
+  "embedding_usd_pages_and_facts": 0.2524,
+  "chat_usd_per_1m_doc_tokens": 0.3044,
+  "chat_calls_per_1k_doc_tokens": 0.555,
+  "facts_per_1k_doc_tokens": 1.552,
+  "by_model": {
+   "embedding:voyage-4": {
+    "requests": 5888,
+    "input_tokens": 4206601,
+    "output_tokens": 0,
+    "usd": 0.2524
+   },
+   "chat:gpt-6-luna": {
+    "requests": 1985,
+    "input_tokens": 5459170,
+    "output_tokens": 1100211,
+    "usd": 1.0886
+   }
+  }
+ },
+ "beam/1m": {
+  "units": 7,
+  "document_tokens_cl100k": 7786917,
+  "windows": 4627,
+  "facts_inserted": 9357,
+  "duplicate": 0,
+  "superseded": 0,
+  "failed_windows": 0,
+  "retried_windows": 0,
+  "extract_s": 3595.0,
+  "extraction_chat": {
+   "requests": 4627,
+   "input_tokens": 12209729,
+   "output_tokens": 2043216,
+   "usd": 2.241
+  },
+  "embedding_usd_pages_and_facts": 0.5687,
+  "chat_usd_per_1m_doc_tokens": 0.2878,
+  "chat_calls_per_1k_doc_tokens": 0.5942,
+  "facts_per_1k_doc_tokens": 1.202,
+  "by_model": {
+   "embedding:voyage-4": {
+    "requests": 10188,
+    "input_tokens": 9478712,
+    "output_tokens": 0,
+    "usd": 0.5687
+   },
+   "chat:gpt-6-luna": {
+    "requests": 4627,
+    "input_tokens": 12209729,
+    "output_tokens": 2043216,
+    "usd": 2.241
+   }
+  }
+ },
+ "locomo/locomo10": {
+  "units": 2,
+  "document_tokens_cl100k": 99092,
+  "windows": 64,
+  "facts_inserted": 520,
+  "duplicate": 0,
+  "superseded": 0,
+  "failed_windows": 0,
+  "retried_windows": 0,
+  "extract_s": 89.7,
+  "extraction_chat": {
+   "requests": 64,
+   "input_tokens": 156914,
+   "output_tokens": 54495,
+   "usd": 0.0429
+  },
+  "embedding_usd_pages_and_facts": 0.0074,
+  "chat_usd_per_1m_doc_tokens": 0.4333,
+  "chat_calls_per_1k_doc_tokens": 0.6459,
+  "facts_per_1k_doc_tokens": 5.248,
+  "by_model": {
+   "embedding:voyage-4": {
+    "requests": 577,
+    "input_tokens": 124115,
+    "output_tokens": 0,
+    "usd": 0.0074
+   },
+   "chat:gpt-6-luna": {
+    "requests": 64,
+    "input_tokens": 156914,
+    "output_tokens": 54495,
+    "usd": 0.0429
+   }
+  }
+ },
+ "longmemeval/s": {
+  "units": 99,
+  "document_tokens_cl100k": 11326071,
+  "windows": 8817,
+  "facts_inserted": 30340,
+  "duplicate": 0,
+  "superseded": 0,
+  "failed_windows": 0,
+  "retried_windows": 0,
+  "extract_s": 7291.3,
+  "extraction_chat": {
+   "requests": 8913,
+   "input_tokens": 18663467,
+   "output_tokens": 4240915,
+   "usd": 3.9378
+  },
+  "embedding_usd_pages_and_facts": 0.7459,
+  "chat_usd_per_1m_doc_tokens": 0.3477,
+  "chat_calls_per_1k_doc_tokens": 0.7869,
+  "facts_per_1k_doc_tokens": 2.679,
+  "by_model": {
+   "embedding:voyage-4": {
+    "requests": 35506,
+    "input_tokens": 12432061,
+    "output_tokens": 0,
+    "usd": 0.7459
+   },
+   "chat:gpt-6-luna": {
+    "requests": 8913,
+    "input_tokens": 18663467,
+    "output_tokens": 4240915,
+    "usd": 3.9378
+   },
+   "rerank:rerank-2.5": {
+    "requests": 60,
+    "input_tokens": 1436912,
+    "output_tokens": 0,
+    "usd": 0.0718
+   }
+  }
+ }
+}

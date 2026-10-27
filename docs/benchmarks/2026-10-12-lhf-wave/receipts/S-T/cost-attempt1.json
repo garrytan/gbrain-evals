@@ -1,0 +1,30 @@
+{
+  "arm": "S-T-a1",
+  "run_id": "lhf-wave-longmemeval-S-T-a1-2026-10-12T20-21-24-214Z-e8c555b7",
+  "gbrain_src": "<work>/gbrain-measure",
+  "gbrain": {
+    "commit": "f77f1418caedc2f521e30ba14040134d09310a49",
+    "tree": "585e2fbf12a5809eefb26e2e39785f01c2284a3d",
+    "dirty": false
+  },
+  "attestation": {
+    "preregistration": "docs/benchmarks/2026-10-12-lhf-wave-preregistration.md",
+    "preregistration_commit": "bc667542810736f692eef3b381e590994a2f0b77",
+    "runner_commit": "bc667542810736f692eef3b381e590994a2f0b77",
+    "worktree_clean_for_preregistration": true,
+    "on_origin": true,
+    "attested_at": "2026-10-12T20:21:24.185Z"
+  },
+  "usd": 0.596023,
+  "input_tokens": 11916386,
+  "output_tokens": 0,
+  "basis": "budget ledger lhf-wave-longmemeval-S-T-a1-2026-10-12T20-21-24-214Z-e8c555b7: 471 paid requests, 0 charged at their reservation because usage was unavailable",
+  "ledger": "<work>/ledger.sqlite",
+  "program_cap_usd": 30,
+  "overshoot_usd": 0,
+  "event_loop_lag_ms": {
+    "p50": 0,
+    "p99": 2271,
+    "max": 3246.1
+  }
+}

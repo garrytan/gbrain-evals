@@ -1,0 +1,37 @@
+{
+  "slug": "contracts/2026-03-20-qfl-renewal-2026",
+  "model": "openai:gpt-6.1-sol",
+  "system_sha256": "66f8a214981e71bf142aafe27cd75f52c5ba0788db1151791014d11fbcb1c039",
+  "attempts": [
+    {
+      "attempt": 1,
+      "model": "openai:gpt-6.1-sol",
+      "prompt_user": "Document kind: record\nTitle: Renewal Order Form 2026: Quarrendon Freight Lines\nDate: Written on 2026-03-20.\nWriter: June Osei-Lark\nVoice: formal legal drafting\nFormat: formal numbered sections and a signature block\nLength: about 198 words\nDate style in the body: undefined\nTypos: none\n\nBrief:\nRenewal Order Form 2026: Quarrendon Freight Lines. Parties: Pemberline Systems and Quarrendon Freight Lines. Drafted 2026-03-02. Effective date 2026-04-01 (signed 2026-03-20; state both dates and keep them distinct). Terms this document sets: price per seat per year (USD) = 1920; discount (%) = 10; end of the current term (renewal date) = 2027-03-31. Executed: include a signature block signed on 2026-03-20 by both parties (customer signatory plus June Osei-Lark for Pemberline). It changes earlier paperwork for this customer; refer to the earlier agreement generically.\n\nBackground (fictional world; use only what the document needs):\nPeople:\n- Ruth Calloway: Chief Revenue Officer; runs the Strategic Accounts pod\n- Anselm Grieve: CFO; approves discounts over 10%\n- June Osei-Lark: Deal desk and contracts manager\n- Moss: Ruth's AI assistant; writes agent notes (an AI assistant)\n- Ilse Varga: North team lead\n- Dana Okafor: Account manager, North team\n- Marcus Lindqvist: Account manager, North team\n- Thea Ramaswell: Director of Yard Operations\n- Felix Duarte: Account executive at Stoneharrow Billing, Pemberline's billing vendor\n\nCustomer accounts in this part of the business:\n- Quarrendon Freight Lines: truckload freight carrier, Upper Midwest; main contact Thea Ramaswell, Director of Yard Operations; codes/nicknames QFL, Q-Freight\n- Brackenwater Freight Co.: less-than-truckload freight, Great Lakes; codes/nicknames BWF, Bracken\n- Tamsin Cold Chain: refrigerated warehousing, Pacific Northwest; codes/nicknames TCC\n- Thornbury Cloth Co. (renamed from Orrin Mills on 2026-01-12): textile mill, Carolinas; codes/nicknames TCC\n\nOther companies:\n- Pemberline Systems: The company whose knowledge base this is. Sells Pemberline Dock, a yard and dock scheduling product, priced per seat per year.\n- Quarendon Freightways: A trucking company that is not a customer; it uses a competitor's yard software. Look-alike of Quarrendon Freight Lines.\n- Stoneharrow Billing: Pemberline's billing and invoicing vendor. Pemberline is the customer here.\n\nWho manages what on 2026-03-20 (background only; don't restate unless the brief asks):\n- Quarrendon Freight Lines: managed by Dana Okafor\n- Brackenwater Freight Co.: managed by Marcus Lindqvist\n- Tamsin Cold Chain: managed by Dana Okafor\n- Thornbury Cloth Co.: managed by Marcus Lindqvist",
+      "response_text": "# Renewal Order Form 2026: Quarrendon Freight Lines\n\n## 1. Parties and Preparation\n\nThis Renewal Order Form is entered into by Pemberline Systems and Quarrendon Freight Lines for renewal of Pemberline Dock, the yard and dock scheduling software. This instrument was drafted on 2026-03-02 and executed on 2026-03-20.\n\n## 2. Effective Date\n\nThis Renewal Order Form takes effect on 2026-04-01. The execution date is distinct from the effective date and does not advance commencement of the renewal.\n\n## 3. Commercial Terms\n\nThe price per seat per year is USD 1,920. A discount of 10% applies to that price. The resulting discounted price per seat per year is USD 1,728. The end of the current term (renewal date) is 2027-03-31.\n\n## 4. Amendment of Earlier Agreement\n\nThis Renewal Order Form amends the earlier agreement between the parties solely with respect to the terms expressly set out herein. In the event of inconsistency concerning those terms, this Renewal Order Form controls. All other provisions of the earlier agreement remain unchanged.\n\n## 5. Execution\n\n**For Pemberline Systems**\n\nSigned: /s/ June Osei-Lark  \nJune Osei-Lark  \nDeal desk and contracts manager  \nDate signed: 2026-03-20\n\n**For Quarrendon Freight Lines**\n\nSigned: /s/ Thea Ramaswell  \nThea Ramaswell  \nDirector of Yard Operations  \nDate signed: 2026-03-20",
+      "usage": {
+        "input_tokens": 1154,
+        "output_tokens": 333,
+        "thinking_tokens": 0
+      },
+      "cost_usd": 0.005638,
+      "provider_meta": {
+        "id": "resp_0898927e67a3e283016acfae2735d487d1a0a4f6ff0698bb6e",
+        "status": "completed",
+        "usage": {
+          "input_tokens": 1154,
+          "input_tokens_details": {
+            "cache_write_tokens": 1151,
+            "cached_tokens": 0
+          },
+          "output_tokens": 333,
+          "output_tokens_details": {
+            "reasoning_tokens": 0
+          },
+          "total_tokens": 1487
+        },
+        "model": "gpt-6.1-sol"
+      },
+      "checks": []
+    }
+  ]
+}

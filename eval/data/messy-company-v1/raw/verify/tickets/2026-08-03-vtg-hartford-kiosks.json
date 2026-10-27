@@ -1,0 +1,49 @@
+{
+  "slug": "tickets/2026-08-03-vtg-hartford-kiosks",
+  "author": "openai:gpt-6.1-sol",
+  "verifier": "gemini:gemini-4-argon",
+  "questions": {
+    "page_date": "2026-08-03",
+    "owner_phrases": [],
+    "entity_occurrences": [
+      {
+        "oid": "e1",
+        "surface": "VTG",
+        "line": 12
+      }
+    ],
+    "claims": [],
+    "events": [
+      {
+        "eid": "e-vtg-sev1",
+        "question": "Does the page describe this: \"Sev 1 at Vantorre's Hartford plant: gate kiosks offline\"? If so, on what date does the text place it?"
+      }
+    ],
+    "ownership": []
+  },
+  "prompt_user_sha256": "18c4d7dd49bfc047cdf0417a618ccbc13c2dae45e7ac57ede85abc81b6822827",
+  "response_text": "{\n  \"date_used\": \"2026-08-03\",\n  \"entities\": [\n    {\n      \"oid\": \"e1\",\n      \"entity\": \"vantorre-group\"\n    }\n  ],\n  \"events\": [\n    {\n      \"eid\": \"e-vtg-sev1\",\n      \"present\": true,\n      \"date\": \"2026-08-03\",\n      \"line\": 10\n    }\n  ]\n}",
+  "parsed": {
+    "date_used": "2026-08-03",
+    "entities": [
+      {
+        "oid": "e1",
+        "entity": "vantorre-group"
+      }
+    ],
+    "events": [
+      {
+        "eid": "e-vtg-sev1",
+        "present": true,
+        "date": "2026-08-03",
+        "line": 10
+      }
+    ]
+  },
+  "usage": {
+    "input_tokens": 2628,
+    "output_tokens": 122,
+    "thinking_tokens": 0
+  },
+  "cost_usd": 0.006476
+}
