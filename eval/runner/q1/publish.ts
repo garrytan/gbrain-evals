@@ -5,7 +5,7 @@
  *
  *   bun eval/runner/q1/publish.ts --config docs/benchmarks/2026-10-06-scoreboard/publication.json \
  *     --results <dir holding each campaign's state directory, by campaign id> --out <receipt dir> [--trees <dir>]
- *     [--custody] [--frontier-redo <judgments file or directory of .ndjson files>]...
+ *     [--custody] [--frontier-redo <judgments file, or a directory searched recursively for .ndjson>]...
  *
  * For every source in the config it:
  *   1. checks out the campaign's launch tree (a detached worktree under --trees), because each campaign renders
@@ -146,6 +146,23 @@ export function shardConversations(def: Pick<CellDefinition, 'benchmark' | 'spli
 
 export interface AssembleOptions { preview?: boolean; custody?: boolean; frontierRedo?: string[] }
 
+/**
+ * The A19 frontier redo judgments from files or directories, searched recursively for .ndjson files (the backfill
+ * writes <unit>/<lease>/<cell>/judgments.ndjson). Refuses when nothing loads or a record is not a judgment.
+ */
+export function loadFrontierRedo(paths: string[]): string[] {
+  const files: string[] = [];
+  const walk = (p: string) => { if (statSync(p).isDirectory()) for (const e of readdirSync(p).sort()) walk(join(p, e)); else if (p.endsWith('.ndjson')) files.push(p); };
+  for (const p of paths) walk(p);
+  const lines = files.flatMap(f => readFileSync(f, 'utf8').split('\n').filter(Boolean).map(l => {
+    const j = JSON.parse(l) as Record<string, unknown>;
+    if (typeof j.answer_id !== 'string' || typeof j.instrument_id !== 'string' || typeof j.judge !== 'string' || typeof j.judge_replicate !== 'number') throw new Error(`--frontier-redo ${f}: a record is not a judgment (answer_id, instrument_id, judge, judge_replicate)`);
+    return l;
+  }));
+  if (!lines.length) throw new Error(`--frontier-redo found 0 judgment records in ${files.length} .ndjson file(s) under ${paths.join(', ')}`);
+  return lines;
+}
+
 export function assemble(config: Publication, results: string, out: string, trees: string, opts: AssembleOptions = {}): CampaignManifest {
   const preview = !!opts.preview;
   if (opts.custody && !process.env.GBRAIN_EVALS_CUSTODY_LOG) throw new Error('--custody schedules the sealed sets from their corpora; set GBRAIN_EVALS_CUSTODY_LOG on the custodian host');
@@ -233,7 +250,7 @@ export function assemble(config: Publication, results: string, out: string, tree
   const productOutcomes = new Map<string, NonNullable<CampaignCell['product_outcomes']>>();
   for (const p of config.product_outcomes) productOutcomes.set(p.cell, [...(productOutcomes.get(p.cell) ?? []), { reader: p.reader, outcome: p.outcome as 'harness_invalid', count: p.count, reason: p.reason }]);
   if (!preview) for (const id of productOutcomes.keys()) if (!covered.has(id)) throw new Error(`publication.json product_outcomes names ${id}, which no source covers`);
-  const redo = (opts.frontierRedo ?? []).flatMap(f => readFileSync(f, 'utf8').split('\n').filter(Boolean));
+  const redo = opts.frontierRedo?.length ? loadFrontierRedo(opts.frontierRedo) : [];
   if (redo.length) for (const id of covered.keys()) {
     const answers = join(out, 'cells', id, 'answers.ndjson');
     const own = new Set(readFileSync(answers, 'utf8').split('\n').filter(Boolean).map(l => (JSON.parse(l) as { answer_id: string }).answer_id));
@@ -299,8 +316,10 @@ if (import.meta.main) {
   const one = (n: string) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : undefined; };
   const config = one('--config'), results = one('--results'), out = one('--out');
   if (!config || !results || !out) { console.error('usage: publish.ts --config <publication.json> --results <dir> --out <receipt dir> [--trees <dir>] [--preview] [--custody] [--frontier-redo <file>]...'); process.exit(2); }
-  const many = (n: string) => argv.flatMap((a, i) => (a === n && argv[i + 1] ? [resolve(argv[i + 1])] : [])).flatMap(p => (statSync(p).isDirectory() ? readdirSync(p).filter(f => f.endsWith('.ndjson')).sort().map(f => join(p, f)) : [p]));
+  const many = (n: string) => argv.flatMap((a, i) => (a === n && argv[i + 1] ? [resolve(argv[i + 1])] : []));
   const c = assemble(JSON.parse(readFileSync(resolve(config), 'utf8')) as Publication, resolve(results), resolve(out), resolve(one('--trees') ?? join(tmpdir(), 'q1-publish-trees')), { preview: argv.includes('--preview'), custody: argv.includes('--custody'), frontierRedo: many('--frontier-redo') });
   const n = (s: string) => c.cells.filter(x => x.status === s).length;
+  const redo = many('--frontier-redo');
+  if (redo.length) console.log(`frontier redo: ${loadFrontierRedo(redo).length} judgment records`);
   console.log(`receipt ${relative(process.cwd(), resolve(out)) || '.'}: ${c.cells.length} cells (${n('complete')} with rows, ${n('invalid')} invalid, ${n('not-run')} not run), ${c.appendix?.length ?? 0} appendix cells, ${readdirSync(resolve(out)).length} entries`);
 }

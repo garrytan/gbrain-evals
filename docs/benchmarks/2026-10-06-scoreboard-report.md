@@ -19,6 +19,14 @@ bun eval/runner/scoreboard.ts render --receipt <receipt dir>
 bun eval/runner/scoreboard.ts check --receipt <receipt dir>
 ```
 
+The sealed sets are assembled on the custodian's host, inside custody, with `--custody` (it schedules them from their
+corpora) and the A19 redo judgments (`--frontier-redo <dir>`, searched recursively for `.ndjson`; it refuses when none
+load). That needs `GBRAIN_EVALS_CUSTODY_LOG`, `GBRAIN_EVALS_DATASETS` (the dataset root) and `GBRAIN_EVALS_BEAM10M_ROOT`,
+the verified BEAM-10M root the launcher's `GBRAIN_EVALS_BEAM10M_SOURCE` names: a dataset root other than the default
+moves BEAM-10M's default with it, so set both. The full receipt is checked there with `check --receipt <dir> --custody`
+(no size budget), and the public tables are checked anywhere with `check --sums <SHA256SUMS>` against
+`publication.json` `published.sha256`.
+
 `publication.json` says which campaign covers which rows and at which launch tree each renders: public-v2 for the
 external and baseline rows on LongMemEval (`4bccbd5a`), public-v3-s2 for gbrain on LongMemEval-S (`3532b1aa`),
 public-v3-m for gbrain on LongMemEval-M (`0518e2fd`), and the sealed campaign (hash `a92b06c5` for every unit that runs from A24 on, `b13010e1` for units started under A23, `0c4459fc` for

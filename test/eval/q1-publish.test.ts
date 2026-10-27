@@ -5,11 +5,11 @@
  * questions, the found-and-fixed appendix and the retired temporal-graph subset (A24 option 1). Lease ids here are invented.
  */
 import { describe, expect, test } from 'bun:test';
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { loadManifest } from '../../eval/runner/q1/cells/definitions.ts';
-import { bundlePins, gbrainBuildLabel, settledLeases, shardConversations, unitCell, type Publication } from '../../eval/runner/q1/publish.ts';
+import { bundlePins, gbrainBuildLabel, loadFrontierRedo, settledLeases, shardConversations, unitCell, type Publication } from '../../eval/runner/q1/publish.ts';
 import { GBRAIN_BUILD } from '../../eval/runner/scoreboard.ts';
 
 const ROOT = resolve(import.meta.dir, '../..');
@@ -132,5 +132,25 @@ describe('publication.json', () => {
     expect(r.subset.label).toContain('c0-c7');
     expect(r.view.reason).toMatch(/every system on those 8 conversations/);
     expect(config.disclosures.find(d => d.startsWith('ext-temporal-graph:'))).toMatch(/retired.*never changed.*option 1.*c0-c7.*sensitivity view.*not run.*current release.*\(F6\)/);
+  });
+});
+
+describe('loadFrontierRedo', () => {
+  const judgment = (id: string) => JSON.stringify({ answer_id: id, instrument_id: 'beam-rubric@claude-opus-5-5', judge: 'claude-opus-5-5', judge_replicate: 0, score: 1, parse_ok: true, outcome: 'scored' });
+  test('finds judgments nested as <unit>/<lease>/<cell>/judgments.ndjson, and refuses 0 records or a record that is not a judgment', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'q1-redo-'));
+    try {
+      const cell = join(dir, 's1.gbrain-defaults.shipped-defaults.c4', 'lease-a1', 's1.gbrain-defaults.shipped-defaults.component-b8000');
+      mkdirSync(cell, { recursive: true });
+      writeFileSync(join(cell, 'judgments.ndjson'), judgment('a') + '\n' + judgment('b') + '\n');
+      writeFileSync(join(cell, 'notes.txt'), 'not read');
+      expect(loadFrontierRedo([dir]).map(l => JSON.parse(l).answer_id)).toEqual(['a', 'b']);
+      expect(loadFrontierRedo([join(cell, 'judgments.ndjson')])).toHaveLength(2);
+      const empty = join(dir, 'empty', 'deeper');
+      mkdirSync(empty, { recursive: true });
+      expect(() => loadFrontierRedo([join(dir, 'empty')])).toThrow(/found 0 judgment records in 0 \.ndjson file\(s\)/);
+      writeFileSync(join(cell, 'answers.ndjson'), JSON.stringify({ answer_id: 'a', text: 'x' }) + '\n');
+      expect(() => loadFrontierRedo([dir])).toThrow(/answers\.ndjson: a record is not a judgment/);
+    } finally { rmSync(dir, { recursive: true, force: true }); }
   });
 });
