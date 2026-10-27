@@ -16,7 +16,7 @@ import { runAgent, SUBMIT_TOOL, type AgentRun, type ScriptedModel } from '../../
 import { DecideError } from '../../eval/runner/decisions/errors.ts';
 import { generateLadderWorld } from '../../eval/generators/model-ladder-gen.ts';
 import { loadFixture } from '../../eval/runner/memory-qa/corpus.ts';
-import { readerPrompt } from '../../eval/runner/memory-qa/qa.ts';
+import { readerPrompt } from '../../eval/runner/memory-qa/qa-v2.ts';
 import { answerFullContext, checkFit, FRONTIER_READERS, FullContextSystem, READER_WINDOWS, splitForCache } from '../../eval/runner/systems/baselines.ts';
 import { classifyRun, evidenceOpened, FILE_AGENT_MAX_TURNS, FileAgentSystem, layoutSessions, parseReader, PROSE_ANSWER_TOOL, proxiedFetch, ripgrep, type GrepLimitEvent } from '../../eval/runner/systems/file-agent.ts';
 import { Sanitizer } from '../../eval/runner/systems/sanitize.ts';

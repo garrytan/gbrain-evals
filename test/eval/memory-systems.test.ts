@@ -20,7 +20,7 @@ import { FakeMemorySystem, serveProtocol } from '../../eval/runner/systems/fake.
 import { FullContextSystem } from '../../eval/runner/systems/baselines.ts';
 import { BudgetRun, closeLedgers } from '../../eval/runner/budget-ledger.ts';
 import { HttpMemorySystem } from '../../eval/runner/systems/http.ts';
-import { packContext, packNative, renderItem, strictSources, TOKENIZER, validateSources } from '../../eval/runner/systems/render.ts';
+import { packContext, packNative, renderItem, strictSources, TOKENIZER, validateSources } from '../../eval/runner/systems/render-v2.ts';
 import { findLeaks, forbiddenMarkers, NS_RE, opaqueSourceId, Sanitizer, SanitizerLeakError, SRC_RE } from '../../eval/runner/systems/sanitize.ts';
 import { SystemError, type Item, type SessionInput } from '../../eval/runner/systems/types.ts';
 

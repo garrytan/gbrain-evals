@@ -82,7 +82,7 @@ import { gbrainSpecFrom, importGbrain, overlaySummary, productIdentityFor, resol
 import { EmbeddingCache, makeCachingTransport } from '../longmemeval-cache.ts';
 import { ndcgAtK, recallAllAtK, recallAnyAtK, uniqueInOrder, percentile } from '../metrics.ts';
 import { loadCorpus, occurrenceId, sha256, type Corpus, type MemoryQuestion, type Session } from './corpus.ts';
-import { ChatClient, DEFAULT_JUDGE, DEFAULT_READER, factsReaderPrompt, judgeResponse, packSessions, readerPrompt, repeatsTrap, approxTokens, unresolvedRelativeTime, type SavedFact } from './qa.ts';
+import { ChatClient, DEFAULT_JUDGE, DEFAULT_READER, factsReaderPrompt, judgeResponse, packSessions, readerPrompt, repeatsTrap, approxTokens, unresolvedRelativeTime, type SavedFact } from './qa-v2.ts';
 import { devConversations, loadSplit } from '../decisions/splits.ts';
 import { appendAccessLog } from '../sealed-confirmation-lib.ts';
 import { decideError, DecideError, renderOperatorMessage } from '../decisions/errors.ts';
@@ -103,7 +103,7 @@ import { GbrainLegacySystem, GbrainShootoutSystem, sourceOfSlug, type GbrainModu
 import { GbrainQuerySystem } from '../systems/gbrain-query/system.ts';
 import { loadConnectorModules, readerBytes } from '../systems/gbrain-query/connector.ts';
 import { HttpMemorySystem } from '../systems/http.ts';
-import { blocksToItems, packContext, packRecipe, renderItem, datedItems, pseudoSessions, RENDERER_VERSION, sessionDay, strictSources, TOKENIZER, validateSources, type ContextMode } from '../systems/render.ts';
+import { blocksToItems, packContext, packRecipe, renderItem, datedItems, pseudoSessions, RENDERER_VERSION, sessionDay, strictSources, TOKENIZER, validateSources, type ContextMode } from '../systems/render-v2.ts';
 import { renderHistory } from './qa.ts';
 import { Sanitizer, SanitizerLeakError } from '../systems/sanitize.ts';
 import { policyKnobs, SystemError, type CapabilityRecord, type Item, type MemorySystem, type RetrievalPolicy, type SessionInput } from '../systems/types.ts';

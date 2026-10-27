@@ -18,7 +18,7 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Usage } from '../memory-qa/records.ts';
-import { encodingCount, measureCalibration, readerTokenizer } from '../systems/render.ts';
+import { encodingCount, measureCalibration, readerTokenizer } from '../systems/render-v2.ts';
 import { normalizeUsage, readerConvention } from './usage.ts';
 
 const lines = <T>(path: string): T[] => existsSync(path) ? readFileSync(path, 'utf8').split('\n').filter(l => l.trim()).map(l => JSON.parse(l) as T) : [];

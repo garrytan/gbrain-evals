@@ -22,7 +22,7 @@ import { createHash } from 'node:crypto';
 import { appendFileSync, existsSync, mkdirSync, readFileSync, truncateSync } from 'node:fs';
 import { dirname } from 'node:path';
 import type { ProvenanceStatus } from '../systems/types.ts';
-import type { PackingLoss } from '../systems/render.ts';
+import type { PackingLoss } from '../systems/render-v2.ts';
 import { OUTCOMES, type Outcome } from './outcomes.ts';
 import type { MemoryQaRow } from './run-systems.ts';
 

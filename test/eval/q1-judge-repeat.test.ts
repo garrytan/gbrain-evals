@@ -9,9 +9,9 @@ import { join } from 'node:path';
 import { frontierAnswers, main, runJudgeRepeat, summarizeRepeats } from '../../eval/runner/judge-repeat.ts';
 import type { MemoryQuestion } from '../../eval/runner/memory-qa/corpus.ts';
 import { INSTRUMENTS } from '../../eval/runner/memory-qa/instruments.ts';
-import { READER_TEMPLATE, chatCacheKey, judgeAnswer, type ChatLike, type ChatOptions } from '../../eval/runner/memory-qa/qa.ts';
+import { READER_TEMPLATE, chatCacheKey, judgeAnswer, type ChatLike, type ChatOptions } from '../../eval/runner/memory-qa/qa-v2.ts';
 import { answerId, answerProblems, judgmentProblems, rawSha256, readRecords, RecordLog, type AnswerRecord } from '../../eval/runner/memory-qa/records.ts';
-import { NATIVE_READER_TEMPLATE } from '../../eval/runner/systems/render.ts';
+import { NATIVE_READER_TEMPLATE } from '../../eval/runner/systems/render-v2.ts';
 
 const dirs: string[] = [];
 const tmp = () => { const d = mkdtempSync(join(tmpdir(), 'q1-judge-')); dirs.push(d); return d; };

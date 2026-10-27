@@ -4,7 +4,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { calibrate, calibrationSamples } from '../../eval/runner/q1/calibrate.ts';
-import { encodingCount } from '../../eval/runner/systems/render.ts';
+import { encodingCount } from '../../eval/runner/systems/render-v2.ts';
 
 const tmp = mkdtempSync(join(tmpdir(), 'q1-calibrate-'));
 afterAll(() => rmSync(tmp, { recursive: true, force: true }));

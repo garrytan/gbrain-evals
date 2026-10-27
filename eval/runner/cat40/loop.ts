@@ -122,7 +122,7 @@ export interface LoopConfig {
   /** The answer tool; default `SUBMIT_TOOL`. It must be named `submit_answer`. */
   submitTool?: ToolSpec;
   /**
-   * Reasoning effort: Anthropic `output_config.effort` (as memory-qa/qa.ts sends it) and, on the OpenAI Responses API
+   * Reasoning effort: Anthropic `output_config.effort` (as memory-qa/qa-v2.ts sends it) and, on the OpenAI Responses API
    * this loop calls, `reasoning.effort` (the Responses form of Chat Completions' `reasoning_effort`). Absent, nothing is
    * added, so Cat 40's requests stay byte-identical.
    */

@@ -18,7 +18,7 @@ import { ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
 import { classifyV2, CLASSIFIER_VERSION_V2, RULES_SHA256_V2 } from '../../eval/runner/q1/hedge.ts';
 import { instrumentFor } from '../../eval/runner/memory-qa/instruments.ts';
 import type { Corpus, MemoryQuestion } from '../../eval/runner/memory-qa/corpus.ts';
-import type { ChatLike, ChatOptions, ChatResult } from '../../eval/runner/memory-qa/qa.ts';
+import type { ChatLike, ChatOptions, ChatResult } from '../../eval/runner/memory-qa/qa-v2.ts';
 import { answerProblems, judgmentProblems, rowProblems } from '../../eval/runner/memory-qa/records.ts';
 import { FakeMemorySystem, FAKE_CAPABILITIES, serveProtocol } from '../../eval/runner/systems/fake.ts';
 import { FRONTIER_READERS, FullContextSystem } from '../../eval/runner/systems/baselines.ts';

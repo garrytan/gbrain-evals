@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { gzipSync } from 'node:zlib';
 import { BudgetRun, closeLedgers, initLedger } from '../../eval/runner/budget-ledger.ts';
-import { ChatClient, chatCacheKey, latestDate, renderHistory, sendsTemperature, sessionDateKey } from '../../eval/runner/memory-qa/qa.ts';
+import { ChatClient, chatCacheKey, latestDate, renderHistory, sendsTemperature, sessionDateKey } from '../../eval/runner/memory-qa/qa-v2.ts';
 import { ledgerRerankRequests, loadFrozenRetrieval, parseRunArgs, resolveReranker, runArm, scoreRetrieval } from '../../eval/runner/memory-qa/run.ts';
 import { DecideError } from '../../eval/runner/decisions/errors.ts';
 import { loadFixture } from '../../eval/runner/memory-qa/corpus.ts';

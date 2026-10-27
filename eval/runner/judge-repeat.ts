@@ -45,7 +45,7 @@ import { decideError, exitCodeFor, renderOperatorMessage, DecideError, type Oper
 import { loadSplit } from './decisions/splits.ts';
 import { loadCorpus, type MemoryQuestion } from './memory-qa/corpus.ts';
 import { instrumentFor, INSTRUMENTS, type Instrument } from './memory-qa/instruments.ts';
-import { ChatClient, judgeAnswer, type ChatLike } from './memory-qa/qa.ts';
+import { ChatClient, judgeAnswer, type ChatLike } from './memory-qa/qa-v2.ts';
 import { judgmentKey, readRecords, RecordLog, type AnswerRecord, type JudgmentRecord } from './memory-qa/records.ts';
 import { requirePaidArm } from './paid-arm.ts';
 import { frontierInstrumentId } from './q1/cell.ts';

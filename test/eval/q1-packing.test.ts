@@ -7,7 +7,7 @@ import { describe, expect, test } from 'bun:test';
 import type { Corpus, MemoryQuestion, Session } from '../../eval/runner/memory-qa/corpus.ts';
 import { readerSessions } from '../../eval/runner/q1/cell.ts';
 import { Sanitizer } from '../../eval/runner/systems/sanitize.ts';
-import { APPROX_COUNTER, RENDERER_VERSION, bodyLines, encodingCount, measureCalibration, packContext, packNative, readerCounter, readerTokenizer, renderItem, strictSources } from '../../eval/runner/systems/render.ts';
+import { APPROX_COUNTER, RENDERER_VERSION, bodyLines, encodingCount, measureCalibration, packContext, packNative, readerCounter, readerTokenizer, renderItem, strictSources } from '../../eval/runner/systems/render-v2.ts';
 import type { Item } from '../../eval/runner/systems/types.ts';
 
 const SONNET = 'anthropic:claude-sonnet-5-5';
