@@ -12,7 +12,7 @@ The report's tables are generated, never typed. Three commands rebuild them from
 ```bash
 # 1. Assemble the receipt: merge every settled cell at its campaign's launch tree, list unsettled cells as pending.
 bun eval/runner/q1/publish.ts --config docs/benchmarks/2026-10-06-scoreboard/publication.json \
-  --results <checkout of evals/q1-scoreboard-results> --out <results checkout>/published/q1-scoreboard
+  --results <results root> --out <receipt dir>
 # 2. Render scoreboard.json, scoreboard.md and the README headline block from the receipt.
 bun eval/runner/scoreboard.ts render --receipt <receipt dir>
 # 3. Recompute everything from the rows and compare byte for byte.
@@ -35,21 +35,27 @@ public-results-only line; the preview is how this layout was checked.
 
 ## Provenance
 
-**Where the receipt lives (decided 2026-10-12, auto-approved under Garry's standing rule of 2026-10-12).** The full
-receipt (campaign.json, every cell's rows, answers, judgments and run configuration, the appendix cells and
-power.json) is pushed to `evals/q1-scoreboard-results` under `published/q1-scoreboard/`, with a `SHA256SUMS` file
-listing every file's sha256 sorted by path. `publication.json` (`published`) and this section record the results-branch
-commit that holds it and the sha256 of `SHA256SUMS`; both are empty until the sealed waves settle and the receipt is
-pushed. Main keeps only the rendered tables: `scoreboard.md` beside this report and the README headline block. To
-verify, check out that commit, confirm the `SHA256SUMS` hash, and run `bun eval/runner/scoreboard.ts check` on the
-receipt, which recomputes every table from the rows. `bun eval/runner/scoreboard.ts check --commit <commit>` does all
-three: it reads `published/q1-scoreboard/` at that results-branch commit, refuses a `SHA256SUMS` hash other than the one
-`publication.json` records, and recomputes the tables. Every render writes `SHA256SUMS`.
+**What is published (A25, Garry 2026-10-27 via GBRA-108: "Rec").** The full receipt (campaign.json, every cell's rows,
+answers, judgments and run configuration, the appendix cells and power.json) carries the question ids of the sealed
+BEAM-10M, BEAM-1M and BEAM-100K sets, so it stays sealed in custody until the follow-up current-master rerun (F6)
+closes, or as Garry decides; publishing it would spend those sets as held-out material, F6 included. What is public:
+the README headline block, `scoreboard.md› beside this report, and the receipt's `SHA256SUMS› on
+`evals/q1-scoreboard-results› under `published/q1-scoreboard/›, nothing else. `SHA256SUMS› lists every receipt file's
+sha256 sorted by path, plus one `render/› line for each public file (the full `scoreboard.md›, and the README's
+headline block between its markers), so its hash commits the receipt and the public tables together.
+`publication.json› (`published›) and the table below record the results-branch commit and that hash.
+
+**How it is checked.** In custody, `bun eval/runner/scoreboard.ts check --receipt <dir> --custody› recomputes every table
+from the rows. Anywhere, `bun eval/runner/scoreboard.ts check --commit <commit>› reads `published/q1-scoreboard/› at that
+results-branch commit, refuses a `SHA256SUMS› hash other than the one `publication.json› records, and checks the
+committed README block and `scoreboard.md› against their `render/› lines; `check --sums <SHA256SUMS>› does the same from
+a local copy. When the full receipt is released, `check --commit› recomputes it from the rows.
 
 | Field | Value |
 |---|---|
 | Results branch | `evals/q1-scoreboard-results` |
-| Receipt path | `published/q1-scoreboard/` |
+| Published path | `published/q1-scoreboard/SHA256SUMS` (aggregates only, A25) |
+| Full receipt | sealed in custody until F6 closes, or as Garry decides |
 | Commit | pending |
 | `SHA256SUMS` sha256 | pending |
 

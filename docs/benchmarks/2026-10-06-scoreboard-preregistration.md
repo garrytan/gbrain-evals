@@ -1383,7 +1383,33 @@ A23 set them. Each fix has a test that fails on the A23 code and passes on this 
   resume. At this tree, v3-s2 hashes to `0ecb4a09` and v3-m to `8ac8642b`. Each public campaign still renders from
   its launch tree.
 
+**A25 (2026-10-27, text only; no cell, lease or hash changes): publication scope.** Garry 2026-10-27 via GBRA-108:
+"Rec". The full receipt carries the question ids of the sealed BEAM-10M, BEAM-1M and BEAM-100K sets (rows, answers,
+judgments, `campaign.json›'s schedule and `scoreboard.json›'s exclusions). Publishing it would spend those sets as
+held-out material, including for the follow-up current-master rerun (F6), so the receipt stays sealed in custody.
+
+- **Public:** the aggregate tables (`docs/benchmarks/2026-10-06-scoreboard/scoreboard.md›), the README headline block
+  and the receipt's `SHA256SUMS›, committed under `published/q1-scoreboard/› on `evals/q1-scoreboard-results›. Nothing
+  else goes on the results branch. Public files print exclusions as counts by reason, and the renderer refuses a
+  public file that would print a sealed set's question id. The public tables link to `scoreboard.md› on main
+  (`publication.json› `published.aggregates_only›).
+- **Committed, not public:** the full receipt, pinned by the sha256 of its `SHA256SUMS› (`published.sha256›), which also
+  lists one `render/› line per public file. It is released when F6 closes, or as Garry decides.
+- **Check:** `bun eval/runner/scoreboard.ts check --commit <results commit>› (or `check --sums <SHA256SUMS>›) verifies the
+  published hash and the rendered public files against it; in custody, `check --receipt <dir> --custody› recomputes
+  every table from the rows.
+- **Superseded:** the provenance plan of 2026-10-12 (the full receipt on the results branch) and, for this campaign, the
+  publication of BEAM-1M per-question rows under D2 (Custody, Q2). Per-question rows of every sealed set publish only
+  with the receipt.
+
 ## Changelog
+
+### 2026-10-27: amendment A25 (publication scope)
+
+Text only (Garry 2026-10-27 via GBRA-108: "Rec"). The full receipt stays sealed in custody until F6 closes, or as Garry
+decides, because it carries the sealed sets' question ids. The README headline block, `scoreboard.md› and the receipt's
+`SHA256SUMS› are public; `check --commit› verifies the published hash and the rendered files. The sealed campaign stays at
+`a92b06c5›.
 
 ### 2026-10-27: render rulings after the sealed campaign settled (no re-freeze)
 

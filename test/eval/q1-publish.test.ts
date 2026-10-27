@@ -121,6 +121,13 @@ describe('publication.json', () => {
     expect(config.published.url).toContain('/published/q1-scoreboard');
   });
 
+  test('A25: aggregates only, the receipt sealed in custody and pinned by its SHA256SUMS hash', () => {
+    expect(config.published).toMatchObject({ branch: 'evals/q1-scoreboard-results', path: 'published/q1-scoreboard', aggregates_only: true });
+    const prereg = readFileSync(join(ROOT, 'docs/benchmarks/2026-10-06-scoreboard-preregistration.md'), 'utf8');
+    expect(prereg).toContain('**A25 (2026-10-27, text only; no cell, lease or hash changes): publication scope.** Garry 2026-10-27 via GBRA-108:\n"Rec".');
+    expect(prereg).toMatch(/released when F6 closes, or as Garry decides/);
+  });
+
   test('temporal-graph is retired with option 1: S1 on c0-c7, the not-run reason, the subset view and the F6 retest', () => {
     expect(config.retired).toHaveLength(1);
     const r = config.retired[0];
