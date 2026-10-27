@@ -39,17 +39,17 @@ public-results-only line; the preview is how this layout was checked.
 answers, judgments and run configuration, the appendix cells and power.json) carries the question ids of the sealed
 BEAM-10M, BEAM-1M and BEAM-100K sets, so it stays sealed in custody until the follow-up current-master rerun (F6)
 closes, or as Garry decides; publishing it would spend those sets as held-out material, F6 included. What is public:
-the README headline block, `scoreboard.md› beside this report, and the receipt's `SHA256SUMS› on
-`evals/q1-scoreboard-results› under `published/q1-scoreboard/›, nothing else. `SHA256SUMS› lists every receipt file's
-sha256 sorted by path, plus one `render/› line for each public file (the full `scoreboard.md›, and the README's
+the README headline block, `scoreboard.md` beside this report, and the receipt's `SHA256SUMS` on
+`evals/q1-scoreboard-results` under `published/q1-scoreboard/`, nothing else. `SHA256SUMS` lists every receipt file's
+sha256 sorted by path, plus one `render/` line for each public file (the full `scoreboard.md`, and the README's
 headline block between its markers), so its hash commits the receipt and the public tables together.
-`publication.json› (`published›) and the table below record the results-branch commit and that hash.
+`publication.json` (`published`) and the table below record the results-branch commit and that hash.
 
-**How it is checked.** In custody, `bun eval/runner/scoreboard.ts check --receipt <dir> --custody› recomputes every table
-from the rows. Anywhere, `bun eval/runner/scoreboard.ts check --commit <commit>› reads `published/q1-scoreboard/› at that
-results-branch commit, refuses a `SHA256SUMS› hash other than the one `publication.json› records, and checks the
-committed README block and `scoreboard.md› against their `render/› lines; `check --sums <SHA256SUMS>› does the same from
-a local copy. When the full receipt is released, `check --commit› recomputes it from the rows.
+**How it is checked.** In custody, `bun eval/runner/scoreboard.ts check --receipt <dir> --custody` recomputes every table
+from the rows. Anywhere, `bun eval/runner/scoreboard.ts check --commit <commit>` reads `published/q1-scoreboard/` at that
+results-branch commit, refuses a `SHA256SUMS` hash other than the one `publication.json` records, and checks the
+committed README block and `scoreboard.md` against their `render/` lines; `check --sums <SHA256SUMS>` does the same from
+a local copy. When the full receipt is released, `check --commit` recomputes it from the rows.
 
 | Field | Value |
 |---|---|

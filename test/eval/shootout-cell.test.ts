@@ -144,6 +144,14 @@ describe('campaign leases', () => {
     const payload = JSON.parse(Buffer.from(argv.at(-1)!.split('--cell-b64 ')[1], 'base64').toString('utf8'));
     expect(payload).toEqual({ lease_id: l.lease_id, lease_usd: 2, max_output_tokens: null, command: 'echo hi', out: `eval/reports/shootout/xf-locomo/${l.lease_id}` });
   });
+
+  test('a sealed cell tells the remote side, so the proxy traces go to the custody root; other cells carry no flag', () => {
+    const { manifestPath, state } = campaign({ cells: [{ id: 'xf-sealed', system: 'ext-extract-first', benchmark: 'locomo', config: 'common', lease_usd: 2, command: 'echo hi', sealed: true }] });
+    const c = new Campaign(manifestPath, state);
+    c.init();
+    const argv = c.launchArgv(c.reserve('xf-sealed'));
+    expect(JSON.parse(Buffer.from(argv.at(-1)!.split('--cell-b64 ')[1], 'base64').toString('utf8')).sealed).toBe(true);
+  });
 });
 
 describe('cell files and parameters', () => {

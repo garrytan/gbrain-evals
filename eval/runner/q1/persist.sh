@@ -13,7 +13,7 @@ if [ ! -d "$wt/.git" ] && [ ! -f "$wt/.git" ]; then
   git -C "$repo" fetch -q origin "$branch" 2>/dev/null && git -C "$repo" worktree add -q "$wt" "origin/$branch" -B "$branch" \
     || { git -C "$repo" worktree add -q --detach "$wt" && git -C "$wt" checkout -q --orphan "$branch" && git -C "$wt" rm -rqf . 2>/dev/null || true; }
 fi
-end=$(( $(date +%s) + ${hours%.*} * 3600 ))
+end=$(( $(date +%s) + $(awk -v h="$hours" 'BEGIN { printf "%d", h * 3600 }') ))
 while :; do
   mkdir -p "$wt/$id"
   rsync -a --delete --exclude 'snapshot/' --exclude '*.tar' --exclude 'setup/' "$state/" "$wt/$id/"

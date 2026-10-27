@@ -143,8 +143,9 @@ jobs:
   # fake system end to end through the shim, the metering proxy in lease mode,
   # the native packer, a keyless fake provider as reader and judge, the shared
   # answer records, cost and speed, and the generator's render and check on the
-  # synthetic receipt. No keys, no Docker. judge-repeat is stubbed by name until
-  # eval/runner/judge-repeat.ts lands; drop it from --stub then.
+  # synthetic receipt. No keys, no Docker. judge-repeat stays stubbed: its `run`
+  # is a paid, ledger-reserved judge with no keyless fixture provider yet.
+  # Wiring the fixture through it is gbrain-evals issue #195.
   scoreboard:
     runs-on: ubuntu-latest
     timeout-minutes: 10

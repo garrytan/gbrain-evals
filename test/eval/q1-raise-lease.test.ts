@@ -102,4 +102,45 @@ describe('raise-lease (A17 campaigns)', () => {
     expect(() => raise(c, m.lease_id, 5, 'x', ssh)).toThrow(/holds lease 3 .*not an open \$4.00/);
     expect(() => raise(c, m.lease_id, 5, '  ', ssh)).toThrow(/needs --reason/);
   });
+
+  test('a reserved lease cannot be settled and is abandoned at its full reservation; a finished lease is not raised', () => {
+    const { c, state, launch, hostCommitted, ssh } = setup();
+    const r = c.reserve('cell-0');
+    expect(() => c.settle(r.lease_id)).toThrow(/was never launched; abandon it instead/);
+    expect(c.abandon(r.lease_id, 'VM never came up')).toMatchObject({ status: 'abandoned', actual_usd: 4 });
+    expect(hostCommitted().committed_usd).toBe(4);
+    const f = launch('cell-1', 'vm-1');
+    appendFileSync(join(state, 'leases.ndjson'), JSON.stringify({ event: 'finished', lease_id: f.lease_id, at: new Date().toISOString(), exit_code: 0 }) + '\n');
+    expect(() => raise(c, f.lease_id, 5, 'late', ssh)).toThrow(/is finished; only a running \(launched\) lease is raised/);
+    expect(hostCommitted().committed_usd).toBe(8);
+  });
+
+  test('an abandoned raised lease is charged its raised reservation in leases, block spend and status, as on the host ledger', () => {
+    const { c, launch, vmLedger, ssh, hostCommitted } = setup();
+    const l = launch('cell-0', 'vm-0');
+    mkdirSync(join(vmLedger(l.lease_id), '..'), { recursive: true });
+    BudgetRun.openLease({ runId: l.lease_id, leaseUsd: 4, ledgerPath: vmLedger(l.lease_id) });
+    raise(c, l.lease_id, 5, 'owner approved $5', ssh);
+    expect([c.blockSpend('T1'), c.status().unsettled_usd]).toEqual([5, 5]);
+    expect(c.abandon(l.lease_id, 'VM lost')).toMatchObject({ status: 'abandoned', actual_usd: 5, note: expect.stringContaining('full reservation of $5.00') });
+    expect(hostCommitted().committed_usd).toBe(5);
+    expect([c.blockSpend('T1'), c.status().unsettled_usd]).toEqual([5, 5]);
+    const m = launch('cell-1', 'vm-1');
+    mkdirSync(join(vmLedger(m.lease_id), '..'), { recursive: true });
+    BudgetRun.openLease({ runId: m.lease_id, leaseUsd: 4, ledgerPath: vmLedger(m.lease_id) });
+    expect(() => raise(c, m.lease_id, 4.5, 'over the block', ssh)).toThrow(/block T1 would hold \$9.50, over its \$9.00 cap/);
+  });
+
+  test('a raised lease whose launch never reached the cell command closes at $0 on the host ledger', () => {
+    const { c, launch, vmLedger, ssh, hostCommitted } = setup();
+    const l = launch('cell-0', 'vm-0');
+    mkdirSync(join(vmLedger(l.lease_id), '..'), { recursive: true });
+    BudgetRun.openLease({ runId: l.lease_id, leaseUsd: 4, ledgerPath: vmLedger(l.lease_id) });
+    raise(c, l.lease_id, 5, 'owner approved $5', ssh);
+    expect(hostCommitted().committed_usd).toBe(5);
+    const log = join(tmp, `launch-${l.lease_id}.log`);
+    writeFileSync(log, 'ubi-runner: creating VM\nubi-runner: setup failed\n');
+    expect(c.abandon(l.lease_id, 'setup failed', { log })).toMatchObject({ status: 'abandoned', actual_usd: 0 });
+    expect(hostCommitted().committed_usd).toBe(0);
+  });
 });

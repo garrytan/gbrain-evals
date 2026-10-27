@@ -324,6 +324,8 @@ export interface LeaseState {
   vm?: string | null; realization_id?: string; restored_from?: string | null; timed_out?: boolean; cell_exit_code?: number | null;
   /** What the operator should know about this state (for example, that an abandoned lease is charged in full). */
   note?: string;
+  /** The host reservation after `eval/runner/q1/raise-lease.ts` raised the running lease (absent when never raised); `usd` stays the launch amount the VM's lease summary carries. */
+  raised_usd?: number;
 }
 
 interface CampaignState { campaign_id: string; run_id: string; ledger: string; manifest_sha256: string; created_at: string; kind?: string }
@@ -489,15 +491,17 @@ export class Campaign {
   leases(): LeaseState[] {
     const out = new Map<string, LeaseState>();
     if (!existsSync(this.eventsPath)) return [];
+    const raisesPath = join(this.stateDir, 'raises.ndjson');
+    const raised = new Map<string, number>(existsSync(raisesPath) ? readFileSync(raisesPath, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l) as { lease_id: string; to_usd: number }).map(r => [r.lease_id, r.to_usd]) : []);
     for (const line of readFileSync(this.eventsPath, 'utf8').split('\n').filter(Boolean)) {
       const e = JSON.parse(line) as LeaseEvent;
-      if (e.event === 'reserved') { out.set(e.lease_id, { lease_id: e.lease_id, cell: e.cell, attempt: e.attempt, usd: e.usd, entry_id: e.entry_id, max_output_tokens: e.max_output_tokens ?? null, status: 'reserved' }); continue; }
+      if (e.event === 'reserved') { out.set(e.lease_id, { lease_id: e.lease_id, cell: e.cell, attempt: e.attempt, usd: e.usd, entry_id: e.entry_id, max_output_tokens: e.max_output_tokens ?? null, status: 'reserved', ...(raised.has(e.lease_id) ? { raised_usd: raised.get(e.lease_id) } : {}) }); continue; }
       const l = out.get(e.lease_id);
       if (!l) continue;
       if (e.event === 'launched') { l.status = 'launched'; if (e.vm !== undefined) l.vm = e.vm; if (e.restore !== undefined) l.restored_from = e.restore; }
       else if (e.event === 'finished') { l.status = 'finished'; l.exit_code = e.exit_code; }
       else if (e.event === 'settled') { l.status = 'settled'; l.actual_usd = e.actual_usd; if (e.timed_out) l.timed_out = true; if (e.cell_exit_code !== undefined) l.cell_exit_code = e.cell_exit_code; }
-      else if (e.event === 'abandoned') { l.status = 'abandoned'; l.actual_usd = e.unstarted ? 0 : l.usd; }
+      else if (e.event === 'abandoned') { l.status = 'abandoned'; l.actual_usd = e.unstarted ? 0 : l.raised_usd ?? l.usd; }
       else if (e.event === 'realized') l.realization_id = e.realization_id;
     }
     return [...out.values()];
@@ -511,7 +515,7 @@ export class Campaign {
   /** Q1: dollars held by a block's leases (reserved, running, settled or abandoned at their charge). */
   blockSpend(block: string): number {
     return this.leases().filter(l => this.manifest.cells.find(c => c.id === l.cell)?.block === block)
-      .reduce((n, l) => n + (l.status === 'settled' || l.status === 'abandoned' ? l.actual_usd ?? l.usd : l.usd), 0);
+      .reduce((n, l) => n + (l.status === 'settled' || l.status === 'abandoned' ? l.actual_usd ?? l.usd : l.raised_usd ?? l.usd), 0);
   }
 
   /** Reserve a new lease for a cell; refused while the cell holds an unsettled lease, or when the campaign cap (or a Q1 block cap) would be passed. */
@@ -778,7 +782,7 @@ export class Campaign {
     if (!unstarted) {
       this.run().settle(l.entry_id, null);
       this.append({ event: 'abandoned', lease_id: leaseId, at: new Date().toISOString(), reason });
-      return { ...this.lease(leaseId), note: `abandoned lease ${leaseId} is charged its full reservation of ${usd(l.usd)} against the campaign cap, because no VM ledger came back to settle it to what was really spent. `
+      return { ...this.lease(leaseId), note: `abandoned lease ${leaseId} is charged its full reservation of ${usd(l.raised_usd ?? l.usd)} against the campaign cap, because no VM ledger came back to settle it to what was really spent. `
         + `If the launch log proves the cell command never started, close it at $0 instead with: bun eval/runner/shootout-cell.ts abandon --campaign <manifest> --state <dir> --lease ${leaseId} --reason "<why>" --unstarted --log <launch log>.` };
     }
     if (l.status === 'reserved') throw new Error(`lease ${leaseId} was never launched; --unstarted is for a launch that died before the cell command`);
@@ -809,8 +813,8 @@ export class Campaign {
     const s = this.state();
     const ledger = ledgerStatus({ ledgerPath: s.ledger, runId: s.run_id });
     const leases = this.leases();
-    const unsettled = leases.filter(l => l.status === 'reserved' || l.status === 'launched' || l.status === 'finished').reduce((n, l) => n + l.usd, 0);
-    const abandonedFull = leases.filter(l => l.status === 'abandoned' && l.actual_usd === l.usd).reduce((n, l) => n + l.usd, 0);
+    const unsettled = leases.filter(l => l.status === 'reserved' || l.status === 'launched' || l.status === 'finished').reduce((n, l) => n + (l.raised_usd ?? l.usd), 0);
+    const abandonedFull = leases.filter(l => l.status === 'abandoned' && l.actual_usd !== 0).reduce((n, l) => n + (l.actual_usd ?? 0), 0);
     return { campaign_id: s.campaign_id, run_id: s.run_id, cap_usd: this.manifest.cap_usd, committed_usd: ledger.run?.committed_usd ?? null, remaining_usd: ledger.run?.remaining_usd ?? null,
       planned_leases_usd: this.manifest.cells.reduce((x, c) => x + c.lease_usd, 0), leases,
       /** Leases charged at their full reservation: still open, or abandoned without a VM ledger. */

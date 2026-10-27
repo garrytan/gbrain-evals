@@ -1172,8 +1172,8 @@ export function renderAll(receipt: string, d: Derivation, campaign: CampaignMani
 
 /**
  * The receipt's file list: every file's sha256 and its path relative to the receipt, sorted by path, rendered files at
- * their rendered bytes, plus one `render/<target>› line per public render target (the full file, or for a README the
- * headline block between its markers). Its sha256 is the public commitment: `check --sums› recomputes the render lines
+ * their rendered bytes, plus one `render/<target>` line per public render target (the full file, or for a README the
+ * headline block between its markers). Its sha256 is the public commitment: `check --sums` recomputes the render lines
  * from the committed public files without the receipt.
  */
 export const SUMS_FILE = 'SHA256SUMS';
@@ -1198,8 +1198,8 @@ function committedRender(name: string): string | null {
 }
 
 /**
- * The public check of an aggregate publication: the SHA256SUMS file hashes to publication.json's `published.sha256›,
- * and every `render/› line matches the committed public file it names. The full receipt is checked in custody.
+ * The public check of an aggregate publication: the SHA256SUMS file hashes to publication.json's `published.sha256`,
+ * and every `render/` line matches the committed public file it names. The full receipt is checked in custody.
  */
 export function checkSums(sums: string, publicationPath = join(ROOT, 'docs/benchmarks/2026-10-06-scoreboard/publication.json')): CheckResult {
   const pub = (JSON.parse(readFileSync(publicationPath, 'utf8')) as { published: { sha256: string | null } }).published;

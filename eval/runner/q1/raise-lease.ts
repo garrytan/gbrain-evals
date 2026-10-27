@@ -73,7 +73,8 @@ export function raises(stateDir: string): Raise[] {
 
 /** The lease's current amount: the last raise, or the amount it launched with. */
 export function leaseUsd(c: Campaign, leaseId: string): number {
-  return raises(c.stateDir).filter(r => r.lease_id === leaseId).pop()?.to_usd ?? c.lease(leaseId).usd;
+  const l = c.lease(leaseId);
+  return l.raised_usd ?? l.usd;
 }
 
 /** Grow (or, with a negative delta, give back) the host reservation of a lease, checked as a reservation is. */
@@ -115,7 +116,7 @@ export function raise(c: Campaign, leaseId: string, toUsd: number, reason: strin
   if (shown.finished || shown.budget_usd === null || Math.abs(shown.budget_usd - from) > 1e-6) throw new Error(`${what}: the VM ledger holds lease ${shown.budget_usd} (finished: ${shown.finished}), not an open ${usd(from)}`);
   const blockOf = (cellId: string) => (c.manifest.cells.find(x => x.id === cellId) as { block?: string } | undefined)?.block;
   const name = blockOf(l.cell), cap = name ? (c.manifest as { blocks?: Record<string, { cap_usd: number }> }).blocks?.[name]?.cap_usd : undefined;
-  const block = name && cap !== undefined ? { name, cap, held: c.blockSpend(name) + raises(c.stateDir).filter(r => blockOf(r.cell) === name && !['settled', 'abandoned'].includes(c.lease(r.lease_id).status)).reduce((n, r) => n + r.to_usd - r.from_usd, 0) } : null;
+  const block = name && cap !== undefined ? { name, cap, held: c.blockSpend(name) } : null;
   if (opts.dryRun) {
     if (block && block.held + delta > block.cap + 1e-9) throw new Error(`${what}: block ${block.name} would hold ${usd(block.held + delta)}, over its ${usd(block.cap)} cap`);
     return { dry_run: true, lease_id: leaseId, from_usd: from, to_usd: toUsd, vm: shown };
