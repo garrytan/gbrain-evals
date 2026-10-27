@@ -61,7 +61,7 @@ import type { MemoryQuestion, Session } from '../memory-qa/corpus.ts';
 import { READER_TEMPLATE } from '../memory-qa/qa.ts';
 import { eventTimeOf } from './sanitize.ts';
 import { type Item } from './types.ts';
-import { TOKENIZER, NATIVE_READER_TEMPLATE, type ContextMode } from './render.ts';
+import { TOKENIZER, NATIVE_READER_TEMPLATE, packRecipe as packRecipeV1, type ContextMode, type RecipeContext, type RecipeRender } from './render.ts';
 
 export * from './render.ts';
 
@@ -383,4 +383,15 @@ export function packContext(mode: ContextMode, q: MemoryQuestion, items: readonl
   const p = packRehydrated(items, opts.sessionOf, opts.budgetTokens, opts.maxUnits ?? null, counter);
   const prompt = READER_TEMPLATE.replace('{history}', renderHistoryByEventTime(p.sessions)).replace('{date}', date).replace('{question}', q.question);
   return finish({ tokens: p.tokens, item_ids: items.filter(i => i.source_ids.some(s => p.source_ids.includes(s))).map(i => i.id), source_ids: p.source_ids, prompt, reader_tokens: p.reader_tokens, delivered: p.delivered, cut: null, packing_loss: null });
+}
+
+/** Recipe renders: `native` uses this module's packer, so it matches the shootout native context `packContext` builds; every other render is render.ts's. */
+export function packRecipe(render: RecipeRender, q: MemoryQuestion, items: readonly Item[], opts: { budgetTokens: number | null; sessionOf: (sourceId: string) => Session | undefined; fallbackDate?: string }): RecipeContext {
+  if (render !== 'native') return packRecipeV1(render, q, items, opts);
+  const date = q.question_date ?? opts.fallbackDate ?? 'unknown';
+  const p = packNative(items, opts.budgetTokens);
+  const before = items.reduce((n, i) => n + TOKENIZER.count(renderItem(i) + '\n'), 0);
+  const prompt = NATIVE_READER_TEMPLATE.replace('{items}', p.lines.join('\n') || '(none)').replace('{date}', date).replace('{question}', q.question);
+  return { mode: 'native', render, tokenizer: TOKENIZER.id, renderer: RENDERER_VERSION, budget_tokens: opts.budgetTokens, tokens: p.tokens, tokens_before: before, items_cut: items.length - p.items.length, dated_items: p.items.filter(i => i.event_date).length,
+    item_ids: p.items.map(i => i.id), source_ids: [...new Set(p.items.flatMap(i => i.source_ids))], prompt };
 }
