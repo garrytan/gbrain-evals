@@ -16,7 +16,7 @@ const tmp = mkdtempSync(join(tmpdir(), 'raise-lease-'));
 afterAll(() => rmSync(tmp, { recursive: true, force: true }));
 let n = 0;
 
-function setup() {
+function setup(Cls: typeof Campaign = Campaign) {
   const dir = join(tmp, `c${++n}`);
   mkdirSync(dir, { recursive: true });
   const manifest = { kind: 'oss-shootout-campaign', schema_version: 1, campaign_id: `raise-${n}`, cap_usd: 10, ledger: join(dir, 'campaign.sqlite'),
@@ -24,7 +24,7 @@ function setup() {
     cells: [0, 1].map(i => ({ id: `cell-${i}`, system: 'fake', benchmark: 'fixture', config: 'common', lease_usd: 4, command: 'true', block: 'T1' })) } as unknown as CampaignManifest;
   writeFileSync(join(dir, 'manifest.json'), JSON.stringify(manifest));
   const state = join(dir, 'state');
-  const c = new Campaign(join(dir, 'manifest.json'), state);
+  const c = new Cls(join(dir, 'manifest.json'), state);
   c.init();
   const launch = (cell: string, vm: string) => {
     const l = c.reserve(cell);
@@ -129,6 +129,21 @@ describe('raise-lease (A17 campaigns)', () => {
     mkdirSync(join(vmLedger(m.lease_id), '..'), { recursive: true });
     BudgetRun.openLease({ runId: m.lease_id, leaseUsd: 4, ledgerPath: vmLedger(m.lease_id) });
     expect(() => raise(c, m.lease_id, 4.5, 'over the block', ssh)).toThrow(/block T1 would hold \$9.50, over its \$9.00 cap/);
+  });
+
+  test('paired with a frozen Campaign that predates raised_usd, raises still stop at the block cap and a second raise starts from the first', () => {
+    class FrozenCampaign extends Campaign {
+      override leases() { return super.leases().map(({ raised_usd: _raised, ...l }) => l.status === 'abandoned' && l.actual_usd !== 0 ? { ...l, actual_usd: l.usd } : l); }
+    }
+    const { c, launch, vmLedger, ssh, hostCommitted } = setup(FrozenCampaign);
+    const a = launch('cell-0', 'vm-0'), b = launch('cell-1', 'vm-1');
+    for (const l of [a, b]) { mkdirSync(join(vmLedger(l.lease_id), '..'), { recursive: true }); BudgetRun.openLease({ runId: l.lease_id, leaseUsd: 4, ledgerPath: vmLedger(l.lease_id) }); }
+    raise(c, a.lease_id, 4.5, 'first', ssh);
+    expect(() => raise(c, b.lease_id, 5, 'second', ssh)).toThrow(/block T1 would hold \$9.50, over its \$9.00 cap/);
+    expect(raise(c, a.lease_id, 4.6, 'again', ssh)).toMatchObject({ from_usd: 4.5, to_usd: 4.6 });
+    c.abandon(a.lease_id, 'VM lost');
+    expect(hostCommitted().committed_usd).toBeCloseTo(8.6, 9);
+    expect(() => raise(c, b.lease_id, 4.5, 'after abandon', ssh)).toThrow(/block T1 would hold \$9.10, over its \$9.00 cap/);
   });
 
   test('a raised lease whose launch never reached the cell command closes at $0 on the host ledger', () => {
