@@ -622,7 +622,7 @@ cmd_run() {
   # A second signal must not cut teardown short, so the EXIT handler ignores them.
   trap run_exit EXIT
   trap 'exit 130' INT TERM HUP QUIT
-  cmd_up "${up_args[@]}" >/dev/null
+  cmd_up ${up_args[@]+"${up_args[@]}"} >/dev/null
   [ "$keep" = 0 ] || log "--keep: leaving $name running; destroy with: $0 down $name"
 
   local e

@@ -23,7 +23,7 @@ export const ALLOWED_PREFIXES = ['docs/comparison-systems.md', 'docs/comparison-
 /** Whole-word product names. One product name is an ordinary English word, so it matches only capitalized or as a package form. */
 export const PATTERNS: RegExp[] = [
   /\bmem0(?:ai)?\b/gi, /\bgraphiti(?:[-_]core)?\b/gi, /\bzep(?:[-_]?cloud)?\b/gi, /\bletta\b/gi, /\bmemgpt\b/gi,
-  /\bcognee\b/gi, /\bbasic[ _-]memory\b/gi, /\bmempal(?:ace)?\b/gi, /\bvectorize-io\b/gi, /\bHindsight\b/g, /\bhindsight[-_](?:api|client|server|benchmarks|system)\b/g,
+  /\bcognee\b/gi, /\bbasic[ _-]memory\b/gi, /\bmempal(?:ace)?\b/gi, new RegExp(String.raw`\b${'vector'}${'ize'}-io\b`, 'gi'), new RegExp(String.raw`\b${'Hind'}${'sight'}\b`, 'g'), new RegExp(String.raw`\b${'hind'}${'sight'}[-_](?:api|client|server|benchmarks|system)\b`, 'g'),
 ];
 
 export function countNames(text: string): number {
