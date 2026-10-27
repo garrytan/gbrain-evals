@@ -80,6 +80,17 @@
  *     on that subset, gives every other cell of it that did not run the
  *     retirement reason, and needs a sensitivity view on the same
  *     conversations on each of those sets; check refuses anything else.
+ *   - A cell's `product_outcomes` count a reader's recorded outcome (for example a
+ *     `harness_invalid` own answer the system's own path flagged as its output
+ *     limit) as a product failure: scored 0, kept in the denominator. The count
+ *     must match the records exactly, or check refuses the receipt.
+ *   - Frontier-judge agreement (preregistration, "Frontier-judge column"): per
+ *     cell and frontier judge, the answers in the arm's frontier scope (any
+ *     replicate-0 frontier judgment), how many that judge scored (an A19 redo
+ *     record in frontier-redo.ndjson replaces the logged record under the same
+ *     key), and on answers both it and the canonical judge scored, the share
+ *     whose pass or fail (PASS_THRESHOLD) agree. Pooled per system; under 90%
+ *     flags the column. Descriptive, never a claim.
  *   - Families: F1 = headline set, component, 8,000 tokens, answers;
  *     F2 = headline set, whole system, answers; F3 = headline set, component,
  *     8,000 tokens, strict recall_all@10 (diagnostic, no claim). Holm within
@@ -127,7 +138,8 @@
  * `hedge_classifier` and adds `derived.classifier.source` and `derived.classifier.per_answer`; v5 adds
  * `derived.withheld` and, with `hedge_classifier: "none"`, sets `derived.classifier` to null and drops the
  * classifier-based fields from every DerivedColumns; v6 adds each cell's `pin` and `sensitivity`, `appendix` and `sensitivity_notes`;
- * v7 adds each cell's `subset` and a sensitivity note's `conversations`):
+ * v7 adds each cell's `subset` and a sensitivity note's `conversations`; v8 adds each cell's `product_outcomes` and
+ * `frontier` and the top-level `frontier`):
  *   schema, generator, campaign {id, hash, campaign_sha256, gbrain, measured, readers},
  *   appendix [CellAggregate & {appendix, reason}] (cells published only in an appendix, never compared),
  *   sensitivity_notes [{set, id, label, reason, question_ids}],
@@ -142,8 +154,10 @@
  * Numbers are rounded to six decimals; arrays are in campaign order. A field
  * may be added only with a schema version bump.
  */
+import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 import { gunzipSync } from 'node:zlib';
 import { renderOperatorMessage, type OperatorFix, type OperatorMessage } from './decisions/errors.ts';
@@ -156,7 +170,7 @@ import { HEDGE_CLASSIFIERS, hedgeClassifier, type HedgeVerdict } from './q1/hedg
 import { PASS_THRESHOLD } from './memory-qa/instruments.ts';
 
 const ROOT = resolve(import.meta.dir, '../..');
-export const SCOREBOARD_SCHEMA = 'gbrain-evals/scoreboard/v7';
+export const SCOREBOARD_SCHEMA = 'gbrain-evals/scoreboard/v8';
 export const CAMPAIGN_SCHEMA = 'gbrain-evals/q1-campaign/v1';
 export const MAX_FILE_BYTES = 50 * 1024 * 1024;
 export const MAX_TREE_BYTES = 60 * 1024 * 1024;
@@ -170,6 +184,9 @@ export const CLUSTER_RETAINED_SHARE = 0.5;
 export const CEILING = 0.95;
 export const README_BEGIN = '<!-- scoreboard:headline:begin -->';
 export const README_END = '<!-- scoreboard:headline:end -->';
+export const FRONTIER_AGREEMENT_FLAG = 0.9;
+/** A19's Opus redo records for a cell's own answers, used in place of the logged record under the same key. */
+export const FRONTIER_REDO_FILE = 'frontier-redo.ndjson';
 const FIELD_EXEMPT: Record<string, string> = { 'ext-agent-runtime': 'runs only the LoCoMo slice (plan §4.1)' };
 const PRODUCT_FAILURES = new Set<Outcome>(['retrieval_error', 'unsupported']);
 const HARNESS_FAILURES = new Set<Outcome>(['reader_error', 'judge_error', 'harness_invalid', 'budget_not_run']);
@@ -239,6 +256,8 @@ export interface CampaignCell {
   /** The cell's directory under the receipt when it is not cells/<cell_id> (appendix cells). */
   dir?: string;
   subset?: CellSubset;
+  /** Recorded outcomes of one reader counted as the product's own failure (scored 0), with the expected count and why. */
+  product_outcomes?: Array<{ reader: string; outcome: 'harness_invalid'; count: number; reason: string }>;
 }
 /** A cell published only in an appendix (the found-and-fixed rows): derived and tabled, never compared, never in a headline. */
 export interface AppendixCell extends CampaignCell { appendix: string; reason: string; dir: string; pin: string }
@@ -260,6 +279,8 @@ export interface CampaignManifest {
   sets: CampaignSet[]; cells: CampaignCell[]; families: CampaignFamily[]; appendix?: AppendixCell[]; retired?: RetiredSystem[];
   pins: Array<{ system: string; version: string; latest_release: string | null }>;
   release_assets: Array<{ name: string; sha256: string; bytes: number }>;
+  /** Where the published receipt lives (results branch URL); README and the main-branch scoreboard.md link there instead of a relative path. */
+  receipt_base?: string;
   disclosures: string[];
   render_targets: string[];
 }
@@ -422,7 +443,9 @@ interface CellData {
   derived: DerivedCounts;
   /** cells/<cell_id>/derived/hedge.ndjson as rendered: one line per judged answer. */
   hedgeLines: string;
+  frontier: FrontierCounts[];
 }
+export interface FrontierCounts { judge: string; scope: number; judged: number; compared: number; agree: number }
 
 /** Counts behind the derived columns (see the header); every rate is a ratio of two of them. */
 export interface DerivedCounts { answers: number; wrong: number; confident_wrong: number; abstention_answers: number; correct_abstentions: number; answerable_answers: number; false_abstentions: number }
@@ -440,7 +463,7 @@ function cellFiles(receipt: string, id: string, under?: string) {
 
 function deriveCell(r: Reader, campaign: CampaignManifest, cell: CampaignCell): CellData {
   const set = campaign.sets.find(s => s.id === cell.set)!;
-  const empty: CellData = { cell, values: new Map(), judgeRuns: [], readerMeans: {}, missingReaders: [], productFailures: 0, harnessFailures: 0, judgeSd: null, latencies: [], rows: new Map(), problems: [], notApplicable: {}, derived: { ...NO_DERIVED }, hedgeLines: '' };
+  const empty: CellData = { cell, values: new Map(), judgeRuns: [], readerMeans: {}, missingReaders: [], productFailures: 0, harnessFailures: 0, judgeSd: null, latencies: [], rows: new Map(), problems: [], notApplicable: {}, derived: { ...NO_DERIVED }, hedgeLines: '', frontier: [] };
   if (cell.status === 'not-run') return empty;
   const files = cellFiles(r.root, cell.cell_id, cell.dir);
   if (!existsSync(files.runConfig)) throw invalid(r.root, `cell ${cell.cell_id} has no run-config.json`, 'the configuration identity is the run-config.json hash');
@@ -449,7 +472,13 @@ function deriveCell(r: Reader, campaign: CampaignManifest, cell: CampaignCell): 
   if (!existsSync(files.receipt)) throw invalid(r.root, `cell ${cell.cell_id} has no receipt.json`, 'every table row links to its cell receipt');
   const rows = new Map(readNdjson<RowRecord>(r, files.rows).map(x => [x.id, x]));
   const answers = readNdjson<AnswerRecord>(r, files.answers);
-  const judgments = readNdjson<JudgmentRecord>(r, files.judgments);
+  const logged = readNdjson<JudgmentRecord>(r, files.judgments);
+  const redoPath = join(files.dir, FRONTIER_REDO_FILE);
+  const redo = existsSync(redoPath) ? readNdjson<JudgmentRecord>(r, redoPath) : [];
+  const jkey = (j: JudgmentRecord) => `${j.answer_id}|${j.instrument_id}|${j.judge}|${j.judge_replicate}`;
+  const redone = new Map(redo.map(j => [jkey(j), j]));
+  if (redo.some(j => j.instrument_id === cell.canonical_instrument)) throw invalid(r.root, `cell ${cell.cell_id} ${FRONTIER_REDO_FILE} holds a canonical judgment`, 'an A19 redo replaces only a frontier judgment; the canonical score is never re-judged');
+  const judgments = logged.map(j => redone.get(jkey(j)) ?? j);
   const problems: string[] = [];
   const byAnswer = new Map<string, JudgmentRecord[]>();
   for (const j of judgments) if (j.instrument_id === cell.canonical_instrument) byAnswer.set(j.answer_id, [...(byAnswer.get(j.answer_id) ?? []), j]);
@@ -465,6 +494,7 @@ function deriveCell(r: Reader, campaign: CampaignManifest, cell: CampaignCell): 
   const hedgeLines = !classifier ? '' : answers.filter(a => JUDGED_OUTCOMES.has(a.outcome))
     .map(a => JSON.stringify({ answer_id: a.answer_id, verdict: verdicts.get(a.answer_id), classifier_version: classifier.version, rules_sha256: classifier.rules_sha256, delivered_tokens: a.delivered_tokens ?? null }) + '\n').join('');
   const excluded = new Map(set.exclusions.map(e => [e.question_id, e.reason]));
+  const asProduct = new Map((cell.product_outcomes ?? []).map(p => [`${p.reader}|${p.outcome}`, { ...p, seen: 0 }]));
   const seenReaders = new Set(answers.map(a => a.reader));
   const missingReaders = cell.readers.filter(x => !seenReaders.has(x));
   const reps = (reader: string) => cell.reader_replicates?.[reader] ?? 1;
@@ -505,7 +535,9 @@ function deriveCell(r: Reader, campaign: CampaignManifest, cell: CampaignCell): 
         const a = qa.find(x => x.reader === reader && x.replicate === rep);
         if (!a) { reason ??= `missing answer: ${reader} replicate ${rep}`; continue; }
         if (NOT_APPLICABLE.has(a.outcome)) { notApplicable[reader] = (notApplicable[reader] ?? 0) + 1; if (!unfit.includes(reader)) unfit.push(reader); continue; }
-        if (PRODUCT_FAILURES.has(a.outcome)) { productFailures++; scores.push(0); runScores.forEach(x => x.push(0)); continue; }
+        const po = asProduct.get(`${a.reader}|${a.outcome}`);
+        if (po) po.seen++;
+        if (PRODUCT_FAILURES.has(a.outcome) || po) { productFailures++; scores.push(0); runScores.forEach(x => x.push(0)); continue; }
         if (HARNESS_FAILURES.has(a.outcome)) { harnessFailures++; reason ??= `harness: ${a.outcome} (${reader})`; continue; }
         const js = byAnswer.get(a.answer_id) ?? [];
         const canonical = js.find(j => j.judge_replicate === 0);
@@ -532,9 +564,33 @@ function deriveCell(r: Reader, campaign: CampaignManifest, cell: CampaignCell): 
     if (cell.arm === 'component' && new Set(qa.map(a => a.context_sha256)).size > 1) throw invalid(r.root, `cell ${cell.cell_id} question ${q.question_id}: readers read different context bytes`, 'every reader of a component arm reads the same frozen pack (plan §4.3)');
     done(mean(perReader)!, null, perReaderRuns.map(x => mean(x)!));
   }
+  for (const p of asProduct.values()) if (p.seen !== p.count) throw invalid(r.root, `cell ${cell.cell_id}: ${p.seen} ${p.reader} answers are recorded ${p.outcome} on scheduled questions, campaign.json counts ${p.count} as product failures`, 'a recorded outcome is counted as the product\'s own failure only for the answers the ruling names, by exact count');
+  const scored = (j: JudgmentRecord | undefined) => !!j && j.parse_ok && j.outcome === 'scored' && typeof j.score === 'number';
+  const frontierOf = new Map<string, Map<string, JudgmentRecord>>();
+  for (const j of judgments) {
+    if (j.judge_replicate !== 0 || !j.instrument_id.startsWith(`${cell.canonical_instrument}@`)) continue;
+    const m = frontierOf.get(j.judge) ?? new Map<string, JudgmentRecord>();
+    m.set(j.answer_id, j);
+    frontierOf.set(j.judge, m);
+  }
+  const scope = new Set([...frontierOf.values()].flatMap(m => [...m.keys()]));
+  const frontier = [...frontierOf.keys()].sort().map(judge => {
+    const m = frontierOf.get(judge)!;
+    let judged = 0, compared = 0, agree = 0;
+    for (const id of scope) {
+      const f = m.get(id);
+      if (!scored(f)) continue;
+      judged++;
+      const c = (byAnswer.get(id) ?? []).find(j => j.judge_replicate === 0);
+      if (!scored(c)) continue;
+      compared++;
+      if ((c!.score! >= PASS_THRESHOLD) === (f!.score! >= PASS_THRESHOLD)) agree++;
+    }
+    return { judge, scope: scope.size, judged, compared, agree };
+  });
   return {
     cell, values, judgeRuns, readerMeans: Object.fromEntries(cell.readers.map(x => [x, mean(readerScores[x])])), missingReaders,
-    productFailures, harnessFailures, judgeSd: mean(sds), latencies, rows, problems, notApplicable, derived, hedgeLines,
+    productFailures, harnessFailures, judgeSd: mean(sds), latencies, rows, problems, notApplicable, derived, hedgeLines, frontier,
   };
 }
 
@@ -575,6 +631,10 @@ export interface CellAggregate {
   sensitivity: Array<{ id: string; label: string; scheduled: number; valued: number; mean: number | null }>;
   /** The conversations a subset row is measured on (CampaignCell.subset), or null; scheduled, valued and mean cover only them. */
   subset: CellSubset | null;
+  /** Recorded outcomes counted as product failures (CampaignCell.product_outcomes). */
+  product_outcomes: Array<{ reader: string; outcome: string; count: number; reason: string }>;
+  /** Frontier-judge agreement per judge: scope, judged, compared and the agreement share (see the header). */
+  frontier: Array<FrontierCounts & { agreement: number | null }>;
 }
 
 export interface FamilyResult { id: string; label: string; metric: string; plan: string; comparisons: string[]; verdict_stability: number | null }
@@ -599,6 +659,8 @@ export interface Scoreboard {
   verdict: string; headline: HeadlineRow[];
   size_curve: { sets: Array<{ id: string; label: string }>; rows: Array<{ system: string; label: string; values: string[] }> };
   losses: string[]; disclosures: string[]; staleness: string;
+  /** Frontier-judge agreement pooled per system and judge over its main cells; flagged under FRONTIER_AGREEMENT_FLAG. */
+  frontier: Array<FrontierCounts & { system: string; agreement: number | null; coverage: number | null; flagged: boolean }>;
   derived: {
     classifier: { file: string; version: string; rules_sha256: string; source: string; per_answer: string } | null;
     /** Why the classifier-based columns are not published (hedge_classifier "none"), else null. */
@@ -862,6 +924,8 @@ export function deriveAll(receipt: string): Derivation {
         return { id: s.id, label: s.label, scheduled: kept.scheduled, valued: keptValued.length, mean: r6n(mean(keptValued.map(v => v.value!))) };
       }),
       subset: cell.subset ?? null,
+      product_outcomes: cell.product_outcomes ?? [],
+      frontier: d.frontier.map(f => ({ ...f, agreement: f.compared ? r6(f.agree / f.compared) : null })),
     };
   };
   const cells = campaign.cells.map(c => aggregate(c, data.get(c.cell_id)!));
@@ -912,6 +976,14 @@ export function deriveAll(receipt: string): Derivation {
     return `Descriptive, not tested: ${what} on ${headSet.label}: ${rows.length ? rows.join('; ') : 'no system ran'}.`;
   })();
 
+  const frontierPooled = [...new Set(cells.flatMap(c => c.frontier.map(f => `${c.system}|${f.judge}`)))].map(k => {
+    const [system, judge] = k.split('|');
+    const fs = cells.filter(c => c.system === system).flatMap(c => c.frontier.filter(f => f.judge === judge));
+    const sum = (x: keyof FrontierCounts) => fs.reduce((a, f) => a + (f[x] as number), 0);
+    const t = { scope: sum('scope'), judged: sum('judged'), compared: sum('compared'), agree: sum('agree') };
+    const agreement = t.compared ? r6(t.agree / t.compared) : null;
+    return { system, judge, ...t, agreement, coverage: t.scope ? r6(t.judged / t.scope) : null, flagged: agreement !== null && agreement < FRONTIER_AGREEMENT_FLAG };
+  });
   const losses = comparisons.filter(c => c.metric === 'answer' && c.delta !== null && c.delta < 0 && c.ci95 && c.ci95[1] < 0).sort((a, b) => a.delta! - b.delta! || (a.id < b.id ? -1 : 1)).map(c => c.id);
   const f1c = comparisons.filter(c => c.family === 'F1');
   const verdict = verdictSentence(ctx, f1c, field);
@@ -927,7 +999,7 @@ export function deriveAll(receipt: string): Derivation {
     sets: campaign.sets.map(s => ({ id: s.id, label: s.label, benchmark: s.benchmark, role: s.role, exposure: s.exposure, exposure_label: EXPOSURE_LABELS[s.exposure], cluster_unit: s.cluster_unit, clusters: new Set(s.scheduled.map(q => q.conversation)).size, scheduled: s.scheduled.length, preregistered_exclusions: s.exclusions })),
     cells, comparisons, families, appendix, sensitivity_notes: campaign.sets.flatMap(s => (s.sensitivity ?? []).map(v => ({ set: s.id, ...v }))), field, verdict, headline,
     size_curve: { sets: curveSets.map(s => ({ id: s.id, label: s.label })), rows: curveRows },
-    losses, disclosures: campaign.disclosures, staleness,
+    losses, disclosures: campaign.disclosures, staleness, frontier: frontierPooled,
     derived: {
       classifier: classifier && { file: 'eval/runner/q1/hedge.ts', version: classifier.version, rules_sha256: classifier.rules_sha256, source: 'campaign.json hedge_classifier, computed at render time', per_answer: HEDGE_FILE },
       withheld: classifier ? null : `confident-error and false-abstention rates not published: ${HEDGE_WITHHELD}`, pass_threshold: PASS_THRESHOLD,
@@ -983,15 +1055,15 @@ export function renderHeadline(sb: Scoreboard, base: string): string {
   return lines.join('\n') + '\n';
 }
 
-export function renderReport(sb: Scoreboard): string {
-  const out = [`# Scoreboard tables: ${sb.campaign.id}`, '', 'Generated by `bun eval/runner/scoreboard.ts render` from this directory\'s rows, answers and judgments; `bun eval/runner/scoreboard.ts check` regenerates it byte for byte.', '', '## Headline', '', renderHeadline(sb, '.').trimEnd(), ''];
+export function renderReport(sb: Scoreboard, base = '.'): string {
+  const out = [`# Scoreboard tables: ${sb.campaign.id}`, '', `Generated by \`bun eval/runner/scoreboard.ts render\` from ${base === '.' ? 'this directory\'s' : `[the receipt](${base})'s`} rows, answers and judgments; \`bun eval/runner/scoreboard.ts check\` regenerates it byte for byte.`, '', '## Headline', '', renderHeadline(sb, base).trimEnd(), ''];
   const dv = sb.derived, classified = dv.classifier !== null;
   const dhead = classified ? ['Confident-error rate', 'Correct abstention', 'False abstention'] : ['Correct abstention'];
   out.push('## Cells', '', `| Cell | Set | System | Build | Arm | Budget | Accuracy | Scored | Product failures | Harness failures | Judge SD | recall_all@10 | Fill rate | ${dhead.join(' | ')} | Status |`, `|---|---|---|---|---|---|---|---|---|---|---|---|---|${dhead.map(() => '---|').join('')}---|`);
   const num = (x: number | null, f: (x: number) => string) => (x === null ? 'n/a' : f(x));
   const ratio = (r: number | null | undefined, k = 0, n = 0) => (r === null || r === undefined ? 'n/a' : `${pct(r)} (${k}/${n})`);
   const dcols = (d: DerivedColumns) => (classified ? `${ratio(d.confident_error_rate, d.confident_wrong, d.wrong)} | ${ratio(d.correct_abstention_rate, d.correct_abstentions, d.abstention_answers)} | ${ratio(d.false_abstention_rate, d.false_abstentions, d.answerable_answers)}` : ratio(d.correct_abstention_rate, d.correct_abstentions, d.abstention_answers));
-  const cellLine = (c: CellAggregate) => `| \`${c.cell_id}\` | ${c.set} | \`${c.system}\` | ${c.pin ? cellText(c.pin) : 'n/a'} | ${c.arm} | ${c.budget ?? 'default'} | ${num(c.mean, pct)} | ${c.valued}/${c.scheduled} | ${c.product_failures} | ${c.harness_failures} | ${num(c.judge_sd, x => x.toFixed(3))} | ${num(c.recall_all_at_10, pct)} | ${num(c.fill_rate, x => x.toFixed(3))} | ${dcols(c.derived)} | ${c.status === 'not-run' ? `not run: ${cellText(c.not_run_reason ?? '')}` : c.complete ? 'complete' : 'incomplete'}${c.subset ? `; on ${cellText(c.subset.label)}: ${cellText(c.subset.reason)}` : ''}${c.missing_readers.length ? `; missing readers ${c.missing_readers.join(', ')}` : ''}${Object.entries(c.not_applicable).map(([r, n]) => `; ${n} did not fit ${r}'s window`).join('')} |`;
+  const cellLine = (c: CellAggregate) => `| \`${c.cell_id}\` | ${c.set} | \`${c.system}\` | ${c.pin ? cellText(c.pin) : 'n/a'} | ${c.arm} | ${c.budget ?? 'default'} | ${num(c.mean, pct)} | ${c.valued}/${c.scheduled} | ${c.product_failures} | ${c.harness_failures} | ${num(c.judge_sd, x => x.toFixed(3))} | ${num(c.recall_all_at_10, pct)} | ${num(c.fill_rate, x => x.toFixed(3))} | ${dcols(c.derived)} | ${c.status === 'not-run' ? `not run: ${cellText(c.not_run_reason ?? '')}` : c.complete ? 'complete' : 'incomplete'}${c.subset ? `; on ${cellText(c.subset.label)}: ${cellText(c.subset.reason)}` : ''}${c.product_outcomes.map(p => `; ${p.count} ${p.reader} ${p.outcome} answers counted as product failures: ${cellText(p.reason)}`).join('')}${c.missing_readers.length ? `; missing readers ${c.missing_readers.join(', ')}` : ''}${Object.entries(c.not_applicable).map(([r, n]) => `; ${n} did not fit ${r}'s window`).join('')} |`;
   for (const c of sb.cells) out.push(cellLine(c));
   const views = sb.cells.filter(c => c.sensitivity.length && c.status !== 'not-run');
   if (views.length) {
@@ -1005,6 +1077,14 @@ export function renderReport(sb: Scoreboard): string {
   }
   out.push('', '## Per-reader accuracy', '', `| Cell | ${sb.campaign.readers.join(' | ')} |`, `|---|${sb.campaign.readers.map(() => '---|').join('')}`);
   for (const c of sb.cells.filter(x => x.status !== 'not-run')) out.push(`| \`${c.cell_id}\` | ${sb.campaign.readers.map(r => (r in c.per_reader ? num(c.per_reader[r], pct) : 'not promised')).join(' | ')} |`);
+  if (sb.frontier.length) {
+    const share = (k: number, n: number) => (n ? `${pct(k / n)} (${k}/${n})` : 'n/a');
+    out.push('', '## Frontier-judge agreement', '', `Each frontier judge re-judges the arm's frontier scope with the canonical prompt and rubric. Coverage is the share of the scope that judge scored; agreement is the share of answers both it and the canonical judge scored whose pass or fail (score ${PASS_THRESHOLD} or above) match. Under ${pct(FRONTIER_AGREEMENT_FLAG)} flags the column. Descriptive only.`, '');
+    out.push('| System | Frontier judge | Coverage | Agreement | Flag |', '|---|---|---|---|---|');
+    for (const f of sb.frontier) out.push(`| \`${f.system}\` | \`${f.judge}\` | ${share(f.judged, f.scope)} | ${share(f.agree, f.compared)} | ${f.flagged ? 'under 90%: flagged' : ''} |`);
+    out.push('', '| Cell | Frontier judge | Coverage | Agreement |', '|---|---|---|---|');
+    for (const c of sb.cells) for (const f of c.frontier) out.push(`| \`${c.cell_id}\` | \`${f.judge}\` | ${share(f.judged, f.scope)} | ${share(f.agree, f.compared)} |`);
+  }
   const source = dv.classifier ? `Classifier \`${dv.classifier.file}\` ${dv.classifier.version}, rule table sha256 \`${dv.classifier.rules_sha256}\` (${dv.classifier.source}; per-answer verdicts in \`${dv.classifier.per_answer}\`); an answer is wrong below a canonical score of ${dv.pass_threshold}.` : `The confident-error and false-abstention columns are not published: ${HEDGE_WITHHELD}. An answer passes at a canonical score of ${dv.pass_threshold} or above.`;
   out.push('', '## Derived columns by system and set', '', `Descriptive only, with no family and no Holm correction. ${source} Counted: ${dv.rule}.`, '');
   out.push(`| System | Set | Cell | ${dhead.join(' | ')} |`, `|---|---|---|${dhead.map(() => '---|').join('')}`);
@@ -1064,12 +1144,45 @@ export function renderAll(receipt: string, d: Derivation, campaign: CampaignMani
   const files = [{ path: join(receipt, 'scoreboard.json'), text: scoreboardJson(sb) }, { path: join(receipt, 'scoreboard.md'), text: renderReport(sb) }, ...d.hedge.map(h => ({ path: join(receipt, HEDGE_FILE.replace('<cell_id>', h.cell_id)), text: h.text }))];
   for (const t of campaign.render_targets) {
     const path = resolve(ROOT, t);
+    const base = campaign.receipt_base ?? relative(dirname(path), receipt);
+    if (t.endsWith('/scoreboard.md')) { files.push({ path, text: renderReport(sb, base) }); continue; }
     const current = existsSync(path) ? readFileSync(path, 'utf8') : '';
-    const next = replaceBlock(current, renderHeadline(sb, relative(dirname(path), receipt)));
+    const next = replaceBlock(current, renderHeadline(sb, base));
     if (next === null) throw invalid(receipt, `${t} has no ${README_BEGIN} … ${README_END} block`, 'the README headline is generated into a marked block so check can compare it byte for byte', { next: 'report', user_message: `add the two marker lines to ${t} where the headline belongs, then run render` });
     files.push({ path, text: next });
   }
+  files.push({ path: join(receipt, SUMS_FILE), text: sha256Sums(receipt, files) });
   return { files };
+}
+
+/** The receipt's file list: every file's sha256 and its path relative to the receipt, sorted by path, rendered files at their rendered bytes. */
+export const SUMS_FILE = 'SHA256SUMS';
+export function sha256Sums(receipt: string, rendered: Array<{ path: string; text: string }>): string {
+  const text = new Map(rendered.filter(f => f.path.startsWith(receipt + '/')).map(f => [f.path, f.text]));
+  const paths = new Set([...treeSize(receipt).map(f => f.path).filter(p => text.has(p) || !p.endsWith('/derived/hedge.ndjson')), ...text.keys()]);
+  paths.delete(join(receipt, SUMS_FILE));
+  return [...paths].map(p => relative(receipt, p)).sort().map(rp => { const p = join(receipt, rp); return `${sha256(text.get(p) ?? readFileSync(p))}  ${rp}\n`; }).join('');
+}
+
+/**
+ * The published receipt at a results-branch commit: `git archive` of publication.json's `published.path` at that commit
+ * into a scratch directory, after its SHA256SUMS hash is matched against `published.sha256`.
+ */
+export function receiptAtCommit(commit: string, publicationPath = join(ROOT, 'docs/benchmarks/2026-10-06-scoreboard/publication.json')): string {
+  const pub = (JSON.parse(readFileSync(publicationPath, 'utf8')) as { published: { branch: string; path: string; commit: string | null; sha256: string | null } }).published;
+  const fix = (user_message: string): OperatorFix => ({ next: 'report', user_message, verify: ['bun', 'eval/runner/scoreboard.ts', 'check', '--commit', commit] });
+  if (pub.commit !== commit) throw new ScoreboardError({ code: 'RECEIPT_INVALID', message: `publication.json records results commit ${pub.commit ?? 'none'}, not ${commit}`, why: 'the report cites one receipt commit; check verifies that one', fix: fix('pass the commit publication.json records, or record the new one') });
+  if (spawnSync('git', ['-C', ROOT, 'cat-file', '-e', `${commit}^{tree}`], { stdio: 'ignore' }).status !== 0) spawnSync('git', ['-C', ROOT, 'fetch', '-q', 'origin', pub.branch], { stdio: 'ignore' });
+  const dir = join(mkdtempSync(join(tmpdir(), 'q1-receipt-')), 'receipt');
+  mkdirSync(dir, { recursive: true });
+  const archive = spawnSync('git', ['-C', ROOT, 'archive', '--format=tar', commit, pub.path], { maxBuffer: 1 << 30 });
+  if (archive.status !== 0) throw new ScoreboardError({ code: 'RECEIPT_MISSING', message: `${pub.branch} commit ${commit} has no ${pub.path}: ${archive.stderr.toString().trim().slice(0, 200)}`, why: 'the receipt is read from the results branch by commit', fix: fix(`fetch ${pub.branch} and confirm the commit holds ${pub.path}`) });
+  const untar = spawnSync('tar', ['-x', '-C', dir, '--strip-components', String(pub.path.split('/').length)], { input: archive.stdout });
+  if (untar.status !== 0) throw new Error(`tar failed: ${untar.stderr.toString().slice(0, 200)}`);
+  const sums = join(dir, SUMS_FILE);
+  const got = existsSync(sums) ? sha256(readFileSync(sums)) : null;
+  if (got !== pub.sha256) throw new ScoreboardError({ code: 'RECEIPT_INVALID', message: `${pub.path}/${SUMS_FILE} at ${commit} hashes to ${got ?? 'nothing'}, publication.json records ${pub.sha256}`, why: 'the receipt is pinned by its SHA256SUMS hash', fix: fix('find out which side changed before anything else') });
+  return dir;
 }
 
 // ─── check ──────────────────────────────────────────────────────────
@@ -1241,14 +1354,14 @@ function emit(op: ScoreboardMessage, json: boolean): void {
 
 function receiptsFrom(argv: string[]): string[] {
   const out: string[] = [];
-  argv.forEach((a, i) => { if (a === '--receipt' && argv[i + 1]) out.push(resolve(argv[i + 1])); });
+  argv.forEach((a, i) => { if (a === '--receipt' && argv[i + 1]) out.push(resolve(argv[i + 1])); if (a === '--commit' && argv[i + 1]) out.push(receiptAtCommit(argv[i + 1])); });
   return out.length ? out : findReceipts();
 }
 
 if (import.meta.main) {
   const argv = process.argv.slice(2);
   const json = argv.includes('--json');
-  const [command, ...rest] = argv.filter((a, i) => !a.startsWith('--') && argv[i - 1] !== '--receipt');
+  const [command, ...rest] = argv.filter((a, i) => !a.startsWith('--') && argv[i - 1] !== '--receipt' && argv[i - 1] !== '--commit');
   const usage: ScoreboardMessage = { code: 'USAGE', message: `unknown command ${command ?? '(none)'}`, why: 'the generator has three commands: check, render, explain', fix: { next: 'run', argv: ['bun', 'eval/runner/scoreboard.ts', 'check'], verify: ['bun', 'eval/runner/scoreboard.ts', 'check'] } };
   try {
     if (command === 'check') {

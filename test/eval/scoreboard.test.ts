@@ -6,11 +6,13 @@
  * secret scan inside check. Every receipt here is synthetic.
  */
 import { describe, expect, test } from 'bun:test';
+import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, truncateSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { gunzipSync, gzipSync } from 'node:zlib';
-import { checkPinTable, checkReceipt, checkSize, derive, deriveAll, explain, README_BEGIN, README_END, renderAll, renderHeadline, loadCampaign, type CampaignManifest, type Scoreboard } from '../../eval/runner/scoreboard.ts';
+import { checkPinTable, checkReceipt, checkSize, derive, deriveAll, explain, FRONTIER_REDO_FILE, README_BEGIN, README_END, receiptAtCommit, renderAll, renderHeadline, loadCampaign, SUMS_FILE, type CampaignManifest, type Scoreboard } from '../../eval/runner/scoreboard.ts';
 import { classify, classifyV3, CLASSIFIER_VERSION, CLASSIFIER_VERSION_V3, RULES_SHA256, RULES_SHA256_V3 } from '../../eval/runner/q1/hedge.ts';
 import { defaultCells, fieldCells, READERS, writeSyntheticReceipt, type SyntheticOptions } from './fixtures/scoreboard/synthetic.ts';
 
@@ -302,7 +304,7 @@ describe('appendix rows and sensitivity views (v6)', () => {
     const d = deriveAll(dir);
     for (const f of renderAll(dir, d, loadCampaign(dir).campaign).files) { mkdirSync(dirname(f.path), { recursive: true }); writeFileSync(f.path, f.text); }
     const sb = d.scoreboard;
-    expect(sb.schema).toBe('gbrain-evals/scoreboard/v7');
+    expect(sb.schema).toBe('gbrain-evals/scoreboard/v8');
     expect(sb.appendix).toHaveLength(1);
     expect(sb.appendix[0]).toMatchObject({ cell_id: 's2a-gbrain-8k', pin: 'GBrain 0.60.95.0 (c5fb0201, 2026-10-01)', mean: s2a.mean, valued: s2a.valued, appendix: 'found and fixed' });
     expect(sb.comparisons.filter(c => c.set === 'S2a').map(c => c.anchor)).toEqual(before.comparisons.filter(c => c.set === 'S2a').map(c => c.anchor));
@@ -414,7 +416,7 @@ describe('derived columns: confident errors and the "I don\'t know" column', () 
 
   test('per cell, per system and set, and pooled over sets, from replicate-0 answers with a scored canonical judgment', () => {
     const { dir, sb } = fresh({ cells: scripted() });
-    expect(sb.schema).toBe('gbrain-evals/scoreboard/v7');
+    expect(sb.schema).toBe('gbrain-evals/scoreboard/v8');
     const s1 = sb.cells.find(c => c.cell_id === 's1-gbrain-8k')!.derived;
     expect(s1).toEqual({ answers: 177, wrong: 107, confident_wrong: 40, abstention_answers: 30, correct_abstentions: 10, answerable_answers: 147, false_abstentions: 27, confident_error_rate: Number((40 / 107).toFixed(6)), correct_abstention_rate: Number((10 / 30).toFixed(6)), false_abstention_rate: Number((27 / 147).toFixed(6)) });
     const s2a = sb.cells.find(c => c.cell_id === 's2a-gbrain-8k')!.derived;
@@ -639,5 +641,107 @@ describe('retired systems (A24 option 1)', () => {
     editJson(join(dir, 'campaign.json'), c => { c.cells.find(y => y.cell_id === 's2a-temporal-graph-8k')!.not_run_reason = RETIRED; delete c.sets.find(s => s.id === 'S1')!.sensitivity; });
     expect(() => loadCampaign(dir)).toThrow(/set S1 has no sensitivity view on ext-temporal-graph's subset/);
     rmSync(dir, { recursive: true });
+  });
+});
+
+describe('A24 render: product outcomes, frontier agreement, SHA256SUMS and the receipt by commit', () => {
+  const ndjson = (p: string) => readFileSync(p, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l));
+  const write = (p: string, xs: unknown[]) => writeFileSync(p, xs.map(x => JSON.stringify(x) + '\n').join(''));
+  const render = (dir: string) => { const d = deriveAll(dir); for (const f of renderAll(dir, d, loadCampaign(dir).campaign).files) { mkdirSync(dirname(f.path), { recursive: true }); writeFileSync(f.path, f.text); } return d.scoreboard; };
+  const THINK = 's1-gbrain-think';
+  const REASON = "gbrain think's own 4,000-token output limit for this model, flagged by its own path as output_truncated";
+  const truncated = (dir: string, n: number) => {
+    const cdir = join(dir, 'cells', THINK);
+    const answers = ndjson(join(cdir, 'answers.ndjson'));
+    const hit = answers.filter(a => a.reader === 'gpt-6.1-sol' && !a.question_id.startsWith('10m-c1:')).slice(0, n);
+    const ids = new Set(hit.map(a => a.answer_id));
+    write(join(cdir, 'answers.ndjson'), answers.map(a => (ids.has(a.answer_id) ? { ...a, outcome: 'harness_invalid' } : a)));
+    write(join(cdir, 'judgments.ndjson'), ndjson(join(cdir, 'judgments.ndjson')).filter(j => !ids.has(j.answer_id)));
+  };
+
+  test('a reader outcome the system flagged as its own limit counts as a product failure, scored 0, by exact count', () => {
+    const { dir } = fresh();
+    truncated(dir, 2);
+    const before = render(dir).cells.find(c => c.cell_id === THINK)!;
+    expect(before.harness_failures).toBe(2);
+    expect(before.product_failures).toBe(0);
+    editJson(join(dir, 'campaign.json'), c => { c.cells.find(x => x.cell_id === THINK)!.product_outcomes = [{ reader: 'gpt-6.1-sol', outcome: 'harness_invalid', count: 2, reason: REASON }]; });
+    const after = render(dir).cells.find(c => c.cell_id === THINK)!;
+    expect(after.harness_failures).toBe(0);
+    expect(after.product_failures).toBe(2);
+    expect(after.valued).toBe(before.valued + 2);
+    expect(after.mean!).toBeLessThan(before.mean!);
+    expect(after.product_outcomes).toEqual([{ reader: 'gpt-6.1-sol', outcome: 'harness_invalid', count: 2, reason: REASON }]);
+    expect(readFileSync(join(dir, 'scoreboard.md'), 'utf8')).toContain('; 2 gpt-6.1-sol harness_invalid answers counted as product failures: ' + REASON);
+    expect(checkReceipt(dir, {}).messages).toEqual([]);
+    editJson(join(dir, 'campaign.json'), c => { c.cells.find(x => x.cell_id === THINK)!.product_outcomes![0].count = 3; });
+    expect(() => deriveAll(dir)).toThrow(/2 gpt-6\.1-sol answers are recorded harness_invalid on scheduled questions, campaign\.json counts 3/);
+    rmSync(dir, { recursive: true });
+  });
+
+  test('frontier agreement is reported on the covered set with coverage, and an A19 redo replaces the logged record under its key', () => {
+    const { dir } = fresh();
+    const cell = 's1-gbrain-8k';
+    const cdir = join(dir, 'cells', cell);
+    const judgments = ndjson(join(cdir, 'judgments.ndjson'));
+    const canonical = judgments.filter(j => j.judge_replicate === 0);
+    const frontier = canonical.map((j, i) => ({ ...j, instrument_id: j.instrument_id + '@claude-opus-5-5', judge: 'claude-opus-5-5', raw_sha256: 'f' + i,
+      ...(i < 2 ? { score: null, parse_ok: false, outcome: 'judge_error' } : i < 30 ? { score: j.score >= 0.5 ? 0 : 1 } : {}) }));
+    write(join(cdir, 'judgments.ndjson'), [...judgments, ...frontier]);
+    const n = canonical.length;
+    const before = render(dir);
+    expect(before.cells.find(c => c.cell_id === cell)!.frontier).toEqual([{ judge: 'claude-opus-5-5', scope: n, judged: n - 2, compared: n - 2, agree: n - 30, agreement: Math.round(((n - 30) / (n - 2)) * 1e6) / 1e6 }]);
+    const pooled = before.frontier.find(f => f.system === 'gbrain-defaults' && f.judge === 'claude-opus-5-5')!;
+    expect(pooled).toMatchObject({ scope: n, judged: n - 2, flagged: true });
+    expect(pooled.coverage).toBe(Math.round(((n - 2) / n) * 1e6) / 1e6);
+    const md = readFileSync(join(dir, 'scoreboard.md'), 'utf8');
+    expect(md).toContain('## Frontier-judge agreement');
+    expect(md).toContain('| ' + String.fromCharCode(96) + 'gbrain-defaults' + String.fromCharCode(96) + ' | ' + String.fromCharCode(96) + 'claude-opus-5-5' + String.fromCharCode(96) + ' | ');
+    expect(md).toContain('under 90%: flagged');
+    write(join(cdir, FRONTIER_REDO_FILE), frontier.slice(0, 2).map((f, i) => ({ ...f, score: canonical[i].score, parse_ok: true, outcome: 'scored', raw_sha256: 'redo' + i })));
+    const redone = render(dir).cells.find(c => c.cell_id === cell)!.frontier[0];
+    expect(redone).toMatchObject({ scope: n, judged: n, compared: n, agree: n - 28 });
+    expect(checkReceipt(dir, {}).messages).toEqual([]);
+    write(join(cdir, FRONTIER_REDO_FILE), [{ ...canonical[0], raw_sha256: 'bad' }]);
+    expect(() => deriveAll(dir)).toThrow(/frontier-redo\.ndjson holds a canonical judgment/);
+    rmSync(dir, { recursive: true });
+  });
+
+  test('every render writes SHA256SUMS over the receipt at its rendered bytes, never listing itself', () => {
+    const { dir } = fresh();
+    const sums = readFileSync(join(dir, SUMS_FILE), 'utf8').trimEnd().split('\n').map(l => l.split('  '));
+    const paths = sums.map(s => s[1]);
+    expect(paths).toEqual([...paths].sort());
+    expect(paths).toContain('scoreboard.json');
+    expect(paths).toContain('campaign.json');
+    expect(paths).toContain('cells/s1-gbrain-8k/answers.ndjson');
+    expect(paths).not.toContain(SUMS_FILE);
+    for (const [hash, p] of sums) expect(createHash('sha256').update(readFileSync(join(dir, p))).digest('hex')).toBe(hash);
+    expect(checkReceipt(dir, {}).messages).toEqual([]);
+    rmSync(dir, { recursive: true });
+  });
+
+  test('receiptAtCommit reads the published path at that commit and refuses a commit or SHA256SUMS publication.json does not record', () => {
+    const { dir } = fresh();
+    const work = mkdtempSync(join(tmpdir(), 'receipt-tree-'));
+    cpSync(dir, join(work, 'published', 'q1-scoreboard'), { recursive: true });
+    const env = { ...process.env, GIT_INDEX_FILE: join(work, 'index') };
+    const gitDir = spawnSync('git', ['-C', ROOT, 'rev-parse', '--absolute-git-dir'], { encoding: 'utf8' }).stdout.trim();
+    const git = (args: string[]) => { const r = spawnSync('git', ['--git-dir', gitDir, '--work-tree', work, ...args], { cwd: work, env, encoding: 'utf8' }); expect(r.stderr).toBe(''); expect(r.status).toBe(0); return r.stdout.trim(); };
+    git(['add', '-f', 'published']);
+    const tree = git(['write-tree']);
+    const sums = createHash('sha256').update(readFileSync(join(dir, SUMS_FILE))).digest('hex');
+    const pub = join(work, 'publication.json');
+    const published = (commit: string | null, sha256: string | null) => writeFileSync(pub, JSON.stringify({ published: { branch: 'no-such-results-branch', path: 'published/q1-scoreboard', url: 'https://example.invalid/receipt', commit, sha256 } }));
+    published(tree, sums);
+    const got = receiptAtCommit(tree, pub);
+    expect(readFileSync(join(got, 'scoreboard.json'), 'utf8')).toBe(readFileSync(join(dir, 'scoreboard.json'), 'utf8'));
+    expect(checkReceipt(got, {}).messages).toEqual([]);
+    published(tree, '0'.repeat(64));
+    expect(() => receiptAtCommit(tree, pub)).toThrow(/SHA256SUMS at .* hashes to .*, publication\.json records 0{64}/);
+    published('1'.repeat(40), sums);
+    expect(() => receiptAtCommit(tree, pub)).toThrow(/publication\.json records results commit 1{40}, not /);
+    rmSync(dir, { recursive: true });
+    rmSync(work, { recursive: true });
   });
 });

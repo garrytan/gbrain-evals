@@ -1385,6 +1385,42 @@ A23 set them. Each fix has a test that fails on the A23 code and passes on this 
 
 ## Changelog
 
+### 2026-10-27: render rulings after the sealed campaign settled (no re-freeze)
+
+The sealed campaign settled: 149 launch units, 114 complete, 8 partial and 27 not run, $7,034.32 on the campaign
+ledgers ($6,729.26 measured) against the $8,000 cap. These rulings are recorded outside the hashed tree; the sealed
+campaign stays at `a92b06c5`, and no cell's configuration changes. They replace the 2026-10-26 drafts and interim
+figures below.
+
+- **Per-cell not-run reasons.** `publication.json` `not_run` gives each cell that did not run its own reason, used in
+  place of the config-wide one: graph-pipeline S1 and markdown-kb S1 as A23 classified them; markdown-kb S2b "projected
+  about 60 h > cell wall clock on the pinned VM" (its local reindex embeds about 2.5 hours per conversation on the
+  pinned VM, 8 of 24 conversations finished in the 22-hour wall clock, $0 spent; the product's behavior, which
+  overrides the custodian log's "harness limit" wording); verbatim-session common on S2a and S3 "the harness has no
+  common-config adapter for this system at this freeze (diagnostic config only)", a harness gap, whose adapter goes on
+  the F6 list.
+- **S2b full-surface `whole-think`: 10 gpt-6.1-sol `harness_invalid` answers are product failures.** Each stopped at
+  exactly 4,000 output tokens on c0 or c1. That is `gbrain think`'s own output limit at the pin for a model outside its
+  reasoning-model list (`maxOutputTokensFor`: 16,000 for Claude 5, Claude 4.x, gpt-5, the o-series and recipes that
+  declare thinking by default; 4,000 otherwise), and gbrain's own path flags the stop `output_truncated`; the shim
+  records any status other than an answer as `harness_invalid`. Under the owner's rule (gbrain's own limit, flagged by
+  its own path, is product behavior), they render as product failures, scored 0 and kept in the denominator
+  (`product_outcomes`, refused at any other count), with a footnote. They are not grouped with the shipped-defaults
+  answers below. gbrain #7421 (2026-10-24, after the pin) extends the 16,000-token limit to OpenAI reasoning models
+  from gpt-5 to gpt-9.
+- **shipped-defaults S1: the 10 `harness_invalid` answers.** The view `a24-shipped-defaults-harness-invalid` (set S1)
+  names its questions by `from_outcomes` (the 8k component arm's `harness_invalid` answers, count 10), and the
+  custodian's assembly derives the ids from the sealed answers, so no sealed id is written by hand. The footnote
+  carries the custodian's trace of the 10 A22 retrievals behind them.
+- **Frontier-judge column.** Agreement is reported per cell and pooled per system on the answers each frontier judge
+  scored, with its coverage: 1,960 of 2,140 gpt-6.1-sol frontier judgments (the frozen tool does not judge the 180
+  temporal-graph `ingest_degraded` answers) and 194 of 214 Opus redos (2 remain `judge_error`, 18 fall outside a
+  published arm). A redo replaces the logged record under the same key and may never hold a canonical judgment.
+- **S3 rows.** file-agent's 23 gpt-6.1-sol `reader_error` answers are harness failures. The agent runtime's 200
+  gpt-6.1-sol `retrieval_error` answers stand as the runtime's failure (A19, item E): no alternative ran.
+- **Receipt.** Every render writes `SHA256SUMS`, and `scoreboard.ts check --commit <commit>` reads the published receipt
+  at that results-branch commit and refuses a `SHA256SUMS` hash other than the one `publication.json` records.
+
 ### 2026-10-26: publication rulings after A24 (no re-freeze)
 
 Three publication notes, recorded outside the hashed tree. The sealed campaign stays at `a92b06c5`, and no cell's

@@ -5,6 +5,7 @@
  *
  *   bun eval/runner/q1/publish.ts --config docs/benchmarks/2026-10-06-scoreboard/publication.json \
  *     --results <dir holding each campaign's state directory, by campaign id> --out <receipt dir> [--trees <dir>]
+ *     [--custody] [--frontier-redo <judgments file>]...
  *
  * For every source in the config it:
  *   1. checks out the campaign's launch tree (a detached worktree under --trees), because each campaign renders
@@ -27,6 +28,16 @@
  * ran validly: its subset cell merges only the subset's shards and every arm of it is shown on their conversations,
  * every set those arms answer on gets a sensitivity view on the same conversations for every system, and every other
  * cell of the system that no source covers is not run with the retirement reason.
+ *
+ * A source on a campaign that ran under several freezes lists `states`: each state directory (under --results) and
+ * the launch units whose final rows it holds; every cell merges once, from all its units' states, at the source's
+ * launch tree. `not_run` names cells (definition or arm id) published as not run with their own reason, whatever
+ * rows they hold. `product_outcomes` counts a cell reader's recorded outcome as the product's failure when the
+ * system's own path flagged it. A sensitivity view may name `from_outcomes` instead of question ids: its questions
+ * are those with an answer of those outcomes in that cell's arms (or that one arm), counted against `count`. --custody (the custodian's
+ * host, GBRAIN_EVALS_CUSTODY_LOG set) schedules the sealed sets from their corpora. --frontier-redo adds A19's Opus
+ * redo judgments: each arm gets the records for its own answers in frontier-redo.ndjson, which the scoreboard uses in
+ * place of the logged error under the same key.
  */
 import { execFileSync, spawnSync } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
@@ -53,12 +64,16 @@ export interface PublicationSource {
   gbrain?: GbrainBuild;
   /** Publish this source's arms only in an appendix: its name, why, and the directory under appendix/. */
   appendix?: { name: string; reason: string; dir: string };
+  /** State directories under --results (default: the campaign id) and the launch units whose final rows each holds. */
+  states?: Array<{ dir: string; units: string[] }>;
 }
+/** A sensitivity view: fixed question ids, or the questions with an answer of these outcomes in one cell's answering arms. */
+export interface PublicationView { sets: string[]; id: string; label: string; reason: string; question_ids: string[]; from_outcomes?: { cell: string; outcomes: string[]; count: number } }
 export interface Publication {
   campaign_id: string; campaign_hash: string;
   /** Where the full receipt is published: a path on the results branch, the branch commit that holds it, and the
    * sha256 of its SHA256SUMS file (every file's sha256, sorted by path). Filled when the receipt is pushed. */
-  published: { branch: string; path: string; commit: string | null; sha256: string | null };
+  published: { branch: string; path: string; url: string; commit: string | null; sha256: string | null };
   /** The GBrain build the main rows measured, and the footnote every rendering of them carries. */
   gbrain: CampaignManifest['gbrain'] & { footnote: string };
   hedge_classifier: string;
@@ -68,7 +83,11 @@ export interface Publication {
   /** Why any other arm with no source is not run. */
   not_run_reason: string;
   sources: PublicationSource[];
-  sensitivity: Array<{ sets: string[]; id: string; label: string; reason: string; question_ids: string[] }>;
+  sensitivity: PublicationView[];
+  /** Cells (definition or arm id) published as not run, whatever rows they hold, with their own reason. */
+  not_run: Record<string, string>;
+  /** A cell reader's recorded outcome counted as the product's own failure (score 0), with the expected count and why. */
+  product_outcomes: Array<{ cell: string; reader: string; outcome: string; count: number; reason: string }>;
   /** Systems whose pinned configuration can no longer run: the sharded cell and shards they ran validly, and the sensitivity view every system gets on those conversations. */
   retired: Array<{ system: string; reason: string; subset: { cell: string; shards: number[]; label: string; reason: string }; view: { id: string; label: string; reason: string } }>;
   /** Build labels for the baselines (gbrain-defaults takes its label from `gbrain`); external kinds take theirs from the pin table. */
@@ -125,7 +144,11 @@ export function shardConversations(def: Pick<CellDefinition, 'benchmark' | 'spli
   return [...ids].sort().filter((_, i) => shards.includes(i % def.shards));
 }
 
-export function assemble(config: Publication, results: string, out: string, trees: string, preview = false): CampaignManifest {
+export interface AssembleOptions { preview?: boolean; custody?: boolean; frontierRedo?: string[] }
+
+export function assemble(config: Publication, results: string, out: string, trees: string, opts: AssembleOptions = {}): CampaignManifest {
+  const preview = !!opts.preview;
+  if (opts.custody && !process.env.GBRAIN_EVALS_CUSTODY_LOG) throw new Error('--custody schedules the sealed sets from their corpora; set GBRAIN_EVALS_CUSTODY_LOG on the custodian host');
   const m = loadManifest();
   for (const p of [config.pins, ...config.sources.map(s => s.pins ?? {})]) if (p['gbrain-defaults']) throw new Error('publication.json writes a gbrain-defaults pin by hand; the GBrain label comes from its gbrain build (publish.ts gbrainBuildLabel)');
   const label = gbrainBuildLabel(config.gbrain);
@@ -134,7 +157,9 @@ export function assemble(config: Publication, results: string, out: string, tree
     if (!def || def.system !== r.system || def.shards < 2) throw new Error(`publication.json retires ${r.system} on ${r.subset.cell}, which is not a sharded cell of that system`);
     return { ...r, def, sets: [...new Set(def.arms.filter(answering).map(a => a.set))], conversations: shardConversations(def, r.subset.shards) };
   });
-  const outsideSubset = (unit: string, def: CellDefinition) => retired.some(r => r.def === def && !r.subset.shards.includes(Number(unit.slice(def.id.length + 2))));
+  const outsideSubset = (unit: string, def: CellDefinition) => retired.some(r => r.system === def.system && (r.def !== def || !r.subset.shards.includes(Number(unit.slice(def.id.length + 2)))));
+  const ownReason = (def: CellDefinition, arm?: ArmDefinition) => (arm && config.not_run[arm.cell_id]) ?? config.not_run[def.id] ?? null;
+  for (const id of Object.keys(config.not_run)) if (!m.cells.some(c => c.id === id || c.arms.some(a => a.cell_id === id))) throw new Error(`publication.json not_run names ${id}, which is no cell or arm`);
   const pins: Record<string, string> = { ...bundlePins(REPO_ROOT), ...config.pins, 'gbrain-defaults': label };
   rmSync(out, { recursive: true, force: true });
   mkdirSync(out, { recursive: true });
@@ -143,14 +168,21 @@ export function assemble(config: Publication, results: string, out: string, tree
   const seen: string[] = [];
   for (const [i, src] of config.sources.entries()) {
     const manifest = JSON.parse(readFileSync(resolve(REPO_ROOT, src.campaign), 'utf8')) as { campaign_id: string };
-    const state = join(results, manifest.campaign_id);
-    const leases = settledLeases(state);
     const byCell = new Map<CellDefinition, string[]>();
-    for (const [unit, l] of leases) {
-      const def = unitCell(unit, m.cells);
-      if (!def || !covers(src, def.system) || outsideSubset(unit, def)) continue;
-      seen.push(l.at);
-      byCell.set(def, [...(byCell.get(def) ?? []), join(state, 'results', unit, l.lease)]);
+    const taken = new Set<string>();
+    for (const st of src.states ?? [{ dir: manifest.campaign_id, units: null as string[] | null }]) {
+      const state = join(results, st.dir);
+      const leases = settledLeases(state);
+      for (const unit of st.units ?? []) if (!leases.has(unit)) throw new Error(`state ${st.dir} has no settled lease for ${unit}, which publication.json says holds its final rows`);
+      for (const [unit, l] of leases) {
+        if (st.units && !st.units.includes(unit)) continue;
+        const def = unitCell(unit, m.cells);
+        if (!def || !covers(src, def.system) || outsideSubset(unit, def) || ownReason(def)) continue;
+        if (taken.has(unit)) throw new Error(`${unit} is listed under two states`);
+        taken.add(unit);
+        seen.push(l.at);
+        byCell.set(def, [...(byCell.get(def) ?? []), join(state, 'results', unit, l.lease)]);
+      }
     }
     const tree = launchTree(src.launch_tree, trees);
     const treePins: Record<string, string> = { ...bundlePins(tree), ...config.pins, 'gbrain-defaults': src.gbrain ? gbrainBuildLabel(src.gbrain) : label };
@@ -170,7 +202,7 @@ export function assemble(config: Publication, results: string, out: string, tree
       if (r.status !== 0 && r.status !== 4) throw new Error(`merge of ${def.id} at ${src.launch_tree} exited ${r.status}: ${(r.stderr || r.stdout).slice(-600)}`);
       for (const arm of def.arms.filter(answering)) {
         const from = join(staged, 'cells', arm.cell_id);
-        if (!existsSync(join(from, 'receipt.json'))) continue;
+        if (!existsSync(join(from, 'receipt.json')) || ownReason(def, arm)) continue;
         const receipt = JSON.parse(readFileSync(join(from, 'receipt.json'), 'utf8')) as { run_status: string; config_sha256: string };
         const pin = src.pins?.[def.system] ?? treePins[def.system];
         const entry = { status: receipt.run_status === 'invalid' ? 'invalid' as const : 'complete' as const, config_sha256: receipt.config_sha256, ...(pin ? { pin } : {}) };
@@ -187,8 +219,29 @@ export function assemble(config: Publication, results: string, out: string, tree
     }
   }
 
+  const derivedViews = new Map(config.sensitivity.filter(v => v.from_outcomes).map(v => {
+    const f = v.from_outcomes!;
+    const def = m.cells.find(c => c.id === f.cell || c.arms.some(a => a.cell_id === f.cell));
+    if (!def) throw new Error(`sensitivity ${v.id} derives from ${f.cell}, which is no cell or arm`);
+    const hits = def.arms.filter(a => answering(a) && (def.id === f.cell || a.cell_id === f.cell)).map(a => join(out, 'cells', a.cell_id, 'answers.ndjson')).filter(p => existsSync(p))
+      .flatMap(p => readFileSync(p, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l) as { question_id: string; outcome: string }))
+      .filter(a => f.outcomes.includes(a.outcome));
+    if (preview) return [v.id, new Set<string>()] as const;
+    if (hits.length !== f.count) throw new Error(`sensitivity ${v.id}: ${f.cell} holds ${hits.length} answers recorded ${f.outcomes.join('/')}, publication.json expects ${f.count}`);
+    return [v.id, new Set(hits.map(a => a.question_id))] as const;
+  }));
+  const productOutcomes = new Map<string, NonNullable<CampaignCell['product_outcomes']>>();
+  for (const p of config.product_outcomes) productOutcomes.set(p.cell, [...(productOutcomes.get(p.cell) ?? []), { reader: p.reader, outcome: p.outcome as 'harness_invalid', count: p.count, reason: p.reason }]);
+  if (!preview) for (const id of productOutcomes.keys()) if (!covered.has(id)) throw new Error(`publication.json product_outcomes names ${id}, which no source covers`);
+  const redo = (opts.frontierRedo ?? []).flatMap(f => readFileSync(f, 'utf8').split('\n').filter(Boolean));
+  if (redo.length) for (const id of covered.keys()) {
+    const answers = join(out, 'cells', id, 'answers.ndjson');
+    const own = new Set(readFileSync(answers, 'utf8').split('\n').filter(Boolean).map(l => (JSON.parse(l) as { answer_id: string }).answer_id));
+    const mine = redo.filter(l => own.has((JSON.parse(l) as { answer_id: string }).answer_id));
+    if (mine.length) writeFileSync(join(out, 'cells', id, 'frontier-redo.ndjson'), mine.join('\n') + '\n');
+  }
   const sets: CampaignSet[] = [...new Set(m.cells.flatMap(c => c.arms.filter(answering).map(a => a.set)))].map(id => m.sets.find(s => s.id === id)!).filter(s => s.role !== 'smoke').map(s => {
-    const open = PUBLIC_CORPUS.has(s.benchmark);
+    const open = PUBLIC_CORPUS.has(s.benchmark) || !!opts.custody;
     let scheduled: CampaignSet['scheduled'] = [];
     if (open) {
       const corpus = loadCorpus(s.benchmark);
@@ -197,7 +250,7 @@ export function assemble(config: Publication, results: string, out: string, tree
     }
     const ids = new Set(scheduled.map(q => q.question_id));
     const views = [
-      ...config.sensitivity.filter(v => v.sets.includes(s.id)).map(v => ({ id: v.id, label: v.label, reason: v.reason, question_ids: v.question_ids.filter(q => ids.has(q)) })),
+      ...config.sensitivity.filter(v => v.sets.includes(s.id)).map(v => ({ id: v.id, label: v.label, reason: v.reason, question_ids: [...(v.from_outcomes ? derivedViews.get(v.id)! : v.question_ids)].filter(q => ids.has(q)) })),
       ...retired.filter(r => r.sets.includes(s.id)).map(r => ({ ...r.view, question_ids: [], conversations: r.conversations })),
     ];
     return {
@@ -211,10 +264,11 @@ export function assemble(config: Publication, results: string, out: string, tree
   const cells: CampaignCell[] = m.cells.flatMap(def => def.arms.filter(answering).map(arm => {
     const c = covered.get(arm.cell_id);
     const r = retired.find(x => x.system === def.system);
-    const subset = r?.sets.includes(arm.set) ? { conversations: r.conversations, label: r.subset.label, reason: r.subset.reason } : null;
-    const reason = (r && !subset ? r.reason : null) ?? pending.find(p => p.units.some(u => unitCell(u, [def])))?.reason ?? config.not_run_reason;
+    const subset = r?.def === def ? { conversations: r.conversations, label: r.subset.label, reason: r.subset.reason } : null;
+    const reason = ownReason(def, arm) ?? (r && !subset ? r.reason : null) ?? pending.find(p => p.units.some(u => unitCell(u, [def])))?.reason ?? config.not_run_reason;
     const entry = c ?? { status: 'not-run' as const, not_run_reason: reason, config_sha256: '', ...(pins[def.system] ? { pin: pins[def.system] } : {}) };
-    return { ...scoreboardCampaignCell(def, arm, { status: 'complete', config_sha256: entry.config_sha256 }), ...entry, ...(subset ? { subset } : {}) };
+    const po = c ? productOutcomes.get(arm.cell_id) : undefined;
+    return { ...scoreboardCampaignCell(def, arm, { status: 'complete', config_sha256: entry.config_sha256 }), ...entry, ...(subset ? { subset } : {}), ...(po ? { product_outcomes: po } : {}) };
   }));
   const head = sets.find(s => s.role === 'headline')!;
   const s1 = cells.filter(c => c.set === head.id);
@@ -233,7 +287,7 @@ export function assemble(config: Publication, results: string, out: string, tree
     hedge_classifier: config.hedge_classifier, sets, cells, families, ...(appendix.length ? { appendix } : {}),
     ...(retired.length ? { retired: retired.map(r => ({ system: r.system, reason: r.reason, subset: { sets: r.sets, conversations: r.conversations, label: r.subset.label, reason: r.subset.reason } })) } : {}),
     pins: Object.entries(pins).filter(([k]) => m.cells.some(c => c.system === k) && k.startsWith('ext-')).map(([system, version]) => ({ system, version, latest_release: null })),
-    release_assets: [], disclosures: [...(preview ? [PREVIEW_DISCLOSURE] : []), `GBrain rows measure ${label}. ${config.gbrain.footnote}`, ...config.disclosures], render_targets: preview ? [] : config.render_targets,
+    release_assets: [], ...(preview ? {} : { receipt_base: config.published.url }), disclosures: [...(preview ? [PREVIEW_DISCLOSURE] : []), `GBrain rows measure ${label}. ${config.gbrain.footnote}`, ...config.disclosures], render_targets: preview ? [] : config.render_targets,
   };
   writeFileSync(join(out, 'campaign.json'), JSON.stringify(campaign, null, 2) + '\n');
   cpSync(join(REPO_ROOT, 'docs/benchmarks/2026-10-06-scoreboard/power.json'), join(out, 'power.json'));
@@ -244,8 +298,9 @@ if (import.meta.main) {
   const argv = process.argv.slice(2);
   const one = (n: string) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : undefined; };
   const config = one('--config'), results = one('--results'), out = one('--out');
-  if (!config || !results || !out) { console.error('usage: publish.ts --config <publication.json> --results <dir> --out <receipt dir> [--trees <dir>] [--preview]'); process.exit(2); }
-  const c = assemble(JSON.parse(readFileSync(resolve(config), 'utf8')) as Publication, resolve(results), resolve(out), resolve(one('--trees') ?? join(tmpdir(), 'q1-publish-trees')), argv.includes('--preview'));
+  if (!config || !results || !out) { console.error('usage: publish.ts --config <publication.json> --results <dir> --out <receipt dir> [--trees <dir>] [--preview] [--custody] [--frontier-redo <file>]...'); process.exit(2); }
+  const many = (n: string) => argv.flatMap((a, i) => (a === n && argv[i + 1] ? [resolve(argv[i + 1])] : []));
+  const c = assemble(JSON.parse(readFileSync(resolve(config), 'utf8')) as Publication, resolve(results), resolve(out), resolve(one('--trees') ?? join(tmpdir(), 'q1-publish-trees')), { preview: argv.includes('--preview'), custody: argv.includes('--custody'), frontierRedo: many('--frontier-redo') });
   const n = (s: string) => c.cells.filter(x => x.status === s).length;
   console.log(`receipt ${relative(process.cwd(), resolve(out)) || '.'}: ${c.cells.length} cells (${n('complete')} with rows, ${n('invalid')} invalid, ${n('not-run')} not run), ${c.appendix?.length ?? 0} appendix cells, ${readdirSync(resolve(out)).length} entries`);
 }

@@ -34,8 +34,9 @@ listing every file's sha256 sorted by path. `publication.json` (`published`) and
 commit that holds it and the sha256 of `SHA256SUMS`; both are empty until the sealed waves settle and the receipt is
 pushed. Main keeps only the rendered tables: `scoreboard.md` beside this report and the README headline block. To
 verify, check out that commit, confirm the `SHA256SUMS` hash, and run `bun eval/runner/scoreboard.ts check` on the
-receipt, which recomputes every table from the rows. Fetching the receipt by commit inside `check` is not built yet;
-it lands with the real render.
+receipt, which recomputes every table from the rows. `bun eval/runner/scoreboard.ts check --commit <commit>` does all
+three: it reads `published/q1-scoreboard/` at that results-branch commit, refuses a `SHA256SUMS` hash other than the one
+`publication.json` records, and recomputes the tables. Every render writes `SHA256SUMS`.
 
 | Field | Value |
 |---|---|
@@ -74,10 +75,12 @@ it lands with the real render.
    - **temporal-graph's 8 conversations (A24 option 1).** Every BEAM-10M cell, on S1 and S1-sweep, is reported a
      second time on the 8 conversations temporal-graph measured validly (c0-c7: `10m-1`, `10m-10`, `10m-2` to
      `10m-7`), so its row can be read against every other system on the same questions.
-   - **shipped-defaults' 10 `harness_invalid` answers (draft, A24).** Every S1 cell is reported a second time
-     without the questions of the 10 answers in the note below, so every system is read on the cohort gbrain's row
-     was scored on. The view's question ids are added to `publication.json` (`sensitivity`, id
-     `a24-shipped-defaults-harness-invalid`, set S1) when the sealed receipt is assembled, not before.
+   - **shipped-defaults' 10 `harness_invalid` answers (A24).** Every S1 cell is reported a second time without the
+     questions of the 10 answers in the note below, so every system is read on the cohort gbrain's row was scored on.
+     `publication.json` names the view (`sensitivity`, id `a24-shipped-defaults-harness-invalid`, set S1) by where
+     its questions come from (`from_outcomes`: the `harness_invalid` answers of the 8k component arm, count 10), and
+     the custodian's assembly derives the question ids from the sealed answers and refuses any other count, so no
+     sealed id is written by hand.
 7. **Row notes (A23, A24).** These notes sit beside the rows they qualify:
    - **temporal-graph: pinned models retired (A24 option 1; GBRA-108 2026-10-26, under Garry's "don't bother me, do
      what makes sense").** The pinned configuration's reranker and ingest model were retired by their provider, so
@@ -88,28 +91,61 @@ it lands with the real render.
      conversations (section 6), and temporal-graph is retested at its current release in the follow-up
      current-master rerun (F6). `publication.json` `retired` records this, and the renderer refuses a
      temporal-graph row off that subset or a not-run one without the reason.
-   - **shipped-defaults: 10 `harness_invalid` answers (draft).** In S1 shipped-defaults' 8k component arm, 10
-     answers (5 on each of c4 and c5), 0.4% of the row's answers, are recorded `harness_invalid`: they failed at
-     0 ms with no usage under A22, and the A24 re-answer carried them forward under their earlier realization
-     instead of answering them again. A harness failure leaves its question out of that row's mean, so the row is
-     scored on the rest and the view in section 6 shows every system without those questions. The cause is under
-     diagnosis; its fix goes into a future freeze, and these answers are not run again under A24.
-   - **Not run.** graph-pipeline S1: three of ten shards measured past the 48-hour limit per conversation, and the
-     graph store's own failures account for the rest. markdown-kb S1: projected about 61 hours, past the 48-hour
-     limit, from the product's quadratic reindex. Each note carries its measurement.
+   - **shipped-defaults: 10 `harness_invalid` answers.** In S1 shipped-defaults' 8k component arm, 10 answers (5 on
+     each of c4 and c5), 0.4% of the row's answers, are recorded `harness_invalid`. A24's re-answer carried them
+     forward under their earlier realization instead of answering them again. The custodian traced the 10 A22
+     retrievals behind them: 9 failed as the shim's `degraded read (harness failure; retry after quiesce)` (8
+     `expansion_not_applied`, 1 `expansion_partial` with `rescore_skipped`; c4 fixed-evidence 3, c5 fixed-evidence 3,
+     c5 vendor-default 3), and the tenth, c4 vendor-default, scored; the stored strings carry no HTTP status. A harness
+     failure leaves its question out of that row's mean, so the row is scored on the rest and the view in section 6
+     shows every system without those questions. The carry-forward fix (a re-answer behind a failed retrieval
+     retrieves again) goes into the follow-up rerun (F6), not this campaign.
+   - **gbrain full-surface S2b `whole-think`: 10 gpt-6.1-sol answers at gbrain's own output limit (product).** On c0
+     (6) and c1 (4), 10 Sol answers stopped at exactly 4,000 output tokens, and every scored Sol answer in those cells
+     used fewer. At the pin, `gbrain think` gives 16,000 output tokens only to Claude 5, Claude 4.x, gpt-5 and o-series
+     models and to recipes that declare thinking by default; gpt-6.1-sol gets the 4,000 default
+     (`src/core/think/index.ts` `maxOutputTokensFor`). gbrain's own path labels that stop `output_truncated`, and the
+     shim records any status other than an answer as `harness_invalid`, which is why the record named no reason. The
+     limit and the flag are gbrain's shipped behavior with this model, so the 10 count as product failures, scored 0
+     and kept in the denominator (`publication.json` `product_outcomes`; the renderer refuses any other count). gbrain
+     #7421 (2026-10-24, after the pin) extends the 16,000-token limit to OpenAI reasoning models from gpt-5 to gpt-9.
+   - **S3 file-agent: 23 gpt-6.1-sol `reader_error` answers.** A harness failure, so those questions leave that row's
+     mean under the outcome rules; the row says how many.
+   - **S3 agent runtime: 200 gpt-6.1-sol `retrieval_error` answers (A19, item E).** The runtime calls gpt-6.1-sol
+     through chat completions with function tools and a reasoning effort, and the provider refuses that request. It is
+     the runtime's own request, which the harness does not change, and the preregistration leaves it to the program
+     owner; no alternative ran, so the row reports all 200 Sol answers as the runtime's failure, scored 0. Its Opus
+     and Sonnet answers are unaffected, and the per-reader table shows each reader. 2 further answers are
+     `reader_error`.
+   - **Not run, with each cell's own reason.** graph-pipeline S1: the product's own behavior (A23); its graph store's
+     hard-coded 32 GiB size limit, once reached, fails every later write and retrieval, its incremental re-extraction
+     makes each session cost more, and three shards ingested for 62 hours without finishing. markdown-kb S1: projected
+     about 61 hours, past the 48-hour limit per conversation, from the product's own reindex. markdown-kb S2b: "not run
+     (projected about 60 h > cell wall clock on the pinned VM)": its local `bm reindex` embeds about 2.5 hours per
+     conversation on the pinned VM, 8 of 24 conversations finished inside the 22-hour wall clock, $0 spent and no
+     answer; that is how the product ingests, so it is the product's behavior, not a harness fault. verbatim-session's
+     common configuration on S2a and S3: "not run: the harness has no common-config adapter for this system at this
+     freeze (diagnostic config only)", a harness gap rather than a property of the system; the adapter is on the F6
+     list. `publication.json` `not_run` carries each reason.
    - **Probe change.** The readiness probe uses an early passage of each system's last session from the A23 freeze
      on (Garry 2026-10-17 via GBRA-108: rec). A conversation settled before then and flagged `ingest_degraded` by a
      probe miss with 0 failed sessions keeps its flag, with a note that the old probe's passage started past the
      product's embedder window. verbatim-session c1 and c5 are two of these.
-   - **Spend: S2b full-context underpriced.** A23 priced each gpt-6.1-sol reading's reservation at about $5.40 from
-     its token estimate; the metering proxy reserves the request's byte count, about $19.29 a call, so the $20 lease
-     admitted one reading at a time. The lease was raised to $110 inside the A24 cap and the cell resumed: about
-     $4.46 an answer, about $89 for the 20, against about $11 projected. The receipt carries the same disclosure.
-     These are interim figures (draft); the settled ledger figures replace them when the report renders.
+   - **Spend.** Sealed spend settled at $7,034.32 on the campaign ledgers ($6,729.26 measured) against the $8,000
+     sealed cap; of 149 launch units, 114 settled complete, 8 partial and 27 not run. S2b full-context was underpriced:
+     A23 priced each gpt-6.1-sol whole-history reading's reservation from its token estimate, but the metering proxy
+     reserves the request's byte count as input tokens, about 3.6 times as much, so the $20 lease admitted one reading
+     at a time. The lease was raised to $110 inside the A24 cap and the cell resumed; it settled complete, 720 of 720
+     answers, at $191.34 measured across its seven leases. The receipt carries the same disclosure.
    - **gbrain synthesize model.** `whole-synthesize` answers with `claude-opus-4-7`, gbrain's shipped default at the
      pin (owner's ruling, 2026-10-16).
-8. **Per-reader accuracy and derived columns.** Per-reader means, correct-abstention rates by system and set, and
-   (if the hedge classifier passes its bar) confident-error and false-abstention rates.
+8. **Per-reader accuracy, frontier-judge agreement and derived columns.** Per-reader means; frontier-judge agreement
+   per cell and pooled per system, on the answers each frontier judge scored, with its coverage (the A19 backfill
+   filled 1,960 of 2,140 gpt-6.1-sol frontier judgments, and the frozen tool does not judge the other 180, which are
+   temporal-graph `ingest_degraded` answers; 194 of 214 Opus redos landed, 2 remain `judge_error` and 18 fall outside
+   a published arm; a redo replaces the logged error under the same key, and under 90% agreement flags the column);
+   correct-abstention rates by system and set, and (if the hedge classifier passes its bar) confident-error and
+   false-abstention rates.
 9. **Found-and-fixed appendix.** The public-v2 gbrain rows at `7aa2caa0` (0.60.106.0), derived and tabled but never
    compared: LongMemEval-M `c1` and `c2` stalled at that pin (fixed in gbrain #6389, 0.60.133.0), so the
    LongMemEval-M row covers the 50 questions of `c0` and `c3`; LongMemEval-S `c0` and `c1` stalled during ingest and

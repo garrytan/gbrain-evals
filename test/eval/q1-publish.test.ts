@@ -81,6 +81,45 @@ describe('publication.json', () => {
     expect(config.gbrain.footnote).toMatch(/not current master.*rerun.*current master.*A23/);
   });
 
+  test('the sealed source lists the 122 units with rows under their freezes, and each not-run cell says why in its own words', () => {
+    const sealed = config.sources.find(s => s.campaign.endsWith('q1-scoreboard-sealed.json'))!;
+    expect(sealed.states!.map(s => s.dir)).toEqual(['a17', 'a22', 'a23', 'a24']);
+    const units = sealed.states!.flatMap(s => s.units);
+    expect(units).toHaveLength(122);
+    expect(new Set(units).size).toBe(122);
+    for (const u of units) expect(unitCell(u, m.cells)).toBeDefined();
+    const verbatim = 'the harness has no common-config adapter for this system at this freeze (diagnostic config only)';
+    expect(config.not_run['s2a.ext-verbatim-session.common']).toBe(verbatim);
+    expect(config.not_run['s3.ext-verbatim-session.common']).toBe(verbatim);
+    expect(config.not_run['s2b.ext-markdown-kb.recipe']).toBe('projected about 60 h > cell wall clock on the pinned VM');
+    expect(config.not_run['s1.ext-markdown-kb.recipe']).toStartWith('projected ~61 h > 48 h limit');
+    expect(config.not_run['s1.ext-graph-pipeline.common']).toStartWith("the product's own behavior (A23)");
+    for (const id of Object.keys(config.not_run)) expect(m.cells.some(c => c.id === id)).toBe(true);
+    expect(units.filter(u => unitCell(u, m.cells)!.id in config.not_run)).toEqual(['s1.ext-graph-pipeline.common.c2']);
+  });
+
+  test("S2b whole-think's 10 Sol answers at gbrain's own output limit are product failures, and the shipped-defaults view derives from its 8k arm", () => {
+    expect(config.product_outcomes).toEqual([expect.objectContaining({ cell: 's2b.gbrain-defaults.full-surface.whole-think', reader: 'openai:gpt-6.1-sol', outcome: 'harness_invalid', count: 10 })]);
+    expect(m.cells.some(c => c.arms.some(a => a.cell_id === config.product_outcomes[0].cell))).toBe(true);
+    const v = config.sensitivity.find(x => x.id === 'a24-shipped-defaults-harness-invalid')!;
+    expect(v.sets).toEqual(['S1']);
+    expect(v.question_ids).toEqual([]);
+    expect(v.from_outcomes).toEqual({ cell: 's1.gbrain-defaults.shipped-defaults.component-b8000', outcomes: ['harness_invalid'], count: 10 });
+    expect(m.cells.some(c => c.arms.some(a => a.cell_id === v.from_outcomes!.cell))).toBe(true);
+    expect(config.disclosures.find(d => d.startsWith('gbrain-defaults full-surface S2b'))).toMatch(/4,000 output tokens.*output_truncated.*product failures, scored 0/);
+    expect(config.disclosures.find(d => d.startsWith('gbrain-defaults shipped-defaults S1'))).toMatch(/9 failed as .*degraded read.*8 .expansion_not_applied., 1 .expansion_partial.*the tenth, c4 vendor-default, scored/);
+  });
+
+  test('the disclosures carry the settled spend and unit counts, never the interim S2b figures', () => {
+    const all = config.disclosures.join('\n');
+    expect(all).toContain('$7,034.32 on the campaign ledgers ($6,729.26 measured) against the $8,000 sealed cap');
+    expect(all).toContain('Of 149 launch units, 114 settled complete, 8 partial and 27 not run');
+    expect(all).toContain('1,960 of 2,140 gpt-6.1-sol frontier judgments');
+    expect(all).toContain('194 of 214 Opus redos landed');
+    expect(all).not.toMatch(/\$19\.29|about \$89|interim/);
+    expect(config.published.url).toContain('/published/q1-scoreboard');
+  });
+
   test('temporal-graph is retired with option 1: S1 on c0-c7, the not-run reason, the subset view and the F6 retest', () => {
     expect(config.retired).toHaveLength(1);
     const r = config.retired[0];
