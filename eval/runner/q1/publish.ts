@@ -73,7 +73,8 @@ export interface Publication {
   campaign_id: string; campaign_hash: string;
   /** Where the full receipt is published: a path on the results branch, the branch commit that holds it, and the
    * sha256 of its SHA256SUMS file (every file's sha256, sorted by path). Filled when the receipt is pushed. */
-  published: { branch: string; path: string; url: string; commit: string | null; sha256: string | null };
+  /** aggregates_only: the receipt stays in custody, and the public tables link to the render target on main instead of the results branch. */
+  published: { branch: string; path: string; url: string; commit: string | null; sha256: string | null; aggregates_only?: boolean };
   /** The GBrain build the main rows measured, and the footnote every rendering of them carries. */
   gbrain: CampaignManifest['gbrain'] & { footnote: string };
   hedge_classifier: string;
@@ -304,7 +305,7 @@ export function assemble(config: Publication, results: string, out: string, tree
     hedge_classifier: config.hedge_classifier, sets, cells, families, ...(appendix.length ? { appendix } : {}),
     ...(retired.length ? { retired: retired.map(r => ({ system: r.system, reason: r.reason, subset: { sets: r.sets, conversations: r.conversations, label: r.subset.label, reason: r.subset.reason } })) } : {}),
     pins: Object.entries(pins).filter(([k]) => m.cells.some(c => c.system === k) && k.startsWith('ext-')).map(([system, version]) => ({ system, version, latest_release: null })),
-    release_assets: [], ...(preview ? {} : { receipt_base: config.published.url }), disclosures: [...(preview ? [PREVIEW_DISCLOSURE] : []), `GBrain rows measure ${label}. ${config.gbrain.footnote}`, ...config.disclosures], render_targets: preview ? [] : config.render_targets,
+    release_assets: [], ...(preview ? {} : config.published.aggregates_only ? { tables: config.render_targets.find(x => x.endsWith('/scoreboard.md')) } : { receipt_base: config.published.url }), disclosures: [...(preview ? [PREVIEW_DISCLOSURE] : []), `GBrain rows measure ${label}. ${config.gbrain.footnote}`, ...config.disclosures], render_targets: preview ? [] : config.render_targets,
   };
   writeFileSync(join(out, 'campaign.json'), JSON.stringify(campaign, null, 2) + '\n');
   cpSync(join(REPO_ROOT, 'docs/benchmarks/2026-10-06-scoreboard/power.json'), join(out, 'power.json'));

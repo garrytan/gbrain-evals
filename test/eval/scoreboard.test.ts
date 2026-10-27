@@ -835,3 +835,31 @@ describe('sealed ids never reach a public file; aggregate publication', () => {
     rmSync(work, { recursive: true });
   });
 });
+
+describe('aggregates-only links', () => {
+  test('with campaign.tables, README and the public tables link to the tables on main, never to a receipt path, and the header says the receipt stays in custody', () => {
+    const work = mkdtempSync(join(tmpdir(), 'agg-'));
+    const readme = join(work, 'README.md');
+    const tables = join(work, 'docs', 'scoreboard.md');
+    writeFileSync(readme, 'intro\n' + README_BEGIN + '\n' + README_END + '\n');
+    const dir = mkdtempSync(join(tmpdir(), 'scoreboard-agg-'));
+    writeSyntheticReceipt(dir, { renderTargets: [readme, tables] });
+    editJson(join(dir, 'campaign.json'), c => { c.receipt_base = 'https://example.invalid/receipt'; c.tables = tables; });
+    const files = renderAll(dir, deriveAll(dir), loadCampaign(dir).campaign).files;
+    for (const f of files) { mkdirSync(dirname(f.path), { recursive: true }); writeFileSync(f.path, f.text); }
+    const block = readFileSync(readme, 'utf8');
+    expect(block).toContain('[cell](docs/scoreboard.md#cells)');
+    expect(block).toContain('[scoreboard report](docs/scoreboard.md).');
+    expect(block).not.toContain('example.invalid');
+    expect(block).not.toContain('/cells/');
+    const md = readFileSync(tables, 'utf8');
+    expect(md).toContain("in custody from the sealed receipt's rows, answers and judgments, which stay in custody");
+    expect(md).toContain('[cell](scoreboard.md#cells)');
+    expect(md).toContain('\n## Cells\n');
+    expect(md).not.toContain('example.invalid');
+    expect(readFileSync(join(dir, 'scoreboard.md'), 'utf8')).toContain("from this directory's rows");
+    expect(checkReceipt(dir, {}).messages).toEqual([]);
+    rmSync(dir, { recursive: true });
+    rmSync(work, { recursive: true });
+  });
+});
