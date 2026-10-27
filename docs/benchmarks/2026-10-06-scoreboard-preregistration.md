@@ -1388,7 +1388,8 @@ A23 set them. Each fix has a test that fails on the A23 code and passes on this 
 ### 2026-10-27: render rulings after the sealed campaign settled (no re-freeze)
 
 The sealed campaign settled: 149 launch units, 114 complete, 8 partial and 27 not run, $7,034.32 on the campaign
-ledgers ($6,729.26 measured) against the $8,000 cap. These rulings are recorded outside the hashed tree; the sealed
+ledgers against the $8,000 cap, of which $6,729.26 is measured ($6,626.00 across the four freezes' cells plus $103.26
+for the A19 frontier-judge backfill). These rulings are recorded outside the hashed tree; the sealed
 campaign stays at `a92b06c5`, and no cell's configuration changes. They replace the 2026-10-26 drafts and interim
 figures below.
 
@@ -1404,7 +1405,9 @@ figures below.
   reasoning-model list (`maxOutputTokensFor`: 16,000 for Claude 5, Claude 4.x, gpt-5, the o-series and recipes that
   declare thinking by default; 4,000 otherwise), and gbrain's own path flags the stop `output_truncated`; the shim
   records any status other than an answer as `harness_invalid`. Under the owner's rule (gbrain's own limit, flagged by
-  its own path, is product behavior), they render as product failures, scored 0 and kept in the denominator
+  its own path, is product behavior; attributed from that code, the custodian's count of 10 stops at exactly 4,000
+  output tokens and a $0 repro of the limit, since the pulled lease logs do not keep the shim's status field), they
+  render as product failures, scored 0 and kept in the denominator
   (`product_outcomes`, refused at any other count), with a footnote. They are not grouped with the shipped-defaults
   answers below. gbrain #7421 (2026-10-24, after the pin) extends the 16,000-token limit to OpenAI reasoning models
   from gpt-5 to gpt-9.
@@ -1418,8 +1421,13 @@ figures below.
   published arm). A redo replaces the logged record under the same key and may never hold a canonical judgment.
 - **S3 rows.** file-agent's 23 gpt-6.1-sol `reader_error` answers are harness failures. The agent runtime's 200
   gpt-6.1-sol `retrieval_error` answers stand as the runtime's failure (A19, item E): no alternative ran.
-- **Receipt.** Every render writes `SHA256SUMS`, and `scoreboard.ts check --commit <commit>` reads the published receipt
-  at that results-branch commit and refuses a `SHA256SUMS` hash other than the one `publication.json` records.
+- **Receipt.** Every render writes `SHA256SUMS`, with one line per public render target, and its hash is the public
+  commitment. `scoreboard.ts check --commit <commit>` reads the published receipt at that results-branch commit and
+  refuses a `SHA256SUMS` hash other than the one `publication.json` records; `check --sums <file>` checks the committed
+  public tables against it without the receipt, and `check --custody` checks the full receipt where it lives, without
+  the size budget. Public files print exclusions as counts by reason, and the renderer refuses a public file that would
+  print a sealed set's question id (`publish.ts` marks each held-out set `sealed`). What the results branch receives,
+  the full receipt or the aggregates and this commitment, is the owner's call.
 
 ### 2026-10-26: publication rulings after A24 (no re-freeze)
 

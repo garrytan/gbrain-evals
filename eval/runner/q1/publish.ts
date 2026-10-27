@@ -5,7 +5,7 @@
  *
  *   bun eval/runner/q1/publish.ts --config docs/benchmarks/2026-10-06-scoreboard/publication.json \
  *     --results <dir holding each campaign's state directory, by campaign id> --out <receipt dir> [--trees <dir>]
- *     [--custody] [--frontier-redo <judgments file>]...
+ *     [--custody] [--frontier-redo <judgments file or directory of .ndjson files>]...
  *
  * For every source in the config it:
  *   1. checks out the campaign's launch tree (a detached worktree under --trees), because each campaign renders
@@ -40,7 +40,7 @@
  * place of the logged error under the same key.
  */
 import { execFileSync, spawnSync } from 'node:child_process';
-import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, relative, resolve } from 'node:path';
 import { loadSplit } from '../decisions/splits.ts';
@@ -256,7 +256,7 @@ export function assemble(config: Publication, results: string, out: string, tree
     return {
       id: s.id, label: s.label, benchmark: s.benchmark, exposure: s.exposure as CampaignSet['exposure'], role: s.role as CampaignSet['role'],
       cluster_unit: s.benchmark.startsWith('lme') ? 'question' as const : 'conversation' as const, claim_min_clusters: s.role === 'headline' ? 9 : 0,
-      scheduled, exclusions: open ? s.exclusions : [], ...(views.length ? { sensitivity: views } : {}),
+      scheduled, exclusions: open ? s.exclusions : [], ...(views.length ? { sensitivity: views } : {}), ...(PUBLIC_CORPUS.has(s.benchmark) ? {} : { sealed: true }),
     };
   });
 
@@ -299,7 +299,7 @@ if (import.meta.main) {
   const one = (n: string) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : undefined; };
   const config = one('--config'), results = one('--results'), out = one('--out');
   if (!config || !results || !out) { console.error('usage: publish.ts --config <publication.json> --results <dir> --out <receipt dir> [--trees <dir>] [--preview] [--custody] [--frontier-redo <file>]...'); process.exit(2); }
-  const many = (n: string) => argv.flatMap((a, i) => (a === n && argv[i + 1] ? [resolve(argv[i + 1])] : []));
+  const many = (n: string) => argv.flatMap((a, i) => (a === n && argv[i + 1] ? [resolve(argv[i + 1])] : [])).flatMap(p => (statSync(p).isDirectory() ? readdirSync(p).filter(f => f.endsWith('.ndjson')).sort().map(f => join(p, f)) : [p]));
   const c = assemble(JSON.parse(readFileSync(resolve(config), 'utf8')) as Publication, resolve(results), resolve(out), resolve(one('--trees') ?? join(tmpdir(), 'q1-publish-trees')), { preview: argv.includes('--preview'), custody: argv.includes('--custody'), frontierRedo: many('--frontier-redo') });
   const n = (s: string) => c.cells.filter(x => x.status === s).length;
   console.log(`receipt ${relative(process.cwd(), resolve(out)) || '.'}: ${c.cells.length} cells (${n('complete')} with rows, ${n('invalid')} invalid, ${n('not-run')} not run), ${c.appendix?.length ?? 0} appendix cells, ${readdirSync(resolve(out)).length} entries`);

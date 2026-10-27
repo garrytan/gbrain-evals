@@ -112,7 +112,8 @@ describe('publication.json', () => {
 
   test('the disclosures carry the settled spend and unit counts, never the interim S2b figures', () => {
     const all = config.disclosures.join('\n');
-    expect(all).toContain('$7,034.32 on the campaign ledgers ($6,729.26 measured) against the $8,000 sealed cap');
+    expect(all).toContain("$7,034.32 on the campaign ledgers against the $8,000 sealed cap; $6,729.26 of it is measured: $6,626.00 across the four freezes' cells (A17, A22, A23 and A24) plus $103.26 for the A19 frontier-judge backfill");
+    expect(config.disclosures.find(d => d.startsWith('gbrain-defaults full-surface S2b'))).toMatch(/exactly 4,000 output tokens\) and a keyless \$0 repro.*not observed/);
     expect(all).toContain('Of 149 launch units, 114 settled complete, 8 partial and 27 not run');
     expect(all).toContain('1,960 of 2,140 gpt-6.1-sol frontier judgments');
     expect(all).toContain('194 of 214 Opus redos landed');

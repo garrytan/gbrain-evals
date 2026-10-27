@@ -12,7 +12,7 @@ import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, truncateSync, wri
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { gunzipSync, gzipSync } from 'node:zlib';
-import { checkPinTable, checkReceipt, checkSize, derive, deriveAll, explain, FRONTIER_REDO_FILE, README_BEGIN, README_END, receiptAtCommit, renderAll, renderHeadline, loadCampaign, SUMS_FILE, type CampaignManifest, type Scoreboard } from '../../eval/runner/scoreboard.ts';
+import { checkPinTable, checkReceipt, checkSize, checkSums, derive, deriveAll, explain, FRONTIER_REDO_FILE, README_BEGIN, README_END, receiptAtCommit, renderAll, renderHeadline, loadCampaign, SUMS_FILE, type CampaignManifest, type Scoreboard } from '../../eval/runner/scoreboard.ts';
 import { classify, classifyV3, CLASSIFIER_VERSION, CLASSIFIER_VERSION_V3, RULES_SHA256, RULES_SHA256_V3 } from '../../eval/runner/q1/hedge.ts';
 import { defaultCells, fieldCells, READERS, writeSyntheticReceipt, type SyntheticOptions } from './fixtures/scoreboard/synthetic.ts';
 
@@ -174,7 +174,9 @@ describe('cohorts, estimand and claim rules', () => {
     const { dir, sb } = fresh();
     expect(sb.sets[0].preregistered_exclusions).toEqual([{ question_id: '10m-c1:q0', reason: 'gold entered an agent context (exposure record)' }]);
     expect(sb.cells.find(c => c.cell_id === 's1-gbrain-8k')!.scheduled).toBe(59);
-    expect(readFileSync(join(dir, 'scoreboard.md'), 'utf8')).toContain('10m-c1:q0 (gold entered an agent context (exposure record))');
+    const md = readFileSync(join(dir, 'scoreboard.md'), 'utf8');
+    expect(md).toContain('- BEAM-10M, preregistered (1): 1 gold entered an agent context (exposure record)');
+    expect(md).not.toContain('10m-c1:q0');
     rmSync(dir, { recursive: true });
   });
 
@@ -320,7 +322,8 @@ describe('appendix rows and sensitivity views (v6)', () => {
     expect(sb.sensitivity_notes).toEqual([{ set: 'S2a', id: 'repeats', label: 'without repeated sessions', reason: 'these haystacks repeat a session.', question_ids: out }]);
     const md = readFileSync(join(dir, 'scoreboard.md'), 'utf8');
     expect(md).toContain('## Sensitivity views');
-    expect(md).toContain(`Excluded: ${out.join(', ')}.`);
+    expect(md).toContain(`Excluded: ${out.length} questions.`);
+    for (const q of out) expect(md).not.toContain(q);
     expect(md).toContain('## Appendix: found and fixed');
     expect(md).toContain('| `s2a-gbrain-8k` | S2a | `gbrain-defaults` | GBrain 0.60.95.0 (c5fb0201, 2026-10-01) |');
     expect(checkReceipt(dir, {}).messages).toEqual([]);
@@ -741,6 +744,93 @@ describe('A24 render: product outcomes, frontier agreement, SHA256SUMS and the r
     expect(() => receiptAtCommit(tree, pub)).toThrow(/SHA256SUMS at .* hashes to .*, publication\.json records 0{64}/);
     published('1'.repeat(40), sums);
     expect(() => receiptAtCommit(tree, pub)).toThrow(/publication\.json records results commit 1{40}, not /);
+    rmSync(dir, { recursive: true });
+    rmSync(work, { recursive: true });
+  });
+});
+
+describe('sealed ids never reach a public file; aggregate publication', () => {
+  const sealedReceipt = (renderTargets: string[] = []) => {
+    const cells = defaultCells().map(c => (c.id === 's1-file-agent' ? { ...c, harnessFail: [2, 3, 7] } : c.id === 's1-hybrid-8k' ? { ...c, doesNotFit: { questions: [4], readers: ['claude-opus-5-5'] } } : c));
+    const dir = mkdtempSync(join(tmpdir(), 'scoreboard-sealed-'));
+    writeSyntheticReceipt(dir, { cells, renderTargets });
+    editJson(join(dir, 'campaign.json'), c => {
+      const s1 = c.sets.find(s => s.id === 'S1')!;
+      s1.sealed = true;
+      s1.sensitivity = [{ id: 'held', label: 'without three questions', reason: 'a view by question.', question_ids: [s1.scheduled[5].question_id, s1.scheduled[11].question_id, s1.scheduled[17].question_id] }];
+    });
+    return dir;
+  };
+  const render = (dir: string) => { const d = deriveAll(dir); const files = renderAll(dir, d, loadCampaign(dir).campaign).files; for (const f of files) { mkdirSync(dirname(f.path), { recursive: true }); writeFileSync(f.path, f.text); } return files; };
+
+  test('exclusion, preregistered and view lists print counts by reason, and no sealed question id appears in any public file', () => {
+    const readme = join(mkdtempSync(join(tmpdir(), 'readme-')), 'README.md');
+    writeFileSync(readme, 'x\n' + README_BEGIN + '\n' + README_END + '\n');
+    const dir = sealedReceipt([readme]);
+    const files = render(dir);
+    const ids = loadCampaign(dir).campaign.sets.find(s => s.id === 'S1')!.scheduled.map(q => q.question_id);
+    const pub = files.filter(f => f.path.endsWith('.md'));
+    expect(pub.map(f => f.path).sort()).toEqual([readme, join(dir, 'scoreboard.md')].sort());
+    for (const f of pub) for (const id of ids) expect(f.text).not.toContain(id);
+    const md = readFileSync(join(dir, 'scoreboard.md'), 'utf8');
+    expect(md).toContain('Counts by reason; question ids stay in the receipt.');
+    expect(md).toContain('- BEAM-10M, preregistered (1): 1 gold entered an agent context (exposure record)');
+    expect(md).toContain('Excluded: 3 questions.');
+    expect(md).toMatch(/- .s1-file-agent. \(\d+\): \d+ baseline-file-agent: harness: reader_error/);
+    expect(readFileSync(join(dir, 'scoreboard.json'), 'utf8')).toContain(ids[2]);
+    expect(checkReceipt(dir, {}).messages).toEqual([]);
+    rmSync(dir, { recursive: true });
+  });
+
+  test('a render that would print a sealed id is refused without naming it, and nothing is written', () => {
+    const dir = sealedReceipt();
+    const id = loadCampaign(dir).campaign.sets.find(s => s.id === 'S1')!.scheduled[3].question_id;
+    editJson(join(dir, 'campaign.json'), c => { c.disclosures = [...c.disclosures, 'see ' + id]; });
+    let err: unknown;
+    try { renderAll(dir, deriveAll(dir), loadCampaign(dir).campaign); } catch (e) { err = e; }
+    expect((err as { op: { code: string; message: string } }).op.code).toBe('SEALED_ID_IN_PUBLIC_FILE');
+    expect((err as { op: { message: string } }).op.message).toMatch(/scoreboard\.md would print 1 question id of a sealed set/);
+    expect((err as { op: { message: string } }).op.message).not.toContain(id);
+    editJson(join(dir, 'campaign.json'), c => { c.sets.find(s => s.id === 'S1')!.sealed = false; });
+    expect(() => renderAll(dir, deriveAll(dir), loadCampaign(dir).campaign)).not.toThrow();
+    rmSync(dir, { recursive: true });
+  });
+
+  test('SHA256SUMS commits the public render targets, check --sums verifies them without the receipt, and a custody check skips only the size budget', () => {
+    const work = mkdtempSync(join(tmpdir(), 'public-'));
+    const readme = join(work, 'README.md');
+    const tables = join(work, 'bench', 'scoreboard.md');
+    writeFileSync(readme, 'intro\n' + README_BEGIN + '\n' + README_END + '\nrest\n');
+    const dir = sealedReceipt([readme, tables]);
+    editJson(join(dir, 'campaign.json'), c => { c.receipt_base = 'https://example.invalid/receipt'; });
+    render(dir);
+    const sums = readFileSync(join(dir, SUMS_FILE), 'utf8');
+    const lines = sums.trimEnd().split('\n').map(l => l.split('  '));
+    const sha = (x: string | Buffer) => createHash('sha256').update(x).digest('hex');
+    const block = readFileSync(readme, 'utf8').split(README_BEGIN + '\n')[1].split(README_END)[0];
+    expect(lines).toContainEqual([sha(block), 'render/' + readme + '#scoreboard:headline']);
+    expect(lines).toContainEqual([sha(readFileSync(tables)), 'render/' + tables]);
+    expect(readFileSync(tables, 'utf8')).toContain('[the receipt](https://example.invalid/receipt)');
+    const pub = join(work, 'publication.json');
+    const published = (sha256: string) => writeFileSync(pub, JSON.stringify({ published: { branch: 'b', path: 'p', url: 'u', commit: null, sha256 } }));
+    const copy = join(work, SUMS_FILE);
+    writeFileSync(copy, sums);
+    published(sha(sums));
+    expect(checkSums(copy, pub)).toMatchObject({ ok: true, messages: [], notes: ['2 rendered public file(s) match SHA256SUMS'] });
+    writeFileSync(readme, readFileSync(readme, 'utf8').replace('intro', 'edited intro'));
+    expect(checkSums(copy, pub).ok).toBe(true);
+    writeFileSync(tables, readFileSync(tables, 'utf8') + 'hand edit\n');
+    expect(checkSums(copy, pub).messages.map(m => [m.code, m.message])).toEqual([['SCOREBOARD_STALE', tables + ' does not match the published SHA256SUMS']]);
+    published('0'.repeat(64));
+    expect(checkSums(copy, pub).messages.map(m => m.code)).toEqual(['RECEIPT_INVALID', 'SCOREBOARD_STALE']);
+    render(dir);
+    writeFileSync(join(dir, 'big.bin'), '');
+    truncateSync(join(dir, 'big.bin'), 61 * 1024 * 1024);
+    render(dir);
+    expect(codes(dir)).toEqual(['RECEIPT_TOO_LARGE', 'RECEIPT_TOO_LARGE']);
+    const custody = checkReceipt(dir, {}, { custody: true });
+    expect(custody.messages).toEqual([]);
+    expect(custody.notes[0]).toStartWith('size budget not applied');
     rmSync(dir, { recursive: true });
     rmSync(work, { recursive: true });
   });

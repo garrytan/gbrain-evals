@@ -106,6 +106,9 @@ three: it reads `published/q1-scoreboard/` at that results-branch commit, refuse
      models and to recipes that declare thinking by default; gpt-6.1-sol gets the 4,000 default
      (`src/core/think/index.ts` `maxOutputTokensFor`). gbrain's own path labels that stop `output_truncated`, and the
      shim records any status other than an answer as `harness_invalid`, which is why the record named no reason. The
+     attribution rests on that code, the custodian's count (all 10 stopped at exactly 4,000 output tokens) and a
+     keyless $0 repro of the limit (`maxOutputTokensFor('openai:gpt-6.1-sol')` returns 4,000 at the pin); the pulled
+     lease logs do not keep the shim's status field, so the `output_truncated` label itself was not observed. The
      limit and the flag are gbrain's shipped behavior with this model, so the 10 count as product failures, scored 0
      and kept in the denominator (`publication.json` `product_outcomes`; the renderer refuses any other count). gbrain
      #7421 (2026-10-24, after the pin) extends the 16,000-token limit to OpenAI reasoning models from gpt-5 to gpt-9.
@@ -131,8 +134,8 @@ three: it reads `published/q1-scoreboard/` at that results-branch commit, refuse
      on (Garry 2026-10-17 via GBRA-108: rec). A conversation settled before then and flagged `ingest_degraded` by a
      probe miss with 0 failed sessions keeps its flag, with a note that the old probe's passage started past the
      product's embedder window. verbatim-session c1 and c5 are two of these.
-   - **Spend.** Sealed spend settled at $7,034.32 on the campaign ledgers ($6,729.26 measured) against the $8,000
-     sealed cap; of 149 launch units, 114 settled complete, 8 partial and 27 not run. S2b full-context was underpriced:
+   - **Spend.** Sealed spend settled at $7,034.32 on the campaign ledgers against the $8,000 sealed cap; $6,729.26 of it
+     is measured, $6,626.00 across the four freezes' cells plus $103.26 for the A19 frontier-judge backfill. Of 149 launch units, 114 settled complete, 8 partial and 27 not run. S2b full-context was underpriced:
      A23 priced each gpt-6.1-sol whole-history reading's reservation from its token estimate, but the metering proxy
      reserves the request's byte count as input tokens, about 3.6 times as much, so the $20 lease admitted one reading
      at a time. The lease was raised to $110 inside the A24 cap and the cell resumed; it settled complete, 720 of 720

@@ -241,6 +241,8 @@ export interface CampaignSet {
   exclusions: Array<{ question_id: string; reason: string }>;
   /** Sensitivity views: every cell on the set is also reported without these questions (for example A21's repeated LongMemEval-S sessions), and, with `conversations`, only on those conversations; never a claim. */
   sensitivity?: Array<{ id: string; label: string; reason: string; question_ids: string[]; conversations?: string[] }>;
+  /** A held-out set (publish.ts marks every corpus outside the public ones): none of its question ids may appear in a rendered public file. */
+  sealed?: boolean;
 }
 /** A row measured on part of its set: the conversations it is scheduled on, the label the report prints after `on`, and why. Its comparisons never claim. */
 export interface CellSubset { conversations: string[]; label: string; reason: string }
@@ -292,7 +294,7 @@ export interface CostSpeedFile {
 
 // ─── Operator messages ──────────────────────────────────────────────
 
-export type ScoreboardCode = 'RECEIPT_MISSING' | 'RECEIPT_INVALID' | 'SCOREBOARD_STALE' | 'PIN_TABLE_MISMATCH' | 'RECEIPT_TOO_LARGE' | 'ASSET_HASH_MISMATCH' | 'SECRET_IN_RECEIPT' | 'EXPLAIN_UNKNOWN' | 'USAGE';
+export type ScoreboardCode = 'RECEIPT_MISSING' | 'RECEIPT_INVALID' | 'SCOREBOARD_STALE' | 'PIN_TABLE_MISMATCH' | 'RECEIPT_TOO_LARGE' | 'ASSET_HASH_MISMATCH' | 'SECRET_IN_RECEIPT' | 'SEALED_ID_IN_PUBLIC_FILE' | 'EXPLAIN_UNKNOWN' | 'USAGE';
 export type ScoreboardMessage = Omit<OperatorMessage, 'code'> & { code: ScoreboardCode };
 
 export class ScoreboardError extends Error {
@@ -1070,7 +1072,7 @@ export function renderReport(sb: Scoreboard, base = '.'): string {
     out.push('', '## Sensitivity views', '', 'Each cell on a set with a sensitivity view is also reported without that view\'s questions. Descriptive only: no comparison, family or claim uses these rows.', '');
     for (const s of sb.sets) for (const v of (sb.cells.find(c => c.set === s.id && c.sensitivity.length)?.sensitivity ?? [])) {
       const why = sb.sensitivity_notes.find(n => n.set === s.id && n.id === v.id);
-      out.push(`- ${s.label}, ${v.label}${why ? `: ${why.reason}${why.conversations ? ` Conversations kept: ${why.conversations.join(', ')}.` : ''}${why.question_ids.length || !why.conversations ? ` Excluded: ${why.question_ids.join(', ')}.` : ''}` : '.'}`);
+      out.push(`- ${s.label}, ${v.label}${why ? `: ${why.reason}${why.conversations ? ` Conversations kept: ${why.conversations.join(', ')}.` : ''}${why.question_ids.length || !why.conversations ? ` Excluded: ${why.question_ids.length} question${why.question_ids.length === 1 ? '' : 's'}.` : ''}` : '.'}`);
     }
     out.push('', '| Cell | Set | System | Build | Accuracy, all questions | View | Accuracy without the view\'s questions |', '|---|---|---|---|---|---|---|');
     for (const c of views) for (const v of c.sensitivity) out.push(`| \`${c.cell_id}\` | ${c.set} | \`${c.system}\` | ${c.pin ? cellText(c.pin) : 'n/a'} | ${num(c.mean, pct)} (${c.valued}/${c.scheduled}) | ${cellText(v.label)} | ${num(v.mean, pct)} (${v.valued}/${v.scheduled}) |`);
@@ -1102,8 +1104,10 @@ export function renderReport(sb: Scoreboard, base = '.'): string {
   out.push('', '## Claim sentences', '');
   for (const c of sb.comparisons) out.push(`- \`${c.id}\`: ${c.sentence}`);
   out.push('', '## Exclusions', '');
-  for (const c of sb.comparisons.filter(x => x.cohort?.excluded.length)) out.push(`- \`${c.id}\` (${c.cohort!.excluded.length}): ${c.cohort!.excluded.map(e => `${e.question_id} (${e.reason})`).join(', ')}`);
-  for (const s of sb.sets.filter(x => x.preregistered_exclusions.length)) out.push(`- ${s.label}, preregistered: ${s.preregistered_exclusions.map(e => `${e.question_id} (${e.reason})`).join(', ')}`);
+  const byReason = (xs: Array<{ reason: string }>) => [...xs.reduce((m, x) => m.set(x.reason, (m.get(x.reason) ?? 0) + 1), new Map<string, number>())].sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1)).map(([r, n]) => `${n} ${r}`).join('; ');
+  out.push('Counts by reason; question ids stay in the receipt.', '');
+  for (const c of sb.comparisons.filter(x => x.cohort?.excluded.length)) out.push(`- \`${c.id}\` (${c.cohort!.excluded.length}): ${byReason(c.cohort!.excluded)}`);
+  for (const s of sb.sets.filter(x => x.preregistered_exclusions.length)) out.push(`- ${s.label}, preregistered (${s.preregistered_exclusions.length}): ${byReason(s.preregistered_exclusions)}`);
   if (sb.appendix.length) {
     for (const kind of [...new Set(sb.appendix.map(a => a.appendix))]) {
       const rows = sb.appendix.filter(a => a.appendix === kind);
@@ -1142,26 +1146,72 @@ export function strayHedgeFiles(receipt: string, campaign: CampaignManifest, ren
 export function renderAll(receipt: string, d: Derivation, campaign: CampaignManifest): Rendered {
   const sb = d.scoreboard;
   const files = [{ path: join(receipt, 'scoreboard.json'), text: scoreboardJson(sb) }, { path: join(receipt, 'scoreboard.md'), text: renderReport(sb) }, ...d.hedge.map(h => ({ path: join(receipt, HEDGE_FILE.replace('<cell_id>', h.cell_id)), text: h.text }))];
+  const commitments: Array<{ name: string; text: string }> = [];
   for (const t of campaign.render_targets) {
     const path = resolve(ROOT, t);
     const base = campaign.receipt_base ?? relative(dirname(path), receipt);
-    if (t.endsWith('/scoreboard.md')) { files.push({ path, text: renderReport(sb, base) }); continue; }
+    if (t.endsWith('/scoreboard.md')) { const text = renderReport(sb, base); files.push({ path, text }); commitments.push({ name: `render/${t}`, text }); continue; }
     const current = existsSync(path) ? readFileSync(path, 'utf8') : '';
-    const next = replaceBlock(current, renderHeadline(sb, base));
+    const block = renderHeadline(sb, base);
+    commitments.push({ name: `render/${t}#scoreboard:headline`, text: block });
+    const next = replaceBlock(current, block);
     if (next === null) throw invalid(receipt, `${t} has no ${README_BEGIN} … ${README_END} block`, 'the README headline is generated into a marked block so check can compare it byte for byte', { next: 'report', user_message: `add the two marker lines to ${t} where the headline belongs, then run render` });
     files.push({ path, text: next });
   }
-  files.push({ path: join(receipt, SUMS_FILE), text: sha256Sums(receipt, files) });
+  const sealedIds = campaign.sets.filter(s => s.sealed).flatMap(s => s.scheduled.map(q => q.question_id));
+  for (const f of files.filter(x => x.path.endsWith('.md') || campaign.render_targets.some(t => resolve(ROOT, t) === x.path))) {
+    const n = sealedIds.filter(id => f.text.includes(id)).length;
+    if (n) throw new ScoreboardError({ code: 'SEALED_ID_IN_PUBLIC_FILE', message: `${rel(f.path)} would print ${n} question id${n === 1 ? '' : 's'} of a sealed set`, why: 'a held-out set\'s question ids stay in custody; public files carry counts by reason', fix: { next: 'report', user_message: 'find the table or disclosure that prints question ids and make it print counts; nothing was written', verify: checkArgv(receipt) } });
+  }
+  files.push({ path: join(receipt, SUMS_FILE), text: sha256Sums(receipt, files, commitments) });
   return { files };
 }
 
-/** The receipt's file list: every file's sha256 and its path relative to the receipt, sorted by path, rendered files at their rendered bytes. */
+/**
+ * The receipt's file list: every file's sha256 and its path relative to the receipt, sorted by path, rendered files at
+ * their rendered bytes, plus one `render/<target>› line per public render target (the full file, or for a README the
+ * headline block between its markers). Its sha256 is the public commitment: `check --sums› recomputes the render lines
+ * from the committed public files without the receipt.
+ */
 export const SUMS_FILE = 'SHA256SUMS';
-export function sha256Sums(receipt: string, rendered: Array<{ path: string; text: string }>): string {
+export function sha256Sums(receipt: string, rendered: Array<{ path: string; text: string }>, commitments: Array<{ name: string; text: string }> = []): string {
   const text = new Map(rendered.filter(f => f.path.startsWith(receipt + '/')).map(f => [f.path, f.text]));
   const paths = new Set([...treeSize(receipt).map(f => f.path).filter(p => text.has(p) || !p.endsWith('/derived/hedge.ndjson')), ...text.keys()]);
   paths.delete(join(receipt, SUMS_FILE));
-  return [...paths].map(p => relative(receipt, p)).sort().map(rp => { const p = join(receipt, rp); return `${sha256(text.get(p) ?? readFileSync(p))}  ${rp}\n`; }).join('');
+  const lines = new Map([...paths].map(p => [relative(receipt, p), sha256(text.get(p) ?? readFileSync(p))]));
+  for (const c of commitments) lines.set(c.name, sha256(c.text));
+  return [...lines.keys()].sort().map(rp => `${lines.get(rp)}  ${rp}\n`).join('');
+}
+
+/** A render target's committed public text as SHA256SUMS commits it: the full file, or the README headline block. */
+function committedRender(name: string): string | null {
+  const [t, block] = name.slice('render/'.length).split('#');
+  const path = resolve(ROOT, t);
+  if (!existsSync(path)) return null;
+  const text = readFileSync(path, 'utf8');
+  if (!block) return text;
+  const a = text.indexOf(README_BEGIN), b = text.indexOf(README_END);
+  return a < 0 || b < a ? null : text.slice(a + README_BEGIN.length + 1, b);
+}
+
+/**
+ * The public check of an aggregate publication: the SHA256SUMS file hashes to publication.json's `published.sha256›,
+ * and every `render/› line matches the committed public file it names. The full receipt is checked in custody.
+ */
+export function checkSums(sums: string, publicationPath = join(ROOT, 'docs/benchmarks/2026-10-06-scoreboard/publication.json')): CheckResult {
+  const pub = (JSON.parse(readFileSync(publicationPath, 'utf8')) as { published: { sha256: string | null } }).published;
+  const verify = ['bun', 'eval/runner/scoreboard.ts', 'check', '--sums', rel(sums)];
+  const messages: ScoreboardMessage[] = [];
+  const text = readFileSync(sums);
+  if (sha256(text) !== pub.sha256) messages.push({ code: 'RECEIPT_INVALID', message: `${rel(sums)} hashes to ${sha256(text)}, publication.json records ${pub.sha256 ?? 'none'}`, why: 'the public tables are pinned by the SHA256SUMS hash publication.json records', fix: { next: 'report', user_message: 'find out which side changed before anything else', verify } });
+  const renders = text.toString('utf8').split('\n').filter(Boolean).map(l => l.split('  ')).filter(([, name]) => name?.startsWith('render/'));
+  if (!renders.length) messages.push({ code: 'RECEIPT_INVALID', message: `${rel(sums)} commits no rendered public file`, why: 'an aggregate publication is checked through its render lines', fix: { next: 'report', user_message: 're-render the receipt in custody with the current scoreboard.ts', verify } });
+  for (const [hash, name] of renders) {
+    const committed = committedRender(name);
+    if (committed !== null && sha256(committed) === hash) continue;
+    messages.push({ code: 'SCOREBOARD_STALE', message: `${name.slice('render/'.length)} ${committed === null ? 'is missing' : 'does not match the published SHA256SUMS'}`, why: 'the committed public tables must be the ones the custody receipt rendered', fix: { next: 'report', user_message: 'restore the rendered file from the custody render; never edit generated tables by hand', verify } });
+  }
+  return { receipt: sums, ok: !messages.length, messages, notes: [`${renders.length} rendered public file(s) match SHA256SUMS`] };
 }
 
 /**
@@ -1281,9 +1331,10 @@ export function findReceipts(root = ROOT): string[] {
 
 export interface CheckResult { receipt: string; ok: boolean; messages: ScoreboardMessage[]; notes: string[] }
 
-export function checkReceipt(receipt: string, env: Record<string, string | undefined> = process.env): CheckResult {
+export function checkReceipt(receipt: string, env: Record<string, string | undefined> = process.env, opts: { custody?: boolean } = {}): CheckResult {
   const messages: ScoreboardMessage[] = [], notes: string[] = [];
-  messages.push(...checkSize(receipt));
+  if (opts.custody) notes.push('size budget not applied: a custody receipt is checked in full where it lives and published only as aggregates');
+  else messages.push(...checkSize(receipt));
   const scan = scanTree([receipt], { env, base: ROOT });
   const secret = secretMessage(scan.findings, [rel(receipt)]);
   if (secret) messages.push(secret);
@@ -1361,13 +1412,14 @@ function receiptsFrom(argv: string[]): string[] {
 if (import.meta.main) {
   const argv = process.argv.slice(2);
   const json = argv.includes('--json');
-  const [command, ...rest] = argv.filter((a, i) => !a.startsWith('--') && argv[i - 1] !== '--receipt' && argv[i - 1] !== '--commit');
+  const [command, ...rest] = argv.filter((a, i) => !a.startsWith('--') && !['--receipt', '--commit', '--sums'].includes(argv[i - 1]));
   const usage: ScoreboardMessage = { code: 'USAGE', message: `unknown command ${command ?? '(none)'}`, why: 'the generator has three commands: check, render, explain', fix: { next: 'run', argv: ['bun', 'eval/runner/scoreboard.ts', 'check'], verify: ['bun', 'eval/runner/scoreboard.ts', 'check'] } };
   try {
     if (command === 'check') {
       const pinMessages = checkPinTable();
-      const receipts = receiptsFrom(argv);
-      const results = receipts.map(r => checkReceipt(r));
+      const sums = argv.flatMap((a, i) => (a === '--sums' && argv[i + 1] ? [resolve(argv[i + 1])] : []));
+      const receipts = sums.length && !argv.includes('--receipt') && !argv.includes('--commit') ? [] : receiptsFrom(argv);
+      const results = [...receipts.map(r => (existsSync(join(r, 'campaign.json')) ? checkReceipt(r, process.env, { custody: argv.includes('--custody') }) : checkSums(join(r, SUMS_FILE)))), ...sums.map(f => checkSums(f))];
       const messages = [...pinMessages, ...results.flatMap(r => r.messages)];
       if (json) console.log(JSON.stringify({ ok: !messages.length, pin_table: pinMessages.length ? 'mismatch' : 'ok', receipts: results.map(r => ({ receipt: rel(r.receipt), ok: r.ok, notes: r.notes, messages: r.messages })), ...(pinMessages.length ? { pin_messages: pinMessages } : {}) }, null, 2));
       else {
