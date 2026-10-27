@@ -143,6 +143,7 @@ How this page changed, newest first. Measurement history lives in the dated repo
 
 gbrain-evals v0.10.76. The gbrain under test is named as master `77cf8e111` (v0.60.169.0). The page still named
 `739e5cc` (v0.60.46.0), the pin until October 6 ([re-pin report](../docs/benchmarks/2026-10-11-wave14-repin.md)).
+
 ### 2026-10-06: Add a memory system to the scoreboard
 
 A new "Add a memory system to the scoreboard" section gives the shim template, the capability record, the keyless

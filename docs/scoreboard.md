@@ -23,7 +23,7 @@ the operator, so each message names the next action instead of only describing t
 | Goal | Command | Cost | Target time |
 |---|---|---:|---:|
 | Read the current verdict | README, "How gbrain compares" | $0 | under 2 minutes |
-| Regenerate every table and aggregate from the committed rows | `bun run eval:scoreboard check` | $0 | under 2 minutes after `bun install` |
+| Verify the published tables, or regenerate every table and aggregate from a receipt's rows | `bun run eval:scoreboard check` | $0 | under 2 minutes after `bun install` |
 | Run the whole pipeline on the fake system | `bun run eval:scoreboard fixture` | $0 | under 5 minutes |
 | See the chain behind one number | `bun run eval:scoreboard explain <row> <column>` | $0 | seconds |
 | Run one public cell on this machine | `bun run eval:scoreboard run --local --campaign <manifest> --state <dir> --cell <id>` | under $5 | under 30 minutes |
@@ -32,7 +32,12 @@ The time targets are measured by a fresh agent on a fresh machine before publica
 `reproduction.md`.
 
 **`check`** rebuilds the README table, the report tables and every aggregate from the rows in the receipt and fails if a
-byte differs. It also scans receipts for provider keys and keeps the receipt tree under its size budget.
+byte differs. It also scans receipts for provider keys and keeps the receipt tree under its size budget. The Q1
+publication releases aggregates only (preregistration amendment A25): the README headline block, `scoreboard.md` and a
+`SHA256SUMS` file on the results branch, with the full receipt sealed in custody until the current-master rerun (F6).
+Without the receipt, `check --sums <SHA256SUMS>` (or `check --commit <results-branch commit>`) checks the published
+README block and `scoreboard.md` against the committed hashes; the full recompute from rows is `check --receipt <dir>`.
+[The report](benchmarks/2026-10-06-scoreboard-report.md#provenance) records the commit and hash.
 
 **`fixture`** runs the protocol's reference fake system end to end with no provider key and no Docker: the Python
 reference shim, the metering proxy in lease mode (with a cell token, per-route output caps and admission control), the
@@ -188,6 +193,12 @@ preregistration.
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
+
+### 2026-10-27: Published aggregates and how to check them
+
+The `check` paragraph and the first reproduce row now say what a reader without the receipt can verify: the Q1
+publication is aggregates only (A25), and `check --sums` or `check --commit` tests the README block and `scoreboard.md`
+against the committed `SHA256SUMS`.
 
 ### 2026-10-07: Dev-only smokes, harness output caps
 

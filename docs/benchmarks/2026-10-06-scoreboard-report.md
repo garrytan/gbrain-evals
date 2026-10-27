@@ -1,7 +1,8 @@
 # The head-to-head memory scoreboard (Q1): report layout
 
-**Status: layout, results pending.** This page fixes where each part of the Q1 report goes before the sealed waves
-settle, so the published report is the layout below with the generated tables filled in. Nothing here is a result.
+**Status: published, aggregates only (A25).** This page fixes where each part of the Q1 report goes and records how the
+published tables are checked. The generated tables are in [scoreboard.md](2026-10-06-scoreboard/scoreboard.md) and the
+README headline block; nothing on this page is a result.
 The rules it follows are in the [preregistration](2026-10-06-scoreboard-preregistration.md); every system is named
 by kind, and products appear only on [comparisons and their protocols](../comparison-systems.md).
 

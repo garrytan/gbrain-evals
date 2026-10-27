@@ -116,6 +116,7 @@ How this page changed, newest first. Measurement history lives in the dated repo
 gbrain-evals v0.10.76. The introduction names gbrain master `77cf8e111` (v0.60.169.0) as the `gbrain` every runner
 loads. It still named `739e5cc` (v0.60.46.0), which stopped being the pin on October 6; five re-pins had not updated
 this page ([re-pin report](../docs/benchmarks/2026-10-11-wave14-repin.md)).
+
 ### 2026-10-06: Scoreboard row in the test table
 
 "Choose the test that answers your question" gained a row for the head-to-head scoreboard's front door,

@@ -14,7 +14,7 @@ describes gbrain as this repository pins it today; the changelog at the bottom r
 |---|---|
 | Pinned product | gbrain [`7a6bdd357`](https://github.com/garrytan/gbrain/tree/7a6bdd3579a3c35d57c63790b428a746fe2f3df7), release v0.60.454.0, declared as `gbrain` in `package.json` |
 | Fixed-purpose aliases | `gbrain-cues` (`939232f`) and `gbrain-reader` (`e78f1c3`), used only by the experiments that name them |
-| This repository | gbrain-evals v0.10.129 (`VERSION`) |
+| This repository | gbrain-evals v0.10.130 (`VERSION`) |
 
 This repository installs gbrain v0.60.454.0 (`7a6bdd357`). Some results below were measured at earlier commits; each
 names its commit, and every commit named below is in the release's history except `a7cb37b`, the September 29 branch
@@ -113,10 +113,12 @@ Other systems publish different metrics on different protocols, so these compari
 the same footing, and say so where we cannot. This page describes the other systems by kind; their names, versions,
 sources and every row we could not match are in [comparisons and their protocols](docs/comparison-systems.md).
 
-**Head-to-head on sealed data: pending.** The [Q1 scoreboard](docs/benchmarks/2026-10-06-scoreboard-preregistration.md)
+**Head-to-head on sealed data: measured, descriptive.** The [Q1 scoreboard](docs/benchmarks/2026-10-06-scoreboard-preregistration.md)
 gives gbrain `f05943e6` (0.60.138.0) and every other system the same BEAM-10M questions, never used to tune gbrain,
-the same three answer models and the same 8,000-token budget, and names each system by kind. Its sealed waves are running. `bun eval/runner/scoreboard.ts render`
-replaces the table below with the measured block from the campaign receipt; until then every cell reads pending.
+the same three answer models and the same 8,000-token budget, and names each system by kind. The sealed waves ran from
+2026-10-09 to 2026-10-27, and the block below is rendered from the campaign receipt by `bun eval/runner/scoreboard.ts render`.
+[The report](docs/benchmarks/2026-10-06-scoreboard-report.md) says how the published tables are checked;
+[the scoreboard guide](docs/scoreboard.md) covers how to reproduce a number, add a system or dispute a row.
 
 <!-- scoreboard:headline:begin -->
 On BEAM-10M (never used to tune gbrain), measured 2026-10-27 at gbrain `f05943e`, the component comparison is descriptive: with these conversations it detects only differences of about 13.58 points, so no row is ranked. The table is incomplete: `ext-graph-pipeline`, `ext-markdown-kb` did not run on BEAM-10M, so no field-wide claim is made.
@@ -250,7 +252,7 @@ tie (95.6% each) and the older six-model lead no longer describe gbrain
 | Every report, grouped by the question it answers | [Documentation index](docs/README.md) |
 | How do retrieval scores differ from answer accuracy? | [What the scores mean](docs/retrieval-lessons.md#what-the-scores-mean) |
 | How are new gbrain defaults decided? | [Held-out program](docs/benchmarks/2026-10-05-heldout-program.md), [decision kit](docs/decisions.md) |
-| Can I reproduce a result or test my own system? | [Run the suite](eval/README.md), [contribute an adapter or a category](eval/CONTRIBUTING.md) |
+| Can I reproduce a result or test my own system? | [Run the suite](eval/README.md), [contribute an adapter or a category](eval/CONTRIBUTING.md), [reproduce a scoreboard number, add a memory system or dispute a row](docs/scoreboard.md) |
 | What is still unfinished? | [Open work](TODOS.md) |
 
 ## Try a small experiment
@@ -372,6 +374,15 @@ Code is MIT licensed. Dataset and vendored benchmark attribution is recorded in 
 [PrecisionMemBench attribution](eval/precisionmembench/ATTRIBUTION.md).
 
 ## Changelog
+
+### 2026-10-27: Q1 scoreboard headline block, measured; repository row names v0.10.130
+
+The Q1 scoreboard's headline block between the `scoreboard:headline` markers now holds the measured results rendered
+from the campaign receipt: BEAM-10M at 8,000 tokens, the BEAM-100K to BEAM-10M size curve, and the notes on every row
+that is incomplete or not run. The sentence above the block no longer says the sealed waves are running, and links
+[the report](docs/benchmarks/2026-10-06-scoreboard-report.md) and [the scoreboard guide](docs/scoreboard.md). Every GBrain
+row measures gbrain 0.60.138.0 (`f05943e6`), not current master; a rerun is planned (F6). The repository row names
+v0.10.130 (was v0.10.129). No other result on this page changed.
 
 ### 2026-10-25: Re-pin to gbrain `7a6bdd357`; repository row names v0.10.129
 
