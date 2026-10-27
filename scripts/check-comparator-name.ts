@@ -39,9 +39,12 @@ export const NEEDLES: Needle[] = [
   { id: 'maker', length: 9, letterSum: 987, wyhash: 12754044376025014919n, sha256: '29307bacccf3dbefa62196cd8eaa3841671a0387b62b60feaeb56d3f637bc412' },
 ];
 
-/** Paths (repo-relative) allowed to contain a needle, and which ones. */
+/** Paths (repo-relative) allowed to contain a needle, and which ones; a path ending in `/` covers the files directly inside that directory. */
 export const ALLOWED: Record<string, Needle['id'][]> = {
   'docs/comparison-systems.md': ['product', 'maker'],
+  // Frozen Q1 comparison bundles at 008b83fe; capability hash labels published scoreboard rows (GBRA-108, 2026-10-27).
+  'docs/comparison-systems/ext-memory-bank/': ['product', 'maker'],
+  'docs/comparison-systems/ext-temporal-graph/README.md': ['product'],
   'docs/plans/2026-09-28-gbrain-10x/audit/coverage-and-categories.md': ['product', 'maker'],
   'docs/plans/2026-09-28-gbrain-10x/audit/evals-docs-infra.md': ['product'],
   'eval/harness-provider/harness.lock.json': ['maker'],
@@ -161,7 +164,7 @@ export function scan(root: string, files = repoFiles(root)): { violations: Hit[]
     for (const { needle, line } of [...findNeedles(bytes, NEEDLES, RECEIPT_TEXT.test(rel)), ...findNeedles(rel).map(h => ({ ...h, line: 0 }))]) {
       if (lines && line > 0 && PYTHON_IMPORT.test(lines[line - 1])) continue;
       const hit = { path: rel, needle, line };
-      (ALLOWED[rel]?.includes(needle) ? allowed : violations).push(hit);
+      ((ALLOWED[rel] ?? ALLOWED[rel.slice(0, rel.lastIndexOf('/') + 1)])?.includes(needle) ? allowed : violations).push(hit);
     }
   }
   return { violations, allowed };
