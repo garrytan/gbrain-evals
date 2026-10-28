@@ -2,6 +2,13 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [Unreleased]
+
+### Shared agents (on_behalf_of): search cost and recall
+
+- **gbrain PR #7852 lets a shared agent read as the audience its harness names; calls without an audience are unchanged (every cell within plus or minus 1% of the parent, at 0%, 20% and 80% restricted)** ([report](docs/benchmarks/2026-10-28-shared-agent-audience.md)). Measured at `e5bee20d` against its parent `9167c248` on one Ubicloud VM, 8 interleaved runs per side, with raw JSON committed.
+- **An audience costs at most 1.3 ms over the member's own token** (a two-member audience adds two readers conditions per row) and keeps the member's recall (hit@10 1.0, 0.998 in the 20% hybrid cells as for the member). No run reported a degraded search.
+
 ## [0.10.130] - 2026-10-27
 
 ### Q1 head-to-head scoreboard: preregistered, run, and published as aggregates
