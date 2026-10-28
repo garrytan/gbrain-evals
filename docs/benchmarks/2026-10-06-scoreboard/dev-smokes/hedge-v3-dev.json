@@ -1,0 +1,198 @@
+{
+  "note": "hedge-v3 on both labeled samples (400 answers), which were its development data, so these numbers are not a validation. Unweighted. guide_reread applies the labeling guide (GUIDE.md beside the hedge-v3 validation sample) to 15 labels where the two labelers disagreed or the guide settles the convention differently; it is close to circular, because the guide and hedge-v3 encode the same conventions.",
+  "classifier_version": "hedge-v3",
+  "rules_sha256": "b89477b86d1953e30bcf3628d4f533b99e1a8aab6514f25ca555ac845936987a",
+  "first_200": {
+    "schema": "gbrain-evals/hedge-validation/v1",
+    "classifier_version": "hedge-v3",
+    "rules_sha256": "b89477b86d1953e30bcf3628d4f533b99e1a8aab6514f25ca555ac845936987a",
+    "labels_sha256": "5e624aaeac97bccfbf69943386c8bb0b592187d279b1d797aa68d240bfc82694",
+    "n": 200,
+    "unlabeled": 0,
+    "accuracy": 0.965,
+    "per_class": {
+      "abstain": {
+        "support": 32,
+        "predicted": 32,
+        "precision": 1,
+        "recall": 1
+      },
+      "hedged": {
+        "support": 59,
+        "predicted": 52,
+        "precision": 1,
+        "recall": 0.8814
+      },
+      "confident": {
+        "support": 109,
+        "predicted": 116,
+        "precision": 0.9397,
+        "recall": 1
+      }
+    },
+    "confusion": {
+      "abstain": {
+        "abstain": 32,
+        "hedged": 0,
+        "confident": 0
+      },
+      "hedged": {
+        "abstain": 0,
+        "hedged": 52,
+        "confident": 7
+      },
+      "confident": {
+        "abstain": 0,
+        "hedged": 0,
+        "confident": 109
+      }
+    },
+    "population_weighted": null,
+    "misclassified_count": 7
+  },
+  "second_200": {
+    "schema": "gbrain-evals/hedge-validation/v1",
+    "classifier_version": "hedge-v3",
+    "rules_sha256": "b89477b86d1953e30bcf3628d4f533b99e1a8aab6514f25ca555ac845936987a",
+    "labels_sha256": "1fc7a69840334fa5e56a57b263a6179c71f553f736268bfa54913ad331505775",
+    "n": 200,
+    "unlabeled": 0,
+    "accuracy": 0.965,
+    "per_class": {
+      "abstain": {
+        "support": 64,
+        "predicted": 64,
+        "precision": 1,
+        "recall": 1
+      },
+      "hedged": {
+        "support": 54,
+        "predicted": 55,
+        "precision": 0.9273,
+        "recall": 0.9444
+      },
+      "confident": {
+        "support": 82,
+        "predicted": 81,
+        "precision": 0.963,
+        "recall": 0.9512
+      }
+    },
+    "confusion": {
+      "abstain": {
+        "abstain": 64,
+        "hedged": 0,
+        "confident": 0
+      },
+      "hedged": {
+        "abstain": 0,
+        "hedged": 51,
+        "confident": 3
+      },
+      "confident": {
+        "abstain": 0,
+        "hedged": 4,
+        "confident": 78
+      }
+    },
+    "population_weighted": null,
+    "misclassified_count": 7
+  },
+  "all_400": {
+    "schema": "gbrain-evals/hedge-validation/v1",
+    "classifier_version": "hedge-v3",
+    "rules_sha256": "b89477b86d1953e30bcf3628d4f533b99e1a8aab6514f25ca555ac845936987a",
+    "labels_sha256": "6cce6d8eef5a88db60dfaf50f4b7a557dd570bf308007ee52b12f165cf80064d",
+    "n": 400,
+    "unlabeled": 0,
+    "accuracy": 0.965,
+    "per_class": {
+      "abstain": {
+        "support": 96,
+        "predicted": 96,
+        "precision": 1,
+        "recall": 1
+      },
+      "hedged": {
+        "support": 113,
+        "predicted": 107,
+        "precision": 0.9626,
+        "recall": 0.9115
+      },
+      "confident": {
+        "support": 191,
+        "predicted": 197,
+        "precision": 0.9492,
+        "recall": 0.9791
+      }
+    },
+    "confusion": {
+      "abstain": {
+        "abstain": 96,
+        "hedged": 0,
+        "confident": 0
+      },
+      "hedged": {
+        "abstain": 0,
+        "hedged": 103,
+        "confident": 10
+      },
+      "confident": {
+        "abstain": 0,
+        "hedged": 4,
+        "confident": 187
+      }
+    },
+    "population_weighted": null,
+    "misclassified_count": 14
+  },
+  "all_400_guide_reread": {
+    "schema": "gbrain-evals/hedge-validation/v1",
+    "classifier_version": "hedge-v3",
+    "rules_sha256": "b89477b86d1953e30bcf3628d4f533b99e1a8aab6514f25ca555ac845936987a",
+    "labels_sha256": "7330ed842618005af916876ebc676f0887858d70b7dede42bedf093ec4b22397",
+    "n": 400,
+    "unlabeled": 0,
+    "accuracy": 0.9975,
+    "per_class": {
+      "abstain": {
+        "support": 96,
+        "predicted": 96,
+        "precision": 1,
+        "recall": 1
+      },
+      "hedged": {
+        "support": 108,
+        "predicted": 107,
+        "precision": 1,
+        "recall": 0.9907
+      },
+      "confident": {
+        "support": 196,
+        "predicted": 197,
+        "precision": 0.9949,
+        "recall": 1
+      }
+    },
+    "confusion": {
+      "abstain": {
+        "abstain": 96,
+        "hedged": 0,
+        "confident": 0
+      },
+      "hedged": {
+        "abstain": 0,
+        "hedged": 107,
+        "confident": 1
+      },
+      "confident": {
+        "abstain": 0,
+        "hedged": 0,
+        "confident": 196
+      }
+    },
+    "population_weighted": null,
+    "misclassified_count": 1,
+    "labels_changed": 15
+  }
+}

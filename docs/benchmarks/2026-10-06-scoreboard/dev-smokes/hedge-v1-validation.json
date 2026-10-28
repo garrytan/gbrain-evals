@@ -1,0 +1,89 @@
+{
+  "note": "hedge-v1 on the first blind 200-answer sample of the 878 dev-smoke answers, labeled by labeler 1. Abstain and confident precision missed the 0.90 bar.",
+  "schema": "gbrain-evals/hedge-validation/v1",
+  "classifier_version": "hedge-v1",
+  "rules_sha256": "3181d1a9963f1c065fd19ca4470062e8f9aba161931289969d15f4cca56c7be7",
+  "labels_sha256": "5e624aaeac97bccfbf69943386c8bb0b592187d279b1d797aa68d240bfc82694",
+  "n": 200,
+  "unlabeled": 0,
+  "accuracy": 0.555,
+  "per_class": {
+    "abstain": {
+      "support": 32,
+      "predicted": 67,
+      "precision": 0.4179,
+      "recall": 0.875
+    },
+    "hedged": {
+      "support": 59,
+      "predicted": 67,
+      "precision": 0.4478,
+      "recall": 0.5085
+    },
+    "confident": {
+      "support": 109,
+      "predicted": 66,
+      "precision": 0.803,
+      "recall": 0.4862
+    }
+  },
+  "confusion": {
+    "abstain": {
+      "abstain": 28,
+      "hedged": 4,
+      "confident": 0
+    },
+    "hedged": {
+      "abstain": 16,
+      "hedged": 30,
+      "confident": 13
+    },
+    "confident": {
+      "abstain": 23,
+      "hedged": 33,
+      "confident": 53
+    }
+  },
+  "population_weighted": {
+    "accuracy": 0.6128,
+    "recall": {
+      "abstain": 0.9094,
+      "hedged": 0.358,
+      "confident": 0.6558
+    }
+  },
+  "misclassified_count": 89,
+  "label_counts": {
+    "abstain": 32,
+    "hedged": 59,
+    "confident": 109
+  },
+  "sample_design": {
+    "schema": "gbrain-evals/hedge-sample-design/v1",
+    "classifier_version": "hedge-v1",
+    "rules_sha256": "3181d1a9963f1c065fd19ca4470062e8f9aba161931289969d15f4cca56c7be7",
+    "seed": "q1-hedge-v1-freeze",
+    "n": 200,
+    "answers": [
+      {
+        "path": "answers.ndjson",
+        "sha256": "a18cfdadbed8fd83876223f1d7b31a03e5d8f853fb442461abc349f76694497e"
+      }
+    ],
+    "eligible": 878,
+    "strata": {
+      "abstain": {
+        "population": 264,
+        "sampled": 67
+      },
+      "hedged": {
+        "population": 184,
+        "sampled": 67
+      },
+      "confident": {
+        "population": 430,
+        "sampled": 66
+      }
+    }
+  }
+}

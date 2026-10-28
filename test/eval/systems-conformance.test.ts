@@ -16,7 +16,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { FakeMemorySystem, serveProtocol } from '../../eval/runner/systems/fake.ts';
 import { FullContextSystem, NoMemorySystem, PlainHybridSystem } from '../../eval/runner/systems/baselines.ts';
-import { PG_EMBED_DIMS } from '../../eval/runner/cat40/pg-arm.ts';
+import { cachedOpenAIEmbedder, PG_EMBED_DIMS } from '../../eval/runner/cat40/pg-arm.ts';
 import { hashEmbed } from '../../eval/runner/memory-qa/run.ts';
 import { HttpMemorySystem } from '../../eval/runner/systems/http.ts';
 import { validateSources } from '../../eval/runner/systems/render.ts';
@@ -32,7 +32,7 @@ const POLICY: RetrievalPolicy = { name: 'conformance:vendor-default', mode: 'ven
 
 const ts = serveProtocol(new FakeMemorySystem());
 
-/** A system with no passive memory API, shaped like the agent-runtime record: native agent, every policy unsupported. */
+/** A system with no passive memory API, shaped like the agent runtime's record: native agent, every policy unsupported. */
 class NativeAgentOnly implements MemorySystem {
   readonly name = 'native-agent-only';
   private no = (): never => { throw new SystemError('unsupported', 'no passive memory API', 501); };
@@ -173,6 +173,47 @@ describe('harness side of the contract', () => {
     } finally { await hybrid.close(); }
   });
 
+  test('plain hybrid embeds one session per request, sees every ingested session before finish, keeps the later copy, and reports lost sessions', async () => {
+    const requests: string[][] = [];
+    const hybrid = new PlainHybridSystem(async texts => { requests.push(texts); return texts.map(t => hashEmbed(t, PG_EMBED_DIMS)); }, 'hash');
+    const src = (i: number) => opaqueSourceId('buffer', String(i));
+    try {
+      await hybrid.reset(NS_A);
+      const n = PlainHybridSystem.FLUSH_AT + 5;
+      for (let i = 0; i < n; i++) await hybrid.ingestSession(NS_A, session(src(i), i === 7 ? 'the lighthouse keeper paints the stairs teal' : `ordinary note number ${i}`), null);
+      expect(requests.length).toBe(PlainHybridSystem.FLUSH_AT);
+      await hybrid.ingestSession(NS_A, session(src(n - 1), 'the observatory dome opens at midnight'), null);
+      const mid = await hybrid.retrieve(NS_A, { text: 'observatory dome midnight', query_time: null }, { ...POLICY, settings: { k: 1 } });
+      expect(mid.items.map(i => [i.source_ids[0], i.text])).toEqual([[src(n - 1), 'user: the observatory dome opens at midnight\nassistant: Noted, thanks.']]);
+      expect((await hybrid.retrieve(NS_A, { text: 'lighthouse keeper teal stairs', query_time: null }, { ...POLICY, settings: { k: 1 } })).items[0].source_ids).toEqual([src(7)]);
+      expect(requests.every(r => r.length === 1)).toBe(true);
+      expect(await hybrid.finishIngest(NS_A, 60)).toMatchObject({ ready: true, completeness: 'known' });
+    } finally { await hybrid.close(); }
+
+    const failing = new PlainHybridSystem(async () => { throw new Error('embedding error 500: upstream'); }, 'hash');
+    try {
+      await failing.reset(NS_B);
+      for (let i = 0; i < 3; i++) await failing.ingestSession(NS_B, session(src(i), `note ${i}`), null);
+      await expect(failing.finishIngest(NS_B, 60)).rejects.toThrow('upstream');
+      expect(await failing.finishIngest(NS_B, 60)).toMatchObject({ ready: false, completeness: 'degraded', raw: { sessions_not_written: 3 } });
+    } finally { await failing.close(); }
+  });
+
+  test('the plain-hybrid embedder retries a rate limit and never retries a budget refusal', async () => {
+    const statuses = [429, 200, 402];
+    const sent: number[] = [];
+    const fetchImpl = (async () => {
+      const status = statuses[sent.length];
+      sent.push(status);
+      if (status === 200) return new Response(JSON.stringify({ data: [{ index: 0, embedding: [0.5, 0.5] }] }));
+      return new Response(status === 402 ? '{"error":{"type":"budget"}}' : '{"error":"slow down"}', { status, headers: { 'retry-after': '0' } });
+    }) as unknown as typeof fetch;
+    const embed = cachedOpenAIEmbedder(join(mkdtempSync(join(tmpdir(), 'embed-retry-')), 'cache.json'), fetchImpl, 'http://proxy.invalid/v1');
+    expect(await embed(['first'])).toEqual([[0.5, 0.5]]);
+    await expect(embed(['second'])).rejects.toThrow('embedding error 402');
+    expect(sent).toEqual([429, 200, 402]);
+  });
+
   test('the TypeScript and Python fakes return identical items for identical input', async () => {
     if (!py) throw new Error(pyError ?? 'python shim missing');
     const a = new HttpMemorySystem(ts.url), b = new HttpMemorySystem(py.url);
@@ -246,7 +287,7 @@ describe('shared Python shim tooling (eval/systems/_shim)', () => {
     probe.stop(true);
     const log = join(mkdtempSync(join(tmpdir(), 'fake-provider-')), 'log.jsonl');
     const proc = Bun.spawn(['python3', 'eval/systems/_shim/fake_provider.py', '--port', String(port), '--log', log], { cwd: ROOT, stdout: 'ignore', stderr: 'pipe' });
-    const base = `http://127.0.0.1:${port}/extract-first/openai/v1`;
+    const base = `http://127.0.0.1:${port}/ext-extract-first/openai/v1`;
     const post = async (path: string, body: unknown) => (await fetch(`${base}${path}`, { method: 'POST', headers: { authorization: 'Bearer dummy-key', 'content-type': 'application/json' }, body: JSON.stringify(body), keepalive: false })).json() as Promise<any>;
     try {
       for (let i = 0; i < 200; i++) { try { await fetch(`${base}/models`, { keepalive: false }); break; } catch { await Bun.sleep(50); } }

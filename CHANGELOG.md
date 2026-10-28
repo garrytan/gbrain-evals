@@ -2,6 +2,25 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.130] - 2026-10-27
+
+### Q1 head-to-head scoreboard: preregistered, run, and published as aggregates
+
+- **You can now read how gbrain's shipped defaults compare with external memory systems and plain baselines on the same questions** ([report](docs/benchmarks/2026-10-06-scoreboard-report.md), [scoreboard](docs/benchmarks/2026-10-06-scoreboard/scoreboard.md), README headline). The headline is BEAM-10M, a set never used to tune gbrain and run from the custodian's host. External systems are named by kind; their frozen bundles are listed in `docs/comparison-systems.md`.
+- **Every GBrain row measures GBrain 0.60.138.0 (`f05943e6`, 2026-10-09), not current master.** A rerun at current master is planned (F6).
+- **What the numbers say.** At 8k context, gbrain-defaults scores 56.3% on BEAM-10M (197 of 199 questions). The 8k rows are descriptive: with 10 conversations only differences of about 13.6 points are detectable, so no row is ranked. On whole-system rows nothing separates after Holm correction; the largest gap is the file-agent baseline, 9.3 points above gbrain (Holm p 0.099).
+- **Preregistration with amendments A1 to A25.** Each amendment was committed before the cells it governs ran, with its campaign hash. The sealed campaign is frozen at `a92b06c5` (149 units). A25 limits publication to aggregates plus a `SHA256SUMS` commitment and keeps the full receipt sealed in custody until F6.
+- **Check a published number yourself.** `bun eval/runner/scoreboard.ts check --sums <SHA256SUMS>` verifies the README block and `scoreboard.md` against the committed hash, and `check --commit <sha>` checks them against the results branch. Public renders print exclusions as counts by reason and refuse to print any sealed question id.
+- **Run your own campaign.** `eval:scoreboard` drives the campaign: leases priced against block and campaign caps, cells on Ubicloud VMs, reattach after a lost session, resume by missing answers, a $0 fixture in CI, and `raise-lease` to raise a running lease on both ledgers.
+- **Spend.** $7,034.32 on the campaign ledgers against an $8,000 sealed cap. Of 149 launch units, 114 settled complete, 8 partial and 27 not run, and each not-run row says why.
+
+### Fixed
+
+- An abandoned or still-open lease that `raise-lease` raised is now charged at its raised amount in lease listings, block spend, status and the next raise's block check, matching the campaign ledger.
+- `eval/runner/q1/persist.sh` honours fractional hours (the default 5.8 ran 5 hours; 0.5 ran not at all).
+- The name guard scans the tree in two passes instead of eleven, so its whole-tree test finishes inside its budget on a loaded machine.
+- The render and chat-client changes Q1 needs live in `render-v2.ts` and `qa-v2.ts`, so `render.ts` and `qa.ts` keep main's bytes.
+
 ## [0.10.129] - 2026-10-25
 
 ### Re-pin to gbrain `7a6bdd357` (v0.60.454.0); N14 at large pages Wave B PR 4

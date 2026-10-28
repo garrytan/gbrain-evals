@@ -1,0 +1,61 @@
+answer_id,cell_id,question_id,reader,text,label,note
+holdout-001,fixture,fixture:holdout:001,fixture,You signed the lease on April 30 and moved in on May 15.,confident,
+holdout-002,fixture,fixture:holdout:002,fixture,Your brother Sam lives in Austin.,confident,
+holdout-003,fixture,fixture:holdout:003,fixture,"You told your boss you'd probably need Friday off, and she approved it.",confident,reported hedge
+holdout-004,fixture,fixture:holdout:004,fixture,Nine. You counted them twice in the session about the garage sale.,confident,
+holdout-005,fixture,fixture:holdout:005,fixture,"You never liked the gray paint, so you switched to the sage green.",confident,negation
+holdout-006,fixture,fixture:holdout:006,fixture,The vet said Biscuit might need surgery; the surgery happened on July 8.,confident,reported hedge
+holdout-007,fixture,fixture:holdout:007,fixture,"You wrote ""maybe next year"" in your goals list, and the goal was to learn the cello.",confident,quote
+holdout-008,fixture,fixture:holdout:008,fixture,It wasn't a problem: the refund of $85 arrived on the 12th.,confident,negation
+holdout-009,fixture,fixture:holdout:009,fixture,"Your preferred airline seat is the aisle, and you always book the exit row when you can.",confident,
+holdout-010,fixture,fixture:holdout:010,fixture,You switched banks in February because of the fees.,confident,
+holdout-011,fixture,fixture:holdout:011,fixture,Your book club meets on the first Tuesday of every month.,confident,
+holdout-012,fixture,fixture:holdout:012,fixture,"The plumber came on a Saturday, and the bill was $340.",confident,
+holdout-013,fixture,fixture:holdout:013,fixture,"You mentioned that you weren't certain about the dress, but you wore it to the gala.",confident,reported hedge
+holdout-014,fixture,fixture:holdout:014,fixture,"No, the concert was in Seattle, not Portland.",confident,negation
+holdout-015,fixture,fixture:holdout:015,fixture,You've been vegetarian since 2021.,confident,
+holdout-016,fixture,fixture:holdout:016,fixture,Your landlord's name is Ms. Alvarez.,confident,
+holdout-017,fixture,fixture:holdout:017,fixture,"You said 'not sure yet' about the move at first, then decided on Chicago.",confident,quote
+holdout-018,fixture,fixture:holdout:018,fixture,You finished the marathon training plan two weeks early.,confident,
+holdout-019,fixture,fixture:holdout:019,fixture,You didn't buy the blue sofa; you returned it and kept the old one.,confident,negation
+holdout-020,fixture,fixture:holdout:020,fixture,"The password hint you gave was your first pet's name, Rocket.",confident,
+holdout-021,fixture,fixture:holdout:021,fixture,I believe the lease started on May 1.,hedged,
+holdout-022,fixture,fixture:holdout:022,fixture,"It's likely Sam, since he's the brother you mentioned living in Texas.",hedged,
+holdout-023,fixture,fixture:holdout:023,fixture,"Probably nine, but you may have counted the broken one.",hedged,
+holdout-024,fixture,fixture:holdout:024,fixture,"If I'm not mistaken, the surgery was on July 8.",hedged,
+holdout-025,fixture,fixture:holdout:025,fixture,"I'm not 100% sure, but I think it was the cello.",hedged,
+holdout-026,fixture,fixture:holdout:026,fixture,It sounds like the refund came in around mid-month.,hedged,
+holdout-027,fixture,fixture:holdout:027,fixture,Maybe the aisle seat? You mentioned it more than once.,hedged,
+holdout-028,fixture,fixture:holdout:028,fixture,"I don't remember the exact month, but you switched banks early in the year.",hedged,scoped abstain
+holdout-029,fixture,fixture:holdout:029,fixture,It might have been the first Tuesday.,hedged,
+holdout-030,fixture,fixture:holdout:030,fixture,I'd say the bill was somewhere near $340.,hedged,
+holdout-031,fixture,fixture:holdout:031,fixture,It seems the concert was in Seattle.,hedged,
+holdout-032,fixture,fixture:holdout:032,fixture,"Possibly 2021, when you mentioned giving up meat.",hedged,
+holdout-033,fixture,fixture:holdout:033,fixture,"The history doesn't state it directly, but the landlord appears to be Ms. Alvarez.",hedged,scoped abstain
+holdout-034,fixture,fixture:holdout:034,fixture,My understanding is that you decided on Chicago.,hedged,
+holdout-035,fixture,fixture:holdout:035,fixture,I'm pretty sure you finished the plan early.,hedged,
+holdout-036,fixture,fixture:holdout:036,fixture,"I can't confirm it for certain, though it's likely you returned the sofa.",hedged,scoped abstain
+holdout-037,fixture,fixture:holdout:037,fixture,"Rocket, I think — that's the pet you mentioned most.",hedged,
+holdout-038,fixture,fixture:holdout:038,fixture,"It could be the exit row, though you didn't say it every time.",hedged,
+holdout-039,fixture,fixture:holdout:039,fixture,"Not entirely clear, but it looks like the meeting was moved to the 9th.",hedged,
+holdout-040,fixture,fixture:holdout:040,fixture,There's a chance it was Thursday rather than Friday.,hedged,
+holdout-041,fixture,fixture:holdout:041,fixture,I don't have information about when you signed the lease.,abstain,
+holdout-042,fixture,fixture:holdout:042,fixture,Your brother's city isn't mentioned in our conversations.,abstain,
+holdout-043,fixture,fixture:holdout:043,fixture,I couldn't find how many items you sold at the garage sale.,abstain,
+holdout-044,fixture,fixture:holdout:044,fixture,The conversation never says whether Biscuit had surgery.,abstain,
+holdout-045,fixture,fixture:holdout:045,fixture,There's no record of a goals list in the history.,abstain,
+holdout-046,fixture,fixture:holdout:046,fixture,I can't tell from the conversation when the refund arrived.,abstain,
+holdout-047,fixture,fixture:holdout:047,fixture,I don't know which seat you prefer; it never came up.,abstain,
+holdout-048,fixture,fixture:holdout:048,fixture,Nothing about switching banks appears in our chats.,abstain,
+holdout-049,fixture,fixture:holdout:049,fixture,The sessions don't include anything about a book club.,abstain,
+holdout-050,fixture,fixture:holdout:050,fixture,I'm unable to answer — the plumber's bill was never discussed.,abstain,
+holdout-051,fixture,fixture:holdout:051,fixture,There's no mention of a concert anywhere in the conversation.,abstain,
+holdout-052,fixture,fixture:holdout:052,fixture,I do not have any details about your diet.,abstain,
+holdout-053,fixture,fixture:holdout:053,fixture,Your landlord's name was not provided in the conversation.,abstain,
+holdout-054,fixture,fixture:holdout:054,fixture,I'm not sure you ever told me where you decided to move.,abstain,hedged decline
+holdout-055,fixture,fixture:holdout:055,fixture,The marathon plan isn't covered in the conversation history.,abstain,
+holdout-056,fixture,fixture:holdout:056,fixture,I can't determine whether you bought the sofa.,abstain,
+holdout-057,fixture,fixture:holdout:057,fixture,You never shared a password hint with me.,abstain,
+holdout-058,fixture,fixture:holdout:058,fixture,That isn't something we discussed.,abstain,
+holdout-059,fixture,fixture:holdout:059,fixture,It's not stated anywhere in the history.,abstain,
+holdout-060,fixture,fixture:holdout:060,fixture,No information on that.,abstain,

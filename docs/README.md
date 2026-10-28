@@ -1,7 +1,7 @@
 # Learn, evaluate, and extend gbrain
 
 This index lists every published report by the question it answers. It describes the repository as it stands:
-gbrain-evals v0.10.129, with gbrain master `7a6bdd357` (v0.60.454.0) as the product under test. Results measured at
+gbrain-evals v0.10.130, with gbrain master `7a6bdd357` (v0.60.454.0) as the product under test. Results measured at
 other gbrain commits name that commit in their report. Everything above [Changelog](#changelog) is current; the
 changelog at the bottom records how this index changed.
 
@@ -21,6 +21,7 @@ Start with [what gbrain does today](../README.md), then follow the route that fi
 | How can I contribute a competing system, new questions or a category? | [Contributor guide](../eval/CONTRIBUTING.md) |
 | Which outside scores are actually comparable? | [Cross-system comparison](comparison-systems.md) |
 | How does gbrain compare with open-source memory systems run through one harness, with one reader? | [October 6 to 8 open-source comparison](benchmarks/2026-10-06-oss-memory-shootout.md) ([preregistration](benchmarks/2026-10-06-oss-memory-shootout-preregistration.md), [update-and-forget preregistration](benchmarks/2026-10-06-oss-memory-shootout-lifecycle-lite-preregistration.md)): gbrain finds the right sessions as well as or better than every system, but as measured through this adapter its evidence leads the reader to fewer correct answers than three of the five. Systems are named by kind; [one table](comparison-systems.md#systems-in-the-open-source-comparison) maps each to its project |
+| How does gbrain's shipped configuration compare with other memory systems on the same sealed questions, answer models and token budget? How do I reproduce a number, add a system or dispute a row? | [Q1 head-to-head scoreboard](benchmarks/2026-10-06-scoreboard/scoreboard.md) ([report layout and how it is checked](benchmarks/2026-10-06-scoreboard-report.md), [preregistration](benchmarks/2026-10-06-scoreboard-preregistration.md), [scoreboard guide](scoreboard.md)): BEAM-10M, descriptive, no row ranked; every GBrain row measures gbrain 0.60.138.0, not current master |
 | What does gbrain's `query` hand a reader at 8,000 tokens, and which lever closes the open-source comparison's gap? | [October 8 budgeted delivery E1](benchmarks/2026-10-08-gbrain-budgeted-delivery-e1.md) ([preregistration](benchmarks/2026-10-08-gbrain-budgeted-delivery-e1-preregistration.md); development, gbrain `c5fb0201`): a date line on each chunk lifts LoCoMo temporal questions from 28 to 78 of 100, so most of the comparison's LoCoMo gap was the adapter; at 8,000 tokens `auto` on 25 hits overruns every budget and adds little, while the same delivery on the first five hits reaches 82% on the LongMemEval-S slice with Sonnet 5.5, level with whole sessions; saved facts show no headroom |
 | How should gbrain pack an explicit token budget, and which packing goes to the held-out test? | [October 9 budgeted delivery E2](benchmarks/2026-10-09-gbrain-budgeted-delivery-e2.md) ([preregistration](benchmarks/2026-10-09-gbrain-budgeted-delivery-e2-preregistration.md); development, gbrain `ca2c447bd`): on all 500 LongMemEval-S questions with Sonnet 5.5 at 8,000 tokens, handing over the top conversations whole (`depth_first`) answers 79.4% against 69.0% for today's uncapped `auto` (+10.4, interval +6.4 to +14.4), with the same gain under Opus 5.5 and gpt-6.1-sol; enforcing the budget without changing the order (`cap_only`) does not help; `depth_first` goes to H1, though it trails `breadth_capped` by 10.5 points on multi-session questions |
 | Does packing for depth beat the shipped cap on held-out questions? | [October 10 budgeted delivery H1](benchmarks/2026-10-10-gbrain-budgeted-delivery-h1.md) ([preregistration](benchmarks/2026-10-10-gbrain-budgeted-delivery-h1-preregistration.md); sealed confirmation v2, gbrain `8a3eedeac`): no. With an explicit 5,500-token budget, `depth_first` answered 122 of 200 held-out questions against 145 for the shipped `cap_only` (−11.5 points, −18.0 to −4.5), losing multi-session questions 15 to 40 of 80 under all three readers, so `cap_only` stays the explicit-budget default |
@@ -220,6 +221,12 @@ and [repository writing guide](../CLAUDE.md). The
 procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
+
+### 2026-10-27: Q1 head-to-head scoreboard; opening names v0.10.130
+
+A new route row links the Q1 scoreboard's published tables, the report that says how they are checked, the
+preregistration and [the scoreboard guide](scoreboard.md) (reproduce a number, add a memory system, dispute a row). None
+of them was reachable from this index. The opening names v0.10.130 (was v0.10.129). No existing row changed.
 
 ### 2026-10-25: Re-pin to gbrain `7a6bdd357`; opening names v0.10.129
 
