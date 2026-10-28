@@ -28,7 +28,7 @@ function vm(delaySeconds: number) {
   const remote = join(root, 'remote');
   mkdirSync(join(remote, 'checkpoint'), { recursive: true });
   writeFileSync(join(remote, 'checkpoint', 'rows.ndjson'), '{"row":1}\n');
-  const env = { ...process.env, PATH: `${bin}:${process.env.PATH}`, UBI_RUNNER_STATE: state, UBI_OWNER: 'test' };
+  const env = { ...process.env, PATH: `${bin}:${process.env.PATH}`, UBI_RUNNER_STATE: state, UBI_OWNER: 'test', UBICLOUD_API_KEY: 'ubi-test-placeholder' };
   const pull = (to: string, extra: Record<string, string> = {}) => Bun.spawn(['bash', RUNNER, 'pull', name, join(remote, 'checkpoint'), to], { env: { ...env, ...extra }, stdout: 'pipe', stderr: 'pipe' });
   const transfers = () => existsSync(log) ? readFileSync(log, 'utf8').trim().split('\n').map(l => l.split(' ')).reduce((acc, [kind, pid, at]) => {
     if (kind === 'start') acc.push({ pid, start: Number(at), end: NaN }); else acc.find(t => t.pid === pid)!.end = Number(at);
@@ -101,7 +101,7 @@ function local(opts: { truncate?: number; failPushes?: number; state?: string; r
   const record = opts.recordArgs ? `echo "$*" >> ${root}/ssh-args\n` : '';
   writeFileSync(join(bin, 'ssh'), `#!/usr/bin/env bash\n${record}for a; do last=$a; done\n[ -e ${drop} ] && exit 255\n${failPush}cd ${home} && HOME=${home} bash -c "$last"${cut}\n`);
   chmodSync(join(bin, 'ssh'), 0o755);
-  const env = { ...process.env, PATH: `${bin}:${process.env.PATH}`, UBI_RUNNER_STATE: state, UBI_OWNER: 'test', UBI_FOLLOW_SECONDS: '1', UBI_STOP_WAIT_SECONDS: '10' };
+  const env = { ...process.env, PATH: `${bin}:${process.env.PATH}`, UBI_RUNNER_STATE: state, UBI_OWNER: 'test', UBICLOUD_API_KEY: 'ubi-test-placeholder', UBI_FOLLOW_SECONDS: '1', UBI_STOP_WAIT_SECONDS: '10' };
   const ubi = (args: string[], extra: Record<string, string> = {}) => Bun.spawn(['bash', RUNNER, ...args], { env: { ...env, ...extra }, stdout: 'pipe', stderr: 'pipe' });
   return { root, home, name, drop, ubi };
 }

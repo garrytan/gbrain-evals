@@ -33,8 +33,12 @@ jobs:
         run: bun install --frozen-lockfile
 
       # Unfiltered: dependency sources are type-checked too. Ambient shims
-      # for Bun text imports and untyped modules live in types/.
+      # for Bun text imports and untyped modules live in types/. The program
+      # needs about 4.4 GB of heap, past node's default 4 GB limit, so the
+      # limit is raised; the runner has 16 GB.
       - name: Typecheck
+        env:
+          NODE_OPTIONS: --max-old-space-size=8192
         run: bunx tsc --noEmit
 
       - name: Typecheck (scripts)
