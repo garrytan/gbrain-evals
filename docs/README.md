@@ -36,6 +36,7 @@ describe current behavior first, then the older work behind a decision.
 
 | Engineering question | Report |
 |---|---|
+| What does per-member read access cost a brain that uses no restrictions? | [October 28 member read access search cost](benchmarks/2026-10-28-member-read-access.md): hybrid +1.5 to 1.6% (within the 2% gate), keyword-only +3.2 to 3.9% (about 2.5 ms, from reading one column per matched row; accepted with the fail-safe kept); members get every page they may read (hit@10 1.0) |
 | Would a graph database walk gbrain's link graph faster than Postgres, for the same answer? | [October 17 graph backend, HydraDB vs Postgres](benchmarks/2026-10-17-graph-backend.md) ([preregistration](benchmarks/2026-10-17-graph-backend-preregistration.md)): no. Breadth-first walks on Postgres (gbrain #6934) beat HydraDB at 10,000 to 1,000,000 pages (warm p95 1.44 s vs 6.28 s at 100,000) with identical answers on 54,842 calls; HydraDB is faster only on deep `both` edge walks |
 | Does gbrain's automatic whole-conversation delivery hold up on the sealed held-out set? | [September 30 auto v2 release check](benchmarks/2026-09-30-evidence-auto-v2.md) |
 | Does it hold up on a harder held-out set where chunks fall short? | [October 2 sealed v2 release decision 1](benchmarks/2026-10-02-sealed-v2-decision-1.md) ([preregistration](benchmarks/2026-10-02-sealed-v2-decision-1-preregistration.md)) |
