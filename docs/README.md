@@ -161,6 +161,7 @@ These documents fix a method before measuring. They publish no capability scores
 | Will a release still look better on questions nobody tuned against? | [September 29 sealed confirmation set](benchmarks/2026-09-29-sealed-confirmation-protocol.md) |
 | What end-to-end task does a 10x memory claim stand on, and what sample can show it? | [October 8 program primary preregistration (T0) and power (PW)](benchmarks/2026-10-08-program-primary-preregistration.md) |
 | What harder workload replaces T0's ceiling, and how was it calibrated? | [October 8 harder program primary preregistration (T0b), with its three calibration rounds](benchmarks/2026-10-08-program-primary-hard-preregistration.md) |
+| Does gbrain find the right passage of a long, heading-structured document more often when a chunk's heading path rides in its embedding prefix, or when chunks start at headings? | [October 28 structure-aware chunks preregistration](benchmarks/2026-10-28-structure-aware-chunks-preregistration.md) (development evidence on messy-company-v1 dev and Qasper dev; retrieval only, embeddings capped at $15) |
 
 ## Data and methods
 
@@ -221,6 +222,13 @@ and [repository writing guide](../CLAUDE.md). The
 procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
+
+### 2026-10-28: Structure-aware chunks preregistration
+
+Protocols and preregistrations gains the [structure-aware chunks preregistration](benchmarks/2026-10-28-structure-aware-chunks-preregistration.md)
+(GBRA-234): whether a heading path in the embedding prefix, or chunks that start at headings, lifts hit@3 on
+messy-company-v1 dev and Qasper dev, with keyless arms and a Cat 13 and Cat 13b no-regression check. It was not
+reachable from this index. No existing row changed.
 
 ### 2026-10-27: Q1 head-to-head scoreboard; opening names v0.10.130
 
