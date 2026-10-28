@@ -26,7 +26,7 @@ degraded search.
 ## The experiment and results
 
 The corpus and harness are the ones from the
-[member read access report](2026-10-28-member-read-access.md):
+member read access report (gbrain-evals #198, `docs/benchmarks/2026-10-28-member-read-access.md`):
 - 5,000 single-source pages on an in-process PGLite brain with no git repository.
 - Bag-of-words hash embeddings, so no key is needed.
 - 60 timed remote MCP `search` calls per cell after 5 warm-up calls, through the
