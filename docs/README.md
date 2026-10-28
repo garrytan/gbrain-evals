@@ -37,6 +37,7 @@ describe current behavior first, then the older work behind a decision.
 | Engineering question | Report |
 |---|---|
 | Would a graph database walk gbrain's link graph faster than Postgres, for the same answer? | [October 17 graph backend, HydraDB vs Postgres](benchmarks/2026-10-17-graph-backend.md) ([preregistration](benchmarks/2026-10-17-graph-backend-preregistration.md)): no. Breadth-first walks on Postgres (gbrain #6934) beat HydraDB at 10,000 to 1,000,000 pages (warm p95 1.44 s vs 6.28 s at 100,000) with identical answers on 54,842 calls; HydraDB is faster only on deep `both` edge walks |
+| Would gbrain find the right passage of a long, sectioned document more often if each chunk's embedding carried its heading path, or if chunks started at their headings? | [October 28 structure-aware chunks](benchmarks/2026-10-28-structure-aware-chunks.md) ([preregistration](benchmarks/2026-10-28-structure-aware-chunks-preregistration.md); development, gbrain `5af37ba44` with a local experiment patch): no detectable gain, so neither idea earns a build proposal. The heading path raised hit@3 on 880 Qasper paper questions from 80.0% to 81.7% (exact p = 0.040) but lowered it on 39 messy-company questions from 76.9% to 74.4%, so the preregistered rule (a gain on both corpora and pooled p < 0.05) fails at p = 0.070; chunks that start at headings and the keyless heading-term arms add nothing detectable |
 | Does gbrain's automatic whole-conversation delivery hold up on the sealed held-out set? | [September 30 auto v2 release check](benchmarks/2026-09-30-evidence-auto-v2.md) |
 | Does it hold up on a harder held-out set where chunks fall short? | [October 2 sealed v2 release decision 1](benchmarks/2026-10-02-sealed-v2-decision-1.md) ([preregistration](benchmarks/2026-10-02-sealed-v2-decision-1-preregistration.md)) |
 | Should an agent get neighbor chunks, sections or whole pages instead of bare chunks, and at what token cost? | [September 30 evidence-delivery study](benchmarks/2026-09-30-evidence-delivery.md) |
@@ -221,6 +222,13 @@ and [repository writing guide](../CLAUDE.md). The
 procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
+
+### 2026-10-28: Structure-aware chunks
+
+Retrieval experiments gains the [structure-aware chunks report](benchmarks/2026-10-28-structure-aware-chunks.md) and its
+[preregistration](benchmarks/2026-10-28-structure-aware-chunks-preregistration.md) (GBRA-234, development evidence at
+gbrain `5af37ba44` with a local experiment patch): no contrast met the preregistered rule, so no build is proposed.
+Neither page was reachable from this index. The opening and every existing row are unchanged.
 
 ### 2026-10-27: Q1 head-to-head scoreboard; opening names v0.10.130
 
