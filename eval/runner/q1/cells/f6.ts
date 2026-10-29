@@ -33,7 +33,7 @@ export const F6_PREREGISTRATION = 'docs/benchmarks/2026-10-29-f6-current-master-
 /** Garry's approval, 2026-10-27: F6's cap, the dry run included. */
 export const F6_CAP_USD = 3100;
 export const F6_DRY_RUN_CAP_USD = 60;
-export const F6_CAMPAIGN_ID = 'f6-current-master';
+export const F6_CAMPAIGN_ID = 'q1-scoreboard-f6-current-master';
 
 type Overlay = Record<(typeof OVERLAY_KEYS)[number], boolean | string>;
 /** Arm A's search keys: every GBRA-205 delivery feature off, chunk budgets, saved facts superseding. */
