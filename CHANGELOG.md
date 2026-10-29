@@ -2,6 +2,12 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.134] - 2026-10-29
+
+### Short first names in full-name search: gbrain#7471 measured
+
+- **gbrain#7472, the fix for gbrain#7471, at `ad136eeb3` against master `3f0b6eecd` (v0.60.426.0)** ([report](docs/benchmarks/2026-10-24-name-variants-7471.md), receipts under `docs/benchmarks/2026-10-24-name-variants-7471/`). On a synthetic 560-page brain with 64 queries, a full-name query using the other form of the given name ("Matt X" for the page titled "Matthew X") went from 0 of 12 to 12 of 12 at rank 1 on keyword-only search and on hybrid search with the reranker off. No query ranked worse on the branch in any configuration. With the Voyage reranker on, both trees return the person page at rank 2. BrainBench is identical on all 24 cells. This is development evidence on placeholder names, not a held-out result.
+
 ## [0.10.133] - 2026-10-29
 
 ### The 8k conversion wave: preregistration, harness and held-out result

@@ -1,7 +1,7 @@
 # Learn, evaluate, and extend gbrain
 
 This index lists every published report by the question it answers. It describes the repository as it stands:
-gbrain-evals v0.10.133, with gbrain master `7a6bdd357` (v0.60.454.0) as the product under test. Results measured at
+gbrain-evals v0.10.134, with gbrain master `7a6bdd357` (v0.60.454.0) as the product under test. Results measured at
 other gbrain commits name that commit in their report. Everything above [Changelog](#changelog) is current; the
 changelog at the bottom records how this index changed.
 
@@ -124,6 +124,7 @@ gap does not isolate the effect of a graph alone.
 |---|---|
 | Does gbrain answer "where did she work on that date?" and "when did I last see him?" from valid time, not from when a note was written? | [September 30 temporal and as-of check (N3)](benchmarks/2026-09-30-n3-temporal-asof.md) |
 | Does a nickname, handle or former name reach the right person without merging two people who share a name? | [September 30 entity-resolution check (N4)](benchmarks/2026-09-30-n4-entity-resolution.md) |
+| Does a full-name search with a short first name (or the formal one) find the person titled with the other form? | [October 24 name variants, mirrored from gbrain #7472](benchmarks/2026-10-24-name-variants-7471.md) (gbrain `ad136eeb3` against master `3f0b6eecd`): yes. Other-form queries went from 0 of 12 to 12 of 12 at rank 1 on keyword-only and on hybrid without the reranker; with the Voyage reranker both trees put the person at rank 2 |
 | Which retrieval failure shapes that an operator agent reported on a large multi-source brain (twin slugs across sources, merge stubs, derived copies, name variants, oversized rows, stray notices) does gbrain still show? (report-only) | [October 20 agent retrieval shapes, E1 to E15](benchmarks/2026-10-20-agent-retrieval-shapes.md) (gbrain `6e1086492`, keyword path): 9 of 15 shapes reproduce and are filed as ARS-1 to ARS-4, ARS-6, ARS-7 and ARS-13 to ARS-15, for example the same slug in two federated sources fills two of the top 10 rows on 30 of 30 queries and a 60,000-character meeting comes back as one 59,883-character row; E8 to E12 hold; E5 is not measured, because search and query take no frontmatter filter (ARS-5) |
 | Can an agent-facing caller read private pages, held Takes, private Facts or another source through any read operation? | [September 30 visibility leak fuzz (N6)](benchmarks/2026-09-30-n6-visibility-fuzz.md), [October 6 on Postgres over the real HTTP transport](benchmarks/2026-10-06-n6-postgres-http.md) ([preregistration](benchmarks/2026-10-06-n6-postgres-http-preregistration.md)), [October 15 remote `find_contradictions` (D9)](benchmarks/2026-10-15-d9-find-contradictions.md): on v0.60.250.0, scoped callers get stored contradiction findings with 0 leaks across 540 `find_contradictions` probes, and a forced probe that skips the live re-read leaks 288, [October 16 recorded-time reads (`known_as_of`)](benchmarks/2026-10-16-n6-known-as-of.md): on v0.60.267.0, 0 leaks and 0 oracles in process and over Postgres HTTP, with 56 and 90 probes reading real history, [October 16 weekly belief diff (`delta {beliefs: true}`)](benchmarks/2026-10-16-n6-delta-beliefs.md): on v0.60.273.0, 0 leaks and 0 oracles in process and over Postgres HTTP, with 28 probes each reading real history, after 12 held-Take leaks found on the branch were fixed before release |
 | Does proactive recall keep private pages away from remote callers and the turn block, as a CI gate? | [October 6 N8 privacy gate](benchmarks/2026-10-06-n8-privacy-gate.md) ([preregistration](benchmarks/2026-10-06-n8-privacy-gate-preregistration.md)) |
@@ -225,6 +226,10 @@ and [repository writing guide](../CLAUDE.md). The
 procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
+
+### 2026-10-29: Opening names v0.10.134
+
+The opening names v0.10.134 (was v0.10.133), which adds the [name-variant report](benchmarks/2026-10-24-name-variants-7471.md) for gbrain#7471. One row joins the correctness table, after the N4 entity-resolution row; no existing row changed.
 
 ### 2026-10-29: Opening names v0.10.133
 
