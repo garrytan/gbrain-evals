@@ -118,6 +118,25 @@ A category is a runner, a seeded generator, a scorer and a dated report that ans
 
 A category with more than one tier keeps one operator guide per tier. Cat 40 Hard is the example: its generator mode, world contract ([WORLD_SCHEMA.md](../docs/benchmarks/cat40-hard/WORLD_SCHEMA.md)), runner path, scorer and paid steps are documented in the [Cat 40 Hard runbook](../docs/benchmarks/cat40-hard/RUNBOOK.md), and its registry row is `model-ladder-hard`.
 
+## Cut the cost of a preregistered run
+
+Two tools lower the cost of a Cat 40 confirmation without changing what it can decide. They apply only to preregistrations written after they shipped (2026-10-28). A preregistration that uses either one declares it before any cell runs; an existing or sealed preregistration keeps its design unless an amendment written before its next cell says otherwise.
+
+- **Reuse an arm that doesn't depend on the build.** The files-only, oracle, memory and Postgres arms never load gbrain, so a new gbrain build on a world that already ran them can use those cells as they are. Run the new experiment's first counted arm to the end (its receipt records the runner checkout), then check before the reused arm would have run:
+
+  ```sh
+  bun eval/runner/cat40/reuse-check.ts --prior <earlier fs dir> --planned <new wave dir> --arm fs --preregistration <prereg.md>
+  ```
+
+  It refuses on any difference in world digest, Hard identity, turn and tool limits, judge, scorer, judge prompt, settings or evaluator code hashes, or in any flag that reaches a cell; when the earlier run did not finish, has fewer cells than it planned or ended a cell in a harness error; when either run recorded a dirty checkout; when the world is not a Hard world; and when the two runner commits differ in any file the runner imports, so run the new arms from the commit the reused arm ran at or one with the same cell code. A gbrain arm is reusable only from the same gbrain and slot commits with every gbrain flag and recorded override content equal. The preregistration must name the earlier directory's budget run id and the arm on one line, and the check refuses without it. Reuse is all of an arm's cells or none, chosen before any new result is seen.
+- **Size each arm by simulation.** Before preregistering sample sizes, rerun the preregistered endpoints on cells that already ran, with one arm on fewer tasks:
+
+  ```sh
+  python3 eval/runner/cat40/arm_power.py --world P1=<cells>.jsonl --world P2=<cells>.jsonl --arm fs --fractions 0.33,0.5,0.67
+  ```
+
+  For each fraction it reports how many seeded draws keep each full-data verdict the arm takes part in (the primary wording per generator for fs, D3 for the baseline, both for the wave arm), the weakest primary lower bound and the spend on the tasks left out. That is how stable a verdict stays on fewer of the same tasks, not power against a smaller true effect, so run it on cells whose effect the preregistration expects. The preregistration names the command, its input cells and its output, and draws the arm's task subset with a recorded seed before the run. On the October public confirmation, fs on half the tasks kept the primary "ahead" in 20 of 20 draws ([audit](../docs/audit/2026-10-28-eval-cost-audit.md)).
+
 ## Reproduce a result
 
 A report identifies two pieces of code: this repository's runner and the gbrain dependency it tested. Use the corresponding gbrain-evals revision, then install its pinned dependency. If the report used a local gbrain checkout, select the specified revision in that separate checkout before linking it.
@@ -138,6 +157,12 @@ See [CREDITS.md](CREDITS.md) for attribution. Contributions to external question
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
+
+### 2026-10-28: Cut the cost of a preregistered run
+
+A new section names the two cost tools for Cat 40 confirmations, `reuse-check.ts` (reuse an arm that doesn't load
+gbrain) and `arm_power.py` (size an arm by simulation), and what a preregistration must declare before using them
+([audit](../docs/audit/2026-10-28-eval-cost-audit.md)).
 
 ### 2026-10-11: The opening names the current pin
 

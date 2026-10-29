@@ -2,6 +2,16 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.131] - 2026-10-28
+
+### Eval cost audit and two tools that cut a confirmation's cost
+
+- **You can now reuse a Cat 40 arm that doesn't load gbrain.** `bun eval/runner/cat40/reuse-check.ts --prior <dir> --planned <dir> --arm fs` compares the two experiment manifests and receipts and refuses on any difference in world, Hard identity, limits, judge, scorer, settings, evaluator code, runner cell code or cell-affecting flag, when either run recorded a dirty checkout or the earlier run didn't finish, and unless `--preregistration` names the earlier budget run and the arm. A re-confirmation of a new gbrain build on the four October worlds, run from the runner commit those arms ran at, would run only the gbrain arms: about $650 instead of about $2,860 (a projection; the sealed worlds' arms are checked in custody).
+- **You can size each arm by simulation before preregistering it.** `python3 eval/runner/cat40/arm_power.py` reruns the frozen confirmation endpoints with one arm on a fraction of the tasks and reports how often each verdict that uses the arm holds on fewer of the same tasks, and the spend on the tasks left out. On the October public cells, the files-only arm on half the tasks kept "ahead" in 20 of 20 draws and would have saved $291.
+- **Both apply only to preregistrations written from 2026-10-28 on**, and each one declares its reused arms and its sizing simulation before any cell runs ([eval/CONTRIBUTING.md](eval/CONTRIBUTING.md#cut-the-cost-of-a-preregistered-run)).
+- **The audit** ([docs/audit/2026-10-28-eval-cost-audit.md](docs/audit/2026-10-28-eval-cost-audit.md)): about $10,400 of model spend from October 14 to 28, 94% of it the Q1 scoreboard and the Cat 40 confirmation.
+- **CI:** the `harness` job's Python tests and Bun proxy tests now run as two parallel jobs, `harness (pytest)` and `harness (proxy)`, with the same test files.
+
 ## [0.10.130] - 2026-10-27
 
 ### Q1 head-to-head scoreboard: preregistered, run, and published as aggregates
