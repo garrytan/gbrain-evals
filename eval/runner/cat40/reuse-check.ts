@@ -94,8 +94,9 @@ export function reuseVerdict(prior: ExperimentManifest, planned: ExperimentManif
 /** The preregistration names the prior budget run id and the arm on one line. */
 export function declared(prereg: string, prior: ExperimentManifest, arm: string): boolean {
   const ids = [prior.budget_run_id, ...(prior.budget_runs ?? [])].filter((x): x is string => !!x);
-  const armWord = new RegExp(`(^|[^\\w-])${arm.replace(/[-]/g, '\\-')}([^\\w-]|$)`);
-  return ids.length > 0 && prereg.split('\n').some(line => ids.some(id => line.includes(id)) && armWord.test(line));
+  const word = (s: string) => new RegExp(`(^|[^\\w-])${s.replace(/[.*+?^${}()|[\]\\-]/g, '\\$&')}([^\\w-]|$)`);
+  const armWord = word(arm), idWords = ids.map(word);
+  return ids.length > 0 && prereg.split('\n').some(line => idWords.some(id => id.test(line)) && armWord.test(line));
 }
 
 export interface Receipt { mode?: string; complete?: boolean; resumed?: boolean; cells_planned?: number; evals_dirty?: boolean | null; gbrain?: Record<string, unknown> | null }
@@ -152,6 +153,8 @@ export function provenanceReasons(o: { prior: ExperimentManifest; planned: Exper
     if (a === b) continue;
     const ca = o.code(a!), cb = o.code(b!);
     if (!ca || !cb) { reasons.push(`runner commit ${ca ? b : a} is not in this checkout (fetch it to compare the cell code)`); continue; }
+    const unresolved = [...new Set([...ca, ...cb].filter(([, id]) => id === 'missing').map(([f]) => f))].sort();
+    if (unresolved.length) { reasons.push(`cell code import closure has files git cannot resolve, so it cannot be compared: ${unresolved.join(', ')}`); continue; }
     const changed = [...new Set([...ca.keys(), ...cb.keys()])].filter(f => ca.get(f) !== cb.get(f)).sort();
     if (changed.length) reasons.push(`cell code differs between runner commits ${a!.slice(0, 12)} and ${b!.slice(0, 12)}: ${changed.join(', ')}`);
   }

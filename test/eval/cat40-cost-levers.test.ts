@@ -65,6 +65,8 @@ describe('reuse-check: reusing a Cat 40 arm', () => {
     expect(declared(`- Reuse: arm \`fs\` from budget run ${fs.budget_run_id}.`, fs, 'fs')).toBe(true);
     expect(declared(`- Reuse: arm fs-acl from budget run ${fs.budget_run_id}.`, fs, 'fs')).toBe(false);
     expect(declared(`- Reuse: arm fs.\n- budget run ${fs.budget_run_id}`, fs, 'fs')).toBe(false);
+    expect(declared(`- Reuse: arm fs from budget run ${fs.budget_run_id}-retry.`, fs, 'fs')).toBe(false);
+    expect(declared(`- Reuse: arm fs from budget run ${fs.budget_run_id}.`, fs, '(')).toBe(false);
     const dir = mkdtempSync(join(tmpdir(), 'reuse-check-'));
     writeFileSync(join(dir, 'prereg.md'), `Reuse \`fs\` cells from ${fs.budget_run_id} (p1).\n`);
     const cli = (prereg: string) => spawnSync('bun', ['eval/runner/cat40/reuse-check.ts', '--prior', join(PUB, 'p1/fs'), '--planned', join(PUB, 'p1/wave'), '--arm', 'fs', '--preregistration', prereg, '--json'], { encoding: 'utf8' });
@@ -208,6 +210,8 @@ describe('reuse-check: provenance the manifests cannot show', () => {
     const drifted = (c: string) => (c === later.hard!.runner_commit ? new Map([...same, ['eval/generators/model-ladder-gen.ts', '3']]) : same);
     expect(prov({ planned: later, code: drifted })).toEqual([`cell code differs between runner commits ${fs.hard!.runner_commit!.slice(0, 12)} and bbbbbbbbbbbb: eval/generators/model-ladder-gen.ts`]);
     expect(prov({ planned: later })).toEqual([`runner commit ${fs.hard!.runner_commit} is not in this checkout (fetch it to compare the cell code)`]);
+    const unresolvable = new Map([...same, ['eval/runner/cat40/helper', 'missing']]);
+    expect(prov({ planned: later, code: () => unresolvable })).toEqual(['cell code import closure has files git cannot resolve, so it cannot be compared: eval/runner/cat40/helper']);
     const head = cellCode('HEAD')!;
     for (const f of ['eval/runner/cat40-model-ladder.ts', 'eval/generators/model-ladder-gen.ts', 'eval/runner/cat40/arms.ts', 'eval/runner/cat40/gbrain-arm.ts']) expect(head.has(f)).toBe(true);
     expect(cellCode('f'.repeat(40))).toBeNull();
@@ -268,6 +272,20 @@ describe('arm_power.py: inputs it refuses and what it counts', () => {
     expect(noWave.stderr).toContain('no paired cells for primary:public');
     for (const f of ['0', '1.5']) expect(go({ P1: worldRows(6, all) }, ['--arm', 'fs', '--fractions', f]).status).toBe(2);
     expect(go({ X1: worldRows(6, all) }, ['--arm', 'fs']).stderr).toContain('must start with P (public) or S (sealed)');
+  }, 120_000);
+
+  // Value: protects=sizing never reports a vacuous or overwritten agreement; fails_when=--draws 0 prints all_agree true or a repeated world silently replaces the first; why_new=adversarial rerun found both; seam=none; no_claim=none beyond protects
+  test('zero draws or resamples, an unparsable fraction or a world given twice is a usage error', () => {
+    for (const extra of [['--draws', '0'], ['--resamples', '0'], ['--fractions', 'half']]) expect(go({ P1: worldRows(6, all) }, ['--arm', 'fs', ...extra]).status).toBe(2);
+    const dir = mkdtempSync(join(tmpdir(), 'arm-power-'));
+    writeFileSync(join(dir, 'p1.jsonl'), worldRows(6, all).join('\n'));
+    const twice = go({ P1: worldRows(6, all) }, ['--arm', 'fs', '--world', `P1=${join(dir, 'p1.jsonl')}`]);
+    expect(twice.status).toBe(2);
+    expect(twice.stderr).toContain('world P1 is given twice');
+    const repeated = go({ P1: worldRows(6, all).map(l => l.replace('"family"', '"repeat":1,"family"')) }, ['--arm', 'fs']);
+    expect(repeated.status).toBe(2);
+    expect(repeated.stderr).toContain('sizes single-repeat runs only');
+    expect(go({ P1: [...worldRows(6, all), '{"arm":'] }, ['--arm', 'fs']).status).toBe(2);
   }, 120_000);
 
   // Value: protects=spend not made follows the tasks actually left out, per generator verdicts cover sealed worlds, and only comparisons using the arm are counted; fails_when=the requested fraction is used for spend or untouched comparisons count as agreement; why_new=only one public world was tested; seam=none; no_claim=statistical power (synthetic worlds)

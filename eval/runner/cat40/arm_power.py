@@ -35,6 +35,8 @@ def load(paths):
                 r = json.loads(line)
                 if r.get('stop') == 'harness_error':
                     continue
+                if r.get('repeat') not in (None, 0):
+                    raise ValueError(f"{p}: cell {r['arm']} {r['model']} {r['task']} has repeat {r['repeat']}; arm_power sizes single-repeat runs only")
                 cells[(r['arm'], r['model'], r['task'])] = r
     for (arm, _, _), r in cells.items():
         usd[arm] += float(r.get('total_usd') or 0) + float(r.get('judge_usd') or 0)
@@ -94,7 +96,13 @@ def main(argv=None):
     if a.arm not in (a.wave, a.fs, a.baseline):
         print(f'arm {a.arm} is in no preregistered comparison (--wave {a.wave}, --fs {a.fs}, --baseline {a.baseline})', file=sys.stderr)
         return 2
-    fractions = [float(x) for x in a.fractions.split(',')]
+    if a.draws < 1 or a.resamples < 1:
+        print(f'--draws and --resamples must be at least 1: {a.draws}, {a.resamples}', file=sys.stderr)
+        return 2
+    try:
+        fractions = [float(x) for x in a.fractions.split(',')]
+    except ValueError:
+        fractions = [0]
     if any(not 0 < f <= 1 for f in fractions):
         print(f'every fraction must be above 0 and at most 1: {a.fractions}', file=sys.stderr)
         return 2
@@ -104,7 +112,14 @@ def main(argv=None):
         if name[:1].upper() not in ('P', 'S'):
             print(f'world {name} must start with P (public) or S (sealed)', file=sys.stderr)
             return 2
-        worlds[name], spent = load(files.split(','))
+        if name in worlds:
+            print(f'world {name} is given twice: put all of its files in one --world {name}=a,b', file=sys.stderr)
+            return 2
+        try:
+            worlds[name], spent = load(files.split(','))
+        except ValueError as e:
+            print(f'world {name}: {e}', file=sys.stderr)
+            return 2
         for arm, v in spent.items():
             usd[arm][name] = v
     if not any(k[0] == a.arm for c in worlds.values() for k in c):
