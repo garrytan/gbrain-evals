@@ -1092,15 +1092,19 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
    * A22: a conversation ingested again (its earlier store was lost) keeps what the earlier realization recorded: its
    * answers, judgments, answer attempts and final retrievals (stamped with the realization that answered them) are
    * copied into the new realization, so no answered question is asked again and only missing work runs on the new
-   * store. The new realization's ingested event names the source and the counts.
+   * store. The new realization's ingested event names the source and the counts. A failed retrieval behind an answer a
+   * ruling sends back is not carried: the question retrieves again on the new store, so the answer is not rebuilt
+   * from the carried failure (A25 candidate: A22's degraded reads behind shipped-defaults S1 c4 and c5).
    */
   function carryForward(convId: string, rid: string, attempt: number, drop: Set<string> = new Set()) {
     const earlier = [...new Set(staging.events().filter(e => e.conversation === convId && e.event === 'ingested' && e.realization_id !== rid).map(e => e.realization_id))].filter(r => !stale(r)).at(-1);
     if (!earlier) return;
     const from = staging.dir(earlier), to = staging.dir(rid);
-    const answersIn = readRecords(join(from, 'answers.ndjson'), 'answer').filter(a => !drop.has(a.answer_id));
+    const recorded = readRecords(join(from, 'answers.ndjson'), 'answer');
+    const answersIn = recorded.filter(a => !drop.has(a.answer_id));
+    const redone = new Set(recorded.filter(a => drop.has(a.answer_id)).map(a => a.question_id));
     const judgmentsIn = readRecords(join(from, 'judgments.ndjson'), 'judgment').filter(j => !drop.has(j.answer_id));
-    const kept = [...latestBy<StagedRetrieval>(join(from, 'retrievals.ndjson'), r => r.key).values()].filter(r => FINAL.has(r.outcome) || r.attempt >= maxAttempts).map(r => ({ ...r, realization_id: r.realization_id ?? earlier }));
+    const kept = [...latestBy<StagedRetrieval>(join(from, 'retrievals.ndjson'), r => r.key).values()].filter(r => FINAL.has(r.outcome) || (r.attempt >= maxAttempts && !redone.has(r.question_id))).map(r => ({ ...r, realization_id: r.realization_id ?? earlier }));
     if (!answersIn.length && !judgmentsIn.length && !kept.length) return;
     const answerLog = new RecordLog(join(to, 'answers.ndjson'), 'answer');
     for (const a of answersIn) answerLog.append(a);

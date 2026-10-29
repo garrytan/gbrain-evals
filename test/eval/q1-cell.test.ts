@@ -888,6 +888,40 @@ describe('own-answer arms through the answer route (POST /answer)', () => {
     } finally { server.stop(true); fake.stop(); }
   });
 
+  test('A25 candidate: a re-answered harness_invalid answer behind a failed retrieval retrieves again instead of being rebuilt from the carried failure', async () => {
+    const fake = serveProtocol(new FakeMemorySystem());
+    let invalid = true, retrieves = 0;
+    const server = Bun.serve({ port: 0, hostname: '127.0.0.1', idleTimeout: 0, fetch: async req => {
+      const path = new URL(req.url).pathname;
+      if (path === '/retrieve') {
+        retrieves++;
+        if (invalid) return Response.json({ error: { kind: 'invalid_request', message: 'degraded read (harness failure; retry after quiesce): pending embeddings' } }, { status: 503 });
+      }
+      const res = await fetch(`${fake.url}${path}`, { method: req.method, headers: { 'content-type': 'application/json' }, body: req.method === 'POST' ? await req.text() : undefined, keepalive: false });
+      const json = await res.json() as Record<string, unknown>;
+      if (path === '/capabilities') Object.assign(json, { system: 'gbrain-defaults' });
+      return Response.json(json, { status: res.status });
+    } });
+    try {
+      const def = cellDef('gbrain-defaults', 'shim', [component({ readers: [SONNET], reader_replicates: {} })], { configuration: 'shipped-defaults' });
+      const out = join(tmp, 'a25-carried-retrieval');
+      const run = (reanswerInvalidBefore: string | null) => runCell(def, { out, systemUrl: `http://127.0.0.1:${server.port}`, maxAttempts: 1, reanswerInvalidBefore, reanswerOutcomes: ['harness_invalid'], ...quiet }, { corpus, reader: scriptedReader(), judge: scriptedJudge() });
+      const answers = () => ndjson(join(out, 'cells', def.arms[0].cell_id, 'answers.ndjson'));
+      await run(null);
+      const first = answers();
+      expect(first.length).toBeGreaterThan(0);
+      expect(first.every(a => a.outcome === 'harness_invalid' && a.latency_ms === 0)).toBe(true);
+      const asked = retrieves;
+      invalid = false;
+      await run(new Date(Date.now() + 3_600_000).toISOString());
+      expect(retrieves).toBeGreaterThan(asked);
+      const second = answers();
+      expect(second).toHaveLength(first.length);
+      expect(new Set(second.map(a => a.outcome))).toEqual(new Set(['scored']));
+      expect(second.some(a => first.some(b => b.realization_id === a.realization_id))).toBe(false);
+    } finally { server.stop(true); fake.stop(); }
+  });
+
   test('A23: a lease refusal of the system\'s own model call stops the cell as a budget stop, never a harness_invalid answer', async () => {
     const { BudgetRun } = await import('../../eval/runner/budget-ledger.ts');
     const { MeteringProxy } = await import('../../eval/runner/metering-proxy.ts');
