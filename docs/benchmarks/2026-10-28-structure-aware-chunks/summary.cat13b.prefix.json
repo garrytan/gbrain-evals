@@ -1,0 +1,175 @@
+{
+  "cell": "cat13b.prefix",
+  "cat": "13b",
+  "arm": "prefix",
+  "stub": false,
+  "gbrain": {
+    "requested": "gbrain@exp/structure-aware-chunks",
+    "ref": "exp/structure-aware-chunks",
+    "commit": "26e2c03b048cac41eb5f0af2331cbe5710b3600a",
+    "tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+    "version": "0.60.482.0",
+    "checkout_dirty": false,
+    "verified": {
+      "copy_tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+      "tree_matches": true,
+      "symlinks_under_src": 0,
+      "dir_is_realpath": true,
+      "cli_version": "0.60.482.0",
+      "cli_version_matches": true
+    },
+    "copied_not_symlinked": true
+  },
+  "metric": "top-1 hit rate",
+  "top1_hit_rate": 0.9333333333333333,
+  "top3_hit_rate": 1,
+  "swamp_at_top": 0.06666666666666667,
+  "queries": 30,
+  "search_pins": {
+    "search.mode": "balanced",
+    "search.reranker.enabled": "false",
+    "search.expansion": "false",
+    "search.cache.enabled": "false",
+    "search.autocut": "false",
+    "search.metadata_boost_gate": "lexical",
+    "search.relational_rerank_pin": "3",
+    "search.adaptive_return": "false"
+  },
+  "errors": 0,
+  "per_query": [
+    {
+      "id": "q01",
+      "targetRank": 1
+    },
+    {
+      "id": "q02",
+      "targetRank": 1
+    },
+    {
+      "id": "q03",
+      "targetRank": 1
+    },
+    {
+      "id": "q04",
+      "targetRank": 1
+    },
+    {
+      "id": "q05",
+      "targetRank": 1
+    },
+    {
+      "id": "q06",
+      "targetRank": 1
+    },
+    {
+      "id": "q07",
+      "targetRank": 1
+    },
+    {
+      "id": "q08",
+      "targetRank": 1
+    },
+    {
+      "id": "q09",
+      "targetRank": 1
+    },
+    {
+      "id": "q10",
+      "targetRank": 1
+    },
+    {
+      "id": "q11",
+      "targetRank": 1
+    },
+    {
+      "id": "q12",
+      "targetRank": 3
+    },
+    {
+      "id": "q13",
+      "targetRank": 1
+    },
+    {
+      "id": "q14",
+      "targetRank": 1
+    },
+    {
+      "id": "q15",
+      "targetRank": 1
+    },
+    {
+      "id": "q16",
+      "targetRank": 1
+    },
+    {
+      "id": "q17",
+      "targetRank": 1
+    },
+    {
+      "id": "q18",
+      "targetRank": 1
+    },
+    {
+      "id": "q19",
+      "targetRank": 1
+    },
+    {
+      "id": "q20",
+      "targetRank": 1
+    },
+    {
+      "id": "q21",
+      "targetRank": 1
+    },
+    {
+      "id": "q22",
+      "targetRank": 1
+    },
+    {
+      "id": "q23",
+      "targetRank": 1
+    },
+    {
+      "id": "q24",
+      "targetRank": 1
+    },
+    {
+      "id": "q25",
+      "targetRank": 1
+    },
+    {
+      "id": "q26",
+      "targetRank": 1
+    },
+    {
+      "id": "q27",
+      "targetRank": 3
+    },
+    {
+      "id": "q28",
+      "targetRank": 1
+    },
+    {
+      "id": "q29",
+      "targetRank": 1
+    },
+    {
+      "id": "q30",
+      "targetRank": 1
+    }
+  ],
+  "embedding": {
+    "model": "openai:text-embedding-3-large",
+    "dims": 1536,
+    "provider_tokens": 5002,
+    "calls": 20,
+    "usd": 0.0007,
+    "cache": {
+      "hits": 40,
+      "misses": 20,
+      "bypassed": 0,
+      "infra_faults": 0,
+      "path": "<scratch>/embed-cache.sqlite"
+    }
+  }
+}

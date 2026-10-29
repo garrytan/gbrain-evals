@@ -37,6 +37,7 @@ describe current behavior first, then the older work behind a decision.
 | Engineering question | Report |
 |---|---|
 | Would a graph database walk gbrain's link graph faster than Postgres, for the same answer? | [October 17 graph backend, HydraDB vs Postgres](benchmarks/2026-10-17-graph-backend.md) ([preregistration](benchmarks/2026-10-17-graph-backend-preregistration.md)): no. Breadth-first walks on Postgres (gbrain #6934) beat HydraDB at 10,000 to 1,000,000 pages (warm p95 1.44 s vs 6.28 s at 100,000) with identical answers on 54,842 calls; HydraDB is faster only on deep `both` edge walks |
+| Would gbrain find the right passage of a long, sectioned document more often if each chunk's embedding carried its heading path, or if chunks started at their headings? | [October 28 structure-aware chunks](benchmarks/2026-10-28-structure-aware-chunks.md) ([preregistration](benchmarks/2026-10-28-structure-aware-chunks-preregistration.md); development, gbrain `5af37ba44` with a local experiment patch): no detectable gain, so neither idea earns a build proposal. The heading path raised hit@3 on 880 Qasper paper questions from 80.0% to 81.7% (exact p = 0.040) but lowered it on 39 messy-company questions from 76.9% to 74.4%, so the preregistered rule (a gain on both corpora and pooled p < 0.05) fails at p = 0.070; chunks that start at headings and the keyless heading-term arms add nothing detectable |
 | Does gbrain's automatic whole-conversation delivery hold up on the sealed held-out set? | [September 30 auto v2 release check](benchmarks/2026-09-30-evidence-auto-v2.md) |
 | Does it hold up on a harder held-out set where chunks fall short? | [October 2 sealed v2 release decision 1](benchmarks/2026-10-02-sealed-v2-decision-1.md) ([preregistration](benchmarks/2026-10-02-sealed-v2-decision-1-preregistration.md)) |
 | Should an agent get neighbor chunks, sections or whole pages instead of bare chunks, and at what token cost? | [September 30 evidence-delivery study](benchmarks/2026-09-30-evidence-delivery.md) |
@@ -161,7 +162,6 @@ These documents fix a method before measuring. They publish no capability scores
 | Will a release still look better on questions nobody tuned against? | [September 29 sealed confirmation set](benchmarks/2026-09-29-sealed-confirmation-protocol.md) |
 | What end-to-end task does a 10x memory claim stand on, and what sample can show it? | [October 8 program primary preregistration (T0) and power (PW)](benchmarks/2026-10-08-program-primary-preregistration.md) |
 | What harder workload replaces T0's ceiling, and how was it calibrated? | [October 8 harder program primary preregistration (T0b), with its three calibration rounds](benchmarks/2026-10-08-program-primary-hard-preregistration.md) |
-| Does gbrain find the right passage of a long, heading-structured document more often when a chunk's heading path rides in its embedding prefix, or when chunks start at headings? | [October 28 structure-aware chunks preregistration](benchmarks/2026-10-28-structure-aware-chunks-preregistration.md) (development evidence on messy-company-v1 dev and Qasper dev; retrieval only, embeddings capped at $15) |
 
 ## Data and methods
 
@@ -222,6 +222,13 @@ and [repository writing guide](../CLAUDE.md). The
 procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
+
+### 2026-10-28: Structure-aware chunks report
+
+Retrieval experiments gains the [structure-aware chunks report](benchmarks/2026-10-28-structure-aware-chunks.md)
+(GBRA-234, development evidence at gbrain `5af37ba44` with a local experiment patch): no contrast met the
+preregistered rule, so no build is proposed. It was not reachable from this index. Its preregistration
+leaves Protocols and preregistrations (no results yet), since the new row links it.
 
 ### 2026-10-28: Structure-aware chunks preregistration
 

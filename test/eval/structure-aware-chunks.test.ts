@@ -1,5 +1,8 @@
 import { describe, expect, test } from 'bun:test';
-import { chunkHits, contrast, displayPath, mcnemar, rrf, type Row } from '../../eval/runner/structure-aware-chunks.ts';
+import { mkdtempSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { chunkHits, contrast, displayPath, mcnemar, readRows, rrf, type Row } from '../../eval/runner/structure-aware-chunks.ts';
 
 const row = (qid: string, hit3: boolean): Row => ({ corpus: 'b', arm: 'base', qid, slug: 's', n_chunks: 4, reachable: true, lead_hit: hit3, lead_chunk: 0, top3: [], hit1: hit3, hit3 });
 
@@ -33,5 +36,22 @@ describe('structure-aware-chunks scoring', () => {
     const c = contrast([row('q1', true), row('q2', true), row('q3', false)], [row('q1', false), row('q2', true), row('q3', true)], 'hit3');
     expect(c).toMatchObject({ n: 3, wins: 1, losses: 1, net: 0 });
     expect(() => contrast([row('q1', true)], [row('q1', true), row('q2', false)], 'hit3')).toThrow('different question sets');
+  });
+
+  test('report refuses a cell with errored queries or rows that disagree with its summary', () => {
+    const out = mkdtempSync(join(tmpdir(), 'sac-cells-'));
+    const cell = (name: string, rows: Row[], summary: { questions: number; errors: number }) => {
+      writeFileSync(join(out, 'rows.' + name + '.jsonl'), rows.map(r => JSON.stringify(r) + '\n').join(''));
+      writeFileSync(join(out, 'summary.' + name + '.json'), JSON.stringify(summary));
+    };
+    cell('b.base', [row('q1', true), row('q2', false)], { questions: 2, errors: 0 });
+    expect(readRows(out, 'b.base')).toHaveLength(2);
+    cell('b.errored', [row('q1', true), { ...row('q2', false), error: 'embed timeout' }], { questions: 2, errors: 1 });
+    expect(() => readRows(out, 'b.errored')).toThrow('errored');
+    cell('b.truncated', [row('q1', true)], { questions: 2, errors: 0 });
+    expect(() => readRows(out, 'b.truncated')).toThrow('summary');
+    writeFileSync(join(out, 'rows.b.nosummary.jsonl'), JSON.stringify(row('q1', true)) + '\n');
+    expect(() => readRows(out, 'b.nosummary')).toThrow('summary');
+    expect(readRows(out, 'b.missing')).toBeNull();
   });
 });

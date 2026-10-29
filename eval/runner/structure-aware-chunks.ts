@@ -605,9 +605,17 @@ export function mcnemar(wins: number, losses: number): number {
   return Math.min(1, 2 * p);
 }
 
-function readRows(out: string, cell: string): Row[] | null {
+/** Rows of a live cell, refused unless the cell is complete and error-free (preregistration: rerun before any contrast is read). */
+export function readRows(out: string, cell: string): Row[] | null {
   const p = join(out, 'rows.' + cell + '.jsonl');
-  return existsSync(p) ? readFileSync(p, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l)) : null;
+  if (!existsSync(p)) return null;
+  const rows: Row[] = readFileSync(p, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l));
+  const errored = rows.filter(r => r.error).length;
+  if (errored) throw new Error('cell ' + cell + ' has ' + errored + ' errored queries; rerun it before reading contrasts');
+  const s = join(out, 'summary.' + cell + '.json');
+  const summary = existsSync(s) ? JSON.parse(readFileSync(s, 'utf8')) : null;
+  if (!summary || summary.errors !== 0 || summary.questions !== rows.length) throw new Error('cell ' + cell + ' rows do not match a complete summary; rerun it before reading contrasts');
+  return rows;
 }
 
 export function contrast(t: Row[], c: Row[], metric: 'hit3' | 'hit1' | 'lead_hit') {
