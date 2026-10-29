@@ -98,9 +98,13 @@ published as reused. Declared reuse, one system per line:
 - Reused from q1-scoreboard-sealed, system ext-verbatim-session.
 - Reused from q1-scoreboard-sealed, system baseline-none.
 - Reused from q1-scoreboard-sealed, system baseline-recency.
-- Reused from q1-scoreboard-sealed, system baseline-hybrid.
-- Reused from q1-scoreboard-sealed, system baseline-file-agent.
 - Reused from q1-scoreboard-sealed, system baseline-full-context.
+
+baseline-hybrid and baseline-file-agent are not declared: their runner files changed after A24
+(`eval/runner/cat40/pg-arm.ts`; `eval/runner/cat40/arms.ts` and `loop.ts`), so the gate refuses them. Their S1, S2b,
+S2a and S3 rows are published as not run unless a rerun at 8,000 is approved and added to this preregistration before
+any counted cell runs. A dataset pin read only by a benchmark a system does not run (the D8 manifest) is not compared
+for that system (`DATASET_PINS` in reuse-check.ts).
 
 ext-temporal-graph's A24 rows were retired; F6 measures its 0.31.2 shipped defaults instead
 (`docs/comparison-systems/ext-temporal-graph/shipped-0.31/`, configuration `shipped-0.31`; the 0.30.2 files are

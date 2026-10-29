@@ -34,7 +34,8 @@ describe('ownsPath', () => {
     expect(ownsPath('baseline-none', 'eval/runner/cat40/pg-arm.ts')).toBe(false);
     expect(ownsPath('baseline-hybrid', 'eval/runner/cat40/pg-arm.ts')).toBe(true);
     for (const f of ['eval/runner/systems/file-agent.ts', 'eval/runner/cat40/arms.ts', 'eval/runner/cat40/loop.ts']) expect(ownsPath('baseline-file-agent', f)).toBe(true);
-    expect(ownsPath('baseline-full-context', 'eval/runner/systems/baselines.ts')).toBeNull();
+    expect(ownsPath('baseline-full-context', 'eval/runner/systems/baselines.ts')).toBe(true);
+    expect(ownsPath('gbrain-defaults', 'eval/runner/systems/baselines.ts')).toBeNull();
     expect(ownsPath('gbrain-defaults', 'eval/systems/gbrain-defaults/Dockerfile')).toBeNull();
   });
 });
@@ -66,12 +67,12 @@ describe('tokenizerPin', () => {
 
 const LOCK = (v: string) => `{\n  "packages": {\n    "@dqbd/tiktoken": ["@dqbd/tiktoken@${v}", "", {}, "sha512-${v}=="],\n  }\n}\n`;
 const READERS = ['anthropic:claude-opus-5-5', 'openai:gpt-6.1-sol'];
-function identity(o: { readers?: string[]; exclusions?: unknown[]; judgeSha?: string; renderer?: string } = {}): TreeIdentity {
+function identity(o: { readers?: string[]; exclusions?: unknown[]; judgeSha?: string; renderer?: string; benchmarks?: string[] } = {}): TreeIdentity {
   const sys = (system: string) => ({
     cells: [{ id: `s1.${system}.recipe`, set: 'S1', benchmark: 'beam-10m', selection: { kind: 'all' }, exclusions: o.exclusions ?? [], arms: [{ id: 'c8k', readers: o.readers ?? READERS }] }],
     sets: [{ id: 'S1', benchmark: 'beam-10m', selection: { kind: 'all' }, exclusions: o.exclusions ?? [] }],
     instruments: [{ id: 'beam-10m', version: 'v1', canonical_judge: 'openai:gpt-4.1-mini', temperature: 0, sha256: o.judgeSha ?? 'aaa' }],
-    benchmarks: ['beam-10m'],
+    benchmarks: o.benchmarks ?? ['beam-10m'],
   });
   return { renderer: o.renderer ?? 'memory-render-v2', tokenizer: 'approx-chars-div-4', systems: Object.fromEntries(['ext-a', 'baseline-none', 'baseline-hybrid'].map(s => [s, sys(s)])) };
 }
@@ -90,6 +91,7 @@ describe('reuseCheck over a throwaway repository', () => {
   const c4 = commit({ [B + 'shim.py']: 'v1\n', 'eval/decisions/splits/beam-10m.json': '{"s":2}\n' }, 'split');
   const c5 = commit({ 'eval/decisions/splits/beam-10m.json': '{"s":1}\n', 'eval/decisions/datasets/beam-x.json': '{"d":2}\n' }, 'dataset');
   const c6 = commit({ 'eval/decisions/datasets/beam-x.json': '{"d":1}\n', 'bun.lock': LOCK('1.0.23') }, 'tokenizer');
+  const c7 = commit({ 'eval/decisions/datasets/d8-manifest.json': '{"files":[]}\n' }, 'a D8 pin');
   const PRE = 'Reuse from A24 source a24-src for ext-a, baseline-none, baseline-hybrid.\n';
   const probe = (probes: Record<string, TreeProbe>) => (c: string) => probes[c] ?? { digest: GOLDEN, identity: identity() };
   const run = (prior: string, planned: string, o: { probes?: Record<string, TreeProbe | Error>; pre?: string; systems?: string[] } = {}) => reuseCheck({
@@ -105,7 +107,8 @@ describe('reuseCheck over a throwaway repository', () => {
     const blob = (p: string) => git('rev-parse', `${c1}:${p}`);
     expect(h.sha256).toBe(createHash('sha256').update(h.files.map(p => `${p}\0${blob(p)}\n`).join('')).digest('hex'));
     expect(pathHash(lsTree(c2, dir), 'ext-a')!.sha256).toBe(h.sha256);
-    expect(pathHash(tree, 'baseline-full-context')).toBeNull();
+    expect(pathHash(tree, 'gbrain-defaults')).toBeNull();
+    expect(pathHash(tree, 'baseline-full-context')!.files).toEqual(['eval/runner/systems/baselines.ts']);
   });
 
   test('a README edit and a new subdirectory configuration keep a bundle reusable; a changed baseline file refuses', () => {
@@ -130,6 +133,13 @@ describe('reuseCheck over a throwaway repository', () => {
     expect(by(run(c5, c6, { systems: ['baseline-none'] }), 'baseline-none').reasons).toEqual(['dataset pin eval/decisions/datasets/beam-x.json differs', expect.stringMatching(/^tokenizer package pin in bun\.lock: .*1\.0\.22.*1\.0\.23/)]);
   });
 
+  test('a pin read only by benchmarks the system does not run (D8) leaves it reusable; a system that runs one is refused', () => {
+    expect(by(run(c6, c7, { systems: ['baseline-none'] }), 'baseline-none')).toMatchObject({ reusable: true, reasons: [] });
+    const d8 = { [c7]: { digest: GOLDEN, identity: identity({ benchmarks: ['beam-10m', 'beam-d8'] }) } };
+    expect(by(run(c6, c7, { systems: ['baseline-none'], probes: d8 }), 'baseline-none').reasons).toEqual(['dataset pin eval/decisions/datasets/d8-manifest.json differs']);
+    expect(by(run(c6, c7, { systems: ['baseline-none'], probes: { [c7]: new Error('boom') } }), 'baseline-none').reasons).toContain('dataset pin eval/decisions/datasets/d8-manifest.json differs');
+  });
+
   test('a different golden digest, renderer, reader set, exclusion or judge instrument refuses', () => {
     const p = (o: Partial<TreeProbe> & { id?: Parameters<typeof identity>[0] }) => ({ [c2]: { digest: o.digest ?? GOLDEN, identity: identity(o.id) } });
     expect(by(run(c1, c2, { probes: p({ digest: 'f'.repeat(64) }) }), 'ext-a').reasons).toEqual([expect.stringMatching(/^golden fixture digest differs/)]);
@@ -142,7 +152,7 @@ describe('reuseCheck over a throwaway repository', () => {
   test('a system with no counted cells, an unmeasured tree, an unknown system or a missing declaration refuses', () => {
     expect(by(run(c1, c2, { systems: ['ext-b'] }), 'ext-b').reasons).toEqual(['no ext-b files at the prior commit', 'no ext-b files at the planned commit', 'ext-b has no counted cells in q1-cells.json at the prior commit', expect.stringContaining('does not name A24 source a24-src and ext-b')]);
     expect(by(run(c1, c2, { probes: { [c1]: new Error('boom') } }), 'ext-a').reasons).toEqual(['shared harness not measured: boom']);
-    expect(by(run(c1, c2, { systems: ['baseline-full-context'] }), 'baseline-full-context').reasons[0]).toMatch(/has no competitor-path rule/);
+    expect(by(run(c1, c2, { systems: ['gbrain-defaults'] }), 'gbrain-defaults').reasons[0]).toMatch(/has no competitor-path rule/);
     const r = run(c1, c2, { pre: 'Reuse from A24 source a24-src for\next-a\n' });
     expect(by(r, 'ext-a')).toMatchObject({ reusable: false, declared: false, reasons: ['the preregistration does not name A24 source a24-src and ext-a on one line'] });
   });

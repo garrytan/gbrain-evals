@@ -22,7 +22,7 @@
  *      instruments (id, version, judge, sha256) and frontier instrument ids, RENDERER_VERSION, the tokenizer id, the
  *      readerCounter identity of every answering arm's readers, the pinned tokenizer package in bun.lock, the split
  *      file of each benchmark the system runs (eval/decisions/splits/<benchmark>.json) and every dataset pin
- *      (eval/decisions/datasets/*). The scheduled-question sha256 a cell records needs the sealed corpus, so it is not
+ *      (eval/decisions/datasets/*) except a pin DATASET_PINS assigns only to benchmarks the system does not run. The scheduled-question sha256 a cell records needs the sealed corpus, so it is not
  *      recomputed here: the selection recipe, the exclusions and the split and dataset file hashes that produce it are
  *      compared instead.
  *   4. The file given with --preregistration names the A24 source id and the system on one line (the rule of
@@ -42,11 +42,16 @@ export const BUNDLE_FILES: readonly string[] = ['Dockerfile', 'docker-compose.ym
 export const BASELINE_FILES: Readonly<Record<string, readonly string[]>> = {
   'baseline-none': ['eval/runner/systems/baselines.ts'],
   'baseline-recency': ['eval/runner/systems/baselines.ts'],
+  'baseline-full-context': ['eval/runner/systems/baselines.ts'],
   'baseline-hybrid': ['eval/runner/systems/baselines.ts', 'eval/runner/cat40/pg-arm.ts'],
   'baseline-file-agent': ['eval/runner/systems/file-agent.ts', 'eval/runner/cat40/arms.ts', 'eval/runner/cat40/loop.ts'],
 };
 const SPLITS = 'eval/decisions/splits/';
 const DATASETS = 'eval/decisions/datasets/';
+/** Dataset pins read by named benchmarks' loaders only (D8: eval/runner/memory-qa/corpus.ts D8_MANIFEST). Such a pin is compared only for a system whose cells run one of them; every other pin is compared for every system. */
+export const DATASET_PINS: Readonly<Record<string, readonly string[]>> = {
+  'eval/decisions/datasets/d8-manifest.json': ['beam-d8'],
+};
 
 /** Whether a repository path is one of the system's own files; null when the system has no competitor-path rule. */
 export function ownsPath(system: string, path: string): boolean | null {
@@ -162,7 +167,10 @@ export function systemVerdict(system: string, prior: Side, planned: Side, isDecl
       }
     }
   }
-  const datasets = [...new Set([...prior.tree.keys(), ...planned.tree.keys()])].filter(p => p.startsWith(DATASETS)).sort();
+  const runs = prior.probe instanceof Error || planned.probe instanceof Error ? null
+    : new Set([...(prior.probe.identity.systems[system]?.benchmarks ?? []), ...(planned.probe.identity.systems[system]?.benchmarks ?? [])]);
+  const read = (p: string) => !runs || !DATASET_PINS[p] || DATASET_PINS[p].some(b => runs.has(b));
+  const datasets = [...new Set([...prior.tree.keys(), ...planned.tree.keys()])].filter(p => p.startsWith(DATASETS) && read(p)).sort();
   for (const p of datasets) if (prior.tree.get(p) !== planned.tree.get(p)) reasons.push(`dataset pin ${p} differs`);
   const tp = tokenizerPin(prior.lock), tn = tokenizerPin(planned.lock);
   if (tp !== tn) reasons.push(`tokenizer package pin in bun.lock: prior ${tp}, planned ${tn}`);
