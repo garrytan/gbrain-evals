@@ -10,6 +10,14 @@ This records what each gbrain-evals release changed and what its measurements me
 - **Where the keyword cost comes from.** Ablations put it on reading one `pages` column per matched row: replacing the predicate with `TRUE` cuts the cost to +0.5%, and dropping the index changes nothing. Removing the cost would leave a one-request window at a brain's first restricted page, so the keyword result was accepted by GBRA-108 with the fail-safe kept.
 - **Restricted brains.** Members get every page they may read (hit@10 1.0 at 20% and 80% restricted).
 
+## [0.10.132] - 2026-10-29
+
+### reuse-check and arm_power refuse inputs they used to pass
+
+- **`reuse-check.ts` no longer approves a reuse it couldn't check.** It refuses when an import in the runner's closure can't be resolved by git at either commit (both sides used to read as "missing" and compare equal). A file the runner imports from an installed package is compared by the version `package.json` pins at each commit. It also refuses when the preregistration names a budget run id only as part of a longer id or a path. A `--arm` value with regex characters is now matched literally instead of crashing the check.
+- **`arm_power.py` no longer reports agreement it didn't measure.** `--draws 0` used to print `0/0` with `all_agree: true`. Now zero draws or resamples, an unparsable fraction, a world given twice, a `--world` without `=`, cells with `repeat` above 0 and an unreadable results file or line are all usage errors (exit 2).
+- **Two slow tests no longer fail on small machines.** The plain-hybrid ingestion test and a situation-recall decision test take 3 to 6 seconds on a 2-CPU machine, against the 5-second default timeout. When the first timed out, the test runner killed the shared fake server, and two later tests failed with it. Both now set a 60-second timeout, as the other slow tests in their files do.
+
 ## [0.10.131] - 2026-10-28
 
 ### Eval cost audit and two tools that cut a confirmation's cost
