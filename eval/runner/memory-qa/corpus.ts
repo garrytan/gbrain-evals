@@ -311,37 +311,48 @@ export function beamGroupDates(batch: { time_anchor?: string | null; turns: Arra
   return batch.turns.map(group => group.find(msg => msg.time_anchor)?.time_anchor ?? batchDate);
 }
 
+export type BeamChat = Array<{ batch_number: number; time_anchor?: string | null; turns: Array<Array<{ role: string; id: number; content: string; time_anchor?: string }>> }>;
+export interface BeamProbingItem { question: string; source_chat_ids?: unknown; answer?: unknown; ideal_response?: unknown; ideal_answer?: unknown; ideal_summary?: unknown; expected_compliance?: unknown; rubric?: unknown }
+
+/** A BEAM chat (a list of batches) as sessions: one per turn group, id `b<batch>-g<group>`, dated by `beamGroupDates`. */
+export function beamSessions(chat: BeamChat): { sessions: Session[]; sessionOfMessage: Map<number, string> } {
+  const sessions: Session[] = [];
+  const sessionOfMessage = new Map<number, string>();
+  for (const batch of chat) {
+    const dates = beamGroupDates(batch);
+    batch.turns.forEach((group, gi) => {
+      const id = `b${batch.batch_number}-g${gi}`;
+      const date = dates[gi];
+      for (const msg of group) sessionOfMessage.set(msg.id, id);
+      sessions.push({ id, date: date ?? undefined, turns: group.map(msg => ({ speaker: msg.role, content: msg.content.replace(MARKER, ''), message_ids: [msg.id] })) });
+    });
+  }
+  return { sessions, sessionOfMessage };
+}
+
+/**
+ * One BEAM probing question: id `<conversation>:<ability>:<index>`, gold sessions from `source_chat_ids` (none for
+ * abstention), the reference from the first of answer, ideal_response, ideal_answer, ideal_summary, expected_compliance,
+ * and the item's own rubric list, else none (the BEAM instrument then judges the reference as a one-item rubric).
+ */
+export function beamQuestion(conversation: string, ability: string, item: BeamProbingItem, i: number, sessionOfMessage: ReadonlyMap<number, string>): MemoryQuestion {
+  const gold = [...new Set(messageIds(item.source_chat_ids).map(id => sessionOfMessage.get(id)).filter((s): s is string => !!s))];
+  const abstention = ability === 'abstention';
+  const reference = item.answer ?? item.ideal_response ?? item.ideal_answer ?? item.ideal_summary ?? item.expected_compliance;
+  return { id: `${conversation}:${ability}:${i}`, conversation, question: item.question, category: ability, gold: abstention ? [] : gold, abstention,
+    answer: reference === undefined ? undefined : String(reference), rubric: Array.isArray(item.rubric) ? item.rubric.map(String) : undefined };
+}
+
 /** `only` restricts loading to those conversation ids (a split), so other conversations' files are never read. */
 export function loadBeam(size: '100k' | '500k' | '1m', only?: ReadonlySet<string>): Corpus {
   const m = beamManifest();
   const conversations: Conversation[] = [];
   const questions: MemoryQuestion[] = [];
   for (const c of m.sizes[size].filter(x => !only || only.has(x.conversation))) {
-    const chat = JSON.parse(readDatasetFile({ path: `beam/${c.chat_path}`, url: m.raw_base + c.chat_path, sha256: c.chat_sha256 }, `beam-${size}`)) as
-      Array<{ batch_number: number; time_anchor?: string | null; turns: Array<Array<{ role: string; id: number; content: string; time_anchor?: string }>> }>;
-    const sessions: Session[] = [];
-    const sessionOfMessage = new Map<number, string>();
-    for (const batch of chat) {
-      const dates = beamGroupDates(batch);
-      batch.turns.forEach((group, gi) => {
-        const id = `b${batch.batch_number}-g${gi}`;
-        const date = dates[gi];
-        for (const msg of group) sessionOfMessage.set(msg.id, id);
-        sessions.push({ id, date: date ?? undefined, turns: group.map(msg => ({ speaker: msg.role, content: msg.content.replace(MARKER, ''), message_ids: [msg.id] })) });
-      });
-    }
+    const { sessions, sessionOfMessage } = beamSessions(JSON.parse(readDatasetFile({ path: `beam/${c.chat_path}`, url: m.raw_base + c.chat_path, sha256: c.chat_sha256 }, `beam-${size}`)) as BeamChat);
     conversations.push({ id: c.conversation, sessions });
-    const pq = JSON.parse(readDatasetFile({ path: `beam/${c.questions_path}`, url: m.raw_base + c.questions_path, sha256: c.questions_sha256 }, `beam-${size}`)) as
-      Record<string, Array<{ question: string; source_chat_ids?: unknown; answer?: unknown; ideal_response?: unknown; ideal_answer?: unknown; ideal_summary?: unknown; expected_compliance?: unknown; rubric?: unknown }>>;
-    for (const [ability, items] of Object.entries(pq)) {
-      items.forEach((item, i) => {
-        const gold = [...new Set(messageIds(item.source_chat_ids).map(id => sessionOfMessage.get(id)).filter((s): s is string => !!s))];
-        const abstention = ability === 'abstention';
-        const reference = item.answer ?? item.ideal_response ?? item.ideal_answer ?? item.ideal_summary ?? item.expected_compliance;
-        questions.push({ id: `${c.conversation}:${ability}:${i}`, conversation: c.conversation, question: item.question, category: ability, gold: abstention ? [] : gold, abstention,
-          answer: reference === undefined ? undefined : String(reference), rubric: Array.isArray(item.rubric) ? item.rubric.map(String) : undefined });
-      });
-    }
+    const pq = JSON.parse(readDatasetFile({ path: `beam/${c.questions_path}`, url: m.raw_base + c.questions_path, sha256: c.questions_sha256 }, `beam-${size}`)) as Record<string, BeamProbingItem[]>;
+    for (const [ability, items] of Object.entries(pq)) items.forEach((item, i) => questions.push(beamQuestion(c.conversation, ability, item, i, sessionOfMessage)));
   }
   return { benchmark: `beam-${size}`, conversations, questions, source: { name: `BEAM ${size}`, files: [{ path: 'eval/decisions/datasets/beam-b2da22e.json', sha256: sha256(readFileSync(join(REPO_ROOT, 'eval/decisions/datasets/beam-b2da22e.json'))) }], revision: m.commit.slice(0, 7), license: m.license } };
 }
