@@ -345,6 +345,8 @@ async function openSut(gut: GbrainUnderTest, wrap?: OpWrapper): Promise<Sut> {
   const { PGLiteEngine } = await importGbrain<EngineModule>(gut, 'src/core/pglite-engine.ts');
   const { operations } = await importGbrain<OperationsModule>(gut, 'src/core/operations.ts');
   const { importImageFile } = await importGbrain<ImportModule>(gut, 'src/core/import-file.ts');
+  const { resetGateway } = await importGbrain<{ resetGateway: () => void }>(gut, 'src/core/ai/gateway.ts');
+  resetGateway();
   const engine = new PGLiteEngine();
   await engine.connect({});
   await engine.initSchema();

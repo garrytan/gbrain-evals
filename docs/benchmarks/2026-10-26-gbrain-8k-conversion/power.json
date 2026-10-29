@@ -1,0 +1,190 @@
+{
+  "schema": "gbrain-evals/c8k-power/v1",
+  "decision_id": "sealed-v2-decision-3-2026-10-26:8k-conversion-f1-f4",
+  "note": "Simulated before custody from the development reading's Sonnet 5.5 rows (LongMemEval-S dev100) with the committed family and rule; bootstrap and sign-flip draws lowered to 2,000. No sealed data. A comparison whose dev_transfer p_pass is below 0.2 is flagged below_20_percent, as the preregistration requires.",
+  "pools": {
+    "multi-session": {
+      "n": 16,
+      "accuracy": {
+        "A0": 0.4375,
+        "A1": 0.5,
+        "A2": 0.5625,
+        "A3": 0.75,
+        "B3": 0.75,
+        "R5": 0.5625
+      }
+    },
+    "temporal-reasoning": {
+      "n": 15,
+      "accuracy": {
+        "A0": 0.6,
+        "A1": 0.6666666666666666,
+        "A2": 0.7333333333333333,
+        "A3": 0.8666666666666667,
+        "B3": 0.8,
+        "R5": 0.6666666666666666
+      }
+    },
+    "knowledge-update": {
+      "n": 16,
+      "accuracy": {
+        "A0": 0.875,
+        "A1": 0.875,
+        "A2": 0.875,
+        "A3": 0.9375,
+        "B3": 0.9375,
+        "R5": 0.8125
+      }
+    },
+    "abstention": {
+      "n": 4,
+      "accuracy": {
+        "A0": 1,
+        "A1": 1,
+        "A2": 1,
+        "A3": 1,
+        "B3": 1,
+        "R5": 1
+      }
+    }
+  },
+  "sealed_shape": {
+    "personas": 40,
+    "per_persona": {
+      "multi-session": 2,
+      "temporal-reasoning": 1,
+      "knowledge-update": 1,
+      "abstention": 1
+    },
+    "kinds": {
+      "multi-session": 80,
+      "temporal-reasoning": 40,
+      "knowledge-update": 40,
+      "abstention": 40
+    }
+  },
+  "scenarios": {
+    "dev_transfer": {
+      "sims": 1000,
+      "comparisons": {
+        "D1": {
+          "mean_delta": 0.03902500000000003,
+          "p_pass": 0.341,
+          "p_fail": 0.001,
+          "p_inconclusive": 0.658,
+          "p_pass_not_recommended": 0.228,
+          "p_recommended": 0.113,
+          "p_guard7_fail": 0.001,
+          "p_guard8_fail": 0,
+          "below_20_percent": false
+        },
+        "D2": {
+          "mean_delta": 0.03855500000000002,
+          "p_pass": 0.716,
+          "p_fail": 0,
+          "p_inconclusive": 0.284,
+          "p_pass_not_recommended": 0,
+          "p_recommended": 0.047,
+          "p_guard7_fail": 0,
+          "p_guard8_fail": 0,
+          "below_20_percent": false
+        },
+        "D3": {
+          "mean_delta": 0.11347499999999966,
+          "p_pass": 1,
+          "p_fail": 0,
+          "p_inconclusive": 0,
+          "p_pass_not_recommended": 0,
+          "p_recommended": 0.047,
+          "p_guard7_fail": 0,
+          "p_guard8_fail": 0,
+          "below_20_percent": false
+        },
+        "D3p": {
+          "mean_delta": 0.17810000000000026,
+          "p_pass": 1,
+          "p_fail": 0,
+          "p_inconclusive": 0,
+          "p_pass_not_recommended": 0,
+          "p_recommended": 1,
+          "p_guard7_fail": 0,
+          "p_guard8_fail": 0,
+          "below_20_percent": false
+        }
+      },
+      "recommended_prefix_length": {
+        "0": 0.887,
+        "1": 0.066,
+        "2": 0,
+        "3": 0.047
+      },
+      "p_flag_recommended": {
+        "flip search.query_budget_unit to auto (BEHAVIOR_CHANGES row; callers without a budget unaffected)": 0.113,
+        "flip search.evidence_date_header and search.evidence_titles on": 0.047,
+        "flip search.query_facts_block on": 1
+      },
+      "p_no_recommendation": 0
+    },
+    "null": {
+      "sims": 1000,
+      "comparisons": {
+        "D1": {
+          "mean_delta": -0.0005050000000000002,
+          "p_pass": 0.007,
+          "p_fail": 0.063,
+          "p_inconclusive": 0.93,
+          "p_pass_not_recommended": 0,
+          "p_recommended": 0.007,
+          "p_guard7_fail": 0.055,
+          "p_guard8_fail": 0,
+          "below_20_percent": true
+        },
+        "D2": {
+          "mean_delta": 0.0016450000000000008,
+          "p_pass": 0.005,
+          "p_fail": 0.039,
+          "p_inconclusive": 0.956,
+          "p_pass_not_recommended": 0,
+          "p_recommended": 0,
+          "p_guard7_fail": 0.031,
+          "p_guard8_fail": 0,
+          "below_20_percent": true
+        },
+        "D3": {
+          "mean_delta": -0.001184999999999997,
+          "p_pass": 0.002,
+          "p_fail": 0.056,
+          "p_inconclusive": 0.942,
+          "p_pass_not_recommended": 0,
+          "p_recommended": 0,
+          "p_guard7_fail": 0.045,
+          "p_guard8_fail": 0,
+          "below_20_percent": true
+        },
+        "D3p": {
+          "mean_delta": -0.00003499999999999963,
+          "p_pass": 0.004,
+          "p_fail": 0.061,
+          "p_inconclusive": 0.935,
+          "p_pass_not_recommended": 0,
+          "p_recommended": 0.004,
+          "p_guard7_fail": 0.048,
+          "p_guard8_fail": 0,
+          "below_20_percent": true
+        }
+      },
+      "recommended_prefix_length": {
+        "0": 0.993,
+        "1": 0.007,
+        "2": 0,
+        "3": 0
+      },
+      "p_flag_recommended": {
+        "flip search.query_budget_unit to auto (BEHAVIOR_CHANGES row; callers without a budget unaffected)": 0.007,
+        "flip search.evidence_date_header and search.evidence_titles on": 0,
+        "flip search.query_facts_block on": 0.004
+      },
+      "p_no_recommendation": 0.989
+    }
+  }
+}

@@ -65,7 +65,7 @@ describe('lease mode refuses before forwarding', () => {
     const { proxy, post } = leased(lease, up.fetchImpl, { allowModels: ['openai:gpt-4.1-mini'], maxOutputTokens: 1000, streaming: 'refuse', forbiddenMarkers: ['conv-26:q007'] });
     try {
       expect((await post('/c/openai/v1/chat/completions', chat('gpt-4o-mini'))).status).toBe(403);
-      expect((await post('/c/openai/v1/chat/completions', chat('gpt-4.1-mini', { max_completion_tokens: 5000 }))).status).toBe(400);
+      expect((await post('/harness/openai/v1/chat/completions', chat('gpt-4.1-mini', { max_completion_tokens: 5000 }))).status).toBe(400);
       expect((await post('/c/openai/v1/chat/completions', chat('gpt-4.1-mini', { stream: true }))).status).toBe(400);
       const leak = await post('/c/openai/v1/chat/completions', chat('gpt-4.1-mini', { messages: [{ role: 'user', content: 'metadata conv-26:q007' }] }));
       expect(leak.status).toBe(403);
@@ -96,7 +96,7 @@ describe('lease mode forwarding', () => {
     const { proxy, post } = leased(lease, up.fetchImpl, { maxOutputTokens: 2048 });
     try {
       const body = { model: 'gpt-4.1-mini', messages: [{ role: 'user', content: 'hi' }] };
-      const res = await post('/c/openai/v1/chat/completions', body, { authorization: 'Bearer dummy-from-container', 'x-api-key': 'dummy2' });
+      const res = await post('/harness/openai/v1/chat/completions', body, { authorization: 'Bearer dummy-from-container', 'x-api-key': 'dummy2' });
       expect(res.status).toBe(200);
       expect(up.seen[0].headers.get('authorization')).toBe('Bearer placeholder-openai');
       expect(up.seen[0].headers.get('x-api-key')).toBeNull();
@@ -197,21 +197,21 @@ describe('attribution across processes', () => {
     proxy.start();
     const base = `http://127.0.0.1:${proxy.port}`;
     const ctl = new ProxyControl(base, 'tok');
-    const post = () => fetch(`${base}/extract-first/openai/v1/chat/completions`, { method: 'POST', body: JSON.stringify(chat()) });
+    const post = () => fetch(`${base}/ext-extract-first/openai/v1/chat/completions`, { method: 'POST', body: JSON.stringify(chat()) });
     try {
-      expect((await fetch(`${base}/__proxy/bind`, { method: 'POST', body: JSON.stringify({ slot: 'extract-first', key: 'x' }) })).status).toBe(403);
-      const ok = await ctl.around('extract-first', 'q:1', async () => { await post(); mode = '503'; await post(); return 'done'; });
+      expect((await fetch(`${base}/__proxy/bind`, { method: 'POST', body: JSON.stringify({ slot: 'ext-extract-first', key: 'x' }) })).status).toBe(403);
+      const ok = await ctl.around('ext-extract-first', 'q:1', async () => { await post(); mode = '503'; await post(); return 'done'; });
       expect(ok.value).toBe('done');
       expect(ok.meter).toMatchObject({ requests: 2, upstream: { statuses: { '200': 1, '503': 1 }, failed: 0, unparseable: 0 } });
       expect(upstreamTrouble(ok.meter)).toBe(true);
       mode = 'garbled';
-      const bad = await ctl.around('extract-first', 'q:2', () => post());
+      const bad = await ctl.around('ext-extract-first', 'q:2', () => post());
       expect(bad.meter.upstream).toEqual({ statuses: {}, failed: 0, unparseable: 1 });
       mode = 'ok';
-      const clean = await ctl.around('extract-first', 'q:3', () => post());
+      const clean = await ctl.around('ext-extract-first', 'q:3', () => post());
       expect(upstreamTrouble(clean.meter)).toBe(false);
       await post();
-      expect(proxy.meters.get('slot:extract-first')!.requests).toBe(1);
+      expect(proxy.meters.get('slot:ext-extract-first')!.requests).toBe(1);
     } finally { proxy.stop(); }
   });
 });

@@ -1,0 +1,4262 @@
+{
+  "kind": "q1-stress-pilot",
+  "schema_version": 1,
+  "created_at": "2026-10-08T07:08:16.087Z",
+  "system": {
+    "url": "http://127.0.0.1:8700",
+    "system": "gbrain-defaults",
+    "resolved": {
+      "gbrain_version": "gbrain 0.60.106.0",
+      "resolved_sha256": "415dafe5ada70e8ba2ba72126a1af950a04eaab31aec0da4b7cf09f43186ccab",
+      "config_sha256": "6349524a02b73bdd16204585d37fb8a03c8495794f9a535fe94756437b7a0554",
+      "starter_tools_sha256": "08403fb2315d2e2ffa12e451950aaee6f704daa9c7a4d466d18c4a454483c58d",
+      "starter_tools": [
+        "add_timeline_entry",
+        "cancel_job",
+        "cancel_write_request",
+        "capture",
+        "context_pack",
+        "delta",
+        "edit_page",
+        "entity",
+        "find_anomalies",
+        "forget",
+        "get_agent_job",
+        "get_backlinks",
+        "get_ingest_log",
+        "get_page",
+        "get_recent_salience",
+        "get_skill",
+        "get_skill_asset",
+        "get_write_request",
+        "list_brain_skillpack",
+        "list_link_sources",
+        "list_pages",
+        "list_skills",
+        "list_write_requests",
+        "mute_notice",
+        "put_page",
+        "query",
+        "recall",
+        "remember",
+        "request_tools",
+        "resolve_slugs",
+        "search",
+        "submit_agent",
+        "synthesize",
+        "traverse_graph",
+        "whoami"
+      ],
+      "first_run_decisions": [
+        {
+          "id": "search_mode",
+          "default": "tokenmax",
+          "applied_argv": [
+            "gbrain",
+            "config",
+            "set",
+            "search.mode",
+            "tokenmax"
+          ]
+        },
+        {
+          "id": "writeback",
+          "default": "salient",
+          "applied_argv": [
+            "gbrain",
+            "config",
+            "set",
+            "memory.auto_writeback",
+            "salient"
+          ]
+        },
+        {
+          "id": "harness_wiring",
+          "default": "skip",
+          "applied_argv": null
+        }
+      ],
+      "engine": "pglite",
+      "embedding_model": "voyage:voyage-4",
+      "embedding_dimensions": 1024,
+      "search_mode": "tokenmax",
+      "search": {
+        "autocut": false,
+        "autocut_jump": 0.2,
+        "autocut_min_keep": 1,
+        "autocut_min_top": 0.35,
+        "cache_enabled": false,
+        "cache_similarity_threshold": 0.92,
+        "cache_ttl_seconds": 3600,
+        "contextual_retrieval": "per_chunk_synopsis",
+        "contextual_retrieval_disabled": false,
+        "cross_modal_both_image_weight": 0.4,
+        "cross_modal_both_text_weight": 0.6,
+        "cross_modal_llm_intent": false,
+        "evidence_cosine_floor": 0.8,
+        "expansion": true,
+        "expansion_variant_budget": null,
+        "floor_ratio": null,
+        "graph_signals": true,
+        "image_query_image_refinement_weight": 0.6,
+        "image_query_text_refinement_weight": 0.4,
+        "intentWeighting": true,
+        "keywordOrFallback": true,
+        "keyword_arm_confidence_floor": null,
+        "metadata_boost_gate": "lexical",
+        "relationalRetrieval": true,
+        "relational_chain_slots": 10,
+        "relational_orient_onehop": false,
+        "relational_planner": true,
+        "relational_rerank_pin": 3,
+        "relational_retrieval_depth": 2,
+        "reranker_enabled": true,
+        "reranker_model": "voyage:rerank-2.5",
+        "reranker_timeout_ms": 5000,
+        "reranker_top_n_in": 50,
+        "reranker_top_n_out": null,
+        "searchLimit": 50,
+        "title_boost": 1.25,
+        "tokenBudget": null,
+        "unified_multimodal": false,
+        "unified_multimodal_only": false
+      },
+      "model_tiers": {
+        "deep": "anthropic:claude-opus-4-7",
+        "reasoning": "anthropic:claude-sonnet-4-6",
+        "subagent": "anthropic:claude-sonnet-4-6",
+        "utility": "anthropic:claude-haiku-4-5-20251001"
+      },
+      "model_tasks": {
+        "models.dream.synthesize": "anthropic:claude-sonnet-4-6",
+        "models.dream.synthesize_verdict": "anthropic:claude-haiku-4-5-20251001",
+        "models.dream.patterns": "anthropic:claude-sonnet-4-6",
+        "models.dream.extract_atoms": "anthropic:claude-haiku-4-5-20251001",
+        "models.drift": "anthropic:claude-sonnet-4-6",
+        "models.auto_think": "anthropic:claude-opus-4-7",
+        "models.think": "anthropic:claude-opus-4-7",
+        "models.fence_repair": "openai:gpt-6.1-sol",
+        "models.subagent": "anthropic:claude-sonnet-4-6",
+        "facts.extraction_model": "anthropic:claude-sonnet-4-6",
+        "models.eval.longmemeval": "anthropic:claude-sonnet-4-6",
+        "models.eval.contradictions_judge": "anthropic:claude-haiku-4-5-20251001",
+        "models.expansion": "anthropic:claude-haiku-4-5-20251001",
+        "models.contextual_synopsis": "anthropic:claude-haiku-4-5-20251001",
+        "models.chat": "anthropic:claude-sonnet-4-6"
+      }
+    },
+    "shipped_behavior": {
+      "delivery_fallbacks": [
+        "no_text_chunks",
+        "redaction_unmapped"
+      ],
+      "preregistered": [
+        "no_text_chunks",
+        "redaction_unmapped"
+      ],
+      "configured_by": "GBRAIN_SHIPPED_FALLBACKS",
+      "matches_preregistration": true
+    },
+    "health": {
+      "ok": true,
+      "surface": "starter",
+      "resolved_sha256": "415dafe5ada70e8ba2ba72126a1af950a04eaab31aec0da4b7cf09f43186ccab",
+      "active_ns": "ns-aee72131782d0cef",
+      "called_ops": [],
+      "shipped_fallbacks": {},
+      "config": "recipe",
+      "service_ms": 0.013
+    }
+  },
+  "corpus": {
+    "benchmark": "beam-1m",
+    "split": "dev",
+    "exposure": "E3",
+    "conversation_ids": [
+      "1m-2",
+      "1m-3",
+      "1m-16",
+      "1m-20",
+      "1m-21",
+      "1m-22",
+      "1m-24",
+      "1m-25",
+      "1m-28",
+      "1m-30",
+      "1m-32"
+    ],
+    "source": {
+      "name": "BEAM 1m",
+      "files": [
+        {
+          "path": "eval/decisions/datasets/beam-b2da22e.json",
+          "sha256": "cb154a2f1d245fcb19e4c35ddf604978604823d04b292b37f083db5c68c491b6"
+        }
+      ],
+      "revision": "b2da22e",
+      "license": "CC BY-SA 4.0"
+    },
+    "conversations": 11,
+    "sessions": 9003,
+    "messages": 22338,
+    "chars": 48148737,
+    "tokens_chars_over_4": 12037184,
+    "synthetic_times": 0,
+    "undated": 0
+  },
+  "namespace": "ns-aee72131782d0cef",
+  "ingest": {
+    "wall_ms": 1987388,
+    "sessions_written_this_run": 6577,
+    "sessions_resumed": 2426,
+    "failed_this_run": 0,
+    "committed_total": 9003,
+    "failed_total": 0,
+    "ms_per_1000_messages": 121345,
+    "service_ms_p50": 274.79,
+    "service_ms_p95": 542.851,
+    "cost": {
+      "usd": 0.40048596000000003,
+      "requests": 4520,
+      "unpriced": 0,
+      "by_model": {
+        "voyage:voyage-4": {
+          "usd": 0.40048596000000003,
+          "requests": 4520
+        }
+      }
+    }
+  },
+  "finish": {
+    "ready": true,
+    "waited_ms": 3899962,
+    "completeness": "known",
+    "service_ms": 3899964.896,
+    "doctor": {
+      "clean": true,
+      "reasons": [],
+      "failing_checks": [],
+      "pages": 9003,
+      "embeddings_missing": 0,
+      "warnings": [
+        "backup_coverage",
+        "extract_atoms_backlog",
+        "graph_signals_coverage",
+        "links_extraction_lag",
+        "pglite_scale"
+      ],
+      "status": "warnings",
+      "health_score": 75
+    },
+    "doctor_rounds": 189,
+    "rounds": [
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:61% coverage, 12195 missing. Backlog: 12195 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain e"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 12195,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:61% coverage, 12139 missing. Backlog: 12139 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain e"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 12139,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:61% coverage, 12084 missing. Backlog: 12084 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain e"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 12084,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:62% coverage, 12026 missing. Backlog: 12026 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain e"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 12026,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:62% coverage, 12003 missing. Backlog: 12003 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain e"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 12003,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:62% coverage, 11925 missing. Backlog: 11925 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain e"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 11925,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:62% coverage, 11780 missing. Backlog: 11780 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain e"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 11780,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:63% coverage, 11615 missing. Backlog: 11615 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain e"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 11615,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:63% coverage, 11447 missing. Backlog: 11447 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain e"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 11447,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:64% coverage, 11398 missing. Backlog: 11398 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain e"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 11398,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:64% coverage, 11360 missing. Backlog: 11360 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain e"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 11360,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:64% coverage, 11306 missing. Backlog: 11306 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain e"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 11306,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:64% coverage, 11236 missing. Backlog: 11236 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain e"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 11236,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:65% coverage, 10997 missing. Backlog: 10997 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain e"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 10997,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:66% coverage, 10796 missing. Backlog: 10796 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain e"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 10796,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:66% coverage, 10653 missing. Backlog: 10653 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain e"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 10653,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:67% coverage, 10436 missing. Backlog: 10436 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain e"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 10436,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:67% coverage, 10256 missing. Backlog: 10256 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain e"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 10256,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:68% coverage, 10142 missing. Backlog: 10142 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain e"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 10142,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:68% coverage, 10086 missing. Backlog: 10086 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain e"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 10086,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:68% coverage, 10019 missing. Backlog: 10019 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain e"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 10019,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:68% coverage, 9960 missing. Backlog: 9960 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 9960,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:68% coverage, 9910 missing. Backlog: 9910 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 9910,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:69% coverage, 9852 missing. Backlog: 9852 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 9852,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:69% coverage, 9811 missing. Backlog: 9811 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 9811,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:69% coverage, 9747 missing. Backlog: 9747 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 9747,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:69% coverage, 9712 missing. Backlog: 9712 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 9712,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:69% coverage, 9688 missing. Backlog: 9688 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 9688,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:69% coverage, 9633 missing. Backlog: 9633 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 9633,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:69% coverage, 9571 missing. Backlog: 9571 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 9571,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:70% coverage, 9522 missing. Backlog: 9522 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 9522,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:70% coverage, 9489 missing. Backlog: 9489 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 9489,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:70% coverage, 9461 missing. Backlog: 9461 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 9461,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:70% coverage, 9418 missing. Backlog: 9418 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 9418,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:70% coverage, 9366 missing. Backlog: 9366 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 9366,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:70% coverage, 9309 missing. Backlog: 9309 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 9309,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:70% coverage, 9272 missing. Backlog: 9272 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 9272,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:70% coverage, 9241 missing. Backlog: 9241 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 9241,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:71% coverage, 9181 missing. Backlog: 9181 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 9181,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:71% coverage, 9129 missing. Backlog: 9129 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 9129,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:71% coverage, 9086 missing. Backlog: 9086 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 9086,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:71% coverage, 9050 missing. Backlog: 9050 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 9050,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:71% coverage, 8989 missing. Backlog: 8989 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 8989,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:71% coverage, 8930 missing. Backlog: 8930 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 8930,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:72% coverage, 8891 missing. Backlog: 8891 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 8891,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:72% coverage, 8843 missing. Backlog: 8843 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 8843,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:72% coverage, 8807 missing. Backlog: 8807 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 8807,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:72% coverage, 8764 missing. Backlog: 8764 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 8764,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:72% coverage, 8726 missing. Backlog: 8726 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 8726,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:72% coverage, 8692 missing. Backlog: 8692 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 8692,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:72% coverage, 8634 missing. Backlog: 8634 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 8634,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:73% coverage, 8566 missing. Backlog: 8566 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 8566,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:73% coverage, 8389 missing. Backlog: 8389 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 8389,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:74% coverage, 8167 missing. Backlog: 8167 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 8167,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:74% coverage, 8039 missing. Backlog: 8039 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 8039,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:75% coverage, 7853 missing. Backlog: 7853 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 7853,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:75% coverage, 7796 missing. Backlog: 7796 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 7796,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:75% coverage, 7722 missing. Backlog: 7722 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 7722,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:76% coverage, 7652 missing. Backlog: 7652 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 7652,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:76% coverage, 7607 missing. Backlog: 7607 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 7607,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:76% coverage, 7544 missing. Backlog: 7544 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 7544,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:76% coverage, 7485 missing. Backlog: 7485 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 7485,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:76% coverage, 7413 missing. Backlog: 7413 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 7413,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:77% coverage, 7346 missing. Backlog: 7346 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 7346,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:77% coverage, 7286 missing. Backlog: 7286 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 7286,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:77% coverage, 7232 missing. Backlog: 7232 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 7232,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:77% coverage, 7177 missing. Backlog: 7177 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 7177,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:77% coverage, 7122 missing. Backlog: 7122 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 7122,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:77% coverage, 7062 missing. Backlog: 7062 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 7062,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:78% coverage, 7011 missing. Backlog: 7011 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 7011,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:78% coverage, 6957 missing. Backlog: 6957 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 6957,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:78% coverage, 6903 missing. Backlog: 6903 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 6903,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:78% coverage, 6844 missing. Backlog: 6844 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 6844,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:78% coverage, 6783 missing. Backlog: 6783 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 6783,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:79% coverage, 6723 missing. Backlog: 6723 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 6723,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:79% coverage, 6662 missing. Backlog: 6662 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 6662,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:79% coverage, 6623 missing. Backlog: 6623 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 6623,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:79% coverage, 6560 missing. Backlog: 6560 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 6560,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:80% coverage, 6345 missing. Backlog: 6345 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 6345,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:81% coverage, 6099 missing. Backlog: 6099 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 6099,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:81% coverage, 5932 missing. Backlog: 5932 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 5932,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:81% coverage, 5866 missing. Backlog: 5866 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 5866,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:81% coverage, 5805 missing. Backlog: 5805 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 5805,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:82% coverage, 5753 missing. Backlog: 5753 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 5753,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:82% coverage, 5698 missing. Backlog: 5698 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 5698,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:82% coverage, 5634 missing. Backlog: 5634 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 5634,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:82% coverage, 5570 missing. Backlog: 5570 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 5570,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:82% coverage, 5538 missing. Backlog: 5538 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 5538,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:82% coverage, 5480 missing. Backlog: 5480 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 5480,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:83% coverage, 5431 missing. Backlog: 5431 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 5431,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:83% coverage, 5417 missing. Backlog: 5417 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 5417,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:83% coverage, 5378 missing. Backlog: 5378 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 5378,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:83% coverage, 5322 missing. Backlog: 5322 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 5322,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:83% coverage, 5262 missing. Backlog: 5262 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 5262,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:83% coverage, 5225 missing. Backlog: 5225 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 5225,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:84% coverage, 5150 missing. Backlog: 5150 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 5150,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:84% coverage, 5083 missing. Backlog: 5083 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 5083,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:84% coverage, 5010 missing. Backlog: 5010 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 5010,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:84% coverage, 4943 missing. Backlog: 4943 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 4943,
+        "warnings": [
+          "backup_coverage",
+          "brain_score",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 55
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:84% coverage, 4881 missing. Backlog: 4881 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 4881,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 60
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:85% coverage, 4824 missing. Backlog: 4824 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 4824,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 60
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:85% coverage, 4778 missing. Backlog: 4778 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 4778,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 60
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:85% coverage, 4717 missing. Backlog: 4717 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 4717,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 60
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:85% coverage, 4646 missing. Backlog: 4646 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 4646,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 60
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:85% coverage, 4581 missing. Backlog: 4581 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 4581,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 60
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:86% coverage, 4435 missing. Backlog: 4435 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 4435,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 60
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:87% coverage, 4086 missing. Backlog: 4086 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 4086,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 60
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:88% coverage, 3826 missing. Backlog: 3826 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 3826,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 60
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:89% coverage, 3578 missing. Backlog: 3578 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 3578,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 60
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:89% coverage, 3498 missing. Backlog: 3498 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 3498,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 60
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:89% coverage, 3429 missing. Backlog: 3429 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 3429,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 60
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:89% coverage, 3354 missing. Backlog: 3354 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 3354,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 60
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:90% coverage, 3283 missing. Backlog: 3283 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 3283,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 60
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:90% coverage, 3233 missing. Backlog: 3233 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 3233,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 60
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:90% coverage, 3166 missing. Backlog: 3166 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 3166,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "embedding_column_registry",
+          "embeddings",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 60
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:90% coverage, 3096 missing. Backlog: 3096 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 3096,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:90% coverage, 3047 missing. Backlog: 3047 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 3047,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:91% coverage, 2971 missing. Backlog: 2971 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 2971,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:91% coverage, 2917 missing. Backlog: 2917 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 2917,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:91% coverage, 2853 missing. Backlog: 2853 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 2853,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:91% coverage, 2797 missing. Backlog: 2797 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 2797,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:91% coverage, 2734 missing. Backlog: 2734 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 2734,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:91% coverage, 2686 missing. Backlog: 2686 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 2686,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:92% coverage, 2630 missing. Backlog: 2630 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 2630,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:92% coverage, 2569 missing. Backlog: 2569 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 2569,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:92% coverage, 2510 missing. Backlog: 2510 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 2510,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:92% coverage, 2471 missing. Backlog: 2471 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 2471,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:92% coverage, 2461 missing. Backlog: 2461 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 2461,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:92% coverage, 2435 missing. Backlog: 2435 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 2435,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:92% coverage, 2379 missing. Backlog: 2379 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 2379,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:93% coverage, 2331 missing. Backlog: 2331 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 2331,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:93% coverage, 2281 missing. Backlog: 2281 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 2281,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:93% coverage, 2242 missing. Backlog: 2242 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 2242,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:93% coverage, 2194 missing. Backlog: 2194 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 2194,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:93% coverage, 2160 missing. Backlog: 2160 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 2160,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:93% coverage, 2107 missing. Backlog: 2107 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 2107,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:93% coverage, 2049 missing. Backlog: 2049 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 2049,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:94% coverage, 1932 missing. Backlog: 1932 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 1932,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:94% coverage, 1822 missing. Backlog: 1822 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 1822,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:95% coverage, 1714 missing. Backlog: 1714 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 1714,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:95% coverage, 1569 missing. Backlog: 1569 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 1569,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:95% coverage, 1439 missing. Backlog: 1439 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 1439,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:96% coverage, 1398 missing. Backlog: 1398 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 1398,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:96% coverage, 1382 missing. Backlog: 1382 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 1382,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:96% coverage, 1354 missing. Backlog: 1354 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 1354,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:96% coverage, 1332 missing. Backlog: 1332 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 1332,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:96% coverage, 1299 missing. Backlog: 1299 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 1299,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:96% coverage, 1285 missing. Backlog: 1285 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 1285,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:96% coverage, 1261 missing. Backlog: 1261 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 1261,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:96% coverage, 1233 missing. Backlog: 1233 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 1233,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:96% coverage, 1190 missing. Backlog: 1190 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 1190,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:96% coverage, 1132 missing. Backlog: 1132 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 1132,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:97% coverage, 1069 missing. Backlog: 1069 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 1069,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:97% coverage, 1021 missing. Backlog: 1021 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain emb"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 1021,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:97% coverage, 978 missing. Backlog: 978 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain embed"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 978,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:97% coverage, 948 missing. Backlog: 948 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain embed"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 948,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:97% coverage, 934 missing. Backlog: 934 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain embed"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 934,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:97% coverage, 883 missing. Backlog: 883 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain embed"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 883,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:97% coverage, 806 missing. Backlog: 806 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain embed"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 806,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:98% coverage, 721 missing. Backlog: 721 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain embed"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 721,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:98% coverage, 658 missing. Backlog: 658 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain embed"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 658,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:98% coverage, 645 missing. Backlog: 645 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain embed"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 645,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:98% coverage, 585 missing. Backlog: 585 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain embed"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 585,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:98% coverage, 470 missing. Backlog: 470 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain embed"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 470,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:99% coverage, 364 missing. Backlog: 364 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain embed"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 364,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:99% coverage, 271 missing. Backlog: 271 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain embed"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 271,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:99% coverage, 252 missing. Backlog: 252 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain embed"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 252,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:99% coverage, 252 missing. Backlog: 252 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain embed"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 252,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:99% coverage, 252 missing. Backlog: 252 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain embed"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 252,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:99% coverage, 233 missing. Backlog: 233 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain embed"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 233,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:99% coverage, 227 missing. Backlog: 227 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain embed"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 227,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:99% coverage, 227 missing. Backlog: 227 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain embed"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 227,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:99% coverage, 226 missing. Backlog: 226 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain embed"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 226,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:99% coverage, 224 missing. Backlog: 224 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain embed"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 224,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:99% coverage, 218 missing. Backlog: 218 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain embed"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 218,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:99% coverage, 216 missing. Backlog: 216 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain embed"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 216,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:99% coverage, 216 missing. Backlog: 216 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain embed"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 216,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:99% coverage, 195 missing. Backlog: 195 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain embed"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 195,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:99% coverage, 195 missing. Backlog: 195 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain embed"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 195,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:99% coverage, 193 missing. Backlog: 193 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain embed"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 193,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:99% coverage, 173 missing. Backlog: 173 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain embed"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 173,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:100% coverage, 136 missing. Backlog: 136 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain embe"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 136,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:100% coverage, 136 missing. Backlog: 136 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain embe"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 136,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:100% coverage, 136 missing. Backlog: 136 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain embe"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 136,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:100% coverage, 118 missing. Backlog: 118 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain embe"
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 118,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:100% coverage, 28 missing. Backlog: 28 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain embed "
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 28,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:100% coverage, 28 missing. Backlog: 28 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain embed "
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 28,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": false,
+        "reasons": [
+          "embeddings:100% coverage, 28 missing. Backlog: 28 chunk(s) without embeddings. Fix: gbrain embed --stale --catch-up (runs until the backlog is empty; a plain gbrain embed "
+        ],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 28,
+        "warnings": [
+          "backup_coverage",
+          "embed_staleness",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 70
+      },
+      {
+        "clean": true,
+        "reasons": [],
+        "failing_checks": [],
+        "pages": 9003,
+        "embeddings_missing": 0,
+        "warnings": [
+          "backup_coverage",
+          "extract_atoms_backlog",
+          "graph_signals_coverage",
+          "links_extraction_lag",
+          "pglite_scale"
+        ],
+        "status": "warnings",
+        "health_score": 75
+      }
+    ],
+    "absent_pages": 0,
+    "expected_pages": 9003,
+    "cost": {
+      "usd": 0.32840405999999867,
+      "requests": 3892,
+      "unpriced": 0,
+      "by_model": {
+        "voyage:voyage-4": {
+          "usd": 0.32840405999999867,
+          "requests": 3892
+        }
+      }
+    }
+  },
+  "restart": {
+    "restart_ms": 3707.1,
+    "serve_session": {
+      "id": "9770308da97a",
+      "surface": "starter",
+      "started_at": "2026-10-08T06:52:54.002384+00:00",
+      "start_ms": 1632.2,
+      "tools_sha256": "08403fb2315d2e2ffa12e451950aaee6f704daa9c7a4d466d18c4a454483c58d",
+      "resolved_sha256": "415dafe5ada70e8ba2ba72126a1af950a04eaab31aec0da4b7cf09f43186ccab"
+    }
+  },
+  "footprint": {
+    "peak_serve_rss_kb": 802060,
+    "final_serve_rss_kb": 485824,
+    "brain_bytes": 1096515449,
+    "samples": 39
+  },
+  "queries": {
+    "n": 220,
+    "ok": 220,
+    "failed": 0,
+    "policy": {
+      "on_degraded": "report"
+    },
+    "service_ms_p50": 4056.771,
+    "service_ms_p95": 5658.657,
+    "gbrain_ms_p50": 4036.989,
+    "gbrain_ms_p95": 5641.37,
+    "wall_ms_p95": 5664,
+    "harness_invalid": 1,
+    "reasons": {
+      "delivery_fallback:no_text_chunks": 25,
+      "delivery_fallback:redaction_unmapped": 12,
+      "degraded:vector_arm_failed": 1,
+      "expansion_not_applied": 1
+    },
+    "recall_any_10": 0.8195876288659794,
+    "recall_all_10": 0.36082474226804123,
+    "tokens_delivered_mean": 26115.859090909093,
+    "cost": {
+      "usd": 0,
+      "requests": 0,
+      "unpriced": 0,
+      "by_model": {}
+    }
+  },
+  "engine_rule": {
+    "checks": {
+      "query_p95_under_10s": true,
+      "no_rerank_fallbacks": true,
+      "no_delivery_fallbacks": true,
+      "no_failed_queries": true,
+      "rss_fits_vm": true
+    },
+    "query_p95_ms": 5658.657,
+    "rerank_fallback_queries": 0,
+    "delivery_fallback_queries": 0,
+    "shipped_fallback_queries": 30,
+    "shipped_fallbacks": {
+      "no_text_chunks": 25,
+      "redaction_unmapped": 12
+    },
+    "shipped_behavior": [
+      "no_text_chunks",
+      "redaction_unmapped"
+    ],
+    "failed_queries": 0,
+    "peak_rss_kb": 802060,
+    "rss_limit_kb": 16777216,
+    "engine": "pglite",
+    "verdict": "PGLite is the S1 headline engine for gbrain-defaults."
+  },
+  "artifacts": {
+    "ingest": "ingest.ndjson",
+    "footprint": "footprint.ndjson",
+    "queries": "queries.ndjson"
+  }
+}

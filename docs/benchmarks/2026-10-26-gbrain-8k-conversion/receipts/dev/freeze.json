@@ -1,0 +1,55 @@
+{
+  "kind": "c8k-freeze",
+  "commit": "cf3ec433f4fffda60d00076bae7361100c632cc4",
+  "version": "0.60.461.0",
+  "keyless": false,
+  "embedding": "openai:text-embedding-3-large@1536",
+  "histories": 100,
+  "evidence_rows": 600,
+  "repeat_rows": 20,
+  "amended": {
+    "histories": 100,
+    "arms_added": {
+      "B3": 100
+    },
+    "rows_retired": {
+      "A4": 100
+    }
+  },
+  "dispatch": "dispatchToolCall(query) with the stdio server's options (c8k-product.ts stdioDispatchOpts)",
+  "retrieval_cache": {
+    "spec_change": 6,
+    "scope": "this cell only (<cell>/cache/retrieval inside the custody root), never committed",
+    "processes": 2,
+    "embed": {
+      "cache": "H1 EmbeddingCache (gbrain src/eval/shared/embed-cache.ts)",
+      "key": "provider:model@dims#query:sha256(text)",
+      "models": [
+        "openai:text-embedding-3-large@1536"
+      ],
+      "hits": 101,
+      "misses": 101,
+      "bypassed": 0,
+      "infra_faults": 0,
+      "canonical_sha256": "cea2f982db8bf02fec31951e5355e583bee10223719c5517a9bb8aa9d2cb855c"
+    },
+    "rerank": {
+      "key": "sha256([provider, endpoint path, model, full request body])",
+      "hits": 720,
+      "misses": 200,
+      "bypassed": 0,
+      "uncached_errors": 0,
+      "rows": 200,
+      "canonical_sha256": "1e11584aeb9779259c56371bcd9d820e8831b6fbed7895a18630de807621fc0c"
+    },
+    "uncached": "chat (readers, judge) and extraction calls"
+  },
+  "service_ms_mean_by_arm": {
+    "A0": 768.5370000000001,
+    "A1": 198.06299999999996,
+    "A2": 183.24200000000002,
+    "A3": 183.79400000000004,
+    "B3": 246.87799999999996,
+    "R5": 306.66799999999995
+  }
+}

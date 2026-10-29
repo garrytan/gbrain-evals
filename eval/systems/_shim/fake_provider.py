@@ -8,9 +8,9 @@ Routes (any path prefix, so `/openai/v1/...` and `/<slot>/openai/v1/...` both wo
   POST .../chat/completions  logprobs requests get a word-overlap True/False answer (cross-encoder rerankers);
                              `response_format: json_schema` gets a schema-valid instance (entities are capitalized
                              words, knowledge graphs get nodes and edges); a forced tool call gets schema-valid
-                             arguments; a extract-first-style "## New Messages" prompt gets one memory per message line;
+                             arguments; an extract-first-style "## New Messages" prompt gets one memory per message line;
                              anything else gets "ok". `stream: true` answers as server-sent events with usage.
-  POST .../responses         `text.format: json_schema` gets temporal-graph's named structured outputs (ExtractedEntities,
+  POST .../responses         `text.format: json_schema` gets the temporal graph library's named structured outputs (ExtractedEntities,
                              ExtractedEdges, EdgeTimestamps) or a schema-valid instance for any other schema.
   POST .../embeddings        hashed bag-of-words vectors; `dimensions` is honored, else the model's native size.
   POST .../messages          an Anthropic-style text answer.

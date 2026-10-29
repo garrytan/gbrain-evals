@@ -1,0 +1,48 @@
+{
+  "schema": "gbrain-evals/hedge-validation/v1",
+  "classifier_version": "hedge-v3",
+  "rules_sha256": "b89477b86d1953e30bcf3628d4f533b99e1a8aab6514f25ca555ac845936987a",
+  "labels_sha256": "9578ae5daa94bdd0f842874327ab85c0300aa62865d3cf816062d3e89afa44e2",
+  "n": 60,
+  "unlabeled": 0,
+  "accuracy": 1,
+  "per_class": {
+    "abstain": {
+      "support": 20,
+      "predicted": 20,
+      "precision": 1,
+      "recall": 1
+    },
+    "hedged": {
+      "support": 20,
+      "predicted": 20,
+      "precision": 1,
+      "recall": 1
+    },
+    "confident": {
+      "support": 20,
+      "predicted": 20,
+      "precision": 1,
+      "recall": 1
+    }
+  },
+  "confusion": {
+    "abstain": {
+      "abstain": 20,
+      "hedged": 0,
+      "confident": 0
+    },
+    "hedged": {
+      "abstain": 0,
+      "hedged": 20,
+      "confident": 0
+    },
+    "confident": {
+      "abstain": 0,
+      "hedged": 0,
+      "confident": 20
+    }
+  },
+  "population_weighted": null,
+  "misclassified": []
+}

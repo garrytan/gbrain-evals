@@ -229,8 +229,9 @@ export function scriptedReaderJudge(): (model: string, prompt: string, maxTokens
     if (prompt.startsWith('I will give you items a memory system returned')) {
       const date = field(prompt, 'Current Date');
       const q = stems(field(prompt, 'Question'));
-      const lines = [...prompt.matchAll(/^- \((\d+), [a-z]+(, superseded)?\)(?: \[valid (\S+) to (\S+)\])? (.*)$/gm)]
-        .map(m => ({ rank: Number(m[1]), superseded: !!m[2], from: m[3] && m[3] !== 'unknown' ? m[3] : null, to: m[4] && m[4] !== 'present' ? m[4] : null, text: m[5] }))
+      // An item is its header line, with the text inline or (a turn-structured item) on the indented lines below it.
+      const lines = [...prompt.matchAll(/^- \((\d+), [a-z]+(, superseded)?\)(?: \[valid (\S+) to (\S+)\])?(?: (.*))?((?:\n  .*)*)$/gm)]
+        .map(m => ({ rank: Number(m[1]), superseded: !!m[2], from: m[3] && m[3] !== 'unknown' ? m[3] : null, to: m[4] && m[4] !== 'present' ? m[4] : null, text: [m[5] ?? '', ...m[6].split('\n').map(s => s.trim())].filter(Boolean).join(' ') }))
         .filter(l => (!l.from || l.from <= date) && (l.to ? l.to > date : !l.superseded))
         .map(l => ({ ...l, score: [...stems(l.text)].filter(w => q.has(w)).length }));
       const best = Math.max(0, ...lines.map(l => l.score));

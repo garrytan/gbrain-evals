@@ -1,0 +1,301 @@
+{
+  "kind": "q1-stress-pilot",
+  "schema_version": 1,
+  "created_at": "2026-10-07T04:01:11.655Z",
+  "system": {
+    "url": "http://127.0.0.1:8700",
+    "system": "gbrain-defaults",
+    "resolved": {
+      "gbrain_version": "gbrain 0.60.95.0",
+      "resolved_sha256": "f7595f00b901106472f09c4505623663eb8c63b66b5f47dc9a0ffdac8958223b",
+      "config_sha256": "6349524a02b73bdd16204585d37fb8a03c8495794f9a535fe94756437b7a0554",
+      "starter_tools_sha256": "08403fb2315d2e2ffa12e451950aaee6f704daa9c7a4d466d18c4a454483c58d",
+      "starter_tools": [
+        "add_timeline_entry",
+        "cancel_job",
+        "cancel_write_request",
+        "capture",
+        "context_pack",
+        "delta",
+        "edit_page",
+        "entity",
+        "find_anomalies",
+        "forget",
+        "get_agent_job",
+        "get_backlinks",
+        "get_ingest_log",
+        "get_page",
+        "get_recent_salience",
+        "get_skill",
+        "get_skill_asset",
+        "get_write_request",
+        "list_brain_skillpack",
+        "list_link_sources",
+        "list_pages",
+        "list_skills",
+        "list_write_requests",
+        "mute_notice",
+        "put_page",
+        "query",
+        "recall",
+        "remember",
+        "request_tools",
+        "resolve_slugs",
+        "search",
+        "submit_agent",
+        "synthesize",
+        "traverse_graph",
+        "whoami"
+      ],
+      "first_run_decisions": [
+        {
+          "id": "search_mode",
+          "default": "tokenmax",
+          "applied_argv": [
+            "gbrain",
+            "config",
+            "set",
+            "search.mode",
+            "tokenmax"
+          ]
+        },
+        {
+          "id": "writeback",
+          "default": "salient",
+          "applied_argv": [
+            "gbrain",
+            "config",
+            "set",
+            "memory.auto_writeback",
+            "salient"
+          ]
+        },
+        {
+          "id": "harness_wiring",
+          "default": "skip",
+          "applied_argv": null
+        }
+      ],
+      "engine": "pglite",
+      "embedding_model": "voyage:voyage-4",
+      "embedding_dimensions": 1024,
+      "search_mode": "tokenmax",
+      "search": {
+        "autocut": false,
+        "autocut_jump": 0.2,
+        "autocut_min_keep": 1,
+        "autocut_min_top": 0.35,
+        "cache_enabled": false,
+        "cache_similarity_threshold": 0.92,
+        "cache_ttl_seconds": 3600,
+        "contextual_retrieval": "per_chunk_synopsis",
+        "contextual_retrieval_disabled": false,
+        "cross_modal_both_image_weight": 0.4,
+        "cross_modal_both_text_weight": 0.6,
+        "cross_modal_llm_intent": false,
+        "evidence_cosine_floor": 0.8,
+        "expansion": true,
+        "expansion_variant_budget": null,
+        "floor_ratio": null,
+        "graph_signals": true,
+        "image_query_image_refinement_weight": 0.6,
+        "image_query_text_refinement_weight": 0.4,
+        "intentWeighting": true,
+        "keywordOrFallback": true,
+        "keyword_arm_confidence_floor": null,
+        "metadata_boost_gate": "lexical",
+        "relationalRetrieval": true,
+        "relational_chain_slots": 10,
+        "relational_orient_onehop": false,
+        "relational_planner": true,
+        "relational_rerank_pin": 3,
+        "relational_retrieval_depth": 2,
+        "reranker_enabled": true,
+        "reranker_model": "voyage:rerank-2.5",
+        "reranker_timeout_ms": 5000,
+        "reranker_top_n_in": 50,
+        "reranker_top_n_out": null,
+        "searchLimit": 50,
+        "title_boost": 1.25,
+        "tokenBudget": null,
+        "unified_multimodal": false,
+        "unified_multimodal_only": false
+      },
+      "model_tiers": {
+        "deep": "anthropic:claude-opus-4-7",
+        "reasoning": "anthropic:claude-sonnet-4-6",
+        "subagent": "anthropic:claude-sonnet-4-6",
+        "utility": "anthropic:claude-haiku-4-5-20251001"
+      },
+      "model_tasks": {
+        "models.dream.synthesize": "anthropic:claude-sonnet-4-6",
+        "models.dream.synthesize_verdict": "anthropic:claude-haiku-4-5-20251001",
+        "models.dream.patterns": "anthropic:claude-sonnet-4-6",
+        "models.dream.extract_atoms": "anthropic:claude-haiku-4-5-20251001",
+        "models.drift": "anthropic:claude-sonnet-4-6",
+        "models.auto_think": "anthropic:claude-opus-4-7",
+        "models.think": "anthropic:claude-opus-4-7",
+        "models.subagent": "anthropic:claude-sonnet-4-6",
+        "facts.extraction_model": "anthropic:claude-sonnet-4-6",
+        "models.eval.longmemeval": "anthropic:claude-sonnet-4-6",
+        "models.eval.contradictions_judge": "anthropic:claude-haiku-4-5-20251001",
+        "models.expansion": "anthropic:claude-haiku-4-5-20251001",
+        "models.contextual_synopsis": "anthropic:claude-haiku-4-5-20251001",
+        "models.chat": "anthropic:claude-sonnet-4-6"
+      }
+    },
+    "health": {
+      "ok": true,
+      "surface": "starter",
+      "resolved_sha256": "f7595f00b901106472f09c4505623663eb8c63b66b5f47dc9a0ffdac8958223b",
+      "active_ns": null,
+      "called_ops": [],
+      "config": "recipe",
+      "service_ms": 0.01
+    }
+  },
+  "corpus": {
+    "benchmark": "beam-1m",
+    "split": "dev",
+    "exposure": "E3",
+    "conversation_ids": [
+      "1m-2",
+      "1m-3",
+      "1m-16",
+      "1m-20",
+      "1m-21",
+      "1m-22",
+      "1m-24",
+      "1m-25",
+      "1m-28",
+      "1m-30",
+      "1m-32"
+    ],
+    "source": {
+      "name": "BEAM 1m",
+      "files": [
+        {
+          "path": "eval/decisions/datasets/beam-b2da22e.json",
+          "sha256": "cb154a2f1d245fcb19e4c35ddf604978604823d04b292b37f083db5c68c491b6"
+        }
+      ],
+      "revision": "b2da22e",
+      "license": "CC BY-SA 4.0"
+    },
+    "conversations": 11,
+    "sessions": 9003,
+    "messages": 22338,
+    "chars": 48148737,
+    "tokens_chars_over_4": 12037184,
+    "synthetic_times": 0,
+    "undated": 0
+  },
+  "namespace": "ns-aee72131782d0cef",
+  "ingest": {
+    "wall_ms": 2348483,
+    "sessions_written_this_run": 9003,
+    "sessions_resumed": 0,
+    "failed_this_run": 0,
+    "committed_total": 9003,
+    "failed_total": 0,
+    "ms_per_1000_messages": 105134,
+    "service_ms_p50": 230.452,
+    "service_ms_p95": 541.602,
+    "cost": {
+      "usd": 0.4766634600000003,
+      "requests": 5383,
+      "unpriced": 0,
+      "by_model": {
+        "voyage:voyage-4": {
+          "usd": 0.4766634600000003,
+          "requests": 5383
+        }
+      }
+    }
+  },
+  "finish": {
+    "ready": true,
+    "waited_ms": 2576646,
+    "completeness": "known",
+    "service_ms": 2576648.194,
+    "cost": {
+      "usd": 0.3180059999999997,
+      "requests": 3765,
+      "unpriced": 0,
+      "by_model": {
+        "voyage:voyage-4": {
+          "usd": 0.3180059999999997,
+          "requests": 3765
+        }
+      }
+    }
+  },
+  "restart": {
+    "restart_ms": 3264.2,
+    "serve_session": {
+      "id": "45be0565224f",
+      "surface": "starter",
+      "started_at": "2026-10-07T03:55:26.107160+00:00",
+      "start_ms": 1323.7,
+      "tools_sha256": "08403fb2315d2e2ffa12e451950aaee6f704daa9c7a4d466d18c4a454483c58d",
+      "resolved_sha256": "f7595f00b901106472f09c4505623663eb8c63b66b5f47dc9a0ffdac8958223b"
+    }
+  },
+  "footprint": {
+    "peak_serve_rss_kb": 822296,
+    "final_serve_rss_kb": 485796,
+    "brain_bytes": 1069757712,
+    "samples": 40
+  },
+  "queries": {
+    "n": 220,
+    "ok": 220,
+    "failed": 0,
+    "policy": {
+      "on_degraded": "report"
+    },
+    "service_ms_p50": 1467.675,
+    "service_ms_p95": 2386.903,
+    "gbrain_ms_p50": 1456.202,
+    "gbrain_ms_p95": 2373.114,
+    "wall_ms_p95": 2393,
+    "harness_invalid": 220,
+    "reasons": {
+      "expansion_not_applied": 220,
+      "delivery_fallback:no_text_chunks": 18,
+      "delivery_fallback:redaction_unmapped": 12,
+      "degraded:vector_arm_failed": 1
+    },
+    "recall_any_10": 0.8402061855670103,
+    "recall_all_10": 0.3865979381443299,
+    "tokens_delivered_mean": 26034.44090909091,
+    "cost": {
+      "usd": 0,
+      "requests": 0,
+      "unpriced": 0,
+      "by_model": {}
+    }
+  },
+  "engine_rule": {
+    "checks": {
+      "query_p95_under_10s": true,
+      "no_rerank_fallbacks": true,
+      "no_delivery_fallbacks": false,
+      "no_failed_queries": true,
+      "rss_fits_vm": true
+    },
+    "query_p95_ms": 2386.903,
+    "rerank_fallback_queries": 0,
+    "delivery_fallback_queries": 24,
+    "failed_queries": 0,
+    "peak_rss_kb": 822296,
+    "rss_limit_kb": 16777216,
+    "engine": "postgres",
+    "verdict": "S1 runs \"gbrain-defaults (Postgres, per gbrain's own pglite_scale advice)\" and the row says so."
+  },
+  "artifacts": {
+    "ingest": "ingest.ndjson",
+    "footprint": "footprint.ndjson",
+    "queries": "queries.ndjson"
+  }
+}
