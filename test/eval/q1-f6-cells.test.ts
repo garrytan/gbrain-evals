@@ -69,7 +69,7 @@ describe('the F6 manifest', () => {
       expect(c.snapshot_command).toContain('--config shipped-0.31');
       expect(c.restore_command).toContain('--config shipped-0.31');
     }
-    expect(m.cells.find(c => c.id === 's1.gbrain-defaults.f6-master')!.launch!.env.GBRAIN_F6_EXTRACT_CAP_USD).toBe('5');
+    expect(m.cells.find(c => c.id === 's1.gbrain-defaults.f6-master')!.launch!.env.GBRAIN_F6_EXTRACT_CAP_USD).toBe('23');
   });
   test('every lease holds its estimate per shard with margin plus twice the largest reservation the proxy can hold at once', () => {
     for (const c of m.cells) {

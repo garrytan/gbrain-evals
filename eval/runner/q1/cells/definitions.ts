@@ -300,18 +300,19 @@ export const F6_ASSUMPTIONS = {
   bun_image: 'oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4',
   /**
    * extract-conversation-facts with gbrain's default extraction model at the budget-ledger price (claude-haiku-5-5,
-   * $0.10 in and $0.50 out per million): model input and output tokens per conversation token (placeholders: each
-   * segment is sent with its context header and the extraction prompt, and facts come back as JSON).
+   * $0.10 in and $0.50 out per million): model input and output tokens per conversation token, measured in the F6 dry
+   * run (BEAM-1M 1m-16: 3,998,207 in and 1,070,067 out over 926,773 conversation tokens; gbrain's own ledger charged
+   * $0.99855 of the $1 cap the 0.22 $/Mtok placeholder rates gave).
    */
-  extraction: { model: 'anthropic:claude-haiku-5-5', input_per_token: 1.6, output_per_token: 0.12 },
-  /** Saved facts per million conversation tokens and tokens per fact, embedded with voyage:voyage-4 (placeholders). */
-  facts_per_mtok: 2_500, tokens_per_fact: 30, embedding_model: 'voyage:voyage-4',
+  extraction: { model: 'anthropic:claude-haiku-5-5', input_per_token: 4.31, output_per_token: 1.15 },
+  /** Saved facts per million conversation tokens (dry run: 4,620 saved over 926,773 tokens) and tokens per fact (placeholder), embedded with voyage:voyage-4. */
+  facts_per_mtok: 4_985, tokens_per_fact: 30, embedding_model: 'voyage:voyage-4',
   /** The extraction cap each conversation's build carries (GBRAIN_F6_EXTRACT_CAP_USD): this multiple of its extraction estimate, at least $1. */
   extraction_cap_multiple: 2,
-  /** Ingest dollars per million tokens beyond extraction: gbrain's page ingest as Q1 measured it, the temporal graph's 0.31.2 shipped defaults (placeholder). */
-  ingest_usd_per_mtok: { 'gbrain-defaults:f6-master': 0.12, 'ext-temporal-graph:shipped-0.31': 7.3 } as Record<string, number>,
-  /** Ingest hours per million tokens: gbrain's page ingest plus serial extraction on PGLite, and the temporal graph (placeholders). */
-  hours_per_mtok: { 'gbrain-defaults:f6-master': 2.5, 'ext-temporal-graph:shipped-0.31': 3.53 } as Record<string, number>,
+  /** Ingest dollars per million tokens beyond extraction, metered in the F6 dry run on 1m-16: gbrain's embeddings ($0.0718), the temporal graph's 0.31.2 shipped defaults ($3.717). */
+  ingest_usd_per_mtok: { 'gbrain-defaults:f6-master': 0.08, 'ext-temporal-graph:shipped-0.31': 4.01 } as Record<string, number>,
+  /** Ingest hours per million tokens, F6 dry run on 1m-16: gbrain's page ingest plus serial extraction on PGLite (6,392 s), the temporal graph (7,546 s). */
+  hours_per_mtok: { 'gbrain-defaults:f6-master': 1.92, 'ext-temporal-graph:shipped-0.31': 2.26 } as Record<string, number>,
   /** gbrain's own calls per recall, dollars (assumed equal to query's measured gbrain_query_usd). */
   gbrain_recall_usd: 0.00176,
   /** Lease sizing: bytes per packed token, the reading template's bytes, and the judge prompt's bytes (the proxy reserves input at bytes + 64). */

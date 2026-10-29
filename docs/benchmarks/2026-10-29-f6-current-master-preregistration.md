@@ -115,30 +115,33 @@ unchanged).
 
 ## Budget
 
-Estimate $2475.43 against the $3,100 cap. Every rate is a named assumption in
-`F6_ASSUMPTIONS` (definitions.ts) that the dry run replaces with a measurement before any counted cell runs:
-extraction tokens per conversation token at claude-haiku-5-5's price, saved facts per million tokens and their
-voyage-4 embeddings, the temporal graph's 0.31.2 ingest at a placeholder $7.30 per million tokens, gbrain's own query
-and recall calls, and ingest hours. Each unit's lease is its estimate per shard times 1.25 plus twice the largest
+Estimate $2220.58 against the $3,100 cap. Every rate is a named assumption in
+`F6_ASSUMPTIONS` (definitions.ts). The dry run (receipt: `2026-10-29-f6-current-master/dry-run/`) replaced these with
+measurements on BEAM-1M 1m-16 before any counted cell runs: extraction tokens per conversation token at
+claude-haiku-5-5's price (4.31 in and 1.15 out, was 1.6 and 0.12), saved facts per million tokens (4,985, was 2,500),
+ingest dollars per million tokens beyond extraction (gbrain $0.08, was $0.12; the temporal graph's 0.31.2 $4.01, was
+$7.30) and ingest hours per million tokens (gbrain 1.92, was 2.5; the temporal graph 2.26, was 3.53). Tokens per saved
+fact and gbrain's own query and recall calls stay assumptions. Each unit's lease is its estimate per shard times 1.25
+plus twice the largest
 reservation its metering proxy can hold at once (the proxy reserves input at the request's bytes + 64 tokens and output
 at the route cap).
 
 | Cell | Block | Arms | Shards | Estimate | Lease per shard |
 |---|---|---|---:|---:|---:|
-| s1.gbrain-defaults.f6-master | F6-S1 | a0, a, p, b, c, d, e | 10 | $166.46 | $21.20 |
-| s1.ext-temporal-graph.shipped-0.31 | F6-S1 | component-b8000 | 10 | $819.78 | $102.86 |
-| s2b.gbrain-defaults.f6-master | F6-T2 | a0, a, p, b, c, d, e | 1 | $152.18 | $190.61 |
-| s2b.ext-temporal-graph.shipped-0.31 | F6-T2 | component-b8000 | 2 | $195.34 | $122.48 |
-| s2a.gbrain-defaults.f6-master | F6-T2 | a0, a, p, b, c, d, e | 1 | $84.64 | $106.19 |
-| s2a.ext-temporal-graph.shipped-0.31 | F6-T2 | component-b8000 | 1 | $26.35 | $33.33 |
-| s3.gbrain-defaults.f6-master | F6-T2 | a0, a, p, b, c, d, e | 1 | $118.24 | $148.19 |
-| s3.ext-temporal-graph.shipped-0.31 | F6-T2 | component-b8000 | 1 | $18.43 | $23.43 |
-| d8.gbrain-defaults.f6-master | F6-D8 | a, p, b, d | 10 | $140.69 | $17.97 |
+| s1.gbrain-defaults.f6-master | F6-S1 | a0, a, p, b, c, d, e | 10 | $249.02 | $31.52 |
+| s1.ext-temporal-graph.shipped-0.31 | F6-S1 | component-b8000 | 10 | $457.88 | $57.62 |
+| s2b.gbrain-defaults.f6-master | F6-T2 | a0, a, p, b, c, d, e | 1 | $170.19 | $213.13 |
+| s2b.ext-temporal-graph.shipped-0.31 | F6-T2 | component-b8000 | 2 | $116.38 | $145.86 |
+| s2a.gbrain-defaults.f6-master | F6-T2 | a0, a, p, b, c, d, e | 1 | $86.14 | $108.06 |
+| s2a.ext-temporal-graph.shipped-0.31 | F6-T2 | component-b8000 | 1 | $19.77 | $25.10 |
+| s3.gbrain-defaults.f6-master | F6-T2 | a0, a, p, b, c, d, e | 1 | $118.44 | $148.44 |
+| s3.ext-temporal-graph.shipped-0.31 | F6-T2 | component-b8000 | 1 | $17.57 | $22.35 |
+| d8.gbrain-defaults.f6-master | F6-D8 | a, p, b, d | 10 | $223.24 | $28.29 |
 | d8.ext-memory-bank.recipe | F6-D8 | component-b8000 | 10 | $214.37 | $27.18 |
 | d8.ext-graph-pipeline.recipe | F6-D8 | component-b8000 | 10 | $410.17 | $51.66 |
 | d8.baseline-hybrid.baseline | F6-D8 | component-b8000 | 1 | $40.57 | $51.10 |
 | d8.baseline-none.baseline | F6-D8 | component-b8000 | 1 | $25.17 | $31.85 |
-| s4-slice.gbrain-defaults.f6-master | F6-S4 | a0, a, p, b, c, d, e | 1 | $63.04 | $79.19 |
+| s4-slice.gbrain-defaults.f6-master | F6-S4 | a0, a, p, b, c, d, e | 1 | $71.67 | $89.98 |
 
 Priority if the cap binds: S1, then S2b, S2a and S3, then D8, then S4-slice.
 
@@ -148,9 +151,9 @@ Through the real launch path (one Ubicloud VM per unit, the metering proxy, the 
 
 | Cell | Arms | Estimate |
 |---|---|---:|
-| s2b-ingest.gbrain-defaults.f6-master | a0, a, p, b, c, d, e | $6.32 |
-| s2b-ingest.ext-temporal-graph.shipped-0.31 | component-b8000 | $7.60 |
-| s3-smoke.gbrain-defaults.f6-master | a0, a, p, b, c, d, e | $11.82 |
+| s2b-ingest.gbrain-defaults.f6-master | a0, a, p, b, c, d, e | $7.01 |
+| s2b-ingest.ext-temporal-graph.shipped-0.31 | component-b8000 | $4.56 |
+| s3-smoke.gbrain-defaults.f6-master | a0, a, p, b, c, d, e | $11.84 |
 
 S2b-ingest is BEAM-1M dev conversation 1m-16 with 10 questions; S3-smoke is LoCoMo conv-44 with 20 questions. Its
 receipt lives under `docs/benchmarks/2026-10-29-f6-current-master/dry-run/`.
