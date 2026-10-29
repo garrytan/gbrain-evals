@@ -1,0 +1,19 @@
+{
+  "kind": "c8k-import",
+  "commit": "cf3ec433f4fffda60d00076bae7361100c632cc4",
+  "version": "0.60.461.0",
+  "keyless": false,
+  "embedding": "openai:text-embedding-3-large@1536",
+  "brains": 40,
+  "sessions": 1840,
+  "pages": 1840,
+  "pages_equal_sessions": true,
+  "settings": {
+    "search.cache.enabled": "false",
+    "decide.provider": "none",
+    "search.crag_escalation": "false",
+    "search.crag_think": "false",
+    "search.track_retrieval": "false",
+    "facts.default_visibility": "world"
+  }
+}

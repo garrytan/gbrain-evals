@@ -3,10 +3,11 @@
 #
 # Run from the repository root on a fresh Ubuntu 24.04 Ubicloud VM. Subcommands:
 #
-#   setup  [--system NAME] [--datasets locomo,lme-s,beam-100k]
-#          Once per VM (ubi-runner --setup): Docker with the compose plugin, Bun 1.4.2 (the CI pin; $BUN_VERSION overrides), `bun install --frozen-lockfile`,
+#   setup  [--system NAME] [--datasets locomo,lme-s,beam-100k] [--conversations id,id]
+#          Once per VM (ubi-runner --setup): Docker with the compose plugin, ripgrep (the file agent's grep), Bun 1.4.2 (the CI pin; $BUN_VERSION overrides), `bun install --frozen-lockfile`,
 #          the pinned datasets through `bun run eval:decide fetch` (each file checked against its SHA-256), and the
-#          system's pinned images (`docker compose pull`, then `build` for the shim image).
+#          system's pinned images (`docker compose pull`, then `build` for the shim image). --conversations fetches
+#          only those BEAM conversations' files (a dev smoke never downloads a sealed conversation).
 #   proxy  --lease-id ID --lease-usd N [--max-output-tokens M] [--port 8787] [--out DIR]
 #          Start the metering proxy for the cell's lease, detached, and wait for its status endpoint. A cell launched
 #          by `bun eval/runner/shootout-cell.ts` already runs the proxy (SHOOTOUT_PROXY is set), so `up` skips this.
@@ -18,11 +19,21 @@
 #          container file systems are kept. Waits for GET /health as `up` does. lifecycle-lite's restart checkpoint
 #          runs it as its --restart-cmd.
 #   down   --system NAME      Stop the stack and remove its volumes.
+#   snapshot --system NAME --out TAR [--port 8700] [--timeout 900]
+#          Stop the stack, tar every named volume of its compose project into TAR (one <volume>.tar per volume plus
+#          volumes.json), write TAR.sha256, start the stack again and wait for GET /health. A Q1 shim cell's
+#          snapshot_command runs it with --out "$SHOOTOUT_SNAPSHOT_DIR/<system>.tar" once ingest is complete. It
+#          refuses, before stopping anything, when a container keeps data in an anonymous volume, which no snapshot
+#          would carry.
+#   restore --system NAME --from TAR [--config recipe|common] [--port 8700] [--timeout 900]
+#          Check TAR against TAR.sha256 when present, create the stack without starting it, replace every named
+#          volume's contents with the snapshot's, then start the stack and wait for GET /health. A Q1 shim cell's
+#          restore_command runs it with --from "$SHOOTOUT_RESTORE_DIR/<system>.tar" before the cell command.
 #
 # A counted cell command therefore looks like:
-#   bash eval/systems/bootstrap.sh up --system extract-first --config common && \
+#   bash eval/systems/bootstrap.sh up --system ext-extract-first --config common && \
 #   bun eval/runner/memory-qa/run.ts --benchmark locomo --system http://127.0.0.1:8700 ... --output "$SHOOTOUT_OUT/mqa"; \
-#   bash eval/systems/bootstrap.sh down --system extract-first
+#   bash eval/systems/bootstrap.sh down --system ext-extract-first
 #
 # The proxy alone holds provider keys. Containers get a dummy key and reach the proxy only through their compose
 # egress relay; the three relay variables the vendor stacks use (PROXY_UPSTREAM, PROXY_HOSTPORT, PROXY_URL) are all
@@ -36,7 +47,7 @@ die() { echo "bootstrap: $*" >&2; exit 1; }
 log() { echo "bootstrap: $*" >&2; }
 
 cmd=${1:-}; shift || true
-SYSTEM="" CONFIG=recipe PORT="" PROXY_PORT=8787 TIMEOUT=900 DATASETS="" LEASE_ID="" LEASE_USD="" MAX_OUT="" OUT=""
+SYSTEM="" CONFIG=recipe PORT="" PROXY_PORT=8787 TIMEOUT=900 DATASETS="" CONVERSATIONS="" LEASE_ID="" LEASE_USD="" MAX_OUT="" OUT="" FROM=""
 while [ $# -gt 0 ]; do
   case "$1" in
     --system) SYSTEM=$2; shift 2 ;;
@@ -45,10 +56,12 @@ while [ $# -gt 0 ]; do
     --proxy-port) PROXY_PORT=$2; shift 2 ;;
     --timeout) TIMEOUT=$2; shift 2 ;;
     --datasets) DATASETS=$2; shift 2 ;;
+    --conversations) CONVERSATIONS=$2; shift 2 ;;
     --lease-id) LEASE_ID=$2; shift 2 ;;
     --lease-usd) LEASE_USD=$2; shift 2 ;;
     --max-output-tokens) MAX_OUT=$2; shift 2 ;;
     --out) OUT=$2; shift 2 ;;
+    --from) FROM=$2; shift 2 ;;
     *) die "unknown argument $1" ;;
   esac
 done
@@ -56,20 +69,24 @@ done
 compose_file() {
   [ -n "$SYSTEM" ] || die "--system is required"
   local f="eval/systems/$SYSTEM/docker-compose.yml"
-  [ -f "$f" ] || die "no compose file for system $SYSTEM ($f)"
+  # External systems' install bundles live beside the comparison page that names them (docs/comparison-systems.md);
+  # the harness addresses them by kind id (eval/systems/kinds.json).
+  [ -f "$f" ] || f="docs/comparison-systems/$SYSTEM/docker-compose.yml"
+  [ -f "$f" ] || die "no compose file for system $SYSTEM (looked in eval/systems/$SYSTEM and docs/comparison-systems/$SYSTEM); kind ids are listed in eval/systems/kinds.json"
   echo "$f"
 }
 
-# The stacks name their relay settings differently: extract-first and markdown-notes read PROXY_UPSTREAM and PROXY_SLOT (and
-# would take PROXY_URL as their in-network base URL), temporal-graph and memory-bank read PROXY_URL and PROXY_OPENAI_PATH,
-# graph-pipeline and agent-runtime read PROXY_HOSTPORT and PROXY_OPENAI_PATH. Every stack's provider calls arrive on the proxy slot
+# The stacks name their relay settings differently: the extract-first server and the Markdown knowledge base read
+# PROXY_UPSTREAM and PROXY_SLOT (and would take PROXY_URL as their in-network base URL), the temporal graph library and
+# the memory-bank server read PROXY_URL and PROXY_OPENAI_PATH, the graph pipeline and the agent runtime read
+# PROXY_HOSTPORT and PROXY_OPENAI_PATH. Every stack's provider calls arrive on the proxy slot
 # named after the system, which the harness binds to each question for attribution.
 compose_env() {
   export SHIM_CONFIG="$CONFIG" SHIM_HOST_PORT="${PORT:-8700}" PROXY_SLOT="$SYSTEM"
   export PROXY_UPSTREAM="host.docker.internal:$PROXY_PORT" PROXY_HOSTPORT="host.docker.internal:$PROXY_PORT"
   export PROXY_OPENAI_PATH="/$SYSTEM/openai/v1" PROXY_ANTHROPIC_PATH="/$SYSTEM/anthropic"
   case "$SYSTEM" in
-    temporal-graph|memory-bank) export PROXY_URL="http://host.docker.internal:$PROXY_PORT" ;;
+    ext-temporal-graph|ext-memory-bank) export PROXY_URL="http://host.docker.internal:$PROXY_PORT" ;;
     *) unset PROXY_URL ;;
   esac
 }
@@ -84,8 +101,45 @@ wait_healthy() {
   curl -sf "http://127.0.0.1:$SHIM_HOST_PORT/health"; echo
 }
 
-# Compose interpolates the caller's environment: never let the cell's own base URLs or keys reach a container.
+# Compose interpolates the caller's environment: never let the cell's own base URLs or keys reach a container. The cell
+# token (SHOOTOUT_CELL_TOKEN, set by the launcher) does pass: the stacks present it as their dummy provider key, so the
+# strict lease proxy admits their calls.
 compose() { env -u OPENAI_BASE_URL -u ANTHROPIC_BASE_URL -u VOYAGE_BASE_URL -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u VOYAGE_API_KEY bash -c 'if docker info >/dev/null 2>&1; then exec docker compose "$@"; else exec sudo -E docker compose "$@"; fi' compose "$@"; }
+dock() { if docker info >/dev/null 2>&1; then docker "$@"; else sudo docker "$@"; fi; }
+
+# The image that tars volumes: the pinned egress relay image every stack already pulls (busybox tar).
+SNAPSHOT_IMAGE=${SNAPSHOT_IMAGE:-alpine/socat:1.8.0.3@sha256:beb4a68d9e4fe6b0f21ea774a0fde6c31f580dde6368939ed70100c5385b015e}
+
+# "<volume key> <docker volume name>" for every named volume of the stack's compose project.
+stack_volumes() {
+  local f=$1 project key
+  project=$(compose -f "$f" config --format json | python3 -c 'import json,sys; print(json.load(sys.stdin)["name"])')
+  for key in $(compose -f "$f" config --volumes); do
+    echo "$key $(dock volume ls -q --filter "label=com.docker.compose.project=$project" --filter "label=com.docker.compose.volume=$key" | head -1)"
+  done
+}
+sha_of() { sha256sum "$1" | cut -d' ' -f1; }
+
+# exited_report before|after: warn about every container of the stack that exited 137 or was OOM-killed. Before the
+# snapshot's stop, any exit at all means the system died while it ran; after it, exit 137 without an OOM kill means the
+# stop grace period ran out.
+exited_report() {
+  local phase=$1 name code oom state
+  while IFS=$'\t' read -r name state code; do
+    [ -n "$name" ] || continue
+    oom=$(dock inspect -f '{{.State.OOMKilled}}' "$name" 2>/dev/null || echo unknown)
+    if [ "$phase" = before ] && [ "$state" != running ]; then
+      echo "bootstrap: warning: $name had already exited before the snapshot (state $state, exit $code, OOMKilled $oom); sessions written after it died failed" >&2
+    elif [ "$phase" = after ] && [ "$code" = 137 ]; then
+      if [ "$oom" = true ]; then echo "bootstrap: warning: $name was OOM-killed (exit 137); a store it was writing may not reopen" >&2
+      else echo "bootstrap: warning: $name was killed at the end of its stop grace period (exit 137); a store it was writing may not reopen" >&2; fi
+    fi
+  done < <(compose -f "$f" ps -a --format json | python3 -c '
+import json, sys
+text = sys.stdin.read().strip()
+rows = json.loads(text) if text.startswith("[") else [json.loads(l) for l in text.splitlines() if l.strip()]
+for r in rows: print(r.get("Name", ""), r.get("State", ""), r.get("ExitCode", ""), sep="\t")' || true)
+}
 
 case "$cmd" in
   setup)
@@ -94,6 +148,11 @@ case "$cmd" in
       sudo apt-get update -qq >/dev/null
       sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq docker.io docker-compose-v2 unzip curl python3 >/dev/null
       sudo usermod -aG docker "$(id -un)"
+    fi
+    if ! command -v rg >/dev/null 2>&1; then
+      log "installing ripgrep (the file agent's grep)"
+      sudo apt-get update -qq >/dev/null
+      sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq ripgrep >/dev/null
     fi
     if ! command -v bun >/dev/null 2>&1 || [ "$(bun --version)" != "$BUN_VERSION" ]; then
       log "installing Bun $BUN_VERSION"
@@ -105,7 +164,7 @@ case "$cmd" in
     bun install --frozen-lockfile
     for b in ${DATASETS//,/ }; do
       log "dataset $b (pinned revision, SHA-256 checked)"
-      bun run eval:decide fetch --benchmark "$b"
+      bun run eval:decide fetch --benchmark "$b" ${CONVERSATIONS:+--conversations "$CONVERSATIONS"}
     done
     if [ -n "$SYSTEM" ] && [ "$SYSTEM" != gbrain ]; then
       f=$(compose_file)
@@ -156,8 +215,67 @@ case "$cmd" in
     compose -f "$f" down -v
     ;;
 
+  snapshot)
+    [ -n "$OUT" ] || die "snapshot needs --out <tar>"
+    f=$(compose_file)
+    compose_env
+    # Only named volumes are snapshotted. A store in an anonymous volume (an image VOLUME the compose file does not
+    # name) would be left out, and a restore on a fresh VM would start that container empty (amendment A23).
+    anonymous=$(for c in $(compose -f "$f" ps -aq); do
+      dock inspect "$c" --format '{{range .Mounts}}{{if eq .Type "volume"}}{{$.Name}} {{.Name}} {{.Destination}}{{"\n"}}{{end}}{{end}}'
+    done | while read -r name vol dest; do
+      [ -z "$vol" ] || [ -n "$(dock volume inspect "$vol" --format '{{index .Labels "com.docker.compose.volume"}}')" ] || echo "${name#/}:$dest"
+    done)
+    [ -z "$anonymous" ] || die "$SYSTEM keeps data in anonymous volumes ($(echo $anonymous)), which a snapshot cannot carry; name them in $f"
+    work=$(mktemp -d)
+    # A failed snapshot still starts the stack again, so the cell's remaining questions see a running system.
+    trap 'rc=$?; rm -rf "$work"; [ $rc -eq 0 ] || compose -f "$f" start >/dev/null 2>&1 || true' EXIT
+    # A container that already exited before the snapshot (an OOM kill mid-ingest, amendment A23) is named apart from
+    # one SIGKILLed at the end of its stop_grace_period (A22): a store either was writing may not reopen.
+    exited_report before
+    log "stopping $SYSTEM to snapshot its volumes"
+    compose -f "$f" stop
+    exited_report after
+    echo '{"system": "'"$SYSTEM"'", "volumes": [' > "$work/volumes.json"
+    sep=""
+    while read -r key vol; do
+      [ -n "$vol" ] || die "volume $key of $SYSTEM does not exist (is the stack up?)"
+      dock run --rm --network none -v "$vol:/v:ro" -v "$work:/out" --entrypoint tar "$SNAPSHOT_IMAGE" -C /v -cf "/out/$key.tar" .
+      printf '%s{"key": "%s", "sha256": "%s"}' "$sep" "$key" "$(sha_of "$work/$key.tar")" >> "$work/volumes.json"
+      sep=", "
+    done < <(stack_volumes "$f")
+    echo ']}' >> "$work/volumes.json"
+    mkdir -p "$(dirname "$OUT")"
+    tar -C "$work" -cf "$OUT" .
+    sha_of "$OUT" > "$OUT.sha256"
+    log "snapshot $OUT sha256 $(cat "$OUT.sha256")"
+    compose -f "$f" start
+    wait_healthy "$f"
+    ;;
+
+  restore)
+    [ -n "$FROM" ] && [ -f "$FROM" ] || die "restore needs --from <tar> naming an existing snapshot"
+    f=$(compose_file)
+    compose_env
+    if [ -f "$FROM.sha256" ] && [ "$(sha_of "$FROM")" != "$(cat "$FROM.sha256")" ]; then die "$FROM does not match $FROM.sha256; the snapshot is damaged"; fi
+    work=$(mktemp -d)
+    trap 'rm -rf "$work"' EXIT
+    tar -C "$work" -xf "$FROM"
+    [ -f "$work/volumes.json" ] || die "$FROM is not a bootstrap.sh snapshot (no volumes.json)"
+    compose -f "$f" up --no-start
+    compose -f "$f" stop
+    while read -r key vol; do
+      [ -f "$work/$key.tar" ] || die "the snapshot has no volume $key"
+      [ "$(sha_of "$work/$key.tar")" = "$(python3 -c 'import json,sys; print(next(v["sha256"] for v in json.load(open(sys.argv[1]))["volumes"] if v["key"] == sys.argv[2]))' "$work/volumes.json" "$key")" ] || die "volume $key does not match its recorded sha256"
+      dock run --rm --network none -v "$vol:/v" -v "$work:/in:ro" --entrypoint sh "$SNAPSHOT_IMAGE" -c "find /v -mindepth 1 -delete && tar -C /v -xf /in/$key.tar"
+    done < <(stack_volumes "$f")
+    log "restored $SYSTEM from $FROM; starting it"
+    compose -f "$f" up -d
+    wait_healthy "$f"
+    ;;
+
   *)
-    sed -n '2,31p' "$0" >&2
+    sed -n '2,39p' "$0" >&2
     exit 2
     ;;
 esac

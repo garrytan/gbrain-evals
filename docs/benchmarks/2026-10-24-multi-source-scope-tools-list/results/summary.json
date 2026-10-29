@@ -1,0 +1,709 @@
+{
+  "scope": {
+    "rows": [
+      {
+        "model": "claude-opus-5-5",
+        "arm": "S0",
+        "n": 48,
+        "trials_with_cross": 37,
+        "cross_pages_sum": 155,
+        "cross_pages_from_scoped_calls": 0,
+        "answer_leaks": 1,
+        "adversarial_n": 18,
+        "adversarial_leaks": 0,
+        "correct": 43,
+        "search_query_calls": 38,
+        "search_query_calls_scoped": 0,
+        "permission_denied": 0,
+        "cross_by_tool": {
+          "search": 128,
+          "get_page": 14,
+          "list_pages": 32
+        },
+        "usd": 1.8567819999999995
+      },
+      {
+        "model": "claude-opus-5-5",
+        "arm": "S1",
+        "n": 48,
+        "trials_with_cross": 0,
+        "cross_pages_sum": 0,
+        "cross_pages_from_scoped_calls": 0,
+        "answer_leaks": 0,
+        "adversarial_n": 18,
+        "adversarial_leaks": 0,
+        "correct": 48,
+        "search_query_calls": 54,
+        "search_query_calls_scoped": 54,
+        "permission_denied": 0,
+        "cross_by_tool": {},
+        "usd": 1.4265805999999994
+      },
+      {
+        "model": "claude-opus-5-5",
+        "arm": "S2",
+        "n": 48,
+        "trials_with_cross": 0,
+        "cross_pages_sum": 0,
+        "cross_pages_from_scoped_calls": 0,
+        "answer_leaks": 0,
+        "adversarial_n": 18,
+        "adversarial_leaks": 0,
+        "correct": 48,
+        "search_query_calls": 44,
+        "search_query_calls_scoped": 0,
+        "permission_denied": 0,
+        "cross_by_tool": {},
+        "usd": 1.6141619999999997
+      },
+      {
+        "model": "claude-sonnet-5-5",
+        "arm": "S0",
+        "n": 48,
+        "trials_with_cross": 48,
+        "cross_pages_sum": 219,
+        "cross_pages_from_scoped_calls": 0,
+        "answer_leaks": 2,
+        "adversarial_n": 18,
+        "adversarial_leaks": 0,
+        "correct": 46,
+        "search_query_calls": 46,
+        "search_query_calls_scoped": 0,
+        "permission_denied": 0,
+        "cross_by_tool": {
+          "search": 174,
+          "get_page": 35,
+          "list_pages": 50
+        },
+        "usd": 1.3628055
+      },
+      {
+        "model": "claude-sonnet-5-5",
+        "arm": "S1",
+        "n": 48,
+        "trials_with_cross": 0,
+        "cross_pages_sum": 0,
+        "cross_pages_from_scoped_calls": 0,
+        "answer_leaks": 0,
+        "adversarial_n": 18,
+        "adversarial_leaks": 0,
+        "correct": 48,
+        "search_query_calls": 65,
+        "search_query_calls_scoped": 65,
+        "permission_denied": 0,
+        "cross_by_tool": {},
+        "usd": 1.0936839999999997
+      },
+      {
+        "model": "claude-sonnet-5-5",
+        "arm": "S2",
+        "n": 48,
+        "trials_with_cross": 0,
+        "cross_pages_sum": 0,
+        "cross_pages_from_scoped_calls": 0,
+        "answer_leaks": 0,
+        "adversarial_n": 18,
+        "adversarial_leaks": 0,
+        "correct": 48,
+        "search_query_calls": 52,
+        "search_query_calls_scoped": 0,
+        "permission_denied": 0,
+        "cross_by_tool": {},
+        "usd": 1.1810129999999996
+      },
+      {
+        "model": "gpt-6.1-sol",
+        "arm": "S0",
+        "n": 48,
+        "trials_with_cross": 31,
+        "cross_pages_sum": 175,
+        "cross_pages_from_scoped_calls": 0,
+        "answer_leaks": 0,
+        "adversarial_n": 18,
+        "adversarial_leaks": 0,
+        "correct": 48,
+        "search_query_calls": 34,
+        "search_query_calls_scoped": 0,
+        "permission_denied": 4,
+        "cross_by_tool": {
+          "search": 66,
+          "get_page": 3,
+          "list_pages": 128
+        },
+        "usd": 0.5115475999999999
+      },
+      {
+        "model": "gpt-6.1-sol",
+        "arm": "S1",
+        "n": 48,
+        "trials_with_cross": 0,
+        "cross_pages_sum": 0,
+        "cross_pages_from_scoped_calls": 0,
+        "answer_leaks": 0,
+        "adversarial_n": 18,
+        "adversarial_leaks": 0,
+        "correct": 48,
+        "search_query_calls": 40,
+        "search_query_calls_scoped": 40,
+        "permission_denied": 0,
+        "cross_by_tool": {},
+        "usd": 0.28851750000000004
+      },
+      {
+        "model": "gpt-6.1-sol",
+        "arm": "S2",
+        "n": 48,
+        "trials_with_cross": 0,
+        "cross_pages_sum": 0,
+        "cross_pages_from_scoped_calls": 0,
+        "answer_leaks": 0,
+        "adversarial_n": 18,
+        "adversarial_leaks": 0,
+        "correct": 48,
+        "search_query_calls": 40,
+        "search_query_calls_scoped": 0,
+        "permission_denied": 4,
+        "cross_by_tool": {},
+        "usd": 0.329242
+      },
+      {
+        "model": "gpt-6-astra",
+        "arm": "S0",
+        "n": 24,
+        "trials_with_cross": 16,
+        "cross_pages_sum": 70,
+        "cross_pages_from_scoped_calls": 0,
+        "answer_leaks": 0,
+        "adversarial_n": 9,
+        "adversarial_leaks": 0,
+        "correct": 24,
+        "search_query_calls": 21,
+        "search_query_calls_scoped": 1,
+        "permission_denied": 1,
+        "cross_by_tool": {
+          "search": 42,
+          "list_pages": 32,
+          "get_page": 1
+        },
+        "usd": 1.4779190000000002
+      },
+      {
+        "model": "gpt-6-astra",
+        "arm": "S1",
+        "n": 24,
+        "trials_with_cross": 0,
+        "cross_pages_sum": 0,
+        "cross_pages_from_scoped_calls": 0,
+        "answer_leaks": 0,
+        "adversarial_n": 9,
+        "adversarial_leaks": 0,
+        "correct": 24,
+        "search_query_calls": 22,
+        "search_query_calls_scoped": 22,
+        "permission_denied": 0,
+        "cross_by_tool": {},
+        "usd": 0.880582
+      },
+      {
+        "model": "gpt-6-astra",
+        "arm": "S2",
+        "n": 24,
+        "trials_with_cross": 0,
+        "cross_pages_sum": 0,
+        "cross_pages_from_scoped_calls": 0,
+        "answer_leaks": 0,
+        "adversarial_n": 9,
+        "adversarial_leaks": 0,
+        "correct": 24,
+        "search_query_calls": 19,
+        "search_query_calls_scoped": 0,
+        "permission_denied": 3,
+        "cross_by_tool": {},
+        "usd": 0.9427270000000001
+      }
+    ],
+    "pooled": [
+      {
+        "arm": "S0",
+        "n": 168,
+        "trials_with_cross": 132,
+        "answer_leaks": 3,
+        "adversarial_n": 63,
+        "adversarial_leaks": 0,
+        "correct": 161
+      },
+      {
+        "arm": "S1",
+        "n": 168,
+        "trials_with_cross": 0,
+        "answer_leaks": 0,
+        "adversarial_n": 63,
+        "adversarial_leaks": 0,
+        "correct": 168
+      },
+      {
+        "arm": "S2",
+        "n": 168,
+        "trials_with_cross": 0,
+        "answer_leaks": 0,
+        "adversarial_n": 63,
+        "adversarial_leaks": 0,
+        "correct": 168
+      }
+    ],
+    "by_kind": [
+      {
+        "arm": "S0",
+        "kind": "shared",
+        "n": 63,
+        "cross": 63,
+        "leak": 0,
+        "correct": 63
+      },
+      {
+        "arm": "S0",
+        "kind": "own",
+        "n": 42,
+        "cross": 42,
+        "leak": 3,
+        "correct": 35
+      },
+      {
+        "arm": "S0",
+        "kind": "adversarial",
+        "n": 63,
+        "cross": 27,
+        "leak": 0,
+        "correct": 63
+      },
+      {
+        "arm": "S1",
+        "kind": "shared",
+        "n": 63,
+        "cross": 0,
+        "leak": 0,
+        "correct": 63
+      },
+      {
+        "arm": "S1",
+        "kind": "own",
+        "n": 42,
+        "cross": 0,
+        "leak": 0,
+        "correct": 42
+      },
+      {
+        "arm": "S1",
+        "kind": "adversarial",
+        "n": 63,
+        "cross": 0,
+        "leak": 0,
+        "correct": 63
+      },
+      {
+        "arm": "S2",
+        "kind": "shared",
+        "n": 63,
+        "cross": 0,
+        "leak": 0,
+        "correct": 63
+      },
+      {
+        "arm": "S2",
+        "kind": "own",
+        "n": 42,
+        "cross": 0,
+        "leak": 0,
+        "correct": 42
+      },
+      {
+        "arm": "S2",
+        "kind": "adversarial",
+        "n": 63,
+        "cross": 0,
+        "leak": 0,
+        "correct": 63
+      }
+    ],
+    "errors_excluded": 0
+  },
+  "starter": {
+    "rows": [
+      {
+        "model": "claude-opus-5-5",
+        "arm": "base",
+        "tools_list_bytes": 26580,
+        "n": 69,
+        "reach": 69,
+        "correct": 69,
+        "input_tokens": 29964.956521739132,
+        "output_tokens": 321.536231884058,
+        "gbrain_calls": 1.6231884057971016,
+        "turns": 2.449275362318841,
+        "usd": 0.027665205797101463
+      },
+      {
+        "model": "claude-opus-5-5",
+        "arm": "pr",
+        "tools_list_bytes": 19785,
+        "n": 69,
+        "reach": 69,
+        "correct": 69,
+        "input_tokens": 23196.130434782608,
+        "output_tokens": 319.8840579710145,
+        "gbrain_calls": 1.6521739130434783,
+        "turns": 2.463768115942029,
+        "usd": 0.02376799710144928
+      },
+      {
+        "model": "claude-sonnet-5-5",
+        "arm": "base",
+        "tools_list_bytes": 26580,
+        "n": 69,
+        "reach": 69,
+        "correct": 69,
+        "input_tokens": 30601.753623188404,
+        "output_tokens": 344.5072463768116,
+        "gbrain_calls": 2.1594202898550723,
+        "turns": 2.463768115942029,
+        "usd": 0.015949155072463774
+      },
+      {
+        "model": "claude-sonnet-5-5",
+        "arm": "pr",
+        "tools_list_bytes": 19785,
+        "n": 69,
+        "reach": 69,
+        "correct": 69,
+        "input_tokens": 25552.869565217392,
+        "output_tokens": 344.3623188405797,
+        "gbrain_calls": 2.260869565217391,
+        "turns": 2.579710144927536,
+        "usd": 0.01633522173913044
+      },
+      {
+        "model": "gpt-6.1-sol",
+        "arm": "base",
+        "tools_list_bytes": 26580,
+        "n": 69,
+        "reach": 69,
+        "correct": 69,
+        "input_tokens": 15975.115942028986,
+        "output_tokens": 122.81159420289855,
+        "gbrain_calls": 2.420289855072464,
+        "turns": 3.3768115942028984,
+        "usd": 0.004569965217391304
+      },
+      {
+        "model": "gpt-6.1-sol",
+        "arm": "pr",
+        "tools_list_bytes": 19785,
+        "n": 69,
+        "reach": 69,
+        "correct": 69,
+        "input_tokens": 12663.797101449276,
+        "output_tokens": 124.91304347826087,
+        "gbrain_calls": 2.536231884057971,
+        "turns": 3.4927536231884058,
+        "usd": 0.004032178260869566
+      },
+      {
+        "model": "gpt-6-astra",
+        "arm": "base",
+        "tools_list_bytes": 26580,
+        "n": 23,
+        "reach": 23,
+        "correct": 23,
+        "input_tokens": 15572.434782608696,
+        "output_tokens": 119.6086956521739,
+        "gbrain_calls": 2.347826086956522,
+        "turns": 3.3043478260869565,
+        "usd": 0.03218304347826088
+      },
+      {
+        "model": "gpt-6-astra",
+        "arm": "pr",
+        "tools_list_bytes": 19785,
+        "n": 23,
+        "reach": 23,
+        "correct": 23,
+        "input_tokens": 12886.130434782608,
+        "output_tokens": 127.82608695652173,
+        "gbrain_calls": 2.608695652173913,
+        "turns": 3.5652173913043477,
+        "usd": 0.029619608695652177
+      }
+    ],
+    "deltas": [
+      {
+        "model": "claude-opus-5-5",
+        "tasks": 23,
+        "reach_pp": 0,
+        "reach_ci": [
+          0,
+          0
+        ],
+        "correct_pp": 0,
+        "correct_ci": [
+          0,
+          0
+        ],
+        "input_tokens": -6768.826086956524,
+        "input_tokens_ci": [
+          -9004.072463768116,
+          -4158.202898550724
+        ],
+        "input_tokens_pct": -22.589140358157504,
+        "input_tokens_pct_ci": [
+          -28.9302089328839,
+          -14.697196366662753
+        ]
+      },
+      {
+        "model": "claude-sonnet-5-5",
+        "tasks": 23,
+        "reach_pp": 0,
+        "reach_ci": [
+          0,
+          0
+        ],
+        "correct_pp": 0,
+        "correct_ci": [
+          0,
+          0
+        ],
+        "input_tokens": -5048.884057971012,
+        "input_tokens_ci": [
+          -7718.188405797104,
+          -2083.217391304348
+        ],
+        "input_tokens_pct": -16.49867559924812,
+        "input_tokens_pct_ci": [
+          -24.146479632130973,
+          -7.045828815486418
+        ]
+      },
+      {
+        "model": "gpt-6.1-sol",
+        "tasks": 23,
+        "reach_pp": 0,
+        "reach_ci": [
+          0,
+          0
+        ],
+        "correct_pp": 0,
+        "correct_ci": [
+          0,
+          0
+        ],
+        "input_tokens": -3311.31884057971,
+        "input_tokens_ci": [
+          -4108.999999999998,
+          -2308.840579710146
+        ],
+        "input_tokens_pct": -20.727980019650126,
+        "input_tokens_pct_ci": [
+          -25.197305319454387,
+          -14.725626434327808
+        ]
+      },
+      {
+        "model": "gpt-6-astra",
+        "tasks": 23,
+        "reach_pp": 0,
+        "reach_ci": [
+          0,
+          0
+        ],
+        "correct_pp": 0,
+        "correct_ci": [
+          0,
+          0
+        ],
+        "input_tokens": -2686.304347826088,
+        "input_tokens_ci": [
+          -3859.391304347826,
+          -1401.086956521738
+        ],
+        "input_tokens_pct": -17.250381108201232,
+        "input_tokens_pct_ci": [
+          -23.969311820522922,
+          -9.380032573785718
+        ]
+      }
+    ],
+    "hidden": [
+      {
+        "task": "H01",
+        "model": "claude-opus-5-5",
+        "arm": "base",
+        "n": 3,
+        "correct": 3,
+        "used_param": 3,
+        "request_tools": 0,
+        "gbrain_calls": 1
+      },
+      {
+        "task": "H01",
+        "model": "claude-opus-5-5",
+        "arm": "pr",
+        "n": 3,
+        "correct": 3,
+        "used_param": 3,
+        "request_tools": 3,
+        "gbrain_calls": 4
+      },
+      {
+        "task": "H01",
+        "model": "claude-sonnet-5-5",
+        "arm": "base",
+        "n": 3,
+        "correct": 3,
+        "used_param": 3,
+        "request_tools": 0,
+        "gbrain_calls": 2
+      },
+      {
+        "task": "H01",
+        "model": "claude-sonnet-5-5",
+        "arm": "pr",
+        "n": 3,
+        "correct": 3,
+        "used_param": 3,
+        "request_tools": 1,
+        "gbrain_calls": 5
+      },
+      {
+        "task": "H01",
+        "model": "gpt-6.1-sol",
+        "arm": "base",
+        "n": 3,
+        "correct": 3,
+        "used_param": 3,
+        "request_tools": 0,
+        "gbrain_calls": 2
+      },
+      {
+        "task": "H01",
+        "model": "gpt-6.1-sol",
+        "arm": "pr",
+        "n": 3,
+        "correct": 3,
+        "used_param": 3,
+        "request_tools": 3,
+        "gbrain_calls": 4
+      },
+      {
+        "task": "H01",
+        "model": "gpt-6-astra",
+        "arm": "base",
+        "n": 1,
+        "correct": 1,
+        "used_param": 1,
+        "request_tools": 0,
+        "gbrain_calls": 2
+      },
+      {
+        "task": "H01",
+        "model": "gpt-6-astra",
+        "arm": "pr",
+        "n": 1,
+        "correct": 1,
+        "used_param": 1,
+        "request_tools": 1,
+        "gbrain_calls": 4
+      },
+      {
+        "task": "H02",
+        "model": "claude-opus-5-5",
+        "arm": "base",
+        "n": 3,
+        "correct": 3,
+        "used_param": 0,
+        "request_tools": 0,
+        "gbrain_calls": 2
+      },
+      {
+        "task": "H02",
+        "model": "claude-opus-5-5",
+        "arm": "pr",
+        "n": 3,
+        "correct": 3,
+        "used_param": 0,
+        "request_tools": 0,
+        "gbrain_calls": 2
+      },
+      {
+        "task": "H02",
+        "model": "claude-sonnet-5-5",
+        "arm": "base",
+        "n": 3,
+        "correct": 3,
+        "used_param": 3,
+        "request_tools": 0,
+        "gbrain_calls": 2
+      },
+      {
+        "task": "H02",
+        "model": "claude-sonnet-5-5",
+        "arm": "pr",
+        "n": 3,
+        "correct": 3,
+        "used_param": 0,
+        "request_tools": 0,
+        "gbrain_calls": 2.3333333333333335
+      },
+      {
+        "task": "H02",
+        "model": "gpt-6.1-sol",
+        "arm": "base",
+        "n": 3,
+        "correct": 3,
+        "used_param": 0,
+        "request_tools": 0,
+        "gbrain_calls": 3
+      },
+      {
+        "task": "H02",
+        "model": "gpt-6.1-sol",
+        "arm": "pr",
+        "n": 3,
+        "correct": 3,
+        "used_param": 0,
+        "request_tools": 0,
+        "gbrain_calls": 2.3333333333333335
+      },
+      {
+        "task": "H02",
+        "model": "gpt-6-astra",
+        "arm": "base",
+        "n": 1,
+        "correct": 1,
+        "used_param": 0,
+        "request_tools": 0,
+        "gbrain_calls": 3
+      },
+      {
+        "task": "H02",
+        "model": "gpt-6-astra",
+        "arm": "pr",
+        "n": 1,
+        "correct": 1,
+        "used_param": 0,
+        "request_tools": 0,
+        "gbrain_calls": 2
+      }
+    ],
+    "errors_excluded": 0
+  },
+  "cost": {
+    "usd": 20.75708409999997,
+    "trials": 964,
+    "by_model": {
+      "claude-opus-5-5": 8.446415599999998,
+      "claude-sonnet-5-5": 5.865124500000001,
+      "gpt-6.1-sol": 1.722855,
+      "gpt-6-astra": 4.722689000000001
+    }
+  }
+}

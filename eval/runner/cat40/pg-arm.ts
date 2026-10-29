@@ -95,8 +95,8 @@ export function cachedOpenAIEmbedder(cachePath: string, fetchImpl: typeof fetch 
         if (usage && price) { usage.requests++; usage.unpriced++; usage.usd += reservationUsd(price); }
         throw new HarnessError(`embedding request failed: ${(e as Error).message}`);
       }
-      if (!RETRYABLE_STATUS.includes(res.status) || attempt === 5) break;
-      await new Promise(r => setTimeout(r, Math.min(60_000, 2000 * 2 ** attempt) + Math.random() * 1000));
+      if (!RETRYABLE_STATUS.includes(res.status) || attempt === 5 || /budget/i.test(text)) break;
+      await new Promise(r => setTimeout(r, Math.max(Number(res.headers.get('retry-after') ?? 0) * 1000, Math.min(60_000, 2000 * 2 ** attempt) + Math.random() * 1000)));
     }
     let body: { data?: Array<{ index: number; embedding: number[] }>; usage?: unknown } | null = null;
     try { body = JSON.parse(text); } catch { body = null; }

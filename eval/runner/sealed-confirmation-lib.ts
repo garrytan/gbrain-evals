@@ -17,7 +17,7 @@
  *     content-addressed response cache.
  */
 import { createHash, randomUUID } from 'node:crypto';
-import { accessSync, appendFileSync, constants as fsConstants, existsSync, mkdirSync, readFileSync, realpathSync, statSync, writeFileSync } from 'node:fs';
+import { accessSync, appendFileSync, closeSync, constants as fsConstants, existsSync, mkdirSync, openSync, readFileSync, readSync, realpathSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { hostname, userInfo } from 'node:os';
 import { recallAllAtK, recallAnyAtK, uniqueInOrder } from './metrics.ts';
@@ -135,8 +135,18 @@ export function sha256Hex(data: string | Buffer): string {
   return createHash('sha256').update(data).digest('hex');
 }
 
+/**
+ * sha256 of a file, read in 8 MiB chunks so memory stays flat at any size. A whole-file read of a multi-GB store
+ * snapshot failed with ENOMEM after an S2b ingest had finished (amendment A23).
+ */
 export function sha256File(path: string): string {
-  return sha256Hex(readFileSync(path));
+  const hash = createHash('sha256');
+  const buf = Buffer.allocUnsafe(8 << 20);
+  const fd = openSync(path, 'r');
+  try {
+    for (let n; (n = readSync(fd, buf, 0, buf.length, null)) > 0;) hash.update(buf.subarray(0, n));
+  } finally { closeSync(fd); }
+  return hash.digest('hex');
 }
 
 export interface Commitment { file: string; sha256: string; bytes: number }

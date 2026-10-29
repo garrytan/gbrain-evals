@@ -1,0 +1,2719 @@
+{
+  "cells": {
+    "a.base": {
+      "cell": "a.base",
+      "corpus": "a",
+      "arm": "base",
+      "stub": false,
+      "gbrain": {
+        "requested": "gbrain@exp/structure-aware-chunks",
+        "ref": "exp/structure-aware-chunks",
+        "commit": "26e2c03b048cac41eb5f0af2331cbe5710b3600a",
+        "tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+        "version": "0.60.482.0",
+        "checkout_dirty": false,
+        "verified": {
+          "copy_tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+          "tree_matches": true,
+          "symlinks_under_src": 0,
+          "dir_is_realpath": true,
+          "cli_version": "0.60.482.0",
+          "cli_version_matches": true
+        },
+        "copied_not_symlinked": true
+      },
+      "pins": {
+        "search.mode": "balanced",
+        "search.reranker.enabled": "false",
+        "search.expansion": "false",
+        "search.cache.enabled": "false"
+      },
+      "resolved": {
+        "contextual_retrieval": "title",
+        "reranker_enabled": false,
+        "expansion": false
+      },
+      "docs": 2,
+      "questions": 10,
+      "errors": 0,
+      "excluded": {
+        "short_docs": 16,
+        "unreachable_questions": 0
+      },
+      "hit1": 0.7,
+      "hit3": 0.9,
+      "lead_hit": 0.7,
+      "reachable": 1,
+      "embedding": {
+        "model": "openai:text-embedding-3-large",
+        "dims": 1536,
+        "provider_tokens": 65,
+        "calls": 7,
+        "usd": 0,
+        "cache": {
+          "hits": 25,
+          "misses": 7,
+          "bypassed": 0,
+          "infra_faults": 0,
+          "path": "<scratch>/embed-cache.sqlite"
+        }
+      }
+    },
+    "a.prefix": {
+      "cell": "a.prefix",
+      "corpus": "a",
+      "arm": "prefix",
+      "stub": false,
+      "gbrain": {
+        "requested": "gbrain@exp/structure-aware-chunks",
+        "ref": "exp/structure-aware-chunks",
+        "commit": "26e2c03b048cac41eb5f0af2331cbe5710b3600a",
+        "tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+        "version": "0.60.482.0",
+        "checkout_dirty": false,
+        "verified": {
+          "copy_tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+          "tree_matches": true,
+          "symlinks_under_src": 0,
+          "dir_is_realpath": true,
+          "cli_version": "0.60.482.0",
+          "cli_version_matches": true
+        },
+        "copied_not_symlinked": true
+      },
+      "pins": {
+        "search.mode": "balanced",
+        "search.reranker.enabled": "false",
+        "search.expansion": "false",
+        "search.cache.enabled": "false"
+      },
+      "resolved": {
+        "contextual_retrieval": "title",
+        "reranker_enabled": false,
+        "expansion": false
+      },
+      "docs": 2,
+      "questions": 10,
+      "errors": 0,
+      "excluded": {
+        "short_docs": 16,
+        "unreachable_questions": 0
+      },
+      "hit1": 0.8,
+      "hit3": 0.9,
+      "lead_hit": 0.8,
+      "reachable": 1,
+      "embedding": {
+        "model": "openai:text-embedding-3-large",
+        "dims": 1536,
+        "provider_tokens": 0,
+        "calls": 0,
+        "usd": 0,
+        "cache": {
+          "hits": 32,
+          "misses": 0,
+          "bypassed": 0,
+          "infra_faults": 0,
+          "path": "<scratch>/embed-cache.sqlite"
+        }
+      }
+    },
+    "a.lead": {
+      "cell": "a.lead",
+      "corpus": "a",
+      "arm": "lead",
+      "stub": false,
+      "gbrain": {
+        "requested": "gbrain@exp/structure-aware-chunks",
+        "ref": "exp/structure-aware-chunks",
+        "commit": "26e2c03b048cac41eb5f0af2331cbe5710b3600a",
+        "tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+        "version": "0.60.482.0",
+        "checkout_dirty": false,
+        "verified": {
+          "copy_tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+          "tree_matches": true,
+          "symlinks_under_src": 0,
+          "dir_is_realpath": true,
+          "cli_version": "0.60.482.0",
+          "cli_version_matches": true
+        },
+        "copied_not_symlinked": true
+      },
+      "pins": {
+        "search.mode": "balanced",
+        "search.reranker.enabled": "false",
+        "search.expansion": "false",
+        "search.cache.enabled": "false"
+      },
+      "resolved": {
+        "contextual_retrieval": "title",
+        "reranker_enabled": false,
+        "expansion": false
+      },
+      "docs": 2,
+      "questions": 10,
+      "errors": 0,
+      "excluded": {
+        "short_docs": 16,
+        "unreachable_questions": 0
+      },
+      "hit1": 0.7,
+      "hit3": 0.9,
+      "lead_hit": 0.7,
+      "reachable": 1,
+      "embedding": {
+        "model": "openai:text-embedding-3-large",
+        "dims": 1536,
+        "provider_tokens": 0,
+        "calls": 0,
+        "usd": 0,
+        "cache": {
+          "hits": 33,
+          "misses": 0,
+          "bypassed": 0,
+          "infra_faults": 0,
+          "path": "<scratch>/embed-cache.sqlite"
+        }
+      }
+    },
+    "a.prefix_lead": {
+      "cell": "a.prefix_lead",
+      "corpus": "a",
+      "arm": "prefix_lead",
+      "stub": false,
+      "gbrain": {
+        "requested": "gbrain@exp/structure-aware-chunks",
+        "ref": "exp/structure-aware-chunks",
+        "commit": "26e2c03b048cac41eb5f0af2331cbe5710b3600a",
+        "tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+        "version": "0.60.482.0",
+        "checkout_dirty": false,
+        "verified": {
+          "copy_tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+          "tree_matches": true,
+          "symlinks_under_src": 0,
+          "dir_is_realpath": true,
+          "cli_version": "0.60.482.0",
+          "cli_version_matches": true
+        },
+        "copied_not_symlinked": true
+      },
+      "pins": {
+        "search.mode": "balanced",
+        "search.reranker.enabled": "false",
+        "search.expansion": "false",
+        "search.cache.enabled": "false"
+      },
+      "resolved": {
+        "contextual_retrieval": "title",
+        "reranker_enabled": false,
+        "expansion": false
+      },
+      "docs": 2,
+      "questions": 10,
+      "errors": 0,
+      "excluded": {
+        "short_docs": 16,
+        "unreachable_questions": 0
+      },
+      "hit1": 0.8,
+      "hit3": 0.9,
+      "lead_hit": 0.8,
+      "reachable": 1,
+      "embedding": {
+        "model": "openai:text-embedding-3-large",
+        "dims": 1536,
+        "provider_tokens": 0,
+        "calls": 0,
+        "usd": 0,
+        "cache": {
+          "hits": 33,
+          "misses": 0,
+          "bypassed": 0,
+          "infra_faults": 0,
+          "path": "<scratch>/embed-cache.sqlite"
+        }
+      }
+    },
+    "a.kw_base": {
+      "cell": "a.kw_base",
+      "corpus": "a",
+      "arm": "kw_base",
+      "stub": false,
+      "gbrain": {
+        "requested": "gbrain@exp/structure-aware-chunks",
+        "ref": "exp/structure-aware-chunks",
+        "commit": "26e2c03b048cac41eb5f0af2331cbe5710b3600a",
+        "tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+        "version": "0.60.482.0",
+        "checkout_dirty": false,
+        "verified": {
+          "copy_tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+          "tree_matches": true,
+          "symlinks_under_src": 0,
+          "dir_is_realpath": true,
+          "cli_version": "0.60.482.0",
+          "cli_version_matches": true
+        },
+        "copied_not_symlinked": true
+      },
+      "pins": {
+        "search.mode": "balanced",
+        "search.reranker.enabled": "false",
+        "search.expansion": "false",
+        "search.cache.enabled": "false"
+      },
+      "resolved": {
+        "contextual_retrieval": "title",
+        "reranker_enabled": false,
+        "expansion": false
+      },
+      "docs": 2,
+      "questions": 10,
+      "errors": 0,
+      "excluded": {
+        "short_docs": 16,
+        "unreachable_questions": 0
+      },
+      "hit1": 0,
+      "hit3": 0.3,
+      "lead_hit": 0.3,
+      "reachable": 1,
+      "embedding": {
+        "model": "openai:text-embedding-3-large",
+        "dims": 1536,
+        "provider_tokens": 0,
+        "calls": 0,
+        "usd": 0,
+        "cache": {
+          "hits": 0,
+          "misses": 0,
+          "bypassed": 0,
+          "infra_faults": 0,
+          "path": "<scratch>/embed-cache.sqlite.kw-unused"
+        }
+      }
+    },
+    "a.kw_lead": {
+      "cell": "a.kw_lead",
+      "corpus": "a",
+      "arm": "kw_lead",
+      "stub": false,
+      "gbrain": {
+        "requested": "gbrain@exp/structure-aware-chunks",
+        "ref": "exp/structure-aware-chunks",
+        "commit": "26e2c03b048cac41eb5f0af2331cbe5710b3600a",
+        "tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+        "version": "0.60.482.0",
+        "checkout_dirty": false,
+        "verified": {
+          "copy_tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+          "tree_matches": true,
+          "symlinks_under_src": 0,
+          "dir_is_realpath": true,
+          "cli_version": "0.60.482.0",
+          "cli_version_matches": true
+        },
+        "copied_not_symlinked": true
+      },
+      "pins": {
+        "search.mode": "balanced",
+        "search.reranker.enabled": "false",
+        "search.expansion": "false",
+        "search.cache.enabled": "false"
+      },
+      "resolved": {
+        "contextual_retrieval": "title",
+        "reranker_enabled": false,
+        "expansion": false
+      },
+      "docs": 2,
+      "questions": 10,
+      "errors": 0,
+      "excluded": {
+        "short_docs": 16,
+        "unreachable_questions": 0
+      },
+      "hit1": 0,
+      "hit3": 0.3,
+      "lead_hit": 0.3,
+      "reachable": 1,
+      "embedding": {
+        "model": "openai:text-embedding-3-large",
+        "dims": 1536,
+        "provider_tokens": 0,
+        "calls": 0,
+        "usd": 0,
+        "cache": {
+          "hits": 0,
+          "misses": 0,
+          "bypassed": 0,
+          "infra_faults": 0,
+          "path": "<scratch>/embed-cache.sqlite.kw-unused"
+        }
+      }
+    },
+    "a.kw_terms": {
+      "cell": "a.kw_terms",
+      "corpus": "a",
+      "arm": "kw_terms",
+      "stub": false,
+      "gbrain": {
+        "requested": "gbrain@exp/structure-aware-chunks",
+        "ref": "exp/structure-aware-chunks",
+        "commit": "26e2c03b048cac41eb5f0af2331cbe5710b3600a",
+        "tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+        "version": "0.60.482.0",
+        "checkout_dirty": false,
+        "verified": {
+          "copy_tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+          "tree_matches": true,
+          "symlinks_under_src": 0,
+          "dir_is_realpath": true,
+          "cli_version": "0.60.482.0",
+          "cli_version_matches": true
+        },
+        "copied_not_symlinked": true
+      },
+      "pins": {
+        "search.mode": "balanced",
+        "search.reranker.enabled": "false",
+        "search.expansion": "false",
+        "search.cache.enabled": "false"
+      },
+      "resolved": {
+        "contextual_retrieval": "title",
+        "reranker_enabled": false,
+        "expansion": false
+      },
+      "docs": 2,
+      "questions": 10,
+      "errors": 0,
+      "excluded": {
+        "short_docs": 16,
+        "unreachable_questions": 0
+      },
+      "hit1": 0,
+      "hit3": 0.3,
+      "lead_hit": 0.3,
+      "reachable": 1,
+      "embedding": {
+        "model": "openai:text-embedding-3-large",
+        "dims": 1536,
+        "provider_tokens": 0,
+        "calls": 0,
+        "usd": 0,
+        "cache": {
+          "hits": 0,
+          "misses": 0,
+          "bypassed": 0,
+          "infra_faults": 0,
+          "path": "<scratch>/embed-cache.sqlite.kw-unused"
+        }
+      }
+    },
+    "a.kw_lead_terms": {
+      "cell": "a.kw_lead_terms",
+      "corpus": "a",
+      "arm": "kw_lead_terms",
+      "stub": false,
+      "gbrain": {
+        "requested": "gbrain@exp/structure-aware-chunks",
+        "ref": "exp/structure-aware-chunks",
+        "commit": "26e2c03b048cac41eb5f0af2331cbe5710b3600a",
+        "tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+        "version": "0.60.482.0",
+        "checkout_dirty": false,
+        "verified": {
+          "copy_tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+          "tree_matches": true,
+          "symlinks_under_src": 0,
+          "dir_is_realpath": true,
+          "cli_version": "0.60.482.0",
+          "cli_version_matches": true
+        },
+        "copied_not_symlinked": true
+      },
+      "pins": {
+        "search.mode": "balanced",
+        "search.reranker.enabled": "false",
+        "search.expansion": "false",
+        "search.cache.enabled": "false"
+      },
+      "resolved": {
+        "contextual_retrieval": "title",
+        "reranker_enabled": false,
+        "expansion": false
+      },
+      "docs": 2,
+      "questions": 10,
+      "errors": 0,
+      "excluded": {
+        "short_docs": 16,
+        "unreachable_questions": 0
+      },
+      "hit1": 0,
+      "hit3": 0.3,
+      "lead_hit": 0.3,
+      "reachable": 1,
+      "embedding": {
+        "model": "openai:text-embedding-3-large",
+        "dims": 1536,
+        "provider_tokens": 0,
+        "calls": 0,
+        "usd": 0,
+        "cache": {
+          "hits": 0,
+          "misses": 0,
+          "bypassed": 0,
+          "infra_faults": 0,
+          "path": "<scratch>/embed-cache.sqlite.kw-unused"
+        }
+      }
+    },
+    "aw.base": {
+      "cell": "aw.base",
+      "corpus": "aw",
+      "arm": "base",
+      "stub": false,
+      "gbrain": {
+        "requested": "gbrain@exp/structure-aware-chunks",
+        "ref": "exp/structure-aware-chunks",
+        "commit": "26e2c03b048cac41eb5f0af2331cbe5710b3600a",
+        "tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+        "version": "0.60.482.0",
+        "checkout_dirty": false,
+        "verified": {
+          "copy_tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+          "tree_matches": true,
+          "symlinks_under_src": 0,
+          "dir_is_realpath": true,
+          "cli_version": "0.60.482.0",
+          "cli_version_matches": true
+        },
+        "copied_not_symlinked": true
+      },
+      "pins": {
+        "search.mode": "balanced",
+        "search.reranker.enabled": "false",
+        "search.expansion": "false",
+        "search.cache.enabled": "false"
+      },
+      "resolved": {
+        "contextual_retrieval": "title",
+        "reranker_enabled": false,
+        "expansion": false
+      },
+      "docs": 118,
+      "questions": 39,
+      "errors": 0,
+      "excluded": {
+        "short_docs": 0,
+        "unreachable_questions": 0
+      },
+      "hit1": 0.46153846153846156,
+      "hit3": 0.7692307692307693,
+      "lead_hit": 0.46153846153846156,
+      "reachable": 1,
+      "embedding": {
+        "model": "openai:text-embedding-3-large",
+        "dims": 1536,
+        "provider_tokens": 68891,
+        "calls": 157,
+        "usd": 0.009,
+        "cache": {
+          "hits": 0,
+          "misses": 204,
+          "bypassed": 0,
+          "infra_faults": 0,
+          "path": "<scratch>/embed-cache.sqlite"
+        }
+      }
+    },
+    "aw.prefix": {
+      "cell": "aw.prefix",
+      "corpus": "aw",
+      "arm": "prefix",
+      "stub": false,
+      "gbrain": {
+        "requested": "gbrain@exp/structure-aware-chunks",
+        "ref": "exp/structure-aware-chunks",
+        "commit": "26e2c03b048cac41eb5f0af2331cbe5710b3600a",
+        "tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+        "version": "0.60.482.0",
+        "checkout_dirty": false,
+        "verified": {
+          "copy_tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+          "tree_matches": true,
+          "symlinks_under_src": 0,
+          "dir_is_realpath": true,
+          "cli_version": "0.60.482.0",
+          "cli_version_matches": true
+        },
+        "copied_not_symlinked": true
+      },
+      "pins": {
+        "search.mode": "balanced",
+        "search.reranker.enabled": "false",
+        "search.expansion": "false",
+        "search.cache.enabled": "false"
+      },
+      "resolved": {
+        "contextual_retrieval": "title",
+        "reranker_enabled": false,
+        "expansion": false
+      },
+      "docs": 118,
+      "questions": 39,
+      "errors": 0,
+      "excluded": {
+        "short_docs": 0,
+        "unreachable_questions": 0
+      },
+      "hit1": 0.5128205128205128,
+      "hit3": 0.7435897435897436,
+      "lead_hit": 0.5128205128205128,
+      "reachable": 1,
+      "embedding": {
+        "model": "openai:text-embedding-3-large",
+        "dims": 1536,
+        "provider_tokens": 51229,
+        "calls": 53,
+        "usd": 0.0067,
+        "cache": {
+          "hits": 106,
+          "misses": 98,
+          "bypassed": 0,
+          "infra_faults": 0,
+          "path": "<scratch>/embed-cache.sqlite"
+        }
+      }
+    },
+    "aw.lead": {
+      "cell": "aw.lead",
+      "corpus": "aw",
+      "arm": "lead",
+      "stub": false,
+      "gbrain": {
+        "requested": "gbrain@exp/structure-aware-chunks",
+        "ref": "exp/structure-aware-chunks",
+        "commit": "26e2c03b048cac41eb5f0af2331cbe5710b3600a",
+        "tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+        "version": "0.60.482.0",
+        "checkout_dirty": false,
+        "verified": {
+          "copy_tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+          "tree_matches": true,
+          "symlinks_under_src": 0,
+          "dir_is_realpath": true,
+          "cli_version": "0.60.482.0",
+          "cli_version_matches": true
+        },
+        "copied_not_symlinked": true
+      },
+      "pins": {
+        "search.mode": "balanced",
+        "search.reranker.enabled": "false",
+        "search.expansion": "false",
+        "search.cache.enabled": "false"
+      },
+      "resolved": {
+        "contextual_retrieval": "title",
+        "reranker_enabled": false,
+        "expansion": false
+      },
+      "docs": 118,
+      "questions": 39,
+      "errors": 0,
+      "excluded": {
+        "short_docs": 0,
+        "unreachable_questions": 0
+      },
+      "hit1": 0.46153846153846156,
+      "hit3": 0.7692307692307693,
+      "lead_hit": 0.46153846153846156,
+      "reachable": 1,
+      "embedding": {
+        "model": "openai:text-embedding-3-large",
+        "dims": 1536,
+        "provider_tokens": 10453,
+        "calls": 5,
+        "usd": 0.0014,
+        "cache": {
+          "hits": 187,
+          "misses": 18,
+          "bypassed": 0,
+          "infra_faults": 0,
+          "path": "<scratch>/embed-cache.sqlite"
+        }
+      }
+    },
+    "aw.prefix_lead": {
+      "cell": "aw.prefix_lead",
+      "corpus": "aw",
+      "arm": "prefix_lead",
+      "stub": false,
+      "gbrain": {
+        "requested": "gbrain@exp/structure-aware-chunks",
+        "ref": "exp/structure-aware-chunks",
+        "commit": "26e2c03b048cac41eb5f0af2331cbe5710b3600a",
+        "tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+        "version": "0.60.482.0",
+        "checkout_dirty": false,
+        "verified": {
+          "copy_tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+          "tree_matches": true,
+          "symlinks_under_src": 0,
+          "dir_is_realpath": true,
+          "cli_version": "0.60.482.0",
+          "cli_version_matches": true
+        },
+        "copied_not_symlinked": true
+      },
+      "pins": {
+        "search.mode": "balanced",
+        "search.reranker.enabled": "false",
+        "search.expansion": "false",
+        "search.cache.enabled": "false"
+      },
+      "resolved": {
+        "contextual_retrieval": "title",
+        "reranker_enabled": false,
+        "expansion": false
+      },
+      "docs": 118,
+      "questions": 39,
+      "errors": 0,
+      "excluded": {
+        "short_docs": 0,
+        "unreachable_questions": 0
+      },
+      "hit1": 0.48717948717948717,
+      "hit3": 0.717948717948718,
+      "lead_hit": 0.48717948717948717,
+      "reachable": 1,
+      "embedding": {
+        "model": "openai:text-embedding-3-large",
+        "dims": 1536,
+        "provider_tokens": 10620,
+        "calls": 5,
+        "usd": 0.0014,
+        "cache": {
+          "hits": 187,
+          "misses": 18,
+          "bypassed": 0,
+          "infra_faults": 0,
+          "path": "<scratch>/embed-cache.sqlite"
+        }
+      }
+    },
+    "aw.kw_base": {
+      "cell": "aw.kw_base",
+      "corpus": "aw",
+      "arm": "kw_base",
+      "stub": false,
+      "gbrain": {
+        "requested": "gbrain@exp/structure-aware-chunks",
+        "ref": "exp/structure-aware-chunks",
+        "commit": "26e2c03b048cac41eb5f0af2331cbe5710b3600a",
+        "tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+        "version": "0.60.482.0",
+        "checkout_dirty": false,
+        "verified": {
+          "copy_tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+          "tree_matches": true,
+          "symlinks_under_src": 0,
+          "dir_is_realpath": true,
+          "cli_version": "0.60.482.0",
+          "cli_version_matches": true
+        },
+        "copied_not_symlinked": true
+      },
+      "pins": {
+        "search.mode": "balanced",
+        "search.reranker.enabled": "false",
+        "search.expansion": "false",
+        "search.cache.enabled": "false"
+      },
+      "resolved": {
+        "contextual_retrieval": "title",
+        "reranker_enabled": false,
+        "expansion": false
+      },
+      "docs": 118,
+      "questions": 39,
+      "errors": 0,
+      "excluded": {
+        "short_docs": 0,
+        "unreachable_questions": 0
+      },
+      "hit1": 0.5384615384615384,
+      "hit3": 0.7692307692307693,
+      "lead_hit": 0.5384615384615384,
+      "reachable": 1,
+      "embedding": {
+        "model": "openai:text-embedding-3-large",
+        "dims": 1536,
+        "provider_tokens": 0,
+        "calls": 0,
+        "usd": 0,
+        "cache": {
+          "hits": 0,
+          "misses": 0,
+          "bypassed": 0,
+          "infra_faults": 0,
+          "path": "<scratch>/embed-cache.sqlite.kw-unused"
+        }
+      }
+    },
+    "aw.kw_lead": {
+      "cell": "aw.kw_lead",
+      "corpus": "aw",
+      "arm": "kw_lead",
+      "stub": false,
+      "gbrain": {
+        "requested": "gbrain@exp/structure-aware-chunks",
+        "ref": "exp/structure-aware-chunks",
+        "commit": "26e2c03b048cac41eb5f0af2331cbe5710b3600a",
+        "tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+        "version": "0.60.482.0",
+        "checkout_dirty": false,
+        "verified": {
+          "copy_tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+          "tree_matches": true,
+          "symlinks_under_src": 0,
+          "dir_is_realpath": true,
+          "cli_version": "0.60.482.0",
+          "cli_version_matches": true
+        },
+        "copied_not_symlinked": true
+      },
+      "pins": {
+        "search.mode": "balanced",
+        "search.reranker.enabled": "false",
+        "search.expansion": "false",
+        "search.cache.enabled": "false"
+      },
+      "resolved": {
+        "contextual_retrieval": "title",
+        "reranker_enabled": false,
+        "expansion": false
+      },
+      "docs": 118,
+      "questions": 39,
+      "errors": 0,
+      "excluded": {
+        "short_docs": 0,
+        "unreachable_questions": 0
+      },
+      "hit1": 0.5384615384615384,
+      "hit3": 0.7692307692307693,
+      "lead_hit": 0.5384615384615384,
+      "reachable": 1,
+      "embedding": {
+        "model": "openai:text-embedding-3-large",
+        "dims": 1536,
+        "provider_tokens": 0,
+        "calls": 0,
+        "usd": 0,
+        "cache": {
+          "hits": 0,
+          "misses": 0,
+          "bypassed": 0,
+          "infra_faults": 0,
+          "path": "<scratch>/embed-cache.sqlite.kw-unused"
+        }
+      }
+    },
+    "aw.kw_terms": {
+      "cell": "aw.kw_terms",
+      "corpus": "aw",
+      "arm": "kw_terms",
+      "stub": false,
+      "gbrain": {
+        "requested": "gbrain@exp/structure-aware-chunks",
+        "ref": "exp/structure-aware-chunks",
+        "commit": "26e2c03b048cac41eb5f0af2331cbe5710b3600a",
+        "tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+        "version": "0.60.482.0",
+        "checkout_dirty": false,
+        "verified": {
+          "copy_tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+          "tree_matches": true,
+          "symlinks_under_src": 0,
+          "dir_is_realpath": true,
+          "cli_version": "0.60.482.0",
+          "cli_version_matches": true
+        },
+        "copied_not_symlinked": true
+      },
+      "pins": {
+        "search.mode": "balanced",
+        "search.reranker.enabled": "false",
+        "search.expansion": "false",
+        "search.cache.enabled": "false"
+      },
+      "resolved": {
+        "contextual_retrieval": "title",
+        "reranker_enabled": false,
+        "expansion": false
+      },
+      "docs": 118,
+      "questions": 39,
+      "errors": 0,
+      "excluded": {
+        "short_docs": 0,
+        "unreachable_questions": 0
+      },
+      "hit1": 0.5384615384615384,
+      "hit3": 0.7692307692307693,
+      "lead_hit": 0.5384615384615384,
+      "reachable": 1,
+      "embedding": {
+        "model": "openai:text-embedding-3-large",
+        "dims": 1536,
+        "provider_tokens": 0,
+        "calls": 0,
+        "usd": 0,
+        "cache": {
+          "hits": 0,
+          "misses": 0,
+          "bypassed": 0,
+          "infra_faults": 0,
+          "path": "<scratch>/embed-cache.sqlite.kw-unused"
+        }
+      }
+    },
+    "aw.kw_lead_terms": {
+      "cell": "aw.kw_lead_terms",
+      "corpus": "aw",
+      "arm": "kw_lead_terms",
+      "stub": false,
+      "gbrain": {
+        "requested": "gbrain@exp/structure-aware-chunks",
+        "ref": "exp/structure-aware-chunks",
+        "commit": "26e2c03b048cac41eb5f0af2331cbe5710b3600a",
+        "tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+        "version": "0.60.482.0",
+        "checkout_dirty": false,
+        "verified": {
+          "copy_tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+          "tree_matches": true,
+          "symlinks_under_src": 0,
+          "dir_is_realpath": true,
+          "cli_version": "0.60.482.0",
+          "cli_version_matches": true
+        },
+        "copied_not_symlinked": true
+      },
+      "pins": {
+        "search.mode": "balanced",
+        "search.reranker.enabled": "false",
+        "search.expansion": "false",
+        "search.cache.enabled": "false"
+      },
+      "resolved": {
+        "contextual_retrieval": "title",
+        "reranker_enabled": false,
+        "expansion": false
+      },
+      "docs": 118,
+      "questions": 39,
+      "errors": 0,
+      "excluded": {
+        "short_docs": 0,
+        "unreachable_questions": 0
+      },
+      "hit1": 0.5384615384615384,
+      "hit3": 0.7692307692307693,
+      "lead_hit": 0.5384615384615384,
+      "reachable": 1,
+      "embedding": {
+        "model": "openai:text-embedding-3-large",
+        "dims": 1536,
+        "provider_tokens": 0,
+        "calls": 0,
+        "usd": 0,
+        "cache": {
+          "hits": 0,
+          "misses": 0,
+          "bypassed": 0,
+          "infra_faults": 0,
+          "path": "<scratch>/embed-cache.sqlite.kw-unused"
+        }
+      }
+    },
+    "b.base": {
+      "cell": "b.base",
+      "corpus": "b",
+      "arm": "base",
+      "stub": false,
+      "gbrain": {
+        "requested": "gbrain@exp/structure-aware-chunks",
+        "ref": "exp/structure-aware-chunks",
+        "commit": "26e2c03b048cac41eb5f0af2331cbe5710b3600a",
+        "tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+        "version": "0.60.482.0",
+        "checkout_dirty": false,
+        "verified": {
+          "copy_tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+          "tree_matches": true,
+          "symlinks_under_src": 0,
+          "dir_is_realpath": true,
+          "cli_version": "0.60.482.0",
+          "cli_version_matches": true
+        },
+        "copied_not_symlinked": true
+      },
+      "pins": {
+        "search.mode": "balanced",
+        "search.reranker.enabled": "false",
+        "search.expansion": "false",
+        "search.cache.enabled": "false"
+      },
+      "resolved": {
+        "contextual_retrieval": "title",
+        "reranker_enabled": false,
+        "expansion": false
+      },
+      "docs": 271,
+      "questions": 880,
+      "errors": 0,
+      "excluded": {
+        "short_docs": 5,
+        "unreachable_questions": 0
+      },
+      "hit1": 0.4727272727272727,
+      "hit3": 0.8,
+      "lead_hit": 0.48522727272727273,
+      "reachable": 1,
+      "embedding": {
+        "model": "openai:text-embedding-3-large",
+        "dims": 1536,
+        "provider_tokens": 1537282,
+        "calls": 1102,
+        "usd": 0.1998,
+        "cache": {
+          "hits": 1,
+          "misses": 3454,
+          "bypassed": 0,
+          "infra_faults": 0,
+          "path": "<scratch>/embed-cache.sqlite"
+        }
+      }
+    },
+    "b.prefix": {
+      "cell": "b.prefix",
+      "corpus": "b",
+      "arm": "prefix",
+      "stub": false,
+      "gbrain": {
+        "requested": "gbrain@exp/structure-aware-chunks",
+        "ref": "exp/structure-aware-chunks",
+        "commit": "26e2c03b048cac41eb5f0af2331cbe5710b3600a",
+        "tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+        "version": "0.60.482.0",
+        "checkout_dirty": false,
+        "verified": {
+          "copy_tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+          "tree_matches": true,
+          "symlinks_under_src": 0,
+          "dir_is_realpath": true,
+          "cli_version": "0.60.482.0",
+          "cli_version_matches": true
+        },
+        "copied_not_symlinked": true
+      },
+      "pins": {
+        "search.mode": "balanced",
+        "search.reranker.enabled": "false",
+        "search.expansion": "false",
+        "search.cache.enabled": "false"
+      },
+      "resolved": {
+        "contextual_retrieval": "title",
+        "reranker_enabled": false,
+        "expansion": false
+      },
+      "docs": 271,
+      "questions": 880,
+      "errors": 0,
+      "excluded": {
+        "short_docs": 5,
+        "unreachable_questions": 0
+      },
+      "hit1": 0.49886363636363634,
+      "hit3": 0.8170454545454545,
+      "lead_hit": 0.5261363636363636,
+      "reachable": 1,
+      "embedding": {
+        "model": "openai:text-embedding-3-large",
+        "dims": 1536,
+        "provider_tokens": 1543134,
+        "calls": 271,
+        "usd": 0.2006,
+        "cache": {
+          "hits": 833,
+          "misses": 2621,
+          "bypassed": 0,
+          "infra_faults": 0,
+          "path": "<scratch>/embed-cache.sqlite"
+        }
+      }
+    },
+    "b.lead": {
+      "cell": "b.lead",
+      "corpus": "b",
+      "arm": "lead",
+      "stub": false,
+      "gbrain": {
+        "requested": "gbrain@exp/structure-aware-chunks",
+        "ref": "exp/structure-aware-chunks",
+        "commit": "26e2c03b048cac41eb5f0af2331cbe5710b3600a",
+        "tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+        "version": "0.60.482.0",
+        "checkout_dirty": false,
+        "verified": {
+          "copy_tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+          "tree_matches": true,
+          "symlinks_under_src": 0,
+          "dir_is_realpath": true,
+          "cli_version": "0.60.482.0",
+          "cli_version_matches": true
+        },
+        "copied_not_symlinked": true
+      },
+      "pins": {
+        "search.mode": "balanced",
+        "search.reranker.enabled": "false",
+        "search.expansion": "false",
+        "search.cache.enabled": "false"
+      },
+      "resolved": {
+        "contextual_retrieval": "title",
+        "reranker_enabled": false,
+        "expansion": false
+      },
+      "docs": 271,
+      "questions": 880,
+      "errors": 0,
+      "excluded": {
+        "short_docs": 5,
+        "unreachable_questions": 0
+      },
+      "hit1": 0.49204545454545456,
+      "hit3": 0.8090909090909091,
+      "lead_hit": 0.5136363636363637,
+      "reachable": 1,
+      "embedding": {
+        "model": "openai:text-embedding-3-large",
+        "dims": 1536,
+        "provider_tokens": 554699,
+        "calls": 243,
+        "usd": 0.0721,
+        "cache": {
+          "hits": 2532,
+          "misses": 931,
+          "bypassed": 0,
+          "infra_faults": 0,
+          "path": "<scratch>/embed-cache.sqlite"
+        }
+      }
+    },
+    "b.prefix_lead": {
+      "cell": "b.prefix_lead",
+      "corpus": "b",
+      "arm": "prefix_lead",
+      "stub": false,
+      "gbrain": {
+        "requested": "gbrain@exp/structure-aware-chunks",
+        "ref": "exp/structure-aware-chunks",
+        "commit": "26e2c03b048cac41eb5f0af2331cbe5710b3600a",
+        "tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+        "version": "0.60.482.0",
+        "checkout_dirty": false,
+        "verified": {
+          "copy_tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+          "tree_matches": true,
+          "symlinks_under_src": 0,
+          "dir_is_realpath": true,
+          "cli_version": "0.60.482.0",
+          "cli_version_matches": true
+        },
+        "copied_not_symlinked": true
+      },
+      "pins": {
+        "search.mode": "balanced",
+        "search.reranker.enabled": "false",
+        "search.expansion": "false",
+        "search.cache.enabled": "false"
+      },
+      "resolved": {
+        "contextual_retrieval": "title",
+        "reranker_enabled": false,
+        "expansion": false
+      },
+      "docs": 271,
+      "questions": 880,
+      "errors": 0,
+      "excluded": {
+        "short_docs": 5,
+        "unreachable_questions": 0
+      },
+      "hit1": 0.5113636363636364,
+      "hit3": 0.8204545454545454,
+      "lead_hit": 0.5454545454545454,
+      "reachable": 1,
+      "embedding": {
+        "model": "openai:text-embedding-3-large",
+        "dims": 1536,
+        "provider_tokens": 560604,
+        "calls": 243,
+        "usd": 0.0729,
+        "cache": {
+          "hits": 2532,
+          "misses": 931,
+          "bypassed": 0,
+          "infra_faults": 0,
+          "path": "<scratch>/embed-cache.sqlite"
+        }
+      }
+    },
+    "b.kw_base": {
+      "cell": "b.kw_base",
+      "corpus": "b",
+      "arm": "kw_base",
+      "stub": false,
+      "gbrain": {
+        "requested": "gbrain@exp/structure-aware-chunks",
+        "ref": "exp/structure-aware-chunks",
+        "commit": "26e2c03b048cac41eb5f0af2331cbe5710b3600a",
+        "tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+        "version": "0.60.482.0",
+        "checkout_dirty": false,
+        "verified": {
+          "copy_tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+          "tree_matches": true,
+          "symlinks_under_src": 0,
+          "dir_is_realpath": true,
+          "cli_version": "0.60.482.0",
+          "cli_version_matches": true
+        },
+        "copied_not_symlinked": true
+      },
+      "pins": {
+        "search.mode": "balanced",
+        "search.reranker.enabled": "false",
+        "search.expansion": "false",
+        "search.cache.enabled": "false"
+      },
+      "resolved": {
+        "contextual_retrieval": "title",
+        "reranker_enabled": false,
+        "expansion": false
+      },
+      "docs": 271,
+      "questions": 880,
+      "errors": 0,
+      "excluded": {
+        "short_docs": 5,
+        "unreachable_questions": 0
+      },
+      "hit1": 0.2318181818181818,
+      "hit3": 0.3534090909090909,
+      "lead_hit": 0.39204545454545453,
+      "reachable": 1,
+      "embedding": {
+        "model": "openai:text-embedding-3-large",
+        "dims": 1536,
+        "provider_tokens": 0,
+        "calls": 0,
+        "usd": 0,
+        "cache": {
+          "hits": 0,
+          "misses": 0,
+          "bypassed": 0,
+          "infra_faults": 0,
+          "path": "<scratch>/embed-cache.sqlite.kw-unused"
+        }
+      }
+    },
+    "b.kw_lead": {
+      "cell": "b.kw_lead",
+      "corpus": "b",
+      "arm": "kw_lead",
+      "stub": false,
+      "gbrain": {
+        "requested": "gbrain@exp/structure-aware-chunks",
+        "ref": "exp/structure-aware-chunks",
+        "commit": "26e2c03b048cac41eb5f0af2331cbe5710b3600a",
+        "tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+        "version": "0.60.482.0",
+        "checkout_dirty": false,
+        "verified": {
+          "copy_tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+          "tree_matches": true,
+          "symlinks_under_src": 0,
+          "dir_is_realpath": true,
+          "cli_version": "0.60.482.0",
+          "cli_version_matches": true
+        },
+        "copied_not_symlinked": true
+      },
+      "pins": {
+        "search.mode": "balanced",
+        "search.reranker.enabled": "false",
+        "search.expansion": "false",
+        "search.cache.enabled": "false"
+      },
+      "resolved": {
+        "contextual_retrieval": "title",
+        "reranker_enabled": false,
+        "expansion": false
+      },
+      "docs": 271,
+      "questions": 880,
+      "errors": 0,
+      "excluded": {
+        "short_docs": 5,
+        "unreachable_questions": 0
+      },
+      "hit1": 0.2340909090909091,
+      "hit3": 0.3522727272727273,
+      "lead_hit": 0.3886363636363636,
+      "reachable": 1,
+      "embedding": {
+        "model": "openai:text-embedding-3-large",
+        "dims": 1536,
+        "provider_tokens": 0,
+        "calls": 0,
+        "usd": 0,
+        "cache": {
+          "hits": 0,
+          "misses": 0,
+          "bypassed": 0,
+          "infra_faults": 0,
+          "path": "<scratch>/embed-cache.sqlite.kw-unused"
+        }
+      }
+    },
+    "b.kw_terms": {
+      "cell": "b.kw_terms",
+      "corpus": "b",
+      "arm": "kw_terms",
+      "stub": false,
+      "gbrain": {
+        "requested": "gbrain@exp/structure-aware-chunks",
+        "ref": "exp/structure-aware-chunks",
+        "commit": "26e2c03b048cac41eb5f0af2331cbe5710b3600a",
+        "tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+        "version": "0.60.482.0",
+        "checkout_dirty": false,
+        "verified": {
+          "copy_tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+          "tree_matches": true,
+          "symlinks_under_src": 0,
+          "dir_is_realpath": true,
+          "cli_version": "0.60.482.0",
+          "cli_version_matches": true
+        },
+        "copied_not_symlinked": true
+      },
+      "pins": {
+        "search.mode": "balanced",
+        "search.reranker.enabled": "false",
+        "search.expansion": "false",
+        "search.cache.enabled": "false"
+      },
+      "resolved": {
+        "contextual_retrieval": "title",
+        "reranker_enabled": false,
+        "expansion": false
+      },
+      "docs": 271,
+      "questions": 880,
+      "errors": 0,
+      "excluded": {
+        "short_docs": 5,
+        "unreachable_questions": 0
+      },
+      "hit1": 0.2375,
+      "hit3": 0.35568181818181815,
+      "lead_hit": 0.39431818181818185,
+      "reachable": 1,
+      "embedding": {
+        "model": "openai:text-embedding-3-large",
+        "dims": 1536,
+        "provider_tokens": 0,
+        "calls": 0,
+        "usd": 0,
+        "cache": {
+          "hits": 0,
+          "misses": 0,
+          "bypassed": 0,
+          "infra_faults": 0,
+          "path": "<scratch>/embed-cache.sqlite.kw-unused"
+        }
+      }
+    },
+    "b.kw_lead_terms": {
+      "cell": "b.kw_lead_terms",
+      "corpus": "b",
+      "arm": "kw_lead_terms",
+      "stub": false,
+      "gbrain": {
+        "requested": "gbrain@exp/structure-aware-chunks",
+        "ref": "exp/structure-aware-chunks",
+        "commit": "26e2c03b048cac41eb5f0af2331cbe5710b3600a",
+        "tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+        "version": "0.60.482.0",
+        "checkout_dirty": false,
+        "verified": {
+          "copy_tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+          "tree_matches": true,
+          "symlinks_under_src": 0,
+          "dir_is_realpath": true,
+          "cli_version": "0.60.482.0",
+          "cli_version_matches": true
+        },
+        "copied_not_symlinked": true
+      },
+      "pins": {
+        "search.mode": "balanced",
+        "search.reranker.enabled": "false",
+        "search.expansion": "false",
+        "search.cache.enabled": "false"
+      },
+      "resolved": {
+        "contextual_retrieval": "title",
+        "reranker_enabled": false,
+        "expansion": false
+      },
+      "docs": 271,
+      "questions": 880,
+      "errors": 0,
+      "excluded": {
+        "short_docs": 5,
+        "unreachable_questions": 0
+      },
+      "hit1": 0.23863636363636365,
+      "hit3": 0.35568181818181815,
+      "lead_hit": 0.3931818181818182,
+      "reachable": 1,
+      "embedding": {
+        "model": "openai:text-embedding-3-large",
+        "dims": 1536,
+        "provider_tokens": 0,
+        "calls": 0,
+        "usd": 0,
+        "cache": {
+          "hits": 0,
+          "misses": 0,
+          "bypassed": 0,
+          "infra_faults": 0,
+          "path": "<scratch>/embed-cache.sqlite.kw-unused"
+        }
+      }
+    }
+  },
+  "cat_cells": {
+    "cat13.base": {
+      "cell": "cat13.base",
+      "cat": "13",
+      "arm": "base",
+      "stub": false,
+      "gbrain": {
+        "requested": "gbrain@exp/structure-aware-chunks",
+        "ref": "exp/structure-aware-chunks",
+        "commit": "26e2c03b048cac41eb5f0af2331cbe5710b3600a",
+        "tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+        "version": "0.60.482.0",
+        "checkout_dirty": false,
+        "verified": {
+          "copy_tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+          "tree_matches": true,
+          "symlinks_under_src": 0,
+          "dir_is_realpath": true,
+          "cli_version": "0.60.482.0",
+          "cli_version_matches": true
+        },
+        "copied_not_symlinked": true
+      },
+      "metric": "nDCG@5 (graded)",
+      "ndcg5": 0.5587368959759047,
+      "p1_strict": 0.5967153284671532,
+      "p5_graded": 0.2748175182481752,
+      "probes": 548,
+      "probes_scored": 548,
+      "search_pins": {
+        "search.mode": "balanced",
+        "search.reranker.enabled": "false",
+        "search.autocut": "false"
+      },
+      "embedding": {
+        "model": "openai:text-embedding-3-large",
+        "dims": 1536,
+        "provider_tokens": 168191,
+        "calls": 788,
+        "usd": 0.0219,
+        "cache": {
+          "hits": 0,
+          "misses": 1028,
+          "bypassed": 0,
+          "infra_faults": 0,
+          "path": "<scratch>/embed-cache.sqlite"
+        }
+      }
+    },
+    "cat13.prefix": {
+      "cell": "cat13.prefix",
+      "cat": "13",
+      "arm": "prefix",
+      "stub": false,
+      "gbrain": {
+        "requested": "gbrain@exp/structure-aware-chunks",
+        "ref": "exp/structure-aware-chunks",
+        "commit": "26e2c03b048cac41eb5f0af2331cbe5710b3600a",
+        "tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+        "version": "0.60.482.0",
+        "checkout_dirty": false,
+        "verified": {
+          "copy_tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+          "tree_matches": true,
+          "symlinks_under_src": 0,
+          "dir_is_realpath": true,
+          "cli_version": "0.60.482.0",
+          "cli_version_matches": true
+        },
+        "copied_not_symlinked": true
+      },
+      "metric": "nDCG@5 (graded)",
+      "ndcg5": 0.561771698934933,
+      "p1_strict": 0.5985401459854015,
+      "p5_graded": 0.27737226277372257,
+      "probes": 548,
+      "probes_scored": 548,
+      "search_pins": {
+        "search.mode": "balanced",
+        "search.reranker.enabled": "false",
+        "search.autocut": "false"
+      },
+      "embedding": {
+        "model": "openai:text-embedding-3-large",
+        "dims": 1536,
+        "provider_tokens": 61409,
+        "calls": 240,
+        "usd": 0.008,
+        "cache": {
+          "hits": 788,
+          "misses": 240,
+          "bypassed": 0,
+          "infra_faults": 0,
+          "path": "<scratch>/embed-cache.sqlite"
+        }
+      }
+    },
+    "cat13.kw_base": {
+      "cell": "cat13.kw_base",
+      "cat": "13",
+      "arm": "kw_base",
+      "stub": false,
+      "gbrain": {
+        "requested": "gbrain@exp/structure-aware-chunks",
+        "ref": "exp/structure-aware-chunks",
+        "commit": "26e2c03b048cac41eb5f0af2331cbe5710b3600a",
+        "tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+        "version": "0.60.482.0",
+        "checkout_dirty": false,
+        "verified": {
+          "copy_tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+          "tree_matches": true,
+          "symlinks_under_src": 0,
+          "dir_is_realpath": true,
+          "cli_version": "0.60.482.0",
+          "cli_version_matches": true
+        },
+        "copied_not_symlinked": true
+      },
+      "metric": "nDCG@5 (graded)",
+      "ndcg5": 0.4606064270800602,
+      "p1_strict": 0.5364963503649635,
+      "p5_graded": 0.1908759124087605,
+      "probes": 548,
+      "probes_scored": 548,
+      "search_pins": {
+        "search.mode": "balanced",
+        "search.reranker.enabled": "false",
+        "search.autocut": "false"
+      },
+      "embedding": {
+        "keyless": true
+      }
+    },
+    "cat13.kw_terms": {
+      "cell": "cat13.kw_terms",
+      "cat": "13",
+      "arm": "kw_terms",
+      "stub": false,
+      "gbrain": {
+        "requested": "gbrain@exp/structure-aware-chunks",
+        "ref": "exp/structure-aware-chunks",
+        "commit": "26e2c03b048cac41eb5f0af2331cbe5710b3600a",
+        "tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+        "version": "0.60.482.0",
+        "checkout_dirty": false,
+        "verified": {
+          "copy_tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+          "tree_matches": true,
+          "symlinks_under_src": 0,
+          "dir_is_realpath": true,
+          "cli_version": "0.60.482.0",
+          "cli_version_matches": true
+        },
+        "copied_not_symlinked": true
+      },
+      "heading_term_chunks": 240,
+      "metric": "nDCG@5 (graded)",
+      "ndcg5": 0.4606064270800602,
+      "p1_strict": 0.5364963503649635,
+      "p5_graded": 0.1908759124087605,
+      "probes": 548,
+      "probes_scored": 548,
+      "search_pins": {
+        "search.mode": "balanced",
+        "search.reranker.enabled": "false",
+        "search.autocut": "false"
+      },
+      "embedding": {
+        "keyless": true
+      }
+    },
+    "cat13b.base": {
+      "cell": "cat13b.base",
+      "cat": "13b",
+      "arm": "base",
+      "stub": false,
+      "gbrain": {
+        "requested": "gbrain@exp/structure-aware-chunks",
+        "ref": "exp/structure-aware-chunks",
+        "commit": "26e2c03b048cac41eb5f0af2331cbe5710b3600a",
+        "tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+        "version": "0.60.482.0",
+        "checkout_dirty": false,
+        "verified": {
+          "copy_tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+          "tree_matches": true,
+          "symlinks_under_src": 0,
+          "dir_is_realpath": true,
+          "cli_version": "0.60.482.0",
+          "cli_version_matches": true
+        },
+        "copied_not_symlinked": true
+      },
+      "metric": "top-1 hit rate",
+      "top1_hit_rate": 0.9333333333333333,
+      "top3_hit_rate": 1,
+      "swamp_at_top": 0.06666666666666667,
+      "queries": 30,
+      "search_pins": {
+        "search.mode": "balanced",
+        "search.reranker.enabled": "false",
+        "search.expansion": "false",
+        "search.cache.enabled": "false",
+        "search.autocut": "false",
+        "search.metadata_boost_gate": "lexical",
+        "search.relational_rerank_pin": "3",
+        "search.adaptive_return": "false"
+      },
+      "errors": 0,
+      "embedding": {
+        "model": "openai:text-embedding-3-large",
+        "dims": 1536,
+        "provider_tokens": 7322,
+        "calls": 50,
+        "usd": 0.001,
+        "cache": {
+          "hits": 0,
+          "misses": 60,
+          "bypassed": 0,
+          "infra_faults": 0,
+          "path": "<scratch>/embed-cache.sqlite"
+        }
+      }
+    },
+    "cat13b.prefix": {
+      "cell": "cat13b.prefix",
+      "cat": "13b",
+      "arm": "prefix",
+      "stub": false,
+      "gbrain": {
+        "requested": "gbrain@exp/structure-aware-chunks",
+        "ref": "exp/structure-aware-chunks",
+        "commit": "26e2c03b048cac41eb5f0af2331cbe5710b3600a",
+        "tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+        "version": "0.60.482.0",
+        "checkout_dirty": false,
+        "verified": {
+          "copy_tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+          "tree_matches": true,
+          "symlinks_under_src": 0,
+          "dir_is_realpath": true,
+          "cli_version": "0.60.482.0",
+          "cli_version_matches": true
+        },
+        "copied_not_symlinked": true
+      },
+      "metric": "top-1 hit rate",
+      "top1_hit_rate": 0.9333333333333333,
+      "top3_hit_rate": 1,
+      "swamp_at_top": 0.06666666666666667,
+      "queries": 30,
+      "search_pins": {
+        "search.mode": "balanced",
+        "search.reranker.enabled": "false",
+        "search.expansion": "false",
+        "search.cache.enabled": "false",
+        "search.autocut": "false",
+        "search.metadata_boost_gate": "lexical",
+        "search.relational_rerank_pin": "3",
+        "search.adaptive_return": "false"
+      },
+      "errors": 0,
+      "embedding": {
+        "model": "openai:text-embedding-3-large",
+        "dims": 1536,
+        "provider_tokens": 5002,
+        "calls": 20,
+        "usd": 0.0007,
+        "cache": {
+          "hits": 40,
+          "misses": 20,
+          "bypassed": 0,
+          "infra_faults": 0,
+          "path": "<scratch>/embed-cache.sqlite"
+        }
+      }
+    },
+    "cat13b.kw_base": {
+      "cell": "cat13b.kw_base",
+      "cat": "13b",
+      "arm": "kw_base",
+      "stub": false,
+      "gbrain": {
+        "requested": "gbrain@exp/structure-aware-chunks",
+        "ref": "exp/structure-aware-chunks",
+        "commit": "26e2c03b048cac41eb5f0af2331cbe5710b3600a",
+        "tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+        "version": "0.60.482.0",
+        "checkout_dirty": false,
+        "verified": {
+          "copy_tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+          "tree_matches": true,
+          "symlinks_under_src": 0,
+          "dir_is_realpath": true,
+          "cli_version": "0.60.482.0",
+          "cli_version_matches": true
+        },
+        "copied_not_symlinked": true
+      },
+      "metric": "top-1 hit rate",
+      "top1_hit_rate": 0.9333333333333333,
+      "top3_hit_rate": 1,
+      "swamp_at_top": 0.06666666666666667,
+      "queries": 30,
+      "search_pins": {
+        "search.mode": "balanced",
+        "search.reranker.enabled": "false",
+        "search.expansion": "false",
+        "search.cache.enabled": "false",
+        "search.autocut": "false",
+        "search.metadata_boost_gate": "lexical",
+        "search.relational_rerank_pin": "3",
+        "search.adaptive_return": "false"
+      },
+      "errors": 0,
+      "embedding": {
+        "keyless": true
+      }
+    },
+    "cat13b.kw_terms": {
+      "cell": "cat13b.kw_terms",
+      "cat": "13b",
+      "arm": "kw_terms",
+      "stub": false,
+      "gbrain": {
+        "requested": "gbrain@exp/structure-aware-chunks",
+        "ref": "exp/structure-aware-chunks",
+        "commit": "26e2c03b048cac41eb5f0af2331cbe5710b3600a",
+        "tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+        "version": "0.60.482.0",
+        "checkout_dirty": false,
+        "verified": {
+          "copy_tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+          "tree_matches": true,
+          "symlinks_under_src": 0,
+          "dir_is_realpath": true,
+          "cli_version": "0.60.482.0",
+          "cli_version_matches": true
+        },
+        "copied_not_symlinked": true
+      },
+      "heading_term_chunks": 20,
+      "metric": "top-1 hit rate",
+      "top1_hit_rate": 0.9333333333333333,
+      "top3_hit_rate": 1,
+      "swamp_at_top": 0.06666666666666667,
+      "queries": 30,
+      "search_pins": {
+        "search.mode": "balanced",
+        "search.reranker.enabled": "false",
+        "search.expansion": "false",
+        "search.cache.enabled": "false",
+        "search.autocut": "false",
+        "search.metadata_boost_gate": "lexical",
+        "search.relational_rerank_pin": "3",
+        "search.adaptive_return": "false"
+      },
+      "errors": 0,
+      "embedding": {
+        "keyless": true
+      }
+    }
+  },
+  "contrasts": [
+    {
+      "treatment": "prefix",
+      "control": "base",
+      "label": "idea 1: heading path in the embedding prefix",
+      "a": {
+        "hit3": {
+          "n": 10,
+          "treatment": 0.9,
+          "control": 0.9,
+          "wins": 0,
+          "losses": 0,
+          "net": 0,
+          "p": 1
+        },
+        "hit1": {
+          "n": 10,
+          "treatment": 0.8,
+          "control": 0.7,
+          "wins": 1,
+          "losses": 0,
+          "net": 1,
+          "p": 1
+        },
+        "lead_hit": {
+          "n": 10,
+          "treatment": 0.8,
+          "control": 0.7,
+          "wins": 1,
+          "losses": 0,
+          "net": 1,
+          "p": 1
+        }
+      },
+      "aw": {
+        "hit3": {
+          "n": 39,
+          "treatment": 0.7435897435897436,
+          "control": 0.7692307692307693,
+          "wins": 2,
+          "losses": 3,
+          "net": -1,
+          "p": 0.9999999999999999
+        },
+        "hit1": {
+          "n": 39,
+          "treatment": 0.5128205128205128,
+          "control": 0.46153846153846156,
+          "wins": 3,
+          "losses": 1,
+          "net": 2,
+          "p": 0.625
+        },
+        "lead_hit": {
+          "n": 39,
+          "treatment": 0.5128205128205128,
+          "control": 0.46153846153846156,
+          "wins": 3,
+          "losses": 1,
+          "net": 2,
+          "p": 0.625
+        }
+      },
+      "b": {
+        "hit3": {
+          "n": 880,
+          "treatment": 0.8170454545454545,
+          "control": 0.8,
+          "wins": 31,
+          "losses": 16,
+          "net": 15,
+          "p": 0.03998605682605212
+        },
+        "hit1": {
+          "n": 880,
+          "treatment": 0.49886363636363634,
+          "control": 0.4727272727272727,
+          "wins": 43,
+          "losses": 20,
+          "net": 23,
+          "p": 0.0051523970420920846
+        },
+        "lead_hit": {
+          "n": 880,
+          "treatment": 0.5261363636363636,
+          "control": 0.48522727272727273,
+          "wins": 71,
+          "losses": 35,
+          "net": 36,
+          "p": 0.0006060762772090516
+        }
+      },
+      "pooled_hit3": {
+        "n": 919,
+        "treatment": 0.8139281828073993,
+        "control": 0.7986942328618063,
+        "wins": 33,
+        "losses": 19,
+        "net": 14,
+        "p": 0.07039422106706257
+      },
+      "decision": {
+        "hit3_up_on_aw": false,
+        "hit3_up_on_b": true,
+        "pooled_p_below_0_05": false,
+        "no_cat13_cat13b_regression": true,
+        "rule_met": false
+      },
+      "role": "primary",
+      "no_regression": {
+        "cat13": {
+          "ndcg5": [
+            0.561771698934933,
+            0.5587368959759047
+          ],
+          "delta": 0.003034802959028249,
+          "p1_strict": {
+            "n": 548,
+            "treatment": 0.5985401459854015,
+            "control": 0.5967153284671532,
+            "wins": 1,
+            "losses": 0,
+            "net": 1,
+            "p": 1
+          }
+        },
+        "cat13b": {
+          "top1": [
+            28,
+            28
+          ],
+          "top3": [
+            30,
+            30
+          ],
+          "queries": 30,
+          "errors": 0
+        },
+        "ok": true
+      }
+    },
+    {
+      "treatment": "lead",
+      "control": "base",
+      "label": "idea 2: chunks start at headings",
+      "a": {
+        "hit3": {
+          "n": 10,
+          "treatment": 0.9,
+          "control": 0.9,
+          "wins": 0,
+          "losses": 0,
+          "net": 0,
+          "p": 1
+        },
+        "hit1": {
+          "n": 10,
+          "treatment": 0.7,
+          "control": 0.7,
+          "wins": 0,
+          "losses": 0,
+          "net": 0,
+          "p": 1
+        },
+        "lead_hit": {
+          "n": 10,
+          "treatment": 0.7,
+          "control": 0.7,
+          "wins": 0,
+          "losses": 0,
+          "net": 0,
+          "p": 1
+        }
+      },
+      "aw": {
+        "hit3": {
+          "n": 39,
+          "treatment": 0.7692307692307693,
+          "control": 0.7692307692307693,
+          "wins": 0,
+          "losses": 0,
+          "net": 0,
+          "p": 1
+        },
+        "hit1": {
+          "n": 39,
+          "treatment": 0.46153846153846156,
+          "control": 0.46153846153846156,
+          "wins": 0,
+          "losses": 0,
+          "net": 0,
+          "p": 1
+        },
+        "lead_hit": {
+          "n": 39,
+          "treatment": 0.46153846153846156,
+          "control": 0.46153846153846156,
+          "wins": 0,
+          "losses": 0,
+          "net": 0,
+          "p": 1
+        }
+      },
+      "b": {
+        "hit3": {
+          "n": 880,
+          "treatment": 0.8090909090909091,
+          "control": 0.8,
+          "wins": 20,
+          "losses": 12,
+          "net": 8,
+          "p": 0.21532714972272524
+        },
+        "hit1": {
+          "n": 880,
+          "treatment": 0.49204545454545456,
+          "control": 0.4727272727272727,
+          "wins": 32,
+          "losses": 15,
+          "net": 17,
+          "p": 0.01862383661500642
+        },
+        "lead_hit": {
+          "n": 880,
+          "treatment": 0.5136363636363637,
+          "control": 0.48522727272727273,
+          "wins": 44,
+          "losses": 19,
+          "net": 25,
+          "p": 0.002227531510988048
+        }
+      },
+      "pooled_hit3": {
+        "n": 919,
+        "treatment": 0.8073993471164309,
+        "control": 0.7986942328618063,
+        "wins": 20,
+        "losses": 12,
+        "net": 8,
+        "p": 0.21532714972272524,
+        "p_holm": 0.861308598890901
+      },
+      "decision": {
+        "hit3_up_on_aw": false,
+        "hit3_up_on_b": true,
+        "pooled_p_below_0_05": false,
+        "no_cat13_cat13b_regression": true,
+        "rule_met": false
+      },
+      "role": "secondary",
+      "no_regression": {
+        "ok": true,
+        "by": "guard: no-op on Cat 13 and Cat 13b"
+      }
+    },
+    {
+      "treatment": "prefix_lead",
+      "control": "prefix",
+      "label": "idea 2 on top of idea 1",
+      "a": {
+        "hit3": {
+          "n": 10,
+          "treatment": 0.9,
+          "control": 0.9,
+          "wins": 0,
+          "losses": 0,
+          "net": 0,
+          "p": 1
+        },
+        "hit1": {
+          "n": 10,
+          "treatment": 0.8,
+          "control": 0.8,
+          "wins": 0,
+          "losses": 0,
+          "net": 0,
+          "p": 1
+        },
+        "lead_hit": {
+          "n": 10,
+          "treatment": 0.8,
+          "control": 0.8,
+          "wins": 0,
+          "losses": 0,
+          "net": 0,
+          "p": 1
+        }
+      },
+      "aw": {
+        "hit3": {
+          "n": 39,
+          "treatment": 0.717948717948718,
+          "control": 0.7435897435897436,
+          "wins": 0,
+          "losses": 1,
+          "net": -1,
+          "p": 1
+        },
+        "hit1": {
+          "n": 39,
+          "treatment": 0.48717948717948717,
+          "control": 0.5128205128205128,
+          "wins": 0,
+          "losses": 1,
+          "net": -1,
+          "p": 1
+        },
+        "lead_hit": {
+          "n": 39,
+          "treatment": 0.48717948717948717,
+          "control": 0.5128205128205128,
+          "wins": 0,
+          "losses": 1,
+          "net": -1,
+          "p": 1
+        }
+      },
+      "b": {
+        "hit3": {
+          "n": 880,
+          "treatment": 0.8204545454545454,
+          "control": 0.8170454545454545,
+          "wins": 12,
+          "losses": 9,
+          "net": 3,
+          "p": 0.6636238098144527
+        },
+        "hit1": {
+          "n": 880,
+          "treatment": 0.5113636363636364,
+          "control": 0.49886363636363634,
+          "wins": 23,
+          "losses": 12,
+          "net": 11,
+          "p": 0.08953107893466963
+        },
+        "lead_hit": {
+          "n": 880,
+          "treatment": 0.5454545454545454,
+          "control": 0.5261363636363636,
+          "wins": 33,
+          "losses": 16,
+          "net": 17,
+          "p": 0.02129411414138718
+        }
+      },
+      "pooled_hit3": {
+        "n": 919,
+        "treatment": 0.8161044613710555,
+        "control": 0.8139281828073993,
+        "wins": 12,
+        "losses": 10,
+        "net": 2,
+        "p": 0.8318119049072257,
+        "p_holm": 1
+      },
+      "decision": {
+        "hit3_up_on_aw": false,
+        "hit3_up_on_b": true,
+        "pooled_p_below_0_05": false,
+        "no_cat13_cat13b_regression": true,
+        "rule_met": false
+      },
+      "role": "secondary",
+      "no_regression": {
+        "cat13": {
+          "ndcg5": [
+            0.561771698934933,
+            0.5587368959759047
+          ],
+          "delta": 0.003034802959028249,
+          "p1_strict": {
+            "n": 548,
+            "treatment": 0.5985401459854015,
+            "control": 0.5967153284671532,
+            "wins": 1,
+            "losses": 0,
+            "net": 1,
+            "p": 1
+          }
+        },
+        "cat13b": {
+          "top1": [
+            28,
+            28
+          ],
+          "top3": [
+            30,
+            30
+          ],
+          "queries": 30,
+          "errors": 0
+        },
+        "ok": true,
+        "by": "prefix vs base (lead is a no-op there)"
+      }
+    },
+    {
+      "treatment": "prefix_lead",
+      "control": "base",
+      "label": "both ideas",
+      "a": {
+        "hit3": {
+          "n": 10,
+          "treatment": 0.9,
+          "control": 0.9,
+          "wins": 0,
+          "losses": 0,
+          "net": 0,
+          "p": 1
+        },
+        "hit1": {
+          "n": 10,
+          "treatment": 0.8,
+          "control": 0.7,
+          "wins": 1,
+          "losses": 0,
+          "net": 1,
+          "p": 1
+        },
+        "lead_hit": {
+          "n": 10,
+          "treatment": 0.8,
+          "control": 0.7,
+          "wins": 1,
+          "losses": 0,
+          "net": 1,
+          "p": 1
+        }
+      },
+      "aw": {
+        "hit3": {
+          "n": 39,
+          "treatment": 0.717948717948718,
+          "control": 0.7692307692307693,
+          "wins": 1,
+          "losses": 3,
+          "net": -2,
+          "p": 0.625
+        },
+        "hit1": {
+          "n": 39,
+          "treatment": 0.48717948717948717,
+          "control": 0.46153846153846156,
+          "wins": 2,
+          "losses": 1,
+          "net": 1,
+          "p": 1
+        },
+        "lead_hit": {
+          "n": 39,
+          "treatment": 0.48717948717948717,
+          "control": 0.46153846153846156,
+          "wins": 2,
+          "losses": 1,
+          "net": 1,
+          "p": 1
+        }
+      },
+      "b": {
+        "hit3": {
+          "n": 880,
+          "treatment": 0.8204545454545454,
+          "control": 0.8,
+          "wins": 40,
+          "losses": 22,
+          "net": 18,
+          "p": 0.030015864349067178
+        },
+        "hit1": {
+          "n": 880,
+          "treatment": 0.5113636363636364,
+          "control": 0.4727272727272727,
+          "wins": 59,
+          "losses": 25,
+          "net": 34,
+          "p": 0.00026645108697203614
+        },
+        "lead_hit": {
+          "n": 880,
+          "treatment": 0.5454545454545454,
+          "control": 0.48522727272727273,
+          "wins": 92,
+          "losses": 39,
+          "net": 53,
+          "p": 0.000004153603353439935
+        }
+      },
+      "pooled_hit3": {
+        "n": 919,
+        "treatment": 0.8161044613710555,
+        "control": 0.7986942328618063,
+        "wins": 41,
+        "losses": 25,
+        "net": 16,
+        "p": 0.06401750413722604
+      },
+      "decision": {
+        "hit3_up_on_aw": false,
+        "hit3_up_on_b": true,
+        "pooled_p_below_0_05": false,
+        "no_cat13_cat13b_regression": true,
+        "rule_met": null
+      },
+      "role": "descriptive",
+      "no_regression": {
+        "cat13": {
+          "ndcg5": [
+            0.561771698934933,
+            0.5587368959759047
+          ],
+          "delta": 0.003034802959028249,
+          "p1_strict": {
+            "n": 548,
+            "treatment": 0.5985401459854015,
+            "control": 0.5967153284671532,
+            "wins": 1,
+            "losses": 0,
+            "net": 1,
+            "p": 1
+          }
+        },
+        "cat13b": {
+          "top1": [
+            28,
+            28
+          ],
+          "top3": [
+            30,
+            30
+          ],
+          "queries": 30,
+          "errors": 0
+        },
+        "ok": true,
+        "by": "prefix vs base (lead is a no-op there)"
+      }
+    },
+    {
+      "treatment": "kw_terms",
+      "control": "kw_base",
+      "label": "keyless: heading path in search_vector (weight C)",
+      "a": {
+        "hit3": {
+          "n": 10,
+          "treatment": 0.3,
+          "control": 0.3,
+          "wins": 0,
+          "losses": 0,
+          "net": 0,
+          "p": 1
+        },
+        "hit1": {
+          "n": 10,
+          "treatment": 0,
+          "control": 0,
+          "wins": 0,
+          "losses": 0,
+          "net": 0,
+          "p": 1
+        },
+        "lead_hit": {
+          "n": 10,
+          "treatment": 0.3,
+          "control": 0.3,
+          "wins": 0,
+          "losses": 0,
+          "net": 0,
+          "p": 1
+        }
+      },
+      "aw": {
+        "hit3": {
+          "n": 39,
+          "treatment": 0.7692307692307693,
+          "control": 0.7692307692307693,
+          "wins": 0,
+          "losses": 0,
+          "net": 0,
+          "p": 1
+        },
+        "hit1": {
+          "n": 39,
+          "treatment": 0.5384615384615384,
+          "control": 0.5384615384615384,
+          "wins": 0,
+          "losses": 0,
+          "net": 0,
+          "p": 1
+        },
+        "lead_hit": {
+          "n": 39,
+          "treatment": 0.5384615384615384,
+          "control": 0.5384615384615384,
+          "wins": 0,
+          "losses": 0,
+          "net": 0,
+          "p": 1
+        }
+      },
+      "b": {
+        "hit3": {
+          "n": 880,
+          "treatment": 0.35568181818181815,
+          "control": 0.3534090909090909,
+          "wins": 4,
+          "losses": 2,
+          "net": 2,
+          "p": 0.6875
+        },
+        "hit1": {
+          "n": 880,
+          "treatment": 0.2375,
+          "control": 0.2318181818181818,
+          "wins": 6,
+          "losses": 1,
+          "net": 5,
+          "p": 0.12500000000000006
+        },
+        "lead_hit": {
+          "n": 880,
+          "treatment": 0.39431818181818185,
+          "control": 0.39204545454545453,
+          "wins": 6,
+          "losses": 4,
+          "net": 2,
+          "p": 0.75390625
+        }
+      },
+      "pooled_hit3": {
+        "n": 919,
+        "treatment": 0.37323177366702937,
+        "control": 0.3710554951033732,
+        "wins": 4,
+        "losses": 2,
+        "net": 2,
+        "p": 0.6875,
+        "p_holm": 1
+      },
+      "decision": {
+        "hit3_up_on_aw": false,
+        "hit3_up_on_b": true,
+        "pooled_p_below_0_05": false,
+        "no_cat13_cat13b_regression": true,
+        "rule_met": false
+      },
+      "role": "secondary",
+      "no_regression": {
+        "cat13": {
+          "ndcg5": [
+            0.4606064270800602,
+            0.4606064270800602
+          ],
+          "delta": 0,
+          "p1_strict": {
+            "n": 548,
+            "treatment": 0.5364963503649635,
+            "control": 0.5364963503649635,
+            "wins": 0,
+            "losses": 0,
+            "net": 0,
+            "p": 1
+          }
+        },
+        "cat13b": {
+          "top1": [
+            28,
+            28
+          ],
+          "top3": [
+            30,
+            30
+          ],
+          "queries": 30,
+          "errors": 0
+        },
+        "ok": true
+      }
+    },
+    {
+      "treatment": "kw_lead",
+      "control": "kw_base",
+      "label": "keyless: chunks start at headings",
+      "a": {
+        "hit3": {
+          "n": 10,
+          "treatment": 0.3,
+          "control": 0.3,
+          "wins": 0,
+          "losses": 0,
+          "net": 0,
+          "p": 1
+        },
+        "hit1": {
+          "n": 10,
+          "treatment": 0,
+          "control": 0,
+          "wins": 0,
+          "losses": 0,
+          "net": 0,
+          "p": 1
+        },
+        "lead_hit": {
+          "n": 10,
+          "treatment": 0.3,
+          "control": 0.3,
+          "wins": 0,
+          "losses": 0,
+          "net": 0,
+          "p": 1
+        }
+      },
+      "aw": {
+        "hit3": {
+          "n": 39,
+          "treatment": 0.7692307692307693,
+          "control": 0.7692307692307693,
+          "wins": 0,
+          "losses": 0,
+          "net": 0,
+          "p": 1
+        },
+        "hit1": {
+          "n": 39,
+          "treatment": 0.5384615384615384,
+          "control": 0.5384615384615384,
+          "wins": 0,
+          "losses": 0,
+          "net": 0,
+          "p": 1
+        },
+        "lead_hit": {
+          "n": 39,
+          "treatment": 0.5384615384615384,
+          "control": 0.5384615384615384,
+          "wins": 0,
+          "losses": 0,
+          "net": 0,
+          "p": 1
+        }
+      },
+      "b": {
+        "hit3": {
+          "n": 880,
+          "treatment": 0.3522727272727273,
+          "control": 0.3534090909090909,
+          "wins": 1,
+          "losses": 2,
+          "net": -1,
+          "p": 1
+        },
+        "hit1": {
+          "n": 880,
+          "treatment": 0.2340909090909091,
+          "control": 0.2318181818181818,
+          "wins": 2,
+          "losses": 0,
+          "net": 2,
+          "p": 0.5
+        },
+        "lead_hit": {
+          "n": 880,
+          "treatment": 0.3886363636363636,
+          "control": 0.39204545454545453,
+          "wins": 1,
+          "losses": 4,
+          "net": -3,
+          "p": 0.375
+        }
+      },
+      "pooled_hit3": {
+        "n": 919,
+        "treatment": 0.36996735582154516,
+        "control": 0.3710554951033732,
+        "wins": 1,
+        "losses": 2,
+        "net": -1,
+        "p": 1,
+        "p_holm": 1
+      },
+      "decision": {
+        "hit3_up_on_aw": false,
+        "hit3_up_on_b": false,
+        "pooled_p_below_0_05": false,
+        "no_cat13_cat13b_regression": true,
+        "rule_met": false
+      },
+      "role": "secondary",
+      "no_regression": {
+        "ok": true,
+        "by": "guard: no-op on Cat 13 and Cat 13b"
+      }
+    },
+    {
+      "treatment": "kw_lead_terms",
+      "control": "kw_base",
+      "label": "keyless: both",
+      "a": {
+        "hit3": {
+          "n": 10,
+          "treatment": 0.3,
+          "control": 0.3,
+          "wins": 0,
+          "losses": 0,
+          "net": 0,
+          "p": 1
+        },
+        "hit1": {
+          "n": 10,
+          "treatment": 0,
+          "control": 0,
+          "wins": 0,
+          "losses": 0,
+          "net": 0,
+          "p": 1
+        },
+        "lead_hit": {
+          "n": 10,
+          "treatment": 0.3,
+          "control": 0.3,
+          "wins": 0,
+          "losses": 0,
+          "net": 0,
+          "p": 1
+        }
+      },
+      "aw": {
+        "hit3": {
+          "n": 39,
+          "treatment": 0.7692307692307693,
+          "control": 0.7692307692307693,
+          "wins": 0,
+          "losses": 0,
+          "net": 0,
+          "p": 1
+        },
+        "hit1": {
+          "n": 39,
+          "treatment": 0.5384615384615384,
+          "control": 0.5384615384615384,
+          "wins": 0,
+          "losses": 0,
+          "net": 0,
+          "p": 1
+        },
+        "lead_hit": {
+          "n": 39,
+          "treatment": 0.5384615384615384,
+          "control": 0.5384615384615384,
+          "wins": 0,
+          "losses": 0,
+          "net": 0,
+          "p": 1
+        }
+      },
+      "b": {
+        "hit3": {
+          "n": 880,
+          "treatment": 0.35568181818181815,
+          "control": 0.3534090909090909,
+          "wins": 5,
+          "losses": 3,
+          "net": 2,
+          "p": 0.7265624999999998
+        },
+        "hit1": {
+          "n": 880,
+          "treatment": 0.23863636363636365,
+          "control": 0.2318181818181818,
+          "wins": 7,
+          "losses": 1,
+          "net": 6,
+          "p": 0.0703125
+        },
+        "lead_hit": {
+          "n": 880,
+          "treatment": 0.3931818181818182,
+          "control": 0.39204545454545453,
+          "wins": 7,
+          "losses": 6,
+          "net": 1,
+          "p": 1
+        }
+      },
+      "pooled_hit3": {
+        "n": 919,
+        "treatment": 0.37323177366702937,
+        "control": 0.3710554951033732,
+        "wins": 5,
+        "losses": 3,
+        "net": 2,
+        "p": 0.7265624999999998
+      },
+      "decision": {
+        "hit3_up_on_aw": false,
+        "hit3_up_on_b": true,
+        "pooled_p_below_0_05": false,
+        "no_cat13_cat13b_regression": true,
+        "rule_met": null
+      },
+      "role": "descriptive",
+      "no_regression": {
+        "cat13": {
+          "ndcg5": [
+            0.4606064270800602,
+            0.4606064270800602
+          ],
+          "delta": 0,
+          "p1_strict": {
+            "n": 548,
+            "treatment": 0.5364963503649635,
+            "control": 0.5364963503649635,
+            "wins": 0,
+            "losses": 0,
+            "net": 0,
+            "p": 1
+          }
+        },
+        "cat13b": {
+          "top1": [
+            28,
+            28
+          ],
+          "top3": [
+            30,
+            30
+          ],
+          "queries": 30,
+          "errors": 0
+        },
+        "ok": true,
+        "by": "kw_terms vs kw_base (lead is a no-op there)"
+      }
+    }
+  ]
+}

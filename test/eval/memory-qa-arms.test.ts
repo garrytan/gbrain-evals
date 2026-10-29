@@ -1,10 +1,11 @@
 import { afterAll, afterEach, describe, expect, test } from 'bun:test';
+import { createHash } from 'node:crypto';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { gzipSync } from 'node:zlib';
 import { BudgetRun, closeLedgers, initLedger } from '../../eval/runner/budget-ledger.ts';
-import { ChatClient, latestDate, renderHistory, sendsTemperature, sessionDateKey } from '../../eval/runner/memory-qa/qa.ts';
+import { ChatClient, chatCacheKey, latestDate, renderHistory, sendsTemperature, sessionDateKey } from '../../eval/runner/memory-qa/qa-v2.ts';
 import { ledgerRerankRequests, loadFrozenRetrieval, parseRunArgs, resolveReranker, runArm, scoreRetrieval } from '../../eval/runner/memory-qa/run.ts';
 import { DecideError } from '../../eval/runner/decisions/errors.ts';
 import { loadFixture } from '../../eval/runner/memory-qa/corpus.ts';
@@ -53,6 +54,35 @@ describe('reader sampling', () => {
       expect(bodies[1].temperature).toBe(0);
       expect(five.finish).toBe('end_turn');
     } finally { globalThis.fetch = real; }
+  });
+});
+
+describe('output floors for models that always reason (A19)', () => {
+  test('a Claude 5-family or GPT-6 judge asked for 10 tokens is sent 2,000; older models, Claude rubric and reader calls are sent what was asked', async () => {
+    const bodies: Array<{ url: string; body: Record<string, unknown> }> = [];
+    const real = globalThis.fetch;
+    const oldKey = process.env.OPENAI_API_KEY;
+    process.env.OPENAI_API_KEY = 'test';
+    globalThis.fetch = (async (i: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(i);
+      bodies.push({ url, body: JSON.parse(String(init?.body)) });
+      return url.includes('anthropic')
+        ? new Response(JSON.stringify({ content: [{ type: 'text', text: 'yes' }], usage: { input_tokens: 1, output_tokens: 1 }, stop_reason: 'end_turn' }), { status: 200 })
+        : new Response(JSON.stringify({ choices: [{ message: { content: 'yes' }, finish_reason: 'stop' }], usage: { prompt_tokens: 1, completion_tokens: 1 } }), { status: 200 });
+    }) as never;
+    try {
+      const c = new ChatClient(join(tmp, 'floor-cache'));
+      await c.chat('anthropic:claude-opus-5-5', 'judge', { maxTokens: 10, replicate: 0, temperature: null });
+      await c.chat('anthropic:claude-sonnet-4-6', 'judge', { maxTokens: 10, replicate: 0 });
+      await c.chat('anthropic:claude-opus-5-5', 'read', { maxTokens: 2048, replicate: 0 });
+      await c.chat('anthropic:claude-opus-5-5', 'rubric', { maxTokens: 1024, replicate: 0, temperature: null });
+      await c.chat('openai:gpt-6.1-sol', 'judge', { maxTokens: 10, replicate: 0, temperature: null });
+      await c.chat('openai:gpt-4.1-mini', 'judge', { maxTokens: 1024, replicate: 0 });
+      expect(bodies.map(b => b.body.max_tokens ?? b.body.max_completion_tokens)).toEqual([2000, 10, 2048, 1024, 2000, 1024]);
+      const key = (model: string, maxTokens: number) => chatCacheKey(model, 'judge', { maxTokens, replicate: 0, temperature: null });
+      expect(key('anthropic:claude-opus-5-5', 10)).not.toBe(key('anthropic:claude-opus-5-5', 2000));
+      expect(createHash('sha256').update(JSON.stringify({ provider: 'anthropic', name: 'claude-opus-5-5', prompt: 'judge', maxTokens: 1024, temperature: 'default', replicate: 0 })).digest('hex')).toBe(key('anthropic:claude-opus-5-5', 1024));
+    } finally { globalThis.fetch = real; if (oldKey === undefined) delete process.env.OPENAI_API_KEY; else process.env.OPENAI_API_KEY = oldKey; }
   });
 });
 

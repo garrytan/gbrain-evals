@@ -13,6 +13,7 @@
  * OpenAI: Responses API with `previous_response_id`, automatic caching.
  */
 import { CHAT_PRICE_OVERRIDES } from '../budget-ledger.ts';
+import { normalizeUsage, type NormalizedUsage } from '../q1/usage.ts';
 
 export interface ToolSpec {
   name: string;
@@ -43,6 +44,7 @@ export interface SubmitPayload {
 
 export interface ToolEvent { name: string; args: Record<string, unknown>; ms: number; chars: number; truncated: boolean; error?: string; result: string }
 
+/** Summed over the run's model calls, normalized by eval/runner/q1/usage.ts: `input` is uncached input for every provider. */
 export interface Usage { input: number; output: number; cache_read: number; cache_write: number; requests: number }
 
 /**
@@ -117,8 +119,14 @@ export interface LoopConfig {
    * malformed tool call the provider rejects). Off, every failure is `error`, as v1 records it.
    */
   classifyStops?: boolean;
-  /** Replaces SUBMIT_TOOL (same name, `submit_answer`) for runners whose deliverable is not a bare value. */
+  /** The answer tool; default `SUBMIT_TOOL`. It must be named `submit_answer`. */
   submitTool?: ToolSpec;
+  /**
+   * Reasoning effort: Anthropic `output_config.effort` (as memory-qa/qa-v2.ts sends it) and, on the OpenAI Responses API
+   * this loop calls, `reasoning.effort` (the Responses form of Chat Completions' `reasoning_effort`). Absent, nothing is
+   * added, so Cat 40's requests stay byte-identical.
+   */
+  effort?: string;
   /** Called once per provider attempt, retries included, with the parsed response or the error (for usage receipts). */
   onAttempt?: (a: ProviderAttempt) => void;
 }
@@ -176,7 +184,9 @@ export async function runAgent(cfg: LoopConfig): Promise<AgentRun> {
   const maxChars = cfg.maxToolChars ?? null;
   const fetchImpl = cfg.fetchImpl ?? fetch;
   const run: AgentRun = { model: cfg.model, final: null, stop: 'turn_cap', turns: 0, tools: [], usage: { input: 0, output: 0, cache_read: 0, cache_write: 0, requests: 0 }, usd: 0, ms: 0, model_ms: 0, tool_ms: 0 };
-  const specs = (): ToolSpec[] => [...cfg.arm.tools(), cfg.submitTool ?? SUBMIT_TOOL];
+  const submitTool = cfg.submitTool ?? SUBMIT_TOOL;
+  if (submitTool.name !== SUBMIT_TOOL.name) throw new Error(`submitTool must be named ${SUBMIT_TOOL.name}`);
+  const specs = (): ToolSpec[] => [...cfg.arm.tools(), submitTool];
 
   const execute = async (name: string, args: Record<string, unknown>): Promise<{ text: string; submitted: boolean }> => {
     if (name === 'submit_answer') {
@@ -226,6 +236,12 @@ export async function runAgent(cfg: LoopConfig): Promise<AgentRun> {
   return run;
 }
 
+function addUsage(run: AgentRun, u: NormalizedUsage) {
+  run.usage.input += u.uncached_input; run.usage.output += u.output;
+  run.usage.cache_read += u.cache_read; run.usage.cache_write += u.cache_write;
+  run.usage.requests++;
+}
+
 type Exec = (name: string, args: Record<string, unknown>) => Promise<{ text: string; submitted: boolean }>;
 
 /** Rebuilds the provider tool list when the arm's tools changed since the last turn. */
@@ -263,12 +279,10 @@ async function anthropicLoop(cfg: LoopConfig, run: AgentRun, specs: () => ToolSp
     const res = await postJson(fetchImpl, 'https://api.anthropic.com/v1/messages', headers, {
       model: cfg.model, max_tokens: cfg.maxOutputTokens ?? 8192,
       system: [{ type: 'text', text: cfg.system, cache_control: { type: 'ephemeral' } }], tools: currentTools(), messages,
+      ...(cfg.effort !== undefined ? { output_config: { effort: cfg.effort } } : {}),
     }, cfg.onAttempt);
     run.model_ms += Date.now() - s;
-    const u = (res.usage ?? {}) as Record<string, number>;
-    run.usage.input += u.input_tokens ?? 0; run.usage.output += u.output_tokens ?? 0;
-    run.usage.cache_read += u.cache_read_input_tokens ?? 0; run.usage.cache_write += u.cache_creation_input_tokens ?? 0;
-    run.usage.requests++;
+    addUsage(run, normalizeUsage('anthropic', res.usage as object | undefined));
     const content = (res.content ?? []) as Array<Record<string, unknown>>;
     messages.push({ role: 'assistant', content });
     const calls = content.filter(c => c.type === 'tool_use');
@@ -302,14 +316,10 @@ async function openaiLoop(cfg: LoopConfig, run: AgentRun, specs: () => ToolSpec[
     const s = Date.now();
     const res = await postJson(fetchImpl, 'https://api.openai.com/v1/responses', headers, {
       model: cfg.model, instructions: cfg.system, input, tools: currentTools(), max_output_tokens: cfg.maxOutputTokens ?? 16_000,
-      ...(previous ? { previous_response_id: previous } : {}),
+      ...(previous ? { previous_response_id: previous } : {}), ...(cfg.effort !== undefined ? { reasoning: { effort: cfg.effort } } : {}),
     }, cfg.onAttempt);
     run.model_ms += Date.now() - s;
-    const u = (res.usage ?? {}) as Record<string, unknown>;
-    const cached = ((u.input_tokens_details ?? {}) as Record<string, number>).cached_tokens ?? 0;
-    run.usage.input += ((u.input_tokens as number) ?? 0) - cached; run.usage.cache_read += cached;
-    run.usage.output += (u.output_tokens as number) ?? 0;
-    run.usage.requests++;
+    addUsage(run, normalizeUsage('openai', res.usage as object | undefined));
     previous = String(res.id);
     const output = (res.output ?? []) as Array<Record<string, unknown>>;
     const calls = output.filter(o => o.type === 'function_call');

@@ -1,0 +1,3279 @@
+{
+  "cost": {
+    "usd": 0,
+    "input_tokens": 0,
+    "output_tokens": 0,
+    "basis": "hermetic: provider keys stripped, keyword search only; the append-cost embedder is an in-process counting fake (no network)"
+  },
+  "delivered_tokens": {
+    "tokens": 0,
+    "basis": "hermetic: provider keys stripped, keyword search only; the append-cost embedder is an in-process counting fake (no network)"
+  },
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "n14-large-page-fidelity",
+  "run_status": "completed",
+  "verdict": "fail",
+  "n_total": 120,
+  "n_scored": 120,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": true,
+  "gbrain_version": "0.60.454.0",
+  "gbrain_pin": "github:garrytan/gbrain#7a6bdd3579a3c35d57c63790b428a746fe2f3df7",
+  "execution": {
+    "source_tree": {
+      "sha256": "c9849aa1ca03a3068b076a08fd6448b30debb3526d30481ec4015e254472d071",
+      "scheme": "git-index-blob-v1",
+      "files": 14605,
+      "git_head": "882eb72db6726ebe95a8c30c1a9a7bb5e637b697",
+      "dirty": false
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#7a6bdd3579a3c35d57c63790b428a746fe2f3df7",
+      "declared_sha": "7a6bdd3579a3c35d57c63790b428a746fe2f3df7",
+      "version": "0.60.454.0",
+      "package_sha256": "67a709899d95c6e97aa9079aaf132ac101233220d180ba9d16e4d5ce86a90295",
+      "loaded_git_head": "7a6bdd3579a3c35d57c63790b428a746fe2f3df7"
+    }
+  },
+  "resolved_config": {
+    "engine": "pglite-in-memory, one brain per (document, arm) child process",
+    "decide": "off (no key, fresh GBRAIN_HOME)",
+    "caller": "operation handlers with OperationContext { remote: false, sourceId: default }",
+    "tiers": [
+      "20mb"
+    ],
+    "arms": [
+      "single-page",
+      "managed-parts",
+      "native"
+    ],
+    "docs": "all",
+    "seed": 14,
+    "concurrency": 1,
+    "rss_limit_mb": 6144,
+    "generator_version": "n14-large-page-gen/v1",
+    "tier_sizes": {
+      "20mb": {
+        "conversation": 20000000
+      }
+    },
+    "search": "search op (keyword), limit 10; a hit is a result whose stored chunk (content_chunks.chunk_text by chunk_id) holds the needle answer as a whole token, passage at most 65536 bytes",
+    "egress": "largest JSON-RPC text frame of every operation result; cap 1048576 bytes",
+    "reads": "single-page and managed-parts: get_page {slug} of the hit page; native: get_page {slug, body: window, around_chunk_id}; plus one default get_page of the entry page per arm",
+    "append": "single-page: put_page whole page + 1 KB; managed-parts: put_page new part + hub index; native: append_page when it exists (the source's trailing whitespace, then the 1 KB day, separator none; Amendment 5)",
+    "native_write": "native: put_page up to 4 MiB; above it an upload session (begin_page_upload mode create, upload_page_part cut to part_max_frame_bytes, commit_page_upload) when gbrain has one; the lifecycle fence write uses mode replace (Amendment 5)",
+    "append_cost": "embedding inputs and estimated tokens (UTF-8 bytes / 4) sent by runEmbedCore({stale: true}) after the append, counted by a fake embed transport; ratio = embed tokens / appended tokens; null when the page has no chunks",
+    "embed_pass_tiers": [
+      "2mb",
+      "20mb",
+      "24mib"
+    ],
+    "settle_bound": "write_pending polls and projection settles wait up to max(240 s, 3 s per MB of the document) (Amendment 4)",
+    "lifecycle": "exploratory (Amendment 4): after the round trip, append a one-row facts fence and forget_fact it (fact withdrawn, recall, exported row), delete_page (search hits for one needle per decile, get_page), restore_page (hits, export equal to the pre-delete export), delete_page purge: true (residue rows and needle bytes, then sweepSegments({ graceMs: 0 })); lifecycle calls are outside the egress count",
+    "roundtrip": "export (runExport --slug-prefix) then reassemble the body; sha256 against source body + append",
+    "native_capability": {
+      "present": true,
+      "get_page_body": "{\"type\":\"string\",\"enum\":[\"auto\",\"full\",\"none\",\"outline\",\"window\"],\"description\":\"auto: whole up to 256 KB, else outline + window; a window's edit_target is edit_page `within`. none: revision + size + tail_sha256 (append_page expected_tail_sha256).\",\"fullSurfaceOnly\":true}",
+      "append_page": true,
+      "upload_session": true,
+      "evidence": "get_page declares body {\"type\":\"string\",\"enum\":[\"auto\",\"full\",\"none\",\"outline\",\"window\"],\"description\":\"auto: whole up to 256 KB, else outline + window; a window's edit_target is edit_page `within`. none: revision + size + tail_sha256 (append_page expected_tail_sha256).\",\"fullSurfaceOnly\":true}; append_page exists; upload sessions exist"
+    },
+    "thresholds": {
+      "native_keyword_recall_floor": 0.9,
+      "append_embed_ratio_max": 3,
+      "native_recall_gap_points_max": 2,
+      "hybrid_recall_min_decile": 0.95
+    },
+    "gbrain_overlay": {
+      "requested": "gbrain@7a6bdd3579a3c35d57c63790b428a746fe2f3df7",
+      "ref": "7a6bdd3579a3c35d57c63790b428a746fe2f3df7",
+      "commit": "7a6bdd3579a3c35d57c63790b428a746fe2f3df7",
+      "tree": "52e0984a395575a70710ad27888c207211c9a582",
+      "version": "0.60.454.0",
+      "checkout_dirty": false,
+      "verified": {
+        "copy_tree": "52e0984a395575a70710ad27888c207211c9a582",
+        "tree_matches": true,
+        "symlinks_under_src": 0,
+        "dir_is_realpath": true,
+        "cli_version": "0.60.454.0",
+        "cli_version_matches": true
+      },
+      "copied_not_symlinked": true
+    },
+    "direct_read_agent": "exploratory (Amendment 1): the entry page default get_page also made with remote: true; its frame is reported per arm and is not in the egress count",
+    "hermetic_wall_ms": 497638
+  },
+  "hashes": {
+    "ledger_sha256": "aa3db34222b7e3bbf4978f34286f5e8818c0b7d908b5627caf108e5573364bb3"
+  },
+  "started_at": "2026-10-25T19:04:51.945Z",
+  "finished_at": "2026-10-25T19:13:11.377Z",
+  "data": {
+    "safety": {
+      "crashes": 0,
+      "responses_over_cap": 0,
+      "roundtrip_byte_loss": 0,
+      "presence_failures": 0
+    },
+    "quality": {
+      "native_append_embed_ratio_max": 2.872,
+      "native_recall_gap_points_max": 0
+    },
+    "floor": {
+      "native_keyword_recall_2mb": null
+    },
+    "capability": {
+      "present": true,
+      "get_page_body": "{\"type\":\"string\",\"enum\":[\"auto\",\"full\",\"none\",\"outline\",\"window\"],\"description\":\"auto: whole up to 256 KB, else outline + window; a window's edit_target is edit_page `within`. none: revision + size + tail_sha256 (append_page expected_tail_sha256).\",\"fullSurfaceOnly\":true}",
+      "append_page": true,
+      "upload_session": true,
+      "evidence": "get_page declares body {\"type\":\"string\",\"enum\":[\"auto\",\"full\",\"none\",\"outline\",\"window\"],\"description\":\"auto: whole up to 256 KB, else outline + window; a window's edit_target is edit_page `within`. none: revision + size + tail_sha256 (append_page expected_tail_sha256).\",\"fullSurfaceOnly\":true}; append_page exists; upload sessions exist"
+    },
+    "verdict_failures": [
+      "floor.native_keyword_recall_2mb=null"
+    ],
+    "arms": [
+      {
+        "arm": "single-page",
+        "doc": "conversation",
+        "tier": "20mb",
+        "status": "ran",
+        "ingest": {
+          "status": "stored",
+          "chunks": 8613,
+          "pages": 1,
+          "embed_skip": null,
+          "wall_ms": 15610,
+          "rss_peak_mb": 2305,
+          "rss_over_baseline_mb": 1228,
+          "storage": {
+            "body_storage": "segmented",
+            "body_bytes": 19999957,
+            "segment_count": 74,
+            "body_generation": 1
+          },
+          "pending": {
+            "writes": 1,
+            "wait_ms": 808
+          },
+          "projection": {
+            "sealed_at_reply": false,
+            "sealed": true,
+            "settle_ms": 7803
+          }
+        },
+        "stored_needles": {
+          "hits": 40,
+          "total": 40,
+          "rate": 1
+        },
+        "keyword_recall": {
+          "hits": 40,
+          "total": 40,
+          "rate": 1
+        },
+        "keyword_recall_by_decile": [
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          }
+        ],
+        "min_decile_recall": 1,
+        "delivered_recall": {
+          "hits": 40,
+          "total": 40,
+          "rate": 1
+        },
+        "distractor_preferred": 0,
+        "reads": {
+          "attempted": 40,
+          "contains": 0,
+          "correct": 0,
+          "max_bytes": 0
+        },
+        "direct_read_bytes": null,
+        "direct_read_agent_bytes": 35694,
+        "max_frame_bytes": 10304,
+        "responses_over_cap": 0,
+        "append": {
+          "status": "ok",
+          "wall_ms": 6792,
+          "embed_inputs": 1,
+          "embed_tokens": 741,
+          "appended_tokens": 258,
+          "embed_ratio": 2.872,
+          "chunks_rewritten": 86,
+          "chunks_deleted": 86,
+          "visible": true,
+          "path": "put_page (whole page rewrite)",
+          "segments": {
+            "generation_before": 1,
+            "generation_after": 2,
+            "live_segments": 74,
+            "segments_at_new_generation": 1,
+            "segment_texts_added": 1,
+            "segment_text_bytes_added": 195406
+          },
+          "projection": {
+            "sealed_at_reply": true,
+            "sealed": true,
+            "settle_ms": 0
+          }
+        },
+        "embed_initial": {
+          "inputs": 8615,
+          "tokens": 5812394,
+          "wall_ms": 108761,
+          "tokens_per_mb": 290619
+        },
+        "roundtrip": "match",
+        "segment_roundtrip": "match",
+        "roundtrip_byte_delta": 0,
+        "lifecycle": {
+          "probes": 10,
+          "hits_before": 10,
+          "forget": {
+            "status": "ok",
+            "fact_rows": 1,
+            "withdrawn": true,
+            "recall_hits_after": 0,
+            "export_row": "struck",
+            "wall_ms": 10412
+          },
+          "delete": {
+            "status": "ok",
+            "hits_after": 0,
+            "get_page_code": "page_not_found",
+            "wall_ms": 2326
+          },
+          "restore": {
+            "status": "ok",
+            "hits_after": 10,
+            "export_matches_pre_delete": true,
+            "wall_ms": 9997
+          },
+          "purge": {
+            "status": "ok",
+            "wall_ms": 5612,
+            "residue": {
+              "pages": 0,
+              "chunks": 0,
+              "manifest_rows": 0,
+              "versions": 0,
+              "facts": 0,
+              "needle_chunks": 0,
+              "needle_texts": 0,
+              "unreferenced_texts": 0,
+              "unreferenced_text_bytes": 0
+            },
+            "sweep": {
+              "texts_deleted": 0,
+              "needle_texts_after": 0,
+              "texts_left": 0
+            },
+            "removed": {
+              "facts": 1,
+              "pages": 1,
+              "page_versions": 4,
+              "content_chunks": 8613,
+              "page_body_manifest": 76,
+              "page_body_stagings": 5,
+              "page_segment_texts": 77,
+              "decide_review_queue": 1,
+              "derived_generations": 1,
+              "write_gate_receipts": 1,
+              "persistence_requests": 6
+            }
+          }
+        }
+      },
+      {
+        "arm": "managed-parts",
+        "doc": "conversation",
+        "tier": "20mb",
+        "status": "ran",
+        "ingest": {
+          "status": "stored",
+          "chunks": 8695,
+          "pages": 1030,
+          "embed_skip": null,
+          "wall_ms": 40101,
+          "rss_peak_mb": 1161,
+          "rss_over_baseline_mb": 84,
+          "storage": null
+        },
+        "stored_needles": {
+          "hits": 40,
+          "total": 40,
+          "rate": 1
+        },
+        "keyword_recall": {
+          "hits": 40,
+          "total": 40,
+          "rate": 1
+        },
+        "keyword_recall_by_decile": [
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          }
+        ],
+        "min_decile_recall": 1,
+        "delivered_recall": {
+          "hits": 40,
+          "total": 40,
+          "rate": 1
+        },
+        "distractor_preferred": 0,
+        "reads": {
+          "attempted": 40,
+          "contains": 40,
+          "correct": 40,
+          "max_bytes": 21508
+        },
+        "direct_read_bytes": 65117,
+        "direct_read_agent_bytes": 65117,
+        "max_frame_bytes": 65117,
+        "responses_over_cap": 0,
+        "append": {
+          "status": "ok",
+          "wall_ms": 560,
+          "embed_inputs": 4,
+          "embed_tokens": 3038,
+          "appended_tokens": 258,
+          "embed_ratio": 11.775,
+          "chunks_rewritten": 4,
+          "chunks_deleted": 3,
+          "visible": true,
+          "path": "put_page new part + hub index update"
+        },
+        "embed_initial": {
+          "inputs": 8697,
+          "tokens": 5789726,
+          "wall_ms": 119194,
+          "tokens_per_mb": 289486
+        },
+        "roundtrip": "match",
+        "roundtrip_byte_delta": 0
+      },
+      {
+        "arm": "native",
+        "doc": "conversation",
+        "tier": "20mb",
+        "status": "ran",
+        "ingest": {
+          "status": "stored",
+          "chunks": 8613,
+          "pages": 1,
+          "embed_skip": null,
+          "wall_ms": 13872,
+          "rss_peak_mb": 1778,
+          "rss_over_baseline_mb": 701,
+          "storage": {
+            "body_storage": "segmented",
+            "body_bytes": 19999957,
+            "segment_count": 74,
+            "body_generation": 1
+          },
+          "pending": {
+            "writes": 1,
+            "wait_ms": 474
+          },
+          "projection": {
+            "sealed_at_reply": false,
+            "sealed": true,
+            "settle_ms": 6826
+          }
+        },
+        "stored_needles": {
+          "hits": 40,
+          "total": 40,
+          "rate": 1
+        },
+        "keyword_recall": {
+          "hits": 40,
+          "total": 40,
+          "rate": 1
+        },
+        "keyword_recall_by_decile": [
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          },
+          {
+            "hits": 4,
+            "total": 4,
+            "rate": 1
+          }
+        ],
+        "min_decile_recall": 1,
+        "delivered_recall": {
+          "hits": 40,
+          "total": 40,
+          "rate": 1
+        },
+        "distractor_preferred": 0,
+        "reads": {
+          "attempted": 40,
+          "contains": 40,
+          "correct": 40,
+          "max_bytes": 9793
+        },
+        "direct_read_bytes": null,
+        "direct_read_agent_bytes": 35694,
+        "max_frame_bytes": 10304,
+        "responses_over_cap": 0,
+        "append": {
+          "status": "ok",
+          "wall_ms": 850,
+          "embed_inputs": 1,
+          "embed_tokens": 741,
+          "appended_tokens": 258,
+          "embed_ratio": 2.872,
+          "chunks_rewritten": 86,
+          "chunks_deleted": 86,
+          "visible": true,
+          "path": "append_page",
+          "segments": {
+            "generation_before": 1,
+            "generation_after": 2,
+            "live_segments": 74,
+            "segments_at_new_generation": 1,
+            "segment_texts_added": 1,
+            "segment_text_bytes_added": 195408
+          },
+          "projection": {
+            "sealed_at_reply": true,
+            "sealed": true,
+            "settle_ms": 0
+          }
+        },
+        "embed_initial": {
+          "inputs": 8615,
+          "tokens": 5812394,
+          "wall_ms": 109666,
+          "tokens_per_mb": 290619
+        },
+        "roundtrip": "match",
+        "segment_roundtrip": "match",
+        "roundtrip_byte_delta": 0,
+        "lifecycle": {
+          "probes": 10,
+          "hits_before": 10,
+          "forget": {
+            "status": "ok",
+            "fact_rows": 1,
+            "withdrawn": true,
+            "recall_hits_after": 0,
+            "export_row": "struck",
+            "wall_ms": 8728
+          },
+          "delete": {
+            "status": "ok",
+            "hits_after": 0,
+            "get_page_code": "page_not_found",
+            "wall_ms": 2401
+          },
+          "restore": {
+            "status": "ok",
+            "hits_after": 10,
+            "export_matches_pre_delete": true,
+            "wall_ms": 9608
+          },
+          "purge": {
+            "status": "ok",
+            "wall_ms": 3770,
+            "residue": {
+              "pages": 0,
+              "chunks": 0,
+              "manifest_rows": 0,
+              "versions": 0,
+              "facts": 0,
+              "needle_chunks": 0,
+              "needle_texts": 0,
+              "unreferenced_texts": 0,
+              "unreferenced_text_bytes": 0
+            },
+            "sweep": {
+              "texts_deleted": 0,
+              "needle_texts_after": 0,
+              "texts_left": 0
+            },
+            "removed": {
+              "facts": 1,
+              "pages": 1,
+              "page_versions": 4,
+              "content_chunks": 8613,
+              "page_body_manifest": 76,
+              "page_body_stagings": 7,
+              "page_segment_texts": 77,
+              "decide_review_queue": 1,
+              "derived_generations": 1,
+              "write_gate_receipts": 1,
+              "persistence_requests": 6
+            }
+          }
+        }
+      }
+    ],
+    "children": [
+      {
+        "tier": "20mb",
+        "doc": "conversation",
+        "arm": "single-page",
+        "wall_ms": 168327,
+        "rss_peak_mb": 4072,
+        "crash": null,
+        "control": {
+          "hits": 4,
+          "total": 4,
+          "missed": []
+        }
+      },
+      {
+        "tier": "20mb",
+        "doc": "conversation",
+        "arm": "managed-parts",
+        "wall_ms": 168469,
+        "rss_peak_mb": 2276,
+        "crash": null,
+        "control": {
+          "hits": 4,
+          "total": 4,
+          "missed": []
+        }
+      },
+      {
+        "tier": "20mb",
+        "doc": "conversation",
+        "arm": "native",
+        "wall_ms": 158344,
+        "rss_peak_mb": 3850,
+        "crash": null,
+        "control": {
+          "hits": 4,
+          "total": 4,
+          "missed": []
+        }
+      }
+    ],
+    "presence": [
+      {
+        "name": "conversation: sha256",
+        "expected": "baddc481bcabfaad1fea68a62835736387d0578e3e897f88b6c409245d0825df",
+        "actual": "baddc481bcabfaad1fea68a62835736387d0578e3e897f88b6c409245d0825df",
+        "ok": true
+      },
+      {
+        "name": "conversation: bytes",
+        "expected": 20000039,
+        "actual": 20000039,
+        "ok": true
+      },
+      {
+        "name": "conversation: needles and distractors unique, at their offsets, deciles and sections",
+        "expected": 0,
+        "actual": 0,
+        "ok": true
+      },
+      {
+        "name": "conversation: four needles in every decile",
+        "expected": 40,
+        "actual": 40,
+        "ok": true
+      },
+      {
+        "name": "conversation: append needle absent from the document",
+        "expected": 0,
+        "actual": 0,
+        "ok": true
+      },
+      {
+        "name": "conversation: append needle once in the append",
+        "expected": 1,
+        "actual": 1,
+        "ok": true
+      },
+      {
+        "name": "conversation: append is about 1 KB",
+        "expected": "yes",
+        "actual": "yes",
+        "ok": true
+      },
+      {
+        "name": "conversation: control needles unique and absent from the document",
+        "expected": 0,
+        "actual": 0,
+        "ok": true
+      }
+    ],
+    "documents": [
+      {
+        "tier": "20mb",
+        "id": "conversation",
+        "bytes": 20000039,
+        "lines": 194573,
+        "sections": 1029,
+        "sha256": "baddc481bcabfaad1fea68a62835736387d0578e3e897f88b6c409245d0825df",
+        "needles": 40,
+        "append_bytes": 1029
+      }
+    ],
+    "probes": [
+      {
+        "tier": "20mb",
+        "arm": "single-page",
+        "doc": "conversation",
+        "rows": [
+          {
+            "id": "conversation:d0:name",
+            "decile": 0,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d0:number",
+            "decile": 0,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d0:date",
+            "decile": 0,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d0:fact",
+            "decile": 0,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d1:name",
+            "decile": 1,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d1:number",
+            "decile": 1,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d1:fact",
+            "decile": 1,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d1:date",
+            "decile": 1,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d2:fact",
+            "decile": 2,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d2:number",
+            "decile": 2,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d2:name",
+            "decile": 2,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d2:date",
+            "decile": 2,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d3:date",
+            "decile": 3,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d3:number",
+            "decile": 3,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d3:name",
+            "decile": 3,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d3:fact",
+            "decile": 3,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d4:date",
+            "decile": 4,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d4:number",
+            "decile": 4,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d4:fact",
+            "decile": 4,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d4:name",
+            "decile": 4,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d5:number",
+            "decile": 5,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d5:date",
+            "decile": 5,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d5:name",
+            "decile": 5,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d5:fact",
+            "decile": 5,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d6:fact",
+            "decile": 6,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d6:name",
+            "decile": 6,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d6:date",
+            "decile": 6,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d6:number",
+            "decile": 6,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d7:date",
+            "decile": 7,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d7:name",
+            "decile": 7,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d7:fact",
+            "decile": 7,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d7:number",
+            "decile": 7,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d8:name",
+            "decile": 8,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d8:fact",
+            "decile": 8,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d8:date",
+            "decile": 8,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d8:number",
+            "decile": 8,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d9:name",
+            "decile": 9,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d9:number",
+            "decile": 9,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d9:date",
+            "decile": 9,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d9:fact",
+            "decile": 9,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          }
+        ],
+        "reads": [
+          {
+            "id": "conversation:d0:name",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: get_page: page conversations/rowan-imogen-casimir-juniper (source default) stores its 19999957-byte body in segments; it is not returned as one string."
+          },
+          {
+            "id": "conversation:d0:number",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: get_page: page conversations/rowan-imogen-casimir-juniper (source default) stores its 19999957-byte body in segments; it is not returned as one string."
+          },
+          {
+            "id": "conversation:d0:date",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: get_page: page conversations/rowan-imogen-casimir-juniper (source default) stores its 19999957-byte body in segments; it is not returned as one string."
+          },
+          {
+            "id": "conversation:d0:fact",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: get_page: page conversations/rowan-imogen-casimir-juniper (source default) stores its 19999957-byte body in segments; it is not returned as one string."
+          },
+          {
+            "id": "conversation:d1:name",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: get_page: page conversations/rowan-imogen-casimir-juniper (source default) stores its 19999957-byte body in segments; it is not returned as one string."
+          },
+          {
+            "id": "conversation:d1:number",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: get_page: page conversations/rowan-imogen-casimir-juniper (source default) stores its 19999957-byte body in segments; it is not returned as one string."
+          },
+          {
+            "id": "conversation:d1:fact",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: get_page: page conversations/rowan-imogen-casimir-juniper (source default) stores its 19999957-byte body in segments; it is not returned as one string."
+          },
+          {
+            "id": "conversation:d1:date",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: get_page: page conversations/rowan-imogen-casimir-juniper (source default) stores its 19999957-byte body in segments; it is not returned as one string."
+          },
+          {
+            "id": "conversation:d2:fact",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: get_page: page conversations/rowan-imogen-casimir-juniper (source default) stores its 19999957-byte body in segments; it is not returned as one string."
+          },
+          {
+            "id": "conversation:d2:number",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: get_page: page conversations/rowan-imogen-casimir-juniper (source default) stores its 19999957-byte body in segments; it is not returned as one string."
+          },
+          {
+            "id": "conversation:d2:name",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: get_page: page conversations/rowan-imogen-casimir-juniper (source default) stores its 19999957-byte body in segments; it is not returned as one string."
+          },
+          {
+            "id": "conversation:d2:date",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: get_page: page conversations/rowan-imogen-casimir-juniper (source default) stores its 19999957-byte body in segments; it is not returned as one string."
+          },
+          {
+            "id": "conversation:d3:date",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: get_page: page conversations/rowan-imogen-casimir-juniper (source default) stores its 19999957-byte body in segments; it is not returned as one string."
+          },
+          {
+            "id": "conversation:d3:number",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: get_page: page conversations/rowan-imogen-casimir-juniper (source default) stores its 19999957-byte body in segments; it is not returned as one string."
+          },
+          {
+            "id": "conversation:d3:name",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: get_page: page conversations/rowan-imogen-casimir-juniper (source default) stores its 19999957-byte body in segments; it is not returned as one string."
+          },
+          {
+            "id": "conversation:d3:fact",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: get_page: page conversations/rowan-imogen-casimir-juniper (source default) stores its 19999957-byte body in segments; it is not returned as one string."
+          },
+          {
+            "id": "conversation:d4:date",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: get_page: page conversations/rowan-imogen-casimir-juniper (source default) stores its 19999957-byte body in segments; it is not returned as one string."
+          },
+          {
+            "id": "conversation:d4:number",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: get_page: page conversations/rowan-imogen-casimir-juniper (source default) stores its 19999957-byte body in segments; it is not returned as one string."
+          },
+          {
+            "id": "conversation:d4:fact",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: get_page: page conversations/rowan-imogen-casimir-juniper (source default) stores its 19999957-byte body in segments; it is not returned as one string."
+          },
+          {
+            "id": "conversation:d4:name",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: get_page: page conversations/rowan-imogen-casimir-juniper (source default) stores its 19999957-byte body in segments; it is not returned as one string."
+          },
+          {
+            "id": "conversation:d5:number",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: get_page: page conversations/rowan-imogen-casimir-juniper (source default) stores its 19999957-byte body in segments; it is not returned as one string."
+          },
+          {
+            "id": "conversation:d5:date",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: get_page: page conversations/rowan-imogen-casimir-juniper (source default) stores its 19999957-byte body in segments; it is not returned as one string."
+          },
+          {
+            "id": "conversation:d5:name",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: get_page: page conversations/rowan-imogen-casimir-juniper (source default) stores its 19999957-byte body in segments; it is not returned as one string."
+          },
+          {
+            "id": "conversation:d5:fact",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: get_page: page conversations/rowan-imogen-casimir-juniper (source default) stores its 19999957-byte body in segments; it is not returned as one string."
+          },
+          {
+            "id": "conversation:d6:fact",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: get_page: page conversations/rowan-imogen-casimir-juniper (source default) stores its 19999957-byte body in segments; it is not returned as one string."
+          },
+          {
+            "id": "conversation:d6:name",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: get_page: page conversations/rowan-imogen-casimir-juniper (source default) stores its 19999957-byte body in segments; it is not returned as one string."
+          },
+          {
+            "id": "conversation:d6:date",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: get_page: page conversations/rowan-imogen-casimir-juniper (source default) stores its 19999957-byte body in segments; it is not returned as one string."
+          },
+          {
+            "id": "conversation:d6:number",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: get_page: page conversations/rowan-imogen-casimir-juniper (source default) stores its 19999957-byte body in segments; it is not returned as one string."
+          },
+          {
+            "id": "conversation:d7:date",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: get_page: page conversations/rowan-imogen-casimir-juniper (source default) stores its 19999957-byte body in segments; it is not returned as one string."
+          },
+          {
+            "id": "conversation:d7:name",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: get_page: page conversations/rowan-imogen-casimir-juniper (source default) stores its 19999957-byte body in segments; it is not returned as one string."
+          },
+          {
+            "id": "conversation:d7:fact",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: get_page: page conversations/rowan-imogen-casimir-juniper (source default) stores its 19999957-byte body in segments; it is not returned as one string."
+          },
+          {
+            "id": "conversation:d7:number",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: get_page: page conversations/rowan-imogen-casimir-juniper (source default) stores its 19999957-byte body in segments; it is not returned as one string."
+          },
+          {
+            "id": "conversation:d8:name",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: get_page: page conversations/rowan-imogen-casimir-juniper (source default) stores its 19999957-byte body in segments; it is not returned as one string."
+          },
+          {
+            "id": "conversation:d8:fact",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: get_page: page conversations/rowan-imogen-casimir-juniper (source default) stores its 19999957-byte body in segments; it is not returned as one string."
+          },
+          {
+            "id": "conversation:d8:date",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: get_page: page conversations/rowan-imogen-casimir-juniper (source default) stores its 19999957-byte body in segments; it is not returned as one string."
+          },
+          {
+            "id": "conversation:d8:number",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: get_page: page conversations/rowan-imogen-casimir-juniper (source default) stores its 19999957-byte body in segments; it is not returned as one string."
+          },
+          {
+            "id": "conversation:d9:name",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: get_page: page conversations/rowan-imogen-casimir-juniper (source default) stores its 19999957-byte body in segments; it is not returned as one string."
+          },
+          {
+            "id": "conversation:d9:number",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: get_page: page conversations/rowan-imogen-casimir-juniper (source default) stores its 19999957-byte body in segments; it is not returned as one string."
+          },
+          {
+            "id": "conversation:d9:date",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: get_page: page conversations/rowan-imogen-casimir-juniper (source default) stores its 19999957-byte body in segments; it is not returned as one string."
+          },
+          {
+            "id": "conversation:d9:fact",
+            "attempted": true,
+            "contains": false,
+            "bytes": null,
+            "correct": false,
+            "error": "page_body_segmented: get_page: page conversations/rowan-imogen-casimir-juniper (source default) stores its 19999957-byte body in segments; it is not returned as one string."
+          }
+        ],
+        "append": {
+          "status": "ok",
+          "chunks_before": 8613,
+          "chunks_after": 8613,
+          "chunks_rewritten": 86,
+          "chunks_deleted": 86,
+          "path": "put_page (whole page rewrite)",
+          "segments": {
+            "generation_before": 1,
+            "generation_after": 2,
+            "live_segments": 74,
+            "segments_at_new_generation": 1,
+            "segment_texts_added": 1,
+            "segment_text_bytes_added": 195406
+          },
+          "pending": null,
+          "projection": {
+            "sealed_at_reply": true,
+            "sealed": true,
+            "settle_ms": 0
+          },
+          "wall_ms": 6792,
+          "embed": {
+            "inputs": 1,
+            "tokens": 741
+          },
+          "appended_tokens": 258,
+          "visible_rank": 1
+        },
+        "roundtrip": {
+          "status": "match",
+          "expected_sha256": "f29cdbbc4114682ee852c2e42885a9525bc9790fed8dbbddc4db525d5cd59baa",
+          "actual_sha256": "f29cdbbc4114682ee852c2e42885a9525bc9790fed8dbbddc4db525d5cd59baa",
+          "byte_delta": 0
+        },
+        "segment_roundtrip": {
+          "status": "match",
+          "actual_sha256": "f29cdbbc4114682ee852c2e42885a9525bc9790fed8dbbddc4db525d5cd59baa",
+          "byte_delta": 0,
+          "regions": [
+            "truth"
+          ]
+        },
+        "lifecycle": {
+          "probes": 10,
+          "hits_before": 10,
+          "forget": {
+            "status": "ok",
+            "fact_rows": 1,
+            "withdrawn": true,
+            "recall_hits_after": 0,
+            "export_row": "struck",
+            "wall_ms": 10412
+          },
+          "delete": {
+            "status": "ok",
+            "hits_after": 0,
+            "get_page_code": "page_not_found",
+            "wall_ms": 2326
+          },
+          "restore": {
+            "status": "ok",
+            "hits_after": 10,
+            "export_matches_pre_delete": true,
+            "wall_ms": 9997
+          },
+          "purge": {
+            "status": "ok",
+            "wall_ms": 5612,
+            "residue": {
+              "pages": 0,
+              "chunks": 0,
+              "manifest_rows": 0,
+              "versions": 0,
+              "facts": 0,
+              "needle_chunks": 0,
+              "needle_texts": 0,
+              "unreferenced_texts": 0,
+              "unreferenced_text_bytes": 0
+            },
+            "sweep": {
+              "texts_deleted": 0,
+              "needle_texts_after": 0,
+              "texts_left": 0
+            },
+            "removed": {
+              "facts": 1,
+              "pages": 1,
+              "page_versions": 4,
+              "content_chunks": 8613,
+              "page_body_manifest": 76,
+              "page_body_stagings": 5,
+              "page_segment_texts": 77,
+              "decide_review_queue": 1,
+              "derived_generations": 1,
+              "write_gate_receipts": 1,
+              "persistence_requests": 6
+            }
+          }
+        },
+        "frames": {
+          "count": 48,
+          "max_bytes": 10304,
+          "over_cap": 0,
+          "by_op": {
+            "put_page": {
+              "count": 2,
+              "max_bytes": 6327,
+              "over_cap": 0
+            },
+            "get_write_request": {
+              "count": 1,
+              "max_bytes": 2913,
+              "over_cap": 0
+            },
+            "search": {
+              "count": 45,
+              "max_bytes": 10304,
+              "over_cap": 0
+            }
+          }
+        },
+        "memory": [
+          {
+            "phase": "start",
+            "t_ms": 1,
+            "rss_mb": 1077,
+            "max_rss_mb": 1077
+          },
+          {
+            "phase": "ingest",
+            "t_ms": 15611,
+            "rss_mb": 1426,
+            "max_rss_mb": 2305
+          },
+          {
+            "phase": "reads",
+            "t_ms": 19932,
+            "rss_mb": 1600,
+            "max_rss_mb": 2305
+          },
+          {
+            "phase": "append",
+            "t_ms": 136066,
+            "rss_mb": 3104,
+            "max_rss_mb": 3207
+          },
+          {
+            "phase": "export",
+            "t_ms": 137037,
+            "rss_mb": 1971,
+            "max_rss_mb": 3216
+          },
+          {
+            "phase": "lifecycle",
+            "t_ms": 165757,
+            "rss_mb": 1852,
+            "max_rss_mb": 4126
+          }
+        ],
+        "ingest": {
+          "status": "stored",
+          "pages": 1,
+          "chunks": 8613,
+          "embed_skip": null,
+          "write_errors": 0,
+          "storage": {
+            "body_storage": "segmented",
+            "body_bytes": 19999957,
+            "segment_count": 74,
+            "body_generation": 1
+          },
+          "pending": {
+            "writes": 1,
+            "wait_ms": 808
+          },
+          "projection": {
+            "sealed_at_reply": false,
+            "sealed": true,
+            "settle_ms": 7803
+          },
+          "wall_ms": 15610
+        },
+        "direct_read": {
+          "bytes": null,
+          "error": "page_body_segmented: get_page: page conversations/rowan-imogen-casimir-juniper (source default) stores its 19999957-byte body in segments; it is not returned as one string."
+        },
+        "direct_read_agent": {
+          "bytes": 35694
+        },
+        "embed_initial": {
+          "inputs": 8615,
+          "tokens": 5812394,
+          "wall_ms": 108761.46248500001
+        },
+        "embed_error": null
+      },
+      {
+        "tier": "20mb",
+        "arm": "managed-parts",
+        "doc": "conversation",
+        "rows": [
+          {
+            "id": "conversation:d0:name",
+            "decile": 0,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d0:number",
+            "decile": 0,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d0:date",
+            "decile": 0,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d0:fact",
+            "decile": 0,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d1:name",
+            "decile": 1,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d1:number",
+            "decile": 1,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d1:fact",
+            "decile": 1,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d1:date",
+            "decile": 1,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d2:fact",
+            "decile": 2,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d2:number",
+            "decile": 2,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d2:name",
+            "decile": 2,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d2:date",
+            "decile": 2,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d3:date",
+            "decile": 3,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d3:number",
+            "decile": 3,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d3:name",
+            "decile": 3,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d3:fact",
+            "decile": 3,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d4:date",
+            "decile": 4,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d4:number",
+            "decile": 4,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d4:fact",
+            "decile": 4,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d4:name",
+            "decile": 4,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d5:number",
+            "decile": 5,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d5:date",
+            "decile": 5,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d5:name",
+            "decile": 5,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d5:fact",
+            "decile": 5,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d6:fact",
+            "decile": 6,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d6:name",
+            "decile": 6,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d6:date",
+            "decile": 6,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d6:number",
+            "decile": 6,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d7:date",
+            "decile": 7,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d7:name",
+            "decile": 7,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d7:fact",
+            "decile": 7,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d7:number",
+            "decile": 7,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d8:name",
+            "decile": 8,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d8:fact",
+            "decile": 8,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d8:date",
+            "decile": 8,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d8:number",
+            "decile": 8,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d9:name",
+            "decile": 9,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d9:number",
+            "decile": 9,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d9:date",
+            "decile": 9,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d9:fact",
+            "decile": 9,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          }
+        ],
+        "reads": [
+          {
+            "id": "conversation:d0:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 21414,
+            "correct": true
+          },
+          {
+            "id": "conversation:d0:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 20942,
+            "correct": true
+          },
+          {
+            "id": "conversation:d0:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 21147,
+            "correct": true
+          },
+          {
+            "id": "conversation:d0:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 21046,
+            "correct": true
+          },
+          {
+            "id": "conversation:d1:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 21093,
+            "correct": true
+          },
+          {
+            "id": "conversation:d1:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 21075,
+            "correct": true
+          },
+          {
+            "id": "conversation:d1:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 21457,
+            "correct": true
+          },
+          {
+            "id": "conversation:d1:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 21100,
+            "correct": true
+          },
+          {
+            "id": "conversation:d2:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 21004,
+            "correct": true
+          },
+          {
+            "id": "conversation:d2:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 20996,
+            "correct": true
+          },
+          {
+            "id": "conversation:d2:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 21076,
+            "correct": true
+          },
+          {
+            "id": "conversation:d2:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 21473,
+            "correct": true
+          },
+          {
+            "id": "conversation:d3:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 20983,
+            "correct": true
+          },
+          {
+            "id": "conversation:d3:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 20967,
+            "correct": true
+          },
+          {
+            "id": "conversation:d3:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 21115,
+            "correct": true
+          },
+          {
+            "id": "conversation:d3:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 21069,
+            "correct": true
+          },
+          {
+            "id": "conversation:d4:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 21009,
+            "correct": true
+          },
+          {
+            "id": "conversation:d4:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 20973,
+            "correct": true
+          },
+          {
+            "id": "conversation:d4:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 20989,
+            "correct": true
+          },
+          {
+            "id": "conversation:d4:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 20991,
+            "correct": true
+          },
+          {
+            "id": "conversation:d5:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 20959,
+            "correct": true
+          },
+          {
+            "id": "conversation:d5:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 21453,
+            "correct": true
+          },
+          {
+            "id": "conversation:d5:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 21129,
+            "correct": true
+          },
+          {
+            "id": "conversation:d5:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 21033,
+            "correct": true
+          },
+          {
+            "id": "conversation:d6:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 20977,
+            "correct": true
+          },
+          {
+            "id": "conversation:d6:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 20931,
+            "correct": true
+          },
+          {
+            "id": "conversation:d6:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 21054,
+            "correct": true
+          },
+          {
+            "id": "conversation:d6:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 20989,
+            "correct": true
+          },
+          {
+            "id": "conversation:d7:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 21055,
+            "correct": true
+          },
+          {
+            "id": "conversation:d7:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 21073,
+            "correct": true
+          },
+          {
+            "id": "conversation:d7:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 21035,
+            "correct": true
+          },
+          {
+            "id": "conversation:d7:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 21065,
+            "correct": true
+          },
+          {
+            "id": "conversation:d8:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 21508,
+            "correct": true
+          },
+          {
+            "id": "conversation:d8:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 20916,
+            "correct": true
+          },
+          {
+            "id": "conversation:d8:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 21025,
+            "correct": true
+          },
+          {
+            "id": "conversation:d8:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 21017,
+            "correct": true
+          },
+          {
+            "id": "conversation:d9:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 21025,
+            "correct": true
+          },
+          {
+            "id": "conversation:d9:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 21056,
+            "correct": true
+          },
+          {
+            "id": "conversation:d9:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 20905,
+            "correct": true
+          },
+          {
+            "id": "conversation:d9:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 21061,
+            "correct": true
+          }
+        ],
+        "append": {
+          "status": "ok",
+          "chunks_before": 8695,
+          "chunks_after": 8696,
+          "chunks_rewritten": 4,
+          "chunks_deleted": 3,
+          "path": "put_page new part + hub index update",
+          "pending": null,
+          "wall_ms": 560,
+          "embed": {
+            "inputs": 4,
+            "tokens": 3038
+          },
+          "appended_tokens": 258,
+          "visible_rank": 1
+        },
+        "roundtrip": {
+          "status": "match",
+          "expected_sha256": "f29cdbbc4114682ee852c2e42885a9525bc9790fed8dbbddc4db525d5cd59baa",
+          "actual_sha256": "f29cdbbc4114682ee852c2e42885a9525bc9790fed8dbbddc4db525d5cd59baa",
+          "byte_delta": 0
+        },
+        "segment_roundtrip": null,
+        "lifecycle": null,
+        "frames": {
+          "count": 1119,
+          "max_bytes": 65117,
+          "over_cap": 0,
+          "by_op": {
+            "put_page": {
+              "count": 1033,
+              "max_bytes": 8369,
+              "over_cap": 0
+            },
+            "search": {
+              "count": 45,
+              "max_bytes": 21183,
+              "over_cap": 0
+            },
+            "get_page": {
+              "count": 41,
+              "max_bytes": 65117,
+              "over_cap": 0
+            }
+          }
+        },
+        "memory": [
+          {
+            "phase": "start",
+            "t_ms": 1,
+            "rss_mb": 1077,
+            "max_rss_mb": 1077
+          },
+          {
+            "phase": "ingest",
+            "t_ms": 40103,
+            "rss_mb": 1070,
+            "max_rss_mb": 1161
+          },
+          {
+            "phase": "reads",
+            "t_ms": 43278,
+            "rss_mb": 1159,
+            "max_rss_mb": 1161
+          },
+          {
+            "phase": "append",
+            "t_ms": 163305,
+            "rss_mb": 1684,
+            "max_rss_mb": 2276
+          },
+          {
+            "phase": "export",
+            "t_ms": 165576,
+            "rss_mb": 2023,
+            "max_rss_mb": 2276
+          },
+          {
+            "phase": "lifecycle",
+            "t_ms": 165577,
+            "rss_mb": 2023,
+            "max_rss_mb": 2276
+          }
+        ],
+        "ingest": {
+          "status": "stored",
+          "pages": 1030,
+          "chunks": 8695,
+          "embed_skip": null,
+          "write_errors": 0,
+          "storage": null,
+          "pending": null,
+          "projection": null,
+          "wall_ms": 40101
+        },
+        "direct_read": {
+          "bytes": 65117
+        },
+        "direct_read_agent": {
+          "bytes": 65117
+        },
+        "embed_initial": {
+          "inputs": 8697,
+          "tokens": 5789726,
+          "wall_ms": 119194.12758499998
+        },
+        "embed_error": null
+      },
+      {
+        "tier": "20mb",
+        "arm": "native",
+        "doc": "conversation",
+        "rows": [
+          {
+            "id": "conversation:d0:name",
+            "decile": 0,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d0:number",
+            "decile": 0,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d0:date",
+            "decile": 0,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d0:fact",
+            "decile": 0,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d1:name",
+            "decile": 1,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d1:number",
+            "decile": 1,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d1:fact",
+            "decile": 1,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d1:date",
+            "decile": 1,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d2:fact",
+            "decile": 2,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d2:number",
+            "decile": 2,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d2:name",
+            "decile": 2,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d2:date",
+            "decile": 2,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d3:date",
+            "decile": 3,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d3:number",
+            "decile": 3,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d3:name",
+            "decile": 3,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d3:fact",
+            "decile": 3,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d4:date",
+            "decile": 4,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d4:number",
+            "decile": 4,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d4:fact",
+            "decile": 4,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d4:name",
+            "decile": 4,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d5:number",
+            "decile": 5,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d5:date",
+            "decile": 5,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d5:name",
+            "decile": 5,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d5:fact",
+            "decile": 5,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d6:fact",
+            "decile": 6,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d6:name",
+            "decile": 6,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d6:date",
+            "decile": 6,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d6:number",
+            "decile": 6,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d7:date",
+            "decile": 7,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d7:name",
+            "decile": 7,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d7:fact",
+            "decile": 7,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d7:number",
+            "decile": 7,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d8:name",
+            "decile": 8,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d8:fact",
+            "decile": 8,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d8:date",
+            "decile": 8,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d8:number",
+            "decile": 8,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d9:name",
+            "decile": 9,
+            "type": "name",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d9:number",
+            "decile": 9,
+            "type": "number",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d9:date",
+            "decile": 9,
+            "type": "date",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          },
+          {
+            "id": "conversation:d9:fact",
+            "decile": 9,
+            "type": "fact",
+            "hit_rank": 1,
+            "delivered_rank": 1,
+            "distractor_rank": null,
+            "n_results": 1
+          }
+        ],
+        "reads": [
+          {
+            "id": "conversation:d0:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 8962,
+            "correct": true
+          },
+          {
+            "id": "conversation:d0:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 9210,
+            "correct": true
+          },
+          {
+            "id": "conversation:d0:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 9040,
+            "correct": true
+          },
+          {
+            "id": "conversation:d0:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 9092,
+            "correct": true
+          },
+          {
+            "id": "conversation:d1:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 9351,
+            "correct": true
+          },
+          {
+            "id": "conversation:d1:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 8976,
+            "correct": true
+          },
+          {
+            "id": "conversation:d1:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 9099,
+            "correct": true
+          },
+          {
+            "id": "conversation:d1:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 9184,
+            "correct": true
+          },
+          {
+            "id": "conversation:d2:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 9550,
+            "correct": true
+          },
+          {
+            "id": "conversation:d2:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 9348,
+            "correct": true
+          },
+          {
+            "id": "conversation:d2:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 8913,
+            "correct": true
+          },
+          {
+            "id": "conversation:d2:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 8981,
+            "correct": true
+          },
+          {
+            "id": "conversation:d3:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 9452,
+            "correct": true
+          },
+          {
+            "id": "conversation:d3:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 8580,
+            "correct": true
+          },
+          {
+            "id": "conversation:d3:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 9054,
+            "correct": true
+          },
+          {
+            "id": "conversation:d3:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 8973,
+            "correct": true
+          },
+          {
+            "id": "conversation:d4:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 8855,
+            "correct": true
+          },
+          {
+            "id": "conversation:d4:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 8758,
+            "correct": true
+          },
+          {
+            "id": "conversation:d4:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 9165,
+            "correct": true
+          },
+          {
+            "id": "conversation:d4:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 8954,
+            "correct": true
+          },
+          {
+            "id": "conversation:d5:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 9174,
+            "correct": true
+          },
+          {
+            "id": "conversation:d5:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 9793,
+            "correct": true
+          },
+          {
+            "id": "conversation:d5:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 9691,
+            "correct": true
+          },
+          {
+            "id": "conversation:d5:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 8795,
+            "correct": true
+          },
+          {
+            "id": "conversation:d6:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 9181,
+            "correct": true
+          },
+          {
+            "id": "conversation:d6:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 9069,
+            "correct": true
+          },
+          {
+            "id": "conversation:d6:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 8961,
+            "correct": true
+          },
+          {
+            "id": "conversation:d6:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 9393,
+            "correct": true
+          },
+          {
+            "id": "conversation:d7:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 9273,
+            "correct": true
+          },
+          {
+            "id": "conversation:d7:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 9355,
+            "correct": true
+          },
+          {
+            "id": "conversation:d7:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 9171,
+            "correct": true
+          },
+          {
+            "id": "conversation:d7:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 9454,
+            "correct": true
+          },
+          {
+            "id": "conversation:d8:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 8962,
+            "correct": true
+          },
+          {
+            "id": "conversation:d8:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 8985,
+            "correct": true
+          },
+          {
+            "id": "conversation:d8:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 9319,
+            "correct": true
+          },
+          {
+            "id": "conversation:d8:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 8816,
+            "correct": true
+          },
+          {
+            "id": "conversation:d9:name",
+            "attempted": true,
+            "contains": true,
+            "bytes": 9519,
+            "correct": true
+          },
+          {
+            "id": "conversation:d9:number",
+            "attempted": true,
+            "contains": true,
+            "bytes": 9142,
+            "correct": true
+          },
+          {
+            "id": "conversation:d9:date",
+            "attempted": true,
+            "contains": true,
+            "bytes": 9072,
+            "correct": true
+          },
+          {
+            "id": "conversation:d9:fact",
+            "attempted": true,
+            "contains": true,
+            "bytes": 8856,
+            "correct": true
+          }
+        ],
+        "append": {
+          "status": "ok",
+          "chunks_before": 8613,
+          "chunks_after": 8613,
+          "chunks_rewritten": 86,
+          "chunks_deleted": 86,
+          "path": "append_page",
+          "segments": {
+            "generation_before": 1,
+            "generation_after": 2,
+            "live_segments": 74,
+            "segments_at_new_generation": 1,
+            "segment_texts_added": 1,
+            "segment_text_bytes_added": 195408
+          },
+          "pending": null,
+          "projection": {
+            "sealed_at_reply": true,
+            "sealed": true,
+            "settle_ms": 0
+          },
+          "wall_ms": 850,
+          "embed": {
+            "inputs": 1,
+            "tokens": 741
+          },
+          "appended_tokens": 258,
+          "visible_rank": 1
+        },
+        "roundtrip": {
+          "status": "match",
+          "expected_sha256": "f29cdbbc4114682ee852c2e42885a9525bc9790fed8dbbddc4db525d5cd59baa",
+          "actual_sha256": "f29cdbbc4114682ee852c2e42885a9525bc9790fed8dbbddc4db525d5cd59baa",
+          "byte_delta": 0
+        },
+        "segment_roundtrip": {
+          "status": "match",
+          "actual_sha256": "f29cdbbc4114682ee852c2e42885a9525bc9790fed8dbbddc4db525d5cd59baa",
+          "byte_delta": 0,
+          "regions": [
+            "truth"
+          ]
+        },
+        "lifecycle": {
+          "probes": 10,
+          "hits_before": 10,
+          "forget": {
+            "status": "ok",
+            "fact_rows": 1,
+            "withdrawn": true,
+            "recall_hits_after": 0,
+            "export_row": "struck",
+            "wall_ms": 8728
+          },
+          "delete": {
+            "status": "ok",
+            "hits_after": 0,
+            "get_page_code": "page_not_found",
+            "wall_ms": 2401
+          },
+          "restore": {
+            "status": "ok",
+            "hits_after": 10,
+            "export_matches_pre_delete": true,
+            "wall_ms": 9608
+          },
+          "purge": {
+            "status": "ok",
+            "wall_ms": 3770,
+            "residue": {
+              "pages": 0,
+              "chunks": 0,
+              "manifest_rows": 0,
+              "versions": 0,
+              "facts": 0,
+              "needle_chunks": 0,
+              "needle_texts": 0,
+              "unreferenced_texts": 0,
+              "unreferenced_text_bytes": 0
+            },
+            "sweep": {
+              "texts_deleted": 0,
+              "needle_texts_after": 0,
+              "texts_left": 0
+            },
+            "removed": {
+              "facts": 1,
+              "pages": 1,
+              "page_versions": 4,
+              "content_chunks": 8613,
+              "page_body_manifest": 76,
+              "page_body_stagings": 7,
+              "page_segment_texts": 77,
+              "decide_review_queue": 1,
+              "derived_generations": 1,
+              "write_gate_receipts": 1,
+              "persistence_requests": 6
+            }
+          }
+        },
+        "frames": {
+          "count": 99,
+          "max_bytes": 10304,
+          "over_cap": 0,
+          "by_op": {
+            "put_page": {
+              "count": 1,
+              "max_bytes": 2430,
+              "over_cap": 0
+            },
+            "begin_page_upload": {
+              "count": 1,
+              "max_bytes": 382,
+              "over_cap": 0
+            },
+            "upload_page_part": {
+              "count": 10,
+              "max_bytes": 119,
+              "over_cap": 0
+            },
+            "get_write_request": {
+              "count": 1,
+              "max_bytes": 2913,
+              "over_cap": 0
+            },
+            "search": {
+              "count": 45,
+              "max_bytes": 10304,
+              "over_cap": 0
+            },
+            "get_page": {
+              "count": 40,
+              "max_bytes": 9793,
+              "over_cap": 0
+            },
+            "append_page": {
+              "count": 1,
+              "max_bytes": 1789,
+              "over_cap": 0
+            }
+          }
+        },
+        "memory": [
+          {
+            "phase": "start",
+            "t_ms": 1,
+            "rss_mb": 1077,
+            "max_rss_mb": 1077
+          },
+          {
+            "phase": "ingest",
+            "t_ms": 13873,
+            "rss_mb": 1454,
+            "max_rss_mb": 1778
+          },
+          {
+            "phase": "reads",
+            "t_ms": 18834,
+            "rss_mb": 1762,
+            "max_rss_mb": 1778
+          },
+          {
+            "phase": "append",
+            "t_ms": 129949,
+            "rss_mb": 1350,
+            "max_rss_mb": 2474
+          },
+          {
+            "phase": "export",
+            "t_ms": 130765,
+            "rss_mb": 1752,
+            "max_rss_mb": 2474
+          },
+          {
+            "phase": "lifecycle",
+            "t_ms": 155662,
+            "rss_mb": 1716,
+            "max_rss_mb": 3853
+          }
+        ],
+        "ingest": {
+          "status": "stored",
+          "pages": 1,
+          "chunks": 8613,
+          "embed_skip": null,
+          "write_errors": 0,
+          "storage": {
+            "body_storage": "segmented",
+            "body_bytes": 19999957,
+            "segment_count": 74,
+            "body_generation": 1
+          },
+          "pending": {
+            "writes": 1,
+            "wait_ms": 474
+          },
+          "projection": {
+            "sealed_at_reply": false,
+            "sealed": true,
+            "settle_ms": 6826
+          },
+          "wall_ms": 13872
+        },
+        "direct_read": {
+          "bytes": null,
+          "error": "page_body_segmented: get_page: page conversations/rowan-imogen-casimir-juniper (source default) stores its 19999957-byte body in segments; it is not returned as one string."
+        },
+        "direct_read_agent": {
+          "bytes": 35694
+        },
+        "embed_initial": {
+          "inputs": 8615,
+          "tokens": 5812394,
+          "wall_ms": 109665.662287
+        },
+        "embed_error": null
+      }
+    ],
+    "findings": [],
+    "harness_error": null
+  },
+  "accounting": {
+    "planned": 120,
+    "attempted": 120,
+    "scored": 120,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  },
+  "latency_ms": null
+}

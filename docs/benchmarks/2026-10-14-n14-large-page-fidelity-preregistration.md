@@ -182,3 +182,27 @@ This amendment was written before any counted run against gbrain `6e1086492dbded
    - Forget on pages over 24 MiB stays unreachable through the arm's write path (item 3).
 7. **Comparison.** The report compares Amendment 4's run at `f717b1a5` (#178). Published reports stay unchanged, and corrections go in the new report as errata.
 8. **Unchanged.** The append stays the preregistered 1 KB day. The paid arm and the upgrade path do not run, so spend is $0.
+
+### Amendment 6 (2026-10-25): Wave B PR 4, per-segment derivations and sentence-aligned cuts
+
+This amendment was written before any counted run against gbrain `7a6bdd3579a3c35d57c63790b428a746fe2f3df7` (master, v0.60.454.0). That commit contains large pages Wave B PR 4 (#7316, merge `baf304c81`, v0.60.453.0, migration v273) and the G7a privacy follow-up (#7586).
+
+PR 4 does four things N14 can see:
+- It keeps links, mentions, timeline entries, fences, conversation facts and synopses per segment, so a write reads only the segments it changed and an append reads only its new tail.
+- On segmented pages, a forced chunk cut lands on a sentence or line end, and timeline passages break only between bullet entries. Inline pages keep their chunker.
+- A new transcript session imports as one page.
+- A per-page lease sends each chunk content version to the embedding provider once.
+
+Development smoke runs at 2 MB (single-page and native) and 24 MiB (native and managed parts) on PGLite ran the unchanged runner at the new pin. They are not results. No rule, threshold, model, arm definition or harness code changes.
+
+1. **Same runs as Amendment 5.** Same engines, tiers, arms and write paths, on the default config, with the lifecycle. Counted and exploratory cells are as in Amendment 5 item 5, with the append rule counted.
+2. **Expected before running.**
+   - Chunk counts on segmented pages change, because of the sentence-aligned cut.
+   - The 24 MiB chat's split needle may now be found whole, so the recall-gap rule may pass at 24 MiB. Amendment 5 expected it to fail. Both outcomes are reported against the unchanged rule.
+   - N14-5 stays fixed.
+   - Forget on pages over 24 MiB stays unreachable through the arm's write path.
+3. **Exploratory additions.**
+   - **Postgres double embed.** The Postgres 2 MB native arm runs 8 more times, without the lifecycle, to recheck the intermittent doubled embedding input on an append that Amendment 5's report found in 5 of 23 document runs. PR 4's per-page embed lease may remove it. These repeats count nothing, and their receipts stay outside the repository; the report gives their counts.
+   - **Incremental append cost.** This is the existing append cells: embedding inputs, chunks rewritten, segments written and append time. No new metric.
+4. **Not run.** N14 writes pages through gbrain's operations, not through transcript ingest, so the one-page transcript change has no N14 cell. The paid arm, which would include per-segment fact extraction and synopses, does not run, so spend is $0.
+5. **Comparison.** The report compares Amendment 5's run at `6e10864` (#180). Published reports stay unchanged, and corrections go in the new report as errata.

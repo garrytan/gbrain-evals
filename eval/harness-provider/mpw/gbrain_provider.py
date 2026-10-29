@@ -40,7 +40,9 @@ to session-corpus files), with the document's date as `valid_from`, its
 page id as `session_id` and `visibility: "world"` (stdio MCP is a remote
 caller and sees world facts only). An identical repeated session is written
 and extracted once. With `page_split: "exchanges"` facts are still extracted
-from whole documents, keyed by the document id. The calls return only after the facts are
+from whole documents, keyed by the document id, and sent without `source_slug`: no page carries the
+document's slug, and since gbrain v0.60.341.0 (afd81cd4a) a remote `extract_facts` whose source page it
+cannot see stores its facts private, so world-only reads would never return them. The calls return only after the facts are
 written, so the extraction barrier is the last call returning; failed windows
 are retried once and counted in the receipt.
 
@@ -529,16 +531,19 @@ class GbrainMemoryProvider(MemoryProvider):
                 for d in sources:
                     u.timestamps.setdefault(d.id.lower(), d.timestamp)
                 u.save()
-            u.receipt["facts"] = facts = self._extract_facts(child, written)
+            u.receipt["facts"] = facts = self._extract_facts(child, written, {p["slug"] for p in pages})
             if self.cfg.get("extraction_source") and facts["windows"] and not (facts["inserted"] + facts["duplicate"] + facts["superseded"]):
                 raise GbrainIngestError(f"unit {unit}: the measured-default extractor wrote no facts from {facts['windows']} windows")
 
-    def _extract_facts(self, child: McpChild, written: list[tuple[str, Document]]) -> dict:
-        """gbrain's `extract_facts` over every window of every written page; returns when every call has returned."""
+    def _extract_facts(self, child: McpChild, written: list[tuple[str, Document]], page_slugs: set[str]) -> dict:
+        """gbrain's `extract_facts` over every window of every written page; returns when every call has returned.
+
+        `source_slug` is sent only when a page carries it (`page_slugs`).
+        """
         calls = []
         for slug, d in written:
             for text in extraction_windows(d, int(self.cfg["extraction_window_chars"])):
-                args = {"turn_text": text, "session_id": slug[len(SLUG_PREFIX):], "source_slug": slug,
+                args = {"turn_text": text, "session_id": slug[len(SLUG_PREFIX):], **({"source_slug": slug} if slug in page_slugs else {}),
                         "visibility": "world", "request_id": str(uuid.uuid4())}
                 if _iso(d.timestamp):
                     args["valid_from"] = _iso(d.timestamp)

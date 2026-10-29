@@ -1,0 +1,321 @@
+{
+  "campaign_id": "q1-scoreboard",
+  "campaign_hash": "a92b06c59ceb0c635c125147263eeacef2b47a88a558def6c8dafef18de987ea",
+  "published": {
+    "branch": "evals/q1-scoreboard-results",
+    "path": "published/q1-scoreboard",
+    "commit": "f15e73025cc38779528808e670db80909e538547",
+    "sha256": "9a955a32d90895c27e3e41151e517e2db2371f249186eb86fae9faeb9bb884b5",
+    "url": "https://github.com/garrytan/gbrain-evals/tree/evals/q1-scoreboard-results/published/q1-scoreboard",
+    "aggregates_only": true
+  },
+  "gbrain": {
+    "commit": "f05943e653fd9d938b343b1774a35325ba792271",
+    "version": "0.60.138.0",
+    "date": "2026-10-09",
+    "resolved_search_mode": "tokenmax",
+    "footnote": "That is not current master; a rerun of the GBrain rows at current master is planned after amendment A23."
+  },
+  "hedge_classifier": "none",
+  "statistics": {
+    "alpha": 0.05,
+    "draws": 1999,
+    "descriptive_draws": 1999,
+    "seed": 20261006
+  },
+  "pending": [],
+  "not_run_reason": "no campaign schedules this cell",
+  "sources": [
+    {
+      "campaign": "docs/benchmarks/2026-10-06-scoreboard/campaign/q1-scoreboard-public-v2.json",
+      "launch_tree": "4bccbd5a",
+      "exclude_systems": [
+        "gbrain-defaults"
+      ]
+    },
+    {
+      "campaign": "docs/benchmarks/2026-10-06-scoreboard/campaign/q1-scoreboard-public-v2.json",
+      "launch_tree": "4bccbd5a",
+      "systems": [
+        "gbrain-defaults"
+      ],
+      "appendix": {
+        "name": "found-and-fixed",
+        "dir": "found-and-fixed",
+        "reason": "Public-v2 gbrain-defaults rows at 7aa2caa0 (0.60.106.0), shown for comparison only (A15): LongMemEval-M c1 and c2 stalled at pin 7aa2caa0, fixed in #6389 (0.60.133.0); LongMemEval-S c0 and c1 stalled ingest, likely #6389; LongMemEval-M c0 and c3 scored at 7aa2caa0. The public gbrain rows reran at f05943e6 (0.60.138.0)."
+      },
+      "gbrain": {
+        "commit": "7aa2caa0aa2a9f031730cd351cd516cf4f9f5802",
+        "version": "0.60.106.0",
+        "date": "2026-10-08"
+      }
+    },
+    {
+      "campaign": "docs/benchmarks/2026-10-06-scoreboard/campaign/q1-scoreboard-public-v3-s2.json",
+      "launch_tree": "3532b1aa",
+      "systems": [
+        "gbrain-defaults"
+      ]
+    },
+    {
+      "campaign": "docs/benchmarks/2026-10-06-scoreboard/campaign/q1-scoreboard-public-v3-m.json",
+      "launch_tree": "0518e2fd",
+      "systems": [
+        "gbrain-defaults"
+      ]
+    },
+    {
+      "campaign": "docs/benchmarks/2026-10-06-scoreboard/campaign/q1-scoreboard-sealed.json",
+      "launch_tree": "008b83fe",
+      "states": [
+        {
+          "dir": "a17",
+          "units": [
+            "s1.gbrain-defaults.shipped-defaults.c0",
+            "s1.gbrain-defaults.shipped-defaults.c2",
+            "s1.gbrain-defaults.shipped-defaults.c3",
+            "s1.ext-extract-first.common.c0",
+            "s1.ext-extract-first.common.c1",
+            "s1.ext-extract-first.common.c2",
+            "s1.ext-extract-first.common.c3",
+            "s1.ext-extract-first.common.c4",
+            "s1.ext-extract-first.common.c5",
+            "s1.ext-extract-first.common.c6",
+            "s1.ext-extract-first.common.c7",
+            "s1.ext-extract-first.common.c8",
+            "s1.ext-extract-first.common.c9",
+            "s1.ext-memory-bank.recipe.c2",
+            "s1.ext-memory-bank.recipe.c4",
+            "s1.ext-memory-bank.recipe.c5",
+            "s1.ext-memory-bank.recipe.c6",
+            "s1.ext-memory-bank.recipe.c7",
+            "s1.ext-memory-bank.recipe.c8",
+            "s1.ext-memory-bank.recipe.c9",
+            "s1.ext-temporal-graph.common.c0",
+            "s1.ext-temporal-graph.common.c1",
+            "s1.ext-temporal-graph.common.c2",
+            "s1.ext-temporal-graph.common.c3",
+            "s1.ext-temporal-graph.common.c4",
+            "s1.ext-temporal-graph.common.c5",
+            "s1.ext-temporal-graph.common.c6",
+            "s1.ext-temporal-graph.common.c7",
+            "s1.baseline-none.baseline"
+          ]
+        },
+        {
+          "dir": "a22",
+          "units": [
+            "s1.gbrain-defaults.shipped-defaults.c1",
+            "s1.gbrain-defaults.shipped-defaults.c6",
+            "s1.gbrain-defaults.shipped-defaults.c7",
+            "s1.gbrain-defaults.shipped-defaults.c8",
+            "s1.gbrain-defaults.shipped-defaults.c9",
+            "s1.ext-graph-pipeline.common.c2",
+            "s1.ext-temporal-graph.common.c8",
+            "s1.ext-temporal-graph.common.c9",
+            "s1.ext-verbatim-session.recipe.c0",
+            "s1.ext-verbatim-session.recipe.c1",
+            "s1.ext-verbatim-session.recipe.c2",
+            "s1.ext-verbatim-session.recipe.c3",
+            "s1.ext-verbatim-session.recipe.c4",
+            "s1.ext-verbatim-session.recipe.c5",
+            "s1.ext-verbatim-session.recipe.c6",
+            "s1.ext-verbatim-session.recipe.c7",
+            "s1.ext-verbatim-session.recipe.c8",
+            "s1.ext-verbatim-session.recipe.c9",
+            "s1.baseline-recency.baseline",
+            "s1.baseline-hybrid.baseline",
+            "s1.baseline-full-context.baseline",
+            "s1.baseline-file-agent.baseline",
+            "s2b.ext-extract-first.common",
+            "s2b.ext-memory-bank.recipe",
+            "s2b.ext-verbatim-session.recipe",
+            "s2b.baseline-recency.baseline",
+            "s2b.baseline-hybrid.baseline",
+            "s2b.baseline-none.baseline",
+            "s2b.baseline-file-agent.baseline"
+          ]
+        },
+        {
+          "dir": "a23",
+          "units": [
+            "s1.ext-memory-bank.recipe.c0",
+            "s1.ext-memory-bank.recipe.c1"
+          ]
+        },
+        {
+          "dir": "a24",
+          "units": [
+            "s1.gbrain-defaults.shipped-defaults.c4",
+            "s1.gbrain-defaults.shipped-defaults.c5",
+            "s1.gbrain-defaults.full-surface.c0",
+            "s1.gbrain-defaults.full-surface.c1",
+            "s1.gbrain-defaults.full-surface.c2",
+            "s1.gbrain-defaults.full-surface.c3",
+            "s1.gbrain-defaults.full-surface.c4",
+            "s1.gbrain-defaults.full-surface.c5",
+            "s1.gbrain-defaults.full-surface.c6",
+            "s1.gbrain-defaults.full-surface.c7",
+            "s1.gbrain-defaults.full-surface.c8",
+            "s1.gbrain-defaults.full-surface.c9",
+            "s1.ext-memory-bank.recipe.c3",
+            "s2b.gbrain-defaults.shipped-defaults",
+            "s2b.gbrain-defaults.full-surface.c0",
+            "s2b.gbrain-defaults.full-surface.c1",
+            "s2b.ext-graph-pipeline.recipe.c0",
+            "s2b.ext-graph-pipeline.recipe.c1",
+            "s2b.ext-graph-pipeline.recipe.c2",
+            "s2b.gbrain-defaults.common-embedder.c0",
+            "s2b.gbrain-defaults.common-embedder.c1",
+            "s2b.baseline-full-context.baseline",
+            "s2a.gbrain-defaults.shipped-defaults",
+            "s2a.gbrain-defaults.full-surface",
+            "s2a.ext-extract-first.common",
+            "s2a.ext-memory-bank.recipe",
+            "s2a.ext-graph-pipeline.recipe",
+            "s2a.ext-markdown-kb.recipe",
+            "s2a.ext-verbatim-session.recipe",
+            "s2a.baseline-recency.baseline",
+            "s2a.baseline-hybrid.baseline",
+            "s2a.baseline-none.baseline",
+            "s2a.ext-memory-bank.common",
+            "s2a.ext-graph-pipeline.common",
+            "s2a.ext-markdown-kb.common",
+            "s2a.baseline-full-context.baseline",
+            "s2a.baseline-file-agent.baseline",
+            "s3.gbrain-defaults.shipped-defaults",
+            "s3.gbrain-defaults.full-surface",
+            "s3.ext-extract-first.recipe",
+            "s3.ext-memory-bank.recipe",
+            "s3.ext-graph-pipeline.recipe",
+            "s3.ext-temporal-graph.recipe",
+            "s3.ext-markdown-kb.recipe",
+            "s3.ext-verbatim-session.recipe",
+            "s3.baseline-recency.baseline",
+            "s3.baseline-hybrid.baseline",
+            "s3.baseline-none.baseline",
+            "s3.ext-extract-first.common",
+            "s3.ext-memory-bank.common",
+            "s3.ext-graph-pipeline.common",
+            "s3.ext-markdown-kb.common",
+            "s3.baseline-full-context.baseline",
+            "s3.baseline-file-agent.baseline",
+            "s3.ext-agent-runtime.recipe",
+            "s3.gbrain-defaults.shipped-defaults.r2",
+            "s3.ext-extract-first.recipe.r2",
+            "s3.ext-memory-bank.recipe.r2",
+            "s3.ext-graph-pipeline.recipe.r2",
+            "s3.ext-markdown-kb.recipe.r2",
+            "s3.ext-verbatim-session.recipe.r2",
+            "s3.baseline-hybrid.baseline.r2"
+          ]
+        }
+      ]
+    }
+  ],
+  "sensitivity": [
+    {
+      "sets": [
+        "S4",
+        "S4-slice"
+      ],
+      "id": "a21-repeated-sessions",
+      "label": "without the 13 repeated-session haystacks (A21)",
+      "reason": "In 13 LongMemEval-S haystacks one session id appears twice with identical turns and different dates, never as gold evidence. gbrain's adapter refuses the second copy; the other systems keep it. This view drops those questions for every system; the headline row keeps all questions.",
+      "question_ids": [
+        "001be529",
+        "18bc8abd",
+        "1d4da289",
+        "1e043500",
+        "58bf7951",
+        "91b15a6e",
+        "caf03d32",
+        "gpt4_76048e76",
+        "078150f1",
+        "c7dc5443",
+        "d23cf73b",
+        "gpt4_4929293b",
+        "gpt4_c27434e8_abs"
+      ]
+    },
+    {
+      "sets": [
+        "S1"
+      ],
+      "id": "a24-shipped-defaults-harness-invalid",
+      "label": "without the questions of shipped-defaults' 10 harness_invalid answers (A24)",
+      "reason": "shipped-defaults' S1 8k component arm settled with 10 answers recorded harness_invalid (5 on each of c4 and c5), carried forward from failed A22 retrievals instead of answered again. A harness failure already leaves its question out of that row's mean; this view leaves those questions out for every system, so each row is read on the cohort gbrain was scored on.",
+      "question_ids": [],
+      "from_outcomes": {
+        "cell": "s1.gbrain-defaults.shipped-defaults.component-b8000",
+        "outcomes": [
+          "harness_invalid"
+        ],
+        "count": 10
+      }
+    }
+  ],
+  "not_run": {
+    "s1.ext-graph-pipeline.common": "the product's own behavior (A23): its graph store's hard-coded 32 GiB size limit, once reached, fails every later write and retrieval, and its incremental re-extraction makes each session cost more; three shards ingested for 62 hours without finishing",
+    "s1.ext-markdown-kb.recipe": "projected ~61 h > 48 h limit per conversation (A23: the product's own reindex cost grows with the square of the chunk count)",
+    "s2b.ext-markdown-kb.recipe": "projected about 60 h > cell wall clock on the pinned VM",
+    "s2a.ext-verbatim-session.common": "the harness has no common-config adapter for this system at this freeze (diagnostic config only)",
+    "s3.ext-verbatim-session.common": "the harness has no common-config adapter for this system at this freeze (diagnostic config only)"
+  },
+  "product_outcomes": [
+    {
+      "cell": "s2b.gbrain-defaults.full-surface.whole-think",
+      "reader": "openai:gpt-6.1-sol",
+      "outcome": "harness_invalid",
+      "count": 10,
+      "reason": "gbrain think's own 4,000-token output limit for this model at the pin, flagged by its own path as output_truncated"
+    }
+  ],
+  "retired": [
+    {
+      "system": "ext-temporal-graph",
+      "reason": "pinned config calls a model its provider retired",
+      "subset": {
+        "cell": "s1.ext-temporal-graph.common",
+        "shards": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "label": "the 8 conversations A17 measured validly (c0-c7)",
+        "reason": "c8 and c9 not run: pinned config calls a model its provider retired (A24 option 1)"
+      },
+      "view": {
+        "id": "a24-temporal-graph-subset",
+        "label": "on the 8 conversations temporal-graph measured (c0-c7)",
+        "reason": "ext-temporal-graph's pinned configuration calls a reranker and an ingest model its provider retired, so its row covers only the 8 conversations A17 measured validly (c0-c7) and c8 and c9 are not run. This view shows every system on those 8 conversations so each row can be read against it; the headline rows keep all 10."
+      }
+    }
+  ],
+  "pins": {
+    "baseline-none": "harness baseline",
+    "baseline-recency": "harness baseline",
+    "baseline-hybrid": "harness baseline",
+    "baseline-full-context": "harness baseline",
+    "baseline-file-agent": "harness baseline"
+  },
+  "disclosures": [
+    "Sealed spend settled at $7,034.32 on the campaign ledgers against the $8,000 sealed cap; $6,729.26 of it is measured: $6,626.00 across the four freezes' cells (A17, A22, A23 and A24) plus $103.26 for the A19 frontier-judge backfill. Of 149 launch units, 114 settled complete, 8 partial and 27 not run; each not-run row says why.",
+    "S2b full-context (`s2b.baseline-full-context.baseline`): A23 priced each gpt-6.1-sol whole-history reading's reservation from its token estimate, but the metering proxy reserves the request's byte count as input tokens, about 3.6 times as much, so the $20 lease admitted one reading at a time. The custodian raised the lease to $110 inside the A24 cap (raise-lease.ts) and resumed. The unit settled complete, 720 of 720 answers, at $191.34 measured across its seven leases.",
+    "ext-temporal-graph: its pinned configuration calls a reranker and an ingest model that their provider retired, and a competitor's settings are never changed, so (ruling 2026-10-26 via GBRA-108, option 1) its BEAM-10M row is shown on the 8 conversations A17 measured validly (c0-c7), every system is also shown on those 8 as a sensitivity view, its cells after the retirement are not run, and it is retested at its current release in the follow-up current-master rerun (F6). c8 and c9 hold A22 rows with 120 `ingest_degraded` and are not merged.",
+    "gbrain-defaults shipped-defaults S1, 8k component arm: 10 answers (5 on each of c4 and c5), 0.4% of the row's answers, are recorded `harness_invalid`. A24's re-answer carried them forward under their earlier realization instead of answering them again. The custodian traced the 10 A22 retrievals behind them: 9 failed as the shim's `degraded read (harness failure; retry after quiesce)` (8 `expansion_not_applied`, 1 `expansion_partial` with `rescore_skipped`; c4 fixed-evidence 3, c5 fixed-evidence 3, c5 vendor-default 3), and the tenth, c4 vendor-default, scored; the stored strings carry no HTTP status. A harness failure leaves its question out of that row's mean, and the sensitivity view `a24-shipped-defaults-harness-invalid` leaves those questions out for every system. The carry-forward fix goes into the follow-up rerun (F6).",
+    "gbrain-defaults full-surface S2b `whole-think`: 10 gpt-6.1-sol answers on c0 and c1 stopped at exactly 4,000 output tokens; every scored Sol answer in those cells used fewer. At the pin, gbrain think gives 16,000 output tokens only to Claude 5, Claude 4.x, gpt-5 and o-series models and to recipes that declare thinking by default; any other model, gpt-6.1-sol included, gets 4,000. gbrain's own path labels that stop `output_truncated`, and the shim records any status other than an answer as `harness_invalid`. The attribution rests on gbrain's code at the pin, the custodian's count (all 10 stopped at exactly 4,000 output tokens) and a keyless $0 repro of the limit; the pulled lease logs do not keep the shim's status field, so the `output_truncated` label itself was not observed. The limit and the flag are gbrain's shipped behavior with this model, so the 10 count as product failures, scored 0 and kept in the denominator. gbrain #7421 (2026-10-24, after the pin) gives OpenAI reasoning models from gpt-5 to gpt-9 the 16,000-token limit.",
+    "S3 file-agent (`s3.baseline-file-agent.baseline`): 23 gpt-6.1-sol answers are `reader_error`, a harness failure, so their questions leave that row's mean under the outcome rules.",
+    "S3 agent runtime (`s3.ext-agent-runtime.recipe`): all 200 of its gpt-6.1-sol answers are `retrieval_error`. The runtime calls gpt-6.1-sol through chat completions with function tools and a reasoning effort, and the provider refuses that request. The preregistration (A19, item E) records this as the runtime's own request, which the harness does not change, and leaves it to the program owner; no alternative ran, so the row reports the Sol answers as the runtime's failure. Its Opus and Sonnet answers are unaffected, and the per-reader table shows each reader. 2 further answers are `reader_error`.",
+    "Frontier-judge column: the A19 backfill filled 1,960 of 2,140 gpt-6.1-sol frontier judgments; the frozen tool does not judge the other 180, which are temporal-graph `ingest_degraded` answers. 194 of 214 Opus redos landed (2 remain `judge_error`, 18 fall outside a published arm), and a redo replaces the logged error under the same key. Agreement is reported on the covered set, with each judge's coverage."
+  ],
+  "render_targets": [
+    "README.md",
+    "docs/benchmarks/2026-10-06-scoreboard/scoreboard.md"
+  ]
+}

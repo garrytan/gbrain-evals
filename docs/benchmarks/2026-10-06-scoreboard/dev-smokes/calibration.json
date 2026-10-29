@@ -1,0 +1,23 @@
+{
+  "anthropic:claude-opus-5-5": {
+    "encoding": "cl100k_base",
+    "factor": 1.4708,
+    "max_error": 0.101,
+    "needs_provider_count": true,
+    "samples": 199
+  },
+  "anthropic:claude-sonnet-5-5": {
+    "encoding": "cl100k_base",
+    "factor": 1.4524,
+    "max_error": 0.0983,
+    "needs_provider_count": true,
+    "samples": 317
+  },
+  "openai:gpt-6.1-sol": {
+    "encoding": "o200k_base",
+    "factor": 1.0009,
+    "max_error": 0.0468,
+    "needs_provider_count": true,
+    "samples": 199
+  }
+}
