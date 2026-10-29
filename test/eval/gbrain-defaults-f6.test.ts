@@ -164,6 +164,12 @@ result = {"ok": a["ok"], "passes": len(a["passes"]), "spent": a["spent_usd"], "c
     const stuck = f6(`f = Fake(extract=[${J(partial)}] * 3); result = f.f6_build(["p1"])`);
     expect(stuck.error.message).toContain('pages_failed=1');
   });
+  test('an F6 install runs only on an image built at the launch pin', () => {
+    const pin = (image: string, launch: string) => f6(`result = shim.f6_pin_problem(${J(image)}, ${J(launch)})`).ok;
+    expect(pin('0ccf2bdd', '0ccf2bdd')).toBeNull();
+    expect(pin('f05943e6', '0ccf2bdd')).toContain('is not the F6 pin 0ccf2bdd');
+    expect(pin('f05943e6', '')).toContain('needs GBRAIN_SHA in the launch environment');
+  });
   test('the cap is a required parameter', () => {
     expect(f6('result = Fake().f6_build(["p1"])', { GBRAIN_F6: '1' }).error).toMatchObject({ kind: 'invalid_request' });
   });

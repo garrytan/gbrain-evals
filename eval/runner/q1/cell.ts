@@ -1323,7 +1323,8 @@ export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight
     const lease = !smoke && c.lease ? c.lease.usd : Math.max(0.01, Math.ceil((smoke ? 2 : 1) * c.estimate.usd / c.shards * 100) / 100);
     return {
       id, system: c.system, benchmark: c.benchmark, config: c.configuration, lease_usd: lease, command,
-      setup_command: `bash eval/systems/bootstrap.sh setup${stack ? ` --system ${c.system}` : ''} --datasets ${c.benchmark}${c.only_conversations ? ` --conversations ${c.only_conversations.join(',')}` : ''}`,
+      // A launch's gbrain pin (F6's GBRAIN_SHA, a build argument) and an own-bundle configuration reach setup too, so the image it builds is the one up runs.
+      setup_command: `${launch.env.GBRAIN_SHA ? `GBRAIN_SHA=${launch.env.GBRAIN_SHA} ` : ''}bash eval/systems/bootstrap.sh setup${stack ? ` --system ${c.system}${downConfig}` : ''} --datasets ${c.benchmark}${c.only_conversations ? ` --conversations ${c.only_conversations.join(',')}` : ''}`,
       vm: { size: `standard-${VM_VCPU}` }, timeout_hours: Math.min(72, Math.ceil(c.expected_hours * 1.5) + 2), block: c.block, sealed: c.split !== 'dev',
       ...(smoke ? { smoke: true } : {}), ...(c.only_conversations ? { conversations: c.only_conversations } : {}), providers, pass: providers.map(p => PROVIDER_KEYS[p]),
       expected_hours: c.expected_hours, wave: headline(c) ? waveOf.get(`${c.id}|${i}`)! : t1Waves + T2_WAVES[c.block],

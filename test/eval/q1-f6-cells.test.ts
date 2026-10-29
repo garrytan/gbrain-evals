@@ -9,7 +9,7 @@ import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { campaignManifest, findCell, runCell } from '../../eval/runner/q1/cell.ts';
-import { definitionProblems, estimateCell, manifestText, MANIFEST_PATH, policyKey, type ArmDefinition, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
+import { definitionProblems, estimateCell, loadManifest, manifestText, MANIFEST_PATH, policyKey, type ArmDefinition, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
 import { ALL_ARMS, buildF6Manifest, F6_ARMS, F6_CAP_USD, F6_DRY_RUN_CAP_USD, F6_MANIFEST_PATH, f6ManifestText, peakReservationUsd } from '../../eval/runner/q1/cells/f6.ts';
 import type { Corpus, MemoryQuestion } from '../../eval/runner/memory-qa/corpus.ts';
 import type { ChatLike, ChatResult } from '../../eval/runner/memory-qa/qa-v2.ts';
@@ -89,6 +89,11 @@ describe('the F6 manifest', () => {
     expect(tg.command).toContain('bootstrap.sh up --system ext-temporal-graph --config shipped-0.31');
     expect(tg.command).toContain('bootstrap.sh down --system ext-temporal-graph --config shipped-0.31');
     expect(camp.cells.find(c => c.id === 's3-smoke.gbrain-defaults.f6-master')!.command).toMatch(/^GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd/);
+    // Setup builds the image up runs, so it gets the pin (and the temporal graph its own bundle) too.
+    expect(camp.cells.find(c => c.id === 's3-smoke.gbrain-defaults.f6-master')!.setup_command).toBe('GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets locomo --conversations conv-44');
+    expect(tg.setup_command).toBe('bash eval/systems/bootstrap.sh setup --system ext-temporal-graph --config shipped-0.31 --datasets beam-1m --conversations 1m-16');
+    for (const c of campaignManifest(loadManifest()).cells) expect(c.setup_command).toMatch(/^bash eval\/systems\/bootstrap\.sh setup( --system [a-z0-9-]+)? --datasets /);
+    for (const c of campaignManifest(m).cells.filter(c => c.system === 'gbrain-defaults')) expect(c.setup_command).toStartWith('GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh setup --system gbrain-defaults ');
     const counted = campaignManifest(m);
     expect([counted.campaign_id, counted.cap_usd, counted.cells.some(c => c.smoke)]).toEqual(['f6-current-master', 3100, false]);
   });

@@ -64,6 +64,9 @@ PROXY_BASE = os.environ.get("GBRAIN_PROXY_BASE", "").rstrip("/")
 FULL_SURFACE = os.environ.get("GBRAIN_FULL_SURFACE", "0") == "1"
 F6 = os.environ.get("GBRAIN_F6", "0") == "1"
 F6_EXTRACT_CAP_USD = os.environ.get("GBRAIN_F6_EXTRACT_CAP_USD", "")
+# The gbrain commit baked into the image (Dockerfile ENV) and the one the launch asked for (compose, from GBRAIN_SHA).
+IMAGE_SHA = os.environ.get("GBRAIN_SHA", "")
+LAUNCH_SHA = os.environ.get("GBRAIN_LAUNCH_SHA", "")
 CALL_TIMEOUT_S = float(os.environ.get("GBRAIN_CALL_TIMEOUT_S", "900"))
 WRITE_POLL_LIMIT_S = float(os.environ.get("GBRAIN_WRITE_POLL_S", "600"))
 REQUEST_NS = uuid.UUID("6f1c3d4e-5a2b-4c8d-9e0f-1a2b3c4d5e6f")
@@ -407,6 +410,16 @@ def fact_entry(f: dict[str, Any]) -> dict[str, Any]:
     return {"slug": slug, "valid_from": f.get("valid_from"), "valid_until": f.get("valid_until"), "visibility": f.get("visibility")}
 
 
+def f6_pin_problem(image_sha: str, launch_sha: str) -> str | None:
+    """Why an F6 install must not run on this image, or None. F6 pins gbrain by the launch's GBRAIN_SHA; an image built
+    from another commit (a stale build, or a setup that ran without the pin) would measure the wrong gbrain."""
+    if not launch_sha:
+        return "F6 needs GBRAIN_SHA in the launch environment (GBRAIN_LAUNCH_SHA is unset); F6 pins gbrain by commit"
+    if image_sha != launch_sha:
+        return f"the image's gbrain commit {image_sha or '(none)'} is not the F6 pin {launch_sha}; rebuild with GBRAIN_SHA={launch_sha} (bootstrap.sh setup)"
+    return None
+
+
 def extraction_problems(run: dict[str, Any]) -> list[str]:
     """Why one `extract-conversation-facts --json` pass did not cover the brain; empty when it did."""
     out = []
@@ -543,6 +556,9 @@ class GbrainDefaultsAdapter(Adapter):
         run with the brain to itself."""
         if not PROXY_BASE:
             raise ShimError("invalid_request", "GBRAIN_PROXY_BASE is unset; provider_base_urls must point at the metering proxy before init")
+        pin = f6_pin_problem(IMAGE_SHA, LAUNCH_SHA) if F6 else None
+        if pin:
+            raise ShimError("invalid_request", pin)
         shutil.rmtree(HOME, ignore_errors=True)
         os.makedirs(os.path.join(HOME, ".gbrain"))
         base_urls = {"voyage": f"{PROXY_BASE}/voyage/v1", "openai": f"{PROXY_BASE}/openai/v1", "anthropic": f"{PROXY_BASE}/anthropic"}
@@ -766,7 +782,7 @@ class GbrainDefaultsAdapter(Adapter):
     def capabilities(self) -> dict[str, Any]:
         out = dict(self.record)
         out["answer"] = {"modes": ["synthesize", *(["think"] if FULL_SURFACE else [])]}
-        out["f6"] = {**out.get("f6", {}), "enabled": F6, "extract_cap_usd": float(F6_EXTRACT_CAP_USD) if F6 and F6_EXTRACT_CAP_USD else None, "overlay_keys": list(SEARCH_OVERLAY_KEYS)}
+        out["f6"] = {**out.get("f6", {}), "enabled": F6, "gbrain_sha": IMAGE_SHA if F6 else None, "extract_cap_usd": float(F6_EXTRACT_CAP_USD) if F6 and F6_EXTRACT_CAP_USD else None, "overlay_keys": list(SEARCH_OVERLAY_KEYS)}
         out["shipped_behavior"] = {"delivery_fallbacks": sorted(SHIPPED_BEHAVIOR), "preregistered": list(PREREGISTERED_SHIPPED_BEHAVIOR),
                                    "configured_by": "GBRAIN_SHIPPED_FALLBACKS", "matches_preregistration": sorted(SHIPPED_BEHAVIOR) == sorted(PREREGISTERED_SHIPPED_BEHAVIOR)}
         if self.reference is not None:
