@@ -760,7 +760,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
     const plan = ingestPlan(conv);
     const sample = probedConversation(convId, [...byConv.keys()], def.probes) ? probeSample(plan, def.probes.sample, `${def.probes.seed}|${convId}`) : new Map<number, 'last' | 'sample'>();
     const canProbe = probeable(capabilities);
-    const fixed = policyFor('fixed-evidence');
+    const fixed = policyFor(identities.size ? [...identities.keys()][0] : 'fixed-evidence');
     const errors: IngestSummary['errors'] = [];
     const writes: number[] = [];
     let failed = 0, synthetic = 0, messages = 0, tokens = 0;

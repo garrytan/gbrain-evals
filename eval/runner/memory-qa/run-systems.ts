@@ -412,7 +412,8 @@ export async function readinessProbe(system: MemorySystem, ns: string, last: Ses
   if (!passage?.trim()) return 'skipped';
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      const res = await system.retrieve(ns, { text: passage, query_time: null }, { ...policy, mode: 'fixed-evidence', settings: policyKnobs(capabilities.retrieval_policies?.['fixed-evidence']).settings });
+      const settings = policy.settings && 'op' in policy.settings ? policy.settings : policyKnobs(capabilities.retrieval_policies?.['fixed-evidence']).settings;
+      const res = await system.retrieve(ns, { text: passage, query_time: null }, { ...policy, mode: 'fixed-evidence', settings });
       return res.items.some(i => i.source_ids.includes(last.source_id)) ? 'found' : 'missed';
     } catch { /* a vendor error is retried once, then counts as a miss */ }
   }

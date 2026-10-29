@@ -146,15 +146,17 @@ describe('policy-major retrieval on F6 cells', () => {
     const out = join(tmp, 'policy-major');
     await runCell(def, { out, probeIntervalMs: 5, probeTimeoutMs: 2000 }, { corpus, system, reader, judge });
     const keys = def.arms.map(a => policyKey(a)!);
-    // Besides the arms' retrievals, each conversation's readiness barrier reads once under Q1's fixed-evidence policy.
-    const armCalls = system.calls.filter(c => c.name !== 'fake:fixed-evidence');
+    // Every read names an arm identity: each conversation's readiness barrier reads first, under the first arm's
+    // identity (a Q1 policy on an F6 stack reads under whichever overlay was last written, and its fact rows fail
+    // the rerank check), so the barrier adds no policy switch.
     const conversations = new Set(system.calls.map(c => c.ns));
-    expect(system.calls.length - armCalls.length).toBe(conversations.size);
-    expect(new Set(armCalls.map(c => c.name.split(':').slice(1).join(':')))).toEqual(new Set(keys));
-    // Within a namespace (conversation), the policy changes exactly arms - 1 times: policy-major.
+    expect(new Set(system.calls.map(c => c.name.split(':').slice(1).join(':')))).toEqual(new Set(keys));
     for (const ns of conversations) {
-      const seq = armCalls.filter(c => c.ns === ns).map(c => c.name);
-      expect(seq.filter((n, i) => i > 0 && n !== seq[i - 1]).length).toBe(keys.length - 1);
+      const seq = system.calls.filter(c => c.ns === ns);
+      expect([seq[0].name, seq[0].settings]).toEqual([`fake:${keys[0]}`, F6_ARMS.a.retrieval]);
+      expect(seq.filter(c => c.name === `fake:${keys[0]}`).length).toBe((seq.length - 1) / keys.length + 1);
+      // Within a namespace (conversation), the policy changes exactly arms - 1 times: policy-major.
+      expect(seq.filter((c, i) => i > 0 && c.name !== seq[i - 1].name).length).toBe(keys.length - 1);
     }
     expect(system.calls.find(c => c.name.endsWith(keys[2]))!.settings).toEqual({ op: 'recall', args: { budget_tokens: 5500 }, overlay: F6_ARMS.b.retrieval.overlay });
   });
