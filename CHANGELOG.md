@@ -2,6 +2,18 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.133] - 2026-10-29
+
+### The 8k conversion wave: preregistration, harness and held-out result
+
+- **You can read the held-out verdict for gbrain's 8k conversion wave.** On the 200 held-out questions of sealed confirmation v2, the facts block (`search.query_facts_block`) answered 183 against 151 for the control, +16.0 points with a persona-clustered 95% interval of +11.0 to +21.5. By the preregistered rule the verdict is `pass`. The budget-unit flag and the evidence-titles flag are `inconclusive`. Read the [report](docs/benchmarks/2026-10-26-gbrain-8k-conversion.md); the flip of `search.query_facts_block` is the owner's call.
+- You can repeat the whole run keyless: the preregistration, the decision file with its committed rule, the C8K harness (`eval/runner/budgeted-delivery/c8k*.ts` and scripts) and the dry-run receipts on the invented custody fixture are committed together, and `c8k-dry-run.sh` runs the development reading and the full custody chain with dummy keys and no provider call.
+- **The held-out run's custody steps are covered by tests.** `test/eval/budgeted-delivery-c8k.test.ts` now exercises the retrieval checks, the final gate, the amendment resume of the freeze, the custody refusals of `decide`, the answer files and budget summary, evidence reading, the reader resume, the corpus build, the export and the extraction, each with a one-line statement of what it protects.
+
+### Fixed
+
+- **`receipt-secrets` is green again.** gitleaks read the `"tokenizer": "approx-chars-div-4"` label in eight gate receipts as an API key. A repo-root `.gitleaksignore` names those eight receipt lines. The receipts are hashed artifacts and are unchanged.
+
 ## [0.10.132] - 2026-10-29
 
 ### reuse-check and arm_power refuse inputs they used to pass
