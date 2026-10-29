@@ -2,6 +2,14 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [Unreleased]
+
+### Per-member read access: search cost on a brain with no restrictions
+
+- **gbrain PR #7812 adds a readers check to every remote read; on a brain with no restrictions it costs hybrid search 1.5 to 1.6% and keyword-only search 3.2 to 3.9%** ([report](docs/benchmarks/2026-10-28-member-read-access.md)). Measured at `f1c39714` against its parent `8e9cd64d` on one Ubicloud VM, 8 interleaved runs per side, with raw JSON committed.
+- **Where the keyword cost comes from.** Ablations put it on reading one `pages` column per matched row: replacing the predicate with `TRUE` cuts the cost to +0.5%, and dropping the index changes nothing. Removing the cost would leave a one-request window at a brain's first restricted page, so the keyword result was accepted by GBRA-108 with the fail-safe kept.
+- **Restricted brains.** Members get every page they may read (hit@10 1.0 at 20% and 80% restricted).
+
 ## [0.10.132] - 2026-10-29
 
 ### reuse-check and arm_power refuse inputs they used to pass
