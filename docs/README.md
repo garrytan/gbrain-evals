@@ -162,7 +162,6 @@ These documents fix a method before measuring. They publish no capability scores
 | Will a release still look better on questions nobody tuned against? | [September 29 sealed confirmation set](benchmarks/2026-09-29-sealed-confirmation-protocol.md) |
 | What end-to-end task does a 10x memory claim stand on, and what sample can show it? | [October 8 program primary preregistration (T0) and power (PW)](benchmarks/2026-10-08-program-primary-preregistration.md) |
 | What harder workload replaces T0's ceiling, and how was it calibrated? | [October 8 harder program primary preregistration (T0b), with its three calibration rounds](benchmarks/2026-10-08-program-primary-hard-preregistration.md) |
-| Does gbrain find the right passage of a long, heading-structured document more often when a chunk's heading path rides in its embedding prefix, or when chunks start at headings? | [October 28 structure-aware chunks preregistration](benchmarks/2026-10-28-structure-aware-chunks-preregistration.md) (development evidence on messy-company-v1 dev and Qasper dev; retrieval only, embeddings capped at $15) |
 
 ## Data and methods
 
@@ -228,7 +227,8 @@ procedure with documented missing pieces; it is not the current refresh command.
 
 Retrieval experiments gains the [structure-aware chunks report](benchmarks/2026-10-28-structure-aware-chunks.md)
 (GBRA-234, development evidence at gbrain `5af37ba44` with a local experiment patch): no contrast met the
-preregistered rule, so no build is proposed. It was not reachable from this index. No existing row changed.
+preregistered rule, so no build is proposed. It was not reachable from this index. Its preregistration
+leaves Protocols and preregistrations (no results yet), since the new row links it.
 
 ### 2026-10-28: Structure-aware chunks preregistration
 

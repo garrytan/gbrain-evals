@@ -31,6 +31,7 @@ same lane tunes on dev only, and any later held-out run reports that the split w
 
 | Date | Lane and splits | Purpose | Code | Rule sha256 | Result |
 |---|---|---|---|---|---|
+| 2026-10-28 | governing-records, dev only (39 questions, one per account and attribute; a 10-question within-document cell is reported only) | Structure-aware chunks: does a chunk's heading path in its embedding prefix, or chunks that start at headings, find the deciding passage more often (development evidence, retrieval only) | gbrain `5af37ba44` with a local experiment patch ([diff](../../../docs/benchmarks/2026-10-28-structure-aware-chunks-gbrain-experiment.patch)) | None stated: the preregistration hashes its gbrain patch, corpus and labels, not its rule; it was committed in `a763ddde` before any live cell | **No detectable gain.** The heading-path prefix moved hit@3 on the 39 dev questions from 76.9% to 74.4% (+2/−3) while raising it on Qasper, so the preregistered rule (a gain on both corpora and pooled p < 0.05) failed at p = 0.070. [Results](../../../docs/benchmarks/2026-10-28-structure-aware-chunks.md) |
 | 2026-10-14 | owner-phrases, dev and held-out | F5 owner-phrase precision ship condition | gbrain `4e10136b` | `6ca46ba4a25e09dd87a3b0ca298f406ab077e71fb06145f83e40703b5fce0b11` | **FAIL.** 6 links, 6 correct, Wilson 95% [0.610, 1.000], against a bar of ≥ 0.85 with ≥ 22 links. Recall dev 2/66, held-out 4/58. 0 links on should-not-link rows. [Run record](../../../docs/benchmarks/2026-10-14-f5-messy-company/README.md) |
 
 **Held-out use so far:** owner-phrases, once (the F5 run above). Future owner-phrase work tunes on dev only. No other
@@ -59,6 +60,12 @@ them, are known only from those pages. Run the `public` view with `load.ts --pub
 facts don't leak into public answers.
 
 ## Changelog
+
+### 2026-10-28: Structure-aware chunks run entry
+
+Added the structure-aware chunks run to "Runs on this dataset": governing-records dev only, no detectable gain
+(hit@3 76.9% to 74.4% on 39 dev questions with the heading-path prefix; the preregistered rule failed at pooled
+p = 0.070). No held-out split was used, so "Held-out use so far" is unchanged.
 
 ### 2026-10-14: First run entry
 
