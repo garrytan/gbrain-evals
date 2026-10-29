@@ -100,7 +100,8 @@ import { HttpMemorySystem } from '../systems/http.ts';
 import { encodingCount, NATIVE_READER_TEMPLATE, packContext, readerCounter, readerTokenizer, RENDERER_VERSION, strictSources, validateSources, type PackCounter, type PackedContext } from '../systems/render-v2.ts';
 import { Sanitizer, SanitizerLeakError, type IngestStep } from '../systems/sanitize.ts';
 import { answerModes, passiveUnsupported, policyKnobs, type CapabilityRecord, type Item, type MemorySystem, type OwnAnswerSystem, type RetrievalPolicy, type SessionInput, type OwnAnswer } from '../systems/types.ts';
-import { definitionProblems, launchPrefix, loadManifest, MANIFEST_PATH, SETS, shimLaunch, type ArmDefinition, type CellDefinition, type Manifest, type Selection } from './cells/definitions.ts';
+import { ALL_SETS, definitionProblems, launchPrefix, loadManifest, MANIFEST_PATH, policyKey, shimLaunch, type ArmDefinition, type CellDefinition, type Manifest, type RetrievalIdentity, type Selection } from './cells/definitions.ts';
+import { F6_MANIFEST_PATH, loadF6Manifest } from './cells/f6.ts';
 import { exitCodeOf, refuse, renderMessage, ScoreboardError, type ScoreboardMessage } from './scoreboard-errors.ts';
 import { answerUsage, normalizeUsage, readerConvention } from './usage.ts';
 
@@ -595,7 +596,14 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
   const slot = def.runner === 'shim' ? capabilities.system : def.system;
   /** The sessions a conversation writes, in order; an ingest probe with `ingest_sessions` writes only that prefix. */
   const ingestPlan = (conv: Corpus['conversations'][number]) => sanitizer.ingestPlan(conv).slice(0, def.ingest_sessions ?? Infinity);
-  const policyFor = (mode: RetrievalPolicy['mode']): RetrievalPolicy => ({ name: `${capabilities.system}:${mode}`, mode, settings: policyKnobs(capabilities.retrieval_policies?.[mode]).settings });
+  /** F6: the retrieval identity behind each policy key; a key without one is a Q1 mode. */
+  const identities = new Map<string, RetrievalIdentity>(arms.filter(a => a.retrieval).map(a => [policyKey(a)!, a.retrieval!]));
+  const policyFor = (key: string): RetrievalPolicy => {
+    const id = identities.get(key);
+    if (id) return { name: `${capabilities.system}:${key}`, mode: 'fixed-evidence', settings: { op: id.op, args: id.args, overlay: id.overlay } };
+    const mode = key as RetrievalPolicy['mode'];
+    return { name: `${capabilities.system}:${mode}`, mode, settings: policyKnobs(capabilities.retrieval_policies?.[mode]).settings };
+  };
   const ownArms = arms.filter(a => a.mode === 'own-answer');
   const agentArms = arms.filter(a => a.mode === 'agent');
   const modes = answerModes(capabilities);
@@ -637,7 +645,10 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
   };
   const byConv = new Map(corpus.conversations.map(c => [c.id, c]));
   const qById = new Map(selected.map(q => [q.id, q]));
-  const policies = [...new Set(arms.map(a => a.policy).filter((p): p is RetrievalPolicy['mode'] => !!p))];
+  /** Retrieval keys: a Q1 arm's policy mode, or an F6 arm's mode@identity (policyKey). */
+  const policies = [...new Set(arms.map(a => policyKey(a)).filter((p): p is string => !!p))];
+  /** F6 cells retrieve policy-major: every question of a conversation under one policy before the next, so the stack switches its overlay once per policy. */
+  const policyMajor = identities.size > 0;
   let stopped: string | null = null;
   let processed = 0;
 
@@ -650,7 +661,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
     let store = false, any = false;
     for (const q of qs) {
       for (const p of policies) {
-        if (!arms.some(a => a.policy === p && armQs.get(a.id)!.has(q.id))) continue;
+        if (!arms.some(a => policyKey(a) === p && armQs.get(a.id)!.has(q.id))) continue;
         const r = retrievals.get(`${q.id}|${p}`);
         if (!r || (!FINAL.has(r.outcome) && r.attempt < maxAttempts)) store = true;
       }
@@ -851,7 +862,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
       publishCell(def, arms, [out], out, { instrument, selected, invalidReasons, configs, capabilities, stopped, maxAttempts });
     };
 
-    const retrieve = async (q: MemoryQuestion, mode: RetrievalPolicy['mode']): Promise<StagedRetrieval | null> => {
+    const retrieve = async (q: MemoryQuestion, mode: string): Promise<StagedRetrieval | null> => {
       const key = `${q.id}|${mode}`;
       const prior = retrievals.get(key);
       if (prior && (FINAL.has(prior.outcome) || prior.attempt >= maxAttempts)) return prior;
@@ -1039,10 +1050,11 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
 
     const oneQuestion = async (q: MemoryQuestion) => {
       const staged = new Map<string, StagedRetrieval | null>();
-      for (const p of policies) if (arms.some(a => a.policy === p && armQs.get(a.id)!.has(q.id))) staged.set(p, await retrieve(q, p));
+      for (const p of policies) if (arms.some(a => policyKey(a) === p && armQs.get(a.id)!.has(q.id))) staged.set(p, await retrieve(q, p));
       for (const arm of arms) {
         if (!armQs.get(arm.id)!.has(q.id) || stopped) continue;
-        const r = arm.policy ? staged.get(arm.policy) ?? null : null;
+        const key = policyKey(arm);
+        const r = key ? staged.get(key) ?? null : null;
         let row: Q1Row;
         if (arm.mode === 'retrieval-only') row = rowFor(arm, q, r, null);
         else if (arm.mode === 'packed' || arm.mode === 'native-default') {
@@ -1056,7 +1068,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
     /** A22: work a question still lacks in this process: a promised answer, a canonical judgment, or a retrieval the live store can still retry. */
     const needs = (q: MemoryQuestion) => {
       for (const p of policies) {
-        if (!isLive || !arms.some(a => a.policy === p && armQs.get(a.id)!.has(q.id))) continue;
+        if (!isLive || !arms.some(a => policyKey(a) === p && armQs.get(a.id)!.has(q.id))) continue;
         const r = retrievals.get(`${q.id}|${p}`);
         if (!r || (!FINAL.has(r.outcome) && r.attempt < maxAttempts)) return true;
       }
@@ -1071,6 +1083,12 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
       return false;
     };
     const mine = selected.filter(x => x.conversation === convId);
+    if (policyMajor) for (const p of policies) {
+      for (const q of mine) {
+        if (stopped) break;
+        if (arms.some(a => policyKey(a) === p && armQs.get(a.id)!.has(q.id))) await retrieve(q, p);
+      }
+    }
     for (const q of mine) {
       if (stopped) break;
       if (opts.stopAfterQuestions !== undefined && processed >= opts.stopAfterQuestions) { stopped = 'stopped by the test hook (simulated kill)'; break; }
@@ -1280,7 +1298,7 @@ const VM_VCPU = 4;
 /** The provider keys a cell's VM receives (ubi-runner --pass): only its metering proxy reads them; the cell sees dummy keys. */
 const PROVIDER_KEYS = { openai: 'OPENAI_API_KEY', anthropic: 'ANTHROPIC_API_KEY', voyage: 'VOYAGE_API_KEY' } as const;
 /** Waves: T1 first (S1 shim shards packed under the overnight cap), then each T2 set after T1 settles, in the preregistered scope-reduction order reversed. */
-const T2_WAVES: Record<string, number> = { 'T2-S2b': 1, 'T2-S3': 2, 'T2-S2a': 3, 'T2-S4-S5': 4 };
+const T2_WAVES: Record<string, number> = { 'T2-S2b': 1, 'T2-S3': 2, 'T2-S2a': 3, 'T2-S4-S5': 4, 'F6-T2': 1, 'F6-D8': 2, 'F6-S4': 3, 'F6-dry': 1 };
 
 /** In-process systems whose adapter drives the bundle's own container: the unit builds it at setup and brings it up around the run like a shim stack (A19). */
 const IN_PROCESS_STACKS = new Set(['ext-agent-runtime']);
@@ -1288,7 +1306,8 @@ const IN_PROCESS_STACKS = new Set(['ext-agent-runtime']);
 /** One launch unit per cell, or per conversation shard for an S1 shim cell, in the shootout campaign's cell format. */
 export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight?: number } = {}): CellSpec[] {
   const perWave = Math.floor((opts.vcpuCapNight ?? 200) / VM_VCPU);
-  const t1Units = m.cells.filter(c => c.block === 'T1').flatMap(c => Array.from({ length: c.shards }, (_, i) => ({ c, i }))).sort((a, b) => b.c.estimate.usd / b.c.shards - a.c.estimate.usd / a.c.shards || (a.c.id < b.c.id ? -1 : 1) || a.i - b.i);
+  const headline = (c: CellDefinition) => c.block === 'T1' || c.block === 'F6-S1';
+  const t1Units = m.cells.filter(headline).flatMap(c => Array.from({ length: c.shards }, (_, i) => ({ c, i }))).sort((a, b) => b.c.estimate.usd / b.c.shards - a.c.estimate.usd / a.c.shards || (a.c.id < b.c.id ? -1 : 1) || a.i - b.i);
   const t1Waves = Math.max(1, Math.ceil(t1Units.length / perWave));
   const waveOf = new Map(t1Units.map((u, k) => [`${u.c.id}|${u.i}`, Math.floor(k / perWave) + 1]));
   const spec = (c: CellDefinition, i: number, smoke: boolean): CellSpec => {
@@ -1297,7 +1316,9 @@ export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight
     const launch = c.launch ?? shimLaunch(c.system, c.configuration);
     const providers: Array<keyof typeof PROVIDER_KEYS> = c.system === 'gbrain-defaults' ? ['openai', 'anthropic', 'voyage'] : ['openai', 'anthropic'];
     const stack = c.runner === 'shim' || IN_PROCESS_STACKS.has(c.system);
-    const command = stack ? `${launchPrefix(launch)}bash eval/systems/bootstrap.sh up --system ${c.system} --config ${launch.config} && ${run}; rc=$?; bash eval/systems/bootstrap.sh down --system ${c.system}; exit $rc` : run;
+    // A configuration with its own bundle directory (shipped-0.31) names it on down too, or down reaches the pinned stack.
+    const downConfig = launch.config === 'shipped-0.31' ? ` --config ${launch.config}` : '';
+    const command = stack ? `${launchPrefix(launch)}bash eval/systems/bootstrap.sh up --system ${c.system} --config ${launch.config} && ${run}; rc=$?; bash eval/systems/bootstrap.sh down --system ${c.system}${downConfig}; exit $rc` : run;
     /** A smoke measures what the estimate assumes, so its lease holds twice the estimate; a counted unit takes its cell's lease override (A20), else the estimate per shard. */
     const lease = !smoke && c.lease ? c.lease.usd : Math.max(0.01, Math.ceil((smoke ? 2 : 1) * c.estimate.usd / c.shards * 100) / 100);
     return {
@@ -1305,7 +1326,7 @@ export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight
       setup_command: `bash eval/systems/bootstrap.sh setup${stack ? ` --system ${c.system}` : ''} --datasets ${c.benchmark}${c.only_conversations ? ` --conversations ${c.only_conversations.join(',')}` : ''}`,
       vm: { size: `standard-${VM_VCPU}` }, timeout_hours: Math.min(72, Math.ceil(c.expected_hours * 1.5) + 2), block: c.block, sealed: c.split !== 'dev',
       ...(smoke ? { smoke: true } : {}), ...(c.only_conversations ? { conversations: c.only_conversations } : {}), providers, pass: providers.map(p => PROVIDER_KEYS[p]),
-      expected_hours: c.expected_hours, wave: c.block === 'T1' ? waveOf.get(`${c.id}|${i}`)! : t1Waves + T2_WAVES[c.block],
+      expected_hours: c.expected_hours, wave: headline(c) ? waveOf.get(`${c.id}|${i}`)! : t1Waves + T2_WAVES[c.block],
       ...(c.snapshot_command ? { snapshot_command: c.snapshot_command } : {}), ...(c.restore_command ? { restore_command: c.restore_command } : {}),
     };
   };
@@ -1316,14 +1337,18 @@ export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight
 }
 
 /** The Q1 scoreboard campaign manifest (shootout-cell.ts `q1-scoreboard-campaign`) for the cell manifest. */
-export function campaignManifest(m: Manifest, opts: { smoke?: boolean; sealed?: { cap_usd: number } } = {}): Q1Campaign {
-  const models = [...new Set([...m.readers, ...Object.keys(m.prices), 'openai:gpt-4.1-mini', 'openai:text-embedding-3-large', 'anthropic:claude-opus-4-7', 'anthropic:claude-haiku-4-5', 'anthropic:claude-haiku-5-5'])].sort();
-  const cells = campaignCells(m, opts).filter(c => !opts.sealed || c.sealed);
-  const id = opts.sealed ? 'q1-scoreboard-sealed' : 'q1-scoreboard';
+export function campaignManifest(m: Manifest, opts: { smoke?: boolean; sealed?: { cap_usd: number }; smokeOnly?: boolean } = {}): Q1Campaign {
+  const f6 = (m as { campaign_id?: string }).campaign_id;
+  // F6 adds the temporal graph's 0.31.2 defaults (gpt-6-luna, text-embedding-3-small) to the models its campaign admits.
+  const models = [...new Set([...m.readers, ...Object.keys(m.prices), 'openai:gpt-4.1-mini', 'openai:text-embedding-3-large', 'anthropic:claude-opus-4-7', 'anthropic:claude-haiku-4-5', 'anthropic:claude-haiku-5-5', ...(f6 ? ['openai:gpt-6-luna', 'openai:text-embedding-3-small'] : [])])].sort();
+  const cells = campaignCells(m, { ...opts, smoke: opts.smoke || opts.smokeOnly }).filter(c => (!opts.sealed || c.sealed) && (!opts.smokeOnly || c.smoke));
+  const id = f6 ? `${f6}${opts.smokeOnly ? '-dry-run' : opts.sealed ? '-sealed' : ''}` : opts.sealed ? 'q1-scoreboard-sealed' : 'q1-scoreboard';
+  const dryCap = (m as { dry_run_cap_usd?: number }).dry_run_cap_usd;
+  const blocks = [...m.blocks, ...(opts.smokeOnly && dryCap ? [{ id: 'F6-dry' as const, estimate_usd: Math.round(m.smoke_cells.reduce((s, c) => s + c.estimate.usd, 0) * 100) / 100, cap_usd: dryCap }] : [])];
   return {
-    kind: 'q1-scoreboard-campaign', schema_version: 1, campaign_id: id, cap_usd: opts.sealed?.cap_usd ?? m.cap_usd, ledger: `eval/reports/scoreboard/${id}/campaign.sqlite`,
+    kind: 'q1-scoreboard-campaign', schema_version: 1, campaign_id: id, cap_usd: opts.sealed?.cap_usd ?? (opts.smokeOnly && dryCap ? dryCap : m.cap_usd), ledger: `eval/reports/scoreboard/${id}/campaign.sqlite`,
     parameters: {}, hedge_classifier: 'none', cells, executes: EXECUTES, images: pinnedImages(),
-    blocks: Object.fromEntries(m.blocks.filter(b => cells.some(c => c.block === b.id)).map(b => [b.id, { estimate_usd: b.estimate_usd, cap_usd: b.cap_usd }])),
+    blocks: Object.fromEntries(blocks.filter(b => cells.some(c => c.block === b.id)).map(b => [b.id, { estimate_usd: b.estimate_usd, cap_usd: b.cap_usd }])),
     output_caps: { ...DEFAULT_ROUTE_CAPS }, route_classes: { ...DEFAULT_ROUTE_CLASSES }, schedule: { vcpu_cap_day: 128, vcpu_cap_night: 200 }, row_pull_every: ROW_FLUSH_EVERY, pull_interval_minutes: 10, models,
   };
 }
@@ -1346,9 +1371,14 @@ export function renderPlan(m: Manifest): string {
 
 // ─── CLI ─────────────────────────────────────────────────────────────
 
-export function findCell(id: string, m: Manifest = loadManifest()): CellDefinition {
+export function findCell(id: string, given?: Manifest): CellDefinition {
+  const m = given ?? loadManifest();
   const c = m.cells.find(x => x.id === id) ?? (m.smoke_cells ?? []).find(x => x.id === id);
   if (c) return c;
+  // F6's cells (eval/runner/q1/cells/f6.ts) live in their own manifest; their ids never collide with Q1's.
+  const f6 = !given && existsSync(F6_MANIFEST_PATH) ? loadF6Manifest() : null;
+  const hit = f6 ? [...f6.cells, ...f6.smoke_cells].find(x => x.id === id) : undefined;
+  if (hit) return hit;
   const near = [...m.cells, ...(m.smoke_cells ?? [])].filter(x => x.id.includes(id.split('.')[0] ?? '')).slice(0, 5).map(x => x.id);
   throw refuse({ code: 'USAGE', message: `no cell ${id} in ${rel(MANIFEST_PATH)}`, why: 'run, show and merge take a cell id from the generated manifest', fix: { next: 'run', argv: [...FRONT, 'plan'], user_message: near.length ? `did you mean ${near.join(', ')}?` : 'list the cells with plan' } });
 }
@@ -1366,7 +1396,7 @@ const usage = (message: string): ScoreboardMessage => ({ code: 'USAGE', message,
 
 /** The paid-run guard for `run` without a lease proxy: --paid and an open ledger run with room for the estimate. */
 export function paidGuard(argv: string[], def: CellDefinition, limit: number | null): number {
-  const estimate = Math.round((limit ? def.estimate.usd * Math.min(1, limit / SETS[def.set].questions) + (def.estimate.lines.ingest ?? 0) : def.estimate.usd) * 100) / 100;
+  const estimate = Math.round((limit ? def.estimate.usd * Math.min(1, limit / ALL_SETS[def.set].questions) + (def.estimate.lines.ingest ?? 0) : def.estimate.usd) * 100) / 100;
   try { requirePaidArm(argv, { arm: `q1 cell ${def.id}`, estimateUsd: estimate, ledgerPath: budgetOptionsFrom(argv).ledgerPath }); }
   catch (e) {
     if (!(e instanceof PaidArmRefusal)) throw e;
@@ -1383,11 +1413,13 @@ export async function main(argv: string[]): Promise<number> {
   const json = argv.includes('--json');
   const sub = argv[0];
   if (sub === 'plan') {
-    const m = loadManifest();
+    // --manifest f6: F6's manifest (eval/runner/q1/cells/f6-cells.json); --dry-run-only keeps its dry-run cells alone.
+    const m = one('--manifest') === 'f6' ? loadF6Manifest() : loadManifest();
     const campaignOut = one('--campaign-out');
     const sealedCap = one('--sealed-cap-usd');
     if (sealedCap !== undefined && !(Number(sealedCap) > 0)) throw refuse(usage('--sealed-cap-usd needs a positive dollar amount'));
-    if (campaignOut) { writeAtomic(resolve(campaignOut), JSON.stringify(campaignManifest(m, { smoke: argv.includes('--with-smoke'), sealed: sealedCap ? { cap_usd: Number(sealedCap) } : undefined }), null, 2) + '\n'); console.error(`campaign manifest written to ${campaignOut}; next: bun run eval:scoreboard plan --campaign ${campaignOut}`); }
+    const smokeOnly = argv.includes('--dry-run-only');
+    if (campaignOut) { writeAtomic(resolve(campaignOut), JSON.stringify(campaignManifest(m, { smoke: smokeOnly || argv.includes('--with-smoke'), smokeOnly, sealed: sealedCap ? { cap_usd: Number(sealedCap) } : undefined }), null, 2) + '\n'); console.error(`campaign manifest written to ${campaignOut}; next: bun run eval:scoreboard plan --campaign ${campaignOut}`); }
     console.log(json ? JSON.stringify({ ...m, waves: campaignCells(m).map(c => ({ id: c.id, wave: c.wave, lease_usd: c.lease_usd })) }, null, 2) : renderPlan(m));
     return 0;
   }
