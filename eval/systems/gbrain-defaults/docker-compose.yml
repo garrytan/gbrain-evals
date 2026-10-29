@@ -11,7 +11,7 @@
 # slot named after the system. The container holds dummy keys (the cell token, SHOOTOUT_CELL_TOKEN, when the launcher
 # sets one, so a strict proxy admits its calls); the proxy injects the real ones.
 #
-# GBRAIN_SHA pins the gbrain commit baked into the image; GBRAIN_FULL_SURFACE=1 serves the full surface for the
+# GBRAIN_SHA pins the gbrain commit baked into the image (GBRAIN_BUN_IMAGE the Bun image at that commit's engines floor); GBRAIN_FULL_SURFACE=1 serves the full surface for the
 # labeled `think` row (every other call still uses starter ops). GBRAIN_F6=1 with GBRAIN_F6_EXTRACT_CAP_USD runs the F6
 # build and policies (shim.py docstring); F6 cells set GBRAIN_SHA to their pin in the launch environment (setup builds with it), and an F6 shim refuses to install unless
 # the image's gbrain commit equals that pin (GBRAIN_LAUNCH_SHA), so a stale image cannot run an F6 cell. Brains live on the gbrain-data volume, so
@@ -25,6 +25,8 @@ services:
       dockerfile: eval/systems/gbrain-defaults/Dockerfile
       args:
         GBRAIN_SHA: ${GBRAIN_SHA:-f05943e653fd9d938b343b1774a35325ba792271}
+        # Unset, the arg is left out and the Dockerfile's default Bun image (Q1's) is used.
+        GBRAIN_BUN_IMAGE:
     environment:
       SHIM_CONFIG: ${SHIM_CONFIG:-recipe}
       SHIM_PORT: "8700"

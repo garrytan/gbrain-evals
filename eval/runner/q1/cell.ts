@@ -100,7 +100,7 @@ import { HttpMemorySystem } from '../systems/http.ts';
 import { encodingCount, NATIVE_READER_TEMPLATE, packContext, readerCounter, readerTokenizer, RENDERER_VERSION, strictSources, validateSources, type PackCounter, type PackedContext } from '../systems/render-v2.ts';
 import { Sanitizer, SanitizerLeakError, type IngestStep } from '../systems/sanitize.ts';
 import { answerModes, passiveUnsupported, policyKnobs, type CapabilityRecord, type Item, type MemorySystem, type OwnAnswerSystem, type RetrievalPolicy, type SessionInput, type OwnAnswer } from '../systems/types.ts';
-import { ALL_SETS, definitionProblems, launchPrefix, loadManifest, MANIFEST_PATH, policyKey, shimLaunch, type ArmDefinition, type CellDefinition, type Manifest, type RetrievalIdentity, type Selection } from './cells/definitions.ts';
+import { ALL_SETS, definitionProblems, F6_ASSUMPTIONS, launchPrefix, loadManifest, MANIFEST_PATH, policyKey, shimLaunch, type ArmDefinition, type CellDefinition, type Manifest, type RetrievalIdentity, type Selection } from './cells/definitions.ts';
 import { F6_MANIFEST_PATH, loadF6Manifest } from './cells/f6.ts';
 import { exitCodeOf, refuse, renderMessage, ScoreboardError, type ScoreboardMessage } from './scoreboard-errors.ts';
 import { answerUsage, normalizeUsage, readerConvention } from './usage.ts';
@@ -1323,8 +1323,8 @@ export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight
     const lease = !smoke && c.lease ? c.lease.usd : Math.max(0.01, Math.ceil((smoke ? 2 : 1) * c.estimate.usd / c.shards * 100) / 100);
     return {
       id, system: c.system, benchmark: c.benchmark, config: c.configuration, lease_usd: lease, command,
-      // A launch's gbrain pin (F6's GBRAIN_SHA, a build argument) and an own-bundle configuration reach setup too, so the image it builds is the one up runs.
-      setup_command: `${launch.env.GBRAIN_SHA ? `GBRAIN_SHA=${launch.env.GBRAIN_SHA} ` : ''}bash eval/systems/bootstrap.sh setup${stack ? ` --system ${c.system}${downConfig}` : ''} --datasets ${c.benchmark}${c.only_conversations ? ` --conversations ${c.only_conversations.join(',')}` : ''}`,
+      // A launch's build arguments (F6's GBRAIN_BUN_IMAGE and GBRAIN_SHA) and an own-bundle configuration reach setup too, so the image it builds is the one up runs.
+      setup_command: `${launchPrefix({ ...launch, env: Object.fromEntries(Object.entries(launch.env).filter(([k]) => k === 'GBRAIN_SHA' || k === 'GBRAIN_BUN_IMAGE')) })}bash eval/systems/bootstrap.sh setup${stack ? ` --system ${c.system}${downConfig}` : ''} --datasets ${c.benchmark}${c.only_conversations ? ` --conversations ${c.only_conversations.join(',')}` : ''}`,
       vm: { size: `standard-${VM_VCPU}` }, timeout_hours: Math.min(72, Math.ceil(c.expected_hours * 1.5) + 2), block: c.block, sealed: c.split !== 'dev',
       ...(smoke ? { smoke: true } : {}), ...(c.only_conversations ? { conversations: c.only_conversations } : {}), providers, pass: providers.map(p => PROVIDER_KEYS[p]),
       expected_hours: c.expected_hours, wave: headline(c) ? waveOf.get(`${c.id}|${i}`)! : t1Waves + T2_WAVES[c.block],
@@ -1348,7 +1348,9 @@ export function campaignManifest(m: Manifest, opts: { smoke?: boolean; sealed?: 
   const blocks = [...m.blocks, ...(opts.smokeOnly && dryCap ? [{ id: 'F6-dry' as const, estimate_usd: Math.round(m.smoke_cells.reduce((s, c) => s + c.estimate.usd, 0) * 100) / 100, cap_usd: dryCap }] : [])];
   return {
     kind: 'q1-scoreboard-campaign', schema_version: 1, campaign_id: id, cap_usd: opts.sealed?.cap_usd ?? (opts.smokeOnly && dryCap ? dryCap : m.cap_usd), ledger: `eval/reports/scoreboard/${id}/campaign.sqlite`,
-    parameters: {}, hedge_classifier: 'none', cells, executes: EXECUTES, images: pinnedImages(),
+    parameters: {}, hedge_classifier: 'none', cells, executes: EXECUTES,
+    // F6's gbrain pin builds on a newer Bun image, named in its launch environment rather than in the bundle files.
+    images: f6 ? Object.fromEntries(Object.entries({ ...pinnedImages(), 'gbrain-defaults/base:1.4.4-slim': F6_ASSUMPTIONS.bun_image.split('@')[1] }).sort(([a], [b]) => (a < b ? -1 : 1))) : pinnedImages(),
     blocks: Object.fromEntries(blocks.filter(b => cells.some(c => c.block === b.id)).map(b => [b.id, { estimate_usd: b.estimate_usd, cap_usd: b.cap_usd }])),
     output_caps: { ...DEFAULT_ROUTE_CAPS }, route_classes: { ...DEFAULT_ROUTE_CLASSES }, schedule: { vcpu_cap_day: 128, vcpu_cap_night: 200 }, row_pull_every: ROW_FLUSH_EVERY, pull_interval_minutes: 10, models,
   };

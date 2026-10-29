@@ -1,8 +1,10 @@
 # gbrain-defaults: gbrain at a frozen commit, installed the documented way, behind the shim protocol.
 # Build context is the repository root (the shared shim base is copied in):
 #   docker build -f eval/systems/gbrain-defaults/Dockerfile --build-arg GBRAIN_SHA=<sha> .
-# Bun >= 1.4.0 (gbrain's engines floor) lives in this image only; the harness host keeps its own Bun.
-FROM oven/bun:1.4.2-slim@sha256:cb3bbbb08e13a4a2ff400f24c7a2a1d5efa83f6ef8544d52d95a519631e2fc61 AS bun
+# Bun at gbrain's engines floor lives in this image only; the harness host keeps its own Bun. GBRAIN_BUN_IMAGE is Q1's 1.4.2
+# by default; a later gbrain pin with a higher floor (F6: 1.4.4) passes its own image by digest.
+ARG GBRAIN_BUN_IMAGE=oven/bun:1.4.2-slim@sha256:cb3bbbb08e13a4a2ff400f24c7a2a1d5efa83f6ef8544d52d95a519631e2fc61
+FROM ${GBRAIN_BUN_IMAGE} AS bun
 FROM python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d
 ARG GBRAIN_SHA=f05943e653fd9d938b343b1774a35325ba792271
 COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun

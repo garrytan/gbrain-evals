@@ -164,6 +164,12 @@ result = {"ok": a["ok"], "passes": len(a["passes"]), "spent": a["spent_usd"], "c
     const stuck = f6(`f = Fake(extract=[${J(partial)}] * 3); result = f.f6_build(["p1"])`);
     expect(stuck.error.message).toContain('pages_failed=1');
   });
+  test('a saved-fact row at rank 1 carries no rerank score: recorded on F6 reads, still a failure when a page row tops the list', () => {
+    const meta = { returned_count: 3, crag: { confidence: 'weak', reason: 'weak_semantic_top' } };
+    const c = (top: boolean) => f6(`result = shim.classify_query_meta(${J(meta)}, {"reranker_enabled": True}, top_fact=${top ? 'True' : 'False'})`).ok;
+    expect(c(true)).toEqual({ outcome: 'scored', reasons: [], recorded: ['crag_top_fact_row'] });
+    expect(c(false)).toEqual({ outcome: 'harness_invalid', reasons: ['rerank_missing'], recorded: [] });
+  });
   test('an F6 install runs only on an image built at the launch pin', () => {
     const pin = (image: string, launch: string) => f6(`result = shim.f6_pin_problem(${J(image)}, ${J(launch)})`).ok;
     expect(pin('0ccf2bdd', '0ccf2bdd')).toBeNull();

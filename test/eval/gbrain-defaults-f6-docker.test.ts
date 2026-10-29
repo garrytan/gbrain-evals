@@ -24,7 +24,7 @@ const BASE = { 'search.evidence_date_header': false, 'search.evidence_titles': f
 const free = () => { const s = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: () => new Response('') }); const p = s.port as number; s.stop(true); return p; };
 const port = ON ? free() : 0;
 const BASE_URL = `http://127.0.0.1:${port}`;
-const env = { ...process.env, SHIM_HOST_PORT: String(port), PROXY_UPSTREAM: 'fake-upstream:8787', GBRAIN_F6: '1', GBRAIN_SHA: PIN, GBRAIN_F6_EXTRACT_CAP_USD: '1' } as Record<string, string>;
+const env = { ...process.env, SHIM_HOST_PORT: String(port), PROXY_UPSTREAM: 'fake-upstream:8787', GBRAIN_F6: '1', GBRAIN_SHA: PIN, GBRAIN_BUN_IMAGE: 'oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4', GBRAIN_F6_EXTRACT_CAP_USD: '1' } as Record<string, string>;
 for (const k of ['OPENAI_BASE_URL', 'ANTHROPIC_BASE_URL', 'VOYAGE_BASE_URL', 'OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'VOYAGE_API_KEY']) delete env[k];
 const compose = (...args: string[]) => Bun.spawnSync(['docker', 'compose', '-p', PROJECT, '-f', COMPOSE, '--profile', 'keyless', ...args], { cwd: ROOT, env });
 const inShim = (...cmd: string[]) => compose('exec', '-T', 'shim', ...cmd);
@@ -58,13 +58,14 @@ describe.skipIf(!ON)('gbrain-defaults container on the F6 path (keyless, F6 pin)
   }, 1_800_000);
   afterAll(() => { compose('down', '-v', '--remove-orphans'); }, 300_000);
 
-  test('install: the image runs the F6 pin on the full surface, with facts.default_visibility world written and read back', async () => {
+  test('install: the image runs the F6 pin on the full surface and records its posture (the shim reads each key back)', async () => {
     const cap = await ok('GET', '/capabilities');
     expect(cap.f6).toMatchObject({ enabled: true, gbrain_sha: PIN, extract_cap_usd: 1, overlay_keys: KEYS });
     expect(cap.resolved.gbrain_version).toBe('gbrain 0.60.493.0');
     expect((await ok('GET', '/health')).surface).toBe('full');
     await ok('POST', '/reset', { ns: NS });
-    expect(inShim('sh', '-c', 'GBRAIN_HOME=/data/home HOME=/data/home gbrain config get facts.default_visibility').stdout.toString().trim()).toBe('world');
+    const install = receipts().filter(r => r.kind === 'install').pop();
+    expect(install.f6_posture).toEqual({ 'facts.default_visibility': 'world' });
   }, 900_000);
 
   test('finish: extraction under the recorded cap, the safe-chunks repair and the fact index, each recorded', async () => {
@@ -89,7 +90,8 @@ describe.skipIf(!ON)('gbrain-defaults container on the F6 path (keyless, F6 pin)
     expect(a.raw.overlay.switch_ms).toBeGreaterThan(0);
     expect(a.raw.overlay.resolved).toEqual(Object.fromEntries(KEYS.map(k => [k, String((BASE as Record<string, unknown>)[k])])));
     expect(a.applied_settings).toMatchObject({ op: 'query', query: Q, limit: 50, token_budget: 5500 });
-    expect(a.raw.meta.delivery).toMatchObject({ budget_tokens: 5500 });
+    expect(a.raw.meta.token_budget).toMatchObject({ budget: 5500 });
+    expect(a.raw.classification.reasons).toEqual([]);
     expect(a.items.length).toBeGreaterThan(0);
     const again = await ok('POST', '/retrieve', { ns: NS, question: Q, query_time: null, policy: f6('query', { limit: 50, token_budget: 5500 }, BASE) });
     expect([again.raw.overlay.switched, again.raw.overlay.overlay_sha256]).toEqual([false, a.raw.overlay.overlay_sha256]);
@@ -97,6 +99,8 @@ describe.skipIf(!ON)('gbrain-defaults container on the F6 path (keyless, F6 pin)
     expect(p.raw.overlay.switched).toBe(true);
     expect(p.raw.overlay.overlay_sha256).not.toBe(a.raw.overlay.overlay_sha256);
     expect(p.raw.overlay.resolved['search.query_facts_block']).toBe('true');
+    expect(p.raw.classification.outcome).toBe('scored');
+    expect(p.items[0].type).toBe('fact');
     const rec = await ok('POST', '/retrieve', { ns: NS, question: Q, query_time: null, policy: f6('recall', { budget_tokens: 5500 }, BASE) });
     expect(rec.applied_settings).toMatchObject({ op: 'recall', question: Q, query: Q, budget_tokens: 5500 });
     expect(rec.raw.overlay).toMatchObject({ switched: true, overlay_sha256: a.raw.overlay.overlay_sha256 });

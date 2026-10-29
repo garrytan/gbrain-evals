@@ -296,6 +296,8 @@ export const ASSUMPTIONS = {
 export const F6_ASSUMPTIONS = {
   /** gbrain at the F6 pin, v0.60.493.0. */
   gbrain_sha: '0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049',
+  /** The pin's package.json engines floor is Bun >= 1.4.4; Q1's image ships 1.4.2. */
+  bun_image: 'oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4',
   /**
    * extract-conversation-facts with gbrain's default extraction model at the budget-ledger price (claude-haiku-5-5,
    * $0.10 in and $0.50 out per million): model input and output tokens per conversation token (placeholders: each
@@ -508,7 +510,7 @@ export function makeCell(set: SetId, system: string, configuration: string, armS
 
 /** How a shim cell's stack starts: bootstrap.sh --config and any environment the configuration needs. */
 export function shimLaunch(system: string, configuration: string): NonNullable<CellDefinition['launch']> {
-  if (configuration === 'f6-master') return { env: { GBRAIN_F6: '1', GBRAIN_SHA: F6_ASSUMPTIONS.gbrain_sha }, config: 'recipe' };
+  if (configuration === 'f6-master') return { env: { GBRAIN_BUN_IMAGE: F6_ASSUMPTIONS.bun_image, GBRAIN_F6: '1', GBRAIN_SHA: F6_ASSUMPTIONS.gbrain_sha }, config: 'recipe' };
   if (configuration === 'shipped-0.31') return { env: {}, config: 'shipped-0.31' };
   return { env: configuration === 'full-surface' ? { GBRAIN_FULL_SURFACE: '1' } : {}, config: configuration === 'common' || configuration === 'common-embedder' ? 'common' : 'recipe' };
 }

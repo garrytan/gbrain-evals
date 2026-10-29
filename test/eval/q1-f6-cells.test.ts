@@ -60,7 +60,7 @@ describe('the F6 manifest', () => {
   });
   test('gbrain cells launch at the pin with F6 on and a recorded extraction cap; the temporal graph launches shipped-0.31 on up, down, snapshot and restore', () => {
     for (const c of all.filter(c => c.system === 'gbrain-defaults')) {
-      expect(c.launch!.env).toMatchObject({ GBRAIN_F6: '1', GBRAIN_SHA: '0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049' });
+      expect(c.launch!.env).toMatchObject({ GBRAIN_F6: '1', GBRAIN_SHA: '0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049', GBRAIN_BUN_IMAGE: 'oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4' });
       expect(Number(c.launch!.env.GBRAIN_F6_EXTRACT_CAP_USD)).toBeGreaterThanOrEqual(1);
       expect(c.estimate.lines).toHaveProperty('extraction');
     }
@@ -85,16 +85,18 @@ describe('the F6 manifest', () => {
     const camp = campaignManifest(m, { smokeOnly: true });
     expect([camp.campaign_id, camp.cap_usd, camp.cells.map(c => c.id)]).toEqual(['q1-scoreboard-f6-current-master-dry-run', 60, ['s2b-ingest.gbrain-defaults.f6-master', 's2b-ingest.ext-temporal-graph.shipped-0.31', 's3-smoke.gbrain-defaults.f6-master']]);
     expect(Object.keys(camp.blocks ?? {})).toEqual(['F6-dry']);
+    expect(camp.images['gbrain-defaults/base:1.4.4-slim']).toBe('sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4');
+    expect(campaignManifest(loadManifest()).images).not.toHaveProperty('gbrain-defaults/base:1.4.4-slim');
     expect(camp.models).toEqual(expect.arrayContaining(['openai:gpt-6-luna', 'openai:text-embedding-3-small', 'anthropic:claude-haiku-5-5']));
     const tg = camp.cells.find(c => c.system === 'ext-temporal-graph')!;
     expect(tg.command).toContain('bootstrap.sh up --system ext-temporal-graph --config shipped-0.31');
     expect(tg.command).toContain('bootstrap.sh down --system ext-temporal-graph --config shipped-0.31');
-    expect(camp.cells.find(c => c.id === 's3-smoke.gbrain-defaults.f6-master')!.command).toMatch(/^GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd/);
+    expect(camp.cells.find(c => c.id === 's3-smoke.gbrain-defaults.f6-master')!.command).toMatch(/^GBRAIN_BUN_IMAGE=oven\/bun:1\.4\.4-slim@sha256:[0-9a-f]{64} GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd/);
     // Setup builds the image up runs, so it gets the pin (and the temporal graph its own bundle) too.
-    expect(camp.cells.find(c => c.id === 's3-smoke.gbrain-defaults.f6-master')!.setup_command).toBe('GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets locomo --conversations conv-44');
+    expect(camp.cells.find(c => c.id === 's3-smoke.gbrain-defaults.f6-master')!.setup_command).toBe('GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets locomo --conversations conv-44');
     expect(tg.setup_command).toBe('bash eval/systems/bootstrap.sh setup --system ext-temporal-graph --config shipped-0.31 --datasets beam-1m --conversations 1m-16');
     for (const c of campaignManifest(loadManifest()).cells) expect(c.setup_command).toMatch(/^bash eval\/systems\/bootstrap\.sh setup( --system [a-z0-9-]+)? --datasets /);
-    for (const c of campaignManifest(m).cells.filter(c => c.system === 'gbrain-defaults')) expect(c.setup_command).toStartWith('GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh setup --system gbrain-defaults ');
+    for (const c of campaignManifest(m).cells.filter(c => c.system === 'gbrain-defaults')) expect(c.setup_command).toStartWith('GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh setup --system gbrain-defaults ');
     const counted = campaignManifest(m);
     expect([counted.campaign_id, counted.cap_usd, counted.cells.some(c => c.smoke)]).toEqual(['q1-scoreboard-f6-current-master', 3100, false]);
     for (const c of [camp, counted, campaignManifest(m, { sealed: { cap_usd: 3100 } })]) expect(c.campaign_id).toMatch(Q1_CAMPAIGN_ID);

@@ -304,10 +304,12 @@ def tool_payload(result: dict[str, Any]) -> tuple[Any, dict[str, Any], list[Any]
 CRAG_IDENTITY_REASONS = frozenset({"exact_lookup", "alias_hit", "exact_title_match", "high_vector_match"})
 
 
-def classify_query_meta(meta: dict[str, Any], resolved_search: dict[str, Any], shipped_behavior: frozenset[str] = SHIPPED_BEHAVIOR) -> dict[str, Any]:
+def classify_query_meta(meta: dict[str, Any], resolved_search: dict[str, Any], shipped_behavior: frozenset[str] = SHIPPED_BEHAVIOR, top_fact: bool = False) -> dict[str, Any]:
     """Plan contract 4.8.4: a degraded stage, a missing rerank block in a reranked mode, an expansion that did not
     apply, an unavailable vector arm or a delivery fallback is a harness failure (retried after quiesce); a semantic
-    cache hit and a shipped-behavior delivery fallback (SHIPPED_BEHAVIOR) are only recorded."""
+    cache hit and a shipped-behavior delivery fallback (SHIPPED_BEHAVIOR) are only recorded. `top_fact` (F6): rank 1 is
+    a saved-fact row, which the reranker never scores, so the confidence grade of that row carries no rerank score
+    even when the page rows were reranked; that is recorded, not a failure."""
     reasons: list[str] = []
     shipped: list[str] = []
     for d in meta.get("degraded") or []:
@@ -320,7 +322,7 @@ def classify_query_meta(meta: dict[str, Any], resolved_search: dict[str, Any], s
     crag = meta.get("crag")
     if (resolved_search.get("reranker_enabled") is True and rows and isinstance(crag, dict) and "top_rerank_score" not in crag
             and crag.get("reason") not in CRAG_IDENTITY_REASONS):
-        reasons.append("rerank_missing")
+        (shipped if top_fact else reasons).append("crag_top_fact_row" if top_fact else "rerank_missing")
     if resolved_search.get("expansion") is True and meta.get("expansion_applied") is False:
         reasons.append("expansion_not_applied")
     if meta.get("vector_enabled") is False:
@@ -598,7 +600,7 @@ class GbrainDefaultsAdapter(Adapter):
             json.dump(meta, f, indent=2)
         with open(os.path.join(HOME, "shim", "state.json"), "w") as f:
             json.dump({"sessions": {}}, f)
-        self.receipt("install", resolved_sha256=meta["resolved_sha256"], config_sha256=meta["config_sha256"], install_ms=meta["install_ms"])
+        self.receipt("install", resolved_sha256=meta["resolved_sha256"], config_sha256=meta["config_sha256"], install_ms=meta["install_ms"], **({"f6_posture": posture} if F6 else {}))
         return meta
 
     def answer_first_run_defaults(self, init: dict[str, Any]) -> list[dict[str, Any]]:
@@ -795,7 +797,7 @@ class GbrainDefaultsAdapter(Adapter):
     def health(self) -> dict[str, Any]:
         if self.reference is None:
             return {"ok": False, "reason": self.reference_error or "installing the reference brain"}
-        return {"ok": True, "surface": "full" if FULL_SURFACE else "starter", "resolved_sha256": self.reference["resolved_sha256"], "active_ns": self.active,
+        return {"ok": True, "surface": "full" if FULL_SURFACE or F6 else "starter", "resolved_sha256": self.reference["resolved_sha256"], "active_ns": self.active,
                 "called_ops": sorted(self.called_ops), "shipped_fallbacks": dict(sorted(self.shipped_counts.items()))}
 
     def stats(self) -> dict[str, Any]:
@@ -1090,12 +1092,13 @@ class GbrainDefaultsAdapter(Adapter):
             known = len(index)
             body, meta, notices, ms = self.call(op, args, budget_ok=True)
             retrieval = meta.get("retrieval") or {}
-            verdict = classify_query_meta(retrieval, self.require_reference()["resolved"]["search"]) if op == "query" else {"outcome": "scored", "reasons": [], "recorded": []}
             if op == "query":
                 rows = [("fact" if r.get("result_type") == "fact" else "page", r) for r in (body if isinstance(body, list) else [])]
             else:
                 b = body if isinstance(body, dict) else {}
                 rows = [("recall_fact", f) for f in b.get("facts") or []] + [("recall_page", r) for r in b.get("results") or []]
+            verdict = (classify_query_meta(retrieval, self.require_reference()["resolved"]["search"], top_fact=bool(rows) and rows[0][0] == "fact") if op == "query"
+                       else {"outcome": "scored", "reasons": [], "recorded": []})
             items, unresolved = [], 0
             for rank, (kind, row) in enumerate(rows, start=1):
                 if kind in ("fact", "recall_fact"):
