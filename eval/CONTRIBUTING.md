@@ -158,6 +158,12 @@ See [CREDITS.md](CREDITS.md) for attribution. Contributions to external question
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
 
+### 2026-10-29: The cost tools refuse more inputs
+
+The section on cutting a preregistered run's cost now says `reuse-check.ts` also refuses an import git cannot resolve (an
+installed package is compared by its pinned `package.json` version) and wants the budget run id and the arm each as a
+whole word. It says `arm_power.py` sizes single-repeat runs only and takes each world's files in one `--world`.
+
 ### 2026-10-28: Cut the cost of a preregistered run
 
 A new section names the two cost tools for Cat 40 confirmations, `reuse-check.ts` (reuse an arm that doesn't load
