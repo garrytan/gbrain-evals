@@ -182,12 +182,21 @@ describe('reuse-check: provenance the manifests cannot show', () => {
   test('an unfinished prior run, or one with fewer cells than its first receipt planned, is refused', () => {
     expect(prov({})).toEqual([]);
     expect(prov({ priorReceipts: [] })).toEqual(['the prior directory has no receipt, so the run never finished']);
-    expect(prov({ priorReceipts: [{ mode: 'cells', complete: false, resumed: false, cells_planned: 300 }] })).toEqual(['the prior run did not finish (its latest receipt says complete: false)']);
+    expect(prov({ priorReceipts: [{ mode: 'cells', complete: false, resumed: false, cells_planned: 300, evals_dirty: false }] })).toEqual(['the prior run did not finish (its latest receipt says complete: false)']);
     const onePerModel = cells.map(c => ({ ...c, cells: 1 }));
     expect(reuseVerdict(fs, wave, 'fs', onePerModel).reasons).toEqual([]);
     expect(prov({ cells: onePerModel })).toEqual(['the prior directory has 3 canonical cells of the 300 its first receipt planned']);
-    const resumed: Receipt[] = [{ mode: 'cells', complete: false, resumed: false, cells_planned: 300 }, { mode: 'cells', complete: true, resumed: true, cells_planned: 40 }];
+    const resumed: Receipt[] = [{ mode: 'cells', complete: false, resumed: false, cells_planned: 300, evals_dirty: false }, { mode: 'cells', complete: true, resumed: true, cells_planned: 40, evals_dirty: false }];
     expect(prov({ priorReceipts: resumed })).toEqual([]);
+  });
+
+  // Value: protects=a run from a dirty or unrecorded checkout, or a planned run with no receipt yet, is refused; fails_when=evals_dirty is ignored or the planned receipt is optional; why_new=the commit alone doesn't name the code a dirty checkout ran; seam=none; no_claim=receipts as the runner writes them
+  test('a dirty or unknown evals checkout on either side, or a planned run without a receipt, is refused', () => {
+    const dirty = (dir: string, v: boolean | null) => readReceipts(join(PUB, dir)).map(r => ({ ...r, evals_dirty: v }));
+    const reason = 'a run recorded a dirty or unknown evals checkout (evals_dirty), so the code it ran is not its runner commit';
+    expect(prov({ priorReceipts: dirty('p1/fs', true) })).toEqual([reason]);
+    expect(prov({ plannedReceipts: dirty('p1/wave', null) })).toEqual([reason]);
+    expect(prov({ plannedReceipts: [] })).toEqual(['the planned directory has no receipt yet: check after its first arm finishes']);
   });
 
   // Value: protects=reuse across runner commits needs identical cell code, including files the Hard code hashes omit; fails_when=a differing renderer or arm file is ignored; why_new=hard.code omits model-ladder-gen.ts and gbrain-arm.ts; seam=code (non-test callers: 1, the CLI); no_claim=git history beyond the checkout depth
@@ -214,7 +223,7 @@ describe('reuse-check: provenance the manifests cannot show', () => {
     const edited = clone(receipts);
     edited.at(-1)!.gbrain!.instructions_override = { file: 'x.md', sha256: '0'.repeat(64) };
     expect(gb(edited)).toEqual(['gbrain receipt instructions_override differs']);
-    expect(gb([])).toEqual(['a gbrain arm needs both receipts to compare its override contents']);
+    expect(gb([])).toEqual(['the planned directory has no receipt yet: check after its first arm finishes', 'a gbrain arm needs both receipts to compare its override contents']);
     const dir = mkdtempSync(join(tmpdir(), 'reuse-check-'));
     writeFileSync(join(dir, 'prereg.md'), `Reuse gbrain from ${base.budget_run_id}.\n`);
     const cli = spawnSync('bun', ['eval/runner/cat40/reuse-check.ts', '--prior', join(PUB, 'p1/baseline'), '--planned', join(PUB, 'p1/baseline'), '--arm', 'gbrain', '--preregistration', join(dir, 'prereg.md'), '--json'], { encoding: 'utf8' });

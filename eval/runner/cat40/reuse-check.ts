@@ -13,8 +13,9 @@
  * --transcripts, --order, --accept-freeze-drift and the budget flags the runner never records. Only Hard worlds are
  * reusable, because only they record evaluator code hashes. The planned models must all have run in the prior
  * directory, with the same number of canonical cells each and no harness errors, and the prior directory's latest
- * receipt must say the run finished with every planned cell present. When the runner commits differ, every file in
- * the runner's TypeScript import closure must be identical at both commits.
+ * receipt must say the run finished with every planned cell present. Every receipt on both sides must record a clean
+ * evals checkout, and the planned directory needs one, so check after its first arm finishes. When the runner commits
+ * differ, every file in the runner's TypeScript import closure must be identical at both commits.
  *
  * The file given with --preregistration must name the prior directory's budget run id and the arm on one line, so the
  * reuse is declared before any cell runs (eval/CONTRIBUTING.md, "Cut the cost of a preregistered run"). Without it the
@@ -97,7 +98,7 @@ export function declared(prereg: string, prior: ExperimentManifest, arm: string)
   return ids.length > 0 && prereg.split('\n').some(line => ids.some(id => line.includes(id)) && armWord.test(line));
 }
 
-export interface Receipt { mode?: string; complete?: boolean; resumed?: boolean; cells_planned?: number; gbrain?: Record<string, unknown> | null }
+export interface Receipt { mode?: string; complete?: boolean; resumed?: boolean; cells_planned?: number; evals_dirty?: boolean | null; gbrain?: Record<string, unknown> | null }
 
 /** The cell-running receipts of a run directory, oldest first: each invocation (a resume included) writes one. */
 export function readReceipts(dir: string): Receipt[] {
@@ -134,6 +135,8 @@ export function provenanceReasons(o: { prior: ExperimentManifest; planned: Exper
   const first = o.priorReceipts[0], last = o.priorReceipts.at(-1), plannedLast = o.plannedReceipts.at(-1);
   if (!last) reasons.push('the prior directory has no receipt, so the run never finished');
   else if (last.complete !== true) reasons.push('the prior run did not finish (its latest receipt says complete: false)');
+  if (!plannedLast) reasons.push('the planned directory has no receipt yet: check after its first arm finishes');
+  if ([...o.priorReceipts, ...o.plannedReceipts].some(r => r.evals_dirty !== false)) reasons.push('a run recorded a dirty or unknown evals checkout (evals_dirty), so the code it ran is not its runner commit');
   if (first && !first.resumed && prior.arms.length === 1) {
     const total = o.cells.reduce((n, c) => n + c.cells, 0);
     if (total !== first.cells_planned) reasons.push(`the prior directory has ${total} canonical cells of the ${first.cells_planned} its first receipt planned`);

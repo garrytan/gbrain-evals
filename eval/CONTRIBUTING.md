@@ -122,13 +122,13 @@ A category with more than one tier keeps one operator guide per tier. Cat 40 Har
 
 Two tools lower the cost of a Cat 40 confirmation without changing what it can decide. They apply only to preregistrations written after they shipped (2026-10-28). A preregistration that uses either one declares it before any cell runs; an existing or sealed preregistration keeps its design unless an amendment written before its next cell says otherwise.
 
-- **Reuse an arm that doesn't depend on the build.** The files-only, oracle, memory and Postgres arms never load gbrain, so a new gbrain build on a world that already ran them can use those cells as they are. Run the new experiment's first counted arm (its `experiment.json` is written before the first cell), then check before the reused arm would have run:
+- **Reuse an arm that doesn't depend on the build.** The files-only, oracle, memory and Postgres arms never load gbrain, so a new gbrain build on a world that already ran them can use those cells as they are. Run the new experiment's first counted arm to the end (its receipt records the runner checkout), then check before the reused arm would have run:
 
   ```sh
   bun eval/runner/cat40/reuse-check.ts --prior <earlier fs dir> --planned <new wave dir> --arm fs --preregistration <prereg.md>
   ```
 
-  It refuses on any difference in world digest, Hard identity, turn and tool limits, judge, scorer, judge prompt, settings or evaluator code hashes, or in any flag that reaches a cell; when the earlier run did not finish, has fewer cells than it planned or ended a cell in a harness error; when the world is not a Hard world; and when the two runner commits differ in any file the runner imports, so run the new arms from the commit the reused arm ran at or one with the same cell code. A gbrain arm is reusable only from the same gbrain and slot commits with every gbrain flag and recorded override content equal. The preregistration must name the earlier directory's budget run id and the arm on one line, and the check refuses without it. Reuse is all of an arm's cells or none, chosen before any new result is seen.
+  It refuses on any difference in world digest, Hard identity, turn and tool limits, judge, scorer, judge prompt, settings or evaluator code hashes, or in any flag that reaches a cell; when the earlier run did not finish, has fewer cells than it planned or ended a cell in a harness error; when either run recorded a dirty checkout; when the world is not a Hard world; and when the two runner commits differ in any file the runner imports, so run the new arms from the commit the reused arm ran at or one with the same cell code. A gbrain arm is reusable only from the same gbrain and slot commits with every gbrain flag and recorded override content equal. The preregistration must name the earlier directory's budget run id and the arm on one line, and the check refuses without it. Reuse is all of an arm's cells or none, chosen before any new result is seen.
 - **Size each arm by simulation.** Before preregistering sample sizes, rerun the preregistered endpoints on cells that already ran, with one arm on fewer tasks:
 
   ```sh
