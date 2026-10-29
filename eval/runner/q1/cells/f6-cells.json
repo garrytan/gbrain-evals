@@ -1,0 +1,3298 @@
+{
+  "schema": "gbrain-evals/q1-cell-manifest/v1",
+  "generated_by": "bun eval/runner/q1/cells/f6.ts",
+  "preregistration": "docs/benchmarks/2026-10-29-f6-current-master-preregistration.md",
+  "readers": [
+    "anthropic:claude-opus-5-5",
+    "openai:gpt-6.1-sol",
+    "anthropic:claude-sonnet-5-5"
+  ],
+  "effort": "medium",
+  "prices": {
+    "anthropic:claude-haiku-5-5": {
+      "input": 0.1,
+      "output": 0.5,
+      "cache_read": 0.01,
+      "cache_write": 0.125,
+      "long": {
+        "above_input_tokens": 100000,
+        "input": 0.5,
+        "output": 2.5,
+        "cache_read": 0.05,
+        "cache_write": 0.625
+      }
+    },
+    "anthropic:claude-opus-5-5": {
+      "input": 4,
+      "output": 20,
+      "cache_read": 0.2,
+      "cache_write": 5
+    },
+    "anthropic:claude-sonnet-5-5": {
+      "input": 2,
+      "output": 10,
+      "cache_read": 0.2,
+      "cache_write": 2.5
+    },
+    "openai:gpt-4.1-mini": {
+      "input": 0.4,
+      "output": 1.6,
+      "cache_read": 0.1
+    },
+    "openai:gpt-4o-2024-08-06": {
+      "input": 2.5,
+      "output": 10,
+      "cache_read": 1.25
+    },
+    "openai:gpt-6-luna": {
+      "input": 0.1,
+      "output": 0.5,
+      "cache_read": 0.01,
+      "cache_write": 0.125,
+      "long": {
+        "above_input_tokens": 272000,
+        "input": 0.2,
+        "output": 0.75,
+        "cache_read": 0.02,
+        "cache_write": 0.25
+      }
+    },
+    "openai:gpt-6.1-sol": {
+      "input": 2,
+      "output": 10,
+      "cache_read": 0.1,
+      "cache_write": 2.5,
+      "long": {
+        "above_input_tokens": 272000,
+        "input": 4,
+        "output": 15,
+        "cache_read": 0.2,
+        "cache_write": 5
+      }
+    }
+  },
+  "assumptions": {
+    "reader_input_overhead_tokens": {
+      "default": 180,
+      "openai:gpt-6.1-sol": 130
+    },
+    "reader_tokens_per_budget_token": {
+      "default": 1,
+      "openai:gpt-6.1-sol": 0.66
+    },
+    "reader_tokens_per_cl100k": {
+      "default": 1.47,
+      "anthropic:claude-opus-5-5": 1.47,
+      "anthropic:claude-sonnet-5-5": 1.45,
+      "openai:gpt-6.1-sol": 0.975
+    },
+    "reader_output_tokens": {
+      "default": 400,
+      "anthropic:claude-opus-5-5": 720,
+      "anthropic:claude-sonnet-5-5": 395,
+      "openai:gpt-6.1-sol": 155
+    },
+    "vendor_default_tokens": {
+      "gbrain-defaults": 23800,
+      "ext-extract-first": 1200,
+      "ext-memory-bank": 10400,
+      "ext-graph-pipeline": 2200,
+      "ext-markdown-kb": 2300,
+      "ext-verbatim-session": 8000,
+      "baseline-hybrid": 7100,
+      "default": 8000
+    },
+    "ingest_usd_per_mtok": {
+      "ext-extract-first:common": 2.8,
+      "ext-extract-first:recipe": 95,
+      "ext-memory-bank:recipe": 1.72,
+      "ext-memory-bank:common": 1.4,
+      "ext-graph-pipeline:recipe": 18.4,
+      "ext-graph-pipeline:recipe:beam": 3.5,
+      "ext-graph-pipeline:common": 1.4,
+      "ext-graph-pipeline:common:beam": 3.98,
+      "ext-temporal-graph:common": 26.97,
+      "ext-temporal-graph:recipe": 90,
+      "ext-markdown-kb:recipe": 0,
+      "ext-markdown-kb:common": 0.1,
+      "ext-verbatim-session:recipe": 0,
+      "ext-verbatim-session:common": 0.1,
+      "gbrain-defaults:shipped-defaults": 0.12,
+      "gbrain-defaults:full-surface": 0.12,
+      "gbrain-defaults:common-embedder": 0.13,
+      "baseline-hybrid:baseline": 0.14
+    },
+    "gbrain_query_usd": 0.00176,
+    "probe_usd": {
+      "gbrain-defaults": {
+        "per_mtok": 6.5,
+        "max_per_conversation": 1.3
+      },
+      "ext-temporal-graph": {
+        "per_mtok": 1.7,
+        "max_per_conversation": 0.13
+      }
+    },
+    "judge": {
+      "lme": {
+        "model": "openai:gpt-4o-2024-08-06",
+        "calls": 1,
+        "input": 370,
+        "output": 2
+      },
+      "beam": {
+        "model": "openai:gpt-4.1-mini",
+        "calls": 3,
+        "input": 900,
+        "output": 60
+      }
+    },
+    "frontier_judge_output_tokens": 60,
+    "agent": {
+      "baseline-file-agent": {
+        "S1": 130000,
+        "S2a": 30000,
+        "S2b": 73000,
+        "S3": {
+          "anthropic:claude-opus-5-5": 9700,
+          "openai:gpt-6.1-sol": 7800,
+          "anthropic:claude-sonnet-5-5": 4950,
+          "default": 9700
+        },
+        "output": 2000,
+        "output_S3": {
+          "anthropic:claude-opus-5-5": 860,
+          "openai:gpt-6.1-sol": 210,
+          "anthropic:claude-sonnet-5-5": 460,
+          "default": 860
+        }
+      },
+      "think": {
+        "S1": 66200,
+        "S2a": 38600,
+        "S2b": 55200,
+        "S3": 36800,
+        "output": 1840
+      },
+      "ext-agent-runtime": {
+        "S3": 7000,
+        "output": 2000
+      }
+    },
+    "synthesize": {
+      "model": "anthropic:claude-opus-4-7",
+      "input": 34700,
+      "output": 850,
+      "price": {
+        "input": 5,
+        "output": 25
+      }
+    },
+    "hours_per_mtok": {
+      "shim": 4,
+      "in-process": 0.05,
+      "ext-extract-first:recipe": 110,
+      "ext-extract-first:common": 1.74,
+      "ext-memory-bank:recipe": 2.32,
+      "ext-graph-pipeline:recipe": 5.6,
+      "ext-graph-pipeline:recipe:beam": 4.93,
+      "ext-graph-pipeline:common:beam": 3.56,
+      "ext-temporal-graph:common": 3.53,
+      "ext-temporal-graph:recipe": 6.6,
+      "ext-markdown-kb:recipe": 0.53,
+      "ext-verbatim-session:recipe": 0.15,
+      "gbrain-defaults:shipped-defaults": 0.9
+    },
+    "vcpu": {
+      "shim": 8,
+      "in-process": 8
+    }
+  },
+  "f6_assumptions": {
+    "gbrain_sha": "0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049",
+    "extraction": {
+      "model": "anthropic:claude-haiku-5-5",
+      "input_per_token": 1.6,
+      "output_per_token": 0.12
+    },
+    "facts_per_mtok": 2500,
+    "tokens_per_fact": 30,
+    "embedding_model": "voyage:voyage-4",
+    "extraction_cap_multiple": 2,
+    "ingest_usd_per_mtok": {
+      "gbrain-defaults:f6-master": 0.12,
+      "ext-temporal-graph:shipped-0.31": 7.3
+    },
+    "hours_per_mtok": {
+      "gbrain-defaults:f6-master": 2.5,
+      "ext-temporal-graph:shipped-0.31": 3.53
+    },
+    "gbrain_recall_usd": 0.00176,
+    "lease": {
+      "bytes_per_token": 4.2,
+      "template_bytes": 4000,
+      "judge_bytes": 12000,
+      "margin": 1.25
+    }
+  },
+  "sets": [
+    {
+      "id": "S1",
+      "benchmark": "beam-10m",
+      "split": "sealed",
+      "questions": 200,
+      "conversations": 10,
+      "corpus_tokens": 110000000,
+      "messages": 70000,
+      "block": "T1",
+      "selection": {
+        "kind": "all"
+      },
+      "exclusions": [
+        {
+          "question_id": "10m-1:abstention:0",
+          "reason": "exposed in another thread's audit (eval/decisions/splits/beam-10m.json exclusions); run and reported apart, never in the confirmatory cohort"
+        }
+      ],
+      "role": "headline",
+      "exposure": "E0",
+      "label": "BEAM-10M"
+    },
+    {
+      "id": "S2b",
+      "benchmark": "beam-1m",
+      "split": "sealed",
+      "questions": 240,
+      "conversations": 24,
+      "corpus_tokens": 24000000,
+      "messages": 16000,
+      "block": "T2-S2b",
+      "selection": {
+        "kind": "per-conversation",
+        "per_conversation": 10,
+        "seed": "q1-beam-1m"
+      },
+      "exclusions": [],
+      "role": "public",
+      "exposure": "E2",
+      "label": "BEAM-1M sealed"
+    },
+    {
+      "id": "S2a",
+      "benchmark": "beam-100k",
+      "split": "sealed",
+      "questions": 140,
+      "conversations": 14,
+      "corpus_tokens": 2000000,
+      "messages": 1400,
+      "block": "T2-S2a",
+      "selection": {
+        "kind": "per-conversation",
+        "per_conversation": 10,
+        "seed": "q1-beam-100k"
+      },
+      "exclusions": [],
+      "role": "public",
+      "exposure": "E2",
+      "label": "BEAM-100K sealed"
+    },
+    {
+      "id": "S3",
+      "benchmark": "locomo",
+      "split": "all",
+      "questions": 200,
+      "conversations": 10,
+      "corpus_tokens": 260000,
+      "messages": 5900,
+      "block": "T2-S3",
+      "selection": {
+        "kind": "stratified",
+        "limit": 200,
+        "stratify": "category",
+        "seed": "q1-locomo",
+        "min": {
+          "adversarial": 40
+        }
+      },
+      "exclusions": [],
+      "role": "public",
+      "exposure": "E2",
+      "label": "LoCoMo"
+    },
+    {
+      "id": "D8",
+      "benchmark": "beam-d8",
+      "split": "sealed",
+      "questions": 300,
+      "conversations": 10,
+      "corpus_tokens": 110000000,
+      "messages": 70000,
+      "block": "F6-D8",
+      "selection": {
+        "kind": "stratified",
+        "limit": 300,
+        "stratify": "conversation-category",
+        "seed": "f6-d8"
+      },
+      "exclusions": [],
+      "role": "headline",
+      "exposure": "E0",
+      "label": "D8 long-history reserve (placeholder counts)"
+    },
+    {
+      "id": "S4-slice",
+      "benchmark": "lme-s",
+      "split": "dev",
+      "questions": 100,
+      "conversations": 100,
+      "corpus_tokens": 11500000,
+      "messages": 50000,
+      "block": "T2-S4-S5",
+      "selection": {
+        "kind": "shootout-slice",
+        "limit": 100,
+        "seed": 42
+      },
+      "exclusions": [],
+      "role": "public",
+      "exposure": "E3",
+      "label": "LongMemEval-S, shootout slice"
+    },
+    {
+      "id": "S2b-ingest",
+      "benchmark": "beam-1m",
+      "split": "dev",
+      "questions": 10,
+      "conversations": 1,
+      "corpus_tokens": 926773,
+      "messages": 2182,
+      "sessions": 928,
+      "block": "T2-S2b",
+      "selection": {
+        "kind": "stratified",
+        "limit": 10,
+        "stratify": "category",
+        "seed": "q1-ingest-probe"
+      },
+      "exclusions": [],
+      "role": "smoke",
+      "exposure": "E2",
+      "label": "BEAM-1M dev ingest probe (1m-16, retrieval only)",
+      "only_conversations": [
+        "1m-16"
+      ]
+    },
+    {
+      "id": "S3-smoke",
+      "benchmark": "locomo",
+      "split": "dev",
+      "questions": 20,
+      "conversations": 1,
+      "corpus_tokens": 20474,
+      "messages": 675,
+      "block": "T2-S3",
+      "selection": {
+        "kind": "stratified",
+        "limit": 20,
+        "stratify": "category",
+        "seed": "q1-smoke"
+      },
+      "exclusions": [],
+      "role": "smoke",
+      "exposure": "E2",
+      "label": "LoCoMo dev smoke (conv-44, 20 questions)",
+      "only_conversations": [
+        "conv-44"
+      ]
+    }
+  ],
+  "blocks": [
+    {
+      "id": "F6-S1",
+      "label": "F6 S1 BEAM-10M (gbrain seven arms, temporal graph 0.31.2)",
+      "plan_usd": 986.24,
+      "estimate_usd": 986.24,
+      "cap_usd": 1479.36
+    },
+    {
+      "id": "F6-T2",
+      "label": "F6 S2b, S2a, S3 (gbrain seven arms, temporal graph 0.31.2)",
+      "plan_usd": 595.18,
+      "estimate_usd": 595.18,
+      "cap_usd": 892.77
+    },
+    {
+      "id": "F6-D8",
+      "label": "F6 D8 long-history reserve",
+      "plan_usd": 830.97,
+      "estimate_usd": 830.97,
+      "cap_usd": 1246.46
+    },
+    {
+      "id": "F6-S4",
+      "label": "F6 S4-slice LongMemEval-S (lowest priority)",
+      "plan_usd": 63.04,
+      "estimate_usd": 63.04,
+      "cap_usd": 94.56
+    }
+  ],
+  "cells": [
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "s1.gbrain-defaults.f6-master",
+      "set": "S1",
+      "block": "F6-S1",
+      "benchmark": "beam-10m",
+      "split": "sealed",
+      "selection": {
+        "kind": "all"
+      },
+      "exclusions": [
+        {
+          "question_id": "10m-1:abstention:0",
+          "reason": "exposed in another thread's audit (eval/decisions/splits/beam-10m.json exclusions); run and reported apart, never in the confirmatory cohort"
+        }
+      ],
+      "system": "gbrain-defaults",
+      "configuration": "f6-master",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "beam-10m",
+      "probes": {
+        "sample": 0,
+        "seed": "f6-probes-s1",
+        "conversations": 0
+      },
+      "shards": 10,
+      "expected_hours": 28,
+      "launch": {
+        "env": {
+          "GBRAIN_F6": "1",
+          "GBRAIN_SHA": "0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049",
+          "GBRAIN_F6_EXTRACT_CAP_USD": "5"
+        },
+        "config": "recipe"
+      },
+      "snapshot_command": "GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=5 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=5 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\"",
+      "arms": [
+        {
+          "id": "a0",
+          "cell_id": "s1.gbrain-defaults.f6-master.a0",
+          "set": "S1",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "query",
+            "args": {
+              "limit": 50
+            },
+            "overlay": {
+              "search.evidence_date_header": false,
+              "search.evidence_titles": false,
+              "search.fact_source_pages": false,
+              "search.query_budget_unit": "chunk",
+              "search.query_facts_block": false,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "A0: query limit 50, no token_budget (the harness packs 8,000 from gbrain's auto delivery)"
+        },
+        {
+          "id": "a",
+          "cell_id": "s1.gbrain-defaults.f6-master.a",
+          "set": "S1",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "query",
+            "args": {
+              "limit": 50,
+              "token_budget": 5500
+            },
+            "overlay": {
+              "search.evidence_date_header": false,
+              "search.evidence_titles": false,
+              "search.fact_source_pages": false,
+              "search.query_budget_unit": "chunk",
+              "search.query_facts_block": false,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "A: query token_budget 5,500, chunk unit, no facts block, no headers"
+        },
+        {
+          "id": "p",
+          "cell_id": "s1.gbrain-defaults.f6-master.p",
+          "set": "S1",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "query",
+            "args": {
+              "limit": 50,
+              "token_budget": 5500
+            },
+            "overlay": {
+              "search.evidence_date_header": false,
+              "search.evidence_titles": false,
+              "search.fact_source_pages": false,
+              "search.query_budget_unit": "chunk",
+              "search.query_facts_block": true,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": {
+            "judges": [
+              "anthropic:claude-opus-5-5",
+              "openai:gpt-6.1-sol"
+            ],
+            "readers": [
+              "anthropic:claude-sonnet-5-5"
+            ],
+            "sample": null
+          },
+          "judge_repeats": null,
+          "label": "P: A with the facts block"
+        },
+        {
+          "id": "b",
+          "cell_id": "s1.gbrain-defaults.f6-master.b",
+          "set": "S1",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "recall",
+            "args": {
+              "budget_tokens": 5500
+            },
+            "overlay": {
+              "search.evidence_date_header": false,
+              "search.evidence_titles": false,
+              "search.fact_source_pages": false,
+              "search.query_budget_unit": "chunk",
+              "search.query_facts_block": false,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "B: recall budget_tokens 5,500 (facts first, then pages)"
+        },
+        {
+          "id": "c",
+          "cell_id": "s1.gbrain-defaults.f6-master.c",
+          "set": "S1",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "query",
+            "args": {
+              "limit": 50,
+              "token_budget": 5500
+            },
+            "overlay": {
+              "search.evidence_date_header": true,
+              "search.evidence_titles": true,
+              "search.fact_source_pages": false,
+              "search.query_budget_unit": "auto",
+              "search.query_facts_block": false,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "C: A with auto unit, date headers and titles"
+        },
+        {
+          "id": "d",
+          "cell_id": "s1.gbrain-defaults.f6-master.d",
+          "set": "S1",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "query",
+            "args": {
+              "limit": 50,
+              "token_budget": 5500
+            },
+            "overlay": {
+              "search.evidence_date_header": true,
+              "search.evidence_titles": true,
+              "search.fact_source_pages": false,
+              "search.query_budget_unit": "auto",
+              "search.query_facts_block": true,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": {
+            "judges": [
+              "anthropic:claude-opus-5-5",
+              "openai:gpt-6.1-sol"
+            ],
+            "readers": [
+              "anthropic:claude-sonnet-5-5"
+            ],
+            "sample": null
+          },
+          "judge_repeats": null,
+          "label": "D: C with the facts block"
+        },
+        {
+          "id": "e",
+          "cell_id": "s1.gbrain-defaults.f6-master.e",
+          "set": "S1",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "query",
+            "args": {
+              "limit": 50,
+              "token_budget": 5500
+            },
+            "overlay": {
+              "search.evidence_date_header": true,
+              "search.evidence_titles": true,
+              "search.fact_source_pages": true,
+              "search.query_budget_unit": "auto",
+              "search.query_facts_block": true,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "E: D with fact source pages"
+        }
+      ],
+      "estimate": {
+        "usd": 166.46,
+        "lines": {
+          "extraction": 24.2,
+          "fact_embeddings": 0.5,
+          "frontier_judges": 8.64,
+          "ingest": 13.2,
+          "judges": 5.75,
+          "readers": 111.72,
+          "system_queries": 2.46
+        }
+      },
+      "lease": {
+        "usd": 21.2,
+        "basis": "F6: estimate per shard x 1.25 plus twice the peak reservation ($0.1916, reader anthropic:claude-opus-5-5)"
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "s1.ext-temporal-graph.shipped-0.31",
+      "set": "S1",
+      "block": "F6-S1",
+      "benchmark": "beam-10m",
+      "split": "sealed",
+      "selection": {
+        "kind": "all"
+      },
+      "exclusions": [
+        {
+          "question_id": "10m-1:abstention:0",
+          "reason": "exposed in another thread's audit (eval/decisions/splits/beam-10m.json exclusions); run and reported apart, never in the confirmatory cohort"
+        }
+      ],
+      "system": "ext-temporal-graph",
+      "configuration": "shipped-0.31",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "beam-10m",
+      "probes": {
+        "sample": 0,
+        "seed": "f6-probes-s1",
+        "conversations": 0
+      },
+      "shards": 10,
+      "expected_hours": 39,
+      "launch": {
+        "env": {},
+        "config": "shipped-0.31"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-temporal-graph --config shipped-0.31 --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-temporal-graph.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-temporal-graph --config shipped-0.31 --from \"$SHOOTOUT_RESTORE_DIR/ext-temporal-graph.tar\"",
+      "arms": [
+        {
+          "id": "component-b8000",
+          "cell_id": "s1.ext-temporal-graph.shipped-0.31.component-b8000",
+          "set": "S1",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "component, 8,000 tokens"
+        }
+      ],
+      "estimate": {
+        "usd": 819.78,
+        "lines": {
+          "ingest": 803,
+          "judges": 0.82,
+          "readers": 15.96
+        }
+      },
+      "lease": {
+        "usd": 102.86,
+        "basis": "F6: estimate per shard x 1.25 plus twice the peak reservation ($0.1916, reader anthropic:claude-opus-5-5)"
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "s2b.gbrain-defaults.f6-master",
+      "set": "S2b",
+      "block": "F6-T2",
+      "benchmark": "beam-1m",
+      "split": "sealed",
+      "selection": {
+        "kind": "per-conversation",
+        "per_conversation": 10,
+        "seed": "q1-beam-1m"
+      },
+      "exclusions": [],
+      "system": "gbrain-defaults",
+      "configuration": "f6-master",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "beam-1m",
+      "probes": {
+        "sample": 0,
+        "seed": "f6-probes-s2b",
+        "conversations": 0
+      },
+      "shards": 1,
+      "expected_hours": 48,
+      "launch": {
+        "env": {
+          "GBRAIN_F6": "1",
+          "GBRAIN_SHA": "0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049",
+          "GBRAIN_F6_EXTRACT_CAP_USD": "1"
+        },
+        "config": "recipe"
+      },
+      "snapshot_command": "GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\"",
+      "arms": [
+        {
+          "id": "a0",
+          "cell_id": "s2b.gbrain-defaults.f6-master.a0",
+          "set": "S2b",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "query",
+            "args": {
+              "limit": 50
+            },
+            "overlay": {
+              "search.evidence_date_header": false,
+              "search.evidence_titles": false,
+              "search.fact_source_pages": false,
+              "search.query_budget_unit": "chunk",
+              "search.query_facts_block": false,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "A0: query limit 50, no token_budget (the harness packs 8,000 from gbrain's auto delivery)"
+        },
+        {
+          "id": "a",
+          "cell_id": "s2b.gbrain-defaults.f6-master.a",
+          "set": "S2b",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "query",
+            "args": {
+              "limit": 50,
+              "token_budget": 5500
+            },
+            "overlay": {
+              "search.evidence_date_header": false,
+              "search.evidence_titles": false,
+              "search.fact_source_pages": false,
+              "search.query_budget_unit": "chunk",
+              "search.query_facts_block": false,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "A: query token_budget 5,500, chunk unit, no facts block, no headers"
+        },
+        {
+          "id": "p",
+          "cell_id": "s2b.gbrain-defaults.f6-master.p",
+          "set": "S2b",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "query",
+            "args": {
+              "limit": 50,
+              "token_budget": 5500
+            },
+            "overlay": {
+              "search.evidence_date_header": false,
+              "search.evidence_titles": false,
+              "search.fact_source_pages": false,
+              "search.query_budget_unit": "chunk",
+              "search.query_facts_block": true,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "P: A with the facts block"
+        },
+        {
+          "id": "b",
+          "cell_id": "s2b.gbrain-defaults.f6-master.b",
+          "set": "S2b",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "recall",
+            "args": {
+              "budget_tokens": 5500
+            },
+            "overlay": {
+              "search.evidence_date_header": false,
+              "search.evidence_titles": false,
+              "search.fact_source_pages": false,
+              "search.query_budget_unit": "chunk",
+              "search.query_facts_block": false,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "B: recall budget_tokens 5,500 (facts first, then pages)"
+        },
+        {
+          "id": "c",
+          "cell_id": "s2b.gbrain-defaults.f6-master.c",
+          "set": "S2b",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "query",
+            "args": {
+              "limit": 50,
+              "token_budget": 5500
+            },
+            "overlay": {
+              "search.evidence_date_header": true,
+              "search.evidence_titles": true,
+              "search.fact_source_pages": false,
+              "search.query_budget_unit": "auto",
+              "search.query_facts_block": false,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "C: A with auto unit, date headers and titles"
+        },
+        {
+          "id": "d",
+          "cell_id": "s2b.gbrain-defaults.f6-master.d",
+          "set": "S2b",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "query",
+            "args": {
+              "limit": 50,
+              "token_budget": 5500
+            },
+            "overlay": {
+              "search.evidence_date_header": true,
+              "search.evidence_titles": true,
+              "search.fact_source_pages": false,
+              "search.query_budget_unit": "auto",
+              "search.query_facts_block": true,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "D: C with the facts block"
+        },
+        {
+          "id": "e",
+          "cell_id": "s2b.gbrain-defaults.f6-master.e",
+          "set": "S2b",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "query",
+            "args": {
+              "limit": 50,
+              "token_budget": 5500
+            },
+            "overlay": {
+              "search.evidence_date_header": true,
+              "search.evidence_titles": true,
+              "search.fact_source_pages": true,
+              "search.query_budget_unit": "auto",
+              "search.query_facts_block": true,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "E: D with fact source pages"
+        }
+      ],
+      "estimate": {
+        "usd": 152.18,
+        "lines": {
+          "extraction": 5.28,
+          "fact_embeddings": 0.11,
+          "ingest": 2.88,
+          "judges": 6.89,
+          "readers": 134.06,
+          "system_queries": 2.96
+        }
+      },
+      "lease": {
+        "usd": 190.61,
+        "basis": "F6: estimate per shard x 1.25 plus twice the peak reservation ($0.1916, reader anthropic:claude-opus-5-5)"
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "s2b.ext-temporal-graph.shipped-0.31",
+      "set": "S2b",
+      "block": "F6-T2",
+      "benchmark": "beam-1m",
+      "split": "sealed",
+      "selection": {
+        "kind": "per-conversation",
+        "per_conversation": 10,
+        "seed": "q1-beam-1m"
+      },
+      "exclusions": [],
+      "system": "ext-temporal-graph",
+      "configuration": "shipped-0.31",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "beam-1m",
+      "probes": {
+        "sample": 0,
+        "seed": "f6-probes-s2b",
+        "conversations": 0
+      },
+      "shards": 2,
+      "expected_hours": 43,
+      "launch": {
+        "env": {},
+        "config": "shipped-0.31"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-temporal-graph --config shipped-0.31 --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-temporal-graph.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-temporal-graph --config shipped-0.31 --from \"$SHOOTOUT_RESTORE_DIR/ext-temporal-graph.tar\"",
+      "arms": [
+        {
+          "id": "component-b8000",
+          "cell_id": "s2b.ext-temporal-graph.shipped-0.31.component-b8000",
+          "set": "S2b",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "component, 8,000 tokens"
+        }
+      ],
+      "estimate": {
+        "usd": 195.34,
+        "lines": {
+          "ingest": 175.2,
+          "judges": 0.98,
+          "readers": 19.15
+        }
+      },
+      "lease": {
+        "usd": 122.48,
+        "basis": "F6: estimate per shard x 1.25 plus twice the peak reservation ($0.1916, reader anthropic:claude-opus-5-5)"
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "s2a.gbrain-defaults.f6-master",
+      "set": "S2a",
+      "block": "F6-T2",
+      "benchmark": "beam-100k",
+      "split": "sealed",
+      "selection": {
+        "kind": "per-conversation",
+        "per_conversation": 10,
+        "seed": "q1-beam-100k"
+      },
+      "exclusions": [],
+      "system": "gbrain-defaults",
+      "configuration": "f6-master",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "beam-100k",
+      "probes": {
+        "sample": 0,
+        "seed": "f6-probes-s2a",
+        "conversations": 0
+      },
+      "shards": 1,
+      "expected_hours": 5,
+      "launch": {
+        "env": {
+          "GBRAIN_F6": "1",
+          "GBRAIN_SHA": "0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049",
+          "GBRAIN_F6_EXTRACT_CAP_USD": "1"
+        },
+        "config": "recipe"
+      },
+      "snapshot_command": "GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\"",
+      "arms": [
+        {
+          "id": "a0",
+          "cell_id": "s2a.gbrain-defaults.f6-master.a0",
+          "set": "S2a",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "query",
+            "args": {
+              "limit": 50
+            },
+            "overlay": {
+              "search.evidence_date_header": false,
+              "search.evidence_titles": false,
+              "search.fact_source_pages": false,
+              "search.query_budget_unit": "chunk",
+              "search.query_facts_block": false,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "A0: query limit 50, no token_budget (the harness packs 8,000 from gbrain's auto delivery)"
+        },
+        {
+          "id": "a",
+          "cell_id": "s2a.gbrain-defaults.f6-master.a",
+          "set": "S2a",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "query",
+            "args": {
+              "limit": 50,
+              "token_budget": 5500
+            },
+            "overlay": {
+              "search.evidence_date_header": false,
+              "search.evidence_titles": false,
+              "search.fact_source_pages": false,
+              "search.query_budget_unit": "chunk",
+              "search.query_facts_block": false,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "A: query token_budget 5,500, chunk unit, no facts block, no headers"
+        },
+        {
+          "id": "p",
+          "cell_id": "s2a.gbrain-defaults.f6-master.p",
+          "set": "S2a",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "query",
+            "args": {
+              "limit": 50,
+              "token_budget": 5500
+            },
+            "overlay": {
+              "search.evidence_date_header": false,
+              "search.evidence_titles": false,
+              "search.fact_source_pages": false,
+              "search.query_budget_unit": "chunk",
+              "search.query_facts_block": true,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "P: A with the facts block"
+        },
+        {
+          "id": "b",
+          "cell_id": "s2a.gbrain-defaults.f6-master.b",
+          "set": "S2a",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "recall",
+            "args": {
+              "budget_tokens": 5500
+            },
+            "overlay": {
+              "search.evidence_date_header": false,
+              "search.evidence_titles": false,
+              "search.fact_source_pages": false,
+              "search.query_budget_unit": "chunk",
+              "search.query_facts_block": false,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "B: recall budget_tokens 5,500 (facts first, then pages)"
+        },
+        {
+          "id": "c",
+          "cell_id": "s2a.gbrain-defaults.f6-master.c",
+          "set": "S2a",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "query",
+            "args": {
+              "limit": 50,
+              "token_budget": 5500
+            },
+            "overlay": {
+              "search.evidence_date_header": true,
+              "search.evidence_titles": true,
+              "search.fact_source_pages": false,
+              "search.query_budget_unit": "auto",
+              "search.query_facts_block": false,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "C: A with auto unit, date headers and titles"
+        },
+        {
+          "id": "d",
+          "cell_id": "s2a.gbrain-defaults.f6-master.d",
+          "set": "S2a",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "query",
+            "args": {
+              "limit": 50,
+              "token_budget": 5500
+            },
+            "overlay": {
+              "search.evidence_date_header": true,
+              "search.evidence_titles": true,
+              "search.fact_source_pages": false,
+              "search.query_budget_unit": "auto",
+              "search.query_facts_block": true,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "D: C with the facts block"
+        },
+        {
+          "id": "e",
+          "cell_id": "s2a.gbrain-defaults.f6-master.e",
+          "set": "S2a",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "query",
+            "args": {
+              "limit": 50,
+              "token_budget": 5500
+            },
+            "overlay": {
+              "search.evidence_date_header": true,
+              "search.evidence_titles": true,
+              "search.fact_source_pages": true,
+              "search.query_budget_unit": "auto",
+              "search.query_facts_block": true,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "E: D with fact source pages"
+        }
+      ],
+      "estimate": {
+        "usd": 84.64,
+        "lines": {
+          "extraction": 0.44,
+          "fact_embeddings": 0.01,
+          "ingest": 0.24,
+          "judges": 4.02,
+          "readers": 78.2,
+          "system_queries": 1.72
+        }
+      },
+      "lease": {
+        "usd": 106.19,
+        "basis": "F6: estimate per shard x 1.25 plus twice the peak reservation ($0.1916, reader anthropic:claude-opus-5-5)"
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "s2a.ext-temporal-graph.shipped-0.31",
+      "set": "S2a",
+      "block": "F6-T2",
+      "benchmark": "beam-100k",
+      "split": "sealed",
+      "selection": {
+        "kind": "per-conversation",
+        "per_conversation": 10,
+        "seed": "q1-beam-100k"
+      },
+      "exclusions": [],
+      "system": "ext-temporal-graph",
+      "configuration": "shipped-0.31",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "beam-100k",
+      "probes": {
+        "sample": 0,
+        "seed": "f6-probes-s2a",
+        "conversations": 0
+      },
+      "shards": 1,
+      "expected_hours": 8,
+      "launch": {
+        "env": {},
+        "config": "shipped-0.31"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-temporal-graph --config shipped-0.31 --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-temporal-graph.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-temporal-graph --config shipped-0.31 --from \"$SHOOTOUT_RESTORE_DIR/ext-temporal-graph.tar\"",
+      "arms": [
+        {
+          "id": "component-b8000",
+          "cell_id": "s2a.ext-temporal-graph.shipped-0.31.component-b8000",
+          "set": "S2a",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "component, 8,000 tokens"
+        }
+      ],
+      "estimate": {
+        "usd": 26.35,
+        "lines": {
+          "ingest": 14.6,
+          "judges": 0.57,
+          "readers": 11.17
+        }
+      },
+      "lease": {
+        "usd": 33.33,
+        "basis": "F6: estimate per shard x 1.25 plus twice the peak reservation ($0.1916, reader anthropic:claude-opus-5-5)"
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "s3.gbrain-defaults.f6-master",
+      "set": "S3",
+      "block": "F6-T2",
+      "benchmark": "locomo",
+      "split": "all",
+      "selection": {
+        "kind": "stratified",
+        "limit": 200,
+        "stratify": "category",
+        "seed": "q1-locomo",
+        "min": {
+          "adversarial": 40
+        }
+      },
+      "exclusions": [],
+      "system": "gbrain-defaults",
+      "configuration": "f6-master",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "locomo",
+      "probes": {
+        "sample": 0,
+        "seed": "f6-probes-s3",
+        "conversations": 0
+      },
+      "shards": 1,
+      "expected_hours": 1,
+      "launch": {
+        "env": {
+          "GBRAIN_F6": "1",
+          "GBRAIN_SHA": "0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049",
+          "GBRAIN_F6_EXTRACT_CAP_USD": "1"
+        },
+        "config": "recipe"
+      },
+      "snapshot_command": "GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\"",
+      "arms": [
+        {
+          "id": "a0",
+          "cell_id": "s3.gbrain-defaults.f6-master.a0",
+          "set": "S3",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "query",
+            "args": {
+              "limit": 50
+            },
+            "overlay": {
+              "search.evidence_date_header": false,
+              "search.evidence_titles": false,
+              "search.fact_source_pages": false,
+              "search.query_budget_unit": "chunk",
+              "search.query_facts_block": false,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "A0: query limit 50, no token_budget (the harness packs 8,000 from gbrain's auto delivery)"
+        },
+        {
+          "id": "a",
+          "cell_id": "s3.gbrain-defaults.f6-master.a",
+          "set": "S3",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "query",
+            "args": {
+              "limit": 50,
+              "token_budget": 5500
+            },
+            "overlay": {
+              "search.evidence_date_header": false,
+              "search.evidence_titles": false,
+              "search.fact_source_pages": false,
+              "search.query_budget_unit": "chunk",
+              "search.query_facts_block": false,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "A: query token_budget 5,500, chunk unit, no facts block, no headers"
+        },
+        {
+          "id": "p",
+          "cell_id": "s3.gbrain-defaults.f6-master.p",
+          "set": "S3",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "query",
+            "args": {
+              "limit": 50,
+              "token_budget": 5500
+            },
+            "overlay": {
+              "search.evidence_date_header": false,
+              "search.evidence_titles": false,
+              "search.fact_source_pages": false,
+              "search.query_budget_unit": "chunk",
+              "search.query_facts_block": true,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "P: A with the facts block"
+        },
+        {
+          "id": "b",
+          "cell_id": "s3.gbrain-defaults.f6-master.b",
+          "set": "S3",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "recall",
+            "args": {
+              "budget_tokens": 5500
+            },
+            "overlay": {
+              "search.evidence_date_header": false,
+              "search.evidence_titles": false,
+              "search.fact_source_pages": false,
+              "search.query_budget_unit": "chunk",
+              "search.query_facts_block": false,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "B: recall budget_tokens 5,500 (facts first, then pages)"
+        },
+        {
+          "id": "c",
+          "cell_id": "s3.gbrain-defaults.f6-master.c",
+          "set": "S3",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "query",
+            "args": {
+              "limit": 50,
+              "token_budget": 5500
+            },
+            "overlay": {
+              "search.evidence_date_header": true,
+              "search.evidence_titles": true,
+              "search.fact_source_pages": false,
+              "search.query_budget_unit": "auto",
+              "search.query_facts_block": false,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "C: A with auto unit, date headers and titles"
+        },
+        {
+          "id": "d",
+          "cell_id": "s3.gbrain-defaults.f6-master.d",
+          "set": "S3",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "query",
+            "args": {
+              "limit": 50,
+              "token_budget": 5500
+            },
+            "overlay": {
+              "search.evidence_date_header": true,
+              "search.evidence_titles": true,
+              "search.fact_source_pages": false,
+              "search.query_budget_unit": "auto",
+              "search.query_facts_block": true,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "D: C with the facts block"
+        },
+        {
+          "id": "e",
+          "cell_id": "s3.gbrain-defaults.f6-master.e",
+          "set": "S3",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "query",
+            "args": {
+              "limit": 50,
+              "token_budget": 5500
+            },
+            "overlay": {
+              "search.evidence_date_header": true,
+              "search.evidence_titles": true,
+              "search.fact_source_pages": true,
+              "search.query_budget_unit": "auto",
+              "search.query_facts_block": true,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "E: D with fact source pages"
+        }
+      ],
+      "estimate": {
+        "usd": 118.24,
+        "lines": {
+          "extraction": 0.06,
+          "fact_embeddings": 0,
+          "ingest": 0.03,
+          "judges": 3.97,
+          "readers": 111.72,
+          "system_queries": 2.46
+        }
+      },
+      "lease": {
+        "usd": 148.19,
+        "basis": "F6: estimate per shard x 1.25 plus twice the peak reservation ($0.1916, reader anthropic:claude-opus-5-5)"
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "s3.ext-temporal-graph.shipped-0.31",
+      "set": "S3",
+      "block": "F6-T2",
+      "benchmark": "locomo",
+      "split": "all",
+      "selection": {
+        "kind": "stratified",
+        "limit": 200,
+        "stratify": "category",
+        "seed": "q1-locomo",
+        "min": {
+          "adversarial": 40
+        }
+      },
+      "exclusions": [],
+      "system": "ext-temporal-graph",
+      "configuration": "shipped-0.31",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "locomo",
+      "probes": {
+        "sample": 0,
+        "seed": "f6-probes-s3",
+        "conversations": 0
+      },
+      "shards": 1,
+      "expected_hours": 1,
+      "launch": {
+        "env": {},
+        "config": "shipped-0.31"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-temporal-graph --config shipped-0.31 --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-temporal-graph.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-temporal-graph --config shipped-0.31 --from \"$SHOOTOUT_RESTORE_DIR/ext-temporal-graph.tar\"",
+      "arms": [
+        {
+          "id": "component-b8000",
+          "cell_id": "s3.ext-temporal-graph.shipped-0.31.component-b8000",
+          "set": "S3",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "component, 8,000 tokens"
+        }
+      ],
+      "estimate": {
+        "usd": 18.43,
+        "lines": {
+          "ingest": 1.9,
+          "judges": 0.57,
+          "readers": 15.96
+        }
+      },
+      "lease": {
+        "usd": 23.43,
+        "basis": "F6: estimate per shard x 1.25 plus twice the peak reservation ($0.1916, reader anthropic:claude-opus-5-5)"
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "d8.gbrain-defaults.f6-master",
+      "set": "D8",
+      "block": "F6-D8",
+      "benchmark": "beam-d8",
+      "split": "sealed",
+      "selection": {
+        "kind": "stratified",
+        "limit": 300,
+        "stratify": "conversation-category",
+        "seed": "f6-d8"
+      },
+      "exclusions": [],
+      "system": "gbrain-defaults",
+      "configuration": "f6-master",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "beam-d8",
+      "probes": {
+        "sample": 0,
+        "seed": "f6-probes-d8",
+        "conversations": 0
+      },
+      "shards": 10,
+      "expected_hours": 28,
+      "launch": {
+        "env": {
+          "GBRAIN_F6": "1",
+          "GBRAIN_SHA": "0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049",
+          "GBRAIN_F6_EXTRACT_CAP_USD": "5"
+        },
+        "config": "recipe"
+      },
+      "snapshot_command": "GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=5 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=5 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\"",
+      "arms": [
+        {
+          "id": "a",
+          "cell_id": "d8.gbrain-defaults.f6-master.a",
+          "set": "D8",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "query",
+            "args": {
+              "limit": 50,
+              "token_budget": 5500
+            },
+            "overlay": {
+              "search.evidence_date_header": false,
+              "search.evidence_titles": false,
+              "search.fact_source_pages": false,
+              "search.query_budget_unit": "chunk",
+              "search.query_facts_block": false,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "A: query token_budget 5,500, chunk unit, no facts block, no headers"
+        },
+        {
+          "id": "p",
+          "cell_id": "d8.gbrain-defaults.f6-master.p",
+          "set": "D8",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "query",
+            "args": {
+              "limit": 50,
+              "token_budget": 5500
+            },
+            "overlay": {
+              "search.evidence_date_header": false,
+              "search.evidence_titles": false,
+              "search.fact_source_pages": false,
+              "search.query_budget_unit": "chunk",
+              "search.query_facts_block": true,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "P: A with the facts block"
+        },
+        {
+          "id": "b",
+          "cell_id": "d8.gbrain-defaults.f6-master.b",
+          "set": "D8",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "recall",
+            "args": {
+              "budget_tokens": 5500
+            },
+            "overlay": {
+              "search.evidence_date_header": false,
+              "search.evidence_titles": false,
+              "search.fact_source_pages": false,
+              "search.query_budget_unit": "chunk",
+              "search.query_facts_block": false,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "B: recall budget_tokens 5,500 (facts first, then pages)"
+        },
+        {
+          "id": "d",
+          "cell_id": "d8.gbrain-defaults.f6-master.d",
+          "set": "D8",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "query",
+            "args": {
+              "limit": 50,
+              "token_budget": 5500
+            },
+            "overlay": {
+              "search.evidence_date_header": true,
+              "search.evidence_titles": true,
+              "search.fact_source_pages": false,
+              "search.query_budget_unit": "auto",
+              "search.query_facts_block": true,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "D: C with the facts block"
+        }
+      ],
+      "estimate": {
+        "usd": 140.69,
+        "lines": {
+          "extraction": 24.2,
+          "fact_embeddings": 0.5,
+          "ingest": 13.2,
+          "judges": 4.92,
+          "readers": 95.76,
+          "system_queries": 2.11
+        }
+      },
+      "lease": {
+        "usd": 17.97,
+        "basis": "F6: estimate per shard x 1.25 plus twice the peak reservation ($0.1916, reader anthropic:claude-opus-5-5)"
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "d8.ext-memory-bank.recipe",
+      "set": "D8",
+      "block": "F6-D8",
+      "benchmark": "beam-d8",
+      "split": "sealed",
+      "selection": {
+        "kind": "stratified",
+        "limit": 300,
+        "stratify": "conversation-category",
+        "seed": "f6-d8"
+      },
+      "exclusions": [],
+      "system": "ext-memory-bank",
+      "configuration": "recipe",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "beam-d8",
+      "probes": {
+        "sample": 0,
+        "seed": "f6-probes-d8",
+        "conversations": 0
+      },
+      "shards": 10,
+      "expected_hours": 26,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-memory-bank --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-memory-bank.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-memory-bank --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-memory-bank.tar\"",
+      "arms": [
+        {
+          "id": "component-b8000",
+          "cell_id": "d8.ext-memory-bank.recipe.component-b8000",
+          "set": "D8",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "component, 8,000 tokens"
+        }
+      ],
+      "estimate": {
+        "usd": 214.37,
+        "lines": {
+          "ingest": 189.2,
+          "judges": 1.23,
+          "readers": 23.94
+        }
+      },
+      "lease": {
+        "usd": 27.18,
+        "basis": "F6: estimate per shard x 1.25 plus twice the peak reservation ($0.1916, reader anthropic:claude-opus-5-5)"
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "d8.ext-graph-pipeline.recipe",
+      "set": "D8",
+      "block": "F6-D8",
+      "benchmark": "beam-d8",
+      "split": "sealed",
+      "selection": {
+        "kind": "stratified",
+        "limit": 300,
+        "stratify": "conversation-category",
+        "seed": "f6-d8"
+      },
+      "exclusions": [],
+      "system": "ext-graph-pipeline",
+      "configuration": "recipe",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "beam-d8",
+      "probes": {
+        "sample": 0,
+        "seed": "f6-probes-d8",
+        "conversations": 0
+      },
+      "shards": 10,
+      "expected_hours": 48,
+      "launch": {
+        "env": {},
+        "config": "recipe"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\"",
+      "arms": [
+        {
+          "id": "component-b8000",
+          "cell_id": "d8.ext-graph-pipeline.recipe.component-b8000",
+          "set": "D8",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "component, 8,000 tokens"
+        }
+      ],
+      "estimate": {
+        "usd": 410.17,
+        "lines": {
+          "ingest": 385,
+          "judges": 1.23,
+          "readers": 23.94
+        }
+      },
+      "lease": {
+        "usd": 51.66,
+        "basis": "F6: estimate per shard x 1.25 plus twice the peak reservation ($0.1916, reader anthropic:claude-opus-5-5)"
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "d8.baseline-hybrid.baseline",
+      "set": "D8",
+      "block": "F6-D8",
+      "benchmark": "beam-d8",
+      "split": "sealed",
+      "selection": {
+        "kind": "stratified",
+        "limit": 300,
+        "stratify": "conversation-category",
+        "seed": "f6-d8"
+      },
+      "exclusions": [],
+      "system": "baseline-hybrid",
+      "configuration": "baseline",
+      "runner": "in-process",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "beam-d8",
+      "probes": {
+        "sample": 0,
+        "seed": "f6-probes-d8",
+        "conversations": 0
+      },
+      "shards": 1,
+      "expected_hours": 6,
+      "arms": [
+        {
+          "id": "component-b8000",
+          "cell_id": "d8.baseline-hybrid.baseline.component-b8000",
+          "set": "D8",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "component, 8,000 tokens"
+        }
+      ],
+      "estimate": {
+        "usd": 40.57,
+        "lines": {
+          "ingest": 15.4,
+          "judges": 1.23,
+          "readers": 23.94
+        }
+      },
+      "lease": {
+        "usd": 51.1,
+        "basis": "F6: estimate per shard x 1.25 plus twice the peak reservation ($0.1916, reader anthropic:claude-opus-5-5)"
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "d8.baseline-none.baseline",
+      "set": "D8",
+      "block": "F6-D8",
+      "benchmark": "beam-d8",
+      "split": "sealed",
+      "selection": {
+        "kind": "stratified",
+        "limit": 300,
+        "stratify": "conversation-category",
+        "seed": "f6-d8"
+      },
+      "exclusions": [],
+      "system": "baseline-none",
+      "configuration": "baseline",
+      "runner": "in-process",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "beam-d8",
+      "probes": {
+        "sample": 0,
+        "seed": "f6-probes-d8",
+        "conversations": 0
+      },
+      "shards": 1,
+      "expected_hours": 6,
+      "arms": [
+        {
+          "id": "component-b8000",
+          "cell_id": "d8.baseline-none.baseline.component-b8000",
+          "set": "D8",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "component, 8,000 tokens"
+        }
+      ],
+      "estimate": {
+        "usd": 25.17,
+        "lines": {
+          "judges": 1.23,
+          "readers": 23.94
+        }
+      },
+      "lease": {
+        "usd": 31.85,
+        "basis": "F6: estimate per shard x 1.25 plus twice the peak reservation ($0.1916, reader anthropic:claude-opus-5-5)"
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "s4-slice.gbrain-defaults.f6-master",
+      "set": "S4-slice",
+      "block": "F6-S4",
+      "benchmark": "lme-s",
+      "split": "dev",
+      "selection": {
+        "kind": "shootout-slice",
+        "limit": 100,
+        "seed": 42
+      },
+      "exclusions": [],
+      "system": "gbrain-defaults",
+      "configuration": "f6-master",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "lme-s",
+      "probes": {
+        "sample": 0,
+        "seed": "f6-probes-s4-slice",
+        "conversations": 0
+      },
+      "shards": 1,
+      "expected_hours": 29,
+      "launch": {
+        "env": {
+          "GBRAIN_F6": "1",
+          "GBRAIN_SHA": "0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049",
+          "GBRAIN_F6_EXTRACT_CAP_USD": "1"
+        },
+        "config": "recipe"
+      },
+      "snapshot_command": "GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\"",
+      "arms": [
+        {
+          "id": "a0",
+          "cell_id": "s4-slice.gbrain-defaults.f6-master.a0",
+          "set": "S4-slice",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "query",
+            "args": {
+              "limit": 50
+            },
+            "overlay": {
+              "search.evidence_date_header": false,
+              "search.evidence_titles": false,
+              "search.fact_source_pages": false,
+              "search.query_budget_unit": "chunk",
+              "search.query_facts_block": false,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "A0: query limit 50, no token_budget (the harness packs 8,000 from gbrain's auto delivery)"
+        },
+        {
+          "id": "a",
+          "cell_id": "s4-slice.gbrain-defaults.f6-master.a",
+          "set": "S4-slice",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "query",
+            "args": {
+              "limit": 50,
+              "token_budget": 5500
+            },
+            "overlay": {
+              "search.evidence_date_header": false,
+              "search.evidence_titles": false,
+              "search.fact_source_pages": false,
+              "search.query_budget_unit": "chunk",
+              "search.query_facts_block": false,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "A: query token_budget 5,500, chunk unit, no facts block, no headers"
+        },
+        {
+          "id": "p",
+          "cell_id": "s4-slice.gbrain-defaults.f6-master.p",
+          "set": "S4-slice",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "query",
+            "args": {
+              "limit": 50,
+              "token_budget": 5500
+            },
+            "overlay": {
+              "search.evidence_date_header": false,
+              "search.evidence_titles": false,
+              "search.fact_source_pages": false,
+              "search.query_budget_unit": "chunk",
+              "search.query_facts_block": true,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "P: A with the facts block"
+        },
+        {
+          "id": "b",
+          "cell_id": "s4-slice.gbrain-defaults.f6-master.b",
+          "set": "S4-slice",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "recall",
+            "args": {
+              "budget_tokens": 5500
+            },
+            "overlay": {
+              "search.evidence_date_header": false,
+              "search.evidence_titles": false,
+              "search.fact_source_pages": false,
+              "search.query_budget_unit": "chunk",
+              "search.query_facts_block": false,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "B: recall budget_tokens 5,500 (facts first, then pages)"
+        },
+        {
+          "id": "c",
+          "cell_id": "s4-slice.gbrain-defaults.f6-master.c",
+          "set": "S4-slice",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "query",
+            "args": {
+              "limit": 50,
+              "token_budget": 5500
+            },
+            "overlay": {
+              "search.evidence_date_header": true,
+              "search.evidence_titles": true,
+              "search.fact_source_pages": false,
+              "search.query_budget_unit": "auto",
+              "search.query_facts_block": false,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "C: A with auto unit, date headers and titles"
+        },
+        {
+          "id": "d",
+          "cell_id": "s4-slice.gbrain-defaults.f6-master.d",
+          "set": "S4-slice",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "query",
+            "args": {
+              "limit": 50,
+              "token_budget": 5500
+            },
+            "overlay": {
+              "search.evidence_date_header": true,
+              "search.evidence_titles": true,
+              "search.fact_source_pages": false,
+              "search.query_budget_unit": "auto",
+              "search.query_facts_block": true,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "D: C with the facts block"
+        },
+        {
+          "id": "e",
+          "cell_id": "s4-slice.gbrain-defaults.f6-master.e",
+          "set": "S4-slice",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "query",
+            "args": {
+              "limit": 50,
+              "token_budget": 5500
+            },
+            "overlay": {
+              "search.evidence_date_header": true,
+              "search.evidence_titles": true,
+              "search.fact_source_pages": true,
+              "search.query_budget_unit": "auto",
+              "search.query_facts_block": true,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "E: D with fact source pages"
+        }
+      ],
+      "estimate": {
+        "usd": 63.04,
+        "lines": {
+          "extraction": 2.53,
+          "fact_embeddings": 0.05,
+          "ingest": 1.38,
+          "judges": 1.98,
+          "readers": 55.86,
+          "system_queries": 1.23
+        }
+      },
+      "lease": {
+        "usd": 79.19,
+        "basis": "F6: estimate per shard x 1.25 plus twice the peak reservation ($0.1916, reader anthropic:claude-opus-5-5)"
+      }
+    }
+  ],
+  "smoke_cells": [
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "s2b-ingest.gbrain-defaults.f6-master",
+      "set": "S2b-ingest",
+      "block": "F6-dry",
+      "benchmark": "beam-1m",
+      "split": "dev",
+      "selection": {
+        "kind": "stratified",
+        "limit": 10,
+        "stratify": "category",
+        "seed": "q1-ingest-probe"
+      },
+      "exclusions": [],
+      "system": "gbrain-defaults",
+      "configuration": "f6-master",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "beam-1m",
+      "probes": {
+        "sample": 0,
+        "seed": "f6-probes-s2b-ingest",
+        "conversations": 0
+      },
+      "only_conversations": [
+        "1m-16"
+      ],
+      "shards": 1,
+      "expected_hours": 3,
+      "launch": {
+        "env": {
+          "GBRAIN_F6": "1",
+          "GBRAIN_SHA": "0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049",
+          "GBRAIN_F6_EXTRACT_CAP_USD": "1"
+        },
+        "config": "recipe"
+      },
+      "snapshot_command": "GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\"",
+      "arms": [
+        {
+          "id": "a0",
+          "cell_id": "s2b-ingest.gbrain-defaults.f6-master.a0",
+          "set": "S2b-ingest",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "query",
+            "args": {
+              "limit": 50
+            },
+            "overlay": {
+              "search.evidence_date_header": false,
+              "search.evidence_titles": false,
+              "search.fact_source_pages": false,
+              "search.query_budget_unit": "chunk",
+              "search.query_facts_block": false,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "A0: query limit 50, no token_budget (the harness packs 8,000 from gbrain's auto delivery)"
+        },
+        {
+          "id": "a",
+          "cell_id": "s2b-ingest.gbrain-defaults.f6-master.a",
+          "set": "S2b-ingest",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "query",
+            "args": {
+              "limit": 50,
+              "token_budget": 5500
+            },
+            "overlay": {
+              "search.evidence_date_header": false,
+              "search.evidence_titles": false,
+              "search.fact_source_pages": false,
+              "search.query_budget_unit": "chunk",
+              "search.query_facts_block": false,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "A: query token_budget 5,500, chunk unit, no facts block, no headers"
+        },
+        {
+          "id": "p",
+          "cell_id": "s2b-ingest.gbrain-defaults.f6-master.p",
+          "set": "S2b-ingest",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "query",
+            "args": {
+              "limit": 50,
+              "token_budget": 5500
+            },
+            "overlay": {
+              "search.evidence_date_header": false,
+              "search.evidence_titles": false,
+              "search.fact_source_pages": false,
+              "search.query_budget_unit": "chunk",
+              "search.query_facts_block": true,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "P: A with the facts block"
+        },
+        {
+          "id": "b",
+          "cell_id": "s2b-ingest.gbrain-defaults.f6-master.b",
+          "set": "S2b-ingest",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "recall",
+            "args": {
+              "budget_tokens": 5500
+            },
+            "overlay": {
+              "search.evidence_date_header": false,
+              "search.evidence_titles": false,
+              "search.fact_source_pages": false,
+              "search.query_budget_unit": "chunk",
+              "search.query_facts_block": false,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "B: recall budget_tokens 5,500 (facts first, then pages)"
+        },
+        {
+          "id": "c",
+          "cell_id": "s2b-ingest.gbrain-defaults.f6-master.c",
+          "set": "S2b-ingest",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "query",
+            "args": {
+              "limit": 50,
+              "token_budget": 5500
+            },
+            "overlay": {
+              "search.evidence_date_header": true,
+              "search.evidence_titles": true,
+              "search.fact_source_pages": false,
+              "search.query_budget_unit": "auto",
+              "search.query_facts_block": false,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "C: A with auto unit, date headers and titles"
+        },
+        {
+          "id": "d",
+          "cell_id": "s2b-ingest.gbrain-defaults.f6-master.d",
+          "set": "S2b-ingest",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "query",
+            "args": {
+              "limit": 50,
+              "token_budget": 5500
+            },
+            "overlay": {
+              "search.evidence_date_header": true,
+              "search.evidence_titles": true,
+              "search.fact_source_pages": false,
+              "search.query_budget_unit": "auto",
+              "search.query_facts_block": true,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "D: C with the facts block"
+        },
+        {
+          "id": "e",
+          "cell_id": "s2b-ingest.gbrain-defaults.f6-master.e",
+          "set": "S2b-ingest",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "query",
+            "args": {
+              "limit": 50,
+              "token_budget": 5500
+            },
+            "overlay": {
+              "search.evidence_date_header": true,
+              "search.evidence_titles": true,
+              "search.fact_source_pages": true,
+              "search.query_budget_unit": "auto",
+              "search.query_facts_block": true,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "E: D with fact source pages"
+        }
+      ],
+      "estimate": {
+        "usd": 6.32,
+        "lines": {
+          "extraction": 0.2,
+          "fact_embeddings": 0,
+          "ingest": 0.11,
+          "judges": 0.29,
+          "readers": 5.59,
+          "system_queries": 0.12
+        }
+      },
+      "lease": {
+        "usd": 8.29,
+        "basis": "F6: estimate per shard x 1.25 plus twice the peak reservation ($0.1916, reader anthropic:claude-opus-5-5)"
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "s2b-ingest.ext-temporal-graph.shipped-0.31",
+      "set": "S2b-ingest",
+      "block": "F6-dry",
+      "benchmark": "beam-1m",
+      "split": "dev",
+      "selection": {
+        "kind": "stratified",
+        "limit": 10,
+        "stratify": "category",
+        "seed": "q1-ingest-probe"
+      },
+      "exclusions": [],
+      "system": "ext-temporal-graph",
+      "configuration": "shipped-0.31",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "beam-1m",
+      "probes": {
+        "sample": 0,
+        "seed": "f6-probes-s2b-ingest",
+        "conversations": 0
+      },
+      "only_conversations": [
+        "1m-16"
+      ],
+      "shards": 1,
+      "expected_hours": 4,
+      "launch": {
+        "env": {},
+        "config": "shipped-0.31"
+      },
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-temporal-graph --config shipped-0.31 --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-temporal-graph.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-temporal-graph --config shipped-0.31 --from \"$SHOOTOUT_RESTORE_DIR/ext-temporal-graph.tar\"",
+      "arms": [
+        {
+          "id": "component-b8000",
+          "cell_id": "s2b-ingest.ext-temporal-graph.shipped-0.31.component-b8000",
+          "set": "S2b-ingest",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "component, 8,000 tokens"
+        }
+      ],
+      "estimate": {
+        "usd": 7.6,
+        "lines": {
+          "ingest": 6.77,
+          "judges": 0.04,
+          "readers": 0.8
+        }
+      },
+      "lease": {
+        "usd": 9.89,
+        "basis": "F6: estimate per shard x 1.25 plus twice the peak reservation ($0.1916, reader anthropic:claude-opus-5-5)"
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "s3-smoke.gbrain-defaults.f6-master",
+      "set": "S3-smoke",
+      "block": "F6-dry",
+      "benchmark": "locomo",
+      "split": "dev",
+      "selection": {
+        "kind": "stratified",
+        "limit": 20,
+        "stratify": "category",
+        "seed": "q1-smoke"
+      },
+      "exclusions": [],
+      "system": "gbrain-defaults",
+      "configuration": "f6-master",
+      "runner": "shim",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "locomo",
+      "probes": {
+        "sample": 0,
+        "seed": "f6-probes-s3-smoke",
+        "conversations": 0
+      },
+      "only_conversations": [
+        "conv-44"
+      ],
+      "shards": 1,
+      "expected_hours": 1,
+      "launch": {
+        "env": {
+          "GBRAIN_F6": "1",
+          "GBRAIN_SHA": "0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049",
+          "GBRAIN_F6_EXTRACT_CAP_USD": "1"
+        },
+        "config": "recipe"
+      },
+      "snapshot_command": "GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\"",
+      "arms": [
+        {
+          "id": "a0",
+          "cell_id": "s3-smoke.gbrain-defaults.f6-master.a0",
+          "set": "S3-smoke",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "query",
+            "args": {
+              "limit": 50
+            },
+            "overlay": {
+              "search.evidence_date_header": false,
+              "search.evidence_titles": false,
+              "search.fact_source_pages": false,
+              "search.query_budget_unit": "chunk",
+              "search.query_facts_block": false,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "A0: query limit 50, no token_budget (the harness packs 8,000 from gbrain's auto delivery)"
+        },
+        {
+          "id": "a",
+          "cell_id": "s3-smoke.gbrain-defaults.f6-master.a",
+          "set": "S3-smoke",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "query",
+            "args": {
+              "limit": 50,
+              "token_budget": 5500
+            },
+            "overlay": {
+              "search.evidence_date_header": false,
+              "search.evidence_titles": false,
+              "search.fact_source_pages": false,
+              "search.query_budget_unit": "chunk",
+              "search.query_facts_block": false,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "A: query token_budget 5,500, chunk unit, no facts block, no headers"
+        },
+        {
+          "id": "p",
+          "cell_id": "s3-smoke.gbrain-defaults.f6-master.p",
+          "set": "S3-smoke",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "query",
+            "args": {
+              "limit": 50,
+              "token_budget": 5500
+            },
+            "overlay": {
+              "search.evidence_date_header": false,
+              "search.evidence_titles": false,
+              "search.fact_source_pages": false,
+              "search.query_budget_unit": "chunk",
+              "search.query_facts_block": true,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "P: A with the facts block"
+        },
+        {
+          "id": "b",
+          "cell_id": "s3-smoke.gbrain-defaults.f6-master.b",
+          "set": "S3-smoke",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "recall",
+            "args": {
+              "budget_tokens": 5500
+            },
+            "overlay": {
+              "search.evidence_date_header": false,
+              "search.evidence_titles": false,
+              "search.fact_source_pages": false,
+              "search.query_budget_unit": "chunk",
+              "search.query_facts_block": false,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "B: recall budget_tokens 5,500 (facts first, then pages)"
+        },
+        {
+          "id": "c",
+          "cell_id": "s3-smoke.gbrain-defaults.f6-master.c",
+          "set": "S3-smoke",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "query",
+            "args": {
+              "limit": 50,
+              "token_budget": 5500
+            },
+            "overlay": {
+              "search.evidence_date_header": true,
+              "search.evidence_titles": true,
+              "search.fact_source_pages": false,
+              "search.query_budget_unit": "auto",
+              "search.query_facts_block": false,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "C: A with auto unit, date headers and titles"
+        },
+        {
+          "id": "d",
+          "cell_id": "s3-smoke.gbrain-defaults.f6-master.d",
+          "set": "S3-smoke",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "query",
+            "args": {
+              "limit": 50,
+              "token_budget": 5500
+            },
+            "overlay": {
+              "search.evidence_date_header": true,
+              "search.evidence_titles": true,
+              "search.fact_source_pages": false,
+              "search.query_budget_unit": "auto",
+              "search.query_facts_block": true,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "D: C with the facts block"
+        },
+        {
+          "id": "e",
+          "cell_id": "s3-smoke.gbrain-defaults.f6-master.e",
+          "set": "S3-smoke",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "retrieval": {
+            "op": "query",
+            "args": {
+              "limit": 50,
+              "token_budget": 5500
+            },
+            "overlay": {
+              "search.evidence_date_header": true,
+              "search.evidence_titles": true,
+              "search.fact_source_pages": true,
+              "search.query_budget_unit": "auto",
+              "search.query_facts_block": true,
+              "search.saved_facts_supersede": true
+            }
+          },
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "E: D with fact source pages"
+        }
+      ],
+      "estimate": {
+        "usd": 11.82,
+        "lines": {
+          "extraction": 0,
+          "fact_embeddings": 0,
+          "ingest": 0,
+          "judges": 0.4,
+          "readers": 11.17,
+          "system_queries": 0.25
+        }
+      },
+      "lease": {
+        "usd": 15.16,
+        "basis": "F6: estimate per shard x 1.25 plus twice the peak reservation ($0.1916, reader anthropic:claude-opus-5-5)"
+      }
+    }
+  ],
+  "total_usd": 2475.43,
+  "plan_total_usd": 3100,
+  "cap_usd": 3100,
+  "dry_run_cap_usd": 60,
+  "campaign_id": "f6-current-master"
+}
