@@ -1,0 +1,348 @@
+{
+  "kind": "c8k-gate",
+  "decision_id": "sealed-v2-decision-3-2026-10-26:8k-conversion-f1-f4",
+  "decision_sha256": "a893822fbd97e790d5b92ab93affbc305402cca70d0173ec0dc19b62a7a36e54",
+  "phase": "final",
+  "created_at": "2026-10-26T14:59:07.130Z",
+  "gbrain": {
+    "commit": "cf3ec433f4fffda60d00076bae7361100c632cc4",
+    "version": "0.60.461.0",
+    "keyless": false,
+    "embedding": "openai:text-embedding-3-large@1536"
+  },
+  "access_log_lines_at_gate": 36,
+  "labels_read_under_this_decision": 0,
+  "evidence_sha256": "5e131069a9bfcb9c4d80e77f65f909c1de9260f973aafae889dc36aa58c984da",
+  "renderer": {
+    "version": "c8k-product-text-v1",
+    "recipe_hash": "3feadd3d59999b6423ae5e2656622ed2b722600bd517345f2f9c438b55011a94",
+    "recipe": {
+      "renderer": "c8k-product-text-v1",
+      "template": "memory-qa READER_TEMPLATE",
+      "template_sha256": "8951d2bf74c971c6527ba7b74fc63f5f49bddc467e11436abd0500219e6dac31",
+      "history": "the tool result text blocks in returned order, joined by one blank line",
+      "budget_tokens": 8000,
+      "tokenizer": "approx-chars-div-4",
+      "cut": "whole rows from the end of the first block's JSON array, re-serialized with JSON.stringify, while the history is over the budget",
+      "date": "question_date, else unknown",
+      "substitution": "one pass over {history}, {date} and {question}"
+    }
+  },
+  "retrieval": {
+    "per_arm": {
+      "A0": {
+        "rows": 200,
+        "questions": 200,
+        "tool_errors": 0,
+        "safe_index_pending": 0,
+        "behavior_changes_disclosures": 0,
+        "rows_outside_history": 0,
+        "extract_receipt_rows": 5,
+        "budget_used_over_cap": 0,
+        "not_cap_only": 0,
+        "facts": {
+          "questions_with_facts": 121,
+          "rows_mean": 1.06,
+          "tokens_max": 187,
+          "over_share_or_rows": 0,
+          "cap_tokens": 1210
+        },
+        "budget_used_mean": null,
+        "result_rows_mean": 10.165,
+        "notices": {
+          "search_filter_hint": 156
+        }
+      },
+      "A1": {
+        "rows": 200,
+        "questions": 200,
+        "tool_errors": 0,
+        "safe_index_pending": 0,
+        "behavior_changes_disclosures": 0,
+        "rows_outside_history": 0,
+        "extract_receipt_rows": 6,
+        "budget_used_over_cap": 0,
+        "not_cap_only": 0,
+        "facts": {
+          "questions_with_facts": 161,
+          "rows_mean": 1.955,
+          "tokens_max": 196,
+          "over_share_or_rows": 0,
+          "cap_tokens": 1210
+        },
+        "budget_used_mean": 5492.77,
+        "result_rows_mean": 11.97,
+        "notices": {
+          "search_filter_hint": 196
+        }
+      },
+      "A2": {
+        "rows": 200,
+        "questions": 200,
+        "tool_errors": 0,
+        "safe_index_pending": 0,
+        "behavior_changes_disclosures": 0,
+        "rows_outside_history": 0,
+        "extract_receipt_rows": 6,
+        "budget_used_over_cap": 0,
+        "not_cap_only": 0,
+        "facts": {
+          "questions_with_facts": 161,
+          "rows_mean": 1.955,
+          "tokens_max": 232,
+          "over_share_or_rows": 0,
+          "cap_tokens": 1210
+        },
+        "budget_used_mean": 5491.21,
+        "result_rows_mean": 11.36,
+        "notices": {
+          "search_filter_hint": 174
+        }
+      },
+      "A3": {
+        "rows": 200,
+        "questions": 200,
+        "tool_errors": 0,
+        "safe_index_pending": 0,
+        "behavior_changes_disclosures": 0,
+        "rows_outside_history": 0,
+        "extract_receipt_rows": 6,
+        "budget_used_over_cap": 0,
+        "not_cap_only": 0,
+        "facts": {
+          "questions_with_facts": 195,
+          "rows_mean": 7.46,
+          "tokens_max": 1185,
+          "over_share_or_rows": 0,
+          "cap_tokens": 1210
+        },
+        "budget_used_mean": 5492.55,
+        "result_rows_mean": 16.61,
+        "notices": {
+          "search_filter_hint": 76
+        }
+      },
+      "B3": {
+        "rows": 200,
+        "questions": 200,
+        "tool_errors": 0,
+        "safe_index_pending": 0,
+        "behavior_changes_disclosures": 0,
+        "rows_outside_history": 0,
+        "extract_receipt_rows": 5,
+        "budget_used_over_cap": 0,
+        "not_cap_only": 0,
+        "facts": {
+          "questions_with_facts": 195,
+          "rows_mean": 7.46,
+          "tokens_max": 1185,
+          "over_share_or_rows": 0,
+          "cap_tokens": 1210
+        },
+        "budget_used_mean": null,
+        "result_rows_mean": 15.73,
+        "notices": {
+          "search_filter_hint": 76
+        }
+      },
+      "R5": {
+        "rows": 200,
+        "questions": 200,
+        "tool_errors": 0,
+        "safe_index_pending": 0,
+        "behavior_changes_disclosures": 0,
+        "rows_outside_history": 0,
+        "extract_receipt_rows": 0,
+        "budget_used_over_cap": 0,
+        "not_cap_only": 0,
+        "facts": {
+          "questions_with_facts": 0,
+          "rows_mean": 0,
+          "tokens_max": 0,
+          "over_share_or_rows": 0,
+          "cap_tokens": 1210
+        },
+        "budget_used_mean": 11548.05,
+        "result_rows_mean": 4.875,
+        "notices": {
+          "search_filter_hint": 6
+        }
+      }
+    },
+    "determinism": {
+      "questions": 20,
+      "repeated": 20,
+      "byte_identical": 20,
+      "pass": true
+    }
+  },
+  "contexts": {
+    "sonnet-5-5.A0": {
+      "rows": 200,
+      "rerender_mismatches": 0,
+      "rows_cut_total": 0,
+      "contexts_with_cuts": 0,
+      "contexts_over_budget": 0,
+      "tokens_mean": 6486.22,
+      "reader_errors": 0
+    },
+    "sonnet-5-5.A1": {
+      "rows": 200,
+      "rerender_mismatches": 0,
+      "rows_cut_total": 11,
+      "contexts_with_cuts": 8,
+      "contexts_over_budget": 0,
+      "tokens_mean": 7669.195,
+      "reader_errors": 0
+    },
+    "sonnet-5-5.A2": {
+      "rows": 200,
+      "rerender_mismatches": 0,
+      "rows_cut_total": 0,
+      "contexts_with_cuts": 0,
+      "contexts_over_budget": 0,
+      "tokens_mean": 7428.455,
+      "reader_errors": 0
+    },
+    "sonnet-5-5.A3": {
+      "rows": 200,
+      "rerender_mismatches": 0,
+      "rows_cut_total": 49,
+      "contexts_with_cuts": 39,
+      "contexts_over_budget": 0,
+      "tokens_mean": 7571.165,
+      "reader_errors": 0
+    },
+    "sonnet-5-5.B3": {
+      "rows": 200,
+      "rerender_mismatches": 0,
+      "rows_cut_total": 1,
+      "contexts_with_cuts": 1,
+      "contexts_over_budget": 0,
+      "tokens_mean": 6571.155,
+      "reader_errors": 0
+    },
+    "sonnet-5-5.R5": {
+      "rows": 200,
+      "rerender_mismatches": 0,
+      "rows_cut_total": 553,
+      "contexts_with_cuts": 200,
+      "contexts_over_budget": 0,
+      "tokens_mean": 6114.225,
+      "reader_errors": 0
+    },
+    "opus-5-5.A0": {
+      "rows": 200,
+      "rerender_mismatches": 0,
+      "rows_cut_total": 0,
+      "contexts_with_cuts": 0,
+      "contexts_over_budget": 0,
+      "tokens_mean": 6486.22,
+      "reader_errors": 0
+    },
+    "opus-5-5.A1": {
+      "rows": 200,
+      "rerender_mismatches": 0,
+      "rows_cut_total": 11,
+      "contexts_with_cuts": 8,
+      "contexts_over_budget": 0,
+      "tokens_mean": 7669.195,
+      "reader_errors": 0
+    },
+    "opus-5-5.A2": {
+      "rows": 200,
+      "rerender_mismatches": 0,
+      "rows_cut_total": 0,
+      "contexts_with_cuts": 0,
+      "contexts_over_budget": 0,
+      "tokens_mean": 7428.455,
+      "reader_errors": 0
+    },
+    "opus-5-5.A3": {
+      "rows": 200,
+      "rerender_mismatches": 0,
+      "rows_cut_total": 49,
+      "contexts_with_cuts": 39,
+      "contexts_over_budget": 0,
+      "tokens_mean": 7571.165,
+      "reader_errors": 0
+    },
+    "opus-5-5.B3": {
+      "rows": 200,
+      "rerender_mismatches": 0,
+      "rows_cut_total": 1,
+      "contexts_with_cuts": 1,
+      "contexts_over_budget": 0,
+      "tokens_mean": 6571.155,
+      "reader_errors": 0
+    },
+    "opus-5-5.R5": {
+      "rows": 200,
+      "rerender_mismatches": 0,
+      "rows_cut_total": 553,
+      "contexts_with_cuts": 200,
+      "contexts_over_budget": 0,
+      "tokens_mean": 6114.225,
+      "reader_errors": 0
+    },
+    "gpt-6-1-sol.A0": {
+      "rows": 200,
+      "rerender_mismatches": 0,
+      "rows_cut_total": 0,
+      "contexts_with_cuts": 0,
+      "contexts_over_budget": 0,
+      "tokens_mean": 6486.22,
+      "reader_errors": 0
+    },
+    "gpt-6-1-sol.A1": {
+      "rows": 200,
+      "rerender_mismatches": 0,
+      "rows_cut_total": 11,
+      "contexts_with_cuts": 8,
+      "contexts_over_budget": 0,
+      "tokens_mean": 7669.195,
+      "reader_errors": 0
+    },
+    "gpt-6-1-sol.A2": {
+      "rows": 200,
+      "rerender_mismatches": 0,
+      "rows_cut_total": 0,
+      "contexts_with_cuts": 0,
+      "contexts_over_budget": 0,
+      "tokens_mean": 7428.455,
+      "reader_errors": 0
+    },
+    "gpt-6-1-sol.A3": {
+      "rows": 200,
+      "rerender_mismatches": 0,
+      "rows_cut_total": 49,
+      "contexts_with_cuts": 39,
+      "contexts_over_budget": 0,
+      "tokens_mean": 7571.165,
+      "reader_errors": 0
+    },
+    "gpt-6-1-sol.B3": {
+      "rows": 200,
+      "rerender_mismatches": 0,
+      "rows_cut_total": 1,
+      "contexts_with_cuts": 1,
+      "contexts_over_budget": 0,
+      "tokens_mean": 6571.155,
+      "reader_errors": 0
+    },
+    "gpt-6-1-sol.R5": {
+      "rows": 200,
+      "rerender_mismatches": 0,
+      "rows_cut_total": 553,
+      "contexts_with_cuts": 200,
+      "contexts_over_budget": 0,
+      "tokens_mean": 6114.225,
+      "reader_errors": 0
+    }
+  },
+  "render_identity": {
+    "rerender_mismatches": 0
+  },
+  "problems": [],
+  "pass": true
+}

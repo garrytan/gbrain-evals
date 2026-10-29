@@ -1,12 +1,130 @@
 # Comparing memory systems without comparing different things
 
-This page compares gbrain, as this repository pins it (master `6e1086492`, v0.60.324.0), with published results for other memory systems. Every row keeps its own measurement or access date; external sources were last checked September 9, 2026. A source check confirms what an author published; it does not mean we reproduced the system. Everything above [Changelog](#changelog) is current.
+This page compares gbrain, as this repository pins it (master `7a6bdd357`, v0.60.454.0), with published results for other memory systems. Every row keeps its own measurement or access date; external sources were last checked September 9, 2026. A source check confirms what an author published; it does not mean we reproduced the system. Everything above [Changelog](#changelog) is current.
 
 Before comparing two memory scores, ask what each system had to do. Find one useful conversation? Find every conversation needed? Return only the right facts? Write the right answer? Those are different jobs, and a system can do one well while struggling with another.
 
 Gbrain has evidence for each stage. Its release configuration finds all labeled evidence on 451/470 answerable LongMemEval questions (95.96%, opaque session ids, gbrain `109b992`; [recount](benchmarks/2026-10-04-longmemeval-opaque-followups.md)). With opaque ids its house reader answers 439/500 (87.8%) with the reranker off and 453/500 with it on, and a `gpt-5.4` reader answers 447/500 on the reranker-off sessions ([re-run](benchmarks/2026-09-29-longmemeval-opaque-qa.md)). The [September 9 refresh](benchmarks/2026-09-09-retrieval-refresh.md) measures how much irrelevant memory search returns: the tight adaptive configuration with reranking has mean precision 0.5859 and recall 0.8250 on PrecisionMemBench, while broad hybrid returns many more distractions.
 
 Those results give engineers useful choices. They do not establish one universal ranking of memory systems. Use [retrieval lessons](retrieval-lessons.md) for the practical conclusions and [settings](settings.md) for the controls behind them.
+
+## Systems in the head-to-head scoreboard
+
+The scoreboard and README describe each external system by kind. This table is the one place that maps a kind id
+(`eval/systems/kinds.json`) to the product, the pinned version and the vendor's own benchmark code. Each product's
+install bundle (Dockerfile, lockfile, compose file, shim and capability record) sits beside this page in
+`docs/comparison-systems/<kind>/`, so a historical install can be rebuilt byte for byte. The harness and the shims
+were first written for the open-source comparison plan (gbrain-evals#73, branch `capy/oss-memory-shootout` at
+`1b7cc28`); its pilot notes stay on that branch.
+
+| Kind id | Product | Pinned package | Vendor benchmark code |
+|---|---|---|---|
+| `ext-extract-first` | Mem0 (open-source) | mem0ai[nlp]==2.2.1 + fastembed + en_core_web_sm 3.8.0 | mem0ai/memory-benchmarks@4b61c5d |
+| `ext-memory-bank` | Hindsight | hindsight server 0.10.2 (vectorize-io/hindsight@5fc4ce20917b916240cef27c212c387a177f115b, tag v0.10.2) + hindsight-client==0.10.2 | vectorize-io/agent-memory-benchmark@f618ed7 |
+| `ext-graph-pipeline` | Cognee | cognee==1.6.2 | topoteretes/cognee@ba3631f, cognee/eval_framework/beam/ |
+| `ext-temporal-graph` | Graphiti (open-source; the hosted Zep service is built on it) | graphiti-core==0.30.2 (getzep/graphiti@eaa4128681bc53487138a4bbc22d58336ebe70d2, tag v0.30.2) | getzep/zep-papers@4b7f26c, LoCoMo scripts |
+| `ext-markdown-kb` | Basic Memory | basic-memory==0.23.2 | basicmachines-co/basic-memory@c0bd87c, benchmarks/ |
+| `ext-agent-runtime` | Letta Code | @letta-ai/letta-code@0.34.4 | none for memory QA |
+| `ext-verbatim-session` | MemPalace (raw vector mode and the LoCoMo hybrid mode with the LLM reranker off) | mempalace==3.10.0 (MemPalace/mempalace@22fd87f) | MemPalace/mempalace@22fd87f benchmarks/locomo_bench.py |
+
+The machine-readable pin table below is what `bun run eval:scoreboard check` validates against the bundles (lockfile
+and capability-record hashes).
+
+```json
+[
+  {
+    "kind": "ext-extract-first",
+    "product": "Mem0 (open-source)",
+    "package": "mem0ai[nlp]==2.2.1 + fastembed + en_core_web_sm 3.8.0",
+    "image": null,
+    "lock_file": "docs/comparison-systems/ext-extract-first/uv.lock",
+    "lock_sha256": "9777b7a8d09274ccfd52e887c2f4caae288c505d6164b0c6b4be491b0af25680",
+    "capability_sha256": "0acaff3ad67dc0f43af54a45d13f1ca331acf695c6054c02be8d2659b3aa992f",
+    "vendor_benchmark_code": "mem0ai/memory-benchmarks@4b61c5d"
+  },
+  {
+    "kind": "ext-memory-bank",
+    "product": "Hindsight",
+    "package": "hindsight server 0.10.2 (vectorize-io/hindsight@5fc4ce20917b916240cef27c212c387a177f115b, tag v0.10.2) + hindsight-client==0.10.2",
+    "image": "ghcr.io/vectorize-io/hindsight:0.10.2@sha256:d1840062a5b79940ab7a9f4809ceb90fc776d4ad737cd9329e9b5836cc64ab70",
+    "lock_file": "docs/comparison-systems/ext-memory-bank/uv.lock",
+    "lock_sha256": "f54d89dfad22a2ca6d3ca122f4ae363ed9e06be3a057e5fe02a230d39c16d6d8",
+    "capability_sha256": "23a033f4b22a8630e7b613172d2b70663613fb65a511c749d720c7ac7938c6fe",
+    "vendor_benchmark_code": "vectorize-io/agent-memory-benchmark@f618ed7"
+  },
+  {
+    "kind": "ext-graph-pipeline",
+    "product": "Cognee",
+    "package": "cognee==1.6.2",
+    "image": "built from docs/comparison-systems/ext-graph-pipeline/Dockerfile on python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d with uv 0.12.3; the run receipt records the built image id",
+    "lock_file": "docs/comparison-systems/ext-graph-pipeline/uv.lock",
+    "lock_sha256": "59af44d5a70bfa016e888d650259443ba8d0d2f2fd27f4416f9b8e184ef5a0d7",
+    "capability_sha256": "e00e460095fdbc1ce7532b430496d4e8d223c41c5c3e691a457af04edf402a89",
+    "vendor_benchmark_code": "topoteretes/cognee@ba3631f, cognee/eval_framework/beam/"
+  },
+  {
+    "kind": "ext-temporal-graph",
+    "product": "Graphiti (open-source; the hosted Zep service is built on it)",
+    "package": "graphiti-core==0.30.2 (getzep/graphiti@eaa4128681bc53487138a4bbc22d58336ebe70d2, tag v0.30.2)",
+    "image": "shim built from graphiti/Dockerfile on python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d",
+    "lock_file": "docs/comparison-systems/ext-temporal-graph/uv.lock",
+    "lock_sha256": "4ce9b2163c7c7596e0d617586ddf238befdf0fe17bccbfc6db856c1bcddd1d13",
+    "capability_sha256": "0ae56345aad00d45e5eae6fa6838d9a19c0dc1be4d647910938a29cd013ec3bb",
+    "vendor_benchmark_code": "getzep/zep-papers@4b7f26c, LoCoMo scripts"
+  },
+  {
+    "kind": "ext-markdown-kb",
+    "product": "Basic Memory",
+    "package": "basic-memory==0.23.2",
+    "image": null,
+    "lock_file": "docs/comparison-systems/ext-markdown-kb/uv.lock",
+    "lock_sha256": "e1a14a1931815cba5ed2acdfab355e1c01b87c157678eac626a184138ab16807",
+    "capability_sha256": "4e95f8ef9a892dc78778257ecf1664573414db807844e75378978735adaa5c37",
+    "vendor_benchmark_code": "basicmachines-co/basic-memory@c0bd87c, benchmarks/"
+  },
+  {
+    "kind": "ext-agent-runtime",
+    "product": "Letta Code",
+    "package": "@letta-ai/letta-code@0.34.4",
+    "image": "letta/letta:0.34.4@sha256:8ee7fb697e7f08b121a487b48315d45c64b195c12418264b091371c9e8ab3a5c (Letta Code 0.34.4, OCI label revision f898fda60932b34ddbcfd389ea414515b0a5d272 = letta-ai/letta-code tag v0.34.4; the retired Python server is not in this image)",
+    "lock_file": null,
+    "lock_sha256": null,
+    "capability_sha256": "d55c28c953bedbf9bc4b47a7f97943a9850ce5333b46260ffa429447c86ca72e",
+    "vendor_benchmark_code": "none for memory QA"
+  },
+  {
+    "kind": "ext-verbatim-session",
+    "product": "MemPalace (raw vector mode and the LoCoMo hybrid mode with the LLM reranker off)",
+    "package": "mempalace==3.10.0 (MemPalace/mempalace@22fd87f09c19d5ffb2d6966486483353937931c0)",
+    "image": "built from the bundle Dockerfile on python:3.12-slim-bookworm; the run receipt records the image id",
+    "lock_file": "docs/comparison-systems/ext-verbatim-session/uv.lock",
+    "lock_sha256": "e2e066bf182dff9570e6f3c0e1b5509f2325a6c7f42d67d93752c760f7ce9b1d",
+    "capability_sha256": "ffd48dae0fcd93b2bc72a1bddd5ae773411052c4b200010b6ca6da0f9d288203",
+    "vendor_benchmark_code": "MemPalace/mempalace@22fd87f benchmarks/locomo_bench.py"
+  }
+]
+```
+
+### Builds the Q1 scoreboard measured
+
+The scoreboard report's Build column labels each row with the build it measured, and never with a product name. An
+external row reads `bundle lock <hash>, capabilities <hash>`: the first eight characters of the `lock_sha256` and
+`capability_sha256` values in the table above, which name the kind's product and package. The labels are read from
+this table at the tree each campaign launched from (`eval/runner/q1/publish.ts`); the table is the same at every Q1
+launch tree. gbrain rows name the commit and version the campaign pinned.
+
+| Kind id | Build label in the Q1 report |
+|---|---|
+| `gbrain-defaults` | gbrain f05943e6 (0.60.138.0), every sealed and public row (A14, A15) |
+| `gbrain-defaults`, found-and-fixed appendix only | gbrain 7aa2caa0 (0.60.106.0), the public-v2 rows (A15) |
+| `ext-extract-first` | bundle lock 9777b7a8, capabilities 0acaff3a |
+| `ext-memory-bank` | bundle lock f54d89df, capabilities 23a033f4 |
+| `ext-graph-pipeline` | bundle lock 59af44d5, capabilities e00e4600 |
+| `ext-temporal-graph` | bundle lock 4ce9b216, capabilities 0ae56345 |
+| `ext-markdown-kb` | bundle lock e1a14a19, capabilities 4e95f8ef |
+| `ext-agent-runtime` | bundle capabilities d55c28c9 (the table pins no lockfile for it) |
+| `ext-verbatim-session` | bundle lock e2e066bf, capabilities ffd48dae |
+| `baseline-*` | harness baseline (no external system) |
 
 ## Four questions hidden inside the word “recall”
 
@@ -25,7 +143,7 @@ A fifth detail matters: what does K count? Gbrain's ordinary LongMemEval path re
 
 The official [retrieval evaluator](https://github.com/xiaowu0162/LongMemEval/blob/main/src/retrieval/eval_utils.py) distinguishes `recall_all` from `recall_any`. Its [printing code](https://github.com/xiaowu0162/LongMemEval/blob/main/src/evaluation/print_retrieval_metrics.py) excludes abstention questions for retrieval. For the cleaned small split, that leaves 470 of 500 questions. Answer accuracy includes the 30 abstention questions.
 
-The September 6 run measured gbrain v0.48.4.0 at `2efaaf8f8a817b5b82e023383618fdcdb1cc5f7d` (receipts from the pre-squash branch head `fd7e7fd9`). This repository now installs a different commit, gbrain master `6e1086492` (v0.60.324.0), so a fresh `bun install` does not reproduce that code exactly. The run used cached OpenAI `text-embedding-3-large` embeddings at 1,536 dimensions, balanced search, Voyage `rerank-2.5`, autocut off, relational pin three, and lexical metadata gating. The embedding choice pins this experiment; the current new-install embedding default is a different setting.
+The September 6 run measured gbrain v0.48.4.0 at `2efaaf8f8a817b5b82e023383618fdcdb1cc5f7d` (receipts from the pre-squash branch head `fd7e7fd9`). This repository now installs a different commit, gbrain master `7a6bdd357` (v0.60.454.0), so a fresh `bun install` does not reproduce that code exactly. The run used cached OpenAI `text-embedding-3-large` embeddings at 1,536 dimensions, balanced search, Voyage `rerank-2.5`, autocut off, relational pin three, and lexical metadata gating. The embedding choice pins this experiment; the current new-install embedding default is a different setting.
 
 Without reranking, gbrain found all evidence on 439/470 questions (93.40%) and some evidence on 464/470 (98.72%). With reranking, the counts were 449/470 (95.53%) and 469/470 (99.79%). The paired strict comparison gained 18 questions and lost eight. The result supports the reranker in this configuration, while making its losses visible. October 4, 2026: [recounted with opaque session ids](benchmarks/2026-10-04-longmemeval-opaque-followups.md) at gbrain `109b992`, the counts are 434/470 and 463/470 without the reranker and 451/470 and 470/470 with it (+23/−6 paired); the published numbers are confirmed.
 
@@ -230,6 +348,11 @@ before A6b use the former environment variable names. The hashes of every file A
 
 ## Changelog
 
+### 2026-10-25: Re-pin to gbrain `7a6bdd357`
+
+The pin named in the opening and in the LongMemEval section changed from `6e1086492` (v0.60.324.0) to `7a6bdd357`
+(v0.60.454.0). No comparison on this page was rerun, and every row keeps its measurement date and commit.
+
 ### 2026-10-20: Re-pin to gbrain `6e1086492`
 
 gbrain-evals v0.10.124. The pin named in the opening and in the LongMemEval section changed from `f717b1a5b`
@@ -240,6 +363,12 @@ date and commit.
 
 gbrain-evals v0.10.123. The pin named in the opening and in the LongMemEval section changed from `77cf8e111` (v0.60.169.0)
 to `f717b1a5b` (v0.60.299.0). No comparison on this page was rerun, and every row keeps its measurement date and commit.
+
+### 2026-10-12: Builds the Q1 scoreboard measured
+
+New subsection under the pin table: the build label each Q1 scoreboard row carries (gbrain `f05943e6`, 0.60.138.0,
+for every sealed and public row; `7aa2caa0`, 0.60.106.0, for the found-and-fixed appendix; external kinds by bundle
+lockfile and capability-record hash), so the report can label builds without naming products. No pin changed.
 
 ### 2026-10-11: Re-pin to gbrain `77cf8e111`; BEAM head-to-head
 
@@ -294,6 +423,14 @@ gbrain-evals v0.10.37. The pin named in the opening and in the LongMemEval insta
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
+
+### 2026-10-06: Kind-to-product table and install bundles for the head-to-head scoreboard
+
+Adds "Systems in the head-to-head scoreboard": the kind ids the scoreboard and README use, mapped to products, pinned
+packages and vendor benchmark code, with a machine-readable pin table. The install bundles that had lived under
+`eval/systems/<product>/` on the open-source comparison branch now sit beside this page as
+`docs/comparison-systems/<kind>/`, so product names appear only here (the name guard, `eval/runner/name-guard.ts`,
+enforces it).
 
 ### 2026-10-05: Restructured as a current-state page with this changelog
 

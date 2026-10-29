@@ -12,18 +12,22 @@ describes gbrain as this repository pins it today; the changelog at the bottom r
 
 | Item | Value |
 |---|---|
-| Pinned product | gbrain [`6e1086492`](https://github.com/garrytan/gbrain/tree/6e1086492dbded0059fcfabc627b846ced7855f4), release v0.60.324.0, declared as `gbrain` in `package.json` |
+| Pinned product | gbrain [`7a6bdd357`](https://github.com/garrytan/gbrain/tree/7a6bdd3579a3c35d57c63790b428a746fe2f3df7), release v0.60.454.0, declared as `gbrain` in `package.json` |
 | Fixed-purpose aliases | `gbrain-cues` (`939232f`) and `gbrain-reader` (`e78f1c3`), used only by the experiments that name them |
-| This repository | gbrain-evals v0.10.128 (`VERSION`) |
+| This repository | gbrain-evals v0.10.133 (`VERSION`) |
 
-This repository installs gbrain v0.60.324.0 (`6e1086492`). Some results below were measured at earlier commits; each
+This repository installs gbrain v0.60.454.0 (`7a6bdd357`). Some results below were measured at earlier commits; each
 names its commit, and every commit named below is in the release's history except `a7cb37b`, the September 29 branch
 commit whose retrieval the reader replay row froze. The search modes held the same values from v0.48.4.0 through
-v0.60.169.0. Since then the default reranker became Voyage `rerank-3-lite` (was `rerank-2.5`, v0.60.223.0) and
-`tokenmax` stopped expanding queries (v0.60.250.0); on 300 LongMemEval-S questions each change kept retrieval within
-its preregistered margins ([reranker addendum](docs/benchmarks/2026-10-13-rerank3-addendum-preregistration.md),
-[expansion latency](docs/benchmarks/2026-10-14-expansion-latency-preregistration.md)). Retrieval results measured
-before v0.60.223.0 used `rerank-2.5`.
+v0.60.169.0. Since then the default reranker became Voyage `rerank-3-lite` (was `rerank-2.5`, v0.60.223.0),
+`tokenmax` stopped expanding queries (v0.60.250.0), and every mode turned on result-time collapse and rank priors
+(`search.collapse`, `search.rank_priors`, v0.60.332.0): same-slug twins in other sources, merge stubs and copies of
+one document fold into one result row, and organization, OCR and date priors adjust the ranking after the reranker. On
+300 LongMemEval-S questions the reranker and expansion changes each kept retrieval within their preregistered margins
+([reranker addendum](docs/benchmarks/2026-10-13-rerank3-addendum-preregistration.md),
+[expansion latency](docs/benchmarks/2026-10-14-expansion-latency-preregistration.md)); collapse and rank priors have no
+such check here. Retrieval results measured before v0.60.223.0 used `rerank-2.5`, and results measured before
+v0.60.332.0 ran without collapse or rank priors.
 
 ## What gbrain does
 
@@ -109,6 +113,64 @@ Other systems publish different metrics on different protocols, so these compari
 the same footing, and say so where we cannot. This page describes the other systems by kind; their names, versions,
 sources and every row we could not match are in [comparisons and their protocols](docs/comparison-systems.md).
 
+**Head-to-head on sealed data: measured, descriptive.** The [Q1 scoreboard](docs/benchmarks/2026-10-06-scoreboard-preregistration.md)
+gives gbrain `f05943e6` (0.60.138.0) and every other system the same BEAM-10M questions, never used to tune gbrain,
+the same three answer models and the same 8,000-token budget, and names each system by kind. The sealed waves ran from
+2026-10-09 to 2026-10-27, and the block below is rendered from the campaign receipt by `bun eval/runner/scoreboard.ts render`.
+[The report](docs/benchmarks/2026-10-06-scoreboard-report.md) says how the published tables are checked;
+[the scoreboard guide](docs/scoreboard.md) covers how to reproduce a number, add a system or dispute a row.
+
+<!-- scoreboard:headline:begin -->
+On BEAM-10M (never used to tune gbrain), measured 2026-10-27 at gbrain `f05943e`, the component comparison is descriptive: with these conversations it detects only differences of about 13.58 points, so no row is ranked. The table is incomplete: `ext-graph-pipeline`, `ext-markdown-kb` did not run on BEAM-10M, so no field-wide claim is made.
+
+| Kind and configuration | BEAM-10M accuracy at 8k, three-reader mean | Dollars per month, personal agent | p50 answer latency | Write to queryable, p50 | Receipt |
+|---|---|---|---|---|---|
+| `gbrain-defaults`: gbrain with its shipped defaults, installed and read the documented way; GBrain 0.60.138.0 (f05943e6, 2026-10-09), shipped defaults, tokenmax search | incomplete: 56.3% (197/199; 95% interval 50.1% to 62.5%) | not measured | 11.1 s | not measured | [cell](docs/benchmarks/2026-10-06-scoreboard/scoreboard.md#cells) |
+| `ext-extract-first`: an extract-first memory server (an LLM extracts and updates facts on every write); component, 8,000 tokens | 58.9% (199/199; 95% interval 54.0% to 63.8%) | not measured | 9.0 s | not measured | [cell](docs/benchmarks/2026-10-06-scoreboard/scoreboard.md#cells) |
+| `ext-memory-bank`: a memory-bank server with background extraction and reflection; component, 8,000 tokens | 55.4% (199/199; 95% interval 50.8% to 59.7%) | not measured | 13.7 s | not measured | [cell](docs/benchmarks/2026-10-06-scoreboard/scoreboard.md#cells) |
+| `ext-graph-pipeline`: a knowledge-graph pipeline (an LLM builds a graph per document); component, 8,000 tokens | not run: the product's own behavior (A23): its graph store's hard-coded 32 GiB size limit, once reached, fails every later write and retrieval, and its incremental re-extraction makes each session cost more; three shards ingested for 62 hours without finishing | not measured | not measured | not measured | none |
+| `ext-temporal-graph`: a temporal knowledge-graph library (bi-temporal edges, LLM extraction per episode); component, 8,000 tokens | 45.1% (159/159; 95% interval 40.1% to 49.9%), on the 8 conversations A17 measured validly (c0-c7) | not measured | 17.5 s | not measured | [cell](docs/benchmarks/2026-10-06-scoreboard/scoreboard.md#cells) |
+| `ext-markdown-kb`: a Markdown-file knowledge base (local embedder, no LLM on write); component, 8,000 tokens | not run: projected ~61 h > 48 h limit per conversation (A23: the product's own reindex cost grows with the square of the chunk count) | not measured | not measured | not measured | none |
+| `ext-verbatim-session`: a verbatim-session memory system (whole sessions, vector search, LLM rerank off); component, 8,000 tokens | 50.8% (199/199; 95% interval 44.2% to 57.9%) | not measured | 7.4 s | not measured | [cell](docs/benchmarks/2026-10-06-scoreboard/scoreboard.md#cells) |
+| `ext-agent-runtime`: a self-editing agent memory runtime (the agent edits its own memory blocks and files) | not run on BEAM-10M | not measured | not measured | not measured | none |
+| `baseline-full-context`: the whole history in the prompt, where it fits the reader's window; whole history, where it fits | no scored questions | not measured | not measured | not measured | [cell](docs/benchmarks/2026-10-06-scoreboard/scoreboard.md#cells) |
+| `baseline-file-agent`: an agent with list, grep and read tools over the same Markdown files; file agent, uncapped grep, 40 turns | incomplete: 68.0% (193/199; 95% interval 64.3% to 72.0%), whole system | not measured | 19.8 s | not measured | [cell](docs/benchmarks/2026-10-06-scoreboard/scoreboard.md#cells) |
+| `baseline-hybrid`: plain Postgres full-text plus pgvector search with reciprocal-rank fusion; component, 8,000 tokens | 51.6% (199/199; 95% interval 44.3% to 58.7%) | not measured | 7.7 s | not measured | [cell](docs/benchmarks/2026-10-06-scoreboard/scoreboard.md#cells) |
+| `baseline-none`: the question alone, no memory; component, 8,000 tokens | 25.8% (199/199; 95% interval 23.2% to 28.3%) | not measured | 3.2 s | not measured | [cell](docs/benchmarks/2026-10-06-scoreboard/scoreboard.md#cells) |
+
+Descriptive, not tested: correct-abstention rate (abstention-question answers the benchmark's own judgment passes) on BEAM-10M: `gbrain-defaults` 86.0%; `ext-extract-first` 86.0%; `ext-memory-bank` 84.2%; `ext-temporal-graph` 88.9%; `ext-verbatim-session` 91.2%; `baseline-full-context` n/a; `baseline-file-agent` 91.2%; `baseline-hybrid` 93.0%; `baseline-none` 100.0%.
+
+| System | BEAM-100K sealed | BEAM-1M sealed | BEAM-10M |
+|---|---|---|---|
+| `gbrain-defaults`: gbrain with its shipped defaults, installed and read the documented way; GBrain 0.60.138.0 (f05943e6, 2026-10-09) | 67.8% (140/140) | 63.1% (240/240) | 56.3% (197/199) |
+| `baseline-full-context`: the whole history in the prompt, where it fits the reader's window | 72.2% (140/140) | no scored questions | no scored questions |
+| `baseline-file-agent`: an agent with list, grep and read tools over the same Markdown files | 72.8% (140/140) | 71.1% (239/240) | 68.0% (193/199) |
+| best external row, `ext-extract-first`: an extract-first memory server (an LLM extracts and updates facts on every write) | 69.5% (140/140) | 63.4% (240/240) | 58.9% (199/199) |
+
+- BEAM-10M: never used to tune gbrain.
+- BEAM-10M, 2k/16k sweep subset: never used to tune gbrain.
+- BEAM-1M sealed: used to choose gbrain settings.
+- BEAM-100K sealed: used to choose gbrain settings.
+- LoCoMo: used to choose gbrain settings.
+- LongMemEval-S: gbrain was developed on it.
+- LongMemEval-S, shootout slice: gbrain was developed on it.
+- LongMemEval-M: gbrain was developed on it.
+- Where gbrain loses: On BEAM-10M we could not tell `baseline-file-agent` and gbrain-defaults apart (68.3% vs 59.0%); a difference smaller than about 12.9 points would not have been detected.
+- Where gbrain loses: On BEAM-10M, 2k/16k sweep subset (10 conversations), `ext-extract-first` scored 59.3% and gbrain-defaults 52.4% (difference -6.9 points, 95% interval -12.3 to -1.4 points). 10 conversations describe these systems on this set; they cannot rank them.
+- Where gbrain loses: On LoCoMo (10 conversations), `baseline-full-context` scored 84.2% and gbrain-defaults 80.0% (difference -4.2 points, 95% interval -7.0 to -1.0 points). 10 conversations describe these systems on this set; they cannot rank them.
+- GBrain rows measure GBrain 0.60.138.0 (f05943e6, 2026-10-09). That is not current master; a rerun of the GBrain rows at current master is planned after amendment A23.
+- Sealed spend settled at $7,034.32 on the campaign ledgers against the $8,000 sealed cap; $6,729.26 of it is measured: $6,626.00 across the four freezes' cells (A17, A22, A23 and A24) plus $103.26 for the A19 frontier-judge backfill. Of 149 launch units, 114 settled complete, 8 partial and 27 not run; each not-run row says why.
+- S2b full-context (`s2b.baseline-full-context.baseline`): A23 priced each gpt-6.1-sol whole-history reading's reservation from its token estimate, but the metering proxy reserves the request's byte count as input tokens, about 3.6 times as much, so the $20 lease admitted one reading at a time. The custodian raised the lease to $110 inside the A24 cap (raise-lease.ts) and resumed. The unit settled complete, 720 of 720 answers, at $191.34 measured across its seven leases.
+- ext-temporal-graph: its pinned configuration calls a reranker and an ingest model that their provider retired, and a competitor's settings are never changed, so (ruling 2026-10-26 via GBRA-108, option 1) its BEAM-10M row is shown on the 8 conversations A17 measured validly (c0-c7), every system is also shown on those 8 as a sensitivity view, its cells after the retirement are not run, and it is retested at its current release in the follow-up current-master rerun (F6). c8 and c9 hold A22 rows with 120 `ingest_degraded` and are not merged.
+- gbrain-defaults shipped-defaults S1, 8k component arm: 10 answers (5 on each of c4 and c5), 0.4% of the row's answers, are recorded `harness_invalid`. A24's re-answer carried them forward under their earlier realization instead of answering them again. The custodian traced the 10 A22 retrievals behind them: 9 failed as the shim's `degraded read (harness failure; retry after quiesce)` (8 `expansion_not_applied`, 1 `expansion_partial` with `rescore_skipped`; c4 fixed-evidence 3, c5 fixed-evidence 3, c5 vendor-default 3), and the tenth, c4 vendor-default, scored; the stored strings carry no HTTP status. A harness failure leaves its question out of that row's mean, and the sensitivity view `a24-shipped-defaults-harness-invalid` leaves those questions out for every system. The carry-forward fix goes into the follow-up rerun (F6).
+- gbrain-defaults full-surface S2b `whole-think`: 10 gpt-6.1-sol answers on c0 and c1 stopped at exactly 4,000 output tokens; every scored Sol answer in those cells used fewer. At the pin, gbrain think gives 16,000 output tokens only to Claude 5, Claude 4.x, gpt-5 and o-series models and to recipes that declare thinking by default; any other model, gpt-6.1-sol included, gets 4,000. gbrain's own path labels that stop `output_truncated`, and the shim records any status other than an answer as `harness_invalid`. The attribution rests on gbrain's code at the pin, the custodian's count (all 10 stopped at exactly 4,000 output tokens) and a keyless $0 repro of the limit; the pulled lease logs do not keep the shim's status field, so the `output_truncated` label itself was not observed. The limit and the flag are gbrain's shipped behavior with this model, so the 10 count as product failures, scored 0 and kept in the denominator. gbrain #7421 (2026-10-24, after the pin) gives OpenAI reasoning models from gpt-5 to gpt-9 the 16,000-token limit.
+- S3 file-agent (`s3.baseline-file-agent.baseline`): 23 gpt-6.1-sol answers are `reader_error`, a harness failure, so their questions leave that row's mean under the outcome rules.
+- S3 agent runtime (`s3.ext-agent-runtime.recipe`): all 200 of its gpt-6.1-sol answers are `retrieval_error`. The runtime calls gpt-6.1-sol through chat completions with function tools and a reasoning effort, and the provider refuses that request. The preregistration (A19, item E) records this as the runtime's own request, which the harness does not change, and leaves it to the program owner; no alternative ran, so the row reports the Sol answers as the runtime's failure. Its Opus and Sonnet answers are unaffected, and the per-reader table shows each reader. 2 further answers are `reader_error`.
+- Frontier-judge column: the A19 backfill filled 1,960 of 2,140 gpt-6.1-sol frontier judgments; the frozen tool does not judge the other 180, which are temporal-graph `ingest_degraded` answers. 194 of 214 Opus redos landed (2 remain `judge_error`, 18 fall outside a published arm), and a redo replaces the logged error under the same key. Agreement is reported on the covered set, with each judge's coverage.
+- Measured 2026-10-09 to 2026-10-27 with gbrain 0.60.138.0 (`f05943e`); pinned systems: `ext-extract-first` bundle lock 9777b7a8, capabilities 0acaff3a; `ext-memory-bank` bundle lock f54d89df, capabilities 23a033f4; `ext-graph-pipeline` bundle lock 59af44d5, capabilities e00e4600; `ext-temporal-graph` bundle lock 4ce9b216, capabilities 0ae56345; `ext-markdown-kb` bundle lock e1a14a19, capabilities 4e95f8ef; `ext-agent-runtime` bundle capabilities d55c28c9; `ext-verbatim-session` bundle lock e2e066bf, capabilities ffd48dae.
+- Full tables, cohorts and exclusions: [scoreboard report](docs/benchmarks/2026-10-06-scoreboard/scoreboard.md).
+<!-- scoreboard:headline:end -->
+
 **Finding all the evidence: gbrain leads every system we can score strictly.** A question counts only if every
 required session is in the top five.
 
@@ -190,7 +252,7 @@ tie (95.6% each) and the older six-model lead no longer describe gbrain
 | Every report, grouped by the question it answers | [Documentation index](docs/README.md) |
 | How do retrieval scores differ from answer accuracy? | [What the scores mean](docs/retrieval-lessons.md#what-the-scores-mean) |
 | How are new gbrain defaults decided? | [Held-out program](docs/benchmarks/2026-10-05-heldout-program.md), [decision kit](docs/decisions.md) |
-| Can I reproduce a result or test my own system? | [Run the suite](eval/README.md), [contribute an adapter or a category](eval/CONTRIBUTING.md) |
+| Can I reproduce a result or test my own system? | [Run the suite](eval/README.md), [contribute an adapter or a category](eval/CONTRIBUTING.md), [reproduce a scoreboard number, add a memory system or dispute a row](docs/scoreboard.md) |
 | What is still unfinished? | [Open work](TODOS.md) |
 
 ## Try a small experiment
@@ -312,6 +374,38 @@ Code is MIT licensed. Dataset and vendored benchmark attribution is recorded in 
 [PrecisionMemBench attribution](eval/precisionmembench/ATTRIBUTION.md).
 
 ## Changelog
+
+### 2026-10-29: Repository row names v0.10.133
+
+gbrain-evals v0.10.133 adds the [8k conversion report](docs/benchmarks/2026-10-26-gbrain-8k-conversion.md) with its preregistration, harness and held-out result. The repository row names v0.10.133 (was v0.10.132). No result row on this page changes; the report is listed in the [docs index](docs/README.md).
+
+### 2026-10-29: Repository row names v0.10.132
+
+gbrain-evals v0.10.132 makes `reuse-check.ts` and `arm_power.py` refuse inputs they used to pass, described in the [contributor guide](eval/CONTRIBUTING.md#cut-the-cost-of-a-preregistered-run). The repository row names v0.10.132 (was v0.10.131). No result row on this page changes.
+
+### 2026-10-28: Repository row names v0.10.131
+
+gbrain-evals v0.10.131 adds the [eval cost audit](docs/audit/2026-10-28-eval-cost-audit.md) and two Cat 40 cost tools, listed in the [docs index](docs/README.md). The repository row names v0.10.131 (was v0.10.130). No result row on this page changes.
+
+### 2026-10-27: Q1 scoreboard headline block, measured; repository row names v0.10.130
+
+The Q1 scoreboard's headline block between the `scoreboard:headline` markers now holds the measured results rendered
+from the campaign receipt: BEAM-10M at 8,000 tokens, the BEAM-100K to BEAM-10M size curve, and the notes on every row
+that is incomplete or not run. The sentence above the block no longer says the sealed waves are running, and links
+[the report](docs/benchmarks/2026-10-06-scoreboard-report.md) and [the scoreboard guide](docs/scoreboard.md). Every GBrain
+row measures gbrain 0.60.138.0 (`f05943e6`), not current master; a rerun is planned (F6). The repository row names
+v0.10.130 (was v0.10.129). No other result on this page changed.
+
+### 2026-10-25: Re-pin to gbrain `7a6bdd357`; repository row names v0.10.129
+
+gbrain-evals v0.10.129. The pinned product row changes from `6e1086492` (v0.60.324.0) to `7a6bdd357` (v0.60.454.0). On pages over 1 MiB, gbrain
+now keeps links, mentions, timeline, fences, conversation facts and synopses per segment, cuts forced chunks at sentence
+ends and imports a new transcript session as one page (large pages Wave B PR 4, gbrain #7316); a git-canonical page that
+turns private and then world again gets its file back (gbrain #7586). `src/core/search/mode.ts` changed between the two
+commits: gbrain v0.60.332.0 added `collapse` and `rank_priors` to every mode bundle, both on (gbrain changelog,
+0.60.332.0), so the search-mode sentences under the table now name them and say that earlier retrieval results ran
+without them. Every commit that paragraph names is still in the release's history except `a7cb37b`. No result row on
+this page changes. The repository row names v0.10.129 (was v0.10.128).
 
 ### 2026-10-21: Repository row names v0.10.128
 
@@ -632,6 +726,12 @@ older six-model lead are retired without a rerun. The row keeps the permission r
 context), which does not depend on reranking. A new row reports the Cat 40 Hard confirmation (+7.7 and +13.0 points
 over plain files on a fresh and a sealed world, reranking verified), and "How gbrain compares" describes agent tasks
 from it. The repository row names v0.10.78 (was v0.10.77).
+
+### 2026-10-12: Q1 scoreboard headline block, pending
+
+New block at the top of "How gbrain compares": the Q1 scoreboard's six-column headline table between the
+`scoreboard:headline` markers, every cell pending until the sealed waves settle. `bun eval/runner/scoreboard.ts
+render` replaces it from the campaign receipt. No existing result changed.
 
 ### 2026-10-11: T0b sealed confirmation; repository row names v0.10.77
 

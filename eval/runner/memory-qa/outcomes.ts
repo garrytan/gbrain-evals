@@ -13,22 +13,30 @@
  *   outcomes.ndjson  the terminal outcome and attempt count per expected id.
  *
  * Outcomes: `scored`; product failures that stay in the denominator as misses
- * (`retrieval_error`, `unsupported`, and `ingest_degraded`, which keeps its
- * measured scores); harness failures that make a comparison incomplete,
- * never a product loss (`reader_error`, `judge_error`, `harness_invalid`,
- * `budget_not_run`). Everything except `scored`, `unsupported` and
- * `ingest_degraded` is retried on resume up to the attempt limit; the last
- * attempt is terminal.
+ * (`retrieval_error`, `unsupported`, an answering agent's `turn_cap` and
+ * `context_overflow` stops, and `ingest_degraded`, which keeps its measured
+ * scores); harness failures that make a comparison incomplete, never a
+ * product loss (`reader_error`, `judge_error`, `harness_invalid`,
+ * `budget_not_run`); and `does_not_fit`, not applicable: a whole history
+ * that does not fit the reader's window leaves that system's denominator and
+ * is reported, neither a product nor a harness failure. Everything except
+ * `scored`, `unsupported`, `ingest_degraded`, `turn_cap`, `context_overflow`
+ * and `does_not_fit` is retried on resume up to the attempt limit (rerunning
+ * a deterministic stop would only re-roll a number); the last attempt is
+ * terminal.
  */
 import { createHash } from 'node:crypto';
 import { appendFileSync, existsSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Observation } from '../stats/paired.ts';
 
-export type Outcome = 'scored' | 'retrieval_error' | 'unsupported' | 'ingest_degraded' | 'reader_error' | 'judge_error' | 'harness_invalid' | 'budget_not_run';
-export const PRODUCT_FAILURES: ReadonlySet<Outcome> = new Set(['retrieval_error', 'unsupported']);
+export type Outcome = 'scored' | 'retrieval_error' | 'unsupported' | 'turn_cap' | 'context_overflow' | 'ingest_degraded' | 'reader_error' | 'judge_error' | 'harness_invalid' | 'budget_not_run' | 'does_not_fit';
+export const OUTCOMES: readonly Outcome[] = ['scored', 'retrieval_error', 'unsupported', 'turn_cap', 'context_overflow', 'ingest_degraded', 'reader_error', 'judge_error', 'harness_invalid', 'budget_not_run', 'does_not_fit'];
+export const PRODUCT_FAILURES: ReadonlySet<Outcome> = new Set(['retrieval_error', 'unsupported', 'turn_cap', 'context_overflow']);
 export const HARNESS_FAILURES: ReadonlySet<Outcome> = new Set(['reader_error', 'judge_error', 'harness_invalid', 'budget_not_run']);
-const FINAL: ReadonlySet<Outcome> = new Set(['scored', 'unsupported', 'ingest_degraded']);
+/** Out of that system's denominator and reported; neither a product nor a harness failure. */
+export const NOT_APPLICABLE: ReadonlySet<Outcome> = new Set(['does_not_fit']);
+const FINAL: ReadonlySet<Outcome> = new Set(['scored', 'unsupported', 'ingest_degraded', 'turn_cap', 'context_overflow', 'does_not_fit']);
 export const DEFAULT_MAX_ATTEMPTS = 3;
 
 export type Row = Record<string, unknown> & { id: string };
@@ -104,7 +112,7 @@ export function canonicalize(manifest: Manifest, attempts: readonly Row[], maxAt
     latest.set(a.id, a);
     tries.set(a.id, (tries.get(a.id) ?? 0) + 1);
   }
-  const counts = Object.fromEntries(['scored', 'retrieval_error', 'unsupported', 'ingest_degraded', 'reader_error', 'judge_error', 'harness_invalid', 'budget_not_run'].map(k => [k, 0])) as Record<Outcome, number>;
+  const counts = Object.fromEntries(OUTCOMES.map(k => [k, 0])) as Record<Outcome, number>;
   const rows: Row[] = [], outcomes: Canonical['outcomes'] = [], missing: string[] = [];
   const pending = new Set<string>();
   for (const id of manifest.expected) {

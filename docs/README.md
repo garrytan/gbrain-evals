@@ -1,7 +1,7 @@
 # Learn, evaluate, and extend gbrain
 
 This index lists every published report by the question it answers. It describes the repository as it stands:
-gbrain-evals v0.10.128, with gbrain master `6e1086492` (v0.60.324.0) as the product under test. Results measured at
+gbrain-evals v0.10.133, with gbrain master `7a6bdd357` (v0.60.454.0) as the product under test. Results measured at
 other gbrain commits name that commit in their report. Everything above [Changelog](#changelog) is current; the
 changelog at the bottom records how this index changed.
 
@@ -21,9 +21,11 @@ Start with [what gbrain does today](../README.md), then follow the route that fi
 | How can I contribute a competing system, new questions or a category? | [Contributor guide](../eval/CONTRIBUTING.md) |
 | Which outside scores are actually comparable? | [Cross-system comparison](comparison-systems.md) |
 | How does gbrain compare with open-source memory systems run through one harness, with one reader? | [October 6 to 8 open-source comparison](benchmarks/2026-10-06-oss-memory-shootout.md) ([preregistration](benchmarks/2026-10-06-oss-memory-shootout-preregistration.md), [update-and-forget preregistration](benchmarks/2026-10-06-oss-memory-shootout-lifecycle-lite-preregistration.md)): gbrain finds the right sessions as well as or better than every system, but as measured through this adapter its evidence leads the reader to fewer correct answers than three of the five. Systems are named by kind; [one table](comparison-systems.md#systems-in-the-open-source-comparison) maps each to its project |
+| How does gbrain's shipped configuration compare with other memory systems on the same sealed questions, answer models and token budget? How do I reproduce a number, add a system or dispute a row? | [Q1 head-to-head scoreboard](benchmarks/2026-10-06-scoreboard/scoreboard.md) ([report layout and how it is checked](benchmarks/2026-10-06-scoreboard-report.md), [preregistration](benchmarks/2026-10-06-scoreboard-preregistration.md), [scoreboard guide](scoreboard.md)): BEAM-10M, descriptive, no row ranked; every GBrain row measures gbrain 0.60.138.0, not current master |
 | What does gbrain's `query` hand a reader at 8,000 tokens, and which lever closes the open-source comparison's gap? | [October 8 budgeted delivery E1](benchmarks/2026-10-08-gbrain-budgeted-delivery-e1.md) ([preregistration](benchmarks/2026-10-08-gbrain-budgeted-delivery-e1-preregistration.md); development, gbrain `c5fb0201`): a date line on each chunk lifts LoCoMo temporal questions from 28 to 78 of 100, so most of the comparison's LoCoMo gap was the adapter; at 8,000 tokens `auto` on 25 hits overruns every budget and adds little, while the same delivery on the first five hits reaches 82% on the LongMemEval-S slice with Sonnet 5.5, level with whole sessions; saved facts show no headroom |
 | How should gbrain pack an explicit token budget, and which packing goes to the held-out test? | [October 9 budgeted delivery E2](benchmarks/2026-10-09-gbrain-budgeted-delivery-e2.md) ([preregistration](benchmarks/2026-10-09-gbrain-budgeted-delivery-e2-preregistration.md); development, gbrain `ca2c447bd`): on all 500 LongMemEval-S questions with Sonnet 5.5 at 8,000 tokens, handing over the top conversations whole (`depth_first`) answers 79.4% against 69.0% for today's uncapped `auto` (+10.4, interval +6.4 to +14.4), with the same gain under Opus 5.5 and gpt-6.1-sol; enforcing the budget without changing the order (`cap_only`) does not help; `depth_first` goes to H1, though it trails `breadth_capped` by 10.5 points on multi-session questions |
 | Does packing for depth beat the shipped cap on held-out questions? | [October 10 budgeted delivery H1](benchmarks/2026-10-10-gbrain-budgeted-delivery-h1.md) ([preregistration](benchmarks/2026-10-10-gbrain-budgeted-delivery-h1-preregistration.md); sealed confirmation v2, gbrain `8a3eedeac`): no. With an explicit 5,500-token budget, `depth_first` answered 122 of 200 held-out questions against 145 for the shipped `cap_only` (−11.5 points, −18.0 to −4.5), losing multi-session questions 15 to 40 of 80 under all three readers, so `cap_only` stays the explicit-budget default |
+| Does gbrain's 8k conversion wave (budget unit, evidence titles, facts block) answer more held-out questions at an 8,000-token reader budget? | [October 26 8k conversion wave](benchmarks/2026-10-26-gbrain-8k-conversion.md) ([preregistration](benchmarks/2026-10-26-gbrain-8k-conversion-preregistration.md); sealed confirmation v2, gbrain `cf3ec433`, v0.60.461.0): the facts block (`search.query_facts_block`) answered 183 of 200 against 151 for the control (+16.0 points, 95% interval +11.0 to +21.5, verdict `pass`), gaining on multi-session (69 against 45 of 80) and temporal (34 against 26 of 40) questions; the budget-unit flag (`search.query_budget_unit = auto`) and the evidence-titles flag (`search.evidence_titles`) are `inconclusive`; all three flags stay default-off, and flipping the facts block on is the owner's call |
 | What is the plan for improving gbrain and proving it? | [September 28 plan and audits](plans/2026-09-28-gbrain-10x/README.md) |
 | What are the cheapest retrieval, latency and cost wins left, and how will each be checked? | [October 11 low-hanging fruit plan](plans/2026-10-11-low-hanging-fruit/PLAN.md) (approved 2026-10-12; closed 2026-10-13: items 0, 1b and 2 to 5 shipped, the `balanced` default flip did not) |
 | What will the next categories measure, and what does gbrain implement for each of them? | [October 1 eval-category wave plan](plans/2026-10-01-eval-category-wave/README.md), [capability and entrypoint matrix](benchmarks/2026-10-01-capability-matrix.md) |
@@ -36,6 +38,7 @@ describe current behavior first, then the older work behind a decision.
 | Engineering question | Report |
 |---|---|
 | Would a graph database walk gbrain's link graph faster than Postgres, for the same answer? | [October 17 graph backend, HydraDB vs Postgres](benchmarks/2026-10-17-graph-backend.md) ([preregistration](benchmarks/2026-10-17-graph-backend-preregistration.md)): no. Breadth-first walks on Postgres (gbrain #6934) beat HydraDB at 10,000 to 1,000,000 pages (warm p95 1.44 s vs 6.28 s at 100,000) with identical answers on 54,842 calls; HydraDB is faster only on deep `both` edge walks |
+| Would gbrain find the right passage of a long, sectioned document more often if each chunk's embedding carried its heading path, or if chunks started at their headings? | [October 28 structure-aware chunks](benchmarks/2026-10-28-structure-aware-chunks.md) ([preregistration](benchmarks/2026-10-28-structure-aware-chunks-preregistration.md); development, gbrain `5af37ba44` with a local experiment patch): no detectable gain, so neither idea earns a build proposal. The heading path raised hit@3 on 880 Qasper paper questions from 80.0% to 81.7% (exact p = 0.040) but lowered it on 39 messy-company questions from 76.9% to 74.4%, so the preregistered rule (a gain on both corpora and pooled p < 0.05) fails at p = 0.070; chunks that start at headings and the keyless heading-term arms add nothing detectable |
 | Does gbrain's automatic whole-conversation delivery hold up on the sealed held-out set? | [September 30 auto v2 release check](benchmarks/2026-09-30-evidence-auto-v2.md) |
 | Does it hold up on a harder held-out set where chunks fall short? | [October 2 sealed v2 release decision 1](benchmarks/2026-10-02-sealed-v2-decision-1.md) ([preregistration](benchmarks/2026-10-02-sealed-v2-decision-1-preregistration.md)) |
 | Should an agent get neighbor chunks, sections or whole pages instead of bare chunks, and at what token cost? | [September 30 evidence-delivery study](benchmarks/2026-09-30-evidence-delivery.md) |
@@ -130,7 +133,7 @@ gap does not isolate the effect of a graph alone.
 | Does the Jev answerability signal (S4) make a reader abstain on unanswerable questions without refusing answerable ones? | [October 6 A4 with S4 on](benchmarks/2026-10-06-a4-s4-on.md) ([preregistration](benchmarks/2026-10-06-a4-s4-on-preregistration.md)) |
 | When the same conversation arrives as a Claude Code, Codex, ChatGPT or WhatsApp export (any of the 27 formats gbrain registers), does gbrain keep who said what and when, and admit what it cannot parse? Does a meeting page tell attendees from people only mentioned? (gates since 2026-10-02, when gbrain's fix for N12-1 was verified) | [October 1 ingestion format fidelity (N12)](benchmarks/2026-10-01-n12-format-fidelity.md) |
 | Are gbrain's six code-intelligence operations ready to use on a real TypeScript repository, and where do their documented limits show? | [October 1 code-intelligence readiness scout (N13)](benchmarks/2026-10-01-n13-code-intelligence.md) |
-| If I put one very large document in gbrain (a 2 MB chat, a novel, a 20 MB or 200 MB export), can an agent find and read what is deep inside it, and does keeping it up to date stay cheap? (report-only and held; at gbrain `6e10864`, with segmented storage on by default, `append_page` and upload sessions, one page up to 128 MiB on PGLite and 256 MiB on Postgres is found 40/40, read in windows and exported byte-identical, and a 1 KB append writes one tail segment and re-embeds one chunk, within the counted append rule; the counted recall-gap rule still fails at 24 MiB, where one needle split across two chunks is missed, and a purge now leaves nothing behind, so bug N14-5 is fixed) | [October 20 Wave B PR 3 (N14)](benchmarks/2026-10-20-n14-large-page-fidelity-wave-b3.md), [October 18 Wave B PR 2 and the switch-on](benchmarks/2026-10-18-n14-large-page-fidelity-wave-b2.md), [October 15 Wave B PR 1, segmented storage (exploratory)](benchmarks/2026-10-15-n14-large-page-fidelity-wave-b1.md), [October 15 after large pages Wave A](benchmarks/2026-10-15-n14-large-page-fidelity-wave-a.md), [October 14 baseline](benchmarks/2026-10-14-n14-large-page-fidelity-baseline.md) ([preregistration](benchmarks/2026-10-14-n14-large-page-fidelity-preregistration.md)) |
+| If I put one very large document in gbrain (a 2 MB chat, a novel, a 20 MB or 200 MB export), can an agent find and read what is deep inside it, and does keeping it up to date stay cheap? (report-only and held; at gbrain `7a6bdd3`, with segmented storage on by default, `append_page`, upload sessions and sentence-aligned chunk cuts, one page up to 128 MiB on PGLite and 256 MiB on Postgres is found 40/40, read in windows and exported byte-identical, and a 1 KB append writes one tail segment and re-embeds one chunk; every counted rule passes, the recall-gap rule at 24 MiB included, and a purge leaves nothing behind) | [October 25 Wave B PR 4 (N14)](benchmarks/2026-10-25-n14-large-page-fidelity-wave-b4.md), [October 20 Wave B PR 3](benchmarks/2026-10-20-n14-large-page-fidelity-wave-b3.md), [October 18 Wave B PR 2 and the switch-on](benchmarks/2026-10-18-n14-large-page-fidelity-wave-b2.md), [October 15 Wave B PR 1, segmented storage (exploratory)](benchmarks/2026-10-15-n14-large-page-fidelity-wave-b1.md), [October 15 after large pages Wave A](benchmarks/2026-10-15-n14-large-page-fidelity-wave-a.md), [October 14 baseline](benchmarks/2026-10-14-n14-large-page-fidelity-baseline.md) ([preregistration](benchmarks/2026-10-14-n14-large-page-fidelity-preregistration.md)) |
 | Does "who is waiting on me" open, close and mute Gmail loops the way the guide says, and where does a reply closing a loop differ from the work being done? | [October 1 open loops on Gmail-shaped threads (N7)](benchmarks/2026-10-01-n7-open-loops-email.md) |
 | Does the brain volunteer the right page when someone is mentioned, without false alarms, and does it keep private pages out of what it pushes? (report-only) | [October 1 unsolicited recall at final delivery (N8)](benchmarks/2026-10-01-n8-proactive-recall.md) |
 | Does relationship retrieval help questions that chain two or three relations, in wording the parser never saw, and does it still help reworded one-hop questions at the current pin? | [October 1 multi-hop check (N9)](benchmarks/2026-10-01-n9-multi-hop.md), [multi-relation planner preregistration](benchmarks/2026-10-04-p7-multi-hop-planner-preregistration.md), [LHF wave 2 attendance paraphrase gate](benchmarks/2026-10-16-lhf-wave-2-attendance-preregistration.md) (held-out paraphrases fired 18 of 90, failed) |
@@ -208,6 +211,8 @@ full answer and the finish reason, with one record per replicate and per attempt
 The [September 6 evidence guide](benchmarks/2026-09-06-longmemeval-ranker-wave/longmemeval/README.md)
 explains the saved LongMemEval files and what their compacted records retain.
 
+The [October 28 eval cost audit](audit/2026-10-28-eval-cost-audit.md) shows where about $10,400 of model spend went
+from October 14 to 28 and how a preregistered Cat 40 run can [reuse an arm or size it by simulation](../eval/CONTRIBUTING.md#cut-the-cost-of-a-preregistered-run).
 The [August audit](audit/2026-08-31-eval-audit.md) describes earlier problems in
 scoring and execution. The September 28, 2026 corrections are listed in the
 [main README](../README.md#corrections), with a dated note in each affected report. [Open work](../TODOS.md) distinguishes unfinished
@@ -220,6 +225,49 @@ and [repository writing guide](../CLAUDE.md). The
 procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
+
+### 2026-10-29: Opening names v0.10.133
+
+The opening names v0.10.133 (was v0.10.132), which adds the [8k conversion report](benchmarks/2026-10-26-gbrain-8k-conversion.md), its preregistration and its held-out result. One row joins the first table, after the H1 row; no existing row changed.
+
+### 2026-10-29: Opening names v0.10.132
+
+The opening names v0.10.132 (was v0.10.131), which tightens the two Cat 40 cost tools the index already links. No existing row changed.
+
+### 2026-10-28: Eval cost audit; opening names v0.10.131
+
+"Checking the evidence" links the [October 28 eval cost audit](audit/2026-10-28-eval-cost-audit.md) and the contributor
+guide's new section on cutting a preregistered run's cost. Neither was reachable from this index. The opening names
+v0.10.131 (was v0.10.130). No existing row changed.
+
+### 2026-10-28: Structure-aware chunks report
+
+Retrieval experiments gains the [structure-aware chunks report](benchmarks/2026-10-28-structure-aware-chunks.md)
+(GBRA-234, development evidence at gbrain `5af37ba44` with a local experiment patch): no contrast met the
+preregistered rule, so no build is proposed. It was not reachable from this index. Its preregistration
+leaves Protocols and preregistrations (no results yet), since the new row links it.
+
+### 2026-10-28: Structure-aware chunks preregistration
+
+Protocols and preregistrations gains the [structure-aware chunks preregistration](benchmarks/2026-10-28-structure-aware-chunks-preregistration.md)
+(GBRA-234): whether a heading path in the embedding prefix, or chunks that start at headings, lifts hit@3 on
+messy-company-v1 dev and Qasper dev, with keyless arms and a Cat 13 and Cat 13b no-regression check. It was not
+reachable from this index. No existing row changed.
+
+### 2026-10-27: Q1 head-to-head scoreboard; opening names v0.10.130
+
+A new route row links the Q1 scoreboard's published tables, the report that says how they are checked, the
+preregistration and [the scoreboard guide](scoreboard.md) (reproduce a number, add a memory system, dispute a row). None
+of them was reachable from this index. The opening names v0.10.130 (was v0.10.129). No existing row changed.
+
+### 2026-10-25: Re-pin to gbrain `7a6bdd357`; opening names v0.10.129
+
+gbrain-evals v0.10.129 (the opening names it; was v0.10.128). The opening names gbrain master `7a6bdd357` (v0.60.454.0, was `6e1086492`, v0.60.324.0), which keeps derived data per
+segment on large pages, cuts forced chunks at sentence ends and imports new transcript sessions as one page (large pages
+Wave B PR 4, gbrain #7316), and restores the file of a git-canonical page that turns private and then world again
+(gbrain #7586). Reports measured at `6e1086492` keep that commit. The N14 row links the
+[Wave B PR 4 run](benchmarks/2026-10-25-n14-large-page-fidelity-wave-b4.md), and its question cell names the result:
+every counted rule passes, the recall-gap rule at 24 MiB included.
 
 ### 2026-10-20: Agent retrieval shapes
 

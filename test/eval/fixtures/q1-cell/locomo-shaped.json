@@ -1,0 +1,397 @@
+{
+ "note": "Invented keyless LoCoMo-shaped fixture for the Q1 cell runner tests: LoCoMo session ids, dates, named speakers and categories (adversarial questions are abstentions with a trap). Scores on it prove the plumbing, never memory quality.",
+ "conversations": [
+  {
+   "id": "conv-a",
+   "sessions": [
+    {
+     "id": "session_1",
+     "date": "1:56 pm on 8 May, 2023",
+     "turns": [
+      {
+       "speaker": "Maya",
+       "content": "I started volunteering at the riverside animal shelter on Saturdays."
+      },
+      {
+       "speaker": "Jon",
+       "content": "That sounds rewarding, how is it going?"
+      }
+     ]
+    },
+    {
+     "id": "session_2",
+     "date": "10:12 am on 21 May, 2023",
+     "turns": [
+      {
+       "speaker": "Maya",
+       "content": "My sister Priya moved to Lisbon for a job at a design studio."
+      },
+      {
+       "speaker": "Jon",
+       "content": "Lisbon is lovely, she will enjoy it."
+      }
+     ]
+    },
+    {
+     "id": "session_3",
+     "date": "4:30 pm on 3 June, 2023",
+     "turns": [
+      {
+       "speaker": "Maya",
+       "content": "I adopted a three-legged beagle named Biscuit from the shelter."
+      },
+      {
+       "speaker": "Jon",
+       "content": "Biscuit is a great name for a beagle."
+      }
+     ]
+    },
+    {
+     "id": "session_4",
+     "date": "8:05 pm on 19 June, 2023",
+     "turns": [
+      {
+       "speaker": "Maya",
+       "content": "I finished my first pottery class and made a blue ceramic bowl."
+      },
+      {
+       "speaker": "Jon",
+       "content": "A blue bowl, nice work."
+      }
+     ]
+    },
+    {
+     "id": "session_5",
+     "date": "2:40 pm on 2 July, 2023",
+     "turns": [
+      {
+       "speaker": "Maya",
+       "content": "Biscuit learned to fetch a frisbee at the park near the river."
+      },
+      {
+       "speaker": "Jon",
+       "content": "Clever dog."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "conv-b",
+   "sessions": [
+    {
+     "id": "session_1",
+     "date": "9:00 am on 2 March, 2023",
+     "turns": [
+      {
+       "speaker": "Ravi",
+       "content": "I signed up for the city marathon happening in October."
+      },
+      {
+       "speaker": "Elena",
+       "content": "Training will be intense."
+      }
+     ]
+    },
+    {
+     "id": "session_2",
+     "date": "6:45 pm on 15 March, 2023",
+     "turns": [
+      {
+       "speaker": "Ravi",
+       "content": "My training plan says I run forty kilometers each week."
+      },
+      {
+       "speaker": "Elena",
+       "content": "That is a solid base."
+      }
+     ]
+    },
+    {
+     "id": "session_3",
+     "date": "11:20 am on 1 April, 2023",
+     "turns": [
+      {
+       "speaker": "Ravi",
+       "content": "I bought green trail shoes from the outdoor store downtown."
+      },
+      {
+       "speaker": "Elena",
+       "content": "Green trail shoes, stylish."
+      }
+     ]
+    },
+    {
+     "id": "session_4",
+     "date": "7:10 pm on 20 April, 2023",
+     "turns": [
+      {
+       "speaker": "Ravi",
+       "content": "My coach Daniel told me to add hill repeats on Thursdays."
+      },
+      {
+       "speaker": "Elena",
+       "content": "Hill repeats build strength."
+      }
+     ]
+    },
+    {
+     "id": "session_5",
+     "date": "5:55 pm on 8 May, 2023",
+     "turns": [
+      {
+       "speaker": "Ravi",
+       "content": "I ran a half marathon in one hour fifty minutes."
+      },
+      {
+       "speaker": "Elena",
+       "content": "Great time for a first half."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "conv-c",
+   "sessions": [
+    {
+     "id": "session_1",
+     "date": "3:15 pm on 12 January, 2023",
+     "turns": [
+      {
+       "speaker": "Lena",
+       "content": "I planted tomatoes and basil in my balcony garden."
+      },
+      {
+       "speaker": "Omar",
+       "content": "Fresh basil is the best."
+      }
+     ]
+    },
+    {
+     "id": "session_2",
+     "date": "12:30 pm on 30 January, 2023",
+     "turns": [
+      {
+       "speaker": "Lena",
+       "content": "My neighbor Hugo gave me a lemon tree seedling."
+      },
+      {
+       "speaker": "Omar",
+       "content": "A lemon tree on a balcony, bold."
+      }
+     ]
+    },
+    {
+     "id": "session_3",
+     "date": "8:20 am on 14 February, 2023",
+     "turns": [
+      {
+       "speaker": "Lena",
+       "content": "The tomatoes got aphids so I sprayed neem oil."
+      },
+      {
+       "speaker": "Omar",
+       "content": "Neem oil usually works."
+      }
+     ]
+    },
+    {
+     "id": "session_4",
+     "date": "6:00 pm on 1 March, 2023",
+     "turns": [
+      {
+       "speaker": "Lena",
+       "content": "I entered my basil pesto in the neighborhood cooking contest."
+      },
+      {
+       "speaker": "Omar",
+       "content": "Good luck in the contest."
+      }
+     ]
+    },
+    {
+     "id": "session_5",
+     "date": "1:45 pm on 18 March, 2023",
+     "turns": [
+      {
+       "speaker": "Lena",
+       "content": "My pesto won second prize at the cooking contest."
+      },
+      {
+       "speaker": "Omar",
+       "content": "Second prize, congratulations."
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "questions": [
+  {
+   "id": "conv-a:q000",
+   "conversation": "conv-a",
+   "question": "Where did Maya adopt Biscuit, and where does she volunteer?",
+   "category": "multi-hop",
+   "gold": [
+    "session_1",
+    "session_3"
+   ],
+   "abstention": false,
+   "answer": "riverside animal shelter"
+  },
+  {
+   "id": "conv-a:q001",
+   "conversation": "conv-a",
+   "question": "When did Maya adopt the beagle?",
+   "category": "temporal",
+   "gold": [
+    "session_3"
+   ],
+   "abstention": false,
+   "answer": "3 June, 2023"
+  },
+  {
+   "id": "conv-a:q002",
+   "conversation": "conv-a",
+   "question": "What did Maya make in her pottery class?",
+   "category": "open-domain",
+   "gold": [
+    "session_4"
+   ],
+   "abstention": false,
+   "answer": "blue ceramic bowl"
+  },
+  {
+   "id": "conv-a:q003",
+   "conversation": "conv-a",
+   "question": "Which city did Priya move to?",
+   "category": "single-hop",
+   "gold": [
+    "session_2"
+   ],
+   "abstention": false,
+   "answer": "Lisbon"
+  },
+  {
+   "id": "conv-a:q004",
+   "conversation": "conv-a",
+   "question": "What instrument did Maya learn at the shelter?",
+   "category": "adversarial",
+   "gold": [],
+   "abstention": true,
+   "answer": "The conversation never states this.",
+   "trap": "violin"
+  },
+  {
+   "id": "conv-b:q000",
+   "conversation": "conv-b",
+   "question": "Which race is Ravi training for, and who coaches him?",
+   "category": "multi-hop",
+   "gold": [
+    "session_1",
+    "session_4"
+   ],
+   "abstention": false,
+   "answer": "Daniel"
+  },
+  {
+   "id": "conv-b:q001",
+   "conversation": "conv-b",
+   "question": "When did Ravi buy the trail shoes?",
+   "category": "temporal",
+   "gold": [
+    "session_3"
+   ],
+   "abstention": false,
+   "answer": "1 April, 2023"
+  },
+  {
+   "id": "conv-b:q002",
+   "conversation": "conv-b",
+   "question": "How far does Ravi run each week?",
+   "category": "open-domain",
+   "gold": [
+    "session_2"
+   ],
+   "abstention": false,
+   "answer": "forty kilometers"
+  },
+  {
+   "id": "conv-b:q003",
+   "conversation": "conv-b",
+   "question": "What color are the trail shoes?",
+   "category": "single-hop",
+   "gold": [
+    "session_3"
+   ],
+   "abstention": false,
+   "answer": "green"
+  },
+  {
+   "id": "conv-b:q004",
+   "conversation": "conv-b",
+   "question": "Which swimming club did Ravi join?",
+   "category": "adversarial",
+   "gold": [],
+   "abstention": true,
+   "answer": "The conversation never states this.",
+   "trap": "harbor swimmers"
+  },
+  {
+   "id": "conv-c:q000",
+   "conversation": "conv-c",
+   "question": "Who gave Lena the lemon tree, and what did she spray on the aphids?",
+   "category": "multi-hop",
+   "gold": [
+    "session_2",
+    "session_3"
+   ],
+   "abstention": false,
+   "answer": "neem oil"
+  },
+  {
+   "id": "conv-c:q001",
+   "conversation": "conv-c",
+   "question": "When did Lena enter the cooking contest?",
+   "category": "temporal",
+   "gold": [
+    "session_4"
+   ],
+   "abstention": false,
+   "answer": "1 March, 2023"
+  },
+  {
+   "id": "conv-c:q002",
+   "conversation": "conv-c",
+   "question": "What prize did the pesto win?",
+   "category": "open-domain",
+   "gold": [
+    "session_5"
+   ],
+   "abstention": false,
+   "answer": "second prize"
+  },
+  {
+   "id": "conv-c:q003",
+   "conversation": "conv-c",
+   "question": "Who is Lena's neighbor?",
+   "category": "single-hop",
+   "gold": [
+    "session_2"
+   ],
+   "abstention": false,
+   "answer": "Hugo"
+  },
+  {
+   "id": "conv-c:q004",
+   "conversation": "conv-c",
+   "question": "What breed is Lena's cat?",
+   "category": "adversarial",
+   "gold": [],
+   "abstention": true,
+   "answer": "The conversation never states this.",
+   "trap": "siamese"
+  }
+ ]
+}

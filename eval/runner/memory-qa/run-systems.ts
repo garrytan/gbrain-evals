@@ -82,7 +82,7 @@ import { gbrainSpecFrom, importGbrain, overlaySummary, productIdentityFor, resol
 import { EmbeddingCache, makeCachingTransport } from '../longmemeval-cache.ts';
 import { ndcgAtK, recallAllAtK, recallAnyAtK, uniqueInOrder, percentile } from '../metrics.ts';
 import { loadCorpus, occurrenceId, sha256, type Corpus, type MemoryQuestion, type Session } from './corpus.ts';
-import { ChatClient, DEFAULT_JUDGE, DEFAULT_READER, factsReaderPrompt, judgeResponse, packSessions, readerPrompt, repeatsTrap, approxTokens, unresolvedRelativeTime, type SavedFact } from './qa.ts';
+import { ChatClient, DEFAULT_JUDGE, DEFAULT_READER, factsReaderPrompt, judgeResponse, packSessions, readerPrompt, repeatsTrap, approxTokens, unresolvedRelativeTime, type SavedFact } from './qa-v2.ts';
 import { devConversations, loadSplit } from '../decisions/splits.ts';
 import { appendAccessLog } from '../sealed-confirmation-lib.ts';
 import { decideError, DecideError, renderOperatorMessage } from '../decisions/errors.ts';
@@ -103,7 +103,7 @@ import { GbrainLegacySystem, GbrainShootoutSystem, sourceOfSlug, type GbrainModu
 import { GbrainQuerySystem } from '../systems/gbrain-query/system.ts';
 import { loadConnectorModules, readerBytes } from '../systems/gbrain-query/connector.ts';
 import { HttpMemorySystem } from '../systems/http.ts';
-import { blocksToItems, packContext, packRecipe, renderItem, datedItems, pseudoSessions, RENDERER_VERSION, sessionDay, strictSources, TOKENIZER, validateSources, type ContextMode } from '../systems/render.ts';
+import { blocksToItems, packContext, packRecipe, renderItem, datedItems, pseudoSessions, RENDERER_VERSION, sessionDay, strictSources, TOKENIZER, validateSources, type ContextMode } from '../systems/render-v2.ts';
 import { renderHistory } from './qa.ts';
 import { Sanitizer, SanitizerLeakError } from '../systems/sanitize.ts';
 import { policyKnobs, SystemError, type CapabilityRecord, type Item, type MemorySystem, type RetrievalPolicy, type SessionInput } from '../systems/types.ts';
@@ -385,6 +385,9 @@ export type ProbeResult = 'found' | 'missed' | 'not-measurable' | 'skipped';
 /** One failed session: its opaque source id, the error kind and the message (never a request body). */
 export interface IngestError { source_id: string; kind: string; message: string }
 
+/** The readiness probe's passage starts within this many characters of its session's opening (about 200 tokens; A23). */
+export const PROBE_WINDOW_CHARS = 800;
+
 /**
  * Readiness probe (engineering review P2): after the system reports its
  * background work done, ask for a verbatim passage of the last session it
@@ -392,11 +395,20 @@ export interface IngestError { source_id: string; kind: string; message: string 
  * quiescence signal lied, so the conversation is ingest-degraded. A vendor
  * error on the probe is retried once, then counts as a miss. Systems
  * without provenance, and the context controls, cannot be probed this way.
+ *
+ * The passage opens the longest turn that starts within the session's first
+ * PROBE_WINDOW_CHARS characters (amendment A23). The probe asks whether the
+ * session landed, not how well the system retrieves: a passage from deep in a
+ * long session tested a system whose embedder reads only a session's opening
+ * tokens (about 256) for its retrieval, and its misses were reported as ingest
+ * failures with 0 failed sessions.
  */
 export async function readinessProbe(system: MemorySystem, ns: string, last: SessionInput | undefined, policy: RetrievalPolicy, capabilities: CapabilityRecord): Promise<ProbeResult> {
   if (!last) return 'skipped';
   if (capabilities.retrieval_metrics === 'not-applicable' || capabilities.provenance?.status === 'unavailable') return 'not-measurable';
-  const passage = [...last.turns].sort((x, y) => y.content.length - x.content.length)[0]?.content.slice(0, 300);
+  let offset = 0;
+  const early = last.turns.filter(t => { const starts = offset; offset += t.content.length; return starts < PROBE_WINDOW_CHARS; });
+  const passage = [...early].sort((x, y) => y.content.length - x.content.length)[0]?.content.slice(0, 300);
   if (!passage?.trim()) return 'skipped';
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
@@ -408,7 +420,7 @@ export async function readinessProbe(system: MemorySystem, ns: string, last: Ses
 }
 
 /** A system's retrieval failure as a row: its kind decides whether it is a product miss, a harness failure or a budget stop. */
-function failureRow(base: MemoryQaRow, e: unknown): MemoryQaRow {
+export function failureRow(base: MemoryQaRow, e: unknown): MemoryQaRow {
   if (e instanceof SanitizerLeakError) return { ...base, error: e.message, error_origin: 'harness', outcome: 'harness_invalid' };
   const kind = e instanceof SystemError ? e.kind : /budget|BudgetExceeded/i.test(String((e as Error).message)) ? 'budget' : 'product_error';
   if (kind === 'budget') return { ...base, error: errorText(e), error_origin: 'harness', error_kind: kind, outcome: 'budget_not_run' };
@@ -465,7 +477,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
   // The shootout recipe runs gbrain's own search defaults, which call paid providers (the reranker) even with hash vectors.
   if (a.providerProxy) {
     if (!/^https?:\/\/[^/]+$/.test(a.providerProxy)) throw new Error('--provider-proxy must look like http://host:port');
-    for (const k of ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'VOYAGE_API_KEY']) process.env[k] = 'dummy-key-the-proxy-replaces';
+    for (const k of ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'VOYAGE_API_KEY']) process.env[k] = process.env.SHOOTOUT_CELL_TOKEN || 'dummy-key-the-proxy-replaces';
     process.env.OPENAI_BASE_URL = `${a.providerProxy}/harness/openai/v1`;
     process.env.ANTHROPIC_BASE_URL = `${a.providerProxy}/harness/anthropic`;
   }

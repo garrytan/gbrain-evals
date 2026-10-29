@@ -33,6 +33,10 @@ Submit a batch of at least 20 questions at `eval/external-authors/<handle>/queri
 
 ## Add a search adapter
 
+This section is for BrainBench's in-process retrieval comparison (`multi-adapter.ts`). To add a memory system to the
+head-to-head scoreboard, use [Add a memory system to the scoreboard](#add-a-memory-system-to-the-scoreboard) instead; that
+harness talks to systems over an HTTP shim protocol, not this interface.
+
 An adapter ingests pages once, then returns a ranked list for each question. The current contract lives in [runner/types.ts](runner/types.ts):
 
 ```typescript
@@ -60,6 +64,39 @@ BRAINBENCH_N=1 bun eval/runner/multi-adapter.ts --adapter my-adapter --queries r
 
 Document the model, embedding dimensions, graph behavior, network use and any limits. An adapter name must describe the behavior that actually ran. A missing provider key must not silently turn a reranked comparison into ordinary hybrid search.
 
+## Add a memory system to the scoreboard
+
+The scoreboard runs every system behind a small HTTP service, its shim, inside the system's own pinned container image,
+with every provider call going through the cell's metering proxy. The harness speaks only the
+[shim protocol](systems/PROTOCOL.md), so a system's code never runs inside the harness process. The steps, with an
+example capability record, are in [docs/scoreboard.md](../docs/scoreboard.md#add-a-system). In short:
+
+1. Start from the shim template [systems/_shim/shim.py](systems/_shim/shim.py) and the reference fake system
+   [systems/_fake/fake.py](systems/_fake/fake.py) with its compose file. Keep only a dummy key in the container, point
+   every SDK at `OPENAI_BASE_URL` (and `ANTHROPIC_BASE_URL`, `VOYAGE_BASE_URL`), and turn off telemetry.
+2. Serve a complete capability record from `/capabilities`. `readiness` (for example `synchronous: ...` or
+   `queued: ...`) decides how ingest cost is split, and `retrieval_policies.<mode>.settings` is the only knob map the
+   harness sends.
+3. Pass the keyless conformance suite against the running shim:
+
+   ```sh
+   SHIM_URL=http://127.0.0.1:8700 bun test test/eval/systems-conformance.test.ts
+   ```
+
+4. Rerun on LoCoMo dev with the metering proxy in front of the shim:
+
+   ```sh
+   bun eval/runner/memory-qa/run.ts --benchmark locomo --split dev --system http://127.0.0.1:8700 \
+     --context native --budget-tokens 8000 --qa reader --provider-proxy http://127.0.0.1:8787 --output eval/reports/scoreboard-dev/<kind>
+   ```
+
+5. Register a kind id in [systems/kinds.json](systems/kinds.json) and the product, version, image digest and lock hash in
+   the pin table of [docs/comparison-systems.md](../docs/comparison-systems.md). Product names appear only there and in
+   the install bundle under `docs/comparison-systems/<kind>/`; `bun eval/runner/name-guard.ts` fails anywhere else.
+
+`bun run eval:scoreboard fixture` runs the whole pipeline on the fake system for $0 and is the quickest check that a
+harness change did not break the wiring.
+
 ## Evaluate a gbrain change
 
 To compare a candidate gbrain build against its baseline on dev splits, and later on held-out data, use the decision kit: [docs/decisions.md](../docs/decisions.md) (`bun run eval:decide`).
@@ -80,6 +117,25 @@ A category is a runner, a seeded generator, a scorer and a dated report that ans
 10. **Write the report and the docs row.** A dated report in `docs/benchmarks/` following the N3 report outline, with "gbrain bugs found" and "documented limits (not bugs)" sections, and a question-first row in [docs/README.md](../docs/README.md). Copy worthwhile receipts out of `eval/reports/` and scrub machine paths with `bun eval/runner/receipt.ts scrub`.
 
 A category with more than one tier keeps one operator guide per tier. Cat 40 Hard is the example: its generator mode, world contract ([WORLD_SCHEMA.md](../docs/benchmarks/cat40-hard/WORLD_SCHEMA.md)), runner path, scorer and paid steps are documented in the [Cat 40 Hard runbook](../docs/benchmarks/cat40-hard/RUNBOOK.md), and its registry row is `model-ladder-hard`.
+
+## Cut the cost of a preregistered run
+
+Two tools lower the cost of a Cat 40 confirmation without changing what it can decide. They apply only to preregistrations written after they shipped (2026-10-28). A preregistration that uses either one declares it before any cell runs; an existing or sealed preregistration keeps its design unless an amendment written before its next cell says otherwise.
+
+- **Reuse an arm that doesn't depend on the build.** The files-only, oracle, memory and Postgres arms never load gbrain, so a new gbrain build on a world that already ran them can use those cells as they are. Run the new experiment's first counted arm to the end (its receipt records the runner checkout), then check before the reused arm would have run:
+
+  ```sh
+  bun eval/runner/cat40/reuse-check.ts --prior <earlier fs dir> --planned <new wave dir> --arm fs --preregistration <prereg.md>
+  ```
+
+  It refuses on any difference in world digest, Hard identity, turn and tool limits, judge, scorer, judge prompt, settings or evaluator code hashes, or in any flag that reaches a cell; when the earlier run did not finish, has fewer cells than it planned or ended a cell in a harness error; when either run recorded a dirty checkout; when the world is not a Hard world; and when the two runner commits differ in any file the runner imports (an installed package by its pinned `package.json` version) or an import git cannot resolve, so run the new arms from the commit the reused arm ran at or one with the same cell code. A gbrain arm is reusable only from the same gbrain and slot commits with every gbrain flag and recorded override content equal. The preregistration must name the earlier directory's budget run id and the arm on one line, each as a whole word, and the check refuses without it. Reuse is all of an arm's cells or none, chosen before any new result is seen.
+- **Size each arm by simulation.** Before preregistering sample sizes, rerun the preregistered endpoints on cells that already ran, with one arm on fewer tasks:
+
+  ```sh
+  python3 eval/runner/cat40/arm_power.py --world P1=<cells>.jsonl --world P2=<cells>.jsonl --arm fs --fractions 0.33,0.5,0.67
+  ```
+
+  For each fraction it reports how many seeded draws keep each full-data verdict the arm takes part in (the primary wording per generator for fs, D3 for the baseline, both for the wave arm), the weakest primary lower bound and the spend on the tasks left out. That is how stable a verdict stays on fewer of the same tasks, not power against a smaller true effect, so run it on cells whose effect the preregistration expects. It sizes single-repeat runs only, and gives each world's files in one `--world`. The preregistration names the command, its input cells and its output, and draws the arm's task subset with a recorded seed before the run. On the October public confirmation, fs on half the tasks kept the primary "ahead" in 20 of 20 draws ([audit](../docs/audit/2026-10-28-eval-cost-audit.md)).
 
 ## Reproduce a result
 
@@ -102,10 +158,29 @@ See [CREDITS.md](CREDITS.md) for attribution. Contributions to external question
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
 
+### 2026-10-29: The cost tools refuse more inputs
+
+The section on cutting a preregistered run's cost now says `reuse-check.ts` also refuses an import git cannot resolve (an
+installed package is compared by its pinned `package.json` version) and wants the budget run id and the arm each as a
+whole word. It says `arm_power.py` sizes single-repeat runs only and takes each world's files in one `--world`.
+
+### 2026-10-28: Cut the cost of a preregistered run
+
+A new section names the two cost tools for Cat 40 confirmations, `reuse-check.ts` (reuse an arm that doesn't load
+gbrain) and `arm_power.py` (size an arm by simulation), and what a preregistration must declare before using them
+([audit](../docs/audit/2026-10-28-eval-cost-audit.md)).
+
 ### 2026-10-11: The opening names the current pin
 
 gbrain-evals v0.10.76. The gbrain under test is named as master `77cf8e111` (v0.60.169.0). The page still named
 `739e5cc` (v0.60.46.0), the pin until October 6 ([re-pin report](../docs/benchmarks/2026-10-11-wave14-repin.md)).
+
+### 2026-10-06: Add a memory system to the scoreboard
+
+A new "Add a memory system to the scoreboard" section gives the shim template, the capability record, the keyless
+conformance command and the LoCoMo dev rerun command, and links to [docs/scoreboard.md](../docs/scoreboard.md). "Add a
+search adapter" now says it covers BrainBench's in-process retrieval comparison only; it had been the only adapter guide,
+and its in-process interface is not how the scoreboard runs systems.
 
 ### 2026-10-05: Restructured as a current-state page with this changelog
 

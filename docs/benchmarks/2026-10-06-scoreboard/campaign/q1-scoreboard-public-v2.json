@@ -1,0 +1,1212 @@
+{
+  "kind": "q1-scoreboard-campaign",
+  "schema_version": 1,
+  "campaign_id": "q1-scoreboard-public-v2",
+  "cap_usd": 441,
+  "ledger": "eval/reports/scoreboard/q1-scoreboard-public-v2/campaign.sqlite",
+  "parameters": {},
+  "hedge_classifier": "none",
+  "cells": [
+    {
+      "id": "s4.gbrain-defaults.shipped-defaults.c0",
+      "system": "gbrain-defaults",
+      "benchmark": "lme-s",
+      "config": "shipped-defaults",
+      "lease_usd": 48.19,
+      "command": "bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s4.gbrain-defaults.shipped-defaults --shard 0/2 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets lme-s",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 14,
+      "block": "T2-S4-S5",
+      "sealed": false,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 7,
+      "wave": 6,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "s4.gbrain-defaults.shipped-defaults.c1",
+      "system": "gbrain-defaults",
+      "benchmark": "lme-s",
+      "config": "shipped-defaults",
+      "lease_usd": 48.19,
+      "command": "bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s4.gbrain-defaults.shipped-defaults --shard 1/2 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets lme-s",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 14,
+      "block": "T2-S4-S5",
+      "sealed": false,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 7,
+      "wave": 6,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "s4-slice.ext-markdown-kb.recipe.c0",
+      "system": "ext-markdown-kb",
+      "benchmark": "lme-s",
+      "config": "recipe",
+      "lease_usd": 6.36,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-markdown-kb --config recipe && bun eval/runner/q1/cell.ts run --cell s4-slice.ext-markdown-kb.recipe --shard 0/2 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-markdown-kb; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-markdown-kb --datasets lme-s",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 14,
+      "block": "T2-S4-S5",
+      "sealed": false,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 7,
+      "wave": 6,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-markdown-kb --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-markdown-kb.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-markdown-kb --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-markdown-kb.tar\""
+    },
+    {
+      "id": "s4-slice.ext-markdown-kb.recipe.c1",
+      "system": "ext-markdown-kb",
+      "benchmark": "lme-s",
+      "config": "recipe",
+      "lease_usd": 6.36,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-markdown-kb --config recipe && bun eval/runner/q1/cell.ts run --cell s4-slice.ext-markdown-kb.recipe --shard 1/2 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-markdown-kb; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-markdown-kb --datasets lme-s",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 14,
+      "block": "T2-S4-S5",
+      "sealed": false,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 7,
+      "wave": 6,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-markdown-kb --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-markdown-kb.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-markdown-kb --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-markdown-kb.tar\""
+    },
+    {
+      "id": "s4-slice.ext-verbatim-session.recipe",
+      "system": "ext-verbatim-session",
+      "benchmark": "lme-s",
+      "config": "recipe",
+      "lease_usd": 13.0,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-verbatim-session --config recipe && bun eval/runner/q1/cell.ts run --cell s4-slice.ext-verbatim-session.recipe --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-verbatim-session; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-verbatim-session --datasets lme-s",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 5,
+      "block": "T2-S4-S5",
+      "sealed": false,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 2,
+      "wave": 6,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-verbatim-session --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-verbatim-session.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-verbatim-session --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-verbatim-session.tar\""
+    },
+    {
+      "id": "s4-slice.baseline-recency.baseline",
+      "system": "baseline-recency",
+      "benchmark": "lme-s",
+      "config": "baseline",
+      "lease_usd": 8.48,
+      "command": "bun eval/runner/q1/cell.ts run --cell s4-slice.baseline-recency.baseline --out \"$SHOOTOUT_OUT\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets lme-s",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 4,
+      "block": "T2-S4-S5",
+      "sealed": false,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 1,
+      "wave": 6
+    },
+    {
+      "id": "s4-slice.baseline-hybrid.baseline",
+      "system": "baseline-hybrid",
+      "benchmark": "lme-s",
+      "config": "baseline",
+      "lease_usd": 10.08,
+      "command": "bun eval/runner/q1/cell.ts run --cell s4-slice.baseline-hybrid.baseline --out \"$SHOOTOUT_OUT\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets lme-s",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 4,
+      "block": "T2-S4-S5",
+      "sealed": false,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 1,
+      "wave": 6
+    },
+    {
+      "id": "s4-slice.baseline-none.baseline",
+      "system": "baseline-none",
+      "benchmark": "lme-s",
+      "config": "baseline",
+      "lease_usd": 8.48,
+      "command": "bun eval/runner/q1/cell.ts run --cell s4-slice.baseline-none.baseline --out \"$SHOOTOUT_OUT\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets lme-s",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 4,
+      "block": "T2-S4-S5",
+      "sealed": false,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 1,
+      "wave": 6
+    },
+    {
+      "id": "s5.gbrain-defaults.shipped-defaults.c0",
+      "system": "gbrain-defaults",
+      "benchmark": "lme-m",
+      "config": "shipped-defaults",
+      "lease_usd": 34.37,
+      "command": "bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s5.gbrain-defaults.shipped-defaults --shard 0/4 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets lme-m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 12,
+      "block": "T2-S4-S5",
+      "sealed": false,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 6,
+      "wave": 6,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "s5.gbrain-defaults.shipped-defaults.c1",
+      "system": "gbrain-defaults",
+      "benchmark": "lme-m",
+      "config": "shipped-defaults",
+      "lease_usd": 34.37,
+      "command": "bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s5.gbrain-defaults.shipped-defaults --shard 1/4 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets lme-m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 12,
+      "block": "T2-S4-S5",
+      "sealed": false,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 6,
+      "wave": 6,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "s5.gbrain-defaults.shipped-defaults.c2",
+      "system": "gbrain-defaults",
+      "benchmark": "lme-m",
+      "config": "shipped-defaults",
+      "lease_usd": 34.37,
+      "command": "bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s5.gbrain-defaults.shipped-defaults --shard 2/4 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets lme-m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 12,
+      "block": "T2-S4-S5",
+      "sealed": false,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 6,
+      "wave": 6,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "s5.gbrain-defaults.shipped-defaults.c3",
+      "system": "gbrain-defaults",
+      "benchmark": "lme-m",
+      "config": "shipped-defaults",
+      "lease_usd": 34.37,
+      "command": "bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s5.gbrain-defaults.shipped-defaults --shard 3/4 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets lme-m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 12,
+      "block": "T2-S4-S5",
+      "sealed": false,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 6,
+      "wave": 6,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "s5.ext-markdown-kb.recipe.c0",
+      "system": "ext-markdown-kb",
+      "benchmark": "lme-m",
+      "config": "recipe",
+      "lease_usd": 2.0,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-markdown-kb --config recipe && bun eval/runner/q1/cell.ts run --cell s5.ext-markdown-kb.recipe --shard 0/20 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-markdown-kb; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-markdown-kb --datasets lme-m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 16,
+      "block": "T2-S4-S5",
+      "sealed": false,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 8,
+      "wave": 6,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-markdown-kb --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-markdown-kb.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-markdown-kb --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-markdown-kb.tar\""
+    },
+    {
+      "id": "s5.ext-markdown-kb.recipe.c1",
+      "system": "ext-markdown-kb",
+      "benchmark": "lme-m",
+      "config": "recipe",
+      "lease_usd": 2.0,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-markdown-kb --config recipe && bun eval/runner/q1/cell.ts run --cell s5.ext-markdown-kb.recipe --shard 1/20 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-markdown-kb; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-markdown-kb --datasets lme-m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 16,
+      "block": "T2-S4-S5",
+      "sealed": false,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 8,
+      "wave": 6,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-markdown-kb --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-markdown-kb.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-markdown-kb --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-markdown-kb.tar\""
+    },
+    {
+      "id": "s5.ext-markdown-kb.recipe.c2",
+      "system": "ext-markdown-kb",
+      "benchmark": "lme-m",
+      "config": "recipe",
+      "lease_usd": 2.0,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-markdown-kb --config recipe && bun eval/runner/q1/cell.ts run --cell s5.ext-markdown-kb.recipe --shard 2/20 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-markdown-kb; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-markdown-kb --datasets lme-m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 16,
+      "block": "T2-S4-S5",
+      "sealed": false,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 8,
+      "wave": 6,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-markdown-kb --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-markdown-kb.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-markdown-kb --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-markdown-kb.tar\""
+    },
+    {
+      "id": "s5.ext-markdown-kb.recipe.c3",
+      "system": "ext-markdown-kb",
+      "benchmark": "lme-m",
+      "config": "recipe",
+      "lease_usd": 2.0,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-markdown-kb --config recipe && bun eval/runner/q1/cell.ts run --cell s5.ext-markdown-kb.recipe --shard 3/20 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-markdown-kb; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-markdown-kb --datasets lme-m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 16,
+      "block": "T2-S4-S5",
+      "sealed": false,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 8,
+      "wave": 6,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-markdown-kb --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-markdown-kb.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-markdown-kb --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-markdown-kb.tar\""
+    },
+    {
+      "id": "s5.ext-markdown-kb.recipe.c4",
+      "system": "ext-markdown-kb",
+      "benchmark": "lme-m",
+      "config": "recipe",
+      "lease_usd": 2.0,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-markdown-kb --config recipe && bun eval/runner/q1/cell.ts run --cell s5.ext-markdown-kb.recipe --shard 4/20 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-markdown-kb; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-markdown-kb --datasets lme-m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 16,
+      "block": "T2-S4-S5",
+      "sealed": false,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 8,
+      "wave": 6,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-markdown-kb --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-markdown-kb.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-markdown-kb --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-markdown-kb.tar\""
+    },
+    {
+      "id": "s5.ext-markdown-kb.recipe.c5",
+      "system": "ext-markdown-kb",
+      "benchmark": "lme-m",
+      "config": "recipe",
+      "lease_usd": 2.0,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-markdown-kb --config recipe && bun eval/runner/q1/cell.ts run --cell s5.ext-markdown-kb.recipe --shard 5/20 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-markdown-kb; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-markdown-kb --datasets lme-m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 16,
+      "block": "T2-S4-S5",
+      "sealed": false,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 8,
+      "wave": 6,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-markdown-kb --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-markdown-kb.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-markdown-kb --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-markdown-kb.tar\""
+    },
+    {
+      "id": "s5.ext-markdown-kb.recipe.c6",
+      "system": "ext-markdown-kb",
+      "benchmark": "lme-m",
+      "config": "recipe",
+      "lease_usd": 2.0,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-markdown-kb --config recipe && bun eval/runner/q1/cell.ts run --cell s5.ext-markdown-kb.recipe --shard 6/20 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-markdown-kb; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-markdown-kb --datasets lme-m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 16,
+      "block": "T2-S4-S5",
+      "sealed": false,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 8,
+      "wave": 6,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-markdown-kb --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-markdown-kb.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-markdown-kb --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-markdown-kb.tar\""
+    },
+    {
+      "id": "s5.ext-markdown-kb.recipe.c7",
+      "system": "ext-markdown-kb",
+      "benchmark": "lme-m",
+      "config": "recipe",
+      "lease_usd": 2.0,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-markdown-kb --config recipe && bun eval/runner/q1/cell.ts run --cell s5.ext-markdown-kb.recipe --shard 7/20 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-markdown-kb; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-markdown-kb --datasets lme-m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 16,
+      "block": "T2-S4-S5",
+      "sealed": false,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 8,
+      "wave": 6,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-markdown-kb --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-markdown-kb.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-markdown-kb --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-markdown-kb.tar\""
+    },
+    {
+      "id": "s5.ext-markdown-kb.recipe.c8",
+      "system": "ext-markdown-kb",
+      "benchmark": "lme-m",
+      "config": "recipe",
+      "lease_usd": 2.0,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-markdown-kb --config recipe && bun eval/runner/q1/cell.ts run --cell s5.ext-markdown-kb.recipe --shard 8/20 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-markdown-kb; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-markdown-kb --datasets lme-m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 16,
+      "block": "T2-S4-S5",
+      "sealed": false,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 8,
+      "wave": 6,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-markdown-kb --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-markdown-kb.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-markdown-kb --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-markdown-kb.tar\""
+    },
+    {
+      "id": "s5.ext-markdown-kb.recipe.c9",
+      "system": "ext-markdown-kb",
+      "benchmark": "lme-m",
+      "config": "recipe",
+      "lease_usd": 2.0,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-markdown-kb --config recipe && bun eval/runner/q1/cell.ts run --cell s5.ext-markdown-kb.recipe --shard 9/20 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-markdown-kb; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-markdown-kb --datasets lme-m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 16,
+      "block": "T2-S4-S5",
+      "sealed": false,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 8,
+      "wave": 6,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-markdown-kb --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-markdown-kb.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-markdown-kb --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-markdown-kb.tar\""
+    },
+    {
+      "id": "s5.ext-markdown-kb.recipe.c10",
+      "system": "ext-markdown-kb",
+      "benchmark": "lme-m",
+      "config": "recipe",
+      "lease_usd": 2.0,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-markdown-kb --config recipe && bun eval/runner/q1/cell.ts run --cell s5.ext-markdown-kb.recipe --shard 10/20 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-markdown-kb; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-markdown-kb --datasets lme-m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 16,
+      "block": "T2-S4-S5",
+      "sealed": false,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 8,
+      "wave": 6,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-markdown-kb --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-markdown-kb.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-markdown-kb --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-markdown-kb.tar\""
+    },
+    {
+      "id": "s5.ext-markdown-kb.recipe.c11",
+      "system": "ext-markdown-kb",
+      "benchmark": "lme-m",
+      "config": "recipe",
+      "lease_usd": 2.0,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-markdown-kb --config recipe && bun eval/runner/q1/cell.ts run --cell s5.ext-markdown-kb.recipe --shard 11/20 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-markdown-kb; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-markdown-kb --datasets lme-m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 16,
+      "block": "T2-S4-S5",
+      "sealed": false,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 8,
+      "wave": 6,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-markdown-kb --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-markdown-kb.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-markdown-kb --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-markdown-kb.tar\""
+    },
+    {
+      "id": "s5.ext-markdown-kb.recipe.c12",
+      "system": "ext-markdown-kb",
+      "benchmark": "lme-m",
+      "config": "recipe",
+      "lease_usd": 2.0,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-markdown-kb --config recipe && bun eval/runner/q1/cell.ts run --cell s5.ext-markdown-kb.recipe --shard 12/20 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-markdown-kb; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-markdown-kb --datasets lme-m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 16,
+      "block": "T2-S4-S5",
+      "sealed": false,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 8,
+      "wave": 6,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-markdown-kb --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-markdown-kb.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-markdown-kb --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-markdown-kb.tar\""
+    },
+    {
+      "id": "s5.ext-markdown-kb.recipe.c13",
+      "system": "ext-markdown-kb",
+      "benchmark": "lme-m",
+      "config": "recipe",
+      "lease_usd": 2.0,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-markdown-kb --config recipe && bun eval/runner/q1/cell.ts run --cell s5.ext-markdown-kb.recipe --shard 13/20 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-markdown-kb; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-markdown-kb --datasets lme-m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 16,
+      "block": "T2-S4-S5",
+      "sealed": false,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 8,
+      "wave": 6,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-markdown-kb --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-markdown-kb.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-markdown-kb --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-markdown-kb.tar\""
+    },
+    {
+      "id": "s5.ext-markdown-kb.recipe.c14",
+      "system": "ext-markdown-kb",
+      "benchmark": "lme-m",
+      "config": "recipe",
+      "lease_usd": 2.0,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-markdown-kb --config recipe && bun eval/runner/q1/cell.ts run --cell s5.ext-markdown-kb.recipe --shard 14/20 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-markdown-kb; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-markdown-kb --datasets lme-m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 16,
+      "block": "T2-S4-S5",
+      "sealed": false,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 8,
+      "wave": 6,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-markdown-kb --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-markdown-kb.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-markdown-kb --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-markdown-kb.tar\""
+    },
+    {
+      "id": "s5.ext-markdown-kb.recipe.c15",
+      "system": "ext-markdown-kb",
+      "benchmark": "lme-m",
+      "config": "recipe",
+      "lease_usd": 2.0,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-markdown-kb --config recipe && bun eval/runner/q1/cell.ts run --cell s5.ext-markdown-kb.recipe --shard 15/20 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-markdown-kb; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-markdown-kb --datasets lme-m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 16,
+      "block": "T2-S4-S5",
+      "sealed": false,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 8,
+      "wave": 6,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-markdown-kb --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-markdown-kb.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-markdown-kb --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-markdown-kb.tar\""
+    },
+    {
+      "id": "s5.ext-markdown-kb.recipe.c16",
+      "system": "ext-markdown-kb",
+      "benchmark": "lme-m",
+      "config": "recipe",
+      "lease_usd": 2.0,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-markdown-kb --config recipe && bun eval/runner/q1/cell.ts run --cell s5.ext-markdown-kb.recipe --shard 16/20 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-markdown-kb; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-markdown-kb --datasets lme-m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 16,
+      "block": "T2-S4-S5",
+      "sealed": false,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 8,
+      "wave": 6,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-markdown-kb --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-markdown-kb.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-markdown-kb --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-markdown-kb.tar\""
+    },
+    {
+      "id": "s5.ext-markdown-kb.recipe.c17",
+      "system": "ext-markdown-kb",
+      "benchmark": "lme-m",
+      "config": "recipe",
+      "lease_usd": 2.0,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-markdown-kb --config recipe && bun eval/runner/q1/cell.ts run --cell s5.ext-markdown-kb.recipe --shard 17/20 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-markdown-kb; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-markdown-kb --datasets lme-m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 16,
+      "block": "T2-S4-S5",
+      "sealed": false,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 8,
+      "wave": 6,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-markdown-kb --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-markdown-kb.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-markdown-kb --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-markdown-kb.tar\""
+    },
+    {
+      "id": "s5.ext-markdown-kb.recipe.c18",
+      "system": "ext-markdown-kb",
+      "benchmark": "lme-m",
+      "config": "recipe",
+      "lease_usd": 2.0,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-markdown-kb --config recipe && bun eval/runner/q1/cell.ts run --cell s5.ext-markdown-kb.recipe --shard 18/20 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-markdown-kb; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-markdown-kb --datasets lme-m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 16,
+      "block": "T2-S4-S5",
+      "sealed": false,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 8,
+      "wave": 6,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-markdown-kb --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-markdown-kb.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-markdown-kb --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-markdown-kb.tar\""
+    },
+    {
+      "id": "s5.ext-markdown-kb.recipe.c19",
+      "system": "ext-markdown-kb",
+      "benchmark": "lme-m",
+      "config": "recipe",
+      "lease_usd": 2.0,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-markdown-kb --config recipe && bun eval/runner/q1/cell.ts run --cell s5.ext-markdown-kb.recipe --shard 19/20 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-markdown-kb; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-markdown-kb --datasets lme-m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 16,
+      "block": "T2-S4-S5",
+      "sealed": false,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 8,
+      "wave": 6,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-markdown-kb --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-markdown-kb.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-markdown-kb --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-markdown-kb.tar\""
+    },
+    {
+      "id": "s5.ext-verbatim-session.recipe",
+      "system": "ext-verbatim-session",
+      "benchmark": "lme-m",
+      "config": "recipe",
+      "lease_usd": 13.0,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-verbatim-session --config recipe && bun eval/runner/q1/cell.ts run --cell s5.ext-verbatim-session.recipe --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-verbatim-session; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-verbatim-session --datasets lme-m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 37,
+      "block": "T2-S4-S5",
+      "sealed": false,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 23,
+      "wave": 6,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-verbatim-session --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-verbatim-session.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-verbatim-session --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-verbatim-session.tar\""
+    },
+    {
+      "id": "s5.baseline-recency.baseline",
+      "system": "baseline-recency",
+      "benchmark": "lme-m",
+      "config": "baseline",
+      "lease_usd": 8.48,
+      "command": "bun eval/runner/q1/cell.ts run --cell s5.baseline-recency.baseline --out \"$SHOOTOUT_OUT\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets lme-m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 14,
+      "block": "T2-S4-S5",
+      "sealed": false,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 8,
+      "wave": 6
+    },
+    {
+      "id": "s5.baseline-hybrid.baseline.c0",
+      "system": "baseline-hybrid",
+      "benchmark": "lme-m",
+      "config": "baseline",
+      "lease_usd": 7.37,
+      "command": "bun eval/runner/q1/cell.ts run --cell s5.baseline-hybrid.baseline --shard 0/6 --out \"$SHOOTOUT_OUT\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets lme-m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 14,
+      "block": "T2-S4-S5",
+      "sealed": false,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 7,
+      "wave": 6
+    },
+    {
+      "id": "s5.baseline-hybrid.baseline.c1",
+      "system": "baseline-hybrid",
+      "benchmark": "lme-m",
+      "config": "baseline",
+      "lease_usd": 7.37,
+      "command": "bun eval/runner/q1/cell.ts run --cell s5.baseline-hybrid.baseline --shard 1/6 --out \"$SHOOTOUT_OUT\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets lme-m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 14,
+      "block": "T2-S4-S5",
+      "sealed": false,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 7,
+      "wave": 6
+    },
+    {
+      "id": "s5.baseline-hybrid.baseline.c2",
+      "system": "baseline-hybrid",
+      "benchmark": "lme-m",
+      "config": "baseline",
+      "lease_usd": 7.37,
+      "command": "bun eval/runner/q1/cell.ts run --cell s5.baseline-hybrid.baseline --shard 2/6 --out \"$SHOOTOUT_OUT\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets lme-m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 14,
+      "block": "T2-S4-S5",
+      "sealed": false,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 7,
+      "wave": 6
+    },
+    {
+      "id": "s5.baseline-hybrid.baseline.c3",
+      "system": "baseline-hybrid",
+      "benchmark": "lme-m",
+      "config": "baseline",
+      "lease_usd": 7.37,
+      "command": "bun eval/runner/q1/cell.ts run --cell s5.baseline-hybrid.baseline --shard 3/6 --out \"$SHOOTOUT_OUT\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets lme-m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 14,
+      "block": "T2-S4-S5",
+      "sealed": false,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 7,
+      "wave": 6
+    },
+    {
+      "id": "s5.baseline-hybrid.baseline.c4",
+      "system": "baseline-hybrid",
+      "benchmark": "lme-m",
+      "config": "baseline",
+      "lease_usd": 7.37,
+      "command": "bun eval/runner/q1/cell.ts run --cell s5.baseline-hybrid.baseline --shard 4/6 --out \"$SHOOTOUT_OUT\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets lme-m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 14,
+      "block": "T2-S4-S5",
+      "sealed": false,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 7,
+      "wave": 6
+    },
+    {
+      "id": "s5.baseline-hybrid.baseline.c5",
+      "system": "baseline-hybrid",
+      "benchmark": "lme-m",
+      "config": "baseline",
+      "lease_usd": 7.37,
+      "command": "bun eval/runner/q1/cell.ts run --cell s5.baseline-hybrid.baseline --shard 5/6 --out \"$SHOOTOUT_OUT\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets lme-m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 14,
+      "block": "T2-S4-S5",
+      "sealed": false,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 7,
+      "wave": 6
+    },
+    {
+      "id": "s5.baseline-none.baseline",
+      "system": "baseline-none",
+      "benchmark": "lme-m",
+      "config": "baseline",
+      "lease_usd": 8.48,
+      "command": "bun eval/runner/q1/cell.ts run --cell s5.baseline-none.baseline --out \"$SHOOTOUT_OUT\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets lme-m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 14,
+      "block": "T2-S4-S5",
+      "sealed": false,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 8,
+      "wave": 6
+    }
+  ],
+  "executes": [
+    "eval/runner/q1/cell.ts",
+    "eval/runner/q1/cells",
+    "eval/runner/q1/scoreboard-errors.ts",
+    "eval/runner/q1/usage.ts",
+    "eval/runner/memory-qa",
+    "eval/runner/systems",
+    "eval/runner/cat40",
+    "eval/runner/decisions",
+    "eval/runner/metering-proxy.ts",
+    "eval/runner/budget-ledger.ts",
+    "eval/runner/usage-receipt.ts",
+    "eval/runner/openai-judge-shim.ts",
+    "eval/runner/paid-arm.ts",
+    "eval/runner/metrics.ts",
+    "eval/runner/sealed-confirmation-lib.ts",
+    "eval/runner/shootout-cell.ts",
+    "eval/runner/evidence-delivery",
+    "eval/runner/gbrain-under-test.ts",
+    "eval/runner/lifecycle/builds.ts",
+    "eval/runner/longmemeval-cache.ts",
+    "eval/runner/receipt.ts",
+    "eval/runner/situation-recall-provenance.ts",
+    "eval/generators/model-ladder-gen.ts",
+    "eval/systems/PROTOCOL.md",
+    "eval/systems/_fake",
+    "eval/systems/_shim",
+    "eval/systems/bootstrap.sh",
+    "eval/systems/gbrain-defaults",
+    "eval/systems/kinds.json",
+    "eval/systems/name-guard-baseline.json",
+    "docs/comparison-systems",
+    "eval/decisions",
+    "package.json",
+    "bun.lock"
+  ],
+  "images": {
+    "_fake/service:1.8.0.3": "sha256:beb4a68d9e4fe6b0f21ea774a0fde6c31f580dde6368939ed70100c5385b015e",
+    "_fake/service:3.12-slim": "sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d",
+    "ext-agent-runtime/base:0.34.4": "sha256:8ee7fb697e7f08b121a487b48315d45c64b195c12418264b091371c9e8ab3a5c",
+    "ext-agent-runtime/service:1.8.0.3": "sha256:beb4a68d9e4fe6b0f21ea774a0fde6c31f580dde6368939ed70100c5385b015e",
+    "ext-agent-runtime/service:3.12-slim": "sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d",
+    "ext-extract-first/base:0.12.3": "sha256:2d890623d310b57771ce840f0da5eed5fc6d657da05ffaa45d82797b53fa3abc",
+    "ext-extract-first/base:3.12-slim-bookworm": "sha256:54c85f3c47607a77f32adec749d3c81d1348bf25833671f512b26a9b6d778cb3",
+    "ext-extract-first/service:1.8.0.3": "sha256:beb4a68d9e4fe6b0f21ea774a0fde6c31f580dde6368939ed70100c5385b015e",
+    "ext-extract-first/service:v1.19.2": "sha256:b7b0444c4c351c970b98e90a6f89c2ee4287c65b44e52b4cb503fa5b2aa927ad",
+    "ext-graph-pipeline/base:0.12.3": "sha256:2d890623d310b57771ce840f0da5eed5fc6d657da05ffaa45d82797b53fa3abc",
+    "ext-graph-pipeline/base:3.12-slim": "sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d",
+    "ext-graph-pipeline/service:1.8.0.3": "sha256:beb4a68d9e4fe6b0f21ea774a0fde6c31f580dde6368939ed70100c5385b015e",
+    "ext-graph-pipeline/service:3.12-slim": "sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d",
+    "ext-markdown-kb/base:0.12.3": "sha256:2d890623d310b57771ce840f0da5eed5fc6d657da05ffaa45d82797b53fa3abc",
+    "ext-markdown-kb/base:3.12-slim-bookworm": "sha256:54c85f3c47607a77f32adec749d3c81d1348bf25833671f512b26a9b6d778cb3",
+    "ext-markdown-kb/service:1.8.0.3": "sha256:beb4a68d9e4fe6b0f21ea774a0fde6c31f580dde6368939ed70100c5385b015e",
+    "ext-memory-bank/base:0.9.5": "sha256:f459f6f73a8c4ef5d69f4e6fbbdb8af751d6fa40ec34b39a1ab469acd6e289b7",
+    "ext-memory-bank/base:3.12-slim": "sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d",
+    "ext-memory-bank/service:0.10.2": "sha256:d1840062a5b79940ab7a9f4809ceb90fc776d4ad737cd9329e9b5836cc64ab70",
+    "ext-memory-bank/service:0.8.1-pg18": "sha256:508c5290cda481d4f5f846446a26e9c1b804766828a394a5861de1b348a18b4c",
+    "ext-memory-bank/service:latest": "sha256:82ad20f6f6e29b91ff33b6662d24063522b1378f08fd8569cd3ab412cac13f50",
+    "ext-temporal-graph/base:0.9.5": "sha256:f459f6f73a8c4ef5d69f4e6fbbdb8af751d6fa40ec34b39a1ab469acd6e289b7",
+    "ext-temporal-graph/base:3.12-slim": "sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d",
+    "ext-temporal-graph/service:5.26.2": "sha256:099b9f74968c123209972835417985ed2a1cc19c0422c0753a313e26a736c365",
+    "ext-temporal-graph/service:latest": "sha256:82ad20f6f6e29b91ff33b6662d24063522b1378f08fd8569cd3ab412cac13f50",
+    "ext-verbatim-session/base:0.12.3": "sha256:2d890623d310b57771ce840f0da5eed5fc6d657da05ffaa45d82797b53fa3abc",
+    "ext-verbatim-session/base:3.12-slim-bookworm": "sha256:54c85f3c47607a77f32adec749d3c81d1348bf25833671f512b26a9b6d778cb3",
+    "ext-verbatim-session/service:1.8.0.3": "sha256:beb4a68d9e4fe6b0f21ea774a0fde6c31f580dde6368939ed70100c5385b015e",
+    "ext-verbatim-session/service:3.12-slim-bookworm": "sha256:54c85f3c47607a77f32adec749d3c81d1348bf25833671f512b26a9b6d778cb3",
+    "gbrain-defaults/base:1.4.2-slim": "sha256:cb3bbbb08e13a4a2ff400f24c7a2a1d5efa83f6ef8544d52d95a519631e2fc61",
+    "gbrain-defaults/base:3.12-slim": "sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d",
+    "gbrain-defaults/service:1.8.0.3": "sha256:beb4a68d9e4fe6b0f21ea774a0fde6c31f580dde6368939ed70100c5385b015e",
+    "gbrain-defaults/service:3.12-slim": "sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d"
+  },
+  "blocks": {
+    "T2-S4-S5": {
+      "estimate_usd": 400.8,
+      "cap_usd": 441
+    }
+  },
+  "output_caps": {
+    "extraction": 4096,
+    "reader": 2048,
+    "judge": 1024,
+    "agent": 16000
+  },
+  "route_classes": {
+    "harness": "reader",
+    "judge": "judge",
+    "agent": "agent"
+  },
+  "schedule": {
+    "vcpu_cap_day": 128,
+    "vcpu_cap_night": 200
+  },
+  "row_pull_every": 20,
+  "pull_interval_minutes": 10,
+  "models": [
+    "anthropic:claude-haiku-4-5",
+    "anthropic:claude-opus-4-7",
+    "anthropic:claude-opus-5-5",
+    "anthropic:claude-sonnet-5-5",
+    "openai:gpt-4.1-mini",
+    "openai:gpt-4o-2024-08-06",
+    "openai:gpt-6.1-sol",
+    "openai:text-embedding-3-large"
+  ]
+}

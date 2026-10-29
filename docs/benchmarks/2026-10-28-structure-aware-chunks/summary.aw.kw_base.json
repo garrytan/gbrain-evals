@@ -1,0 +1,59 @@
+{
+  "cell": "aw.kw_base",
+  "corpus": "aw",
+  "arm": "kw_base",
+  "stub": false,
+  "gbrain": {
+    "requested": "gbrain@exp/structure-aware-chunks",
+    "ref": "exp/structure-aware-chunks",
+    "commit": "26e2c03b048cac41eb5f0af2331cbe5710b3600a",
+    "tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+    "version": "0.60.482.0",
+    "checkout_dirty": false,
+    "verified": {
+      "copy_tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+      "tree_matches": true,
+      "symlinks_under_src": 0,
+      "dir_is_realpath": true,
+      "cli_version": "0.60.482.0",
+      "cli_version_matches": true
+    },
+    "copied_not_symlinked": true
+  },
+  "pins": {
+    "search.mode": "balanced",
+    "search.reranker.enabled": "false",
+    "search.expansion": "false",
+    "search.cache.enabled": "false"
+  },
+  "resolved": {
+    "contextual_retrieval": "title",
+    "reranker_enabled": false,
+    "expansion": false
+  },
+  "docs": 118,
+  "questions": 39,
+  "errors": 0,
+  "excluded": {
+    "short_docs": 0,
+    "unreachable_questions": 0
+  },
+  "hit1": 0.5384615384615384,
+  "hit3": 0.7692307692307693,
+  "lead_hit": 0.5384615384615384,
+  "reachable": 1,
+  "embedding": {
+    "model": "openai:text-embedding-3-large",
+    "dims": 1536,
+    "provider_tokens": 0,
+    "calls": 0,
+    "usd": 0,
+    "cache": {
+      "hits": 0,
+      "misses": 0,
+      "bypassed": 0,
+      "infra_faults": 0,
+      "path": "<scratch>/embed-cache.sqlite.kw-unused"
+    }
+  }
+}

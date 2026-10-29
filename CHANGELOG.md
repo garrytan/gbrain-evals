@@ -2,6 +2,73 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.133] - 2026-10-29
+
+### The 8k conversion wave: preregistration, harness and held-out result
+
+- **You can read the held-out verdict for gbrain's 8k conversion wave.** On the 200 held-out questions of sealed confirmation v2, the facts block (`search.query_facts_block`) answered 183 against 151 for the control, +16.0 points with a persona-clustered 95% interval of +11.0 to +21.5. By the preregistered rule the verdict is `pass`. The budget-unit flag and the evidence-titles flag are `inconclusive`. Read the [report](docs/benchmarks/2026-10-26-gbrain-8k-conversion.md); the flip of `search.query_facts_block` is the owner's call.
+- You can repeat the whole run keyless: the preregistration, the decision file with its committed rule, the C8K harness (`eval/runner/budgeted-delivery/c8k*.ts` and scripts) and the dry-run receipts on the invented custody fixture are committed together, and `c8k-dry-run.sh` runs the development reading and the full custody chain with dummy keys and no provider call.
+- **The held-out run's custody steps are covered by tests.** `test/eval/budgeted-delivery-c8k.test.ts` now exercises the retrieval checks, the final gate, the amendment resume of the freeze, the custody refusals of `decide`, the answer files and budget summary, evidence reading, the reader resume, the corpus build, the export and the extraction, each with a one-line statement of what it protects.
+
+### Fixed
+
+- **`receipt-secrets` is green again.** gitleaks read the `"tokenizer": "approx-chars-div-4"` label in eight gate receipts as an API key. A repo-root `.gitleaksignore` names those eight receipt lines. The receipts are hashed artifacts and are unchanged.
+
+## [0.10.132] - 2026-10-29
+
+### reuse-check and arm_power refuse inputs they used to pass
+
+- **`reuse-check.ts` no longer approves a reuse it couldn't check.** It refuses when an import in the runner's closure can't be resolved by git at either commit (both sides used to read as "missing" and compare equal). A file the runner imports from an installed package is compared by the version `package.json` pins at each commit. It also refuses when the preregistration names a budget run id only as part of a longer id or a path. A `--arm` value with regex characters is now matched literally instead of crashing the check.
+- **`arm_power.py` no longer reports agreement it didn't measure.** `--draws 0` used to print `0/0` with `all_agree: true`. Now zero draws or resamples, an unparsable fraction, a world given twice, a `--world` without `=`, cells with `repeat` above 0 and an unreadable results file or line are all usage errors (exit 2).
+- **Two slow tests no longer fail on small machines.** The plain-hybrid ingestion test and a situation-recall decision test take 3 to 6 seconds on a 2-CPU machine, against the 5-second default timeout. When the first timed out, the test runner killed the shared fake server, and two later tests failed with it. Both now set a 60-second timeout, as the other slow tests in their files do.
+
+## [0.10.131] - 2026-10-28
+
+### Eval cost audit and two tools that cut a confirmation's cost
+
+- **You can now reuse a Cat 40 arm that doesn't load gbrain.** `bun eval/runner/cat40/reuse-check.ts --prior <dir> --planned <dir> --arm fs` compares the two experiment manifests and receipts and refuses on any difference in world, Hard identity, limits, judge, scorer, settings, evaluator code, runner cell code or cell-affecting flag, when either run recorded a dirty checkout or the earlier run didn't finish, and unless `--preregistration` names the earlier budget run and the arm. A re-confirmation of a new gbrain build on the four October worlds, run from the runner commit those arms ran at, would run only the gbrain arms: about $650 instead of about $2,860 (a projection; the sealed worlds' arms are checked in custody).
+- **You can size each arm by simulation before preregistering it.** `python3 eval/runner/cat40/arm_power.py` reruns the frozen confirmation endpoints with one arm on a fraction of the tasks and reports how often each verdict that uses the arm holds on fewer of the same tasks, and the spend on the tasks left out. On the October public cells, the files-only arm on half the tasks kept "ahead" in 20 of 20 draws and would have saved $291.
+- **Both apply only to preregistrations written from 2026-10-28 on**, and each one declares its reused arms and its sizing simulation before any cell runs ([eval/CONTRIBUTING.md](eval/CONTRIBUTING.md#cut-the-cost-of-a-preregistered-run)).
+- **The audit** ([docs/audit/2026-10-28-eval-cost-audit.md](docs/audit/2026-10-28-eval-cost-audit.md)): about $10,400 of model spend from October 14 to 28, 94% of it the Q1 scoreboard and the Cat 40 confirmation.
+- **CI:** the `harness` job's Python tests and Bun proxy tests now run as two parallel jobs, `harness (pytest)` and `harness (proxy)`, with the same test files.
+
+## [0.10.130] - 2026-10-27
+
+### Q1 head-to-head scoreboard: preregistered, run, and published as aggregates
+
+- **You can now read how gbrain's shipped defaults compare with external memory systems and plain baselines on the same questions** ([report](docs/benchmarks/2026-10-06-scoreboard-report.md), [scoreboard](docs/benchmarks/2026-10-06-scoreboard/scoreboard.md), README headline). The headline is BEAM-10M, a set never used to tune gbrain and run from the custodian's host. External systems are named by kind; their frozen bundles are listed in `docs/comparison-systems.md`.
+- **Every GBrain row measures GBrain 0.60.138.0 (`f05943e6`, 2026-10-09), not current master.** A rerun at current master is planned (F6).
+- **What the numbers say.** At 8k context, gbrain-defaults scores 56.3% on BEAM-10M (197 of 199 questions). The 8k rows are descriptive: with 10 conversations only differences of about 13.6 points are detectable, so no row is ranked. On whole-system rows nothing separates after Holm correction; the largest gap is the file-agent baseline, 9.3 points above gbrain (Holm p 0.099).
+- **Preregistration with amendments A1 to A25.** Each amendment was committed before the cells it governs ran, with its campaign hash. The sealed campaign is frozen at `a92b06c5` (149 units). A25 limits publication to aggregates plus a `SHA256SUMS` commitment and keeps the full receipt sealed in custody until F6.
+- **Check a published number yourself.** `bun eval/runner/scoreboard.ts check --sums <SHA256SUMS>` verifies the README block and `scoreboard.md` against the committed hash, and `check --commit <sha>` checks them against the results branch. Public renders print exclusions as counts by reason and refuse to print any sealed question id.
+- **Run your own campaign.** `eval:scoreboard` drives the campaign: leases priced against block and campaign caps, cells on Ubicloud VMs, reattach after a lost session, resume by missing answers, a $0 fixture in CI, and `raise-lease` to raise a running lease on both ledgers.
+- **Spend.** $7,034.32 on the campaign ledgers against an $8,000 sealed cap. Of 149 launch units, 114 settled complete, 8 partial and 27 not run, and each not-run row says why.
+
+### Fixed
+
+- An abandoned or still-open lease that `raise-lease` raised is now charged at its raised amount in lease listings, block spend, status and the next raise's block check, matching the campaign ledger.
+- `eval/runner/q1/persist.sh` honours fractional hours (the default 5.8 ran 5 hours; 0.5 ran not at all).
+- The name guard scans the tree in two passes instead of eleven, so its whole-tree test finishes inside its budget on a loaded machine.
+- The render and chat-client changes Q1 needs live in `render-v2.ts` and `qa-v2.ts`, so `render.ts` and `qa.ts` keep main's bytes.
+
+## [0.10.129] - 2026-10-25
+
+### Re-pin to gbrain `7a6bdd357` (v0.60.454.0); N14 at large pages Wave B PR 4
+
+- **Pin.** gbrain moves from `6e1086492` (v0.60.324.0) to `7a6bdd357` (v0.60.454.0). This brings large pages Wave B PR 4 (#7316): derived data is kept per segment, forced chunk cuts land on a sentence or line end, and a new transcript session imports as one page. It also brings the git-canonical privacy follow-up (#7586).
+- **Re-pin fixes.** Each was root-caused, and no assertion was weakened:
+  - N4 scores `remember`'s documented entity refusal (gbrain #7248) as unresolved, not as an error.
+  - The ARS E2 broken-adapter test unfolds collapsed rows before it reverses them.
+  - With `page_split: exchanges`, the harness provider no longer sends a `source_slug` that no page carries.
+  - cat30 restores `GBRAIN_HOME` after it runs.
+  - Docs name the new pin, and the search-mode notes add `collapse` and `rank_priors`.
+- **N14** ([report](docs/benchmarks/2026-10-25-n14-large-page-fidelity-wave-b4.md)). Preregistration Amendment 6 was written before any counted run. The run is hermetic on the default config, covering PGLite from 2 MB to 260 MiB and Postgres at 2 MB and from 100 MiB to 260 MiB, at $0.
+  - **Counted verdict: pass.** This is the first time every rule passes. The recall gap is 0 at 2 MB, 20 MB and 24 MiB; it was 2.5 at 24 MiB, because the split needle is now found whole. The worst native append ratio is 2.87.
+  - Segmented pages have 2 to 4% fewer chunks. Every stored page is still found 40/40, read in windows and exported byte-identical.
+  - Exploratory: the Postgres doubled append embed did not recur (0 of 30 document runs, against 5 of 23 at v0.10.124). Ingest at 100 MiB and above is 5 to 14% slower, all in the projection seal.
+  - Forget on pages over 24 MiB is still unreachable: an upload replace adding the fence fails with `request_too_large`.
+- **Registry.** The N14 row stays held only for the trusted-local egress rule, which waits on a product decision.
+
 ## [0.10.128] - 2026-10-21
 
 ### Agent retrieval shapes: gbrain#7195 measured

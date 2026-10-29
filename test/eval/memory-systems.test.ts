@@ -12,7 +12,7 @@ import { join } from 'node:path';
 import { loadFixture, type Conversation, type MemoryQuestion, type Session } from '../../eval/runner/memory-qa/corpus.ts';
 import { canonicalize, crossSystemExclusion, freezeManifest, outcomeOf, type Manifest } from '../../eval/runner/memory-qa/outcomes.ts';
 import { readerPrompt } from '../../eval/runner/memory-qa/qa.ts';
-import { parseRunArgs, runArm } from '../../eval/runner/memory-qa/run-systems.ts';
+import { parseRunArgs, PROBE_WINDOW_CHARS, readinessProbe, runArm } from '../../eval/runner/memory-qa/run-systems.ts';
 import { assertScorerRejectsFakeSystems } from '../../eval/runner/mutation-kit.ts';
 import { pairObservations } from '../../eval/runner/stats/paired.ts';
 import { toObservation } from '../../eval/runner/stats/rows.ts';
@@ -20,9 +20,9 @@ import { FakeMemorySystem, serveProtocol } from '../../eval/runner/systems/fake.
 import { FullContextSystem } from '../../eval/runner/systems/baselines.ts';
 import { BudgetRun, closeLedgers } from '../../eval/runner/budget-ledger.ts';
 import { HttpMemorySystem } from '../../eval/runner/systems/http.ts';
-import { packContext, packNative, renderItem, strictSources, TOKENIZER, validateSources } from '../../eval/runner/systems/render.ts';
-import { findLeaks, forbiddenMarkers, NS_RE, Sanitizer, SRC_RE } from '../../eval/runner/systems/sanitize.ts';
-import { SystemError, type Item } from '../../eval/runner/systems/types.ts';
+import { packContext, packNative, renderItem, strictSources, TOKENIZER, validateSources } from '../../eval/runner/systems/render-v2.ts';
+import { findLeaks, forbiddenMarkers, NS_RE, opaqueSourceId, Sanitizer, SanitizerLeakError, SRC_RE } from '../../eval/runner/systems/sanitize.ts';
+import { SystemError, type Item, type SessionInput } from '../../eval/runner/systems/types.ts';
 
 const tmp = mkdtempSync(join(tmpdir(), 'memory-systems-'));
 afterAll(() => rmSync(tmp, { recursive: true, force: true }));
@@ -70,6 +70,30 @@ describe('sanitizer', () => {
     } finally { server.stop(); }
     expect(bodies.length).toBe(6);
     expect(bodies.flatMap(b => findLeaks(b, san.markers))).toEqual([]);
+  });
+
+  test('a marker inside the system\'s own name (its policy names) does not refuse its requests; the marker elsewhere still does', async () => {
+    const server = serveProtocol(new FakeMemorySystem());
+    try {
+      const sys = new HttpMemorySystem(server.url, { name: 'ext-temporal-graph', markers: ['temporal'] });
+      const ns = san.ns('gpt4_2655b836_abs');
+      await sys.reset(ns);
+      await sys.retrieve(ns, { text: 'What color is my car?', query_time: null }, { name: 'ext-temporal-graph:fixed-evidence', mode: 'fixed-evidence', settings: {} });
+      await expect(sys.retrieve(ns, { text: 'a temporal question', query_time: null }, { name: 'ext-temporal-graph:fixed-evidence', mode: 'fixed-evidence', settings: {} })).rejects.toBeInstanceOf(SanitizerLeakError);
+    } finally { server.stop(); }
+  });
+
+  test('a hex raw id that happens to sit inside an opaque source id does not refuse the request; the same id in the text still does', async () => {
+    const server = serveProtocol(new FakeMemorySystem());
+    try {
+      const src = opaqueSourceId('conv-x', 'session-y');
+      const marker = src.slice(8, 16);
+      const sys = new HttpMemorySystem(server.url, { markers: [marker] });
+      const ns = san.ns('gpt4_2655b836_abs');
+      await sys.reset(ns);
+      await sys.ingestSession(ns, { source_id: src, turns: [{ role: 'user', speaker: 'user', content: 'I bought a red car.' }] } as SessionInput, null);
+      await expect(sys.ingestSession(ns, { source_id: src, turns: [{ role: 'user', speaker: 'user', content: `see ${marker}` }] } as SessionInput, null)).rejects.toBeInstanceOf(SanitizerLeakError);
+    } finally { server.stop(); }
   });
 
   test('a marker that the corpus text itself contains is not forbidden', () => {
@@ -273,6 +297,22 @@ describe('memory-qa with a MemorySystem', () => {
       expect(rows.every(r => r.outcome === 'scored')).toBe(true);
       expect(rows.filter(r => !r.abstention).every(r => (r.recall_measurable !== false) === measurable)).toBe(true);
     }
+  });
+
+  test('readiness probe: the passage opens a turn near the start of the last session, so a system that embeds only a session\'s opening is not marked degraded (A23)', async () => {
+    const turn = (c: string, n: number) => ({ role: 'user', content: (c.repeat(n) + ' ').slice(0, n), time: null });
+    const last = { source_id: 'ns-last', time: null, turns: [turn('a', 120), turn('b', 600), turn('c', 300), turn('d', 4000)] } as unknown as SessionInput;
+    const opening = last.turns.map(t => t.content).join('').slice(0, PROBE_WINDOW_CHARS + 300);
+    const asked: string[] = [];
+    const openingOnly = new FakeMemorySystem();
+    openingOnly.retrieve = async (_ns, q) => {
+      asked.push(q.text);
+      const items = opening.includes(q.text) ? [{ text: q.text, source_ids: ['ns-last'] } as unknown as Item] : [];
+      return { items, applied_settings: {}, truncated: false };
+    };
+    const caps = await new FakeMemorySystem().capabilities();
+    expect(await readinessProbe(openingOnly, 'ns', last, { mode: 'fixed-evidence', settings: {} } as never, caps)).toBe('found');
+    expect(asked).toEqual([last.turns[1].content.slice(0, 300)]);
   });
 
   test('readiness probe: a shim whose quiescence signal lies (indexes late) marks its conversations ingest-degraded; an honest one passes', async () => {

@@ -186,4 +186,15 @@ describe('comparator name guard', () => {
       expect(scan(root, Object.keys(files)).violations.map(h => `${h.path}:${h.line}`).sort()).toEqual(['sys/README.md:1', 'sys/shim.py:2']);
     } finally { rmSync(root, { recursive: true, force: true }); }
   });
+  test('a directory entry allows the files directly inside it, not a deeper or sibling directory', () => {
+    const root = mkdtempSync(join(tmpdir(), 'name-guard-'));
+    try {
+      const files = ['docs/comparison-systems/ext-memory-bank/README.md', 'docs/comparison-systems/ext-memory-bank/sub/README.md', 'docs/comparison-systems/ext-other/README.md'];
+      for (const rel of files) { mkdirSync(join(root, rel, '..'), { recursive: true }); writeFileSync(join(root, rel), `the ${product} server
+`); }
+      const r = scan(root, files);
+      expect(r.allowed.map(h => h.path)).toEqual([files[0]]);
+      expect(r.violations.map(h => h.path).sort()).toEqual([files[1], files[2]]);
+    } finally { rmSync(root, { recursive: true, force: true }); }
+  });
 });

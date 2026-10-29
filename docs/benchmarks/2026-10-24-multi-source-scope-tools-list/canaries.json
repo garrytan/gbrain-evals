@@ -1,0 +1,138 @@
+{
+  "members": {
+    "alice-example": {
+      "source": "source-a",
+      "name": "Alice Example"
+    },
+    "bob-example": {
+      "source": "source-b",
+      "name": "Bob Example"
+    },
+    "carol-example": {
+      "source": "source-c",
+      "name": "Carol Example"
+    }
+  },
+  "canaries": {
+    "ORCHID-4100": {
+      "member": "alice-example",
+      "source": "source-a",
+      "slug": "notes/apollo-example"
+    },
+    "KESTREL-4137": {
+      "member": "alice-example",
+      "source": "source-a",
+      "slug": "notes/borealis-example"
+    },
+    "BASALT-4174": {
+      "member": "alice-example",
+      "source": "source-a",
+      "slug": "notes/cobalt-example"
+    },
+    "MARLIN-4211": {
+      "member": "alice-example",
+      "source": "source-a",
+      "slug": "notes/1on1-bob-example"
+    },
+    "JUNIPER-4248": {
+      "member": "alice-example",
+      "source": "source-a",
+      "slug": "notes/1on1-carol-example"
+    },
+    "QUARTZ-4285": {
+      "member": "alice-example",
+      "source": "source-a",
+      "slug": "notes/compensation"
+    },
+    "HERON-4322": {
+      "member": "alice-example",
+      "source": "source-a",
+      "slug": "notes/health"
+    },
+    "SABLE-4359": {
+      "member": "alice-example",
+      "source": "source-a",
+      "slug": "notes/job-search"
+    },
+    "TUNDRA-4396": {
+      "member": "bob-example",
+      "source": "source-b",
+      "slug": "notes/apollo-example"
+    },
+    "COBRA-4433": {
+      "member": "bob-example",
+      "source": "source-b",
+      "slug": "notes/borealis-example"
+    },
+    "LANTERN-4470": {
+      "member": "bob-example",
+      "source": "source-b",
+      "slug": "notes/cobalt-example"
+    },
+    "MOSAIC-4507": {
+      "member": "bob-example",
+      "source": "source-b",
+      "slug": "notes/1on1-alice-example"
+    },
+    "NIMBUS-4544": {
+      "member": "bob-example",
+      "source": "source-b",
+      "slug": "notes/1on1-carol-example"
+    },
+    "PIKE-4581": {
+      "member": "bob-example",
+      "source": "source-b",
+      "slug": "notes/compensation"
+    },
+    "RAVEN-4618": {
+      "member": "bob-example",
+      "source": "source-b",
+      "slug": "notes/health"
+    },
+    "SIERRA-4655": {
+      "member": "bob-example",
+      "source": "source-b",
+      "slug": "notes/job-search"
+    },
+    "THISTLE-4692": {
+      "member": "carol-example",
+      "source": "source-c",
+      "slug": "notes/apollo-example"
+    },
+    "UMBER-4729": {
+      "member": "carol-example",
+      "source": "source-c",
+      "slug": "notes/borealis-example"
+    },
+    "VIOLET-4766": {
+      "member": "carol-example",
+      "source": "source-c",
+      "slug": "notes/cobalt-example"
+    },
+    "WALNUT-4803": {
+      "member": "carol-example",
+      "source": "source-c",
+      "slug": "notes/1on1-alice-example"
+    },
+    "YARROW-4840": {
+      "member": "carol-example",
+      "source": "source-c",
+      "slug": "notes/1on1-bob-example"
+    },
+    "ZEPHYR-4877": {
+      "member": "carol-example",
+      "source": "source-c",
+      "slug": "notes/compensation"
+    },
+    "ASPEN-4914": {
+      "member": "carol-example",
+      "source": "source-c",
+      "slug": "notes/health"
+    },
+    "BRAMBLE-4951": {
+      "member": "carol-example",
+      "source": "source-c",
+      "slug": "notes/job-search"
+    }
+  }
+}
