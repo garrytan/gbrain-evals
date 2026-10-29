@@ -1,0 +1,60 @@
+{
+ "arm": "fs",
+ "draws": 20,
+ "resamples": 2000,
+ "seed": 1,
+ "arm_usd": 582.34,
+ "full": {
+  "primary:public": {
+   "wording": "ahead",
+   "delta_pp": 12.5,
+   "ci95": [
+    9.0,
+    16.0
+   ]
+  },
+  "d3": {
+   "wording": "passes",
+   "delta_pp": -3.5,
+   "ci95": [
+    -5.83,
+    -1.33
+   ]
+  }
+ },
+ "fractions": {
+  "0.33": {
+   "agree": {
+    "primary:public": "20/20",
+    "d3": "20/20"
+   },
+   "all_agree": true,
+   "weakest_primary_lower_pp": {
+    "primary:public": 2.53
+   },
+   "usd_not_spent": 390.17
+  },
+  "0.5": {
+   "agree": {
+    "primary:public": "20/20",
+    "d3": "20/20"
+   },
+   "all_agree": true,
+   "weakest_primary_lower_pp": {
+    "primary:public": 5.0
+   },
+   "usd_not_spent": 291.17
+  },
+  "0.67": {
+   "agree": {
+    "primary:public": "20/20",
+    "d3": "20/20"
+   },
+   "all_agree": true,
+   "weakest_primary_lower_pp": {
+    "primary:public": 4.98
+   },
+   "usd_not_spent": 192.17
+  }
+ }
+}
