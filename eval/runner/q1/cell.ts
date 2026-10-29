@@ -120,8 +120,8 @@ const writeAtomic = (path: string, text: string) => { mkdirSync(dirname(path), {
 const readLines = <T>(path: string): T[] => existsSync(path) ? readFileSync(path, 'utf8').split('\n').filter(l => l.trim()).flatMap(l => { try { return [JSON.parse(l) as T]; } catch { return []; } }) : [];
 /** Why the system called its own answer a harness failure, from the error code and reason it returned (A23: 237 think answers recorded none). */
 const invalidReason = (a: OwnAnswer) => {
-  const r = (a.raw ?? {}) as { error_code?: unknown; raw?: { reason?: unknown; message?: unknown } };
-  const parts = [r.error_code && `error_code ${r.error_code}`, r.raw?.reason && `reason ${r.raw.reason}`, r.raw?.message && String(r.raw.message).slice(0, 200)].filter(Boolean);
+  const r = (a.raw ?? {}) as { error_code?: unknown; synthesis_status?: unknown; raw?: { reason?: unknown; message?: unknown } };
+  const parts = [r.error_code ? `error_code ${r.error_code}` : r.synthesis_status && `synthesis_status ${r.synthesis_status}`, r.raw?.reason && `reason ${r.raw.reason}`, r.raw?.message && String(r.raw.message).slice(0, 200)].filter(Boolean);
   return `the system classified its answer path as a harness failure${parts.length ? `: ${parts.join('; ')}` : ' and named no reason'}`;
 };
 const hashKey = (seed: string, id: string) => createHash('sha256').update(`${seed}\u0000${id}`).digest('hex');

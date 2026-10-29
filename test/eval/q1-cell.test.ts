@@ -850,6 +850,26 @@ describe('own-answer arms through the answer route (POST /answer)', () => {
     } finally { server.stop(true); fake.stop(); }
   });
 
+  test('F6: an own answer stopped by its output limit records its synthesis_status as the reason when the system gave no error code', async () => {
+    const fake = serveProtocol(new FakeMemorySystem());
+    const server = Bun.serve({ port: 0, hostname: '127.0.0.1', idleTimeout: 0, fetch: async req => {
+      const path = new URL(req.url).pathname;
+      if (path === '/answer') return Response.json({ answer: 'partial', outcome: 'harness_invalid', synthesis_status: 'output_truncated', degraded: null, source_ids: [], model: null, usage: { input: 0, output: 0 }, usd: null, service_ms: 1, raw: {} });
+      const res = await fetch(`${fake.url}${path}`, { method: req.method, headers: { 'content-type': 'application/json' }, body: req.method === 'POST' ? await req.text() : undefined, keepalive: false });
+      const json = await res.json() as Record<string, unknown>;
+      if (path === '/capabilities') Object.assign(json, { system: 'gbrain-defaults', answer: { modes: ['think'] } });
+      return Response.json(json, { status: res.status });
+    } });
+    try {
+      const def = cellDef('gbrain-defaults', 'shim', [{ ...think, readers: ['openai:gpt-6.1-sol'] }], { configuration: 'full-surface' });
+      const out = join(tmp, 'f6-truncated-reason');
+      await runCell(def, { out, systemUrl: `http://127.0.0.1:${server.port}`, maxAttempts: 1, ...quiet }, { corpus, reader: scriptedReader(), judge: scriptedJudge() });
+      const attempts = [...new Bun.Glob('runs/*/r/*/answer-attempts.ndjson').scanSync(out)].flatMap(f => ndjson(join(out, f)));
+      expect(attempts.length).toBeGreaterThan(0);
+      for (const a of attempts) expect([a.outcome, a.error]).toEqual(['harness_invalid', 'the system classified its answer path as a harness failure: synthesis_status output_truncated']);
+    } finally { server.stop(true); fake.stop(); }
+  });
+
   test('A23: --reanswer-invalid-before answers again the harness_invalid answers recorded before the cutoff, on a new realization that carries every other record; a cutoff before them changes nothing', async () => {
     const fake = serveProtocol(new FakeMemorySystem());
     let invalid = true, calls = 0;
