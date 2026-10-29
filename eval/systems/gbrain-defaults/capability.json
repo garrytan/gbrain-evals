@@ -97,5 +97,22 @@
     "POST /restart {ns}": "stop and start serve on the namespace's brain; restart_ms",
     "GET /health": "adds called_ops (every MCP tool called since start), checked against resolved.starter_tools, and shipped_fallbacks (shipped-behavior delivery fallbacks counted per reason)",
     "POST /finish": "adds doctor (the last doctor gate), doctor_rounds (their count), rounds (every doctor gate of the barrier), absent_pages, expected_pages and background_liabilities (pending_jobs by kind, oldest_pending_age_s, pending_effects by kind, drained, drain_rounds, the doctor's facts and queue backlog)"
+  },
+  "f6": {
+    "preregistration": "docs/benchmarks/2026-10-29-f6-current-master-preregistration.md",
+    "enabled_by": "GBRAIN_F6=1 (off for every Q1 cell); GBRAIN_F6_EXTRACT_CAP_USD is the extraction cap, a recorded parameter",
+    "surface": "gbrain serve --surface full (query's evidence-budget argument and recall's limit and include_expired are full-surface parameters)",
+    "build": [
+      "the Q1 install recipe at the cell's pin (launch env GBRAIN_SHA)",
+      "gbrain config set facts.default_visibility world at install (the posture gbrain's bootstrap writes when unset), read back",
+      "sessions written with put_page as in Q1",
+      "/finish, serve stopped: gbrain extract-conversation-facts --source-id default --max-cost-usd <cap left> --json --yes, resumed up to 3 passes while a pass ends partial; a pass that stops on its cap, or pages failed, pending, blocked, ambiguous, too large or unparsed after the last pass, or an unpriced model, fail the realization",
+      "gbrain repair safe-chunks --source default --json, then --apply when the preview finds pages",
+      "the Q1 quiesce barrier",
+      "a fact index: one recall {session_id: cli:extract-conversation-facts:<slug>, limit 100, include_expired} per session page"
+    ],
+    "policies": "settings {op: query | recall, args, overlay}: query gets {query: question, ...args}; recall gets {question, query: question, ...args}; overlay writes all six search keys (evidence_date_header, evidence_titles, fact_source_pages, query_budget_unit, query_facts_block, saved_facts_supersede)",
+    "overlay_switch": "only when the overlay hash changes: stop serve, gbrain config set each key, gbrain config get each key (a mismatch is a product error that invalidates the cell), start serve; raw.overlay records the hash, whether it switched, the values read back and switch_ms",
+    "item_mapping": "rows in gbrain's delivered order. A query fact row (result_type fact) or a recall fact -> type fact, id fact:<fact_id>, text as delivered (recall: its date header line, then the fact), source_ids the session of the fact's source page (fact index, else one recall with the row's follow_up), valid_from/valid_to from the fact; unavailable when no page resolves. Page rows map as in Q1; recall's results[] map to type chunk."
   }
 }

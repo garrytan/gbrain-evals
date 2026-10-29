@@ -21,6 +21,16 @@ be queued after its outbox effect completed, src/core/persistence/effect-facts.t
 outlast the finish horizon, and whatever is left is recorded as `background_liabilities`; restart serve. /retrieve calls `query` (never with `token_budget`, which switches gbrain to
 chunk delivery) and classifies the response meta; /answer is gbrain's own answer (`synthesize`, or `think` on the
 full surface when GBRAIN_FULL_SURFACE=1).
+
+F6 (GBRAIN_F6=1, docs/benchmarks/2026-10-29-f6-current-master-preregistration.md) serves the full surface and adds a
+brain build to /finish and per-arm retrieval policies to /retrieve, leaving every Q1 path as it was. The install also
+writes gbrain's single-principal facts posture (facts.default_visibility world, the value gbrain's bootstrap writes when
+unset). /finish runs `gbrain extract-conversation-facts` over the whole brain under a recorded dollar cap
+(GBRAIN_F6_EXTRACT_CAP_USD) and fails the realization when the run stops on its cap or leaves pages unfinished, then
+gbrain's safe-chunks repair, before the quiesce barrier; it then indexes every saved fact's source page through recall.
+An F6 policy names its op (query or recall), the op's arguments and an overlay of the six search keys. The shim applies
+an overlay only when it changes: stop serve, `gbrain config set` all six keys, read each back, start serve, and record
+the overlay's hash and switch time on the retrieval. Fact rows map to their source session through the fact index.
 """
 from __future__ import annotations
 
@@ -52,6 +62,8 @@ ACTIVE_MARK = os.path.join(DATA, "active-ns")
 GBRAIN = os.environ.get("GBRAIN_BIN", "gbrain")
 PROXY_BASE = os.environ.get("GBRAIN_PROXY_BASE", "").rstrip("/")
 FULL_SURFACE = os.environ.get("GBRAIN_FULL_SURFACE", "0") == "1"
+F6 = os.environ.get("GBRAIN_F6", "0") == "1"
+F6_EXTRACT_CAP_USD = os.environ.get("GBRAIN_F6_EXTRACT_CAP_USD", "")
 CALL_TIMEOUT_S = float(os.environ.get("GBRAIN_CALL_TIMEOUT_S", "900"))
 WRITE_POLL_LIMIT_S = float(os.environ.get("GBRAIN_WRITE_POLL_S", "600"))
 REQUEST_NS = uuid.UUID("6f1c3d4e-5a2b-4c8d-9e0f-1a2b3c4d5e6f")
@@ -60,6 +72,19 @@ REQUEST_NS = uuid.UUID("6f1c3d4e-5a2b-4c8d-9e0f-1a2b3c4d5e6f")
 # at every serve start); `think` is called only on the labeled full surface.
 STARTER_CALLS = ("put_page", "get_write_request", "list_write_requests", "query", "list_pages", "synthesize")
 FULL_SURFACE_CALLS = ("think",)
+F6_CALLS = ("recall",)
+# The six search keys every F6 overlay writes explicitly, defaults included (gbrain src/core/config.ts:1436-1443).
+SEARCH_OVERLAY_KEYS = ("search.evidence_date_header", "search.evidence_titles", "search.fact_source_pages", "search.query_budget_unit",
+                       "search.query_facts_block", "search.saved_facts_supersede")
+OVERLAY_VALUES = {"search.query_budget_unit": ("chunk", "auto")}
+# The arguments an F6 policy may pass to each op; the question fills query (and recall's question and query).
+F6_OPS = {"query": ("limit", "autocut", "expand", "token_budget"), "recall": ("budget_tokens",)}
+F6_POSTURE = (("facts.default_visibility", "world"),)
+EXTRACT_SESSION_PREFIX = "cli:extract-conversation-facts:"
+# Extraction is resumable per page; a pass that ends partial (some pages failed on a provider error) is run again.
+F6_EXTRACT_PASSES = 3
+EXTRACT_TIMEOUT_S = float(os.environ.get("GBRAIN_F6_EXTRACT_TIMEOUT_S", str(48 * 3600)))
+FACT_INDEX_LIMIT = 100
 PENDING_STATES = {"queued", "running", "recovering"}
 # gbrain job states from which a job can still run (src/core/minions/types.ts MinionJobStatus).
 PENDING_JOB_STATES = ("waiting", "delayed", "paused", "waiting-children", "active")
@@ -366,6 +391,37 @@ def job_liabilities(jobs: list[dict[str, Any]], now: datetime) -> dict[str, Any]
     return {"pending_jobs": dict(sorted(by_kind.items())), "oldest_pending_age_s": round(max(ages)) if ages else None}
 
 
+
+def overlay_text(value: Any) -> str:
+    """An overlay value as `gbrain config set` takes it and `config get` prints it."""
+    return ("true" if value else "false") if isinstance(value, bool) else str(value)
+
+
+def fact_entry(f: dict[str, Any]) -> dict[str, Any]:
+    """A saved fact's source page (the extractor's source_session, else its context line) and validity window."""
+    session = str(f.get("source_session") or "")
+    slug = session[len(EXTRACT_SESSION_PREFIX):] if session.startswith(EXTRACT_SESSION_PREFIX) else None
+    if not slug:
+        m = re.match(r"^from (\S+) segment ", str(f.get("context") or ""))
+        slug = m.group(1) if m else None
+    return {"slug": slug, "valid_from": f.get("valid_from"), "valid_until": f.get("valid_until"), "visibility": f.get("visibility")}
+
+
+def extraction_problems(run: dict[str, Any]) -> list[str]:
+    """Why one `extract-conversation-facts --json` pass did not cover the brain; empty when it did."""
+    out = []
+    if run.get("budget_exhausted"):
+        out.append(f"extraction stopped on its cap ({run.get('spent_usd')} spent)")
+    if run.get("status") != "ok":
+        out.append(f"extraction status {run.get('status')!r} (exit {run.get('exit')})")
+    for key in ("pages_failed", "pages_pending", "pages_blocked", "pages_detection_ambiguous", "pages_skipped_too_large", "pages_skipped_unparsed", "pages_lock_skipped"):
+        if int(run.get(key) or 0):
+            out.append(f"{key}={run.get(key)}")
+    if run.get("no_pricing_models"):
+        out.append(f"unpriced extraction models {run.get('no_pricing_models')}")
+    return out
+
+
 class GbrainDefaultsAdapter(Adapter):
     def __init__(self) -> None:
         with open(os.path.join(HERE, "capability.json")) as f:
@@ -498,6 +554,7 @@ class GbrainDefaultsAdapter(Adapter):
             raise ShimError("product_error", f"gbrain init --pglite did not succeed: {canonical(init)[:400]}")
         migrations = self.cli("apply-migrations", "--yes", "--non-interactive", "--no-autopilot-install", timeout_s=900, check=False)
         answered = self.answer_first_run_defaults(init)
+        posture = self.apply_f6_posture() if F6 else None
         resolved = self.resolve_config()
         tools = self.capture_tools(["--surface", "starter"])
         missing = [op for op in STARTER_CALLS if op not in tools]
@@ -518,6 +575,7 @@ class GbrainDefaultsAdapter(Adapter):
             "starter_tools": sorted(tools),
             "starter_tools_sha256": sha256_text(canonical(sorted(tools))),
             "doctor": doctor_gate(doctor, 0),
+            **({"f6_posture": posture} if F6 else {}),
         }
         os.makedirs(os.path.join(HOME, "shim"), exist_ok=True)
         with open(os.path.join(HOME, "shim", "install.json"), "w") as f:
@@ -539,6 +597,16 @@ class GbrainDefaultsAdapter(Adapter):
                 if argv:
                     self.cli(*argv[1:] if argv[0] == "gbrain" else argv)
                 out.append({"id": d.get("id"), "default": d.get("default"), "applied_argv": argv or None})
+        return out
+
+    def apply_f6_posture(self) -> dict[str, str]:
+        """Write gbrain's single-principal facts posture and read it back (db-plane keys, outside config.json)."""
+        out = {}
+        for key, value in F6_POSTURE:
+            self.cli("config", "set", key, value)
+            out[key] = self.cli("config", "get", key).stdout.strip()
+            if out[key] != value:
+                raise ShimError("product_error", f"{key} reads back {out[key]!r} after config set {value!r}")
         return out
 
     def config_sha256(self) -> str:
@@ -625,11 +693,11 @@ class GbrainDefaultsAdapter(Adapter):
         ref = self.require_reference()
         if sha256_text(canonical(self.resolve_config())) != ref["resolved_sha256"]:
             raise ShimError("product_error", "gbrain's resolved configuration changed from the reference install; the cell is invalid (install or model-default drift)")
-        surface = ["--surface", "full" if FULL_SURFACE else "starter"]
+        surface = ["--surface", "full" if FULL_SURFACE or F6 else "starter"]
         t0 = time.perf_counter()
         mcp = self.start_mcp(surface)
         tools = self.list_tools(mcp)
-        needed = STARTER_CALLS + (FULL_SURFACE_CALLS if FULL_SURFACE else ())
+        needed = STARTER_CALLS + (FULL_SURFACE_CALLS if FULL_SURFACE else ()) + (F6_CALLS if F6 else ())
         missing = [op for op in needed if op not in tools]
         if missing:
             mcp.close(5)
@@ -680,9 +748,10 @@ class GbrainDefaultsAdapter(Adapter):
             json.dump(st, f)
         os.replace(path + ".tmp", path)
 
-    def call(self, name: str, args: dict[str, Any], timeout_s: float = CALL_TIMEOUT_S) -> tuple[Any, dict[str, Any], list[Any], float]:
-        """One MCP tool call, timed inside the container (service_ms is this boundary, not gbrain's latency field)."""
-        if "token_budget" in args:
+    def call(self, name: str, args: dict[str, Any], timeout_s: float = CALL_TIMEOUT_S, budget_ok: bool = False) -> tuple[Any, dict[str, Any], list[Any], float]:
+        """One MCP tool call, timed inside the container (service_ms is this boundary, not gbrain's latency field). Only
+        an F6 policy that names token_budget passes budget_ok, and only on an F6 stack."""
+        if "token_budget" in args and not (budget_ok and F6):
             raise ShimError("invalid_request", "the shim never sends token_budget: it switches gbrain's query to chunk delivery", 400)
         assert self.mcp is not None
         self.called_ops.add(name)
@@ -697,6 +766,7 @@ class GbrainDefaultsAdapter(Adapter):
     def capabilities(self) -> dict[str, Any]:
         out = dict(self.record)
         out["answer"] = {"modes": ["synthesize", *(["think"] if FULL_SURFACE else [])]}
+        out["f6"] = {**out.get("f6", {}), "enabled": F6, "extract_cap_usd": float(F6_EXTRACT_CAP_USD) if F6 and F6_EXTRACT_CAP_USD else None, "overlay_keys": list(SEARCH_OVERLAY_KEYS)}
         out["shipped_behavior"] = {"delivery_fallbacks": sorted(SHIPPED_BEHAVIOR), "preregistered": list(PREREGISTERED_SHIPPED_BEHAVIOR),
                                    "configured_by": "GBRAIN_SHIPPED_FALLBACKS", "matches_preregistration": sorted(SHIPPED_BEHAVIOR) == sorted(PREREGISTERED_SHIPPED_BEHAVIOR)}
         if self.reference is not None:
@@ -804,6 +874,7 @@ class GbrainDefaultsAdapter(Adapter):
                 read_errors.append(f"outbox: {str(e)[:300]}")
             self.place(ns)
             expected = {v["slug"]: sid for sid, v in self.state()["sessions"].items()}
+            build = self.f6_build(sorted(expected)) if F6 else None
             rounds = []
             while True:
                 gate = doctor_gate(self.cli_json("doctor", "--json", timeout_s=900), len(expected))
@@ -833,6 +904,8 @@ class GbrainDefaultsAdapter(Adapter):
             self.start_serve()
             seen = self.listed_conversation_slugs()
             absent = sorted(s for s in expected if s not in seen)
+            if build is not None:
+                build = {**{k: v for k, v in build.items() if k != "passes"}, "passes": len(build["passes"]), "fact_index": self.build_fact_index(sorted(expected))}
             waited = round((time.monotonic() - t0) * 1000)
             ready = gate["clean"] and not absent
             self.receipt("finish", rounds=rounds, absent=absent[:20], ready=ready, waited_ms=waited, background_liabilities=liabilities)
@@ -840,7 +913,202 @@ class GbrainDefaultsAdapter(Adapter):
                 raise ShimError("product_error", "doctor ran under a live gbrain serve (details.reason live_serve); its database checks did not run, so the barrier cannot pass")
             return {"ready": ready, "waited_ms": waited, "completeness": "known" if ready else "degraded",
                     "doctor": gate, "doctor_rounds": len(rounds), "rounds": rounds, "absent_pages": len(absent), "expected_pages": len(expected),
-                    "background_liabilities": liabilities}
+                    "background_liabilities": liabilities, **({"f6_build": build} if build is not None else {})}
+
+# ---- F6 brain build -----------------------------------------------------------------------------------------
+
+    def f6_build(self, slugs: list[str]) -> dict[str, Any]:
+        """F6's build with serve stopped: gbrain's conversation fact extraction over the whole brain (source default)
+        under the recorded dollar cap, then gbrain's safe-chunks repair (preview, then --apply when it finds pages).
+        Extraction resumes per page, so a pass that ends partial runs again with the cap left, up to F6_EXTRACT_PASSES.
+        The realization fails when a pass stops on its cap, when pages are still failed, pending, blocked, ambiguous,
+        too large or unparsed after the last pass, or when the model has no price. A build that finished for the same
+        pages is not repeated on a /finish retry."""
+        st = self.state()
+        pages_sha = sha256_text(canonical(slugs))
+        prior = st.get("f6_build")
+        if prior and prior.get("ok") and prior.get("pages_sha256") == pages_sha:
+            return {**prior, "reused": True}
+        try:
+            cap = float(F6_EXTRACT_CAP_USD)
+        except ValueError:
+            cap = 0.0
+        if not cap > 0:
+            raise ShimError("invalid_request", "GBRAIN_F6_EXTRACT_CAP_USD must name the extraction cap in dollars; it is a recorded parameter of the F6 build", 400)
+        self.stop_serve()
+        t0 = time.perf_counter()
+        passes: list[dict[str, Any]] = []
+        spent = 0.0
+        problems: list[str] = []
+        while len(passes) < F6_EXTRACT_PASSES:
+            left = max(0.0, cap - spent)
+            p0 = time.perf_counter()
+            proc = self.cli("extract-conversation-facts", "--source-id", "default", "--max-cost-usd", f"{left:.6f}", "--json", "--yes", timeout_s=EXTRACT_TIMEOUT_S, check=False)
+            text = proc.stdout.strip()
+            try:
+                run = json.loads(text[text.index("{"):])
+            except ValueError:
+                run = {"status": "no_json", "exit": proc.returncode, "stderr_tail": (proc.stderr or "")[-400:]}
+            run["exit"], run["ms"] = proc.returncode, round((time.perf_counter() - p0) * 1000)
+            passes.append(run)
+            spent += float(run.get("spent_usd") or 0)
+            problems = extraction_problems(run)
+            if run.get("budget_exhausted") or not problems or run.get("status") not in ("partial",):
+                break
+        extract_ms = round((time.perf_counter() - t0) * 1000)
+        totals = {k: sum(int(p.get(k) or 0) for p in passes) for k in ("pages_processed", "segments_processed", "facts_extracted", "facts_inserted", "pages_failed")}
+        r0 = time.perf_counter()
+        preview = self.cli_json("repair", "safe-chunks", "--source", "default", "--json", timeout_s=EXTRACT_TIMEOUT_S)
+        found = next((x for x in preview.get("results") or [] if x.get("kind") == "safe-chunks"), {})
+        applied = self.cli_json("repair", "safe-chunks", "--source", "default", "--apply", "--json", timeout_s=EXTRACT_TIMEOUT_S) if found.get("affected") else None
+        done = next((x for x in (applied or {}).get("results") or [] if x.get("kind") == "safe-chunks"), {})
+        for x in (found, done):
+            if x.get("stopped"):
+                problems.append(f"safe-chunks stopped: {canonical(x['stopped'])[:200]}")
+        if applied is not None and (done.get("failed") or done.get("complete") is False):
+            problems.append(f"safe-chunks apply incomplete: {len(done.get('failed') or [])} failed")
+        record = {"ok": not problems, "problems": problems, "pages_sha256": pages_sha, "pages": len(slugs), "cap_usd": cap, "spent_usd": round(spent, 6),
+                  "passes": passes, "totals": totals, "extract_ms": extract_ms, "posture": dict(F6_POSTURE),
+                  "safe_chunks": {"previewed": found.get("affected"), "applied": done.get("applied", 0), "failed": len(done.get("failed") or []), "complete": done.get("complete", True),
+                                  "ms": round((time.perf_counter() - r0) * 1000)}}
+        st["f6_build"] = record
+        self.save_state(st)
+        self.receipt("f6_build", **{k: v for k, v in record.items() if k != "passes"})
+        if problems:
+            raise ShimError("product_error", f"the F6 build did not finish (the realization fails): {'; '.join(problems)[:600]}")
+        return record
+
+    def build_fact_index(self, slugs: list[str]) -> dict[str, Any]:
+        """Every saved conversation fact's source page, read on the live serve with one recall per session page
+        (session_id is the extractor's source_session), expired and superseded facts included. A page at the recall
+        limit is recorded; its later fact rows resolve through their own follow_up recall."""
+        index: dict[str, dict[str, Any]] = {}
+        at_limit, t0 = [], time.perf_counter()
+        visibility: dict[str, int] = {}
+        for slug in slugs:
+            body, _m, _n, _ms = self.call("recall", {"session_id": EXTRACT_SESSION_PREFIX + slug, "limit": FACT_INDEX_LIMIT, "include_expired": True})
+            facts = body.get("facts") if isinstance(body, dict) else None
+            for f in facts or []:
+                index[str(f.get("fact_id") or f.get("id"))] = fact_entry(f)
+                visibility[str(f.get("visibility"))] = visibility.get(str(f.get("visibility")), 0) + 1
+            if len(facts or []) >= FACT_INDEX_LIMIT:
+                at_limit.append(slug)
+        st = self.state()
+        st["fact_index"] = index
+        self.save_state(st)
+        out = {"facts": len(index), "visibility": dict(sorted(visibility.items())), "pages_at_limit": len(at_limit), "ms": round((time.perf_counter() - t0) * 1000)}
+        self.receipt("fact_index", **out)
+        return out
+
+    def apply_overlay(self, ns: str, overlay: dict[str, Any]) -> dict[str, Any]:
+        """Make `overlay` the active search configuration of ns's brain, only when it changes: stop serve, config set
+        all six keys, read each back (a mismatch invalidates the cell), start serve. Returns the overlay's hash, whether
+        it switched, the values read back and the switch time."""
+        sha = sha256_text(canonical(overlay))
+        if self.active != ns:
+            self.place(ns)
+        st = self.state()
+        switched, ms, resolved = False, 0.0, st.get("overlay_resolved")
+        if st.get("overlay_sha256") != sha:
+            t0 = time.perf_counter()
+            self.stop_serve()
+            for key in SEARCH_OVERLAY_KEYS:
+                self.cli("config", "set", key, overlay_text(overlay[key]))
+            resolved = {key: self.cli("config", "get", key).stdout.strip() for key in SEARCH_OVERLAY_KEYS}
+            wrong = sorted(k for k in SEARCH_OVERLAY_KEYS if resolved[k] != overlay_text(overlay[k]))
+            if wrong:
+                raise ShimError("product_error", f"the search overlay did not resolve: {', '.join(f'{k}={resolved[k]!r}' for k in wrong)}; the cell is invalid")
+            st = self.state()
+            st.update(overlay_sha256=sha, overlay_resolved=resolved)
+            self.save_state(st)
+            self.start_serve()
+            switched, ms = True, round((time.perf_counter() - t0) * 1000, 1)
+            self.receipt("overlay", overlay_sha256=sha, resolved=resolved, switch_ms=ms)
+        if self.mcp is None or self.mcp.proc.poll() is not None:
+            self.start_serve()
+        return {"overlay_sha256": sha, "switched": switched, "switch_ms": ms, "resolved": resolved}
+
+    def f6_policy(self, question: str, policy: dict[str, Any]) -> tuple[str, dict[str, Any], dict[str, Any]]:
+        """An F6 policy's call: settings {op, args, overlay[, on_degraded]}. Refused unless the stack runs GBRAIN_F6=1."""
+        if not F6:
+            raise ShimError("invalid_request", "F6 policies (settings.op) need a stack started with GBRAIN_F6=1", 400)
+        s = policy.get("settings") or {}
+        unknown = sorted(set(s) - {"op", "args", "overlay", "on_degraded"})
+        op, args, overlay = s.get("op"), s.get("args") or {}, s.get("overlay")
+        if unknown or op not in F6_OPS or not isinstance(args, dict) or not isinstance(overlay, dict):
+            raise ShimError("invalid_request", f"an F6 policy is {{op: query|recall, args, overlay}}; got op={op!r}, extra {unknown}", 400)
+        bad_args = sorted(set(args) - set(F6_OPS[op]))
+        if bad_args:
+            raise ShimError("invalid_request", f"{op} arguments {bad_args} are not F6 policy arguments; allowed: {list(F6_OPS[op])}", 400)
+        for k in ("token_budget", "budget_tokens", "limit"):
+            if k in args and not (isinstance(args[k], int) and not isinstance(args[k], bool) and args[k] > 0):
+                raise ShimError("invalid_request", f"{k} must be a positive integer", 400)
+        if sorted(overlay) != sorted(SEARCH_OVERLAY_KEYS):
+            raise ShimError("invalid_request", f"an overlay writes exactly the six search keys {list(SEARCH_OVERLAY_KEYS)}; got {sorted(overlay)}", 400)
+        for k, v in overlay.items():
+            if not (v in OVERLAY_VALUES[k] if k in OVERLAY_VALUES else isinstance(v, bool)):
+                raise ShimError("invalid_request", f"overlay {k}={v!r} is not one of {list(OVERLAY_VALUES.get(k, (True, False)))}", 400)
+        call_args = {"query": question, **args} if op == "query" else {"question": question, "query": question, **args}
+        return op, call_args, overlay
+
+    def fact_source(self, fact_id: str, row: dict[str, Any], index: dict[str, Any]) -> dict[str, Any] | None:
+        """A fact row's index entry, or one recall with the row's own follow_up (grep) when the index lacks it."""
+        if fact_id in index:
+            return index[fact_id]
+        follow = row.get("follow_up") if isinstance(row.get("follow_up"), dict) else {}
+        if follow.get("op") != "recall" or not isinstance(follow.get("args"), dict):
+            return None
+        body, _m, _n, _ms = self.call("recall", {**follow["args"], "limit": FACT_INDEX_LIMIT, "include_expired": True})
+        for f in (body.get("facts") if isinstance(body, dict) else None) or []:
+            index[str(f.get("fact_id") or f.get("id"))] = fact_entry(f)
+        return index.get(fact_id)
+
+    def f6_retrieve(self, ns: str, question: str, policy: dict[str, Any]) -> dict[str, Any]:
+        op, args, overlay = self.f6_policy(question, policy)
+        on_degraded = (policy.get("settings") or {}).get("on_degraded", self.record["retrieval_policies"]["on_degraded"])
+        with self.lock:
+            switch = self.apply_overlay(ns, overlay)
+            st = self.state()
+            sources = {v["slug"]: sid for sid, v in st["sessions"].items()}
+            index = st.get("fact_index") or {}
+            known = len(index)
+            body, meta, notices, ms = self.call(op, args, budget_ok=True)
+            retrieval = meta.get("retrieval") or {}
+            verdict = classify_query_meta(retrieval, self.require_reference()["resolved"]["search"]) if op == "query" else {"outcome": "scored", "reasons": [], "recorded": []}
+            if op == "query":
+                rows = [("fact" if r.get("result_type") == "fact" else "page", r) for r in (body if isinstance(body, list) else [])]
+            else:
+                b = body if isinstance(body, dict) else {}
+                rows = [("recall_fact", f) for f in b.get("facts") or []] + [("recall_page", r) for r in b.get("results") or []]
+            items, unresolved = [], 0
+            for rank, (kind, row) in enumerate(rows, start=1):
+                if kind in ("fact", "recall_fact"):
+                    fid = str(row.get("fact_id") or row.get("id"))
+                    entry = fact_entry(row) if kind == "recall_fact" else self.fact_source(fid, row, index)
+                    sid = sources.get((entry or {}).get("slug") or "")
+                    unresolved += 0 if sid else 1
+                    text = str(row.get("chunk_text") or "") if kind == "fact" else "\n".join(x for x in (row.get("date_header"), row.get("fact")) if x)
+                    items.append({"id": f"fact:{fid}", "rank": rank, "type": "fact", "text": text, "source_ids": [sid] if sid else [],
+                                  "valid_from": (entry or {}).get("valid_from"), "valid_to": (entry or {}).get("valid_until"), "provenance_status": "exact" if sid else "unavailable"})
+                    continue
+                slug = str(row.get("slug") or "")
+                sid = sources.get(slug)
+                episode = kind == "page" and row.get("type") == "conversation" and not (row.get("delivered") or {}).get("truncated")
+                items.append({"id": f"{slug}#{row.get('chunk_id', rank)}", "rank": rank, "type": "episode" if episode else "chunk",
+                              "text": str((row.get("chunk_text") if kind == "page" else row.get("chunk")) or ""), "source_ids": [sid] if sid else [],
+                              "valid_from": None, "valid_to": None, "provenance_status": "exact" if sid else "unavailable"})
+            if len(index) != known:
+                st = self.state()
+                st["fact_index"] = index
+                self.save_state(st)
+            fact_rows = sum(1 for k, _r in rows if k in ("fact", "recall_fact"))
+            raw = {"tool": op, "args": args, "gbrain_ms": ms, "meta": retrieval if op == "query" else {k: v for k, v in (body if isinstance(body, dict) else {}).items() if k not in ("facts", "results")},
+                   "notices": notices, "classification": verdict, "serve_session": self.serve_session, "overlay": switch, "fact_rows": fact_rows, "fact_rows_unresolved": unresolved,
+                   "query_time": "not sent: neither op takes an as-of date", "rows": len(items)}
+            self.receipt("retrieve", op=op, args=args, gbrain_ms=ms, classification=verdict, overlay_sha256=switch["overlay_sha256"], switched=switch["switched"], rows=len(items), fact_rows=fact_rows)
+            if verdict["outcome"] != "scored" and on_degraded == "error":
+                raise ShimError("invalid_request", f"degraded read (harness failure; retry after quiesce): {', '.join(verdict['reasons'])}", 503)
+            return {"items": items, "applied_settings": {"op": op, **args, "overlay_sha256": switch["overlay_sha256"]}, "truncated": False, "raw": raw}
 
     def listed_conversation_slugs(self) -> set[str]:
         seen: set[str] = set()
@@ -870,6 +1138,8 @@ class GbrainDefaultsAdapter(Adapter):
         return {"query": question, **{k: settings[k] for k in sorted(QUERY_KNOBS) if k in settings}}
 
     def retrieve(self, ns: str, question: str, query_time: str | None, policy: dict[str, Any]) -> dict[str, Any]:
+        if "op" in (policy.get("settings") or {}):
+            return self.f6_retrieve(ns, question, policy)
         args = self.query_args(question, policy)
         on_degraded = (policy.get("settings") or {}).get("on_degraded", self.record["retrieval_policies"]["on_degraded"])
         with self.lock:

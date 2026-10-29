@@ -12,7 +12,8 @@
 # sets one, so a strict proxy admits its calls); the proxy injects the real ones.
 #
 # GBRAIN_SHA pins the gbrain commit baked into the image; GBRAIN_FULL_SURFACE=1 serves the full surface for the
-# labeled `think` row (every other call still uses starter ops). Brains live on the gbrain-data volume, so
+# labeled `think` row (every other call still uses starter ops). GBRAIN_F6=1 with GBRAIN_F6_EXTRACT_CAP_USD runs the F6
+# build and policies (shim.py docstring); F6 cells set GBRAIN_SHA to their pin in the launch environment. Brains live on the gbrain-data volume, so
 # `bootstrap.sh restart` keeps them and `down` removes them.
 name: gbrain-defaults
 
@@ -28,6 +29,8 @@ services:
       SHIM_PORT: "8700"
       GBRAIN_PROXY_BASE: http://egress:9000/${PROXY_SLOT:-gbrain-defaults}
       GBRAIN_FULL_SURFACE: ${GBRAIN_FULL_SURFACE:-0}
+      GBRAIN_F6: ${GBRAIN_F6:-0}
+      GBRAIN_F6_EXTRACT_CAP_USD: ${GBRAIN_F6_EXTRACT_CAP_USD:-}
       GBRAIN_SHIPPED_FALLBACKS: ${GBRAIN_SHIPPED_FALLBACKS:-no_text_chunks,redaction_unmapped}
       VOYAGE_API_KEY: ${SHOOTOUT_CELL_TOKEN:-dummy-key-the-proxy-injects-the-real-one}
       OPENAI_API_KEY: ${SHOOTOUT_CELL_TOKEN:-sk-dummy-key-the-proxy-injects-the-real-one}
