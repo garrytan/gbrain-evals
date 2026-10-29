@@ -8,16 +8,21 @@
  * An arm that doesn't run gbrain (oracle, fs, fs-acl, memory, pg) is reusable when both manifests have the same
  * world digest, Hard identity, turn and tool limits, judge, scorer, judge prompt, settings digest and evaluator code
  * hashes, and every flag that reaches a cell. A gbrain arm (gbrain, gbrain-fs) additionally needs the same gbrain and
- * slot commits, label and every gbrain flag. Only run-control flags may differ: --out, --world (the digest is the
- * identity), --arms, --models, --budget-ledger, --concurrency, --transcripts, --order, --accept-freeze-drift and the
- * budget flags the runner never records. The planned models must all have run in the prior directory, with the same
- * number of canonical cells each and no harness errors.
+ * slot commits, label, every gbrain flag and the same override contents recorded in both receipts. Only run-control
+ * flags may differ: --out, --world (the digest is the identity), --arms, --models, --budget-ledger, --concurrency,
+ * --transcripts, --order, --accept-freeze-drift and the budget flags the runner never records. Only Hard worlds are
+ * reusable, because only they record evaluator code hashes. The planned models must all have run in the prior
+ * directory, with the same number of canonical cells each and no harness errors, and the prior directory's latest
+ * receipt must say the run finished with every planned cell present. When the runner commits differ, every file in
+ * the runner's TypeScript import closure must be identical at both commits.
  *
- * With --preregistration, the file must name the prior directory's budget run id and the arm on one line, so the
- * reuse is declared before any cell runs (eval/CONTRIBUTING.md, "Cost levers"). Exit 0 reusable, 1 refused, 2 usage.
+ * The file given with --preregistration must name the prior directory's budget run id and the arm on one line, so the
+ * reuse is declared before any cell runs (eval/CONTRIBUTING.md, "Cut the cost of a preregistered run"). Without it the
+ * arm is refused. Exit 0 reusable, 1 refused, 2 usage.
  */
-import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { execFileSync } from 'node:child_process';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { dirname, join, posix } from 'node:path';
 import type { ExperimentManifest } from '../cat40-model-ladder.ts';
 
 export const BUILD_INDEPENDENT_ARMS: readonly string[] = ['oracle', 'fs', 'fs-acl', 'memory', 'pg'];
@@ -57,6 +62,8 @@ export function reuseVerdict(prior: ExperimentManifest, planned: ExperimentManif
   const gbrainArm = GBRAIN_ARMS.includes(arm);
   if (!gbrainArm && !BUILD_INDEPENDENT_ARMS.includes(arm)) reasons.push(`unknown arm ${arm}`);
   if (!prior.arms.includes(arm)) reasons.push(`the prior directory did not run ${arm} (it ran ${prior.arms.join(',')})`);
+  if (!gbrainArm && planned.arms.includes(arm)) reasons.push(`the planned directory runs ${arm} itself`);
+  if (!prior.hard && !planned.hard) reasons.push('not a Hard world: no evaluator code hashes to compare');
   if (prior.exploratory || planned.exploratory) reasons.push('an exploratory experiment is never reused or reused into');
   if (prior.world_digest !== planned.world_digest) reasons.push(`world_digest: prior ${prior.world_digest}, planned ${planned.world_digest}`);
   const hard = (m: ExperimentManifest) => (m.hard ? { ...m.hard, runner_commit: null } : null);
@@ -90,23 +97,89 @@ export function declared(prereg: string, prior: ExperimentManifest, arm: string)
   return ids.length > 0 && prereg.split('\n').some(line => ids.some(id => line.includes(id)) && armWord.test(line));
 }
 
+export interface Receipt { mode?: string; complete?: boolean; resumed?: boolean; cells_planned?: number; gbrain?: Record<string, unknown> | null }
+
+/** The cell-running receipts of a run directory, oldest first: each invocation (a resume included) writes one. */
+export function readReceipts(dir: string): Receipt[] {
+  const names = existsSync(dir) ? readdirSync(dir).filter(n => /^receipt-\d+\.json$/.test(n)) : [];
+  return names.sort((a, b) => Number(a.slice(8, -5)) - Number(b.slice(8, -5)))
+    .map(n => JSON.parse(readFileSync(join(dir, n), 'utf8')) as Receipt).filter(r => r.mode !== 'build-slots');
+}
+
+const CELL_ENTRY = 'eval/runner/cat40-model-ladder.ts';
+
+/** Blob id of every file in the runner's relative-import closure at a commit, or null when the commit isn't here. */
+export function cellCode(commit: string, cwd = process.cwd()): Map<string, string> | null {
+  const git = (...args: string[]) => execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+  try { git('cat-file', '-e', `${commit}^{commit}`); } catch { return null; }
+  const blobs = new Map<string, string>();
+  const queue = [CELL_ENTRY];
+  while (queue.length) {
+    const file = queue.pop()!;
+    if (blobs.has(file)) continue;
+    let id: string;
+    try { id = git('rev-parse', `${commit}:${file}`).trim(); } catch { blobs.set(file, 'missing'); continue; }
+    blobs.set(file, id);
+    for (const m of git('cat-file', 'blob', id).matchAll(/(?:from|import)\s*\(?\s*['"](\.{1,2}\/[^'"]+)['"]/g)) queue.push(posix.normalize(posix.join(dirname(file), m[1]!)));
+  }
+  return blobs;
+}
+
+const GBRAIN_RECEIPT_KEYS = ['instructions_override', 'tool_overrides', 'served_instructions_sha256', 'config', 'build_config', 'surface', 'advertised_surface', 'keyless_slots'];
+
+/** What the manifests can't show: whether the prior run finished, the gbrain override contents, and the runner code. */
+export function provenanceReasons(o: { prior: ExperimentManifest; planned: ExperimentManifest; arm: string; cells: CellCount[]; priorReceipts: Receipt[]; plannedReceipts: Receipt[]; code: (commit: string) => Map<string, string> | null }): string[] {
+  const reasons: string[] = [];
+  const { prior, planned } = o;
+  const first = o.priorReceipts[0], last = o.priorReceipts.at(-1), plannedLast = o.plannedReceipts.at(-1);
+  if (!last) reasons.push('the prior directory has no receipt, so the run never finished');
+  else if (last.complete !== true) reasons.push('the prior run did not finish (its latest receipt says complete: false)');
+  if (first && !first.resumed && prior.arms.length === 1) {
+    const total = o.cells.reduce((n, c) => n + c.cells, 0);
+    if (total !== first.cells_planned) reasons.push(`the prior directory has ${total} canonical cells of the ${first.cells_planned} its first receipt planned`);
+  }
+  if (GBRAIN_ARMS.includes(o.arm)) {
+    if (!last?.gbrain || !plannedLast?.gbrain) reasons.push('a gbrain arm needs both receipts to compare its override contents');
+    else for (const k of GBRAIN_RECEIPT_KEYS) if (!same(last.gbrain[k] ?? null, plannedLast.gbrain[k] ?? null)) reasons.push(`gbrain receipt ${k} differs`);
+  }
+  const commits = (m: ExperimentManifest) => [...new Set([...(m.runner_commits ?? []), m.hard?.runner_commit ?? null])];
+  const before = commits(prior), after = commits(planned);
+  if ([...before, ...after].some(c => !c)) reasons.push('a runner commit is not recorded, so the cell code cannot be compared');
+  else for (const a of before) for (const b of after) {
+    if (a === b) continue;
+    const ca = o.code(a!), cb = o.code(b!);
+    if (!ca || !cb) { reasons.push(`runner commit ${ca ? b : a} is not in this checkout (fetch it to compare the cell code)`); continue; }
+    const changed = [...new Set([...ca.keys(), ...cb.keys()])].filter(f => ca.get(f) !== cb.get(f)).sort();
+    if (changed.length) reasons.push(`cell code differs between runner commits ${a!.slice(0, 12)} and ${b!.slice(0, 12)}: ${changed.join(', ')}`);
+  }
+  return reasons;
+}
+
 const armLabel = (m: ExperimentManifest, arm: string) => (arm === 'gbrain' ? m.label : arm === 'gbrain-fs' ? `${m.label}+fs` : arm);
 
 if (import.meta.main) {
   const argv = process.argv.slice(2);
-  const get = (k: string) => { const i = argv.indexOf(k); return i >= 0 ? argv[i + 1] : undefined; };
+  const get = (k: string) => { const i = argv.indexOf(k); const v = i >= 0 ? argv[i + 1] : undefined; return v?.startsWith('--') ? undefined : v; };
   const priorDir = get('--prior'), plannedDir = get('--planned'), arm = get('--arm'), preregPath = get('--preregistration');
   if (!priorDir || !plannedDir || !arm) {
     console.error('usage: bun eval/runner/cat40/reuse-check.ts --prior <dir> --planned <dir> --arm <arm> [--preregistration <file>] [--json]');
     process.exit(2);
   }
-  const read = (d: string) => JSON.parse(readFileSync(join(d, 'experiment.json'), 'utf8')) as ExperimentManifest;
+  const read = (d: string) => {
+    try { return JSON.parse(readFileSync(join(d, 'experiment.json'), 'utf8')) as ExperimentManifest; } catch (e) {
+      console.error(`cannot read ${join(d, 'experiment.json')}: ${(e as Error).message}`);
+      process.exit(2);
+    }
+  };
   const prior = read(priorDir), planned = read(plannedDir);
   const resultsPath = join(priorDir, 'results.jsonl');
   const cells = existsSync(resultsPath) ? countCells(readFileSync(resultsPath, 'utf8').split('\n'), armLabel(prior, arm)) : [];
   const v = reuseVerdict(prior, planned, arm, cells);
   const isDeclared = preregPath ? declared(readFileSync(preregPath, 'utf8'), prior, arm) : null;
-  const out: ReuseVerdict = { ...v, reusable: v.reusable && isDeclared !== false, reasons: [...v.reasons, ...(isDeclared === false ? [`${preregPath} does not name budget run ${prior.budget_run_id} and arm ${arm} on one line`] : [])], declared: isDeclared };
+  const reasons = [...v.reasons, ...provenanceReasons({ prior, planned, arm, cells, priorReceipts: readReceipts(priorDir), plannedReceipts: readReceipts(plannedDir), code: c => cellCode(c) })];
+  if (isDeclared === null) reasons.push('no --preregistration: the reuse must be declared there before any cell runs');
+  if (isDeclared === false) reasons.push(`${preregPath} does not name budget run ${prior.budget_run_id} and arm ${arm} on one line`);
+  const out: ReuseVerdict = { ...v, reusable: reasons.length === 0, reasons, declared: isDeclared };
   if (argv.includes('--json')) console.log(JSON.stringify(out, null, 2));
   else {
     console.log(`${arm} from ${priorDir}: ${out.reusable ? 'reusable' : 'refused'}${out.cells.length ? ` (${out.cells.map(c => `${c.model} ${c.cells}`).join(', ')} cells)` : ''}`);

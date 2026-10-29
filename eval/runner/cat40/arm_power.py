@@ -13,9 +13,10 @@ recomputed on what is left with the same Comparison code: the primary wave - fs 
 baseline is present. A comparison pairs cells by task, so dropping one arm's cells drops those tasks from every
 comparison that uses that arm and leaves the others untouched.
 
-Output, per fraction: how many draws kept each full-data verdict, the weakest primary lower bound, and the share of
-the arm's recorded spend (total_usd plus judge_usd per cell) that the fraction would not have spent. A preregistration that sizes an
-arm this way names this command, its inputs and its output before any cell runs.
+Output, per fraction: how many draws kept each full-data verdict that uses the arm, the weakest primary lower bound,
+and the arm's recorded spend (total_usd plus judge_usd per cell) on the tasks the fraction leaves out. This measures how
+stable each verdict is on fewer of the same tasks; it is not power against a smaller true effect. A preregistration
+that sizes an arm this way names this command, its inputs and its output before any cell runs.
 """
 import argparse, json, os, random, sys
 from collections import defaultdict
@@ -59,12 +60,20 @@ def verdicts(worlds, a, resamples, seed):
     return out
 
 
+def arm_tasks(cells, arm):
+    return sorted({t for (x, _, t) in cells if x == arm}, key=str)
+
+
+def kept_count(n, fraction):
+    return max(1, round(n * fraction)) if n else 0
+
+
 def subsample(worlds, arm, fraction, rng):
     kept = {}
     for name in sorted(worlds):
         cells = worlds[name]
-        tasks = sorted({t for (x, _, t) in cells if x == arm}, key=str)
-        keep = set(rng.sample(tasks, max(1, round(len(tasks) * fraction)))) if tasks else set()
+        tasks = arm_tasks(cells, arm)
+        keep = set(rng.sample(tasks, kept_count(len(tasks), fraction)))
         kept[name] = {k: v for k, v in cells.items() if k[0] != arm or k[2] in keep}
     return kept
 
@@ -82,39 +91,60 @@ def main(argv=None):
     ap.add_argument('--fs', default='fs')
     ap.add_argument('--json')
     a = ap.parse_args(argv)
-    worlds, usd = {}, defaultdict(float)
+    if a.arm not in (a.wave, a.fs, a.baseline):
+        print(f'arm {a.arm} is in no preregistered comparison (--wave {a.wave}, --fs {a.fs}, --baseline {a.baseline})', file=sys.stderr)
+        return 2
+    fractions = [float(x) for x in a.fractions.split(',')]
+    if any(not 0 < f <= 1 for f in fractions):
+        print(f'every fraction must be above 0 and at most 1: {a.fractions}', file=sys.stderr)
+        return 2
+    worlds, usd = {}, defaultdict(dict)
     for spec in a.world:
         name, files = spec.split('=', 1)
+        if name[:1].upper() not in ('P', 'S'):
+            print(f'world {name} must start with P (public) or S (sealed)', file=sys.stderr)
+            return 2
         worlds[name], spent = load(files.split(','))
         for arm, v in spent.items():
-            usd[arm] += v
+            usd[arm][name] = v
     if not any(k[0] == a.arm for c in worlds.values() for k in c):
         print(f'arm {a.arm} has no cells in the input', file=sys.stderr)
         return 2
     full = verdicts(worlds, a, a.resamples, a.seed)
-    out = {'arm': a.arm, 'draws': a.draws, 'resamples': a.resamples, 'seed': a.seed, 'arm_usd': round(usd[a.arm], 2), 'full': full, 'fractions': {}}
-    for frac in [float(x) for x in a.fractions.split(',')]:
+    empty = [k for k, v in full.items() if v['wording'] == 'no cells']
+    if empty:
+        print(f'no paired cells for {", ".join(empty)} in the full data, so there is no verdict to keep', file=sys.stderr)
+        return 2
+    uses = [k for k in full if a.arm in ((a.wave, a.baseline) if k == 'd3' else (a.wave, a.fs))]
+    arm_usd = sum(usd[a.arm].values())
+    out = {'arm': a.arm, 'draws': a.draws, 'resamples': a.resamples, 'seed': a.seed, 'arm_usd': round(arm_usd, 2), 'full': full, 'fractions': {}}
+    for frac in fractions:
         rng = random.Random(a.seed)
         agree = defaultdict(int)
         weakest = {}
         for d in range(a.draws):
             got = verdicts(subsample(worlds, a.arm, frac, rng), a, a.resamples, a.seed + d)
-            for k, v in got.items():
-                agree[k] += v['wording'] == full[k]['wording']
-                if k.startswith('primary') and v['ci95'] and (k not in weakest or v['ci95'][0] < weakest[k]):
-                    weakest[k] = v['ci95'][0]
+            for k in uses:
+                agree[k] += got[k]['wording'] == full[k]['wording']
+                if k.startswith('primary') and got[k]['ci95'] and (k not in weakest or got[k]['ci95'][0] < weakest[k]):
+                    weakest[k] = got[k]['ci95'][0]
+        not_spent = 0.0
+        for name, cells in worlds.items():
+            n = len(arm_tasks(cells, a.arm))
+            if n:
+                not_spent += usd[a.arm].get(name, 0.0) * (1 - kept_count(n, frac) / n)
         out['fractions'][str(frac)] = {
-            'agree': {k: f'{agree[k]}/{a.draws}' for k in full},
-            'all_agree': all(agree[k] == a.draws for k in full),
+            'agree': {k: f'{agree[k]}/{a.draws}' for k in uses},
+            'all_agree': all(agree[k] == a.draws for k in uses),
             'weakest_primary_lower_pp': weakest,
-            'usd_not_spent': round(usd[a.arm] * (1 - frac), 2),
+            'usd_not_spent': round(not_spent, 2),
         }
     text = json.dumps(out, indent=1, allow_nan=False)
     if a.json:
         with open(a.json, 'w') as f:
             f.write(text + '\n')
     summary = ', '.join(f"{k} {v['wording']}" for k, v in full.items())
-    print(f"full data: {summary}; {a.arm} spent ${out['arm_usd']}")
+    print(f"full data: {summary}{'' if 'd3' in full else ', d3 not evaluated (no baseline cells)'}; {a.arm} spent ${out['arm_usd']}")
     for frac, r in out['fractions'].items():
         print(f"{a.arm} on {frac} of tasks: {', '.join(f'{k} {v}' for k, v in r['agree'].items())}; saves ${r['usd_not_spent']}")
     return 0

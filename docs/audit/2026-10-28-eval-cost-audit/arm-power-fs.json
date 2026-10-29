@@ -25,8 +25,7 @@
  "fractions": {
   "0.33": {
    "agree": {
-    "primary:public": "20/20",
-    "d3": "20/20"
+    "primary:public": "20/20"
    },
    "all_agree": true,
    "weakest_primary_lower_pp": {
@@ -36,8 +35,7 @@
   },
   "0.5": {
    "agree": {
-    "primary:public": "20/20",
-    "d3": "20/20"
+    "primary:public": "20/20"
    },
    "all_agree": true,
    "weakest_primary_lower_pp": {
@@ -47,8 +45,7 @@
   },
   "0.67": {
    "agree": {
-    "primary:public": "20/20",
-    "d3": "20/20"
+    "primary:public": "20/20"
    },
    "all_agree": true,
    "weakest_primary_lower_pp": {

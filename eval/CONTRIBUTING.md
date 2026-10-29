@@ -128,14 +128,14 @@ Two tools lower the cost of a Cat 40 confirmation without changing what it can d
   bun eval/runner/cat40/reuse-check.ts --prior <earlier fs dir> --planned <new wave dir> --arm fs --preregistration <prereg.md>
   ```
 
-  It refuses on any difference in world digest, Hard identity, turn and tool limits, judge, scorer, judge prompt, settings or evaluator code hashes, or in any flag that reaches a cell, and when the earlier run is partial or ended a cell in a harness error. A gbrain arm is reusable only from the same gbrain and slot commits with every gbrain flag equal. The preregistration must name the earlier directory's budget run id and the arm on one line. Reuse is all of an arm's cells or none, chosen before any new result is seen.
+  It refuses on any difference in world digest, Hard identity, turn and tool limits, judge, scorer, judge prompt, settings or evaluator code hashes, or in any flag that reaches a cell; when the earlier run did not finish, has fewer cells than it planned or ended a cell in a harness error; when the world is not a Hard world; and when the two runner commits differ in any file the runner imports, so run the new arms from the commit the reused arm ran at or one with the same cell code. A gbrain arm is reusable only from the same gbrain and slot commits with every gbrain flag and recorded override content equal. The preregistration must name the earlier directory's budget run id and the arm on one line, and the check refuses without it. Reuse is all of an arm's cells or none, chosen before any new result is seen.
 - **Size each arm by simulation.** Before preregistering sample sizes, rerun the preregistered endpoints on cells that already ran, with one arm on fewer tasks:
 
   ```sh
   python3 eval/runner/cat40/arm_power.py --world P1=<cells>.jsonl --world P2=<cells>.jsonl --arm fs --fractions 0.33,0.5,0.67
   ```
 
-  For each fraction it reports how many seeded draws keep every full-data verdict (the primary wording per generator and D3), the weakest primary lower bound and the spend not made. The preregistration names the command, its input cells and its output, and draws the arm's task subset with a recorded seed before the run. On the October public confirmation, fs on half the tasks kept the primary "ahead" in 20 of 20 draws ([audit](../docs/audit/2026-10-28-eval-cost-audit.md)).
+  For each fraction it reports how many seeded draws keep each full-data verdict the arm takes part in (the primary wording per generator for fs, D3 for the baseline, both for the wave arm), the weakest primary lower bound and the spend on the tasks left out. That is how stable a verdict stays on fewer of the same tasks, not power against a smaller true effect, so run it on cells whose effect the preregistration expects. The preregistration names the command, its input cells and its output, and draws the arm's task subset with a recorded seed before the run. On the October public confirmation, fs on half the tasks kept the primary "ahead" in 20 of 20 draws ([audit](../docs/audit/2026-10-28-eval-cost-audit.md)).
 
 ## Reproduce a result
 
