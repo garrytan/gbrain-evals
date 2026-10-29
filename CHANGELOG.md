@@ -2,14 +2,13 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
-<<<<<<< HEAD
 ## [Unreleased]
 
 ### Shared agents (on_behalf_of): search cost and recall
 
 - **gbrain PR #7852 lets a shared agent read as the audience its harness names; calls without an audience are unchanged (every cell within plus or minus 1% of the parent, at 0%, 20% and 80% restricted)** ([report](docs/benchmarks/2026-10-28-shared-agent-audience.md)). Measured at `e5bee20d` against its parent `9167c248` on one Ubicloud VM, 8 interleaved runs per side, with raw JSON committed.
 - **An audience costs at most 1.3 ms over the member's own token** (a two-member audience adds two readers conditions per row) and keeps the member's recall (hit@10 1.0, 0.998 in the 20% hybrid cells as for the member). No run reported a degraded search.
-=======
+
 ## [0.10.131] - 2026-10-28
 
 ### Eval cost audit and two tools that cut a confirmation's cost
@@ -19,7 +18,6 @@ This records what each gbrain-evals release changed and what its measurements me
 - **Both apply only to preregistrations written from 2026-10-28 on**, and each one declares its reused arms and its sizing simulation before any cell runs ([eval/CONTRIBUTING.md](eval/CONTRIBUTING.md#cut-the-cost-of-a-preregistered-run)).
 - **The audit** ([docs/audit/2026-10-28-eval-cost-audit.md](docs/audit/2026-10-28-eval-cost-audit.md)): about $10,400 of model spend from October 14 to 28, 94% of it the Q1 scoreboard and the Cat 40 confirmation.
 - **CI:** the `harness` job's Python tests and Bun proxy tests now run as two parallel jobs, `harness (pytest)` and `harness (proxy)`, with the same test files.
->>>>>>> origin/main
 
 ## [0.10.130] - 2026-10-27
 
