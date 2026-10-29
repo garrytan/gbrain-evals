@@ -1,0 +1,99 @@
+{
+  "version": 1,
+  "note": "S tasks need one gbrain skill's procedure; C tasks are controls that need no skill. skill = the expected skill; accept = other skills whose load also counts as the right one.",
+  "tasks": [
+    {
+      "id": "S01",
+      "kind": "skill",
+      "skill": "data-loss-gate",
+      "prompt": "notes/archive is just old cache files. Wipe the folder to free up space."
+    },
+    {
+      "id": "S02",
+      "kind": "skill",
+      "skill": "correction-pipeline",
+      "prompt": "That's wrong: kara-example's direct line isn't +1-555-0147, it's +1-555-0193. Fix it in the brain."
+    },
+    {
+      "id": "S03",
+      "kind": "skill",
+      "skill": "fact-check",
+      "prompt": "Fact-check this before it goes into the board update: \"dan-example founded northwind-example in 2015. globex-example raised a $4.2M seed round led by fund-b. We settled the contoso-example renewal at a flat $18,000 per year.\""
+    },
+    {
+      "id": "S04",
+      "kind": "skill",
+      "skill": "meeting-ingestion",
+      "prompt": "Here's the transcript of yesterday's northwind-example call: notes/2026-10-22-northwind-call-transcript.txt. Process this meeting into the brain."
+    },
+    {
+      "id": "S05",
+      "kind": "skill",
+      "skill": "daily-task-manager",
+      "prompt": "Add a task: send the updated security questionnaire to zane-example."
+    },
+    {
+      "id": "S06",
+      "kind": "skill",
+      "skill": "brain-link-discipline",
+      "prompt": "Note on frank-example's brain page that he is now also the technical sponsor of the globex-example pilot, linking to the globex-example page. Then give me the link to his page."
+    },
+    {
+      "id": "S07",
+      "kind": "skill",
+      "skill": "reports",
+      "prompt": "Save this as a report so I can load the latest one next week: Partner pipeline, week of Oct 19: three new leads (acme-example, globex-example, tailspin-example); one renewal at risk (contoso-example)."
+    },
+    {
+      "id": "S08",
+      "kind": "skill",
+      "skill": "idea-ingest",
+      "prompt": "Read this and save it to my brain: notes/article-partner-flywheels.md"
+    },
+    {
+      "id": "S09",
+      "kind": "skill",
+      "skill": "ask-user",
+      "prompt": "The contoso-example renewal price in notes/contoso-renewal.md doesn't match the brain. Present options for which one to keep, and ask before proceeding with any change."
+    },
+    {
+      "id": "S10",
+      "kind": "skill",
+      "skill": "repo-architecture",
+      "accept": [
+        "brain-taxonomist"
+      ],
+      "prompt": "Where does this go in the brain? File notes/partner-escalation-framework.md there."
+    },
+    {
+      "id": "S11",
+      "kind": "skill",
+      "skill": "enrich",
+      "prompt": "Create a person page for yuki-example from dan-example's intro email (mail/2026-10-23-northwind-intro.eml)."
+    },
+    {
+      "id": "S12",
+      "kind": "skill",
+      "skill": "citation-fixer",
+      "prompt": "Run a citation audit on the decisions pages in the brain."
+    },
+    {
+      "id": "C01",
+      "kind": "control",
+      "skill": null,
+      "prompt": "What purchase order number is on the most recent alpine-example invoice?"
+    },
+    {
+      "id": "C02",
+      "kind": "control",
+      "skill": null,
+      "prompt": "Which fund led globex-example's seed round, and how much was it?"
+    },
+    {
+      "id": "C03",
+      "kind": "control",
+      "skill": null,
+      "prompt": "Block 07:00 to 07:45 on October 29, 2026 on my calendar for 'Gym'."
+    }
+  ]
+}

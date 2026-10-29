@@ -1,7 +1,7 @@
 # Learn, evaluate, and extend gbrain
 
 This index lists every published report by the question it answers. It describes the repository as it stands:
-gbrain-evals v0.10.135, with gbrain master `7a6bdd357` (v0.60.454.0) as the product under test. Results measured at
+gbrain-evals v0.10.136, with gbrain master `7a6bdd357` (v0.60.454.0) as the product under test. Results measured at
 other gbrain commits name that commit in their report. Everything above [Changelog](#changelog) is current; the
 changelog at the bottom records how this index changed.
 
@@ -116,6 +116,7 @@ gap does not isolate the effect of a graph alone.
 | How soon is a commit searchable when a running gbrain process watches the repository, in watch and poll mode, with embeddings, several sources and idle cost? | [October 19 sync freshness after the commit notifier](benchmarks/2026-10-19-sync-freshness.md) (gbrain v0.60.316.0, #7079; GBRA-133 PR 2b.6): single-file commit keyword-visible in 0.60 s p50 through `gbrain serve` in watch mode (was 3.7 s managed, never classic), 2 s p50 and under 3.7 s p95 in poll mode; deferred embeds drain fully except on PGLite after a provider outage (about 3% left); several sources sync one after another, about 2 to 3 s apart; one idle serve runs 31.5 transactions per 30 s (was 25.5); after gbrain v0.60.320.0 (#7053) the first managed sync after activating a classic brain converges in one pass, 129.6 s for 100,000 pages on Postgres (n = 1) and about 13 s for 10,000 pages on either engine |
 | Which MCP tool surface should gbrain register for agents: seven verbs, `starter` or `full`? | [October 5 registration-surface cell](benchmarks/2026-10-05-registration-surface.md) ([preregistration](benchmarks/2026-10-05-registration-surface-preregistration.md)) |
 | Does the brain-first block `gbrain setup` writes into Claude Code's and Codex's instruction files get agents to search the brain first? | [October 24 brain-first install block](benchmarks/2026-10-24-brain-first-install-block.md) (gbrain `10f74dbd`, block v1; four models, 780 trials): yes. It reached the brain in 221 of 221 trials on the tasks that need it, like a one-sentence told rule, against 82% to 97% with no instructions, with no scope leak; the paraphrase gain is tuned, not held out |
+| Does a short skill index in the harness's instruction file get agents to load and follow the right gbrain skill, against every skill in the native skills directory? | [October 24 spring-loaded skills](benchmarks/2026-10-24-spring-loaded-skills.md) (gbrain branch `12669180`, not on master; three models, 360 trials; [preregistration](benchmarks/2026-10-24-spring-loaded-skills/preregistration.md)): the index loaded the right skill before acting in 29 of 36 Claude Code trials, against 15 for native skills and 0 with none, and tied native on Codex at 22 of 24, at about a quarter of native's standing tokens. Pass sits near the floor in the harnesses' real permission modes in every arm. |
 | What happens when tweet ingestion becomes parallel? | [Tweet ingestion](benchmarks/2026-04-18-tweet-ingestion.md) |
 | What did the earlier ingestion worker comparisons measure? | [Subagent comparison](benchmarks/2026-04-18-minions-vs-openclaw-subagents.md), [production comparison](benchmarks/2026-04-18-minions-vs-openclaw-production.md) |
 
@@ -227,6 +228,10 @@ and [repository writing guide](../CLAUDE.md). The
 procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
+
+### 2026-10-29: Opening names v0.10.136
+
+The opening names v0.10.136 (was v0.10.135), which adds the [spring-loaded skills report](benchmarks/2026-10-24-spring-loaded-skills.md) for gbrain GBRA-194. One row joins the agent table, after the brain-first install block row; no existing row changed.
 
 ### 2026-10-29: Opening names v0.10.135
 
