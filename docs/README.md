@@ -1,7 +1,7 @@
 # Learn, evaluate, and extend gbrain
 
 This index lists every published report by the question it answers. It describes the repository as it stands:
-gbrain-evals v0.10.130, with gbrain master `7a6bdd357` (v0.60.454.0) as the product under test. Results measured at
+gbrain-evals v0.10.131, with gbrain master `7a6bdd357` (v0.60.454.0) as the product under test. Results measured at
 other gbrain commits name that commit in their report. Everything above [Changelog](#changelog) is current; the
 changelog at the bottom records how this index changed.
 
@@ -210,6 +210,8 @@ full answer and the finish reason, with one record per replicate and per attempt
 The [September 6 evidence guide](benchmarks/2026-09-06-longmemeval-ranker-wave/longmemeval/README.md)
 explains the saved LongMemEval files and what their compacted records retain.
 
+The [October 28 eval cost audit](audit/2026-10-28-eval-cost-audit.md) shows where about $10,400 of model spend went
+from October 14 to 28 and how a preregistered Cat 40 run can [reuse an arm or size it by simulation](../eval/CONTRIBUTING.md#cut-the-cost-of-a-preregistered-run).
 The [August audit](audit/2026-08-31-eval-audit.md) describes earlier problems in
 scoring and execution. The September 28, 2026 corrections are listed in the
 [main README](../README.md#corrections), with a dated note in each affected report. [Open work](../TODOS.md) distinguishes unfinished
@@ -222,6 +224,12 @@ and [repository writing guide](../CLAUDE.md). The
 procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
+
+### 2026-10-28: Eval cost audit; opening names v0.10.131
+
+"Checking the evidence" links the [October 28 eval cost audit](audit/2026-10-28-eval-cost-audit.md) and the contributor
+guide's new section on cutting a preregistered run's cost. Neither was reachable from this index. The opening names
+v0.10.131 (was v0.10.130). No existing row changed.
 
 ### 2026-10-28: Structure-aware chunks report
 
