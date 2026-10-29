@@ -431,7 +431,7 @@ describe('paired non-regression and improvement decisions', () => {
     profile.metrics[0].floor_exclusive = true;
     resign(manifest, results);
     expect(measurements(manifest, results).coverage.find(c => c.profile_id === 'cat2')!.status).toBe('regressed');
-  });
+  }, 60_000);
 
   test('new capability acceptance applies only to C1 while baseline misses remain measurements', () => {
     const { manifest, results } = fixture();

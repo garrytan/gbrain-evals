@@ -33,6 +33,8 @@ def load(paths):
                 if not line.strip():
                     continue
                 r = json.loads(line)
+                if r.get('repeat') not in (None, 0):
+                    raise ValueError(f"{p}: a cell has repeat {r.get('repeat')!r}; arm_power sizes single-repeat runs only")
                 if r.get('stop') == 'harness_error':
                     continue
                 cells[(r['arm'], r['model'], r['task'])] = r
@@ -94,17 +96,34 @@ def main(argv=None):
     if a.arm not in (a.wave, a.fs, a.baseline):
         print(f'arm {a.arm} is in no preregistered comparison (--wave {a.wave}, --fs {a.fs}, --baseline {a.baseline})', file=sys.stderr)
         return 2
-    fractions = [float(x) for x in a.fractions.split(',')]
+    if a.draws < 1 or a.resamples < 1:
+        print(f'--draws and --resamples must be at least 1: {a.draws}, {a.resamples}', file=sys.stderr)
+        return 2
+    try:
+        fractions = [float(x) for x in a.fractions.split(',')]
+    except ValueError:
+        print(f'--fractions must be comma-separated numbers: {a.fractions}', file=sys.stderr)
+        return 2
     if any(not 0 < f <= 1 for f in fractions):
         print(f'every fraction must be above 0 and at most 1: {a.fractions}', file=sys.stderr)
         return 2
     worlds, usd = {}, defaultdict(dict)
     for spec in a.world:
-        name, files = spec.split('=', 1)
+        name, sep, files = spec.partition('=')
+        if not sep:
+            print(f'--world {spec} must be NAME=file[,file...]', file=sys.stderr)
+            return 2
         if name[:1].upper() not in ('P', 'S'):
             print(f'world {name} must start with P (public) or S (sealed)', file=sys.stderr)
             return 2
-        worlds[name], spent = load(files.split(','))
+        if name in worlds:
+            print(f'world {name} is given twice: put all of its files in one --world {name}=a,b', file=sys.stderr)
+            return 2
+        try:
+            worlds[name], spent = load(files.split(','))
+        except (OSError, ValueError, KeyError, TypeError, AttributeError) as e:
+            print(f'world {name}: unreadable results: {e!r}', file=sys.stderr)
+            return 2
         for arm, v in spent.items():
             usd[arm][name] = v
     if not any(k[0] == a.arm for c in worlds.values() for k in c):
