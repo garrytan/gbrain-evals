@@ -85,7 +85,7 @@ describe('the F6 manifest', () => {
     const camp = campaignManifest(m, { smokeOnly: true });
     expect([camp.campaign_id, camp.cap_usd, camp.cells.map(c => c.id)]).toEqual(['q1-scoreboard-f6-current-master-dry-run', 60, ['s2b-ingest.gbrain-defaults.f6-master', 's2b-ingest.ext-temporal-graph.shipped-0.31', 's3-smoke.gbrain-defaults.f6-master']]);
     expect(Object.keys(camp.blocks ?? {})).toEqual(['F6-dry']);
-    expect(camp.images['gbrain-defaults/base:1.4.4-slim']).toBe('sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4');
+    expect(camp.images?.['gbrain-defaults/base:1.4.4-slim']).toBe('sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4');
     expect(campaignManifest(loadManifest()).images).not.toHaveProperty('gbrain-defaults/base:1.4.4-slim');
     expect(camp.models).toEqual(expect.arrayContaining(['openai:gpt-6-luna', 'openai:text-embedding-3-small', 'anthropic:claude-haiku-5-5']));
     const tg = camp.cells.find(c => c.system === 'ext-temporal-graph')!;
