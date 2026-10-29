@@ -1,0 +1,6 @@
+{
+  "note": "Names the answering cell's driver (eval/runner/systems/agent-runtime.ts) reads at run time, kept here so product names stay inside this bundle.",
+  "container": "shootout-letta-letta-1",
+  "cli": "letta",
+  "telemetry_off": ["LETTA_CODE_TELEM=0", "DO_NOT_TRACK=1", "DISABLE_AUTOUPDATER=1"]
+}

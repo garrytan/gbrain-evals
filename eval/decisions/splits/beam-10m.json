@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "benchmark": "beam-10m",
+  "salt": "gbrain-evals-heldout-split-v1",
+  "method": "no dev split: all ten BEAM-10M conversations are sealed; Q1 harness work uses BEAM 100K and 1M dev conversations instead",
+  "dev_fraction": 0,
+  "dev": [],
+  "sealed": [
+    "10m-1",
+    "10m-10",
+    "10m-2",
+    "10m-3",
+    "10m-4",
+    "10m-5",
+    "10m-6",
+    "10m-7",
+    "10m-8",
+    "10m-9"
+  ],
+  "exclusions": [
+    {
+      "question": "10m-1:abstention:0",
+      "harness_id": "1_abstention_0",
+      "scope": "confirmatory cohort (Q1 S1); kept in the data and reported as excluded",
+      "reason": "exposed: its question, rubric, unanswerable note and one comparator's outcome entered an agent context in another thread's audit (2026-10-06), so it is no longer held out from gbrain work",
+      "recorded_at": "2026-10-06"
+    }
+  ],
+  "created_at": "2026-10-06",
+  "note": "Committed before any system ran on BEAM-10M (Q1 PLAN §4.2). Every conversation is sealed: the custodian runs S1 cells under decision q1-scoreboard and returns aggregates until publication retires the set. The exclusion maps the public harness id <conversation_id>_<ability>_<index> to this repository's <conversation>:<ability>:<index>, assuming the hub's conversation_id 1 is 10m-1 and the harness indexes each ability's list in file order, as this loader does; the custodian confirms the mapping when filling the manifest, without exposing the question."
+}

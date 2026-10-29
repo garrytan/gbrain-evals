@@ -31,7 +31,7 @@
  * reaches the system.
  *
  * Time. The fixture has no event times on the upstream wire, but two shims
- * (temporal-graph, memory-bank) refuse an undated session. Every belief gets a
+ * (the temporal graph library, the memory-bank server) refuse an undated session. Every belief gets a
  * disclosed synthetic time, one minute apart in fixture order from
  * 2026-05-29T00:00 (upstream's pin date): the arrival order upstream
  * providers saw, and nothing taken from the belief's own dates. Queries are
@@ -359,7 +359,7 @@ export async function runPmb(a: PmbArgs): Promise<{ receipt: Record<string, unkn
 
   if (a.providerProxy) {
     if (!/^https?:\/\/[^/]+$/.test(a.providerProxy)) throw new Error('--provider-proxy must look like http://host:port');
-    for (const k of ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'VOYAGE_API_KEY']) process.env[k] = 'dummy-key-the-proxy-replaces';
+    for (const k of ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'VOYAGE_API_KEY']) process.env[k] = process.env.SHOOTOUT_CELL_TOKEN || 'dummy-key-the-proxy-replaces';
     process.env.OPENAI_BASE_URL = `${a.providerProxy}/harness/openai/v1`;
     process.env.ANTHROPIC_BASE_URL = `${a.providerProxy}/harness/anthropic`;
   }

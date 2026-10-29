@@ -1320,6 +1320,7 @@ export const REGISTRY: readonly CategoryEntry[] = [
     gate: 'report-only', evidence_maturity: 'regression-only',
     contract: 'Scores one configuration cell; the shootout scripts assemble cells into a matrix.',
   },
+
   {
     id: 'lifecycle-lite', legacy_alias: 'shootout-P2', name: 'Update and forget across memory systems (open-source memory shootout, lifecycle-lite)',
     family: 'temporal', tier: 'P', script: 'eval/runner/lifecycle-lite.ts',
@@ -1425,7 +1426,7 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'living-pages-breakeven.ts': { role: 'keyless W9 build decision: the read/write break-even and the classification of the owner\'s mcp_request_log counts (docs/benchmarks/2026-10-17-living-pages-preregistration.md)' },
   'living-pages-csv.ts': { role: 'parser for the living-pages query A table (CSV, tab or psql output)' },
   'llm-budget.ts': { role: 'shared LLM concurrency bucket' },
-  'metering-proxy.ts': { role: 'fail-closed provider metering proxy: in-process for Cat 40 and other gbrain-arm callers, lease mode for open-source memory shootout cells (docs/plans/2026-10-05-oss-memory-shootout/PLAN.md)' },
+  'metering-proxy.ts': { role: 'fail-closed provider metering proxy: in-process for Cat 40 and other gbrain-arm callers, lease mode for open-source memory comparison cells (the head-to-head scoreboard)' },
   'longmemeval-aggregate.ts': { role: 'LongMemEval receipt aggregator', part_of: 'longmemeval-retrieval' },
   'longmemeval-batch.sh': { role: 'LongMemEval multi-worker batch wrapper', part_of: 'longmemeval-retrieval' },
   'longmemeval-cache.ts': { role: 'LongMemEval embedding cache', part_of: 'longmemeval-retrieval' },
@@ -1496,9 +1497,15 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'metering-proxy-testkit.ts': { role: 'metering proxy test kit: throwaway metered cell and the zero-balance check' },
   'harness-metering-proxy.ts': { role: 'local metering proxy for every paid model request in a harness cell' },
   'shootout-report.ts': { role: 'open-source memory shootout Phase 4 analysis: primary family, pin link, S1, S2 and descriptive tables with the preregistered sentences, from the committed cell results (latest settled attempt per cell)' },
-  'shootout-cell.ts': { role: 'open-source memory shootout cells (PLAN.md 2026-10-05): campaign manifest, durable host-ledger leases, Ubicloud launch, settlement; not the embedder-shootout entry shootout-cell' },
+  'shootout-cell.ts': { role: 'open-source memory comparison cells (the head-to-head scoreboard): campaign manifest, durable host-ledger leases, Ubicloud launch, settlement; not the embedder-shootout entry shootout-cell' },
   'smoke.ts': { role: 'embedder-shootout pre-flight smoke', part_of: 'shootout-cell' },
+  'scoreboard.ts': { role: 'head-to-head scoreboard generator: rows, answers and judgments to cohorts, Holm families, scoreboard.json and the README and report tables; check, render, explain (docs/benchmarks/2026-10-06-scoreboard-preregistration.md)' },
+  'judge-repeat.ts': { role: 'repeated judging of fixed answers (zero reader calls) for the head-to-head scoreboard: judge SD and verdict stability' },
+  'name-guard.ts': { role: 'ratchet guard: external product names only in docs/comparison-systems.md and its bundles' },
+  'scoreboard-cli.ts': { role: 'head-to-head scoreboard front door (bun run eval:scoreboard): check, fixture, explain, doctor, plan, smoke, run, status, judge, render, dispute (docs/scoreboard.md)' },
+  'cost-speed.ts': { role: 'head-to-head scoreboard cost and speed columns from rows and proxy usage, and the campaign progress page (--watch)' },
   'stub-upstream.ts': { role: 'deterministic stand-in for paid model providers in keyless tests' },
+  'structure-aware-chunks.ts': { role: 'heading-path prefix and heading-led chunk experiment on messy-company dev and Qasper dev (docs/benchmarks/2026-10-28-structure-aware-chunks-preregistration.md); live embeddings, not dispatched' },
   'synthetic-corpus-loader.ts': { role: 'synthetic-v1 corpus loader' },
   'tool-bridge.ts': { role: 'agent tool bridge' },
   'types.ts': { role: 'shared types' },
@@ -1507,4 +1514,4 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
 };
 
 /** Subdirectories of eval/runner/ holding helper modules only. */
-export const RUNNER_HELPER_DIRS: readonly string[] = ['adapters', 'batch', 'budgeted-delivery', 'cat40', 'cat41', 'decisions', 'evaluator', 'evidence-delivery', 'external-ideas-wave-a', 'facts-absorb', 'graph-backend', 'lifecycle', 'lifecycle-lite', 'memory-proof-wave', 'memory-qa', 'memory-trust', 'messy-company', 'outcomes', 'p4-stream', 'pilot', 'power', 'q2', 'queries', 'stats', 'system-one', 'systems', 't0', 'takes-bootstrap'];
+export const RUNNER_HELPER_DIRS: readonly string[] = ['adapters', 'batch', 'budgeted-delivery', 'cat40', 'cat41', 'decisions', 'evaluator', 'evidence-delivery', 'external-ideas-wave-a', 'facts-absorb', 'graph-backend', 'lifecycle', 'lifecycle-lite', 'memory-proof-wave', 'memory-qa', 'memory-trust', 'messy-company', 'outcomes', 'p4-stream', 'pilot', 'power', 'q1', 'q2', 'queries', 'stats', 'system-one', 'systems', 't0', 'takes-bootstrap'];
