@@ -1,0 +1,168 @@
+{
+  "gbrain": {
+    "requested": "gbrain@exp/structure-aware-chunks",
+    "ref": "exp/structure-aware-chunks",
+    "commit": "26e2c03b048cac41eb5f0af2331cbe5710b3600a",
+    "tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+    "version": "0.60.482.0",
+    "checkout_dirty": false,
+    "verified": {
+      "copy_tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+      "tree_matches": true,
+      "symlinks_under_src": 0,
+      "dir_is_realpath": true,
+      "cli_version": "0.60.482.0",
+      "cli_version_matches": true
+    },
+    "copied_not_symlinked": true
+  },
+  "note": "Pages rendered the way eval/runner/adapters/gbrain-inline.ts renders them for Cat 13 and Cat 13b. An arm whose chunk texts, heading terms and embedding inputs equal the base arm on every page cannot change either category.",
+  "cat13_world_v1": {
+    "prefix": {
+      "pages": 240,
+      "chunks": 480,
+      "changed_pages": 240,
+      "changed_chunks": 240,
+      "no_op": false,
+      "example_slugs": [
+        "companies/accel-5",
+        "companies/acme-0",
+        "companies/acme-labs-50",
+        "companies/amazon-3",
+        "companies/anchor-28"
+      ]
+    },
+    "lead": {
+      "pages": 240,
+      "chunks": 480,
+      "changed_pages": 0,
+      "changed_chunks": 0,
+      "no_op": true,
+      "example_slugs": []
+    },
+    "prefix_lead": {
+      "pages": 240,
+      "chunks": 480,
+      "changed_pages": 240,
+      "changed_chunks": 240,
+      "no_op": false,
+      "example_slugs": [
+        "companies/accel-5",
+        "companies/acme-0",
+        "companies/acme-labs-50",
+        "companies/amazon-3",
+        "companies/anchor-28"
+      ]
+    },
+    "kw_lead": {
+      "pages": 240,
+      "chunks": 480,
+      "changed_pages": 0,
+      "changed_chunks": 0,
+      "no_op": true,
+      "example_slugs": []
+    },
+    "kw_terms": {
+      "pages": 240,
+      "chunks": 480,
+      "changed_pages": 240,
+      "changed_chunks": 240,
+      "no_op": false,
+      "example_slugs": [
+        "companies/accel-5",
+        "companies/acme-0",
+        "companies/acme-labs-50",
+        "companies/amazon-3",
+        "companies/anchor-28"
+      ]
+    },
+    "kw_lead_terms": {
+      "pages": 240,
+      "chunks": 480,
+      "changed_pages": 240,
+      "changed_chunks": 240,
+      "no_op": false,
+      "example_slugs": [
+        "companies/accel-5",
+        "companies/acme-0",
+        "companies/acme-labs-50",
+        "companies/amazon-3",
+        "companies/anchor-28"
+      ]
+    }
+  },
+  "cat13b_source_swamp_v1": {
+    "prefix": {
+      "pages": 20,
+      "chunks": 30,
+      "changed_pages": 20,
+      "changed_chunks": 20,
+      "no_op": false,
+      "example_slugs": [
+        "openclaw/chat/2026-04-01",
+        "openclaw/chat/2026-04-03",
+        "openclaw/chat/2026-04-05",
+        "openclaw/chat/2026-04-08",
+        "openclaw/chat/2026-04-10"
+      ]
+    },
+    "lead": {
+      "pages": 20,
+      "chunks": 30,
+      "changed_pages": 0,
+      "changed_chunks": 0,
+      "no_op": true,
+      "example_slugs": []
+    },
+    "prefix_lead": {
+      "pages": 20,
+      "chunks": 30,
+      "changed_pages": 20,
+      "changed_chunks": 20,
+      "no_op": false,
+      "example_slugs": [
+        "openclaw/chat/2026-04-01",
+        "openclaw/chat/2026-04-03",
+        "openclaw/chat/2026-04-05",
+        "openclaw/chat/2026-04-08",
+        "openclaw/chat/2026-04-10"
+      ]
+    },
+    "kw_lead": {
+      "pages": 20,
+      "chunks": 30,
+      "changed_pages": 0,
+      "changed_chunks": 0,
+      "no_op": true,
+      "example_slugs": []
+    },
+    "kw_terms": {
+      "pages": 20,
+      "chunks": 30,
+      "changed_pages": 20,
+      "changed_chunks": 20,
+      "no_op": false,
+      "example_slugs": [
+        "openclaw/chat/2026-04-01",
+        "openclaw/chat/2026-04-03",
+        "openclaw/chat/2026-04-05",
+        "openclaw/chat/2026-04-08",
+        "openclaw/chat/2026-04-10"
+      ]
+    },
+    "kw_lead_terms": {
+      "pages": 20,
+      "chunks": 30,
+      "changed_pages": 20,
+      "changed_chunks": 20,
+      "no_op": false,
+      "example_slugs": [
+        "openclaw/chat/2026-04-01",
+        "openclaw/chat/2026-04-03",
+        "openclaw/chat/2026-04-05",
+        "openclaw/chat/2026-04-08",
+        "openclaw/chat/2026-04-10"
+      ]
+    }
+  }
+}
