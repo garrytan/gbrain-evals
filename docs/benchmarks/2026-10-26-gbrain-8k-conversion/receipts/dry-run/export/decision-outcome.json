@@ -1,0 +1,411 @@
+{
+  "kind": "c8k-decision-outcome",
+  "decision_id": "sealed-v2-decision-3-2026-10-26:8k-conversion-f1-f4",
+  "decision_sha256": "65f8ce7dac58cd38ea0f3e6dfe0ecfe96cb010f0e6b07aeb8985d4bfa84ba081",
+  "decided_at": "2026-10-26T09:37:49.326Z",
+  "comparisons": [
+    {
+      "id": "D1",
+      "tests": "F1",
+      "a": "A0",
+      "b": "A1",
+      "verdict": "inconclusive",
+      "label": "inconclusive",
+      "recommended": false,
+      "superiority_shown": false,
+      "stats": {
+        "delta": 0.03333333333333333,
+        "ci95": [
+          -0.15,
+          0.21666666666666667
+        ],
+        "mcnemar": {
+          "losses": 15,
+          "wins": 17,
+          "both_pass": 9,
+          "both_fail": 19,
+          "discordant": 32,
+          "p_two_sided": 0.860050065908581
+        },
+        "p_holm": 0.90899658203125,
+        "n_pairs": 60,
+        "n_clusters": 12,
+        "earlier": 0.4,
+        "later": 0.43333333333333335
+      },
+      "noninferiority": {
+        "reference": "R5",
+        "candidate": "A1",
+        "delta": -0.2,
+        "ci95": [
+          -0.38333333333333336,
+          0
+        ],
+        "lower_bound_above": -0.05,
+        "pass": false
+      },
+      "guard7": {
+        "test": "mcnemar_one_sided_loss",
+        "alpha": 0.05,
+        "kinds": {
+          "multi-session": {
+            "n": 24,
+            "base": 10,
+            "cand": 11,
+            "delta_questions": 1,
+            "threshold": 1,
+            "pass": true,
+            "wins": 6,
+            "losses": 5,
+            "p_loss_one_sided": 0.7255859374999999
+          },
+          "temporal-reasoning": {
+            "n": 12,
+            "base": 6,
+            "cand": 5,
+            "delta_questions": -1,
+            "threshold": 1,
+            "pass": true,
+            "wins": 3,
+            "losses": 4,
+            "p_loss_one_sided": 0.5000000000000001
+          },
+          "knowledge-update": {
+            "n": 12,
+            "base": 2,
+            "cand": 4,
+            "delta_questions": 2,
+            "threshold": 1,
+            "pass": true,
+            "wins": 4,
+            "losses": 2,
+            "p_loss_one_sided": 0.890625
+          },
+          "abstention": {
+            "n": 12,
+            "base": 6,
+            "cand": 6,
+            "delta_questions": 0,
+            "threshold": 1,
+            "pass": true,
+            "wins": 4,
+            "losses": 4,
+            "p_loss_one_sided": 0.6367187500000001
+          }
+        },
+        "pass": true
+      },
+      "guard8": {
+        "n": 12,
+        "earlier": 6,
+        "later": 6,
+        "pass": true
+      },
+      "reasons": [
+        "superiority not shown (delta > 0, 95% interval above zero and Holm-adjusted McNemar p < alpha are all required)",
+        "delta 0.0333, 95% interval [-0.1500, 0.2167], McNemar p 0.860, Holm p 0.909"
+      ]
+    },
+    {
+      "id": "D2",
+      "tests": "F2",
+      "a": "A1",
+      "b": "A2",
+      "verdict": "inconclusive",
+      "label": "inconclusive",
+      "recommended": false,
+      "superiority_shown": false,
+      "stats": {
+        "delta": 0.2,
+        "ci95": [
+          0.05,
+          0.35
+        ],
+        "mcnemar": {
+          "losses": 11,
+          "wins": 23,
+          "both_pass": 15,
+          "both_fail": 11,
+          "discordant": 34,
+          "p_two_sided": 0.05761267291381955
+        },
+        "p_holm": 0.2304506916552782,
+        "n_pairs": 60,
+        "n_clusters": 12,
+        "earlier": 0.43333333333333335,
+        "later": 0.6333333333333333
+      },
+      "noninferiority": null,
+      "guard7": {
+        "test": "mcnemar_one_sided_loss",
+        "alpha": 0.05,
+        "kinds": {
+          "multi-session": {
+            "n": 24,
+            "base": 11,
+            "cand": 16,
+            "delta_questions": 5,
+            "threshold": 1,
+            "pass": true,
+            "wins": 10,
+            "losses": 5,
+            "p_loss_one_sided": 0.940765380859375
+          },
+          "temporal-reasoning": {
+            "n": 12,
+            "base": 5,
+            "cand": 8,
+            "delta_questions": 3,
+            "threshold": 1,
+            "pass": true,
+            "wins": 6,
+            "losses": 3,
+            "p_loss_one_sided": 0.91015625
+          },
+          "knowledge-update": {
+            "n": 12,
+            "base": 4,
+            "cand": 6,
+            "delta_questions": 2,
+            "threshold": 1,
+            "pass": true,
+            "wins": 3,
+            "losses": 1,
+            "p_loss_one_sided": 0.9375
+          },
+          "abstention": {
+            "n": 12,
+            "base": 6,
+            "cand": 8,
+            "delta_questions": 2,
+            "threshold": 1,
+            "pass": true,
+            "wins": 4,
+            "losses": 2,
+            "p_loss_one_sided": 0.890625
+          }
+        },
+        "pass": true
+      },
+      "guard8": {
+        "n": 12,
+        "earlier": 6,
+        "later": 8,
+        "pass": true
+      },
+      "reasons": [
+        "superiority not shown (delta > 0, 95% interval above zero and Holm-adjusted McNemar p < alpha are all required)",
+        "delta 0.2000, 95% interval [0.0500, 0.3500], McNemar p 0.0576, Holm p 0.230"
+      ]
+    },
+    {
+      "id": "D3",
+      "tests": "F3",
+      "a": "A2",
+      "b": "A3",
+      "verdict": "fail",
+      "label": "fail",
+      "recommended": false,
+      "superiority_shown": false,
+      "stats": {
+        "delta": -0.06666666666666667,
+        "ci95": [
+          -0.21666666666666667,
+          0.08333333333333333
+        ],
+        "mcnemar": {
+          "losses": 10,
+          "wins": 6,
+          "both_pass": 28,
+          "both_fail": 16,
+          "discordant": 16,
+          "p_two_sided": 0.454498291015625
+        },
+        "p_holm": 0.90899658203125,
+        "n_pairs": 60,
+        "n_clusters": 12,
+        "earlier": 0.6333333333333333,
+        "later": 0.5666666666666667
+      },
+      "noninferiority": null,
+      "guard7": {
+        "test": "mcnemar_one_sided_loss",
+        "alpha": 0.05,
+        "kinds": {
+          "multi-session": {
+            "n": 24,
+            "base": 16,
+            "cand": 16,
+            "delta_questions": 0,
+            "threshold": 1,
+            "pass": true,
+            "wins": 0,
+            "losses": 0,
+            "p_loss_one_sided": 1
+          },
+          "temporal-reasoning": {
+            "n": 12,
+            "base": 8,
+            "cand": 8,
+            "delta_questions": 0,
+            "threshold": 1,
+            "pass": true,
+            "wins": 0,
+            "losses": 0,
+            "p_loss_one_sided": 1
+          },
+          "knowledge-update": {
+            "n": 12,
+            "base": 6,
+            "cand": 4,
+            "delta_questions": -2,
+            "threshold": 1,
+            "pass": true,
+            "wins": 3,
+            "losses": 5,
+            "p_loss_one_sided": 0.3632812500000002
+          },
+          "abstention": {
+            "n": 12,
+            "base": 8,
+            "cand": 6,
+            "delta_questions": -2,
+            "threshold": 1,
+            "pass": true,
+            "wins": 3,
+            "losses": 5,
+            "p_loss_one_sided": 0.3632812500000002
+          }
+        },
+        "pass": true
+      },
+      "guard8": {
+        "n": 12,
+        "earlier": 8,
+        "later": 6,
+        "pass": false
+      },
+      "reasons": [
+        "guard 8: abstention 6 against 8",
+        "delta -0.0667, 95% interval [-0.2167, 0.0833], McNemar p 0.454, Holm p 0.909"
+      ]
+    },
+    {
+      "id": "D3p",
+      "tests": "F3",
+      "a": "A0",
+      "b": "B3",
+      "verdict": "inconclusive",
+      "label": "inconclusive",
+      "recommended": false,
+      "superiority_shown": false,
+      "stats": {
+        "delta": 0.1,
+        "ci95": [
+          0,
+          0.2
+        ],
+        "mcnemar": {
+          "losses": 4,
+          "wins": 10,
+          "both_pass": 20,
+          "both_fail": 26,
+          "discordant": 14,
+          "p_two_sided": 0.1795654296875
+        },
+        "p_holm": 0.5386962890625,
+        "n_pairs": 60,
+        "n_clusters": 12,
+        "earlier": 0.4,
+        "later": 0.5
+      },
+      "noninferiority": null,
+      "guard7": {
+        "test": "mcnemar_one_sided_loss",
+        "alpha": 0.05,
+        "kinds": {
+          "multi-session": {
+            "n": 24,
+            "base": 10,
+            "cand": 10,
+            "delta_questions": 0,
+            "threshold": 1,
+            "pass": true,
+            "wins": 0,
+            "losses": 0,
+            "p_loss_one_sided": 1
+          },
+          "temporal-reasoning": {
+            "n": 12,
+            "base": 6,
+            "cand": 6,
+            "delta_questions": 0,
+            "threshold": 1,
+            "pass": true,
+            "wins": 0,
+            "losses": 0,
+            "p_loss_one_sided": 1
+          },
+          "knowledge-update": {
+            "n": 12,
+            "base": 2,
+            "cand": 7,
+            "delta_questions": 5,
+            "threshold": 1,
+            "pass": true,
+            "wins": 6,
+            "losses": 1,
+            "p_loss_one_sided": 0.9921875
+          },
+          "abstention": {
+            "n": 12,
+            "base": 6,
+            "cand": 7,
+            "delta_questions": 1,
+            "threshold": 1,
+            "pass": true,
+            "wins": 4,
+            "losses": 3,
+            "p_loss_one_sided": 0.7734375
+          }
+        },
+        "pass": true
+      },
+      "guard8": {
+        "n": 12,
+        "earlier": 6,
+        "later": 7,
+        "pass": true
+      },
+      "reasons": [
+        "superiority not shown (delta > 0, 95% interval above zero and Holm-adjusted McNemar p < alpha are all required)",
+        "delta 0.1000, 95% interval [0.0000, 0.2000], McNemar p 0.180, Holm p 0.539"
+      ]
+    }
+  ],
+  "p_holm": {
+    "D1": 0.90899658203125,
+    "D2": 0.2304506916552782,
+    "D3": 0.90899658203125,
+    "D3p": 0.5386962890625
+  },
+  "recommended_prefix": [],
+  "recommended_standalone": [],
+  "recommendations": [],
+  "reported_without_recommendation": [],
+  "outcome": "every flag stays off; the set is not reopened for these flags, and nothing is tuned on it",
+  "problems": [],
+  "reader_errors": {
+    "A0": 0,
+    "A1": 0,
+    "A2": 0,
+    "A3": 0,
+    "B3": 0,
+    "R5": 0
+  },
+  "label_reads": {
+    "this_decision": 18,
+    "expected": 18,
+    "all_after_final_gate": true
+  }
+}

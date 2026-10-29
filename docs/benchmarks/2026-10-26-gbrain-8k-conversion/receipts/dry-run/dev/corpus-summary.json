@@ -1,0 +1,14 @@
+{
+  "id": "lme-s-dev100-seed42",
+  "questions": 100,
+  "conversations": 100,
+  "kinds": {
+    "abstention": 4,
+    "multi-session": 16,
+    "single-session-assistant": 17,
+    "single-session-preference": 17,
+    "single-session-user": 15,
+    "temporal-reasoning": 15,
+    "knowledge-update": 16
+  }
+}
