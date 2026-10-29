@@ -2,7 +2,6 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
-<<<<<<< HEAD
 ## [Unreleased]
 
 ### Per-member read access: search cost on a brain with no restrictions
@@ -10,7 +9,7 @@ This records what each gbrain-evals release changed and what its measurements me
 - **gbrain PR #7812 adds a readers check to every remote read; on a brain with no restrictions it costs hybrid search 1.5 to 1.6% and keyword-only search 3.2 to 3.9%** ([report](docs/benchmarks/2026-10-28-member-read-access.md)). Measured at `f1c39714` against its parent `8e9cd64d` on one Ubicloud VM, 8 interleaved runs per side, with raw JSON committed.
 - **Where the keyword cost comes from.** Ablations put it on reading one `pages` column per matched row: replacing the predicate with `TRUE` cuts the cost to +0.5%, and dropping the index changes nothing. Removing the cost would leave a one-request window at a brain's first restricted page, so the keyword result was accepted by GBRA-108 with the fail-safe kept.
 - **Restricted brains.** Members get every page they may read (hit@10 1.0 at 20% and 80% restricted).
-=======
+
 ## [0.10.131] - 2026-10-28
 
 ### Eval cost audit and two tools that cut a confirmation's cost
@@ -20,7 +19,6 @@ This records what each gbrain-evals release changed and what its measurements me
 - **Both apply only to preregistrations written from 2026-10-28 on**, and each one declares its reused arms and its sizing simulation before any cell runs ([eval/CONTRIBUTING.md](eval/CONTRIBUTING.md#cut-the-cost-of-a-preregistered-run)).
 - **The audit** ([docs/audit/2026-10-28-eval-cost-audit.md](docs/audit/2026-10-28-eval-cost-audit.md)): about $10,400 of model spend from October 14 to 28, 94% of it the Q1 scoreboard and the Cat 40 confirmation.
 - **CI:** the `harness` job's Python tests and Bun proxy tests now run as two parallel jobs, `harness (pytest)` and `harness (proxy)`, with the same test files.
->>>>>>> origin/main
 
 ## [0.10.130] - 2026-10-27
 
