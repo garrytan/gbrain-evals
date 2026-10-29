@@ -31,6 +31,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { CHAT_PRICE_OVERRIDES } from '../../budget-ledger.ts';
+import { lookupEmbeddingPrice } from '../../../../node_modules/gbrain/src/core/embedding-pricing.ts';
 import { FRONTIER_READERS, READER_WINDOWS } from '../../systems/baselines.ts';
 import type { Outcome } from '../../memory-qa/outcomes.ts';
 
@@ -40,8 +41,13 @@ export const MANIFEST_PATH = resolve(import.meta.dir, 'q1-cells.json');
 export const SCHEMA_PATH = resolve(import.meta.dir, 'schema.json');
 export const PREREGISTRATION = 'docs/benchmarks/2026-10-06-scoreboard-preregistration.md';
 
-export type SetId = 'S1' | 'S1-sweep' | 'S2a' | 'S2b' | 'S3' | 'S4' | 'S4-slice' | 'S5' | 'S3-smoke' | 'S3-smoke-default' | 'S2b-ingest';
-export type BlockId = 'T1' | 'T2-S2a' | 'T2-S2b' | 'T2-S3' | 'T2-S4-S5';
+export type Q1SetId = 'S1' | 'S1-sweep' | 'S2a' | 'S2b' | 'S3' | 'S4' | 'S4-slice' | 'S5' | 'S3-smoke' | 'S3-smoke-default' | 'S2b-ingest';
+/** F6's own set (eval/runner/q1/cells/f6.ts): the D8 long-history reserve. */
+export type SetId = Q1SetId | 'D8';
+export type Q1BlockId = 'T1' | 'T2-S2a' | 'T2-S2b' | 'T2-S3' | 'T2-S4-S5';
+/** F6's spend blocks (eval/runner/q1/cells/f6.ts), charged to F6's own cap. */
+export type F6BlockId = 'F6-S1' | 'F6-T2' | 'F6-D8' | 'F6-S4' | 'F6-dry';
+export type BlockId = Q1BlockId | F6BlockId;
 export type Split = 'dev' | 'sealed' | 'all';
 
 export type Selection =
@@ -55,6 +61,31 @@ export type Selection =
 
 export type ArmMode = 'packed' | 'native-default' | 'own-answer' | 'agent' | 'full-context' | 'retrieval-only';
 
+/**
+ * F6: the retrieval an arm's policy names exactly, so arms of one cell retrieve apart: the op (gbrain query or recall),
+ * its arguments, and the six-key search overlay the shim applies before the call (eval/systems/gbrain-defaults/shim.py
+ * f6_policy). Q1 arms carry none and keep their mode's policy.
+ */
+export interface RetrievalIdentity {
+  op: 'query' | 'recall';
+  args: Record<string, number | boolean>;
+  overlay: Record<string, boolean | string>;
+}
+export const OVERLAY_KEYS = ['search.evidence_date_header', 'search.evidence_titles', 'search.fact_source_pages', 'search.query_budget_unit', 'search.query_facts_block', 'search.saved_facts_supersede'] as const;
+const RETRIEVAL_ARGS: Record<RetrievalIdentity['op'], readonly string[]> = { query: ['limit', 'autocut', 'expand', 'token_budget'], recall: ['budget_tokens'] };
+const canonicalJson = (v: unknown): string => Array.isArray(v) ? `[${v.map(canonicalJson).join(',')}]`
+  : v && typeof v === 'object' ? `{${Object.keys(v).sort().map(k => `${JSON.stringify(k)}:${canonicalJson((v as Record<string, unknown>)[k])}`).join(',')}}` : JSON.stringify(v);
+/** sha256 of an identity's canonical JSON, the overlay's included. */
+export const retrievalSha = (r: RetrievalIdentity) => createHash('sha256').update(canonicalJson(r)).digest('hex');
+/**
+ * The key an arm's retrievals are staged under (`<question>|<key>`): its policy mode, or for an arm with a retrieval
+ * identity `<mode>@<op>-<12 hex of its identity hash>`, so two arms share a retrieval only when they name the same one.
+ */
+export function policyKey(a: Pick<ArmDefinition, 'policy' | 'retrieval'>): string | null {
+  if (!a.policy) return null;
+  return a.retrieval ? `${a.policy}@${a.retrieval.op}-${retrievalSha(a.retrieval).slice(0, 12)}` : a.policy;
+}
+
 export interface ArmDefinition {
   id: string;
   /** The scoreboard cell this arm writes: `<cell id>.<arm id>`. */
@@ -64,6 +95,8 @@ export interface ArmDefinition {
   arm: 'component' | 'whole-system' | 'diagnostic';
   mode: ArmMode;
   policy: 'fixed-evidence' | 'vendor-default' | null;
+  /** F6 arms: the exact retrieval this arm's policy sends (RetrievalIdentity); absent on every Q1 arm. */
+  retrieval?: RetrievalIdentity;
   budget: number | null;
   /** Own-answer arms: which answer route (gbrain `synthesize` or `think`). */
   variant?: 'synthesize' | 'think';
@@ -107,7 +140,7 @@ export interface CellDefinition {
   shards: number;
   expected_hours: number;
   /** Shim cells: the stack's bootstrap environment and config (`GBRAIN_FULL_SURFACE=1` for gbrain's full-surface cell). */
-  launch?: { env: Record<string, string>; config: 'recipe' | 'common' };
+  launch?: { env: Record<string, string>; config: 'recipe' | 'common' | 'shipped-0.31' };
   /** Shim cells: tar the stack's named volumes into the realization once ingest is complete (the launcher sets SHOOTOUT_SNAPSHOT_DIR). */
   snapshot_command?: string;
   /** Shim cells: load that snapshot into a fresh stack before a resumed cell runs (the launcher sets SHOOTOUT_RESTORE_DIR). */
@@ -153,7 +186,7 @@ export interface Manifest {
 
 const BEAM10M_EXCLUSION = { question_id: '10m-1:abstention:0', reason: 'exposed in another thread\'s audit (eval/decisions/splits/beam-10m.json exclusions); run and reported apart, never in the confirmatory cohort' };
 
-export const SETS: Record<SetId, SetFacts> = {
+export const SETS: Record<Q1SetId, SetFacts> = {
   S1: { id: 'S1', benchmark: 'beam-10m', split: 'sealed', questions: 200, conversations: 10, corpus_tokens: 110_000_000, messages: 70_000, block: 'T1', selection: { kind: 'all' }, exclusions: [BEAM10M_EXCLUSION], role: 'headline', exposure: 'E0', label: 'BEAM-10M' },
   'S1-sweep': { id: 'S1-sweep', benchmark: 'beam-10m', split: 'sealed', questions: 100, conversations: 10, corpus_tokens: 110_000_000, messages: 70_000, block: 'T1', selection: { kind: 'stratified', limit: 100, stratify: 'conversation-category', seed: 'q1-sweep' }, exclusions: [BEAM10M_EXCLUSION], role: 'public', exposure: 'E0', label: 'BEAM-10M, 2k/16k sweep subset' },
   S2a: { id: 'S2a', benchmark: 'beam-100k', split: 'sealed', questions: 140, conversations: 14, corpus_tokens: 2_000_000, messages: 1_400, block: 'T2-S2a', selection: { kind: 'per-conversation', per_conversation: 10, seed: 'q1-beam-100k' }, exclusions: [], role: 'public', exposure: 'E2', label: 'BEAM-100K sealed' },
@@ -167,8 +200,19 @@ export const SETS: Record<SetId, SetFacts> = {
   'S2b-ingest': { id: 'S2b-ingest', benchmark: 'beam-1m', split: 'dev', questions: 10, conversations: 1, corpus_tokens: 926_773, messages: 2_182, sessions: 928, block: 'T2-S2b', selection: { kind: 'stratified', limit: 10, stratify: 'category', seed: 'q1-ingest-probe' }, exclusions: [], role: 'smoke', exposure: 'E2', label: 'BEAM-1M dev ingest probe (1m-16, retrieval only)', only_conversations: ['1m-16'] },
 };
 
+/**
+ * F6's sets beyond Q1's (preregistration docs/benchmarks/2026-10-29-f6-current-master-preregistration.md). D8 is the
+ * long-history reserve in owner custody (loader beam-d8, eval/runner/memory-qa/corpus.ts): its question, token and
+ * message counts are placeholders until the custodian reports the aggregates, and its selection limit is a parameter.
+ */
+export const F6_SETS: Record<'D8', SetFacts> = {
+  D8: { id: 'D8', benchmark: 'beam-d8', split: 'sealed', questions: 300, conversations: 10, corpus_tokens: 110_000_000, messages: 70_000, block: 'F6-D8', selection: { kind: 'stratified', limit: 300, stratify: 'conversation-category', seed: 'f6-d8' }, exclusions: [], role: 'headline', exposure: 'E0', label: 'D8 long-history reserve (placeholder counts)' },
+};
+/** Every set a cell may name: Q1's and F6's. */
+export const ALL_SETS: Record<SetId, SetFacts> = { ...SETS, ...F6_SETS };
+
 /** PLAN §7 block lines (the approved estimate the re-priced manifest is compared with). */
-export const PLAN_BLOCKS: Record<BlockId, { label: string; plan_usd: number }> = {
+export const PLAN_BLOCKS: Record<Q1BlockId, { label: string; plan_usd: number }> = {
   T1: { label: 'T1 S1 headline (complete)', plan_usd: 3995 },
   'T2-S2a': { label: 'T2 S2a BEAM-100K', plan_usd: 585 },
   'T2-S2b': { label: 'T2 S2b BEAM-1M', plan_usd: 1720 },
@@ -245,6 +289,46 @@ export const ASSUMPTIONS = {
   vcpu: { shim: 8, 'in-process': 8 },
 };
 
+/**
+ * F6's rates (eval/runner/q1/cells/f6.ts), each a named assumption the dry run replaces with a measurement. They live
+ * apart from ASSUMPTIONS so Q1's manifest stays byte-identical.
+ */
+export const F6_ASSUMPTIONS = {
+  /** gbrain at the F6 pin, v0.60.493.0. */
+  gbrain_sha: '0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049',
+  /**
+   * extract-conversation-facts with gbrain's default extraction model at the budget-ledger price (claude-haiku-5-5,
+   * $0.10 in and $0.50 out per million): model input and output tokens per conversation token (placeholders: each
+   * segment is sent with its context header and the extraction prompt, and facts come back as JSON).
+   */
+  extraction: { model: 'anthropic:claude-haiku-5-5', input_per_token: 1.6, output_per_token: 0.12 },
+  /** Saved facts per million conversation tokens and tokens per fact, embedded with voyage:voyage-4 (placeholders). */
+  facts_per_mtok: 2_500, tokens_per_fact: 30, embedding_model: 'voyage:voyage-4',
+  /** The extraction cap each conversation's build carries (GBRAIN_F6_EXTRACT_CAP_USD): this multiple of its extraction estimate, at least $1. */
+  extraction_cap_multiple: 2,
+  /** Ingest dollars per million tokens beyond extraction: gbrain's page ingest as Q1 measured it, the temporal graph's 0.31.2 shipped defaults (placeholder). */
+  ingest_usd_per_mtok: { 'gbrain-defaults:f6-master': 0.12, 'ext-temporal-graph:shipped-0.31': 7.3 } as Record<string, number>,
+  /** Ingest hours per million tokens: gbrain's page ingest plus serial extraction on PGLite, and the temporal graph (placeholders). */
+  hours_per_mtok: { 'gbrain-defaults:f6-master': 2.5, 'ext-temporal-graph:shipped-0.31': 3.53 } as Record<string, number>,
+  /** gbrain's own calls per recall, dollars (assumed equal to query's measured gbrain_query_usd). */
+  gbrain_recall_usd: 0.00176,
+  /** Lease sizing: bytes per packed token, the reading template's bytes, and the judge prompt's bytes (the proxy reserves input at bytes + 64). */
+  lease: { bytes_per_token: 4.2, template_bytes: 4_000, judge_bytes: 12_000, margin: 1.25 },
+};
+
+/** An embedding model's list price per million tokens (gbrain's own price table, as budget-ledger prices embeddings). */
+function embeddingPrice(model: string): number {
+  const p = lookupEmbeddingPrice(model);
+  if (p.kind !== 'known') throw new Error(`no embedding price for ${model}`);
+  return p.pricePerMTok;
+}
+
+/** Extraction dollars for `tokens` conversation tokens under F6_ASSUMPTIONS. */
+export function f6ExtractionUsd(tokens: number): number {
+  const x = F6_ASSUMPTIONS.extraction, p = priceOf(x.model);
+  return tokens * (x.input_per_token * p.input + x.output_per_token * p.output) / 1e6;
+}
+
 // ─── Prices ──────────────────────────────────────────────────────────
 
 /** List price per million tokens from eval/runner/budget-ledger.ts; a dated snapshot bills at its family's price. */
@@ -264,7 +348,7 @@ const agentTokens = (v: number | Record<string, number> | undefined, reader: str
 // ─── Estimates ───────────────────────────────────────────────────────
 
 function armQuestions(def: Pick<CellDefinition, 'set'>, arm: ArmDefinition): number {
-  return SETS[arm.set].questions || SETS[def.set].questions;
+  return ALL_SETS[arm.set].questions || ALL_SETS[def.set].questions;
 }
 
 function judgeCost(benchmark: string, judge?: string): number {
@@ -284,17 +368,21 @@ function fullContextCost(set: SetFacts, reader: string, questions: number): numb
 }
 
 export function estimateCell(def: Omit<CellDefinition, 'estimate'>): CellEstimate {
-  const set = SETS[def.set];
+  const set = ALL_SETS[def.set];
   const lines: Record<string, number> = {};
   const add = (k: string, v: number) => { if (v) lines[k] = (lines[k] ?? 0) + v; };
   const family = def.benchmark.startsWith('beam') ? 'beam' : def.benchmark;
-  const rate = ASSUMPTIONS.ingest_usd_per_mtok[`${def.system}:${def.configuration}:${family}`] ?? ASSUMPTIONS.ingest_usd_per_mtok[`${def.system}:${def.configuration}`] ?? 0;
+  const rate = ASSUMPTIONS.ingest_usd_per_mtok[`${def.system}:${def.configuration}:${family}`] ?? ASSUMPTIONS.ingest_usd_per_mtok[`${def.system}:${def.configuration}`] ?? F6_ASSUMPTIONS.ingest_usd_per_mtok[`${def.system}:${def.configuration}`] ?? 0;
   const tokens = def.ingest_sessions ? set.corpus_tokens * Math.min(1, def.ingest_sessions / Math.max(1, set.sessions ?? def.ingest_sessions)) : set.corpus_tokens;
   add('ingest', rate * tokens / 1e6);
   const probe = ASSUMPTIONS.probe_usd[def.system];
   if (probe) add('ingest_probes', Math.min(probe.max_per_conversation, probe.per_mtok * tokens / set.conversations / 1e6) * Math.min(set.conversations, def.probes.conversations ?? set.conversations));
-  const policies = new Set(def.arms.map(a => a.policy).filter(Boolean));
-  if (def.system === 'gbrain-defaults') add('system_queries', policies.size * set.questions * ASSUMPTIONS.gbrain_query_usd);
+  if (def.configuration === 'f6-master') {
+    add('extraction', f6ExtractionUsd(tokens));
+    add('fact_embeddings', tokens / 1e6 * F6_ASSUMPTIONS.facts_per_mtok * F6_ASSUMPTIONS.tokens_per_fact * embeddingPrice(F6_ASSUMPTIONS.embedding_model) / 1e6);
+  }
+  const policies = new Map(def.arms.filter(a => a.policy).map(a => [policyKey(a)!, a.retrieval?.op ?? 'query']));
+  if (def.system === 'gbrain-defaults') for (const op of policies.values()) add('system_queries', set.questions * (op === 'recall' ? F6_ASSUMPTIONS.gbrain_recall_usd : ASSUMPTIONS.gbrain_query_usd));
   for (const arm of def.arms) {
     const n = armQuestions(def, arm);
     const answers = (reader: string) => n * (arm.reader_replicates[reader] ?? 1);
@@ -322,9 +410,9 @@ export function estimateCell(def: Omit<CellDefinition, 'estimate'>): CellEstimat
 
 // ─── Generation (PLAN §7 cells) ──────────────────────────────────────
 
-const READERS = [...FRONTIER_READERS];
-const SONNET = 'anthropic:claude-sonnet-5-5';
-const FRONTIER_JUDGES = ['anthropic:claude-opus-5-5', 'openai:gpt-6.1-sol'];
+export const READERS = [...FRONTIER_READERS];
+export const SONNET = 'anthropic:claude-sonnet-5-5';
+export const FRONTIER_JUDGES = ['anthropic:claude-opus-5-5', 'openai:gpt-6.1-sol'];
 const EXT_BEAM = ['ext-extract-first', 'ext-memory-bank', 'ext-graph-pipeline', 'ext-temporal-graph', 'ext-markdown-kb', 'ext-verbatim-session'];
 const EXT_LME = ['ext-markdown-kb', 'ext-verbatim-session'];
 const PASSIVE_BASELINES = ['baseline-recency', 'baseline-hybrid', 'baseline-none'];
@@ -340,11 +428,12 @@ const headlineConfig = (system: string, family: 'beam' | 'locomo' | 'lme', set?:
   system === 'gbrain-defaults' ? 'shipped-defaults' : system.startsWith('baseline-') ? 'baseline'
   : family === 'beam' && (COMMON_ON_BEAM.has(system) || (set === 'S1' && COMMON_ON_S1.has(system))) ? 'common' : 'recipe';
 const SHIMS = new Set(['gbrain-defaults', ...EXT_BEAM]);
+export { EXT_BEAM, PASSIVE_BASELINES, headlineConfig };
 
 const short = (system: string) => system.replace(/^ext-|^baseline-/, '');
 const familyOf = (b: string): 'beam' | 'locomo' | 'lme' => b.startsWith('beam') ? 'beam' : b === 'locomo' ? 'locomo' : 'lme';
 
-interface ArmSpec extends Partial<ArmDefinition> { id: string; mode: ArmMode }
+export interface ArmSpec extends Partial<ArmDefinition> { id: string; mode: ArmMode }
 
 /** Leases set apart from the estimate per shard, for cells wave 1 measured running past their leases (A20, A22). */
 export const LEASE_OVERRIDES: Record<string, { usd: number; basis: string }> = {
@@ -386,8 +475,10 @@ export const HOURS_OVERRIDES: Record<string, { hours: number; basis: string }> =
   's1.baseline-hybrid.baseline': { hours: 9, basis: 'A22: concurrent embedding ingests S1 in about 0.9 hours; the sequential question phase (2,200 answers, canonical and frontier judging) takes about 8' },
 };
 
-function makeCell(set: SetId, system: string, configuration: string, armSpecs: ArmSpec[], extra: { ingest_replicate?: number } = {}): CellDefinition {
-  const s = SETS[set];
+/** One cell. `extra`: F6 cells name their own block, probes and launch environment (Q1 cells pass none of these). */
+export function makeCell(set: SetId, system: string, configuration: string, armSpecs: ArmSpec[],
+  extra: { ingest_replicate?: number; block?: BlockId; probes?: CellDefinition['probes']; launchEnv?: Record<string, string> } = {}): CellDefinition {
+  const s = ALL_SETS[set];
   const id = `${set.toLowerCase()}.${system}.${configuration}${extra.ingest_replicate && extra.ingest_replicate > 1 ? `.r${extra.ingest_replicate}` : ''}`;
   const runner = SHIMS.has(system) ? 'shim' as const : 'in-process' as const;
   const arms: ArmDefinition[] = armSpecs.map(a => {
@@ -396,25 +487,29 @@ function makeCell(set: SetId, system: string, configuration: string, armSpecs: A
       id: a.id, cell_id: `${id}.${a.id}`, set: a.set ?? set,
       arm: a.arm ?? (component ? 'component' : a.mode === 'retrieval-only' ? 'diagnostic' : 'whole-system'), mode: a.mode,
       policy: a.policy !== undefined ? a.policy : component || a.mode === 'retrieval-only' ? 'fixed-evidence' : a.mode === 'native-default' ? 'vendor-default' : null,
+      ...(a.retrieval ? { retrieval: a.retrieval } : {}),
       budget: a.budget ?? null, ...(a.variant ? { variant: a.variant } : {}),
       questions: a.questions ?? null, readers: a.readers ?? (a.mode === 'retrieval-only' ? [] : READERS), reader_replicates: a.reader_replicates ?? {},
       frontier: a.frontier ?? null, judge_repeats: a.judge_repeats ?? null, label: a.label ?? a.id, ...(a.anchor ? { anchor: true } : {}),
     };
   });
-  const launch = runner === 'shim' ? shimLaunch(system, configuration) : null;
+  const shim = runner === 'shim' ? shimLaunch(system, configuration) : null;
+  const launch = shim && extra.launchEnv ? { ...shim, env: { ...shim.env, ...extra.launchEnv } } : shim;
   const family = s.benchmark.startsWith('beam') ? 'beam' : s.benchmark;
-  const perMtok = ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}:${family}`] ?? ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}`] ?? ASSUMPTIONS.hours_per_mtok[runner];
+  const perMtok = ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}:${family}`] ?? ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}`] ?? F6_ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}`] ?? ASSUMPTIONS.hours_per_mtok[runner];
   const single = perMtok * s.corpus_tokens / 1e6;
-  const shards = runner === 'shim' && set === 'S1' ? s.conversations : runner === 'shim' && single > UNIT_LIMIT_HOURS ? Math.min(s.conversations, Math.ceil(single / 48)) : 1;
+  const shards = runner === 'shim' && (set === 'S1' || set === 'D8') ? s.conversations : runner === 'shim' && single > UNIT_LIMIT_HOURS ? Math.min(s.conversations, Math.ceil(single / 48)) : 1;
   const hours = Math.max(1, Math.ceil(single / shards));
-  const base = { schema: CELL_SCHEMA as typeof CELL_SCHEMA, id, set, block: s.block, benchmark: s.benchmark, split: s.split, selection: s.selection, exclusions: s.exclusions, system, configuration, runner,
-    ingest_replicate: extra.ingest_replicate ?? 1, effort: 'medium' as const, canonical_instrument: s.benchmark, probes: { sample: 20, seed: `q1-probes-${set.toLowerCase()}`, conversations: set === 'S4' || set === 'S4-slice' || set === 'S5' ? 50 : null },
+  const base = { schema: CELL_SCHEMA as typeof CELL_SCHEMA, id, set, block: extra.block ?? s.block, benchmark: s.benchmark, split: s.split, selection: s.selection, exclusions: s.exclusions, system, configuration, runner,
+    ingest_replicate: extra.ingest_replicate ?? 1, effort: 'medium' as const, canonical_instrument: s.benchmark, probes: extra.probes ?? { sample: 20, seed: `q1-probes-${set.toLowerCase()}`, conversations: set === 'S4' || set === 'S4-slice' || set === 'S5' ? 50 : null },
     ...(s.only_conversations ? { only_conversations: s.only_conversations } : {}), shards, expected_hours: HOURS_OVERRIDES[id]?.hours ?? Math.min(48, hours), ...(launch ? shimCommands(system, launch) : {}), arms };
   return { ...base, estimate: estimateCell(base), ...(LEASE_OVERRIDES[id] ? { lease: LEASE_OVERRIDES[id] } : {}), ...(REANSWER_OVERRIDES[id] ? { reanswer_invalid_before: REANSWER_OVERRIDES[id] } : {}), ...(FRESH_OVERRIDES[id] ? { fresh_before: FRESH_OVERRIDES[id] } : {}) };
 }
 
 /** How a shim cell's stack starts: bootstrap.sh --config and any environment the configuration needs. */
 export function shimLaunch(system: string, configuration: string): NonNullable<CellDefinition['launch']> {
+  if (configuration === 'f6-master') return { env: { GBRAIN_F6: '1', GBRAIN_SHA: F6_ASSUMPTIONS.gbrain_sha }, config: 'recipe' };
+  if (configuration === 'shipped-0.31') return { env: {}, config: 'shipped-0.31' };
   return { env: configuration === 'full-surface' ? { GBRAIN_FULL_SURFACE: '1' } : {}, config: configuration === 'common' || configuration === 'common-embedder' ? 'common' : 'recipe' };
 }
 
@@ -426,7 +521,8 @@ function shimCommands(system: string, launch: NonNullable<CellDefinition['launch
   const pre = launchPrefix(launch);
   return {
     launch,
-    snapshot_command: `${pre}bash eval/systems/bootstrap.sh snapshot --system ${system} --out "$SHOOTOUT_SNAPSHOT_DIR/${system}.tar"`,
+    // A configuration with its own bundle directory (shipped-0.31) names it on every bootstrap call, or the call reaches the pinned stack.
+    snapshot_command: `${pre}bash eval/systems/bootstrap.sh snapshot --system ${system}${launch.config === 'shipped-0.31' ? ' --config shipped-0.31' : ''} --out "$SHOOTOUT_SNAPSHOT_DIR/${system}.tar"`,
     restore_command: `${pre}bash eval/systems/bootstrap.sh restore --system ${system} --config ${launch.config} --from "$SHOOTOUT_RESTORE_DIR/${system}.tar"`,
   };
 }
@@ -539,7 +635,7 @@ function withFrontierSample(cells: CellDefinition[], set: SetId): CellDefinition
 
 export function buildManifest(): Manifest {
   const cells = generateCells();
-  const blocks = (Object.keys(PLAN_BLOCKS) as BlockId[]).map(id => {
+  const blocks = (Object.keys(PLAN_BLOCKS) as Q1BlockId[]).map(id => {
     const estimate = Math.round(cells.filter(c => c.block === id).reduce((s, c) => s + c.estimate.usd, 0) * 100) / 100;
     return { id, label: PLAN_BLOCKS[id].label, plan_usd: PLAN_BLOCKS[id].plan_usd, estimate_usd: estimate, cap_usd: Math.round(estimate * 150) / 100 };
   });
@@ -575,13 +671,31 @@ function selectionProblems(s: Selection, where: string): string[] {
   return [`${where}: unknown selection kind ${JSON.stringify((s as { kind?: unknown }).kind)}`];
 }
 
+export const F6_BLOCK_IDS: readonly F6BlockId[] = ['F6-S1', 'F6-T2', 'F6-D8', 'F6-S4', 'F6-dry'];
+
+/** An arm's retrieval identity: only on gbrain cells whose stack runs F6 (GBRAIN_F6=1), on a packed or retrieval-only arm, naming a known op, its own arguments and all six overlay keys. */
+function retrievalProblems(d: CellDefinition, a: ArmDefinition, w: string): string[] {
+  const p: string[] = [];
+  const r = a.retrieval!;
+  if (d.system !== 'gbrain-defaults' || d.launch?.env.GBRAIN_F6 !== '1') p.push(`${w}: a retrieval identity runs only on a gbrain-defaults stack started with GBRAIN_F6=1`);
+  if (a.mode !== 'packed' && a.mode !== 'retrieval-only') p.push(`${w}: only packed and retrieval-only arms carry a retrieval identity`);
+  if (!r || typeof r !== 'object' || !RETRIEVAL_ARGS[r.op]) return [...p, `${w}: retrieval.op must be query or recall`];
+  const extra = Object.keys(r.args ?? {}).filter(k => !RETRIEVAL_ARGS[r.op].includes(k));
+  if (extra.length) p.push(`${w}: ${r.op} takes no ${extra.join(', ')} (allowed: ${RETRIEVAL_ARGS[r.op].join(', ')})`);
+  for (const k of ['limit', 'token_budget', 'budget_tokens']) if (k in (r.args ?? {}) && !(Number.isInteger(r.args[k]) && (r.args[k] as number) > 0)) p.push(`${w}: retrieval.args.${k} must be a positive integer`);
+  const keys = Object.keys(r.overlay ?? {}).sort();
+  if (keys.join() !== [...OVERLAY_KEYS].sort().join()) p.push(`${w}: retrieval.overlay must set exactly ${OVERLAY_KEYS.join(', ')}`);
+  for (const [k, v] of Object.entries(r.overlay ?? {})) if (k === 'search.query_budget_unit' ? !['chunk', 'auto'].includes(v as string) : typeof v !== 'boolean') p.push(`${w}: retrieval.overlay ${k} has an invalid value ${JSON.stringify(v)}`);
+  return p;
+}
+
 /** Problems with one definition against the schema and the kind vocabulary; empty when it is runnable. */
 export function definitionProblems(d: CellDefinition, kinds: ReadonlySet<string>): string[] {
   const p: string[] = [];
   if (d.schema !== CELL_SCHEMA) p.push(`schema must be ${CELL_SCHEMA}`);
   if (!ID.test(d.id ?? '')) p.push(`id ${JSON.stringify(d.id)} must be 1-80 characters of [a-z0-9.-]`);
-  if (!SETS[d.set]) p.push(`set ${d.set} is unknown`);
-  if (!PLAN_BLOCKS[d.block]) p.push(`block ${d.block} is unknown`);
+  if (!ALL_SETS[d.set]) p.push(`set ${d.set} is unknown`);
+  if (!(PLAN_BLOCKS as Record<string, unknown>)[d.block] && !(F6_BLOCK_IDS as readonly string[]).includes(d.block)) p.push(`block ${d.block} is unknown`);
   if (!['dev', 'sealed', 'all'].includes(d.split)) p.push('split must be dev, sealed or all');
   p.push(...selectionProblems(d.selection, 'selection'));
   if (!kinds.has(d.system)) p.push(`system ${d.system} is not a kind id in eval/systems/kinds.json`);
@@ -597,7 +711,8 @@ export function definitionProblems(d: CellDefinition, kinds: ReadonlySet<string>
     if (!/^[a-z0-9][a-z0-9-]{0,39}$/.test(a.id ?? '') || ids.has(a.id)) p.push(`${w}: id must be unique, 1-40 characters of [a-z0-9-]`);
     ids.add(a.id);
     if (a.cell_id !== `${d.id}.${a.id}`) p.push(`${w}: cell_id must be ${d.id}.${a.id}`);
-    if (!SETS[a.set]) p.push(`${w}: set ${a.set} is unknown`);
+    if (!ALL_SETS[a.set]) p.push(`${w}: set ${a.set} is unknown`);
+    if (a.retrieval !== undefined) p.push(...retrievalProblems(d, a, w));
     if (!MODES.includes(a.mode)) p.push(`${w}: mode must be one of ${MODES.join(', ')}`);
     if (a.mode === 'packed' && !(Number.isInteger(a.budget) && (a.budget as number) > 0)) p.push(`${w}: a packed arm needs a positive token budget`);
     if (a.mode !== 'packed' && a.budget !== null) p.push(`${w}: only packed arms carry a budget`);
