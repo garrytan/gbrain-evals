@@ -254,9 +254,18 @@ export const INSTRUMENTS: Readonly<Record<string, Instrument>> = Object.freeze({
   'beam-10m': beamInstrument('beam-10m'),
 });
 
+/**
+ * Instruments for reserve sets added after the Q1 registry above was pinned (test/eval/q1-instruments.test.ts holds
+ * its hashes). beam-d8, the D8 long-history reserve in BEAM's generator format, is judged by BEAM's rubric
+ * instrument under its own id.
+ */
+export const RESERVE_INSTRUMENTS: Readonly<Record<string, Instrument>> = Object.freeze({
+  'beam-d8': beamInstrument('beam-d8'),
+});
+
 /** The instrument for a benchmark; explicit per benchmark, no prefix guessing. */
 export function instrumentFor(benchmark: string): Instrument {
-  const i = INSTRUMENTS[benchmark];
-  if (!i) throw new Error(`no judge instrument is registered for benchmark ${benchmark}; registered: ${Object.keys(INSTRUMENTS).join(', ')}`);
+  const i = INSTRUMENTS[benchmark] ?? RESERVE_INSTRUMENTS[benchmark];
+  if (!i) throw new Error(`no judge instrument is registered for benchmark ${benchmark}; registered: ${[...Object.keys(INSTRUMENTS), ...Object.keys(RESERVE_INSTRUMENTS)].join(', ')}`);
   return i;
 }

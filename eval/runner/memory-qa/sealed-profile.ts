@@ -52,7 +52,7 @@ const HEX = /^[0-9a-f]{64}$/;
 const VOCAB: Record<string, readonly string[]> = {
   kind: ['memory-qa-arm'], split: ['dev', 'sealed'], run_status: ['complete', 'partial', 'invalid'], context: ['native', 'rehydrated'],
   'policy.mode': ['vendor-default', 'fixed-evidence'],
-  benchmark: ['locomo', 'lme-s', 'beam-100k', 'beam-500k', 'beam-1m', 'fixture', 'custody'],
+  benchmark: ['locomo', 'lme-s', 'beam-100k', 'beam-500k', 'beam-1m', 'beam-d8', 'fixture', 'custody'],
   'system.name': ['gbrain', 'gbrain-shootout', 'fake', 'ext-extract-first', 'ext-temporal-graph', 'ext-graph-pipeline', 'ext-agent-runtime', 'ext-markdown-kb', 'ext-memory-bank', 'full-context', 'no-memory', 'plain-hybrid'],
 };
 const HASHES = ['run_config_hash', 'manifest_sha256'];
