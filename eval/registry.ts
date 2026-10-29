@@ -1505,6 +1505,7 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'scoreboard-cli.ts': { role: 'head-to-head scoreboard front door (bun run eval:scoreboard): check, fixture, explain, doctor, plan, smoke, run, status, judge, render, dispute (docs/scoreboard.md)' },
   'cost-speed.ts': { role: 'head-to-head scoreboard cost and speed columns from rows and proxy usage, and the campaign progress page (--watch)' },
   'stub-upstream.ts': { role: 'deterministic stand-in for paid model providers in keyless tests' },
+  'structure-aware-chunks.ts': { role: 'heading-path prefix and heading-led chunk experiment on messy-company dev and Qasper dev (docs/benchmarks/2026-10-28-structure-aware-chunks-preregistration.md); live embeddings, not dispatched' },
   'synthetic-corpus-loader.ts': { role: 'synthetic-v1 corpus loader' },
   'tool-bridge.ts': { role: 'agent tool bridge' },
   'types.ts': { role: 'shared types' },

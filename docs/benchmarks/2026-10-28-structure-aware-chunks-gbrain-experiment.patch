@@ -1,0 +1,110 @@
+diff --git a/src/core/import-file.ts b/src/core/import-file.ts
+index a4586cb2..5f9fb2d6 100644
+--- a/src/core/import-file.ts
++++ b/src/core/import-file.ts
+@@ -687,7 +687,13 @@ export async function importFromContent(
+       modeRequiresWrapper(effectiveCRMode) && !modeRequiresSynopsis(effectiveCRMode)
+         ? buildContextualPrefix(parsed.title, null)
+         : null;
+-    const wrappedTexts = pending.map(i => prefix ? wrapChunkForEmbedding(chunks[i].chunk_text, prefix, chunks[i].chunk_source) : chunks[i].chunk_text);
++    const headingPrefix = (c: ChunkInput): string | null => {
++      if (!prefix || process.env.GBRAIN_EXP_HEADING_PREFIX !== '1' || !c.heading_path) return prefix;
++      const parts = c.heading_path.split(' › ');
++      if (parts[0]?.trim().toLowerCase() === parsed.title.trim().toLowerCase()) parts.shift();
++      return parts.length > 0 ? buildContextualPrefix(parsed.title, parts.join(' › ')) : prefix;
++    };
++    const wrappedTexts = pending.map(i => { const p = headingPrefix(chunks[i]); return p ? wrapChunkForEmbedding(chunks[i].chunk_text, p, chunks[i].chunk_source) : chunks[i].chunk_text; });
+     // #4616: store the usable vectors; refused chunks stay NULL for embed --stale.
+     const { vectors: embeddings, refused } = await embedBatchKeepingUsable(wrappedTexts);
+     embeddingPartial = refused;
+diff --git a/src/core/markdown-chunks.ts b/src/core/markdown-chunks.ts
+index ca289682..58b231e7 100644
+--- a/src/core/markdown-chunks.ts
++++ b/src/core/markdown-chunks.ts
+@@ -1,6 +1,6 @@
+ import type { ChunkInput } from './types.ts';
+ import type { BrainEngine } from './engine.ts';
+-import { chunkText } from './chunkers/recursive.ts';
++import { chunkProjectedText, chunkText } from './chunkers/recursive.ts';
+ import { chunkCodeText, detectCodeLanguage } from './chunkers/code.ts';
+ import { sanitizeRemoteBody } from './remote-body.ts';
+ import { credentialSafeProjection } from './credential-projection.ts';
+@@ -138,6 +138,47 @@ export async function fencedCodeChunks(markdown: string, startChunkIndex: number
+ }
+ 
+ 
++const EXP_HEADING = /^ {0,3}(#{1,6})[ \t]+(.+?)[ \t#]*$/;
++const EXP_FENCE = /^ {0,3}(```|~~~)/;
++
++/**
++ * Experiment (structure-aware chunks, not for merge): the ATX heading ancestry of the section holding most of each
++ * chunk's bytes, joined with ' › ', or '' when most of the chunk sits before the first heading. Headings inside code
++ * fences are ignored. Spans are UTF-8 byte offsets into `projected`.
++ */
++export function experimentHeadingPaths(projected: string, chunks: ReadonlyArray<{ byte_start?: number; byte_end?: number }>): string[] {
++  const heads: Array<{ at: number; level: number; text: string }> = [];
++  let at = 0;
++  let inFence = false;
++  for (const line of projected.split('\n')) {
++    if (EXP_FENCE.test(line)) inFence = !inFence;
++    else if (!inFence) {
++      const m = EXP_HEADING.exec(line);
++      if (m) heads.push({ at, level: m[1].length, text: m[2].replace(/\s+/g, ' ').trim() });
++    }
++    at += Buffer.byteLength(line, 'utf8') + 1;
++  }
++  if (heads.length === 0) return chunks.map(() => '');
++  const paths: string[] = [];
++  const stack: Array<{ level: number; text: string }> = [];
++  for (const h of heads) {
++    while (stack.length > 0 && stack[stack.length - 1].level >= h.level) stack.pop();
++    stack.push(h);
++    paths.push(stack.map(s => s.text).join(' › '));
++  }
++  const regions = [{ start: 0, end: heads[0].at, i: -1 }, ...heads.map((h, i) => ({ start: h.at, end: i + 1 < heads.length ? heads[i + 1].at : at, i }))];
++  return chunks.map(c => {
++    if (c.byte_start === undefined || c.byte_end === undefined) return '';
++    let best = -1;
++    let bestLen = 0;
++    for (const r of regions) {
++      const len = Math.min(c.byte_end, r.end) - Math.max(c.byte_start, r.start);
++      if (len > bestLen) { bestLen = len; best = r.i; }
++    }
++    return best >= 0 ? paths[best] : '';
++  });
++}
++
+ /**
+  * Truth then timeline prose chunks through a fence overlay, plus the
+  * overlay's low-tier facts-fence rows as trailing chunks, each piece led by
+@@ -152,10 +193,14 @@ async function overlaidChunks(page: { compiled_truth: string; timeline?: string
+   const timeline = splitFenceOverlay(page.timeline ?? '', overlay);
+   for (const [text, source] of [[truth.main, 'compiled_truth'], [timeline.main, 'timeline']] as const) {
+     if (!text.trim()) continue;
+-    for (const c of chunkText(text, { maxTokens, spans: true })) {
++    const projected = credentialSafeProjection(sanitizeRemoteBody(text));
++    const pieces = chunkProjectedText(projected, { maxTokens, spans: true, ...(process.env.GBRAIN_EXP_HEADINGS_LEAD === '1' ? { headingsLead: true } : {}) });
++    const paths = experimentHeadingPaths(projected, pieces);
++    pieces.forEach((c, i) => {
+       chunks.push({ chunk_index: chunks.length, chunk_text: c.text, chunk_source: source,
+-        ...(c.byte_start !== undefined && c.byte_end !== undefined ? { projected_byte_start: c.byte_start, projected_byte_end: c.byte_end } : {}) });
+-    }
++        ...(c.byte_start !== undefined && c.byte_end !== undefined ? { projected_byte_start: c.byte_start, projected_byte_end: c.byte_end } : {}),
++        ...(paths[i] ? { heading_path: paths[i] } : {}) });
++    });
+   }
+   if (fenced && truth.main.trim()) chunks.push(...await fenced(truth.main, chunks.length));
+   for (const { tier, unconfirmed, body } of [...truth.lowTier, ...timeline.lowTier]) {
+diff --git a/src/core/types.ts b/src/core/types.ts
+index eff7be88..aa83eee1 100644
+--- a/src/core/types.ts
++++ b/src/core/types.ts
+@@ -824,6 +824,8 @@ export interface ChunkInput {
+   parent_symbol_path?: string[];
+   doc_comment?: string;
+   symbol_name_qualified?: string;
++  /** Experiment (structure-aware chunks): heading ancestry of a prose chunk; in memory only, never stored. */
++  heading_path?: string;
+   /**
+    * v244: where a prose chunk sits in the projected text of its chunk_source
+    * (credentialSafeProjection(sanitizeRemoteBody(<fence-overlaid compiled_truth

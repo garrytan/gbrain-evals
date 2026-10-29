@@ -1,0 +1,156 @@
+{
+  "gbrain": {
+    "requested": "gbrain@exp/structure-aware-chunks",
+    "ref": "exp/structure-aware-chunks",
+    "commit": "26e2c03b048cac41eb5f0af2331cbe5710b3600a",
+    "tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+    "version": "0.60.482.0",
+    "checkout_dirty": false,
+    "verified": {
+      "copy_tree": "d4e1ce9b82c76783aae312008668cc1a3f026342",
+      "tree_matches": true,
+      "symlinks_under_src": 0,
+      "dir_is_realpath": true,
+      "cli_version": "0.60.482.0",
+      "cli_version_matches": true
+    },
+    "copied_not_symlinked": true
+  },
+  "corpora": {
+    "a": {
+      "docs_in": 18,
+      "docs": 2,
+      "questions": 10,
+      "excluded": {
+        "short_docs": 16,
+        "unreachable_questions": 0
+      },
+      "arms": {
+        "base": {
+          "chunks": 25,
+          "chunks_with_heading_path": 25,
+          "embed_tokens_est": 22247,
+          "usd_est": 0.0029,
+          "reachable_questions": 10
+        },
+        "prefix": {
+          "chunks": 25,
+          "chunks_with_heading_path": 25,
+          "embed_tokens_est": 22493,
+          "usd_est": 0.0029,
+          "reachable_questions": 10
+        },
+        "lead": {
+          "chunks": 26,
+          "chunks_with_heading_path": 26,
+          "embed_tokens_est": 22315,
+          "usd_est": 0.0029,
+          "reachable_questions": 10
+        },
+        "prefix_lead": {
+          "chunks": 26,
+          "chunks_with_heading_path": 26,
+          "embed_tokens_est": 22572,
+          "usd_est": 0.0029,
+          "reachable_questions": 10
+        },
+        "kw_base": {
+          "chunks": 25,
+          "chunks_with_heading_path": 25,
+          "embed_tokens_est": 0,
+          "usd_est": 0,
+          "reachable_questions": 10
+        },
+        "kw_lead": {
+          "chunks": 26,
+          "chunks_with_heading_path": 26,
+          "embed_tokens_est": 0,
+          "usd_est": 0,
+          "reachable_questions": 10
+        },
+        "kw_terms": {
+          "chunks": 25,
+          "chunks_with_heading_path": 25,
+          "embed_tokens_est": 0,
+          "usd_est": 0,
+          "reachable_questions": 10
+        },
+        "kw_lead_terms": {
+          "chunks": 26,
+          "chunks_with_heading_path": 26,
+          "embed_tokens_est": 0,
+          "usd_est": 0,
+          "reachable_questions": 10
+        }
+      }
+    },
+    "b": {
+      "docs_in": 276,
+      "docs": 271,
+      "questions": 880,
+      "excluded": {
+        "short_docs": 5,
+        "unreachable_questions": 0
+      },
+      "arms": {
+        "base": {
+          "chunks": 2622,
+          "chunks_with_heading_path": 2621,
+          "embed_tokens_est": 2128511,
+          "usd_est": 0.2767,
+          "reachable_questions": 880
+        },
+        "prefix": {
+          "chunks": 2622,
+          "chunks_with_heading_path": 2621,
+          "embed_tokens_est": 2149318,
+          "usd_est": 0.2794,
+          "reachable_questions": 880
+        },
+        "lead": {
+          "chunks": 2631,
+          "chunks_with_heading_path": 2630,
+          "embed_tokens_est": 2129171,
+          "usd_est": 0.2768,
+          "reachable_questions": 880
+        },
+        "prefix_lead": {
+          "chunks": 2631,
+          "chunks_with_heading_path": 2630,
+          "embed_tokens_est": 2150033,
+          "usd_est": 0.2795,
+          "reachable_questions": 880
+        },
+        "kw_base": {
+          "chunks": 2622,
+          "chunks_with_heading_path": 2621,
+          "embed_tokens_est": 0,
+          "usd_est": 0,
+          "reachable_questions": 880
+        },
+        "kw_lead": {
+          "chunks": 2631,
+          "chunks_with_heading_path": 2630,
+          "embed_tokens_est": 0,
+          "usd_est": 0,
+          "reachable_questions": 880
+        },
+        "kw_terms": {
+          "chunks": 2622,
+          "chunks_with_heading_path": 2621,
+          "embed_tokens_est": 0,
+          "usd_est": 0,
+          "reachable_questions": 880
+        },
+        "kw_lead_terms": {
+          "chunks": 2631,
+          "chunks_with_heading_path": 2630,
+          "embed_tokens_est": 0,
+          "usd_est": 0,
+          "reachable_questions": 880
+        }
+      }
+    }
+  },
+  "usd_est_total_cold_cache": 1.1241
+}

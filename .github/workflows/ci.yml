@@ -183,10 +183,17 @@ jobs:
   # checks, gbrain provider isolation), the metering proxy's per-process
   # zero-balance tests and the keyless launcher fixture. Everything talks to
   # local stubs; no secrets. MPW_REQUIRE_HARNESS=1 turns a missing venv into a
-  # failure instead of a skip.
+  # failure instead of a skip. The Python tests (about 6 minutes) and the Bun
+  # proxy and launcher tests (about 2.5 minutes) need the same venv but nothing
+  # from each other, so they run as two jobs side by side instead of in series,
+  # each installing the venv itself; the test files are unchanged.
   harness:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        suite: [pytest, proxy]
     env:
       MPW_REQUIRE_HARNESS: '1'
     steps:
@@ -206,7 +213,9 @@ jobs:
         run: bun run harness:setup
 
       - name: Harness wrapper tests (pytest)
+        if: matrix.suite == 'pytest'
         run: bun run harness:test
 
       - name: Metering proxy and launcher tests
+        if: matrix.suite == 'proxy'
         run: bun test test/eval/harness-metering-proxy.test.ts test/eval/harness-cell.test.ts test/eval/harness-cell-e2e.test.ts

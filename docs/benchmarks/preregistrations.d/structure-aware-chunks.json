@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "experiments": [
+    {
+      "id": "structure-aware-chunks",
+      "preregistration": "docs/benchmarks/2026-10-28-structure-aware-chunks-preregistration.md",
+      "results": [
+        "docs/benchmarks/2026-10-28-structure-aware-chunks/**",
+        "docs/benchmarks/2026-10-28-structure-aware-chunks.md"
+      ]
+    }
+  ]
+}
