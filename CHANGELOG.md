@@ -2,6 +2,12 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.136] - 2026-10-29
+
+### Spring-loaded skills for gbrain GBRA-194 measured
+
+- **The opt-in skill index `gbrain setup <harness> --skill-loading spring` writes, at gbrain branch `12669180` (not on master)** ([report](docs/benchmarks/2026-10-24-spring-loaded-skills.md), preregistration and receipts under `docs/benchmarks/2026-10-24-spring-loaded-skills/`). On 12 tasks that each need one bundled skill's procedure, real Claude Code and Codex CLIs and three models (claude-sonnet-5-5, claude-opus-5-5, gpt-6.1-sol; 360 counted trials), the index got agents to load the right skill before acting in 29 of 36 Claude Code trials, against 15 with every skill in the native skills directory and 0 with no skill text, and tied native on Codex at 22 of 24. It adds about 2,057 standing input tokens per Claude Code turn (native adds 8,579) and 1,429 per Codex turn (native 6,420). Pass rates sit near the floor in the harnesses' real permission modes in every arm, because headless Claude Code denied gbrain MCP calls and Codex's read-only sandbox refused brain writes; the labeled MCP pre-approved configuration carries the pass comparison (21 against 12 for native). The preregistered rule proposes spring as the default; that decision is gbrain's, and the build under test keeps it off. Model spend was $41.27 against a $55 cap.
+
 ## [0.10.135] - 2026-10-29
 
 ### Brain-first install block for gbrain GBRA-188 measured
