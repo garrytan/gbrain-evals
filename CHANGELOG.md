@@ -9,6 +9,14 @@ This records what each gbrain-evals release changed and what its measurements me
 - **gbrain PR #7852 lets a shared agent read as the audience its harness names; calls without an audience are unchanged (every cell within plus or minus 1% of the parent, at 0%, 20% and 80% restricted)** ([report](docs/benchmarks/2026-10-28-shared-agent-audience.md)). Measured at `e5bee20d` against its parent `9167c248` on one Ubicloud VM, 8 interleaved runs per side, with raw JSON committed.
 - **An audience costs at most 1.3 ms over the member's own token** (a two-member audience adds two readers conditions per row) and keeps the member's recall (hit@10 1.0, 0.998 in the 20% hybrid cells as for the member). No run reported a degraded search.
 
+## [0.10.132] - 2026-10-29
+
+### reuse-check and arm_power refuse inputs they used to pass
+
+- **`reuse-check.ts` no longer approves a reuse it couldn't check.** It refuses when an import in the runner's closure can't be resolved by git at either commit (both sides used to read as "missing" and compare equal). A file the runner imports from an installed package is compared by the version `package.json` pins at each commit. It also refuses when the preregistration names a budget run id only as part of a longer id or a path. A `--arm` value with regex characters is now matched literally instead of crashing the check.
+- **`arm_power.py` no longer reports agreement it didn't measure.** `--draws 0` used to print `0/0` with `all_agree: true`. Now zero draws or resamples, an unparsable fraction, a world given twice, a `--world` without `=`, cells with `repeat` above 0 and an unreadable results file or line are all usage errors (exit 2).
+- **Two slow tests no longer fail on small machines.** The plain-hybrid ingestion test and a situation-recall decision test take 3 to 6 seconds on a 2-CPU machine, against the 5-second default timeout. When the first timed out, the test runner killed the shared fake server, and two later tests failed with it. Both now set a 60-second timeout, as the other slow tests in their files do.
+
 ## [0.10.131] - 2026-10-28
 
 ### Eval cost audit and two tools that cut a confirmation's cost

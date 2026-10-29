@@ -94,8 +94,9 @@ export function reuseVerdict(prior: ExperimentManifest, planned: ExperimentManif
 /** The preregistration names the prior budget run id and the arm on one line. */
 export function declared(prereg: string, prior: ExperimentManifest, arm: string): boolean {
   const ids = [prior.budget_run_id, ...(prior.budget_runs ?? [])].filter((x): x is string => !!x);
-  const armWord = new RegExp(`(^|[^\\w-])${arm.replace(/[-]/g, '\\-')}([^\\w-]|$)`);
-  return ids.length > 0 && prereg.split('\n').some(line => ids.some(id => line.includes(id)) && armWord.test(line));
+  const word = (s: string) => new RegExp(`(?<![\\w.:/-])${s.replace(/[.*+?^${}()|[\]\\-]/g, '\\$&')}(?![\\w:/-]|\\.[\\w:/-])`);
+  const armWord = word(arm), idWords = ids.map(word);
+  return ids.length > 0 && prereg.split('\n').some(line => idWords.some(id => id.test(line)) && armWord.test(line));
 }
 
 export interface Receipt { mode?: string; complete?: boolean; resumed?: boolean; cells_planned?: number; evals_dirty?: boolean | null; gbrain?: Record<string, unknown> | null }
@@ -108,20 +109,29 @@ export function readReceipts(dir: string): Receipt[] {
 }
 
 const CELL_ENTRY = 'eval/runner/cat40-model-ladder.ts';
+export const UNRESOLVED = 'unresolved';
 
-/** Blob id of every file in the runner's relative-import closure at a commit, or null when the commit isn't here. */
+/** Blob id of every file in the runner's relative-import closure at a commit (an installed package file: its pinned
+ * package.json version), or null when the commit isn't here. A file git cannot resolve reads UNRESOLVED. */
 export function cellCode(commit: string, cwd = process.cwd()): Map<string, string> | null {
   const git = (...args: string[]) => execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
   try { git('cat-file', '-e', `${commit}^{commit}`); } catch { return null; }
   const blobs = new Map<string, string>();
   const queue = [CELL_ENTRY];
+  let deps: Record<string, string> | undefined;
   while (queue.length) {
     const file = queue.pop()!;
     if (blobs.has(file)) continue;
-    let id: string;
-    try { id = git('rev-parse', `${commit}:${file}`).trim(); } catch { blobs.set(file, 'missing'); continue; }
+    const pkg = /^node_modules\/((?:@[^/]+\/)?[^/]+)\//.exec(file);
+    if (pkg) {
+      try { deps ??= (({ dependencies, devDependencies }) => ({ ...devDependencies, ...dependencies }))(JSON.parse(git('show', `${commit}:package.json`))); } catch { deps = {}; }
+      blobs.set(file, deps![pkg[1]!] ? `package ${pkg[1]}@${deps![pkg[1]!]}` : UNRESOLVED);
+      continue;
+    }
+    let id: string, source: string;
+    try { id = git('rev-parse', `${commit}:${file}`).trim(); source = git('cat-file', 'blob', id); } catch { blobs.set(file, UNRESOLVED); continue; }
     blobs.set(file, id);
-    for (const m of git('cat-file', 'blob', id).matchAll(/(?:from|import)\s*\(?\s*['"](\.{1,2}\/[^'"]+)['"]/g)) queue.push(posix.normalize(posix.join(dirname(file), m[1]!)));
+    for (const m of source.matchAll(/(?:from|import)\s*\(?\s*['"](\.{1,2}\/[^'"]+)['"]/g)) queue.push(posix.normalize(posix.join(dirname(file), m[1]!)));
   }
   return blobs;
 }
@@ -152,6 +162,8 @@ export function provenanceReasons(o: { prior: ExperimentManifest; planned: Exper
     if (a === b) continue;
     const ca = o.code(a!), cb = o.code(b!);
     if (!ca || !cb) { reasons.push(`runner commit ${ca ? b : a} is not in this checkout (fetch it to compare the cell code)`); continue; }
+    const unresolved = [...new Set([...ca, ...cb].filter(([, id]) => id === UNRESOLVED).map(([f]) => f))].sort();
+    if (unresolved.length) { reasons.push(`cell code import closure has files git cannot resolve, so it cannot be compared: ${unresolved.join(', ')}`); continue; }
     const changed = [...new Set([...ca.keys(), ...cb.keys()])].filter(f => ca.get(f) !== cb.get(f)).sort();
     if (changed.length) reasons.push(`cell code differs between runner commits ${a!.slice(0, 12)} and ${b!.slice(0, 12)}: ${changed.join(', ')}`);
   }

@@ -197,7 +197,7 @@ describe('harness side of the contract', () => {
       await expect(failing.finishIngest(NS_B, 60)).rejects.toThrow('upstream');
       expect(await failing.finishIngest(NS_B, 60)).toMatchObject({ ready: false, completeness: 'degraded', raw: { sessions_not_written: 3 } });
     } finally { await failing.close(); }
-  });
+  }, 60_000);
 
   test('the plain-hybrid embedder retries a rate limit and never retries a budget refusal', async () => {
     const statuses = [429, 200, 402];
