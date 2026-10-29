@@ -102,8 +102,8 @@ export interface Receipt { mode?: string; complete?: boolean; resumed?: boolean;
 
 /** The cell-running receipts of a run directory, oldest first: each invocation (a resume included) writes one. */
 export function readReceipts(dir: string): Receipt[] {
-  const names = existsSync(dir) ? readdirSync(dir).filter(n => /^receipt-\d+\.json$/.test(n)) : [];
-  return names.sort((a, b) => Number(a.slice(8, -5)) - Number(b.slice(8, -5)))
+  const names = existsSync(dir) ? readdirSync(dir).filter(n => /^receipt-\d+\.json$/.test(n)).sort((a, b) => Number(a.slice(8, -5)) - Number(b.slice(8, -5))) : [];
+  return names
     .map(n => JSON.parse(readFileSync(join(dir, n), 'utf8')) as Receipt).filter(r => r.mode !== 'build-slots');
 }
 
