@@ -1,0 +1,9 @@
+{
+ "dataset": "D8 long-history reserve",
+ "status": "unfilled",
+ "generator": "BEAM generator output layout (https://github.com/mohammadtavakoli78/BEAM, src/beam/main.py at b2da22e)",
+ "layout": "conversations/<n>/chat.json (chat_trunecated.json when present) and conversations/<n>/probing_questions/<ability>/<ability>.json under GBRAIN_EVALS_D8_SOURCE; conversation d8-<n> is conversations/<n>, n = 1 to 10",
+ "note": "Hashes only; no D8 text is committed. Until the custodian runs `bun eval/runner/q1/d8-manifest.ts fill --write` on the custody host, `files` is empty and beam-d8 loads with a notice that its bytes are unpinned. Once filled, every file the loader reads must be listed here with a matching SHA-256, and every listed file of a loaded conversation must be present.",
+ "files": [],
+ "filled_at": null
+}

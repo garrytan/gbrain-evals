@@ -14,10 +14,11 @@
  * remaining distinct occurrences for scoring.
  */
 import { createHash } from 'node:crypto';
-import { closeSync, existsSync, openSync, readFileSync, readSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { closeSync, existsSync, openSync, readdirSync, readFileSync, readSync } from 'node:fs';
+import { isAbsolute, join, relative, resolve } from 'node:path';
 import { homedir } from 'node:os';
 import { decideError } from '../decisions/errors.ts';
+import { appendAccessLog } from '../sealed-confirmation-lib.ts';
 import { beam10mManifestPath, beam10mRoot, loadBeam10mCorpus } from './beam10m-corpus.ts';
 import { loadBeam10mQuestions } from './beam10m-questions.ts';
 
@@ -145,6 +146,8 @@ export function filesFor(benchmark: string, only?: ReadonlySet<string>): Dataset
     case 'beam-10m': throw decideError({ code: 'CUSTODY_MISSING', message: 'BEAM-10M is sealed: it is fetched and extracted only by the custodian',
       why: 'every BEAM-10M conversation is in the sealed split; its files live in owner custody, never on a development machine',
       fix: { next: 'tell_user_to_run', argv: ['bun', 'eval/runner/q1/beam10m-manifest.ts', 'fetch', '--write'], user_message: 'the custodian fetches BEAM-10M at the pinned revision and fills the manifest' } });
+    case 'beam-d8': throw decideError({ code: 'CUSTODY_MISSING', message: 'beam-d8 is sealed: its files are never downloaded',
+      why: 'every D8 conversation is in the sealed split and lives only in owner custody (GBRAIN_EVALS_D8_SOURCE on the custodian host)', fix: d8Ask });
     case 'fixture': return [];
     default: throw new Error(`unknown benchmark ${benchmark}`);
   }
@@ -199,6 +202,7 @@ export async function fetchDataset(benchmark: string, opts: { force?: boolean; v
   const log = opts.log ?? ((s: string) => process.stderr.write(s + '\n'));
   let fetched = 0; let verified = 0;
   if (benchmark === 'beam-10m') return { fetched: 0, verified: verifyBeam10mCustody(log) };
+  if (benchmark === 'beam-d8') return { fetched: 0, verified: verifyD8Custody(log) };
   const { mkdirSync, renameSync, rmSync, createWriteStream } = await import('node:fs');
   const { dirname } = await import('node:path');
   for (const f of filesFor(benchmark, opts.only)) {
@@ -355,6 +359,139 @@ export function loadBeam(size: '100k' | '500k' | '1m', only?: ReadonlySet<string
     for (const [ability, items] of Object.entries(pq)) items.forEach((item, i) => questions.push(beamQuestion(c.conversation, ability, item, i, sessionOfMessage)));
   }
   return { benchmark: `beam-${size}`, conversations, questions, source: { name: `BEAM ${size}`, files: [{ path: 'eval/decisions/datasets/beam-b2da22e.json', sha256: sha256(readFileSync(join(REPO_ROOT, 'eval/decisions/datasets/beam-b2da22e.json'))) }], revision: m.commit.slice(0, 7), license: m.license } };
+}
+
+// ─── D8 long-history reserve ────────────────────────────────────────
+
+/**
+ * D8 (benchmark `beam-d8`): ten conversations generated with BEAM's generator and held in owner custody, all sealed
+ * (eval/decisions/splits/beam-d8.json). GBRAIN_EVALS_D8_SOURCE names a root outside the checkout that holds the
+ * generator's own layout:
+ *
+ *   conversations/<n>/chat.json                                   (chat_trunecated.json instead when present, as BEAM reads it)
+ *   conversations/<n>/probing_questions/<ability>/<ability>.json  (one file per ability, as the generator writes them)
+ *
+ * Conversation `d8-<n>` is conversations/<n>. Sessions, gold, references and rubrics are loadBeam's (beamSessions,
+ * beamQuestion). An ability file is a list of items or, as the generator writes it, a list of lists (one inner list
+ * per generation prompt); items are numbered in file order after flattening. Nothing is ever downloaded. The
+ * manifest (eval/decisions/datasets/d8-manifest.json) stays `unfilled` until the custodian records every file's
+ * SHA-256 (`bun eval/runner/q1/d8-manifest.ts fill --write`); once filled, a file it does not list, a listed file
+ * that is missing and a hash mismatch all refuse.
+ */
+export const D8_MANIFEST = 'eval/decisions/datasets/d8-manifest.json';
+export const D8_CONVERSATIONS: readonly string[] = Array.from({ length: 10 }, (_, i) => `d8-${i + 1}`);
+export const d8ManifestPath = () => process.env.GBRAIN_EVALS_D8_MANIFEST ?? join(REPO_ROOT, D8_MANIFEST);
+export interface D8Manifest { dataset: string; status: 'unfilled' | 'filled'; layout: string; note: string; files: Array<{ path: string; sha256: string }>; filled_at: string | null }
+const D8_FILL = ['bun', 'eval/runner/q1/d8-manifest.ts', 'fill', '--write'];
+const d8Ask = { next: 'ask_user' as const, user_message: 'run beam-d8 on the custody host with GBRAIN_EVALS_D8_SOURCE set to the D8 root (it holds conversations/1 to conversations/10)' };
+
+/** The D8 custody root, refusing when GBRAIN_EVALS_D8_SOURCE is unset or inside the repository. */
+export function d8Source(env: Record<string, string | undefined> = process.env): string {
+  const source = env.GBRAIN_EVALS_D8_SOURCE;
+  if (!source) throw decideError({ code: 'CUSTODY_MISSING', message: 'beam-d8: GBRAIN_EVALS_D8_SOURCE is not set',
+    why: 'all ten D8 conversations are sealed (eval/decisions/splits/beam-d8.json) and live only in owner custody; nothing is downloaded', fix: d8Ask });
+  const abs = resolve(source);
+  const rel = relative(REPO_ROOT, abs);
+  if (rel === '' || (!rel.startsWith('..') && !isAbsolute(rel))) throw decideError({ code: 'CUSTODY_MISSING', message: `beam-d8: GBRAIN_EVALS_D8_SOURCE ${abs} is inside the repository`,
+    why: 'sealed files never live where Git could pick them up', fix: d8Ask });
+  return abs;
+}
+
+export function readD8Manifest(path = d8ManifestPath()): { manifest: D8Manifest; sha256: string } {
+  const bytes = readFileSync(path);
+  return { manifest: JSON.parse(bytes.toString('utf8')) as D8Manifest, sha256: sha256(bytes) };
+}
+
+/** The files one D8 conversation is read from, as paths relative to the root; refuses when any part of the layout is missing. */
+export function d8ConversationFiles(root: string, conversation: string): { chat: string; abilities: Array<{ ability: string; path: string }> } {
+  if (!D8_CONVERSATIONS.includes(conversation)) throw new Error(`beam-d8 has no conversation ${conversation}`);
+  const dir = `conversations/${conversation.slice(3)}`;
+  const missing = (what: string) => decideError({ code: 'DATASET_MISSING', message: `beam-d8: ${what} is not under GBRAIN_EVALS_D8_SOURCE`,
+    why: 'each D8 conversation is a BEAM generator directory with a chat file and probing_questions/<ability>/<ability>.json', fix: d8Ask });
+  if (!existsSync(join(root, dir))) throw missing(dir);
+  const chat = ['chat_trunecated.json', 'chat.json'].map(f => `${dir}/${f}`).find(p => existsSync(join(root, p)));
+  if (!chat) throw missing(`${dir}/chat.json`);
+  const pq = `${dir}/probing_questions`;
+  if (!existsSync(join(root, pq))) throw missing(pq);
+  const abilities = readdirSync(join(root, pq), { withFileTypes: true }).filter(e => e.isDirectory()).map(e => e.name).sort().map(ability => {
+    const path = `${pq}/${ability}/${ability}.json`;
+    if (!existsSync(join(root, path))) throw missing(path);
+    return { ability, path };
+  });
+  if (!abilities.length) throw missing(`${pq}/<ability>/<ability>.json`);
+  return { chat, abilities };
+}
+
+/** Every file D8 is read from with its SHA-256, the entries a filled manifest holds (bytes are hashed, never parsed). */
+export function d8ManifestFiles(root: string): Array<{ path: string; sha256: string }> {
+  return D8_CONVERSATIONS.flatMap(id => { const f = d8ConversationFiles(root, id); return [f.chat, ...f.abilities.map(a => a.path)]; })
+    .map(path => ({ path, sha256: fileSha256(join(root, path)) }));
+}
+
+const flatItems = (v: unknown): unknown[] => Array.isArray(v) ? v.flatMap(flatItems) : [v];
+
+/**
+ * Load D8 (sealed): appends one custody access-log line per conversation before its files are read. `only` keeps
+ * those conversations. With a filled manifest every file must be listed and match; with an unfilled one the files'
+ * hashes are recorded in the corpus source and a notice says they were not pinned.
+ */
+export function loadD8(custody: { log: string; decisionId: string; purpose: string }, opts: { only?: ReadonlySet<string>; root?: string; manifestPath?: string } = {}): Corpus {
+  const root = opts.root ?? d8Source();
+  if (!custody.log) throw decideError({ code: 'CUSTODY_MISSING', message: 'beam-d8 opens only on the custodian host', why: 'every opening of a sealed set is logged first',
+    fix: { next: 'ask_user', user_message: 'request the beam-d8 cells from the custodian (decision q1-scoreboard)' } });
+  const unknown = opts.only ? [...opts.only].filter(id => !D8_CONVERSATIONS.includes(id)) : [];
+  if (unknown.length) throw new Error(`beam-d8 has no conversation ${unknown.join(', ')}`);
+  const { manifest, sha256: manifestSha } = readD8Manifest(opts.manifestPath);
+  const pinned = manifest.status === 'filled' ? new Map(manifest.files.map(f => [f.path, f.sha256])) : null;
+  const files: DatasetIdentity['files'] = [];
+  const read = (path: string) => {
+    const bytes = readFileSync(join(root, path));
+    const got = sha256(bytes);
+    const want = pinned?.get(path);
+    if (pinned && got !== want) throw decideError({ code: 'DATASET_HASH_MISMATCH', message: want ? `beam-d8: ${path} has SHA-256 ${got.slice(0, 12)}, expected ${want.slice(0, 12)}` : `beam-d8: ${path} is not in the filled manifest`,
+      why: 'only the pinned bytes are scored', fix: { next: 'tell_user_to_run', argv: D8_FILL, user_message: 're-verify the custodian\'s D8 files, or refill the manifest if they changed on purpose' } });
+    files.push({ path, sha256: got });
+    return bytes.toString('utf8');
+  };
+  const conversations: Conversation[] = [];
+  const questions: MemoryQuestion[] = [];
+  for (const id of D8_CONVERSATIONS.filter(c => !opts.only || opts.only.has(c))) {
+    const f = d8ConversationFiles(root, id);
+    if (pinned) {
+      const reading = new Set([f.chat, ...f.abilities.map(a => a.path)]);
+      const absent = [...pinned.keys()].filter(p => p.startsWith(`conversations/${id.slice(3)}/`) && !reading.has(p));
+      if (absent.length) throw decideError({ code: 'DATASET_MISSING', message: `beam-d8: ${absent.length} file(s) the manifest pins for ${id} are not under GBRAIN_EVALS_D8_SOURCE`, why: 'a pinned conversation loads whole or not at all', fix: d8Ask });
+    }
+    appendAccessLog(custody.log, { action: 'open', purpose: `beam-d8 ${id}: ${custody.purpose}`, decision_id: custody.decisionId, labels_sha256: manifestSha, run_sha256: null });
+    const { sessions, sessionOfMessage } = beamSessions(JSON.parse(read(f.chat)) as BeamChat);
+    conversations.push({ id, sessions });
+    for (const { ability, path } of f.abilities) {
+      flatItems(JSON.parse(read(path))).forEach((item, i) => {
+        if (!item || typeof item !== 'object' || typeof (item as BeamProbingItem).question !== 'string') throw new Error(`beam-d8: ${path} item ${i} has no question`);
+        questions.push(beamQuestion(id, ability, item as BeamProbingItem, i, sessionOfMessage));
+      });
+    }
+  }
+  if (!pinned) process.stderr.write(`[custody] beam-d8: the manifest is unfilled, so ${files.length} file(s) loaded without pinned hashes (fill it with ${D8_FILL.join(' ')})\n`);
+  return { benchmark: 'beam-d8', conversations, questions,
+    source: { name: 'D8 long-history reserve (BEAM generator layout)', files: [{ path: D8_MANIFEST, sha256: manifestSha }, ...files], revision: pinned ? manifestSha.slice(0, 7) : 'unfilled', license: 'custodian-held' } };
+}
+
+/** `decide fetch` for D8: nothing is downloaded; every file the filled manifest pins must be under the custody root with its hash. */
+export function verifyD8Custody(log: (s: string) => void = s => process.stderr.write(s + '\n')): number {
+  const root = d8Source();
+  const { manifest } = readD8Manifest();
+  if (manifest.status !== 'filled') throw decideError({ code: 'CUSTODY_MISSING', message: 'beam-d8: the manifest has no hashes yet', why: 'only pinned bytes are verified',
+    fix: { next: 'tell_user_to_run', argv: D8_FILL, user_message: 'the custodian fills the D8 manifest on the custody host' } });
+  for (const f of manifest.files) {
+    const abs = join(root, f.path);
+    if (!existsSync(abs)) throw decideError({ code: 'DATASET_MISSING', message: `beam-d8: ${f.path} is not under GBRAIN_EVALS_D8_SOURCE`, why: 'every pinned file must be present', fix: d8Ask });
+    const got = fileSha256(abs);
+    if (got !== f.sha256) throw decideError({ code: 'DATASET_HASH_MISMATCH', message: `beam-d8: ${f.path} has SHA-256 ${got.slice(0, 12)}, expected ${f.sha256.slice(0, 12)}`, why: 'only the pinned bytes are scored',
+      fix: { next: 'tell_user_to_run', argv: D8_FILL, user_message: 're-verify the custodian\'s D8 files' } });
+  }
+  log(`[custody] beam-d8: ${manifest.files.length} file(s) match their pinned sha256 under GBRAIN_EVALS_D8_SOURCE`);
+  return manifest.files.length;
 }
 
 // ─── LongMemEval-M ──────────────────────────────────────────────────
@@ -536,7 +673,7 @@ export function loadCustodyCorpus(path: string): Corpus {
     source: { name: `custodian sealed corpus ${raw.id}`, files: [{ path: 'custody', sha256: sha256(bytes) }], revision: raw.id, license: 'custodian-authored' } };
 }
 
-/** `only` restricts LoCoMo and BEAM to those conversations (a dev split), so a BEAM conversation outside it is never read. */
+/** `only` restricts LoCoMo, BEAM and D8 to those conversations (a split), so a BEAM or D8 conversation outside it is never read. */
 export function loadCorpus(benchmark: string, corpusFile?: string, only?: ReadonlySet<string>): Corpus {
   if (benchmark === 'custody') {
     if (!corpusFile) throw new Error('benchmark custody needs --corpus-file <custody path>');
@@ -556,6 +693,13 @@ export function loadCorpus(benchmark: string, corpusFile?: string, only?: Readon
       const corpus = loadBeam10mCorpus();
       const questions = loadBeam10mQuestions(corpus, { log, decisionId: process.env.GBRAIN_EVALS_DECISION_ID ?? 'q1-scoreboard', purpose: 'memory-qa loadCorpus beam-10m' });
       return { benchmark: 'beam-10m', conversations: corpus.conversations, questions: questions.questions, source: corpus.source };
+    }
+    case 'beam-d8': {
+      d8Source();
+      const log = process.env.GBRAIN_EVALS_CUSTODY_LOG;
+      if (!log) throw decideError({ code: 'CUSTODY_MISSING', message: 'beam-d8 questions open only on the custodian host',
+        why: 'all ten D8 conversations are sealed (eval/decisions/splits/beam-d8.json); every opening is logged', fix: { next: 'ask_user', user_message: 'request the beam-d8 cells from the custodian (decision q1-scoreboard)' } });
+      return loadD8({ log, decisionId: process.env.GBRAIN_EVALS_DECISION_ID ?? 'q1-scoreboard', purpose: 'memory-qa loadCorpus beam-d8' }, { only });
     }
     case 'fixture': return loadFixture();
     default: throw new Error(`unknown benchmark ${benchmark}`);
