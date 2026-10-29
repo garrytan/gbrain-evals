@@ -67,6 +67,7 @@ F6_EXTRACT_CAP_USD = os.environ.get("GBRAIN_F6_EXTRACT_CAP_USD", "")
 # The gbrain commit baked into the image (Dockerfile ENV) and the one the launch asked for (compose, from GBRAIN_SHA).
 IMAGE_SHA = os.environ.get("GBRAIN_SHA", "")
 LAUNCH_SHA = os.environ.get("GBRAIN_LAUNCH_SHA", "")
+BUN_IMAGE = os.environ.get("GBRAIN_BUN_IMAGE", "")
 CALL_TIMEOUT_S = float(os.environ.get("GBRAIN_CALL_TIMEOUT_S", "900"))
 WRITE_POLL_LIMIT_S = float(os.environ.get("GBRAIN_WRITE_POLL_S", "600"))
 REQUEST_NS = uuid.UUID("6f1c3d4e-5a2b-4c8d-9e0f-1a2b3c4d5e6f")
@@ -784,6 +785,12 @@ class GbrainDefaultsAdapter(Adapter):
     def capabilities(self) -> dict[str, Any]:
         out = dict(self.record)
         out["answer"] = {"modes": ["synthesize", *(["think"] if FULL_SURFACE else [])]}
+        if F6:
+            # capability.json names Q1's build; an F6 image is built at the launch's pin on its own Bun image.
+            version = f", {self.reference['gbrain_version'].removeprefix('gbrain ')}" if self.reference is not None else ""
+            bun = subprocess.run(["bun", "--version"], capture_output=True, text=True).stdout.strip()
+            out["versions"] = {**out["versions"], "package": f"gbrain (github:garrytan/gbrain#{IMAGE_SHA}{version}), installed with bun install -g",
+                               "runtime": f"Bun {bun} ({BUN_IMAGE})"}
         out["f6"] = {**out.get("f6", {}), "enabled": F6, "gbrain_sha": IMAGE_SHA if F6 else None, "extract_cap_usd": float(F6_EXTRACT_CAP_USD) if F6 and F6_EXTRACT_CAP_USD else None, "overlay_keys": list(SEARCH_OVERLAY_KEYS)}
         out["shipped_behavior"] = {"delivery_fallbacks": sorted(SHIPPED_BEHAVIOR), "preregistered": list(PREREGISTERED_SHIPPED_BEHAVIOR),
                                    "configured_by": "GBRAIN_SHIPPED_FALLBACKS", "matches_preregistration": sorted(SHIPPED_BEHAVIOR) == sorted(PREREGISTERED_SHIPPED_BEHAVIOR)}

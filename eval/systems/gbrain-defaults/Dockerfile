@@ -7,8 +7,9 @@ ARG GBRAIN_BUN_IMAGE=oven/bun:1.4.2-slim@sha256:cb3bbbb08e13a4a2ff400f24c7a2a1d5
 FROM ${GBRAIN_BUN_IMAGE} AS bun
 FROM python:3.12-slim@sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d
 ARG GBRAIN_SHA=f05943e653fd9d938b343b1774a35325ba792271
+ARG GBRAIN_BUN_IMAGE
 COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun
-ENV BUN_INSTALL=/opt/bun PATH=/opt/bun/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin PYTHONUNBUFFERED=1 GBRAIN_SHA=${GBRAIN_SHA}
+ENV BUN_INSTALL=/opt/bun PATH=/opt/bun/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin PYTHONUNBUFFERED=1 GBRAIN_SHA=${GBRAIN_SHA} GBRAIN_BUN_IMAGE=${GBRAIN_BUN_IMAGE}
 RUN ln -s /usr/local/bin/bun /usr/local/bin/bunx \
  && bun install -g "github:garrytan/gbrain#${GBRAIN_SHA}" \
  && gbrain --version \

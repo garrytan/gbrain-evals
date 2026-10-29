@@ -62,6 +62,7 @@ describe.skipIf(!ON)('gbrain-defaults container on the F6 path (keyless, F6 pin)
     const cap = await ok('GET', '/capabilities');
     expect(cap.f6).toMatchObject({ enabled: true, gbrain_sha: PIN, extract_cap_usd: 1, overlay_keys: KEYS });
     expect(cap.resolved.gbrain_version).toBe('gbrain 0.60.493.0');
+    expect(cap.versions).toMatchObject({ package: `gbrain (github:garrytan/gbrain#${PIN}, 0.60.493.0), installed with bun install -g`, runtime: `Bun 1.4.4 (${env.GBRAIN_BUN_IMAGE})` });
     expect((await ok('GET', '/health')).surface).toBe('full');
     await ok('POST', '/reset', { ns: NS });
     const install = receipts().filter(r => r.kind === 'install').pop();
