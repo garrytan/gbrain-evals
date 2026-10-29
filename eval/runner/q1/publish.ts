@@ -37,7 +37,8 @@
  * are those with an answer of those outcomes in that cell's arms (or that one arm), counted against `count`. --custody (the custodian's
  * host, GBRAIN_EVALS_CUSTODY_LOG set) schedules the sealed sets from their corpora. --frontier-redo adds A19's Opus
  * redo judgments: each arm gets the records for its own answers in frontier-redo.ndjson, which the scoreboard uses in
- * place of the logged error under the same key.
+ * place of the logged error under the same key. A source with `reuse_check` (rows measured at an earlier commit and
+ * reused in a later run) publishes only when eval/runner/q1/reuse-check.ts passes for every system it lists.
  */
 import { execFileSync, spawnSync } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
@@ -48,6 +49,7 @@ import { loadCorpus } from '../memory-qa/corpus.ts';
 import type { AppendixCell, CampaignCell, CampaignFamily, CampaignManifest, CampaignSet, PinEntry } from '../scoreboard.ts';
 import { scoreboardCampaignCell, selectCellQuestions, splitConversations } from './cell.ts';
 import { loadManifest, type ArmDefinition, type CellDefinition } from './cells/definitions.ts';
+import { reuseCheck } from './reuse-check.ts';
 
 const REPO_ROOT = resolve(import.meta.dir, '../../..');
 const PUBLIC_CORPUS = new Set(['locomo', 'lme-s', 'lme-m']);
@@ -66,6 +68,8 @@ export interface PublicationSource {
   appendix?: { name: string; reason: string; dir: string };
   /** State directories under --results (default: the campaign id) and the launch units whose final rows each holds. */
   states?: Array<{ dir: string; units: string[] }>;
+  /** Rows reused from launch_tree into a later run: publish only when eval/runner/q1/reuse-check.ts passes from launch_tree to `planned` for every system the source publishes, declared in `preregistration` under `a24_source`. */
+  reuse_check?: { planned: string; preregistration: string; a24_source: string };
 }
 /** A sensitivity view: fixed question ids, or the questions with an answer of these outcomes in one cell's answering arms. */
 export interface PublicationView { sets: string[]; id: string; label: string; reason: string; question_ids: string[]; from_outcomes?: { cell: string; outcomes: string[]; count: number } }
@@ -145,6 +149,16 @@ export function shardConversations(def: Pick<CellDefinition, 'benchmark' | 'spli
   return [...ids].sort().filter((_, i) => shards.includes(i % def.shards));
 }
 
+/** Why a source with reuse_check may not publish (its systems must be listed, and each must pass the reuse check), or null. */
+export function reuseRefusal(src: PublicationSource): string | null {
+  const rc = src.reuse_check;
+  if (!rc) return null;
+  if (!src.systems?.length) return `${src.campaign}: a reuse_check source lists its systems`;
+  const r = reuseCheck({ prior: src.launch_tree, planned: rc.planned, systems: src.systems, preregistration: readFileSync(resolve(REPO_ROOT, rc.preregistration), 'utf8'), source: rc.a24_source });
+  const refused = r.systems.filter(s => !s.reusable);
+  return refused.length ? `${src.campaign} at ${src.launch_tree} fails its reuse check: ${refused.map(s => `${s.system} (${s.reasons.join('; ')})`).join(', ')}` : null;
+}
+
 export interface AssembleOptions { preview?: boolean; custody?: boolean; frontierRedo?: string[] }
 
 /**
@@ -178,6 +192,7 @@ export function assemble(config: Publication, results: string, out: string, tree
   const outsideSubset = (unit: string, def: CellDefinition) => retired.some(r => r.system === def.system && (r.def !== def || !r.subset.shards.includes(Number(unit.slice(def.id.length + 2)))));
   const ownReason = (def: CellDefinition, arm?: ArmDefinition) => (arm && config.not_run[arm.cell_id]) ?? config.not_run[def.id] ?? null;
   for (const id of Object.keys(config.not_run)) if (!m.cells.some(c => c.id === id || c.arms.some(a => a.cell_id === id))) throw new Error(`publication.json not_run names ${id}, which is no cell or arm`);
+  for (const refusal of config.sources.map(reuseRefusal)) if (refusal) throw new Error(refusal);
   const pins: Record<string, string> = { ...bundlePins(REPO_ROOT), ...config.pins, 'gbrain-defaults': label };
   rmSync(out, { recursive: true, force: true });
   mkdirSync(out, { recursive: true });
