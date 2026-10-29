@@ -6,12 +6,16 @@
  */
 import { describe, expect, test } from 'bun:test';
 import { createHash } from 'node:crypto';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { Database } from 'bun:sqlite';
 import { join, resolve } from 'node:path';
-import { assertFilled, decideC8k, determinismQuestions, loadDecision, type C8kDecision } from '../../eval/runner/budgeted-delivery/c8k.ts';
-import { BRAIN_SETTINGS, C8K_ARMS, C8K_KEYS, HARNESS_BUDGET_TOKENS, QUERY_BUDGET, READER_TEMPLATE_SHA256, RECIPE_HASH, RENDERER_VERSION, renderContext } from '../../eval/runner/budgeted-delivery/c8k-product.ts';
+import { assertFilled, budgetSummary, buildCorpus, decideC8k, determinismQuestions, loadDecision, readEvidence, retrievalChecks, runDecide, runExport, runExtract, runFreeze, runGate, runRead, writeAnswers, type C8kDecision } from '../../eval/runner/budgeted-delivery/c8k.ts';
+import { BRAIN_SETTINGS, C8K_ARMS, C8K_KEYS, FACTS_BLOCK_MAX_ROWS, HARNESS_BUDGET_TOKENS, QUERY_BUDGET, READER_TEMPLATE_SHA256, RECIPE_HASH, RENDERER_VERSION, brainName, productHistory, renderContext, type EvidenceRow, type ProductModules } from '../../eval/runner/budgeted-delivery/c8k-product.ts';
+import type { Corpus } from '../../eval/runner/memory-qa/corpus.ts';
+import { sha256File } from '../../eval/runner/sealed-confirmation-lib.ts';
+import { slugOf } from '../../eval/runner/systems/gbrain.ts';
+import { opaqueSourceId } from '../../eval/runner/systems/sanitize.ts';
 import { stubFacts } from '../../eval/runner/budgeted-delivery/stub-proxy.ts';
 import { cachingRerankTransport, installRetrievalCache, rerankKey, retrievalCacheReceipt, type RetrievalCacheModules } from '../../eval/runner/budgeted-delivery/c8k-retrieval-cache.ts';
 import { READER_TEMPLATE } from '../../eval/runner/memory-qa/qa.ts';
@@ -263,6 +267,14 @@ describe('the product-text renderer', () => {
     expect(r.tokens).toBeLessThanOrEqual(HARNESS_BUDGET_TOKENS);
     expect(r.slugs).toEqual(rows(r.rows_kept!, 1).map(x => x.slug));
   });
+  // Value: protects=a cut never changes the bytes of the rows it keeps, and a first block that is not a JSON array passes through whole; fails_when=productHistory cuts a block that gbrain did not write compactly, or cuts a non-array block; why_new=the round-trip guard had no negative-path test; seam=none; no_claim=does not show gbrain writes compact JSON
+  test('a pretty-printed first block over budget is refused instead of cut; a block that is not a JSON array is passed through uncut', () => {
+    const pretty = [JSON.stringify(rows(5, 400), null, 2)];
+    expect(() => productHistory(pretty, 100)).toThrow(/round-trip/);
+    expect(productHistory(pretty, 1 << 20)).toMatchObject({ kept: 5, cut: 0, text: pretty[0] });
+    expect(productHistory(['not json', 'second'], 1)).toEqual({ text: 'not json\n\nsecond', rows: null, kept: 0, cut: 0 });
+    expect(productHistory([JSON.stringify({ rows: [] })], 1).rows).toBeNull();
+  });
 });
 
 describe('keyless helpers', () => {
@@ -335,6 +347,397 @@ describe('the freeze retrieval cache (spec change 6)', () => {
       const r = retrievalCacheReceipt(m, dir);
       expect(r).toMatchObject({ spec_change: 6, processes: 2, embed: { hits: 10, misses: 4, models: ['openai:text-embedding-3-large@1536'] }, rerank: { hits: 1, misses: 1, rows: 1 } });
     } finally { rmSync(dir, { recursive: true, force: true }); }
+  });
+});
+
+
+// ─── custody steps on invented fixtures (no keys, no network) ─────
+
+const fixtureCorpus = (): Corpus => ({
+  benchmark: 'custody', source: { name: 'fixture' } as never,
+  conversations: ['conv-a', 'conv-b'].map(c => ({ id: c, sessions: ['s1', 's2'].map(s => ({ id: s, date: '2026/01/01', turns: [{ speaker: 'user', content: `${c} ${s}` }] })) })) as never,
+  questions: [['q-a1', 'conv-a'], ['q-a2', 'conv-a'], ['q-b1', 'conv-b'], ['q-b2', 'conv-b']].map(([id, c]) => ({ id, conversation: c, question: `What about ${id}?`, question_date: '2026/02/01 (Sun) 10:00', category: 'multi-session', gold: [], abstention: false })),
+});
+const chatSlug = (conv: string, session: string) => slugOf(opaqueSourceId(conv, session));
+/** One clean result per arm and question: a row of the question's own history, capped arms reporting cap_only within budget, and an A0 repeat for every question. */
+const cleanEvidence = (corpus: Corpus) => {
+  const evidence = C8K_ARMS.flatMap(arm => corpus.questions.map(q => ({ kind: 'evidence', question_id: q.id, haystack_id: q.conversation, arm: arm.id, request: {}, keys: {},
+    blocks: [JSON.stringify([{ slug: chatSlug(q.conversation, 's1'), chunk_text: 'x' }])], is_error: false, text_sha256: `t-${q.id}`,
+    delivery: 'search.query_budget_unit' in arm.keys ? { budget_used: 100, auto_packing: 'cap_only' } : null, degraded: null, notices: [] as string[], service_ms: 1 }) as EvidenceRow & { kind: string }));
+  const repeats = corpus.questions.map(q => ({ kind: 'repeat', question_id: q.id, arm: 'A0', text_sha256: `t-${q.id}` }));
+  return { evidence, repeats, sha256: 'fixture' };
+};
+
+describe('retrievalChecks (decision rule step 1) on hand-built evidence', () => {
+  // Value: protects=each retrieval gate problem class is flagged alone and a clean freeze passes; fails_when=any one check in retrievalChecks is dropped or loosened; why_new=no test exercised retrievalChecks; seam=none; no_claim=does not test the live gbrain query path
+  test('a clean freeze passes; each problem class is flagged alone', () => {
+    const corpus = fixtureCorpus();
+    const clean = retrievalChecks(D, corpus, cleanEvidence(corpus), () => 1);
+    expect(clean.problems).toEqual([]);
+    expect(clean.determinism).toEqual({ questions: 4, repeated: 4, byte_identical: 4, pass: true });
+    const row = (ev: ReturnType<typeof cleanEvidence>, arm: string, q = 'q-a1') => ev.evidence.find(r => r.arm === arm && r.question_id === q)!;
+    const cases: Array<[string, (ev: ReturnType<typeof cleanEvidence>) => void, RegExp]> = [
+      ['coverage', ev => { ev.evidence.splice(ev.evidence.indexOf(row(ev, 'A2')), 1); }, /^A2: 3 results for 3 of 4 questions$/],
+      ['tool errors', ev => { row(ev, 'A1').is_error = true; }, /^A1: 1 tool results are errors$/],
+      ['row outside history', ev => { row(ev, 'A0').blocks = [JSON.stringify([{ slug: chatSlug('conv-b', 's2'), chunk_text: 'x' }])]; }, /^A0: 1 rows name a page outside the question's history$/],
+      ['behavior_changes disclosure', ev => { row(ev, 'B3').notices = ['behavior_changes']; }, /^B3: 1 results carry the once-per-brain behavior_changes disclosure/],
+      ['safe_index_pending', ev => { row(ev, 'R5').degraded = [{ stage: 'safe_index_pending' }]; }, /^R5: 1 results report safe_index_pending/],
+      ['over budget', ev => { row(ev, 'A1').delivery = { budget_used: QUERY_BUDGET + 1, auto_packing: 'cap_only' }; }, new RegExp(`^A1: 1 results do not report budget_used at most ${QUERY_BUDGET}$`)],
+      ['not cap_only', ev => { row(ev, 'A2').delivery = { budget_used: 100, auto_packing: 'off' }; }, /^A2: 1 results do not report auto_packing cap_only$/],
+      ['oversize facts block', ev => { row(ev, 'A3').blocks = [JSON.stringify(Array.from({ length: FACTS_BLOCK_MAX_ROWS + 1 }, (_, i) => ({ result_type: 'fact', slug: `facts/f-${i}`, fact: 'f' })))]; }, /^A3: 1 results carry facts over \d+ tokens or 40 rows$/],
+      ['determinism mismatch', ev => { ev.repeats[0].text_sha256 = 'drifted'; }, /^determinism: 3 of 4 A0 results byte-identical on repeat$/],
+      ['arm outside the table', ev => { ev.evidence.push({ ...row(ev, 'A0'), arm: 'C9' }); }, /^C9: 1 results of an arm outside the arm table$/],
+    ];
+    for (const [name, mutate, want] of cases) {
+      const ev = cleanEvidence(corpus);
+      mutate(ev);
+      const { problems } = retrievalChecks(D, corpus, ev, () => 1);
+      expect(problems.length === 1 && want.test(problems[0]) ? name : `${name}: ${JSON.stringify(problems)}`).toBe(name);
+    }
+  });
+});
+
+/** Writes the clean evidence as one ndjson per history, as the freeze does. */
+const writeEvidence = (dir: string, ev: ReturnType<typeof cleanEvidence>) => {
+  mkdirSync(dir, { recursive: true });
+  for (const conv of ['conv-a', 'conv-b']) {
+    const mine = [...ev.evidence.filter(r => r.haystack_id === conv), ...ev.repeats.filter(r => r.question_id.startsWith(`q-${conv.slice(-1)}`))];
+    writeFileSync(join(dir, `${brainName(conv)}.ndjson`), mine.map(r => JSON.stringify(r)).join('\n') + '\n');
+  }
+};
+const primaryArms = () => D.answer_arms.filter(a => a.role === 'primary');
+
+describe('runGate final phase on temp-dir fixtures', () => {
+  // Value: protects=final gate refuses reader prompts that no longer re-render and refuses to run after a label read; fails_when=prompt_sha or recipe_hash compare or score-line check is removed; why_new=runGate final had no test; seam=none; no_claim=does not cover the retrieval phase receipt shape
+  test('passes when every reader prompt re-renders; fails on a changed prompt or recipe hash; throws once a score line exists', () => {
+    const root = mkdtempSync(join(tmpdir(), 'c8k-gate-'));
+    try {
+      const corpus = fixtureCorpus();
+      const ev = cleanEvidence(corpus);
+      writeEvidence(join(root, 'evidence'), ev);
+      const readers = join(root, 'readers');
+      const writeReaders = (tamper?: (r: Row, arm: string) => void) => {
+        for (const a of primaryArms()) {
+          mkdirSync(join(readers, a.reader), { recursive: true });
+          const rows = corpus.questions.map(q => {
+            const e = ev.evidence.find(r => r.arm === a.arm && r.question_id === q.id)!;
+            const r: Row = { question_id: q.id, prompt_sha256: renderContext(e.blocks, q, D.construction.harness_budget_tokens).prompt_sha256, recipe_hash: RECIPE_HASH };
+            tamper?.(r, a.arm);
+            return r;
+          });
+          writeFileSync(join(readers, a.reader, `${a.arm}.ndjson`), rows.map(r => JSON.stringify(r)).join('\n') + '\n');
+        }
+      };
+      const log = join(root, 'access.ndjson');
+      const gate = () => runGate({ decision: D, decisionSha: 'd'.repeat(64), corpus, evidence: join(root, 'evidence'), readers, phase: 'final', log, tokens: () => 1, gbrain: {}, roles: ['primary'] });
+      writeReaders();
+      const ok = gate();
+      expect(ok.problems).toEqual([]);
+      expect(ok.pass).toBe(true);
+      expect(ok.render_identity).toEqual({ rerender_mismatches: 0 });
+      writeReaders((r, arm) => { if (arm === 'A2' && r.question_id === 'q-b1') r.prompt_sha256 = '0'.repeat(64); });
+      const prompt = gate();
+      expect(prompt.pass).toBe(false);
+      expect(prompt.problems).toEqual(['sonnet-5-5.A2: 1 contexts do not re-render to the bytes the reader got']);
+      writeReaders((r, arm) => { if (arm === 'R5') r.recipe_hash = 'older-recipe'; });
+      const recipe = gate();
+      expect(recipe.problems).toEqual(['sonnet-5-5.R5: 4 contexts do not re-render to the bytes the reader got']);
+      expect(recipe.render_identity).toEqual({ rerender_mismatches: 4 });
+      writeFileSync(log, JSON.stringify({ action: 'open', decision_id: D.decision_id }) + '\n' + JSON.stringify({ action: 'score', decision_id: D.decision_id }) + '\n');
+      expect(gate).toThrow(/labels were already read under this decision/);
+    } finally { rmSync(root, { recursive: true, force: true }); }
+  });
+});
+
+describe('runFreeze amendment resume (spec change 7) with stub product modules', () => {
+  // Value: protects=a history frozen before the arm-table amendment gets only its missing arms and keeps its repeat; fails_when=freeze requeries frozen arms, drops repeats, keeps retired rows or leaves .tmp; why_new=runFreeze resume was untested; seam=none; no_claim=does not prove the real PGLite engine or dispatch behave like the stub
+  test('only the missing arm is queried, retired rows move to retired/, the frozen repeat is kept, nothing is left as .tmp', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'c8k-freeze-'));
+    try {
+      const corpus = fixtureCorpus();
+      corpus.conversations = corpus.conversations.filter(c => c.id === 'conv-a');
+      corpus.questions = corpus.questions.filter(q => q.conversation === 'conv-a');
+      const evidence = join(root, 'runs', 'evidence');
+      mkdirSync(evidence, { recursive: true });
+      const name = brainName('conv-a');
+      const frozen = (arm: string, q: string) => ({ kind: 'evidence', question_id: q, haystack_id: 'conv-a', arm, blocks: ['[]'], is_error: false, text_sha256: `old-${arm}-${q}`, notices: [], service_ms: 1 });
+      const prior = [...['A0', 'A1', 'A2', 'A3', 'C9', 'R5'].flatMap(a => ['q-a1', 'q-a2'].map(q => frozen(a, q))), { kind: 'repeat', question_id: 'q-a1', arm: 'A0', text_sha256: 'old-A0-q-a1', is_error: false, blocks: ['[]'] }];
+      writeFileSync(join(evidence, `${name}.ndjson`), prior.map(r => JSON.stringify(r)).join('\n') + '\n');
+      const calls: Array<{ query: unknown; keys: Record<string, string> }> = [];
+      class StubEngine {
+        cfg = new Map<string, string>();
+        async connect() {} async initSchema() {} async disconnect() {}
+        async setConfig(k: string, v: string) { this.cfg.set(k, v); }
+        async getConfig(k: string) { return this.cfg.get(k); }
+        async executeRaw(_sql: string, params: [string[]]) { for (const k of params[0]) this.cfg.delete(k); return []; }
+      }
+      const m = { PGLiteEngine: StubEngine, stdioFrameBytes: 1 << 20, NoticeLedger: class {},
+        dispatchToolCall: async (e: StubEngine, _n: string, p: Record<string, unknown>) => { calls.push({ query: p.query, keys: Object.fromEntries(e.cfg) }); return { content: [{ type: 'text', text: '[]' }], _meta: {} }; } } as unknown as ProductModules;
+      class FakeEmbeddingCache { constructor(readonly path: string) {} open() {} close() {} stats() { return { hits: 0, misses: 0, bypassed: 0, infra_faults: 0 }; } canonicalSha256() { return 'e'.repeat(64); } }
+      const cache = { modules: { EmbeddingCache: FakeEmbeddingCache, installEmbedCache: () => ({ model: 'hash', dims: 1536, uninstall() {} }), setRerankTransport() {} } as unknown as RetrievalCacheModules };
+      const freeze = () => runFreeze({ custodyRoot: root, decision: D, corpus, brains: join(root, 'brains'), evidence, m, identity: {}, cache });
+      const out = await freeze();
+      expect(calls.map(c => c.query)).toEqual(['warm-up', 'What about q-a1?', 'What about q-a2?']);
+      expect(calls.slice(1).map(c => c.keys)).toEqual([{ 'search.query_facts_block': 'true' }, { 'search.query_facts_block': 'true' }]);
+      const rows = readFileSync(join(evidence, `${name}.ndjson`), 'utf8').trim().split('\n').map(l => JSON.parse(l));
+      expect(rows.filter(r => r.arm === 'C9')).toEqual([]);
+      expect(rows.filter(r => r.kind === 'repeat')).toEqual([prior.at(-1)]);
+      expect(rows.filter(r => r.arm === 'B3').map(r => r.question_id)).toEqual(['q-a1', 'q-a2']);
+      expect(rows.filter(r => ['A0', 'A1', 'A2', 'A3', 'R5'].includes(r.arm) && r.kind === 'evidence')).toEqual(prior.filter(r => r.kind === 'evidence' && r.arm !== 'C9'));
+      expect(readFileSync(join(evidence, 'retired', `${name}.ndjson`), 'utf8').trim().split('\n').map(l => JSON.parse(l))).toEqual(prior.filter(r => r.arm === 'C9'));
+      expect(out.amended).toEqual({ histories: 1, arms_added: { B3: 1 }, rows_retired: { C9: 2 } });
+      expect(readdirSync(evidence).filter(f => f.endsWith('.tmp'))).toEqual([]);
+      const settled = readFileSync(join(evidence, `${name}.ndjson`), 'utf8');
+      await freeze();
+      expect(calls).toHaveLength(3);
+      expect(readFileSync(join(evidence, `${name}.ndjson`), 'utf8')).toBe(settled);
+    } finally { rmSync(root, { recursive: true, force: true }); }
+  });
+});
+
+describe('runDecide custody refusals', () => {
+  // Value: protects=decide fails every comparison on a stale score sha, an early label read or a foreign decision sha; fails_when=any runDecide custody check is removed or stops failing the gate; why_new=runDecide refusals untested; seam=none; no_claim=does not check comparison statistics
+  test('stale score report, label read before the final gate and a foreign decision sha each land in problems and fail the gate', () => {
+    const root = mkdtempSync(join(tmpdir(), 'c8k-decide-'));
+    try {
+      const sha = 'a'.repeat(64);
+      const dirs = { scoresDir: join(root, 'scores'), compareDir: join(root, 'compare'), answersDir: join(root, 'answers') };
+      for (const d of Object.values(dirs)) mkdirSync(d, { recursive: true });
+      const id = (arm: string) => primaryArms().find(a => a.arm === arm)!.id;
+      const setup = () => {
+        for (const a of primaryArms()) {
+          writeFileSync(join(dirs.scoresDir, `${a.id}.json`), JSON.stringify({ per_question: [{ question_id: 'q-1', question_type: 'multi-session', answer_correct: a.arm !== 'A0' }] }));
+          writeFileSync(join(dirs.answersDir, `${a.id}.jsonl`), JSON.stringify({ record_type: 'meta', decision_sha256: sha }) + '\n' + JSON.stringify({ question_id: 'q-1', hypothesis: 'x' }) + '\n');
+        }
+        const inputs = (a: string, b: string) => ({ inputs: [a, b].map(x => ({ sha256: sha256File(join(dirs.scoresDir, `${id(x)}.json`)) })) });
+        for (const c of D.rule.comparisons) writeFileSync(join(dirs.compareDir, `${c.id}.json`), JSON.stringify(inputs(c.a, c.b)));
+        writeFileSync(join(dirs.compareDir, 'F1-noninferiority.json'), JSON.stringify(inputs(D.rule.f1_noninferiority.reference, D.rule.f1_noninferiority.candidate)));
+        writeFileSync(join(root, 'log.ndjson'), [{ action: 'open', decision_id: D.decision_id }, { action: 'gate', decision_id: D.decision_id }].map(e => JSON.stringify(e)).join('\n') + '\n');
+      };
+      const decide = () => runDecide({ decision: D, decisionSha: sha, gate: { decision_sha256: sha, phase: 'final', pass: true, problems: [], access_log_lines_at_gate: 2 }, ...dirs, log: join(root, 'log.ndjson') });
+      setup();
+      const clean = decide();
+      expect(clean.problems).toEqual([]);
+      expect(clean.comparisons.map(c => c.verdict)).toEqual(['inconclusive', 'inconclusive', 'inconclusive', 'inconclusive']);
+      const refusals: Array<[string, () => void, string]> = [
+        ['stale score report', () => writeFileSync(join(dirs.scoresDir, `${id('A2')}.json`), JSON.stringify({ per_question: [] })), 'D2.json was not computed from the A1 and A2 score reports (in that order)'],
+        ['label read before the gate', () => writeFileSync(join(root, 'log.ndjson'), [{ action: 'score', decision_id: D.decision_id }, { action: 'gate', decision_id: D.decision_id }].map(e => JSON.stringify(e)).join('\n') + '\n'), 'a label read under this decision precedes the final gate'],
+        ['foreign decision sha', () => writeFileSync(join(dirs.answersDir, `${id('B3')}.jsonl`), JSON.stringify({ record_type: 'meta', decision_sha256: 'b'.repeat(64) }) + '\n'), `${id('B3')}.jsonl was written under another decision file`],
+      ];
+      for (const [, mutate, problem] of refusals) {
+        setup();
+        mutate();
+        const r = decide();
+        expect(r.problems).toContain(problem);
+        expect(r.comparisons.map(c => c.verdict)).toEqual(['fail', 'fail', 'fail', 'fail']);
+        expect(r.comparisons[0].reasons[0]).toContain(problem);
+      }
+    } finally { rmSync(root, { recursive: true, force: true }); }
+  });
+});
+
+describe('writeAnswers and budgetSummary', () => {
+  // Value: protects=answers keep only the question's own sessions, never turn a reader error into a hypothesis, and spend counts settled plus abandoned; fails_when=retrieved filter, reader_error branch or lease spend rule changes; why_new=c8k writeAnswers/budgetSummary untested; seam=none; no_claim=does not cover the development budget scope
+  test('retrieved stays inside the question\'s conversation; a reader error is never a hypothesis; spend is settled actuals plus abandoned reservations', () => {
+    const root = mkdtempSync(join(tmpdir(), 'c8k-answers-'));
+    try {
+      const corpus = fixtureCorpus();
+      const readers = join(root, 'readers');
+      for (const a of primaryArms()) {
+        mkdirSync(join(readers, a.reader), { recursive: true });
+        const rows: Row[] = corpus.questions.map(q => ({ question_id: q.id, slugs: [chatSlug(q.conversation, 's1')], answer: 'ok', prompt_sha256: 'p', context_tokens: 10, rows_cut: 0, input_tokens: 5, output_tokens: 1 }));
+        if (a.arm === 'A1') {
+          rows[0].slugs = [chatSlug('conv-a', 's2'), chatSlug('conv-b', 's1'), 'extracts/receipt-1', chatSlug('conv-a', 's2')];
+          rows[1] = { ...rows[1], answer: 'stale text', reader_error: 'HTTP 529' };
+          rows[2] = { ...rows[2], answer: '  ' };
+        }
+        writeFileSync(join(readers, a.reader, `${a.arm}.ndjson`), rows.map(r => JSON.stringify(r)).join('\n') + '\n');
+      }
+      const outDir = join(root, 'answers');
+      const summary = writeAnswers({ custodyRoot: root, decision: D, decisionSha: 'c'.repeat(64), corpus, readers, outDir, roles: ['primary'] });
+      expect(summary['sonnet-5-5.A1']).toEqual({ rows: 4, reader_errors: 1, empty: 1 });
+      expect(summary['sonnet-5-5.A0']).toEqual({ rows: 4, reader_errors: 0, empty: 0 });
+      const lines = readFileSync(join(outDir, 'sonnet-5-5.A1.jsonl'), 'utf8').trim().split('\n').map(l => JSON.parse(l));
+      expect(lines[0]).toMatchObject({ record_type: 'meta', decision_sha256: 'c'.repeat(64), questions: 4 });
+      expect(lines[1].retrieved).toEqual(['s2']);
+      expect(lines[2]).toMatchObject({ question_id: 'q-a2', reader_error: 'HTTP 529' });
+      expect('hypothesis' in lines[2]).toBe(false);
+      expect(lines[3]).toMatchObject({ hypothesis: '  ', reader_empty: true });
+      const step = D.budget.steps[0];
+      const b = budgetSummary(D, { campaign_id: 'camp-1', leases: [
+        { cell: `c8k-${step.id}`, usd: 5, status: 'settled', actual_usd: 1.5 },
+        { cell: `c8k-${step.id}`, usd: 2, status: 'abandoned' },
+        { cell: `c8k-${step.id}`, usd: 3, status: 'open' },
+        { cell: 'other-cell', usd: 9, status: 'settled', actual_usd: 9 },
+      ] });
+      expect(b.steps[0]).toMatchObject({ id: step.id, leases: 3, reserved_usd: 10, spent_usd: 3.5, open_leases: 1 });
+      expect(b.spent_usd).toBe(3.5);
+      expect(b.steps.slice(1).every(s => s.leases === 0 && s.spent_usd === 0)).toBe(true);
+    } finally { rmSync(root, { recursive: true, force: true }); }
+  });
+});
+
+
+
+describe('readEvidence on temp-dir files', () => {
+  // Value: protects=repeat rows split from evidence rows and the evidence sha covering each sorted file name and its bytes; fails_when=the kind split, ndjson filter, sort or sha input changes; why_new=readEvidence had no direct test; seam=none; no_claim=does not validate row contents
+  test('repeats and evidence split by kind; the sha hashes sorted names and bytes; other files and blank lines are skipped', () => {
+    const root = mkdtempSync(join(tmpdir(), 'c8k-evidence-'));
+    try {
+      const dir = join(root, 'evidence');
+      mkdirSync(dir, { recursive: true });
+      const a = [{ kind: 'evidence', question_id: 'q-a1', arm: 'A0' }, { kind: 'repeat', question_id: 'q-a1', arm: 'A0' }].map(r => JSON.stringify(r)).join('\n\n') + '\n';
+      const b = [{ kind: 'repeat', question_id: 'q-b1', arm: 'A0' }, { kind: 'evidence', question_id: 'q-b1', arm: 'A1' }].map(r => JSON.stringify(r)).join('\n') + '\n';
+      writeFileSync(join(dir, 'b.ndjson'), b);
+      writeFileSync(join(dir, 'a.ndjson'), a);
+      writeFileSync(join(dir, 'notes.txt'), 'not json');
+      const r = readEvidence(dir);
+      expect(r.evidence.map(x => `${x.arm}|${x.question_id}`)).toEqual(['A0|q-a1', 'A1|q-b1']);
+      expect(r.repeats.map(x => x.question_id)).toEqual(['q-a1', 'q-b1']);
+      expect(r.sha256).toBe(createHash('sha256').update('a.ndjson').update(a).update('b.ndjson').update(b).digest('hex'));
+      expect(readEvidence(join(root, 'absent'))).toEqual({ evidence: [], repeats: [], sha256: createHash('sha256').digest('hex') });
+    } finally { rmSync(root, { recursive: true, force: true }); }
+  });
+});
+
+describe('runRead resume against a local stub reader endpoint', () => {
+  // Value: protects=a reader rerun answers only missing and reader_error rows and refuses a question with no frozen evidence; fails_when=the todo filter skips errored rows, re-asks finished ones or the missing-evidence throw is dropped; why_new=runRead was untested; seam=none; no_claim=does not exercise real provider APIs, retries or backoff
+  test('finished rows are skipped, reader_error rows are retried, a question without evidence throws', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'c8k-read-'));
+    const prompts: string[] = [];
+    const server = Bun.serve({ port: 0, async fetch(req) {
+      const body = await req.json() as { messages: Array<{ content: string }> };
+      prompts.push(body.messages[0].content);
+      return Response.json({ choices: [{ message: { content: 'served' }, finish_reason: 'stop' }], usage: { prompt_tokens: 3, completion_tokens: 1 }, model: 'stub-model' });
+    } });
+    const env = { base: process.env.OPENAI_BASE_URL, key: process.env.OPENAI_API_KEY };
+    process.env.OPENAI_BASE_URL = `http://127.0.0.1:${server.port}`;
+    process.env.OPENAI_API_KEY = 'test-key';
+    try {
+      const corpus = fixtureCorpus();
+      const evidence = join(root, 'evidence');
+      writeEvidence(evidence, cleanEvidence(corpus));
+      const readers = join(root, 'readers');
+      mkdirSync(join(readers, 'stub-reader'), { recursive: true });
+      const prior = [{ question_id: 'q-a1', answer: 'kept' }, { question_id: 'q-a2', reader_error: 'HTTP 529' }, { question_id: 'q-b1', answer: 'kept' }];
+      writeFileSync(join(readers, 'stub-reader', 'A0.ndjson'), prior.map(r => JSON.stringify(r)).join('\n') + '\n');
+      const read = (reader: string) => runRead({ custodyRoot: root, decision: D, corpus, evidence, readers, reader, model: 'stub-model', arms: ['A0'], cache: join(root, 'qa'), concurrency: 1 });
+      const out = await read('stub-reader');
+      expect(prompts.map(p => ['q-a1', 'q-a2', 'q-b1', 'q-b2'].filter(id => p.includes(`What about ${id}?`)))).toEqual([['q-a2'], ['q-b2']]);
+      const rows = readFileSync(join(readers, 'stub-reader', 'A0.ndjson'), 'utf8').trim().split('\n').map(l => JSON.parse(l));
+      expect(rows.slice(3).map(r => [r.question_id, r.answer, 'reader_error' in r])).toEqual([['q-a2', 'served', false], ['q-b2', 'served', false]]);
+      expect(out.arms.A0).toMatchObject({ rows: 4, reader_errors: 0 });
+      rmSync(join(evidence, `${brainName('conv-b')}.ndjson`));
+      await read('stub-reader');
+      expect(prompts).toHaveLength(2);
+      await expect(read('fresh-reader')).rejects.toThrow('no A0 evidence for a question; the freeze is incomplete');
+    } finally {
+      server.stop(true);
+      if (env.base === undefined) delete process.env.OPENAI_BASE_URL; else process.env.OPENAI_BASE_URL = env.base;
+      if (env.key === undefined) delete process.env.OPENAI_API_KEY; else process.env.OPENAI_API_KEY = env.key;
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('buildCorpus on temp-dir questions', () => {
+  // Value: protects=the corpus step logs the open before parsing, refuses a commitment mismatch unlogged and writes no corpus from a rejected file; fails_when=the log moves after validation, the commitment check or validation is dropped; why_new=c8k buildCorpus was untested; seam=none; no_claim=does not cover the custody-check step
+  test('the open is logged with the questions sha before validation; a commitment mismatch logs nothing; a rejected file writes no corpus', () => {
+    const root = mkdtempSync(join(tmpdir(), 'c8k-corpus-'));
+    try {
+      const qfile = (questionId: string) => JSON.stringify({ schema: 'sealed-confirmation-questions-v1', set_id: 'set-fixture', haystacks: [{ haystack_id: 'hs-0123456789', sessions: ['ss-0123456789', 'ss-0123456780'].map(s => ({ session_id: s, date: '2026/01/01', turns: [{ role: 'user', content: 'hello' }] })) }], questions: [{ question_id: questionId, haystack_id: 'hs-0123456789', question: 'What?', question_date: '2026/02/01' }] });
+      const log = join(root, 'log', 'access.ndjson');
+      const logLines = () => existsSync(log) ? readFileSync(log, 'utf8').trim().split('\n').map(l => JSON.parse(l)) : [];
+      const build = (text: string, out: string, commit = text) => {
+        const questions = join(root, 'sealed', 'questions.json');
+        mkdirSync(join(root, 'sealed'), { recursive: true });
+        writeFileSync(questions, text);
+        const manifest = join(root, 'sealed', 'manifest.json');
+        writeFileSync(manifest, JSON.stringify({ set: 'set-fixture', commitments: { 'questions.json': { sha256: createHash('sha256').update(commit).digest('hex'), bytes: Buffer.byteLength(commit) } } }));
+        return buildCorpus({ custodyRoot: root, decision: D, manifestPath: manifest, questions, log, out: join(root, out), purpose: 'fixture' });
+      };
+      const good = qfile('qq-0123456789');
+      expect(build(good, 'corpus.json')).toEqual({ questions: 1, conversations: 1, sessions: 2 });
+      expect(logLines()).toHaveLength(1);
+      expect(logLines()[0]).toMatchObject({ action: 'open', decision_id: D.decision_id, labels_sha256: createHash('sha256').update(good).digest('hex'), run_sha256: null });
+      const corpus = JSON.parse(readFileSync(join(root, 'corpus.json'), 'utf8'));
+      expect([corpus.id, corpus.questions[0].conversation]).toEqual(['set-fixture-c8k', 'hs-0123456789']);
+      expect(() => build(good, 'mismatch.json', good + ' ')).toThrow(/commitment mismatch for questions.json/);
+      expect(logLines()).toHaveLength(1);
+      const bad = qfile('Question-1');
+      expect(() => build(bad, 'rejected.json')).toThrow(/questions file rejected:\nquestions\[0\]: question_id must be opaque/);
+      expect(logLines()).toHaveLength(2);
+      expect(logLines()[1].labels_sha256).toBe(createHash('sha256').update(bad).digest('hex'));
+      expect(existsSync(join(root, 'rejected.json'))).toBe(false);
+      expect(existsSync(join(root, 'mismatch.json'))).toBe(false);
+    } finally { rmSync(root, { recursive: true, force: true }); }
+  });
+});
+
+describe('runExport on temp-dir runs', () => {
+  // Value: protects=export copies only the listed aggregate files, refuses an out dir inside the runs dir and writes nothing when a corpus id would leak; fails_when=the file list widens, the runs-dir check or leakScan call is removed; why_new=c8k runExport was untested; seam=none; no_claim=does not check scoreAggregate or compareAggregate shapes
+  test('only aggregates leave; an export dir inside runs is refused; a corpus id in a summary refuses the whole export', () => {
+    const root = mkdtempSync(join(tmpdir(), 'c8k-export-'));
+    try {
+      const corpus = fixtureCorpus();
+      const runs = join(root, 'runs');
+      const put = (p: string, v: unknown) => { mkdirSync(join(runs, p, '..'), { recursive: true }); writeFileSync(join(runs, p), typeof v === 'string' ? v : JSON.stringify(v)); };
+      put('gate.json', { pass: true, problems: [] });
+      put('read/sonnet.json', { rows: 4 });
+      put('ledger/cells.json', { usd: 1 });
+      put('notes.json', { private: true });
+      put('read/sonnet.ndjson', '{"answer":"x"}\n');
+      put('evidence/b-1.ndjson', '{"kind":"evidence"}\n');
+      const out = join(root, 'export');
+      expect(runExport({ custodyRoot: root, corpus, runs, out })).toEqual({ files: 3, out: 'export' });
+      const listed = (readdirSync(out, { recursive: true }) as string[]).filter(f => f.endsWith('.json')).sort();
+      expect(listed).toEqual(['gate.json', join('ledger', 'cells.json'), join('read', 'sonnet.json')]);
+      expect(JSON.parse(readFileSync(join(out, 'read', 'sonnet.json'), 'utf8'))).toEqual({ rows: 4 });
+      expect(() => runExport({ custodyRoot: root, corpus, runs, out: join(runs, 'export') })).toThrow('the export directory must be outside the runs directory');
+      expect(existsSync(join(runs, 'export'))).toBe(false);
+      put('gate.json', { pass: false, problems: ['conv-a has no evidence'] });
+      const leakOut = join(root, 'export-2');
+      expect(() => runExport({ custodyRoot: root, corpus, runs, out: leakOut })).toThrow(/export refused, nothing written: gate.json: an id of the corpus/);
+      expect(existsSync(leakOut)).toBe(false);
+    } finally { rmSync(root, { recursive: true, force: true }); }
+  });
+});
+
+describe('runExtract with stub product modules', () => {
+  // Value: protects=extract shard k of n takes every nth history, records an extraction throw as an error row and skips finished brains on resume; fails_when=shard selection, the per-brain catch or the finished skip changes; why_new=runExtract was untested; seam=none; no_claim=does not prove gbrain's real extraction or safe-chunks repair
+  test('shard 1/2 takes only the second history; shard 0/2 the first and third with a throw as an error row; a full rerun calls nothing', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'c8k-extract-'));
+    try {
+      const corpus = fixtureCorpus();
+      corpus.conversations = [...corpus.conversations, { ...corpus.conversations[0], id: 'conv-c' }];
+      corpus.questions = [...corpus.questions, { ...corpus.questions[0], id: 'q-c1', conversation: 'conv-c' }];
+      const brains = join(root, 'brains');
+      for (const c of ['conv-a', 'conv-b', 'conv-c']) mkdirSync(join(brains, brainName(c)), { recursive: true });
+      const calls: string[] = [];
+      class StubEngine {
+        path = '';
+        async connect(o: { database_path: string }) { this.path = o.database_path; } async initSchema() {} async disconnect() {}
+        async executeRaw(sql: string) { return sql.includes('FROM facts') ? [{ facts: 3, world: 1, sources: 2 }] : [{ n: 0 }]; }
+      }
+      const m = { PGLiteEngine: StubEngine,
+        runRepairCommand: async () => { console.log(JSON.stringify({ results: [{ kind: 'safe-chunks', affected: 0, applied: 0, failed: [], complete: true }] })); },
+        runExtractConversationFactsCore: async (e: StubEngine) => {
+          calls.push(e.path);
+          if (e.path.endsWith(brainName('conv-c'))) throw new Error('model refused');
+          return { pages_processed: 2, pages_failed: 0, segments_processed: 2, facts_extracted: 3 };
+        } } as unknown as ProductModules;
+      const extract = (shard?: { k: number; n: number }) => runExtract({ custodyRoot: root, corpus, brains, m, identity: {}, shard });
+      const names = (cs: string[]) => cs.map(c => join(brains, brainName(c)));
+      await extract({ k: 1, n: 2 });
+      expect(calls).toEqual(names(['conv-b']));
+      const out = await extract({ k: 0, n: 2 });
+      expect(calls).toEqual(names(['conv-b', 'conv-a', 'conv-c']));
+      const rows = readFileSync(join(brains, 'extracted.ndjson'), 'utf8').trim().split('\n').map(l => JSON.parse(l));
+      expect(rows.map(r => [r.brain, r.error, r.pages_processed, r.facts])).toEqual([[brainName('conv-b'), null, 2, 3], [brainName('conv-a'), null, 2, 3], [brainName('conv-c'), 'extraction threw', 0, 3]]);
+      expect(out).toMatchObject({ brains: 3, extraction_errors: 1, pages_processed: 4, facts: 9 });
+      await extract();
+      expect(calls).toHaveLength(3);
+    } finally { rmSync(root, { recursive: true, force: true }); }
   });
 });
 
