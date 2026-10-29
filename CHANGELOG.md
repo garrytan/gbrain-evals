@@ -2,6 +2,12 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.135] - 2026-10-29
+
+### Brain-first install block for gbrain GBRA-188 measured
+
+- **The managed block `gbrain setup claude-code` and `gbrain setup codex` write, at gbrain `10f74dbd` (block v1)** ([report](docs/benchmarks/2026-10-24-brain-first-install-block.md), receipts under `docs/benchmarks/2026-10-24-brain-first-install-block/`). On a synthetic two-source brain with 20 tasks, real Claude Code and Codex CLIs and four models (780 counted trials), the block and a one-sentence told rule both reached the brain in 221 of 221 trials on the tasks that need it, against 82% to 97% with no instructions. The block passed 254 of 260 trials, the told rule 251 and no instructions 222, at between 4% less and 6% more spend per trial than no instructions, with no scope leak in any arm. The paraphrase result is tuned on the tasks that chose the wording, not held out. gbrain v0.60.495.0 shipped block v2 with a reworded search line and a per-turn rule; neither was measured here.
+
 ## [0.10.134] - 2026-10-29
 
 ### Short first names in full-name search: gbrain#7471 measured
