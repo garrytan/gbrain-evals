@@ -33,10 +33,10 @@ def load(paths):
                 if not line.strip():
                     continue
                 r = json.loads(line)
+                if r.get('repeat') not in (None, 0):
+                    raise ValueError(f"{p}: a cell has repeat {r.get('repeat')!r}; arm_power sizes single-repeat runs only")
                 if r.get('stop') == 'harness_error':
                     continue
-                if r.get('repeat') not in (None, 0):
-                    raise ValueError(f"{p}: cell {r['arm']} {r['model']} {r['task']} has repeat {r['repeat']}; arm_power sizes single-repeat runs only")
                 cells[(r['arm'], r['model'], r['task'])] = r
     for (arm, _, _), r in cells.items():
         usd[arm] += float(r.get('total_usd') or 0) + float(r.get('judge_usd') or 0)
@@ -102,13 +102,17 @@ def main(argv=None):
     try:
         fractions = [float(x) for x in a.fractions.split(',')]
     except ValueError:
-        fractions = [0]
+        print(f'--fractions must be comma-separated numbers: {a.fractions}', file=sys.stderr)
+        return 2
     if any(not 0 < f <= 1 for f in fractions):
         print(f'every fraction must be above 0 and at most 1: {a.fractions}', file=sys.stderr)
         return 2
     worlds, usd = {}, defaultdict(dict)
     for spec in a.world:
-        name, files = spec.split('=', 1)
+        name, sep, files = spec.partition('=')
+        if not sep:
+            print(f'--world {spec} must be NAME=file[,file...]', file=sys.stderr)
+            return 2
         if name[:1].upper() not in ('P', 'S'):
             print(f'world {name} must start with P (public) or S (sealed)', file=sys.stderr)
             return 2
@@ -117,8 +121,8 @@ def main(argv=None):
             return 2
         try:
             worlds[name], spent = load(files.split(','))
-        except ValueError as e:
-            print(f'world {name}: {e}', file=sys.stderr)
+        except (OSError, ValueError, KeyError, TypeError, AttributeError) as e:
+            print(f'world {name}: unreadable results: {e!r}', file=sys.stderr)
             return 2
         for arm, v in spent.items():
             usd[arm][name] = v

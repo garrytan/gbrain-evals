@@ -4,7 +4,7 @@ import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { ExperimentManifest } from '../../eval/runner/cat40-model-ladder.ts';
-import { cellCode, countCells, declared, provenanceReasons, readReceipts, reuseVerdict, type Receipt } from '../../eval/runner/cat40/reuse-check.ts';
+import { cellCode, countCells, declared, provenanceReasons, readReceipts, reuseVerdict, UNRESOLVED, type Receipt } from '../../eval/runner/cat40/reuse-check.ts';
 
 const PUB = 'docs/benchmarks/2026-10-14-cat40-next-confirm-public';
 const manifest = (dir: string) => JSON.parse(readFileSync(join(PUB, dir, 'experiment.json'), 'utf8')) as ExperimentManifest;
@@ -66,6 +66,7 @@ describe('reuse-check: reusing a Cat 40 arm', () => {
     expect(declared(`- Reuse: arm fs-acl from budget run ${fs.budget_run_id}.`, fs, 'fs')).toBe(false);
     expect(declared(`- Reuse: arm fs.\n- budget run ${fs.budget_run_id}`, fs, 'fs')).toBe(false);
     expect(declared(`- Reuse: arm fs from budget run ${fs.budget_run_id}-retry.`, fs, 'fs')).toBe(false);
+    for (const suffix of ['.retry', ':retry', '/x']) expect(declared(`- Reuse: arm fs from budget run ${fs.budget_run_id}${suffix}`, fs, 'fs')).toBe(false);
     expect(declared(`- Reuse: arm fs from budget run ${fs.budget_run_id}.`, fs, '(')).toBe(false);
     const dir = mkdtempSync(join(tmpdir(), 'reuse-check-'));
     writeFileSync(join(dir, 'prereg.md'), `Reuse \`fs\` cells from ${fs.budget_run_id} (p1).\n`);
@@ -210,9 +211,11 @@ describe('reuse-check: provenance the manifests cannot show', () => {
     const drifted = (c: string) => (c === later.hard!.runner_commit ? new Map([...same, ['eval/generators/model-ladder-gen.ts', '3']]) : same);
     expect(prov({ planned: later, code: drifted })).toEqual([`cell code differs between runner commits ${fs.hard!.runner_commit!.slice(0, 12)} and bbbbbbbbbbbb: eval/generators/model-ladder-gen.ts`]);
     expect(prov({ planned: later })).toEqual([`runner commit ${fs.hard!.runner_commit} is not in this checkout (fetch it to compare the cell code)`]);
-    const unresolvable = new Map([...same, ['eval/runner/cat40/helper', 'missing']]);
+    const unresolvable = new Map([...same, ['eval/runner/cat40/helper', UNRESOLVED]]);
     expect(prov({ planned: later, code: () => unresolvable })).toEqual(['cell code import closure has files git cannot resolve, so it cannot be compared: eval/runner/cat40/helper']);
     const head = cellCode('HEAD')!;
+    expect([...head.values()]).not.toContain(UNRESOLVED);
+    expect(head.get('node_modules/gbrain/src/core/embedding-pricing.ts')).toStartWith('package gbrain@github:garrytan/gbrain#');
     for (const f of ['eval/runner/cat40-model-ladder.ts', 'eval/generators/model-ladder-gen.ts', 'eval/runner/cat40/arms.ts', 'eval/runner/cat40/gbrain-arm.ts']) expect(head.has(f)).toBe(true);
     expect(cellCode('f'.repeat(40))).toBeNull();
   });
@@ -286,6 +289,9 @@ describe('arm_power.py: inputs it refuses and what it counts', () => {
     expect(repeated.status).toBe(2);
     expect(repeated.stderr).toContain('sizes single-repeat runs only');
     expect(go({ P1: [...worldRows(6, all), '{"arm":'] }, ['--arm', 'fs']).status).toBe(2);
+    expect(go({ P1: [...worldRows(6, all), '{"stop":"submitted"}'] }, ['--arm', 'fs']).status).toBe(2);
+    expect(go({ P1: worldRows(6, all).map(l => l.replace('"family"', '"repeat":0,"family"')) }, ['--arm', 'fs']).status).toBe(0);
+    expect(spawnSync('python3', ['eval/runner/cat40/arm_power.py', '--world', 'P1', '--arm', 'fs'], { encoding: 'utf8' }).status).toBe(2);
   }, 120_000);
 
   // Value: protects=spend not made follows the tasks actually left out, per generator verdicts cover sealed worlds, and only comparisons using the arm are counted; fails_when=the requested fraction is used for spend or untouched comparisons count as agreement; why_new=only one public world was tested; seam=none; no_claim=statistical power (synthetic worlds)
