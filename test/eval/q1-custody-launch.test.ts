@@ -10,16 +10,17 @@ import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, 
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { BudgetRun, closeLedgers } from '../../eval/runner/budget-ledger.ts';
-import { beam10mCustodyPush, Campaign, runRemote, type CampaignManifest, type LaunchContext, type LeaseState, type RemotePayload } from '../../eval/runner/shootout-cell.ts';
+import { beam10mCustodyPush, Campaign, d8CustodyPush, runRemote, type CampaignManifest, type LaunchContext, type LeaseState, type RemotePayload } from '../../eval/runner/shootout-cell.ts';
 import { ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
 import { sealedLaunchChecks } from '../../eval/runner/scoreboard-cli.ts';
-import { verifyBeam10mCustody } from '../../eval/runner/memory-qa/corpus.ts';
+import { d8ManifestPath, d8Source, verifyBeam10mCustody, verifyD8Custody } from '../../eval/runner/memory-qa/corpus.ts';
+import { homedir } from 'node:os';
 
 const ROOT = resolve(import.meta.dir, '../..');
 const tmp = mkdtempSync(join(tmpdir(), 'q1-custody-'));
 const inRepo = join(ROOT, 'test/eval/fixtures/scoreboard', `tmp-custody-${process.pid}-${Date.now()}`);
 mkdirSync(inRepo, { recursive: true });
-const ENV_KEYS = ['GBRAIN_EVALS_BEAM10M_SOURCE', 'GBRAIN_EVALS_BEAM10M_MANIFEST', 'GBRAIN_EVALS_BEAM10M_ROOT', 'UBI_OWNER'] as const;
+const ENV_KEYS = ['GBRAIN_EVALS_BEAM10M_SOURCE', 'GBRAIN_EVALS_BEAM10M_MANIFEST', 'GBRAIN_EVALS_BEAM10M_ROOT', 'GBRAIN_EVALS_D8_SOURCE', 'GBRAIN_EVALS_D8_MANIFEST', 'UBI_OWNER'] as const;
 const saved = Object.fromEntries(ENV_KEYS.map(k => [k, process.env[k]]));
 afterEach(() => { for (const k of ENV_KEYS) if (saved[k] === undefined) delete process.env[k]; else process.env[k] = saved[k]; });
 afterAll(() => { closeLedgers(); rmSync(tmp, { recursive: true, force: true }); rmSync(inRepo, { recursive: true, force: true }); });
@@ -44,6 +45,16 @@ function standIn(name: string) {
   return { root, manifest, conversations };
 }
 
+/** A synthetic D8 stand-in: two conversations in the BEAM generator layout and a filled manifest inside the root. */
+function d8StandIn(name: string) {
+  const root = join(tmp, name);
+  const files = ['1', '2'].flatMap(c => [[`conversations/${c}/chat.json`, JSON.stringify({ synthetic: `chat ${c}` })], [`conversations/${c}/probing_questions/abstention/abstention.json`, JSON.stringify([{ question: `SYNTHETIC ${c}` }])]] as const);
+  for (const [p, body] of files) { mkdirSync(dirname(join(root, p)), { recursive: true }); writeFileSync(join(root, p), body); }
+  const manifest = join(root, 'stand-in-d8-manifest.json');
+  writeFileSync(manifest, JSON.stringify({ dataset: 'D8 stand-in', status: 'filled', layout: 'stand-in', note: 'synthetic', files: files.map(([path, body]) => ({ path, sha256: sha(body) })), filled_at: '2026-10-30T00:00:00Z' }));
+  return { root, manifest, files: files.map(([p]) => p) };
+}
+
 let n = 0;
 function campaign(cells: CampaignManifest['cells']) {
   const dir = join(tmp, `c${++n}`);
@@ -57,6 +68,7 @@ function campaign(cells: CampaignManifest['cells']) {
 }
 const S1 = { id: 's1-c0', system: 'gbrain-defaults', benchmark: 'beam-10m', config: 'shipped-defaults', lease_usd: 5, command: 'true', block: 'T1', sealed: true, vm: { size: 'standard-4' }, restore_command: 'true' };
 const LOCOMO = { id: 's3-c0', system: 'gbrain-defaults', benchmark: 'locomo', config: 'shipped-defaults', lease_usd: 5, command: 'true', block: 'T1', sealed: true, restore_command: 'true' };
+const D8 = { id: 'd8-c0', system: 'gbrain-defaults', benchmark: 'beam-d8', config: 'f6-master', lease_usd: 5, command: 'true', block: 'T1', sealed: true, vm: { size: 'standard-4' }, restore_command: 'true' };
 const PUBLIC = { id: 'lme-c0', system: 'gbrain-defaults', benchmark: 'lme-s', config: 'shipped-defaults', lease_usd: 5, command: 'true', block: 'T1' };
 const lease = (cell: string): LeaseState => ({ lease_id: `${cell}-a1-0000`, cell, attempt: 1, usd: 5, entry_id: 'e', max_output_tokens: null, status: 'reserved' });
 
@@ -78,7 +90,7 @@ describe('defect 2: the sealed Q1 payload', () => {
   test('on the VM a sealed Q1 payload gets SHOOTOUT_CUSTODY and GBRAIN_EVALS_CUSTODY_LOG inside its out; pushed custody files are wiped at teardown', async () => {
     const base = join(tmp, 'vm-custody');
     const out = join(base, 'out', 's3-c0', 'lease-x');
-    for (const d of ['datasets', 'restore']) { mkdirSync(join(base, d), { recursive: true }); writeFileSync(join(base, d, 'f'), 'x'); }
+    for (const d of ['datasets', 'restore', 'd8']) { mkdirSync(join(base, d), { recursive: true }); writeFileSync(join(base, d, 'f'), 'x'); }
     const port = 24000 + Math.floor(Math.random() * 9000);
     const code = await runRemote({ lease_id: 'lease-x', lease_usd: 0.1, out, cell: 's3-c0', sealed: true,
       command: 'printf "%s\\n%s\\n" "$SHOOTOUT_CUSTODY" "$GBRAIN_EVALS_CUSTODY_LOG" > "$SHOOTOUT_OUT/env.txt"; [ -f "$SHOOTOUT_CUSTODY/../datasets/f" ] || exit 9' }, { port, custodyBase: base });
@@ -86,6 +98,7 @@ describe('defect 2: the sealed Q1 payload', () => {
     expect(readFileSync(join(out, 'env.txt'), 'utf8').trim().split('\n')).toEqual([join(base, 'lease-x'), join(out, 'access-log.jsonl')]);
     expect(existsSync(join(base, 'datasets'))).toBe(false);
     expect(existsSync(join(base, 'restore'))).toBe(false);
+    expect(existsSync(join(base, 'd8'))).toBe(false);
     expect(existsSync(join(base, 'lease-x', 'proxy', 'lease.sqlite'))).toBe(true);
   }, 30_000);
 
@@ -179,6 +192,56 @@ describe('defect 1: the BEAM-10M custody push', () => {
   });
 });
 
+describe('the D8 custody push', () => {
+  test('a sealed D8 cell checks every file against the stand-in manifest before any VM, pushes them and the manifest to ~/custody/d8, and points the loader there', () => {
+    const s = d8StandIn('d8-push-ok');
+    process.env.GBRAIN_EVALS_D8_SOURCE = s.root;
+    process.env.GBRAIN_EVALS_D8_MANIFEST = s.manifest;
+    const a = campaign([D8, LOCOMO]);
+    const c = new Campaign(a.manifestPath, a.state);
+    const argv = c.launchArgv(lease('d8-c0'), { vm: 'ubirun-test-1-abc' });
+    const [push, ...more] = after(argv, '--push');
+    expect(more).toEqual([]);
+    const [from, to, list] = push.split(':');
+    expect([from, to]).toEqual([s.root, 'custody/d8']);
+    expect(readFileSync(list, 'utf8').trim().split('\n')).toEqual([...s.files, 'stand-in-d8-manifest.json']);
+    expect(after(argv, '--env')).toEqual(['GBRAIN_EVALS_D8_SOURCE=~/custody/d8', 'GBRAIN_EVALS_D8_MANIFEST=~/custody/d8/stand-in-d8-manifest.json']);
+    expect(argv.indexOf('--push')).toBeLessThan(argv.indexOf('--'));
+    expect(payloadOf(argv)).toMatchObject({ sealed: true, out: '~/custody/out/d8-c0/d8-c0-a1-0000' });
+    expect(after(c.launchArgv(lease('s3-c0'), { vm: 'ubirun-test-1-abd' }), '--push')).toEqual([]);
+  });
+
+  test('an unset source, a source inside the repository, no manifest, an unfilled one, one outside the source, a changed byte or a missing file refuses before any VM', () => {
+    const s = d8StandIn('d8-push-bad');
+    const ok = { GBRAIN_EVALS_D8_SOURCE: s.root, GBRAIN_EVALS_D8_MANIFEST: s.manifest };
+    expect(caught(() => d8CustodyPush({})).op).toMatchObject({ code: 'CUSTODY_REQUIRED', message: expect.stringMatching(/GBRAIN_EVALS_D8_SOURCE is not set/) });
+    expect(caught(() => d8CustodyPush({ ...ok, GBRAIN_EVALS_D8_SOURCE: inRepo })).op.message).toMatch(/inside the repository/);
+    expect(caught(() => d8CustodyPush({ GBRAIN_EVALS_D8_SOURCE: s.root })).op.message).toMatch(/GBRAIN_EVALS_D8_MANIFEST is not set/);
+    const outside = join(tmp, 'd8-manifest-outside.json');
+    writeFileSync(outside, readFileSync(s.manifest));
+    expect(caught(() => d8CustodyPush({ ...ok, GBRAIN_EVALS_D8_MANIFEST: outside })).op.message).toMatch(/must sit inside GBRAIN_EVALS_D8_SOURCE/);
+    const unfilled = join(s.root, 'unfilled.json');
+    writeFileSync(unfilled, JSON.stringify({ ...JSON.parse(readFileSync(s.manifest, 'utf8')), status: 'unfilled', files: [] }));
+    expect(caught(() => d8CustodyPush({ ...ok, GBRAIN_EVALS_D8_MANIFEST: unfilled })).op.message).toMatch(/has no hashes/);
+    expect(d8CustodyPush(ok).list).toHaveLength(5);
+    const f = join(s.root, s.files[3]);
+    writeFileSync(f, readFileSync(f, 'utf8') + ' ');
+    expect(caught(() => d8CustodyPush(ok)).op.message).toMatch(/conversations\/2\/probing_questions\/abstention\/abstention\.json .*not the pinned bytes/);
+    rmSync(join(s.root, s.files[0]));
+    expect(caught(() => d8CustodyPush(ok)).op.message).toMatch(/conversations\/1\/chat\.json .*missing/);
+  });
+
+  test('on the VM the loader reads the pushed root and manifest from their ~/ paths, and setup\'s fetch verifies the pushed files', () => {
+    expect(d8Source({ GBRAIN_EVALS_D8_SOURCE: '~/custody/d8' })).toBe(join(homedir(), 'custody/d8'));
+    process.env.GBRAIN_EVALS_D8_MANIFEST = '~/custody/d8/stand-in-d8-manifest.json';
+    expect(d8ManifestPath()).toBe(join(homedir(), 'custody/d8/stand-in-d8-manifest.json'));
+    const s = d8StandIn('d8-vm-fetch');
+    process.env.GBRAIN_EVALS_D8_SOURCE = s.root;
+    process.env.GBRAIN_EVALS_D8_MANIFEST = s.manifest;
+    expect(verifyD8Custody(() => {})).toBe(4);
+  });
+});
+
 describe('doctor --for sealed', () => {
   const byId = (checks: ReturnType<typeof sealedLaunchChecks>) => Object.fromEntries(checks.map(c => [c.id, c]));
 
@@ -194,6 +257,14 @@ describe('doctor --for sealed', () => {
     expect(stand['s1-corpus'].ok).toBe(false);
     expect(stand['s1-corpus'].detail).toMatch(/stand-in manifest/);
     expect(byId(sealedLaunchChecks(a.manifestPath, a.state, ['s3-c0'], {}))['s1-corpus']).toBeUndefined();
+  });
+
+  test('d8-corpus fails without the custodian\'s D8 source and passes with a filled manifest inside it', () => {
+    const a = campaign([D8, LOCOMO]);
+    expect(byId(sealedLaunchChecks(a.manifestPath, a.state, [], {}))['d8-corpus']).toMatchObject({ ok: false, code: 'CUSTODY_REQUIRED', detail: expect.stringMatching(/GBRAIN_EVALS_D8_SOURCE is not set/) });
+    const s = d8StandIn('d8-doctor');
+    expect(byId(sealedLaunchChecks(a.manifestPath, a.state, [], { GBRAIN_EVALS_D8_SOURCE: s.root, GBRAIN_EVALS_D8_MANIFEST: s.manifest }))['d8-corpus']).toMatchObject({ ok: true, detail: expect.stringMatching(/4 D8 file\(s\)/) });
+    expect(byId(sealedLaunchChecks(a.manifestPath, a.state, ['s3-c0'], {}))['d8-corpus']).toBeUndefined();
   });
 
   test('each check fails on its defect: no push (defect 1), no custody payload (defect 2), output in the checkout or rows pulled into the repository', () => {

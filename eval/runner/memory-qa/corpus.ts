@@ -380,14 +380,16 @@ export function loadBeam(size: '100k' | '500k' | '1m', only?: ReadonlySet<string
  */
 export const D8_MANIFEST = 'eval/decisions/datasets/d8-manifest.json';
 export const D8_CONVERSATIONS: readonly string[] = Array.from({ length: 10 }, (_, i) => `d8-${i + 1}`);
-export const d8ManifestPath = () => process.env.GBRAIN_EVALS_D8_MANIFEST ?? join(REPO_ROOT, D8_MANIFEST);
+/** A sealed VM's env names its custody paths from the VM user's home (`~/custody/d8`, as the launcher's push sets them). */
+const fromHome = (p: string | undefined) => !p ? undefined : p.startsWith('~/') ? join(homedir(), p.slice(2)) : p;
+export const d8ManifestPath = () => fromHome(process.env.GBRAIN_EVALS_D8_MANIFEST) ?? join(REPO_ROOT, D8_MANIFEST);
 export interface D8Manifest { dataset: string; status: 'unfilled' | 'filled'; layout: string; note: string; files: Array<{ path: string; sha256: string }>; filled_at: string | null }
 const D8_FILL = ['bun', 'eval/runner/q1/d8-manifest.ts', 'fill', '--write'];
 const d8Ask = { next: 'ask_user' as const, user_message: 'run beam-d8 on the custody host with GBRAIN_EVALS_D8_SOURCE set to the D8 root (it holds conversations/1 to conversations/10)' };
 
 /** The D8 custody root, refusing when GBRAIN_EVALS_D8_SOURCE is unset or inside the repository. */
 export function d8Source(env: Record<string, string | undefined> = process.env): string {
-  const source = env.GBRAIN_EVALS_D8_SOURCE;
+  const source = fromHome(env.GBRAIN_EVALS_D8_SOURCE);
   if (!source) throw decideError({ code: 'CUSTODY_MISSING', message: 'beam-d8: GBRAIN_EVALS_D8_SOURCE is not set',
     why: 'all ten D8 conversations are sealed (eval/decisions/splits/beam-d8.json) and live only in owner custody; nothing is downloaded', fix: d8Ask });
   const abs = resolve(source);

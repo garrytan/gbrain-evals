@@ -262,6 +262,16 @@ export function sealedLaunchChecks(manifestPath: string, stateDir: string | unde
       } catch (e) { if (!(e instanceof ScoreboardError)) throw e; detail = e.op.message; code = e.op.code; }
       out.push({ id: 's1-corpus', ok, severity: 'error', detail, code, fix: fix('export GBRAIN_EVALS_BEAM10M_SOURCE=<the verified BEAM-10M dataset root outside the checkout> on the custodian host') });
     }
+    const d8 = sealed.filter(x => x.benchmark === 'beam-d8');
+    if (d8.length) {
+      let ok = false, detail: string, code: ScoreboardCode = 'CUSTODY_REQUIRED';
+      try {
+        const push = c.custodyPush(d8[0].id, env);
+        if (!push) detail = `this tree's launcher pushes no D8 files to a sealed D8 VM (${d8.length} cell(s)), so the loader refuses`;
+        else { ok = true; detail = `${push.list.length - 1} D8 file(s) under ${push.source} match the filled manifest; ${d8.length} D8 cell(s) push them and the manifest to ~/custody/d8 before setup`; }
+      } catch (e) { if (!(e instanceof ScoreboardError)) throw e; detail = e.op.message; code = e.op.code; }
+      out.push({ id: 'd8-corpus', ok, severity: 'error', detail, code, fix: fix('export GBRAIN_EVALS_D8_SOURCE=<the D8 root outside the checkout> and GBRAIN_EVALS_D8_MANIFEST=<the filled manifest inside it> on the custodian host') });
+    }
     const noCustody = sealed.filter(x => !c.payload(probe(x.id)).sealed);
     out.push({ id: 'sealed-payload', ok: !noCustody.length, severity: 'error', code: 'SEALED_CELL_LOCAL',
       detail: noCustody.length ? `${noCustody.length} of ${sealed.length} sealed cell(s) would launch without a custody root or GBRAIN_EVALS_CUSTODY_LOG on the VM (e.g. ${noCustody[0].id}), so cell.ts refuses before the first question` : `${sealed.length} sealed cell(s) carry a VM custody root and the custody access log`,

@@ -382,7 +382,8 @@ export function ownerTag(raw: string | undefined): string | null {
   return t.slice(0, 12);
 }
 
-export interface CustodyPush { source: string; list: string[]; env: string[] }
+/** A custody push: the listed files under `source` go to `dest` (relative to the VM user's home) before setup, and `env` points the loader there. */
+export interface CustodyPush { source: string; dest: string; list: string[]; env: string[] }
 
 /**
  * A17: the custodian's BEAM-10M files for a sealed S1 cell, checked against the manifest on this host before any VM
@@ -411,7 +412,35 @@ export function beam10mCustodyPush(env: Record<string, string | undefined> = pro
     list.push(rel);
     extra.push(`GBRAIN_EVALS_BEAM10M_MANIFEST=~/custody/datasets/${rel}`);
   }
-  return { source: resolve(source), list, env: ['GBRAIN_EVALS_BEAM10M_ROOT=~/custody/datasets', ...extra] };
+  return { source: resolve(source), dest: 'custody/datasets', list, env: ['GBRAIN_EVALS_BEAM10M_ROOT=~/custody/datasets', ...extra] };
+}
+
+/**
+ * F6: the custodian's D8 files for a sealed D8 cell, mirroring beam10mCustodyPush. GBRAIN_EVALS_D8_SOURCE names the D8
+ * root (outside the checkout) and GBRAIN_EVALS_D8_MANIFEST a filled manifest inside it (the committed manifest stays
+ * unfilled, so a launch always names the custodian's filled copy). Every listed file's SHA-256 is checked here before
+ * any VM exists; ubi-runner pushes the files and the manifest to ~/custody/d8 before setup, where setup's fetch
+ * (verifyD8Custody) checks them again, the loader logs each opening to the VM's custody access log
+ * (GBRAIN_EVALS_CUSTODY_LOG, set by the remote command), and the remote command wipes ~/custody/d8 at teardown.
+ */
+export function d8CustodyPush(env: Record<string, string | undefined> = process.env, campaign = '<campaign>'): CustodyPush {
+  const source = env.GBRAIN_EVALS_D8_SOURCE;
+  const fix = { next: 'tell_user_to_run' as const, argv: ['bun', 'run', 'eval:scoreboard', 'doctor', '--for', 'sealed', '--campaign', campaign], user_message: 'on the custodian host, export GBRAIN_EVALS_D8_SOURCE=<the D8 root, outside the checkout> and GBRAIN_EVALS_D8_MANIFEST=<the filled D8 manifest inside it>' };
+  if (!source) throw refuse({ code: 'CUSTODY_REQUIRED', message: 'a sealed D8 cell needs the custodian\'s files and GBRAIN_EVALS_D8_SOURCE is not set', why: 'D8 is never downloaded on a VM; the custodian host pushes its verified copy', fix });
+  if (insideRepository(source)) throw refuse({ code: 'CUSTODY_REQUIRED', message: `GBRAIN_EVALS_D8_SOURCE ${source} is inside the repository`, why: 'sealed files never live where Git could pick them up', fix });
+  const manifest = env.GBRAIN_EVALS_D8_MANIFEST;
+  if (!manifest) throw refuse({ code: 'CUSTODY_REQUIRED', message: 'a sealed D8 cell needs the filled D8 manifest and GBRAIN_EVALS_D8_MANIFEST is not set', why: 'the committed D8 manifest stays unfilled; only pinned bytes are pushed', fix });
+  const rel = relative(resolve(source), resolve(manifest));
+  if (rel.startsWith('..') || isAbsolute(rel)) throw refuse({ code: 'USAGE', message: 'the D8 manifest must sit inside GBRAIN_EVALS_D8_SOURCE', why: 'it travels with the files it describes', fix });
+  const m = JSON.parse(readFileSync(manifest, 'utf8')) as { status: string; files: Array<{ path: string; sha256: string }> };
+  if (m.status !== 'filled' || !m.files?.length) throw refuse({ code: 'CUSTODY_REQUIRED', message: 'the D8 manifest has no hashes', why: 'only pinned bytes are pushed', fix });
+  const list: string[] = [];
+  for (const f of m.files) {
+    const abs = join(source, f.path);
+    if (!existsSync(abs) || sha256File(abs) !== f.sha256) throw refuse({ code: 'CUSTODY_REQUIRED', message: `${f.path} under GBRAIN_EVALS_D8_SOURCE is ${existsSync(abs) ? 'not the pinned bytes' : 'missing'}`, why: 'the push refuses before any VM exists when a file does not match the manifest', fix });
+    list.push(f.path);
+  }
+  return { source: resolve(source), dest: 'custody/d8', list: [...list, rel], env: ['GBRAIN_EVALS_D8_SOURCE=~/custody/d8', `GBRAIN_EVALS_D8_MANIFEST=~/custody/d8/${rel}`] };
 }
 
 export class Campaign {
@@ -558,9 +587,11 @@ export class Campaign {
   /** The cell's output on the VM, relative to the VM user's home: what ubi-runner and reattach pull. */
   remotePath(l: LeaseState) { return this.sealedQ1(l.cell) ? `custody/out/${l.cell}/${l.lease_id}` : `work/${basename(REPO_ROOT)}/${this.remoteOut(l)}`; }
 
-  /** A17: what a sealed S1 cell's launch pushes to the VM before setup (null for every other cell). */
+  /** A17: what a sealed BEAM-10M or D8 cell's launch pushes to the VM before setup (null for every other cell). */
   custodyPush(cellId: string, env: Record<string, string | undefined> = process.env): CustodyPush | null {
-    return this.sealedQ1(cellId) && this.cell(cellId).benchmark === 'beam-10m' ? beam10mCustodyPush(env, this.manifestPath) : null;
+    if (!this.sealedQ1(cellId)) return null;
+    const benchmark = this.cell(cellId).benchmark;
+    return benchmark === 'beam-10m' ? beam10mCustodyPush(env, this.manifestPath) : benchmark === 'beam-d8' ? d8CustodyPush(env, this.manifestPath) : null;
   }
 
   /** Q1: the VM name, in ubi-runner's ownership format so `list --mine` and teardown find it. */
@@ -611,7 +642,7 @@ export class Campaign {
       mkdirSync(join(this.stateDir, 'setup'), { recursive: true });
       const listFile = join(this.stateDir, 'setup', `${l.cell}.push`);
       writeFileSync(listFile, push.list.join('\n') + '\n');
-      pushArgs = ['--push', `${push.source}:custody/datasets:${listFile}`, ...push.env.flatMap(e => ['--env', e])];
+      pushArgs = ['--push', `${push.source}:${push.dest}:${listFile}`, ...push.env.flatMap(e => ['--env', e])];
     }
     if (opts.restore?.dir === '~/custody/restore' && opts.restoreFrom) pushArgs.push('--push', `${opts.restoreFrom}:custody/restore`);
     let setup = c.setup ? (existsSync(resolve(REPO_ROOT, c.setup)) ? resolve(REPO_ROOT, c.setup) : resolve(c.setup)) : null;
@@ -987,7 +1018,7 @@ export async function runRemote(payload: RemotePayload, opts: { port?: number; p
     process.off('SIGTERM', onTerm);
     proxy.kill('SIGTERM');
     await proxy.exited;
-    if (custody && payload.cell) for (const d of ['datasets', 'restore']) rmSync(join(dirname(custody), d), { recursive: true, force: true });
+    if (custody && payload.cell) for (const d of ['datasets', 'restore', 'd8']) rmSync(join(dirname(custody), d), { recursive: true, force: true });
     const s = ledgerStatus({ ledgerPath: ledger, runId: payload.lease_id });
     writeFileSync(join(out, 'lease-summary.json'), JSON.stringify({ run_id: payload.lease_id, lease_usd: payload.lease_usd, committed_usd: s.run?.committed_usd ?? payload.lease_usd,
       requests: s.run ? BudgetRun.runRequests(ledger, payload.lease_id) : null, max_output_tokens: s.run ? BudgetRun.leaseMaxOutputTokens(ledger, payload.lease_id) ?? DEFAULT_MAX_OUTPUT_TOKENS : null, cell_exit_code: code,

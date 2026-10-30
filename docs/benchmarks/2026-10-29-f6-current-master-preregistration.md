@@ -83,7 +83,8 @@ write the overlay hash and the switch time into the retrieval record.
 | D8 long-history reserve | 10 (owner custody) | stratified by conversation then category, seed `f6-d8`, limit 300 (a parameter) | A, P, B, D | ext-memory-bank recipe, ext-graph-pipeline recipe, baseline-hybrid, baseline-none |
 | S4-slice LongMemEval-S | 100 | 100 (the shootout slice) | all seven | none (lowest priority) |
 
-D8's question, token and message counts are placeholders until the custodian reports the aggregates. D8 is judged
+D8 as the custodian's aggregates report it: 10 conversations, 4,226,928 cl100k tokens, 18,938 messages and 1,268
+items; the loader in custody selected 300 questions across all 10 conversations and 10 categories with no errors. D8 is judged
 with the BEAM rubric instrument under its own id (`beam-d8`).
 
 Readers: claude-opus-5-5, claude-sonnet-5-5 and gpt-6.1-sol at effort medium. Canonical judges as in Q1. Frontier
@@ -184,7 +185,7 @@ unchanged).
 
 ## Budget
 
-Estimate $2591.64 for the counted cells plus the dry run's $31.17 spent: **$2622.81 against the $3,100 cap**. The
+Estimate $1908.89 for the counted cells plus the dry run's $31.17 spent: **$1940.06 against the $3,100 cap**. The
 counted campaign's cap is $3,068.83 (the approval less the dry run's spend), so the two together cannot pass $3,100. Every rate is a named assumption in
 `F6_ASSUMPTIONS` (definitions.ts). The dry run (receipt: `2026-10-29-f6-current-master/dry-run/`) replaced these with
 measurements on BEAM-1M 1m-16 before any counted cell runs: extraction tokens per conversation token at
@@ -204,11 +205,11 @@ them, and claude-sonnet-5-5 held at Opus's $3.05 (its prices are lower), $11.62 
 |---|---|---:|
 | F6-S1 | gbrain seven arms, temporal graph 0.31.2, file agent, hybrid | $1077.96 |
 | F6-T2 | S2b, S2a and S3: gbrain seven arms, temporal graph 0.31.2 | $528.49 |
-| F6-D8 | gbrain four arms and four comparison rows | $913.52 |
+| F6-D8 | gbrain four arms and four comparison rows | $230.77 |
 | F6-S4 | S4-slice gbrain seven arms | $71.67 |
-| Counted cells | | $2591.64 |
+| Counted cells | | $1908.89 |
 | Dry run (spent) | | $31.17 |
-| Total | | $2622.81 |
+| Total | | $1940.06 |
 
 | Cell | Block | Arms | Shards | Estimate | Lease per shard |
 |---|---|---|---:|---:|---:|
@@ -222,10 +223,10 @@ them, and claude-sonnet-5-5 held at Opus's $3.05 (its prices are lower), $11.62 
 | s2a.ext-temporal-graph.shipped-0.31 | F6-T2 | component-b8000 | 1 | $19.77 | $25.10 |
 | s3.gbrain-defaults.f6-master | F6-T2 | a0, a, p, b, c, d, e | 1 | $118.44 | $148.44 |
 | s3.ext-temporal-graph.shipped-0.31 | F6-T2 | component-b8000 | 1 | $17.57 | $22.35 |
-| d8.gbrain-defaults.f6-master | F6-D8 | a, p, b, d | 10 | $223.24 | $28.29 |
-| d8.ext-memory-bank.recipe | F6-D8 | component-b8000 | 10 | $214.37 | $27.18 |
-| d8.ext-graph-pipeline.recipe | F6-D8 | component-b8000 | 10 | $410.17 | $51.66 |
-| d8.baseline-hybrid.baseline | F6-D8 | component-b8000 | 1 | $40.57 | $51.10 |
+| d8.gbrain-defaults.f6-master | F6-D8 | a, p, b, d | 10 | $107.43 | $13.82 |
+| d8.ext-memory-bank.recipe | F6-D8 | component-b8000 | 10 | $32.44 | $4.44 |
+| d8.ext-graph-pipeline.recipe | F6-D8 | component-b8000 | 10 | $39.97 | $5.38 |
+| d8.baseline-hybrid.baseline | F6-D8 | component-b8000 | 1 | $25.76 | $32.59 |
 | d8.baseline-none.baseline | F6-D8 | component-b8000 | 1 | $25.17 | $31.85 |
 | s4-slice.gbrain-defaults.f6-master | F6-S4 | a0, a, p, b, c, d, e | 1 | $71.67 | $89.98 |
 
