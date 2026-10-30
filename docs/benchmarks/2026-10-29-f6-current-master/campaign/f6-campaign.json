@@ -1,0 +1,1819 @@
+{
+  "kind": "q1-scoreboard-campaign",
+  "schema_version": 1,
+  "campaign_id": "q1-scoreboard-f6-current-master",
+  "cap_usd": 3068.83,
+  "ledger": "eval/reports/scoreboard/q1-scoreboard-f6-current-master/campaign.sqlite",
+  "parameters": {},
+  "hedge_classifier": "none",
+  "cells": [
+    {
+      "id": "s1.gbrain-defaults.f6-master.c0",
+      "system": "gbrain-defaults",
+      "benchmark": "beam-10m",
+      "config": "f6-master",
+      "lease_usd": 31.52,
+      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.f6-master --shard 0/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 35,
+      "block": "F6-S1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 22,
+      "wave": 1,
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "s1.gbrain-defaults.f6-master.c1",
+      "system": "gbrain-defaults",
+      "benchmark": "beam-10m",
+      "config": "f6-master",
+      "lease_usd": 31.52,
+      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.f6-master --shard 1/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 35,
+      "block": "F6-S1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 22,
+      "wave": 1,
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "s1.gbrain-defaults.f6-master.c2",
+      "system": "gbrain-defaults",
+      "benchmark": "beam-10m",
+      "config": "f6-master",
+      "lease_usd": 31.52,
+      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.f6-master --shard 2/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 35,
+      "block": "F6-S1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 22,
+      "wave": 1,
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "s1.gbrain-defaults.f6-master.c3",
+      "system": "gbrain-defaults",
+      "benchmark": "beam-10m",
+      "config": "f6-master",
+      "lease_usd": 31.52,
+      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.f6-master --shard 3/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 35,
+      "block": "F6-S1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 22,
+      "wave": 1,
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "s1.gbrain-defaults.f6-master.c4",
+      "system": "gbrain-defaults",
+      "benchmark": "beam-10m",
+      "config": "f6-master",
+      "lease_usd": 31.52,
+      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.f6-master --shard 4/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 35,
+      "block": "F6-S1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 22,
+      "wave": 1,
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "s1.gbrain-defaults.f6-master.c5",
+      "system": "gbrain-defaults",
+      "benchmark": "beam-10m",
+      "config": "f6-master",
+      "lease_usd": 31.52,
+      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.f6-master --shard 5/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 35,
+      "block": "F6-S1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 22,
+      "wave": 1,
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "s1.gbrain-defaults.f6-master.c6",
+      "system": "gbrain-defaults",
+      "benchmark": "beam-10m",
+      "config": "f6-master",
+      "lease_usd": 31.52,
+      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.f6-master --shard 6/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 35,
+      "block": "F6-S1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 22,
+      "wave": 1,
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "s1.gbrain-defaults.f6-master.c7",
+      "system": "gbrain-defaults",
+      "benchmark": "beam-10m",
+      "config": "f6-master",
+      "lease_usd": 31.52,
+      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.f6-master --shard 7/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 35,
+      "block": "F6-S1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 22,
+      "wave": 1,
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "s1.gbrain-defaults.f6-master.c8",
+      "system": "gbrain-defaults",
+      "benchmark": "beam-10m",
+      "config": "f6-master",
+      "lease_usd": 31.52,
+      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.f6-master --shard 8/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 35,
+      "block": "F6-S1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 22,
+      "wave": 1,
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "s1.gbrain-defaults.f6-master.c9",
+      "system": "gbrain-defaults",
+      "benchmark": "beam-10m",
+      "config": "f6-master",
+      "lease_usd": 31.52,
+      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.f6-master --shard 9/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 35,
+      "block": "F6-S1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 22,
+      "wave": 1,
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "s1.ext-temporal-graph.shipped-0.31.c0",
+      "system": "ext-temporal-graph",
+      "benchmark": "beam-10m",
+      "config": "shipped-0.31",
+      "lease_usd": 57.62,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-temporal-graph --config shipped-0.31 && bun eval/runner/q1/cell.ts run --cell s1.ext-temporal-graph.shipped-0.31 --shard 0/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-temporal-graph --config shipped-0.31; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-temporal-graph --config shipped-0.31 --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 40,
+      "block": "F6-S1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 25,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-temporal-graph --config shipped-0.31 --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-temporal-graph.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-temporal-graph --config shipped-0.31 --from \"$SHOOTOUT_RESTORE_DIR/ext-temporal-graph.tar\""
+    },
+    {
+      "id": "s1.ext-temporal-graph.shipped-0.31.c1",
+      "system": "ext-temporal-graph",
+      "benchmark": "beam-10m",
+      "config": "shipped-0.31",
+      "lease_usd": 57.62,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-temporal-graph --config shipped-0.31 && bun eval/runner/q1/cell.ts run --cell s1.ext-temporal-graph.shipped-0.31 --shard 1/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-temporal-graph --config shipped-0.31; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-temporal-graph --config shipped-0.31 --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 40,
+      "block": "F6-S1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 25,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-temporal-graph --config shipped-0.31 --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-temporal-graph.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-temporal-graph --config shipped-0.31 --from \"$SHOOTOUT_RESTORE_DIR/ext-temporal-graph.tar\""
+    },
+    {
+      "id": "s1.ext-temporal-graph.shipped-0.31.c2",
+      "system": "ext-temporal-graph",
+      "benchmark": "beam-10m",
+      "config": "shipped-0.31",
+      "lease_usd": 57.62,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-temporal-graph --config shipped-0.31 && bun eval/runner/q1/cell.ts run --cell s1.ext-temporal-graph.shipped-0.31 --shard 2/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-temporal-graph --config shipped-0.31; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-temporal-graph --config shipped-0.31 --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 40,
+      "block": "F6-S1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 25,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-temporal-graph --config shipped-0.31 --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-temporal-graph.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-temporal-graph --config shipped-0.31 --from \"$SHOOTOUT_RESTORE_DIR/ext-temporal-graph.tar\""
+    },
+    {
+      "id": "s1.ext-temporal-graph.shipped-0.31.c3",
+      "system": "ext-temporal-graph",
+      "benchmark": "beam-10m",
+      "config": "shipped-0.31",
+      "lease_usd": 57.62,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-temporal-graph --config shipped-0.31 && bun eval/runner/q1/cell.ts run --cell s1.ext-temporal-graph.shipped-0.31 --shard 3/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-temporal-graph --config shipped-0.31; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-temporal-graph --config shipped-0.31 --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 40,
+      "block": "F6-S1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 25,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-temporal-graph --config shipped-0.31 --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-temporal-graph.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-temporal-graph --config shipped-0.31 --from \"$SHOOTOUT_RESTORE_DIR/ext-temporal-graph.tar\""
+    },
+    {
+      "id": "s1.ext-temporal-graph.shipped-0.31.c4",
+      "system": "ext-temporal-graph",
+      "benchmark": "beam-10m",
+      "config": "shipped-0.31",
+      "lease_usd": 57.62,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-temporal-graph --config shipped-0.31 && bun eval/runner/q1/cell.ts run --cell s1.ext-temporal-graph.shipped-0.31 --shard 4/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-temporal-graph --config shipped-0.31; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-temporal-graph --config shipped-0.31 --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 40,
+      "block": "F6-S1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 25,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-temporal-graph --config shipped-0.31 --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-temporal-graph.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-temporal-graph --config shipped-0.31 --from \"$SHOOTOUT_RESTORE_DIR/ext-temporal-graph.tar\""
+    },
+    {
+      "id": "s1.ext-temporal-graph.shipped-0.31.c5",
+      "system": "ext-temporal-graph",
+      "benchmark": "beam-10m",
+      "config": "shipped-0.31",
+      "lease_usd": 57.62,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-temporal-graph --config shipped-0.31 && bun eval/runner/q1/cell.ts run --cell s1.ext-temporal-graph.shipped-0.31 --shard 5/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-temporal-graph --config shipped-0.31; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-temporal-graph --config shipped-0.31 --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 40,
+      "block": "F6-S1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 25,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-temporal-graph --config shipped-0.31 --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-temporal-graph.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-temporal-graph --config shipped-0.31 --from \"$SHOOTOUT_RESTORE_DIR/ext-temporal-graph.tar\""
+    },
+    {
+      "id": "s1.ext-temporal-graph.shipped-0.31.c6",
+      "system": "ext-temporal-graph",
+      "benchmark": "beam-10m",
+      "config": "shipped-0.31",
+      "lease_usd": 57.62,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-temporal-graph --config shipped-0.31 && bun eval/runner/q1/cell.ts run --cell s1.ext-temporal-graph.shipped-0.31 --shard 6/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-temporal-graph --config shipped-0.31; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-temporal-graph --config shipped-0.31 --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 40,
+      "block": "F6-S1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 25,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-temporal-graph --config shipped-0.31 --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-temporal-graph.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-temporal-graph --config shipped-0.31 --from \"$SHOOTOUT_RESTORE_DIR/ext-temporal-graph.tar\""
+    },
+    {
+      "id": "s1.ext-temporal-graph.shipped-0.31.c7",
+      "system": "ext-temporal-graph",
+      "benchmark": "beam-10m",
+      "config": "shipped-0.31",
+      "lease_usd": 57.62,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-temporal-graph --config shipped-0.31 && bun eval/runner/q1/cell.ts run --cell s1.ext-temporal-graph.shipped-0.31 --shard 7/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-temporal-graph --config shipped-0.31; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-temporal-graph --config shipped-0.31 --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 40,
+      "block": "F6-S1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 25,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-temporal-graph --config shipped-0.31 --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-temporal-graph.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-temporal-graph --config shipped-0.31 --from \"$SHOOTOUT_RESTORE_DIR/ext-temporal-graph.tar\""
+    },
+    {
+      "id": "s1.ext-temporal-graph.shipped-0.31.c8",
+      "system": "ext-temporal-graph",
+      "benchmark": "beam-10m",
+      "config": "shipped-0.31",
+      "lease_usd": 57.62,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-temporal-graph --config shipped-0.31 && bun eval/runner/q1/cell.ts run --cell s1.ext-temporal-graph.shipped-0.31 --shard 8/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-temporal-graph --config shipped-0.31; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-temporal-graph --config shipped-0.31 --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 40,
+      "block": "F6-S1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 25,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-temporal-graph --config shipped-0.31 --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-temporal-graph.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-temporal-graph --config shipped-0.31 --from \"$SHOOTOUT_RESTORE_DIR/ext-temporal-graph.tar\""
+    },
+    {
+      "id": "s1.ext-temporal-graph.shipped-0.31.c9",
+      "system": "ext-temporal-graph",
+      "benchmark": "beam-10m",
+      "config": "shipped-0.31",
+      "lease_usd": 57.62,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-temporal-graph --config shipped-0.31 && bun eval/runner/q1/cell.ts run --cell s1.ext-temporal-graph.shipped-0.31 --shard 9/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-temporal-graph --config shipped-0.31; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-temporal-graph --config shipped-0.31 --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 40,
+      "block": "F6-S1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 25,
+      "wave": 1,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-temporal-graph --config shipped-0.31 --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-temporal-graph.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-temporal-graph --config shipped-0.31 --from \"$SHOOTOUT_RESTORE_DIR/ext-temporal-graph.tar\""
+    },
+    {
+      "id": "s1.baseline-file-agent.baseline",
+      "system": "baseline-file-agent",
+      "benchmark": "beam-10m",
+      "config": "baseline",
+      "lease_usd": 368.19,
+      "command": "bun eval/runner/q1/cell.ts run --cell s1.baseline-file-agent.baseline --out \"$SHOOTOUT_OUT\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 11,
+      "block": "F6-S1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 6,
+      "wave": 1
+    },
+    {
+      "id": "s1.baseline-hybrid.baseline",
+      "system": "baseline-hybrid",
+      "benchmark": "beam-10m",
+      "config": "baseline",
+      "lease_usd": 119.26,
+      "command": "bun eval/runner/q1/cell.ts run --cell s1.baseline-hybrid.baseline --out \"$SHOOTOUT_OUT\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets beam-10m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 16,
+      "block": "F6-S1",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 9,
+      "wave": 1
+    },
+    {
+      "id": "s2b.gbrain-defaults.f6-master",
+      "system": "gbrain-defaults",
+      "benchmark": "beam-1m",
+      "config": "f6-master",
+      "lease_usd": 213.13,
+      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=3 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s2b.gbrain-defaults.f6-master --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-1m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 72,
+      "block": "F6-T2",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 47,
+      "wave": 2,
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=3 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=3 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "s2b.ext-temporal-graph.shipped-0.31",
+      "system": "ext-temporal-graph",
+      "benchmark": "beam-1m",
+      "config": "shipped-0.31",
+      "lease_usd": 145.86,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-temporal-graph --config shipped-0.31 && bun eval/runner/q1/cell.ts run --cell s2b.ext-temporal-graph.shipped-0.31 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-temporal-graph --config shipped-0.31; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-temporal-graph --config shipped-0.31 --datasets beam-1m",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 72,
+      "block": "F6-T2",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 48,
+      "wave": 2,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-temporal-graph --config shipped-0.31 --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-temporal-graph.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-temporal-graph --config shipped-0.31 --from \"$SHOOTOUT_RESTORE_DIR/ext-temporal-graph.tar\""
+    },
+    {
+      "id": "s2a.gbrain-defaults.f6-master",
+      "system": "gbrain-defaults",
+      "benchmark": "beam-100k",
+      "config": "f6-master",
+      "lease_usd": 108.06,
+      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s2a.gbrain-defaults.f6-master --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-100k",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 8,
+      "block": "F6-T2",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 4,
+      "wave": 2,
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "s2a.ext-temporal-graph.shipped-0.31",
+      "system": "ext-temporal-graph",
+      "benchmark": "beam-100k",
+      "config": "shipped-0.31",
+      "lease_usd": 25.1,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-temporal-graph --config shipped-0.31 && bun eval/runner/q1/cell.ts run --cell s2a.ext-temporal-graph.shipped-0.31 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-temporal-graph --config shipped-0.31; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-temporal-graph --config shipped-0.31 --datasets beam-100k",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 10,
+      "block": "F6-T2",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 5,
+      "wave": 2,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-temporal-graph --config shipped-0.31 --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-temporal-graph.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-temporal-graph --config shipped-0.31 --from \"$SHOOTOUT_RESTORE_DIR/ext-temporal-graph.tar\""
+    },
+    {
+      "id": "s3.gbrain-defaults.f6-master",
+      "system": "gbrain-defaults",
+      "benchmark": "locomo",
+      "config": "f6-master",
+      "lease_usd": 148.44,
+      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s3.gbrain-defaults.f6-master --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets locomo",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 4,
+      "block": "F6-T2",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 1,
+      "wave": 2,
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "s3.ext-temporal-graph.shipped-0.31",
+      "system": "ext-temporal-graph",
+      "benchmark": "locomo",
+      "config": "shipped-0.31",
+      "lease_usd": 22.35,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-temporal-graph --config shipped-0.31 && bun eval/runner/q1/cell.ts run --cell s3.ext-temporal-graph.shipped-0.31 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-temporal-graph --config shipped-0.31; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-temporal-graph --config shipped-0.31 --datasets locomo",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 4,
+      "block": "F6-T2",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 1,
+      "wave": 2,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-temporal-graph --config shipped-0.31 --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-temporal-graph.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-temporal-graph --config shipped-0.31 --from \"$SHOOTOUT_RESTORE_DIR/ext-temporal-graph.tar\""
+    },
+    {
+      "id": "d8.gbrain-defaults.f6-master.c0",
+      "system": "gbrain-defaults",
+      "benchmark": "beam-d8",
+      "config": "f6-master",
+      "lease_usd": 13.82,
+      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell d8.gbrain-defaults.f6-master --shard 0/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-d8",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 4,
+      "block": "F6-D8",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 1,
+      "wave": 3,
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "d8.gbrain-defaults.f6-master.c1",
+      "system": "gbrain-defaults",
+      "benchmark": "beam-d8",
+      "config": "f6-master",
+      "lease_usd": 13.82,
+      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell d8.gbrain-defaults.f6-master --shard 1/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-d8",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 4,
+      "block": "F6-D8",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 1,
+      "wave": 3,
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "d8.gbrain-defaults.f6-master.c2",
+      "system": "gbrain-defaults",
+      "benchmark": "beam-d8",
+      "config": "f6-master",
+      "lease_usd": 13.82,
+      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell d8.gbrain-defaults.f6-master --shard 2/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-d8",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 4,
+      "block": "F6-D8",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 1,
+      "wave": 3,
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "d8.gbrain-defaults.f6-master.c3",
+      "system": "gbrain-defaults",
+      "benchmark": "beam-d8",
+      "config": "f6-master",
+      "lease_usd": 13.82,
+      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell d8.gbrain-defaults.f6-master --shard 3/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-d8",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 4,
+      "block": "F6-D8",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 1,
+      "wave": 3,
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "d8.gbrain-defaults.f6-master.c4",
+      "system": "gbrain-defaults",
+      "benchmark": "beam-d8",
+      "config": "f6-master",
+      "lease_usd": 13.82,
+      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell d8.gbrain-defaults.f6-master --shard 4/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-d8",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 4,
+      "block": "F6-D8",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 1,
+      "wave": 3,
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "d8.gbrain-defaults.f6-master.c5",
+      "system": "gbrain-defaults",
+      "benchmark": "beam-d8",
+      "config": "f6-master",
+      "lease_usd": 13.82,
+      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell d8.gbrain-defaults.f6-master --shard 5/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-d8",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 4,
+      "block": "F6-D8",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 1,
+      "wave": 3,
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "d8.gbrain-defaults.f6-master.c6",
+      "system": "gbrain-defaults",
+      "benchmark": "beam-d8",
+      "config": "f6-master",
+      "lease_usd": 13.82,
+      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell d8.gbrain-defaults.f6-master --shard 6/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-d8",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 4,
+      "block": "F6-D8",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 1,
+      "wave": 3,
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "d8.gbrain-defaults.f6-master.c7",
+      "system": "gbrain-defaults",
+      "benchmark": "beam-d8",
+      "config": "f6-master",
+      "lease_usd": 13.82,
+      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell d8.gbrain-defaults.f6-master --shard 7/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-d8",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 4,
+      "block": "F6-D8",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 1,
+      "wave": 3,
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "d8.gbrain-defaults.f6-master.c8",
+      "system": "gbrain-defaults",
+      "benchmark": "beam-d8",
+      "config": "f6-master",
+      "lease_usd": 13.82,
+      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell d8.gbrain-defaults.f6-master --shard 8/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-d8",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 4,
+      "block": "F6-D8",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 1,
+      "wave": 3,
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "d8.gbrain-defaults.f6-master.c9",
+      "system": "gbrain-defaults",
+      "benchmark": "beam-d8",
+      "config": "f6-master",
+      "lease_usd": 13.82,
+      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell d8.gbrain-defaults.f6-master --shard 9/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-d8",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 4,
+      "block": "F6-D8",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 1,
+      "wave": 3,
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    },
+    {
+      "id": "d8.ext-memory-bank.recipe.c0",
+      "system": "ext-memory-bank",
+      "benchmark": "beam-d8",
+      "config": "recipe",
+      "lease_usd": 4.44,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-memory-bank --config recipe && bun eval/runner/q1/cell.ts run --cell d8.ext-memory-bank.recipe --shard 0/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-memory-bank; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-memory-bank --datasets beam-d8",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 4,
+      "block": "F6-D8",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 1,
+      "wave": 3,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-memory-bank --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-memory-bank.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-memory-bank --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-memory-bank.tar\""
+    },
+    {
+      "id": "d8.ext-memory-bank.recipe.c1",
+      "system": "ext-memory-bank",
+      "benchmark": "beam-d8",
+      "config": "recipe",
+      "lease_usd": 4.44,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-memory-bank --config recipe && bun eval/runner/q1/cell.ts run --cell d8.ext-memory-bank.recipe --shard 1/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-memory-bank; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-memory-bank --datasets beam-d8",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 4,
+      "block": "F6-D8",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 1,
+      "wave": 3,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-memory-bank --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-memory-bank.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-memory-bank --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-memory-bank.tar\""
+    },
+    {
+      "id": "d8.ext-memory-bank.recipe.c2",
+      "system": "ext-memory-bank",
+      "benchmark": "beam-d8",
+      "config": "recipe",
+      "lease_usd": 4.44,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-memory-bank --config recipe && bun eval/runner/q1/cell.ts run --cell d8.ext-memory-bank.recipe --shard 2/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-memory-bank; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-memory-bank --datasets beam-d8",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 4,
+      "block": "F6-D8",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 1,
+      "wave": 3,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-memory-bank --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-memory-bank.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-memory-bank --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-memory-bank.tar\""
+    },
+    {
+      "id": "d8.ext-memory-bank.recipe.c3",
+      "system": "ext-memory-bank",
+      "benchmark": "beam-d8",
+      "config": "recipe",
+      "lease_usd": 4.44,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-memory-bank --config recipe && bun eval/runner/q1/cell.ts run --cell d8.ext-memory-bank.recipe --shard 3/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-memory-bank; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-memory-bank --datasets beam-d8",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 4,
+      "block": "F6-D8",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 1,
+      "wave": 3,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-memory-bank --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-memory-bank.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-memory-bank --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-memory-bank.tar\""
+    },
+    {
+      "id": "d8.ext-memory-bank.recipe.c4",
+      "system": "ext-memory-bank",
+      "benchmark": "beam-d8",
+      "config": "recipe",
+      "lease_usd": 4.44,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-memory-bank --config recipe && bun eval/runner/q1/cell.ts run --cell d8.ext-memory-bank.recipe --shard 4/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-memory-bank; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-memory-bank --datasets beam-d8",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 4,
+      "block": "F6-D8",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 1,
+      "wave": 3,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-memory-bank --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-memory-bank.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-memory-bank --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-memory-bank.tar\""
+    },
+    {
+      "id": "d8.ext-memory-bank.recipe.c5",
+      "system": "ext-memory-bank",
+      "benchmark": "beam-d8",
+      "config": "recipe",
+      "lease_usd": 4.44,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-memory-bank --config recipe && bun eval/runner/q1/cell.ts run --cell d8.ext-memory-bank.recipe --shard 5/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-memory-bank; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-memory-bank --datasets beam-d8",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 4,
+      "block": "F6-D8",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 1,
+      "wave": 3,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-memory-bank --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-memory-bank.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-memory-bank --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-memory-bank.tar\""
+    },
+    {
+      "id": "d8.ext-memory-bank.recipe.c6",
+      "system": "ext-memory-bank",
+      "benchmark": "beam-d8",
+      "config": "recipe",
+      "lease_usd": 4.44,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-memory-bank --config recipe && bun eval/runner/q1/cell.ts run --cell d8.ext-memory-bank.recipe --shard 6/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-memory-bank; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-memory-bank --datasets beam-d8",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 4,
+      "block": "F6-D8",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 1,
+      "wave": 3,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-memory-bank --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-memory-bank.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-memory-bank --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-memory-bank.tar\""
+    },
+    {
+      "id": "d8.ext-memory-bank.recipe.c7",
+      "system": "ext-memory-bank",
+      "benchmark": "beam-d8",
+      "config": "recipe",
+      "lease_usd": 4.44,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-memory-bank --config recipe && bun eval/runner/q1/cell.ts run --cell d8.ext-memory-bank.recipe --shard 7/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-memory-bank; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-memory-bank --datasets beam-d8",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 4,
+      "block": "F6-D8",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 1,
+      "wave": 3,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-memory-bank --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-memory-bank.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-memory-bank --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-memory-bank.tar\""
+    },
+    {
+      "id": "d8.ext-memory-bank.recipe.c8",
+      "system": "ext-memory-bank",
+      "benchmark": "beam-d8",
+      "config": "recipe",
+      "lease_usd": 4.44,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-memory-bank --config recipe && bun eval/runner/q1/cell.ts run --cell d8.ext-memory-bank.recipe --shard 8/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-memory-bank; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-memory-bank --datasets beam-d8",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 4,
+      "block": "F6-D8",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 1,
+      "wave": 3,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-memory-bank --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-memory-bank.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-memory-bank --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-memory-bank.tar\""
+    },
+    {
+      "id": "d8.ext-memory-bank.recipe.c9",
+      "system": "ext-memory-bank",
+      "benchmark": "beam-d8",
+      "config": "recipe",
+      "lease_usd": 4.44,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-memory-bank --config recipe && bun eval/runner/q1/cell.ts run --cell d8.ext-memory-bank.recipe --shard 9/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-memory-bank; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-memory-bank --datasets beam-d8",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 4,
+      "block": "F6-D8",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 1,
+      "wave": 3,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-memory-bank --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-memory-bank.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-memory-bank --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-memory-bank.tar\""
+    },
+    {
+      "id": "d8.ext-graph-pipeline.recipe.c0",
+      "system": "ext-graph-pipeline",
+      "benchmark": "beam-d8",
+      "config": "recipe",
+      "lease_usd": 5.38,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-graph-pipeline --config recipe && bun eval/runner/q1/cell.ts run --cell d8.ext-graph-pipeline.recipe --shard 0/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-graph-pipeline; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-graph-pipeline --datasets beam-d8",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 7,
+      "block": "F6-D8",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 3,
+      "wave": 3,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\""
+    },
+    {
+      "id": "d8.ext-graph-pipeline.recipe.c1",
+      "system": "ext-graph-pipeline",
+      "benchmark": "beam-d8",
+      "config": "recipe",
+      "lease_usd": 5.38,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-graph-pipeline --config recipe && bun eval/runner/q1/cell.ts run --cell d8.ext-graph-pipeline.recipe --shard 1/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-graph-pipeline; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-graph-pipeline --datasets beam-d8",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 7,
+      "block": "F6-D8",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 3,
+      "wave": 3,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\""
+    },
+    {
+      "id": "d8.ext-graph-pipeline.recipe.c2",
+      "system": "ext-graph-pipeline",
+      "benchmark": "beam-d8",
+      "config": "recipe",
+      "lease_usd": 5.38,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-graph-pipeline --config recipe && bun eval/runner/q1/cell.ts run --cell d8.ext-graph-pipeline.recipe --shard 2/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-graph-pipeline; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-graph-pipeline --datasets beam-d8",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 7,
+      "block": "F6-D8",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 3,
+      "wave": 3,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\""
+    },
+    {
+      "id": "d8.ext-graph-pipeline.recipe.c3",
+      "system": "ext-graph-pipeline",
+      "benchmark": "beam-d8",
+      "config": "recipe",
+      "lease_usd": 5.38,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-graph-pipeline --config recipe && bun eval/runner/q1/cell.ts run --cell d8.ext-graph-pipeline.recipe --shard 3/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-graph-pipeline; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-graph-pipeline --datasets beam-d8",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 7,
+      "block": "F6-D8",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 3,
+      "wave": 3,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\""
+    },
+    {
+      "id": "d8.ext-graph-pipeline.recipe.c4",
+      "system": "ext-graph-pipeline",
+      "benchmark": "beam-d8",
+      "config": "recipe",
+      "lease_usd": 5.38,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-graph-pipeline --config recipe && bun eval/runner/q1/cell.ts run --cell d8.ext-graph-pipeline.recipe --shard 4/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-graph-pipeline; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-graph-pipeline --datasets beam-d8",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 7,
+      "block": "F6-D8",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 3,
+      "wave": 3,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\""
+    },
+    {
+      "id": "d8.ext-graph-pipeline.recipe.c5",
+      "system": "ext-graph-pipeline",
+      "benchmark": "beam-d8",
+      "config": "recipe",
+      "lease_usd": 5.38,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-graph-pipeline --config recipe && bun eval/runner/q1/cell.ts run --cell d8.ext-graph-pipeline.recipe --shard 5/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-graph-pipeline; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-graph-pipeline --datasets beam-d8",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 7,
+      "block": "F6-D8",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 3,
+      "wave": 3,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\""
+    },
+    {
+      "id": "d8.ext-graph-pipeline.recipe.c6",
+      "system": "ext-graph-pipeline",
+      "benchmark": "beam-d8",
+      "config": "recipe",
+      "lease_usd": 5.38,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-graph-pipeline --config recipe && bun eval/runner/q1/cell.ts run --cell d8.ext-graph-pipeline.recipe --shard 6/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-graph-pipeline; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-graph-pipeline --datasets beam-d8",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 7,
+      "block": "F6-D8",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 3,
+      "wave": 3,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\""
+    },
+    {
+      "id": "d8.ext-graph-pipeline.recipe.c7",
+      "system": "ext-graph-pipeline",
+      "benchmark": "beam-d8",
+      "config": "recipe",
+      "lease_usd": 5.38,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-graph-pipeline --config recipe && bun eval/runner/q1/cell.ts run --cell d8.ext-graph-pipeline.recipe --shard 7/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-graph-pipeline; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-graph-pipeline --datasets beam-d8",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 7,
+      "block": "F6-D8",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 3,
+      "wave": 3,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\""
+    },
+    {
+      "id": "d8.ext-graph-pipeline.recipe.c8",
+      "system": "ext-graph-pipeline",
+      "benchmark": "beam-d8",
+      "config": "recipe",
+      "lease_usd": 5.38,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-graph-pipeline --config recipe && bun eval/runner/q1/cell.ts run --cell d8.ext-graph-pipeline.recipe --shard 8/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-graph-pipeline; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-graph-pipeline --datasets beam-d8",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 7,
+      "block": "F6-D8",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 3,
+      "wave": 3,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\""
+    },
+    {
+      "id": "d8.ext-graph-pipeline.recipe.c9",
+      "system": "ext-graph-pipeline",
+      "benchmark": "beam-d8",
+      "config": "recipe",
+      "lease_usd": 5.38,
+      "command": "bash eval/systems/bootstrap.sh up --system ext-graph-pipeline --config recipe && bun eval/runner/q1/cell.ts run --cell d8.ext-graph-pipeline.recipe --shard 9/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-graph-pipeline; exit $rc",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-graph-pipeline --datasets beam-d8",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 7,
+      "block": "F6-D8",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 3,
+      "wave": 3,
+      "snapshot_command": "bash eval/systems/bootstrap.sh snapshot --system ext-graph-pipeline --out \"$SHOOTOUT_SNAPSHOT_DIR/ext-graph-pipeline.tar\"",
+      "restore_command": "bash eval/systems/bootstrap.sh restore --system ext-graph-pipeline --config recipe --from \"$SHOOTOUT_RESTORE_DIR/ext-graph-pipeline.tar\""
+    },
+    {
+      "id": "d8.baseline-hybrid.baseline",
+      "system": "baseline-hybrid",
+      "benchmark": "beam-d8",
+      "config": "baseline",
+      "lease_usd": 32.59,
+      "command": "bun eval/runner/q1/cell.ts run --cell d8.baseline-hybrid.baseline --out \"$SHOOTOUT_OUT\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets beam-d8",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 4,
+      "block": "F6-D8",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 1,
+      "wave": 3
+    },
+    {
+      "id": "d8.baseline-none.baseline",
+      "system": "baseline-none",
+      "benchmark": "beam-d8",
+      "config": "baseline",
+      "lease_usd": 31.85,
+      "command": "bun eval/runner/q1/cell.ts run --cell d8.baseline-none.baseline --out \"$SHOOTOUT_OUT\"",
+      "setup_command": "bash eval/systems/bootstrap.sh setup --datasets beam-d8",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 4,
+      "block": "F6-D8",
+      "sealed": true,
+      "providers": [
+        "openai",
+        "anthropic"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY"
+      ],
+      "expected_hours": 1,
+      "wave": 3
+    },
+    {
+      "id": "s4-slice.gbrain-defaults.f6-master",
+      "system": "gbrain-defaults",
+      "benchmark": "lme-s",
+      "config": "f6-master",
+      "lease_usd": 89.98,
+      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s4-slice.gbrain-defaults.f6-master --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "setup_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets lme-s",
+      "vm": {
+        "size": "standard-4"
+      },
+      "timeout_hours": 37,
+      "block": "F6-S4",
+      "sealed": false,
+      "providers": [
+        "openai",
+        "anthropic",
+        "voyage"
+      ],
+      "pass": [
+        "OPENAI_API_KEY",
+        "ANTHROPIC_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "expected_hours": 23,
+      "wave": 4,
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+    }
+  ],
+  "executes": [
+    "eval/runner/q1/cell.ts",
+    "eval/runner/q1/cells",
+    "eval/runner/q1/scoreboard-errors.ts",
+    "eval/runner/q1/usage.ts",
+    "eval/runner/memory-qa",
+    "eval/runner/systems",
+    "eval/runner/cat40",
+    "eval/runner/decisions",
+    "eval/runner/metering-proxy.ts",
+    "eval/runner/budget-ledger.ts",
+    "eval/runner/usage-receipt.ts",
+    "eval/runner/openai-judge-shim.ts",
+    "eval/runner/paid-arm.ts",
+    "eval/runner/metrics.ts",
+    "eval/runner/sealed-confirmation-lib.ts",
+    "eval/runner/shootout-cell.ts",
+    "eval/runner/evidence-delivery",
+    "eval/runner/gbrain-under-test.ts",
+    "eval/runner/lifecycle/builds.ts",
+    "eval/runner/longmemeval-cache.ts",
+    "eval/runner/receipt.ts",
+    "scripts/ubicloud/ubi-runner.sh",
+    "eval/runner/situation-recall-provenance.ts",
+    "eval/generators/model-ladder-gen.ts",
+    "eval/systems/PROTOCOL.md",
+    "eval/systems/_fake",
+    "eval/systems/_shim",
+    "eval/systems/bootstrap.sh",
+    "eval/systems/gbrain-defaults",
+    "eval/systems/kinds.json",
+    "eval/systems/name-guard-baseline.json",
+    "docs/comparison-systems",
+    "eval/decisions",
+    "package.json",
+    "bun.lock"
+  ],
+  "images": {
+    "_fake/service:1.8.0.3": "sha256:beb4a68d9e4fe6b0f21ea774a0fde6c31f580dde6368939ed70100c5385b015e",
+    "_fake/service:3.12-slim": "sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d",
+    "ext-agent-runtime/base:0.34.4": "sha256:8ee7fb697e7f08b121a487b48315d45c64b195c12418264b091371c9e8ab3a5c",
+    "ext-agent-runtime/service:1.8.0.3": "sha256:beb4a68d9e4fe6b0f21ea774a0fde6c31f580dde6368939ed70100c5385b015e",
+    "ext-agent-runtime/service:3.12-slim": "sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d",
+    "ext-extract-first/base:0.12.3": "sha256:2d890623d310b57771ce840f0da5eed5fc6d657da05ffaa45d82797b53fa3abc",
+    "ext-extract-first/base:3.12-slim-bookworm": "sha256:54c85f3c47607a77f32adec749d3c81d1348bf25833671f512b26a9b6d778cb3",
+    "ext-extract-first/service:1.8.0.3": "sha256:beb4a68d9e4fe6b0f21ea774a0fde6c31f580dde6368939ed70100c5385b015e",
+    "ext-extract-first/service:v1.19.2": "sha256:b7b0444c4c351c970b98e90a6f89c2ee4287c65b44e52b4cb503fa5b2aa927ad",
+    "ext-graph-pipeline/base:0.12.3": "sha256:2d890623d310b57771ce840f0da5eed5fc6d657da05ffaa45d82797b53fa3abc",
+    "ext-graph-pipeline/base:3.12-slim": "sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d",
+    "ext-graph-pipeline/service:1.8.0.3": "sha256:beb4a68d9e4fe6b0f21ea774a0fde6c31f580dde6368939ed70100c5385b015e",
+    "ext-graph-pipeline/service:3.12-slim": "sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d",
+    "ext-markdown-kb/base:0.12.3": "sha256:2d890623d310b57771ce840f0da5eed5fc6d657da05ffaa45d82797b53fa3abc",
+    "ext-markdown-kb/base:3.12-slim-bookworm": "sha256:54c85f3c47607a77f32adec749d3c81d1348bf25833671f512b26a9b6d778cb3",
+    "ext-markdown-kb/service:1.8.0.3": "sha256:beb4a68d9e4fe6b0f21ea774a0fde6c31f580dde6368939ed70100c5385b015e",
+    "ext-memory-bank/base:0.9.5": "sha256:f459f6f73a8c4ef5d69f4e6fbbdb8af751d6fa40ec34b39a1ab469acd6e289b7",
+    "ext-memory-bank/base:3.12-slim": "sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d",
+    "ext-memory-bank/service:0.10.2": "sha256:d1840062a5b79940ab7a9f4809ceb90fc776d4ad737cd9329e9b5836cc64ab70",
+    "ext-memory-bank/service:0.8.1-pg18": "sha256:508c5290cda481d4f5f846446a26e9c1b804766828a394a5861de1b348a18b4c",
+    "ext-memory-bank/service:latest": "sha256:82ad20f6f6e29b91ff33b6662d24063522b1378f08fd8569cd3ab412cac13f50",
+    "ext-temporal-graph/base:0.9.5": "sha256:f459f6f73a8c4ef5d69f4e6fbbdb8af751d6fa40ec34b39a1ab469acd6e289b7",
+    "ext-temporal-graph/base:3.12-slim": "sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d",
+    "ext-temporal-graph/service:5.26.2": "sha256:099b9f74968c123209972835417985ed2a1cc19c0422c0753a313e26a736c365",
+    "ext-temporal-graph/service:latest": "sha256:82ad20f6f6e29b91ff33b6662d24063522b1378f08fd8569cd3ab412cac13f50",
+    "ext-verbatim-session/base:0.12.3": "sha256:2d890623d310b57771ce840f0da5eed5fc6d657da05ffaa45d82797b53fa3abc",
+    "ext-verbatim-session/base:3.12-slim-bookworm": "sha256:54c85f3c47607a77f32adec749d3c81d1348bf25833671f512b26a9b6d778cb3",
+    "ext-verbatim-session/service:1.8.0.3": "sha256:beb4a68d9e4fe6b0f21ea774a0fde6c31f580dde6368939ed70100c5385b015e",
+    "ext-verbatim-session/service:3.12-slim-bookworm": "sha256:54c85f3c47607a77f32adec749d3c81d1348bf25833671f512b26a9b6d778cb3",
+    "gbrain-defaults/base:1.4.2-slim": "sha256:cb3bbbb08e13a4a2ff400f24c7a2a1d5efa83f6ef8544d52d95a519631e2fc61",
+    "gbrain-defaults/base:1.4.4-slim": "sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4",
+    "gbrain-defaults/base:3.12-slim": "sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d",
+    "gbrain-defaults/service:1.8.0.3": "sha256:beb4a68d9e4fe6b0f21ea774a0fde6c31f580dde6368939ed70100c5385b015e",
+    "gbrain-defaults/service:3.12-slim": "sha256:02108f5d322dd89f1c9e552442c25acb0543dfdbc455693a5599624f20d9155d"
+  },
+  "blocks": {
+    "F6-S1": {
+      "estimate_usd": 1077.96,
+      "cap_usd": 1616.94
+    },
+    "F6-T2": {
+      "estimate_usd": 528.49,
+      "cap_usd": 792.74
+    },
+    "F6-D8": {
+      "estimate_usd": 230.77,
+      "cap_usd": 346.16
+    },
+    "F6-S4": {
+      "estimate_usd": 71.67,
+      "cap_usd": 107.51
+    }
+  },
+  "output_caps": {
+    "extraction": 4096,
+    "reader": 2048,
+    "judge": 2048,
+    "agent": 16000
+  },
+  "route_classes": {
+    "harness": "reader",
+    "judge": "judge",
+    "agent": "agent"
+  },
+  "schedule": {
+    "vcpu_cap_day": 128,
+    "vcpu_cap_night": 200
+  },
+  "row_pull_every": 20,
+  "pull_interval_minutes": 10,
+  "models": [
+    "anthropic:claude-haiku-4-5",
+    "anthropic:claude-haiku-5-5",
+    "anthropic:claude-opus-4-7",
+    "anthropic:claude-opus-5-5",
+    "anthropic:claude-sonnet-5-5",
+    "openai:gpt-4.1-mini",
+    "openai:gpt-4o-2024-08-06",
+    "openai:gpt-6-luna",
+    "openai:gpt-6.1-sol",
+    "openai:text-embedding-3-large",
+    "openai:text-embedding-3-small"
+  ]
+}

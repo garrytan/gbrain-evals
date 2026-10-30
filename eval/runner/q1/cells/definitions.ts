@@ -206,7 +206,7 @@ export const SETS: Record<Q1SetId, SetFacts> = {
  * message counts are placeholders until the custodian reports the aggregates, and its selection limit is a parameter.
  */
 export const F6_SETS: Record<'D8', SetFacts> = {
-  D8: { id: 'D8', benchmark: 'beam-d8', split: 'sealed', questions: 300, conversations: 10, corpus_tokens: 110_000_000, messages: 70_000, block: 'F6-D8', selection: { kind: 'stratified', limit: 300, stratify: 'conversation-category', seed: 'f6-d8' }, exclusions: [], role: 'headline', exposure: 'E0', label: 'D8 long-history reserve (placeholder counts)' },
+  D8: { id: 'D8', benchmark: 'beam-d8', split: 'sealed', questions: 300, conversations: 10, corpus_tokens: 4_226_928, messages: 18_938, block: 'F6-D8', selection: { kind: 'stratified', limit: 300, stratify: 'conversation-category', seed: 'f6-d8' }, exclusions: [], role: 'headline', exposure: 'E0', label: 'D8 long-history reserve' },
 };
 /** Every set a cell may name: Q1's and F6's. */
 export const ALL_SETS: Record<SetId, SetFacts> = { ...SETS, ...F6_SETS };

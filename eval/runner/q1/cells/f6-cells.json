@@ -331,8 +331,8 @@
       "split": "sealed",
       "questions": 300,
       "conversations": 10,
-      "corpus_tokens": 110000000,
-      "messages": 70000,
+      "corpus_tokens": 4226928,
+      "messages": 18938,
       "block": "F6-D8",
       "selection": {
         "kind": "stratified",
@@ -343,7 +343,7 @@
       "exclusions": [],
       "role": "headline",
       "exposure": "E0",
-      "label": "D8 long-history reserve (placeholder counts)"
+      "label": "D8 long-history reserve"
     },
     {
       "id": "S4-slice",
@@ -430,9 +430,9 @@
     {
       "id": "F6-D8",
       "label": "F6 D8 long-history reserve",
-      "plan_usd": 913.52,
-      "estimate_usd": 913.52,
-      "cap_usd": 1370.28
+      "plan_usd": 230.77,
+      "estimate_usd": 230.77,
+      "cap_usd": 346.16
     },
     {
       "id": "F6-S4",
@@ -2052,18 +2052,18 @@
         "conversations": 0
       },
       "shards": 10,
-      "expected_hours": 22,
+      "expected_hours": 1,
       "launch": {
         "env": {
           "GBRAIN_BUN_IMAGE": "oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4",
           "GBRAIN_F6": "1",
           "GBRAIN_SHA": "0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049",
-          "GBRAIN_F6_EXTRACT_CAP_USD": "23"
+          "GBRAIN_F6_EXTRACT_CAP_USD": "1"
         },
         "config": "recipe"
       },
-      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
-      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\"",
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\"",
       "arms": [
         {
           "id": "a",
@@ -2202,18 +2202,18 @@
         }
       ],
       "estimate": {
-        "usd": 223.24,
+        "usd": 107.43,
         "lines": {
-          "extraction": 110.66,
-          "fact_embeddings": 0.99,
-          "ingest": 8.8,
+          "extraction": 4.25,
+          "fact_embeddings": 0.04,
+          "ingest": 0.34,
           "judges": 4.92,
           "readers": 95.76,
           "system_queries": 2.11
         }
       },
       "lease": {
-        "usd": 28.29,
+        "usd": 13.82,
         "basis": "F6: estimate per shard x 1.25 plus twice the peak reservation ($0.1916, reader anthropic:claude-opus-5-5)"
       }
     },
@@ -2243,7 +2243,7 @@
         "conversations": 0
       },
       "shards": 10,
-      "expected_hours": 26,
+      "expected_hours": 1,
       "launch": {
         "env": {},
         "config": "recipe"
@@ -2272,15 +2272,15 @@
         }
       ],
       "estimate": {
-        "usd": 214.37,
+        "usd": 32.44,
         "lines": {
-          "ingest": 189.2,
+          "ingest": 7.27,
           "judges": 1.23,
           "readers": 23.94
         }
       },
       "lease": {
-        "usd": 27.18,
+        "usd": 4.44,
         "basis": "F6: estimate per shard x 1.25 plus twice the peak reservation ($0.1916, reader anthropic:claude-opus-5-5)"
       }
     },
@@ -2310,7 +2310,7 @@
         "conversations": 0
       },
       "shards": 10,
-      "expected_hours": 48,
+      "expected_hours": 3,
       "launch": {
         "env": {},
         "config": "recipe"
@@ -2339,15 +2339,15 @@
         }
       ],
       "estimate": {
-        "usd": 410.17,
+        "usd": 39.97,
         "lines": {
-          "ingest": 385,
+          "ingest": 14.79,
           "judges": 1.23,
           "readers": 23.94
         }
       },
       "lease": {
-        "usd": 51.66,
+        "usd": 5.38,
         "basis": "F6: estimate per shard x 1.25 plus twice the peak reservation ($0.1916, reader anthropic:claude-opus-5-5)"
       }
     },
@@ -2377,7 +2377,7 @@
         "conversations": 0
       },
       "shards": 1,
-      "expected_hours": 6,
+      "expected_hours": 1,
       "arms": [
         {
           "id": "component-b8000",
@@ -2400,15 +2400,15 @@
         }
       ],
       "estimate": {
-        "usd": 40.57,
+        "usd": 25.76,
         "lines": {
-          "ingest": 15.4,
+          "ingest": 0.59,
           "judges": 1.23,
           "readers": 23.94
         }
       },
       "lease": {
-        "usd": 51.1,
+        "usd": 32.59,
         "basis": "F6: estimate per shard x 1.25 plus twice the peak reservation ($0.1916, reader anthropic:claude-opus-5-5)"
       }
     },
@@ -2438,7 +2438,7 @@
         "conversations": 0
       },
       "shards": 1,
-      "expected_hours": 6,
+      "expected_hours": 1,
       "arms": [
         {
           "id": "component-b8000",
@@ -3426,7 +3426,7 @@
       }
     }
   ],
-  "total_usd": 2591.64,
+  "total_usd": 1908.89,
   "plan_total_usd": 3100,
   "cap_usd": 3068.83,
   "dry_run_cap_usd": 60,
