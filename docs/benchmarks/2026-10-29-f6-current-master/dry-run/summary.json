@@ -1,0 +1,712 @@
+{
+ "schema": "gbrain-evals/f6-dry-run-summary/v1",
+ "campaigns": [
+  "q1-scoreboard-f6-current-master-dry-run",
+  "q1-scoreboard-f6-current-master-dry-run-r2"
+ ],
+ "cap_usd": 60,
+ "spent_usd": 31.1698,
+ "cells": [
+  {
+   "cell": "s2b-ingest.gbrain-defaults.f6-master",
+   "run": "r1 (before the barrier fix; superseded)",
+   "lease_id": "s2b-ingest.gbrain-defaults.f6-master-a1-4fd3ddc6",
+   "lease_usd": 12.64,
+   "actual_usd": 7.9606,
+   "requests": 9209,
+   "realizations": [
+    {
+     "sessions": 928,
+     "failed_sessions": 0,
+     "ingested_tokens": 926773,
+     "wall_ms": 6391890,
+     "readiness_probe": "missed",
+     "degraded": true,
+     "finish_ms": 6321823,
+     "conv": "1m-16"
+    }
+   ],
+   "arms": {
+    "a": {
+     "answers": 30,
+     "outcomes": {
+      "ingest_degraded": 30
+     },
+     "row_outcomes": {
+      "ingest_degraded": 10
+     },
+     "judgments": 30,
+     "mean": 0.688,
+     "per_reader": {
+      "?": 0.688
+     }
+    },
+    "a0": {
+     "answers": 30,
+     "outcomes": {
+      "ingest_degraded": 30
+     },
+     "row_outcomes": {
+      "ingest_degraded": 10
+     },
+     "judgments": 30,
+     "mean": 0.744,
+     "per_reader": {
+      "?": 0.744
+     }
+    },
+    "b": {
+     "answers": 30,
+     "outcomes": {
+      "ingest_degraded": 30
+     },
+     "row_outcomes": {
+      "ingest_degraded": 10
+     },
+     "judgments": 30,
+     "mean": 0.82,
+     "per_reader": {
+      "?": 0.82
+     }
+    },
+    "c": {
+     "answers": 30,
+     "outcomes": {
+      "ingest_degraded": 30
+     },
+     "row_outcomes": {
+      "ingest_degraded": 10
+     },
+     "judgments": 30,
+     "mean": 0.68,
+     "per_reader": {
+      "?": 0.68
+     }
+    },
+    "d": {
+     "answers": 30,
+     "outcomes": {
+      "ingest_degraded": 30
+     },
+     "row_outcomes": {
+      "ingest_degraded": 10
+     },
+     "judgments": 30,
+     "mean": 0.805,
+     "per_reader": {
+      "?": 0.805
+     }
+    },
+    "e": {
+     "answers": 30,
+     "outcomes": {
+      "ingest_degraded": 30
+     },
+     "row_outcomes": {
+      "ingest_degraded": 10
+     },
+     "judgments": 30,
+     "mean": 0.768,
+     "per_reader": {
+      "?": 0.768
+     }
+    },
+    "p": {
+     "answers": 30,
+     "outcomes": {
+      "ingest_degraded": 30
+     },
+     "row_outcomes": {
+      "ingest_degraded": 10
+     },
+     "judgments": 30,
+     "mean": 0.782,
+     "per_reader": {
+      "?": 0.782
+     }
+    }
+   },
+   "usage": {
+    "harness|None|claude-opus-5-5": [
+     66,
+     562840,
+     74496,
+     3.7413
+    ],
+    "harness|None|claude-sonnet-5-5": [
+     66,
+     562840,
+     47253,
+     1.5982
+    ],
+    "harness|None|gpt-6.1-sol": [
+     66,
+     353838,
+     27349,
+     1.158
+    ],
+    "gbrain-defaults|background|claude-haiku-5-5": [
+     1047,
+     3998207,
+     1070067,
+     0.7719
+    ],
+    "judge|None|gpt-4.1-mini": [
+     2194,
+     1162366,
+     70881,
+     0.5784
+    ],
+    "gbrain-defaults|background|voyage-4": [
+     5502,
+     1064012,
+     0,
+     0.0638
+    ],
+    "gbrain-defaults|query|rerank-3-lite": [
+     70,
+     1809527,
+     0,
+     0.0362
+    ],
+    "gbrain-defaults|commit|voyage-4": [
+     133,
+     133950,
+     0,
+     0.008
+    ],
+    "gbrain-defaults|None|rerank-3-lite": [
+     2,
+     64568,
+     0,
+     0.0013
+    ],
+    "gbrain-defaults|query|voyage-4": [
+     60,
+     1266,
+     0,
+     0.0001
+    ],
+    "gbrain-defaults|None|voyage-4": [
+     2,
+     58,
+     0,
+     0.0
+    ]
+   },
+   "total": 7.9572
+  },
+  {
+   "cell": "s2b-ingest.ext-temporal-graph.shipped-0.31",
+   "run": "r1",
+   "lease_id": "s2b-ingest.ext-temporal-graph.shipped-0.31-a1-1c90202e",
+   "lease_usd": 15.2,
+   "actual_usd": 5.1394,
+   "requests": 10705,
+   "realizations": [
+    {
+     "sessions": 928,
+     "failed_sessions": 0,
+     "ingested_tokens": 926773,
+     "wall_ms": 7546151,
+     "readiness_probe": "found",
+     "degraded": false,
+     "finish_ms": 0,
+     "conv": "1m-16"
+    }
+   ],
+   "arms": {
+    "component-b8000": {
+     "answers": 30,
+     "outcomes": {
+      "scored": 30
+     },
+     "row_outcomes": {
+      "scored": 10
+     },
+     "judgments": 30,
+     "mean": 0.709,
+     "per_reader": {
+      "?": 0.709
+     }
+    }
+   },
+   "usage": {
+    "ext-temporal-graph|commit|gpt-6-luna": [
+     4320,
+     34861978,
+     348091,
+     3.6759
+    ],
+    "harness|None|claude-opus-5-5": [
+     10,
+     84776,
+     11912,
+     0.5773
+    ],
+    "ext-temporal-graph|query|gpt-4.1-mini": [
+     3325,
+     860993,
+     3325,
+     0.3302
+    ],
+    "harness|None|claude-sonnet-5-5": [
+     10,
+     84776,
+     7760,
+     0.2472
+    ],
+    "harness|None|gpt-6.1-sol": [
+     10,
+     53582,
+     4240,
+     0.1763
+    ],
+    "judge|None|gpt-4.1-mini": [
+     431,
+     185414,
+     10759,
+     0.0914
+    ],
+    "ext-temporal-graph|None|gpt-4.1-mini": [
+     347,
+     95739,
+     347,
+     0.0389
+    ],
+    "ext-temporal-graph|commit|text-embedding-3-small": [
+     2241,
+     111275,
+     0,
+     0.0022
+    ],
+    "ext-temporal-graph|query|text-embedding-3-small": [
+     10,
+     219,
+     0,
+     0.0
+    ],
+    "ext-temporal-graph|None|text-embedding-3-small": [
+     1,
+     60,
+     0,
+     0.0
+    ]
+   },
+   "total": 5.1394
+  },
+  {
+   "cell": "s2b-ingest.gbrain-defaults.f6-master",
+   "run": "r2 (fixed tree 15430482)",
+   "lease_id": "s2b-ingest.gbrain-defaults.f6-master-a1-3d8e6004",
+   "lease_usd": 14.02,
+   "actual_usd": 8.0659,
+   "requests": 9102,
+   "realizations": [
+    {
+     "sessions": 928,
+     "failed_sessions": 0,
+     "ingested_tokens": 926773,
+     "wall_ms": 6402198,
+     "readiness_probe": "found",
+     "degraded": false,
+     "finish_ms": 6327187,
+     "conv": "1m-16"
+    }
+   ],
+   "arms": {
+    "a": {
+     "answers": 30,
+     "outcomes": {
+      "scored": 30
+     },
+     "row_outcomes": {
+      "scored": 10
+     },
+     "judgments": 30,
+     "mean": 0.718,
+     "per_reader": {
+      "?": 0.718
+     }
+    },
+    "a0": {
+     "answers": 30,
+     "outcomes": {
+      "scored": 30
+     },
+     "row_outcomes": {
+      "scored": 10
+     },
+     "judgments": 30,
+     "mean": 0.713,
+     "per_reader": {
+      "?": 0.713
+     }
+    },
+    "b": {
+     "answers": 30,
+     "outcomes": {
+      "scored": 30
+     },
+     "row_outcomes": {
+      "scored": 10
+     },
+     "judgments": 30,
+     "mean": 0.801,
+     "per_reader": {
+      "?": 0.801
+     }
+    },
+    "c": {
+     "answers": 30,
+     "outcomes": {
+      "scored": 30
+     },
+     "row_outcomes": {
+      "scored": 10
+     },
+     "judgments": 30,
+     "mean": 0.705,
+     "per_reader": {
+      "?": 0.705
+     }
+    },
+    "d": {
+     "answers": 30,
+     "outcomes": {
+      "scored": 30
+     },
+     "row_outcomes": {
+      "scored": 10
+     },
+     "judgments": 30,
+     "mean": 0.766,
+     "per_reader": {
+      "?": 0.766
+     }
+    },
+    "e": {
+     "answers": 30,
+     "outcomes": {
+      "scored": 30
+     },
+     "row_outcomes": {
+      "scored": 10
+     },
+     "judgments": 30,
+     "mean": 0.731,
+     "per_reader": {
+      "?": 0.731
+     }
+    },
+    "p": {
+     "answers": 30,
+     "outcomes": {
+      "scored": 30
+     },
+     "row_outcomes": {
+      "scored": 10
+     },
+     "judgments": 30,
+     "mean": 0.779,
+     "per_reader": {
+      "?": 0.779
+     }
+    }
+   },
+   "usage": {
+    "harness|None|claude-opus-5-5": [
+     67,
+     571794,
+     75772,
+     3.8026
+    ],
+    "harness|None|claude-sonnet-5-5": [
+     67,
+     571794,
+     47924,
+     1.6228
+    ],
+    "harness|None|gpt-6.1-sol": [
+     67,
+     359499,
+     28463,
+     1.1833
+    ],
+    "gbrain-defaults|background|claude-haiku-5-5": [
+     1048,
+     4001719,
+     1059819,
+     0.7671
+    ],
+    "judge|None|gpt-4.1-mini": [
+     2187,
+     1169532,
+     71023,
+     0.5814
+    ],
+    "gbrain-defaults|background|voyage-4": [
+     5378,
+     1029779,
+     0,
+     0.0618
+    ],
+    "gbrain-defaults|query|rerank-3-lite": [
+     70,
+     1810080,
+     0,
+     0.0362
+    ],
+    "gbrain-defaults|commit|voyage-4": [
+     155,
+     166124,
+     0,
+     0.01
+    ],
+    "gbrain-defaults|None|rerank-3-lite": [
+     1,
+     32284,
+     0,
+     0.0006
+    ],
+    "gbrain-defaults|query|voyage-4": [
+     60,
+     1266,
+     0,
+     0.0001
+    ],
+    "gbrain-defaults|None|voyage-4": [
+     2,
+     58,
+     0,
+     0.0
+    ]
+   },
+   "total": 8.0659
+  },
+  {
+   "cell": "s3-smoke.gbrain-defaults.f6-master",
+   "run": "r2 (fixed tree 15430482)",
+   "lease_id": "s3-smoke.gbrain-defaults.f6-master-a1-eb87a25b",
+   "lease_usd": 23.68,
+   "actual_usd": 10.0039,
+   "requests": 1317,
+   "realizations": [
+    {
+     "sessions": 28,
+     "failed_sessions": 0,
+     "ingested_tokens": 20474,
+     "wall_ms": 303588,
+     "readiness_probe": "found",
+     "degraded": false,
+     "finish_ms": 287719,
+     "conv": "conv-44"
+    }
+   ],
+   "arms": {
+    "a": {
+     "answers": 60,
+     "outcomes": {
+      "scored": 60
+     },
+     "row_outcomes": {
+      "scored": 20
+     },
+     "judgments": 60,
+     "mean": 0.767,
+     "per_reader": {
+      "?": 0.767
+     }
+    },
+    "a0": {
+     "answers": 60,
+     "outcomes": {
+      "scored": 60
+     },
+     "row_outcomes": {
+      "scored": 20
+     },
+     "judgments": 60,
+     "mean": 0.833,
+     "per_reader": {
+      "?": 0.833
+     }
+    },
+    "b": {
+     "answers": 60,
+     "outcomes": {
+      "scored": 60
+     },
+     "row_outcomes": {
+      "scored": 20
+     },
+     "judgments": 60,
+     "mean": 0.767,
+     "per_reader": {
+      "?": 0.767
+     }
+    },
+    "c": {
+     "answers": 60,
+     "outcomes": {
+      "scored": 60
+     },
+     "row_outcomes": {
+      "scored": 20
+     },
+     "judgments": 60,
+     "mean": 0.783,
+     "per_reader": {
+      "?": 0.783
+     }
+    },
+    "d": {
+     "answers": 60,
+     "outcomes": {
+      "scored": 60
+     },
+     "row_outcomes": {
+      "scored": 20
+     },
+     "judgments": 60,
+     "mean": 0.817,
+     "per_reader": {
+      "?": 0.817
+     }
+    },
+    "e": {
+     "answers": 60,
+     "outcomes": {
+      "scored": 60
+     },
+     "row_outcomes": {
+      "scored": 20
+     },
+     "judgments": 60,
+     "mean": 0.817,
+     "per_reader": {
+      "?": 0.817
+     }
+    },
+    "p": {
+     "answers": 60,
+     "outcomes": {
+      "scored": 60
+     },
+     "row_outcomes": {
+      "scored": 20
+     },
+     "judgments": 60,
+     "mean": 0.817,
+     "per_reader": {
+      "?": 0.817
+     }
+    }
+   },
+   "usage": {
+    "harness|None|claude-opus-5-5": [
+     124,
+     953568,
+     77545,
+     5.3652
+    ],
+    "harness|None|claude-sonnet-5-5": [
+     124,
+     953568,
+     45700,
+     2.3641
+    ],
+    "harness|None|gpt-6.1-sol": [
+     124,
+     670322,
+     17319,
+     1.8488
+    ],
+    "judge|None|gpt-4o-2024-08-06": [
+     371,
+     131345,
+     662,
+     0.335
+    ],
+    "gbrain-defaults|query|rerank-3-lite": [
+     140,
+     2879849,
+     0,
+     0.0576
+    ],
+    "gbrain-defaults|background|claude-haiku-5-5": [
+     32,
+     115254,
+     46872,
+     0.0301
+    ],
+    "gbrain-defaults|background|voyage-4": [
+     275,
+     38009,
+     0,
+     0.0023
+    ],
+    "gbrain-defaults|None|rerank-3-lite": [
+     1,
+     22751,
+     0,
+     0.0005
+    ],
+    "gbrain-defaults|commit|voyage-4": [
+     4,
+     5609,
+     0,
+     0.0003
+    ],
+    "gbrain-defaults|query|voyage-4": [
+     120,
+     1578,
+     0,
+     0.0001
+    ],
+    "gbrain-defaults|None|voyage-4": [
+     2,
+     52,
+     0,
+     0.0
+    ]
+   },
+   "total": 10.0039
+  }
+ ],
+ "abandoned_unstarted": [
+  {
+   "lease_id": "s3-smoke.gbrain-defaults.f6-master-a1-fccdb811",
+   "lease_usd": 23.64,
+   "abandoned": "launcher cancelled while the VM was being created: the cell would have run the tree before the readiness-barrier fix; rerun under a new state",
+   "actual_usd": 0
+  }
+ ],
+ "f6_build": {
+  "r1": {
+   "cap_usd": 1.0,
+   "spent_usd": 0.99855,
+   "pages": 928,
+   "segments": 1047,
+   "facts_extracted": 4706,
+   "facts_inserted": 4620,
+   "extract_ms": 6293078,
+   "ok": true
+  },
+  "r2": {
+   "cap_usd": 2.0,
+   "spent_usd": 0.991868,
+   "pages": 928,
+   "segments": 1047,
+   "facts_extracted": 4604,
+   "facts_inserted": 4529,
+   "extract_ms": 6297840,
+   "ok": true
+  }
+ },
+ "overlay_switch_ms_docker": [
+  8216.9,
+  8513.8,
+  8369.6
+ ]
+}
