@@ -498,6 +498,12 @@ export const HOURS_OVERRIDES: Record<string, { hours: number; basis: string }> =
   's1.baseline-hybrid.baseline': { hours: 9, basis: 'A22: concurrent embedding ingests S1 in about 0.9 hours; the sequential question phase (2,200 answers, canonical and frontier judging) takes about 8' },
 };
 
+/** A system's ingest hours per million corpus tokens: for its benchmark family, then its configuration (Q1's, then F6's), then its runner's default. */
+export function hoursPerMtok(system: string, configuration: string, benchmark: string, runner: 'shim' | 'in-process'): number {
+  const family = benchmark.startsWith('beam') ? 'beam' : benchmark;
+  return ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}:${family}`] ?? ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}`] ?? F6_ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}`] ?? ASSUMPTIONS.hours_per_mtok[runner];
+}
+
 /** One cell. `extra`: F6 cells name their own block, probes and launch environment (Q1 cells pass none of these). */
 export function makeCell(set: SetId, system: string, configuration: string, armSpecs: ArmSpec[],
   extra: { ingest_replicate?: number; block?: BlockId; probes?: CellDefinition['probes']; launchEnv?: Record<string, string> } = {}): CellDefinition {
@@ -518,8 +524,7 @@ export function makeCell(set: SetId, system: string, configuration: string, armS
   });
   const shim = runner === 'shim' ? shimLaunch(system, configuration) : null;
   const launch = shim && extra.launchEnv ? { ...shim, env: { ...shim.env, ...extra.launchEnv } } : shim;
-  const family = s.benchmark.startsWith('beam') ? 'beam' : s.benchmark;
-  const perMtok = ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}:${family}`] ?? ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}`] ?? F6_ASSUMPTIONS.hours_per_mtok[`${system}:${configuration}`] ?? ASSUMPTIONS.hours_per_mtok[runner];
+  const perMtok = hoursPerMtok(system, configuration, s.benchmark, runner);
   const single = perMtok * s.corpus_tokens / 1e6;
   const shards = runner === 'shim' && (set === 'S1' || set === 'D8') ? s.conversations : runner === 'shim' && single > UNIT_LIMIT_HOURS ? Math.min(s.conversations, Math.ceil(single / 48)) : 1;
   const hours = Math.max(1, Math.ceil(single / shards));

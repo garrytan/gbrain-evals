@@ -92,7 +92,7 @@ import { failureRow, hashEmbed, readinessProbe, selectQuestions } from '../memor
 import { checkSealedDestinations, sealedPaths } from '../memory-qa/sealed-profile.ts';
 import { PaidArmRefusal, requirePaidArm } from '../paid-arm.ts';
 import { appendAccessLog } from '../sealed-confirmation-lib.ts';
-import { DEFAULT_ROUTE_CLASSES, type CampaignManifest as Q1Campaign, type CellSpec } from '../shootout-cell.ts';
+import { DEFAULT_ROUTE_CLASSES, Q1_CAMPAIGN_ID, type CampaignManifest as Q1Campaign, type CellSpec } from '../shootout-cell.ts';
 import { AgentRuntimeSystem } from '../systems/agent-runtime.ts';
 import { answerFullContext, FullContextSystem, NoMemorySystem, PlainHybridSystem, type FitTokenizer } from '../systems/baselines.ts';
 import { FILE_AGENT_SYSTEM, FileAgentSystem, type AnsweringSystem } from '../systems/file-agent.ts';
@@ -1337,17 +1337,28 @@ export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight
   return out;
 }
 
+/** A campaign over named launch units alone, under its own id and ledger cap (plan --units; F6 amendment A1). */
+export interface UnitSelection { campaign_id: string; cap_usd: number; units: string[] }
+
 /** The Q1 scoreboard campaign manifest (shootout-cell.ts `q1-scoreboard-campaign`) for the cell manifest. */
-export function campaignManifest(m: Manifest, opts: { smoke?: boolean; sealed?: { cap_usd: number }; smokeOnly?: boolean } = {}): Q1Campaign {
+export function campaignManifest(m: Manifest, opts: { smoke?: boolean; sealed?: { cap_usd: number }; smokeOnly?: boolean; units?: UnitSelection } = {}): Q1Campaign {
   const f6 = (m as { campaign_id?: string }).campaign_id;
   // F6 adds the temporal graph's 0.31.2 defaults (gpt-6-luna, text-embedding-3-small) to the models its campaign admits.
   const models = [...new Set([...m.readers, ...Object.keys(m.prices), 'openai:gpt-4.1-mini', 'openai:text-embedding-3-large', 'anthropic:claude-opus-4-7', 'anthropic:claude-haiku-4-5', 'anthropic:claude-haiku-5-5', ...(f6 ? ['openai:gpt-6-luna', 'openai:text-embedding-3-small'] : [])])].sort();
-  const cells = campaignCells(m, { ...opts, smoke: opts.smoke || opts.smokeOnly }).filter(c => (!opts.sealed || c.sealed) && (!opts.smokeOnly || c.smoke));
-  const id = f6 ? `${f6}${opts.smokeOnly ? '-dry-run' : opts.sealed ? '-sealed' : ''}` : opts.sealed ? 'q1-scoreboard-sealed' : 'q1-scoreboard';
+  const all = campaignCells(m, { ...opts, smoke: opts.smoke || opts.smokeOnly }).filter(c => (!opts.sealed || c.sealed) && (!opts.smokeOnly || c.smoke));
+  const u = opts.units;
+  if (u) {
+    const unknown = u.units.filter(id => !all.some(c => c.id === id));
+    if (!Q1_CAMPAIGN_ID.test(u.campaign_id) || !(u.cap_usd > 0) || !u.units.length || new Set(u.units).size !== u.units.length || unknown.length) {
+      throw new Error(`a unit selection needs a q1-scoreboard campaign_id, a positive cap_usd and distinct known unit ids${unknown.length ? ` (unknown: ${unknown.join(', ')})` : ''}`);
+    }
+  }
+  const cells = u ? all.filter(c => u.units.includes(c.id)) : all;
+  const id = u ? u.campaign_id : f6 ? `${f6}${opts.smokeOnly ? '-dry-run' : opts.sealed ? '-sealed' : ''}` : opts.sealed ? 'q1-scoreboard-sealed' : 'q1-scoreboard';
   const dryCap = (m as { dry_run_cap_usd?: number }).dry_run_cap_usd;
   const blocks = [...m.blocks, ...(opts.smokeOnly && dryCap ? [{ id: 'F6-dry' as const, estimate_usd: Math.round(m.smoke_cells.reduce((s, c) => s + c.estimate.usd, 0) * 100) / 100, cap_usd: dryCap }] : [])];
   return {
-    kind: 'q1-scoreboard-campaign', schema_version: 1, campaign_id: id, cap_usd: opts.sealed?.cap_usd ?? (opts.smokeOnly && dryCap ? dryCap : m.cap_usd), ledger: `eval/reports/scoreboard/${id}/campaign.sqlite`,
+    kind: 'q1-scoreboard-campaign', schema_version: 1, campaign_id: id, cap_usd: u?.cap_usd ?? opts.sealed?.cap_usd ?? (opts.smokeOnly && dryCap ? dryCap : m.cap_usd), ledger: `eval/reports/scoreboard/${id}/campaign.sqlite`,
     parameters: {}, hedge_classifier: 'none', cells, executes: EXECUTES,
     // F6's gbrain pin builds on a newer Bun image, named in its launch environment rather than in the bundle files.
     images: f6 ? Object.fromEntries(Object.entries({ ...pinnedImages(), 'gbrain-defaults/base:1.4.4-slim': F6_ASSUMPTIONS.bun_image.split('@')[1] }).sort(([a], [b]) => (a < b ? -1 : 1))) : pinnedImages(),
@@ -1416,13 +1427,17 @@ export async function main(argv: string[]): Promise<number> {
   const json = argv.includes('--json');
   const sub = argv[0];
   if (sub === 'plan') {
-    // --manifest f6: F6's manifest (eval/runner/q1/cells/f6-cells.json); --dry-run-only keeps its dry-run cells alone.
+    // --manifest f6: F6's manifest (eval/runner/q1/cells/f6-cells.json); --dry-run-only keeps its dry-run cells alone;
+    // --units <file>: a UnitSelection (JSON), the named units alone under its own campaign id and cap.
     const m = one('--manifest') === 'f6' ? loadF6Manifest() : loadManifest();
     const campaignOut = one('--campaign-out');
     const sealedCap = one('--sealed-cap-usd');
     if (sealedCap !== undefined && !(Number(sealedCap) > 0)) throw refuse(usage('--sealed-cap-usd needs a positive dollar amount'));
     const smokeOnly = argv.includes('--dry-run-only');
-    if (campaignOut) { writeAtomic(resolve(campaignOut), JSON.stringify(campaignManifest(m, { smoke: smokeOnly || argv.includes('--with-smoke'), smokeOnly, sealed: sealedCap ? { cap_usd: Number(sealedCap) } : undefined }), null, 2) + '\n'); console.error(`campaign manifest written to ${campaignOut}; next: bun run eval:scoreboard plan --campaign ${campaignOut}`); }
+    const unitsFile = one('--units');
+    if (unitsFile && !campaignOut) throw refuse(usage('--units needs --campaign-out <file>'));
+    const units = unitsFile ? JSON.parse(readFileSync(resolve(unitsFile), 'utf8')) as UnitSelection : undefined;
+    if (campaignOut) { writeAtomic(resolve(campaignOut), JSON.stringify(campaignManifest(m, { smoke: smokeOnly || argv.includes('--with-smoke'), smokeOnly, sealed: sealedCap ? { cap_usd: Number(sealedCap) } : undefined, units }), null, 2) + '\n'); console.error(`campaign manifest written to ${campaignOut}; next: bun run eval:scoreboard plan --campaign ${campaignOut}`); }
     console.log(json ? JSON.stringify({ ...m, waves: campaignCells(m).map(c => ({ id: c.id, wave: c.wave, lease_usd: c.lease_usd })) }, null, 2) : renderPlan(m));
     return 0;
   }

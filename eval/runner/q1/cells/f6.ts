@@ -25,7 +25,7 @@ import { resolve } from 'node:path';
 import { CHAT_PRICE_OVERRIDES, reservationUsd } from '../../budget-ledger.ts';
 import { DEFAULT_ROUTE_CAPS } from '../../metering-proxy.ts';
 import {
-  ALL_SETS, ASSUMPTIONS, F6_ASSUMPTIONS, f6ExtractionLedgerUsd, FRONTIER_JUDGES, makeCell, MANIFEST_SCHEMA, OVERLAY_KEYS, priceOf, READERS, SONNET,
+  ALL_SETS, ASSUMPTIONS, F6_ASSUMPTIONS, f6ExtractionLedgerUsd, FRONTIER_JUDGES, hoursPerMtok, makeCell, MANIFEST_SCHEMA, OVERLAY_KEYS, priceOf, READERS, SONNET,
   type ArmSpec, type BlockId, type CellDefinition, type F6BlockId, type Manifest, type RetrievalIdentity, type SetId,
 } from './definitions.ts';
 
@@ -138,9 +138,27 @@ function withLease(c: CellDefinition): CellDefinition {
   if (usd >= largest) return { ...c, lease: { usd, basis: `F6: estimate per shard x ${F6_ASSUMPTIONS.lease.margin} plus twice the peak reservation ($${peak.usd}, ${peak.by})` } };
   return { ...c, lease: { usd: lease(largest), basis: `F6: the largest shard's estimate ($${largest.toFixed(2)}, the set's largest conversation at ${largestRatio(c.set)} times the mean) x ${F6_ASSUMPTIONS.lease.margin} plus twice the peak reservation ($${peak.usd}, ${peak.by})` } };
 }
+/**
+ * The ingest hours of a unit's largest shard (A1): its mean shard with one mean conversation replaced by the set's
+ * largest, as maxShardUsd sizes its spend. A single-shard unit holds the whole set, so its hours are the whole cell's.
+ */
+export function maxShardHours(c: CellDefinition): number {
+  const s = ALL_SETS[c.set];
+  const whole = hoursPerMtok(c.system, c.configuration, c.benchmark, c.runner) * s.corpus_tokens / 1e6;
+  if (c.shards === 1) return whole;
+  return whole / c.shards + whole / s.conversations * (largestRatio(c.set) - 1);
+}
+/**
+ * A sharded unit's expected hours from its largest shard (A1), so the finish budget (cell.ts finishTimeoutFor) and the
+ * unit timeout cover the largest conversation's build rather than the mean's. Expected hours are a launch-control field,
+ * so a cell's configuration identity is unchanged.
+ */
+function withHours(c: CellDefinition): CellDefinition {
+  return c.shards === 1 ? c : { ...c, expected_hours: Math.max(c.expected_hours, Math.ceil(maxShardHours(c))) };
+}
 const gbrain = (set: SetId, block: BlockId, ids: string[], frontier: string[] = []) =>
-  withLease(makeCell(set, 'gbrain-defaults', 'f6-master', gbrainArms(ids, frontier), { block, probes: noProbes(set), launchEnv: { GBRAIN_F6_EXTRACT_CAP_USD: String(extractionCapUsd(set)) } }));
-const other = (set: SetId, block: BlockId, system: string, configuration: string) => withLease(makeCell(set, system, configuration, [b8()], { block, probes: noProbes(set) }));
+  withHours(withLease(makeCell(set, 'gbrain-defaults', 'f6-master', gbrainArms(ids, frontier), { block, probes: noProbes(set), launchEnv: { GBRAIN_F6_EXTRACT_CAP_USD: String(extractionCapUsd(set)) } })));
+const other = (set: SetId, block: BlockId, system: string, configuration: string) => withHours(withLease(makeCell(set, system, configuration, [b8()], { block, probes: noProbes(set) })));
 /** An S1 baseline rerun, with its estimate set from Q1's measured spend (F6_MEASURED_ESTIMATES). */
 const rerun = (system: string, arm: ArmSpec) => {
   const c = makeCell('S1', system, 'baseline', [arm], { block: 'F6-S1', probes: noProbes('S1') });

@@ -8,10 +8,10 @@ import { afterAll, describe, expect, test } from 'bun:test';
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { campaignManifest, findCell, runCell } from '../../eval/runner/q1/cell.ts';
+import { campaignManifest, findCell, finishTimeoutFor, runCell, type UnitSelection } from '../../eval/runner/q1/cell.ts';
 import { Q1_CAMPAIGN_ID } from '../../eval/runner/shootout-cell.ts';
 import { ALL_SETS, definitionProblems, estimateCell, F6_ASSUMPTIONS, f6ExtractionLedgerUsd, loadManifest, manifestText, MANIFEST_PATH, policyKey, type ArmDefinition, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
-import { ALL_ARMS, buildF6Manifest, maxShardUsd, F6_ARMS, F6_CAP_USD, F6_DRY_RUN_CAP_USD, F6_MANIFEST_PATH, f6ManifestText, peakReservationUsd } from '../../eval/runner/q1/cells/f6.ts';
+import { ALL_ARMS, buildF6Manifest, maxShardHours, maxShardUsd, F6_ARMS, F6_CAP_USD, F6_DRY_RUN_CAP_USD, F6_MANIFEST_PATH, f6ManifestText, peakReservationUsd } from '../../eval/runner/q1/cells/f6.ts';
 import type { Corpus, MemoryQuestion } from '../../eval/runner/memory-qa/corpus.ts';
 import type { ChatLike, ChatResult } from '../../eval/runner/memory-qa/qa-v2.ts';
 import type { PublicQuestion, RetrievalPolicy } from '../../eval/runner/systems/types.ts';
@@ -127,6 +127,46 @@ describe('the F6 manifest', () => {
     const counted = campaignManifest(m);
     expect([counted.campaign_id, counted.cap_usd, counted.cells.some(c => c.smoke)]).toEqual(['q1-scoreboard-f6-current-master', 3068.83, false]);
     for (const c of [camp, counted, campaignManifest(m, { sealed: { cap_usd: 3100 } })]) expect(c.campaign_id).toMatch(Q1_CAMPAIGN_ID);
+  });
+  test('a sharded unit\'s finish budget and timeout cover its largest shard\'s ingest with a quarter to spare (A1)', () => {
+    const sharded = m.cells.filter(c => c.shards > 1);
+    expect(Object.fromEntries(sharded.map(c => [c.id, c.expected_hours]))).toEqual({ 's1.gbrain-defaults.f6-master': 26, 's1.ext-temporal-graph.shipped-0.31': 31, 'd8.gbrain-defaults.f6-master': 2, 'd8.ext-memory-bank.recipe': 3, 'd8.ext-graph-pipeline.recipe': 5 });
+    const units = campaignManifest(m).cells;
+    for (const c of sharded) {
+      const hours = maxShardHours(c);
+      expect(hours).toBeGreaterThan(maxShardHours({ ...c, shards: 1 }) / c.shards);
+      expect(finishTimeoutFor(c) / 3600).toBeGreaterThanOrEqual(1.25 * hours);
+      const own = units.filter(u => u.id.startsWith(`${c.id}.c`));
+      expect(own).toHaveLength(c.shards);
+      for (const u of own) expect(u.timeout_hours).toBeGreaterThanOrEqual(1.25 * hours);
+    }
+    // The D8 canary's largest conversation (1.03M ingested tokens) needed about 1.9 hours of gbrain's /finish per million.
+    expect(finishTimeoutFor(m.cells.find(c => c.id === 'd8.gbrain-defaults.f6-master')!) / 3600).toBeGreaterThanOrEqual(1.25 * 1.9 * 1.0327);
+  });
+  test('plan --units: the named units alone under their own campaign id, cap and ledger; A1 holds every unit the frozen campaign did not launch (A1)', () => {
+    const dir = join(ROOT, 'docs/benchmarks/2026-10-29-f6-current-master/campaign');
+    const sel = JSON.parse(readFileSync(join(dir, 'f6-campaign-a1-units.json'), 'utf8')) as UnitSelection;
+    const a1 = campaignManifest(m, { units: sel });
+    expect([a1.campaign_id, a1.cap_usd, a1.ledger]).toEqual(['q1-scoreboard-f6-current-master-a1', 2016.76, 'eval/reports/scoreboard/q1-scoreboard-f6-current-master-a1/campaign.sqlite']);
+    expect(a1.cells).toEqual(campaignManifest(m).cells.filter(c => sel.units.includes(c.id)));
+    expect(a1.cells.map(c => c.id)).toEqual(sel.units);
+    expect(readFileSync(join(dir, 'f6-campaign-a1.json'), 'utf8')).toBe(JSON.stringify(a1, null, 2) + '\n');
+    const round = (x: number) => Math.round(x * 100) / 100;
+    expect(round(a1.cells.reduce((s, c) => s + c.lease_usd, 0))).toBeLessThanOrEqual(a1.cap_usd);
+    // The frozen campaign keeps the units it launched (and the settled D8 canary, c0); A1's cap is what its leases leave.
+    const frozen = JSON.parse(readFileSync(join(dir, 'f6-campaign.json'), 'utf8')) as { cap_usd: number; cells: Array<{ id: string; lease_usd: number }> };
+    const shards = (id: string, from: number, to: number) => Array.from({ length: to - from + 1 }, (_, i) => `${id}.c${from + i}`);
+    const launched = [...shards('s1.gbrain-defaults.f6-master', 0, 9), ...shards('s1.ext-temporal-graph.shipped-0.31', 0, 3), 's1.baseline-file-agent.baseline', ...shards('d8.gbrain-defaults.f6-master', 0, 9)];
+    expect(frozen.cells.filter(c => !sel.units.includes(c.id)).map(c => c.id)).toEqual(launched.filter(id => id !== 'd8.gbrain-defaults.f6-master.c0'));
+    expect(sel.units).toContain('d8.gbrain-defaults.f6-master.c0');
+    const committed = round(frozen.cells.filter(c => launched.includes(c.id)).reduce((s, c) => s + c.lease_usd, 0));
+    expect([committed, sel.cap_usd]).toEqual([1052.07, round(frozen.cap_usd - committed)]);
+    for (const bad of [{ ...sel, units: [...sel.units, 'd8.none.c0'] }, { ...sel, units: [sel.units[0], sel.units[0]] }, { ...sel, units: [] }, { ...sel, campaign_id: 'f6-a1' }, { ...sel, cap_usd: 0 }]) expect(() => campaignManifest(m, { units: bad })).toThrow(/unit selection/);
+    const cli = (args: string[]) => Bun.spawnSync(['bun', 'eval/runner/q1/cell.ts', 'plan', '--manifest', 'f6', '--json', ...args], { cwd: ROOT, stdout: 'pipe', stderr: 'pipe' });
+    const outFile = join(tmp, 'a1.json');
+    expect(cli(['--units', join(dir, 'f6-campaign-a1-units.json'), '--campaign-out', outFile]).exitCode).toBe(0);
+    expect(readFileSync(outFile, 'utf8')).toBe(readFileSync(join(dir, 'f6-campaign-a1.json'), 'utf8'));
+    expect(cli(['--units', join(dir, 'f6-campaign-a1-units.json')]).exitCode).not.toBe(0);
   });
 });
 
