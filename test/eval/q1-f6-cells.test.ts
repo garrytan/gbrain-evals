@@ -168,6 +168,45 @@ describe('the F6 manifest', () => {
     expect(readFileSync(outFile, 'utf8')).toBe(readFileSync(join(dir, 'f6-campaign-a1.json'), 'utf8'));
     expect(cli(['--units', join(dir, 'f6-campaign-a1-units.json')]).exitCode).not.toBe(0);
   });
+  test('gbrain\'s finish follows segments: A1\'s D8 budget covers the largest session count with a quarter to spare (A2)', () => {
+    // Named assumptions (A2), aggregates only: sessions and ingested tokens per D8 conversation (930 sessions and at most
+    // 0.43M tokens each, except d8-1 and d8-2), bytes per ingested token from the custodian's d8-1 chat-file size, and
+    // gbrain's measured 6.4 seconds per extraction window of 6,500 characters. A session splits into ceil(chars / 6,500)
+    // windows, so sessions + chars / 6,500 bounds the segment count from above.
+    const D8_CONVERSATIONS: Record<string, { sessions: number; tokens: number }> = Object.fromEntries(Array.from({ length: 10 }, (_, i) => [`d8-${i + 1}`, { sessions: 930, tokens: 430_000 }]));
+    Object.assign(D8_CONVERSATIONS, { 'd8-1': { sessions: 351, tokens: 1_032_700 }, 'd8-2': { sessions: 630, tokens: 322_457 } });
+    const BYTES_PER_TOKEN = 4_976_396 / 1_032_700, WINDOW_CHARS = 6_500, SECONDS_PER_SEGMENT = 6.4;
+    const finishS = (c: { sessions: number; tokens: number }) => (c.sessions + c.tokens * BYTES_PER_TOKEN / WINDOW_CHARS) * SECONDS_PER_SEGMENT;
+    const budget = finishTimeoutFor(m.cells.find(c => c.id === 'd8.gbrain-defaults.f6-master')!);
+    expect(budget).toBe(3 * 3600);
+    for (const c of Object.values(D8_CONVERSATIONS)) expect(budget).toBeGreaterThanOrEqual(1.25 * finishS(c));
+    // The bound holds against what the frozen campaign saw: d8-2 finished in 4,043 s, and a 930-session conversation outran
+    // the frozen 1.5-hour budget.
+    expect(finishS(D8_CONVERSATIONS['d8-2'])).toBeGreaterThanOrEqual(4_043);
+    expect(930 * SECONDS_PER_SEGMENT).toBeGreaterThan(1.5 * 3600);
+  });
+  test('the A2 campaign reruns the eight degraded D8 gbrain shards alone, fresh, at A1\'s hours, under a $115 cap; the three ledgers stay under the counted cap (A2)', () => {
+    const dir = join(ROOT, 'docs/benchmarks/2026-10-29-f6-current-master/campaign');
+    const sel = JSON.parse(readFileSync(join(dir, 'f6-campaign-a2-units.json'), 'utf8')) as UnitSelection;
+    const a2 = campaignManifest(m, { units: sel });
+    expect([a2.campaign_id, a2.cap_usd, a2.ledger]).toEqual(['q1-scoreboard-f6-current-master-a2', 115, 'eval/reports/scoreboard/q1-scoreboard-f6-current-master-a2/campaign.sqlite']);
+    expect(a2.cells.map(c => c.id)).toEqual([1, 3, 4, 5, 6, 7, 8, 9].map(i => `d8.gbrain-defaults.f6-master.c${i}`));
+    expect(readFileSync(join(dir, 'f6-campaign-a2.json'), 'utf8')).toBe(JSON.stringify(a2, null, 2) + '\n');
+    for (const c of a2.cells) expect([c.expected_hours, c.timeout_hours, c.command.includes('--fresh-before'), c.command.includes('--reanswer')]).toEqual([2, 5, false, false]);
+    const round = (x: number) => Math.round(x * 100) / 100;
+    const a1 = JSON.parse(readFileSync(join(dir, 'f6-campaign-a1.json'), 'utf8')) as { cells: Array<{ id: string; lease_usd: number }> };
+    expect(a1.cells.some(c => sel.units.includes(c.id))).toBe(false);
+    expect(round(a2.cells.reduce((s, c) => s + c.lease_usd, 0))).toBe(110.56);
+    // Frozen: $115.36 settled on D8 gbrain plus $913.87 of open S1 leases; A1: its lease total (each unit launched once,
+    // no lease raised, nothing resumed or relaunched); A2: its cap.
+    const frozen = JSON.parse(readFileSync(join(dir, 'f6-campaign.json'), 'utf8')) as { cap_usd: number; cells: Array<{ id: string; lease_usd: number }> };
+    const s1Open = round(frozen.cells.filter(c => /^s1\.(gbrain-defaults\.f6-master\.c\d|ext-temporal-graph\.shipped-0\.31\.c[0-3]|baseline-file-agent\.baseline)$/.test(c.id)).reduce((s, c) => s + c.lease_usd, 0));
+    const a1Leases = round(a1.cells.reduce((s, c) => s + c.lease_usd, 0));
+    expect([s1Open, a1Leases]).toEqual([913.87, 1416.06]);
+    const total = round(115.36 + s1Open + a1Leases + a2.cap_usd);
+    expect(total).toBe(2560.29);
+    expect(total).toBeLessThanOrEqual(frozen.cap_usd);
+  });
 });
 
 describe('the arm policy identity', () => {
