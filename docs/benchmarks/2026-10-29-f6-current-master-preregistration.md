@@ -269,3 +269,31 @@ Through the real launch path (one Ubicloud VM per unit, the metering proxy, the 
 
 S2b-ingest is BEAM-1M dev conversation 1m-16 with 10 questions; S3-smoke is LoCoMo conv-44 with 20 questions. Its
 receipt lives under `docs/benchmarks/2026-10-29-f6-current-master/dry-run/`.
+
+## Freeze
+
+Frozen on 2026-10-30, before any counted F6 cell reserved a lease.
+
+- **Freeze commit:** gbrain-evals `1929c441` (branch `evals/f6-current-master`).
+- **Campaign:** `q1-scoreboard-f6-current-master`, manifest
+  `2026-10-29-f6-current-master/campaign/f6-campaign.json`, 61 launch units, leases $2,454.31, ledger cap $3,068.83.
+- **Sealed hash:** `bun eval/runner/shootout-cell.ts hash --campaign <manifest>` =
+  `6c4227709d69505e7ddeb6b6e8f9db25e46a1b8252632248be9091086186b85a` (194 tree files), computed on this machine and
+  recomputed on the custodian host from a fresh clone at the freeze commit, with the same result.
+- **gbrain:** `0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049`, v0.60.493.0 (the newest published release at the freeze).
+- **D8 pins:** the custodian filled the D8 manifest on the custody host, outside the checkout (110 files, hashes only,
+  nothing parsed). Its SHA-256 is `dbf4ca326be3e1fa4012cbe0a9529ebb92781eed211184cbf05c965d44eee51f`. Every D8 launch
+  verifies each file against it before a VM exists.
+- **Custody preflight:** `bun run eval:scoreboard doctor --for sealed` passed on the custodian host (s1-corpus 20 files,
+  d8-corpus 110 files, 60 sealed cells with a VM custody root, every model priced, VMs tagged `gbra240`).
+- **Ledger:** one campaign ledger under the custodian's state directory; the dry run's $31.17 sits on its own two
+  ledgers and is counted against the approval.
+- **Launch order:** S1 and D8 first, then S2b, S2a and S3, then S4-slice, at most 128 vCPU in flight. The scope-cut order
+  above applies if the ledger nears its cap.
+
+Nothing above changes after the first counted cell runs. A later change is a dated amendment below, written before any
+cell it affects.
+
+## Amendments
+
+None.
