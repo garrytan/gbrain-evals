@@ -1,0 +1,21 @@
+{
+  "campaign_id": "q1-scoreboard-f6-current-master-a3",
+  "cap_usd": 553.23,
+  "units": [
+    "s1.gbrain-defaults.f6-master.c0",
+    "s1.gbrain-defaults.f6-master.c1",
+    "s1.gbrain-defaults.f6-master.c2",
+    "s1.gbrain-defaults.f6-master.c3",
+    "s1.gbrain-defaults.f6-master.c4",
+    "s1.gbrain-defaults.f6-master.c5",
+    "s1.gbrain-defaults.f6-master.c6",
+    "s1.gbrain-defaults.f6-master.c7",
+    "s1.gbrain-defaults.f6-master.c8",
+    "s1.gbrain-defaults.f6-master.c9",
+    "d8.ext-graph-pipeline.recipe.c9",
+    "s1.ext-temporal-graph.shipped-0.31.c0",
+    "s1.ext-temporal-graph.shipped-0.31.c1",
+    "s1.ext-temporal-graph.shipped-0.31.c2",
+    "s1.ext-temporal-graph.shipped-0.31.c3"
+  ]
+}

@@ -594,13 +594,14 @@ export class Campaign {
     return benchmark === 'beam-10m' ? beam10mCustodyPush(env, this.manifestPath) : benchmark === 'beam-d8' ? d8CustodyPush(env, this.manifestPath) : null;
   }
 
-  /** Q1: the VM name, in ubi-runner's ownership format so `list --mine` and teardown find it. */
+  /** Q1: the VM name, in ubi-runner's ownership format so `list --mine` and teardown find it, ending in `-t<hours>`: the cell's timeout, the launcher's backstop and two hours for setup and the final pull, so an age-based sweep of TTL-less `ubirun-*` VMs leaves a running cell alone (A3). */
   vmName(l: LeaseState, env: Record<string, string | undefined> = process.env): string {
     const owner = ownerTag(env.UBI_OWNER);
     if (!owner) throw refuse({ code: 'OWNER_UNSET', message: 'UBI_OWNER is not set', why: 'scoreboard VMs carry their owner in the name so each thread destroys only its own VMs and the quota report shows who uses what',
       fix: { next: 'run', argv: ['export', 'UBI_OWNER=<your thread code, for example gbra49>'], verify: ['bash', 'scripts/ubicloud/ubi-runner.sh', 'owner'] } });
     const suffix = createHash('sha256').update(l.lease_id).digest('hex').slice(0, 6);
-    return `ubirun-${owner}-${Math.floor(Date.now() / 1000)}-${suffix}`;
+    const ttl = Math.min(999, Math.ceil((this.cell(l.cell).timeout_hours ?? 0) + BACKSTOP_HOURS + 2));
+    return `ubirun-${owner}-${Math.floor(Date.now() / 1000)}-${suffix}-t${ttl}`;
   }
 
   /** The VM payload for a lease; Q1 cells carry their timeout, checkpoint interval, snapshot command, route caps and admission share. */

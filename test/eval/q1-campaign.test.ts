@@ -163,7 +163,7 @@ describe('executor, VM payload and schedule', () => {
     c.init();
     const l = c.reserve('kb-locomo');
     const name = c.vmName(l);
-    expect(name).toMatch(/^ubirun-gbra49test-\d+-[0-9a-f]{6}$/);
+    expect(name).toMatch(/^ubirun-gbra49test-\d+-[0-9a-f]{6}-t8$/);
     const argv = c.launchArgv(l, { vm: name });
     expect(argv.slice(argv.indexOf('-n'), argv.indexOf('-n') + 2)).toEqual(['-n', name]);
     const p = payloadOf(argv);
