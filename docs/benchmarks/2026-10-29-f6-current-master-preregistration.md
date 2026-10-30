@@ -296,4 +296,53 @@ cell it affects.
 
 ## Amendments
 
-None.
+### A1 (2026-10-30): finish budget and unit timeout from the largest conversation
+
+Written after the first counted units launched, before any unit it changes runs. It changes F6 cells only; Q1's
+manifest is byte-identical.
+
+**Cause.** The D8 gbrain canary, `d8.gbrain-defaults.f6-master.c0`, holds D8's largest conversation: 1,032,700
+ingested tokens, 2.16 times the mean. A unit's expected hours came from the set's mean conversation (1 hour for a D8
+gbrain shard), and the runner waits 1.5 times that for the system's `/finish`. gbrain's finish runs about 1.9 hours per
+million tokens, so this conversation needed about 2 hours. `POST /finish` timed out after its 5,460-second budget, the
+realization was degraded and all 360 of its answers are `ingest_degraded`. The unit settled at $13.20. Leases were
+already sized from the largest conversation (Budget above), but hours were not. The same gap reaches
+`d8.ext-graph-pipeline.recipe` (about 5.1 hours of ingest at 4.93 hours per million tokens against a 4.5-hour finish
+budget) and leaves S1's largest conversation (about 27 hours against a 33-hour finish budget) under a quarter of margin.
+
+**Rule.** A sharded F6 unit's expected hours are its largest shard's ingest hours, rounded up: the mean shard with one
+mean conversation replaced by the set's largest, at the Budget table's `max_conversation_ratio` and the cell's ingest
+hours per million corpus tokens (`maxShardHours`, eval/runner/q1/cells/f6.ts). The finish budget stays 1.5 times the
+expected hours and the unit timeout 1.5 times plus 2 hours, at most 72. Single-shard units, estimates, leases and arms
+are unchanged. Expected hours are a launch-control field, so no cell's configuration identity changes and rows from
+either campaign key the same way.
+
+| Cell | Largest shard's ingest | Expected hours | Finish budget | Unit timeout |
+|---|---:|---:|---:|---:|
+| s1.gbrain-defaults.f6-master | 25.8 h | 22 to 26 | 33 to 39 h | 35 to 41 h |
+| s1.ext-temporal-graph.shipped-0.31 | 30.3 h | 25 to 31 | 37.5 to 46.5 h | 40 to 49 h |
+| d8.gbrain-defaults.f6-master | 1.8 h | 1 to 2 | 1.5 to 3 h | 4 to 5 h |
+| d8.ext-memory-bank.recipe | 2.1 h | 1 to 3 | 1.5 to 4.5 h | 4 to 7 h |
+| d8.ext-graph-pipeline.recipe | 4.5 h | 3 to 5 | 4.5 to 7.5 h | 7 to 10 h |
+
+The rule counts corpus tokens, which put D8's largest conversation at 0.92 million against the 1.03 million the canary
+ingested. The new budgets still cover the measured sizes with a quarter to spare: 3 hours of gbrain finish against
+about 2 hours, and 7.5 hours of graph-pipeline finish against about 5.1.
+
+**Campaign split.** The frozen campaign `q1-scoreboard-f6-current-master` keeps hash `6c422770` and launches nothing
+more. The 24 units it launched continue under it: S1 gbrain c0 to c9, S1 temporal graph c0 to c3, the S1 file agent and
+D8 gbrain c1 to c9, beside the settled canary. Their leases, $1,052.07, are its worst case. Every unit it did not launch,
+plus a fresh `d8.gbrain-defaults.f6-master.c0`, runs in a new campaign:
+
+- **Campaign:** `q1-scoreboard-f6-current-master-a1`, manifest `2026-10-29-f6-current-master/campaign/f6-campaign-a1.json`,
+  built by `bun eval/runner/q1/cell.ts plan --manifest f6 --units <campaign>/f6-campaign-a1-units.json --campaign-out
+  <manifest>`: 37 launch units, leases $1,416.06.
+- **Ledger:** its own, capped at $2,016.76 ($3,068.83 less the frozen campaign's $1,052.07), so the two ledgers
+  together cannot pass $3,068.83, or $3,100 with the dry run.
+- **Hash:** `bun eval/runner/shootout-cell.ts hash --campaign <manifest>` =
+  `2f5db2a26685507c8ebc99251bff02f915bdd411eda245370a6b5037df4b2187` (194 tree files) on this machine. The custodian
+  recomputes it from a fresh clone at the A1 commit before any A1 unit launches.
+
+**Publication.** The canary's degraded realization is not published. Every other unit publishes from the campaign that
+ran it, through `eval/runner/q1/publish.ts` sources; D8 gbrain takes c0 from A1 and c1 to c9 from the frozen campaign.
+The scope-cut order is unchanged.
