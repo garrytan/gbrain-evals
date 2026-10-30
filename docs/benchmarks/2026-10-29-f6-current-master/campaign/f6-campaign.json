@@ -13,7 +13,7 @@
       "benchmark": "beam-10m",
       "config": "f6-master",
       "lease_usd": 31.52,
-      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.f6-master --shard 0/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=29 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.f6-master --shard 0/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
       "setup_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
       "vm": {
         "size": "standard-4"
@@ -33,8 +33,8 @@
       ],
       "expected_hours": 22,
       "wave": 1,
-      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
-      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=29 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=29 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
     },
     {
       "id": "s1.gbrain-defaults.f6-master.c1",
@@ -42,7 +42,7 @@
       "benchmark": "beam-10m",
       "config": "f6-master",
       "lease_usd": 31.52,
-      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.f6-master --shard 1/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=29 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.f6-master --shard 1/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
       "setup_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
       "vm": {
         "size": "standard-4"
@@ -62,8 +62,8 @@
       ],
       "expected_hours": 22,
       "wave": 1,
-      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
-      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=29 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=29 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
     },
     {
       "id": "s1.gbrain-defaults.f6-master.c2",
@@ -71,7 +71,7 @@
       "benchmark": "beam-10m",
       "config": "f6-master",
       "lease_usd": 31.52,
-      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.f6-master --shard 2/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=29 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.f6-master --shard 2/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
       "setup_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
       "vm": {
         "size": "standard-4"
@@ -91,8 +91,8 @@
       ],
       "expected_hours": 22,
       "wave": 1,
-      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
-      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=29 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=29 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
     },
     {
       "id": "s1.gbrain-defaults.f6-master.c3",
@@ -100,7 +100,7 @@
       "benchmark": "beam-10m",
       "config": "f6-master",
       "lease_usd": 31.52,
-      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.f6-master --shard 3/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=29 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.f6-master --shard 3/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
       "setup_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
       "vm": {
         "size": "standard-4"
@@ -120,8 +120,8 @@
       ],
       "expected_hours": 22,
       "wave": 1,
-      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
-      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=29 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=29 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
     },
     {
       "id": "s1.gbrain-defaults.f6-master.c4",
@@ -129,7 +129,7 @@
       "benchmark": "beam-10m",
       "config": "f6-master",
       "lease_usd": 31.52,
-      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.f6-master --shard 4/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=29 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.f6-master --shard 4/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
       "setup_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
       "vm": {
         "size": "standard-4"
@@ -149,8 +149,8 @@
       ],
       "expected_hours": 22,
       "wave": 1,
-      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
-      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=29 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=29 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
     },
     {
       "id": "s1.gbrain-defaults.f6-master.c5",
@@ -158,7 +158,7 @@
       "benchmark": "beam-10m",
       "config": "f6-master",
       "lease_usd": 31.52,
-      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.f6-master --shard 5/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=29 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.f6-master --shard 5/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
       "setup_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
       "vm": {
         "size": "standard-4"
@@ -178,8 +178,8 @@
       ],
       "expected_hours": 22,
       "wave": 1,
-      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
-      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=29 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=29 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
     },
     {
       "id": "s1.gbrain-defaults.f6-master.c6",
@@ -187,7 +187,7 @@
       "benchmark": "beam-10m",
       "config": "f6-master",
       "lease_usd": 31.52,
-      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.f6-master --shard 6/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=29 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.f6-master --shard 6/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
       "setup_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
       "vm": {
         "size": "standard-4"
@@ -207,8 +207,8 @@
       ],
       "expected_hours": 22,
       "wave": 1,
-      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
-      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=29 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=29 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
     },
     {
       "id": "s1.gbrain-defaults.f6-master.c7",
@@ -216,7 +216,7 @@
       "benchmark": "beam-10m",
       "config": "f6-master",
       "lease_usd": 31.52,
-      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.f6-master --shard 7/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=29 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.f6-master --shard 7/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
       "setup_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
       "vm": {
         "size": "standard-4"
@@ -236,8 +236,8 @@
       ],
       "expected_hours": 22,
       "wave": 1,
-      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
-      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=29 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=29 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
     },
     {
       "id": "s1.gbrain-defaults.f6-master.c8",
@@ -245,7 +245,7 @@
       "benchmark": "beam-10m",
       "config": "f6-master",
       "lease_usd": 31.52,
-      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.f6-master --shard 8/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=29 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.f6-master --shard 8/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
       "setup_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
       "vm": {
         "size": "standard-4"
@@ -265,8 +265,8 @@
       ],
       "expected_hours": 22,
       "wave": 1,
-      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
-      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=29 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=29 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
     },
     {
       "id": "s1.gbrain-defaults.f6-master.c9",
@@ -274,7 +274,7 @@
       "benchmark": "beam-10m",
       "config": "f6-master",
       "lease_usd": 31.52,
-      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.f6-master --shard 9/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=29 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell s1.gbrain-defaults.f6-master --shard 9/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
       "setup_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-10m",
       "vm": {
         "size": "standard-4"
@@ -294,8 +294,8 @@
       ],
       "expected_hours": 22,
       "wave": 1,
-      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
-      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=23 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=29 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=29 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
     },
     {
       "id": "s1.ext-temporal-graph.shipped-0.31.c0",
@@ -791,7 +791,7 @@
       "benchmark": "beam-d8",
       "config": "f6-master",
       "lease_usd": 13.82,
-      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell d8.gbrain-defaults.f6-master --shard 0/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=2 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell d8.gbrain-defaults.f6-master --shard 0/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
       "setup_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-d8",
       "vm": {
         "size": "standard-4"
@@ -811,8 +811,8 @@
       ],
       "expected_hours": 1,
       "wave": 3,
-      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
-      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=2 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=2 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
     },
     {
       "id": "d8.gbrain-defaults.f6-master.c1",
@@ -820,7 +820,7 @@
       "benchmark": "beam-d8",
       "config": "f6-master",
       "lease_usd": 13.82,
-      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell d8.gbrain-defaults.f6-master --shard 1/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=2 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell d8.gbrain-defaults.f6-master --shard 1/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
       "setup_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-d8",
       "vm": {
         "size": "standard-4"
@@ -840,8 +840,8 @@
       ],
       "expected_hours": 1,
       "wave": 3,
-      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
-      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=2 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=2 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
     },
     {
       "id": "d8.gbrain-defaults.f6-master.c2",
@@ -849,7 +849,7 @@
       "benchmark": "beam-d8",
       "config": "f6-master",
       "lease_usd": 13.82,
-      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell d8.gbrain-defaults.f6-master --shard 2/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=2 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell d8.gbrain-defaults.f6-master --shard 2/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
       "setup_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-d8",
       "vm": {
         "size": "standard-4"
@@ -869,8 +869,8 @@
       ],
       "expected_hours": 1,
       "wave": 3,
-      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
-      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=2 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=2 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
     },
     {
       "id": "d8.gbrain-defaults.f6-master.c3",
@@ -878,7 +878,7 @@
       "benchmark": "beam-d8",
       "config": "f6-master",
       "lease_usd": 13.82,
-      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell d8.gbrain-defaults.f6-master --shard 3/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=2 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell d8.gbrain-defaults.f6-master --shard 3/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
       "setup_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-d8",
       "vm": {
         "size": "standard-4"
@@ -898,8 +898,8 @@
       ],
       "expected_hours": 1,
       "wave": 3,
-      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
-      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=2 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=2 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
     },
     {
       "id": "d8.gbrain-defaults.f6-master.c4",
@@ -907,7 +907,7 @@
       "benchmark": "beam-d8",
       "config": "f6-master",
       "lease_usd": 13.82,
-      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell d8.gbrain-defaults.f6-master --shard 4/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=2 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell d8.gbrain-defaults.f6-master --shard 4/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
       "setup_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-d8",
       "vm": {
         "size": "standard-4"
@@ -927,8 +927,8 @@
       ],
       "expected_hours": 1,
       "wave": 3,
-      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
-      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=2 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=2 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
     },
     {
       "id": "d8.gbrain-defaults.f6-master.c5",
@@ -936,7 +936,7 @@
       "benchmark": "beam-d8",
       "config": "f6-master",
       "lease_usd": 13.82,
-      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell d8.gbrain-defaults.f6-master --shard 5/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=2 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell d8.gbrain-defaults.f6-master --shard 5/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
       "setup_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-d8",
       "vm": {
         "size": "standard-4"
@@ -956,8 +956,8 @@
       ],
       "expected_hours": 1,
       "wave": 3,
-      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
-      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=2 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=2 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
     },
     {
       "id": "d8.gbrain-defaults.f6-master.c6",
@@ -965,7 +965,7 @@
       "benchmark": "beam-d8",
       "config": "f6-master",
       "lease_usd": 13.82,
-      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell d8.gbrain-defaults.f6-master --shard 6/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=2 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell d8.gbrain-defaults.f6-master --shard 6/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
       "setup_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-d8",
       "vm": {
         "size": "standard-4"
@@ -985,8 +985,8 @@
       ],
       "expected_hours": 1,
       "wave": 3,
-      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
-      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=2 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=2 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
     },
     {
       "id": "d8.gbrain-defaults.f6-master.c7",
@@ -994,7 +994,7 @@
       "benchmark": "beam-d8",
       "config": "f6-master",
       "lease_usd": 13.82,
-      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell d8.gbrain-defaults.f6-master --shard 7/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=2 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell d8.gbrain-defaults.f6-master --shard 7/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
       "setup_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-d8",
       "vm": {
         "size": "standard-4"
@@ -1014,8 +1014,8 @@
       ],
       "expected_hours": 1,
       "wave": 3,
-      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
-      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=2 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=2 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
     },
     {
       "id": "d8.gbrain-defaults.f6-master.c8",
@@ -1023,7 +1023,7 @@
       "benchmark": "beam-d8",
       "config": "f6-master",
       "lease_usd": 13.82,
-      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell d8.gbrain-defaults.f6-master --shard 8/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=2 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell d8.gbrain-defaults.f6-master --shard 8/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
       "setup_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-d8",
       "vm": {
         "size": "standard-4"
@@ -1043,8 +1043,8 @@
       ],
       "expected_hours": 1,
       "wave": 3,
-      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
-      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=2 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=2 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
     },
     {
       "id": "d8.gbrain-defaults.f6-master.c9",
@@ -1052,7 +1052,7 @@
       "benchmark": "beam-d8",
       "config": "f6-master",
       "lease_usd": 13.82,
-      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell d8.gbrain-defaults.f6-master --shard 9/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
+      "command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=2 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh up --system gbrain-defaults --config recipe && bun eval/runner/q1/cell.ts run --cell d8.gbrain-defaults.f6-master --shard 9/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system gbrain-defaults; exit $rc",
       "setup_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh setup --system gbrain-defaults --datasets beam-d8",
       "vm": {
         "size": "standard-4"
@@ -1072,8 +1072,8 @@
       ],
       "expected_hours": 1,
       "wave": 3,
-      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
-      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=1 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
+      "snapshot_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=2 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh snapshot --system gbrain-defaults --out \"$SHOOTOUT_SNAPSHOT_DIR/gbrain-defaults.tar\"",
+      "restore_command": "GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_F6=1 GBRAIN_F6_EXTRACT_CAP_USD=2 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh restore --system gbrain-defaults --config recipe --from \"$SHOOTOUT_RESTORE_DIR/gbrain-defaults.tar\""
     },
     {
       "id": "d8.ext-memory-bank.recipe.c0",
@@ -1350,7 +1350,7 @@
       "system": "ext-graph-pipeline",
       "benchmark": "beam-d8",
       "config": "recipe",
-      "lease_usd": 5.38,
+      "lease_usd": 7.55,
       "command": "bash eval/systems/bootstrap.sh up --system ext-graph-pipeline --config recipe && bun eval/runner/q1/cell.ts run --cell d8.ext-graph-pipeline.recipe --shard 0/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-graph-pipeline; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-graph-pipeline --datasets beam-d8",
       "vm": {
@@ -1377,7 +1377,7 @@
       "system": "ext-graph-pipeline",
       "benchmark": "beam-d8",
       "config": "recipe",
-      "lease_usd": 5.38,
+      "lease_usd": 7.55,
       "command": "bash eval/systems/bootstrap.sh up --system ext-graph-pipeline --config recipe && bun eval/runner/q1/cell.ts run --cell d8.ext-graph-pipeline.recipe --shard 1/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-graph-pipeline; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-graph-pipeline --datasets beam-d8",
       "vm": {
@@ -1404,7 +1404,7 @@
       "system": "ext-graph-pipeline",
       "benchmark": "beam-d8",
       "config": "recipe",
-      "lease_usd": 5.38,
+      "lease_usd": 7.55,
       "command": "bash eval/systems/bootstrap.sh up --system ext-graph-pipeline --config recipe && bun eval/runner/q1/cell.ts run --cell d8.ext-graph-pipeline.recipe --shard 2/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-graph-pipeline; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-graph-pipeline --datasets beam-d8",
       "vm": {
@@ -1431,7 +1431,7 @@
       "system": "ext-graph-pipeline",
       "benchmark": "beam-d8",
       "config": "recipe",
-      "lease_usd": 5.38,
+      "lease_usd": 7.55,
       "command": "bash eval/systems/bootstrap.sh up --system ext-graph-pipeline --config recipe && bun eval/runner/q1/cell.ts run --cell d8.ext-graph-pipeline.recipe --shard 3/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-graph-pipeline; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-graph-pipeline --datasets beam-d8",
       "vm": {
@@ -1458,7 +1458,7 @@
       "system": "ext-graph-pipeline",
       "benchmark": "beam-d8",
       "config": "recipe",
-      "lease_usd": 5.38,
+      "lease_usd": 7.55,
       "command": "bash eval/systems/bootstrap.sh up --system ext-graph-pipeline --config recipe && bun eval/runner/q1/cell.ts run --cell d8.ext-graph-pipeline.recipe --shard 4/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-graph-pipeline; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-graph-pipeline --datasets beam-d8",
       "vm": {
@@ -1485,7 +1485,7 @@
       "system": "ext-graph-pipeline",
       "benchmark": "beam-d8",
       "config": "recipe",
-      "lease_usd": 5.38,
+      "lease_usd": 7.55,
       "command": "bash eval/systems/bootstrap.sh up --system ext-graph-pipeline --config recipe && bun eval/runner/q1/cell.ts run --cell d8.ext-graph-pipeline.recipe --shard 5/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-graph-pipeline; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-graph-pipeline --datasets beam-d8",
       "vm": {
@@ -1512,7 +1512,7 @@
       "system": "ext-graph-pipeline",
       "benchmark": "beam-d8",
       "config": "recipe",
-      "lease_usd": 5.38,
+      "lease_usd": 7.55,
       "command": "bash eval/systems/bootstrap.sh up --system ext-graph-pipeline --config recipe && bun eval/runner/q1/cell.ts run --cell d8.ext-graph-pipeline.recipe --shard 6/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-graph-pipeline; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-graph-pipeline --datasets beam-d8",
       "vm": {
@@ -1539,7 +1539,7 @@
       "system": "ext-graph-pipeline",
       "benchmark": "beam-d8",
       "config": "recipe",
-      "lease_usd": 5.38,
+      "lease_usd": 7.55,
       "command": "bash eval/systems/bootstrap.sh up --system ext-graph-pipeline --config recipe && bun eval/runner/q1/cell.ts run --cell d8.ext-graph-pipeline.recipe --shard 7/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-graph-pipeline; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-graph-pipeline --datasets beam-d8",
       "vm": {
@@ -1566,7 +1566,7 @@
       "system": "ext-graph-pipeline",
       "benchmark": "beam-d8",
       "config": "recipe",
-      "lease_usd": 5.38,
+      "lease_usd": 7.55,
       "command": "bash eval/systems/bootstrap.sh up --system ext-graph-pipeline --config recipe && bun eval/runner/q1/cell.ts run --cell d8.ext-graph-pipeline.recipe --shard 8/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-graph-pipeline; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-graph-pipeline --datasets beam-d8",
       "vm": {
@@ -1593,7 +1593,7 @@
       "system": "ext-graph-pipeline",
       "benchmark": "beam-d8",
       "config": "recipe",
-      "lease_usd": 5.38,
+      "lease_usd": 7.55,
       "command": "bash eval/systems/bootstrap.sh up --system ext-graph-pipeline --config recipe && bun eval/runner/q1/cell.ts run --cell d8.ext-graph-pipeline.recipe --shard 9/10 --system-url http://127.0.0.1:8700 --out \"$SHOOTOUT_OUT\"; rc=$?; bash eval/systems/bootstrap.sh down --system ext-graph-pipeline; exit $rc",
       "setup_command": "bash eval/systems/bootstrap.sh setup --system ext-graph-pipeline --datasets beam-d8",
       "vm": {
