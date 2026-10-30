@@ -320,6 +320,18 @@ export const F6_ASSUMPTIONS = {
   agent_first_turn_usd: { 'openai:gpt-6.1-sol': 5.52, 'anthropic:claude-opus-5-5': 3.05, default: 3.05 } as Record<string, number>,
   /** gbrain's own calls per recall, dollars (assumed equal to query's measured gbrain_query_usd). */
   gbrain_recall_usd: 0.00176,
+  /**
+   * Extraction dollars per million conversation tokens as gbrain's own budget ledger charges them, which is what
+   * `--max-cost-usd` counts against: the dry run charged $0.99855 and $0.991868 over 926,773 tokens (1.077 and 1.070),
+   * rounded up.
+   */
+  gbrain_ledger_extraction_usd_per_mtok: 1.08,
+  /**
+   * The largest conversation's size over the set's mean, rounded up: D8 and S1 from the custodian's chat-file byte
+   * sizes (aggregates only); S2b, S2a, S3 and S4-slice from cl100k tokens per conversation of the public files over
+   * the set's split and selection; a one-conversation set is 1.
+   */
+  max_conversation_ratio: { S1: 1.22, D8: 2.17, S2b: 1.07, S2a: 1.07, S3: 1.19, 'S4-slice': 1.02, 'S2b-ingest': 1, 'S3-smoke': 1 } as Record<string, number>,
   /** Lease sizing: bytes per packed token, the reading template's bytes, and the judge prompt's bytes (the proxy reserves input at bytes + 64). */
   lease: { bytes_per_token: 4.2, template_bytes: 4_000, judge_bytes: 12_000, margin: 1.25 },
 };
@@ -330,6 +342,9 @@ function embeddingPrice(model: string): number {
   if (p.kind !== 'known') throw new Error(`no embedding price for ${model}`);
   return p.pricePerMTok;
 }
+
+/** Extraction dollars for `tokens` conversation tokens at gbrain's own ledger rate (what its --max-cost-usd counts). */
+export const f6ExtractionLedgerUsd = (tokens: number) => tokens * F6_ASSUMPTIONS.gbrain_ledger_extraction_usd_per_mtok / 1e6;
 
 /** Extraction dollars for `tokens` conversation tokens under F6_ASSUMPTIONS. */
 export function f6ExtractionUsd(tokens: number): number {

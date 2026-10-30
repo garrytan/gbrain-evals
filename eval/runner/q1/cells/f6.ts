@@ -25,7 +25,7 @@ import { resolve } from 'node:path';
 import { CHAT_PRICE_OVERRIDES, reservationUsd } from '../../budget-ledger.ts';
 import { DEFAULT_ROUTE_CAPS } from '../../metering-proxy.ts';
 import {
-  ALL_SETS, ASSUMPTIONS, F6_ASSUMPTIONS, f6ExtractionUsd, FRONTIER_JUDGES, makeCell, MANIFEST_SCHEMA, OVERLAY_KEYS, priceOf, READERS, SONNET,
+  ALL_SETS, ASSUMPTIONS, F6_ASSUMPTIONS, f6ExtractionLedgerUsd, FRONTIER_JUDGES, makeCell, MANIFEST_SCHEMA, OVERLAY_KEYS, priceOf, READERS, SONNET,
   type ArmSpec, type BlockId, type CellDefinition, type F6BlockId, type Manifest, type RetrievalIdentity, type SetId,
 } from './definitions.ts';
 
@@ -78,10 +78,14 @@ export const F6_MEASURED_ESTIMATES: Record<string, { usd: number; basis: string 
 };
 /** No write-to-queryable probes: no conversation is probed at all (probes.conversations 0). */
 const noProbes = (set: SetId) => ({ sample: 0, seed: `f6-probes-${set.toLowerCase()}`, conversations: 0 });
-/** Each conversation's extraction cap: a multiple of its extraction estimate, at least $1, rounded up to the dollar. */
+/**
+ * Each conversation's extraction cap: a multiple of the set's largest conversation's extraction at gbrain's own ledger
+ * rate (what --max-cost-usd counts against), at least $1, rounded up to the dollar. Extraction spend scales with a
+ * conversation's size, so a cap sized from the mean would stop the largest conversation's build.
+ */
 export function extractionCapUsd(set: SetId): number {
   const s = ALL_SETS[set];
-  return Math.max(1, Math.ceil(F6_ASSUMPTIONS.extraction_cap_multiple * f6ExtractionUsd(s.corpus_tokens / s.conversations)));
+  return Math.max(1, Math.ceil(F6_ASSUMPTIONS.extraction_cap_multiple * f6ExtractionLedgerUsd(s.corpus_tokens / s.conversations * largestRatio(set))));
 }
 /**
  * The largest single reservation a unit's metering proxy holds at once, as the proxy prices it: input reserved at the
@@ -109,11 +113,30 @@ export function peakReservationUsd(c: CellDefinition): { usd: number; by: string
   const [by, usd] = calls.sort((a, b) => b[1] - a[1])[0];
   return { usd: Math.round(usd * 10_000) / 10_000, by };
 }
+/** The estimate lines that scale with conversation size. */
+const SIZE_LINES = ['ingest', 'ingest_probes', 'extraction', 'fact_embeddings'];
+/**
+ * The estimate of a unit's largest shard: its mean shard with one mean conversation replaced by the set's largest
+ * (F6_ASSUMPTIONS.max_conversation_ratio). A single-shard unit holds the whole set, so its estimate is the whole cell's.
+ */
+export function maxShardUsd(c: CellDefinition): number {
+  if (c.shards === 1) return c.estimate.usd;
+  const sized = SIZE_LINES.reduce((s, k) => s + (c.estimate.lines[k] ?? 0), 0);
+  return c.estimate.usd / c.shards + sized / ALL_SETS[c.set].conversations * (largestRatio(c.set) - 1);
+}
+function largestRatio(set: SetId): number {
+  const r = F6_ASSUMPTIONS.max_conversation_ratio[set];
+  if (!(r >= 1)) throw new Error(`F6_ASSUMPTIONS.max_conversation_ratio has no ratio for ${set}`);
+  return r;
+}
 /** A unit's lease: its estimate per shard with the lease margin, plus twice the peak reservation, so the last calls of a unit near its estimate still fit. */
 function withLease(c: CellDefinition): CellDefinition {
   const peak = peakReservationUsd(c);
-  const usd = Math.ceil((c.estimate.usd / c.shards * F6_ASSUMPTIONS.lease.margin + 2 * peak.usd) * 100) / 100;
-  return { ...c, lease: { usd, basis: `F6: estimate per shard x ${F6_ASSUMPTIONS.lease.margin} plus twice the peak reservation ($${peak.usd}, ${peak.by})` } };
+  const lease = (shardUsd: number) => Math.ceil((shardUsd * F6_ASSUMPTIONS.lease.margin + 2 * peak.usd) * 100) / 100;
+  const usd = lease(c.estimate.usd / c.shards);
+  const largest = maxShardUsd(c);
+  if (usd >= largest) return { ...c, lease: { usd, basis: `F6: estimate per shard x ${F6_ASSUMPTIONS.lease.margin} plus twice the peak reservation ($${peak.usd}, ${peak.by})` } };
+  return { ...c, lease: { usd: lease(largest), basis: `F6: the largest shard's estimate ($${largest.toFixed(2)}, the set's largest conversation at ${largestRatio(c.set)} times the mean) x ${F6_ASSUMPTIONS.lease.margin} plus twice the peak reservation ($${peak.usd}, ${peak.by})` } };
 }
 const gbrain = (set: SetId, block: BlockId, ids: string[], frontier: string[] = []) =>
   withLease(makeCell(set, 'gbrain-defaults', 'f6-master', gbrainArms(ids, frontier), { block, probes: noProbes(set), launchEnv: { GBRAIN_F6_EXTRACT_CAP_USD: String(extractionCapUsd(set)) } }));

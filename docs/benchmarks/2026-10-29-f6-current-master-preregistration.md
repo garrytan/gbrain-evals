@@ -33,8 +33,10 @@ harness was built). F6 cells set `GBRAIN_SHA` in their launch environment; the Q
    cannot see them.
 2. Every session written with `put_page` as a `type: conversation` page carrying its session date, as in Q1.
 3. With serve stopped, `gbrain extract-conversation-facts --source-id default --max-cost-usd <cap> --json --yes` over
-   the whole brain. The cap is a recorded parameter of each cell (`GBRAIN_F6_EXTRACT_CAP_USD`): twice the
-   conversation's extraction estimate, at least $1. A pass that ends `partial` is run again with the cap left, up to
+   the whole brain. The cap is a recorded parameter of each cell (`GBRAIN_F6_EXTRACT_CAP_USD`): twice the largest
+   conversation's extraction estimate in the set, at gbrain's own ledger rate ($1.08 per million tokens, what
+   `--max-cost-usd` counts against), at least $1, rounded up to the dollar. The largest conversation is the set's mean
+   times its `max_conversation_ratio` (below). A pass that ends `partial` is run again with the cap left, up to
    three passes. The realization fails, and is never scored, when a pass stops on its cap, when pages are still
    failed, pending, blocked, ambiguous, too large or unparsed after the last pass, or when the extraction model has no
    price. Facts written, segments, spend and each pass's counters are recorded in the finish receipt.
@@ -197,7 +199,22 @@ spend: the file agent at $275.96 (Q1's measured S1 spend) and the hybrid at $95.
 bounds, since F6 drops Q1's frontier judging, judge repeats, Sonnet replicates and the hybrid's 2k and 16k sweep.
 
 Each unit's lease is its estimate per shard times 1.25 plus twice the largest reservation its metering proxy can hold
-at once (the proxy reserves input at the request's bytes + 64 tokens and output at the route cap). For the file agent
+at once (the proxy reserves input at the request's bytes + 64 tokens and output at the route cap). A sharded unit whose
+lease would be under its largest shard's estimate (the mean shard with one mean conversation replaced by the set's
+largest) takes its lease from that shard instead; only `d8.ext-graph-pipeline.recipe` does ($5.73, lease $7.55).
+
+Largest conversation over the set's mean (`max_conversation_ratio`, rounded up), and the extraction cap it gives:
+
+| Set | Ratio | Source | Extraction cap |
+|---|---:|---|---:|
+| S1 | 1.22 | custodian's chat-file byte sizes (aggregate) | $29 |
+| D8 | 2.17 | custodian's chat-file byte sizes (4,976,396 bytes against a 2,302,262 mean) | $2 |
+| S2b | 1.07 | cl100k tokens per conversation, the 24 sealed BEAM-1M conversations in the split file (1.069) | $3 |
+| S2a | 1.07 | the same for the 14 sealed BEAM-100K conversations (1.066) | $1 |
+| S3 | 1.19 | the same for the 10 LoCoMo conversations (1.180) | $1 |
+| S4-slice | 1.02 | the same for the 100 LongMemEval-S haystacks of the shootout slice (1.019) | $1 |
+
+For the file agent
 that reservation is one first turn per reader at once: gpt-6.1-sol $5.52 and claude-opus-5-5 $3.05 as Q1 measured
 them, and claude-sonnet-5-5 held at Opus's $3.05 (its prices are lower), $11.62 in all, so its lease is $368.19.
 
@@ -225,7 +242,7 @@ them, and claude-sonnet-5-5 held at Opus's $3.05 (its prices are lower), $11.62 
 | s3.ext-temporal-graph.shipped-0.31 | F6-T2 | component-b8000 | 1 | $17.57 | $22.35 |
 | d8.gbrain-defaults.f6-master | F6-D8 | a, p, b, d | 10 | $107.43 | $13.82 |
 | d8.ext-memory-bank.recipe | F6-D8 | component-b8000 | 10 | $32.44 | $4.44 |
-| d8.ext-graph-pipeline.recipe | F6-D8 | component-b8000 | 10 | $39.97 | $5.38 |
+| d8.ext-graph-pipeline.recipe | F6-D8 | component-b8000 | 10 | $39.97 | $7.55 |
 | d8.baseline-hybrid.baseline | F6-D8 | component-b8000 | 1 | $25.76 | $32.59 |
 | d8.baseline-none.baseline | F6-D8 | component-b8000 | 1 | $25.17 | $31.85 |
 | s4-slice.gbrain-defaults.f6-master | F6-S4 | a0, a, p, b, c, d, e | 1 | $71.67 | $89.98 |

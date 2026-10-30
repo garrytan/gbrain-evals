@@ -10,8 +10,8 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { campaignManifest, findCell, runCell } from '../../eval/runner/q1/cell.ts';
 import { Q1_CAMPAIGN_ID } from '../../eval/runner/shootout-cell.ts';
-import { definitionProblems, estimateCell, loadManifest, manifestText, MANIFEST_PATH, policyKey, type ArmDefinition, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
-import { ALL_ARMS, buildF6Manifest, F6_ARMS, F6_CAP_USD, F6_DRY_RUN_CAP_USD, F6_MANIFEST_PATH, f6ManifestText, peakReservationUsd } from '../../eval/runner/q1/cells/f6.ts';
+import { ALL_SETS, definitionProblems, estimateCell, F6_ASSUMPTIONS, f6ExtractionLedgerUsd, loadManifest, manifestText, MANIFEST_PATH, policyKey, type ArmDefinition, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
+import { ALL_ARMS, buildF6Manifest, maxShardUsd, F6_ARMS, F6_CAP_USD, F6_DRY_RUN_CAP_USD, F6_MANIFEST_PATH, f6ManifestText, peakReservationUsd } from '../../eval/runner/q1/cells/f6.ts';
 import type { Corpus, MemoryQuestion } from '../../eval/runner/memory-qa/corpus.ts';
 import type { ChatLike, ChatResult } from '../../eval/runner/memory-qa/qa-v2.ts';
 import type { PublicQuestion, RetrievalPolicy } from '../../eval/runner/systems/types.ts';
@@ -75,7 +75,7 @@ describe('the F6 manifest', () => {
       expect(c.snapshot_command).toContain('--config shipped-0.31');
       expect(c.restore_command).toContain('--config shipped-0.31');
     }
-    expect(m.cells.find(c => c.id === 's1.gbrain-defaults.f6-master')!.launch!.env.GBRAIN_F6_EXTRACT_CAP_USD).toBe('23');
+    expect(m.cells.find(c => c.id === 's1.gbrain-defaults.f6-master')!.launch!.env.GBRAIN_F6_EXTRACT_CAP_USD).toBe('29');
   });
   test('the S1 baseline reruns are priced from Q1\'s measured spend, and the file agent\'s lease holds every reader\'s first turn at once, twice', () => {
     const at = (id: string) => m.cells.find(c => c.id === id)!;
@@ -83,6 +83,20 @@ describe('the F6 manifest', () => {
     expect(at('s1.baseline-hybrid.baseline').estimate).toEqual({ usd: 95.1, lines: { q1_measured: 95.1 } });
     expect(peakReservationUsd(at('s1.baseline-file-agent.baseline')).usd).toBe(11.62);
     expect(at('s1.baseline-file-agent.baseline').lease!.usd).toBe(Math.ceil((275.96 * 1.25 + 2 * 11.62) * 100) / 100);
+  });
+  test('each set\'s extraction cap is at least twice the largest conversation\'s extraction at gbrain\'s own ledger rate', () => {
+    for (const c of all.filter(c => c.system === 'gbrain-defaults')) {
+      const s = ALL_SETS[c.set];
+      const ratio = F6_ASSUMPTIONS.max_conversation_ratio[c.set];
+      expect([c.set, ratio >= 1]).toEqual([c.set, true]);
+      const largest = s.corpus_tokens / s.conversations * ratio;
+      expect([c.set, Number(c.launch!.env.GBRAIN_F6_EXTRACT_CAP_USD) >= 2 * f6ExtractionLedgerUsd(largest)]).toEqual([c.set, true]);
+    }
+    // D8's largest conversation (2.17 times the mean) would have outrun the old mean-sized $1 cap.
+    expect(2 * f6ExtractionLedgerUsd(ALL_SETS.D8.corpus_tokens / 10 * 2.17)).toBeGreaterThan(1);
+  });
+  test('every unit\'s lease covers its largest shard: the shard holding the set\'s largest conversation', () => {
+    for (const c of all) expect([c.id, c.lease!.usd >= maxShardUsd(c)]).toEqual([c.id, true]);
   });
   test('every lease holds its estimate per shard with margin plus twice the largest reservation the proxy can hold at once', () => {
     for (const c of m.cells) {
