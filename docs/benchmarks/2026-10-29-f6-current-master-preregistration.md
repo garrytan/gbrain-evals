@@ -392,3 +392,68 @@ from the frozen campaign. Its own ledger is capped at $115.
 **Publication.** D8 gbrain publishes c0 from A1, c2 from the frozen campaign and c1 and c3 to c9 from A2, through
 `eval/runner/q1/publish.ts` sources. The frozen campaign's degraded D8 gbrain realizations (c0, c1 and c3 to c9) are
 never published. The scope-cut order is unchanged.
+
+### A3 (2026-10-30): S1 and D8 cells lost to a VM sweep
+
+Written before any A3 unit runs. It adds a campaign and changes no cell, manifest or earlier campaign. The one code
+change is the VM name, described below, and it applies only to launches from this commit on. The frozen and A1
+checkouts are not touched.
+
+**Cause.** From 16:33:50 to 16:36:24 UTC on 2026-10-30, another team's test run of an unmerged runner change destroyed
+every Ubicloud VM in the project named `ubirun-*` with no expiry and older than 4 hours. That was 22 F6 VMs, aged 5.7
+to 10 hours: S1 gbrain c0 to c9, S1 temporal graph c0 to c3 and S1 file-agent from the frozen campaign, and S1 temporal
+graph c4 to c9 and D8 graph-pipeline c9 from A1. ubi-runner lost each session, waited out its one-hour reattach window,
+and the launcher recorded each cell as failed with runner exit 255. Each VM held its lease's spend ledger, so none of
+them reports measured spend. No checkpoint was pulled for any of them except the file-agent's (ingest complete, 140
+answered rows). The 8 A1 VMs younger than 4 hours survived and keep running. The sweep's owners have stopped it.
+
+**Booked loss.** The 22 leases are closed with `abandon`, which charges each its full reservation: $913.87 in the
+frozen campaign and $353.27 in A1, $1,267.14 in all. Their true spend is at most that and is not measured. No
+realization from them exists, so none is published.
+
+**VM names.** Every launch from this commit on names its VM `ubirun-<owner>-<epoch>-<suffix>-t<hours>`. The hours are
+the cell's timeout, plus the launcher's 4-hour backstop, plus 2 hours for setup and the final pull: 47 for S1 gbrain,
+55 for S1 temporal graph and 16 for D8 graph-pipeline. A sweep of VMs with no expiry then leaves a running cell alone.
+Test: `test/eval/q1-campaign.test.ts`, "a Q1 launch names its VM with the owner tag ...". The cells and their commands
+are unchanged. Every A3 unit also runs under the reattach watcher (`eval/runner/q1/reattach.ts`), which saves the
+metering proxy's status and ledger snapshot every 30 minutes, so a lost VM still leaves measured spend.
+
+**Campaign.** `q1-scoreboard-f6-current-master-a3`, manifest `2026-10-29-f6-current-master/campaign/f6-campaign-a3.json`,
+built by `bun eval/runner/q1/cell.ts plan --manifest f6 --units <campaign>/f6-campaign-a3-units.json --campaign-out
+<manifest>`. It has 15 units with leases of $553.23:
+
+- **S1 gbrain c0 to c9:** $31.52 each. They run at A1's hours, sized from the largest conversation: 26 expected and a
+  41-hour unit timeout. The frozen campaign's units ran at 35 hours.
+- **S1 temporal graph c0 to c3:** $57.62 each, 31 hours expected, a 49-hour unit timeout.
+- **D8 graph-pipeline c9:** $7.55, identical to its A1 cell.
+
+Each unit builds its store afresh under A3's own output. Its own ledger is capped at $553.23.
+
+- **Hash:** `bun eval/runner/shootout-cell.ts hash --campaign <manifest>` =
+  `2ad97fef38246793842cdb3ee0ecc57e76fcaf20d48c91c0c6f4be7977e1d2cf` (194 tree files). The custodian computed it from
+  a fresh clone at commit c6648f06. This amendment changes no hashed file.
+
+**Cap arithmetic (booked).** Booked spend counts settled leases at their measured spend and open or abandoned leases
+at their full reservation.
+
+| Item | Booked |
+|---|---:|
+| Frozen campaign, which launches nothing more: $117.36 measured plus $913.87 abandoned | $1,031.23 |
+| A1: $127.92 measured, $353.27 abandoned, $872.18 open on 8 running units | $1,353.37 |
+| A2 | $91.41 |
+| A3, its cap | $553.23 |
+| **Ledgers together** | **$3,029.24** |
+
+The ledgers together stay under the counted campaign's $3,068.83 by $39.59. With the $31.17 dry run, the total is
+$3,060.41 against the $3,100 approval.
+
+**Stage 2.** S1 temporal graph c4 to c9 ($345.72) and the S1 file-agent ($368.19) need $713.91. The file-agent resumes
+from its checkpoint, so its store is ingested again and only questions without answers run. Both launch in a later
+amendment, A4. A4 runs only once settled A1 units have released enough of their open leases that the ledgers together,
+A4's cap included, stay at or under $3,068.83. That needs the 8 running A1 units to settle at $197.86 or less in total.
+If they settle higher, the scope-cut order covers the gap: S4-slice, then S2a, then S1 hybrid, then S3, then S2b
+temporal graph. Each cut is recorded in A4 before A4 runs.
+
+**Publication.** S1 gbrain c0 to c9, S1 temporal graph c0 to c3 and D8 graph-pipeline c9 publish from A3. Every other
+D8 source stays as A2 set it. S1 stays descriptive and unranked. Until A4's units finish, S1 temporal graph covers 4 of
+10 shards and the S1 file-agent row is missing, and the report says so.
