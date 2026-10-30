@@ -346,3 +346,49 @@ plus a fresh `d8.gbrain-defaults.f6-master.c0`, runs in a new campaign:
 **Publication.** The canary's degraded realization is not published. Every other unit publishes from the campaign that
 ran it, through `eval/runner/q1/publish.ts` sources; D8 gbrain takes c0 from A1 and c1 to c9 from the frozen campaign.
 The scope-cut order is unchanged.
+
+### A2 (2026-10-30): D8 gbrain shards degraded at the frozen finish budget
+
+Written before any A2 unit runs. It adds a campaign and changes no cell, manifest or earlier campaign.
+
+**Cause.** In the frozen campaign, 9 of the 10 D8 gbrain shards hit the same `/finish` client timeout at about 1.53
+hours. Each of those conversations has 929 to 930 sessions and 0.30 to 0.43 million tokens. The one that finished,
+d8-2, has 630 sessions and 322,457 tokens and drained in 4,043 seconds. gbrain's finish time follows its extraction
+segments, about 6.4 seconds per window, much more than its tokens. D8 has about 2,200 to 2,700 sessions per million
+tokens, against about 1,000 for the dry run's 1m-16 and about 590 for S1, so a rate in hours per million tokens
+understates D8. Besides the canary (c0, rerun in A1), the degraded shards are c1 and c3 to c9; all their answers are
+`ingest_degraded`. c2 is sound.
+
+**Check of A1's budget.** A session splits into one extraction window per 6,500 characters, rounded up, so sessions
+plus characters / 6,500 bound a conversation's segments from above. Named assumptions, aggregates only: 930 sessions
+per D8 conversation, except 630 for d8-2 and 351 for d8-1; at most 0.43 million ingested tokens per conversation, except
+322,457 for d8-2 and 1,032,700 for d8-1; 4.82 bytes per ingested token (the custodian's 4,976,396-byte d8-1 file over
+its 1,032,700 tokens); 6.4 seconds per segment. A 930-session conversation then needs at most about 2.2 hours (1.65 from
+its sessions alone), d8-1 about 2.0 and d8-2 about 1.5 (it took 1.1). A1's D8 gbrain finish budget, 3 hours, covers the
+largest by 1.35 times and the largest session count alone by 1.81 times, so A1's hours stand. S1's units keep running:
+by the same model they project to about 18 to 27 hours against their 33-hour finish budget. Test:
+`test/eval/q1-f6-cells.test.ts`, "gbrain's finish follows segments".
+
+**Campaign.** `q1-scoreboard-f6-current-master-a2`, manifest `2026-10-29-f6-current-master/campaign/f6-campaign-a2.json`,
+built by `bun eval/runner/q1/cell.ts plan --manifest f6 --units <campaign>/f6-campaign-a2-units.json --campaign-out
+<manifest>`: `d8.gbrain-defaults.f6-master` c1 and c3 to c9 alone, 8 units at A1's hours (2 expected, 3-hour finish
+budget, 5-hour unit timeout), leases $110.56. Each builds its brain afresh under A2's own output; nothing carries over
+from the frozen campaign. Its own ledger is capped at $115.
+
+- **Hash:** `bun eval/runner/shootout-cell.ts hash --campaign <manifest>` =
+  `3eb387881be2abed6aff31079c9a8c65a4a0794b107b96c07c469c7929d21358` (194 tree files) on this machine. The A1 manifest
+  hashes to `2f5db2a2` at this commit too. The custodian recomputes it from a fresh clone at the A2 commit before any
+  A2 unit launches.
+
+**Cap arithmetic.** The three ledgers together stay under the counted campaign's $3,068.83:
+
+- **Frozen campaign:** launches nothing more. Worst case $1,029.23: $115.36 settled on D8 gbrain plus $913.87 of open S1
+  leases.
+- **A1:** each unit is launched once, no lease is raised, and no unit is resumed or relaunched without a further
+  amendment, so its worst case is its lease total, $1,416.06.
+- **A2:** its cap, $115.
+- **Total:** $1,029.23 + $1,416.06 + $115 = $2,560.29.
+
+**Publication.** D8 gbrain publishes c0 from A1, c2 from the frozen campaign and c1 and c3 to c9 from A2, through
+`eval/runner/q1/publish.ts` sources. The frozen campaign's degraded D8 gbrain realizations (c0, c1 and c3 to c9) are
+never published. The scope-cut order is unchanged.
