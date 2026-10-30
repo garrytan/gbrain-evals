@@ -33,17 +33,23 @@ describe('the F6 manifest', () => {
   });
   test('every cell is valid, the estimate fits the $3,100 cap and the dry run fits $60', () => {
     for (const c of all) expect([c.id, definitionProblems(c, kinds)]).toEqual([c.id, []]);
-    expect(m.cap_usd).toBe(F6_CAP_USD);
-    expect(m.total_usd).toBeLessThanOrEqual(F6_CAP_USD);
+    // The counted campaign's cap is the approval less the dry run's spend, so the two together stay within $3,100.
+    expect(m.cap_usd).toBe(3068.83);
+    expect(m.cap_usd + m.dry_run_spent_usd).toBe(F6_CAP_USD);
+    expect(m.total_usd).toBeLessThanOrEqual(m.cap_usd);
     expect(m.smoke_cells.reduce((s, c) => s + c.estimate.usd, 0)).toBeLessThanOrEqual(F6_DRY_RUN_CAP_USD);
   });
   test('the scope: gbrain seven arms on S1, S2b, S2a, S3 and S4-slice, four on D8; the temporal graph 0.31.2 component arm; D8\'s comparison rows; nothing else rerun', () => {
     const ids = m.cells.map(c => c.id);
-    expect(ids).toEqual(['s1.gbrain-defaults.f6-master', 's1.ext-temporal-graph.shipped-0.31', 's2b.gbrain-defaults.f6-master', 's2b.ext-temporal-graph.shipped-0.31',
+    expect(ids).toEqual(['s1.gbrain-defaults.f6-master', 's1.ext-temporal-graph.shipped-0.31', 's1.baseline-file-agent.baseline', 's1.baseline-hybrid.baseline', 's2b.gbrain-defaults.f6-master', 's2b.ext-temporal-graph.shipped-0.31',
       's2a.gbrain-defaults.f6-master', 's2a.ext-temporal-graph.shipped-0.31', 's3.gbrain-defaults.f6-master', 's3.ext-temporal-graph.shipped-0.31',
       'd8.gbrain-defaults.f6-master', 'd8.ext-memory-bank.recipe', 'd8.ext-graph-pipeline.recipe', 'd8.baseline-hybrid.baseline', 'd8.baseline-none.baseline', 's4-slice.gbrain-defaults.f6-master']);
     for (const c of m.cells.filter(c => c.system === 'gbrain-defaults')) expect(c.arms.map(a => a.id)).toEqual(c.set === 'D8' ? ['a', 'p', 'b', 'd'] : ALL_ARMS);
-    for (const c of m.cells.filter(c => c.system !== 'gbrain-defaults')) expect(c.arms.map(a => [a.id, a.budget, a.retrieval])).toEqual([['component-b8000', 8000, undefined]]);
+    for (const c of m.cells.filter(c => c.system !== 'gbrain-defaults' && c.system !== 'baseline-file-agent')) expect(c.arms.map(a => [a.id, a.budget, a.retrieval])).toEqual([['component-b8000', 8000, undefined]]);
+    // The file agent reruns Q1's arm: whole-system agent, 40 turns, the same three readers.
+    const q1 = loadManifest().cells.find(c => c.id === 's1.baseline-file-agent.baseline')!;
+    const agent = m.cells.find(c => c.id === 's1.baseline-file-agent.baseline')!;
+    expect(agent.arms.map(a => [a.id, a.mode, a.label, a.readers])).toEqual(q1.arms.map(a => [a.id, a.mode, a.label, a.readers]));
     expect(m.cells.find(c => c.set === 'S1' && c.system !== 'gbrain-defaults')!.shards).toBe(10);
     expect(m.cells.find(c => c.id === 's1.gbrain-defaults.f6-master')!.shards).toBe(10);
   });
@@ -51,7 +57,7 @@ describe('the F6 manifest', () => {
     for (const c of all) {
       expect(c.probes.conversations).toBe(0);
       for (const a of c.arms) {
-        expect([a.mode, a.budget, a.readers, a.reader_replicates, a.judge_repeats]).toEqual(['packed', 8000, m.readers, {}, null]);
+        expect([a.mode, a.budget, a.readers, a.reader_replicates, a.judge_repeats]).toEqual(c.system === 'baseline-file-agent' ? ['agent', null, m.readers, {}, null] : ['packed', 8000, m.readers, {}, null]);
         const frontier = c.id === 's1.gbrain-defaults.f6-master' && (a.id === 'p' || a.id === 'd');
         expect(a.frontier).toEqual(frontier ? { judges: ['anthropic:claude-opus-5-5', 'openai:gpt-6.1-sol'], readers: [SONNET], sample: null } : null);
       }
@@ -70,6 +76,13 @@ describe('the F6 manifest', () => {
       expect(c.restore_command).toContain('--config shipped-0.31');
     }
     expect(m.cells.find(c => c.id === 's1.gbrain-defaults.f6-master')!.launch!.env.GBRAIN_F6_EXTRACT_CAP_USD).toBe('23');
+  });
+  test('the S1 baseline reruns are priced from Q1\'s measured spend, and the file agent\'s lease holds every reader\'s first turn at once, twice', () => {
+    const at = (id: string) => m.cells.find(c => c.id === id)!;
+    expect(at('s1.baseline-file-agent.baseline').estimate).toEqual({ usd: 275.96, lines: { q1_measured: 275.96 } });
+    expect(at('s1.baseline-hybrid.baseline').estimate).toEqual({ usd: 95.1, lines: { q1_measured: 95.1 } });
+    expect(peakReservationUsd(at('s1.baseline-file-agent.baseline')).usd).toBe(11.62);
+    expect(at('s1.baseline-file-agent.baseline').lease!.usd).toBe(Math.ceil((275.96 * 1.25 + 2 * 11.62) * 100) / 100);
   });
   test('every lease holds its estimate per shard with margin plus twice the largest reservation the proxy can hold at once', () => {
     for (const c of m.cells) {
@@ -98,7 +111,7 @@ describe('the F6 manifest', () => {
     for (const c of campaignManifest(loadManifest()).cells) expect(c.setup_command).toMatch(/^bash eval\/systems\/bootstrap\.sh setup( --system [a-z0-9-]+)? --datasets /);
     for (const c of campaignManifest(m).cells.filter(c => c.system === 'gbrain-defaults')) expect(c.setup_command).toStartWith('GBRAIN_BUN_IMAGE=oven/bun:1.4.4-slim@sha256:1846adf22496bd711036aae8be147e57bdebbaea2e5264e3e0b5af1db187d9a4 GBRAIN_SHA=0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049 bash eval/systems/bootstrap.sh setup --system gbrain-defaults ');
     const counted = campaignManifest(m);
-    expect([counted.campaign_id, counted.cap_usd, counted.cells.some(c => c.smoke)]).toEqual(['q1-scoreboard-f6-current-master', 3100, false]);
+    expect([counted.campaign_id, counted.cap_usd, counted.cells.some(c => c.smoke)]).toEqual(['q1-scoreboard-f6-current-master', 3068.83, false]);
     for (const c of [camp, counted, campaignManifest(m, { sealed: { cap_usd: 3100 } })]) expect(c.campaign_id).toMatch(Q1_CAMPAIGN_ID);
   });
 });

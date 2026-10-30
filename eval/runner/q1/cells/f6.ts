@@ -13,8 +13,9 @@
  *   the D8 long-history reserve (set D8, loader beam-d8, owner custody).
  *   the LongMemEval-S shootout slice for the gbrain arms, lowest priority.
  *
- * Competitor and baseline rows of S1, S2b, S2a and S3 are not rerun: they are reused from A24 through publish.ts
- * sources, gated by eval/runner/q1/reuse-check.ts. No judge repeats, reader replicates, 2k/16k sweep, own-answer arms
+ * Competitor and baseline rows of S1, S2b, S2a and S3 are reused from A24 through publish.ts sources, gated by
+ * eval/runner/q1/reuse-check.ts, except the two systems the gate refuses: baseline-file-agent and baseline-hybrid run
+ * again on S1 at the current tree (Q1's file-agent arm, and the hybrid's 8,000-token component arm), priced from Q1. No judge repeats, reader replicates, 2k/16k sweep, own-answer arms
  * or write-to-queryable probes; frontier judges re-judge only the S1 claude-sonnet-5-5 answers of arms P and D.
  *
  * `bun eval/runner/q1/cells/f6.ts` regenerates f6-cells.json; a test fails when the committed file is stale.
@@ -33,6 +34,10 @@ export const F6_PREREGISTRATION = 'docs/benchmarks/2026-10-29-f6-current-master-
 /** Garry's approval, 2026-10-27: F6's cap, the dry run included. */
 export const F6_CAP_USD = 3100;
 export const F6_DRY_RUN_CAP_USD = 60;
+/** What the dry run spent (both dry-run campaigns, settled leases; docs/benchmarks/2026-10-29-f6-current-master/dry-run/). */
+export const F6_DRY_RUN_SPENT_USD = 31.17;
+/** The counted campaign's cap: F6's approval less what the dry run already spent against it. */
+export const F6_COUNTED_CAP_USD = Math.round((F6_CAP_USD - F6_DRY_RUN_SPENT_USD) * 100) / 100;
 export const F6_CAMPAIGN_ID = 'q1-scoreboard-f6-current-master';
 
 type Overlay = Record<(typeof OVERLAY_KEYS)[number], boolean | string>;
@@ -63,6 +68,14 @@ const FRONTIER_S1 = { judges: FRONTIER_JUDGES, readers: [SONNET], sample: null }
 const gbrainArms = (ids: string[], frontier: string[] = []): ArmSpec[] =>
   ids.map(id => ({ id, mode: 'packed' as const, budget: 8000, label: F6_ARMS[id].label, retrieval: F6_ARMS[id].retrieval, ...(frontier.includes(id) ? { frontier: FRONTIER_S1 } : {}) }));
 const b8 = (): ArmSpec => ({ id: 'component-b8000', mode: 'packed', budget: 8000, label: 'component, 8,000 tokens' });
+/**
+ * The S1 baselines the reuse check refuses, rerun at the current tree and priced from Q1's measured spend (an upper
+ * bound: F6 drops Q1's frontier judging, judge repeats, Sonnet replicates and the hybrid's 2k/16k sweep).
+ */
+export const F6_MEASURED_ESTIMATES: Record<string, { usd: number; basis: string }> = {
+  's1.baseline-file-agent.baseline': { usd: 275.96, basis: 'Q1 measured spend of the S1 file agent (whole-agent, 40 turns, three readers)' },
+  's1.baseline-hybrid.baseline': { usd: 95.1, basis: 'Q1 clean-run price of the S1 hybrid baseline' },
+};
 /** No write-to-queryable probes: no conversation is probed at all (probes.conversations 0). */
 const noProbes = (set: SetId) => ({ sample: 0, seed: `f6-probes-${set.toLowerCase()}`, conversations: 0 });
 /** Each conversation's extraction cap: a multiple of its extraction estimate, at least $1, rounded up to the dollar. */
@@ -84,7 +97,11 @@ export function peakReservationUsd(c: CellDefinition): { usd: number; by: string
     return reservationUsd({ provider: model.split(':')[0], model: model.split(':')[1], kind: 'chat', ...p, inputTokens: inputBytes + 64, maxOutputTokens: maxOut });
   };
   const calls: Array<[string, number]> = [];
-  for (const a of c.arms) for (const r of a.readers) calls.push([`reader ${r}`, one(r, Math.ceil((a.budget ?? 8000) * L.bytes_per_token) + L.template_bytes, DEFAULT_ROUTE_CAPS.reader)]);
+  for (const a of c.arms.filter(a => a.mode === 'packed')) for (const r of a.readers) calls.push([`reader ${r}`, one(r, Math.ceil((a.budget ?? 8000) * L.bytes_per_token) + L.template_bytes, DEFAULT_ROUTE_CAPS.reader)]);
+  for (const a of c.arms.filter(a => a.mode === 'agent')) {
+    const turns = a.readers.map(r => F6_ASSUMPTIONS.agent_first_turn_usd[r] ?? F6_ASSUMPTIONS.agent_first_turn_usd.default);
+    calls.push([`file agent: one first turn per reader at once (${a.readers.length})`, turns.reduce((s, x) => s + x, 0)]);
+  }
   const judges = [c.benchmark.startsWith('beam') ? ASSUMPTIONS.judge.beam.model : ASSUMPTIONS.judge.lme.model, ...c.arms.flatMap(a => a.frontier?.judges ?? [])];
   for (const j of judges) calls.push([`judge ${j}`, one(j, L.judge_bytes, DEFAULT_ROUTE_CAPS.judge)]);
   if (c.configuration === 'f6-master') calls.push([`extraction ${F6_ASSUMPTIONS.extraction.model}`, one(F6_ASSUMPTIONS.extraction.model, 64_000, DEFAULT_ROUTE_CAPS.extraction)]);
@@ -101,12 +118,20 @@ function withLease(c: CellDefinition): CellDefinition {
 const gbrain = (set: SetId, block: BlockId, ids: string[], frontier: string[] = []) =>
   withLease(makeCell(set, 'gbrain-defaults', 'f6-master', gbrainArms(ids, frontier), { block, probes: noProbes(set), launchEnv: { GBRAIN_F6_EXTRACT_CAP_USD: String(extractionCapUsd(set)) } }));
 const other = (set: SetId, block: BlockId, system: string, configuration: string) => withLease(makeCell(set, system, configuration, [b8()], { block, probes: noProbes(set) }));
+/** An S1 baseline rerun, with its estimate set from Q1's measured spend (F6_MEASURED_ESTIMATES). */
+const rerun = (system: string, arm: ArmSpec) => {
+  const c = makeCell('S1', system, 'baseline', [arm], { block: 'F6-S1', probes: noProbes('S1') });
+  const m = F6_MEASURED_ESTIMATES[c.id];
+  return withLease({ ...c, estimate: { usd: m.usd, lines: { q1_measured: m.usd } } });
+};
 
 /** F6's counted cells, in priority order (S4-slice last). */
 export function generateF6Cells(): CellDefinition[] {
   return [
     gbrain('S1', 'F6-S1', ALL_ARMS, ['p', 'd']),
     other('S1', 'F6-S1', 'ext-temporal-graph', 'shipped-0.31'),
+    rerun('baseline-file-agent', { id: 'whole-agent', mode: 'agent', label: 'file agent, uncapped grep, 40 turns' }),
+    rerun('baseline-hybrid', b8()),
     ...(['S2b', 'S2a', 'S3'] as SetId[]).flatMap(set => [gbrain(set, 'F6-T2', ALL_ARMS), other(set, 'F6-T2', 'ext-temporal-graph', 'shipped-0.31')]),
     gbrain('D8', 'F6-D8', D8_GBRAIN_ARMS),
     ...D8_SYSTEMS.map(([system, configuration]) => other('D8', 'F6-D8', system, configuration)),
@@ -128,14 +153,14 @@ export function generateF6DryRunCells(): CellDefinition[] {
 }
 
 const F6_BLOCKS: Record<F6BlockId, string> = {
-  'F6-S1': 'F6 S1 BEAM-10M (gbrain seven arms, temporal graph 0.31.2)',
+  'F6-S1': 'F6 S1 BEAM-10M (gbrain seven arms, temporal graph 0.31.2, file agent and hybrid baseline reruns)',
   'F6-T2': 'F6 S2b, S2a, S3 (gbrain seven arms, temporal graph 0.31.2)',
   'F6-D8': 'F6 D8 long-history reserve',
   'F6-S4': 'F6 S4-slice LongMemEval-S (lowest priority)',
   'F6-dry': 'F6 priced dry run (public dev data)',
 };
 
-export interface F6Manifest extends Manifest { f6_assumptions: typeof F6_ASSUMPTIONS; dry_run_cap_usd: number; campaign_id: string }
+export interface F6Manifest extends Manifest { f6_assumptions: typeof F6_ASSUMPTIONS; dry_run_cap_usd: number; dry_run_spent_usd: number; campaign_id: string }
 
 export function buildF6Manifest(): F6Manifest {
   const cells = generateF6Cells();
@@ -151,7 +176,7 @@ export function buildF6Manifest(): F6Manifest {
     schema: MANIFEST_SCHEMA, generated_by: 'bun eval/runner/q1/cells/f6.ts', preregistration: F6_PREREGISTRATION, readers: READERS, effort: 'medium',
     prices: Object.fromEntries(models.sort(([a], [b]) => (a < b ? -1 : 1))), assumptions: ASSUMPTIONS, f6_assumptions: F6_ASSUMPTIONS,
     sets, blocks, cells, smoke_cells: smoke,
-    total_usd: round(blocks.reduce((s, b) => s + b.estimate_usd, 0)), plan_total_usd: F6_CAP_USD, cap_usd: F6_CAP_USD, dry_run_cap_usd: F6_DRY_RUN_CAP_USD, campaign_id: F6_CAMPAIGN_ID,
+    total_usd: round(blocks.reduce((s, b) => s + b.estimate_usd, 0)), plan_total_usd: F6_CAP_USD, cap_usd: F6_COUNTED_CAP_USD, dry_run_cap_usd: F6_DRY_RUN_CAP_USD, dry_run_spent_usd: F6_DRY_RUN_SPENT_USD, campaign_id: F6_CAMPAIGN_ID,
   };
 }
 

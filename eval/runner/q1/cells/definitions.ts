@@ -313,6 +313,11 @@ export const F6_ASSUMPTIONS = {
   ingest_usd_per_mtok: { 'gbrain-defaults:f6-master': 0.08, 'ext-temporal-graph:shipped-0.31': 4.01 } as Record<string, number>,
   /** Ingest hours per million tokens, F6 dry run on 1m-16: gbrain's page ingest plus serial extraction on PGLite (6,392 s), the temporal graph (7,546 s). */
   hours_per_mtok: { 'gbrain-defaults:f6-master': 1.92, 'ext-temporal-graph:shipped-0.31': 2.26 } as Record<string, number>,
+  /**
+   * The file agent's first-turn reservation per reader, dollars, as the metering proxy held it in Q1 (gpt-6.1-sol and
+   * claude-opus-5-5 measured; any other reader, claude-sonnet-5-5 included, is held at Opus's, which its lower prices keep it under).
+   */
+  agent_first_turn_usd: { 'openai:gpt-6.1-sol': 5.52, 'anthropic:claude-opus-5-5': 3.05, default: 3.05 } as Record<string, number>,
   /** gbrain's own calls per recall, dollars (assumed equal to query's measured gbrain_query_usd). */
   gbrain_recall_usd: 0.00176,
   /** Lease sizing: bytes per packed token, the reading template's bytes, and the judge prompt's bytes (the proxy reserves input at bytes + 64). */

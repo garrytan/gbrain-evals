@@ -228,6 +228,11 @@
       "gbrain-defaults:f6-master": 1.92,
       "ext-temporal-graph:shipped-0.31": 2.26
     },
+    "agent_first_turn_usd": {
+      "openai:gpt-6.1-sol": 5.52,
+      "anthropic:claude-opus-5-5": 3.05,
+      "default": 3.05
+    },
     "gbrain_recall_usd": 0.00176,
     "lease": {
       "bytes_per_token": 4.2,
@@ -410,10 +415,10 @@
   "blocks": [
     {
       "id": "F6-S1",
-      "label": "F6 S1 BEAM-10M (gbrain seven arms, temporal graph 0.31.2)",
-      "plan_usd": 706.9,
-      "estimate_usd": 706.9,
-      "cap_usd": 1060.35
+      "label": "F6 S1 BEAM-10M (gbrain seven arms, temporal graph 0.31.2, file agent and hybrid baseline reruns)",
+      "plan_usd": 1077.96,
+      "estimate_usd": 1077.96,
+      "cap_usd": 1616.94
     },
     {
       "id": "F6-T2",
@@ -817,6 +822,128 @@
       },
       "lease": {
         "usd": 57.62,
+        "basis": "F6: estimate per shard x 1.25 plus twice the peak reservation ($0.1916, reader anthropic:claude-opus-5-5)"
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "s1.baseline-file-agent.baseline",
+      "set": "S1",
+      "block": "F6-S1",
+      "benchmark": "beam-10m",
+      "split": "sealed",
+      "selection": {
+        "kind": "all"
+      },
+      "exclusions": [
+        {
+          "question_id": "10m-1:abstention:0",
+          "reason": "exposed in another thread's audit (eval/decisions/splits/beam-10m.json exclusions); run and reported apart, never in the confirmatory cohort"
+        }
+      ],
+      "system": "baseline-file-agent",
+      "configuration": "baseline",
+      "runner": "in-process",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "beam-10m",
+      "probes": {
+        "sample": 0,
+        "seed": "f6-probes-s1",
+        "conversations": 0
+      },
+      "shards": 1,
+      "expected_hours": 6,
+      "arms": [
+        {
+          "id": "whole-agent",
+          "cell_id": "s1.baseline-file-agent.baseline.whole-agent",
+          "set": "S1",
+          "arm": "whole-system",
+          "mode": "agent",
+          "policy": null,
+          "budget": null,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "file agent, uncapped grep, 40 turns"
+        }
+      ],
+      "estimate": {
+        "usd": 275.96,
+        "lines": {
+          "q1_measured": 275.96
+        }
+      },
+      "lease": {
+        "usd": 368.19,
+        "basis": "F6: estimate per shard x 1.25 plus twice the peak reservation ($11.62, file agent: one first turn per reader at once (3))"
+      }
+    },
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "s1.baseline-hybrid.baseline",
+      "set": "S1",
+      "block": "F6-S1",
+      "benchmark": "beam-10m",
+      "split": "sealed",
+      "selection": {
+        "kind": "all"
+      },
+      "exclusions": [
+        {
+          "question_id": "10m-1:abstention:0",
+          "reason": "exposed in another thread's audit (eval/decisions/splits/beam-10m.json exclusions); run and reported apart, never in the confirmatory cohort"
+        }
+      ],
+      "system": "baseline-hybrid",
+      "configuration": "baseline",
+      "runner": "in-process",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "beam-10m",
+      "probes": {
+        "sample": 0,
+        "seed": "f6-probes-s1",
+        "conversations": 0
+      },
+      "shards": 1,
+      "expected_hours": 9,
+      "arms": [
+        {
+          "id": "component-b8000",
+          "cell_id": "s1.baseline-hybrid.baseline.component-b8000",
+          "set": "S1",
+          "arm": "component",
+          "mode": "packed",
+          "policy": "fixed-evidence",
+          "budget": 8000,
+          "questions": null,
+          "readers": [
+            "anthropic:claude-opus-5-5",
+            "openai:gpt-6.1-sol",
+            "anthropic:claude-sonnet-5-5"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "component, 8,000 tokens"
+        }
+      ],
+      "estimate": {
+        "usd": 95.1,
+        "lines": {
+          "q1_measured": 95.1
+        }
+      },
+      "lease": {
+        "usd": 119.26,
         "basis": "F6: estimate per shard x 1.25 plus twice the peak reservation ($0.1916, reader anthropic:claude-opus-5-5)"
       }
     },
@@ -3299,9 +3426,10 @@
       }
     }
   ],
-  "total_usd": 2220.58,
+  "total_usd": 2591.64,
   "plan_total_usd": 3100,
-  "cap_usd": 3100,
+  "cap_usd": 3068.83,
   "dry_run_cap_usd": 60,
+  "dry_run_spent_usd": 31.17,
   "campaign_id": "q1-scoreboard-f6-current-master"
 }
