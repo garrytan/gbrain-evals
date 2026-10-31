@@ -90,12 +90,12 @@ export function modelsNotRun(lane: string, hasRoute: (model: string) => boolean)
   return PRIMARY_MODELS.filter(model => !hasRoute(model)).map(model => ({ model, reason: `${lane} has no ${model.slice(0, model.indexOf(':'))}: route` }));
 }
 
-/** A provider's base URL, read from the passed environment when called (a metering proxy sets it per slot). */
 /** The value of `table[key]` when `key` is the table's own key; an inherited name such as `toString` is never a row. */
 function own<T>(table: Readonly<Record<string, T>>, key: string): T | undefined {
   return Object.hasOwn(table, key) ? table[key] : undefined;
 }
 
+/** A provider's base URL, read from the passed environment when called (a metering proxy sets it per slot). */
 export function compatBaseUrl(provider: string, env: Record<string, string | undefined> = process.env): string {
   const row = own(COMPAT_PROVIDERS, provider);
   if (!row) throw new Error(`no OpenAI-compatible provider ${JSON.stringify(provider)} in COMPAT_PROVIDERS (eval/runner/providers/openai-compatible.ts)`);
@@ -253,7 +253,9 @@ export class CompatHttpError extends Error {
   readonly retryable: boolean;
   readonly retryAfterMs: number | null;
   readonly body: string;
-  constructor(info: CompatErrorInfo) {
+  /** The usage a 2xx answer without `choices[0].message` still reported (the provider may have billed it), for the attempt's receipt. */
+  readonly usage: Record<string, unknown> | null;
+  constructor(info: CompatErrorInfo, usage: Record<string, unknown> | null = null) {
     super(`${info.provider} ${info.status}: ${info.body.slice(0, 300)}`);
     this.name = 'CompatHttpError';
     this.status = info.status;
@@ -261,6 +263,7 @@ export class CompatHttpError extends Error {
     this.retryable = info.retryable;
     this.retryAfterMs = info.retryAfterMs;
     this.body = info.body;
+    this.usage = usage;
   }
 }
 
@@ -279,26 +282,35 @@ export function compatError(info: CompatErrorInfo): Error {
   return new CompatHttpError(info);
 }
 
+/** A loopback host: a metering proxy slot or the keyless fake. */
+export function isLoopbackUrl(url: string): boolean {
+  return /^(localhost|127(\.\d{1,3}){3}|\[::1\])$/.test(new URL(url).hostname);
+}
+
 /**
- * Send one request, once. A non-2xx answer throws `compatError`'s error; the caller's own loop decides any retry.
- * A request to the provider's own domain (any of its hosts or regions) that the budget ledger cannot price is
- * refused before it is sent, because the ledger's guard forwards an unpriced host unmetered; a proxy slot (any other
- * host) meters itself. A 2xx answer without `choices[0].message` is a server error, never an empty answer.
+ * Refuse a request the budget ledger cannot price, unless it goes to a loopback host (a metering proxy slot, which
+ * meters itself, or the keyless fake): the ledger's guard forwards a host it cannot price unmetered.
+ */
+export function assertMetered(req: CompatRequest): void {
+  if (isLoopbackUrl(req.url) || priceRequest(req.url, req.body)) return;
+  throw new BudgetExceededError(`budget: the ledger cannot price ${new URL(req.url).hostname.replace(/\.$/, '')}, so this ${own(COMPAT_PROVIDERS, req.provider)?.label ?? req.provider} request would spend unmetered; register the host and the model's price in eval/runner/budget-ledger.ts first`);
+}
+
+/**
+ * Send one request, once, after `assertMetered`. A non-2xx answer throws `compatError`'s error; the caller's own loop
+ * decides any retry. A 2xx answer without `choices[0].message` is a server error carrying the usage it reported,
+ * never an empty answer.
  */
 export async function compatSend(req: CompatRequest, opts: { fetchImpl?: typeof fetch; timeoutMs?: number } = {}): Promise<CompatResponse> {
-  const row = own(COMPAT_PROVIDERS, req.provider)!;
-  const host = new URL(req.url).hostname.replace(/\.$/, '');
-  const domain = new URL(row.base_url_default).hostname.split('.').slice(-2).join('.');
-  if ((host === domain || host.endsWith(`.${domain}`)) && !priceRequest(req.url, req.body)) {
-    throw new BudgetExceededError(`budget: the ledger cannot price ${host}, so this ${row.label} request would spend unmetered; register the host and the model's price in eval/runner/budget-ledger.ts first`);
-  }
+  assertMetered(req);
   const res = await (opts.fetchImpl ?? fetch)(req.url, { method: 'POST', headers: req.headers, body: JSON.stringify(req.body), signal: AbortSignal.timeout(opts.timeoutMs ?? 300_000) });
   const text = await res.text();
   if (!res.ok) throw compatError(classifyCompatError(req.provider, res.status, text, res.headers));
   let json: unknown;
   try { json = JSON.parse(text); }
   catch { throw new CompatHttpError({ provider: req.provider, status: res.status, kind: 'server', retryable: true, retryAfterMs: null, body: `response body is not JSON: ${text.slice(0, 200)}` }); }
+  const parsed = parseCompatResponse(json);
   const choices = (json as { choices?: Array<{ message?: unknown }> } | null)?.choices;
-  if (!Array.isArray(choices) || !choices[0]?.message) throw new CompatHttpError({ provider: req.provider, status: res.status, kind: 'server', retryable: true, retryAfterMs: null, body: `response has no choices[0].message: ${text.slice(0, 200)}` });
-  return parseCompatResponse(json);
+  if (!Array.isArray(choices) || !choices[0]?.message) throw new CompatHttpError({ provider: req.provider, status: res.status, kind: 'server', retryable: true, retryAfterMs: null, body: `response has no choices[0].message: ${text.slice(0, 200)}` }, parsed.usage);
+  return parsed;
 }

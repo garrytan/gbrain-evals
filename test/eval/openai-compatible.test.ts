@@ -11,7 +11,7 @@ import { BudgetExceededError, chatPrice, priceRequest } from '../../eval/runner/
 import { REFUSAL_TYPE } from '../../eval/runner/harness-metering-proxy.ts';
 import {
   CANARY_MAX_OUTPUT_TOKENS, COMPAT_PROVIDERS, CompatHttpError, PRIMARY_MODELS, ParticleCreditExhausted, RETRY_AFTER_CAP_MS,
-  classifyCompatError, compatError, compatRequest, compatSend, modelsNotRun, parseCompatResponse, type CanarySampling,
+  assertMetered, classifyCompatError, compatError, compatRequest, compatSend, modelsNotRun, parseCompatResponse, type CanarySampling,
 } from '../../eval/runner/providers/openai-compatible.ts';
 import { normalizeUsage, receipt, responseMeta, usageSourceOf } from '../../eval/runner/usage-receipt.ts';
 
@@ -201,6 +201,31 @@ describe('compatSend and parseCompatResponse', () => {
       expect(e.message).toStartWith(`budget: the ledger cannot price ${new URL(base).hostname.replace(/\.$/, '')}`);
       expect(m.calls).toHaveLength(0);
     }
+  });
+
+  test('an unpriced request to any host but loopback is refused before it is sent; loopback hosts go through', async () => {
+    for (const base of ['http://203.0.113.7:8787/particle/v1', 'https://particle-proxy.example.com/v1', 'http://localhost.:8787/v1']) {
+      const m = mockFetch([]);
+      const e = await compatSend(compatRequest('particle:particle-1', ASK, {}, { ...KEYED, PARTICLE_BASE_URL: base }), { fetchImpl: m.impl }).catch(x => x);
+      expect(e).toBeInstanceOf(BudgetExceededError);
+      expect(e.message).toStartWith(`budget: the ledger cannot price ${new URL(base).hostname.replace(/\.$/, '')}, so this Particle request`);
+      expect(m.calls).toHaveLength(0);
+    }
+    for (const base of ['http://localhost:9/v1', 'http://[::1]:9/v1', 'http://127.0.0.2:9/v1']) {
+      const m = mockFetch([{ body: PARTICLE_OK }]);
+      expect((await compatSend(compatRequest('particle:particle-1', ASK, {}, { ...KEYED, PARTICLE_BASE_URL: base }), { fetchImpl: m.impl })).text).toBe('In May 2023.');
+      expect(m.calls).toHaveLength(1);
+    }
+    const stray = { ...compatRequest('particle:particle-1', ASK, {}, SLOT), provider: 'unlisted', url: 'https://llm.example.com/v1/chat/completions' };
+    expect(() => assertMetered(stray)).toThrow('so this unlisted request would spend unmetered');
+  });
+
+  test('a 2xx answer without choices[0].message keeps the usage it reported, for the attempt\'s receipt', async () => {
+    const usage = { prompt_tokens: 12, completion_tokens: 40, total_tokens: 52 };
+    const e = await compatSend(compatRequest('particle:particle-1', ASK, {}, SLOT), { fetchImpl: mockFetch([{ body: { choices: [], usage } }]).impl }).catch(x => x);
+    expect(e).toBeInstanceOf(CompatHttpError);
+    expect(e.usage).toEqual(usage);
+    expect((await compatSend(compatRequest('particle:particle-1', ASK, {}, SLOT), { fetchImpl: mockFetch([{ body: {} }]).impl }).catch(x => x)).usage).toBeNull();
   });
 
   test('a 2xx answer without choices[0].message is a retryable server error, never an empty answer', async () => {

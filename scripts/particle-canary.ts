@@ -15,28 +15,29 @@
  * An answer counts only when it is non-empty and did not stop at the output limit, and its mean log probability only
  * when every token's is a finite number.
  *
- * With --compare (an earlier canary of the same model, base URL and sampling, kept outside --out) it reports how many
- * answers changed, how many came back with a different response model, system fingerprint, weight version or tier,
+ * With --compare (an earlier canary of the same model, endpoint, sampling and prompt set, kept outside --out; a
+ * mismatch is refused before anything is sent) it reports how many answers changed, how many came back with a different response model, system fingerprint, weight version or tier,
  * and the mean change in per-answer mean log probability. It warns above --warn-changed and --warn-logprob; those
  * thresholds are set above the largest difference seen between back-to-back canary pairs (serving noise), measured
  * before the first counted use. The curated history (docs/benchmarks/particle-canary/history.jsonl) is committed
  * with each report, never written here.
  *
  * It refuses a base URL the ledger cannot price (a request there would spend unmetered); loopback hosts (a metering
- * proxy, the keyless fake in eval/systems/_shim/fake_provider.py) go through. Cost: 12 requests of under 100 input
+ * proxy, the keyless fake in eval/systems/_shim/fake_provider.py) go through. A loopback endpoint records no upstream
+ * and a proxy slot's port changes per run, so endpoints are compared only when neither is loopback. Cost: 12 requests of under 100 input
  * and at most 64 output tokens, well under a cent.
  *
  * Exit 0: every prompt answered and, with --compare, every prompt compared (warnings print above a threshold).
- * Exit 1: refused, a prompt failed after its retries or gave no usable answer, a budget stop (the ledger's, a proxy's
+ * Exit 1: refused (including a --warn threshold that is not a number), a prompt failed after its retries or gave no usable answer, a budget stop (the ledger's, a proxy's
  * or Particle's credit) ended the canary, or --compare compared fewer than every prompt or, under --warn-logprob, had
  * no log probabilities to compare.
  */
 import { createHash } from 'node:crypto';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
-import { BudgetExceededError, budgetOptionsFrom, priceRequest, receiptCost, startPaidRun } from '../eval/runner/budget-ledger.ts';
+import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { budgetOptionsFrom, receiptCost, startPaidRun } from '../eval/runner/budget-ledger.ts';
 import { requirePaidArm } from '../eval/runner/paid-arm.ts';
-import { CompatHttpError, compatRequest, compatSend, type CanarySampling, type CompatLogprob, type CompatRequest } from '../eval/runner/providers/openai-compatible.ts';
+import { CompatHttpError, assertMetered, compatBaseUrl, compatRequest, compatSend, isLoopbackUrl, type CanarySampling, type CompatLogprob, type CompatRequest } from '../eval/runner/providers/openai-compatible.ts';
 import { normalizeFinish, normalizeUsage, receipt, responseMeta, usageSourceOf, type UsageReceipt } from '../eval/runner/usage-receipt.ts';
 
 export const CANARY_MODEL = 'particle:particle-1';
@@ -78,19 +79,27 @@ export interface CanaryResult {
   system_fingerprint: string | null;
 }
 
-export interface CanaryRecord {
-  schema: 'particle-canary/v1';
-  at: string;
+export interface CanaryIdentity {
   model: string;
   base_url: string;
   prompts_sha256: string;
   sampling: CanarySampling;
+}
+
+export interface CanaryRecord extends CanaryIdentity {
+  schema: 'particle-canary/v1';
+  at: string;
   effort: string;
   max_output_tokens: number;
   results: CanaryResult[];
   receipts: UsageReceipt[];
   /** Set when a budget stop ended the canary early. */
   stopped: string | null;
+}
+
+/** The model, endpoint, sampling and prompt set a canary sends under `env`, as its record carries them. */
+export function canaryIdentity(env: Record<string, string | undefined> = process.env): CanaryIdentity {
+  return { model: CANARY_MODEL, base_url: compatBaseUrl(CANARY_MODEL.slice(0, CANARY_MODEL.indexOf(':')), env), prompts_sha256: sha256(JSON.stringify(CANARY_PROMPTS)), sampling: CANARY_SAMPLING };
 }
 
 /** The 12 canary requests as the provider module builds them. */
@@ -101,10 +110,7 @@ export function canaryRequests(env: Record<string, string | undefined> = process
 /** Send the canary once per prompt (up to 3 attempts on a 429 or 5xx, honoring a capped Retry-After). A budget stop ends it after its receipt. */
 export async function runCanary(env: Record<string, string | undefined> = process.env, opts: { retryDelayMs?: (attempt: number) => number } = {}): Promise<CanaryRecord> {
   const requests = canaryRequests(env);
-  const { hostname } = new URL(requests[0]!.url);
-  if (!/^(localhost|127(\.\d{1,3}){3}|\[::1\])$/.test(hostname) && !priceRequest(requests[0]!.url, requests[0]!.body)) {
-    throw new BudgetExceededError(`budget: the ledger cannot price ${hostname}, so the canary would spend unmetered; register Particle's hosts and particle-1's price in eval/runner/budget-ledger.ts first`);
-  }
+  assertMetered(requests[0]!);
   const results: CanaryResult[] = [];
   const receipts: UsageReceipt[] = [];
   let stopped: string | null = null;
@@ -119,13 +125,15 @@ export async function runCanary(env: Record<string, string | undefined> = proces
         receipts.push(receipt({ ...base, attempt, response_model: res.response_model, status: 'ok', error: null, finish: normalizeFinish(res.finish), finish_raw: res.finish, answer: res.text,
           usage: normalizeUsage(usageSourceOf(CANARY_MODEL), res.usage), usage_raw: res.usage, response_meta: res.meta }));
         const lps = res.logprobs?.map(t => t.logprob) ?? [];
-        const usable = res.text !== '' && res.finish !== 'length';
+        const usable = res.text.trim() !== '' && normalizeFinish(res.finish) !== 'max_tokens';
         result = { ...failed, status: usable ? 'ok' : 'error', answer: res.text, answer_sha256: usable ? sha256(res.text) : null, finish: res.finish,
           mean_logprob: lps.length && lps.every(Number.isFinite) ? lps.reduce((a, b) => a + b, 0) / lps.length : null, logprobs: res.logprobs,
           response_model: res.response_model, weight_version: res.meta.weight_version, service_tier: res.meta.service_tier, system_fingerprint: res.meta.system_fingerprint };
         break;
       } catch (e) {
-        receipts.push(receipt({ ...base, attempt, response_model: null, status: 'error', error: (e as Error).message.slice(0, 300), finish: null, finish_raw: null, answer: '', usage: null, usage_raw: null, response_meta: responseMeta(null) }));
+        const usage = e instanceof CompatHttpError ? e.usage : null;
+        receipts.push(receipt({ ...base, attempt, response_model: null, status: 'error', error: (e as Error).message.slice(0, 300), finish: null, finish_raw: null, answer: '',
+          usage: normalizeUsage(usageSourceOf(CANARY_MODEL), usage), usage_raw: usage, response_meta: responseMeta(null) }));
         if ((e as Error).name === 'BudgetExceededError') { stopped = (e as Error).message; break; }
         if (!(e instanceof CompatHttpError && e.retryable) || attempt === ATTEMPTS - 1) break;
         await Bun.sleep(e.retryAfterMs ?? (opts.retryDelayMs ?? (n => 2000 * 2 ** n))(attempt));
@@ -134,26 +142,28 @@ export async function runCanary(env: Record<string, string | undefined> = proces
     results.push(result);
     if (stopped) break;
   }
-  return {
-    schema: 'particle-canary/v1', at: new Date().toISOString(), model: CANARY_MODEL, base_url: requests[0]!.url.replace(/\/chat\/completions$/, ''),
-    prompts_sha256: sha256(JSON.stringify(CANARY_PROMPTS)), sampling: CANARY_SAMPLING, effort: 'none', max_output_tokens: requests[0]!.sent.output_limit, results, receipts, stopped,
-  };
+  return { schema: 'particle-canary/v1', at: new Date().toISOString(), ...canaryIdentity(env), effort: 'none', max_output_tokens: requests[0]!.sent.output_limit, results, receipts, stopped };
 }
 
 export interface CanaryDiff { compared: number; complete: boolean; changed_answers: number; changed_identity: number; mean_abs_logprob_change: number | null; max_abs_logprob_change: number | null }
 
-type Comparable = Pick<CanaryRecord, 'model' | 'base_url' | 'sampling' | 'prompts_sha256' | 'results'>;
+/**
+ * Throws unless two canaries share a prompt set, model, sampling and endpoint. A loopback endpoint (a metering proxy
+ * slot, whose port changes per run, or the fake) records no upstream, so endpoints are compared only when neither is.
+ */
+export function assertComparable(a: CanaryIdentity, b: CanaryIdentity): void {
+  if (a.prompts_sha256 !== b.prompts_sha256) throw new Error('the two canaries sent different prompts; compare canaries of one prompt set');
+  if (a.model !== b.model) throw new Error(`the two canaries differ in model (${a.model} and ${b.model}); compare canaries of one model and endpoint`);
+  if (!isLoopbackUrl(a.base_url) && !isLoopbackUrl(b.base_url) && a.base_url !== b.base_url) throw new Error(`the two canaries differ in base_url (${a.base_url} and ${b.base_url}); compare canaries of one model and endpoint`);
+  if (JSON.stringify(a.sampling) !== JSON.stringify(b.sampling)) throw new Error('the two canaries used different sampling; compare canaries of one sampling mode');
+}
 
 /**
- * Answers and mean log probabilities of two canaries of one model, endpoint, sampling and prompt set, prompt by
- * prompt. Only prompts both answered count; `complete` says whether that was every canary prompt.
+ * Answers and mean log probabilities of two comparable canaries (`assertComparable`), prompt by prompt. Only prompts
+ * both answered count; `complete` says whether that was every canary prompt.
  */
-export function compareCanary(a: Comparable, b: Comparable): CanaryDiff {
-  if (a.prompts_sha256 !== b.prompts_sha256) throw new Error('the two canaries sent different prompts; compare canaries of one prompt set');
-  for (const k of ['model', 'base_url'] as const) {
-    if (a[k] !== b[k]) throw new Error(`the two canaries differ in ${k} (${a[k]} and ${b[k]}); compare canaries of one model and endpoint`);
-  }
-  if (JSON.stringify(a.sampling) !== JSON.stringify(b.sampling)) throw new Error('the two canaries used different sampling; compare canaries of one sampling mode');
+export function compareCanary(a: CanaryIdentity & Pick<CanaryRecord, 'results'>, b: CanaryIdentity & Pick<CanaryRecord, 'results'>): CanaryDiff {
+  assertComparable(a, b);
   const other = new Map(b.results.filter(r => r.status === 'ok').map(r => [r.id, r]));
   const pairs = a.results.filter(r => r.status === 'ok' && other.has(r.id)).map(r => [r, other.get(r.id)!] as const);
   const moves = pairs.filter(([x, y]) => x.mean_logprob !== null && y.mean_logprob !== null).map(([x, y]) => Math.abs(x.mean_logprob! - y.mean_logprob!));
@@ -172,22 +182,33 @@ if (import.meta.main) {
     const out = flag('--out');
     if (!out) throw new Error('pass --out <run dir>: the canary writes particle-canary.json into the calling run\'s output directory');
     const compare = flag('--compare');
-    if (compare && resolve(compare) === resolve(out, 'particle-canary.json')) throw new Error('--compare names the file this run writes; keep the baseline outside --out');
+    const target = join(out, 'particle-canary.json');
+    if (compare && existsSync(target)) {
+      const [a, b] = [statSync(compare), statSync(target)];
+      if (a.dev === b.dev && a.ino === b.ino) throw new Error('--compare names the file this run writes; keep the baseline outside --out');
+    }
+    const threshold = (name: string) => {
+      if (!argv.includes(name)) return null;
+      const v = flag(name) ?? '';
+      if (v.trim() === '' || !Number.isFinite(Number(v))) throw new Error(`${name} takes a number, not ${JSON.stringify(v)}`);
+      return Number(v);
+    };
+    const [changed, logprob] = [threshold('--warn-changed'), threshold('--warn-logprob')];
     const baseline: CanaryRecord | null = compare ? JSON.parse(readFileSync(compare, 'utf8')) : null;
+    if (baseline) assertComparable(baseline, canaryIdentity());
     const { run, guard } = startPaidRun('particle-canary', { ...budgetOptionsFrom(argv), estimateUsd: CANARY_ESTIMATE_USD });
     let record: CanaryRecord;
     try { record = await runCanary(); }
     finally { guard.uninstall(); }
     const cost = receiptCost(run.close());
     mkdirSync(out, { recursive: true });
-    writeFileSync(join(out, 'particle-canary.json'), JSON.stringify({ ...record, cost }, null, 2) + '\n');
+    writeFileSync(target, JSON.stringify({ ...record, cost }, null, 2) + '\n');
     const answered = record.results.filter(r => r.status === 'ok').length;
-    console.log(`particle canary: ${answered} of ${CANARY_PROMPTS.length} answered${record.stopped ? `; stopped: ${record.stopped}` : ''}; ${join(out, 'particle-canary.json')}`);
+    console.log(`particle canary: ${answered} of ${CANARY_PROMPTS.length} answered${record.stopped ? `; stopped: ${record.stopped}` : ''}; ${target}`);
     let full = answered === CANARY_PROMPTS.length;
     if (baseline) {
       const diff = compareCanary(baseline, record);
       console.log(JSON.stringify(diff));
-      const [changed, logprob] = [flag('--warn-changed'), flag('--warn-logprob')].map(v => (v === undefined ? null : Number(v)));
       if (changed !== null && diff.changed_answers > changed) console.log(`warning: ${diff.changed_answers} answers changed (threshold ${changed}): the model behind particle-1 may have changed`);
       if (diff.changed_identity > 0) console.log(`warning: ${diff.changed_identity} answers came back with a different response model, system fingerprint, weight version or service tier: the serving stack behind particle-1 changed`);
       if (logprob !== null && diff.mean_abs_logprob_change === null) {

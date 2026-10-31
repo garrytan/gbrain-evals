@@ -4,7 +4,7 @@
  * budget stop, and the comparison of two canaries. No provider is called.
  */
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, linkSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { BudgetRun, closeLedgers, initLedger } from '../../eval/runner/budget-ledger.ts';
@@ -33,12 +33,14 @@ describe('compareCanary', () => {
     expect(() => compareCanary(a, { ...b, prompts_sha256: 'y' })).toThrow('different prompts');
   });
 
-  test('a comparison is complete only when both canaries answered every prompt, and canaries of another model, endpoint or sampling are refused', () => {
+  test('a comparison is complete only when both canaries answered every prompt, and canaries of another model, endpoint or sampling are refused; a proxy slot\'s per-run port is not another endpoint', () => {
     const all = { ...same, results: CANARY_PROMPTS.map((_, i) => result(`c${String(i + 1).padStart(2, '0')}`, 'a', -0.1)) };
     expect(compareCanary(all, all)).toMatchObject({ compared: CANARY_PROMPTS.length, complete: true, changed_answers: 0 });
     expect(compareCanary(all, { ...all, results: all.results.slice(0, 1) })).toMatchObject({ compared: 1, complete: false });
     expect(compareCanary(all, { ...all, results: all.results.map((r, i) => (i === 3 ? { ...r, system_fingerprint: 'fp_new' } : r)) })).toMatchObject({ changed_answers: 0, changed_identity: 1 });
-    expect(() => compareCanary(all, { ...all, base_url: 'http://127.0.0.1:8787/particle/v1' })).toThrow('differ in base_url');
+    expect(() => compareCanary(all, { ...all, base_url: 'https://us.api.particle.ai/v1' })).toThrow('differ in base_url');
+    const slot = (port: number) => ({ ...all, base_url: `http://127.0.0.1:${port}/slot-1/particle/v1` });
+    expect(compareCanary(slot(8787), slot(9911))).toMatchObject({ compared: CANARY_PROMPTS.length, complete: true });
     expect(() => compareCanary(all, { ...all, model: 'particle:particle-2' })).toThrow('differ in model');
     expect(() => compareCanary(all, { ...all, sampling: { ...CANARY_SAMPLING, seed: 8 } })).toThrow('different sampling');
   });
@@ -58,6 +60,35 @@ describe('what counts as an answer', () => {
       expect(rec.results.filter(r => r.status === 'error').every(r => r.answer_sha256 === null)).toBe(true);
       expect(rec.results.every(r => r.mean_logprob === null)).toBe(true);
       expect(n).toBe(CANARY_PROMPTS.length);
+    } finally { server.stop(true); }
+  });
+});
+
+describe('answers stopped by an output limit, blank answers and billed malformed answers', () => {
+  test('an answer stopped by any output limit, or holding only whitespace, is a failed prompt', async () => {
+    const cases = [['cut off', 'max_tokens'], ['cut off', 'model_context_window_exceeded'], [' \n', 'stop'], ['ok', 'stop']] as const;
+    let n = 0;
+    const server = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: () => {
+      const [content, finish_reason] = cases[n++ % cases.length]!;
+      return Response.json({ model: 'particle-ai/particle-1', choices: [{ index: 0, finish_reason, message: { role: 'assistant', content } }] });
+    } });
+    try {
+      const rec = await runCanary({ PARTICLE_API_KEY: 'dummy-key', PARTICLE_BASE_URL: `http://127.0.0.1:${server.port}/v1` });
+      expect(rec.results.map(r => r.status)).toEqual(CANARY_PROMPTS.map((_, i) => (i % cases.length === 3 ? 'ok' : 'error')));
+    } finally { server.stop(true); }
+  });
+
+  test('a 2xx answer without a message is retried, and its attempt\'s receipt keeps the usage it reported', async () => {
+    let n = 0;
+    const server = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: () => (n++ === 0
+      ? Response.json({ choices: [], usage: { prompt_tokens: 20, completion_tokens: 7, total_tokens: 27 } })
+      : Response.json({ model: 'particle-ai/particle-1', choices: [{ index: 0, finish_reason: 'stop', message: { role: 'assistant', content: 'ok' } }] })) });
+    try {
+      const rec = await runCanary({ PARTICLE_API_KEY: 'dummy-key', PARTICLE_BASE_URL: `http://127.0.0.1:${server.port}/v1` }, { retryDelayMs: () => 0 });
+      expect(rec.results.every(r => r.status === 'ok')).toBe(true);
+      expect(rec.receipts[0]).toMatchObject({ attempt: 0, status: 'error', usage_raw: { prompt_tokens: 20, completion_tokens: 7, total_tokens: 27 }, usage: { input_total: 20, output_total: 7 } });
+      expect(rec.receipts[1]).toMatchObject({ question_id: 'c01', attempt: 1, status: 'ok' });
+      expect(n).toBe(CANARY_PROMPTS.length + 1);
     } finally { server.stop(true); }
   });
 });
@@ -122,6 +153,34 @@ describe('the canary run', () => {
     expect(r.out).toContain('--compare names the file this run writes');
     expect(readFileSync(baseline, 'utf8')).toBe(before);
     expect(chats()).toBe(sentBefore);
+  });
+
+  test('a --compare baseline of the same file by another path, of other sampling or model, or a --warn threshold that is not a number, is refused before anything is sent', () => {
+    const baseline = join(dir, 'a', 'particle-canary.json');
+    const before = readFileSync(baseline, 'utf8');
+    const chats = () => readFileSync(fakeLog, 'utf8').trim().split('\n').filter(l => JSON.parse(l).route === 'chat').length;
+    const sentBefore = chats();
+    linkSync(baseline, join(dir, 'hardlink.json'));
+    symlinkSync(join(dir, 'a'), join(dir, 'a-link'));
+    const rec = JSON.parse(before) as CanaryRecord;
+    writeFileSync(join(dir, 'other-sampling.json'), JSON.stringify({ ...rec, sampling: { ...rec.sampling, seed: 7 } }));
+    writeFileSync(join(dir, 'other-model.json'), JSON.stringify({ ...rec, model: 'particle:particle-2' }));
+    const paid = ['--paid', '--budget-run-id', runId, '--budget-ledger', ledger];
+    for (const [args, message] of [
+      [['--out', join(dir, 'a'), '--compare', join(dir, 'hardlink.json')], '--compare names the file this run writes'],
+      [['--out', join(dir, 'a-link'), '--compare', baseline], '--compare names the file this run writes'],
+      [['--out', join(dir, 'm1'), '--compare', join(dir, 'other-sampling.json')], 'the two canaries used different sampling'],
+      [['--out', join(dir, 'm2'), '--compare', join(dir, 'other-model.json')], 'the two canaries differ in model'],
+      [['--out', join(dir, 'm3'), '--compare', baseline, '--warn-logprob', 'abc'], '--warn-logprob takes a number, not "abc"'],
+      [['--out', join(dir, 'm4'), '--warn-changed'], '--warn-changed takes a number, not ""'],
+    ] as const) {
+      const r = canary([...paid, ...args], keyless());
+      expect(r.code).toBe(1);
+      expect(r.out).toContain(message);
+    }
+    expect(readFileSync(baseline, 'utf8')).toBe(before);
+    expect(chats()).toBe(sentBefore);
+    expect(['m1', 'm2', 'm3', 'm4'].some(d => existsSync(join(dir, d)))).toBe(false);
   });
 
   test('a credit 402 after a 429 stops the canary with both attempts receipted', async () => {
