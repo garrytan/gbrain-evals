@@ -27,6 +27,7 @@ Start with [what gbrain does today](../README.md), then follow the route that fi
 | Does packing for depth beat the shipped cap on held-out questions? | [October 10 budgeted delivery H1](benchmarks/2026-10-10-gbrain-budgeted-delivery-h1.md) ([preregistration](benchmarks/2026-10-10-gbrain-budgeted-delivery-h1-preregistration.md); sealed confirmation v2, gbrain `8a3eedeac`): no. With an explicit 5,500-token budget, `depth_first` answered 122 of 200 held-out questions against 145 for the shipped `cap_only` (−11.5 points, −18.0 to −4.5), losing multi-session questions 15 to 40 of 80 under all three readers, so `cap_only` stays the explicit-budget default |
 | Does gbrain's 8k conversion wave (budget unit, evidence titles, facts block) answer more held-out questions at an 8,000-token reader budget? | [October 26 8k conversion wave](benchmarks/2026-10-26-gbrain-8k-conversion.md) ([preregistration](benchmarks/2026-10-26-gbrain-8k-conversion-preregistration.md); sealed confirmation v2, gbrain `cf3ec433`, v0.60.461.0): the facts block (`search.query_facts_block`) answered 183 of 200 against 151 for the control (+16.0 points, 95% interval +11.0 to +21.5, verdict `pass`), gaining on multi-session (69 against 45 of 80) and temporal (34 against 26 of 40) questions; the budget-unit flag (`search.query_budget_unit = auto`) and the evidence-titles flag (`search.evidence_titles`) are `inconclusive`; all three flags stay default-off, and flipping the facts block on is the owner's call |
 | What is the plan for improving gbrain and proving it? | [September 28 plan and audits](plans/2026-09-28-gbrain-10x/README.md) |
+| What was the October plan for fewer wrong answers, fewer tokens and cheaper, bigger brains, and which reports did it produce? | [October 7 10x memory advantage plan and audits](plans/2026-10-07-10x-memory-advantage/README.md) (approved 2026-10-08, last updated 2026-10-17, superseded 2026-10-29; kept as the record that reports from its waves 0 to 5 cite) |
 | What are the cheapest retrieval, latency and cost wins left, and how will each be checked? | [October 11 low-hanging fruit plan](plans/2026-10-11-low-hanging-fruit/PLAN.md) (approved 2026-10-12; closed 2026-10-13: items 0, 1b and 2 to 5 shipped, the `balanced` default flip did not) |
 | What will the next categories measure, and what does gbrain implement for each of them? | [October 1 eval-category wave plan](plans/2026-10-01-eval-category-wave/README.md), [capability and entrypoint matrix](benchmarks/2026-10-01-capability-matrix.md) |
 
@@ -228,6 +229,13 @@ and [repository writing guide](../CLAUDE.md). The
 procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
+
+### 2026-10-31: Row for the October 7 10x memory advantage plan
+
+The route table gained a row for the [October 7 10x memory advantage plan](plans/2026-10-07-10x-memory-advantage/README.md),
+after the September 28 plan row. Eleven reports and preregistrations on main cite that plan, but it lived only on the
+branch of its closed pull request, #97, so this index could not link it. The folder lands as a record, marked
+superseded. The opening still names v0.10.136; no existing row changed.
 
 ### 2026-10-29: Opening names v0.10.136
 

@@ -2,6 +2,21 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [Unreleased]
+
+### The October 7 10x memory advantage plan lands on main as a superseded record
+
+- **Eleven reports and preregistrations on main cite a plan that main didn't have.** Three reports and eight
+  preregistrations from the plan's waves 0 to 5 name `docs/plans/2026-10-07-10x-memory-advantage/PLAN.md`, the branch
+  `capy/10x-memory-advantage-plan` or a link into it. The plan lived only on that branch, whose pull request, #97, was
+  closed unmerged on 2026-10-29. The folder (the plan, its five audits, six reviews and the eng test plan) now lands at
+  that path, each file byte for byte as on the branch's last commit, `2b6ff9af` (2026-10-17). Its README opens with
+  a dated banner: the plan is superseded, and no wave, cap or gate runs from it.
+- **The eleven citations are unchanged, and the branch stays.** The preregistrations are frozen (each changes only by
+  an amendment appended at its end, and some are bound by recorded SHA-256 hashes), and every citation already
+  resolves: the path now exists on main, and the branch keeps every revision of the plan as each report read it.
+- The [docs index](docs/README.md) links the folder from its route table.
+
 ## [0.10.136] - 2026-10-29
 
 ### Spring-loaded skills for gbrain GBRA-194 measured

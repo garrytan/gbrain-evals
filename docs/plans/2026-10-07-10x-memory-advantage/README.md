@@ -1,5 +1,18 @@
 # Build the 10x memory advantage (2026-10-07)
 
+**Superseded. Landed on main as a record on 2026-10-31.** The plan was last updated on 2026-10-17, when wave 4b
+closed and wave 6 was next. Its thread, GBRA-60, ended on 2026-10-27, and its pull request,
+[#97](https://github.com/garrytan/gbrain-evals/pull/97), was closed unmerged on 2026-10-29 as "superseded by the
+approved memory-wave plans". Those plans are not in this repository. Nothing in this folder is current: no wave, cap or
+gate below runs from it. For what gbrain does today and every result since, start at the [docs index](../../README.md).
+Wave 6 was to extend the Q1 head-to-head scoreboard, which was published on 2026-10-27
+([report](../../benchmarks/2026-10-06-scoreboard-report.md)).
+
+Every file in this folder except this README is copied byte for byte from commit `2b6ff9af` on the branch
+`capy/10x-memory-advantage-plan`, which keeps every revision of the plan. Reports and preregistrations on main cite the
+plan by that path, that branch or a link into it, as it stood when they were written; their citations are unchanged.
+Below this banner, the README is the folder's guide as the branch left it, so its status line is out of date.
+
 This folder records the plan for the next round of gbrain work after the maintainer's brief "Pick the right thing to 10x" (2026-10-07): fewer confident wrong answers, fewer tokens at the same accuracy, cheaper writes and bigger brains, and capabilities no other memory system has. Status: approved by the maintainer on 2026-10-08 (PLAN.md section 10 records each decision). Each wave still runs under its own cap and preregistration.
 
 - [PLAN.md](PLAN.md) is the plan: the premises checked against the evidence, the program-level 10x primary and the bet-level mechanisms under it, a first repair batch (wave 0), a bounded decision pilot (wave 1) and five further waves that are fully scoped but not scheduled, each with its files, gates, budgets and merge-queue sequencing, the next two weeks, and one list of the decisions the maintainer has to make. Its "Review record" holds the gstack autoplan review and the cross-model outside review; an accepted amendment there overrides conflicting text above it.
