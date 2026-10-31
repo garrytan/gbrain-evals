@@ -1,6 +1,6 @@
 # Contributing to BrainBench
 
-Useful contributions make it easier to tell when gbrain helps. You can contribute naturally worded questions, a competing search implementation, or a reproduction of a published result.
+Useful contributions make it easier to tell when gbrain helps. You can contribute naturally worded questions, a competing search implementation, another system's notes scored on Cat 35, or a reproduction of a published result.
 
 Work from the repository root. Install with `bun install --frozen-lockfile`, and run `bun run test` for the tests under `test/eval/` and `eval/`, the Python tests and the validators. The gbrain under test is the one `package.json` declares, master `77cf8e111` (v0.60.169.0); a category scores what gbrain implements at that commit. Model-comparison runs follow the model rules in [CLAUDE.md](../CLAUDE.md#choose-models). Everything above [Changelog](#changelog) is current.
 
@@ -97,6 +97,48 @@ example capability record, are in [docs/scoreboard.md](../docs/scoreboard.md#add
 `bun run eval:scoreboard fixture` runs the whole pipeline on the fake system for $0 and is the quickest check that a
 harness change did not break the wiring.
 
+## Score another system's Cat 35 documents
+
+Cat 35 plants facts, decisions and distractors in 24 fictional agent conversations, then asks a judge how many of
+the planted facts survive into the notes gbrain writes from each conversation. If your system also turns a conversation
+into Markdown notes, the runner can score those notes with the same judge, on the same items, in the same run as gbrain's
+lanes.
+
+1. Run your system on the conversations in `eval/data/transcript-distill-v1/transcripts/` (Claude Code JSONL; plain-text
+   renderings are in `transcripts-txt/`). Do not read `gold/`: it holds the answer keys.
+2. Write one file per conversation into one folder, named `<transcript_id>.md` (for example `coding-reflection-01.md`).
+   An empty file is a valid answer. A missing file is a lane error for that conversation and scores zero.
+3. Score the folder next to the verbatim lane:
+
+   ```sh
+   CAT35_FULL=1 bun eval/runner/cat35-transcript-distill.ts --budget-usd 10 \
+     --lanes verbatim --external-lane mytool --external-dir path/to/folder
+   ```
+
+   Without `CAT35_FULL=1` the runner scores the two-conversation smoke set. `--lanes none` scores only your folder. A run
+   needs `ANTHROPIC_API_KEY` and `OPENAI_API_KEY` like any Cat 35 run, and the runner prints its pre-flight cost
+   projection before the first judge call.
+
+Your lane is judged the way gbrain's dream lane is: recall of the planted facts, with an evidence check that the quote the
+judge cites is in your document and in the conversation, plus claim grounding, distractor leakage, the usability checklist,
+attribution hazards and quote fidelity. Read your recall next to the verbatim lane from the same run: verbatim keeps the
+whole conversation, so its score is the judge's ceiling.
+
+The receipt's `external_lane` block records the lane name, the folder's real path, the size limit, each file's bytes and
+sha256, the conversations with no file, and a note that the harness has no record of how the documents were made.
+`lanes`, `mode` and the prior-run deltas describe the built-in lanes only, and a run with an external lane is never
+publishable as the benchmark. Scrub machine paths with `bun eval/runner/receipt.ts scrub` before you share a receipt.
+
+The runner treats the folder as untrusted. It opens only the `<transcript_id>.md` names it expects, and before any provider
+call it refuses the whole run on a symlink, anything that is not a regular file, a hard-linked file, a file over 64 KiB, a
+file with more than 80 claims (what the grounding judge grades in one call) or invalid UTF-8. A lane name is lowercase
+letters, digits and dashes, up to 32 characters, and cannot reuse a built-in lane name.
+
+Know the limits before you compare numbers. Your documents go to the judge's provider, so keep private data out of them.
+A document can carry text aimed at the judge; the judge prompts fence every document as untrusted data and each call sees
+one lane's document, so such text can only move that lane's own numbers. The harness cannot tell whether your system saw
+the answer keys.
+
 ## Evaluate a gbrain change
 
 To compare a candidate gbrain build against its baseline on dev splits, and later on held-out data, use the decision kit: [docs/decisions.md](../docs/decisions.md) (`bun run eval:decide`).
@@ -157,6 +199,13 @@ See [CREDITS.md](CREDITS.md) for attribution. Contributions to external question
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
+
+### 2026-10-31: Score another system's Cat 35 documents
+
+A new section explains `--external-lane NAME --external-dir DIR`, which scores another system's Markdown notes beside
+gbrain's Cat 35 lanes under the same judge: the folder layout, the commands, what the receipt's `external_lane` block
+records, the refusals for a hostile folder and the limits. The opening now lists this as a way to contribute. The feature
+was rebuilt on main from Khaled Aly's design in [#32](https://github.com/garrytan/gbrain-evals/pull/32).
 
 ### 2026-10-29: The cost tools refuse more inputs
 

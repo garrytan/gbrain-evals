@@ -115,6 +115,74 @@
         ]
       }
     },
+    "external_lane": {
+      "type": [
+        "object",
+        "null"
+      ],
+      "description": "The optional external lane (--external-lane NAME --external-dir DIR): documents another system wrote, scored like the dream lane's output. null when absent. lanes, mode and deltas cover the built-in lanes only, and a run with an external lane is never publishable.",
+      "required": [
+        "name",
+        "dir",
+        "max_bytes",
+        "files",
+        "missing",
+        "provenance"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]{0,31}$"
+        },
+        "dir": {
+          "type": "string",
+          "description": "Real path of --external-dir as resolved by the runner."
+        },
+        "max_bytes": {
+          "type": "integer",
+          "description": "Per-document size limit the runner enforced."
+        },
+        "files": {
+          "type": "array",
+          "description": "Every document scored, in corpus order.",
+          "items": {
+            "type": "object",
+            "required": [
+              "transcript_id",
+              "file",
+              "bytes",
+              "sha256"
+            ],
+            "properties": {
+              "transcript_id": {
+                "type": "string"
+              },
+              "file": {
+                "type": "string"
+              },
+              "bytes": {
+                "type": "integer"
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            }
+          }
+        },
+        "missing": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Selected transcripts with no document; each is a lane error in lane_errors."
+        },
+        "provenance": {
+          "type": "string",
+          "description": "States that the harness has no record of how the documents were made."
+        }
+      }
+    },
     "per_item": {
       "type": "array",
       "items": {
@@ -135,11 +203,8 @@
           },
           "lane": {
             "type": "string",
-            "enum": [
-              "verbatim",
-              "facts",
-              "dream"
-            ]
+            "pattern": "^[a-z][a-z0-9-]{0,31}$",
+            "description": "A built-in lane (verbatim, facts, dream) or the external lane's name (external_lane.name)."
           },
           "item_id": {
             "type": "string"
@@ -167,7 +232,7 @@
               "number",
               "null"
             ],
-            "description": "Per-item joint score (coverage credit × mechanical evidence verification). Dream lane only; null elsewhere."
+            "description": "Per-item joint score (coverage credit × mechanical evidence verification). Dream and external lanes only; null elsewhere."
           }
         }
       }
@@ -238,6 +303,13 @@
         }
       },
       "description": "Mechanical quote fidelity over dream-page blockquotes + qualifying inline spans, checked against the transcript."
+    },
+    "quote_fidelity_by_lane": {
+      "type": "object",
+      "description": "Quote fidelity per distilled lane (dream and the external lane). verbatim_quote_fidelity keeps the dream lane's value.",
+      "additionalProperties": {
+        "type": "object"
+      }
     },
     "hallucination": {
       "type": "object",
@@ -354,6 +426,10 @@
           "violated"
         ],
         "properties": {
+          "lane": {
+            "type": "string",
+            "description": "The distilled lane whose output was checked (dream or the external lane). Receipts before 2026-10-31 omit it and mean dream."
+          },
           "hazard_id": {
             "type": "string"
           },
