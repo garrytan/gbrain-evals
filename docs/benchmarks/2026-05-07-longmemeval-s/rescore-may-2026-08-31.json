@@ -6,7 +6,7 @@
   "resolved": {
     "gbrain_version": "0.47.8.0",
     "gbrain_pin": "github:garrytan/gbrain#2a56b51236850f6abcbf2f1ea71981bb9630f6fe",
-    "source_ndjson": "eval/reports/longmemeval/rescore-may-copy.ndjson"
+    "source_ndjson": "docs/benchmarks/2026-05-07-longmemeval-s/rescore-may-copy.ndjson"
   },
   "summaries": [
     {

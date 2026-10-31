@@ -2,7 +2,7 @@
 
 Useful contributions make it easier to tell when gbrain helps. You can contribute naturally worded questions, a competing search implementation, another system's notes scored on Cat 35, or a reproduction of a published result.
 
-Work from the repository root. Install with `bun install --frozen-lockfile`, and run `bun run test` for the tests under `test/eval/` and `eval/`, the Python tests and the validators. The gbrain under test is the one `package.json` declares, master `77cf8e111` (v0.60.169.0); a category scores what gbrain implements at that commit. Model-comparison runs follow the model rules in [CLAUDE.md](../CLAUDE.md#choose-models). Everything above [Changelog](#changelog) is current.
+Work from the repository root. Install with `bun install --frozen-lockfile`, and run `bun run test` for the tests under `test/eval/` and `eval/`, the Python tests and the validators. The gbrain under test is the one `package.json` declares, master `7a6bdd357` (v0.60.454.0); a category scores what gbrain implements at that commit. Model-comparison runs follow the model rules in [CLAUDE.md](../CLAUDE.md#choose-models). Everything above [Changelog](#changelog) is current.
 
 ## Write questions in your own words
 
@@ -218,6 +218,11 @@ gbrain's Cat 35 lanes under the same judge: the folder layout, the commands, wha
 records, how claim grounding counts claims, which fields stay built-in only, the refusals for a hostile folder and the
 limits. The opening now lists this as a way to contribute. The feature was rebuilt on main from Khaled Aly's design in
 [#32](https://github.com/garrytan/gbrain-evals/pull/32).
+
+### 2026-10-31: The opening names the current pin again
+
+The opening names gbrain master `7a6bdd357` (v0.60.454.0) as the gbrain under test, matching `package.json`. It still
+named `77cf8e111` (v0.60.169.0), which stopped being the pin on October 18; the later re-pins had not updated this page.
 
 ### 2026-10-29: The cost tools refuse more inputs
 

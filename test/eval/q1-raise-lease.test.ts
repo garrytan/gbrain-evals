@@ -158,4 +158,38 @@ describe('raise-lease (A17 campaigns)', () => {
     expect(c.abandon(l.lease_id, 'setup failed', { log })).toMatchObject({ status: 'abandoned', actual_usd: 0 });
     expect(hostCommitted().committed_usd).toBe(0);
   });
+
+  /** A raise during the run, then a final pull that fails: the runner returns and the lease is finished, raised and unsettled. */
+  function finishedRaised() {
+    const s = setup();
+    const l = s.launch('cell-0', 'vm-0');
+    mkdirSync(join(s.vmLedger(l.lease_id), '..'), { recursive: true });
+    BudgetRun.openLease({ runId: l.lease_id, leaseUsd: 4, ledgerPath: s.vmLedger(l.lease_id) });
+    raise(s.c, l.lease_id, 4.5, 'owner approved $4.50', s.ssh);
+    appendFileSync(join(s.state, 'leases.ndjson'), JSON.stringify({ event: 'finished', lease_id: l.lease_id, at: new Date().toISOString(), exit_code: 253 }) + '\n');
+    expect(s.c.lease(l.lease_id)).toMatchObject({ status: 'finished', raised_usd: 4.5 });
+    expect([s.c.blockSpend('T1'), s.c.status().unsettled_usd, s.hostCommitted().committed_usd]).toEqual([4.5, 4.5, 4.5]);
+    return { ...s, l };
+  }
+
+  test('a finished raised lease is abandoned at its raised reservation in leases, block spend and status, as on the host ledger (#196)', () => {
+    const { c, l, hostCommitted } = finishedRaised();
+    expect(c.abandon(l.lease_id, 'final pull failed')).toMatchObject({ status: 'abandoned', actual_usd: 4.5, note: expect.stringContaining('full reservation of $4.50') });
+    expect([c.blockSpend('T1'), c.status().unsettled_usd, hostCommitted().committed_usd]).toEqual([4.5, 4.5, 4.5]);
+    expect(() => c.abandon(l.lease_id, 'again')).toThrow(/is already abandoned/);
+  });
+
+  test('a finished raised lease closes at $0 only when its launch log shows the cell command never started (#197)', () => {
+    const { c, state, l, hostCommitted } = finishedRaised();
+    const ran = join(tmp, `launch-ran-${l.lease_id}.log`);
+    writeFileSync(ran, 'ubi-runner: creating VM\nubi-runner: running on vm-0\nubi-runner: final pull failed\n');
+    expect(() => c.abandon(l.lease_id, 'final pull failed', { log: ran })).toThrow(/shows ubi-runner reached the cell command; the lease cannot be closed at \$0/);
+    expect(c.lease(l.lease_id)).toMatchObject({ status: 'finished', raised_usd: 4.5 });
+    expect([c.blockSpend('T1'), c.status().unsettled_usd, hostCommitted().committed_usd]).toEqual([4.5, 4.5, 4.5]);
+    const never = join(tmp, `launch-never-${l.lease_id}.log`);
+    writeFileSync(never, 'ubi-runner: creating VM\nubi-runner: setup failed\n');
+    expect(c.abandon(l.lease_id, 'setup failed', { log: never })).toMatchObject({ status: 'abandoned', actual_usd: 0 });
+    expect([c.blockSpend('T1'), c.status().unsettled_usd, hostCommitted().committed_usd]).toEqual([0, 0, 0]);
+    expect(readFileSync(join(state, 'evidence', `${l.lease_id}.log`), 'utf8')).toBe(readFileSync(never, 'utf8'));
+  });
 });
