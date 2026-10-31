@@ -13,7 +13,7 @@ published result and are not the preregistered (Holm, clustered) analysis. Scrip
 
 1. **Bet 2 is already ~70% designed and partly built, in two in-flight campaigns that the parent's overlap list does not fully name.**
    - **evals #89 "open-source memory comparison" (owner GBRA-1, not GBRA-49)**: a `MemorySystem` interface, an HTTP shim protocol, pinned
-     Docker shims for Mem0, the comparator, Graphiti, Cognee, Basic Memory and Letta (agent-only), a fail-closed metering proxy, a sanitizer, a frozen
+     Docker shims for [ext-extract-first], the comparator, [ext-temporal-graph], [ext-graph-pipeline], [ext-markdown-kb] and [ext-agent-runtime] (agent-only), a fail-closed metering proxy, a sanitizer, a frozen
      preregistration, and **Phase 4 complete (2026-10-08)**: LoCoMo dev, BEAM-100K dev and a LongMemEval-S 100-question slice for every system,
      plus full-context, no-memory and plain-hybrid controls, with ingest dollars, reader tokens and latency per cell.
    - **`evals/q1-scoreboard` (GBRA-49, preregistration draft 2026-10-06)**: the "head-to-head scoreboard" with BEAM-10M as the inferential
@@ -24,21 +24,21 @@ published result and are not the preregistered (Holm, clustered) analysis. Scrip
    Bet 2 must extend these, not start a fourth harness.
 2. **The draft shootout data says gbrain loses on the token-matched read path today.** [recount] On the LME-S 100 slice at a fixed
    8,000-token budget of each system's native evidence (the preregistered primary arm, `fixed-evidence.native.b8000.main`, gpt-4o reader):
-   gbrain master 0.59, the comparator 0.89, Cognee 0.83, Mem0 0.77, plain hybrid 0.71, Basic Memory 0.69, Graphiti 0.37. gbrain has the best
+   gbrain master 0.59, the comparator 0.89, [ext-graph-pipeline] 0.83, [ext-extract-first] 0.77, plain hybrid 0.71, [ext-markdown-kb] 0.69, [ext-temporal-graph] 0.37. gbrain has the best
    strict recall (0.979) but its native items are chunks. When every system's items are rehydrated to the raw sessions they cite, at the
-   same 8k budget, gbrain is first: 0.78 vs the comparator 0.76, Cognee 0.74, Mem0 0.73, Basic Memory 0.72, plain hybrid 0.70, Graphiti 0.40.
+   same 8k budget, gbrain is first: 0.78 vs the comparator 0.76, [ext-graph-pipeline] 0.74, [ext-extract-first] 0.73, [ext-markdown-kb] 0.72, plain hybrid 0.70, [ext-temporal-graph] 0.40.
    So gbrain's ranking is strong and its evidence packaging is what loses.
    Cause candidate: the shootout's gbrain adapter calls `hybridSearch` and returns `chunk_text`
    (`eval/runner/systems/gbrain.ts:99,185` on #89), not gbrain's shipped `query` evidence delivery (`auto`, whole conversations), which the sealed
    v2 check measured at 192 vs 132 of 200 over chunks. The scoreboard fixes this by reading through MCP `query`.
 3. **"10x cheaper writes" has real support, with a caveat.** [recount] Ingest $ for the same LME-S 100 haystacks (~4,800 sessions): gbrain
-   $1.53 (embeddings only), Basic Memory $1.45, plain hybrid $1.28, the comparator $32.11, Mem0 $42.27, Cognee $60.88, Graphiti $108.69. That is
+   $1.53 (embeddings only), [ext-markdown-kb] $1.45, plain hybrid $1.28, the comparator $32.11, [ext-extract-first] $42.27, [ext-graph-pipeline] $60.88, [ext-temporal-graph] $108.69. That is
    21x to 71x. Caveat: gbrain's shipped defaults are not zero-LLM on write (`facts.extraction` with `claude-sonnet-4-6` runs in background:
    $9.94 vs $0.32 per 1,000 pages, P8 sealed; `tokenmax`, the scripted first-run default in the scoreboard recipe, sets
    `contextual_retrieval: per_chunk_synopsis`, one Haiku call per chunk, `src/core/search/mode.ts:605`).
 4. **"10x fewer tokens" runs against measured evidence.** Delivering less text has lost every time it was tested: chunks vs whole
    conversations 132 vs 192 of 200 sealed (3,280 vs 12,982 input tokens); window1/window2 recovered only 30%/36% of the gap at 44% of tokens;
-   answer packets 48/60 vs 53/60. Mem0's own default context in the shootout is ~1,262 provider-reported input tokens per question (not ~7k;
+   answer packets 48/60 vs 53/60. [ext-extract-first]'s own default context in the shootout is ~1,262 provider-reported input tokens per question (not ~7k;
    the "~7K tokens/query" figure only appears quoted in `docs/plans/2026-09-28-gbrain-10x/audit/coverage-and-categories.md:393`).
 5. **BEAM-1M 53.5% is mostly a retrieval-coverage and scoring-floor problem, not dates.** [recount from committed rows] 49 of 194 answerable
    BEAM-1M dev questions have more than 5 gold turn groups (34 have more than 10) and can never pass strict recall@5; on the 145 feasible ones,
@@ -79,7 +79,7 @@ published result and are not the preregistered (Holm, clustered) analysis. Scrip
 
 | Branch / PR | Code | Status |
 |---|---|---|
-| `capy/oss-memory-shootout` (#89, GBRA-1) | `eval/runner/systems/types.ts` (`MemorySystem`: `reset`, `ingestSession(ns, session, event_time)`, `finishIngest`, `retrieve(ns, question, policy)`, `deleteSource`, `capabilities`), `eval/runner/systems/gbrain.ts` (gbrain-legacy and gbrain-shootout adapters), `eval/runner/metering-proxy.ts`, `eval/runner/shootout-cell.ts`, `eval/systems/PROTOCOL.md` (HTTP: `/health /capabilities /reset /ingest /finish /retrieve /delete_source`), `eval/systems/{mem0,look-ahead,graphiti,cognee,basic-memory,letta,_fake,_shim}` with `capability.json`, compose stacks, `PILOT.md`; `lifecycle-lite` | Phase 4 (memory QA dev) complete 2026-10-08; Phase 5 PMB and Phase 6 lifecycle-lite cells committed; Phase 7 sealed (LoCoMo sealed + BEAM-100K sealed) added by amendment A5; Phase 8 Cat 40 pending. Cap $1,450. 1,159 files changed vs main. |
+| `capy/oss-memory-shootout` (#89, GBRA-1) | `eval/runner/systems/types.ts` (`MemorySystem`: `reset`, `ingestSession(ns, session, event_time)`, `finishIngest`, `retrieve(ns, question, policy)`, `deleteSource`, `capabilities`), `eval/runner/systems/gbrain.ts` (gbrain-legacy and gbrain-shootout adapters), `eval/runner/metering-proxy.ts`, `eval/runner/shootout-cell.ts`, `eval/systems/PROTOCOL.md` (HTTP: `/health /capabilities /reset /ingest /finish /retrieve /delete_source`), `eval/systems/{[ext-extract-first],look-ahead,[ext-temporal-graph],[ext-graph-pipeline],[ext-markdown-kb],[ext-agent-runtime],_fake,_shim}` with `capability.json`, compose stacks, `PILOT.md`; `lifecycle-lite` | Phase 4 (memory QA dev) complete 2026-10-08; Phase 5 PMB and Phase 6 lifecycle-lite cells committed; Phase 7 sealed (LoCoMo sealed + BEAM-100K sealed) added by amendment A5; Phase 8 Cat 40 pending. Cap $1,450. 1,159 files changed vs main. |
 | `evals/q1-scoreboard` (GBRA-49) | `eval/runner/scoreboard.ts`, `scoreboard-cli.ts` (`bun run eval:scoreboard check|fixture|explain|doctor|plan|smoke|run|status|judge|render|dispute`), `eval/runner/q1/{power,stress-pilot,scoreboard-errors}.ts`, `eval/systems/kinds.json`, `docs/scoreboard.md`, `.github/ISSUE_TEMPLATE/scoreboard-dispute.md`, `docs/comparison-systems/ext-*/README.md` | Preregistration draft, OPEN values (frozen gbrain commit, campaign hash, calibration). Dev stress pilot done 2026-10-07. Sibling branches `evals/q1-runner` (write-to-queryable probes, packed and whole-system arms), `q1-baselines`, `q1-integration`, `q1-data-instruments`, `q1-frontdoor`, `q1-gbrain-defaults`. |
 | `capy/memory-proof-wave` (#69, GBRA-52) | `eval/harness-provider/` (`bun run harness:cell plan|run|resume|tune|rejudge`), `eval/runner/memory-proof-wave/` (power sim, grouping manifest), `eval/workload-suites/` B1-B4 | Acceptance cells only, $4.16 spent of $2,800; sealed runs not yet. |
 
@@ -105,14 +105,14 @@ published result and are not the preregistered (Holm, clustered) analysis. Scrip
 
 | System | On main | Runnable shim (#89) | Scoreboard kind (q1) | Quoted numbers on main |
 |---|---|---|---|---|
-| Mem0 OSS 2.2.1 | no | yes (Qdrant) | `ext-extract-first` (mapping confirmed in `docs/comparison-systems.md` on `evals/q1-scoreboard`, lines 22-28) | LME-S 94.4% self-reported (gpt-4o, top-200); 49.00% independent; HaluMem extraction 42.9%; PMB 0.06 |
+| [ext-extract-first] OSS 2.2.1 | no | yes (Qdrant) | `ext-extract-first` (mapping confirmed in `docs/comparison-systems.md` on `evals/q1-scoreboard`, lines 22-28) | LME-S 94.4% self-reported (gpt-4o, top-200); 49.00% independent; HaluMem extraction 42.9%; PMB 0.06 |
 | The comparator | no | yes (Postgres+pgvector) | `ext-memory-bank` | LME-S 91.4% / 89.0% / 94.6% vendor; AMB rows (MPW doc: comparator BEAM rag 86.2/80.1/79.1 at 100k/500k/1M, historical only) |
-| Graphiti 0.30.2 (not Zep) | no | yes (Neo4j 5.26) | `ext-temporal-graph` | Zep 90.2% (gpt-5.4 reader+judge), 71.2% older paper |
-| Cognee 1.6.2 | no | yes | `ext-graph-pipeline` | none on main |
-| Basic Memory 0.23.2 (AGPL) | no | yes | `ext-markdown-kb` | none |
-| Letta 0.34.4 | no | agent-only (no passive memory API) | `ext-agent-runtime` | none |
-| MemPalace 3.10.0 (raw vector; LoCoMo hybrid, LLM rerank off) | no | no (#89); install bundle on q1 | `ext-verbatim-session` | MemPal any-hit 96.6-100%, our strict recount 85.7-90.0% |
-| Mastra OM, Supermemory, ByteRover, Zep platform, MemCog, Lethe, agentmemory, ContextFit | no | no | no | quoted only (LME-S QA or R@5) |
+| [ext-temporal-graph] 0.30.2 (not [ext-temporal-graph hosted service]) | no | yes (Neo4j 5.26) | `ext-temporal-graph` | [ext-temporal-graph hosted service] 90.2% (gpt-5.4 reader+judge), 71.2% older paper |
+| [ext-graph-pipeline] 1.6.2 | no | yes | `ext-graph-pipeline` | none on main |
+| [ext-markdown-kb] 0.23.2 (AGPL) | no | yes | `ext-markdown-kb` | none |
+| [ext-agent-runtime] 0.34.4 | no | agent-only (no passive memory API) | `ext-agent-runtime` | none |
+| [ext-verbatim-session] 3.10.0 (raw vector; LoCoMo hybrid, LLM rerank off) | no | no (#89); install bundle on q1 | `ext-verbatim-session` | [ext-verbatim-session] any-hit 96.6-100%, our strict recount 85.7-90.0% |
+| Mastra OM, Supermemory, ByteRover, [ext-temporal-graph hosted service] platform, MemCog, Lethe, agentmemory, ContextFit | no | no | no | quoted only (LME-S QA or R@5) |
 | Full context, plain files + grep, Postgres hybrid, recency, none | partly (Cat 40 fs/pg arms) | full-context, no-memory, plain-hybrid controls | `baseline-*` | n/a |
 
 ## 2. WHAT HAS BEEN MEASURED
@@ -164,11 +164,11 @@ about what a frontier reader does with gbrain's BEAM evidence. The BEAM *judge* 
 |---|---:|---:|---:|---:|---:|---:|---:|
 | gbrain-shootout @ master `c5fb0201` | **0.59** | 6,638 | 0.63 | 10,015 | 0.78 | 0.979 | **1.53** |
 | The comparator | 0.89 | 8,739 | 0.88 | 7,169 | 0.76 | 0.979 | 32.11 (a3 rerun) |
-| Cognee (3 shards pooled) | 0.83 | ~6,900 | 0.85 | ~6,130 | 0.74 | 0.94 | 60.88 |
-| Mem0 | 0.77 | 7,591 | 0.78 | **1,262** | 0.73 | 0.94 | 42.27 |
+| [ext-graph-pipeline] (3 shards pooled) | 0.83 | ~6,900 | 0.85 | ~6,130 | 0.74 | 0.94 | 60.88 |
+| [ext-extract-first] | 0.77 | 7,591 | 0.78 | **1,262** | 0.73 | 0.94 | 42.27 |
 | plain hybrid control | 0.71 | 5,530 | 0.86 | 25,019 | 0.70 | 0.896 | 1.28 |
-| Basic Memory (2 shards pooled) | 0.69 | ~5,090 | 0.85 | ~20,600 | 0.72 | 0.83 | 1.45 |
-| Graphiti | 0.37 | 6,077 | 0.86 | 27,797 | 0.40 | 0.40 | 108.69 |
+| [ext-markdown-kb] (2 shards pooled) | 0.69 | ~5,090 | 0.85 | ~20,600 | 0.72 | 0.83 | 1.45 |
+| [ext-temporal-graph] | 0.37 | 6,077 | 0.86 | 27,797 | 0.40 | 0.40 | 108.69 |
 | full-context control | 0.14 at 8k | | 0.78 at ~128k ctx | | | | 0 |
 | no-memory control | | | 0.09 | 139 | | | 0 |
 
@@ -178,17 +178,17 @@ about what a frontier reader does with gbrain's BEAM evidence. The BEAM *judge* 
 |---|---:|---:|---:|---:|---:|
 | gbrain-shootout master | 0.605 | 0.578 | 10,389 | **0.574** | 0.115 |
 | gbrain-shootout master, recipe (`gbrain init` defaults) | 0.599 | 0.611 | 9,840 | 0.546 | 0.055 |
-| Cognee common | 0.569 | 0.578 | 12,677 | 0.537 | 2.10 |
+| [ext-graph-pipeline] common | 0.569 | 0.578 | 12,677 | 0.537 | 2.10 |
 | The comparator common | 0.583 | 0.574 | 7,158 | 0.398 | 3.21 |
-| Mem0 common / recipe | 0.554 / 0.550 | 0.570 / 0.591 | 1,297 / 1,394 | 0.426 / 0.407 | 1.63 / 5.69 |
-| Basic Memory recipe (local embedder) | 0.622 | 0.573 | 5,447 | 0.444 | 0 |
-| Graphiti common | 0.431 | 0.637 | 17,447 | 0.120 | 10.28 |
+| [ext-extract-first] common / recipe | 0.554 / 0.550 | 0.570 / 0.591 | 1,297 / 1,394 | 0.426 / 0.407 | 1.63 / 5.69 |
+| [ext-markdown-kb] recipe (local embedder) | 0.622 | 0.573 | 5,447 | 0.444 | 0 |
+| [ext-temporal-graph] common | 0.431 | 0.637 | 17,447 | 0.120 | 10.28 |
 | plain hybrid | 0.549 | 0.592 | 14,377 | 0.426 | 0.089 |
 | full context | 0.378 at 8k | 0.600 at ~148,700 ctx | | | 0 |
 | no memory | | 0.278 | 135 | | 0 |
 
-**LoCoMo dev r1, 587 q, reader gpt-4o-mini:** gbrain-shootout master 8k native 0.649 (rehydrated 0.727, strict@5 0.873); Mem0 common (a2)
-0.760; the comparator common 0.756; Cognee recipe 0.712; Graphiti recipe vendor-default 0.702; Basic Memory 0.673; plain hybrid 0.670; full
+**LoCoMo dev r1, 587 q, reader gpt-4o-mini:** gbrain-shootout master 8k native 0.649 (rehydrated 0.727, strict@5 0.873); [ext-extract-first] common (a2)
+0.760; the comparator common 0.756; [ext-graph-pipeline] recipe 0.712; [ext-temporal-graph] recipe vendor-default 0.702; [ext-markdown-kb] 0.673; plain hybrid 0.670; full
 context 0.629 (at ~25k ctx); no memory 0.218.
 
 Reading: rehydration isolates ranking from packaging; gbrain's ranking leads, its native packaging trails. On BEAM-100K every system sits between 0.55 and 0.65 under a weak reader, full context ties retrieval systems, and only 3 and 6
@@ -203,7 +203,7 @@ unit is the worst-performing at 8k among non-graph systems. These are the cells 
 | Breakdown (on arm) | Sonnet 4.6 facts-absorb $9.62 (1,021 calls, 2.17M in / 0.21M out tokens), embeddings $0.322 (5,551 calls, 2.48M tokens); `put_page` p50/p95 80/168 ms; `remember` 282/399 ms; **job drain 4,673 s (78 min) for 996 jobs** | | | same JSON |
 | P8 dev | on $11.97 / off $0.32 per 1,000 pages ($1.16 / $0.03 per 1,000 messages); drain 96 min; extraction jobs drain ~one at a time on PGLite even at `--concurrency 4` | build `ef0de8657` | development | gbrain `docs/eval/decisions/p8/DEV_RESULTS.md:19-33` |
 | Derived embedding price | $0.322 / 2.48M tokens ≈ $0.13 per M tokens (text-embedding-3-large) | | derived | from P8 JSON |
-| Per-system ingest $ per M ingested tokens [recount, #89] | BEAM-100K (~0.6M tokens): gbrain ~$0.19, Mem0 common ~$2.7, Cognee ~$3.5, the comparator ~$5.4, Graphiti ~$17 | | development | #89 receipts; token count assumes ~100k per conversation (BEAM size label) |
+| Per-system ingest $ per M ingested tokens [recount, #89] | BEAM-100K (~0.6M tokens): gbrain ~$0.19, [ext-extract-first] common ~$2.7, [ext-graph-pipeline] ~$3.5, the comparator ~$5.4, [ext-temporal-graph] ~$17 | | development | #89 receipts; token count assumes ~100k per conversation (BEAM size label) |
 | Scoreboard stress pilot | ~12.0M tokens ingested for $1.79 total (embeddings, rerank, expansion), voyage-4 | | development | q1 prereg "Engine rule" |
 
 ### 2.5 Tokens delivered
@@ -215,7 +215,7 @@ unit is the worst-performing at 8k among non-graph systems. These are the cells 
 - Evidence delivery (dev, LME-S 400): page 361, chunks 253, window1 285, window2 292 at 44% of page tokens; verdict `page_only`
   (`2026-09-30-evidence-delivery.md:3`).
 - Answer packets: 48/60 vs 53/60 full sessions, $8.01 (gbrain `docs/eval-bench.md:24-31`).
-- Mem0's "~7K tokens/query" is quoted only in a plan audit; #89 measured ~1,262-1,394 reader input tokens for Mem0's default.
+- [ext-extract-first]'s "~7K tokens/query" is quoted only in a plan audit; #89 measured ~1,262-1,394 reader input tokens for [ext-extract-first]'s default.
 
 ### 2.6 Scale (accuracy as the corpus grows)
 
@@ -261,7 +261,7 @@ core tier FAIL. P5 H3 FAIL (precision 0/18). P8 narrower tool surface FAIL (−8
 | Trick questions where "I don't know" is right | BEAM abstention (22 of 220 at 1M), LoCoMo adversarial, A4 | No "confident wrong" column; partial-credit BEAM judge blurs it. |
 | Privacy-leak checks | N6/N8 gbrain-only; #89 Phase 0 cross-namespace canary; scoreboard excludes N6 | No portable privacy column. Most competitors have no private-page concept; need a namespace/grant model and forget-residue instead. |
 | Columns: accuracy, confident-error rate, tokens/answer, read latency, $ to ingest, time to findable | Scoreboard has accuracy, tokens, latency, $/1,000 messages, write-to-queryable, monthly cost | Missing: confident-error rate; findability split by retrieval arm (keyword vs vector vs facts). |
-| Adapters for Mem0, the comparator, Graphiti, Letta-style files, full context | #89 shims: Mem0, the comparator, Graphiti, Cognee, Basic Memory, Letta (agent-only); controls full-context, none, hybrid; q1 adds file agent, recency | **Built.** Gap is gbrain's own adapter (chunks vs shipped delivery) and Letta passive memory. |
+| Adapters for [ext-extract-first], the comparator, [ext-temporal-graph], [ext-agent-runtime]-style files, full context | #89 shims: [ext-extract-first], the comparator, [ext-temporal-graph], [ext-graph-pipeline], [ext-markdown-kb], [ext-agent-runtime] (agent-only); controls full-context, none, hybrid; q1 adds file agent, recency | **Built.** Gap is gbrain's own adapter (chunks vs shipped delivery) and [ext-agent-runtime] passive memory. |
 | Defaults and best settings | #89 "recipe" vs "common models"; scoreboard headline = documented recipe if ingest fits 48 h | "Best settings" (vendor-tuned) not defined; needs a vendor-tuning window or a published sweep with caps. |
 | Vendors invited to submit | #89 D4 "no public vendor posts for now"; scoreboard has dispute template and add-a-system guide | No submission protocol for vendor-run results; no verification beyond disputes. |
 | Scale curve 100k → 10M | BEAM 100K/1M dev rows, 500K sealed (P4 only), 12M merged stress pilot (retrieval only); scoreboard S1 BEAM-10M, S2 100K/1M | No controlled curve (same questions, growing haystack). No 500K or 10M answer row yet. |
@@ -290,8 +290,8 @@ core tier FAIL. P5 H3 FAIL (precision 0/18). P8 narrower tool surface FAIL (−8
    per-chunk Haiku synopses. A cost table that shows gbrain at embedding-only cost must name the configuration and also show the defaults row.
 9. **Scale fragility at 50k+ docs** (manifest bound, sync slowdown, embed timeout, serve boot). A 10M-token personal world (~tens of thousands of
    pages) will hit these; GBRA-45 and GBRA-59 are on the sync side.
-10. **Harness failure counted as product loss.** #89 logged Mem0 `/finish` timeouts (587 rows `ingest_degraded`), the comparator 64 MB shm (340 of
-    400 `retrieval_error`), Cognee lease refusals; each needed an amendment and rerun. Keep the canonical-outcome rules.
+10. **Harness failure counted as product loss.** #89 logged [ext-extract-first] `/finish` timeouts (587 rows `ingest_degraded`), the comparator 64 MB shm (340 of
+    400 `retrieval_error`), [ext-graph-pipeline] lease refusals; each needed an amendment and rerun. Keep the canonical-outcome rules.
 11. **Leaks.** Raw `answer_` session ids reached readers (historical 86.6% invalid); the public harness puts `{question_id}_{session_id}` into
     contexts (61 of 500 committed contexts, MPW doc) and scores `bool("false")` as a pass. Use the sanitizer and input allowlist (amendment 6).
 12. **Vendor relations.** #89 decision D4 deferred vendor posts; BEAM-10M exposure audit shows another thread printed a gold answer into an agent
@@ -333,7 +333,7 @@ private or deleted, asked by a non-owner principal or after `forget`).
 
 | # | Goal | Files | Migration | Effort | Proof metric and dataset | Paid cost |
 |---|---|---|---|---|---|---|
-| B1 | **Fix gbrain's arm in the head-to-head**: read through shipped `query` evidence delivery (`auto`/page, `token_budget`) in #89's gbrain-shootout adapter, as a named amendment before Phase 7 sealed cells; keep the chunk arm as a diagnostic | evals `eval/runner/systems/gbrain.ts` (#89), prereg amendment; no gbrain change | no | 1 HD / 4 AH | LME-S 100 slice and LoCoMo dev, 8k native: gbrain `query`-delivery svc vs chunk svc and vs the comparator/Mem0; paired, conversation-clustered | ~$20 per LME-S arm (gbrain LME-S cell committed $19.9), ~$7 LoCoMo, ~$3 BEAM-100K |
+| B1 | **Fix gbrain's arm in the head-to-head**: read through shipped `query` evidence delivery (`auto`/page, `token_budget`) in #89's gbrain-shootout adapter, as a named amendment before Phase 7 sealed cells; keep the chunk arm as a diagnostic | evals `eval/runner/systems/gbrain.ts` (#89), prereg amendment; no gbrain change | no | 1 HD / 4 AH | LME-S 100 slice and LoCoMo dev, 8k native: gbrain `query`-delivery svc vs chunk svc and vs the comparator/[ext-extract-first]; paired, conversation-clustered | ~$20 per LME-S arm (gbrain LME-S cell committed $19.9), ~$7 LoCoMo, ~$3 BEAM-100K |
 | B2 | **BEAM-1M failure analysis** (retrieval vs reading vs dates vs loader vs judge) | evals: new `docs/benchmarks/<date>-beam-1m-failure-analysis*`, reuse `memory-qa/run.ts`; no gbrain change | no | 2 HD / 8 AH | 1M dev 220 q: (a) keyless decomposition table (2.2) incl. feasible-subset strict@5; (b) oracle-evidence arm (gold turn groups to the reader) = reading ceiling; (c) frontier reader replay (sonnet-5-5, opus-5-5, gpt-6.1-sol) on frozen top-5 contexts; (d) top-k 5/10/20/40 x reranker on/off x expansion on/off, retrieval only; (e) page/`auto` delivery at 8k/16k/24k; (f) loader audit: turn-group granularity vs BEAM's own session unit, gold count > 5 share; (g) no-memory floor and strict all-items-met rate | retrieval arms ~$0.06 each (cached embeddings); reader arms: 220 q x ~8k tokens ≈ 1.8M in: sonnet-5-5 ~$4-5, gpt-6.1-sol ~$4-5, opus-5-5 ~$8-9 per arm incl. output; judge gpt-4.1-mini ~$1/arm. Total ≈ $40-60 |
 | B3 | **Personal world generator** (email, meetings, calendar, docs, chat) with nested sizes 100k → 10M and an oracle ledger incl. change events, hops, traps and privacy classes | evals `eval/generators/personal-world-*.ts` (extend `amara-life.ts`, `world.ts`, `n1/n3/n5/n6` generators), `eval/data/personal-world-v1/manifest.json` (hashes only for big sizes), solvability + presence checks | no | 6 HD / 30 AH | keyless: solvability 100% on oracle evidence; presence of every gold span; nested invariance (100k questions answerable identically at all sizes with oracle) | generation: if LLM-rendered prose, ~10M output tokens for one 10M world; at sonnet-5-5 output $10/M ≈ $100 per 10M persona, ~$10 per 1M persona; template rendering ≈ $0. Recommend template core + LLM paraphrase for 20% |
 | B4 | **Confident-wrong and abstention instrument** shared by all systems | evals `eval/runner/memory-qa/outcomes.ts`/`instruments.ts` (q1), `qa.ts` | no | 1.5 HD / 6 AH | CWA definition validated on A4 (known labels) and LoCoMo adversarial (planted answers): human-adjudicated 100-item sample, judge agreement ≥ 90% | ~$5 judge re-runs |
@@ -356,12 +356,12 @@ systems that treat sources differently can use it.
 
 | Adapter | State | Remaining effort |
 |---|---|---|
-| Mem0, the comparator, Graphiti, Cognee, Basic Memory | built and piloted (#89) | ~0.5 HD each to add `principal` and readiness |
-| Letta | agent-only (no passive API at 0.34.4) | native-agent cell exists in q1 plan for LoCoMo; 2 HD to add personal-world agent cell |
-| Letta-style files / file agent | `baseline-file-agent` (q1: list/grep/read, 40-turn cap) and Cat 40 `fs`/`memory` arms | 1 HD to point at personal-world Markdown |
+| [ext-extract-first], the comparator, [ext-temporal-graph], [ext-graph-pipeline], [ext-markdown-kb] | built and piloted (#89) | ~0.5 HD each to add `principal` and readiness |
+| [ext-agent-runtime] | agent-only (no passive API at 0.34.4) | native-agent cell exists in q1 plan for LoCoMo; 2 HD to add personal-world agent cell |
+| [ext-agent-runtime]-style files / file agent | `baseline-file-agent` (q1: list/grep/read, 40-turn cap) and Cat 40 `fs`/`memory` arms | 1 HD to point at personal-world Markdown |
 | Full context | built (#89 control; q1 with prompt caching) | 0 |
 | gbrain | gbrain-legacy, gbrain-shootout (#89, chunk text), `gbrain-defaults` (q1, MCP `query`) | B1 |
-| Supermemory, Zep platform, Mastra OM | quoted only; managed/closed | vendor submission only (B8) |
+| Supermemory, [ext-temporal-graph hosted service] platform, Mastra OM | quoted only; managed/closed | vendor submission only (B8) |
 
 ### 5.4 Scale-curve experiment design
 
@@ -370,13 +370,13 @@ systems that treat sources differently can use it.
 - **External rows:** BEAM 100K/500K/1M dev (public), BEAM-10M (S1, custodian), LME-S → LME-M 100 (q1 S5).
 - **Cheap retrieval-only curve now:** the 11 BEAM-1M dev conversations, asked one at a time against their own 1M brain vs against the merged
   ~12M brain (stress pilot already ingested it): strict@5/@10, any@10, tokens delivered, p95 latency, same gbrain-defaults config. Cost ≈ $2.
-- **Systems:** gbrain-defaults, gbrain zero-LLM config (facts off, title CR), the comparator, Mem0, Cognee, Graphiti (common config; recipe only
+- **Systems:** gbrain-defaults, gbrain zero-LLM config (facts off, title CR), the comparator, [ext-extract-first], [ext-graph-pipeline], [ext-temporal-graph] (common config; recipe only
   where ingest fits 48 h), file agent, plain hybrid, full context where it fits the reader window (fails past ~1M; record "refused").
 - **Readers (model rule):** claude-opus-5-5, gpt-6.1-sol, claude-sonnet-5-5 on the 8k matched arm; sonnet-5-5 only on the default-amount and
   2k/16k sweep; Fable smoke only. Judges: canonical per benchmark; personal world judge = gpt-6.1-sol with a 300-item human-checked sample.
 - **Cost (estimate):** reader: 10 personas x 5 sizes x ~100 q x 3 readers x ~8k tokens ≈ 120M input tokens ≈ $300 (blended $2.7/M) + outputs
-  ≈ $350-450. Ingest at 10M x 10 personas = 100M tokens: gbrain ~$15 (stress-pilot rate), Mem0 ~$270, the comparator ~$540, Cognee ~$350,
-  Graphiti ~$1,700 (BEAM-100K $/M rates) → Graphiti likely capped to 1M or common-config only. Total ≈ $700-1,000 without Graphiti at 10M.
+  ≈ $350-450. Ingest at 10M x 10 personas = 100M tokens: gbrain ~$15 (stress-pilot rate), [ext-extract-first] ~$270, the comparator ~$540, [ext-graph-pipeline] ~$350,
+  [ext-temporal-graph] ~$1,700 (BEAM-100K $/M rates) → [ext-temporal-graph] likely capped to 1M or common-config only. Total ≈ $700-1,000 without [ext-temporal-graph] at 10M.
   This fits inside the scoreboard's $8,500 cap only if it replaces, not adds to, cut-able blocks (S5, S2a).
 - **Outputs:** accuracy and CWA vs size with clustered CIs; tokens vs size; p95 latency vs size; $ per correct answer vs size. Decision rule
   preregistered: "gbrain's accuracy slope from 1M to 10M is non-inferior to the best external system's within 3 pts" etc.
@@ -433,9 +433,9 @@ systems that treat sources differently can use it.
 python3 - < (see section 2.2; reads docs/benchmarks/2026-10-06-beam-1m-dates/qa/baseline/shard-*/rows.ndjson.gz)
 # Shootout aggregates (keyless, scratch clone)
 cd ~/.capy/work/gbra60/scratchB/evals && python3 ../agg.py lme-s comparator-common-lme-s-a2-18ab0d18
-python3 ../agg.py beam-100k basic-memory-common-beam-100k-a1-b180b106
+python3 ../agg.py beam-100k [ext-markdown-kb]-common-beam-100k-a1-b180b106
 ```
 
-Excluded attempts: the comparator LME-S a2 (340/400 `retrieval_error`, shm bug, superseded by a3), Graphiti LME-S a1/a2 (lost at launch/sync),
-Mem0 LoCoMo a1 (`ingest_degraded`, superseded by a2), Basic Memory BEAM a1 (one degraded conversation, superseded by a2). Mem0 LME-S includes 2
-`ingest_degraded` rows counted as 0. Cognee and Basic Memory LME-S are pooled across shards by question count.
+Excluded attempts: the comparator LME-S a2 (340/400 `retrieval_error`, shm bug, superseded by a3), [ext-temporal-graph] LME-S a1/a2 (lost at launch/sync),
+[ext-extract-first] LoCoMo a1 (`ingest_degraded`, superseded by a2), [ext-markdown-kb] BEAM a1 (one degraded conversation, superseded by a2). [ext-extract-first] LME-S includes 2
+`ingest_degraded` rows counted as 0. [ext-graph-pipeline] and [ext-markdown-kb] LME-S are pooled across shards by question count.

@@ -138,7 +138,7 @@ The audits are excellent and most of the plan's corrections to the brief are rig
 ## Low findings
 
 - **L1.** Line 37 says `gpt-4.1-mini` is a reader "that the eval model rules forbid". gbrain-evals `CLAUDE.md:91-92` allows one bridge model, and audit E §4 names it the only link. Fix: "allowed only as the bridge; no product claim".
-- **L2.** Line 115 names "Basic Memory" despite the kind-id convention on line 26. Fix: use `ext-markdown-kb`.
+- **L2.** Line 115 names "[ext-markdown-kb]" despite the kind-id convention on line 26. Fix: use `ext-markdown-kb`.
 - **L3.** A7's target "29 of 36 → ≥ 33" uses the W10c LME-S subset as the baseline for an LME-M run, at n=36. Fix: give each set its own baseline and call it descriptive.
 - **L4.** Line 65 and line 68 carry 2026-10-08 dates on a plan dated 2026-10-07. They are UTC. Fix: state the timezone.
 

@@ -10,7 +10,7 @@ Token units differ by a factor of about 1.6 and every number below names its uni
 
 ## 0. Bottom line
 
-1. **The headline rests on the wrong 22k.** The 22k is Claude tokens. The same request text is 13,695 GPT tokens (W10b, `2026-10-07-longmemeval-w10b-reader-replay.md`: "Mean input tokens: 22,077 for the Claude readers and 13,695 for `gpt-6.1-sol` on the same text"), and gbrain's own cl100k count of whole-page delivery is 13,800 (`2026-09-30-evidence-delivery.md`, "Three token counts"). Mem0's self-reported figure is 6,787 tokens per retrieval call on LongMemEval at top_200, tokenizer unstated (Mem0 docs, `docs.mem0.ai/core-concepts/memory-evaluation`, fetched 2026-10-07; not in `comparison-systems.md`). On matched units gbrain is about 2x Mem0, not 3x.
+1. **The headline rests on the wrong 22k.** The 22k is Claude tokens. The same request text is 13,695 GPT tokens (W10b, `2026-10-07-longmemeval-w10b-reader-replay.md`: "Mean input tokens: 22,077 for the Claude readers and 13,695 for `gpt-6.1-sol` on the same text"), and gbrain's own cl100k count of whole-page delivery is 13,800 (`2026-09-30-evidence-delivery.md`, "Three token counts"). [ext-extract-first]'s self-reported figure is 6,787 tokens per retrieval call on LongMemEval at top_200, tokenizer unstated ([ext-extract-first] docs, `docs.[ext-extract-first].ai/core-concepts/memory-evaluation`, fetched 2026-10-07; not in `comparison-systems.md`). On matched units gbrain is about 2x [ext-extract-first], not 3x.
 2. **Every deterministic shrink measured so far lost.** These are lexical excerpts, neighbor windows, sections and more chunks at the same budget (section 2.3). The only presentations that kept accuracy were the intact sessions and the reader's own notes written from intact sessions. So a brief has to be **written by a model that reads the intact evidence**, with verbatim quotes for decisive values.
 3. **Selecting perfectly still doesn't get to 2k.** [A-calc] Over W10a's 500 captured requests, the gold sessions alone average 6,489 chars/4 tokens, against 15,822 for everything delivered. Multi-session questions need 8,981. So 2k means compressing *inside* the gold sessions about 3x, and about 4.5x on multi-session. That is exactly where the excerpt selector dropped a $150 sale.
 4. **The reader already compresses well.** A frontier reader's own visible notes plus answer run 138 (Sonnet 5.5) to 150 (Opus 5.5) chars/4 tokens on average, p95 326-356 [A-calc]. A 2k brief is plausible if a cheap builder writes question-conditioned notes that the frontier reader then trusts.
@@ -159,13 +159,13 @@ The JSON-vs-natural-language memory format showed no difference: +0.2 and +0.4 p
 
 ### 2.5 External token figures (for the "others need 7k" claim)
 
-- **Mem0.** 6,787 tokens per retrieval call on LongMemEval (94.4%), 6,956 on LoCoMo, 6,719 on BEAM-1M, 6,914 on BEAM-10M. Top_200 memories, managed platform, tokenizer unstated, self-reported (Mem0 docs and the `mem0ai/mem0` README via web search, 2026-10-07).
-  - `docs/comparison-systems.md` carries Mem0's accuracy (line 51) but **no token figure**.
-  - `docs/plans/2026-09-28-gbrain-10x/audit/coverage-and-categories.md:87` says "Mem0 publishes about 6.8K tokens per query, Zep 1.6K", with no link.
-- **Zep 1.6K:** unsourced in-repo (that audit line only).
-- **The comparator, Graphiti:** **not found** in either repo or `comparison-systems.md`.
+- **[ext-extract-first].** 6,787 tokens per retrieval call on LongMemEval (94.4%), 6,956 on LoCoMo, 6,719 on BEAM-1M, 6,914 on BEAM-10M. Top_200 memories, managed platform, tokenizer unstated, self-reported ([ext-extract-first] docs and the `[ext-extract-first]/[ext-extract-first]` README via web search, 2026-10-07).
+  - `docs/comparison-systems.md` carries [ext-extract-first]'s accuracy (line 51) but **no token figure**.
+  - `docs/plans/2026-09-28-gbrain-10x/audit/coverage-and-categories.md:87` says "[ext-extract-first] publishes about 6.8K tokens per query, [ext-temporal-graph hosted service] 1.6K", with no link.
+- **[ext-temporal-graph hosted service] 1.6K:** unsourced in-repo (that audit line only).
+- **The comparator, [ext-temporal-graph]:** **not found** in either repo or `comparison-systems.md`.
 - **The MPW comparator** (an extract-first server on the public agent-memory benchmark harness) has committed rows of LongMemEval-S 473/500 at **43.6k context tokens** and LoCoMo10 1417/1540 at 36.2k (`docs/designs/MEMORY_PROOF_WAVE.md:37-39` on gbrain branch `capy/mpw-integration`). That is a counterexample to "others need 7k".
-- **Full-context baselines.** Mem0 says "25,000+ tokens per query" (Mem0 docs). W10c measured 171,596 Claude tokens on LongMemEval-S.
+- **Full-context baselines.** [ext-extract-first] says "25,000+ tokens per query" ([ext-extract-first] docs). W10c measured 171,596 Claude tokens on LongMemEval-S.
 
 ---
 
@@ -173,7 +173,7 @@ The JSON-vs-natural-language memory format showed no difference: +0.2 and +0.4 p
 
 | Set | Size | Openings / exposure | Protocol / file | Usable for bet 1? |
 |---|---|---|---|---|
-| **LoCoMo** | 10 conversations public (`locomo10.json`); split 3 dev (conv-44, 47, 48) / 7 sealed (conv-26, 30, 41, 42, 43, 49, 50) | Sealed opened by P2 E2 (2026-10-04), P3 E1 (2026-10-04, **FAIL**), P6 R1 (2026-10-06), and the OSS shootout Phase 7 (A5, approved 2026-10-06, "completed 2026-10-07"), which ran Mem0, the comparator, Graphiti, Cognee, Basic Memory and gbrain on all 7. **0 unexposed conversations.** | `gbrain-evals/eval/decisions/splits/locomo.json`: "7 sealed conversations are fewer than the comparator default of 10 clusters, so the sealed split is diagnostic evidence, never a primary confirmation"; OSS prereg A5 (branch `capy/oss-memory-shootout`, lines 372-405) | **Diagnostic only.** It is public data and conversations are small: 5 sessions ≈ 4,730 chars/4 tokens already, so a 7k or 15k "budget" there means *more* sessions, not compression. |
+| **LoCoMo** | 10 conversations public (`locomo10.json`); split 3 dev (conv-44, 47, 48) / 7 sealed (conv-26, 30, 41, 42, 43, 49, 50) | Sealed opened by P2 E2 (2026-10-04), P3 E1 (2026-10-04, **FAIL**), P6 R1 (2026-10-06), and the OSS shootout Phase 7 (A5, approved 2026-10-06, "completed 2026-10-07"), which ran [ext-extract-first], the comparator, [ext-temporal-graph], [ext-graph-pipeline], [ext-markdown-kb] and gbrain on all 7. **0 unexposed conversations.** | `gbrain-evals/eval/decisions/splits/locomo.json`: "7 sealed conversations are fewer than the comparator default of 10 clusters, so the sealed split is diagnostic evidence, never a primary confirmation"; OSS prereg A5 (branch `capy/oss-memory-shootout`, lines 372-405) | **Diagnostic only.** It is public data and conversations are small: 5 sessions ≈ 4,730 chars/4 tokens already, so a 7k or 15k "budget" there means *more* sessions, not compression. |
 | **sealed-confirmation-v1** | 150 q / 30 personas, ~65k-token histories, ~1,200-token chats | **1 of 3 used** (`evidence-auto-v2-2026-09-30:e2:auto`); chunk already 147/150. No later opening found; the followups plan says "Sealed v1 and v2 stay closed" (`PLAN.md:184`). | `docs/benchmarks/2026-09-29-sealed-confirmation-protocol.md` | It can reject harm, not confirm gain, because of the ceiling. |
 | **sealed-confirmation-v2** | 200 q / 40 personas, 134,830-150,385-token histories; 80 multi-session, 40 temporal, 40 knowledge update, 40 abstention | **1 of 3 used** (decision 1, 2026-10-02); **2 left**. Exposure: 34 of 40 histories imported and their sessions sent to providers by P8 quote grounding (2026-10-04/05); questions and labels not read; "Future v2 decisions must name this exposure". Reading is near ceiling: oracle 199/200, chunk oracle 196/200. | `docs/benchmarks/2026-10-01-sealed-confirmation-v2-protocol.md` (rules inherited from v1) | **Yes**, the best available held-out set for a brief-vs-auto non-inferiority decision (auto 192/200 leaves room to detect harm). Uses an opening. |
 | **LongMemEval-S** | 500 q | All dev (`splits/lme-s.json`, `dev_fraction: 1`) | sealed v1 protocol lines 7-9; plan amendment 1 | Dev and tuning only. |
@@ -187,7 +187,7 @@ The JSON-vs-natural-language memory format showed no difference: +0.2 and +0.4 p
 
 ## 4. Gaps between Garry's bet and reality
 
-1. **"gbrain hands the reader ~22k tokens, Mem0 ~7k."** The 22k is Claude-tokenizer specific. On GPT tokens it is 13,794, and on cl100k about 13,800 (page arm, September). Mem0's 6.8k is self-reported, at top_200, with an unknown tokenizer and a different reader and judge. The like-for-like gap is about 2x. gbrain-evals has **no** matched-token comparison published yet; the OSS shootout cells at an 8,000 chars/4 budget are landing on PR #89 but have no report.
+1. **"gbrain hands the reader ~22k tokens, [ext-extract-first] ~7k."** The 22k is Claude-tokenizer specific. On GPT tokens it is 13,794, and on cl100k about 13,800 (page arm, September). [ext-extract-first]'s 6.8k is self-reported, at top_200, with an unknown tokenizer and a different reader and judge. The like-for-like gap is about 2x. gbrain-evals has **no** matched-token comparison published yet; the OSS shootout cells at an 8,000 chars/4 budget are landing on PR #89 but have no report.
 2. **"Dates lifted LoCoMo 74.2% → 88.2% with search unchanged."** True (R@5 0.541 in both arms). But 172 of the 196 net gained questions are temporal (27 → 199 of 221): the baseline lacked any date, so the effect is repairing missing information, not compressing it. It does not predict that removing text is safe.
 3. **"A bad reading prompt costs up to 10 points."** "Up to 10" was **not found** as a number. The measured within-reader prompt effects are:
    - +7.8 pts notes vs direct on oracle sessions (GPT-4o);
@@ -403,7 +403,7 @@ For reference, chunk vs page discordance was 120/400 = 30% (evidence-delivery) a
     - The MPW harness counts delivered context with cl100k on inserted text, gated ±10% of target (design A0 item 8).
     - **A5 "equal-context frontier" at 4k, 8k, 16k and 32k** plus each system's default, swept on dev, with the preregistered target and at most two more points on sealed BEAM. That is the same grid shape as bet 1, on raw pages.
   - Action: add a `brief` arm to A5 *before* MPW freezes its preregistration, or keep bet 1 on LongMemEval and sealed v2 only. Don't open MPW's BEAM sealed split for a second question. Resolve the 54-conversation (#69 body) vs 14/14/42 (design) discrepancy with GBRA-52.
-- **Evals #89, OSS memory shootout.** It already runs Mem0, Graphiti, the comparator, Cognee and Basic Memory on one harness, with `fixed-evidence` packs at 8,000 chars/4 tokens in `native` and `rehydrated` modes, and D2 frontier readers on 100-q slices. Its Phase 7 opened LoCoMo sealed and BEAM-100K sealed. Use its cells (once reported) as the **matched** "others at 8k" source instead of Mem0's self-report. A brief arm could be a new `context mode` there.
+- **Evals #89, OSS memory shootout.** It already runs [ext-extract-first], [ext-temporal-graph], the comparator, [ext-graph-pipeline] and [ext-markdown-kb] on one harness, with `fixed-evidence` packs at 8,000 chars/4 tokens in `native` and `rehydrated` modes, and D2 frontier readers on 100-q slices. Its Phase 7 opened LoCoMo sealed and BEAM-100K sealed. Use its cells (once reported) as the **matched** "others at 8k" source instead of [ext-extract-first]'s self-report. A brief arm could be a new `context mode` there.
 - **gbrain #6271 + evals #76/#93/#77, GBRA-39 Cat 40 Hard.** Root cause: missing nicknames (~6.7 pts) and "no result counts" on aggregation questions (#93 body). The brief's `aggregates` with counts directly serve this. The Cat 40 agent-task harness is where the `evidence_brief` op (A9) should show agent value. Don't touch the #77 sealed variant.
 - **GBRA-49, evals #88 Q2 parser gaps and the Q1 scoreboard.** #88's write-then-answer has "four models, three ingests … abstention rubric". Reuse that rubric for A10 rather than inventing a third. The BEAM-10M scoreboard (not found in-repo) is where breadth plus brief should report tokens per query.
 - **GBRA-58 trust tiers (#5575).** Brief claims should carry the source's trust tier and taint once tiers exist. The builder is a new place where poisoned content could be laundered into a "fact" (risk 9). Its poisoning suites should include a brief arm.
@@ -416,8 +416,8 @@ For reference, chunk vs page discordance was 120/400 = 30% (evidence-delivery) a
 ## 9. Not found
 
 - A sourced "up to 10 points" reading-prompt cost.
-- The comparator and Graphiti tokens per query in either repo.
-- A sourced in-repo Zep 1.6K figure.
+- The comparator and [ext-temporal-graph] tokens per query in either repo.
+- A sourced in-repo [ext-temporal-graph hosted service] 1.6K figure.
 - Any gbrain arm measured below ~3.3k tokens with a 5.x reader.
 - Any think-lane input-token measurement.
 - A BEAM-10M split or scoreboard file.

@@ -763,7 +763,7 @@ Both voices start with `INPUT: ceo c50f1702…`, matching the checkpoint.
 | 24 | Living pages are justified against a stale baseline anchoring already fixes; the pinned-cost pairing is wrong | not raised | §12 high | outside | accepted (compare against anchored retrieval with a no-refresh control; review minutes at observed read/write ratios; cost pairing corrected) |
 | 25 | Several premise corrections overstate the records (2x unverified, floor is 100K, dev split, strict feasibility vs rubric) | C1 (count) | §13 medium | both, partly | accepted (every label corrected in sections 0, 1.2, 1.3, 2) |
 | 26 | `gpt-4.1-mini` is allowed as the bridge, not forbidden | L1 low | not raised | native | accepted |
-| 27 | "Basic Memory" named instead of `ext-markdown-kb` | L2 low | not raised | native | accepted |
+| 27 | "[ext-markdown-kb]" named instead of `ext-markdown-kb` | L2 low | not raised | native | accepted |
 | 28 | A7's target borrows another set's baseline | L3 low | not raised | native | accepted (own baselines, descriptive) |
 | 29 | 2026-10-08 dates are UTC | L4 low | not raised | native | accepted (timezone stated in the header) |
 | 30 | Send waves 2 to 6 back for re-scoping / do not approve the seven-wave program | recommendation | verdict | both | accepted in part: waves become "scoped, not scheduled" and the pilot orders them; rejected in the form of removing or weakening the wave specifications, because the maintainer's five bets stay fully specified and separately approvable, and the ordering question is better answered by the pilot's data than by this review |

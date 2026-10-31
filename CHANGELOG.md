@@ -10,8 +10,11 @@ This records what each gbrain-evals release changed and what its measurements me
   preregistrations from the plan's waves 0 to 5 name `docs/plans/2026-10-07-10x-memory-advantage/PLAN.md`, the branch
   `capy/10x-memory-advantage-plan` or a link into it. The plan lived only on that branch, whose pull request, #97, was
   closed unmerged on 2026-10-29. The folder (the plan, its five audits, six reviews and the eng test plan) now lands at
-  that path, each file byte for byte as on the branch's last commit, `2b6ff9af` (2026-10-17). Its README opens with
-  a dated banner: the plan is superseded, and no wave, cap or gate runs from it.
+  that path from the branch's last commit, `2b6ff9af` (2026-10-17). Its README opens with a dated banner: the plan
+  is superseded, and no wave, cap or gate runs from it. Seven files are byte for byte the branch's. In the other six,
+  each of the 118 external product names is replaced by its kind id in square brackets (`[ext-extract-first]`), as
+  the name guard requires outside `docs/comparison-systems.md`; nothing else changed, and the branch keeps the
+  original wording.
 - **The eleven citations are unchanged, and the branch stays.** The preregistrations are frozen (each changes only by
   an amendment appended at its end, and some are bound by recorded SHA-256 hashes), and every citation already
   resolves: the path now exists on main, and the branch keeps every revision of the plan as each report read it.

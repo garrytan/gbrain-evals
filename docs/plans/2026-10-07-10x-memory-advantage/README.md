@@ -8,10 +8,14 @@ gate below runs from it. For what gbrain does today and every result since, star
 Wave 6 was to extend the Q1 head-to-head scoreboard, which was published on 2026-10-27
 ([report](../../benchmarks/2026-10-06-scoreboard-report.md)).
 
-Every file in this folder except this README is copied byte for byte from commit `2b6ff9af` on the branch
-`capy/10x-memory-advantage-plan`, which keeps every revision of the plan. Reports and preregistrations on main cite the
-plan by that path, that branch or a link into it, as it stood when they were written; their citations are unchanged.
-Below this banner, the README is the folder's guide as the branch left it, so its status line is out of date.
+Every other file in this folder is the file at commit `2b6ff9af` on the branch `capy/10x-memory-advantage-plan`,
+with one kind of edit. This repository names external memory systems only in
+[comparison-systems.md](../../comparison-systems.md), so each of the 118 product names in six of the files is replaced
+by its kind id in square brackets, such as `[ext-extract-first]`. Nothing else changed; seven files are byte for byte
+the branch's. The branch keeps the original wording and every revision of the plan. Reports and preregistrations on
+main cite the plan by this path, that branch or a link into it, as it stood when they were written; their citations
+are unchanged. Below this banner, the README is the folder's guide as the branch left it, so its status line is out
+of date.
 
 This folder records the plan for the next round of gbrain work after the maintainer's brief "Pick the right thing to 10x" (2026-10-07): fewer confident wrong answers, fewer tokens at the same accuracy, cheaper writes and bigger brains, and capabilities no other memory system has. Status: approved by the maintainer on 2026-10-08 (PLAN.md section 10 records each decision). Each wave still runs under its own cap and preregistration.
 
