@@ -100,7 +100,7 @@
       "claim_id": "longmemeval-recall-all",
       "readme_anchor": "docs/benchmarks/2026-05-07-longmemeval-s.md: August 31 correction, May hybrid strict recall 392/470 = 83.40% and expansion 84.26%",
       "artifact_path": "docs/benchmarks/2026-05-07-longmemeval-s/rescore-may-2026-08-31.json",
-      "artifact_sha256": "17d23de0ff27203f37e9e73d79e7fa303742b7a85dd6098010a44753d6d8bc22",
+      "artifact_sha256": "1be683948bded653586cd3a8d826946682aa7cf63f8b103f6f70c8a18d7df26f",
       "expected": {
         "/summaries/2/adapter": "gbrain-hybrid",
         "/summaries/2/recall_all_at_k": 0.8340425531914893,
@@ -112,7 +112,7 @@
       },
       "golden_test": "test/eval/longmemeval-golden.test.ts: longmemeval golden regression (committed May NDJSON)",
       "status": "covered",
-      "note": "Published summary of the 2026-08-31 erratum resolution: the May run's raw rows rescored under the official recall_all@5 metric. The golden test re-derives every number in this file from the committed NDJSON via the same summarizeAdapterRows the runner uses."
+      "note": "Published summary of the 2026-08-31 erratum resolution: the May run's raw rows rescored under the official recall_all@5 metric. The golden test re-derives every number in this file from the committed NDJSON via the same summarizeAdapterRows the runner uses. On 2026-10-31 (issue #26) resolved.source_ndjson was repointed from eval/reports/longmemeval/rescore-may-copy.ndjson, the gitignored path the aggregator read, to that committed copy; no other byte changed. The .md twin still names the old path in its first line because it is protected generated evidence (2026-09-09-retrieval-refresh/documentation-integrity.json)."
     },
     {
       "claim_id": "longmemeval-raw-rows",
@@ -698,7 +698,7 @@
       "artifact_path": "docs/benchmarks/2026-08-16-brainbench-cat35-transcript-distill/judge-calibration-2026-08-25.json",
       "artifact_sha256": "6aefaf365d52c87ea2ef972a73f20b6bd2d5676f209414eb03e307e08488f478",
       "status": "covered",
-      "note": "The annotation file has 40 slots: 24 populated coverage judgments and 16 grounding/distraction placeholders. All human_verdict fields remain null. This preserves a pending calibration sample; it does not establish human agreement or a calibrated judge."
+      "note": "The annotation file has 40 slots: 24 populated coverage judgments and 16 grounding/distraction placeholders. All human_verdict fields remain null. This preserves a pending calibration sample; it does not establish human agreement or a calibrated judge. Its judge_model, claude-sonnet-4-6, is a movable alias, not a snapshot: the 2026-08-25 run predates resolved_model recording (29e9ac9f, 2026-09-01), so the judge_verdict values cannot be tied to fixed judge weights, the same caveat as the Cat 35 baseline and wave receipts."
     },
     {
       "claim_id": "precisionmembench-adaptive",
