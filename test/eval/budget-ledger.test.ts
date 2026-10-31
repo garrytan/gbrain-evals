@@ -116,6 +116,8 @@ describe('pricing', () => {
     }
     // With no output limit Particle generates up to 32,000 tokens (docs.particle.ai/models), so that is reserved, not 4,096.
     expect(priceRequest('https://api.particle.ai/v1/chat/completions', { model: 'particle-1', messages: [] })!.maxOutputTokens).toBe(32_000);
+    // A dated id takes its family's output cap as it takes its family's price.
+    expect(priceRequest('https://api.particle.ai/v1/chat/completions', { model: 'particle-1-2026-10-31', messages: [] })!.maxOutputTokens).toBe(32_000);
     const p = priceRequest('https://api.particle.ai/v1/chat/completions', body)!;
     // The usage of the 2026-10-31 live memory-qa reader smoke: 330 prompt tokens, 70 completion tokens, 39 of them reasoning.
     const smoke = usageCost(p, { usage: { prompt_tokens: 330, completion_tokens: 70, total_tokens: 400, prompt_tokens_details: { cached_tokens: 0 }, completion_tokens_details: { reasoning_tokens: 39 } } })!;
@@ -126,6 +128,15 @@ describe('pricing', () => {
     expect(cached.usd).toBeCloseTo(((18234 - 16384) * 0.25 + 16384 * 0.03 + 412 * 1) / 1e6, 12);
     expect(() => priceRequest('https://api.particle.ai/v1/chat/completions', { model: 'glm-5.3-flash', max_tokens: 5, messages: [] })).toThrow('no chat price for particle:glm-5.3-flash');
     expect(priceRequest('https://api.particle.ai/v1/models', undefined)).toBeNull();
+  });
+
+  test("Particle's hosted web search is refused: it bills $0.0025 a search outside usage, so the ledger could neither reserve nor settle it", () => {
+    const url = 'https://api.particle.ai/v1/chat/completions';
+    const body = { model: 'particle-1', max_tokens: 64, messages: [{ role: 'user', content: 'What happened today?' }] };
+    expect(() => priceRequest(url, { ...body, tools: [{ type: 'web_search' }] })).toThrow(/hosted web search/);
+    expect(() => priceRequest(`https://us.api.particle.ai/v1/chat/completions`, { ...body, tools: [{ type: 'function', function: { name: 'f' } }, { type: 'web_search' }] })).toThrow(/hosted web search/);
+    expect(priceRequest(url, { ...body, tools: [{ type: 'web_search' }], tool_choice: 'none' })).toMatchObject({ provider: 'particle', maxOutputTokens: 64 });
+    expect(priceRequest(url, { ...body, tools: [{ type: 'function', function: { name: 'f' } }] })).toMatchObject({ provider: 'particle', maxOutputTokens: 64 });
   });
 });
 
@@ -194,6 +205,18 @@ describe('ledger', () => {
     expect(entries[0]).toMatchObject({ status: 'reconciled', input_tokens: 330, output_tokens: 70 });
     expect(entries[0].actual_usd).toBeCloseTo((330 * 0.25 + 70 * 1) / 1e6, 12);
     expect(run.close()).toMatchObject({ requests: 1, input_tokens: 330, output_tokens: 70 });
+  });
+
+  test('a redirect cannot carry a guarded request from an admitted host to one the ledger cannot price', async () => {
+    let reached = 0;
+    const far = Bun.serve({ hostname: '0.0.0.0', port: 0, fetch: () => { reached++; return Response.json({}); } });
+    const hop = Bun.serve({ hostname: '127.0.0.1', port: 0, fetch: () => new Response(null, { status: 307, headers: { location: `http://0.0.0.0:${far.port}/v1/chat/completions` } }) });
+    const run = BudgetRun.open({ runner: 'test', budgetUsd: 1, ledgerPath: ledgerPath() });
+    const guard = installPaidRequestGuard(run);
+    try {
+      await expect(fetch(`http://127.0.0.1:${hop.port}/v1/chat/completions`, { method: 'POST', body: JSON.stringify({ model: 'm', messages: [] }) })).rejects.toThrow();
+    } finally { guard.uninstall(); hop.stop(true); far.stop(true); }
+    expect(reached).toBe(0);
   });
 
   test('a network failure after send charges the reservation', async () => {

@@ -164,13 +164,18 @@ describe('memory-qa reading lane (readAndJudge)', () => {
     expect(row.qa_score).toBe(1);
   });
 
-  test("think answers relative dates from the question's day: referenceDate reaches think and the row records it", async () => {
-    serve([judgeYes]);
+  test("think answers relative dates from the question's day: referenceDate reaches think and the row records the date think reports", async () => {
+    serve([judgeYes, judgeYes]);
     const seen: Array<Record<string, unknown>> = [];
-    const think = async (_engine: unknown, o: Record<string, unknown>) => { seen.push(o); return { answer: 'You moved in May 2023.', synthesis_status: 'ok', usage: { input_tokens: 10, output_tokens: 2 } }; };
+    const think = async (_engine: unknown, o: Record<string, unknown>) => { seen.push(o); return { answer: 'You moved in May 2023.', synthesis_status: 'ok', usage: { input_tokens: 10, output_tokens: 2 }, temporal: { reference_date: String(o.referenceDate), time_zone: 'UTC' } }; };
     const row = await readAndJudge({ benchmark: 'lme-s', qa: qa({ mode: 'think' }), q, chat: new ChatClient(tmp(), () => 0), think: { fn: think, engine: null, referenceDate: '2023-05-30' }, prompt: null, countTokens: null });
     expect(seen).toEqual([{ question: 'When did I move?', model: 'anthropic:claude-sonnet-5-5', modelExplicit: true, remote: false, referenceDate: '2023-05-30' }]);
     expect(row.qa_reference_date).toBe('2023-05-30');
+    // A gbrain build before referenceDate (0.60.88) ignores it and reports no temporal context, so the row claims no date.
+    const older = async () => ({ answer: 'You moved in May 2023.', synthesis_status: 'ok', usage: { input_tokens: 10, output_tokens: 2 } });
+    const old = await readAndJudge({ benchmark: 'lme-s', qa: qa({ mode: 'think' }), q, chat: new ChatClient(tmp(), () => 0), think: { fn: older, engine: null, referenceDate: '2023-05-30' }, prompt: null, countTokens: null });
+    expect(old.qa_score).toBe(1);
+    expect(old.qa_reference_date).toBeUndefined();
   });
 
   test('the think reference date is the question date, else the latest session date in any dataset format', () => {

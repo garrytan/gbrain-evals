@@ -1148,7 +1148,7 @@ export const CHAT_PRICE_OVERRIDES: Record<string, ChatPrice> = {
   'openai:gpt-6-astra': { input: 10, output: 50, cache_read: 1, cache_write: 12.5, long: { above_input_tokens: 272_000, input: 20, output: 75, cache_read: 2, cache_write: 25 } },
   // docs.particle.ai/models and /usage-billing, checked 2026-10-31: peak list rates, reasoning tokens billed as output
   // inside completion_tokens, and a 32,000-token output cap when a request sends no limit. Off-peak (20:30-04:00 New York)
-  // bills half and is settled here at the peak rates; hosted web search ($0.0025 a search) is not in usage and not priced.
+  // bills half and is settled here at the peak rates. Hosted web search ($0.0025 a search) is not in usage, so priceRequest refuses it.
   'particle:particle-1': { input: 0.25, output: 1.0, cache_read: 0.03, max_output: 32_000 },
 };
 
@@ -1227,6 +1227,9 @@ export function priceRequest(url: string, body: unknown, options: PriceOptions =
   const b = (body ?? {}) as Record<string, unknown>;
   const model = typeof b.model === 'string' ? b.model : '';
   if (!model) throw new BudgetExceededError(`paid request to ${url} names no model; cannot reserve its cost`);
+  if (provider === 'particle' && b.tool_choice !== 'none' && Array.isArray(b.tools) && b.tools.some(t => (t as { type?: unknown } | null)?.type === 'web_search')) {
+    throw new BudgetExceededError(`${url} turns on Particle's hosted web search, billed at $0.0025 a search outside usage, so the ledger can neither reserve nor settle it; send the request without the web_search tool or with tool_choice "none"`);
+  }
   const path = new URL(url).pathname;
   if (provider === 'typesafe') {
     // System One and the Jev reranker bill input tokens only, at gbrain's own TypeSafe price (embedding-pricing.ts).
@@ -1253,9 +1256,9 @@ export function priceRequest(url: string, body: unknown, options: PriceOptions =
   const chained = typeof b.previous_response_id === 'string'
     ? options.chainContextTokens?.(b.previous_response_id) ?? UNKNOWN_CHAIN_CONTEXT_TOKENS : 0;
   const inputTokens = Math.ceil((textBytes([b.system, b.instructions, b.messages, b.prompt, b.input]) + toolBytes) / 3) + 16 + chained;
-  const listed = CHAT_PRICE_OVERRIDES[`${provider}:${model}`] ?? HARNESS_CHAT_PRICES[`${provider}:${model}`];
+  const price = chatPrice(`${provider}:${model}`);
   const maxOutputTokens = [b.max_tokens, b.max_completion_tokens, b.max_output_tokens].find(v => typeof v === 'number') as number | undefined
-    ?? listed?.max_output ?? DEFAULT_MAX_OUTPUT_TOKENS;
+    ?? (price && 'max_output' in price ? price.max_output : undefined) ?? DEFAULT_MAX_OUTPUT_TOKENS;
   if (provider === 'openrouter') {
     const maxPrice = (b.provider as { max_price?: { prompt?: number; completion?: number } } | undefined)?.max_price;
     if (typeof maxPrice?.prompt !== 'number' || typeof maxPrice.completion !== 'number') {
@@ -1263,7 +1266,6 @@ export function priceRequest(url: string, body: unknown, options: PriceOptions =
     }
     return { provider, model, kind: 'chat', input: maxPrice.prompt, output: maxPrice.completion, inputTokens, maxOutputTokens };
   }
-  const price = chatPrice(`${provider}:${model}`);
   if (!price) throw new BudgetExceededError(`no chat price for ${provider}:${model}; cannot reserve its cost. Look up the provider's current list price for ${model} (input, output and cache rates per million tokens) and register it in CHAT_PRICE_OVERRIDES in eval/runner/budget-ledger.ts as '${provider}:${model}' with the date you checked, then rerun; never guess a rate`);
   // OpenAI caches automatically; Anthropic writes its cache only where a request sets cache_control.
   const cacheWritePremium = price.cache_write !== undefined && price.cache_write > price.input
@@ -1520,8 +1522,9 @@ export function installPaidRequestGuard(run: BudgetRun, options: { fetchImpl?: t
     const url = input instanceof Request ? input.url : String(input);
     const batchKind = batchRequestKind(url, init?.method ?? (input instanceof Request ? input.method : 'GET'));
     if (batchKind === 'free') return send(input, init);
+    const direct: RequestInit = { ...init, redirect: 'error' };
     if (batchKind === 'submission') {
-      if (batchLaneScope.getStore()) return send(input, init);
+      if (batchLaneScope.getStore()) return send(input, direct);
       state.exhausted = true;
       throw new BudgetExceededError(`batch submission to ${url} did not come through the batch lane; submit batches with eval/runner/batch/ so the ledger reserves their worst case first`);
     }
@@ -1537,7 +1540,7 @@ export function installPaidRequestGuard(run: BudgetRun, options: { fetchImpl?: t
           throw new BudgetExceededError(`${protocol}//${hostname} is not a host the ledger can price, so a request to it during a paid run could spend outside the cap and leave no record; `
             + 'register its provider in PAID_HOSTS and its list prices in CHAT_PRICE_OVERRIDES in eval/runner/budget-ledger.ts, or send it through a loopback metering proxy');
         }
-        return send(input, init);
+        return send(input, direct);
       }
       const allowance = allowanceScope.getStore();
       if (allowance) {
@@ -1545,7 +1548,7 @@ export function installPaidRequestGuard(run: BudgetRun, options: { fetchImpl?: t
         const held = reservationUsd(price);
         allowance.hold(held, `${price.provider}:${price.model} ${price.kind}`);
         let res: Response;
-        try { res = await send(input, init); }
+        try { res = await send(input, direct); }
         catch (error) { allowance.charge(held, null); throw error; }
         allowance.charge(held, await measure(price, res));
         return res;
@@ -1556,7 +1559,7 @@ export function installPaidRequestGuard(run: BudgetRun, options: { fetchImpl?: t
       throw error;
     }
     let response: Response;
-    try { response = await send(input, init); }
+    try { response = await send(input, direct); }
     catch (error) { run.settle(id, null); throw error; }
     run.settle(id, await measure(price, response));
     return response;

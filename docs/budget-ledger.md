@@ -56,7 +56,8 @@ If a settled cost is still above its reservation, the difference is recorded as 
 - Another process holding the ledger's write lock for 20 s makes a reservation refuse rather than wait forever.
 - A file that is not a SQLite ledger, or that SQLite cannot read, refuses with the `verify` command.
 - A ledger file replaced while a runner is open (a restore from backup) is reopened before the next write; that runner's run then is not in the new file, and it refuses.
-- While a paid run is open, a request to a host the ledger cannot price (neither a listed paid provider nor loopback) is refused before it is sent, and the runner stops scheduling paid work. Register the provider host and its list prices in `eval/runner/budget-ledger.ts`, or send the request through a loopback metering proxy.
+- While a paid run is open, a request to a host the ledger cannot price (neither a listed paid provider nor loopback) is refused before it is sent, and the runner stops scheduling paid work. Register the provider host and its list prices in `eval/runner/budget-ledger.ts`, or send the request through a loopback metering proxy. A guarded request does not follow redirects, so an admitted host cannot hand it on to another one.
+- A Particle request that turns on hosted web search (`tools: [{"type": "web_search"}]` without `tool_choice: "none"`) is refused: each search bills $0.0025 outside the usage the ledger settles from.
 
 ## Event-loop lag in every receipt
 

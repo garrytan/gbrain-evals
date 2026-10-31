@@ -148,7 +148,7 @@ export interface MemoryQaRow {
   qa_usage_missing?: number;
   /** The final replicate's full answer; every replicate's answer is in qa_receipts. */
   qa_answer?: string;
-  /** The referenceDate passed to gbrain think (YYYY-MM-DD); absent when neither the question nor a session has a date. */
+  /** The reference date gbrain think reports it answered against (YYYY-MM-DD): the question date, else the latest session date, else the run date; absent when the gbrain build predates referenceDate (0.60.88) and reports none. */
   qa_reference_date?: string;
   /** One usage-receipt/v1 record per attempted reader, think and judge invocation, every replicate. */
   qa_receipts?: UsageReceipt[];
@@ -366,6 +366,7 @@ type ThinkFn = (engine: unknown, o: Record<string, unknown>) => Promise<{
   answer: string; synthesis_status?: string; modelUsed?: string;
   usage?: { input_tokens: number; output_tokens: number } | null;
   evidence_delivery?: { tokens_delivered: number; tokenizer: string };
+  temporal?: { reference_date: string };
 }>;
 
 /**
@@ -382,6 +383,7 @@ export async function readAndJudge(p: {
   const scores: number[] = [];
   let answer = '';
   let trap = 0;
+  let referenceDate: string | undefined;
   try {
     for (let r = 0; r < p.qa.runs; r++) {
       if (p.think) {
@@ -394,6 +396,7 @@ export async function readAndJudge(p: {
           throw e;
         }
         answer = res.answer ?? '';
+        referenceDate = res.temporal?.reference_date;
         const d = res.evidence_delivery;
         receipts.push(receipt({ ...base, response_model: res.modelUsed ?? null, status: 'ok', error: null, finish: thinkFinish(res.synthesis_status), finish_raw: res.synthesis_status ?? null,
           answer, usage: normalizeUsage('gbrain-think', res.usage), usage_raw: res.usage ?? null, delivered: d ? { tokenizer: d.tokenizer, tokens: d.tokens_delivered } : null }));
@@ -414,7 +417,7 @@ export async function readAndJudge(p: {
     qa_score: scores.reduce((x, y) => x + y, 0) / scores.length, qa_scores: scores, qa_runs: scores.length, ...(p.q.trap ? { qa_trap: trap / scores.length } : {}),
     ...(missing ? { qa_usage_missing: missing } : { qa_input_tokens: mean(answers.map(x => x.usage!.input_total)), qa_output_tokens: mean(answers.map(x => x.usage!.output_total)) }),
     ...(answers.every(x => x.delivered) ? { qa_delivered_tokens: mean(answers.map(x => x.delivered!.tokens)) } : {}),
-    qa_answer: answer, qa_receipts: receipts, ...(p.think?.referenceDate ? { qa_reference_date: p.think.referenceDate } : {}),
+    qa_answer: answer, qa_receipts: receipts, ...(referenceDate ? { qa_reference_date: referenceDate } : {}),
   };
 }
 
