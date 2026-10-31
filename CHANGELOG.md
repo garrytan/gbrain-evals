@@ -10,6 +10,22 @@ This records what each gbrain-evals release changed and what its measurements me
 - **The sealed-results report now carries the equivalence check of the build that shipped as gbrain#6066** ([section](docs/benchmarks/2026-10-09-memory-proof-wave-sealed-results.md#equivalence-of-the-shipped-build)). On the public BEAM dev conversations, retrieval at `d7d7686de` stays inside the same-build noise of `d7467d1cf` at 100k, 500k and 1M. End to end, results are within noise except that re-ingesting extracts a new fact set, so the combined rows also measure a new extraction. Its receipts were already on main; the README's equivalence claim now links this section.
 - Both sections and the `facts_tokens` 0 receipts were written on October 10 on branch `capy/mpw-harness`, which never had a pull request. The receipts land byte for byte from that branch. The sections land as written with three edits. They point to wave 2's step 0, they say "the verdict on 8 questions" where the facts-block check said "8 answers", and they quote the `equivalence_report.py` command on a copy of the directory, because the script rewrites `report.json` in place and cannot regenerate its `extract_stale` fields. `docs/receipts-manifest.json` gains six entries that pin their hashes and quoted values, and the re-judge ledger status, which records a Capy scratch path, joins `test/eval/fixtures/historical-capy-local-paths.json`. Nothing was rerun.
 
+### The October 7 10x memory advantage plan lands on main as a superseded record
+
+- **Eleven reports and preregistrations on main cite a plan that main didn't have.** Three reports and eight
+  preregistrations from the plan's waves 0 to 5 name `docs/plans/2026-10-07-10x-memory-advantage/PLAN.md`, the branch
+  `capy/10x-memory-advantage-plan` or a link into it. The plan lived only on that branch, whose pull request, #97, was
+  closed unmerged on 2026-10-29. The folder (the plan, its five audits, six reviews and the eng test plan) now lands at
+  that path from the branch's last commit, `2b6ff9af` (2026-10-17). Its README opens with a dated banner: the plan
+  is superseded, and no wave, cap or gate runs from it. Seven files are byte for byte the branch's. In the other six,
+  each of the 118 external product names is replaced by its kind id in square brackets (`[ext-extract-first]`), as
+  the name guard requires outside `docs/comparison-systems.md`; nothing else changed, and the branch keeps the
+  original wording.
+- None of the eleven citations changes, and the branch stays. The preregistrations are frozen (each changes only by
+  an amendment appended at its end, and some are bound by recorded SHA-256 hashes), and every citation already
+  resolves: the path now exists on main, and the branch keeps every revision of the plan as each report read it.
+- The [docs index](docs/README.md) links the folder from its route table.
+
 ## [0.10.136] - 2026-10-29
 
 ### Spring-loaded skills for gbrain GBRA-194 measured
