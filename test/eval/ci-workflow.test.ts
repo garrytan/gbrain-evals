@@ -10,8 +10,8 @@ function runLines(): string[] {
 
 describe('CI workflow gates (audit C5 to C8)', () => {
   test('tsc gates run unfiltered, so dependency diagnostics fail too', () => {
-    expect(runLines()).toContain('bunx tsc --noEmit');
-    expect(runLines()).toContain('bunx tsc --noEmit -p tsconfig.scripts.json');
+    expect(runLines()).toContain('bun run typecheck');
+    expect(pkg.scripts.typecheck).toBe('NODE_OPTIONS=--max-old-space-size=8192 tsc --noEmit && tsc --noEmit -p tsconfig.scripts.json');
     expect(workflow).not.toContain('node_modules/');
     expect(workflow).not.toMatch(/tsc[^\n]*\|/);
   });
@@ -55,6 +55,12 @@ describe('CI workflow gates (audit C5 to C8)', () => {
   test('the Bun version CI installs supports --shard', () => {
     const version = /bun-version: (\d+)\.(\d+)\.(\d+)/.exec(workflow)!.slice(1).map(Number);
     expect(version[0] * 1e6 + version[1] * 1e3 + version[2]).toBeGreaterThanOrEqual(1_003_014);
+  });
+
+  test('every job installs the Bun version package.json requires', () => {
+    const versions = [...workflow.matchAll(/bun-version: (\S+)/g)].map(m => m[1]);
+    expect(versions.length).toBeGreaterThan(0);
+    expect([...new Set(versions)]).toEqual([pkg.engines.bun.replace(/^>=/, '')]);
   });
 });
 
