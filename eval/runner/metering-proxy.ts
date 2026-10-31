@@ -34,7 +34,9 @@
  * `POST /__proxy/bind {slot, key}`, `POST /__proxy/unbind {slot}` and
  * `POST /__proxy/finalize {key}`. With `--control-token` (or
  * SHOOTOUT_PROXY_CONTROL_TOKEN) these need the `x-proxy-control` header, so a
- * vendor container cannot move charges.
+ * vendor container cannot move charges. `GET /__proxy/status` carries the
+ * token's sha256 as `control_sha256`, so the process that spawned this proxy can
+ * tell it from another one answering on the same port.
  *
  * Standalone (lease mode):
  *   bun eval/runner/metering-proxy.ts --listen 0.0.0.0:8787 --budget-ledger <file> --lease-usd <n> --run-id <id>
@@ -92,7 +94,7 @@
  *     `socket connection closed unexpectedly` failed temporal-graph c9's
  *     sessions). A timeout is never retried.
  */
-import { timingSafeEqual } from 'node:crypto';
+import { createHash, timingSafeEqual } from 'node:crypto';
 import { appendFileSync, readFileSync } from 'node:fs';
 import { BudgetExceededError, BudgetRun, ledgerStatus, priceRequest, reservationUsd, sseUsage, usageCost, type BudgetAllowance } from './budget-ledger.ts';
 
@@ -463,7 +465,7 @@ export class MeteringProxy {
     const p = this.options.policy;
     const run = p ? ledgerStatus({ ledgerPath: p.lease.ledgerPath, runId: p.lease.runId }).run : null;
     const unattributed = Object.fromEntries(this.unattributed);
-    return { mode: p ? 'lease' : 'in-process', run_id: p?.lease.runId ?? null, lease_usd: run?.budget_usd ?? p?.lease.budgetUsd ?? null, committed_usd: run?.committed_usd ?? null,
+    return { mode: p ? 'lease' : 'in-process', run_id: p?.lease.runId ?? null, control_sha256: this.options.controlToken ? createHash('sha256').update(this.options.controlToken).digest('hex') : null, lease_usd: run?.budget_usd ?? p?.lease.budgetUsd ?? null, committed_usd: run?.committed_usd ?? null,
       max_output_tokens: p ? p.maxOutputTokens ?? DEFAULT_MAX_OUTPUT_TOKENS : null, ...this.counts,
       ...(p ? { billed_usd: this.totals.billed_usd, reserved_unsettled_usd: this.totals.reserved_unsettled_usd, unattributed_background: unattributed,
         route_caps: p.routeCaps ?? null, admission: p.admission ? { limits: p.admission.limits, ...p.admission.stats } : null, cell_token: !!this.options.cellToken, trust_local: !!this.options.trustLocal } : {}) };

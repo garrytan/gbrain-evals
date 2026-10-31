@@ -1,7 +1,7 @@
 # Learn, evaluate, and extend gbrain
 
 This index lists every published report by the question it answers. It describes the repository as it stands:
-gbrain-evals v0.10.137, with gbrain master `7a6bdd357` (v0.60.454.0) as the product under test. Results measured at
+gbrain-evals v0.10.138, with gbrain master `7a6bdd357` (v0.60.454.0) as the product under test. Results measured at
 other gbrain commits name that commit in their report. Everything above [Changelog](#changelog) is current; the
 changelog at the bottom records how this index changed.
 
@@ -62,6 +62,7 @@ describe current behavior first, then the older work behind a decision.
 | Do Voyage's newer rerankers make gbrain's rerank cheaper or faster without losing recall? | [October 13 reranker addendum, GBRA-86](benchmarks/2026-10-13-rerank3-addendum-preregistration.md): `rerank-3-lite` at the shipped 50 × 1,400 shape passes and cuts rerank cost 60% with about the same latency; fewer candidates is faster but loses recall |
 | Why did the last-session verbatim probe miss, and does the fix change recall? | [October 9 verbatim-probe paired verdict, gbrain #6391 (`f05943e65`)](benchmarks/2026-10-09-verbatim-probe-preregistration.md): the misses were reads the probe classified as degraded; after the fix all 500 probes read clean (was 429), strict recall@10 unchanged at 496 of 500 |
 | How well does scoped vector search hold up at 1M to 2M chunks, and what fixes it? | [October 9 HNSW scale mirror, from gbrain #6380 (`2e84d234e`)](benchmarks/2026-10-09-hnsw-scale.md): pooled attempts that scan 20,000 tuples lift random 10% scope recall@50 from 0.52 to 0.77 to 0.96 to 0.99 at +16 to 36 ms p50; chunk statistics refreshed after bulk writes keep the HNSW plan; topic-coherent selective sources remain a gap |
+| What does a shared agent acting for an audience cost, and does it lose recall? | [October 28 shared-agent audience cost](benchmarks/2026-10-28-shared-agent-audience.md), re-checked October 31 on train M (gbrain #8134): calls without an audience unchanged (within plus or minus 1% of the parent; train M within -1.3 to +0.3% of folder rules); an audience adds 0.1 to 2.2 ms over the member and keeps its recall (hit@10 1.0 on train M) |
 | Does relaxed HNSW scan order help filtered vector search on Postgres, and what does it cost? | [October 7 fix wave 11 mirror, W6.3 from gbrain `capy/fix-wave-11`](benchmarks/2026-10-07-hnsw-relaxed-order.md): on real 1024- and 1536-dimension embeddings, recall@10 at a 50% source filter rises 2.1 and 1.7 points with latency unchanged within noise, so `relaxed_order` ships default-on |
 | Does gbrain link Korean names without matching inside longer words? | [October 5 Hangul mention boundaries](benchmarks/2026-10-05-hangul-mention-boundaries.md) |
 | Does relationship retrieval still help when the question is reworded? | [September 29 paraphrase check](benchmarks/2026-09-29-relational-paraphrase.md) |
@@ -230,6 +231,10 @@ and [repository writing guide](../CLAUDE.md). The
 procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
+
+### 2026-10-31: Opening names v0.10.138
+
+The opening names v0.10.138 (was v0.10.137), which adds the [shared-agent audience cost report](benchmarks/2026-10-28-shared-agent-audience.md) for gbrain #7852, re-checked on train M (#8134). One row joins the engineering table, after the HNSW scale row; no existing row changed.
 
 ### 2026-10-31: Opening names v0.10.137
 
