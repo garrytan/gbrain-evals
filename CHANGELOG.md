@@ -2,7 +2,14 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
-## [Unreleased]
+## [0.10.137] - 2026-10-31
+
+### Per-member read access: search cost on a brain with no restrictions
+
+- **gbrain's per-member read access, as it ships in train M (gbrain PR #8134: #7812 readers, #7842 folder rules, #7852 shared-agent audiences), costs hybrid search 1.5 to 1.9% and keyword-only search 2.2% on a brain with no restrictions** ([report](docs/benchmarks/2026-10-28-member-read-access.md)). Measured at `244f30dd` against master `922ba1a9` on one Ubicloud VM, 10 runs per side with the order alternated, raw JSON committed. That is the median of per-run p50s, the method the 2% gate was set with; the median of each round's paired ratio gives 2.2 to 2.6% (hybrid) and 2.7 to 2.8% (keyword). GBRA-108 accepted train M on the gate method.
+- **Run order shifts the result by about a point.** An 8 + 8 run with the train always first read +4.1 to +4.7% for hybrid; a run with master always first read +0.1 to +1.1%. The #7812 runs (October 28, at `f1c39714` against `8e9cd64d`: hybrid +1.5 to 1.6%, keyword +3.2 to 3.9%) always ran the branch first, so they likely read a point or so high.
+- **Where the keyword cost comes from.** Ablations on #7812 put it on reading one `pages` column per matched row: replacing the predicate with `TRUE` cuts the cost to +0.5%, and dropping the index changes nothing. Removing the cost would leave a one-request window at a brain's first restricted page, so GBRA-108 accepted it with the fail-safe kept. Folder rules and shared-agent audiences add no cost of their own (a master, A1, A2, train run within 2.6 points of each other).
+- **Restricted brains.** Members, and shared agents naming those members, get every page they may read (hit@10 1.0 at 20% and 80% restricted).
 
 ### The October 7 10x memory advantage plan lands on main as a superseded record
 
