@@ -5,9 +5,12 @@
  * unpriced models refused before any lease, the executor resolved explicitly),
  * plan (cells, waves, blocks, commands), run's custody and local refusals,
  * dry run, and a launcher that exits non-zero on a failed cell and 4 on a cap.
- * Keyless: no provider, Docker or VM is contacted.
+ * Keyless: no provider, Docker or VM is contacted. A `docker` first on the
+ * PATH doctor is given always fails, so its daemon check answers at once and
+ * no test waits on a cold Docker daemon (one took over 5 s on a CI runner,
+ * 2026-10-28).
  */
-import { afterAll, afterEach, beforeEach, describe, expect, test } from 'bun:test';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from 'bun:test';
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
@@ -19,7 +22,13 @@ import type { LaunchContext } from '../../eval/runner/shootout-cell.ts';
 
 const ROOT = resolve(import.meta.dir, '../..');
 const tmp = mkdtempSync(join(tmpdir(), 'scoreboard-cli-'));
-afterAll(() => { closeLedgers(); rmSync(tmp, { recursive: true, force: true }); });
+const PATH = process.env.PATH;
+const noDocker = join(tmp, 'no-docker');
+mkdirSync(noDocker);
+writeFileSync(join(noDocker, 'docker'), '#!/bin/sh\nexit 1\n');
+chmodSync(join(noDocker, 'docker'), 0o755);
+beforeAll(() => { process.env.PATH = `${noDocker}:${PATH}`; });
+afterAll(() => { closeLedgers(); rmSync(tmp, { recursive: true, force: true }); process.env.PATH = PATH; });
 const MISSING = join(tmp, 'not-landed.ts');
 const cli = (args: string[], env: Record<string, string | undefined> = {}) => {
   const p = Bun.spawnSync([process.execPath, 'eval/runner/scoreboard-cli.ts', ...args], { cwd: ROOT, env: { ...process.env, ...env } });
@@ -148,13 +157,13 @@ describe('doctor', () => {
     const drive = join(tmp, '.capy/drive/x/ubi-runner.sh');
     mkdirSync(join(tmp, '.capy/drive/x'), { recursive: true });
     writeFileSync(drive, '');
-    const r = await doctor(['--for', 'run'], { UBI_RUNNER: drive, OPENAI_API_KEY: 'x' });
+    const r = await doctor(['--for', 'run'], { PATH: process.env.PATH, UBI_RUNNER: drive, OPENAI_API_KEY: 'x' });
     const by = Object.fromEntries(r.checks.map(c => [c.id, c]));
     expect(r.ok).toBe(false);
     expect(by.executor).toMatchObject({ ok: false, code: 'RUNNER_UNRESOLVED' });
     expect(by['ubi-owner']).toMatchObject({ ok: false, code: 'OWNER_UNSET' });
     expect(by['ubicloud-token']).toMatchObject({ ok: false });
-    const ok = await doctor(['--for', 'run'], { OPENAI_API_KEY: 'x', UBI_OWNER: 'gbra49', UBICLOUD_API_TOKEN: 'x' });
+    const ok = await doctor(['--for', 'run'], { PATH: process.env.PATH, OPENAI_API_KEY: 'x', UBI_OWNER: 'gbra49', UBICLOUD_API_TOKEN: 'x' });
     expect(Object.fromEntries(ok.checks.map(c => [c.id, c])).executor).toMatchObject({ ok: true, detail: expect.stringContaining('scripts/ubicloud/ubi-runner.sh') });
     expect(priceProbe('voyage:rerank-2.5').url).toContain('/rerank');
   });
@@ -172,7 +181,7 @@ describe('doctor', () => {
   });
 
   test('sealed preflight needs the custodian host', async () => {
-    const r = await doctor(['--for', 'sealed'], { GBRAIN_EVALS_CUSTODY_LOG: '/nope/custody.log' });
+    const r = await doctor(['--for', 'sealed'], { PATH: process.env.PATH, GBRAIN_EVALS_CUSTODY_LOG: '/nope/custody.log' });
     expect(r.checks.find(c => c.id === 'custody')).toMatchObject({ ok: false, code: 'CUSTODY_REQUIRED' });
   });
 });
