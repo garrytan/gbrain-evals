@@ -2,6 +2,31 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.137] - 2026-10-31
+
+### Per-member read access: search cost on a brain with no restrictions
+
+- **gbrain's per-member read access, as it ships in train M (gbrain PR #8134: #7812 readers, #7842 folder rules, #7852 shared-agent audiences), costs hybrid search 1.5 to 1.9% and keyword-only search 2.2% on a brain with no restrictions** ([report](docs/benchmarks/2026-10-28-member-read-access.md)). Measured at `244f30dd` against master `922ba1a9` on one Ubicloud VM, 10 runs per side with the order alternated, raw JSON committed. That is the median of per-run p50s, the method the 2% gate was set with; the median of each round's paired ratio gives 2.2 to 2.6% (hybrid) and 2.7 to 2.8% (keyword). GBRA-108 accepted train M on the gate method.
+- **Run order shifts the result by about a point.** An 8 + 8 run with the train always first read +4.1 to +4.7% for hybrid; a run with master always first read +0.1 to +1.1%. The #7812 runs (October 28, at `f1c39714` against `8e9cd64d`: hybrid +1.5 to 1.6%, keyword +3.2 to 3.9%) always ran the branch first, so they likely read a point or so high.
+- **Where the keyword cost comes from.** Ablations on #7812 put it on reading one `pages` column per matched row: replacing the predicate with `TRUE` cuts the cost to +0.5%, and dropping the index changes nothing. Removing the cost would leave a one-request window at a brain's first restricted page, so GBRA-108 accepted it with the fail-safe kept. Folder rules and shared-agent audiences add no cost of their own (a master, A1, A2, train run within 2.6 points of each other).
+- **Restricted brains.** Members, and shared agents naming those members, get every page they may read (hit@10 1.0 at 20% and 80% restricted).
+
+### The October 7 10x memory advantage plan lands on main as a superseded record
+
+- **Eleven reports and preregistrations on main cite a plan that main didn't have.** Three reports and eight
+  preregistrations from the plan's waves 0 to 5 name `docs/plans/2026-10-07-10x-memory-advantage/PLAN.md`, the branch
+  `capy/10x-memory-advantage-plan` or a link into it. The plan lived only on that branch, whose pull request, #97, was
+  closed unmerged on 2026-10-29. The folder (the plan, its five audits, six reviews and the eng test plan) now lands at
+  that path from the branch's last commit, `2b6ff9af` (2026-10-17). Its README opens with a dated banner: the plan
+  is superseded, and no wave, cap or gate runs from it. Seven files are byte for byte the branch's. In the other six,
+  each of the 118 external product names is replaced by its kind id in square brackets (`[ext-extract-first]`), as
+  the name guard requires outside `docs/comparison-systems.md`; nothing else changed, and the branch keeps the
+  original wording.
+- None of the eleven citations changes, and the branch stays. The preregistrations are frozen (each changes only by
+  an amendment appended at its end, and some are bound by recorded SHA-256 hashes), and every citation already
+  resolves: the path now exists on main, and the branch keeps every revision of the plan as each report read it.
+- The [docs index](docs/README.md) links the folder from its route table.
+
 ## [0.10.136] - 2026-10-29
 
 ### Spring-loaded skills for gbrain GBRA-194 measured
