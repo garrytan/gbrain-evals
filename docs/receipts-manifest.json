@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "description": "Map from published claims to their saved evidence. The manifest test checks artifact paths, SHA-256 hashes, and declared JSON-pointer values. It does not parse report prose or independently validate every scorer. Separate golden tests and recount scripts are named where available. Entries marked disclosed-gap identify missing evidence; a fresh run cannot restore a missing historical receipt.",
-  "updated": "2026-10-25",
+  "updated": "2026-10-31",
   "entries": [
     {
       "claim_id": "graph-backend-2026-10-17",
@@ -7035,6 +7035,160 @@
       "golden_test": "test/eval/n14-large-page-fidelity.test.ts: pinned 2 MB ledger hash, scorer, mutation suite and Amendment 2 to 6 tests",
       "status": "covered",
       "note": "N14 run at large pages Wave B PR 4 (gbrain 7a6bdd35, v0.60.454.0, default config, exploratory), Postgres 16.15, 100mib to 260mib, gbrain-evals 882eb72 (clean tree), native arm through append_page and upload sessions (Amendments 5 and 6), keyword search and a counting embedder, lifecycle on, $0."
+    },
+    {
+      "claim_id": "mpw-lme-facts0-shard1-cell",
+      "readme_anchor": "docs/benchmarks/2026-10-09-memory-proof-wave-sealed-results.md: Exploratory, post hoc: removing the facts block alone closes none of that gap on one shard",
+      "artifact_path": "docs/benchmarks/2026-10-10-memory-proof-wave-lme-facts0/cells/longmemeval-s-gbrain-rag-a08ee2bbc80d/cell.json",
+      "artifact_sha256": "ab36e008c12efd62cf00086015702b3db3a370657b20ca9bb9e98cc7af794a95",
+      "status": "covered",
+      "expected": {
+        "/identity/pins/gbrain/loaded_git_head": "d7467d1cf822442b965e435aa6979133edc96a72",
+        "/identity/provider_config/lane": "combined",
+        "/identity/provider_config/facts_tokens": 0,
+        "/identity/provider_config/token_budget": 6300,
+        "/identity/target_tokens": 8000,
+        "/identity/models/answer": "gemini:gemini-3.8-flash",
+        "/identity/models/judge": "gemini:gemini-3.5-flash"
+      },
+      "note": "Exploratory, post hoc, decides nothing: wave 1 LongMemEval-S combined shard 1 (100 histories) run again on 2026-10-10 with facts_tokens 0 and the page query budget left at 6,300 tokens, on a fresh ingest at the freeze build d7467d1cf. The spec has the same content as eval/harness-provider/cells/posthoc/longmemeval-s-gbrain-combined-shard1-facts0.json. The receipts were written on branch capy/mpw-harness and copied to main byte for byte on 2026-10-31."
+    },
+    {
+      "claim_id": "mpw-lme-facts0-shard1-summary",
+      "readme_anchor": "docs/benchmarks/2026-10-09-memory-proof-wave-sealed-results.md: Exploratory, post hoc: removing the facts block alone closes none of that gap on one shard",
+      "artifact_path": "docs/benchmarks/2026-10-10-memory-proof-wave-lme-facts0/cells/longmemeval-s-gbrain-rag-a08ee2bbc80d/summary.json",
+      "artifact_sha256": "eb5611e8028c2165fc4b420816274a0cd52de443101249327d8822f51ed261b2",
+      "status": "covered",
+      "expected": {
+        "/score/scheduled": 100,
+        "/score/correct": 71,
+        "/score/counts/abstention": 16,
+        "/score/complete": true,
+        "/delivered_context/mean": 6331.7,
+        "/delivered_context/ok": false,
+        "/gates/delivered_context": false
+      },
+      "note": "In-cell judge counts for the facts_tokens 0 cell. With no facts block it delivers a mean of 6,332 tokens and fails the 8,000-token context gate. The report compares lanes on the joint re-judge (mpw-lme-facts0-shard1-rejudge), which gives the same 71 and 16."
+    },
+    {
+      "claim_id": "mpw-lme-facts0-shard1-rejudge",
+      "readme_anchor": "docs/benchmarks/2026-10-09-memory-proof-wave-sealed-results.md: Exploratory, post hoc: removing the facts block alone closes none of that gap on one shard",
+      "artifact_path": "docs/benchmarks/2026-10-10-memory-proof-wave-lme-facts0/rejudge/analysis.json",
+      "artifact_sha256": "a817d1448364ed0c4f64c3d6d60801c6096e41943fb0d8bb4d632edbce7a0d65",
+      "status": "covered",
+      "expected": {
+        "/cells/facts0 (new store)/correct": 71,
+        "/cells/facts0 (new store)/abstentions": 16,
+        "/cells/combined wave-1 (shard 1)/correct": 71,
+        "/cells/combined wave-1 (shard 1)/abstentions": 14,
+        "/cells/raw wave-1/correct": 80,
+        "/cells/raw wave-1/abstentions": 11,
+        "/cells/comparator wave-1/correct": 83,
+        "/cells/comparator wave-1/abstentions": 12,
+        "/by_type/single-session-user/facts0 (new store)": [
+          52,
+          6,
+          44
+        ],
+        "/by_type/single-session-user/combined wave-1 (shard 1)": [
+          52,
+          5,
+          46
+        ],
+        "/by_type/single-session-user/raw wave-1": [
+          52,
+          4,
+          49
+        ],
+        "/by_type/multi-session/facts0 (new store)": [
+          43,
+          5,
+          22
+        ],
+        "/by_type/multi-session/combined wave-1 (shard 1)": [
+          43,
+          4,
+          20
+        ],
+        "/by_type/multi-session/raw wave-1": [
+          43,
+          2,
+          26
+        ],
+        "/by_type/single-session-user_abs/facts0 (new store)": [
+          5,
+          5,
+          5
+        ],
+        "/by_type/single-session-user_abs/combined wave-1 (shard 1)": [
+          5,
+          5,
+          5
+        ],
+        "/by_type/single-session-user_abs/raw wave-1": [
+          5,
+          5,
+          5
+        ],
+        "/gap_closed/gap_points_shard1": 9,
+        "/gap_closed/facts0_minus_orig_combined": 0,
+        "/gap_closed/facts0_minus_samestore_1800": null
+      },
+      "note": "Joint blinded re-judge (gemini-3.5-flash, seed 20261005) of the facts_tokens 0 answers with the wave 1 shard 1 combined, raw and comparator answers. by_type values are [questions, abstained, correct]. Recounted on 2026-10-31 from the judge records in rejudge/receipt.tgz: 71, 71, 80 and 83 correct, 16, 14, 11 and 12 abstentions, and against wave 1 combined the facts_tokens 0 answers gain 4 questions and lose 4. facts0_minus_samestore_1800 is null because the planned same-store 1,800-token cell was refused by its ledger cap."
+    },
+    {
+      "claim_id": "mpw-lme-facts0-cell-ledger",
+      "readme_anchor": "docs/benchmarks/2026-10-09-memory-proof-wave-sealed-results.md: Exploratory, post hoc: removing the facts block alone closes none of that gap on one shard",
+      "artifact_path": "docs/benchmarks/2026-10-10-memory-proof-wave-lme-facts0/ledger-status.json",
+      "artifact_sha256": "a22d7fe77beb8775c14ee12fe0ba65d9ba6083b8bdae710990168d78cede9105",
+      "status": "covered",
+      "expected": {
+        "/totals/program_cap_usd": 16.16,
+        "/totals/committed_usd": 9.394766155,
+        "/totals/remaining_usd": 6.765233845000001,
+        "/totals/open_reservations_usd": 0,
+        "/runs": 1
+      },
+      "note": "Ledger of the facts_tokens 0 cell, capped at what the approved $90 equivalence check had left ($90 less $73.84). The cell committed $9.39; the $6.77 left was below the $16 budget of the planned same-store cell, which the ledger refused, so only one run is recorded."
+    },
+    {
+      "claim_id": "mpw-lme-facts0-rejudge-ledger",
+      "readme_anchor": "docs/benchmarks/2026-10-09-memory-proof-wave-sealed-results.md: Exploratory, post hoc: removing the facts block alone closes none of that gap on one shard",
+      "artifact_path": "docs/benchmarks/2026-10-10-memory-proof-wave-lme-facts0/rejudge/ledger-status.json",
+      "artifact_sha256": "897a27693d8c7700c89704ae9ef5685b31ec4c964283a823eca0a32e29e420fb",
+      "status": "covered",
+      "expected": {
+        "/totals/program_cap_usd": 1.5,
+        "/totals/committed_usd": 0.2514315,
+        "/totals/open_reservations_usd": 0
+      },
+      "note": "Ledger of the joint re-judge: $0.25 of a $1.50 cap. It records a Capy scratch ledger path, so it is listed in test/eval/fixtures/historical-capy-local-paths.json and kept byte for byte."
+    },
+    {
+      "claim_id": "mpw-equivalence-report",
+      "readme_anchor": "docs/benchmarks/2026-10-09-memory-proof-wave-sealed-results.md: Equivalence of the shipped build",
+      "artifact_path": "docs/benchmarks/2026-10-10-memory-proof-wave-equivalence/report.json",
+      "artifact_sha256": "2e850589228563ffc919ad6879d1f00b4c90a6613bcd066800f1dcc7b9346b7f",
+      "status": "covered",
+      "expected": {
+        "/100k~1combined/answers/r3/baseline/correct": 56,
+        "/100k~1combined/answers/r3/s23/correct": 57,
+        "/500k~1combined/answers/r3/baseline/correct": 100,
+        "/500k~1combined/answers/r3/s23/correct": 100,
+        "/1m~1combined/answers/r3/baseline/correct": 99,
+        "/1m~1combined/answers/r3/s23/correct": 97,
+        "/1m~1combined/context_vs_baseline_answers/r2a/changed": 7,
+        "/1m~1combined/context_vs_baseline_answers/r2b/changed": 11,
+        "/1m~1combined/context_vs_baseline_answers/r3/changed": 140,
+        "/1m~1combined/census/base/totals/facts": 26889,
+        "/1m~1combined/census/new/totals/facts": 27250,
+        "/500k~1combined/census/base/totals/facts": 11625,
+        "/500k~1combined/census/new/totals/facts": 11580,
+        "/1m~1ingest_guard/baseline_ingest_usd": 5.110424005,
+        "/1m~1ingest_guard/new_head_ingest_usd": 5.16438159,
+        "/1m~1ingest_guard/stopped": false
+      },
+      "note": "gbrain#6066 equivalence check, freeze build d7467d1cf against d7d7686de, on the public BEAM dev conversations (2026-10-10). report.json reached main at 95b4e7db; the report section that cites it reached main on 2026-10-31. eval/harness-provider/mpw_tools/equivalence_report.py regenerates every field from the committed receipts except extract_stale, because its extract-stale.log inputs match the *.log ignore rule and were never committed (checked 2026-10-31)."
     }
   ]
 }
