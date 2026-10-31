@@ -1,0 +1,147 @@
+{
+  "kind": "oss-shootout-cells",
+  "schema_version": 1,
+  "system": "gbrain-query",
+  "config": "c8k",
+  "notes": "8k conversion (GBRA-205) on sealed confirmation v2 and its development reading on LongMemEval-S dev100. Every cell is local to the custodian's Mac: eval/runner/budgeted-delivery/c8k-run.sh reserves and launches them with the campaign state inside the custody root (C8K_ROOT), so the development and held-out cells share one ledger and the campaign's $300 cap (Garry, 2026-10-26). Each cell command is a step of the same script; rows, caches, brains and the lease proxy's usage log stay under that root.",
+  "cells": [
+    {
+      "id": "c8k-dev-import",
+      "benchmark": "lme-s",
+      "lease_usd": 4,
+      "local": true,
+      "lease_basis": "estimate $2: the dev100 haystacks (about 12.2M tokens measured by the keyless run) embedded once with text-embedding-3-large ($0.13/M; the proxy reserves at bytes/3)",
+      "command": "bash eval/runner/budgeted-delivery/c8k-run.sh cell dev-import",
+      "pass": [
+        "OPENAI_API_KEY"
+      ],
+      "timeout_hours": 3
+    },
+    {
+      "id": "c8k-dev-extract",
+      "benchmark": "lme-s",
+      "lease_usd": 13,
+      "local": true,
+      "lease_basis": "estimate $5: conversation fact extraction over the dev100 haystacks (about 11,000 segment calls, about 28M input tokens measured keyless) with claude-haiku-5-5, facts embedded, then the safe-chunks repair",
+      "command": "bash eval/runner/budgeted-delivery/c8k-run.sh cell dev-extract",
+      "pass": [
+        "ANTHROPIC_API_KEY",
+        "OPENAI_API_KEY"
+      ],
+      "timeout_hours": 6
+    },
+    {
+      "id": "c8k-dev-freeze",
+      "benchmark": "lme-s",
+      "lease_usd": 2,
+      "local": true,
+      "lease_basis": "estimate $1: about 620 queries (6 arms x 100 plus repeats), query embeddings and Voyage reranks",
+      "command": "bash eval/runner/budgeted-delivery/c8k-run.sh cell dev-freeze",
+      "pass": [
+        "OPENAI_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "timeout_hours": 2
+    },
+    {
+      "id": "c8k-dev-read",
+      "benchmark": "lme-s",
+      "lease_usd": 36,
+      "local": true,
+      "lease_basis": "estimate $25: 600 gpt-4o-2024-08-06 and 600 claude-sonnet-5-5 calls at about 7,400 context tokens",
+      "command": "bash eval/runner/budgeted-delivery/c8k-run.sh cell dev-read",
+      "pass": [
+        "ANTHROPIC_API_KEY",
+        "OPENAI_API_KEY"
+      ],
+      "timeout_hours": 4
+    },
+    {
+      "id": "c8k-dev-score",
+      "benchmark": "lme-s",
+      "lease_usd": 5,
+      "local": true,
+      "lease_basis": "estimate $2: 1,200 gpt-4o-2024-08-06 judge calls (12 answer files x 100)",
+      "command": "bash eval/runner/budgeted-delivery/c8k-run.sh cell dev-score",
+      "pass": [
+        "OPENAI_API_KEY"
+      ],
+      "timeout_hours": 2
+    },
+    {
+      "id": "c8k-import",
+      "benchmark": "custody",
+      "lease_usd": 5,
+      "local": true,
+      "lease_basis": "estimate $1.5: 40 histories of about 143,000 tokens embedded once with text-embedding-3-large",
+      "command": "bash eval/runner/budgeted-delivery/c8k-run.sh cell import",
+      "pass": [
+        "OPENAI_API_KEY"
+      ],
+      "timeout_hours": 3
+    },
+    {
+      "id": "c8k-extract",
+      "benchmark": "custody",
+      "lease_usd": 50,
+      "local": true,
+      "lease_basis": "estimate $25: conversation fact extraction over 40 histories of about 143,000 tokens with the default extraction model",
+      "command": "bash eval/runner/budgeted-delivery/c8k-run.sh cell extract",
+      "pass": [
+        "ANTHROPIC_API_KEY",
+        "OPENAI_API_KEY"
+      ],
+      "timeout_hours": 6
+    },
+    {
+      "id": "c8k-freeze",
+      "benchmark": "custody",
+      "lease_usd": 3,
+      "local": true,
+      "lease_basis": "estimate $1.5: about 1,220 queries (6 arms x 200 plus 20 repeats): query embeddings and Voyage reranks",
+      "command": "bash eval/runner/budgeted-delivery/c8k-run.sh cell freeze",
+      "pass": [
+        "OPENAI_API_KEY",
+        "VOYAGE_API_KEY"
+      ],
+      "timeout_hours": 3
+    },
+    {
+      "id": "c8k-read-sonnet",
+      "benchmark": "custody",
+      "lease_usd": 55,
+      "local": true,
+      "lease_basis": "estimate $30: 1,200 claude-sonnet-5-5 calls (6 arms x 200)",
+      "command": "bash eval/runner/budgeted-delivery/c8k-run.sh cell read-sonnet",
+      "pass": [
+        "ANTHROPIC_API_KEY"
+      ],
+      "timeout_hours": 4
+    },
+    {
+      "id": "c8k-read-frontier",
+      "benchmark": "custody",
+      "lease_usd": 115,
+      "local": true,
+      "lease_basis": "estimate $80: 1,200 claude-opus-5-5 and 1,200 gpt-6.1-sol calls",
+      "command": "bash eval/runner/budgeted-delivery/c8k-run.sh cell read-frontier",
+      "pass": [
+        "ANTHROPIC_API_KEY",
+        "OPENAI_API_KEY"
+      ],
+      "timeout_hours": 6
+    },
+    {
+      "id": "c8k-score",
+      "benchmark": "custody",
+      "lease_usd": 12,
+      "local": true,
+      "lease_basis": "estimate $5: 3,600 gpt-4o-2024-08-06 judge calls (18 answer files x 200)",
+      "command": "bash eval/runner/budgeted-delivery/c8k-run.sh cell score",
+      "pass": [
+        "OPENAI_API_KEY"
+      ],
+      "timeout_hours": 2
+    }
+  ]
+}

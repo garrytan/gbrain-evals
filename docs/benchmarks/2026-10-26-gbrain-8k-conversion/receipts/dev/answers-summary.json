@@ -1,0 +1,62 @@
+{
+  "dev.gpt-4o.A0": {
+    "rows": 100,
+    "reader_errors": 0,
+    "empty": 0
+  },
+  "dev.gpt-4o.A1": {
+    "rows": 100,
+    "reader_errors": 0,
+    "empty": 0
+  },
+  "dev.gpt-4o.A2": {
+    "rows": 100,
+    "reader_errors": 0,
+    "empty": 0
+  },
+  "dev.gpt-4o.A3": {
+    "rows": 100,
+    "reader_errors": 0,
+    "empty": 0
+  },
+  "dev.gpt-4o.B3": {
+    "rows": 100,
+    "reader_errors": 0,
+    "empty": 0
+  },
+  "dev.gpt-4o.R5": {
+    "rows": 100,
+    "reader_errors": 0,
+    "empty": 0
+  },
+  "dev.sonnet-5-5.A0": {
+    "rows": 100,
+    "reader_errors": 0,
+    "empty": 0
+  },
+  "dev.sonnet-5-5.A1": {
+    "rows": 100,
+    "reader_errors": 0,
+    "empty": 0
+  },
+  "dev.sonnet-5-5.A2": {
+    "rows": 100,
+    "reader_errors": 0,
+    "empty": 0
+  },
+  "dev.sonnet-5-5.A3": {
+    "rows": 100,
+    "reader_errors": 0,
+    "empty": 0
+  },
+  "dev.sonnet-5-5.B3": {
+    "rows": 100,
+    "reader_errors": 0,
+    "empty": 0
+  },
+  "dev.sonnet-5-5.R5": {
+    "rows": 100,
+    "reader_errors": 0,
+    "empty": 0
+  }
+}

@@ -1,0 +1,169 @@
+{
+  "kind": "c8k-gate",
+  "decision_id": "sealed-v2-decision-3-2026-10-26:8k-conversion-f1-f4",
+  "decision_sha256": "65f8ce7dac58cd38ea0f3e6dfe0ecfe96cb010f0e6b07aeb8985d4bfa84ba081",
+  "phase": "retrieval",
+  "created_at": "2026-10-26T09:37:42.255Z",
+  "gbrain": {
+    "commit": "cf3ec433f4fffda60d00076bae7361100c632cc4",
+    "version": "0.60.461.0",
+    "keyless": true,
+    "embedding": "hash@1536 (keyless control)"
+  },
+  "access_log_lines_at_gate": 36,
+  "labels_read_under_this_decision": 0,
+  "evidence_sha256": "63679f724cc40ff7020be8080f91833becf24071a85a09471ba6d513b0949870",
+  "renderer": {
+    "version": "c8k-product-text-v1",
+    "recipe_hash": "3feadd3d59999b6423ae5e2656622ed2b722600bd517345f2f9c438b55011a94",
+    "recipe": {
+      "renderer": "c8k-product-text-v1",
+      "template": "memory-qa READER_TEMPLATE",
+      "template_sha256": "8951d2bf74c971c6527ba7b74fc63f5f49bddc467e11436abd0500219e6dac31",
+      "history": "the tool result text blocks in returned order, joined by one blank line",
+      "budget_tokens": 8000,
+      "tokenizer": "approx-chars-div-4",
+      "cut": "whole rows from the end of the first block's JSON array, re-serialized with JSON.stringify, while the history is over the budget",
+      "date": "question_date, else unknown",
+      "substitution": "one pass over {history}, {date} and {question}"
+    }
+  },
+  "retrieval": {
+    "per_arm": {
+      "A0": {
+        "rows": 60,
+        "questions": 60,
+        "tool_errors": 0,
+        "safe_index_pending": 0,
+        "behavior_changes_disclosures": 0,
+        "rows_outside_history": 0,
+        "extract_receipt_rows": 60,
+        "budget_used_over_cap": 0,
+        "not_cap_only": 0,
+        "facts": {
+          "questions_with_facts": 12,
+          "rows_mean": 0.6,
+          "tokens_max": 114,
+          "over_share_or_rows": 0,
+          "cap_tokens": 1210
+        },
+        "budget_used_mean": null,
+        "result_rows_mean": 9.6,
+        "notices": {}
+      },
+      "A1": {
+        "rows": 60,
+        "questions": 60,
+        "tool_errors": 0,
+        "safe_index_pending": 0,
+        "behavior_changes_disclosures": 0,
+        "rows_outside_history": 0,
+        "extract_receipt_rows": 60,
+        "budget_used_over_cap": 0,
+        "not_cap_only": 0,
+        "facts": {
+          "questions_with_facts": 12,
+          "rows_mean": 0.6,
+          "tokens_max": 114,
+          "over_share_or_rows": 0,
+          "cap_tokens": 1210
+        },
+        "budget_used_mean": 5483.116666666667,
+        "result_rows_mean": 9.6,
+        "notices": {}
+      },
+      "A2": {
+        "rows": 60,
+        "questions": 60,
+        "tool_errors": 0,
+        "safe_index_pending": 0,
+        "behavior_changes_disclosures": 0,
+        "rows_outside_history": 0,
+        "extract_receipt_rows": 60,
+        "budget_used_over_cap": 0,
+        "not_cap_only": 0,
+        "facts": {
+          "questions_with_facts": 12,
+          "rows_mean": 0.6,
+          "tokens_max": 150,
+          "over_share_or_rows": 0,
+          "cap_tokens": 1210
+        },
+        "budget_used_mean": 5479.366666666667,
+        "result_rows_mean": 9.6,
+        "notices": {}
+      },
+      "A3": {
+        "rows": 60,
+        "questions": 60,
+        "tool_errors": 0,
+        "safe_index_pending": 0,
+        "behavior_changes_disclosures": 0,
+        "rows_outside_history": 0,
+        "extract_receipt_rows": 60,
+        "budget_used_over_cap": 0,
+        "not_cap_only": 0,
+        "facts": {
+          "questions_with_facts": 24,
+          "rows_mean": 0.8,
+          "tokens_max": 84,
+          "over_share_or_rows": 0,
+          "cap_tokens": 1210
+        },
+        "budget_used_mean": 5480.816666666667,
+        "result_rows_mean": 9.8,
+        "notices": {}
+      },
+      "B3": {
+        "rows": 60,
+        "questions": 60,
+        "tool_errors": 0,
+        "safe_index_pending": 0,
+        "behavior_changes_disclosures": 0,
+        "rows_outside_history": 0,
+        "extract_receipt_rows": 60,
+        "budget_used_over_cap": 0,
+        "not_cap_only": 0,
+        "facts": {
+          "questions_with_facts": 24,
+          "rows_mean": 0.8,
+          "tokens_max": 84,
+          "over_share_or_rows": 0,
+          "cap_tokens": 1210
+        },
+        "budget_used_mean": null,
+        "result_rows_mean": 9.8,
+        "notices": {}
+      },
+      "R5": {
+        "rows": 60,
+        "questions": 60,
+        "tool_errors": 0,
+        "safe_index_pending": 0,
+        "behavior_changes_disclosures": 0,
+        "rows_outside_history": 0,
+        "extract_receipt_rows": 1,
+        "budget_used_over_cap": 0,
+        "not_cap_only": 0,
+        "facts": {
+          "questions_with_facts": 0,
+          "rows_mean": 0,
+          "tokens_max": 0,
+          "over_share_or_rows": 0,
+          "cap_tokens": 1210
+        },
+        "budget_used_mean": 14548.416666666666,
+        "result_rows_mean": 5,
+        "notices": {}
+      }
+    },
+    "determinism": {
+      "questions": 20,
+      "repeated": 20,
+      "byte_identical": 20,
+      "pass": true
+    }
+  },
+  "problems": [],
+  "pass": true
+}

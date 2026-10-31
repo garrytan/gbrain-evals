@@ -1,0 +1,92 @@
+{
+  "sonnet-5-5.A0": {
+    "rows": 60,
+    "reader_errors": 0,
+    "empty": 0
+  },
+  "sonnet-5-5.A1": {
+    "rows": 60,
+    "reader_errors": 0,
+    "empty": 0
+  },
+  "sonnet-5-5.A2": {
+    "rows": 60,
+    "reader_errors": 0,
+    "empty": 0
+  },
+  "sonnet-5-5.A3": {
+    "rows": 60,
+    "reader_errors": 0,
+    "empty": 0
+  },
+  "sonnet-5-5.B3": {
+    "rows": 60,
+    "reader_errors": 0,
+    "empty": 0
+  },
+  "sonnet-5-5.R5": {
+    "rows": 60,
+    "reader_errors": 0,
+    "empty": 0
+  },
+  "opus-5-5.A0": {
+    "rows": 60,
+    "reader_errors": 0,
+    "empty": 0
+  },
+  "opus-5-5.A1": {
+    "rows": 60,
+    "reader_errors": 0,
+    "empty": 0
+  },
+  "opus-5-5.A2": {
+    "rows": 60,
+    "reader_errors": 0,
+    "empty": 0
+  },
+  "opus-5-5.A3": {
+    "rows": 60,
+    "reader_errors": 0,
+    "empty": 0
+  },
+  "opus-5-5.B3": {
+    "rows": 60,
+    "reader_errors": 0,
+    "empty": 0
+  },
+  "opus-5-5.R5": {
+    "rows": 60,
+    "reader_errors": 0,
+    "empty": 0
+  },
+  "gpt-6-1-sol.A0": {
+    "rows": 60,
+    "reader_errors": 0,
+    "empty": 0
+  },
+  "gpt-6-1-sol.A1": {
+    "rows": 60,
+    "reader_errors": 0,
+    "empty": 0
+  },
+  "gpt-6-1-sol.A2": {
+    "rows": 60,
+    "reader_errors": 0,
+    "empty": 0
+  },
+  "gpt-6-1-sol.A3": {
+    "rows": 60,
+    "reader_errors": 0,
+    "empty": 0
+  },
+  "gpt-6-1-sol.B3": {
+    "rows": 60,
+    "reader_errors": 0,
+    "empty": 0
+  },
+  "gpt-6-1-sol.R5": {
+    "rows": 60,
+    "reader_errors": 0,
+    "empty": 0
+  }
+}

@@ -1,0 +1,413 @@
+{
+ "suite": "brainbench",
+ "command": "gbrain eval run-all --suites brainbench",
+ "seed": 42,
+ "cells": 24,
+ "differing_cells": [],
+ "master_cells": {
+  "openclaw/know-to-ask": {
+   "know_to_ask_failure_rate": 0,
+   "false_fire_rate": 0,
+   "source_isolation_violations": 0,
+   "avg_injected_tokens": 50.0134,
+   "gold_failed": 0,
+   "gold_total": 149
+  },
+  "openclaw/push": {
+   "push_precision": 1,
+   "push_recall": 1,
+   "source_isolation_violations": 0,
+   "avg_injected_tokens": 66.0935,
+   "gold_failed": 0,
+   "gold_total": 96
+  },
+  "openclaw/write-back": {
+   "write_back_fidelity": 1,
+   "provenance_accuracy": 1,
+   "gold_failed": 0,
+   "gold_total": 58
+  },
+  "openclaw/continuity": {
+   "continuity_rate": 1,
+   "source_isolation_violations": 0,
+   "avg_injected_tokens": 82.5,
+   "gold_failed": 0,
+   "gold_total": 12
+  },
+  "openclaw/trust": {
+   "trust_label_accuracy": 1,
+   "laundering_violations": 0,
+   "self_promotion_violations": 0,
+   "gold_failed": 0,
+   "gold_total": 35
+  },
+  "openclaw/state-resolution": {
+   "current_fact_accuracy": 1,
+   "stale_surfaced_as_current": 0,
+   "history_preserved": 1,
+   "lower_tier_supersede_violations": 0,
+   "gold_failed": 0,
+   "gold_total": 16
+  },
+  "openclaw/poisoning": {
+   "poison_persist_rate": 0,
+   "flagged_and_labeled_rate": 1,
+   "unconfirmed_preference_activation_rate": 0,
+   "agent_relayed_activation_rate": 0,
+   "poison_activation_rate": 0,
+   "benign_retention": 1,
+   "false_quarantine_rate": 0,
+   "default_persist_unlabeled_rate": 0,
+   "default_activation_unlabeled_rate": 0,
+   "default_benign_retention": 1,
+   "source_isolation_violations": 0,
+   "avg_injected_tokens": 31.2,
+   "gold_failed": 0,
+   "gold_total": 170
+  },
+  "openclaw/deletion": {
+   "residual_after_purge": 0,
+   "receipt_completeness": 1,
+   "resurrection_after_resync": 0,
+   "gold_failed": 0,
+   "gold_total": 5
+  },
+  "claude-code/know-to-ask": {
+   "know_to_ask_failure_rate": 0,
+   "false_fire_rate": 0,
+   "source_isolation_violations": 0,
+   "avg_injected_tokens": 43.5638,
+   "gold_failed": 0,
+   "gold_total": 149
+  },
+  "claude-code/push": {
+   "push_precision": 1,
+   "push_recall": 1,
+   "source_isolation_violations": 0,
+   "avg_injected_tokens": 57.8224,
+   "gold_failed": 0,
+   "gold_total": 96
+  },
+  "claude-code/write-back": {
+   "write_back_fidelity": 1,
+   "provenance_accuracy": 1,
+   "gold_failed": 0,
+   "gold_total": 58
+  },
+  "claude-code/continuity": {
+   "continuity_rate": 1,
+   "source_isolation_violations": 0,
+   "avg_injected_tokens": 67.25,
+   "gold_failed": 0,
+   "gold_total": 12
+  },
+  "claude-code/trust": {
+   "trust_label_accuracy": 1,
+   "laundering_violations": 0,
+   "self_promotion_violations": 0,
+   "gold_failed": 0,
+   "gold_total": 35
+  },
+  "claude-code/state-resolution": {
+   "current_fact_accuracy": 1,
+   "stale_surfaced_as_current": 0,
+   "history_preserved": 1,
+   "lower_tier_supersede_violations": 0,
+   "gold_failed": 0,
+   "gold_total": 16
+  },
+  "claude-code/poisoning": {
+   "poison_persist_rate": 0,
+   "flagged_and_labeled_rate": 1,
+   "unconfirmed_preference_activation_rate": 0,
+   "agent_relayed_activation_rate": 0,
+   "poison_activation_rate": 0,
+   "benign_retention": 1,
+   "false_quarantine_rate": 0,
+   "default_persist_unlabeled_rate": 0,
+   "default_activation_unlabeled_rate": 0,
+   "default_benign_retention": 1,
+   "source_isolation_violations": 0,
+   "avg_injected_tokens": 36.8,
+   "gold_failed": 0,
+   "gold_total": 170
+  },
+  "claude-code/deletion": {
+   "residual_after_purge": 0,
+   "receipt_completeness": 1,
+   "resurrection_after_resync": 0,
+   "gold_failed": 0,
+   "gold_total": 5
+  },
+  "codex/know-to-ask": {
+   "know_to_ask_failure_rate": 0,
+   "false_fire_rate": 0,
+   "source_isolation_violations": 0,
+   "avg_injected_tokens": 48.2416,
+   "gold_failed": 0,
+   "gold_total": 149
+  },
+  "codex/push": {
+   "push_precision": 1,
+   "push_recall": 0.5521,
+   "source_isolation_violations": 0,
+   "avg_injected_tokens": 58.514,
+   "gold_failed": 43,
+   "gold_total": 96
+  },
+  "codex/write-back": {
+   "write_back_fidelity": 1,
+   "provenance_accuracy": 1,
+   "gold_failed": 0,
+   "gold_total": 58
+  },
+  "codex/continuity": {
+   "continuity_rate": 1,
+   "source_isolation_violations": 0,
+   "avg_injected_tokens": 158.0833,
+   "gold_failed": 0,
+   "gold_total": 12
+  },
+  "codex/trust": {
+   "trust_label_accuracy": 1,
+   "laundering_violations": 0,
+   "self_promotion_violations": 0,
+   "gold_failed": 0,
+   "gold_total": 35
+  },
+  "codex/state-resolution": {
+   "current_fact_accuracy": 1,
+   "stale_surfaced_as_current": 0,
+   "history_preserved": 1,
+   "lower_tier_supersede_violations": 0,
+   "gold_failed": 0,
+   "gold_total": 16
+  },
+  "codex/poisoning": {
+   "poison_persist_rate": 0,
+   "flagged_and_labeled_rate": 1,
+   "unconfirmed_preference_activation_rate": 0,
+   "agent_relayed_activation_rate": 0,
+   "poison_activation_rate": 0,
+   "benign_retention": 1,
+   "false_quarantine_rate": 0,
+   "default_persist_unlabeled_rate": 0,
+   "default_activation_unlabeled_rate": 0,
+   "default_benign_retention": 1,
+   "source_isolation_violations": 0,
+   "avg_injected_tokens": 51.5,
+   "gold_failed": 0,
+   "gold_total": 170
+  },
+  "codex/deletion": {
+   "residual_after_purge": 0,
+   "receipt_completeness": 1,
+   "resurrection_after_resync": 0,
+   "gold_failed": 0,
+   "gold_total": 5
+  }
+ },
+ "branch_cells": {
+  "openclaw/know-to-ask": {
+   "know_to_ask_failure_rate": 0,
+   "false_fire_rate": 0,
+   "source_isolation_violations": 0,
+   "avg_injected_tokens": 50.0134,
+   "gold_failed": 0,
+   "gold_total": 149
+  },
+  "openclaw/push": {
+   "push_precision": 1,
+   "push_recall": 1,
+   "source_isolation_violations": 0,
+   "avg_injected_tokens": 66.0935,
+   "gold_failed": 0,
+   "gold_total": 96
+  },
+  "openclaw/write-back": {
+   "write_back_fidelity": 1,
+   "provenance_accuracy": 1,
+   "gold_failed": 0,
+   "gold_total": 58
+  },
+  "openclaw/continuity": {
+   "continuity_rate": 1,
+   "source_isolation_violations": 0,
+   "avg_injected_tokens": 82.5,
+   "gold_failed": 0,
+   "gold_total": 12
+  },
+  "openclaw/trust": {
+   "trust_label_accuracy": 1,
+   "laundering_violations": 0,
+   "self_promotion_violations": 0,
+   "gold_failed": 0,
+   "gold_total": 35
+  },
+  "openclaw/state-resolution": {
+   "current_fact_accuracy": 1,
+   "stale_surfaced_as_current": 0,
+   "history_preserved": 1,
+   "lower_tier_supersede_violations": 0,
+   "gold_failed": 0,
+   "gold_total": 16
+  },
+  "openclaw/poisoning": {
+   "poison_persist_rate": 0,
+   "flagged_and_labeled_rate": 1,
+   "unconfirmed_preference_activation_rate": 0,
+   "agent_relayed_activation_rate": 0,
+   "poison_activation_rate": 0,
+   "benign_retention": 1,
+   "false_quarantine_rate": 0,
+   "default_persist_unlabeled_rate": 0,
+   "default_activation_unlabeled_rate": 0,
+   "default_benign_retention": 1,
+   "source_isolation_violations": 0,
+   "avg_injected_tokens": 31.2,
+   "gold_failed": 0,
+   "gold_total": 170
+  },
+  "openclaw/deletion": {
+   "residual_after_purge": 0,
+   "receipt_completeness": 1,
+   "resurrection_after_resync": 0,
+   "gold_failed": 0,
+   "gold_total": 5
+  },
+  "claude-code/know-to-ask": {
+   "know_to_ask_failure_rate": 0,
+   "false_fire_rate": 0,
+   "source_isolation_violations": 0,
+   "avg_injected_tokens": 43.5638,
+   "gold_failed": 0,
+   "gold_total": 149
+  },
+  "claude-code/push": {
+   "push_precision": 1,
+   "push_recall": 1,
+   "source_isolation_violations": 0,
+   "avg_injected_tokens": 57.8224,
+   "gold_failed": 0,
+   "gold_total": 96
+  },
+  "claude-code/write-back": {
+   "write_back_fidelity": 1,
+   "provenance_accuracy": 1,
+   "gold_failed": 0,
+   "gold_total": 58
+  },
+  "claude-code/continuity": {
+   "continuity_rate": 1,
+   "source_isolation_violations": 0,
+   "avg_injected_tokens": 67.25,
+   "gold_failed": 0,
+   "gold_total": 12
+  },
+  "claude-code/trust": {
+   "trust_label_accuracy": 1,
+   "laundering_violations": 0,
+   "self_promotion_violations": 0,
+   "gold_failed": 0,
+   "gold_total": 35
+  },
+  "claude-code/state-resolution": {
+   "current_fact_accuracy": 1,
+   "stale_surfaced_as_current": 0,
+   "history_preserved": 1,
+   "lower_tier_supersede_violations": 0,
+   "gold_failed": 0,
+   "gold_total": 16
+  },
+  "claude-code/poisoning": {
+   "poison_persist_rate": 0,
+   "flagged_and_labeled_rate": 1,
+   "unconfirmed_preference_activation_rate": 0,
+   "agent_relayed_activation_rate": 0,
+   "poison_activation_rate": 0,
+   "benign_retention": 1,
+   "false_quarantine_rate": 0,
+   "default_persist_unlabeled_rate": 0,
+   "default_activation_unlabeled_rate": 0,
+   "default_benign_retention": 1,
+   "source_isolation_violations": 0,
+   "avg_injected_tokens": 36.8,
+   "gold_failed": 0,
+   "gold_total": 170
+  },
+  "claude-code/deletion": {
+   "residual_after_purge": 0,
+   "receipt_completeness": 1,
+   "resurrection_after_resync": 0,
+   "gold_failed": 0,
+   "gold_total": 5
+  },
+  "codex/know-to-ask": {
+   "know_to_ask_failure_rate": 0,
+   "false_fire_rate": 0,
+   "source_isolation_violations": 0,
+   "avg_injected_tokens": 48.2416,
+   "gold_failed": 0,
+   "gold_total": 149
+  },
+  "codex/push": {
+   "push_precision": 1,
+   "push_recall": 0.5521,
+   "source_isolation_violations": 0,
+   "avg_injected_tokens": 58.514,
+   "gold_failed": 43,
+   "gold_total": 96
+  },
+  "codex/write-back": {
+   "write_back_fidelity": 1,
+   "provenance_accuracy": 1,
+   "gold_failed": 0,
+   "gold_total": 58
+  },
+  "codex/continuity": {
+   "continuity_rate": 1,
+   "source_isolation_violations": 0,
+   "avg_injected_tokens": 158.0833,
+   "gold_failed": 0,
+   "gold_total": 12
+  },
+  "codex/trust": {
+   "trust_label_accuracy": 1,
+   "laundering_violations": 0,
+   "self_promotion_violations": 0,
+   "gold_failed": 0,
+   "gold_total": 35
+  },
+  "codex/state-resolution": {
+   "current_fact_accuracy": 1,
+   "stale_surfaced_as_current": 0,
+   "history_preserved": 1,
+   "lower_tier_supersede_violations": 0,
+   "gold_failed": 0,
+   "gold_total": 16
+  },
+  "codex/poisoning": {
+   "poison_persist_rate": 0,
+   "flagged_and_labeled_rate": 1,
+   "unconfirmed_preference_activation_rate": 0,
+   "agent_relayed_activation_rate": 0,
+   "poison_activation_rate": 0,
+   "benign_retention": 1,
+   "false_quarantine_rate": 0,
+   "default_persist_unlabeled_rate": 0,
+   "default_activation_unlabeled_rate": 0,
+   "default_benign_retention": 1,
+   "source_isolation_violations": 0,
+   "avg_injected_tokens": 51.5,
+   "gold_failed": 0,
+   "gold_total": 170
+  },
+  "codex/deletion": {
+   "residual_after_purge": 0,
+   "receipt_completeness": 1,
+   "resurrection_after_resync": 0,
+   "gold_failed": 0,
+   "gold_total": 5
+  }
+ }
+}

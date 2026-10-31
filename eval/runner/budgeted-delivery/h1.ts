@@ -77,6 +77,9 @@ export function loadDecision(path: string): { decision: H1Decision; sha256: stri
   return { decision, sha256: sha256Hex(bytes) };
 }
 
+/** What the custody checks read of a decision file (the 8k conversion decision shares it). */
+export type SealedDecision = Pick<H1Decision, 'decision_id' | 'sealed'>;
+
 const arm = (d: H1Decision, id: string) => { const a = d.answer_arms.find(x => x.id === id); if (!a) throw new Error(`the decision has no answer arm ${id}`); return a; };
 const writeJson = (path: string, value: unknown) => { mkdirSync(dirname(path), { recursive: true }); writeFileSync(path, JSON.stringify(value, null, 2) + '\n'); };
 
@@ -91,7 +94,7 @@ export const readLog = (path: string): LogEntry[] => existsSync(path) ? readFile
  * The access log must start with exactly the entries the decision file records (action and decision id, in order),
  * and every later line must belong to this decision (a resumed run). Anything else stops the run before any read.
  */
-export function checkAccessLog(entries: LogEntry[], d: H1Decision): { lines: number; before: number; this_decision: number } {
+export function checkAccessLog(entries: LogEntry[], d: SealedDecision): { lines: number; before: number; this_decision: number } {
   const before = d.sealed.access_log_before;
   if (entries.length < before.lines) throw new Error(`the access log has ${entries.length} lines; the decision file records ${before.lines} before this opening`);
   before.entries.forEach((e, i) => {
@@ -102,7 +105,7 @@ export function checkAccessLog(entries: LogEntry[], d: H1Decision): { lines: num
   return { lines: entries.length, before: before.lines, this_decision: entries.length - before.lines };
 }
 
-export function custodyCheck(o: { custodyRoot: string; decision: H1Decision; manifestPath: string; questions: string; labels: string; log: string }) {
+export function custodyCheck(o: { custodyRoot: string; decision: SealedDecision; manifestPath: string; questions: string; labels: string; log: string }) {
   checkCustodyPaths(o.custodyRoot, [['questions file', o.questions], ['labels file', o.labels], ['access log', o.log]]);
   const m = JSON.parse(readFileSync(o.manifestPath, 'utf8')) as Manifest;
   if (m.set !== o.decision.sealed.set) throw new Error(`the manifest is for ${m.set}, the decision for ${o.decision.sealed.set}`);
@@ -381,7 +384,7 @@ export function budgetSummary(d: H1Decision & { budget: { estimate_usd: number; 
 // ─── return-log ───────────────────────────────────────────────────
 
 /** Copy the custody access log back to the owner's file, refusing unless the owner's lines are its prefix and every added line is this decision's. */
-export function returnLog(o: { decision: H1Decision; from: string; to: string }) {
+export function returnLog(o: { decision: Pick<H1Decision, 'decision_id'>; from: string; to: string }) {
   const owner = existsSync(o.to) ? readFileSync(o.to, 'utf8') : '';
   const custody = readFileSync(o.from, 'utf8');
   if (!custody.startsWith(owner)) throw new Error('the owner\'s access log is not a prefix of the custody copy; reconcile them by hand');
