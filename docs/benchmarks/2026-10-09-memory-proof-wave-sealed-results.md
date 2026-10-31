@@ -95,6 +95,27 @@ The comparator misses the delivered-context gate on both datasets. Its 95th-perc
 
 On LongMemEval-S, the combined lane trails gbrain's own pages-only lane by 10.5 points and abstains more often (77 abstentions against 54). The combined lane gives 1,800 of its 8,000 tokens to extracted facts and 6,300 to pages, while the raw lane gives all 8,100 to pages. On LoCoMo10, the combined lane is 8.3 points ahead of the raw lane.
 
+**Exploratory, post hoc: removing the facts block alone closes none of that gap on one shard.** This check was chosen after the result and decides nothing. It ran combined shard 1 (100 histories) again with `facts_tokens` 0 and everything else unchanged, including the page query's 6,300-token budget and `tokenmax` mode, on a fresh ingest. The answers were judged jointly with the wave-1 shard-1 answers, whose cached judgments replayed unchanged.
+
+| Shard 1 (100 questions) | Correct | Abstentions |
+|---|---:|---:|
+| gbrain combined, `facts_tokens` 0 | 71 | 16 |
+| gbrain combined (wave 1) | 71 | 14 |
+| gbrain raw (wave 1) | 80 | 11 |
+| Comparator (wave 1) | 83 | 12 |
+
+On this shard the combined lane trails the raw lane by 9 points. Dropping the facts block changes 8 answers, 4 gained and 4 lost, so 0 of the 9 points close. The shard holds three question types:
+
+| Type (questions) | `facts_tokens` 0 | Combined | Raw |
+|---|---|---|---|
+| single-session-user (52) | 44 correct, 6 abstained | 46, 5 | 49, 4 |
+| multi-session (43) | 22, 5 | 20, 4 | 26, 2 |
+| single-session-user, abstention (5) | 5, 5 | 5, 5 | 5, 5 |
+
+With no facts block, the cell delivers a mean of 6,332 tokens, against the raw lane's 8,100 of pages, so it fails the 8,000-token context gate. What remains of the gap is page space, search mode or the store. A planned second cell would have answered the same shard at 1,800 fact tokens from the new store, which would have separated the new ingest from the block. It was refused by its ledger cap (its $16 run budget exceeded the $6.77 left), and the store was destroyed with its VM, so the comparison is against the wave-1 receipts. Spend: $9.39 for the cell and $0.25 for the re-judge. Receipts are in [`2026-10-10-memory-proof-wave-lme-facts0/`](2026-10-10-memory-proof-wave-lme-facts0/).
+
+Wave 2's step 0 later split the combined-to-raw gap on the 100 LongMemEval-S dev questions, at gbrain `59782b95`, where it was also 9 points. Removing the facts block cost 1 point, giving its space back to pages added 0, and switching the combined store's search mode from `tokenmax` to `conservative` added 13 ([step 0 result](2026-10-10-memory-proof-wave-2-preregistration-addenda.md#step-0-result-mode-dominates-so-the-wave-pauses-october-11-2026)).
+
 LongMemEval-S combined ran as four cells of 100 histories each, split by history; each history is its own brain, so the split does not change what any question sees. Each shard was re-judged jointly with the raw and comparator answers to the same 100 questions.
 
 | Cell | Spend | Cap |
@@ -110,6 +131,35 @@ LongMemEval-S combined ran as four cells of 100 histories each, split by history
 | **Total** | **$169.26** | **$305** |
 
 Receipts are in [`2026-10-09-memory-proof-wave-matched/`](2026-10-09-memory-proof-wave-matched/): each cell's JSON files, ledger status and a tarball of stage records and the request log, the two re-judges, the VM record and one path redaction.
+
+## Equivalence of the shipped build
+
+Retrieval is equivalent; end-to-end is within noise except fact re-extraction. The check compares the freeze build `d7467d1cf` with gbrain#6066 at `d7d7686de`, pinned for the check. The [addenda](2026-10-05-memory-proof-wave-preregistration-addenda.md) planned it on the sealed cells. Those cells and stores were lost ([receipts lost](#receipts-lost)), so it ran on the public BEAM dev conversations instead: 4 conversations at 100k (80 questions) and 7 each at 500k and 1M (140 questions each). Both lanes ran at the sealed configuration, and it decides nothing.
+
+A question counts as changed when its delivered context differs from the baseline cell's recorded context. The noise floor is four retrieval-only replays on the freeze build against the baseline's own store. The new head was replayed the same way, twice, against the baseline store: once as it was and once after the new head's `extract --stale`. The store uses PGLite, and no step ran the deferred ANN build or `reindex-vectors`. The new head then re-ingested each lane (end to end).
+
+| Size, lane | Changed, noise floor (4 same-build replays) | Changed, new head on the baseline store | Changed, new head end to end | Correct, baseline vs new head end to end |
+|---|---|---|---|---|
+| 100k combined (80) | 5, 5, 9, 7 | 7, 6 | 80 | 56 vs 57 (mean 0.644 vs 0.665) |
+| 100k raw (80) | 3, 2, 3, 2 | 2, 2 | 2 | 0 vs 0 of the 2 changed |
+| 500k combined (140) | 10, 12, 10, 14 | 14, 11 | 140 | 100 vs 100 (0.664 vs 0.666) |
+| 500k raw (140) | 1, 1, 1, 0 | 1, 1 | 0 | none changed |
+| 1M combined (140) | 5, 10, 13, 10 | 7, 11 | 140 | 99 vs 97 (0.676 vs 0.652) |
+| 1M raw (127 with a baseline) | 1, 1, 2, 1 | 1, 1 | 3 | 1 vs 1 of the 3 changed |
+
+On the baseline store, the new head stays inside the same-build range at every size. Its keyword arm returns identical candidates on every question. Its vector arm changes the candidate set on 0 to 6 questions per replay, against 0 to 5 between two same-build replays, and no vector pool is underfilled. The questions whose context changed in the first of these replays were answered again and judged jointly with the baseline answers. They get the same number correct on both builds at every size and lane, except one 100k raw question (1 of 2 vs 0 of 2).
+
+**Caveat: fact re-extraction.** End to end, every combined question changes, because re-ingesting calls the extraction model again and it writes a different fact set. The 1M combined store has 27,250 facts against 26,889, and 500k has 11,580 against 11,625. Page and chunk counts are equal on both builds at every size. The combined end-to-end rows therefore measure a new extraction as well as the new build. The check did not re-extract on the freeze build, so extraction variance and the build change cannot be separated. The raw lane has no extraction, and its end-to-end changes stay at or within one question of the same-build range.
+
+Other checks on the new head:
+- No search sets `min_trust`.
+- No page or fact is quarantined or hidden by eligibility.
+- The new head's ingest gate flags 3, 19 and 23 rows in the combined stores at the three sizes. They are still delivered, marked unconfirmed, with their text unchanged.
+- Ingest cost stays within 2% of the baseline at every size ($5.16 against $5.11 at 1M), under the stop at 1.25 times the baseline.
+
+Of the 1M raw baseline, 13 questions from one conversation were refused by the run's budget and have no baseline, so they are excluded.
+
+The check cost $73.84 of its $90 cap. Receipts, per size and build, are in [`2026-10-10-memory-proof-wave-equivalence/`](2026-10-10-memory-proof-wave-equivalence/), with `report.json` from `python3 eval/harness-provider/mpw_tools/equivalence_report.py docs/benchmarks/2026-10-10-memory-proof-wave-equivalence`.
 
 ## What ran
 
@@ -179,6 +229,18 @@ python -m mpw_tools.sealed_cost --pair <gbrain cell>:<comparator cell>:<gbrain r
 The analysis is [`memory-proof-wave-sealed-analysis.ts`](../../eval/runner/memory-proof-wave-sealed-analysis.ts) and the cost computation is [`mpw_tools/sealed_cost.py`](../../eval/harness-provider/mpw_tools/sealed_cost.py). Both read the cells from custody, which no longer exists, so the numbers on this page cannot be recomputed.
 
 ## Changelog
+
+### 2026-10-31: Post hoc sections reach main
+
+The post hoc facts-block check and the equivalence section were written on October 10 on branch `capy/mpw-harness` (`0f1a427b`, `e3260246`) and reached main on October 31 unchanged, with the `facts_tokens` 0 receipts. Added one paragraph after the facts-block check that points to wave 2's step 0, which later traced the combined-to-raw gap to search mode rather than the facts block.
+
+### 2026-10-10: Post hoc facts-block check
+
+Added the exploratory, post hoc LongMemEval-S shard-1 rerun with `facts_tokens` 0: it closes none of the 9-point combined-to-raw gap on that shard.
+
+### 2026-10-10: Equivalence of the shipped build
+
+Added the gbrain#6066 equivalence check (`d7467d1cf` against `d7d7686de`) on the public BEAM dev conversations: the same-build noise floor, per-size changed-context and end-to-end counts, and the fact re-extraction caveat.
 
 ### 2026-10-10: Descriptive rows
 

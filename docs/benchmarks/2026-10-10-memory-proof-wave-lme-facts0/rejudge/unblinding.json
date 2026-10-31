@@ -1,0 +1,2807 @@
+{
+  "seed": 20261005,
+  "schedule_sha256": "200a4029dbaf3daf70ad5eaf7ce78c373bd45240799342d03dfff4190dbabe02",
+  "judge_model": "gemini:gemini-3.5-flash",
+  "order": [
+    {
+      "position": 0,
+      "blind_id": "b-6857c78b188f",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "577d4d32",
+      "redactions": 0
+    },
+    {
+      "position": 1,
+      "blind_id": "b-6d8577f5baec",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "8e9d538c",
+      "redactions": 0
+    },
+    {
+      "position": 2,
+      "blind_id": "b-3514bde009e4",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "1faac195",
+      "redactions": 0
+    },
+    {
+      "position": 3,
+      "blind_id": "b-51ee5bb46931",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "c960da58",
+      "redactions": 0
+    },
+    {
+      "position": 4,
+      "blind_id": "b-ff17b78397c4",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "d23cf73b",
+      "redactions": 0
+    },
+    {
+      "position": 5,
+      "blind_id": "b-3a583c0e204d",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "e47becba",
+      "redactions": 0
+    },
+    {
+      "position": 6,
+      "blind_id": "b-07e2005dd797",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "2e6d26dc",
+      "redactions": 0
+    },
+    {
+      "position": 7,
+      "blind_id": "b-b2e4830d818e",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "gpt4_5501fe77",
+      "redactions": 0
+    },
+    {
+      "position": 8,
+      "blind_id": "b-799a4b62bfba",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "gpt4_a56e767c",
+      "redactions": 0
+    },
+    {
+      "position": 9,
+      "blind_id": "b-2d9f04e6a52f",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "5a7937c8",
+      "redactions": 0
+    },
+    {
+      "position": 10,
+      "blind_id": "b-c805a6726226",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "2788b940",
+      "redactions": 0
+    },
+    {
+      "position": 11,
+      "blind_id": "b-b971b7f63fc2",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "8550ddae",
+      "redactions": 0
+    },
+    {
+      "position": 12,
+      "blind_id": "b-81a3feaada8f",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "60bf93ed",
+      "redactions": 0
+    },
+    {
+      "position": 13,
+      "blind_id": "b-c320a096c729",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "c5e8278d",
+      "redactions": 0
+    },
+    {
+      "position": 14,
+      "blind_id": "b-61599199d5d7",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "7024f17c",
+      "redactions": 0
+    },
+    {
+      "position": 15,
+      "blind_id": "b-dd677d638cf3",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "129d1232",
+      "redactions": 0
+    },
+    {
+      "position": 16,
+      "blind_id": "b-264709963f35",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "75499fd8",
+      "redactions": 0
+    },
+    {
+      "position": 17,
+      "blind_id": "b-587f34c19c15",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "0862e8bf",
+      "redactions": 0
+    },
+    {
+      "position": 18,
+      "blind_id": "b-d0937b6442ef",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "9d25d4e0",
+      "redactions": 0
+    },
+    {
+      "position": 19,
+      "blind_id": "b-51986394bb59",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "726462e0",
+      "redactions": 0
+    },
+    {
+      "position": 20,
+      "blind_id": "b-549cd7aaa814",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "d851d5ba",
+      "redactions": 0
+    },
+    {
+      "position": 21,
+      "blind_id": "b-1b72763b365d",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "gpt4_7fce9456",
+      "redactions": 0
+    },
+    {
+      "position": 22,
+      "blind_id": "b-3d46ab2c0523",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "25e5aa4f",
+      "redactions": 0
+    },
+    {
+      "position": 23,
+      "blind_id": "b-374173b2d828",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "d851d5ba",
+      "redactions": 0
+    },
+    {
+      "position": 24,
+      "blind_id": "b-ffb9f7a1e24a",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "bc8a6e93",
+      "redactions": 0
+    },
+    {
+      "position": 25,
+      "blind_id": "b-1dd1ce458664",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "6cb6f249",
+      "redactions": 0
+    },
+    {
+      "position": 26,
+      "blind_id": "b-cb9b622ec53e",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "36b9f61e",
+      "redactions": 0
+    },
+    {
+      "position": 27,
+      "blind_id": "b-129e4072c331",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "726462e0",
+      "redactions": 0
+    },
+    {
+      "position": 28,
+      "blind_id": "b-2d44df16a344",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "caf9ead2",
+      "redactions": 0
+    },
+    {
+      "position": 29,
+      "blind_id": "b-b82b82ae7412",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "4100d0a0",
+      "redactions": 0
+    },
+    {
+      "position": 30,
+      "blind_id": "b-aea343054933",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "36b9f61e",
+      "redactions": 0
+    },
+    {
+      "position": 31,
+      "blind_id": "b-37b529de3bdd",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "bc8a6e93_abs",
+      "redactions": 0
+    },
+    {
+      "position": 32,
+      "blind_id": "b-7efceebd7ff5",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "6b168ec8",
+      "redactions": 0
+    },
+    {
+      "position": 33,
+      "blind_id": "b-cc4882bb4fb5",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "3d86fd0a",
+      "redactions": 0
+    },
+    {
+      "position": 34,
+      "blind_id": "b-5eed91a62b85",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "76d63226",
+      "redactions": 0
+    },
+    {
+      "position": 35,
+      "blind_id": "b-b82654aaae66",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "ad7109d1",
+      "redactions": 0
+    },
+    {
+      "position": 36,
+      "blind_id": "b-bd043aa4f624",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "3f1e9474",
+      "redactions": 0
+    },
+    {
+      "position": 37,
+      "blind_id": "b-a466340f6a87",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "46a3abf7",
+      "redactions": 0
+    },
+    {
+      "position": 38,
+      "blind_id": "b-714fbb753773",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "0a995998",
+      "redactions": 0
+    },
+    {
+      "position": 39,
+      "blind_id": "b-a3f734499b72",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "2788b940",
+      "redactions": 0
+    },
+    {
+      "position": 40,
+      "blind_id": "b-2f637db6b27f",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "gpt4_e05b82a6",
+      "redactions": 0
+    },
+    {
+      "position": 41,
+      "blind_id": "b-bde0b0f37c82",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "a82c026e",
+      "redactions": 0
+    },
+    {
+      "position": 42,
+      "blind_id": "b-be2dee0890b1",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "gpt4_a56e767c",
+      "redactions": 0
+    },
+    {
+      "position": 43,
+      "blind_id": "b-da8bddb4192f",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "6f9b354f",
+      "redactions": 0
+    },
+    {
+      "position": 44,
+      "blind_id": "b-9276745170cd",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "311778f1",
+      "redactions": 0
+    },
+    {
+      "position": 45,
+      "blind_id": "b-0868112c0e12",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "577d4d32",
+      "redactions": 0
+    },
+    {
+      "position": 46,
+      "blind_id": "b-093a32486596",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "bc8a6e93",
+      "redactions": 0
+    },
+    {
+      "position": 47,
+      "blind_id": "b-2e9646440292",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "d682f1a2",
+      "redactions": 0
+    },
+    {
+      "position": 48,
+      "blind_id": "b-ec01668a2723",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "b86304ba",
+      "redactions": 0
+    },
+    {
+      "position": 49,
+      "blind_id": "b-abec09a6bbe6",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "dd2973ad",
+      "redactions": 0
+    },
+    {
+      "position": 50,
+      "blind_id": "b-e98985c41505",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "118b2229",
+      "redactions": 0
+    },
+    {
+      "position": 51,
+      "blind_id": "b-24586278c558",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "2788b940",
+      "redactions": 0
+    },
+    {
+      "position": 52,
+      "blind_id": "b-a661b658193a",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "29f2956b",
+      "redactions": 0
+    },
+    {
+      "position": 53,
+      "blind_id": "b-9c88b6843b1c",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "gpt4_59c863d7",
+      "redactions": 0
+    },
+    {
+      "position": 54,
+      "blind_id": "b-d8a37dd8301f",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "8550ddae",
+      "redactions": 0
+    },
+    {
+      "position": 55,
+      "blind_id": "b-7e4d9de21c7b",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "3d86fd0a",
+      "redactions": 0
+    },
+    {
+      "position": 56,
+      "blind_id": "b-635fea04816f",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "e01b8e2f",
+      "redactions": 0
+    },
+    {
+      "position": 57,
+      "blind_id": "b-9d37a7db7af6",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "2ce6a0f2",
+      "redactions": 0
+    },
+    {
+      "position": 58,
+      "blind_id": "b-54e02beff90f",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "gpt4_a56e767c",
+      "redactions": 0
+    },
+    {
+      "position": 59,
+      "blind_id": "b-ed6979a6ee16",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "b86304ba",
+      "redactions": 0
+    },
+    {
+      "position": 60,
+      "blind_id": "b-df819068abf1",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "ec81a493",
+      "redactions": 0
+    },
+    {
+      "position": 61,
+      "blind_id": "b-26c3bd606b2f",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "129d1232",
+      "redactions": 0
+    },
+    {
+      "position": 62,
+      "blind_id": "b-76a25a13c831",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "2318644b",
+      "redactions": 0
+    },
+    {
+      "position": 63,
+      "blind_id": "b-be4d1c50c505",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "21436231",
+      "redactions": 0
+    },
+    {
+      "position": 64,
+      "blind_id": "b-f314a48a22c0",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "88432d0a",
+      "redactions": 0
+    },
+    {
+      "position": 65,
+      "blind_id": "b-07dda94e5bcd",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "a9f6b44c",
+      "redactions": 0
+    },
+    {
+      "position": 66,
+      "blind_id": "b-1affa9f45b8d",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "aae3761f",
+      "redactions": 0
+    },
+    {
+      "position": 67,
+      "blind_id": "b-f3ec3e649922",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "dccbc061",
+      "redactions": 0
+    },
+    {
+      "position": 68,
+      "blind_id": "b-02d92db7a9ba",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "gpt4_5501fe77",
+      "redactions": 0
+    },
+    {
+      "position": 69,
+      "blind_id": "b-6beaa12ed3ff",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "5a7937c8",
+      "redactions": 0
+    },
+    {
+      "position": 70,
+      "blind_id": "b-9903e4dcb602",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "gpt4_2ba83207",
+      "redactions": 0
+    },
+    {
+      "position": 71,
+      "blind_id": "b-f53b9bc075fe",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "gpt4_15e38248",
+      "redactions": 0
+    },
+    {
+      "position": 72,
+      "blind_id": "b-586464e2150c",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "19b5f2b3_abs",
+      "redactions": 0
+    },
+    {
+      "position": 73,
+      "blind_id": "b-d0f4edce37a4",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "19b5f2b3",
+      "redactions": 0
+    },
+    {
+      "position": 74,
+      "blind_id": "b-e10004efc75f",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "66f24dbb",
+      "redactions": 0
+    },
+    {
+      "position": 75,
+      "blind_id": "b-00f3af1a6648",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "10d9b85a",
+      "redactions": 0
+    },
+    {
+      "position": 76,
+      "blind_id": "b-856686d3893e",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "9d25d4e0",
+      "redactions": 0
+    },
+    {
+      "position": 77,
+      "blind_id": "b-6f6af20a9e46",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "6b168ec8",
+      "redactions": 0
+    },
+    {
+      "position": 78,
+      "blind_id": "b-a9647f7ff2d3",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "5d3d2817",
+      "redactions": 0
+    },
+    {
+      "position": 79,
+      "blind_id": "b-02a0a3324523",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "0a995998",
+      "redactions": 0
+    },
+    {
+      "position": 80,
+      "blind_id": "b-bdb9500289e9",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "d52b4f67",
+      "redactions": 0
+    },
+    {
+      "position": 81,
+      "blind_id": "b-a9a3e2046d81",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "8ebdbe50",
+      "redactions": 0
+    },
+    {
+      "position": 82,
+      "blind_id": "b-e3af69786fe1",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "b86304ba",
+      "redactions": 0
+    },
+    {
+      "position": 83,
+      "blind_id": "b-650b74ff02e8",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "a9f6b44c",
+      "redactions": 0
+    },
+    {
+      "position": 84,
+      "blind_id": "b-8897a3fbbd52",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "58ef2f1c",
+      "redactions": 0
+    },
+    {
+      "position": 85,
+      "blind_id": "b-9bf4eae5d875",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "bc8a6e93",
+      "redactions": 0
+    },
+    {
+      "position": 86,
+      "blind_id": "b-f871c142b036",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "c960da58",
+      "redactions": 0
+    },
+    {
+      "position": 87,
+      "blind_id": "b-eb34cad195be",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "gpt4_7fce9456",
+      "redactions": 0
+    },
+    {
+      "position": 88,
+      "blind_id": "b-75a8155602f8",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "eeda8a6d",
+      "redactions": 0
+    },
+    {
+      "position": 89,
+      "blind_id": "b-18a74fe9ec86",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "6b168ec8",
+      "redactions": 0
+    },
+    {
+      "position": 90,
+      "blind_id": "b-5c9e5037063a",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "3d86fd0a",
+      "redactions": 0
+    },
+    {
+      "position": 91,
+      "blind_id": "b-4e1dcb70db47",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "e3038f8c",
+      "redactions": 0
+    },
+    {
+      "position": 92,
+      "blind_id": "b-f10143908354",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "eeda8a6d",
+      "redactions": 0
+    },
+    {
+      "position": 93,
+      "blind_id": "b-8586c19d7149",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "76d63226",
+      "redactions": 0
+    },
+    {
+      "position": 94,
+      "blind_id": "b-5e0d5610c901",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "b3c15d39",
+      "redactions": 0
+    },
+    {
+      "position": 95,
+      "blind_id": "b-77c8b6da534f",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "2ce6a0f2",
+      "redactions": 0
+    },
+    {
+      "position": 96,
+      "blind_id": "b-7889f52034d5",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "6ade9755",
+      "redactions": 0
+    },
+    {
+      "position": 97,
+      "blind_id": "b-95f077f8dc84",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "29f2956b",
+      "redactions": 0
+    },
+    {
+      "position": 98,
+      "blind_id": "b-7ef6eff01009",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "2788b940",
+      "redactions": 0
+    },
+    {
+      "position": 99,
+      "blind_id": "b-0500f41b87e1",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "c8c3f81d",
+      "redactions": 0
+    },
+    {
+      "position": 100,
+      "blind_id": "b-b0f787ba29a9",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "60472f9c",
+      "redactions": 0
+    },
+    {
+      "position": 101,
+      "blind_id": "b-c737d503cea8",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "726462e0",
+      "redactions": 0
+    },
+    {
+      "position": 102,
+      "blind_id": "b-f9e413e65d74",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "25e5aa4f",
+      "redactions": 0
+    },
+    {
+      "position": 103,
+      "blind_id": "b-dc601a762fd6",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "60bf93ed",
+      "redactions": 0
+    },
+    {
+      "position": 104,
+      "blind_id": "b-e9b00f3253b5",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "c8c3f81d",
+      "redactions": 0
+    },
+    {
+      "position": 105,
+      "blind_id": "b-0692b9c0fda5",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "577d4d32",
+      "redactions": 0
+    },
+    {
+      "position": 106,
+      "blind_id": "b-3c6de1e1478c",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "gpt4_d12ceb0e",
+      "redactions": 0
+    },
+    {
+      "position": 107,
+      "blind_id": "b-a4b49941cf02",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "4fd1909e",
+      "redactions": 0
+    },
+    {
+      "position": 108,
+      "blind_id": "b-6d218fd9a8f1",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "577d4d32",
+      "redactions": 0
+    },
+    {
+      "position": 109,
+      "blind_id": "b-bd100b536fd6",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "6ade9755",
+      "redactions": 0
+    },
+    {
+      "position": 110,
+      "blind_id": "b-b61cdd5fe3b4",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "8ebdbe50",
+      "redactions": 0
+    },
+    {
+      "position": 111,
+      "blind_id": "b-58f8badd498b",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "caf9ead2",
+      "redactions": 0
+    },
+    {
+      "position": 112,
+      "blind_id": "b-e5ebf8f1d475",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "faba32e5",
+      "redactions": 0
+    },
+    {
+      "position": 113,
+      "blind_id": "b-3c81345a8651",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "7024f17c",
+      "redactions": 0
+    },
+    {
+      "position": 114,
+      "blind_id": "b-421788940199",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "d851d5ba",
+      "redactions": 0
+    },
+    {
+      "position": 115,
+      "blind_id": "b-98f23795d9a5",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "3b6f954b",
+      "redactions": 0
+    },
+    {
+      "position": 116,
+      "blind_id": "b-cb7d2dc501b7",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "29f2956b",
+      "redactions": 0
+    },
+    {
+      "position": 117,
+      "blind_id": "b-0a7b898902bf",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "95bcc1c8",
+      "redactions": 0
+    },
+    {
+      "position": 118,
+      "blind_id": "b-43b139e99275",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "95bcc1c8",
+      "redactions": 0
+    },
+    {
+      "position": 119,
+      "blind_id": "b-b68b7d305850",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "5d3d2817",
+      "redactions": 0
+    },
+    {
+      "position": 120,
+      "blind_id": "b-c86c98bc0257",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "6d550036",
+      "redactions": 0
+    },
+    {
+      "position": 121,
+      "blind_id": "b-9f5531bb158f",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "2318644b",
+      "redactions": 0
+    },
+    {
+      "position": 122,
+      "blind_id": "b-a459cde230e6",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "gpt4_5501fe77",
+      "redactions": 0
+    },
+    {
+      "position": 123,
+      "blind_id": "b-096e5898e097",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "c19f7a0b",
+      "redactions": 0
+    },
+    {
+      "position": 124,
+      "blind_id": "b-e2a34568136d",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "51a45a95",
+      "redactions": 0
+    },
+    {
+      "position": 125,
+      "blind_id": "b-ac68105b6d5a",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "1faac195",
+      "redactions": 0
+    },
+    {
+      "position": 126,
+      "blind_id": "b-6eda433fe1bb",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "36b9f61e",
+      "redactions": 0
+    },
+    {
+      "position": 127,
+      "blind_id": "b-61acf087bae3",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "51a45a95",
+      "redactions": 0
+    },
+    {
+      "position": 128,
+      "blind_id": "b-71384712efde",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "0862e8bf_abs",
+      "redactions": 0
+    },
+    {
+      "position": 129,
+      "blind_id": "b-62c6f5ccae79",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "bc8a6e93_abs",
+      "redactions": 0
+    },
+    {
+      "position": 130,
+      "blind_id": "b-517f74ee70f3",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "a9f6b44c",
+      "redactions": 0
+    },
+    {
+      "position": 131,
+      "blind_id": "b-e4401b998e05",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "e01b8e2f",
+      "redactions": 0
+    },
+    {
+      "position": 132,
+      "blind_id": "b-d1f461d2ba96",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "58bf7951",
+      "redactions": 0
+    },
+    {
+      "position": 133,
+      "blind_id": "b-74f2765f7cd8",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "faba32e5",
+      "redactions": 0
+    },
+    {
+      "position": 134,
+      "blind_id": "b-6eca4c542590",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "edced276",
+      "redactions": 0
+    },
+    {
+      "position": 135,
+      "blind_id": "b-f3c8a8f7ad25",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "e831120c",
+      "redactions": 0
+    },
+    {
+      "position": 136,
+      "blind_id": "b-1972d97be638",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "gpt4_31ff4165",
+      "redactions": 0
+    },
+    {
+      "position": 137,
+      "blind_id": "b-c37c26afa77b",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "e831120c",
+      "redactions": 0
+    },
+    {
+      "position": 138,
+      "blind_id": "b-246f936264f6",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "5a7937c8",
+      "redactions": 0
+    },
+    {
+      "position": 139,
+      "blind_id": "b-12873cd745b3",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "c8c3f81d",
+      "redactions": 0
+    },
+    {
+      "position": 140,
+      "blind_id": "b-251bb11c68ba",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "gpt4_e05b82a6",
+      "redactions": 0
+    },
+    {
+      "position": 141,
+      "blind_id": "b-574be022f9ba",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "6ade9755",
+      "redactions": 0
+    },
+    {
+      "position": 142,
+      "blind_id": "b-0ea2ef0ce8ad",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "726462e0",
+      "redactions": 0
+    },
+    {
+      "position": 143,
+      "blind_id": "b-0dc3adbfceca",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "118b2229",
+      "redactions": 0
+    },
+    {
+      "position": 144,
+      "blind_id": "b-17285fe196ae",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "gpt4_731e37d7",
+      "redactions": 0
+    },
+    {
+      "position": 145,
+      "blind_id": "b-06b623648bbc",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "19b5f2b3",
+      "redactions": 0
+    },
+    {
+      "position": 146,
+      "blind_id": "b-676fe38f65d3",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "gpt4_f2262a51",
+      "redactions": 0
+    },
+    {
+      "position": 147,
+      "blind_id": "b-9521e22352f7",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "66f24dbb",
+      "redactions": 0
+    },
+    {
+      "position": 148,
+      "blind_id": "b-afad79d08779",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "c5e8278d",
+      "redactions": 0
+    },
+    {
+      "position": 149,
+      "blind_id": "b-3417efa9da49",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "94f70d80",
+      "redactions": 0
+    },
+    {
+      "position": 150,
+      "blind_id": "b-f3ded1ce274a",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "9d25d4e0",
+      "redactions": 0
+    },
+    {
+      "position": 151,
+      "blind_id": "b-06eb9d93bbb2",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "2318644b",
+      "redactions": 0
+    },
+    {
+      "position": 152,
+      "blind_id": "b-2f26abf488e3",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "3b6f954b",
+      "redactions": 0
+    },
+    {
+      "position": 153,
+      "blind_id": "b-66399450ce28",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "edced276",
+      "redactions": 0
+    },
+    {
+      "position": 154,
+      "blind_id": "b-c1ded152cfc9",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "19b5f2b3",
+      "redactions": 0
+    },
+    {
+      "position": 155,
+      "blind_id": "b-33050d837ff2",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "129d1232",
+      "redactions": 0
+    },
+    {
+      "position": 156,
+      "blind_id": "b-a36a70553af0",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "a82c026e",
+      "redactions": 0
+    },
+    {
+      "position": 157,
+      "blind_id": "b-6ad7377eef9e",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "8ebdbe50",
+      "redactions": 0
+    },
+    {
+      "position": 158,
+      "blind_id": "b-dfae0238ac24",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "gpt4_ab202e7f",
+      "redactions": 0
+    },
+    {
+      "position": 159,
+      "blind_id": "b-5ec8d33de491",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "6b168ec8",
+      "redactions": 0
+    },
+    {
+      "position": 160,
+      "blind_id": "b-9c46b6fe5a6b",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "gpt4_2ba83207",
+      "redactions": 0
+    },
+    {
+      "position": 161,
+      "blind_id": "b-e186f87925cb",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "dccbc061",
+      "redactions": 0
+    },
+    {
+      "position": 162,
+      "blind_id": "b-fde1dd14a0f3",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "ccb36322",
+      "redactions": 0
+    },
+    {
+      "position": 163,
+      "blind_id": "b-2a260b24e3e6",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "58ef2f1c",
+      "redactions": 0
+    },
+    {
+      "position": 164,
+      "blind_id": "b-ec7cf6c900a0",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "gpt4_194be4b3",
+      "redactions": 0
+    },
+    {
+      "position": 165,
+      "blind_id": "b-d10ebbf7cca2",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "0862e8bf",
+      "redactions": 0
+    },
+    {
+      "position": 166,
+      "blind_id": "b-9bf0e15a4731",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "311778f1",
+      "redactions": 0
+    },
+    {
+      "position": 167,
+      "blind_id": "b-5513f0639a66",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "caf9ead2",
+      "redactions": 0
+    },
+    {
+      "position": 168,
+      "blind_id": "b-4bb83eaf7e11",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "80ec1f4f",
+      "redactions": 0
+    },
+    {
+      "position": 169,
+      "blind_id": "b-e7018bc88088",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "ad7109d1",
+      "redactions": 0
+    },
+    {
+      "position": 170,
+      "blind_id": "b-688be39f258a",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "gpt4_d12ceb0e",
+      "redactions": 0
+    },
+    {
+      "position": 171,
+      "blind_id": "b-248cd275ff6e",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "7024f17c",
+      "redactions": 0
+    },
+    {
+      "position": 172,
+      "blind_id": "b-3c047f453e34",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "b86304ba",
+      "redactions": 0
+    },
+    {
+      "position": 173,
+      "blind_id": "b-9a8bf754ee1e",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "6cb6f249",
+      "redactions": 0
+    },
+    {
+      "position": 174,
+      "blind_id": "b-57d1b929dfb8",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "25e5aa4f",
+      "redactions": 0
+    },
+    {
+      "position": 175,
+      "blind_id": "b-2504ce8dec18",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "51a45a95",
+      "redactions": 0
+    },
+    {
+      "position": 176,
+      "blind_id": "b-45b350bf8f64",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "0862e8bf",
+      "redactions": 0
+    },
+    {
+      "position": 177,
+      "blind_id": "b-4543bf5cde11",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "gpt4_ab202e7f",
+      "redactions": 0
+    },
+    {
+      "position": 178,
+      "blind_id": "b-04d09e769515",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "0a995998",
+      "redactions": 0
+    },
+    {
+      "position": 179,
+      "blind_id": "b-3fd812477007",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "15745da0_abs",
+      "redactions": 0
+    },
+    {
+      "position": 180,
+      "blind_id": "b-1ff9925ddb5c",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "d682f1a2",
+      "redactions": 0
+    },
+    {
+      "position": 181,
+      "blind_id": "b-d92b4a03bfd1",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "58bf7951",
+      "redactions": 0
+    },
+    {
+      "position": 182,
+      "blind_id": "b-a2f5827f6bb6",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "88432d0a",
+      "redactions": 0
+    },
+    {
+      "position": 183,
+      "blind_id": "b-b1b9c63de581",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "c5e8278d",
+      "redactions": 0
+    },
+    {
+      "position": 184,
+      "blind_id": "b-1e74dac67b59",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "c19f7a0b",
+      "redactions": 0
+    },
+    {
+      "position": 185,
+      "blind_id": "b-286e5b35d572",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "75499fd8",
+      "redactions": 0
+    },
+    {
+      "position": 186,
+      "blind_id": "b-119a4e6688b3",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "8550ddae",
+      "redactions": 0
+    },
+    {
+      "position": 187,
+      "blind_id": "b-9e1476ac340f",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "f8c5f88b",
+      "redactions": 0
+    },
+    {
+      "position": 188,
+      "blind_id": "b-21d604e30855",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "gpt4_2ba83207",
+      "redactions": 0
+    },
+    {
+      "position": 189,
+      "blind_id": "b-e9813fa0971b",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "gpt4_ab202e7f",
+      "redactions": 0
+    },
+    {
+      "position": 190,
+      "blind_id": "b-0765fdfb35ba",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "8e9d538c",
+      "redactions": 0
+    },
+    {
+      "position": 191,
+      "blind_id": "b-fc7a551f5865",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "a06e4cfe",
+      "redactions": 0
+    },
+    {
+      "position": 192,
+      "blind_id": "b-d2acda10ebe1",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "19b5f2b3_abs",
+      "redactions": 0
+    },
+    {
+      "position": 193,
+      "blind_id": "b-dbddc052c5af",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "ccb36322",
+      "redactions": 0
+    },
+    {
+      "position": 194,
+      "blind_id": "b-1802a6cf3f51",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "8a137a7f",
+      "redactions": 0
+    },
+    {
+      "position": 195,
+      "blind_id": "b-fa7c59cce2c6",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "e01b8e2f",
+      "redactions": 0
+    },
+    {
+      "position": 196,
+      "blind_id": "b-0d4e6a8a7da5",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "8550ddae",
+      "redactions": 0
+    },
+    {
+      "position": 197,
+      "blind_id": "b-c5e1a7eff3d8",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "c8c3f81d",
+      "redactions": 0
+    },
+    {
+      "position": 198,
+      "blind_id": "b-820743876788",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "4100d0a0",
+      "redactions": 0
+    },
+    {
+      "position": 199,
+      "blind_id": "b-8c58e80eb6b7",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "8ebdbe50",
+      "redactions": 0
+    },
+    {
+      "position": 200,
+      "blind_id": "b-584866ade496",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "aae3761f",
+      "redactions": 0
+    },
+    {
+      "position": 201,
+      "blind_id": "b-e02d5145a753",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "6d550036",
+      "redactions": 0
+    },
+    {
+      "position": 202,
+      "blind_id": "b-3275cc6abbbd",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "gpt4_2ba83207",
+      "redactions": 0
+    },
+    {
+      "position": 203,
+      "blind_id": "b-5fe1be865cc2",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "e01b8e2f",
+      "redactions": 0
+    },
+    {
+      "position": 204,
+      "blind_id": "b-789f2a50c52b",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "gpt4_a56e767c",
+      "redactions": 0
+    },
+    {
+      "position": 205,
+      "blind_id": "b-da94ff18560f",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "faba32e5",
+      "redactions": 0
+    },
+    {
+      "position": 206,
+      "blind_id": "b-f07af1616118",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "8a137a7f",
+      "redactions": 0
+    },
+    {
+      "position": 207,
+      "blind_id": "b-c4667c3ed8c9",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "19b5f2b3",
+      "redactions": 0
+    },
+    {
+      "position": 208,
+      "blind_id": "b-6030d692396a",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "15745da0",
+      "redactions": 0
+    },
+    {
+      "position": 209,
+      "blind_id": "b-526ef8d2be1f",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "19b5f2b3_abs",
+      "redactions": 0
+    },
+    {
+      "position": 210,
+      "blind_id": "b-395c097c0e6d",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "ec81a493",
+      "redactions": 0
+    },
+    {
+      "position": 211,
+      "blind_id": "b-a50871af57e9",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "ccb36322",
+      "redactions": 0
+    },
+    {
+      "position": 212,
+      "blind_id": "b-7affcb4f2c6c",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "853b0a1d",
+      "redactions": 0
+    },
+    {
+      "position": 213,
+      "blind_id": "b-46dc8238ca0a",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "15745da0",
+      "redactions": 0
+    },
+    {
+      "position": 214,
+      "blind_id": "b-0249c19fdefc",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "a82c026e",
+      "redactions": 0
+    },
+    {
+      "position": 215,
+      "blind_id": "b-27b87ab6e683",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "66f24dbb",
+      "redactions": 0
+    },
+    {
+      "position": 216,
+      "blind_id": "b-ef520ecd8341",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "gpt4_31ff4165",
+      "redactions": 0
+    },
+    {
+      "position": 217,
+      "blind_id": "b-c798d1ddb15b",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "aae3761f",
+      "redactions": 0
+    },
+    {
+      "position": 218,
+      "blind_id": "b-b84ea32646b7",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "b3c15d39",
+      "redactions": 0
+    },
+    {
+      "position": 219,
+      "blind_id": "b-5d7e38607f54",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "2ce6a0f2",
+      "redactions": 0
+    },
+    {
+      "position": 220,
+      "blind_id": "b-b18eaee9df06",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "80ec1f4f",
+      "redactions": 0
+    },
+    {
+      "position": 221,
+      "blind_id": "b-442d7f4ae8e7",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "3a704032",
+      "redactions": 0
+    },
+    {
+      "position": 222,
+      "blind_id": "b-51d5bf0d8783",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "eeda8a6d",
+      "redactions": 0
+    },
+    {
+      "position": 223,
+      "blind_id": "b-3b3fd7ff820c",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "311778f1",
+      "redactions": 0
+    },
+    {
+      "position": 224,
+      "blind_id": "b-62e743ad17a5",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "gpt4_e05b82a6",
+      "redactions": 0
+    },
+    {
+      "position": 225,
+      "blind_id": "b-55d0431660ae",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "60472f9c",
+      "redactions": 0
+    },
+    {
+      "position": 226,
+      "blind_id": "b-8ea3aeebc061",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "caf9ead2",
+      "redactions": 0
+    },
+    {
+      "position": 227,
+      "blind_id": "b-1518505d19de",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "b3c15d39",
+      "redactions": 0
+    },
+    {
+      "position": 228,
+      "blind_id": "b-9ddd81694e7a",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "3a704032",
+      "redactions": 0
+    },
+    {
+      "position": 229,
+      "blind_id": "b-e7da11b76ce1",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "29f2956b_abs",
+      "redactions": 0
+    },
+    {
+      "position": 230,
+      "blind_id": "b-ed410a529ea6",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "94f70d80",
+      "redactions": 0
+    },
+    {
+      "position": 231,
+      "blind_id": "b-23fd9b3eb390",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "gpt4_f2262a51",
+      "redactions": 0
+    },
+    {
+      "position": 232,
+      "blind_id": "b-25678c6fb143",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "e47becba",
+      "redactions": 0
+    },
+    {
+      "position": 233,
+      "blind_id": "b-385573bf5ba7",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "75499fd8",
+      "redactions": 0
+    },
+    {
+      "position": 234,
+      "blind_id": "b-1485b0b1633f",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "gpt4_15e38248",
+      "redactions": 0
+    },
+    {
+      "position": 235,
+      "blind_id": "b-b82c29c52caf",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "gpt4_731e37d7",
+      "redactions": 0
+    },
+    {
+      "position": 236,
+      "blind_id": "b-1d6cde899e2c",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "gpt4_ab202e7f",
+      "redactions": 0
+    },
+    {
+      "position": 237,
+      "blind_id": "b-7628232fcce5",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "d23cf73b",
+      "redactions": 0
+    },
+    {
+      "position": 238,
+      "blind_id": "b-7caf938b2de3",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "5d3d2817",
+      "redactions": 0
+    },
+    {
+      "position": 239,
+      "blind_id": "b-e6b8cf61ed9a",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "3a704032",
+      "redactions": 0
+    },
+    {
+      "position": 240,
+      "blind_id": "b-81871033c1ae",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "d52b4f67",
+      "redactions": 0
+    },
+    {
+      "position": 241,
+      "blind_id": "b-05977d11de0b",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "8a137a7f",
+      "redactions": 0
+    },
+    {
+      "position": 242,
+      "blind_id": "b-636a438a7fc8",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "36580ce8",
+      "redactions": 0
+    },
+    {
+      "position": 243,
+      "blind_id": "b-a62f06a629e4",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "0a995998",
+      "redactions": 0
+    },
+    {
+      "position": 244,
+      "blind_id": "b-f5593466e61a",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "e831120c",
+      "redactions": 0
+    },
+    {
+      "position": 245,
+      "blind_id": "b-2a86204c6c94",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "gpt4_731e37d7",
+      "redactions": 0
+    },
+    {
+      "position": 246,
+      "blind_id": "b-03ba0976fdc1",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "7024f17c",
+      "redactions": 0
+    },
+    {
+      "position": 247,
+      "blind_id": "b-7b9325b936e5",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "e47becba",
+      "redactions": 0
+    },
+    {
+      "position": 248,
+      "blind_id": "b-87a45006a930",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "36580ce8",
+      "redactions": 0
+    },
+    {
+      "position": 249,
+      "blind_id": "b-862d570a2b02",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "8e9d538c",
+      "redactions": 0
+    },
+    {
+      "position": 250,
+      "blind_id": "b-bd0d29d74afa",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "6f9b354f",
+      "redactions": 0
+    },
+    {
+      "position": 251,
+      "blind_id": "b-4b2bf3b8b16f",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "29f2956b_abs",
+      "redactions": 0
+    },
+    {
+      "position": 252,
+      "blind_id": "b-57ec3665a34e",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "f8c5f88b",
+      "redactions": 0
+    },
+    {
+      "position": 253,
+      "blind_id": "b-bb310feb70b2",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "15745da0",
+      "redactions": 0
+    },
+    {
+      "position": 254,
+      "blind_id": "b-003e20a5930b",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "88432d0a",
+      "redactions": 0
+    },
+    {
+      "position": 255,
+      "blind_id": "b-3ef416ff5801",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "1faac195",
+      "redactions": 0
+    },
+    {
+      "position": 256,
+      "blind_id": "b-0eb301b2a9d1",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "2e6d26dc",
+      "redactions": 0
+    },
+    {
+      "position": 257,
+      "blind_id": "b-30cf4a9e5604",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "10d9b85a",
+      "redactions": 0
+    },
+    {
+      "position": 258,
+      "blind_id": "b-c807930c77c8",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "60472f9c",
+      "redactions": 0
+    },
+    {
+      "position": 259,
+      "blind_id": "b-0b293ca158df",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "e3038f8c",
+      "redactions": 0
+    },
+    {
+      "position": 260,
+      "blind_id": "b-e45752b0dff6",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "3b6f954b",
+      "redactions": 0
+    },
+    {
+      "position": 261,
+      "blind_id": "b-25f0f4a6aa4e",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "10d9b85a",
+      "redactions": 0
+    },
+    {
+      "position": 262,
+      "blind_id": "b-eda1139dbf46",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "58bf7951",
+      "redactions": 0
+    },
+    {
+      "position": 263,
+      "blind_id": "b-39952d658485",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "a06e4cfe",
+      "redactions": 0
+    },
+    {
+      "position": 264,
+      "blind_id": "b-56a91ecbfd6e",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "edced276",
+      "redactions": 0
+    },
+    {
+      "position": 265,
+      "blind_id": "b-c308ba54732c",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "d682f1a2",
+      "redactions": 0
+    },
+    {
+      "position": 266,
+      "blind_id": "b-305b55685047",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "gpt4_f2262a51",
+      "redactions": 0
+    },
+    {
+      "position": 267,
+      "blind_id": "b-520fc8b30cd6",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "10d9b85a",
+      "redactions": 0
+    },
+    {
+      "position": 268,
+      "blind_id": "b-9a92ca0ddb09",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "6d550036",
+      "redactions": 0
+    },
+    {
+      "position": 269,
+      "blind_id": "b-2fba76b5847a",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "bc8a6e93_abs",
+      "redactions": 0
+    },
+    {
+      "position": 270,
+      "blind_id": "b-e1a8ae422a7e",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "51a45a95",
+      "redactions": 0
+    },
+    {
+      "position": 271,
+      "blind_id": "b-236cfe2e98b9",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "ad7109d1",
+      "redactions": 0
+    },
+    {
+      "position": 272,
+      "blind_id": "b-0e9aa32f1e57",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "3a704032",
+      "redactions": 0
+    },
+    {
+      "position": 273,
+      "blind_id": "b-e18360e66ae9",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "66f24dbb",
+      "redactions": 0
+    },
+    {
+      "position": 274,
+      "blind_id": "b-fe4ca04940a8",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "bc8a6e93_abs",
+      "redactions": 0
+    },
+    {
+      "position": 275,
+      "blind_id": "b-a8993c2f5308",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "6ade9755",
+      "redactions": 0
+    },
+    {
+      "position": 276,
+      "blind_id": "b-9a4bc307681d",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "853b0a1d",
+      "redactions": 0
+    },
+    {
+      "position": 277,
+      "blind_id": "b-18cea7f9594c",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "d23cf73b",
+      "redactions": 0
+    },
+    {
+      "position": 278,
+      "blind_id": "b-6e5341deb4d8",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "gpt4_e05b82a6",
+      "redactions": 0
+    },
+    {
+      "position": 279,
+      "blind_id": "b-26003efb32e2",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "3f1e9474",
+      "redactions": 0
+    },
+    {
+      "position": 280,
+      "blind_id": "b-fb48a7d2a19d",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "80ec1f4f",
+      "redactions": 0
+    },
+    {
+      "position": 281,
+      "blind_id": "b-faa0f388e136",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "129d1232",
+      "redactions": 0
+    },
+    {
+      "position": 282,
+      "blind_id": "b-2855393eb686",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "6cb6f249",
+      "redactions": 0
+    },
+    {
+      "position": 283,
+      "blind_id": "b-a9e87269dff8",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "ccb36322",
+      "redactions": 0
+    },
+    {
+      "position": 284,
+      "blind_id": "b-7732da4eb762",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "4100d0a0",
+      "redactions": 0
+    },
+    {
+      "position": 285,
+      "blind_id": "b-2e98f2200607",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "3d86fd0a",
+      "redactions": 0
+    },
+    {
+      "position": 286,
+      "blind_id": "b-b7b42e4d68cd",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "ec81a493",
+      "redactions": 0
+    },
+    {
+      "position": 287,
+      "blind_id": "b-4720b3bae32f",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "dccbc061",
+      "redactions": 0
+    },
+    {
+      "position": 288,
+      "blind_id": "b-7f1d88332f1a",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "76d63226",
+      "redactions": 0
+    },
+    {
+      "position": 289,
+      "blind_id": "b-c99913312d7c",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "15745da0",
+      "redactions": 0
+    },
+    {
+      "position": 290,
+      "blind_id": "b-d816198b2e30",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "e831120c",
+      "redactions": 0
+    },
+    {
+      "position": 291,
+      "blind_id": "b-51e5c5141ffc",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "d851d5ba",
+      "redactions": 0
+    },
+    {
+      "position": 292,
+      "blind_id": "b-53e945568af9",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "0862e8bf_abs",
+      "redactions": 0
+    },
+    {
+      "position": 293,
+      "blind_id": "b-98d28c74f0d5",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "aae3761f",
+      "redactions": 0
+    },
+    {
+      "position": 294,
+      "blind_id": "b-a09cd2dbde0d",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "gpt4_15e38248",
+      "redactions": 0
+    },
+    {
+      "position": 295,
+      "blind_id": "b-97e9ae2b4bbb",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "853b0a1d",
+      "redactions": 0
+    },
+    {
+      "position": 296,
+      "blind_id": "b-fe5a834186a3",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "d52b4f67",
+      "redactions": 0
+    },
+    {
+      "position": 297,
+      "blind_id": "b-232e8d91e138",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "2ce6a0f2",
+      "redactions": 0
+    },
+    {
+      "position": 298,
+      "blind_id": "b-5402e605a6fd",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "9d25d4e0",
+      "redactions": 0
+    },
+    {
+      "position": 299,
+      "blind_id": "b-e1af3bd33ea3",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "36b9f61e",
+      "redactions": 0
+    },
+    {
+      "position": 300,
+      "blind_id": "b-e4e2bd1efa8e",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "46a3abf7",
+      "redactions": 0
+    },
+    {
+      "position": 301,
+      "blind_id": "b-5c14fd14970d",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "gpt4_7fce9456",
+      "redactions": 0
+    },
+    {
+      "position": 302,
+      "blind_id": "b-0401e1251d30",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "d23cf73b",
+      "redactions": 0
+    },
+    {
+      "position": 303,
+      "blind_id": "b-c4b6efc68e08",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "94f70d80",
+      "redactions": 0
+    },
+    {
+      "position": 304,
+      "blind_id": "b-b3274aa4eb36",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "dd2973ad",
+      "redactions": 0
+    },
+    {
+      "position": 305,
+      "blind_id": "b-3188fb843922",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "4fd1909e",
+      "redactions": 0
+    },
+    {
+      "position": 306,
+      "blind_id": "b-607191655e20",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "15745da0_abs",
+      "redactions": 0
+    },
+    {
+      "position": 307,
+      "blind_id": "b-c0b3a0a5512e",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "3b6f954b",
+      "redactions": 0
+    },
+    {
+      "position": 308,
+      "blind_id": "b-926cc629efa4",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "58bf7951",
+      "redactions": 0
+    },
+    {
+      "position": 309,
+      "blind_id": "b-5e3e86167a3b",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "46a3abf7",
+      "redactions": 0
+    },
+    {
+      "position": 310,
+      "blind_id": "b-94f45781b0b1",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "36580ce8",
+      "redactions": 0
+    },
+    {
+      "position": 311,
+      "blind_id": "b-5c13f8317f92",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "ec81a493",
+      "redactions": 0
+    },
+    {
+      "position": 312,
+      "blind_id": "b-ec6f6f9d2199",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "gpt4_31ff4165",
+      "redactions": 0
+    },
+    {
+      "position": 313,
+      "blind_id": "b-e3e0ed03d0a8",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "c960da58",
+      "redactions": 0
+    },
+    {
+      "position": 314,
+      "blind_id": "b-a4400f5bf4c5",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "a06e4cfe",
+      "redactions": 0
+    },
+    {
+      "position": 315,
+      "blind_id": "b-2c78014fc2ef",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "eeda8a6d",
+      "redactions": 0
+    },
+    {
+      "position": 316,
+      "blind_id": "b-d8c2b3a1ccac",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "faba32e5",
+      "redactions": 0
+    },
+    {
+      "position": 317,
+      "blind_id": "b-921045981d3c",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "gpt4_f2262a51",
+      "redactions": 0
+    },
+    {
+      "position": 318,
+      "blind_id": "b-14a801596d95",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "25e5aa4f",
+      "redactions": 0
+    },
+    {
+      "position": 319,
+      "blind_id": "b-7e7c248e0a66",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "19b5f2b3_abs",
+      "redactions": 0
+    },
+    {
+      "position": 320,
+      "blind_id": "b-58537dc57ba7",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "f8c5f88b",
+      "redactions": 0
+    },
+    {
+      "position": 321,
+      "blind_id": "b-ada7069370da",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "8e9d538c",
+      "redactions": 0
+    },
+    {
+      "position": 322,
+      "blind_id": "b-b90d48db7c4e",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "60bf93ed",
+      "redactions": 0
+    },
+    {
+      "position": 323,
+      "blind_id": "b-29cfb9360e46",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "a82c026e",
+      "redactions": 0
+    },
+    {
+      "position": 324,
+      "blind_id": "b-ff706d9627a5",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "gpt4_d12ceb0e",
+      "redactions": 0
+    },
+    {
+      "position": 325,
+      "blind_id": "b-653e546285f5",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "b3c15d39",
+      "redactions": 0
+    },
+    {
+      "position": 326,
+      "blind_id": "b-838bed9fccfd",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "95bcc1c8",
+      "redactions": 0
+    },
+    {
+      "position": 327,
+      "blind_id": "b-3b8bdc064c10",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "gpt4_59c863d7",
+      "redactions": 0
+    },
+    {
+      "position": 328,
+      "blind_id": "b-8f783f8848ee",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "0862e8bf_abs",
+      "redactions": 0
+    },
+    {
+      "position": 329,
+      "blind_id": "b-fcc9a0c526a3",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "gpt4_5501fe77",
+      "redactions": 0
+    },
+    {
+      "position": 330,
+      "blind_id": "b-bbe09dcd4a05",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "60472f9c",
+      "redactions": 0
+    },
+    {
+      "position": 331,
+      "blind_id": "b-b3540c634c41",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "d52b4f67",
+      "redactions": 0
+    },
+    {
+      "position": 332,
+      "blind_id": "b-22e2decc5de5",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "94f70d80",
+      "redactions": 0
+    },
+    {
+      "position": 333,
+      "blind_id": "b-a9e21e6c985d",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "0862e8bf_abs",
+      "redactions": 0
+    },
+    {
+      "position": 334,
+      "blind_id": "b-a40df9c76917",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "gpt4_731e37d7",
+      "redactions": 0
+    },
+    {
+      "position": 335,
+      "blind_id": "b-bc7b996a42af",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "60bf93ed",
+      "redactions": 0
+    },
+    {
+      "position": 336,
+      "blind_id": "b-93c0d457ee7b",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "2e6d26dc",
+      "redactions": 0
+    },
+    {
+      "position": 337,
+      "blind_id": "b-ef2d6d630fb6",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "6f9b354f",
+      "redactions": 0
+    },
+    {
+      "position": 338,
+      "blind_id": "b-521400e52d8e",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "4fd1909e",
+      "redactions": 0
+    },
+    {
+      "position": 339,
+      "blind_id": "b-6c77db9fb137",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "5d3d2817",
+      "redactions": 0
+    },
+    {
+      "position": 340,
+      "blind_id": "b-4c3c5af1fbc6",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "36580ce8",
+      "redactions": 0
+    },
+    {
+      "position": 341,
+      "blind_id": "b-2b3f4a89fab4",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "gpt4_194be4b3",
+      "redactions": 0
+    },
+    {
+      "position": 342,
+      "blind_id": "b-b1a21ac3d8cb",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "3f1e9474",
+      "redactions": 0
+    },
+    {
+      "position": 343,
+      "blind_id": "b-62266996590b",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "1faac195",
+      "redactions": 0
+    },
+    {
+      "position": 344,
+      "blind_id": "b-315b5e706b6b",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "2318644b",
+      "redactions": 0
+    },
+    {
+      "position": 345,
+      "blind_id": "b-8cd269bc88b8",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "58ef2f1c",
+      "redactions": 0
+    },
+    {
+      "position": 346,
+      "blind_id": "b-2329088e19e3",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "58ef2f1c",
+      "redactions": 0
+    },
+    {
+      "position": 347,
+      "blind_id": "b-564a6942f418",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "3f1e9474",
+      "redactions": 0
+    },
+    {
+      "position": 348,
+      "blind_id": "b-534178c63353",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "f8c5f88b",
+      "redactions": 0
+    },
+    {
+      "position": 349,
+      "blind_id": "b-b2737d84669a",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "bc8a6e93",
+      "redactions": 0
+    },
+    {
+      "position": 350,
+      "blind_id": "b-91bd64fa4119",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "gpt4_31ff4165",
+      "redactions": 0
+    },
+    {
+      "position": 351,
+      "blind_id": "b-dc175e5dacf8",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "29f2956b_abs",
+      "redactions": 0
+    },
+    {
+      "position": 352,
+      "blind_id": "b-6857bcb1276f",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "c960da58",
+      "redactions": 0
+    },
+    {
+      "position": 353,
+      "blind_id": "b-4a52fba14e7d",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "311778f1",
+      "redactions": 0
+    },
+    {
+      "position": 354,
+      "blind_id": "b-9d2ba6abba48",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "6f9b354f",
+      "redactions": 0
+    },
+    {
+      "position": 355,
+      "blind_id": "b-efea28c77746",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "c19f7a0b",
+      "redactions": 0
+    },
+    {
+      "position": 356,
+      "blind_id": "b-96ffe6c0252e",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "gpt4_194be4b3",
+      "redactions": 0
+    },
+    {
+      "position": 357,
+      "blind_id": "b-67bbcdebc99c",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "15745da0_abs",
+      "redactions": 0
+    },
+    {
+      "position": 358,
+      "blind_id": "b-e2e73bac6277",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "2e6d26dc",
+      "redactions": 0
+    },
+    {
+      "position": 359,
+      "blind_id": "b-9b6dba5fd70a",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "95bcc1c8",
+      "redactions": 0
+    },
+    {
+      "position": 360,
+      "blind_id": "b-feab62df24d5",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "gpt4_59c863d7",
+      "redactions": 0
+    },
+    {
+      "position": 361,
+      "blind_id": "b-38ecf727ce80",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "29f2956b",
+      "redactions": 0
+    },
+    {
+      "position": 362,
+      "blind_id": "b-ee30312f8469",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "a9f6b44c",
+      "redactions": 0
+    },
+    {
+      "position": 363,
+      "blind_id": "b-81557a5c4724",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "5a7937c8",
+      "redactions": 0
+    },
+    {
+      "position": 364,
+      "blind_id": "b-61753ef266c4",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "e47becba",
+      "redactions": 0
+    },
+    {
+      "position": 365,
+      "blind_id": "b-6b0407aba1ff",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "21436231",
+      "redactions": 0
+    },
+    {
+      "position": 366,
+      "blind_id": "b-1edb218b472c",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "46a3abf7",
+      "redactions": 0
+    },
+    {
+      "position": 367,
+      "blind_id": "b-c1fac8737dfe",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "dd2973ad",
+      "redactions": 0
+    },
+    {
+      "position": 368,
+      "blind_id": "b-193f812695bb",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "gpt4_d12ceb0e",
+      "redactions": 0
+    },
+    {
+      "position": 369,
+      "blind_id": "b-0fb67784fce1",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "6cb6f249",
+      "redactions": 0
+    },
+    {
+      "position": 370,
+      "blind_id": "b-41a90d7ab9a3",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "gpt4_59c863d7",
+      "redactions": 0
+    },
+    {
+      "position": 371,
+      "blind_id": "b-5c4c8f687222",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "88432d0a",
+      "redactions": 0
+    },
+    {
+      "position": 372,
+      "blind_id": "b-a50c72f7ad07",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "gpt4_194be4b3",
+      "redactions": 0
+    },
+    {
+      "position": 373,
+      "blind_id": "b-df69077a4ff9",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "15745da0_abs",
+      "redactions": 0
+    },
+    {
+      "position": 374,
+      "blind_id": "b-44d817338320",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "gpt4_15e38248",
+      "redactions": 0
+    },
+    {
+      "position": 375,
+      "blind_id": "b-dca1b517a1f5",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "dccbc061",
+      "redactions": 0
+    },
+    {
+      "position": 376,
+      "blind_id": "b-d61a78f8519f",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "118b2229",
+      "redactions": 0
+    },
+    {
+      "position": 377,
+      "blind_id": "b-6d4ba6e8a6fb",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "29f2956b_abs",
+      "redactions": 0
+    },
+    {
+      "position": 378,
+      "blind_id": "b-74220d509b38",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "gpt4_7fce9456",
+      "redactions": 0
+    },
+    {
+      "position": 379,
+      "blind_id": "b-feabd03a4fb7",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "ad7109d1",
+      "redactions": 0
+    },
+    {
+      "position": 380,
+      "blind_id": "b-f959af659f34",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "0862e8bf",
+      "redactions": 0
+    },
+    {
+      "position": 381,
+      "blind_id": "b-0e36d16bf667",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "21436231",
+      "redactions": 0
+    },
+    {
+      "position": 382,
+      "blind_id": "b-4d4a15be82d7",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "4fd1909e",
+      "redactions": 0
+    },
+    {
+      "position": 383,
+      "blind_id": "b-bf963f954edd",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "4100d0a0",
+      "redactions": 0
+    },
+    {
+      "position": 384,
+      "blind_id": "b-7f3788348a0e",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "dd2973ad",
+      "redactions": 0
+    },
+    {
+      "position": 385,
+      "blind_id": "b-40408c0a899a",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "75499fd8",
+      "redactions": 0
+    },
+    {
+      "position": 386,
+      "blind_id": "b-0edbc93cb6b3",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "d682f1a2",
+      "redactions": 0
+    },
+    {
+      "position": 387,
+      "blind_id": "b-1ed87e3fc75d",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "80ec1f4f",
+      "redactions": 0
+    },
+    {
+      "position": 388,
+      "blind_id": "b-a7f5fef3c221",
+      "cell_id": "longmemeval-s-comparator-rag-d7a615c1cd51",
+      "query_id": "c19f7a0b",
+      "redactions": 0
+    },
+    {
+      "position": 389,
+      "blind_id": "b-00435dc18783",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "a06e4cfe",
+      "redactions": 0
+    },
+    {
+      "position": 390,
+      "blind_id": "b-09cb4430f721",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "76d63226",
+      "redactions": 0
+    },
+    {
+      "position": 391,
+      "blind_id": "b-554280bdc01e",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "21436231",
+      "redactions": 0
+    },
+    {
+      "position": 392,
+      "blind_id": "b-3535bf32a776",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "c5e8278d",
+      "redactions": 0
+    },
+    {
+      "position": 393,
+      "blind_id": "b-4d7711be4912",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "edced276",
+      "redactions": 0
+    },
+    {
+      "position": 394,
+      "blind_id": "b-ba7441f5d2f2",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "853b0a1d",
+      "redactions": 0
+    },
+    {
+      "position": 395,
+      "blind_id": "b-9d4c10f0c4ba",
+      "cell_id": "longmemeval-s-gbrain-rag-a08ee2bbc80d",
+      "query_id": "e3038f8c",
+      "redactions": 0
+    },
+    {
+      "position": 396,
+      "blind_id": "b-121fe4a76804",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "118b2229",
+      "redactions": 0
+    },
+    {
+      "position": 397,
+      "blind_id": "b-be9aaee33149",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "8a137a7f",
+      "redactions": 0
+    },
+    {
+      "position": 398,
+      "blind_id": "b-be9937bcbca7",
+      "cell_id": "longmemeval-s-gbrain-rag-85a66b7bc109",
+      "query_id": "e3038f8c",
+      "redactions": 0
+    },
+    {
+      "position": 399,
+      "blind_id": "b-2ba4f53cdd6c",
+      "cell_id": "longmemeval-s-gbrain-rag-818fc7549633",
+      "query_id": "6d550036",
+      "redactions": 0
+    }
+  ]
+}
