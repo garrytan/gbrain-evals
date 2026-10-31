@@ -206,6 +206,17 @@ describe('on the VM', () => {
     expect(existsSync(join(out, 'ran'))).toBe(false);
   }, 30_000);
 
+  test('a listener on the proxy port that never answers does not hold the launch: it fails once the proxy exits', async () => {
+    const out = join(tmp, 'silent-out');
+    const port = await freePort(0);
+    const silent = Bun.serve({ port, hostname: '0.0.0.0', idleTimeout: 0, fetch: () => new Promise<Response>(() => {}) });
+    try {
+      await expect(runRemote({ lease_id: 'silent-lease', lease_usd: 0.1, command: 'touch "$SHOOTOUT_OUT/ran"', out }, { port }))
+        .rejects.toThrow(/the metering proxy exited \(code \d+\) before it served lease silent-lease/);
+    } finally { silent.stop(true); }
+    expect(existsSync(join(out, 'ran'))).toBe(false);
+  }, 30_000);
+
   test('rows are checkpointed every 20 attempts, and the store snapshot after ingest gets an immutable realization id', async () => {
     const out = join(tmp, 'checkpoint-out');
     const port = await freePort(0);
