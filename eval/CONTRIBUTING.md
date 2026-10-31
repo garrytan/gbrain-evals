@@ -2,7 +2,7 @@
 
 Useful contributions make it easier to tell when gbrain helps. You can contribute naturally worded questions, a competing search implementation, or a reproduction of a published result.
 
-Work from the repository root. Install with `bun install --frozen-lockfile`, and run `bun run test` for the tests under `test/eval/` and `eval/`, the Python tests and the validators. The gbrain under test is the one `package.json` declares, master `77cf8e111` (v0.60.169.0); a category scores what gbrain implements at that commit. Model-comparison runs follow the model rules in [CLAUDE.md](../CLAUDE.md#choose-models). Everything above [Changelog](#changelog) is current.
+Work from the repository root. Install with `bun install --frozen-lockfile`, and run `bun run test` for the tests under `test/eval/` and `eval/`, the Python tests and the validators. The gbrain under test is the one `package.json` declares, master `7a6bdd357` (v0.60.454.0); a category scores what gbrain implements at that commit. Model-comparison runs follow the model rules in [CLAUDE.md](../CLAUDE.md#choose-models). Everything above [Changelog](#changelog) is current.
 
 ## Write questions in your own words
 
@@ -164,6 +164,11 @@ Step 5 of "Add a category" now says to build every Anthropic Messages request th
 5-family models reject `temperature` and a forced `tool_choice` with HTTP 400, and the helper leaves requests to older
 models unchanged. Step 5 also says to set `paidFlags: true` on the registry row of a paid runner that `all.ts`
 dispatches, so `all.ts` passes it `--paid --budget-run-id <id>`.
+
+### 2026-10-31: The opening names the current pin again
+
+The opening names gbrain master `7a6bdd357` (v0.60.454.0) as the gbrain under test, matching `package.json`. It still
+named `77cf8e111` (v0.60.169.0), which stopped being the pin on October 18; the later re-pins had not updated this page.
 
 ### 2026-10-29: The cost tools refuse more inputs
 

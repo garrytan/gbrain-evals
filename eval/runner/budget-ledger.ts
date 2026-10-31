@@ -29,7 +29,10 @@
  * provider host is reserved, including SDK retries (each retry is a fetch)
  * and calls gbrain makes internally (write-side extraction, synthesis,
  * embeddings). Cached work that never reaches fetch costs nothing and
- * reserves nothing. Reservations count tool schemas, OpenAI `instructions`,
+ * reserves nothing. While a guard is installed it refuses an HTTP request to
+ * any other host that is not loopback: the ledger cannot price it, so an
+ * OpenAI-compatible vendor reached through OPENAI_BASE_URL would spend outside
+ * both caps and leave no record. Reservations count tool schemas, OpenAI `instructions`,
  * the context an OpenAI `previous_response_id` carries, and the cache-write
  * premium when a request can write the provider's prompt cache.
  *
@@ -1059,8 +1062,8 @@ const allowanceScope = new AsyncLocalStorage<BudgetAllowance>();
 
 // ─── Request pricing ────────────────────────────────────────────────
 
-/** Hosts whose requests cost money. */
-const PAID_HOSTS: Record<string, 'openai' | 'anthropic' | 'voyage' | 'openrouter' | 'typesafe' | 'gemini' | 'groq'> = {
+/** Hosts whose requests cost money. Every other host a guarded fetch reaches must be loopback. */
+const PAID_HOSTS: Record<string, 'openai' | 'anthropic' | 'voyage' | 'openrouter' | 'typesafe' | 'gemini' | 'groq' | 'particle'> = {
   'api.openai.com': 'openai',
   'api.anthropic.com': 'anthropic',
   'api.voyageai.com': 'voyage',
@@ -1068,7 +1071,17 @@ const PAID_HOSTS: Record<string, 'openai' | 'anthropic' | 'voyage' | 'openrouter
   'api.typesafe.ai': 'typesafe',
   'generativelanguage.googleapis.com': 'gemini',
   'api.groq.com': 'groq',
+  // Particle AI's OpenAI-compatible API (docs.particle.ai); us.api.particle.ai serves the same API from US-only GPUs.
+  'api.particle.ai': 'particle',
+  'us.api.particle.ai': 'particle',
 };
+
+/** A request host's provider; a host named like an Object.prototype member is not one. */
+const paidProvider = (hostname: string) => Object.hasOwn(PAID_HOSTS, hostname) ? PAID_HOSTS[hostname] : undefined;
+
+/** The metering proxies, local fakes and shims listen here; they bill nothing themselves. IPv4-mapped 127/8 reaches URL as [::ffff:7fXX:XXXX]. */
+const isLoopback = (hostname: string) => hostname === 'localhost' || hostname === '[::1]' || hostname === '0.0.0.0'
+  || /^127(\.\d{1,3}){3}$/.test(hostname) || /^\[::ffff:7f[0-9a-f]{2}:[0-9a-f]{1,4}\]$/.test(hostname);
 
 /** Output-token allowance for a chat request that names no limit. */
 const DEFAULT_MAX_OUTPUT_TOKENS = 4096;
@@ -1090,8 +1103,11 @@ const RERANK_PRICES: Record<string, number> = {
 };
 
 interface TokenPrices { input: number; output: number; cache_read?: number; cache_write?: number }
-/** A model whose prompts over `above_input_tokens` (cache reads and writes included) are billed at other rates for the whole request. */
-export interface ChatPrice extends TokenPrices { long?: TokenPrices & { above_input_tokens: number } }
+/**
+ * A model whose prompts over `above_input_tokens` (cache reads and writes included) are billed at other rates for the whole
+ * request. `max_output` is the output the provider allows a request that names no limit, reserved for such a request.
+ */
+export interface ChatPrice extends TokenPrices { long?: TokenPrices & { above_input_tokens: number }; max_output?: number }
 
 /**
  * Chat list prices, USD per 1M tokens, checked against the providers' pricing
@@ -1134,6 +1150,10 @@ export const CHAT_PRICE_OVERRIDES: Record<string, ChatPrice> = {
   'openai:gpt-6.1-sol': { input: 2, output: 10, cache_read: 0.1, cache_write: 2.5, long: { above_input_tokens: 272_000, input: 4, output: 15, cache_read: 0.2, cache_write: 5 } },
   'openai:gpt-6-luna': { input: 0.1, output: 0.5, cache_read: 0.01, cache_write: 0.125, long: { above_input_tokens: 272_000, input: 0.2, output: 0.75, cache_read: 0.02, cache_write: 0.25 } },
   'openai:gpt-6-astra': { input: 10, output: 50, cache_read: 1, cache_write: 12.5, long: { above_input_tokens: 272_000, input: 20, output: 75, cache_read: 2, cache_write: 25 } },
+  // docs.particle.ai/models and /usage-billing, checked 2026-10-31: peak list rates, reasoning tokens billed as output
+  // inside completion_tokens, and a 32,000-token output cap when a request sends no limit. Off-peak (20:30-04:00 New York)
+  // bills half and is settled here at the peak rates. Hosted web search ($0.0025 a search) is not in usage, so priceRequest refuses it.
+  'particle:particle-1': { input: 0.25, output: 1.0, cache_read: 0.03, max_output: 32_000 },
 };
 
 /**
@@ -1203,7 +1223,7 @@ export interface PriceOptions {
 
 /** Price a request from its URL and JSON body. Returns null for a free host; throws for an unpriceable paid request. */
 export function priceRequest(url: string, body: unknown, options: PriceOptions = {}): RequestPrice | null {
-  const provider = PAID_HOSTS[new URL(url).hostname];
+  const provider = paidProvider(new URL(url).hostname);
   if (!provider) return null;
   if (provider === 'gemini') return priceGemini(url, body);
   // Model listings are free metadata reads (providers' key probes use them).
@@ -1211,6 +1231,9 @@ export function priceRequest(url: string, body: unknown, options: PriceOptions =
   const b = (body ?? {}) as Record<string, unknown>;
   const model = typeof b.model === 'string' ? b.model : '';
   if (!model) throw new BudgetExceededError(`paid request to ${url} names no model; cannot reserve its cost`);
+  if (provider === 'particle' && b.tool_choice !== 'none' && Array.isArray(b.tools) && b.tools.some(t => (t as { type?: unknown } | null)?.type === 'web_search')) {
+    throw new BudgetExceededError(`${url} turns on Particle's hosted web search, billed at $0.0025 a search outside usage, so the ledger can neither reserve nor settle it; send the request without the web_search tool or with tool_choice "none"`);
+  }
   const path = new URL(url).pathname;
   if (provider === 'typesafe') {
     // System One and the Jev reranker bill input tokens only, at gbrain's own TypeSafe price (embedding-pricing.ts).
@@ -1237,9 +1260,9 @@ export function priceRequest(url: string, body: unknown, options: PriceOptions =
   const chained = typeof b.previous_response_id === 'string'
     ? options.chainContextTokens?.(b.previous_response_id) ?? UNKNOWN_CHAIN_CONTEXT_TOKENS : 0;
   const inputTokens = Math.ceil((textBytes([b.system, b.instructions, b.messages, b.prompt, b.input]) + toolBytes) / 3) + 16 + chained;
-  const harnessRow = HARNESS_CHAT_PRICES[`${provider}:${model}`];
+  const price = chatPrice(`${provider}:${model}`);
   const maxOutputTokens = [b.max_tokens, b.max_completion_tokens, b.max_output_tokens].find(v => typeof v === 'number') as number | undefined
-    ?? harnessRow?.max_output ?? DEFAULT_MAX_OUTPUT_TOKENS;
+    ?? (price && 'max_output' in price ? price.max_output : undefined) ?? DEFAULT_MAX_OUTPUT_TOKENS;
   if (provider === 'openrouter') {
     const maxPrice = (b.provider as { max_price?: { prompt?: number; completion?: number } } | undefined)?.max_price;
     if (typeof maxPrice?.prompt !== 'number' || typeof maxPrice.completion !== 'number') {
@@ -1247,7 +1270,6 @@ export function priceRequest(url: string, body: unknown, options: PriceOptions =
     }
     return { provider, model, kind: 'chat', input: maxPrice.prompt, output: maxPrice.completion, inputTokens, maxOutputTokens };
   }
-  const price = chatPrice(`${provider}:${model}`);
   if (!price) throw new BudgetExceededError(`no chat price for ${provider}:${model}; cannot reserve its cost. Look up the provider's current list price for ${model} (input, output and cache rates per million tokens) and register it in CHAT_PRICE_OVERRIDES in eval/runner/budget-ledger.ts as '${provider}:${model}' with the date you checked, then rerun; never guess a rate`);
   // OpenAI caches automatically; Anthropic writes its cache only where a request sets cache_control.
   const cacheWritePremium = price.cache_write !== undefined && price.cache_write > price.input
@@ -1504,8 +1526,9 @@ export function installPaidRequestGuard(run: BudgetRun, options: { fetchImpl?: t
     const url = input instanceof Request ? input.url : String(input);
     const batchKind = batchRequestKind(url, init?.method ?? (input instanceof Request ? input.method : 'GET'));
     if (batchKind === 'free') return send(input, init);
+    const direct: RequestInit = { ...init, redirect: 'error' };
     if (batchKind === 'submission') {
-      if (batchLaneScope.getStore()) return send(input, init);
+      if (batchLaneScope.getStore()) return send(input, direct);
       state.exhausted = true;
       throw new BudgetExceededError(`batch submission to ${url} did not come through the batch lane; submit batches with eval/runner/batch/ so the ledger reserves their worst case first`);
     }
@@ -1514,14 +1537,22 @@ export function installPaidRequestGuard(run: BudgetRun, options: { fetchImpl?: t
     let id: string;
     try {
       price = priceRequest(url, body, pricing);
-      if (!price) return send(input, init);
+      if (!price) {
+        const { protocol, hostname } = new URL(url);
+        const local = protocol === 'file:' || protocol === 'data:' || protocol === 'blob:' || isLoopback(hostname);
+        if (!local && !paidProvider(hostname)) {
+          throw new BudgetExceededError(`${protocol}//${hostname} is not a host the ledger can price, so a request to it during a paid run could spend outside the cap and leave no record; `
+            + 'register its provider in PAID_HOSTS and its list prices in CHAT_PRICE_OVERRIDES in eval/runner/budget-ledger.ts, or reach it through loopback: a metering proxy for a provider, a port forward for a memory-system shim');
+        }
+        return send(input, direct);
+      }
       const allowance = allowanceScope.getStore();
       if (allowance) {
         if (allowance.budget !== run) throw new BudgetExceededError(`allowance ${allowance.description} belongs to another budget run`);
         const held = reservationUsd(price);
         allowance.hold(held, `${price.provider}:${price.model} ${price.kind}`);
         let res: Response;
-        try { res = await send(input, init); }
+        try { res = await send(input, direct); }
         catch (error) { allowance.charge(held, null); throw error; }
         allowance.charge(held, await measure(price, res));
         return res;
@@ -1532,7 +1563,7 @@ export function installPaidRequestGuard(run: BudgetRun, options: { fetchImpl?: t
       throw error;
     }
     let response: Response;
-    try { response = await send(input, init); }
+    try { response = await send(input, direct); }
     catch (error) { run.settle(id, null); throw error; }
     run.settle(id, await measure(price, response));
     return response;
