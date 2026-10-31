@@ -192,14 +192,17 @@ describe('ledger', () => {
       for (const url of ['https://api.unlisted-vendor.ai/v1/chat/completions', 'http://10.0.0.5:8000/v1/chat/completions', 'https://127.0.0.1.example.com/v1/chat/completions']) {
         await expect(send(url, chat)).rejects.toThrow(/is not a host the ledger can price.*PAID_HOSTS/);
       }
+      // A host named like an Object.prototype member is not a paid host.
+      await expect(fetch('https://constructor/v1/models')).rejects.toThrow(/is not a host the ledger can price/);
       expect(guard.exhausted).toBe(true);
-      for (const url of ['http://127.0.0.1:8787/v1/chat/completions', 'http://localhost:8787/v1/chat/completions', 'http://[::1]:8787/v1/chat/completions']) await send(url, chat);
+      for (const url of ['http://127.0.0.1:8787/v1/chat/completions', 'http://localhost:8787/v1/chat/completions', 'http://[::1]:8787/v1/chat/completions',
+        'http://0.0.0.0:8787/v1/chat/completions', 'http://[::ffff:127.0.0.1]:8787/v1/chat/completions']) await send(url, chat);
       await fetch('file:///dev/null');
       await fetch('https://api.particle.ai/v1/models');
       await send('https://api.particle.ai/v1/chat/completions', chat);
     } finally { guard.uninstall(); }
     expect(mock.calls).toEqual(['http://127.0.0.1:8787/v1/chat/completions', 'http://localhost:8787/v1/chat/completions', 'http://[::1]:8787/v1/chat/completions',
-      'file:///dev/null', 'https://api.particle.ai/v1/models', 'https://api.particle.ai/v1/chat/completions']);
+      'http://0.0.0.0:8787/v1/chat/completions', 'http://[::ffff:127.0.0.1]:8787/v1/chat/completions', 'file:///dev/null', 'https://api.particle.ai/v1/models', 'https://api.particle.ai/v1/chat/completions']);
     const entries = read(path).entries;
     expect(entries).toHaveLength(1);
     expect(entries[0]).toMatchObject({ status: 'reconciled', input_tokens: 330, output_tokens: 70 });
@@ -207,10 +210,10 @@ describe('ledger', () => {
     expect(run.close()).toMatchObject({ requests: 1, input_tokens: 330, output_tokens: 70 });
   });
 
-  test('a redirect cannot carry a guarded request from an admitted host to one the ledger cannot price', async () => {
+  test('a guarded request follows no redirect, so an admitted host cannot hand it on to another host', async () => {
     let reached = 0;
-    const far = Bun.serve({ hostname: '0.0.0.0', port: 0, fetch: () => { reached++; return Response.json({}); } });
-    const hop = Bun.serve({ hostname: '127.0.0.1', port: 0, fetch: () => new Response(null, { status: 307, headers: { location: `http://0.0.0.0:${far.port}/v1/chat/completions` } }) });
+    const far = Bun.serve({ hostname: '127.0.0.1', port: 0, fetch: () => { reached++; return Response.json({}); } });
+    const hop = Bun.serve({ hostname: '127.0.0.1', port: 0, fetch: () => new Response(null, { status: 307, headers: { location: `http://127.0.0.1:${far.port}/v1/chat/completions` } }) });
     const run = BudgetRun.open({ runner: 'test', budgetUsd: 1, ledgerPath: ledgerPath() });
     const guard = installPaidRequestGuard(run);
     try {

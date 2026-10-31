@@ -1076,8 +1076,12 @@ const PAID_HOSTS: Record<string, 'openai' | 'anthropic' | 'voyage' | 'openrouter
   'us.api.particle.ai': 'particle',
 };
 
-/** The metering proxies, local fakes and shims listen here; they bill nothing themselves. */
-const isLoopback = (hostname: string) => hostname === 'localhost' || hostname === '[::1]' || /^127(\.\d{1,3}){3}$/.test(hostname);
+/** A request host's provider; a host named like an Object.prototype member is not one. */
+const paidProvider = (hostname: string) => Object.hasOwn(PAID_HOSTS, hostname) ? PAID_HOSTS[hostname] : undefined;
+
+/** The metering proxies, local fakes and shims listen here; they bill nothing themselves. IPv4-mapped 127/8 reaches URL as [::ffff:7fXX:XXXX]. */
+const isLoopback = (hostname: string) => hostname === 'localhost' || hostname === '[::1]' || hostname === '0.0.0.0'
+  || /^127(\.\d{1,3}){3}$/.test(hostname) || /^\[::ffff:7f[0-9a-f]{2}:[0-9a-f]{1,4}\]$/.test(hostname);
 
 /** Output-token allowance for a chat request that names no limit. */
 const DEFAULT_MAX_OUTPUT_TOKENS = 4096;
@@ -1219,7 +1223,7 @@ export interface PriceOptions {
 
 /** Price a request from its URL and JSON body. Returns null for a free host; throws for an unpriceable paid request. */
 export function priceRequest(url: string, body: unknown, options: PriceOptions = {}): RequestPrice | null {
-  const provider = PAID_HOSTS[new URL(url).hostname];
+  const provider = paidProvider(new URL(url).hostname);
   if (!provider) return null;
   if (provider === 'gemini') return priceGemini(url, body);
   // Model listings are free metadata reads (providers' key probes use them).
@@ -1536,9 +1540,9 @@ export function installPaidRequestGuard(run: BudgetRun, options: { fetchImpl?: t
       if (!price) {
         const { protocol, hostname } = new URL(url);
         const local = protocol === 'file:' || protocol === 'data:' || protocol === 'blob:' || isLoopback(hostname);
-        if (!local && !PAID_HOSTS[hostname]) {
+        if (!local && !paidProvider(hostname)) {
           throw new BudgetExceededError(`${protocol}//${hostname} is not a host the ledger can price, so a request to it during a paid run could spend outside the cap and leave no record; `
-            + 'register its provider in PAID_HOSTS and its list prices in CHAT_PRICE_OVERRIDES in eval/runner/budget-ledger.ts, or send it through a loopback metering proxy');
+            + 'register its provider in PAID_HOSTS and its list prices in CHAT_PRICE_OVERRIDES in eval/runner/budget-ledger.ts, or reach it through loopback: a metering proxy for a provider, a port forward for a memory-system shim');
         }
         return send(input, direct);
       }
