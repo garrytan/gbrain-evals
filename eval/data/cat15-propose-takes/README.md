@@ -16,7 +16,7 @@ An extracted claim that matches a label is a **true positive**. An extra claim i
 - **Recall:** matched claims divided by labeled claims.
 - **F1:** one score combining precision and recall.
 
-A page with no labeled claims scores 1.0 when the extractor correctly returns an empty list. Unparseable extractor output is a system failure and scores zero.
+A page with no labeled claims scores 1.0 when the extractor correctly returns an empty list. Unparseable extractor output is a system failure and scores zero. An extractor reply cut off at its token limit gets one retry at 4,096 tokens, as gbrain's extractor does; a reply still cut off scores zero and is marked `extraction_truncated`, because gbrain fails that page.
 
 ## Training and held-out pages
 
@@ -40,21 +40,22 @@ Dry or filtered runs are always marked partial and `publishable: false`; passing
 From the repository root:
 
 ```sh
-# Live extraction and judging: requires ANTHROPIC_API_KEY.
-bun eval/runner/cat15-propose-takes.ts
+# Live extraction and judging: requires ANTHROPIC_API_KEY and an open
+# budget-ledger run, which caps and records the spend.
+bun eval/runner/cat15-propose-takes.ts --paid --budget-run-id <id>
 
 # Free pipeline check; always marked partial.
 CAT15_DRY_RUN=1 bun eval/runner/cat15-propose-takes.ts
 
 # Investigate one page.
-CAT15_PROBES=cat15-hold-people-bob bun eval/runner/cat15-propose-takes.ts
+CAT15_PROBES=cat15-hold-people-bob bun eval/runner/cat15-propose-takes.ts --paid --budget-run-id <id>
 
 bun test test/eval/cat15-propose-takes.test.ts
 ```
 
 The default scored corpus is `node_modules/gbrain/test/fixtures/calibration/`: `extract-takes-corpus/` for training and `holdout/` for held-out pages. Set `CAT15_CORPUS_DIR` to point at a deliberately selected alternative checkout.
 
-Missing corpus files or keys produce a skipped receipt and a nonzero exit. `--allow-skip` acknowledges the skip without converting it into a measurement.
+Missing corpus files or keys produce a skipped receipt and a nonzero exit. `--allow-skip` acknowledges the skip without converting it into a measurement. A live run without `--paid --budget-run-id <id>` is refused with a skipped receipt and exit 2, which `--allow-skip` does not change. A run that names a missing, closed or spent budget run writes an error receipt, and so does a run whose ledger refuses a request partway, because it stops early. The [budget ledger guide](../../../docs/budget-ledger.md) shows how to open a run.
 
 Outputs go to `eval/reports/cat15-propose-takes/`: individual probe dumps, `_summary.json` and `receipt.json`. The summary identifies models, prompt version, filters and dry-run status.
 
