@@ -119,12 +119,12 @@ lanes.
    needs `ANTHROPIC_API_KEY` and `OPENAI_API_KEY` like any Cat 35 run, and the runner prints its pre-flight cost
    projection before the first judge call.
 
-Your lane is judged the way gbrain's dream lane is: recall of the planted facts, with an evidence check that the quote
+Your lane is judged the way gbrain's dream lane is, on recall of the planted facts with an evidence check that the quote
 the judge cites is in your document and in the conversation, plus claim grounding, distractor leakage, the usability
 checklist, attribution hazards and quote fidelity. Claim grounding grades the sentences of five or more words outside
 code fences, headings and quote lines, as it does for dream, so don't wrap a document in a code fence. A lane with no
 gradable claim gets no hallucination rate, and one with no quotes gets no quote-fidelity rate, rather than a perfect
-score. Read your recall next to the verbatim lane from the same run: verbatim keeps the whole conversation, so its score
+score. Read your recall next to the verbatim lane from the same run. Verbatim keeps the whole conversation, so its score
 is the judge's ceiling.
 
 The receipt's `external_lane` block records the lane name, the folder's real path, the size limit, each file's bytes and
