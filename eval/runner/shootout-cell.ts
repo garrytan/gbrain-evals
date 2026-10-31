@@ -933,8 +933,12 @@ export async function runRemote(payload: RemotePayload, opts: { port?: number; p
     const started = performance.now();
     let up = false;
     const ended = () => proxy.exitCode !== null || proxy.signalCode !== null;
+    const control = createHash('sha256').update(controlToken).digest('hex');
     while (!up && !ended() && performance.now() - started < 120_000) {
-      try { up = ((await (await fetch(`http://127.0.0.1:${port}/__proxy/status`, { signal: AbortSignal.timeout(1000) })).json()) as { run_id?: string }).run_id === payload.lease_id; } catch { up = false; }
+      try {
+        const s = (await (await fetch(`http://127.0.0.1:${port}/__proxy/status`, { signal: AbortSignal.timeout(1000) })).json()) as { run_id?: string; control_sha256?: string };
+        up = s.run_id === payload.lease_id && s.control_sha256 === control;
+      } catch { up = false; }
       if (!up) await Bun.sleep(50);
     }
     if (!up) throw new Error(ended() ? `the metering proxy exited (${proxy.signalCode ?? `code ${proxy.exitCode}`}) before it served lease ${payload.lease_id} on port ${port}` : `the metering proxy did not serve lease ${payload.lease_id} on port ${port} within 120 s`);

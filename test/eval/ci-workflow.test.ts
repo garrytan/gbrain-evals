@@ -60,6 +60,7 @@ describe('CI workflow gates (audit C5 to C8)', () => {
   test('every job installs the Bun version package.json requires', () => {
     const versions = [...workflow.matchAll(/bun-version: (\S+)/g)].map(m => m[1]);
     expect(versions.length).toBeGreaterThan(0);
+    expect(pkg.engines.bun).toMatch(/^>=\d+\.\d+\.\d+$/);
     expect([...new Set(versions)]).toEqual([pkg.engines.bun.replace(/^>=/, '')]);
   });
 });

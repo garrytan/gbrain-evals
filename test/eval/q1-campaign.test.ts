@@ -206,6 +206,17 @@ describe('on the VM', () => {
     expect(existsSync(join(out, 'ran'))).toBe(false);
   }, 30_000);
 
+  test('a leftover proxy serving the same lease on the port is not taken for this launch\'s proxy: its control token differs, so the launch fails and the cell never runs', async () => {
+    const out = join(tmp, 'orphan-out');
+    const port = await freePort(0);
+    const orphan = Bun.serve({ port, hostname: '0.0.0.0', fetch: () => Response.json({ run_id: 'orphan-lease', control_sha256: 'f'.repeat(64) }) });
+    try {
+      await expect(runRemote({ lease_id: 'orphan-lease', lease_usd: 0.1, command: 'touch "$SHOOTOUT_OUT/ran"', out }, { port }))
+        .rejects.toThrow(/the metering proxy exited \(code \d+\) before it served lease orphan-lease/);
+    } finally { orphan.stop(true); }
+    expect(existsSync(join(out, 'ran'))).toBe(false);
+  }, 30_000);
+
   test('a listener on the proxy port that never answers does not hold the launch: it fails once the proxy exits', async () => {
     const out = join(tmp, 'silent-out');
     const port = await freePort(0);

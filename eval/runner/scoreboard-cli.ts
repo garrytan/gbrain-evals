@@ -134,9 +134,11 @@ export async function doctor(a: Args, env: Record<string, string | undefined> = 
   const paid = forWhat === 'local' || forWhat === 'run' || forWhat === 'sealed';
   const remote = forWhat === 'run' || forWhat === 'sealed';
 
-  const bunRange = (JSON.parse(readFileSync(join(REPO_ROOT, 'package.json'), 'utf8')) as { engines: { bun: string } }).engines.bun;
-  add({ id: 'bun', ok: Bun.semver.satisfies(Bun.version, bunRange), severity: 'error', detail: `Bun ${Bun.version} (needs ${bunRange}, package.json engines)`, code: 'PREFLIGHT_FAILED',
-    fix: { next: 'run', argv: ['bash', '-c', `curl -fsSL https://bun.sh/install | bash -s bun-v${bunRange.replace(/^>=/, '')}`], verify: ['bun', '--version'] } });
+  const bunRange = (JSON.parse(readFileSync(join(REPO_ROOT, 'package.json'), 'utf8')) as { engines?: { bun?: string } }).engines?.bun ?? '';
+  const bunMin = /^>=(\d+\.\d+\.\d+)$/.exec(bunRange)?.[1];
+  if (!bunMin) throw new Error(`package.json engines.bun must read ">=X.Y.Z" (doctor installs that version), not ${JSON.stringify(bunRange)}`);
+  add({ id: 'bun', ok: Bun.semver.satisfies(Bun.version.replace(/[-+].*$/, ''), bunRange), severity: 'error', detail: `Bun ${Bun.version} (needs ${bunRange}, package.json engines)`, code: 'PREFLIGHT_FAILED',
+    fix: { next: 'run', argv: ['bash', '-c', `curl -fsSL https://bun.sh/install | bash -s bun-v${bunMin}`], verify: ['bun', '--version'] } });
   const py = Bun.spawnSync(['python3', '--version'], { stdout: 'pipe', stderr: 'pipe' });
   add({ id: 'python3', ok: py.exitCode === 0, severity: err(forWhat === 'fixture' || forWhat === 'local'), detail: py.exitCode === 0 ? py.stdout.toString().trim() || py.stderr.toString().trim() : 'python3 not found (the reference shim and fake provider are Python)', code: 'PREFLIGHT_FAILED',
     fix: { next: 'tell_user_to_run', argv: ['sudo', 'apt-get', 'install', '-y', 'python3'], verify: ['python3', '--version'] } });
