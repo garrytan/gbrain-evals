@@ -47,7 +47,8 @@ and the judge, the shared answer and judgment records, the cost and speed report
 nothing about memory quality; they prove the wiring. `--stub judge-repeat` (or `generator`) replaces a stage that is not
 in the checkout with a stub and says so in the output. CI runs it on every pull request.
 
-**`doctor`** is the preflight that runs before any lease is reserved. It checks the Bun version (1.4.0 or later), Python,
+**`doctor`** is the preflight that runs before any lease is reserved. It checks the Bun version against `engines.bun` in
+`package.json` (1.4.4 or later, and it offers to install that version), Python,
 Docker, the CPU architecture, free disk, the default proxy and shim ports, which provider keys are present (never their
 values), the ledger, the pinned dataset hashes for public sets, that every model a campaign resolves is priced, and,
 for Ubicloud runs, that the VM executor is the repository's `scripts/ubicloud/ubi-runner.sh` (or a runner `UBI_RUNNER`
@@ -193,6 +194,11 @@ preregistration.
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
+
+### 2026-10-31: doctor's Bun check follows `engines`
+
+The `doctor` paragraph now says doctor checks Bun against `engines.bun` in `package.json` (1.4.4 or later) and offers to
+install that version. It said 1.4.0 or later, which no longer matched the check.
 
 ### 2026-10-27: Published aggregates and how to check them
 

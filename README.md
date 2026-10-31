@@ -14,7 +14,7 @@ describes gbrain as this repository pins it today; the changelog at the bottom r
 |---|---|
 | Pinned product | gbrain [`7a6bdd357`](https://github.com/garrytan/gbrain/tree/7a6bdd3579a3c35d57c63790b428a746fe2f3df7), release v0.60.454.0, declared as `gbrain` in `package.json` |
 | Fixed-purpose aliases | `gbrain-cues` (`939232f`) and `gbrain-reader` (`e78f1c3`), used only by the experiments that name them |
-| This repository | gbrain-evals v0.10.136 (`VERSION`) |
+| This repository | gbrain-evals v0.10.138 (`VERSION`) |
 
 This repository installs gbrain v0.60.454.0 (`7a6bdd357`). Some results below were measured at earlier commits; each
 names its commit, and every commit named below is in the release's history except `a7cb37b`, the September 29 branch
@@ -374,6 +374,14 @@ Code is MIT licensed. Dataset and vendored benchmark attribution is recorded in 
 [PrecisionMemBench attribution](eval/precisionmembench/ATTRIBUTION.md).
 
 ## Changelog
+
+### 2026-10-31: Repository row names v0.10.138
+
+gbrain-evals v0.10.138 adds the [shared-agent audience cost report](docs/benchmarks/2026-10-28-shared-agent-audience.md) for gbrain #7852 and train M (#8134). The repository row names v0.10.138 (was v0.10.137). No result row on this page changes; the report is listed in the [docs index](docs/README.md).
+
+### 2026-10-31: Repository row names v0.10.137
+
+gbrain-evals v0.10.137 adds the [member read access search cost report](docs/benchmarks/2026-10-28-member-read-access.md) for gbrain #7812 and train M (#8134). The repository row names v0.10.137 (was v0.10.136). No result row on this page changes; the report is listed in the [docs index](docs/README.md).
 
 ### 2026-10-29: Repository row names v0.10.136
 

@@ -2,6 +2,47 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.138] - 2026-10-31
+
+### Shared agents (on_behalf_of): search cost and recall
+
+- **gbrain PR #7852 lets a shared agent read as the audience its harness names, and calls without an audience cost nothing measurable** ([report](docs/benchmarks/2026-10-28-shared-agent-audience.md)). Measured at `e5bee20d` against its parent `9167c248` on one Ubicloud VM, 8 interleaved runs per side, with raw JSON committed: every cell is within plus or minus 1% at 0%, 20% and 80% restricted. #7852 ships in train M (gbrain PR #8134, head `244f30dd`), where the train M attribution run from 0.10.137 puts the train within -1.3% to +0.3% of folder rules (A2) on a brain with no restrictions.
+- **An audience costs 0.1 to 2.2 ms over the member's own token and keeps that member's recall.** A one-member audience adds under 0.8 ms. A two-member audience adds up to 1.3 ms at `e5bee20d` and up to 2.2 ms (keyword search) at the train M head. hit@10 is 1.0 in every audience cell on train M. The measured search code is the same at both heads, apart from a path under the operator privacy hatch that the bench never turns on.
+
+### Toolchain: Bun 1.4.4, a typecheck that fits in memory, two CI flakes fixed
+
+- **`bun run typecheck` passes without a hand-set heap limit.** The program needs about 4.4 GB of heap, more than Node's default limit, so the script died of heap exhaustion (exit 134 after 1:54 at a 4.4 GB peak, measured at `e9bda629`). The script now raises the limit itself (`NODE_OPTIONS=--max-old-space-size=8192`); with it the run peaks near 4.9 GB of memory, so it still needs a machine with more than about 5 GB of RAM. CI used to raise it in its own step environment, which hid the failure; CI now runs the same script, and `test/eval/ci-workflow.test.ts` checks that it does and that the script keeps the limit and both programs.
+- **CI runs Bun 1.4.4 in every job**, and `package.json` declares `"engines": { "bun": ">=1.4.4" }`. Bun 1.4.2 is below gbrain's `SECURE_BUN_VERSION` (a Brotli decoder CVE) and below the minimum that newer gbrain CLIs accept, so this comes before the next gbrain pin bump. A test checks that every CI job installs the version `engines` names, and the scoreboard's `doctor` now checks the launching host's Bun against `engines` and offers to install that version (it accepted any 1.4.x and offered 1.4.2). Doctor refuses an `engines.bun` that is not of the form `>=X.Y.Z`, the form whose version it installs, and the CI test checks that form. `@types/bun` stays at 1.4.2: version 1.4.4 types a subprocess's `signalCode` as a signal name or a number, and gbrain's `src/core/cli-preflight.ts` (at the pin and at master `922ba1a9`) stores it in a `string | null`, which the typecheck of gbrain's sources rejects. It moves once gbrain accepts the wider type. The VM bootstrap scripts and the Cat 41 image keep their recorded Bun 1.4.2: each is part of a campaign's measured setup, and Bun 1.4.2 still installs this lockfile. A new test checks that the Bun `eval/systems/bootstrap.sh` installs by default meets the pinned gbrain CLI's `MINIMUM_BUN_VERSION`, so a gbrain bump that raises that floor fails CI instead of a paid VM.
+- **Two timing failures in CI's `tests (3)` are fixed at their causes**, with no assertion changed in either test file.
+  - `test/eval/scoreboard-cli.test.ts`: doctor checks Docker with `docker info`. On a cold daemon that took more than 5 seconds on a CI runner (2026-10-28, `1c66e565`), so tests that never need Docker hit Bun's 5-second test timeout, and one then read the killed child's empty output. Doctor now checks Docker in the environment it is given, like its other checks, and the test puts a `docker` that always fails first on that PATH. With a `docker` that sleeps 8 seconds on the PATH, 13 of the file's 20 tests failed before this change and none after.
+  - `test/eval/q1-campaign.test.ts`: the VM-side tests picked a random port from 24000 to 32999, which overlaps Linux's range for outgoing connections. On 2026-10-29 (`d58b4e33`) port 32890 was taken, the metering proxy exited at once, and `runRemote` kept polling for 10 seconds before failing. These tests and `q1-custody-launch.test.ts` now take a port the operating system reports free. `runRemote` now waits until the proxy's status route answers for this lease with the sha256 of the control token this launch gave it, and fails as soon as the proxy exits or is killed, naming its exit code or signal; each status request gives up after a second, so a listener that never answers cannot hold the launch. Before, a different server already answering on the port passed the check and received the cell's traffic, and so would a proxy left over from an earlier launch of the same lease; new tests hold the port with each of those, and with a listener that never answers, and check that the launch fails and the cell never runs. The metering proxy's status route now carries that hash as `control_sha256`.
+- **Campaign identity.** `package.json`, `eval/runner/shootout-cell.ts` and `eval/runner/metering-proxy.ts` are in the F6 campaign's executed tree (`bun.lock` is unchanged). This release counts for F6, or any Q1-style campaign frozen before it, only under a new campaign identity. No file in the Cat 40 Hard freeze changed.
+
+## [0.10.137] - 2026-10-31
+
+### Per-member read access: search cost on a brain with no restrictions
+
+- **gbrain's per-member read access, as it ships in train M (gbrain PR #8134: #7812 readers, #7842 folder rules, #7852 shared-agent audiences), costs hybrid search 1.5 to 1.9% and keyword-only search 2.2% on a brain with no restrictions** ([report](docs/benchmarks/2026-10-28-member-read-access.md)). Measured at `244f30dd` against master `922ba1a9` on one Ubicloud VM, 10 runs per side with the order alternated, raw JSON committed. That is the median of per-run p50s, the method the 2% gate was set with; the median of each round's paired ratio gives 2.2 to 2.6% (hybrid) and 2.7 to 2.8% (keyword). GBRA-108 accepted train M on the gate method.
+- **Run order shifts the result by about a point.** An 8 + 8 run with the train always first read +4.1 to +4.7% for hybrid; a run with master always first read +0.1 to +1.1%. The #7812 runs (October 28, at `f1c39714` against `8e9cd64d`: hybrid +1.5 to 1.6%, keyword +3.2 to 3.9%) always ran the branch first, so they likely read a point or so high.
+- **Where the keyword cost comes from.** Ablations on #7812 put it on reading one `pages` column per matched row: replacing the predicate with `TRUE` cuts the cost to +0.5%, and dropping the index changes nothing. Removing the cost would leave a one-request window at a brain's first restricted page, so GBRA-108 accepted it with the fail-safe kept. Folder rules and shared-agent audiences add no cost of their own (a master, A1, A2, train run within 2.6 points of each other).
+- **Restricted brains.** Members, and shared agents naming those members, get every page they may read (hit@10 1.0 at 20% and 80% restricted).
+
+### The October 7 10x memory advantage plan lands on main as a superseded record
+
+- **Eleven reports and preregistrations on main cite a plan that main didn't have.** Three reports and eight
+  preregistrations from the plan's waves 0 to 5 name `docs/plans/2026-10-07-10x-memory-advantage/PLAN.md`, the branch
+  `capy/10x-memory-advantage-plan` or a link into it. The plan lived only on that branch, whose pull request, #97, was
+  closed unmerged on 2026-10-29. The folder (the plan, its five audits, six reviews and the eng test plan) now lands at
+  that path from the branch's last commit, `2b6ff9af` (2026-10-17). Its README opens with a dated banner: the plan
+  is superseded, and no wave, cap or gate runs from it. Seven files are byte for byte the branch's. In the other six,
+  each of the 118 external product names is replaced by its kind id in square brackets (`[ext-extract-first]`), as
+  the name guard requires outside `docs/comparison-systems.md`; nothing else changed, and the branch keeps the
+  original wording.
+- None of the eleven citations changes, and the branch stays. The preregistrations are frozen (each changes only by
+  an amendment appended at its end, and some are bound by recorded SHA-256 hashes), and every citation already
+  resolves: the path now exists on main, and the branch keeps every revision of the plan as each report read it.
+- The [docs index](docs/README.md) links the folder from its route table.
+
 ## [0.10.136] - 2026-10-29
 
 ### Spring-loaded skills for gbrain GBRA-194 measured
