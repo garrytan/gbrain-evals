@@ -510,3 +510,20 @@ launches.
 
 **Publication.** The S1 file-agent publishes from A4. S1 temporal graph publishes every shard that completes,
 c0 to c3 from A3 and any from A4b, and the report gives the shard count. S4-slice has no row.
+
+### A4b addendum (2026-10-31): temporal graph shards c4 to c9
+
+Written before A4b launches, as A4 requires. At 21:14 UTC on 2026-10-31 the frozen, A1, A2, A3 and A4 ledgers together
+had booked $2,713.75: A3 and A4 have settled, and the two running S2b cells still count at their full $358.99
+reservation. Six shards at $57.62 come to $345.72, and $2,713.75 + $345.72 = $3,059.47, under $3,068.83 even if both S2b
+cells use their whole leases. So A4b runs all 6 shards, c4 to c9.
+
+- **Campaign:** `q1-scoreboard-f6-current-master-a4b`, manifest
+  `2026-10-29-f6-current-master/campaign/f6-campaign-a4b.json`, units in `f6-campaign-a4b-units.json`, ledger capped at
+  $345.72. Each cell is identical to A1's cell of the same id: lease $57.62, 31 hours expected, a 49-hour timeout, VM
+  name ending `-t55`. Everything outside `cells`, `campaign_id`, `cap_usd` and `ledger` is identical to A4.
+- **Hash:** `bun eval/runner/shootout-cell.ts hash --campaign <manifest>` =
+  `fff66e085a7b4ccaadbb4efd01bd57467ee1a35becbc4944c92356fd626358e9` (194 tree files), computed by the custodian from a
+  fresh clone at commit d9fffb93. This addendum changes no hashed file.
+- **Launch condition:** A4b launches once both S2b cells have settled and the five earlier ledgers together book
+  $2,723.11 or less ($3,068.83 minus A4b's cap).
