@@ -82,9 +82,18 @@ describe('readExternalDocs on a hostile folder', () => {
       expect(Buffer.from(out.docs.get('gamma-03')!, 'utf8').equals(bom)).toBe(true);
       expect(out.missing).toEqual(['beta-02']);
       expect(out.files).toEqual([
-        { transcript_id: 'alpha-01', file: 'alpha-01.md', bytes: 0, sha256: sha256('') },
-        { transcript_id: 'gamma-03', file: 'gamma-03.md', bytes: bom.length, sha256: sha256(bom) },
+        { transcript_id: 'alpha-01', file: 'alpha-01.md', bytes: 0, sha256: sha256(''), claims: 0 },
+        { transcript_id: 'gamma-03', file: 'gamma-03.md', bytes: bom.length, sha256: sha256(bom), claims: 0 },
       ]);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test('records how many claims the grounding judge will grade; fenced text and short fragments count none', () => {
+    const dir = folder({ 'alpha-01.md': '```markdown\n- A fenced claim.\n- Another one.\n```\n', 'beta-02.md': 'The first plain sentence counts here. The second plain sentence counts too. Too short.\n' });
+    try {
+      expect(readExternalDocs(dir, ids).files.map((f) => [f.transcript_id, f.claims])).toEqual([['alpha-01', 0], ['beta-02', 2]]);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
@@ -380,10 +389,14 @@ function builtinView(rc: any, lane: string): any {
   }
   delete c.gates.external_judge_failed_rate;
   const ne = rc.native_evidence;
+  // Built-in lanes are scored before the external lane, so their judge events keep the same ids.
+  const builtinEvents = ne.judge_events.filter((e: any) => e.lane !== lane);
+  const builtinIds = new Set(builtinEvents.map((e: any) => e.event_id));
   c.native_built_in = {
-    events: ne.judge_events.filter((e: any) => e.lane !== lane).map(({ event_id, ...e }: any) => e),
-    grounding: ne.grounding.filter((g: any) => g.lane !== lane).map(({ judge_event_id, ...g }: any) => g),
-    distractors: ne.distractors.filter((d: any) => d.lane !== lane).map(({ judge_event_id, ...d }: any) => d),
+    events: builtinEvents,
+    attempts: ne.judge_attempts.filter((a: any) => builtinIds.has(a.event_id)),
+    grounding: ne.grounding.filter((g: any) => g.lane !== lane),
+    distractors: ne.distractors.filter((d: any) => d.lane !== lane),
   };
   return c;
 }
@@ -419,6 +432,7 @@ describe('hermetic external-lane runs', () => {
       max_bytes: EXTERNAL_DOC_MAX_BYTES,
       files: ['coding-reflection-02', 'pure-routine-01'].map((tid) => ({
         transcript_id: tid, file: `${tid}.md`, bytes: docs[tid].length, sha256: sha256(docs[tid]),
+        claims: tid === 'coding-reflection-02' ? 2 : 0,
       })),
       missing: ['coding-reflection-01'],
       provenance: EXTERNAL_PROVENANCE_NOTE,
@@ -483,13 +497,27 @@ describe('hermetic external-lane runs', () => {
     }, 90_000);
   }
 
+  test('a lane whose documents hold no gradable claim still reports hallucination, with zero claims', () => {
+    const r = runHermetic(['--lanes', 'none', ...EXT], {
+      setup: (dir) => {
+        const ext = join(dir, 'ext-out');
+        mkdirSync(ext);
+        writeFileSync(join(ext, 'coding-reflection-02.md'), `\`\`\`markdown\n${notes('coding-reflection-02')}\`\`\`\n`);
+      },
+    });
+    expect(r.exitCode, r.stderr).toBe(0);
+    expect(r.receipt.external_lane.files.map((f: any) => [f.transcript_id, f.claims])).toEqual([['coding-reflection-02', 0]]);
+    expect(r.receipt.hallucination['ext-notes']).toEqual({ claims: 0, verifiable: 0, ungrounded: 0, rate: 0 });
+    expect(r.stderr).toContain('ext-notes hallucination: 0.0% (0/0 verifiable claims)');
+  });
+
   test('every built-in field is identical with or without an external lane, even one whose judge fails', () => {
     const alone = runHermetic(['--lanes', 'verbatim']);
     const beside = runHermetic(['--lanes', 'verbatim', ...EXT], { setup: (dir) => { writeExternalDocs(dir, { judgeFails: true }); } });
     expect(alone.exitCode, alone.stderr).toBe(0);
     expect(builtinView(beside.receipt, 'ext-notes')).toEqual(builtinView(alone.receipt, 'ext-notes'));
     expect(builtinWs0View(beside.ws0, 'ext-notes')).toEqual(builtinWs0View(alone.ws0, 'ext-notes'));
-    expect(beside.requests).toEqual(expect.arrayContaining(alone.requests));
+    expect(beside.requests.slice(0, alone.requests.length)).toEqual(alone.requests);
     expect(beside.requests.length).toBeGreaterThan(alone.requests.length);
     // The external lane's judge failures fail only its own gate, which the run's verdict and exit code include.
     expect(beside.receipt.native_evidence.judge_events.some((e: any) => e.lane === 'ext-notes' && e.judge_failed)).toBe(true);

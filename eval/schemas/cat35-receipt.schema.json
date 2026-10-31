@@ -151,7 +151,8 @@
               "transcript_id",
               "file",
               "bytes",
-              "sha256"
+              "sha256",
+              "claims"
             ],
             "properties": {
               "transcript_id": {
@@ -166,6 +167,10 @@
               "sha256": {
                 "type": "string",
                 "pattern": "^[0-9a-f]{64}$"
+              },
+              "claims": {
+                "type": "integer",
+                "description": "Sentences the grounding judge grades; segmentClaims skips code fences, headings and quotes, as it does for the dream lane."
               }
             }
           }

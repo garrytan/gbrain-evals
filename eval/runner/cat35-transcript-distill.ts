@@ -219,7 +219,8 @@ export function externalLaneNameError(name: string): string | null {
 
 export interface ExternalDocs {
   docs: Map<string, string>;
-  files: Array<{ transcript_id: string; file: string; bytes: number; sha256: string }>;
+  /** claims: sentences the grounding judge grades (segmentClaims skips code fences, headings and quotes, as for dream). */
+  files: Array<{ transcript_id: string; file: string; bytes: number; sha256: string; claims: number }>;
   missing: string[];
 }
 
@@ -292,7 +293,7 @@ export function readExternalDocs(
     const claims = segmentClaims(text).length;
     if (claims > maxClaims) throw new Error(`${file} has ${claims} claims, over the ${maxClaims} the grounding judge grades in one call`);
     out.docs.set(tid, text);
-    out.files.push({ transcript_id: tid, file, bytes: n, sha256: sha256(bytes) });
+    out.files.push({ transcript_id: tid, file, bytes: n, sha256: sha256(bytes), claims });
   }
   return out;
 }
@@ -1099,10 +1100,16 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
   // server-reported model lands in the receipt's judge_models_resolved.
   resetJudgeModelsResolved();
 
-  for (const f of fixtures) {
+  // Built-in lanes over every transcript first, then the external lane, so the
+  // external lane's spend or provider errors cannot reach a built-in judge call.
+  const passes: Array<[Fixture, Lane[]]> = [
+    ...fixtures.map((f): [Fixture, Lane[]] => [f, opts.lanes]),
+    ...(external ? fixtures.map((f): [Fixture, Lane[]] => [f, [external]]) : []),
+  ];
+  for (const [f, lanes] of passes) {
     const tid = f.gold.transcript_id;
     const st = states.get(tid)!;
-    for (const lane of scoredLanes) {
+    for (const lane of lanes) {
       const doc = st.laneDocs[lane];
       const errored = st.laneError[lane];
 
@@ -1288,7 +1295,7 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
     }
 
     // Attribution hazards (distilled lanes): does the page-set assert the wrong claim?
-    for (const lane of scoredLanes.filter(distilled)) {
+    for (const lane of lanes.filter(distilled)) {
       const doc = st.laneDocs[lane];
       for (const h of f.gold.hazards) {
         if (!doc || st.laneError[lane]) {
@@ -1401,6 +1408,7 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
   for (const [lane, b] of Object.entries(halluc)) {
     hallucination[lane] = { ...b, rate: b.verifiable ? b.ungrounded / b.verifiable : 0 };
   }
+  if (external) hallucination[external] ??= { claims: 0, verifiable: 0, ungrounded: 0, rate: 0 };
   const distractorLeakage: Record<string, { hits: number; confirmed: number; denominator: number; judge_failed: number; rate: number }> = {};
   for (const lane of scoredLanes) {
     if (!leakage[lane]) continue;
