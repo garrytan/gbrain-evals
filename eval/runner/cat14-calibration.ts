@@ -85,8 +85,9 @@
  * non-zero unless invoked with --allow-skip.
  *
  * Run:
- *   bun eval/runner/cat14-calibration.ts                  # live (ANTHROPIC_API_KEY)
  *   bun eval/runner/cat14-calibration.ts --budget-run-id <id>   # live, joined to that budget-ledger run (all.ts passes the id)
+ *   bun eval/runner/cat14-calibration.ts --budget-usd <dollars> # live, in a new budget-ledger run capped at that amount
+ *   (a live run with neither is refused: it would spend with no ledger cap)
  *   CAT14_DRY_RUN=1 bun eval/runner/cat14-calibration.ts  # hermetic conformance run
  *   CAT14_PROBES=cat14-pos-1-geography bun eval/runner/cat14-calibration.ts
  *   bun eval/runner/cat14-calibration.ts --allow-skip     # missing key → skip receipt, exit 0
@@ -113,7 +114,7 @@ import {
 } from './receipt.ts';
 import { gbrainVersion, gbrainPin } from './gbrain-version.ts';
 import { UNTRUSTED_DATA_INSTRUCTION, fenceUntrusted, newJudgeNonce } from './judge.ts';
-import { fitAnthropicRequest, toolChoiceSent, withThinkingRoom } from './anthropic-request.ts';
+import { fitAnthropicRequest, temperatureSent, toolChoiceSent, withThinkingRoom } from './anthropic-request.ts';
 import { acceptsTemperature, anthropicModelId, judgeClientFor, judgeTransport } from './openai-judge-shim.ts';
 import { budgetOptionsFrom, receiptCost, startPaidRun } from './budget-ledger.ts';
 import { attestPreregistration } from './prereg.ts';
@@ -1155,9 +1156,15 @@ async function main(): Promise<void> {
   ensureStubbedGateway();
   // The ledger guard goes in before the SDK client exists, so the client's fetch is the guarded one.
   const budget = budgetOptionsFrom(process.argv.slice(2));
+  if (!hermetic && budget.budgetUsd === null && budget.runId === null) {
+    const reason = 'a live run spends money and needs a budget-ledger cap: pass --budget-run-id <id> naming an open run, or --budget-usd <dollars> to open one';
+    console.error(`[cat14] REFUSED: ${reason}`);
+    writeSkipReceipt(startedAt, reason, filtered.length, hermetic, filter);
+    process.exit(2);
+  }
   const prereg = argFlag('--preregistration');
   const attestation = !hermetic && prereg ? attestPreregistration(prereg) : null;
-  const paid = !hermetic && (budget.budgetUsd !== null || budget.runId !== null) ? startPaidRun(CATEGORY, { ...budget, estimateUsd: Number(argFlag('--estimate-usd') ?? 1) }) : null;
+  const paid = !hermetic ? startPaidRun(CATEGORY, { ...budget, estimateUsd: Number(argFlag('--estimate-usd') ?? 1) }) : null;
   const anthropic = hermetic ? null : new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
   const liveComplete = anthropic ? makeLiveComplete(anthropic) : null;
   const liveJudge = anthropic ? makeLiveJudge(anthropic) : null;
@@ -1229,8 +1236,8 @@ async function main(): Promise<void> {
       completion_rate: accSummary.completion_rate,
       errors: accSummary.errors,
       publishable: false,
-      resolved_config: { ...resolvedConfig(hermetic, filter), profile_mode: profileMode, judge_transport: judgeTransport(JUDGE_MODEL), temperature_sent: { think: acceptsTemperature(THINK_MODEL), judge: acceptsTemperature(JUDGE_MODEL) }, tool_choice_sent: { judge: toolChoiceSent(JUDGE_MODEL) } },
-      judge: { model: hermetic ? 'heuristic-string-judge' : JUDGE_MODEL, temperature: JUDGE_TEMPERATURE },
+      resolved_config: { ...resolvedConfig(hermetic, filter), profile_mode: profileMode, judge_transport: judgeTransport(JUDGE_MODEL), temperature_sent: { think: temperatureSent(THINK_MODEL, THINK_TEMPERATURE), judge: temperatureSent(JUDGE_MODEL, JUDGE_TEMPERATURE) }, tool_choice_sent: { judge: toolChoiceSent(JUDGE_MODEL) } },
+      judge: { model: hermetic ? 'heuristic-string-judge' : JUDGE_MODEL, temperature: hermetic ? JUDGE_TEMPERATURE : temperatureSent(JUDGE_MODEL, JUDGE_TEMPERATURE) },
       ...runExtras,
       data: { summary: summary as unknown as Record<string, unknown> },
     });
@@ -1250,8 +1257,8 @@ async function main(): Promise<void> {
     completion_rate: accSummary.completion_rate,
     errors: accSummary.errors,
     publishable: accSummary.publishable && !hermetic && !filter,
-    resolved_config: { ...resolvedConfig(hermetic, filter), profile_mode: profileMode, judge_transport: judgeTransport(JUDGE_MODEL), temperature_sent: { think: acceptsTemperature(THINK_MODEL), judge: acceptsTemperature(JUDGE_MODEL) }, tool_choice_sent: { judge: toolChoiceSent(JUDGE_MODEL) } },
-    judge: { model: hermetic ? 'heuristic-string-judge' : JUDGE_MODEL, temperature: JUDGE_TEMPERATURE },
+    resolved_config: { ...resolvedConfig(hermetic, filter), profile_mode: profileMode, judge_transport: judgeTransport(JUDGE_MODEL), temperature_sent: { think: temperatureSent(THINK_MODEL, THINK_TEMPERATURE), judge: temperatureSent(JUDGE_MODEL, JUDGE_TEMPERATURE) }, tool_choice_sent: { judge: toolChoiceSent(JUDGE_MODEL) } },
+    judge: { model: hermetic ? 'heuristic-string-judge' : JUDGE_MODEL, temperature: hermetic ? JUDGE_TEMPERATURE : temperatureSent(JUDGE_MODEL, JUDGE_TEMPERATURE) },
     ...runExtras,
     data: { summary: summary as unknown as Record<string, unknown> },
   });

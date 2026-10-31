@@ -1563,7 +1563,7 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
       ...receipt.config_snapshot,
       detailed_receipt: receiptPath,
     },
-    judge: { model: judgeModel, temperature: JUDGE_TEMPERATURE, rubric_version: CAT35_JUDGE_PROMPT_VERSION },
+    judge: { model: judgeModel, temperature: temperatureSent(judgeModel, JUDGE_TEMPERATURE), rubric_version: CAT35_JUDGE_PROMPT_VERSION },
     data: { coverage_by_lane: coverageByLane, gates, judge_failed_rate: judgeFailedRate, detailed_receipt: receiptPath },
     startedAt,
   });

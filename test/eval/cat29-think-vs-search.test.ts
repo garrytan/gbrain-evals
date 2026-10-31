@@ -441,7 +441,7 @@ describe('cat29 paid runs and judge prices', () => {
     return ledgerPath;
   };
 
-  // Value: protects=a live run given only a budget run id (all.ts sets BRAINBENCH_BUDGET_RUN_ID, no --budget-usd) joins that ledger run and its receipt names it; fails_when=the paid guard goes back to starting only on --budget-usd; why_new=the run-id-only branch had no test; seam=none; no_claim=injected clients, no request reaches the network
+  // Value: protects=a live run given only a budget run id (all.ts sets BRAINBENCH_BUDGET_RUN_ID, no --budget-usd) joins that ledger run and its receipt names it; fails_when=the paid guard goes back to starting only on --budget-usd; why_new=the run-id-only branch had no test; seam=none; no_claim=injected judge and think clients and hash embeds; gbrain's gateway may still list OpenAI models
   test('a run id with no --budget-usd joins that ledger run and the receipt names it', async () => {
     const ledgerPath = scratchLedger();
     const run = BudgetRun.open({ runner: 'cat29-test', budgetUsd: 1, ledgerPath });
@@ -449,7 +449,7 @@ describe('cat29 paid runs and judge prices', () => {
     expect(String((r.receipt as Record<string, any>).cost?.basis)).toContain(run.runId);
   }, RUN_TIMEOUT);
 
-  // Value: protects=a closed budget run id stops a live run before it starts; fails_when=the run id is ignored without --budget-usd, so the run spends outside the ledger; why_new=the run-id-only branch had no test; seam=none; no_claim=injected clients, no request reaches the network
+  // Value: protects=a closed budget run id stops a live run before it starts; fails_when=the run id is ignored without --budget-usd, so the run spends outside the ledger; why_new=the run-id-only branch had no test; seam=none; no_claim=injected clients; the run stops before seeding
   test('a closed run id is refused before the run starts', async () => {
     const ledgerPath = scratchLedger();
     const run = BudgetRun.open({ runner: 'cat29-test', budgetUsd: 1, ledgerPath });
@@ -460,8 +460,34 @@ describe('cat29 paid runs and judge prices', () => {
   // Value: protects=an unpriced judge model fails before the corpus is seeded or think is called; fails_when=the price is looked up only at the first judge call; why_new=Cat 29 checked the price per judge call, after paid embedding and think calls; seam=none; no_claim=stub run, the live order is the same code path
   test('an unpriced judge model fails before any think call', async () => {
     thinkCalls.length = 0;
-    await expect(runCat29({ stub: true, judgeModel: 'claude-opus-4-5', pages: MINI_PAGES, questions: [MINI_QUESTION], reportsDir: tmpReports(), quiet: true, thinkAnthropic }))
+    await expect(runCat29({ stub: true, judgeModel: 'claude-unlisted-1', pages: MINI_PAGES, questions: [MINI_QUESTION], reportsDir: tmpReports(), quiet: true, thinkAnthropic }))
       .rejects.toThrow('no chat price');
     expect(thinkCalls.length).toBe(0);
+  }, RUN_TIMEOUT);
+
+  // Value: protects=a live run with neither a budget run id nor --budget-usd is refused before the corpus is seeded or anything is sent; fails_when=the paid guard is skipped when neither is set, so the run spends with no ledger cap; why_new=that case ran unguarded; seam=none; no_claim=injected clients; the run stops before seeding
+  test('a live run with no budget-ledger cap is refused before any think call', async () => {
+    thinkCalls.length = 0;
+    const live = (budget?: ReturnType<typeof budgetOptionsFrom>) => withFakeKeys(() => runCat29({
+      stub: false, embedMode: 'hash', pages: MINI_PAGES, questions: [MINI_QUESTION], reportsDir: tmpReports(), quiet: true, thinkAnthropic,
+      judgeClient: makeStubJudgeClient() as unknown as JudgeConfig['client'], budget,
+    }));
+    await expect(live(budgetOptionsFrom([], {}))).rejects.toThrow('needs a budget-ledger cap');
+    await expect(live(undefined)).rejects.toThrow('needs a budget-ledger cap');
+    expect(thinkCalls.length).toBe(0);
+  }, RUN_TIMEOUT);
+
+  // Value: protects=the receipt records the temperatures sent as numbers, null where the model takes none, in temperature_sent and judge.temperature alike; fails_when=temperature_sent goes back to booleans or judge.temperature to the configured 0; why_new=Cat 29 wrote booleans while every other site wrote number | null; seam=none; no_claim=injected judge and think clients and hash embeds
+  test('the receipt records the temperature sent: 0 for the Sonnet 4.6 think model, null for a Claude 5 judge', async () => {
+    const ledgerPath = scratchLedger();
+    const run = BudgetRun.open({ runner: 'cat29-test', budgetUsd: 1, ledgerPath });
+    const r = await withFakeKeys(() => runCat29({
+      stub: false, embedMode: 'hash', pages: MINI_PAGES, questions: [MINI_QUESTION], reportsDir: tmpReports(), quiet: true, thinkAnthropic,
+      judgeModel: 'claude-haiku-5-5', judgeClient: makeStubJudgeClient() as unknown as JudgeConfig['client'],
+      budget: { ...budgetOptionsFrom([], {}), ledgerPath, runId: run.runId },
+    }));
+    const receipt = r.receipt as Record<string, any>;
+    expect(receipt.resolved_config.temperature_sent).toEqual({ think: 0, judge: null });
+    expect(receipt.judge.temperature).toBeNull();
   }, RUN_TIMEOUT);
 });

@@ -21,8 +21,10 @@
  * **Paid guard:** a selection that includes any K or P category refuses to
  * start without both `--paid` and `--budget-run-id <id>` naming an open run
  * in the budget ledger (eval/runner/paid-arm.ts). The id reaches every child
- * as BRAINBENCH_BUDGET_RUN_ID, so runners that use startPaidRun join it, and a
- * runner whose registry row sets `paidFlags` also gets `--paid --budget-run-id <id>`.
+ * as BRAINBENCH_BUDGET_RUN_ID and the ledger path (`--budget-ledger` or the
+ * default) as BRAINBENCH_BUDGET_LEDGER, so runners that use startPaidRun join
+ * that run in that ledger, and a runner whose registry row sets `paidFlags`
+ * also gets `--paid --budget-run-id <id>`.
  *
  * **Shape:** each dispatched runner runs in its own Bun subprocess (isolated
  * PGLite engine, stdout/stderr captured). Subprocesses run concurrently
@@ -75,6 +77,7 @@ import { basename, join } from 'path';
 import { loadReceipt, receiptPath, type Receipt } from './receipt.ts';
 import { REGISTRY, registryEntry, tiersFor, type CategoryEntry, type GateStatus, type PromotionRules, type RegistryTier, type TierSelection } from '../registry.ts';
 import { PaidArmRefusal, requirePaidArm } from './paid-arm.ts';
+import { budgetOptionsFrom } from './budget-ledger.ts';
 import { describeOutcome, evaluatePromotion } from './promotion.ts';
 
 // ─── Category registry ───────────────────────────────────────────────
@@ -518,14 +521,16 @@ export function printNotRun(notRun: NotRun[], log: (s: string) => void = console
 
 /**
  * Refuse a selection that includes a K or P category unless `--paid` and
- * `--budget-run-id` name an open budget run; returns the env every child gets.
+ * `--budget-run-id` name an open budget run; returns the env every child
+ * gets: the run id and the ledger it is in.
  */
 export function paidGuard(argv: readonly string[], dispatch: readonly DispatchedCategory[], ledger: { ledgerPath?: string } = {}): Record<string, string> {
   const paid = dispatch.filter(c => c.registryTier !== 'H');
   if (paid.length === 0) return {};
   const estimate = paid.some(c => c.costUsd === null) ? null : paid.reduce((n, c) => n + (c.costUsd ?? 0), 0);
-  const { budgetRunId } = requirePaidArm(argv, { arm: `all.ts with ${paid.length} paid categor${paid.length > 1 ? 'ies' : 'y'} (${paid.map(c => `Cat ${c.id}`).join(', ')})`, estimateUsd: estimate, ...ledger });
-  return { BRAINBENCH_BUDGET_RUN_ID: budgetRunId };
+  const ledgerPath = ledger.ledgerPath ?? budgetOptionsFrom(argv).ledgerPath;
+  const { budgetRunId } = requirePaidArm(argv, { arm: `all.ts with ${paid.length} paid categor${paid.length > 1 ? 'ies' : 'y'} (${paid.map(c => `Cat ${c.id}`).join(', ')})`, estimateUsd: estimate, ledgerPath });
+  return { BRAINBENCH_BUDGET_RUN_ID: budgetRunId, BRAINBENCH_BUDGET_LEDGER: ledgerPath };
 }
 
 async function main() {

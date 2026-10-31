@@ -526,7 +526,7 @@ function writeCat5Receipt(
       search_mode: 'not_applicable (no retrieval in this eval)',
       reranker_enabled: 'not_applicable (no retrieval in this eval)',
     },
-    judge: { model, temperature: 0 },
+    judge: { model, temperature: temperatureSent(model, 0) },
     started_at: startedAt,
     finished_at: new Date().toISOString(),
   } as const;

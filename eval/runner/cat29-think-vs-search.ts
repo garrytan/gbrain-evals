@@ -59,8 +59,9 @@
  *
  * Run:
  *   bun eval/runner/cat29-think-vs-search.ts --stub        # hermetic
- *   bun eval/runner/cat29-think-vs-search.ts               # live (needs ANTHROPIC + OPENAI keys)
- *   bun eval/runner/cat29-think-vs-search.ts --budget-run-id <id>   # live, joined to that budget-ledger run (all.ts passes the id)
+ *   bun eval/runner/cat29-think-vs-search.ts --budget-run-id <id>   # live (ANTHROPIC + OPENAI keys), joined to that budget-ledger run (all.ts passes the id)
+ *   bun eval/runner/cat29-think-vs-search.ts --budget-usd <dollars> # live, in a new budget-ledger run capped at that amount
+ *   (a live run with neither is refused: it would spend with no ledger cap)
  *   CAT29_QUESTIONS=2 bun eval/runner/cat29-think-vs-search.ts --stub
  */
 
@@ -96,7 +97,7 @@ import { assertCat29JudgeInput, assertCat29SutQuestion, CAT29_JUDGE_PAIR, CAT29_
 import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
 import { installStubEmbed } from './cat27-graph-signals.ts';
 import { acceptsTemperature, anthropicModelId, judgeClientFor, judgeTransport } from './openai-judge-shim.ts';
-import { fitAnthropicRequest, toolChoiceSent, withThinkingRoom } from './anthropic-request.ts';
+import { fitAnthropicRequest, temperatureSent, toolChoiceSent, withThinkingRoom } from './anthropic-request.ts';
 import { budgetOptionsFrom, receiptCost, startPaidRun, type BudgetOptions } from './budget-ledger.ts';
 import { attestPreregistration, type Attestation } from './prereg.ts';
 
@@ -734,10 +735,13 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
   const thinkModel = options.model ?? THINK_MODEL;
   const judgeModel = options.judgeModel ?? JUDGE_MODEL;
   judgePrice(anthropicModelId(judgeModel));
+  if (!stub && options.budget?.budgetUsd == null && options.budget?.runId == null) {
+    throw new Error('Cat 29 live run spends money and needs a budget-ledger cap: pass --budget-run-id <id> naming an open run, or --budget-usd <dollars> to open one');
+  }
   const hashEmbeds = stub || options.embedMode === 'hash';
   let attestation: Attestation | null = null;
   // The guard goes in before any SDK client is built, so the clients fetch through it.
-  const paid = !stub && (options.budget?.budgetUsd != null || options.budget?.runId != null)
+  const paid = !stub && options.budget
     ? (options.preregistration ? (attestation = attestPreregistration(options.preregistration)) : null, startPaidRun(CAT29_CATEGORY, { ...options.budget, estimateUsd: options.estimateUsd ?? 0.4 }))
     : null;
 
@@ -926,7 +930,7 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
       embed_transport: hashEmbeds ? 'stubbed-hash' : 'live',
       embed_mode: options.embedMode ?? 'real',
       judge_transport: judgeTransport(judgeModel),
-      temperature_sent: { think: acceptsTemperature(thinkModel), judge: acceptsTemperature(judgeModel) },
+      temperature_sent: { think: temperatureSent(thinkModel, THINK_TEMPERATURE), judge: temperatureSent(judgeModel, JUDGE_TEMPERATURE) },
       tool_choice_sent: { judge: toolChoiceSent(judgeModel) },
       think_llm: thinkResponseFor ? 'stubbed' : options.thinkAnthropic ? 'injected' : 'live',
       think_temperature: THINK_TEMPERATURE,
@@ -935,7 +939,7 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
       judge_pairwise: true,
       judge_both_orders: true,
     },
-    judge: { model: stub ? 'stub-judge' : judgeModel, temperature: JUDGE_TEMPERATURE, rubric_version: RUBRIC_VERSION },
+    judge: { model: stub ? 'stub-judge' : judgeModel, temperature: stub ? JUDGE_TEMPERATURE : temperatureSent(judgeModel, JUDGE_TEMPERATURE), rubric_version: RUBRIC_VERSION },
     ...(attestation ? { preregistration_attestation: attestation } : {}),
     ...(paidCost ? { cost: paidCost } : {}),
     started_at: startedAt,

@@ -30,7 +30,10 @@
  *
  * Per-probe flow:
  *   1. Read the fixture page (CAT15_CORPUS_DIR or the gbrain package default).
- *   2. Run the production extract prompt against the page body via Sonnet.
+ *   2. Run the production extract prompt against the page body via Sonnet. A
+ *      reply cut off at its token limit gets gbrain's one retry at
+ *      PROPOSE_TAKES_RETRY_MAX_TOKENS; a reply still cut off is scored as a
+ *      miss, because gbrain fails that page.
  *   3. Load the hand-labeled .gradeable-claims.json ground truth.
  *   4. Haiku matcher judge labels TP/FP/FN via structured tool-use; output is
  *      validated (coverage, index range, no double-counting) before any
@@ -55,11 +58,12 @@ import {
   EXTRACT_TAKES_PROMPT,
   PROPOSE_TAKES_PROMPT_VERSION,
   PROPOSE_TAKES_MAX_TOKENS,
+  PROPOSE_TAKES_RETRY_MAX_TOKENS,
   extractorOutcome,
 } from '../../node_modules/gbrain/src/core/cycle/propose-takes.ts';
 import { fitAnthropicRequest, temperatureSent, toolChoiceSent, withThinkingRoom } from './anthropic-request.ts';
 import { budgetOptionsFrom, receiptCost, startPaidRun } from './budget-ledger.ts';
-import { PaidArmRefusal, requirePaidArm } from './paid-arm.ts';
+import { PaidArmRefusal, paidRequested, requirePaidArm } from './paid-arm.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
 import {
   writeReceipt,
@@ -133,6 +137,8 @@ interface ProbeResult {
   trivially_correct?: boolean;
   /** Extractor output was unparseable (not a well-formed [] either) — SUT misbehavior, scored 0. */
   extraction_parse_failed?: boolean;
+  /** The extractor reply was still cut off at max_tokens on gbrain's one retry, so gbrain would fail the page; scored 0. */
+  extraction_truncated?: boolean;
   extracted_claims: ExtractedClaim[];
   ground_truth_claims: GroundTruthClaim[];
   matches: ClaimMatch[];
@@ -212,6 +218,8 @@ const JUDGE_TEMPERATURE = 0;
 export const EXTRACT_TEMPERATURE = 0;
 /** gbrain's extractor limit; a Claude 5 extractor gets 4,096 tokens, gbrain's own retry limit, to think in. */
 const EXTRACT_MAX_TOKENS = withThinkingRoom(EXTRACT_MODEL, PROPOSE_TAKES_MAX_TOKENS);
+/** gbrain retries a reply cut off at its limit once at this limit, clamped to at least the first one. */
+const EXTRACT_RETRY_MAX_TOKENS = Math.max(EXTRACT_MAX_TOKENS, PROPOSE_TAKES_RETRY_MAX_TOKENS);
 const MATCH_MAX_TOKENS = withThinkingRoom(JUDGE_MODEL, 2000);
 
 let _anthropic: Anthropic | null = null;
@@ -230,21 +238,23 @@ interface ExtractOutcome {
   raw_text: string;
   /** Output was empty/unparseable and NOT a well-formed empty array — SUT misbehavior. */
   parse_failed: boolean;
-  /** The reply stopped at EXTRACT_MAX_TOKENS: the harness limit cut it off, so it is not scored. */
+  /** The reply stopped at EXTRACT_RETRY_MAX_TOKENS on gbrain's one retry, where gbrain fails the page; scored as a miss. */
   truncated?: boolean;
 }
 
 async function extractClaims(pageBody: string, client?: Anthropic): Promise<ExtractOutcome> {
   const prompt = buildExtractionPrompt(pageBody);
-  const res = await (client ?? getAnthropic()).messages.create(fitAnthropicRequest({
+  const call = (maxTokens: number) => (client ?? getAnthropic()).messages.create(fitAnthropicRequest({
     model: EXTRACT_MODEL,
-    max_tokens: EXTRACT_MAX_TOKENS,
+    max_tokens: maxTokens,
     temperature: EXTRACT_TEMPERATURE,
     messages: [{ role: 'user', content: prompt }],
   }));
+  let res = await call(EXTRACT_MAX_TOKENS);
+  if (res.stop_reason === 'max_tokens') res = await call(EXTRACT_RETRY_MAX_TOKENS);
   const block = res.content.find((b): b is Anthropic.Messages.TextBlock => b.type === 'text');
   const raw = block?.text ?? '';
-  if (res.stop_reason === 'max_tokens') return { claims: [], raw_text: raw, parse_failed: false, truncated: true };
+  if (res.stop_reason === 'max_tokens') return { claims: [], raw_text: raw, parse_failed: true, truncated: true };
   // Tolerant of fence wrappers: find a JSON array in the output.
   const match = raw.match(/\[[\s\S]*\]/);
   if (match) {
@@ -553,15 +563,13 @@ async function runProbe(probe: Probe, dryRun: boolean, deps: RunProbeDeps = {}):
     } catch (err) {
       return { kind: 'error', origin: 'dependency', message: `extract call failed: ${err instanceof Error ? err.message : String(err)}` };
     }
-    if (extraction.truncated) {
-      return { kind: 'error', origin: 'harness', message: `extractor reply stopped at max_tokens (${EXTRACT_MAX_TOKENS}) before it finished` };
-    }
     extracted = extraction.claims;
     parseFailed = extraction.parse_failed;
 
     if (parseFailed) {
-      // SUT misbehavior: unparseable output. Scored as a total miss even when
-      // the page has zero claims (a correct model returns a clean []).
+      // SUT misbehavior: unparseable output, or a reply still cut off after
+      // gbrain's one retry (gbrain fails that page). Scored as a total miss even
+      // when the page has zero claims (a correct model returns a clean []).
       const result: ProbeResult = {
         probe_id: probe.id,
         split: probe.split,
@@ -578,11 +586,15 @@ async function runProbe(probe: Probe, dryRun: boolean, deps: RunProbeDeps = {}):
         f1_target: probe.f1_target,
         gate: 'fail',
         extraction_parse_failed: true,
+        ...(extraction.truncated ? { extraction_truncated: true } : {}),
         extracted_claims: [],
         ground_truth_claims: groundTruth,
         matches: [],
       };
-      return { kind: 'scored', result, sutError: `extractor output unparseable (not a well-formed [] either): ${extraction.raw_text.slice(0, 200)}` };
+      const sutError = extraction.truncated
+        ? `extractor reply stopped at max_tokens (${EXTRACT_MAX_TOKENS}, then ${EXTRACT_RETRY_MAX_TOKENS} on gbrain's one retry) before it finished`
+        : `extractor output unparseable (not a well-formed [] either): ${extraction.raw_text.slice(0, 200)}`;
+      return { kind: 'scored', result, sutError };
     }
 
     if (extracted.length === 0 || groundTruth.length === 0) {
@@ -769,7 +781,7 @@ function resolvedConfig(dryRun: boolean, filter: string | null): Record<string, 
     judge_temperature: JUDGE_TEMPERATURE,
     temperature_sent: { extract: temperatureSent(EXTRACT_MODEL, EXTRACT_TEMPERATURE), judge: temperatureSent(JUDGE_MODEL, JUDGE_TEMPERATURE) },
     tool_choice_sent: { judge: toolChoiceSent(JUDGE_MODEL) },
-    max_tokens_sent: { extract: EXTRACT_MAX_TOKENS, judge: MATCH_MAX_TOKENS },
+    max_tokens_sent: { extract: EXTRACT_MAX_TOKENS, extract_retry: EXTRACT_RETRY_MAX_TOKENS, judge: MATCH_MAX_TOKENS },
     prompt_version: PROPOSE_TAKES_PROMPT_VERSION,
     prompt_source: 'node_modules/gbrain/src/core/cycle/propose-takes.ts (imported directly, not mirrored)',
     dry_run: dryRun,
@@ -841,7 +853,21 @@ async function main(): Promise<void> {
     } catch (e) {
       if (!(e instanceof PaidArmRefusal)) throw e;
       console.error(`[cat15] REFUSED: ${e.message}`);
-      writeSkipReceipt(startedAt, e.message, filtered.length);
+      if (!paidRequested(argv)) {
+        writeSkipReceipt(startedAt, e.message, filtered.length);
+        process.exit(2);
+      }
+      // Asked to spend and refused (a missing, closed or drained run): an error, never a skip that BRAINBENCH_ALLOW_SKIP passes.
+      writeReceipt(receiptPath(CATEGORY, REPORTS_ROOT), {
+        ...baseReceipt(startedAt),
+        run_status: 'error',
+        n_total: filtered.length,
+        n_scored: 0,
+        completion_rate: 0,
+        errors: [{ probe_id: 'preflight', origin: 'harness', message: e.message }],
+        publishable: false,
+        resolved_config: resolvedConfig(dryRun, filter),
+      });
       process.exit(2);
     }
   }
@@ -851,6 +877,7 @@ async function main(): Promise<void> {
   const acc = new ProbeAccounting(filtered.length);
   const results: ProbeResult[] = [];
   for (const probe of filtered) {
+    if (paid?.guard.exhausted) break;
     process.stderr.write(`  ${probe.id}... `);
     const outcome = await runProbe(probe, dryRun);
     if (outcome.kind === 'error') {
@@ -870,6 +897,7 @@ async function main(): Promise<void> {
     process.stderr.write(`P=${r.precision.toFixed(2)} R=${r.recall.toFixed(2)} F1=${r.f1.toFixed(2)} gate=${r.gate}${r.trivially_correct ? ' (trivially correct: no claims, none extracted)' : ''}\n`);
   }
 
+  const budgetExhausted = paid?.guard.exhausted ?? false;
   paid?.guard.uninstall();
   const cost = paid ? receiptCost(paid.run.close()) : null;
   const plannedSplits = [...new Set(filtered.map(p => p.split))];
@@ -895,8 +923,9 @@ async function main(): Promise<void> {
   writeFileSync(join(DUMPS_DIR, '_summary.json'), JSON.stringify(summary, null, 2));
 
   // Receipt — the artifact all.ts aggregates. Invalid runs (infra error rate
-  // over the cap) are run_status 'error': they produced no trustworthy verdict.
-  if (accSummary.run_invalid) {
+  // over the cap, or a budget run that refused a request and stopped the run)
+  // are run_status 'error': they produced no trustworthy verdict.
+  if (accSummary.run_invalid || budgetExhausted) {
     writeReceipt(receiptPath(CATEGORY, REPORTS_ROOT), {
       ...baseReceipt(startedAt),
       run_status: 'error',
@@ -906,11 +935,13 @@ async function main(): Promise<void> {
       errors: accSummary.errors,
       publishable: false,
       resolved_config: resolvedConfig(dryRun, filter),
-      judge: { model: JUDGE_MODEL, temperature: JUDGE_TEMPERATURE },
+      judge: { model: JUDGE_MODEL, temperature: temperatureSent(JUDGE_MODEL, JUDGE_TEMPERATURE) },
       cost,
-      data: { summary },
+      data: { summary, budget_exhausted: budgetExhausted },
     });
-    console.error(`[cat15] RUN INVALID: infra error rate ${(accSummary.infra_error_rate * 100).toFixed(0)}% over cap; see receipt errors[]`);
+    console.error(budgetExhausted
+      ? '[cat15] RUN INVALID: the budget run refused a request, so the run stopped early; see receipt errors[]'
+      : `[cat15] RUN INVALID: infra error rate ${(accSummary.infra_error_rate * 100).toFixed(0)}% over cap; see receipt errors[]`);
     process.exit(2);
   }
 
@@ -925,7 +956,7 @@ async function main(): Promise<void> {
     errors: accSummary.errors,
     publishable: accSummary.publishable && !dryRun && !filter,
     resolved_config: resolvedConfig(dryRun, filter),
-    judge: { model: JUDGE_MODEL, temperature: JUDGE_TEMPERATURE },
+    judge: { model: JUDGE_MODEL, temperature: temperatureSent(JUDGE_MODEL, JUDGE_TEMPERATURE) },
     cost,
     data: { summary },
   });

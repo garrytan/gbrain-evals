@@ -23,18 +23,16 @@
  * never pool its verdicts with Haiku 4.5 verdicts.
  */
 import type Anthropic from '@anthropic-ai/sdk';
-import { acceptsTemperature } from './openai-judge-shim.ts';
-
-const isClaude5 = (model: string) => /(?:^|[:/])claude-[a-z]+-5(?:[.-]|$)/i.test(model);
+import { acceptsTemperature, isClaude5Family } from './openai-judge-shim.ts';
 
 /** Whether a model accepts a forced `tool_choice`; the Claude 5 family gets `auto` and an instruction instead. */
 export function acceptsForcedToolChoice(model: string): boolean {
-  return !isClaude5(model);
+  return !isClaude5Family(model);
 }
 
 /** A runner's default output limit for a model: at least 4,096 tokens for the Claude 5 family, which thinks inside it. */
 export function withThinkingRoom(model: string, maxTokens: number): number {
-  return isClaude5(model) ? Math.max(maxTokens, 4096) : maxTokens;
+  return isClaude5Family(model) ? Math.max(maxTokens, 4096) : maxTokens;
 }
 
 /** The temperature a fitted request sends, for receipts: null when the model rejects it. */

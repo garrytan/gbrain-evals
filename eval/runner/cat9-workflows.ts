@@ -449,7 +449,7 @@ function writeCat9Artifacts(
     gbrain_version: gbrainVersion(),
     gbrain_pin: gbrainPin(),
     resolved_config: resolvedConfig,
-    judge: { model: judgeModel, temperature: 0 },
+    judge: { model: judgeModel, temperature: temperatureSent(judgeModel, JUDGE_TEMPERATURE) },
     started_at: startedAt,
     finished_at: new Date().toISOString(),
   } as const;

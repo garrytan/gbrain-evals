@@ -91,7 +91,7 @@ import { configureGateway, __setEmbedTransportForTests } from 'gbrain/ai/gateway
 import { runThink, type ThinkLLMClient, type ThinkResult } from 'gbrain/think';
 import { fitAnthropicRequest, temperatureSent, toolChoiceSent } from './anthropic-request.ts';
 import { budgetOptionsFrom, receiptCost, startPaidRun } from './budget-ledger.ts';
-import { PaidArmRefusal, requirePaidArm } from './paid-arm.ts';
+import { PaidArmRefusal, paidRequested, requirePaidArm } from './paid-arm.ts';
 import { JUDGE_PROMPT_VERSION, JUDGE_TEMPERATURE, scoreAnswer, type JudgeEvidence, type RubricCriterion } from './judge.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
 import {
@@ -869,14 +869,16 @@ async function main(): Promise<void> {
     } catch (e) {
       if (!(e instanceof PaidArmRefusal)) throw e;
       console.error(`[cat25] REFUSED: ${e.message}`);
+      // Asked to spend and refused (a missing, closed or drained run): an error, never a skip that BRAINBENCH_ALLOW_SKIP passes.
+      const refusedPaidRun = paidRequested(argv);
       writeReceipt(receiptPath(CATEGORY, REPORTS_ROOT), {
         ...baseReceipt(startedAt),
-        run_status: 'skipped',
-        skip_reason: e.message,
+        run_status: refusedPaidRun ? 'error' : 'skipped',
+        ...(refusedPaidRun ? {} : { skip_reason: e.message }),
         n_total: PROBES.length,
         n_scored: 0,
         completion_rate: 0,
-        errors: [],
+        errors: refusedPaidRun ? [{ probe_id: 'preflight', origin: 'harness', message: e.message }] : [],
         publishable: false,
         resolved_config: resolvedConfig(hermetic),
       });
@@ -896,6 +898,7 @@ async function main(): Promise<void> {
   const results: ProbeResult[] = [];
 
   for (const probe of PROBES) {
+    if (paid?.guard.exhausted) break;
     process.stderr.write(`  ${probe.id}... `);
     let outcome: ProbeOutcome;
     try {
@@ -938,6 +941,7 @@ async function main(): Promise<void> {
     }
   }
 
+  const budgetExhausted = paid?.guard.exhausted ?? false;
   paid?.guard.uninstall();
   const cost = paid ? receiptCost(paid.run.close()) : null;
   const summary = aggregate(results, hermetic ? 'hermetic' : 'live', PROBES.length);
@@ -949,7 +953,8 @@ async function main(): Promise<void> {
     JSON.stringify({ summary, per_probe: results, accounting: accSummary }, null, 2) + '\n',
   );
 
-  if (accSummary.run_invalid) {
+  // A budget run that refused a request stopped the run early: no trustworthy verdict.
+  if (accSummary.run_invalid || budgetExhausted) {
     writeReceipt(receiptPath(CATEGORY, REPORTS_ROOT), {
       ...baseReceipt(startedAt),
       run_status: 'error',
@@ -959,11 +964,13 @@ async function main(): Promise<void> {
       errors: accSummary.errors,
       publishable: false,
       resolved_config: resolvedConfig(hermetic),
-      judge: { model: hermetic ? 'deterministic-marker-judge' : JUDGE_MODEL, temperature: 0 },
+      judge: { model: hermetic ? 'deterministic-marker-judge' : JUDGE_MODEL, temperature: hermetic ? 0 : temperatureSent(JUDGE_MODEL, JUDGE_TEMPERATURE) },
       cost,
-      data: { summary: summary as unknown as Record<string, unknown> },
+      data: { summary: summary as unknown as Record<string, unknown>, budget_exhausted: budgetExhausted },
     });
-    console.error(`[cat25] RUN INVALID: infra error rate ${(accSummary.infra_error_rate * 100).toFixed(0)}% over cap`);
+    console.error(budgetExhausted
+      ? '[cat25] RUN INVALID: the budget run refused a request, so the run stopped early; see receipt errors[]'
+      : `[cat25] RUN INVALID: infra error rate ${(accSummary.infra_error_rate * 100).toFixed(0)}% over cap`);
     process.exit(2);
   }
 
@@ -980,7 +987,7 @@ async function main(): Promise<void> {
     errors: accSummary.errors,
     publishable: accSummary.publishable && !hermetic,
     resolved_config: resolvedConfig(hermetic),
-    judge: { model: hermetic ? 'deterministic-marker-judge' : JUDGE_MODEL, temperature: 0 },
+    judge: { model: hermetic ? 'deterministic-marker-judge' : JUDGE_MODEL, temperature: hermetic ? 0 : temperatureSent(JUDGE_MODEL, JUDGE_TEMPERATURE) },
     cost,
     data: {
       summary: summary as unknown as Record<string, unknown>,

@@ -10,7 +10,13 @@ import { describe, test, expect } from 'bun:test';
 import type Anthropic from '@anthropic-ai/sdk';
 import { acceptsForcedToolChoice, fitAnthropicRequest, temperatureSent, toolChoiceSent, withThinkingRoom } from '../../eval/runner/anthropic-request.ts';
 import { SCORE_ANSWER_TOOL, judgePrice, scoreAnswer, type JudgeEvidence } from '../../eval/runner/judge.ts';
-import { classifyClaim, runCat5, type Claim } from '../../eval/runner/cat5-provenance.ts';
+import { CAT5_CATEGORY, classifyClaim, runCat5, type Claim } from '../../eval/runner/cat5-provenance.ts';
+import { isClaude5Family, openAIMessagesShim } from '../../eval/runner/openai-judge-shim.ts';
+import { usageCost } from '../../eval/runner/budget-ledger.ts';
+import { loadReceipt, receiptPath } from '../../eval/runner/receipt.ts';
+import { mkdtempSync } from 'fs';
+import { tmpdir } from 'os';
+import { join } from 'path';
 import { makeLiveComplete } from '../../eval/runner/cat25-trajectory-routing.ts';
 import { judgePair, makeStubJudgeClient, type Cat29Question } from '../../eval/runner/cat29-think-vs-search.ts';
 import { scoreGrounding } from '../../eval/runner/cat35-judges.ts';
@@ -82,6 +88,15 @@ describe('fitAnthropicRequest', () => {
     expect([acceptsForcedToolChoice('anthropic:claude-sonnet-5-5'), acceptsForcedToolChoice('claude-haiku-4-5-20251001')]).toEqual([false, true]);
   });
 
+  // Value: protects=one predicate decides the Claude 5 family for temperature, tool choice and output limit, Bedrock-style and later-generation ids included; fails_when=acceptsTemperature and the tool-choice rule disagree, or a Bedrock or claude-*-6 id is treated as an older model; why_new=two separate regexes matched only claude-<name>-5 after ^, : or /; seam=none; no_claim=ids only, no provider call
+  test('Bedrock-style and later-generation Claude ids take the Claude 5 rule; older ids do not', () => {
+    const newer = ['anthropic.claude-sonnet-5-5-v1:0', 'us.anthropic.claude-opus-5-5-v1:0', 'claude-opus-6', 'anthropic:claude-haiku-6-1'];
+    const older = ['claude-haiku-4-5-20251001', 'anthropic.claude-sonnet-4-6-v1:0', 'claude-3-5-sonnet-20241022'];
+    const fields = (m: string) => [isClaude5Family(m), temperatureSent(m, 0), toolChoiceSent(m), withThinkingRoom(m, 700)];
+    expect(newer.map(fields)).toEqual(newer.map(() => [true, null, 'auto', 4096]));
+    expect(older.map(fields)).toEqual(older.map(() => [false, 0, 'tool', 700]));
+  });
+
   test('a default output limit leaves Claude 5 room to think; other models keep theirs', () => {
     expect(CLAUDE_5.map(m => withThinkingRoom(m, 700))).toEqual([4096, 4096, 4096]);
     expect(withThinkingRoom('claude-opus-5-5', 8000)).toBe(8000);
@@ -143,6 +158,20 @@ describe('judge.ts scoreAnswer', () => {
     expect(result.cost_usd).toBeCloseTo((1000 * 4 + 2000 * 0.2 + 500 * 5 + 100 * 20) / 1e6, 12);
   });
 
+  // Value: protects=a cached OpenAI judge response through the shim costs what the ledger settles for the same upstream response; fails_when=the shim drops input_tokens_details, so cached input is priced at the uncached rate; why_new=the judge pricing tests used Anthropic usage only; seam=none; no_claim=stub fetch, no OpenAI request
+  test('a cached OpenAI judge response through the shim costs what the ledger settles', async () => {
+    const upstream = {
+      id: 'resp_1', model: 'gpt-6.1-sol', status: 'completed',
+      output: [{ type: 'message', content: [{ type: 'output_text', text: JSON.stringify(SCORE_REPLY.content[0]!.input) }] }],
+      usage: { input_tokens: 10_000, input_tokens_details: { cached_tokens: 9_000 }, output_tokens: 100 },
+    };
+    const fetchImpl = (async () => new Response(JSON.stringify(upstream), { status: 200, headers: { 'content-type': 'application/json' } })) as unknown as typeof fetch;
+    const client = openAIMessagesShim({ apiKey: 'test-key-not-real', fetchImpl }) as unknown as Anthropic;
+    const result = await scoreAnswer(EVIDENCE, { client, model: 'openai:gpt-6.1-sol' });
+    expect(result.cost_usd).toBeCloseTo(usageCost(judgePrice('openai:gpt-6.1-sol'), upstream)!.usd, 12);
+    expect(result.cost_usd).toBeCloseTo((1_000 * 2 + 9_000 * 0.1 + 100 * 10) / 1e6, 12);
+  });
+
   test('the corrective retry to a Claude 5 judge also asks for the tool; an explicit limit is sent as given', async () => {
     const r = recording();
     const result = await scoreAnswer(EVIDENCE, { client: r.client, model: 'claude-sonnet-5-5', maxTokens: 900 });
@@ -199,6 +228,14 @@ describe('the other call sites', () => {
     const score = await classifyClaim(CLAIM, EVIDENCE.ground_truth_pages, { client: cached.client });
     expect(score.input_tokens).toBe(2 * 350);
     expect(score.cost_usd).toBeCloseTo(2 * (10 * 1 + 300 * 0.1 + 40 * 1.25 + 5 * 5) / 1e6, 12);
+  });
+
+  // Value: protects=a Cat 5 receipt's judge.temperature is what was sent, null for a Claude 5 classifier; fails_when=the receipt writes the configured 0 beside temperature_sent null; why_new=judge.temperature was a constant 0; seam=none; no_claim=stub client
+  test('cat5 receipt judge temperature is what was sent', async () => {
+    const pagesBySlug = new Map(EVIDENCE.ground_truth_pages.map(p => [p.slug, p]));
+    const reportsRoot = mkdtempSync(join(tmpdir(), 'cat5-receipt-'));
+    await runCat5({ claims: [CLAIM], pagesBySlug, client: recording().client, model: 'claude-haiku-5-5', reportsRoot });
+    expect(loadReceipt(receiptPath(CAT5_CATEGORY, reportsRoot)).judge).toEqual({ model: 'claude-haiku-5-5', temperature: null });
   });
 
   test('cat25 think completion', async () => {
