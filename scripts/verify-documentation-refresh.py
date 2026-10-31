@@ -26,7 +26,8 @@ def anchors(text):
 
 def candidate_references(root=ROOT):
     # The situation-recall candidate is the memory-cue build, installed as
-    # the gbrain-cues alias since 2026-09-29; `gbrain` is the product pin.
+    # the gbrain-cues alias since 2026-09-29; `gbrain` is the product pin,
+    # checked by product_pin_references.
     pin = json.loads((root / "package.json").read_text())["dependencies"]["gbrain-cues"]
     match = re.fullmatch(r"github:garrytan/gbrain#([a-f0-9]{40})", pin)
     if not match:
@@ -60,9 +61,54 @@ def candidate_references(root=ROOT):
     return errors
 
 
+# Hub pages that name the product pin, one pattern per sentence (CLAUDE.md, "Shape of a top-level document").
+PRODUCT_PIN_SENTENCES = {
+    "README.md": [
+        r"\| Pinned product \| gbrain \[`(?P<sha>[a-f0-9]{7,40})`\]\(https://github\.com/garrytan/gbrain/tree/(?P<full>[a-f0-9]{40})\), release v(?P<version>[\d.]+),",
+        r"This repository installs gbrain v(?P<version>[\d.]+) \(`(?P<sha>[a-f0-9]{7,40})`\)",
+    ],
+    "docs/settings.md": [r"This page describes the gbrain this repository installs, master `(?P<sha>[a-f0-9]{7,40})` \(v(?P<version>[\d.]+),"],
+    "docs/comparison-systems.md": [
+        r"as this repository pins it \(master `(?P<sha>[a-f0-9]{7,40})`, v(?P<version>[\d.]+)\)",
+        r"This repository now installs a different commit, gbrain master `(?P<sha>[a-f0-9]{7,40})` \(v(?P<version>[\d.]+)\)",
+    ],
+    "docs/retrieval-lessons.md": [r"as this repository pins it \(master `(?P<sha>[a-f0-9]{7,40})`, v(?P<version>[\d.]+)\)"],
+    "eval/README.md": [r"Every runner loads the gbrain declared in `package.json`: master `(?P<sha>[a-f0-9]{7,40})` \(v(?P<version>[\d.]+)\)"],
+    "eval/CONTRIBUTING.md": [r"The gbrain under test is the one `package.json` declares, master `(?P<sha>[a-f0-9]{7,40})` \(v(?P<version>[\d.]+)\)"],
+}
+
+
+def product_pin_references(root=ROOT):
+    """The `gbrain` product pin: bun.lock and every hub sentence naming it agree with package.json, and the hubs name one release."""
+    pin = json.loads((root / "package.json").read_text())["dependencies"]["gbrain"]
+    match = re.fullmatch(r"github:garrytan/gbrain#([a-f0-9]{40})", pin)
+    if not match:
+        return [["package.json", "Product pin must have an exact 40-character Git pin"]]
+    sha = match.group(1)
+    errors = []
+    lock = re.search(r'"gbrain"\s*:\s*"([^"]+)"', (root / "bun.lock").read_text())
+    if not lock or lock.group(1) != pin:
+        errors.append(["bun.lock", "Declared product pin differs from package.json pin"])
+    versions = {}
+    for file, patterns in PRODUCT_PIN_SENTENCES.items():
+        text = re.sub(r"\s+", " ", (root / file).read_text())
+        for pattern in patterns:
+            reference = re.search(pattern, text)
+            if not reference:
+                errors.append([file, "Product pin sentence missing: " + pattern])
+            elif not sha.startswith(reference.group("sha")) or reference.groupdict().get("full", sha) != sha:
+                errors.append([file, reference.group(0), "Product pin reference differs from package.json pin"])
+            else:
+                versions.setdefault(reference.group("version"), []).append(file)
+    if len(versions) > 1:
+        errors.append([", ".join(sorted({f for files in versions.values() for f in files})),
+                       "Product pin sentences name different releases: " + ", ".join(sorted(versions))])
+    return errors
+
+
 def verify():
     manifest = json.loads(MANIFEST.read_text())
-    errors = candidate_references()
+    errors = candidate_references() + product_pin_references()
     for file, expected in manifest["protected_sha256"].items():
         path = ROOT / file
         if not path.exists() or hashlib.sha256(path.read_bytes()).hexdigest() != expected:

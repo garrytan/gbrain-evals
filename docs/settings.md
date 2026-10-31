@@ -6,7 +6,7 @@ autocut off. That setup retrieves all labeled conversations for 451/470 answerab
 with opaque session ids at gbrain `109b992`. [Recount](benchmarks/2026-10-04-longmemeval-opaque-followups.md),
 [original experiment](benchmarks/2026-09-06-longmemeval-ranker-wave.md).
 
-This page describes the gbrain this repository installs, master `7a6bdd357` (v0.60.454.0, declared in
+This page describes the gbrain this repository installs, master `3ec766c40` (v0.60.531.0, declared in
 `package.json`). Most experiments here ran at gbrain v0.48.4.0 (`2efaaf8f`) or later commits named beside each
 number. The `balanced`, `conservative` and `tokenmax` mode definitions (`MODE_BUNDLES` in
 `src/core/search/mode.ts`) hold the same values from `2efaaf8f` through `77cf8e111` (v0.60.169.0), apart from three
@@ -22,9 +22,14 @@ queries (v0.60.250.0). The conversation measurements here used `rerank-2.5`; on 
 one document fold into one result row, and organization, OCR and date priors adjust the ranking after the reranker. The
 LongMemEval retrieval rows were measured before v0.60.332.0 and do not test collapse or rank priors; other code differs.
 From v0.60.164.0, `query` also adds up to three matching saved facts as rows of their own (`search.query_facts_arm`,
-on by default and outside the mode bundles); the LongMemEval retrieval rows were measured before it and do not test
-it. Existing per-key overrides take precedence over a mode, so a mode name alone
-is not a complete description of an experiment. Everything above [Changelog](#changelog) is current.
+on by default and outside the mode bundles), and since v0.60.491.0 a `query` with a token budget puts up to 40 dated
+saved facts first instead (`search.query_facts_block`, on by default). Three more defaults outside the bundles arrived
+after v0.60.454.0: `search` puts a newer correction ahead of the saved fact it corrects (`search.saved_facts_supersede`,
+v0.60.493.0); a remote `search` or `query` that names no `limit` keeps at most 3 pages that matched only by meaning
+(`search.remote_page_cap`, v0.60.506.0; `0` turns it off); and text from conversation, chat, email and meeting pages
+comes back inside a quote fence marked as source material (v0.60.507.0, v0.60.521.0; no setting turns it off). The
+LongMemEval retrieval rows were measured before all of these and do not test them. Existing per-key overrides take
+precedence over a mode, so a mode name alone is not a complete description of an experiment. Everything above [Changelog](#changelog) is current.
 
 ## Choose by the questions you need to answer
 
@@ -160,6 +165,14 @@ the [refresh report](benchmarks/2026-09-09-retrieval-refresh.md) gives the full
 reproducible matrix used here.
 
 ## Changelog
+
+### 2026-10-31: Installed pin moves to `3ec766c40`
+
+The installed gbrain commit changed from `7a6bdd357` (v0.60.454.0) to `3ec766c40` (v0.60.531.0). `MODE_BUNDLES` in
+`src/core/search/mode.ts` holds the same values at both commits; the file's only change adds the private-readable set to
+the semantic cache key (GBRA-156). The note on defaults outside the bundles now also names the dated facts block of a
+budgeted `query` (v0.60.491.0), correction ordering of saved facts (v0.60.493.0), the remote page cap (v0.60.506.0) and
+quote-fenced chat text (v0.60.507.0, v0.60.521.0), and says no LongMemEval retrieval row tests them.
 
 ### 2026-10-25: Installed pin moves to `7a6bdd357`
 

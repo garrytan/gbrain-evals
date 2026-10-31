@@ -2,7 +2,7 @@
 
 Useful contributions make it easier to tell when gbrain helps. You can contribute naturally worded questions, a competing search implementation, or a reproduction of a published result.
 
-Work from the repository root. Install with `bun install --frozen-lockfile`, and run `bun run test` for the tests under `test/eval/` and `eval/`, the Python tests and the validators. The gbrain under test is the one `package.json` declares, master `77cf8e111` (v0.60.169.0); a category scores what gbrain implements at that commit. Model-comparison runs follow the model rules in [CLAUDE.md](../CLAUDE.md#choose-models). Everything above [Changelog](#changelog) is current.
+Work from the repository root. Install with `bun install --frozen-lockfile`, and run `bun run test` for the tests under `test/eval/` and `eval/`, the Python tests and the validators. The gbrain under test is the one `package.json` declares, master `3ec766c40` (v0.60.531.0); a category scores what gbrain implements at that commit. Model-comparison runs follow the model rules in [CLAUDE.md](../CLAUDE.md#choose-models). Everything above [Changelog](#changelog) is current.
 
 ## Write questions in your own words
 
@@ -157,6 +157,13 @@ See [CREDITS.md](CREDITS.md) for attribution. Contributions to external question
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
+
+### 2026-10-31: The opening names the current pin
+
+The opening names gbrain master `3ec766c40` (v0.60.531.0) as the pin. It still named `77cf8e111`
+(v0.60.169.0): three re-pins (`f717b1a5b`, `6e1086492`, `7a6bdd357`) had not updated it, because the documentation
+verifier checked only the `gbrain-cues` pin. `scripts/verify-documentation-refresh.py` now checks this sentence against
+`package.json` too.
 
 ### 2026-10-29: The cost tools refuse more inputs
 

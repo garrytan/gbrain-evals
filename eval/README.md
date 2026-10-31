@@ -2,7 +2,7 @@
 
 BrainBench is our collection of tests for gbrain. Each test asks a narrower question than “does memory work?” One checks whether search finds a relationship. Another checks whether an important decision survives when a conversation becomes a note.
 
-Every runner loads the gbrain declared in `package.json`: master `77cf8e111` (v0.60.169.0) as `gbrain`, plus the fixed-purpose aliases `gbrain-cues` and `gbrain-reader` for the experiments that name them. Most category runners also take `--gbrain <checkout>[@ref]` to measure another build as a copied overlay. Start with the [main guide](../README.md) for what gbrain does today, or the [documentation index](../docs/README.md) for every report. This page explains the test machinery and how to work with it. Everything above [Changelog](#changelog) is current.
+Every runner loads the gbrain declared in `package.json`: master `3ec766c40` (v0.60.531.0) as `gbrain`, plus the fixed-purpose aliases `gbrain-cues` and `gbrain-reader` for the experiments that name them. Most category runners also take `--gbrain <checkout>[@ref]` to measure another build as a copied overlay. Start with the [main guide](../README.md) for what gbrain does today, or the [documentation index](../docs/README.md) for every report. This page explains the test machinery and how to work with it. Everything above [Changelog](#changelog) is current.
 
 ## Start with a free check
 
@@ -110,6 +110,13 @@ To reproduce an old result, match both the gbrain-evals revision and the gbrain 
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
+
+### 2026-10-31: The introduction names the current pin
+
+The introduction names gbrain master `3ec766c40` (v0.60.531.0) as the pin. It still named `77cf8e111`
+(v0.60.169.0): three re-pins (`f717b1a5b`, `6e1086492`, `7a6bdd357`) had not updated it, because the documentation
+verifier checked only the `gbrain-cues` pin. `scripts/verify-documentation-refresh.py` now checks this sentence against
+`package.json` too.
 
 ### 2026-10-11: The introduction names the current pin
 

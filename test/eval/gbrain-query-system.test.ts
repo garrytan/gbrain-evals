@@ -15,7 +15,7 @@ import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
 import { importGbrain, resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
 import { hashEmbed } from '../../eval/runner/memory-qa/run.ts';
 import { renderSessionPage } from '../../eval/runner/memory-qa/corpus.ts';
-import { GbrainQueryConnector, loadConnectorModules, parity, QUERY_PATH_PINS, wireRequest, WIRE_NAMES, type ConnectorModules } from '../../eval/runner/systems/gbrain-query/connector.ts';
+import { GbrainQueryConnector, loadConnectorModules, parity, QUERY_PATH_PINS, storedText, wireRequest, WIRE_NAMES, type ConnectorModules, type DeliveredRow } from '../../eval/runner/systems/gbrain-query/connector.ts';
 import { DELIVERY_VARIANTS, GbrainQuerySystem, memoKey, parseGrid } from '../../eval/runner/systems/gbrain-query/system.ts';
 import type { GbrainModules } from '../../eval/runner/systems/gbrain.ts';
 
@@ -161,6 +161,36 @@ describe('fixture (fixed in gbrain #6367): auto stays inside an explicit 8,000-t
     expect(five.record.over_budget).toBe(false);
     expect(five.record.spilled_blocks).toBe(0);
   }, 120_000);
+});
+
+describe('quote-fenced chat text (gbrain v0.60.507.0 and later): the connector hands on the stored text', () => {
+  const ctx = (engine: unknown) => ({ engine, config: { engine: 'pglite' }, logger: { info() {}, warn() {}, error() {}, debug() {} }, dryRun: false, remote: false, sourceId: 'default' });
+  const stored = async (e: any, ids: number[]) => new Map((await e.executeRaw('SELECT id, chunk_text FROM content_chunks WHERE id = ANY($1::int[])', [ids]) as Array<{ id: number; chunk_text: string }>).map(r => [Number(r.id), r.chunk_text]));
+
+  test('the pinned query handler fences conversation rows; the frozen list carries the stored chunk text and deliveries count the quoted blocks', async () => {
+    const e = await brain(6, 12);
+    const raw = await conn.operations.find(o => o.name === 'query')!.handler(ctx(e), wireRequest('frozen-chunk', Q, { limit: 10 })) as DeliveredRow[];
+    expect(raw.length).toBeGreaterThan(0);
+    expect(raw.every(r => r.quoted === 'transcript' && r.chunk_text.startsWith('[quoted conversation excerpt from '))).toBe(true);
+    const c = new GbrainQueryConnector(conn, e);
+    const f = await c.freeze(Q, 10);
+    const texts = await stored(e, f.rows.map(r => r.chunk_id));
+    expect(f.rows.map(r => r.chunk_text)).toEqual(f.rows.map(r => texts.get(r.chunk_id)!));
+    const d = await c.deliver(f.rows, 'auto', 3000);
+    expect(d.record.quoted_blocks).toBe(d.record.blocks);
+    expect(d.blocks.some(b => b.text.includes('[quoted conversation excerpt'))).toBe(false);
+    const live = await c.live('live-parity', Q, 10, 3000);
+    expect(live.record.quoted_blocks).toBe(live.record.blocks);
+    expect(live.record.evidence_sha256).toBe(d.record.evidence_sha256);
+  }, 60_000);
+
+  test('a fenced row the build cannot unwrap, or a quoted row with no fence, is refused; other rows pass unchanged', () => {
+    const row: DeliveredRow = { slug: 'chat/0000000000000001', type: 'conversation', chunk_id: 1, chunk_text: 'Alice: hello', quoted: 'transcript' };
+    expect(() => storedText([row], null)).toThrow(/exports no unquoteTranscriptText/);
+    expect(() => storedText([row], conn.unquote)).toThrow(/carries no fence naming chat\/0000000000000001/);
+    const plain: DeliveredRow = { slug: 'notes/a', type: 'note', chunk_id: 2, chunk_text: 'a note' };
+    expect(storedText([plain], null)[0]).toBe(plain);
+  });
 });
 
 describe('GbrainQuerySystem', () => {
