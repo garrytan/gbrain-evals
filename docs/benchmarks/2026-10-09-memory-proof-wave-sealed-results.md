@@ -154,12 +154,12 @@ On the baseline store, the new head stays inside the same-build range at every s
 Other checks on the new head:
 - No search sets `min_trust`.
 - No page or fact is quarantined or hidden by eligibility.
-- The new head's ingest gate flags 3, 19 and 23 rows in the combined stores at the three sizes. They are still delivered, marked unconfirmed, with their text unchanged.
+- The new head's ingest gate flags 3, 19 and 23 rows in the combined stores at the three sizes, and 2, 17 and 21 in the raw stores. They are still delivered, marked unconfirmed, with their text unchanged.
 - Ingest cost stays within 2% of the baseline at every size ($5.16 against $5.11 at 1M), under the stop at 1.25 times the baseline.
 
 Of the 1M raw baseline, 13 questions from one conversation were refused by the run's budget and have no baseline, so they are excluded.
 
-The check cost $73.84 of its $90 cap. Receipts, per size and build, are in [`2026-10-10-memory-proof-wave-equivalence/`](2026-10-10-memory-proof-wave-equivalence/), with `report.json` written by `eval/harness-provider/mpw_tools/equivalence_report.py`. The script rewrites `report.json` in place, so run it on a copy: `cp -r docs/benchmarks/2026-10-10-memory-proof-wave-equivalence ~/eq-copy && python3 eval/harness-provider/mpw_tools/equivalence_report.py ~/eq-copy`. The `extract-stale.log` files behind its `extract_stale` fields were not committed, so on a fresh checkout the copy's `extract_stale` fields come out null and every other field matches.
+The check cost $73.84 of its $90 cap. Receipts, per size and build, are in [`2026-10-10-memory-proof-wave-equivalence/`](2026-10-10-memory-proof-wave-equivalence/), with `report.json` written by `eval/harness-provider/mpw_tools/equivalence_report.py`. The script rewrites `report.json` in place, so run it on a copy: `D=$(mktemp -d)/eq && cp -r docs/benchmarks/2026-10-10-memory-proof-wave-equivalence "$D" && python3 eval/harness-provider/mpw_tools/equivalence_report.py "$D"`. The `extract-stale.log` files behind its `extract_stale` fields were not committed, so on a fresh checkout the copy's `extract_stale` fields come out null and every other field matches.
 
 ## What ran
 
@@ -232,7 +232,7 @@ The analysis is [`memory-proof-wave-sealed-analysis.ts`](../../eval/runner/memor
 
 ### 2026-10-31: Post hoc sections reach main
 
-The post hoc facts-block check and the equivalence section were written on October 10 on branch `capy/mpw-harness` (`0f1a427b`, `e3260246`) and reached main on October 31 with the `facts_tokens` 0 receipts and three edits. A new paragraph after the facts-block check points to wave 2's step 0, which later traced the combined-to-raw gap to search mode rather than the facts block. The facts-block check now says dropping the block changes the verdict on 8 questions, where it said 8 answers: the rerun generated every answer afresh, so the 8 counts verdicts. The equivalence section now quotes `equivalence_report.py` on a copy of the directory, because the script rewrites `report.json` in place and cannot restore its `extract_stale` fields, whose logs were not committed.
+The post hoc facts-block check and the equivalence section were written on October 10 on branch `capy/mpw-harness` (`0f1a427b`, `e3260246`) and reached main on October 31 with the `facts_tokens` 0 receipts and four edits. A new paragraph after the facts-block check points to wave 2's step 0, which later traced the combined-to-raw gap to search mode rather than the facts block. The facts-block check now says dropping the block changes the verdict on 8 questions, where it said 8 answers: the rerun generated every answer afresh, so the 8 counts verdicts. The equivalence section now gives the raw stores' gate-flag counts beside the combined ones, both from `report.json`. It also quotes `equivalence_report.py` on a fresh copy of the directory, because the script rewrites `report.json` in place and cannot restore its `extract_stale` fields, whose logs were not committed.
 
 ### 2026-10-10: Post hoc facts-block check
 
