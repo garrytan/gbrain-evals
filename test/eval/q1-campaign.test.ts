@@ -16,6 +16,7 @@ import { dirname, join, resolve } from 'node:path';
 import { BudgetRun, closeLedgers } from '../../eval/runner/budget-ledger.ts';
 import { Campaign, executedTree, loadCampaign, ownerTag, planWaves, REPO_RUNNER, resolveRunner, runRemote, treeDiff, type CampaignManifest, type LaunchContext, type RemotePayload } from '../../eval/runner/shootout-cell.ts';
 import { exitCodeOf, ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
+import { freePort } from '../../eval/runner/lifecycle/slice.ts';
 
 const ROOT = resolve(import.meta.dir, '../..');
 const tmp = mkdtempSync(join(tmpdir(), 'q1-campaign-'));
@@ -186,7 +187,7 @@ describe('executor, VM payload and schedule', () => {
 describe('on the VM', () => {
   test('timeout_hours reaches the cell: the command is stopped at its deadline and the summary says so', async () => {
     const out = join(tmp, 'timeout-out');
-    const port = 24000 + Math.floor(Math.random() * 9000);
+    const port = await freePort(0);
     const t0 = performance.now();
     const code = await runRemote({ lease_id: 'timeout-lease', lease_usd: 0.1, command: 'sleep 30', out, timeout_hours: 1 / 3600 }, { port });
     expect(code).toBe(124);
@@ -194,9 +195,42 @@ describe('on the VM', () => {
     expect(JSON.parse(readFileSync(join(out, 'lease-summary.json'), 'utf8'))).toMatchObject({ timed_out: true, timeout_hours: 1 / 3600, cell_exit_code: 124 });
   }, 30_000);
 
+  test('a server already answering on the proxy port is not taken for the lease proxy: the launch fails naming the proxy\'s exit and the cell never runs', async () => {
+    const out = join(tmp, 'foreign-out');
+    const port = await freePort(0);
+    const foreign = Bun.serve({ port, hostname: '0.0.0.0', fetch: () => Response.json({ run_id: 'another-lease' }) });
+    try {
+      await expect(runRemote({ lease_id: 'foreign-lease', lease_usd: 0.1, command: 'touch "$SHOOTOUT_OUT/ran"', out }, { port }))
+        .rejects.toThrow(/the metering proxy exited \(code \d+\) before it served lease foreign-lease/);
+    } finally { foreign.stop(true); }
+    expect(existsSync(join(out, 'ran'))).toBe(false);
+  }, 30_000);
+
+  test('a leftover proxy serving the same lease on the port is not taken for this launch\'s proxy: its control token differs, so the launch fails and the cell never runs', async () => {
+    const out = join(tmp, 'orphan-out');
+    const port = await freePort(0);
+    const orphan = Bun.serve({ port, hostname: '0.0.0.0', fetch: () => Response.json({ run_id: 'orphan-lease', control_sha256: 'f'.repeat(64) }) });
+    try {
+      await expect(runRemote({ lease_id: 'orphan-lease', lease_usd: 0.1, command: 'touch "$SHOOTOUT_OUT/ran"', out }, { port }))
+        .rejects.toThrow(/the metering proxy exited \(code \d+\) before it served lease orphan-lease/);
+    } finally { orphan.stop(true); }
+    expect(existsSync(join(out, 'ran'))).toBe(false);
+  }, 30_000);
+
+  test('a listener on the proxy port that never answers does not hold the launch: it fails once the proxy exits', async () => {
+    const out = join(tmp, 'silent-out');
+    const port = await freePort(0);
+    const silent = Bun.serve({ port, hostname: '0.0.0.0', idleTimeout: 0, fetch: () => new Promise<Response>(() => {}) });
+    try {
+      await expect(runRemote({ lease_id: 'silent-lease', lease_usd: 0.1, command: 'touch "$SHOOTOUT_OUT/ran"', out }, { port }))
+        .rejects.toThrow(/the metering proxy exited \(code \d+\) before it served lease silent-lease/);
+    } finally { silent.stop(true); }
+    expect(existsSync(join(out, 'ran'))).toBe(false);
+  }, 30_000);
+
   test('rows are checkpointed every 20 attempts, and the store snapshot after ingest gets an immutable realization id', async () => {
     const out = join(tmp, 'checkpoint-out');
-    const port = 24000 + Math.floor(Math.random() * 9000);
+    const port = await freePort(0);
     const write = (k: number) => `for i in $(seq 1 ${k}); do echo '{"id":"q'$i'"}' >> "$SHOOTOUT_OUT/attempts.ndjson"; done`;
     const command = `${write(20)}; sleep 0.8; ${write(20)}; sleep 0.8; ${write(5)}`;
     const seen = new Set<number>();
@@ -223,7 +257,7 @@ describe('on the VM', () => {
 describe('A22: the VM side under a stop and a checkpoint-only resume', () => {
   test('a SIGTERM (ubi-runner stopping the detached command) stops the cell and still writes the final checkpoint and lease summary', async () => {
     const out = join(tmp, 'sigterm-out');
-    const port = 24000 + Math.floor(Math.random() * 9000);
+    const port = await freePort(0);
     const command = `for i in $(seq 1 25); do echo '{"id":"q'$i'"}' >> "$SHOOTOUT_OUT/attempts.ndjson"; done; sleep 30`;
     const run = runRemote({ lease_id: 'term-lease', lease_usd: 0.1, command, out, cell: 'kb-locomo', campaign_sha256: 'f'.repeat(64), row_pull_every: 20 }, { port, pollMs: 50 });
     while (!existsSync(join(out, 'checkpoint', 'checkpoint.json'))) await Bun.sleep(25);
@@ -240,7 +274,7 @@ describe('A22: the VM side under a stop and a checkpoint-only resume', () => {
     mkdirSync(join(staged, 'checkpoint'), { recursive: true });
     writeFileSync(join(staged, 'checkpoint', 'attempts.ndjson'), '{"id":"q1"}\n{"id":"q2"}\n');
     writeFileSync(join(staged, 'checkpoint', 'ingest-complete'), '{}\n');
-    const port = 24000 + Math.floor(Math.random() * 9000);
+    const port = await freePort(0);
     const command = `[ ! -e "$SHOOTOUT_OUT/ingest-complete" ] && [ ! -e "$SHOOTOUT_OUT/realization" ] && sleep 0.3 && touch "$SHOOTOUT_OUT/ingest-complete" && sleep 0.5`;
     const code = await runRemote({ lease_id: 'answers-lease', lease_usd: 0.1, command, out, cell: 'kb-locomo', campaign_sha256: 'f'.repeat(64), row_pull_every: 20,
       snapshot_command: 'printf "new store" > "$SHOOTOUT_SNAPSHOT_DIR/store.tar"', restore: { realization_id: null, dir: rel(staged) } }, { port, pollMs: 50 });

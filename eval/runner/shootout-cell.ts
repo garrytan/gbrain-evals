@@ -930,9 +930,18 @@ export async function runRemote(payload: RemotePayload, opts: { port?: number; p
   const onTerm = () => { stoppedBy ??= 'SIGTERM'; stopCell?.('SIGTERM'); };
   process.on('SIGTERM', onTerm);
   try {
+    const started = performance.now();
     let up = false;
-    for (let i = 0; i < 200 && !up; i++) { try { up = (await fetch(`http://127.0.0.1:${port}/__proxy/status`)).ok; } catch { await Bun.sleep(50); } }
-    if (!up) throw new Error('the metering proxy did not start');
+    const ended = () => proxy.exitCode !== null || proxy.signalCode !== null;
+    const control = createHash('sha256').update(controlToken).digest('hex');
+    while (!up && !ended() && performance.now() - started < 120_000) {
+      try {
+        const s = (await (await fetch(`http://127.0.0.1:${port}/__proxy/status`, { signal: AbortSignal.timeout(1000) })).json()) as { run_id?: string; control_sha256?: string };
+        up = s.run_id === payload.lease_id && s.control_sha256 === control;
+      } catch { up = false; }
+      if (!up) await Bun.sleep(50);
+    }
+    if (!up) throw new Error(ended() ? `the metering proxy exited (${proxy.signalCode ?? `code ${proxy.exitCode}`}) before it served lease ${payload.lease_id} on port ${port}` : `the metering proxy did not serve lease ${payload.lease_id} on port ${port} within 120 s`);
     const base = `http://127.0.0.1:${port}`;
     const env: Record<string, string | undefined> = { ...process.env, SHOOTOUT_OUT: out, SHOOTOUT_PROXY: base, SHOOTOUT_LEASE_ID: payload.lease_id, SHOOTOUT_PROXY_CONTROL_TOKEN: controlToken,
       OPENAI_BASE_URL: `${base}/cell/openai/v1`, ANTHROPIC_BASE_URL: `${base}/cell/anthropic`, VOYAGE_BASE_URL: `${base}/cell/voyage/v1`, SHOOTOUT_CELL_TOKEN: cellToken, ...(custody ? { SHOOTOUT_CUSTODY: custody } : {}),

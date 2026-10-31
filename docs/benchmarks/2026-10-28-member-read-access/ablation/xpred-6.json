@@ -1,0 +1,1 @@
+{"pages":5000,"queries":60,"cells":[{"share":0,"who":"unbound","match":"keyword","p50":67.66,"p95":93.4},{"share":0,"who":"member","match":"keyword","p50":68.1,"p95":83.4},{"share":0,"who":"unbound","match":"hybrid","p50":74.91,"p95":91.84},{"share":0,"who":"member","match":"hybrid","p50":75.86,"p95":89.8}]}
