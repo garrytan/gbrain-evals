@@ -2,6 +2,23 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [Unreleased]
+
+### The budget ledger meters Particle and refuses hosts it cannot price
+
+- **A paid run can no longer spend through a host the ledger doesn't know.** While a paid-request guard is installed, a request to any HTTP host that is neither in the ledger's paid-host table nor loopback is refused before it is sent, and the runner stops scheduling paid work. Before, such a host counted as free: an OpenAI-compatible vendor reached through `OPENAI_BASE_URL` spent outside the cap and left no ledger record. A live particle-1 memory-qa smoke on 2026-10-31 recorded its Anthropic judge request and not the Particle reader call. Loopback hosts (the metering proxies, local fakes and shims) and local files pass as before.
+- **particle-1 is priced.** `api.particle.ai` and `us.api.particle.ai` are paid hosts for provider `particle`, and `particle:particle-1` lists at $0.25 input, $0.03 cached input and $1.00 output per million tokens (docs.particle.ai, checked 2026-10-31). Requests settle from OpenAI chat usage, with reasoning tokens counted inside `completion_tokens`. A request that names no output limit reserves Particle's 32,000-token default. Off-peak calls bill at half price and settle here at the peak rate, so the ledger overstates them.
+
+### memory-qa `--qa think` answers relative dates from the question's day
+
+- `gbrain think` now gets a `referenceDate`: the question date, else the conversation's latest session date (LoCoMo and BEAM questions carry none). Before, "last month" in a LongMemEval question resolved against the day of the run. Each row records the date it passed as `qa_reference_date`. No published report on main used `--qa think`, so no committed number changes.
+- `eval/runner/budget-ledger.ts` and `eval/runner/memory-qa/run.ts` are in the F6 campaign's frozen tree. These changes land on main only and count for F6 only under a new campaign identity.
+
+### Tests and receipts
+
+- `test/eval/q1-raise-lease.test.ts` covers a raised lease that finished and is then abandoned: charged its raised reservation, or closed at $0 only when its launch log shows the cell command never started (#196, #197).
+- `rescore-may-2026-08-31.json` names the committed copy of its source rows instead of the gitignored path the aggregator read, and its manifest entry is re-hashed. The manifest entry for `judge-calibration-2026-08-25.json` now says its judge, `claude-sonnet-4-6`, is a movable alias. Both were leftovers of #26.
+
 ## [0.10.136] - 2026-10-29
 
 ### Spring-loaded skills for gbrain GBRA-194 measured
