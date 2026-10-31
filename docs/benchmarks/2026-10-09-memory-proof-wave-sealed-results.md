@@ -159,7 +159,7 @@ Other checks on the new head:
 
 Of the 1M raw baseline, 13 questions from one conversation were refused by the run's budget and have no baseline, so they are excluded.
 
-The check cost $73.84 of its $90 cap. Receipts, per size and build, are in [`2026-10-10-memory-proof-wave-equivalence/`](2026-10-10-memory-proof-wave-equivalence/), with `report.json` from `python3 eval/harness-provider/mpw_tools/equivalence_report.py docs/benchmarks/2026-10-10-memory-proof-wave-equivalence`.
+The check cost $73.84 of its $90 cap. Receipts, per size and build, are in [`2026-10-10-memory-proof-wave-equivalence/`](2026-10-10-memory-proof-wave-equivalence/), with `report.json` from `python3 eval/harness-provider/mpw_tools/equivalence_report.py docs/benchmarks/2026-10-10-memory-proof-wave-equivalence`. The script rewrites `report.json` in place, and the `extract-stale.log` files behind its `extract_stale` fields were not committed, so on a fresh checkout it writes those fields as null. To check the other fields, run it on a copy of the directory.
 
 ## What ran
 
@@ -232,7 +232,7 @@ The analysis is [`memory-proof-wave-sealed-analysis.ts`](../../eval/runner/memor
 
 ### 2026-10-31: Post hoc sections reach main
 
-The post hoc facts-block check and the equivalence section were written on October 10 on branch `capy/mpw-harness` (`0f1a427b`, `e3260246`) and reached main on October 31 unchanged, with the `facts_tokens` 0 receipts. Added one paragraph after the facts-block check that points to wave 2's step 0, which later traced the combined-to-raw gap to search mode rather than the facts block.
+The post hoc facts-block check and the equivalence section were written on October 10 on branch `capy/mpw-harness` (`0f1a427b`, `e3260246`) and reached main on October 31 unchanged, with the `facts_tokens` 0 receipts. Added one paragraph after the facts-block check that points to wave 2's step 0, which later traced the combined-to-raw gap to search mode rather than the facts block. The equivalence section now says that `equivalence_report.py` rewrites `report.json` in place and cannot restore its `extract_stale` fields, whose logs were not committed.
 
 ### 2026-10-10: Post hoc facts-block check
 
