@@ -13,6 +13,22 @@ This records what each gbrain-evals release changed and what its measurements me
   - `test/eval/q1-campaign.test.ts`: the VM-side tests picked a random port from 24000 to 32999, which overlaps Linux's range for outgoing connections. On 2026-10-29 (`d58b4e33`) port 32890 was taken, the metering proxy exited at once, and `runRemote` kept polling for 10 seconds before failing. These tests and `q1-custody-launch.test.ts` now take a port the operating system reports free. `runRemote` now waits until the proxy's status route answers for this lease with the sha256 of the control token this launch gave it, and fails as soon as the proxy exits or is killed, naming its exit code or signal; each status request gives up after a second, so a listener that never answers cannot hold the launch. Before, a different server already answering on the port passed the check and received the cell's traffic, and so would a proxy left over from an earlier launch of the same lease; new tests hold the port with each of those, and with a listener that never answers, and check that the launch fails and the cell never runs. The metering proxy's status route now carries that hash as `control_sha256`.
 - **Campaign identity.** `package.json`, `eval/runner/shootout-cell.ts` and `eval/runner/metering-proxy.ts` are in the F6 campaign's executed tree (`bun.lock` is unchanged). This release counts for F6, or any Q1-style campaign frozen before it, only under a new campaign identity. No file in the Cat 40 Hard freeze changed.
 
+### The October 7 10x memory advantage plan lands on main as a superseded record
+
+- **Eleven reports and preregistrations on main cite a plan that main didn't have.** Three reports and eight
+  preregistrations from the plan's waves 0 to 5 name `docs/plans/2026-10-07-10x-memory-advantage/PLAN.md`, the branch
+  `capy/10x-memory-advantage-plan` or a link into it. The plan lived only on that branch, whose pull request, #97, was
+  closed unmerged on 2026-10-29. The folder (the plan, its five audits, six reviews and the eng test plan) now lands at
+  that path from the branch's last commit, `2b6ff9af` (2026-10-17). Its README opens with a dated banner: the plan
+  is superseded, and no wave, cap or gate runs from it. Seven files are byte for byte the branch's. In the other six,
+  each of the 118 external product names is replaced by its kind id in square brackets (`[ext-extract-first]`), as
+  the name guard requires outside `docs/comparison-systems.md`; nothing else changed, and the branch keeps the
+  original wording.
+- None of the eleven citations changes, and the branch stays. The preregistrations are frozen (each changes only by
+  an amendment appended at its end, and some are bound by recorded SHA-256 hashes), and every citation already
+  resolves: the path now exists on main, and the branch keeps every revision of the plan as each report read it.
+- The [docs index](docs/README.md) links the folder from its route table.
+
 ## [0.10.136] - 2026-10-29
 
 ### Spring-loaded skills for gbrain GBRA-194 measured
