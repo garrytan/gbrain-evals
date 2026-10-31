@@ -733,6 +733,7 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
 
   const thinkModel = options.model ?? THINK_MODEL;
   const judgeModel = options.judgeModel ?? JUDGE_MODEL;
+  judgePrice(anthropicModelId(judgeModel));
   const hashEmbeds = stub || options.embedMode === 'hash';
   let attestation: Attestation | null = null;
   // The guard goes in before any SDK client is built, so the clients fetch through it.
