@@ -108,6 +108,36 @@ describe('pricing', () => {
     const usage = { prompt_tokens: 12374, completion_tokens: 88, total_tokens: 12462, prompt_tokens_details: { cached_tokens: 0, cache_write_tokens: 12371 }, completion_tokens_details: { reasoning_tokens: 52 } };
     expect(usageCost(sol, { usage })).toEqual({ usd: (3 * 2 + 12371 * 2.5 + 88 * 10) / 1e6, input_tokens: 12374, output_tokens: 88 });
   });
+
+  test('particle-1 is priced on both Particle hosts and settles from OpenAI chat usage, reasoning inside completion_tokens', () => {
+    const body = { model: 'particle-1', max_tokens: 1024, messages: [{ role: 'user', content: 'x'.repeat(900) }] };
+    for (const host of ['api.particle.ai', 'us.api.particle.ai']) {
+      expect(priceRequest(`https://${host}/v1/chat/completions`, body)).toMatchObject({ provider: 'particle', model: 'particle-1', kind: 'chat', input: 0.25, output: 1, cache_read: 0.03, maxOutputTokens: 1024 });
+    }
+    // With no output limit Particle generates up to 32,000 tokens (docs.particle.ai/models), so that is reserved, not 4,096.
+    expect(priceRequest('https://api.particle.ai/v1/chat/completions', { model: 'particle-1', messages: [] })!.maxOutputTokens).toBe(32_000);
+    // A dated id takes its family's output cap as it takes its family's price.
+    expect(priceRequest('https://api.particle.ai/v1/chat/completions', { model: 'particle-1-2026-10-31', messages: [] })!.maxOutputTokens).toBe(32_000);
+    const p = priceRequest('https://api.particle.ai/v1/chat/completions', body)!;
+    // The usage of the 2026-10-31 live memory-qa reader smoke: 330 prompt tokens, 70 completion tokens, 39 of them reasoning.
+    const smoke = usageCost(p, { usage: { prompt_tokens: 330, completion_tokens: 70, total_tokens: 400, prompt_tokens_details: { cached_tokens: 0 }, completion_tokens_details: { reasoning_tokens: 39 } } })!;
+    expect(smoke).toMatchObject({ input_tokens: 330, output_tokens: 70 });
+    expect(smoke.usd).toBeCloseTo((330 * 0.25 + 70 * 1) / 1e6, 12);
+    // docs.particle.ai/usage-billing's example: the cached prefix is part of prompt_tokens and bills at the cached rate.
+    const cached = usageCost(p, { usage: { prompt_tokens: 18234, completion_tokens: 412, total_tokens: 18646, prompt_tokens_details: { cached_tokens: 16384 }, completion_tokens_details: { reasoning_tokens: 256 } } })!;
+    expect(cached.usd).toBeCloseTo(((18234 - 16384) * 0.25 + 16384 * 0.03 + 412 * 1) / 1e6, 12);
+    expect(() => priceRequest('https://api.particle.ai/v1/chat/completions', { model: 'glm-5.3-flash', max_tokens: 5, messages: [] })).toThrow('no chat price for particle:glm-5.3-flash');
+    expect(priceRequest('https://api.particle.ai/v1/models', undefined)).toBeNull();
+  });
+
+  test("Particle's hosted web search is refused: it bills $0.0025 a search outside usage, so the ledger could neither reserve nor settle it", () => {
+    const url = 'https://api.particle.ai/v1/chat/completions';
+    const body = { model: 'particle-1', max_tokens: 64, messages: [{ role: 'user', content: 'What happened today?' }] };
+    expect(() => priceRequest(url, { ...body, tools: [{ type: 'web_search' }] })).toThrow(/hosted web search/);
+    expect(() => priceRequest(`https://us.api.particle.ai/v1/chat/completions`, { ...body, tools: [{ type: 'function', function: { name: 'f' } }, { type: 'web_search' }] })).toThrow(/hosted web search/);
+    expect(priceRequest(url, { ...body, tools: [{ type: 'web_search' }], tool_choice: 'none' })).toMatchObject({ provider: 'particle', maxOutputTokens: 64 });
+    expect(priceRequest(url, { ...body, tools: [{ type: 'function', function: { name: 'f' } }] })).toMatchObject({ provider: 'particle', maxOutputTokens: 64 });
+  });
 });
 
 describe('ledger', () => {
@@ -149,6 +179,47 @@ describe('ledger', () => {
     const entries = read(path).entries;
     expect(entries).toHaveLength(2);
     expect(entries.every(e => e.status === 'charged-reservation' && e.actual_usd === e.reserved_usd)).toBe(true);
+  });
+
+  test('a host the ledger cannot price is refused before sending; loopback, local files and priced hosts go through', async () => {
+    const path = ledgerPath();
+    const run = BudgetRun.open({ runner: 'test', budgetUsd: 1, ledgerPath: path });
+    const usage = { prompt_tokens: 330, completion_tokens: 70, total_tokens: 400, prompt_tokens_details: { cached_tokens: 0 }, completion_tokens_details: { reasoning_tokens: 39 } };
+    const mock = mockFetch(() => Response.json({ model: 'particle-ai/particle-1', usage }));
+    const guard = installPaidRequestGuard(run, { fetchImpl: mock.impl });
+    const chat = { model: 'particle-1', max_tokens: 1024, messages: [{ role: 'user', content: 'When did I move?' }] };
+    try {
+      for (const url of ['https://api.unlisted-vendor.ai/v1/chat/completions', 'http://10.0.0.5:8000/v1/chat/completions', 'https://127.0.0.1.example.com/v1/chat/completions']) {
+        await expect(send(url, chat)).rejects.toThrow(/is not a host the ledger can price.*PAID_HOSTS/);
+      }
+      // A host named like an Object.prototype member is not a paid host.
+      await expect(fetch('https://constructor/v1/models')).rejects.toThrow(/is not a host the ledger can price/);
+      expect(guard.exhausted).toBe(true);
+      for (const url of ['http://127.0.0.1:8787/v1/chat/completions', 'http://localhost:8787/v1/chat/completions', 'http://[::1]:8787/v1/chat/completions',
+        'http://0.0.0.0:8787/v1/chat/completions', 'http://[::ffff:127.0.0.1]:8787/v1/chat/completions']) await send(url, chat);
+      await fetch('file:///dev/null');
+      await fetch('https://api.particle.ai/v1/models');
+      await send('https://api.particle.ai/v1/chat/completions', chat);
+    } finally { guard.uninstall(); }
+    expect(mock.calls).toEqual(['http://127.0.0.1:8787/v1/chat/completions', 'http://localhost:8787/v1/chat/completions', 'http://[::1]:8787/v1/chat/completions',
+      'http://0.0.0.0:8787/v1/chat/completions', 'http://[::ffff:127.0.0.1]:8787/v1/chat/completions', 'file:///dev/null', 'https://api.particle.ai/v1/models', 'https://api.particle.ai/v1/chat/completions']);
+    const entries = read(path).entries;
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({ status: 'reconciled', input_tokens: 330, output_tokens: 70 });
+    expect(entries[0].actual_usd).toBeCloseTo((330 * 0.25 + 70 * 1) / 1e6, 12);
+    expect(run.close()).toMatchObject({ requests: 1, input_tokens: 330, output_tokens: 70 });
+  });
+
+  test('a guarded request follows no redirect, so an admitted host cannot hand it on to another host', async () => {
+    let reached = 0;
+    const far = Bun.serve({ hostname: '127.0.0.1', port: 0, fetch: () => { reached++; return Response.json({}); } });
+    const hop = Bun.serve({ hostname: '127.0.0.1', port: 0, fetch: () => new Response(null, { status: 307, headers: { location: `http://127.0.0.1:${far.port}/v1/chat/completions` } }) });
+    const run = BudgetRun.open({ runner: 'test', budgetUsd: 1, ledgerPath: ledgerPath() });
+    const guard = installPaidRequestGuard(run);
+    try {
+      await expect(fetch(`http://127.0.0.1:${hop.port}/v1/chat/completions`, { method: 'POST', body: JSON.stringify({ model: 'm', messages: [] }) })).rejects.toThrow();
+    } finally { guard.uninstall(); hop.stop(true); far.stop(true); }
+    expect(reached).toBe(0);
   });
 
   test('a network failure after send charges the reservation', async () => {
