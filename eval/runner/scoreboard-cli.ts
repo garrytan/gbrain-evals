@@ -134,9 +134,9 @@ export async function doctor(a: Args, env: Record<string, string | undefined> = 
   const paid = forWhat === 'local' || forWhat === 'run' || forWhat === 'sealed';
   const remote = forWhat === 'run' || forWhat === 'sealed';
 
-  const [maj, min] = Bun.version.split('.').map(Number);
-  add({ id: 'bun', ok: maj > 1 || (maj === 1 && min >= 4), severity: 'error', detail: `Bun ${Bun.version} (needs 1.4.0 or later)`, code: 'PREFLIGHT_FAILED',
-    fix: { next: 'run', argv: ['bash', '-c', 'curl -fsSL https://bun.sh/install | bash -s bun-v1.4.2'], verify: ['bun', '--version'] } });
+  const bunRange = (JSON.parse(readFileSync(join(REPO_ROOT, 'package.json'), 'utf8')) as { engines: { bun: string } }).engines.bun;
+  add({ id: 'bun', ok: Bun.semver.satisfies(Bun.version, bunRange), severity: 'error', detail: `Bun ${Bun.version} (needs ${bunRange}, package.json engines)`, code: 'PREFLIGHT_FAILED',
+    fix: { next: 'run', argv: ['bash', '-c', `curl -fsSL https://bun.sh/install | bash -s bun-v${bunRange.replace(/^>=/, '')}`], verify: ['bun', '--version'] } });
   const py = Bun.spawnSync(['python3', '--version'], { stdout: 'pipe', stderr: 'pipe' });
   add({ id: 'python3', ok: py.exitCode === 0, severity: err(forWhat === 'fixture' || forWhat === 'local'), detail: py.exitCode === 0 ? py.stdout.toString().trim() || py.stderr.toString().trim() : 'python3 not found (the reference shim and fake provider are Python)', code: 'PREFLIGHT_FAILED',
     fix: { next: 'tell_user_to_run', argv: ['sudo', 'apt-get', 'install', '-y', 'python3'], verify: ['python3', '--version'] } });

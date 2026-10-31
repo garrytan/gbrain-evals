@@ -180,6 +180,14 @@ describe('doctor', () => {
     expect(beam.fix?.argv).toEqual(['bun', 'run', 'eval:decide', 'fetch', '--benchmark', 'beam-1m', '--conversations', '1m-16']);
   });
 
+  test('the Bun check asks for the version package.json engines names', async () => {
+    const range = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8')).engines.bun as string;
+    const bun = (await doctor(['--for', 'fixture'], { PATH: process.env.PATH })).checks.find(c => c.id === 'bun')!;
+    expect(bun.ok).toBe(Bun.semver.satisfies(Bun.version, range));
+    expect(bun.detail).toContain(`needs ${range}`);
+    expect(bun.fix?.argv?.at(-1)).toContain(`bash -s bun-v${range.replace(/^>=/, '')}`);
+  });
+
   test('sealed preflight needs the custodian host', async () => {
     const r = await doctor(['--for', 'sealed'], { PATH: process.env.PATH, GBRAIN_EVALS_CUSTODY_LOG: '/nope/custody.log' });
     expect(r.checks.find(c => c.id === 'custody')).toMatchObject({ ok: false, code: 'CUSTODY_REQUIRED' });

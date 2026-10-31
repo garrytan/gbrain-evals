@@ -195,6 +195,17 @@ describe('on the VM', () => {
     expect(JSON.parse(readFileSync(join(out, 'lease-summary.json'), 'utf8'))).toMatchObject({ timed_out: true, timeout_hours: 1 / 3600, cell_exit_code: 124 });
   }, 30_000);
 
+  test('a server already answering on the proxy port is not taken for the lease proxy: the launch fails naming the proxy\'s exit and the cell never runs', async () => {
+    const out = join(tmp, 'foreign-out');
+    const port = await freePort(0);
+    const foreign = Bun.serve({ port, hostname: '0.0.0.0', fetch: () => Response.json({ run_id: 'another-lease' }) });
+    try {
+      await expect(runRemote({ lease_id: 'foreign-lease', lease_usd: 0.1, command: 'touch "$SHOOTOUT_OUT/ran"', out }, { port }))
+        .rejects.toThrow(/the metering proxy exited \(code \d+\) before it served lease foreign-lease/);
+    } finally { foreign.stop(true); }
+    expect(existsSync(join(out, 'ran'))).toBe(false);
+  }, 30_000);
+
   test('rows are checkpointed every 20 attempts, and the store snapshot after ingest gets an immutable realization id', async () => {
     const out = join(tmp, 'checkpoint-out');
     const port = await freePort(0);
