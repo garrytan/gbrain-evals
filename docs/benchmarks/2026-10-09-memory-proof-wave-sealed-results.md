@@ -114,6 +114,8 @@ On this shard the combined lane trails the raw lane by 9 points. Dropping the fa
 
 With no facts block, the cell delivers a mean of 6,332 tokens, against the raw lane's 8,100 of pages, so it fails the 8,000-token context gate. What remains of the gap is page space, search mode or the store. A planned second cell would have answered the same shard at 1,800 fact tokens from the new store, which would have separated the new ingest from the block. It was refused by its ledger cap (its $16 run budget exceeded the $6.77 left), and the store was destroyed with its VM, so the comparison is against the wave-1 receipts. Spend: $9.39 for the cell and $0.25 for the re-judge. Receipts are in [`2026-10-10-memory-proof-wave-lme-facts0/`](2026-10-10-memory-proof-wave-lme-facts0/).
 
+Wave 2's step 0 later split the combined-to-raw gap on the 100 LongMemEval-S dev questions, at gbrain `59782b95`, where it was also 9 points. Removing the facts block cost 1 point, giving its space back to pages added 0, and switching the combined store's search mode from `tokenmax` to `conservative` added 13 ([step 0 result](2026-10-10-memory-proof-wave-2-preregistration-addenda.md#step-0-result-mode-dominates-so-the-wave-pauses-october-11-2026)).
+
 LongMemEval-S combined ran as four cells of 100 histories each, split by history; each history is its own brain, so the split does not change what any question sees. Each shard was re-judged jointly with the raw and comparator answers to the same 100 questions.
 
 | Cell | Spend | Cap |
@@ -227,6 +229,10 @@ python -m mpw_tools.sealed_cost --pair <gbrain cell>:<comparator cell>:<gbrain r
 The analysis is [`memory-proof-wave-sealed-analysis.ts`](../../eval/runner/memory-proof-wave-sealed-analysis.ts) and the cost computation is [`mpw_tools/sealed_cost.py`](../../eval/harness-provider/mpw_tools/sealed_cost.py). Both read the cells from custody, which no longer exists, so the numbers on this page cannot be recomputed.
 
 ## Changelog
+
+### 2026-10-31: Post hoc sections reach main
+
+The post hoc facts-block check and the equivalence section were written on October 10 on branch `capy/mpw-harness` (`0f1a427b`, `e3260246`) and reached main on October 31 unchanged, with the `facts_tokens` 0 receipts. Added one paragraph after the facts-block check that points to wave 2's step 0, which later traced the combined-to-raw gap to search mode rather than the facts block.
 
 ### 2026-10-10: Post hoc facts-block check
 
