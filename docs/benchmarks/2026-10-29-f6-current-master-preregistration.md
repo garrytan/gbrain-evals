@@ -457,3 +457,56 @@ temporal graph. Each cut is recorded in A4 before A4 runs.
 **Publication.** S1 gbrain c0 to c9, S1 temporal graph c0 to c3 and D8 graph-pipeline c9 publish from A3. Every other
 D8 source stays as A2 set it. S1 stays descriptive and unranked. Until A4's units finish, S1 temporal graph covers 4 of
 10 shards and the S1 file-agent row is missing, and the report says so.
+
+### A4 (2026-10-31): S4-slice cut, partial A1 cells, file-agent resume
+
+Written before S4-slice is stopped and before any A4 unit runs.
+
+**Why.** A3's stage 2 needed the 8 A1 units that survived the sweep to settle at $197.86 or less in total. At
+02:00 UTC on 2026-10-31 they stood at $213.88 measured: four settled at $137.02 and four still running at $76.86. Booked
+spend across the ledgers was $2,859.84, leaving $208.99 under the counted $3,068.83. Stage 2 needs $713.91. Even with
+every remaining cut in the scope-cut order, all of stage 2 cannot fit. The coordinator chose to stay under the
+$3,100 approval: cut S4-slice, run the S1 file-agent first, then as many S1 temporal graph shards as fit.
+
+**Cut.** S4-slice is first in the scope-cut order and had spent $4.22 of its $89.98 lease. It is stopped now. Its
+lease settles at measured spend, and no S4-slice row is published. S2a is next in the order, but both its cells had
+already ended.
+
+**Partial A1 cells, not resumed.** Three A1 cells settled without finishing. Each kept its answered rows and a complete
+realization:
+
+- **S3 gbrain:** reached its 4-hour timeout (1 hour expected) after 700 rows, $51.57.
+- **S2a gbrain:** reached its 8-hour timeout (4 hours expected) after 420 rows, $39.57.
+- **S2a temporal graph:** used its whole $25.10 lease after 139 rows, $25.03.
+
+S2a and S3 come before the S1 cells in the scope-cut order, so none of the three is resumed. The report gives each
+one's answered rows as partial, with the cause, and draws no comparison from them.
+
+**Ledger fix.** At commit 69adc404 the budget ledger accepts a reservation that brings a run or the program exactly
+to its cap, within 1e-9 dollars. Before, adding float sums could exceed an exactly equal cap by about 2e-14 dollars,
+and the reservation was refused. That held A3's last unit for 3 hours, until another lease settled below its
+reservation. A cent over the cap is still refused. Test: `test/eval/budget-ledger-sqlite.test.ts`, "reservations that
+sum exactly to the cap fit despite float rounding ...".
+
+**Campaign.** `q1-scoreboard-f6-current-master-a4`, manifest `2026-10-29-f6-current-master/campaign/f6-campaign-a4.json`,
+built by `bun eval/runner/q1/cell.ts plan --manifest f6 --units <campaign>/f6-campaign-a4-units.json --campaign-out
+<manifest>`. It has one unit, `s1.baseline-file-agent.baseline`, identical to the frozen campaign's cell: lease
+$368.19, 6 hours expected, an 11-hour timeout, VM name ending `-t17`. Its ledger is capped at $368.19.
+
+- **Mode:** it launches with `bun eval/runner/shootout-cell.ts resume --cell s1.baseline-file-agent.baseline
+  --from-campaign <frozen manifest> --from-state <frozen state>`, from the checkpoint the frozen campaign pulled
+  before the sweep. The harness calls this mode `answers`: the store is ingested again, the 140 answered rows and their
+  judgments are kept, and only questions without them are answered.
+- **Hash:** `bun eval/runner/shootout-cell.ts hash --campaign <manifest>` =
+  `fee2706d5d1a896ce77dff59fddb347dda06bb6770527d376a5c2238035b15b4` (194 tree files). The custodian computed it from
+  a fresh clone at commit 0fe77aad. This amendment changes no hashed file.
+- **Launch condition:** A4 launches only when the booked spend of the frozen, A1, A2 and A3 ledgers together is
+  $2,700.64 or less, so A4's cap still fits under $3,068.83. That is expected once S1 hybrid settles.
+
+**Temporal graph shards (A4b).** Once both S2b cells have settled, S1 temporal graph shards from c4 on launch in a
+campaign of their own, at $57.62 each. The number of shards is the largest that keeps every ledger, A4b's cap
+included, at or under $3,068.83, and never more than 6. A short addendum names A4b's manifest and hash before it
+launches.
+
+**Publication.** The S1 file-agent publishes from A4. S1 temporal graph publishes every shard that completes,
+c0 to c3 from A3 and any from A4b, and the report gives the shard count. S4-slice has no row.
