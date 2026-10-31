@@ -19,8 +19,6 @@ const ROOT = resolve(import.meta.dir, '../..');
 const KEYED = { PARTICLE_API_KEY: 'test-key' };
 /** A metering proxy's particle slot: compatSend refuses an unpriced Particle host, never a proxy slot. */
 const SLOT = { ...KEYED, PARTICLE_BASE_URL: 'http://127.0.0.1:8787/slot-1/particle/v1' };
-/** False until PR #207 (GBEV-8) prices Particle's hosts in the budget ledger. */
-const ledgerKnowsParticle = priceRequest('https://api.particle.ai/v1/chat/completions', { model: 'particle-1', messages: [] }) !== null;
 const ASK = [{ role: 'user' as const, content: 'When did I move to Lisbon?' }];
 
 /** A particle-1 response in the shape api.particle.ai returned to the 2026-10-31 probes (usage numbers from the live memory-qa smoke). */
@@ -193,8 +191,8 @@ describe('compatSend and parseCompatResponse', () => {
     expect(JSON.parse(String(m.calls[0]!.init.body))).toEqual(req.body);
   });
 
-  test.skipIf(ledgerKnowsParticle)('a request straight to a Particle host the ledger cannot price is refused before it is sent', async () => {
-    for (const base of [COMPAT_PROVIDERS.particle!.base_url_default, ...COMPAT_PROVIDERS.particle!.base_url_alternates, 'https://api.particle.ai./v1', 'https://eu.api.particle.ai/v1']) {
+  test('a request straight to a Particle host the ledger cannot price is refused before it is sent', async () => {
+    for (const base of ['https://api.particle.ai./v1', 'https://eu.api.particle.ai/v1']) {
       const m = mockFetch([]);
       const e = await compatSend(compatRequest('particle:particle-1', ASK, {}, { ...KEYED, PARTICLE_BASE_URL: base }), { fetchImpl: m.impl }).catch(x => x);
       expect(e).toBeInstanceOf(BudgetExceededError);
@@ -296,8 +294,7 @@ describe('receipts', () => {
 });
 
 describe('the budget ledger prices every table host', () => {
-  // Activates when PR #207 (GBEV-8) lands: until then the ledger knows no Particle host, and this test reports the gap as a skip.
-  test.skipIf(!ledgerKnowsParticle)('each base URL host of each row, and each of its models, has a ledger price', () => {
+  test('each base URL host of each row, and each of its models, has a ledger price', () => {
     for (const [provider, row] of Object.entries(COMPAT_PROVIDERS)) {
       for (const base of [row.base_url_default, ...row.base_url_alternates]) {
         for (const [name, m] of Object.entries(row.models)) {

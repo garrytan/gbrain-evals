@@ -137,8 +137,7 @@ describe('Particle in the freshness check (plan GST-605 Phase 1, item 6)', () =>
     expect(inits.every(i => i.signal instanceof AbortSignal)).toBe(true);
   });
 
-  test('every default round model has a ledger price; particle-1 is the one gap until PR #207 prices Particle', () => {
-    const unpriced = ROUND_MODELS.filter(m => chatPrice(m) === undefined);
-    expect(unpriced).toEqual(chatPrice('particle:particle-1') === undefined ? ['particle:particle-1'] : []);
+  test('every default round model has a ledger price', () => {
+    expect(ROUND_MODELS.filter(m => chatPrice(m) === undefined)).toEqual([]);
   });
 });
