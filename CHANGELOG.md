@@ -2,7 +2,12 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
-## [Unreleased]
+## [0.10.138] - 2026-10-31
+
+### Shared agents (on_behalf_of): search cost and recall
+
+- **gbrain PR #7852 lets a shared agent read as the audience its harness names, and calls without an audience cost nothing measurable** ([report](docs/benchmarks/2026-10-28-shared-agent-audience.md)). Measured at `e5bee20d` against its parent `9167c248` on one Ubicloud VM, 8 interleaved runs per side, with raw JSON committed: every cell is within plus or minus 1% at 0%, 20% and 80% restricted. #7852 ships in train M (gbrain PR #8134, head `244f30dd`), where the train M attribution run from 0.10.137 puts the train within -1.3% to +0.3% of folder rules (A2) on a brain with no restrictions.
+- **An audience costs 0.1 to 2.2 ms over the member's own token and keeps that member's recall.** A one-member audience adds under 0.8 ms. A two-member audience adds up to 1.3 ms at `e5bee20d` and up to 2.2 ms (keyword search) at the train M head. hit@10 is 1.0 in every audience cell on train M. The measured search code is the same at both heads, apart from a path under the operator privacy hatch that the bench never turns on.
 
 ### Toolchain: Bun 1.4.4, a typecheck that fits in memory, two CI flakes fixed
 
