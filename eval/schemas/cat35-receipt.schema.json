@@ -386,7 +386,8 @@
         "per_transcript": {
           "type": "array"
         }
-      }
+      },
+      "description": "Blended usability over the built-in lanes only; an external lane reports in usability_by_lane."
     },
     "emission": {
       "type": "object",
@@ -516,7 +517,8 @@
       }
     },
     "judge_failed_rate": {
-      "type": "number"
+      "type": "number",
+      "description": "Share of the built-in lanes' judge invocations that failed after retry. native_evidence counts every judge call in the run, external lane included."
     },
     "prior_run": {
       "type": [
@@ -550,7 +552,7 @@
     },
     "gates": {
       "type": "object",
-      "description": "Validity gates (verbatim coverage, judge_failed rate, dream emission). Values may be null when a gate is not applicable to the lane set."
+      "description": "Validity gates (verbatim coverage, judge_failed rate over the built-in lanes, dream emission, and external_judge_failed_rate only when an external lane ran). Values may be null when a gate is not applicable to the lane set."
     },
     "transcripts": {
       "type": "array",

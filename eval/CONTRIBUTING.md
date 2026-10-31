@@ -112,7 +112,7 @@ lanes.
 
    ```sh
    CAT35_FULL=1 bun eval/runner/cat35-transcript-distill.ts --budget-usd 10 \
-     --lanes verbatim --external-lane mytool --external-dir path/to/folder
+     --lanes verbatim --external-lane ext-notes --external-dir path/to/folder
    ```
 
    Without `CAT35_FULL=1` the runner scores the two-conversation smoke set. `--lanes none` scores only your folder. A run
@@ -125,14 +125,19 @@ attribution hazards and quote fidelity. Read your recall next to the verbatim la
 whole conversation, so its score is the judge's ceiling.
 
 The receipt's `external_lane` block records the lane name, the folder's real path, the size limit, each file's bytes and
-sha256, the conversations with no file, and a note that the harness has no record of how the documents were made.
-`lanes`, `mode` and the prior-run deltas describe the built-in lanes only, and a run with an external lane is never
-publishable as the benchmark. Scrub machine paths with `bun eval/runner/receipt.ts scrub` before you share a receipt.
+sha256, the conversations with no file, and a note that the harness has no record of how the documents were made. Your
+lane's scores sit under its name in the per-lane maps. `lanes`, `mode`, the prior-run deltas, the blended usability, the
+judge-failure gate and the WS0 counters describe the built-in lanes only, so adding your lane changes none of gbrain's
+numbers. Your lane gets its own `external_judge_failed_rate` gate, which the run's exit code includes, and a run with an
+external lane is never publishable as the benchmark. Scrub machine paths with `bun eval/runner/receipt.ts scrub` before
+you share a receipt.
 
 The runner treats the folder as untrusted. It opens only the `<transcript_id>.md` names it expects, and before any provider
 call it refuses the whole run on a symlink, anything that is not a regular file, a hard-linked file, a file over 64 KiB, a
-file with more than 80 claims (what the grounding judge grades in one call) or invalid UTF-8. A lane name is lowercase
-letters, digits and dashes, up to 32 characters, and cannot reuse a built-in lane name.
+file with more than 80 claims (what the grounding judge grades in one call), invalid UTF-8, or a document that contains one
+of the corpus's answer-key ids (a sign the system read `gold/`). A lane name is lowercase letters, digits and dashes, up to
+32 characters, and cannot reuse a built-in lane name. Name the lane by what the system does, such as `ext-notes`; product
+names belong only in [docs/comparison-systems.md](../docs/comparison-systems.md).
 
 Know the limits before you compare numbers. Your documents go to the judge's provider, so keep private data out of them.
 A document can carry text aimed at the judge; the judge prompts fence every document as untrusted data and each call sees
@@ -204,7 +209,7 @@ How this page changed, newest first. Measurement history lives in the dated repo
 
 A new section explains `--external-lane NAME --external-dir DIR`, which scores another system's Markdown notes beside
 gbrain's Cat 35 lanes under the same judge: the folder layout, the commands, what the receipt's `external_lane` block
-records, the refusals for a hostile folder and the limits. The opening now lists this as a way to contribute. The feature
+records, which fields stay built-in only, the refusals for a hostile folder and the limits. The opening now lists this as a way to contribute. The feature
 was rebuilt on main from Khaled Aly's design in [#32](https://github.com/garrytan/gbrain-evals/pull/32).
 
 ### 2026-10-29: The cost tools refuse more inputs

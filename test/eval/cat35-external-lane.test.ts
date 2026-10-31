@@ -10,8 +10,11 @@
  *   - CLI refusals before any work
  *   - hermetic runs (stubbed judge and gbrain, fetch forbidden, an empty budget
  *     ledger): the receipt records the name, the directory, each file's sha256
- *     and the provenance note; a hostile folder stops the run before any judge
- *     call; the built-in lanes score the same with or without the external lane
+ *     and the provenance note; a hostile folder, an empty folder or a gold id
+ *     in a document stops the run before any judge call; every built-in field
+ *     is identical with or without an external lane, even one whose judge
+ *     fails; and identical bytes score identically in the dream lane and an
+ *     external lane
  */
 
 import { describe, expect, test } from 'bun:test';
@@ -45,7 +48,7 @@ function scratch(prefix: string): string {
 
 describe('externalLaneNameError', () => {
   test('accepts short lowercase names', () => {
-    for (const name of ['a', 'carafe', 'my-tool-2', `a${'b'.repeat(31)}`]) expect(externalLaneNameError(name)).toBeNull();
+    for (const name of ['a', 'ext-notes', 'my-tool-2', `a${'b'.repeat(31)}`]) expect(externalLaneNameError(name)).toBeNull();
   });
 
   test('refuses built-in lanes, none, and inherited object keys', () => {
@@ -187,14 +190,15 @@ describe('CLI refusals', () => {
       writeFileSync(join(cwd, 'a-file'), 'not a directory');
       mkdirSync(join(cwd, 'docs-dir'));
       const cases: Array<[string[], string]> = [
-        [['--external-lane', 'carafe'], 'go together'],
+        [['--external-lane', 'ext-notes'], 'go together'],
         [['--external-dir', 'docs-dir'], 'go together'],
         [['--external-lane', 'Carafe', '--external-dir', 'docs-dir'], 'must match'],
         [['--external-lane', 'dream', '--external-dir', 'docs-dir'], 'built-in'],
-        [['--external-lane', 'carafe', '--external-dir', 'no-such-dir'], 'not found'],
-        [['--external-lane', 'carafe', '--external-dir', 'a-file'], 'not a directory'],
+        [['--external-lane', 'ext-notes', '--external-dir', 'no-such-dir'], 'not found'],
+        [['--external-lane', 'ext-notes', '--external-dir', 'a-file'], 'not a directory'],
         [['--lanes', 'none'], '--lanes none needs'],
-        [['--lanes', 'none,verbatim', '--external-lane', 'carafe', '--external-dir', 'docs-dir'], "unknown lane 'none'"],
+        [['--lanes', 'none,verbatim', '--external-lane', 'ext-notes', '--external-dir', 'docs-dir'], "unknown lane 'none'"],
+        [['--transcript-mode', 'half', '--external-lane', 'ext-notes', '--external-dir', 'docs-dir'], 'cannot run with an external lane'],
       ];
       for (const [args, message] of cases) {
         const proc = Bun.spawnSync([process.execPath, RUNNER, ...args], {
@@ -212,12 +216,16 @@ describe('CLI refusals', () => {
 
 // ─── Hermetic runs ────────────────────────────────────────────────────────
 
-function preload(requestLog: string): string {
+const TIDS = ['coding-reflection-01', 'coding-reflection-02', 'pure-routine-01'];
+const JUDGE_FAILS = 'STUB-JUDGE-FAILS';
+
+function preload(requestLog: string, dreamDocs: Record<string, string>): string {
   return `
 import { mock } from 'bun:test';
 import { appendFileSync, readFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 const root = ${JSON.stringify(ROOT)};
+const dreamDocs = ${JSON.stringify(dreamDocs)};
 globalThis.fetch = async () => { throw new Error('Network forbidden in the Cat35 external-lane test'); };
 const goldOf = (tid) => JSON.parse(readFileSync(join(root, 'eval/data/transcript-distill-v1/gold', tid + '.json'), 'utf8'));
 class Engine {
@@ -247,16 +255,20 @@ mock.module(join(root, 'node_modules/gbrain/src/commands/extract-conversation-fa
   async runExtractConversationFactsCore() { throw new Error('facts lane must not run'); }
 }));
 mock.module(join(root, 'node_modules/gbrain/src/core/cycle/synthesize.ts'), () => ({
-  async runPhaseSynthesize() { throw new Error('dream lane must not run'); }
+  async runPhaseSynthesize(engine, opts) {
+    const tid = basename(opts.inputFile).slice(11, -4);
+    if (!(tid in dreamDocs)) throw new Error('no stub dream document for ' + tid);
+    engine.pages.set('notes/' + tid, { compiled_truth: dreamDocs[tid] });
+    return { status: 'ok', details: { verdicts: [{ score: 0.8 }], written_slugs: ['notes/' + tid] } };
+  }
 }));
 const anchors = new Map();
-for (const tid of ['coding-reflection-01', 'coding-reflection-02', 'pure-routine-01']) {
-  for (const it of goldOf(tid).items) anchors.set(it.item_id, it.verbatim_anchor);
-}
+for (const tid of ${JSON.stringify(TIDS)}) for (const it of goldOf(tid).items) anchors.set(it.item_id, it.verbatim_anchor);
 const client = { messages: { async create(req) {
   const tool = req.tools[0].name;
   const text = req.messages[0].content;
   appendFileSync(${JSON.stringify(requestLog)}, JSON.stringify({ tool, text: text.replace(/nonce="[0-9a-f]+"/g, 'nonce="N"') }) + '\\n');
+  if (text.includes(${JSON.stringify(JUDGE_FAILS)})) return { model: 'hermetic-judge', content: [], usage: { input_tokens: 10, output_tokens: 5 } };
   let input;
   if (tool === 'score_salient_items') {
     const ids = [...text.matchAll(/item_id=([^:]+):/g)].map((m) => m[1]);
@@ -284,8 +296,6 @@ mock.module(join(root, 'eval/runner/cat35-judges.ts'), () => exports);
 `;
 }
 
-const TIDS = ['coding-reflection-01', 'coding-reflection-02', 'pure-routine-01'];
-
 interface Run {
   exitCode: number | null;
   stderr: string;
@@ -296,7 +306,7 @@ interface Run {
   ledgerEntries: unknown[];
 }
 
-function runHermetic(args: string[], setup?: (dir: string) => void): Run {
+function runHermetic(args: string[], opts: { setup?: (dir: string) => void; dreamDocs?: Record<string, string> } = {}): Run {
   const dir = scratch('cat35-ext-run-');
   try {
     mkdirSync(join(dir, 'eval/data'), { recursive: true });
@@ -304,9 +314,9 @@ function runHermetic(args: string[], setup?: (dir: string) => void): Run {
     symlinkSync(join(ROOT, 'node_modules'), join(dir, 'node_modules'));
     symlinkSync(join(ROOT, 'package.json'), join(dir, 'package.json'));
     const requestLog = join(dir, 'requests.jsonl');
-    writeFileSync(join(dir, 'preload.ts'), preload(requestLog));
+    writeFileSync(join(dir, 'preload.ts'), preload(requestLog, opts.dreamDocs ?? {}));
     initLedger({ ledgerPath: join(dir, 'ledger.sqlite') });
-    setup?.(dir);
+    opts.setup?.(dir);
     const proc = Bun.spawnSync([process.execPath, '--preload', join(dir, 'preload.ts'), RUNNER, '--json', '--transcripts', TIDS.join(','), ...args], {
       cwd: dir,
       env: { PATH: process.env.PATH, HOME: dir, TMPDIR: dir, ANTHROPIC_API_KEY: 'stub-only', OPENAI_API_KEY: 'stub-only',
@@ -334,29 +344,69 @@ function runHermetic(args: string[], setup?: (dir: string) => void): Run {
 
 const anchor = (tid: string) => gold(tid).items[0].verbatim_anchor as string;
 const distractor = (tid: string) => gold(tid).distractors[0].anchor as string;
+const notes = (tid: string) =>
+  `# Session notes\n\nThe user said "${anchor(tid)}".\n\nAlso noted: ${distractor(tid)}.\n`;
 
 /** Documents for two of the three transcripts: coding-reflection-01 is missing on purpose. */
-function writeExternalDocs(dir: string): Record<string, Buffer> {
-  const ext = join(dir, 'carafe-out');
+function writeExternalDocs(dir: string, opts: { judgeFails?: boolean } = {}): Record<string, Buffer> {
+  const ext = join(dir, 'ext-out');
   mkdirSync(ext);
   const docs: Record<string, Buffer> = {
-    'coding-reflection-02': Buffer.concat([
-      Buffer.from([0xef, 0xbb, 0xbf]),
-      Buffer.from(`# Snapshot loader flake\n\nThe user said ${anchor('coding-reflection-02')}.\n\nAlso: ${distractor('coding-reflection-02')}.\n`),
-    ]),
-    'pure-routine-01': Buffer.from(''),
+    'coding-reflection-02': Buffer.concat([Buffer.from([0xef, 0xbb, 0xbf]), Buffer.from(notes('coding-reflection-02'))]),
+    'pure-routine-01': Buffer.from(opts.judgeFails ? `# Routine\n\n${JUDGE_FAILS} for every judge call on this document.\n` : ''),
   };
   for (const [tid, body] of Object.entries(docs)) writeFileSync(join(ext, `${tid}.md`), body);
   return docs;
+}
+
+const EXT = ['--external-lane', 'ext-notes', '--external-dir', 'ext-out'];
+
+/** Everything in a receipt that describes the built-in lanes; run-level accounting is left out. */
+function builtinView(rc: any, lane: string): any {
+  const c = structuredClone(rc);
+  for (const k of ['timestamp', 'wall_seconds', 'total_cost_usd', 'judge_models_resolved', 'native_evidence', 'external_lane', 'gate_pass']) delete c[k];
+  for (const k of ['coverage_by_lane', 'hallucination', 'distractor_leakage', 'usability_by_lane', 'compression_ratio_by_lane', 'quote_fidelity_by_lane']) delete c[k][lane];
+  for (const k of ['coverage_by_kind', 'coverage_by_notability', 'coverage_by_depth']) {
+    for (const [group, byLane] of Object.entries<any>(c[k])) {
+      delete byLane[lane];
+      if (!Object.keys(byLane).length) delete c[k][group];
+    }
+  }
+  c.per_item = c.per_item.filter((r: any) => r.lane !== lane);
+  c.attribution_hazards = c.attribution_hazards.filter((h: any) => h.lane !== lane);
+  for (const [tid, errors] of Object.entries<any>(c.lane_errors)) {
+    delete errors[lane];
+    if (!Object.keys(errors).length) delete c.lane_errors[tid];
+  }
+  delete c.gates.external_judge_failed_rate;
+  const ne = rc.native_evidence;
+  c.native_built_in = {
+    events: ne.judge_events.filter((e: any) => e.lane !== lane).map(({ event_id, ...e }: any) => e),
+    grounding: ne.grounding.filter((g: any) => g.lane !== lane).map(({ judge_event_id, ...g }: any) => g),
+    distractors: ne.distractors.filter((d: any) => d.lane !== lane).map(({ judge_event_id, ...d }: any) => d),
+  };
+  return c;
+}
+
+function builtinWs0View(ws0: any, lane: string): any {
+  const c = structuredClone(ws0);
+  for (const k of ['started_at', 'finished_at', 'verdict', 'cost', 'delivered_tokens']) delete c[k];
+  for (const k of ['detailed_receipt', 'external_lane']) delete c.resolved_config[k];
+  delete c.data.detailed_receipt;
+  delete c.data.coverage_by_lane[lane];
+  delete c.data.gates.external_judge_failed_rate;
+  return c;
 }
 
 describe('hermetic external-lane runs', () => {
   test('--lanes none scores only the external lane and the receipt records name, directory, hashes and provenance', () => {
     let docs: Record<string, Buffer> = {};
     let extDir = '';
-    const r = runHermetic(['--lanes', 'none', '--external-lane', 'carafe', '--external-dir', 'carafe-out'], (dir) => {
-      docs = writeExternalDocs(dir);
-      extDir = join(dir, 'carafe-out');
+    const r = runHermetic(['--lanes', 'none', ...EXT], {
+      setup: (dir) => {
+        docs = writeExternalDocs(dir);
+        extDir = join(dir, 'ext-out');
+      },
     });
     expect(r.exitCode, r.stderr).toBe(0);
     expect(r.ledgerEntries).toEqual([]);
@@ -364,7 +414,7 @@ describe('hermetic external-lane runs', () => {
     expect(rc.lanes).toEqual([]);
     expect(rc.mode).toBe('b-pre-validity');
     expect(rc.external_lane).toEqual({
-      name: 'carafe',
+      name: 'ext-notes',
       dir: extDir,
       max_bytes: EXTERNAL_DOC_MAX_BYTES,
       files: ['coding-reflection-02', 'pure-routine-01'].map((tid) => ({
@@ -374,72 +424,104 @@ describe('hermetic external-lane runs', () => {
       provenance: EXTERNAL_PROVENANCE_NOTE,
     });
     expect(rc.external_lane.provenance).toContain('no record of how they were made');
-    expect(rc.lane_errors).toEqual({ 'coding-reflection-01': { carafe: 'no coding-reflection-01.md in --external-dir' } });
+    expect(rc.lane_errors).toEqual({ 'coding-reflection-01': { 'ext-notes': 'no coding-reflection-01.md in --external-dir' } });
 
-    expect(new Set(rc.per_item.map((row: any) => row.lane))).toEqual(new Set(['carafe']));
-    const cov = rc.coverage_by_lane.carafe;
+    expect(new Set(rc.per_item.map((row: any) => row.lane))).toEqual(new Set(['ext-notes']));
+    const cov = rc.coverage_by_lane['ext-notes'];
     // coding-reflection-01 is a lane error (all ABSENT); coding-reflection-02 has its first item verbatim.
     expect(cov.macro).toBeCloseTo((0 + 1 / 8) / 2, 10);
     expect(cov.joint_macro).toBeCloseTo((0 + 1 / 8) / 2, 10);
     // Two sentences; the heading is not a claim, and the empty document has none.
-    expect(rc.hallucination.carafe).toEqual({ claims: 2, verifiable: 2, ungrounded: 0, rate: 0 });
-    expect(rc.distractor_leakage.carafe).toEqual({ hits: 1, confirmed: 1, denominator: 8, judge_failed: 0, rate: 1 / 8 });
-    expect(rc.usability_by_lane.carafe.rate).toBe(1);
-    expect(rc.quote_fidelity_by_lane).toHaveProperty('carafe');
+    expect(rc.hallucination['ext-notes']).toEqual({ claims: 2, verifiable: 2, ungrounded: 0, rate: 0 });
+    expect(rc.distractor_leakage['ext-notes']).toEqual({ hits: 1, confirmed: 1, denominator: 8, judge_failed: 0, rate: 1 / 8 });
+    expect(rc.usability_by_lane['ext-notes'].rate).toBe(1);
+    expect(rc.quote_fidelity_by_lane['ext-notes']).toEqual({ total: 1, grounded: 1, rate: 1 });
     expect(rc.attribution_hazards.map((h: any) => [h.lane, h.transcript_id, h.violated])).toEqual([
-      ['carafe', 'coding-reflection-01', null],
-      ['carafe', 'coding-reflection-02', false],
+      ['ext-notes', 'coding-reflection-01', null],
+      ['ext-notes', 'coding-reflection-02', false],
     ]);
-    expect(rc.native_evidence.judge_events.every((e: any) => e.lane === 'carafe')).toBe(true);
+    expect(rc.native_evidence.judge_events.every((e: any) => e.lane === 'ext-notes')).toBe(true);
     const labels = r.requests.filter((q) => q.tool === 'grade_claims').map((q) => JSON.parse(q.text.match(/<batch label=(.*)>/)![1]));
-    expect(labels).toEqual(['carafe:coding-reflection-02', `hazard:carafe:${gold('coding-reflection-02').hazards[0].hazard_id}`]);
+    expect(labels).toEqual(['ext-notes:coding-reflection-02', `hazard:ext-notes:${gold('coding-reflection-02').hazards[0].hazard_id}`]);
+    // Built-in fields stay empty: blended usability, the built-in judge gate and the WS0 counters.
+    expect(rc.usability).toEqual({ satisfied: 0, total: 0, rate: null, per_transcript: [] });
+    expect(rc.judge_failed_rate).toBe(0);
+    expect(rc.gates).toEqual({ verbatim_coverage: null, judge_failed_rate: true, dream_emission: null, external_judge_failed_rate: true });
     // Artifacts are the input bytes, BOM included; the empty document is kept.
-    expect(r.artifacts['coding-reflection-02.carafe.md'].equals(docs['coding-reflection-02'])).toBe(true);
-    expect(r.artifacts['pure-routine-01.carafe.md'].length).toBe(0);
-    expect(r.artifacts['coding-reflection-01.carafe.md']).toBeUndefined();
+    expect(r.artifacts['coding-reflection-02.ext-notes.md'].equals(docs['coding-reflection-02'])).toBe(true);
+    expect(r.artifacts['pure-routine-01.ext-notes.md'].length).toBe(0);
+    expect(r.artifacts['coding-reflection-01.ext-notes.md']).toBeUndefined();
 
     expect(r.ws0.publishable).toBe(false);
+    expect([r.ws0.n_total, r.ws0.n_scored, r.ws0.errors]).toEqual([0, 0, []]);
     expect(r.ws0.resolved_config.external_lane).toEqual(rc.external_lane);
-    // A receipt with an external lane cannot feed the native regression collector.
     expect(() => collectNativeRows35({ receipt: rc, gold: TIDS.map(gold), artifacts: { documents: {}, transcripts: {} } }))
-      .toThrow('empty or unknown native population');
+      .toThrow('scored an external lane');
   }, 90_000);
 
-  test('a symlink in the folder stops the run before any judge call or spend', () => {
-    const r = runHermetic(['--lanes', 'none', '--external-lane', 'carafe', '--external-dir', 'carafe-out'], (dir) => {
-      writeExternalDocs(dir);
-      symlinkSync('/proc/self/environ', join(dir, 'carafe-out', 'coding-reflection-01.md'));
-    });
-    expect(r.exitCode, r.stderr).toBe(2);
-    expect(r.stderr).toContain('coding-reflection-01.md is a symlink');
-    expect(r.receipt).toBeNull();
-    expect(r.requests).toEqual([]);
-    expect(r.ledgerEntries).toEqual([]);
-    expect(r.ws0.run_status).toBe('error');
-    expect(r.ws0.errors[0].message).toContain('is a symlink');
-    expect(r.artifacts).toEqual({});
-  }, 90_000);
+  const hostile: Array<[string, (ext: string) => void, string]> = [
+    ['a symlink to /proc/self/environ', (ext) => symlinkSync('/proc/self/environ', join(ext, 'coding-reflection-01.md')), 'coding-reflection-01.md is a symlink'],
+    ['a gold id in a document', (ext) => writeFileSync(join(ext, 'coding-reflection-01.md'), `Covered ${gold('coding-reflection-01').items[2].item_id}.\n`), 'gold id'],
+    ['an empty folder', (ext) => { for (const f of readdirSync(ext)) rmSync(join(ext, f)); }, 'has no <transcript_id>.md for any of the 3 selected transcripts'],
+  ];
+  for (const [what, spoil, message] of hostile) {
+    test(`${what} stops the run before any judge call or spend`, () => {
+      const r = runHermetic(['--lanes', 'none', ...EXT], {
+        setup: (dir) => {
+          writeExternalDocs(dir);
+          spoil(join(dir, 'ext-out'));
+        },
+      });
+      expect(r.exitCode, r.stderr).toBe(2);
+      expect(r.stderr).toContain(message);
+      expect(r.receipt).toBeNull();
+      expect(r.requests).toEqual([]);
+      expect(r.ledgerEntries).toEqual([]);
+      expect(r.ws0.run_status).toBe('error');
+      expect(r.ws0.errors[0].message).toContain(message);
+      expect(r.artifacts).toEqual({});
+    }, 90_000);
+  }
 
-  test('the built-in lane scores and judge requests are identical with or without the external lane', () => {
+  test('every built-in field is identical with or without an external lane, even one whose judge fails', () => {
     const alone = runHermetic(['--lanes', 'verbatim']);
-    const beside = runHermetic(['--lanes', 'verbatim', '--external-lane', 'carafe', '--external-dir', 'carafe-out'], (dir) => {
-      writeExternalDocs(dir);
-    });
-    for (const r of [alone, beside]) expect(r.exitCode, r.stderr).toBe(0);
-    expect(beside.receipt.lanes).toEqual(['verbatim']);
-    expect(beside.receipt.mode).toBe(alone.receipt.mode);
-    expect(alone.receipt.external_lane).toBeNull();
-    const verbatimRows = (rc: any) => rc.per_item.filter((row: any) => row.lane === 'verbatim').map((row: any) => [row.transcript_id, row.item_id, row.status]);
-    expect(verbatimRows(beside.receipt)).toEqual(verbatimRows(alone.receipt));
-    expect(beside.receipt.coverage_by_lane.verbatim).toEqual(alone.receipt.coverage_by_lane.verbatim);
-    expect(beside.receipt.distractor_leakage.verbatim).toEqual(alone.receipt.distractor_leakage.verbatim);
-    expect(beside.receipt.usability_by_lane.verbatim).toEqual(alone.receipt.usability_by_lane.verbatim);
-    expect(beside.receipt.compression_ratio_by_lane.verbatim).toEqual(alone.receipt.compression_ratio_by_lane.verbatim);
+    const beside = runHermetic(['--lanes', 'verbatim', ...EXT], { setup: (dir) => { writeExternalDocs(dir, { judgeFails: true }); } });
+    expect(alone.exitCode, alone.stderr).toBe(0);
+    expect(builtinView(beside.receipt, 'ext-notes')).toEqual(builtinView(alone.receipt, 'ext-notes'));
+    expect(builtinWs0View(beside.ws0, 'ext-notes')).toEqual(builtinWs0View(alone.ws0, 'ext-notes'));
     expect(beside.requests).toEqual(expect.arrayContaining(alone.requests));
     expect(beside.requests.length).toBeGreaterThan(alone.requests.length);
-    expect(alone.ws0.publishable).toBe(false);
-    expect(beside.ws0.publishable).toBe(false);
-    expect(() => collectNativeRows35({ receipt: beside.receipt, gold: TIDS.map(gold), artifacts: { documents: {}, transcripts: {} } }))
-      .toThrow('outside native transcript/lane population');
+    // The external lane's judge failures fail only its own gate, which the run's verdict and exit code include.
+    expect(beside.receipt.native_evidence.judge_events.some((e: any) => e.lane === 'ext-notes' && e.judge_failed)).toBe(true);
+    expect(beside.receipt.gates.judge_failed_rate).toBe(true);
+    expect(beside.receipt.gates.external_judge_failed_rate).toBe(false);
+    expect([alone.receipt.gate_pass, beside.receipt.gate_pass, beside.exitCode]).toEqual([true, false, 1]);
+    expect([alone.ws0.publishable, beside.ws0.publishable]).toEqual([false, false]);
+    expect(alone.receipt.external_lane).toBeNull();
+  }, 120_000);
+
+  test('identical bytes score identically in the dream lane and an external lane', () => {
+    const dreamDocs = { 'coding-reflection-01': notes('coding-reflection-01'), 'coding-reflection-02': notes('coding-reflection-02'), 'pure-routine-01': '' };
+    const r = runHermetic(['--lanes', 'dream', '--external-lane', 'ext-mirror', '--external-dir', 'mirror'], {
+      dreamDocs,
+      setup: (dir) => {
+        mkdirSync(join(dir, 'mirror'));
+        for (const [tid, body] of Object.entries(dreamDocs)) writeFileSync(join(dir, 'mirror', `${tid}.md`), body);
+      },
+    });
+    expect(r.exitCode, r.stderr).toBe(0);
+    const rc = r.receipt;
+    const rows = (lane: string) => rc.per_item.filter((x: any) => x.lane === lane).map((x: any) => [x.transcript_id, x.item_id, x.status, x.joint]);
+    expect(rows('dream').length).toBe(17);
+    expect(rows('ext-mirror')).toEqual(rows('dream'));
+    for (const k of ['coverage_by_lane', 'hallucination', 'distractor_leakage', 'usability_by_lane', 'compression_ratio_by_lane', 'quote_fidelity_by_lane']) {
+      expect(rc[k]['ext-mirror'], k).toEqual(rc[k].dream);
+    }
+    expect(rc.quote_fidelity_by_lane.dream.total).toBe(2);
+    const hazards = (lane: string) => rc.attribution_hazards.filter((h: any) => h.lane === lane).map((h: any) => [h.transcript_id, h.hazard_id, h.violated]);
+    expect(hazards('dream')).toHaveLength(2);
+    expect(hazards('ext-mirror')).toEqual(hazards('dream'));
+    const purposes = (lane: string) => rc.native_evidence.judge_events.filter((e: any) => e.lane === lane).map((e: any) => [e.transcript_id, e.purpose]);
+    expect(purposes('ext-mirror')).toEqual(purposes('dream'));
   }, 120_000);
 });

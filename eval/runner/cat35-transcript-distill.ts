@@ -240,6 +240,10 @@ export function readExternalDocs(
   maxBytes = EXTERNAL_DOC_MAX_BYTES,
   maxClaims = EXTERNAL_DOC_MAX_CLAIMS,
 ): ExternalDocs {
+  const { O_NOFOLLOW, O_NONBLOCK } = constants;
+  if (typeof O_NOFOLLOW !== 'number' || typeof O_NONBLOCK !== 'number') {
+    throw new Error('this platform cannot open a file without following links');
+  }
   const out: ExternalDocs = { docs: new Map(), files: [], missing: [] };
   const decoder = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
   for (const tid of transcriptIds) {
@@ -260,7 +264,7 @@ export function readExternalDocs(
     if (st.size > maxBytes) throw new Error(`${file} is ${st.size} bytes, over the ${maxBytes}-byte limit`);
     let fd: number;
     try {
-      fd = openSync(path, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK);
+      fd = openSync(path, constants.O_RDONLY | O_NOFOLLOW | O_NONBLOCK);
     } catch (e) {
       throw new Error(`${file} could not be opened without following links (${(e as NodeJS.ErrnoException).code ?? 'error'})`);
     }
@@ -346,6 +350,7 @@ function parseOpts(): Opts {
     transcriptMode: (() => {
       const m = get('--transcript-mode') ?? 'real';
       if (m !== 'real' && m !== 'unrelated' && m !== 'half') { process.stderr.write(`[cat35] --transcript-mode must be real, unrelated or half\n`); process.exit(2); }
+      if (m !== 'real' && externalLane) refuse(`--transcript-mode ${m} applies to the dream lane only; it cannot run with an external lane`);
       return m as TranscriptMode;
     })(),
     preregistration: get('--preregistration') ?? null,
@@ -745,7 +750,7 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
   }
   const controlInputs: Record<string, { donor?: string; chars: number; of_chars: number; sha256: string }> = {};
   if (opts.transcriptMode !== 'real') {
-    if (opts.lanes.some((l) => l !== 'dream') || external) return setupError(`--transcript-mode ${opts.transcriptMode} applies to the dream lane only; pass --lanes dream`);
+    if (opts.lanes.some((l) => l !== 'dream')) return setupError(`--transcript-mode ${opts.transcriptMode} applies to the dream lane only; pass --lanes dream`);
     const donors = unrelatedDonors(fixtures.map((f) => ({ id: f.gold.transcript_id, scenario: f.gold.scenario })));
     const byId = new Map(fixtures.map((f) => [f.gold.transcript_id, f]));
     for (const f of fixtures) {
@@ -773,11 +778,15 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
       return setupError(`input allowlist: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
-  // External documents are vetted before any spend; a hostile file refuses the run.
+  // External documents are vetted before any spend; a hostile file refuses the
+  // run, and so does a gold id in a document (its system saw the answer keys).
   let externalDocs: ExternalDocs | null = null;
   if (opts.externalLane) {
     try {
       externalDocs = readExternalDocs(opts.externalLane.dir, fixtures.map((f) => f.gold.transcript_id));
+      for (const [tid, doc] of externalDocs.docs) {
+        assertCat35SutSource({ slug: `${tid}.md`, content: doc }, fixtures.map((f) => f.gold));
+      }
     } catch (error) {
       return setupError(`--external-dir: ${error instanceof Error ? error.message : String(error)}`);
     }
@@ -1370,8 +1379,9 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
       : { n: 0, mean: null, min: null, max: null };
   };
 
-  // Usability aggregate.
-  const usabAgg = usabilityPerTranscript.reduce(
+  // Usability aggregate over the built-in lanes; the external lane reports in usability_by_lane.
+  const builtinUsability = usabilityPerTranscript.filter((u) => isBuiltinLane(u.lane));
+  const usabAgg = builtinUsability.reduce(
     (acc, u) => ({ satisfied: acc.satisfied + u.satisfied, total: acc.total + u.total }),
     { satisfied: 0, total: 0 },
   );
@@ -1416,7 +1426,11 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
     };
   }
 
-  const judgeFailedRate = judgeCalls ? judgeFailures / judgeCalls : 0;
+  // The judge gate covers the built-in lanes, so an external document's judge
+  // failures cannot move it; the external lane gets a gate of its own.
+  const failedRate = (events: typeof judgeEvents) => (events.length ? events.filter((e) => e.judge_failed).length / events.length : 0);
+  const judgeFailedRate = failedRate(judgeEvents.filter((e) => isBuiltinLane(e.lane)));
+  const externalJudgeFailedRate = external ? failedRate(judgeEvents.filter((e) => e.lane === external)) : null;
 
   // ── E1: prior-run delta ─────────────────────────────────────────────────
   mkdirSync(REPORT_DIR, { recursive: true });
@@ -1607,6 +1621,7 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
         ? emission.rate >= 0.7
         : emission.emitted >= 1
       : null,
+    ...(externalJudgeFailedRate === null ? {} : { external_judge_failed_rate: externalJudgeFailedRate < 0.05 }),
   };
   const gatePass = Object.values(gates).every((g) => g !== false);
 
@@ -1679,7 +1694,7 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
       satisfied: usabAgg.satisfied,
       total: usabAgg.total,
       rate: usabAgg.total ? usabAgg.satisfied / usabAgg.total : null,
-      per_transcript: usabilityPerTranscript,
+      per_transcript: builtinUsability,
     },
     usability_by_lane: usabilityByLane,
     emission,
@@ -1727,13 +1742,13 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
     mode,
     externalLane: externalLaneRecord !== null,
     gatePass,
-    perItem,
+    perItem: perItem.filter((r) => isBuiltinLane(r.lane)),
     errors: [
       ...judgeEvents
-        .filter((e) => e.judge_failed)
+        .filter((e) => e.judge_failed && isBuiltinLane(e.lane))
         .map((e) => ({ probe_id: `${e.transcript_id}:${e.lane}:${e.purpose}`, origin: 'judge' as const, message: `judge failed after retry (${e.event_id})` })),
       ...[...states.entries()].flatMap(([tid, st]) =>
-        Object.entries(st.laneError).map(([lane, msg]) => ({ probe_id: `${tid}:${lane}`, origin: 'sut' as const, message: String(msg).slice(0, 500) })),
+        Object.entries(st.laneError).filter(([lane]) => isBuiltinLane(lane)).map(([lane, msg]) => ({ probe_id: `${tid}:${lane}`, origin: 'sut' as const, message: String(msg).slice(0, 500) })),
       ),
     ],
     resolvedConfig: {
@@ -1798,7 +1813,7 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
   if (usabAgg.total) err(`usability checklist: ${usabAgg.satisfied}/${usabAgg.total} (${((usabAgg.satisfied / usabAgg.total) * 100).toFixed(0)}%)`);
   err(`emission: ${emission.emitted}/${emission.expected_high} expected-high produced pages`);
   if (externalLaneRecord) {
-    err(`external lane ${externalLaneRecord.name}: ${externalLaneRecord.files.length} documents (sha256 in the receipt), ${externalLaneRecord.missing.length} missing; not publishable, the harness has no record of how they were made`);
+    err(`external lane ${externalLaneRecord.name}: ${externalLaneRecord.files.length} documents (sha256 in the receipt), ${externalLaneRecord.missing.length} missing, judge_failed_rate ${((externalJudgeFailedRate ?? 0) * 100).toFixed(1)}%; not publishable, the harness has no record of how they were made`);
   }
   err(`judge_failed_rate: ${(judgeFailedRate * 100).toFixed(1)}%  cost: $${totalCost.toFixed(2)} (judges+facts; dream-lane spend not surfaced)  wall: ${receipt.wall_seconds}s`);
   if (deltas) {
