@@ -111,12 +111,17 @@ To reproduce an old result, match both the gbrain-evals revision and the gbrain 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
 
-### 2026-10-31: The introduction names the current pin
+### 2026-10-31: The introduction names the new pin
 
-The introduction names gbrain master `3ec766c40` (v0.60.531.0) as the pin. It still named `77cf8e111`
-(v0.60.169.0): three re-pins (`f717b1a5b`, `6e1086492`, `7a6bdd357`) had not updated it, because the documentation
-verifier checked only the `gbrain-cues` pin. `scripts/verify-documentation-refresh.py` now checks this sentence against
-`package.json` too.
+The introduction names gbrain master `3ec766c40` (v0.60.531.0), the new pin (was `7a6bdd357`, v0.60.454.0).
+`scripts/verify-documentation-refresh.py` now checks this sentence against `package.json`, so a re-pin that misses it fails
+`bun run validate`.
+
+### 2026-10-31: The introduction names the current pin again
+
+The introduction names gbrain master `7a6bdd357` (v0.60.454.0) as the `gbrain` every runner loads, matching
+`package.json`. It still named `77cf8e111` (v0.60.169.0), which stopped being the pin on October 18; the later re-pins
+had not updated this page.
 
 ### 2026-10-11: The introduction names the current pin
 
