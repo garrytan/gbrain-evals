@@ -104,7 +104,7 @@ On LongMemEval-S, the combined lane trails gbrain's own pages-only lane by 10.5 
 | gbrain raw (wave 1) | 80 | 11 |
 | Comparator (wave 1) | 83 | 12 |
 
-On this shard the combined lane trails the raw lane by 9 points. Dropping the facts block changes 8 answers, 4 gained and 4 lost, so 0 of the 9 points close. The shard holds three question types:
+On this shard the combined lane trails the raw lane by 9 points. Dropping the facts block changes the verdict on 8 questions, 4 gained and 4 lost, so 0 of the 9 points close. The shard holds three question types:
 
 | Type (questions) | `facts_tokens` 0 | Combined | Raw |
 |---|---|---|---|
@@ -159,7 +159,7 @@ Other checks on the new head:
 
 Of the 1M raw baseline, 13 questions from one conversation were refused by the run's budget and have no baseline, so they are excluded.
 
-The check cost $73.84 of its $90 cap. Receipts, per size and build, are in [`2026-10-10-memory-proof-wave-equivalence/`](2026-10-10-memory-proof-wave-equivalence/), with `report.json` from `python3 eval/harness-provider/mpw_tools/equivalence_report.py docs/benchmarks/2026-10-10-memory-proof-wave-equivalence`. The script rewrites `report.json` in place, and the `extract-stale.log` files behind its `extract_stale` fields were not committed, so on a fresh checkout it writes those fields as null. To check the other fields, run it on a copy of the directory.
+The check cost $73.84 of its $90 cap. Receipts, per size and build, are in [`2026-10-10-memory-proof-wave-equivalence/`](2026-10-10-memory-proof-wave-equivalence/), with `report.json` written by `eval/harness-provider/mpw_tools/equivalence_report.py`. The script rewrites `report.json` in place, so run it on a copy: `cp -r docs/benchmarks/2026-10-10-memory-proof-wave-equivalence ~/eq-copy && python3 eval/harness-provider/mpw_tools/equivalence_report.py ~/eq-copy`. The `extract-stale.log` files behind its `extract_stale` fields were not committed, so on a fresh checkout the copy's `extract_stale` fields come out null and every other field matches.
 
 ## What ran
 
@@ -232,7 +232,7 @@ The analysis is [`memory-proof-wave-sealed-analysis.ts`](../../eval/runner/memor
 
 ### 2026-10-31: Post hoc sections reach main
 
-The post hoc facts-block check and the equivalence section were written on October 10 on branch `capy/mpw-harness` (`0f1a427b`, `e3260246`) and reached main on October 31 unchanged, with the `facts_tokens` 0 receipts. Added one paragraph after the facts-block check that points to wave 2's step 0, which later traced the combined-to-raw gap to search mode rather than the facts block. The equivalence section now says that `equivalence_report.py` rewrites `report.json` in place and cannot restore its `extract_stale` fields, whose logs were not committed.
+The post hoc facts-block check and the equivalence section were written on October 10 on branch `capy/mpw-harness` (`0f1a427b`, `e3260246`) and reached main on October 31 with the `facts_tokens` 0 receipts and three edits. A new paragraph after the facts-block check points to wave 2's step 0, which later traced the combined-to-raw gap to search mode rather than the facts block. The facts-block check now says dropping the block changes the verdict on 8 questions, where it said 8 answers: the rerun generated every answer afresh, so the 8 counts verdicts. The equivalence section now quotes `equivalence_report.py` on a copy of the directory, because the script rewrites `report.json` in place and cannot restore its `extract_stale` fields, whose logs were not committed.
 
 ### 2026-10-10: Post hoc facts-block check
 
