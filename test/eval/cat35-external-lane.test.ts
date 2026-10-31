@@ -20,7 +20,7 @@
 import { describe, expect, test } from 'bun:test';
 import { createHash } from 'node:crypto';
 import {
-  existsSync, linkSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, symlinkSync, writeFileSync,
+  existsSync, linkSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, renameSync, rmSync, symlinkSync, writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -117,6 +117,38 @@ describe('readExternalDocs on a hostile folder', () => {
     }
   });
 
+  test('refuses a folder that was swapped for a link after it was resolved', () => {
+    const root = scratch('cat35-ext-swap-');
+    try {
+      const real = join(root, 'out');
+      mkdirSync(real);
+      writeFileSync(join(real, 'alpha-01.md'), 'inside');
+      mkdirSync(join(root, 'elsewhere'));
+      writeFileSync(join(root, 'elsewhere', 'alpha-01.md'), 'OUTSIDE');
+      renameSync(real, join(root, 'moved'));
+      symlinkSync(join(root, 'elsewhere'), real);
+      expect(() => readExternalDocs(real, ids)).toThrow('could not be opened as a directory without following links');
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  test.skipIf(process.platform !== 'linux')('refuses a folder whose parent was swapped for a link after it was resolved', () => {
+    const root = scratch('cat35-ext-swap-');
+    try {
+      const real = join(root, 'parent', 'out');
+      mkdirSync(real, { recursive: true });
+      writeFileSync(join(real, 'alpha-01.md'), 'inside');
+      mkdirSync(join(root, 'elsewhere', 'out'), { recursive: true });
+      writeFileSync(join(root, 'elsewhere', 'out', 'alpha-01.md'), 'OUTSIDE');
+      renameSync(join(root, 'parent'), join(root, 'moved'));
+      symlinkSync(join(root, 'elsewhere'), join(root, 'parent'));
+      expect(() => readExternalDocs(real, ids)).toThrow(`--external-dir now resolves to ${join(root, 'elsewhere', 'out')}, not ${real}`);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
   test('refuses a FIFO without blocking, and a directory, by name', () => {
     const dir = folder();
     try {
@@ -181,6 +213,15 @@ describe('readExternalDocs on a hostile folder', () => {
   });
 });
 
+describe('receipt schema', () => {
+  test('a receipt with no external lane must name a built-in lane in every per_item row', () => {
+    const schema = JSON.parse(readFileSync(join(import.meta.dir, '../../eval/schemas/cat35-receipt.schema.json'), 'utf8'));
+    const rule = schema.allOf.find((r: any) => r.if?.properties?.external_lane);
+    expect(rule.if.properties.external_lane).toEqual({ type: 'null' });
+    expect(rule.then.properties.per_item.items.properties.lane.enum).toEqual(schema.properties.lanes.items.enum);
+  });
+});
+
 describe('WS0 publishability', () => {
   test('a full run that scored an external lane is never publishable', () => {
     const base = {
@@ -208,6 +249,8 @@ describe('CLI refusals', () => {
         [['--lanes', 'none'], '--lanes none needs'],
         [['--lanes', 'none,verbatim', '--external-lane', 'ext-notes', '--external-dir', 'docs-dir'], "unknown lane 'none'"],
         [['--transcript-mode', 'half', '--external-lane', 'ext-notes', '--external-dir', 'docs-dir'], 'cannot run with an external lane'],
+        [['--lanes', 'verbatim', '--external-lane=ext-notes', '--external-dir=docs-dir'], '--external-lane=ext-notes: write --external-lane NAME'],
+        [['--external-dirs', 'docs-dir'], '--external-dirs: write'],
       ];
       for (const [args, message] of cases) {
         const proc = Bun.spawnSync([process.execPath, RUNNER, ...args], {
@@ -456,7 +499,9 @@ describe('hermetic external-lane runs', () => {
     ]);
     expect(rc.native_evidence.judge_events.every((e: any) => e.lane === 'ext-notes')).toBe(true);
     const labels = r.requests.filter((q) => q.tool === 'grade_claims').map((q) => JSON.parse(q.text.match(/<batch label=(.*)>/)![1]));
-    expect(labels).toEqual(['ext-notes:coding-reflection-02', `hazard:ext-notes:${gold('coding-reflection-02').hazards[0].hazard_id}`]);
+    // The judge sees a fixed 'external' label, never the contributor's lane name.
+    expect(labels).toEqual(['external:coding-reflection-02', `hazard:external:${gold('coding-reflection-02').hazards[0].hazard_id}`]);
+    expect(r.requests.some((q) => q.text.includes('ext-notes'))).toBe(false);
     // Built-in fields stay empty: blended usability, the built-in judge gate and the WS0 counters.
     expect(rc.usability).toEqual({ satisfied: 0, total: 0, rate: null, per_transcript: [] });
     expect(rc.judge_failed_rate).toBe(0);
@@ -497,18 +542,19 @@ describe('hermetic external-lane runs', () => {
     }, 90_000);
   }
 
-  test('a lane whose documents hold no gradable claim still reports hallucination, with zero claims', () => {
+  test('a lane with nothing to grade reports no hallucination or quote-fidelity rate, and the scorecard shows zero claims', () => {
     const r = runHermetic(['--lanes', 'none', ...EXT], {
       setup: (dir) => {
         const ext = join(dir, 'ext-out');
         mkdirSync(ext);
-        writeFileSync(join(ext, 'coding-reflection-02.md'), `\`\`\`markdown\n${notes('coding-reflection-02')}\`\`\`\n`);
+        writeFileSync(join(ext, 'coding-reflection-02.md'), '```markdown\n- The user fixed the flaky runner test today.\n```\n');
       },
     });
     expect(r.exitCode, r.stderr).toBe(0);
     expect(r.receipt.external_lane.files.map((f: any) => [f.transcript_id, f.claims])).toEqual([['coding-reflection-02', 0]]);
-    expect(r.receipt.hallucination['ext-notes']).toEqual({ claims: 0, verifiable: 0, ungrounded: 0, rate: 0 });
-    expect(r.stderr).toContain('ext-notes hallucination: 0.0% (0/0 verifiable claims)');
+    expect(r.receipt.hallucination['ext-notes']).toBeUndefined();
+    expect(r.receipt.quote_fidelity_by_lane['ext-notes']).toBeUndefined();
+    expect(r.stderr).toContain('external lane ext-notes: 1 documents (sha256 in the receipt), 0 gradable claims');
   });
 
   test('every built-in field is identical with or without an external lane, even one whose judge fails', () => {

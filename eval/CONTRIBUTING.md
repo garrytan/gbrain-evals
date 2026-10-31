@@ -119,11 +119,13 @@ lanes.
    needs `ANTHROPIC_API_KEY` and `OPENAI_API_KEY` like any Cat 35 run, and the runner prints its pre-flight cost
    projection before the first judge call.
 
-Your lane is judged the way gbrain's dream lane is: recall of the planted facts, with an evidence check that the quote the
-judge cites is in your document and in the conversation, plus claim grounding, distractor leakage, the usability checklist,
-attribution hazards and quote fidelity. Claim grounding grades the sentences of five or more words outside code fences,
-headings and quote lines, as it does for dream, so don't wrap a document in a code fence. Read your recall next to the
-verbatim lane from the same run: verbatim keeps the whole conversation, so its score is the judge's ceiling.
+Your lane is judged the way gbrain's dream lane is: recall of the planted facts, with an evidence check that the quote
+the judge cites is in your document and in the conversation, plus claim grounding, distractor leakage, the usability
+checklist, attribution hazards and quote fidelity. Claim grounding grades the sentences of five or more words outside
+code fences, headings and quote lines, as it does for dream, so don't wrap a document in a code fence. A lane with no
+gradable claim gets no hallucination rate, and one with no quotes gets no quote-fidelity rate, rather than a perfect
+score. Read your recall next to the verbatim lane from the same run: verbatim keeps the whole conversation, so its score
+is the judge's ceiling.
 
 The receipt's `external_lane` block records the lane name, the folder's real path, the size limit, each file's bytes and
 sha256, how many claims the grounding judge grades in each file, the conversations with no file, and a note that the
@@ -134,17 +136,19 @@ errors cannot reach gbrain's numbers. Your lane gets its own `external_judge_fai
 code includes, and a run with an external lane is never publishable as the benchmark. Scrub machine paths with
 `bun eval/runner/receipt.ts scrub` before you share a receipt.
 
-The runner treats the folder as untrusted. It opens only the `<transcript_id>.md` names it expects, and before any provider
-call it refuses the whole run on a symlink, anything that is not a regular file, a hard-linked file, a file over 64 KiB, a
-file with more than 80 claims (what the grounding judge grades in one call), invalid UTF-8, or a document that contains one
-of the corpus's answer-key ids (a sign the system read `gold/`). A lane name is lowercase letters, digits and dashes, up to
-32 characters, and cannot reuse a built-in lane name. Name the lane by what the system does, such as `ext-notes`; product
-names belong only in [docs/comparison-systems.md](../docs/comparison-systems.md).
+The runner treats the folder as untrusted. It opens only the `<transcript_id>.md` names it expects, and before any
+provider call it refuses the whole run on a symlink, anything that is not a regular file, a hard-linked file, a file
+over 64 KiB, a file with more than 80 claims (what the grounding judge grades in one call), invalid UTF-8, a document
+that contains one of the corpus's answer-key ids (a sign the system read `gold/`), or a folder that was replaced or
+swapped for a link after the run resolved its path. On Linux the runner holds the folder open and reads every file
+through that handle. A lane name is lowercase letters, digits and dashes, up to 32 characters, and cannot reuse a
+built-in lane name. Name the lane by what the system does, such as `ext-notes`; product names belong only in
+[docs/comparison-systems.md](../docs/comparison-systems.md).
 
 Know the limits before you compare numbers. Your documents go to the judge's provider, so keep private data out of them.
-A document can carry text aimed at the judge; the judge prompts fence every document as untrusted data and each call sees
-one lane's document, so such text can only move that lane's own numbers. The harness cannot tell whether your system saw
-the answer keys.
+A document can carry text aimed at the judge; the judge prompts fence every document as untrusted data, label it
+`external` rather than with your lane name, and each call sees one lane's document, so such text can only move that
+lane's own numbers. The harness cannot tell whether your system saw the answer keys.
 
 ## Evaluate a gbrain change
 

@@ -42,6 +42,35 @@
     "transcripts"
   ],
   "additionalProperties": true,
+  "allOf": [
+    {
+      "$comment": "Without an external lane (null or absent), every per_item row names a built-in lane.",
+      "if": {
+        "properties": {
+          "external_lane": {
+            "type": "null"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "per_item": {
+            "items": {
+              "properties": {
+                "lane": {
+                  "enum": [
+                    "verbatim",
+                    "facts",
+                    "dream"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ],
   "properties": {
     "schema_version": {
       "type": "integer",

@@ -50,7 +50,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import {
   closeSync, constants, existsSync, fstatSync, lstatSync, mkdirSync, mkdtempSync, openSync, readdirSync, readFileSync, readSync,
-  realpathSync, rmSync, statSync, writeFileSync,
+  readlinkSync, realpathSync, rmSync, statSync, writeFileSync,
 } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { PGLiteEngine } from 'gbrain/pglite-engine';
@@ -233,7 +233,9 @@ export interface ExternalDocs {
  * over maxBytes, invalid UTF-8 or more claims than the grounding judge can
  * grade in one call throws, naming the file. A missing file is
  * reported in `missing`; an empty file is a present document. sha256 covers
- * the raw bytes, and the decoded text re-encodes to the same bytes.
+ * the raw bytes, and the decoded text re-encodes to the same bytes. DIR must
+ * be a real path (realpathSync): it is opened without following a link, and a
+ * folder replaced after it was resolved is refused.
  */
 export function readExternalDocs(
   dir: string,
@@ -241,59 +243,78 @@ export function readExternalDocs(
   maxBytes = EXTERNAL_DOC_MAX_BYTES,
   maxClaims = EXTERNAL_DOC_MAX_CLAIMS,
 ): ExternalDocs {
-  const { O_NOFOLLOW, O_NONBLOCK } = constants;
-  if (typeof O_NOFOLLOW !== 'number' || typeof O_NONBLOCK !== 'number') {
+  const { O_DIRECTORY, O_NOFOLLOW, O_NONBLOCK } = constants;
+  if (typeof O_DIRECTORY !== 'number' || typeof O_NOFOLLOW !== 'number' || typeof O_NONBLOCK !== 'number') {
     throw new Error('this platform cannot open a file without following links');
   }
   const out: ExternalDocs = { docs: new Map(), files: [], missing: [] };
   const decoder = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
-  for (const tid of transcriptIds) {
-    if (!SAFE_TRANSCRIPT_ID.test(tid)) throw new Error(`transcript id '${tid}' is not a safe file name`);
-    const file = `${tid}.md`;
-    const path = join(dir, file);
-    let st: ReturnType<typeof lstatSync>;
-    try {
-      st = lstatSync(path);
-    } catch (e) {
-      if ((e as NodeJS.ErrnoException).code !== 'ENOENT') throw e;
-      out.missing.push(tid);
-      continue;
-    }
-    if (st.isSymbolicLink()) throw new Error(`${file} is a symlink; copy the document into the folder`);
-    if (!st.isFile()) throw new Error(`${file} is not a regular file`);
-    if (st.nlink > 1) throw new Error(`${file} has ${st.nlink} hard links; copy the document into the folder`);
-    if (st.size > maxBytes) throw new Error(`${file} is ${st.size} bytes, over the ${maxBytes}-byte limit`);
-    let fd: number;
-    try {
-      fd = openSync(path, constants.O_RDONLY | O_NOFOLLOW | O_NONBLOCK);
-    } catch (e) {
-      throw new Error(`${file} could not be opened without following links (${(e as NodeJS.ErrnoException).code ?? 'error'})`);
-    }
-    const buf = Buffer.alloc(maxBytes + 1);
-    let n = 0;
-    try {
-      const fst = fstatSync(fd);
-      if (!fst.isFile() || fst.dev !== st.dev || fst.ino !== st.ino) throw new Error(`${file} changed while it was opened`);
-      while (n < buf.length) {
-        const r = readSync(fd, buf, n, buf.length - n, null);
-        if (r === 0) break;
-        n += r;
+  let dirFd: number;
+  try {
+    dirFd = openSync(dir, constants.O_RDONLY | O_DIRECTORY | O_NOFOLLOW);
+  } catch (e) {
+    throw new Error(`--external-dir ${dir} could not be opened as a directory without following links (${(e as NodeJS.ErrnoException).code ?? 'error'})`);
+  }
+  try {
+    // On Linux every file is looked up through this one handle, so a folder
+    // renamed or swapped for a link after it was resolved cannot redirect a read.
+    const pinned = `/proc/self/fd/${dirFd}`;
+    const base = existsSync(pinned) ? pinned : dir;
+    const resolved = base === pinned ? readlinkSync(pinned) : dir;
+    if (resolved !== dir) throw new Error(`--external-dir now resolves to ${resolved}, not ${dir}`);
+    for (const tid of transcriptIds) {
+      if (!SAFE_TRANSCRIPT_ID.test(tid)) throw new Error(`transcript id '${tid}' is not a safe file name`);
+      const file = `${tid}.md`;
+      const path = join(base, file);
+      let st: ReturnType<typeof lstatSync>;
+      try {
+        st = lstatSync(path);
+      } catch (e) {
+        if ((e as NodeJS.ErrnoException).code !== 'ENOENT') throw e;
+        out.missing.push(tid);
+        continue;
       }
-    } finally {
-      closeSync(fd);
+      if (st.isSymbolicLink()) throw new Error(`${file} is a symlink; copy the document into the folder`);
+      if (!st.isFile()) throw new Error(`${file} is not a regular file`);
+      if (st.nlink > 1) throw new Error(`${file} has ${st.nlink} hard links; copy the document into the folder`);
+      if (st.size > maxBytes) throw new Error(`${file} is ${st.size} bytes, over the ${maxBytes}-byte limit`);
+      let fd: number;
+      try {
+        fd = openSync(path, constants.O_RDONLY | O_NOFOLLOW | O_NONBLOCK);
+      } catch (e) {
+        throw new Error(`${file} could not be opened without following links (${(e as NodeJS.ErrnoException).code ?? 'error'})`);
+      }
+      const buf = Buffer.alloc(maxBytes + 1);
+      let n = 0;
+      try {
+        const fst = fstatSync(fd);
+        if (!fst.isFile() || fst.dev !== st.dev || fst.ino !== st.ino) throw new Error(`${file} changed while it was opened`);
+        while (n < buf.length) {
+          const r = readSync(fd, buf, n, buf.length - n, null);
+          if (r === 0) break;
+          n += r;
+        }
+      } finally {
+        closeSync(fd);
+      }
+      if (n > maxBytes) throw new Error(`${file} grew past the ${maxBytes}-byte limit while it was read`);
+      const bytes = buf.subarray(0, n);
+      let text: string;
+      try {
+        text = decoder.decode(bytes);
+      } catch {
+        throw new Error(`${file} is not valid UTF-8`);
+      }
+      const claims = segmentClaims(text).length;
+      if (claims > maxClaims) throw new Error(`${file} has ${claims} claims, over the ${maxClaims} the grounding judge grades in one call`);
+      out.docs.set(tid, text);
+      out.files.push({ transcript_id: tid, file, bytes: n, sha256: sha256(bytes), claims });
     }
-    if (n > maxBytes) throw new Error(`${file} grew past the ${maxBytes}-byte limit while it was read`);
-    const bytes = buf.subarray(0, n);
-    let text: string;
-    try {
-      text = decoder.decode(bytes);
-    } catch {
-      throw new Error(`${file} is not valid UTF-8`);
-    }
-    const claims = segmentClaims(text).length;
-    if (claims > maxClaims) throw new Error(`${file} has ${claims} claims, over the ${maxClaims} the grounding judge grades in one call`);
-    out.docs.set(tid, text);
-    out.files.push({ transcript_id: tid, file, bytes: n, sha256: sha256(bytes), claims });
+    const after = lstatSync(dir);
+    const held = fstatSync(dirFd);
+    if (!after.isDirectory() || after.dev !== held.dev || after.ino !== held.ino) throw new Error(`--external-dir ${dir} was replaced while it was read`);
+  } finally {
+    closeSync(dirFd);
   }
   return out;
 }
@@ -317,6 +338,8 @@ function parseOpts(): Opts {
     lanes.push(l);
   }
   let externalLane: Opts['externalLane'] = null;
+  const unknownExternal = a.find((x) => x.startsWith('--external-') && x !== '--external-lane' && x !== '--external-dir');
+  if (unknownExternal) refuse(`${unknownExternal}: write --external-lane NAME --external-dir DIR, each value after a space`);
   if (a.includes('--external-lane') || a.includes('--external-dir')) {
     const name = get('--external-lane');
     const dirArg = get('--external-dir');
@@ -891,7 +914,7 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
         continue;
       }
       st.laneDocs[external] = doc;
-      st.lanePages[external] = doc.trim() ? [{ slug: `${external}/${tid}`, body: doc }] : [];
+      st.lanePages[external] = doc.trim() ? [{ slug: `external/${tid}`, body: doc }] : [];
     }
     err(`external[${external}]: ${externalDocs.files.length} documents, ${externalDocs.missing.length} missing`);
   }
@@ -1177,7 +1200,7 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
           if (jointFallback.length && distilled(lane)) {
             const g = await scoreGrounding(
               {
-                label: lane === 'dream' ? `joint:${tid}` : `joint:${lane}:${tid}`,
+                label: lane === 'dream' ? `joint:${tid}` : `joint:external:${tid}`,
                 claims: jointFallback.map((x) => x.evidence),
                 transcript: f.transcriptText,
               },
@@ -1205,7 +1228,7 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
             ? doc.split('\n').filter((l) => l.trim().startsWith('- ')).map((l) => l.replace(/^- \[[a-z]+\] /, '').trim())
             : segmentClaims(doc);
         if (claims.length) {
-          const g = await scoreGrounding({ label: `${lane}:${tid}`, claims, transcript: f.transcriptText }, jcfg);
+          const g = await scoreGrounding({ label: lane === external ? `external:${tid}` : `${lane}:${tid}`, claims, transcript: f.transcriptText }, jcfg);
           judgeCalls++;
           totalCost += g.cost_usd;
           if (g.judge_failed) judgeFailures++;
@@ -1303,7 +1326,7 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
           continue;
         }
         const g = await scoreGrounding(
-          { label: lane === 'dream' ? `hazard:${h.hazard_id}` : `hazard:${lane}:${h.hazard_id}`, claims: [h.wrong_claim], transcript: doc },
+          { label: lane === 'dream' ? `hazard:${h.hazard_id}` : `hazard:external:${h.hazard_id}`, claims: [h.wrong_claim], transcript: doc },
           jcfg,
         );
         judgeCalls++;
@@ -1356,6 +1379,7 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
     const b = quoteFid[lane];
     b.rate = b.total ? b.grounded / b.total : 1;
   }
+  if (external && quoteFid[external]?.total === 0) delete quoteFid[external];
   const compressionByLane: Record<string, number> = {};
   for (const [lane, arr] of Object.entries(compression)) {
     compressionByLane[lane] = arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
@@ -1408,7 +1432,6 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
   for (const [lane, b] of Object.entries(halluc)) {
     hallucination[lane] = { ...b, rate: b.verifiable ? b.ungrounded / b.verifiable : 0 };
   }
-  if (external) hallucination[external] ??= { claims: 0, verifiable: 0, ungrounded: 0, rate: 0 };
   const distractorLeakage: Record<string, { hits: number; confirmed: number; denominator: number; judge_failed: number; rate: number }> = {};
   for (const lane of scoredLanes) {
     if (!leakage[lane]) continue;
@@ -1821,7 +1844,7 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
   if (usabAgg.total) err(`usability checklist: ${usabAgg.satisfied}/${usabAgg.total} (${((usabAgg.satisfied / usabAgg.total) * 100).toFixed(0)}%)`);
   err(`emission: ${emission.emitted}/${emission.expected_high} expected-high produced pages`);
   if (externalLaneRecord) {
-    err(`external lane ${externalLaneRecord.name}: ${externalLaneRecord.files.length} documents (sha256 in the receipt), ${externalLaneRecord.missing.length} missing, judge_failed_rate ${((externalJudgeFailedRate ?? 0) * 100).toFixed(1)}%; not publishable, the harness has no record of how they were made`);
+    err(`external lane ${externalLaneRecord.name}: ${externalLaneRecord.files.length} documents (sha256 in the receipt), ${externalLaneRecord.files.reduce((n, f) => n + f.claims, 0)} gradable claims, ${externalLaneRecord.missing.length} missing, judge_failed_rate ${((externalJudgeFailedRate ?? 0) * 100).toFixed(1)}%; not publishable, the harness has no record of how they were made`);
   }
   err(`judge_failed_rate: ${(judgeFailedRate * 100).toFixed(1)}%  cost: $${totalCost.toFixed(2)} (judges+facts; dream-lane spend not surfaced)  wall: ${receipt.wall_seconds}s`);
   if (deltas) {
