@@ -56,6 +56,7 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 import { fitAnthropicRequest, temperatureSent, toolChoiceSent, withThinkingRoom } from './anthropic-request.ts';
+import { judgePrice, priceOf } from './judge.ts';
 import { ProbeAccounting, type ProbeSummary } from './probe-accounting.ts';
 import {
   writeReceipt,
@@ -143,23 +144,16 @@ export interface Cat5Config {
   enableThreshold?: boolean;
 }
 
-// ─── Defaults + pricing ──────────────────────────────────────────────
+// ─── Defaults ────────────────────────────────────────────────────────
 
 const DEFAULT_MODEL = 'claude-haiku-4-5-20251001';
 const DEFAULT_MAX_TOKENS = 400;
 const DEFAULT_THRESHOLD = 0.9;
 
-const PRICE_INPUT_PER_M = 1.0;
-const PRICE_OUTPUT_PER_M = 5.0;
-
 let defaultClient: Anthropic | null = null;
 function getDefaultClient(): Anthropic {
   if (!defaultClient) defaultClient = new Anthropic();
   return defaultClient;
-}
-
-function priceOf(input: number, output: number): number {
-  return (input * PRICE_INPUT_PER_M + output * PRICE_OUTPUT_PER_M) / 1_000_000;
 }
 
 // ─── Tool definition ─────────────────────────────────────────────────
@@ -265,6 +259,7 @@ export async function classifyClaim(
 ): Promise<ClaimScore> {
   const client = config.client ?? getDefaultClient();
   const model = config.model ?? DEFAULT_MODEL;
+  const price = judgePrice(model);
   const maxTokens = config.maxTokens ?? withThinkingRoom(model, DEFAULT_MAX_TOKENS);
   const userContent = renderClaimPrompt(claim, sources);
 
@@ -287,7 +282,7 @@ export async function classifyClaim(
     }));
     inputTokens += response.usage.input_tokens;
     outputTokens += response.usage.output_tokens;
-    cost += priceOf(response.usage.input_tokens, response.usage.output_tokens);
+    cost += priceOf(price, response);
     return parseClassification(response);
   }
 

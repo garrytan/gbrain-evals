@@ -240,6 +240,13 @@ describe('matchClaims validation + retry', () => {
     expect(out.result!.matches[0].extracted_index).toBe(0);
   });
 
+  // Value: protects=the matcher request forces the match_claims tool at temperature 0 with the 2000-token limit for the default judge; fails_when=the matcher request drops its tool choice, temperature or limit; why_new=existing matcher tests check the returned result but not the request sent; seam=none; no_claim=stub client, Claude 5 matcher request not covered (judge model is an env constant read at import)
+  test('the matcher request forces match_claims at temperature 0 for the default judge', async () => {
+    const calls: Array<Record<string, unknown>> = [];
+    await matchClaims('page', EXTRACTED, GT, fakeClient([VALID_TOOL_USE], calls as any));
+    expect(calls[0]).toMatchObject({ temperature: 0, max_tokens: 2000, tool_choice: { type: 'tool', name: 'match_claims' } });
+  });
+
   test('malformed first attempt triggers ONE corrective retry naming the defect', async () => {
     const calls: Array<{ messages: Array<{ content: unknown }> }> = [];
     const out = await matchClaims('page', EXTRACTED, GT, fakeClient([MALFORMED_TOOL_USE, VALID_TOOL_USE], calls));
@@ -566,4 +573,18 @@ describe('cat15 extraction temperature (audit A-03)', () => {
     expect(seen[0].temperature).toBe(0);
     expect(EXTRACT_TEMPERATURE).toBe(0);
   });
+
+  // Value: protects=a Claude 5 extractor (CAT15_MODEL) is sent no temperature and 4,096 tokens to think in, while the default extractor keeps gbrain's 2,048-token limit; fails_when=the extractor request skips fitAnthropicRequest or withThinkingRoom; why_new=the extractor model is read from the environment at import, so no in-process test reaches the Claude 5 request; seam=none; no_claim=stub client in a subprocess, not a live call
+  test('a Claude 5 extractor gets no temperature and room to think; the default keeps gbrain\'s limit', () => {
+    const sentFor = (model: string | undefined) => {
+      const script = "const { extractClaims } = await import('./eval/runner/cat15-propose-takes.ts'); const seen = []; await extractClaims('A page body.', { messages: { create: async (p) => { seen.push(p); return { content: [{ type: 'text', text: '[]' }] }; } } }); console.log(JSON.stringify({ max_tokens: seen[0].max_tokens, temperature: seen[0].temperature ?? null }));";
+      const env: Record<string, string> = {};
+      for (const [k, v] of Object.entries(process.env)) if (v !== undefined && k !== 'CAT15_MODEL') env[k] = v;
+      if (model) env.CAT15_MODEL = model;
+      const proc = Bun.spawnSync(['bun', '-e', script], { cwd: REPO_ROOT, env, stdout: 'pipe', stderr: 'pipe' });
+      return JSON.parse(proc.stdout.toString().trim().split('\n').at(-1)!);
+    };
+    expect(sentFor('claude-opus-5-5')).toEqual({ max_tokens: 4096, temperature: null });
+    expect(sentFor(undefined)).toEqual({ max_tokens: 2048, temperature: 0 });
+  }, 30000);
 });

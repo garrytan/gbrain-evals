@@ -230,7 +230,7 @@ async function extractClaims(pageBody: string, client?: Anthropic): Promise<Extr
   const prompt = buildExtractionPrompt(pageBody);
   const res = await (client ?? getAnthropic()).messages.create(fitAnthropicRequest({
     model: EXTRACT_MODEL,
-    max_tokens: PROPOSE_TAKES_MAX_TOKENS,
+    max_tokens: withThinkingRoom(EXTRACT_MODEL, PROPOSE_TAKES_MAX_TOKENS),
     temperature: EXTRACT_TEMPERATURE,
     messages: [{ role: 'user', content: prompt }],
   }));

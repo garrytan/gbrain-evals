@@ -135,6 +135,14 @@ describe('judge.ts scoreAnswer', () => {
     expect(result.cost_usd).toBeCloseTo((1000 * 1 + 100 * 5) / 1e6, 12);
   });
 
+  // Value: protects=scoreAnswer cost prices cache reads and writes at their own rates, not the input rate; fails_when=the cache terms are dropped from the judge cost or priced as plain input; why_new=the judge cost tests send usage with no cache fields; seam=none; no_claim=keyless stub usage, not a live provider bill (unit only)
+  test('judge cost counts cache reads and writes at their own rates', async () => {
+    const cached = { ...SCORE_REPLY, usage: { input_tokens: 1000, output_tokens: 100, cache_read_input_tokens: 2000, cache_creation_input_tokens: 500 } };
+    const r = recording(() => cached);
+    const result = await scoreAnswer(EVIDENCE, { client: r.client, model: 'claude-opus-5-5' });
+    expect(result.cost_usd).toBeCloseTo((1000 * 4 + 2000 * 0.2 + 500 * 5 + 100 * 20) / 1e6, 12);
+  });
+
   test('the corrective retry to a Claude 5 judge also asks for the tool; an explicit limit is sent as given', async () => {
     const r = recording();
     const result = await scoreAnswer(EVIDENCE, { client: r.client, model: 'claude-sonnet-5-5', maxTokens: 900 });
@@ -169,6 +177,16 @@ describe('the other call sites', () => {
     const old = recording();
     await classifyClaim(CLAIM, EVIDENCE.ground_truth_pages, { client: old.client });
     expect(old.requests().map(q => [q.max_tokens, q.temperature, q.tool_choice])).toEqual([[400, 0, { type: 'tool', name: 'classify_claim' }], [400, 0, { type: 'tool', name: 'classify_claim' }]]);
+  });
+
+  test('cat5 prices each classifier model at its own rate', async () => {
+    const opus = await classifyClaim(CLAIM, EVIDENCE.ground_truth_pages, { client: recording().client, model: 'claude-opus-5-5' });
+    expect(opus.cost_usd).toBeCloseTo(2 * (10 * 4 + 5 * 20) / 1e6, 12);
+    const haiku = await classifyClaim(CLAIM, EVIDENCE.ground_truth_pages, { client: recording().client });
+    expect(haiku.cost_usd).toBeCloseTo(2 * (10 * 1 + 5 * 5) / 1e6, 12);
+    const unpriced = recording();
+    await expect(classifyClaim(CLAIM, EVIDENCE.ground_truth_pages, { client: unpriced.client, model: 'claude-unlisted-1' })).rejects.toThrow('no chat price');
+    expect(unpriced.bodies.length).toBe(0);
   });
 
   test('cat25 think completion', async () => {
