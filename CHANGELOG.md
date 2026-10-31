@@ -15,7 +15,7 @@ This records what each gbrain-evals release changed and what its measurements me
   each of the 118 external product names is replaced by its kind id in square brackets (`[ext-extract-first]`), as
   the name guard requires outside `docs/comparison-systems.md`; nothing else changed, and the branch keeps the
   original wording.
-- **The eleven citations are unchanged, and the branch stays.** The preregistrations are frozen (each changes only by
+- None of the eleven citations changes, and the branch stays. The preregistrations are frozen (each changes only by
   an amendment appended at its end, and some are bound by recorded SHA-256 hashes), and every citation already
   resolves: the path now exists on main, and the branch keeps every revision of the plan as each report read it.
 - The [docs index](docs/README.md) links the folder from its route table.
