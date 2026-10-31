@@ -26,6 +26,7 @@ import { describe, test, expect } from 'bun:test';
 import { mkdtempSync, readFileSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
+import { BudgetRun, initLedger } from '../../eval/runner/budget-ledger.ts';
 import {
   loadProbes,
   runProbe,
@@ -401,6 +402,19 @@ describe('cat14 runs and receipts', () => {
     expect(r.receipt.run_status).toBe('skipped');
     expect(r.receipt.skip_reason).toContain('--budget-run-id <id> naming an open run, or --budget-usd <dollars>');
   }, 30000);
+
+  // Value: protects=a request the budget run refuses stops the run with an error receipt instead of a verdict over whichever probes got budget; fails_when=Cat 14 ignores paid.guard.exhausted; why_new=Cat 14 joins the all.ts run and had no exhaustion handling; seam=none; no_claim=the guard refuses the first reservation, so no request leaves the process
+  test('a request the budget run refuses stops the run with an error receipt', () => {
+    const ledgerPath = join(mkdtempSync(join(tmpdir(), 'cat14-ledger-')), 'ledger.sqlite');
+    initLedger({ ledgerPath, programCapUsd: 5, reason: 'test' });
+    const budgetRun = BudgetRun.open({ runner: 'cat14-test', budgetUsd: 0.000001, ledgerPath });
+    const r = run({ ANTHROPIC_API_KEY: 'test-key-not-real', BRAINBENCH_BUDGET_LEDGER: ledgerPath, BRAINBENCH_BUDGET_RUN_ID: budgetRun.runId, CAT14_PROBES: 'cat14-pos-1-geography,cat14-pos-2-tactics' });
+    expect(r.exitCode).toBe(2);
+    expect(r.stderr).toContain('the budget run refused a request');
+    expect(r.receipt.run_status).toBe('error');
+    expect(r.receipt.data.budget_exhausted).toBe(true);
+    expect(r.receipt.errors.map((e: { probe_id: string; origin: string }) => [e.probe_id, e.origin])).toEqual([['cat14-pos-1-geography', 'harness']]);
+  }, 60000);
 
   // Value: protects=temperature_sent records numbers (null where the model takes none), as every other site does; fails_when=it goes back to booleans; why_new=Cat 14 wrote booleans while the CHANGELOG and the other sites use number | null; seam=none; no_claim=hermetic run with the default models
   test('the receipt records the temperatures sent as numbers', () => {

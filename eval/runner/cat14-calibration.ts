@@ -1186,6 +1186,12 @@ async function main(): Promise<void> {
     } catch (e) {
       outcome = { kind: 'error', origin: 'harness', message: `runProbe threw: ${errMsg(e)}` };
     }
+    // A request the budget run refused is no SUT or judge failure: record it and stop.
+    if (paid?.guard.exhausted) {
+      acc.error(probe.id, 'harness', 'the budget run refused a request, so this probe was not scored');
+      process.stderr.write('BUDGET EXHAUSTED\n');
+      break;
+    }
     if (outcome.kind === 'error') {
       acc.error(probe.id, outcome.origin, outcome.message);
       if (outcome.origin === 'judge') judgeFailedCount++;
@@ -1205,6 +1211,7 @@ async function main(): Promise<void> {
 
   const summary = aggregate(results, { mode: hermetic ? 'hermetic' : 'live', judgeFailed: judgeFailedCount });
   const accSummary = acc.summary();
+  const budgetExhausted = paid?.guard.exhausted ?? false;
   paid?.guard.uninstall();
   const runExtras = {
     profile_mode: profileMode,
@@ -1227,7 +1234,8 @@ async function main(): Promise<void> {
   if (!existsSync(DUMPS_DIR)) mkdirSync(DUMPS_DIR, { recursive: true });
   writeFileSync(join(DUMPS_DIR, '_summary.json'), JSON.stringify(summary, null, 2));
 
-  if (accSummary.run_invalid) {
+  // Invalid runs (infra error rate over the cap, or a budget run that refused a request and stopped the run) write run_status 'error'.
+  if (accSummary.run_invalid || budgetExhausted) {
     writeReceipt(receiptPath(CATEGORY, REPORTS_ROOT), {
       ...baseReceipt(startedAt),
       run_status: 'error',
@@ -1239,9 +1247,11 @@ async function main(): Promise<void> {
       resolved_config: { ...resolvedConfig(hermetic, filter), profile_mode: profileMode, judge_transport: judgeTransport(JUDGE_MODEL), temperature_sent: { think: temperatureSent(THINK_MODEL, THINK_TEMPERATURE), judge: temperatureSent(JUDGE_MODEL, JUDGE_TEMPERATURE) }, tool_choice_sent: { judge: toolChoiceSent(JUDGE_MODEL) } },
       judge: { model: hermetic ? 'heuristic-string-judge' : JUDGE_MODEL, temperature: hermetic ? JUDGE_TEMPERATURE : temperatureSent(JUDGE_MODEL, JUDGE_TEMPERATURE) },
       ...runExtras,
-      data: { summary: summary as unknown as Record<string, unknown> },
+      data: { summary: summary as unknown as Record<string, unknown>, budget_exhausted: budgetExhausted },
     });
-    console.error(`[cat14] RUN INVALID: infra error rate ${(accSummary.infra_error_rate * 100).toFixed(0)}% over cap; see receipt errors[]`);
+    console.error(budgetExhausted
+      ? '[cat14] RUN INVALID: the budget run refused a request, so the run stopped early; see receipt errors[]'
+      : `[cat14] RUN INVALID: infra error rate ${(accSummary.infra_error_rate * 100).toFixed(0)}% over cap; see receipt errors[]`);
     process.exit(2);
   }
 

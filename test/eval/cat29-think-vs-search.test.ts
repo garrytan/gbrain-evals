@@ -490,4 +490,24 @@ describe('cat29 paid runs and judge prices', () => {
     expect(receipt.resolved_config.temperature_sent).toEqual({ think: 0, judge: null });
     expect(receipt.judge.temperature).toBeNull();
   }, RUN_TIMEOUT);
+
+  // Value: protects=a think request the budget run refuses stops the run before judging and writes an error receipt, never a publishable 'think loses' result or a SUT failure; fails_when=Cat 29 ignores paid.guard.exhausted, so the empty think answer is judged and scored 0; why_new=Cat 29 joins the all.ts run and had no exhaustion handling; seam=none; no_claim=the guard refuses the first think reservation, so no request leaves the process
+  test('a think request the budget run refuses stops the run with an error receipt', async () => {
+    const ledgerPath = scratchLedger();
+    const run = BudgetRun.open({ runner: 'cat29-test', budgetUsd: 0.000001, ledgerPath });
+    const judged: string[] = [];
+    const r = await withFakeKeys(() => runCat29({
+      stub: false, embedMode: 'hash', pages: MINI_PAGES, questions: [MINI_QUESTION, { ...MINI_QUESTION, id: 'tq2-acme-arr-copy' }], reportsDir: tmpReports(), quiet: true,
+      judgeClient: makeStubJudgeClient({ onRequest: c => judged.push(c) }) as unknown as JudgeConfig['client'],
+      budget: { ...budgetOptionsFrom([], {}), ledgerPath, runId: run.runId },
+    }));
+    const receipt = r.receipt as Record<string, any>;
+    expect(receipt.run_status).toBe('error');
+    expect(receipt.verdict).toBeUndefined();
+    expect(receipt.publishable).toBe(false);
+    expect(receipt.data.budget_exhausted).toBe(true);
+    expect(receipt.errors.map((e: { probe_id: string; origin: string }) => [e.probe_id, e.origin])).toEqual([[MINI_QUESTION.id, 'harness']]);
+    expect(judged.length).toBe(0);
+    expect(r.exitCode).toBe(1);
+  }, RUN_TIMEOUT);
 });

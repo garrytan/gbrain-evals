@@ -771,6 +771,7 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
   const rows: QuestionResult[] = [];
   let questions: Cat29Question[] = [];
   let judgeCost = 0;
+  let budgetExhausted = false;
   let acc: ProbeAccounting;
   try {
     await engine.connect({});
@@ -790,8 +791,10 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
     acc = new ProbeAccounting(questions.length);
 
     for (const q of questions) {
+      if (paid?.guard.exhausted) break;
       log(`[cat29] running ${q.id}...\n`);
       const sutErrors: string[] = [];
+      const sutFailures: string[] = [];
       // Input allowlist: both systems get the question text only, never the
       // expected facts or gold slugs. A violation is a harness bug and aborts.
       assertCat29SutQuestion(q.text, q.expected_facts, q.gold_slugs);
@@ -808,7 +811,7 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
             }).join('\n')}`;
       } catch (e: any) {
         sutErrors.push(`search: ${e?.message ?? e}`);
-        acc.error(q.id, 'sut', `search failed: ${e?.message ?? e}`);
+        sutFailures.push(`search failed: ${e?.message ?? e}`);
       }
 
       // THINK side: full synthesis pipeline (gather runs against the real
@@ -824,12 +827,19 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
         thinkAns = r.answer && r.answer.trim().length > 0 ? r.answer : null;
         if (thinkAns === null) {
           sutErrors.push(`think: empty answer (synthesis_status=${r.synthesis_status ?? 'unknown'})`);
-          acc.error(q.id, 'sut', `think produced no answer (${r.synthesis_status ?? 'unknown'})`);
+          sutFailures.push(`think produced no answer (${r.synthesis_status ?? 'unknown'})`);
         }
       } catch (e: any) {
         sutErrors.push(`think: ${e?.message ?? e}`);
-        acc.error(q.id, 'sut', `think failed: ${e?.message ?? e}`);
+        sutFailures.push(`think failed: ${e?.message ?? e}`);
       }
+
+      // A request the budget run refused is no SUT failure: stop before judging.
+      if (paid?.guard.exhausted) {
+        acc.error(q.id, 'harness', 'the budget run refused a request, so this question was not judged');
+        break;
+      }
+      for (const message of sutFailures) acc.error(q.id, 'sut', message);
 
       // BLIND pairwise judging, both orders. 'a' = search, 'b' = think; the
       // labels never reach the judge and the mapping exists only in this runner.
@@ -893,6 +903,7 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
     console.log = origLog;
     if (hashEmbeds) __setEmbedTransportForTests(null);
     try { await engine.disconnect(); } catch { /* already dead */ }
+    budgetExhausted = paid?.guard.exhausted ?? false;
     paid?.guard.uninstall();
   }
   const paidCost = paid ? receiptCost(paid.run.close()) : null;
@@ -912,14 +923,13 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
     schema_version: RECEIPT_SCHEMA_VERSION,
     benchmark_version: BENCHMARK_VERSION,
     category: CAT29_CATEGORY,
-    run_status: 'completed',
-    verdict,
+    ...(budgetExhausted ? { run_status: 'error' as const } : { run_status: 'completed' as const, verdict }),
     n_total: summary.n_total,
     n_scored: summary.n_scored,
     completion_rate: summary.completion_rate,
     errors: summary.errors,
     publishable: summary.publishable && !stub && !options.questions && !options.pages
-      && (options.questionLimit === undefined),
+      && (options.questionLimit === undefined) && !budgetExhausted,
     gbrain_version: gbrainVersionResolved(),
     gbrain_pin: gbrainPin(),
     resolved_config: {
@@ -957,6 +967,7 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
       position_inconsistent: inconsistent.length,
       position_inconsistent_question_ids: inconsistent.map(r => r.question_id),
       judge_cost_usd: judgeCost,
+      budget_exhausted: budgetExhausted,
       per_question: rows,
     },
   };
@@ -974,11 +985,13 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
   log(`[cat29]   think mean:       ${Number.isNaN(tMean) ? 'n/a' : tMean.toFixed(2)}/5\n`);
   log(`[cat29]   think model:      ${thinkModelUsed ?? 'n/a'} (pinned ${thinkModel})\n`);
   log(`[cat29]   position flips:   ${inconsistent.length}/${judged.length} judged pairs\n`);
-  log(`[cat29]   verdict:          ${verdict} (run_invalid=${summary.run_invalid}, publishable=${receipt.publishable})\n`);
+  log(budgetExhausted
+    ? '[cat29]   RUN INVALID:      the budget run refused a request, so the run stopped early; see receipt errors[]\n'
+    : `[cat29]   verdict:          ${verdict} (run_invalid=${summary.run_invalid}, publishable=${receipt.publishable})\n`);
   log(`[cat29]   receipt:          ${receiptFile}\n`);
 
   // A stub run whose gate held exits 0: plumbing verified, reported as partial.
-  const exitCode = summary.run_invalid ? 1 : (measured === 'pass' ? 0 : 1);
+  const exitCode = summary.run_invalid || budgetExhausted ? 1 : (measured === 'pass' ? 0 : 1);
   return { receipt, rows, exitCode, receiptFile };
 }
 
