@@ -21,6 +21,10 @@ deflates a token count.
 - **OpenAI** reports `prompt_tokens` (Chat Completions) or `input_tokens` (Responses) as the total input
   already. Cached reads (`cached_tokens`) and cache writes (`cache_write_tokens`) are subsets of that total.
   Adding them on top counts them twice: a 100-token prompt with 60 cached tokens becomes 160.
+- **Particle** (`particle:particle-1`), like every provider in the OpenAI-compatible provider module
+  ([`eval/runner/providers/openai-compatible.ts`](../eval/runner/providers/openai-compatible.ts)), reports OpenAI
+  Chat Completions usage: cached reads inside `prompt_tokens`, and reasoning inside `completion_tokens`, which it
+  bills as output. `usageSourceOf('particle:…')` returns the OpenAI convention.
 
 The same formula, `input + cache_read + cache_write`, is right for Anthropic and wrong for OpenAI. The committed
 W10b `gpt-5.4` arm shows the size of the error: its 500 requests read 1,272,832 tokens from the cache, so the
@@ -49,6 +53,8 @@ with `from_cache: true` and the original call's usage.
 | `usage` | The normalized numbers below, or null when the response carried none |
 | `usage_raw` | The provider's usage object, unchanged |
 | `delivered` | Tokens of the text delivered to the model, with the tokenizer named (`cl100k` for reader prompts; `think` reports its own delivery count) |
+| `request` | Optional: what the request sent, for calls made through the OpenAI-compatible provider module (below) |
+| `response_meta` | Optional: what identifies the serving model and tier, for the same calls (below) |
 
 `usage` holds:
 
@@ -70,6 +76,35 @@ fields as null instead of a partial sum. A memory-qa response cached before raw 
 Provider-reported tokens are not comparable across model families: on the same W10b text, Claude readers saw a
 mean of 22,077 tokens and `gpt-6.1-sol` 13,695. A gate that compares arms with different readers uses `delivered`
 (one tokenizer, cl100k, on the delivered text) and reports the provider numbers beside it.
+
+## Request settings and response identity
+
+A reasoning model's answer depends on settings the model id does not show, and a provider can change the weights
+behind an id. Lanes that call a provider through the OpenAI-compatible provider module record both on every attempt
+(today the particle weight canary, `scripts/particle-canary.ts`). The fields are optional, so the schema stays
+`usage-receipt/v1` and older receipts stay valid.
+
+`request`, built by `compatRequest` with the request itself:
+
+| Field | Meaning |
+|---|---|
+| `effort_sent`, `effort_effective` | The `reasoning_effort` sent and the level the provider runs it at. Particle runs `minimal` as `low`, `medium` and `xhigh` as `high`, and `ultra` as `max`, so a campaign that fixes `medium` for every reader records particle-1 at `high` |
+| `output_limit_field`, `output_limit` | The output-limit field (`max_completion_tokens`) and its value. particle-1 is sent at least 16,000 tokens, because reasoning shares the limit: a 48-token limit at the default effort returned empty content (probe, 2026-10-31) |
+| `temperature_sent`, `seed_sent` | Null when none was sent. Particle is sent neither, and then samples with top_p 0.85; only the weight canary (`scripts/particle-canary.ts`) sends them |
+
+`response_meta`, from `responseMeta(response)`:
+
+| Field | Meaning |
+|---|---|
+| `metadata` | The response's raw `metadata` object, unchanged. Particle sends a weight version, or a list per span |
+| `weight_version` | `metadata.weight_version` when it is a string. Particle reported one in 1 of 18 probe responses (2026-10-31), and then only `default`, so its absence proves nothing; the paid weight canary watches for changes instead |
+| `service_tier`, `system_fingerprint` | As the response reports them |
+| `non_default_tier` | True when the response names a tier other than `default`. Particle's `flex` tier lists at half price and may serve differently |
+| `truncated` | True when the model stopped at the output limit (`finish_reason: length`) |
+
+A failed attempt (a 429, a network error, a 402) has no response, so every `response_meta` field is null, never an
+invented value, and `response_model` and `usage` are null as before. A truncated response keeps its own content as
+`answer`, even when that is empty: the reasoning text (Particle's `reasoning_content`) never fills an answer.
 
 ## How a memory-qa row uses it
 
@@ -95,11 +130,13 @@ For the Q1 scoreboard (`evals/q1-scoreboard`, `eval/runner/q1/cell.ts`), the cha
 ## Check it
 
 ```bash
-bun test test/eval/memory-qa-usage.test.ts
+bun test test/eval/memory-qa-usage.test.ts test/eval/openai-compatible.test.ts
 ```
 
-The test serves recorded synthetic Anthropic and OpenAI responses through a mocked fetch and checks that both
+The first file serves recorded synthetic Anthropic and OpenAI responses through a mocked fetch and checks that both
 conventions give the same totals, that retries and failures leave one record per attempt, that `think` rows
 carry `think`'s own usage, that a 5,000-character answer survives whole, and that the normalizer reproduces the
 committed W10 means (22,167 for W10a; 22,077 for Opus 5.5, 13,695 for `gpt-6.1-sol` and 14,458 for `gpt-5.4` in
-W10b). It makes no provider call.
+W10b). The second file checks Particle's convention, the `request` and `response_meta` fields, the null fields of a
+failed attempt and the empty answer of a truncated response, against a mocked fetch and the keyless fake provider. It
+makes no provider call.
