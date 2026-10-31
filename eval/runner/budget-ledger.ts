@@ -864,7 +864,7 @@ export class BudgetRun {
       checkCap(db, paths.ledger, options);
       const cap = currentCap(db);
       const remaining = cap - programRow(db).committed_usd;
-      if (options.budgetUsd > remaining) {
+      if (options.budgetUsd > remaining + 1e-9) {
         throw new BudgetExceededError(`run budget $${options.budgetUsd.toFixed(2)} exceeds the $${remaining.toFixed(2)} left of the $${cap.toFixed(2)} program cap (${paths.ledger})`);
       }
       db.query(`INSERT INTO runs (${RUN_COLUMNS}) VALUES (?, ?, ?, ?, ?, NULL)`).run(runId, options.runner, options.budgetUsd, options.estimateUsd ?? null, now());
@@ -941,10 +941,10 @@ export class BudgetRun {
       const cap = currentCap(db);
       const programCommitted = programRow(db).committed_usd;
       ledgerTestHooks.afterCapCheck?.();
-      if (run.committed_usd + usd > run.budget_usd) {
+      if (run.committed_usd + usd > run.budget_usd + 1e-9) {
         throw new BudgetExceededError(`${description}: reserving $${usd.toFixed(4)} would take this run to $${(run.committed_usd + usd).toFixed(4)}, over its $${run.budget_usd.toFixed(2)} budget`);
       }
-      if (programCommitted + usd > cap) {
+      if (programCommitted + usd > cap + 1e-9) {
         throw new BudgetExceededError(`${description}: reserving $${usd.toFixed(4)} would take the program to $${(programCommitted + usd).toFixed(4)}, over its $${cap.toFixed(2)} cap (${this.ledgerPath})`);
       }
       db.query(`INSERT INTO entries (id, run_id, description, reserved_usd, actual_usd, status, input_tokens, output_tokens, created_at, settled_at, participant)
