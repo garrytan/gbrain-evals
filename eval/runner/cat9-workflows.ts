@@ -65,6 +65,7 @@ import {
   type RubricCriterion,
   type GroundTruthPage,
 } from './judge.ts';
+import { temperatureSent, toolChoiceSent } from './anthropic-request.ts';
 import { ProbeAccounting, type ProbeSummary } from './probe-accounting.ts';
 import {
   writeReceipt,
@@ -424,6 +425,8 @@ function writeCat9Artifacts(
     agent_temperature: AGENT_TEMPERATURE,
     judge_model: judgeModel,
     judge_temperature: JUDGE_TEMPERATURE,
+    temperature_sent: { agent: temperatureSent(agentModel, AGENT_TEMPERATURE), judge: temperatureSent(judgeModel, JUDGE_TEMPERATURE) },
+    tool_choice_sent: { judge: toolChoiceSent(judgeModel) },
     judge_prompt_version: JUDGE_PROMPT_VERSION,
     turn_cap: opts.turnCap ?? 10,
     max_retries: opts.maxRetries ?? 3,

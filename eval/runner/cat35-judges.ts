@@ -2,7 +2,9 @@
  * BrainBench Cat 35 — batched forced-tool-use judges.
  *
  * Follows the judge.ts idioms exactly:
- *   - forced tool_choice (structured output, no string parsing)
+ *   - forced tool_choice (structured output, no string parsing); a Claude
+ *     5-family judge gets no temperature and `tool_choice: auto` with an
+ *     instruction to call the tool (fitAnthropicRequest, audit B1)
  *   - system prompt sent with cache_control ephemeral (static per judge type;
  *     per-call content goes in the user message so the prefix caches)
  *   - ONE retry on malformed tool_use, then a STRUCTURED failure — these
@@ -32,6 +34,7 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk';
+import { fitAnthropicRequest, withThinkingRoom } from './anthropic-request.ts';
 import { acceptsTemperature, anthropicModelId, judgeClientFor } from './openai-judge-shim.ts';
 import { getDefaultLlmBudget } from './llm-budget.ts';
 import { JUDGE_TEMPERATURE, UNTRUSTED_DATA_INSTRUCTION, escapeUntrusted, fenceUntrusted, newJudgeNonce, unescapeUntrusted } from './judge.ts';
@@ -150,7 +153,7 @@ export function singleResolvedModel(map: unknown): string | null {
 interface JudgeTool {
   name: string;
   description: string;
-  input_schema: Record<string, unknown>;
+  input_schema: Anthropic.Messages.Tool.InputSchema;
 }
 
 interface OneCall {
@@ -170,11 +173,11 @@ async function callJudgeOnce(
   const requested = resolveModel(cfg);
   const client = cfg?.client ?? judgeClientFor(requested, getDefaultClient);
   const model = anthropicModelId(requested);
-  const maxTokens = cfg?.maxTokens ?? DEFAULT_MAX_TOKENS;
+  const maxTokens = cfg?.maxTokens ?? withThinkingRoom(model, DEFAULT_MAX_TOKENS);
   let response: Anthropic.Messages.Message;
   try {
     response = (await getDefaultLlmBudget().withLlmSlot(() =>
-      client.messages.create({
+      client.messages.create(fitAnthropicRequest({
         model,
         max_tokens: maxTokens,
         ...(acceptsTemperature(requested) ? { temperature: JUDGE_TEMPERATURE } : {}),
@@ -188,7 +191,7 @@ async function callJudgeOnce(
         tools: [tool],
         tool_choice: { type: 'tool', name: tool.name },
         messages: [{ role: 'user', content: userContent }],
-      }),
+      })),
     )) as Anthropic.Messages.Message;
   } catch (e) {
     // Transport-level failure (429/529/network). Same contract as malformed

@@ -88,6 +88,7 @@ import {
 import { gbrainPin, gbrainVersion } from './gbrain-version.ts';
 import { attestPreregistration } from './prereg.ts';
 import { judgeTransport } from './openai-judge-shim.ts';
+import { temperatureSent, toolChoiceSent } from './anthropic-request.ts';
 import {
   assertCat35CoverageInput, assertCat35LeakInput, assertCat35SutSource, assertCat35UsabilityInput, CAT35_BOUNDARIES,
 } from './evaluator/judge-inputs.ts';
@@ -1466,6 +1467,8 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
       transcript_mode: opts.transcriptMode,
       control_inputs: controlInputs,
       judge_transport: judgeTransport(judgeModel),
+      temperature_sent: { judge: temperatureSent(judgeModel, JUDGE_TEMPERATURE) },
+      tool_choice_sent: { judge: toolChoiceSent(judgeModel) },
       dream_model: dreamModel,
       triage_model: triageModel,
       facts_model: factsModel,

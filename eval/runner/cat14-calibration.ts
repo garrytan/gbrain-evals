@@ -112,6 +112,7 @@ import {
 } from './receipt.ts';
 import { gbrainVersion, gbrainPin } from './gbrain-version.ts';
 import { UNTRUSTED_DATA_INSTRUCTION, fenceUntrusted, newJudgeNonce } from './judge.ts';
+import { fitAnthropicRequest, toolChoiceSent, withThinkingRoom } from './anthropic-request.ts';
 import { acceptsTemperature, anthropicModelId, judgeClientFor, judgeTransport } from './openai-judge-shim.ts';
 import { budgetOptionsFrom, receiptCost, startPaidRun } from './budget-ledger.ts';
 import { attestPreregistration } from './prereg.ts';
@@ -704,15 +705,15 @@ function makeLiveJudge(anthropic: Anthropic): JudgeFn {
       let lastErr = 'malformed tool output';
       for (let attempt = 1; attempt <= 2 && !out; attempt++) {
         try {
-          const res = await client.messages.create({
+          const res = await client.messages.create(fitAnthropicRequest({
             model: anthropicModelId(JUDGE_MODEL),
-            max_tokens: JUDGE_MAX_TOKENS,
+            max_tokens: withThinkingRoom(JUDGE_MODEL, JUDGE_MAX_TOKENS),
             ...(acceptsTemperature(JUDGE_MODEL) ? { temperature: JUDGE_TEMPERATURE } : {}),
             system,
             tools: [JUDGE_TOOL],
             tool_choice: { type: 'tool', name: 'judge_ab' },
             messages: [{ role: 'user', content: user }],
-          });
+          }));
           const toolUse = res.content.find((b): b is Anthropic.Messages.ToolUseBlock => b.type === 'tool_use');
           out = toolUse && toolUse.name === 'judge_ab' ? validateJudgeToolOut(toolUse.input) : null;
         } catch (err) {
@@ -1227,7 +1228,7 @@ async function main(): Promise<void> {
       completion_rate: accSummary.completion_rate,
       errors: accSummary.errors,
       publishable: false,
-      resolved_config: { ...resolvedConfig(hermetic, filter), profile_mode: profileMode, judge_transport: judgeTransport(JUDGE_MODEL), temperature_sent: { think: acceptsTemperature(THINK_MODEL), judge: acceptsTemperature(JUDGE_MODEL) } },
+      resolved_config: { ...resolvedConfig(hermetic, filter), profile_mode: profileMode, judge_transport: judgeTransport(JUDGE_MODEL), temperature_sent: { think: acceptsTemperature(THINK_MODEL), judge: acceptsTemperature(JUDGE_MODEL) }, tool_choice_sent: { judge: toolChoiceSent(JUDGE_MODEL) } },
       judge: { model: hermetic ? 'heuristic-string-judge' : JUDGE_MODEL, temperature: JUDGE_TEMPERATURE },
       ...runExtras,
       data: { summary: summary as unknown as Record<string, unknown> },
@@ -1248,7 +1249,7 @@ async function main(): Promise<void> {
     completion_rate: accSummary.completion_rate,
     errors: accSummary.errors,
     publishable: accSummary.publishable && !hermetic && !filter,
-    resolved_config: { ...resolvedConfig(hermetic, filter), profile_mode: profileMode, judge_transport: judgeTransport(JUDGE_MODEL), temperature_sent: { think: acceptsTemperature(THINK_MODEL), judge: acceptsTemperature(JUDGE_MODEL) } },
+    resolved_config: { ...resolvedConfig(hermetic, filter), profile_mode: profileMode, judge_transport: judgeTransport(JUDGE_MODEL), temperature_sent: { think: acceptsTemperature(THINK_MODEL), judge: acceptsTemperature(JUDGE_MODEL) }, tool_choice_sent: { judge: toolChoiceSent(JUDGE_MODEL) } },
     judge: { model: hermetic ? 'heuristic-string-judge' : JUDGE_MODEL, temperature: JUDGE_TEMPERATURE },
     ...runExtras,
     data: { summary: summary as unknown as Record<string, unknown> },

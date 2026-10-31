@@ -55,6 +55,7 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk';
+import { fitAnthropicRequest, temperatureSent, toolChoiceSent, withThinkingRoom } from './anthropic-request.ts';
 import { ProbeAccounting, type ProbeSummary } from './probe-accounting.ts';
 import {
   writeReceipt,
@@ -264,7 +265,7 @@ export async function classifyClaim(
 ): Promise<ClaimScore> {
   const client = config.client ?? getDefaultClient();
   const model = config.model ?? DEFAULT_MODEL;
-  const maxTokens = config.maxTokens ?? DEFAULT_MAX_TOKENS;
+  const maxTokens = config.maxTokens ?? withThinkingRoom(model, DEFAULT_MAX_TOKENS);
   const userContent = renderClaimPrompt(claim, sources);
 
   let inputTokens = 0;
@@ -272,7 +273,7 @@ export async function classifyClaim(
   let cost = 0;
 
   async function callOnce(): Promise<ParsedClassification | null> {
-    const response = await client.messages.create({
+    const response = await client.messages.create(fitAnthropicRequest({
       model,
       max_tokens: maxTokens,
       // WS0 judge policy: temperature 0 — classifications must be reproducible.
@@ -283,7 +284,7 @@ export async function classifyClaim(
       tools: [CLASSIFY_CLAIM_TOOL],
       tool_choice: { type: 'tool', name: 'classify_claim' },
       messages: [{ role: 'user', content: userContent }],
-    });
+    }));
     inputTokens += response.usage.input_tokens;
     outputTokens += response.usage.output_tokens;
     cost += priceOf(response.usage.input_tokens, response.usage.output_tokens);
@@ -518,6 +519,8 @@ function writeCat5Receipt(
     resolved_config: {
       classifier_model: model,
       classifier_temperature: 0,
+      temperature_sent: temperatureSent(model, 0),
+      tool_choice_sent: toolChoiceSent(model),
       threshold: opts.threshold ?? DEFAULT_THRESHOLD,
       thresholds_enabled: opts.enableThreshold ?? false,
       // WS5: cat5 classifies gold claims against gold pages — no gbrain

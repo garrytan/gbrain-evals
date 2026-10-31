@@ -80,6 +80,7 @@ import {
   extractUntrusted,
   fenceUntrusted,
   newJudgeNonce,
+  judgePrice,
   parseCriterionScores,
   priceOf,
   weightedMean,
@@ -94,6 +95,7 @@ import { assertCat29JudgeInput, assertCat29SutQuestion, CAT29_JUDGE_PAIR, CAT29_
 import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
 import { installStubEmbed } from './cat27-graph-signals.ts';
 import { acceptsTemperature, anthropicModelId, judgeClientFor, judgeTransport } from './openai-judge-shim.ts';
+import { fitAnthropicRequest, toolChoiceSent, withThinkingRoom } from './anthropic-request.ts';
 import { budgetOptionsFrom, receiptCost, startPaidRun, type BudgetOptions } from './budget-ledger.ts';
 import { attestPreregistration, type Attestation } from './prereg.ts';
 
@@ -440,24 +442,25 @@ async function judgeOrder(
   const client = judgeConfig.client ?? new Anthropic();
   const budget = judgeConfig.budget ?? getDefaultLlmBudget();
   const rubric = rubricFor(q);
+  const price = judgePrice(judgeConfig.model ?? JUDGE_MODEL);
   const messages: Anthropic.Messages.MessageParam[] = [{ role: 'user', content: renderPairPrompt(q, answer1, answer2, pages) }];
   let cost = 0;
   for (let attempt = 1; attempt <= 2; attempt++) {
     let response: Anthropic.Messages.Message;
     try {
-      response = await budget.withLlmSlot(() => client.messages.create({
+      response = await budget.withLlmSlot(() => client.messages.create(fitAnthropicRequest({
         model: judgeConfig.model ?? JUDGE_MODEL,
-        max_tokens: judgeConfig.maxTokens ?? PAIR_MAX_TOKENS,
+        max_tokens: judgeConfig.maxTokens ?? withThinkingRoom(judgeConfig.model ?? JUDGE_MODEL, PAIR_MAX_TOKENS),
         ...(acceptsTemperature(judgeConfig.model ?? JUDGE_MODEL) ? { temperature: JUDGE_TEMPERATURE } : {}),
         system: [{ type: 'text', text: PAIRWISE_JUDGE_SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
         tools: [SCORE_PAIR_TOOL],
         tool_choice: { type: 'tool', name: SCORE_PAIR_TOOL.name },
         messages,
-      }));
+      })));
     } catch (e: any) {
       throw new JudgeFailure(`judge call failed for ${q.id}: ${e?.message ?? e}`);
     }
-    cost += priceOf(response.usage?.input_tokens ?? 0, response.usage?.output_tokens ?? 0);
+    cost += priceOf(price, response);
     const parsed = parsePairOutput(response, rubric);
     if (parsed.verdict) return { verdict: parsed.verdict, cost_usd: cost };
     messages.splice(1, 1, {
@@ -922,6 +925,7 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
       embed_mode: options.embedMode ?? 'real',
       judge_transport: judgeTransport(judgeModel),
       temperature_sent: { think: acceptsTemperature(thinkModel), judge: acceptsTemperature(judgeModel) },
+      tool_choice_sent: { judge: toolChoiceSent(judgeModel) },
       think_llm: thinkResponseFor ? 'stubbed' : options.thinkAnthropic ? 'injected' : 'live',
       think_temperature: THINK_TEMPERATURE,
       judge_mode: options.judgeClient || stub ? 'injected/stub' : 'live',

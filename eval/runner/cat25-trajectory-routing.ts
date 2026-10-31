@@ -88,7 +88,8 @@ import { PGLiteEngine } from 'gbrain/pglite-engine';
 import { importFromContentEmbedded } from './import-embedded.ts';
 import { configureGateway, __setEmbedTransportForTests } from 'gbrain/ai/gateway';
 import { runThink, type ThinkLLMClient, type ThinkResult } from 'gbrain/think';
-import { JUDGE_PROMPT_VERSION, scoreAnswer, type JudgeEvidence, type RubricCriterion } from './judge.ts';
+import { fitAnthropicRequest, temperatureSent, toolChoiceSent } from './anthropic-request.ts';
+import { JUDGE_PROMPT_VERSION, JUDGE_TEMPERATURE, scoreAnswer, type JudgeEvidence, type RubricCriterion } from './judge.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
 import {
   writeReceipt,
@@ -490,13 +491,13 @@ export const hermeticComplete: CompleteFn = async (_params, extracted) => {
 export function makeLiveComplete(anthropic: Anthropic): CompleteFn {
   return async (params) => {
     const model = String(params.model).replace(/^anthropic[:/]/, '');
-    const res = await anthropic.messages.create({
+    const res = await anthropic.messages.create(fitAnthropicRequest({
       model,
       max_tokens: params.max_tokens,
       temperature: THINK_TEMPERATURE,
       ...(params.system !== undefined ? { system: params.system } : {}),
       messages: params.messages,
-    });
+    }));
     const block = res.content.find((b): b is Anthropic.Messages.TextBlock => b.type === 'text');
     return block?.text ?? '';
   };
@@ -822,6 +823,8 @@ function resolvedConfig(hermetic: boolean): Record<string, unknown> {
     think_temperature: THINK_TEMPERATURE,
     judge: hermetic ? 'deterministic-marker-judge' : `judge.ts scoreAnswer (${JUDGE_MODEL}, temperature 0)`,
     judge_prompt_version: hermetic ? null : JUDGE_PROMPT_VERSION,
+    temperature_sent: hermetic ? null : { think: temperatureSent(THINK_MODEL, THINK_TEMPERATURE), judge: temperatureSent(JUDGE_MODEL, JUDGE_TEMPERATURE) },
+    tool_choice_sent: hermetic ? null : { judge: toolChoiceSent(JUDGE_MODEL) },
     embedding_transport: 'stubbed deterministic hash-embed (__setEmbedTransportForTests)',
     fact_seeding: 'engine.insertFact typed-claim rows (direct; extraction is out of boundary)',
     pipeline: "gbrain runThink ('gbrain/think' subpath export), client-injected LLM, remote:false",

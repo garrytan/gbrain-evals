@@ -44,6 +44,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { PGLiteEngine } from 'gbrain/pglite-engine';
 import { OperationError } from 'gbrain/operations';
+import { fitAnthropicRequest, withThinkingRoom } from '../anthropic-request.ts';
 import type { Adapter, Page, Query, RankedDoc, BrainState, AdapterConfig } from '../types.ts';
 import {
   createToolBridge,
@@ -131,7 +132,7 @@ export interface AgentRunResult {
 export const DEFAULT_AGENT_MODEL = 'claude-sonnet-4-6';
 const DEFAULT_MODEL = DEFAULT_AGENT_MODEL;
 const DEFAULT_MAX_TOKENS = 1024;
-/** The agent under test samples at temperature 0 so Cat 8/9 transcripts are reproducible. */
+/** The agent under test samples at temperature 0 so Cat 8/9 transcripts are reproducible; Claude 5-family agents reject it and sample at the provider default. */
 export const AGENT_TEMPERATURE = 0;
 const DEFAULT_TURN_CAP = 10;
 const DEFAULT_MAX_RETRIES = 3;
@@ -327,7 +328,7 @@ export async function runAgentLoop(
 ): Promise<AgentRunResult> {
   const client = config.client ?? getDefaultClient();
   const model = config.model ?? DEFAULT_MODEL;
-  const maxTokens = config.maxTokens ?? DEFAULT_MAX_TOKENS;
+  const maxTokens = config.maxTokens ?? withThinkingRoom(model, DEFAULT_MAX_TOKENS);
   const turnCap = config.turnCap ?? DEFAULT_TURN_CAP;
   const systemPrompt = config.systemPrompt ?? DEFAULT_AGENT_SYSTEM_PROMPT;
   const maxRetries = config.maxRetries ?? DEFAULT_MAX_RETRIES;
@@ -367,7 +368,7 @@ export async function runAgentLoop(
     let response: Anthropic.Messages.Message | null = null;
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
-        response = await client.messages.create({
+        response = await client.messages.create(fitAnthropicRequest({
           model,
           max_tokens: maxTokens,
           temperature: AGENT_TEMPERATURE,
@@ -380,7 +381,7 @@ export async function runAgentLoop(
           ],
           tools: bridge.toolDefs,
           messages,
-        });
+        }));
         break;
       } catch (err) {
         if (!isRateLimitError(err)) throw err;

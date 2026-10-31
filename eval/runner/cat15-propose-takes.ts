@@ -56,6 +56,7 @@ import {
   PROPOSE_TAKES_MAX_TOKENS,
   extractorOutcome,
 } from '../../node_modules/gbrain/src/core/cycle/propose-takes.ts';
+import { fitAnthropicRequest, temperatureSent, toolChoiceSent, withThinkingRoom } from './anthropic-request.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
 import {
   writeReceipt,
@@ -227,12 +228,12 @@ interface ExtractOutcome {
 
 async function extractClaims(pageBody: string, client?: Anthropic): Promise<ExtractOutcome> {
   const prompt = buildExtractionPrompt(pageBody);
-  const res = await (client ?? getAnthropic()).messages.create({
+  const res = await (client ?? getAnthropic()).messages.create(fitAnthropicRequest({
     model: EXTRACT_MODEL,
     max_tokens: PROPOSE_TAKES_MAX_TOKENS,
     temperature: EXTRACT_TEMPERATURE,
     messages: [{ role: 'user', content: prompt }],
-  });
+  }));
   const block = res.content.find((b): b is Anthropic.Messages.TextBlock => b.type === 'text');
   const raw = block?.text ?? '';
   // Tolerant of fence wrappers: find a JSON array in the output.
@@ -394,15 +395,15 @@ async function callMatcherOnce(
       content: `Your previous match_claims call was malformed: ${correctiveFeedback}. Call match_claims again with a valid, complete matching (one entry per ground-truth claim; every extracted index accounted exactly once).`,
     });
   }
-  const res = await client.messages.create({
+  const res = await client.messages.create(fitAnthropicRequest({
     model: JUDGE_MODEL,
-    max_tokens: 2000,
+    max_tokens: withThinkingRoom(JUDGE_MODEL, 2000),
     temperature: JUDGE_TEMPERATURE,
     system: sys,
     tools: [MATCH_TOOL],
     tool_choice: { type: 'tool', name: 'match_claims' },
     messages,
-  });
+  }));
   const t = res.content.find((b): b is Anthropic.Messages.ToolUseBlock => b.type === 'tool_use' && b.name === 'match_claims');
   if (!t) return { result: null, defect: 'no match_claims tool_use block in response' };
   return validateMatchResult(t.input, extractedCount, gtCount);
@@ -754,6 +755,8 @@ function resolvedConfig(dryRun: boolean, filter: string | null): Record<string, 
     extract_temperature: EXTRACT_TEMPERATURE,
     judge_model: JUDGE_MODEL,
     judge_temperature: JUDGE_TEMPERATURE,
+    temperature_sent: { extract: temperatureSent(EXTRACT_MODEL, EXTRACT_TEMPERATURE), judge: temperatureSent(JUDGE_MODEL, JUDGE_TEMPERATURE) },
+    tool_choice_sent: { judge: toolChoiceSent(JUDGE_MODEL) },
     prompt_version: PROPOSE_TAKES_PROMPT_VERSION,
     prompt_source: 'node_modules/gbrain/src/core/cycle/propose-takes.ts (imported directly, not mirrored)',
     dry_run: dryRun,
