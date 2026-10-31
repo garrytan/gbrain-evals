@@ -14,6 +14,22 @@ This records what each gbrain-evals release changed and what its measurements me
 - **A Cat 15 extractor reply cut off at its token limit is a harness error naming the limit**, not a scored extraction failure, and the receipt records the limits sent (`max_tokens_sent`).
 - **Checked live on 2026-10-31** under a scratch budget ledger: the shared judge passed on its first attempt with claude-opus-5-5, claude-sonnet-5-5, claude-haiku-5-5 and claude-haiku-4-5-20251001, and its reported cost matched the ledger's settled cost; every changed call site answered with all four models; one Cat 14 probe scored with an Opus 5.5 judge. A $0 test, `test/eval/anthropic-request.test.ts`, holds the contract.
 
+### The October 7 10x memory advantage plan lands on main as a superseded record
+
+- **Eleven reports and preregistrations on main cite a plan that main didn't have.** Three reports and eight
+  preregistrations from the plan's waves 0 to 5 name `docs/plans/2026-10-07-10x-memory-advantage/PLAN.md`, the branch
+  `capy/10x-memory-advantage-plan` or a link into it. The plan lived only on that branch, whose pull request, #97, was
+  closed unmerged on 2026-10-29. The folder (the plan, its five audits, six reviews and the eng test plan) now lands at
+  that path from the branch's last commit, `2b6ff9af` (2026-10-17). Its README opens with a dated banner: the plan
+  is superseded, and no wave, cap or gate runs from it. Seven files are byte for byte the branch's. In the other six,
+  each of the 118 external product names is replaced by its kind id in square brackets (`[ext-extract-first]`), as
+  the name guard requires outside `docs/comparison-systems.md`; nothing else changed, and the branch keeps the
+  original wording.
+- None of the eleven citations changes, and the branch stays. The preregistrations are frozen (each changes only by
+  an amendment appended at its end, and some are bound by recorded SHA-256 hashes), and every citation already
+  resolves: the path now exists on main, and the branch keeps every revision of the plan as each report read it.
+- The [docs index](docs/README.md) links the folder from its route table.
+
 ## [0.10.136] - 2026-10-29
 
 ### Spring-loaded skills for gbrain GBRA-194 measured
