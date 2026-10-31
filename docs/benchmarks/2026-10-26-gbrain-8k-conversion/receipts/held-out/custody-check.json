@@ -1,0 +1,12 @@
+{
+  "decision_id": "sealed-v2-decision-3-2026-10-26:8k-conversion-f1-f4",
+  "checked_at": "2026-10-26T10:03:49.434Z",
+  "questions_sha256": "8d29e92dc6792fb444e564ca556acd5cb4566ec14a6080c0e2e1ee8e8bd98a38",
+  "labels_sha256": "83bf52d11e0a26f64f1ece8ce5ac637b81844e38e67c5df1495cb7614a0357c4",
+  "labels_parsed": false,
+  "access_log": {
+    "lines": 35,
+    "before": 35,
+    "this_decision": 0
+  }
+}

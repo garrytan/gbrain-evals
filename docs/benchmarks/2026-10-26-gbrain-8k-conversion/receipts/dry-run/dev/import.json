@@ -1,0 +1,20 @@
+{
+  "kind": "c8k-import",
+  "commit": "cf3ec433f4fffda60d00076bae7361100c632cc4",
+  "version": "0.60.461.0",
+  "keyless": true,
+  "embedding": "hash@1536 (keyless control)",
+  "brains": 100,
+  "sessions": 4799,
+  "pages": 4794,
+  "pages_equal_sessions": false,
+  "settings": {
+    "search.cache.enabled": "false",
+    "decide.provider": "none",
+    "search.crag_escalation": "false",
+    "search.crag_think": "false",
+    "search.track_retrieval": "false",
+    "facts.default_visibility": "world",
+    "search.reranker.enabled": "false"
+  }
+}

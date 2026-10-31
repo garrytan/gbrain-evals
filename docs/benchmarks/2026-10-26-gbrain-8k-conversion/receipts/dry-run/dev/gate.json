@@ -1,0 +1,294 @@
+{
+  "kind": "c8k-gate",
+  "decision_id": "sealed-v2-decision-3-2026-10-26:8k-conversion-f1-f4",
+  "decision_sha256": "65f8ce7dac58cd38ea0f3e6dfe0ecfe96cb010f0e6b07aeb8985d4bfa84ba081",
+  "phase": "final",
+  "created_at": "2026-10-26T09:35:46.916Z",
+  "gbrain": {
+    "commit": "cf3ec433f4fffda60d00076bae7361100c632cc4",
+    "version": "0.60.461.0",
+    "keyless": true,
+    "embedding": "hash@1536 (keyless control)"
+  },
+  "access_log_lines_at_gate": 0,
+  "labels_read_under_this_decision": 0,
+  "evidence_sha256": "c7d57f0edf65b7092bbb55bf723b3b39c72d9c9f4d2f821a47a31e6dd30b48d2",
+  "renderer": {
+    "version": "c8k-product-text-v1",
+    "recipe_hash": "3feadd3d59999b6423ae5e2656622ed2b722600bd517345f2f9c438b55011a94",
+    "recipe": {
+      "renderer": "c8k-product-text-v1",
+      "template": "memory-qa READER_TEMPLATE",
+      "template_sha256": "8951d2bf74c971c6527ba7b74fc63f5f49bddc467e11436abd0500219e6dac31",
+      "history": "the tool result text blocks in returned order, joined by one blank line",
+      "budget_tokens": 8000,
+      "tokenizer": "approx-chars-div-4",
+      "cut": "whole rows from the end of the first block's JSON array, re-serialized with JSON.stringify, while the history is over the budget",
+      "date": "question_date, else unknown",
+      "substitution": "one pass over {history}, {date} and {question}"
+    }
+  },
+  "retrieval": {
+    "per_arm": {
+      "A0": {
+        "rows": 100,
+        "questions": 100,
+        "tool_errors": 0,
+        "safe_index_pending": 0,
+        "behavior_changes_disclosures": 0,
+        "rows_outside_history": 0,
+        "extract_receipt_rows": 1,
+        "budget_used_over_cap": 0,
+        "not_cap_only": 0,
+        "facts": {
+          "questions_with_facts": 21,
+          "rows_mean": 0.26,
+          "tokens_max": 156,
+          "over_share_or_rows": 0,
+          "cap_tokens": 1210
+        },
+        "budget_used_mean": null,
+        "result_rows_mean": 9.82,
+        "notices": {
+          "search_filter_hint": 85
+        }
+      },
+      "A1": {
+        "rows": 100,
+        "questions": 100,
+        "tool_errors": 0,
+        "safe_index_pending": 0,
+        "behavior_changes_disclosures": 0,
+        "rows_outside_history": 0,
+        "extract_receipt_rows": 2,
+        "budget_used_over_cap": 0,
+        "not_cap_only": 0,
+        "facts": {
+          "questions_with_facts": 37,
+          "rows_mean": 0.48,
+          "tokens_max": 186,
+          "over_share_or_rows": 0,
+          "cap_tokens": 1210
+        },
+        "budget_used_mean": 5492.87,
+        "result_rows_mean": 10.94,
+        "notices": {
+          "search_filter_hint": 91
+        }
+      },
+      "A2": {
+        "rows": 100,
+        "questions": 100,
+        "tool_errors": 0,
+        "safe_index_pending": 0,
+        "behavior_changes_disclosures": 0,
+        "rows_outside_history": 0,
+        "extract_receipt_rows": 2,
+        "budget_used_over_cap": 0,
+        "not_cap_only": 0,
+        "facts": {
+          "questions_with_facts": 37,
+          "rows_mean": 0.48,
+          "tokens_max": 222,
+          "over_share_or_rows": 0,
+          "cap_tokens": 1210
+        },
+        "budget_used_mean": 5492.85,
+        "result_rows_mean": 10.31,
+        "notices": {
+          "search_filter_hint": 88
+        }
+      },
+      "A3": {
+        "rows": 100,
+        "questions": 100,
+        "tool_errors": 0,
+        "safe_index_pending": 0,
+        "behavior_changes_disclosures": 0,
+        "rows_outside_history": 0,
+        "extract_receipt_rows": 2,
+        "budget_used_over_cap": 0,
+        "not_cap_only": 0,
+        "facts": {
+          "questions_with_facts": 44,
+          "rows_mean": 0.77,
+          "tokens_max": 471,
+          "over_share_or_rows": 0,
+          "cap_tokens": 1210
+        },
+        "budget_used_mean": 5493.27,
+        "result_rows_mean": 10.59,
+        "notices": {
+          "search_filter_hint": 54
+        }
+      },
+      "B3": {
+        "rows": 100,
+        "questions": 100,
+        "tool_errors": 0,
+        "safe_index_pending": 0,
+        "behavior_changes_disclosures": 0,
+        "rows_outside_history": 0,
+        "extract_receipt_rows": 1,
+        "budget_used_over_cap": 0,
+        "not_cap_only": 0,
+        "facts": {
+          "questions_with_facts": 44,
+          "rows_mean": 0.77,
+          "tokens_max": 471,
+          "over_share_or_rows": 0,
+          "cap_tokens": 1210
+        },
+        "budget_used_mean": null,
+        "result_rows_mean": 10.11,
+        "notices": {
+          "search_filter_hint": 53
+        }
+      },
+      "R5": {
+        "rows": 100,
+        "questions": 100,
+        "tool_errors": 0,
+        "safe_index_pending": 0,
+        "behavior_changes_disclosures": 0,
+        "rows_outside_history": 0,
+        "extract_receipt_rows": 0,
+        "budget_used_over_cap": 0,
+        "not_cap_only": 0,
+        "facts": {
+          "questions_with_facts": 0,
+          "rows_mean": 0,
+          "tokens_max": 0,
+          "over_share_or_rows": 0,
+          "cap_tokens": 1210
+        },
+        "budget_used_mean": 13399.72,
+        "result_rows_mean": 4.97,
+        "notices": {
+          "search_filter_hint": 11
+        }
+      }
+    },
+    "determinism": {
+      "questions": 20,
+      "repeated": 20,
+      "byte_identical": 20,
+      "pass": true
+    }
+  },
+  "contexts": {
+    "dev.gpt-4o.A0": {
+      "rows": 100,
+      "rerender_mismatches": 0,
+      "rows_cut_total": 0,
+      "contexts_with_cuts": 0,
+      "contexts_over_budget": 0,
+      "tokens_mean": 6465.28,
+      "reader_errors": 0
+    },
+    "dev.gpt-4o.A1": {
+      "rows": 100,
+      "rerender_mismatches": 0,
+      "rows_cut_total": 7,
+      "contexts_with_cuts": 6,
+      "contexts_over_budget": 0,
+      "tokens_mean": 7535.08,
+      "reader_errors": 0
+    },
+    "dev.gpt-4o.A2": {
+      "rows": 100,
+      "rerender_mismatches": 0,
+      "rows_cut_total": 1,
+      "contexts_with_cuts": 1,
+      "contexts_over_budget": 0,
+      "tokens_mean": 7318.69,
+      "reader_errors": 0
+    },
+    "dev.gpt-4o.A3": {
+      "rows": 100,
+      "rerender_mismatches": 0,
+      "rows_cut_total": 1,
+      "contexts_with_cuts": 1,
+      "contexts_over_budget": 0,
+      "tokens_mean": 7311.44,
+      "reader_errors": 0
+    },
+    "dev.gpt-4o.B3": {
+      "rows": 100,
+      "rerender_mismatches": 0,
+      "rows_cut_total": 0,
+      "contexts_with_cuts": 0,
+      "contexts_over_budget": 0,
+      "tokens_mean": 6391.17,
+      "reader_errors": 0
+    },
+    "dev.gpt-4o.R5": {
+      "rows": 100,
+      "rerender_mismatches": 0,
+      "rows_cut_total": 289,
+      "contexts_with_cuts": 99,
+      "contexts_over_budget": 0,
+      "tokens_mean": 6035.39,
+      "reader_errors": 0
+    },
+    "dev.sonnet-5-5.A0": {
+      "rows": 100,
+      "rerender_mismatches": 0,
+      "rows_cut_total": 0,
+      "contexts_with_cuts": 0,
+      "contexts_over_budget": 0,
+      "tokens_mean": 6465.28,
+      "reader_errors": 0
+    },
+    "dev.sonnet-5-5.A1": {
+      "rows": 100,
+      "rerender_mismatches": 0,
+      "rows_cut_total": 7,
+      "contexts_with_cuts": 6,
+      "contexts_over_budget": 0,
+      "tokens_mean": 7535.08,
+      "reader_errors": 0
+    },
+    "dev.sonnet-5-5.A2": {
+      "rows": 100,
+      "rerender_mismatches": 0,
+      "rows_cut_total": 1,
+      "contexts_with_cuts": 1,
+      "contexts_over_budget": 0,
+      "tokens_mean": 7318.69,
+      "reader_errors": 0
+    },
+    "dev.sonnet-5-5.A3": {
+      "rows": 100,
+      "rerender_mismatches": 0,
+      "rows_cut_total": 1,
+      "contexts_with_cuts": 1,
+      "contexts_over_budget": 0,
+      "tokens_mean": 7311.44,
+      "reader_errors": 0
+    },
+    "dev.sonnet-5-5.B3": {
+      "rows": 100,
+      "rerender_mismatches": 0,
+      "rows_cut_total": 0,
+      "contexts_with_cuts": 0,
+      "contexts_over_budget": 0,
+      "tokens_mean": 6391.17,
+      "reader_errors": 0
+    },
+    "dev.sonnet-5-5.R5": {
+      "rows": 100,
+      "rerender_mismatches": 0,
+      "rows_cut_total": 289,
+      "contexts_with_cuts": 99,
+      "contexts_over_budget": 0,
+      "tokens_mean": 6035.39,
+      "reader_errors": 0
+    }
+  },
+  "render_identity": {
+    "rerender_mismatches": 0
+  },
+  "problems": [],
+  "pass": true
+}

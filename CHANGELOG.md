@@ -2,12 +2,67 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
-## [Unreleased]
+## [0.10.138] - 2026-10-31
 
 ### Shared agents (on_behalf_of): search cost and recall
 
-- **gbrain PR #7852 lets a shared agent read as the audience its harness names; calls without an audience are unchanged (every cell within plus or minus 1% of the parent, at 0%, 20% and 80% restricted)** ([report](docs/benchmarks/2026-10-28-shared-agent-audience.md)). Measured at `e5bee20d` against its parent `9167c248` on one Ubicloud VM, 8 interleaved runs per side, with raw JSON committed.
-- **An audience costs at most 1.3 ms over the member's own token** (a two-member audience adds two readers conditions per row) and keeps the member's recall (hit@10 1.0, 0.998 in the 20% hybrid cells as for the member). No run reported a degraded search.
+- **gbrain PR #7852 lets a shared agent read as the audience its harness names, and calls without an audience cost nothing measurable** ([report](docs/benchmarks/2026-10-28-shared-agent-audience.md)). Measured at `e5bee20d` against its parent `9167c248` on one Ubicloud VM, 8 interleaved runs per side, with raw JSON committed: every cell is within plus or minus 1% at 0%, 20% and 80% restricted. #7852 ships in train M (gbrain PR #8134, head `244f30dd`), where the train M attribution run from 0.10.137 puts the train within -1.3% to +0.3% of folder rules (A2) on a brain with no restrictions.
+- **An audience costs 0.1 to 2.2 ms over the member's own token and keeps that member's recall.** A one-member audience adds under 0.8 ms. A two-member audience adds up to 1.3 ms at `e5bee20d` and up to 2.2 ms (keyword search) at the train M head. hit@10 is 1.0 in every audience cell on train M. The measured search code is the same at both heads, apart from a path under the operator privacy hatch that the bench never turns on.
+
+## [0.10.137] - 2026-10-31
+
+### Per-member read access: search cost on a brain with no restrictions
+
+- **gbrain's per-member read access, as it ships in train M (gbrain PR #8134: #7812 readers, #7842 folder rules, #7852 shared-agent audiences), costs hybrid search 1.5 to 1.9% and keyword-only search 2.2% on a brain with no restrictions** ([report](docs/benchmarks/2026-10-28-member-read-access.md)). Measured at `244f30dd` against master `922ba1a9` on one Ubicloud VM, 10 runs per side with the order alternated, raw JSON committed. That is the median of per-run p50s, the method the 2% gate was set with; the median of each round's paired ratio gives 2.2 to 2.6% (hybrid) and 2.7 to 2.8% (keyword). GBRA-108 accepted train M on the gate method.
+- **Run order shifts the result by about a point.** An 8 + 8 run with the train always first read +4.1 to +4.7% for hybrid; a run with master always first read +0.1 to +1.1%. The #7812 runs (October 28, at `f1c39714` against `8e9cd64d`: hybrid +1.5 to 1.6%, keyword +3.2 to 3.9%) always ran the branch first, so they likely read a point or so high.
+- **Where the keyword cost comes from.** Ablations on #7812 put it on reading one `pages` column per matched row: replacing the predicate with `TRUE` cuts the cost to +0.5%, and dropping the index changes nothing. Removing the cost would leave a one-request window at a brain's first restricted page, so GBRA-108 accepted it with the fail-safe kept. Folder rules and shared-agent audiences add no cost of their own (a master, A1, A2, train run within 2.6 points of each other).
+- **Restricted brains.** Members, and shared agents naming those members, get every page they may read (hit@10 1.0 at 20% and 80% restricted).
+
+### The October 7 10x memory advantage plan lands on main as a superseded record
+
+- **Eleven reports and preregistrations on main cite a plan that main didn't have.** Three reports and eight
+  preregistrations from the plan's waves 0 to 5 name `docs/plans/2026-10-07-10x-memory-advantage/PLAN.md`, the branch
+  `capy/10x-memory-advantage-plan` or a link into it. The plan lived only on that branch, whose pull request, #97, was
+  closed unmerged on 2026-10-29. The folder (the plan, its five audits, six reviews and the eng test plan) now lands at
+  that path from the branch's last commit, `2b6ff9af` (2026-10-17). Its README opens with a dated banner: the plan
+  is superseded, and no wave, cap or gate runs from it. Seven files are byte for byte the branch's. In the other six,
+  each of the 118 external product names is replaced by its kind id in square brackets (`[ext-extract-first]`), as
+  the name guard requires outside `docs/comparison-systems.md`; nothing else changed, and the branch keeps the
+  original wording.
+- None of the eleven citations changes, and the branch stays. The preregistrations are frozen (each changes only by
+  an amendment appended at its end, and some are bound by recorded SHA-256 hashes), and every citation already
+  resolves: the path now exists on main, and the branch keeps every revision of the plan as each report read it.
+- The [docs index](docs/README.md) links the folder from its route table.
+
+## [0.10.136] - 2026-10-29
+
+### Spring-loaded skills for gbrain GBRA-194 measured
+
+- **The opt-in skill index `gbrain setup <harness> --skill-loading spring` writes, at gbrain branch `12669180` (not on master)** ([report](docs/benchmarks/2026-10-24-spring-loaded-skills.md), preregistration and receipts under `docs/benchmarks/2026-10-24-spring-loaded-skills/`). On 12 tasks that each need one bundled skill's procedure, real Claude Code and Codex CLIs and three models (claude-sonnet-5-5, claude-opus-5-5, gpt-6.1-sol; 360 counted trials), the index got agents to load the right skill before acting in 29 of 36 Claude Code trials, against 15 with every skill in the native skills directory and 0 with no skill text, and tied native on Codex at 22 of 24. It adds about 2,057 standing input tokens per Claude Code turn (native adds 8,579) and 1,429 per Codex turn (native 6,420). Pass rates sit near the floor in the harnesses' real permission modes in every arm, because headless Claude Code denied gbrain MCP calls and Codex's read-only sandbox refused brain writes; the labeled MCP pre-approved configuration carries the pass comparison (21 against 12 for native). The preregistered rule proposes spring as the default; that decision is gbrain's, and the build under test keeps it off. Model spend was $41.27 against a $55 cap.
+
+## [0.10.135] - 2026-10-29
+
+### Brain-first install block for gbrain GBRA-188 measured
+
+- **The managed block `gbrain setup claude-code` and `gbrain setup codex` write, at gbrain `10f74dbd` (block v1)** ([report](docs/benchmarks/2026-10-24-brain-first-install-block.md), receipts under `docs/benchmarks/2026-10-24-brain-first-install-block/`). On a synthetic two-source brain with 20 tasks, real Claude Code and Codex CLIs and four models (780 counted trials), the block and a one-sentence told rule both reached the brain in 221 of 221 trials on the tasks that need it, against 82% to 97% with no instructions. The block passed 254 of 260 trials, the told rule 251 and no instructions 222, at between 4% less and 6% more spend per trial than no instructions, with no scope leak in any arm. The paraphrase result is tuned on the tasks that chose the wording, not held out. gbrain v0.60.495.0 shipped block v2 with a reworded search line and a per-turn rule; neither was measured here.
+
+## [0.10.134] - 2026-10-29
+
+### Short first names in full-name search: gbrain#7471 measured
+
+- **gbrain#7472, the fix for gbrain#7471, at `ad136eeb3` against master `3f0b6eecd` (v0.60.426.0)** ([report](docs/benchmarks/2026-10-24-name-variants-7471.md), receipts under `docs/benchmarks/2026-10-24-name-variants-7471/`). On a synthetic 560-page brain with 64 queries, a full-name query using the other form of the given name ("Matt X" for the page titled "Matthew X") went from 0 of 12 to 12 of 12 at rank 1 on keyword-only search and on hybrid search with the reranker off. No query ranked worse on the branch in any configuration. With the Voyage reranker on, both trees return the person page at rank 2. BrainBench is identical on all 24 cells. This is development evidence on placeholder names, not a held-out result.
+
+## [0.10.133] - 2026-10-29
+
+### The 8k conversion wave: preregistration, harness and held-out result
+
+- **You can read the held-out verdict for gbrain's 8k conversion wave.** On the 200 held-out questions of sealed confirmation v2, the facts block (`search.query_facts_block`) answered 183 against 151 for the control, +16.0 points with a persona-clustered 95% interval of +11.0 to +21.5. By the preregistered rule the verdict is `pass`. The budget-unit flag and the evidence-titles flag are `inconclusive`. Read the [report](docs/benchmarks/2026-10-26-gbrain-8k-conversion.md); the flip of `search.query_facts_block` is the owner's call.
+- You can repeat the whole run keyless: the preregistration, the decision file with its committed rule, the C8K harness (`eval/runner/budgeted-delivery/c8k*.ts` and scripts) and the dry-run receipts on the invented custody fixture are committed together, and `c8k-dry-run.sh` runs the development reading and the full custody chain with dummy keys and no provider call.
+- **The held-out run's custody steps are covered by tests.** `test/eval/budgeted-delivery-c8k.test.ts` now exercises the retrieval checks, the final gate, the amendment resume of the freeze, the custody refusals of `decide`, the answer files and budget summary, evidence reading, the reader resume, the corpus build, the export and the extraction, each with a one-line statement of what it protects.
+
+### Fixed
+
+- **`receipt-secrets` is green again.** gitleaks read the `"tokenizer": "approx-chars-div-4"` label in eight gate receipts as an API key. A repo-root `.gitleaksignore` names those eight receipt lines. The receipts are hashed artifacts and are unchanged.
 
 ## [0.10.132] - 2026-10-29
 
