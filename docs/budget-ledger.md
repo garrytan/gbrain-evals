@@ -46,7 +46,7 @@ A reservation is the worst case for the request as sent:
 - input: the system prompt, OpenAI `instructions`, messages and input, and the tool schemas at their full JSON size, at about 3 bytes per token;
 - a request that continues an OpenAI response (`previous_response_id`) also reserves that response's reported input plus output tokens, because the provider bills the whole chain as input. A response id this process has not seen reserves a full 1,050,000-token context;
 - when the request can write the provider's prompt cache at a price above the input price (OpenAI models with a cache-write price; Anthropic requests that set `cache_control`), all input is priced at the cache-write rate;
-- output: the request's own output limit, or 4,096 tokens.
+- output: the request's own output limit, else the default output cap the ledger lists for the model (the Gemini models, and particle-1 at 32,000 tokens), else 4,096 tokens.
 
 If a settled cost is still above its reservation, the difference is recorded as `overshoot_usd` in the run summary, the receipt and `status`. It already counts against both caps.
 
@@ -56,6 +56,7 @@ If a settled cost is still above its reservation, the difference is recorded as 
 - Another process holding the ledger's write lock for 20 s makes a reservation refuse rather than wait forever.
 - A file that is not a SQLite ledger, or that SQLite cannot read, refuses with the `verify` command.
 - A ledger file replaced while a runner is open (a restore from backup) is reopened before the next write; that runner's run then is not in the new file, and it refuses.
+- While a paid run is open, a request to a host the ledger cannot price (neither a listed paid provider nor loopback) is refused before it is sent, and the runner stops scheduling paid work. Register the provider host and its list prices in `eval/runner/budget-ledger.ts`, or send the request through a loopback metering proxy.
 
 ## Event-loop lag in every receipt
 
