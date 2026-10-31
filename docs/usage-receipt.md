@@ -111,7 +111,10 @@ invented value, and `response_model` and `usage` are null as before. A truncated
 `readAndJudge` in `eval/runner/memory-qa/run.ts` writes `qa_receipts` (every reader, think and judge record for
 the question), `qa_input_tokens` and `qa_output_tokens` (means over replicates of `input_total` and
 `output_total` from the answer records), `qa_delivered_tokens` and `qa_answer` (the final replicate's full
-answer). When any answer's response carried no usage, the row has `qa_usage_missing` instead of token means.
+answer). A `--qa think` row also has `qa_reference_date`, the day (YYYY-MM-DD) `think` reports it resolved relative
+dates against: the harness asks for the question date, else the conversation's latest session date, and a gbrain
+build older than 0.60.88 reports none, so its rows carry no date. When any answer's response carried no usage, the row
+has `qa_usage_missing` instead of token means.
 The arm's `receipt.json` adds `usage.by_role`, the `sumUsage` totals per role.
 
 ## Adopting it in another harness
@@ -135,8 +138,8 @@ bun test test/eval/memory-qa-usage.test.ts test/eval/openai-compatible.test.ts
 
 The first file serves recorded synthetic Anthropic and OpenAI responses through a mocked fetch and checks that both
 conventions give the same totals, that retries and failures leave one record per attempt, that `think` rows
-carry `think`'s own usage, that a 5,000-character answer survives whole, and that the normalizer reproduces the
-committed W10 means (22,167 for W10a; 22,077 for Opus 5.5, 13,695 for `gpt-6.1-sol` and 14,458 for `gpt-5.4` in
-W10b). The second file checks Particle's convention, the `request` and `response_meta` fields, the null fields of a
-failed attempt and the empty answer of a truncated response, against a mocked fetch and the keyless fake provider. It
-makes no provider call.
+carry `think`'s own usage and the reference date `think` reports, that a 5,000-character answer survives whole, and
+that the normalizer reproduces the committed W10 means (22,167 for W10a; 22,077 for Opus 5.5, 13,695 for
+`gpt-6.1-sol` and 14,458 for `gpt-5.4` in W10b). The second file checks Particle's convention, the `request` and
+`response_meta` fields, the null fields of a failed attempt and the empty answer of a truncated response, against a
+mocked fetch and the keyless fake provider. Neither makes a provider call.

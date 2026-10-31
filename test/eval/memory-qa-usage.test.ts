@@ -9,7 +9,7 @@ import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'n
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { ChatClient, chatReceipts, chatWithReceipts, approxTokens } from '../../eval/runner/memory-qa/qa.ts';
-import { readAndJudge, type RunArgs } from '../../eval/runner/memory-qa/run.ts';
+import { readAndJudge, thinkReferenceDate, type RunArgs } from '../../eval/runner/memory-qa/run.ts';
 import { normalizeFinish, normalizeUsage, sumUsage, usageSourceOf, type UsageReceipt } from '../../eval/runner/usage-receipt.ts';
 
 const dirs: string[] = [];
@@ -162,6 +162,30 @@ describe('memory-qa reading lane (readAndJudge)', () => {
     expect(t).toMatchObject({ role: 'think', finish: 'stop', finish_raw: 'ok', usage: { convention: 'gbrain-think', input_total: 9000 }, delivered: { tokenizer: 'cl100k', tokens: 8200 } });
     expect(j).toMatchObject({ role: 'judge', status: 'ok', usage: { input_total: 300 } });
     expect(row.qa_score).toBe(1);
+  });
+
+  test("think answers relative dates from the question's day: referenceDate reaches think and the row records the date think reports", async () => {
+    serve([judgeYes, judgeYes]);
+    const seen: Array<Record<string, unknown>> = [];
+    const think = async (_engine: unknown, o: Record<string, unknown>) => { seen.push(o); return { answer: 'You moved in May 2023.', synthesis_status: 'ok', usage: { input_tokens: 10, output_tokens: 2 }, temporal: { reference_date: String(o.referenceDate), time_zone: 'UTC' } }; };
+    const row = await readAndJudge({ benchmark: 'lme-s', qa: qa({ mode: 'think' }), q, chat: new ChatClient(tmp(), () => 0), think: { fn: think, engine: null, referenceDate: '2023-05-30' }, prompt: null, countTokens: null });
+    expect(seen).toEqual([{ question: 'When did I move?', model: 'anthropic:claude-sonnet-5-5', modelExplicit: true, remote: false, referenceDate: '2023-05-30' }]);
+    expect(row.qa_reference_date).toBe('2023-05-30');
+    // A gbrain build before referenceDate (0.60.88) ignores it and reports no temporal context, so the row claims no date.
+    const older = async () => ({ answer: 'You moved in May 2023.', synthesis_status: 'ok', usage: { input_tokens: 10, output_tokens: 2 } });
+    const old = await readAndJudge({ benchmark: 'lme-s', qa: qa({ mode: 'think' }), q, chat: new ChatClient(tmp(), () => 0), think: { fn: older, engine: null, referenceDate: '2023-05-30' }, prompt: null, countTokens: null });
+    expect(old.qa_score).toBe(1);
+    expect(old.qa_reference_date).toBeUndefined();
+  });
+
+  test('the think reference date is the question date, else the latest session date in any dataset format', () => {
+    const sessions = (...dates: Array<string | undefined>) => dates.map((date, i) => ({ id: `s${i}`, date, turns: [] }));
+    expect(thinkReferenceDate('2023/05/30 (Tue) 23:40', sessions('2023/05/20 (Sat) 02:21'))).toBe('2023-05-30');
+    // LoCoMo questions carry no date. "10:04 am on 19 October" sorts before "1:56 pm on 8 May" as text, so dates compare as dates.
+    expect(thinkReferenceDate(undefined, sessions('1:56 pm on 8 May, 2023', '10:04 am on 19 October, 2023', undefined))).toBe('2023-10-19');
+    expect(thinkReferenceDate(undefined, sessions('March-05-2024', 'January-28-2024'))).toBe('2024-03-05');
+    expect(thinkReferenceDate('sometime last spring', sessions('2026-01-05', '2026-02-11'))).toBe('2026-02-11');
+    expect(thinkReferenceDate(undefined, sessions(undefined))).toBeUndefined();
   });
 
   test('think without usage reports the gap instead of a token count', async () => {
