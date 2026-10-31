@@ -90,6 +90,9 @@ describe('the particle request (compatRequest)', () => {
     expect(() => compatRequest('particle-1', ASK, {}, KEYED)).toThrow('no OpenAI-compatible provider ""');
     expect(() => compatRequest('openai:gpt-6.1-sol', ASK, {}, KEYED)).toThrow('no OpenAI-compatible provider "openai"');
     expect(() => compatRequest('particle:particle-1', ASK, { effort: 'turbo' }, KEYED)).toThrow('reasoning effort "turbo" is not one Particle lists');
+    expect(() => compatRequest('toString:x', ASK, {}, KEYED)).toThrow('no OpenAI-compatible provider "toString"');
+    expect(() => compatRequest('particle:toString', ASK, {}, KEYED)).toThrow('not a Particle model in COMPAT_PROVIDERS');
+    expect(() => compatRequest('particle:particle-1', ASK, { effort: 'toString' }, KEYED)).toThrow('reasoning effort "toString" is not one Particle lists');
     expect(() => compatRequest('particle:particle-1', ASK, { maxOutputTokens: 131_073 }, KEYED)).toThrow('outside 1 to 131072');
   });
 });
@@ -191,12 +194,21 @@ describe('compatSend and parseCompatResponse', () => {
   });
 
   test.skipIf(ledgerKnowsParticle)('a request straight to a Particle host the ledger cannot price is refused before it is sent', async () => {
-    for (const base of [COMPAT_PROVIDERS.particle!.base_url_default, ...COMPAT_PROVIDERS.particle!.base_url_alternates]) {
+    for (const base of [COMPAT_PROVIDERS.particle!.base_url_default, ...COMPAT_PROVIDERS.particle!.base_url_alternates, 'https://api.particle.ai./v1', 'https://eu.api.particle.ai/v1']) {
       const m = mockFetch([]);
       const e = await compatSend(compatRequest('particle:particle-1', ASK, {}, { ...KEYED, PARTICLE_BASE_URL: base }), { fetchImpl: m.impl }).catch(x => x);
       expect(e).toBeInstanceOf(BudgetExceededError);
-      expect(e.message).toStartWith(`budget: the ledger cannot price ${new URL(base).hostname}`);
+      expect(e.message).toStartWith(`budget: the ledger cannot price ${new URL(base).hostname.replace(/\.$/, '')}`);
       expect(m.calls).toHaveLength(0);
+    }
+  });
+
+  test('a 2xx answer without choices[0].message is a retryable server error, never an empty answer', async () => {
+    for (const body of [{}, { choices: [] }, { choices: [{ finish_reason: 'stop' }] }]) {
+      const e = await compatSend(compatRequest('particle:particle-1', ASK, {}, SLOT), { fetchImpl: mockFetch([{ body }]).impl }).catch(x => x);
+      expect(e).toBeInstanceOf(CompatHttpError);
+      expect(e).toMatchObject({ status: 200, kind: 'server', retryable: true });
+      expect(e.message).toContain('no choices[0].message');
     }
   });
 
@@ -210,6 +222,11 @@ describe('compatSend and parseCompatResponse', () => {
     expect(res).toMatchObject({ id: 'chatcmpl-1', text: 'In May 2023.', finish: 'stop', response_model: 'particle-ai/particle-1', usage: PARTICLE_OK.usage, tool_calls: [], logprobs: null });
     expect(res.meta).toEqual({ metadata: { weight_version: 'default' }, weight_version: 'default', service_tier: 'default', system_fingerprint: 'fp_1', non_default_tier: false, truncated: false });
     expect(normalizeUsage(usageSourceOf('particle:particle-1'), res.usage)).toEqual({ convention: 'openai-chat', input_total: 330, input_uncached: 74, cache_read: 256, cache_write: 0, output_total: 86, reasoning: 49 });
+  });
+
+  test('content sent as a list of parts keeps its text parts, in order', () => {
+    const res = parseCompatResponse({ ...PARTICLE_OK, choices: [{ index: 0, finish_reason: 'stop', message: { role: 'assistant', content: [{ type: 'text', text: 'In May ' }, { type: 'image_url', image_url: {} }, { type: 'text', text: '2023.' }] } }] });
+    expect(res.text).toBe('In May 2023.');
   });
 
   test('a truncated response keeps its empty answer: reasoning text never fills it', () => {

@@ -92,6 +92,13 @@ describe('Particle in the freshness check (plan GST-605 Phase 1, item 6)', () =>
     expect(assess(run, [...counted, ...listed], id => id !== 'particle:particle-1', { ledgerPrice }).blocking).toEqual([expect.stringContaining('particle:particle-1 has no price')]);
   });
 
+  test('a default-tier listing whose price cannot be read blocks, so the ledger price is never left unchecked', () => {
+    const renamed = particleListing({ data: PARTICLE_MODELS.data.map(x => (x.id === 'particle-ai/particle-1' && !x.service_tier
+      ? { ...x, input_modalities: [{ type: 'text', pricing: [{ type: 'input', unit: 'token', cost_usd: '0.00000025' }] }] } : x)) });
+    expect(renamed.find(x => x.id === 'particle-1' && x.service_tier === 'default')?.price).toBeUndefined();
+    expect(assess(run, [...counted, ...renamed], () => true, { ledgerPrice }).blocking).toEqual([expect.stringContaining('Particle lists its default tier with no price this script can read')]);
+  });
+
   test('a changed particle-1 listing warns; a newer Particle model warns', () => {
     const moved = listed.map(x => (x.id === 'particle-1' ? { ...x, created: x.created + 86_400 } : x));
     expect(assess(run, [...counted, ...moved], () => true, { ledgerPrice }).warnings).toEqual([expect.stringContaining("particle:particle-1's listing changed since 2026-10-31 (created 1793108609 -> 1793195009")]);

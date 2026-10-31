@@ -20,8 +20,10 @@
  * particle-1's listing changed since it was recorded, Particle's list was skipped, the run calls Fable (smoke tests
  * only) or gpt-4.1-mini (only as the bridge to earlier BEAM runs).
  * Exit 1: a called model has no price in this repository's ledger or in gbrain's table, is gpt-5.4-mini, or is a
- * Particle model missing from Particle's default-tier list or priced in the ledger differently from it (blocks the run).
- * Exit 2: a provider's model list could not be read.
+ * Particle model missing from Particle's default-tier list, listed there with no price this script can read, or priced
+ * in the ledger differently from it (blocks the run).
+ * Exit 2: OpenAI's or Anthropic's model list could not be read, or Particle's when the run calls a Particle model
+ * (for a run that calls none, a failed Particle read is a skip with its reason).
  */
 import { createHash } from 'node:crypto';
 import { chatPrice } from '../eval/runner/budget-ledger.ts';
@@ -132,7 +134,8 @@ export function assess(called: string[], listed: ListedModel[], priced: (id: str
     const row = listed.find(m => m.provider === 'particle' && m.id === id && m.service_tier === 'default');
     if (!row) { blocking.push(`${c} is not in Particle's model list at the default tier: check the id at docs.particle.ai/models before calling it`); continue; }
     const ledger = options.ledgerPrice?.(c);
-    if (ledger && row.price && (ledger.input !== row.price.input || ledger.output !== row.price.output || (ledger.cache_read ?? null) !== row.price.cache_read)) {
+    if (!row.price) blocking.push(`${c}: Particle lists its default tier with no price this script can read, so the ledger price was not checked; compare docs.particle.ai/models with particleListing's pricing fields`);
+    else if (ledger && (ledger.input !== row.price.input || ledger.output !== row.price.output || (ledger.cache_read ?? null) !== row.price.cache_read)) {
       blocking.push(`${c} is priced in the ledger at ${money(ledger)}, but Particle lists its default tier at ${money(row.price)}: correct CHAT_PRICE_OVERRIDES in eval/runner/budget-ledger.ts with the date checked`);
     }
     const seen = PARTICLE_LISTINGS[id];

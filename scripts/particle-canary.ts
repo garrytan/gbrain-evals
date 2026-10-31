@@ -12,21 +12,28 @@
  * ledger run named by --budget-run-id. It writes each answer's hash and its per-token top log probabilities, with one
  * usage receipt per attempt, to <run dir>/particle-canary.json: the calling run's own output directory.
  *
- * With --compare it reports how many answers changed and the mean change in per-answer mean log probability against
- * an earlier canary. It warns above --warn-changed and --warn-logprob; those thresholds are set above the largest
- * difference seen between back-to-back canary pairs (serving noise), measured before the first counted use. The
- * curated history (docs/benchmarks/particle-canary/history.jsonl) is committed with each report, never written here.
+ * An answer counts only when it is non-empty and did not stop at the output limit, and its mean log probability only
+ * when every token's is a finite number.
+ *
+ * With --compare (an earlier canary of the same model, base URL and sampling, kept outside --out) it reports how many
+ * answers changed, how many came back with a different response model, system fingerprint, weight version or tier,
+ * and the mean change in per-answer mean log probability. It warns above --warn-changed and --warn-logprob; those
+ * thresholds are set above the largest difference seen between back-to-back canary pairs (serving noise), measured
+ * before the first counted use. The curated history (docs/benchmarks/particle-canary/history.jsonl) is committed
+ * with each report, never written here.
  *
  * It refuses a base URL the ledger cannot price (a request there would spend unmetered); loopback hosts (a metering
  * proxy, the keyless fake in eval/systems/_shim/fake_provider.py) go through. Cost: 12 requests of under 100 input
  * and at most 64 output tokens, well under a cent.
  *
- * Exit 0: every prompt answered (warnings print above a threshold). Exit 1: refused, a prompt failed after its
- * retries, or a budget stop (the ledger's, a proxy's or Particle's credit) ended the canary.
+ * Exit 0: every prompt answered and, with --compare, every prompt compared (warnings print above a threshold).
+ * Exit 1: refused, a prompt failed after its retries or gave no usable answer, a budget stop (the ledger's, a proxy's
+ * or Particle's credit) ended the canary, or --compare compared fewer than every prompt or, under --warn-logprob, had
+ * no log probabilities to compare.
  */
 import { createHash } from 'node:crypto';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { BudgetExceededError, budgetOptionsFrom, priceRequest, receiptCost, startPaidRun } from '../eval/runner/budget-ledger.ts';
 import { requirePaidArm } from '../eval/runner/paid-arm.ts';
 import { CompatHttpError, compatRequest, compatSend, type CanarySampling, type CompatLogprob, type CompatRequest } from '../eval/runner/providers/openai-compatible.ts';
@@ -112,7 +119,9 @@ export async function runCanary(env: Record<string, string | undefined> = proces
         receipts.push(receipt({ ...base, attempt, response_model: res.response_model, status: 'ok', error: null, finish: normalizeFinish(res.finish), finish_raw: res.finish, answer: res.text,
           usage: normalizeUsage(usageSourceOf(CANARY_MODEL), res.usage), usage_raw: res.usage, response_meta: res.meta }));
         const lps = res.logprobs?.map(t => t.logprob) ?? [];
-        result = { ...failed, status: 'ok', answer: res.text, answer_sha256: sha256(res.text), finish: res.finish, mean_logprob: lps.length ? lps.reduce((a, b) => a + b, 0) / lps.length : null, logprobs: res.logprobs,
+        const usable = res.text !== '' && res.finish !== 'length';
+        result = { ...failed, status: usable ? 'ok' : 'error', answer: res.text, answer_sha256: usable ? sha256(res.text) : null, finish: res.finish,
+          mean_logprob: lps.length && lps.every(Number.isFinite) ? lps.reduce((a, b) => a + b, 0) / lps.length : null, logprobs: res.logprobs,
           response_model: res.response_model, weight_version: res.meta.weight_version, service_tier: res.meta.service_tier, system_fingerprint: res.meta.system_fingerprint };
         break;
       } catch (e) {
@@ -131,7 +140,7 @@ export async function runCanary(env: Record<string, string | undefined> = proces
   };
 }
 
-export interface CanaryDiff { compared: number; complete: boolean; changed_answers: number; mean_abs_logprob_change: number | null; max_abs_logprob_change: number | null }
+export interface CanaryDiff { compared: number; complete: boolean; changed_answers: number; changed_identity: number; mean_abs_logprob_change: number | null; max_abs_logprob_change: number | null }
 
 type Comparable = Pick<CanaryRecord, 'model' | 'base_url' | 'sampling' | 'prompts_sha256' | 'results'>;
 
@@ -150,6 +159,7 @@ export function compareCanary(a: Comparable, b: Comparable): CanaryDiff {
   const moves = pairs.filter(([x, y]) => x.mean_logprob !== null && y.mean_logprob !== null).map(([x, y]) => Math.abs(x.mean_logprob! - y.mean_logprob!));
   return {
     compared: pairs.length, complete: pairs.length === CANARY_PROMPTS.length, changed_answers: pairs.filter(([x, y]) => x.answer_sha256 !== y.answer_sha256).length,
+    changed_identity: pairs.filter(([x, y]) => (['response_model', 'system_fingerprint', 'weight_version', 'service_tier'] as const).some(k => x[k] !== y[k])).length,
     mean_abs_logprob_change: moves.length ? moves.reduce((s, m) => s + m, 0) / moves.length : null, max_abs_logprob_change: moves.length ? Math.max(...moves) : null,
   };
 }
@@ -161,6 +171,9 @@ if (import.meta.main) {
     requirePaidArm(argv, { arm: 'particle canary', estimateUsd: CANARY_ESTIMATE_USD });
     const out = flag('--out');
     if (!out) throw new Error('pass --out <run dir>: the canary writes particle-canary.json into the calling run\'s output directory');
+    const compare = flag('--compare');
+    if (compare && resolve(compare) === resolve(out, 'particle-canary.json')) throw new Error('--compare names the file this run writes; keep the baseline outside --out');
+    const baseline: CanaryRecord | null = compare ? JSON.parse(readFileSync(compare, 'utf8')) : null;
     const { run, guard } = startPaidRun('particle-canary', { ...budgetOptionsFrom(argv), estimateUsd: CANARY_ESTIMATE_USD });
     let record: CanaryRecord;
     try { record = await runCanary(); }
@@ -171,13 +184,16 @@ if (import.meta.main) {
     const answered = record.results.filter(r => r.status === 'ok').length;
     console.log(`particle canary: ${answered} of ${CANARY_PROMPTS.length} answered${record.stopped ? `; stopped: ${record.stopped}` : ''}; ${join(out, 'particle-canary.json')}`);
     let full = answered === CANARY_PROMPTS.length;
-    const compare = flag('--compare');
-    if (compare) {
-      const diff = compareCanary(JSON.parse(readFileSync(compare, 'utf8')), record);
+    if (baseline) {
+      const diff = compareCanary(baseline, record);
       console.log(JSON.stringify(diff));
       const [changed, logprob] = [flag('--warn-changed'), flag('--warn-logprob')].map(v => (v === undefined ? null : Number(v)));
       if (changed !== null && diff.changed_answers > changed) console.log(`warning: ${diff.changed_answers} answers changed (threshold ${changed}): the model behind particle-1 may have changed`);
-      if (logprob !== null && (diff.mean_abs_logprob_change ?? 0) > logprob) console.log(`warning: mean log probability moved ${diff.mean_abs_logprob_change} (threshold ${logprob}): the model behind particle-1 may have changed`);
+      if (diff.changed_identity > 0) console.log(`warning: ${diff.changed_identity} answers came back with a different response model, system fingerprint, weight version or service tier: the serving stack behind particle-1 changed`);
+      if (logprob !== null && diff.mean_abs_logprob_change === null) {
+        console.log('warning: no answer had log probabilities for every token in both canaries, so --warn-logprob checked nothing');
+        full = false;
+      } else if (logprob !== null && diff.mean_abs_logprob_change! > logprob) console.log(`warning: mean log probability moved ${diff.mean_abs_logprob_change} (threshold ${logprob}): the model behind particle-1 may have changed`);
       if (!diff.complete) {
         console.log(`warning: both canaries answered only ${diff.compared} of ${CANARY_PROMPTS.length} prompts, so this comparison is not a weight check`);
         full = false;
