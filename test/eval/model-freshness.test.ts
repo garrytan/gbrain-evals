@@ -120,4 +120,18 @@ describe('Particle in the freshness check (plan GST-605 Phase 1, item 6)', () =>
     expect(seen).toEqual([{ url: 'http://127.0.0.1:8787/particle/v1/models', auth: 'Bearer k' }]);
     expect('models' in out && out.models.length).toBe(4);
   });
+
+  test('a failed read throws when the run calls a Particle model and is a skip with its reason when it calls none; the read has a timeout', async () => {
+    const inits: RequestInit[] = [];
+    const down = (async (_url: string, init: RequestInit) => { inits.push(init); return new Response('upstream down', { status: 503 }); }) as unknown as typeof fetch;
+    await expect(listParticleModels({ PARTICLE_API_KEY: 'k' }, down)).rejects.toThrow('Particle model list: HTTP 503');
+    expect(await listParticleModels({ PARTICLE_API_KEY: 'k' }, down, { required: false })).toEqual({ skipped: 'Particle model list: HTTP 503; no Particle model is in this run' });
+    expect(inits).toHaveLength(2);
+    expect(inits.every(i => i.signal instanceof AbortSignal)).toBe(true);
+  });
+
+  test('every default round model has a ledger price; particle-1 is the one gap until PR #207 prices Particle', () => {
+    const unpriced = ROUND_MODELS.filter(m => chatPrice(m) === undefined);
+    expect(unpriced).toEqual(chatPrice('particle:particle-1') === undefined ? ['particle:particle-1'] : []);
+  });
 });

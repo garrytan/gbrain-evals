@@ -21,7 +21,7 @@
  * existing budget stop ends the run. The empty-balance body was never probed (that needs an empty account), so the
  * body is recorded, never required. A proxy's own 402 stays a plain budget stop.
  */
-import { BudgetExceededError } from '../budget-ledger.ts';
+import { BudgetExceededError, priceRequest } from '../budget-ledger.ts';
 import { responseMeta, type ReceiptRequest, type ResponseMeta } from '../usage-receipt.ts';
 
 export interface CompatModel {
@@ -273,8 +273,17 @@ export function compatError(info: CompatErrorInfo): Error {
   return new CompatHttpError(info);
 }
 
-/** Send one request, once. A non-2xx answer throws `compatError`'s error; the caller's own loop decides any retry. */
+/**
+ * Send one request, once. A non-2xx answer throws `compatError`'s error; the caller's own loop decides any retry.
+ * A request straight to one of the row's own hosts that the budget ledger cannot price is refused before it is
+ * sent, because the ledger's guard forwards an unpriced host unmetered; a proxy slot (any other host) meters itself.
+ */
 export async function compatSend(req: CompatRequest, opts: { fetchImpl?: typeof fetch; timeoutMs?: number } = {}): Promise<CompatResponse> {
+  const row = COMPAT_PROVIDERS[req.provider]!;
+  const host = new URL(req.url).hostname;
+  if ([row.base_url_default, ...row.base_url_alternates].some(base => new URL(base).hostname === host) && !priceRequest(req.url, req.body)) {
+    throw new BudgetExceededError(`budget: the ledger cannot price ${host}, so this ${row.label} request would spend unmetered; register the host and the model's price in eval/runner/budget-ledger.ts first`);
+  }
   const res = await (opts.fetchImpl ?? fetch)(req.url, { method: 'POST', headers: req.headers, body: JSON.stringify(req.body), signal: AbortSignal.timeout(opts.timeoutMs ?? 300_000) });
   const text = await res.text();
   if (!res.ok) throw compatError(classifyCompatError(req.provider, res.status, text, res.headers));

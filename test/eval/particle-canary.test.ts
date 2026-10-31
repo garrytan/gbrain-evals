@@ -8,7 +8,7 @@ import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { BudgetRun, closeLedgers, initLedger } from '../../eval/runner/budget-ledger.ts';
-import { CANARY_PROMPTS, compareCanary, type CanaryRecord, type CanaryResult } from '../../scripts/particle-canary.ts';
+import { CANARY_MODEL, CANARY_PROMPTS, CANARY_SAMPLING, compareCanary, type CanaryRecord, type CanaryResult } from '../../scripts/particle-canary.ts';
 
 const ROOT = resolve(import.meta.dir, '../..');
 const dir = mkdtempSync(join(tmpdir(), 'particle-canary-'));
@@ -24,11 +24,22 @@ const result = (id: string, answer: string, mean: number | null): CanaryResult =
 });
 
 describe('compareCanary', () => {
+  const same = { model: CANARY_MODEL, base_url: 'https://api.particle.ai/v1', sampling: CANARY_SAMPLING, prompts_sha256: 'x' };
+
   test('counts changed answers and the mean and largest move in mean log probability over prompts both runs answered', () => {
-    const a = { prompts_sha256: 'x', results: [result('c01', '391', -0.1), result('c02', 'Canberra', -0.2), result('c03', 'yrassecen', -0.3)] };
-    const b = { prompts_sha256: 'x', results: [result('c01', '391', -0.15), result('c02', 'Sydney', -0.2), { ...result('c03', '', null), status: 'error' as const }] };
-    expect(compareCanary(a, b)).toEqual({ compared: 2, changed_answers: 1, mean_abs_logprob_change: expect.closeTo(0.025, 10), max_abs_logprob_change: expect.closeTo(0.05, 10) });
+    const a = { ...same, results: [result('c01', '391', -0.1), result('c02', 'Canberra', -0.2), result('c03', 'yrassecen', -0.3)] };
+    const b = { ...same, results: [result('c01', '391', -0.15), result('c02', 'Sydney', -0.2), { ...result('c03', '', null), status: 'error' as const }] };
+    expect(compareCanary(a, b)).toEqual({ compared: 2, complete: false, changed_answers: 1, mean_abs_logprob_change: expect.closeTo(0.025, 10), max_abs_logprob_change: expect.closeTo(0.05, 10) });
     expect(() => compareCanary(a, { ...b, prompts_sha256: 'y' })).toThrow('different prompts');
+  });
+
+  test('a comparison is complete only when both canaries answered every prompt, and canaries of another model, endpoint or sampling are refused', () => {
+    const all = { ...same, results: CANARY_PROMPTS.map((_, i) => result(`c${String(i + 1).padStart(2, '0')}`, 'a', -0.1)) };
+    expect(compareCanary(all, all)).toMatchObject({ compared: CANARY_PROMPTS.length, complete: true, changed_answers: 0 });
+    expect(compareCanary(all, { ...all, results: all.results.slice(0, 1) })).toMatchObject({ compared: 1, complete: false });
+    expect(() => compareCanary(all, { ...all, base_url: 'http://127.0.0.1:8787/particle/v1' })).toThrow('differ in base_url');
+    expect(() => compareCanary(all, { ...all, model: 'particle:particle-2' })).toThrow('differ in model');
+    expect(() => compareCanary(all, { ...all, sampling: { ...CANARY_SAMPLING, seed: 8 } })).toThrow('different sampling');
   });
 });
 
@@ -78,7 +89,7 @@ describe('the canary run', () => {
     expect(sent.every(l => l.effort === 'none' && l.max_completion_tokens === 64 && l.logprobs === true && l.auth_is_dummy)).toBe(true);
     const second = canary(['--paid', '--budget-run-id', runId, '--budget-ledger', ledger, '--out', join(dir, 'b'), '--compare', join(dir, 'a', 'particle-canary.json'), '--warn-changed', '0', '--warn-logprob', '0.01'], keyless());
     expect(second.code).toBe(0);
-    expect(second.out).toContain('"compared":12,"changed_answers":0,"mean_abs_logprob_change":0');
+    expect(second.out).toContain('"compared":12,"complete":true,"changed_answers":0,"mean_abs_logprob_change":0');
     expect(second.out).not.toContain('warning:');
   });
 

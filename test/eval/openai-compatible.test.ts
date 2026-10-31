@@ -17,6 +17,10 @@ import { normalizeUsage, receipt, responseMeta, usageSourceOf } from '../../eval
 
 const ROOT = resolve(import.meta.dir, '../..');
 const KEYED = { PARTICLE_API_KEY: 'test-key' };
+/** A metering proxy's particle slot: compatSend refuses an unpriced Particle host, never a proxy slot. */
+const SLOT = { ...KEYED, PARTICLE_BASE_URL: 'http://127.0.0.1:8787/slot-1/particle/v1' };
+/** False until PR #207 (GBEV-8) prices Particle's hosts in the budget ledger. */
+const ledgerKnowsParticle = priceRequest('https://api.particle.ai/v1/chat/completions', { model: 'particle-1', messages: [] }) !== null;
 const ASK = [{ role: 'user' as const, content: 'When did I move to Lisbon?' }];
 
 /** A particle-1 response in the shape api.particle.ai returned to the 2026-10-31 probes (usage numbers from the live memory-qa smoke). */
@@ -177,22 +181,32 @@ describe('errors and the credit stop', () => {
 describe('compatSend and parseCompatResponse', () => {
   test('one request per call, never retried; a 429 throws with its capped wait for the caller\'s own loop', async () => {
     const m = mockFetch([{ status: 429, body: { error: { message: 'slow down' } }, headers: { 'retry-after': '3' } }]);
-    const req = compatRequest('particle:particle-1', ASK, {}, KEYED);
+    const req = compatRequest('particle:particle-1', ASK, {}, SLOT);
     const e = await compatSend(req, { fetchImpl: m.impl }).catch(x => x);
     expect(e).toBeInstanceOf(CompatHttpError);
     expect(e).toMatchObject({ status: 429, retryable: true, retryAfterMs: 3000 });
     expect(m.calls).toHaveLength(1);
-    expect(m.calls[0]!.url).toBe('https://api.particle.ai/v1/chat/completions');
+    expect(m.calls[0]!.url).toBe('http://127.0.0.1:8787/slot-1/particle/v1/chat/completions');
     expect(JSON.parse(String(m.calls[0]!.init.body))).toEqual(req.body);
+  });
+
+  test.skipIf(ledgerKnowsParticle)('a request straight to a Particle host the ledger cannot price is refused before it is sent', async () => {
+    for (const base of [COMPAT_PROVIDERS.particle!.base_url_default, ...COMPAT_PROVIDERS.particle!.base_url_alternates]) {
+      const m = mockFetch([]);
+      const e = await compatSend(compatRequest('particle:particle-1', ASK, {}, { ...KEYED, PARTICLE_BASE_URL: base }), { fetchImpl: m.impl }).catch(x => x);
+      expect(e).toBeInstanceOf(BudgetExceededError);
+      expect(e.message).toStartWith(`budget: the ledger cannot price ${new URL(base).hostname}`);
+      expect(m.calls).toHaveLength(0);
+    }
   });
 
   test('a credit 402 rejects with ParticleCreditExhausted', async () => {
     const m = mockFetch([{ status: 402, body: 'no balance' }]);
-    await expect(compatSend(compatRequest('particle:particle-1', ASK, {}, KEYED), { fetchImpl: m.impl })).rejects.toBeInstanceOf(ParticleCreditExhausted);
+    await expect(compatSend(compatRequest('particle:particle-1', ASK, {}, SLOT), { fetchImpl: m.impl })).rejects.toBeInstanceOf(ParticleCreditExhausted);
   });
 
   test('the parsed response keeps the answer, finish, usage, response model and the identity metadata', async () => {
-    const res = await compatSend(compatRequest('particle:particle-1', ASK, {}, KEYED), { fetchImpl: mockFetch([{ body: PARTICLE_OK }]).impl });
+    const res = await compatSend(compatRequest('particle:particle-1', ASK, {}, SLOT), { fetchImpl: mockFetch([{ body: PARTICLE_OK }]).impl });
     expect(res).toMatchObject({ id: 'chatcmpl-1', text: 'In May 2023.', finish: 'stop', response_model: 'particle-ai/particle-1', usage: PARTICLE_OK.usage, tool_calls: [], logprobs: null });
     expect(res.meta).toEqual({ metadata: { weight_version: 'default' }, weight_version: 'default', service_tier: 'default', system_fingerprint: 'fp_1', non_default_tier: false, truncated: false });
     expect(normalizeUsage(usageSourceOf('particle:particle-1'), res.usage)).toEqual({ convention: 'openai-chat', input_total: 330, input_uncached: 74, cache_read: 256, cache_write: 0, output_total: 86, reasoning: 49 });
@@ -241,7 +255,6 @@ describe('receipts', () => {
 
 describe('the budget ledger prices every table host', () => {
   // Activates when PR #207 (GBEV-8) lands: until then the ledger knows no Particle host, and this test reports the gap as a skip.
-  const ledgerKnowsParticle = priceRequest('https://api.particle.ai/v1/chat/completions', { model: 'particle-1', messages: [] }) !== null;
   test.skipIf(!ledgerKnowsParticle)('each base URL host of each row, and each of its models, has a ledger price', () => {
     for (const [provider, row] of Object.entries(COMPAT_PROVIDERS)) {
       for (const base of [row.base_url_default, ...row.base_url_alternates]) {

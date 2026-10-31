@@ -131,16 +131,25 @@ export async function runCanary(env: Record<string, string | undefined> = proces
   };
 }
 
-export interface CanaryDiff { compared: number; changed_answers: number; mean_abs_logprob_change: number | null; max_abs_logprob_change: number | null }
+export interface CanaryDiff { compared: number; complete: boolean; changed_answers: number; mean_abs_logprob_change: number | null; max_abs_logprob_change: number | null }
 
-/** Answers and mean log probabilities of two canaries, prompt by prompt; only prompts both answered count. */
-export function compareCanary(a: Pick<CanaryRecord, 'prompts_sha256' | 'results'>, b: Pick<CanaryRecord, 'prompts_sha256' | 'results'>): CanaryDiff {
+type Comparable = Pick<CanaryRecord, 'model' | 'base_url' | 'sampling' | 'prompts_sha256' | 'results'>;
+
+/**
+ * Answers and mean log probabilities of two canaries of one model, endpoint, sampling and prompt set, prompt by
+ * prompt. Only prompts both answered count; `complete` says whether that was every canary prompt.
+ */
+export function compareCanary(a: Comparable, b: Comparable): CanaryDiff {
   if (a.prompts_sha256 !== b.prompts_sha256) throw new Error('the two canaries sent different prompts; compare canaries of one prompt set');
+  for (const k of ['model', 'base_url'] as const) {
+    if (a[k] !== b[k]) throw new Error(`the two canaries differ in ${k} (${a[k]} and ${b[k]}); compare canaries of one model and endpoint`);
+  }
+  if (JSON.stringify(a.sampling) !== JSON.stringify(b.sampling)) throw new Error('the two canaries used different sampling; compare canaries of one sampling mode');
   const other = new Map(b.results.filter(r => r.status === 'ok').map(r => [r.id, r]));
   const pairs = a.results.filter(r => r.status === 'ok' && other.has(r.id)).map(r => [r, other.get(r.id)!] as const);
   const moves = pairs.filter(([x, y]) => x.mean_logprob !== null && y.mean_logprob !== null).map(([x, y]) => Math.abs(x.mean_logprob! - y.mean_logprob!));
   return {
-    compared: pairs.length, changed_answers: pairs.filter(([x, y]) => x.answer_sha256 !== y.answer_sha256).length,
+    compared: pairs.length, complete: pairs.length === CANARY_PROMPTS.length, changed_answers: pairs.filter(([x, y]) => x.answer_sha256 !== y.answer_sha256).length,
     mean_abs_logprob_change: moves.length ? moves.reduce((s, m) => s + m, 0) / moves.length : null, max_abs_logprob_change: moves.length ? Math.max(...moves) : null,
   };
 }
@@ -161,6 +170,7 @@ if (import.meta.main) {
     writeFileSync(join(out, 'particle-canary.json'), JSON.stringify({ ...record, cost }, null, 2) + '\n');
     const answered = record.results.filter(r => r.status === 'ok').length;
     console.log(`particle canary: ${answered} of ${CANARY_PROMPTS.length} answered${record.stopped ? `; stopped: ${record.stopped}` : ''}; ${join(out, 'particle-canary.json')}`);
+    let full = answered === CANARY_PROMPTS.length;
     const compare = flag('--compare');
     if (compare) {
       const diff = compareCanary(JSON.parse(readFileSync(compare, 'utf8')), record);
@@ -168,8 +178,12 @@ if (import.meta.main) {
       const [changed, logprob] = [flag('--warn-changed'), flag('--warn-logprob')].map(v => (v === undefined ? null : Number(v)));
       if (changed !== null && diff.changed_answers > changed) console.log(`warning: ${diff.changed_answers} answers changed (threshold ${changed}): the model behind particle-1 may have changed`);
       if (logprob !== null && (diff.mean_abs_logprob_change ?? 0) > logprob) console.log(`warning: mean log probability moved ${diff.mean_abs_logprob_change} (threshold ${logprob}): the model behind particle-1 may have changed`);
+      if (!diff.complete) {
+        console.log(`warning: both canaries answered only ${diff.compared} of ${CANARY_PROMPTS.length} prompts, so this comparison is not a weight check`);
+        full = false;
+      }
     }
-    process.exit(answered === CANARY_PROMPTS.length ? 0 : 1);
+    process.exit(full ? 0 : 1);
   } catch (e) {
     console.error(`particle-canary: ${(e as Error).message}`);
     process.exit(1);

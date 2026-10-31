@@ -143,12 +143,21 @@ export function assess(called: string[], listed: ListedModel[], priced: (id: str
   return { warnings, blocking };
 }
 
-/** Particle's list, or why it was skipped (no key). The base URL follows PARTICLE_BASE_URL like every particle request. */
-export async function listParticleModels(env: Record<string, string | undefined> = process.env, fetchImpl: typeof fetch = fetch): Promise<{ models: ListedModel[] } | { skipped: string }> {
+/**
+ * Particle's list, or why it was skipped (no key). The base URL follows PARTICLE_BASE_URL like every particle request.
+ * A failed read throws when the run calls a Particle model (`required`, the default); otherwise it is a skip with its
+ * reason, so a run that calls no Particle model does not depend on Particle being up.
+ */
+export async function listParticleModels(env: Record<string, string | undefined> = process.env, fetchImpl: typeof fetch = fetch, opts: { required?: boolean } = {}): Promise<{ models: ListedModel[] } | { skipped: string }> {
   if (!env.PARTICLE_API_KEY) return { skipped: 'PARTICLE_API_KEY is not set' };
-  const res = await fetchImpl(`${compatBaseUrl('particle', env)}/models`, { headers: { authorization: `Bearer ${env.PARTICLE_API_KEY}` } });
-  if (!res.ok) throw new Error(`Particle model list: HTTP ${res.status}`);
-  return { models: particleListing(await res.json()) };
+  try {
+    const res = await fetchImpl(`${compatBaseUrl('particle', env)}/models`, { headers: { authorization: `Bearer ${env.PARTICLE_API_KEY}` }, signal: AbortSignal.timeout(30_000) });
+    if (!res.ok) throw new Error(`Particle model list: HTTP ${res.status}`);
+    return { models: particleListing(await res.json()) };
+  } catch (e) {
+    if (opts.required ?? true) throw e;
+    return { skipped: `${(e as Error).message}; no Particle model is in this run` };
+  }
 }
 
 async function listModels(): Promise<ListedModel[]> {
@@ -169,7 +178,7 @@ if (import.meta.main) {
   let particle: Awaited<ReturnType<typeof listParticleModels>>;
   try {
     listed = await listModels();
-    particle = await listParticleModels();
+    particle = await listParticleModels(process.env, fetch, { required: called.some(c => c.startsWith('particle:')) });
   } catch (e) {
     console.error(`model-freshness: ${(e as Error).message}; check the provider key and retry`);
     process.exit(2);
