@@ -9,7 +9,8 @@
  */
 
 import { describe, test, expect } from 'bun:test';
-import { existsSync, readFileSync } from 'fs';
+import { existsSync, mkdtempSync, readFileSync } from 'fs';
+import { tmpdir } from 'os';
 import { join } from 'path';
 import type Anthropic from '@anthropic-ai/sdk';
 import {
@@ -586,5 +587,30 @@ describe('cat15 extraction temperature (audit A-03)', () => {
     };
     expect(sentFor('claude-opus-5-5')).toEqual({ max_tokens: 4096, temperature: null });
     expect(sentFor(undefined)).toEqual({ max_tokens: 2048, temperature: 0 });
+  }, 30000);
+
+  // Value: protects=an extractor reply cut off at max_tokens is a harness error naming the limit, never a scored SUT miss; fails_when=extractClaims ignores stop_reason or runProbe scores a truncated reply; why_new=parse failures are scored 0 as SUT misbehavior, and a cut-off reply looked the same; seam=none; no_claim=stub client and stub extractor
+  test('a reply cut off at max_tokens is a harness error, not a scored miss', async () => {
+    const client = { messages: { create: async () => ({ content: [{ type: 'text', text: '[{"claim_text": "half a cla' }], stop_reason: 'max_tokens' }) } } as any;
+    const out = await extractClaims('A page body.', client);
+    expect(out).toMatchObject({ claims: [], parse_failed: false, truncated: true });
+    const outcome = await runProbe(CLAIMS_PROBE, false, { corpusDir: TEST_FIXTURES, extract: async () => out });
+    expect(outcome).toMatchObject({ kind: 'error', origin: 'harness' });
+    if (outcome.kind !== 'error') throw new Error('unreachable');
+    expect(outcome.message).toContain('max_tokens (2048)');
+  });
+});
+
+describe('cat15 live runs join the budget ledger', () => {
+  // Value: protects=a live Cat 15 run without --paid --budget-run-id is refused before any request, with a skipped receipt naming the flags; fails_when=main builds the client or calls the API without a ledger run; why_new=Cat 15 spent with no ledger cap before; seam=none; no_claim=refusal path only, the joined path is a live smoke
+  test('a live run without --paid --budget-run-id is refused with a skipped receipt', () => {
+    const ledger = join(mkdtempSync(join(tmpdir(), 'cat15-ledger-')), 'ledger.sqlite');
+    const r = runRunner({ CAT15_DRY_RUN: undefined, ANTHROPIC_API_KEY: 'test-key-not-real', BRAINBENCH_BUDGET_LEDGER: ledger, BRAINBENCH_BUDGET_RUN_ID: undefined });
+    expect(r.exitCode).toBe(2);
+    expect(r.stderr).toContain('--paid and --budget-run-id <id> are missing');
+    const receipt = JSON.parse(readFileSync(RECEIPT, 'utf-8'));
+    expect(receipt.run_status).toBe('skipped');
+    expect(receipt.skip_reason).toContain('Cat 15 live run spends money');
+    expect(receipt.resolved_config.max_tokens_sent).toEqual({ extract: 2048, judge: 2000 });
   }, 30000);
 });

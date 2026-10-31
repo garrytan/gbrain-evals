@@ -104,6 +104,7 @@ export interface ClaimScore {
   expected_label: ClaimLabel;
   matches_expected: boolean;
   judge_rationale: string;
+  /** Every prompt token the classifier read, cache reads and writes included, so tokens and cost_usd agree. */
   input_tokens: number;
   output_tokens: number;
   cost_usd: number;
@@ -280,7 +281,7 @@ export async function classifyClaim(
       tool_choice: { type: 'tool', name: 'classify_claim' },
       messages: [{ role: 'user', content: userContent }],
     }));
-    inputTokens += response.usage.input_tokens;
+    inputTokens += response.usage.input_tokens + (response.usage.cache_read_input_tokens ?? 0) + (response.usage.cache_creation_input_tokens ?? 0);
     outputTokens += response.usage.output_tokens;
     cost += priceOf(price, response);
     return parseClassification(response);
@@ -452,6 +453,7 @@ async function runConcurrently<T, R>(
 }
 
 export async function runCat5(opts: RunCat5Options): Promise<Cat5Report> {
+  judgePrice(opts.model ?? DEFAULT_MODEL);
   const startedAt = new Date().toISOString();
   const concurrency = opts.concurrency ?? 4;
   const acc = new ProbeAccounting(opts.claims.length);

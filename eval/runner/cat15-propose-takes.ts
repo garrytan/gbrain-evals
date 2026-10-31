@@ -39,11 +39,12 @@
  *   6. Gate: training avg F1 >= 0.85, holdout avg F1 >= 0.80,
  *      train-holdout gap <= 0.10.
  *
- * Run:
- *   bun eval/runner/cat15-propose-takes.ts
- *   CAT15_PROBES=cat15-train-concept-market bun eval/runner/cat15-propose-takes.ts
+ * Run (a live run spends money, so it needs `--paid --budget-run-id <id>` naming an open budget-ledger run;
+ * all.ts passes both):
+ *   bun eval/runner/cat15-propose-takes.ts --paid --budget-run-id <id>
+ *   CAT15_PROBES=cat15-train-concept-market bun eval/runner/cat15-propose-takes.ts --paid --budget-run-id <id>
  *   CAT15_DRY_RUN=1 bun eval/runner/cat15-propose-takes.ts
- *   CAT15_CORPUS_DIR=/path/to/fixtures/calibration bun eval/runner/cat15-propose-takes.ts
+ *   CAT15_CORPUS_DIR=/path/to/fixtures/calibration bun eval/runner/cat15-propose-takes.ts --paid --budget-run-id <id>
  *   bun eval/runner/cat15-propose-takes.ts --allow-skip   # skip (missing corpus/key) exits 0
  */
 
@@ -57,6 +58,8 @@ import {
   extractorOutcome,
 } from '../../node_modules/gbrain/src/core/cycle/propose-takes.ts';
 import { fitAnthropicRequest, temperatureSent, toolChoiceSent, withThinkingRoom } from './anthropic-request.ts';
+import { budgetOptionsFrom, receiptCost, startPaidRun } from './budget-ledger.ts';
+import { PaidArmRefusal, requirePaidArm } from './paid-arm.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
 import {
   writeReceipt,
@@ -207,6 +210,9 @@ const JUDGE_MODEL = process.env.CAT15_JUDGE_MODEL ?? 'claude-haiku-4-5-20251001'
 const JUDGE_TEMPERATURE = 0;
 /** Extraction runs at temperature 0 so the scored extraction is reproducible (audit A-03). */
 export const EXTRACT_TEMPERATURE = 0;
+/** gbrain's extractor limit; a Claude 5 extractor gets 4,096 tokens, gbrain's own retry limit, to think in. */
+const EXTRACT_MAX_TOKENS = withThinkingRoom(EXTRACT_MODEL, PROPOSE_TAKES_MAX_TOKENS);
+const MATCH_MAX_TOKENS = withThinkingRoom(JUDGE_MODEL, 2000);
 
 let _anthropic: Anthropic | null = null;
 function getAnthropic(): Anthropic {
@@ -224,18 +230,21 @@ interface ExtractOutcome {
   raw_text: string;
   /** Output was empty/unparseable and NOT a well-formed empty array — SUT misbehavior. */
   parse_failed: boolean;
+  /** The reply stopped at EXTRACT_MAX_TOKENS: the harness limit cut it off, so it is not scored. */
+  truncated?: boolean;
 }
 
 async function extractClaims(pageBody: string, client?: Anthropic): Promise<ExtractOutcome> {
   const prompt = buildExtractionPrompt(pageBody);
   const res = await (client ?? getAnthropic()).messages.create(fitAnthropicRequest({
     model: EXTRACT_MODEL,
-    max_tokens: withThinkingRoom(EXTRACT_MODEL, PROPOSE_TAKES_MAX_TOKENS),
+    max_tokens: EXTRACT_MAX_TOKENS,
     temperature: EXTRACT_TEMPERATURE,
     messages: [{ role: 'user', content: prompt }],
   }));
   const block = res.content.find((b): b is Anthropic.Messages.TextBlock => b.type === 'text');
   const raw = block?.text ?? '';
+  if (res.stop_reason === 'max_tokens') return { claims: [], raw_text: raw, parse_failed: false, truncated: true };
   // Tolerant of fence wrappers: find a JSON array in the output.
   const match = raw.match(/\[[\s\S]*\]/);
   if (match) {
@@ -397,7 +406,7 @@ async function callMatcherOnce(
   }
   const res = await client.messages.create(fitAnthropicRequest({
     model: JUDGE_MODEL,
-    max_tokens: withThinkingRoom(JUDGE_MODEL, 2000),
+    max_tokens: MATCH_MAX_TOKENS,
     temperature: JUDGE_TEMPERATURE,
     system: sys,
     tools: [MATCH_TOOL],
@@ -543,6 +552,9 @@ async function runProbe(probe: Probe, dryRun: boolean, deps: RunProbeDeps = {}):
       extraction = await (deps.extract ? deps.extract(pageBody) : extractClaims(pageBody, deps.client));
     } catch (err) {
       return { kind: 'error', origin: 'dependency', message: `extract call failed: ${err instanceof Error ? err.message : String(err)}` };
+    }
+    if (extraction.truncated) {
+      return { kind: 'error', origin: 'harness', message: `extractor reply stopped at max_tokens (${EXTRACT_MAX_TOKENS}) before it finished` };
     }
     extracted = extraction.claims;
     parseFailed = extraction.parse_failed;
@@ -757,6 +769,7 @@ function resolvedConfig(dryRun: boolean, filter: string | null): Record<string, 
     judge_temperature: JUDGE_TEMPERATURE,
     temperature_sent: { extract: temperatureSent(EXTRACT_MODEL, EXTRACT_TEMPERATURE), judge: temperatureSent(JUDGE_MODEL, JUDGE_TEMPERATURE) },
     tool_choice_sent: { judge: toolChoiceSent(JUDGE_MODEL) },
+    max_tokens_sent: { extract: EXTRACT_MAX_TOKENS, judge: MATCH_MAX_TOKENS },
     prompt_version: PROPOSE_TAKES_PROMPT_VERSION,
     prompt_source: 'node_modules/gbrain/src/core/cycle/propose-takes.ts (imported directly, not mirrored)',
     dry_run: dryRun,
@@ -818,6 +831,21 @@ async function main(): Promise<void> {
     process.exit(allowSkip ? 0 : 3);
   }
 
+  // A live run spends money: it joins an open budget-ledger run, and the guard goes in before the SDK client exists.
+  const argv = process.argv.slice(2);
+  let paid: ReturnType<typeof startPaidRun> | null = null;
+  if (!dryRun) {
+    try {
+      const { budgetRunId } = requirePaidArm(argv, { arm: 'Cat 15 live run', estimateUsd: null });
+      paid = startPaidRun(CATEGORY, { ...budgetOptionsFrom(argv), runId: budgetRunId, estimateUsd: null });
+    } catch (e) {
+      if (!(e instanceof PaidArmRefusal)) throw e;
+      console.error(`[cat15] REFUSED: ${e.message}`);
+      writeSkipReceipt(startedAt, e.message, filtered.length);
+      process.exit(2);
+    }
+  }
+
   console.log(`[cat15] running ${filtered.length} probes (extract=${EXTRACT_MODEL} judge=${JUDGE_MODEL} dry_run=${dryRun} prompt=${PROPOSE_TAKES_PROMPT_VERSION})`);
 
   const acc = new ProbeAccounting(filtered.length);
@@ -842,6 +870,8 @@ async function main(): Promise<void> {
     process.stderr.write(`P=${r.precision.toFixed(2)} R=${r.recall.toFixed(2)} F1=${r.f1.toFixed(2)} gate=${r.gate}${r.trivially_correct ? ' (trivially correct: no claims, none extracted)' : ''}\n`);
   }
 
+  paid?.guard.uninstall();
+  const cost = paid ? receiptCost(paid.run.close()) : null;
   const plannedSplits = [...new Set(filtered.map(p => p.split))];
   const summary = aggregate(results, { dryRun, probeFilter: filter, plannedSplits });
   const accSummary = acc.summary();
@@ -877,6 +907,7 @@ async function main(): Promise<void> {
       publishable: false,
       resolved_config: resolvedConfig(dryRun, filter),
       judge: { model: JUDGE_MODEL, temperature: JUDGE_TEMPERATURE },
+      cost,
       data: { summary },
     });
     console.error(`[cat15] RUN INVALID: infra error rate ${(accSummary.infra_error_rate * 100).toFixed(0)}% over cap; see receipt errors[]`);
@@ -895,6 +926,7 @@ async function main(): Promise<void> {
     publishable: accSummary.publishable && !dryRun && !filter,
     resolved_config: resolvedConfig(dryRun, filter),
     judge: { model: JUDGE_MODEL, temperature: JUDGE_TEMPERATURE },
+    cost,
     data: { summary },
   });
 

@@ -37,9 +37,9 @@ import Anthropic from '@anthropic-ai/sdk';
 import { fitAnthropicRequest, withThinkingRoom } from './anthropic-request.ts';
 import { acceptsTemperature, anthropicModelId, judgeClientFor } from './openai-judge-shim.ts';
 import { getDefaultLlmBudget } from './llm-budget.ts';
-import { JUDGE_TEMPERATURE, UNTRUSTED_DATA_INSTRUCTION, escapeUntrusted, fenceUntrusted, newJudgeNonce, unescapeUntrusted } from './judge.ts';
+import { JUDGE_TEMPERATURE, UNTRUSTED_DATA_INSTRUCTION, escapeUntrusted, fenceUntrusted, judgePrice, newJudgeNonce, priceOf, unescapeUntrusted } from './judge.ts';
 
-// ─── Version + pricing ────────────────────────────────────────────────────
+// ─── Version ──────────────────────────────────────────────────────────────
 
 /**
  * Pinned prompt version, recorded in the receipt for comparability.
@@ -51,20 +51,6 @@ export const CAT35_JUDGE_PROMPT_VERSION = '2026-09-28-v2';
 
 const DEFAULT_MODEL = 'claude-haiku-4-5-20251001';
 const DEFAULT_MAX_TOKENS = 2000;
-
-/** $/1M-token rates, matched by model-id substring (2026-08 prices). */
-const MODEL_PRICES: Array<{ match: RegExp; inputPerM: number; outputPerM: number }> = [
-  { match: /haiku/, inputPerM: 1.0, outputPerM: 5.0 },
-  { match: /sonnet/, inputPerM: 3.0, outputPerM: 15.0 },
-];
-
-function priceOf(model: string, inputTokens: number, outputTokens: number): number {
-  const row = MODEL_PRICES.find((p) => p.match.test(model));
-  // Unknown model → sonnet rates (conservative overestimate for budgeting).
-  const inputPerM = row?.inputPerM ?? 3.0;
-  const outputPerM = row?.outputPerM ?? 15.0;
-  return (inputTokens * inputPerM + outputTokens * outputPerM) / 1_000_000;
-}
 
 // ─── Config + client ──────────────────────────────────────────────────────
 
@@ -171,6 +157,7 @@ async function callJudgeOnce(
   userContent: string,
 ): Promise<OneCall> {
   const requested = resolveModel(cfg);
+  const price = judgePrice(requested);
   const client = cfg?.client ?? judgeClientFor(requested, getDefaultClient);
   const model = anthropicModelId(requested);
   const maxTokens = cfg?.maxTokens ?? withThinkingRoom(model, DEFAULT_MAX_TOKENS);
@@ -235,9 +222,10 @@ async function callJudgeOnce(
     cache_read_input_tokens?: number;
   };
   const output_tokens = usage.output_tokens ?? 0;
+  const cost_usd = priceOf(price, response);
   // Cache tokens are billed separately (creation 1.25x input rate, reads
-  // 0.1x) and are NOT included in usage.input_tokens — omitting them
-  // systematically under-reports spend across hundreds of judge calls.
+  // 0.1x) and are NOT included in usage.input_tokens; the input count weights
+  // them the same way, and cost_usd prices them at the model's own rates.
   const input_tokens = Math.round(
     (usage.input_tokens ?? 0) +
       (usage.cache_creation_input_tokens ?? 0) * 1.25 +
@@ -252,9 +240,9 @@ async function callJudgeOnce(
     error: null,
     input_tokens,
     output_tokens,
-    cost_usd: priceOf(model, input_tokens, output_tokens),
+    cost_usd,
   });
-  return { input, input_tokens, output_tokens, cost_usd: priceOf(model, input_tokens, output_tokens) };
+  return { input, input_tokens, output_tokens, cost_usd };
 }
 
 // ═══ 1. Salient-unit coverage ═════════════════════════════════════════════

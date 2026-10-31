@@ -45,6 +45,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { PGLiteEngine } from 'gbrain/pglite-engine';
 import { OperationError } from 'gbrain/operations';
 import { fitAnthropicRequest, withThinkingRoom } from '../anthropic-request.ts';
+import { judgePrice, priceOf } from '../judge.ts';
 import type { Adapter, Page, Query, RankedDoc, BrainState, AdapterConfig } from '../types.ts';
 import {
   createToolBridge,
@@ -144,10 +145,6 @@ const DEFAULT_MAX_RETRIES = 3;
  */
 export const SUBSTANTIVE_TEXT_MIN_CHARS = 80;
 
-// Sonnet 4.6 pricing (2026-04 cents per 1M tokens).
-const PRICE_INPUT_PER_M = 3.0;
-const PRICE_OUTPUT_PER_M = 15.0;
-
 export const DEFAULT_AGENT_SYSTEM_PROMPT = `You are an assistant with access to Amara Okafor's personal knowledge brain. Amara is a Partner at Halfway Capital (a fictional VC firm). Her pages live at slugs like \`user/amara-okafor\`, \`emails/em-NNNN\`, \`slack/sl-NNNN\`, \`meeting/mtg-NNNN\`, \`notes/YYYY-MM-DD-topic\`.
 
 IRON LAW: Before answering anything about Amara, you MUST search the brain first. Call \`search\` or \`get_page\` before your final answer. Never guess from general knowledge.
@@ -164,10 +161,6 @@ let defaultClient: Anthropic | null = null;
 function getDefaultClient(): Anthropic {
   if (!defaultClient) defaultClient = new Anthropic();
   return defaultClient;
-}
-
-function priceOf(input: number, output: number): number {
-  return (input * PRICE_INPUT_PER_M + output * PRICE_OUTPUT_PER_M) / 1_000_000;
 }
 
 function isRateLimitError(err: unknown): boolean {
@@ -328,6 +321,7 @@ export async function runAgentLoop(
 ): Promise<AgentRunResult> {
   const client = config.client ?? getDefaultClient();
   const model = config.model ?? DEFAULT_MODEL;
+  const price = judgePrice(model);
   const maxTokens = config.maxTokens ?? withThinkingRoom(model, DEFAULT_MAX_TOKENS);
   const turnCap = config.turnCap ?? DEFAULT_TURN_CAP;
   const systemPrompt = config.systemPrompt ?? DEFAULT_AGENT_SYSTEM_PROMPT;
@@ -398,7 +392,7 @@ export async function runAgentLoop(
 
     totalInputTokens += response.usage.input_tokens;
     totalOutputTokens += response.usage.output_tokens;
-    totalCost += priceOf(response.usage.input_tokens, response.usage.output_tokens);
+    totalCost += priceOf(price, response);
 
     turns.push({
       turn_index: turnIndex++,

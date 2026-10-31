@@ -60,6 +60,7 @@
  * Run:
  *   bun eval/runner/cat29-think-vs-search.ts --stub        # hermetic
  *   bun eval/runner/cat29-think-vs-search.ts               # live (needs ANTHROPIC + OPENAI keys)
+ *   bun eval/runner/cat29-think-vs-search.ts --budget-run-id <id>   # live, joined to that budget-ledger run (all.ts passes the id)
  *   CAT29_QUESTIONS=2 bun eval/runner/cat29-think-vs-search.ts --stub
  */
 
@@ -735,7 +736,7 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
   const hashEmbeds = stub || options.embedMode === 'hash';
   let attestation: Attestation | null = null;
   // The guard goes in before any SDK client is built, so the clients fetch through it.
-  const paid = !stub && options.budget?.budgetUsd != null
+  const paid = !stub && (options.budget?.budgetUsd != null || options.budget?.runId != null)
     ? (options.preregistration ? (attestation = attestPreregistration(options.preregistration)) : null, startPaidRun(CAT29_CATEGORY, { ...options.budget, estimateUsd: options.estimateUsd ?? 0.4 }))
     : null;
 

@@ -21,7 +21,8 @@
  * **Paid guard:** a selection that includes any K or P category refuses to
  * start without both `--paid` and `--budget-run-id <id>` naming an open run
  * in the budget ledger (eval/runner/paid-arm.ts). The id reaches every child
- * as BRAINBENCH_BUDGET_RUN_ID, so runners that use startPaidRun join it.
+ * as BRAINBENCH_BUDGET_RUN_ID, so runners that use startPaidRun join it, and a
+ * runner whose registry row sets `paidFlags` also gets `--paid --budget-run-id <id>`.
  *
  * **Shape:** each dispatched runner runs in its own Bun subprocess (isolated
  * PGLite engine, stdout/stderr captured). Subprocesses run concurrently
@@ -100,6 +101,8 @@ interface DispatchedCategory {
   timeoutMs?: number;
   /** Latency benchmark: runs alone, never alongside another category. */
   exclusive?: boolean;
+  /** The runner refuses a live run without `--paid --budget-run-id <id>`; childArgs passes both. */
+  paidFlags?: true;
   /** report-only: a completed non-pass verdict is reported, not failed (registry gate). */
   gate: GateStatus;
   /** Preregistered promotion rules; all.ts gates on these when present. */
@@ -183,6 +186,11 @@ export function parseOnly(argv: string[]): Set<string> | null {
   return new Set(names.map(n => registryEntry(n)!.id));
 }
 
+/** A dispatched runner's argv: its registry args, plus `--paid --budget-run-id <id>` for a runner that requires them. */
+export function childArgs(cat: Pick<DispatchedCategory, 'script' | 'args' | 'paidFlags'>, budgetRunId: string | undefined): string[] {
+  return [cat.script, ...(cat.args ?? []), ...(cat.paidFlags && budgetRunId ? ['--paid', '--budget-run-id', budgetRunId] : [])];
+}
+
 /** Split the registry into what runs in this tier and what does not, with a reason for each omission. */
 export function selectCategories(tier: TierSelection, only: ReadonlySet<string> | null = null): { dispatch: DispatchedCategory[]; notRun: NotRun[] } {
   const dispatch: DispatchedCategory[] = [];
@@ -196,7 +204,7 @@ export function selectCategories(tier: TierSelection, only: ReadonlySet<string> 
     } else if (selected.has(c.registryTier)) {
       dispatch.push(c);
     } else {
-      notRun.push({ id: c.id, name: c.name, tier: c.tier, reason: `tier ${c.registryTier} not selected`, command: `bun ${[c.script, ...(c.args ?? [])].join(' ')}` });
+      notRun.push({ id: c.id, name: c.name, tier: c.tier, reason: `tier ${c.registryTier} not selected`, command: `bun ${childArgs(c, '<id>').join(' ')}` });
     }
   }
   return { dispatch, notRun };
@@ -325,7 +333,7 @@ function runCatSubprocess(cat: DispatchedCategory): Promise<CategoryRun> {
     let output = '';
     let settled = false;
     const base = { id: cat.id, name: cat.name, tier: cat.tier, script: cat.script };
-    const child = spawn('bun', [cat.script, ...(cat.args ?? []), ...(outputDir ? [cat.outputFlag!, outputDir] : [])], {
+    const child = spawn('bun', [...childArgs(cat, process.env.BRAINBENCH_BUDGET_RUN_ID), ...(outputDir ? [cat.outputFlag!, outputDir] : [])], {
       stdio: ['ignore', 'pipe', 'pipe'],
       env: { ...process.env, ...(cat.env ?? {}) },
     });

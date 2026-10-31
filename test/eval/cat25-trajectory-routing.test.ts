@@ -25,6 +25,9 @@
  */
 
 import { describe, test, expect } from 'bun:test';
+import { mkdtempSync, readFileSync } from 'fs';
+import { tmpdir } from 'os';
+import { join } from 'path';
 import {
   PROBES,
   runProbe,
@@ -270,4 +273,21 @@ describe('cat25 live judge: prompt injection hardening (audit B-JDG-01)', () => 
     expect(seen[0].temperature).toBe(0);
     expect(seen[0].model).toBe('claude-sonnet-4-6');
   });
+});
+
+describe('cat25 live runs join the budget ledger', () => {
+  // Value: protects=a live Cat 25 run without --paid --budget-run-id is refused before any request, with a skipped receipt naming the flags; fails_when=main builds the client or calls the API without a ledger run; why_new=Cat 25 spent with no ledger cap before; seam=none; no_claim=refusal path only, the joined path is a live smoke
+  test('a live run without --paid --budget-run-id is refused with a skipped receipt', () => {
+    const root = join(import.meta.dir, '..', '..');
+    const env: Record<string, string> = {};
+    for (const [k, v] of Object.entries(process.env)) if (v !== undefined && !['CAT25_DRY_RUN', 'BRAINBENCH_BUDGET_RUN_ID'].includes(k)) env[k] = v;
+    env.ANTHROPIC_API_KEY = 'test-key-not-real';
+    env.BRAINBENCH_BUDGET_LEDGER = join(mkdtempSync(join(tmpdir(), 'cat25-ledger-')), 'ledger.sqlite');
+    const proc = Bun.spawnSync(['bun', join(root, 'eval', 'runner', 'cat25-trajectory-routing.ts')], { cwd: root, env, stdout: 'pipe', stderr: 'pipe' });
+    expect(proc.exitCode).toBe(2);
+    expect(proc.stderr.toString()).toContain('--paid and --budget-run-id <id> are missing');
+    const receipt = JSON.parse(readFileSync(join(root, 'eval', 'reports', 'cat25-trajectory-routing', 'receipt.json'), 'utf-8'));
+    expect(receipt.run_status).toBe('skipped');
+    expect(receipt.skip_reason).toContain('Cat 25 live run spends money');
+  }, 30000);
 });

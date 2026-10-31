@@ -10,7 +10,7 @@ import { describe, test, expect } from 'bun:test';
 import type Anthropic from '@anthropic-ai/sdk';
 import { acceptsForcedToolChoice, fitAnthropicRequest, temperatureSent, toolChoiceSent, withThinkingRoom } from '../../eval/runner/anthropic-request.ts';
 import { SCORE_ANSWER_TOOL, judgePrice, scoreAnswer, type JudgeEvidence } from '../../eval/runner/judge.ts';
-import { classifyClaim, type Claim } from '../../eval/runner/cat5-provenance.ts';
+import { classifyClaim, runCat5, type Claim } from '../../eval/runner/cat5-provenance.ts';
 import { makeLiveComplete } from '../../eval/runner/cat25-trajectory-routing.ts';
 import { judgePair, makeStubJudgeClient, type Cat29Question } from '../../eval/runner/cat29-think-vs-search.ts';
 import { scoreGrounding } from '../../eval/runner/cat35-judges.ts';
@@ -189,6 +189,18 @@ describe('the other call sites', () => {
     expect(unpriced.bodies.length).toBe(0);
   });
 
+  // Value: protects=a Cat 5 run with an unpriced model fails once as a config error before any claim, and receipt tokens include cache reads and writes like the cost does; fails_when=the price lookup moves back inside the per-claim try/catch or cache tokens drop out of input_tokens; why_new=an unpriced model became one dependency error per claim; seam=none; no_claim=stub client
+  test('cat5 refuses an unpriced model once and counts cache tokens with the cost', async () => {
+    const pagesBySlug = new Map(EVIDENCE.ground_truth_pages.map(p => [p.slug, p]));
+    const unpriced = recording();
+    await expect(runCat5({ claims: [CLAIM, { ...CLAIM, id: 'c2' }], pagesBySlug, client: unpriced.client, model: 'claude-unlisted-1' })).rejects.toThrow('no chat price');
+    expect(unpriced.bodies.length).toBe(0);
+    const cached = recording(() => ({ ...TEXT_REPLY, usage: { input_tokens: 10, output_tokens: 5, cache_read_input_tokens: 300, cache_creation_input_tokens: 40 } }));
+    const score = await classifyClaim(CLAIM, EVIDENCE.ground_truth_pages, { client: cached.client });
+    expect(score.input_tokens).toBe(2 * 350);
+    expect(score.cost_usd).toBeCloseTo(2 * (10 * 1 + 300 * 0.1 + 40 * 1.25 + 5 * 5) / 1e6, 12);
+  });
+
   test('cat25 think completion', async () => {
     const r = recording();
     const complete = makeLiveComplete(r.client);
@@ -224,6 +236,17 @@ describe('the other call sites', () => {
     }
   });
 
+  // Value: protects=Cat 35 judge cost uses each model's ledger price, and an unpriced judge is refused before any request; fails_when=the substring price table comes back (Opus 5.5 at Sonnet rates, Haiku 5.5 at Haiku 4.5 rates); why_new=the batched-judge test checks requests only; seam=none; no_claim=stub client
+  test('cat35 judges price each model at its own rate', async () => {
+    const cost = async (model?: string) => (await scoreGrounding({ label: 'x', claims: ['a claim'], transcript: 't' }, { client: recording().client, model })).cost_usd;
+    expect(await cost('claude-opus-5-5')).toBeCloseTo(2 * (10 * 4 + 5 * 20) / 1e6, 12);
+    expect(await cost('claude-haiku-5-5')).toBeCloseTo(2 * (10 * 0.1 + 5 * 0.5) / 1e6, 12);
+    expect(await cost()).toBeCloseTo(2 * (10 * 1 + 5 * 5) / 1e6, 12);
+    const unpriced = recording();
+    await expect(scoreGrounding({ label: 'x', claims: ['a claim'], transcript: 't' }, { client: unpriced.client, model: 'claude-unlisted-1' })).rejects.toThrow('no chat price');
+    expect(unpriced.bodies.length).toBe(0);
+  });
+
   test('Cat 8/9 agent loop', async () => {
     const adapter = new ClaudeSonnetWithToolsAdapter();
     const state = (await adapter.init([{ slug: 'people/alice', type: 'person', title: 'Alice', compiled_truth: 'Alice has a cat.', timeline: '' }], { name: 'b1' })) as AgentAdapterState;
@@ -235,6 +258,20 @@ describe('the other call sites', () => {
       expectClaude5Request(claude5!, null);
       expect([claude5!.max_tokens, older!.max_tokens]).toEqual([4096, 1024]);
       expect([older!.model, older!.temperature]).toEqual(['claude-sonnet-4-6', 0]);
+    } finally {
+      await adapter.teardown?.(state);
+    }
+  });
+
+  // Value: protects=the Cat 8/9 agent loop prices each model at its ledger rate instead of Sonnet 4.6's; fails_when=the fixed Sonnet 4.6 price comes back; why_new=the agent-loop test checks requests only; seam=none; no_claim=stub client, one end_turn reply per run
+  test('the Cat 8/9 agent loop prices each model at its own rate', async () => {
+    const adapter = new ClaudeSonnetWithToolsAdapter();
+    const state = (await adapter.init([{ slug: 'people/alice', type: 'person', title: 'Alice', compiled_truth: 'Alice has a cat.', timeline: '' }], { name: 'b1' })) as AgentAdapterState;
+    try {
+      const opus = await runAgentLoop('b1', 'Who is Alice?', state, { client: recording().client, model: 'claude-opus-5-5', maxRetries: 1 });
+      const sonnet = await runAgentLoop('b1', 'Who is Alice?', state, { client: recording().client, maxRetries: 1 });
+      expect(opus.total_cost_usd).toBeCloseTo((10 * 4 + 5 * 20) / 1e6, 12);
+      expect(sonnet.total_cost_usd).toBeCloseTo((10 * 3 + 5 * 15) / 1e6, 12);
     } finally {
       await adapter.teardown?.(state);
     }

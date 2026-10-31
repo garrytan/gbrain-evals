@@ -76,7 +76,7 @@ import {
   type Cat35JudgeAttempt,
   type CoverageVerdict,
 } from './cat35-judges.ts';
-import { JUDGE_TEMPERATURE } from './judge.ts';
+import { JUDGE_TEMPERATURE, judgePrice } from './judge.ts';
 import {
   BENCHMARK_VERSION,
   RECEIPT_SCHEMA_VERSION,
@@ -541,6 +541,11 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
 
   const judgeModel =
     opts.judgeModel ?? process.env.CAT35_JUDGE_MODEL ?? 'claude-haiku-4-5-20251001';
+  try {
+    judgePrice(judgeModel);
+  } catch (e) {
+    return setupError(e instanceof Error ? e.message : String(e));
+  }
   const dreamModel = opts.model ?? (opts.full ? SONNET : HAIKU);
   const factsModel = opts.model ?? (opts.full ? SONNET : HAIKU);
   const triageModel = opts.model ?? HAIKU;

@@ -86,6 +86,7 @@
  *
  * Run:
  *   bun eval/runner/cat14-calibration.ts                  # live (ANTHROPIC_API_KEY)
+ *   bun eval/runner/cat14-calibration.ts --budget-run-id <id>   # live, joined to that budget-ledger run (all.ts passes the id)
  *   CAT14_DRY_RUN=1 bun eval/runner/cat14-calibration.ts  # hermetic conformance run
  *   CAT14_PROBES=cat14-pos-1-geography bun eval/runner/cat14-calibration.ts
  *   bun eval/runner/cat14-calibration.ts --allow-skip     # missing key → skip receipt, exit 0
@@ -1156,7 +1157,7 @@ async function main(): Promise<void> {
   const budget = budgetOptionsFrom(process.argv.slice(2));
   const prereg = argFlag('--preregistration');
   const attestation = !hermetic && prereg ? attestPreregistration(prereg) : null;
-  const paid = !hermetic && budget.budgetUsd !== null ? startPaidRun(CATEGORY, { ...budget, estimateUsd: Number(argFlag('--estimate-usd') ?? 1) }) : null;
+  const paid = !hermetic && (budget.budgetUsd !== null || budget.runId !== null) ? startPaidRun(CATEGORY, { ...budget, estimateUsd: Number(argFlag('--estimate-usd') ?? 1) }) : null;
   const anthropic = hermetic ? null : new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
   const liveComplete = anthropic ? makeLiveComplete(anthropic) : null;
   const liveJudge = anthropic ? makeLiveJudge(anthropic) : null;

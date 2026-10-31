@@ -69,6 +69,8 @@ export type RunSpec =
     timeoutMs?: number;
     /** Latency benchmark: runs alone, never alongside another category. */
     exclusive?: boolean;
+    /** The runner refuses a live run without `--paid --budget-run-id <id>`; all.ts passes both from its paid run. */
+    paidFlags?: true;
   }
   | { kind: 'listed'; reason: string; command?: string };
 
@@ -447,7 +449,7 @@ export const REGISTRY: readonly CategoryEntry[] = [
   },
   {
     id: 'propose-takes', legacy_alias: '15', name: 'propose_takes extraction (live model)',
-    family: 'extraction', tier: 'P', script: 'eval/runner/cat15-propose-takes.ts', run: { kind: 'dispatched', timeoutMs: HOUR },
+    family: 'extraction', tier: 'P', script: 'eval/runner/cat15-propose-takes.ts', run: { kind: 'dispatched', timeoutMs: HOUR, paidFlags: true },
     cost_estimate: UNMEASURED, receipt_path: receipt('cat15-propose-takes'),
     headline: { metric: 'precision, recall and F1 of extracted takes', denominator: '48 labeled claims' },
     gate: 'report-only', promotion: REPORT_ONLY, evidence_maturity: 'regression-only',
@@ -519,7 +521,7 @@ export const REGISTRY: readonly CategoryEntry[] = [
   },
   {
     id: 'trajectory-routing', legacy_alias: '25', name: 'Trajectory routing in think (live model)',
-    family: 'reasoning', tier: 'P', script: 'eval/runner/cat25-trajectory-routing.ts', run: { kind: 'dispatched', timeoutMs: HOUR },
+    family: 'reasoning', tier: 'P', script: 'eval/runner/cat25-trajectory-routing.ts', run: { kind: 'dispatched', timeoutMs: HOUR, paidFlags: true },
     cost_estimate: UNMEASURED, receipt_path: receipt('cat25-trajectory-routing'),
     headline: { metric: 'think answers with vs without trajectory routing', denominator: 'synthetic-v1 temporal probes' },
     gate: 'report-only', promotion: REPORT_ONLY, evidence_maturity: 'regression-only',

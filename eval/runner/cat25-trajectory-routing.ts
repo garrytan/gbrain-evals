@@ -72,8 +72,9 @@
  * claude-sonnet-4-6, temperature 0) + 12 Haiku judge calls ≈ $0.30-0.60.
  * Hermetic mode costs $0 and needs no keys.
  *
- * Run:
- *   bun eval/runner/cat25-trajectory-routing.ts                  # live (ANTHROPIC_API_KEY)
+ * Run (a live run spends money, so it needs `--paid --budget-run-id <id>` naming an open budget-ledger run;
+ * all.ts passes both):
+ *   bun eval/runner/cat25-trajectory-routing.ts --paid --budget-run-id <id>   # live (ANTHROPIC_API_KEY)
  *   CAT25_DRY_RUN=1 bun eval/runner/cat25-trajectory-routing.ts  # hermetic conformance run
  *   bun eval/runner/cat25-trajectory-routing.ts --allow-skip     # missing key → skip receipt, exit 0
  */
@@ -89,6 +90,8 @@ import { importFromContentEmbedded } from './import-embedded.ts';
 import { configureGateway, __setEmbedTransportForTests } from 'gbrain/ai/gateway';
 import { runThink, type ThinkLLMClient, type ThinkResult } from 'gbrain/think';
 import { fitAnthropicRequest, temperatureSent, toolChoiceSent } from './anthropic-request.ts';
+import { budgetOptionsFrom, receiptCost, startPaidRun } from './budget-ledger.ts';
+import { PaidArmRefusal, requirePaidArm } from './paid-arm.ts';
 import { JUDGE_PROMPT_VERSION, JUDGE_TEMPERATURE, scoreAnswer, type JudgeEvidence, type RubricCriterion } from './judge.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
 import {
@@ -856,6 +859,31 @@ async function main(): Promise<void> {
     process.exit(allowSkip ? 0 : 3);
   }
 
+  // A live run spends money: it joins an open budget-ledger run, and the guard goes in before the SDK client exists.
+  const argv = process.argv.slice(2);
+  let paid: ReturnType<typeof startPaidRun> | null = null;
+  if (!hermetic) {
+    try {
+      const { budgetRunId } = requirePaidArm(argv, { arm: 'Cat 25 live run', estimateUsd: null });
+      paid = startPaidRun(CATEGORY, { ...budgetOptionsFrom(argv), runId: budgetRunId, estimateUsd: null });
+    } catch (e) {
+      if (!(e instanceof PaidArmRefusal)) throw e;
+      console.error(`[cat25] REFUSED: ${e.message}`);
+      writeReceipt(receiptPath(CATEGORY, REPORTS_ROOT), {
+        ...baseReceipt(startedAt),
+        run_status: 'skipped',
+        skip_reason: e.message,
+        n_total: PROBES.length,
+        n_scored: 0,
+        completion_rate: 0,
+        errors: [],
+        publishable: false,
+        resolved_config: resolvedConfig(hermetic),
+      });
+      process.exit(2);
+    }
+  }
+
   ensureStubbedGateway();
   const anthropic = hermetic ? null : new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
   const deps: ProbeRunDeps = hermetic
@@ -881,6 +909,7 @@ async function main(): Promise<void> {
       console.error(`\n[cat25] PREFLIGHT ABORT: ${outcome.message}`);
       acc.error(probe.id, 'harness', outcome.message);
       const s = acc.summary();
+      paid?.guard.uninstall();
       writeReceipt(receiptPath(CATEGORY, REPORTS_ROOT), {
         ...baseReceipt(startedAt),
         run_status: 'error',
@@ -890,6 +919,7 @@ async function main(): Promise<void> {
         errors: s.errors,
         publishable: false,
         resolved_config: resolvedConfig(hermetic),
+        cost: paid ? receiptCost(paid.run.close()) : null,
       });
       process.exit(2);
     }
@@ -908,6 +938,8 @@ async function main(): Promise<void> {
     }
   }
 
+  paid?.guard.uninstall();
+  const cost = paid ? receiptCost(paid.run.close()) : null;
   const summary = aggregate(results, hermetic ? 'hermetic' : 'live', PROBES.length);
   const accSummary = acc.summary();
 
@@ -928,6 +960,7 @@ async function main(): Promise<void> {
       publishable: false,
       resolved_config: resolvedConfig(hermetic),
       judge: { model: hermetic ? 'deterministic-marker-judge' : JUDGE_MODEL, temperature: 0 },
+      cost,
       data: { summary: summary as unknown as Record<string, unknown> },
     });
     console.error(`[cat25] RUN INVALID: infra error rate ${(accSummary.infra_error_rate * 100).toFixed(0)}% over cap`);
@@ -948,6 +981,7 @@ async function main(): Promise<void> {
     publishable: accSummary.publishable && !hermetic,
     resolved_config: resolvedConfig(hermetic),
     judge: { model: hermetic ? 'deterministic-marker-judge' : JUDGE_MODEL, temperature: 0 },
+    cost,
     data: {
       summary: summary as unknown as Record<string, unknown>,
       per_probe: results as unknown as Record<string, unknown>[],
