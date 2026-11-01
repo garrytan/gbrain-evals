@@ -34,14 +34,31 @@ gbrain's seam for a frozen candidate list.
 `decide.*`, `DECIDE_CONFIG_KEYS`) and a value that does not read back. `cacheStatus()` reports the semantic cache's
 runtime state (`disabled` in every build in scope).
 
+`GbrainQuerySystem` also writes `HELD_GBRAIN_DEFAULTS` from [gbrain-under-test.ts](../../gbrain-under-test.ts):
+`search.query_facts_block=false`, `search.saved_facts_supersede=false` and `search.remote_page_cap=0`, gbrain's behavior
+before v0.60.491.0, so its arms measure what they measured before the re-pin to v0.60.531.0. A memory-qa `--pin` or
+`--config` value for one of these keys overrides it. The capability record lists the values written as
+`held_defaults` and names the change in `deviations_from_vendor_code`.
+
+## Quote-fenced chat text
+
+Since gbrain v0.60.507.0, `query` and `assembleEvidenceForHits` return a chat page's text inside a quote fence
+(`quoted: "transcript"`), and no setting turns that off. `storedText` unwraps each such row with the build's own
+`unquoteTranscriptText`, so a frozen list re-resolves against the stored chunks and readers get the text they got
+before. Delivered match spans move back onto the unwrapped text. A build that fences but exports no
+`unquoteTranscriptText` (v0.60.507.0 to v0.60.520.0) is refused. Two parts cannot be undone. A token budget still
+counts the fence, so a budgeted delivery can carry slightly less text, and a tool-call block gbrain summarized stays
+summarized, so the re-resolution check refuses that row.
+
 ## What every delivery records
 
 `deliveryRecord` returns, by value: the request as sent, requested and applied unit, the budget and whether the caller
 passed it, `budget_used`, `tokens_delivered`, `overrun_tokens` and `over_budget`, block count, units and `auto`
 reasons per block, spilled blocks and pages (`reason: conversation_over_budget`), passthrough blocks, drops,
 fallbacks, unresolved hits, distinct sessions in and out, the evidence fingerprint and the evidence bytes (characters,
-UTF-8 bytes, SHA-256), and a per-block list (slug, unit, reason, tokens, truncation, fallback, chunk ids,
-`effective_date`). memory-qa adds the final reader prompt's bytes (`qa_context.reader_bytes`) and hash to every row.
+UTF-8 bytes, SHA-256), `quoted_blocks` (the blocks gbrain returned quote-fenced and the connector handed on
+unwrapped), and a per-block list (slug, unit, reason, tokens, truncation, fallback, chunk ids, `effective_date`).
+memory-qa adds the final reader prompt's bytes (`qa_context.reader_bytes`) and hash to every row.
 
 `parity(live, assembled, { dates })` compares every field a reader consumes block by block (slug, title, text, unit,
 chunk ids, spans, tokens, truncation, fallback, reason) and the totals. The evidence fingerprint alone omits dates and
@@ -50,7 +67,7 @@ titles, so it is reported separately.
 ## Two behaviors pinned by keyless fixtures
 
 `test/eval/gbrain-query-system.test.ts` checks both on real PGLite brains with hash vectors. At the pinned gbrain
-(v0.60.126.0, which includes gbrain #6367):
+(`3ec766c40`, v0.60.531.0; gbrain #6367 fixed both in v0.60.126.0):
 
 1. **`auto` stays inside an explicit 8,000-token budget.** With 25 hits over long conversations, conversations that no
    longer fit are dropped at the budget floor instead of spilling outside it (`over_budget: false`,
@@ -78,6 +95,13 @@ const live = await c.live('live-parity', question, 25, 8000);
 ```
 
 ## Changelog
+
+### 2026-10-31: held read defaults, quote-fenced chat text and the v0.60.531.0 pin
+
+The Pins section names the three gbrain defaults `GbrainQuerySystem` holds at their old values. A new section
+describes how the connector unwraps quote-fenced chat text, and the delivery record list gains `quoted_blocks`. The
+fixtures section names the current pin, `3ec766c40` (v0.60.531.0), where both fixtures pass; it named v0.60.126.0
+since 2026-10-09.
 
 ### 2026-10-09: fixtures assert the behavior gbrain #6367 fixed
 
