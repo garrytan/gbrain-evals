@@ -11,13 +11,14 @@
  * member by member are frozen, by hash, in
  * fixtures/reviewed-compressed-receipts.json; any other compressed receipt is
  * read here, and only the path prefixes that file declares, each with its
- * reason, are exempt inside it.
+ * reason, are exempt inside it. A compressed receipt in a format this test
+ * cannot open, or with an archive or database inside it, fails unread.
  */
 
 import { describe, expect, test } from 'bun:test';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { gunzipSync, gzipSync } from 'node:zlib';
@@ -69,23 +70,33 @@ describe('scrubMachinePaths', () => {
   });
 });
 
-/** Each member of a tarball, or a gzip file's content, as [member name, text], with the declared exempt path prefixes removed. */
-function members(path: string): Array<[string, string]> {
-  const exempt = (text: string) => Object.keys(reviewed.exempt_machine_paths).reduce((t, prefix) => t.split(prefix).join(''), text);
-  if (!/\.(tgz|tar\.gz|tar)$/.test(path)) return [['', exempt(gunzipSync(readFileSync(path)).toString('utf8'))]];
+/** Each member of a tarball, or a gzip file's content, as [member name, bytes]. */
+function members(path: string): Array<[string, Buffer]> {
+  if (!/\.(tgz|tar\.gz|tar)$/.test(path)) return [['', gunzipSync(readFileSync(path))]];
   const dir = mkdtempSync(join(tmpdir(), 'receipt-members-'));
   try {
     execFileSync('tar', ['-xf', path, '-C', dir]);
-    return (readdirSync(dir, { recursive: true }) as string[]).filter(f => statSync(join(dir, f)).isFile()).sort()
-      .map(f => [f, exempt(readFileSync(join(dir, f), 'utf8'))]);
+    return (readdirSync(dir, { recursive: true }) as string[]).filter(f => lstatSync(join(dir, f)).isFile()).sort()
+      .map(f => [f, readFileSync(join(dir, f))]);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 }
 
-/** Receipts under `root` outside `frozen` whose text matches `pattern`; a tarball or gzip receipt is read member by member. */
+/** Leading bytes of the archive, compression and database formats a member can hold that neither receipt guard reads: gzip, zip, xz, zstd, bzip2, 7z, SQLite. A tar stream is "ustar" at byte 257. scripts/scan-receipts.sh refuses the same list. */
+const OPAQUE = ['1f8b', '504b0304', 'fd377a585a00', '28b52ffd', '425a68', '377abcaf271c', '53514c69746520666f726d6174203300'];
+const opaque = (bytes: Buffer) => OPAQUE.some(magic => bytes.subarray(0, magic.length / 2).toString('hex') === magic) || bytes.subarray(257, 262).toString('latin1') === 'ustar';
+const exempt = (text: string) => Object.keys(reviewed.exempt_machine_paths).reduce((t, prefix) => t.split(prefix).join(''), text);
+
+/** Receipts under `root` outside `frozen` whose text matches `pattern`; a tarball or gzip receipt is read member by member, and one this cannot read is an offender. */
 function offenders(root: string, files: string[], frozen: Record<string, string>, pattern: RegExp): string[] {
-  return files.filter(f => !(f in frozen)).flatMap(f => /\.(tgz|tar|gz)$/.test(f)
-    ? members(join(root, f)).filter(([, text]) => pattern.test(text)).map(([name]) => name ? `${f}: ${name}` : f)
-    : /\.(json|ndjson|jsonl|log)$/.test(f) && pattern.test(readFileSync(join(root, f), 'utf8')) ? [f] : []);
+  return files.filter(f => !(f in frozen)).flatMap(f => {
+    if (/\.(zip|xz|zst|bz2|7z)$/.test(f)) return [`${f} (unreadable compression)`];
+    if (!/\.(tgz|tar|gz)$/.test(f)) return /\.(json|ndjson|jsonl|log)$/.test(f) && pattern.test(readFileSync(join(root, f), 'utf8')) ? [f] : [];
+    return members(join(root, f)).flatMap(([name, bytes]) => {
+      const label = name ? `${f}: ${name}` : f;
+      if (opaque(bytes)) return [`${label} (nested archive)`];
+      return pattern.test(exempt(bytes.toString('utf8'))) ? [label] : [];
+    });
+  });
 }
 
 const sha256 = (path: string) => createHash('sha256').update(readFileSync(path)).digest('hex');
@@ -101,6 +112,17 @@ describe('compressed receipts', () => {
       writeFileSync(join(root, 'rows.ndjson.gz'), gzipSync(JSON.stringify({ cache: '/tmp/r1-embed-cache.sqlite' })));
       expect(offenders(root, ['receipt.tgz', 'rows.ndjson.gz'], {}, MACHINE_LOCAL_PATH)).toEqual(['receipt.tgz: stages/ingest/a.json', 'rows.ndjson.gz']);
       expect(offenders(root, ['receipt.tgz'], { 'receipt.tgz': sha256(join(root, 'receipt.tgz')) }, MACHINE_LOCAL_PATH)).toEqual([]);
+    } finally { rmSync(root, { recursive: true, force: true }); }
+  });
+
+  test('a nested archive or a compression neither guard opens is an offender, whatever it holds', () => {
+    const root = mkdtempSync(join(tmpdir(), 'receipt-members-'));
+    try {
+      mkdirSync(join(root, 'cell'), { recursive: true });
+      writeFileSync(join(root, 'cell/rows.json.gz'), gzipSync(JSON.stringify({ store: '/home/alice/cells/_stores/x' })));
+      execFileSync('tar', ['-czf', join(root, 'receipt.tgz'), '-C', join(root, 'cell'), 'rows.json.gz']);
+      writeFileSync(join(root, 'rows.json.xz'), 'not opened');
+      expect(offenders(root, ['receipt.tgz', 'rows.json.xz'], {}, MACHINE_LOCAL_PATH)).toEqual(['receipt.tgz: rows.json.gz (nested archive)', 'rows.json.xz (unreadable compression)']);
     } finally { rmSync(root, { recursive: true, force: true }); }
   });
 

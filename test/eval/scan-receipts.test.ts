@@ -77,6 +77,25 @@ describe('scan-receipts.sh', () => {
     expect(gz.out).toContain('LEAKS FOUND');
   });
 
+  test('a nested archive or an unsupported compression fails the scan instead of passing unread', () => {
+    const nested = run(['docs/benchmarks/a/receipts'], KEY_STUB, root => {
+      mkdirSync(join(root, 'stage'), { recursive: true });
+      writeFileSync(join(root, 'stage/rows.json.gz'), gzipSync(JSON.stringify({ key: FAKE_KEY })));
+      mkdirSync(join(root, 'docs/benchmarks/w/cells/c'), { recursive: true });
+      execFileSync('tar', ['-czf', join(root, 'docs/benchmarks/w/cells/c/receipt.tgz'), '-C', join(root, 'stage'), 'rows.json.gz']);
+      rmSync(join(root, 'stage'), { recursive: true });
+    });
+    expect(nested.code).toBe(1);
+    expect(nested.out).toContain('cannot scan nested archive or database: docs/benchmarks/w/cells/c/receipt.tgz/rows.json.gz');
+    expect(nested.out).toContain('LEAKS FOUND');
+    const xz = run(['docs/benchmarks/a/receipts'], 'exit 0', root => {
+      mkdirSync(join(root, 'docs/benchmarks/w/raw'), { recursive: true });
+      writeFileSync(join(root, 'docs/benchmarks/w/raw/rows.json.xz'), 'not opened');
+    });
+    expect(xz.code).toBe(1);
+    expect(xz.out).toContain('cannot unpack docs/benchmarks/w/raw/rows.json.xz');
+  });
+
   test('a compressed receipt reviewed with the pinned gitleaks is skipped until its bytes or the pin change', () => {
     const pinned = readFileSync(SCRIPT, 'utf8').match(/^VERSION=(.+)$/m)![1]!;
     const sha = (path: string) => createHash('sha256').update(readFileSync(path)).digest('hex');
