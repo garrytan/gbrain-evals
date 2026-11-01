@@ -29,8 +29,17 @@
  * reducer inputs (isProtectedResult and the deterministic CRAG grade), on
  * which unanswerable questions S4 could never abstain even when on.
  *
+ * Every reader row records the gateway's stop reason. An answer cut off at its
+ * output limit (stop reason `length`) is scored as the model's answer, flagged
+ * `truncated` and counted per arm, except that an abstention phrase in it
+ * scores `unscorable`: the preregistration scores an abstention from the final
+ * answer, and a cut-off answer never reached one (second 2026-11-01 amendment,
+ * docs/benchmarks/2026-10-01-n2-a4-preregistration.md). `--smoke <n>` asks the
+ * reader only the first n questions of each class: the preregistered smoke that
+ * counts cut-off answers before a counted cell, never a publishable result.
+ *
  * Usage: bun eval/runner/a4-abstention.ts [--seed N] [--output <dir>] [--gbrain <checkout>[@ref]]
- *          [--paid --budget-run-id <id>] [--json]
+ *          [--paid --budget-run-id <id> [--smoke <n>]] [--json]
  */
 import { join } from 'node:path';
 import { budgetOptionsFrom, ledgerStatus, receiptCost, startPaidRun, type RunSummary } from './budget-ledger.ts';
@@ -322,7 +331,27 @@ export async function retrieveAll(gut: GbrainUnderTest, ledger: A4Ledger, log: (
 
 // ─── Paid answerer ───────────────────────────────────────────────────────
 
-export interface AnswerRow { id: string; cls: A4Class; arm: 'retrieved' | 'oracle'; outcome: Outcome; outcome_v2?: Outcome; final: string; hedged: boolean; text?: string; error?: string; usage?: { input: number; output: number } }
+export interface AnswerRow { id: string; cls: A4Class; arm: 'retrieved' | 'oracle'; outcome: Outcome; outcome_v2?: Outcome; final: string; hedged: boolean; text?: string; error?: string; usage?: { input: number; output: number }; stop_reason?: string; truncated?: boolean }
+
+/**
+ * Score one reader answer with its gateway stop reason. An answer cut off at its
+ * output limit is the model's answer (flagged `truncated`), but its abstention
+ * phrase is not the deliberate abstention the preregistration scores from a
+ * final answer, so it counts as `unscorable` (attempted, not correct).
+ */
+export function scoreReaderAnswer(q: Pick<A4Question, 'attribute' | 'answer' | 'sibling_value'>, text: string, stopReason: string, values: Record<string, readonly string[]>): Pick<AnswerRow, 'outcome' | 'outcome_v2' | 'final' | 'hedged' | 'stop_reason' | 'truncated'> {
+  const truncated = stopReason === 'length';
+  const cut = (o: Outcome): Outcome => (truncated && o === 'abstain' ? 'unscorable' : o);
+  const s = scoreAnswer(q, text, values);
+  return { ...s, outcome: cut(s.outcome), outcome_v2: cut(scoreAnswerV2(q, text, values).outcome), stop_reason: stopReason, truncated };
+}
+
+/** The questions the paid reader answers: all of them, or the first `smoke` of each class. */
+export function paidQuestions(ledger: Pick<A4Ledger, 'questions'>, smoke: number | null): A4Question[] {
+  if (smoke === null) return [...ledger.questions];
+  const classes = [...new Set(ledger.questions.map(q => q.cls))];
+  return classes.flatMap(c => ledger.questions.filter(q => q.cls === c).slice(0, smoke));
+}
 
 async function pool<T, R>(items: readonly T[], n: number, fn: (t: T) => Promise<R>): Promise<R[]> {
   const out: R[] = new Array(items.length);
@@ -333,21 +362,22 @@ async function pool<T, R>(items: readonly T[], n: number, fn: (t: T) => Promise<
   return out;
 }
 
-async function runPaid(gut: GbrainUnderTest, ledger: A4Ledger, retrieved: readonly Retrieval[], anthropicKey: string, argv: readonly string[], log: (s: string) => void): Promise<{ answers: AnswerRow[]; cost: RunSummary | null; reader: Record<string, unknown> }> {
+async function runPaid(gut: GbrainUnderTest, ledger: A4Ledger, retrieved: readonly Retrieval[], anthropicKey: string, argv: readonly string[], smoke: number | null, log: (s: string) => void): Promise<{ answers: AnswerRow[]; cost: RunSummary | null; reader: Record<string, unknown> }> {
   const READER_MODEL = argValue(argv, '--reader-model') ?? DEFAULT_READER_MODEL;
   const temperature = acceptsTemperature(READER_MODEL) ? { temperature: 0 } : {};
-  const { run, guard } = startPaidRun(CATEGORY, { ...budgetOptionsFrom(argv), estimateUsd: PAID_ESTIMATE_USD, log });
+  const questions = paidQuestions(ledger, smoke);
+  const { run, guard } = startPaidRun(CATEGORY, { ...budgetOptionsFrom(argv), estimateUsd: PAID_ESTIMATE_USD * questions.length / ledger.questions.length, log });
   let out: { answers: AnswerRow[]; cost: RunSummary | null; reader: Record<string, unknown> } | undefined;
   try {
     out = await withHermeticEnv('a4-paid', async () => {
       process.env.ANTHROPIC_API_KEY = anthropicKey;
-      const gw = await importGbrain<{ configureGateway: (c: Record<string, unknown>) => void; chat: (o: Record<string, unknown>) => Promise<{ text: string; usage: { input_tokens?: number; output_tokens?: number } }> }>(gut, 'src/core/ai/gateway.ts');
+      const gw = await importGbrain<{ configureGateway: (c: Record<string, unknown>) => void; chat: (o: Record<string, unknown>) => Promise<{ text: string; stopReason: string; usage: { input_tokens?: number; output_tokens?: number } }> }>(gut, 'src/core/ai/gateway.ts');
       const reader = await importGbrain<{ READER_NOTES_SYSTEM_TEXT: string; READER_NOTES_PROMPT_VERSION: string; READER_MAX_SESSION_CHARS: number; buildReaderUserText: (i: { question: string; rendered: string }) => string }>(gut, 'src/eval/longmemeval/reader.ts');
       const { renderChatBlock } = await importGbrain<{ renderChatBlock: (s: Array<{ session_id: string; body: string }>, o: { maxSessionChars?: number }) => { rendered: string } }>(gut, 'src/eval/longmemeval/sanitize.ts');
       gw.configureGateway({ chat_model: READER_MODEL, env: { ANTHROPIC_API_KEY: anthropicKey } });
       const pageBody = new Map(ledger.pages.map(p => [p.slug, p.body]));
       const byId = new Map(retrieved.map(r => [r.id, r]));
-      const jobs = ledger.questions.flatMap(q => (['retrieved', 'oracle'] as const).map(arm => ({ q, arm })));
+      const jobs = questions.flatMap(q => (['retrieved', 'oracle'] as const).map(arm => ({ q, arm })));
       log(`paid reader (${READER_MODEL}) over ${jobs.length} requests`);
       const answers = await pool(jobs, CONCURRENCY, async ({ q, arm }): Promise<AnswerRow> => {
         const sessions = arm === 'retrieved'
@@ -360,14 +390,12 @@ async function runPaid(gut: GbrainUnderTest, ledger: A4Ledger, retrieved: readon
           if (guard.exhausted) break;
           try {
             const res = await gw.chat({ model: READER_MODEL, system: reader.READER_NOTES_SYSTEM_TEXT, messages: [{ role: 'user', content }], maxTokens: READER_MAX_TOKENS, ...temperature });
-            const s = scoreAnswer(q, res.text, ledger.values);
-            const v2 = scoreAnswerV2(q, res.text, ledger.values);
-            return { id: q.id, cls: q.cls, arm, ...s, outcome_v2: v2.outcome, text: res.text, usage: { input: res.usage.input_tokens ?? 0, output: res.usage.output_tokens ?? 0 } };
+            return { id: q.id, cls: q.cls, arm, ...scoreReaderAnswer(q, res.text, res.stopReason, ledger.values), text: res.text, usage: { input: res.usage.input_tokens ?? 0, output: res.usage.output_tokens ?? 0 } };
           } catch (e) { lastError = e instanceof Error ? e.message : String(e); }
         }
         return { id: q.id, cls: q.cls, arm, outcome: 'error', final: '', hedged: false, error: lastError || 'budget exhausted' };
       });
-      return { answers, cost: null, reader: { model: READER_MODEL, system_prompt_version: reader.READER_NOTES_PROMPT_VERSION, max_tokens: READER_MAX_TOKENS, temperature: acceptsTemperature(READER_MODEL) ? 0 : 'provider default (the model rejects temperature)', rendering: 'renderChatBlock, one block per result, session id = page slug, no date', concurrency: CONCURRENCY, retries: 1 } };
+      return { answers, cost: null, reader: { model: READER_MODEL, system_prompt_version: reader.READER_NOTES_PROMPT_VERSION, max_tokens: READER_MAX_TOKENS, temperature: acceptsTemperature(READER_MODEL) ? 0 : 'provider default (the model rejects temperature)', rendering: 'renderChatBlock, one block per result, session id = page slug, no date', concurrency: CONCURRENCY, retries: 1, smoke: smoke === null ? null : { questions_per_class: smoke, questions: questions.length }, truncation: 'stop reason length: scored as the answer and flagged truncated; an abstention phrase in it scores unscorable (second 2026-11-01 amendment to the N2/A4 preregistration)' } };
     });
   } finally {
     guard.uninstall();
@@ -503,6 +531,8 @@ export function paidSummary(answers: readonly AnswerRow[], retrieved: readonly R
     false_refusal_cost: { refused_answerable_retrieved: refused.length, of_which_oracle_answered_correctly: refused.filter(a => oracleCorrect.has(a.id)).length, answerable: arm('retrieved').filter(a => isAnswerable(a.cls)).length },
     paired_answerable_correct: { both: pairs.filter(x => x.a.outcome === 'correct' && x.o.outcome === 'correct').length, retrieved_only: pairs.filter(x => x.a.outcome === 'correct' && x.o.outcome !== 'correct').length, oracle_only: pairs.filter(x => x.a.outcome !== 'correct' && x.o.outcome === 'correct').length, neither: pairs.filter(x => x.a.outcome !== 'correct' && x.o.outcome !== 'correct').length },
     hedged_answers: answers.filter(a => a.hedged).length,
+    truncated: { retrieved: arm('retrieved').filter(a => a.truncated).length, oracle: arm('oracle').filter(a => a.truncated).length },
+    stop_reasons: Object.fromEntries((['retrieved', 'oracle'] as const).map(k => [k, arm(k).reduce((m, a) => (a.stop_reason ? { ...m, [a.stop_reason]: (m[a.stop_reason] ?? 0) + 1 } : m), {} as Record<string, number>)])),
     sensitivity_hedged_as_abstain: {
       note: 'not preregistered: answers that say the information is unavailable but also name another value, read as abstentions instead of answers',
       retrieved: armMetrics(arm('retrieved').map(a => ({ cls: a.cls, outcome: a.hedged && a.outcome !== 'correct' ? 'abstain' as Outcome : a.outcome }))),
@@ -528,9 +558,15 @@ async function main(): Promise<void> {
   const seed = seedArg === undefined ? A4_DEFAULT_SEED : Number(seedArg);
   if (!Number.isInteger(seed)) throw new Error('--seed needs an integer');
   const paid = paidRequested(argv);
+  const smokeArg = argValue(argv, '--smoke');
+  const smoke = smokeArg === undefined ? null : Number(smokeArg);
+  if (smoke !== null && !(Number.isInteger(smoke) && smoke > 0)) throw new Error('--smoke needs a positive number of questions per class');
   const ledgerPath = budgetOptionsFrom(argv).ledgerPath;
-  const budget = paid ? requirePaidArm(argv, { arm: 'A4 answer arm', estimateUsd: PAID_ESTIMATE_USD, ledgerPath }) : null;
+  const world = generateA4World({ seed });
+  const { ledger } = world;
+  const budget = paid ? requirePaidArm(argv, { arm: 'A4 answer arm', estimateUsd: PAID_ESTIMATE_USD * paidQuestions(ledger, smoke).length / ledger.questions.length, ledgerPath }) : null;
   const s4On = argv.includes('--s4-on');
+  if (s4On && smoke !== null) throw new Error('--s4-on runs over every question; it does not take --smoke');
   const s4Threshold = Number(argValue(argv, '--s4-threshold') ?? S4_DEFAULT_THRESHOLD);
   const typesafeKey = process.env.TYPESAFE_API_KEY ?? process.env.JEV_TYPESAFE_API_KEY ?? '';
   if (s4On && (!paid || !typesafeKey)) throw new Error('--s4-on needs the paid reader arm (--paid --budget-run-id) and a TypeSafe key (TYPESAFE_API_KEY or JEV_TYPESAFE_API_KEY)');
@@ -543,8 +579,6 @@ async function main(): Promise<void> {
   const startedAt = new Date().toISOString();
   const gut = resolveGbrainUnderTest(gbrainSpecFrom(argv));
   log(`# BrainBench A4: abstention (gbrain ${gut.version}${gut.overlay ? `, overlay ${gut.overlay.build.commit.slice(0, 7)}` : ', pinned'})`);
-  const world = generateA4World({ seed });
-  const { ledger } = world;
   let harnessError: string | null = null;
   const t0 = Date.now();
   const h = await withHermeticEnv('a4', () => retrieveAll(gut, ledger, log)).catch(e => { harnessError = `harness: ${e instanceof Error ? e.message : String(e)}`; return null; });
@@ -556,7 +590,7 @@ async function main(): Promise<void> {
   let paidError: string | null = null;
   let s4Out: Awaited<ReturnType<typeof runS4>> | null = null;
   if (paid && h && !harnessError) {
-    try { paidOut = await runPaid(gut, ledger, h.rows, anthropicKey, argv, log); }
+    try { paidOut = await runPaid(gut, ledger, h.rows, anthropicKey, argv, smoke, log); }
     catch (e) { paidError = e instanceof Error ? e.message : String(e); }
     if (s4On && paidOut) {
       try { s4Out = await runS4(gut, ledger, h.rows, typesafeKey, s4Threshold, argv, log); }
@@ -582,7 +616,7 @@ async function main(): Promise<void> {
     n_scored: harnessError ? 0 : ledger.questions.length,
     completion_rate: harnessError ? 0 : 1,
     errors,
-    publishable: !harnessError,
+    publishable: !harnessError && smoke === null,
     gbrain_version: gut.version,
     gbrain_pin: gbrainPin(),
     execution: { source_tree: sourceTreeIdentity(), product: productIdentityFor(gut) },
@@ -629,7 +663,7 @@ async function main(): Promise<void> {
           cost: s4Out.cost ? receiptCost(s4Out.cost) : null,
         };
       })() : null,
-      paid: ps ? { ...ps, answers: paidOut!.answers.map(a => ({ id: a.id, cls: a.cls, arm: a.arm, outcome: a.outcome, outcome_v2: a.outcome_v2 ?? null, hedged: a.hedged, final: a.final.slice(0, 400), error: a.error ?? null })) } : null,
+      paid: ps ? { ...ps, answers: paidOut!.answers.map(a => ({ id: a.id, cls: a.cls, arm: a.arm, outcome: a.outcome, outcome_v2: a.outcome_v2 ?? null, hedged: a.hedged, final: a.final.slice(0, 400), stop_reason: a.stop_reason ?? null, truncated: a.truncated ?? null, error: a.error ?? null })) } : null,
       harness_error: harnessError,
     },
   };
@@ -651,6 +685,7 @@ async function main(): Promise<void> {
       const m = ps[k];
       log(`reader, ${k} evidence: correct useful ${pct(m.correct_useful_rate)}, false refusal ${pct(m.false_refusal_rate)}, unanswerable answered ${pct(m.unanswerable_answer_rate)}, abstain recall ${pct(m.abstain_recall)}, precision ${pct(m.abstain_precision)}, coverage ${pct(m.coverage)}, risk ${pct(m.risk)}, utility(l=1) ${m.utility_l1}, errors ${m.errors}; ${m.decision.pass ? 'abstains usefully' : `does not abstain usefully (${m.decision.failed.join('; ')})`}`);
     }
+    log(`reader stop reasons: ${JSON.stringify(ps.stop_reasons)}; cut off at ${READER_MAX_TOKENS} output tokens: ${ps.truncated.retrieved} retrieved, ${ps.truncated.oracle} oracle${smoke === null ? '' : ` (smoke: ${smoke} question${smoke === 1 ? '' : 's'} per class)`}`);
     log(`CRAG-gated reader: strong-only utility(l=1) ${ps.crag_gated.strong.utility_l1}, moderate+ ${ps.crag_gated.moderate_or_strong.utility_l1}`);
     log(`false-refusal cost: ${ps.false_refusal_cost.refused_answerable_retrieved} answerable refused on retrieved evidence, ${ps.false_refusal_cost.of_which_oracle_answered_correctly} of them answered correctly on oracle evidence`);
   }
