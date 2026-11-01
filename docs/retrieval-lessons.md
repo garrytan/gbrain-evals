@@ -12,7 +12,7 @@ questions (opaque session ids, gbrain `109b992`). The interesting engineering
 question is how it gets there, and which parts help on other kinds of material.
 
 This page states what the experiments show about gbrain as this repository pins
-it (master `77cf8e111`, v0.60.169.0); each number names the gbrain commit it was
+it (master `3ec766c40`, v0.60.531.0); each number names the gbrain commit it was
 measured at. Everything above [Changelog](#changelog) is current.
 [Conversation results](benchmarks/2026-10-04-longmemeval-opaque-followups.md).
 
@@ -254,6 +254,17 @@ application resemble the ones a measured configuration solves.
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
+
+### 2026-10-31: The opening names the current pin
+
+The opening names gbrain master `3ec766c40` (v0.60.531.0) as the pin. It still named `77cf8e111`
+(v0.60.169.0): three re-pins (`f717b1a5b`, `6e1086492`, `7a6bdd357`) had not updated it, because the documentation
+verifier checked only the `gbrain-cues` pin. `scripts/verify-documentation-refresh.py` now checks this sentence against
+`package.json` too. Every
+number here names the commit it was measured at, so no lesson changes. Since `77cf8e111` the default reranker became
+`rerank-3-lite`, `tokenmax` stopped expanding queries, every mode turned on collapse and rank priors, and four read
+defaults outside the modes arrived in v0.60.491.0 to v0.60.521.0 ([settings](settings.md)); no measurement on this page
+ran with them.
 
 ### 2026-10-11: The opening names the current pin
 

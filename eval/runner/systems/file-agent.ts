@@ -30,20 +30,28 @@
  *            sees source ids, gold ids or this measure.
  *
  * Provider calls use the loop's plumbing; `proxiedFetch` sends them to
- * ANTHROPIC_BASE_URL and OPENAI_BASE_URL when set, so a cell's metering proxy
- * sees every call. `scripted` replaces the model for keyless tests.
+ * ANTHROPIC_BASE_URL, OPENAI_BASE_URL and PARTICLE_BASE_URL when set, so a
+ * cell's metering proxy sees every call. `scripted` replaces the model for
+ * keyless tests.
+ *
+ *   receipts one usage receipt per provider attempt, retries and failures
+ *            included, in <workDir>/receipts.ndjson, keyed by the answer id
+ *            the cell passes, with the loop's turn. A budget
+ *            stop (an empty Particle balance, a refused ledger reservation)
+ *            ends the question as `budget_not_run`, and the cell stops.
  */
 import { spawn, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { CHAT_PRICE_OVERRIDES } from '../budget-ledger.ts';
 import { cleanPath, FileStore, FsArm, type GrepRequest, type UncappedGrep } from '../cat40/arms.ts';
-import { provider, runAgent, type AgentRun, type ScriptedModel, type ToolSpec } from '../cat40/loop.ts';
+import { attemptReceipt, priceUsage, provider, runAgent, type AgentRun, type ProviderAttempt, type ScriptedModel, type ToolSpec } from '../cat40/loop.ts';
 import { decideError } from '../decisions/errors.ts';
 import { FRONTIER_READERS } from './baselines.ts';
 import type { Outcome } from '../memory-qa/outcomes.ts';
+import { COMPAT_PROVIDERS } from '../providers/openai-compatible.ts';
 import { SystemError, type CapabilityRecord, type DeleteResult, type FinishResult, type IngestResult, type MemorySystem, type PublicQuestion, type RetrieveResult, type SessionInput } from './types.ts';
 
 export interface AnswerUsage { input: number; output: number; cache_read: number; cache_write: number }
@@ -70,7 +78,15 @@ export interface AnswerOptions {
   /** Reader as `provider:model`, for example `anthropic:claude-opus-5-5`. */
   reader: string;
   replicate: number;
+  /**
+   * The cell's opaque answer id (records.ts answerId: sha256 of cell, question, reader and replicate). It is each attempt
+   * receipt's `question_id`, so receipts join answers.ndjson while no raw question id crosses the system boundary.
+   */
+  answer_id?: string;
 }
+
+/** One provider attempt of the file agent: a usage receipt with the loop's turn, `question_id` the cell's answer id (else the namespace). */
+export type FileAgentReceipt = ReturnType<typeof attemptReceipt>;
 
 export interface AnsweringSystem extends MemorySystem {
   answer(ns: string, question: PublicQuestion, opts: AnswerOptions): Promise<AgentAnswer>;
@@ -192,32 +208,41 @@ export function ripgrep(root: string, limits: GrepLimits = DEFAULT_GREP_LIMITS, 
 // ─── Readers and provider routing ───────────────────────────────────
 
 /** `provider:model` split, refused unless the loop can reach and price it. */
-export function parseReader(reader: string): { provider: 'anthropic' | 'openai'; model: string } {
+export function parseReader(reader: string): { provider: 'anthropic' | 'openai' | 'particle'; model: string } {
   const i = reader.indexOf(':');
   const [prov, model] = i > 0 ? [reader.slice(0, i), reader.slice(i + 1)] : ['', reader];
   let routed: string | null = null;
   try { routed = provider(model); } catch { routed = null; }
-  if ((prov !== 'anthropic' && prov !== 'openai') || routed !== prov) {
-    throw decideError({ code: 'SPEC_INVALID', message: `reader ${JSON.stringify(reader)} is not an anthropic:<claude model> or openai:<gpt model> id`,
-      why: 'the file agent runs the Cat 40 loop, which speaks the Anthropic Messages API and the OpenAI Responses API only',
-      fix: { next: 'report', user_message: `pass one of ${FRONTIER_READERS.join(', ')}, or another priced anthropic:/openai: model id`, verify: ['grep', '-n', 'FRONTIER_READERS', 'eval/runner/systems/baselines.ts'] } });
+  if ((prov !== 'anthropic' && prov !== 'openai' && prov !== 'particle') || routed !== prov) {
+    throw decideError({ code: 'SPEC_INVALID', message: `reader ${JSON.stringify(reader)} is not an anthropic:<claude model>, openai:<gpt model> or particle:<particle model> id`,
+      why: 'the file agent runs the Cat 40 loop, which speaks the Anthropic Messages API, the OpenAI Responses API and Particle\'s Chat Completions only',
+      fix: { next: 'report', user_message: `pass one of ${FRONTIER_READERS.join(', ')}, particle:particle-1, or another priced anthropic:/openai: model id`, verify: ['grep', '-n', 'FRONTIER_READERS', 'eval/runner/systems/baselines.ts'] } });
   }
   if (!CHAT_PRICE_OVERRIDES[reader]) {
     throw decideError({ code: 'SPEC_INVALID', message: `reader ${reader} has no verified price, so its spend cannot be reserved`,
       why: 'every paid call reserves its worst case against the ledger before it is sent',
       fix: { next: 'run', argv: ['$EDITOR', 'eval/runner/budget-ledger.ts'], user_message: `look up ${reader}'s per-million-token rates on the provider's pricing page and add them to CHAT_PRICE_OVERRIDES`, verify: ['grep', '-n', reader, 'eval/runner/budget-ledger.ts'] } });
   }
-  return { provider: prov as 'anthropic' | 'openai', model };
+  return { provider: prov as 'anthropic' | 'openai' | 'particle', model };
 }
 
-/** Routes the loop's fixed provider URLs to ANTHROPIC_BASE_URL and OPENAI_BASE_URL (the metering proxy) when they are set. */
+/**
+ * Routes the loop's fixed provider URLs to ANTHROPIC_BASE_URL and OPENAI_BASE_URL (the metering proxy) when they are
+ * set, and Particle's documented base URLs to PARTICLE_BASE_URL. The Particle branch builds its URL from
+ * PARTICLE_BASE_URL itself; this keeps a request built against a default Particle URL on the proxy too.
+ */
 export function proxiedFetch(env: Record<string, string | undefined> = process.env, base?: typeof fetch): typeof fetch {
   const anthropic = env.ANTHROPIC_BASE_URL?.replace(/\/$/, '');
   const openai = env.OPENAI_BASE_URL?.replace(/\/$/, '');
+  const particleRow = COMPAT_PROVIDERS.particle;
+  const particle = env[particleRow.base_url_env]?.replace(/\/+$/, '');
+  const particleBases = [particleRow.base_url_default, ...particleRow.base_url_alternates];
   return ((input: string | URL | Request, init?: RequestInit) => {
     const url = String(input instanceof Request ? input.url : input);
+    const particleBase = particle ? particleBases.find(b => url.startsWith(`${b}/`)) : undefined;
     const routed = anthropic && url.startsWith('https://api.anthropic.com/') ? anthropic + url.slice('https://api.anthropic.com'.length)
-      : openai && url.startsWith('https://api.openai.com/v1/') ? openai + url.slice('https://api.openai.com/v1'.length) : url;
+      : openai && url.startsWith('https://api.openai.com/v1/') ? openai + url.slice('https://api.openai.com/v1'.length)
+      : particleBase ? particle + url.slice(particleBase.length) : url;
     return (base ?? globalThis.fetch)(routed, init);
   }) as typeof fetch;
 }
@@ -263,10 +288,15 @@ export class FileAgentSystem implements AnsweringSystem {
   private sessions = new Map<string, StoredSession[]>();
   private trees = new Map<string, { root: string; files: Map<string, TreeFile> }>();
   private workDir: string;
+  /** Every provider attempt's receipt (FileAgentReceipt), one per line. */
+  readonly receiptsPath: string;
+  /** Receipts already in receiptsPath per reader, question and replicate, and the newline a half-written last line needs. */
+  private recorded: { counts: Map<string, number>; lead: string } | null = null;
 
   constructor(private opts: FileAgentOptions = {}) {
     requireRipgrep();
     this.workDir = opts.workDir ?? mkdtempSync(join(tmpdir(), 'file-agent-'));
+    this.receiptsPath = join(this.workDir, 'receipts.ndjson');
   }
 
   async capabilities(): Promise<CapabilityRecord> {
@@ -325,6 +355,25 @@ export class FileAgentSystem implements AnsweringSystem {
     return t;
   }
 
+  /**
+   * The receipts already written, counted once per instance: the cell retries a failed answer under the same answer id
+   * (A22), and its attempts are numbered on from the earlier ones, so (model, question_id, replicate, attempt) names one
+   * attempt. A line a killed run left half-written is not counted.
+   */
+  private receiptLog() {
+    if (this.recorded) return this.recorded;
+    const text = existsSync(this.receiptsPath) ? readFileSync(this.receiptsPath, 'utf8') : '';
+    const counts = new Map<string, number>();
+    for (const line of text.split('\n')) {
+      let r: FileAgentReceipt | null;
+      try { r = JSON.parse(line) as FileAgentReceipt | null; } catch { continue; }
+      if (!r || typeof r !== 'object') continue;
+      const key = `${r.model}|${r.question_id}|${r.replicate}`;
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+    return this.recorded = { counts, lead: text && !text.endsWith('\n') ? '\n' : '' };
+  }
+
   async answer(ns: string, q: PublicQuestion, opts: AnswerOptions): Promise<AgentAnswer> {
     const scripted = this.opts.scripted?.(q);
     const model = scripted ? opts.reader : parseReader(opts.reader).model;
@@ -332,8 +381,30 @@ export class FileAgentSystem implements AnsweringSystem {
     const store = new FileStore(new Map([...files].map(([p, f]) => [p, f.content])));
     const arm = new FsArm('file-agent', store, { grep: ripgrep(root, this.opts.grepLimits ?? DEFAULT_GREP_LIMITS, e => this.limitEvents.push(e)), write: false });
     const t0 = performance.now();
-    const run = await runAgent({ model, system: FILE_AGENT_SYSTEM, user: fileAgentUser(q), arm, maxTurns: this.opts.maxTurns ?? FILE_AGENT_MAX_TURNS, maxToolChars: null,
-      submitTool: PROSE_ANSWER_TOOL, fetchImpl: this.opts.fetchImpl ?? proxiedFetch(), scripted, effort: this.opts.effort ?? FILE_AGENT_EFFORT });
+    const receipts: FileAgentReceipt[] = [];
+    const onAttempt = (a: ProviderAttempt) => {
+      const log = this.receiptLog();
+      const key = `${opts.reader}|${opts.answer_id ?? ns}|${opts.replicate}`;
+      const attempt = log.counts.get(key) ?? 0;
+      const r = attemptReceipt(model, a, { lane: 'q1-file-agent', role: 'reader', question_id: opts.answer_id ?? ns, replicate: opts.replicate, attempt });
+      log.counts.set(key, attempt + 1);
+      receipts.push(r);
+      mkdirSync(this.workDir, { recursive: true });
+      appendFileSync(this.receiptsPath, log.lead + JSON.stringify(r) + '\n');
+      log.lead = '';
+    };
+    let run: AgentRun;
+    try {
+      run = await runAgent({ model, system: FILE_AGENT_SYSTEM, user: fileAgentUser(q), arm, maxTurns: this.opts.maxTurns ?? FILE_AGENT_MAX_TURNS, maxToolChars: null,
+        submitTool: PROSE_ANSWER_TOOL, fetchImpl: this.opts.fetchImpl ?? proxiedFetch(), scripted, effort: this.opts.effort ?? FILE_AGENT_EFFORT, onAttempt });
+    } catch (e) {
+      if ((e as Error).name !== 'BudgetExceededError') throw e;
+      const billed = receipts.flatMap(r => r.usage ? [r.usage] : []);
+      const sum = (f: (u: (typeof billed)[number]) => number) => billed.reduce((s, u) => s + f(u), 0);
+      const usage = { input: sum(u => u.input_uncached ?? u.input_total), output: sum(u => u.output_total), cache_read: sum(u => u.cache_read ?? 0), cache_write: sum(u => u.cache_write ?? 0) };
+      return { text: '', stop_reason: 'budget', outcome: 'budget_not_run', error: (e as Error).message, usage, provider_input_tokens: sum(u => u.input_total),
+        latency_ms: performance.now() - t0, turns: receipts.reduce((n, r) => Math.max(n, r.turn ?? 0), 0), usd: priceUsage(model, { ...usage, requests: receipts.length }), opened_source_ids: [] };
+    }
     const opened: string[] = [];
     for (const t of run.tools) {
       if (t.name !== 'read_file' || t.error) continue;

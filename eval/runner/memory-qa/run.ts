@@ -79,7 +79,7 @@ import { homedir } from 'node:os';
 import { createHash } from 'node:crypto';
 import { budgetOptionsFrom, startPaidRun, receiptCost, type BudgetRun, type PaidRequestGuard } from '../budget-ledger.ts';
 import { requirePaidArm } from '../paid-arm.ts';
-import { gbrainSpecFrom, importGbrain, overlaySummary, productIdentityFor, resolveGbrainUnderTest, type GbrainUnderTest } from '../gbrain-under-test.ts';
+import { gbrainSpecFrom, HELD_GBRAIN_DEFAULTS, importGbrain, overlaySummary, productIdentityFor, resolveGbrainUnderTest, type GbrainUnderTest } from '../gbrain-under-test.ts';
 import { EmbeddingCache, makeCachingTransport } from '../longmemeval-cache.ts';
 import { ndcgAtK, recallAllAtK, recallAnyAtK, uniqueInOrder, percentile } from '../metrics.ts';
 import { isoSessionDate, loadCorpus, occurrenceId, renderSessionPage, sha256, type Corpus, type MemoryQuestion, type Session } from './corpus.ts';
@@ -165,7 +165,7 @@ export interface MemoryQaRow {
 /** The part of hybridSearch's onMeta report the reranker fidelity check reads. */
 type SearchMeta = { degraded?: Array<string | { stage?: string; reason?: string }> };
 
-const DEFAULT_PINS: Record<string, string> = { 'search.mode': 'balanced', 'search.autocut': 'false' };
+const DEFAULT_PINS: Record<string, string> = { 'search.mode': 'balanced', 'search.autocut': 'false', ...HELD_GBRAIN_DEFAULTS };
 const RECYCLE_EVERY = 25;
 const repoRelative = (p: string) => p.replace(resolve(import.meta.dir, '../../..') + '/', '');
 /** Planning estimate for one session through the conversation-facts extractor (product default model). */

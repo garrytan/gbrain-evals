@@ -2,7 +2,7 @@
 
 Useful contributions make it easier to tell when gbrain helps. You can contribute naturally worded questions, a competing search implementation, another system's notes scored on Cat 35, or a reproduction of a published result.
 
-Work from the repository root. Install with `bun install --frozen-lockfile`, and run `bun run test` for the tests under `test/eval/` and `eval/`, the Python tests and the validators. The gbrain under test is the one `package.json` declares, master `7a6bdd357` (v0.60.454.0); a category scores what gbrain implements at that commit. Model-comparison runs follow the model rules in [CLAUDE.md](../CLAUDE.md#choose-models). Everything above [Changelog](#changelog) is current.
+Work from the repository root. Install with `bun install --frozen-lockfile`, and run `bun run test` for the tests under `test/eval/` and `eval/`, the Python tests and the validators. The gbrain under test is the one `package.json` declares, master `3ec766c40` (v0.60.531.0); a category scores what gbrain implements at that commit. Model-comparison runs follow the model rules in [CLAUDE.md](../CLAUDE.md#choose-models). Everything above [Changelog](#changelog) is current.
 
 ## Write questions in your own words
 
@@ -217,6 +217,12 @@ Step 5 of "Add a category" now says to export each default model a runner picks 
 `test/eval/model-defaults.test.ts`, which fails on a default that is neither a current-generation model nor a named
 exception in `eval/runner/model-defaults.ts`. The test's own header asks a new category to do this, and CLAUDE.md's
 model rules now cover defaults.
+
+### 2026-10-31: The opening names the new pin
+
+The opening names gbrain master `3ec766c40` (v0.60.531.0), the new pin (was `7a6bdd357`, v0.60.454.0).
+`scripts/verify-documentation-refresh.py` now checks this sentence against `package.json`, so a re-pin that misses it fails
+`bun run validate`.
 
 ### 2026-10-31: Anthropic requests go through fitAnthropicRequest
 
