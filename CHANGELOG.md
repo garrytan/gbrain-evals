@@ -4,6 +4,12 @@ This records what each gbrain-evals release changed and what its measurements me
 
 ## [Unreleased]
 
+### particle-1 results carry their disclosure up front
+
+- **`docs/disclosures.md`** lists the relationship Garry Tan disclosed for a tested company: Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which makes particle-1. Any finding, report or summary of particle-1 results carries that line up front.
+- **The line is added** under the titles of the particle-1 replay report and the tokenizer calibration (as a dated note; neither body changed), to README's particle-1 sentence, to the docs index's particle-1 entries and to the corrections page's particle-1 cost comparison. The W10b finding now links the in-repository list instead of a drive path outsiders could not open.
+- **Pins follow the report.** The replay report's SHA-256 changes, so the finding's `SHA256SUMS` and its `docs/receipts-manifest.json` entry carry the new digest. No figure changed.
+
 ### The first finding file: particle-1 against frontier readers on LongMemEval W10b
 
 - **A finding file** ([`docs/findings/2026-11-01-particle-1-longmemeval-w10b.md`](docs/findings/2026-11-01-particle-1-longmemeval-w10b.md)) states the particle-1 replay's W10b result in the public finding format: 457 of 500 under LongMemEval's gpt-4o judge, 3.4 points behind Opus 5.5 (95% interval -5.6 to -1.4) at $0.0043 per correct answer against $0.0993. It also gives the dated price table, the limits and an R48 "Why null?" verdict (FIX-METHOD) for the Sonnet 5.5 and GPT-6.1 Sol comparisons. It discloses that Y Combinator, which Garry Tan runs, is an investor in Particle, which makes particle-1.

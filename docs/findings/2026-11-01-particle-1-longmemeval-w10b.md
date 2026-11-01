@@ -15,8 +15,7 @@ disclosures: "Disclosure: Y Combinator, which Garry Tan runs, is an investor in 
 # particle-1 answers 91.4% of 500 LongMemEval questions on gbrain's retrieval, 3.4 points behind Opus 5.5 (95% interval 1.4 to 5.6), at a twenty-third of its list cost per correct answer (near ceiling, one protocol judge)
 
 Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which makes particle-1. The standing list
-of disclosures for public findings is [research/disclosures.md](drive://org-gstack-gbrain/research/disclosures.md) in
-the GStack GBrain organization's Capy Drive.
+of disclosures is [docs/disclosures.md](../disclosures.md).
 
 ## What we found
 
@@ -253,6 +252,11 @@ behind this file. The 40 files the numbers come from are listed with their diges
 [SHA256SUMS](2026-11-01-particle-1-longmemeval-w10b/SHA256SUMS).
 
 ## Changelog
+
+### 2026-11-01: Disclosure link in the repository
+
+The disclosure line links [docs/disclosures.md](../disclosures.md) in this repository instead of a list outsiders
+could not open. The line itself is unchanged.
 
 ### 2026-11-01: First version
 

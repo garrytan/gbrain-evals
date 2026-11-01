@@ -41,7 +41,7 @@ says which ones do not and why. Everything above [Changelog](#changelog) is curr
   Sol's, not a seventh. Its W10c figures for Sol are $0.0356 and $0.0178 per question on gbrain's retrieval (was
   $0.0287 and $0.0144) and $0.2679 and $0.1339 with the whole history (was $0.2145 and $0.1073). OpenAI's billing API
   refused our key, so these follow OpenAI's published rate and the usage the responses reported, not an invoice. No
-  accuracy figure changes, and the reports keep their original figures.
+  accuracy figure changes, and the reports keep their original figures. Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which makes particle-1.
   [W10b](benchmarks/2026-10-07-longmemeval-w10b-reader-replay.md),
   [W10c](benchmarks/2026-10-07-longmemeval-w10c-full-context.md),
   [replay report](benchmarks/2026-11-01-longmemeval-particle-replay/REPORT.md),
@@ -103,6 +103,11 @@ says which ones do not and why. Everything above [Changelog](#changelog) is curr
   [Notice](benchmarks/2026-10-02-model-ladder.md#retired-2026-10-12).
 
 ## Changelog
+
+### 2026-11-01: The particle-1 cost comparison carries its disclosure
+
+The GPT-6.1 Sol entry's comparison with particle-1's cost carries the line from [disclosures](disclosures.md). No
+figure changed.
 
 ### 2026-11-01: particle-1 replay and GPT-6.1 Sol cost figures
 
