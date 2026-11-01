@@ -4,6 +4,22 @@ This records what each gbrain-evals release changed and what its measurements me
 
 ## [Unreleased]
 
+### SkillOpt Cats 30 to 33 re-baselined on today's models, with receipts committed
+
+- **[November 1 SkillOpt re-baseline](docs/benchmarks/2026-11-01-skillopt-rebaseline/REPORT.md)** at gbrain
+  `3ec766c40`, Haiku 5.5 target, Opus 5.5 optimizer, `gpt-6.1-sol` judge (preregistered, two amendments). Cat 30
+  passes 4 of 4 skills, Cat 31 passes, Cat 32 is partial (Part B's gate never saw a gaming candidate), and Cat 33
+  passes 4 of 4 transfer pairs. The full loop ties a one-shot rewrite for the second time (0.54 against 0.54), so the
+  iterative loop is a CUT-CANDIDATE under R48. Metered cost $12.76.
+- **The judge moves to `gpt-6.1-sol`**, outside the target's family, and every SkillOpt receipt carries each
+  optimization's final skill text and gbrain's run receipt (`skillopt_runs`). These receipts are a new identity and do
+  not pool with the June 3 run.
+- **Receipts, gbrain's step events and the metered cost are committed** under the report's directory, and four
+  `covered` entries in `docs/receipts-manifest.json` check the headline numbers. The June 3 report's disclosed gap
+  stays as it was.
+- **gbrain defects found** (success-reflection edit format, held-out feedback to the proposer, test criteria shown to
+  the optimizer, unapplied edits recorded as tried) are reported upstream; gbrain fixes them in GBRA-274.
+
 ### claude-opus-5-5 and particle-1 are the primary models in the rule docs
 
 - **CLAUDE.md's "Choose models" names `claude-opus-5-5` and `particle-1` as the primary models** (unit U4 of the
