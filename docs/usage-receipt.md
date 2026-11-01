@@ -128,8 +128,9 @@ only. In memory-qa, a failed attempt the provider answered with a Retry-After al
 before the next attempt, capped at 120 seconds, absent when the provider sent none or no attempt followed. In
 memory-qa and Q1, a Particle attempt waits up to the metering proxies' 900-second upstream deadline, and one that
 times out is the last attempt, because Particle may have billed it; a Q1 cell records that answer as a final
-`reader_error` and does not ask the question again. The lease proxy answers a particle request whose connection was
-reset with a 504 for the same reason, instead of sending it again. A truncated response keeps its own content as
+`reader_error` and does not ask the question again. For the same reason, the lease proxy answers a particle request whose connection
+was reset before the response headers arrived with a 504 instead of sending it again. A reset after the headers still
+reaches the client as a 500 that it retries (issue #270). A truncated response keeps its own content as
 `answer`, even when that is empty: the reasoning text (Particle's `reasoning_content`) never fills an answer.
 
 ## How a memory-qa row uses it
