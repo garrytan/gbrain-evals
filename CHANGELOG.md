@@ -4,6 +4,21 @@ This records what each gbrain-evals release changed and what its measurements me
 
 ## [Unreleased]
 
+### gstack's pregate gives each test process 30 minutes in this repository
+
+- **A repository `.gstack/pregate.json` raises the pregate's per-process test timeout from 600 to 1800 seconds.** On
+  4-core machines the selected test group ran past 600 seconds for three threads, and pregate records a timed-out
+  group as incomplete, which fails /ship. Any policy file also makes a touched file with no test lane a hard failure
+  (`PREGATE_NO_LANE`) that stops the check before any test runs, where the repository without one only warned. So the
+  file maps every path to no extra lane (`"dependencies": {"**": []}`). The import graph still selects each touched
+  file's tests, and a red or timed-out lane still fails. A touched file with no test now passes without the warning.
+  The catch-all also matches a deleted test, and pregate applies a `[]` declaration before its removed-test handling.
+  So deleting a test no longer runs its owning suite or the tests of files that name it in pregate, and no "coverage
+  removed" note prints. CI's full suite still runs every remaining test on the pull request. A test group that runs
+  slow now has 30 minutes before pregate marks it incomplete. Every other check, `literals` included, keeps its level. Scratch pregate runs on 2026-11-01 compared the repository
+  with and without the file. A source edit selected the same 925 tests in 51 files both ways. A failing test beside an
+  unmapped `types/ambient.d.ts` edit failed both ways. An unmapped edit alone warned before and passes now.
+
 ### chronicle-lift scores one agent model at a time, A4 rows keep the reader's stop reason, and PrecisionMemBench's gbrain-think is metered
 
 - **chronicle-lift never pools two agent models into one lift** (#236). A finished agent cell was keyed on arm,
