@@ -5,7 +5,14 @@
  * Runs every (model, arm, task) cell of the fictional company world in
  * eval/data/model-ladder-v1 through one agent loop (cat40/loop.ts). Arms differ
  * only in their tools. Writes one JSON line per cell to results.jsonl (a rerun
- * with the same --out resumes), then a summary and receipt.
+ * with the same --out resumes), then a summary and receipt. Every provider
+ * attempt of a v1 cell, retries and failures included, is one usage receipt in
+ * cells/<cell>/attempts.ndjson.
+ *
+ * Models: Anthropic (claude-*), OpenAI (gpt-*, o*) and Particle (particle-1, through
+ * eval/runner/providers/openai-compatible.ts with PARTICLE_API_KEY). particle-1
+ * never judges, and a run with it needs --judge passed explicitly, because the v1
+ * default claims judge is gpt-5.4-mini, which the model rules never run.
  *
  * Protocol: docs/benchmarks/2026-10-02-model-ladder-protocol.md.
  *
@@ -53,13 +60,13 @@
  * (HARD_ARM_EXPLORATORY), and its experiment.json and receipt record `exploratory: true`.
  */
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { isAbsolute, join, relative, resolve } from 'node:path';
+import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { homedir, tmpdir } from 'node:os';
 import { generateLadderWorld, worldDigest, DEFAULT_LADDER_DIR, WIDE_FAMILIES, stratumOf, openCustodianTemplates, assertDevWorld, type LadderTask, type LadderWorld, type Family, type Stratum } from '../generators/model-ladder-gen.ts';
 import { gbrainSpecFrom, parseGbrainSpec } from './gbrain-under-test.ts';
-import { runAgent, runAgentText, provider, HarnessError, type AgentRun, type Arm, type ScriptedModel } from './cat40/loop.ts';
+import { runAgent, runAgentText, provider, attemptReceipt, HarnessError, type AgentRun, type Arm, type ProviderAttempt, type ScriptedModel } from './cat40/loop.ts';
 import { FsArm, MemoryArm, OracleArm, FileStore, isWriteCall } from './cat40/arms.ts';
 import { renderDoc } from '../generators/model-ladder-gen.ts';
 import { PgArm, PgStore, cachedOpenAIEmbedder } from './cat40/pg-arm.ts';
@@ -175,6 +182,25 @@ interface Ctx {
   failedCellsProxyUsd: number;
   /** Turns per session (`--max-turns`; the loop default otherwise). */
   maxTurns?: number;
+  /** Scrubs a value before it is written under `out` (cat40Recorder). */
+  record: <V>(value: V) => V;
+}
+
+/** Where a v1 cell's provider attempts go: `cells/<cell>/attempts.ndjson` under --out, the cell key made a directory name. */
+export const cellAttemptsPath = (out: string, key: string) => join(out, 'cells', key.replace(/\|/g, '__').replace(/[^A-Za-z0-9._-]/g, '_'), 'attempts.ndjson');
+
+/**
+ * Every provider attempt of one session of a v1 cell, retries and failures included, appended as one usage receipt
+ * (attemptReceipt: request fields sent, response model, Particle's response metadata, usage, finish, errors) to the
+ * cell's attempts.ndjson, for every provider.
+ */
+function attemptLog(ctx: Ctx, key: string, model: string, repeat: number, session: 1 | 2): (a: ProviderAttempt) => void {
+  const path = cellAttemptsPath(ctx.out, key);
+  let attempt = 0;
+  return a => {
+    mkdirSync(dirname(path), { recursive: true });
+    appendFileSync(path, JSON.stringify(ctx.record(attemptReceipt(model, a, { lane: 'cat40-model-ladder', role: 'reader', question_id: `${key}|s${session}`, replicate: repeat, attempt: attempt++ }))) + '\n');
+  };
 }
 
 async function judgeClaims(ctx: Ctx, task: LadderTask, run: AgentRun): Promise<{ claims: ClaimVerdicts | null; usd: number }> {
@@ -210,10 +236,10 @@ async function runCell(ctx: Ctx, model: string, armName: CellArm, task: LadderTa
     const common = { model, arm, system: systemPrompt(ctx.world, arm), maxToolChars: ctx.maxToolChars, ...(ctx.maxTurns ? { maxTurns: ctx.maxTurns } : {}) };
     let session1: AgentRun | undefined;
     if (task.family === 'F' && armName !== 'oracle') {
-      session1 = await runAgent({ ...common, user: userMessage(ctx.world, task, arm, 1), scripted: ctx.scripted ? scriptedAgent(task, armName) : undefined });
+      session1 = await runAgent({ ...common, user: userMessage(ctx.world, task, arm, 1), scripted: ctx.scripted ? scriptedAgent(task, armName) : undefined, onAttempt: attemptLog(ctx, runId, model, repeat, 1) });
       if (slot) await slot.newSession();
     }
-    const run = await runAgent({ ...common, system: systemPrompt(ctx.world, arm), user: userMessage(ctx.world, task, arm, 2), scripted: ctx.scripted ? scriptedAgent(task, armName) : undefined });
+    const run = await runAgent({ ...common, system: systemPrompt(ctx.world, arm), user: userMessage(ctx.world, task, arm, 2), scripted: ctx.scripted ? scriptedAgent(task, armName) : undefined, onAttempt: attemptLog(ctx, runId, model, repeat, 2) });
     const score = scoreTask(task, run, { session1, isWrite });
     lastTools.set(runId, [...(session1?.tools ?? []).map(t => ({ session: 1, name: t.name, args: t.args, result: t.result.slice(0, 40_000) })), ...run.tools.map(t => ({ session: 2, name: t.name, args: t.args, result: t.result.slice(0, 40_000) }))]);
     let judged: { claims: ClaimVerdicts | null; usd: number; error?: string };
@@ -494,6 +520,13 @@ export async function main(argv = process.argv.slice(2)) {
   const arms = (buildSlots ? 'gbrain' : flag(argv, '--arms') ?? (scripted ? 'oracle,fs,memory' : 'oracle,fs,pg,memory,gbrain')).split(',') as CellArm[];
   if (!hard && arms.includes('gbrain-fs')) throw new UsageError('gbrain-fs is an exploratory Hard arm: it runs only on the Hard calibration-seed (development) world');
   if (hard && !buildSlots) hardRefusals({ models: scripted ? [] : models, judge: flag(argv, '--judge'), arms, scripted, seed: raw.seed, step: flag(argv, '--step') });
+  // particle-1 never judges, and a run with it never takes model-ladder v1's default claims judge, gpt-5.4-mini, which the model rules never run.
+  const isParticle = (m: string) => { try { return provider(m) === 'particle'; } catch { return false; } };
+  if (!scripted && !buildSlots) {
+    const judgeFlag = flag(argv, '--judge');
+    if (judgeFlag && isParticle(judgeFlag)) throw new UsageError(`--judge ${judgeFlag}: particle-1 never judges a cell; pass --judge gpt-6.1-sol`);
+    if (!hard && models.some(isParticle) && (judgeFlag ?? 'gpt-5.4-mini') === 'gpt-5.4-mini') throw new UsageError('a run with particle-1 needs its claims judge passed explicitly (--judge gpt-6.1-sol, or --judge none): the v1 default, gpt-5.4-mini, is a model the model rules never run');
+  }
   const exploratory = arms.includes('gbrain-fs');
   const families = (flag(argv, '--families') ?? (hard ? HARD_FAMILIES : WIDE_FAMILIES).join(',')).split(',') as Family[];
   const known = new Set<string>(hard ? HARD_FAMILIES : WIDE_FAMILIES);
@@ -527,9 +560,13 @@ export async function main(argv = process.argv.slice(2)) {
     const frozen = frozenKnobDigest();
     if (frozen !== hw.knob_digest) throw new HardStop('HARD_KNOBS_NOT_FROZEN', `seed ${hw.seed} is a smoke or held-out seed, and its world's knob digest ${hw.knob_digest.slice(0, 12)} ${frozen ? `differs from knobs.frozen.json (${frozen.slice(0, 12)})` : 'has no knobs.frozen.json to match (the generator is not frozen yet)'}`,
       'freeze first (scripts/cat40-hard.sh step freeze), then regenerate the world with --knobs docs/benchmarks/cat40-hard/knobs.frozen.json');
-    const drift = freezeDrift();
-    if (drift.length && !flag(argv, '--accept-freeze-drift')) throw new HardStop('HARD_FREEZE_DRIFT', `frozen code changed since freeze.json: ${drift.join(', ')}`,
-      'a scorer-only change: rescore offline (eval/runner/cat40/rescore.ts --hard) and continue; a behavior change: rerun the affected calibration and reference cells; then pass --accept-freeze-drift "<dated note in calibration.md>"', 'Garry decides when a generator change after step 5 is involved (CEO-F17)');
+    // --accept-freeze-drift accepts only drift whose current hash docs/benchmarks/cat40-hard/accepted-drift.json lists.
+    const accept = flag(argv, '--accept-freeze-drift') !== undefined;
+    const drift = freezeDrift(accept);
+    if (drift.length) throw new HardStop('HARD_FREEZE_DRIFT', accept
+      ? `frozen code changed since freeze.json, and accepted-drift.json does not list the current hash of ${drift.map(f => `${f} (${codeHashes(REPO_ROOT)[f]})`).join(', ')}`
+      : `frozen code changed since freeze.json: ${drift.join(', ')}`,
+      'a scorer-only change: rescore offline (eval/runner/cat40/rescore.ts --hard) and continue; a behavior change: rerun the affected calibration and reference cells; then record each file\'s current hash with a dated note in docs/benchmarks/cat40-hard/accepted-drift.json, add the same note to calibration.md, and pass --accept-freeze-drift "<the note>"', 'Garry decides when a generator change after step 5 is involved (CEO-F17)');
   }
   // Confirmation steps spend only from their world's preregistered ledger (PREREG.md, Budget).
   if (hw && !scripted && isConfirmStep(flag(argv, '--step'))) checkConfirmLedger(flag(argv, '--budget-ledger'));
@@ -550,7 +587,7 @@ export async function main(argv = process.argv.slice(2)) {
   if (descriptionsFile) instructionsOverride.descriptions = JSON.parse(readFileSync(resolve(descriptionsFile), 'utf8'));
   instructionsOverride.dropTools = (flag(argv, '--gbrain-drop-tools') ?? '').split(',').filter(Boolean);
   const ctx: Ctx = { world, files: { all: files(() => true), acl: files(d => !d.restricted) }, out, scripted, judge, gbrainLabel: flag(argv, '--gbrain-label') ?? 'gbrain',
-    maxToolChars: parseMaxToolChars(flag(argv, '--max-tool-chars')), budgetRunId: null, failedCellsProxyUsd: 0, ...(flag(argv, '--max-turns') ? { maxTurns } : {}) };
+    maxToolChars: parseMaxToolChars(flag(argv, '--max-tool-chars')), budgetRunId: null, failedCellsProxyUsd: 0, ...(flag(argv, '--max-turns') ? { maxTurns } : {}), record };
   const log = (s: string) => { process.stderr.write(`[cat40] ${s}\n`); appendFileSync(join(out, 'run.log'), record(`${new Date().toISOString()} ${s}\n`)); };
 
   const resultsPath = join(out, 'results.jsonl');
@@ -809,7 +846,7 @@ export async function main(argv = process.argv.slice(2)) {
 
 /** --preflight: everything a paid step needs, with no paid call (DX-F13). */
 function printPreflight(o: { hw: HardWorld | null; world: LadderWorld; models: string[]; arms: string[]; cells: number; judge: string | null; maxTurns?: number; toolLimits: string; needsGbrain: boolean; slotDir: string | null; nSlots: number; step?: string; ledger?: string; scripted: boolean; families: string[]; tasksPerFamily: number; repeats: number; done: Array<Record<string, unknown>> }) {
-  const keyOf = (m: string) => { try { return provider(m) === 'anthropic' ? 'ANTHROPIC_API_KEY' : 'OPENAI_API_KEY'; } catch { return '(unknown provider)'; } };
+  const keyOf = (m: string) => { try { return ({ anthropic: 'ANTHROPIC_API_KEY', openai: 'OPENAI_API_KEY', particle: 'PARTICLE_API_KEY' } as const)[provider(m)]; } catch { return '(unknown provider)'; } };
   const env: Record<string, string[]> = {};
   for (const a of o.arms) env[a] = [...new Set([...(o.scripted ? [] : o.models.map(keyOf)), ...(a === 'pg' || a === 'gbrain' || a === 'gbrain-fs' ? ['OPENAI_API_KEY (embeddings)'] : [])])];
   if (o.judge) env.judge = [keyOf(o.judge)];

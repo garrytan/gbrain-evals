@@ -65,7 +65,7 @@ Oracle failures are read and classified as wording or answer-key defects before 
 
 ### After the freeze
 
-A runner or scorer fix that leaves every world digest unchanged proceeds with a dated note in calibration.md. A scorer-only change is applied to every affected result by offline rescoring (`bun eval/runner/cat40/rescore.ts --hard --world <world.json> --results <attempts.jsonl> --out <dir>`); a behavior change reruns the affected calibration and reference cells. The runner records the frozen files' hashes in each run's `experiment.json` and refuses a held-out run whose frozen code differs from `freeze.json` unless `--accept-freeze-drift "<dated note>"` is passed. A generator change after step 3 voids the freeze; after step 5 it stops for Garry.
+A runner or scorer fix that leaves every world digest unchanged proceeds with a dated note in calibration.md. A scorer-only change is applied to every affected result by offline rescoring (`bun eval/runner/cat40/rescore.ts --hard --world <world.json> --results <attempts.jsonl> --out <dir>`); a behavior change reruns the affected calibration and reference cells. The runner records the frozen files' hashes in each run's `experiment.json` and refuses a held-out run whose frozen code differs from `freeze.json` unless `--accept-freeze-drift "<dated note>"` is passed and every drifted file's current hash is listed with its dated note in [accepted-drift.json](accepted-drift.json) (the same note in calibration.md). An unlisted drift stops the run even with the flag; `bun eval/runner/cat40/hard-ops.ts freeze check` names the unlisted files. A generator change after step 3 voids the freeze; after step 5 it stops for Garry.
 
 A failed claims judgment is re-judged without rerunning the agent: `bun eval/runner/cat40/judge-hard.ts --rejudge <run dir> --judge gpt-6.1-sol --budget-usd <n> --budget-ledger .budget/cat40-hard.sqlite`.
 
@@ -90,7 +90,7 @@ Every refusal and stop-for-Garry condition exits 3 and prints `STOP <code>`, wha
 | `HARD_WORLD_INVALID` | the world fails the invariants | regenerate it; never edit a world |
 | `HARD_WORLD_MISMATCH` | the world differs from its generator, or the output directory holds another world identity | regenerate the world, or repeat the original command, or use a new `--out` |
 | `HARD_KNOBS_NOT_FROZEN` | a smoke or held-out world uses knobs other than `knobs.frozen.json` | freeze first, then regenerate with the frozen knobs |
-| `HARD_FREEZE_DRIFT` | frozen code changed since `freeze.json` | rescore offline or rerun affected cells, note it in calibration.md, then pass `--accept-freeze-drift` |
+| `HARD_FREEZE_DRIFT` | frozen code changed since `freeze.json`, without `--accept-freeze-drift` or with a file whose current hash `accepted-drift.json` does not list | rescore offline or rerun affected cells, record the file's hash and a dated note in `accepted-drift.json` and the same note in calibration.md, then pass `--accept-freeze-drift` |
 | `HARD_ORACLE_TOO_LARGE` | an oracle prompt exceeds a model input limit | lower `h1_near_miss_cap` before the freeze, or drop those oracle cells with a recorded reason |
 | `HARD_SLOTS_QUARANTINED` | fewer healthy gbrain slots than planned | read the quarantine reasons, repair or rebuild the slots, resume |
 | `HARD_CELLS_INCOMPLETE` | cells still lack a harness-clean attempt | rerun the printed command to resume |
