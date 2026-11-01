@@ -144,6 +144,6 @@ export function writeSyntheticReceipt(dir: string, o: SyntheticOptions = {}): Ca
     release_assets: o.releaseAssets ?? [], disclosures: ['Synthetic fixture: every number is invented.'], render_targets: o.renderTargets ?? [],
   };
   writeFileSync(join(dir, 'campaign.json'), JSON.stringify(campaign, null, 2) + '\n');
-  writeFileSync(join(dir, 'power.json'), JSON.stringify({ schema: 'gbrain-evals/q1-power/v1', decision: { family1: o.family1 ?? 'full', detectable_difference_points: o.detectableDifference ?? 12.5, shrunk_comparators: o.shrunkComparators ?? null } }, null, 2) + '\n');
+  writeFileSync(join(dir, 'power.json'), JSON.stringify({ schema: 'gbrain-evals/q1-power/v1', decision: { family1: o.family1 ?? 'full', threshold_points: 10, detectable_difference_points: o.detectableDifference ?? 8.5, shrunk_comparators: o.shrunkComparators ?? null } }, null, 2) + '\n');
   return campaign;
 }
