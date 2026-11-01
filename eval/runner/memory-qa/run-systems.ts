@@ -82,7 +82,9 @@ import { gbrainSpecFrom, importGbrain, overlaySummary, productIdentityFor, resol
 import { EmbeddingCache, makeCachingTransport } from '../longmemeval-cache.ts';
 import { ndcgAtK, recallAllAtK, recallAnyAtK, uniqueInOrder, percentile } from '../metrics.ts';
 import { loadCorpus, occurrenceId, sha256, type Corpus, type MemoryQuestion, type Session } from './corpus.ts';
-import { ChatClient, DEFAULT_JUDGE, DEFAULT_READER, factsReaderPrompt, judgeResponse, packSessions, readerPrompt, repeatsTrap, approxTokens, unresolvedRelativeTime, type SavedFact } from './qa-v2.ts';
+import { ChatClient, DEFAULT_JUDGE, DEFAULT_READER, chatWithReceipts, factsReaderPrompt, hasChatRoute, judgeResponse, packSessions, readerPrompt, repeatsTrap, approxTokens, unresolvedRelativeTime, type SavedFact } from './qa-v2.ts';
+import { modelsNotRun } from '../providers/openai-compatible.ts';
+import type { UsageReceipt } from '../usage-receipt.ts';
 import { devConversations, loadSplit } from '../decisions/splits.ts';
 import { appendAccessLog } from '../sealed-confirmation-lib.ts';
 import { decideError, DecideError, renderOperatorMessage } from '../decisions/errors.ts';
@@ -179,6 +181,8 @@ export interface MemoryQaRow {
   qa_sessions?: number;
   qa_answer?: string;
   qa_error?: string;
+  /** One usage-receipt/v1 record per attempted reader call, every replicate. */
+  qa_receipts?: UsageReceipt[];
   qa_facts?: number;
   facts_count?: number;
   facts_unresolved_share?: number;
@@ -572,6 +576,9 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
     try { return { value: await fn(), meter: null }; } catch (error) { return { error, meter: null }; }
   };
   const providerOf = (m: Meter | null) => m ? { usd: m.usd, requests: m.requests, unpriced: m.unpriced, ...(m.upstream ? { upstream: m.upstream } : {}) } : undefined;
+  /** A reader or judge call ended on a BudgetExceededError (the ledger's cap, Particle's credit 402): no later question or conversation runs. */
+  let stopped: 'budget' | null = null;
+  const budgetStop = (e: unknown) => (e as Error)?.name === 'BudgetExceededError';
 
   // Multi-arm state: one canonical retrieval per (question, policy), one row set per arm, frozen reader contexts.
   const arms = a.arms ? expandArms(a.arms) : [];
@@ -602,7 +609,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
         ? convQs.filter(q => policies.some(p => rPending.has(retrievalKey(q.id, p))) || armState.some(s => s.pending.has(q.id)))
         : convQs.filter(q => pending.has(q.id));
       if (!qs.length) continue;
-      if (paid?.guard.exhausted) break;
+      if (paid?.guard.exhausted || stopped) break;
       const conv = byConv.get(convId)!;
       const ns = sanitizer.ns(convId);
       const plan = legacy ? [] : sanitizer.ingestPlan(conv);
@@ -759,25 +766,27 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
         }
         let out: MemoryQaRow = { ...row, qa_context: meta as MemoryQaRow['qa_context'], ...(keepPrompt ? { qa_prompt: prompt } : {}) };
         const scores: number[] = [];
+        const receipts: UsageReceipt[] = [];
         let tin = 0; let tout = 0; let answer = ''; let trap = 0;
         try {
           for (let r = 0; r < a.qa.runs; r++) {
             let res: Awaited<ReturnType<ChatClient['chat']>>;
-            try { res = await chat!.chat(reader, prompt, { maxTokens: 1024, replicate: r }); }
-            catch (e) { throw new Error(`reader: ${(e as Error).message}`); }
+            try { res = await chatWithReceipts(chat!, { role: 'reader', question_id: question.id, replicate: r, model: reader, delivered: null }, prompt, { maxTokens: 1024, replicate: r }, receipts); }
+            catch (e) { if (budgetStop(e)) throw e; throw new Error(`reader: ${(e as Error).message}`); }
             answer = res.text; tin += res.input_tokens; tout += res.output_tokens;
             if (judge === READER_ONLY) continue;
-            scores.push(await judgeResponse(chat!, a.benchmark, judge, question, answer, r).catch(e => { throw new Error(`judge: ${(e as Error).message}`); }));
+            scores.push(await judgeResponse(chat!, a.benchmark, judge, question, answer, r).catch(e => { if (budgetStop(e)) throw e; throw new Error(`judge: ${(e as Error).message}`); }));
             if (question.abstention && repeatsTrap(answer, question.trap)) trap++;
           }
           // Reader-only arms (judge "none") keep the whole answer for a scorer outside this process, such as the sealed runner.
           out = judge === READER_ONLY
-            ? { ...out, qa_runs: a.qa.runs, qa_input_tokens: Math.round(tin / a.qa.runs), qa_output_tokens: Math.round(tout / a.qa.runs), qa_context_tokens: Number(meta.tokens ?? 0), qa_answer: answer }
+            ? { ...out, qa_runs: a.qa.runs, qa_input_tokens: Math.round(tin / a.qa.runs), qa_output_tokens: Math.round(tout / a.qa.runs), qa_context_tokens: Number(meta.tokens ?? 0), qa_answer: answer, qa_receipts: receipts }
             : { ...out, qa_score: scores.reduce((x, y) => x + y, 0) / scores.length, qa_scores: scores, qa_runs: scores.length, ...(question.trap ? { qa_trap: trap / scores.length } : {}),
-              qa_input_tokens: Math.round(tin / scores.length), qa_output_tokens: Math.round(tout / scores.length), qa_context_tokens: Number(meta.tokens ?? 0), qa_answer: answer.slice(0, 2000) };
+              qa_input_tokens: Math.round(tin / scores.length), qa_output_tokens: Math.round(tout / scores.length), qa_context_tokens: Number(meta.tokens ?? 0), qa_answer: answer.slice(0, 2000), qa_receipts: receipts };
         } catch (e) {
           const msg = (e as Error).message.slice(0, 300);
-          out = { ...out, qa_error: msg, outcome: msg.startsWith('judge:') ? 'judge_error' : 'reader_error' };
+          if (budgetStop(e)) stopped = 'budget';
+          out = { ...out, qa_error: msg, qa_receipts: receipts, outcome: budgetStop(e) ? 'budget_not_run' : msg.startsWith('judge:') ? 'judge_error' : 'reader_error' };
         }
         return out;
       };
@@ -830,6 +839,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
       };
 
       for (const q of qs) {
+        if (stopped) break;
         const base: MemoryQaRow = { id: q.id, conversation: q.conversation, category: q.category, abstention: q.abstention, gold_count: q.gold.length, ...convFacts };
         if (arms.length) {
           for (const p of policies) {
@@ -841,6 +851,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
             rByKey.set(key, r);
           }
           for (const s of armState) {
+            if (stopped) break;
             if (!s.pending.has(q.id)) continue;
             const r = rByKey.get(retrievalKey(q.id, s.arm.policy));
             if (!r) continue;
@@ -872,6 +883,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
             const retrieved = uniqueInOrder(res.items.map(i => (i.source_ids[0] ? sanitizer.sessionOf(ns, i.source_ids[0]) : undefined) ?? `?${i.id}`)).slice(0, a.topK);
             row = { ...base, ...scoreRetrieval(retrieved, q.gold), retrieved, latency_ms: Math.round(latency * 10) / 10, error: null };
             if (chat) {
+              const receipts: UsageReceipt[] = [];
               try {
                 const scores: number[] = [];
                 let tin = 0; let tout = 0; let answer = ''; let trap = 0;
@@ -884,18 +896,19 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
                     tin += approxTokens(q.question);
                   } else {
                     const prompt = a.qa.context === 'facts' ? factsReaderPrompt(q, readFacts, lastDate(conv.sessions)) : readerPrompt(q, pack.sessions, lastDate(conv.sessions));
-                    const out = await chat.chat(a.qa.reader, prompt, { maxTokens: 1024, replicate: r });
+                    const out = await chatWithReceipts(chat, { role: 'reader', question_id: q.id, replicate: r, model: a.qa.reader, delivered: null }, prompt, { maxTokens: 1024, replicate: r }, receipts);
                     answer = out.text; tin += out.input_tokens; tout += out.output_tokens;
                   }
-                  scores.push(await judgeResponse(chat, a.benchmark, a.qa.judge, q, answer, r).catch(e => { throw new Error(`judge: ${(e as Error).message}`); }));
+                  scores.push(await judgeResponse(chat, a.benchmark, a.qa.judge, q, answer, r).catch(e => { if (budgetStop(e)) throw e; throw new Error(`judge: ${(e as Error).message}`); }));
                   if (q.abstention && repeatsTrap(answer, q.trap)) trap++;
                 }
                 row = { ...row, qa_score: scores.reduce((x, y) => x + y, 0) / scores.length, qa_scores: scores, qa_runs: scores.length,
                   ...(q.trap ? { qa_trap: trap / scores.length } : {}), qa_input_tokens: Math.round(tin / scores.length), qa_output_tokens: Math.round(tout / scores.length),
                   qa_context_tokens: think || a.qa.context === 'facts' ? undefined : pack.tokens, qa_sessions: think || a.qa.context === 'facts' ? undefined : pack.sessions.length,
-                  ...(a.qa.context === 'facts' ? { qa_facts: readFacts.length, qa_facts_tokens: factsContextTokens(readFacts) } : {}), qa_answer: answer.slice(0, 2000) };
+                  ...(a.qa.context === 'facts' ? { qa_facts: readFacts.length, qa_facts_tokens: factsContextTokens(readFacts) } : {}), qa_answer: answer.slice(0, 2000), ...(receipts.length ? { qa_receipts: receipts } : {}) };
               } catch (e) {
-                row = { ...row, qa_error: (e as Error).message.slice(0, 300) };
+                if (budgetStop(e)) stopped = 'budget';
+                row = { ...row, qa_error: (e as Error).message.slice(0, 300), ...(receipts.length ? { qa_receipts: receipts } : {}), ...(budgetStop(e) ? { outcome: 'budget_not_run' as const } : {}) };
               }
             }
           } catch (e) {
@@ -938,7 +951,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
       counts: { rows: rows.length, scored: scored.length, errors: rows.filter(r => r.error).length, abstention: rows.filter(r => r.abstention).length },
       summary: { recall_all_at_5: mean('recall_all_at_5'), recall_any_at_5: mean('recall_any_at_5'), recall_all_at_10: mean('recall_all_at_10'), ndcg_at_10: mean('ndcg_at_10'),
         latency_p50_ms: scored.length ? percentile(scored.map(r => r.latency_ms ?? 0), 50) : null, latency_p95_ms: scored.length ? percentile(scored.map(r => r.latency_ms ?? 0), 95) : null,
-        ...(reading ? qaSummary() : {}) },
+        ...(reading ? qaSummary() : {}), ...(stopped ? { stopped } : {}) },
       upstream_trouble_rows: rows.filter(r => r.provider?.upstream && upstreamTrouble(r.provider as Meter)).length,
       upstream_retries: rows.filter(r => r.upstream_retry).length,
     };
@@ -952,7 +965,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
     dataset: corpus.source,
     facts: a.facts === 'none' ? null : { lane: a.facts, extractor: 'runExtractConversationFactsCore (product default model, force)', pages: 'conversation type, ISO session date', ...factStats,
       unresolved_share: factStats.facts ? factStats.unresolved / factStats.facts : null },
-    fidelity, cost, ingest_replicate: a.ingestReplicate,
+    fidelity, cost, ingest_replicate: a.ingestReplicate, models_not_run: modelsNotRun('memory-qa', hasChatRoute),
     metering: a.providerProxy ? { mode: 'lease-proxy', proxy: a.providerProxy, slot, lease_id: process.env.SHOOTOUT_LEASE_ID ?? null, retry_upstream_5xx: a.retryUpstream5xx } : { mode: paid ? 'budget-ledger' : 'none' },
     ingest: legacy ? null : { ...ingestStats, errors: allIngestErrors, errors_truncated: allIngestErrors.length >= 500 }, sanitizer: { forbidden_markers: sanitizer.markers.length }, sealed_profile: sealed ? { checked: 'output and caches inside the custody root, outside the repository and the shared cache' } : null,
   };

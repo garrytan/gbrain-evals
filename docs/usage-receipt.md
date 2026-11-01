@@ -80,9 +80,10 @@ mean of 22,077 tokens and `gpt-6.1-sol` 13,695. A gate that compares arms with d
 ## Request settings and response identity
 
 A reasoning model's answer depends on settings the model id does not show, and a provider can change the weights
-behind an id. Lanes that call a provider through the OpenAI-compatible provider module record both on every attempt
-(today the particle weight canary, `scripts/particle-canary.ts`). The fields are optional, so the schema stays
-`usage-receipt/v1` and older receipts stay valid.
+behind an id. Lanes that call a provider through the OpenAI-compatible provider module record both on every attempt:
+the memory-qa reading lane (`eval/runner/memory-qa/qa-v2.ts`, for `--reader particle:particle-1`) and the particle
+weight canary (`scripts/particle-canary.ts`). The fields are optional, so the schema stays `usage-receipt/v1` and
+older receipts stay valid.
 
 `request`, built by `compatRequest` with the request itself:
 
@@ -103,7 +104,9 @@ behind an id. Lanes that call a provider through the OpenAI-compatible provider 
 | `truncated` | True when the model stopped at the output limit (`finish_reason: length`) |
 
 A failed attempt (a 429, a network error, a 402) has no response, so every `response_meta` field is null, never an
-invented value, and `response_model` and `usage` are null as before. A truncated response keeps its own content as
+invented value, and `response_model` and `usage` are null as before. When the provider answered a failed attempt
+with a Retry-After, the record also has `retry_after_ms`: the wait before the next attempt, capped at 120 seconds.
+It is absent when the provider sent none or no attempt followed. A truncated response keeps its own content as
 `answer`, even when that is empty: the reasoning text (Particle's `reasoning_content`) never fills an answer.
 
 ## How a memory-qa row uses it
@@ -115,7 +118,9 @@ answer). A `--qa think` row also has `qa_reference_date`, the day (YYYY-MM-DD) `
 dates against: the harness asks for the question date, else the conversation's latest session date, and a gbrain
 build older than 0.60.88 reports none, so its rows carry no date. When any answer's response carried no usage, the row
 has `qa_usage_missing` instead of token means.
-The arm's `receipt.json` adds `usage.by_role`, the `sumUsage` totals per role.
+The arm's `receipt.json` adds `usage.by_role`, the `sumUsage` totals per role. A question stopped by a budget stop
+(the ledger's cap, or Particle's credit 402) keeps the records gathered before the stop on its error row. Memory-system
+cells (`eval/runner/memory-qa/run-systems.ts`) write `qa_receipts` for their reader calls.
 
 ## Adopting it in another harness
 
@@ -133,7 +138,7 @@ For the Q1 scoreboard (`evals/q1-scoreboard`, `eval/runner/q1/cell.ts`), the cha
 ## Check it
 
 ```bash
-bun test test/eval/memory-qa-usage.test.ts test/eval/openai-compatible.test.ts
+bun test test/eval/memory-qa-usage.test.ts test/eval/openai-compatible.test.ts test/eval/memory-qa-particle.test.ts
 ```
 
 The first file serves recorded synthetic Anthropic and OpenAI responses through a mocked fetch and checks that both
@@ -142,4 +147,6 @@ carry `think`'s own usage and the reference date `think` reports, that a 5,000-c
 that the normalizer reproduces the committed W10 means (22,167 for W10a; 22,077 for Opus 5.5, 13,695 for
 `gpt-6.1-sol` and 14,458 for `gpt-5.4` in W10b). The second file checks Particle's convention, the `request` and
 `response_meta` fields, the null fields of a failed attempt and the empty answer of a truncated response, against a
-mocked fetch and the keyless fake provider. Neither makes a provider call.
+mocked fetch and the keyless fake provider. The third checks the memory-qa particle route: a 429, 429, 200 sequence
+leaves three records with what each sent and the first one's wait, and a credit 402 leaves its record and stops the
+run. None of them makes a provider call.
