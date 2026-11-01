@@ -21,6 +21,13 @@
  * exactly one split and fills 24 train, 24 selection and 36 test tasks by
  * family quota, so no gold fact appears in two splits.
  *
+ * skillopt-method-v2 (query-v2.ts, briefing-v2.ts, fact-check-v2.ts) adds
+ * families that need procedure: a value as of a date that a later record
+ * superseded, two values at once, a second hop through world-v1, several
+ * meetings in one briefing. Its candidates draw on overlapping pages, so
+ * `assembleGrouped` places them one at a time and joins a group only while it
+ * stays in one split with at most three tasks.
+ *
  * Everything is seeded and deterministic; no model is called.
  */
 import { readFileSync } from 'node:fs';
@@ -45,7 +52,7 @@ export interface MethodTask {
   family: string;
   task: string;
   judge: Judge;
-  anchor: { kind: 'page' | 'entity' | 'claim'; id: string };
+  anchor: { kind: 'page' | 'entity' | 'claim' | 'record' | 'calendar'; id: string };
   /** Keys of the gold facts; tasks sharing one land in the same split. */
   fact_keys: string[];
   answerable: boolean;
@@ -61,7 +68,9 @@ export interface MethodTask {
 }
 
 export type Candidate = Omit<MethodTask, 'task_id' | 'split' | 'judge' | 'skill'>;
-export type Draft = { ok: true; candidate: Candidate } | { ok: false; family: string; anchor: string; reason: string };
+/** `priority` (v2 only): within a family, `assembleGrouped` tries higher-priority candidates first (more traps, more pages to consult). */
+export type Draft = { ok: true; candidate: Candidate; priority?: number } | { ok: false; family: string; anchor: string; reason: string };
+export type Quotas = Readonly<Record<string, readonly [number, number, number]>>;
 
 export interface GenerationReport {
   skill: SkillName;
@@ -73,6 +82,10 @@ export interface GenerationReport {
   components: number;
   assigned: Record<string, Record<Split, number>>;
   unused_candidates: number;
+  /** v2: the seeded attempt of `assembleGrouped` that filled every quota. */
+  assembly_attempt?: number;
+  /** v2: why a family's quota differs from the plan, when the corpora could not fill it. */
+  notes?: string[];
 }
 
 export interface SkillGeneration { tasks: MethodTask[]; report: GenerationReport }
@@ -129,6 +142,9 @@ export interface GovRow {
   attribute: string;
   as_of: string;
   value: number | string;
+  /** Signing and effective dates of the governing record. */
+  signed: string;
+  effective: string;
   governing_slug: string;
   deciding_passage: { slug: string; line: number; quote: string };
   traps: string[];
@@ -255,6 +271,95 @@ function monthEnd(iso: string, months: number): string {
 
 export const govFactKey = (row: GovRow) => `gov:${row.account}:${row.attribute}=${row.value}`;
 
+// ─── v2: superseded records and pairs ────────────────────────────────────────
+
+/**
+ * The record a governing-records row supersedes: the latest earlier labelled
+ * row for the same account and attribute whose governing page and value both
+ * differ from this row's. Null when no earlier record held another value.
+ */
+export function supersededRow(rows: readonly GovRow[], row: GovRow): GovRow | null {
+  return rows
+    .filter(r => r.account === row.account && r.attribute === row.attribute && r.as_of < row.as_of && r.governing_slug !== row.governing_slug && String(r.value) !== String(row.value))
+    .sort((a, b) => a.as_of.localeCompare(b.as_of))
+    .at(-1) ?? null;
+}
+
+export interface SupersededFact {
+  fact: GovFact;
+  /** The superseded record's row, and the paragraph of its own page its value reads out of. */
+  prev: GovRow;
+  prevEvidence: string;
+}
+
+export type SupersededResult = { ok: true; s: SupersededFact } | { ok: false; row: GovRow; reason: string };
+
+/**
+ * Every dev governing record that superseded another value, confirmed or with
+ * its drop reason. Beyond confirmGovRow, the oracle checks that the superseded
+ * value reads out of the superseded record's own deciding paragraph (so the
+ * brain really holds the stale value) and that the labels' effective dates put
+ * that record in force first and the governing one in force on the row's date.
+ */
+export function supersededFacts(corpus: Corpus): SupersededResult[] {
+  const rows = governingRows();
+  const out: SupersededResult[] = [];
+  for (const g of govFacts(corpus)) {
+    const row = g.ok ? g.fact.row : g.row;
+    const prev = supersededRow(rows, row);
+    if (!prev) continue;
+    if (!g.ok) { out.push({ ok: false, row, reason: g.reason }); continue; }
+    if (!(prev.effective < row.effective && row.effective <= row.as_of)) { out.push({ ok: false, row, reason: 'the labels do not put the superseded record in force before the governing one' }); continue; }
+    const o = confirmGovRow(corpus, prev);
+    if ('reason' in o) { out.push({ ok: false, row, reason: `superseded record: ${o.reason}` }); continue; }
+    out.push({ ok: true, s: { fact: g.fact, prev, prevEvidence: o.evidence } });
+  }
+  return out;
+}
+
+export const pairId = (a: GovRow, b: GovRow) => `${a.account}:${a.attribute}+${b.attribute}:${a.as_of}`;
+
+export type GovPairResult = { ok: true; a: GovFact; b: GovFact } | { ok: false; anchor: string; reason: string };
+
+/**
+ * Every pair of dev governing records for one account on one date (two
+ * attributes, in ATTRIBUTES order). A pair is confirmed when the oracle
+ * confirms both rows and neither value reads as the other, since two "30 days"
+ * values could not be told apart.
+ */
+export function govPairs(corpus: Corpus): GovPairResult[] {
+  const results = govFacts(corpus);
+  const order = Object.keys(ATTRIBUTES);
+  const rowOf = (g: GovResult) => (g.ok ? g.fact.row : g.row);
+  const out: GovPairResult[] = [];
+  for (const a of results) for (const b of results) {
+    const ra = rowOf(a), rb = rowOf(b);
+    if (ra.account !== rb.account || ra.as_of !== rb.as_of || order.indexOf(ra.attribute) >= order.indexOf(rb.attribute)) continue;
+    const anchor = pairId(ra, rb);
+    if (!a.ok) { out.push({ ok: false, anchor, reason: `${ra.attribute}: ${a.reason}` }); continue; }
+    if (!b.ok) { out.push({ ok: false, anchor, reason: `${rb.attribute}: ${b.reason}` }); continue; }
+    const [fa, fb] = [a.fact, b.fact];
+    if (matches(fa.attribute.gold(ra.value), fb.attribute.format(rb.value)) || matches(fb.attribute.gold(rb.value), fa.attribute.format(ra.value))) { out.push({ ok: false, anchor, reason: 'the two values read as each other' }); continue; }
+    out.push({ ok: true, a: fa, b: fb });
+  }
+  return out;
+}
+
+/** Fields a candidate about two governing-record facts shares across skills, and the distinct governing pages (one citation group each). */
+export function pairBase(a: GovFact, b: GovFact) {
+  const pages = [...new Set([a.row.governing_slug, b.row.governing_slug])];
+  return {
+    pages,
+    base: {
+      anchor: { kind: 'record' as const, id: pairId(a.row, b.row) },
+      fact_keys: [govFactKey(a.row), govFactKey(b.row), ...pages.map(p => `page:${p}`)],
+      distractors: { slugs: [...new Set([...a.row.distractor_slugs, ...b.row.distractor_slugs])].filter(x => !pages.includes(x)), values: [...a.others, ...b.others] },
+      source: `messy-company-v1 labels/governing-records/dev.jsonl ${a.row.id} and ${b.row.id}`,
+      oracle: { path: 'for each row, the paragraph holding the labelled deciding passage on its governing page; each gold value reads out of its own paragraph through the scorer pattern', evidence: a.evidence === b.evidence ? a.evidence : `${a.evidence}\n\n${b.evidence}` },
+    },
+  };
+}
+
 // ─── world-v1 relationships ──────────────────────────────────────────────────
 
 const ROLE_FIELDS = ['founders', 'employees', 'investors', 'advisors'] as const;
@@ -326,6 +431,47 @@ export function confirmNotFounder(corpus: Corpus, company: RichPage, person: Ric
   return { evidence: linking[0]! };
 }
 
+// ─── v2: second hops ─────────────────────────────────────────────────────────
+
+/**
+ * Oracle for the last hop of a multi-hop question: C's founder is confirmed
+ * (confirmFounder), and the founder's own page has a sentence naming C with a
+ * "found" word, so the page the answer must cite holds the answer.
+ */
+export function confirmFounderPage(corpus: Corpus, company: RichPage): { founder: RichPage; evidence: string } | { reason: string } {
+  const o = confirmFounder(corpus, company);
+  if ('reason' in o) return o;
+  const founder = corpus.world.get(o.founder)!;
+  const evidence = sentences(founder).find(x => x.includes(company.title) && /\bfound/i.test(x));
+  if (!evidence) return { reason: "the founder's page has no sentence naming the company with a founding word" };
+  return { founder, evidence };
+}
+
+/**
+ * Oracle for "P is an employee of C" or "P advises C" as a first hop: exactly
+ * one company lists P in that role, both titles are unique, and a sentence on
+ * either page names the other.
+ */
+export function confirmRoleTie(corpus: Corpus, person: RichPage, role: 'employees' | 'advisors'): { company: RichPage; evidence: string } | { reason: string } {
+  const tied = [...corpus.world.values()].filter(c => c.type === 'company' && (c._facts[role] ?? []).includes(person.slug));
+  if (tied.length !== 1) return { reason: `${tied.length} companies list the person among ${role}` };
+  const company = tied[0]!;
+  if (!uniqueTitle(corpus, company) || !uniqueTitle(corpus, person)) return { reason: 'person or company title is not unique' };
+  const evidence = sentences(person).find(x => x.includes(company.title)) ?? sentences(company).find(x => x.includes(person.title));
+  if (!evidence) return { reason: "neither page's prose names the other" };
+  return { company, evidence };
+}
+
+/** Oracle for a world-v1 meeting's topic company as a first hop: the company's title is unique and the meeting page's prose names it. */
+export function confirmMeetingTopic(corpus: Corpus, meeting: RichPage): { company: RichPage; evidence: string } | { reason: string } {
+  const company = corpus.world.get(String(meeting._facts.topic_company));
+  if (!company) return { reason: 'topic company page missing' };
+  if (!uniqueTitle(corpus, company)) return { reason: 'company title is not unique' };
+  const evidence = sentences(meeting).find(x => x.includes(company.title));
+  if (!evidence) return { reason: 'meeting page prose does not name the topic company' };
+  return { company, evidence };
+}
+
 // ─── Negative controls ───────────────────────────────────────────────────────
 
 const INVENTED_FIRST = ['Corvin', 'Talisa', 'Odran', 'Mireille', 'Bastien', 'Ysolde', 'Caspian', 'Linnea', 'Thaddeus', 'Oriane', 'Leopold', 'Saskia', 'Evander', 'Ingrid', 'Ambrose', 'Petrina', 'Lisandro', 'Wilhelmina'];
@@ -370,6 +516,17 @@ export function lookalikePeople(corpus: Corpus, rng: Rng, n: number): NegativeNa
     const name = `${first} ${last}`;
     if (!last || a.title === name || b.title === name || out.some(o => o.name === name)) continue;
     if (absentFromCorpora(corpus, name)) out.push({ name, kind: 'lookalike', near: a.slug, evidence: `"${name}" occurs in no page; "${a.title}" and "${b.title}" do` });
+  }
+  return out;
+}
+
+/** v2: invented people from every first-and-last-name pair, in seeded order: neither the full name nor the surname occurs in either corpus. */
+export function inventedPeopleGrid(corpus: Corpus, rng: Rng, n: number): NegativeName[] {
+  const out: NegativeName[] = [];
+  for (const [first, last] of rng.shuffle(INVENTED_FIRST.flatMap(f => INVENTED_LAST.map(l => [f, l] as const)))) {
+    if (out.length === n) break;
+    const name = `${first} ${last}`;
+    if (absentFromCorpora(corpus, name) && absentFromCorpora(corpus, last)) out.push({ name, kind: 'invented', evidence: `neither "${name}" nor "${last}" occurs in any page of either corpus` });
   }
   return out;
 }
@@ -448,10 +605,10 @@ function components(candidates: readonly Candidate[]): Candidate[][] {
  * by family quota (quotas[family] = [train, sel, test]) one whole component at
  * a time. Throws when the candidates cannot fill a quota.
  */
-export function assembleSkill(skill: SkillName, seed: number, drafts: readonly Draft[], quotas: Readonly<Record<string, readonly [number, number, number]>>): SkillGeneration {
-  const rng = new Rng(seed);
+/** Count candidates per family, drop those the oracle rejected or whose solvability control fails, and record each drop. */
+function screen(skill: SkillName, seed: number, drafts: readonly Draft[]): { report: GenerationReport; kept: Array<{ candidate: Candidate; priority: number }> } {
   const report: GenerationReport = { skill, seed, candidates: {}, dropped_by_oracle: 0, dropped_by_solvability: 0, dropped: [], components: 0, assigned: {}, unused_candidates: 0 };
-  const kept: Candidate[] = [];
+  const kept: Array<{ candidate: Candidate; priority: number }> = [];
   for (const d of drafts) {
     const family = d.ok ? d.candidate.family : d.family;
     report.candidates[family] = (report.candidates[family] ?? 0) + 1;
@@ -465,8 +622,16 @@ export function assembleSkill(skill: SkillName, seed: number, drafts: readonly D
       report.dropped.push({ family, anchor: d.candidate.anchor.id, reason: 'solvability control failed: the answer built from the gold page does not pass the scorer' });
       continue;
     }
-    kept.push(d.candidate);
+    kept.push({ candidate: d.candidate, priority: d.priority ?? 0 });
   }
+  return { report, kept };
+}
+
+export function assembleSkill(skill: SkillName, seed: number, drafts: readonly Draft[], quotas: Quotas): SkillGeneration {
+  const rng = new Rng(seed);
+  const screened = screen(skill, seed, drafts);
+  const report = screened.report;
+  const kept = screened.kept.map(k => k.candidate);
 
   for (const family of Object.keys(quotas)) report.assigned[family] = { train: 0, sel: 0, test: 0 };
   const comps = rng.shuffle(components(kept).map(c => rng.shuffle(c).slice(0, MAX_TASKS_PER_COMPONENT)));
@@ -499,4 +664,108 @@ export function assembleSkill(skill: SkillName, seed: number, drafts: readonly D
     });
   }
   return { tasks, report };
+}
+
+// ─── v2 assembly ─────────────────────────────────────────────────────────────
+
+/** The keys that tie tasks into one group: anchor, gold facts and gold pages (the same keys splitLeaks checks). */
+const taskKeys = (t: Pick<MethodTask, 'anchor' | 'fact_keys' | 'gold'>) => [...new Set([`anchor:${t.anchor.id}`, ...t.fact_keys, ...t.gold.slugs.map(x => `page:${x}`)])];
+
+/** Sizes of the connected groups of tasks that share an anchor, a gold fact or a gold page, largest first. */
+export function groupSizes(tasks: ReadonlyArray<Pick<MethodTask, 'anchor' | 'fact_keys' | 'gold'>>): number[] {
+  const owner = new Map<string, number>();
+  const parent = tasks.map((_, i) => i);
+  const find = (i: number): number => (parent[i] === i ? i : (parent[i] = find(parent[i]!)));
+  tasks.forEach((t, i) => {
+    for (const k of taskKeys(t)) {
+      const j = owner.get(k);
+      if (j === undefined) owner.set(k, i);
+      else parent[find(i)] = find(j);
+    }
+  });
+  const sizes = new Map<number, number>();
+  tasks.forEach((_, i) => sizes.set(find(i), (sizes.get(find(i)) ?? 0) + 1));
+  return [...sizes.values()].sort((a, b) => b - a);
+}
+
+/** Seeded attempts `assembleGrouped` makes before it gives up. */
+export const ASSEMBLY_ATTEMPTS = 500;
+
+/**
+ * One seeded attempt: place candidates one at a time (scarcest family first,
+ * then by priority, then in seeded order). A candidate joins the groups it
+ * touches only when they sit in one split, its family still needs tasks there,
+ * the joined group stays at MAX_TASKS_PER_COMPONENT or fewer and its anchor is
+ * unused; a candidate touching no group opens one in the split its family
+ * most needs. Returns the placed tasks when every quota is filled exactly.
+ */
+function fillOnce(kept: ReadonlyArray<{ candidate: Candidate; priority: number }>, quotas: Quotas, order: readonly string[], rng: Rng): Array<Candidate & { split: Split }> | null {
+  const assigned = Object.fromEntries(Object.keys(quotas).map(f => [f, { train: 0, sel: 0, test: 0 }])) as Record<string, Record<Split, number>>;
+  const quota = (f: string, sp: Split) => quotas[f]![SPLITS.indexOf(sp)]!;
+  const need = (f: string, sp: Split) => quota(f, sp) - assigned[f]![sp];
+  const groups: Array<{ split: Split; size: number; keys: string[] }> = [];
+  const groupOf = new Map<string, number>();
+  const anchors = new Set<string>();
+  const placed: Array<Candidate & { split: Split }> = [];
+  const splitOrder = rng.shuffle(SPLITS);
+  const queue = order.flatMap(f => rng.shuffle(kept.filter(k => k.candidate.family === f)).sort((a, b) => b.priority - a.priority));
+  for (const { candidate: c } of queue) {
+    if (anchors.has(c.anchor.id)) continue;
+    const keys = taskKeys(c);
+    const touched = [...new Set(keys.map(k => groupOf.get(k)).filter((g): g is number => g !== undefined))];
+    let split: Split | undefined;
+    if (touched.length) {
+      if (new Set(touched.map(g => groups[g]!.split)).size > 1) continue;
+      split = groups[touched[0]!]!.split;
+      if (touched.reduce((n, g) => n + groups[g]!.size, 0) + 1 > MAX_TASKS_PER_COMPONENT || need(c.family, split) <= 0) continue;
+    } else {
+      split = splitOrder.filter(sp => need(c.family, sp) > 0).sort((a, b) => need(c.family, b) / quota(c.family, b) - need(c.family, a) / quota(c.family, a))[0];
+      if (!split) continue;
+    }
+    const merged = { split, size: touched.reduce((n, g) => n + groups[g]!.size, 0) + 1, keys: [...keys, ...touched.flatMap(g => groups[g]!.keys)] };
+    groups.push(merged);
+    for (const k of merged.keys) groupOf.set(k, groups.length - 1);
+    anchors.add(c.anchor.id);
+    assigned[c.family]![split]++;
+    placed.push({ ...c, split });
+  }
+  return Object.keys(quotas).every(f => SPLITS.every(sp => need(f, sp) === 0)) ? placed : null;
+}
+
+/**
+ * v2 assembly. Screens the drafts like `assembleSkill`, then fills the splits
+ * with `fillOnce`, retrying with the next seed until one attempt fills every
+ * family quota exactly. Families are placed scarcest first (confirmed
+ * candidates per quota slot), after any families `opts.first` names.
+ * Candidates of one family that share an anchor are
+ * alternatives (variants of one calendar or claim): at most one is placed.
+ * Throws when no attempt fills the quotas.
+ */
+export function assembleGrouped(skill: SkillName, seed: number, drafts: readonly Draft[], quotas: Quotas, opts: { notes?: readonly string[]; first?: readonly string[] } = {}): SkillGeneration {
+  const { report, kept } = screen(skill, seed, drafts);
+  const families = Object.keys(quotas);
+  const stray = kept.find(k => !families.includes(k.candidate.family));
+  if (stray) throw new Error(`${skill}: family ${stray.candidate.family} has no quota`);
+  const supply = (f: string) => kept.filter(k => k.candidate.family === f).length / quotas[f]!.reduce((a, b) => a + b, 0);
+  const rank = (f: string) => (opts.first?.includes(f) ? opts.first.indexOf(f) - opts.first.length : 0);
+  const order = [...families].sort((a, b) => rank(a) - rank(b) || supply(a) - supply(b) || a.localeCompare(b));
+  for (let attempt = 0; attempt < ASSEMBLY_ATTEMPTS; attempt++) {
+    const rng = new Rng(seed + attempt * 104_729);
+    const placed = fillOnce(kept, quotas, order, rng);
+    if (!placed) continue;
+    for (const f of families) report.assigned[f] = Object.fromEntries(SPLITS.map(sp => [sp, placed.filter(c => c.family === f && c.split === sp).length])) as Record<Split, number>;
+    report.components = groupSizes(placed).length;
+    report.unused_candidates = kept.length - placed.length;
+    report.assembly_attempt = attempt;
+    if (opts.notes?.length) report.notes = [...opts.notes];
+    const tasks: MethodTask[] = [];
+    for (const split of SPLITS) {
+      rng.shuffle(placed.filter(c => c.split === split)).forEach((c, i) => {
+        const { split: _, ...rest } = c;
+        tasks.push({ task_id: `${skill}-${split}-${String(i + 1).padStart(2, '0')}`, skill, split, ...rest, judge: compileJudge(skill, c.gold) });
+      });
+    }
+    return { tasks, report };
+  }
+  throw new Error(`${skill}: no seeded attempt filled the quotas ${JSON.stringify(quotas)} from ${JSON.stringify(Object.fromEntries(families.map(f => [f, kept.filter(k => k.candidate.family === f).length])))} confirmed candidates`);
 }

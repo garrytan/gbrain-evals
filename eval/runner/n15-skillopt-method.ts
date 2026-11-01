@@ -10,12 +10,17 @@
  * here; the plan's Phase 2 (rollout server and ledger) is built only if the
  * probe's preregistered gate says so.
  *
+ * The probe reads skillopt-method-v2, the hardening after probe 1 found v1
+ * saturated; v1 stays frozen and is checked here too.
+ *
  * Hermetic run (default, keyless, report-only):
- *   1. the dataset regenerates byte for byte and matches MANIFEST.json;
- *   2. each seed SKILL.md matches its sha256 at gbrain 3ec766c40;
- *   3. on train and selection, every solvability-control answer passes its
- *      judge, and an empty answer and "I don't know" fail every task that is
- *      not a negative control;
+ *   1. both dataset versions regenerate byte for byte and match their
+ *      MANIFEST.json;
+ *   2. each seed SKILL.md, in both versions, matches its sha256 at gbrain
+ *      3ec766c40;
+ *   3. on train and selection of both versions, every solvability-control
+ *      answer passes its judge, and an empty answer and "I don't know" fail
+ *      every task that is not a negative control;
  *   4. the tool coverage of each seed against what the rollout serves;
  *   5. the A1 probe end to end on a deterministic in-process transport (no
  *      model call), which must read no test file.
@@ -33,7 +38,7 @@
  */
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
-import { checkManifest, regenerationDiffs } from '../generators/skillopt-method/gen.ts';
+import { datasetProblems } from '../generators/skillopt-method/gen.ts';
 import { budgetOptionsFrom, receiptCost, startPaidRun, type RunSummary } from './budget-ledger.ts';
 import { gbrainPin, gbrainVersion } from './gbrain-version.ts';
 import { DECIDE_OFF, withHermeticEnv } from './hermetic-env.ts';
@@ -41,9 +46,9 @@ import { paidRequested, PaidArmRefusal, requirePaidArm } from './paid-arm.ts';
 import { attestPreregistration, type Attestation } from './prereg.ts';
 import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, noModelSpend, productIdentity, receiptPath, sourceTreeIdentity, writeReceipt, type ProbeError, type Receipt } from './receipt.ts';
 import { auditSkill } from './skillopt-method/audit.ts';
-import { DATA_DIR, readSeed, readTasks, SEED_GBRAIN_COMMIT, sha256 } from './skillopt-method/dataset.ts';
+import { DATASET_VERSIONS, datasetDir, datasetName, DEFAULT_DATASET, readCriteria, readSeed, readTasks, SEED_GBRAIN_COMMIT, sha256, type DatasetVersion } from './skillopt-method/dataset.ts';
 import { PROBE_ESTIMATE_USD, PROBE_MODELS, runProbe, toolCoverage, type ProbeResult, type ProbeSkillResult } from './skillopt-method/probe.ts';
-import { CRITERIA, evaluateJudge, SKILLS, type SkillName } from './skillopt-method/score.ts';
+import { evaluateJudge, SKILLS, type SkillName } from './skillopt-method/score.ts';
 
 export const CATEGORY = 'n15-skillopt-method';
 export const PREREGISTRATION = 'docs/benchmarks/2026-11-01-skillopt-method/PREREGISTRATION.md';
@@ -54,23 +59,21 @@ export const DEFAULT_PROPOSER_MODEL = PROBE_MODELS.proposer;
 export interface IntegrityResult {
   dataset_problems: string[];
   seed_problems: string[];
-  /** Per skill: solvability controls that fail, and degenerate answers that pass, on train and selection. */
+  /** Per dataset version and skill ("v2 query"): solvability controls that fail, and degenerate answers that pass, on train and selection. */
   scorer: Record<string, { tasks: number; controls_failing: string[]; degenerate_passing: string[] }>;
 }
 
 export function checkIntegrity(): IntegrityResult {
   const seed_problems: string[] = [];
-  for (const s of SKILLS) {
-    try { readSeed(s); } catch (e) { seed_problems.push((e as Error).message); }
-  }
   const scorer: IntegrityResult['scorer'] = {};
-  for (const s of SKILLS) {
-    const tasks = [...readTasks(s, 'train'), ...readTasks(s, 'sel')];
+  for (const v of DATASET_VERSIONS) for (const s of SKILLS) {
+    try { readSeed(s, v); } catch (e) { seed_problems.push(`${v}: ${(e as Error).message}`); }
+    const tasks = [...readTasks(s, 'train', v), ...readTasks(s, 'sel', v)];
     const controls_failing = tasks.filter(t => !evaluateJudge(t.oracle_answer, t.judge).correct).map(t => t.task_id);
     const degenerate_passing = tasks.filter(t => t.answerable && ['', "I don't know."].some(a => evaluateJudge(a, t.judge).correct)).map(t => t.task_id);
-    scorer[s] = { tasks: tasks.length, controls_failing, degenerate_passing };
+    scorer[`${v} ${s}`] = { tasks: tasks.length, controls_failing, degenerate_passing };
   }
-  return { dataset_problems: [...regenerationDiffs(), ...checkManifest()], seed_problems, scorer };
+  return { dataset_problems: DATASET_VERSIONS.flatMap(datasetProblems), seed_problems, scorer };
 }
 
 const integrityOk = (r: IntegrityResult) => !r.dataset_problems.length && !r.seed_problems.length && Object.values(r.scorer).every(x => !x.controls_failing.length && !x.degenerate_passing.length);
@@ -99,7 +102,7 @@ function probeData(p: ProbeResult) {
   };
 }
 
-const manifestSha = () => sha256(readFileSync(join(DATA_DIR, 'MANIFEST.json')));
+const manifestSha = (v: DatasetVersion) => sha256(readFileSync(join(datasetDir(v), 'MANIFEST.json')));
 
 function baseReceipt(startedAt: string) {
   return {
@@ -110,8 +113,10 @@ function baseReceipt(startedAt: string) {
     gbrain_pin: gbrainPin(),
     execution: { source_tree: sourceTreeIdentity(), product: productIdentity() },
     hashes: {
-      dataset_manifest_sha256: manifestSha(),
-      ...Object.fromEntries(SKILLS.map(s => [`criteria_${s}_sha256`, sha256(CRITERIA[s] + '\n')])),
+      dataset: datasetName(DEFAULT_DATASET),
+      dataset_manifest_sha256: manifestSha(DEFAULT_DATASET),
+      ...Object.fromEntries(DATASET_VERSIONS.filter(v => v !== DEFAULT_DATASET).map(v => [`${datasetName(v)}_manifest_sha256`, manifestSha(v)])),
+      ...Object.fromEntries(SKILLS.map(s => [`criteria_${s}_sha256`, sha256(readCriteria(s))])),
       seeds_gbrain_commit: SEED_GBRAIN_COMMIT,
     },
     started_at: startedAt,
@@ -221,7 +226,7 @@ async function main(): Promise<void> {
   if (d.integrity) {
     const i = d.integrity as IntegrityResult;
     log(`\nverdict: ${receipt.verdict ?? receipt.run_status} (report-only; nothing gates)`);
-    log(`dataset: ${i.dataset_problems.length ? i.dataset_problems.join('; ') : 'regenerates byte for byte and matches MANIFEST.json'}`);
+    log(`datasets: ${i.dataset_problems.length ? i.dataset_problems.join('; ') : `${DATASET_VERSIONS.join(' and ')} regenerate byte for byte and match their MANIFEST.json; the probe reads ${datasetName(DEFAULT_DATASET)}`}`);
     log(`seeds: ${i.seed_problems.length ? i.seed_problems.join('; ') : `all match their sha256 at gbrain ${SEED_GBRAIN_COMMIT.slice(0, 9)}`}`);
     for (const [s, x] of Object.entries(i.scorer)) log(`scorer ${s}: ${x.tasks - x.controls_failing.length}/${x.tasks} solvability controls pass; ${x.degenerate_passing.length} degenerate answers pass`);
   }

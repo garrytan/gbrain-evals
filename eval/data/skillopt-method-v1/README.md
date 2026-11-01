@@ -3,7 +3,10 @@
 skillopt-method-v1 holds the task sets for the SkillOpt method benchmark (category `skillopt-method`, N15; issue
 GST-799). They measure gbrain's three shipped skills `query`, `briefing` and `fact-check` on a brain of 355 pages:
 messy-company-v1's 115 public dev pages and world-v1's 240 pages. Each skill has 84 tasks: 24 train, 24 selection and
-36 test. The test split is sealed: only `readSealedTestTasks` in
+36 test. [Probe 1](../../../docs/benchmarks/2026-11-01-skillopt-method/probe/probe1/summary.json) ran on these tasks
+and found them saturated, so [skillopt-method-v2](../skillopt-method-v2/README.md) hardens them once and is the
+dataset the runner and probe read; this version stays frozen, regenerable and checked. The test split is sealed: only
+`readSealedTestTasks` in
 [`eval/runner/skillopt-method/dataset.ts`](../../runner/skillopt-method/dataset.ts) reads it, at a stage's final
 scoring. The data is frozen: [`MANIFEST.json`](MANIFEST.json) lists the sha256 of every data file, and
 `bun eval/runner/validate-data.ts` fails if any of them changes.
@@ -80,8 +83,8 @@ names no gold value or page.
 ## Regenerating
 
 ```sh
-bun eval/generators/skillopt-method/gen.ts check   # regeneration reproduces every file, and the manifest matches
-bun eval/generators/skillopt-method/gen.ts write   # rewrite the task files and MANIFEST.json (a new dataset version)
+bun eval/generators/skillopt-method/gen.ts check v1   # regeneration reproduces every file, and the manifest matches
+bun eval/generators/skillopt-method/gen.ts write v1   # rewrite the task files and MANIFEST.json (a new dataset version)
 ```
 
 The generators (`eval/generators/skillopt-method/{query,briefing,fact-check}.ts`) are seeded (15001, 15002 and 15003)
@@ -98,6 +101,12 @@ and call no model. `write` copies a seed skill only when it is missing, and only
   import time.
 
 ## Changelog
+
+### 2026-11-01: v2 becomes the default
+
+Probe 1 found these tasks saturated: the seed and one rewrite reached the ceiling. skillopt-method-v2 hardens them,
+and the runner and probe now read it. No file of this version changed; `gen.ts check v1` and `write v1` now name the
+version.
 
 ### 2026-11-01: Dataset created and frozen
 

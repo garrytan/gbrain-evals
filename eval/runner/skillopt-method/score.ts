@@ -11,12 +11,14 @@
  *              separators and units, dates in common formats, names in any case
  *   citation   a citation of a gold page in the skill's own citation form
  *              (`briefing`: `[Source: slug, updated DATE]`; `query` and
- *              `fact-check`: the slug itself)
+ *              `fact-check`: the slug itself); one check per citation group
+ *              when the gold has several (skillopt-method-v2)
  *   status     fact-check only: a `STATUS:` line with a status the evidence
  *              supports (the skill's 6-level scale)
  *   no-status  fact-check only: no `STATUS:` line with a status the evidence
  *              rules out
- *   abstain    negative controls: the answer says the brain does not hold it,
+ *   abstain    negative controls, and a v2 briefing meeting whose subject no
+ *              page carries: the answer says the brain does not hold it,
  *              naming what the task asked about
  *
  * The regexes need only the `m` flag (letters match case-insensitively through
@@ -50,8 +52,10 @@ export interface Gold {
   values: GoldValue[];
   /** Pages that hold the answer; citing any one counts. Empty on a negative control. */
   slugs: string[];
+  /** Citation groups (skillopt-method-v2): one citation check per group, each passed by citing any page in it. Absent: one check over `slugs`. */
+  cite?: string[][];
   status?: StatusClass;
-  /** Negative controls: the name the task asks about; the abstention must name it within 300 characters. */
+  /** Negative controls, and a v2 briefing meeting no page covers: the name the task asks about; the abstention must name it within 300 characters. */
   subject?: string;
 }
 
@@ -169,6 +173,8 @@ export const ABSTAIN_PATTERN = `(?:${ABSTAIN_PHRASES.map(ci).join('|')})`;
 /**
  * The checks for one task. A negative control (no gold slug) asks for an
  * abstention; for fact-check it asks for a status the brain cannot support.
+ * A query or briefing task with a `subject` and gold pages asks for both: the
+ * answered parts, and an abstention for the subject.
  */
 export function compileChecks(skill: SkillName, gold: Gold): MethodCheck[] {
   const checks: MethodCheck[] = [];
@@ -178,12 +184,12 @@ export function compileChecks(skill: SkillName, gold: Gold): MethodCheck[] {
     checks.push({ op: 'regex', arg: statusPattern(accept), kind: 'status' });
     const reject = status === 'supported' ? [...CONTRADICTED_STATUSES, ...UNVERIFIED_STATUSES] : status === 'not-supported' ? [...SUPPORTED_STATUSES] : [];
     if (reject.length) checks.push({ op: 'regex', arg: absent(statusPattern(reject)), kind: 'no-status' });
-  } else if (gold.slugs.length === 0) {
+  } else if (gold.slugs.length === 0 || gold.subject) {
     const name = gold.subject ? namePattern(gold.subject) : null;
     checks.push({ op: 'regex', arg: name ? `(?:${name}[\\s\\S]{0,300}?${ABSTAIN_PATTERN}|${ABSTAIN_PATTERN}[\\s\\S]{0,300}?${name})` : ABSTAIN_PATTERN, kind: 'abstain' });
   }
   for (const v of gold.values) checks.push({ op: 'regex', arg: valuePattern(v), kind: 'value' });
-  if (gold.slugs.length) checks.push({ op: 'regex', arg: citationPattern(skill, gold.slugs), kind: 'citation' });
+  for (const group of gold.cite ?? (gold.slugs.length ? [gold.slugs] : [])) checks.push({ op: 'regex', arg: citationPattern(skill, group), kind: 'citation' });
   return checks;
 }
 
@@ -281,6 +287,36 @@ export const CRITERIA: Readonly<Record<SkillName, string>> = {
     '- A confirmed claim carries no STATUS line of LIKELY INACCURATE, FALSE or UNVERIFIED; a claim the brain cannot support carries no STATUS line of VERIFIED or LIKELY ACCURATE.',
     '- A contradicted claim states the correct value the brain holds. Numbers may use separators or units; dates may use any common format that includes the year; names are matched without regard to case.',
     '- The report cites, by its slug, the brain page that decides the claim. Citing only a page that does not decide it fails.',
+    'Scoring is all or nothing per task.',
+  ].join('\n'),
+};
+
+/**
+ * The criteria texts for skillopt-method-v2, whose tasks ask for more than one
+ * value, go through superseded records and linked pages, and mix answered and
+ * unanswerable meetings. Same rules as CRITERIA: no gold value, no slug.
+ */
+export const CRITERIA_V2: Readonly<Record<SkillName, string>> = {
+  query: [
+    'Each task is a question to answer from the brain. An answer counts as correct only when every check passes:',
+    '- It states every value the question asks for. Numbers may use separators, units or "k"; dates may use any common format that includes the year; names are matched without regard to case.',
+    '- It cites, by its slug (for example [Source: <slug>]), the brain page that decides each value it states. For a value as of a date, that is the record in force on that date, not a record it superseded and not one signed but not yet in force. For a person or company reached through other pages, it is the page of the person or company the answer names. Citing only a page that does not decide the answer fails.',
+    '- When the brain does not hold the answer, the correct answer says so and names what it looked for (for example "the brain doesn\'t have information on X") instead of giving a value.',
+    'Scoring is all or nothing per task.',
+  ].join('\n'),
+  briefing: [
+    'Each task is a daily briefing for the meetings listed in the task. An answer counts as correct only when every check passes:',
+    '- For every external meeting the task lists, it states the fact the task asks for. An account\'s value is the one in force on the briefing\'s date. Numbers may use separators or units; dates may use any common format that includes the year; names are matched without regard to case.',
+    '- It cites inline as [Source: slug, updated DATE] a brain page that holds each fact: for an account\'s value, the record in force on the briefing\'s date; for a person, the person\'s own page. Other citation forms, or citing only a page that does not hold the fact, fail.',
+    '- When a participant has no brain page, the correct briefing says so for that meeting (for example "No brain page for <name>") instead of describing them, and still covers every other meeting.',
+    'Scoring is all or nothing per task.',
+  ].join('\n'),
+  'fact-check': [
+    'Each task is one brain-derived claim to verify through the data-derived-claims gate. A claim may state more than one value. An answer counts as correct only when every check passes:',
+    '- A STATUS: line gives the status the brain supports: VERIFIED or LIKELY ACCURATE when the brain confirms every part of the claim; LIKELY INACCURATE or FALSE when the brain contradicts any part of it; UNVERIFIED, LIKELY INACCURATE or FALSE when the brain has no record of what the claim names or does not support it.',
+    '- A confirmed claim carries no STATUS line of LIKELY INACCURATE, FALSE or UNVERIFIED; a claim the brain cannot support carries no STATUS line of VERIFIED or LIKELY ACCURATE.',
+    '- A contradicted claim states, for every value the claim gives, the correct value the brain holds as of the claim\'s date. Numbers may use separators or units; dates may use any common format that includes the year; names are matched without regard to case.',
+    '- The report cites, by its slug, the brain page that decides each part of the claim; for a value as of a date, that is the record in force on that date. Citing only a page that does not decide it fails.',
     'Scoring is all or nothing per task.',
   ].join('\n'),
 };

@@ -1,28 +1,40 @@
 /**
- * SkillOpt method benchmark, Phase 1 (GST-799): scorer, task sets, seeds,
- * criteria, mutation suite and audit. Keyless; no model call.
+ * SkillOpt method benchmark, Phase 1 (GST-799): scorer, task sets (v1, and
+ * v2, the hardening after probe 1 saturated v1), seeds, criteria, mutation
+ * suite and audit. Keyless; no model call.
  */
 import { describe, expect, test } from 'bun:test';
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { buildFiles, checkManifest, regenerationDiffs } from '../../eval/generators/skillopt-method/gen.ts';
-import { splitLeaks, type MethodTask } from '../../eval/generators/skillopt-method/common.ts';
+import { buildFiles, datasetProblems } from '../../eval/generators/skillopt-method/gen.ts';
+import { groupSizes, MAX_TASKS_PER_COMPONENT, splitLeaks, type MethodTask } from '../../eval/generators/skillopt-method/common.ts';
 import { QUERY_QUOTAS } from '../../eval/generators/skillopt-method/query.ts';
+import { QUERY_V2_QUOTAS } from '../../eval/generators/skillopt-method/query-v2.ts';
 import { BRIEFING_QUOTAS } from '../../eval/generators/skillopt-method/briefing.ts';
+import { BRIEFING_V2_QUOTAS } from '../../eval/generators/skillopt-method/briefing-v2.ts';
 import { FACT_CHECK_QUOTAS } from '../../eval/generators/skillopt-method/fact-check.ts';
+import { FACT_CHECK_V2_QUOTAS } from '../../eval/generators/skillopt-method/fact-check-v2.ts';
 import { assertScorerRejectsFakeSystems, type AnswerSpace } from '../../eval/runner/mutation-kit.ts';
 import { auditSkill } from '../../eval/runner/skillopt-method/audit.ts';
-import { readCriteria, readSealedTestTasks, readSeed, readTasks, SEED_GBRAIN_COMMIT, SEED_GBRAIN_VERSION, SEED_SHA256 } from '../../eval/runner/skillopt-method/dataset.ts';
 import {
-  citationNdcg, citedSlugs, compileJudge, countedScoreFn, CRITERIA, evaluateJudge, renderFailedCheck, SKILLS, SPLITS, type Gold, type SkillName,
+  DATASET_VERSIONS, datasetDir, datasetName, DEFAULT_DATASET, readCriteria, readSealedTestTasks, readSeed, readTasks, SEED_GBRAIN_COMMIT, SEED_GBRAIN_VERSION, SEED_SHA256,
+  type DatasetVersion,
+} from '../../eval/runner/skillopt-method/dataset.ts';
+import {
+  citationNdcg, citedSlugs, compileJudge, countedScoreFn, CRITERIA, CRITERIA_V2, evaluateJudge, renderFailedCheck, SKILLS, SPLITS, type Gold, type SkillName,
 } from '../../eval/runner/skillopt-method/score.ts';
 
 const REPO_ROOT = join(import.meta.dir, '../..');
 const pass = (skill: SkillName, gold: Gold, answer: string) => evaluateJudge(answer, compileJudge(skill, gold)).correct;
-const QUOTAS: Record<SkillName, Record<string, readonly number[]>> = { query: QUERY_QUOTAS, briefing: BRIEFING_QUOTAS, 'fact-check': FACT_CHECK_QUOTAS };
-const trainSel = (skill: SkillName): MethodTask[] => [...readTasks(skill, 'train'), ...readTasks(skill, 'sel')];
-const allTasks = (skill: SkillName): MethodTask[] => [...trainSel(skill), ...readSealedTestTasks(skill)];
+const QUOTAS: Record<DatasetVersion, Record<SkillName, Record<string, readonly number[]>>> = {
+  v1: { query: QUERY_QUOTAS, briefing: BRIEFING_QUOTAS, 'fact-check': FACT_CHECK_QUOTAS },
+  v2: { query: QUERY_V2_QUOTAS, briefing: BRIEFING_V2_QUOTAS, 'fact-check': FACT_CHECK_V2_QUOTAS },
+};
+const CRITERIA_TEXTS: Record<DatasetVersion, Readonly<Record<SkillName, string>>> = { v1: CRITERIA, v2: CRITERIA_V2 };
+const trainSel = (skill: SkillName, version: DatasetVersion = DEFAULT_DATASET): MethodTask[] => [...readTasks(skill, 'train', version), ...readTasks(skill, 'sel', version)];
+const allTasks = (skill: SkillName, version: DatasetVersion = DEFAULT_DATASET): MethodTask[] => [...trainSel(skill, version), ...readSealedTestTasks(skill, version)];
+const checkKinds = (t: MethodTask) => (t.judge.kind === 'rule' ? t.judge.checks.map(c => (c as { kind?: string }).kind) : []);
 
 describe('counted scorer: tolerant value patterns', () => {
   const q = (values: Gold['values'], answer: string) => pass('query', { values, slugs: ['contracts/2025-03-28-qfl-msa'] }, `${answer} [Source: contracts/2025-03-28-qfl-msa]`);
@@ -82,6 +94,18 @@ describe('counted scorer: citations, statuses and abstentions', () => {
     expect(pass('query', gold, "I don't know.")).toBe(false);
     expect(pass('query', gold, 'Corvin Vantwerp works with Acme.')).toBe(false);
   });
+  test('v2 gold: one citation check per group, and an abstention for a subject beside answered parts', () => {
+    const pair: Gold = { values: [{ kind: 'number', value: 140 }, { kind: 'number', value: 1850, unit: 'money' }], slugs: ['contracts/a', 'contracts/b'], cite: [['contracts/a'], ['contracts/b']] };
+    expect(pass('query', pair, '140 seats (contracts/a) at $1,850 (contracts/b)')).toBe(true);
+    expect(pass('query', pair, '140 seats at $1,850 (contracts/a)')).toBe(false);
+    expect(pass('query', pair, '140 seats (contracts/a) (contracts/b)')).toBe(false);
+    const day: Gold = { values: [{ kind: 'name', value: 'Acme' }], slugs: ['people/mia-brown-0'], cite: [['people/mia-brown-0']], subject: 'Corvin Vantwerp' };
+    const answered = 'Mia Brown runs Acme. [Source: people/mia-brown-0, updated 2026-10-30]';
+    expect(pass('briefing', day, `${answered}\n## 14:30 Corvin Vantwerp\n- No brain page for Corvin Vantwerp.`)).toBe(true);
+    expect(pass('briefing', day, answered)).toBe(false);
+    expect(pass('briefing', day, '## 14:30 Corvin Vantwerp\n- No brain page for Corvin Vantwerp.')).toBe(false);
+    expect(compileJudge('query', { values: [], slugs: [], subject: 'X' })).toEqual(compileJudge('query', { values: [], slugs: [], subject: 'X', cite: [] }));
+  });
   test('countedScoreFn is binary; nDCG is a diagnostic over cited slugs', async () => {
     const judge = compileJudge('query', { values: [{ kind: 'number', value: 140 }], slugs: ['contracts/2025-03-28-qfl-msa'] });
     const traj = (final_text: string) => ({ task_id: 't', task: 'q', final_text, tool_calls: [], usage: { input_tokens: 0, output_tokens: 0, cache_read_tokens: 0, cache_creation_tokens: 0 }, turns: 1, stop_reason: 'end', duration_ms: 0 }) as Parameters<typeof countedScoreFn>[0];
@@ -93,45 +117,96 @@ describe('counted scorer: citations, statuses and abstentions', () => {
   });
 });
 
-describe('frozen task sets', () => {
+for (const version of DATASET_VERSIONS) describe(`frozen task sets: ${datasetName(version)}`, () => {
   test('generation is deterministic and matches the committed files and MANIFEST.json', () => {
-    expect(regenerationDiffs()).toEqual([]);
-    expect(checkManifest()).toEqual([]);
-    expect([...buildFiles()].map(([p, c]) => [p, createHash('sha256').update(c).digest('hex')])).toEqual([...buildFiles()].map(([p, c]) => [p, createHash('sha256').update(c).digest('hex')]));
+    expect(datasetProblems(version)).toEqual([]);
+    expect([...buildFiles(version)].map(([p, c]) => [p, createHash('sha256').update(c).digest('hex')])).toEqual([...buildFiles(version)].map(([p, c]) => [p, createHash('sha256').update(c).digest('hex')]));
   });
 
   for (const skill of SKILLS) {
-    test(`${skill}: 24/24/36 tasks, family quotas, and no anchor, fact or gold page in two splits`, () => {
-      const tasks = allTasks(skill);
+    test(`${skill}: 24/24/36 tasks, family quotas, at most three tasks per group, and no anchor, fact or gold page in two splits`, () => {
+      const tasks = allTasks(skill, version);
       expect(SPLITS.map(s => tasks.filter(t => t.split === s).length)).toEqual([24, 24, 36]);
-      for (const [family, q] of Object.entries(QUOTAS[skill])) expect([family, SPLITS.map(s => tasks.filter(t => t.split === s && t.family === family).length)]).toEqual([family, [...q]]);
+      for (const [family, q] of Object.entries(QUOTAS[version][skill])) expect([family, SPLITS.map(s => tasks.filter(t => t.split === s && t.family === family).length)]).toEqual([family, [...q]]);
+      expect([...new Set(tasks.map(t => t.family))].sort()).toEqual(Object.keys(QUOTAS[version][skill]).sort());
       expect(splitLeaks(tasks)).toEqual([]);
+      expect(groupSizes(tasks)[0]).toBeLessThanOrEqual(MAX_TASKS_PER_COMPONENT);
       expect(tasks.every(t => t.anchor.id && t.skill === skill)).toBe(true);
       expect(tasks.every(t => t.answerable === (t.gold.slugs.length > 0))).toBe(true);
       expect(tasks.filter(t => !t.answerable).length).toBeGreaterThanOrEqual(14);
+      if (version !== 'v1') expect(new Set(tasks.map(t => t.anchor.id)).size).toBe(tasks.length);
     });
 
     test(`${skill}: every solvability control passes and the generation report counts its drops`, () => {
-      for (const t of allTasks(skill)) expect([t.task_id, evaluateJudge(t.oracle_answer, t.judge).correct]).toEqual([t.task_id, true]);
-      const report = JSON.parse(readFileSync(join(REPO_ROOT, 'eval/data/skillopt-method-v1', skill, 'generation-report.json'), 'utf8'));
+      for (const t of allTasks(skill, version)) expect([t.task_id, evaluateJudge(t.oracle_answer, t.judge).correct]).toEqual([t.task_id, true]);
+      const report = JSON.parse(readFileSync(join(datasetDir(version), skill, 'generation-report.json'), 'utf8'));
       expect(report.dropped_by_oracle).toBe(report.dropped.filter((d: { reason: string }) => !d.reason.startsWith('solvability')).length);
       expect(report.dropped_by_solvability).toBe(0);
     });
   }
 
-  test('briefing tasks list the day\'s meetings', () => {
-    for (const t of trainSel('briefing')) expect(/Today's calendar:\n(- \d{2}:\d{2} .+\n){3,4}/.test(t.task)).toBe(true);
+  test('the test split has its own reader', () => {
+    expect(() => readTasks('query', 'test' as 'sel', version)).toThrow(/sealed/);
+  });
+});
+
+describe('briefing calendars', () => {
+  test("v1 tasks list the day's meetings", () => {
+    for (const t of trainSel('briefing', 'v1')) expect(/Today's calendar:\n(- \d{2}:\d{2} .+\n){3,4}/.test(t.task)).toBe(true);
   });
 
-  test('the test split has its own reader', () => {
-    expect(() => readTasks('query', 'test' as 'sel')).toThrow(/sealed/);
+  test('v2 tasks list the day and ask about every external meeting, each answered one with its own citation check', () => {
+    const meetings: Record<string, number> = { 'multi-meeting': 2, 'multi-meeting-absent': 3, negative: 1 };
+    for (const t of allTasks('briefing', 'v2')) {
+      expect([t.task_id, /Today's calendar:\n(- \d{2}:\d{2} .+\n){3,5}/.test(t.task)]).toEqual([t.task_id, true]);
+      const asks = t.task.split('For each external meeting, include:\n')[1]!.split('\n').filter(l => l.startsWith('- '));
+      expect([t.task_id, asks.length]).toEqual([t.task_id, meetings[t.family]]);
+      const kinds = checkKinds(t);
+      expect([t.task_id, kinds.filter(k => k === 'citation').length, kinds.filter(k => k === 'value').length, kinds.filter(k => k === 'abstain').length])
+        .toEqual([t.task_id, t.family === 'negative' ? 0 : 2, t.family === 'negative' ? 0 : 2, t.family === 'multi-meeting' ? 0 : 1]);
+    }
+  });
+});
+
+describe('v2 hardening', () => {
+  test('a superseded record\'s value and page are distractors, and answering with them fails', () => {
+    for (const [skill, family] of [['query', 'gov-superseded'], ['fact-check', 'superseded']] as const) {
+      const tasks = allTasks(skill, 'v2').filter(t => t.family === family);
+      expect(tasks.length).toBeGreaterThan(0);
+      for (const t of tasks) {
+        const stale = t.distractors.values[0]!;
+        expect([t.task_id, t.gold.slugs.length, t.distractors.slugs.includes(t.gold.slugs[0]!), String(stale.value) === String(t.gold.values[0]!.value)]).toEqual([t.task_id, 1, false, false]);
+        const answer = `${skill === 'fact-check' ? 'STATUS: FALSE\n' : ''}${stale.value} (${t.distractors.slugs[0]})`;
+        expect([t.task_id, evaluateJudge(answer, t.judge).correct]).toEqual([t.task_id, false]);
+      }
+    }
+  });
+
+  test('two-value tasks check both values and cite each governing page', () => {
+    for (const [skill, families] of [['query', ['gov-pair']], ['fact-check', ['compound-supported', 'compound-contradicted']]] as const) {
+      for (const t of allTasks(skill, 'v2').filter(x => (families as readonly string[]).includes(x.family))) {
+        const kinds = checkKinds(t);
+        expect([t.task_id, kinds.filter(k => k === 'citation').length]).toEqual([t.task_id, t.gold.cite!.length]);
+        expect([t.task_id, kinds.filter(k => k === 'value').length]).toEqual([t.task_id, t.family === 'compound-supported' ? 0 : 2]);
+        if (t.gold.cite!.length > 1) expect([t.task_id, evaluateJudge(t.oracle_answer.split(t.gold.cite![1]![0]!).join('contracts/none'), t.judge).correct]).toEqual([t.task_id, false]);
+      }
+    }
+    expect(allTasks('fact-check', 'v2').some(t => (t.gold.cite?.length ?? 0) > 1)).toBe(true);
+  });
+
+  test('multi-hop answers cite the founder\'s own page; the company page alone fails', () => {
+    for (const t of allTasks('query', 'v2').filter(x => x.family === 'multi-hop')) {
+      expect([t.task_id, t.gold.slugs.length, t.gold.slugs[0]!.startsWith('people/')]).toEqual([t.task_id, 1, true]);
+      const answer = `${t.gold.values[0]!.value} founded it. [Source: ${t.distractors.slugs[0]}]`;
+      expect([t.task_id, evaluateJudge(answer, t.judge).correct]).toEqual([t.task_id, false]);
+    }
   });
 });
 
 describe('seeds', () => {
-  for (const skill of SKILLS) {
-    test(`${skill} seed is verbatim from gbrain ${SEED_GBRAIN_COMMIT.slice(0, 9)}`, () => {
-      expect(createHash('sha256').update(readSeed(skill)).digest('hex')).toBe(SEED_SHA256[skill]);
+  for (const version of DATASET_VERSIONS) for (const skill of SKILLS) {
+    test(`${datasetName(version)} ${skill} seed is verbatim from gbrain ${SEED_GBRAIN_COMMIT.slice(0, 9)}`, () => {
+      expect(createHash('sha256').update(readSeed(skill, version)).digest('hex')).toBe(SEED_SHA256[skill]);
       const installed = join(REPO_ROOT, 'node_modules/gbrain/skills', skill, 'SKILL.md');
       const pkg = JSON.parse(readFileSync(join(REPO_ROOT, 'node_modules/gbrain/package.json'), 'utf8')) as { version: string };
       const pinned = (JSON.parse(readFileSync(join(REPO_ROOT, 'package.json'), 'utf8')).dependencies.gbrain as string).endsWith(SEED_GBRAIN_COMMIT);
@@ -142,15 +217,16 @@ describe('seeds', () => {
 
 describe('criteria text and failed-check rendering', () => {
   test('one task-independent criteria text per skill, frozen with the data, naming no gold value, slug or entity', () => {
-    for (const skill of SKILLS) {
-      expect(readCriteria(skill)).toBe(CRITERIA[skill] + '\n');
-      expect(citedSlugs(CRITERIA[skill])).toEqual([]);
-      expect(/\d/.test(CRITERIA[skill])).toBe(false);
-      for (const t of allTasks(skill)) for (const v of t.gold.values) if (v.kind === 'name') expect([t.task_id, CRITERIA[skill].toLowerCase().includes(v.value.toLowerCase())]).toEqual([t.task_id, false]);
+    for (const version of DATASET_VERSIONS) for (const skill of SKILLS) {
+      const text = CRITERIA_TEXTS[version][skill];
+      expect(readCriteria(skill, version)).toBe(text + '\n');
+      expect(citedSlugs(text)).toEqual([]);
+      expect(/\d/.test(text)).toBe(false);
+      for (const t of allTasks(skill, version)) for (const v of t.gold.values) if (v.kind === 'name') expect([t.task_id, text.toLowerCase().includes(v.value.toLowerCase())]).toEqual([t.task_id, false]);
     }
   });
   test('a failed check renders without its argument', () => {
-    for (const skill of SKILLS) for (const t of trainSel(skill)) for (const c of t.judge.kind === 'rule' ? t.judge.checks : []) {
+    for (const version of DATASET_VERSIONS) for (const skill of SKILLS) for (const t of trainSel(skill, version)) for (const c of t.judge.kind === 'rule' ? t.judge.checks : []) {
       const text = renderFailedCheck(c);
       expect(/\d|\//.test(text)).toBe(false);
       for (const v of t.gold.values) expect(text.toLowerCase().includes(String(v.value).toLowerCase())).toBe(false);
@@ -158,9 +234,9 @@ describe('criteria text and failed-check rendering', () => {
   });
 });
 
-describe('mutation suite', () => {
+for (const version of DATASET_VERSIONS) describe(`mutation suite: ${datasetName(version)}`, () => {
   for (const skill of SKILLS) {
-    const probes = trainSel(skill);
+    const probes = trainSel(skill, version);
     test(`${skill}: the scorer passes the honest system and fails every fake system`, () => {
       const space: AnswerSpace<MethodTask, string> = {
         truth: t => t.oracle_answer,
@@ -182,7 +258,7 @@ describe('mutation suite', () => {
         },
       };
       const results = assertScorerRejectsFakeSystems({
-        category: `skillopt-method ${skill}`,
+        category: `${datasetName(version)} ${skill}`,
         probes,
         space,
         score: answers => {
@@ -221,13 +297,19 @@ describe('mutation suite', () => {
     };
     const unit = (v: MethodTask['gold']['values'][number]) => (v.kind === 'number' && v.unit === 'percent' ? '%' : v.kind === 'number' && v.unit === 'days' ? ' days' : '');
     let checked = 0;
-    for (const skill of SKILLS) for (const t of trainSel(skill).filter(x => x.answerable)) {
-      const v = t.gold.values[0];
-      const variants = v ? formats[v.kind]!(v.value).map(f => (v.kind === 'number' && v.unit === 'money' ? `$${f}` : f) + (v ? unit(v) : '')) : [''];
-      for (const value of variants) {
-        const cite = skill === 'briefing' ? `[Source: ${t.gold.slugs[0]}, updated 2026-10-30]` : `(source: ${t.gold.slugs[0]})`;
+    for (const skill of SKILLS) for (const t of trainSel(skill, version).filter(x => x.answerable)) {
+      const first = t.gold.values[0];
+      const n = first ? formats[first.kind]!(first.value).length : 1;
+      for (let i = 0; i < n; i++) {
+        const value = t.gold.values.map(v => {
+          const forms = formats[v.kind]!(v.value);
+          const f = forms[i % forms.length]!;
+          return (v.kind === 'number' && v.unit === 'money' ? `${f}` : f) + unit(v);
+        }).join(' and ');
+        const cite = (t.gold.cite ?? [t.gold.slugs]).map(g => (skill === 'briefing' ? `[Source: ${g[0]}, updated 2026-10-30]` : `(source: ${g[0]})`)).join(' ');
         const status = skill !== 'fact-check' ? '' : t.gold.status === 'supported' ? 'Status: LIKELY ACCURATE\n' : t.gold.status === 'contradicted' ? 'STATUS: LIKELY INACCURATE\n' : 'STATUS: FALSE\n';
-        const answer = `${status}In short, the answer is ${value}. ${cite}`;
+        const abstain = t.gold.subject ? `\nNo brain page for ${t.gold.subject}.` : '';
+        const answer = `${status}In short, the answer is ${value}. ${cite}${abstain}`;
         expect([t.task_id, answer, evaluateJudge(answer, t.judge).correct]).toEqual([t.task_id, answer, true]);
         checked++;
       }
@@ -238,8 +320,8 @@ describe('mutation suite', () => {
   test('a gold-pasting skill does not raise the test score above the noise floor', () => {
     const NOISE_FLOOR = 1 / 36;
     for (const skill of SKILLS) {
-      const train = readTasks(skill, 'train');
-      const test = readSealedTestTasks(skill);
+      const train = readTasks(skill, 'train', version);
+      const test = readSealedTestTasks(skill, version);
       const pasted = new Map(train.map(t => [t.task, t.oracle_answer]));
       const lookup = (t: MethodTask) => pasted.get(t.task) ?? "I don't know.";
       const dump = train.map(t => t.oracle_answer).join('\n\n');

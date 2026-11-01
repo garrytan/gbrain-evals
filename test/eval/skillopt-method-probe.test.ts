@@ -62,7 +62,7 @@ describe('probe runs', () => {
   test('the fake probe runs end to end through runSkillOpt and scoreSkillOnTasks and reads no test file', async () => {
     const r = await withHermeticEnv('n15-probe-test', async () => runProbe({ fake: true, skills: ['query'] }));
     expect(r.mode).toBe('fake');
-    expect(r.files_read).toEqual(['eval/data/skillopt-method-v1/query/train.jsonl', 'eval/data/skillopt-method-v1/query/sel.jsonl']);
+    expect(r.files_read).toEqual(['eval/data/skillopt-method-v2/query/train.jsonl', 'eval/data/skillopt-method-v2/query/sel.jsonl']);
     const q = r.skills[0]!;
     expect({ no_skill: q.no_skill, seed: q.seed, repeats: q.one_shot_repeats, kept: q.one_shot_kept, seed_opus: q.seed_opus, ceiling: q.ceiling }).toEqual({ no_skill: 0, seed: 0.5, repeats: [1, 1], kept: 1, seed_opus: 0.5, ceiling: 1 });
     expect(Object.keys(q.arms.seed.per_task).length).toBe(24);

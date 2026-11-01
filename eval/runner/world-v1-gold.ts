@@ -26,6 +26,9 @@ export interface RichPage {
     advisors?: string[];
     attendees?: string[];
     related_companies?: string[];
+    meeting_type?: string;
+    date?: string;
+    topic_company?: string;
   };
 }
 

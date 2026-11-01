@@ -2,8 +2,9 @@
  * A1 headroom probe for the SkillOpt method benchmark (GST-799, plan decision A).
  *
  * Before any optimizer adapter is built, measure whether gbrain's shipped
- * skills leave room for an optimizer to show anything. Selection split only;
- * the test split is never read. Per skill:
+ * skills leave room for an optimizer to show anything. It reads the default
+ * dataset (skillopt-method-v2 since probe 1 saturated v1), selection split
+ * only; the test split is never read. Per skill:
  *
  *   no-skill    a one-line neutral system prompt, Haiku 5.5, 3 runs per task
  *   seed        the shipped SKILL.md, Haiku 5.5, 3 runs per task
@@ -37,7 +38,7 @@ import { runSkillOpt, scoreSkillOnTasks, type BenchmarkTask } from 'gbrain/core/
 import { operations } from 'gbrain/operations';
 import { READ_ONLY_BRAIN_TOOLS } from '../../../node_modules/gbrain/src/core/skillopt/rollout.ts';
 import { loadCorpora, type MethodTask } from '../../generators/skillopt-method/common.ts';
-import { frontmatterTools, readSeed, readTasks } from './dataset.ts';
+import { datasetName, DEFAULT_DATASET, frontmatterTools, readSeed, readTasks } from './dataset.ts';
 import { countedScoreFn, evaluateJudge, SKILLS, type ScoreFn, type SkillName } from './score.ts';
 
 export const PROBE_MODELS = {
@@ -244,7 +245,7 @@ export async function runProbe(opts: ProbeOptions): Promise<ProbeResult> {
   const skills = opts.skills ?? SKILLS;
   const filesRead: string[] = [];
   const load = (skill: SkillName, split: 'train' | 'sel') => {
-    filesRead.push(`eval/data/skillopt-method-v1/${skill}/${split}.jsonl`);
+    filesRead.push(`eval/data/${datasetName(DEFAULT_DATASET)}/${skill}/${split}.jsonl`);
     return readTasks(skill, split);
   };
   const data = new Map(skills.map(s => [s, { train: load(s, 'train'), sel: load(s, 'sel') }]));

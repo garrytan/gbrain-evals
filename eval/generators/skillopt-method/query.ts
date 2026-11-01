@@ -83,7 +83,7 @@ export function queryDrafts(corpus: Corpus, rng: Rng): Draft[] {
   return drafts;
 }
 
-function negative(name: string, kind: string, evidence: string, task: string): Draft {
+export function negative(name: string, kind: string, evidence: string, task: string): Draft {
   return { ok: true, candidate: {
     family: 'negative',
     task,

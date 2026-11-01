@@ -36,8 +36,8 @@ export const FACT_CHECK_QUOTAS = {
 } as const;
 
 const PREAMBLE = 'Fact-check this claim before it ships. A gbrain pipeline produced it from the brain, so it is a data-derived claim.';
-const taskText = (claim: string) => `${PREAMBLE}\n\nCLAIM: ${claim}`;
-const report = (claim: string, status: string, source: string) => `[1] CLAIM: ${claim}\nLANE: data-derived\nSTATUS: ${status}\nSOURCE: ${source}`;
+export const taskText = (claim: string) => `${PREAMBLE}\n\nCLAIM: ${claim}`;
+export const report = (claim: string, status: string, source: string) => `[1] CLAIM: ${claim}\nLANE: data-derived\nSTATUS: ${status}\nSOURCE: ${source}`;
 
 export function factCheckDrafts(corpus: Corpus, rng: Rng): Draft[] {
   const drafts: Draft[] = [];
@@ -72,7 +72,13 @@ export function factCheckDrafts(corpus: Corpus, rng: Rng): Draft[] {
       oracle_answer: report(wrong, 'FALSE', `${f.row.governing_slug}: "${f.evidence}"`),
     } });
   }
+  drafts.push(...worldClaimDrafts(corpus, rng));
+  return drafts;
+}
 
+/** The world-v1 claims (founder-supported, not-founder) and the negative controls, shared with v2. */
+export function worldClaimDrafts(corpus: Corpus, rng: Rng): Draft[] {
+  const drafts: Draft[] = [];
   const companies = [...corpus.world.values()].filter(p => p.type === 'company');
   for (const company of companies) {
     const o = confirmFounder(corpus, company);

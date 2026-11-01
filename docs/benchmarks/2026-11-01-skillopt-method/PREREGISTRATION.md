@@ -84,4 +84,57 @@ Cap $20 for the whole probe (all three skills), enforced by the budget ledger ru
 
 ## Amendments
 
-None yet.
+### Amendment 1 (2026-11-01, after probe 1 and before probe 2): harden the tasks once
+
+This amendment was written after probe 1 and before probe 2 ran.
+
+**Probe 1.** Probe 1 ran at gbrain-evals `6b0d058a` on dataset v1 ([summary](probe/probe1/summary.json), [log](probe/probe1/run.log)). Selection scores:
+
+| Skill | No skill | Seed | One-shot repeats | Seed on Opus |
+|---|---|---|---|---|
+| `query` | 0.33 | 1.00 | 1.00, 1.00 | 0.96 |
+| `briefing` | 0.17 | 0.96 | 1.00, 1.00 | 0.50 |
+| `fact-check` | 0.00 | 0.58 | 1.00, not run | not run |
+
+No skill qualified, and the kept one-shot reached the ceiling on all three, so rule 2 applies: harden once and probe again. Two `fact-check` arms did not run because the $20 run budget ran out ($19.82 metered; $12.13 of it was Opus calls reading long pages). Neither could change the verdict: a second repeat cannot lower a kept 1.00, and the Opus arm does not gate.
+
+The runner then refused its own receipt, so probe 1's per-task rows and rewrite texts are lost, and its numbers come from the run log. Commit `559e196c` fixed this: a live receipt now carries a verdict (`pass` when every arm scored, else `partial`), and each skill's result is written to `probe-partial.json` as soon as it is scored.
+
+**Why harden.** On v1 the shipped seeds already scored 1.00 and 0.96 on `query` and `briefing`, so those tasks could not show room above the seed. On `fact-check` one rewrite took the seed from 0.58 to 1.00, which is consistent with a fix to output format. The goal of v2 is tasks where the skill's procedure decides the score:
+- searching widely enough;
+- taking the record that governs on a date over one it superseded, or one signed but not yet in force;
+- covering every entity asked about;
+- checking each part of a claim.
+
+**Dataset v2.** [`eval/data/skillopt-method-v2`](../../../eval/data/skillopt-method-v2/README.md): `MANIFEST.json` sha256 `df512633dd5d2f28c67ebc3d92c523c361c87747242f9b13713f7b14fe0c3d6d`, `data_sha256` `c948bfb52743ac0b03b970d581981298ee22fbdea15bbfe839d92341b5cb0ca3`. Generator seeds are 15011, 15012 and 15013, and a test regenerates the data byte for byte.
+
+v2 keeps everything v1 holds fixed:
+- each skill's output contract and the scorer's check kinds;
+- 24 train, 24 selection and 36 test tasks per skill;
+- one anchor per task, every anchor, gold fact and gold page in one split only, and at most three tasks per connected group of pages;
+- independent-oracle confirmation;
+- solvability controls that pass, and degenerate answers that fail.
+
+v1 stays frozen and validated. The runner and probe read v2.
+
+| Skill | Families (train / selection / test) | Oracle drops |
+|---|---|---|
+| `query` | gov-superseded 8/8/12, gov-pair 5/5/7, multi-hop 7/7/11, negative 4/4/6 | 62 of 406, all multi-hop |
+| `briefing` | multi-meeting 13/13/20, multi-meeting with an absent subject 7/7/10, negative 4/4/6 | 39 of 249, all person meetings |
+| `fact-check` | superseded 6/6/9, compound supported 3/3/4, compound contradicted 3/3/5, founder supported 3/3/5, not founder 5/5/7, negative 4/4/6 | 53 of 650 |
+
+Notes on each family:
+- `query` gov-superseded asks for an account attribute as of a date governed by a later record, and only the governing page counts as a citation. gov-pair asks for two attributes as of one date; 16 of its 17 tasks have a newer record signed but not yet in force. multi-hop asks, for example, who founded the company a person works with, and needs the final page cited.
+- `briefing` answered calendars hold two external meetings, and each needs its fact and a citation in briefing's form. Absent-subject calendars add a third meeting whose subject no page carries, which needs briefing's abstention naming that subject.
+- `fact-check` superseded claims state a value an older record held when a newer one governs. Compound claims state two attributes as of one date; 7 of the 21 cross two records. A contradicted compound claim needs both governing values.
+
+**Deviations from the hardening as specified:**
+- `query` gov-pair uses only pairs one record governs, so each has one citation check. Pairs across two records would have taken records gov-superseded already uses, and `fact-check`'s compound claims carry them instead.
+- Answered `briefing` calendars always hold two external meetings, not two or three.
+- `fact-check` quotas were rebalanced as listed above.
+
+The full notes are in each skill's `generation-report.json`.
+
+**Probe 2.** Same arms, models, runs, metric and gate as above, on v2's selection split, run with `--after-hardening`, so rule 3 applies: if fewer than two skills qualify and the kept one-shot is within 0.15 of the ceiling on a skill that does not, the verdict is **stop**, subject to rule 4's coverage condition. The solvability ceiling on v2 is 1.00 for all three skills.
+
+**Budget.** The estimate is $28, from probe 1's measured prices plus the longer v2 tasks. The cap is $35 on its own run in the probe's ledger, inside the plan's approved $1,000. A budget stop keeps every skill already scored. The gate is then read only where the missing arms cannot change it, and otherwise reported as `incomplete`.
