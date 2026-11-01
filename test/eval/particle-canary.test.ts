@@ -148,6 +148,15 @@ describe('the canary run', () => {
     expect(third.out).not.toContain('warning:');
   });
 
+  test('with no --warn flag, --compare against a baseline without log probabilities fails: the log-probability check measured nothing', () => {
+    const rec = JSON.parse(readFileSync(join(dir, 'a', 'particle-canary.json'), 'utf8')) as CanaryRecord;
+    writeFileSync(join(dir, 'no-logprobs.json'), JSON.stringify({ ...rec, results: rec.results.map(r => ({ ...r, mean_logprob: null, logprobs: null })) }));
+    const r = canary(['--paid', '--budget-run-id', runId, '--budget-ledger', ledger, '--out', join(dir, 'nl'), '--compare', join(dir, 'no-logprobs.json')], keyless());
+    expect(r.code).toBe(1);
+    expect(r.out).toContain('"compared":12,"complete":true,"changed_answers":0,"changed_identity":0,"mean_abs_logprob_change":null');
+    expect(r.out).toContain('the log-probability threshold checked nothing');
+  });
+
   test('--compare naming the file this run writes is refused before anything is sent, and the baseline stays as it was', () => {
     const baseline = join(dir, 'a', 'particle-canary.json');
     const before = readFileSync(baseline, 'utf8');

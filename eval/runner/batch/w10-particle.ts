@@ -127,7 +127,7 @@ async function fullHistoryAt(root: string, model: string): Promise<Map<string, R
 }
 
 /** A comparator arm's bodies rebuilt as it sent them, every one matching the committed manifest's hash, or a refusal. */
-async function rehash(arm: string, c5fb0201: string | null): Promise<{ bodies: Map<string, Record<string, unknown>>; record: Record<string, unknown> }> {
+export async function rehash(arm: string, c5fb0201: string | null): Promise<{ bodies: Map<string, Record<string, unknown>>; record: Record<string, unknown> }> {
   const path = join(MANIFEST_DIR, `${arm}.json`);
   const manifest = readManifest(path);
   const want = new Map(manifest.requests.map(r => [r.question_id, r.body_sha256]));
@@ -278,7 +278,11 @@ export async function replayQuestions(opts: {
 export interface LedgerEntryLite { description: string; reserved_usd: number; actual_usd: number | null; status: string }
 export interface Bar { pass: boolean; [k: string]: unknown }
 
-/** Preregistered bars 1 to 4 on one arm's particle requests: metering, receipts, truncation and errors. */
+/**
+ * Preregistered bars 1 to 4 on one arm's particle requests: metering, receipts, truncation and errors. Bars 1 and 2 fail
+ * when the arm sent no particle request: answers replayed from the response cache were measured by the run that paid for
+ * them, so an arm served wholly from the cache (a rerun into a fresh --out on the same cache) has measured nothing.
+ */
 export function checkBars(rows: ParticleRow[], receipts: UsageReceipt[], entries: LedgerEntryLite[]): Record<'metering' | 'receipts' | 'truncation' | 'errors', Bar> {
   const sent = receipts.filter(r => r.model === PARTICLE && !r.from_cache);
   const metered = entries.filter(e => e.description.startsWith('particle:'));
@@ -299,10 +303,10 @@ export function checkBars(rows: ParticleRow[], receipts: UsageReceipt[], entries
   const failed = rows.filter(r => r.error !== null && !r.budget_stop).length;
   return {
     metering: {
-      pass: unpriced === 0 && unsettled === 0 && metered.length === sent.length && gap <= 0.02, basis: 'usage fields (Particle offers no balance read by API)',
+      pass: sent.length > 0 && unpriced === 0 && unsettled === 0 && metered.length === sent.length && gap <= 0.02, basis: 'usage fields (Particle offers no balance read by API)',
       particle_requests: sent.length, ledger_entries: metered.length, unsettled, unpriced, ledger_usd: Number(ledgerUsd.toFixed(6)), usage_usd: Number(usageUsd.toFixed(6)), gap: Number(gap.toFixed(6)),
     },
-    receipts: { pass: receiptProblems === 0, particle_receipts: sent.length, problems: receiptProblems },
+    receipts: { pass: sent.length > 0 && receiptProblems === 0, particle_receipts: sent.length, problems: receiptProblems },
     truncation: { pass: answered.length > 0 && truncated / answered.length <= 0.01, truncated, answered: answered.length, rate: answered.length ? Number((truncated / answered.length).toFixed(4)) : null },
     errors: { pass: rows.length > 0 && failed / rows.length <= 0.02, failed_after_retries: failed, questions: rows.length, rate: rows.length ? Number((failed / rows.length).toFixed(4)) : null },
   };
@@ -318,7 +322,7 @@ function ledgerEntries(ledgerPath: string, runId: string, participant: string | 
 const quantile = (xs: number[], p: number) => { const s = [...xs].sort((a, b) => a - b); return s.length ? s[Math.min(s.length - 1, Math.ceil(p * s.length) - 1)] : null; };
 const tally = (xs: (string | null | undefined)[]) => xs.reduce((m, x) => ({ ...m, [String(x)]: (m[String(x)] ?? 0) + 1 }), {} as Record<string, number>);
 
-async function run(armId: string, argv: string[]): Promise<number> {
+export async function run(armId: string, argv: string[]): Promise<number> {
   const arm = REPLAY_ARMS[armId];
   if (!arm) throw new Error(`unknown arm ${armId}; arms: ${Object.keys(REPLAY_ARMS).join(', ')}`);
   const out = flag(argv, '--out');

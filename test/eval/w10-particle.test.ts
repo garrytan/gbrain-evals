@@ -4,14 +4,14 @@
  * development-lane rule and the keyless re-score. Keyless: committed W10 receipts only, provider replies from a mocked
  * fetch, a placeholder Particle key.
  */
-import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
+import { afterAll, afterEach, beforeEach, describe, expect, test } from 'bun:test';
 import { createHash } from 'node:crypto';
 import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { gzipSync } from 'node:zlib';
-process.env.W10_STATE_DIR = join(tmpdir(), `w10-particle-test-${process.pid}`);
-process.env.W10_PARTICLE_STATE_DIR = join(tmpdir(), `w10-particle-state-${process.pid}`);
+const STATE_DIRS = { W10_STATE_DIR: join(tmpdir(), `w10-particle-test-${process.pid}`), W10_PARTICLE_STATE_DIR: join(tmpdir(), `w10-particle-state-${process.pid}`) };
+Object.assign(process.env, STATE_DIRS);
 const { ARMS, r1 } = await import('../../eval/runner/batch/w10.ts');
 const { judgeBody } = await import('../../eval/runner/batch/sources.ts');
 const { ChatClient } = await import('../../eval/runner/memory-qa/qa-v2.ts');
@@ -32,6 +32,7 @@ afterEach(() => {
   for (const k of ENV) { if (saved[k] === undefined) delete process.env[k]; else process.env[k] = saved[k]; }
   for (const d of dirs.splice(0)) rmSync(d, { recursive: true, force: true });
 });
+afterAll(() => { for (const d of Object.values(STATE_DIRS)) rmSync(d, { recursive: true, force: true }); });
 
 const particleReply = (content: string, finish = 'stop', reasoning = 120) => ({
   id: 'chatcmpl-1', object: 'chat.completion', model: 'particle-ai/particle-1', service_tier: 'default', system_fingerprint: 'fp_1', metadata: { weight_version: 'default' },
@@ -78,6 +79,26 @@ describe('comparator text', () => {
     expect(P.loadInputs('r1').get('q1')).toEqual({ system: 's', user: 'u' });
     writeFileSync(join(P.STATE_DIR, 'inputs', 'r1.ndjson.gz'), gzipSync(content.replace('"u"', '"v"')));
     expect(() => P.loadInputs('r1')).toThrow('no longer matches the build record');
+  });
+
+  test('a rebuilt comparator body that no longer hashes to its committed manifest is refused', async () => {
+    const arm = ARMS['w10b-sol-notes'];
+    const build = arm.build;
+    expect((await P.rehash('w10b-sol-notes', null)).record).toMatchObject({ bodies: 500, matching: 500, differing_at_pin: 0 });
+    arm.build = () => { const built = build(); const [id, body] = [...built.bodies][0]; built.bodies.set(id, { ...body, max_tokens: 1 }); return built; };
+    try {
+      await expect(P.rehash('w10b-sol-notes', null)).rejects.toThrow('1 of 500 rebuilt bodies differ from the committed manifest');
+    } finally { arm.build = build; }
+  });
+
+  test('whole-history bodies that no longer render at the pin need a gbrain c5fb0201 checkout, and a checkout at any other commit is refused', async () => {
+    const arm = ARMS['w10c-sol-full'];
+    const build = arm.build;
+    arm.build = () => ({ bodies: new Map(), source: 'none rendered', protocol: { name: 'test', sha256: '' } });
+    try {
+      await expect(P.rehash('w10c-sol-full', null)).rejects.toThrow('150 of 150 whole-history bodies no longer render byte for byte at the pinned gbrain; pass --gbrain-c5fb0201');
+      await expect(P.rehash('w10c-sol-full', ROOT)).rejects.toThrow(', not gbrain c5fb0201');
+    } finally { arm.build = build; }
   });
 
   test('a body of any other shape is refused', () => {
@@ -201,6 +222,25 @@ describe('preregistered bars', () => {
     expect(P.checkBars(many(2, { error: 'particle 503: busy', truncated: null }), [], []).errors.pass).toBe(true);
     expect(P.checkBars(many(3, { error: 'particle 503: busy', truncated: null }), [], []).errors.pass).toBe(false);
   });
+
+  test('bars 1 and 2 fail an arm whose every particle answer came from the response cache, since that arm measured nothing', async () => {
+    const out = await run();
+    const cached = out.receipts.map(r => (r.model === P.PARTICLE ? { ...r, from_cache: true } : r));
+    const bars = P.checkBars(out.rows, cached, []);
+    expect(bars.metering).toMatchObject({ pass: false, particle_requests: 0, ledger_entries: 0 });
+    expect(bars.receipts).toMatchObject({ pass: false, particle_receipts: 0 });
+    expect([bars.truncation.pass, bars.errors.pass]).toEqual([true, true]);
+  });
+});
+
+describe('run', () => {
+  test('refuses an --out that already holds rows and leaves it as it was', async () => {
+    const out = tmp();
+    writeFileSync(join(out, 'rows.ndjson'), '{}\n');
+    await expect(P.run('w10b-particle-notes', ['--out', out])).rejects.toThrow('already holds rows; a rerun goes to a fresh --out');
+    expect(readdirSync(out)).toEqual(['rows.ndjson']);
+    expect(readFileSync(join(out, 'rows.ndjson'), 'utf8')).toBe('{}\n');
+  });
 });
 
 describe('development-lane test', () => {
@@ -241,7 +281,8 @@ describe('keyless re-score', () => {
     expect(vsOpus.delta).toBe(0);
     expect(out.decision_b.flip).toBe(false);
   });
-test('report refuses an arm that stopped or left questions unrun', () => {
+
+  test('report refuses an arm that stopped or left questions unrun', () => {
     const dir = tmp();
     const arm = join(dir, 'arms', 'w10b-particle-notes');
     mkdirSync(arm, { recursive: true });

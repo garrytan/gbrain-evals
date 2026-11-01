@@ -149,7 +149,8 @@ Keys: `PARTICLE_API_KEY` for the reader and `OPENAI_API_KEY` for the judge. Data
 ```bash
 # $0: rebuild and check every comparator body, render the whole-history prompts from gbrain c5fb0201
 git clone https://github.com/garrytan/gbrain /tmp/gbrain-c5fb0201 && git -C /tmp/gbrain-c5fb0201 checkout c5fb0201d1960a0a5a81c35d77718311b03154b7
-# W10_PARTICLE_STATE_DIR holds the saved prompt text and the response cache; an empty one means every answer is a fresh paid call
+# W10_PARTICLE_STATE_DIR holds the saved prompt text and the response cache; from an empty one each distinct prompt is paid once,
+# and a prompt already answered replays from the cache (120 current-pin prompts repeat R1's)
 export W10_PARTICLE_STATE_DIR=<an empty directory>
 LME_DATASET=<longmemeval_s_cleaned.json> W10_STATE_DIR=<another empty directory> \
   bun eval/runner/batch/w10-particle.ts build --gbrain-c5fb0201 /tmp/gbrain-c5fb0201
