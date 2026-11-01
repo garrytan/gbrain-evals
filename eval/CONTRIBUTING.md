@@ -116,8 +116,12 @@ lanes.
    ```
 
    Without `CAT35_FULL=1` the runner scores the two-conversation smoke set. `--lanes none` scores only your folder. A run
-   needs `ANTHROPIC_API_KEY` and `OPENAI_API_KEY` like any Cat 35 run, and the runner prints its pre-flight cost
-   projection before the first judge call.
+   needs `ANTHROPIC_API_KEY` and `OPENAI_API_KEY` like any Cat 35 run. Before the first judge call the runner prints
+   its pre-flight cost projection, with your lane's share, and refuses to start when the projection exceeds
+   `CAT35_HARD_STOP_USD` (default $40). Your lane's share is priced from the documents it read, as the judge receives
+   them: every judge call that can read a document, its claims or the conversation, at the judge model's rates, each
+   with its full answer allowance and one retry, so a folder of large documents judged by an Opus or GPT model can
+   exceed the default cap.
 
 Your lane is judged the way gbrain's dream lane is, on recall of the planted facts with an evidence check that the quote
 the judge cites is in your document and in the conversation, plus claim grounding, distractor leakage, the usability
@@ -140,9 +144,11 @@ The runner treats the folder as untrusted. It opens only the `<transcript_id>.md
 provider call it refuses the whole run on a symlink, anything that is not a regular file, a hard-linked file, a file
 over 64 KiB, a file with more than 80 claims (what the grounding judge grades in one call), invalid UTF-8, a document
 that contains one of the corpus's answer-key ids (a sign the system read `gold/`), or a folder that was replaced or
-swapped for a link after the run resolved its path. On Linux the runner holds the folder open and reads every file
-through that handle. A lane name is lowercase letters, digits and dashes, up to 32 characters, and cannot reuse a
-built-in lane name. Name the lane by what the system does, such as `ext-notes`; product names belong only in
+swapped for a link after the run resolved its path. The runner holds the folder open and reads every file through that
+handle's path under `/proc/self/fd`. Bun has no other race-free way to read a folder that could be swapped mid-run, so
+on a system without `/proc/self/fd`, such as macOS, the runner refuses the external lane; run it on Linux. A lane
+name is lowercase letters, digits and dashes, up to 32 characters, and cannot reuse a built-in lane name. Name the lane
+by what the system does, such as `ext-notes`; product names belong only in
 [docs/comparison-systems.md](../docs/comparison-systems.md).
 
 Know the limits before you compare numbers. Your documents go to the judge's provider, so keep private data out of them.
@@ -210,6 +216,13 @@ See [CREDITS.md](CREDITS.md) for attribution. Contributions to external question
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
+
+### 2026-11-01: The external lane's cost projection and platform
+
+The Cat 35 external-lane section now says the pre-flight projection prices your lane from the documents it read and
+names your lane's share, and that the runner refuses the lane on a system without `/proc/self/fd`. It said only that the
+runner printed a projection, and that on Linux it read every file through the folder handle, without saying what
+happened elsewhere: other systems read by path, which a folder swapped mid-run could redirect.
 
 ### 2026-11-01: Register a new category's default models
 
