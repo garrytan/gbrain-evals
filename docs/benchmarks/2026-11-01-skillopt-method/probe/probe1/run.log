@@ -1,0 +1,82 @@
+# BrainBench N15: SkillOpt method benchmark, Phase 1 (gbrain 0.60.531.0)
+[budget] n15-skillopt-method-probe: estimated cost $20.00; ledger <work>/ledger.sqlite
+[budget] n15-skillopt-method-probe: joined shared run n15-skillopt-method-probe-2026-11-01T19-52-34-193Z-4954f076 ($20.00 across all of its workers)
+  Setting up brain schema (v281)...
+  276 migration(s) applied
+[gbrain] content-sanity warn: contracts/2025-03-28-qfl-msa (58180 bytes) — exceeds warn threshold; stored and searchable, no action needed
+[n15 probe] query: 24 selection tasks, 24 train tasks
+[gbrain] vector search unavailable (missing_env) — results are keyword-only. Run `gbrain doctor` to diagnose.
+[n15 probe]   no-skill 0.3333333333333333, seed 1
+[skillopt] Models for query:
+[skillopt]   optimizer  anthropic:claude-opus-5-5  (caller-supplied) *
+[skillopt]   target     anthropic:claude-haiku-5-5  (caller-supplied) *
+[skillopt]   judge      anthropic:claude-haiku-5-5  (inactive: rule/qrels benchmark)
+[skillopt]   expansion  anthropic:claude-haiku-4-5-20251001  (unrecorded: gateway not resolved against this brain) *
+[skillopt]   chat       anthropic:claude-haiku-5-5  (unrecorded: gateway not resolved against this brain) *
+[skillopt]   embedding  openai:text-embedding-3-large  (built-in default) *
+[skillopt]   optimizer output cap 16000 tokens (--reflect-max-tokens)
+[skillopt]   * not chosen by touchpoint-specific configuration (models.default, a built-in default, a substitution or unknown provenance); --models-strict aborts on these
+[skillopt] Models for query:
+[skillopt]   optimizer  anthropic:claude-opus-5-5  (caller-supplied) *
+[skillopt]   target     anthropic:claude-haiku-5-5  (caller-supplied) *
+[skillopt]   judge      anthropic:claude-haiku-5-5  (inactive: rule/qrels benchmark)
+[skillopt]   expansion  anthropic:claude-haiku-4-5-20251001  (unrecorded: gateway not resolved against this brain) *
+[skillopt]   chat       anthropic:claude-haiku-5-5  (unrecorded: gateway not resolved against this brain) *
+[skillopt]   embedding  openai:text-embedding-3-large  (built-in default) *
+[skillopt]   optimizer output cap 16000 tokens (--reflect-max-tokens)
+[skillopt]   * not chosen by touchpoint-specific configuration (models.default, a built-in default, a substitution or unknown provenance); --models-strict aborts on these
+[n15 probe]   one-shot 1, 1 (kept seed), seed on Opus 0.9583333333333334
+[n15 probe] briefing: 24 selection tasks, 24 train tasks
+[n15 probe]   no-skill 0.16666666666666666, seed 0.9583333333333334
+[skillopt] Models for briefing:
+[skillopt]   optimizer  anthropic:claude-opus-5-5  (caller-supplied) *
+[skillopt]   target     anthropic:claude-haiku-5-5  (caller-supplied) *
+[skillopt]   judge      anthropic:claude-haiku-5-5  (inactive: rule/qrels benchmark)
+[skillopt]   expansion  anthropic:claude-haiku-4-5-20251001  (unrecorded: gateway not resolved against this brain) *
+[skillopt]   chat       anthropic:claude-haiku-5-5  (unrecorded: gateway not resolved against this brain) *
+[skillopt]   embedding  openai:text-embedding-3-large  (built-in default) *
+[skillopt]   optimizer output cap 16000 tokens (--reflect-max-tokens)
+[skillopt]   * not chosen by touchpoint-specific configuration (models.default, a built-in default, a substitution or unknown provenance); --models-strict aborts on these
+[skillopt] Models for briefing:
+[skillopt]   optimizer  anthropic:claude-opus-5-5  (caller-supplied) *
+[skillopt]   target     anthropic:claude-haiku-5-5  (caller-supplied) *
+[skillopt]   judge      anthropic:claude-haiku-5-5  (inactive: rule/qrels benchmark)
+[skillopt]   expansion  anthropic:claude-haiku-4-5-20251001  (unrecorded: gateway not resolved against this brain) *
+[skillopt]   chat       anthropic:claude-haiku-5-5  (unrecorded: gateway not resolved against this brain) *
+[skillopt]   embedding  openai:text-embedding-3-large  (built-in default) *
+[skillopt]   optimizer output cap 16000 tokens (--reflect-max-tokens)
+[skillopt]   * not chosen by touchpoint-specific configuration (models.default, a built-in default, a substitution or unknown provenance); --models-strict aborts on these
+[n15 probe]   one-shot 1, 1 (kept 1), seed on Opus 0.5
+[n15 probe] fact-check: 24 selection tasks, 24 train tasks
+[n15 probe]   no-skill 0, seed 0.5833333333333334
+[skillopt] Models for fact-check:
+[skillopt]   optimizer  anthropic:claude-opus-5-5  (caller-supplied) *
+[skillopt]   target     anthropic:claude-haiku-5-5  (caller-supplied) *
+[skillopt]   judge      anthropic:claude-haiku-5-5  (inactive: rule/qrels benchmark)
+[skillopt]   expansion  anthropic:claude-haiku-4-5-20251001  (unrecorded: gateway not resolved against this brain) *
+[skillopt]   chat       anthropic:claude-haiku-5-5  (unrecorded: gateway not resolved against this brain) *
+[skillopt]   embedding  openai:text-embedding-3-large  (built-in default) *
+[skillopt]   optimizer output cap 16000 tokens (--reflect-max-tokens)
+[skillopt]   * not chosen by touchpoint-specific configuration (models.default, a built-in default, a substitution or unknown provenance); --models-strict aborts on these
+[skillopt] Models for fact-check:
+[skillopt]   optimizer  anthropic:claude-opus-5-5  (caller-supplied) *
+[skillopt]   target     anthropic:claude-haiku-5-5  (caller-supplied) *
+[skillopt]   judge      anthropic:claude-haiku-5-5  (inactive: rule/qrels benchmark)
+[skillopt]   expansion  anthropic:claude-haiku-4-5-20251001  (unrecorded: gateway not resolved against this brain) *
+[skillopt]   chat       anthropic:claude-haiku-5-5  (unrecorded: gateway not resolved against this brain) *
+[skillopt]   embedding  openai:text-embedding-3-large  (built-in default) *
+[skillopt]   optimizer output cap 16000 tokens (--reflect-max-tokens)
+[skillopt]   * not chosen by touchpoint-specific configuration (models.default, a built-in default, a substitution or unknown provenance); --models-strict aborts on these
+[skillopt] one-shot rewrite produced no candidate (one_shot_rewrite_failed: [chat(anthropic:claude-opus-5-5)] anthropic:claude-opus-5-5 chat: reserving $0.4556 would take this run to $20.2241, over its $20.00 budget)
+[n15 probe]   one-shot 1, none (kept 1), seed on Opus error
+480 | /** Atomic write: upgrade to v2, scrub machine-local paths, validate, write temp file in the same dir, rename over target. */
+481 | export function writeReceipt(path: string, input: Receipt): void {
+482 |   const receipt = scrubMachinePaths(upgradeReceipt(input), REPO_ROOT, '', '');
+483 |   const violations = validateStoredReceipt(receipt);
+484 |   if (violations.length > 0) {
+485 |     throw new Error(`refusing to write invalid receipt (${receipt.category}): ${violations.join('; ')}`);
+                    ^
+error: refusing to write invalid receipt (n15-skillopt-method): completed receipt requires verdict pass|partial|fail
+      at writeReceipt (eval/runner/receipt.ts:485:15)
+      at main (eval/runner/n15-skillopt-method.ts:208:3)
+
