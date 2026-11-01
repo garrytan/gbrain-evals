@@ -957,6 +957,11 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
   const scaffold = loadScaffold();
   const scaffoldBySlug = new Map(scaffold.map((p) => [p.slug, p.body]));
   let totalCost = 0;
+  let externalCost = 0;
+  const addCost = (lane: Lane, usd: number) => {
+    if (lane === external) externalCost += usd;
+    else totalCost += usd;
+  };
 
   // Per-transcript state.
   interface TState {
@@ -1236,7 +1241,7 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
           assertCat35CoverageInput(coverageInput, f.gold);
           const cov = await scoreSalienceCoverage({ lane, transcript_id: tid, ...coverageInput }, jcfg);
           judgeCalls++;
-          totalCost += cov.cost_usd;
+          addCost(lane, cov.cost_usd);
           if (cov.judge_failed_ids.length) judgeFailures++;
           recordJudgeEvent(tid, lane, 'coverage', f.gold.items.map((i) => i.item_id), cov, cov.judge_failed_ids.length > 0);
           const byId = new Map(cov.verdicts.map((v) => [v.item_id, v]));
@@ -1284,7 +1289,7 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
               jcfg,
             );
             judgeCalls++;
-            totalCost += g.cost_usd;
+            addCost(lane, g.cost_usd);
             if (g.judge_failed) judgeFailures++;
             recordJudgeEvent(tid, lane, 'joint_grounding', jointFallback.map((i) => i.item_id), g, g.judge_failed);
             for (let i = 0; i < jointFallback.length; i++) {
@@ -1307,7 +1312,7 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
         if (claims.length) {
           const g = await scoreGrounding({ label: lane === external ? `external:${tid}` : `${lane}:${tid}`, claims, transcript: f.transcriptText }, jcfg);
           judgeCalls++;
-          totalCost += g.cost_usd;
+          addCost(lane, g.cost_usd);
           if (g.judge_failed) judgeFailures++;
           const eventId = recordJudgeEvent(tid, lane, 'hallucination', claims.map((_, i) => String(i)), g, g.judge_failed);
           groundingEvidence.push({
@@ -1361,7 +1366,7 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
           assertCat35LeakInput(leakInput, f.gold);
           const conf = await confirmDistractorLeaks(leakInput, jcfg);
           judgeCalls++;
-          totalCost += conf.cost_usd;
+          addCost(lane, conf.cost_usd);
           if (conf.judge_failed) judgeFailures++;
           else bucket.confirmed += conf.confirmed.length;
           const eventId = recordJudgeEvent(tid, lane, 'distractor_confirmation', hits, conf, conf.judge_failed);
@@ -1386,7 +1391,7 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
           assertCat35UsabilityInput(usabilityInput, f.gold);
           const u = await scoreUsabilityChecklist(usabilityInput, jcfg);
           judgeCalls++;
-          totalCost += u.cost_usd;
+          addCost(lane, u.cost_usd);
           if (u.judge_failed) judgeFailures++;
           else usabilityPerTranscript.push({ transcript_id: tid, lane, satisfied: u.satisfied, total: u.total });
           recordJudgeEvent(tid, lane, 'usability', u.checks.map((c) => c.id), u, u.judge_failed);
@@ -1407,7 +1412,7 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
           jcfg,
         );
         judgeCalls++;
-        totalCost += g.cost_usd;
+        addCost(lane, g.cost_usd);
         recordJudgeEvent(tid, lane, 'hazard', [h.hazard_id], g, g.judge_failed);
         if (g.judge_failed) {
           judgeFailures++;
@@ -1551,14 +1556,16 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
   const priorFound: { path: string; receipt: Record<string, unknown> } | null = (() => {
     // Content-aware discovery (a filename filter missed the committed
     // baseline-receipt.json and made the fresh-clone fallback dead code):
-    // any parseable .json whose cat matches is a candidate. Newest-first;
-    // prefer a mode-comparable receipt so a later BPRE smoke can't shadow
-    // the latest full receipt.
+    // any parseable .json whose cat matches and whose lanes are lane names is a
+    // candidate. Newest-first;
+    // prefer a receipt comparable on mode and lane set, so a later BPRE smoke
+    // can't shadow the latest full receipt and an external-only (--lanes none)
+    // receipt can't shadow the latest gbrain receipt.
     // Collect from BOTH dirs BEFORE filtering: breaking on the first dir with
     // any receipt meant a local BPRE smoke hid the committed full baseline —
     // exactly the shadowing this exists to prevent. Preference order:
-    // mode-comparable beats not; within a tier, local beats committed
-    // (dirs scanned local-first), newer beats older.
+    // same mode and lanes, then same mode, then any; within a tier, local
+    // beats committed (dirs scanned local-first), newer beats older.
     const found: Array<{ path: string; receipt: Record<string, unknown>; local: boolean }> = [];
     for (const dir of [REPORT_DIR, BASELINE_DIR]) {
       if (!existsSync(dir)) continue;
@@ -1566,7 +1573,7 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
         if (!f.endsWith('.json')) continue;
         try {
           const parsed = JSON.parse(readFileSync(join(dir, f), 'utf8'));
-          if (parsed?.cat === 'cat35-transcript-distill') {
+          if (parsed?.cat === 'cat35-transcript-distill' && Array.isArray(parsed.lanes) && parsed.lanes.every((l: unknown) => typeof l === 'string')) {
             found.push({ path: join(dir, f), receipt: parsed, local: dir === REPORT_DIR });
           }
         } catch {
@@ -1575,8 +1582,10 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
       }
     }
     if (!found.length) return null;
-    const comparable = found.filter((c) => (c.receipt as { mode?: string }).mode === mode);
-    const pool = comparable.length ? comparable : found;
+    const laneKey = (lanes: string[]) => [...lanes].sort().join(',');
+    const sameMode = found.filter((c) => (c.receipt as { mode?: string }).mode === mode);
+    const sameLanes = sameMode.filter((c) => laneKey(c.receipt.lanes as string[]) === laneKey(opts.lanes));
+    const pool = sameLanes.length ? sameLanes : sameMode.length ? sameMode : found;
     const localPool = pool.filter((c) => c.local);
     const finalPool = localPool.length ? localPool : pool;
     return finalPool[finalPool.length - 1];
@@ -1840,10 +1849,12 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
         .filter(([, s]) => Object.keys(s.laneError).length)
         .map(([tid, s]) => [tid, s.laneError]),
     ),
-    // Judges + facts extraction only: runPhaseSynthesize exposes job status,
-    // not token spend, so the dream lane's LLM cost is NOT included here.
+    // Judges + facts extraction for the built-in lanes only: runPhaseSynthesize
+    // exposes job status, not token spend, so the dream lane's LLM cost is NOT
+    // included here, and the external lane's judge spend is external_cost_usd.
     total_cost_usd: Number(totalCost.toFixed(4)),
-    cost_note: 'judges + facts extraction only; dream-lane subagent spend is not surfaced by the gbrain phase API',
+    external_cost_usd: external ? Number(externalCost.toFixed(4)) : null,
+    cost_note: 'built-in lanes\' judges + facts extraction only; the external lane\'s judge spend is external_cost_usd; dream-lane subagent spend is not surfaced by the gbrain phase API',
     wall_seconds: Math.round((Date.now() - wallStart) / 1000),
     gates,
     gate_pass: gatePass,
@@ -1875,7 +1886,13 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
       detailed_receipt: receiptPath,
     },
     judge: { model: judgeModel, temperature: temperatureSent(judgeModel, JUDGE_TEMPERATURE), rubric_version: CAT35_JUDGE_PROMPT_VERSION },
-    data: { coverage_by_lane: coverageByLane, gates, judge_failed_rate: judgeFailedRate, detailed_receipt: receiptPath },
+    data: {
+      coverage_by_lane: Object.fromEntries(Object.entries(coverageByLane).filter(([lane]) => isBuiltinLane(lane))),
+      gates,
+      judge_failed_rate: judgeFailedRate,
+      external_cost_usd: receipt.external_cost_usd,
+      detailed_receipt: receiptPath,
+    },
     startedAt,
   });
   if (paidRun) {
@@ -1927,7 +1944,7 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
   if (externalLaneRecord) {
     err(`external lane ${externalLaneRecord.name}: ${externalLaneRecord.files.length} documents (sha256 in the receipt), ${externalLaneRecord.files.reduce((n, f) => n + f.claims, 0)} gradable claims, ${externalLaneRecord.missing.length} missing, judge_failed_rate ${((externalJudgeFailedRate ?? 0) * 100).toFixed(1)}%; not publishable, the harness has no record of how they were made`);
   }
-  err(`judge_failed_rate: ${(judgeFailedRate * 100).toFixed(1)}%  cost: $${totalCost.toFixed(2)} (judges+facts; dream-lane spend not surfaced)  wall: ${receipt.wall_seconds}s`);
+  err(`judge_failed_rate: ${(judgeFailedRate * 100).toFixed(1)}%  cost: $${totalCost.toFixed(2)} (judges+facts; dream-lane spend not surfaced)${external ? `, external lane $${externalCost.toFixed(2)}` : ''}  wall: ${receipt.wall_seconds}s`);
   if (deltas) {
     for (const [k, d] of Object.entries(deltas)) err(`delta ${k}: ${(d.prior * 100).toFixed(1)}% → ${(d.current * 100).toFixed(1)}% (${d.delta >= 0 ? '+' : ''}${(d.delta * 100).toFixed(1)}pp, informational)`);
     if (itemFlips.length) err(`item flips vs prior: ${itemFlips.length}`);

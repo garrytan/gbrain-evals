@@ -16,6 +16,70 @@ This records what each gbrain-evals release changed and what its measurements me
 - **What does not change.** Other readers' requests, answer records and run configs are unchanged: the Anthropic and OpenAI full-context bodies are pinned by sha256 from main `8ca8d2cc` (`test/eval/file-agent.test.ts`). No counted Q1 cell reads with particle-1; adding it as its own arm is the Q1 owner's amendment. `docs/scoreboard.md` now gives the judge cap as 2,048 tokens, the value the code holds; it said 1,024.
 - **Campaign identity.** `eval/runner/metering-proxy.ts`, `eval/runner/q1/cell.ts`, `eval/runner/shootout-cell.ts`, `eval/runner/memory-qa` and `eval/runner/systems` are in Q1's executed tree, so the Q1 campaign hash moves, and a new campaign manifest's `output_caps` gains the per-model key.
 
+### The particle-1 weight canary treats a missing signal as a failure, and the freshness check keeps the Particle key on Particle's hosts
+
+- **A missing log probability no longer reads as 0** (#230). The provider module turns a null or empty log probability into 0, so a canary answer with no real weight signal could compare as unchanged. The canary now reads each token's log probability, and each listed alternative's, from the raw response. A null, empty, string or missing value leaves that answer's log probabilities and mean unset. `--compare` measures the log-probability move only when every answer both canaries gave has a mean in both, where before it averaged the answers that had one. One missing answer now fails the comparison (exit 1).
+- **`--compare` refuses a canary sent to a loopback endpoint** (#231). A metering proxy or the keyless fake records no upstream, so a loopback canary cannot show which server answered, and two loopback canaries used to compare as the same endpoint. A loopback endpoint on either side is now refused before anything is sent. The six committed canaries all went straight to `https://api.particle.ai/v1`, so they still compare.
+- **`bun scripts/model-freshness.ts` sends `PARTICLE_API_KEY` only to a host `compatSend` would send it to** (#232). Before it reads Particle's model list, it applies `compatSend`'s host check: a Particle API host the budget ledger prices, or loopback. Any other `PARTICLE_BASE_URL` host gets no request, and the read fails with the host check's reason.
+
+### claude-opus-5-5 and particle-1 are the primary models in the rule docs
+
+- **CLAUDE.md's "Choose models" names `claude-opus-5-5` and `particle-1` as the primary models** (unit U4 of the
+  particle-1 plan, following Garry's decision of 2026-10-31). Every model-comparison run includes both as readers or
+  agents, and its first table shows both with cost per correct answer. A campaign already preregistered adds particle-1
+  at its next amendment, and a runner with no `particle:` route lists particle-1 under `models_not_run` with the
+  reason. The rule says how to call particle-1 (`particle:particle-1` through `https://api.particle.ai/v1`, with
+  `reasoning_effort` sent explicitly and an output limit that leaves room for reasoning), what its receipt records, and
+  where its first paired numbers are: the
+  [particle-1 replay](docs/benchmarks/2026-11-01-longmemeval-particle-replay/REPORT.md).
+- **particle-1 never judges a counted cell.** Counted judges stay protocol-matched (`gpt-4o-2024-08-06` for
+  LongMemEval, `gpt-6.1-sol` for Cat 40 Hard). particle-1 becomes a development loop's default reader and agent once it
+  passes that loop's preregistered agreement test.
+- **The newest frontier Opus, GPT and Sonnet still run beside the primary models.** "Report the models people use
+  first" now comes after the primary models' first table, and a reader-matched comparison with a published system keeps
+  that system's reader. AGENTS.md's model summary and eval/CONTRIBUTING.md's opening say the same; CONTRIBUTING names
+  `eval/runner/providers/openai-compatible.ts` as particle-1's shared provider module.
+
+### Cat 35 keeps the external lane out of gbrain's WS0 numbers and deltas, and the scoreboard checks read more of their inputs
+
+- **The WS0 receipt's coverage map holds only gbrain's lanes (#217).** Its `n_total`, `n_scored` and `errors` counted
+  the built-in lanes only, but `data.coverage_by_lane` also carried the external lane. A missing external document,
+  which scores zero as a lane error, or a failed external judge call moved a coverage figure that the receipt's errors
+  never listed. `data.coverage_by_lane` now holds the built-in lanes, and the external lane's scores stay under its name
+  in the detailed receipt's per-lane maps.
+- **The external lane's judge spend is reported apart (#217).** `total_cost_usd` counted it, so the built-in lanes'
+  cost rose whenever an external lane ran beside them. `total_cost_usd` now counts the built-in lanes' judges and fact
+  extraction, and `external_cost_usd`, in the detailed receipt and in WS0 `data`, holds the external lane's judge
+  spend (null without one). The scorecard's cost line names both. The WS0 `cost`, read from the budget ledger, still
+  covers every paid request; subtract `external_cost_usd` for gbrain's share. `attribution_hazards` needed no change:
+  every row names its lane, and its one reader that ignores the lane (`situation-recall-native-35.ts`) refuses a
+  receipt with an external lane before reading it.
+- **Prior-run deltas pass over an external-only receipt (#218).** Discovery took the newest receipt in the same mode, so
+  a `--lanes none` run became the prior receipt of the next gbrain run, which then skipped its deltas as a lanes
+  mismatch (`prior=[], current=[verbatim]` in a keyless run). It now prefers the newest receipt with the same mode and
+  lane set, then the same mode, then any. A receipt whose `lanes` is not a list of lane names is no longer a candidate;
+  sorting such a list stopped the run after its judges had been paid and before its receipt was written.
+- **The scoreboard refuses a `power.json` that `eval/runner/q1/power.ts` cannot write.** A file that is not JSON is now
+  `RECEIPT_INVALID`; it threw a bare parse error that stopped `scoreboard.ts check`. So are a comparator list with an
+  entry that is not a system id, a detectable difference of zero or less, a full or shrunk decision with no detectable
+  difference, and a full or shrunk decision whose difference is above the `threshold_points` it records, or that records
+  none. power.ts ranks Family 1 only under a measured difference at or under its 10-point threshold; such a decision
+  used to rank rows while printing "about more than 30 points" or a difference above that threshold.
+- **The documentation verifier checks the scoreboard explanation's figures and every commit it names.**
+  `scripts/verify-documentation-refresh.py` reads README's text between its last heading and the scoreboard block, not
+  only the paragraph that names the commit. It now fails when a decimal figure there (today 59.0, 58.9, 68.3, 56.3, 12.9
+  and 13.58) appears neither in the block nor in `docs/benchmarks/2026-10-06-scoreboard/scoreboard.md`, the render's
+  other file. It compares every token after `check --commit` with the publication commit, so a second, shortened or
+  lengthened commit fails (it read only the first 40 hex characters). It also fails when README has no
+  `<!-- scoreboard:headline:begin -->` line (it read the last section instead, and passed if that named the commit) or no
+  `<!-- scoreboard:headline:end -->` line (it read the rest of README as the render), when `publication.json`'s
+  `published` is not an object (it crashed), and when `published.commit` is missing or neither null nor text (a number
+  crashed it, and a missing key passed as a pending publication). Whole numbers, such as the 192 shared questions, are
+  not checked, because the render does not print that count.
+- The last two items cover the three findings #241's adversarial review deferred (the figures, the `power.json` gaps
+  and the verifier's fragility), none of which had an issue, and the gaps this change's own adversarial review found in
+  them. No published receipt, result or README line changes.
+
 ### particle-1 replays W10's LongMemEval reader prompts: first paired numbers against Opus 5.5, Sonnet 5.5 and GPT-6.1 Sol
 
 - **`bun eval/runner/batch/w10-particle.ts` replays W10's recorded reader prompts on particle-1** (unit U3 of the particle-1 plan). `build` rebuilds each comparator's system and user text from W10's committed request bodies and checks it against W10's manifests. `run <arm>` reads and judges every question under a ledger run with a 900-second deadline per attempt, and writes rows, one receipt per attempt and the preregistered bars 1 to 4. `report` re-scores the committed rows without a key and refuses an arm that stopped, left questions unrun, failed a bar or holds a failed judge call. In check mode it verifies `summary.json` and the compare files and flags a compare file it no longer writes.

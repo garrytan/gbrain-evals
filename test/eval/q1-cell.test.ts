@@ -200,7 +200,7 @@ describe('keyless end to end: two component cells into a scoreboard receipt', ()
       pins: [], release_assets: [], disclosures: ['Keyless fixture: the fake system stands in for both rows; scores prove the wiring only.'], render_targets: [], hedge_classifier: CLASSIFIER_VERSION_V2,
     };
     writeFileSync(join(receipt, 'campaign.json'), JSON.stringify(campaign, null, 2) + '\n');
-    writeFileSync(join(receipt, 'power.json'), JSON.stringify({ schema: 'gbrain-evals/q1-power/v1', decision: { family1: 'full', detectable_difference_points: 20, shrunk_comparators: null } }) + '\n');
+    writeFileSync(join(receipt, 'power.json'), JSON.stringify({ schema: 'gbrain-evals/q1-power/v1', decision: { family1: 'full', threshold_points: 10, detectable_difference_points: 8, shrunk_comparators: null } }) + '\n');
     const run = (sub: string) => Bun.spawnSync(['bun', 'eval/runner/scoreboard.ts', sub, '--receipt', receipt], { cwd: ROOT, stdout: 'pipe', stderr: 'pipe' });
     const render = run('render');
     expect(render.exitCode).toBe(0);

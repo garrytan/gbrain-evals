@@ -2,7 +2,7 @@
 
 Useful contributions make it easier to tell when gbrain helps. You can contribute naturally worded questions, a competing search implementation, another system's notes scored on Cat 35, or a reproduction of a published result.
 
-Work from the repository root. Install with `bun install --frozen-lockfile`, and run `bun run test` for the tests under `test/eval/` and `eval/`, the Python tests and the validators. The gbrain under test is the one `package.json` declares, master `3ec766c40` (v0.60.531.0); a category scores what gbrain implements at that commit. Model-comparison runs follow the model rules in [CLAUDE.md](../CLAUDE.md#choose-models). Everything above [Changelog](#changelog) is current.
+Work from the repository root. Install with `bun install --frozen-lockfile`, and run `bun run test` for the tests under `test/eval/` and `eval/`, the Python tests and the validators. The gbrain under test is the one `package.json` declares, master `3ec766c40` (v0.60.531.0); a category scores what gbrain implements at that commit. Model-comparison runs follow the model rules in [CLAUDE.md](../CLAUDE.md#choose-models): the primary models are `claude-opus-5-5` and `particle-1`, and a runner that calls models supports both (particle-1 through `eval/runner/providers/openai-compatible.ts`) or lists the one it cannot run under `models_not_run`. Everything above [Changelog](#changelog) is current.
 
 ## Write questions in your own words
 
@@ -133,10 +133,11 @@ is the judge's ceiling.
 
 The receipt's `external_lane` block records the lane name, the folder's real path, the size limit, each file's bytes and
 sha256, how many claims the grounding judge grades in each file, the conversations with no file, and a note that the
-harness has no record of how the documents were made. Your lane's scores sit under its name in the per-lane maps.
-`lanes`, `mode`, the prior-run deltas, the blended usability, the judge-failure gate and the WS0 counters describe the
-built-in lanes only, and the runner scores every built-in lane before your lane, so your lane's spend and provider
-errors cannot reach gbrain's numbers. Your lane gets its own `external_judge_failed_rate` gate, which the run's exit
+harness has no record of how the documents were made. Your lane's scores sit under its name in the per-lane maps, and
+its judge spend is `external_cost_usd`. `lanes`, `mode`, the prior-run deltas, the blended usability, the
+judge-failure gate, `total_cost_usd` and the WS0 receipt's counters, errors and coverage map describe the built-in lanes
+only, and the runner scores every built-in lane before your lane, so your lane's spend and provider errors cannot reach
+gbrain's numbers. Your lane gets its own `external_judge_failed_rate` gate, which the run's exit
 code includes, and a run with an external lane is never publishable as the benchmark. Scrub machine paths with
 `bun eval/runner/receipt.ts scrub` before you share a receipt.
 
@@ -216,6 +217,21 @@ See [CREDITS.md](CREDITS.md) for attribution. Contributions to external question
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
+
+### 2026-11-01: primary models named
+
+[`f9b891e3`](https://github.com/garrytan/gbrain-evals/commit/f9b891e3), gbrain-evals
+[#274](https://github.com/garrytan/gbrain-evals/pull/274). The opening paragraph names claude-opus-5-5 and particle-1 as
+the primary models and points to the shared provider module. Before, it pointed only to CLAUDE.md's model rules. The
+change follows Garry's decision of 2026-10-31 that these are the primary models, with the
+[particle-1 replay](../docs/benchmarks/2026-11-01-longmemeval-particle-replay/REPORT.md) as their first paired numbers.
+
+### 2026-11-01: The external lane's spend and the WS0 receipt
+
+The Cat 35 external-lane section now says your lane's judge spend is `external_cost_usd`, kept out of `total_cost_usd`,
+and that the WS0 receipt's coverage map, like its counters and errors, covers the built-in lanes only. Before #217 both
+carried your lane: `total_cost_usd` counted its judge spend, and the WS0 coverage map listed it beside counters and
+errors that did not.
 
 ### 2026-11-01: Compressed receipts are checked member by member
 

@@ -576,7 +576,15 @@
       "type": "boolean"
     },
     "total_cost_usd": {
-      "type": "number"
+      "type": "number",
+      "description": "Runner-reported spend of the built-in lanes: their judges and facts extraction. The external lane's judge spend is external_cost_usd."
+    },
+    "external_cost_usd": {
+      "type": [
+        "number",
+        "null"
+      ],
+      "description": "Runner-reported judge spend of the external lane, kept out of total_cost_usd; null when no external lane ran. Receipts before 2026-11-01 omit it and count that spend in total_cost_usd."
     },
     "wall_seconds": {
       "type": "number"
@@ -608,7 +616,7 @@
     },
     "cost_note": {
       "type": "string",
-      "description": "What total_cost_usd covers. Judges + facts only: the gbrain phase API does not surface dream-lane subagent spend."
+      "description": "What total_cost_usd covers. The built-in lanes' judges + facts only: the external lane's judge spend is external_cost_usd, and the gbrain phase API does not surface dream-lane subagent spend."
     }
   }
 }
