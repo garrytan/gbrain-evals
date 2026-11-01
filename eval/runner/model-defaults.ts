@@ -57,7 +57,7 @@ export const DEFAULT_MODEL_EXCEPTIONS: Readonly<Record<string, DefaultModelExcep
   'memory-qa beam-1m reader and judge': { models: ['openai:gpt-4.1-mini', 'openai:gpt-4.1-mini'], kind: 'frozen-protocol', reason: 'the gpt-4.1-mini bridge to earlier BEAM runs' },
   'memory-qa fixture reader and judge': {
     models: ['openai:gpt-4o-mini', 'openai:gpt-4o-mini'], kind: 'pinned-harness',
-    reason: "run.ts sends the fixture's reader and judge calls through qa.ts, whose bytes the H1 decision pins; its Anthropic path sends the judge's 10-token verdict limit unchanged, so a Claude 5 judge can spend it thinking and score an empty verdict as wrong (A19). The fixture moves when run.ts uses qa-v2's client",
+    reason: "qa.ts sets this pair in DEFAULT_READER and DEFAULT_JUDGE, and the H1 decision pins qa.ts's bytes (docs/benchmarks/2026-10-10-gbrain-budgeted-delivery-h1/decision.json), so this change cannot move it. run.ts already sends these calls through qa-v2's client, which gives a Claude 5 verdict call the 2,000-token floor (A19), so the pair can move once its default is set outside qa.ts",
   },
   'lifecycle-lite reader and judge': {
     models: ['openai:gpt-4o-mini', 'openai:gpt-4o-2024-08-06'], kind: 'frozen-protocol',
