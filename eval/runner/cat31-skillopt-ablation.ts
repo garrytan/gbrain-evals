@@ -66,7 +66,7 @@ import {
 import { ProbeAccounting } from './probe-accounting.ts';
 import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt } from './receipt.ts';
 import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
-import { makeSkilloptStubTransport, PINNED_CONFIG, CLEAN_OUTCOMES, SKILLOPT_MODELS, type SkilloptStubBehavior } from './cat30-skillopt-improvement.ts';
+import { makeSkilloptStubTransport, PINNED_CONFIG, CLEAN_OUTCOMES, SKILLOPT_MODELS, type SkilloptRunRecord, type SkilloptStubBehavior } from './cat30-skillopt-improvement.ts';
 
 export const CAT31_CATEGORY = 'cat31-skillopt-ablation';
 
@@ -132,6 +132,7 @@ export interface Cat31Options {
   trials?: number;
   targetModel?: string;
   optimizerModel?: string;
+  judgeModel?: string;
   epochs?: number;
   batchSize?: number;
   runsPerTask?: number;
@@ -160,6 +161,7 @@ export function optionsFromEnv(argv: string[] = process.argv.slice(2)): Cat31Opt
     trials: process.env.SKILLOPT_TRIALS ? Number(process.env.SKILLOPT_TRIALS) : undefined,
     targetModel: process.env.SKILLOPT_TARGET_MODEL,
     optimizerModel: process.env.SKILLOPT_OPTIMIZER_MODEL,
+    judgeModel: process.env.SKILLOPT_JUDGE_MODEL,
     epochs: process.env.SKILLOPT_EPOCHS ? Number(process.env.SKILLOPT_EPOCHS) : undefined,
     batchSize: process.env.SKILLOPT_BATCH_SIZE ? Number(process.env.SKILLOPT_BATCH_SIZE) : undefined,
     runsPerTask: process.env.SKILLOPT_HELDOUT_RUNS ? Number(process.env.SKILLOPT_HELDOUT_RUNS) : undefined,
@@ -217,12 +219,14 @@ interface TrialDeps {
   acc: ProbeAccounting;
   targetModel: string;
   optimizerModel: string;
+  judgeModel: string;
   epochs: number;
   batchSize: number;
   runsPerTask: number;
   maxCostUsd: number;
   runSkillOptFn: typeof runSkillOpt;
   scoreFn: typeof scoreSkillOnTasks;
+  runs: SkilloptRunRecord[];
   log: (s: string) => void;
 }
 
@@ -235,11 +239,12 @@ async function runConfigTrial(deps: TrialDeps, cfgOpts: Record<string, unknown>,
     r = await deps.runSkillOptFn({
       engine: deps.engine, skillName: deps.seed, skillsDir: tmpSkills, benchmarkPath,
       epochs: deps.epochs, batchSize: deps.batchSize, lr: 4, lrSchedule: 'cosine', split: SPLIT,
-      optimizerModel: deps.optimizerModel, targetModel: deps.targetModel, judgeModel: deps.targetModel,
+      optimizerModel: deps.optimizerModel, targetModel: deps.targetModel, judgeModel: deps.judgeModel,
       mode: 'patch', dryRun: false, noMutate: false, allowMutateBundled: false,
       bootstrapReviewed: false, json: true, maxCostUsd: deps.maxCostUsd, maxRuntimeMin: 25, force: true,
       ...cfgOpts,
     } as any);
+    deps.runs.push({ label: tag, outcome: r.outcome, final_text: r.finalText ?? null, receipt: r.receipt ?? null });
   } catch (e: any) {
     const msg = `runSkillOpt threw: ${e?.message ?? e}`;
     deps.log(`[cat31]   ${tag} SUT error: ${msg}\n`);
@@ -252,7 +257,7 @@ async function runConfigTrial(deps: TrialDeps, cfgOpts: Record<string, unknown>,
     return { heldout: null, sel: r.receipt?.best_sel_score ?? null, cost: r.receipt?.final_cost_usd ?? 0, outcome: r.outcome, error: msg, error_origin: 'sut' };
   }
   try {
-    const heldout = await deps.scoreFn({ engine: deps.engine, skillText: r.finalText ?? seedBody, tasks: heldTasks, targetModel: deps.targetModel, judgeModel: deps.targetModel, runsPerTask: deps.runsPerTask });
+    const heldout = await deps.scoreFn({ engine: deps.engine, skillText: r.finalText ?? seedBody, tasks: heldTasks, targetModel: deps.targetModel, judgeModel: deps.judgeModel, runsPerTask: deps.runsPerTask });
     deps.acc.score(tag, heldout);
     return { heldout, sel: r.receipt?.best_sel_score ?? 0, cost: r.receipt?.final_cost_usd ?? 0, outcome: r.outcome };
   } catch (e: any) {
@@ -271,6 +276,7 @@ export async function runCat31(options: Cat31Options = {}): Promise<Cat31RunResu
   const stub = options.stubLlm ?? false;
   const targetModel = options.targetModel ?? SKILLOPT_MODELS.target;
   const optimizerModel = options.optimizerModel ?? (bpre ? SKILLOPT_MODELS.bpreOptimizer : SKILLOPT_MODELS.optimizer);
+  const judgeModel = options.judgeModel ?? SKILLOPT_MODELS.judge; // skillopt-v1 has rule and qrels judges only
   const epochs = options.epochs ?? (bpre ? 1 : 3);
   const batchSize = options.batchSize ?? 5;
   const runsPerTask = options.runsPerTask ?? (bpre || stub ? 1 : 3);
@@ -324,6 +330,7 @@ export async function runCat31(options: Cat31Options = {}): Promise<Cat31RunResu
 
   const acc = new ProbeAccounting(expected);
   const byConfig: Record<string, TrialScore[]> = {};
+  const skilloptRuns: SkilloptRunRecord[] = [];
   let seedHeldout = NaN;
   let engine: any = null;
   try {
@@ -341,7 +348,7 @@ export async function runCat31(options: Cat31Options = {}): Promise<Cat31RunResu
     // Reference floor: the unoptimized seed on held-out (cheap, no optimizer).
     // A floor-scoring failure is fatal — the gate is meaningless without it.
     try {
-      seedHeldout = await scoreFn({ engine, skillText: seedBody, tasks: heldTasks, targetModel, judgeModel: targetModel, runsPerTask });
+      seedHeldout = await scoreFn({ engine, skillText: seedBody, tasks: heldTasks, targetModel, judgeModel, runsPerTask });
       acc.score('seed-floor', seedHeldout);
     } catch (e: any) {
       acc.error('seed-floor', 'dependency', `seed floor scoring failed: ${e?.message ?? e}`);
@@ -361,9 +368,10 @@ export async function runCat31(options: Cat31Options = {}): Promise<Cat31RunResu
 
     const deps: TrialDeps = {
       engine, isolatedHome, dataDir, seed, acc,
-      targetModel, optimizerModel, epochs, batchSize, runsPerTask, maxCostUsd,
+      targetModel, optimizerModel, judgeModel, epochs, batchSize, runsPerTask, maxCostUsd,
       runSkillOptFn: options.runSkillOptFn ?? runSkillOpt,
       scoreFn,
+      runs: skilloptRuns,
       log,
     };
     for (const cfg of configs) {
@@ -413,6 +421,7 @@ export async function runCat31(options: Cat31Options = {}): Promise<Cat31RunResu
       seed,
       target_model: targetModel,
       optimizer_model: optimizerModel,
+      judge_model: judgeModel,
       epochs, batch_size: batchSize, runs_per_task: runsPerTask, trials,
       max_cost_usd: maxCostUsd,
       lift_margin: LIFT_MARGIN,
@@ -433,6 +442,7 @@ export async function runCat31(options: Cat31Options = {}): Promise<Cat31RunResu
       gate_pass: gatePass,
       gate_reasons: reasons,
       infra_error_rate: summary.infra_error_rate,
+      skillopt_runs: skilloptRuns,
     },
   };
   writeReceipt(receiptFile, receipt);

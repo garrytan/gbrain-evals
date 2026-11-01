@@ -131,7 +131,7 @@ gap does not isolate the effect of a graph alone.
 | Which judge models may grade a forecasting take, among the verdicts confident enough for gbrain's auto-resolve rule to apply? | [October 16 take grading, mirrored from gbrain #6882](benchmarks/2026-10-16-take-grading.md) ([preregistration](benchmarks/2026-10-16-take-grading-preregistration.md)): `gpt-6.1-sol` applies 496 verdicts with none wrong (upper bound 0.6%) and qualifies; `claude-opus-5-5` matches every gold verdict but is rarely confident enough to apply, `claude-sonnet-5-5` applies one wrong verdict |
 | Does gbrain's private forecast journal rank holders correctly, count every open prediction, and stay hidden from remote callers? | [October 17 forecast journal, mirrored from gbrain #6886](benchmarks/2026-10-17-forecast-journal.md) ([preregistration](benchmarks/2026-10-17-forecast-journal-preregistration.md)): on synthetic holders of known skill, median Spearman ρ 0.905, who-was-right set-F1 1.000, exact counts, 8/8 remote probes; shipped in v0.60.286.0 |
 | What did gbrain fix wave 9 cost on fact inserts, and can takes-quality receipts from before and after it be compared? | [October 5 fix wave 9 mirror, from gbrain #6111](benchmarks/2026-10-05-fix-wave-9-mirror.md): pinning `search_path` makes bulk fact inserts about 10-13% slower with fingerprints unchanged; takes-quality protocol 1 and 2 receipts are dissimilar inputs |
-| Can a skill improve on held-out tasks, and can the judge detect cheating? | [Skill optimization](benchmarks/2026-06-03-skillopt.md) |
+| Can a skill improve on held-out tasks, can the judge detect cheating, and does SkillOpt's iterative loop beat one rewrite? | [November 1 SkillOpt re-baseline](benchmarks/2026-11-01-skillopt-rebaseline/REPORT.md) ([preregistration](benchmarks/2026-11-01-skillopt-rebaseline/PREREGISTRATION.md)): all four practice skills improve held out, and both skills tested for transfer help the other model in 4 of 4 Haiku 5.5 and Sonnet 5.5 pairs; the full loop ties a one-shot rewrite again (0.54 against 0.54) and the iterative loop is a CUT-CANDIDATE; Cat 32's gate never saw a gaming candidate (partial). The [June 3 run](benchmarks/2026-06-03-skillopt.md) used other models and does not pool with it |
 | Can the system distinguish kinds of claims and sensible confidence? | [Calibration and proposed takes](benchmarks/2026-05-18-brainbench-cat14-cat15-calibration.md) (the advice result was retracted on September 28, 2026), [October 2 blind rerun of the advice test](benchmarks/2026-10-02-cat14-rerun.md) |
 | When gbrain fails, refuses or needs a decision, do real agents (Claude Code, Codex) ask the user before spending money or destroying data, and do they recover from the errors they can fix? | [Agent operator outcomes (Cat 41): what it measures and its gate](benchmarks/2026-10-03-agent-operator-protocol.md), [runs: v0.60.35.0 baseline, gate passed at `b3f4e8b`](benchmarks/2026-10-03-agent-operator.md) |
 | Does gbrain help an agent finish company-knowledge tasks better than grep, a memory tool or plain Postgres, and does that hold as models improve? | [Model Ladder (Cat 40): what it measures](benchmarks/2026-10-02-model-ladder-protocol.md), [results](benchmarks/2026-10-02-model-ladder.md) |
@@ -260,6 +260,10 @@ and [repository writing guide](../CLAUDE.md). The
 procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
+
+### 2026-11-01: The skill-optimization row points to the November 1 re-baseline
+
+The skill-optimization row now names the [November 1 SkillOpt re-baseline](benchmarks/2026-11-01-skillopt-rebaseline/REPORT.md) and its result, and keeps the June 3 report as the earlier run. No other row changed.
 
 ### 2026-11-01: particle-1 tokenizer calibration
 
