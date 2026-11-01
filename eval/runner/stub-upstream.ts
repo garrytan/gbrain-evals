@@ -9,6 +9,9 @@
  *   /gemini/v1beta/models/<model>:generateContent | :streamGenerateContent | :embedContent | :batchEmbedContents | :countTokens
  *   /groq/openai/v1/chat/completions
  *   /voyage/v1/embeddings | /rerank
+ *   /particle/v1/chat/completions   (OpenAI chat, answered as Particle answers: response
+ *                                    model `particle-ai/particle-1`, reasoning tokens inside
+ *                                    completion_tokens, `metadata.weight_version`, `service_tier`)
  *
  * Structured output requests (OpenAI `response_format` json_schema, responses
  * `text.format`, an Anthropic forced tool call, Gemini `responseSchema` or
@@ -32,13 +35,14 @@
  */
 import { createHash } from 'node:crypto';
 
-export type StubProvider = 'openai' | 'anthropic' | 'gemini' | 'groq' | 'voyage';
+export type StubProvider = 'openai' | 'anthropic' | 'gemini' | 'groq' | 'voyage' | 'particle';
 export type StubRoute =
   | 'openai.chat' | 'openai.responses' | 'openai.embeddings'
   | 'anthropic.messages'
   | 'gemini.generateContent' | 'gemini.embedContent' | 'gemini.batchEmbedContents' | 'gemini.countTokens'
   | 'groq.chat'
-  | 'voyage.embeddings' | 'voyage.rerank';
+  | 'voyage.embeddings' | 'voyage.rerank'
+  | 'particle.chat';
 
 export interface StubRequest {
   route: StubRoute;
@@ -72,6 +76,8 @@ export interface StubUpstream {
   close(): void;
 }
 
+/** Reasoning tokens a stub Particle answer reports inside completion_tokens, unless the request sent effort none. */
+const STUB_REASONING_TOKENS = 24;
 const tokens = (value: unknown) => Math.max(1, Math.ceil(Buffer.byteLength(typeof value === 'string' ? value : JSON.stringify(value ?? '')) / 4));
 const digest = (text: string) => createHash('sha256').update(text).digest();
 
@@ -264,6 +270,20 @@ export async function startStubUpstream(options: { port?: number } = {}): Promis
     return json({ id, object: 'chat.completion', created, model: request.model, choices: [{ index: 0, message: { role: 'assistant', content: result.text, refusal: null }, finish_reason: 'stop', logprobs: null }], usage });
   }
 
+  /** OpenAI chat with Particle's response fields; streams and error replies pass through as OpenAI's. */
+  async function particleChat(request: StubRequest): Promise<Response> {
+    const res = await openaiChat(request, false);
+    if (request.body.stream || !res.ok) return res;
+    const out = await res.json() as Record<string, any>;
+    const reasoning = request.body.reasoning_effort === 'none' ? 0 : STUB_REASONING_TOKENS;
+    const completion = out.usage.completion_tokens + reasoning;
+    return json({
+      ...out, model: request.model === 'particle-1' ? 'particle-ai/particle-1' : request.model,
+      service_tier: 'default', system_fingerprint: 'fp_stub_particle', metadata: { weight_version: 'default' },
+      usage: { ...out.usage, completion_tokens: completion, total_tokens: out.usage.prompt_tokens + completion, completion_tokens_details: { reasoning_tokens: reasoning } },
+    });
+  }
+
   async function openaiResponses(request: StubRequest): Promise<Response> {
     const { body } = request;
     const result = await content(request, openaiSchema(body));
@@ -379,6 +399,7 @@ export async function startStubUpstream(options: { port?: number } = {}): Promis
     [/^\/groq\/openai\/v1\/chat\/completions$/, 'groq', () => 'groq.chat'],
     [/^\/voyage\/v1\/embeddings$/, 'voyage', () => 'voyage.embeddings'],
     [/^\/voyage\/v1\/rerank$/, 'voyage', () => 'voyage.rerank'],
+    [/^\/particle\/v1\/chat\/completions$/, 'particle', () => 'particle.chat'],
   ];
 
   const server = Bun.serve({
@@ -403,6 +424,7 @@ export async function startStubUpstream(options: { port?: number } = {}): Promis
         switch (route) {
           case 'openai.chat': return openaiChat(request, false);
           case 'groq.chat': return openaiChat(request, true);
+          case 'particle.chat': return particleChat(request);
           case 'openai.responses': return openaiResponses(request);
           case 'openai.embeddings': return embeddings(request, 'openai');
           case 'voyage.embeddings': return embeddings(request, 'voyage');
@@ -411,7 +433,7 @@ export async function startStubUpstream(options: { port?: number } = {}): Promis
           default: return gemini(request, m[2], url);
         }
       }
-      if (req.method === 'GET' && /^\/(openai|groq\/openai)\/v1\/models\/?$/.test(url.pathname)) return json({ object: 'list', data: [] });
+      if (req.method === 'GET' && /^\/(openai|groq\/openai|particle)\/v1\/models\/?$/.test(url.pathname)) return json({ object: 'list', data: [] });
       return json({ error: { message: `stub upstream has no route for ${req.method} ${url.pathname}` } }, 404);
     },
   });
@@ -419,7 +441,7 @@ export async function startStubUpstream(options: { port?: number } = {}): Promis
   return {
     url,
     port: server.port as number,
-    upstreams: { openai: `${url}/openai`, anthropic: `${url}/anthropic`, gemini: `${url}/gemini`, groq: `${url}/groq`, voyage: `${url}/voyage` },
+    upstreams: { openai: `${url}/openai`, anthropic: `${url}/anthropic`, gemini: `${url}/gemini`, groq: `${url}/groq`, voyage: `${url}/voyage`, particle: `${url}/particle` },
     hits,
     requests,
     respond(route, fn) { if (fn) responders.set(route, fn); else responders.delete(route); },

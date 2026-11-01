@@ -299,11 +299,12 @@ export function assertMetered(req: CompatRequest): void {
 /**
  * Send one request, once, after `assertMetered`. A non-2xx answer throws `compatError`'s error; the caller's own loop
  * decides any retry. A 2xx answer without `choices[0].message` is a server error carrying the usage it reported,
- * never an empty answer.
+ * never an empty answer. `timeoutMs` (300 s unless given) is the only deadline: Bun's own 300-second fetch timeout is
+ * off, so a longer deadline holds.
  */
 export async function compatSend(req: CompatRequest, opts: { fetchImpl?: typeof fetch; timeoutMs?: number } = {}): Promise<CompatResponse> {
   assertMetered(req);
-  const res = await (opts.fetchImpl ?? fetch)(req.url, { method: 'POST', headers: req.headers, body: JSON.stringify(req.body), signal: AbortSignal.timeout(opts.timeoutMs ?? 300_000) });
+  const res = await (opts.fetchImpl ?? fetch)(req.url, { method: 'POST', headers: req.headers, body: JSON.stringify(req.body), signal: AbortSignal.timeout(opts.timeoutMs ?? 300_000), timeout: false } as RequestInit);
   const text = await res.text();
   if (!res.ok) throw compatError(classifyCompatError(req.provider, res.status, text, res.headers));
   let json: unknown;

@@ -27,6 +27,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync
 import { join, resolve } from 'node:path';
 import { gbrainSpecFrom, resolveGbrainUnderTest } from '../runner/gbrain-under-test.ts';
 import { REPO_ROOT } from '../runner/harness-env.ts';
+import { COMPAT_PROVIDERS } from '../runner/providers/openai-compatible.ts';
 import { startBench, type Bench, type Bridge } from './bench-infra.ts';
 import { SUITES, manifestPath } from './cli.ts';
 import { bundleManifest, countValue, sha256, valueForms } from './common.ts';
@@ -117,7 +118,10 @@ export function parseAnswer(text: string): string {
   return (m ? m[1]! : text).trim();
 }
 
-const maxTokensFor = (model: string) => model.startsWith('openai:') ? 4000 : MODEL_CONFIG.reader.max_output_tokens;
+/** Reader output limit: 4,000 for OpenAI, particle-1's output floor (16,000, room for its reasoning), else the shared reader config's 400. */
+export const maxTokensFor = (model: string) => model.startsWith('openai:') ? 4000
+  : model.startsWith('particle:') ? COMPAT_PROVIDERS.particle.models['particle-1'].output_floor
+  : MODEL_CONFIG.reader.max_output_tokens;
 
 /** Identifiers that must never reach a model: every document, query and unit id of the bundle. */
 function forbiddenIds(bundle: SuiteBundle): string[] {
@@ -133,9 +137,16 @@ function leakCheck(prompt: string, forbidden: string[], where: string): void {
   if (hit) throw new Error(`leak: ${where} carries the identifier ${hit}`);
 }
 
-async function pool<T>(items: T[], n: number, fn: (x: T) => Promise<void>): Promise<void> {
+/** Runs `fn` over `items` n at a time. After the first error no new item starts, and every call in flight finishes (and writes its receipt) before that error is thrown. */
+export async function pool<T>(items: T[], n: number, fn: (x: T) => Promise<void>): Promise<void> {
   let i = 0;
-  await Promise.all(Array.from({ length: Math.min(n, items.length) }, async () => { while (i < items.length) await fn(items[i++]!); }));
+  let failure = null as { error: unknown } | null;
+  await Promise.all(Array.from({ length: Math.min(n, items.length) }, async () => {
+    while (!failure && i < items.length) {
+      try { await fn(items[i++]!); } catch (error) { failure ??= { error }; }
+    }
+  }));
+  if (failure) throw failure.error;
 }
 
 export function selectQueries(bundle: SuiteBundle, smoke: number | null): HarnessQuery[] {
