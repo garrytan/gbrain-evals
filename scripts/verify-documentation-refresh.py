@@ -142,7 +142,7 @@ def scoreboard_publication_reference(root=ROOT):
     if stale:
         return stale
     render = block.partition(SCOREBOARD_END)[0] + (root / SCOREBOARD_RENDER).read_text()
-    figures = re.findall(r"(?<![\w.])\d+\.\d+(?![\w.])", "\n\n".join(paragraphs))
+    figures = re.findall(r"(?<![\w.])\d+\.\d+(?!\w|\.\d)", "\n\n".join(paragraphs))
     return [["README.md", f, "The paragraph above the scoreboard block quotes a figure that neither the block nor " + SCOREBOARD_RENDER + " shows; update it with the new render"]
             for f in figures if not re.search(r"(?<![\w.])" + re.escape(f) + r"(?!\d)", render)]
 

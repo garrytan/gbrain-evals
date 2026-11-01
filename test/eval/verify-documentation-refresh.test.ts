@@ -139,6 +139,13 @@ describe('verify-documentation-refresh: the scoreboard explanation', () => {
     ]);
   });
 
+  test('a figure that ends a sentence in README\'s paragraph is checked too', () => {
+    const root = copyWith('stale-figure-at-end', 'README.md', t => t.replace('the 13.58 points in the opening sentence is the preregistered power check for the\ncomponent rows.', 'the opening sentence\'s power check for the component rows detects 13.85.'));
+    expect(references(root, 'scoreboard_publication_reference')).toEqual([
+      ['README.md', '13.85', 'The paragraph above the scoreboard block quotes a figure that neither the block nor ' + RENDER + ' shows; update it with the new render'],
+    ]);
+  });
+
   test('a README with no scoreboard block fails, even when a later section names the publication commit', () => {
     const published = JSON.parse(readFileSync(join(ROOT, PUBLICATION), 'utf8')).published.commit as string;
     const root = copyWith('no-begin-marker', 'README.md', t => `${t.replace('<!-- scoreboard:headline:begin -->\n', '')}\nVerified with \`bun eval/runner/scoreboard.ts check --commit ${published}\`.\n`);
