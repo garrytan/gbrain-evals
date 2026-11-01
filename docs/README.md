@@ -72,7 +72,7 @@ describe current behavior first, then the older work behind a decision.
 | What does today's gbrain answer on LongMemEval end to end? | [October 7 current-pin run](benchmarks/2026-10-07-longmemeval-w10a-current-pin.md) ([preregistration](benchmarks/2026-10-06-longmemeval-w10-preregistration.md)) |
 | Which reader should read gbrain's results? | [October 7 reader replay on frozen retrieval](benchmarks/2026-10-07-longmemeval-w10b-reader-replay.md) |
 | Is gbrain worth it compared with pasting the whole history into the reader? | [October 7 full-context comparison](benchmarks/2026-10-07-longmemeval-w10c-full-context.md) |
-| How does particle-1 read the same W10 prompts, and does gbrain's retrieval hold up against particle-1 reading the whole history? | [November 1 particle-1 replay](benchmarks/2026-11-01-longmemeval-particle-replay/REPORT.md) ([preregistration](benchmarks/2026-11-01-longmemeval-particle-replay/PREREGISTRATION.md); development, 500 + 150 questions): 457 of 500, 3.4 points behind Opus 5.5 at about a twenty-third of its cost per correct answer; gbrain within 7 points of particle-1's whole history |
+| How does particle-1 read the same W10 prompts, and does gbrain's retrieval hold up against particle-1 reading the whole history? | [November 1 particle-1 replay](benchmarks/2026-11-01-longmemeval-particle-replay/REPORT.md) ([preregistration](benchmarks/2026-11-01-longmemeval-particle-replay/PREREGISTRATION.md), [finding with a keyless recheck and cross-family second judges](findings/2026-11-01-particle-1-longmemeval-w10b.md); development, 500 + 150 questions): 457 of 500, 3.4 points behind Opus 5.5 at about a twenty-third of its cost per correct answer; gbrain within 7 points of particle-1's whole history |
 | How much of what gbrain delivers to the reader does the answer need, how much does a reader write down, and how often does a wrong answer commit to a wrong value? | [October 8 reading headroom recount](benchmarks/2026-10-08-reading-headroom.md) ($0, from the W10 receipts, not preregistered): the answer's own sessions are 41% of the 15,823 chars/4 tokens delivered (8,981 on multi-session questions), frontier readers' notes run 138 to 151 tokens, and 19 to 29 of 470 answerable questions get a committed wrong value, by reader |
 | Can a smaller hand-off than whole conversations keep the reader's accuracy for less money? | [October 8 evidence architecture pilot](benchmarks/2026-10-08-evidence-architecture-pilot.md) ([preregistration](benchmarks/2026-10-08-evidence-architecture-pilot-preregistration.md); development, 100 questions): a Haiku-written brief keeps Sonnet 5.5 at 92 against 93 for whole sessions at $0.0079 against $0.0473 a question, but Haiku reading the whole sessions itself (89, $0.0025) matches the brief at lower cost and latency, so the preregistered off-ramp fires; truncation and small digests lose 20 to 50 points |
 | Does the evidence brief hold up on questions the pilot never saw? | [October 8 evidence brief confirmation (A6)](benchmarks/2026-10-08-evidence-brief-confirmation.md) ([preregistration](benchmarks/2026-10-08-evidence-brief-confirmation-preregistration.md); development, 400 questions): the 2,000-token Haiku brief costs Sonnet 5.5 3.0 points (375 to 363, 95% interval -5.25 to -0.75), so it is not shown non-inferior at the 3-point tolerance and does not go to the sealed set; FALLBACK loses 1.25 points at 44% of the dollars (inconclusive after Holm); truncation fails |
@@ -260,6 +260,10 @@ and [repository writing guide](../CLAUDE.md). The
 procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
+
+### 2026-11-01: Finding link on the particle-1 replay row
+
+The November 1 particle-1 replay row links the [W10b finding](findings/2026-11-01-particle-1-longmemeval-w10b.md), which was not reachable from this index. No claim in the row changed.
 
 ### 2026-11-01: The skill-optimization row points to the November 1 re-baseline
 
