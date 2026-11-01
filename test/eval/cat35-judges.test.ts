@@ -35,6 +35,7 @@ import {
 } from '../../eval/runner/cat35-judges.ts';
 import { hasWikilink, selfContainedOpening } from '../../eval/runner/cat35-checks.ts';
 import { UNTRUSTED_DATA_INSTRUCTION, extractUntrusted } from '../../eval/runner/judge.ts';
+import { CHAT_PRICE_OVERRIDES } from '../../eval/runner/budget-ledger.ts';
 
 // ─── Stub client (judge.test.ts pattern + request recording) ──────────────
 
@@ -601,6 +602,35 @@ describe('cached input counts at the judge model\'s own rates', () => {
     expect(r.input_tokens).toBe(1000 + 2000 * 0.05);
     expect(r.cost_usd).toBeCloseTo((1000 * 2 + 2000 * 0.1 + 100 * 10) / 1e6, 10);
     expect(r.cost_usd).toBeCloseTo((r.input_tokens * 2 + r.output_tokens * 10) / 1e6, 10);
+  });
+
+  // Value: protects=the default Haiku 5.5 judge's count rounds exactly as the old 0.1 literal did, so its receipts stay identical; fails_when=the read weight is the float quotient 0.01 / 0.1 (0.09999999999999999), which rounds a half-token count down; why_new=adversarial review of the #220 fix; seam=none; no_claim=stub client
+  test('the default Haiku 5.5 judge rounds a half-token cache-read count as before', async () => {
+    const halfUsage = { input_tokens: 0, cache_read_input_tokens: 5, output_tokens: 1 } as unknown as StubResponse['usage'];
+    const { client } = makeStubClient([toolUse('score_salient_items', { items: ITEMS.map((i) => ({ item_id: i.item_id, status: 'FULL', evidence: 'ok' })) }, halfUsage)]);
+    const r = await scoreSalienceCoverage(coverageArgs(), { client });
+    expect(r.input_tokens).toBe(1);
+  });
+
+  // Value: protects=above a model's long-context threshold input_tokens x the long input rate + output_tokens x the long output rate still equals cost_usd; fails_when=the count's weights drift from the cache ratios usageCost bills at the long tier; why_new=adversarial review of the #220 fix; seam=none; no_claim=stub client, Haiku 5.5's long rates from the ledger table
+  test('a long-context Haiku 5.5 call is counted at the long-context rates usageCost bills', async () => {
+    const longUsage = { input_tokens: 90_000, cache_read_input_tokens: 40_000, output_tokens: 100 } as unknown as StubResponse['usage'];
+    const { client } = makeStubClient([toolUse('score_salient_items', { items: ITEMS.map((i) => ({ item_id: i.item_id, status: 'FULL', evidence: 'ok' })) }, longUsage)]);
+    const r = await scoreSalienceCoverage(coverageArgs(), { client });
+    expect(r.cost_usd).toBeCloseTo((90_000 * 0.5 + 40_000 * 0.05 + 100 * 2.5) / 1e6, 10);
+    expect(r.cost_usd).toBeCloseTo((r.input_tokens * 0.5 + r.output_tokens * 2.5) / 1e6, 10);
+  });
+
+  // Value: protects=the count's base-rate cache weights hold above every priced model's long-context threshold; fails_when=a long tier is added or repriced with cache ratios that differ from its base tier's; why_new=adversarial review of the #220 fix; seam=none; no_claim=the table's prices themselves
+  test('every long-context tier keeps its model\'s cache ratios', () => {
+    for (const [model, price] of Object.entries(CHAT_PRICE_OVERRIDES)) {
+      if (!price.long) continue;
+      for (const key of ['cache_read', 'cache_write'] as const) {
+        const base = (price[key] ?? price.input) / price.input;
+        const long = (price.long[key] ?? price.long.input) / price.long.input;
+        expect([model, key, Math.round(long * 1e6)]).toEqual([model, key, Math.round(base * 1e6)]);
+      }
+    }
   });
 
   // Value: protects=the default Haiku 5.5 judge's input count is unchanged by the per-model weights; fails_when=the weights change the count for a model whose cache rates are 1.25x and 0.1x input; why_new=the formula now reads the model's own rates (#220); seam=none; no_claim=stub client

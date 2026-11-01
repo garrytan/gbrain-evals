@@ -16,7 +16,8 @@
  *     call, never priced at another model's rates. The input-token count
  *     weights cache writes and reads by the model's own cache rates relative
  *     to its input rate, so input_tokens x input rate + output_tokens x
- *     output rate equals cost_usd
+ *     output rate equals cost_usd to within a rounded token, at the
+ *     long-context rates when the call crossed that threshold
  *
  * NOT judge.ts `scoreAnswer`: that has a 0-5 rubric contract and bypasses the
  * LLM budget. Every real call here is wrapped in
@@ -232,13 +233,16 @@ async function callJudgeOnce(
   // and itemizes them in input_tokens_details, the fields usageCost reads.
   // The input count weights them by this model's own cache rates relative to
   // its input rate (Haiku 5.5 writes at 1.25x and reads at 0.1x; Opus 5.5 and
-  // gpt-6.1-sol read at 0.05x), the rates cost_usd uses.
+  // gpt-6.1-sol read at 0.05x). Every long-context tier keeps its model's
+  // cache ratios, so the weights hold above the threshold too. Each weight is
+  // rounded to six places so 0.01 / 0.1 is exactly 0.1.
   const openaiRead = usage.input_tokens_details?.cached_tokens ?? 0;
   const openaiWrite = usage.input_tokens_details?.cache_write_tokens ?? 0;
+  const weight = (rate: number | undefined) => Math.round(((rate ?? price.input) / price.input) * 1e6) / 1e6;
   const input_tokens = Math.round(
     (usage.input_tokens ?? 0) - openaiRead - openaiWrite +
-      ((usage.cache_creation_input_tokens ?? 0) + openaiWrite) * ((price.cache_write ?? price.input) / price.input) +
-      ((usage.cache_read_input_tokens ?? 0) + openaiRead) * ((price.cache_read ?? price.input) / price.input),
+      ((usage.cache_creation_input_tokens ?? 0) + openaiWrite) * weight(price.cache_write) +
+      ((usage.cache_read_input_tokens ?? 0) + openaiRead) * weight(price.cache_read),
   );
   cfg?.evidence?.push({
     tool: tool.name,
