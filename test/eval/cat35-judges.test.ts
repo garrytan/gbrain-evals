@@ -580,6 +580,28 @@ describe('usability perturbation (Abridge pattern)', () => {
 // (singleResolvedModel) refuses cross-run deltas on absent/mixed/null-keyed
 // evidence.
 
+describe('cached input counts at the judge model\'s own rates', () => {
+  const cachedUsage = { input_tokens: 1000, cache_creation_input_tokens: 400, cache_read_input_tokens: 2000, output_tokens: 100 } as unknown as StubResponse['usage'];
+  const coverage = () => toolUse('score_salient_items', { items: ITEMS.map((i) => ({ item_id: i.item_id, status: 'FULL', evidence: 'ok' })) }, cachedUsage);
+
+  // Value: protects=input_tokens priced at the model's input rate plus output_tokens at its output rate equals cost_usd, for a judge whose cache-read rate is not a tenth of its input rate; fails_when=the input count weights cache tokens by fixed Haiku 4.5-era multipliers (1.25 and 0.1); why_new=Opus 5.5 reads cache at 0.05x input, so the fixed weights overstated its input count while the comment said they match pricing (#220); seam=none; no_claim=stub client, list prices from the ledger table
+  test('an Opus 5.5 judge weights cache reads at 0.05x and writes at 1.25x', async () => {
+    const { client } = makeStubClient([coverage()]);
+    const r = await scoreSalienceCoverage(coverageArgs(), { client, model: 'claude-opus-5-5' });
+    expect(r.input_tokens).toBe(1000 + 400 * 1.25 + 2000 * 0.05);
+    expect(r.cost_usd).toBeCloseTo((1000 * 4 + 400 * 5 + 2000 * 0.2 + 100 * 20) / 1e6, 10);
+    expect(r.cost_usd).toBeCloseTo((r.input_tokens * 4 + r.output_tokens * 20) / 1e6, 10);
+  });
+
+  // Value: protects=the default Haiku 5.5 judge's input count is unchanged by the per-model weights; fails_when=the weights change the count for a model whose cache rates are 1.25x and 0.1x input; why_new=the formula now reads the model's own rates (#220); seam=none; no_claim=stub client
+  test('the default Haiku 5.5 judge keeps the 1.25x and 0.1x weights', async () => {
+    const { client } = makeStubClient([coverage()]);
+    const r = await scoreSalienceCoverage(coverageArgs(), { client });
+    expect(r.input_tokens).toBe(1000 + 400 * 1.25 + 2000 * 0.1);
+    expect(r.cost_usd).toBeCloseTo((r.input_tokens * 0.1 + r.output_tokens * 0.5) / 1e6, 10);
+  });
+});
+
 describe('judge_models_resolved accounting', () => {
   const SNAPSHOT = 'claude-haiku-4-5-20251001';
 

@@ -12,7 +12,11 @@
  *   - injectable `client` for $0 stub-driven tests
  *   - temperature 0 (judge.ts JUDGE_TEMPERATURE), recorded in the receipt
  *   - per-call token + cost accounting, priced from the budget ledger's
- *     table (judge.ts judgePrice)
+ *     table (judge.ts judgePrice); an unpriced model is refused before the
+ *     call, never priced at another model's rates. The input-token count
+ *     weights cache writes and reads by the model's own cache rates relative
+ *     to its input rate, so input_tokens x input rate + output_tokens x
+ *     output rate equals cost_usd
  *
  * NOT judge.ts `scoreAnswer`: that has a 0-5 rubric contract and bypasses the
  * LLM budget. Every real call here is wrapped in
@@ -222,13 +226,14 @@ async function callJudgeOnce(
   };
   const output_tokens = usage.output_tokens ?? 0;
   const cost_usd = priceOf(price, response);
-  // Cache tokens are billed separately (creation 1.25x input rate, reads
-  // 0.1x) and are NOT included in usage.input_tokens; the input count weights
-  // them the same way, and cost_usd prices them at the model's own rates.
+  // Cache tokens are billed separately and are NOT included in
+  // usage.input_tokens. The input count weights them by this model's own
+  // cache rates relative to its input rate (Haiku 5.5 writes at 1.25x and
+  // reads at 0.1x; Opus 5.5 reads at 0.05x), the rates cost_usd uses.
   const input_tokens = Math.round(
     (usage.input_tokens ?? 0) +
-      (usage.cache_creation_input_tokens ?? 0) * 1.25 +
-      (usage.cache_read_input_tokens ?? 0) * 0.1,
+      (usage.cache_creation_input_tokens ?? 0) * ((price.cache_write ?? price.input) / price.input) +
+      (usage.cache_read_input_tokens ?? 0) * ((price.cache_read ?? price.input) / price.input),
   );
   cfg?.evidence?.push({
     tool: tool.name,
