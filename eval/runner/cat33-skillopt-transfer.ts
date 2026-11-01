@@ -73,6 +73,15 @@ export const RATIO_BAND = 0.5;
 
 const SPLIT: [number, number, number] = [1, 1, 1];
 export const ALL_SEEDS = ['seed-missing-structure', 'seed-no-verdict'];
+/**
+ * (X, Y) model pairs a full run uses: optimize on X, evaluate transfer on Y.
+ * Weak→strong and strong→weak, so transfer is shown in both directions (a
+ * one-way pair could be confounded by Y simply being a stronger model).
+ */
+export const DEFAULT_PAIRS = [
+  { x: SKILLOPT_MODELS.target, y: SKILLOPT_MODELS.strong },
+  { x: SKILLOPT_MODELS.strong, y: SKILLOPT_MODELS.target },
+];
 
 // ─── Pure transfer math (exported for the regression test) ───────────────────
 
@@ -336,15 +345,7 @@ export async function runCat33(options: Cat33Options = {}): Promise<Cat33RunResu
   const runsPerTask = options.runsPerTask ?? (bpre || stub ? 1 : 3);
   const maxCostUsd = options.maxCostUsd ?? (bpre ? 3.0 : 6.0);
   const seeds = options.seeds ?? (bpre ? ['seed-missing-structure'] : ALL_SEEDS);
-  // (X, Y) model pairs: optimize on X, evaluate transfer on Y. Default exercises
-  // weak→strong and strong→weak so transfer is shown in both directions (a
-  // one-way pair could be confounded by Y simply being a stronger model).
-  const pairs = options.pairs ?? (bpre
-    ? [{ x: SKILLOPT_MODELS.target, y: SKILLOPT_MODELS.target }]
-    : [
-        { x: SKILLOPT_MODELS.target, y: SKILLOPT_MODELS.strong },
-        { x: SKILLOPT_MODELS.strong, y: SKILLOPT_MODELS.target },
-      ]);
+  const pairs = options.pairs ?? (bpre ? [{ x: SKILLOPT_MODELS.target, y: SKILLOPT_MODELS.target }] : DEFAULT_PAIRS);
   const dataDir = options.dataDir ?? join(process.cwd(), 'eval/data/skillopt-v1');
   const reportsDir = options.reportsDir ?? join(process.cwd(), 'eval/reports');
   const receiptFile = receiptPath(CAT33_CATEGORY, reportsDir);
