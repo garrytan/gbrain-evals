@@ -25,8 +25,9 @@
  *     responses from their usage events (or charges the reservation), settles
  *     a 4xx answer without usage at $0 (providers do not bill rejected
  *     requests; a 5xx, a timeout, a lost connection or a response body that
- *     fails to read keeps the reservation, and a particle request that failed
- *     after it went out is answered 504, which no client sends again), refuses
+ *     fails to read keeps the reservation, and a particle request that may
+ *     have gone out before it failed is answered 504, which no client sends
+ *     again), refuses
  *     bodies carrying a forbidden marker (the sanitizer's leak tripwire), and
  *     appends one usage line per request (never a body or a key).
  *
@@ -99,7 +100,11 @@
  *     any response (a closed or reset socket) is sent again up to twice, after
  *     1 and 4 seconds; each failed attempt is charged at its reservation (A23:
  *     `socket connection closed unexpectedly` failed temporal-graph c9's
- *     sessions). A timeout is never retried.
+ *     sessions). A timeout is never retried. A particle request is sent again
+ *     only when its connection was refused. Another failure proven to happen
+ *     before any byte was sent (`compatNeverSent`: a host name that did not
+ *     resolve, a rejected TLS certificate) is answered 502, which a client may
+ *     send again, and any other particle transport failure 504 (issue #288).
  */
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { appendFileSync, readFileSync } from 'node:fs';
@@ -107,7 +112,7 @@ import { BudgetExceededError, BudgetRun, ledgerStatus, priceRequest, reservation
 
 export { sseUsage };
 import { findLeaks } from './systems/sanitize.ts';
-import { COMPAT_PROVIDERS, carriesKeyInCleartext, compatConnectionLost, isLoopbackUrl } from './providers/openai-compatible.ts';
+import { COMPAT_PROVIDERS, carriesKeyInCleartext, compatMayHaveBilled, compatNeverSent, isLoopbackUrl } from './providers/openai-compatible.ts';
 
 /** Particle's row comes from COMPAT_PROVIDERS (eval/runner/providers/openai-compatible.ts): its upstream, key variable, output field and output floor. */
 const PARTICLE = COMPAT_PROVIDERS.particle;
@@ -142,7 +147,7 @@ export const PROXIED_DEADLINE_MS = ADMISSION_MAX_WAIT_MS + UPSTREAM_DEADLINE_MS 
 
 /** The deadline a client gives one request to `url`: PROXIED_DEADLINE_MS on loopback (a metering proxy slot or the keyless fake), else UPSTREAM_DEADLINE_MS. */
 export const compatDeadlineMs = (url: string) => (isLoopbackUrl(url) ? PROXIED_DEADLINE_MS : UPSTREAM_DEADLINE_MS);
-/** Waits before a request whose connection failed before any response is sent again (A23). A particle request is sent again only when its connection was refused: a reset may come after Particle billed the generation, so it is answered 504 like a timeout. */
+/** Waits before a request whose connection failed before any response is sent again (A23). A particle request is sent again only when its connection was refused, a failure `compatNeverSent` proves happened before any byte was sent: any transport failure it does not prove may come after Particle billed the generation, so it is answered 504 like a timeout (issue #288). */
 const TRANSPORT_RETRY_MS = [1000, 4000];
 /** A connection that closed or reset before the provider answered; never a timeout or an abort. */
 const transportFailure = (e: unknown) => {
@@ -663,8 +668,8 @@ export class MeteringProxy {
       catch (e) {
         if (entry) p.lease.settle(entry, null);
         this.charge(key, prov, bounded?.model ?? null, reserved, !!bounded, tag);
-        const midFlight = prov === 'particle' && compatConnectionLost(e);
-        const again = !midFlight && retries < TRANSPORT_RETRY_MS.length && transportFailure(e);
+        const midFlight = prov === 'particle' && compatMayHaveBilled(e);
+        const again = retries < TRANSPORT_RETRY_MS.length && transportFailure(e) && (prov !== 'particle' || compatNeverSent(e));
         this.log({ at, key, provider: prov, route, model, outcome: 'failed', reason: `${(e as Error).message.slice(0, 280)}${again ? ' (sent again)' : ''}`, reserved_usd: reserved, actual_usd: reserved, charged_reservation: !!bounded, ...tagged });
         if (!again) {
           admitted?.release();

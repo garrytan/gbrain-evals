@@ -9,6 +9,7 @@
  */
 import { afterAll, beforeEach, describe, expect, spyOn, test } from 'bun:test';
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { createServer, type AddressInfo, type Socket } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { BudgetRun, closeLedgers, ledgerStatus } from '../../eval/runner/budget-ledger.ts';
@@ -353,12 +354,13 @@ describe('particle-1 through the lease proxy (plan GST-605 Phase 2)', () => {
     } finally { proxy.stop(); }
   });
 
-  // Value: protects=a request that passed the proxy's upstream deadline is never resent by a client (issue #250); fails_when=the proxy answers its own upstream timeout with the retryable 502 a lost connection gets; why_new=compatTimedOut reads a 504 as a timeout; seam=none; no_claim=Particle's own 504
-  test('an upstream request that times out at the proxy is answered 504, which compatTimedOut reads as a timeout; any other upstream failure stays a 502', async () => {
+  // Value: protects=a request that passed the proxy's upstream deadline is never resent by a client (issue #250), and neither is one that failed in a way Bun does not prove happened before sending (issue #288); fails_when=the proxy answers its own upstream timeout, or a failure with no code, with the retryable 502 a refused connection gets; why_new=compatTimedOut reads a 504 as a timeout; seam=none; no_claim=Particle's own 504
+  test('an upstream request that times out at the proxy is answered 504, which compatTimedOut reads as a timeout; a certificate the client rejected stays a 502, and a failure with no code is a 504 (#288)', async () => {
     const { compatTimedOut, classifyCompatError, CompatHttpError } = await import('../../eval/runner/providers/openai-compatible.ts');
-    for (const [name, status] of [['TimeoutError', 504], ['TypeError', 502]] as const) {
+    const errors = { TimeoutError: new DOMException('The operation timed out.', 'TimeoutError'), CERT_HAS_EXPIRED: Object.assign(new TypeError('certificate has expired'), { code: 'CERT_HAS_EXPIRED' }), uncoded: new TypeError('fetch failed') };
+    for (const [name, status] of [['TimeoutError', 504], ['CERT_HAS_EXPIRED', 502], ['uncoded', 504]] as const) {
       const lease = BudgetRun.openLease({ runId: `particle-upstream-${name}`, leaseUsd: 1, ledgerPath: ledgerFile() });
-      const failing = (async () => { throw name === 'TimeoutError' ? new DOMException('The operation timed out.', 'TimeoutError') : new TypeError('fetch failed: certificate has expired'); }) as unknown as typeof fetch;
+      const failing = (async () => { throw errors[name]; }) as unknown as typeof fetch;
       const proxy = new MeteringProxy({ fetchImpl: failing, policy: { lease, usageLog: join(tmp, `particle-upstream-${name}.ndjson`), ...harness } });
       proxy.start();
       try {
@@ -500,6 +502,47 @@ describe('particle-1 through the lease proxy (plan GST-605 Phase 2)', () => {
     expect(signals).toHaveLength(2);
     expect(signals[0]).toBeInstanceOf(AbortSignal);
     expect(signals[1]).toBe(signals[0]);
+  });
+
+  // Value: protects=a particle request the lease proxy lost after it may have gone out is sent upstream once, by the proxy and by its client (issue #288); fails_when=the proxy answers a malformed status line, a bad Content-Length, a bad chunk or a body that fails to decompress with the 502 a client sends again; why_new=the proxy answers every particle transport failure 504 unless it is proven to happen before sending; seam=a loopback socket upstream that reads the request and answers badly, and Bun.sleep run at once; no_claim=what Particle's edge sends when it fails
+  test('a particle request whose upstream answers a malformed status line, a bad Content-Length, a bad chunk or a body that fails to decompress is answered 504 and reaches the upstream once, through qa-v2 too; a refused connection, and another provider, keep the 502 (#288)', async () => {
+    const { ChatClient } = await import('../../eval/runner/memory-qa/qa-v2.ts');
+    const answers: Record<string, (s: Socket) => void> = {
+      'status line': s => s.end('not http at all\r\n\r\n'),
+      'content-length': s => s.end('HTTP/1.1 200 OK\r\ncontent-length: abc\r\n\r\n{}'),
+      chunk: s => s.end('HTTP/1.1 200 OK\r\ncontent-type: application/json\r\ntransfer-encoding: chunked\r\n\r\nzz\r\nhello\r\n0\r\n\r\n'),
+      gzip: s => s.end('HTTP/1.1 200 OK\r\ncontent-type: application/json\r\ncontent-encoding: gzip\r\ncontent-length: 10\r\n\r\nnotgzip!!!'),
+      refused: () => {},
+    };
+    const saved = { url: process.env.PARTICLE_BASE_URL, key: process.env.PARTICLE_API_KEY };
+    const sleep = spyOn(Bun, 'sleep').mockImplementation(async () => {});
+    try {
+      for (const [name, answer] of Object.entries(answers)) {
+        let hits = 0;
+        const up = createServer(s => { s.on('error', () => {}); s.once('data', () => { hits++; answer(s); }); });
+        await new Promise<void>(r => up.listen(0, '127.0.0.1', r));
+        const url = `http://127.0.0.1:${(up.address() as AddressInfo).port}`;
+        if (name === 'refused') await new Promise<void>(r => up.close(() => r()));
+        const lease = BudgetRun.openLease({ runId: `particle-288-${name.replace(/ /g, '-')}`, leaseUsd: 1, ledgerPath: ledgerFile() });
+        const proxy = new MeteringProxy({ upstream: { particle: url, openai: url }, policy: { lease, usageLog: join(tmp, `particle-288-${n}-${name.replace(/ /g, '-')}.ndjson`), ...harness } });
+        proxy.start();
+        const base = `http://127.0.0.1:${proxy.port}`;
+        const post = (path: string, body: unknown) => fetch(`${base}${path}`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+        try {
+          const particle = await post('/harness/particle/v1/chat/completions', particleChat());
+          const openai = await post('/harness/openai/v1/chat/completions', chat());
+          const lost = name !== 'refused';
+          expect([name, particle.status, openai.status, hits]).toEqual([name, lost ? 504 : 502, 502, lost ? 2 : 0]);
+          Object.assign(process.env, { PARTICLE_BASE_URL: `${base}/harness/particle/v1`, PARTICLE_API_KEY: 'placeholder-particle' });
+          if (!lost) continue;
+          const err = await new ChatClient(join(tmp, `qa-cache-288-${n}`), () => 0).chat('particle:particle-1', `Q ${name}?`, { maxTokens: 64, replicate: 0 }).catch(e => e) as Error & { status?: number; attempt_errors?: string[] };
+          expect([name, err.status, err.attempt_errors?.length, hits]).toEqual([name, 504, 1, 3]);
+        } finally { proxy.stop(); if (name !== 'refused') up.close(); }
+      }
+    } finally {
+      sleep.mockRestore();
+      for (const [k, v] of [['PARTICLE_BASE_URL', saved.url], ['PARTICLE_API_KEY', saved.key]] as const) { if (v === undefined) delete process.env[k]; else process.env[k] = v; }
+    }
   });
 
   // Value: protects=the lease proxy never sends a provider's real key over http to a host that is not loopback (issue #277); fails_when=an --upstream or a constructor upstream with an http URL that is not loopback is accepted; why_new=assertMetered guards clients only, and the proxy swaps in the real key itself; seam=none; no_claim=TLS certificate checks
