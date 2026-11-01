@@ -97,9 +97,9 @@ export interface AnswerReceipt {
   answer_raw: string;
   answer: string;
   error: string | null;
-  /** The provider's finish reason; a reply cut off at its output limit is `truncated` and scored as the answer it is. */
+  /** The provider's finish reason; a reply cut off at its output limit is `truncated` and scored as the answer it is (null: unknown). */
   finish_reason: string | null;
-  truncated: boolean;
+  truncated: boolean | null;
   input_tokens: number | null;
   output_tokens: number | null;
 }
@@ -383,9 +383,9 @@ Answer to grade: {answer}
 The answer is correct only if it commits to the correct answer as the current answer. Mentioning an outdated value as history is fine; hedging between values or committing to a wrong value is not.
 Reply with exactly one line of JSON: {"correct": true} or {"correct": false}.`;
 
-export interface ScoredAnswer { query_id: string; category: string; checkpoint?: number; outcome: Outcome | 'error'; correct: boolean; judged: boolean; truncated: boolean; finish_reason: string | null; miss?: string; context_tokens: number | null }
+export interface ScoredAnswer { query_id: string; category: string; checkpoint?: number; outcome: Outcome | 'error'; correct: boolean; judged: boolean; truncated: boolean | null; finish_reason: string | null; miss?: string; context_tokens: number | null }
 
-export async function score(bench: Bench | null, bundle: SuiteBundle, dir: string, log: (l: string) => void) {
+export async function score(bench: Bench | null, bundle: SuiteBundle, dir: string, log: (l: string) => void, smokeRun = false) {
   const suite = SUITES[bundle.suite];
   const labels = new Map(bundle.labels.map(l => [l.query_id, l]));
   const queries = new Map(bundle.queries.map(q => [q.id, q]));
@@ -399,8 +399,8 @@ export async function score(bench: Bench | null, bundle: SuiteBundle, dir: strin
       }
     }
   }
-  const out: Record<string, Record<string, { n: number; correct: number; accuracy: number; truncated: number; by_category: Record<string, { n: number; correct: number }>; outcomes: Record<string, number>; judged: number; misses?: Record<string, number>; checkpoints?: Record<string, unknown>; context_tokens: { mean: number | null; p95: number | null }; rows: ScoredAnswer[] }>> = {};
-  const models = [MODEL_CONFIG.fixed_reader.id, ...MODEL_CONFIG.frontier_sweep.map(m => m.id).filter(m => m !== MODEL_CONFIG.fixed_reader.id), ...MODEL_CONFIG.alternate_readers.map(m => m.id), ...MODEL_CONFIG.smoke_only_readers];
+  const out: Record<string, Record<string, { n: number; correct: number; accuracy: number; truncated: number | null; by_category: Record<string, { n: number; correct: number }>; outcomes: Record<string, number>; judged: number; misses?: Record<string, number>; checkpoints?: Record<string, unknown>; context_tokens: { mean: number | null; p95: number | null }; rows: ScoredAnswer[] }>> = {};
+  const models = [MODEL_CONFIG.fixed_reader.id, ...MODEL_CONFIG.frontier_sweep.map(m => m.id).filter(m => m !== MODEL_CONFIG.fixed_reader.id), ...MODEL_CONFIG.alternate_readers.map(m => m.id), ...(smokeRun ? MODEL_CONFIG.smoke_only_readers : [])];
   for (const arm of armsWithAnswers(dir)) {
     for (const model of models) {
       const receipts = readReceipts(dir, arm, model);
@@ -409,7 +409,7 @@ export async function score(bench: Bench | null, bundle: SuiteBundle, dir: strin
       for (const r of receipts) {
         const label = labels.get(r.query_id)!;
         const q = queries.get(r.query_id)!;
-        const cut = { truncated: r.truncated === true, finish_reason: r.finish_reason ?? null };
+        const cut = { truncated: r.truncated ?? null, finish_reason: r.finish_reason ?? null };
         if (r.error) { rows.push({ query_id: r.query_id, category: label.category, checkpoint: r.checkpoint, outcome: 'error', correct: false, judged: false, ...cut, context_tokens: r.context_tokens_cl100k }); continue; }
         let { outcome } = suite.score(label, r.answer);
         let correct = outcome === 'correct';
@@ -454,7 +454,7 @@ export async function score(bench: Bench | null, bundle: SuiteBundle, dir: strin
       for (const c of Object.values(checkpoints)) { c.corrected_value_accuracy = c.correct / c.n; c.stale_answer_rate = c.stale / c.n; }
       const toks = rows.map(r => r.context_tokens).filter((x): x is number => typeof x === 'number').sort((a, b) => a - b);
       const correct = rows.filter(r => r.correct).length;
-      const truncated = rows.filter(r => r.truncated).length;
+      const truncated = rows.some(r => r.truncated === null) ? null : rows.filter(r => r.truncated).length;
       out[arm] ??= {};
       out[arm][model] = {
         n: rows.length, correct, accuracy: rows.length ? correct / rows.length : 0, truncated, by_category: byCat, outcomes, judged: rows.filter(r => r.judged).length,
@@ -463,7 +463,7 @@ export async function score(bench: Bench | null, bundle: SuiteBundle, dir: strin
         context_tokens: { mean: toks.length ? Math.round(toks.reduce((a, b) => a + b, 0) / toks.length) : null, p95: toks.length ? toks[Math.min(toks.length - 1, Math.floor(toks.length * 0.95))]! : null },
         rows,
       };
-      log(`[${bundle.suite}/${arm}] ${model}: ${correct}/${rows.length} correct (${(100 * correct / rows.length).toFixed(1)}%), ${truncated} cut off at the output limit`);
+      log(`[${bundle.suite}/${arm}] ${model}: ${correct}/${rows.length} correct (${(100 * correct / rows.length).toFixed(1)}%), ${truncated ?? 'unknown'} cut off at the output limit`);
     }
   }
   writeJson(join(dir, 'results.json'), { suite: bundle.suite, scored_at: new Date().toISOString(), results: out });
@@ -504,7 +504,7 @@ if (import.meta.main) {
       const models = arg(argv, '--models')?.split(',') ?? MODEL_CONFIG.frontier_sweep.map(m => m.id).filter(m => m !== MODEL_CONFIG.fixed_reader.id);
       await sweep(bench!, bundle, dir, models, log);
     } else if (phase === 'score') {
-      await score(bench, bundle, dir, log);
+      await score(bench, bundle, dir, log, smoke !== null);
     }
   } catch (e) {
     log(`FAILED: ${(e as Error).stack ?? e}`);

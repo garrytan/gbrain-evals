@@ -8,7 +8,7 @@
  * key is used: the proxy holds a placeholder Particle key and the fake never checks it.
  */
 import { afterAll, afterEach, beforeAll, describe, expect, test } from 'bun:test';
-import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { BudgetRun, closeLedgers, initLedger, ledgerStatus } from '../../eval/runner/budget-ledger.ts';
@@ -246,6 +246,44 @@ describe('a workload-suite question read by particle-1', () => {
     expect(result).toMatchObject({ n: 1, correct: 0, truncated: 1 });
     expect(result.rows).toEqual([expect.objectContaining({ query_id: q.id, correct: false, truncated: true, finish_reason: 'length' })]);
     expect(result.rows[0].outcome).not.toBe('error');
+  });
+
+  test('a reply or answer recorded before finish reasons were kept reads as unknown, so its arm\'s truncation count is unknown, not zero', async () => {
+    const b = await particleBench();
+    const q = passing.queries[0]!;
+    const opts = { tag: `passing-details/gbrain-raw/reader/${q.id}`, maxTokens: maxTokensFor('particle:particle-1') };
+    expect(await b.model('particle:particle-1', 'Q legacy?', opts)).toMatchObject({ finish_reason: 'stop', truncated: false });
+    const cacheDir = join(b.dir, 'model-cache');
+    for (const f of readdirSync(cacheDir)) {
+      const { finish_reason, truncated, ...legacy } = JSON.parse(readFileSync(join(cacheDir, f), 'utf8'));
+      writeFileSync(join(cacheDir, f), JSON.stringify(legacy));
+    }
+    expect(await b.model('particle:particle-1', 'Q legacy?', opts)).toMatchObject({ cached: true, finish_reason: null, truncated: null });
+
+    const bench = { model: b.model } as unknown as Bench;
+    const context = passing.documents.filter(d => d.user_id === q.user_id).slice(0, 2).map(d => d.content).join('\n\n');
+    await answerOne(bench, passing, b.dir, 'gbrain-raw', 'particle:particle-1', q, context, null, []);
+    const receiptFile = join(b.dir, 'answers', 'gbrain-raw', 'particle_particle-1', `${q.id}.json`);
+    const { finish_reason, truncated, ...legacy } = JSON.parse(readFileSync(receiptFile, 'utf8'));
+    expect([finish_reason, truncated]).toEqual(['stop', false]);
+    writeFileSync(receiptFile, JSON.stringify(legacy));
+    await score(null, passing, b.dir, () => {});
+    const result = JSON.parse(readFileSync(join(b.dir, 'results.json'), 'utf8')).results['gbrain-raw']['particle:particle-1'];
+    expect(result.truncated).toBeNull();
+    expect(result.rows[0]).toMatchObject({ truncated: null, finish_reason: null });
+  });
+
+  test('a smoke-only reader\'s answers are scored only when the scoring run is a labeled smoke run', async () => {
+    const b = await particleBench();
+    const q = passing.queries[0]!;
+    const context = passing.documents.filter(d => d.user_id === q.user_id).slice(0, 2).map(d => d.content).join('\n\n');
+    const particle = await answerOne({ model: b.model } as unknown as Bench, passing, b.dir, 'gbrain-raw', 'particle:particle-1', q, context, null, []);
+    const fable = 'anthropic:claude-fable-5-1';
+    mkdirSync(join(b.dir, 'answers', 'gbrain-raw', 'anthropic_claude-fable-5-1'), { recursive: true });
+    writeFileSync(join(b.dir, 'answers', 'gbrain-raw', 'anthropic_claude-fable-5-1', `${q.id}.json`), JSON.stringify({ ...particle, model: fable }));
+    const scored = async (smokeRun: boolean) => { await score(null, passing, b.dir, () => {}, smokeRun); return Object.keys(JSON.parse(readFileSync(join(b.dir, 'results.json'), 'utf8')).results['gbrain-raw']); };
+    expect(await scored(false)).toEqual(['particle:particle-1']);
+    expect(await scored(true)).toEqual(['particle:particle-1', fable]);
   });
 });
 

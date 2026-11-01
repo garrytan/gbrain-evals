@@ -46,8 +46,11 @@ export interface Bench {
   close(): { usd: number; requests: number; run_id: string };
 }
 
-/** `finish_reason` is the provider's own; `truncated` marks an answer cut off at its output limit, which is still the model's answer. */
-export interface ModelReply { text: string; input_tokens: number | null; output_tokens: number | null; cached: boolean; model: string; finish_reason: string | null; truncated: boolean; error?: string }
+/**
+ * `finish_reason` is the provider's own; `truncated` marks an answer cut off at its output limit, which is still the
+ * model's answer, and is null when unknown (a cached reply written before replies kept their finish reason).
+ */
+export interface ModelReply { text: string; input_tokens: number | null; output_tokens: number | null; cached: boolean; model: string; finish_reason: string | null; truncated: boolean | null; error?: string }
 
 const pick = (env: Record<string, string>, keys: string[]) => Object.fromEntries(Object.entries(env).filter(([k]) => keys.some(p => k.toUpperCase().startsWith(p.toUpperCase()))));
 
@@ -123,7 +126,7 @@ export function modelCaller(proxy: Pick<Proxy, 'envFor'>, outDir: string): Bench
     const effort = compat ? `\n${compat.default_effort}:${compat.efforts[compat.default_effort]}` : '';
     const key = createHash('sha256').update(`${modelId}\n${o.maxTokens}\n${o.cacheKey ?? ''}\n${prompt}${effort}`).digest('hex');
     const cachePath = join(cacheDir, `${key}.json`);
-    if (existsSync(cachePath)) return { finish_reason: null, truncated: false, ...(JSON.parse(readFileSync(cachePath, 'utf8')) as Omit<ModelReply, 'finish_reason' | 'truncated'>), cached: true };
+    if (existsSync(cachePath)) return { finish_reason: null, truncated: null, ...(JSON.parse(readFileSync(cachePath, 'utf8')) as Omit<ModelReply, 'finish_reason' | 'truncated'>), cached: true };
     const env = o.tag.includes('/judge/') ? judge : reader;
     let reply: ModelReply;
     try {
