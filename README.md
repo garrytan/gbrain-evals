@@ -201,8 +201,9 @@ preregistered test with the same reader, judge and context budget on sealed BEAM
 with background extraction and reflection (+2.64 points, one-sided 95% bounds +0.90 and +4.41). Its cost per correct
 answer was 0.63 of the server's at 20 reads per stored conversation and level at 200. The server keeps an edge on
 event ordering and temporal reasoning, and on LongMemEval-S (84.5% against 80.3% for gbrain's pages alone). gbrain
-ran its freeze build `d7467d1cf`, whose retrieval was checked equivalent at `d7d7686de`; both are in the pin's
-history. [Sealed results](docs/benchmarks/2026-10-09-memory-proof-wave-sealed-results.md).
+ran its freeze build `d7467d1cf`, whose retrieval was
+[checked equivalent](docs/benchmarks/2026-10-09-memory-proof-wave-sealed-results.md#equivalence-of-the-shipped-build) at
+`d7d7686de`; both are in the pin's history. [Sealed results](docs/benchmarks/2026-10-09-memory-proof-wave-sealed-results.md).
 
 **Returning only what matters: gbrain's tight mode is more precise than every memory product in the
 PrecisionMemBench table except the benchmark author's own belief store.** Its mean precision is 0.586, against 0.22,
@@ -374,6 +375,10 @@ Code is MIT licensed. Dataset and vendored benchmark attribution is recorded in 
 [PrecisionMemBench attribution](eval/precisionmembench/ATTRIBUTION.md).
 
 ## Changelog
+
+### 2026-10-31: Equivalence claim links its section
+
+The memory-bank paragraph says `d7467d1cf`'s retrieval was checked equivalent at `d7d7686de`; that claim now links the [equivalence section](docs/benchmarks/2026-10-09-memory-proof-wave-sealed-results.md#equivalence-of-the-shipped-build) of the sealed results, which reached main on 2026-10-31 together with the post hoc LongMemEval-S facts-block check. No result row on this page changes.
 
 ### 2026-10-31: Repository row names v0.10.138
 
