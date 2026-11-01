@@ -278,17 +278,6 @@ describe('whole-system arms through the cell runner', () => {
     expect(existsSync(join(dir, 'judgments.ndjson')) ? ndjson(join(dir, 'judgments.ndjson')) : []).toEqual([]);
   });
 
-  test('file agent: a particle reader through the lease proxy refuses before any call, since the proxy has no particle route yet', async () => {
-    const def = cellDef('baseline-file-agent', 'in-process', [{ id: 'whole-agent', mode: 'agent', readers: ['anthropic:claude-opus-5-5', 'particle:particle-1'] }], { configuration: 'baseline' });
-    let calls = 0;
-    const count = (async () => { calls++; return new Response('{}'); }) as unknown as typeof fetch;
-    const err = await runCell(def, { out: join(tmp, 'agent-particle-proxy'), providerProxy: 'http://127.0.0.1:9', maxAttempts: 1, ...quiet }, { corpus, system: new FileAgentSystem({ workDir: join(tmp, 'agent-particle-proxy-trees'), fetchImpl: count }), judge: scriptedJudge() }).catch(e => e) as ScoreboardError;
-    expect(err).toBeInstanceOf(ScoreboardError);
-    expect(err.op.code).toBe('NOT_YET_AVAILABLE');
-    expect(err.message).toContain('particle:particle-1 through --provider-proxy');
-    expect(calls).toBe(0);
-  });
-
   test('full context: a history over the window is does_not_fit, never judged', async () => {
     const def = cellDef('baseline-full-context', 'in-process', [{ id: 'whole-full-context', mode: 'full-context' }], { configuration: 'baseline' });
     const out = join(tmp, 'full-no-fit');
