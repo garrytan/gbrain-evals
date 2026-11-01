@@ -7,7 +7,7 @@ import { CAT36_CATEGORY, cat36ProductPackage, validateCat36Profile, type Cat36Bu
 import { cat36Hash, constructionSources, fixturePageId, loadCat36Corpus, loadCat36Counterfactual, type Cat36Probe } from './cat36-corpus.ts';
 import { scoreCat36Probe } from './cat36-scorer.ts';
 import { DEFAULT_JUDGE_SYSTEM_PROMPT, scoreAnswer, type JudgeEvidence, type JudgeResult } from './judge.ts';
-import { temperatureSent } from './anthropic-request.ts';
+import { assertJudgeThinkingRoom, temperatureSent } from './anthropic-request.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
 import { BENCHMARK_VERSION, loadReceipt, writeReceipt, type FailureOrigin, type Receipt } from './receipt.ts';
 import { resolveRegressionProduct } from './situation-recall-provenance.ts';
@@ -58,6 +58,7 @@ export function validateGroundedProfile(profile: GroundedProfile): void {
   }
   if (profile.mode === 'offline') return;
   if (!/^(openai|anthropic|google):[^\s:]+$/.test(profile.answer_model) || profile.judge_model !== GROUNDED_JUDGE_MODEL) throw new Error('unsupported live answer provider or judge pricing model');
+  assertJudgeThinkingRoom(profile.judge_model, profile.judge_max_tokens);
   if (!/^[a-f0-9]{40}$/.test(profile.expected_product_sha ?? '')
     || (profile.expected_package_sha256 !== undefined && !/^[a-f0-9]{64}$/.test(profile.expected_package_sha256))) throw new Error('exact live product identity required');
   for (const cap of [profile.answer_budget, profile.judge_budget]) {
