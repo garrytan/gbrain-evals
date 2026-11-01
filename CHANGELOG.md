@@ -106,8 +106,10 @@ This records what each gbrain-evals release changed and what its measurements me
   `test/eval/verify-documentation-refresh.test.ts` ran its 26-file owning suite both ways, and only the timeout-only
   policy names the 7 files that lost their last test. An edit to `eval/runner/providers/openai-compatible.ts` selected
   the same 79 test files both ways. An older gstack would fail an unmapped edit with `PREGATE_NO_LANE` instead of
-  warning, so a new `.gstack/ship-policy.json` sets `min_gstack_version` to 1.92.35.0: an older gstack refuses the
-  repository's policy with `POLICY_GSTACK_TOO_OLD` and names the upgrade. Every other ship-policy key keeps its default.
+  warning, so a new `.gstack/ship-policy.json` sets `min_gstack_version` to 1.92.35.0. On an older gstack the session
+  check then warns that the repository needs 1.92.35.0 and names the upgrade, and the receipt and merge-queue steps
+  refuse the policy with `POLICY_GSTACK_TOO_OLD`. Its /ship preflight still reaches pregate, so an unmapped edit can
+  fail there first. Every other ship-policy key keeps its default.
 
 ### chronicle-lift scores one agent model at a time, A4 rows keep the reader's stop reason, and PrecisionMemBench's gbrain-think is metered
 
