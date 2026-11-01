@@ -79,7 +79,7 @@ The counted arms are oracle, fs, pg, memory and gbrain. `--arms gbrain-fs` (plan
 
 ## Stop codes
 
-Every refusal and stop-for-Garry condition exits 3 and prints `STOP <code>`, what failed, the fix and, when it applies, the decision needed. Usage errors (an unknown flag, a missing value) exit 2.
+Every refusal and stop-for-Garry condition exits 3 and prints `STOP <code>`, what failed, the fix and, when it applies, the decision needed. Usage errors (an unknown flag, a missing value, particle-1 in `--models` or `--judge`) exit 2.
 
 | Code | Meaning | Fix |
 |---|---|---|

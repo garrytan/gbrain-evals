@@ -4,9 +4,13 @@ Every reading lane in this repository records model calls in one shape, `usage-r
 [`eval/runner/usage-receipt.ts`](../eval/runner/usage-receipt.ts). The memory-qa reader, gbrain `think` and judge
 calls write it today ([`eval/runner/memory-qa/run.ts`](../eval/runner/memory-qa/run.ts)), and the W10 batch
 re-score reads its committed rows through the same normalizer
-([`eval/runner/batch/w10-rescore.ts`](../eval/runner/batch/w10-rescore.ts)). This page is for harness authors
-who want token counts and dollars that compare across providers: the Q1 scoreboard cells and the wave 1 pilot arms
-of the [10x memory advantage plan](https://github.com/garrytan/gbrain-evals/pull/97) adopt it.
+([`eval/runner/batch/w10-rescore.ts`](../eval/runner/batch/w10-rescore.ts)). The Cat 40 agent loop reports every
+provider attempt, retries and failures included, and `attemptReceipt` in
+[`eval/runner/cat40/loop.ts`](../eval/runner/cat40/loop.ts) turns each into one record. The v1 model ladder writes a
+cell's attempts to `cells/<cell>/attempts.ndjson` under its `--out` directory, and the Q1 file agent writes its
+attempts to `receipts.ndjson` in its work directory (`runs/<cell>/file-agent/` under a Q1 cell's output). This page
+is for harness authors who want token counts and dollars that compare across providers. The Q1 scoreboard cells and
+the wave 1 pilot arms of the [10x memory advantage plan](https://github.com/garrytan/gbrain-evals/pull/97) adopt it.
 
 Nothing on this page is a new measurement. Its worked numbers recount committed W10 receipts.
 
@@ -43,7 +47,7 @@ with `from_cache: true` and the original call's usage.
 | Field | Meaning |
 |---|---|
 | `schema` | `usage-receipt/v1` |
-| `lane`, `role` | The harness lane (`memory-qa`, `w10-batch`, `q1-cell`) and the call's role (`reader`, `think`, `judge`, `builder`) |
+| `lane`, `role` | The harness lane (`memory-qa`, `w10-batch`, `q1-cell`, `cat40-model-ladder`, `q1-file-agent`) and the call's role (`reader`, `think`, `judge`, `builder`) |
 | `question_id`, `replicate`, `attempt` | Which question and replicate; `attempt` counts from 0 within that question, replicate and role |
 | `model`, `response_model` | The requested `provider:model` and the model id the provider reported |
 | `status`, `error` | `ok`, or `error` with the provider's message |
@@ -53,8 +57,8 @@ with `from_cache: true` and the original call's usage.
 | `usage` | The normalized numbers below, or null when the response carried none |
 | `usage_raw` | The provider's usage object, unchanged |
 | `delivered` | Tokens of the text delivered to the model, with the tokenizer named (`cl100k` for reader prompts; `think` reports its own delivery count) |
-| `request` | Optional: what the request sent, for calls made through the OpenAI-compatible provider module (below) |
-| `response_meta` | Optional: what identifies the serving model and tier, for the same calls (below) |
+| `request` | Optional: what the request sent, for calls made through the OpenAI-compatible provider module and every Cat 40 loop attempt (below) |
+| `response_meta` | Optional: what identifies the serving model and tier, for calls made through the provider module (below) |
 
 `usage` holds:
 
@@ -77,12 +81,20 @@ Provider-reported tokens are not comparable across model families: on the same W
 mean of 22,077 tokens and `gpt-6.1-sol` 13,695. A gate that compares arms with different readers uses `delivered`
 (one tokenizer, cl100k, on the delivered text) and reports the provider numbers beside it.
 
+Records from the two Cat 40 loop lanes carry three more fields. `turn` is the loop's turn, `ms` the attempt's wall
+time, and `retry_after_ms` the Retry-After a Particle error sent, in milliseconds (capped at 120 seconds, null
+otherwise). In the ladder, `question_id` is the cell key and session (`<model>|<arm label>|<task>|<repeat>|s2` for
+the scored session, `|s1` for a family F task's first session) and `replicate` is the repeat. In the file agent,
+`question_id` is the Q1 cell's opaque answer id, so its receipts join `answers.ndjson` without a raw question id. A
+rerun numbers its attempts on from the records already in the file, so `question_id`, `replicate` and `attempt` name
+one attempt.
+
 ## Request settings and response identity
 
 A reasoning model's answer depends on settings the model id does not show, and a provider can change the weights
 behind an id. Lanes that call a provider through the OpenAI-compatible provider module record both on every attempt
-(today the particle weight canary, `scripts/particle-canary.ts`). The fields are optional, so the schema stays
-`usage-receipt/v1` and older receipts stay valid.
+(the particle weight canary, `scripts/particle-canary.ts`, and particle-1 in the Cat 40 loop). The fields are
+optional, so the schema stays `usage-receipt/v1` and older receipts stay valid.
 
 `request`, built by `compatRequest` with the request itself:
 
@@ -91,6 +103,11 @@ behind an id. Lanes that call a provider through the OpenAI-compatible provider 
 | `effort_sent`, `effort_effective` | The `reasoning_effort` sent and the level the provider runs it at. Particle runs `minimal` as `low`, `medium` and `xhigh` as `high`, and `ultra` as `max`, so a campaign that fixes `medium` for every reader records particle-1 at `high` |
 | `output_limit_field`, `output_limit` | The output-limit field (`max_completion_tokens`) and its value. particle-1 is sent at least 16,000 tokens, because reasoning shares the limit: a 48-token limit at the default effort returned empty content (probe, 2026-10-31) |
 | `temperature_sent`, `seed_sent` | Null when none was sent. Particle is sent neither, and then samples with top_p 0.85; only the weight canary (`scripts/particle-canary.ts`) sends them |
+
+The Cat 40 loop sends particle-1 `reasoning_effort` `high` unless the caller passes another level. It records
+`request` for its Anthropic and OpenAI attempts too, built by the loop itself. Those providers run the effort they
+are sent, so `effort_sent` and `effort_effective` both hold the effort the caller passed (null when it passes none,
+as the ladder does). The output-limit field is `max_tokens` or `max_output_tokens`, and temperature and seed are null.
 
 `response_meta`, from `responseMeta(response)`:
 
@@ -103,8 +120,10 @@ behind an id. Lanes that call a provider through the OpenAI-compatible provider 
 | `truncated` | True when the model stopped at the output limit (`finish_reason: length`) |
 
 A failed attempt (a 429, a network error, a 402) has no response, so every `response_meta` field is null, never an
-invented value, and `response_model` and `usage` are null as before. A truncated response keeps its own content as
-`answer`, even when that is empty: the reasoning text (Particle's `reasoning_content`) never fills an answer.
+invented value, and `response_model` and `usage` are null as before. One `error` attempt keeps a body. The Cat 40
+loop retries a Particle 2xx that has no `choices[0].message` as a server error, and that attempt's record keeps the
+body's usage and response metadata. A truncated response keeps its own content as `answer`, even when that is empty:
+the reasoning text (Particle's `reasoning_content`) never fills an answer.
 
 ## How a memory-qa row uses it
 
@@ -134,6 +153,7 @@ For the Q1 scoreboard (`evals/q1-scoreboard`, `eval/runner/q1/cell.ts`), the cha
 
 ```bash
 bun test test/eval/memory-qa-usage.test.ts test/eval/openai-compatible.test.ts
+bun test test/eval/cat40-particle-loop.test.ts test/eval/cat40-particle-ladder.test.ts test/eval/file-agent.test.ts
 ```
 
 The first file serves recorded synthetic Anthropic and OpenAI responses through a mocked fetch and checks that both
@@ -142,4 +162,7 @@ carry `think`'s own usage and the reference date `think` reports, that a 5,000-c
 that the normalizer reproduces the committed W10 means (22,167 for W10a; 22,077 for Opus 5.5, 13,695 for
 `gpt-6.1-sol` and 14,458 for `gpt-5.4` in W10b). The second file checks Particle's convention, the `request` and
 `response_meta` fields, the null fields of a failed attempt and the empty answer of a truncated response, against a
-mocked fetch and the keyless fake provider. Neither makes a provider call.
+mocked fetch and the keyless fake provider. The second command checks the Cat 40 loop lanes. `cat40-particle-loop`
+checks one record per attempt for every provider, with its turn and request fields. `cat40-particle-ladder` runs the
+ladder against a fake Particle server on loopback and checks `attempts.ndjson` and its rerun numbering. `file-agent`
+checks `receipts.ndjson`, keyed by answer id. None of these files makes a provider call.
