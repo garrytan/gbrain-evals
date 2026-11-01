@@ -346,7 +346,7 @@ Prepare and approve a separate [`GroundedProfile`](../../eval/runner/cat36-groun
 | `mode` | `live` for CLI execution. |
 | `answer_model` | An explicit `openai:`, `anthropic:`, or `google:` chat model supported by the public gateway. |
 | `judge_model` | `claude-haiku-5-5` (`GROUNDED_JUDGE_MODEL`). Until 2026-11-01 it was `claude-haiku-4-5-20251001`, the snapshot the shared judge's fixed Haiku 4.5 prices assumed; the shared judge now prices every model from the budget ledger's table, and CLAUDE.md retires Haiku 4.5. A Haiku 4.5 replay is a different judge identity: never pool it with Haiku 5.5 verdicts. |
-| `answer_max_tokens`, `judge_max_tokens` | Separate integer output limits from 1 to 4096. They are not dollar limits. |
+| `answer_max_tokens`, `judge_max_tokens` | Separate integer output limits from 1 to 4096. They are not dollar limits. A live `judge_max_tokens` must be 4096, because the Haiku 5.5 judge thinks inside that limit and the shared judge sends an explicit limit unchanged; a smaller one is refused before any answer is generated. |
 | `expected_product_sha`, `expected_package_sha256` | Exact loaded product identity matching the retrieval build; the package hash is required for archive installs. |
 | `answer_budget`, `judge_budget` | Separate `{ "kind": "isolated-provider-cap", "approval_id": "<real approval reference>", "max_usd": <approved amount> }` records. Configure the external enforcement before execution. |
 
@@ -397,7 +397,7 @@ bun eval/runner/longmemeval-answers.ts \
   --adapter hybrid
 ```
 
-This command only validates. Paid execution additionally needs `--execute --profile <approved-LmeAnswerProfile.json> --output <new-dir>` and matching `--answer-max-usd`/`--judge-max-usd` confirmations of the separate external allowances. The profile pins dataset, raw-row, source-manifest and retrieval-config hashes as well as model identities. The generator sees only the question and selected original excerpts. Session-diversity adapters contribute only the first returned chunk for each already-selected session, not an expanded full conversation.
+This command only validates. Paid execution additionally needs `--execute --profile <approved-LmeAnswerProfile.json> --output <new-dir>` and matching `--answer-max-usd`/`--judge-max-usd` confirmations of the separate external allowances. The profile pins dataset, raw-row, source-manifest and retrieval-config hashes as well as model identities. Its live `judge_max_tokens` must be 4096, because the Haiku 5.5 judge thinks inside that limit; a smaller one is refused before any answer is generated. The generator sees only the question and selected original excerpts. Session-diversity adapters contribute only the first returned chunk for each already-selected session, not an expanded full conversation.
 
 The replay retains original answers, usage, judge responses and retries. It is a **secondary shared-judge grounding check**, not official LongMemEval answer accuracy: this checkout lacks the upstream evaluator and full dataset, and the protocol does not silently substitute an internal scorer with different rules. The reference answer is judge-only material, never evidence sent to answer generation. Missing data, legacy rows, unverified model identity, excluded judge errors, or missing external caps remain blocking prerequisites.
 
