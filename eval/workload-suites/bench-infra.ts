@@ -23,6 +23,7 @@ import { createHash } from 'node:crypto';
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { BudgetRun, closeLedgers, initLedger } from '../runner/budget-ledger.ts';
+import { UPSTREAM_DEADLINE_MS } from '../runner/metering-proxy.ts';
 import { ensureHarness, harnessProcessEnv, PROVIDER_DIR, REPO_ROOT, type HarnessInstall } from '../runner/harness-env.ts';
 import type { GbrainUnderTest } from '../runner/gbrain-under-test.ts';
 import { COMPAT_PROVIDERS, CompatHttpError, ParticleCreditExhausted, compatRequest, compatSend, type CompatRequest, type CompatResponse } from '../runner/providers/openai-compatible.ts';
@@ -151,7 +152,7 @@ interface AttemptOutcome {
  * OpenAI-compatible provider in COMPAT_PROVIDERS, plain text out. Each provider attempt calls `onAttempt` with its
  * usage receipt (`question_id` is the call's tag); a failed attempt's response fields are null.
  */
-export async function callModel(env: Record<string, string>, modelId: string, prompt: string, tag: string, maxTokens: number, onAttempt: (r: UsageReceipt) => void = () => {}): Promise<ModelReply> {
+export async function callModel(env: Record<string, string>, modelId: string, prompt: string, tag: string, maxTokens: number, onAttempt: (r: UsageReceipt) => void = () => {}, deadlineMs = UPSTREAM_DEADLINE_MS): Promise<ModelReply> {
   const [provider, model] = [modelId.slice(0, modelId.indexOf(':')), modelId.slice(modelId.indexOf(':') + 1)];
   const fail = (error: string): ModelReply => ({ text: '', input_tokens: null, output_tokens: null, cached: false, model: modelId, error });
   const note = (attempt: number, o: AttemptOutcome) => onAttempt(receipt({
@@ -161,7 +162,7 @@ export async function callModel(env: Record<string, string>, modelId: string, pr
     usage: o.usage ? normalizeUsage(usageSourceOf(modelId), o.usage) : null, usage_raw: o.usage && typeof o.usage === 'object' ? o.usage as Record<string, unknown> : null, delivered: null,
     ...(o.request ? { request: o.request, response_meta: o.response_meta ?? responseMeta(null) } : {}),
   }));
-  if (Object.hasOwn(COMPAT_PROVIDERS, provider)) return callCompat(modelId, prompt, tag, maxTokens, env, fail, note);
+  if (Object.hasOwn(COMPAT_PROVIDERS, provider)) return callCompat(modelId, prompt, tag, maxTokens, env, fail, note, deadlineMs);
   if (provider !== 'anthropic' && provider !== 'openai') return fail(`unsupported reader provider ${provider}`);
   for (let attempt = 0; ; attempt++) {
     let res: Response;
@@ -209,9 +210,10 @@ export async function callModel(env: Record<string, string>, modelId: string, pr
  * The particle route: one `compatRequest` (effort `high`, the model's output floor at least), sent once per attempt
  * with `compatSend` under callModel's attempt limits. A 429 or 5xx waits its Retry-After (capped at 120 s) when it
  * sends one, else the same backoff as OpenAI; a proxy's 402 is a budget refusal; Particle's credit 402 throws
- * `ParticleCreditExhausted` after its receipt.
+ * `ParticleCreditExhausted` after its receipt. A long reasoning answer gets the metering proxies' upstream deadline,
+ * not Bun's 300-second fetch timeout, and a request that times out is never sent again.
  */
-async function callCompat(modelId: string, prompt: string, tag: string, maxTokens: number, env: Record<string, string>, fail: (error: string) => ModelReply, note: (attempt: number, o: AttemptOutcome) => void): Promise<ModelReply> {
+async function callCompat(modelId: string, prompt: string, tag: string, maxTokens: number, env: Record<string, string>, fail: (error: string) => ModelReply, note: (attempt: number, o: AttemptOutcome) => void, deadlineMs: number): Promise<ModelReply> {
   let built: CompatRequest;
   try { built = compatRequest(modelId, [{ role: 'user', content: prompt }], { maxOutputTokens: maxTokens }, env); } catch (e) { return fail((e as Error).message); }
   const req: CompatRequest = { ...built, headers: { ...built.headers, 'x-mpw-tag': tag } };
@@ -219,12 +221,13 @@ async function callCompat(modelId: string, prompt: string, tag: string, maxToken
   for (let attempt = 0; ; attempt++) {
     let r: CompatResponse;
     try {
-      r = await compatSend(req);
+      r = await compatSend(req, { timeoutMs: deadlineMs });
     } catch (e) {
       const error = e as Error;
       const http = error instanceof CompatHttpError ? error : null;
       const budget = error.name === 'BudgetExceededError';
-      const retry = http ? http.retryable && attempt < 5 : !budget && attempt < 4;
+      const timedOut = error.name === 'TimeoutError' || error.name === 'AbortError';
+      const retry = http ? http.retryable && attempt < 5 : !budget && !timedOut && attempt < 4;
       const waitMs = http ? http.retryAfterMs ?? 3000 * (attempt + 1) : 2000 * (attempt + 1);
       const waitNote = retry ? `; retrying in ${waitMs} ms${http?.retryAfterMs != null ? ' (Retry-After)' : ''}` : '';
       note(attempt, { error: `${http || budget ? '' : 'network: '}${error.message}${waitNote}`, usage: http?.usage, request: req.sent });

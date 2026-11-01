@@ -203,6 +203,19 @@ describe('a workload-suite question read by particle-1', () => {
     expect(line!.response_meta).toMatchObject({ weight_version: 'default', service_tier: 'default', truncated: false });
   });
 
+  test('a particle request that outlasts its deadline leaves one receipt and is never sent again', async () => {
+    let hits = 0;
+    const slow = Bun.serve({ port: 0, hostname: '127.0.0.1', async fetch() { hits++; await Bun.sleep(1500); return Response.json({}); } });
+    try {
+      const seen: UsageReceipt[] = [];
+      const env = { PARTICLE_BASE_URL: `http://127.0.0.1:${slow.port}/particle/v1`, PARTICLE_API_KEY: 'pk-placeholder-particle' };
+      const reply = await callModel(env, 'particle:particle-1', 'Q?', 'beliefs/gbrain-combined/reader/q-slow', 16_000, r => seen.push(r), 200);
+      expect(reply.error).toStartWith('network: ');
+      expect(hits).toBe(1);
+      expect(seen.map(r => r.status)).toEqual(['error']);
+    } finally { slow.stop(true); }
+  });
+
   test('a cached particle answer is keyed on the effort it was read at', async () => {
     const b = await particleBench();
     const ask = () => b.model('particle:particle-1', 'Answer: cached?', { tag: 'beliefs/gbrain-combined/reader/q-cache', maxTokens: 16_000 });

@@ -57,6 +57,7 @@ import { dirname, join, resolve } from 'node:path';
 import {
   BudgetExceededError, BudgetRun, ledgerStatus, priceRequest, reservationUsd, streamUsageCost, unguardedFetch, usageCost,
 } from './budget-ledger.ts';
+import { UPSTREAM_DEADLINE_MS } from './metering-proxy.ts';
 import { COMPAT_PROVIDERS } from './providers/openai-compatible.ts';
 import { normalizeUsage, responseMeta, type ResponseMeta } from './usage-receipt.ts';
 
@@ -384,7 +385,7 @@ export async function startMeteringProxy(options: MeteringProxyOptions): Promise
 
     let upstream: Response;
     try {
-      upstream = await unguardedFetch(target, { method: req.method, headers, body: raw.length ? raw : undefined, redirect: 'manual' });
+      upstream = await unguardedFetch(target, { method: req.method, headers, body: raw.length ? raw : undefined, redirect: 'manual', timeout: false, signal: AbortSignal.timeout(UPSTREAM_DEADLINE_MS) } as RequestInit);
     } catch (error) {
       const message = `metering proxy could not reach ${provider}: ${(error as Error).message}`;
       return finish(errorResponse(502, 'mpw_proxy_upstream_unreachable', message), { ...settle(null, 0, message), error: message });
