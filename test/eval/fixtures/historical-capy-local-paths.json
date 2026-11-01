@@ -1,5 +1,5 @@
 {
-  "_comment": "Committed receipts recorded before v0.10.101 that contain a Capy machine path (a /workspace/ checkout, or ~/.capy/ or $HOME/.capy/ scratch): MACHINE_LOCAL_PATH did not match those forms until then. They are kept byte-for-byte as historical evidence. No other receipt may contain such a path, and these files may not change.",
+  "_comment": "Committed receipts recorded before v0.10.101 that contain a Capy machine path (a /workspace/ checkout, or ~/.capy/ or $HOME/.capy/ scratch): MACHINE_LOCAL_PATH did not match those forms until then. They are kept byte-for-byte as historical evidence. One of them, the 2026-10-10-memory-proof-wave-lme-facts0 re-judge ledger status, was recorded on 2026-10-10 on branch capy/mpw-harness and reached main on 2026-10-31. No other receipt may contain such a path, and these files may not change.",
   "files": {
     "docs/benchmarks/2026-09-29-repin-cats-1-2-6/cat6-prose-scale.b80cad6.receipt.json": "6bfb489a22edced150042d7d337b7e2937f1320be9546585cf389958a1023435",
     "docs/benchmarks/2026-09-30-n6-visibility-fuzz/receipt-evidence-delivery-732ee81.json": "615dd0a9754ad42df6cd010d29512aa658b356b1751482b26cee7fe0030370cf",
@@ -388,6 +388,7 @@
     "docs/benchmarks/2026-10-10-memory-proof-wave-2/retune-lme/rejudge/ledger-status.json": "60fd8fd80d72bc6813cf16a0d22560c3df5ecb1977e631fc94409539bf1a5dd3",
     "docs/benchmarks/2026-10-10-memory-proof-wave-2/step0/rejudge/ledger-status.json": "89f1abcd407ceaa17e3ce7f01393b801b5d70693efe8f1b5fa4580be7d9f72f6",
     "docs/benchmarks/2026-10-10-memory-proof-wave-2/w5/rejudge/ledger-status.json": "a73fcc98827306bb18d2fc93ef322e57ae67fbe0391434d9352d42b06b68564f",
+    "docs/benchmarks/2026-10-10-memory-proof-wave-lme-facts0/rejudge/ledger-status.json": "897a27693d8c7700c89704ae9ef5685b31ec4c964283a823eca0a32e29e420fb",
     "docs/benchmarks/2026-10-12-d2d4-smoke/d2d4/experiment.json": "197ae7990c5e7aaa802f4b7f671bf31b20020d96964028d10c840a9912458cd6",
     "docs/benchmarks/2026-10-12-d2d4-smoke/d2d4/receipt-1791841550919.json": "a4115ef41cc796a0caede9ab265e83c30460d667710813d20c8bc0fb10401a49",
     "docs/benchmarks/2026-10-12-d2d4-smoke/master/experiment.json": "0aeadd082d698378f1d83865d03733615cbefb7d9adafed1df7c532181ecf590",
