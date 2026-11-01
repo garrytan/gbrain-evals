@@ -97,6 +97,9 @@ export interface AnswerReceipt {
   answer_raw: string;
   answer: string;
   error: string | null;
+  /** The provider's finish reason; a reply cut off at its output limit is `truncated` and scored as the answer it is. */
+  finish_reason: string | null;
+  truncated: boolean;
   input_tokens: number | null;
   output_tokens: number | null;
 }
@@ -169,7 +172,7 @@ export function selectQueries(bundle: SuiteBundle, smoke: number | null): Harnes
 function writeJson(path: string, value: unknown) { mkdirSync(join(path, '..'), { recursive: true }); writeFileSync(path, JSON.stringify(value, null, 1) + '\n'); }
 const receiptPath = (dir: string, arm: string, model: string, qid: string) => join(dir, 'answers', arm, model.replace(/[:/]/g, '_'), `${qid}.json`);
 
-async function answerOne(bench: Bench, bundle: SuiteBundle, dir: string, arm: string, model: string, q: HarnessQuery, context: string, meta: RetrieveReceipt | null, forbidden: string[], extra: Partial<AnswerReceipt> = {}): Promise<AnswerReceipt> {
+export async function answerOne(bench: Bench, bundle: SuiteBundle, dir: string, arm: string, model: string, q: HarnessQuery, context: string, meta: RetrieveReceipt | null, forbidden: string[], extra: Partial<AnswerReceipt> = {}): Promise<AnswerReceipt> {
   const path = receiptPath(dir, arm, model, q.id + (extra.checkpoint !== undefined ? '' : ''));
   if (existsSync(path)) {
     const prior = JSON.parse(readFileSync(path, 'utf8')) as AnswerReceipt;
@@ -181,7 +184,7 @@ async function answerOne(bench: Bench, bundle: SuiteBundle, dir: string, arm: st
   const receipt: AnswerReceipt = {
     suite: bundle.suite, arm, model, query_id: q.id, unit: q.user_id, prompt_sha256: sha256(prompt), prompt,
     context_tokens_cl100k: meta?.tokens_cl100k ?? null, retrieve_meta: meta ? { ...meta.meta, retrieve_ms: meta.retrieve_ms } : null,
-    answer_raw: reply.text, answer: parseAnswer(reply.text), error: reply.error ?? null,
+    answer_raw: reply.text, answer: parseAnswer(reply.text), error: reply.error ?? null, finish_reason: reply.finish_reason, truncated: reply.truncated,
     input_tokens: reply.input_tokens, output_tokens: reply.output_tokens, ...extra,
   };
   writeJson(path, receipt);
@@ -362,7 +365,7 @@ async function sweep(bench: Bench, bundle: SuiteBundle, dir: string, models: str
         if (existsSync(path) && !JSON.parse(readFileSync(path, 'utf8')).error) return;
         leakCheck(r.prompt, forbidden, `the ${model} prompt for ${r.query_id}`);
         const reply = await bench.model(model, r.prompt, { tag: `${bundle.suite}/${arm}/reader/${r.query_id}`, maxTokens: maxTokensFor(model) });
-        writeJson(path, { ...r, model, answer_raw: reply.text, answer: parseAnswer(reply.text), error: reply.error ?? null, input_tokens: reply.input_tokens, output_tokens: reply.output_tokens });
+        writeJson(path, { ...r, model, answer_raw: reply.text, answer: parseAnswer(reply.text), error: reply.error ?? null, finish_reason: reply.finish_reason, truncated: reply.truncated, input_tokens: reply.input_tokens, output_tokens: reply.output_tokens });
       });
       if (bench.proxy.exhausted) throw new Error(`budget exhausted: ${bench.proxy.lastRefusal}`);
       log(`[${bundle.suite}/${arm}] sweep ${model}: ${base.length} questions`);
@@ -380,9 +383,9 @@ Answer to grade: {answer}
 The answer is correct only if it commits to the correct answer as the current answer. Mentioning an outdated value as history is fine; hedging between values or committing to a wrong value is not.
 Reply with exactly one line of JSON: {"correct": true} or {"correct": false}.`;
 
-export interface ScoredAnswer { query_id: string; category: string; checkpoint?: number; outcome: Outcome | 'error'; correct: boolean; judged: boolean; miss?: string; context_tokens: number | null }
+export interface ScoredAnswer { query_id: string; category: string; checkpoint?: number; outcome: Outcome | 'error'; correct: boolean; judged: boolean; truncated: boolean; finish_reason: string | null; miss?: string; context_tokens: number | null }
 
-async function score(bench: Bench | null, bundle: SuiteBundle, dir: string, log: (l: string) => void) {
+export async function score(bench: Bench | null, bundle: SuiteBundle, dir: string, log: (l: string) => void) {
   const suite = SUITES[bundle.suite];
   const labels = new Map(bundle.labels.map(l => [l.query_id, l]));
   const queries = new Map(bundle.queries.map(q => [q.id, q]));
@@ -396,8 +399,8 @@ async function score(bench: Bench | null, bundle: SuiteBundle, dir: string, log:
       }
     }
   }
-  const out: Record<string, Record<string, { n: number; correct: number; accuracy: number; by_category: Record<string, { n: number; correct: number }>; outcomes: Record<string, number>; judged: number; misses?: Record<string, number>; checkpoints?: Record<string, unknown>; context_tokens: { mean: number | null; p95: number | null }; rows: ScoredAnswer[] }>> = {};
-  const models = [MODEL_CONFIG.fixed_reader.id, ...MODEL_CONFIG.frontier_sweep.map(m => m.id).filter(m => m !== MODEL_CONFIG.fixed_reader.id), ...MODEL_CONFIG.alternate_readers.map(m => m.id)];
+  const out: Record<string, Record<string, { n: number; correct: number; accuracy: number; truncated: number; by_category: Record<string, { n: number; correct: number }>; outcomes: Record<string, number>; judged: number; misses?: Record<string, number>; checkpoints?: Record<string, unknown>; context_tokens: { mean: number | null; p95: number | null }; rows: ScoredAnswer[] }>> = {};
+  const models = [MODEL_CONFIG.fixed_reader.id, ...MODEL_CONFIG.frontier_sweep.map(m => m.id).filter(m => m !== MODEL_CONFIG.fixed_reader.id), ...MODEL_CONFIG.alternate_readers.map(m => m.id), ...MODEL_CONFIG.smoke_only_readers];
   for (const arm of armsWithAnswers(dir)) {
     for (const model of models) {
       const receipts = readReceipts(dir, arm, model);
@@ -406,7 +409,8 @@ async function score(bench: Bench | null, bundle: SuiteBundle, dir: string, log:
       for (const r of receipts) {
         const label = labels.get(r.query_id)!;
         const q = queries.get(r.query_id)!;
-        if (r.error) { rows.push({ query_id: r.query_id, category: label.category, checkpoint: r.checkpoint, outcome: 'error', correct: false, judged: false, context_tokens: r.context_tokens_cl100k }); continue; }
+        const cut = { truncated: r.truncated === true, finish_reason: r.finish_reason ?? null };
+        if (r.error) { rows.push({ query_id: r.query_id, category: label.category, checkpoint: r.checkpoint, outcome: 'error', correct: false, judged: false, ...cut, context_tokens: r.context_tokens_cl100k }); continue; }
         let { outcome } = suite.score(label, r.answer);
         let correct = outcome === 'correct';
         let judged = false;
@@ -417,7 +421,7 @@ async function score(bench: Bench | null, bundle: SuiteBundle, dir: string, log:
           const m = /\{\s*"correct"\s*:\s*(true|false)\s*\}/.exec(reply.text);
           if (m) { judged = true; correct = m[1] === 'true'; outcome = correct ? 'correct' : 'wrong'; }
         }
-        const row: ScoredAnswer = { query_id: r.query_id, category: label.category, checkpoint: r.checkpoint, outcome, correct, judged, context_tokens: r.context_tokens_cl100k };
+        const row: ScoredAnswer = { query_id: r.query_id, category: label.category, checkpoint: r.checkpoint, outcome, correct, judged, ...cut, context_tokens: r.context_tokens_cl100k };
         if (bundle.suite === 'passing-details' && label.gold.kind === 'value') {
           const store = BENCH_ARMS['passing-details'].find(a => a.id === arm)?.store ?? arm;
           // A facts-only lane stores only what extraction kept, so its presence is the facts check alone.
@@ -450,15 +454,16 @@ async function score(bench: Bench | null, bundle: SuiteBundle, dir: string, log:
       for (const c of Object.values(checkpoints)) { c.corrected_value_accuracy = c.correct / c.n; c.stale_answer_rate = c.stale / c.n; }
       const toks = rows.map(r => r.context_tokens).filter((x): x is number => typeof x === 'number').sort((a, b) => a - b);
       const correct = rows.filter(r => r.correct).length;
+      const truncated = rows.filter(r => r.truncated).length;
       out[arm] ??= {};
       out[arm][model] = {
-        n: rows.length, correct, accuracy: rows.length ? correct / rows.length : 0, by_category: byCat, outcomes, judged: rows.filter(r => r.judged).length,
+        n: rows.length, correct, accuracy: rows.length ? correct / rows.length : 0, truncated, by_category: byCat, outcomes, judged: rows.filter(r => r.judged).length,
         ...(Object.keys(misses).length ? { misses } : {}),
         ...(Object.keys(checkpoints).length ? { checkpoints } : {}),
         context_tokens: { mean: toks.length ? Math.round(toks.reduce((a, b) => a + b, 0) / toks.length) : null, p95: toks.length ? toks[Math.min(toks.length - 1, Math.floor(toks.length * 0.95))]! : null },
         rows,
       };
-      log(`[${bundle.suite}/${arm}] ${model}: ${correct}/${rows.length} correct (${(100 * correct / rows.length).toFixed(1)}%)`);
+      log(`[${bundle.suite}/${arm}] ${model}: ${correct}/${rows.length} correct (${(100 * correct / rows.length).toFixed(1)}%), ${truncated} cut off at the output limit`);
     }
   }
   writeJson(join(dir, 'results.json'), { suite: bundle.suite, scored_at: new Date().toISOString(), results: out });
@@ -474,6 +479,8 @@ if (import.meta.main) {
   const phase = arg(argv, '--phase') ?? 'answer';
   const smoke = arg(argv, '--smoke') ? Number(arg(argv, '--smoke')) : null;
   const stub = argv.includes('--stub');
+  const smokeOnly = (arg(argv, '--models')?.split(',') ?? []).filter(m => MODEL_CONFIG.smoke_only_readers.includes(m));
+  if (smokeOnly.length && !smoke) { console.error(`${smokeOnly.join(', ')} reads only in a labeled smoke run, never a counted one (CLAUDE.md); pass --smoke N`); process.exit(2); }
   const dir = resolve(arg(argv, '--out') ?? join(REPO_ROOT, 'eval/reports/workload-bench', `${suiteId}${smoke ? `-smoke${smoke}` : ''}${stub ? '-stub' : ''}`));
   const log = (l: string) => process.stderr.write(`${new Date().toISOString().slice(11, 19)} ${l}\n`);
   const bundle = suite.generate({ seed: suite.defaultSeed, smoke: false });

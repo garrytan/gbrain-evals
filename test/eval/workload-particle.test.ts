@@ -16,8 +16,8 @@ import { readRequestLog, startMeteringProxy, type MeteringProxy } from '../../ev
 import { createMeteredTestCell, type MeteredTestCell } from '../../eval/runner/metering-proxy-testkit.ts';
 import { COMPAT_PROVIDERS, ParticleCreditExhausted } from '../../eval/runner/providers/openai-compatible.ts';
 import type { UsageReceipt } from '../../eval/runner/usage-receipt.ts';
-import { callModel, modelCaller } from '../../eval/workload-suites/bench-infra.ts';
-import { maxTokensFor, pool, readerPrompt } from '../../eval/workload-suites/bench.ts';
+import { callModel, modelCaller, type Bench } from '../../eval/workload-suites/bench-infra.ts';
+import { answerOne, maxTokensFor, pool, readerPrompt, score } from '../../eval/workload-suites/bench.ts';
 import { SUITES, runSuite } from '../../eval/workload-suites/cli.ts';
 import { MODEL_CONFIG, ROUTED_PROVIDERS, modelRuleViolations, workloadModelsNotRun } from '../../eval/workload-suites/run-config.ts';
 
@@ -82,7 +82,7 @@ describe('a workload-suite question read by particle-1', () => {
     const tag = `passing-details/gbrain-raw/reader/${q.id}`;
     const before = fakeLines().length;
     const reply = await b.model('particle:particle-1', prompt, { tag, maxTokens: maxTokensFor('particle:particle-1') });
-    expect(reply).toEqual({ text: 'ok', input_tokens: expect.any(Number), output_tokens: expect.any(Number), cached: false, model: 'particle:particle-1' });
+    expect(reply).toEqual({ text: 'ok', input_tokens: expect.any(Number), output_tokens: expect.any(Number), cached: false, model: 'particle:particle-1', finish_reason: 'stop', truncated: false });
 
     const [line, ...rest] = b.log();
     expect(rest).toEqual([]);
@@ -226,6 +226,27 @@ describe('a workload-suite question read by particle-1', () => {
     row.default_effort = 'medium';
     try { expect((await ask()).cached).toBe(false); } finally { row.default_effort = was; }
   });
+
+  test('an answer cut off at its output limit is the model\'s answer: scored as is, recorded as truncated with its finish reason, counted per arm and never asked again', async () => {
+    const b = await particleBench();
+    const cutOff = { id: 'chatcmpl-cut', object: 'chat.completion', model: 'particle-ai/particle-1', service_tier: 'default', choices: [{ index: 0, finish_reason: 'length', message: { role: 'assistant', content: 'Answer: the code you set is' } }], usage: { prompt_tokens: 700, completion_tokens: 16_000, total_tokens: 16_700, completion_tokens_details: { reasoning_tokens: 15_990 } } };
+    await faults([{ status: 200, body: JSON.stringify(cutOff) }]);
+    const q = passing.queries[0]!;
+    const context = passing.documents.filter(d => d.user_id === q.user_id).slice(0, 2).map(d => d.content).join('\n\n');
+    const bench = { model: b.model } as unknown as Bench;
+    const before = fakeLines().length;
+    const answered = await answerOne(bench, passing, b.dir, 'gbrain-raw', 'particle:particle-1', q, context, null, []);
+    expect(answered).toMatchObject({ answer_raw: 'Answer: the code you set is', error: null, finish_reason: 'length', truncated: true });
+    expect(await answerOne(bench, passing, b.dir, 'gbrain-raw', 'particle:particle-1', q, context, null, [])).toEqual(answered);
+    expect(fakeLines().length - before).toBe(1);
+    expect(b.attempts().map(a => [a.status, a.finish, a.finish_raw])).toEqual([['ok', 'max_tokens', 'length']]);
+
+    await score(null, passing, b.dir, () => {});
+    const result = JSON.parse(readFileSync(join(b.dir, 'results.json'), 'utf8')).results['gbrain-raw']['particle:particle-1'];
+    expect(result).toMatchObject({ n: 1, correct: 0, truncated: 1 });
+    expect(result.rows).toEqual([expect.objectContaining({ query_id: q.id, correct: false, truncated: true, finish_reason: 'length' })]);
+    expect(result.rows[0].outcome).not.toBe('error');
+  });
 });
 
 describe('the existing reader routes', () => {
@@ -252,6 +273,20 @@ describe('the existing reader routes', () => {
     for (const r of seen) expect('request' in r || 'response_meta' in r).toBe(false);
     expect(await callModel(env, 'gemini:gemini-3.8-flash', 'Q?', tag, 400, r => seen.push(r))).toMatchObject({ error: 'unsupported reader provider gemini' });
     expect(seen).toHaveLength(2);
+  });
+
+  test('an Anthropic or OpenAI reply cut off at its output limit is marked truncated with its finish reason, not as an error', async () => {
+    const c = await createMeteredTestCell({ labels: ['reader', 'judge'] });
+    cells.push(c);
+    const env = c.proxy.envFor('reader');
+    const usage = { input_tokens: 10, output_tokens: 400 };
+    c.stub.respond('anthropic.messages', () => ({ status: 200, body: { id: 'msg_cut', type: 'message', role: 'assistant', model: 'claude-sonnet-5-5', content: [{ type: 'text', text: 'Answer: the' }], stop_reason: 'max_tokens', stop_sequence: null, usage } }));
+    c.stub.respond('openai.chat', () => ({ status: 200, body: { id: 'chatcmpl-cut', object: 'chat.completion', model: 'gpt-6.1-sol', choices: [{ index: 0, message: { role: 'assistant', content: 'Answer: the' }, finish_reason: 'length' }], usage: { prompt_tokens: 10, completion_tokens: 4000, total_tokens: 4010 } } }));
+    const tag = 'beliefs/gbrain-combined/reader/q-cut';
+    expect(await callModel(env, 'anthropic:claude-sonnet-5-5', 'Q?', tag, 400)).toMatchObject({ text: 'Answer: the', finish_reason: 'max_tokens', truncated: true });
+    expect(await callModel(env, 'openai:gpt-6.1-sol', 'Q?', tag, 4000)).toMatchObject({ text: 'Answer: the', finish_reason: 'length', truncated: true });
+    c.stub.respond('anthropic.messages', null);
+    expect(await callModel(env, 'anthropic:claude-sonnet-5-5', 'Q2?', tag, 400)).toMatchObject({ finish_reason: 'end_turn', truncated: false });
   });
 
   test('a receipt that cannot be written stops the call; the answered request is never sent again', async () => {

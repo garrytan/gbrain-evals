@@ -46,7 +46,8 @@ export interface Bench {
   close(): { usd: number; requests: number; run_id: string };
 }
 
-export interface ModelReply { text: string; input_tokens: number | null; output_tokens: number | null; cached: boolean; model: string; error?: string }
+/** `finish_reason` is the provider's own; `truncated` marks an answer cut off at its output limit, which is still the model's answer. */
+export interface ModelReply { text: string; input_tokens: number | null; output_tokens: number | null; cached: boolean; model: string; finish_reason: string | null; truncated: boolean; error?: string }
 
 const pick = (env: Record<string, string>, keys: string[]) => Object.fromEntries(Object.entries(env).filter(([k]) => keys.some(p => k.toUpperCase().startsWith(p.toUpperCase()))));
 
@@ -122,7 +123,7 @@ export function modelCaller(proxy: Pick<Proxy, 'envFor'>, outDir: string): Bench
     const effort = compat ? `\n${compat.default_effort}:${compat.efforts[compat.default_effort]}` : '';
     const key = createHash('sha256').update(`${modelId}\n${o.maxTokens}\n${o.cacheKey ?? ''}\n${prompt}${effort}`).digest('hex');
     const cachePath = join(cacheDir, `${key}.json`);
-    if (existsSync(cachePath)) return { ...(JSON.parse(readFileSync(cachePath, 'utf8')) as ModelReply), cached: true };
+    if (existsSync(cachePath)) return { finish_reason: null, truncated: false, ...(JSON.parse(readFileSync(cachePath, 'utf8')) as Omit<ModelReply, 'finish_reason' | 'truncated'>), cached: true };
     const env = o.tag.includes('/judge/') ? judge : reader;
     let reply: ModelReply;
     try {
@@ -134,6 +135,12 @@ export function modelCaller(proxy: Pick<Proxy, 'envFor'>, outDir: string): Bench
     if (!reply.error) writeFileSync(cachePath, JSON.stringify(reply));
     return reply;
   };
+}
+
+/** A reply's finish reason as the provider sent it, and whether it stopped at the output limit. */
+function finished(raw: unknown): Pick<ModelReply, 'finish_reason' | 'truncated'> {
+  const finish_reason = typeof raw === 'string' ? raw : null;
+  return { finish_reason, truncated: normalizeFinish(finish_reason) === 'max_tokens' };
 }
 
 interface AttemptOutcome {
@@ -154,7 +161,7 @@ interface AttemptOutcome {
  */
 export async function callModel(env: Record<string, string>, modelId: string, prompt: string, tag: string, maxTokens: number, onAttempt: (r: UsageReceipt) => void = () => {}, deadlineMs = UPSTREAM_DEADLINE_MS): Promise<ModelReply> {
   const [provider, model] = [modelId.slice(0, modelId.indexOf(':')), modelId.slice(modelId.indexOf(':') + 1)];
-  const fail = (error: string): ModelReply => ({ text: '', input_tokens: null, output_tokens: null, cached: false, model: modelId, error });
+  const fail = (error: string): ModelReply => ({ text: '', input_tokens: null, output_tokens: null, cached: false, model: modelId, finish_reason: null, truncated: false, error });
   const note = (attempt: number, o: AttemptOutcome) => onAttempt(receipt({
     lane: 'workload-suites', role: tag.includes('/judge/') ? 'judge' : 'reader', question_id: tag, replicate: 0, attempt, model: modelId,
     response_model: o.response_model ?? null, status: o.error === null ? 'ok' : 'error', error: o.error, from_cache: false,
@@ -191,12 +198,12 @@ export async function callModel(env: Record<string, string>, modelId: string, pr
     if (res.ok && provider === 'anthropic') {
       const text = (body.content ?? []).filter((c: any) => c.type === 'text').map((c: any) => c.text).join('');
       note(attempt, { error: null, response_model: typeof body.model === 'string' ? body.model : null, text, finish: body.stop_reason, usage: body.usage });
-      return { text, input_tokens: body.usage?.input_tokens ?? null, output_tokens: body.usage?.output_tokens ?? null, cached: false, model: modelId };
+      return { text, input_tokens: body.usage?.input_tokens ?? null, output_tokens: body.usage?.output_tokens ?? null, cached: false, model: modelId, ...finished(body.stop_reason) };
     }
     if (res.ok) {
       const text = body.choices?.[0]?.message?.content ?? '';
       note(attempt, { error: null, response_model: typeof body.model === 'string' ? body.model : null, text, finish: body.choices?.[0]?.finish_reason, usage: body.usage });
-      return { text, input_tokens: body.usage?.prompt_tokens ?? null, output_tokens: body.usage?.completion_tokens ?? null, cached: false, model: modelId };
+      return { text, input_tokens: body.usage?.prompt_tokens ?? null, output_tokens: body.usage?.completion_tokens ?? null, cached: false, model: modelId, ...finished(body.choices?.[0]?.finish_reason) };
     }
     const msg = JSON.stringify(body).slice(0, 600);
     note(attempt, { error: `HTTP ${res.status}: ${msg}`, usage: body?.usage });
@@ -236,7 +243,7 @@ async function callCompat(modelId: string, prompt: string, tag: string, maxToken
       return fail(budget ? `budget refused: ${(error as { body?: string }).body?.slice(0, 600) ?? error.message}` : http ? `HTTP ${http.status}: ${http.body.slice(0, 600)}` : `network: ${error.message}`);
     }
     note(attempt, { error: null, response_model: r.response_model, text: r.text, finish: r.finish, usage: r.usage, request: req.sent, response_meta: r.meta });
-    return { text: r.text, input_tokens: count(r.usage?.prompt_tokens), output_tokens: count(r.usage?.completion_tokens), cached: false, model: modelId };
+    return { text: r.text, input_tokens: count(r.usage?.prompt_tokens), output_tokens: count(r.usage?.completion_tokens), cached: false, model: modelId, ...finished(r.finish) };
   }
 }
 
