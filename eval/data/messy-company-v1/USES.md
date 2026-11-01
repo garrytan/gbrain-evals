@@ -18,7 +18,7 @@ use:
 | aliases | Alias precision (P3) | 52 | 45 | Are codes, short names, former names and nicknames attached to the right entity, while look-alikes and corpus typos are not? `collides_with` marks surfaces two entities share legitimately. |
 | entity-mentions | Look-alike disambiguation; Cat 40 Hard H3 (look-alike entities) | 613 | 551 | Which entity does each occurrence of TCC, PHL, TP, Marrow or Vantorre denote on that page and date? Use the 69 colliding and 37 look-alike rows as the headline; unique surfaces only check coverage. |
 | ownership | Cat 40 Hard H2 (long histories); account-history recall | 19 | 16 | Who owned an account on a date, through corrected announcements, belated overlaps, unknown starts, acting cover and private-only assignments? |
-| governing-records | Governing record as of a date (F1); deciding passage (F2); Cat 40 Hard H4 (authority) | 164 | 156 | What value governs on a date, which record decides it, and which line says so? Traps: signed but not yet effective, superseded, drafts, partial affiliate overrides, misstatements, and clauses deep in 34–58 KB contracts with no word overlap. |
+| governing-records | Governing record as of a date (F1); deciding passage (F2); Cat 40 Hard H4 (authority); SkillOpt method task sets (N15, dev only) | 164 | 156 | What value governs on a date, which record decides it, and which line says so? Traps: signed but not yet effective, superseded, drafts, partial affiliate overrides, misstatements, and clauses deep in 34–58 KB contracts with no word overlap. |
 | document-status | Document status (F3) | 21 | 20 | Signed, unsigned or draft, including 11 documents whose status is only in the body. |
 | timeline | auto_chronicle-style timelines | 29 | 27 | Are dated events extracted with the right date and account, and is no event placed on a handoff date that a correction retracted? Event evidence lists every page that states the event. |
 | changes | Contradiction surfacing (N2) | 14 | 12 | Contradictions, dated changes and compatible pairs between claims; "ignore my earlier number" retractions. A category that proposes resolutions can use `correct` on each side. |
@@ -60,6 +60,12 @@ them, are known only from those pages. Run the `public` view with `load.ts --pub
 facts don't leak into public answers.
 
 ## Changelog
+
+### 2026-11-01: SkillOpt method task sets use governing-records dev
+
+The governing-records row now names the SkillOpt method task sets (N15,
+[`eval/data/skillopt-method-v1`](../skillopt-method-v1/README.md)), which take their account-value gold from the
+dev labels only. Building them ran no model, so "Runs on this dataset" and "Held-out use so far" are unchanged.
 
 ### 2026-10-28: Structure-aware chunks run entry
 

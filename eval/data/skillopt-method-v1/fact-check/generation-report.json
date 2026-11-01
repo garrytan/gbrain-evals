@@ -1,0 +1,309 @@
+{
+  "skill": "fact-check",
+  "seed": 15003,
+  "candidates": {
+    "gov-supported": 164,
+    "gov-contradicted": 164,
+    "founder-supported": 80,
+    "not-founder": 46,
+    "negative": 19
+  },
+  "dropped_by_oracle": 53,
+  "dropped_by_solvability": 0,
+  "dropped": [
+    {
+      "family": "founder-supported",
+      "anchor": "companies/accel-5",
+      "reason": "0 founders in _facts"
+    },
+    {
+      "family": "founder-supported",
+      "anchor": "companies/acme-labs-50",
+      "reason": "founder page missing"
+    },
+    {
+      "family": "founder-supported",
+      "anchor": "companies/amazon-3",
+      "reason": "0 founders in _facts"
+    },
+    {
+      "family": "founder-supported",
+      "anchor": "companies/andreessen-horowitz-2",
+      "reason": "0 founders in _facts"
+    },
+    {
+      "family": "founder-supported",
+      "anchor": "companies/apple-4",
+      "reason": "0 founders in _facts"
+    },
+    {
+      "family": "founder-supported",
+      "anchor": "companies/benchmark-3",
+      "reason": "0 founders in _facts"
+    },
+    {
+      "family": "founder-supported",
+      "anchor": "companies/bessemer-12",
+      "reason": "0 founders in _facts"
+    },
+    {
+      "family": "founder-supported",
+      "anchor": "companies/beta-labs-51",
+      "reason": "founder page missing"
+    },
+    {
+      "family": "founder-supported",
+      "anchor": "companies/delta-labs-53",
+      "reason": "founder page missing"
+    },
+    {
+      "family": "founder-supported",
+      "anchor": "companies/epsilon-labs-54",
+      "reason": "founder page missing"
+    },
+    {
+      "family": "founder-supported",
+      "anchor": "companies/first-round-10",
+      "reason": "0 founders in _facts"
+    },
+    {
+      "family": "founder-supported",
+      "anchor": "companies/floodgate-9",
+      "reason": "0 founders in _facts"
+    },
+    {
+      "family": "founder-supported",
+      "anchor": "companies/founders-fund-0",
+      "reason": "0 founders in _facts"
+    },
+    {
+      "family": "founder-supported",
+      "anchor": "companies/gamma-labs-52",
+      "reason": "founder page missing"
+    },
+    {
+      "family": "founder-supported",
+      "anchor": "companies/google-1",
+      "reason": "0 founders in _facts"
+    },
+    {
+      "family": "founder-supported",
+      "anchor": "companies/greylock-4",
+      "reason": "0 founders in _facts"
+    },
+    {
+      "family": "founder-supported",
+      "anchor": "companies/helix-labs-59",
+      "reason": "founder page missing"
+    },
+    {
+      "family": "founder-supported",
+      "anchor": "companies/index-ventures-7",
+      "reason": "0 founders in _facts"
+    },
+    {
+      "family": "founder-supported",
+      "anchor": "companies/initialized-11",
+      "reason": "0 founders in _facts"
+    },
+    {
+      "family": "founder-supported",
+      "anchor": "companies/khosla-ventures-8",
+      "reason": "0 founders in _facts"
+    },
+    {
+      "family": "founder-supported",
+      "anchor": "companies/kleiner-perkins-14",
+      "reason": "0 founders in _facts"
+    },
+    {
+      "family": "founder-supported",
+      "anchor": "companies/lightspeed-6",
+      "reason": "0 founders in _facts"
+    },
+    {
+      "family": "founder-supported",
+      "anchor": "companies/meridian-40",
+      "reason": "founder page missing"
+    },
+    {
+      "family": "founder-supported",
+      "anchor": "companies/meta-2",
+      "reason": "0 founders in _facts"
+    },
+    {
+      "family": "founder-supported",
+      "anchor": "companies/microsoft-0",
+      "reason": "0 founders in _facts"
+    },
+    {
+      "family": "founder-supported",
+      "anchor": "companies/nea-13",
+      "reason": "0 founders in _facts"
+    },
+    {
+      "family": "founder-supported",
+      "anchor": "companies/nexus-41",
+      "reason": "founder page missing"
+    },
+    {
+      "family": "founder-supported",
+      "anchor": "companies/nimbus-labs-55",
+      "reason": "founder page missing"
+    },
+    {
+      "family": "founder-supported",
+      "anchor": "companies/orbit-42",
+      "reason": "founder page missing"
+    },
+    {
+      "family": "founder-supported",
+      "anchor": "companies/prism-43",
+      "reason": "founder page missing"
+    },
+    {
+      "family": "founder-supported",
+      "anchor": "companies/pulse-labs-58",
+      "reason": "founder page missing"
+    },
+    {
+      "family": "founder-supported",
+      "anchor": "companies/quantum-labs-57",
+      "reason": "founder page missing"
+    },
+    {
+      "family": "founder-supported",
+      "anchor": "companies/quasar-44",
+      "reason": "founder page missing"
+    },
+    {
+      "family": "founder-supported",
+      "anchor": "companies/resonance-45",
+      "reason": "founder page missing"
+    },
+    {
+      "family": "founder-supported",
+      "anchor": "companies/sequoia-capital-1",
+      "reason": "0 founders in _facts"
+    },
+    {
+      "family": "founder-supported",
+      "anchor": "companies/spire-46",
+      "reason": "founder page missing"
+    },
+    {
+      "family": "founder-supported",
+      "anchor": "companies/talon-47",
+      "reason": "founder page missing"
+    },
+    {
+      "family": "founder-supported",
+      "anchor": "companies/umbra-48",
+      "reason": "founder page missing"
+    },
+    {
+      "family": "founder-supported",
+      "anchor": "companies/vector-labs-56",
+      "reason": "founder page missing"
+    },
+    {
+      "family": "founder-supported",
+      "anchor": "companies/vellum-49",
+      "reason": "founder page missing"
+    },
+    {
+      "family": "not-founder",
+      "anchor": "people/quinten-nakamura-115:companies/nimbus-5",
+      "reason": "a sentence linking the person and the company has a \"found\" word"
+    },
+    {
+      "family": "not-founder",
+      "anchor": "people/rachel-brown-95:companies/delta-3",
+      "reason": "a sentence linking the person and the company has a \"found\" word"
+    },
+    {
+      "family": "not-founder",
+      "anchor": "people/adam-lopez-113:companies/delta-3",
+      "reason": "a sentence linking the person and the company has a \"found\" word"
+    },
+    {
+      "family": "not-founder",
+      "anchor": "people/yara-moore-174:companies/tempo-24",
+      "reason": "a sentence linking the person and the company has a \"found\" word"
+    },
+    {
+      "family": "not-founder",
+      "anchor": "people/fiona-moore-88:companies/drift-31",
+      "reason": "a sentence linking the person and the company has a \"found\" word"
+    },
+    {
+      "family": "not-founder",
+      "anchor": "people/xavier-nakamura-118:companies/pulse-8",
+      "reason": "neither page's prose names the other"
+    },
+    {
+      "family": "not-founder",
+      "anchor": "people/julia-davis-86:companies/helix-labs-59",
+      "reason": "a sentence linking the person and the company has a \"found\" word"
+    },
+    {
+      "family": "not-founder",
+      "anchor": "people/fiona-moore-88:companies/lucid-21",
+      "reason": "a sentence linking the person and the company has a \"found\" word"
+    },
+    {
+      "family": "not-founder",
+      "anchor": "people/vera-rodriguez-171:companies/lucid-21",
+      "reason": "a sentence linking the person and the company has a \"found\" word"
+    },
+    {
+      "family": "not-founder",
+      "anchor": "people/tara-kapoor-111:companies/beta-1",
+      "reason": "neither page's prose names the other"
+    },
+    {
+      "family": "not-founder",
+      "anchor": "people/quinn-park-119:companies/helix-9",
+      "reason": "a sentence linking the person and the company has a \"found\" word"
+    },
+    {
+      "family": "not-founder",
+      "anchor": "people/tina-lopez-117:companies/quantum-7",
+      "reason": "a sentence linking the person and the company has a \"found\" word"
+    },
+    {
+      "family": "not-founder",
+      "anchor": "people/tina-jones-112:companies/gamma-2",
+      "reason": "neither page's prose names the other"
+    }
+  ],
+  "components": 66,
+  "assigned": {
+    "gov-supported": {
+      "train": 5,
+      "sel": 5,
+      "test": 7
+    },
+    "gov-contradicted": {
+      "train": 5,
+      "sel": 5,
+      "test": 7
+    },
+    "founder-supported": {
+      "train": 4,
+      "sel": 4,
+      "test": 6
+    },
+    "not-founder": {
+      "train": 6,
+      "sel": 6,
+      "test": 10
+    },
+    "negative": {
+      "train": 4,
+      "sel": 4,
+      "test": 6
+    }
+  },
+  "unused_candidates": 336
+}

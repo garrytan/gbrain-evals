@@ -1,0 +1,114 @@
+{
+  "dataset": "skillopt-method-v1",
+  "hash_scheme": "sha256 of each file's bytes; data_sha256 is sha256 over \"<sha256>  <path>\\n\" lines in path order; the dataset hash is sha256 of this file",
+  "files": [
+    {
+      "path": "query/criteria.md",
+      "sha256": "bd2c4ff7aea8aaafd81250051a3ffbd0ea8428cd5e72334ede93c3216d68d353",
+      "bytes": 661
+    },
+    {
+      "path": "query/generation-report.json",
+      "sha256": "b5ab2192154a1f63cf3990cdb1e9e24de0f62ecba7c848604656d3766cd11828",
+      "bytes": 11329
+    },
+    {
+      "path": "query/sel.jsonl",
+      "sha256": "e66078ad98bae07f99a3aa12861ca01e0c8c7005b0947271d6d06fecb44e7464",
+      "bytes": 54773
+    },
+    {
+      "path": "query/test.jsonl",
+      "sha256": "5ba7e8936c8a3b1e1127149f8e8ff92cdc070251313831881e419fdae76baba2",
+      "bytes": 84634
+    },
+    {
+      "path": "query/train.jsonl",
+      "sha256": "64a007ac84d9a5237d9265cbb0380ec46c2ed7b834d5366f9b99a448bdb6b203",
+      "bytes": 54467
+    },
+    {
+      "path": "briefing/criteria.md",
+      "sha256": "a59d9c471f7b9c7578fbc06b90277351d5b01217918e8fe0affcdffd7f0a81fd",
+      "bytes": 679
+    },
+    {
+      "path": "briefing/generation-report.json",
+      "sha256": "426a9753a374f11941bc04566d04abf322b051441121b3e506a5831bb3df8a00",
+      "bytes": 6554
+    },
+    {
+      "path": "briefing/sel.jsonl",
+      "sha256": "43df07605a9ab92c08e6c87a0c108618bb8586e6b980331b76319350053f3697",
+      "bytes": 64176
+    },
+    {
+      "path": "briefing/test.jsonl",
+      "sha256": "df99d68cb7955d311b89037f52df7f6db5cba61712536766a12abafdeaf599c0",
+      "bytes": 92806
+    },
+    {
+      "path": "briefing/train.jsonl",
+      "sha256": "e2d3c6e841be66b5ceb8698487fd4d27e6e05023d43c2d480c8ff6ab2e19ba8c",
+      "bytes": 63691
+    },
+    {
+      "path": "fact-check/criteria.md",
+      "sha256": "164c6041dde9737807c58a85925625fbc7621070e837e08e229c655be6171623",
+      "bytes": 943
+    },
+    {
+      "path": "fact-check/generation-report.json",
+      "sha256": "7c7eb4d853fe2c3f5d61a83e34f5d0b52e025938cd7f163edd2d30e9cb82bed5",
+      "bytes": 8346
+    },
+    {
+      "path": "fact-check/sel.jsonl",
+      "sha256": "d5e3c09f9206987e9ab2d6500593742b0ba1de1bbff1b1ade57dde28131541cf",
+      "bytes": 51328
+    },
+    {
+      "path": "fact-check/test.jsonl",
+      "sha256": "700c467bd6c6d1ce37633544a230fb080fb961a422fba42cfd79482e7023bbfc",
+      "bytes": 80225
+    },
+    {
+      "path": "fact-check/train.jsonl",
+      "sha256": "e7ffd65ec42d59f0da66210b6979eecad7fac525d74cdae52a864ad69c873671",
+      "bytes": 52304
+    },
+    {
+      "path": "seeds/briefing/SKILL.md",
+      "sha256": "551c2f308c27b8a0823e2dfbbcdf7e8ace78ff6498afaa3ac21da852c7cf0d16",
+      "bytes": 9304
+    },
+    {
+      "path": "seeds/fact-check/SKILL.md",
+      "sha256": "49f0d356eee44541eddbc9cd501dc36707d417d84ca10446c0d315321f259674",
+      "bytes": 21084
+    },
+    {
+      "path": "seeds/query/SKILL.md",
+      "sha256": "afe2a88394bb78bb651ebd5434415dfa1a96cbc3c52848e134be16b3e8d36f08",
+      "bytes": 11610
+    }
+  ],
+  "counts": {
+    "query": {
+      "train": 24,
+      "sel": 24,
+      "test": 36
+    },
+    "briefing": {
+      "train": 24,
+      "sel": 24,
+      "test": 36
+    },
+    "fact-check": {
+      "train": 24,
+      "sel": 24,
+      "test": 36
+    }
+  },
+  "data_sha256": "7bd2402a76c343aa670ced7d0902ab975c4e21bd2282ff5377d199f9596ead29"
+}

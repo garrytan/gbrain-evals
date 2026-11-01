@@ -195,6 +195,7 @@ These documents fix a method before measuring. They publish no capability scores
 | Will a release still look better on questions nobody tuned against? | [September 29 sealed confirmation set](benchmarks/2026-09-29-sealed-confirmation-protocol.md) |
 | What end-to-end task does a 10x memory claim stand on, and what sample can show it? | [October 8 program primary preregistration (T0) and power (PW)](benchmarks/2026-10-08-program-primary-preregistration.md) |
 | What harder workload replaces T0's ceiling, and how was it calibrated? | [October 8 harder program primary preregistration (T0b), with its three calibration rounds](benchmarks/2026-10-08-program-primary-hard-preregistration.md) |
+| Do gbrain's shipped `query`, `briefing` and `fact-check` skills leave room for a skill optimizer, or does one rewrite take all the gain? (the A1 probe has not run) | [November 1 SkillOpt method A1 probe preregistration (N15)](benchmarks/2026-11-01-skillopt-method/PREREGISTRATION.md), with its [task sets](../eval/data/skillopt-method-v1/README.md) |
 
 ## Data and methods
 
@@ -260,6 +261,11 @@ and [repository writing guide](../CLAUDE.md). The
 procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
+
+### 2026-11-01: SkillOpt method preregistration row
+
+"Protocols and preregistrations" gained a row for the [SkillOpt method A1 probe preregistration](benchmarks/2026-11-01-skillopt-method/PREREGISTRATION.md)
+and its task sets (N15). No result exists yet, and no existing row changed.
 
 ### 2026-11-01: Finding link on the particle-1 replay row
 

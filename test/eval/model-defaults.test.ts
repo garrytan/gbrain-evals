@@ -34,6 +34,7 @@ import { JUDGE_MODEL as PILOT_JUDGE } from '../../eval/runner/pilot/run.ts';
 import { SHIPPED_DEFAULT_MODEL } from '../../eval/runner/facts-absorb-gate.ts';
 import { GPT4O as E1_GPT4O, SONNET as E1_SONNET } from '../../eval/runner/evidence-delivery/e1.ts';
 import { DEV_ANSWER, DEV_JUDGE } from '../../eval/runner/harness-dev.ts';
+import { DEFAULT_PROPOSER_MODEL as N15_PROPOSER, DEFAULT_TARGET_MODEL as N15_TARGET } from '../../eval/runner/n15-skillopt-method.ts';
 
 const DEFAULTS: Record<string, readonly string[]> = {
   'shared judge (judge.ts)': [SHARED_JUDGE],
@@ -61,6 +62,7 @@ const DEFAULTS: Record<string, readonly string[]> = {
   'evidence-delivery E1 readers': [E1_SONNET, E1_GPT4O],
   'N2 contradiction judge': [N2_JUDGE],
   'N7 open-loop extractor': [N7_EXTRACTOR],
+  'N15 SkillOpt method target and proposer': [N15_TARGET, N15_PROPOSER],
   'harness dev lane reader and judge': [DEV_ANSWER, DEV_JUDGE.default!],
   'harness dev lane BEAM judge': [DEV_JUDGE.beam!],
 };

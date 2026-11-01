@@ -1,0 +1,227 @@
+{
+  "skill": "briefing",
+  "seed": 15002,
+  "candidates": {
+    "meeting-account": 164,
+    "meeting-person": 80,
+    "negative": 15
+  },
+  "dropped_by_oracle": 39,
+  "dropped_by_solvability": 0,
+  "dropped": [
+    {
+      "family": "meeting-person",
+      "anchor": "people/beth-williams-177",
+      "reason": "no primary affiliation page"
+    },
+    {
+      "family": "meeting-person",
+      "anchor": "people/carol-jackson-81",
+      "reason": "neither the company's _facts nor its page prose name the person"
+    },
+    {
+      "family": "meeting-person",
+      "anchor": "people/carol-wilson-28",
+      "reason": "person page prose does not name the company"
+    },
+    {
+      "family": "meeting-person",
+      "anchor": "people/chris-jackson-91",
+      "reason": "neither the company's _facts nor its page prose name the person"
+    },
+    {
+      "family": "meeting-person",
+      "anchor": "people/chris-singh-96",
+      "reason": "no primary affiliation page"
+    },
+    {
+      "family": "meeting-person",
+      "anchor": "people/chris-williams-37",
+      "reason": "person page prose does not name the company"
+    },
+    {
+      "family": "meeting-person",
+      "anchor": "people/david-zhang-83",
+      "reason": "neither the company's _facts nor its page prose name the person"
+    },
+    {
+      "family": "meeting-person",
+      "anchor": "people/eric-martinez-93",
+      "reason": "neither the company's _facts nor its page prose name the person"
+    },
+    {
+      "family": "meeting-person",
+      "anchor": "people/fiona-moore-88",
+      "reason": "neither the company's _facts nor its page prose name the person"
+    },
+    {
+      "family": "meeting-person",
+      "anchor": "people/helen-johnson-32",
+      "reason": "person page prose does not name the company"
+    },
+    {
+      "family": "meeting-person",
+      "anchor": "people/helen-martinez-87",
+      "reason": "neither the company's _facts nor its page prose name the person"
+    },
+    {
+      "family": "meeting-person",
+      "anchor": "people/henry-johnson-12",
+      "reason": "person page prose does not name the company"
+    },
+    {
+      "family": "meeting-person",
+      "anchor": "people/iris-lee-82",
+      "reason": "neither the company's _facts nor its page prose name the person"
+    },
+    {
+      "family": "meeting-person",
+      "anchor": "people/jack-davis-89",
+      "reason": "neither the company's _facts nor its page prose name the person"
+    },
+    {
+      "family": "meeting-person",
+      "anchor": "people/julia-davis-86",
+      "reason": "neither the company's _facts nor its page prose name the person"
+    },
+    {
+      "family": "meeting-person",
+      "anchor": "people/kate-lopez-99",
+      "reason": "no primary affiliation page"
+    },
+    {
+      "family": "meeting-person",
+      "anchor": "people/linda-taylor-178",
+      "reason": "no primary affiliation page"
+    },
+    {
+      "family": "meeting-person",
+      "anchor": "people/mark-jones-2",
+      "reason": "person page prose does not name the company"
+    },
+    {
+      "family": "meeting-person",
+      "anchor": "people/priya-taylor-85",
+      "reason": "neither the company's _facts nor its page prose name the person"
+    },
+    {
+      "family": "meeting-person",
+      "anchor": "people/quinn-miller-39",
+      "reason": "person page prose does not name the company"
+    },
+    {
+      "family": "meeting-person",
+      "anchor": "people/rachel-brown-95",
+      "reason": "no primary affiliation page"
+    },
+    {
+      "family": "meeting-person",
+      "anchor": "people/rosa-jackson-90",
+      "reason": "neither the company's _facts nor its page prose name the person"
+    },
+    {
+      "family": "meeting-person",
+      "anchor": "people/rosa-miller-98",
+      "reason": "no primary affiliation page"
+    },
+    {
+      "family": "meeting-person",
+      "anchor": "people/rosa-nakamura-94",
+      "reason": "neither the company's _facts nor its page prose name the person"
+    },
+    {
+      "family": "meeting-person",
+      "anchor": "people/sarah-lopez-84",
+      "reason": "neither the company's _facts nor its page prose name the person"
+    },
+    {
+      "family": "meeting-person",
+      "anchor": "people/sarah-williams-92",
+      "reason": "neither the company's _facts nor its page prose name the person"
+    },
+    {
+      "family": "meeting-person",
+      "anchor": "people/tara-jackson-173",
+      "reason": "no primary affiliation page"
+    },
+    {
+      "family": "meeting-person",
+      "anchor": "people/tara-kapoor-111",
+      "reason": "person page prose does not name the company"
+    },
+    {
+      "family": "meeting-person",
+      "anchor": "people/tina-hernandez-97",
+      "reason": "no primary affiliation page"
+    },
+    {
+      "family": "meeting-person",
+      "anchor": "people/tina-jones-112",
+      "reason": "person page prose does not name the company"
+    },
+    {
+      "family": "meeting-person",
+      "anchor": "people/tina-wang-179",
+      "reason": "no primary affiliation page"
+    },
+    {
+      "family": "meeting-person",
+      "anchor": "people/vera-chen-14",
+      "reason": "person page prose does not name the company"
+    },
+    {
+      "family": "meeting-person",
+      "anchor": "people/vera-singh-20",
+      "reason": "person page prose does not name the company"
+    },
+    {
+      "family": "meeting-person",
+      "anchor": "people/vera-wilson-25",
+      "reason": "person page prose does not name the company"
+    },
+    {
+      "family": "meeting-person",
+      "anchor": "people/victor-taylor-1",
+      "reason": "person page prose does not name the company"
+    },
+    {
+      "family": "meeting-person",
+      "anchor": "people/wendy-hernandez-80",
+      "reason": "neither the company's _facts nor its page prose name the person"
+    },
+    {
+      "family": "meeting-person",
+      "anchor": "people/xavier-nakamura-118",
+      "reason": "person page prose does not name the company"
+    },
+    {
+      "family": "meeting-person",
+      "anchor": "people/yara-johnson-8",
+      "reason": "person page prose does not name the company"
+    },
+    {
+      "family": "meeting-person",
+      "anchor": "people/yara-moore-174",
+      "reason": "no primary affiliation page"
+    }
+  ],
+  "components": 64,
+  "assigned": {
+    "meeting-account": {
+      "train": 10,
+      "sel": 10,
+      "test": 15
+    },
+    "meeting-person": {
+      "train": 10,
+      "sel": 10,
+      "test": 15
+    },
+    "negative": {
+      "train": 4,
+      "sel": 4,
+      "test": 6
+    }
+  },
+  "unused_candidates": 136
+}

@@ -1,5 +1,5 @@
 {
-  "source": "Seconds per offline category, measured in the ci checks job of run 40000004320 (attempt 2, ubuntu-latest, BRAINBENCH_CONCURRENCY=2, 2026-10-23). Refresh after a category's runtime changes; a category missing here fails test/eval/brainbench-shards.test.ts.",
+  "source": "Seconds per offline category, measured in the ci checks job of run 40000004320 (attempt 2, ubuntu-latest, BRAINBENCH_CONCURRENCY=2, 2026-10-23). N15 was measured before its first CI run on a 4-CPU Capy cloud machine (2026-11-01, four solo runs of 5.0 to 5.5 s, rounded up to 6). Refresh after a category's runtime changes; a category missing here fails test/eval/brainbench-shards.test.ts.",
   "seconds": {
     "1": 9,
     "2": 1,
@@ -35,6 +35,7 @@
     "N4": 14,
     "N12": 11,
     "N13": 7,
+    "N15": 6,
     "N7": 5,
     "SO": 1
   }

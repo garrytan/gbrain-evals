@@ -137,6 +137,7 @@ Follow the current task's branch and review instructions. This guide does not au
 | Source separation | Source-isolation and multi-source tests |
 | Transcript ingestion, fact extraction or synthesis | Cat35 |
 | Automatic memory injection and continuity | Cat34 |
+| A shipped skill (`query`, `briefing`, `fact-check`) or SkillOpt itself | SkillOpt method task sets (`skillopt-method`, N15): `bun eval/runner/n15-skillopt-method.ts` keyless, then the A1 probe |
 
 A feature change should have evidence on the behavior it changes. A benchmark that stays flat can still provide a useful regression check. For changes outside the current task, record follow-up work rather than silently expanding scope.
 

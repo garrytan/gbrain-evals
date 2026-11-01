@@ -21,6 +21,8 @@
  *      generated since 0.10.1).
  *   6. messy-company-v1: every data file matches its sha256 in MANIFEST.json
  *      and no data file is missing from it (the dataset is frozen).
+ *   7. skillopt-method-v1: the same for the SkillOpt method task sets, criteria
+ *      texts and seed skills (eval/generators/skillopt-method/gen.ts).
  *
  * Usage: bun eval/runner/validate-data.ts [--quiet]
  */
@@ -31,6 +33,7 @@ import { join, relative } from 'path';
 import { canonicalJson, renderCalendarIcs } from '../generators/amara-life-gen.ts';
 import { buildSkeleton } from '../generators/amara-life.ts';
 import { checkManifest } from '../generators/messy-company/manifest.ts';
+import { checkManifest as checkSkilloptMethodManifest } from '../generators/skillopt-method/gen.ts';
 
 const sha256Hex = (bytes: string | Buffer) => createHash('sha256').update(bytes).digest('hex');
 
@@ -273,10 +276,16 @@ export function checkMessyCompany(root = join(REPO_ROOT, 'eval/data/messy-compan
   return { check: 'messy-company-v1', failures: checkManifest(root), warnings: [] };
 }
 
+// ─── 7. skillopt-method-v1 ──────────────────────────────────────────
+
+export function checkSkilloptMethod(root = join(REPO_ROOT, 'eval/data/skillopt-method-v1')): CheckResult {
+  return { check: 'skillopt-method-v1', failures: checkSkilloptMethodManifest(root), warnings: [] };
+}
+
 // ─── CLI ────────────────────────────────────────────────────────────
 
 export function runAllChecks(): CheckResult[] {
-  return [checkSyntheticV1(), checkAmaraLife(), checkQrels(), checkBaseline(), checkMultimodalFixtures(), checkGold(), checkMessyCompany()];
+  return [checkSyntheticV1(), checkAmaraLife(), checkQrels(), checkBaseline(), checkMultimodalFixtures(), checkGold(), checkMessyCompany(), checkSkilloptMethod()];
 }
 
 if (import.meta.main) {
