@@ -100,7 +100,7 @@ const ITEMS = [
 ];
 
 /** The Haiku 5.5 judge the request-shape and pricing tests below were written for; the default is now gpt-6.1-sol. */
-const HAIKU = 'claude-haiku-5-5';
+const HAIKU = 'anthropic:claude-haiku-5-5';
 
 function coverageArgs() {
   return { lane: 'dream', transcript_id: 't-1', document: 'The distilled page body.', items: ITEMS };

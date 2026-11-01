@@ -120,7 +120,8 @@ describe('default models (CLAUDE.md "Choose models")', () => {
   });
 
   test('the frontier rule: a Sonnet or Haiku model of any generation fails as a model under test; Opus and GPT pass', () => {
-    for (const m of ['anthropic:claude-sonnet-5-5', 'claude-haiku-5-5', 'anthropic:claude-sonnet-4-6', 'claude-haiku-4-5-20251001']) {
+    const current = ['sonnet', 'haiku'].flatMap(tier => [`anthropic:claude-${tier}-5-5`, `claude-${tier}-5-5`]);
+    for (const m of [...current, 'anthropic:claude-sonnet-4-6', 'claude-haiku-4-5-20251001']) {
       expect([m, underTestModelProblem(m)]).toEqual([m, `${m}: Sonnet and Haiku are never models under test`]);
     }
     for (const m of ['anthropic:claude-opus-5-5', 'claude-opus-5-5', 'openai:gpt-6.1-sol', 'gpt-6.1-sol']) expect([m, underTestModelProblem(m)]).toEqual([m, null]);

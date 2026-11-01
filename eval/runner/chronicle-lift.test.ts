@@ -99,22 +99,22 @@ describe('agent answer identity (#236)', () => {
     return { code: r.status, stderr: r.stderr, locked, error: r.stderr.split('\n').find(l => l.startsWith('error: ')) ?? '', qa: scores?.qa ?? null };
   };
   const score = (rows: unknown[], ...args: string[]) => lift('score', rows, ...args);
-  // The reviewer's keyless repro: the off arm answered by Sonnet 4.6, the on arm resumed under the Sonnet 5.5 default.
-  const mixed = doc.questions.flatMap(q => [row('off', q, 1, 'claude-sonnet-4-6', false), row('on-a', q, 1, 'claude-sonnet-5-5', true)]);
+  // The reviewer's keyless repro: the off arm answered by Sonnet 4.6, the on arm resumed under the Opus 5.5 default.
+  const mixed = doc.questions.flatMap(q => [row('off', q, 1, 'claude-sonnet-4-6', false), row('on-a', q, 1, 'claude-opus-5-5', true)]);
 
   test('score refuses to pool answers from two agent models into one lift', () => {
     const r = score(mixed);
     expect(r.code).not.toBe(0);
     expect(r.stderr).toContain('claude-sonnet-4-6');
-    expect(r.stderr).toContain('claude-sonnet-5-5');
+    expect(r.stderr).toContain('claude-opus-5-5');
     expect(r.error).toContain('Pass --model');
     expect(r.qa).toBeNull();
   });
 
   test('two answer identities of one model are refused without offering --model, which cannot separate them', () => {
-    const identity = { model: 'claude-sonnet-5-5', max_turns: 12, gbrain: '0.60.531.0', questions: 'q' };
-    const rows = doc.questions.flatMap(q => [row('off', q, 1, 'claude-sonnet-5-5', true), row('on-a', q, 1, 'claude-sonnet-5-5', true, { identity, brain: 'b' })]);
-    const r = score(rows, '--model', 'claude-sonnet-5-5');
+    const identity = { model: 'claude-opus-5-5', max_turns: 12, gbrain: '0.60.531.0', questions: 'q' };
+    const rows = doc.questions.flatMap(q => [row('off', q, 1, 'claude-opus-5-5', true), row('on-a', q, 1, 'claude-opus-5-5', true, { identity, brain: 'b' })]);
+    const r = score(rows, '--model', 'claude-opus-5-5');
     expect(r.code).not.toBe(0);
     expect(r.qa).toBeNull();
     expect(r.error).toContain('2 answer identities');
@@ -122,21 +122,21 @@ describe('agent answer identity (#236)', () => {
   });
 
   test('score --model keeps one model\'s answers, so the false +100 pp lift disappears', () => {
-    const r = score(mixed, '--model', 'claude-sonnet-5-5');
+    const r = score(mixed, '--model', 'claude-opus-5-5');
     expect(r.code).toBe(0);
     expect(r.qa.questions).toBe(0);
     expect(r.qa.lift).toBeNull();
-    expect(r.qa.identity.model).toBe('claude-sonnet-5-5');
+    expect(r.qa.identity.model).toBe('claude-opus-5-5');
     expect(r.qa.excluded_runs).toBe(doc.questions.length);
   });
 
   test('score refuses answers from two builds of the same arm brain', () => {
-    const identity = { model: 'claude-sonnet-5-5', max_turns: 12, gbrain: '0.60.531.0', questions: 'q' };
-    const rows = doc.questions.flatMap(q => [row('off', q, 1, 'claude-sonnet-5-5', true, { identity, brain: 'b-off' }), row('on-a', q, 1, 'claude-sonnet-5-5', true, { identity, brain: q.id === 'when-1' ? 'b-on-old' : 'b-on-new' })]);
+    const identity = { model: 'claude-opus-5-5', max_turns: 12, gbrain: '0.60.531.0', questions: 'q' };
+    const rows = doc.questions.flatMap(q => [row('off', q, 1, 'claude-opus-5-5', true, { identity, brain: 'b-off' }), row('on-a', q, 1, 'claude-opus-5-5', true, { identity, brain: q.id === 'when-1' ? 'b-on-old' : 'b-on-new' })]);
     const r = score(rows);
     expect(r.code).not.toBe(0);
     expect(r.stderr).toContain('on-a');
-    const same = score(doc.questions.flatMap(q => [row('off', q, 1, 'claude-sonnet-5-5', false, { identity, brain: 'b-off' }), row('on-a', q, 1, 'claude-sonnet-5-5', true, { identity, brain: 'b-on' })]));
+    const same = score(doc.questions.flatMap(q => [row('off', q, 1, 'claude-opus-5-5', false, { identity, brain: 'b-off' }), row('on-a', q, 1, 'claude-opus-5-5', true, { identity, brain: 'b-on' })]));
     expect(same.code).toBe(0);
     expect(same.qa.lift.diff).toBe(1);
   });
@@ -146,8 +146,8 @@ describe('agent answer identity (#236)', () => {
     expect(legacy.code).not.toBe(0);
     expect(legacy.error).toContain('another answer identity');
     expect(legacy.locked).toBe(false);
-    const identity = { model: 'claude-sonnet-5-5', max_turns: 12, gbrain: '0.60.531.0', questions: 'q' };
-    const rebuilt = lift('run', [row('off', doc.questions[0], 1, 'claude-sonnet-5-5', true, { identity, brain: 'b' })], '--arms', 'off', '--no-qa');
+    const identity = { model: 'claude-opus-5-5', max_turns: 12, gbrain: '0.60.531.0', questions: 'q' };
+    const rebuilt = lift('run', [row('off', doc.questions[0], 1, 'claude-opus-5-5', true, { identity, brain: 'b' })], '--arms', 'off', '--no-qa');
     expect(rebuilt.code).not.toBe(0);
     expect(rebuilt.error).toContain('--arms none');
   });
@@ -163,7 +163,7 @@ describe('agent answer identity (#236)', () => {
 
   test('the resume key changes with the model, the turn cap, the gbrain under test, the questions and the brain', async () => {
     const { qaKey } = await import('./chronicle-lift.ts');
-    const identity = { model: 'claude-sonnet-5-5', max_turns: 12, gbrain: '0.60.531.0', questions: 'q' };
+    const identity = { model: 'claude-opus-5-5', max_turns: 12, gbrain: '0.60.531.0', questions: 'q' };
     const base = qaKey('off', 'when-1', 1, identity, 'brain-1');
     expect(qaKey('off', 'when-1', 1, { ...identity }, 'brain-1')).toBe(base);
     for (const changed of [qaKey('off', 'when-1', 1, { ...identity, model: 'claude-sonnet-4-6' }, 'brain-1'), qaKey('off', 'when-1', 1, { ...identity, max_turns: 8 }, 'brain-1'),

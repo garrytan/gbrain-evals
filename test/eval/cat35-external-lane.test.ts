@@ -263,7 +263,7 @@ describe('externalJudgeEstimateUsd', () => {
 
   test("the judge model's own rates price it, so a pricier judge cannot pass at a cheaper model's figure", () => {
     expect(est({}, 'claude-opus-5-5')).toBeGreaterThan(est({}, 'claude-sonnet-5-5'));
-    expect(est({}, 'claude-sonnet-5-5')).toBeGreaterThan(est({}, 'claude-haiku-5-5'));
+    expect(est({}, 'claude-sonnet-5-5')).toBeGreaterThan(est({}, 'anthropic:claude-haiku-5-5'));
     expect(() => est({}, 'claude-unpriced-9')).toThrow('no chat price');
   });
 
