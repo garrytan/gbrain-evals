@@ -1,0 +1,107 @@
+{
+ "category": "n15-skillopt-method",
+ "probe": 1,
+ "after_hardening": false,
+ "gbrain_pin": "3ec766c40664b652b14e39788d177139f5a7b105",
+ "gbrain_evals_commit": "6b0d058a153c",
+ "budget_run_id": "n15-skillopt-method-probe-2026-11-01T19-52-34-193Z-4954f076",
+ "receipt": "not written: the runner refused its own completed receipt for lacking a verdict (fixed in the next commit), so per-task rows and rewrite texts were lost; the numbers below are the run log's [n15 probe] lines (run.log)",
+ "models": {
+  "target": "anthropic:claude-haiku-5-5",
+  "proposer": "anthropic:claude-opus-5-5",
+  "frontier": "anthropic:claude-opus-5-5"
+ },
+ "split": "sel (24 tasks per skill); the test split was not read",
+ "skills": [
+  {
+   "skill": "query",
+   "ceiling": 1.0,
+   "no_skill": 0.3333,
+   "seed": 1.0,
+   "one_shot_repeats": [
+    1.0,
+    1.0
+   ],
+   "one_shot_kept": 1.0,
+   "one_shot_kept_note": "neither repeat beat the seed, so the kept score is the seed's",
+   "seed_opus": 0.9583,
+   "tool_gaps": [
+    "recall",
+    "get_timeline"
+   ],
+   "gate_reasons": [
+    "seed-above-band",
+    "one-shot-at-ceiling"
+   ]
+  },
+  {
+   "skill": "briefing",
+   "ceiling": 1.0,
+   "no_skill": 0.1667,
+   "seed": 0.9583,
+   "one_shot_repeats": [
+    1.0,
+    1.0
+   ],
+   "one_shot_kept": 1.0,
+   "seed_opus": 0.5,
+   "tool_gaps": [
+    "get_timeline"
+   ],
+   "gate_reasons": [
+    "seed-above-band",
+    "one-shot-at-ceiling"
+   ]
+  },
+  {
+   "skill": "fact-check",
+   "ceiling": 1.0,
+   "no_skill": 0.0,
+   "seed": 0.5833,
+   "one_shot_repeats": [
+    1.0,
+    null
+   ],
+   "one_shot_kept": 1.0,
+   "seed_opus": null,
+   "tool_gaps": [],
+   "outside_brain": [
+    "web_search",
+    "web_fetch"
+   ],
+   "gate_reasons": [
+    "one-shot-at-ceiling"
+   ],
+   "unscored": [
+    "one_shot_2: the budget ledger refused the Opus proposer call ($20.00 run budget)",
+    "seed_opus: budget exhausted"
+   ]
+  }
+ ],
+ "gate": {
+  "verdict": "harden-and-reprobe",
+  "qualifying": [],
+  "why": "no skill qualifies; one-shot reached the ceiling on all three, and this is the first probe. The two unscored fact-check arms cannot change it: a second repeat cannot lower the kept 1.00, and the Opus seed arm does not gate."
+ },
+ "cost": {
+  "basis": "budget ledger, provider usage fields at list price",
+  "usd": 19.8171,
+  "overshoot_usd": 0.0374,
+  "by_model": [
+   {
+    "model": "anthropic:claude-haiku-5-5 chat",
+    "requests": 4841,
+    "usd": 7.6837,
+    "input_tokens": 122384071,
+    "output_tokens": 3473965
+   },
+   {
+    "model": "anthropic:claude-opus-5-5 chat",
+    "requests": 161,
+    "usd": 12.1334,
+    "input_tokens": 5610605,
+    "output_tokens": 123042
+   }
+  ]
+ }
+}

@@ -31,8 +31,8 @@
  * Usage: bun eval/runner/n15-skillopt-method.ts [--output <dir>] [--json]
  *        bun eval/runner/n15-skillopt-method.ts --probe --paid --budget-run-id <id> [--skills query,briefing,fact-check] [--after-hardening] [--output <dir>]
  */
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { checkManifest, regenerationDiffs } from '../generators/skillopt-method/gen.ts';
 import { budgetOptionsFrom, receiptCost, startPaidRun, type RunSummary } from './budget-ledger.ts';
 import { gbrainPin, gbrainVersion } from './gbrain-version.ts';
@@ -42,7 +42,7 @@ import { attestPreregistration, type Attestation } from './prereg.ts';
 import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, noModelSpend, productIdentity, receiptPath, sourceTreeIdentity, writeReceipt, type ProbeError, type Receipt } from './receipt.ts';
 import { auditSkill } from './skillopt-method/audit.ts';
 import { DATA_DIR, readSeed, readTasks, SEED_GBRAIN_COMMIT, sha256 } from './skillopt-method/dataset.ts';
-import { PROBE_ESTIMATE_USD, PROBE_MODELS, runProbe, toolCoverage, type ProbeResult } from './skillopt-method/probe.ts';
+import { PROBE_ESTIMATE_USD, PROBE_MODELS, runProbe, toolCoverage, type ProbeResult, type ProbeSkillResult } from './skillopt-method/probe.ts';
 import { CRITERIA, evaluateJudge, SKILLS, type SkillName } from './skillopt-method/score.ts';
 
 export const CATEGORY = 'n15-skillopt-method';
@@ -148,7 +148,7 @@ async function runHermetic(argv: readonly string[], log: (s: string) => void): P
   };
 }
 
-async function runLiveProbe(argv: readonly string[], log: (s: string) => void): Promise<Receipt> {
+async function runLiveProbe(argv: readonly string[], log: (s: string) => void, outDir: string): Promise<Receipt> {
   const startedAt = new Date().toISOString();
   const skills = parseSkills(argv);
   const estimateUsd = PROBE_ESTIMATE_USD * skills.length / SKILLS.length;
@@ -163,7 +163,16 @@ async function runLiveProbe(argv: readonly string[], log: (s: string) => void): 
   try {
     probe = await withHermeticEnv('n15-probe', async () => {
       process.env.ANTHROPIC_API_KEY = anthropicKey;
-      return runProbe({ fake: false, skills, afterHardening: argv.includes('--after-hardening'), log });
+      const done: ProbeSkillResult[] = [];
+      const partialPath = join(outDir, 'probe-partial.json');
+      return runProbe({
+        fake: false, skills, afterHardening: argv.includes('--after-hardening'), log,
+        onSkill: result => {
+          done.push(result);
+          mkdirSync(outDir, { recursive: true });
+          writeFileSync(partialPath, JSON.stringify({ category: CATEGORY, started_at: startedAt, skills: done.map(({ rewrites, ...s }) => ({ ...s, rewrite_audits: rewrites.map(text => auditSkill(s.skill, text)) })) }, null, 2) + '\n');
+        },
+      });
     });
   } catch (e) {
     errors.push({ probe_id: 'probe', origin: 'harness', message: (e as Error).message });
@@ -181,6 +190,7 @@ async function runLiveProbe(argv: readonly string[], log: (s: string) => void): 
     ...baseReceipt(startedAt),
     cost: cost ? receiptCost(cost) : null,
     run_status: probe ? 'completed' : 'error',
+    ...(probe ? { verdict: scored === planned ? 'pass' as const : 'partial' as const } : {}),
     n_total: planned, n_scored: probe ? scored : 0, completion_rate: probe ? scored / planned : 0, errors,
     publishable: !!probe && scored === planned,
     preregistration_attestation: attestation,
@@ -201,7 +211,7 @@ async function main(): Promise<void> {
   let receipt: Receipt;
   if (probeMode && !argv.includes('--fake')) {
     if (!paidRequested(argv)) log('The live A1 probe spends money; pass --paid --budget-run-id <id> (or --fake for the keyless path).');
-    receipt = await runLiveProbe(argv, log);
+    receipt = await runLiveProbe(argv, log, dirname(outPath));
   } else {
     receipt = await runHermetic(argv, log);
   }

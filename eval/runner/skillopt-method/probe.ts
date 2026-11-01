@@ -49,8 +49,12 @@ export const PROBE_RUNS_PER_TASK = 3;
 export const PROBE_FRONTIER_RUNS_PER_TASK = 1;
 export const PROBE_REWRITE_REPEATS = 2;
 export const PROBE_REWRITE_SPLIT: [number, number, number] = [1, 22, 1];
-/** Whole probe, three skills, at plan prices; the preregistered cap. */
-export const PROBE_ESTIMATE_USD = 20;
+/**
+ * Whole probe, three skills, at measured prices: probe 1 spent $19.82 on all but
+ * fact-check's second rewrite and its Opus seed arm, $12.13 of it on Opus
+ * rollouts that read long pages (PREREGISTRATION.md, amendment 1).
+ */
+export const PROBE_ESTIMATE_USD = 28;
 /** Per one-shot repeat, passed to runSkillOpt as its own cap; the budget ledger enforces the probe total. */
 export const PROBE_REWRITE_MAX_COST_USD = 3;
 export const PROBE_REFLECT_MAX_TOKENS = 16_000;
@@ -199,6 +203,8 @@ export interface ProbeOptions {
   skills?: readonly SkillName[];
   afterHardening?: boolean;
   log?: (line: string) => void;
+  /** Called with each skill's result as soon as it is scored, so a later budget stop or crash keeps it. */
+  onSkill?: (result: ProbeSkillResult) => void;
 }
 
 export interface ProbeResult {
@@ -314,7 +320,7 @@ export async function runProbe(opts: ProbeOptions): Promise<ProbeResult> {
       if (beat) beat.kept = true;
       const seedOpus = await scoreArm(seedText, sel, PROBE_MODELS.frontier, PROBE_FRONTIER_RUNS_PER_TASK);
       log(`[n15 probe]   one-shot ${oneShot.map(x => x.score ?? 'none').join(', ')} (kept ${beat ? beat.score : 'seed'}), seed on Opus ${seedOpus.score ?? 'error'}`);
-      results.push({
+      const result: ProbeSkillResult = {
         skill, ceiling,
         no_skill: noSkill.score, seed: seed.score,
         one_shot_repeats: oneShot.map(x => x.score), one_shot_kept: beat ? beat.score : seed.score,
@@ -322,7 +328,9 @@ export async function runProbe(opts: ProbeOptions): Promise<ProbeResult> {
         tool_gaps: coverage.find(c => c.skill === skill)!.missing,
         arms: { no_skill: noSkill, seed, one_shot: oneShot, seed_opus: seedOpus },
         rewrites,
-      });
+      };
+      results.push(result);
+      opts.onSkill?.(result);
     }
   } finally {
     if (opts.fake) __setChatTransportForTests(null);
