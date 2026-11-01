@@ -8,7 +8,7 @@
  * key is used: the proxy holds a placeholder Particle key and the fake never checks it.
  */
 import { afterAll, afterEach, beforeAll, describe, expect, test } from 'bun:test';
-import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { BudgetRun, closeLedgers, initLedger, ledgerStatus } from '../../eval/runner/budget-ledger.ts';
@@ -16,8 +16,8 @@ import { readRequestLog, startMeteringProxy, type MeteringProxy } from '../../ev
 import { createMeteredTestCell, type MeteredTestCell } from '../../eval/runner/metering-proxy-testkit.ts';
 import { COMPAT_PROVIDERS, ParticleCreditExhausted } from '../../eval/runner/providers/openai-compatible.ts';
 import type { UsageReceipt } from '../../eval/runner/usage-receipt.ts';
-import { callModel, modelCaller } from '../../eval/workload-suites/bench-infra.ts';
-import { maxTokensFor, pool, readerPrompt } from '../../eval/workload-suites/bench.ts';
+import { callModel, modelCaller, type Bench } from '../../eval/workload-suites/bench-infra.ts';
+import { answerOne, maxTokensFor, pool, readerPrompt, score } from '../../eval/workload-suites/bench.ts';
 import { SUITES, runSuite } from '../../eval/workload-suites/cli.ts';
 import { MODEL_CONFIG, ROUTED_PROVIDERS, modelRuleViolations, workloadModelsNotRun } from '../../eval/workload-suites/run-config.ts';
 
@@ -82,7 +82,7 @@ describe('a workload-suite question read by particle-1', () => {
     const tag = `passing-details/gbrain-raw/reader/${q.id}`;
     const before = fakeLines().length;
     const reply = await b.model('particle:particle-1', prompt, { tag, maxTokens: maxTokensFor('particle:particle-1') });
-    expect(reply).toEqual({ text: 'ok', input_tokens: expect.any(Number), output_tokens: expect.any(Number), cached: false, model: 'particle:particle-1' });
+    expect(reply).toEqual({ text: 'ok', input_tokens: expect.any(Number), output_tokens: expect.any(Number), cached: false, model: 'particle:particle-1', finish_reason: 'stop', truncated: false });
 
     const [line, ...rest] = b.log();
     expect(rest).toEqual([]);
@@ -226,6 +226,65 @@ describe('a workload-suite question read by particle-1', () => {
     row.default_effort = 'medium';
     try { expect((await ask()).cached).toBe(false); } finally { row.default_effort = was; }
   });
+
+  test('an answer cut off at its output limit is the model\'s answer: scored as is, recorded as truncated with its finish reason, counted per arm and never asked again', async () => {
+    const b = await particleBench();
+    const cutOff = { id: 'chatcmpl-cut', object: 'chat.completion', model: 'particle-ai/particle-1', service_tier: 'default', choices: [{ index: 0, finish_reason: 'length', message: { role: 'assistant', content: 'Answer: the code you set is' } }], usage: { prompt_tokens: 700, completion_tokens: 16_000, total_tokens: 16_700, completion_tokens_details: { reasoning_tokens: 15_990 } } };
+    await faults([{ status: 200, body: JSON.stringify(cutOff) }]);
+    const q = passing.queries[0]!;
+    const context = passing.documents.filter(d => d.user_id === q.user_id).slice(0, 2).map(d => d.content).join('\n\n');
+    const bench = { model: b.model } as unknown as Bench;
+    const before = fakeLines().length;
+    const answered = await answerOne(bench, passing, b.dir, 'gbrain-raw', 'particle:particle-1', q, context, null, []);
+    expect(answered).toMatchObject({ answer_raw: 'Answer: the code you set is', error: null, finish_reason: 'length', truncated: true });
+    expect(await answerOne(bench, passing, b.dir, 'gbrain-raw', 'particle:particle-1', q, context, null, [])).toEqual(answered);
+    expect(fakeLines().length - before).toBe(1);
+    expect(b.attempts().map(a => [a.status, a.finish, a.finish_raw])).toEqual([['ok', 'max_tokens', 'length']]);
+
+    await score(null, passing, b.dir, () => {});
+    const result = JSON.parse(readFileSync(join(b.dir, 'results.json'), 'utf8')).results['gbrain-raw']['particle:particle-1'];
+    expect(result).toMatchObject({ n: 1, correct: 0, truncated: 1 });
+    expect(result.rows).toEqual([expect.objectContaining({ query_id: q.id, correct: false, truncated: true, finish_reason: 'length' })]);
+    expect(result.rows[0].outcome).not.toBe('error');
+  });
+
+  test('a reply or answer recorded before finish reasons were kept reads as unknown, so its arm\'s truncation count is unknown, not zero', async () => {
+    const b = await particleBench();
+    const q = passing.queries[0]!;
+    const opts = { tag: `passing-details/gbrain-raw/reader/${q.id}`, maxTokens: maxTokensFor('particle:particle-1') };
+    expect(await b.model('particle:particle-1', 'Q legacy?', opts)).toMatchObject({ finish_reason: 'stop', truncated: false });
+    const cacheDir = join(b.dir, 'model-cache');
+    for (const f of readdirSync(cacheDir)) {
+      const { finish_reason, truncated, ...legacy } = JSON.parse(readFileSync(join(cacheDir, f), 'utf8'));
+      writeFileSync(join(cacheDir, f), JSON.stringify(legacy));
+    }
+    expect(await b.model('particle:particle-1', 'Q legacy?', opts)).toMatchObject({ cached: true, finish_reason: null, truncated: null });
+
+    const bench = { model: b.model } as unknown as Bench;
+    const context = passing.documents.filter(d => d.user_id === q.user_id).slice(0, 2).map(d => d.content).join('\n\n');
+    await answerOne(bench, passing, b.dir, 'gbrain-raw', 'particle:particle-1', q, context, null, []);
+    const receiptFile = join(b.dir, 'answers', 'gbrain-raw', 'particle_particle-1', `${q.id}.json`);
+    const { finish_reason, truncated, ...legacy } = JSON.parse(readFileSync(receiptFile, 'utf8'));
+    expect([finish_reason, truncated]).toEqual(['stop', false]);
+    writeFileSync(receiptFile, JSON.stringify(legacy));
+    await score(null, passing, b.dir, () => {});
+    const result = JSON.parse(readFileSync(join(b.dir, 'results.json'), 'utf8')).results['gbrain-raw']['particle:particle-1'];
+    expect(result.truncated).toBeNull();
+    expect(result.rows[0]).toMatchObject({ truncated: null, finish_reason: null });
+  });
+
+  test('a smoke-only reader\'s answers are scored only when the scoring run is a labeled smoke run', async () => {
+    const b = await particleBench();
+    const q = passing.queries[0]!;
+    const context = passing.documents.filter(d => d.user_id === q.user_id).slice(0, 2).map(d => d.content).join('\n\n');
+    const particle = await answerOne({ model: b.model } as unknown as Bench, passing, b.dir, 'gbrain-raw', 'particle:particle-1', q, context, null, []);
+    const fable = 'anthropic:claude-fable-5-1';
+    mkdirSync(join(b.dir, 'answers', 'gbrain-raw', 'anthropic_claude-fable-5-1'), { recursive: true });
+    writeFileSync(join(b.dir, 'answers', 'gbrain-raw', 'anthropic_claude-fable-5-1', `${q.id}.json`), JSON.stringify({ ...particle, model: fable }));
+    const scored = async (smokeRun: boolean) => { await score(null, passing, b.dir, () => {}, smokeRun); return Object.keys(JSON.parse(readFileSync(join(b.dir, 'results.json'), 'utf8')).results['gbrain-raw']); };
+    expect(await scored(false)).toEqual(['particle:particle-1']);
+    expect(await scored(true)).toEqual(['particle:particle-1', fable]);
+  });
 });
 
 describe('the existing reader routes', () => {
@@ -252,6 +311,27 @@ describe('the existing reader routes', () => {
     for (const r of seen) expect('request' in r || 'response_meta' in r).toBe(false);
     expect(await callModel(env, 'gemini:gemini-3.8-flash', 'Q?', tag, 400, r => seen.push(r))).toMatchObject({ error: 'unsupported reader provider gemini' });
     expect(seen).toHaveLength(2);
+  });
+
+  test('an Anthropic or OpenAI reply cut off at its output limit is marked truncated with its finish reason, not as an error', async () => {
+    const c = await createMeteredTestCell({ labels: ['reader', 'judge'] });
+    cells.push(c);
+    const env = c.proxy.envFor('reader');
+    const usage = { input_tokens: 10, output_tokens: 400 };
+    c.stub.respond('anthropic.messages', () => ({ status: 200, body: { id: 'msg_cut', type: 'message', role: 'assistant', model: 'claude-sonnet-5-5', content: [{ type: 'text', text: 'Answer: the' }], stop_reason: 'max_tokens', stop_sequence: null, usage } }));
+    c.stub.respond('openai.chat', () => ({ status: 200, body: { id: 'chatcmpl-cut', object: 'chat.completion', model: 'gpt-6.1-sol', choices: [{ index: 0, message: { role: 'assistant', content: 'Answer: the' }, finish_reason: 'length' }], usage: { prompt_tokens: 10, completion_tokens: 4000, total_tokens: 4010 } } }));
+    const tag = 'beliefs/gbrain-combined/reader/q-cut';
+    expect(await callModel(env, 'anthropic:claude-sonnet-5-5', 'Q?', tag, 400)).toMatchObject({ text: 'Answer: the', finish_reason: 'max_tokens', truncated: true });
+    expect(await callModel(env, 'openai:gpt-6.1-sol', 'Q?', tag, 4000)).toMatchObject({ text: 'Answer: the', finish_reason: 'length', truncated: true });
+    c.stub.respond('anthropic.messages', null);
+    expect(await callModel(env, 'anthropic:claude-sonnet-5-5', 'Q2?', tag, 400)).toMatchObject({ finish_reason: 'end_turn', truncated: false });
+  });
+
+  test('a reply without a finish reason is not known to be whole, so it reads as unknown rather than not truncated', async () => {
+    const c = await createMeteredTestCell({ labels: ['reader', 'judge'] });
+    cells.push(c);
+    c.stub.respond('openai.chat', () => ({ status: 200, body: { id: 'chatcmpl-nofinish', object: 'chat.completion', model: 'gpt-6.1-sol', choices: [{ index: 0, message: { role: 'assistant', content: 'Answer: 7' }, finish_reason: null }], usage: { prompt_tokens: 10, completion_tokens: 3, total_tokens: 13 } } }));
+    expect(await callModel(c.proxy.envFor('reader'), 'openai:gpt-6.1-sol', 'Q?', 'beliefs/gbrain-combined/reader/q-nofinish', 4000)).toMatchObject({ text: 'Answer: 7', finish_reason: null, truncated: null });
   });
 
   test('a receipt that cannot be written stops the call; the answered request is never sent again', async () => {

@@ -6,7 +6,9 @@
  * and scorer mutation checks.
  */
 import { describe, expect, test } from 'bun:test';
+import { resolve } from 'node:path';
 import { assertScorerRejectsFakeSystems } from '../../eval/runner/mutation-kit.ts';
+import { SMOKE_ONLY_READERS } from '../../eval/runner/systems/baselines.ts';
 import { runChecks, storePresenceFailures } from '../../eval/workload-suites/checks.ts';
 import { SUITES, runSuite } from '../../eval/workload-suites/cli.ts';
 import { bundleFiles, bundleManifest, renderContext } from '../../eval/workload-suites/common.ts';
@@ -191,6 +193,34 @@ describe('schema, model rule and frontier subset', () => {
     expect(modelRuleViolations(bad).join(' ')).toContain('gpt-5.4-mini');
     const old = { ...MODEL_CONFIG, fixed_reader: { id: 'anthropic:claude-sonnet-4-6', family: 'sonnet' as const } };
     expect(modelRuleViolations(old).join(' ')).toContain('claude-sonnet-4-6');
+  });
+
+  test('Fable is smoke-only: out of the counted sweep, flagged in any counted role, and a sweep that names it needs --smoke', () => {
+    const fable = { id: 'anthropic:claude-fable-5-1', family: 'fable' as const };
+    const smokeOnly = `${fable.id} is smoke-only and never reads or judges a counted cell`;
+    expect(MODEL_CONFIG.frontier_sweep.map(m => m.id)).not.toContain(fable.id);
+    expect(MODEL_CONFIG.smoke_only_readers).toEqual([...SMOKE_ONLY_READERS]);
+    expect(modelRuleViolations({ ...MODEL_CONFIG, frontier_sweep: [...MODEL_CONFIG.frontier_sweep, fable] })).toEqual([smokeOnly]);
+    expect(modelRuleViolations({ ...MODEL_CONFIG, alternate_readers: [fable] })).toEqual([smokeOnly]);
+    expect(modelRuleViolations({ ...MODEL_CONFIG, judge: fable })).toEqual([smokeOnly]);
+    const refused = Bun.spawnSync(['bun', 'eval/workload-suites/bench.ts', 'beliefs', '--phase', 'sweep', '--models', `openai:gpt-6.1-sol,${fable.id}`], { cwd: resolve(import.meta.dir, '../..') });
+    expect(refused.exitCode).toBe(2);
+    expect(refused.stderr.toString()).toContain(`${fable.id} reads only in a labeled smoke run, never a counted one (CLAUDE.md); pass --smoke N`);
+  });
+
+  test('bench.ts refuses a --smoke that is not a positive whole number and a model that is not a configured reader, before it writes anything', () => {
+    const root = resolve(import.meta.dir, '../..');
+    const run = (...flags: string[]) => Bun.spawnSync(['bun', 'eval/workload-suites/bench.ts', 'beliefs', '--phase', 'score', ...flags], { cwd: root });
+    for (const [flags, shown] of [[['--smoke', '0'], '0'], [['--smoke', 'x'], 'x'], [['--smoke', '2.5'], '2.5'], [['--smoke', '--stub'], '--stub'], [['--smoke'], 'nothing']] as const) {
+      const r = run(...flags);
+      expect(r.exitCode).toBe(2);
+      expect(r.stderr.toString()).toContain(`--smoke takes a positive whole number of questions, not ${shown}`);
+    }
+    for (const model of ['openai:gpt-5.4-mini', 'anthropic:claude-fable-5', 'anthropic:claude-sonnet-4-6', 'anthropic:claude-fable-5-1-20261001', 'openai:o4-mini', 'anthropic:claude-haiku-5-5']) {
+      const r = run('--smoke', '5', '--models', `anthropic:claude-opus-5-5, ${model}`);
+      expect(r.exitCode).toBe(2);
+      expect(r.stderr.toString()).toContain(`${model} is not a reader in run-config.ts, so no score would read its answers`);
+    }
   });
 
   test('the frontier subset covers every category at about a quarter and is stable', () => {

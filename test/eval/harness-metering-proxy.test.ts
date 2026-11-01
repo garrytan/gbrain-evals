@@ -10,7 +10,7 @@
  * MPW_REQUIRE_HARNESS=1 and the venv is missing (CI sets this), and is
  * skipped with a message otherwise.
  */
-import { afterEach, describe, expect, test } from 'bun:test';
+import { afterEach, describe, expect, spyOn, test } from 'bun:test';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, existsSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -520,6 +520,32 @@ describe('particle through the metering proxy', () => {
       expect(listing).toMatchObject({ method: 'GET', path: '/v1/models', settlement: 'free', request: null });
     } finally { await p.close(); }
   });
+
+  test('a request the proxy answers slower than the old 255 s idle limit still reaches the client (scaled: any limit runs as 1 s against a 6 s answer)', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'mp-particle-idle-')); dirs.push(dir);
+    const ledgerPath = join(dir, 'ledger.sqlite');
+    initLedger({ ledgerPath });
+    const run = BudgetRun.open({ runner: 'mp-particle-idle-test', budgetUsd: 1, ledgerPath });
+    const answerMs = 6_000;
+    const slow = Bun.serve({ hostname: '127.0.0.1', port: 0, idleTimeout: 0, async fetch() { await Bun.sleep(answerMs); return Response.json({ object: 'list', data: [{ id: 'particle-ai/particle-1', object: 'model' }] }); } });
+    const serve = Bun.serve.bind(Bun);
+    const limits: unknown[] = [];
+    const scaled = spyOn(Bun, 'serve').mockImplementation(((o: any) => { limits.push(o.idleTimeout); return serve({ ...o, idleTimeout: o.idleTimeout ? 1 : 0 }); }) as typeof Bun.serve);
+    let proxy: Awaited<ReturnType<typeof startMeteringProxy>>;
+    try {
+      proxy = await startMeteringProxy({ run, cellId: 'cell-particle-idle', requestLogPath: join(dir, 'log.jsonl'), bodiesDir: join(dir, 'bodies'), labels: ['reader'], upstreams: { particle: `http://127.0.0.1:${slow.port}/particle` }, realKeys: { PARTICLE_API_KEY: 'pk-test-particle' } });
+    } finally { scaled.mockRestore(); }
+    try {
+      expect(limits).toEqual([0]);
+      const env = proxy.envFor('reader');
+      const t0 = Date.now();
+      const res = await fetch(`${env.PARTICLE_BASE_URL}/models`, { headers: { authorization: `Bearer ${env.PARTICLE_API_KEY}` } });
+      expect(res.status).toBe(200);
+      expect(await res.json()).toMatchObject({ data: [{ id: 'particle-ai/particle-1' }] });
+      expect(Date.now() - t0).toBeGreaterThanOrEqual(answerMs);
+      expect(readRequestLog(join(dir, 'log.jsonl'), join(dir, 'bodies'))).toMatchObject([{ method: 'GET', path: '/v1/models', status: 200, settlement: 'free' }]);
+    } finally { await proxy.close(); slow.stop(true); }
+  }, 20_000);
 });
 
 // ─── Zero balance blocks dispatch from each process ──────────────────
