@@ -74,14 +74,20 @@ export const BPRE_BASELINE_CEILING = 0.95;
 /**
  * Default models for Cats 30-33. The target runs the skill and is deliberately
  * the weak model, so an optimized skill has room to improve; the optimizer
- * proposes rewrites; strong is the held-out LLM judge (Cat 32) and the other
- * end of the Cat 33 transfer pairs, so it must be stronger than the target.
+ * proposes rewrites; strong is the other end of the Cat 33 transfer pairs, so
+ * it must be stronger than the target. judge is every LLM judge (Cat 32's
+ * held-out quality judge) and the judge model each category hands gbrain.
+ * Every target is a Claude model, so the judge comes from another family: no
+ * model judges its own family's counted rows (Captain rule GST-767, applied
+ * here 2026-11-01; Cat 32's judge was strong, and Cats 30, 31 and 33 named the
+ * target, before then).
  */
 export const SKILLOPT_MODELS = {
   target: 'anthropic:claude-haiku-5-5',
   optimizer: 'anthropic:claude-opus-5-5',
   bpreOptimizer: 'anthropic:claude-haiku-5-5',
   strong: 'anthropic:claude-sonnet-5-5',
+  judge: 'openai:gpt-6.1-sol',
 } as const;
 
 /**
@@ -236,6 +242,14 @@ export interface SeedResult {
   error_origin?: 'sut' | 'dependency';
 }
 
+/** One runSkillOpt call as the category receipt keeps it: the skill it returned and gbrain's own run receipt. */
+export interface SkilloptRunRecord {
+  label: string;
+  outcome: string;
+  final_text: string | null;
+  receipt: unknown;
+}
+
 export interface Cat30Options {
   bpre?: boolean;
   stubLlm?: boolean;
@@ -326,6 +340,7 @@ interface SeedRunDeps {
   maxCostUsd: number;
   runSkillOptFn: typeof runSkillOpt;
   scoreFn: typeof scoreSkillOnTasks;
+  runs: SkilloptRunRecord[];
   log: (s: string) => void;
 }
 
@@ -413,6 +428,7 @@ async function runSeed(deps: SeedRunDeps, seed: string): Promise<SeedResult> {
       maxRuntimeMin: 20,
       force: true,
     } as any);
+    deps.runs.push({ label: seed, outcome: result.outcome, final_text: result.finalText ?? null, receipt: result.receipt ?? null });
     outcome = result.outcome;
     optimizedBody = result.finalText ?? seedBody;
     receipt = result.receipt ?? {};
@@ -462,7 +478,7 @@ export async function runCat30(options: Cat30Options = {}): Promise<Cat30RunResu
   const stub = options.stubLlm ?? false;
   const targetModel = options.targetModel ?? SKILLOPT_MODELS.target;
   const optimizerModel = options.optimizerModel ?? (bpre ? SKILLOPT_MODELS.bpreOptimizer : SKILLOPT_MODELS.optimizer);
-  const judgeModel = options.judgeModel ?? SKILLOPT_MODELS.target; // unused for rule judges
+  const judgeModel = options.judgeModel ?? SKILLOPT_MODELS.judge; // skillopt-v1 has rule and qrels judges only
   const epochs = options.epochs ?? (bpre ? 1 : 2);
   const batchSize = options.batchSize ?? 5;
   const runsPerTask = options.runsPerTask ?? (bpre || stub ? 1 : 3);
@@ -520,6 +536,7 @@ export async function runCat30(options: Cat30Options = {}): Promise<Cat30RunResu
 
   const acc = new ProbeAccounting(seeds.length);
   const results: SeedResult[] = [];
+  const skilloptRuns: SkilloptRunRecord[] = [];
   let engine: any = null;
   try {
     engine = options.engineFactory ? await options.engineFactory() : new PGLiteEngine();
@@ -534,6 +551,7 @@ export async function runCat30(options: Cat30Options = {}): Promise<Cat30RunResu
       epochs, batchSize, runsPerTask, maxCostUsd,
       runSkillOptFn: options.runSkillOptFn ?? runSkillOpt,
       scoreFn: options.scoreFn ?? scoreSkillOnTasks,
+      runs: skilloptRuns,
       log,
     };
     for (const seed of seeds) results.push(await runSeed(deps, seed));
@@ -586,6 +604,7 @@ export async function runCat30(options: Cat30Options = {}): Promise<Cat30RunResu
       total_cost_usd: totalCost,
       gate_pass: gatePass,
       infra_error_rate: summary.infra_error_rate,
+      skillopt_runs: skilloptRuns,
     },
   };
   writeReceipt(receiptFile, receipt);
