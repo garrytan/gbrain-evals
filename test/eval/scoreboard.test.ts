@@ -280,6 +280,14 @@ describe('cohorts, estimand and claim rules', () => {
     rmSync(dir, { recursive: true });
   });
 
+  test('a power.json with no decision is an invalid receipt', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'scoreboard-'));
+    writeSyntheticReceipt(dir);
+    writeFileSync(join(dir, 'power.json'), JSON.stringify({ schema: 'gbrain-evals/q1-power/v1' }) + '\n');
+    expect(() => derive(dir)).toThrow(/power\.json records no decision/);
+    rmSync(dir, { recursive: true });
+  });
+
   test('README headline: six columns, plain-word exposure, staleness with a newer release, receipt links', () => {
     const { dir, sb } = fresh();
     const md = readFileSync(join(dir, 'scoreboard.md'), 'utf8');

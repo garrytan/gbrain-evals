@@ -117,4 +117,10 @@ describe('verify-documentation-refresh: the scoreboard explanation', () => {
     expect(errors[0].slice(0, 2)).toEqual(['README.md', published]);
     expect(errors[0][2]).toStartWith('The paragraph above the scoreboard block describes a publication other than');
   });
+
+  test('a publication that records no commit yet has nothing to compare', () => {
+    const published = JSON.parse(readFileSync(join(ROOT, PUBLICATION), 'utf8')).published.commit as string;
+    const root = copyWith('pending-publication', PUBLICATION, t => t.replace(`"${published}"`, 'null'));
+    expect(references(root, 'scoreboard_publication_reference')).toEqual([]);
+  });
 });

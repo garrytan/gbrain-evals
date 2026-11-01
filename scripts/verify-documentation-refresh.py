@@ -119,8 +119,11 @@ SCOREBOARD_PUBLICATION = "docs/benchmarks/2026-10-06-scoreboard/publication.json
 
 
 def scoreboard_publication_reference(root=ROOT):
-    """README's paragraph above the scoreboard block explains one published render, so it names the commit publication.json records."""
-    commit = json.loads((root / SCOREBOARD_PUBLICATION).read_text())["published"]["commit"]
+    """README's paragraph above the scoreboard block explains one published render, so it names the commit publication.json records.
+    Between a custody render and its publication the commit is null, and there is nothing to compare yet."""
+    commit = (json.loads((root / SCOREBOARD_PUBLICATION).read_text()).get("published") or {}).get("commit")
+    if commit is None:
+        return []
     above = (root / "README.md").read_text().partition("<!-- scoreboard:headline:begin -->")[0].rsplit("\n## ", 1)[-1]
     named = re.search(r"check --commit\s+([a-f0-9]{40})", above)
     if not named:
