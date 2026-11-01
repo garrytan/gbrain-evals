@@ -45,7 +45,7 @@
 
 // First import: the budget ledger replaces globalThis.fetch with its
 // delegating fetch before any gbrain or SDK module can capture fetch.
-import { BudgetExceededError, budgetOptionsFrom, receiptCost, startPaidRun, type BudgetRun, type PaidRequestGuard } from './budget-ledger.ts';
+import { BudgetExceededError, budgetOptionsFrom, receiptCost, reservationUsd, startPaidRun, type BudgetRun, type PaidRequestGuard } from './budget-ledger.ts';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import {
@@ -87,7 +87,7 @@ import {
   type Cat35JudgeAttempt,
   type CoverageVerdict,
 } from './cat35-judges.ts';
-import { JUDGE_TEMPERATURE, judgePrice } from './judge.ts';
+import { escapeUntrusted, JUDGE_TEMPERATURE, judgePrice } from './judge.ts';
 import {
   BENCHMARK_VERSION,
   RECEIPT_SCHEMA_VERSION,
@@ -98,8 +98,8 @@ import {
 } from './receipt.ts';
 import { gbrainPin, gbrainVersion } from './gbrain-version.ts';
 import { attestPreregistration } from './prereg.ts';
-import { judgeTransport } from './openai-judge-shim.ts';
-import { temperatureSent, toolChoiceSent } from './anthropic-request.ts';
+import { isOpenAIModel, judgeTransport, OPENAI_JUDGE_MIN_OUTPUT_TOKENS } from './openai-judge-shim.ts';
+import { temperatureSent, toolChoiceSent, withThinkingRoom } from './anthropic-request.ts';
 import {
   assertCat35CoverageInput, assertCat35LeakInput, assertCat35SutSource, assertCat35UsabilityInput, CAT35_BOUNDARIES,
 } from './evaluator/judge-inputs.ts';
@@ -216,6 +216,45 @@ export const EXTERNAL_PROVENANCE_NOTE =
   'The harness read these documents from --external-dir as they were and has no record of how they were made: ' +
   'which system, version, model, prompt or inputs produced them, or whether that system saw the answer keys. ' +
   'This lane\'s scores are only as trustworthy as the documents, so a run with an external lane is never publishable.';
+
+/**
+ * The prompt around one judge call's document or conversation: system prompt, tool schema, gold
+ * items or distractor hits, and framing. The largest, coverage over ten items, is 3.6 KB.
+ */
+const JUDGE_CALL_FIXED_BYTES = 4096;
+
+/**
+ * Worst-case judge spend on the external lane, priced from the documents read rather than at the
+ * per-batch figure set for dream documents, which peak at 10.5 KB. It sums what the budget ledger
+ * reserves for every judge attempt the documents can cause. A signal conversation's document goes
+ * to the coverage judge, even when empty. A non-empty document also goes to the usability and
+ * distractor judges and to one hazard call per planted hazard, its claims and the conversation to
+ * the grounding judge, and the conversation to the joint-evidence fallback. Text counts as escaped
+ * for the prompt, at the ledger's 3 bytes per token; every attempt reserves the full answer
+ * (cat35-judges' 2,000 tokens, with the room a Claude 5 judge thinks in or the OpenAI shim's
+ * floor), and every judge retries once.
+ */
+export function externalJudgeEstimateUsd(
+  docs: Array<{ document: string; claims: number; transcript: string; items: number; distractors: number; hazards: number }>,
+  judgeModel: string,
+): number {
+  const maxOutputTokens = Math.max(withThinkingRoom(judgeModel, 2000), isOpenAIModel(judgeModel) ? OPENAI_JUDGE_MIN_OUTPUT_TOKENS : 0);
+  const price = { ...judgePrice(judgeModel), cacheWritePremium: true, maxOutputTokens };
+  let usd = 0;
+  for (const d of docs) {
+    const doc = Buffer.byteLength(escapeUntrusted(d.document));
+    const transcript = Buffer.byteLength(escapeUntrusted(d.transcript));
+    const calls = d.items ? [doc] : [];
+    if (d.document) {
+      calls.push(doc, ...Array<number>(d.hazards).fill(doc));
+      if (d.distractors) calls.push(doc);
+      if (d.claims) calls.push(doc + transcript);
+      if (d.items) calls.push(transcript);
+    }
+    for (const bytes of calls) usd += 2 * reservationUsd({ ...price, inputTokens: Math.ceil((bytes + JUDGE_CALL_FIXED_BYTES) / 3) });
+  }
+  return usd;
+}
 
 /** The external lane name becomes a receipt key and part of artifact file names. */
 export function externalLaneNameError(name: string): string | null {
@@ -873,16 +912,28 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
   // hazard + joint-fallback calls ride inside the per-batch price).
   const EXTRA_JUDGE_BATCHES_PER_TRANSCRIPT = 3;
   const judgeBatches =
-    nSignal * scoredLanes.length + fixtures.length * EXTRA_JUDGE_BATCHES_PER_TRANSCRIPT * (external ? 2 : 1);
+    nSignal * opts.lanes.length + (opts.lanes.length ? fixtures.length * EXTRA_JUDGE_BATCHES_PER_TRANSCRIPT : 0);
   const judgeEst =
     // Unknown judge models estimate at the EXPENSIVE rate (only haiku earns
     // the cheap estimate) — a pricier model must not sneak past pre-flight.
     judgeBatches * (judgeModel.includes('haiku') ? EST.judgePerBatchHaiku : EST.judgePerBatchSonnet);
-  const projected = dreamEst + factsEst + judgeEst;
+  // External documents run up to 64 KiB, six times a dream document, so their
+  // judge spend is priced from the documents read above.
+  const externalEst = externalDocs
+    ? externalJudgeEstimateUsd(externalDocs.files.map((file) => {
+        const f = fixtures.find((x) => x.gold.transcript_id === file.transcript_id)!;
+        return {
+          document: externalDocs.docs.get(file.transcript_id)!, claims: file.claims, transcript: f.transcriptText,
+          items: f.gold.items.length, distractors: f.gold.distractors.length, hazards: f.gold.hazards.length,
+        };
+      }), judgeModel)
+    : 0;
+  const projected = dreamEst + factsEst + judgeEst + externalEst;
+  const externalShare = externalDocs ? `, external lane $${externalEst.toFixed(2)} for ${externalDocs.files.length} documents` : '';
   if (projected > HARD_STOP_USD) {
-    return setupError(`pre-flight: projected worst-case $${projected.toFixed(2)} exceeds CAT35_HARD_STOP_USD=$${HARD_STOP_USD} — refusing to start`);
+    return setupError(`pre-flight: projected worst-case $${projected.toFixed(2)}${externalShare} exceeds CAT35_HARD_STOP_USD=$${HARD_STOP_USD} — refusing to start`);
   }
-  err(`pre-flight: projected worst-case $${projected.toFixed(2)} (cap $${HARD_STOP_USD})`);
+  err(`pre-flight: projected worst-case $${projected.toFixed(2)}${externalShare} (cap $${HARD_STOP_USD})`);
   // Every provider request from here on (judges, fact extraction, dream
   // synthesis and its subagents) is reserved in the budget ledger first.
   const attestation = opts.preregistration ? attestPreregistration(opts.preregistration) : null;

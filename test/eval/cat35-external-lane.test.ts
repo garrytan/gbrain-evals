@@ -8,14 +8,16 @@
  *     special files, hard links, oversized files, too many claims, invalid
  *     UTF-8 and unsafe transcript ids, and hashing every file it reads; and
  *     refusing to read at all on a system with no /proc/self/fd (#226)
+ *   - the pre-flight judge estimate, priced from the documents read (#225)
  *   - CLI refusals before any work
  *   - hermetic runs (stubbed judge and gbrain, fetch forbidden, an empty budget
  *     ledger): the receipt records the name, the directory, each file's sha256
  *     and the provenance note; a hostile folder, an empty folder or a gold id
  *     in a document stops the run before any judge call; every built-in field
  *     is identical with or without an external lane, even one whose judge
- *     fails; and identical bytes score identically in the dream lane and an
- *     external lane
+ *     fails; identical bytes score identically in the dream lane and an
+ *     external lane; and a large document set trips the hard stop before any
+ *     judge call
  *
  * Reading tests and hermetic runs need /proc/self/fd and skip elsewhere,
  * where the runner refuses the lane.
@@ -35,6 +37,7 @@ import {
   EXTERNAL_DOC_MAX_BYTES,
   EXTERNAL_DOC_MAX_CLAIMS,
   EXTERNAL_PROVENANCE_NOTE,
+  externalJudgeEstimateUsd,
   externalLaneNameError,
   readExternalDocs,
 } from '../../eval/runner/cat35-transcript-distill.ts';
@@ -231,6 +234,37 @@ describe.skipIf(!FD_PATHS)('readExternalDocs on a hostile folder', () => {
   });
 });
 
+describe('externalJudgeEstimateUsd', () => {
+  const transcript = 'user: we shipped the fix today and agreed to keep the old flag for a week\n'.repeat(80);
+  const base = { document: 'The user shipped the fix today.', claims: 1, transcript, items: 8, distractors: 4, hazards: 1 };
+  const est = (over: Partial<typeof base>, model = 'claude-sonnet-5-5') => externalJudgeEstimateUsd([{ ...base, ...over }], model);
+
+  test('larger documents cost more, counted as the judge sees them, escaped', () => {
+    expect(est({ document: 'a'.repeat(EXTERNAL_DOC_MAX_BYTES) })).toBeGreaterThan(est({ document: 'a'.repeat(4096) }));
+    expect(est({ document: '<'.repeat(4096) })).toBeGreaterThan(est({ document: 'a'.repeat(4096) }));
+  });
+
+  test('each hazard adds a call that carries the document, and claims add a grounding call that carries the conversation', () => {
+    const big = 'a'.repeat(EXTERNAL_DOC_MAX_BYTES);
+    const hazardCall = est({ document: big, hazards: 1 }) - est({ document: big, hazards: 0 });
+    expect(est({ document: big, hazards: 3 }) - est({ document: big, hazards: 0 })).toBeCloseTo(3 * hazardCall, 10);
+    expect(est({ claims: 1 }) - est({ claims: 0 })).toBeLessThan(est({ claims: 1, transcript: transcript.repeat(4) }) - est({ claims: 0, transcript: transcript.repeat(4) }));
+  });
+
+  test('an empty document costs only the coverage call on a signal conversation, and nothing on a routine one', () => {
+    expect(est({ document: '', claims: 0 })).toBeGreaterThan(0);
+    expect(est({ document: '', claims: 0 })).toBeLessThan(est({ document: 'x', claims: 0 }) / 4);
+    expect(est({ document: '', claims: 0, items: 0 })).toBe(0);
+    expect(externalJudgeEstimateUsd([], 'claude-sonnet-5-5')).toBe(0);
+  });
+
+  test("the judge model's own rates price it, so a pricier judge cannot pass at a cheaper model's figure", () => {
+    // Opus 5.5 lists at 40 times Haiku 5.5's input, cache-write and output rates; both get the same 4,096-token answer.
+    expect(est({}, 'claude-opus-5-5') / est({}, 'claude-haiku-5-5')).toBeCloseTo(40, 6);
+    expect(() => est({}, 'claude-unpriced-9')).toThrow('no chat price');
+  });
+});
+
 describe('receipt schema', () => {
   test('a receipt with no external lane must name a built-in lane in every per_item row', () => {
     const schema = JSON.parse(readFileSync(join(import.meta.dir, '../../eval/schemas/cat35-receipt.schema.json'), 'utf8'));
@@ -376,7 +410,7 @@ interface Run {
   ledgerEntries: unknown[];
 }
 
-function runHermetic(args: string[], opts: { setup?: (dir: string) => void; dreamDocs?: Record<string, string> } = {}): Run {
+function runHermetic(args: string[], opts: { setup?: (dir: string) => void; dreamDocs?: Record<string, string>; env?: Record<string, string> } = {}): Run {
   const dir = scratch('cat35-ext-run-');
   try {
     mkdirSync(join(dir, 'eval/data'), { recursive: true });
@@ -390,7 +424,7 @@ function runHermetic(args: string[], opts: { setup?: (dir: string) => void; drea
     const proc = Bun.spawnSync([process.execPath, '--preload', join(dir, 'preload.ts'), RUNNER, '--json', '--transcripts', TIDS.join(','), ...args], {
       cwd: dir,
       env: { PATH: process.env.PATH, HOME: dir, TMPDIR: dir, ANTHROPIC_API_KEY: 'stub-only', OPENAI_API_KEY: 'stub-only',
-        CAT35_JUDGE_MODEL: 'claude-haiku-4-5-20251001', BRAINBENCH_BUDGET_USD: '5', BRAINBENCH_BUDGET_LEDGER: join(dir, 'ledger.sqlite') },
+        CAT35_JUDGE_MODEL: 'claude-haiku-4-5-20251001', BRAINBENCH_BUDGET_USD: '5', BRAINBENCH_BUDGET_LEDGER: join(dir, 'ledger.sqlite'), ...opts.env },
       stdout: 'pipe', stderr: 'pipe', timeout: 60_000,
     });
     const reports = join(dir, 'eval/reports/cat35-transcript-distill');
@@ -431,6 +465,17 @@ function writeExternalDocs(dir: string, opts: { judgeFails?: boolean } = {}): Re
 
 const EXT = ['--external-lane', 'ext-notes', '--external-dir', 'ext-out'];
 
+/** A document at the reader's limits: 80 claims in just under 64 KiB. */
+const largeDoc = (tid: string) =>
+  Array.from({ length: EXTERNAL_DOC_MAX_CLAIMS }, (_, i) => `The ${tid} notes record detail ${i}${' and more words'.repeat(50)}.`).join('\n');
+
+/** One document at the reader's limits for each of the three transcripts. */
+function writeLargeExternalDocs(dir: string): void {
+  mkdirSync(join(dir, 'ext-out'));
+  for (const tid of TIDS) writeFileSync(join(dir, 'ext-out', `${tid}.md`), largeDoc(tid));
+}
+
+const projection = (r: Run) => Number(/pre-flight: projected worst-case \$([0-9.]+)/.exec(r.stderr)?.[1]);
 
 /** Everything in a receipt that describes the built-in lanes; run-level accounting is left out. */
 function builtinView(rc: any, lane: string): any {
@@ -560,6 +605,24 @@ describe.skipIf(!FD_PATHS)('hermetic external-lane runs', () => {
       expect(r.artifacts).toEqual({});
     }, 90_000);
   }
+
+  test('the pre-flight projection prices the documents read, so a large set trips the hard stop before any judge call', () => {
+    for (const tid of TIDS) {
+      expect(Buffer.byteLength(largeDoc(tid))).toBeLessThanOrEqual(EXTERNAL_DOC_MAX_BYTES);
+      expect(segmentClaims(largeDoc(tid))).toHaveLength(EXTERNAL_DOC_MAX_CLAIMS);
+    }
+    const small = runHermetic(['--lanes', 'none', ...EXT], { setup: (dir) => { writeExternalDocs(dir); } });
+    expect(small.exitCode, small.stderr).toBe(0);
+    const cap = projection(small) * 2;
+    expect(cap).toBeGreaterThan(0);
+    const large = runHermetic(['--lanes', 'none', ...EXT], { setup: writeLargeExternalDocs, env: { CAT35_HARD_STOP_USD: String(cap) } });
+    expect(large.exitCode, large.stderr).toBe(2);
+    expect(large.stderr).toContain(`exceeds CAT35_HARD_STOP_USD=$${cap}`);
+    expect(projection(large)).toBeGreaterThan(cap);
+    expect(large.requests).toEqual([]);
+    expect(large.ledgerEntries).toEqual([]);
+    expect(large.ws0.run_status).toBe('error');
+  }, 120_000);
 
   test('a lane with nothing to grade reports no hallucination or quote-fidelity rate, and the scorecard shows zero claims', () => {
     const r = runHermetic(['--lanes', 'none', ...EXT], {
