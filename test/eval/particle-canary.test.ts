@@ -147,6 +147,20 @@ describe('answers stopped by an output limit, blank answers and billed malformed
     } finally { server.stop(true); }
   });
 
+  // Value: protects=a canary prompt answered 504, which Particle may have billed, is paid for once (issue #282); fails_when=the canary retries a 504 like any 5xx, up to 3 sends of 64 output tokens each; why_new=the canary stops on compatMayHaveBilled; seam=none; no_claim=whether Particle bills a request its gateway timed out
+  test('a 504 is never sent again; a 503 still is (#282)', async () => {
+    for (const [status, sends] of [[504, 1], [503, 3]] as const) {
+      let n = 0;
+      const server = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: () => { n++; return Response.json({ error: { message: 'gateway' } }, { status }); } });
+      try {
+        const rec = await runCanary({ PARTICLE_API_KEY: 'dummy-key', PARTICLE_BASE_URL: `http://127.0.0.1:${server.port}/v1` }, { retryDelayMs: () => 0 });
+        expect([status, n]).toEqual([status, CANARY_PROMPTS.length * sends]);
+        expect(rec.results.every(r => r.status === 'error')).toBe(true);
+        expect(rec.receipts.filter(r => r.question_id === 'c01').map(r => r.attempt)).toEqual(Array.from({ length: sends }, (_, i) => i));
+      } finally { server.stop(true); }
+    }
+  });
+
   // Value: protects=a billed canary answer with a malformed log-probability list keeps its answer and its receipt's usage (issue #276); fails_when=parseCompatResponse throws on a null token entry or a top_logprobs that is not a list, so the prompt fails with usage_raw null; why_new=parseCompatResponse drops malformed log probabilities instead of throwing; seam=none; no_claim=what Particle sends in these fields today
   test('a null token entry or a top_logprobs that is not a list leaves the log probabilities unset, and the answer and its receipt\'s usage stand (#276)', async () => {
     const shapes = [[null], [{ token: 'ok', logprob: -0.5, top_logprobs: {} }], [{ token: 'ok', logprob: -0.5, top_logprobs: [null] }]];

@@ -12,6 +12,7 @@
  */
 import { afterEach, describe, expect, spyOn, test } from 'bun:test';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, existsSync, writeFileSync } from 'node:fs';
+import { createServer, type AddressInfo, type Socket } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import {
@@ -557,6 +558,43 @@ describe('particle through the metering proxy', () => {
       expect(Date.now() - t0).toBeGreaterThanOrEqual(answerMs);
       expect(readRequestLog(join(dir, 'log.jsonl'), join(dir, 'bodies'))).toMatchObject([{ method: 'GET', path: '/v1/models', status: 200, settlement: 'free' }]);
     } finally { await proxy.close(); slow.stop(true); }
+  }, 20_000);
+
+  // Value: protects=the workload route's proxy answers a particle request that failed after it went out with a 504, which no particle client sends again (issue #282); fails_when=it answers a timeout, a reset or a body that fails after the headers with the 502 a client retries, or answers a refused connection, which never reached Particle, with a 504; why_new=the lease proxy already answers these 504 (#250, #270); seam=loopback sockets that hang, reset, close mid-body or refuse, and a shortened upstream deadline; no_claim=whether Particle bills a dropped request
+  test('a particle request that times out, resets or loses its body after it went out is answered 504; a refused connection, and another provider, get the 502 (#282)', async () => {
+    const { UPSTREAM_DEADLINE_MS } = await import('../../eval/runner/metering-proxy.ts');
+    const faults: Record<string, (s: Socket) => void> = {
+      hang: () => {},
+      reset: s => s.resetAndDestroy(),
+      body: s => { s.write('HTTP/1.1 200 OK\r\ncontent-type: application/json\r\ncontent-length: 1000\r\n\r\n{"id":"x",'); setTimeout(() => s.destroy(), 20); },
+    };
+    const timeout = AbortSignal.timeout;
+    AbortSignal.timeout = (ms: number) => timeout.call(AbortSignal, ms === UPSTREAM_DEADLINE_MS ? 300 : ms);
+    const seen: string[] = [];
+    const sockets: Socket[] = [];
+    try {
+      for (const fault of ['hang', 'reset', 'body', 'refused']) {
+        const upstream = createServer(s => { sockets.push(s); s.once('data', () => { seen.push(fault); faults[fault]?.(s); }); });
+        await new Promise<void>(r => upstream.listen(0, '127.0.0.1', r));
+        const base = `http://127.0.0.1:${(upstream.address() as AddressInfo).port}`;
+        if (fault === 'refused') await new Promise<void>(r => upstream.close(() => r()));
+        const dir = mkdtempSync(join(tmpdir(), 'mp-particle-lost-')); dirs.push(dir);
+        const ledgerPath = join(dir, 'ledger.sqlite');
+        initLedger({ ledgerPath });
+        const run = BudgetRun.open({ runner: 'mp-particle-lost-test', budgetUsd: 1, ledgerPath });
+        const proxy = await startMeteringProxy({ run, cellId: `cell-${fault}`, requestLogPath: join(dir, 'log.jsonl'), bodiesDir: join(dir, 'bodies'), labels: ['reader'], upstreams: { particle: base, openai: base }, realKeys: { PARTICLE_API_KEY: 'stub-not-a-real-key', OPENAI_API_KEY: 'stub-not-a-real-key' } });
+        try {
+          const env = proxy.envFor('reader');
+          const particle = await post(`${env.PARTICLE_BASE_URL}/chat/completions`, { authorization: `Bearer ${env.PARTICLE_API_KEY}` }, compatRequest('particle:particle-1', ASK, {}, env).body);
+          const openai = await post(`${env.OPENAI_BASE_URL}/chat/completions`, { authorization: `Bearer ${env.OPENAI_API_KEY}` }, { model: 'gpt-6.1-sol', max_completion_tokens: 20, messages: ASK });
+          const lost = fault !== 'refused';
+          expect([fault, particle.status, ((await particle.json()) as any).error.type]).toEqual([fault, lost ? 504 : 502, lost ? 'mpw_proxy_upstream_lost' : 'mpw_proxy_upstream_unreachable']);
+          expect([fault, openai.status, ((await openai.json()) as any).error.type]).toEqual([fault, 502, 'mpw_proxy_upstream_unreachable']);
+          expect(readRequestLog(join(dir, 'log.jsonl'), join(dir, 'bodies')).map(l => [l.provider, l.status, l.settlement])).toEqual([['particle', lost ? 504 : 502, 'charged-reservation'], ['openai', 502, 'charged-reservation']]);
+        } finally { await proxy.close(); if (fault !== 'refused') upstream.close(); }
+      }
+    } finally { AbortSignal.timeout = timeout; for (const s of sockets) s.destroy(); }
+    expect(seen).toEqual(['hang', 'hang', 'reset', 'reset', 'body', 'body']);
   }, 20_000);
 });
 
