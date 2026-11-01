@@ -55,7 +55,7 @@ bun test test/eval/cat15-propose-takes.test.ts
 
 The default scored corpus is `node_modules/gbrain/test/fixtures/calibration/`: `extract-takes-corpus/` for training and `holdout/` for held-out pages. Set `CAT15_CORPUS_DIR` to point at a deliberately selected alternative checkout.
 
-Missing corpus files or keys produce a skipped receipt and a nonzero exit. `--allow-skip` acknowledges the skip without converting it into a measurement. A live run without `--paid --budget-run-id <id>` is refused with a skipped receipt and exit 2, which `--allow-skip` does not change. A run that names a missing, closed or spent budget run writes an error receipt, and so does a run whose ledger refuses a request partway, because it stops early. The [budget ledger guide](../../../docs/budget-ledger.md) shows how to open a run.
+Missing corpus files or keys produce a skipped receipt and a nonzero exit. `--allow-skip` acknowledges the skip without converting it into a measurement. A live run given neither `--paid` nor `--budget-run-id` is refused with a skipped receipt and exit 2, which `--allow-skip` does not change. A run given only one of the two flags, or one naming a missing, closed or spent budget run, writes an error receipt instead, and so does a run whose ledger refuses a request partway, because it stops early. The [budget ledger guide](../../../docs/budget-ledger.md) shows how to open a run.
 
 Outputs go to `eval/reports/cat15-propose-takes/`: individual probe dumps, `_summary.json` and `receipt.json`. The summary identifies models, prompt version, filters and dry-run status.
 
