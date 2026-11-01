@@ -17,6 +17,7 @@ import { DecideError } from '../../eval/runner/decisions/errors.ts';
 import { generateLadderWorld } from '../../eval/generators/model-ladder-gen.ts';
 import { loadFixture } from '../../eval/runner/memory-qa/corpus.ts';
 import { readerPrompt } from '../../eval/runner/memory-qa/qa-v2.ts';
+import { UPSTREAM_DEADLINE_MS } from '../../eval/runner/metering-proxy.ts';
 import { answerFullContext, checkFit, FRONTIER_READERS, FullContextSystem, READER_WINDOWS, splitForCache } from '../../eval/runner/systems/baselines.ts';
 import { classifyRun, evidenceOpened, FILE_AGENT_MAX_TURNS, FileAgentSystem, layoutSessions, parseReader, PROSE_ANSWER_TOOL, proxiedFetch, ripgrep, type GrepLimitEvent } from '../../eval/runner/systems/file-agent.ts';
 import { Sanitizer } from '../../eval/runner/systems/sanitize.ts';
@@ -428,6 +429,23 @@ describe('true full context', () => {
       const long = once(() => new Response('{"error":{"message":"This model\'s maximum context length is 1048576 tokens"}}', { status: 400 }));
       const d = await answerFullContext({ reader: 'particle:particle-1', prompt, conversation: conv.id, fetchImpl: long.fetchImpl });
       expect([d.outcome, d.fit.fits, long.calls()]).toEqual(['does_not_fit', false, 1]);
+    });
+
+    // Value: protects=a slow particle-1 reading is billed once; fails_when=a timed-out request is sent again (issue #250's bug on this path) or waits less than the proxies' upstream deadline; why_new=readCompat sends with compatSend; seam=none; no_claim=Particle's billing of an aborted request
+    test('a reading that times out is a reader_error after one request, sent with the proxies\' 900-second upstream deadline', async () => {
+      const timeout = AbortSignal.timeout;
+      const deadlines: number[] = [];
+      AbortSignal.timeout = (ms: number) => { deadlines.push(ms); return timeout.call(AbortSignal, ms); };
+      try {
+        for (const name of ['TimeoutError', 'AbortError']) {
+          let calls = 0;
+          const fetchImpl = (async () => { calls++; throw new DOMException('The operation timed out.', name); }) as unknown as typeof fetch;
+          const a = await answerFullContext({ reader: 'particle:particle-1', prompt, conversation: conv.id, fetchImpl });
+          expect([a.outcome, calls, a.attempts!.length, a.attempts![0].status, a.attempts![0].retry_after_ms]).toEqual(['reader_error', 1, 1, 'error', null]);
+        }
+      } finally { AbortSignal.timeout = timeout; }
+      expect(deadlines).toEqual([UPSTREAM_DEADLINE_MS, UPSTREAM_DEADLINE_MS]);
+      expect(UPSTREAM_DEADLINE_MS).toBe(900_000);
     });
   });
 
