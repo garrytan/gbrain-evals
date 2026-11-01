@@ -124,7 +124,9 @@ A failed attempt (a 429, a network error, a 402) has no response, so every `resp
 invented value, and `response_model` and `usage` are null as before. One `error` attempt keeps a body: a Particle
 2xx that has no `choices[0].message`, or whose body is not JSON, is an `error` attempt whose record keeps the body's
 usage (the Cat 40 loop keeps its response metadata too). Particle answered it and may have billed it, so it is the
-last attempt: no client sends it again, and a Q1 cell records its question as a final `reader_error` (issue #280).
+last attempt: no client sends it again in the same run, and a Q1 cell records its question as a final
+`reader_error` (issue #280). A memory-qa resume and a workload rerun into the same output still ask it again
+(issue #287).
 `sumUsage` totals count successful records only. In memory-qa, a failed attempt the provider answered with a
 Retry-After also has `retry_after_ms`: the wait before the next attempt, capped at 120 seconds, absent when the
 provider sent none or no attempt followed. In
@@ -137,8 +139,8 @@ that times out, loses its connection or is answered 504 ends the question as a f
 the same reason, the lease proxy answers a particle request whose connection was reset before the response headers
 arrived, or whose body failed to read after them, with a 504 instead of sending it again, and charges its reservation
 (issue #270). The workload route's proxy answers a particle request that timed out, lost its connection or lost its
-body after it went out with a 504 too, and its particle client and the particle canary never send a 504 again
-(issue #282). A truncated response keeps its own content as
+body after it went out with a 504 too, and its particle client and the particle canary never send a 504 again in
+the same run (issue #282). A truncated response keeps its own content as
 `answer`, even when that is empty: the reasoning text (Particle's `reasoning_content`) never fills an answer.
 
 ## How a memory-qa row uses it
