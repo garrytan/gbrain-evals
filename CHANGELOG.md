@@ -15,6 +15,13 @@ This records what each gbrain-evals release changed and what its measurements me
 - **Checked live on 2026-10-31** under a scratch budget ledger: the shared judge passed on its first attempt with claude-opus-5-5, claude-sonnet-5-5, claude-haiku-5-5 and claude-haiku-4-5-20251001, and its reported cost matched the ledger's settled cost; every changed call site answered with all four models; one Cat 14 probe scored with an Opus 5.5 judge. A $0 test, `test/eval/anthropic-request.test.ts`, holds the contract.
 - **Campaign identity.** `eval/runner/openai-judge-shim.ts` and `eval/runner/receipt.ts` are in the F6 campaign's executed tree. This change counts for F6, or any Q1-style campaign frozen before it, only under a new campaign identity. No file in the Cat 40 Hard freeze changed.
 
+### Score another system's Cat 35 documents beside gbrain's lanes
+
+- **You can score a folder of another system's Markdown notes with Cat 35's judges.** Run the Cat 35 runner with `--external-lane NAME --external-dir DIR`; add `--lanes none` to score only the folder. The lane is judged the way gbrain's dream lane is, on recall with the evidence check, claim grounding, distractor leakage, the usability checklist, attribution hazards and quote fidelity. Read its recall next to the verbatim lane from the same run, which is the judge's ceiling. [eval/CONTRIBUTING.md](eval/CONTRIBUTING.md#score-another-systems-cat-35-documents) explains the folder layout, the commands and the limits.
+- **The receipt records what was scored.** Its `external_lane` block holds the lane name, the folder's real path, each file's bytes, sha256 and gradable claim count, the conversations with no file, and a note that the harness has no record of how the documents were made. A run with an external lane is never publishable as the benchmark. The lane list, prior-run deltas, blended usability, judge-failure gate and WS0 counters cover gbrain's built-in lanes only, and the runner judges every built-in lane first, so the external lane's spend or provider errors cannot change them. The external lane has its own `external_judge_failed_rate` gate, which counts toward the exit code.
+- **The runner treats the folder as untrusted.** Before any provider call it refuses the run on a symlink, a special file, a hard link, a file over 64 KiB or 80 claims, invalid UTF-8, a document that contains an answer-key id, or a folder swapped for another after its path was resolved. Judge prompts label the documents `external`, never with the contributor's lane name.
+- The feature is rebuilt on main from Khaled Aly's (@khalloud) design in [#32](https://github.com/garrytan/gbrain-evals/pull/32).
+
 ## [0.10.138] - 2026-10-31
 
 ### Shared agents (on_behalf_of): search cost and recall

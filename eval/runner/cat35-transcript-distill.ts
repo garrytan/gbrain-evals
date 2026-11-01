@@ -9,6 +9,12 @@
  *   facts    — ingest → runExtractConversationFactsCore (memory-write lane)
  *   dream    — triage → runPhaseSynthesize (THE headline distillation feature)
  *
+ * plus one optional external lane: --external-lane NAME --external-dir DIR
+ * reads DIR/<transcript_id>.md written by another system and scores it like
+ * the dream lane's output (--lanes none scores only that lane). The folder is
+ * treated as hostile (readExternalDocs), the receipt records every file's
+ * sha256 in external_lane, and such a run is never publishable.
+ *
  * Run:
  *   bun eval/runner/cat35-transcript-distill.ts --budget-usd 1              # BPRE smoke (default): 2 transcripts, Haiku — measured $0.10 / 81s
  *   CAT35_FULL=1 bun eval/runner/cat35-transcript-distill.ts --budget-usd 20 # full 24 × 3 lanes — measured $6.20 / 29 min (Sonnet judge)
@@ -17,6 +23,7 @@
  * (budget-ledger.ts); without --budget-usd (or BRAINBENCH_BUDGET_USD) the
  * runner refuses to start after the pre-flight estimate.
  *   ... --lanes verbatim,dream --transcripts coding-reflection-01 --json --judge-calibration
+ *   ... --lanes verbatim --external-lane mytool --external-dir DIR
  *
  * Safe-by-default: the runner DEFAULTS to BPRE so `eval:brainbench` sweeps can
  * never accidentally launch a full-spend run. Env:
@@ -41,7 +48,10 @@
 import { BudgetExceededError, budgetOptionsFrom, receiptCost, startPaidRun, type BudgetRun, type PaidRequestGuard } from './budget-ledger.ts';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { existsSync, lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  closeSync, constants, existsSync, fstatSync, lstatSync, mkdirSync, mkdtempSync, openSync, readdirSync, readFileSync, readSync,
+  readlinkSync, realpathSync, rmSync, statSync, writeFileSync,
+} from 'node:fs';
 import { createHash } from 'node:crypto';
 import { PGLiteEngine } from 'gbrain/pglite-engine';
 import { configureGateway } from 'gbrain/ai/gateway';
@@ -95,8 +105,11 @@ import {
 
 // ─── Types over the committed fixtures ────────────────────────────────────
 
-export type Lane = 'verbatim' | 'facts' | 'dream';
-const ALL_LANES: Lane[] = ['verbatim', 'facts', 'dream'];
+type BuiltinLane = 'verbatim' | 'facts' | 'dream';
+/** A built-in lane or the external lane's name (--external-lane). */
+export type Lane = BuiltinLane | (string & {});
+const ALL_LANES: BuiltinLane[] = ['verbatim', 'facts', 'dream'];
+const isBuiltinLane = (lane: string): lane is BuiltinLane => (ALL_LANES as string[]).includes(lane);
 
 interface GoldFile {
   schema_version: number;
@@ -143,7 +156,9 @@ interface Opts {
   full: boolean;
   limit: number | null;
   json: boolean;
-  lanes: Lane[];
+  lanes: BuiltinLane[];
+  /** --external-lane NAME --external-dir DIR; dir is the resolved real path. */
+  externalLane: { name: string; dir: string } | null;
   transcripts: string[] | null;
   judgeCalibration: boolean;
   /** Optional explicit annotation file after --judge-calibration. */
@@ -178,27 +193,177 @@ export function firstHalf(text: string): string {
   return text.slice(0, cut > 0 ? cut + 1 : Math.floor(text.length / 2));
 }
 
+// ─── External lane ────────────────────────────────────────────────────────
+
+const EXTERNAL_LANE_NAME = /^[a-z][a-z0-9-]{0,31}$/;
+const SAFE_TRANSCRIPT_ID = /^[a-z0-9][a-z0-9-]*$/;
+/** Six times the longest published dream document (10.5 KB) and 2.5 times the longest transcript (26 KB). */
+export const EXTERNAL_DOC_MAX_BYTES = 64 * 1024;
+/**
+ * The grounding judge grades every claim of a document in one call with a
+ * 2,000-token answer and fails the whole batch if one verdict is missing; 80
+ * claims fit that answer, and the published dream documents peak at 62.
+ */
+export const EXTERNAL_DOC_MAX_CLAIMS = 80;
+export const EXTERNAL_PROVENANCE_NOTE =
+  'The harness read these documents from --external-dir as they were and has no record of how they were made: ' +
+  'which system, version, model, prompt or inputs produced them, or whether that system saw the answer keys. ' +
+  'This lane\'s scores are only as trustworthy as the documents, so a run with an external lane is never publishable.';
+
+/** The external lane name becomes a receipt key and part of artifact file names. */
+export function externalLaneNameError(name: string): string | null {
+  if (!EXTERNAL_LANE_NAME.test(name)) return `--external-lane '${name}' must match ${EXTERNAL_LANE_NAME.source}`;
+  if (isBuiltinLane(name) || name === 'none') return `--external-lane '${name}' is a built-in lane name`;
+  if (name in Object.prototype) return `--external-lane '${name}' is reserved`;
+  return null;
+}
+
+export interface ExternalDocs {
+  docs: Map<string, string>;
+  /** claims: sentences the grounding judge grades (segmentClaims skips code fences, headings and quotes, as for dream). */
+  files: Array<{ transcript_id: string; file: string; bytes: number; sha256: string; claims: number }>;
+  missing: string[];
+}
+
+/**
+ * Read DIR/<transcript_id>.md for each transcript, treating DIR as hostile
+ * output from another system. The folder is never listed; only names built
+ * from committed transcript ids are opened. A symlink (which could point at
+ * /proc/self/environ and send this process's keys to the judge), a
+ * non-regular file (a FIFO would hang the read), a hard-linked file, a file
+ * over maxBytes, invalid UTF-8 or more claims than the grounding judge can
+ * grade in one call throws, naming the file. A missing file is
+ * reported in `missing`; an empty file is a present document. sha256 covers
+ * the raw bytes, and the decoded text re-encodes to the same bytes. DIR must
+ * be a real path (realpathSync): it is opened without following a link, and a
+ * folder replaced after it was resolved is refused.
+ */
+export function readExternalDocs(
+  dir: string,
+  transcriptIds: string[],
+  maxBytes = EXTERNAL_DOC_MAX_BYTES,
+  maxClaims = EXTERNAL_DOC_MAX_CLAIMS,
+): ExternalDocs {
+  const { O_DIRECTORY, O_NOFOLLOW, O_NONBLOCK } = constants;
+  if (typeof O_DIRECTORY !== 'number' || typeof O_NOFOLLOW !== 'number' || typeof O_NONBLOCK !== 'number') {
+    throw new Error('this platform cannot open a file without following links');
+  }
+  const out: ExternalDocs = { docs: new Map(), files: [], missing: [] };
+  const decoder = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
+  let dirFd: number;
+  try {
+    dirFd = openSync(dir, constants.O_RDONLY | O_DIRECTORY | O_NOFOLLOW);
+  } catch (e) {
+    throw new Error(`--external-dir ${dir} could not be opened as a directory without following links (${(e as NodeJS.ErrnoException).code ?? 'error'})`);
+  }
+  try {
+    // On Linux every file is looked up through this one handle, so a folder
+    // renamed or swapped for a link after it was resolved cannot redirect a read.
+    const pinned = `/proc/self/fd/${dirFd}`;
+    const base = existsSync(pinned) ? pinned : dir;
+    const resolved = base === pinned ? readlinkSync(pinned) : dir;
+    if (resolved !== dir) throw new Error(`--external-dir now resolves to ${resolved}, not ${dir}`);
+    for (const tid of transcriptIds) {
+      if (!SAFE_TRANSCRIPT_ID.test(tid)) throw new Error(`transcript id '${tid}' is not a safe file name`);
+      const file = `${tid}.md`;
+      const path = join(base, file);
+      let st: ReturnType<typeof lstatSync>;
+      try {
+        st = lstatSync(path);
+      } catch (e) {
+        if ((e as NodeJS.ErrnoException).code !== 'ENOENT') throw e;
+        out.missing.push(tid);
+        continue;
+      }
+      if (st.isSymbolicLink()) throw new Error(`${file} is a symlink; copy the document into the folder`);
+      if (!st.isFile()) throw new Error(`${file} is not a regular file`);
+      if (st.nlink > 1) throw new Error(`${file} has ${st.nlink} hard links; copy the document into the folder`);
+      if (st.size > maxBytes) throw new Error(`${file} is ${st.size} bytes, over the ${maxBytes}-byte limit`);
+      let fd: number;
+      try {
+        fd = openSync(path, constants.O_RDONLY | O_NOFOLLOW | O_NONBLOCK);
+      } catch (e) {
+        throw new Error(`${file} could not be opened without following links (${(e as NodeJS.ErrnoException).code ?? 'error'})`);
+      }
+      const buf = Buffer.alloc(maxBytes + 1);
+      let n = 0;
+      try {
+        const fst = fstatSync(fd);
+        if (!fst.isFile() || fst.dev !== st.dev || fst.ino !== st.ino) throw new Error(`${file} changed while it was opened`);
+        while (n < buf.length) {
+          const r = readSync(fd, buf, n, buf.length - n, null);
+          if (r === 0) break;
+          n += r;
+        }
+      } finally {
+        closeSync(fd);
+      }
+      if (n > maxBytes) throw new Error(`${file} grew past the ${maxBytes}-byte limit while it was read`);
+      const bytes = buf.subarray(0, n);
+      let text: string;
+      try {
+        text = decoder.decode(bytes);
+      } catch {
+        throw new Error(`${file} is not valid UTF-8`);
+      }
+      const claims = segmentClaims(text).length;
+      if (claims > maxClaims) throw new Error(`${file} has ${claims} claims, over the ${maxClaims} the grounding judge grades in one call`);
+      out.docs.set(tid, text);
+      out.files.push({ transcript_id: tid, file, bytes: n, sha256: sha256(bytes), claims });
+    }
+    const after = lstatSync(dir);
+    const held = fstatSync(dirFd);
+    if (!after.isDirectory() || after.dev !== held.dev || after.ino !== held.ino) throw new Error(`--external-dir ${dir} was replaced while it was read`);
+  } finally {
+    closeSync(dirFd);
+  }
+  return out;
+}
+
 function parseOpts(): Opts {
   const a = process.argv.slice(2);
   const get = (flag: string) => {
     const i = a.indexOf(flag);
     return i >= 0 ? a[i + 1] : undefined;
   };
+  function refuse(msg: string): never {
+    process.stderr.write(`[cat35] ${msg}\n`);
+    process.exit(2);
+  }
   const lanesRaw = get('--lanes');
-  const lanes = lanesRaw
-    ? (lanesRaw.split(',').map((s) => s.trim()) as Lane[])
-    : [...ALL_LANES];
-  for (const l of lanes) {
-    if (!ALL_LANES.includes(l)) {
-      process.stderr.write(`[cat35] unknown lane '${l}' (valid: ${ALL_LANES.join(',')})\n`);
-      process.exit(2);
+  const requested = lanesRaw ? lanesRaw.split(',').map((s) => s.trim()) : [...ALL_LANES];
+  const noBuiltinLanes = requested.length === 1 && requested[0] === 'none';
+  const lanes: BuiltinLane[] = [];
+  for (const l of noBuiltinLanes ? [] : requested) {
+    if (!isBuiltinLane(l)) refuse(`unknown lane '${l}' (valid: ${ALL_LANES.join(',')}, or none alone with an external lane)`);
+    lanes.push(l);
+  }
+  let externalLane: Opts['externalLane'] = null;
+  const unknownExternal = a.find((x) => x.startsWith('--external-') && x !== '--external-lane' && x !== '--external-dir');
+  if (unknownExternal) refuse(`${unknownExternal}: write --external-lane NAME --external-dir DIR, each value after a space`);
+  if (a.includes('--external-lane') || a.includes('--external-dir')) {
+    const name = get('--external-lane');
+    const dirArg = get('--external-dir');
+    if (name === undefined || dirArg === undefined) refuse('--external-lane NAME and --external-dir DIR go together');
+    const nameError = externalLaneNameError(name);
+    if (nameError) refuse(nameError);
+    let dir: string;
+    try {
+      dir = realpathSync(dirArg);
+    } catch {
+      refuse(`--external-dir not found: ${dirArg}`);
     }
+    if (!statSync(dir).isDirectory()) refuse(`--external-dir is not a directory: ${dirArg}`);
+    externalLane = { name, dir };
+  } else if (noBuiltinLanes) {
+    refuse('--lanes none needs --external-lane NAME --external-dir DIR');
   }
   return {
     full: process.env.CAT35_FULL === '1',
     limit: get('--limit') ? Number(get('--limit')) : null,
     json: a.includes('--json'),
     lanes,
+    externalLane,
     transcripts: get('--transcripts') ? get('--transcripts')!.split(',').map((s) => s.trim()) : null,
     judgeCalibration: a.includes('--judge-calibration'),
     judgeCalibrationPath:
@@ -210,6 +375,7 @@ function parseOpts(): Opts {
     transcriptMode: (() => {
       const m = get('--transcript-mode') ?? 'real';
       if (m !== 'real' && m !== 'unrelated' && m !== 'half') { process.stderr.write(`[cat35] --transcript-mode must be real, unrelated or half\n`); process.exit(2); }
+      if (m !== 'real' && externalLane) refuse(`--transcript-mode ${m} applies to the dream lane only; it cannot run with an external lane`);
       return m as TranscriptMode;
     })(),
     preregistration: get('--preregistration') ?? null,
@@ -478,9 +644,14 @@ export function errorWs0Receipt(message: string, startedAt: string): Receipt {
   };
 }
 
-/** Completed run: the unit is one salient item judged in one lane; only a whole-corpus, all-lane full run is publishable. */
+/**
+ * Completed run: the unit is one salient item judged in one lane. Only a
+ * whole-corpus, all-lane full run is publishable, and never one that scored
+ * an external lane (the harness cannot vouch for those documents).
+ */
 export function completedWs0Receipt(args: {
   mode: string;
+  externalLane?: boolean;
   gatePass: boolean;
   perItem: PerItemRow[];
   errors: ProbeError[];
@@ -498,7 +669,7 @@ export function completedWs0Receipt(args: {
     n_scored: nScored,
     completion_rate: args.perItem.length ? nScored / args.perItem.length : 0,
     errors: args.errors,
-    publishable: args.mode === 'full',
+    publishable: args.mode === 'full' && !args.externalLane,
     resolved_config: args.resolvedConfig,
     judge: args.judge,
     data: args.data,
@@ -518,6 +689,11 @@ function closePaidRun(): void {
 
 async function main(runTmp: string, runStamp: Date): Promise<number> {
   const opts = parseOpts();
+  const external = opts.externalLane?.name ?? null;
+  const scoredLanes: Lane[] = external ? [...opts.lanes, external] : opts.lanes;
+  // The external lane takes the dream lane's output path: joint coverage,
+  // claim grounding, leakage confirmation, usability, hazards, quote fidelity.
+  const distilled = (lane: Lane) => lane === 'dream' || lane === external;
   const wallStart = Date.now();
   const startedAt = runStamp.toISOString();
   const setupError = (msg: string): number => {
@@ -632,6 +808,32 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
       return setupError(`input allowlist: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
+  // External documents are vetted before any spend; a hostile file refuses the
+  // run, and so does a gold id in a document (its system saw the answer keys).
+  let externalDocs: ExternalDocs | null = null;
+  if (opts.externalLane) {
+    try {
+      externalDocs = readExternalDocs(opts.externalLane.dir, fixtures.map((f) => f.gold.transcript_id));
+      for (const [tid, doc] of externalDocs.docs) {
+        assertCat35SutSource({ slug: `${tid}.md`, content: doc }, fixtures.map((f) => f.gold));
+      }
+    } catch (error) {
+      return setupError(`--external-dir: ${error instanceof Error ? error.message : String(error)}`);
+    }
+    if (!externalDocs.files.length) {
+      return setupError(`--external-dir has no <transcript_id>.md for any of the ${fixtures.length} selected transcripts`);
+    }
+  }
+  const externalLaneRecord = opts.externalLane && externalDocs
+    ? {
+        name: opts.externalLane.name,
+        dir: opts.externalLane.dir,
+        max_bytes: EXTERNAL_DOC_MAX_BYTES,
+        files: externalDocs.files,
+        missing: externalDocs.missing,
+        provenance: EXTERNAL_PROVENANCE_NOTE,
+      }
+    : null;
   // Mode integrity: 'full' is publication-eligible and therefore requires the
   // WHOLE corpus and ALL lanes. CAT35_FULL=1 plus any narrowing flag is a
   // deliberate partial run — receipts must say so (a cherry-picked subset
@@ -642,7 +844,7 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
     !opts.limit &&
     !opts.transcripts;
   const mode = opts.full ? (isWholeRun ? 'full' : 'partial') : 'b-pre-validity';
-  err(`mode=${mode} lanes=${opts.lanes.join(',')} transcripts=${fixtures.length} judge=${judgeModel}`);
+  err(`mode=${mode} lanes=${opts.lanes.join(',')}${external ? ` external=${external}` : ''} transcripts=${fixtures.length} judge=${judgeModel}`);
 
   // Pre-flight budget arithmetic (mid-call aborts are impossible; refuse to start instead).
   const nSignal = fixtures.filter((f) => f.gold.items.length > 0).length;
@@ -655,7 +857,8 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
   // 3 = grounding + leakage-confirm + usability per transcript (pessimistic;
   // hazard + joint-fallback calls ride inside the per-batch price).
   const EXTRA_JUDGE_BATCHES_PER_TRANSCRIPT = 3;
-  const judgeBatches = nSignal * opts.lanes.length + fixtures.length * EXTRA_JUDGE_BATCHES_PER_TRANSCRIPT;
+  const judgeBatches =
+    nSignal * scoredLanes.length + fixtures.length * EXTRA_JUDGE_BATCHES_PER_TRANSCRIPT * (external ? 2 : 1);
   const judgeEst =
     // Unknown judge models estimate at the EXPENSIVE rate (only haiku earns
     // the cheap estimate) — a pricier model must not sneak past pre-flight.
@@ -708,6 +911,19 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
       },
     ]),
   );
+
+  if (external && externalDocs) {
+    for (const [tid, st] of states) {
+      const doc = externalDocs.docs.get(tid);
+      if (doc === undefined) {
+        st.laneError[external] = `no ${tid}.md in --external-dir`;
+        continue;
+      }
+      st.laneDocs[external] = doc;
+      st.lanePages[external] = doc.trim() ? [{ slug: `external/${tid}`, body: doc }] : [];
+    }
+    err(`external[${external}]: ${externalDocs.files.length} documents, ${externalDocs.missing.length} missing`);
+  }
 
   // ── Lanes 1+2: Engine A (shared, production-faithful ordering) ──────────
   let factsBudgetExhausted = false;
@@ -864,7 +1080,7 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
   const halluc: Record<string, { claims: number; verifiable: number; ungrounded: number }> = {};
   const leakage: Record<string, { hits: number; confirmed: number }> = {};
   const usabilityPerTranscript: Array<{ transcript_id: string; lane: Lane; satisfied: number; total: number }> = [];
-  const hazardsOut: Array<{ hazard_id: string; transcript_id: string; type: string; violated: boolean | null }> = [];
+  const hazardsOut: Array<{ lane: Lane; hazard_id: string; transcript_id: string; type: string; violated: boolean | null }> = [];
 
   const judgeEvents: Array<{
     event_id: string;
@@ -913,10 +1129,16 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
   // server-reported model lands in the receipt's judge_models_resolved.
   resetJudgeModelsResolved();
 
-  for (const f of fixtures) {
+  // Built-in lanes over every transcript first, then the external lane, so the
+  // external lane's spend or provider errors cannot reach a built-in judge call.
+  const passes: Array<[Fixture, Lane[]]> = [
+    ...fixtures.map((f): [Fixture, Lane[]] => [f, opts.lanes]),
+    ...(external ? fixtures.map((f): [Fixture, Lane[]] => [f, [external]]) : []),
+  ];
+  for (const [f, lanes] of passes) {
     const tid = f.gold.transcript_id;
     const st = states.get(tid)!;
-    for (const lane of opts.lanes) {
+    for (const lane of lanes) {
       const doc = st.laneDocs[lane];
       const errored = st.laneError[lane];
 
@@ -932,7 +1154,7 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
               notability: it.notability,
               depth_bucket: it.depth_bucket,
               status: 'ABSENT',
-              joint: lane === 'dream' ? 0 : null,
+              joint: distilled(lane) ? 0 : null,
             });
           }
         } else {
@@ -947,7 +1169,7 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
           if (cov.judge_failed_ids.length) judgeFailures++;
           recordJudgeEvent(tid, lane, 'coverage', f.gold.items.map((i) => i.item_id), cov, cov.judge_failed_ids.length > 0);
           const byId = new Map(cov.verdicts.map((v) => [v.item_id, v]));
-          // Per-item joint (dream lane): evidence must appear in the doc AND
+          // Per-item joint (distilled lanes): evidence must appear in the doc AND
           // trace to the transcript; paraphrase evidence falls back to the
           // grounding judge.
           const jointFallback: Array<{ item_id: string; evidence: string }> = [];
@@ -956,7 +1178,7 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
             const failed = cov.judge_failed_ids.includes(it.item_id) || !v;
             const status = failed ? 'JUDGE_FAILED' : v!.status;
             let joint: number | null = null;
-            if (lane === 'dream' && !failed && v) {
+            if (distilled(lane) && !failed && v) {
               const credit = v.status === 'FULL' ? 1 : v.status === 'PARTIAL' ? 0.5 : 0;
               if (credit === 0) joint = 0;
               else {
@@ -981,9 +1203,13 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
               joint,
             });
           }
-          if (jointFallback.length && lane === 'dream') {
+          if (jointFallback.length && distilled(lane)) {
             const g = await scoreGrounding(
-              { label: `joint:${tid}`, claims: jointFallback.map((x) => x.evidence), transcript: f.transcriptText },
+              {
+                label: lane === 'dream' ? `joint:${tid}` : `joint:external:${tid}`,
+                claims: jointFallback.map((x) => x.evidence),
+                transcript: f.transcriptText,
+              },
               jcfg,
             );
             judgeCalls++;
@@ -1001,14 +1227,14 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
         }
       }
 
-      // Hallucination / claim precision (facts + dream lanes; ALL claims).
-      if ((lane === 'facts' || lane === 'dream') && doc && !errored) {
+      // Hallucination / claim precision (facts + distilled lanes; ALL claims).
+      if ((lane === 'facts' || distilled(lane)) && doc && !errored) {
         const claims =
           lane === 'facts'
             ? doc.split('\n').filter((l) => l.trim().startsWith('- ')).map((l) => l.replace(/^- \[[a-z]+\] /, '').trim())
             : segmentClaims(doc);
         if (claims.length) {
-          const g = await scoreGrounding({ label: `${lane}:${tid}`, claims, transcript: f.transcriptText }, jcfg);
+          const g = await scoreGrounding({ label: lane === external ? `external:${tid}` : `${lane}:${tid}`, claims, transcript: f.transcriptText }, jcfg);
           judgeCalls++;
           totalCost += g.cost_usd;
           if (g.judge_failed) judgeFailures++;
@@ -1030,7 +1256,7 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
         } else {
           groundingEvidence.push({ transcript_id: tid, lane, status: 'no_claims', judge_event_id: null, claims, results: [] });
         }
-      } else if (lane === 'facts' || lane === 'dream') {
+      } else if (lane === 'facts' || distilled(lane)) {
         groundingEvidence.push({
           transcript_id: tid, lane,
           status: errored ? 'lane_error' : doc == null ? 'missing_output' : 'empty_output',
@@ -1038,7 +1264,7 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
         });
       }
 
-      // Distractor leakage (mechanical scan; judge confirm on facts + dream).
+      // Distractor leakage (mechanical scan; judge confirm on every lane but verbatim).
       const distractorRows: typeof distractorEvidence = f.gold.distractors.map((d) => ({
         transcript_id: tid, lane, distractor_id: d.distractor_id, anchor: d.anchor,
         denominator_eligible: !errored && doc !== undefined,
@@ -1078,7 +1304,7 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
       distractorEvidence.push(...distractorRows);
 
       // Usability (page-producing lanes, conditional on emission).
-      if ((lane === 'verbatim' || lane === 'dream') && !errored) {
+      if ((lane === 'verbatim' || distilled(lane)) && !errored) {
         const pages = st.lanePages[lane] ?? [];
         if (pages.length) {
           const usabilityInput = {
@@ -1097,27 +1323,28 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
       }
     }
 
-    // Attribution hazards (dream lane): does the page-set assert the wrong claim?
-    if (opts.lanes.includes('dream') && f.gold.hazards.length) {
-      const doc = st.laneDocs.dream;
+    // Attribution hazards (distilled lanes): does the page-set assert the wrong claim?
+    for (const lane of lanes.filter(distilled)) {
+      const doc = st.laneDocs[lane];
       for (const h of f.gold.hazards) {
-        if (!doc || st.laneError.dream) {
-          hazardsOut.push({ hazard_id: h.hazard_id, transcript_id: tid, type: h.type, violated: null });
+        if (!doc || st.laneError[lane]) {
+          hazardsOut.push({ lane, hazard_id: h.hazard_id, transcript_id: tid, type: h.type, violated: null });
           continue;
         }
         const g = await scoreGrounding(
-          { label: `hazard:${h.hazard_id}`, claims: [h.wrong_claim], transcript: doc },
+          { label: lane === 'dream' ? `hazard:${h.hazard_id}` : `hazard:external:${h.hazard_id}`, claims: [h.wrong_claim], transcript: doc },
           jcfg,
         );
         judgeCalls++;
         totalCost += g.cost_usd;
-        recordJudgeEvent(tid, 'dream', 'hazard', [h.hazard_id], g, g.judge_failed);
+        recordJudgeEvent(tid, lane, 'hazard', [h.hazard_id], g, g.judge_failed);
         if (g.judge_failed) {
           judgeFailures++;
-          hazardsOut.push({ hazard_id: h.hazard_id, transcript_id: tid, type: h.type, violated: null });
+          hazardsOut.push({ lane, hazard_id: h.hazard_id, transcript_id: tid, type: h.type, violated: null });
         } else {
-          // grounded==true means the DREAM OUTPUT asserts the wrong claim → violation.
+          // grounded==true means the lane's OUTPUT asserts the wrong claim → violation.
           hazardsOut.push({
+            lane,
             hazard_id: h.hazard_id,
             transcript_id: tid,
             type: h.type,
@@ -1135,18 +1362,18 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
     coverage_by_kind: coverageByKind,
     coverage_by_notability: coverageByNotability,
     coverage_by_depth: coverageByDepth,
-  } = aggregateCoverage(perItem, opts.lanes, signalFixtures.map((f) => f.gold.transcript_id));
+  } = aggregateCoverage(perItem, scoredLanes, signalFixtures.map((f) => f.gold.transcript_id));
 
   // Quote fidelity + compression + emission.
   const quoteFid: Record<string, { total: number; grounded: number; rate: number }> = {};
   const compression: Record<string, number[]> = {};
   for (const f of fixtures) {
     const st = states.get(f.gold.transcript_id)!;
-    for (const lane of opts.lanes) {
+    for (const lane of scoredLanes) {
       const doc = st.laneDocs[lane];
       if (doc === undefined || st.laneError[lane]) continue;
       (compression[lane] ??= []).push(compressionRatio(doc, f.transcriptText));
-      if (lane === 'dream' && doc) {
+      if (distilled(lane) && doc) {
         const qf = quoteFidelity(doc, f.transcriptText);
         const bucket = (quoteFid[lane] ??= { total: 0, grounded: 0, rate: 0 });
         bucket.total += qf.total;
@@ -1158,6 +1385,7 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
     const b = quoteFid[lane];
     b.rate = b.total ? b.grounded / b.total : 1;
   }
+  if (external && quoteFid[external]?.total === 0) delete quoteFid[external];
   const compressionByLane: Record<string, number> = {};
   for (const [lane, arr] of Object.entries(compression)) {
     compressionByLane[lane] = arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
@@ -1188,8 +1416,9 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
       : { n: 0, mean: null, min: null, max: null };
   };
 
-  // Usability aggregate.
-  const usabAgg = usabilityPerTranscript.reduce(
+  // Usability aggregate over the built-in lanes; the external lane reports in usability_by_lane.
+  const builtinUsability = usabilityPerTranscript.filter((u) => isBuiltinLane(u.lane));
+  const usabAgg = builtinUsability.reduce(
     (acc, u) => ({ satisfied: acc.satisfied + u.satisfied, total: acc.total + u.total }),
     { satisfied: 0, total: 0 },
   );
@@ -1197,7 +1426,7 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
   // incompatible populations — the blended aggregate alone misleads any
   // consumer reading usability.rate.
   const usabilityByLane: Record<string, { satisfied: number; total: number; rate: number | null }> = {};
-  for (const lane of ['verbatim', 'dream'] as const) {
+  for (const lane of scoredLanes) {
     const rows = usabilityPerTranscript.filter((u) => u.lane === lane);
     const satisfied = rows.reduce((a, u) => a + u.satisfied, 0);
     const total = rows.reduce((a, u) => a + u.total, 0);
@@ -1210,7 +1439,7 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
     hallucination[lane] = { ...b, rate: b.verifiable ? b.ungrounded / b.verifiable : 0 };
   }
   const distractorLeakage: Record<string, { hits: number; confirmed: number; denominator: number; judge_failed: number; rate: number }> = {};
-  for (const lane of ALL_LANES) {
+  for (const lane of scoredLanes) {
     if (!leakage[lane]) continue;
     // Denominator excludes transcripts whose lane errored — a crashed lane
     // never had its distractors scanned, and counting them would bias the
@@ -1234,12 +1463,16 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
     };
   }
 
-  const judgeFailedRate = judgeCalls ? judgeFailures / judgeCalls : 0;
+  // The judge gate covers the built-in lanes, so an external document's judge
+  // failures cannot move it; the external lane gets a gate of its own.
+  const failedRate = (events: typeof judgeEvents) => (events.length ? events.filter((e) => e.judge_failed).length / events.length : 0);
+  const judgeFailedRate = failedRate(judgeEvents.filter((e) => isBuiltinLane(e.lane)));
+  const externalJudgeFailedRate = external ? failedRate(judgeEvents.filter((e) => e.lane === external)) : null;
 
   // ── E1: prior-run delta ─────────────────────────────────────────────────
   mkdirSync(REPORT_DIR, { recursive: true });
   const headline: Record<string, number> = {};
-  for (const [lane, c] of Object.entries(coverageByLane)) headline[`${lane}_macro`] = c.macro;
+  for (const [lane, c] of Object.entries(coverageByLane)) if (isBuiltinLane(lane)) headline[`${lane}_macro`] = c.macro;
   let priorRun: { path: string; timestamp: string; gbrain_version: string } | null = null;
   let priorRunSkippedReason: string | undefined;
   let deltas: Record<string, { prior: number; current: number; delta: number }> | null = null;
@@ -1335,7 +1568,7 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
       const priorItems = new Map(
         ((prior.per_item ?? []) as PerItemRow[]).map((r) => [`${r.lane}:${r.transcript_id}:${r.item_id}`, r.status]),
       );
-      for (const r of perItem) {
+      for (const r of perItem.filter((row) => isBuiltinLane(row.lane))) {
         const p = priorItems.get(`${r.lane}:${r.transcript_id}:${r.item_id}`);
         if (p && p !== r.status) {
           itemFlips.push({ lane: r.lane, transcript_id: r.transcript_id, item_id: r.item_id, prior: p, current: r.status });
@@ -1425,6 +1658,7 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
         ? emission.rate >= 0.7
         : emission.emitted >= 1
       : null,
+    ...(externalJudgeFailedRate === null ? {} : { external_judge_failed_rate: externalJudgeFailedRate < 0.05 }),
   };
   const gatePass = Object.values(gates).every((g) => g !== false);
 
@@ -1483,6 +1717,7 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
       dream_concurrency: DREAM_CONCURRENCY,
     },
     lanes: opts.lanes,
+    external_lane: externalLaneRecord,
     transcripts: fixtures.map((f) => f.gold.transcript_id),
     signal_transcripts: signalFixtures.length,
     per_item: perItem,
@@ -1491,13 +1726,14 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
     coverage_by_notability: coverageByNotability,
     coverage_by_depth: coverageByDepth,
     verbatim_quote_fidelity: quoteFid.dream ?? { total: 0, grounded: 0, rate: 1 },
+    quote_fidelity_by_lane: quoteFid,
     hallucination,
     distractor_leakage: distractorLeakage,
     usability: {
       satisfied: usabAgg.satisfied,
       total: usabAgg.total,
       rate: usabAgg.total ? usabAgg.satisfied / usabAgg.total : null,
-      per_transcript: usabilityPerTranscript,
+      per_transcript: builtinUsability,
     },
     usability_by_lane: usabilityByLane,
     emission,
@@ -1543,14 +1779,15 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
   writeFileSync(receiptPath, JSON.stringify(receipt, null, 2) + '\n');
   const completed = completedWs0Receipt({
     mode,
+    externalLane: externalLaneRecord !== null,
     gatePass,
-    perItem,
+    perItem: perItem.filter((r) => isBuiltinLane(r.lane)),
     errors: [
       ...judgeEvents
-        .filter((e) => e.judge_failed)
+        .filter((e) => e.judge_failed && isBuiltinLane(e.lane))
         .map((e) => ({ probe_id: `${e.transcript_id}:${e.lane}:${e.purpose}`, origin: 'judge' as const, message: `judge failed after retry (${e.event_id})` })),
       ...[...states.entries()].flatMap(([tid, st]) =>
-        Object.entries(st.laneError).map(([lane, msg]) => ({ probe_id: `${tid}:${lane}`, origin: 'sut' as const, message: String(msg).slice(0, 500) })),
+        Object.entries(st.laneError).filter(([lane]) => isBuiltinLane(lane)).map(([lane, msg]) => ({ probe_id: `${tid}:${lane}`, origin: 'sut' as const, message: String(msg).slice(0, 500) })),
       ),
     ],
     resolvedConfig: {
@@ -1560,6 +1797,7 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
       corpus_sha: corpusSha,
       judge_prompt_version: CAT35_JUDGE_PROMPT_VERSION,
       input_allowlist: CAT35_BOUNDARIES,
+      external_lane: externalLaneRecord,
       ...receipt.config_snapshot,
       detailed_receipt: receiptPath,
     },
@@ -1580,7 +1818,7 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
   const artifactsDir = join(REPORT_DIR, `${stamp}-artifacts`);
   mkdirSync(artifactsDir, { recursive: true });
   for (const [tid, st] of states) {
-    for (const lane of opts.lanes) {
+    for (const lane of scoredLanes) {
       const doc = st.laneDocs[lane];
       if (doc !== undefined) writeFileSync(join(artifactsDir, `${tid}.${lane}.md`), doc ?? '');
     }
@@ -1613,6 +1851,9 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
   }
   if (usabAgg.total) err(`usability checklist: ${usabAgg.satisfied}/${usabAgg.total} (${((usabAgg.satisfied / usabAgg.total) * 100).toFixed(0)}%)`);
   err(`emission: ${emission.emitted}/${emission.expected_high} expected-high produced pages`);
+  if (externalLaneRecord) {
+    err(`external lane ${externalLaneRecord.name}: ${externalLaneRecord.files.length} documents (sha256 in the receipt), ${externalLaneRecord.files.reduce((n, f) => n + f.claims, 0)} gradable claims, ${externalLaneRecord.missing.length} missing, judge_failed_rate ${((externalJudgeFailedRate ?? 0) * 100).toFixed(1)}%; not publishable, the harness has no record of how they were made`);
+  }
   err(`judge_failed_rate: ${(judgeFailedRate * 100).toFixed(1)}%  cost: $${totalCost.toFixed(2)} (judges+facts; dream-lane spend not surfaced)  wall: ${receipt.wall_seconds}s`);
   if (deltas) {
     for (const [k, d] of Object.entries(deltas)) err(`delta ${k}: ${(d.prior * 100).toFixed(1)}% → ${(d.current * 100).toFixed(1)}% (${d.delta >= 0 ? '+' : ''}${(d.delta * 100).toFixed(1)}pp, informational)`);
