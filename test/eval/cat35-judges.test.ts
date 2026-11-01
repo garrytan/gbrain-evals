@@ -593,6 +593,16 @@ describe('cached input counts at the judge model\'s own rates', () => {
     expect(r.cost_usd).toBeCloseTo((r.input_tokens * 4 + r.output_tokens * 20) / 1e6, 10);
   });
 
+  // Value: protects=an OpenAI judge's cached input, which the shim reports inside input_tokens and itemizes in input_tokens_details, is weighted at its own cache rate like Anthropic's; fails_when=the count reads only Anthropic's cache_creation_input_tokens and cache_read_input_tokens fields, so cached OpenAI input counts at 1.0x; why_new=red-team finding on the #220 fix; seam=none; no_claim=stub client returning shim-shaped usage, list prices from the ledger table
+  test('an OpenAI judge weights its cached input, reported inside input_tokens, at 0.05x', async () => {
+    const shimUsage = { input_tokens: 3000, output_tokens: 100, input_tokens_details: { cached_tokens: 2000 } } as unknown as StubResponse['usage'];
+    const { client } = makeStubClient([toolUse('score_salient_items', { items: ITEMS.map((i) => ({ item_id: i.item_id, status: 'FULL', evidence: 'ok' })) }, shimUsage)]);
+    const r = await scoreSalienceCoverage(coverageArgs(), { client, model: 'gpt-6.1-sol' });
+    expect(r.input_tokens).toBe(1000 + 2000 * 0.05);
+    expect(r.cost_usd).toBeCloseTo((1000 * 2 + 2000 * 0.1 + 100 * 10) / 1e6, 10);
+    expect(r.cost_usd).toBeCloseTo((r.input_tokens * 2 + r.output_tokens * 10) / 1e6, 10);
+  });
+
   // Value: protects=the default Haiku 5.5 judge's input count is unchanged by the per-model weights; fails_when=the weights change the count for a model whose cache rates are 1.25x and 0.1x input; why_new=the formula now reads the model's own rates (#220); seam=none; no_claim=stub client
   test('the default Haiku 5.5 judge keeps the 1.25x and 0.1x weights', async () => {
     const { client } = makeStubClient([coverage()]);

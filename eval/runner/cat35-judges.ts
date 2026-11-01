@@ -223,17 +223,22 @@ async function callJudgeOnce(
     output_tokens?: number;
     cache_creation_input_tokens?: number;
     cache_read_input_tokens?: number;
+    input_tokens_details?: { cached_tokens?: number; cache_write_tokens?: number };
   };
   const output_tokens = usage.output_tokens ?? 0;
   const cost_usd = priceOf(price, response);
-  // Cache tokens are billed separately and are NOT included in
-  // usage.input_tokens. The input count weights them by this model's own
-  // cache rates relative to its input rate (Haiku 5.5 writes at 1.25x and
-  // reads at 0.1x; Opus 5.5 reads at 0.05x), the rates cost_usd uses.
+  // Anthropic reports cache writes and reads beside usage.input_tokens; an
+  // OpenAI judge (through openai-judge-shim) counts them inside input_tokens
+  // and itemizes them in input_tokens_details, the fields usageCost reads.
+  // The input count weights them by this model's own cache rates relative to
+  // its input rate (Haiku 5.5 writes at 1.25x and reads at 0.1x; Opus 5.5 and
+  // gpt-6.1-sol read at 0.05x), the rates cost_usd uses.
+  const openaiRead = usage.input_tokens_details?.cached_tokens ?? 0;
+  const openaiWrite = usage.input_tokens_details?.cache_write_tokens ?? 0;
   const input_tokens = Math.round(
-    (usage.input_tokens ?? 0) +
-      (usage.cache_creation_input_tokens ?? 0) * ((price.cache_write ?? price.input) / price.input) +
-      (usage.cache_read_input_tokens ?? 0) * ((price.cache_read ?? price.input) / price.input),
+    (usage.input_tokens ?? 0) - openaiRead - openaiWrite +
+      ((usage.cache_creation_input_tokens ?? 0) + openaiWrite) * ((price.cache_write ?? price.input) / price.input) +
+      ((usage.cache_read_input_tokens ?? 0) + openaiRead) * ((price.cache_read ?? price.input) / price.input),
   );
   cfg?.evidence?.push({
     tool: tool.name,
