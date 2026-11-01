@@ -14,7 +14,7 @@
  *
  *   bun eval/runner/chronicle-lift.ts corpus --out <dir>                    # render the vault only, $0
  *   bun eval/runner/chronicle-lift.ts run --out <dir> --budget-usd <n> [--arms off,on-a,on-b] [--repeats 2]
- *        [--model claude-sonnet-5-5] [--questions <ids>] [--qa-arms off,on-a] [--no-qa]
+ *        [--model claude-opus-5-5] [--questions <ids>] [--qa-arms off,on-a] [--no-qa]
  *        (`--arms none` reuses the brains an earlier run built in --out; a finished agent cell is never rerun.
  *        A cell is finished only for the same answer identity: agent model, turn cap, gbrain under test,
  *        questions file and the arm's brain build. An --out holding answers from another identity, or from a brain
@@ -44,7 +44,7 @@ import { runAgent, type Arm, type SubmitPayload, type ToolSpec } from './cat40/l
 import { gbrainSpecFrom, overlaySummary, resolveGbrainUnderTest } from './gbrain-under-test.ts';
 
 export const LIFT_VERSION = 'chronicle-lift-v1';
-export const DEFAULT_AGENT_MODEL = 'claude-sonnet-5-5';
+export const DEFAULT_AGENT_MODEL = 'claude-opus-5-5';
 const REPO = resolve(import.meta.dir, '../..');
 const CORPUS = join(REPO, 'eval/data/amara-life-v1');
 const LABELS = join(REPO, 'eval/data/chronicle-lift-v1');

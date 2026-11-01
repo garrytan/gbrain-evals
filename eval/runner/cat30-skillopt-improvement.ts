@@ -72,21 +72,23 @@ export const IMPROVE_MARGIN = 0.05;
 export const BPRE_BASELINE_CEILING = 0.95;
 
 /**
- * Default models for Cats 30-33. The target runs the skill and is deliberately
- * the weak model, so an optimized skill has room to improve; the optimizer
- * proposes rewrites; strong is the other end of the Cat 33 transfer pairs, so
- * it must be stronger than the target. judge is every LLM judge (Cat 32's
- * held-out quality judge) and the judge model each category hands gbrain.
- * Every target is a Claude model, so the judge comes from another family: no
- * model judges its own family's counted rows (Captain rule GST-767, applied
- * here 2026-11-01; Cat 32's judge was strong, and Cats 30, 31 and 33 named the
- * target, before then).
+ * Default models for Cats 30-33. gbrain and gstack are built for frontier
+ * models (CLAUDE.md "Choose models"), so the target that runs the skill is the
+ * newest frontier Opus, and the optimizer proposes rewrites with it in every
+ * mode. transfer is the other end of the Cat 33 transfer pairs, the newest
+ * frontier GPT, so a skill crosses model families in both directions. Until
+ * 2026-11-01 the target and the B-pre optimizer were Haiku 5.5, kept weak so an
+ * optimized skill had room to improve, and the pairs ran between Haiku 5.5 and
+ * Sonnet 5.5. judge is every LLM judge (Cat 32's held-out quality judge) and
+ * the judge model each category hands gbrain. It comes from outside the
+ * target's family: no model judges its own family's counted rows (Captain rule
+ * GST-767). Cat 33 scores with rule and retrieval judges only, so its GPT end
+ * makes no judge call.
  */
 export const SKILLOPT_MODELS = {
-  target: 'anthropic:claude-haiku-5-5',
+  target: 'anthropic:claude-opus-5-5',
   optimizer: 'anthropic:claude-opus-5-5',
-  bpreOptimizer: 'anthropic:claude-haiku-5-5',
-  strong: 'anthropic:claude-sonnet-5-5',
+  transfer: 'openai:gpt-6.1-sol',
   judge: 'openai:gpt-6.1-sol',
 } as const;
 
@@ -477,7 +479,7 @@ export async function runCat30(options: Cat30Options = {}): Promise<Cat30RunResu
   const bpre = options.bpre ?? false;
   const stub = options.stubLlm ?? false;
   const targetModel = options.targetModel ?? SKILLOPT_MODELS.target;
-  const optimizerModel = options.optimizerModel ?? (bpre ? SKILLOPT_MODELS.bpreOptimizer : SKILLOPT_MODELS.optimizer);
+  const optimizerModel = options.optimizerModel ?? SKILLOPT_MODELS.optimizer;
   const judgeModel = options.judgeModel ?? SKILLOPT_MODELS.judge; // skillopt-v1 has rule and qrels judges only
   const epochs = options.epochs ?? (bpre ? 1 : 2);
   const batchSize = options.batchSize ?? 5;

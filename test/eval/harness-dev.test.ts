@@ -1,5 +1,5 @@
 /**
- * The harness dev lane's models (GST-758): new dev cells read with the newest Sonnet and are judged by gpt-6.1-sol,
+ * The harness dev lane's models (GST-758, GST-798): new dev cells read with the newest Opus and are judged by gpt-6.1-sol,
  * BEAM keeps the judge its pinned harness fixes, and the scripts that reproduce the October 5 dev phase pin the models
  * that phase ran on instead of taking the new defaults.
  */
@@ -15,9 +15,9 @@ const track = (over: Partial<Track> = {}): Track => ({
 });
 
 describe('harness dev lane models', () => {
-  test('a dev cell reads with claude-sonnet-5-5 and is judged by gpt-6.1-sol, except BEAM, whose harness fixes its judge', () => {
-    expect(devSpec(track(), 8000, {}, 10).models).toEqual({ answer: 'anthropic:claude-sonnet-5-5', judge: 'openai:gpt-6.1-sol' });
-    expect(devSpec(track({ dataset: 'beam', split: '100k' }), 8000, {}, 10).models).toEqual({ answer: 'anthropic:claude-sonnet-5-5', judge: 'gemini:gemini-3.5-flash' });
+  test('a dev cell reads with claude-opus-5-5 and is judged by gpt-6.1-sol, except BEAM, whose harness fixes its judge', () => {
+    expect(devSpec(track(), 8000, {}, 10).models).toEqual({ answer: 'anthropic:claude-opus-5-5', judge: 'openai:gpt-6.1-sol' });
+    expect(devSpec(track({ dataset: 'beam', split: '100k' }), 8000, {}, 10).models).toEqual({ answer: 'anthropic:claude-opus-5-5', judge: 'gemini:gemini-3.5-flash' });
   });
 
   test('a track can name its own answer model and judge (--answer, --judge)', () => {

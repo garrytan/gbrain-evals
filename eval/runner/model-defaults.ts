@@ -1,10 +1,11 @@
 /**
  * Which models a live category may name as its default (CLAUDE.md "Choose models"), and the defaults that keep an
- * older model on purpose.
+ * older model, or a Sonnet or Haiku model under test, on purpose.
  *
  * test/eval/model-defaults.test.ts imports every registered default and fails when one outside
- * DEFAULT_MODEL_EXCEPTIONS is not a current-generation model, or when an exception no longer names what the code
- * uses. Changing a default is a new receipt identity: never pool its results with the old model's.
+ * DEFAULT_MODEL_EXCEPTIONS is not a current-generation model, when a model under test outside them is a Sonnet or
+ * Haiku model, or when an exception no longer names what the code uses. Changing a default is a new receipt identity:
+ * never pool its results with the old model's.
  */
 
 /** Current-generation ids, without provider prefix or dated snapshot suffix (checked 2026-11-01). */
@@ -31,6 +32,15 @@ export function defaultModelProblem(model: string): string | null {
   return CURRENT_GENERATION.includes(id) ? null : `${model} is not a current-generation model`;
 }
 
+/**
+ * Why `model` cannot be a live category's default model under test (an agent, reader, answer, think or extraction
+ * model, an optimizer or an optimization target), or null when it can. gbrain and gstack are built for frontier
+ * models, so Sonnet and Haiku are never models under test (Garry, 2026-11-01). Judges are not models under test.
+ */
+export function underTestModelProblem(model: string): string | null {
+  return /^claude-(?:sonnet|haiku)-/.test(bareModelId(model)) ? `${model}: Sonnet and Haiku are never models under test` : null;
+}
+
 export interface DefaultModelException {
   /** The models the code uses, in the order the test reads them. */
   models: readonly string[];
@@ -38,7 +48,10 @@ export interface DefaultModelException {
   reason: string;
 }
 
-/** Keyed by the names test/eval/model-defaults.test.ts gives the defaults it reads. */
+/**
+ * Keyed by the names test/eval/model-defaults.test.ts gives the defaults it reads. An exception covers both rules: a
+ * frozen protocol, a product-default mirror or a pinned harness keeps whatever model it names.
+ */
 export const DEFAULT_MODEL_EXCEPTIONS: Readonly<Record<string, DefaultModelException>> = {
   'memory-qa lme-s reader and judge': {
     models: ['openai:gpt-4o-2024-08-06', 'openai:gpt-4o-2024-08-06'], kind: 'frozen-protocol',

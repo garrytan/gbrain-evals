@@ -15,7 +15,7 @@
  *   2. Does a defined answerer abstain on unanswerable questions without
  *      refusing answerable ones? gbrain has no keyless answerer, so the
  *      answerer is gbrain's house reader used as a fixed harness reader
- *      (src/eval/longmemeval/reader.ts notes-mode system text, sonnet-5-5,
+ *      (src/eval/longmemeval/reader.ts notes-mode system text, opus-5-5,
  *      1,024 output tokens, the provider's default temperature), paid. It reads the top five
  *      query results (retrieved arm) and, as a matched control, the oracle
  *      evidence from the ledger (oracle arm). Answers are scored
@@ -57,10 +57,10 @@ import {
 } from '../generators/a4-abstention-gen.ts';
 
 export const CATEGORY = 'a4-abstention';
-export const READER_MODEL = 'anthropic:claude-sonnet-5-5';
+export const READER_MODEL = 'anthropic:claude-opus-5-5';
 const DEFAULT_READER_MODEL = READER_MODEL;
 export const READER_MAX_TOKENS = 1024;
-export const PAID_ESTIMATE_USD = 3;
+export const PAID_ESTIMATE_USD = 4;
 const TOP_K = 5;
 const CONCURRENCY = 6;
 
