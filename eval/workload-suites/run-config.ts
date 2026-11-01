@@ -11,7 +11,7 @@
  * newest and update this file in a commit that runs nothing.
  */
 import { COMPAT_PROVIDERS, modelsNotRun } from '../runner/providers/openai-compatible.ts';
-import { SMOKE_ONLY_READERS } from '../runner/systems/baselines.ts';
+import { FRONTIER_READERS, SMOKE_ONLY_READERS } from '../runner/systems/baselines.ts';
 import { sha256 } from './common.ts';
 import type { SuiteBundle, SuiteId } from './types.ts';
 
@@ -26,18 +26,18 @@ export const workloadModelsNotRun = (routed: readonly string[] = ROUTED_PROVIDER
 
 export const MODEL_CONFIG = {
   status: 'placeholder: confirm newest models and freeze in the preregistration before any paid cell',
-  checked: '2026-10-05',
+  checked: '2026-11-01',
   fixed_reader: { id: 'anthropic:claude-sonnet-5-5', family: 'sonnet' } as ModelRef,
   frontier_sweep: [
     { id: 'anthropic:claude-opus-5-5', family: 'opus' },
-    { id: 'openai:gpt-6-astra', family: 'gpt' },
+    { id: 'openai:gpt-6.1-sol', family: 'gpt' },
     { id: 'anthropic:claude-sonnet-5-5', family: 'sonnet' },
     { id: 'particle:particle-1', family: 'particle' },
   ] as ModelRef[],
   /** Readers allowed only in a labeled smoke run (`bench.ts --smoke N --models ...`), never in a counted cell: Fable (CLAUDE.md). */
   smoke_only_readers: [...SMOKE_ONLY_READERS] as string[],
-  /** The alternate newest GPT, re-reading the same frontier subset when the budget allows (it is also the judge model). */
-  alternate_readers: [{ id: 'openai:gpt-6.1-sol', family: 'gpt' }] as ModelRef[],
+  /** gpt-6-astra re-reads the same frontier subset when the budget allows. It is an alternate reader, never a counted frontier reader: the sweep's GPT is gpt-6.1-sol (CLAUDE.md). */
+  alternate_readers: [{ id: 'openai:gpt-6-astra', family: 'gpt' }] as ModelRef[],
   /** Judges only answers the deterministic scorer marks `ambiguous` (both the gold and a stale or distractor value named). */
   judge: { id: 'openai:gpt-6.1-sol', family: 'gpt' } as ModelRef,
   /** Fraction of each category's questions in the frontier sweep, chosen by hash order of query id. */
@@ -71,8 +71,7 @@ export function modelRuleViolations(config: { fixed_reader: ModelRef; frontier_s
     if (EXCLUDED.some(re => re.test(m.id))) out.push(`${m.id} is an excluded or older-generation model`);
     if ((SMOKE_ONLY_READERS as readonly string[]).includes(m.id)) out.push(`${m.id} is smoke-only and never reads or judges a counted cell`);
   }
-  const families = new Set(config.frontier_sweep.map(m => m.family));
-  for (const f of ['opus', 'gpt', 'sonnet'] as const) if (!families.has(f)) out.push(`frontier sweep has no ${f} model`);
+  for (const id of FRONTIER_READERS) if (!config.frontier_sweep.some(m => m.id === id)) out.push(`frontier sweep has no ${id}, one of the newest frontier readers (FRONTIER_READERS)`);
   if (config.fixed_reader.family !== 'sonnet') out.push('the fixed reader must be the newest frontier Sonnet');
   if (config.judge.id.startsWith('particle:')) out.push(`${config.judge.id} never judges a counted cell`);
   if (!config.frontier_sweep.some(m => m.id === config.fixed_reader.id)) out.push('the fixed reader must be the sweep\'s Sonnet so the sweep shares one anchor');

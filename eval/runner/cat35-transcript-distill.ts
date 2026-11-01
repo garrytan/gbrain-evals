@@ -45,7 +45,7 @@
 
 // First import: the budget ledger replaces globalThis.fetch with its
 // delegating fetch before any gbrain or SDK module can capture fetch.
-import { BudgetExceededError, budgetOptionsFrom, receiptCost, startPaidRun, type BudgetRun, type PaidRequestGuard } from './budget-ledger.ts';
+import { BudgetExceededError, budgetOptionsFrom, receiptCost, reservationUsd, startPaidRun, type BudgetRun, type PaidRequestGuard } from './budget-ledger.ts';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import {
@@ -87,7 +87,7 @@ import {
   type Cat35JudgeAttempt,
   type CoverageVerdict,
 } from './cat35-judges.ts';
-import { JUDGE_TEMPERATURE, judgePrice } from './judge.ts';
+import { escapeUntrusted, JUDGE_TEMPERATURE, judgePrice } from './judge.ts';
 import {
   BENCHMARK_VERSION,
   RECEIPT_SCHEMA_VERSION,
@@ -98,8 +98,8 @@ import {
 } from './receipt.ts';
 import { gbrainPin, gbrainVersion } from './gbrain-version.ts';
 import { attestPreregistration } from './prereg.ts';
-import { judgeTransport } from './openai-judge-shim.ts';
-import { temperatureSent, toolChoiceSent } from './anthropic-request.ts';
+import { isOpenAIModel, judgeTransport, OPENAI_JUDGE_MIN_OUTPUT_TOKENS } from './openai-judge-shim.ts';
+import { temperatureSent, toolChoiceSent, withThinkingRoom } from './anthropic-request.ts';
 import {
   assertCat35CoverageInput, assertCat35LeakInput, assertCat35SutSource, assertCat35UsabilityInput, CAT35_BOUNDARIES,
 } from './evaluator/judge-inputs.ts';
@@ -217,6 +217,50 @@ export const EXTERNAL_PROVENANCE_NOTE =
   'which system, version, model, prompt or inputs produced them, or whether that system saw the answer keys. ' +
   'This lane\'s scores are only as trustworthy as the documents, so a run with an external lane is never publishable.';
 
+/**
+ * The prompt around one judge call's document or conversation: system prompt, tool schema, gold
+ * items or distractor hits, and framing. The largest, coverage over ten items, is 3.6 KB.
+ */
+const JUDGE_CALL_FIXED_BYTES = 4096;
+/** One evidence quote in the joint-evidence call: up to 200 characters, each at most 6 bytes JSON-encoded, and its index. */
+const EVIDENCE_QUOTE_MAX_BYTES = 200 * 6 + 16;
+
+/**
+ * Worst-case judge spend on the external lane, priced from the documents read rather than at the
+ * per-batch figure set for dream documents, which peak at 10.5 KB. It sums what the budget ledger
+ * reserves for every judge attempt the documents can cause. A signal conversation's document goes
+ * to the coverage judge, even when empty. A non-empty document also goes to the usability and
+ * distractor judges and to one hazard call per planted hazard, its claims and the conversation to
+ * the grounding judge, and the conversation and one evidence quote per item to the joint-evidence
+ * fallback. Text counts as the judge receives it (escaped, each claim JSON-encoded), at the
+ * ledger's 3 bytes per token; every attempt reserves the full answer (cat35-judges' 2,000 tokens,
+ * with the room a Claude 5 judge thinks in or the OpenAI shim's floor), and every judge retries
+ * once. The Anthropic SDK's own transport retries under an attempt are not counted (#258).
+ */
+export function externalJudgeEstimateUsd(
+  docs: Array<{ document: string; transcript: string; items: number; distractors: number; hazards: number }>,
+  judgeModel: string,
+): number {
+  const maxOutputTokens = Math.max(withThinkingRoom(judgeModel, 2000), isOpenAIModel(judgeModel) ? OPENAI_JUDGE_MIN_OUTPUT_TOKENS : 0);
+  const price = { ...judgePrice(judgeModel), cacheWritePremium: true, maxOutputTokens };
+  const escaped = (text: string) => Buffer.byteLength(escapeUntrusted(text));
+  let usd = 0;
+  for (const d of docs) {
+    const doc = escaped(d.document);
+    const transcript = escaped(d.transcript);
+    const claims = segmentClaims(d.document);
+    const calls = d.items ? [doc] : [];
+    if (d.document) {
+      calls.push(doc, ...Array<number>(d.hazards).fill(doc));
+      if (d.distractors) calls.push(doc);
+      if (claims.length) calls.push(escaped(claims.map((c, i) => `  ${i}: ${JSON.stringify(c)}`).join('\n')) + transcript);
+      if (d.items) calls.push(transcript + d.items * EVIDENCE_QUOTE_MAX_BYTES);
+    }
+    for (const bytes of calls) usd += 2 * reservationUsd({ ...price, inputTokens: Math.ceil((bytes + JUDGE_CALL_FIXED_BYTES) / 3) });
+  }
+  return usd;
+}
+
 /** The external lane name becomes a receipt key and part of artifact file names. */
 export function externalLaneNameError(name: string): string | null {
   if (!EXTERNAL_LANE_NAME.test(name)) return `--external-lane '${name}' must match ${EXTERNAL_LANE_NAME.source}`;
@@ -242,14 +286,18 @@ export interface ExternalDocs {
  * grade in one call throws, naming the file. A missing file is
  * reported in `missing`; an empty file is a present document. sha256 covers
  * the raw bytes, and the decoded text re-encodes to the same bytes. DIR must
- * be a real path (realpathSync): it is opened without following a link, and a
- * folder replaced after it was resolved is refused.
+ * be a real path (realpathSync): it is opened without following a link, every
+ * file is read through that handle's path under fdDir (Linux's /proc/self/fd),
+ * and a folder replaced after it was resolved is refused. A system with no
+ * such path is refused before any file is opened: Bun has no openat, and a
+ * read by path could follow a folder swapped and restored mid-read.
  */
 export function readExternalDocs(
   dir: string,
   transcriptIds: string[],
   maxBytes = EXTERNAL_DOC_MAX_BYTES,
   maxClaims = EXTERNAL_DOC_MAX_CLAIMS,
+  fdDir = '/proc/self/fd',
 ): ExternalDocs {
   const { O_DIRECTORY, O_NOFOLLOW, O_NONBLOCK } = constants;
   if (typeof O_DIRECTORY !== 'number' || typeof O_NOFOLLOW !== 'number' || typeof O_NONBLOCK !== 'number') {
@@ -264,16 +312,18 @@ export function readExternalDocs(
     throw new Error(`--external-dir ${dir} could not be opened as a directory without following links (${(e as NodeJS.ErrnoException).code ?? 'error'})`);
   }
   try {
-    // On Linux every file is looked up through this one handle, so a folder
-    // renamed or swapped for a link after it was resolved cannot redirect a read.
-    const pinned = `/proc/self/fd/${dirFd}`;
-    const base = existsSync(pinned) ? pinned : dir;
-    const resolved = base === pinned ? readlinkSync(pinned) : dir;
+    // Every file is looked up through this one handle, so a folder renamed or
+    // swapped for a link after it was resolved cannot redirect a read.
+    const pinned = join(fdDir, String(dirFd));
+    if (!existsSync(pinned)) {
+      throw new Error(`this system has no ${fdDir} to read --external-dir through the folder handle it holds, and a read by path could follow a folder swapped mid-run; the external lane runs on Linux`);
+    }
+    const resolved = readlinkSync(pinned);
     if (resolved !== dir) throw new Error(`--external-dir now resolves to ${resolved}, not ${dir}`);
     for (const tid of transcriptIds) {
       if (!SAFE_TRANSCRIPT_ID.test(tid)) throw new Error(`transcript id '${tid}' is not a safe file name`);
       const file = `${tid}.md`;
-      const path = join(base, file);
+      const path = join(pinned, file);
       let st: ReturnType<typeof lstatSync>;
       try {
         st = lstatSync(path);
@@ -867,16 +917,28 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
   // hazard + joint-fallback calls ride inside the per-batch price).
   const EXTRA_JUDGE_BATCHES_PER_TRANSCRIPT = 3;
   const judgeBatches =
-    nSignal * scoredLanes.length + fixtures.length * EXTRA_JUDGE_BATCHES_PER_TRANSCRIPT * (external ? 2 : 1);
+    nSignal * opts.lanes.length + (opts.lanes.length ? fixtures.length * EXTRA_JUDGE_BATCHES_PER_TRANSCRIPT : 0);
   const judgeEst =
     // Unknown judge models estimate at the EXPENSIVE rate (only haiku earns
     // the cheap estimate) — a pricier model must not sneak past pre-flight.
     judgeBatches * (judgeModel.includes('haiku') ? EST.judgePerBatchHaiku : EST.judgePerBatchSonnet);
-  const projected = dreamEst + factsEst + judgeEst;
+  // External documents run up to 64 KiB, six times a dream document, so their
+  // judge spend is priced from the documents read above.
+  const externalEst = externalDocs
+    ? externalJudgeEstimateUsd(externalDocs.files.map((file) => {
+        const f = fixtures.find((x) => x.gold.transcript_id === file.transcript_id)!;
+        return {
+          document: externalDocs.docs.get(file.transcript_id)!, transcript: f.transcriptText,
+          items: f.gold.items.length, distractors: f.gold.distractors.length, hazards: f.gold.hazards.length,
+        };
+      }), judgeModel)
+    : 0;
+  const projected = dreamEst + factsEst + judgeEst + externalEst;
+  const externalShare = externalDocs ? `, external lane $${externalEst.toFixed(2)} for ${externalDocs.files.length} documents` : '';
   if (projected > HARD_STOP_USD) {
-    return setupError(`pre-flight: projected worst-case $${projected.toFixed(2)} exceeds CAT35_HARD_STOP_USD=$${HARD_STOP_USD} — refusing to start`);
+    return setupError(`pre-flight: projected worst-case $${projected.toFixed(2)}${externalShare} exceeds CAT35_HARD_STOP_USD=$${HARD_STOP_USD} — refusing to start`);
   }
-  err(`pre-flight: projected worst-case $${projected.toFixed(2)} (cap $${HARD_STOP_USD})`);
+  err(`pre-flight: projected worst-case $${projected.toFixed(2)}${externalShare} (cap $${HARD_STOP_USD})`);
   // Every provider request from here on (judges, fact extraction, dream
   // synthesis and its subagents) is reserved in the budget ledger first.
   const attestation = opts.preregistration ? attestPreregistration(opts.preregistration) : null;
