@@ -311,6 +311,49 @@ describe('cohorts, estimand and claim rules', () => {
     rmSync(dir, { recursive: true });
   });
 
+  test('a power.json that is not JSON is an invalid receipt, so check reports it instead of stopping', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'scoreboard-'));
+    writeSyntheticReceipt(dir, { cells: fieldCells() });
+    writeFileSync(join(dir, 'power.json'), '{"schema": "gbrain-evals/q1-power/v1", "decision": {\n');
+    expect(() => derive(dir)).toThrow(/^RECEIPT_INVALID: .*power\.json is not valid JSON/);
+    expect(checkReceipt(dir).messages.map(m => m.code)).toContain('RECEIPT_INVALID');
+    rmSync(dir, { recursive: true });
+  });
+
+  const powerDir = () => {
+    const dir = mkdtempSync(join(tmpdir(), 'scoreboard-'));
+    writeSyntheticReceipt(dir, { cells: fieldCells() });
+    return { dir, write: (decision: object) => writeFileSync(join(dir, 'power.json'), JSON.stringify({ schema: 'gbrain-evals/q1-power/v1', decision }) + '\n') };
+  };
+
+  test('a power decision whose comparator list holds an entry that is not a system id is an invalid receipt', () => {
+    const { dir, write } = powerDir();
+    write({ family1: 'descriptive', detectable_difference_points: 12.5, shrunk_comparators: ['ext-memory-bank', 7] });
+    expect(() => derive(dir)).toThrow(/shrunk_comparators \["ext-memory-bank",7\], whose entries are not all system ids/);
+    rmSync(dir, { recursive: true });
+  });
+
+  test('a power decision whose detectable difference is zero or less is an invalid receipt', () => {
+    const { dir, write } = powerDir();
+    write({ family1: 'descriptive', detectable_difference_points: 0, shrunk_comparators: null });
+    expect(() => derive(dir)).toThrow(/detectable_difference_points 0, not above zero/);
+    write({ family1: 'descriptive', detectable_difference_points: -4.2, shrunk_comparators: null });
+    expect(() => derive(dir)).toThrow(/detectable_difference_points -4\.2, not above zero/);
+    rmSync(dir, { recursive: true });
+  });
+
+  test('a full or shrunk power decision with no detectable difference is an invalid receipt, since power.ts ranks a family only under a measured one', () => {
+    const { dir, write } = powerDir();
+    const kept = ['ext-extract-first', 'ext-memory-bank', 'ext-graph-pipeline', 'ext-temporal-graph', 'ext-markdown-kb', 'ext-verbatim-session', 'baseline-hybrid', 'baseline-none'];
+    for (const [family1, shrunk_comparators] of [['full', null], ['shrunk', kept]] as const) {
+      write({ family1, detectable_difference_points: 12.5, shrunk_comparators });
+      expect(() => derive(dir)).not.toThrow();
+      write({ family1, detectable_difference_points: null, shrunk_comparators });
+      expect(() => derive(dir)).toThrow(new RegExp(`family1 ${family1} with no detectable difference`));
+    }
+    rmSync(dir, { recursive: true });
+  });
+
   test('README headline: six columns, plain-word exposure, staleness with a newer release, receipt links', () => {
     const { dir, sb } = fresh();
     const md = readFileSync(join(dir, 'scoreboard.md'), 'utf8');
