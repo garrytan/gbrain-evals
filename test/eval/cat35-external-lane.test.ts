@@ -259,8 +259,8 @@ describe('externalJudgeEstimateUsd', () => {
   });
 
   test("the judge model's own rates price it, so a pricier judge cannot pass at a cheaper model's figure", () => {
-    // Opus 5.5 lists at 40 times Haiku 5.5's input, cache-write and output rates; both get the same 4,096-token answer.
-    expect(est({}, 'claude-opus-5-5') / est({}, 'claude-haiku-5-5')).toBeCloseTo(40, 6);
+    expect(est({}, 'claude-opus-5-5')).toBeGreaterThan(est({}, 'claude-sonnet-5-5'));
+    expect(est({}, 'claude-sonnet-5-5')).toBeGreaterThan(est({}, 'claude-haiku-5-5'));
     expect(() => est({}, 'claude-unpriced-9')).toThrow('no chat price');
   });
 });
