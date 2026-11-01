@@ -1,0 +1,150 @@
+{
+ "schema_version": 1,
+ "arm_id": "w10c-particle-currentpin",
+ "workstream": "W10c",
+ "label": "R2: the 150 W10c questions on gbrain c5fb0201 retrieval (W10a capture)",
+ "model": "particle:particle-1",
+ "effort": "high",
+ "output_limit": 16000,
+ "timeout_ms": 900000,
+ "concurrency": 8,
+ "judge": {
+  "model": "openai:gpt-4o-2024-08-06",
+  "protocol": {
+   "name": "longmemeval-official-evaluate_qa-anscheck",
+   "sha256": "efcf3d0d581bcd5e4b278c3a77378a0c97b15941c58e77ba93f2b5f216414753"
+  },
+  "temperature": 0,
+  "max_tokens": 10,
+  "verdict": "\"yes\" in the lowercased reply"
+ },
+ "text_source": {
+  "name": "currentpin",
+  "questions": 150,
+  "text_sha256": "f44153dee1c38c3e6cde8de8a7f2459ed99b61964037de087491daf817102cfb",
+  "arms": [
+   "w10c-sol-currentpin",
+   "w10a-sonnet55-notes"
+  ],
+  "comparators": {
+   "w10c-sol-currentpin": {
+    "manifest": "docs/benchmarks/2026-10-06-longmemeval-w10-manifests/w10c-sol-currentpin.json",
+    "manifest_sha256": "9a842d2a885f62aa0c8ae10eb2dd69f58a64f4ea59ef83f60170c4f67b9139bf",
+    "bodies": 150,
+    "matching": 150,
+    "differing_at_pin": 0,
+    "rendered_with": "the pinned gbrain"
+   },
+   "w10a-sonnet55-notes": {
+    "manifest": "docs/benchmarks/2026-10-06-longmemeval-w10-manifests/w10a-sonnet55-notes.json",
+    "manifest_sha256": "03646b9d04770d4aee59399e09660db7de1c4296bcfa3ef011e5eaa0988aabdb",
+    "bodies": 500,
+    "matching": 500,
+    "differing_at_pin": 0,
+    "rendered_with": "the pinned gbrain"
+   }
+  }
+ },
+ "build": {
+  "built_at": "2026-11-01T05:30:58.464Z",
+  "gbrain_pin": "github:garrytan/gbrain#3ec766c40664b652b14e39788d177139f5a7b105",
+  "dataset_sha256": "d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442"
+ },
+ "denominator": 150,
+ "attempted": 150,
+ "not_run": [],
+ "stopped": null,
+ "counts": {
+  "correct_official": 135,
+  "reader_errors": 0,
+  "judge_errors": 0,
+  "empty_answers": 0,
+  "truncated": 0,
+  "finish": {
+   "stop": 150
+  },
+  "from_cache": 120
+ },
+ "latency_ms": {
+  "n": 30,
+  "p50": 4135,
+  "p95": 26684
+ },
+ "tokens": {
+  "prompt": 2107766,
+  "cached": 0,
+  "completion": 67812,
+  "reasoning": 57562
+ },
+ "reader_list_usd": 0.594754,
+ "judge_list_usd": 0.083567,
+ "response_models": {
+  "particle-ai/particle-1": 150
+ },
+ "service_tiers": {
+  "default": 150
+ },
+ "weight_versions": {
+  "null": 150
+ },
+ "ledger": {
+  "usd": 0.133116,
+  "input_tokens": 412793,
+  "output_tokens": 15194,
+  "basis": "budget ledger w10-particle-u3-2026-11-01T05-45-53-538Z-2259dad5: 60 paid requests, 0 charged at their reservation because usage was unavailable",
+  "ledger": "/home/user/.capy/work/u3/ledger.sqlite",
+  "program_cap_usd": 12,
+  "overshoot_usd": 0,
+  "event_loop_lag_ms": {
+   "p50": 0,
+   "p99": 0,
+   "max": 275.6
+  }
+ },
+ "bars": {
+  "metering": {
+   "pass": true,
+   "basis": "usage fields (Particle offers no balance read by API)",
+   "particle_requests": 30,
+   "ledger_entries": 30,
+   "unsettled": 0,
+   "unpriced": 0,
+   "ledger_usd": 0.116756,
+   "usage_usd": 0.116756,
+   "gap": 0
+  },
+  "receipts": {
+   "pass": true,
+   "particle_receipts": 30,
+   "problems": 0
+  },
+  "truncation": {
+   "pass": true,
+   "truncated": 0,
+   "answered": 150,
+   "rate": 0
+  },
+  "errors": {
+   "pass": true,
+   "failed_after_retries": 0,
+   "questions": 150,
+   "rate": 0
+  }
+ },
+ "models_not_run": [
+  {
+   "model": "anthropic:claude-opus-5-5",
+   "reason": "W10c has no Opus 5.5 rows to pair with; this replay calls particle-1 only"
+  }
+ ],
+ "preregistration_attestation": {
+  "preregistration": "docs/benchmarks/2026-11-01-longmemeval-particle-replay/PREREGISTRATION.md",
+  "preregistration_commit": "b6e7f7aaee6bdffa7c8a55c74b8c1f9671e4ec47",
+  "runner_commit": "e29ad9c1e1dfe0bb622236c80138f679a64db6de",
+  "worktree_clean_for_preregistration": true,
+  "on_origin": true,
+  "attested_at": "2026-11-01T05:53:40.745Z"
+ },
+ "started_at": "2026-11-01T05:53:40.805Z",
+ "finished_at": "2026-11-01T05:54:39.628Z"
+}

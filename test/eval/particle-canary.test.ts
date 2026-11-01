@@ -8,7 +8,7 @@ import { existsSync, linkSync, mkdtempSync, readFileSync, rmSync, symlinkSync, w
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { BudgetRun, closeLedgers, initLedger } from '../../eval/runner/budget-ledger.ts';
-import { CANARY_MODEL, CANARY_PROMPTS, CANARY_SAMPLING, compareCanary, runCanary, type CanaryRecord, type CanaryResult } from '../../scripts/particle-canary.ts';
+import { CANARY_MODEL, CANARY_PROMPTS, CANARY_SAMPLING, CANARY_WARN, compareCanary, runCanary, type CanaryRecord, type CanaryResult } from '../../scripts/particle-canary.ts';
 
 const ROOT = resolve(import.meta.dir, '../..');
 const dir = mkdtempSync(join(tmpdir(), 'particle-canary-'));
@@ -194,5 +194,17 @@ describe('the canary run', () => {
     expect(rec.receipts[1]!.error).toStartWith('budget: Particle credit exhausted');
     expect(rec.receipts[1]!.response_meta).toEqual({ metadata: null, weight_version: null, service_tier: null, system_fingerprint: null, non_default_tier: null, truncated: null });
     expect(rec.results).toHaveLength(1);
+  });
+});
+
+describe('warning thresholds', () => {
+  test('the default thresholds sit above every serving-noise pair in the committed history', () => {
+    const pairs = readFileSync(join(ROOT, 'docs/benchmarks/particle-canary/history.jsonl'), 'utf8').trim().split('\n').map(l => JSON.parse(l)).filter(r => r.diff);
+    expect(pairs.length).toBeGreaterThanOrEqual(3);
+    for (const { diff } of pairs) {
+      expect(diff.complete).toBe(true);
+      expect(diff.changed_answers).toBeLessThanOrEqual(CANARY_WARN.changed_answers);
+      expect(diff.mean_abs_logprob_change).toBeLessThan(CANARY_WARN.mean_logprob_change);
+    }
   });
 });

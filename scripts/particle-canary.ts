@@ -17,9 +17,9 @@
  *
  * With --compare (an earlier canary of the same model, endpoint, sampling and prompt set, kept outside --out; a
  * mismatch is refused before anything is sent) it reports how many answers changed, how many came back with a different response model, system fingerprint, weight version or tier,
- * and the mean change in per-answer mean log probability. It warns above --warn-changed and --warn-logprob; those
- * thresholds are set above the largest difference seen between back-to-back canary pairs (serving noise), measured
- * before the first counted use. The curated history (docs/benchmarks/particle-canary/history.jsonl) is committed
+ * and the mean change in per-answer mean log probability. It warns above --warn-changed and --warn-logprob, which
+ * default to CANARY_WARN: thresholds set above the largest difference seen between back-to-back canary pairs (serving
+ * noise), measured before the first counted use. The curated history (docs/benchmarks/particle-canary/history.jsonl) is committed
  * with each report, never written here.
  *
  * It refuses a base URL the ledger cannot price (a request there would spend unmetered); loopback hosts (a metering
@@ -43,6 +43,12 @@ import { normalizeFinish, normalizeUsage, receipt, responseMeta, usageSourceOf, 
 export const CANARY_MODEL = 'particle:particle-1';
 export const CANARY_SAMPLING: CanarySampling = { mode: 'canary', temperature: 0, seed: 20261031, top_logprobs: 5 };
 export const CANARY_ESTIMATE_USD = 0.01;
+/**
+ * --compare's warning thresholds, above the serving noise of three back-to-back canary pairs on 2026-11-01 (the particle
+ * replay, docs/benchmarks/particle-canary/history.jsonl): 3, 1 and 2 of 12 answers changed, and the mean log probability
+ * moved 0.0153, 0.0025 and 0.0062. A warning fires on more than 3 changed answers or a move above 0.02.
+ */
+export const CANARY_WARN = { changed_answers: 3, mean_logprob_change: 0.02 } as const;
 const ATTEMPTS = 3;
 
 /** Short prompts with one expected answer each, so a changed answer or a moved log probability means a changed model or server. */
@@ -193,7 +199,7 @@ if (import.meta.main) {
       if (v.trim() === '' || !Number.isFinite(Number(v))) throw new Error(`${name} takes a number, not ${JSON.stringify(v)}`);
       return Number(v);
     };
-    const [changed, logprob] = [threshold('--warn-changed'), threshold('--warn-logprob')];
+    const [changed, logprob] = [threshold('--warn-changed') ?? CANARY_WARN.changed_answers, threshold('--warn-logprob') ?? CANARY_WARN.mean_logprob_change];
     const baseline: CanaryRecord | null = compare ? JSON.parse(readFileSync(compare, 'utf8')) : null;
     if (baseline) assertComparable(baseline, canaryIdentity());
     const { run, guard } = startPaidRun('particle-canary', { ...budgetOptionsFrom(argv), estimateUsd: CANARY_ESTIMATE_USD });
