@@ -18,7 +18,8 @@
  *        (`--arms none` reuses the brains an earlier run built in --out; a finished agent cell is never rerun.
  *        A cell is finished only for the same answer identity: agent model, turn cap, gbrain under test,
  *        questions file and the arm's brain build. An --out holding answers from another identity, or from a brain
- *        this run would rebuild, is refused before any paid step: answer each configuration in its own --out.)
+ *        this run would rebuild, is refused before any paid step: answer each configuration in its own --out.
+ *        A run holds <out>/run.lock while it runs, so a second run on the same --out is refused.)
  *        [--gbrain <checkout>@<ref>]   measure a copied overlay of another gbrain commit instead of the pin
  *   bun eval/runner/chronicle-lift.ts score --out <dir> [--review <review.json>] [--model <id>]
  *        (score never pools answers from two answer identities or two builds of one arm's brain: it refuses,
@@ -306,6 +307,10 @@ async function run(argv: string[]) {
   const out = resolve(flag(argv, '--out') ?? join(process.env.HOME ?? '/tmp', '.cache/gbrain-evals/chronicle-lift/run'));
   if (!relative(REPO, out).startsWith('..')) throw new Error(`--out ${out} is inside this repository; gbrain init refuses a content directory inside another Git worktree. Choose a directory outside it and copy receipts in afterwards.`);
   mkdirSync(out, { recursive: true });
+  const lock = join(out, 'run.lock');
+  try { writeFileSync(lock, `${process.pid}\n`, { flag: 'wx' }); }
+  catch { throw new Error(`${lock} exists: another run is using this --out (pid ${readFileSync(lock, 'utf8').trim()}). Remove the file if no run is active.`); }
+  process.on('exit', () => rmSync(lock, { force: true }));
   const armsFlag = flag(argv, '--arms') ?? 'off,on-a,on-b';
   const arms = (armsFlag === 'none' ? [] : armsFlag.split(',')) as ArmId[];
   const qaArms = argv.includes('--no-qa') ? [] : (flag(argv, '--qa-arms') ?? 'off,on-a').split(',') as ArmId[];

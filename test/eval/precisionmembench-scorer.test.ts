@@ -483,6 +483,7 @@ describe('runner receipts + payload provenance (findings -02/-03/-06 + WS0 recei
     expect(r.receipt.run_status).toBe('error');
     expect(r.receipt.publishable).toBe(false);
     expect(r.receipt.errors.some(e => e.origin === 'harness' && e.message.includes('budget exhausted'))).toBe(true);
+    expect(r.receipt.data?.total_cases).toBe(0);
   }, 240_000);
 
   test('--budget-run-id alone asks for the paid arm, which needs --paid too; the = forms parse (#239)', async () => {

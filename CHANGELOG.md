@@ -15,8 +15,9 @@ This records what each gbrain-evals release changed and what its measurements me
   `score` refuses a results file that holds more than one answer identity, or one arm's answers from two builds of its
   brain; `score --model <id>` keeps one model's answers and reports how many rows it left out. Older rows carry only
   their model, which is enough for the check. `run` refuses, before any paid step, an `--out` that already holds
-  answers from another identity or from a brain it would rebuild, so resuming never pays for rows `score` would
-  refuse. The committed 2026-10-04 lift results rescore unchanged apart from a new `qa.identity` naming Sonnet 4.6.
+  answers from another identity or from a brain it would rebuild, or that another run holds (`run.lock`), so resuming
+  never pays for rows `score` would refuse. The committed 2026-10-04 lift results rescore unchanged apart from a new
+  `qa.identity` naming Sonnet 4.6.
 - **A4 reader rows record the gateway's stop reason** (#238). An answer cut off at the 1,024-token limit (stop reason
   `length`) is scored as the reader's answer, flagged `truncated` and counted per arm (`data.paid.truncated`, with
   every arm's stop reasons in `data.paid.stop_reasons`). An abstention phrase in a cut-off answer scores `unscorable`,
@@ -33,14 +34,14 @@ This records what each gbrain-evals release changed and what its measurements me
   usage. The limit stays at 1,024. No counted A4 cell has run on Sonnet 5.5.
 - **PrecisionMemBench's `gbrain-think` mode is a metered paid arm** (#239). Since the move to current models it asked
   Opus 5.5 once per case outside the budget ledger, and its receipt did not name the model. It now needs
-  `--paid --budget-run-id <id>` for an open ledger run, and without them writes a skipped receipt and exits 2 before
-  any request. Every request it makes, the seeding embeddings included, passes the ledger's paid-request guard, and the
+  `--paid --budget-run-id <id>` for an open ledger run, and without them writes a skipped receipt and exits 2 before any
+  request. Every request it makes, the seeding embeddings included, passes the ledger's paid-request guard, and the
   receipt's `cost` comes from the ledger. gbrain's think turns a refused request into an empty answer, so a case the
-  ledger refuses is recorded as a harness error instead of scored, and the run as incomplete (`run_status: error`, not
-  publishable, exit 3). `resolved_config.chat_model` names the think model. The other modes join the ledger when given
-  `--paid` or `--budget-run-id` (either asks for the paid arm, which needs both) and stay unmetered without them. A
-  one-case live run on 2026-11-01 settled $0.0595 from usage (one Opus 5.5 request, 36 embedding requests). The
-  adapter's header no longer says a cheap model is pinned.
+  ledger refuses is recorded as a harness error, left out of the report's totals, and the run as incomplete
+  (`run_status: error`, not publishable, exit 3). `resolved_config.chat_model` names the think model. The other modes
+  join the ledger when given `--paid` or `--budget-run-id` (either asks for the paid arm, which needs both) and stay
+  unmetered without them. A one-case live run on 2026-11-01 settled $0.0595 from usage (one Opus 5.5 request, 36
+  embedding requests). The adapter's header no longer says a cheap model is pinned.
 
 ### Top-level docs describe gbrain at the pin `3ec766c40`, and corrections and history leave the current-state pages
 

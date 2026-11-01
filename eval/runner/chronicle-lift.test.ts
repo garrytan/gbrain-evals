@@ -94,8 +94,9 @@ describe('agent answer identity (#236)', () => {
     writeFileSync(join(out, 'qa-results.jsonl'), rows.map(r => JSON.stringify(r)).join('\n') + '\n');
     const r = spawnSync('bun', [join(import.meta.dir, 'chronicle-lift.ts'), cmd, '--out', out, ...args], { encoding: 'utf8' });
     const scores = existsSync(join(out, 'scores.json')) ? JSON.parse(readFileSync(join(out, 'scores.json'), 'utf8')) : null;
+    const locked = existsSync(join(out, 'run.lock'));
     rmSync(out, { recursive: true, force: true });
-    return { code: r.status, stderr: r.stderr, error: r.stderr.split('\n').find(l => l.startsWith('error: ')) ?? '', qa: scores?.qa ?? null };
+    return { code: r.status, stderr: r.stderr, locked, error: r.stderr.split('\n').find(l => l.startsWith('error: ')) ?? '', qa: scores?.qa ?? null };
   };
   const score = (rows: unknown[], ...args: string[]) => lift('score', rows, ...args);
   // The reviewer's keyless repro: the off arm answered by Sonnet 4.6, the on arm resumed under the Sonnet 5.5 default.
@@ -144,10 +145,20 @@ describe('agent answer identity (#236)', () => {
     const legacy = lift('run', [row('off', doc.questions[0], 1, 'claude-sonnet-4-6', true)], '--arms', 'none', '--qa-arms', 'off');
     expect(legacy.code).not.toBe(0);
     expect(legacy.error).toContain('another answer identity');
+    expect(legacy.locked).toBe(false);
     const identity = { model: 'claude-sonnet-5-5', max_turns: 12, gbrain: '0.60.531.0', questions: 'q' };
     const rebuilt = lift('run', [row('off', doc.questions[0], 1, 'claude-sonnet-5-5', true, { identity, brain: 'b' })], '--arms', 'off', '--no-qa');
     expect(rebuilt.code).not.toBe(0);
     expect(rebuilt.error).toContain('--arms none');
+  });
+
+  test('run refuses an --out that another run holds', () => {
+    const out = mkdtempSync(join(tmpdir(), 'lift-lock-'));
+    writeFileSync(join(out, 'run.lock'), '12345\n');
+    const r = spawnSync('bun', [join(import.meta.dir, 'chronicle-lift.ts'), 'run', '--out', out, '--arms', 'none', '--no-qa'], { encoding: 'utf8' });
+    rmSync(out, { recursive: true, force: true });
+    expect(r.status).not.toBe(0);
+    expect(r.stderr.split('\n').find(l => l.startsWith('error: '))).toContain('another run is using this --out');
   });
 
   test('the resume key changes with the model, the turn cap, the gbrain under test, the questions and the brain', async () => {

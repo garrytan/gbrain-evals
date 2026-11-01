@@ -355,7 +355,11 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
     const { run, guard } = paid;
     paid = null;
     guard.uninstall();
-    return { cost: receiptCost(run.close()) };
+    try {
+      return { cost: receiptCost(run.close()) };
+    } catch (err) {
+      throw new Error(`closing budget run ${run.runId} failed, so this receipt has no cost; the ledger keeps the run's entries: ${err instanceof Error ? err.message : String(err)}`);
+    }
   };
 
   const acc = new ProbeAccounting(cases.length);
@@ -420,8 +424,9 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
         acc.score(tc.caseId, entry.passed ? 1 : 0);
       } catch (err) {
         const msg = String(err);
-        acc.error(tc.caseId, paid?.guard.exhausted ? 'harness' : 'sut', msg);
-        report.push(missEntryForCrash(tc, pinnedInSeed, msg));
+        const unmeasured = paid?.guard.exhausted ?? false;
+        acc.error(tc.caseId, unmeasured ? 'harness' : 'sut', msg);
+        if (!unmeasured) report.push(missEntryForCrash(tc, pinnedInSeed, msg));
       } finally {
         if (adapter instanceof GbrainBeliefAdapter) {
           for (const observation of adapter.observations.slice(observationStart)) observation.case_id = tc.caseId;
