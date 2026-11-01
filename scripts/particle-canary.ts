@@ -29,8 +29,8 @@
  *
  * Exit 0: every prompt answered and, with --compare, every prompt compared (warnings print above a threshold).
  * Exit 1: refused (including a --warn threshold that is not a number), a prompt failed after its retries or gave no usable answer, a budget stop (the ledger's, a proxy's
- * or Particle's credit) ended the canary, or --compare compared fewer than every prompt or, under --warn-logprob, had
- * no log probabilities to compare.
+ * or Particle's credit) ended the canary, or --compare compared fewer than every prompt or had no log probabilities to
+ * compare against the log-probability threshold (--warn-logprob, else CANARY_WARN's).
  */
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
@@ -217,12 +217,12 @@ if (import.meta.main) {
     if (baseline) {
       const diff = compareCanary(baseline, record);
       console.log(JSON.stringify(diff));
-      if (changed !== null && diff.changed_answers > changed) console.log(`warning: ${diff.changed_answers} answers changed (threshold ${changed}): the model behind particle-1 may have changed`);
+      if (diff.changed_answers > changed) console.log(`warning: ${diff.changed_answers} answers changed (threshold ${changed}): the model behind particle-1 may have changed`);
       if (diff.changed_identity > 0) console.log(`warning: ${diff.changed_identity} answers came back with a different response model, system fingerprint, weight version or service tier: the serving stack behind particle-1 changed`);
-      if (logprob !== null && diff.mean_abs_logprob_change === null) {
-        console.log('warning: no answer had log probabilities for every token in both canaries, so --warn-logprob checked nothing');
+      if (diff.mean_abs_logprob_change === null) {
+        console.log('warning: no answer had log probabilities for every token in both canaries, so the log-probability threshold checked nothing');
         full = false;
-      } else if (logprob !== null && diff.mean_abs_logprob_change! > logprob) console.log(`warning: mean log probability moved ${diff.mean_abs_logprob_change} (threshold ${logprob}): the model behind particle-1 may have changed`);
+      } else if (diff.mean_abs_logprob_change > logprob) console.log(`warning: mean log probability moved ${diff.mean_abs_logprob_change} (threshold ${logprob}): the model behind particle-1 may have changed`);
       if (!diff.complete) {
         console.log(`warning: both canaries answered only ${diff.compared} of ${CANARY_PROMPTS.length} prompts, so this comparison is not a weight check`);
         full = false;

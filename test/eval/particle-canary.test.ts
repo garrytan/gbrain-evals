@@ -143,6 +143,9 @@ describe('the canary run', () => {
     expect(second.code).toBe(0);
     expect(second.out).toContain('"compared":12,"complete":true,"changed_answers":0,"changed_identity":0,"mean_abs_logprob_change":0');
     expect(second.out).not.toContain('warning:');
+    const third = canary(['--paid', '--budget-run-id', runId, '--budget-ledger', ledger, '--out', join(dir, 'c'), '--compare', join(dir, 'a', 'particle-canary.json')], keyless());
+    expect(third.code).toBe(0);
+    expect(third.out).not.toContain('warning:');
   });
 
   test('--compare naming the file this run writes is refused before anything is sent, and the baseline stays as it was', () => {

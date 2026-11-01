@@ -19,7 +19,8 @@
     "p50": 3737,
     "p95": 14889
    },
-   "offpeak_rows": 500,
+   "paid_rows": 500,
+   "offpeak_paid_rows": 500,
    "charged_estimate_usd": 0.9783,
    "effort": "high",
    "stopped": null,
@@ -74,8 +75,9 @@
     "p50": 4135,
     "p95": 26684
    },
-   "offpeak_rows": 150,
-   "charged_estimate_usd": 0.2974,
+   "paid_rows": 30,
+   "offpeak_paid_rows": 30,
+   "charged_estimate_usd": 0.0584,
    "effort": "high",
    "stopped": null,
    "not_run": 0,
@@ -129,7 +131,8 @@
     "p50": 7066,
     "p95": 18684
    },
-   "offpeak_rows": 150,
+   "paid_rows": 150,
+   "offpeak_paid_rows": 150,
    "charged_estimate_usd": 2.0657,
    "effort": "high",
    "stopped": null,
@@ -184,7 +187,8 @@
     "p50": 2857,
     "p95": 6711
    },
-   "offpeak_rows": 150,
+   "paid_rows": 150,
+   "offpeak_paid_rows": 150,
    "charged_estimate_usd": 0.2725,
    "effort": "none",
    "stopped": null,

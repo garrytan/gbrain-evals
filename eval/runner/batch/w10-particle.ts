@@ -31,8 +31,8 @@
  */
 import { Database } from 'bun:sqlite';
 import { execFileSync } from 'node:child_process';
-import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { homedir } from 'node:os';
+import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { homedir, tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { gunzipSync, gzipSync } from 'node:zlib';
 import { budgetOptionsFrom, priceRequest, receiptCost, startPaidRun, usageCost } from '../budget-ledger.ts';
@@ -90,7 +90,9 @@ export const REPLAY_ARMS: Record<string, ReplayArm> = {
 };
 
 const flag = (argv: string[], name: string) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; };
-const writeJson = (path: string, v: unknown) => { mkdirSync(resolve(path, '..'), { recursive: true }); writeFileSync(path, JSON.stringify(scrubMachinePaths(v, undefined, undefined, undefined, [[join(homedir(), '.capy/work') + '/', '<work>/']]), null, 1) + '\n'); };
+/** Committed files carry no machine path: checkout, home and temp prefixes as scrubMachinePaths rewrites them, Capy agent scratch as `<work>/`. */
+const scrub = <T>(v: T): T => scrubMachinePaths(v, undefined, undefined, undefined, [[join(homedir(), '.capy/work') + '/', '<work>/']]);
+const writeJson = (path: string, v: unknown) => { mkdirSync(resolve(path, '..'), { recursive: true }); writeFileSync(path, JSON.stringify(scrub(v), null, 1) + '\n'); };
 const isBudgetStop = (e: unknown) => (e as Error)?.name === 'BudgetExceededError';
 const message = (e: unknown) => String((e as Error)?.message ?? e).slice(0, 500);
 
@@ -201,7 +203,7 @@ export interface Judgment { verdict: boolean | null; raw: string | null; error: 
 
 export interface ParticleRow {
   question_id: string; question_type: string; arm_id: string; model: string; effort: string; output_limit: number;
-  requested_at: string; hypothesis: string; finish: string | null; truncated: boolean | null; error: string | null;
+  requested_at: string; hypothesis: string; finish: string | null; truncated: boolean | null; error: string | null; budget_stop: boolean;
   response_model: string | null; response_meta: ChatResultV2['response_meta'] | null; usage: Record<string, unknown> | null;
   usd: number; list_usd: number; judge_usd: number; latency_ms: number | null; from_cache: boolean; reader_attempts: number;
   official: Judgment | null; correct_official: 0 | 1;
@@ -228,9 +230,9 @@ export async function replayQuestions(opts: {
     const ctx = (role: 'reader' | 'judge', model: string) => ({ role, question_id: id, replicate: 0, model, delivered: null });
     const requestedAt = new Date().toISOString();
     const t0 = performance.now();
-    let reader: ChatResultV2 | null = null, error: string | null = null;
+    let reader: ChatResultV2 | null = null, error: string | null = null, budgetStop = false;
     try { reader = await chatWithReceipts(opts.client, ctx('reader', PARTICLE), text.user, { maxTokens: OUTPUT_LIMIT, replicate: 0, effort: opts.arm.effort, system: text.system }, receipts); }
-    catch (e) { error = message(e); if (isBudgetStop(e)) out.stopped ??= error; }
+    catch (e) { error = message(e); budgetStop = isBudgetStop(e); if (budgetStop) out.stopped ??= error; }
     const latency = reader && !reader.cached ? Math.round(performance.now() - t0) : null;
     const answer = reader?.text ?? '';
     let official: Judgment | null = null;
@@ -247,7 +249,7 @@ export async function replayQuestions(opts: {
     const usd = reader?.usage ? particleUsd(reader.usage) : 0;
     const row: ParticleRow = {
       question_id: id, question_type: reportType(q), arm_id: opts.armId, model: PARTICLE, effort: opts.arm.effort, output_limit: OUTPUT_LIMIT,
-      requested_at: requestedAt, hypothesis: answer, finish: reader?.finish ?? null, truncated: reader ? reader.finish === 'length' : null, error,
+      requested_at: requestedAt, hypothesis: answer, finish: reader?.finish ?? null, truncated: reader ? reader.finish === 'length' : null, error, budget_stop: budgetStop,
       response_model: reader?.response_model ?? null, response_meta: reader?.response_meta ?? null, usage: reader?.usage ?? null,
       usd, list_usd: usd, judge_usd: judgeReceipt?.usage_raw ? judgeUsd(judgeReceipt.usage_raw) : 0, latency_ms: latency, from_cache: reader?.cached ?? false,
       reader_attempts: lane.filter(r => r.role === 'reader').length, official, correct_official: official?.verdict === true ? 1 : 0,
@@ -283,7 +285,7 @@ export function checkBars(rows: ParticleRow[], receipts: UsageReceipt[], entries
   }).length;
   const answered = rows.filter(r => r.truncated !== null);
   const truncated = answered.filter(r => r.truncated).length;
-  const failed = rows.filter(r => r.error !== null && !/^budget/.test(r.error)).length;
+  const failed = rows.filter(r => r.error !== null && !r.budget_stop).length;
   return {
     metering: {
       pass: unpriced === 0 && unsettled === 0 && metered.length === sent.length && gap <= 0.02, basis: 'usage fields (Particle offers no balance read by API)',
@@ -325,8 +327,8 @@ async function run(armId: string, argv: string[]): Promise<number> {
     result = await replayQuestions({
       client: new ChatClient(flag(argv, '--cache') ?? join(STATE_DIR, 'cache'), undefined, TIMEOUT_MS), armId, arm, inputs, questions: r1(),
       onRow: (row, receipts) => {
-        appendFileSync(join(out, 'rows.ndjson'), JSON.stringify(row) + '\n');
-        if (receipts.length) appendFileSync(join(out, 'receipts.ndjson'), receipts.map(r => JSON.stringify(r)).join('\n') + '\n');
+        appendFileSync(join(out, 'rows.ndjson'), JSON.stringify(scrub(row)) + '\n');
+        if (receipts.length) appendFileSync(join(out, 'receipts.ndjson'), receipts.map(r => JSON.stringify(scrub(r))).join('\n') + '\n');
         process.stderr.write(`[w10-particle] ${armId} ${row.question_id} ${row.error ? 'error' : row.truncated ? 'truncated' : 'ok'} correct=${row.correct_official}\n`);
       },
     });
@@ -445,8 +447,13 @@ export function particleOffPeak(iso: string): boolean {
   return minutes >= 20 * 60 + 30 || minutes < 4 * 60;
 }
 
-/** Paired differences, decision G, the development-lane test and decision B's stop rule, from committed rows. */
-export function report(dir: string): Record<string, unknown> {
+/**
+ * Paired differences, decision G, the development-lane test and decision B's stop rule, from committed rows. The paired
+ * compare files go to `compareDir` (the replay directory itself only when writing). An arm's charged estimate covers its
+ * own paid reader calls, at half the list price in Particle's off-peak window; answers served from the response cache
+ * were paid for, and are counted, in the arm that first asked.
+ */
+export function report(dir: string, compareDir = dir): Record<string, unknown> {
   const ids500 = [...r1().keys()].sort(), ids150 = subsets.w10c150();
   const comparators: Record<string, [string, string[]]> = {
     'w10b-opus55-notes': [join(W10B, 'arms/w10b-opus55-notes'), ids500], 'w10b-sonnet55-notes': [join(W10B, 'arms/w10b-sonnet55-notes'), ids500],
@@ -460,14 +467,14 @@ export function report(dir: string): Record<string, unknown> {
   const arms = Object.fromEntries(Object.entries(particle).map(([id, path]) => {
     const receipt = JSON.parse(readFileSync(join(path, 'receipt.json'), 'utf8'));
     const rows = readNdjson(join(path, 'rows.ndjson'));
-    const offPeak = rows.filter(r => typeof r.requested_at === 'string' && particleOffPeak(r.requested_at));
-    const charged = rows.reduce((a, r) => a + (r.list_usd ?? 0), 0) - offPeak.reduce((a, r) => a + (r.list_usd ?? 0) / 2, 0);
-    return [id, { ...armStats(path, scored.get(id)!, idsOf(id), false), offpeak_rows: offPeak.length, charged_estimate_usd: Number(charged.toFixed(4)), effort: receipt.effort, stopped: receipt.stopped, not_run: receipt.not_run.length, bars: receipt.bars, ledger_usd: receipt.ledger.usd }];
+    const paid = rows.filter(r => !r.from_cache);
+    const charged = paid.reduce((a, r) => a + (r.list_usd ?? 0) * (typeof r.requested_at === 'string' && particleOffPeak(r.requested_at) ? 0.5 : 1), 0);
+    return [id, { ...armStats(path, scored.get(id)!, idsOf(id), false), paid_rows: paid.length, offpeak_paid_rows: paid.filter(r => typeof r.requested_at === 'string' && particleOffPeak(r.requested_at)).length, charged_estimate_usd: Number(charged.toFixed(4)), effort: receipt.effort, stopped: receipt.stopped, not_run: receipt.not_run.length, bars: receipt.bars, ledger_usd: receipt.ledger.usd }];
   }));
   const out: Record<string, unknown> = { kind: 'particle-replay', arms, comparators: Object.fromEntries(Object.entries(comparators).map(([k, [p, ids]]) => [k, armStats(p, scored.get(k)!, ids, true)])) };
   if (particle['w10b-particle-notes']) {
     const p = c('w10b-particle-notes', ids500);
-    const w10b = paired(dir, 'w10b', [
+    const w10b = paired(compareDir, 'w10b', [
       { field: 'correct__particle_minus_opus55', a: c('w10b-opus55-notes', ids500), b: p },
       { field: 'correct__particle_minus_sonnet55', a: c('w10b-sonnet55-notes', ids500), b: p },
       { field: 'correct__particle_minus_sol', a: c('w10b-sol-notes', ids500), b: p },
@@ -478,11 +485,11 @@ export function report(dir: string): Record<string, unknown> {
   }
   if (particle['w10c-particle-currentpin'] && particle['w10c-particle-full']) {
     const pin = c('w10c-particle-currentpin', ids150), full = c('w10c-particle-full', ids150), sonnetFull = c('w10c-sonnet55-full', ids150), solFull = c('w10c-sol-full', ids150);
-    out.decision_g = paired(dir, 'g-noninferiority', [
+    out.decision_g = paired(compareDir, 'g-noninferiority', [
       { field: 'correct__particle_gbrain', a: full, b: pin },
       { field: 'correct__sonnet55_gbrain', a: full, b: c('w10a-sonnet55-notes', ids150) },
     ], ids150, join(ROOT, FAMILY_G));
-    const w10c = paired(dir, 'w10c', [
+    const w10c = paired(compareDir, 'w10c', [
       { field: 'correct__particle_gbrain_minus_particle_full', a: full, b: pin },
       { field: 'correct__particle_full_minus_sonnet55_full', a: sonnetFull, b: full },
       { field: 'correct__particle_full_minus_sol_full', a: solFull, b: full },
@@ -518,10 +525,11 @@ async function main(argv: string[]): Promise<number> {
   if (cmd === 'run') return run(arg, argv);
   if (cmd === 'report') {
     if (!arg) throw new Error('report <replay dir>');
-    const text = JSON.stringify(report(resolve(arg)), null, 1) + '\n';
+    const write = argv.includes('--write');
+    const text = JSON.stringify(report(resolve(arg), write ? resolve(arg) : mkdtempSync(join(tmpdir(), 'w10-particle-report-'))), null, 1) + '\n';
     const path = join(resolve(arg), 'summary.json');
     console.log(text);
-    if (argv.includes('--write')) { writeFileSync(path, text); return 0; }
+    if (write) { writeFileSync(path, text); return 0; }
     if (!existsSync(path) || readFileSync(path, 'utf8') !== text) { console.error(`re-score differs from ${path}`); return 1; }
     console.error(`re-score matches ${path}`);
     return 0;

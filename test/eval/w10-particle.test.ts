@@ -5,9 +5,11 @@
  * fetch, a placeholder Particle key.
  */
 import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { createHash } from 'node:crypto';
+import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
+import { gzipSync } from 'node:zlib';
 process.env.W10_STATE_DIR = join(tmpdir(), `w10-particle-test-${process.pid}`);
 process.env.W10_PARTICLE_STATE_DIR = join(tmpdir(), `w10-particle-state-${process.pid}`);
 const { ARMS, r1 } = await import('../../eval/runner/batch/w10.ts');
@@ -66,6 +68,16 @@ describe('comparator text', () => {
       expect(P.readerText(sonnet.get(id)!)).toEqual(text);
       expect(P.readerText(opus.get(id)!)).toEqual(text);
     }
+  });
+
+  test('saved prompt text that no longer hashes to the build record is refused', () => {
+    const content = JSON.stringify({ question_id: 'q1', system: 's', user: 'u' }) + '\n';
+    mkdirSync(join(P.STATE_DIR, 'inputs'), { recursive: true });
+    writeFileSync(join(P.STATE_DIR, 'build.json'), JSON.stringify({ sources: { r1: { text_sha256: createHash('sha256').update(content).digest('hex') } } }));
+    writeFileSync(join(P.STATE_DIR, 'inputs', 'r1.ndjson.gz'), gzipSync(content));
+    expect(P.loadInputs('r1').get('q1')).toEqual({ system: 's', user: 'u' });
+    writeFileSync(join(P.STATE_DIR, 'inputs', 'r1.ndjson.gz'), gzipSync(content.replace('"u"', '"v"')));
+    expect(() => P.loadInputs('r1')).toThrow('no longer matches the build record');
   });
 
   test('a body of any other shape is refused', () => {
@@ -129,6 +141,28 @@ describe('read and judge', () => {
     expect(out.not_run).toEqual(IDS.slice(1));
     expect(s.particle().length).toBe(1);
     expect(s.openai().length).toBe(0);
+    expect(out.rows[0].budget_stop).toBe(true);
+  });
+
+  test('the ledger\'s own refusal stops the arm like a credit stop and is not counted against bar 4', async () => {
+    globalThis.fetch = (async () => { const e = new Error('particle:particle-1 chat: reserving $0.0100 would take this run to $12.0100, over its $12.00 budget'); e.name = 'BudgetExceededError'; throw e; }) as typeof fetch;
+    const out = await replay(inputsFor(IDS));
+    expect(out.stopped).toStartWith('particle:particle-1 chat: reserving');
+    expect(out.rows).toHaveLength(1);
+    expect(out.rows[0]).toMatchObject({ budget_stop: true, correct_official: 0 });
+    expect(out.not_run).toEqual(IDS.slice(1));
+    expect(P.checkBars(out.rows, out.receipts, []).errors).toMatchObject({ pass: true, failed_after_retries: 0 });
+  });
+
+  test('the client\'s per-attempt deadline bounds each Particle attempt', async () => {
+    const waited: number[] = [];
+    globalThis.fetch = ((_url: unknown, init?: RequestInit) => new Promise((_, reject) => {
+      const t0 = Date.now();
+      init!.signal!.addEventListener('abort', () => { waited.push(Date.now() - t0); reject(init!.signal!.reason); });
+    })) as typeof fetch;
+    await expect(new ChatClient(tmp(), () => 0, 50).chat(P.PARTICLE, 'q', { maxTokens: 10, replicate: 0, effort: 'none' })).rejects.toThrow();
+    expect(waited.length).toBeGreaterThan(0);
+    expect(Math.max(...waited)).toBeLessThan(2_000);
   });
 });
 
@@ -185,10 +219,11 @@ describe('keyless re-score', () => {
     const arm = join(dir, 'arms', 'w10b-particle-notes');
     mkdirSync(arm, { recursive: true });
     const opus = readFileSync(join(ROOT, 'docs/benchmarks/2026-10-07-longmemeval-w10b-reader-replay/arms/w10b-opus55-notes/rows.ndjson'), 'utf8').trim().split('\n').map(l => JSON.parse(l));
-    writeFileSync(join(arm, 'rows.ndjson'), opus.map(r => JSON.stringify({ ...r, model: P.PARTICLE, usage: null, usd: 0.001, list_usd: 0.001, secondary: null })).join('\n') + '\n');
+    writeFileSync(join(arm, 'rows.ndjson'), opus.map((r, i) => JSON.stringify({ ...r, model: P.PARTICLE, usage: null, usd: 0.001, list_usd: 0.001, secondary: null, requested_at: '2026-11-01T05:50:00Z', from_cache: i < 100 })).join('\n') + '\n');
     writeFileSync(join(arm, 'receipt.json'), JSON.stringify({ effort: 'high', stopped: null, not_run: [], bars: {}, ledger: { usd: 0.5 } }));
-    const out = P.report(dir) as any;
-    expect(out.arms['w10b-particle-notes']).toMatchObject({ n: 500, correct: 474, list_usd_per_correct: Number((0.5 / 474).toFixed(5)) });
+    const out = P.report(dir, tmp()) as any;
+    expect(readdirSync(dir).filter(f => f.startsWith('compare-'))).toEqual([]);
+    expect(out.arms['w10b-particle-notes']).toMatchObject({ n: 500, correct: 474, list_usd_per_correct: Number((0.5 / 474).toFixed(5)), paid_rows: 400, offpeak_paid_rows: 400, charged_estimate_usd: 0.2 });
     expect(out.comparators['w10b-opus55-notes']).toMatchObject({ correct: 474, batch_usd: 24.0103 });
     const vsOpus = out.w10b.comparisons.find((c: any) => c.id === 'correct__particle_minus_opus55');
     expect(vsOpus.delta).toBe(0);
