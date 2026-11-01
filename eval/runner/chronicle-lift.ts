@@ -15,9 +15,13 @@
  *   bun eval/runner/chronicle-lift.ts corpus --out <dir>                    # render the vault only, $0
  *   bun eval/runner/chronicle-lift.ts run --out <dir> --budget-usd <n> [--arms off,on-a,on-b] [--repeats 2]
  *        [--model claude-sonnet-5-5] [--questions <ids>] [--qa-arms off,on-a] [--no-qa]
- *        (`--arms none` reuses the brains an earlier run built in --out; finished agent cells are never rerun)
+ *        (`--arms none` reuses the brains an earlier run built in --out; a finished agent cell is never rerun.
+ *        A cell is finished only for the same answer identity: agent model, turn cap, gbrain under test,
+ *        questions file and the arm's brain build. Another model or a rebuilt brain answers again beside it.)
  *        [--gbrain <checkout>@<ref>]   measure a copied overlay of another gbrain commit instead of the pin
- *   bun eval/runner/chronicle-lift.ts score --out <dir> [--review <review.json>]
+ *   bun eval/runner/chronicle-lift.ts score --out <dir> [--review <review.json>] [--model <id>]
+ *        (score never pools answers from two answer identities or two builds of one arm's brain: it refuses,
+ *        and --model keeps one model's answers)
  *
  * `--out` must be outside any Git worktree: `gbrain init` refuses to create its
  * content directory inside another repository (local_conflict).
@@ -170,6 +174,15 @@ export function sampleIndices(n: number, k: number, seed: number): number[] {
 }
 export const SLACK_SAMPLE = { size: 25, seed: 4 };
 
+/** Everything an agent answer depends on besides its arm's brain, the question and the repeat. */
+export interface AnswerIdentity { model: string; max_turns: number; gbrain: string; questions: string }
+
+/** The resume key of one agent cell: a cell counts as finished only for the same answer identity and brain build. */
+export function qaKey(arm: string, question: string, repeat: number, identity: AnswerIdentity, brain: string): string {
+  const digest = createHash('sha256').update(JSON.stringify([identity.model, identity.max_turns, identity.gbrain, identity.questions, brain])).digest('hex');
+  return `${arm}|${question}|${repeat}|${digest.slice(0, 16)}`;
+}
+
 // ─── Brains ─────────────────────────────────────────────────────────
 
 type ArmId = 'off' | 'on-a' | 'on-b';
@@ -275,6 +288,7 @@ export function systemPrompt(arm: Arm, today: string): string {
 // ─── Commands ───────────────────────────────────────────────────────
 
 const flag = (argv: string[], name: string) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; };
+const sha256 = (data: string | Buffer) => createHash('sha256').update(data).digest('hex').slice(0, 16);
 const git = (...a: string[]) => { try { return execFileSync('git', ['-C', REPO, ...a], { encoding: 'utf8' }).trim(); } catch { return null; } };
 
 function writeVault(out: string): { vault: string; digest: string; pages: number; chronicle_shaped: number } {
@@ -297,10 +311,12 @@ async function run(argv: string[]) {
   const repeats = Number(flag(argv, '--repeats') ?? 2);
   const model = flag(argv, '--model') ?? DEFAULT_AGENT_MODEL;
   const maxTurns = Number(flag(argv, '--max-turns') ?? 12);
-  const questionsDoc = JSON.parse(readFileSync(flag(argv, '--questions-file') ?? join(LABELS, 'questions.json'), 'utf8')) as QuestionDoc & { today: string };
+  const questionsText = readFileSync(flag(argv, '--questions-file') ?? join(LABELS, 'questions.json'), 'utf8');
+  const questionsDoc = JSON.parse(questionsText) as QuestionDoc & { today: string };
   const only = flag(argv, '--questions')?.split(',');
   const questions = questionsDoc.questions.filter(q => !only || only.includes(q.id));
   const estimate = Number(flag(argv, '--estimate-usd') ?? 15);
+  const identity: AnswerIdentity = { model, max_turns: maxTurns, gbrain: gut.overlay ? `${gut.version} overlay ${gut.overlay.build.commit}` : gut.version, questions: sha256(questionsText) };
   const corpus = writeVault(out);
   writeFileSync(join(out, 'corpus.json'), JSON.stringify(corpus, null, 2) + '\n');
   const paid = arms.length > 0 || qaArms.length > 0;
@@ -331,12 +347,13 @@ async function run(argv: string[]) {
       const home = join(out, 'brains', arm);
       const restore = () => { rmSync(join(home, 'home'), { recursive: true, force: true }); execFileSync('tar', ['-C', home, '-xf', join(out, 'brains', `${arm}.tar`), 'home']); };
       restore();
+      const brain = sha256(readFileSync(join(out, 'brains', `${arm}.tar`)));
       let agentArm = new GbrainMcpArm(home);
       await agentArm.start();
       try {
         for (let r = 1; r <= repeats; r++) {
           for (const q of questions) {
-            const key = `${arm}|${q.id}|${r}`;
+            const key = qaKey(arm, q.id, r, identity, brain);
             if (done.has(key)) continue;
             if (stopAll) return;
             if (budget?.guard.exhausted) throw new Error('budget exhausted');
@@ -346,9 +363,9 @@ async function run(argv: string[]) {
             const wrote = res.tools.some(t => agentArm.writeTools().includes(t.name) && t.name !== 'submit_answer');
             const correct = scoreAnswer(q, res.final, questionsDoc.contacts_first_names);
             const { tools, ...runRest } = res;
-            appendFileSync(resultsPath, JSON.stringify({ key, arm, question: q.id, type: q.type, repeat: r, correct, final: res.final, wrote,
+            appendFileSync(resultsPath, JSON.stringify({ key, arm, question: q.id, type: q.type, repeat: r, identity, brain, correct, final: res.final, wrote,
               run: { ...runRest, tool_calls: tools.map(t => ({ name: t.name, args: t.args, ms: t.ms, chars: t.chars, error: t.error })) } }) + '\n');
-            console.error(`[lift] ${key}: ${correct ? 'correct' : 'wrong'} ($${res.usd.toFixed(4)}, ${res.turns} turns, ${res.stop})`);
+            console.error(`[lift] ${arm}|${q.id}|${r}: ${correct ? 'correct' : 'wrong'} ($${res.usd.toFixed(4)}, ${res.turns} turns, ${res.stop})`);
             if (wrote) { await agentArm.stop(); restore(); agentArm = new GbrainMcpArm(home); await agentArm.start(); }
           }
         }
@@ -424,7 +441,18 @@ function score(argv: string[]) {
   }
   const qaPath = join(out, 'qa-results.jsonl');
   if (existsSync(qaPath)) {
-    const rows = readFileSync(qaPath, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l)) as Array<{ arm: string; question: string; type: string; repeat: number; final: SubmitPayload | null; run: { usd: number; stop: string } }>;
+    type Row = { arm: string; question: string; type: string; repeat: number; identity?: AnswerIdentity; brain?: string; final: SubmitPayload | null; run: { model: string; usd: number; stop: string } };
+    const all = readFileSync(qaPath, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l)) as Row[];
+    const identityOf = (r: Row) => r.identity ?? { model: r.run.model };
+    const model = flag(argv, '--model');
+    const rows = model ? all.filter(r => identityOf(r).model === model) : all;
+    const identities = [...new Set(rows.map(r => JSON.stringify(identityOf(r))))];
+    if (model && rows.length === 0) throw new Error(`${qaPath} has no answers from ${model}; its models are ${[...new Set(all.map(r => identityOf(r).model))].join(', ')}`);
+    if (identities.length > 1) throw new Error(`${qaPath} holds answers from ${identities.length} answer identities (${identities.join('; ')}); scoring them together would pool their arms into one lift. Pass --model <id> to score one model, or keep each configuration in its own --out.`);
+    for (const arm of new Set(rows.map(r => r.arm))) {
+      const brains = new Set(rows.filter(r => r.arm === arm).map(r => r.brain ?? 'unrecorded'));
+      if (brains.size > 1) throw new Error(`${qaPath} holds ${arm} answers from ${brains.size} builds of the ${arm} brain (${[...brains].join(', ')}); the brain was rebuilt in this --out after some answers were written. Resume with --arms none to keep one build, or rebuild into a fresh --out.`);
+    }
     const byArm: Record<string, Record<string, number[]>> = {};
     for (const r of rows) {
       const q = questionsDoc.questions.find(x => x.id === r.question);
@@ -436,7 +464,7 @@ function score(argv: string[]) {
     const off = ids.map(id => mean(byArm.off[id])); const on = ids.map(id => mean(byArm['on-a'][id]));
     const types = [...new Set(questionsDoc.questions.map(q => q.type))];
     result.qa = {
-      questions: ids.length, runs: rows.length,
+      identity: rows[0] ? identityOf(rows[0]) : null, questions: ids.length, runs: rows.length, ...(model ? { excluded_runs: all.length - rows.length } : {}),
       accuracy: { off: off.length ? mean(off) : null, on: on.length ? mean(on) : null },
       lift: ids.length ? pairedBootstrap(off, on) : null,
       by_type: Object.fromEntries(types.map(t => { const tid = ids.filter(id => questionsDoc.questions.find(q => q.id === id)!.type === t); return [t, { questions: tid.length, off: tid.length ? mean(tid.map(id => mean(byArm.off[id]))) : null, on: tid.length ? mean(tid.map(id => mean(byArm['on-a'][id]))) : null }]; })),
