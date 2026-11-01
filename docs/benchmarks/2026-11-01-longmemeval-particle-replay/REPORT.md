@@ -149,14 +149,17 @@ Keys: `PARTICLE_API_KEY` for the reader and `OPENAI_API_KEY` for the judge. Data
 ```bash
 # $0: rebuild and check every comparator body, render the whole-history prompts from gbrain c5fb0201
 git clone https://github.com/garrytan/gbrain /tmp/gbrain-c5fb0201 && git -C /tmp/gbrain-c5fb0201 checkout c5fb0201d1960a0a5a81c35d77718311b03154b7
-# W10_PARTICLE_STATE_DIR holds the saved prompt text and the response cache; from an empty one each distinct prompt is paid once,
-# and a prompt already answered replays from the cache (120 current-pin prompts repeat R1's)
+# W10_PARTICLE_STATE_DIR holds the saved prompt text and the response cache. Effort and output limit are part of the cache
+# key, so from an empty one each distinct prompt is paid once at each effort: 120 current-pin prompts repeat R1's and replay
+# from the cache, while the effort-none arm pays again for the 150 prompts the current-pin arm answered at high
 export W10_PARTICLE_STATE_DIR=<an empty directory>
 LME_DATASET=<longmemeval_s_cleaned.json> W10_STATE_DIR=<another empty directory> \
   bun eval/runner/batch/w10-particle.ts build --gbrain-c5fb0201 /tmp/gbrain-c5fb0201
 
 # paid, under one ledger run (this replay: $7.23 at list price)
 RUN=$(bun eval/runner/budget-ledger.ts open --runner w10-particle-u3 --budget-usd 12 --estimate-usd 10.8)
+# this replay wrote here; a rerun takes a fresh OUT, because run refuses an --out that already holds rows,
+# and preflight and the canary would overwrite the committed records
 OUT=docs/benchmarks/2026-11-01-longmemeval-particle-replay
 bun eval/runner/batch/w10-particle.ts preflight --out $OUT/preflight --paid --budget-run-id $RUN
 bun scripts/particle-canary.ts --paid --budget-run-id $RUN --out $OUT/canary/pair-1-a   # then pair-1-b with --compare, and pairs 2 and 3
