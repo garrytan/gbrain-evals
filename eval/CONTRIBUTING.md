@@ -167,7 +167,7 @@ A category is a runner, a seeded generator, a scorer and a dated report that ans
 7. **Ship the tests** under `test/eval/`: a generator determinism test (same seed, same ledger hash), a scorer test with hand-built gold including a negative that must fail, a deliberately broken adapter the category must fail, and a scorer mutation suite. The mutation suite uses `assertScorerRejectsFakeSystems` from [runner/mutation-kit.ts](runner/mutation-kit.ts): the honest system must pass, and the empty, always-positive, always-refuse, stale and wrong-source fakes must fail (declare a fake not applicable only with a reason). See `test/eval/scorer-mutation.test.ts` for N3, N4 and N6.
 8. **Print in a fixed order:** verdict, safety contracts, quality metrics with denominators, gbrain bugs with a one-line repro, receipt path. Record every gbrain finding with `upsertBug` from [runner/bug-ledger.ts](runner/bug-ledger.ts), classified as a bug against a stated contract, a feature gap or a category defect.
 9. **Measure the run time** of the hermetic arm and keep it under the registry's CI budget (target 60 seconds); `bun eval/runner/all.ts --only <id>` runs just your category through the same gate CI uses.
-10. **Write the report and the docs row.** A dated report in `docs/benchmarks/` following the N3 report outline, with "gbrain bugs found" and "documented limits (not bugs)" sections, and a question-first row in [docs/README.md](../docs/README.md). Copy worthwhile receipts out of `eval/reports/` and scrub machine paths with `bun eval/runner/receipt.ts scrub`.
+10. **Write the report and the docs row.** A dated report in `docs/benchmarks/` following the N3 report outline, with "gbrain bugs found" and "documented limits (not bugs)" sections, and a question-first row in [docs/README.md](../docs/README.md). Copy worthwhile receipts out of `eval/reports/` and scrub machine paths with `bun eval/runner/receipt.ts scrub`. The receipt guards read tarball and gzip receipts member by member: `test/eval/receipt-machine-paths.test.ts` fails on a machine path inside one (other than the harness VM overlay path it declares) and `scripts/scan-receipts.sh` on a key, unless the file is reviewed and listed with its hash in `test/eval/fixtures/reviewed-compressed-receipts.json`.
 
 A category with more than one tier keeps one operator guide per tier. Cat 40 Hard is the example: its generator mode, world contract ([WORLD_SCHEMA.md](../docs/benchmarks/cat40-hard/WORLD_SCHEMA.md)), runner path, scorer and paid steps are documented in the [Cat 40 Hard runbook](../docs/benchmarks/cat40-hard/RUNBOOK.md), and its registry row is `model-ladder-hard`.
 
@@ -210,6 +210,12 @@ See [CREDITS.md](CREDITS.md) for attribution. Contributions to external question
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
+
+### 2026-11-01: Compressed receipts are checked member by member
+
+Step 10 of "Add a category" now says the machine-path test and the receipt secret scan read tarball and gzip receipts
+member by member, and that a compressed receipt either passes both or is reviewed and listed by hash in
+`test/eval/fixtures/reviewed-compressed-receipts.json`. Before #221 neither guard opened a compressed receipt.
 
 ### 2026-11-01: Register a new category's default models
 
