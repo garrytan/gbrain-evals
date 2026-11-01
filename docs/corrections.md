@@ -18,6 +18,34 @@ says which ones do not and why. Everything above [Changelog](#changelog) is curr
 - **Query expansion "hurts retrieval"** described the September 6 code (255/470). At gbrain `109b992` it scores
   436/470 against 434/470 without it (+6/−4, p = 0.75), so that finding no longer describes gbrain.
   [Recount](benchmarks/2026-10-04-longmemeval-opaque-followups.md).
+- **Two cost figures in the particle-1 replay report are off** (2026-11-01). Its results table gives Opus 5.5
+  $0.0994 per correct answer; $47.091364 over 474 correct answers is $0.09935, which is $0.0993 (the table rounded
+  summary.json's five-decimal value a second time; the opening paragraph's $0.099 stands). Its batch-price figures for
+  Opus 5.5 and Sonnet 5.5, $0.0507 and $0.0255 per correct answer ($0.051 in the opening paragraph), come from W10's
+  ledger-settled amounts. W10's preregistration settled each arm's 10-question pilot at list price until the batch
+  discount was confirmed, but the provider billed the pilots at the batch rate too, so at half the list price the
+  figures are $0.0497 and $0.0250. Every particle-1 figure is unaffected; GPT-6.1 Sol's figures have their own entry
+  below. The report keeps its original figures; this page carries the correction.
+  [Report](benchmarks/2026-11-01-longmemeval-particle-replay/REPORT.md),
+  [recheck](findings/2026-11-01-particle-1-longmemeval-w10b.md).
+- **GPT-6.1 Sol's reader costs in W10b, W10c and the particle-1 replay are about a fifth low** (2026-11-01). OpenAI
+  reported almost every Sol prompt token as a cache write (6,845,950 of 6,847,450 in W10b), and it prices cache writes
+  at $2.50 per million tokens against $2.00 for input. W10 settled its rows on 2026-10-06 at the input price, two days
+  before the budget ledger began pricing OpenAI cache writes (`8a8e502a`). At the cache-write rate, W10b's Sol reader
+  cost is $8.83 at batch price (was $7.12), so the W10b run total is $92.00 (was $90.29). W10c's Sol reader costs
+  $0.0178 per question on gbrain's retrieval (was $0.0144, so the recurring total with the rerank rises by $0.0034) and
+  $0.1339 with the whole history (was $0.1073), so gbrain's recurring cost is still about a seventh of the whole
+  history's. The replay
+  report's W10b figures for Sol are $0.0381 per correct answer at list and $0.0190 at batch (was $0.0307 and $0.0154,
+  which was itself $0.01535 rounded a second time), so particle-1's list cost per correct answer is about a ninth of
+  Sol's, not a seventh. Its W10c figures for Sol are $0.0356 and $0.0178 per question on gbrain's retrieval (was
+  $0.0287 and $0.0144) and $0.2679 and $0.1339 with the whole history (was $0.2145 and $0.1073). OpenAI's billing API
+  refused our key, so these follow OpenAI's published rate and the usage the responses reported, not an invoice. No
+  accuracy figure changes, and the reports keep their original figures.
+  [W10b](benchmarks/2026-10-07-longmemeval-w10b-reader-replay.md),
+  [W10c](benchmarks/2026-10-07-longmemeval-w10c-full-context.md),
+  [replay report](benchmarks/2026-11-01-longmemeval-particle-replay/REPORT.md),
+  [recheck](findings/2026-11-01-particle-1-longmemeval-w10b.md).
 
 ## Relationships and calibration
 
@@ -69,6 +97,15 @@ says which ones do not and why. Everything above [Changelog](#changelog) is curr
   [Notice](benchmarks/2026-10-02-model-ladder.md#retired-2026-10-12).
 
 ## Changelog
+
+### 2026-11-01: particle-1 replay and GPT-6.1 Sol cost figures
+
+The recheck behind the [particle-1 W10b finding](findings/2026-11-01-particle-1-longmemeval-w10b.md) recounted the
+replay's numbers from its committed rows. Every quoted count and interval reproduced, and so did every particle-1
+cost. Two entries are added under LongMemEval. The first covers two figures in the replay report: Opus 5.5's list cost
+per correct answer in the results table ($0.0994, correctly $0.0993) and the batch-price figures for Opus 5.5 and
+Sonnet 5.5 ($0.0507 and $0.0255, at the batch rate $0.0497 and $0.0250). The second reprices GPT-6.1 Sol's reader
+costs in W10b, W10c and the replay report at OpenAI's cache-write rate, which W10's ledger did not yet apply.
 
 ### 2026-11-01: Page created from README's corrections
 
