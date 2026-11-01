@@ -171,23 +171,26 @@ describe('particleLoop', () => {
     expect(run.stop).toBe('context_overflow');
   });
 
-  test('a 2xx without choices[0].message is retried, its usage kept on the error attempt', async () => {
+  // Value: protects=a particle turn answered 2xx without a message is billed once (issue #280); fails_when=postJson retries the 2xx as a server error, up to 6 sends a turn, or the run lacks timed_out so a caller asks the question again; why_new=postJson throws a compat 2xx without a message at once with its 2xx status, which compatMayHaveBilled reads; seam=none; no_claim=whether Particle bills an answer without a message
+  test('a 2xx without choices[0].message is sent once, its usage kept on the error attempt, and ends the run with timed_out, on Hard runs too (#280)', async () => {
     const empty = { id: 'x', model: 'particle-ai/particle-1', choices: [], usage: { prompt_tokens: 10, completion_tokens: 5 } };
-    const { run, attempts } = await drive('particle', 'particle-1', {}, { faults: [{ status: 200, body: JSON.stringify(empty) }] });
-    const clean = await drive('particle', 'particle-1');
-    expect(run.stop).toBe('submitted');
-    expect(run.usage).toEqual({ ...clean.run.usage, input: clean.run.usage.input + 10, output: clean.run.usage.output + 5, requests: clean.run.usage.requests + 1 });
-    expect(attempts[0]).toMatchObject({ status: 'error', response: empty, turn: 1 });
-    expect(attempts[0].error).toContain('without choices[0].message');
-    expect(delays).toEqual([2500]);
+    const { run, attempts, requests } = await drive('particle', 'particle-1', {}, { faults: [{ status: 200, body: JSON.stringify(empty) }] });
+    expect([run.stop, run.timed_out, requests.length]).toEqual(['error', true, 1]);
+    expect(run.usage).toEqual({ input: 10, output: 5, cache_read: 0, cache_write: 0, requests: 1 });
+    expect(attempts).toEqual([expect.objectContaining({ status: 'error', response: empty, turn: 1 })]);
+    expect(attempts[0].error).toContain('provider error 200: particle answered 200 without choices[0].message');
+    const hard = await drive('particle', 'particle-1', { classifyStops: true }, { faults: [{ status: 200, body: JSON.stringify(empty) }] });
+    expect([hard.run.stop, hard.run.timed_out, hard.requests.length]).toEqual(['error', true, 1]);
+    expect(delays).toEqual([]);
   });
 
-  test('a 2xx whose body is not JSON is recorded and retried as a server error', async () => {
-    const { run, attempts } = await drive('particle', 'particle-1', {}, { faults: [{ status: 200, body: '<html>bad gateway</html>' }] });
-    expect(run.stop).toBe('submitted');
-    expect(attempts[0]).toMatchObject({ status: 'error', response: null, turn: 1, retry_after_ms: null });
+  // Value: protects=a particle turn answered 2xx with a body that is not JSON is sent once (issue #280); fails_when=postJson retries it as a server error; why_new=any compat 2xx without a message ends the turn; seam=none; no_claim=which gateways answer 200 with HTML
+  test('a 2xx whose body is not JSON is recorded and never sent again (#280)', async () => {
+    const { run, attempts, requests } = await drive('particle', 'particle-1', {}, { faults: [{ status: 200, body: '<html>bad gateway</html>' }] });
+    expect([run.stop, run.timed_out, requests.length]).toEqual(['error', true, 1]);
+    expect(attempts).toEqual([expect.objectContaining({ status: 'error', response: null, turn: 1, retry_after_ms: null })]);
     expect(attempts[0].error).toContain('with a body that is not JSON: <html>bad gateway</html>');
-    expect(delays).toEqual([2500]);
+    expect(delays).toEqual([]);
   });
 
   test('a network failure or a body that is not JSON leaves an attempt on the other branches too, and still ends the run at once', async () => {
@@ -204,7 +207,7 @@ describe('particleLoop', () => {
     expect(delays).toEqual([]);
   });
 
-  test('a JSON null body: the other branches record it and fail at once as before, and Particle retries it as a server error', async () => {
+  test('a JSON null body: the other branches record it and fail at once as before, and Particle records it and never sends it again (#280)', async () => {
     const nullBody = (async () => new Response('null', { status: 200 })) as unknown as typeof fetch;
     for (const [p, model] of [['anthropic', 'claude-opus-5-5'], ['openai', 'gpt-6.1-sol']] as const) {
       const attempts: ProviderAttempt[] = [];
@@ -213,10 +216,10 @@ describe('particleLoop', () => {
       expect(attempts).toEqual([expect.objectContaining({ status: 'ok', response: null, turn: 1 })]);
     }
     expect(delays).toEqual([]);
-    const { run, attempts } = await drive('particle', 'particle-1', {}, { faults: [{ status: 200, body: 'null' }] });
-    expect(run.stop).toBe('submitted');
+    const { run, attempts, requests } = await drive('particle', 'particle-1', {}, { faults: [{ status: 200, body: 'null' }] });
+    expect([run.stop, run.timed_out, requests.length]).toEqual(['error', true, 1]);
     expect(attempts[0].error).toContain('answered 200 without choices[0].message: null');
-    expect(delays).toEqual([2500]);
+    expect(delays).toEqual([]);
   });
 
   test('a body that fails to read is recorded as an attempt and ends the run as an error', async () => {

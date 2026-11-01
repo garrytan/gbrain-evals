@@ -11,7 +11,7 @@ import { BudgetExceededError, chatPrice, priceRequest } from '../../eval/runner/
 import { REFUSAL_TYPE } from '../../eval/runner/harness-metering-proxy.ts';
 import {
   CANARY_MAX_OUTPUT_TOKENS, COMPAT_PROVIDERS, CompatHttpError, PRIMARY_MODELS, ParticleCreditExhausted, RETRY_AFTER_CAP_MS,
-  assertMetered, classifyCompatError, compatError, compatRequest, compatSend, modelsNotRun, parseCompatResponse, type CanarySampling,
+  assertMetered, classifyCompatError, compatError, compatMayHaveBilled, compatRequest, compatSend, modelsNotRun, parseCompatResponse, type CanarySampling,
 } from '../../eval/runner/providers/openai-compatible.ts';
 import { normalizeUsage, receipt, responseMeta, usageSourceOf } from '../../eval/runner/usage-receipt.ts';
 
@@ -242,13 +242,17 @@ describe('compatSend and parseCompatResponse', () => {
     expect((await compatSend(compatRequest('particle:particle-1', ASK, {}, SLOT), { fetchImpl: mockFetch([{ body: {} }]).impl }).catch(x => x)).usage).toBeNull();
   });
 
-  test('a 2xx answer without choices[0].message is a retryable server error, never an empty answer', async () => {
-    for (const body of [{}, { choices: [] }, { choices: [{ finish_reason: 'stop' }] }]) {
+  // Value: protects=no caller of compatSend sends a 2xx answer again (issue #280); fails_when=a 2xx without a message is retryable, or compatMayHaveBilled does not read it as billed, so qa-v2, the full-context reader, the workload route or the canary resend it; why_new=compatSend marks it not retryable and compatMayHaveBilled reads its 2xx status; seam=none; no_claim=whether Particle bills an answer without a message
+  test('a 2xx answer without choices[0].message, or whose body is not JSON, is an error that is not retryable and that compatMayHaveBilled reads as billed, never an empty answer (#280)', async () => {
+    for (const body of [{}, { choices: [] }, { choices: [{ finish_reason: 'stop' }] }, '<html>ok</html>']) {
       const e = await compatSend(compatRequest('particle:particle-1', ASK, {}, SLOT), { fetchImpl: mockFetch([{ body }]).impl }).catch(x => x);
       expect(e).toBeInstanceOf(CompatHttpError);
-      expect(e).toMatchObject({ status: 200, kind: 'server', retryable: true });
-      expect(e.message).toContain('no choices[0].message');
+      expect(e).toMatchObject({ status: 200, kind: 'server', retryable: false });
+      expect(e.message).toContain(typeof body === 'string' ? 'response body is not JSON' : 'no choices[0].message');
+      expect(compatMayHaveBilled(e)).toBe(true);
     }
+    const read = (status: number) => compatMayHaveBilled(new CompatHttpError(classifyCompatError('particle', status, 'x')));
+    expect([read(429), read(500), read(502), read(503), read(504)]).toEqual([false, false, false, false, true]);
   });
 
   test('a credit 402 rejects with ParticleCreditExhausted', async () => {

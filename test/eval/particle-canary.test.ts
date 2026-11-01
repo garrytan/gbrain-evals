@@ -132,17 +132,18 @@ describe('answers stopped by an output limit, blank answers and billed malformed
     } finally { server.stop(true); }
   });
 
-  test('a 2xx answer without a message is retried, and its attempt\'s receipt keeps the usage it reported', async () => {
+  // Value: protects=a billed canary answer without a message is paid for once (issue #280); fails_when=the canary retries a 2xx without a message as a server error; why_new=compatSend marks a 2xx without a message not retryable; seam=none; no_claim=whether Particle bills an answer without a message
+  test('a 2xx answer without a message is never sent again, and its attempt\'s receipt keeps the usage it reported (#280)', async () => {
     let n = 0;
     const server = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: () => (n++ === 0
       ? Response.json({ choices: [], usage: { prompt_tokens: 20, completion_tokens: 7, total_tokens: 27 } })
       : Response.json({ model: 'particle-ai/particle-1', choices: [{ index: 0, finish_reason: 'stop', message: { role: 'assistant', content: 'ok' } }] })) });
     try {
       const rec = await runCanary({ PARTICLE_API_KEY: 'dummy-key', PARTICLE_BASE_URL: `http://127.0.0.1:${server.port}/v1` }, { retryDelayMs: () => 0 });
-      expect(rec.results.every(r => r.status === 'ok')).toBe(true);
-      expect(rec.receipts[0]).toMatchObject({ attempt: 0, status: 'error', usage_raw: { prompt_tokens: 20, completion_tokens: 7, total_tokens: 27 }, usage: { input_total: 20, output_total: 7 } });
-      expect(rec.receipts[1]).toMatchObject({ question_id: 'c01', attempt: 1, status: 'ok' });
-      expect(n).toBe(CANARY_PROMPTS.length + 1);
+      expect(rec.results.map(r => r.status)).toEqual(CANARY_PROMPTS.map((_, i) => (i === 0 ? 'error' : 'ok')));
+      expect(rec.receipts[0]).toMatchObject({ question_id: 'c01', attempt: 0, status: 'error', usage_raw: { prompt_tokens: 20, completion_tokens: 7, total_tokens: 27 }, usage: { input_total: 20, output_total: 7 } });
+      expect(rec.receipts[1]).toMatchObject({ question_id: 'c02', attempt: 0, status: 'ok' });
+      expect(n).toBe(CANARY_PROMPTS.length);
     } finally { server.stop(true); }
   });
 

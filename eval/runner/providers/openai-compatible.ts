@@ -261,7 +261,7 @@ export function classifyCompatError(provider: string, status: number, body: stri
   return { provider, status, kind, retryable: kind === 'rate_limited' || kind === 'server', retryAfterMs: retryAfter(header), body };
 }
 
-/** A non-2xx answer that is not a budget stop. */
+/** A non-2xx answer that is not a budget stop, or a 2xx answer without a usable `choices[0].message` (`compatSend`). */
 export class CompatHttpError extends Error {
   readonly status: number;
   readonly kind: CompatErrorKind;
@@ -299,11 +299,13 @@ export function compatConnectionLost(e: unknown): boolean {
 }
 
 /**
- * A request the provider may have billed: it timed out (`compatTimedOut`) or its connection was lost after it went out
- * (`compatConnectionLost`). A caller never sends it again, with or without a metering proxy in front.
+ * A request the provider may have billed: it timed out (`compatTimedOut`), its connection was lost after it went out
+ * (`compatConnectionLost`), or it was answered 2xx without a usable `choices[0].message` (an error carrying that 2xx
+ * status, issue #280). A caller never sends it again, with or without a metering proxy in front.
  */
 export function compatMayHaveBilled(e: unknown): boolean {
-  return compatTimedOut(e) || compatConnectionLost(e);
+  const status = (e as { status?: unknown } | null)?.status;
+  return compatTimedOut(e) || compatConnectionLost(e) || (typeof status === 'number' && status >= 200 && status < 300);
 }
 
 /** Particle answered 402 without a proxy's marker: the prepaid balance is empty. Throw it after the failing attempt's receipt is written. */
@@ -346,9 +348,10 @@ export function assertMetered(req: CompatRequest): void {
 
 /**
  * Send one request, once, after `assertMetered`. A non-2xx answer throws `compatError`'s error; the caller's own loop
- * decides any retry. A 2xx answer without `choices[0].message` is a server error carrying the usage it reported,
- * never an empty answer. `timeoutMs` (300 s unless given) is the only deadline: Bun's own 300-second fetch timeout is
- * off, so a longer deadline holds.
+ * decides any retry. A 2xx answer without `choices[0].message`, or whose body is not JSON, is an error carrying its 2xx
+ * status and the usage it reported, never an empty answer, and it is not retryable: the provider answered, so it may
+ * have billed it (`compatMayHaveBilled`, issue #280). `timeoutMs` (300 s unless given) is the only deadline: Bun's own
+ * 300-second fetch timeout is off, so a longer deadline holds.
  */
 export async function compatSend(req: CompatRequest, opts: { fetchImpl?: typeof fetch; timeoutMs?: number } = {}): Promise<CompatResponse> {
   assertMetered(req);
@@ -357,9 +360,9 @@ export async function compatSend(req: CompatRequest, opts: { fetchImpl?: typeof 
   if (!res.ok) throw compatError(classifyCompatError(req.provider, res.status, text, res.headers));
   let json: unknown;
   try { json = JSON.parse(text); }
-  catch { throw new CompatHttpError({ provider: req.provider, status: res.status, kind: 'server', retryable: true, retryAfterMs: null, body: `response body is not JSON: ${text.slice(0, 200)}` }); }
+  catch { throw new CompatHttpError({ provider: req.provider, status: res.status, kind: 'server', retryable: false, retryAfterMs: null, body: `response body is not JSON: ${text.slice(0, 200)}` }); }
   const parsed = parseCompatResponse(json);
   const choices = (json as { choices?: Array<{ message?: unknown }> } | null)?.choices;
-  if (!Array.isArray(choices) || !choices[0]?.message) throw new CompatHttpError({ provider: req.provider, status: res.status, kind: 'server', retryable: true, retryAfterMs: null, body: `response has no choices[0].message: ${text.slice(0, 200)}` }, parsed.usage);
+  if (!Array.isArray(choices) || !choices[0]?.message) throw new CompatHttpError({ provider: req.provider, status: res.status, kind: 'server', retryable: false, retryAfterMs: null, body: `response has no choices[0].message: ${text.slice(0, 200)}` }, parsed.usage);
   return parsed;
 }

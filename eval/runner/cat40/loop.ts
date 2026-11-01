@@ -67,7 +67,7 @@ export class HarnessError extends Error {
   constructor(message: string) { super(message); this.name = 'HarnessError'; }
 }
 
-/** A provider's non-2xx answer, after backoff for retryable statuses. */
+/** A provider's non-2xx answer, after backoff for retryable statuses, or a particle 2xx without a message (its 2xx status). */
 export class ProviderError extends Error {
   constructor(readonly status: number, readonly body: string) { super(`provider error ${status}: ${body.slice(0, 500)}`); this.name = 'ProviderError'; }
 }
@@ -95,8 +95,9 @@ export interface AgentRun {
   /** Particle runs only: turns with at least one tool call whose arguments were not a JSON object (run with `{}`). */
   unparseable_tool_turns?: number;
   /**
-   * Particle runs only: the run ended on a turn that timed out, or lost its connection after it went out
-   * (`compatMayHaveBilled`). Particle may have billed that turn, so a caller never runs the question again.
+   * Particle runs only: the run ended on a turn that timed out, lost its connection after it went out, or was answered
+   * 2xx without a message (`compatMayHaveBilled`). Particle may have billed that turn, so a caller never runs the
+   * question again.
    */
   timed_out?: true;
 }
@@ -193,8 +194,9 @@ export const RETRYABLE_STATUS = [429, 500, 502, 503, 504, 529];
  * failure included, before it propagates. `compat` names an OpenAI-compatible provider (Particle): its errors are
  * classified by the provider module, a retry waits at least the Retry-After it sends (capped at 120 s) and never less
  * than the backoff (and not after the last attempt), a credit or proxy 402 throws the budget stop after its attempt is
- * recorded, and a 2xx that is not JSON or has no `choices[0].message` is retried as a server error. A `compat` request
- * is sent with `compatDeadlineMs` instead of Bun's 300-second fetch timeout, and a 504 (a gateway's or the lease
+ * recorded, and a 2xx that is not JSON or has no `choices[0].message` is recorded and thrown as a ProviderError with
+ * its 2xx status, never sent again, because the provider answered it and may have billed it (issue #280). A `compat`
+ * request is sent with `compatDeadlineMs` instead of Bun's 300-second fetch timeout, and a 504 (a gateway's or the lease
  * proxy's timeout, which the provider may have billed) is never sent again (issue #253). Without `compat` (Anthropic,
  * OpenAI) requests, retries and waits are as they always were, and a 2xx that is not JSON still throws, after its
  * attempt is recorded.
@@ -231,10 +233,9 @@ async function postJson(fetchImpl: typeof fetch, url: string, headers: Record<st
         onAttempt?.({ status: 'ok', response: json, error: null, ms: Date.now() - t });
         return json!;
       }
-      last = new ProviderError(502, `${compat} answered ${res.status} ${parsed ? 'without choices[0].message' : 'with a body that is not JSON'}: ${text.slice(0, 300)}`);
-      onAttempt?.({ status: 'error', response: json, error: last.message, ms: Date.now() - t, retry_after_ms: null });
-      if (attempt < 5) await new Promise(r => setTimeout(r, Math.min(60_000, 2000 * 2 ** attempt) + Math.random() * 1000));
-      continue;
+      const answered = new ProviderError(res.status, `${compat} answered ${res.status} ${parsed ? 'without choices[0].message' : 'with a body that is not JSON'}: ${text.slice(0, 300)}`);
+      onAttempt?.({ status: 'error', response: json, error: answered.message, ms: Date.now() - t, retry_after_ms: null });
+      throw answered;
     }
     last = new ProviderError(res.status, text);
     const info = compat ? classifyCompatError(compat, res.status, text, res.headers) : null;
