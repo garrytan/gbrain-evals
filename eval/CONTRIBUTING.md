@@ -118,9 +118,10 @@ lanes.
    Without `CAT35_FULL=1` the runner scores the two-conversation smoke set. `--lanes none` scores only your folder. A run
    needs `ANTHROPIC_API_KEY` and `OPENAI_API_KEY` like any Cat 35 run. Before the first judge call the runner prints
    its pre-flight cost projection, with your lane's share, and refuses to start when the projection exceeds
-   `CAT35_HARD_STOP_USD` (default $40). Your lane's share is priced from the documents it read: every judge call that
-   can read a document, its claims or the conversation, at the judge model's rates, each with its full answer allowance
-   and one retry, so a folder of large documents judged by an Opus or GPT model can exceed the default cap.
+   `CAT35_HARD_STOP_USD` (default $40). Your lane's share is priced from the documents it read, as the judge receives
+   them: every judge call that can read a document, its claims or the conversation, at the judge model's rates, each
+   with its full answer allowance and one retry, so a folder of large documents judged by an Opus or GPT model can
+   exceed the default cap.
 
 Your lane is judged the way gbrain's dream lane is, on recall of the planted facts with an evidence check that the quote
 the judge cites is in your document and in the conversation, plus claim grounding, distractor leakage, the usability

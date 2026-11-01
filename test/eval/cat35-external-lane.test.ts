@@ -30,8 +30,9 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { initLedger, readLedger } from '../../eval/runner/budget-ledger.ts';
+import { initLedger, priceRequest, readLedger, reservationUsd } from '../../eval/runner/budget-ledger.ts';
 import { segmentClaims } from '../../eval/runner/cat35-checks.ts';
+import { confirmDistractorLeaks, scoreGrounding, scoreSalienceCoverage, scoreUsabilityChecklist } from '../../eval/runner/cat35-judges.ts';
 import {
   completedWs0Receipt,
   EXTERNAL_DOC_MAX_BYTES,
@@ -236,7 +237,7 @@ describe.skipIf(!FD_PATHS)('readExternalDocs on a hostile folder', () => {
 
 describe('externalJudgeEstimateUsd', () => {
   const transcript = 'user: we shipped the fix today and agreed to keep the old flag for a week\n'.repeat(80);
-  const base = { document: 'The user shipped the fix today.', claims: 1, transcript, items: 8, distractors: 4, hazards: 1 };
+  const base = { document: 'The user shipped the fix today.', transcript, items: 8, distractors: 4, hazards: 1 };
   const est = (over: Partial<typeof base>, model = 'claude-sonnet-5-5') => externalJudgeEstimateUsd([{ ...base, ...over }], model);
 
   test('larger documents cost more, counted as the judge sees them, escaped', () => {
@@ -248,13 +249,14 @@ describe('externalJudgeEstimateUsd', () => {
     const big = 'a'.repeat(EXTERNAL_DOC_MAX_BYTES);
     const hazardCall = est({ document: big, hazards: 1 }) - est({ document: big, hazards: 0 });
     expect(est({ document: big, hazards: 3 }) - est({ document: big, hazards: 0 })).toBeCloseTo(3 * hazardCall, 10);
-    expect(est({ claims: 1 }) - est({ claims: 0 })).toBeLessThan(est({ claims: 1, transcript: transcript.repeat(4) }) - est({ claims: 0, transcript: transcript.repeat(4) }));
+    const noClaim = 'Fix shipped.';
+    expect(est({}) - est({ document: noClaim })).toBeLessThan(est({ transcript: transcript.repeat(4) }) - est({ document: noClaim, transcript: transcript.repeat(4) }));
   });
 
   test('an empty document costs only the coverage call on a signal conversation, and nothing on a routine one', () => {
-    expect(est({ document: '', claims: 0 })).toBeGreaterThan(0);
-    expect(est({ document: '', claims: 0 })).toBeLessThan(est({ document: 'x', claims: 0 }) / 4);
-    expect(est({ document: '', claims: 0, items: 0 })).toBe(0);
+    expect(est({ document: '' })).toBeGreaterThan(0);
+    expect(est({ document: '' })).toBeLessThan(est({ document: 'x' }) / 4);
+    expect(est({ document: '', items: 0 })).toBe(0);
     expect(externalJudgeEstimateUsd([], 'claude-sonnet-5-5')).toBe(0);
   });
 
@@ -262,6 +264,31 @@ describe('externalJudgeEstimateUsd', () => {
     expect(est({}, 'claude-opus-5-5')).toBeGreaterThan(est({}, 'claude-sonnet-5-5'));
     expect(est({}, 'claude-sonnet-5-5')).toBeGreaterThan(est({}, 'claude-haiku-5-5'));
     expect(() => est({}, 'claude-unpriced-9')).toThrow('no chat price');
+  });
+
+  test('it covers what the ledger reserves for the requests the judges build, including quote- and control-heavy claims', async () => {
+    const tid = 'coding-reflection-01';
+    const g = gold(tid);
+    const conversation = readFileSync(join(ROOT, 'eval/data/transcript-distill-v1/transcripts-txt', `${g.base_ts.slice(0, 10)}-${tid}.txt`), 'utf8');
+    const claimDoc = (filler: string) => Array.from({ length: EXTERNAL_DOC_MAX_CLAIMS }, (_, i) => `The user noted detail ${i} ${filler.repeat(700)} today.`).join('\n');
+    for (const [kind, document] of Object.entries({ plain: claimDoc('a'), quotes: claimDoc('"'), control: claimDoc('\u0001') })) {
+      expect(segmentClaims(document), kind).toHaveLength(EXTERNAL_DOC_MAX_CLAIMS);
+      expect(Buffer.byteLength(document), kind).toBeLessThanOrEqual(EXTERNAL_DOC_MAX_BYTES);
+      const requests: any[] = [];
+      // A judge that never calls its tool makes every judge retry once, as the estimate assumes.
+      const cfg = { model: 'claude-sonnet-5-5', client: { messages: { async create(req: any) { requests.push(req); return { model: 'stub', content: [], usage: { input_tokens: 1, output_tokens: 1 } }; } } } };
+      await scoreSalienceCoverage({ lane: 'external', transcript_id: tid, document, items: g.items.map((i: any) => ({ item_id: i.item_id, statement: i.statement })) }, cfg);
+      await scoreUsabilityChecklist({ transcript_id: tid, pages: [{ slug: `external/${tid}`, body: document }], hasGoldVibes: true }, cfg);
+      await confirmDistractorLeaks({ document, hits: g.distractors.map((d: any) => ({ distractor_id: d.distractor_id, statement: d.statement })) }, cfg);
+      for (const h of g.hazards) await scoreGrounding({ label: `hazard:external:${h.hazard_id}`, claims: [h.wrong_claim], transcript: document }, cfg);
+      await scoreGrounding({ label: `external:${tid}`, claims: segmentClaims(document), transcript: conversation }, cfg);
+      await scoreGrounding({ label: `joint:external:${tid}`, claims: g.items.map(() => '\u0001'.repeat(200)), transcript: conversation }, cfg);
+      expect(requests).toHaveLength(2 * (5 + g.hazards.length));
+      const reserved = requests.reduce((usd, req) => usd + reservationUsd(priceRequest('https://api.anthropic.com/v1/messages', req)!), 0);
+      const estimate = externalJudgeEstimateUsd([{ document, transcript: conversation, items: g.items.length, distractors: g.distractors.length, hazards: g.hazards.length }], 'claude-sonnet-5-5');
+      expect(estimate, kind).toBeGreaterThanOrEqual(reserved);
+      expect(estimate, kind).toBeLessThan(reserved * 1.2);
+    }
   });
 });
 

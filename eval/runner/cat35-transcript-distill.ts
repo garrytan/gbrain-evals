@@ -222,6 +222,8 @@ export const EXTERNAL_PROVENANCE_NOTE =
  * items or distractor hits, and framing. The largest, coverage over ten items, is 3.6 KB.
  */
 const JUDGE_CALL_FIXED_BYTES = 4096;
+/** One evidence quote in the joint-evidence call: up to 200 characters, each at most 6 bytes JSON-encoded, and its index. */
+const EVIDENCE_QUOTE_MAX_BYTES = 200 * 6 + 16;
 
 /**
  * Worst-case judge spend on the external lane, priced from the documents read rather than at the
@@ -229,27 +231,30 @@ const JUDGE_CALL_FIXED_BYTES = 4096;
  * reserves for every judge attempt the documents can cause. A signal conversation's document goes
  * to the coverage judge, even when empty. A non-empty document also goes to the usability and
  * distractor judges and to one hazard call per planted hazard, its claims and the conversation to
- * the grounding judge, and the conversation to the joint-evidence fallback. Text counts as escaped
- * for the prompt, at the ledger's 3 bytes per token; every attempt reserves the full answer
- * (cat35-judges' 2,000 tokens, with the room a Claude 5 judge thinks in or the OpenAI shim's
- * floor), and every judge retries once.
+ * the grounding judge, and the conversation and one evidence quote per item to the joint-evidence
+ * fallback. Text counts as the judge receives it (escaped, each claim JSON-encoded), at the
+ * ledger's 3 bytes per token; every attempt reserves the full answer (cat35-judges' 2,000 tokens,
+ * with the room a Claude 5 judge thinks in or the OpenAI shim's floor), and every judge retries
+ * once. The Anthropic SDK's own transport retries under an attempt are not counted (#258).
  */
 export function externalJudgeEstimateUsd(
-  docs: Array<{ document: string; claims: number; transcript: string; items: number; distractors: number; hazards: number }>,
+  docs: Array<{ document: string; transcript: string; items: number; distractors: number; hazards: number }>,
   judgeModel: string,
 ): number {
   const maxOutputTokens = Math.max(withThinkingRoom(judgeModel, 2000), isOpenAIModel(judgeModel) ? OPENAI_JUDGE_MIN_OUTPUT_TOKENS : 0);
   const price = { ...judgePrice(judgeModel), cacheWritePremium: true, maxOutputTokens };
+  const escaped = (text: string) => Buffer.byteLength(escapeUntrusted(text));
   let usd = 0;
   for (const d of docs) {
-    const doc = Buffer.byteLength(escapeUntrusted(d.document));
-    const transcript = Buffer.byteLength(escapeUntrusted(d.transcript));
+    const doc = escaped(d.document);
+    const transcript = escaped(d.transcript);
+    const claims = segmentClaims(d.document);
     const calls = d.items ? [doc] : [];
     if (d.document) {
       calls.push(doc, ...Array<number>(d.hazards).fill(doc));
       if (d.distractors) calls.push(doc);
-      if (d.claims) calls.push(doc + transcript);
-      if (d.items) calls.push(transcript);
+      if (claims.length) calls.push(escaped(claims.map((c, i) => `  ${i}: ${JSON.stringify(c)}`).join('\n')) + transcript);
+      if (d.items) calls.push(transcript + d.items * EVIDENCE_QUOTE_MAX_BYTES);
     }
     for (const bytes of calls) usd += 2 * reservationUsd({ ...price, inputTokens: Math.ceil((bytes + JUDGE_CALL_FIXED_BYTES) / 3) });
   }
@@ -923,7 +928,7 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
     ? externalJudgeEstimateUsd(externalDocs.files.map((file) => {
         const f = fixtures.find((x) => x.gold.transcript_id === file.transcript_id)!;
         return {
-          document: externalDocs.docs.get(file.transcript_id)!, claims: file.claims, transcript: f.transcriptText,
+          document: externalDocs.docs.get(file.transcript_id)!, transcript: f.transcriptText,
           items: f.gold.items.length, distractors: f.gold.distractors.length, hazards: f.gold.hazards.length,
         };
       }), judgeModel)
