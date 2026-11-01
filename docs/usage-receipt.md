@@ -134,8 +134,8 @@ memory-qa and Q1, a Particle attempt waits up to the metering proxies' 900-secon
 lease-proxy slot it waits that deadline plus the proxy's longest admission wait (600 seconds) and a minute, so the
 proxy always answers first (issue #271). An attempt that times out, or whose transport fails in any way not proven to
 happen before the request was sent, is the last attempt, because Particle may have billed it. Only a refused
-connection, a host name that does not resolve, no route to the host, a URL fetch refuses and a rejected TLS
-certificate are proven (`COMPAT_PRE_SEND_CODES`, issue #288), so a reset, a malformed response, a bad chunk or a body
+connection, a host name that does not resolve, no route to the host or no local address to send from, a URL fetch
+refuses and a rejected TLS certificate are proven (`COMPAT_PRE_SEND_CODES`, issue #288), so a reset, a malformed response, a bad chunk or a body
 that fails to decompress ends the loop too. A Q1 cell records that answer as a final `reader_error` and does not ask
 the question again. The Q1 file agent's particle turns follow the same rules: a turn that times out, fails in
 transport in a way not proven to happen before sending, or is answered 504 ends the question as a final
