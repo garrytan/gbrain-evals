@@ -1026,13 +1026,14 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
           continue;
         }
         const pq = sanitizer.question(q, lastEventTime);
-        const res = await meter.around('agent', `answer:${aid.slice(0, 16)}`, 'reader', () => (system as AnsweringSystem).answer(ns, pq, { reader: rd, replicate: rep }));
+        const res = await meter.around('agent', `answer:${aid.slice(0, 16)}`, 'reader', () => (system as AnsweringSystem).answer(ns, pq, { reader: rd, replicate: rep, answer_id: aid }));
         if (res.error !== undefined) { appendAnswer(answerRecord(id, { text: '', outcome: 'reader_error', usage: zero, latency_ms: 0, provider_input_tokens: null }), String((res.error as Error).message)); continue; }
         const a = res.value!;
         const gold = q.gold.map(g => sanitizer.source(q.conversation, g));
         const opened = a.opened_source_ids.filter(s => gold.includes(s)).length;
         extra.evidence_opened = { ...(extra.evidence_opened ?? {}), [rd]: gold.length ? opened / new Set(gold).size : null };
         appendAnswer(answerRecord(id, { ...a, outcome: a.outcome === 'scored' && degraded ? 'ingest_degraded' : a.outcome, opened_source_ids: a.opened_source_ids.map(s => sanitizer.sessionOf(ns, s) ?? s) }), a.error);
+        if (a.outcome === 'budget_not_run') stopped = `budget: ${String(a.error).slice(0, 200)}`;
       }
       return extra;
     };
@@ -1265,7 +1266,7 @@ export function pinnedImages(root = resolve(import.meta.dir, '../../..')): Recor
 }
 
 /** Repository paths every Q1 cell executes (their git tree enters the campaign hash). */
-export const EXECUTES = ['eval/runner/q1/cell.ts', 'eval/runner/q1/cells', 'eval/runner/q1/scoreboard-errors.ts', 'eval/runner/q1/usage.ts', 'eval/runner/memory-qa', 'eval/runner/systems', 'eval/runner/cat40', 'eval/runner/decisions',
+export const EXECUTES = ['eval/runner/q1/cell.ts', 'eval/runner/q1/cells', 'eval/runner/q1/scoreboard-errors.ts', 'eval/runner/q1/usage.ts', 'eval/runner/memory-qa', 'eval/runner/systems', 'eval/runner/cat40', 'eval/runner/decisions', 'eval/runner/providers',
   'eval/runner/metering-proxy.ts', 'eval/runner/budget-ledger.ts', 'eval/runner/usage-receipt.ts', 'eval/runner/openai-judge-shim.ts', 'eval/runner/paid-arm.ts', 'eval/runner/metrics.ts', 'eval/runner/sealed-confirmation-lib.ts', 'eval/runner/shootout-cell.ts',
   'eval/runner/evidence-delivery', 'eval/runner/gbrain-under-test.ts', 'eval/runner/lifecycle/builds.ts',
   'eval/runner/longmemeval-cache.ts', 'eval/runner/receipt.ts', 'scripts/ubicloud/ubi-runner.sh', 'eval/runner/situation-recall-provenance.ts', 'eval/generators/model-ladder-gen.ts',

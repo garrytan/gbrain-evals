@@ -5,9 +5,9 @@
  * true full-context baseline (reader windows, fit and refusal, per-conversation
  * prompt caching against a recorded fetch).
  */
-import { afterAll, describe, expect, test } from 'bun:test';
+import { afterAll, afterEach, beforeEach, describe, expect, test } from 'bun:test';
 import { createHash } from 'node:crypto';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { CHAT_PRICE_OVERRIDES } from '../../eval/runner/budget-ledger.ts';
@@ -376,5 +376,84 @@ describe('true full context', () => {
     expect(new FullContextSystem('whole-history').name).toBe('baseline-full-context');
     expect(new FullContextSystem('recency').name).toBe('baseline-recency');
     expect((await new FullContextSystem('whole-history').capabilities()).fit).toMatch(/does_not_fit/);
+  });
+});
+
+describe('file agent with particle-1 (plan GST-605 Phase 3)', () => {
+  const KEYS = ['PARTICLE_API_KEY', 'PARTICLE_BASE_URL'] as const;
+  let saved: Record<string, string | undefined> = {};
+  beforeEach(() => { saved = Object.fromEntries(KEYS.map(k => [k, process.env[k]])); process.env.PARTICLE_API_KEY = 'test-key'; delete process.env.PARTICLE_BASE_URL; });
+  afterEach(() => { for (const k of KEYS) { if (saved[k] === undefined) delete process.env[k]; else process.env[k] = saved[k]; } });
+
+  const ns = 'ns-00000000000000p1';
+  const ingest = async (sys: FileAgentSystem) => sys.ingestSession(ns, { source_id: 'src-00000000000000p1', turns: [{ role: 'user', speaker: 'User', content: 'my dog is called Rex' }] }, '2026-01-02T00:00:00Z');
+  const chat = (message: Record<string, unknown>, finish: string) => ({ id: 'c', model: 'particle-ai/particle-1', choices: [{ index: 0, message: { role: 'assistant', ...message }, finish_reason: finish }],
+    usage: { prompt_tokens: 500, completion_tokens: 40, prompt_tokens_details: { cached_tokens: 300 }, completion_tokens_details: { reasoning_tokens: 30 } }, service_tier: 'default', metadata: { weight_version: 'default' } });
+  const call = (name: string, args: unknown) => ({ content: null, tool_calls: [{ id: `call_${name}`, type: 'function', function: { name, arguments: JSON.stringify(args) } }] });
+
+  test('readers: particle:particle-1 parses; a particle: id the loop cannot route refuses', () => {
+    expect(parseReader('particle:particle-1')).toEqual({ provider: 'particle', model: 'particle-1' });
+    for (const bad of ['particle:gpt-6.1-sol', 'openai:particle-1', 'particle:particle-9']) expect(() => parseReader(bad)).toThrow(DecideError);
+  });
+
+  test('proxiedFetch sends Particle\'s documented base URLs to PARTICLE_BASE_URL and leaves others alone', async () => {
+    const seen: string[] = [];
+    const base = (async (u: string | URL | Request) => { seen.push(String(u)); return new Response('{}'); }) as typeof fetch;
+    const f = proxiedFetch({ PARTICLE_BASE_URL: 'http://127.0.0.1:8787/slot-2/particle/v1/' }, base);
+    await f('https://api.particle.ai/v1/chat/completions');
+    await f('https://us.api.particle.ai/v1/chat/completions');
+    await f('http://127.0.0.1:8787/slot-2/particle/v1/chat/completions');
+    await proxiedFetch({}, base)('https://api.particle.ai/v1/chat/completions');
+    expect(seen).toEqual(['http://127.0.0.1:8787/slot-2/particle/v1/chat/completions', 'http://127.0.0.1:8787/slot-2/particle/v1/chat/completions',
+      'http://127.0.0.1:8787/slot-2/particle/v1/chat/completions', 'https://api.particle.ai/v1/chat/completions']);
+  });
+
+  test('a multi-turn question with one retry: every fake request leaves one receipt, keyed by the answer id, with its turn', async () => {
+    const bodies: Array<Record<string, any>> = [];
+    let n = 0;
+    const fetchImpl = (async (_url: string, init: RequestInit) => {
+      bodies.push(JSON.parse(String(init.body)));
+      n++;
+      if (n === 1) return new Response(JSON.stringify(chat(call('list_dir', { path: '.' }), 'tool_calls')));
+      if (n === 2) return new Response('{"error":{"message":"Rate limit exceeded"}}', { status: 429, headers: { 'retry-after': '0' } });
+      return new Response(JSON.stringify(chat(call('submit_answer', { answer: 'Rex' }), 'tool_calls')));
+    }) as unknown as typeof fetch;
+    const sys = new FileAgentSystem({ workDir: join(tmp, 'particle-retry'), fetchImpl });
+    await ingest(sys);
+    const a = await sys.answer(ns, { text: 'What is my dog called?', query_time: null }, { reader: 'particle:particle-1', replicate: 0, answer_id: 'a'.repeat(64) });
+    expect(a).toMatchObject({ text: 'Rex', outcome: 'scored', stop_reason: 'submitted', turns: 2 });
+    expect(bodies).toHaveLength(3);
+    expect(bodies.every(b => b.model === 'particle-1' && b.reasoning_effort === 'medium' && b.max_completion_tokens === 16_000)).toBe(true);
+    expect(bodies[0].tools.map((t: any) => t.function.name)).toEqual(['list_dir', 'grep', 'read_file', 'submit_answer']);
+    const receipts = readFileSync(sys.receiptsPath, 'utf8').trim().split('\n').map(l => JSON.parse(l));
+    expect(receipts).toHaveLength(bodies.length);
+    expect(receipts.map(r => [r.attempt, r.turn, r.status])).toEqual([[0, 1, 'ok'], [1, 2, 'error'], [2, 2, 'ok']]);
+    expect(receipts.every(r => r.lane === 'q1-file-agent' && r.question_id === 'a'.repeat(64) && r.model === 'particle:particle-1')).toBe(true);
+    expect(receipts[0].request).toEqual({ effort_sent: 'medium', effort_effective: 'high', output_limit_field: 'max_completion_tokens', output_limit: 16_000, temperature_sent: null, seed_sent: null });
+    expect(receipts[1]).toMatchObject({ response_model: null, usage: null, retry_after_ms: 0, response_meta: { weight_version: null, service_tier: null } });
+    expect(receipts[2]).toMatchObject({ response_model: 'particle-ai/particle-1', usage: { input_total: 500, cache_read: 300, reasoning: 30 }, response_meta: { weight_version: 'default' } });
+    expect(a.usage).toEqual({ input: 400, output: 80, cache_read: 600, cache_write: 0 });
+    await sys.close();
+  });
+
+  test('an empty Particle balance ends the question as budget_not_run, after the failing attempt\'s receipt', async () => {
+    let n = 0;
+    const fetchImpl = (async () => {
+      n++;
+      if (n === 1) return new Response(JSON.stringify(chat(call('list_dir', { path: '.' }), 'tool_calls')));
+      return new Response('{"error":{"message":"Insufficient credits"}}', { status: 402 });
+    }) as unknown as typeof fetch;
+    const sys = new FileAgentSystem({ workDir: join(tmp, 'particle-402'), fetchImpl });
+    await ingest(sys);
+    const a = await sys.answer(ns, { text: 'What is my dog called?', query_time: null }, { reader: 'particle:particle-1', replicate: 0 });
+    expect(a).toMatchObject({ text: '', outcome: 'budget_not_run', stop_reason: 'budget', turns: 2, provider_input_tokens: 500 });
+    expect(a.error).toStartWith('budget: Particle credit exhausted');
+    expect(a.usage).toEqual({ input: 200, output: 40, cache_read: 300, cache_write: 0 });
+    expect(a.usd).toBeCloseTo((200 * 0.25 + 300 * 0.03 + 40 * 1.0) / 1e6, 12);
+    expect(n).toBe(2);
+    const receipts = readFileSync(sys.receiptsPath, 'utf8').trim().split('\n').map(l => JSON.parse(l));
+    expect(receipts.map(r => [r.status, r.question_id])).toEqual([['ok', ns], ['error', ns]]);
+    expect(receipts[1].error).toStartWith('402:');
+    await sys.close();
   });
 });

@@ -23,6 +23,7 @@ import { answerProblems, judgmentProblems, rowProblems } from '../../eval/runner
 import { FakeMemorySystem, FAKE_CAPABILITIES, serveProtocol } from '../../eval/runner/systems/fake.ts';
 import { FRONTIER_READERS, FullContextSystem } from '../../eval/runner/systems/baselines.ts';
 import { FileAgentSystem } from '../../eval/runner/systems/file-agent.ts';
+import { BudgetExceededError } from '../../eval/runner/budget-ledger.ts';
 import type { ScriptedModel } from '../../eval/runner/cat40/loop.ts';
 import { CAMPAIGN_SCHEMA, type CampaignManifest } from '../../eval/runner/scoreboard.ts';
 
@@ -260,6 +261,21 @@ describe('whole-system arms through the cell runner', () => {
     expect(ndjson(join(dir, 'judgments.ndjson')).length).toBe(answers.length);
     const rec = JSON.parse(readFileSync(join(dir, 'receipt.json'), 'utf8'));
     expect(rec.ingest.write_start_to_queryable_ms.not_measurable).toBeGreaterThan(0);
+  });
+
+  test('file agent: a budget stop ends the question as budget_not_run and stops the cell before any later answer or judgment', async () => {
+    const def = cellDef('baseline-file-agent', 'in-process', [{ id: 'whole-agent', mode: 'agent' }], { configuration: 'baseline' });
+    const out = join(tmp, 'agent-budget');
+    let calls = 0;
+    const refuse = (async () => { calls++; throw new BudgetExceededError('budget: the ledger refused the reservation (test)'); }) as unknown as typeof fetch;
+    const res = await runCell(def, { out, maxAttempts: 1, ...quiet }, { corpus, system: new FileAgentSystem({ workDir: join(out, 'trees'), fetchImpl: refuse }), judge: scriptedJudge() });
+    expect(res.stopped).toStartWith('budget: budget: the ledger refused');
+    expect(res.status).toBe('partial');
+    expect(calls).toBe(1);
+    const dir = join(out, 'cells', def.arms[0].cell_id);
+    const answers = ndjson(join(dir, 'answers.ndjson'));
+    expect(answers.map(a => a.outcome)).toEqual(['budget_not_run']);
+    expect(existsSync(join(dir, 'judgments.ndjson')) ? ndjson(join(dir, 'judgments.ndjson')) : []).toEqual([]);
   });
 
   test('full context: a history over the window is does_not_fit, never judged', async () => {
