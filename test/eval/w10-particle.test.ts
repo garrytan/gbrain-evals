@@ -6,7 +6,7 @@
  */
 import { afterAll, afterEach, beforeEach, describe, expect, test } from 'bun:test';
 import { createHash } from 'node:crypto';
-import { mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { cpSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { gzipSync } from 'node:zlib';
@@ -234,6 +234,11 @@ describe('preregistered bars', () => {
 });
 
 describe('run', () => {
+  test('rows and receipts scrub machine paths from their error text only, so answers stay verbatim', () => {
+    const row = { answer: `see ${ROOT}/notes`, error: `ENOENT: ${ROOT}/eval/x.json`, official: { verdict: null, raw: `${tmpdir()}/raw`, error: `cache ${tmpdir()}/c.json` } };
+    expect(JSON.parse(JSON.stringify(row, P.scrubErrorText))).toEqual({ ...row, error: 'ENOENT: eval/x.json', official: { ...row.official, error: 'cache <tmp>/c.json' } });
+  });
+
   test('refuses an --out that already holds rows and leaves it as it was', async () => {
     const out = tmp();
     writeFileSync(join(out, 'rows.ndjson'), '{}\n');
@@ -291,6 +296,34 @@ describe('keyless re-score', () => {
     expect(() => P.report(dir, tmp())).toThrow('w10b-particle-notes did not finish');
   });
 
+  test('report refuses an arm with an answer whose judge call failed, since that answer was scored wrong unjudged', () => {
+    const dir = tmp();
+    const arm = join(dir, 'arms', 'w10b-particle-notes');
+    mkdirSync(arm, { recursive: true });
+    writeFileSync(join(arm, 'rows.ndjson'), [{ question_id: IDS[0], official: { verdict: true, raw: 'Yes.', error: null } }, { question_id: IDS[1], official: { verdict: null, raw: null, error: 'openai 503: unavailable' } }].map(r => JSON.stringify(r)).join('\n') + '\n');
+    writeFileSync(join(arm, 'receipt.json'), JSON.stringify({ effort: 'high', stopped: null, not_run: [], bars: {}, ledger: { usd: 0 } }));
+    expect(() => P.report(dir, tmp())).toThrow('w10b-particle-notes: the judge call failed for 1 of its answers');
+  });
+
+  test("Tango's score test reads z 1.5567 and one-sided p 0.0598 for 2 against 7 discordant pairs of 150 at a 7-point margin", () => {
+    const ids = Array.from({ length: 150 }, (_, i) => String(i));
+    const a = new Map(ids.map((id, i) => [id, (i < 7 || i >= 9 + 6 ? 1 : 0) as 0 | 1]));
+    const b = new Map(ids.map((id, i) => [id, (i >= 7 && i < 9) || i >= 9 + 6 ? 1 : 0] as [string, 0 | 1]));
+    expect(P.tangoNonInferiority(a, b, ids, 0.07)).toEqual({ z: 1.5567, p: 0.0598 });
+    expect(P.tangoNonInferiority(a, a, ids, 0.07).p).toBeLessThan(0.001);
+  });
+
+  test('report check mode fails on a compare file the re-score no longer writes', () => {
+    const dir = tmp();
+    cpSync(join(ROOT, 'docs/benchmarks/2026-11-01-longmemeval-particle-replay'), dir, { recursive: true });
+    const check = () => Bun.spawnSync(['bun', 'eval/runner/batch/w10-particle.ts', 'report', dir], { cwd: ROOT, stdout: 'ignore', stderr: 'pipe' });
+    expect(check().exitCode).toBe(0);
+    writeFileSync(join(dir, 'compare-old-a.ndjson'), '');
+    const stale = check();
+    expect(stale.exitCode).toBe(1);
+    expect(stale.stderr.toString()).toContain(`re-score differs from ${join(dir, 'compare-old-a.ndjson')}`);
+  }, 60_000);
+
   test('R2 arms that answer as GPT-6.1 Sol did read decision G and the development-lane test from the registered family', () => {
     const dir = tmp();
     const src: Record<string, string> = {
@@ -308,7 +341,7 @@ describe('keyless re-score', () => {
     const out = P.report(dir) as any;
     expect(out.decision_g.family_id).toBe('particle-replay-g-gbrain-noninferior-to-particle-full');
     expect(out.decision_g.comparisons.map((c: any) => [c.id, c.n_pairs])).toEqual([['particle-gbrain-vs-particle-full', 150], ['sonnet55-gbrain-vs-particle-full', 150]]);
-    expect(out.decision_g.comparisons.every((c: any) => typeof c.p_holm === 'number')).toBe(true);
+    expect(out.decision_g.comparisons.every((c: any) => typeof c.p_holm === 'number' && typeof c.tango.p === 'number' && typeof c.tango.p_holm === 'number')).toBe(true);
     expect(out.development_lane).toMatchObject({ sonnetDelta: 10 / 150, agreeParticle: out.development_lane.agreeSol });
     expect(out.development_lane.delta).toBeCloseTo(out.w10c.comparisons.find((c: any) => c.id === 'correct__sol_full_minus_old').delta, 12);
   });

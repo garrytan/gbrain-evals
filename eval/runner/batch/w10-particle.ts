@@ -20,14 +20,16 @@
  * per arm. Every answer is judged with LongMemEval's official prompt on gpt-4o-2024-08-06 (temperature 0, 10 tokens,
  * "yes" in the reply), W10's primary judge, through the same client. An answer cut off at its output limit is scored
  * as the model's answer and never retried; its row records `truncated` and the finish reason. An empty answer is wrong
- * without a judge call. A reader that still fails after its retries is a reader error, wrong. A budget stop (the
+ * without a judge call. A reader that still fails after its retries is a reader error, wrong; so is an answer whose judge
+ * call still fails, and that arm's run exits 1 and report refuses it until it is re-judged. A budget stop (the
  * ledger's, or Particle's credit 402) ends the arm after the failing question's row: no new question starts and the
  * receipt says `stopped`. --out must hold no rows yet, so a rerun of a stopped arm goes to a fresh directory. The
  * receipt checks the preregistered bars 1 to 4 on the arm's particle requests.
  *
  * report re-scores committed rows, keyless: paired differences with 95% intervals through compare.ts, decision G's
- * preregistered family, the development-lane test, decision B's stop rule, cost per correct answer, latency and
- * truncations. With --write it writes summary.json; without, it exits 1 when the committed summary.json differs.
+ * preregistered family with Tango's score test beside it, the development-lane test, decision B's stop rule, cost per
+ * correct answer, latency and truncations. With --write it writes summary.json; without, it exits 1 when the committed
+ * summary.json or a compare file differs, or a compare file is one the re-score no longer writes.
  */
 import { Database } from 'bun:sqlite';
 import { execFileSync } from 'node:child_process';
@@ -37,6 +39,7 @@ import { join, resolve } from 'node:path';
 import { gunzipSync, gzipSync } from 'node:zlib';
 import { budgetOptionsFrom, priceRequest, receiptCost, startPaidRun, usageCost } from '../budget-ledger.ts';
 import { runCompare, type CompareOutput } from '../compare.ts';
+import { holmAdjusted } from '../stats/paired.ts';
 import { ChatClient, chatWithReceipts, type ChatLike, type ChatResultV2 } from '../memory-qa/qa-v2.ts';
 import { requirePaidArm } from '../paid-arm.ts';
 import { attestPreregistration } from '../prereg.ts';
@@ -92,11 +95,12 @@ export const REPLAY_ARMS: Record<string, ReplayArm> = {
 const flag = (argv: string[], name: string) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; };
 /**
  * Committed files carry no machine path: checkout, home and temp prefixes as scrubMachinePaths rewrites them, Capy agent
- * scratch as `<work>/`. Records that hold model text (rows, usage receipts, preflight answers) scrub only their ledger
- * path, so an answer is stored exactly as the judge saw it.
+ * scratch as `<work>/`. Records that hold model text (rows, usage receipts, preflight results) are written through
+ * scrubErrorText, which scrubs only their `error` fields, so an answer is stored exactly as the judge saw it.
  */
 const scrub = <T>(v: T): T => scrubMachinePaths(v, undefined, undefined, undefined, [[join(homedir(), '.capy/work') + '/', '<work>/']]);
-const writeJson = (path: string, v: unknown) => { mkdirSync(resolve(path, '..'), { recursive: true }); writeFileSync(path, JSON.stringify(v, null, 1) + '\n'); };
+export const scrubErrorText = (key: string, value: unknown) => (key === 'error' && typeof value === 'string' ? scrub(value) : value);
+const writeJson = (path: string, v: unknown, replacer?: (key: string, value: unknown) => unknown) => { mkdirSync(resolve(path, '..'), { recursive: true }); writeFileSync(path, JSON.stringify(v, replacer, 1) + '\n'); };
 const isBudgetStop = (e: unknown) => (e as Error)?.name === 'BudgetExceededError';
 const message = (e: unknown) => String((e as Error)?.message ?? e).slice(0, 500);
 
@@ -342,12 +346,17 @@ export async function run(armId: string, argv: string[]): Promise<number> {
     result = await replayQuestions({
       client: new ChatClient(flag(argv, '--cache') ?? join(STATE_DIR, 'cache'), undefined, TIMEOUT_MS), armId, arm, inputs, questions: r1(),
       onRow: (row, receipts) => {
-        appendFileSync(join(out, 'rows.ndjson'), JSON.stringify(row) + '\n');
-        if (receipts.length) appendFileSync(join(out, 'receipts.ndjson'), receipts.map(r => JSON.stringify(r)).join('\n') + '\n');
+        appendFileSync(join(out, 'rows.ndjson'), JSON.stringify(row, scrubErrorText) + '\n');
+        if (receipts.length) appendFileSync(join(out, 'receipts.ndjson'), receipts.map(r => JSON.stringify(r, scrubErrorText)).join('\n') + '\n');
         process.stderr.write(`[w10-particle] ${armId} ${row.question_id} ${row.error ? 'error' : row.truncated ? 'truncated' : 'ok'} correct=${row.correct_official}\n`);
       },
     });
-  } finally { guard.uninstall(); }
+  } catch (e) {
+    guard.uninstall();
+    budget.close();
+    throw e;
+  }
+  guard.uninstall();
   const summary = budget.close();
   const rows = result.rows;
   const bars = checkBars(rows, result.receipts, ledgerEntries(budget.ledgerPath, budget.runId, budget.participant));
@@ -374,8 +383,8 @@ export async function run(armId: string, argv: string[]): Promise<number> {
   };
   writeJson(join(out, 'receipt.json'), scrub(receipt));
   const failedBars = Object.entries(bars).filter(([, b]) => !b.pass).map(([k]) => k);
-  console.log(JSON.stringify({ arm: armId, attempted: rows.length, of: inputs.size, correct: receipt.counts.correct_official, truncated: receipt.counts.truncated, stopped: result.stopped, failed_bars: failedBars, ledger_usd: receipt.ledger.usd }));
-  return result.stopped || result.not_run.length || failedBars.length ? 1 : 0;
+  console.log(JSON.stringify({ arm: armId, attempted: rows.length, of: inputs.size, correct: receipt.counts.correct_official, truncated: receipt.counts.truncated, judge_errors: receipt.counts.judge_errors, stopped: result.stopped, failed_bars: failedBars, ledger_usd: receipt.ledger.usd }));
+  return result.stopped || result.not_run.length || failedBars.length || receipt.counts.judge_errors ? 1 : 0;
 }
 
 /** One small particle-1 request and one one-token judge request, each metered, before an arm's paid step. */
@@ -400,7 +409,7 @@ async function preflight(argv: string[]): Promise<number> {
     }
   } finally { guard.uninstall(); }
   const cost = scrub(receiptCost(budget.close()));
-  writeJson(join(out, 'preflight.json'), { at: new Date().toISOString(), results, receipts, cost });
+  writeJson(join(out, 'preflight.json'), { at: new Date().toISOString(), results, receipts, cost }, scrubErrorText);
   const ok = Object.values(results).every(r => r.ok) && results[PARTICLE]?.response_model === 'particle-ai/particle-1';
   console.log(JSON.stringify({ ok, results, cost_usd: cost.usd }));
   return ok ? 0 : 1;
@@ -422,6 +431,22 @@ function paired(dir: string, name: string, fields: { field: string; a: Map<strin
   writeFileSync(pa, a.map(r => JSON.stringify(r)).join('\n') + '\n');
   writeFileSync(pb, b.map(r => JSON.stringify(r)).join('\n') + '\n');
   return compact(runCompare({ a: pa, b: pb, family, metrics: family ? [] : fields.map(f => f.field), excludeWhen: [], where: [], aWhere: [], bWhere: [], seed: 20261101, draws: 10000, alpha: 0.05, json: true }).decision);
+}
+
+/**
+ * Tango's score test for paired non-inferiority (Statistics in Medicine 1998): is B at most `margin` below A on paired
+ * 0/1 outcomes, with the variance taken from the restricted maximum-likelihood estimate under the null rather than from
+ * the observed disagreement. Reported beside decision G's registered bootstrap test; one-sided p from the normal tail.
+ */
+export function tangoNonInferiority(a: Map<string, 0 | 1>, b: Map<string, 0 | 1>, ids: string[], margin: number): { z: number; p: number } {
+  const n = ids.length, d = -margin;
+  const bOnly = ids.filter(id => b.get(id) === 1 && a.get(id) === 0).length, aOnly = ids.filter(id => a.get(id) === 1 && b.get(id) === 0).length;
+  const A = 2 * n, B = -bOnly - aOnly + (2 * n - bOnly + aOnly) * d, C = -aOnly * d * (1 - d);
+  const q = (-B + Math.sqrt(B * B - 4 * A * C)) / (2 * A);
+  const z = (bOnly - aOnly - n * d) / Math.sqrt(n * (2 * q + d * (1 - d)));
+  const x = Math.abs(z) / Math.SQRT2, t = 1 / (1 + x / 2);
+  const erfc = t * Math.exp(-x * x - 1.26551223 + t * (1.00002368 + t * (0.37409196 + t * (0.09678418 + t * (-0.18628806 + t * (0.27886807 + t * (-1.13520398 + t * (1.48851587 + t * (-0.82215223 + t * 0.17087277)))))))));
+  return { z: Number(z.toFixed(4)), p: Number((z >= 0 ? erfc / 2 : 1 - erfc / 2).toFixed(4)) };
 }
 
 /**
@@ -479,6 +504,8 @@ export function report(dir: string, compareDir = dir): Record<string, unknown> {
   for (const [id, path] of Object.entries(particle)) {
     const receipt = existsSync(join(path, 'receipt.json')) ? JSON.parse(readFileSync(join(path, 'receipt.json'), 'utf8')) : null;
     if (!receipt || receipt.stopped || receipt.not_run.length) throw new Error(`${id} did not finish (no receipt.json, a stop or unrun questions); report scores complete arms only`);
+    const judgeErrors = readNdjson(join(path, 'rows.ndjson')).filter(r => (r.official as Judgment | null)?.error).length;
+    if (judgeErrors) throw new Error(`${id}: the judge call failed for ${judgeErrors} of its answers, each scored wrong; re-judge them before reporting`);
   }
   const scored = new Map(Object.entries({ ...Object.fromEntries(Object.entries(comparators).map(([k, [p]]) => [k, p])), ...particle }).map(([k, p]) => [k, scoreArm(p)]));
   const c = (name: string, ids: string[]) => col(scored.get(name)!, ids);
@@ -504,10 +531,15 @@ export function report(dir: string, compareDir = dir): Record<string, unknown> {
   }
   if (particle['w10c-particle-currentpin'] && particle['w10c-particle-full']) {
     const pin = c('w10c-particle-currentpin', ids150), full = c('w10c-particle-full', ids150), sonnetFull = c('w10c-sonnet55-full', ids150), solFull = c('w10c-sol-full', ids150);
-    out.decision_g = paired(compareDir, 'g-noninferiority', [
+    const fieldsG = [
       { field: 'correct__particle_gbrain', a: full, b: pin },
       { field: 'correct__sonnet55_gbrain', a: full, b: c('w10a-sonnet55-notes', ids150) },
-    ], ids150, join(ROOT, FAMILY_G));
+    ];
+    const g = paired(compareDir, 'g-noninferiority', fieldsG, ids150, join(ROOT, FAMILY_G));
+    const family = JSON.parse(readFileSync(join(ROOT, FAMILY_G), 'utf8')) as { comparisons: { id: string; metric: string; tolerance: number }[] };
+    const tango = family.comparisons.map(fc => { const f = fieldsG.find(x => x.field === fc.metric)!; return { id: fc.id, ...tangoNonInferiority(f.a, f.b, ids150, fc.tolerance) }; });
+    const holm = holmAdjusted(tango.map(t => t.p));
+    out.decision_g = { ...g, comparisons: g.comparisons.map(x => { const i = tango.findIndex(t => t.id === x.id); return { ...x, tango: { z: tango[i].z, p: tango[i].p, p_holm: Number(holm[i].toFixed(4)) } }; }) };
     const w10c = paired(compareDir, 'w10c', [
       { field: 'correct__particle_gbrain_minus_particle_full', a: full, b: pin },
       { field: 'correct__particle_full_minus_sonnet55_full', a: sonnetFull, b: full },
@@ -551,7 +583,9 @@ async function main(argv: string[]): Promise<number> {
       console.log(text);
       if (write) { writeFileSync(join(dir, 'summary.json'), text); return 0; }
       const same = (name: string, fresh: string) => existsSync(join(dir, name)) && readFileSync(join(dir, name), 'utf8') === fresh;
-      const differs = [...(same('summary.json', text) ? [] : ['summary.json']), ...readdirSync(compareDir).sort().filter(f => !same(f, readFileSync(join(compareDir, f), 'utf8')))];
+      const fresh = readdirSync(compareDir).sort();
+      const stale = readdirSync(dir).sort().filter(f => f.startsWith('compare-') && !fresh.includes(f));
+      const differs = [...(same('summary.json', text) ? [] : ['summary.json']), ...fresh.filter(f => !same(f, readFileSync(join(compareDir, f), 'utf8'))), ...stale];
       if (differs.length) { console.error(`re-score differs from ${differs.map(f => join(dir, f)).join(', ')}`); return 1; }
       console.error(`re-score matches ${join(dir, 'summary.json')} and its compare files`);
       return 0;

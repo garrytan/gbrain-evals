@@ -441,7 +441,12 @@
     },
     "p_noninferiority": 0.036096390360963904,
     "p_holm": 0.036096390360963904,
-    "power": "with 150 pairs in 150 clusters, a two-sided 0.05 test has 80% power for an absolute change of about 0.0557; the observed delta is below that size, so a null result here is not evidence of no effect; an exact McNemar test needs at least 6 wins with zero losses to reach 0.05"
+    "power": "with 150 pairs in 150 clusters, a two-sided 0.05 test has 80% power for an absolute change of about 0.0557; the observed delta is below that size, so a null result here is not evidence of no effect; an exact McNemar test needs at least 6 wins with zero losses to reach 0.05",
+    "tango": {
+     "z": 1.5567,
+     "p": 0.0598,
+     "p_holm": 0.0598
+    }
    },
    {
     "id": "sonnet55-gbrain-vs-particle-full",
@@ -464,7 +469,12 @@
     },
     "p_noninferiority": 0.0173982601739826,
     "p_holm": 0.0347965203479652,
-    "power": "with 150 pairs in 150 clusters, a two-sided 0.05 test has 80% power for an absolute change of about 0.0817; the observed delta is below that size, so a null result here is not evidence of no effect; an exact McNemar test needs at least 6 wins with zero losses to reach 0.05"
+    "power": "with 150 pairs in 150 clusters, a two-sided 0.05 test has 80% power for an absolute change of about 0.0817; the observed delta is below that size, so a null result here is not evidence of no effect; an exact McNemar test needs at least 6 wins with zero losses to reach 0.05",
+    "tango": {
+     "z": 2.0211,
+     "p": 0.0216,
+     "p_holm": 0.0432
+    }
    }
   ]
  },

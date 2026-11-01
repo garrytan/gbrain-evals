@@ -88,7 +88,7 @@ Paired differences on these 150 questions (95% intervals; wins and losses are fo
 | particle-1 on gbrain's retrieval | 135 | 140 | -3.3 (-7.3 to +0.7) | 0.036 | 0.036 | non-inferior at 7 points |
 | Sonnet 5.5 on gbrain's retrieval (W10a) | 139 | 140 | -0.7 (-6.7 to +5.3) | 0.017 | 0.035 | non-inferior at 7 points |
 
-The two-sided 95% interval for the first comparison reaches -7.3 points; the preregistered test is one-sided at alpha 0.05, which corresponds to a 90% interval, and it passes. That pass depends on the method. The paired bootstrap estimates the variance from the observed disagreement (9 of 150 questions), while Tango's score test, the usual paired non-inferiority test, estimates it under the null and gives T = 1.557 and one-sided p = 0.060, which fails at alpha 0.05. The second comparison passes under either test (Tango p = 0.022). Under Tango with Holm, only the Sonnet 5.5 comparison would pass. Per question type, particle-1's net five-question gap comes from temporal reasoning (33 against 36), multi-session (32 against 33) and single-session-user (18 against 19); knowledge updates (one more for gbrain) and abstention (one more for the whole history) cancel.
+The two-sided 95% interval for the first comparison reaches -7.3 points; the preregistered test is one-sided at alpha 0.05, which corresponds to a 90% interval, and it passes. That pass depends on the method. The paired bootstrap estimates the variance from the observed disagreement (9 of 150 questions), while Tango's score test, the usual paired non-inferiority test, estimates it under the null and gives T = 1.557 and one-sided p = 0.060, which fails at alpha 0.05 (`tango` under decision G in summary.json). The second comparison passes under either test (Tango p = 0.022). Under Tango with Holm, only the Sonnet 5.5 comparison would pass. Per question type, particle-1's net five-question gap comes from temporal reasoning (33 against 36), multi-session (32 against 33) and single-session-user (18 against 19); knowledge updates (one more for gbrain) and abstention (one more for the whole history) cancel.
 
 ### The development-lane test
 
@@ -164,7 +164,7 @@ for arm in w10b-particle-notes w10c-particle-currentpin w10c-particle-full w10c-
   bun eval/runner/batch/w10-particle.ts run $arm --out $OUT/arms/$arm --paid --budget-run-id $RUN
 done
 
-# $0: re-score the committed rows; exits 1 if summary.json differs
+# $0: re-score the committed rows; exits 1 if summary.json or a compare file differs, or a compare file is stale
 bun eval/runner/batch/w10-particle.ts report docs/benchmarks/2026-11-01-longmemeval-particle-replay
 ```
 
