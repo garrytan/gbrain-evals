@@ -579,17 +579,19 @@ describe('file agent with particle-1 (plan GST-605 Phase 3)', () => {
     expect([lines[0], lines[1], lines[5]].map(l => JSON.parse(l)).map(r => [r.attempt, r.status])).toEqual([[0, 'error'], [1, 'ok'], [2, 'ok']]);
   });
 
-  test('a budget stop counts the usage of a billed 2xx that was retried', async () => {
+  // Value: protects=a file-agent particle turn answered 2xx without a message is billed once and its usage counted (issue #280); fails_when=the loop retries the billed 2xx, or the answer lacks timed_out so the cell asks the question again; why_new=postJson ends the turn on a compat 2xx without a message; seam=none; no_claim=whether Particle bills an answer without a message
+  test('a billed 2xx without a message is sent once, counts its usage and ends the answer as a timed-out reader_error (#280)', async () => {
     let n = 0;
     const fetchImpl = (async () => {
       n++;
       if (n === 1) return new Response(JSON.stringify({ ...chat(call('list_dir', { path: '.' }), 'tool_calls'), choices: [] }));
       return new Response('{"error":{"message":"Insufficient credits"}}', { status: 402 });
     }) as unknown as typeof fetch;
-    const sys = new FileAgentSystem({ workDir: join(tmp, 'particle-billed-402'), fetchImpl });
+    const sys = new FileAgentSystem({ workDir: join(tmp, 'particle-billed-2xx'), fetchImpl });
     await ingest(sys);
     const a = await sys.answer(ns, { text: 'What is my dog called?', query_time: null }, { reader: 'particle:particle-1', replicate: 0 });
-    expect(a).toMatchObject({ outcome: 'budget_not_run', provider_input_tokens: 500, usage: { input: 200, output: 40, cache_read: 300, cache_write: 0 } });
+    expect(a).toMatchObject({ outcome: 'reader_error', stop_reason: 'provider_error', timed_out: true, turns: 1, provider_input_tokens: 500, usage: { input: 200, output: 40, cache_read: 300, cache_write: 0 } });
+    expect(n).toBe(1);
     await sys.close();
   });
 

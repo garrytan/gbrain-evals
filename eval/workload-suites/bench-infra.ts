@@ -26,7 +26,7 @@ import { BudgetRun, closeLedgers, initLedger } from '../runner/budget-ledger.ts'
 import { UPSTREAM_DEADLINE_MS } from '../runner/metering-proxy.ts';
 import { ensureHarness, harnessProcessEnv, PROVIDER_DIR, REPO_ROOT, type HarnessInstall } from '../runner/harness-env.ts';
 import type { GbrainUnderTest } from '../runner/gbrain-under-test.ts';
-import { COMPAT_PROVIDERS, CompatHttpError, ParticleCreditExhausted, compatRequest, compatSend, type CompatRequest, type CompatResponse } from '../runner/providers/openai-compatible.ts';
+import { COMPAT_PROVIDERS, CompatHttpError, ParticleCreditExhausted, compatMayHaveBilled, compatRequest, compatSend, type CompatRequest, type CompatResponse } from '../runner/providers/openai-compatible.ts';
 import { normalizeFinish, normalizeUsage, receipt, responseMeta, usageSourceOf, type ReceiptRequest, type ResponseMeta, type UsageReceipt } from '../runner/usage-receipt.ts';
 
 export const DEFAULT_LEDGER = join(REPO_ROOT, '.budget/workload-suites.sqlite');
@@ -221,7 +221,9 @@ export async function callModel(env: Record<string, string>, modelId: string, pr
  * with `compatSend` under callModel's attempt limits. A 429 or 5xx waits its Retry-After (capped at 120 s) when it
  * sends one, else the same backoff as OpenAI; a proxy's 402 is a budget refusal; Particle's credit 402 throws
  * `ParticleCreditExhausted` after its receipt. A long reasoning answer gets the metering proxies' upstream deadline,
- * not Bun's 300-second fetch timeout, and a request that times out is never sent again.
+ * not Bun's 300-second fetch timeout. A request Particle may have billed (`compatMayHaveBilled`: it timed out, lost its
+ * connection after it went out, was answered 504, which the harness proxy sends when its upstream request failed after
+ * it went out, or was answered 2xx without a message) is never sent again (issue #282).
  */
 async function callCompat(modelId: string, prompt: string, tag: string, maxTokens: number, env: Record<string, string>, fail: (error: string) => ModelReply, note: (attempt: number, o: AttemptOutcome) => void, deadlineMs: number): Promise<ModelReply> {
   let built: CompatRequest;
@@ -236,8 +238,7 @@ async function callCompat(modelId: string, prompt: string, tag: string, maxToken
       const error = e as Error;
       const http = error instanceof CompatHttpError ? error : null;
       const budget = error.name === 'BudgetExceededError';
-      const timedOut = error.name === 'TimeoutError' || error.name === 'AbortError';
-      const retry = http ? http.retryable && attempt < 5 : !budget && !timedOut && attempt < 4;
+      const retry = !compatMayHaveBilled(error) && (http ? http.retryable && attempt < 5 : !budget && attempt < 4);
       const waitMs = http ? http.retryAfterMs ?? 3000 * (attempt + 1) : 2000 * (attempt + 1);
       const waitNote = retry ? `; retrying in ${waitMs} ms${http?.retryAfterMs != null ? ' (Retry-After)' : ''}` : '';
       note(attempt, { error: `${http || budget ? '' : 'network: '}${error.message}${waitNote}`, usage: http?.usage, request: req.sent });

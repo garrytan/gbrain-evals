@@ -301,7 +301,7 @@ export interface FullContextAnswer {
   finish?: string | null;
   truncated?: boolean;
   attempts?: ReaderAttempt[];
-  /** The last request timed out or lost its connection after it went out; Particle may have billed it, so the cell never sends it again. */
+  /** The last request timed out, lost its connection after it went out or was answered 2xx without a message; Particle may have billed it, so the cell never sends it again. */
   timed_out?: boolean;
 }
 
@@ -367,8 +367,8 @@ export async function answerFullContext(opts: { reader: string; prompt: string; 
  * Retry-After, capped at 120 seconds, or else the backoff; a context-length 400 is `does_not_fit`; a budget stop
  * (Particle's credit 402, or the lease proxy's own 402) is `budget_not_run` and is never retried. A request gets the
  * metering proxies' upstream deadline, plus the lease proxy's longest admission wait on a loopback proxy slot
- * (`compatDeadlineMs`), and one that times out or loses its connection after it
- * went out (`compatMayHaveBilled`) is a `reader_error` that is never sent again, because Particle may have billed it. Each attempt is recorded, the failed ones with null response
+ * (`compatDeadlineMs`), and one that times out, loses its connection after it went out or is answered 2xx without a
+ * message (`compatMayHaveBilled`) is a `reader_error` that is never sent again, because Particle may have billed it. Each attempt is recorded, the failed ones with null response
  * fields. An answer cut off at its output limit is the answer.
  */
 async function readCompat(req: CompatRequest, fit: FitCheck, cache_key: string, fetchImpl?: typeof fetch): Promise<FullContextAnswer> {

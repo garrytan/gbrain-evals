@@ -905,7 +905,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
     const terminal = (id: string, outcome: Outcome) => FINAL.has(outcome) || (answerTries.get(id) ?? 0) + 1 >= maxAttempts;
     /** One answering try; an OpenAI-compatible reader's line also keeps its provider attempts, so a retried try's receipts persist. */
     const recordAttempt = (id: string, outcome: Outcome, error?: string, attempts?: ReaderAttempt[]) => { appendFileSync(join(dir, 'answer-attempts.ndjson'), JSON.stringify({ answer_id: id, outcome, error: error?.slice(0, 300), at: new Date().toISOString(), ...(attempts ? { attempts } : {}) }) + '\n'); if (isTry({ outcome, attempts })) answerTries.set(id, (answerTries.get(id) ?? 0) + 1); };
-    /** `final`: a try that must not be sent again (an OpenAI-compatible request that timed out or lost its connection, which the provider may have billed). */
+    /** `final`: a try that must not be sent again (an OpenAI-compatible request that timed out, lost its connection or was answered 2xx without a message, which the provider may have billed). */
     const appendAnswer = (raw: AnswerRecord, error?: string, pack: PackedContext | null = null, final = false) => {
       const a = withDerived(raw, pack);
       if (FINAL.has(a.outcome)) { answers.append(a); return; }

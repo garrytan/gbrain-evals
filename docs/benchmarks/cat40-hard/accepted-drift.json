@@ -28,6 +28,11 @@
       "sha256": "e2b57478dfe742606ea4bb793b31e323c02a128782a71114a1ba4b1b674b2da2",
       "date": "2026-11-01",
       "note": "loop.ts with the particle turn fixes of fix wave 2 (issues #253 and #271): a particle request is sent with compatDeadlineMs (the upstream deadline, or on a loopback lease-proxy slot that deadline plus the proxy's longest admission wait) and Bun's fetch timeout off, a particle 504 is never sent again, and a run that ends on a turn Particle may have billed records timed_out. Only the compat branch changed: the claude-opus-5-5 and gpt-6.1-sol fetch init, request bodies and retry timing are unchanged (test/eval/cat40-particle-loop.test.ts), so no Anthropic or OpenAI cell changes."
+    },
+    {
+      "sha256": "de216fb8b330ee57f3fa119718501f4c1783280d5be9cd3e40dd8f7e32074316",
+      "date": "2026-11-01",
+      "note": "loop.ts with the particle 2xx fix of fix wave 2 (issue #280): a particle answer with status 2xx and no choices[0].message, or a body that is not JSON, is recorded with any usage it reported and thrown at once as a ProviderError with its 2xx status, so the run ends with timed_out instead of sending the turn up to five more times as a server error. On a Hard run that session ends as error, as a timed-out particle turn does; after six sends it used to end as harness_error, which a Hard run retries. Only the compat branch of postJson changed: the claude-opus-5-5 and gpt-6.1-sol request bodies and retry timing stay pinned by test/eval/cat40-particle-loop.test.ts, so no Anthropic or OpenAI cell changes."
     }
   ],
   "eval/runner/cat40/arms.ts": [

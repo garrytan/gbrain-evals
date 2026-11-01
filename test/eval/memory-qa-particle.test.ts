@@ -149,12 +149,13 @@ describe('the particle route in qa-v2', () => {
     expect(row.qa_receipts!.map(r => [r.attempt, r.status, r.retry_after_ms])).toEqual([[0, 'error', 0], [1, 'error', 0], [2, 'error', 0], [3, 'error', 0], [4, 'error', undefined]]);
   });
 
-  test('a 200 with no message is retried, as the provider module classes it', async () => {
-    const mock = serve([{ body: { id: 'chatcmpl-0', model: 'particle-ai/particle-1', choices: [] } }, { body: PARTICLE_OK }]);
+  // Value: protects=a particle reading answered 200 without a message is billed once (issue #280); fails_when=qa-v2's chat client retries it as the server error the provider module used to class it; why_new=compatSend marks a 2xx without a message not retryable and compatMayHaveBilled reads it as billed; seam=none; no_claim=whether Particle bills an answer without a message
+  test('a 200 with no message is sent once, its usage on the failed attempt: Particle answered it, so it may have billed it (#280)', async () => {
+    const mock = serve([{ body: { id: 'chatcmpl-0', model: 'particle-ai/particle-1', choices: [], usage: { prompt_tokens: 100, completion_tokens: 50 } } }, { body: PARTICLE_OK }]);
     const row = await readAndJudge({ benchmark: 'lme-s', qa: qa(), q, chat: new ChatClient(tmp(), () => 0), think: null, prompt: 'P', countTokens: null });
-    expect(mock.particle()).toHaveLength(2);
-    expect(row.qa_receipts!.filter(r => r.role === 'reader').map(r => [r.attempt, r.status])).toEqual([[0, 'error'], [1, 'ok']]);
-    expect(row.qa_score).toBe(1);
+    expect(mock.particle()).toHaveLength(1);
+    expect(row.qa_error).toContain('no choices[0].message');
+    expect(row.qa_receipts!.filter(r => r.role === 'reader').map(r => [r.attempt, r.status, r.usage?.input_total, r.usage?.output_total])).toEqual([[0, 'error', 100, 50]]);
   });
 
   // Value: protects=a slow particle-1 answer is billed once (issue #250); fails_when=a timed-out attempt is sent again, or an attempt waits Bun's or compatSend's 300 s instead of the proxies' upstream deadline; why_new=the qa-v2 compat branch had no deadline and retried timeouts; seam=none; no_claim=Particle's billing of an aborted request
@@ -216,14 +217,19 @@ describe('the particle route in qa-v2', () => {
 
   test('a particle judge in run.ts records what each attempt sent, the answer\'s identity and the usage a failed attempt reported', async () => {
     const yes = { ...PARTICLE_OK, choices: [{ index: 0, finish_reason: 'stop', message: { role: 'assistant', content: 'yes' } }] };
-    const mock = serve([{ body: { id: 'chatcmpl-0', model: 'particle-ai/particle-1', choices: [], usage: { prompt_tokens: 100, completion_tokens: 50 } } }, { body: yes }]);
-    const row = await readAndJudge({ benchmark: 'lme-s', qa: qa({ reader: 'openai:gpt-4o-mini', judge: 'particle:particle-1' }), q, chat: new ChatClient(tmp(), () => 0), think: null, prompt: 'P', countTokens: null });
+    const args: Omit<Parameters<typeof readAndJudge>[0], 'chat'> = { benchmark: 'lme-s', qa: qa({ reader: 'openai:gpt-4o-mini', judge: 'particle:particle-1' }), q, think: null, prompt: 'P', countTokens: null };
+    const mock = serve([{ status: 503, body: { error: { message: 'overloaded' } } }, { body: yes }]);
+    const row = await readAndJudge({ ...args, chat: new ChatClient(tmp(), () => 0) });
     expect(mock.particle()).toHaveLength(2);
     const judges = row.qa_receipts!.filter(r => r.role === 'judge');
     expect(judges.map(r => [r.attempt, r.status, r.request?.effort_sent, r.request?.output_limit])).toEqual([[0, 'error', 'high', 16_000], [1, 'ok', 'high', 16_000]]);
     expect(judges.map(r => r.response_meta?.weight_version ?? null)).toEqual([null, 'default']);
-    expect(judges.map(r => [r.usage?.input_total, r.usage?.output_total])).toEqual([[100, 50], [330, 86]]);
+    expect(judges.map(r => [r.usage?.input_total, r.usage?.output_total])).toEqual([[undefined, undefined], [330, 86]]);
     expect(row.qa_score).toBe(1);
+    const billed = serve([{ body: { id: 'chatcmpl-0', model: 'particle-ai/particle-1', choices: [], usage: { prompt_tokens: 100, completion_tokens: 50 } } }, { body: yes }]);
+    const failed = await readAndJudge({ ...args, chat: new ChatClient(tmp(), () => 0) });
+    expect(billed.particle()).toHaveLength(1);
+    expect(failed.qa_receipts!.filter(r => r.role === 'judge').map(r => [r.attempt, r.status, r.request?.output_limit, r.usage?.input_total, r.usage?.output_total])).toEqual([[0, 'error', 16_000, 100, 50]]);
   });
 
   test('a credit 402 is one attempt: its receipt is written and the stop reaches the caller with the receipts gathered so far', async () => {

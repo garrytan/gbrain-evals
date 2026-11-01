@@ -857,6 +857,23 @@ describe('particle-1 readers through Q1\'s lease proxy (plan GST-605 Phase 2)', 
     expect(tries(out, def).map(t => t.outcome)).toEqual(['reader_error', 'reader_error']);
     expect(ndjson(join(out, 'cells', def.arms[0].cell_id, 'answers.ndjson')).map(a => a.outcome)).toEqual(['reader_error', 'reader_error']);
   });
+
+  // Value: protects=a file-agent question whose particle turn was answered 2xx without a message is asked once (issue #280); fails_when=the agent loop retries the 2xx as a server error, or the cell's A22 pass asks the question again because its reader_error is not final; why_new=a compat 2xx without a message ends the run with timed_out, which the cell records final; seam=none; no_claim=whether Particle bills an answer without a message
+  test('file agent: a particle turn answered 2xx without a message is sent once and leaves the question a final reader_error (#280)', async () => {
+    const def = cellDef('baseline-file-agent', 'in-process', [{ id: 'whole-agent', mode: 'agent', readers: [PARTICLE] }], { configuration: 'baseline', ...slice });
+    process.env.PARTICLE_API_KEY = 'test-key';
+    let calls = 0;
+    const usage = { prompt_tokens: 10, completion_tokens: 5 };
+    const emptyThenSubmit = (async () => Response.json(++calls % 2
+      ? { id: 'x', model: 'particle-ai/particle-1', choices: [], usage }
+      : { id: 'y', model: 'particle-ai/particle-1', choices: [{ index: 0, finish_reason: 'tool_calls', message: submit().message }], usage })) as unknown as typeof fetch;
+    const out = join(tmp, 'particle-agent-empty');
+    const res = await runCell(def, { out, ...quiet }, { corpus, system: new FileAgentSystem({ workDir: join(out, 'trees'), fetchImpl: emptyThenSubmit }), judge: scriptedJudge() });
+    expect(res.stopped).toBeNull();
+    expect(calls).toBe(2);
+    expect(tries(out, def).map(t => t.outcome)).toEqual(['reader_error']);
+    expect(ndjson(join(out, 'cells', def.arms[0].cell_id, 'answers.ndjson')).map(a => a.outcome)).toEqual(['reader_error', 'scored']);
+  }, 20_000);
 });
 
 describe('background tail spend after /finish (gbrain-defaults closure)', () => {

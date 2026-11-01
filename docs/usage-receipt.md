@@ -121,11 +121,15 @@ as the ladder does). The output-limit field is `max_tokens` or `max_output_token
 | `truncated` | True when the model stopped at the output limit (`finish_reason: length`) |
 
 A failed attempt (a 429, a network error, a 402) has no response, so every `response_meta` field is null, never an
-invented value, and `response_model` and `usage` are null as before. One `error` attempt keeps a body. The Cat 40
-loop and memory-qa retry a Particle 2xx that has no `choices[0].message` as a server error, and that attempt's record
-keeps the body's usage (the Cat 40 loop keeps its response metadata too); `sumUsage` totals count successful records
-only. In memory-qa, a failed attempt the provider answered with a Retry-After also has `retry_after_ms`: the wait
-before the next attempt, capped at 120 seconds, absent when the provider sent none or no attempt followed. In
+invented value, and `response_model` and `usage` are null as before. One `error` attempt keeps a body: a Particle
+2xx that has no `choices[0].message`, or whose body is not JSON, is an `error` attempt whose record keeps the body's
+usage (the Cat 40 loop keeps its response metadata too). Particle answered it and may have billed it, so it is the
+last attempt: no client sends it again in the same run, and a Q1 cell records its question as a final
+`reader_error` (issue #280). A memory-qa resume and a workload rerun into the same output still ask it again
+(issue #287).
+`sumUsage` totals count successful records only. In memory-qa, a failed attempt the provider answered with a
+Retry-After also has `retry_after_ms`: the wait before the next attempt, capped at 120 seconds, absent when the
+provider sent none or no attempt followed. In
 memory-qa and Q1, a Particle attempt waits up to the metering proxies' 900-second upstream deadline. On a loopback
 lease-proxy slot it waits that deadline plus the proxy's longest admission wait (600 seconds) and a minute, so the
 proxy always answers first (issue #271). An attempt that times out, or whose connection resets or closes after the
@@ -134,7 +138,9 @@ request went out, is the last attempt, because Particle may have billed it; a Q1
 that times out, loses its connection or is answered 504 ends the question as a final `reader_error` (issue #253). For
 the same reason, the lease proxy answers a particle request whose connection was reset before the response headers
 arrived, or whose body failed to read after them, with a 504 instead of sending it again, and charges its reservation
-(issue #270). A truncated response keeps its own content as
+(issue #270). The workload route's proxy answers a particle request that timed out, lost its connection or lost its
+body after it went out with a 504 too, and its particle client and the particle canary never send a 504 again in
+the same run (issue #282). A truncated response keeps its own content as
 `answer`, even when that is empty: the reasoning text (Particle's `reasoning_content`) never fills an answer.
 
 ## How a memory-qa row uses it
