@@ -64,7 +64,9 @@ const message = (e: unknown) => String((e as Error)?.message ?? e).slice(0, 500)
 
 async function listing(url: string): Promise<Record<string, unknown>> {
   const headers: Record<string, string> = url.includes('anthropic') ? { 'x-api-key': process.env.ANTHROPIC_API_KEY ?? '', 'anthropic-version': '2023-06-01' } : { authorization: 'Bearer ' + (process.env.OPENAI_API_KEY ?? '') };
-  const j = await (await fetch(url, { headers })).json() as Record<string, any>;
+  const res = await fetch(url, { headers });
+  if (!res.ok) throw new Error(url + ': model listing returned HTTP ' + res.status);
+  const j = await res.json() as Record<string, any>;
   return { id: j.id ?? null, created: j.created ?? null, created_at: j.created_at ?? null };
 }
 
@@ -104,7 +106,7 @@ async function run(argv: string[]): Promise<number> {
           else {
             try {
               const r = await chatWithReceipts(client, { role: 'judge', question_id: t.question_id, replicate: 0, model, delivered: null }, prompt(t.question_id, t.hypothesis), JUDGE_OPTIONS, receipts);
-              const usd = r.usage ? usageCost(priceRequest(url, { model: model.slice(model.indexOf(':') + 1), messages: [] })!, { usage: r.usage })?.usd ?? 0 : 0;
+              const usd = r.usage && !r.cached ? usageCost(priceRequest(url, { model: model.slice(model.indexOf(':') + 1), messages: [] })!, { usage: r.usage })?.usd ?? 0 : 0;
               row = { ...base, verdict: judgeVerdict(r.text), raw: r.text, error: null, response_model: r.response_model, finish: r.finish, usage: r.usage, usd, from_cache: r.cached };
             } catch (e) {
               row = { ...base, verdict: null, raw: null, error: message(e), response_model: null, finish: null, usage: null, usd: 0, from_cache: false };

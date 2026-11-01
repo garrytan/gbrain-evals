@@ -141,7 +141,9 @@ not be checked; the Sol figures follow OpenAI's published rate and the usage the
 
 **Judging and this finding's spend.** The replay's gpt-4o judging cost $0.48 for all four of its arms. The second
 judges cost $1.61 from the budget ledger (2,497 requests, including 6 in the smoke test): `gpt-6.1-sol` $0.86 for
-1,500 judgments, `claude-sonnet-5-5` $0.75 for 1,000. The cap was $25, with a stop at $20.
+1,500 judgments, `claude-sonnet-5-5` $0.75 for 1,000. Nine of the `claude-sonnet-5-5` judgments were answered from the
+smoke test's response cache and not paid again; the run's receipt still prices them ($0.004), so its per-judge figures
+add up to $1.611 against the ledger's $1.607 for the full run. The cap was $25, with a stop at $20.
 
 ## Why null? (R48)
 
