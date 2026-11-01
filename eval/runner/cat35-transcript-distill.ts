@@ -1556,7 +1556,8 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
   const priorFound: { path: string; receipt: Record<string, unknown> } | null = (() => {
     // Content-aware discovery (a filename filter missed the committed
     // baseline-receipt.json and made the fresh-clone fallback dead code):
-    // any parseable .json whose cat matches is a candidate. Newest-first;
+    // any parseable .json whose cat matches and whose lanes are lane names is a
+    // candidate. Newest-first;
     // prefer a receipt comparable on mode and lane set, so a later BPRE smoke
     // can't shadow the latest full receipt and an external-only (--lanes none)
     // receipt can't shadow the latest gbrain receipt.
@@ -1572,7 +1573,7 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
         if (!f.endsWith('.json')) continue;
         try {
           const parsed = JSON.parse(readFileSync(join(dir, f), 'utf8'));
-          if (parsed?.cat === 'cat35-transcript-distill') {
+          if (parsed?.cat === 'cat35-transcript-distill' && Array.isArray(parsed.lanes) && parsed.lanes.every((l: unknown) => typeof l === 'string')) {
             found.push({ path: join(dir, f), receipt: parsed, local: dir === REPORT_DIR });
           }
         } catch {
@@ -1581,9 +1582,9 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
       }
     }
     if (!found.length) return null;
-    const laneKey = (lanes: unknown) => (Array.isArray(lanes) ? [...lanes].sort().join(',') : '');
+    const laneKey = (lanes: string[]) => [...lanes].sort().join(',');
     const sameMode = found.filter((c) => (c.receipt as { mode?: string }).mode === mode);
-    const sameLanes = sameMode.filter((c) => laneKey(c.receipt.lanes) === laneKey(opts.lanes));
+    const sameLanes = sameMode.filter((c) => laneKey(c.receipt.lanes as string[]) === laneKey(opts.lanes));
     const pool = sameLanes.length ? sameLanes : sameMode.length ? sameMode : found;
     const localPool = pool.filter((c) => c.local);
     const finalPool = localPool.length ? localPool : pool;

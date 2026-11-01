@@ -122,27 +122,35 @@ SCOREBOARD_END = "<!-- scoreboard:headline:end -->"
 
 
 def scoreboard_publication_reference(root=ROOT):
-    """README's paragraph above the scoreboard block explains one published render: every commit it names is the one
-    publication.json records, and every decimal figure it quotes appears in the block or in scoreboard.md, the render's
-    other file. Between a custody render and its publication the commit is null, and there is nothing to compare yet."""
+    """README's text between its last heading and the scoreboard block explains one published render: every commit it
+    names after `check --commit` is the one publication.json records, and every decimal figure it quotes appears in the
+    block or in scoreboard.md, the render's other file. Between a custody render and its publication the commit is null,
+    and there is nothing to compare yet."""
     published = json.loads((root / SCOREBOARD_PUBLICATION).read_text()).get("published")
     if not isinstance(published, dict):
         return [[SCOREBOARD_PUBLICATION, "published is not an object, so the publication commit cannot be read"]]
-    commit = published.get("commit")
+    if "commit" not in published:
+        return [[SCOREBOARD_PUBLICATION, "published has no commit; a publication pending its commit records null"]]
+    commit = published["commit"]
     if commit is None:
         return []
-    above, begin, block = (root / "README.md").read_text().partition(SCOREBOARD_BEGIN)
+    if not isinstance(commit, str):
+        return [[SCOREBOARD_PUBLICATION, "published.commit is " + json.dumps(commit) + ", not a commit or null"]]
+    above, begin, rest = (root / "README.md").read_text().partition(SCOREBOARD_BEGIN)
     if not begin:
         return [["README.md", "README.md has no " + SCOREBOARD_BEGIN + " line, so the paragraph above the scoreboard block cannot be found"]]
-    paragraphs = [p for p in above.rsplit("\n## ", 1)[-1].split("\n\n") if "check --commit" in p]
-    named = re.findall(r"check --commit\s+([a-f0-9]{40})", "\n\n".join(paragraphs))
+    block, end, _ = rest.partition(SCOREBOARD_END)
+    if not end:
+        return [["README.md", "README.md has no " + SCOREBOARD_END + " line, so the scoreboard block cannot be told from the rest of README"]]
+    explanation = above.rsplit("\n## ", 1)[-1]
+    named = [c.strip("`'\"()[],.;:") for c in re.findall(r"check --commit\s+(\S+)", explanation)]
     if not named:
         return [["README.md", "The paragraph above the scoreboard block names no publication commit"]]
     stale = [["README.md", c, "The paragraph above the scoreboard block describes a publication other than " + SCOREBOARD_PUBLICATION + " records (" + commit + "); update it with the new render"] for c in named if c != commit]
     if stale:
         return stale
-    render = block.partition(SCOREBOARD_END)[0] + (root / SCOREBOARD_RENDER).read_text()
-    figures = re.findall(r"(?<![\w.])\d+\.\d+(?!\w|\.\d)", "\n\n".join(paragraphs))
+    render = block + (root / SCOREBOARD_RENDER).read_text()
+    figures = re.findall(r"(?<![\w.])\d+\.\d+(?!\w|\.\d)", explanation)
     return [["README.md", f, "The paragraph above the scoreboard block quotes a figure that neither the block nor " + SCOREBOARD_RENDER + " shows; update it with the new render"]
             for f in figures if not re.search(r"(?<![\w.])" + re.escape(f) + r"(?!\d)", render)]
 

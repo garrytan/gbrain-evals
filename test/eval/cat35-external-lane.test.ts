@@ -768,4 +768,20 @@ describe.skipIf(!FD_PATHS)('hermetic external-lane runs', () => {
     const macro = gbrain.receipt.coverage_by_lane.verbatim.macro;
     expect(next.receipt.deltas).toEqual({ verbatim_macro: { prior: macro, current: macro, delta: 0 } });
   }, 120_000);
+
+  test('prior-run discovery passes over an older receipt whose lane list is not all text, instead of stopping the run after judging', () => {
+    const gbrain = runHermetic(['--lanes', 'verbatim']);
+    expect(gbrain.exitCode, gbrain.stderr).toBe(0);
+    const next = runHermetic(['--lanes', 'verbatim'], {
+      setup: (dir) => {
+        const reports = join(dir, 'eval/reports/cat35-transcript-distill');
+        mkdirSync(reports, { recursive: true });
+        writeFileSync(join(reports, '2026-10-30-000000-cat35-bpre.json'), JSON.stringify({ ...gbrain.receipt, lanes: [{ toString: null }] }));
+        writeFileSync(join(reports, '2026-10-31-000000-cat35-bpre.json'), JSON.stringify(gbrain.receipt));
+      },
+    });
+    expect(next.exitCode, next.stderr).toBe(0);
+    expect(next.receipt.comparability).toBe('comparable');
+    expect(next.receipt.prior_run.path).toEndWith('/eval/reports/cat35-transcript-distill/2026-10-31-000000-cat35-bpre.json');
+  }, 120_000);
 });

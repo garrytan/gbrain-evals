@@ -234,9 +234,9 @@ describe('cohorts, estimand and claim rules', () => {
   });
 
   test('the verdict prints the preregistered detectable difference to one decimal', () => {
-    const { dir, sb } = fresh({ detectableDifference: 13.58 });
-    expect(sb.verdict).toContain('(detectable difference about 13.6 points)');
-    expect(sb.verdict).not.toContain('13.58');
+    const { dir, sb } = fresh({ detectableDifference: 9.58 });
+    expect(sb.verdict).toContain('(detectable difference about 9.6 points)');
+    expect(sb.verdict).not.toContain('9.58');
     rmSync(dir, { recursive: true });
   });
 
@@ -346,11 +346,27 @@ describe('cohorts, estimand and claim rules', () => {
     const { dir, write } = powerDir();
     const kept = ['ext-extract-first', 'ext-memory-bank', 'ext-graph-pipeline', 'ext-temporal-graph', 'ext-markdown-kb', 'ext-verbatim-session', 'baseline-hybrid', 'baseline-none'];
     for (const [family1, shrunk_comparators] of [['full', null], ['shrunk', kept]] as const) {
-      write({ family1, detectable_difference_points: 12.5, shrunk_comparators });
+      write({ family1, threshold_points: 10, detectable_difference_points: 8.5, shrunk_comparators });
       expect(() => derive(dir)).not.toThrow();
-      write({ family1, detectable_difference_points: null, shrunk_comparators });
+      write({ family1, threshold_points: 10, detectable_difference_points: null, shrunk_comparators });
       expect(() => derive(dir)).toThrow(new RegExp(`family1 ${family1} with no detectable difference`));
     }
+    rmSync(dir, { recursive: true });
+  });
+
+  test('a full or shrunk power decision whose detectable difference is above its threshold is an invalid receipt, since power.ts ranks a family only at or under it', () => {
+    const { dir, write } = powerDir();
+    const kept = ['ext-extract-first', 'ext-memory-bank', 'ext-graph-pipeline', 'ext-temporal-graph', 'ext-markdown-kb', 'ext-verbatim-session', 'baseline-hybrid', 'baseline-none'];
+    for (const [family1, shrunk_comparators] of [['full', null], ['shrunk', kept]] as const) {
+      write({ family1, threshold_points: 10, detectable_difference_points: 10, shrunk_comparators });
+      expect(() => derive(dir)).not.toThrow();
+      write({ family1, threshold_points: 10, detectable_difference_points: 10.5, shrunk_comparators });
+      expect(() => derive(dir)).toThrow(new RegExp(`family1 ${family1} with detectable difference 10\\.5 and threshold_points 10,`));
+      write({ family1, detectable_difference_points: 8.5, shrunk_comparators });
+      expect(() => derive(dir)).toThrow(new RegExp(`family1 ${family1} with detectable difference 8\\.5 and threshold_points null,`));
+    }
+    write({ family1: 'descriptive', threshold_points: 10, detectable_difference_points: 13.58, shrunk_comparators: null });
+    expect(() => derive(dir)).not.toThrow();
     rmSync(dir, { recursive: true });
   });
 

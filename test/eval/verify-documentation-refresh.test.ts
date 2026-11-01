@@ -169,4 +169,32 @@ describe('verify-documentation-refresh: the scoreboard explanation', () => {
       expect(references(root, 'scoreboard_publication_reference')).toEqual([[PUBLICATION, 'published is not an object, so the publication commit cannot be read']]);
     }
   });
+
+  test('a publication commit that is missing or not text fails instead of passing or crashing the verifier', () => {
+    const published = JSON.parse(readFileSync(join(ROOT, PUBLICATION), 'utf8')).published.commit as string;
+    const number = copyWith('commit-number', PUBLICATION, t => t.replace(`"commit": "${published}"`, '"commit": 123'));
+    expect(references(number, 'scoreboard_publication_reference')).toEqual([[PUBLICATION, 'published.commit is 123, not a commit or null']]);
+    const missing = copyWith('commit-missing', PUBLICATION, t => t.replace(`"commit": "${published}",`, ''));
+    expect(references(missing, 'scoreboard_publication_reference')).toEqual([[PUBLICATION, 'published has no commit; a publication pending its commit records null']]);
+  });
+
+  test('a commit with characters after its 40, or a short one, is not the publication\'s', () => {
+    const published = JSON.parse(readFileSync(join(ROOT, PUBLICATION), 'utf8')).published.commit as string;
+    const longer = copyWith('commit-overlong', 'README.md', t => t.replace(/(check --commit\s+[a-f0-9]{40})/, '$1ab'));
+    expect(references(longer, 'scoreboard_publication_reference').map(e => e.slice(0, 2))).toEqual([['README.md', `${published}ab`]]);
+    const short = copyWith('commit-short', 'README.md', t => t.replace(/(check --commit\s+[a-f0-9]{40}`\))/, '$1 (it replaced `check --commit abc1234`)'));
+    expect(references(short, 'scoreboard_publication_reference').map(e => e.slice(0, 2))).toEqual([['README.md', 'abc1234']]);
+  });
+
+  test('a figure in another paragraph above the block is checked too', () => {
+    const root = copyWith('stale-figure-next-paragraph', 'README.md', t => t.replace('rendered again in custody. Two\nnumbers', 'rendered again in custody.\n\nTwo numbers').replace('the 13.58 points in the opening sentence', 'the 13.85 points in the opening sentence'));
+    expect(references(root, 'scoreboard_publication_reference')).toEqual([
+      ['README.md', '13.85', 'The paragraph above the scoreboard block quotes a figure that neither the block nor ' + RENDER + ' shows; update it with the new render'],
+    ]);
+  });
+
+  test('a README whose scoreboard block has no end marker fails instead of reading the rest of README as the render', () => {
+    const root = copyWith('no-end-marker', 'README.md', t => t.replace('<!-- scoreboard:headline:end -->\n', ''));
+    expect(references(root, 'scoreboard_publication_reference')).toEqual([['README.md', 'README.md has no <!-- scoreboard:headline:end --> line, so the scoreboard block cannot be told from the rest of README']]);
+  });
 });
