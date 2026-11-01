@@ -86,7 +86,7 @@ import { loadCorpus, type Corpus, type MemoryQuestion, type Session } from '../m
 import { ContextStore } from '../memory-qa/arms.ts';
 import { instrumentFor, type Instrument } from '../memory-qa/instruments.ts';
 import { DEFAULT_MAX_ATTEMPTS, OUTCOMES, type Outcome } from '../memory-qa/outcomes.ts';
-import { ChatClient, judgeAnswer, READER_TEMPLATE, type ChatLike } from '../memory-qa/qa-v2.ts';
+import { ChatClient, isCompatModel, judgeAnswer, READER_TEMPLATE, type ChatLike } from '../memory-qa/qa-v2.ts';
 import { answerId, answerRecord, judgmentKey, readRecords, RecordLog, sha256, type AnswerRecord, type JudgmentRecord, type Q1Row } from '../memory-qa/records.ts';
 import { failureRow, hashEmbed, readinessProbe, selectQuestions } from '../memory-qa/run-systems.ts';
 import { checkSealedDestinations, sealedPaths } from '../memory-qa/sealed-profile.ts';
@@ -613,6 +613,10 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
         : runnable.length ? { next: 'run', argv: [...FRONT, 'run', '--cell', def.id, '--arms', runnable.join(',')], user_message: 'run the other arms now; the blocked arms wait for the system\'s answer route' } : { next: 'report', user_message: 'the cell waits for an answer route in the system\'s shim' } });
   }
   const readersOf = new Map(arms.map(a => [a.id, armReaders(a, capabilities)]));
+  const compatReaders = [...new Set([...readersOf.values()].flat())].filter(isCompatModel);
+  if (compatReaders.length && opts.providerProxy) throw refuse({ code: 'NOT_YET_AVAILABLE', message: `cell ${def.id}: ${compatReaders.join(', ')} cannot read behind the lease proxy yet`,
+    why: 'the lease proxy has no route for OpenAI-compatible providers, so these readers would spend outside the lease and its meter; particle-1 plan unit U5 adds the route',
+    fix: { next: 'report', user_message: `run ${def.id} without ${compatReaders.join(', ')} until the lease proxy routes it` } });
   const chat = deps.reader ?? deps.judge ?? new ChatClient(custody ? join(out, 'cache', 'qa') : env.GBRAIN_EVALS_QA_CACHE ?? join(homedir(), '.cache', 'gbrain-evals', 'qa-cache'));
   const reader = onSlot(deps.reader ?? chat, meter, 'harness');
   const judge = onSlot(deps.judge ?? chat, meter, 'judge');

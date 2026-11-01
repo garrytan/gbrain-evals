@@ -158,7 +158,8 @@ export class ChatClient extends BaseChatClient implements ChatLike {
         lastError = e;
         attemptErrors.push(String((e as Error).message ?? e).slice(0, 300));
         const status = (e as { status?: number }).status;
-        const stop = /budget|BudgetExceeded/i.test(String((e as Error).message)) || (status !== undefined && status < 500 && status !== 429) || attempt === 4;
+        const retryable = compat ? (e as { retryable?: boolean }).retryable !== false : status === undefined || status >= 500 || status === 429;
+        const stop = /budget|BudgetExceeded/i.test(String((e as Error).message)) || !retryable || attempt === 4;
         const retryAfterMs = compat && !stop ? (e as { retryAfterMs?: number | null }).retryAfterMs ?? null : null;
         if (compat) compatAttempts.push({ retry_after_ms: retryAfterMs, usage: (e as { usage?: Record<string, unknown> | null }).usage ?? null });
         if (stop) break;

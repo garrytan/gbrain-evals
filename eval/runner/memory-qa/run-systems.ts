@@ -82,8 +82,8 @@ import { gbrainSpecFrom, importGbrain, overlaySummary, productIdentityFor, resol
 import { EmbeddingCache, makeCachingTransport } from '../longmemeval-cache.ts';
 import { ndcgAtK, recallAllAtK, recallAnyAtK, uniqueInOrder, percentile } from '../metrics.ts';
 import { loadCorpus, occurrenceId, sha256, type Corpus, type MemoryQuestion, type Session } from './corpus.ts';
-import { ChatClient, DEFAULT_JUDGE, DEFAULT_READER, chatWithReceipts, factsReaderPrompt, hasChatRoute, judgeResponse, packSessions, readerPrompt, repeatsTrap, approxTokens, unresolvedRelativeTime, type SavedFact } from './qa-v2.ts';
-import { modelsNotRun } from '../providers/openai-compatible.ts';
+import { ChatClient, DEFAULT_JUDGE, DEFAULT_READER, chatWithReceipts, factsReaderPrompt, hasChatRoute, isCompatModel, judgeResponse, packSessions, readerPrompt, repeatsTrap, approxTokens, unresolvedRelativeTime, type SavedFact } from './qa-v2.ts';
+import { compatRequest, modelsNotRun } from '../providers/openai-compatible.ts';
 import type { UsageReceipt } from '../usage-receipt.ts';
 import { devConversations, loadSplit } from '../decisions/splits.ts';
 import { appendAccessLog } from '../sealed-confirmation-lib.ts';
@@ -434,6 +434,9 @@ export function failureRow(base: MemoryQaRow, e: unknown): MemoryQaRow {
 
 export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unknown>; rows: MemoryQaRow[] }> {
   const started = new Date().toISOString();
+  const compat = [...new Set([...(a.qa.mode === 'none' ? [] : [a.qa.reader, a.qa.judge]), ...(a.arms?.readers.map(r => r.model) ?? []), ...(a.arms?.judge ? [a.arms.judge] : [])])].filter(isCompatModel);
+  if (compat.length && a.providerProxy) throw new Error(`${compat.join(', ')} cannot run behind --provider-proxy yet: the metering proxy has no route for OpenAI-compatible providers (particle-1 plan unit U5 adds it), so these requests would spend outside the lease; run this cell without the proxy under --paid --budget-run-id`);
+  for (const model of compat) compatRequest(model, [], {});
   const legacy = a.system === 'gbrain';
   const inProcessGbrain = legacy || a.system === 'gbrain-shootout' || a.system === 'gbrain-query';
   if (!legacy && (a.facts !== 'none' || a.qa.mode === 'think' || a.qa.context === 'facts')) throw new Error('--facts, --qa think and --qa-context facts read gbrain directly; they need --system gbrain');

@@ -733,6 +733,15 @@ describe('custody and the paid guard', () => {
     expect(existsSync(join(tmp, 'unpaid'))).toBe(false);
   });
 
+  // Value: protects=a particle reader never spends outside a lease; fails_when=a cell behind the lease proxy sends a particle reader straight to api.particle.ai; why_new=qa-v2 now routes particle (U2) and the lease proxy has no particle route until U5; seam=none; no_claim=keyless, refused before any request
+  test('an OpenAI-compatible reader behind the lease proxy is refused before the cell ingests or reads', async () => {
+    const def = cellDef('baseline-recency', 'in-process', [component({ readers: ['particle:particle-1'], reader_replicates: {} })], { configuration: 'baseline' });
+    const out = join(tmp, 'compat-proxy');
+    const err = await runCell(def, { out, providerProxy: 'http://127.0.0.1:9', ...quiet }, { corpus, system: new FakeMemorySystem() }).catch(e => e) as ScoreboardError;
+    expect(err.op.message).toBe(`cell ${def.id}: particle:particle-1 cannot read behind the lease proxy yet`);
+    expect(err.op.code).toBe('NOT_YET_AVAILABLE');
+  });
+
   test('own-answer arms without an answer route refuse and name the runnable arms', async () => {
     const def = cellDef('gbrain-defaults', 'shim', [component(), { id: 'whole-think', mode: 'own-answer', variant: 'think' }], { configuration: 'shipped-defaults' });
     const err = await runCell(def, { out: join(tmp, 'own') }, { corpus, system: new FakeMemorySystem(), reader: scriptedReader(), judge: scriptedJudge() }).catch(e => e);

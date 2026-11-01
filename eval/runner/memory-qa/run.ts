@@ -265,7 +265,10 @@ export function rerankerInactive(message: string, rerankModel: string): DecideEr
 }
 
 export function parseRunArgs(argv: string[]): RunArgs {
-  if (isSystemsArgv(argv)) return systems.parseRunArgs(argv) as unknown as RunArgs;
+  if (isSystemsArgv(argv)) {
+    if (argv.includes('--reader-effort')) throw new Error('--reader-effort sets the reading lane\'s reader; memory-system cells send each provider\'s default effort, so leave it out with --system, --arms, --replay or --provider-proxy');
+    return systems.parseRunArgs(argv) as unknown as RunArgs;
+  }
   const one = (name: string) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; };
   const many = (name: string) => argv.flatMap((a, i) => (a === name ? [argv[i + 1]] : []));
   const benchmark = one('--benchmark');
@@ -455,7 +458,6 @@ export async function readAndJudge(p: {
 }
 
 export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unknown>; rows: MemoryQaRow[] }> {
-  if (a.qa.mode === 'reader' && isCompatModel(a.qa.reader)) compatRequest(a.qa.reader, [], { effort: a.qa.effort, maxOutputTokens: a.qa.maxTokens });
   if ('system' in a) return systems.runArm(a as unknown as systems.RunArgs) as unknown as Promise<{ receipt: Record<string, unknown>; rows: MemoryQaRow[] }>;
   const started = new Date().toISOString();
   mkdirSync(a.output, { recursive: true });
@@ -480,6 +482,8 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
   if (a.qa.context === 'facts' && (a.facts === 'none' || a.qa.mode !== 'reader')) throw new Error('--qa-context facts needs --facts conversation and --qa reader');
   if ((a.qa.context === 'none' || a.qa.context === 'oracle') && a.qa.mode !== 'reader') throw new Error(`--qa-context ${a.qa.context} needs --qa reader`);
   if ((a.retrievedFrom || a.qa.context === 'none' || a.qa.context === 'oracle') && (a.qa.mode === 'think' || a.facts !== 'none')) throw new Error('--retrieved-from and --qa-context none|oracle build no brain, so they cannot run think or the facts lane');
+  if (a.qa.mode === 'reader' && isCompatModel(a.qa.reader)) compatRequest(a.qa.reader, [], { effort: a.qa.effort, maxOutputTokens: a.qa.maxTokens });
+  if (a.qa.mode !== 'none' && isCompatModel(a.qa.judge)) compatRequest(a.qa.judge, [], {});
   const frozen = a.retrievedFrom ? loadFrozenRetrieval(a.retrievedFrom) : null;
   // No brain is built when the evidence is replayed, empty or the gold sessions themselves.
   const brainless = !!frozen || a.qa.context === 'none' || a.qa.context === 'oracle';
@@ -715,7 +719,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
     paid.guard.uninstall();
     cost = receiptCost(summary) as unknown as Record<string, unknown>;
   }
-  const runStatus = refusal ? 'refused' : invalidReasons.length ? 'invalid' : allRows.length < expected ? 'partial' : 'complete';
+  const runStatus = refusal ? 'refused' : invalidReasons.length ? 'invalid' : stopped || new Set(allRows.map(r => r.id)).size < expected ? 'partial' : 'complete';
   const finishedAt = new Date().toISOString();
   const attempts: Attempt[] = [...priorAttempts, { run_status: runStatus, finished_at: finishedAt, rows_added: allRows.length - rowsBefore, reranked_queries: attemptFidelity.reranked_queries,
     rerank_provider_requests: attemptFidelity.rerank_provider_requests, embedding_deferred_pages: attemptFidelity.embedding_deferred_pages, usd: (cost?.usd as number | undefined) ?? null }];

@@ -147,6 +147,14 @@ describe('the particle route in qa-v2', () => {
     expect(row.qa_receipts!.map(r => [r.attempt, r.status, r.retry_after_ms])).toEqual([[0, 'error', 0], [1, 'error', 0], [2, 'error', 0], [3, 'error', 0], [4, 'error', undefined]]);
   });
 
+  test('a 200 with no message is retried, as the provider module classes it', async () => {
+    const mock = serve([{ body: { id: 'chatcmpl-0', model: 'particle-ai/particle-1', choices: [] } }, { body: PARTICLE_OK }]);
+    const row = await readAndJudge({ benchmark: 'lme-s', qa: qa(), q, chat: new ChatClient(tmp(), () => 0), think: null, prompt: 'P', countTokens: null });
+    expect(mock.particle()).toHaveLength(2);
+    expect(row.qa_receipts!.filter(r => r.role === 'reader').map(r => [r.attempt, r.status])).toEqual([[0, 'error'], [1, 'ok']]);
+    expect(row.qa_score).toBe(1);
+  });
+
   test('a credit 402 is one attempt: its receipt is written and the stop reaches the caller with the receipts gathered so far', async () => {
     const mock = serve([{ status: 402, body: { error: { message: 'insufficient balance' } } }]);
     const err = await readAndJudge({ benchmark: 'lme-s', qa: qa(), q, chat: new ChatClient(tmp(), () => 0), think: null, prompt: 'P', countTokens: null }).catch(e => e) as Error & { qa_receipts: UsageReceipt[] };
@@ -167,10 +175,20 @@ describe('the particle route in qa-v2', () => {
     await expect(runArm(parseRunArgs([...argv, '--reader-effort', 'turbo']))).rejects.toThrow('reasoning effort "turbo" is not one Particle lists');
     delete process.env.PARTICLE_API_KEY;
     await expect(runArm(parseRunArgs(argv))).rejects.toThrow('PARTICLE_API_KEY is not set');
-    const systemsOut = join(tmp(), 'systems');
-    await expect(runArm(parseRunArgs(['--benchmark', 'fixture', '--system', 'fake', '--qa', 'reader', '--reader', 'particle:particle-1', '--output', systemsOut]))).rejects.toThrow('PARTICLE_API_KEY is not set');
-    expect(existsSync(systemsOut)).toBe(false);
     expect([mock.particle().length, mock.seen.length]).toEqual([1, 2]);
+  });
+
+  test('memory-system cells: every particle model the cell calls is checked before it ingests, a provider proxy refuses particle, and --reader-effort is refused', async () => {
+    const mock = serve([]);
+    const out = join(tmp(), 'systems');
+    const cell = (...extra: string[]) => runArm(parseRunArgs(['--benchmark', 'fixture', '--system', 'fake', '--qa', 'reader', '--output', out, ...extra]));
+    await expect(cell('--reader', 'particle:particle-1', '--provider-proxy', 'http://127.0.0.1:9')).rejects.toThrow('particle:particle-1 cannot run behind --provider-proxy yet');
+    expect(() => parseRunArgs(['--benchmark', 'fixture', '--system', 'fake', '--reader', 'particle:particle-1', '--reader-effort', 'none', '--output', out])).toThrow('--reader-effort sets the reading lane\'s reader');
+    delete process.env.PARTICLE_API_KEY;
+    await expect(cell('--reader', 'particle:particle-1')).rejects.toThrow('PARTICLE_API_KEY is not set');
+    await expect(cell('--reader', 'openai:gpt-4o-mini', '--judge', 'particle:particle-1')).rejects.toThrow('PARTICLE_API_KEY is not set');
+    expect(existsSync(out)).toBe(false);
+    expect(mock.seen).toHaveLength(0);
   });
 });
 
@@ -215,6 +233,18 @@ describe('the budget stop', () => {
     expect(receipt.models_not_run).toEqual([]);
     expect((receipt.qa as { temperature_sent: { reader: unknown } }).temperature_sent.reader).toBe('none (provider default)');
     expect((receipt.usage as { by_role: Record<string, { errors: number; records: number }> }).by_role.reader).toMatchObject({ records: 2, errors: 1 });
+  }, 60_000);
+
+  test('run.ts: a stop on the last question leaves the run partial, and the rerun that answers it reads complete although the stopped row stays in the file', async () => {
+    process.env.GBRAIN_EVALS_QA_CACHE = join(tmp(), 'qa-cache');
+    const out = join(tmp(), 'run');
+    const argv = ['--benchmark', 'fixture', '--qa', 'reader', '--qa-context', 'oracle', '--reader', 'particle:particle-1', '--judge', 'openai:gpt-4o-mini', '--limit', '2', ...paidArgs('last-stop'), '--output', out];
+    serve([{ body: PARTICLE_OK }, { status: 402, body: { error: { message: 'insufficient balance' } } }]);
+    const first = await runArm(parseRunArgs(argv));
+    expect([first.rows.length, first.receipt.run_status, (first.receipt.summary as { stopped?: string }).stopped]).toEqual([2, 'partial', 'budget']);
+    serve([{ body: PARTICLE_OK }]);
+    const second = await runArm(parseRunArgs(argv));
+    expect([second.rows.length, second.receipt.run_status, 'stopped' in (second.receipt.summary as object)]).toEqual([3, 'complete', false]);
   }, 60_000);
 
   test('run-systems.ts: reader calls leave receipts, and a credit 402 ends the question as budget_not_run and stops the cell', async () => {
