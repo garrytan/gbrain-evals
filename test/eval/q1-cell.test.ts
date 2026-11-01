@@ -727,6 +727,31 @@ describe('particle-1 readers through Q1\'s lease proxy (plan GST-605 Phase 2)', 
     } finally { lp.stop(); }
   });
 
+  // Value: protects=a slow particle reading is billed once (issue #250 at the cell level); fails_when=a timed-out try is left non-terminal, so the cell's A22 retry pass (or the provider loop) sends it again; why_new=qa-v2 and readCompat stop on a timeout, and the cell must not undo that; seam=none; no_claim=Particle's billing of an aborted request
+  test('packed and full context: a reading that times out is sent once, recorded as a final reader_error with its attempt, and never sent again in this process', async () => {
+    for (const mode of ['packed', 'full-context'] as const) {
+      const lp = leaseProxy(1);
+      const realFetch = globalThis.fetch;
+      let calls = 0;
+      const timeout = (async (input: RequestInfo | URL, init?: RequestInit) => {
+        if (!String(input instanceof Request ? input.url : input).includes('/particle/')) return realFetch(input, init);
+        calls++;
+        throw new DOMException('The operation timed out.', 'TimeoutError');
+      }) as unknown as typeof fetch;
+      if (mode === 'packed') globalThis.fetch = timeout;
+      try {
+        const def = mode === 'packed' ? cellDef('ext-graph-pipeline', 'shim', [component({ readers: [PARTICLE], reader_replicates: {} })], slice)
+          : cellDef('baseline-full-context', 'in-process', [{ id: 'whole-full-context', mode: 'full-context', readers: [PARTICLE] }], { configuration: 'baseline', ...slice });
+        const out = join(tmp, `particle-timeout-${mode}`);
+        await runCell(def, { out, providerProxy: lp.url, ...quiet }, { corpus, system: mode === 'packed' ? new FakeMemorySystem() : new FullContextSystem('whole-history'), reader: new ChatClient(join(out, 'qa-cache')), judge: scriptedJudge(),
+          ...(mode === 'full-context' ? { fullContextFetch: timeout } : {}) });
+        expect([mode, calls, lp.seen.length]).toEqual([mode, 2, 0]);
+        expect(tries(out, def).map(t => [t.outcome, t.attempts.length, t.attempts[0].status])).toEqual(Array(2).fill(['reader_error', 1, 'error']));
+        expect(ndjson(join(out, 'cells', def.arms[0].cell_id, 'answers.ndjson')).map(a => [a.outcome, a.attempts.length])).toEqual(Array(2).fill(['reader_error', 1]));
+      } finally { globalThis.fetch = realFetch; lp.stop(); }
+    }
+  });
+
   // Value: protects=the lease as a hard stop for particle; fails_when=an exhausted lease's refusal is retried, recorded as a reader error, loses its attempt, or lets the cell read or judge on; why_new=the scheduler's budget stop now sees particle's proxy refusal; seam=none; no_claim=Particle's own credit 402 (file-agent.test.ts)
   test('packed and full context: an exhausted lease refuses the first reading before it reaches Particle; the cell stops as a budget stop after recording the failed attempt', async () => {
     for (const mode of ['packed', 'full-context'] as const) {

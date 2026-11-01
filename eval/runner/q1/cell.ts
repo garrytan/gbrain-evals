@@ -903,10 +903,11 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
     const terminal = (id: string, outcome: Outcome) => FINAL.has(outcome) || (answerTries.get(id) ?? 0) + 1 >= maxAttempts;
     /** One answering try; an OpenAI-compatible reader's line also keeps its provider attempts, so a retried try's receipts persist. */
     const recordAttempt = (id: string, outcome: Outcome, error?: string, attempts?: ReaderAttempt[]) => { appendFileSync(join(dir, 'answer-attempts.ndjson'), JSON.stringify({ answer_id: id, outcome, error: error?.slice(0, 300), at: new Date().toISOString(), ...(attempts ? { attempts } : {}) }) + '\n'); answerTries.set(id, (answerTries.get(id) ?? 0) + 1); };
-    const appendAnswer = (raw: AnswerRecord, error?: string, pack: PackedContext | null = null) => {
+    /** `final`: a try that must not be sent again (a timed-out OpenAI-compatible request, which the provider may have billed). */
+    const appendAnswer = (raw: AnswerRecord, error?: string, pack: PackedContext | null = null, final = false) => {
       const a = withDerived(raw, pack);
       if (FINAL.has(a.outcome)) { answers.append(a); return; }
-      if (terminal(a.answer_id, a.outcome)) { recordAttempt(a.answer_id, a.outcome, error, a.attempts); answers.append(a); return; }
+      if (final || terminal(a.answer_id, a.outcome)) { recordAttempt(a.answer_id, a.outcome, error, a.attempts); answers.append(a); return; }
       recordAttempt(a.answer_id, a.outcome, error, a.attempts);
     };
 
@@ -990,7 +991,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
             stopped = `budget: ${msg.slice(0, 200)}`;
             return pack;
           }
-          appendAnswer(failed('reader_error'), msg);
+          appendAnswer(failed('reader_error'), msg, null, attempts !== undefined && ['TimeoutError', 'AbortError'].includes((res.error as Error).name));
           continue;
         }
         const c = res.value!;
@@ -1022,7 +1023,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
           if (!a) { appendAnswer(answerRecord(id, { text: '', outcome: 'reader_error', usage: zero, latency_ms: 0, provider_input_tokens: null }), String((res.error as Error)?.message)); continue; }
           extra.fit = { ...(extra.fit ?? {}), [rd]: { fits: a.fit.fits, prompt_tokens: a.fit.prompt_tokens, max_input_tokens: a.fit.max_input_tokens, tokenizer: a.fit.tokenizer } };
           appendAnswer(answerRecord(id, { text: a.text, outcome: a.outcome === 'scored' && degraded ? 'ingest_degraded' : a.outcome, usage: a.usage, latency_ms: Math.round(a.latency_ms), provider_input_tokens: a.provider_input_tokens || null,
-            ...(a.attempts ? { finish: a.finish ?? null, truncated: a.truncated ?? false, attempts: a.attempts } : {}) }), a.error);
+            ...(a.attempts ? { finish: a.finish ?? null, truncated: a.truncated ?? false, attempts: a.attempts } : {}) }), a.error, null, a.timed_out === true);
           if (a.outcome === 'budget_not_run') stopped = `budget: ${String(a.error).slice(0, 200)}`;
           continue;
         }

@@ -4,7 +4,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { calibrate, calibrationSamples } from '../../eval/runner/q1/calibrate.ts';
-import { calibrationCell } from '../../eval/runner/q1/calibration-cell.ts';
+import { calibrationCell, claimOut } from '../../eval/runner/q1/calibration-cell.ts';
 import { findCell } from '../../eval/runner/q1/cell.ts';
 import { loadManifest } from '../../eval/runner/q1/cells/definitions.ts';
 import { encodingCount } from '../../eval/runner/systems/render-v2.ts';
@@ -61,4 +61,17 @@ test('--pre-normalizer re-derives the provider total from the raw buckets old pa
   writeFileSync(join(run, 'r', 'rid', 'answers.ndjson'), answers.map(a => JSON.stringify(a) + '\n').join(''));
   expect(calibrationSamples(out).map(s => s.provider)).toEqual([o200k + 1024, cl100k]);
   expect(calibrationSamples(out, { preNormalizer: true }).map(s => s.provider)).toEqual([o200k, cl100k]);
+});
+
+// Value: protects=a paid calibration measures Particle, never the fake; fails_when=a paid run resumes in a keyless run's --out (or the reverse) and records the fake provider's factor as measured; why_new=calibration-cell.ts keeps its caches and answers in --out; seam=none; no_claim=the paid run itself
+test('a calibration --out holds one kind of run: a paid run refuses a keyless run\'s directory and the reverse; the same kind resumes', () => {
+  const keyless = join(tmp, 'claim-keyless');
+  mkdirSync(keyless, { recursive: true });
+  claimOut(keyless, true);
+  claimOut(keyless, true);
+  expect(() => claimOut(keyless, false)).toThrow('holds a keyless calibration run; give this run a fresh --out');
+  const paid = join(tmp, 'claim-paid');
+  mkdirSync(paid, { recursive: true });
+  claimOut(paid, false);
+  expect(() => claimOut(paid, true)).toThrow('holds a paid calibration run');
 });

@@ -9,11 +9,12 @@
  * The proxy holds the provider keys from this environment and Q1's route caps and classes, and spends the lease; the
  * cell sees dummy keys. `--keyless-upstream` sends every provider to eval/systems/_shim/fake_provider.py instead
  * (Particle under its `/particle` prefix) with placeholder keys, for the $0 run before a paid one. The chat and
- * embedding caches live in --out, so a keyless run's answers never stand in for a paid run's. Frontier judges are
+ * embedding caches live in --out, and `upstream.json` there records which kind of run it holds, so a paid run refuses
+ * a keyless run's --out (it would resume from the fake answers) and the reverse. Frontier judges are
  * off; the canonical judge runs, as in any cell. `calibration.json` in --out holds the reader's factor and largest
  * per-pack error under its table encoding and under the other tiktoken encoding, and the lease's dollars.
  */
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { BudgetRun } from '../budget-ledger.ts';
 import { DEFAULT_ROUTE_CAPS, MeteringProxy, usageSplit } from '../metering-proxy.ts';
@@ -31,6 +32,15 @@ export function calibrationCell(def: CellDefinition, reader: string): CellDefini
   return { ...def, arms: [{ ...arm, readers: [reader], reader_replicates: {}, frontier: null }] };
 }
 
+/** Records in `out` whether it holds a keyless or a paid run, and refuses an `out` that holds the other kind. */
+export function claimOut(out: string, keyless: boolean): void {
+  const marker = join(out, 'upstream.json');
+  if (existsSync(marker) && JSON.parse(readFileSync(marker, 'utf8')).keyless !== keyless) {
+    throw new Error(`${out} holds a ${keyless ? 'paid' : 'keyless'} calibration run; give this run a fresh --out`);
+  }
+  writeFileSync(marker, JSON.stringify({ keyless }) + '\n');
+}
+
 if (import.meta.main) {
   const argv = process.argv.slice(2);
   const one = (n: string) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : undefined; };
@@ -42,6 +52,7 @@ if (import.meta.main) {
   const keyless = one('--keyless-upstream')?.replace(/\/$/, '') ?? null;
   const out = resolve(outArg);
   mkdirSync(out, { recursive: true });
+  claimOut(out, !!keyless);
   const def = calibrationCell(findCell(one('--cell') ?? 's3-smoke.baseline-hybrid.baseline'), reader);
   Object.assign(process.env, { GBRAIN_EVALS_QA_CACHE: join(out, 'qa-cache'), GBRAIN_EVALS_EMBED_CACHE: join(out, 'embed-cache') });
   const placeholder = 'keyless-not-a-provider-key';

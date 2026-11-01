@@ -301,6 +301,8 @@ export interface FullContextAnswer {
   finish?: string | null;
   truncated?: boolean;
   attempts?: ReaderAttempt[];
+  /** The last request timed out; Particle may have billed it, so the cell never sends it again. */
+  timed_out?: boolean;
 }
 
 const TOO_LONG = /prompt is too long|context[_ ]length|context window|maximum context|too many (input )?tokens|input is too long|exceeds the context/i;
@@ -390,6 +392,7 @@ async function readCompat(req: CompatRequest, fit: FitCheck, cache_key: string, 
       attempts.push({ status: 'error', error: message, from_cache: false, response_model: null, finish: null, reasoning_tokens: receiptUsage(source, err.usage)?.reasoning ?? null, weight_version: null, ...sent, retry_after_ms: wait });
       if (err.name === 'BudgetExceededError') return stop('budget_not_run', message);
       if (err.kind === 'context_overflow') return stop('does_not_fit', message);
+      if (timedOut) return { ...stop('reader_error', message), timed_out: true };
       if (!again) return stop('reader_error', message);
       await new Promise(r => setTimeout(r, wait ?? 2000 * 2 ** attempt));
     }
