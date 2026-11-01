@@ -93,16 +93,23 @@ This records what each gbrain-evals release changed and what its measurements me
 
 - **A repository `.gstack/pregate.json` raises the pregate's per-process test timeout from 600 to 1800 seconds.** On
   4-core machines the selected test group ran past 600 seconds for three threads, and pregate records a timed-out
-  group as incomplete, which fails /ship. Any policy file also makes a touched file with no test lane a hard failure
-  (`PREGATE_NO_LANE`) that stops the check before any test runs, where the repository without one only warned. So the
-  file maps every path to no extra lane (`"dependencies": {"**": []}`). The import graph still selects each touched
-  file's tests, and a red or timed-out lane still fails. A touched file with no test now passes without the warning.
-  The catch-all also matches a deleted test, and pregate applies a `[]` declaration before its removed-test handling.
-  So deleting a test no longer runs its owning suite or the tests of files that name it in pregate, and no "coverage
-  removed" note prints. CI's full suite still runs every remaining test on the pull request. A test group that runs
-  slow now has 30 minutes before pregate marks it incomplete. Every other check, `literals` included, keeps its level. Scratch pregate runs on 2026-11-01 compared the repository
-  with and without the file. A source edit selected the same 925 tests in 51 files both ways. A failing test beside an
-  unmapped `types/ambient.d.ts` edit failed both ways. An unmapped edit alone warned before and passes now.
+  group as incomplete, which fails /ship. The file sets only `timeout_s`, so a slow test group has 30 minutes before
+  pregate marks it incomplete, and every other check, `literals` included, keeps its level.
+- **The pregate's unmapped-edit and deleted-test warnings are back** (this needs gstack 1.92.35.0 or later). The file
+  first also mapped every path to no extra lane (`"dependencies": {"**": []}`), because older gstack turned any policy
+  file into a hard `PREGATE_NO_LANE` failure for a touched file with no test lane, before any test ran. That catch-all
+  let an unmapped edit pass with no warning, and it dropped the "coverage removed" note for a deleted test (before gstack
+  1.92.35.0 the deleted test's owning suite did not run either). gstack 1.92.35.0 keeps the no-policy lane verdicts for
+  a policy that sets only `timeout_s`, so the catch-all is gone. Scratch pregate runs on 2026-11-01 (main `40bebe33`,
+  gstack 1.92.35.0) compared the two policies. An edit to `scripts/make-decision-splits.ts`, which no test covers,
+  passed under the catch-all and now warns (`PREGATE_NO_POLICY`). Deleting
+  `test/eval/verify-documentation-refresh.test.ts` ran its 26-file owning suite both ways, and only the timeout-only
+  policy names the 7 files that lost their last test. An edit to `eval/runner/providers/openai-compatible.ts` selected
+  the same 79 test files both ways. An older gstack would fail an unmapped edit with `PREGATE_NO_LANE` instead of
+  warning, so a new `.gstack/ship-policy.json` sets `min_gstack_version` to 1.92.35.0. On an older gstack the session
+  check then warns that the repository needs 1.92.35.0 and names the upgrade, and `gstack-ship-queue ready` refuses the
+  policy with `POLICY_GSTACK_TOO_OLD`. Pregate does not read this file, so until that gstack is upgraded an unmapped
+  edit still fails there with `PREGATE_NO_LANE`. Every other ship-policy key keeps its default.
 
 ### chronicle-lift scores one agent model at a time, A4 rows keep the reader's stop reason, and PrecisionMemBench's gbrain-think is metered
 
