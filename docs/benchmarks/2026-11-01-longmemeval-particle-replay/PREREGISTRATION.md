@@ -102,3 +102,7 @@ Whatever decision G's test shows, README's comparison paragraph gains one senten
 ### Result files
 
 Results land only after this file is committed and on origin: `arms/<arm>/{rows.ndjson,receipts.ndjson,receipt.json}`, `build.json`, `preflight/`, `canary/`, `compare-*.ndjson`, `summary.json` and `REPORT.md` in this directory.
+
+## Amendment log
+
+- 2026-11-01T05:42:37Z, before any paid call (window granted by GBEV-3): bar 1's basis. Particle exposes no credit-balance read by API, and its balance is shared across every key on the account, so bar 1 reconciles the ledger against the total priced from the responses' usage fields instead of the change in the prepaid balance. GBEV-3 approved this as a named deviation from the plan's balance basis. The ledger prices particle-1 at Particle's peak list price, and Particle charges half in its off-peak window (20:30 to 04:00 New York time), so the ledger total is a conservative upper bound on what Particle charges. Each row records when its reader call started, and the report gives both the ledger's list-price total and the off-peak-adjusted estimate.

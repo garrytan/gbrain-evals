@@ -200,7 +200,7 @@ export interface Judgment { verdict: boolean | null; raw: string | null; error: 
 
 export interface ParticleRow {
   question_id: string; question_type: string; arm_id: string; model: string; effort: string; output_limit: number;
-  hypothesis: string; finish: string | null; truncated: boolean | null; error: string | null;
+  requested_at: string; hypothesis: string; finish: string | null; truncated: boolean | null; error: string | null;
   response_model: string | null; response_meta: ChatResultV2['response_meta'] | null; usage: Record<string, unknown> | null;
   usd: number; list_usd: number; judge_usd: number; latency_ms: number | null; from_cache: boolean; reader_attempts: number;
   official: Judgment | null; correct_official: 0 | 1;
@@ -225,6 +225,7 @@ export async function replayQuestions(opts: {
     if (!q) throw new Error(`${id} has no W10 replay row (question, answer, type)`);
     const receipts: UsageReceipt[] = [];
     const ctx = (role: 'reader' | 'judge', model: string) => ({ role, question_id: id, replicate: 0, model, delivered: null });
+    const requestedAt = new Date().toISOString();
     const t0 = performance.now();
     let reader: ChatResultV2 | null = null, error: string | null = null;
     try { reader = await chatWithReceipts(opts.client, ctx('reader', PARTICLE), text.user, { maxTokens: OUTPUT_LIMIT, replicate: 0, effort: opts.arm.effort, system: text.system }, receipts); }
@@ -245,7 +246,7 @@ export async function replayQuestions(opts: {
     const usd = reader?.usage ? particleUsd(reader.usage) : 0;
     const row: ParticleRow = {
       question_id: id, question_type: reportType(q), arm_id: opts.armId, model: PARTICLE, effort: opts.arm.effort, output_limit: OUTPUT_LIMIT,
-      hypothesis: answer, finish: reader?.finish ?? null, truncated: reader ? reader.finish === 'length' : null, error,
+      requested_at: requestedAt, hypothesis: answer, finish: reader?.finish ?? null, truncated: reader ? reader.finish === 'length' : null, error,
       response_model: reader?.response_model ?? null, response_meta: reader?.response_meta ?? null, usage: reader?.usage ?? null,
       usd, list_usd: usd, judge_usd: judgeReceipt?.usage_raw ? judgeUsd(judgeReceipt.usage_raw) : 0, latency_ms: latency, from_cache: reader?.cached ?? false,
       reader_attempts: lane.filter(r => r.role === 'reader').length, official, correct_official: official?.verdict === true ? 1 : 0,
@@ -436,6 +437,13 @@ function armStats(dir: string, scored: Map<string, Scored>, ids: string[], batch
   };
 }
 
+/** Particle's off-peak window, 20:30 to 04:00 New York time, when it charges half its peak list price. */
+export function particleOffPeak(iso: string): boolean {
+  const [h, m] = new Intl.DateTimeFormat('en-US', { timeZone: 'America/New_York', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(iso)).split(':').map(Number);
+  const minutes = h * 60 + m;
+  return minutes >= 20 * 60 + 30 || minutes < 4 * 60;
+}
+
 /** Paired differences, decision G, the development-lane test and decision B's stop rule, from committed rows. */
 export function report(dir: string): Record<string, unknown> {
   const ids500 = [...r1().keys()].sort(), ids150 = subsets.w10c150();
@@ -450,7 +458,10 @@ export function report(dir: string): Record<string, unknown> {
   const idsOf = (id: string) => (REPLAY_ARMS[id].workstream === 'W10b' ? ids500 : ids150);
   const arms = Object.fromEntries(Object.entries(particle).map(([id, path]) => {
     const receipt = JSON.parse(readFileSync(join(path, 'receipt.json'), 'utf8'));
-    return [id, { ...armStats(path, scored.get(id)!, idsOf(id), false), effort: receipt.effort, stopped: receipt.stopped, not_run: receipt.not_run.length, bars: receipt.bars, ledger_usd: receipt.ledger.usd }];
+    const rows = readNdjson(join(path, 'rows.ndjson'));
+    const offPeak = rows.filter(r => typeof r.requested_at === 'string' && particleOffPeak(r.requested_at));
+    const charged = rows.reduce((a, r) => a + (r.list_usd ?? 0), 0) - offPeak.reduce((a, r) => a + (r.list_usd ?? 0) / 2, 0);
+    return [id, { ...armStats(path, scored.get(id)!, idsOf(id), false), offpeak_rows: offPeak.length, charged_estimate_usd: Number(charged.toFixed(4)), effort: receipt.effort, stopped: receipt.stopped, not_run: receipt.not_run.length, bars: receipt.bars, ledger_usd: receipt.ledger.usd }];
   }));
   const out: Record<string, unknown> = { kind: 'particle-replay', arms, comparators: Object.fromEntries(Object.entries(comparators).map(([k, [p, ids]]) => [k, armStats(p, scored.get(k)!, ids, true)])) };
   if (particle['w10b-particle-notes']) {
