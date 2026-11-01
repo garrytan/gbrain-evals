@@ -16,7 +16,7 @@ An extracted claim that matches a label is a **true positive**. An extra claim i
 - **Recall:** matched claims divided by labeled claims.
 - **F1:** one score combining precision and recall.
 
-A page with no labeled claims scores 1.0 when the extractor correctly returns an empty list. Unparseable extractor output is a system failure and scores zero. An extractor reply cut off at its token limit gets one retry at 4,096 tokens, as gbrain's extractor does; a reply still cut off scores zero and is marked `extraction_truncated`, because gbrain fails that page.
+A page with no labeled claims scores 1.0 when the extractor correctly returns an empty list. Unparseable extractor output is a system failure and scores zero. An extractor reply cut off at its token limit gets one retry at 4,096 tokens, as gbrain's extractor does. A Claude 5 extractor, such as the Opus 5.5 default, already gets 4,096 tokens on its first call because it thinks inside that limit, and the receipt's `max_tokens_sent` records both limits; a reply still cut off scores zero and is marked `extraction_truncated`, because gbrain fails that page.
 
 ## Training and held-out pages
 
