@@ -137,6 +137,26 @@ describe('Q1 campaign identity and freeze', () => {
     expect((await reverted.launch('kb-locomo', vm(1))).status).toBe('settled');
   });
 
+  test('eval/runner/providers is executed: a file added under it changes the campaign hash and refuses resume under the earlier freeze', async () => {
+    const { EXECUTES } = await import('../../eval/runner/q1/cell.ts');
+    expect(EXECUTES).toContain('eval/runner/providers');
+    const a = q1({ executes: EXECUTES });
+    const frozen = loadCampaign(a.manifestPath);
+    expect(frozen.tree!.map(e => e.path)).toContain('eval/runner/providers/openai-compatible.ts');
+    const c = new Campaign(a.manifestPath, a.state);
+    c.init();
+    c.reserve('kb-locomo');
+    const probe = join(ROOT, 'eval/runner/providers', `freeze-probe-${process.pid}.tmp`);
+    writeFileSync(probe, 'a change after the freeze\n');
+    try {
+      expect(loadCampaign(a.manifestPath).sha256).not.toBe(frozen.sha256);
+      const e = await rejected(new Campaign(a.manifestPath, a.state).resume('kb-locomo', vm(1)));
+      expect(e.op.code).toBe('CAMPAIGN_HASH_MISMATCH');
+      expect((e.op.state as { changed: string[] }).changed).toEqual([rel(probe)]);
+    } finally { rmSync(probe, { force: true }); }
+    expect(loadCampaign(a.manifestPath).sha256).toBe(frozen.sha256);
+  }, 30_000);
+
   test('a changed image digest is named too', () => {
     const a = q1();
     new Campaign(a.manifestPath, a.state).init();
