@@ -235,7 +235,8 @@ procedure with documented missing pieces; it is not the current refresh command.
 ### 2026-10-31: Re-pin to gbrain `3ec766c40`; opening names v0.10.139
 
 The opening names v0.10.139 (was v0.10.138) and gbrain master `3ec766c40` (v0.60.531.0) as the product under test (was
-`7a6bdd357`, v0.60.454.0). v0.10.139 holds gbrain's four new read defaults for comparable memory-qa arms (see the
+`7a6bdd357`, v0.60.454.0). For comparable memory-qa arms, v0.10.139 holds three of gbrain's four new read defaults at
+their old values and unwraps the fourth, quote-fenced chat text, on the `gbrain-query` path (see the
 [README](../README.md)), adds the Cat 35 external lane ([contributor guide](../eval/CONTRIBUTING.md#score-another-systems-cat-35-documents)),
 lands the post hoc LongMemEval-S facts-block and shipped-build equivalence checks
 ([sealed results](benchmarks/2026-10-09-memory-proof-wave-sealed-results.md)), and carries current Claude models in

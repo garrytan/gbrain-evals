@@ -67,7 +67,7 @@ titles, so it is reported separately.
 ## Two behaviors pinned by keyless fixtures
 
 `test/eval/gbrain-query-system.test.ts` checks both on real PGLite brains with hash vectors. At the pinned gbrain
-(`3ec766c40`, v0.60.531.0; gbrain #6367 fixed both in v0.60.126.0):
+(`3ec766c40`, v0.60.531.0; gbrain #6367 fixed both in v0.60.124.0):
 
 1. **`auto` stays inside an explicit 8,000-token budget.** With 25 hits over long conversations, conversations that no
    longer fit are dropped at the budget floor instead of spilling outside it (`over_budget: false`,
@@ -100,8 +100,8 @@ const live = await c.live('live-parity', question, 25, 8000);
 
 The Pins section names the three gbrain defaults `GbrainQuerySystem` holds at their old values. A new section
 describes how the connector unwraps quote-fenced chat text, and the delivery record list gains `quoted_blocks`. The
-fixtures section names the current pin, `3ec766c40` (v0.60.531.0), where both fixtures pass; it named v0.60.126.0
-since 2026-10-09.
+fixtures section names the current pin, `3ec766c40` (v0.60.531.0), where both fixtures pass, and the release in which
+gbrain #6367 fixed both, v0.60.124.0; it named the v0.60.126.0 pin since 2026-10-09.
 
 ### 2026-10-09: fixtures assert the behavior gbrain #6367 fixed
 
