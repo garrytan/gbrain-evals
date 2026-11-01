@@ -221,7 +221,9 @@ How this page changed, newest first. Measurement history lives in the dated repo
 
 [`f9b891e3`](https://github.com/garrytan/gbrain-evals/commit/f9b891e3), gbrain-evals
 [#274](https://github.com/garrytan/gbrain-evals/pull/274). The opening paragraph names claude-opus-5-5 and particle-1 as
-the primary models and points to the shared provider module. Before, it pointed only to CLAUDE.md's model rules.
+the primary models and points to the shared provider module. Before, it pointed only to CLAUDE.md's model rules. The
+change follows Garry's decision of 2026-10-31 that these are the primary models, with the
+[particle-1 replay](../docs/benchmarks/2026-11-01-longmemeval-particle-replay/REPORT.md) as their first paired numbers.
 
 ### 2026-11-01: Compressed receipts are checked member by member
 
