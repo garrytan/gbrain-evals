@@ -18,7 +18,9 @@
  *           repeats the planted misleading answer (`qa_trap`);
  *   beam    each rubric item judged yes/no; the score is the fraction met.
  *
- * `judgeResponse` above is the decision kit's frozen judging path. Q1 judges
+ * qa.ts's `judgeResponse` is the decision kit's frozen judging path; this
+ * module's sends the same prompts and records an OpenAI-compatible judge's
+ * receipts as it records a reader's. Q1 judges
  * through `judgeAnswer`: the benchmark's registered instrument
  * (instruments.ts), with a malformed or empty judgment retried as a fresh
  * call and finally recorded as a judge failure, never as a "no".
@@ -58,7 +60,7 @@ import type { Instrument, JudgeCall } from './instruments.ts';
 import { rawSha256, type JudgmentRecord } from './records.ts';
 import { normalizeUsage, responseMeta, usageSourceOf, type ReceiptRequest, type ResponseMeta, type UsageReceipt } from '../usage-receipt.ts';
 import { COMPAT_PROVIDERS, compatRequest, compatSend, type CompatRequest } from '../providers/openai-compatible.ts';
-import { ChatClient as BaseChatClient, sendsTemperature as baseSendsTemperature, chatReceipts, type ChatResult } from './qa.ts';
+import { ChatClient as BaseChatClient, sendsTemperature as baseSendsTemperature, chatReceipts, judgePromptsFor, judgeYes, type ChatResult } from './qa.ts';
 
 type ProviderReply = Omit<ChatResultV2, 'cached' | 'attempt_errors' | 'compat_attempts'>;
 interface ReceiptContext { role: UsageReceipt['role']; question_id: string; replicate: number; model: string; delivered: UsageReceipt['delivered'] }
@@ -159,7 +161,8 @@ export class ChatClient extends BaseChatClient implements ChatLike {
         attemptErrors.push(String((e as Error).message ?? e).slice(0, 300));
         const status = (e as { status?: number }).status;
         const retryable = compat ? (e as { retryable?: boolean }).retryable !== false : status === undefined || status >= 500 || status === 429;
-        const stop = /budget|BudgetExceeded/i.test(String((e as Error).message)) || !retryable || attempt === 4;
+        const budget = compat ? (e as Error).name === 'BudgetExceededError' : /budget|BudgetExceeded/i.test(String((e as Error).message));
+        const stop = budget || !retryable || attempt === 4;
         const retryAfterMs = compat && !stop ? (e as { retryAfterMs?: number | null }).retryAfterMs ?? null : null;
         if (compat) compatAttempts.push({ retry_after_ms: retryAfterMs, usage: (e as { usage?: Record<string, unknown> | null }).usage ?? null });
         if (stop) break;
@@ -234,6 +237,22 @@ function compatReceipts(receipts: UsageReceipt[], out: Omit<ChatResultV2, keyof 
     return { ...r, request: out.sent, response_meta: responseMeta(null), ...(a?.retry_after_ms != null ? { retry_after_ms: a.retry_after_ms } : {}),
       ...(a?.usage ? { usage: normalizeUsage(usageSourceOf(r.model), a.usage), usage_raw: a.usage } : {}) };
   });
+}
+
+/**
+ * qa.ts's `judgeResponse` (the same prompts, output limit and verdict) recording through this module's
+ * `chatWithReceipts`, so an OpenAI-compatible judge's receipts carry what each attempt sent, the response's identity
+ * and the usage a failed attempt reported. An Anthropic or OpenAI judge's requests and receipts are qa.ts's.
+ */
+export async function judgeResponse(client: ChatLike, benchmark: string, judgeModel: string, q: MemoryQuestion, response: string, replicate: number, receipts?: UsageReceipt[]): Promise<number> {
+  const prompts = judgePromptsFor(benchmark, q, response);
+  let yes = 0;
+  for (const p of prompts) {
+    const ctx = { role: 'judge' as const, question_id: q.id, replicate, model: judgeModel, delivered: null };
+    const out = receipts ? await chatWithReceipts(client, ctx, p, { maxTokens: 10, replicate }, receipts) : await client.chat(judgeModel, p, { maxTokens: 10, replicate });
+    if (judgeYes(out.text)) yes++;
+  }
+  return yes / prompts.length;
 }
 
 /** A judge call whose output stayed malformed through every attempt. */

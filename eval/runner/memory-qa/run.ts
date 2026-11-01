@@ -97,8 +97,8 @@ import { gbrainSpecFrom, importGbrain, overlaySummary, productIdentityFor, resol
 import { EmbeddingCache, makeCachingTransport } from '../longmemeval-cache.ts';
 import { ndcgAtK, recallAllAtK, recallAnyAtK, uniqueInOrder, percentile } from '../metrics.ts';
 import { isoSessionDate, loadCorpus, occurrenceId, renderSessionPage, sha256, type Corpus, type MemoryQuestion, type Session } from './corpus.ts';
-import { ChatClient as BaseChatClient, DEFAULT_JUDGE, DEFAULT_READER, factsReaderPrompt, judgeResponse, latestDate, packSessions, readerPrompt, repeatsTrap, sessionDateKey, unresolvedRelativeTime, type SavedFact } from './qa.ts';
-import { ChatClient, chatWithReceipts, hasChatRoute, isCompatModel, sendsTemperature } from './qa-v2.ts';
+import { DEFAULT_JUDGE, DEFAULT_READER, factsReaderPrompt, latestDate, packSessions, readerPrompt, repeatsTrap, sessionDateKey, unresolvedRelativeTime, type SavedFact } from './qa.ts';
+import { ChatClient, chatWithReceipts, hasChatRoute, isCompatModel, judgeResponse, sendsTemperature, type ChatLike } from './qa-v2.ts';
 import { compatRequest, modelsNotRun } from '../providers/openai-compatible.ts';
 import { normalizeUsage, receipt, sumUsage, thinkFinish, USAGE_RECEIPT_SCHEMA, type UsageReceipt } from '../usage-receipt.ts';
 import { devConversations, loadSplit } from '../decisions/splits.ts';
@@ -400,11 +400,9 @@ type ThinkFn = (engine: unknown, o: Record<string, unknown>) => Promise<{
  * other failure is the row's `qa_error`. gbrain think turns a refused request
  * into an `llm_error` answer instead of throwing, so a think call after which
  * `budgetExhausted` reports the ledger refused a request is a budget stop too.
- * `chat` is typed as qa.ts's client because the pinned `judgeResponse` takes
- * it; runArm passes qa-v2's.
  */
 export async function readAndJudge(p: {
-  benchmark: string; qa: RunArgs['qa']; q: MemoryQuestion; chat: BaseChatClient;
+  benchmark: string; qa: RunArgs['qa']; q: MemoryQuestion; chat: ChatLike;
   think: { fn: ThinkFn; engine: unknown; referenceDate?: string } | null; prompt: string | null; countTokens: ((s: string) => number) | null;
   budgetExhausted?: () => boolean;
 }): Promise<Partial<MemoryQaRow>> {

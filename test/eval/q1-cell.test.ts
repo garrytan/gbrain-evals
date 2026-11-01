@@ -733,13 +733,15 @@ describe('custody and the paid guard', () => {
     expect(existsSync(join(tmp, 'unpaid'))).toBe(false);
   });
 
-  // Value: protects=a particle reader never spends outside a lease; fails_when=a cell behind the lease proxy sends a particle reader straight to api.particle.ai; why_new=qa-v2 now routes particle (U2) and the lease proxy has no particle route until U5; seam=none; no_claim=keyless, refused before any request
-  test('an OpenAI-compatible reader behind the lease proxy is refused before the cell ingests or reads', async () => {
-    const def = cellDef('baseline-recency', 'in-process', [component({ readers: ['particle:particle-1'], reader_replicates: {} })], { configuration: 'baseline' });
-    const out = join(tmp, 'compat-proxy');
-    const err = await runCell(def, { out, providerProxy: 'http://127.0.0.1:9', ...quiet }, { corpus, system: new FakeMemorySystem() }).catch(e => e) as ScoreboardError;
-    expect(err.op.message).toBe(`cell ${def.id}: particle:particle-1 cannot read behind the lease proxy yet`);
-    expect(err.op.code).toBe('NOT_YET_AVAILABLE');
+  // Value: protects=particle never spends outside a lease; fails_when=a cell behind the lease proxy sends a particle reader or frontier judge straight to api.particle.ai; why_new=qa-v2 now routes particle (U2) and the lease proxy has no particle route until U5; seam=none; no_claim=keyless, refused before any request
+  test('an OpenAI-compatible reader or frontier judge behind the lease proxy is refused before the cell ingests or reads', async () => {
+    const refusal = async (arm: Partial<ArmDefinition>) => {
+      const def = cellDef('baseline-recency', 'in-process', [component({ reader_replicates: {}, ...arm })], { configuration: 'baseline' });
+      const err = await runCell(def, { out: mkdtempSync(join(tmp, 'compat-proxy-')), providerProxy: 'http://127.0.0.1:9', ...quiet }, { corpus, system: new FakeMemorySystem() }).catch(e => e) as ScoreboardError;
+      return [err.op.code, err.op.message.slice(def.id.length + 7)];
+    };
+    expect(await refusal({ readers: ['particle:particle-1'] })).toEqual(['NOT_YET_AVAILABLE', 'particle:particle-1 cannot read or judge behind the lease proxy yet']);
+    expect(await refusal({ readers: [SONNET], frontier: { judges: ['anthropic:claude-opus-5-5', 'particle:particle-1'], readers: null, sample: null } })).toEqual(['NOT_YET_AVAILABLE', 'particle:particle-1 cannot read or judge behind the lease proxy yet']);
   });
 
   test('own-answer arms without an answer route refuse and name the runnable arms', async () => {

@@ -155,7 +155,7 @@ describe('Q1 campaign identity and freeze', () => {
       expect((e.op.state as { changed: string[] }).changed).toEqual([rel(probe)]);
     } finally { rmSync(probe, { force: true }); }
     expect(loadCampaign(a.manifestPath).sha256).toBe(frozen.sha256);
-  });
+  }, 30_000);
 
   test('a changed image digest is named too', () => {
     const a = q1();

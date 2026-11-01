@@ -155,6 +155,26 @@ describe('the particle route in qa-v2', () => {
     expect(row.qa_score).toBe(1);
   });
 
+  test('a 429 whose body mentions a budget is retried like any 429; only a BudgetExceededError stops the loop', async () => {
+    const mock = serve([{ status: 429, body: { error: { message: 'per-minute token budget exceeded' } } }, { body: PARTICLE_OK }]);
+    const row = await readAndJudge({ benchmark: 'lme-s', qa: qa(), q, chat: new ChatClient(tmp(), () => 0), think: null, prompt: 'P', countTokens: null });
+    expect(mock.particle()).toHaveLength(2);
+    expect(row.qa_receipts!.filter(r => r.role === 'reader').map(r => [r.attempt, r.status])).toEqual([[0, 'error'], [1, 'ok']]);
+    expect(row.qa_score).toBe(1);
+  });
+
+  test('a particle judge in run.ts records what each attempt sent, the answer\'s identity and the usage a failed attempt reported', async () => {
+    const yes = { ...PARTICLE_OK, choices: [{ index: 0, finish_reason: 'stop', message: { role: 'assistant', content: 'yes' } }] };
+    const mock = serve([{ body: { id: 'chatcmpl-0', model: 'particle-ai/particle-1', choices: [], usage: { prompt_tokens: 100, completion_tokens: 50 } } }, { body: yes }]);
+    const row = await readAndJudge({ benchmark: 'lme-s', qa: qa({ reader: 'openai:gpt-4o-mini', judge: 'particle:particle-1' }), q, chat: new ChatClient(tmp(), () => 0), think: null, prompt: 'P', countTokens: null });
+    expect(mock.particle()).toHaveLength(2);
+    const judges = row.qa_receipts!.filter(r => r.role === 'judge');
+    expect(judges.map(r => [r.attempt, r.status, r.request?.effort_sent, r.request?.output_limit])).toEqual([[0, 'error', 'high', 16_000], [1, 'ok', 'high', 16_000]]);
+    expect(judges.map(r => r.response_meta?.weight_version ?? null)).toEqual([null, 'default']);
+    expect(judges.map(r => [r.usage?.input_total, r.usage?.output_total])).toEqual([[100, 50], [330, 86]]);
+    expect(row.qa_score).toBe(1);
+  });
+
   test('a credit 402 is one attempt: its receipt is written and the stop reaches the caller with the receipts gathered so far', async () => {
     const mock = serve([{ status: 402, body: { error: { message: 'insufficient balance' } } }]);
     const err = await readAndJudge({ benchmark: 'lme-s', qa: qa(), q, chat: new ChatClient(tmp(), () => 0), think: null, prompt: 'P', countTokens: null }).catch(e => e) as Error & { qa_receipts: UsageReceipt[] };

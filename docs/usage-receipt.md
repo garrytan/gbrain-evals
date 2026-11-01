@@ -81,7 +81,7 @@ mean of 22,077 tokens and `gpt-6.1-sol` 13,695. A gate that compares arms with d
 
 A reasoning model's answer depends on settings the model id does not show, and a provider can change the weights
 behind an id. Lanes that call a provider through the OpenAI-compatible provider module record both on every attempt:
-the memory-qa reading lane (`eval/runner/memory-qa/qa-v2.ts`, for `--reader particle:particle-1`) and the particle
+the memory-qa reading lane (`eval/runner/memory-qa/qa-v2.ts`, for `--reader` or `--judge particle:particle-1`) and the particle
 weight canary (`scripts/particle-canary.ts`). The fields are optional, so the schema stays `usage-receipt/v1` and
 older receipts stay valid.
 
@@ -104,10 +104,12 @@ older receipts stay valid.
 | `truncated` | True when the model stopped at the output limit (`finish_reason: length`) |
 
 A failed attempt (a 429, a network error, a 402) has no response, so every `response_meta` field is null, never an
-invented value, and `response_model` and `usage` are null as before. When the provider answered a failed attempt
-with a Retry-After, the record also has `retry_after_ms`: the wait before the next attempt, capped at 120 seconds.
-It is absent when the provider sent none or no attempt followed. A truncated response keeps its own content as
-`answer`, even when that is empty: the reasoning text (Particle's `reasoning_content`) never fills an answer.
+invented value, and `response_model` is null as before. `usage` is null too, unless the provider reported usage for
+the failed attempt (a 200 with no answer), which the record then carries; `sumUsage` totals count successful records
+only. When the provider answered a failed attempt with a Retry-After, the record also has `retry_after_ms`: the wait
+before the next attempt, capped at 120 seconds. It is absent when the provider sent none or no attempt followed. A
+truncated response keeps its own content as `answer`, even when that is empty: the reasoning text (Particle's
+`reasoning_content`) never fills an answer.
 
 ## How a memory-qa row uses it
 
@@ -148,5 +150,5 @@ that the normalizer reproduces the committed W10 means (22,167 for W10a; 22,077 
 `gpt-6.1-sol` and 14,458 for `gpt-5.4` in W10b). The second file checks Particle's convention, the `request` and
 `response_meta` fields, the null fields of a failed attempt and the empty answer of a truncated response, against a
 mocked fetch and the keyless fake provider. The third checks the memory-qa particle route: a 429, 429, 200 sequence
-leaves three records with what each sent and the first one's wait, and a credit 402 leaves its record and stops the
-run. None of them makes a provider call.
+leaves three records with what each sent and the first one's wait, a particle judge's records carry the same fields,
+and a credit 402 leaves its record and stops the run. None of them makes a provider call.
