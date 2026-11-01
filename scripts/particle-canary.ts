@@ -140,7 +140,7 @@ export async function runCanary(env: Record<string, string | undefined> = proces
         receipts.push(receipt({ ...base, attempt, response_model: res.response_model, status: 'ok', error: null, finish: normalizeFinish(res.finish), finish_raw: res.finish, answer: res.text,
           usage: normalizeUsage(usageSourceOf(CANARY_MODEL), res.usage), usage_raw: res.usage, response_meta: res.meta }));
         const sent = (body as { choices?: Array<{ logprobs?: { content?: Array<{ logprob?: unknown; top_logprobs?: Array<{ logprob?: unknown }> | null } | null> } }> } | null)?.choices?.[0]?.logprobs?.content;
-        const logprobs = Array.isArray(sent) && sent.length > 0 && sent.every(t => Number.isFinite(t?.logprob) && (t?.top_logprobs ?? []).every(x => Number.isFinite(x?.logprob))) ? res.logprobs : null;
+        const logprobs = res.logprobs !== null && Array.isArray(sent) && sent.length > 0 && sent.every(t => Number.isFinite(t?.logprob) && (t?.top_logprobs ?? []).every(x => Number.isFinite(x?.logprob))) ? res.logprobs : null;
         const usable = res.text.trim() !== '' && normalizeFinish(res.finish) !== 'max_tokens';
         result = { ...failed, status: usable ? 'ok' : 'error', answer: res.text, answer_sha256: usable ? sha256(res.text) : null, finish: res.finish,
           mean_logprob: logprobs?.length ? logprobs.reduce((a, t) => a + t.logprob, 0) / logprobs.length : null, logprobs,

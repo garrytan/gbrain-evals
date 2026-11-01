@@ -191,11 +191,20 @@ export interface CompatResponse {
   meta: ResponseMeta;
 }
 
+const isObject = (v: unknown): v is Record<string, any> => !!v && typeof v === 'object' && !Array.isArray(v);
+
+/**
+ * A response's fields, read defensively: a malformed part of a billed 2xx answer is dropped, never thrown, so the
+ * answer and its usage reach the caller's receipt. A tool call that is not an object is dropped. Log probabilities are
+ * kept only when every token entry is an object whose `top_logprobs` is absent or a list of objects; else they are null.
+ */
 export function parseCompatResponse(json: unknown): CompatResponse {
   const r = (json && typeof json === 'object' ? json : {}) as Record<string, any>;
   const choice = Array.isArray(r.choices) ? r.choices[0] ?? {} : {};
   const message = choice.message ?? {};
-  const content = Array.isArray(choice.logprobs?.content) ? choice.logprobs.content as Array<Record<string, any>> : null;
+  const listed = choice.logprobs?.content;
+  const content = Array.isArray(listed) && listed.every(t => isObject(t) && (t.top_logprobs == null || (Array.isArray(t.top_logprobs) && t.top_logprobs.every(isObject))))
+    ? listed as Array<Record<string, any>> : null;
   return {
     id: typeof r.id === 'string' ? r.id : null,
     text: typeof message.content === 'string' ? message.content
@@ -203,7 +212,7 @@ export function parseCompatResponse(json: unknown): CompatResponse {
     finish: typeof choice.finish_reason === 'string' ? choice.finish_reason : null,
     usage: r.usage && typeof r.usage === 'object' ? r.usage : null,
     response_model: typeof r.model === 'string' ? r.model : null,
-    tool_calls: Array.isArray(message.tool_calls) ? message.tool_calls : [],
+    tool_calls: Array.isArray(message.tool_calls) ? message.tool_calls.filter(isObject) : [],
     logprobs: content ? content.map(t => ({ token: String(t.token), logprob: Number(t.logprob), top: (t.top_logprobs ?? []).map((x: Record<string, unknown>) => ({ token: String(x.token), logprob: Number(x.logprob) })) })) : null,
     meta: responseMeta(json),
   };
@@ -317,13 +326,22 @@ export function isLoopbackUrl(url: string): boolean {
   return /^(localhost|127(\.\d{1,3}){3}|\[::1\])$/.test(new URL(url).hostname);
 }
 
+/** A URL a provider's bearer key must never be sent to: a host that is not loopback, reached without https (issue #277). */
+export function carriesKeyInCleartext(url: string): boolean {
+  return !isLoopbackUrl(url) && new URL(url).protocol !== 'https:';
+}
+
 /**
  * Refuse a request the budget ledger cannot price, unless it goes to a loopback host (a metering proxy slot, which
- * meters itself, or the keyless fake): the ledger's guard forwards a host it cannot price unmetered.
+ * meters itself, or the keyless fake): the ledger's guard forwards a host it cannot price unmetered. A host that is not
+ * loopback must also be reached over https, because the request carries the provider's bearer key (issue #277).
  */
 export function assertMetered(req: CompatRequest): void {
-  if (isLoopbackUrl(req.url) || priceRequest(req.url, req.body)) return;
-  throw new BudgetExceededError(`budget: the ledger cannot price ${new URL(req.url).hostname.replace(/\.$/, '')}, so this ${own(COMPAT_PROVIDERS, req.provider)?.label ?? req.provider} request would spend unmetered; register the host and the model's price in eval/runner/budget-ledger.ts first`);
+  if (isLoopbackUrl(req.url)) return;
+  const { protocol, hostname } = new URL(req.url);
+  const label = own(COMPAT_PROVIDERS, req.provider)?.label ?? req.provider;
+  if (!priceRequest(req.url, req.body)) throw new BudgetExceededError(`budget: the ledger cannot price ${hostname.replace(/\.$/, '')}, so this ${label} request would spend unmetered; register the host and the model's price in eval/runner/budget-ledger.ts first`);
+  if (carriesKeyInCleartext(req.url)) throw new BudgetExceededError(`budget: ${protocol}//${hostname} would carry the ${label} key in cleartext; a host that is not loopback is reached only over https`);
 }
 
 /**
