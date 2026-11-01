@@ -101,6 +101,12 @@ def product_pin_references(root=ROOT):
                 errors.append([file, reference.group(0), "Product pin reference differs from package.json pin"])
             else:
                 versions.setdefault(reference.group("version"), []).append(file)
+    installed = root / "node_modules" / "gbrain" / "package.json"
+    if installed.exists():
+        version = json.loads(installed.read_text())["version"]
+        stale = sorted(f for v, files in versions.items() if v != version for f in files)
+        if stale:
+            errors.append([", ".join(stale), "Product pin sentences name a release other than the installed gbrain v" + version])
     if len(versions) > 1:
         errors.append([", ".join(sorted({f for files in versions.values() for f in files})),
                        "Product pin sentences name different releases: " + ", ".join(sorted(versions))])

@@ -78,6 +78,15 @@ describe('verify-documentation-refresh: the product pin', () => {
     expect(references(root).map(e => e[0])).toEqual(['README.md']);
   });
 
+  test('hubs that name a release the installed gbrain is not fail', () => {
+    const root = copyWith('installed-release', 'bun.lock', t => `${t}\n`);
+    mkdirSync(join(root, 'node_modules/gbrain'), { recursive: true });
+    writeFileSync(join(root, 'node_modules/gbrain/package.json'), JSON.stringify({ name: 'gbrain', version: '0.60.1.0' }));
+    const errors = references(root);
+    expect(errors).toHaveLength(1);
+    expect(errors[0][1]).toBe('Product pin sentences name a release other than the installed gbrain v0.60.1.0');
+  });
+
   test('a product pin that is not an exact commit fails before any hub is read', () => {
     const root = copyWith('branch-pin', 'package.json', t => t.replace(`gbrain#${sha}`, 'gbrain#master'));
     expect(references(root)).toEqual([['package.json', 'Product pin must have an exact 40-character Git pin']]);
