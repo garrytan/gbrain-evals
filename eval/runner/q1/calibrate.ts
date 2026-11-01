@@ -18,15 +18,18 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { Usage } from '../memory-qa/records.ts';
-import { encodingCount, measureCalibration, readerTokenizer } from '../systems/render-v2.ts';
+import { encodingCount, measureCalibration, readerTokenizer, type Encoding } from '../systems/render-v2.ts';
 import { normalizeUsage, readerConvention } from './usage.ts';
 
 const lines = <T>(path: string): T[] => existsSync(path) ? readFileSync(path, 'utf8').split('\n').filter(l => l.trim()).map(l => JSON.parse(l) as T) : [];
 
 export interface CalibrationSample { reader: string; local: number; provider: number }
 
-/** Samples from one cell output dir: each packed answer's prompt counted locally against its provider input tokens. */
-export function calibrationSamples(out: string, opts: { preNormalizer?: boolean } = {}): CalibrationSample[] {
+/**
+ * Samples from one cell output dir: each packed answer's prompt counted locally against its provider input tokens.
+ * `encoding` counts every prompt in that encoding instead of each reader's table encoding, to compare encodings.
+ */
+export function calibrationSamples(out: string, opts: { preNormalizer?: boolean; encoding?: Encoding } = {}): CalibrationSample[] {
   const samples: CalibrationSample[] = [];
   const runs = join(out, 'runs');
   if (!existsSync(runs)) return samples;
@@ -41,7 +44,7 @@ export function calibrationSamples(out: string, opts: { preNormalizer?: boolean 
         const provider = opts.preNormalizer
           ? normalizeUsage(readerConvention(a.reader), { input_tokens: a.usage.input, cache_read_tokens: a.usage.cache_read, cache_write_tokens: a.usage.cache_write }).total_input
           : a.provider_input_tokens;
-        samples.push({ reader: a.reader, local: encodingCount(readerTokenizer(a.reader).encoding, prompt), provider });
+        samples.push({ reader: a.reader, local: encodingCount(opts.encoding ?? readerTokenizer(a.reader).encoding, prompt), provider });
       }
     }
   }

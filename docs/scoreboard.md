@@ -84,8 +84,10 @@ cells launch only with `--sealed` from the custodian's host, where dataset cache
   that does not present the cell's token is refused, wherever it comes from: the runners present the token as their
   provider key and the compose stacks as their dummy key (`${SHOOTOUT_CELL_TOKEN:-dummy}`). Each request has a stable id, the slot it arrived on, the brain and phase the harness bound, and a bucket;
   calls nobody bound land in an explicit unattributed-background bucket. Output caps bind only the harness's own calls
-  (readers 2,048 tokens, the file agent's loop 16,000, judges 1,024, configurable in the manifest); a system's own
-  requests pass unmodified (preregistration amendment A3). Billed dollars and dollars charged at a reservation
+  (readers 2,048 tokens, the file agent's loop 16,000, judges 2,048, configurable in the manifest); a system's own
+  requests pass unmodified (preregistration amendment A3). A `<class>@<provider>:<model>` cap is checked before its
+  class cap: particle-1 reads at its 16,000-token output floor (`reader@particle:particle-1`), reaching the proxy at
+  `/<slot>/particle/v1`, while every other reader on the same slot stays at 2,048. Q1 never judges with particle-1. Billed dollars and dollars charged at a reservation
   because no usage came back are reported separately. Cells on one provider key share its requests-per-minute,
   tokens-per-minute and concurrency limits, and a provider's `retry-after` pauses every cell on that key. A 429 counts
   as provider trouble and is retried like a 5xx.
@@ -194,6 +196,12 @@ preregistration.
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
+
+### 2026-11-01: particle-1 readers, the judge cap
+
+The metering paragraph adds the per-model reader cap that lets particle-1 read at 16,000 output tokens behind the lease
+proxy, and says Q1 never judges with particle-1. It also corrects the judge cap to 2,048 tokens, the value
+`DEFAULT_ROUTE_CAPS` in `eval/runner/metering-proxy.ts` holds; it said 1,024.
 
 ### 2026-10-31: doctor's Bun check follows `engines`
 

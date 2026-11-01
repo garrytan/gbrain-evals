@@ -435,7 +435,7 @@ export function failureRow(base: MemoryQaRow, e: unknown): MemoryQaRow {
 export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unknown>; rows: MemoryQaRow[] }> {
   const started = new Date().toISOString();
   const compat = [...new Set([...(a.qa.mode === 'none' ? [] : [a.qa.reader, a.qa.judge]), ...(a.arms?.readers.map(r => r.model) ?? []), ...(a.arms?.judge ? [a.arms.judge] : [])])].filter(isCompatModel);
-  if (compat.length && a.providerProxy) throw new Error(`${compat.join(', ')} cannot run behind --provider-proxy yet: the metering proxy has no route for OpenAI-compatible providers (particle-1 plan unit U5 adds it), so these requests would spend outside the lease; run this cell without the proxy under --paid --budget-run-id`);
+  if (compat.length && a.providerProxy) throw new Error(`${compat.join(', ')} cannot run behind --provider-proxy yet: this lane points only OpenAI, Anthropic and Voyage at the proxy, so these requests would go straight to the provider and spend outside the lease (the lease proxy routes Particle for Q1 cells since particle-1 plan unit U5); run this cell without the proxy under --paid --budget-run-id`);
   for (const model of compat) compatRequest(model, [], {});
   const legacy = a.system === 'gbrain';
   const inProcessGbrain = legacy || a.system === 'gbrain-shootout' || a.system === 'gbrain-query';

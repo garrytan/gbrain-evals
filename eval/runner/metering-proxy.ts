@@ -69,7 +69,9 @@
  *   route output caps  `--route-caps extraction=4096,reader=2048,judge=2048` with
  *     `--route-class harness=reader,judge=judge` (other slots use
  *     `--default-route-class`, extraction by default) replace the one output
- *     cap, so a 5xx keeps a small reservation instead of 32,768 tokens.
+ *     cap, so a 5xx keeps a small reservation instead of 32,768 tokens. A
+ *     `<class>@<provider>:<model>` key (`reader@particle:particle-1=16000`)
+ *     caps one model on that class and is checked before the class cap.
  *   billed and reserved  Meters, usage lines and the summary report billed
  *     dollars (usage the provider reported) apart from reserved-unsettled
  *     dollars (a 5xx, timeout, lost stream or missing usage charged at its
@@ -100,9 +102,13 @@ import { BudgetExceededError, BudgetRun, ledgerStatus, priceRequest, reservation
 
 export { sseUsage };
 import { findLeaks } from './systems/sanitize.ts';
+import { COMPAT_PROVIDERS, compatConnectionLost } from './providers/openai-compatible.ts';
 
-export const UPSTREAM: Record<string, string> = { anthropic: 'https://api.anthropic.com', openai: 'https://api.openai.com', voyage: 'https://api.voyageai.com' };
-export type ProviderName = 'anthropic' | 'openai' | 'voyage';
+/** Particle's row comes from COMPAT_PROVIDERS (eval/runner/providers/openai-compatible.ts): its upstream, key variable, output field and output floor. */
+const PARTICLE = COMPAT_PROVIDERS.particle;
+
+export const UPSTREAM: Record<string, string> = { anthropic: 'https://api.anthropic.com', openai: 'https://api.openai.com', voyage: 'https://api.voyageai.com', particle: new URL(PARTICLE.base_url_default).origin };
+export type ProviderName = 'anthropic' | 'openai' | 'voyage' | 'particle';
 type Send = (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 
 /** Lease mode forwards only these routes. GET model listings are free metadata reads. */
@@ -113,13 +119,14 @@ const ROUTES: Record<ProviderName, Array<{ method: string; path: RegExp }>> = {
   ],
   anthropic: [{ method: 'POST', path: /^\/v1\/messages$/ }],
   voyage: [{ method: 'POST', path: /^\/v1\/embeddings$/ }, { method: 'POST', path: /^\/v1\/rerank$/ }],
+  particle: [{ method: 'POST', path: /^\/v1\/chat\/completions$/ }, { method: 'GET', path: /^\/v1\/models(\/[^/]+)?$/ }],
 };
-const KEY_ENV: Record<ProviderName, string> = { openai: 'OPENAI_API_KEY', anthropic: 'ANTHROPIC_API_KEY', voyage: 'VOYAGE_API_KEY' };
+const KEY_ENV: Record<ProviderName, string> = { openai: 'OPENAI_API_KEY', anthropic: 'ANTHROPIC_API_KEY', voyage: 'VOYAGE_API_KEY', particle: PARTICLE.key_env };
 const CREDENTIAL_HEADERS = ['authorization', 'x-api-key', 'api-key', 'openai-organization', 'openai-project', 'cookie', 'proxy-authorization'];
 export const DEFAULT_MAX_OUTPUT_TOKENS = 32_768;
 /** A provider call may run this long (Bun's own 300-second fetch timeout is off; long reasoning calls exceed it). */
 export const UPSTREAM_DEADLINE_MS = 900_000;
-/** Waits before a request whose connection failed before any response is sent again (A23). */
+/** Waits before a request whose connection failed before any response is sent again (A23). A particle request is sent again only when its connection was refused: a reset may come after Particle billed the generation, so it is answered 504 like a timeout. */
 const TRANSPORT_RETRY_MS = [1000, 4000];
 /** A connection that closed or reset before the provider answered; never a timeout or an abort. */
 const transportFailure = (e: unknown) => {
@@ -149,10 +156,17 @@ export const newMeter = (): Meter => ({ usd: 0, requests: 0, unpriced: 0, byMode
 /** True when the provider itself misbehaved during a meter's requests: a 429, a 5xx, a lost connection, or a 200 that was not JSON. */
 export const upstreamTrouble = (m: Meter | null | undefined) => !!m?.upstream && (m.upstream.failed > 0 || m.upstream.unparseable > 0 || Object.keys(m.upstream.statuses).some(s => Number(s) >= 500 || Number(s) === 429));
 
-/** Output-token caps by route class, and which slot belongs to which class. */
+/**
+ * Output-token caps by route class, and which slot belongs to which class. A `<class>@<provider>:<model>` key caps one
+ * model on that class and is checked before the class cap.
+ */
 export interface RouteCaps { caps: Record<string, number>; slots: Record<string, string>; defaultClass: string }
-/** Output caps by route class. `agent` is the harness's own answering baselines (the file agent's loop states 8,192 tokens on Anthropic and 16,000 on OpenAI per turn). */
-export const DEFAULT_ROUTE_CAPS: Record<string, number> = { extraction: 4096, reader: 2048, judge: 2048, agent: 16000 };
+/**
+ * Output caps by route class. `agent` is the harness's own answering baselines (the file agent's loop states 8,192
+ * tokens on Anthropic and 16,000 on OpenAI per turn). particle-1 reads at its output floor (16,000), below which its
+ * reasoning truncates answers, so its reader cap is its own; every other reader stays at 2,048.
+ */
+export const DEFAULT_ROUTE_CAPS: Record<string, number> = { extraction: 4096, reader: 2048, judge: 2048, agent: 16000, 'reader@particle:particle-1': PARTICLE.models['particle-1'].output_floor };
 
 export type Phase = 'commit' | 'background' | 'query';
 export const PHASES: readonly Phase[] = ['commit', 'background', 'query'];
@@ -351,6 +365,7 @@ function outputField(provider: ProviderName, route: string): string | null {
   if (provider === 'anthropic') return 'max_tokens';
   if (provider === 'openai' && route === '/v1/chat/completions') return 'max_completion_tokens';
   if (provider === 'openai' && route === '/v1/responses') return 'max_output_tokens';
+  if (provider === 'particle' && route === '/v1/chat/completions') return PARTICLE.output_limit_field;
   return null;
 }
 
@@ -435,7 +450,7 @@ export class MeteringProxy {
         if (url.pathname.startsWith('/__proxy/') && req.method === 'POST') return this.control(url.pathname, req);
         const t = url.pathname.match(/^\/_t\/([^/]+)(\/.*)$/);
         const path = t ? t[2] : url.pathname;
-        const m = path.match(/^\/(?:([^/]+)\/)?(anthropic|openai|voyage)(\/.*)$/);
+        const m = path.match(/^\/(?:([^/]+)\/)?(anthropic|openai|voyage|particle)(\/.*)$/);
         if (!m) return json(404, 'invalid_request', `no provider route ${t ? '/_t/<token>' + path : path}`);
         const [, slot = 'default', prov, rest] = m as unknown as [string, string | undefined, ProviderName, string];
         if (!this.authorized(req, t ? decodeURIComponent(t[1]) : null, server.requestIP(req)?.address ?? null)) {
@@ -543,7 +558,7 @@ export class MeteringProxy {
     const p = this.options.policy!;
     const at = new Date().toISOString();
     const routeClass = p.routeCaps ? p.routeCaps.slots[tag.slot] ?? p.routeCaps.defaultClass : undefined;
-    const cap = routeClass !== undefined && p.routeCaps!.caps[routeClass] !== undefined ? p.routeCaps!.caps[routeClass] : p.maxOutputTokens ?? DEFAULT_MAX_OUTPUT_TOKENS;
+    let cap = routeClass !== undefined && p.routeCaps!.caps[routeClass] !== undefined ? p.routeCaps!.caps[routeClass] : p.maxOutputTokens ?? DEFAULT_MAX_OUTPUT_TOKENS;
     const tagged = { request_id: tag.request_id, slot: tag.slot, brain: tag.brain, phase: tag.phase, bucket: tag.bucket, ...(routeClass !== undefined ? { route_class: routeClass } : {}), output_cap: cap };
     const refuse = (status: number, kind: string, reason: string, model: string | null = null, extra: Record<string, string> = {}) => {
       this.log({ at, key, provider: prov, route, model, outcome: 'refused', reason, status, ...tagged });
@@ -568,6 +583,8 @@ export class MeteringProxy {
       if (!body || typeof body !== 'object' || Array.isArray(body)) return refuse(400, 'invalid_request', 'request body must be a JSON object');
     }
     const model = typeof body?.model === 'string' ? body.model : null;
+    const modelCap = routeClass !== undefined && model ? p.routeCaps!.caps[`${routeClass}@${prov}:${model}`] : undefined;
+    if (modelCap !== undefined) tagged.output_cap = cap = modelCap;
     const streamed = body?.stream === true;
     if (streamed && (p.streaming ?? 'meter') === 'refuse') return refuse(400, 'invalid_request', 'streaming is disabled for this cell', model);
     if (streamed && prov === 'openai' && route === '/v1/chat/completions') body!.stream_options = { ...(body!.stream_options ?? {}), include_usage: true };
@@ -578,7 +595,7 @@ export class MeteringProxy {
     // request that states none reserves the default allowance.
     if (field && body && this.harnessSlot(tag.slot)) {
       const stated = [body.max_tokens, body.max_completion_tokens, body.max_output_tokens].filter((v): v is number => typeof v === 'number');
-      if (stated.some(v => v > cap)) return refuse(400, 'invalid_request', `requested ${Math.max(...stated)} output tokens, above this cell's ${routeClass !== undefined ? `${routeClass} route ` : ''}cap of ${cap}`, model);
+      if (stated.some(v => v > cap)) return refuse(400, 'invalid_request', `requested ${Math.max(...stated)} output tokens, above this cell's ${routeClass !== undefined ? `${routeClass} route ` : ''}cap of ${cap}${modelCap !== undefined ? ` for ${prov}:${model}` : ''}`, model);
       if (!stated.length) body[field] = cap;
     }
     const target = `${this.options.upstream?.[prov] ?? UPSTREAM[prov]}${route}${search}`;
@@ -624,12 +641,13 @@ export class MeteringProxy {
       catch (e) {
         if (entry) p.lease.settle(entry, null);
         this.charge(key, prov, bounded?.model ?? null, reserved, !!bounded, tag);
-        const again = retries < TRANSPORT_RETRY_MS.length && transportFailure(e);
+        const midFlight = prov === 'particle' && compatConnectionLost(e);
+        const again = !midFlight && retries < TRANSPORT_RETRY_MS.length && transportFailure(e);
         this.log({ at, key, provider: prov, route, model, outcome: 'failed', reason: `${(e as Error).message.slice(0, 280)}${again ? ' (sent again)' : ''}`, reserved_usd: reserved, actual_usd: reserved, charged_reservation: !!bounded, ...tagged });
         if (!again) {
           admitted?.release();
           this.observe(key, 'failed');
-          return json(502, 'product_error', `upstream failed: ${(e as Error).message}`);
+          return json((e as Error).name === 'TimeoutError' || midFlight ? 504 : 502, 'product_error', `upstream failed: ${(e as Error).message}`);
         }
         await Bun.sleep(TRANSPORT_RETRY_MS[retries++]);
         if (bounded) {

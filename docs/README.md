@@ -220,6 +220,9 @@ a mapping from a question to the documents considered relevant.
   [claim-extraction fixture](../eval/data/cat15-propose-takes/README.md).
 - [LongMemEval cache](../eval/data/longmemeval/embed-cache/README.md): what the cache
   contains and what does not ship with a clone.
+- [November 1 particle-1 tokenizer calibration](benchmarks/2026-11-01-particle-1-calibration/README.md)
+  (development data, not a result): particle-1's prompt tokens track `o200k_base` with a factor of 1.0488 and a
+  largest error of 0.50% over 20 packed Q1 prompts of about 8,100 tokens; other prompt sizes still need samples.
 - [External question authors](../eval/external-authors/README.md): submitting new
   questions and understanding the existing synthetic questions.
 - [Credits](../eval/CREDITS.md) and
@@ -257,6 +260,11 @@ and [repository writing guide](../CLAUDE.md). The
 procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
+
+### 2026-11-01: particle-1 tokenizer calibration
+
+Data and methods links the [November 1 particle-1 tokenizer calibration](benchmarks/2026-11-01-particle-1-calibration/README.md),
+which was not reachable from this index. No existing row changed.
 
 ### 2026-11-01: Row for the November 1 particle-1 replay
 
