@@ -45,6 +45,7 @@ import {
 import { loadSyntheticV1, type SyntheticPage } from '../../eval/runner/synthetic-corpus-loader.ts';
 import { loadReceipt, receiptPath } from '../../eval/runner/receipt.ts';
 import { UNTRUSTED_DATA_INSTRUCTION, extractUntrusted, type JudgeConfig } from '../../eval/runner/judge.ts';
+import { BudgetRun, budgetOptionsFrom, initLedger } from '../../eval/runner/budget-ledger.ts';
 
 const RUN_TIMEOUT = 240_000;
 
@@ -400,4 +401,113 @@ describe('cat29 pairwise judge', () => {
       expect([extractUntrusted(user, 'untrusted_answer_1'), extractUntrusted(user, 'untrusted_answer_2')]).toContain(adversarial);
     }
   });
+});
+
+// ─── Ledger joins and judge prices before any work ─────────────────────
+
+describe('cat29 paid runs and judge prices', () => {
+  const thinkCalls: Array<Record<string, any>> = [];
+  const thinkAnthropic = {
+    messages: {
+      create: async (params: Record<string, any>) => {
+        thinkCalls.push(params);
+        return {
+          id: 'm', type: 'message', role: 'assistant', model: params.model,
+          content: [{ type: 'text', text: JSON.stringify({ answer: 'ARR is $120K as of 2025-01-15. (companies/acme-co-0)', citations: [], gaps: [] }) }],
+          stop_reason: 'end_turn', stop_sequence: null, usage: { input_tokens: 1, output_tokens: 1 },
+        };
+      },
+    },
+  } as any;
+  const withFakeKeys = async <T>(fn: () => Promise<T>): Promise<T> => {
+    const saved = { a: process.env.ANTHROPIC_API_KEY, o: process.env.OPENAI_API_KEY };
+    process.env.ANTHROPIC_API_KEY = 'test-key-not-real';
+    process.env.OPENAI_API_KEY = 'test-key-not-real';
+    try {
+      return await fn();
+    } finally {
+      if (saved.a === undefined) delete process.env.ANTHROPIC_API_KEY; else process.env.ANTHROPIC_API_KEY = saved.a;
+      if (saved.o === undefined) delete process.env.OPENAI_API_KEY; else process.env.OPENAI_API_KEY = saved.o;
+    }
+  };
+  const liveWithRunId = (runId: string, ledgerPath: string) => withFakeKeys(() => runCat29({
+    stub: false, embedMode: 'hash', pages: MINI_PAGES, questions: [MINI_QUESTION], reportsDir: tmpReports(), quiet: true, thinkAnthropic,
+    judgeClient: makeStubJudgeClient() as unknown as JudgeConfig['client'],
+    budget: { ...budgetOptionsFrom([], {}), ledgerPath, runId },
+  }));
+  const scratchLedger = () => {
+    const ledgerPath = join(mkdtempSync(join(tmpdir(), 'cat29-ledger-')), 'ledger.sqlite');
+    initLedger({ ledgerPath, programCapUsd: 5, reason: 'test' });
+    return ledgerPath;
+  };
+
+  // Value: protects=a live run given only a budget run id (all.ts sets BRAINBENCH_BUDGET_RUN_ID, no --budget-usd) joins that ledger run and its receipt names it; fails_when=the paid guard goes back to starting only on --budget-usd; why_new=the run-id-only branch had no test; seam=none; no_claim=injected judge and think clients and hash embeds; gbrain's gateway may still list OpenAI models
+  test('a run id with no --budget-usd joins that ledger run and the receipt names it', async () => {
+    const ledgerPath = scratchLedger();
+    const run = BudgetRun.open({ runner: 'cat29-test', budgetUsd: 1, ledgerPath });
+    const r = await liveWithRunId(run.runId, ledgerPath);
+    expect(String((r.receipt as Record<string, any>).cost?.basis)).toContain(run.runId);
+  }, RUN_TIMEOUT);
+
+  // Value: protects=a closed budget run id stops a live run before it starts; fails_when=the run id is ignored without --budget-usd, so the run spends outside the ledger; why_new=the run-id-only branch had no test; seam=none; no_claim=injected clients; the run stops before seeding
+  test('a closed run id is refused before the run starts', async () => {
+    const ledgerPath = scratchLedger();
+    const run = BudgetRun.open({ runner: 'cat29-test', budgetUsd: 1, ledgerPath });
+    run.close();
+    await expect(liveWithRunId(run.runId, ledgerPath)).rejects.toThrow('already finished');
+  }, RUN_TIMEOUT);
+
+  // Value: protects=an unpriced judge model fails before the corpus is seeded or think is called; fails_when=the price is looked up only at the first judge call; why_new=Cat 29 checked the price per judge call, after paid embedding and think calls; seam=none; no_claim=stub run, the live order is the same code path
+  test('an unpriced judge model fails before any think call', async () => {
+    thinkCalls.length = 0;
+    await expect(runCat29({ stub: true, judgeModel: 'claude-unlisted-1', pages: MINI_PAGES, questions: [MINI_QUESTION], reportsDir: tmpReports(), quiet: true, thinkAnthropic }))
+      .rejects.toThrow('no chat price');
+    expect(thinkCalls.length).toBe(0);
+  }, RUN_TIMEOUT);
+
+  // Value: protects=a live run with neither a budget run id nor --budget-usd is refused before the corpus is seeded or anything is sent; fails_when=the paid guard is skipped when neither is set, so the run spends with no ledger cap; why_new=that case ran unguarded; seam=none; no_claim=injected clients; the run stops before seeding
+  test('a live run with no budget-ledger cap is refused before any think call', async () => {
+    thinkCalls.length = 0;
+    const live = (budget?: ReturnType<typeof budgetOptionsFrom>) => withFakeKeys(() => runCat29({
+      stub: false, embedMode: 'hash', pages: MINI_PAGES, questions: [MINI_QUESTION], reportsDir: tmpReports(), quiet: true, thinkAnthropic,
+      judgeClient: makeStubJudgeClient() as unknown as JudgeConfig['client'], budget,
+    }));
+    await expect(live(budgetOptionsFrom([], {}))).rejects.toThrow('needs a budget-ledger cap');
+    await expect(live(undefined)).rejects.toThrow('needs a budget-ledger cap');
+    expect(thinkCalls.length).toBe(0);
+  }, RUN_TIMEOUT);
+
+  // Value: protects=the receipt records the temperatures sent as numbers, null where the model takes none, in temperature_sent and judge.temperature alike; fails_when=temperature_sent goes back to booleans or judge.temperature to the configured 0; why_new=Cat 29 wrote booleans while every other site wrote number | null; seam=none; no_claim=injected judge and think clients and hash embeds
+  test('the receipt records the temperature sent: 0 for the Sonnet 4.6 think model, null for a Claude 5 judge', async () => {
+    const ledgerPath = scratchLedger();
+    const run = BudgetRun.open({ runner: 'cat29-test', budgetUsd: 1, ledgerPath });
+    const r = await withFakeKeys(() => runCat29({
+      stub: false, embedMode: 'hash', pages: MINI_PAGES, questions: [MINI_QUESTION], reportsDir: tmpReports(), quiet: true, thinkAnthropic,
+      judgeModel: 'claude-haiku-5-5', judgeClient: makeStubJudgeClient() as unknown as JudgeConfig['client'],
+      budget: { ...budgetOptionsFrom([], {}), ledgerPath, runId: run.runId },
+    }));
+    const receipt = r.receipt as Record<string, any>;
+    expect(receipt.resolved_config.temperature_sent).toEqual({ think: 0, judge: null });
+    expect(receipt.judge.temperature).toBeNull();
+  }, RUN_TIMEOUT);
+
+  // Value: protects=a think request the budget run refuses stops the run before judging and writes an error receipt, never a publishable 'think loses' result or a SUT failure; fails_when=Cat 29 ignores paid.guard.exhausted, so the empty think answer is judged and scored 0; why_new=Cat 29 joins the all.ts run and had no exhaustion handling; seam=none; no_claim=the guard refuses the first think reservation, so no request leaves the process
+  test('a think request the budget run refuses stops the run with an error receipt', async () => {
+    const ledgerPath = scratchLedger();
+    const run = BudgetRun.open({ runner: 'cat29-test', budgetUsd: 0.000001, ledgerPath });
+    const judged: string[] = [];
+    const r = await withFakeKeys(() => runCat29({
+      stub: false, embedMode: 'hash', pages: MINI_PAGES, questions: [MINI_QUESTION, { ...MINI_QUESTION, id: 'tq2-acme-arr-copy' }], reportsDir: tmpReports(), quiet: true,
+      judgeClient: makeStubJudgeClient({ onRequest: c => judged.push(c) }) as unknown as JudgeConfig['client'],
+      budget: { ...budgetOptionsFrom([], {}), ledgerPath, runId: run.runId },
+    }));
+    const receipt = r.receipt as Record<string, any>;
+    expect(receipt.run_status).toBe('error');
+    expect(receipt.verdict).toBeUndefined();
+    expect(receipt.publishable).toBe(false);
+    expect(receipt.data.budget_exhausted).toBe(true);
+    expect(receipt.errors.map((e: { probe_id: string; origin: string }) => [e.probe_id, e.origin])).toEqual([[MINI_QUESTION.id, 'harness']]);
+    expect(judged.length).toBe(0);
+    expect(r.exitCode).toBe(1);
+  }, RUN_TIMEOUT);
 });
