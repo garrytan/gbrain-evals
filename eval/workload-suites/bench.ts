@@ -21,10 +21,11 @@
  * (cl100k), the retrieval metadata and the model's usage. Reader and judge
  * calls are cached by prompt hash, so rerunning a phase spends nothing on
  * calls already made. Default output: eval/reports/workload-bench/<suite>/.
+ * A smoke run never writes into a directory report.ts publishes from.
  */
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { join, relative, resolve } from 'node:path';
 import { gbrainSpecFrom, resolveGbrainUnderTest } from '../runner/gbrain-under-test.ts';
 import { REPO_ROOT } from '../runner/harness-env.ts';
 import { COMPAT_PROVIDERS } from '../runner/providers/openai-compatible.ts';
@@ -34,6 +35,7 @@ import { bundleManifest, countValue, sha256, valueForms } from './common.ts';
 import { ComparatorCorrectionAdapter, GbrainCorrectionAdapter, type RetrieveReceipt } from './correction-adapters.ts';
 import { CORRECTION_ARMS, runCorrectionArm, type ArmId, type CorrectionItem } from './corrections.ts';
 import { classifyMiss } from './passing-details.ts';
+import { publishedSuiteAt } from './report.ts';
 import { MODEL_CONFIG, frontierSubset } from './run-config.ts';
 import type { HarnessQuery, Outcome, ScorerLabel, SuiteBundle, SuiteId } from './types.ts';
 
@@ -487,6 +489,8 @@ if (import.meta.main) {
   const smokeOnly = requested.filter(m => MODEL_CONFIG.smoke_only_readers.includes(m));
   if (smokeOnly.length && smoke === null) { console.error(`${smokeOnly.join(', ')} reads only in a labeled smoke run, never a counted one (CLAUDE.md); pass --smoke N`); process.exit(2); }
   const dir = resolve(arg(argv, '--out') ?? join(REPO_ROOT, 'eval/reports/workload-bench', `${suiteId}${smoke ? `-smoke${smoke}` : ''}${stub ? '-stub' : ''}`));
+  const published = smoke !== null ? publishedSuiteAt(dir) : null;
+  if (published) { console.error(`${relative(REPO_ROOT, dir)} is the directory report.ts publishes ${published} from (RUN_DIRS), so a smoke run may not write there; pass --out with another directory`); process.exit(2); }
   const log = (l: string) => process.stderr.write(`${new Date().toISOString().slice(11, 19)} ${l}\n`);
   const bundle = suite.generate({ seed: suite.defaultSeed, smoke: false });
   bundle.extra['frontier-subset'] = frontierSubset(bundle);

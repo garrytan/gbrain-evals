@@ -10,7 +10,7 @@
  * label, the run manifest) with machine paths scrubbed.
  */
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, resolve } from 'node:path';
 import { REPO_ROOT } from '../runner/harness-env.ts';
 import { MODEL_CONFIG } from './run-config.ts';
 
@@ -21,6 +21,9 @@ export const RUN_DIRS: Record<string, string> = {
   'time-relationships': 'time-relationships-smoke20',
   beliefs: 'beliefs',
 };
+
+/** The suite that report.ts publishes from `dir` (one of RUN_DIRS), or null. */
+export const publishedSuiteAt = (dir: string): string | null => Object.entries(RUN_DIRS).find(([, sub]) => join(BENCH, sub) === resolve(dir))?.[0] ?? null;
 
 const read = (p: string) => JSON.parse(readFileSync(p, 'utf8'));
 const pct = (a: number, b: number) => b ? `${(100 * a / b).toFixed(1)}%` : 'n/a';

@@ -6,7 +6,9 @@
  * and scorer mutation checks.
  */
 import { describe, expect, test } from 'bun:test';
-import { resolve } from 'node:path';
+import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
 import { assertScorerRejectsFakeSystems } from '../../eval/runner/mutation-kit.ts';
 import { SMOKE_ONLY_READERS } from '../../eval/runner/systems/baselines.ts';
 import { runChecks, storePresenceFailures } from '../../eval/workload-suites/checks.ts';
@@ -17,6 +19,7 @@ import {
   type CorrectionAdapter, type CorrectionItem, type UnrelatedWrite,
 } from '../../eval/workload-suites/corrections.ts';
 import { classifyMiss, generatePassingDetails } from '../../eval/workload-suites/passing-details.ts';
+import { RUN_DIRS } from '../../eval/workload-suites/report.ts';
 import { MODEL_CONFIG, frontierSubset, modelRuleViolations } from '../../eval/workload-suites/run-config.ts';
 import { schemaErrors } from '../../eval/workload-suites/schema-check.ts';
 import type { ScorerLabel, SuiteBundle, SuiteDefinition, SuiteId } from '../../eval/workload-suites/types.ts';
@@ -229,6 +232,24 @@ describe('schema, model rule and frontier subset', () => {
       const r = run('--smoke', '5', '--models', `anthropic:claude-opus-5-5, ${model}`);
       expect(r.exitCode).toBe(2);
       expect(r.stderr.toString()).toContain(`${model} is not a reader in run-config.ts, so no score would read its answers`);
+    }
+  });
+
+  test('bench.ts refuses a smoke run into a directory report.ts publishes from, by --out or by its default name, before it writes anything (#245)', () => {
+    const root = resolve(import.meta.dir, '../..');
+    const runJson = (sub: string) => join(root, 'eval/reports/workload-bench', sub, 'run.json');
+    const snapshot = (sub: string) => existsSync(runJson(sub)) ? readFileSync(runJson(sub), 'utf8') : null;
+    expect(Object.values(RUN_DIRS)).toContain('time-relationships-smoke20');
+    const cases: Array<[string[], string, string]> = [
+      ...Object.entries(RUN_DIRS).map(([suite, sub]) => [['beliefs', '--smoke', '5', '--phase', 'score', '--out', `eval/reports/workload-bench/${sub}`], suite, sub] as [string[], string, string]),
+      [['time-relationships', '--smoke', '20', '--phase', 'score'], 'time-relationships', 'time-relationships-smoke20'],
+    ];
+    for (const [args, suite, sub] of cases) {
+      const before = snapshot(sub);
+      const r = Bun.spawnSync(['bun', 'eval/workload-suites/bench.ts', ...args], { cwd: root });
+      expect([sub, r.exitCode]).toEqual([sub, 2]);
+      expect(r.stderr.toString()).toContain(`eval/reports/workload-bench/${sub} is the directory report.ts publishes ${suite} from (RUN_DIRS), so a smoke run may not write there; pass --out with another directory`);
+      expect(snapshot(sub)).toBe(before);
     }
   });
 
