@@ -760,6 +760,17 @@ describe('custody and the paid guard', () => {
     expect(existsSync(join(tmp, 'unpaid'))).toBe(false);
   });
 
+  // Value: protects=particle never spends outside a lease; fails_when=a cell behind the lease proxy sends a particle reader or frontier judge straight to api.particle.ai; why_new=qa-v2 now routes particle (U2) and the lease proxy has no particle route until U5; seam=none; no_claim=keyless, refused before any request
+  test('an OpenAI-compatible reader or frontier judge behind the lease proxy is refused before the cell ingests or reads', async () => {
+    const refusal = async (arm: Partial<ArmDefinition>) => {
+      const def = cellDef('baseline-recency', 'in-process', [component({ reader_replicates: {}, ...arm })], { configuration: 'baseline' });
+      const err = await runCell(def, { out: mkdtempSync(join(tmp, 'compat-proxy-')), providerProxy: 'http://127.0.0.1:9', ...quiet }, { corpus, system: new FakeMemorySystem() }).catch(e => e) as ScoreboardError;
+      return [err.op.code, err.op.message.replace(def.id, '<cell>')];
+    };
+    expect(await refusal({ readers: ['particle:particle-1'] })).toEqual(['NOT_YET_AVAILABLE', 'cell <cell> reads or judges with particle:particle-1 through --provider-proxy, and the lease proxy has no particle route yet']);
+    expect(await refusal({ readers: [SONNET], frontier: { judges: ['anthropic:claude-opus-5-5', 'particle:particle-1'], readers: null, sample: null } })).toEqual(['NOT_YET_AVAILABLE', 'cell <cell> reads or judges with particle:particle-1 through --provider-proxy, and the lease proxy has no particle route yet']);
+  });
+
   test('own-answer arms without an answer route refuse and name the runnable arms', async () => {
     const def = cellDef('gbrain-defaults', 'shim', [component(), { id: 'whole-think', mode: 'own-answer', variant: 'think' }], { configuration: 'shipped-defaults' });
     const err = await runCell(def, { out: join(tmp, 'own') }, { corpus, system: new FakeMemorySystem(), reader: scriptedReader(), judge: scriptedJudge() }).catch(e => e);
