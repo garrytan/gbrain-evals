@@ -92,7 +92,7 @@
   "input_tokens": 412793,
   "output_tokens": 15194,
   "basis": "budget ledger w10-particle-u3-2026-11-01T05-45-53-538Z-2259dad5: 60 paid requests, 0 charged at their reservation because usage was unavailable",
-  "ledger": "/home/user/.capy/work/u3/ledger.sqlite",
+  "ledger": "<work>/u3/ledger.sqlite",
   "program_cap_usd": 12,
   "overshoot_usd": 0,
   "event_loop_lag_ms": {

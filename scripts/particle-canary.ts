@@ -34,9 +34,11 @@
  */
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { budgetOptionsFrom, receiptCost, startPaidRun } from '../eval/runner/budget-ledger.ts';
 import { requirePaidArm } from '../eval/runner/paid-arm.ts';
+import { scrubMachinePaths } from '../eval/runner/receipt.ts';
 import { CompatHttpError, assertMetered, compatBaseUrl, compatRequest, compatSend, isLoopbackUrl, type CanarySampling, type CompatLogprob, type CompatRequest } from '../eval/runner/providers/openai-compatible.ts';
 import { normalizeFinish, normalizeUsage, receipt, responseMeta, usageSourceOf, type UsageReceipt } from '../eval/runner/usage-receipt.ts';
 
@@ -208,7 +210,7 @@ if (import.meta.main) {
     finally { guard.uninstall(); }
     const cost = receiptCost(run.close());
     mkdirSync(out, { recursive: true });
-    writeFileSync(target, JSON.stringify({ ...record, cost }, null, 2) + '\n');
+    writeFileSync(target, JSON.stringify(scrubMachinePaths({ ...record, cost }, undefined, undefined, undefined, [[join(homedir(), '.capy/work') + '/', '<work>/']]), null, 2) + '\n');
     const answered = record.results.filter(r => r.status === 'ok').length;
     console.log(`particle canary: ${answered} of ${CANARY_PROMPTS.length} answered${record.stopped ? `; stopped: ${record.stopped}` : ''}; ${target}`);
     let full = answered === CANARY_PROMPTS.length;

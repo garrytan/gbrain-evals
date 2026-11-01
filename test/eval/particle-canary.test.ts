@@ -8,6 +8,7 @@ import { existsSync, linkSync, mkdtempSync, readFileSync, rmSync, symlinkSync, w
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { BudgetRun, closeLedgers, initLedger } from '../../eval/runner/budget-ledger.ts';
+import { MACHINE_LOCAL_PATH } from '../../eval/runner/receipt.ts';
 import { CANARY_MODEL, CANARY_PROMPTS, CANARY_SAMPLING, CANARY_WARN, compareCanary, runCanary, type CanaryRecord, type CanaryResult } from '../../scripts/particle-canary.ts';
 
 const ROOT = resolve(import.meta.dir, '../..');
@@ -133,6 +134,7 @@ describe('the canary run', () => {
     expect(rec.results).toHaveLength(CANARY_PROMPTS.length);
     expect(rec.results.every(r => r.status === 'ok' && r.answer_sha256 && r.logprobs?.length && r.response_model === 'particle-ai/particle-1')).toBe(true);
     expect(rec.receipts).toHaveLength(12);
+    expect(MACHINE_LOCAL_PATH.test(readFileSync(join(dir, 'a', 'particle-canary.json'), 'utf8'))).toBe(false);
     expect(rec.receipts[0]).toMatchObject({ lane: 'particle-canary', status: 'ok', request: { effort_sent: 'none', effort_effective: 'none', output_limit: 64, temperature_sent: 0, seed_sent: 20261031 }, response_meta: { service_tier: 'default', truncated: false } });
     const sent = readFileSync(fakeLog, 'utf8').trim().split('\n').map(l => JSON.parse(l)).filter(l => l.route === 'chat');
     expect(sent).toHaveLength(12);

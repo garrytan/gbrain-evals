@@ -40,6 +40,7 @@ import { runCompare, type CompareOutput } from '../compare.ts';
 import { ChatClient, chatWithReceipts, type ChatLike, type ChatResultV2 } from '../memory-qa/qa-v2.ts';
 import { requirePaidArm } from '../paid-arm.ts';
 import { attestPreregistration } from '../prereg.ts';
+import { scrubMachinePaths } from '../receipt.ts';
 import { COMPAT_PROVIDERS } from '../providers/openai-compatible.ts';
 import type { UsageReceipt } from '../usage-receipt.ts';
 import { bodySha, readManifest, sha256 } from './manifest.ts';
@@ -89,7 +90,7 @@ export const REPLAY_ARMS: Record<string, ReplayArm> = {
 };
 
 const flag = (argv: string[], name: string) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; };
-const writeJson = (path: string, v: unknown) => { mkdirSync(resolve(path, '..'), { recursive: true }); writeFileSync(path, JSON.stringify(v, null, 1) + '\n'); };
+const writeJson = (path: string, v: unknown) => { mkdirSync(resolve(path, '..'), { recursive: true }); writeFileSync(path, JSON.stringify(scrubMachinePaths(v, undefined, undefined, undefined, [[join(homedir(), '.capy/work') + '/', '<work>/']]), null, 1) + '\n'); };
 const isBudgetStop = (e: unknown) => (e as Error)?.name === 'BudgetExceededError';
 const message = (e: unknown) => String((e as Error)?.message ?? e).slice(0, 500);
 
