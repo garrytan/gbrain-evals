@@ -12,25 +12,27 @@
  * ledger run named by --budget-run-id. It writes each answer's hash and its per-token top log probabilities, with one
  * usage receipt per attempt, to <run dir>/particle-canary.json: the calling run's own output directory.
  *
- * An answer counts only when it is non-empty and did not stop at the output limit, and its mean log probability only
- * when every token's is a finite number.
+ * An answer counts only when it is non-empty and did not stop at the output limit. Its log probabilities, and their
+ * mean, count only when the response gave every token's and every listed alternative's as a number: a null, empty,
+ * string or missing one leaves both unset (no signal), never 0.
  *
  * With --compare (an earlier canary of the same model, endpoint, sampling and prompt set, kept outside --out; a
  * mismatch is refused before anything is sent) it reports how many answers changed, how many came back with a different response model, system fingerprint, weight version or tier,
- * and the mean change in per-answer mean log probability. It warns above --warn-changed and --warn-logprob, which
+ * and the mean change in per-answer mean log probability, measured only when every answer both gave has a mean in both.
+ * It warns above --warn-changed and --warn-logprob, which
  * default to CANARY_WARN: thresholds set above the largest difference seen between back-to-back canary pairs (serving
  * noise), measured before the first counted use. The curated history (docs/benchmarks/particle-canary/history.jsonl) is committed
  * with each report, never written here.
  *
  * It refuses a base URL the ledger cannot price (a request there would spend unmetered); loopback hosts (a metering
- * proxy, the keyless fake in eval/systems/_shim/fake_provider.py) go through. A loopback endpoint records no upstream
- * and a proxy slot's port changes per run, so endpoints are compared only when neither is loopback. Cost: 12 requests of under 100 input
- * and at most 64 output tokens, well under a cent.
+ * proxy, the keyless fake in eval/systems/_shim/fake_provider.py) go through. A loopback endpoint records no upstream,
+ * so it cannot show which server answered: --compare refuses a canary on one, and only canaries sent straight to
+ * Particle's API compare. Cost: 12 requests of under 100 input and at most 64 output tokens, well under a cent.
  *
  * Exit 0: every prompt answered and, with --compare, every prompt compared (warnings print above a threshold).
  * Exit 1: refused (including a --warn threshold that is not a number), a prompt failed after its retries or gave no usable answer, a budget stop (the ledger's, a proxy's
- * or Particle's credit) ended the canary, or --compare compared fewer than every prompt or had no log probabilities to
- * compare against the log-probability threshold (--warn-logprob, else CANARY_WARN's).
+ * or Particle's credit) ended the canary, or --compare compared fewer than every prompt or lacked log probabilities for
+ * an answer both canaries gave, so the log-probability threshold (--warn-logprob, else CANARY_WARN's) checked nothing.
  */
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
@@ -78,7 +80,7 @@ export interface CanaryResult {
   answer: string;
   answer_sha256: string | null;
   finish: string | null;
-  /** Mean per-token log probability of the answer; null without log probabilities. */
+  /** Mean per-token log probability of the answer; null unless the response gave every one as a number. */
   mean_logprob: number | null;
   logprobs: CompatLogprob[] | null;
   response_model: string | null;
@@ -129,13 +131,19 @@ export async function runCanary(env: Record<string, string | undefined> = proces
     let result: CanaryResult = failed;
     for (let attempt = 0; attempt < ATTEMPTS; attempt++) {
       try {
-        const res = await compatSend(req);
+        let body: unknown = null;
+        const res = await compatSend(req, { fetchImpl: (async (url: string, init: RequestInit) => {
+          const r = await fetch(url, init);
+          body = await r.clone().json().catch(() => null);
+          return r;
+        }) as unknown as typeof fetch });
         receipts.push(receipt({ ...base, attempt, response_model: res.response_model, status: 'ok', error: null, finish: normalizeFinish(res.finish), finish_raw: res.finish, answer: res.text,
           usage: normalizeUsage(usageSourceOf(CANARY_MODEL), res.usage), usage_raw: res.usage, response_meta: res.meta }));
-        const lps = res.logprobs?.map(t => t.logprob) ?? [];
+        const sent = (body as { choices?: Array<{ logprobs?: { content?: Array<{ logprob?: unknown; top_logprobs?: Array<{ logprob?: unknown }> | null } | null> } }> } | null)?.choices?.[0]?.logprobs?.content;
+        const logprobs = Array.isArray(sent) && sent.length > 0 && sent.every(t => Number.isFinite(t?.logprob) && (t?.top_logprobs ?? []).every(x => Number.isFinite(x?.logprob))) ? res.logprobs : null;
         const usable = res.text.trim() !== '' && normalizeFinish(res.finish) !== 'max_tokens';
         result = { ...failed, status: usable ? 'ok' : 'error', answer: res.text, answer_sha256: usable ? sha256(res.text) : null, finish: res.finish,
-          mean_logprob: lps.length && lps.every(Number.isFinite) ? lps.reduce((a, b) => a + b, 0) / lps.length : null, logprobs: res.logprobs,
+          mean_logprob: logprobs?.length ? logprobs.reduce((a, t) => a + t.logprob, 0) / logprobs.length : null, logprobs,
           response_model: res.response_model, weight_version: res.meta.weight_version, service_tier: res.meta.service_tier, system_fingerprint: res.meta.system_fingerprint };
         break;
       } catch (e) {
@@ -157,29 +165,45 @@ export interface CanaryDiff { compared: number; complete: boolean; changed_answe
 
 /**
  * Throws unless two canaries share a prompt set, model, sampling and endpoint. A loopback endpoint (a metering proxy
- * slot, whose port changes per run, or the fake) records no upstream, so endpoints are compared only when neither is.
+ * slot or the keyless fake) records no upstream, so it cannot show which server answered: a canary on one, on either
+ * side, is refused, even at the same loopback URL.
  */
 export function assertComparable(a: CanaryIdentity, b: CanaryIdentity): void {
   if (a.prompts_sha256 !== b.prompts_sha256) throw new Error('the two canaries sent different prompts; compare canaries of one prompt set');
   if (a.model !== b.model) throw new Error(`the two canaries differ in model (${a.model} and ${b.model}); compare canaries of one model and endpoint`);
-  if (!isLoopbackUrl(a.base_url) && !isLoopbackUrl(b.base_url) && a.base_url !== b.base_url) throw new Error(`the two canaries differ in base_url (${a.base_url} and ${b.base_url}); compare canaries of one model and endpoint`);
   if (JSON.stringify(a.sampling) !== JSON.stringify(b.sampling)) throw new Error('the two canaries used different sampling; compare canaries of one sampling mode');
+  const loopback = [a.base_url, b.base_url].find(isLoopbackUrl);
+  if (loopback) throw new Error(`the canary endpoint ${loopback} is loopback: a metering proxy or the keyless fake records no upstream, so it cannot show that both canaries reached one serving endpoint; compare canaries sent straight to Particle's API`);
+  if (a.base_url !== b.base_url) throw new Error(`the two canaries differ in base_url (${a.base_url} and ${b.base_url}); compare canaries of one model and endpoint`);
 }
 
 /**
  * Answers and mean log probabilities of two comparable canaries (`assertComparable`), prompt by prompt. Only prompts
- * both answered count; `complete` says whether that was every canary prompt.
+ * both answered count; `complete` says whether that was every canary prompt. The log-probability move is measured only
+ * when every one of those answers has a mean in both canaries; one missing leaves it null, never a move over the rest.
  */
 export function compareCanary(a: CanaryIdentity & Pick<CanaryRecord, 'results'>, b: CanaryIdentity & Pick<CanaryRecord, 'results'>): CanaryDiff {
   assertComparable(a, b);
   const other = new Map(b.results.filter(r => r.status === 'ok').map(r => [r.id, r]));
   const pairs = a.results.filter(r => r.status === 'ok' && other.has(r.id)).map(r => [r, other.get(r.id)!] as const);
-  const moves = pairs.filter(([x, y]) => x.mean_logprob !== null && y.mean_logprob !== null).map(([x, y]) => Math.abs(x.mean_logprob! - y.mean_logprob!));
+  const measured = pairs.every(([x, y]) => x.mean_logprob !== null && y.mean_logprob !== null);
+  const moves = measured ? pairs.map(([x, y]) => Math.abs(x.mean_logprob! - y.mean_logprob!)) : [];
   return {
     compared: pairs.length, complete: pairs.length === CANARY_PROMPTS.length, changed_answers: pairs.filter(([x, y]) => x.answer_sha256 !== y.answer_sha256).length,
     changed_identity: pairs.filter(([x, y]) => (['response_model', 'system_fingerprint', 'weight_version', 'service_tier'] as const).some(k => x[k] !== y[k])).length,
     mean_abs_logprob_change: moves.length ? moves.reduce((s, m) => s + m, 0) / moves.length : null, max_abs_logprob_change: moves.length ? Math.max(...moves) : null,
   };
+}
+
+/** --compare's warnings for a diff, and whether it checked the weights: every prompt compared and a log-probability move measured. */
+export function compareWarnings(diff: CanaryDiff, warn: { changed_answers: number; mean_logprob_change: number } = CANARY_WARN): { warnings: string[]; checked: boolean } {
+  const warnings: string[] = [];
+  if (diff.changed_answers > warn.changed_answers) warnings.push(`${diff.changed_answers} answers changed (threshold ${warn.changed_answers}): the model behind particle-1 may have changed`);
+  if (diff.changed_identity > 0) warnings.push(`${diff.changed_identity} answers came back with a different response model, system fingerprint, weight version or service tier: the serving stack behind particle-1 changed`);
+  if (diff.mean_abs_logprob_change === null) warnings.push('not every answer both canaries gave had log probabilities for every token in both, so the log-probability threshold checked nothing');
+  else if (diff.mean_abs_logprob_change > warn.mean_logprob_change) warnings.push(`mean log probability moved ${diff.mean_abs_logprob_change} (threshold ${warn.mean_logprob_change}): the model behind particle-1 may have changed`);
+  if (!diff.complete) warnings.push(`both canaries answered only ${diff.compared} of ${CANARY_PROMPTS.length} prompts, so this comparison is not a weight check`);
+  return { warnings, checked: diff.complete && diff.mean_abs_logprob_change !== null };
 }
 
 if (import.meta.main) {
@@ -217,16 +241,9 @@ if (import.meta.main) {
     if (baseline) {
       const diff = compareCanary(baseline, record);
       console.log(JSON.stringify(diff));
-      if (diff.changed_answers > changed) console.log(`warning: ${diff.changed_answers} answers changed (threshold ${changed}): the model behind particle-1 may have changed`);
-      if (diff.changed_identity > 0) console.log(`warning: ${diff.changed_identity} answers came back with a different response model, system fingerprint, weight version or service tier: the serving stack behind particle-1 changed`);
-      if (diff.mean_abs_logprob_change === null) {
-        console.log('warning: no answer had log probabilities for every token in both canaries, so the log-probability threshold checked nothing');
-        full = false;
-      } else if (diff.mean_abs_logprob_change > logprob) console.log(`warning: mean log probability moved ${diff.mean_abs_logprob_change} (threshold ${logprob}): the model behind particle-1 may have changed`);
-      if (!diff.complete) {
-        console.log(`warning: both canaries answered only ${diff.compared} of ${CANARY_PROMPTS.length} prompts, so this comparison is not a weight check`);
-        full = false;
-      }
+      const { warnings, checked } = compareWarnings(diff, { changed_answers: changed, mean_logprob_change: logprob });
+      for (const w of warnings) console.log(`warning: ${w}`);
+      full = full && checked;
     }
     process.exit(full ? 0 : 1);
   } catch (e) {
