@@ -36,7 +36,7 @@ export interface SyntheticCell {
 export interface SyntheticOptions {
   conversations?: number; questionsPerConversation?: number; cells?: SyntheticCell[];
   family1?: 'full' | 'shrunk' | 'descriptive'; shrunkComparators?: string[] | null;
-  draws?: number; renderTargets?: string[]; releaseAssets?: CampaignManifest['release_assets'];
+  draws?: number; renderTargets?: string[]; releaseAssets?: CampaignManifest['release_assets']; detectableDifference?: number;
   /** campaign.json `hedge_classifier` (default: CURRENT_CLASSIFIER). */
   hedgeClassifier?: string;
 }
@@ -144,6 +144,6 @@ export function writeSyntheticReceipt(dir: string, o: SyntheticOptions = {}): Ca
     release_assets: o.releaseAssets ?? [], disclosures: ['Synthetic fixture: every number is invented.'], render_targets: o.renderTargets ?? [],
   };
   writeFileSync(join(dir, 'campaign.json'), JSON.stringify(campaign, null, 2) + '\n');
-  writeFileSync(join(dir, 'power.json'), JSON.stringify({ schema: 'gbrain-evals/q1-power/v1', decision: { family1: o.family1 ?? 'full', detectable_difference_points: 12.5, shrunk_comparators: o.shrunkComparators ?? null } }, null, 2) + '\n');
+  writeFileSync(join(dir, 'power.json'), JSON.stringify({ schema: 'gbrain-evals/q1-power/v1', decision: { family1: o.family1 ?? 'full', detectable_difference_points: o.detectableDifference ?? 12.5, shrunk_comparators: o.shrunkComparators ?? null } }, null, 2) + '\n');
   return campaign;
 }

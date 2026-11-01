@@ -77,6 +77,7 @@ PRODUCT_PIN_SENTENCES = {
     "docs/retrieval-lessons.md": [r"as this repository pins it \(master `(?P<sha>[a-f0-9]{7,40})`, v(?P<version>[\d.]+)\)"],
     "eval/README.md": [r"Every runner loads the gbrain declared in `package.json`: master `(?P<sha>[a-f0-9]{7,40})` \(v(?P<version>[\d.]+)\)"],
     "eval/CONTRIBUTING.md": [r"The gbrain under test is the one `package.json` declares, master `(?P<sha>[a-f0-9]{7,40})` \(v(?P<version>[\d.]+)\)"],
+    "eval/CREDITS.md": [r"is current as of the gbrain this repository pins, master `(?P<sha>[a-f0-9]{7,40})` \(v(?P<version>[\d.]+)\)"],
 }
 
 
@@ -114,9 +115,27 @@ def product_pin_references(root=ROOT):
     return errors
 
 
+SCOREBOARD_PUBLICATION = "docs/benchmarks/2026-10-06-scoreboard/publication.json"
+
+
+def scoreboard_publication_reference(root=ROOT):
+    """README's paragraph above the scoreboard block explains one published render, so it names the commit publication.json records.
+    Between a custody render and its publication the commit is null, and there is nothing to compare yet."""
+    commit = (json.loads((root / SCOREBOARD_PUBLICATION).read_text()).get("published") or {}).get("commit")
+    if commit is None:
+        return []
+    above = (root / "README.md").read_text().partition("<!-- scoreboard:headline:begin -->")[0].rsplit("\n## ", 1)[-1]
+    named = re.search(r"check --commit\s+([a-f0-9]{40})", above)
+    if not named:
+        return [["README.md", "The paragraph above the scoreboard block names no publication commit"]]
+    if named.group(1) != commit:
+        return [["README.md", named.group(1), "The paragraph above the scoreboard block describes a publication other than " + SCOREBOARD_PUBLICATION + " records (" + commit + "); update it with the new render"]]
+    return []
+
+
 def verify():
     manifest = json.loads(MANIFEST.read_text())
-    errors = candidate_references() + product_pin_references()
+    errors = candidate_references() + product_pin_references() + scoreboard_publication_reference()
     if not (ROOT / "node_modules" / "gbrain" / "package.json").exists():
         print("verify-documentation-refresh: node_modules/gbrain is not installed, so the hubs' release was not checked against it", file=sys.stderr)
     for file, expected in manifest["protected_sha256"].items():
