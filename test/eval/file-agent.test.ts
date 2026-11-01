@@ -436,7 +436,7 @@ describe('file agent with particle-1 (plan GST-605 Phase 3)', () => {
     await sys.close();
   });
 
-  test('a retried answer numbers its receipts on from the earlier attempt, also in a new process after a half-written line', async () => {
+  test('a retried answer numbers its receipts on from the earlier attempt, also in a new process after stray and half-written lines', async () => {
     let n = 0;
     const fetchImpl = (async () => {
       n++;
@@ -451,15 +451,15 @@ describe('file agent with particle-1 (plan GST-605 Phase 3)', () => {
     expect((await sys.answer(ns, q, opts)).text).toBe('');
     expect((await sys.answer(ns, q, opts)).text).toBe('Rex');
     await sys.close();
-    appendFileSync(join(workDir, 'receipts.ndjson'), `{"model":"particle:particle-1","question_id":"${'b'.repeat(64)}",`);
+    appendFileSync(join(workDir, 'receipts.ndjson'), `null\n7\n{"model":"particle:particle-1","question_id":"${'b'.repeat(64)}",`);
     const again = new FileAgentSystem({ workDir, fetchImpl });
     await ingest(again);
     expect((await again.answer(ns, q, opts)).text).toBe('Rex');
     await again.close();
     const lines = readFileSync(join(workDir, 'receipts.ndjson'), 'utf8').trim().split('\n');
-    expect(lines).toHaveLength(4);
-    expect(() => JSON.parse(lines[2])).toThrow();
-    expect([lines[0], lines[1], lines[3]].map(l => JSON.parse(l)).map(r => [r.attempt, r.status])).toEqual([[0, 'error'], [1, 'ok'], [2, 'ok']]);
+    expect(lines).toHaveLength(6);
+    expect(() => JSON.parse(lines[4])).toThrow();
+    expect([lines[0], lines[1], lines[5]].map(l => JSON.parse(l)).map(r => [r.attempt, r.status])).toEqual([[0, 'error'], [1, 'ok'], [2, 'ok']]);
   });
 
   test('a budget stop counts the usage of a billed 2xx that was retried', async () => {

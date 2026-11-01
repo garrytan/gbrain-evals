@@ -365,8 +365,9 @@ export class FileAgentSystem implements AnsweringSystem {
     const text = existsSync(this.receiptsPath) ? readFileSync(this.receiptsPath, 'utf8') : '';
     const counts = new Map<string, number>();
     for (const line of text.split('\n')) {
-      let r: FileAgentReceipt;
-      try { r = JSON.parse(line) as FileAgentReceipt; } catch { continue; }
+      let r: FileAgentReceipt | null;
+      try { r = JSON.parse(line) as FileAgentReceipt | null; } catch { continue; }
+      if (!r || typeof r !== 'object') continue;
       const key = `${r.model}|${r.question_id}|${r.replicate}`;
       counts.set(key, (counts.get(key) ?? 0) + 1);
     }
