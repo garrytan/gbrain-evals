@@ -19,6 +19,9 @@
  *                    `completion_tokens_details.reasoning_tokens`.
  *   openai (responses) the same with `input_tokens`, `input_tokens_details`,
  *                    `output_tokens` and `output_tokens_details`.
+ *   particle         OpenAI chat, as every provider in COMPAT_PROVIDERS
+ *                    (eval/runner/providers/openai-compatible.ts): reasoning
+ *                    is inside `completion_tokens` and billed as output.
  *   gbrain-think     gbrain's `think` returns `{ input_tokens, output_tokens }`
  *                    summed over its synthesis calls, with no cache split, so
  *                    the cache fields are null (not reported), never zero.
@@ -27,11 +30,21 @@
  * one `error` record per failed attempt and one `ok` record, and each
  * replicate has its own records. A response served from the harness's local
  * response cache is marked `from_cache` (no provider call in this run).
+ *
+ * Lanes that call an OpenAI-compatible provider through the provider module
+ * also record `request` (the effort sent and the level it ran at, the output
+ * limit, any sampling control) and `response_meta` (the raw `metadata`,
+ * `service_tier`, `system_fingerprint`; all null on a failed attempt),
+ * because those settings change answers and the provider can change the model
+ * behind one id. Both fields are optional, so the schema stays v1.
  */
 
 export const USAGE_RECEIPT_SCHEMA = 'usage-receipt/v1';
 
 export type UsageSource = 'anthropic' | 'openai' | 'gbrain-think';
+
+/** The providers in COMPAT_PROVIDERS (eval/runner/providers/openai-compatible.ts), whose usage follows OpenAI chat; a test keeps the two in step. */
+const OPENAI_CHAT_COMPATIBLE = new Set(['particle']);
 
 export interface NormalizedUsage {
   /** Which provider rule produced these numbers; `legacy-cache` is a cached response stored before raw usage was kept (totals only). */
@@ -74,16 +87,60 @@ export interface UsageReceipt {
   usage_raw: Record<string, unknown> | null;
   /** Tokens of the text delivered to the model, counted with one tokenizer across arms. */
   delivered: { tokenizer: string; tokens: number } | null;
+  /** What the request sent; recorded by lanes that call an OpenAI-compatible provider through eval/runner/providers. */
+  request?: ReceiptRequest;
+  /** What identifies the serving model and tier; every field is null on a failed attempt. */
+  response_meta?: ResponseMeta;
+}
+
+/** The settings a request sent that change the answer. */
+export interface ReceiptRequest {
+  /** The reasoning effort sent, and the level the provider runs it at (Particle runs `medium` as `high`). */
+  effort_sent: string | null;
+  effort_effective: string | null;
+  /** The output-limit field and the value sent. */
+  output_limit_field: string;
+  output_limit: number;
+  /** Sampling controls sent; null when none was sent and the provider sampled with its default. */
+  temperature_sent: number | null;
+  seed_sent: number | null;
+}
+
+/** The response fields that identify what served an answer. */
+export interface ResponseMeta {
+  /** The response's raw `metadata` (Particle: a weight version, or a per-span list), unchanged; null when absent. */
+  metadata: unknown;
+  /** `metadata.weight_version` when the provider reported one as a string. */
+  weight_version: string | null;
+  service_tier: string | null;
+  system_fingerprint: string | null;
+  /** True when the response names a service tier other than `default`, which can serve and bill differently; null when it names none. */
+  non_default_tier: boolean | null;
+  /** True when the model stopped at the output limit (`finish_reason: length`). The answer is the message content only, possibly empty; reasoning text never fills it. */
+  truncated: boolean | null;
 }
 
 const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : null);
 const obj = (v: unknown) => (v && typeof v === 'object' ? v as Record<string, unknown> : {});
 
+/** `response_meta` of a Chat Completions response; every field null for a failed attempt (no response). */
+export function responseMeta(response: unknown): ResponseMeta {
+  const r = response && typeof response === 'object' ? response as Record<string, unknown> : null;
+  const str = (v: unknown) => (typeof v === 'string' ? v : null);
+  const metadata = r?.metadata ?? null;
+  const tier = str(r?.service_tier);
+  const finish = r && Array.isArray(r.choices) ? str(obj(r.choices[0]).finish_reason) : null;
+  return {
+    metadata, weight_version: str(obj(metadata).weight_version), service_tier: tier, system_fingerprint: str(r?.system_fingerprint),
+    non_default_tier: tier === null ? null : tier !== 'default', truncated: finish === null ? null : finish === 'length',
+  };
+}
+
 /** `provider:model` or a bare model id to the usage convention its responses follow. */
 export function usageSourceOf(model: string): Exclude<UsageSource, 'gbrain-think'> {
   const [provider, name] = model.includes(':') ? [model.slice(0, model.indexOf(':')), model.slice(model.indexOf(':') + 1)] : ['', model];
   if (provider === 'anthropic' || (!provider && /^claude/.test(name))) return 'anthropic';
-  if (provider === 'openai' || (!provider && /^(gpt|o\d|chatgpt)/.test(name))) return 'openai';
+  if (provider === 'openai' || OPENAI_CHAT_COMPATIBLE.has(provider) || (!provider && /^(gpt|o\d|chatgpt)/.test(name))) return 'openai';
   throw new Error(`no usage convention for ${model}; add one to eval/runner/usage-receipt.ts`);
 }
 
