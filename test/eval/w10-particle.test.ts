@@ -296,6 +296,15 @@ describe('keyless re-score', () => {
     expect(() => P.report(dir, tmp())).toThrow('w10b-particle-notes did not finish');
   });
 
+  test('report refuses an arm that failed a preregistered bar', () => {
+    const dir = tmp();
+    const arm = join(dir, 'arms', 'w10b-particle-notes');
+    mkdirSync(arm, { recursive: true });
+    writeFileSync(join(arm, 'rows.ndjson'), '');
+    writeFileSync(join(arm, 'receipt.json'), JSON.stringify({ effort: 'high', stopped: null, not_run: [], bars: { metering: { pass: false }, receipts: { pass: false }, truncation: { pass: true }, errors: { pass: true } }, ledger: { usd: 0 } }));
+    expect(() => P.report(dir, tmp())).toThrow('w10b-particle-notes failed preregistered bars (metering, receipts)');
+  });
+
   test('report refuses an arm with an answer whose judge call failed, since that answer was scored wrong unjudged', () => {
     const dir = tmp();
     const arm = join(dir, 'arms', 'w10b-particle-notes');
@@ -309,20 +318,25 @@ describe('keyless re-score', () => {
     const ids = Array.from({ length: 150 }, (_, i) => String(i));
     const a = new Map(ids.map((id, i) => [id, (i < 7 || i >= 9 + 6 ? 1 : 0) as 0 | 1]));
     const b = new Map(ids.map((id, i) => [id, (i >= 7 && i < 9) || i >= 9 + 6 ? 1 : 0] as [string, 0 | 1]));
-    expect(P.tangoNonInferiority(a, b, ids, 0.07)).toEqual({ z: 1.5567, p: 0.0598 });
+    const t = P.tangoNonInferiority(a, b, ids, 0.07);
+    expect(t.z).toBeCloseTo(1.5567, 4);
+    expect(t.p).toBeCloseTo(0.0598, 4);
     expect(P.tangoNonInferiority(a, a, ids, 0.07).p).toBeLessThan(0.001);
   });
 
-  test('report check mode fails on a compare file the re-score no longer writes', () => {
+  test('report check mode fails on a compare file the re-score no longer writes, and --write removes it', () => {
     const dir = tmp();
     cpSync(join(ROOT, 'docs/benchmarks/2026-11-01-longmemeval-particle-replay'), dir, { recursive: true });
-    const check = () => Bun.spawnSync(['bun', 'eval/runner/batch/w10-particle.ts', 'report', dir], { cwd: ROOT, stdout: 'ignore', stderr: 'pipe' });
+    const check = (...args: string[]) => Bun.spawnSync(['bun', 'eval/runner/batch/w10-particle.ts', 'report', dir, ...args], { cwd: ROOT, stdout: 'ignore', stderr: 'pipe' });
     expect(check().exitCode).toBe(0);
     writeFileSync(join(dir, 'compare-old-a.ndjson'), '');
     const stale = check();
     expect(stale.exitCode).toBe(1);
     expect(stale.stderr.toString()).toContain(`re-score differs from ${join(dir, 'compare-old-a.ndjson')}`);
-  }, 60_000);
+    expect(check('--write').exitCode).toBe(0);
+    expect(readdirSync(dir).includes('compare-old-a.ndjson')).toBe(false);
+    expect(check().exitCode).toBe(0);
+  }, 90_000);
 
   test('R2 arms that answer as GPT-6.1 Sol did read decision G and the development-lane test from the registered family', () => {
     const dir = tmp();

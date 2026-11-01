@@ -16,19 +16,21 @@
  *
  * run sends one arm's saved text to particle-1 through qa-v2's ChatClient and chatWithReceipts (Particle has no batch
  * API), so it inherits their 5-attempt retries, receipts and response cache: a rerun into a fresh --out replays every
- * answer already paid for. Eight questions at a time, a 900-second deadline per attempt, effort and output limit fixed
+ * answer already paid for, sends no particle request for it and so measures neither bar 1 nor bar 2; a rerun that counts
+ * takes a fresh --cache too. Eight questions at a time, a 900-second deadline per attempt, effort and output limit fixed
  * per arm. Every answer is judged with LongMemEval's official prompt on gpt-4o-2024-08-06 (temperature 0, 10 tokens,
  * "yes" in the reply), W10's primary judge, through the same client. An answer cut off at its output limit is scored
  * as the model's answer and never retried; its row records `truncated` and the finish reason. An empty answer is wrong
  * without a judge call. A reader that still fails after its retries is a reader error, wrong; so is an answer whose judge
- * call still fails, and that arm's run exits 1 and report refuses it until it is re-judged. A budget stop (the
+ * call still fails, and that arm's run exits 1. A budget stop (the
  * ledger's, or Particle's credit 402) ends the arm after the failing question's row: no new question starts and the
  * receipt says `stopped`. --out must hold no rows yet, so a rerun of a stopped arm goes to a fresh directory. The
  * receipt checks the preregistered bars 1 to 4 on the arm's particle requests.
  *
  * report re-scores committed rows, keyless: paired differences with 95% intervals through compare.ts, decision G's
  * preregistered family with Tango's score test beside it, the development-lane test, decision B's stop rule, cost per
- * correct answer, latency and truncations. With --write it writes summary.json; without, it exits 1 when the committed
+ * correct answer, latency and truncations. It refuses an arm that stopped, left questions unrun, failed a bar or holds a
+ * failed judge call. With --write it replaces summary.json and the compare files; without, it exits 1 when the committed
  * summary.json or a compare file differs, or a compare file is one the re-score no longer writes.
  */
 import { Database } from 'bun:sqlite';
@@ -102,6 +104,7 @@ const scrub = <T>(v: T): T => scrubMachinePaths(v, undefined, undefined, undefin
 export const scrubErrorText = (key: string, value: unknown) => (key === 'error' && typeof value === 'string' ? scrub(value) : value);
 const writeJson = (path: string, v: unknown, replacer?: (key: string, value: unknown) => unknown) => { mkdirSync(resolve(path, '..'), { recursive: true }); writeFileSync(path, JSON.stringify(v, replacer, 1) + '\n'); };
 const isBudgetStop = (e: unknown) => (e as Error)?.name === 'BudgetExceededError';
+const NOT_JUDGED = 'not judged: the arm stopped';
 const message = (e: unknown) => String((e as Error)?.message ?? e).slice(0, 500);
 
 // ─── Build ($0) ─────────────────────────────────────────────────────
@@ -246,7 +249,7 @@ export async function replayQuestions(opts: {
     const answer = reader?.text ?? '';
     let official: Judgment | null = null;
     if (reader && answer.trim() === '') official = { verdict: false, raw: null, error: null, skipped: 'empty answer: wrong without a judge call' };
-    else if (reader && out.stopped) official = { verdict: null, raw: null, error: 'not judged: the arm stopped' };
+    else if (reader && out.stopped) official = { verdict: null, raw: null, error: NOT_JUDGED };
     else if (reader) {
       try {
         const j = await chatWithReceipts(opts.client, ctx('judge', JUDGE), officialJudgePrompt(q.question_type, q.question, q.answer, answer, id.includes('_abs')), { maxTokens: 10, replicate: 0, temperature: 0 }, receipts);
@@ -331,7 +334,7 @@ export async function run(armId: string, argv: string[]): Promise<number> {
   if (!arm) throw new Error(`unknown arm ${armId}; arms: ${Object.keys(REPLAY_ARMS).join(', ')}`);
   const out = flag(argv, '--out');
   if (!out) throw new Error('pass --out <fresh directory> for the arm\'s rows, receipts and receipt.json');
-  if (existsSync(join(out, 'rows.ndjson'))) throw new Error(`${out} already holds rows; a rerun goes to a fresh --out (every row of a rows file counts), and answers already paid for replay from the response cache`);
+  if (existsSync(join(out, 'rows.ndjson'))) throw new Error(`${out} already holds rows; a rerun goes to a fresh --out (every row of a rows file counts). Answers already paid for replay from the response cache, which measures neither bar 1 nor bar 2, so a rerun that counts takes a fresh --cache too`);
   const inputs = loadInputs(arm.text);
   for (const [id, text] of inputs) assertFitsParticleWindow(id, text);
   const build = JSON.parse(readFileSync(join(STATE_DIR, 'build.json'), 'utf8'));
@@ -370,7 +373,7 @@ export async function run(armId: string, argv: string[]): Promise<number> {
     build: { built_at: build.built_at, gbrain_pin: build.gbrain_pin, dataset_sha256: build.dataset_sha256 },
     denominator: inputs.size, attempted: rows.length, not_run: result.not_run, stopped: result.stopped,
     counts: {
-      correct_official: rows.reduce((a, r) => a + r.correct_official, 0), reader_errors: rows.filter(r => r.error).length, judge_errors: rows.filter(r => r.official?.error).length,
+      correct_official: rows.reduce((a, r) => a + r.correct_official, 0), reader_errors: rows.filter(r => r.error).length, judge_errors: rows.filter(r => r.official?.error && r.official.error !== NOT_JUDGED).length,
       empty_answers: rows.filter(r => r.official?.skipped).length, truncated: rows.filter(r => r.truncated).length, finish: tally(rows.map(r => r.finish)), from_cache: rows.filter(r => r.from_cache).length,
     },
     latency_ms: { n: latencies.length, p50: quantile(latencies, 0.5), p95: quantile(latencies, 0.95) },
@@ -446,7 +449,7 @@ export function tangoNonInferiority(a: Map<string, 0 | 1>, b: Map<string, 0 | 1>
   const z = (bOnly - aOnly - n * d) / Math.sqrt(n * (2 * q + d * (1 - d)));
   const x = Math.abs(z) / Math.SQRT2, t = 1 / (1 + x / 2);
   const erfc = t * Math.exp(-x * x - 1.26551223 + t * (1.00002368 + t * (0.37409196 + t * (0.09678418 + t * (-0.18628806 + t * (0.27886807 + t * (-1.13520398 + t * (1.48851587 + t * (-0.82215223 + t * 0.17087277)))))))));
-  return { z: Number(z.toFixed(4)), p: Number((z >= 0 ? erfc / 2 : 1 - erfc / 2).toFixed(4)) };
+  return { z, p: z >= 0 ? erfc / 2 : 1 - erfc / 2 };
 }
 
 /**
@@ -504,8 +507,10 @@ export function report(dir: string, compareDir = dir): Record<string, unknown> {
   for (const [id, path] of Object.entries(particle)) {
     const receipt = existsSync(join(path, 'receipt.json')) ? JSON.parse(readFileSync(join(path, 'receipt.json'), 'utf8')) : null;
     if (!receipt || receipt.stopped || receipt.not_run.length) throw new Error(`${id} did not finish (no receipt.json, a stop or unrun questions); report scores complete arms only`);
+    const failedBars = Object.entries(receipt.bars as Record<string, Bar>).filter(([, b]) => !b.pass).map(([k]) => k);
+    if (failedBars.length) throw new Error(`${id} failed preregistered bars (${failedBars.join(', ')}); report scores arms that pass bars 1 to 4`);
     const judgeErrors = readNdjson(join(path, 'rows.ndjson')).filter(r => (r.official as Judgment | null)?.error).length;
-    if (judgeErrors) throw new Error(`${id}: the judge call failed for ${judgeErrors} of its answers, each scored wrong; re-judge them before reporting`);
+    if (judgeErrors) throw new Error(`${id}: the judge call failed for ${judgeErrors} of its answers, each scored wrong; rerun the arm into a fresh --out with a fresh --cache`);
   }
   const scored = new Map(Object.entries({ ...Object.fromEntries(Object.entries(comparators).map(([k, [p]]) => [k, p])), ...particle }).map(([k, p]) => [k, scoreArm(p)]));
   const c = (name: string, ids: string[]) => col(scored.get(name)!, ids);
@@ -536,10 +541,19 @@ export function report(dir: string, compareDir = dir): Record<string, unknown> {
       { field: 'correct__sonnet55_gbrain', a: full, b: c('w10a-sonnet55-notes', ids150) },
     ];
     const g = paired(compareDir, 'g-noninferiority', fieldsG, ids150, join(ROOT, FAMILY_G));
-    const family = JSON.parse(readFileSync(join(ROOT, FAMILY_G), 'utf8')) as { comparisons: { id: string; metric: string; tolerance: number }[] };
-    const tango = family.comparisons.map(fc => { const f = fieldsG.find(x => x.field === fc.metric)!; return { id: fc.id, ...tangoNonInferiority(f.a, f.b, ids150, fc.tolerance) }; });
+    const family = JSON.parse(readFileSync(join(ROOT, FAMILY_G), 'utf8')) as { comparisons: { id: string; metric: string; gate: string; direction: string; tolerance: number }[] };
+    const tango = family.comparisons.map(fc => {
+      const f = fieldsG.find(x => x.field === fc.metric);
+      if (!f || fc.gate !== 'noninferiority' || fc.direction !== 'higher') throw new Error(`${FAMILY_G}: ${fc.id} is not a higher-is-better non-inferiority comparison of ${fieldsG.map(x => x.field).join(' or ')}, the only kind Tango's test is computed for`);
+      return { id: fc.id, ...tangoNonInferiority(f.a, f.b, ids150, fc.tolerance) };
+    });
     const holm = holmAdjusted(tango.map(t => t.p));
-    out.decision_g = { ...g, comparisons: g.comparisons.map(x => { const i = tango.findIndex(t => t.id === x.id); return { ...x, tango: { z: tango[i].z, p: tango[i].p, p_holm: Number(holm[i].toFixed(4)) } }; }) };
+    const round = (x: number) => Number(x.toFixed(4));
+    out.decision_g = { ...g, comparisons: g.comparisons.map(x => {
+      const i = tango.findIndex(t => t.id === x.id);
+      if (i < 0) throw new Error(`decision G comparison ${x.id} is not in ${FAMILY_G}`);
+      return { ...x, tango: { z: round(tango[i].z), p: round(tango[i].p), p_holm: round(holm[i]) } };
+    }) };
     const w10c = paired(compareDir, 'w10c', [
       { field: 'correct__particle_gbrain_minus_particle_full', a: full, b: pin },
       { field: 'correct__particle_full_minus_sonnet55_full', a: sonnetFull, b: full },
@@ -577,6 +591,7 @@ async function main(argv: string[]): Promise<number> {
   if (cmd === 'report') {
     if (!arg) throw new Error('report <replay dir>');
     const dir = resolve(arg), write = argv.includes('--write');
+    if (write) for (const f of readdirSync(dir)) if (f.startsWith('compare-')) rmSync(join(dir, f));
     const compareDir = write ? dir : mkdtempSync(join(tmpdir(), 'w10-particle-report-'));
     try {
       const text = JSON.stringify(report(dir, compareDir), null, 1) + '\n';
