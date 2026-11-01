@@ -4,6 +4,12 @@ This records what each gbrain-evals release changed and what its measurements me
 
 ## [Unreleased]
 
+### The W10b write-ups carry the gbrain and OpenAI disclosures
+
+- **`docs/disclosures.md` carries the standing list:** Garry Tan's dated words and the exact line for Particle, gstack, gbrain, ggstack, QM, Hermes, OpenAI and OpenClaw, with its notes, the subjects that get no line and which pages here carry which lines.
+- **The W10b finding carries the gbrain and OpenAI lines** beside the Particle line under its title, in its front matter and in its X hook draft, and its publication status and claim-check table record Garry's answer. The particle-1 replay report (in a dated note), README's full-context paragraph and the corrections page's GPT-6.1 Sol entry carry both lines, and the docs index's replay row carries the gbrain line, because each reports gbrain's result or an OpenAI model's beside particle-1's.
+- **Pins follow the report.** The replay report's SHA-256 changes, so the finding's `SHA256SUMS` and its `docs/receipts-manifest.json` entry carry the new digest. No figure changed.
+
 ### particle-1 results carry their disclosure up front
 
 - **`docs/disclosures.md`** lists the relationship Garry Tan disclosed for a tested company: Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which makes particle-1. Any finding, report or summary of particle-1 results carries that line up front.

@@ -10,19 +10,26 @@ data: committed in this repository; 40 files with their SHA-256 in 2026-11-01-pa
 author: GBEV-25
 reviewed_by: google/gemini-4-argon (R51, via GEVA-119)
 reproduced_by: GEVA-119 (gstack-evals crew, clean machine)
-disclosures: "Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which makes particle-1."
+disclosures:
+  - "Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which makes particle-1."
+  - "gbrain is Garry Tan's own project."
+  - "Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator."
 ---
 
 # particle-1 answers 91.4% of 500 LongMemEval questions on gbrain's retrieval, 3.4 points behind Opus 5.5 (95% interval 1.4 to 5.6), at about a twenty-third of its list cost per correct answer (exploratory, public dev set, near ceiling, one protocol judge)
 
 Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which makes particle-1.
 
+gbrain is Garry Tan's own project.
+
+Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
+
 **Publication status:** unpublished. Done: a keyless recount of every number from the committed rows, a clean-machine
 rerun and claim check with a cross-family review, which passed the file with edits that this version applies (see
 [the claim check](#the-claim-check)), and dated notes beside the corrected cost figures in the reports this file cites.
-Still blocking a post: a recheck of the edited lines, and Garry Tan's answer on two disclosure questions: whether a
-finding also names ties to the other companies whose models it features (OpenAI, Anthropic, DeepSeek, Google), and
-whether a gbrain finding says that gbrain is his open-source project.
+Garry Tan answered the disclosure questions on 2026-11-02, so the gbrain and OpenAI lines above join the Particle line,
+and Anthropic, DeepSeek and Google get none. Still blocking a post: a recheck of the edited and added lines, and Garry
+Tan's approval of the post text.
 
 ## What we found
 
@@ -296,7 +303,7 @@ behind this file. The 40 files the numbers come from are listed with their diges
 ## The X hook
 
 A draft, not posted; Garry Tan approves the final text. It carries the grade, the ceiling, the interval and the
-disclosure, and says Opus 5.5 ran at effort low. The post adds the chart from [Result](#result) and a link to this file
+three disclosure lines, and says Opus 5.5 ran at effort low. The post adds the chart from [Result](#result) and a link to this file
 at its commit.
 
 > particle-1 answered 91.4% of 500 LongMemEval questions on gbrain's retrieval, 3.4 points behind Opus 5.5 at effort
@@ -304,6 +311,10 @@ at its commit.
 > judge, every reader near the ceiling (91% to 95%).
 >
 > Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which makes particle-1.
+>
+> gbrain is Garry Tan's own project.
+>
+> Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
 
 ## The claim check
 
@@ -324,9 +335,16 @@ version applies every edit. The claim-check file, `gbrain-evals-particle-1-w10b`
 | Secrets and held-out data | Pass | No key patterns, home-directory paths or Capy thread ids in this file, its bundle or the check script. The dataset file is not committed, only its digest. |
 | The corrections, wherever the old figures appear | Pass with this version | The replay report, W10b and W10c carry a dated note beside each figure that [corrections](../corrections.md#longmemeval) revises. |
 | Cross-family review (R51) | Pass with edits | `google/gemini-4-argon`, one round, twelve findings, all applied here. |
-| Disclosure of the other companies the file features | Open | Waiting on Garry Tan (see the publication status under the title). |
+| Disclosure of the other companies the file features | Answered | Garry Tan answered on 2026-11-02: the gbrain and OpenAI lines are added under the title and in the X hook, and Anthropic, DeepSeek and Google get no line. The words come from [docs/disclosures.md](../disclosures.md). |
 
 ## Changelog
+
+### 2026-11-02: The gbrain and OpenAI disclosure lines
+
+Garry Tan answered the claim check's disclosure question. Under the title, beside the Particle line, the file now
+carries the gbrain line and the OpenAI line in the words of [docs/disclosures.md](../disclosures.md), and so do the
+front matter and the X hook draft. The publication status and the claim check's last row record the answer. No result
+changed.
 
 ### 2026-11-01: Claim-check edits
 
