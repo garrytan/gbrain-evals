@@ -6,15 +6,21 @@
  *   - lane-name validation (it becomes a receipt key and an artifact file name)
  *   - readExternalDocs refusing symlinks (including one to /proc/self/environ),
  *     special files, hard links, oversized files, too many claims, invalid
- *     UTF-8 and unsafe transcript ids, and hashing every file it reads
+ *     UTF-8 and unsafe transcript ids, and hashing every file it reads; and
+ *     refusing to read at all on a system with no /proc/self/fd (#226)
+ *   - the pre-flight judge estimate, priced from the documents read (#225)
  *   - CLI refusals before any work
  *   - hermetic runs (stubbed judge and gbrain, fetch forbidden, an empty budget
  *     ledger): the receipt records the name, the directory, each file's sha256
  *     and the provenance note; a hostile folder, an empty folder or a gold id
  *     in a document stops the run before any judge call; every built-in field
  *     is identical with or without an external lane, even one whose judge
- *     fails; and identical bytes score identically in the dream lane and an
- *     external lane
+ *     fails; identical bytes score identically in the dream lane and an
+ *     external lane; and a large document set trips the hard stop before any
+ *     judge call
+ *
+ * Reading tests and hermetic runs need /proc/self/fd and skip elsewhere,
+ * where the runner refuses the lane.
  */
 
 import { describe, expect, test } from 'bun:test';
@@ -24,13 +30,16 @@ import {
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { initLedger, readLedger } from '../../eval/runner/budget-ledger.ts';
+import { initLedger, priceRequest, readLedger, reservationUsd } from '../../eval/runner/budget-ledger.ts';
 import { segmentClaims } from '../../eval/runner/cat35-checks.ts';
+import { confirmDistractorLeaks, scoreGrounding, scoreSalienceCoverage, scoreUsabilityChecklist } from '../../eval/runner/cat35-judges.ts';
+import { isOpenAIModel, openAIMessagesShim } from '../../eval/runner/openai-judge-shim.ts';
 import {
   completedWs0Receipt,
   EXTERNAL_DOC_MAX_BYTES,
   EXTERNAL_DOC_MAX_CLAIMS,
   EXTERNAL_PROVENANCE_NOTE,
+  externalJudgeEstimateUsd,
   externalLaneNameError,
   readExternalDocs,
 } from '../../eval/runner/cat35-transcript-distill.ts';
@@ -41,6 +50,8 @@ const RUNNER = join(ROOT, 'eval/runner/cat35-transcript-distill.ts');
 const GOLD_DIR = join(ROOT, 'eval/data/transcript-distill-v1/gold');
 const gold = (tid: string) => JSON.parse(readFileSync(join(GOLD_DIR, `${tid}.json`), 'utf8'));
 const sha256 = (b: Buffer | string) => createHash('sha256').update(b).digest('hex');
+/** The runner reads the external folder through /proc/self/fd and refuses the lane where it is missing. */
+const FD_PATHS = existsSync('/proc/self/fd');
 
 function scratch(prefix: string): string {
   return realpathSync(mkdtempSync(join(tmpdir(), prefix)));
@@ -63,15 +74,27 @@ describe('externalLaneNameError', () => {
   });
 });
 
-describe('readExternalDocs on a hostile folder', () => {
-  const ids = ['alpha-01', 'beta-02', 'gamma-03'];
+const ids = ['alpha-01', 'beta-02', 'gamma-03'];
 
-  function folder(files: Record<string, string | Buffer> = {}): string {
-    const dir = scratch('cat35-ext-');
-    for (const [name, body] of Object.entries(files)) writeFileSync(join(dir, name), body);
-    return dir;
-  }
+function folder(files: Record<string, string | Buffer> = {}): string {
+  const dir = scratch('cat35-ext-');
+  for (const [name, body] of Object.entries(files)) writeFileSync(join(dir, name), body);
+  return dir;
+}
 
+describe('readExternalDocs on a system without /proc/self/fd', () => {
+  test('refuses before opening any document, because a read by path could follow a folder swapped mid-run', () => {
+    const dir = folder({ 'alpha-01.md': 'inside' });
+    try {
+      expect(() => readExternalDocs(dir, ids, EXTERNAL_DOC_MAX_BYTES, EXTERNAL_DOC_MAX_CLAIMS, join(dir, 'no-fd-paths')))
+        .toThrow(`this system has no ${join(dir, 'no-fd-paths')} to read --external-dir through the folder handle it holds`);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe.skipIf(!FD_PATHS)('readExternalDocs on a hostile folder', () => {
   test('reads present documents in corpus order, records missing ones and hashes the raw bytes', () => {
     const bom = Buffer.concat([Buffer.from([0xef, 0xbb, 0xbf]), Buffer.from('# Gamma\n\nShipped the fix.\n')]);
     const dir = folder({ 'gamma-03.md': bom, 'alpha-01.md': '', 'unrelated.md': 'never read', 'beta-02.txt': 'wrong extension' });
@@ -209,6 +232,74 @@ describe('readExternalDocs on a hostile folder', () => {
       }
     } finally {
       rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('externalJudgeEstimateUsd', () => {
+  const transcript = 'user: we shipped the fix today and agreed to keep the old flag for a week\n'.repeat(80);
+  const base = { document: 'The user shipped the fix today.', transcript, items: 8, distractors: 4, hazards: 1 };
+  const est = (over: Partial<typeof base>, model = 'claude-sonnet-5-5') => externalJudgeEstimateUsd([{ ...base, ...over }], model);
+
+  test('larger documents cost more, counted as the judge sees them, escaped', () => {
+    expect(est({ document: 'a'.repeat(EXTERNAL_DOC_MAX_BYTES) })).toBeGreaterThan(est({ document: 'a'.repeat(4096) }));
+    expect(est({ document: '<'.repeat(4096) })).toBeGreaterThan(est({ document: 'a'.repeat(4096) }));
+  });
+
+  test('each hazard adds a call that carries the document, and claims add a grounding call that carries the conversation', () => {
+    const big = 'a'.repeat(EXTERNAL_DOC_MAX_BYTES);
+    const hazardCall = est({ document: big, hazards: 1 }) - est({ document: big, hazards: 0 });
+    expect(est({ document: big, hazards: 3 }) - est({ document: big, hazards: 0 })).toBeCloseTo(3 * hazardCall, 10);
+    const noClaim = 'Fix shipped.';
+    expect(est({}) - est({ document: noClaim })).toBeLessThan(est({ transcript: transcript.repeat(4) }) - est({ document: noClaim, transcript: transcript.repeat(4) }));
+  });
+
+  test('an empty document costs only the coverage call on a signal conversation, and nothing on a routine one', () => {
+    expect(est({ document: '' })).toBeGreaterThan(0);
+    expect(est({ document: '' })).toBeLessThan(est({ document: 'x' }) / 4);
+    expect(est({ document: '', items: 0 })).toBe(0);
+    expect(externalJudgeEstimateUsd([], 'claude-sonnet-5-5')).toBe(0);
+  });
+
+  test("the judge model's own rates price it, so a pricier judge cannot pass at a cheaper model's figure", () => {
+    expect(est({}, 'claude-opus-5-5')).toBeGreaterThan(est({}, 'claude-sonnet-5-5'));
+    expect(est({}, 'claude-sonnet-5-5')).toBeGreaterThan(est({}, 'claude-haiku-5-5'));
+    expect(() => est({}, 'claude-unpriced-9')).toThrow('no chat price');
+  });
+
+  test('it covers what the ledger reserves for the requests the judges build, including quote- and control-heavy claims', async () => {
+    const tid = 'coding-reflection-01';
+    const g = gold(tid);
+    const conversation = readFileSync(join(ROOT, 'eval/data/transcript-distill-v1/transcripts-txt', `${g.base_ts.slice(0, 10)}-${tid}.txt`), 'utf8');
+    const claimDoc = (filler: string) => Array.from({ length: EXTERNAL_DOC_MAX_CLAIMS }, (_, i) => `The user noted detail ${i} ${filler.repeat(700)} today.`).join('\n');
+    for (const [kind, document] of Object.entries({ plain: claimDoc('a'), quotes: claimDoc('"'), control: claimDoc('\u0001') })) {
+      expect(segmentClaims(document), kind).toHaveLength(EXTERNAL_DOC_MAX_CLAIMS);
+      expect(Buffer.byteLength(document), kind).toBeLessThanOrEqual(EXTERNAL_DOC_MAX_BYTES);
+      for (const model of ['claude-sonnet-5-5', 'gpt-6.1-sol']) {
+        const requests: any[] = [];
+        // A judge that never answers with its tool makes every judge retry once, as the estimate assumes.
+        const openAI = isOpenAIModel(model);
+        const fetchImpl = (async (_url: string, init: { body: string }) => {
+          requests.push(JSON.parse(init.body));
+          return new Response(JSON.stringify({ status: 'completed', output: [], usage: { input_tokens: 1, output_tokens: 1 } }), { status: 200 });
+        }) as unknown as typeof fetch;
+        const client = openAI
+          ? openAIMessagesShim({ apiKey: 'test-key-not-real', fetchImpl })
+          : { messages: { async create(req: any) { requests.push(req); return { model: 'stub', content: [], usage: { input_tokens: 1, output_tokens: 1 } }; } } };
+        const cfg = { model, client };
+        await scoreSalienceCoverage({ lane: 'external', transcript_id: tid, document, items: g.items.map((i: any) => ({ item_id: i.item_id, statement: i.statement })) }, cfg);
+        await scoreUsabilityChecklist({ transcript_id: tid, pages: [{ slug: `external/${tid}`, body: document }], hasGoldVibes: true }, cfg);
+        await confirmDistractorLeaks({ document, hits: g.distractors.map((d: any) => ({ distractor_id: d.distractor_id, statement: d.statement })) }, cfg);
+        for (const h of g.hazards) await scoreGrounding({ label: `hazard:external:${h.hazard_id}`, claims: [h.wrong_claim], transcript: document }, cfg);
+        await scoreGrounding({ label: `external:${tid}`, claims: segmentClaims(document), transcript: conversation }, cfg);
+        await scoreGrounding({ label: `joint:external:${tid}`, claims: g.items.map(() => '\u0001'.repeat(200)), transcript: conversation }, cfg);
+        expect(requests, `${model} ${kind}`).toHaveLength(2 * (5 + g.hazards.length));
+        const url = openAI ? 'https://api.openai.com/v1/responses' : 'https://api.anthropic.com/v1/messages';
+        const reserved = requests.reduce((usd, req) => usd + reservationUsd(priceRequest(url, req)!), 0);
+        const estimate = externalJudgeEstimateUsd([{ document, transcript: conversation, items: g.items.length, distractors: g.distractors.length, hazards: g.hazards.length }], model);
+        expect(estimate, `${model} ${kind}`).toBeGreaterThanOrEqual(reserved);
+        expect(estimate, `${model} ${kind}`).toBeLessThan(reserved * 1.2);
+      }
     }
   });
 });
@@ -358,7 +449,7 @@ interface Run {
   ledgerEntries: unknown[];
 }
 
-function runHermetic(args: string[], opts: { setup?: (dir: string) => void; dreamDocs?: Record<string, string> } = {}): Run {
+function runHermetic(args: string[], opts: { setup?: (dir: string) => void; dreamDocs?: Record<string, string>; env?: Record<string, string> } = {}): Run {
   const dir = scratch('cat35-ext-run-');
   try {
     mkdirSync(join(dir, 'eval/data'), { recursive: true });
@@ -372,7 +463,7 @@ function runHermetic(args: string[], opts: { setup?: (dir: string) => void; drea
     const proc = Bun.spawnSync([process.execPath, '--preload', join(dir, 'preload.ts'), RUNNER, '--json', '--transcripts', TIDS.join(','), ...args], {
       cwd: dir,
       env: { PATH: process.env.PATH, HOME: dir, TMPDIR: dir, ANTHROPIC_API_KEY: 'stub-only', OPENAI_API_KEY: 'stub-only',
-        CAT35_JUDGE_MODEL: 'claude-haiku-4-5-20251001', BRAINBENCH_BUDGET_USD: '5', BRAINBENCH_BUDGET_LEDGER: join(dir, 'ledger.sqlite') },
+        CAT35_JUDGE_MODEL: 'claude-haiku-4-5-20251001', BRAINBENCH_BUDGET_USD: '5', BRAINBENCH_BUDGET_LEDGER: join(dir, 'ledger.sqlite'), ...opts.env },
       stdout: 'pipe', stderr: 'pipe', timeout: 60_000,
     });
     const reports = join(dir, 'eval/reports/cat35-transcript-distill');
@@ -412,6 +503,18 @@ function writeExternalDocs(dir: string, opts: { judgeFails?: boolean } = {}): Re
 }
 
 const EXT = ['--external-lane', 'ext-notes', '--external-dir', 'ext-out'];
+
+/** A document at the reader's limits: 80 claims in just under 64 KiB. */
+const largeDoc = (tid: string) =>
+  Array.from({ length: EXTERNAL_DOC_MAX_CLAIMS }, (_, i) => `The ${tid} notes record detail ${i}${' and more words'.repeat(50)}.`).join('\n');
+
+/** One document at the reader's limits for each of the three transcripts. */
+function writeLargeExternalDocs(dir: string): void {
+  mkdirSync(join(dir, 'ext-out'));
+  for (const tid of TIDS) writeFileSync(join(dir, 'ext-out', `${tid}.md`), largeDoc(tid));
+}
+
+const projection = (r: Run) => Number(/pre-flight: projected worst-case \$([0-9.]+)/.exec(r.stderr)?.[1]);
 
 /** Everything in a receipt that describes the built-in lanes; run-level accounting is left out. */
 function builtinView(rc: any, lane: string): any {
@@ -454,7 +557,7 @@ function builtinWs0View(ws0: any, lane: string): any {
   return c;
 }
 
-describe('hermetic external-lane runs', () => {
+describe.skipIf(!FD_PATHS)('hermetic external-lane runs', () => {
   test('--lanes none scores only the external lane and the receipt records name, directory, hashes and provenance', () => {
     let docs: Record<string, Buffer> = {};
     let extDir = '';
@@ -541,6 +644,24 @@ describe('hermetic external-lane runs', () => {
       expect(r.artifacts).toEqual({});
     }, 90_000);
   }
+
+  test('the pre-flight projection prices the documents read, so a large set trips the hard stop before any judge call', () => {
+    for (const tid of TIDS) {
+      expect(Buffer.byteLength(largeDoc(tid))).toBeLessThanOrEqual(EXTERNAL_DOC_MAX_BYTES);
+      expect(segmentClaims(largeDoc(tid))).toHaveLength(EXTERNAL_DOC_MAX_CLAIMS);
+    }
+    const small = runHermetic(['--lanes', 'none', ...EXT], { setup: (dir) => { writeExternalDocs(dir); } });
+    expect(small.exitCode, small.stderr).toBe(0);
+    const cap = projection(small) * 2;
+    expect(cap).toBeGreaterThan(0);
+    const large = runHermetic(['--lanes', 'none', ...EXT], { setup: writeLargeExternalDocs, env: { CAT35_HARD_STOP_USD: String(cap) } });
+    expect(large.exitCode, large.stderr).toBe(2);
+    expect(large.stderr).toContain(`exceeds CAT35_HARD_STOP_USD=$${cap}`);
+    expect(projection(large)).toBeGreaterThan(cap);
+    expect(large.requests).toEqual([]);
+    expect(large.ledgerEntries).toEqual([]);
+    expect(large.ws0.run_status).toBe('error');
+  }, 120_000);
 
   test('a lane with nothing to grade reports no hallucination or quote-fidelity rate, and the scorecard shows zero claims', () => {
     const r = runHermetic(['--lanes', 'none', ...EXT], {

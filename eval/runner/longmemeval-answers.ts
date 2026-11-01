@@ -7,7 +7,7 @@ import type { SearchResult } from 'gbrain/types';
 import type { ChatResult } from 'gbrain/ai/gateway';
 import { classifyErrorOrigin, type AdapterSpec, type NdjsonRow, type Question, type RunConfigPreimage } from './longmemeval.ts';
 import { DEFAULT_JUDGE_SYSTEM_PROMPT, scoreAnswer, type JudgeEvidence, type JudgeResult } from './judge.ts';
-import { temperatureSent } from './anthropic-request.ts';
+import { assertJudgeThinkingRoom, temperatureSent } from './anthropic-request.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
 import { BENCHMARK_VERSION, loadReceipt, writeReceipt, type Receipt } from './receipt.ts';
 import { regressionPackageHash, resolveRegressionProduct, type ResolvedRegressionProduct } from './situation-recall-provenance.ts';
@@ -139,6 +139,7 @@ export function validateLmeAnswerProfile(p: LmeAnswerProfile): void {
   for (const digest of [p.dataset_sha256, p.rows_sha256, p.source_manifest_sha256, p.retrieval_config_sha256]) if (!/^[a-f0-9]{64}$/.test(digest)) throw new Error('explicit frozen dataset, rows, source, and retrieval-model configuration hashes required');
   for (const limit of [p.answer_max_tokens, p.judge_max_tokens]) if (!Number.isInteger(limit) || limit < 1 || limit > 4096) throw new Error('explicit output limits in [1,4096] required');
   if (p.mode === 'offline') return;
+  assertJudgeThinkingRoom(p.judge_model, p.judge_max_tokens);
   if (!/^(openai|anthropic|google):[^\s:]+$/.test(p.answer_model) || !/^[a-f0-9]{40}$/.test(p.expected_product_sha ?? '')
     || (p.expected_package_sha256 !== undefined && !/^[a-f0-9]{64}$/.test(p.expected_package_sha256))) throw new Error('supported answer provider and exact product identity required');
   for (const cap of [p.answer_budget, p.judge_budget]) if (!cap || cap.kind !== 'isolated-provider-cap' || !cap.approval_id?.trim()

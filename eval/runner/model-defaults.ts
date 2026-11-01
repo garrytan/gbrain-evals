@@ -80,6 +80,10 @@ export const DEFAULT_MODEL_EXCEPTIONS: Readonly<Record<string, DefaultModelExcep
     models: ['anthropic:claude-haiku-4-5-20251001'], kind: 'product-default-mirror',
     reason: "the N2 preregistration measures gbrain's contradiction judge with the model gbrain picks by default (TIER_DEFAULTS.utility); it moves when gbrain's default moves",
   },
+  'harness dev lane BEAM judge': {
+    models: ['gemini:gemini-3.5-flash'], kind: 'pinned-harness',
+    reason: "the pinned agent-memory harness fixes BEAM's rubric judge to gemini-3.5-flash, and harness-cell.ts refuses a BEAM cell whose spec names another judge",
+  },
   'N7 open-loop extractor': {
     models: ['anthropic:claude-sonnet-4-6'], kind: 'product-default-mirror',
     reason: "the N7 extractor-arm preregistration measures gbrain's default chat model (the gateway default); it moves when gbrain's default moves",

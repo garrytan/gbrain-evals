@@ -5,7 +5,11 @@
 set -uo pipefail
 export PATH="$HOME/.bun/bin:$HOME/.local/bin:$PATH"
 L="--budget-ledger ${LEDGER:-.budget/mpw-dev-vm.sqlite}"
-D="bun eval/runner/harness-dev.ts sweep --provider comparator"
+# The October 5 dev phase ran on these models (memory proof wave preregistration); harness-dev.ts defaults to
+# claude-sonnet-5-5 and gpt-6.1-sol since 2026-11-01, so a rerun names them to reproduce that phase.
+ANSWER=gemini:gemini-3.8-flash
+MODELS="--answer $ANSWER --judge gemini:gemini-3.5-flash"
+D="bun eval/runner/harness-dev.ts sweep $MODELS --provider comparator"
 COMBINED='{"max_tokens":3500,"max_chunk_tokens":2000}'
 FACTS='{"max_tokens":8000,"max_chunk_tokens":0}'
 RAW='{"max_tokens":0,"max_chunk_tokens":8000}'
@@ -33,7 +37,7 @@ beam() {  # split units
 }
 agent() {  # dataset split ids-key
   [ -n "$(needed comparator-$1-agentic 8000)" ] && $D --dataset "$1" --split "$2" --question-ids-file "$(ids $3)" --lane combined --mode agentic-rag --base "$COMBINED" --targets 8000 --no-default --sample 20 --off-target-closest --name "comparator-$1-agentic" -- $L
-  [ -n "$(needed comparator-$1-agent default)" ] && $D --dataset "$1" --split "$2" --question-ids-file "$(ids $3)" --lane combined --mode agent --base '{}' --extra '{"serve_model":"gemini:gemini-3.8-flash"}' --targets '' --name "comparator-$1-agent" -- $L
+  [ -n "$(needed comparator-$1-agent default)" ] && $D --dataset "$1" --split "$2" --question-ids-file "$(ids $3)" --lane combined --mode agent --base '{}' --extra "{\"serve_model\":\"$ANSWER\"}" --targets '' --name "comparator-$1-agent" -- $L
 }
 lme() {
   waitfor "--dataset longmemeval"
