@@ -126,7 +126,7 @@ const CREDENTIAL_HEADERS = ['authorization', 'x-api-key', 'api-key', 'openai-org
 export const DEFAULT_MAX_OUTPUT_TOKENS = 32_768;
 /** A provider call may run this long (Bun's own 300-second fetch timeout is off; long reasoning calls exceed it). */
 export const UPSTREAM_DEADLINE_MS = 900_000;
-/** Waits before a request whose connection failed before any response is sent again (A23). */
+/** Waits before a request whose connection failed before any response is sent again (A23). A particle request is sent again only when its connection was refused: a reset may come after Particle billed the generation, so it is answered 504 like a timeout. */
 const TRANSPORT_RETRY_MS = [1000, 4000];
 /** A connection that closed or reset before the provider answered; never a timeout or an abort. */
 const transportFailure = (e: unknown) => {
@@ -641,12 +641,13 @@ export class MeteringProxy {
       catch (e) {
         if (entry) p.lease.settle(entry, null);
         this.charge(key, prov, bounded?.model ?? null, reserved, !!bounded, tag);
-        const again = retries < TRANSPORT_RETRY_MS.length && transportFailure(e);
+        const midFlight = prov === 'particle' && transportFailure(e) && (e as { code?: string }).code !== 'ECONNREFUSED';
+        const again = !midFlight && retries < TRANSPORT_RETRY_MS.length && transportFailure(e);
         this.log({ at, key, provider: prov, route, model, outcome: 'failed', reason: `${(e as Error).message.slice(0, 280)}${again ? ' (sent again)' : ''}`, reserved_usd: reserved, actual_usd: reserved, charged_reservation: !!bounded, ...tagged });
         if (!again) {
           admitted?.release();
           this.observe(key, 'failed');
-          return json((e as Error).name === 'TimeoutError' ? 504 : 502, 'product_error', `upstream failed: ${(e as Error).message}`);
+          return json((e as Error).name === 'TimeoutError' || midFlight ? 504 : 502, 'product_error', `upstream failed: ${(e as Error).message}`);
         }
         await Bun.sleep(TRANSPORT_RETRY_MS[retries++]);
         if (bounded) {

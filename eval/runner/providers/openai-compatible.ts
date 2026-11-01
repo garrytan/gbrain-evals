@@ -235,10 +235,16 @@ function retryAfter(value: string | null | undefined): number | null {
   return Number.isFinite(ms) ? Math.min(Math.max(0, Math.round(ms)), RETRY_AFTER_CAP_MS) : null;
 }
 
-/** Classify a non-2xx answer to a request built here, from its status, body text and headers. */
+/**
+ * Classify a non-2xx answer to a request built here, from its status, body text and headers. A metering proxy's budget
+ * refusal is a budget stop at any status: the lease proxy refuses with 402 when the lease cannot cover a request, 503
+ * when it holds no key for the provider and 403 for a model off the cell's allowlist.
+ */
 export function classifyCompatError(provider: string, status: number, body: string, headers?: Headers | Record<string, string | undefined>): CompatErrorInfo {
   const header = headers instanceof Headers ? headers.get('retry-after') : Object.entries(headers ?? {}).find(([k]) => k.toLowerCase() === 'retry-after')?.[1];
-  const kind: CompatErrorKind = status === 402 ? (PROXY_REFUSAL_MARKERS.some(m => body.includes(m)) ? 'proxy_budget' : 'credit_exhausted')
+  const proxy = PROXY_REFUSAL_MARKERS.some(m => body.includes(m));
+  const kind: CompatErrorKind = proxy && (status === 402 || /"type":"budget"/.test(body)) ? 'proxy_budget'
+    : status === 402 ? 'credit_exhausted'
     : status === 429 ? 'rate_limited'
     : status >= 500 ? 'server'
     : status === 400 && /context[_ ]length|context window|prompt is too long|too many tokens|maximum context|input is too long|exceeds the context/i.test(body) ? 'context_overflow'
@@ -288,7 +294,7 @@ export class ParticleCreditExhausted extends BudgetExceededError {
 /** The error to throw for a classified answer: the credit stop, a proxy's budget stop, or a CompatHttpError. */
 export function compatError(info: CompatErrorInfo): Error {
   if (info.kind === 'credit_exhausted') return new ParticleCreditExhausted(info.body);
-  if (info.kind === 'proxy_budget') return Object.assign(new BudgetExceededError(`budget: the metering proxy refused the ${info.provider} request (HTTP 402): ${info.body.slice(0, 300)}`), { status: 402, body: info.body });
+  if (info.kind === 'proxy_budget') return Object.assign(new BudgetExceededError(`budget: the metering proxy refused the ${info.provider} request (HTTP ${info.status}): ${info.body.slice(0, 300)}`), { status: info.status, body: info.body });
   return new CompatHttpError(info);
 }
 

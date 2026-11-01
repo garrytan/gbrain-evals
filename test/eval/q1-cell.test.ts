@@ -801,29 +801,17 @@ describe('particle-1 readers through Q1\'s lease proxy (plan GST-605 Phase 2)', 
     }
   });
 
-  // Value: protects=the file agent's particle route end to end through Q1's lease proxy (plan Phase 3 item 2, landing with Phase 2's slot environment); fails_when=its requests miss the agent slot, are refused at the reader cap, or an exhausted lease does not stop the cell; why_new=U8 tested proxiedFetch alone until this slot environment existed; seam=none; no_claim=keyless
-  test('file agent: a particle reader runs on the agent slot at /agent/particle/v1, charged to particle; an exhausted lease ends it as a budget stop', async () => {
+  // Value: protects=no Q1 agent arm reads particle through the lease proxy while the agent loop sends a timed-out turn again (issue #253); fails_when=an agent arm with a particle reader reaches the proxy, or the refusal happens after ingest; why_new=lifting U2's lease-proxy refusal for packed and full-context readers would otherwise reopen the agent lane; seam=none; no_claim=the agent loop's own timeout handling
+  test('file agent: a particle reader on an agent arm through the lease proxy is refused before anything is sent, until issue #253', async () => {
     const def = cellDef('baseline-file-agent', 'in-process', [{ id: 'whole-agent', mode: 'agent', readers: [PARTICLE] }], { configuration: 'baseline', ...slice });
-    const ok = leaseProxy(1, submit);
+    const lp = leaseProxy(1, submit);
     try {
       const out = join(tmp, 'particle-agent');
-      const system = new FileAgentSystem({ workDir: join(out, 'trees') });
-      const res = await runCell(def, { out, providerProxy: ok.url, ...quiet }, { corpus, system, judge: scriptedJudge() });
-      expect(res.status).toBe('complete');
-      expect(ok.seen).toHaveLength(2);
-      expect(ok.seen.every(s => s.body.model === 'particle-1' && s.body.max_completion_tokens === 16_000 && s.body.tools.length > 0)).toBe(true);
-      expect(ok.lines().map(l => [l.provider, l.slot, l.route_class, l.output_cap, l.outcome])).toEqual(Array(2).fill(['particle', 'agent', 'agent', 16_000, 'forwarded']));
-      expect(ndjson(join(out, 'cells', def.arms[0].cell_id, 'answers.ndjson')).map(a => [a.outcome, a.stop_reason])).toEqual(Array(2).fill(['scored', 'submitted']));
-      expect(ndjson(system.receiptsPath).map(r => [r.lane, r.model, r.status, r.response_model])).toEqual(Array(2).fill(['q1-file-agent', PARTICLE, 'ok', 'particle-ai/particle-1']));
-    } finally { ok.stop(); }
-    const empty = leaseProxy(0.01, submit);
-    try {
-      const out = join(tmp, 'particle-agent-exhausted');
-      const res = await runCell(def, { out, providerProxy: empty.url, ...quiet }, { corpus, system: new FileAgentSystem({ workDir: join(out, 'trees') }), judge: scriptedJudge() });
-      expect(res.stopped).toContain('metering proxy');
-      expect(empty.seen).toHaveLength(0);
-      expect(empty.lines().map(l => [l.provider, l.slot, l.outcome, l.status])).toEqual([['particle', 'agent', 'refused', 402]]);
-    } finally { empty.stop(); }
+      const err = await runCell(def, { out, providerProxy: lp.url, ...quiet }, { corpus, system: new FileAgentSystem({ workDir: join(out, 'trees') }), judge: scriptedJudge() }).catch(e => e) as ScoreboardError;
+      expect([err.op.code, err.op.message.replace(def.id, '<cell>')]).toEqual(['NOT_YET_AVAILABLE', 'cell <cell> answers with particle:particle-1 on an agent arm through --provider-proxy, and the agent loop still sends a timed-out turn again (issue #253)']);
+      expect(lp.seen).toHaveLength(0);
+      expect(lp.lines()).toEqual([]);
+    } finally { lp.stop(); }
   });
 });
 

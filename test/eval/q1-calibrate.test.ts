@@ -1,6 +1,6 @@
 /** Per-reader token calibration from dev smoke cells (eval/runner/q1/calibrate.ts), on a synthetic cell output. */
 import { afterAll, expect, test } from 'bun:test';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { calibrate, calibrationSamples } from '../../eval/runner/q1/calibrate.ts';
@@ -74,4 +74,16 @@ test('a calibration --out holds one kind of run: a paid run refuses a keyless ru
   mkdirSync(paid, { recursive: true });
   claimOut(paid, false);
   expect(() => claimOut(paid, true)).toThrow('holds a paid calibration run');
+});
+
+// Value: protects=a keyless rehearsal never turns into a paid run; fails_when=--keyless-upstream without an http(s) URL falls through to the paid branch, which hands the proxy this environment's real keys; why_new=calibration-cell.ts holds real keys behind a keyless switch; seam=none; no_claim=the paid branch itself
+test('--keyless-upstream with no URL, an empty one or a non-URL is a usage error before any lease or output', () => {
+  for (const [i, tail] of [['--keyless-upstream'], ['--keyless-upstream', ''], ['--keyless-upstream', 'fake-provider']].entries()) {
+    const out = join(tmp, `keyless-arg-${i}`);
+    const ledger = join(tmp, `keyless-arg-${i}.sqlite`);
+    const r = Bun.spawnSync([process.execPath, 'eval/runner/q1/calibration-cell.ts', '--reader', 'particle:particle-1', '--out', out, '--budget-ledger', ledger, '--run-id', `keyless-arg-${i}`, '--lease-usd', '0.01', ...tail],
+      { cwd: join(import.meta.dir, '..', '..'), env: { PATH: process.env.PATH ?? '' }, stdout: 'pipe', stderr: 'pipe' });
+    expect([r.exitCode, existsSync(out), existsSync(ledger)]).toEqual([2, false, false]);
+    expect(r.stderr.toString()).toContain('--keyless-upstream needs the fake upstream');
+  }
 });

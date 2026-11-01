@@ -128,7 +128,8 @@ only. In memory-qa, a failed attempt the provider answered with a Retry-After al
 before the next attempt, capped at 120 seconds, absent when the provider sent none or no attempt followed. In
 memory-qa and Q1, a Particle attempt waits up to the metering proxies' 900-second upstream deadline, and one that
 times out is the last attempt, because Particle may have billed it; a Q1 cell records that answer as a final
-`reader_error` and does not ask the question again. A truncated response keeps its own content as
+`reader_error` and does not ask the question again. The lease proxy answers a particle request whose connection was
+reset with a 504 for the same reason, instead of sending it again. A truncated response keeps its own content as
 `answer`, even when that is empty: the reasoning text (Particle's `reasoning_content`) never fills an answer.
 
 ## How a memory-qa row uses it
@@ -189,6 +190,7 @@ and a credit 402 leaves its record and stops the run. The second command checks 
 `cat40-particle-loop` checks one record per attempt for every provider, with its turn and request fields.
 `cat40-particle-ladder` runs the ladder against a fake Particle server on loopback and checks `attempts.ndjson` and
 its rerun numbering. `file-agent` checks `receipts.ndjson`, keyed by answer id, and the particle full-context
-reading's attempts and truncation. The third command runs Q1's packed, full-context and file-agent cells with
-particle-1 through the real lease proxy in front of a fake Particle, and checks each answer record's `attempts`, the
-truncation count and the attempt a lease refusal leaves. None of these files makes a provider call.
+reading's attempts and truncation. The third command runs Q1's packed and full-context cells with particle-1 through
+the real lease proxy in front of a fake Particle, and checks each answer record's `attempts`, the truncation count and
+the attempt a lease refusal leaves; a file-agent cell with particle-1 behind the proxy is refused until issue #253 is
+fixed. None of these files makes a provider call.

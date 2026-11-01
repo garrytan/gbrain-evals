@@ -7,13 +7,15 @@
  *     [--cell s3-smoke.baseline-hybrid.baseline] [--keyless-upstream http://127.0.0.1:<fake_provider.py port>]
  *
  * The proxy holds the provider keys from this environment and Q1's route caps and classes, and spends the lease; the
- * cell sees dummy keys. `--keyless-upstream` sends every provider to eval/systems/_shim/fake_provider.py instead
- * (Particle under its `/particle` prefix) with placeholder keys, for the $0 run before a paid one. The chat and
+ * cell sees this run's cell token as its keys, and the proxy answers only that token and this run's control token. `--keyless-upstream` sends every provider to eval/systems/_shim/fake_provider.py instead
+ * (Particle under its `/particle` prefix) with placeholder keys, for the $0 run before a paid one; the flag without
+ * an http(s) URL is a usage error, never a paid run. The chat and
  * embedding caches live in --out, and `upstream.json` there records which kind of run it holds, so a paid run refuses
  * a keyless run's --out (it would resume from the fake answers) and the reverse. Frontier judges are
  * off; the canonical judge runs, as in any cell. `calibration.json` in --out holds the reader's factor and largest
  * per-pack error under its table encoding and under the other tiktoken encoding, and the lease's dollars.
  */
+import { randomUUID } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { BudgetRun } from '../budget-ledger.ts';
@@ -49,17 +51,23 @@ if (import.meta.main) {
     console.error('usage: bun eval/runner/q1/calibration-cell.ts --reader <provider:model> --out <dir> --budget-ledger <file> --run-id <id> --lease-usd <n> [--cell <dev smoke cell>] [--keyless-upstream <url>]');
     process.exit(2);
   }
-  const keyless = one('--keyless-upstream')?.replace(/\/$/, '') ?? null;
+  const keylessArg = argv.includes('--keyless-upstream') ? one('--keyless-upstream') ?? '' : null;
+  if (keylessArg !== null && !/^https?:\/\/\S+$/.test(keylessArg)) {
+    console.error(`--keyless-upstream needs the fake upstream's http(s) URL, got ${JSON.stringify(keylessArg)}; without one the run would spend real keys`);
+    process.exit(2);
+  }
+  const keyless = keylessArg?.replace(/\/$/, '') ?? null;
   const out = resolve(outArg);
   mkdirSync(out, { recursive: true });
   claimOut(out, !!keyless);
   const def = calibrationCell(findCell(one('--cell') ?? 's3-smoke.baseline-hybrid.baseline'), reader);
-  Object.assign(process.env, { GBRAIN_EVALS_QA_CACHE: join(out, 'qa-cache'), GBRAIN_EVALS_EMBED_CACHE: join(out, 'embed-cache') });
   const placeholder = 'keyless-not-a-provider-key';
   const keys = keyless ? { OPENAI_API_KEY: placeholder, ANTHROPIC_API_KEY: placeholder, VOYAGE_API_KEY: placeholder, PARTICLE_API_KEY: placeholder } : { ...process.env };
+  const [cellToken, controlToken] = [randomUUID(), randomUUID()];
+  Object.assign(process.env, { GBRAIN_EVALS_QA_CACHE: join(out, 'qa-cache'), GBRAIN_EVALS_EMBED_CACHE: join(out, 'embed-cache'), SHOOTOUT_CELL_TOKEN: cellToken, SHOOTOUT_PROXY_CONTROL_TOKEN: controlToken });
   const lease = BudgetRun.openLease({ runId, leaseUsd, ledgerPath: resolve(ledger), runner: 'q1-calibration-cell' });
   const usageLog = join(out, 'usage.ndjson');
-  const proxy = new MeteringProxy({ ...(keyless ? { upstream: { openai: keyless, anthropic: keyless, voyage: keyless, particle: `${keyless}/particle` } } : {}),
+  const proxy = new MeteringProxy({ ...(keyless ? { upstream: { openai: keyless, anthropic: keyless, voyage: keyless, particle: `${keyless}/particle` } } : {}), cellToken, controlToken,
     policy: { lease, usageLog, env: keys, routeCaps: { caps: { ...DEFAULT_ROUTE_CAPS }, slots: { ...DEFAULT_ROUTE_CLASSES }, defaultClass: 'extraction' } } });
   proxy.start();
   try {

@@ -385,6 +385,43 @@ describe('particle-1 through the lease proxy (plan GST-605 Phase 2)', () => {
     } finally { proxy.stop(); }
   });
 
+  // Value: protects=every lease-proxy budget refusal stops a particle reader at once (issue #254); fails_when=the 503 for a missing PARTICLE_API_KEY or the 403 for a model off the allowlist reads as a retryable server error or a client error; why_new=a compat budget stop is read by its error name, which only a 402 got; seam=none; no_claim=the harness proxy's refusals
+  test('the lease proxy\'s 503 for a missing key and 403 for a model off the allowlist are budget stops; its other refusals are not', async () => {
+    const { classifyCompatError, compatError } = await import('../../eval/runner/providers/openai-compatible.ts');
+    const missing = start(upstream(particleReply).fetchImpl, { ...harness, env: FAKE_ENV });
+    const offList = start(upstream(particleReply).fetchImpl, { ...harness, allowModels: ['openai:gpt-6.1-sol'] });
+    try {
+      const answers = [await missing.post('/harness/particle/v1/chat/completions', particleChat()), await offList.post('/harness/particle/v1/chat/completions', particleChat()), await offList.post('/harness/particle/v1/responses', particleChat())];
+      const read = await Promise.all(answers.map(async res => {
+        const info = classifyCompatError('particle', res.status, await res.text());
+        const e = compatError(info) as Error & { status?: number };
+        return [res.status, info.kind, e.name, e.status];
+      }));
+      expect(read).toEqual([[503, 'proxy_budget', 'BudgetExceededError', 503], [403, 'proxy_budget', 'BudgetExceededError', 403], [403, 'client', 'CompatHttpError', 403]]);
+    } finally { missing.proxy.stop(); offList.proxy.stop(); }
+  });
+
+  // Value: protects=a particle request whose connection dropped after it reached Particle is never sent again (issue #250's billing risk); fails_when=the proxy's transport retry resends a reset particle request, or answers it with a 502 a client retries; why_new=particle joins the lease proxy's A23 transport retry; seam=none; no_claim=whether Particle bills a dropped request
+  test('a reset particle connection is answered 504 and sent once; a refused one is sent again, like any provider', async () => {
+    const { compatTimedOut, classifyCompatError, CompatHttpError } = await import('../../eval/runner/providers/openai-compatible.ts');
+    const reset = upstream(() => { throw Object.assign(new Error('The socket connection was closed unexpectedly.'), { code: 'ECONNRESET' }); });
+    const one = start(reset.fetchImpl, harness);
+    try {
+      const res = await one.post('/harness/particle/v1/chat/completions', particleChat());
+      expect(res.status).toBe(504);
+      expect(compatTimedOut(new CompatHttpError(classifyCompatError('particle', res.status, await res.text())))).toBe(true);
+      expect(reset.seen).toHaveLength(1);
+      expect(one.lines().map(l => [l.outcome, l.charged_reservation])).toEqual([['failed', true]]);
+    } finally { one.proxy.stop(); }
+    let calls = 0;
+    const refused = upstream(() => { if (++calls === 1) throw Object.assign(new Error('Unable to connect. Is the computer able to access the url?'), { code: 'ECONNREFUSED' }); return particleReply(); });
+    const two = start(refused.fetchImpl, harness);
+    try {
+      expect((await two.post('/harness/particle/v1/chat/completions', particleChat())).status).toBe(200);
+      expect(refused.seen).toHaveLength(2);
+    } finally { two.proxy.stop(); }
+  });
+
   test('the CLI takes a per-model route cap and a particle upstream', () => {
     const a = parseProxyArgs(['--budget-ledger', 'x', '--lease-usd', '1', '--run-id', 'r', '--route-caps', 'extraction=4096,reader=2048,reader@particle:particle-1=16000,judge=2048', '--route-class', 'harness=reader,judge=judge', '--upstream', 'particle=http://127.0.0.1:9']);
     expect(a.routeCaps!.caps).toEqual({ extraction: 4096, reader: 2048, 'reader@particle:particle-1': 16000, judge: 2048 });

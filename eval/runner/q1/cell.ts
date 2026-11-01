@@ -571,6 +571,9 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
   const compatJudges = [...new Set([instrument.canonical_judge, ...(opts.frontier === false ? [] : arms.flatMap(a => a.frontier?.judges ?? []))])].filter(isCompatModel);
   if (compatJudges.length) throw refuse({ code: 'USAGE', message: `cell ${def.id} judges with ${compatJudges.join(', ')}, and Q1 never judges with an OpenAI-compatible model`,
     why: 'particle-1 reads but never judges a counted cell (plan GST-605); a judge is the instrument every reader is scored by, so it stays one the preregistration names', fix: { next: 'report', user_message: `judge ${def.id} with its instrument's canonical judge, and list frontier judges from the preregistration only` } });
+  const agentCompat = opts.providerProxy ? [...new Set(arms.filter(a => a.mode === 'agent').flatMap(a => a.readers))].filter(isCompatModel) : [];
+  if (agentCompat.length) throw refuse({ code: 'NOT_YET_AVAILABLE', message: `cell ${def.id} answers with ${agentCompat.join(', ')} on an agent arm through --provider-proxy, and the agent loop still sends a timed-out turn again (issue #253)`,
+    why: "the agent loop sends each turn with Bun's 300-second fetch timeout and retries a 504, and the cell asks a timed-out question again, while the lease proxy keeps the upstream call open and Particle may bill every abandoned turn (issue #250's pattern)", fix: { next: 'report', user_message: `read ${def.id}'s particle reader on packed or full-context arms until issue #253 is fixed` } });
 
   // Custody before anything reads the corpus.
   const custody = !deps.corpus && needsCustody(def);
