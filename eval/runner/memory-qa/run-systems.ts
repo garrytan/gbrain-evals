@@ -78,7 +78,7 @@ import { homedir } from 'node:os';
 import { createHash } from 'node:crypto';
 import { budgetOptionsFrom, startPaidRun, receiptCost, type BudgetRun, type PaidRequestGuard } from '../budget-ledger.ts';
 import { requirePaidArm } from '../paid-arm.ts';
-import { gbrainSpecFrom, importGbrain, overlaySummary, productIdentityFor, resolveGbrainUnderTest, type GbrainUnderTest } from '../gbrain-under-test.ts';
+import { gbrainSpecFrom, HELD_GBRAIN_DEFAULTS, importGbrain, overlaySummary, productIdentityFor, resolveGbrainUnderTest, type GbrainUnderTest } from '../gbrain-under-test.ts';
 import { EmbeddingCache, makeCachingTransport } from '../longmemeval-cache.ts';
 import { ndcgAtK, recallAllAtK, recallAnyAtK, uniqueInOrder, percentile } from '../metrics.ts';
 import { loadCorpus, occurrenceId, sha256, type Corpus, type MemoryQuestion, type Session } from './corpus.ts';
@@ -217,7 +217,7 @@ export interface MemoryQaRow {
   query_time_source?: 'question' | 'last-session' | 'none';
 }
 
-const DEFAULT_PINS: Record<string, string> = { 'search.mode': 'balanced', 'search.reranker.enabled': 'false', 'search.autocut': 'false' };
+const DEFAULT_PINS: Record<string, string> = { 'search.mode': 'balanced', 'search.reranker.enabled': 'false', 'search.autocut': 'false', ...HELD_GBRAIN_DEFAULTS };
 /** Planning estimate for one session through the conversation-facts extractor (product default model). */
 const FACTS_USD_PER_SESSION = 0.03;
 
@@ -544,7 +544,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
   const system: MemorySystem = prior ? new ReplaySystem(prior.capabilities)
     : legacy ? new GbrainLegacySystem(mods!, { ...a.pins, ...a.config }, identity, { topK: a.topK, as: extractFacts ? 'conversation' : 'note', rerankPinned })
     : a.system === 'gbrain-shootout' ? new GbrainShootoutSystem(mods!, a.config, identity)
-    : a.system === 'gbrain-query' ? new GbrainQuerySystem(mods!, connectorMods!, a.config, identity, { frozenFrom: a.frozenFrom, rerankExpected: (a.config['search.reranker.enabled'] ?? 'true') !== 'false' })
+    : a.system === 'gbrain-query' ? new GbrainQuerySystem(mods!, connectorMods!, { ...Object.fromEntries(Object.keys(HELD_GBRAIN_DEFAULTS).map(k => [k, a.pins[k] ?? HELD_GBRAIN_DEFAULTS[k]])), ...a.config }, identity, { frozenFrom: a.frozenFrom, rerankExpected: (a.config['search.reranker.enabled'] ?? 'true') !== 'false' })
     : a.system === 'fake' ? new FakeMemorySystem()
     : a.system === 'full-context' ? new FullContextSystem()
     : a.system === 'no-memory' ? new NoMemorySystem()

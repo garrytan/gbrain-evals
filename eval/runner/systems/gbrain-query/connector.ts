@@ -98,22 +98,55 @@ export interface ConnectorModules {
   knownConfigKeys: readonly string[];
   decideConfigKeys: readonly string[];
   semanticResultCacheAvailable: () => boolean;
+  /** gbrain's inverse of its chat quote fence and the label the fence names (src/core/search/transcript-quote.ts, v0.60.521.0 and later); null in builds without them. */
+  unquote: { unquoteTranscriptText: (text: string, label: string) => string; quoteLabel: (row: DeliveredRow) => string | null } | null;
 }
 
 export async function loadConnectorModules(load: <T>(rel: string) => Promise<T>): Promise<ConnectorModules> {
-  const [ops, ev, cfg, dcfg, qc] = await Promise.all([
+  const [ops, ev, cfg, dcfg, qc, tq] = await Promise.all([
     load<{ operations: ConnectorModules['operations'] }>('src/core/operations.ts'),
     load<{ assembleEvidenceForHits: ConnectorModules['assembleEvidenceForHits']; evidenceFingerprint: ConnectorModules['evidenceFingerprint'] }>('src/core/search/evidence-delivery.ts'),
     load<{ KNOWN_CONFIG_KEYS: readonly string[] }>('src/core/config.ts'),
     load<{ DECIDE_CONFIG_KEYS: readonly string[] }>('src/core/ai/decide/config.ts'),
     load<{ semanticResultCacheAvailable: () => boolean }>('src/core/search/query-cache.ts'),
+    load<Partial<NonNullable<ConnectorModules['unquote']>>>('src/core/search/transcript-quote.ts').catch(() => null),
   ]);
   return { operations: ops.operations, assembleEvidenceForHits: ev.assembleEvidenceForHits, evidenceFingerprint: ev.evidenceFingerprint,
-    knownConfigKeys: cfg.KNOWN_CONFIG_KEYS, decideConfigKeys: dcfg.DECIDE_CONFIG_KEYS, semanticResultCacheAvailable: qc.semanticResultCacheAvailable };
+    knownConfigKeys: cfg.KNOWN_CONFIG_KEYS, decideConfigKeys: dcfg.DECIDE_CONFIG_KEYS, semanticResultCacheAvailable: qc.semanticResultCacheAvailable,
+    unquote: tq?.unquoteTranscriptText && tq.quoteLabel ? { unquoteTranscriptText: tq.unquoteTranscriptText, quoteLabel: tq.quoteLabel } : null };
+}
+
+/**
+ * The rows with their stored chat text. Since gbrain v0.60.507.0 `query` and `assembleEvidenceForHits` return a chat
+ * page's text inside a quote fence (`quoted: "transcript"`), and no setting turns that off. The connector hands on the
+ * text inside the fence, unwrapped by the build's own `unquoteTranscriptText`, so a frozen list re-resolves against the
+ * stored chunks and readers get the text they got before; `quoted` stays on the row, delivered match spans move back
+ * onto the unwrapped text (a NUL marks each offset, which stored text cannot hold), and the delivery record counts
+ * those blocks. A token budget still counts the fence, and a tool-call block gbrain summarized stays summarized (a
+ * frozen row's text then differs from its stored chunk, which the re-resolution check refuses). A fenced row this
+ * build cannot unwrap throws.
+ */
+export function storedText(rows: DeliveredRow[], unquote: ConnectorModules['unquote']): DeliveredRow[] {
+  return rows.map(r => {
+    if (r.quoted !== 'transcript') return r;
+    const label = unquote?.quoteLabel(r);
+    if (!unquote || !label) throw new Error(`gbrain returned ${r.slug} quote-fenced, and this build exports no unquoteTranscriptText or labels the row with none (gbrain v0.60.507.0 to v0.60.520.0 fence without it); measure another build`);
+    const chunk_text = unquote.unquoteTranscriptText(r.chunk_text, label);
+    if (chunk_text === r.chunk_text) throw new Error(`${r.slug} is marked quoted but its text carries no fence naming ${label}`);
+    const spans = r.delivered?.match_spans;
+    if (!spans?.length) return { ...r, chunk_text };
+    const at = (p: number) => {
+      const marked = unquote.unquoteTranscriptText(`${r.chunk_text.slice(0, p)}\u0000${r.chunk_text.slice(p)}`, label);
+      const i = marked.indexOf('\u0000');
+      if (i < 0 || marked.slice(0, i) + marked.slice(i + 1) !== chunk_text) throw new Error(`${r.slug}: delivered match span offset ${p} falls on the quote fence, not the quoted text`);
+      return i;
+    };
+    return { ...r, chunk_text, delivered: { ...r.delivered!, match_spans: spans.map(s => ({ ...s, start: at(s.start), end: at(s.end) })) } };
+  });
 }
 
 export interface DeliveredEvidence { unit: string; chunk_ids: number[]; match_spans: Array<{ chunk_id: number; start: number; end: number }>; tokens: number; truncated: boolean; fallback_reason?: string; reason?: string; unmapped_chunk_ids?: number[] }
-export interface DeliveredRow { slug: string; source_id?: string; title?: string; type?: string | null; chunk_text: string; chunk_id: number; chunk_index?: number; effective_date?: string | Date | null; rerank_score?: number; score?: number; delivered?: DeliveredEvidence }
+export interface DeliveredRow { slug: string; source_id?: string; title?: string; type?: string | null; chunk_text: string; chunk_id: number; chunk_index?: number; effective_date?: string | Date | null; rerank_score?: number; score?: number; delivered?: DeliveredEvidence; quoted?: string }
 export interface DeliveryMeta { requested_unit: string; applied_unit: string; return_window: number; budget_tokens: number; budget_used: number; tokens_delivered: number; tokenizer: string; blocks: number; dropped: number; dropped_reasons: Record<string, number>; fallbacks: string[]; budget_clamped?: unknown; auto_packing?: string }
 
 /** A pinned key's check: registered in gbrain and read back equal from the brain the handler reads. */
@@ -140,6 +173,8 @@ export interface DeliveryRecord {
   spilled_blocks: number;
   spilled_pages: number;
   passthrough_blocks: number;
+  /** Blocks gbrain returned quote-fenced, handed on unwrapped (`storedText`). */
+  quoted_blocks: number;
   dropped: number;
   dropped_reasons: Record<string, number>;
   fallbacks: string[];
@@ -187,6 +222,7 @@ export function deliveryRecord(source: DeliveryRecord['source'], request: Record
     overrun_tokens: used !== null && budget !== null ? Math.max(0, used - budget) : 0, over_budget: used !== null && budget !== null && used > budget,
     blocks: rows.length, units: count(per_block.map(b => b.unit)), reasons: count(per_block.map(b => b.reason)),
     spilled_blocks: spilled.length, spilled_pages: new Set(spilled.map(b => b.slug)).size, passthrough_blocks: per_block.filter(b => b.reason === 'not_conversation').length,
+    quoted_blocks: rows.filter(r => r.quoted === 'transcript').length,
     dropped: meta?.dropped ?? 0, dropped_reasons: meta?.dropped_reasons ?? {}, fallbacks: meta?.fallbacks ?? [], unresolved: extra.unresolved ?? 0,
     hit_count: extra.hits.length, distinct_sessions_in: new Set(extra.hits.map(h => h.slug)).size, distinct_sessions_out: new Set(rows.map(r => r.slug)).size,
     fingerprint, evidence_chars: bytes.chars, evidence_utf8_bytes: bytes.utf8_bytes, evidence_sha256: bytes.sha256, per_block,
@@ -308,7 +344,8 @@ export class GbrainQueryConnector {
     this.lastMeta = null;
     const t0 = performance.now();
     const rows = await op.handler(this.ctx, params) as DeliveredRow[];
-    return { rows, meta: this.lastMeta, service_ms: performance.now() - t0 };
+    const service_ms = performance.now() - t0;
+    return { rows: storedText(rows, this.mods.unquote), meta: this.lastMeta, service_ms };
   }
 
   /** The frozen hit list. Refuses when the response carries a delivery (the plan was not null) or the request named a budget. */
@@ -328,8 +365,9 @@ export class GbrainQueryConnector {
     const frozen: FrozenHit[] = hits.map(h => ({ source_id: h.source_id, slug: h.slug, chunk_id: h.chunk_id }));
     const request = assembleRequest(frozen, unit, budget, packing);
     const out = await this.mods.assembleEvidenceForHits(this.engine, request);
-    const record = deliveryRecord('assemble', request, out.results, out.delivery, this.mods.evidenceFingerprint(out.results), { unresolved: out.unresolved.length, hits });
-    return { record, blocks: toBlocks(out.results), rows: out.results };
+    const results = storedText(out.results, this.mods.unquote);
+    const record = deliveryRecord('assemble', request, results, out.delivery, this.mods.evidenceFingerprint(results), { unresolved: out.unresolved.length, hits });
+    return { record, blocks: toBlocks(results), rows: results };
   }
 
   /** A live `query` call under a named wire request, recorded the same way as an assembled delivery. */

@@ -52,6 +52,7 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { renderSessionPage } from '../../memory-qa/corpus.ts';
+import { HELD_GBRAIN_DEFAULTS } from '../../gbrain-under-test.ts';
 import { GbrainBrain, sourceOfSlug, type GbrainModules } from '../gbrain.ts';
 import { SystemError, type CapabilityRecord, type Item, type PublicQuestion, type RetrievalPolicy, type RetrieveResult, type SessionInput } from '../types.ts';
 import { AUTO_PACKINGS, CONNECTOR_VERSION, GbrainQueryConnector, parity, QUERY_PATH_PINS, type AutoPacking, type ConnectorModules, type Delivery, type FrozenRow, type PinCheck, type ReturnUnit } from './connector.ts';
@@ -124,7 +125,7 @@ export class GbrainQuerySystem extends GbrainBrain {
   readonly fidelity = { embedding_deferred_pages: 0, rerank_missing_queries: 0, reranked_queries: 0 };
 
   constructor(mods: GbrainModules, private conn: ConnectorModules, settings: Record<string, string>, identity: Record<string, unknown>, private opts: { frozenFrom?: string | null; rerankExpected: boolean }) {
-    super(mods, { ...settings, ...QUERY_PATH_PINS }, identity);
+    super(mods, { ...HELD_GBRAIN_DEFAULTS, ...settings, ...QUERY_PATH_PINS }, identity);
   }
 
   protected async opened(engine: any): Promise<void> {
@@ -136,13 +137,13 @@ export class GbrainQuerySystem extends GbrainBrain {
   async capabilities(): Promise<CapabilityRecord> {
     return {
       system: 'gbrain-query', protocol: 1, versions: { package: String(this.identity.version ?? 'unknown'), commit: String(this.identity.commit ?? 'unknown'), image: null, lock_sha256: null, vendor_benchmark_code: null, connector: CONNECTOR_VERSION },
-      configs: { common: { model_roles: { embedder: 'openai:text-embedding-3-large', dims: 1536 }, notes: 'gbrain balanced defaults plus the query-path pins' } },
+      configs: { common: { model_roles: { embedder: 'openai:text-embedding-3-large', dims: 1536 }, notes: 'gbrain balanced defaults, the held defaults and the query-path pins; quote-fenced chat text unwrapped' } },
       time: 'native', provenance: { status: 'exact', mechanism: 'each block cites its page; one page per session' }, delete: 'native',
       readiness: 'synchronous: import returns after the page and its vectors are written', namespace: 'one in-memory PGLite brain per namespace (truncated between namespaces)',
       parallel_namespaces: false, streaming: 'disabled', telemetry_off: [], agent_surface: { kind: 'none' },
       retrieval_policies: { 'fixed-evidence': { settings: { limit: QUERY_LIMIT } }, 'vendor-default': { settings: { limit: QUERY_LIMIT } } },
-      query_path_pins: { ...QUERY_PATH_PINS }, measured_path: 'trusted local caller (remote: false); remote lean rows and safe-chunk rules are not exercised',
-      deviations_from_vendor_code: ['expand: false (agent default true), matching the shootout retrieval'],
+      query_path_pins: { ...QUERY_PATH_PINS }, held_defaults: Object.fromEntries(Object.keys(HELD_GBRAIN_DEFAULTS).map(k => [k, this.settings[k]])), measured_path: 'trusted local caller (remote: false); remote lean rows and safe-chunk rules are not exercised',
+      deviations_from_vendor_code: ['expand: false (agent default true), matching the shootout retrieval', 'search.query_facts_block, search.saved_facts_supersede and search.remote_page_cap held at their values before gbrain v0.60.491.0 (held_defaults)', 'quote-fenced chat text (gbrain v0.60.507.0 and later) handed on unwrapped'],
     };
   }
 

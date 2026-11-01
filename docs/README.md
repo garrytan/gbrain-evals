@@ -1,7 +1,7 @@
 # Learn, evaluate, and extend gbrain
 
 This index lists every published report by the question it answers. It describes the repository as it stands:
-gbrain-evals v0.10.138, with gbrain master `7a6bdd357` (v0.60.454.0) as the product under test. Results measured at
+gbrain-evals v0.10.139, with gbrain master `3ec766c40` (v0.60.531.0) as the product under test. Results measured at
 other gbrain commits name that commit in their report. Everything above [Changelog](#changelog) is current; the
 changelog at the bottom records how this index changed.
 
@@ -25,7 +25,7 @@ Start with [what gbrain does today](../README.md), then follow the route that fi
 | What does gbrain's `query` hand a reader at 8,000 tokens, and which lever closes the open-source comparison's gap? | [October 8 budgeted delivery E1](benchmarks/2026-10-08-gbrain-budgeted-delivery-e1.md) ([preregistration](benchmarks/2026-10-08-gbrain-budgeted-delivery-e1-preregistration.md); development, gbrain `c5fb0201`): a date line on each chunk lifts LoCoMo temporal questions from 28 to 78 of 100, so most of the comparison's LoCoMo gap was the adapter; at 8,000 tokens `auto` on 25 hits overruns every budget and adds little, while the same delivery on the first five hits reaches 82% on the LongMemEval-S slice with Sonnet 5.5, level with whole sessions; saved facts show no headroom |
 | How should gbrain pack an explicit token budget, and which packing goes to the held-out test? | [October 9 budgeted delivery E2](benchmarks/2026-10-09-gbrain-budgeted-delivery-e2.md) ([preregistration](benchmarks/2026-10-09-gbrain-budgeted-delivery-e2-preregistration.md); development, gbrain `ca2c447bd`): on all 500 LongMemEval-S questions with Sonnet 5.5 at 8,000 tokens, handing over the top conversations whole (`depth_first`) answers 79.4% against 69.0% for today's uncapped `auto` (+10.4, interval +6.4 to +14.4), with the same gain under Opus 5.5 and gpt-6.1-sol; enforcing the budget without changing the order (`cap_only`) does not help; `depth_first` goes to H1, though it trails `breadth_capped` by 10.5 points on multi-session questions |
 | Does packing for depth beat the shipped cap on held-out questions? | [October 10 budgeted delivery H1](benchmarks/2026-10-10-gbrain-budgeted-delivery-h1.md) ([preregistration](benchmarks/2026-10-10-gbrain-budgeted-delivery-h1-preregistration.md); sealed confirmation v2, gbrain `8a3eedeac`): no. With an explicit 5,500-token budget, `depth_first` answered 122 of 200 held-out questions against 145 for the shipped `cap_only` (−11.5 points, −18.0 to −4.5), losing multi-session questions 15 to 40 of 80 under all three readers, so `cap_only` stays the explicit-budget default |
-| Does gbrain's 8k conversion wave (budget unit, evidence titles, facts block) answer more held-out questions at an 8,000-token reader budget? | [October 26 8k conversion wave](benchmarks/2026-10-26-gbrain-8k-conversion.md) ([preregistration](benchmarks/2026-10-26-gbrain-8k-conversion-preregistration.md); sealed confirmation v2, gbrain `cf3ec433`, v0.60.461.0): the facts block (`search.query_facts_block`) answered 183 of 200 against 151 for the control (+16.0 points, 95% interval +11.0 to +21.5, verdict `pass`), gaining on multi-session (69 against 45 of 80) and temporal (34 against 26 of 40) questions; the budget-unit flag (`search.query_budget_unit = auto`) and the evidence-titles flag (`search.evidence_titles`) are `inconclusive`; all three flags stay default-off, and flipping the facts block on is the owner's call |
+| Does gbrain's 8k conversion wave (budget unit, evidence titles, facts block) answer more held-out questions at an 8,000-token reader budget? | [October 26 8k conversion wave](benchmarks/2026-10-26-gbrain-8k-conversion.md) ([preregistration](benchmarks/2026-10-26-gbrain-8k-conversion-preregistration.md); sealed confirmation v2, gbrain `cf3ec433`, v0.60.461.0): the facts block (`search.query_facts_block`) answered 183 of 200 against 151 for the control (+16.0 points, 95% interval +11.0 to +21.5, verdict `pass`), gaining on multi-session (69 against 45 of 80) and temporal (34 against 26 of 40) questions; the budget-unit flag (`search.query_budget_unit = auto`) and the evidence-titles flag (`search.evidence_titles`) are `inconclusive`; both stay default-off, while gbrain turned the facts block on by default in v0.60.491.0 and this repository's memory-qa harness holds it off for comparable arms |
 | What is the plan for improving gbrain and proving it? | [September 28 plan and audits](plans/2026-09-28-gbrain-10x/README.md) |
 | What was the October plan for fewer wrong answers, fewer tokens and cheaper, bigger brains, and which reports did it produce? | [October 7 10x memory advantage plan and audits](plans/2026-10-07-10x-memory-advantage/README.md) (approved 2026-10-08, last updated 2026-10-17, superseded 2026-10-29; kept as the record that reports from its waves 0 to 5 cite) |
 | What are the cheapest retrieval, latency and cost wins left, and how will each be checked? | [October 11 low-hanging fruit plan](plans/2026-10-11-low-hanging-fruit/PLAN.md) (approved 2026-10-12; closed 2026-10-13: items 0, 1b and 2 to 5 shipped, the `balanced` default flip did not) |
@@ -231,6 +231,19 @@ and [repository writing guide](../CLAUDE.md). The
 procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
+
+### 2026-10-31: Re-pin to gbrain `3ec766c40`; opening names v0.10.139
+
+The opening names v0.10.139 (was v0.10.138) and gbrain master `3ec766c40` (v0.60.531.0) as the product under test (was
+`7a6bdd357`, v0.60.454.0). For comparable memory-qa arms, v0.10.139 holds three of gbrain's four new read defaults at
+their old values and unwraps the fourth, quote-fenced chat text, on the `gbrain-query` path (see the
+[README](../README.md)), adds the Cat 35 external lane ([contributor guide](../eval/CONTRIBUTING.md#score-another-systems-cat-35-documents)),
+lands the post hoc LongMemEval-S facts-block and shipped-build equivalence checks
+([sealed results](benchmarks/2026-10-09-memory-proof-wave-sealed-results.md)), and carries current Claude models in
+the shared judge and the particle-1 provider module (see [CHANGELOG.md](../CHANGELOG.md)).
+`scripts/verify-documentation-refresh.py` now checks the opening's pin against `package.json`. The 8k conversion wave
+row said all three flags stay default-off; it now says gbrain turned the facts block on by default in v0.60.491.0, which
+the new pin includes, and that the memory-qa harness holds it off. No result in any row changed.
 
 ### 2026-10-31: Opening names v0.10.138
 

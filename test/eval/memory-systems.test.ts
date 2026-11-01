@@ -221,6 +221,12 @@ describe('canonical outcomes', () => {
 describe('memory-qa with a MemorySystem', () => {
   const args = (out: string, ...extra: string[]) => parseRunArgs(['--benchmark', 'fixture', '--output', out, ...extra]);
 
+  test('gbrain-query runs a --pin override of a held default, and its capability record names the value it ran', async () => {
+    const { receipt } = await runArm(args(join(tmp, 'gq-pin'), '--system', 'gbrain-query', '--pin', 'search.query_facts_block=true')) as { receipt: any };
+    expect(receipt.search_pins['search.query_facts_block']).toBe('true');
+    expect(receipt.system.capabilities.held_defaults).toEqual({ 'search.query_facts_block': 'true', 'search.saved_facts_supersede': 'false', 'search.remote_page_cap': '0' });
+  }, 60_000);
+
   test('the TypeScript fake runs the fixture end to end with canonical files', async () => {
     const out = join(tmp, 'fake-run');
     const { receipt, rows } = await runArm(args(out, '--system', 'fake'));
@@ -426,6 +432,18 @@ describe('memory-qa with a MemorySystem', () => {
     await expect(runArm(args(join(tmp, 'y'), '--system', 'fake', '--facts', 'conversation'))).rejects.toThrow(/need --system gbrain/);
     await expect(runArm(args(join(tmp, 'z'), '--context', 'native'))).rejects.toThrow(/legacy rehydrated/);
     await expect(runArm(args(join(tmp, 'w'), '--system', 'nonsense'))).rejects.toThrow(/--system must be/);
+  });
+});
+
+describe('held gbrain defaults', () => {
+  test('both memory-qa entry points pin them by default, and --pin still overrides one', async () => {
+    const { HELD_GBRAIN_DEFAULTS } = await import('../../eval/runner/gbrain-under-test.ts');
+    const legacy = await import('../../eval/runner/memory-qa/run.ts');
+    const argv = ['--benchmark', 'fixture', '--output', '/tmp/x'];
+    expect(legacy.parseRunArgs(argv).pins).toMatchObject(HELD_GBRAIN_DEFAULTS);
+    expect(parseRunArgs(argv).pins).toMatchObject(HELD_GBRAIN_DEFAULTS);
+    expect(legacy.parseRunArgs([...argv, '--pin', 'search.remote_page_cap=3']).pins['search.remote_page_cap']).toBe('3');
+    expect(parseRunArgs([...argv, '--pin', 'search.remote_page_cap=3']).pins['search.remote_page_cap']).toBe('3');
   });
 });
 

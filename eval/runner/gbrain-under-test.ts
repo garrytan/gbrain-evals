@@ -26,6 +26,26 @@ import { regressionPackageHash } from './situation-recall-provenance.ts';
 const REPO_ROOT = resolve(import.meta.dir, '../..');
 export const OVERLAY_ROOT = join(REPO_ROOT, '.gbrain-overlays');
 
+/**
+ * gbrain defaults that changed after the previous product pin, 7a6bdd357 (v0.60.454.0), held at their old values by
+ * the memory-qa harness (DEFAULT_PINS in memory-qa/run.ts and memory-qa/run-systems.ts) and by the gbrain-query
+ * system (systems/gbrain-query/system.ts), so their arms stay comparable with receipts measured before the change:
+ *
+ *   search.query_facts_block=false      v0.60.491.0 turned on a dated facts block at the head of a budgeted `query`.
+ *   search.saved_facts_supersede=false  v0.60.493.0 puts a newer correction ahead of the saved fact it corrects.
+ *   search.remote_page_cap=0            v0.60.506.0 keeps at most 3 meaning-only pages in a remote search or query
+ *                                       that names no `limit`.
+ *
+ * The fourth change, quote-fenced chat text (v0.60.507.0, v0.60.521.0), has no switch; the gbrain-query connector
+ * unwraps it (systems/gbrain-query/connector.ts). A build older than a key stores the key and ignores it. Arms that
+ * measure gbrain's own defaults (gbrain-shootout, the gbrain-defaults container, the Cat 40 MCP arm) do not take these.
+ */
+export const HELD_GBRAIN_DEFAULTS: Readonly<Record<string, string>> = Object.freeze({
+  'search.query_facts_block': 'false',
+  'search.saved_facts_supersede': 'false',
+  'search.remote_page_cap': '0',
+});
+
 export interface GbrainOverlay {
   requested: string;
   checkout: string;
