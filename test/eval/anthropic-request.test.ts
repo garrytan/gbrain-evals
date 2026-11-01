@@ -8,7 +8,7 @@
  */
 import { describe, test, expect } from 'bun:test';
 import type Anthropic from '@anthropic-ai/sdk';
-import { acceptsForcedToolChoice, fitAnthropicRequest, temperatureSent, toolChoiceSent, withThinkingRoom } from '../../eval/runner/anthropic-request.ts';
+import { CLAUDE5_THINKING_FLOOR, acceptsForcedToolChoice, assertJudgeThinkingRoom, fitAnthropicRequest, temperatureSent, toolChoiceSent, withThinkingRoom } from '../../eval/runner/anthropic-request.ts';
 import { SCORE_ANSWER_TOOL, judgePrice, scoreAnswer, type JudgeEvidence } from '../../eval/runner/judge.ts';
 import { CAT5_CATEGORY, classifyClaim, runCat5, type Claim } from '../../eval/runner/cat5-provenance.ts';
 import { isClaude5Family, openAIMessagesShim } from '../../eval/runner/openai-judge-shim.ts';
@@ -101,6 +101,16 @@ describe('fitAnthropicRequest', () => {
     expect(CLAUDE_5.map(m => withThinkingRoom(m, 700))).toEqual([4096, 4096, 4096]);
     expect(withThinkingRoom('claude-opus-5-5', 8000)).toBe(8000);
     expect([...OLDER, 'openai:gpt-6.1-sol'].map(m => withThinkingRoom(m, 700))).toEqual([700, 700, 700]);
+  });
+
+  // Value: protects=an explicit judge limit below the floor is refused only for a Claude 5-family judge, and the floor is the one withThinkingRoom applies; fails_when=the check refuses an older judge's small limit, or accepts a Claude 5 limit withThinkingRoom would raise; why_new=explicit limits are sent as given, so the LongMemEval and Cat 36 answer profiles check theirs before any spend (#237); seam=none; no_claim=ids only, no provider call
+  test('an explicit Claude 5 judge limit below the thinking floor is refused; other judges keep theirs', () => {
+    expect(CLAUDE5_THINKING_FLOOR).toBe(4096);
+    for (const m of CLAUDE_5) {
+      expect(() => assertJudgeThinkingRoom(m, CLAUDE5_THINKING_FLOOR - 1)).toThrow(`below the Claude 5 thinking floor (4096) for ${m}`);
+      expect(() => assertJudgeThinkingRoom(m, CLAUDE5_THINKING_FLOOR)).not.toThrow();
+    }
+    for (const m of [...OLDER, 'openai:gpt-6.1-sol']) expect(() => assertJudgeThinkingRoom(m, 10)).not.toThrow();
   });
 });
 

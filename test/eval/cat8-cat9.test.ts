@@ -534,6 +534,22 @@ describe('Cat 9 runCat9 integration', () => {
     expect(bundleFiles).toContain('judge-notes.md');
   });
 
+  // Value: protects=a Cat 9 run with an unpriced judge or agent model is refused before any agent turn is paid for; fails_when=runCat9 leaves the price lookup to scoreAnswer, after each scenario's agent loop has spent; why_new=Cat 9 never checked its judge price up front (#219); seam=none; no_claim=stub clients, no provider call
+  test('an unpriced judge or agent model is refused before any agent call', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const state: any = { engine: {}, poisonFixtures: [] };
+    const scenarios: WorkflowScenario[] = [
+      { id: 's1', workflow: 'briefing', text: 't', ground_truth_slugs: [], rubric: [{ id: 'c', criterion: 'x', weight: 1 }] },
+    ];
+    let agentCalls = 0;
+    const agentClient = { messages: { create: async () => { agentCalls++; return makeAgentClient().messages.create({} as never); } } } as unknown as Anthropic;
+    const { runCat9 } = await import('../../eval/runner/cat9-workflows.ts');
+    const base = { scenarios, state, pagesBySlug: new Map<string, GroundTruthPage>(), agentClient, judgeClient: makeJudgeClient('pass'), concurrency: 1, reportsRoot: tmpReportsRoot('cat9-unpriced-') };
+    await expect(runCat9({ ...base, judge: { model: 'claude-unpriced-judge-9' } })).rejects.toThrow('no chat price for anthropic:claude-unpriced-judge-9');
+    await expect(runCat9({ ...base, model: 'claude-unpriced-agent-9' })).rejects.toThrow('no chat price for anthropic:claude-unpriced-agent-9');
+    expect(agentCalls).toBe(0);
+  });
+
   test('mixed verdicts produce a fractional pass rate', async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const state: any = { engine: {}, poisonFixtures: [] };

@@ -199,7 +199,7 @@ describe('Cat36 grounded-answer secondary replay', () => {
   });
 
   test('live requires explicit models, separate budget approvals, exact identity, and rejects test injection', async () => {
-    const live: GroundedProfile = { ...profile, mode: 'live', answer_model: 'openai:gpt-4.1-mini', expected_product_sha: 'a'.repeat(40) };
+    const live: GroundedProfile = { ...profile, mode: 'live', answer_model: 'openai:gpt-4.1-mini', expected_product_sha: 'a'.repeat(40), judge_max_tokens: 4096 };
     expect(() => validateGroundedProfile(live)).toThrow('caps');
     live.answer_budget = { kind: 'isolated-provider-cap', approval_id: 'answer-approval', max_usd: 1 };
     live.judge_budget = { kind: 'isolated-provider-cap', approval_id: 'judge-approval', max_usd: 1 };
@@ -215,11 +215,20 @@ describe('Cat36 grounded-answer secondary replay', () => {
     expect(blocked.data!.blocked_reason).toContain('production live retrieval');
   });
 
+  // Value: protects=a live Cat 36 run is refused before any answer spend when its Haiku 5.5 judge limit leaves no room to think; fails_when=validateGroundedProfile accepts a live judge_max_tokens below the Claude 5 thinking floor; why_new=the validator took any limit in [1,4096] and scoreAnswer sends an explicit limit unchanged (#237); seam=none; no_claim=validation only, no provider call
+  test('live admission refuses a Claude 5 judge limit below the thinking floor', () => {
+    const live: GroundedProfile = { ...profile, mode: 'live', answer_model: 'openai:gpt-4.1-mini', expected_product_sha: 'a'.repeat(40), judge_max_tokens: 4096,
+      answer_budget: { kind: 'isolated-provider-cap', approval_id: 'answer-approval', max_usd: 1 }, judge_budget: { kind: 'isolated-provider-cap', approval_id: 'judge-approval', max_usd: 1 } };
+    expect(() => validateGroundedProfile(live)).not.toThrow();
+    for (const judge_max_tokens of [1, 1024, 4095]) expect(() => validateGroundedProfile({ ...live, judge_max_tokens })).toThrow('thinking floor');
+    expect(() => validateGroundedProfile({ ...profile, judge_max_tokens: 128 })).not.toThrow();
+  });
+
   test('loaded product identity and both provider credentials are checked before live inference', async () => {
     const f = await fixture();
     const product = resolveRegressionProduct({ expectedPackageSha256: regressionPackageHash(resolve('node_modules/gbrain')) });
     const sha = product.product_sha ?? product.declared_pin.split('#')[1];
-    const live: GroundedProfile = { ...profile, mode: 'live', answer_model: 'openai:gpt-4.1-mini', expected_product_sha: sha, expected_package_sha256: product.package_sha256,
+    const live: GroundedProfile = { ...profile, mode: 'live', answer_model: 'openai:gpt-4.1-mini', expected_product_sha: sha, expected_package_sha256: product.package_sha256, judge_max_tokens: 4096,
       answer_budget: { kind: 'isolated-provider-cap', approval_id: 'answer-approval', max_usd: 1 }, judge_budget: { kind: 'isolated-provider-cap', approval_id: 'judge-approval', max_usd: 1 } };
     const receipt = loadReceipt(join(f.primaryDir, 'receipt.json'));
     const retrievalProfile = { ...offlineCat36Profile(), mode: 'live', expected_product_sha: sha, expected_package_sha256: product.package_sha256, provider_budget: live.answer_budget };
