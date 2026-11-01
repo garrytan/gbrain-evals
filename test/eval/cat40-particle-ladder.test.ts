@@ -28,7 +28,7 @@ async function ladder(name: string, replies: Array<{ status: number; body: unkno
   } });
   const out = join(tmp, name);
   const ledger = join(tmp, `${name}.sqlite`);
-  expect(Bun.spawnSync(['bun', 'eval/runner/budget-ledger.ts', 'init', '--budget-ledger', ledger, '--program-cap-usd', '1', '--reason', 'keyless test'], { cwd: ROOT }).exitCode).toBe(0);
+  if (!existsSync(ledger)) expect(Bun.spawnSync(['bun', 'eval/runner/budget-ledger.ts', 'init', '--budget-ledger', ledger, '--program-cap-usd', '1', '--reason', 'keyless test'], { cwd: ROOT }).exitCode).toBe(0);
   try {
     const proc = Bun.spawn(['bun', 'eval/runner/cat40-model-ladder.ts', '--models', 'particle-1', '--arms', 'oracle', '--tasks', 'A01', ...extra,
       '--budget-usd', '1', '--budget-ledger', ledger, '--out', out], {
@@ -57,7 +57,7 @@ describe('model ladder with particle-1 (fake Particle on loopback)', () => {
       request: { effort_sent: 'high', effort_effective: 'high', output_limit_field: 'max_completion_tokens', output_limit: 16_000 } });
   }, 60_000);
 
-  test('a credit 402 stops the ladder after its attempt\'s receipt, with no cell recorded', async () => {
+  test('a credit 402 stops the ladder after its attempt\'s receipt, with no cell recorded; a rerun numbers its attempts on from the stopped run\'s', async () => {
     const { code, stderr, out, seen } = await ladder('credit', [{ status: 402, body: { error: { message: 'Insufficient credits' } } }]);
     expect(code).not.toBe(0);
     expect(stderr).toContain('budget: Particle credit exhausted');
@@ -65,6 +65,12 @@ describe('model ladder with particle-1 (fake Particle on loopback)', () => {
     expect(existsSync(join(out, 'results.jsonl')) ? lines(join(out, 'results.jsonl')) : []).toEqual([]);
     const receipts = lines(cellAttemptsPath(out, 'particle-1|oracle|A01|0'));
     expect(receipts.map(r => [r.status, r.error?.slice(0, 4)])).toEqual([['error', '402:']]);
+
+    const resumed = await ladder('credit', [{ status: 200, body: submit }]);
+    expect({ code: resumed.code, stderr: resumed.code ? resumed.stderr.slice(-2000) : '' }).toEqual({ code: 0, stderr: '' });
+    expect(lines(join(out, 'results.jsonl')).map(r => r.score.success)).toEqual([true]);
+    const all = lines(cellAttemptsPath(out, 'particle-1|oracle|A01|0'));
+    expect(all.map(r => [r.question_id, r.attempt, r.status])).toEqual([['particle-1|oracle|A01|0|s2', 0, 'error'], ['particle-1|oracle|A01|0|s2', 1, 'ok']]);
   }, 60_000);
 
   test('particle-1 never judges, and a run with it names its judge (the v1 default is gpt-5.4-mini)', async () => {
