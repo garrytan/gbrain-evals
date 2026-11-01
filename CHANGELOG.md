@@ -4,6 +4,40 @@ This records what each gbrain-evals release changed and what its measurements me
 
 ## [Unreleased]
 
+### Cat 35 keeps the external lane out of gbrain's WS0 numbers and deltas, and the scoreboard checks read more of their inputs
+
+- **The WS0 receipt's coverage map holds only gbrain's lanes (#217).** Its `n_total`, `n_scored` and `errors` counted
+  the built-in lanes only, but `data.coverage_by_lane` also carried the external lane. A missing external document,
+  which scores zero as a lane error, or a failed external judge call moved a coverage figure that the receipt's errors
+  never listed. `data.coverage_by_lane` now holds the built-in lanes, and the external lane's scores stay under its name
+  in the detailed receipt's per-lane maps.
+- **The external lane's judge spend is reported apart (#217).** `total_cost_usd` counted it, so the built-in lanes'
+  cost rose whenever an external lane ran beside them. `total_cost_usd` now counts the built-in lanes' judges and fact
+  extraction, and `external_cost_usd`, in the detailed receipt and in WS0 `data`, holds the external lane's judge
+  spend (null without one). The scorecard's cost line names both. The WS0 `cost`, read from the budget ledger, still
+  covers every paid request; subtract `external_cost_usd` for gbrain's share. `attribution_hazards` needed no change:
+  every row names its lane, and its one reader that ignores the lane (`situation-recall-native-35.ts`) refuses a
+  receipt with an external lane before reading it.
+- **Prior-run deltas pass over an external-only receipt (#218).** Discovery took the newest receipt in the same mode, so
+  a `--lanes none` run became the prior receipt of the next gbrain run, which then skipped its deltas as a lanes
+  mismatch (`prior=[], current=[verbatim]` in a keyless run). It now prefers the newest receipt with the same mode and
+  lane set, then the same mode, then any.
+- **The scoreboard refuses a `power.json` that `eval/runner/q1/power.ts` cannot write.** A file that is not JSON is now
+  `RECEIPT_INVALID`; it threw a bare parse error that stopped `scoreboard.ts check`. So are a comparator list with an
+  entry that is not a system id, a detectable difference of zero or less, and a full or shrunk decision with no
+  detectable difference. power.ts ranks Family 1 only under a measured difference of at most 10 points; such a decision
+  used to rank rows while printing "about more than 30 points".
+- **The documentation verifier checks the scoreboard paragraph's figures and every commit it names.**
+  `scripts/verify-documentation-refresh.py` now fails when a decimal figure in README's paragraph above the scoreboard
+  block (today 59.0, 58.9, 68.3, 56.3, 12.9 and 13.58) appears neither in the block nor in
+  `docs/benchmarks/2026-10-06-scoreboard/scoreboard.md`, the render's other file. It also fails when that paragraph
+  names a second `check --commit` other than the publication's (it read only the first), when README has no
+  `<!-- scoreboard:headline:begin -->` line (it read the last section instead, and passed if that named the commit), and
+  when `publication.json`'s `published` is not an object (it crashed). Whole numbers, such as the 192 shared questions,
+  are not checked, because the render does not print that count.
+- The last two items cover the three findings #241's adversarial review deferred (the figures, the `power.json` gaps
+  and the verifier's fragility), none of which had an issue. No published receipt, result or README line changes.
+
 ### gstack's pregate gives each test process 30 minutes in this repository
 
 - **A repository `.gstack/pregate.json` raises the pregate's per-process test timeout from 600 to 1800 seconds.** On
