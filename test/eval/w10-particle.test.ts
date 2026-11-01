@@ -145,13 +145,25 @@ describe('read and judge', () => {
   });
 
   test('the ledger\'s own refusal stops the arm like a credit stop and is not counted against bar 4', async () => {
-    globalThis.fetch = (async () => { const e = new Error('particle:particle-1 chat: reserving $0.0100 would take this run to $12.0100, over its $12.00 budget'); e.name = 'BudgetExceededError'; throw e; }) as typeof fetch;
+    globalThis.fetch = (async () => { const e = new Error('particle:particle-1 chat: reserving $0.0100 would take this run to $12.0100, over its $12.00 budget'); e.name = 'BudgetExceededError'; throw e; }) as unknown as typeof fetch;
     const out = await replay(inputsFor(IDS));
     expect(out.stopped).toStartWith('particle:particle-1 chat: reserving');
     expect(out.rows).toHaveLength(1);
     expect(out.rows[0]).toMatchObject({ budget_stop: true, correct_official: 0 });
     expect(out.not_run).toEqual(IDS.slice(1));
     expect(P.checkBars(out.rows, out.receipts, []).errors).toMatchObject({ pass: true, failed_after_retries: 0 });
+  });
+
+  test('a question that throws lets the questions already reading finish with rows, starts no new one and rethrows', async () => {
+    const s = serve(IDS.map(() => ({ body: particleReply('Yes.') })));
+    const seen: string[] = [];
+    const run = P.replayQuestions({
+      client: new ChatClient(tmp(), () => 0), armId: 'w10b-particle-notes', arm: P.REPLAY_ARMS['w10b-particle-notes'], inputs: inputsFor(IDS), questions: r1(), concurrency: 2,
+      onRow: row => { seen.push(row.question_id); if (seen.length === 1) throw new Error('disk full'); },
+    });
+    await expect(run).rejects.toThrow('disk full');
+    expect(seen).toHaveLength(2);
+    expect(s.particle()).toHaveLength(2);
   });
 
   test('the client\'s per-attempt deadline bounds each Particle attempt', async () => {
@@ -229,7 +241,16 @@ describe('keyless re-score', () => {
     expect(vsOpus.delta).toBe(0);
     expect(out.decision_b.flip).toBe(false);
   });
-test('R2 arms that answer as GPT-6.1 Sol did read decision G and the development-lane test from the registered family', () => {
+test('report refuses an arm that stopped or left questions unrun', () => {
+    const dir = tmp();
+    const arm = join(dir, 'arms', 'w10b-particle-notes');
+    mkdirSync(arm, { recursive: true });
+    writeFileSync(join(arm, 'rows.ndjson'), '');
+    writeFileSync(join(arm, 'receipt.json'), JSON.stringify({ effort: 'high', stopped: 'budget: Particle credit exhausted', not_run: [IDS[1]], bars: {}, ledger: { usd: 0 } }));
+    expect(() => P.report(dir, tmp())).toThrow('w10b-particle-notes did not finish');
+  });
+
+  test('R2 arms that answer as GPT-6.1 Sol did read decision G and the development-lane test from the registered family', () => {
     const dir = tmp();
     const src: Record<string, string> = {
       'w10b-particle-notes': 'docs/benchmarks/2026-10-07-longmemeval-w10b-reader-replay/arms/w10b-sol-notes',

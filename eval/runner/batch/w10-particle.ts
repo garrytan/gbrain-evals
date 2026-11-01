@@ -31,7 +31,7 @@
  */
 import { Database } from 'bun:sqlite';
 import { execFileSync } from 'node:child_process';
-import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { homedir, tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { gunzipSync, gzipSync } from 'node:zlib';
@@ -90,9 +90,13 @@ export const REPLAY_ARMS: Record<string, ReplayArm> = {
 };
 
 const flag = (argv: string[], name: string) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; };
-/** Committed files carry no machine path: checkout, home and temp prefixes as scrubMachinePaths rewrites them, Capy agent scratch as `<work>/`. */
+/**
+ * Committed files carry no machine path: checkout, home and temp prefixes as scrubMachinePaths rewrites them, Capy agent
+ * scratch as `<work>/`. Records that hold model text (rows, usage receipts, preflight answers) scrub only their ledger
+ * path, so an answer is stored exactly as the judge saw it.
+ */
 const scrub = <T>(v: T): T => scrubMachinePaths(v, undefined, undefined, undefined, [[join(homedir(), '.capy/work') + '/', '<work>/']]);
-const writeJson = (path: string, v: unknown) => { mkdirSync(resolve(path, '..'), { recursive: true }); writeFileSync(path, JSON.stringify(scrub(v), null, 1) + '\n'); };
+const writeJson = (path: string, v: unknown) => { mkdirSync(resolve(path, '..'), { recursive: true }); writeFileSync(path, JSON.stringify(v, null, 1) + '\n'); };
 const isBudgetStop = (e: unknown) => (e as Error)?.name === 'BudgetExceededError';
 const message = (e: unknown) => String((e as Error)?.message ?? e).slice(0, 500);
 
@@ -174,7 +178,7 @@ export async function build(c5fb0201: string | null): Promise<Record<string, unk
     schema_version: 1, built_at: new Date().toISOString(), gbrain_pin: JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8')).dependencies?.gbrain ?? null,
     dataset_sha256: existsSync(DATASET) ? sha256(readFileSync(DATASET)) : null, comparators, sources,
   };
-  writeJson(join(STATE_DIR, 'build.json'), record);
+  writeJson(join(STATE_DIR, 'build.json'), scrub(record));
   return record;
 }
 
@@ -213,8 +217,9 @@ export interface ReplayResult { rows: ParticleRow[]; receipts: UsageReceipt[]; s
 
 /**
  * Read and judge every question of one arm, eight at a time. A budget stop ends the arm: the failing question keeps its
- * row, questions already reading finish without a judge, and no new question starts. `onRow` sees each row and its
- * receipts as they land.
+ * row, questions already reading finish without a judge, and no new question starts. A question that throws starts no
+ * new question either; the ones already reading finish and keep their rows, then the error is rethrown. `onRow` sees
+ * each row and its receipts as they land.
  */
 export async function replayQuestions(opts: {
   client: ChatLike; armId: string; arm: ReplayArm; inputs: Map<string, ReaderText>; questions: Map<string, ReplayRow>;
@@ -258,7 +263,13 @@ export async function replayQuestions(opts: {
     out.receipts.push(...lane);
     opts.onRow?.(row, lane);
   };
-  await Promise.all(Array.from({ length: opts.concurrency ?? CONCURRENCY }, async () => { while (!out.stopped && queue.length) await one(queue.shift()!); }));
+  const thrown: unknown[] = [];
+  await Promise.all(Array.from({ length: opts.concurrency ?? CONCURRENCY }, async () => {
+    while (!out.stopped && !thrown.length && queue.length) {
+      try { await one(queue.shift()!); } catch (error) { thrown.push(error); }
+    }
+  }));
+  if (thrown.length) throw thrown[0];
   const done = new Set(out.rows.map(r => r.question_id));
   out.not_run = ids.filter(id => !done.has(id));
   return out;
@@ -327,8 +338,8 @@ async function run(armId: string, argv: string[]): Promise<number> {
     result = await replayQuestions({
       client: new ChatClient(flag(argv, '--cache') ?? join(STATE_DIR, 'cache'), undefined, TIMEOUT_MS), armId, arm, inputs, questions: r1(),
       onRow: (row, receipts) => {
-        appendFileSync(join(out, 'rows.ndjson'), JSON.stringify(scrub(row)) + '\n');
-        if (receipts.length) appendFileSync(join(out, 'receipts.ndjson'), receipts.map(r => JSON.stringify(scrub(r))).join('\n') + '\n');
+        appendFileSync(join(out, 'rows.ndjson'), JSON.stringify(row) + '\n');
+        if (receipts.length) appendFileSync(join(out, 'receipts.ndjson'), receipts.map(r => JSON.stringify(r)).join('\n') + '\n');
         process.stderr.write(`[w10-particle] ${armId} ${row.question_id} ${row.error ? 'error' : row.truncated ? 'truncated' : 'ok'} correct=${row.correct_official}\n`);
       },
     });
@@ -357,7 +368,7 @@ async function run(armId: string, argv: string[]): Promise<number> {
     models_not_run: arm.workstream === 'W10c' ? [{ model: 'anthropic:claude-opus-5-5', reason: 'W10c has no Opus 5.5 rows to pair with; this replay calls particle-1 only' }] : [],
     preregistration_attestation: attestation, started_at: startedAt, finished_at: new Date().toISOString(),
   };
-  writeJson(join(out, 'receipt.json'), receipt);
+  writeJson(join(out, 'receipt.json'), scrub(receipt));
   const failedBars = Object.entries(bars).filter(([, b]) => !b.pass).map(([k]) => k);
   console.log(JSON.stringify({ arm: armId, attempted: rows.length, of: inputs.size, correct: receipt.counts.correct_official, truncated: receipt.counts.truncated, stopped: result.stopped, failed_bars: failedBars, ledger_usd: receipt.ledger.usd }));
   return result.stopped || result.not_run.length || failedBars.length ? 1 : 0;
@@ -384,7 +395,7 @@ async function preflight(argv: string[]): Promise<number> {
       } catch (e) { results[model] = { ok: false, error: message(e) }; }
     }
   } finally { guard.uninstall(); }
-  const cost = receiptCost(budget.close());
+  const cost = scrub(receiptCost(budget.close()));
   writeJson(join(out, 'preflight.json'), { at: new Date().toISOString(), results, receipts, cost });
   const ok = Object.values(results).every(r => r.ok) && results[PARTICLE]?.response_model === 'particle-ai/particle-1';
   console.log(JSON.stringify({ ok, results, cost_usd: cost.usd }));
@@ -461,6 +472,10 @@ export function report(dir: string, compareDir = dir): Record<string, unknown> {
     'w10c-sol-currentpin': [join(W10C, 'arms/w10c-sol-currentpin'), ids150], 'w10c-sonnet55-full': [join(W10C, 'arms/w10c-sonnet55-full'), ids150], 'w10c-sol-full': [join(W10C, 'arms/w10c-sol-full'), ids150],
   };
   const particle = Object.fromEntries(Object.keys(REPLAY_ARMS).filter(id => existsSync(join(dir, 'arms', id, 'rows.ndjson'))).map(id => [id, join(dir, 'arms', id)]));
+  for (const [id, path] of Object.entries(particle)) {
+    const receipt = existsSync(join(path, 'receipt.json')) ? JSON.parse(readFileSync(join(path, 'receipt.json'), 'utf8')) : null;
+    if (!receipt || receipt.stopped || receipt.not_run.length) throw new Error(`${id} did not finish (no receipt.json, a stop or unrun questions); report scores complete arms only`);
+  }
   const scored = new Map(Object.entries({ ...Object.fromEntries(Object.entries(comparators).map(([k, [p]]) => [k, p])), ...particle }).map(([k, p]) => [k, scoreArm(p)]));
   const c = (name: string, ids: string[]) => col(scored.get(name)!, ids);
   const idsOf = (id: string) => (REPLAY_ARMS[id].workstream === 'W10b' ? ids500 : ids150);
@@ -517,7 +532,7 @@ async function main(argv: string[]): Promise<number> {
   if (cmd === 'build') {
     const record = await build(flag(argv, '--gbrain-c5fb0201') ?? null);
     const out = flag(argv, '--out');
-    if (out) writeJson(join(out, 'build.json'), record);
+    if (out) writeJson(join(out, 'build.json'), scrub(record));
     console.log(JSON.stringify(record, null, 1));
     return 0;
   }
@@ -525,14 +540,20 @@ async function main(argv: string[]): Promise<number> {
   if (cmd === 'run') return run(arg, argv);
   if (cmd === 'report') {
     if (!arg) throw new Error('report <replay dir>');
-    const write = argv.includes('--write');
-    const text = JSON.stringify(report(resolve(arg), write ? resolve(arg) : mkdtempSync(join(tmpdir(), 'w10-particle-report-'))), null, 1) + '\n';
-    const path = join(resolve(arg), 'summary.json');
-    console.log(text);
-    if (write) { writeFileSync(path, text); return 0; }
-    if (!existsSync(path) || readFileSync(path, 'utf8') !== text) { console.error(`re-score differs from ${path}`); return 1; }
-    console.error(`re-score matches ${path}`);
-    return 0;
+    const dir = resolve(arg), write = argv.includes('--write');
+    const compareDir = write ? dir : mkdtempSync(join(tmpdir(), 'w10-particle-report-'));
+    try {
+      const text = JSON.stringify(report(dir, compareDir), null, 1) + '\n';
+      console.log(text);
+      if (write) { writeFileSync(join(dir, 'summary.json'), text); return 0; }
+      const same = (name: string, fresh: string) => existsSync(join(dir, name)) && readFileSync(join(dir, name), 'utf8') === fresh;
+      const differs = [...(same('summary.json', text) ? [] : ['summary.json']), ...readdirSync(compareDir).filter(f => !same(f, readFileSync(join(compareDir, f), 'utf8')))];
+      if (differs.length) { console.error(`re-score differs from ${differs.map(f => join(dir, f)).join(', ')}`); return 1; }
+      console.error(`re-score matches ${join(dir, 'summary.json')} and its compare files`);
+      return 0;
+    } finally {
+      if (!write) rmSync(compareDir, { recursive: true, force: true });
+    }
   }
   throw new Error('usage: w10-particle.ts build | preflight | run <arm> | report <dir>');
 }

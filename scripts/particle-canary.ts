@@ -210,7 +210,7 @@ if (import.meta.main) {
     finally { guard.uninstall(); }
     const cost = receiptCost(run.close());
     mkdirSync(out, { recursive: true });
-    writeFileSync(target, JSON.stringify(scrubMachinePaths({ ...record, cost }, undefined, undefined, undefined, [[join(homedir(), '.capy/work') + '/', '<work>/']]), null, 2) + '\n');
+    writeFileSync(target, JSON.stringify({ ...record, cost: scrubMachinePaths(cost, undefined, undefined, undefined, [[join(homedir(), '.capy/work') + '/', '<work>/']]) }, null, 2) + '\n');
     const answered = record.results.filter(r => r.status === 'ok').length;
     console.log(`particle canary: ${answered} of ${CANARY_PROMPTS.length} answered${record.stopped ? `; stopped: ${record.stopped}` : ''}; ${target}`);
     let full = answered === CANARY_PROMPTS.length;
