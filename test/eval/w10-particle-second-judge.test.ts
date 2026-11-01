@@ -31,7 +31,7 @@ describe('w10-particle-second-judge', () => {
       const owed = tasks(judge);
       expect(owed.length).toBe(500 * JUDGES[judge].arms.length);
       const rows = readNdjson(join(OUT, judge, 'rows.ndjson'));
-      const key = (r: { arm: unknown; question_id: unknown }) => `${r.arm}/${r.question_id}`;
+      const key = (r: Record<string, unknown>) => `${r.arm}/${r.question_id}`;
       expect(rows.map(key).sort()).toEqual(owed.map(key).sort());
       for (const r of rows) {
         expect(r.judge).toBe(judge);

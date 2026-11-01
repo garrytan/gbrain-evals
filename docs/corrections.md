@@ -19,7 +19,7 @@ says which ones do not and why. Everything above [Changelog](#changelog) is curr
   436/470 against 434/470 without it (+6/−4, p = 0.75), so that finding no longer describes gbrain.
   [Recount](benchmarks/2026-10-04-longmemeval-opaque-followups.md).
 - **Two cost figures in the particle-1 replay report are off** (2026-11-01). Its results table gives Opus 5.5
-  $0.0994 per correct answer; $47.091364 over 474 correct answers is $0.09935, which is $0.0993 (the table rounded
+  $0.0994 per correct answer; $47.091364 over 474 correct answers is $0.099349, which is $0.0993 (the table rounded
   summary.json's five-decimal value a second time; the opening paragraph's $0.099 stands). Its batch-price figures for
   Opus 5.5 and Sonnet 5.5, $0.0507 and $0.0255 per correct answer ($0.051 in the opening paragraph), come from W10's
   ledger-settled amounts. W10's preregistration settled each arm's 10-question pilot at list price until the batch
@@ -46,6 +46,12 @@ says which ones do not and why. Everything above [Changelog](#changelog) is curr
   [W10c](benchmarks/2026-10-07-longmemeval-w10c-full-context.md),
   [replay report](benchmarks/2026-11-01-longmemeval-particle-replay/REPORT.md),
   [recheck](findings/2026-11-01-particle-1-longmemeval-w10b.md).
+- **The W10b reader-replay report calls Opus 5.5 "the strongest reader on this retrieval"** (2026-11-01). Its
+  preregistered test compares each reader with the replayed Sonnet 4.6 run only (one-sided, Holm across six arms), so
+  it supports "Opus 5.5 scored higher than Sonnet 4.6" (474 against 451, Holm p = 0.0006), not a ranking of the newer
+  readers against each other. README's row says this; the report keeps its original sentence.
+  [Report](benchmarks/2026-10-07-longmemeval-w10b-reader-replay.md),
+  [preregistration](benchmarks/2026-10-06-longmemeval-w10-preregistration.md).
 
 ## Relationships and calibration
 
@@ -102,10 +108,12 @@ says which ones do not and why. Everything above [Changelog](#changelog) is curr
 
 The recheck behind the [particle-1 W10b finding](findings/2026-11-01-particle-1-longmemeval-w10b.md) recounted the
 replay's numbers from its committed rows. Every quoted count and interval reproduced, and so did every particle-1
-cost. Two entries are added under LongMemEval. The first covers two figures in the replay report: Opus 5.5's list cost
+cost. Three entries are added under LongMemEval. The first covers two figures in the replay report: Opus 5.5's list cost
 per correct answer in the results table ($0.0994, correctly $0.0993) and the batch-price figures for Opus 5.5 and
 Sonnet 5.5 ($0.0507 and $0.0255, at the batch rate $0.0497 and $0.0250). The second reprices GPT-6.1 Sol's reader
-costs in W10b, W10c and the replay report at OpenAI's cache-write rate, which W10's ledger did not yet apply.
+costs in W10b, W10c and the replay report at OpenAI's cache-write rate, which W10's ledger did not yet apply. The third
+records that the W10b report's opening sentence calls Opus 5.5 the strongest reader, which its preregistered test does
+not support; README's row was reworded in the same change.
 
 ### 2026-11-01: Page created from README's corrections
 

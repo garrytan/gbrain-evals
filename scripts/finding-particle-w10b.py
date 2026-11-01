@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 """Keyless recheck of the particle-1 W10b finding from committed rows (docs/findings/2026-11-01-particle-1-longmemeval-w10b.md).
 
-Recounts every number the finding quotes from the per-question rows, not from summary.json or REPORT.md: verdicts from
-the stored judge replies ("yes" in the lowercased reply, reader errors wrong), the paired particle-1 differences with
-the same cluster bootstrap as eval/runner/compare.ts (mulberry32, seed 20261101, 10,000 draws) and exact McNemar tests,
+Recounts the finding's numbers from the per-question rows, not from summary.json or REPORT.md: verdicts from the
+stored judge replies ("yes" in the lowercased reply, reader errors wrong), the paired particle-1 differences with the
+same cluster bootstrap as eval/runner/compare.ts (mulberry32, seed 20261101, 10,000 draws) and exact McNemar tests,
 cost per correct answer re-derived from each row's token usage and the dated price table below, GPT-6.1 Sol's W10b and
-W10c reader costs repriced at OpenAI's cache-write rate, and W10c's three particle-1 counts. When the second-judge rows exist it adds agreement with gpt-4o (Cohen's kappa, flips per arm) and
-each pair's paired difference under its cross-family judge. It checks every digest in SHA256SUMS first and every
-recomputed headline value against the replay's summary.json.
+W10c reader costs repriced at OpenAI's cache-write rate, and W10c's three particle-1 counts. When the second-judge rows
+exist it adds agreement with gpt-4o (Cohen's kappa, flips per arm), each pair's paired difference under its
+cross-family judge, and every reply whose last yes or no contradicts the protocol rule, with the affected figures read
+by that last word. It checks every digest in SHA256SUMS first and every recomputed headline value against the
+replay's summary.json; the only figures it copies from summary.json are the detectable gaps in compare.ts's power
+notes.
 
   python3 scripts/finding-particle-w10b.py            print the analysis
   python3 scripts/finding-particle-w10b.py --check    exit 1 unless the output matches the committed analysis.txt and analysis.json
@@ -273,7 +276,9 @@ def analyse():
             continue
         judged = {}
         for r in (json.loads(l) for l in path.read_text().splitlines() if l.strip()):
-            judged.setdefault(r["arm"], {})[r["question_id"]] = r
+            if r["question_id"] in judged.setdefault(r["arm"], {}):
+                raise SystemExit(f"{judge}: two {r['arm']} judgments for {r['question_id']}")
+            judged[r["arm"]][r["question_id"]] = r
         per_arm = {}
         for name in ["particle-1"] + comparators:
             j = judged.get(name, {})

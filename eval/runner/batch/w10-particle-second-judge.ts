@@ -12,9 +12,12 @@
  *   bun eval/runner/budget-ledger.ts init --budget-ledger <ledger> --program-cap-usd 25
  *   RUN=$(bun eval/runner/budget-ledger.ts open --budget-ledger <ledger> --runner w10-particle-second-judge --budget-usd 20 --estimate-usd 10 | jq -r .run_id)
  *   bun eval/runner/batch/w10-particle-second-judge.ts run --out <fresh dir> --budget-ledger <ledger> --paid --budget-run-id $RUN
+ *
+ * Responses are cached in a fresh temporary directory unless --cache names one, so identical prompts within a run are
+ * judged once and a rerun never replays an earlier run's judgments.
  */
-import { appendFileSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
-import { homedir } from 'node:os';
+import { appendFileSync, existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
+import { homedir, tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { budgetOptionsFrom, priceRequest, receiptCost, startPaidRun, usageCost } from '../budget-ledger.ts';
 import { ChatClient, chatWithReceipts } from '../memory-qa/qa-v2.ts';
@@ -73,10 +76,12 @@ async function listing(url: string): Promise<Record<string, unknown>> {
 async function run(argv: string[]): Promise<number> {
   const out = flag(argv, '--out');
   if (!out) throw new Error('pass --out <fresh directory>');
-  const judges = (flag(argv, '--judges') ?? Object.keys(JUDGES).join(',')).split(',');
+  const judges = [...new Set((flag(argv, '--judges') ?? Object.keys(JUDGES).join(',')).split(','))];
   for (const j of judges) if (!JUDGES[j]) throw new Error('unknown judge ' + j + '; judges: ' + Object.keys(JUDGES).join(', '));
   for (const j of judges) if (existsSync(join(out, j, 'rows.ndjson'))) throw new Error(join(out, j) + ' already holds rows; a rerun goes to a fresh --out');
+  if (existsSync(join(out, 'receipt.json'))) throw new Error(join(out, 'receipt.json') + ' exists; a rerun goes to a fresh --out');
   const limit = flag(argv, '--limit');
+  if (limit !== undefined && !(Number.isInteger(Number(limit)) && Number(limit) > 0)) throw new Error('--limit takes a positive whole number');
   const work = judges.map(j => ({ judge: j, items: tasks(j).slice(0, limit ? Number(limit) : undefined) }));
   const questions = r1();
   const prompt = (id: string, hypothesis: string) => { const q = questions.get(id)!; return officialJudgePrompt(q.question_type, q.question, q.answer, hypothesis, id.includes('_abs')); };
@@ -84,41 +89,50 @@ async function run(argv: string[]): Promise<number> {
   const listings = Object.fromEntries(await Promise.all(judges.map(async j => [j, await listing(JUDGES[j].listing)] as const)));
   requirePaidArm(argv, { arm: 'W10b second judge (' + judges.join(', ') + ')', estimateUsd: estimate });
   const { run: budget, guard } = startPaidRun('w10-particle-second-judge', { ...budgetOptionsFrom(argv), estimateUsd: estimate });
-  const client = new ChatClient(flag(argv, '--cache') ?? join(homedir(), '.capy/work/w10-particle-second-judge/cache'));
+  const client = new ChatClient(flag(argv, '--cache') ?? mkdtempSync(join(tmpdir(), 'w10-second-judge-cache-')));
   const startedAt = new Date().toISOString();
   const results: Record<string, SecondJudgeRow[]> = Object.fromEntries(judges.map(j => [j, []]));
   let stopped: string | null = null;
+  let crashed: unknown = null;
   try {
-    await Promise.all(work.map(async ({ judge, items }) => {
+    const settled = await Promise.allSettled(work.map(async ({ judge, items }) => {
       const dir = join(out, judge);
       mkdirSync(dir, { recursive: true });
       const { model, url } = JUDGES[judge];
       const queue = [...items];
-      await Promise.all(Array.from({ length: CONCURRENCY }, async () => {
-        while (!stopped && queue.length) {
-          const t = queue.shift()!;
-          const q = questions.get(t.question_id);
-          if (!q) throw new Error(t.question_id + ' has no W10 replay row');
-          const base = { judge, arm: t.arm, question_id: t.question_id, question_type: t.question_id.endsWith('_abs') ? 'abstention' : q.question_type };
-          const receipts: UsageReceipt[] = [];
-          let row: SecondJudgeRow;
-          if (t.reader_error || t.hypothesis.trim() === '') row = { ...base, verdict: false, raw: null, error: null, skipped: t.reader_error ? 'reader error: wrong without a judge call' : 'empty answer: wrong without a judge call', response_model: null, finish: null, usage: null, usd: 0, from_cache: false };
-          else {
-            try {
-              const r = await chatWithReceipts(client, { role: 'judge', question_id: t.question_id, replicate: 0, model, delivered: null }, prompt(t.question_id, t.hypothesis), JUDGE_OPTIONS, receipts);
-              const usd = r.usage && !r.cached ? usageCost(priceRequest(url, { model: model.slice(model.indexOf(':') + 1), messages: [] })!, { usage: r.usage })?.usd ?? 0 : 0;
-              row = { ...base, verdict: judgeVerdict(r.text), raw: r.text, error: null, response_model: r.response_model, finish: r.finish, usage: r.usage, usd, from_cache: r.cached };
-            } catch (e) {
-              row = { ...base, verdict: null, raw: null, error: message(e), response_model: null, finish: null, usage: null, usd: 0, from_cache: false };
-              if ((e as Error)?.name === 'BudgetExceededError' || /budget/i.test(message(e))) stopped ??= row.error;
+      const workers = await Promise.allSettled(Array.from({ length: CONCURRENCY }, async () => {
+        try {
+          while (!stopped && queue.length) {
+            const t = queue.shift()!;
+            const q = questions.get(t.question_id);
+            if (!q) throw new Error(t.question_id + ' has no W10 replay row');
+            const base = { judge, arm: t.arm, question_id: t.question_id, question_type: t.question_id.endsWith('_abs') ? 'abstention' : q.question_type };
+            const receipts: UsageReceipt[] = [];
+            let row: SecondJudgeRow;
+            if (t.reader_error || t.hypothesis.trim() === '') row = { ...base, verdict: false, raw: null, error: null, skipped: t.reader_error ? 'reader error: wrong without a judge call' : 'empty answer: wrong without a judge call', response_model: null, finish: null, usage: null, usd: 0, from_cache: false };
+            else {
+              try {
+                const r = await chatWithReceipts(client, { role: 'judge', question_id: t.question_id, replicate: 0, model, delivered: null }, prompt(t.question_id, t.hypothesis), JUDGE_OPTIONS, receipts);
+                const usd = r.usage && !r.cached ? usageCost(priceRequest(url, { model: model.slice(model.indexOf(':') + 1), messages: [] })!, { usage: r.usage })?.usd ?? 0 : 0;
+                row = { ...base, verdict: judgeVerdict(r.text), raw: r.text, error: null, response_model: r.response_model, finish: r.finish, usage: r.usage, usd, from_cache: r.cached };
+              } catch (e) {
+                row = { ...base, verdict: null, raw: null, error: message(e), response_model: null, finish: null, usage: null, usd: 0, from_cache: false };
+                if ((e as Error)?.name === 'BudgetExceededError' || /budget/i.test(message(e))) stopped ??= row.error;
+              }
             }
+            results[judge].push(row);
+            appendFileSync(join(dir, 'rows.ndjson'), JSON.stringify(row, scrubErrorText) + '\n');
+            if (receipts.length) appendFileSync(join(dir, 'receipts.ndjson'), receipts.map(r => JSON.stringify({ ...r, lane: 'w10-particle-second-judge', arm: t.arm }, scrubErrorText)).join('\n') + '\n');
           }
-          results[judge].push(row);
-          appendFileSync(join(dir, 'rows.ndjson'), JSON.stringify(row, scrubErrorText) + '\n');
-          if (receipts.length) appendFileSync(join(dir, 'receipts.ndjson'), receipts.map(r => JSON.stringify({ ...r, lane: 'w10-particle-second-judge', arm: t.arm }, scrubErrorText)).join('\n') + '\n');
+        } catch (e) {
+          stopped ??= message(e);
+          throw e;
         }
       }));
+      const failed = workers.find(w => w.status === 'rejected');
+      if (failed) throw (failed as PromiseRejectedResult).reason;
     }));
+    crashed = (settled.find(x => x.status === 'rejected') as PromiseRejectedResult | undefined)?.reason ?? null;
   } finally {
     guard.uninstall();
   }
@@ -138,11 +152,12 @@ async function run(argv: string[]): Promise<number> {
   };
   writeFileSync(join(out, 'receipt.json'), JSON.stringify(receipt, null, 1).replaceAll(homedir() + '/.capy/work/', '<work>/') + '\n');
   console.log(JSON.stringify({ judges: receipt.judges, stopped, ledger_usd: receipt.ledger.usd }, null, 1));
+  if (crashed) throw crashed;
   return stopped || Object.values(receipt.judges).some(j => j.errors || j.judged !== j.of) ? 1 : 0;
 }
 
 if (import.meta.main) {
   const [cmd, ...rest] = process.argv.slice(2);
-  if (cmd !== 'run') { console.error('usage: w10-particle-second-judge.ts run --out <dir> [--judges gpt-6.1-sol,claude-sonnet-5-5] [--limit n] --paid --budget-run-id <id>'); process.exit(2); }
+  if (cmd !== 'run') { console.error('usage: w10-particle-second-judge.ts run --out <dir> [--judges gpt-6.1-sol,claude-sonnet-5-5] [--limit n] [--cache <dir>] --paid --budget-run-id <id>'); process.exit(2); }
   run(rest).then(code => process.exit(code)).catch(e => { console.error(e instanceof Error ? e.message : String(e)); process.exit(1); });
 }

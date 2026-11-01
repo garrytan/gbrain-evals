@@ -146,7 +146,8 @@ input rate, which is where the committed $0.0307 comes from. OpenAI's billing AP
 not be checked; the Sol figures follow OpenAI's published rate and the usage the responses reported.
 
 **Judging and this finding's spend.** The replay's gpt-4o judging cost $0.48 for all four of its arms. The second
-judges cost $1.61 from the budget ledger (2,497 requests, including 6 in the smoke test): `gpt-6.1-sol` $0.86 for
+judges cost $1.607 for 2,491 paid requests, as the run's receipt records from the budget ledger; a smoke test before
+the run added 6 requests and $0.003 that no committed file records. By judge: `gpt-6.1-sol` $0.86 for
 1,500 judgments, `claude-sonnet-5-5` $0.75 for 1,000. On nine questions GPT-6.1 Sol's answer is byte-identical to
 particle-1's, so the `claude-sonnet-5-5` prompt was identical too. Those nine Sol judgments were replayed from the same
 run's response cache, share particle-1's verdict and were not paid again. The run's receipt still prices them ($0.004),
@@ -225,11 +226,11 @@ GPT-6.1 Sol.
    bun install --frozen-lockfile
    bun eval/runner/budget-ledger.ts init --budget-ledger <ledger> --program-cap-usd 25
    RUN=$(bun eval/runner/budget-ledger.ts open --budget-ledger <ledger> --runner w10-particle-second-judge --budget-usd 20 --estimate-usd 10 | jq -r .run_id)
-   bun eval/runner/batch/w10-particle-second-judge.ts run --out <fresh dir> --cache <fresh dir> --budget-ledger <ledger> --paid --budget-run-id $RUN
+   bun eval/runner/batch/w10-particle-second-judge.ts run --out <fresh dir> --budget-ledger <ledger> --paid --budget-run-id $RUN
    ```
 
-   A fresh `--cache` matters on a machine that ran the judges before: the default cache would replay every earlier
-   judgment at no cost.
+   Each run judges through a fresh temporary response cache unless `--cache` names one, so a rerun pays for every
+   judgment instead of replaying an earlier run's.
 
    The fresh run's `rows.ndjson` files can replace the committed ones under
    `docs/findings/2026-11-01-particle-1-longmemeval-w10b/second-judge/` for the script to read. Expect a few verdicts
