@@ -41,7 +41,10 @@ import { PG_EMBED_DIMS, PG_EMBED_MODEL, type Embedder } from '../cat40/pg-arm.ts
 import { decideError } from '../decisions/errors.ts';
 import type { Outcome } from '../memory-qa/outcomes.ts';
 import { sendsTemperature } from '../memory-qa/qa.ts';
+import type { ReaderAttempt } from '../memory-qa/records.ts';
+import { COMPAT_PROVIDERS, compatRequest, compatSend, type CompatRequest } from '../providers/openai-compatible.ts';
 import { answerUsage, normalizeUsage } from '../q1/usage.ts';
+import { normalizeUsage as receiptUsage, usageSourceOf } from '../usage-receipt.ts';
 import { SystemError, type CapabilityRecord, type DeleteResult, type FinishResult, type IngestResult, type Item, type MemorySystem, type PublicQuestion, type RetrievalPolicy, type RetrieveResult, type SessionInput } from './types.ts';
 
 const sessionText = (s: SessionInput) => s.turns.map(t => `${t.speaker}: ${t.content}`).join('\n');
@@ -240,12 +243,15 @@ export interface ReaderWindow {
   source: string;
 }
 
-/** Every reader's context window, in one place. Checked 2026-10-06 on the providers' model pages. */
+const PARTICLE_1 = COMPAT_PROVIDERS.particle.models['particle-1'];
+
+/** Every reader's context window, in one place. Checked 2026-10-06 on the providers' model pages; particle-1 from its row in COMPAT_PROVIDERS. */
 export const READER_WINDOWS: Readonly<Record<string, ReaderWindow>> = {
   'anthropic:claude-opus-5-5': { context_window: 1_000_000, max_input_tokens: 1_000_000, max_output_tokens: 128_000, source: 'platform.claude.com/docs/en/models/overview, 2026-10-06' },
   'anthropic:claude-sonnet-5-5': { context_window: 1_000_000, max_input_tokens: 1_000_000, max_output_tokens: 128_000, source: 'platform.claude.com/docs/en/models/overview, 2026-10-06' },
   'anthropic:claude-fable-5-1': { context_window: 1_000_000, max_input_tokens: 1_000_000, max_output_tokens: 128_000, source: 'platform.claude.com/docs/en/models/overview, 2026-10-06' },
   'openai:gpt-6.1-sol': { context_window: 1_050_000, max_input_tokens: 922_000, max_output_tokens: 128_000, source: 'developers.openai.com/api/docs/models/gpt-6.1-sol, 2026-10-06' },
+  'particle:particle-1': { context_window: PARTICLE_1.context_tokens, max_input_tokens: PARTICLE_1.context_tokens, max_output_tokens: PARTICLE_1.output_ceiling, source: COMPAT_PROVIDERS.particle.source },
 };
 
 export function readerWindow(reader: string): ReaderWindow {
@@ -290,6 +296,10 @@ export interface FullContextAnswer {
   latency_ms: number;
   cache_key: string;
   error?: string;
+  /** OpenAI-compatible readers only (records.ts `AnswerRecord`): the answering attempt's finish, whether it stopped at its output limit, and every provider attempt. */
+  finish?: string | null;
+  truncated?: boolean;
+  attempts?: ReaderAttempt[];
 }
 
 const TOO_LONG = /prompt is too long|context[_ ]length|context window|maximum context|too many (input )?tokens|input is too long|exceeds the context/i;
@@ -306,15 +316,20 @@ export const FULL_CONTEXT_EFFORT = 'medium';
  * the conversation, so its automatic prefix cache routes them together.
  * Request parameters match `ChatClient` (qa.ts) so only caching differs, reasoning effort included (default
  * `medium`, OpenAI `reasoning_effort`, Anthropic `output_config.effort`; the effort is part of the prompt-cache key).
+ * An OpenAI-compatible reader (COMPAT_PROVIDERS, today particle-1) is built and sent by the provider module, with
+ * `prompt_cache_key` set as for OpenAI, its output floor (16,000 for particle-1) as the output limit the fit check
+ * counts, and every attempt recorded; Particle's credit 402 is `budget_not_run`.
  */
 export async function answerFullContext(opts: { reader: string; prompt: string; conversation: string; maxOutputTokens?: number; tokenizer?: FitTokenizer; fetchImpl?: typeof fetch; effort?: string }): Promise<FullContextAnswer> {
-  const outputTokens = opts.maxOutputTokens ?? 1024;
   const effort = opts.effort ?? FULL_CONTEXT_EFFORT;
-  const fit = checkFit(opts.reader, opts.prompt, outputTokens, opts.tokenizer);
-  const cache_key = createHash('sha256').update(`full-context\u0000${opts.conversation}\u0000${effort}`).digest('hex').slice(0, 32);
-  const empty = { input: 0, output: 0, cache_read: 0, cache_write: 0 };
-  if (!fit.fits) return { text: '', outcome: 'does_not_fit', fit, usage: empty, provider_input_tokens: 0, latency_ms: 0, cache_key };
   const [prov, model] = [opts.reader.slice(0, opts.reader.indexOf(':')), opts.reader.slice(opts.reader.indexOf(':') + 1)];
+  const cache_key = createHash('sha256').update(`full-context\u0000${opts.conversation}\u0000${effort}`).digest('hex').slice(0, 32);
+  const compat = Object.hasOwn(COMPAT_PROVIDERS, prov) ? compatRequest(opts.reader, [{ role: 'user', content: opts.prompt }], { effort, maxOutputTokens: opts.maxOutputTokens, promptCacheKey: cache_key }) : null;
+  const outputTokens = compat ? compat.sent.output_limit : opts.maxOutputTokens ?? 1024;
+  const fit = checkFit(opts.reader, opts.prompt, outputTokens, opts.tokenizer);
+  const empty = { input: 0, output: 0, cache_read: 0, cache_write: 0 };
+  if (!fit.fits) return { text: '', outcome: 'does_not_fit', fit, usage: empty, provider_input_tokens: 0, latency_ms: 0, cache_key, ...(compat ? { finish: null, truncated: false, attempts: [] } : {}) };
+  if (compat) return readCompat(compat, fit, cache_key, opts.fetchImpl);
   const { prefix, suffix } = splitForCache(opts.prompt);
   const fetchImpl = opts.fetchImpl ?? globalThis.fetch;
   const request: { url: string; headers: Record<string, string>; body: unknown } = prov === 'anthropic'
@@ -341,4 +356,38 @@ export async function answerFullContext(opts: { reader: string; prompt: string; 
     await new Promise(r => setTimeout(r, 2000 * 2 ** attempt));
   }
   return { text: '', outcome: 'reader_error', fit, usage: empty, provider_input_tokens: 0, latency_ms: performance.now() - t0, cache_key, error: last };
+}
+
+/**
+ * A whole-history reading by an OpenAI-compatible reader: one request per attempt of the same 5-attempt loop, sent
+ * once each by the provider module. A 429 or 5xx (or a lost connection) is tried again after the provider's
+ * Retry-After, capped at 120 seconds, or else the backoff; a context-length 400 is `does_not_fit`; a budget stop
+ * (Particle's credit 402, or the lease proxy's own 402) is `budget_not_run` and is never retried. Each attempt is
+ * recorded, the failed ones with null response fields. An answer cut off at its output limit is the answer.
+ */
+async function readCompat(req: CompatRequest, fit: FitCheck, cache_key: string, fetchImpl?: typeof fetch): Promise<FullContextAnswer> {
+  const t0 = performance.now();
+  const attempts: ReaderAttempt[] = [];
+  const sent = { effort_sent: req.sent.effort_sent, effort_effective: req.sent.effort_effective, output_limit: req.sent.output_limit };
+  const source = usageSourceOf(req.model);
+  const empty = { input: 0, output: 0, cache_read: 0, cache_write: 0 };
+  const stop = (outcome: Outcome, error: string): FullContextAnswer => ({ text: '', outcome, fit: outcome === 'does_not_fit' ? { ...fit, fits: false } : fit, usage: empty, provider_input_tokens: 0, latency_ms: performance.now() - t0, cache_key, error, finish: null, truncated: false, attempts });
+  for (let attempt = 0; ; attempt++) {
+    try {
+      const res = await compatSend(req, { fetchImpl, timeoutMs: 600_000 });
+      const u = normalizeUsage(source, res.usage);
+      attempts.push({ status: 'ok', error: null, from_cache: false, response_model: res.response_model, finish: res.finish, reasoning_tokens: receiptUsage(source, res.usage)?.reasoning ?? null, weight_version: res.meta.weight_version, ...sent, retry_after_ms: null });
+      return { text: res.text, outcome: 'scored', fit, usage: answerUsage(u), provider_input_tokens: u.total_input, latency_ms: performance.now() - t0, cache_key, finish: res.finish, truncated: res.finish === 'length', attempts };
+    } catch (e) {
+      const err = e as Error & { kind?: string; retryable?: boolean; retryAfterMs?: number | null; usage?: Record<string, unknown> | null };
+      const message = String(err.message ?? e).slice(0, 300);
+      const again = err.name !== 'BudgetExceededError' && err.kind !== 'context_overflow' && err.retryable !== false && attempt < 4;
+      const wait = again ? err.retryAfterMs ?? null : null;
+      attempts.push({ status: 'error', error: message, from_cache: false, response_model: null, finish: null, reasoning_tokens: receiptUsage(source, err.usage)?.reasoning ?? null, weight_version: null, ...sent, retry_after_ms: wait });
+      if (err.name === 'BudgetExceededError') return stop('budget_not_run', message);
+      if (err.kind === 'context_overflow') return stop('does_not_fit', message);
+      if (!again) return stop('reader_error', message);
+      await new Promise(r => setTimeout(r, wait ?? 2000 * 2 ** attempt));
+    }
+  }
 }

@@ -4,6 +4,9 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { calibrate, calibrationSamples } from '../../eval/runner/q1/calibrate.ts';
+import { calibrationCell } from '../../eval/runner/q1/calibration-cell.ts';
+import { findCell } from '../../eval/runner/q1/cell.ts';
+import { loadManifest } from '../../eval/runner/q1/cells/definitions.ts';
 import { encodingCount } from '../../eval/runner/systems/render-v2.ts';
 
 const tmp = mkdtempSync(join(tmpdir(), 'q1-calibrate-'));
@@ -30,6 +33,18 @@ test('each packed answer pairs the local count of its exact prompt with the prov
   expect(c['anthropic:claude-sonnet-5-5'].factor).toBeCloseTo(1.5, 2);
   expect(c['openai:gpt-6.1-sol']).toMatchObject({ encoding: 'o200k_base', factor: 1, max_error: 0, samples: 1 });
   expect(calibrationSamples(join(tmp, 'missing'))).toEqual([]);
+  expect(calibrationSamples(tmp, { encoding: 'o200k_base' }).map(s => s.local)).toEqual([encodingCount('o200k_base', prompts[0]), encodingCount('o200k_base', prompts[1]), encodingCount('o200k_base', prompts[1])]);
+});
+
+// Value: protects=a calibration run reads dev data with the one reader it calibrates; fails_when=it could run a counted (sealed) cell, keep the cell's three readers or its frontier judges; why_new=particle-1's Q1 calibration (plan GST-605 Phase 2) runs through this; seam=none; no_claim=the paid run itself
+test('a calibration cell is a dev smoke cell\'s packed arm read by one reader, without frontier judges; a cell outside the dev split or without a packed arm is refused', () => {
+  const m = loadManifest();
+  const def = calibrationCell(findCell('s3-smoke.baseline-hybrid.baseline', m), 'particle:particle-1');
+  expect(def.arms).toHaveLength(1);
+  expect(def.arms[0]).toMatchObject({ mode: 'packed', budget: 8000, readers: ['particle:particle-1'], reader_replicates: {}, frontier: null });
+  expect(() => calibrationCell(findCell('s3-smoke.baseline-full-context.baseline', m), 'particle:particle-1')).toThrow('no packed arm');
+  const sealed = m.cells.find(c => c.split !== 'dev' && c.arms.some(a => a.mode === 'packed'))!;
+  expect(() => calibrationCell(sealed, 'particle:particle-1')).toThrow('dev data only');
 });
 
 test('--pre-normalizer re-derives the provider total from the raw buckets old packed answers stored, per reader convention', () => {

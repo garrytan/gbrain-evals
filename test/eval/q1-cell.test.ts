@@ -8,8 +8,8 @@
  * realizations, proxy slots and phases, custody and the paid guard, the
  * generated cell manifest and the campaign manifest the front door reads.
  */
-import { afterAll, describe, expect, test } from 'bun:test';
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { afterAll, afterEach, beforeEach, describe, expect, test } from 'bun:test';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { campaignCells, campaignManifest, cellAggregates, contextKey, publishCell, frontierInstrumentId, probeSample, realizationId, runCell, scoreboardCampaignCell, selectCellQuestions, type CellDeps, type CellOptions, type CellResult } from '../../eval/runner/q1/cell.ts';
@@ -18,17 +18,18 @@ import { ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
 import { classifyV2, CLASSIFIER_VERSION_V2, RULES_SHA256_V2 } from '../../eval/runner/q1/hedge.ts';
 import { instrumentFor } from '../../eval/runner/memory-qa/instruments.ts';
 import type { Corpus, MemoryQuestion } from '../../eval/runner/memory-qa/corpus.ts';
-import type { ChatLike, ChatOptions, ChatResult } from '../../eval/runner/memory-qa/qa-v2.ts';
+import { ChatClient, type ChatLike, type ChatOptions, type ChatResult } from '../../eval/runner/memory-qa/qa-v2.ts';
 import { answerProblems, judgmentProblems, rowProblems } from '../../eval/runner/memory-qa/records.ts';
 import { FakeMemorySystem, FAKE_CAPABILITIES, serveProtocol } from '../../eval/runner/systems/fake.ts';
 import { FRONTIER_READERS, FullContextSystem } from '../../eval/runner/systems/baselines.ts';
 import { FileAgentSystem } from '../../eval/runner/systems/file-agent.ts';
-import { BudgetExceededError } from '../../eval/runner/budget-ledger.ts';
+import { BudgetExceededError, BudgetRun, closeLedgers } from '../../eval/runner/budget-ledger.ts';
+import { DEFAULT_ROUTE_CAPS, MeteringProxy } from '../../eval/runner/metering-proxy.ts';
 import type { ScriptedModel } from '../../eval/runner/cat40/loop.ts';
 import { CAMPAIGN_SCHEMA, type CampaignManifest } from '../../eval/runner/scoreboard.ts';
 
 const NO_META = { finish: null, usage: null, response_model: null, attempt_errors: [] as string[] };
-import { Campaign, loadCampaign, planWaves } from '../../eval/runner/shootout-cell.ts';
+import { Campaign, DEFAULT_ROUTE_CLASSES, loadCampaign, planWaves } from '../../eval/runner/shootout-cell.ts';
 
 const ROOT = resolve(import.meta.dir, '../..');
 const tmp = mkdtempSync(join(tmpdir(), 'q1-cell-'));
@@ -276,17 +277,6 @@ describe('whole-system arms through the cell runner', () => {
     const answers = ndjson(join(dir, 'answers.ndjson'));
     expect(answers.map(a => a.outcome)).toEqual(['budget_not_run']);
     expect(existsSync(join(dir, 'judgments.ndjson')) ? ndjson(join(dir, 'judgments.ndjson')) : []).toEqual([]);
-  });
-
-  test('file agent: a particle reader through the lease proxy refuses before any call, since the proxy has no particle route yet', async () => {
-    const def = cellDef('baseline-file-agent', 'in-process', [{ id: 'whole-agent', mode: 'agent', readers: ['anthropic:claude-opus-5-5', 'particle:particle-1'] }], { configuration: 'baseline' });
-    let calls = 0;
-    const count = (async () => { calls++; return new Response('{}'); }) as unknown as typeof fetch;
-    const err = await runCell(def, { out: join(tmp, 'agent-particle-proxy'), providerProxy: 'http://127.0.0.1:9', maxAttempts: 1, ...quiet }, { corpus, system: new FileAgentSystem({ workDir: join(tmp, 'agent-particle-proxy-trees'), fetchImpl: count }), judge: scriptedJudge() }).catch(e => e) as ScoreboardError;
-    expect(err).toBeInstanceOf(ScoreboardError);
-    expect(err.op.code).toBe('NOT_YET_AVAILABLE');
-    expect(err.message).toContain('particle:particle-1 through --provider-proxy');
-    expect(calls).toBe(0);
   });
 
   test('full context: a history over the window is does_not_fit, never judged', async () => {
@@ -662,6 +652,127 @@ describe('metering through a lease proxy', () => {
   });
 });
 
+describe('particle-1 readers through Q1\'s lease proxy (plan GST-605 Phase 2)', () => {
+  const PARTICLE = 'particle:particle-1';
+  const slice = { selection: { kind: 'shootout-slice' as const, limit: 2, seed: 42 } };
+  const answerText = () => ({ message: { content: 'From the history: something.' }, finish: 'stop' });
+  const submit = () => ({ message: { content: null, tool_calls: [{ id: 'call_1', type: 'function', function: { name: 'submit_answer', arguments: JSON.stringify({ answer: 'The history does not say.' }) } }] }, finish: 'tool_calls' });
+  let k = 0;
+  /** The real lease proxy (eval/runner/metering-proxy.ts, Q1's route caps and classes) in front of a fake Particle. */
+  function leaseProxy(leaseUsd: number, answer: (n: number) => { message: Record<string, unknown>; finish: string } = answerText) {
+    const seen: Array<{ url: string; auth: string | null; body: Record<string, any> }> = [];
+    const upstream = (async (url: string, init: RequestInit) => {
+      seen.push({ url: String(url), auth: new Headers(init.headers).get('authorization'), body: JSON.parse(String(init.body)) });
+      const a = answer(seen.length);
+      return Response.json({ id: `c${seen.length}`, model: 'particle-ai/particle-1', choices: [{ index: 0, message: { role: 'assistant', ...a.message }, finish_reason: a.finish }],
+        usage: { prompt_tokens: 500, completion_tokens: 40, completion_tokens_details: { reasoning_tokens: 30 } }, service_tier: 'default', metadata: { weight_version: 'default' } });
+    }) as unknown as typeof fetch;
+    const usageLog = join(tmp, `particle-usage-${++k}.ndjson`);
+    const lease = BudgetRun.openLease({ runId: `particle-${k}`, leaseUsd, ledgerPath: join(tmp, `particle-${k}.sqlite`) });
+    const proxy = new MeteringProxy({ fetchImpl: upstream, policy: { lease, usageLog, env: { OPENAI_API_KEY: 'placeholder', ANTHROPIC_API_KEY: 'placeholder', VOYAGE_API_KEY: 'placeholder', PARTICLE_API_KEY: 'placeholder-particle' },
+      routeCaps: { caps: { ...DEFAULT_ROUTE_CAPS }, slots: { ...DEFAULT_ROUTE_CLASSES }, defaultClass: 'extraction' } } });
+    proxy.start();
+    return { seen, url: `http://127.0.0.1:${proxy.port}`, lines: () => existsSync(usageLog) ? ndjson(usageLog) : [], stop: () => proxy.stop() };
+  }
+  /** Every answering try the cell staged (answer-attempts.ndjson under each realization). */
+  const tries = (out: string, def: CellDefinition) => {
+    const r = join(out, 'runs', def.id, 'r');
+    return readdirSync(r).flatMap(rid => existsSync(join(r, rid, 'answer-attempts.ndjson')) ? ndjson(join(r, rid, 'answer-attempts.ndjson')) : []);
+  };
+  let saved: NodeJS.ProcessEnv = {};
+  beforeEach(() => { saved = { ...process.env }; });
+  afterEach(() => { for (const key of Object.keys(process.env)) if (!(key in saved)) delete process.env[key]; Object.assign(process.env, saved); closeLedgers(); });
+
+  // Value: protects=bar 2 receipts and Q1 metering on the packed path; fails_when=a particle reading skips the lease proxy, is capped at 2,048, is charged to no model, loses its attempts, or a truncated answer is retried or not counted; why_new=U5 lifts the refusal of particle readers behind the lease proxy; seam=none; no_claim=keyless (fake Particle behind the real proxy)
+  test('packed: each reading lands at /harness/particle/v1, is charged to particle at its 16,000-token cap and keeps its attempt; a truncated answer is scored, judged, counted and never retried', async () => {
+    const lp = leaseProxy(1, n => ({ ...answerText(), finish: n === 1 ? 'length' : 'stop' }));
+    try {
+      const def = cellDef('ext-graph-pipeline', 'shim', [component({ readers: [PARTICLE], reader_replicates: {} })], slice);
+      const out = join(tmp, 'particle-packed');
+      const res = await runCell(def, { out, providerProxy: lp.url, ...quiet }, { corpus, system: new FakeMemorySystem(), reader: new ChatClient(join(out, 'qa-cache')), judge: scriptedJudge() });
+      expect(res.status).toBe('complete');
+      expect(lp.seen).toHaveLength(2);
+      expect(lp.seen.every(s => s.url === 'https://api.particle.ai/v1/chat/completions' && s.auth === 'Bearer placeholder-particle' && s.body.model === 'particle-1' && s.body.max_completion_tokens === 16_000
+        && s.body.reasoning_effort === 'medium' && !('temperature' in s.body))).toBe(true);
+      expect(lp.lines().map(l => [l.provider, l.slot, l.route, l.route_class, l.output_cap, l.outcome, l.model])).toEqual(Array(2).fill(['particle', 'harness', '/v1/chat/completions', 'reader', 16_000, 'forwarded', 'particle-1']));
+      const dir = join(out, 'cells', def.arms[0].cell_id);
+      const answers = ndjson(join(dir, 'answers.ndjson'));
+      expect(answers.map(a => [a.outcome, a.truncated, a.finish]).sort()).toEqual([['scored', false, 'stop'], ['scored', true, 'length']]);
+      expect(answers.flatMap(a => answerProblems(a))).toEqual([]);
+      expect(answers.map(a => a.attempts)).toEqual(answers.map(a => [{ status: 'ok', error: null, from_cache: false, response_model: 'particle-ai/particle-1', finish: a.finish, reasoning_tokens: 30, weight_version: 'default',
+        effort_sent: 'medium', effort_effective: 'high', output_limit: 16_000, retry_after_ms: null }]));
+      expect(ndjson(join(dir, 'judgments.ndjson'))).toHaveLength(2);
+      const rec = JSON.parse(readFileSync(join(dir, 'receipt.json'), 'utf8'));
+      expect(rec.counts.truncated).toBe(1);
+      expect(rec.spend.usd.reader).toBeGreaterThan(0);
+      expect(JSON.parse(readFileSync(join(dir, 'run-config.json'), 'utf8')).reader).toMatchObject({ max_tokens: 2048, max_tokens_by_reader: { [PARTICLE]: 16_000 } });
+    } finally { lp.stop(); }
+  });
+
+  // Value: protects=Q1 metering on the full-context path; fails_when=a whole-history particle reading bypasses the proxy slot or its cap, or drops its prompt cache key or attempts; why_new=answerFullContext gains the particle transport; seam=none; no_claim=keyless
+  test('full context: each whole-history reading lands at /harness/particle/v1 with its prompt cache key and 16,000-token cap, charged to particle, with its attempt', async () => {
+    const lp = leaseProxy(1);
+    try {
+      const def = cellDef('baseline-full-context', 'in-process', [{ id: 'whole-full-context', mode: 'full-context', readers: [PARTICLE] }], { configuration: 'baseline', ...slice });
+      const out = join(tmp, 'particle-full');
+      const res = await runCell(def, { out, providerProxy: lp.url, ...quiet }, { corpus, system: new FullContextSystem('whole-history'), judge: scriptedJudge() });
+      expect(res.status).toBe('complete');
+      expect(lp.seen).toHaveLength(2);
+      expect(lp.seen.every(s => s.body.max_completion_tokens === 16_000 && typeof s.body.prompt_cache_key === 'string' && s.body.messages.length === 1)).toBe(true);
+      expect(lp.lines().map(l => [l.provider, l.slot, l.route_class, l.output_cap, l.outcome])).toEqual(Array(2).fill(['particle', 'harness', 'reader', 16_000, 'forwarded']));
+      const dir = join(out, 'cells', def.arms[0].cell_id);
+      const answers = ndjson(join(dir, 'answers.ndjson'));
+      expect(answers.map(a => [a.outcome, a.truncated, a.attempts.length, a.attempts[0].output_limit, a.attempts[0].response_model])).toEqual(Array(2).fill(['scored', false, 1, 16_000, 'particle-ai/particle-1']));
+      expect(JSON.parse(readFileSync(join(dir, 'run-config.json'), 'utf8')).reader.max_tokens_by_reader).toEqual({ [PARTICLE]: 16_000 });
+    } finally { lp.stop(); }
+  });
+
+  // Value: protects=the lease as a hard stop for particle; fails_when=an exhausted lease's refusal is retried, recorded as a reader error, loses its attempt, or lets the cell read or judge on; why_new=the scheduler's budget stop now sees particle's proxy refusal; seam=none; no_claim=Particle's own credit 402 (file-agent.test.ts)
+  test('packed and full context: an exhausted lease refuses the first reading before it reaches Particle; the cell stops as a budget stop after recording the failed attempt', async () => {
+    for (const mode of ['packed', 'full-context'] as const) {
+      const lp = leaseProxy(0.01);
+      try {
+        const def = mode === 'packed' ? cellDef('ext-graph-pipeline', 'shim', [component({ readers: [PARTICLE], reader_replicates: {} })], slice)
+          : cellDef('baseline-full-context', 'in-process', [{ id: 'whole-full-context', mode: 'full-context', readers: [PARTICLE] }], { configuration: 'baseline', ...slice });
+        const out = join(tmp, `particle-exhausted-${mode}`);
+        const res = await runCell(def, { out, providerProxy: lp.url, ...quiet }, { corpus, system: mode === 'packed' ? new FakeMemorySystem() : new FullContextSystem('whole-history'), reader: new ChatClient(join(out, 'qa-cache')), judge: scriptedJudge() });
+        expect([mode, res.status]).toEqual([mode, 'partial']);
+        expect(res.stopped).toContain('the metering proxy refused the particle request (HTTP 402)');
+        expect(lp.seen).toHaveLength(0);
+        expect(lp.lines().map(l => [l.provider, l.slot, l.outcome, l.status])).toEqual([['particle', 'harness', 'refused', 402]]);
+        expect(tries(out, def).map(t => [t.outcome, t.attempts.length, t.attempts[0].status, t.attempts[0].response_model, t.attempts[0].output_limit])).toEqual([['budget_not_run', 1, 'error', null, 16_000]]);
+        const dir = join(out, 'cells', def.arms[0].cell_id);
+        expect(existsSync(join(dir, 'judgments.ndjson')) ? ndjson(join(dir, 'judgments.ndjson')) : []).toEqual([]);
+      } finally { lp.stop(); }
+    }
+  });
+
+  // Value: protects=the file agent's particle route end to end through Q1's lease proxy (plan Phase 3 item 2, landing with Phase 2's slot environment); fails_when=its requests miss the agent slot, are refused at the reader cap, or an exhausted lease does not stop the cell; why_new=U8 tested proxiedFetch alone until this slot environment existed; seam=none; no_claim=keyless
+  test('file agent: a particle reader runs on the agent slot at /agent/particle/v1, charged to particle; an exhausted lease ends it as a budget stop', async () => {
+    const def = cellDef('baseline-file-agent', 'in-process', [{ id: 'whole-agent', mode: 'agent', readers: [PARTICLE] }], { configuration: 'baseline', ...slice });
+    const ok = leaseProxy(1, submit);
+    try {
+      const out = join(tmp, 'particle-agent');
+      const system = new FileAgentSystem({ workDir: join(out, 'trees') });
+      const res = await runCell(def, { out, providerProxy: ok.url, ...quiet }, { corpus, system, judge: scriptedJudge() });
+      expect(res.status).toBe('complete');
+      expect(ok.seen).toHaveLength(2);
+      expect(ok.seen.every(s => s.body.model === 'particle-1' && s.body.max_completion_tokens === 16_000 && s.body.tools.length > 0)).toBe(true);
+      expect(ok.lines().map(l => [l.provider, l.slot, l.route_class, l.output_cap, l.outcome])).toEqual(Array(2).fill(['particle', 'agent', 'agent', 16_000, 'forwarded']));
+      expect(ndjson(join(out, 'cells', def.arms[0].cell_id, 'answers.ndjson')).map(a => [a.outcome, a.stop_reason])).toEqual(Array(2).fill(['scored', 'submitted']));
+      expect(ndjson(system.receiptsPath).map(r => [r.lane, r.model, r.status, r.response_model])).toEqual(Array(2).fill(['q1-file-agent', PARTICLE, 'ok', 'particle-ai/particle-1']));
+    } finally { ok.stop(); }
+    const empty = leaseProxy(0.01, submit);
+    try {
+      const out = join(tmp, 'particle-agent-exhausted');
+      const res = await runCell(def, { out, providerProxy: empty.url, ...quiet }, { corpus, system: new FileAgentSystem({ workDir: join(out, 'trees') }), judge: scriptedJudge() });
+      expect(res.stopped).toContain('metering proxy');
+      expect(empty.seen).toHaveLength(0);
+      expect(empty.lines().map(l => [l.provider, l.slot, l.outcome, l.status])).toEqual([['particle', 'agent', 'refused', 402]]);
+    } finally { empty.stop(); }
+  });
+});
+
 describe('background tail spend after /finish (gbrain-defaults closure)', () => {
   /**
    * gbrain-defaults' shape: one namespace at a time, model jobs queued behind /finish run only while their namespace is
@@ -760,15 +871,14 @@ describe('custody and the paid guard', () => {
     expect(existsSync(join(tmp, 'unpaid'))).toBe(false);
   });
 
-  // Value: protects=particle never spends outside a lease; fails_when=a cell behind the lease proxy sends a particle reader or frontier judge straight to api.particle.ai; why_new=qa-v2 now routes particle (U2) and the lease proxy has no particle route until U5; seam=none; no_claim=keyless, refused before any request
-  test('an OpenAI-compatible reader or frontier judge behind the lease proxy is refused before the cell ingests or reads', async () => {
-    const refusal = async (arm: Partial<ArmDefinition>) => {
-      const def = cellDef('baseline-recency', 'in-process', [component({ reader_replicates: {}, ...arm })], { configuration: 'baseline' });
-      const err = await runCell(def, { out: mkdtempSync(join(tmp, 'compat-proxy-')), providerProxy: 'http://127.0.0.1:9', ...quiet }, { corpus, system: new FakeMemorySystem() }).catch(e => e) as ScoreboardError;
+  // Value: protects=particle-1 never judges a Q1 cell; fails_when=a particle frontier judge reaches the judge slot, behind the lease proxy or on the ledger; why_new=U5 lifts U2's lease-proxy refusal for particle readers only; seam=none; no_claim=keyless, refused before any request
+  test('an OpenAI-compatible frontier judge is refused before the cell ingests or reads, with or without the lease proxy', async () => {
+    const refusal = async (providerProxy: string | null) => {
+      const def = cellDef('baseline-recency', 'in-process', [component({ reader_replicates: {}, readers: [SONNET], frontier: { judges: ['anthropic:claude-opus-5-5', 'particle:particle-1'], readers: null, sample: null } })], { configuration: 'baseline' });
+      const err = await runCell(def, { out: mkdtempSync(join(tmp, 'compat-judge-')), providerProxy, ...quiet }, { corpus, system: new FakeMemorySystem() }).catch(e => e) as ScoreboardError;
       return [err.op.code, err.op.message.replace(def.id, '<cell>')];
     };
-    expect(await refusal({ readers: ['particle:particle-1'] })).toEqual(['NOT_YET_AVAILABLE', 'cell <cell> reads or judges with particle:particle-1 through --provider-proxy, and the lease proxy has no particle route yet']);
-    expect(await refusal({ readers: [SONNET], frontier: { judges: ['anthropic:claude-opus-5-5', 'particle:particle-1'], readers: null, sample: null } })).toEqual(['NOT_YET_AVAILABLE', 'cell <cell> reads or judges with particle:particle-1 through --provider-proxy, and the lease proxy has no particle route yet']);
+    for (const proxy of ['http://127.0.0.1:9', null]) expect(await refusal(proxy)).toEqual(['USAGE', 'cell <cell> judges with particle:particle-1, and Q1 never judges with an OpenAI-compatible model']);
   });
 
   test('own-answer arms without an answer route refuse and name the runnable arms', async () => {
@@ -1067,6 +1177,16 @@ describe('the generated cell manifest', () => {
     expect(units.find(u => u.id === 's2b.baseline-full-context.baseline')!.command).toContain('--reanswer-invalid-before 2026-10-26T00:00:00Z --reanswer-outcomes reader_error');
     expect(units.filter(u => u.command.includes('--fresh-before 2026-10-26T00:00:00Z')).map(u => u.id).filter(id => id.startsWith('s1.ext-memory-bank'))).toEqual(['s1.ext-memory-bank.recipe.c0', 's1.ext-memory-bank.recipe.c1', 's1.ext-memory-bank.recipe.c3']);
     expect(units.find(u => u.id === 's2b.baseline-full-context.baseline')!.lease_usd).toBe(20);
+  });
+
+  // Value: protects=the real Particle key reaches only a particle-reading cell's VM proxy, and the campaign carries particle's reader cap; fails_when=a particle cell's VM lacks PARTICLE_API_KEY, every other unit gains it, or the campaign drops the per-model cap; why_new=U5 adds particle to PROVIDER_KEYS and the route caps; seam=none; no_claim=no counted cell reads with particle-1 (the Q1 owner's amendment adds that arm)
+  test('a unit that reads with particle-1 passes PARTICLE_API_KEY to its VM proxy; no counted unit does; the campaign carries the reader@particle:particle-1 cap', () => {
+    const m = loadManifest();
+    expect(campaignCells(m, { smoke: true }).filter(u => u.pass?.includes('PARTICLE_API_KEY'))).toEqual([]);
+    const def = cellDef('baseline-recency', 'in-process', [component({ readers: ['particle:particle-1'], reader_replicates: {} })], { configuration: 'baseline' });
+    const [unit] = campaignCells({ ...m, cells: [def], smoke_cells: [] });
+    expect([unit.providers, unit.pass]).toEqual([['openai', 'anthropic', 'particle'], ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'PARTICLE_API_KEY']]);
+    expect(campaignManifest(m).output_caps).toEqual({ extraction: 4096, reader: 2048, judge: 2048, agent: 16000, 'reader@particle:particle-1': 16000 });
   });
 
   test('A24: every unit the A23 price counts as answering again or rerunning fresh carries the flag that makes its resume do it', () => {

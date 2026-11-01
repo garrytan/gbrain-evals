@@ -142,6 +142,18 @@ The arm's `receipt.json` adds `usage.by_role`, the `sumUsage` totals per role. A
 (the ledger's cap, or Particle's credit 402) keeps the records gathered before the stop on its error row. Memory-system
 cells (`eval/runner/memory-qa/run-systems.ts`) write `qa_receipts` for their reader calls.
 
+## How a Q1 answer uses it
+
+Q1 cells (`eval/runner/q1/cell.ts`) keep answer records (`eval/runner/memory-qa/records.ts`), not receipt files. A
+packed or full-context answer from a reader in the OpenAI-compatible provider module (particle-1) adds `finish` (the
+answering attempt's raw finish reason), `truncated` (the answer stopped at its output limit; it is still scored as
+the model's answer and never retried) and `attempts`: one entry per provider attempt, in order, with `status`,
+`error`, `from_cache`, `response_model`, `finish`, `reasoning_tokens`, `weight_version`, `effort_sent`,
+`effort_effective`, `output_limit` and `retry_after_ms`. A failed attempt's response fields are null. A try that
+fails below the attempt limit, or ends on a budget stop, keeps its attempts on its `answer-attempts.ndjson` line. The
+arm's `receipt.json` counts truncated answers in `counts.truncated`. Other readers' records are unchanged, and the
+Q1 file agent writes `receipts.ndjson` as above.
+
 ## Adopting it in another harness
 
 1. Keep the provider's raw usage object with each response.
@@ -160,6 +172,7 @@ For the Q1 scoreboard (`evals/q1-scoreboard`, `eval/runner/q1/cell.ts`), the cha
 ```bash
 bun test test/eval/memory-qa-usage.test.ts test/eval/openai-compatible.test.ts test/eval/memory-qa-particle.test.ts
 bun test test/eval/cat40-particle-loop.test.ts test/eval/cat40-particle-ladder.test.ts test/eval/file-agent.test.ts
+bun test test/eval/q1-cell.test.ts
 ```
 
 The first file serves recorded synthetic Anthropic and OpenAI responses through a mocked fetch and checks that both
@@ -173,5 +186,7 @@ leaves three records with what each sent and the first one's wait, a particle ju
 and a credit 402 leaves its record and stops the run. The second command checks the Cat 40 loop lanes.
 `cat40-particle-loop` checks one record per attempt for every provider, with its turn and request fields.
 `cat40-particle-ladder` runs the ladder against a fake Particle server on loopback and checks `attempts.ndjson` and
-its rerun numbering. `file-agent` checks `receipts.ndjson`, keyed by answer id. None of these files makes a provider
-call.
+its rerun numbering. `file-agent` checks `receipts.ndjson`, keyed by answer id, and the particle full-context
+reading's attempts and truncation. The third command runs Q1's packed, full-context and file-agent cells with
+particle-1 through the real lease proxy in front of a fake Particle, and checks each answer record's `attempts`, the
+truncation count and the attempt a lease refusal leaves. None of these files makes a provider call.

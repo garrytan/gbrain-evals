@@ -368,6 +368,69 @@ describe('true full context', () => {
     await sys.close();
   });
 
+  // Value: protects=existing readers' full-context requests, which counted Q1 cells froze; fails_when=adding the particle transport changes one byte of an Anthropic or OpenAI body; why_new=answerFullContext gains a second transport; seam=none; no_claim=provider-side behavior
+  test('Anthropic and OpenAI full-context request bodies are byte for byte main 8ca8d2cc\'s (sha256 pinned before particle-1 joined)', async () => {
+    const fixed = 'History:\nSession 1: alice: I moved to Lisbon.\n\nCurrent Date: 2023/05/01\nQuestion: Where does Alice live?\nAnswer:';
+    const pinned: Record<string, string> = {
+      'anthropic:claude-opus-5-5': 'c3d7e0a1e0548aa843fb055bc9fa70e941fc8562655ebb8e9aa12d4e4fef4bbf',
+      'anthropic:claude-sonnet-5-5': '2ca566d6650b17480c3cc45deff079a69393087b40bfbf5456f9d0ccebd06399',
+      'openai:gpt-6.1-sol': 'c6bf19e08831d83c697ae48f787b3bb8d6686e33eab7d82ff8d980beb237a59d',
+    };
+    for (const [reader, sha] of Object.entries(pinned)) {
+      let body = '';
+      const fetchImpl = (async (_u: string, init: RequestInit) => { body = String(init.body); return Response.json(reader.startsWith('anthropic') ? { content: [{ type: 'text', text: 'Lisbon' }], usage: { input_tokens: 10, output_tokens: 2 } } : { choices: [{ message: { content: 'Lisbon' } }], usage: { prompt_tokens: 10, completion_tokens: 2 } }); }) as unknown as typeof fetch;
+      const a = await answerFullContext({ reader, prompt: fixed, conversation: 'ns-1', maxOutputTokens: 2048, fetchImpl });
+      expect([reader, createHash('sha256').update(body).digest('hex')]).toEqual([reader, sha]);
+      expect(Object.keys(a).sort()).toEqual(['cache_key', 'fit', 'latency_ms', 'outcome', 'provider_input_tokens', 'text', 'usage']);
+    }
+  });
+
+  describe('particle-1 (plan GST-605 Phase 2)', () => {
+    const KEYS = ['PARTICLE_API_KEY', 'PARTICLE_BASE_URL'] as const;
+    let saved: Record<string, string | undefined> = {};
+    beforeEach(() => { saved = Object.fromEntries(KEYS.map(k => [k, process.env[k]])); process.env.PARTICLE_API_KEY = 'test-key'; delete process.env.PARTICLE_BASE_URL; });
+    afterEach(() => { for (const k of KEYS) { if (saved[k] === undefined) delete process.env[k]; else process.env[k] = saved[k]; } });
+    const reply = (finish: string) => Response.json({ id: 'c', model: 'particle-ai/particle-1', choices: [{ index: 0, message: { role: 'assistant', content: 'Lisbon' }, finish_reason: finish }],
+      usage: { prompt_tokens: 900, completion_tokens: 16000, prompt_tokens_details: { cached_tokens: 600 }, completion_tokens_details: { reasoning_tokens: 15990 } }, service_tier: 'default', metadata: { weight_version: 'default' } });
+
+    // Value: protects=bar 2 receipts and the truncation rule on the Q1 full-context path; fails_when=a particle reading skips the provider module, loses a failed attempt, retries a truncated answer, or counts the 2,048 cap in its fit check; why_new=answerFullContext gains the particle transport; seam=none; no_claim=keyless (a recorded fetch)
+    test('a reading goes through the provider module with its output floor, keeps every attempt, and an answer cut at its output limit is scored as truncated, never retried', async () => {
+      const sent: Array<{ url: string; auth: string | null; body: Record<string, any> }> = [];
+      let n = 0;
+      const fetchImpl = (async (url: string, init: RequestInit) => {
+        sent.push({ url: String(url), auth: new Headers(init.headers).get('authorization'), body: JSON.parse(String(init.body)) });
+        return ++n === 1 ? new Response('{"error":{"message":"Rate limit exceeded"}}', { status: 429, headers: { 'retry-after': '0' } }) : reply('length');
+      }) as unknown as typeof fetch;
+      const a = await answerFullContext({ reader: 'particle:particle-1', prompt, conversation: conv.id, maxOutputTokens: 2048, fetchImpl });
+      expect(sent.map(s => [s.url, s.auth])).toEqual([['https://api.particle.ai/v1/chat/completions', 'Bearer test-key'], ['https://api.particle.ai/v1/chat/completions', 'Bearer test-key']]);
+      expect(sent[0].body).toEqual({ model: 'particle-1', messages: [{ role: 'user', content: prompt }], reasoning_effort: 'medium', max_completion_tokens: 16_000, prompt_cache_key: a.cache_key });
+      expect(a).toMatchObject({ outcome: 'scored', text: 'Lisbon', finish: 'length', truncated: true, provider_input_tokens: 900, usage: { input: 300, output: 16000, cache_read: 600, cache_write: 0 }, fit: { fits: true, output_tokens: 16_000 } });
+      expect(a.attempts).toEqual([
+        { status: 'error', error: 'particle 429: {"error":{"message":"Rate limit exceeded"}}', from_cache: false, response_model: null, finish: null, reasoning_tokens: null, weight_version: null, effort_sent: 'medium', effort_effective: 'high', output_limit: 16_000, retry_after_ms: 0 },
+        { status: 'ok', error: null, from_cache: false, response_model: 'particle-ai/particle-1', finish: 'length', reasoning_tokens: 15990, weight_version: 'default', effort_sent: 'medium', effort_effective: 'high', output_limit: 16_000, retry_after_ms: null },
+      ]);
+      expect(READER_WINDOWS['particle:particle-1']).toMatchObject({ context_window: 1_048_576, max_output_tokens: 131_072 });
+      const edge = 'x'.repeat(3_100_000);
+      expect(checkFit('particle:particle-1', edge, 2048).fits).toBe(true);
+      const refused = await answerFullContext({ reader: 'particle:particle-1', prompt: edge, conversation: conv.id, maxOutputTokens: 2048, fetchImpl });
+      expect([refused.outcome, refused.fit.output_tokens, sent.length]).toEqual(['does_not_fit', 16_000, 2]);
+    });
+
+    // Value: protects=a credit stop ends the reading as budget_not_run with its receipt, never as an answer error; fails_when=a credit or lease 402 is retried or recorded as reader_error, or a context overflow is a reader error; why_new=new transport; seam=none; no_claim=Particle's real 402 body
+    test('Particle\'s credit 402 and the lease proxy\'s 402 are budget_not_run after one attempt; a context-length 400 is does_not_fit', async () => {
+      const once = (res: () => Response) => { let calls = 0; return { fetchImpl: (async () => { calls++; return res(); }) as unknown as typeof fetch, calls: () => calls }; };
+      for (const body of ['{"error":{"message":"Insufficient credits"}}', '{"error":{"kind":"budget","message":"metering proxy: reserving $0.02 would take this run over its budget"}}']) {
+        const f = once(() => new Response(body, { status: 402 }));
+        const a = await answerFullContext({ reader: 'particle:particle-1', prompt, conversation: conv.id, fetchImpl: f.fetchImpl });
+        expect([a.outcome, f.calls(), a.attempts!.length, a.attempts![0].status, a.attempts![0].output_limit, a.truncated]).toEqual(['budget_not_run', 1, 1, 'error', 16_000, false]);
+        expect(a.error).toMatch(/^budget: /);
+      }
+      const long = once(() => new Response('{"error":{"message":"This model\'s maximum context length is 1048576 tokens"}}', { status: 400 }));
+      const d = await answerFullContext({ reader: 'particle:particle-1', prompt, conversation: conv.id, fetchImpl: long.fetchImpl });
+      expect([d.outcome, d.fit.fits, long.calls()]).toEqual(['does_not_fit', false, 1]);
+    });
+  });
+
   test('public ids: the shootout full-context system is unchanged; Q1 modes name the kinds', async () => {
     const legacy = await new FullContextSystem().capabilities();
     expect(new FullContextSystem().name).toBe('full-context');

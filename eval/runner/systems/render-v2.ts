@@ -138,6 +138,7 @@ export const READER_TOKENIZERS: Record<string, ReaderTokenizer> = {
   'anthropic:claude-sonnet-5-5': { encoding: 'cl100k_base', calibration: 1.4524, calibrated: true, measured: { on: '2026-10-07', samples: 317, max_error: 0.0983, source: SMOKES } },
   'anthropic:claude-fable-5-1': { encoding: 'cl100k_base', calibration: 1.0, calibrated: false },
   'openai:gpt-6.1-sol': { encoding: 'o200k_base', calibration: 1.0009, calibrated: true, measured: { on: '2026-10-07', samples: 199, max_error: 0.0468, source: SMOKES } },
+  'particle:particle-1': { encoding: 'o200k_base', calibration: 1.0, calibrated: false },
 };
 
 const canonicalReader = (reader: string) => reader.includes(':') ? reader : `openai:${reader}`;

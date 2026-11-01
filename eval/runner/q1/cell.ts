@@ -86,11 +86,12 @@ import { loadCorpus, type Corpus, type MemoryQuestion, type Session } from '../m
 import { ContextStore } from '../memory-qa/arms.ts';
 import { instrumentFor, type Instrument } from '../memory-qa/instruments.ts';
 import { DEFAULT_MAX_ATTEMPTS, OUTCOMES, type Outcome } from '../memory-qa/outcomes.ts';
-import { ChatClient, isCompatModel, judgeAnswer, READER_TEMPLATE, type ChatLike } from '../memory-qa/qa-v2.ts';
-import { answerId, answerRecord, judgmentKey, readRecords, RecordLog, sha256, type AnswerRecord, type JudgmentRecord, type Q1Row } from '../memory-qa/records.ts';
+import { ChatClient, chatWithReceipts, isCompatModel, judgeAnswer, READER_TEMPLATE, type ChatLike } from '../memory-qa/qa-v2.ts';
+import { answerId, answerRecord, judgmentKey, readerAttempts, readRecords, RecordLog, sha256, type AnswerRecord, type JudgmentRecord, type Q1Row, type ReaderAttempt } from '../memory-qa/records.ts';
 import { failureRow, hashEmbed, readinessProbe, selectQuestions } from '../memory-qa/run-systems.ts';
 import { checkSealedDestinations, sealedPaths } from '../memory-qa/sealed-profile.ts';
 import { PaidArmRefusal, requirePaidArm } from '../paid-arm.ts';
+import { COMPAT_PROVIDERS } from '../providers/openai-compatible.ts';
 import { appendAccessLog } from '../sealed-confirmation-lib.ts';
 import { DEFAULT_ROUTE_CLASSES, type CampaignManifest as Q1Campaign, type CellSpec } from '../shootout-cell.ts';
 import { AgentRuntimeSystem } from '../systems/agent-runtime.ts';
@@ -102,6 +103,7 @@ import { Sanitizer, SanitizerLeakError, type IngestStep } from '../systems/sanit
 import { answerModes, passiveUnsupported, policyKnobs, type CapabilityRecord, type Item, type MemorySystem, type OwnAnswerSystem, type RetrievalPolicy, type SessionInput, type OwnAnswer } from '../systems/types.ts';
 import { definitionProblems, launchPrefix, loadManifest, MANIFEST_PATH, SETS, shimLaunch, type ArmDefinition, type CellDefinition, type Manifest, type Selection } from './cells/definitions.ts';
 import { exitCodeOf, refuse, renderMessage, ScoreboardError, type ScoreboardMessage } from './scoreboard-errors.ts';
+import type { UsageReceipt } from '../usage-receipt.ts';
 import { answerUsage, normalizeUsage, readerConvention } from './usage.ts';
 
 const REPO_ROOT = resolve(import.meta.dir, '../../..');
@@ -113,6 +115,16 @@ const FRONT = ['bun', 'eval/runner/q1/cell.ts'];
 const FINAL: ReadonlySet<Outcome> = new Set(['scored', 'unsupported', 'ingest_degraded', 'turn_cap', 'context_overflow', 'does_not_fit']);
 const JUDGED: ReadonlySet<Outcome> = new Set(['scored', 'ingest_degraded']);
 const READER_MAX_TOKENS = 2048;
+/**
+ * The output limit a packed or full-context reader is sent: READER_MAX_TOKENS, raised to an OpenAI-compatible model's
+ * output floor as compatRequest raises it (16,000 for particle-1, the lease proxy's `reader@particle:particle-1` cap).
+ */
+export function readerMaxTokens(reader: string): number {
+  if (!isCompatModel(reader)) return READER_MAX_TOKENS;
+  const at = reader.indexOf(':');
+  const models = COMPAT_PROVIDERS[reader.slice(0, at)].models;
+  return Object.hasOwn(models, reader.slice(at + 1)) ? Math.max(READER_MAX_TOKENS, models[reader.slice(at + 1)].output_floor) : READER_MAX_TOKENS;
+}
 
 const kindsSet = () => new Set((JSON.parse(readFileSync(join(REPO_ROOT, 'eval/systems/kinds.json'), 'utf8')) as { kinds: Array<{ id: string }> }).kinds.map(k => k.id));
 const rel = (p: string) => relative(REPO_ROOT, p) || '.';
@@ -361,11 +373,14 @@ function metering(proxy: string | null, staging: Staging, env: Record<string, st
     async tail() {},
   };
   const ctl = new ProxyControl(proxy);
-  for (const k of ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'VOYAGE_API_KEY']) env[k] = env.SHOOTOUT_CELL_TOKEN || 'dummy-key-the-proxy-replaces';
+  const compat = Object.entries(COMPAT_PROVIDERS);
+  for (const k of ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'VOYAGE_API_KEY', ...compat.map(([, c]) => c.key_env)]) env[k] = env.SHOOTOUT_CELL_TOKEN || 'dummy-key-the-proxy-replaces';
   const slotEnv = async <T>(slot: string, fn: () => Promise<T>): Promise<T> => {
-    const prior = { o: env.OPENAI_BASE_URL, a: env.ANTHROPIC_BASE_URL, v: env.VOYAGE_BASE_URL };
-    env.OPENAI_BASE_URL = `${proxy}/${slot}/openai/v1`; env.ANTHROPIC_BASE_URL = `${proxy}/${slot}/anthropic`; env.VOYAGE_BASE_URL = `${proxy}/${slot}/voyage/v1`;
-    try { return await fn(); } finally { env.OPENAI_BASE_URL = prior.o; env.ANTHROPIC_BASE_URL = prior.a; env.VOYAGE_BASE_URL = prior.v; }
+    const urls: Record<string, string> = { OPENAI_BASE_URL: `${proxy}/${slot}/openai/v1`, ANTHROPIC_BASE_URL: `${proxy}/${slot}/anthropic`, VOYAGE_BASE_URL: `${proxy}/${slot}/voyage/v1`,
+      ...Object.fromEntries(compat.map(([name, c]) => [c.base_url_env, `${proxy}/${slot}/${name}/v1`])) };
+    const prior = Object.fromEntries(Object.keys(urls).map(k => [k, env[k]]));
+    Object.assign(env, urls);
+    try { return await fn(); } finally { for (const [k, v] of Object.entries(prior)) if (v === undefined) delete env[k]; else env[k] = v; }
   };
   const tails = new Map<string, { key: string; brain: string }>();
   const rebind = async (slot: string) => {
@@ -454,10 +469,11 @@ export function runConfigText(def: CellDefinition, arm: ArmDefinition, ctx: { in
   const cell = Object.fromEntries(Object.entries(rest).filter(([k]) => !(LAUNCH_CONTROL_FIELDS as readonly string[]).includes(k)));
   const counter = arm.mode === 'packed' || arm.mode === 'native-default' ? readerCounter(arm.readers).identity : arm.mode === 'full-context' ? arm.readers.map(r => ({ reader: r, ...readerTokenizer(r) })) : null;
   const prompt = arm.mode === 'full-context' ? PROMPTS.rehydrated : arm.mode === 'agent' && def.system === 'baseline-file-agent' ? PROMPTS.agent : arm.mode === 'packed' || arm.mode === 'native-default' ? PROMPTS.native : null;
+  const raised = arm.mode === 'packed' || arm.mode === 'native-default' || arm.mode === 'full-context' ? arm.readers.filter(r => readerMaxTokens(r) !== READER_MAX_TOKENS) : [];
   return JSON.stringify({
     schema: RUN_CONFIG_SCHEMA, cell_id: arm.cell_id, run_cell: def.id, cell, arm,
     instrument: { id: ctx.instrument.id, sha256: ctx.instrument.sha256, judge: ctx.instrument.canonical_judge },
-    reader: { effort: def.effort, max_tokens: READER_MAX_TOKENS, prompt_sha256: prompt ? sha256(prompt) : null },
+    reader: { effort: def.effort, max_tokens: READER_MAX_TOKENS, prompt_sha256: prompt ? sha256(prompt) : null, ...(raised.length ? { max_tokens_by_reader: Object.fromEntries(raised.map(r => [r, readerMaxTokens(r)])) } : {}) },
     renderer: RENDERER_VERSION, counter, dataset: ctx.dataset, scheduled_sha256: ctx.scheduledSha, limit: ctx.limit,
   }, null, 2) + '\n';
 }
@@ -552,9 +568,9 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
   const arms = def.arms.filter(a => !opts.arms || opts.arms.includes(a.id));
   if (!arms.length) throw refuse({ code: 'USAGE', message: `--arms ${opts.arms?.join(',')} names no arm of ${def.id}`, why: 'a run needs at least one arm', fix: { next: 'run', argv: [...FRONT, 'show', '--cell', def.id] } });
   const instrument = instrumentFor(def.canonical_instrument);
-  const compatModels = opts.providerProxy ? [...new Set([...arms.flatMap(a => a.readers), instrument.canonical_judge, ...(opts.frontier === false ? [] : arms.flatMap(a => a.frontier?.judges ?? []))])].filter(isCompatModel) : [];
-  if (compatModels.length) throw refuse({ code: 'NOT_YET_AVAILABLE', message: `cell ${def.id} reads or judges with ${compatModels.join(', ')} through --provider-proxy, and the lease proxy has no particle route yet`,
-    why: 'through the lease proxy a reader or judge is metered only by the proxy; a particle reader or judge would call api.particle.ai with the real key and no meter (the route comes with plan GST-605 Phase 2)', fix: { next: 'run', argv: [...FRONT, 'run', '--cell', def.id, '--out', out] } });
+  const compatJudges = [...new Set([instrument.canonical_judge, ...(opts.frontier === false ? [] : arms.flatMap(a => a.frontier?.judges ?? []))])].filter(isCompatModel);
+  if (compatJudges.length) throw refuse({ code: 'USAGE', message: `cell ${def.id} judges with ${compatJudges.join(', ')}, and Q1 never judges with an OpenAI-compatible model`,
+    why: 'particle-1 reads but never judges a counted cell (plan GST-605); a judge is the instrument every reader is scored by, so it stays one the preregistration names', fix: { next: 'report', user_message: `judge ${def.id} with its instrument's canonical judge, and list frontier judges from the preregistration only` } });
 
   // Custody before anything reads the corpus.
   const custody = !deps.corpus && needsCustody(def);
@@ -885,12 +901,13 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
     };
 
     const terminal = (id: string, outcome: Outcome) => FINAL.has(outcome) || (answerTries.get(id) ?? 0) + 1 >= maxAttempts;
-    const recordAttempt = (id: string, outcome: Outcome, error?: string) => { appendFileSync(join(dir, 'answer-attempts.ndjson'), JSON.stringify({ answer_id: id, outcome, error: error?.slice(0, 300), at: new Date().toISOString() }) + '\n'); answerTries.set(id, (answerTries.get(id) ?? 0) + 1); };
+    /** One answering try; an OpenAI-compatible reader's line also keeps its provider attempts, so a retried try's receipts persist. */
+    const recordAttempt = (id: string, outcome: Outcome, error?: string, attempts?: ReaderAttempt[]) => { appendFileSync(join(dir, 'answer-attempts.ndjson'), JSON.stringify({ answer_id: id, outcome, error: error?.slice(0, 300), at: new Date().toISOString(), ...(attempts ? { attempts } : {}) }) + '\n'); answerTries.set(id, (answerTries.get(id) ?? 0) + 1); };
     const appendAnswer = (raw: AnswerRecord, error?: string, pack: PackedContext | null = null) => {
       const a = withDerived(raw, pack);
       if (FINAL.has(a.outcome)) { answers.append(a); return; }
-      if (terminal(a.answer_id, a.outcome)) { recordAttempt(a.answer_id, a.outcome, error); answers.append(a); return; }
-      recordAttempt(a.answer_id, a.outcome, error);
+      if (terminal(a.answer_id, a.outcome)) { recordAttempt(a.answer_id, a.outcome, error, a.attempts); answers.append(a); return; }
+      recordAttempt(a.answer_id, a.outcome, error, a.attempts);
     };
 
     const judgeOne = async (q: MemoryQuestion, a: AnswerRecord, arm: ArmDefinition) => {
@@ -959,16 +976,28 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
           continue;
         }
         const t0 = performance.now();
-        const res = await meter.around('harness', `read:${aid.slice(0, 16)}`, 'reader', () => reader.chat(rd, pack!.prompt, { maxTokens: READER_MAX_TOKENS, replicate: rep, effort: def.effort }));
+        const chatOpts = { maxTokens: readerMaxTokens(rd), replicate: rep, effort: def.effort };
+        // An OpenAI-compatible reader's answer keeps every provider attempt (records.ts `ReaderAttempt`); other readers' records are unchanged.
+        const receipts: UsageReceipt[] | null = isCompatModel(rd) ? [] : null;
+        const res = await meter.around('harness', `read:${aid.slice(0, 16)}`, 'reader', () => receipts
+          ? chatWithReceipts(reader, { role: 'reader', question_id: q.id, replicate: rep, model: rd, delivered: null }, pack!.prompt, chatOpts, receipts)
+          : reader.chat(rd, pack!.prompt, chatOpts));
+        const attempts = receipts ? readerAttempts(receipts) : undefined;
         if (res.error !== undefined) {
           const msg = String((res.error as Error).message);
-          if (/budget|BudgetExceeded/i.test(msg)) { stopped = `budget: ${msg.slice(0, 200)}`; return pack; }
-          appendAnswer(answerRecord(id, { text: '', outcome: 'reader_error', usage: zero, latency_ms: Math.round(performance.now() - t0), provider_input_tokens: null }), msg);
+          const failed = (outcome: Outcome) => answerRecord(id, { text: '', outcome, usage: zero, latency_ms: Math.round(performance.now() - t0), provider_input_tokens: null, ...(attempts ? { finish: null, truncated: false, attempts } : {}) });
+          if (/budget|BudgetExceeded/i.test(msg)) {
+            if (attempts) appendAnswer(failed('budget_not_run'), msg);
+            stopped = `budget: ${msg.slice(0, 200)}`;
+            return pack;
+          }
+          appendAnswer(failed('reader_error'), msg);
           continue;
         }
         const c = res.value!;
         const u = normalizeUsage(readerConvention(rd), c.usage ?? c);
-        appendAnswer(answerRecord(id, { text: c.text, outcome: r!.outcome, usage: answerUsage(u), latency_ms: Math.round(performance.now() - t0), provider_input_tokens: u.total_input }), undefined, pack);
+        appendAnswer(answerRecord(id, { text: c.text, outcome: r!.outcome, usage: answerUsage(u), latency_ms: Math.round(performance.now() - t0), provider_input_tokens: u.total_input,
+          ...(attempts ? { finish: c.finish, truncated: c.finish === 'length', attempts } : {}) }), undefined, pack);
       }
       return pack;
     };
@@ -989,11 +1018,12 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
         if (answers.has(aid)) continue;
         if (!isLive) continue;
         if (arm.mode === 'full-context') {
-          const res = await meter.around('harness', `read:${aid.slice(0, 16)}`, 'reader', () => answerFullContext({ reader: rd, prompt: pack!.prompt, conversation: ns, maxOutputTokens: READER_MAX_TOKENS, effort: def.effort, tokenizer: fitTokenizer(rd), ...(deps.fullContextFetch ? { fetchImpl: deps.fullContextFetch } : {}) }));
+          const res = await meter.around('harness', `read:${aid.slice(0, 16)}`, 'reader', () => answerFullContext({ reader: rd, prompt: pack!.prompt, conversation: ns, maxOutputTokens: readerMaxTokens(rd), effort: def.effort, tokenizer: fitTokenizer(rd), ...(deps.fullContextFetch ? { fetchImpl: deps.fullContextFetch } : {}) }));
           const a = res.value;
           if (!a) { appendAnswer(answerRecord(id, { text: '', outcome: 'reader_error', usage: zero, latency_ms: 0, provider_input_tokens: null }), String((res.error as Error)?.message)); continue; }
           extra.fit = { ...(extra.fit ?? {}), [rd]: { fits: a.fit.fits, prompt_tokens: a.fit.prompt_tokens, max_input_tokens: a.fit.max_input_tokens, tokenizer: a.fit.tokenizer } };
-          appendAnswer(answerRecord(id, { text: a.text, outcome: a.outcome === 'scored' && degraded ? 'ingest_degraded' : a.outcome, usage: a.usage, latency_ms: Math.round(a.latency_ms), provider_input_tokens: a.provider_input_tokens || null }), a.error);
+          appendAnswer(answerRecord(id, { text: a.text, outcome: a.outcome === 'scored' && degraded ? 'ingest_degraded' : a.outcome, usage: a.usage, latency_ms: Math.round(a.latency_ms), provider_input_tokens: a.provider_input_tokens || null,
+            ...(a.attempts ? { finish: a.finish ?? null, truncated: a.truncated ?? false, attempts: a.attempts } : {}) }), a.error);
           if (a.outcome === 'budget_not_run') stopped = `budget: ${String(a.error).slice(0, 200)}`;
           continue;
         }
@@ -1200,7 +1230,8 @@ export function publishCell(def: CellDefinition, arms: ArmDefinition[], roots: s
       readers, reader_replicates: arm.reader_replicates, effort: arm.mode === 'own-answer' ? null : def.effort,
       instrument: { id: ctx.instrument.id, sha256: ctx.instrument.sha256, judge: ctx.instrument.canonical_judge }, frontier: arm.frontier ? { ...arm.frontier, instrument_ids: arm.frontier.judges.map(j => frontierInstrumentId(ctx.instrument.id, j)) } : null,
       selection: { questions: qs.size, conversations: new Set(rows.map(r => r.conversation)).size, scheduled_sha256: sha256([...qs].join('\n')) },
-      counts: { rows: rows.length, answers: answers.length, answers_promised: promised, judgments: judgments.length, unjudged, outcomes },
+      counts: { rows: rows.length, answers: answers.length, answers_promised: promised, judgments: judgments.length, unjudged, outcomes,
+        ...(answers.some(a => a.truncated !== undefined) ? { truncated: answers.filter(a => a.truncated).length } : {}) },
       per_reader_mean: Object.fromEntries(readers.map(r => [r, scores(r)])),
       realizations: staged.map(s => ({ conversation: s.conv, realization_id: s.rid, attempts: s.attempts, restored_from: s.restored_from ?? null, ...(s.carried_from ? { carried_from: s.carried_from } : {}), degraded: s.ingest?.degraded ?? null,
         background_liabilities: s.ingest?.finish.background_liabilities ?? null })).sort((a, b) => (a.conversation < b.conversation ? -1 : 1)),
@@ -1278,7 +1309,7 @@ export const EXECUTES = ['eval/runner/q1/cell.ts', 'eval/runner/q1/cells', 'eval
 
 const VM_VCPU = 4;
 /** The provider keys a cell's VM receives (ubi-runner --pass): only its metering proxy reads them; the cell sees dummy keys. */
-const PROVIDER_KEYS = { openai: 'OPENAI_API_KEY', anthropic: 'ANTHROPIC_API_KEY', voyage: 'VOYAGE_API_KEY' } as const;
+const PROVIDER_KEYS = { openai: 'OPENAI_API_KEY', anthropic: 'ANTHROPIC_API_KEY', voyage: 'VOYAGE_API_KEY', particle: COMPAT_PROVIDERS.particle.key_env } as const;
 /** Waves: T1 first (S1 shim shards packed under the overnight cap), then each T2 set after T1 settles, in the preregistered scope-reduction order reversed. */
 const T2_WAVES: Record<string, number> = { 'T2-S2b': 1, 'T2-S3': 2, 'T2-S2a': 3, 'T2-S4-S5': 4 };
 
@@ -1295,7 +1326,7 @@ export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight
     const id = `${c.id}${c.shards > 1 ? `.c${i}` : ''}`;
     const run = [...FRONT, 'run', '--cell', c.id, ...(c.shards > 1 ? ['--shard', `${i}/${c.shards}`] : []), ...(c.runner === 'shim' ? ['--system-url', 'http://127.0.0.1:8700'] : []), ...(c.reanswer_invalid_before ? ['--reanswer-invalid-before', c.reanswer_invalid_before.at, ...(c.reanswer_invalid_before.outcomes ? ['--reanswer-outcomes', c.reanswer_invalid_before.outcomes.join(',')] : [])] : []), ...(c.fresh_before?.shards.includes(i) ? ['--fresh-before', c.fresh_before.at] : []), '--out', '"$SHOOTOUT_OUT"'].join(' ');
     const launch = c.launch ?? shimLaunch(c.system, c.configuration);
-    const providers: Array<keyof typeof PROVIDER_KEYS> = c.system === 'gbrain-defaults' ? ['openai', 'anthropic', 'voyage'] : ['openai', 'anthropic'];
+    const providers: Array<keyof typeof PROVIDER_KEYS> = [...(c.system === 'gbrain-defaults' ? ['openai', 'anthropic', 'voyage'] as const : ['openai', 'anthropic'] as const), ...(c.arms.some(a => a.readers.some(r => r.startsWith('particle:'))) ? ['particle'] as const : [])];
     const stack = c.runner === 'shim' || IN_PROCESS_STACKS.has(c.system);
     const command = stack ? `${launchPrefix(launch)}bash eval/systems/bootstrap.sh up --system ${c.system} --config ${launch.config} && ${run}; rc=$?; bash eval/systems/bootstrap.sh down --system ${c.system}; exit $rc` : run;
     /** A smoke measures what the estimate assumes, so its lease holds twice the estimate; a counted unit takes its cell's lease override (A20), else the estimate per shard. */
