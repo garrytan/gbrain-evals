@@ -164,15 +164,20 @@ jobs:
         run: timeout 300 bun run eval:scoreboard fixture --stub judge-repeat --json
 
   # Secret scan of published receipts: every receipts/ directory and every
-  # scoreboard receipt tree under docs/benchmarks/. gitleaks is pinned by
-  # version and sha256; findings are redacted in the log.
+  # scoreboard receipt tree under docs/benchmarks/, plus the members of every
+  # tarball or gzip receipt under docs/benchmarks, results, baselines and qrels
+  # that is not reviewed at its current hash and gitleaks version in
+  # test/eval/fixtures/reviewed-compressed-receipts.json; a tarball GNU tar
+  # cannot list cleanly, or one with a repeated name or a special entry, is
+  # refused unread. gitleaks is pinned by version and sha256; findings are
+  # redacted in the log.
   receipt-secrets:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
-      - name: gitleaks on docs/benchmarks/**/receipts and scoreboard receipts
+      - name: gitleaks on docs/benchmarks/**/receipts, scoreboard receipts and compressed receipts
         run: bash scripts/scan-receipts.sh
 
   # The pinned agent-memory benchmark harness (eval/harness-provider/): CPU-only
