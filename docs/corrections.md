@@ -71,7 +71,7 @@ says which ones do not and why. Everything above [Changelog](#changelog) is curr
 
 ### 2026-11-01: Page created from README's corrections
 
-Created in the documentation refresh at gbrain `3ec766c40` (v0.60.531.0), gbrain-evals __PR__. README's
+Created in the documentation refresh at gbrain `3ec766c40` (v0.60.531.0), gbrain-evals #241. README's
 `## Corrections` section moved here, so README's current state shows only numbers that stand. The entries keep their
 wording, grouped by topic, with two changes: the query-expansion entry names the commit it was measured at
 (`109b992`, was "current gbrain") and links its recount. Two entries are new on this page, moved from current-state

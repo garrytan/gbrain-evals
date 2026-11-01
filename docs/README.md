@@ -259,7 +259,7 @@ procedure with documented missing pieces; it is not the current refresh command.
 
 ### 2026-11-01: Agent reports get their own section; corrections link
 
-gbrain-evals __PR__. The route table's agent-task row held one cell of about 6,400 characters listing fourteen reports.
+gbrain-evals #241. The route table's agent-task row held one cell of about 6,400 characters listing fourteen reports.
 That row keeps Cat 40 and Cat 41; the six Cat 41 setup runs and the eight meeting-prep (T0b) reports move, with their
 wording unchanged, to a new [Agents operating gbrain](#agents-operating-gbrain) section, one bullet per report.
 "Checking the evidence" now links the new [corrections](corrections.md) page instead of README's former corrections

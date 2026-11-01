@@ -347,7 +347,7 @@ before A6b use the former environment variable names. The hashes of every file A
 
 ### 2026-11-01: Invalid rows move to the corrections page; changelog order
 
-gbrain-evals __PR__. Three invalid gbrain rows leave the current-state tables for [corrections](corrections.md): the
+gbrain-evals #241. Three invalid gbrain rows leave the current-state tables for [corrections](corrections.md): the
 LongMemEval QA row for gbrain v0.48.4.0 (86.6%, 433/500, invalid since September 28 because the answer model saw
 `answer_` evidence-session ids) and the two struck-through May PrecisionMemBench rows (tight adaptive 0.582 and
 hybrid 0.075, invalid because of the seeding defect). The opaque-id QA row now names the invalid figure it replaces

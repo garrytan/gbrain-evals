@@ -375,7 +375,7 @@ Code is MIT licensed. Dataset and vendored benchmark attribution is recorded in 
 
 ### 2026-11-01: Results name their commits; N14 row; corrections and history move out
 
-gbrain-evals __PR__, the documentation refresh at the pin `3ec766c40` (v0.60.531.0).
+gbrain-evals #241, the documentation refresh at the pin `3ec766c40` (v0.60.531.0).
 
 - **Results.** Every row names the gbrain commit it was measured at: the multi-relation planner its held-out build
   `94bd52e01` (was v0.60.60.0), Cat 41 its candidate `b3f4e8b` (was v0.60.46.0), the three managed-sync rows

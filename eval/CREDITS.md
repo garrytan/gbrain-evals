@@ -46,7 +46,7 @@ How this page changed, newest first. Measurement history lives in the dated repo
 
 ### 2026-11-01: Stamped with the gbrain pin
 
-gbrain-evals __PR__. The opening said the page was current as of gbrain-evals v0.10.25; it now names the gbrain this
+gbrain-evals #241. The opening said the page was current as of gbrain-evals v0.10.25; it now names the gbrain this
 repository pins, master `3ec766c40` (v0.60.531.0), and `scripts/verify-documentation-refresh.py` checks that sentence
 against `package.json` with the other hub pin sentences. Nothing else on the page changed: no external query batch or
 adapter has been contributed since the last entry.
