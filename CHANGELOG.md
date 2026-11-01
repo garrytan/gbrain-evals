@@ -4,6 +4,46 @@ This records what each gbrain-evals release changed and what its measurements me
 
 ## [Unreleased]
 
+### Cat 35 keeps the external lane out of gbrain's WS0 numbers and deltas, and the scoreboard checks read more of their inputs
+
+- **The WS0 receipt's coverage map holds only gbrain's lanes (#217).** Its `n_total`, `n_scored` and `errors` counted
+  the built-in lanes only, but `data.coverage_by_lane` also carried the external lane. A missing external document,
+  which scores zero as a lane error, or a failed external judge call moved a coverage figure that the receipt's errors
+  never listed. `data.coverage_by_lane` now holds the built-in lanes, and the external lane's scores stay under its name
+  in the detailed receipt's per-lane maps.
+- **The external lane's judge spend is reported apart (#217).** `total_cost_usd` counted it, so the built-in lanes'
+  cost rose whenever an external lane ran beside them. `total_cost_usd` now counts the built-in lanes' judges and fact
+  extraction, and `external_cost_usd`, in the detailed receipt and in WS0 `data`, holds the external lane's judge
+  spend (null without one). The scorecard's cost line names both. The WS0 `cost`, read from the budget ledger, still
+  covers every paid request; subtract `external_cost_usd` for gbrain's share. `attribution_hazards` needed no change:
+  every row names its lane, and its one reader that ignores the lane (`situation-recall-native-35.ts`) refuses a
+  receipt with an external lane before reading it.
+- **Prior-run deltas pass over an external-only receipt (#218).** Discovery took the newest receipt in the same mode, so
+  a `--lanes none` run became the prior receipt of the next gbrain run, which then skipped its deltas as a lanes
+  mismatch (`prior=[], current=[verbatim]` in a keyless run). It now prefers the newest receipt with the same mode and
+  lane set, then the same mode, then any. A receipt whose `lanes` is not a list of lane names is no longer a candidate;
+  sorting such a list stopped the run after its judges had been paid and before its receipt was written.
+- **The scoreboard refuses a `power.json` that `eval/runner/q1/power.ts` cannot write.** A file that is not JSON is now
+  `RECEIPT_INVALID`; it threw a bare parse error that stopped `scoreboard.ts check`. So are a comparator list with an
+  entry that is not a system id, a detectable difference of zero or less, a full or shrunk decision with no detectable
+  difference, and a full or shrunk decision whose difference is above the `threshold_points` it records, or that records
+  none. power.ts ranks Family 1 only under a measured difference at or under its 10-point threshold; such a decision
+  used to rank rows while printing "about more than 30 points" or a difference above that threshold.
+- **The documentation verifier checks the scoreboard explanation's figures and every commit it names.**
+  `scripts/verify-documentation-refresh.py` reads README's text between its last heading and the scoreboard block, not
+  only the paragraph that names the commit. It now fails when a decimal figure there (today 59.0, 58.9, 68.3, 56.3, 12.9
+  and 13.58) appears neither in the block nor in `docs/benchmarks/2026-10-06-scoreboard/scoreboard.md`, the render's
+  other file. It compares every token after `check --commit` with the publication commit, so a second, shortened or
+  lengthened commit fails (it read only the first 40 hex characters). It also fails when README has no
+  `<!-- scoreboard:headline:begin -->` line (it read the last section instead, and passed if that named the commit) or no
+  `<!-- scoreboard:headline:end -->` line (it read the rest of README as the render), when `publication.json`'s
+  `published` is not an object (it crashed), and when `published.commit` is missing or neither null nor text (a number
+  crashed it, and a missing key passed as a pending publication). Whole numbers, such as the 192 shared questions, are
+  not checked, because the render does not print that count.
+- The last two items cover the three findings #241's adversarial review deferred (the figures, the `power.json` gaps
+  and the verifier's fragility), none of which had an issue, and the gaps this change's own adversarial review found in
+  them. No published receipt, result or README line changes.
+
 ### particle-1 replays W10's LongMemEval reader prompts: first paired numbers against Opus 5.5, Sonnet 5.5 and GPT-6.1 Sol
 
 - **`bun eval/runner/batch/w10-particle.ts` replays W10's recorded reader prompts on particle-1** (unit U3 of the particle-1 plan). `build` rebuilds each comparator's system and user text from W10's committed request bodies and checks it against W10's manifests. `run <arm>` reads and judges every question under a ledger run with a 900-second deadline per attempt, and writes rows, one receipt per attempt and the preregistered bars 1 to 4. `report` re-scores the committed rows without a key and refuses an arm that stopped, left questions unrun, failed a bar or holds a failed judge call. In check mode it verifies `summary.json` and the compare files and flags a compare file it no longer writes.

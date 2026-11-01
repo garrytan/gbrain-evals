@@ -133,10 +133,11 @@ is the judge's ceiling.
 
 The receipt's `external_lane` block records the lane name, the folder's real path, the size limit, each file's bytes and
 sha256, how many claims the grounding judge grades in each file, the conversations with no file, and a note that the
-harness has no record of how the documents were made. Your lane's scores sit under its name in the per-lane maps.
-`lanes`, `mode`, the prior-run deltas, the blended usability, the judge-failure gate and the WS0 counters describe the
-built-in lanes only, and the runner scores every built-in lane before your lane, so your lane's spend and provider
-errors cannot reach gbrain's numbers. Your lane gets its own `external_judge_failed_rate` gate, which the run's exit
+harness has no record of how the documents were made. Your lane's scores sit under its name in the per-lane maps, and
+its judge spend is `external_cost_usd`. `lanes`, `mode`, the prior-run deltas, the blended usability, the
+judge-failure gate, `total_cost_usd` and the WS0 receipt's counters, errors and coverage map describe the built-in lanes
+only, and the runner scores every built-in lane before your lane, so your lane's spend and provider errors cannot reach
+gbrain's numbers. Your lane gets its own `external_judge_failed_rate` gate, which the run's exit
 code includes, and a run with an external lane is never publishable as the benchmark. Scrub machine paths with
 `bun eval/runner/receipt.ts scrub` before you share a receipt.
 
@@ -216,6 +217,13 @@ See [CREDITS.md](CREDITS.md) for attribution. Contributions to external question
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
+
+### 2026-11-01: The external lane's spend and the WS0 receipt
+
+The Cat 35 external-lane section now says your lane's judge spend is `external_cost_usd`, kept out of `total_cost_usd`,
+and that the WS0 receipt's coverage map, like its counters and errors, covers the built-in lanes only. Before #217 both
+carried your lane: `total_cost_usd` counted its judge spend, and the WS0 coverage map listed it beside counters and
+errors that did not.
 
 ### 2026-11-01: Compressed receipts are checked member by member
 
