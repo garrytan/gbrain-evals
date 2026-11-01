@@ -1,7 +1,7 @@
 # Learn, evaluate, and extend gbrain
 
 This index lists every published report by the question it answers. It describes the repository as it stands:
-gbrain-evals v0.10.138, with gbrain master `7a6bdd357` (v0.60.454.0) as the product under test. Results measured at
+gbrain-evals v0.10.139, with gbrain master `3ec766c40` (v0.60.531.0) as the product under test. Results measured at
 other gbrain commits name that commit in their report. Everything above [Changelog](#changelog) is current; the
 changelog at the bottom records how this index changed.
 
@@ -231,6 +231,13 @@ and [repository writing guide](../CLAUDE.md). The
 procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
+
+### 2026-10-31: Re-pin to gbrain `3ec766c40`; opening names v0.10.139
+
+The opening names v0.10.139 (was v0.10.138) and gbrain master `3ec766c40` (v0.60.531.0) as the product under test (was
+`7a6bdd357`, v0.60.454.0). v0.10.139 holds gbrain's four new read defaults for comparable memory-qa arms (see the
+[README](../README.md)) and adds the Cat 35 external lane ([contributor guide](../eval/CONTRIBUTING.md#score-another-systems-cat-35-documents)).
+`scripts/verify-documentation-refresh.py` now checks the opening's pin against `package.json`. No row changed.
 
 ### 2026-10-31: Opening names v0.10.138
 

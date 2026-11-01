@@ -1,7 +1,7 @@
 /**
  * scripts/verify-documentation-refresh.py `product_pin_references`: bun.lock and every hub sentence that names the
  * `gbrain` product pin must agree with package.json, and the hubs must name one release. Until 2026-10-31 the verifier
- * checked only the `gbrain-cues` pin, and three hubs kept naming `77cf8e111` through three re-pins (audit item D1).
+ * checked only the `gbrain-cues` pin, so hubs kept naming older pins through later re-pins (audit item D1).
  */
 import { afterAll, describe, expect, test } from 'bun:test';
 import { cpSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -9,7 +9,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 
 const ROOT = resolve(import.meta.dir, '../..');
-const HUBS = ['README.md', 'docs/settings.md', 'docs/comparison-systems.md', 'docs/retrieval-lessons.md', 'eval/README.md', 'eval/CONTRIBUTING.md'];
+const HUBS = ['README.md', 'docs/README.md', 'docs/settings.md', 'docs/comparison-systems.md', 'docs/retrieval-lessons.md', 'eval/README.md', 'eval/CONTRIBUTING.md'];
 const tmp = mkdtempSync(join(tmpdir(), 'verify-docs-pin-'));
 afterAll(() => rmSync(tmp, { recursive: true, force: true }));
 
@@ -54,6 +54,11 @@ describe('verify-documentation-refresh: the product pin', () => {
     expect(errors).toHaveLength(1);
     expect(errors[0][0]).toBe('eval/README.md');
     expect(errors[0][2]).toBe('Product pin reference differs from package.json pin');
+  });
+
+  test('the docs index opening is a hub too', () => {
+    const root = copyWith('stale-index', 'docs/README.md', t => t.replace(`master \`${sha.slice(0, 9)}\``, 'master `7a6bdd357`'));
+    expect(references(root).map(e => [e[0], e[2]])).toEqual([['docs/README.md', 'Product pin reference differs from package.json pin']]);
   });
 
   test('a hub sentence reworded out of recognition fails as missing, not as passing', () => {

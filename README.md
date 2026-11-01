@@ -14,7 +14,7 @@ describes gbrain as this repository pins it today; the changelog at the bottom r
 |---|---|
 | Pinned product | gbrain [`3ec766c40`](https://github.com/garrytan/gbrain/tree/3ec766c40664b652b14e39788d177139f5a7b105), release v0.60.531.0, declared as `gbrain` in `package.json` |
 | Fixed-purpose aliases | `gbrain-cues` (`939232f`) and `gbrain-reader` (`e78f1c3`), used only by the experiments that name them |
-| This repository | gbrain-evals v0.10.138 (`VERSION`) |
+| This repository | gbrain-evals v0.10.139 (`VERSION`) |
 
 This repository installs gbrain v0.60.531.0 (`3ec766c40`). Some results below were measured at earlier commits; each
 names its commit, and every commit named below is in the release's history except `a7cb37b`, the September 29 branch
@@ -385,9 +385,11 @@ Code is MIT licensed. Dataset and vendored benchmark attribution is recorded in 
 
 ## Changelog
 
-### 2026-10-31: Re-pin to gbrain `3ec766c40`; the four new read defaults are named
+### 2026-10-31: Re-pin to gbrain `3ec766c40`; the four new read defaults are named; repository row names v0.10.139
 
-The pinned product row changes from `7a6bdd357` (v0.60.454.0) to `3ec766c40` (v0.60.531.0), and so does the sentence
+gbrain-evals v0.10.139 re-pins gbrain and adds the Cat 35 external lane, which scores another system's notes with Cat
+35's judges ([contributor guide](eval/CONTRIBUTING.md#score-another-systems-cat-35-documents)). The repository row names
+v0.10.139 (was v0.10.138). The pinned product row changes from `7a6bdd357` (v0.60.454.0) to `3ec766c40` (v0.60.531.0), and so does the sentence
 under the table. Every commit the current state names is in the new release's history except `a7cb37b`, as before. A
 new paragraph under it names the four read defaults gbrain added after the old pin (the dated facts block of a budgeted
 `query`, v0.60.491.0; correction ordering of saved facts, v0.60.493.0; the remote page cap, v0.60.506.0; quote-fenced

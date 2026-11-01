@@ -67,6 +67,7 @@ PRODUCT_PIN_SENTENCES = {
         r"\| Pinned product \| gbrain \[`(?P<sha>[a-f0-9]{7,40})`\]\(https://github\.com/garrytan/gbrain/tree/(?P<full>[a-f0-9]{40})\), release v(?P<version>[\d.]+),",
         r"This repository installs gbrain v(?P<version>[\d.]+) \(`(?P<sha>[a-f0-9]{7,40})`\)",
     ],
+    "docs/README.md": [r"with gbrain master `(?P<sha>[a-f0-9]{7,40})` \(v(?P<version>[\d.]+)\) as the product under test"],
     "docs/settings.md": [r"This page describes the gbrain this repository installs, master `(?P<sha>[a-f0-9]{7,40})` \(v(?P<version>[\d.]+),"],
     "docs/comparison-systems.md": [
         r"as this repository pins it \(master `(?P<sha>[a-f0-9]{7,40})`, v(?P<version>[\d.]+)\)",
