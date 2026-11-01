@@ -23,6 +23,8 @@ The retrieval adapters were implemented within this project:
 
 These are useful controls, but they are not third-party implementations submitted by competing vendors. External adapters should record their author and implementation assumptions here.
 
+**Khaled Aly** (@khalloud, Carafe team) designed the Cat 35 external lane in [#32](https://github.com/garrytan/gbrain-evals/pull/32): it scores another system's notes beside gbrain's lanes under the same judge. The lane was rebuilt on main from that design.
+
 ## Data and upstream work
 
 The committed `eval/data/world-v1/` corpus contains 240 fictional entities. Claude Opus wrote the generated prose. Its historical one-time generation cost was approximately $3.14; that is a recorded cost, not a current regeneration quote.
@@ -41,6 +43,11 @@ A **Codex** review challenged whether the early suite established anything beyon
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
+
+### 2026-10-31: Credit for the Cat 35 external lane
+
+"Questions and adapters" now credits Khaled Aly (@khalloud, Carafe team) for the Cat 35 external lane, designed in
+[#32](https://github.com/garrytan/gbrain-evals/pull/32) and rebuilt on main.
 
 ### 2026-10-05: Restructured as a current-state page with this changelog
 
