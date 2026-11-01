@@ -333,12 +333,25 @@ describe('metering proxy', () => {
     await (await post(`${c.proxy.baseUrls.anthropic}/v1/messages`, { 'x-api-key': token }, { model: 'claude-sonnet-5-5', max_tokens: 50, stream: true, messages: [{ role: 'user', content: 'hi' }] })).text();
     await (await post(`${c.proxy.baseUrls.gemini}/v1beta/models/gemini-3.5-flash:streamGenerateContent?alt=sse`, { 'x-goog-api-key': token }, { contents: [{ parts: [{ text: 'hi' }] }] })).text();
     await (await post(`${c.proxy.baseUrls.openai}/responses`, { authorization: `Bearer ${token}` }, { model: 'gpt-6.1-sol', max_output_tokens: 50, stream: true, reasoning: { effort: 'low' }, input: 'hi' })).text();
-    await waitFor(() => c.log().length === 3, 5000);
-    const [anth, gem, resp] = readRequestLog(c.requestLogPath, c.bodiesDir);
+    expect(Array.isArray(await (await post(`${c.proxy.baseUrls.gemini}/v1beta/models/gemini-3.5-flash:streamGenerateContent`, { 'x-goog-api-key': token }, { contents: [{ parts: [{ text: 'hi' }] }] })).json())).toBe(true);
+    await waitFor(() => c.log().length === 4, 5000);
+    const [anth, gem, resp, gemArray] = readRequestLog(c.requestLogPath, c.bodiesDir);
+    expect(gemArray).toMatchObject({ stream: false, provider: 'gemini', settlement: 'reconciled', response_model: 'gemini-3.5-flash', reasoning_tokens: 0 });
     expect(anth).toMatchObject({ stream: true, provider: 'anthropic', settlement: 'reconciled', response_model: 'claude-sonnet-5-5', reasoning_tokens: null });
     expect(gem).toMatchObject({ stream: true, provider: 'gemini', settlement: 'reconciled', response_model: 'gemini-3.5-flash', reasoning_tokens: 0 });
     expect(resp).toMatchObject({ stream: true, provider: 'openai', settlement: 'reconciled', response_model: 'gpt-6.1-sol', reasoning_tokens: 0 });
     expect(resp.request).toEqual({ effort_sent: 'low', effort_effective: null, effort_effective_source: null, output_limit_field: 'max_output_tokens', output_limit: 50 });
+  });
+
+  test('readRequestLog leaves out a last line cut off mid-append and throws on any other line that is not JSON', async () => {
+    const c = await cell({ labels: ['harness'] });
+    await post(`${c.proxy.baseUrls.openai}/chat/completions`, { authorization: `Bearer ${c.proxy.tokens.harness}` }, { model: 'gpt-6.1-sol', max_tokens: 10, messages: [{ role: 'user', content: 'hi' }] });
+    await waitFor(() => c.log().length === 1, 5000);
+    const whole = readFileSync(c.requestLogPath, 'utf8');
+    writeFileSync(c.requestLogPath, whole + whole.slice(0, 40));
+    expect(readRequestLog(c.requestLogPath, c.bodiesDir).map(l => l.response_model)).toEqual(['gpt-6.1-sol']);
+    writeFileSync(c.requestLogPath, whole.slice(0, 40) + '\n' + whole);
+    expect(() => readRequestLog(c.requestLogPath, c.bodiesDir)).toThrow();
   });
 
   test('the client receives each SSE chunk as the upstream sends it', async () => {

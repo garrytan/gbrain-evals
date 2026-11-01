@@ -185,8 +185,12 @@ function bearer(header: string | null): string | null {
 const obj = (v: unknown) => (v && typeof v === 'object' ? v as Record<string, any> : {});
 const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : null);
 
-/** What a decoded response says served it; every field null for a body that is not a model response. */
-function responseFields(provider: MeteredProvider, response: unknown): Pick<RequestLogLine, 'response_model' | 'reasoning_tokens' | 'response_meta'> {
+/**
+ * What a decoded response says served it; every field null for a body that is not a model response. A JSON array
+ * (Gemini's streamGenerateContent without alt=sse) is read as its chunks merged, the last value of each field winning.
+ */
+function responseFields(provider: MeteredProvider, decoded: unknown): Pick<RequestLogLine, 'response_model' | 'reasoning_tokens' | 'response_meta'> {
+  const response = Array.isArray(decoded) ? Object.assign({}, ...decoded.map(obj)) : decoded;
   const r = obj(response);
   const model = typeof r.model === 'string' ? r.model : typeof r.modelVersion === 'string' ? r.modelVersion : null;
   const reasoning = provider === 'gemini' ? num(obj(r.usageMetadata).thoughtsTokenCount)
@@ -233,10 +237,12 @@ function loggedRequest(provider: MeteredProvider, body: unknown): LoggedRequest 
 
 /**
  * The request log with each line's request side joined from its stored body by `body_sha256`; `request` is null
- * for a request whose body the proxy did not store (a GET, an unknown token) or that is not JSON.
+ * for a request whose body the proxy did not store (a GET, an unknown token) or that is not JSON. A last line with
+ * no newline is an append cut off when the proxy died and is left out; any other line that is not JSON throws.
  */
 export function readRequestLog(requestLogPath: string, bodiesDir: string): Array<RequestLogLine & { request: LoggedRequest | null }> {
-  return readFileSync(requestLogPath, 'utf8').split('\n').filter(Boolean).map(text => {
+  const log = readFileSync(requestLogPath, 'utf8');
+  return log.slice(0, log.lastIndexOf('\n') + 1).split('\n').filter(Boolean).map(text => {
     const line = JSON.parse(text) as RequestLogLine;
     const path = join(bodiesDir, `${line.body_sha256}.json`);
     let body: unknown = null;

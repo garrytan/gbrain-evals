@@ -14,7 +14,7 @@ import { join, resolve } from 'node:path';
 import { BudgetRun, closeLedgers, initLedger, ledgerStatus } from '../../eval/runner/budget-ledger.ts';
 import { readRequestLog, startMeteringProxy, type MeteringProxy } from '../../eval/runner/harness-metering-proxy.ts';
 import { createMeteredTestCell, type MeteredTestCell } from '../../eval/runner/metering-proxy-testkit.ts';
-import { ParticleCreditExhausted } from '../../eval/runner/providers/openai-compatible.ts';
+import { COMPAT_PROVIDERS, ParticleCreditExhausted } from '../../eval/runner/providers/openai-compatible.ts';
 import type { UsageReceipt } from '../../eval/runner/usage-receipt.ts';
 import { callModel, modelCaller } from '../../eval/workload-suites/bench-infra.ts';
 import { maxTokensFor, pool, readerPrompt } from '../../eval/workload-suites/bench.ts';
@@ -202,6 +202,17 @@ describe('a workload-suite question read by particle-1', () => {
     expect(line!.reasoning_tokens).toBeGreaterThan(0);
     expect(line!.response_meta).toMatchObject({ weight_version: 'default', service_tier: 'default', truncated: false });
   });
+
+  test('a cached particle answer is keyed on the effort it was read at', async () => {
+    const b = await particleBench();
+    const ask = () => b.model('particle:particle-1', 'Answer: cached?', { tag: 'beliefs/gbrain-combined/reader/q-cache', maxTokens: 16_000 });
+    expect((await ask()).cached).toBe(false);
+    expect((await ask()).cached).toBe(true);
+    const row = COMPAT_PROVIDERS.particle.models['particle-1'] as { default_effort: string };
+    const was = row.default_effort;
+    row.default_effort = 'medium';
+    try { expect((await ask()).cached).toBe(false); } finally { row.default_effort = was; }
+  });
 });
 
 describe('the existing reader routes', () => {
@@ -228,6 +239,24 @@ describe('the existing reader routes', () => {
     for (const r of seen) expect('request' in r || 'response_meta' in r).toBe(false);
     expect(await callModel(env, 'gemini:gemini-3.8-flash', 'Q?', tag, 400, r => seen.push(r))).toMatchObject({ error: 'unsupported reader provider gemini' });
     expect(seen).toHaveLength(2);
+  });
+
+  test('a receipt that cannot be written stops the call; the answered request is never sent again', async () => {
+    const c = await createMeteredTestCell({ labels: ['reader', 'judge'] });
+    cells.push(c);
+    const env = c.proxy.envFor('reader');
+    const failsOnce = () => {
+      let failed = false;
+      return (r: UsageReceipt) => { if (r.status === 'ok' && !failed) { failed = true; throw new Error('ENOSPC: receipt not written'); } };
+    };
+    for (const model of ['anthropic:claude-sonnet-5-5', 'openai:gpt-6.1-sol']) {
+      expect(await callModel(env, model, 'Q?', 'beliefs/gbrain-combined/reader/q-disk', 400, failsOnce()).catch(e => e)).toMatchObject({ message: 'ENOSPC: receipt not written' });
+    }
+    expect(c.stub.requests).toHaveLength(2);
+    const b = await particleBench();
+    const before = fakeLines().length;
+    expect(await callModel(b.proxy.envFor('reader'), 'particle:particle-1', 'Q?', 'beliefs/gbrain-combined/reader/q-disk', 16_000, failsOnce()).catch(e => e)).toMatchObject({ message: 'ENOSPC: receipt not written' });
+    expect(fakeLines().length - before).toBe(1);
   });
 
   test('the reader output limit: particle-1 gets its 16,000-token floor, OpenAI 4,000, Anthropic the shared 400', () => {

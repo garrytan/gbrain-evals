@@ -25,7 +25,7 @@ import { join } from 'node:path';
 import { BudgetRun, closeLedgers, initLedger } from '../runner/budget-ledger.ts';
 import { ensureHarness, harnessProcessEnv, PROVIDER_DIR, REPO_ROOT, type HarnessInstall } from '../runner/harness-env.ts';
 import type { GbrainUnderTest } from '../runner/gbrain-under-test.ts';
-import { COMPAT_PROVIDERS, CompatHttpError, ParticleCreditExhausted, compatRequest, compatSend, type CompatRequest } from '../runner/providers/openai-compatible.ts';
+import { COMPAT_PROVIDERS, CompatHttpError, ParticleCreditExhausted, compatRequest, compatSend, type CompatRequest, type CompatResponse } from '../runner/providers/openai-compatible.ts';
 import { normalizeFinish, normalizeUsage, receipt, responseMeta, usageSourceOf, type ReceiptRequest, type ResponseMeta, type UsageReceipt } from '../runner/usage-receipt.ts';
 
 export const DEFAULT_LEDGER = join(REPO_ROOT, '.budget/workload-suites.sqlite');
@@ -117,7 +117,9 @@ export function modelCaller(proxy: Pick<Proxy, 'envFor'>, outDir: string): Bench
   let stopped: ParticleCreditExhausted | null = null;
   return async (modelId, prompt, o) => {
     if (stopped) throw stopped;
-    const key = createHash('sha256').update(`${modelId}\n${o.maxTokens}\n${o.cacheKey ?? ''}\n${prompt}`).digest('hex');
+    const compat = COMPAT_PROVIDERS[modelId.slice(0, modelId.indexOf(':'))]?.models[modelId.slice(modelId.indexOf(':') + 1)];
+    const effort = compat ? `\n${compat.default_effort}:${compat.efforts[compat.default_effort]}` : '';
+    const key = createHash('sha256').update(`${modelId}\n${o.maxTokens}\n${o.cacheKey ?? ''}\n${prompt}${effort}`).digest('hex');
     const cachePath = join(cacheDir, `${key}.json`);
     if (existsSync(cachePath)) return { ...(JSON.parse(readFileSync(cachePath, 'utf8')) as ModelReply), cached: true };
     const env = o.tag.includes('/judge/') ? judge : reader;
@@ -171,30 +173,29 @@ export async function callModel(env: Record<string, string>, modelId: string, pr
           headers: { 'content-type': 'application/json', 'x-api-key': env.ANTHROPIC_API_KEY!, 'anthropic-version': '2023-06-01', 'x-mpw-tag': tag },
           body: JSON.stringify({ model, max_tokens: maxTokens, messages: [{ role: 'user', content: prompt }] }),
         });
-        body = await res.json().catch(() => ({}));
-        if (res.ok) {
-          const text = (body.content ?? []).filter((c: any) => c.type === 'text').map((c: any) => c.text).join('');
-          note(attempt, { error: null, response_model: typeof body.model === 'string' ? body.model : null, text, finish: body.stop_reason, usage: body.usage });
-          return { text, input_tokens: body.usage?.input_tokens ?? null, output_tokens: body.usage?.output_tokens ?? null, cached: false, model: modelId };
-        }
       } else {
         res = await fetch(`${env.OPENAI_BASE_URL}/chat/completions`, {
           method: 'POST',
           headers: { 'content-type': 'application/json', authorization: `Bearer ${env.OPENAI_API_KEY}`, 'x-mpw-tag': tag },
           body: JSON.stringify({ model, max_completion_tokens: maxTokens, reasoning_effort: 'low', messages: [{ role: 'user', content: prompt }] }),
         });
-        body = await res.json().catch(() => ({}));
-        if (res.ok) {
-          const text = body.choices?.[0]?.message?.content ?? '';
-          note(attempt, { error: null, response_model: typeof body.model === 'string' ? body.model : null, text, finish: body.choices?.[0]?.finish_reason, usage: body.usage });
-          return { text, input_tokens: body.usage?.prompt_tokens ?? null, output_tokens: body.usage?.completion_tokens ?? null, cached: false, model: modelId };
-        }
       }
+      body = await res.json().catch(() => ({}));
     } catch (e) {
       note(attempt, { error: `network: ${(e as Error).message}` });
       if (attempt >= 4) return fail(`network: ${(e as Error).message}`);
       await Bun.sleep(2000 * (attempt + 1));
       continue;
+    }
+    if (res.ok && provider === 'anthropic') {
+      const text = (body.content ?? []).filter((c: any) => c.type === 'text').map((c: any) => c.text).join('');
+      note(attempt, { error: null, response_model: typeof body.model === 'string' ? body.model : null, text, finish: body.stop_reason, usage: body.usage });
+      return { text, input_tokens: body.usage?.input_tokens ?? null, output_tokens: body.usage?.output_tokens ?? null, cached: false, model: modelId };
+    }
+    if (res.ok) {
+      const text = body.choices?.[0]?.message?.content ?? '';
+      note(attempt, { error: null, response_model: typeof body.model === 'string' ? body.model : null, text, finish: body.choices?.[0]?.finish_reason, usage: body.usage });
+      return { text, input_tokens: body.usage?.prompt_tokens ?? null, output_tokens: body.usage?.completion_tokens ?? null, cached: false, model: modelId };
     }
     const msg = JSON.stringify(body).slice(0, 600);
     note(attempt, { error: `HTTP ${res.status}: ${msg}`, usage: body?.usage });
@@ -216,10 +217,9 @@ async function callCompat(modelId: string, prompt: string, tag: string, maxToken
   const req: CompatRequest = { ...built, headers: { ...built.headers, 'x-mpw-tag': tag } };
   const count = (v: unknown) => (typeof v === 'number' ? v : null);
   for (let attempt = 0; ; attempt++) {
+    let r: CompatResponse;
     try {
-      const r = await compatSend(req);
-      note(attempt, { error: null, response_model: r.response_model, text: r.text, finish: r.finish, usage: r.usage, request: req.sent, response_meta: r.meta });
-      return { text: r.text, input_tokens: count(r.usage?.prompt_tokens), output_tokens: count(r.usage?.completion_tokens), cached: false, model: modelId };
+      r = await compatSend(req);
     } catch (e) {
       const error = e as Error;
       const http = error instanceof CompatHttpError ? error : null;
@@ -232,6 +232,8 @@ async function callCompat(modelId: string, prompt: string, tag: string, maxToken
       if (retry) { await Bun.sleep(waitMs); continue; }
       return fail(budget ? `budget refused: ${(error as { body?: string }).body?.slice(0, 600) ?? error.message}` : http ? `HTTP ${http.status}: ${http.body.slice(0, 600)}` : `network: ${error.message}`);
     }
+    note(attempt, { error: null, response_model: r.response_model, text: r.text, finish: r.finish, usage: r.usage, request: req.sent, response_meta: r.meta });
+    return { text: r.text, input_tokens: count(r.usage?.prompt_tokens), output_tokens: count(r.usage?.completion_tokens), cached: false, model: modelId };
   }
 }
 
