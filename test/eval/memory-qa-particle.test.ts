@@ -175,6 +175,24 @@ describe('the particle route in qa-v2', () => {
     expect(deadlines).toEqual([UPSTREAM_DEADLINE_MS, UPSTREAM_DEADLINE_MS]);
   });
 
+  // Value: protects=a particle reading through the lease proxy is never abandoned while the proxy still sends and bills it (issue #271); fails_when=an attempt on a loopback proxy slot waits only the 900 s upstream deadline, which the proxy's admission wait (up to 600 s) eats into; why_new=qa-v2's deadline follows the request's URL (compatDeadlineMs); seam=none; no_claim=a real 26-minute wait
+  test('an attempt on a loopback proxy slot waits the proxy\'s longest admission wait plus its upstream deadline; a direct attempt waits the upstream deadline (#271)', async () => {
+    const { PROXIED_DEADLINE_MS } = await import('../../eval/runner/metering-proxy.ts');
+    const timeout = AbortSignal.timeout;
+    const deadlines: number[] = [];
+    const urls: string[] = [];
+    globalThis.fetch = (async (input: RequestInfo | URL) => { urls.push(String(input)); return Response.json(PARTICLE_OK); }) as unknown as typeof fetch;
+    AbortSignal.timeout = (ms: number) => { deadlines.push(ms); return timeout.call(AbortSignal, ms); };
+    try {
+      process.env.PARTICLE_BASE_URL = 'http://127.0.0.1:8787/harness/particle/v1';
+      expect((await new ChatClient(tmp(), () => 0).chat('particle:particle-1', 'P', { maxTokens: 64, replicate: 0 })).text).toBe('In May 2023.');
+      delete process.env.PARTICLE_BASE_URL;
+      expect((await new ChatClient(tmp(), () => 0).chat('particle:particle-1', 'P', { maxTokens: 64, replicate: 0 })).text).toBe('In May 2023.');
+    } finally { AbortSignal.timeout = timeout; }
+    expect(urls).toEqual(['http://127.0.0.1:8787/harness/particle/v1/chat/completions', 'https://api.particle.ai/v1/chat/completions']);
+    expect(deadlines).toEqual([PROXIED_DEADLINE_MS, UPSTREAM_DEADLINE_MS]);
+  });
+
   // Value: protects=a particle request whose connection resets after it went out is billed once without the lease proxy; fails_when=qa-v2 retries the reset as a lost connection; why_new=the lease proxy already answers this reset 504 and never resends it, the direct client retried it; seam=a loopback socket that reads the request, then resets; no_claim=Particle's billing of a reset request
   test('a particle request whose connection resets after it went out ends the loop after one request, as a timeout does', async () => {
     let connections = 0;
