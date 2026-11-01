@@ -1,8 +1,9 @@
 # Corrections to published numbers
 
 These published numbers are invalid, overstated or retired. Each affected report keeps its original figures, labeled,
-beside a dated correction or notice. The list covers the audit of September 28, 2026 and every later correction to a
-number this repository published. [README](../README.md) and the hub pages show only the numbers that stand; this page
+beside a dated correction or notice. The list covers the audit of September 28, 2026, the corrections README carried
+until 2026-11-01 and the rows the comparisons page dropped as invalid. A report that later corrected its own figures
+says so in that report. [README](../README.md) and the hub pages show only the numbers that stand; this page
 says which ones do not and why. Everything above [Changelog](#changelog) is current.
 
 ## LongMemEval
