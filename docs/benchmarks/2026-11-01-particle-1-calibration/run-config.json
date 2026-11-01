@@ -1,0 +1,90 @@
+{
+  "schema": "gbrain-evals/q1-run-config/v1",
+  "cell_id": "s3-smoke.baseline-hybrid.baseline.component-b8000",
+  "run_cell": "s3-smoke.baseline-hybrid.baseline",
+  "cell": {
+    "schema": "gbrain-evals/q1-cell/v1",
+    "id": "s3-smoke.baseline-hybrid.baseline",
+    "set": "S3-smoke",
+    "block": "T2-S3",
+    "benchmark": "locomo",
+    "split": "dev",
+    "selection": {
+      "kind": "stratified",
+      "limit": 20,
+      "stratify": "category",
+      "seed": "q1-smoke"
+    },
+    "exclusions": [],
+    "system": "baseline-hybrid",
+    "configuration": "baseline",
+    "runner": "in-process",
+    "ingest_replicate": 1,
+    "effort": "medium",
+    "canonical_instrument": "locomo",
+    "probes": {
+      "sample": 20,
+      "seed": "q1-probes-s3-smoke",
+      "conversations": null
+    },
+    "only_conversations": [
+      "conv-44"
+    ]
+  },
+  "arm": {
+    "id": "component-b8000",
+    "cell_id": "s3-smoke.baseline-hybrid.baseline.component-b8000",
+    "set": "S3-smoke",
+    "arm": "component",
+    "mode": "packed",
+    "policy": "fixed-evidence",
+    "budget": 8000,
+    "questions": null,
+    "readers": [
+      "particle:particle-1"
+    ],
+    "reader_replicates": {},
+    "frontier": null,
+    "judge_repeats": null,
+    "label": "component, 8,000 tokens (dev smoke)"
+  },
+  "instrument": {
+    "id": "locomo",
+    "sha256": "754c83f541b77e652f0b97edac9cb82a1561b8a38822eb88591c807c0dad13be",
+    "judge": "openai:gpt-4o-2024-08-06"
+  },
+  "reader": {
+    "effort": "medium",
+    "max_tokens": 2048,
+    "prompt_sha256": "215660c5a2fb85c3068e09b2b02f047c9557393b505ef22c59c08918addfd3be",
+    "max_tokens_by_reader": {
+      "particle:particle-1": 16000
+    }
+  },
+  "renderer": "memory-render-v2",
+  "counter": {
+    "counter": "reader-max-v1",
+    "tokenizer": "@dqbd/tiktoken@1.0.22",
+    "readers": [
+      {
+        "reader": "particle:particle-1",
+        "encoding": "o200k_base",
+        "calibration": 1,
+        "calibrated": false
+      }
+    ]
+  },
+  "dataset": {
+    "name": "LoCoMo (locomo10.json)",
+    "files": [
+      {
+        "path": "locomo/locomo10.json",
+        "sha256": "79fa87e90f04081343b8c8debecb80a9a6842b76a7aa537dc9fdf651ea698ff4"
+      }
+    ],
+    "revision": "3eb6f2c",
+    "license": "CC BY-NC 4.0"
+  },
+  "scheduled_sha256": "f4435143a1c220eecdbb2f9325c9c88af95d3cfa95059550078392090dca689f",
+  "limit": null
+}

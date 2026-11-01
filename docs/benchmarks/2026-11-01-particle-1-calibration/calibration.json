@@ -1,0 +1,35 @@
+{
+  "run_id": "u5-calibration-2026-11-01",
+  "cell": "s3-smoke.baseline-hybrid.baseline",
+  "arm": "s3-smoke.baseline-hybrid.baseline.component-b8000",
+  "reader": "particle:particle-1",
+  "effort": "medium",
+  "keyless": false,
+  "status": "complete",
+  "stopped": null,
+  "calibration": {
+    "particle:particle-1": {
+      "encoding": "o200k_base",
+      "factor": 1.0488,
+      "max_error": 0.005,
+      "needs_provider_count": false,
+      "samples": 20
+    }
+  },
+  "other_encoding": {
+    "encoding": "cl100k_base",
+    "factor": 1.0118,
+    "max_error": 0.0011,
+    "needs_provider_count": false,
+    "samples": 20
+  },
+  "lease": {
+    "usd": 1.45,
+    "billed_usd": 0.08614768999999999,
+    "reserved_unsettled_usd": 0,
+    "unattributed_background_usd": 0,
+    "requests": 110,
+    "refused": 0,
+    "unauthorized": 0
+  }
+}

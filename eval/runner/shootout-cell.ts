@@ -944,9 +944,9 @@ export async function runRemote(payload: RemotePayload, opts: { port?: number; p
     if (!up) throw new Error(ended() ? `the metering proxy exited (${proxy.signalCode ?? `code ${proxy.exitCode}`}) before it served lease ${payload.lease_id} on port ${port}` : `the metering proxy did not serve lease ${payload.lease_id} on port ${port} within 120 s`);
     const base = `http://127.0.0.1:${port}`;
     const env: Record<string, string | undefined> = { ...process.env, SHOOTOUT_OUT: out, SHOOTOUT_PROXY: base, SHOOTOUT_LEASE_ID: payload.lease_id, SHOOTOUT_PROXY_CONTROL_TOKEN: controlToken,
-      OPENAI_BASE_URL: `${base}/cell/openai/v1`, ANTHROPIC_BASE_URL: `${base}/cell/anthropic`, VOYAGE_BASE_URL: `${base}/cell/voyage/v1`, SHOOTOUT_CELL_TOKEN: cellToken, ...(custody ? { SHOOTOUT_CUSTODY: custody } : {}),
+      OPENAI_BASE_URL: `${base}/cell/openai/v1`, ANTHROPIC_BASE_URL: `${base}/cell/anthropic`, VOYAGE_BASE_URL: `${base}/cell/voyage/v1`, PARTICLE_BASE_URL: `${base}/cell/particle/v1`, SHOOTOUT_CELL_TOKEN: cellToken, ...(custody ? { SHOOTOUT_CUSTODY: custody } : {}),
       ...(custody && payload.cell ? { GBRAIN_EVALS_CUSTODY_LOG: join(out, 'access-log.jsonl') } : {}) };
-    for (const k of ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'VOYAGE_API_KEY']) if (env[k]) env[k] = 'dummy-key-the-proxy-replaces';
+    for (const k of ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'VOYAGE_API_KEY', 'PARTICLE_API_KEY']) if (env[k]) env[k] = 'dummy-key-the-proxy-replaces';
     if (payload.restore) {
       const dir = resolve(REPO_ROOT, expandHome(payload.restore.dir));
       // Without a restored store the old ingest-complete marker would trigger a snapshot of the empty store at once.
@@ -1050,7 +1050,7 @@ if (import.meta.main) {
     const cmd = argv[0];
     if (cmd === 'remote') {
       const keyless = process.env.SHOOTOUT_KEYLESS_UPSTREAM;
-      const upstream = keyless ? Object.fromEntries(['openai', 'anthropic', 'voyage'].map(p => [p, keyless])) : undefined;
+      const upstream = keyless ? { ...Object.fromEntries(['openai', 'anthropic', 'voyage'].map(p => [p, keyless])), particle: `${keyless.replace(/\/$/, '')}/particle` } : undefined;
       process.exit(await runRemote(JSON.parse(Buffer.from(one('--cell-b64') ?? '', 'base64').toString('utf8')), { port: one('--port') ? Number(one('--port')) : undefined, upstream }));
     }
     if (cmd === 'hash') {

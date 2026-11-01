@@ -9,7 +9,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { BudgetRun, closeLedgers, initLedger } from '../../eval/runner/budget-ledger.ts';
 import { MACHINE_LOCAL_PATH } from '../../eval/runner/receipt.ts';
-import { CANARY_MODEL, CANARY_PROMPTS, CANARY_SAMPLING, CANARY_WARN, compareCanary, runCanary, type CanaryRecord, type CanaryResult } from '../../scripts/particle-canary.ts';
+import { CANARY_MODEL, CANARY_PROMPTS, CANARY_SAMPLING, CANARY_WARN, compareCanary, compareWarnings, runCanary, type CanaryRecord, type CanaryResult } from '../../scripts/particle-canary.ts';
 
 const ROOT = resolve(import.meta.dir, '../..');
 const dir = mkdtempSync(join(tmpdir(), 'particle-canary-'));
@@ -34,16 +34,48 @@ describe('compareCanary', () => {
     expect(() => compareCanary(a, { ...b, prompts_sha256: 'y' })).toThrow('different prompts');
   });
 
-  test('a comparison is complete only when both canaries answered every prompt, and canaries of another model, endpoint or sampling are refused; a proxy slot\'s per-run port is not another endpoint', () => {
+  test('a comparison is complete only when both canaries answered every prompt, and canaries of another model, endpoint or sampling are refused', () => {
     const all = { ...same, results: CANARY_PROMPTS.map((_, i) => result(`c${String(i + 1).padStart(2, '0')}`, 'a', -0.1)) };
     expect(compareCanary(all, all)).toMatchObject({ compared: CANARY_PROMPTS.length, complete: true, changed_answers: 0 });
     expect(compareCanary(all, { ...all, results: all.results.slice(0, 1) })).toMatchObject({ compared: 1, complete: false });
     expect(compareCanary(all, { ...all, results: all.results.map((r, i) => (i === 3 ? { ...r, system_fingerprint: 'fp_new' } : r)) })).toMatchObject({ changed_answers: 0, changed_identity: 1 });
     expect(() => compareCanary(all, { ...all, base_url: 'https://us.api.particle.ai/v1' })).toThrow('differ in base_url');
-    const slot = (port: number) => ({ ...all, base_url: `http://127.0.0.1:${port}/slot-1/particle/v1` });
-    expect(compareCanary(slot(8787), slot(9911))).toMatchObject({ compared: CANARY_PROMPTS.length, complete: true });
     expect(() => compareCanary(all, { ...all, model: 'particle:particle-2' })).toThrow('differ in model');
     expect(() => compareCanary(all, { ...all, sampling: { ...CANARY_SAMPLING, seed: 8 } })).toThrow('different sampling');
+  });
+
+  test('an answer pair missing a mean log probability on either side leaves the move unmeasured, never measured on the pairs that remain (#230)', () => {
+    const ids = CANARY_PROMPTS.map((_, i) => `c${String(i + 1).padStart(2, '0')}`);
+    const a = { ...same, results: ids.map(id => result(id, 'a', -0.1)) };
+    const b = { ...same, results: ids.map((id, i) => result(id, 'a', i === 0 ? -0.1 : null)) };
+    expect(compareCanary(a, b)).toMatchObject({ compared: CANARY_PROMPTS.length, complete: true, changed_answers: 0, mean_abs_logprob_change: null, max_abs_logprob_change: null });
+    expect(compareCanary(b, a)).toMatchObject({ mean_abs_logprob_change: null, max_abs_logprob_change: null });
+  });
+
+  test('a loopback endpoint on either side is refused: it records no upstream, so a fake or a retargeted proxy cannot pass as the same serving endpoint (#231)', () => {
+    const direct = { ...same, results: [result('c01', 'a', -0.1)] };
+    const at = (base_url: string) => ({ ...direct, base_url });
+    for (const [x, y] of [
+      [direct, at('http://127.0.0.1:8787/particle/v1')],
+      [at('http://localhost:9911/slot-1/particle/v1'), direct],
+      [at('http://127.0.0.1:8787/slot-1/particle/v1'), at('http://127.0.0.1:9911/slot-1/particle/v1')],
+      [at('http://127.0.0.1:8787/particle/v1'), at('http://127.0.0.1:8787/particle/v1')],
+      [at('http://[::1]:8787/particle/v1'), at('http://[::1]:8787/particle/v1')],
+    ]) expect(() => compareCanary(x!, y!)).toThrow('loopback');
+  });
+});
+
+describe('compareWarnings', () => {
+  const clean = { compared: CANARY_PROMPTS.length, complete: true, changed_answers: 0, changed_identity: 0, mean_abs_logprob_change: 0.001, max_abs_logprob_change: 0.002 };
+
+  test('warns above each threshold and on any identity change, and checks the weights only when every prompt compared with a log-probability move measured', () => {
+    expect(compareWarnings(clean)).toEqual({ warnings: [], checked: true });
+    expect(compareWarnings({ ...clean, changed_answers: 4, changed_identity: 1, mean_abs_logprob_change: 0.03 })).toEqual({ checked: true, warnings: [
+      expect.stringContaining('4 answers changed (threshold 3)'), expect.stringContaining('1 answers came back with a different response model'), expect.stringContaining('mean log probability moved 0.03 (threshold 0.02)'),
+    ] });
+    expect(compareWarnings({ ...clean, changed_answers: 1, mean_abs_logprob_change: 0.015 }, { changed_answers: 0, mean_logprob_change: 0.01 }).warnings).toHaveLength(2);
+    expect(compareWarnings({ ...clean, compared: 11, complete: false })).toEqual({ warnings: [expect.stringContaining('answered only 11 of 12 prompts')], checked: false });
+    expect(compareWarnings({ ...clean, mean_abs_logprob_change: null, max_abs_logprob_change: null })).toEqual({ warnings: [expect.stringContaining('checked nothing')], checked: false });
   });
 });
 
@@ -61,6 +93,27 @@ describe('what counts as an answer', () => {
       expect(rec.results.filter(r => r.status === 'error').every(r => r.answer_sha256 === null)).toBe(true);
       expect(rec.results.every(r => r.mean_logprob === null)).toBe(true);
       expect(n).toBe(CANARY_PROMPTS.length);
+    } finally { server.stop(true); }
+  });
+
+  test('a null, empty or string log probability, on a token or a listed alternative, is no signal: the mean and the token list stay unset, never 0 (#230)', async () => {
+    const tokens = [
+      [{ token: 'ok', logprob: null, top_logprobs: [] }],
+      [{ token: 'ok', logprob: '', top_logprobs: [] }],
+      [{ token: 'ok', logprob: '-0.5', top_logprobs: [] }],
+      [{ token: 'ok', logprob: -0.5, top_logprobs: [{ token: 'ok', logprob: null }] }],
+      [{ token: 'o', logprob: 0, top_logprobs: [{ token: 'o', logprob: 0 }] }, { token: 'k', logprob: -0.5, top_logprobs: [] }],
+    ];
+    let n = 0;
+    const server = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: () => Response.json({
+      model: 'particle-ai/particle-1', choices: [{ index: 0, finish_reason: 'stop', message: { role: 'assistant', content: 'ok' }, logprobs: { content: tokens[n++ % tokens.length] } }],
+    }) });
+    try {
+      const rec = await runCanary({ PARTICLE_API_KEY: 'dummy-key', PARTICLE_BASE_URL: `http://127.0.0.1:${server.port}/v1` });
+      const real = (i: number) => i % tokens.length === tokens.length - 1;
+      expect(rec.results.every(r => r.status === 'ok')).toBe(true);
+      expect(rec.results.map(r => r.mean_logprob)).toEqual(CANARY_PROMPTS.map((_, i) => (real(i) ? -0.25 : null)));
+      expect(rec.results.map(r => r.logprobs === null)).toEqual(CANARY_PROMPTS.map((_, i) => !real(i)));
     } finally { server.stop(true); }
   });
 });
@@ -101,6 +154,7 @@ describe('the canary run', () => {
   const ledger = join(dir, 'ledger.sqlite');
   let runId = '';
   const keyless = () => ({ PARTICLE_API_KEY: 'dummy-key', PARTICLE_BASE_URL: `${base}/particle/v1` });
+  const direct = (rec: CanaryRecord) => ({ ...rec, base_url: 'https://api.particle.ai/v1' });
 
   beforeAll(async () => {
     const probe = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: () => new Response('') });
@@ -126,7 +180,7 @@ describe('the canary run', () => {
     expect(r.out).toContain('the ledger cannot price api.unlisted-vendor.example');
   });
 
-  test('12 prompts at effort none in canary mode, one receipt each, answer hashes and log probabilities in the run directory; a second run compares clean', () => {
+  test('12 prompts at effort none in canary mode, one receipt each, answer hashes and log probabilities in the run directory; a second run\'s record compares clean', () => {
     const first = canary(['--paid', '--budget-run-id', runId, '--budget-ledger', ledger, '--out', join(dir, 'a')], keyless());
     expect(first.out).toContain('12 of 12 answered');
     expect(first.code).toBe(0);
@@ -139,22 +193,28 @@ describe('the canary run', () => {
     const sent = readFileSync(fakeLog, 'utf8').trim().split('\n').map(l => JSON.parse(l)).filter(l => l.route === 'chat');
     expect(sent).toHaveLength(12);
     expect(sent.every(l => l.effort === 'none' && l.max_completion_tokens === 64 && l.logprobs === true && l.auth_is_dummy)).toBe(true);
-    const second = canary(['--paid', '--budget-run-id', runId, '--budget-ledger', ledger, '--out', join(dir, 'b'), '--compare', join(dir, 'a', 'particle-canary.json'), '--warn-changed', '0', '--warn-logprob', '0.01'], keyless());
-    expect(second.code).toBe(0);
-    expect(second.out).toContain('"compared":12,"complete":true,"changed_answers":0,"changed_identity":0,"mean_abs_logprob_change":0');
-    expect(second.out).not.toContain('warning:');
-    const third = canary(['--paid', '--budget-run-id', runId, '--budget-ledger', ledger, '--out', join(dir, 'c'), '--compare', join(dir, 'a', 'particle-canary.json')], keyless());
-    expect(third.code).toBe(0);
-    expect(third.out).not.toContain('warning:');
+    expect(canary(['--paid', '--budget-run-id', runId, '--budget-ledger', ledger, '--out', join(dir, 'b')], keyless()).code).toBe(0);
+    const diff = compareCanary(direct(rec), direct(JSON.parse(readFileSync(join(dir, 'b', 'particle-canary.json'), 'utf8')) as CanaryRecord));
+    expect(diff).toEqual({ compared: 12, complete: true, changed_answers: 0, changed_identity: 0, mean_abs_logprob_change: 0, max_abs_logprob_change: 0 });
+    expect(compareWarnings(diff, { changed_answers: 0, mean_logprob_change: 0.01 })).toEqual({ warnings: [], checked: true });
+    expect(compareWarnings(diff)).toEqual({ warnings: [], checked: true });
   });
 
-  test('with no --warn flag, --compare against a baseline without log probabilities fails: the log-probability check measured nothing', () => {
-    const rec = JSON.parse(readFileSync(join(dir, 'a', 'particle-canary.json'), 'utf8')) as CanaryRecord;
-    writeFileSync(join(dir, 'no-logprobs.json'), JSON.stringify({ ...rec, results: rec.results.map(r => ({ ...r, mean_logprob: null, logprobs: null })) }));
-    const r = canary(['--paid', '--budget-run-id', runId, '--budget-ledger', ledger, '--out', join(dir, 'nl'), '--compare', join(dir, 'no-logprobs.json')], keyless());
+  test('--compare with a canary on a loopback endpoint (a proxy or the fake) is refused before anything is sent (#231)', () => {
+    const chats = () => readFileSync(fakeLog, 'utf8').trim().split('\n').filter(l => JSON.parse(l).route === 'chat').length;
+    const sentBefore = chats();
+    const r = canary(['--paid', '--budget-run-id', runId, '--budget-ledger', ledger, '--out', join(dir, 'loop'), '--compare', join(dir, 'a', 'particle-canary.json')], keyless());
     expect(r.code).toBe(1);
-    expect(r.out).toContain('"compared":12,"complete":true,"changed_answers":0,"changed_identity":0,"mean_abs_logprob_change":null');
-    expect(r.out).toContain('the log-probability threshold checked nothing');
+    expect(r.out).toContain('is loopback');
+    expect(chats()).toBe(sentBefore);
+    expect(existsSync(join(dir, 'loop'))).toBe(false);
+  });
+
+  test('with no --warn flag, a baseline without log probabilities fails the comparison: the log-probability check measured nothing', () => {
+    const rec = direct(JSON.parse(readFileSync(join(dir, 'a', 'particle-canary.json'), 'utf8')) as CanaryRecord);
+    const diff = compareCanary({ ...rec, results: rec.results.map(r => ({ ...r, mean_logprob: null, logprobs: null })) }, rec);
+    expect(diff).toEqual({ compared: 12, complete: true, changed_answers: 0, changed_identity: 0, mean_abs_logprob_change: null, max_abs_logprob_change: null });
+    expect(compareWarnings(diff)).toEqual({ warnings: [expect.stringContaining('the log-probability threshold checked nothing')], checked: false });
   });
 
   test('--compare naming the file this run writes is refused before anything is sent, and the baseline stays as it was', () => {
