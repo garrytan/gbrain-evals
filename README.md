@@ -34,8 +34,10 @@ leads with up to 40 dated saved facts (`search.query_facts_block`, v0.60.491.0).
 ahead of the saved fact it corrects (`search.saved_facts_supersede`, v0.60.493.0). A remote `search` or `query` that
 names no `limit` keeps every page that matched its words but at most 3 pages that matched only by meaning
 (`search.remote_page_cap`, v0.60.506.0). Text from conversation, chat, email and meeting pages comes back inside a quote
-fence, marked as source material, from `search`, `query`, `assemble_evidence` and `think` and from every read over MCP
-(v0.60.507.0, v0.60.521.0). No result on this page was measured with them. The memory-qa harness holds the first three
+fence, marked as source material, from `search`, `query`, `assemble_evidence` and `think`, and over MCP from `get_page`,
+`fetch`, `recall`, `delta` facts and hot memory (v0.60.507.0, v0.60.521.0); `search_exact`, `get_chunks` and timeline
+rows still return stored text. Apart from the keyless Cats 37 to 39 check in the memory trust row, no result on this page
+was measured with them. The memory-qa harness holds the first three
 at their old values and unwraps the fence on its `query` path
 ([`eval/runner/gbrain-under-test.ts`](eval/runner/gbrain-under-test.ts)); arms that measure gbrain's own defaults take
 all four as shipped.
@@ -398,7 +400,8 @@ repository row names v0.10.139
 under the table. Every commit the current state names is in the new release's history except `a7cb37b`, as before. A
 new paragraph under it names the four read defaults gbrain added after the old pin (the dated facts block of a budgeted
 `query`, v0.60.491.0; correction ordering of saved facts, v0.60.493.0; the remote page cap, v0.60.506.0; quote-fenced
-chat text, v0.60.507.0 and v0.60.521.0), says no result on this page was measured with them, and says the memory-qa
+chat text, v0.60.507.0 and v0.60.521.0), says that apart from the keyless Cats 37 to 39 check no result on this page was
+measured with them, and says the memory-qa
 harness holds the first three at their old values and unwraps the fence. The memory trust row's keyless check moves from
 `77cf8e111` to `3ec766c40`: Cats 37, 38 and 39 pass every safety and quality contract in the BrainBench offline tier at
 the new pin, as on main at `7a6bdd357`. Known limits: the timeline-read bullet said "At the pin" about a measurement

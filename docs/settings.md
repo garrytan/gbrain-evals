@@ -69,7 +69,7 @@ as completed reranked measurements.
 | `search.adaptive_return` | Cap results according to query intent | Off for the broad-return baseline. Try it when irrelevant results cost more than missed additional evidence. |
 | `search.adaptive_return_entity_max` / `_other_max` / `_min_keep` | Caps for entity questions, other questions, and the minimum kept | Product defaults are 2, 6, and 1. The tight experiment explicitly uses 1, 1, and 1. |
 | `return_unit` on `search`, `query` and `recall` | How much text comes back around each hit: `chunk`, `window`, `section`, `page` or `auto` | `auto` (the default) returns the whole conversation behind each hit within a 24,000-token budget and leaves other hits as chunks. On a sealed held-out set it answered 192 of 200 against 132 for bare chunks, at about four times the reader input. Use `chunk` when reader tokens matter more than answer quality. [Sealed v2 decision](benchmarks/2026-10-02-sealed-v2-decision-1.md), [delivery study](benchmarks/2026-09-30-evidence-delivery.md) |
-| `auto_chronicle` | Turn saved meeting, conversation and calendar pages into timeline events with one chat call per page (on by default since v0.60.45.0) | At the pinned `739e5cc` it writes dated follow-ups from meeting notes as events on their future dates (0.96 wrong events per page against gbrain's 0.20 gate); turn it off (`gbrain config set auto_chronicle false`) if meeting notes carry dated action items. From gbrain v0.60.49.0 (`b9ee931`, PR #6010) keep it on: it finds 37 and 38 of 38 labeled events, writes 0 events dated after their page and 0.04 wrong events per judged page, for about $0.01 per page. [Experiment](benchmarks/2026-10-04-auto-chronicle-lift.md), [rerun](benchmarks/2026-10-04-auto-chronicle-rerun.md). |
+| `auto_chronicle` | Turn saved meeting, conversation and calendar pages into timeline events with one chat call per page (on by default since v0.60.45.0) | Keep it on: gbrain v0.60.49.0 (`b9ee931`, PR #6010), which the installed `3ec766c40` postdates, fixed the dated follow-ups that `739e5cc` (the pin from 2026-10-04 to 2026-10-06) wrote from meeting notes as events on their future dates (0.96 wrong events per page against gbrain's 0.20 gate). At `b9ee931` it finds 37 and 38 of 38 labeled events, writes 0 events dated after their page and 0.04 wrong events per judged page, for about $0.01 per page. [Experiment](benchmarks/2026-10-04-auto-chronicle-lift.md), [rerun](benchmarks/2026-10-04-auto-chronicle-rerun.md). |
 | `GBRAIN_SOURCE_BOOST` | Override the source-prefix weight map | This is an environment setting, separate from the search mode. A stale prefix can make an intended preference do nothing. |
 
 The settings are defined in the pinned
@@ -172,7 +172,9 @@ The installed gbrain commit changed from `7a6bdd357` (v0.60.454.0) to `3ec766c40
 `src/core/search/mode.ts` holds the same values at both commits; the file's only change adds the private-readable set to
 the semantic cache key (GBRA-156). The note on defaults outside the bundles now also names the dated facts block of a
 budgeted `query` (v0.60.491.0), correction ordering of saved facts (v0.60.493.0), the remote page cap (v0.60.506.0) and
-quote-fenced chat text (v0.60.507.0, v0.60.521.0), and says no LongMemEval retrieval row tests them.
+quote-fenced chat text (v0.60.507.0, v0.60.521.0), and says no LongMemEval retrieval row tests them. The `auto_chronicle`
+row led with "At the pinned `739e5cc`", which stopped being the pin on 2026-10-06; it now leads with the behavior from
+v0.60.49.0 on and names `739e5cc` as the older measurement.
 
 ### 2026-10-25: Installed pin moves to `7a6bdd357`
 
