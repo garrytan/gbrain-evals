@@ -8,13 +8,25 @@
  * comparator's extraction) under labels `gbrain` and `comparator`, the
  * reader and judge under `reader` and `judge`. The bridge process and its
  * children only ever hold proxy tokens.
+ *
+ * Reader and judge calls go to Anthropic, OpenAI, or an OpenAI-compatible
+ * provider in COMPAT_PROVIDERS (particle-1) through the provider module
+ * (eval/runner/providers/openai-compatible.ts), and every provider attempt,
+ * a failed one included, appends one usage receipt to
+ * `<outDir>/attempts.ndjson`. A particle 429 or 5xx waits its Retry-After
+ * (capped at 120 s) when it sends one. When Particle's prepaid credit runs out
+ * (an HTTP 402 no proxy marked as its own), the call writes its receipt and
+ * throws `ParticleCreditExhausted`, and every later reader or judge call of
+ * the bench throws it without sending.
  */
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { BudgetRun, closeLedgers, initLedger } from '../runner/budget-ledger.ts';
 import { ensureHarness, harnessProcessEnv, PROVIDER_DIR, REPO_ROOT, type HarnessInstall } from '../runner/harness-env.ts';
 import type { GbrainUnderTest } from '../runner/gbrain-under-test.ts';
+import { COMPAT_PROVIDERS, CompatHttpError, ParticleCreditExhausted, compatRequest, compatSend, type CompatRequest } from '../runner/providers/openai-compatible.ts';
+import { normalizeFinish, normalizeUsage, receipt, responseMeta, usageSourceOf, type ReceiptRequest, type ResponseMeta, type UsageReceipt } from '../runner/usage-receipt.ts';
 
 export const DEFAULT_LEDGER = join(REPO_ROOT, '.budget/workload-suites.sqlite');
 export const PROGRAM_CAP_USD = 720;
@@ -64,10 +76,6 @@ export async function startBench(opts: { runner: string; budgetUsd: number; outD
   });
   const install = ensureHarness({ log });
   const bridges: Bridge[] = [];
-  const reader = proxy.envFor('reader');
-  const judge = proxy.envFor('judge');
-  const cacheDir = join(opts.outDir, 'model-cache');
-  mkdirSync(cacheDir, { recursive: true });
 
   return {
     proxy, run, install, gut: opts.gut, stub, outDir: opts.outDir,
@@ -84,15 +92,7 @@ export async function startBench(opts: { runner: string; budgetUsd: number; outD
       await b.call('init', { system, config, store_dir: storeDir, reset });
       return b;
     },
-    async model(modelId, prompt, o) {
-      const key = createHash('sha256').update(`${modelId}\n${o.maxTokens}\n${o.cacheKey ?? ''}\n${prompt}`).digest('hex');
-      const cachePath = join(cacheDir, `${key}.json`);
-      if (existsSync(cachePath)) return { ...(JSON.parse(readFileSync(cachePath, 'utf8')) as ModelReply), cached: true };
-      const env = o.tag.includes('/judge/') ? judge : reader;
-      const reply = await callModel(env, modelId, prompt, o.tag, o.maxTokens);
-      if (!reply.error) writeFileSync(cachePath, JSON.stringify(reply));
-      return reply;
-    },
+    model: modelCaller(proxy, opts.outDir),
     close() {
       for (const b of bridges) b.kill();
       const summary = run.close();
@@ -104,9 +104,63 @@ export async function startBench(opts: { runner: string; budgetUsd: number; outD
   };
 }
 
-/** One reader or judge call through the proxy. Anthropic Messages or OpenAI Chat Completions, plain text out. */
-export async function callModel(env: Record<string, string>, modelId: string, prompt: string, tag: string, maxTokens: number): Promise<ModelReply> {
+/**
+ * `Bench.model`: reader and judge calls through the proxy's `reader` and `judge` tokens, cached by prompt hash in
+ * `<outDir>/model-cache`, one usage receipt per provider attempt in `<outDir>/attempts.ndjson`, and the credit stop.
+ */
+export function modelCaller(proxy: Pick<Proxy, 'envFor'>, outDir: string): Bench['model'] {
+  const reader = proxy.envFor('reader');
+  const judge = proxy.envFor('judge');
+  const cacheDir = join(outDir, 'model-cache');
+  mkdirSync(cacheDir, { recursive: true });
+  const attempts = join(outDir, 'attempts.ndjson');
+  let stopped: ParticleCreditExhausted | null = null;
+  return async (modelId, prompt, o) => {
+    if (stopped) throw stopped;
+    const key = createHash('sha256').update(`${modelId}\n${o.maxTokens}\n${o.cacheKey ?? ''}\n${prompt}`).digest('hex');
+    const cachePath = join(cacheDir, `${key}.json`);
+    if (existsSync(cachePath)) return { ...(JSON.parse(readFileSync(cachePath, 'utf8')) as ModelReply), cached: true };
+    const env = o.tag.includes('/judge/') ? judge : reader;
+    let reply: ModelReply;
+    try {
+      reply = await callModel(env, modelId, prompt, o.tag, o.maxTokens, r => appendFileSync(attempts, JSON.stringify(r) + '\n'));
+    } catch (error) {
+      if (error instanceof ParticleCreditExhausted) stopped = error;
+      throw error;
+    }
+    if (!reply.error) writeFileSync(cachePath, JSON.stringify(reply));
+    return reply;
+  };
+}
+
+interface AttemptOutcome {
+  error: string | null;
+  response_model?: string | null;
+  text?: string;
+  finish?: string | null;
+  usage?: unknown;
+  /** Set for an OpenAI-compatible provider, whose receipts carry `request` and `response_meta`. */
+  request?: ReceiptRequest;
+  response_meta?: ResponseMeta;
+}
+
+/**
+ * One reader or judge call through the proxy: Anthropic Messages, OpenAI Chat Completions, or Chat Completions to an
+ * OpenAI-compatible provider in COMPAT_PROVIDERS, plain text out. Each provider attempt calls `onAttempt` with its
+ * usage receipt (`question_id` is the call's tag); a failed attempt's response fields are null.
+ */
+export async function callModel(env: Record<string, string>, modelId: string, prompt: string, tag: string, maxTokens: number, onAttempt: (r: UsageReceipt) => void = () => {}): Promise<ModelReply> {
   const [provider, model] = [modelId.slice(0, modelId.indexOf(':')), modelId.slice(modelId.indexOf(':') + 1)];
+  const fail = (error: string): ModelReply => ({ text: '', input_tokens: null, output_tokens: null, cached: false, model: modelId, error });
+  const note = (attempt: number, o: AttemptOutcome) => onAttempt(receipt({
+    lane: 'workload-suites', role: tag.includes('/judge/') ? 'judge' : 'reader', question_id: tag, replicate: 0, attempt, model: modelId,
+    response_model: o.response_model ?? null, status: o.error === null ? 'ok' : 'error', error: o.error, from_cache: false,
+    finish: normalizeFinish(o.finish), finish_raw: o.finish ?? null, answer: o.text ?? '',
+    usage: o.usage ? normalizeUsage(usageSourceOf(modelId), o.usage) : null, usage_raw: o.usage && typeof o.usage === 'object' ? o.usage as Record<string, unknown> : null, delivered: null,
+    ...(o.request ? { request: o.request, response_meta: o.response_meta ?? responseMeta(null) } : {}),
+  }));
+  if (Object.hasOwn(COMPAT_PROVIDERS, provider)) return callCompat(modelId, prompt, tag, maxTokens, env, fail, note);
+  if (provider !== 'anthropic' && provider !== 'openai') return fail(`unsupported reader provider ${provider}`);
   for (let attempt = 0; ; attempt++) {
     let res: Response;
     let body: any;
@@ -120,9 +174,10 @@ export async function callModel(env: Record<string, string>, modelId: string, pr
         body = await res.json().catch(() => ({}));
         if (res.ok) {
           const text = (body.content ?? []).filter((c: any) => c.type === 'text').map((c: any) => c.text).join('');
+          note(attempt, { error: null, response_model: typeof body.model === 'string' ? body.model : null, text, finish: body.stop_reason, usage: body.usage });
           return { text, input_tokens: body.usage?.input_tokens ?? null, output_tokens: body.usage?.output_tokens ?? null, cached: false, model: modelId };
         }
-      } else if (provider === 'openai') {
+      } else {
         res = await fetch(`${env.OPENAI_BASE_URL}/chat/completions`, {
           method: 'POST',
           headers: { 'content-type': 'application/json', authorization: `Bearer ${env.OPENAI_API_KEY}`, 'x-mpw-tag': tag },
@@ -131,20 +186,52 @@ export async function callModel(env: Record<string, string>, modelId: string, pr
         body = await res.json().catch(() => ({}));
         if (res.ok) {
           const text = body.choices?.[0]?.message?.content ?? '';
+          note(attempt, { error: null, response_model: typeof body.model === 'string' ? body.model : null, text, finish: body.choices?.[0]?.finish_reason, usage: body.usage });
           return { text, input_tokens: body.usage?.prompt_tokens ?? null, output_tokens: body.usage?.completion_tokens ?? null, cached: false, model: modelId };
         }
-      } else {
-        throw new Error(`unsupported reader provider ${provider}`);
       }
     } catch (e) {
-      if (attempt >= 4) return { text: '', input_tokens: null, output_tokens: null, cached: false, model: modelId, error: `network: ${(e as Error).message}` };
+      note(attempt, { error: `network: ${(e as Error).message}` });
+      if (attempt >= 4) return fail(`network: ${(e as Error).message}`);
       await Bun.sleep(2000 * (attempt + 1));
       continue;
     }
     const msg = JSON.stringify(body).slice(0, 600);
-    if (res.status === 402) return { text: '', input_tokens: null, output_tokens: null, cached: false, model: modelId, error: `budget refused: ${msg}` };
+    note(attempt, { error: `HTTP ${res.status}: ${msg}`, usage: body?.usage });
+    if (res.status === 402) return fail(`budget refused: ${msg}`);
     if ((res.status === 429 || res.status >= 500) && attempt < 5) { await Bun.sleep(3000 * (attempt + 1)); continue; }
-    return { text: '', input_tokens: null, output_tokens: null, cached: false, model: modelId, error: `HTTP ${res.status}: ${msg}` };
+    return fail(`HTTP ${res.status}: ${msg}`);
+  }
+}
+
+/**
+ * The particle route: one `compatRequest` (effort `high`, the model's output floor at least), sent once per attempt
+ * with `compatSend` under callModel's attempt limits. A 429 or 5xx waits its Retry-After (capped at 120 s) when it
+ * sends one, else the same backoff as OpenAI; a proxy's 402 is a budget refusal; Particle's credit 402 throws
+ * `ParticleCreditExhausted` after its receipt.
+ */
+async function callCompat(modelId: string, prompt: string, tag: string, maxTokens: number, env: Record<string, string>, fail: (error: string) => ModelReply, note: (attempt: number, o: AttemptOutcome) => void): Promise<ModelReply> {
+  let built: CompatRequest;
+  try { built = compatRequest(modelId, [{ role: 'user', content: prompt }], { maxOutputTokens: maxTokens }, env); } catch (e) { return fail((e as Error).message); }
+  const req: CompatRequest = { ...built, headers: { ...built.headers, 'x-mpw-tag': tag } };
+  const count = (v: unknown) => (typeof v === 'number' ? v : null);
+  for (let attempt = 0; ; attempt++) {
+    try {
+      const r = await compatSend(req);
+      note(attempt, { error: null, response_model: r.response_model, text: r.text, finish: r.finish, usage: r.usage, request: req.sent, response_meta: r.meta });
+      return { text: r.text, input_tokens: count(r.usage?.prompt_tokens), output_tokens: count(r.usage?.completion_tokens), cached: false, model: modelId };
+    } catch (e) {
+      const error = e as Error;
+      const http = error instanceof CompatHttpError ? error : null;
+      const budget = error.name === 'BudgetExceededError';
+      const retry = http ? http.retryable && attempt < 5 : !budget && attempt < 4;
+      const waitMs = http ? http.retryAfterMs ?? 3000 * (attempt + 1) : 2000 * (attempt + 1);
+      const waitNote = retry ? `; retrying in ${waitMs} ms${http?.retryAfterMs != null ? ' (Retry-After)' : ''}` : '';
+      note(attempt, { error: `${http || budget ? '' : 'network: '}${error.message}${waitNote}`, usage: http?.usage, request: req.sent });
+      if (error instanceof ParticleCreditExhausted) throw error;
+      if (retry) { await Bun.sleep(waitMs); continue; }
+      return fail(budget ? `budget refused: ${(error as { body?: string }).body?.slice(0, 600) ?? error.message}` : http ? `HTTP ${http.status}: ${http.body.slice(0, 600)}` : `network: ${error.message}`);
+    }
   }
 }
 

@@ -17,6 +17,10 @@
  *   5. streams the response back (server-sent events are teed, not
  *      buffered), decodes the provider's usage and settles the reservation.
  *
+ * The Particle row comes from COMPAT_PROVIDERS (eval/runner/providers/openai-compatible.ts):
+ * prefix `/particle`, upstream the origin of the table's default base URL,
+ * the table's key variable, and children get `PARTICLE_BASE_URL=<proxy>/particle/v1`.
+ *
  * Settlement: decoded usage reconciles the entry. A 4xx answer without usage
  * is a request the provider rejected before doing any work, so it settles at
  * $0. Anything else without decodable usage (a 5xx, a network failure after
@@ -28,7 +32,14 @@
  * contain one, a zero-width space is inserted; `lastRefusal` keeps the exact
  * text for the launcher.
  *
- * Every request appends one JSON line to `requestLogPath`.
+ * Every request appends one JSON line to `requestLogPath`. Beside the
+ * pricing it records what the response says served it: the model it names,
+ * its reasoning tokens and `response_meta` (raw `metadata` with any weight
+ * version, `service_tier`, `system_fingerprint`), all null when the attempt
+ * failed. The request side (effort sent and effective, output limit) is not
+ * repeated in the log: `readRequestLog` joins it from the stored body by
+ * `body_sha256`, so every particle request can be checked against bar 2 of
+ * plan GST-605.
  *
  * CLI (a standalone proxy joined to an open budget run; prints nothing
  * secret, writes the child environments to the ready file with mode 0600):
@@ -41,14 +52,18 @@
  * to the real provider with the key from this process's environment.
  */
 import { createHash, randomBytes } from 'node:crypto';
-import { appendFileSync, chmodSync, existsSync, mkdirSync, renameSync, writeFileSync } from 'node:fs';
+import { appendFileSync, chmodSync, existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import {
   BudgetExceededError, BudgetRun, ledgerStatus, priceRequest, reservationUsd, streamUsageCost, unguardedFetch, usageCost,
 } from './budget-ledger.ts';
+import { COMPAT_PROVIDERS } from './providers/openai-compatible.ts';
+import { normalizeUsage, responseMeta, type ResponseMeta } from './usage-receipt.ts';
 
-export type MeteredProvider = 'openai' | 'anthropic' | 'gemini' | 'groq' | 'voyage';
+export type MeteredProvider = 'openai' | 'anthropic' | 'gemini' | 'groq' | 'voyage' | 'particle';
 type RequestPrice = NonNullable<ReturnType<typeof priceRequest>>;
+
+const PARTICLE = COMPAT_PROVIDERS.particle;
 
 /** Path prefix, real upstream and launcher key variables per provider (CONTRACTS.md table). */
 export const METERED_PROVIDERS: Record<MeteredProvider, { prefix: string; upstream: string; keyEnv: string[] }> = {
@@ -57,6 +72,7 @@ export const METERED_PROVIDERS: Record<MeteredProvider, { prefix: string; upstre
   gemini: { prefix: '/gemini', upstream: 'https://generativelanguage.googleapis.com', keyEnv: ['GEMINI_API_KEY', 'GOOGLE_API_KEY', 'GOOGLE_GENERATIVE_AI_API_KEY'] },
   groq: { prefix: '/groq', upstream: 'https://api.groq.com', keyEnv: ['GROQ_API_KEY'] },
   voyage: { prefix: '/voyage', upstream: 'https://api.voyageai.com', keyEnv: ['VOYAGE_API_KEY'] },
+  particle: { prefix: '/particle', upstream: new URL(PARTICLE.base_url_default).origin, keyEnv: [PARTICLE.key_env] },
 };
 const PROVIDER_IDS = Object.keys(METERED_PROVIDERS) as MeteredProvider[];
 
@@ -99,6 +115,21 @@ export interface RequestLogLine {
   /** free (not priced), reconciled, charged-reservation, rejected-unbilled, or null when nothing was reserved. */
   settlement: 'free' | 'reconciled' | 'charged-reservation' | 'rejected-unbilled' | null;
   error: string | null;
+  /** The model the response named; null when it named none (a refusal, an error answer, a network failure). */
+  response_model: string | null;
+  /** Reasoning or thinking tokens, a subset of output_tokens; null when the response reported none. */
+  reasoning_tokens: number | null;
+  /** The response's raw metadata, weight version, service tier and system fingerprint; every field null when the attempt failed. */
+  response_meta: ResponseMeta;
+}
+
+/** What a logged request sent that changes the answer, read from its stored body. */
+export interface LoggedRequest {
+  effort_sent: string | null;
+  /** The level the provider runs the sent effort at (COMPAT_PROVIDERS); null outside that table. */
+  effort_effective: string | null;
+  output_limit_field: string | null;
+  output_limit: number | null;
 }
 
 export interface ProxyTotals { requests: number; refused: number; reserved_usd: number; actual_usd: number; input_tokens: number; output_tokens: number }
@@ -147,6 +178,67 @@ const emptyTotals = (): ProxyTotals => ({ requests: 0, refused: 0, reserved_usd:
 function bearer(header: string | null): string | null {
   const m = header?.match(/^Bearer\s+(.+)$/i);
   return m ? m[1].trim() : null;
+}
+
+const obj = (v: unknown) => (v && typeof v === 'object' ? v as Record<string, any> : {});
+const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : null);
+
+/** What a decoded response says served it; every field null for a body that is not a model response. */
+function responseFields(provider: MeteredProvider, response: unknown): Pick<RequestLogLine, 'response_model' | 'reasoning_tokens' | 'response_meta'> {
+  const r = obj(response);
+  const model = typeof r.model === 'string' ? r.model : typeof r.modelVersion === 'string' ? r.modelVersion : null;
+  const reasoning = provider === 'gemini' ? num(obj(r.usageMetadata).thoughtsTokenCount)
+    : provider === 'voyage' ? null
+    : normalizeUsage(provider === 'anthropic' ? 'anthropic' : 'openai', r.usage)?.reasoning ?? null;
+  return { response_model: model, reasoning_tokens: reasoning, response_meta: responseMeta(response ?? null) };
+}
+
+/**
+ * The response-side fields of a server-sent-events body, last value wins: Chat Completions chunks, Anthropic
+ * `message_start` and `message_delta` (usage merged), Responses API events and Gemini chunks.
+ */
+function streamResponse(sse: string): Record<string, unknown> {
+  const out: Record<string, any> = {};
+  for (const line of sse.split(/\r?\n/)) {
+    if (!line.startsWith('data:')) continue;
+    let event: unknown;
+    try { event = JSON.parse(line.slice(5).trim()); } catch { continue; }
+    const e = obj(event);
+    const body = obj(e.response ?? e.message ?? e);
+    for (const key of ['model', 'modelVersion', 'metadata', 'service_tier', 'system_fingerprint', 'usageMetadata']) if (body[key] !== undefined && body[key] !== null) out[key] = body[key];
+    const usage = body.usage ?? e.usage ?? obj(e.x_groq).usage;
+    if (usage && typeof usage === 'object') out.usage = { ...obj(out.usage), ...usage };
+    const finish = Array.isArray(body.choices) ? obj(body.choices[0]).finish_reason : undefined;
+    if (typeof finish === 'string') out.choices = [{ finish_reason: finish }];
+  }
+  return out;
+}
+
+function loggedRequest(provider: MeteredProvider, body: unknown): LoggedRequest {
+  const b = obj(body);
+  const effort = typeof b.reasoning_effort === 'string' ? b.reasoning_effort : typeof obj(b.reasoning).effort === 'string' ? obj(b.reasoning).effort as string : null;
+  const field = ['max_completion_tokens', 'max_tokens', 'max_output_tokens'].find(k => typeof b[k] === 'number') ?? null;
+  const row = Object.hasOwn(COMPAT_PROVIDERS, provider) && Object.hasOwn(COMPAT_PROVIDERS[provider].models, String(b.model)) ? COMPAT_PROVIDERS[provider].models[String(b.model)] : null;
+  return {
+    effort_sent: effort,
+    effort_effective: effort !== null && row && Object.hasOwn(row.efforts, effort) ? row.efforts[effort] : null,
+    output_limit_field: field,
+    output_limit: field ? b[field] as number : null,
+  };
+}
+
+/**
+ * The request log with each line's request side joined from its stored body by `body_sha256`; `request` is null
+ * for a request whose body the proxy did not store (a GET, an unknown token) or that is not JSON.
+ */
+export function readRequestLog(requestLogPath: string, bodiesDir: string): Array<RequestLogLine & { request: LoggedRequest | null }> {
+  return readFileSync(requestLogPath, 'utf8').split('\n').filter(Boolean).map(text => {
+    const line = JSON.parse(text) as RequestLogLine;
+    const path = join(bodiesDir, `${line.body_sha256}.json`);
+    let body: unknown = null;
+    if (existsSync(path)) { try { body = JSON.parse(readFileSync(path, 'utf8')); } catch {} }
+    return { ...line, request: body && typeof body === 'object' ? loggedRequest(line.provider, body) : null };
+  });
 }
 
 export async function startMeteringProxy(options: MeteringProxyOptions): Promise<MeteringProxy> {
@@ -220,6 +312,7 @@ export async function startMeteringProxy(options: MeteringProxyOptions): Promise
     const line: RequestLogLine = {
       ts: new Date().toISOString(), cell_id: cellId, label, tag, provider, model: null, kind: null, method: req.method, path: rest, body_sha256: bodySha,
       stream: false, reserved_usd: 0, actual_usd: null, input_tokens: null, output_tokens: null, status: 0, refused: false, settlement: null, error: null,
+      response_model: null, reasoning_tokens: null, response_meta: responseMeta(null),
     };
     const finish = (response: Response, patch: Partial<RequestLogLine> = {}) => { record({ ...line, ...patch, status: response.status }); return response; };
 
@@ -299,7 +392,7 @@ export async function startMeteringProxy(options: MeteringProxyOptions): Promise
       let parsed: unknown = null;
       try { parsed = JSON.parse(new TextDecoder().decode(bytes)); } catch {}
       const cost = price && parsed !== null ? usageCost(price, parsed) : null;
-      return finish(new Response(bytes, { status: upstream.status, statusText: upstream.statusText, headers: outHeaders }), settle(cost, upstream.status, null));
+      return finish(new Response(bytes, { status: upstream.status, statusText: upstream.statusText, headers: outHeaders }), { ...settle(cost, upstream.status, null), ...responseFields(provider, parsed) });
     }
 
     const [toClient, toMeter] = upstream.body.tee();
@@ -308,7 +401,7 @@ export async function startMeteringProxy(options: MeteringProxyOptions): Promise
       let patch: Partial<RequestLogLine>;
       try {
         const text = await new Response(toMeter).text();
-        patch = settle(price ? streamUsageCost(price, text) : null, status, null);
+        patch = { ...settle(price ? streamUsageCost(price, text) : null, status, null), ...responseFields(provider, streamResponse(text)) };
       } catch (error) {
         const message = `stream from ${provider} ended early: ${(error as Error).message}`;
         patch = { ...settle(null, status, message), error: message };
@@ -332,7 +425,7 @@ export async function startMeteringProxy(options: MeteringProxyOptions): Promise
   });
   const url = `http://127.0.0.1:${server.port}`;
   const baseUrls: Record<MeteredProvider, string> = {
-    openai: `${url}/openai/v1`, anthropic: `${url}/anthropic`, gemini: `${url}/gemini`, groq: `${url}/groq`, voyage: `${url}/voyage/v1`,
+    openai: `${url}/openai/v1`, anthropic: `${url}/anthropic`, gemini: `${url}/gemini`, groq: `${url}/groq`, voyage: `${url}/voyage/v1`, particle: `${url}/particle/v1`,
   };
   return {
     url,
@@ -348,6 +441,7 @@ export async function startMeteringProxy(options: MeteringProxyOptions): Promise
       if (served('gemini')) Object.assign(env, { GOOGLE_GEMINI_BASE_URL: baseUrls.gemini, GEMINI_API_KEY: token, GOOGLE_GENERATIVE_AI_API_KEY: token });
       if (served('groq')) Object.assign(env, { GROQ_BASE_URL: baseUrls.groq, GROQ_API_KEY: token });
       if (served('voyage')) Object.assign(env, { VOYAGE_API_KEY: token });
+      if (served('particle')) Object.assign(env, { [PARTICLE.base_url_env]: baseUrls.particle, [PARTICLE.key_env]: token });
       return env;
     },
     stats() {

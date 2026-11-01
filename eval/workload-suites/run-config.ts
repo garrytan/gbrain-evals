@@ -4,14 +4,23 @@
  * Model ids are placeholders until the preregistration freezes them. The
  * project rule: one fixed reader for every cell (the newest frontier
  * Sonnet); a preregistered subset of questions swept across the newest
- * frontier Opus, GPT, Sonnet and Fable models; one fixed judge. Older
- * generations and gpt-5.4-mini are never run. Before a paid run, check which
- * models are newest and update this file in a commit that runs nothing.
+ * frontier Opus, GPT, Sonnet and Fable models, plus particle-1 (a primary
+ * model, plan GST-605); one fixed judge, never particle-1. Older generations
+ * and gpt-5.4-mini are never run. Before a paid run, check which models are
+ * newest and update this file in a commit that runs nothing.
  */
+import { COMPAT_PROVIDERS, modelsNotRun } from '../runner/providers/openai-compatible.ts';
 import { sha256 } from './common.ts';
 import type { SuiteBundle, SuiteId } from './types.ts';
 
-export interface ModelRef { id: string; family: 'sonnet' | 'opus' | 'gpt' | 'fable' }
+export interface ModelRef { id: string; family: 'sonnet' | 'opus' | 'gpt' | 'fable' | 'particle' }
+
+/** The providers bench-infra.ts `callModel` sends reader and judge calls to: Anthropic, OpenAI and every COMPAT_PROVIDERS row. */
+export const ROUTED_PROVIDERS: readonly string[] = ['anthropic', 'openai', ...Object.keys(COMPAT_PROVIDERS)];
+
+/** The primary models (PRIMARY_MODELS) the workload suites have no route for, each with its reason; outside every identity and resume check. */
+export const workloadModelsNotRun = (routed: readonly string[] = ROUTED_PROVIDERS) =>
+  modelsNotRun('workload-suites', model => routed.includes(model.slice(0, model.indexOf(':'))));
 
 export const MODEL_CONFIG = {
   status: 'placeholder: confirm newest models and freeze in the preregistration before any paid cell',
@@ -22,6 +31,7 @@ export const MODEL_CONFIG = {
     { id: 'openai:gpt-6-astra', family: 'gpt' },
     { id: 'anthropic:claude-sonnet-5-5', family: 'sonnet' },
     { id: 'anthropic:claude-fable-5-1', family: 'fable' },
+    { id: 'particle:particle-1', family: 'particle' },
   ] as ModelRef[],
   /** The alternate newest GPT, re-reading the same frontier subset when the budget allows (it is also the judge model). */
   alternate_readers: [{ id: 'openai:gpt-6.1-sol', family: 'gpt' }] as ModelRef[],
@@ -46,6 +56,7 @@ export const MODEL_CONFIG = {
     /** The no-memory control calls the reader with this exact context, so an empty-context guard cannot skip the call. */
     no_memory_context: '(no memories were retrieved)',
   },
+  models_not_run: workloadModelsNotRun(),
 } as const;
 
 /** Model ids the project rule excludes: older generations and gpt-5.4-mini. */
@@ -59,6 +70,7 @@ export function modelRuleViolations(config: { fixed_reader: ModelRef; frontier_s
   const families = new Set(config.frontier_sweep.map(m => m.family));
   for (const f of ['opus', 'gpt', 'sonnet', 'fable'] as const) if (!families.has(f)) out.push(`frontier sweep has no ${f} model`);
   if (config.fixed_reader.family !== 'sonnet') out.push('the fixed reader must be the newest frontier Sonnet');
+  if (config.judge.id.startsWith('particle:')) out.push(`${config.judge.id} never judges a counted cell`);
   if (!config.frontier_sweep.some(m => m.id === config.fixed_reader.id)) out.push('the fixed reader must be the sweep\'s Sonnet so the sweep shares one anchor');
   return out;
 }

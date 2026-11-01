@@ -35,6 +35,7 @@ and costs nothing. Base URLs:
 | Gemini | `GOOGLE_GEMINI_BASE_URL=<proxy>/gemini`, `GEMINI_API_KEY`, `GOOGLE_GENERATIVE_AI_API_KEY` | `/gemini` | `https://generativelanguage.googleapis.com` |
 | Groq | `GROQ_BASE_URL=<proxy>/groq`, `GROQ_API_KEY` | `/groq` | `https://api.groq.com` |
 | Voyage | gbrain `provider_base_urls.voyage=<proxy>/voyage/v1`, `VOYAGE_API_KEY` | `/voyage` | `https://api.voyageai.com` |
+| Particle | `PARTICLE_BASE_URL=<proxy>/particle/v1`, `PARTICLE_API_KEY` | `/particle` | `https://api.particle.ai` (row derived from `COMPAT_PROVIDERS`, `eval/runner/providers/openai-compatible.ts`) |
 
 ## Metering proxy (`eval/runner/harness-metering-proxy.ts`)
 
@@ -42,7 +43,8 @@ and costs nothing. Base URLs:
 startMeteringProxy({
   run,              // BudgetRun from budget-ledger.ts (the one shared SQLite ledger)
   cellId,           // named in refusals and receipts
-  requestLogPath,   // JSONL: one line per request (label, tag, provider, model, kind, reserved, actual, tokens, status, refused)
+  requestLogPath,   // JSONL: one line per request (label, tag, provider, model, kind, reserved, actual, tokens, status, refused,
+                    // response_model, reasoning_tokens, response_meta)
   bodiesDir,        // exact request bodies, <sha256>.json
   labels,           // process labels to mint tokens for
   upstreams?,       // test/stub override per provider
@@ -72,6 +74,16 @@ is charged at its reservation. Free requests (model listings, Gemini
 countTokens) are forwarded without a reservation. The CLI form takes
 `--upstream <provider>=<url>` for stubs.
 
+Each log line also records what the response says served it, from the JSON
+body or the event stream: `response_model`, `reasoning_tokens` and
+`response_meta` (usage-receipt.ts: raw `metadata` with any weight version,
+`service_tier`, `system_fingerprint`), all null when the attempt failed.
+`readRequestLog(requestLogPath, bodiesDir)` returns the lines with the
+request side joined from each stored body by `body_sha256` (effort sent,
+the level the provider runs it at for a `COMPAT_PROVIDERS` row, output-limit
+field and value), so bar 2 of plan GST-605 can be checked for every
+particle request on the workload-suite and development-lane paths.
+
 `eval/runner/metering-proxy-testkit.ts` exports `createMeteredTestCell` and
 `assertZeroBalanceBlocks({ label, spawn, trigger, stop })`, the per-process
 zero-balance check (refused at zero balance with no upstream hit and no new
@@ -79,7 +91,7 @@ committed spend; reaches the stub and settles with budget). The comparator
 server launcher must pass it under label `comparator`.
 
 `eval/runner/stub-upstream.ts` serves deterministic OpenAI, Anthropic, Gemini,
-Groq and Voyage responses (schema-valid structured output, hash embeddings,
+Groq, Voyage and Particle responses (schema-valid structured output, hash embeddings,
 usage blocks) for keyless tests, the mode smoke and the quickstart fixture.
 
 ## Launcher actions (`eval/runner/harness-cell.ts`)
