@@ -4,6 +4,38 @@ This records what each gbrain-evals release changed and what its measurements me
 
 ## [Unreleased]
 
+### Frontier first: Opus 5.5 and GPT-6.1 Sol are the models under test, never Sonnet or Haiku
+
+- **The model rules say gbrain and gstack are built for frontier models** (Garry, 2026-11-01). CLAUDE.md's "Choose
+  models", AGENTS.md's summary and eval/CONTRIBUTING.md's opening now say every model-comparison run tests them on the
+  newest frontier Opus and GPT (`claude-opus-5-5`, `gpt-6.1-sol`) plus `particle-1` as the primary low-cost model.
+  Sonnet and Haiku are no longer required in comparison runs, and they are never models under test (agents, readers,
+  answer models, optimizers, optimization targets) or stand-ins for a frontier model, unless a run asks a question
+  about that tier and says so. Judges are separate: a protocol's judge stays, and a cheaper judge is fine where the
+  protocol allows one, as long as no model judges its own family's rows. The particle-1 rules are unchanged.
+- **Every model-under-test default R4 (#243) set to Sonnet 5.5 or Haiku 5.5 moves to a frontier model.** Each is a new
+  receipt identity, never pooled with results on the old default.
+  - `claude-opus-5-5`: the A4 house reader (was Sonnet 5.5; a third 2026-11-01 amendment to the
+    [N2/A4 preregistration](docs/benchmarks/2026-10-01-n2-a4-preregistration.md) records it and asks for an Opus 5.5
+    `--smoke 2` check before the first counted cell, and the paid estimate moves from $3 to $4 under the unchanged
+    $6 cap), chronicle-lift's agent (was Sonnet 5.5), Cat 35's dream, facts and triage models in both modes (one
+    `DISTILL_MODEL`; full mode was Sonnet 5.5, BPRE mode and triage Haiku 5.5), the SkillOpt target (was Haiku 5.5),
+    the SkillOpt optimizer in B-pre mode too (the separate Haiku 5.5 `bpreOptimizer` is gone), temporal-contradictions'
+    dev `--models` default (was Haiku 5.5; its run estimate moves from $0.30 to $1.20 per model and run) and the
+    harness dev lane's reader (`DEV_ANSWER`, Sonnet 5.5 since #256).
+  - `gpt-6.1-sol`: the other end of Cat 33's transfer pairs (was Sonnet 5.5), so the pairs run Opus 5.5 to GPT-6.1 Sol
+    and back. `SKILLOPT_MODELS.strong` is renamed `transfer`. The situation-recall-v1 inventory names the new pair
+    slices in a second dated amendment, so its hash changes again and a Cat 33 profile registered against the old hash
+    must be registered again.
+- **Cat 35's default judge moves from `claude-haiku-5-5` to `gpt-6.1-sol`**, because a Claude judge would grade Opus
+  5.5's distillations. Cat 35's pre-flight estimates are repriced for Opus 5.5: a BPRE smoke projects $3.24 and a full
+  run $53.40 worst case, above the $40 default `CAT35_HARD_STOP_USD`, so a full run now needs that cap raised
+  explicitly. No other judge default changes.
+- **`test/eval/model-defaults.test.ts` fails when a model-under-test default names a Sonnet or Haiku model** outside
+  the named exceptions in `eval/runner/model-defaults.ts` (`underTestModelProblem`). Registered defaults now say
+  which models are under test and which judge. The frozen protocols and product-default mirrors that keep a Sonnet 4.6
+  or Haiku 4.5 model stay frozen. No model was run.
+
 ### particle-1 results carry their disclosure up front
 
 - **`docs/disclosures.md`** lists the relationship Garry Tan disclosed for a tested company: Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which makes particle-1. Any finding, report or summary of particle-1 results carries that line up front.

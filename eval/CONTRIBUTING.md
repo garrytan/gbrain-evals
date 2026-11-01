@@ -2,7 +2,7 @@
 
 Useful contributions make it easier to tell when gbrain helps. You can contribute naturally worded questions, a competing search implementation, another system's notes scored on Cat 35, or a reproduction of a published result.
 
-Work from the repository root. Install with `bun install --frozen-lockfile`, and run `bun run test` for the tests under `test/eval/` and `eval/`, the Python tests and the validators. The gbrain under test is the one `package.json` declares, master `3ec766c40` (v0.60.531.0); a category scores what gbrain implements at that commit. Model-comparison runs follow the model rules in [CLAUDE.md](../CLAUDE.md#choose-models): the primary models are `claude-opus-5-5` and `particle-1`, and a runner that calls models supports both (particle-1 through `eval/runner/providers/openai-compatible.ts`) or lists the one it cannot run under `models_not_run`. Everything above [Changelog](#changelog) is current.
+Work from the repository root. Install with `bun install --frozen-lockfile`, and run `bun run test` for the tests under `test/eval/` and `eval/`, the Python tests and the validators. The gbrain under test is the one `package.json` declares, master `3ec766c40` (v0.60.531.0); a category scores what gbrain implements at that commit. Model-comparison runs follow the model rules in [CLAUDE.md](../CLAUDE.md#choose-models): gbrain and gstack are built for frontier models, so runs test them on the newest frontier Opus and GPT (today `claude-opus-5-5` and `gpt-6.1-sol`) plus `particle-1` as the primary low-cost model, and never use Sonnet or Haiku as a model under test. The primary models are `claude-opus-5-5` and `particle-1`, and a runner that calls models supports both (particle-1 through `eval/runner/providers/openai-compatible.ts`) or lists the one it cannot run under `models_not_run`. Everything above [Changelog](#changelog) is current.
 
 ## Write questions in your own words
 
@@ -217,6 +217,12 @@ See [CREDITS.md](CREDITS.md) for attribution. Contributions to external question
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
+
+### 2026-11-01: frontier models first
+
+The opening paragraph says runs test gbrain and gstack on the newest frontier Opus and GPT (`claude-opus-5-5` and
+`gpt-6.1-sol`) plus `particle-1`, and never use Sonnet or Haiku as a model under test. Before, it named only the two
+primary models. The change follows Garry's rule of 2026-11-01 that gbrain and gstack are built for frontier models.
 
 ### 2026-11-01: primary models named
 
