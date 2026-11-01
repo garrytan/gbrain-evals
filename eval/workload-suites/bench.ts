@@ -137,9 +137,16 @@ function leakCheck(prompt: string, forbidden: string[], where: string): void {
   if (hit) throw new Error(`leak: ${where} carries the identifier ${hit}`);
 }
 
-async function pool<T>(items: T[], n: number, fn: (x: T) => Promise<void>): Promise<void> {
+/** Runs `fn` over `items` n at a time. After the first error no new item starts, and every call in flight finishes (and writes its receipt) before that error is thrown. */
+export async function pool<T>(items: T[], n: number, fn: (x: T) => Promise<void>): Promise<void> {
   let i = 0;
-  await Promise.all(Array.from({ length: Math.min(n, items.length) }, async () => { while (i < items.length) await fn(items[i++]!); }));
+  let failure = null as { error: unknown } | null;
+  await Promise.all(Array.from({ length: Math.min(n, items.length) }, async () => {
+    while (!failure && i < items.length) {
+      try { await fn(items[i++]!); } catch (error) { failure ??= { error }; }
+    }
+  }));
+  if (failure) throw failure.error;
 }
 
 export function selectQueries(bundle: SuiteBundle, smoke: number | null): HarnessQuery[] {

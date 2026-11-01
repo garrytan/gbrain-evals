@@ -17,7 +17,7 @@ import { createMeteredTestCell, type MeteredTestCell } from '../../eval/runner/m
 import { ParticleCreditExhausted } from '../../eval/runner/providers/openai-compatible.ts';
 import type { UsageReceipt } from '../../eval/runner/usage-receipt.ts';
 import { callModel, modelCaller } from '../../eval/workload-suites/bench-infra.ts';
-import { maxTokensFor, readerPrompt } from '../../eval/workload-suites/bench.ts';
+import { maxTokensFor, pool, readerPrompt } from '../../eval/workload-suites/bench.ts';
 import { SUITES, runSuite } from '../../eval/workload-suites/cli.ts';
 import { MODEL_CONFIG, ROUTED_PROVIDERS, modelRuleViolations, workloadModelsNotRun } from '../../eval/workload-suites/run-config.ts';
 
@@ -37,7 +37,9 @@ beforeAll(async () => {
   probe.stop(true);
   fake = Bun.spawn(['python3', 'eval/systems/_shim/fake_provider.py', '--port', String(port), '--log', fakeLog], { cwd: ROOT, stdout: 'ignore', stderr: 'pipe' });
   fakeRoot = `http://127.0.0.1:${port}`;
-  for (let i = 0; i < 200; i++) { try { await fetch(`${fakeRoot}/particle/v1/models`, { keepalive: false }); break; } catch { await Bun.sleep(50); } }
+  for (let i = 0; i < 200; i++) { try { await fetch(`${fakeRoot}/particle/v1/models`, { keepalive: false }); return; } catch { await Bun.sleep(50); } }
+  fake.kill();
+  throw new Error(`fake provider never answered on port ${port}: ${await new Response(fake.stderr as ReadableStream).text()}`);
 });
 afterAll(() => fake?.kill());
 
@@ -87,7 +89,7 @@ describe('a workload-suite question read by particle-1', () => {
     expect(line).toMatchObject({ label: 'reader', tag, provider: 'particle', model: 'particle-1', kind: 'chat', method: 'POST', path: '/v1/chat/completions', status: 200, refused: false, settlement: 'reconciled', response_model: 'particle-ai/particle-1' });
     expect(line!.reasoning_tokens).toBeGreaterThan(0);
     expect(line!.response_meta).toMatchObject({ weight_version: 'default', service_tier: 'default', non_default_tier: false, truncated: false });
-    expect(line!.request).toEqual({ effort_sent: 'high', effort_effective: 'high', output_limit_field: 'max_completion_tokens', output_limit: 16_000 });
+    expect(line!.request).toEqual({ effort_sent: 'high', effort_effective: 'high', effort_effective_source: 'docs.particle.ai and GET /v1/models, checked 2026-10-31', output_limit_field: 'max_completion_tokens', output_limit: 16_000 });
     expect(JSON.parse(readFileSync(join(b.bodies, `${line!.body_sha256}.json`), 'utf8'))).toEqual({ model: 'particle-1', messages: [{ role: 'user', content: prompt }], reasoning_effort: 'high', max_completion_tokens: 16_000 });
     expect(Object.keys(b.proxy.stats().byProvider)).toEqual(['particle']);
 
@@ -150,6 +152,26 @@ describe('a workload-suite question read by particle-1', () => {
     expect(fakeLines().length - before).toBe(1);
     expect(b.log()).toHaveLength(1);
     expect(b.attempts()).toHaveLength(1);
+  });
+
+  test('the sweep pool lets calls in flight finish before it throws the first error, and starts no call after it', async () => {
+    const started: number[] = [];
+    const finished: number[] = [];
+    let release!: () => void;
+    const gate = new Promise<void>(r => { release = r; });
+    let settled = false;
+    const run = pool([1, 2, 3, 4, 5, 6], 3, async n => {
+      started.push(n);
+      if (n === 1) throw new Error('credit stop');
+      await gate;
+      finished.push(n);
+    }).finally(() => { settled = true; });
+    await Bun.sleep(20);
+    expect(settled).toBe(false);
+    release();
+    expect(await run.catch(e => e)).toMatchObject({ message: 'credit stop' });
+    expect(started).toEqual([1, 2, 3]);
+    expect(finished).toEqual([2, 3]);
   });
 
   test('a proxy budget refusal stays a budget refusal: an error reply, no credit stop, nothing sent', async () => {

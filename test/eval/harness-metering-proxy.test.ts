@@ -327,6 +327,20 @@ describe('metering proxy', () => {
     expect(c.committed().run).toBeCloseTo(anth.actual_usd! + oai.reserved_usd, 12);
   });
 
+  test('streamed Anthropic, Gemini and Responses answers log the model that served them and their reasoning tokens', async () => {
+    const c = await cell({ labels: ['harness'] });
+    const token = c.proxy.tokens.harness;
+    await (await post(`${c.proxy.baseUrls.anthropic}/v1/messages`, { 'x-api-key': token }, { model: 'claude-sonnet-5-5', max_tokens: 50, stream: true, messages: [{ role: 'user', content: 'hi' }] })).text();
+    await (await post(`${c.proxy.baseUrls.gemini}/v1beta/models/gemini-3.5-flash:streamGenerateContent?alt=sse`, { 'x-goog-api-key': token }, { contents: [{ parts: [{ text: 'hi' }] }] })).text();
+    await (await post(`${c.proxy.baseUrls.openai}/responses`, { authorization: `Bearer ${token}` }, { model: 'gpt-6.1-sol', max_output_tokens: 50, stream: true, reasoning: { effort: 'low' }, input: 'hi' })).text();
+    await waitFor(() => c.log().length === 3, 5000);
+    const [anth, gem, resp] = readRequestLog(c.requestLogPath, c.bodiesDir);
+    expect(anth).toMatchObject({ stream: true, provider: 'anthropic', settlement: 'reconciled', response_model: 'claude-sonnet-5-5', reasoning_tokens: null });
+    expect(gem).toMatchObject({ stream: true, provider: 'gemini', settlement: 'reconciled', response_model: 'gemini-3.5-flash', reasoning_tokens: 0 });
+    expect(resp).toMatchObject({ stream: true, provider: 'openai', settlement: 'reconciled', response_model: 'gpt-6.1-sol', reasoning_tokens: 0 });
+    expect(resp.request).toEqual({ effort_sent: 'low', effort_effective: null, effort_effective_source: null, output_limit_field: 'max_output_tokens', output_limit: 50 });
+  });
+
   test('the client receives each SSE chunk as the upstream sends it', async () => {
     let release!: () => void;
     const gate = new Promise<void>(r => { release = r; });
@@ -469,7 +483,7 @@ describe('particle through the metering proxy', () => {
       const [line] = readRequestLog(p.log, p.bodies);
       expect(line).toMatchObject({ label: 'reader', tag: 'reader:q1', provider: 'particle', model: 'particle-1', kind: 'chat', path: '/v1/chat/completions', status: 200, refused: false, settlement: 'reconciled', response_model: 'particle-ai/particle-1', reasoning_tokens: 24 });
       expect(line.response_meta).toEqual({ metadata: { weight_version: 'default' }, weight_version: 'default', service_tier: 'default', system_fingerprint: 'fp_stub_particle', non_default_tier: false, truncated: false });
-      expect(line.request).toEqual({ effort_sent: 'high', effort_effective: 'high', output_limit_field: 'max_completion_tokens', output_limit: 16_000 });
+      expect(line.request).toEqual({ effort_sent: 'high', effort_effective: 'high', effort_effective_source: 'docs.particle.ai and GET /v1/models, checked 2026-10-31', output_limit_field: 'max_completion_tokens', output_limit: 16_000 });
       expect(line.reserved_usd).toBeCloseTo(reservationUsd(priceRequest('https://api.particle.ai/v1/chat/completions', req.body)!), 12);
       const usage = res.usage as { prompt_tokens: number; completion_tokens: number };
       expect(line.actual_usd).toBeCloseTo((usage.prompt_tokens * 0.25 + usage.completion_tokens * 1.0) / 1e6, 12);
@@ -489,7 +503,7 @@ describe('particle through the metering proxy', () => {
       const [failed, listing] = readRequestLog(p.log, p.bodies);
       expect(failed).toMatchObject({ status: 429, settlement: 'rejected-unbilled', response_model: null, reasoning_tokens: null });
       expect(failed.response_meta).toEqual({ metadata: null, weight_version: null, service_tier: null, system_fingerprint: null, non_default_tier: null, truncated: null });
-      expect(failed.request).toEqual({ effort_sent: 'medium', effort_effective: 'high', output_limit_field: 'max_completion_tokens', output_limit: 20_000 });
+      expect(failed.request).toEqual({ effort_sent: 'medium', effort_effective: 'high', effort_effective_source: 'docs.particle.ai and GET /v1/models, checked 2026-10-31', output_limit_field: 'max_completion_tokens', output_limit: 20_000 });
       expect(listing).toMatchObject({ method: 'GET', path: '/v1/models', settlement: 'free', request: null });
     } finally { await p.close(); }
   });

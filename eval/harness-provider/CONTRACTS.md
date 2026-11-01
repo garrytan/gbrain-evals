@@ -82,7 +82,9 @@ body or the event stream: `response_model`, `reasoning_tokens` and
 request side joined from each stored body by `body_sha256` (effort sent,
 the level the provider runs it at for a `COMPAT_PROVIDERS` row, output-limit
 field and value), so bar 2 of plan GST-605 can be checked for every
-particle request on the workload-suite and development-lane paths.
+particle request on the workload-suite and development-lane paths. The
+effective level comes from the table as it is when the log is read, so each
+line names that row's `source` and checked date in `effort_effective_source`.
 
 `eval/runner/metering-proxy-testkit.ts` exports `createMeteredTestCell` and
 `assertZeroBalanceBlocks({ label, spawn, trigger, stop })`, the per-process

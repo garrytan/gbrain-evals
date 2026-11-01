@@ -126,8 +126,10 @@ export interface RequestLogLine {
 /** What a logged request sent that changes the answer, read from its stored body. */
 export interface LoggedRequest {
   effort_sent: string | null;
-  /** The level the provider runs the sent effort at (COMPAT_PROVIDERS); null outside that table. */
+  /** The level the provider runs the sent effort at, read from today's COMPAT_PROVIDERS table when the log is read; null outside that table. */
   effort_effective: string | null;
+  /** The `source` (with its checked date) of the table row `effort_effective` came from; null when it is null. */
+  effort_effective_source: string | null;
   output_limit_field: string | null;
   output_limit: number | null;
 }
@@ -219,9 +221,11 @@ function loggedRequest(provider: MeteredProvider, body: unknown): LoggedRequest 
   const effort = typeof b.reasoning_effort === 'string' ? b.reasoning_effort : typeof obj(b.reasoning).effort === 'string' ? obj(b.reasoning).effort as string : null;
   const field = ['max_completion_tokens', 'max_tokens', 'max_output_tokens'].find(k => typeof b[k] === 'number') ?? null;
   const row = Object.hasOwn(COMPAT_PROVIDERS, provider) && Object.hasOwn(COMPAT_PROVIDERS[provider].models, String(b.model)) ? COMPAT_PROVIDERS[provider].models[String(b.model)] : null;
+  const effective = effort !== null && row && Object.hasOwn(row.efforts, effort) ? row.efforts[effort] : null;
   return {
     effort_sent: effort,
-    effort_effective: effort !== null && row && Object.hasOwn(row.efforts, effort) ? row.efforts[effort] : null,
+    effort_effective: effective,
+    effort_effective_source: effective === null ? null : COMPAT_PROVIDERS[provider].source,
     output_limit_field: field,
     output_limit: field ? b[field] as number : null,
   };
