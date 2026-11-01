@@ -136,6 +136,14 @@ describe('particleLoop', () => {
     expect(delays).toEqual([2500, 4500, 8500]);
   });
 
+  test('six failed attempts end the turn without a wait after the last one', async () => {
+    const attempts: ProviderAttempt[] = [];
+    const { run } = await drive('particle', 'particle-1', { onAttempt: a => attempts.push(a) }, { faults: Array.from({ length: 6 }, () => rateLimited({ 'retry-after': '1' })) });
+    expect(run.stop).toBe('error');
+    expect(attempts).toHaveLength(6);
+    expect(delays).toEqual([2500, 4500, 8500, 16_500, 32_500]);
+  });
+
   test('without a Retry-After header the backoff is the other branches\'', async () => {
     await drive('particle', 'particle-1', {}, { faults: [{ status: 503 }] });
     expect(delays).toEqual([2500]);
@@ -166,7 +174,9 @@ describe('particleLoop', () => {
   test('a 2xx without choices[0].message is retried, its usage kept on the error attempt', async () => {
     const empty = { id: 'x', model: 'particle-ai/particle-1', choices: [], usage: { prompt_tokens: 10, completion_tokens: 5 } };
     const { run, attempts } = await drive('particle', 'particle-1', {}, { faults: [{ status: 200, body: JSON.stringify(empty) }] });
+    const clean = await drive('particle', 'particle-1');
     expect(run.stop).toBe('submitted');
+    expect(run.usage).toEqual({ ...clean.run.usage, input: clean.run.usage.input + 10, output: clean.run.usage.output + 5, requests: clean.run.usage.requests + 1 });
     expect(attempts[0]).toMatchObject({ status: 'error', response: empty, turn: 1 });
     expect(attempts[0].error).toContain('without choices[0].message');
     expect(delays).toEqual([2500]);
@@ -180,11 +190,27 @@ describe('particleLoop', () => {
     expect(delays).toEqual([2500]);
   });
 
-  test('a JSON null body: the other branches fail at once as before, and Particle retries it as a server error', async () => {
+  test('a network failure or a body that is not JSON leaves an attempt on the other branches too, and still ends the run at once', async () => {
+    const down = (async () => { throw new TypeError('fetch failed'); }) as unknown as typeof fetch;
+    const html = (async () => new Response('<html>bad gateway</html>', { status: 200 })) as unknown as typeof fetch;
+    for (const [p, model] of [['anthropic', 'claude-opus-5-5'], ['openai', 'gpt-6.1-sol']] as const) {
+      for (const [fetchImpl, error] of [[down, 'network: fetch failed'], [html, '200 with a body that is not JSON: <html>bad gateway</html>']] as const) {
+        const attempts: ProviderAttempt[] = [];
+        const { run } = await drive(p, model, { fetchImpl, onAttempt: a => attempts.push(a) });
+        expect(run.stop).toBe('error');
+        expect(attempts).toEqual([expect.objectContaining({ status: 'error', response: null, error, turn: 1 })]);
+      }
+    }
+    expect(delays).toEqual([]);
+  });
+
+  test('a JSON null body: the other branches record it and fail at once as before, and Particle retries it as a server error', async () => {
     const nullBody = (async () => new Response('null', { status: 200 })) as unknown as typeof fetch;
     for (const [p, model] of [['anthropic', 'claude-opus-5-5'], ['openai', 'gpt-6.1-sol']] as const) {
-      const { run } = await drive(p, model, { fetchImpl: nullBody });
+      const attempts: ProviderAttempt[] = [];
+      const { run } = await drive(p, model, { fetchImpl: nullBody, onAttempt: a => attempts.push(a) });
       expect(run.stop).toBe('error');
+      expect(attempts).toEqual([expect.objectContaining({ status: 'ok', response: null, turn: 1 })]);
     }
     expect(delays).toEqual([]);
     const { run, attempts } = await drive('particle', 'particle-1', {}, { faults: [{ status: 200, body: 'null' }] });

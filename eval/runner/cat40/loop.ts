@@ -183,12 +183,13 @@ function cap(text: string, max: number | null): { text: string; truncated: boole
 export const RETRYABLE_STATUS = [429, 500, 502, 503, 504, 529];
 
 /**
- * Up to 6 attempts with exponential backoff on retryable statuses. `compat` names an OpenAI-compatible provider
- * (Particle): its errors are classified by the provider module, a retry waits at least the Retry-After it sends (capped
- * at 120 s) and never less than the backoff, a credit or proxy 402 throws the budget stop after its attempt is recorded,
- * a network or body-read failure is recorded before it propagates, and a 2xx that is not JSON or has no
- * `choices[0].message` is retried as a server error. Without `compat` (Anthropic, OpenAI) attempts and waits are as
- * they always were.
+ * Up to 6 attempts with exponential backoff on retryable statuses. Every attempt is recorded, a network or body-read
+ * failure included, before it propagates. `compat` names an OpenAI-compatible provider (Particle): its errors are
+ * classified by the provider module, a retry waits at least the Retry-After it sends (capped at 120 s) and never less
+ * than the backoff (and not after the last attempt), a credit or proxy 402 throws the budget stop after its attempt is
+ * recorded, and a 2xx that is not JSON or has no `choices[0].message` is retried as a server error. Without `compat`
+ * (Anthropic, OpenAI) requests, retries and waits are as they always were, and a 2xx that is not JSON still throws,
+ * after its attempt is recorded.
  */
 async function postJson(fetchImpl: typeof fetch, url: string, headers: Record<string, string>, body: unknown, onAttempt?: (a: ProviderAttempt) => void, compat?: string): Promise<Record<string, unknown>> {
   let last: ProviderError | null = null;
@@ -197,35 +198,41 @@ async function postJson(fetchImpl: typeof fetch, url: string, headers: Record<st
     let res: Response;
     try { res = await fetchImpl(url, { method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: JSON.stringify(body) }); }
     catch (e) {
-      if (compat) onAttempt?.({ status: 'error', response: null, error: `network: ${(e as Error).message.slice(0, 500)}`, ms: Date.now() - t, retry_after_ms: null });
+      onAttempt?.({ status: 'error', response: null, error: `network: ${(e as Error).message.slice(0, 500)}`, ms: Date.now() - t, ...(compat ? { retry_after_ms: null } : {}) });
       throw e;
     }
     let text: string;
     try { text = await res.text(); }
     catch (e) {
-      if (compat) onAttempt?.({ status: 'error', response: null, error: `network: reading the ${res.status} body failed: ${(e as Error).message.slice(0, 500)}`, ms: Date.now() - t, retry_after_ms: null });
+      onAttempt?.({ status: 'error', response: null, error: `network: reading the ${res.status} body failed: ${(e as Error).message.slice(0, 500)}`, ms: Date.now() - t, ...(compat ? { retry_after_ms: null } : {}) });
       throw e;
     }
     if (res.ok) {
       let json: Record<string, unknown> | null = null;
       let parsed = true;
       try { json = JSON.parse(text) as Record<string, unknown>; }
-      catch (e) { if (!compat) throw e; parsed = false; }
-      const choices = (compat && !json ? undefined : json!.choices) as Array<{ message?: unknown }> | undefined;
+      catch (e) {
+        if (!compat) {
+          onAttempt?.({ status: 'error', response: null, error: `${res.status} with a body that is not JSON: ${text.slice(0, 300)}`, ms: Date.now() - t });
+          throw e;
+        }
+        parsed = false;
+      }
+      const choices = (json?.choices ?? undefined) as Array<{ message?: unknown }> | undefined;
       if (!compat || (Array.isArray(choices) && choices[0]?.message)) {
         onAttempt?.({ status: 'ok', response: json, error: null, ms: Date.now() - t });
         return json!;
       }
       last = new ProviderError(502, `${compat} answered ${res.status} ${parsed ? 'without choices[0].message' : 'with a body that is not JSON'}: ${text.slice(0, 300)}`);
       onAttempt?.({ status: 'error', response: json, error: last.message, ms: Date.now() - t, retry_after_ms: null });
-      await new Promise(r => setTimeout(r, Math.min(60_000, 2000 * 2 ** attempt) + Math.random() * 1000));
+      if (attempt < 5) await new Promise(r => setTimeout(r, Math.min(60_000, 2000 * 2 ** attempt) + Math.random() * 1000));
       continue;
     }
     last = new ProviderError(res.status, text);
     const info = compat ? classifyCompatError(compat, res.status, text, res.headers) : null;
     onAttempt?.({ status: 'error', response: null, error: `${res.status}: ${text.slice(0, 500)}`, ms: Date.now() - t, ...(info ? { retry_after_ms: info.retryAfterMs } : {}) });
     if (info?.kind === 'credit_exhausted' || info?.kind === 'proxy_budget') throw compatError(info);
-    if (!RETRYABLE_STATUS.includes(res.status)) break;
+    if (!RETRYABLE_STATUS.includes(res.status) || (compat && attempt === 5)) break;
     await new Promise(r => setTimeout(r, Math.max(info?.retryAfterMs ?? 0, Math.min(60_000, 2000 * 2 ** attempt) + Math.random() * 1000)));
   }
   throw last!;
@@ -429,7 +436,12 @@ async function particleLoop(cfg: LoopConfig, run: AgentRun, specs: () => ToolSpe
     const req = compatRequest(`particle:${cfg.model}`, messages, { effort: cfg.effort ?? 'high', maxOutputTokens: cfg.maxOutputTokens ?? 16_000, tools: currentTools(), toolChoice: 'auto', promptCacheKey });
     assertMetered(req);
     const s = Date.now();
-    const res = parseCompatResponse(await postJson(fetchImpl, req.url, req.headers, req.body, attemptHook(cfg, run, () => req.sent), req.provider));
+    const hook = attemptHook(cfg, run, () => req.sent);
+    const onAttempt = (a: ProviderAttempt) => {
+      if (a.status === 'error' && a.response?.usage) addUsage(run, normalizeUsage('openai', a.response.usage as object));
+      hook?.(a);
+    };
+    const res = parseCompatResponse(await postJson(fetchImpl, req.url, req.headers, req.body, onAttempt, req.provider));
     run.model_ms += Date.now() - s;
     addUsage(run, normalizeUsage('openai', res.usage ?? undefined));
     const calls: CompatToolCall[] = res.tool_calls.map(c => ({ id: String(c.id), type: 'function', function: { name: String(c.function?.name), arguments: String(c.function?.arguments ?? '') } }));

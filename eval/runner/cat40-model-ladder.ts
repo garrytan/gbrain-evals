@@ -11,8 +11,9 @@
  *
  * Models: Anthropic (claude-*), OpenAI (gpt-*, o*) and Particle (particle-1, through
  * eval/runner/providers/openai-compatible.ts with PARTICLE_API_KEY). particle-1
- * never judges, and a run with it needs --judge passed explicitly, because the v1
- * default claims judge is gpt-5.4-mini, which the model rules never run.
+ * runs on v1 worlds only and never judges, and a run with it needs --judge passed
+ * explicitly, because the v1 default claims judge is gpt-5.4-mini, which the model
+ * rules never run.
  *
  * Protocol: docs/benchmarks/2026-10-02-model-ladder-protocol.md.
  *
@@ -532,6 +533,7 @@ export async function main(argv = process.argv.slice(2)) {
   if (!scripted && !buildSlots) {
     const judgeFlag = flag(argv, '--judge');
     if (judgeFlag && isParticle(judgeFlag)) throw new UsageError(`--judge ${judgeFlag}: particle-1 never judges a cell; pass --judge gpt-6.1-sol`);
+    if (hard && models.some(isParticle)) throw new UsageError('particle-1 does not run on Hard worlds: the Hard campaign keeps its model list (amendment A6), and its freeze does not cover the particle transport (eval/runner/providers); the next Cat 40 preregistration that lists particle-1 adds both');
     if (!hard && models.some(isParticle) && (judgeFlag ?? 'gpt-5.4-mini') === 'gpt-5.4-mini') throw new UsageError('a run with particle-1 needs its claims judge passed explicitly (--judge gpt-6.1-sol, or --judge none): the v1 default, gpt-5.4-mini, is a model the model rules never run');
   }
   const exploratory = arms.includes('gbrain-fs');

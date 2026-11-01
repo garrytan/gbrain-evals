@@ -52,7 +52,6 @@ import { decideError } from '../decisions/errors.ts';
 import { FRONTIER_READERS } from './baselines.ts';
 import type { Outcome } from '../memory-qa/outcomes.ts';
 import { COMPAT_PROVIDERS } from '../providers/openai-compatible.ts';
-import { sumUsage } from '../usage-receipt.ts';
 import { SystemError, type CapabilityRecord, type DeleteResult, type FinishResult, type IngestResult, type MemorySystem, type PublicQuestion, type RetrieveResult, type SessionInput } from './types.ts';
 
 export interface AnswerUsage { input: number; output: number; cache_read: number; cache_write: number }
@@ -399,10 +398,11 @@ export class FileAgentSystem implements AnsweringSystem {
         submitTool: PROSE_ANSWER_TOOL, fetchImpl: this.opts.fetchImpl ?? proxiedFetch(), scripted, effort: this.opts.effort ?? FILE_AGENT_EFFORT, onAttempt });
     } catch (e) {
       if ((e as Error).name !== 'BudgetExceededError') throw e;
-      const u = sumUsage(receipts);
-      const usage = { input: u.input_uncached ?? u.input_total, output: u.output_total, cache_read: u.cache_read ?? 0, cache_write: u.cache_write ?? 0 };
-      return { text: '', stop_reason: 'budget', outcome: 'budget_not_run', error: (e as Error).message, usage, provider_input_tokens: u.input_total,
-        latency_ms: performance.now() - t0, turns: receipts.reduce((n, r) => Math.max(n, r.turn ?? 0), 0), usd: priceUsage(model, { ...usage, requests: u.provider_calls }), opened_source_ids: [] };
+      const billed = receipts.flatMap(r => r.usage ? [r.usage] : []);
+      const sum = (f: (u: (typeof billed)[number]) => number) => billed.reduce((s, u) => s + f(u), 0);
+      const usage = { input: sum(u => u.input_uncached ?? u.input_total), output: sum(u => u.output_total), cache_read: sum(u => u.cache_read ?? 0), cache_write: sum(u => u.cache_write ?? 0) };
+      return { text: '', stop_reason: 'budget', outcome: 'budget_not_run', error: (e as Error).message, usage, provider_input_tokens: sum(u => u.input_total),
+        latency_ms: performance.now() - t0, turns: receipts.reduce((n, r) => Math.max(n, r.turn ?? 0), 0), usd: priceUsage(model, { ...usage, requests: receipts.length }), opened_source_ids: [] };
     }
     const opened: string[] = [];
     for (const t of run.tools) {
