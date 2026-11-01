@@ -208,7 +208,7 @@ describe('schema, model rule and frontier subset', () => {
     expect(refused.stderr.toString()).toContain(`${fable.id} reads only in a labeled smoke run, never a counted one (CLAUDE.md); pass --smoke N`);
   });
 
-  test('bench.ts refuses a --smoke that is not a positive whole number and an excluded model, before it writes anything', () => {
+  test('bench.ts refuses a --smoke that is not a positive whole number and a model that is not a configured reader, before it writes anything', () => {
     const root = resolve(import.meta.dir, '../..');
     const run = (...flags: string[]) => Bun.spawnSync(['bun', 'eval/workload-suites/bench.ts', 'beliefs', '--phase', 'score', ...flags], { cwd: root });
     for (const [flags, shown] of [[['--smoke', '0'], '0'], [['--smoke', 'x'], 'x'], [['--smoke', '2.5'], '2.5'], [['--smoke', '--stub'], '--stub'], [['--smoke'], 'nothing']] as const) {
@@ -216,10 +216,10 @@ describe('schema, model rule and frontier subset', () => {
       expect(r.exitCode).toBe(2);
       expect(r.stderr.toString()).toContain(`--smoke takes a positive whole number of questions, not ${shown}`);
     }
-    for (const model of ['openai:gpt-5.4-mini', 'anthropic:claude-fable-5', 'anthropic:claude-sonnet-4-6']) {
-      const r = run('--smoke', '5', '--models', `anthropic:claude-opus-5-5,${model}`);
+    for (const model of ['openai:gpt-5.4-mini', 'anthropic:claude-fable-5', 'anthropic:claude-sonnet-4-6', 'anthropic:claude-fable-5-1-20261001', 'openai:o4-mini', 'anthropic:claude-haiku-5-5']) {
+      const r = run('--smoke', '5', '--models', `anthropic:claude-opus-5-5, ${model}`);
       expect(r.exitCode).toBe(2);
-      expect(r.stderr.toString()).toContain(`${model} is an excluded or older-generation model and never runs (CLAUDE.md)`);
+      expect(r.stderr.toString()).toContain(`${model} is not a reader in run-config.ts, so no score would read its answers`);
     }
   });
 

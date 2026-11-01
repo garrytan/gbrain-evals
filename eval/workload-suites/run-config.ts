@@ -63,12 +63,12 @@ export const MODEL_CONFIG = {
 } as const;
 
 /** Model ids the project rule excludes: older generations and gpt-5.4-mini. */
-export const EXCLUDED_MODELS = [/gpt-5\.4-mini/, /claude-(?:sonnet|opus)-4/, /claude-haiku/, /gpt-5(?:\.|-|$)/, /gpt-4/, /claude-sonnet-5(?!-5)/, /claude-opus-5(?!-5)/, /claude-fable-5(?!-1)/];
+const EXCLUDED = [/gpt-5\.4-mini/, /claude-(?:sonnet|opus)-4/, /claude-haiku/, /gpt-5(?:\.|-|$)/, /gpt-4/, /claude-sonnet-5(?!-5)/, /claude-opus-5(?!-5)/, /claude-fable-5(?!-1)/];
 
 export function modelRuleViolations(config: { fixed_reader: ModelRef; frontier_sweep: readonly ModelRef[]; alternate_readers?: readonly ModelRef[]; judge: ModelRef } = MODEL_CONFIG): string[] {
   const out: string[] = [];
   for (const m of [config.fixed_reader, ...config.frontier_sweep, ...(config.alternate_readers ?? []), config.judge]) {
-    if (EXCLUDED_MODELS.some(re => re.test(m.id))) out.push(`${m.id} is an excluded or older-generation model`);
+    if (EXCLUDED.some(re => re.test(m.id))) out.push(`${m.id} is an excluded or older-generation model`);
     if ((SMOKE_ONLY_READERS as readonly string[]).includes(m.id)) out.push(`${m.id} is smoke-only and never reads or judges a counted cell`);
   }
   const families = new Set(config.frontier_sweep.map(m => m.family));

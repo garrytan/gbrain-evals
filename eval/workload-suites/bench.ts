@@ -34,7 +34,7 @@ import { bundleManifest, countValue, sha256, valueForms } from './common.ts';
 import { ComparatorCorrectionAdapter, GbrainCorrectionAdapter, type RetrieveReceipt } from './correction-adapters.ts';
 import { CORRECTION_ARMS, runCorrectionArm, type ArmId, type CorrectionItem } from './corrections.ts';
 import { classifyMiss } from './passing-details.ts';
-import { EXCLUDED_MODELS, MODEL_CONFIG, frontierSubset } from './run-config.ts';
+import { MODEL_CONFIG, frontierSubset } from './run-config.ts';
 import type { HarnessQuery, Outcome, ScorerLabel, SuiteBundle, SuiteId } from './types.ts';
 
 export const TARGET_TOKENS = 8000;
@@ -480,9 +480,10 @@ if (import.meta.main) {
   const smoke = argv.includes('--smoke') ? Number(arg(argv, '--smoke')) : null;
   if (smoke !== null && !(Number.isInteger(smoke) && smoke > 0)) { console.error(`--smoke takes a positive whole number of questions, not ${arg(argv, '--smoke') ?? 'nothing'}`); process.exit(2); }
   const stub = argv.includes('--stub');
-  const requested = arg(argv, '--models')?.split(',') ?? [];
-  const excluded = requested.filter(m => EXCLUDED_MODELS.some(re => re.test(m)));
-  if (excluded.length) { console.error(`${excluded.join(', ')} is an excluded or older-generation model and never runs (CLAUDE.md)`); process.exit(2); }
+  const requested = arg(argv, '--models')?.split(',').map(m => m.trim()) ?? [];
+  const readers = [...MODEL_CONFIG.frontier_sweep, ...MODEL_CONFIG.alternate_readers].map(m => m.id);
+  const unscored = requested.filter(m => !readers.includes(m) && !MODEL_CONFIG.smoke_only_readers.includes(m));
+  if (unscored.length) { console.error(`${unscored.join(', ')} is not a reader in run-config.ts, so no score would read its answers; --models takes frontier_sweep and alternate_readers ids, and smoke_only_readers ids with --smoke N`); process.exit(2); }
   const smokeOnly = requested.filter(m => MODEL_CONFIG.smoke_only_readers.includes(m));
   if (smokeOnly.length && smoke === null) { console.error(`${smokeOnly.join(', ')} reads only in a labeled smoke run, never a counted one (CLAUDE.md); pass --smoke N`); process.exit(2); }
   const dir = resolve(arg(argv, '--out') ?? join(REPO_ROOT, 'eval/reports/workload-bench', `${suiteId}${smoke ? `-smoke${smoke}` : ''}${stub ? '-stub' : ''}`));
@@ -505,7 +506,7 @@ if (import.meta.main) {
       if (suiteId === 'corrections') await answerCorrections(bench!, bundle, dir, armIds, queries, log);
       else await answerStatic(bench!, bundle, dir, armIds, queries, log);
     } else if (phase === 'sweep') {
-      const models = arg(argv, '--models')?.split(',') ?? MODEL_CONFIG.frontier_sweep.map(m => m.id).filter(m => m !== MODEL_CONFIG.fixed_reader.id);
+      const models = requested.length ? requested : MODEL_CONFIG.frontier_sweep.map(m => m.id).filter(m => m !== MODEL_CONFIG.fixed_reader.id);
       await sweep(bench!, bundle, dir, models, log);
     } else if (phase === 'score') {
       await score(bench, bundle, dir, log, smoke !== null);
