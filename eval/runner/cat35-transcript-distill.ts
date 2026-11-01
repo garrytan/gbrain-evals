@@ -86,7 +86,7 @@ import {
   type Cat35JudgeAttempt,
   type CoverageVerdict,
 } from './cat35-judges.ts';
-import { JUDGE_TEMPERATURE } from './judge.ts';
+import { JUDGE_TEMPERATURE, judgePrice } from './judge.ts';
 import {
   BENCHMARK_VERSION,
   RECEIPT_SCHEMA_VERSION,
@@ -98,6 +98,7 @@ import {
 import { gbrainPin, gbrainVersion } from './gbrain-version.ts';
 import { attestPreregistration } from './prereg.ts';
 import { judgeTransport } from './openai-judge-shim.ts';
+import { temperatureSent, toolChoiceSent } from './anthropic-request.ts';
 import {
   assertCat35CoverageInput, assertCat35LeakInput, assertCat35SutSource, assertCat35UsabilityInput, CAT35_BOUNDARIES,
 } from './evaluator/judge-inputs.ts';
@@ -716,6 +717,11 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
 
   const judgeModel =
     opts.judgeModel ?? process.env.CAT35_JUDGE_MODEL ?? 'claude-haiku-4-5-20251001';
+  try {
+    judgePrice(judgeModel);
+  } catch (e) {
+    return setupError(e instanceof Error ? e.message : String(e));
+  }
   const dreamModel = opts.model ?? (opts.full ? SONNET : HAIKU);
   const factsModel = opts.model ?? (opts.full ? SONNET : HAIKU);
   const triageModel = opts.model ?? HAIKU;
@@ -1700,6 +1706,8 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
       transcript_mode: opts.transcriptMode,
       control_inputs: controlInputs,
       judge_transport: judgeTransport(judgeModel),
+      temperature_sent: { judge: temperatureSent(judgeModel, JUDGE_TEMPERATURE) },
+      tool_choice_sent: { judge: toolChoiceSent(judgeModel) },
       dream_model: dreamModel,
       triage_model: triageModel,
       facts_model: factsModel,
@@ -1793,7 +1801,7 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
       ...receipt.config_snapshot,
       detailed_receipt: receiptPath,
     },
-    judge: { model: judgeModel, temperature: JUDGE_TEMPERATURE, rubric_version: CAT35_JUDGE_PROMPT_VERSION },
+    judge: { model: judgeModel, temperature: temperatureSent(judgeModel, JUDGE_TEMPERATURE), rubric_version: CAT35_JUDGE_PROMPT_VERSION },
     data: { coverage_by_lane: coverageByLane, gates, judge_failed_rate: judgeFailedRate, detailed_receipt: receiptPath },
     startedAt,
   });

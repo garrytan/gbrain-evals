@@ -34,7 +34,7 @@ A skipped adapter or incomplete receipt is not a measured pass. Some runners acc
 
 ## Authorize spending with the budget ledger
 
-LongMemEval, Cat13 and Cat35 refuse to make provider requests until you pass `--budget-usd <dollars>` (or set `BRAINBENCH_BUDGET_USD`). Each run prints its cost estimate first and refuses when the estimate is above the budget.
+LongMemEval, Cat13 and Cat35 refuse to make provider requests until you pass `--budget-usd <dollars>` (or set `BRAINBENCH_BUDGET_USD`). Each run prints its cost estimate first and refuses when the estimate is above the budget. A live Cat14 or Cat29 run needs `--budget-usd <dollars>` or `--budget-run-id <id>` naming an open ledger run, and a live Cat15 or Cat25 run needs `--paid --budget-run-id <id>`. When `all.ts` dispatches them, it passes its own budget run and ledger.
 
 Every request to a paid provider host is reserved in a ledger before it is sent, including SDK retries and the requests gbrain makes internally during extraction and synthesis. After the response, the reservation is reconciled to the provider-reported usage. A request whose usage cannot be read is charged at its full reservation. A reservation that would take the run past `--budget-usd`, or all runs together past the program cap, is refused and the request is never sent.
 

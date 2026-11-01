@@ -55,6 +55,7 @@ import {
   type AgentRunConfig,
   type AgentRunResult,
 } from './adapters/claude-sonnet-with-tools.ts';
+import { temperatureSent } from './anthropic-request.ts';
 import { ProbeAccounting, type ProbeSummary } from './probe-accounting.ts';
 import {
   writeReceipt,
@@ -408,6 +409,7 @@ function writeCat8Artifacts(
   const resolvedConfig: Record<string, unknown> = {
     agent_model: model,
     agent_temperature: AGENT_TEMPERATURE,
+    temperature_sent: { agent: temperatureSent(model, AGENT_TEMPERATURE) },
     turn_cap: opts.turnCap ?? 10,
     max_retries: opts.maxRetries ?? 3,
     // WS5: search mode + reranker state the adapter pinned before ingest.

@@ -55,6 +55,8 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk';
+import { fitAnthropicRequest, temperatureSent, toolChoiceSent, withThinkingRoom } from './anthropic-request.ts';
+import { judgePrice, priceOf } from './judge.ts';
 import { ProbeAccounting, type ProbeSummary } from './probe-accounting.ts';
 import {
   writeReceipt,
@@ -102,6 +104,7 @@ export interface ClaimScore {
   expected_label: ClaimLabel;
   matches_expected: boolean;
   judge_rationale: string;
+  /** Every prompt token the classifier read, cache reads and writes included, so tokens and cost_usd agree. */
   input_tokens: number;
   output_tokens: number;
   cost_usd: number;
@@ -142,23 +145,16 @@ export interface Cat5Config {
   enableThreshold?: boolean;
 }
 
-// ─── Defaults + pricing ──────────────────────────────────────────────
+// ─── Defaults ────────────────────────────────────────────────────────
 
 const DEFAULT_MODEL = 'claude-haiku-4-5-20251001';
 const DEFAULT_MAX_TOKENS = 400;
 const DEFAULT_THRESHOLD = 0.9;
 
-const PRICE_INPUT_PER_M = 1.0;
-const PRICE_OUTPUT_PER_M = 5.0;
-
 let defaultClient: Anthropic | null = null;
 function getDefaultClient(): Anthropic {
   if (!defaultClient) defaultClient = new Anthropic();
   return defaultClient;
-}
-
-function priceOf(input: number, output: number): number {
-  return (input * PRICE_INPUT_PER_M + output * PRICE_OUTPUT_PER_M) / 1_000_000;
 }
 
 // ─── Tool definition ─────────────────────────────────────────────────
@@ -264,7 +260,8 @@ export async function classifyClaim(
 ): Promise<ClaimScore> {
   const client = config.client ?? getDefaultClient();
   const model = config.model ?? DEFAULT_MODEL;
-  const maxTokens = config.maxTokens ?? DEFAULT_MAX_TOKENS;
+  const price = judgePrice(model);
+  const maxTokens = config.maxTokens ?? withThinkingRoom(model, DEFAULT_MAX_TOKENS);
   const userContent = renderClaimPrompt(claim, sources);
 
   let inputTokens = 0;
@@ -272,7 +269,7 @@ export async function classifyClaim(
   let cost = 0;
 
   async function callOnce(): Promise<ParsedClassification | null> {
-    const response = await client.messages.create({
+    const response = await client.messages.create(fitAnthropicRequest({
       model,
       max_tokens: maxTokens,
       // WS0 judge policy: temperature 0 — classifications must be reproducible.
@@ -283,10 +280,10 @@ export async function classifyClaim(
       tools: [CLASSIFY_CLAIM_TOOL],
       tool_choice: { type: 'tool', name: 'classify_claim' },
       messages: [{ role: 'user', content: userContent }],
-    });
-    inputTokens += response.usage.input_tokens;
+    }));
+    inputTokens += response.usage.input_tokens + (response.usage.cache_read_input_tokens ?? 0) + (response.usage.cache_creation_input_tokens ?? 0);
     outputTokens += response.usage.output_tokens;
-    cost += priceOf(response.usage.input_tokens, response.usage.output_tokens);
+    cost += priceOf(price, response);
     return parseClassification(response);
   }
 
@@ -456,6 +453,7 @@ async function runConcurrently<T, R>(
 }
 
 export async function runCat5(opts: RunCat5Options): Promise<Cat5Report> {
+  judgePrice(opts.model ?? DEFAULT_MODEL);
   const startedAt = new Date().toISOString();
   const concurrency = opts.concurrency ?? 4;
   const acc = new ProbeAccounting(opts.claims.length);
@@ -518,6 +516,8 @@ function writeCat5Receipt(
     resolved_config: {
       classifier_model: model,
       classifier_temperature: 0,
+      temperature_sent: temperatureSent(model, 0),
+      tool_choice_sent: toolChoiceSent(model),
       threshold: opts.threshold ?? DEFAULT_THRESHOLD,
       thresholds_enabled: opts.enableThreshold ?? false,
       // WS5: cat5 classifies gold claims against gold pages — no gbrain
@@ -526,7 +526,7 @@ function writeCat5Receipt(
       search_mode: 'not_applicable (no retrieval in this eval)',
       reranker_enabled: 'not_applicable (no retrieval in this eval)',
     },
-    judge: { model, temperature: 0 },
+    judge: { model, temperature: temperatureSent(model, 0) },
     started_at: startedAt,
     finished_at: new Date().toISOString(),
   } as const;
