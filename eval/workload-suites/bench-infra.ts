@@ -143,7 +143,7 @@ export function modelCaller(proxy: Pick<Proxy, 'envFor'>, outDir: string): Bench
 /** A reply's finish reason as the provider sent it, and whether it stopped at the output limit. */
 function finished(raw: unknown): Pick<ModelReply, 'finish_reason' | 'truncated'> {
   const finish_reason = typeof raw === 'string' ? raw : null;
-  return { finish_reason, truncated: normalizeFinish(finish_reason) === 'max_tokens' };
+  return { finish_reason, truncated: finish_reason === null ? null : normalizeFinish(finish_reason) === 'max_tokens' };
 }
 
 interface AttemptOutcome {

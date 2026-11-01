@@ -327,6 +327,13 @@ describe('the existing reader routes', () => {
     expect(await callModel(env, 'anthropic:claude-sonnet-5-5', 'Q2?', tag, 400)).toMatchObject({ finish_reason: 'end_turn', truncated: false });
   });
 
+  test('a reply without a finish reason is not known to be whole, so it reads as unknown rather than not truncated', async () => {
+    const c = await createMeteredTestCell({ labels: ['reader', 'judge'] });
+    cells.push(c);
+    c.stub.respond('openai.chat', () => ({ status: 200, body: { id: 'chatcmpl-nofinish', object: 'chat.completion', model: 'gpt-6.1-sol', choices: [{ index: 0, message: { role: 'assistant', content: 'Answer: 7' }, finish_reason: null }], usage: { prompt_tokens: 10, completion_tokens: 3, total_tokens: 13 } } }));
+    expect(await callModel(c.proxy.envFor('reader'), 'openai:gpt-6.1-sol', 'Q?', 'beliefs/gbrain-combined/reader/q-nofinish', 4000)).toMatchObject({ text: 'Answer: 7', finish_reason: null, truncated: null });
+  });
+
   test('a receipt that cannot be written stops the call; the answered request is never sent again', async () => {
     const c = await createMeteredTestCell({ labels: ['reader', 'judge'] });
     cells.push(c);

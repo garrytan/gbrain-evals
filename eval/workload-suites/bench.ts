@@ -34,7 +34,7 @@ import { bundleManifest, countValue, sha256, valueForms } from './common.ts';
 import { ComparatorCorrectionAdapter, GbrainCorrectionAdapter, type RetrieveReceipt } from './correction-adapters.ts';
 import { CORRECTION_ARMS, runCorrectionArm, type ArmId, type CorrectionItem } from './corrections.ts';
 import { classifyMiss } from './passing-details.ts';
-import { MODEL_CONFIG, frontierSubset } from './run-config.ts';
+import { EXCLUDED_MODELS, MODEL_CONFIG, frontierSubset } from './run-config.ts';
 import type { HarnessQuery, Outcome, ScorerLabel, SuiteBundle, SuiteId } from './types.ts';
 
 export const TARGET_TOKENS = 8000;
@@ -477,10 +477,14 @@ if (import.meta.main) {
   const suite = SUITES[suiteId];
   if (!suite) { console.error('usage: bun eval/workload-suites/bench.ts <suite> --phase answer|sweep|score [--arms a,b] [--smoke N] [--budget-usd N] [--out DIR] [--stub] [--models m1,m2]'); process.exit(2); }
   const phase = arg(argv, '--phase') ?? 'answer';
-  const smoke = arg(argv, '--smoke') ? Number(arg(argv, '--smoke')) : null;
+  const smoke = argv.includes('--smoke') ? Number(arg(argv, '--smoke')) : null;
+  if (smoke !== null && !(Number.isInteger(smoke) && smoke > 0)) { console.error(`--smoke takes a positive whole number of questions, not ${arg(argv, '--smoke') ?? 'nothing'}`); process.exit(2); }
   const stub = argv.includes('--stub');
-  const smokeOnly = (arg(argv, '--models')?.split(',') ?? []).filter(m => MODEL_CONFIG.smoke_only_readers.includes(m));
-  if (smokeOnly.length && !smoke) { console.error(`${smokeOnly.join(', ')} reads only in a labeled smoke run, never a counted one (CLAUDE.md); pass --smoke N`); process.exit(2); }
+  const requested = arg(argv, '--models')?.split(',') ?? [];
+  const excluded = requested.filter(m => EXCLUDED_MODELS.some(re => re.test(m)));
+  if (excluded.length) { console.error(`${excluded.join(', ')} is an excluded or older-generation model and never runs (CLAUDE.md)`); process.exit(2); }
+  const smokeOnly = requested.filter(m => MODEL_CONFIG.smoke_only_readers.includes(m));
+  if (smokeOnly.length && smoke === null) { console.error(`${smokeOnly.join(', ')} reads only in a labeled smoke run, never a counted one (CLAUDE.md); pass --smoke N`); process.exit(2); }
   const dir = resolve(arg(argv, '--out') ?? join(REPO_ROOT, 'eval/reports/workload-bench', `${suiteId}${smoke ? `-smoke${smoke}` : ''}${stub ? '-stub' : ''}`));
   const log = (l: string) => process.stderr.write(`${new Date().toISOString().slice(11, 19)} ${l}\n`);
   const bundle = suite.generate({ seed: suite.defaultSeed, smoke: false });

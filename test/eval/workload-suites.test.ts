@@ -208,6 +208,21 @@ describe('schema, model rule and frontier subset', () => {
     expect(refused.stderr.toString()).toContain(`${fable.id} reads only in a labeled smoke run, never a counted one (CLAUDE.md); pass --smoke N`);
   });
 
+  test('bench.ts refuses a --smoke that is not a positive whole number and an excluded model, before it writes anything', () => {
+    const root = resolve(import.meta.dir, '../..');
+    const run = (...flags: string[]) => Bun.spawnSync(['bun', 'eval/workload-suites/bench.ts', 'beliefs', '--phase', 'score', ...flags], { cwd: root });
+    for (const [flags, shown] of [[['--smoke', '0'], '0'], [['--smoke', 'x'], 'x'], [['--smoke', '2.5'], '2.5'], [['--smoke', '--stub'], '--stub'], [['--smoke'], 'nothing']] as const) {
+      const r = run(...flags);
+      expect(r.exitCode).toBe(2);
+      expect(r.stderr.toString()).toContain(`--smoke takes a positive whole number of questions, not ${shown}`);
+    }
+    for (const model of ['openai:gpt-5.4-mini', 'anthropic:claude-fable-5', 'anthropic:claude-sonnet-4-6']) {
+      const r = run('--smoke', '5', '--models', `anthropic:claude-opus-5-5,${model}`);
+      expect(r.exitCode).toBe(2);
+      expect(r.stderr.toString()).toContain(`${model} is an excluded or older-generation model and never runs (CLAUDE.md)`);
+    }
+  });
+
   test('the frontier subset covers every category at about a quarter and is stable', () => {
     const b = smokeOf.get('beliefs')!;
     const subset = frontierSubset(b);
