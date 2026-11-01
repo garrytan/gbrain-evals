@@ -242,14 +242,18 @@ export interface ExternalDocs {
  * grade in one call throws, naming the file. A missing file is
  * reported in `missing`; an empty file is a present document. sha256 covers
  * the raw bytes, and the decoded text re-encodes to the same bytes. DIR must
- * be a real path (realpathSync): it is opened without following a link, and a
- * folder replaced after it was resolved is refused.
+ * be a real path (realpathSync): it is opened without following a link, every
+ * file is read through that handle's path under fdDir (Linux's /proc/self/fd),
+ * and a folder replaced after it was resolved is refused. A system with no
+ * such path is refused before any file is opened: Bun has no openat, and a
+ * read by path could follow a folder swapped and restored mid-read.
  */
 export function readExternalDocs(
   dir: string,
   transcriptIds: string[],
   maxBytes = EXTERNAL_DOC_MAX_BYTES,
   maxClaims = EXTERNAL_DOC_MAX_CLAIMS,
+  fdDir = '/proc/self/fd',
 ): ExternalDocs {
   const { O_DIRECTORY, O_NOFOLLOW, O_NONBLOCK } = constants;
   if (typeof O_DIRECTORY !== 'number' || typeof O_NOFOLLOW !== 'number' || typeof O_NONBLOCK !== 'number') {
@@ -264,16 +268,18 @@ export function readExternalDocs(
     throw new Error(`--external-dir ${dir} could not be opened as a directory without following links (${(e as NodeJS.ErrnoException).code ?? 'error'})`);
   }
   try {
-    // On Linux every file is looked up through this one handle, so a folder
-    // renamed or swapped for a link after it was resolved cannot redirect a read.
-    const pinned = `/proc/self/fd/${dirFd}`;
-    const base = existsSync(pinned) ? pinned : dir;
-    const resolved = base === pinned ? readlinkSync(pinned) : dir;
+    // Every file is looked up through this one handle, so a folder renamed or
+    // swapped for a link after it was resolved cannot redirect a read.
+    const pinned = join(fdDir, String(dirFd));
+    if (!existsSync(pinned)) {
+      throw new Error(`this system has no ${fdDir} to read --external-dir through the folder handle it holds, and a read by path could follow a folder swapped mid-run; the external lane runs on Linux`);
+    }
+    const resolved = readlinkSync(pinned);
     if (resolved !== dir) throw new Error(`--external-dir now resolves to ${resolved}, not ${dir}`);
     for (const tid of transcriptIds) {
       if (!SAFE_TRANSCRIPT_ID.test(tid)) throw new Error(`transcript id '${tid}' is not a safe file name`);
       const file = `${tid}.md`;
-      const path = join(base, file);
+      const path = join(pinned, file);
       let st: ReturnType<typeof lstatSync>;
       try {
         st = lstatSync(path);

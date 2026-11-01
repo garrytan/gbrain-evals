@@ -6,7 +6,8 @@
  *   - lane-name validation (it becomes a receipt key and an artifact file name)
  *   - readExternalDocs refusing symlinks (including one to /proc/self/environ),
  *     special files, hard links, oversized files, too many claims, invalid
- *     UTF-8 and unsafe transcript ids, and hashing every file it reads
+ *     UTF-8 and unsafe transcript ids, and hashing every file it reads; and
+ *     refusing to read at all on a system with no /proc/self/fd (#226)
  *   - CLI refusals before any work
  *   - hermetic runs (stubbed judge and gbrain, fetch forbidden, an empty budget
  *     ledger): the receipt records the name, the directory, each file's sha256
@@ -15,6 +16,9 @@
  *     is identical with or without an external lane, even one whose judge
  *     fails; and identical bytes score identically in the dream lane and an
  *     external lane
+ *
+ * Reading tests and hermetic runs need /proc/self/fd and skip elsewhere,
+ * where the runner refuses the lane.
  */
 
 import { describe, expect, test } from 'bun:test';
@@ -41,6 +45,8 @@ const RUNNER = join(ROOT, 'eval/runner/cat35-transcript-distill.ts');
 const GOLD_DIR = join(ROOT, 'eval/data/transcript-distill-v1/gold');
 const gold = (tid: string) => JSON.parse(readFileSync(join(GOLD_DIR, `${tid}.json`), 'utf8'));
 const sha256 = (b: Buffer | string) => createHash('sha256').update(b).digest('hex');
+/** The runner reads the external folder through /proc/self/fd and refuses the lane where it is missing. */
+const FD_PATHS = existsSync('/proc/self/fd');
 
 function scratch(prefix: string): string {
   return realpathSync(mkdtempSync(join(tmpdir(), prefix)));
@@ -63,15 +69,27 @@ describe('externalLaneNameError', () => {
   });
 });
 
-describe('readExternalDocs on a hostile folder', () => {
-  const ids = ['alpha-01', 'beta-02', 'gamma-03'];
+const ids = ['alpha-01', 'beta-02', 'gamma-03'];
 
-  function folder(files: Record<string, string | Buffer> = {}): string {
-    const dir = scratch('cat35-ext-');
-    for (const [name, body] of Object.entries(files)) writeFileSync(join(dir, name), body);
-    return dir;
-  }
+function folder(files: Record<string, string | Buffer> = {}): string {
+  const dir = scratch('cat35-ext-');
+  for (const [name, body] of Object.entries(files)) writeFileSync(join(dir, name), body);
+  return dir;
+}
 
+describe('readExternalDocs on a system without /proc/self/fd', () => {
+  test('refuses before opening any document, because a read by path could follow a folder swapped mid-run', () => {
+    const dir = folder({ 'alpha-01.md': 'inside' });
+    try {
+      expect(() => readExternalDocs(dir, ids, EXTERNAL_DOC_MAX_BYTES, EXTERNAL_DOC_MAX_CLAIMS, join(dir, 'no-fd-paths')))
+        .toThrow(`this system has no ${join(dir, 'no-fd-paths')} to read --external-dir through the folder handle it holds`);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe.skipIf(!FD_PATHS)('readExternalDocs on a hostile folder', () => {
   test('reads present documents in corpus order, records missing ones and hashes the raw bytes', () => {
     const bom = Buffer.concat([Buffer.from([0xef, 0xbb, 0xbf]), Buffer.from('# Gamma\n\nShipped the fix.\n')]);
     const dir = folder({ 'gamma-03.md': bom, 'alpha-01.md': '', 'unrelated.md': 'never read', 'beta-02.txt': 'wrong extension' });
@@ -413,6 +431,7 @@ function writeExternalDocs(dir: string, opts: { judgeFails?: boolean } = {}): Re
 
 const EXT = ['--external-lane', 'ext-notes', '--external-dir', 'ext-out'];
 
+
 /** Everything in a receipt that describes the built-in lanes; run-level accounting is left out. */
 function builtinView(rc: any, lane: string): any {
   const c = structuredClone(rc);
@@ -454,7 +473,7 @@ function builtinWs0View(ws0: any, lane: string): any {
   return c;
 }
 
-describe('hermetic external-lane runs', () => {
+describe.skipIf(!FD_PATHS)('hermetic external-lane runs', () => {
   test('--lanes none scores only the external lane and the receipt records name, directory, hashes and provenance', () => {
     let docs: Record<string, Buffer> = {};
     let extDir = '';
