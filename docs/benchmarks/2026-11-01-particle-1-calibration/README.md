@@ -16,10 +16,11 @@ inside the bar. The factor is in `READER_TOKENIZERS['particle:particle-1']`
 
 ## How it ran
 
-- **Command.** `bun eval/runner/q1/calibration-cell.ts --reader particle:particle-1 --lease-usd 1.45 --cell
-  s3-smoke.baseline-hybrid.baseline` at branch head `5a907478`, ledger run `u5-calibration-2026-11-01`, from
-  06:00 to 06:06 UTC. A one-request preflight (ledger run `u5-preflight-2026-11-01`, $0.00002525) ran first. A
-  keyless run of the same cell against `eval/systems/_shim/fake_provider.py` passed before the paid one.
+- **Command.** `bun eval/runner/q1/calibration-cell.ts --reader particle:particle-1 --out <dir> --budget-ledger
+  <ledger> --run-id u5-calibration-2026-11-01 --lease-usd 1.45 --cell s3-smoke.baseline-hybrid.baseline` at branch
+  head `5a907478`, from 06:00 to 06:06 UTC. A one-request preflight (ledger run `u5-preflight-2026-11-01`,
+  $0.00002525) ran first. A keyless run of the same cell against `eval/systems/_shim/fake_provider.py` passed before
+  the paid one.
 - **Cell.** The packed 8k arm of `s3-smoke.baseline-hybrid.baseline` (LoCoMo dev `conv-44`, 20 questions, the same
   questions as the [2026-10-07 dev smokes](../2026-10-06-scoreboard/dev-smokes/README.md)), read by
   `particle:particle-1` alone at effort medium, with no frontier judges. The canonical LoCoMo judge
@@ -27,9 +28,10 @@ inside the bar. The factor is in `READER_TOKENIZERS['particle:particle-1']`
 - **Metering.** Every request went through Q1's lease proxy, run in the same process: particle-1 on
   `/harness/particle/v1` under the `reader@particle:particle-1` cap of 16,000 output tokens, the judge on the
   2,048-token judge cap, embeddings on the extraction cap.
-- **Answers.** All 20 were scored, none was truncated, and each took one attempt. Particle reported effort `high`
-  for every request sent at `medium`. Three answers used more than 2,048 output tokens (the largest 8,456), so they
-  would have been cut off at the reader class cap that every other reader keeps.
+- **Answers.** All 20 were scored, none was truncated, and each took one attempt. Every request was sent at effort
+  `medium`, which Particle runs at `high`, so each attempt records `effort_effective` `high`; that value comes from the
+  provider module's effort table, not from the response. Three answers used more than 2,048 output tokens (the largest
+  8,456), so they would have been cut off at the reader class cap that every other reader keeps.
 
 ## Spend
 
