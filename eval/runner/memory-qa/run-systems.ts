@@ -76,7 +76,7 @@ import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } fr
 import { join, resolve } from 'node:path';
 import { homedir } from 'node:os';
 import { createHash } from 'node:crypto';
-import { budgetOptionsFrom, startPaidRun, receiptCost, type BudgetRun, type PaidRequestGuard } from '../budget-ledger.ts';
+import { BudgetExceededError, budgetOptionsFrom, startPaidRun, receiptCost, type BudgetRun, type PaidRequestGuard } from '../budget-ledger.ts';
 import { requirePaidArm } from '../paid-arm.ts';
 import { gbrainSpecFrom, importGbrain, overlaySummary, productIdentityFor, resolveGbrainUnderTest, type GbrainUnderTest } from '../gbrain-under-test.ts';
 import { EmbeddingCache, makeCachingTransport } from '../longmemeval-cache.ts';
@@ -576,7 +576,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
     try { return { value: await fn(), meter: null }; } catch (error) { return { error, meter: null }; }
   };
   const providerOf = (m: Meter | null) => m ? { usd: m.usd, requests: m.requests, unpriced: m.unpriced, ...(m.upstream ? { upstream: m.upstream } : {}) } : undefined;
-  /** A reader or judge call ended on a BudgetExceededError (the ledger's cap, Particle's credit 402): no later question or conversation runs. */
+  /** A reader, think or judge call ended on a budget stop (the ledger's cap, Particle's credit 402): no later question or conversation runs. */
   let stopped: 'budget' | null = null;
   const budgetStop = (e: unknown) => (e as Error)?.name === 'BudgetExceededError';
 
@@ -892,6 +892,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
                 for (let r = 0; r < a.qa.runs; r++) {
                   if (think) {
                     const res = await think(brain(), { question: q.question, model: a.qa.thinkModel, modelExplicit: true, remote: false });
+                    if (paid?.guard.exhausted) throw new BudgetExceededError(`budget: the ledger refused a request during gbrain think, which reported ${res.synthesis_status ?? 'no status'}`);
                     answer = res.answer ?? '';
                     tin += approxTokens(q.question);
                   } else {

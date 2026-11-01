@@ -6,7 +6,7 @@
  */
 import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
 import { createHash } from 'node:crypto';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { BudgetRun, closeLedgers, initLedger } from '../../eval/runner/budget-ledger.ts';
@@ -136,6 +136,17 @@ describe('the particle route in qa-v2', () => {
     expect(mock.particle()).toHaveLength(3);
   });
 
+  test('a fifth failed attempt records no Retry-After wait and throws without waiting, since no attempt follows', async () => {
+    const slow = { status: 429, body: { error: 'slow down' }, headers: { 'Retry-After': '0' } };
+    const mock = serve([slow, slow, slow, slow, { ...slow, headers: { 'Retry-After': '1' } }]);
+    const t0 = performance.now();
+    const row = await readAndJudge({ benchmark: 'lme-s', qa: qa(), q, chat: new ChatClient(tmp(), () => 0), think: null, prompt: 'P', countTokens: null });
+    expect(performance.now() - t0).toBeLessThan(900);
+    expect(mock.particle()).toHaveLength(5);
+    expect(row.qa_error).toStartWith('particle 429');
+    expect(row.qa_receipts!.map(r => [r.attempt, r.status, r.retry_after_ms])).toEqual([[0, 'error', 0], [1, 'error', 0], [2, 'error', 0], [3, 'error', 0], [4, 'error', undefined]]);
+  });
+
   test('a credit 402 is one attempt: its receipt is written and the stop reaches the caller with the receipts gathered so far', async () => {
     const mock = serve([{ status: 402, body: { error: { message: 'insufficient balance' } } }]);
     const err = await readAndJudge({ benchmark: 'lme-s', qa: qa(), q, chat: new ChatClient(tmp(), () => 0), think: null, prompt: 'P', countTokens: null }).catch(e => e) as Error & { qa_receipts: UsageReceipt[] };
@@ -156,7 +167,10 @@ describe('the particle route in qa-v2', () => {
     await expect(runArm(parseRunArgs([...argv, '--reader-effort', 'turbo']))).rejects.toThrow('reasoning effort "turbo" is not one Particle lists');
     delete process.env.PARTICLE_API_KEY;
     await expect(runArm(parseRunArgs(argv))).rejects.toThrow('PARTICLE_API_KEY is not set');
-    expect(mock.particle()).toHaveLength(1);
+    const systemsOut = join(tmp(), 'systems');
+    await expect(runArm(parseRunArgs(['--benchmark', 'fixture', '--system', 'fake', '--qa', 'reader', '--reader', 'particle:particle-1', '--output', systemsOut]))).rejects.toThrow('PARTICLE_API_KEY is not set');
+    expect(existsSync(systemsOut)).toBe(false);
+    expect([mock.particle().length, mock.seen.length]).toEqual([1, 2]);
   });
 });
 
@@ -169,6 +183,20 @@ function paidArgs(label: string) {
 }
 
 describe('the budget stop', () => {
+  test('run.ts think lane: gbrain think answers llm_error when the ledger refuses its request, and that is a budget stop, not an empty answer judged', async () => {
+    const mock = serve([]);
+    const think = async () => ({ answer: '', synthesis_status: 'llm_error', usage: null, modelUsed: 'claude-sonnet-5-5' });
+    const args = { benchmark: 'lme-s', qa: qa({ mode: 'think' }), q, chat: new ChatClient(tmp(), () => 0), think: { fn: think as never, engine: null }, prompt: null, countTokens: null };
+    const err = await readAndJudge({ ...args, budgetExhausted: () => true }).catch(e => e) as Error & { qa_receipts: UsageReceipt[] };
+    expect(err.name).toBe('BudgetExceededError');
+    expect(err.message).toBe('budget: the ledger refused a request during gbrain think, which reported llm_error');
+    expect(err.qa_receipts.map(r => [r.role, r.status, r.finish_raw, r.answer])).toEqual([['think', 'error', 'llm_error', '']]);
+    expect(mock.openai()).toHaveLength(0);
+    const row = await readAndJudge({ ...args, budgetExhausted: () => false });
+    expect(row.qa_receipts!.map(r => [r.role, r.status])).toEqual([['think', 'ok'], ['judge', 'ok']]);
+    expect(mock.openai()).toHaveLength(1);
+  });
+
   test('run.ts: a credit 402 writes the question\'s row with its receipt, then no judge, no later question and no later conversation runs; the summary says stopped: budget', async () => {
     process.env.GBRAIN_EVALS_QA_CACHE = join(tmp(), 'qa-cache');
     const mock = serve([{ body: PARTICLE_OK }, { status: 402, body: { error: { message: 'insufficient balance' } } }]);
