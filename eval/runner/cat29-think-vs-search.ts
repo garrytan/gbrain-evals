@@ -59,7 +59,9 @@
  *
  * Run:
  *   bun eval/runner/cat29-think-vs-search.ts --stub        # hermetic
- *   bun eval/runner/cat29-think-vs-search.ts               # live (needs ANTHROPIC + OPENAI keys)
+ *   bun eval/runner/cat29-think-vs-search.ts --budget-run-id <id>   # live (ANTHROPIC + OPENAI keys), joined to that budget-ledger run (all.ts passes the id)
+ *   bun eval/runner/cat29-think-vs-search.ts --budget-usd <dollars> # live, in a new budget-ledger run capped at that amount
+ *   (a live run with neither is refused: it would spend with no ledger cap)
  *   CAT29_QUESTIONS=2 bun eval/runner/cat29-think-vs-search.ts --stub
  */
 
@@ -80,6 +82,7 @@ import {
   extractUntrusted,
   fenceUntrusted,
   newJudgeNonce,
+  judgePrice,
   parseCriterionScores,
   priceOf,
   weightedMean,
@@ -94,6 +97,7 @@ import { assertCat29JudgeInput, assertCat29SutQuestion, CAT29_JUDGE_PAIR, CAT29_
 import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
 import { installStubEmbed } from './cat27-graph-signals.ts';
 import { acceptsTemperature, anthropicModelId, judgeClientFor, judgeTransport } from './openai-judge-shim.ts';
+import { fitAnthropicRequest, temperatureSent, toolChoiceSent, withThinkingRoom } from './anthropic-request.ts';
 import { budgetOptionsFrom, receiptCost, startPaidRun, type BudgetOptions } from './budget-ledger.ts';
 import { attestPreregistration, type Attestation } from './prereg.ts';
 
@@ -440,24 +444,25 @@ async function judgeOrder(
   const client = judgeConfig.client ?? new Anthropic();
   const budget = judgeConfig.budget ?? getDefaultLlmBudget();
   const rubric = rubricFor(q);
+  const price = judgePrice(judgeConfig.model ?? JUDGE_MODEL);
   const messages: Anthropic.Messages.MessageParam[] = [{ role: 'user', content: renderPairPrompt(q, answer1, answer2, pages) }];
   let cost = 0;
   for (let attempt = 1; attempt <= 2; attempt++) {
     let response: Anthropic.Messages.Message;
     try {
-      response = await budget.withLlmSlot(() => client.messages.create({
+      response = await budget.withLlmSlot(() => client.messages.create(fitAnthropicRequest({
         model: judgeConfig.model ?? JUDGE_MODEL,
-        max_tokens: judgeConfig.maxTokens ?? PAIR_MAX_TOKENS,
+        max_tokens: judgeConfig.maxTokens ?? withThinkingRoom(judgeConfig.model ?? JUDGE_MODEL, PAIR_MAX_TOKENS),
         ...(acceptsTemperature(judgeConfig.model ?? JUDGE_MODEL) ? { temperature: JUDGE_TEMPERATURE } : {}),
         system: [{ type: 'text', text: PAIRWISE_JUDGE_SYSTEM_PROMPT, cache_control: { type: 'ephemeral' } }],
         tools: [SCORE_PAIR_TOOL],
         tool_choice: { type: 'tool', name: SCORE_PAIR_TOOL.name },
         messages,
-      }));
+      })));
     } catch (e: any) {
       throw new JudgeFailure(`judge call failed for ${q.id}: ${e?.message ?? e}`);
     }
-    cost += priceOf(response.usage?.input_tokens ?? 0, response.usage?.output_tokens ?? 0);
+    cost += priceOf(price, response);
     const parsed = parsePairOutput(response, rubric);
     if (parsed.verdict) return { verdict: parsed.verdict, cost_usd: cost };
     messages.splice(1, 1, {
@@ -729,10 +734,14 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
 
   const thinkModel = options.model ?? THINK_MODEL;
   const judgeModel = options.judgeModel ?? JUDGE_MODEL;
+  judgePrice(anthropicModelId(judgeModel));
+  if (!stub && options.budget?.budgetUsd == null && options.budget?.runId == null) {
+    throw new Error('Cat 29 live run spends money and needs a budget-ledger cap: pass --budget-run-id <id> naming an open run, or --budget-usd <dollars> to open one');
+  }
   const hashEmbeds = stub || options.embedMode === 'hash';
   let attestation: Attestation | null = null;
   // The guard goes in before any SDK client is built, so the clients fetch through it.
-  const paid = !stub && options.budget?.budgetUsd != null
+  const paid = !stub && options.budget
     ? (options.preregistration ? (attestation = attestPreregistration(options.preregistration)) : null, startPaidRun(CAT29_CATEGORY, { ...options.budget, estimateUsd: options.estimateUsd ?? 0.4 }))
     : null;
 
@@ -762,6 +771,7 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
   const rows: QuestionResult[] = [];
   let questions: Cat29Question[] = [];
   let judgeCost = 0;
+  let budgetExhausted = false;
   let acc: ProbeAccounting;
   try {
     await engine.connect({});
@@ -781,8 +791,10 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
     acc = new ProbeAccounting(questions.length);
 
     for (const q of questions) {
+      if (paid?.guard.exhausted) break;
       log(`[cat29] running ${q.id}...\n`);
       const sutErrors: string[] = [];
+      const sutFailures: string[] = [];
       // Input allowlist: both systems get the question text only, never the
       // expected facts or gold slugs. A violation is a harness bug and aborts.
       assertCat29SutQuestion(q.text, q.expected_facts, q.gold_slugs);
@@ -799,7 +811,7 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
             }).join('\n')}`;
       } catch (e: any) {
         sutErrors.push(`search: ${e?.message ?? e}`);
-        acc.error(q.id, 'sut', `search failed: ${e?.message ?? e}`);
+        sutFailures.push(`search failed: ${e?.message ?? e}`);
       }
 
       // THINK side: full synthesis pipeline (gather runs against the real
@@ -815,12 +827,19 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
         thinkAns = r.answer && r.answer.trim().length > 0 ? r.answer : null;
         if (thinkAns === null) {
           sutErrors.push(`think: empty answer (synthesis_status=${r.synthesis_status ?? 'unknown'})`);
-          acc.error(q.id, 'sut', `think produced no answer (${r.synthesis_status ?? 'unknown'})`);
+          sutFailures.push(`think produced no answer (${r.synthesis_status ?? 'unknown'})`);
         }
       } catch (e: any) {
         sutErrors.push(`think: ${e?.message ?? e}`);
-        acc.error(q.id, 'sut', `think failed: ${e?.message ?? e}`);
+        sutFailures.push(`think failed: ${e?.message ?? e}`);
       }
+
+      // A request the budget run refused is no SUT failure: stop before judging.
+      if (paid?.guard.exhausted) {
+        acc.error(q.id, 'harness', 'the budget run refused a request, so this question was not judged');
+        break;
+      }
+      for (const message of sutFailures) acc.error(q.id, 'sut', message);
 
       // BLIND pairwise judging, both orders. 'a' = search, 'b' = think; the
       // labels never reach the judge and the mapping exists only in this runner.
@@ -884,6 +903,7 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
     console.log = origLog;
     if (hashEmbeds) __setEmbedTransportForTests(null);
     try { await engine.disconnect(); } catch { /* already dead */ }
+    budgetExhausted = paid?.guard.exhausted ?? false;
     paid?.guard.uninstall();
   }
   const paidCost = paid ? receiptCost(paid.run.close()) : null;
@@ -903,14 +923,13 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
     schema_version: RECEIPT_SCHEMA_VERSION,
     benchmark_version: BENCHMARK_VERSION,
     category: CAT29_CATEGORY,
-    run_status: 'completed',
-    verdict,
+    ...(budgetExhausted ? { run_status: 'error' as const } : { run_status: 'completed' as const, verdict }),
     n_total: summary.n_total,
     n_scored: summary.n_scored,
     completion_rate: summary.completion_rate,
     errors: summary.errors,
     publishable: summary.publishable && !stub && !options.questions && !options.pages
-      && (options.questionLimit === undefined),
+      && (options.questionLimit === undefined) && !budgetExhausted,
     gbrain_version: gbrainVersionResolved(),
     gbrain_pin: gbrainPin(),
     resolved_config: {
@@ -921,7 +940,8 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
       embed_transport: hashEmbeds ? 'stubbed-hash' : 'live',
       embed_mode: options.embedMode ?? 'real',
       judge_transport: judgeTransport(judgeModel),
-      temperature_sent: { think: acceptsTemperature(thinkModel), judge: acceptsTemperature(judgeModel) },
+      temperature_sent: { think: temperatureSent(thinkModel, THINK_TEMPERATURE), judge: temperatureSent(judgeModel, JUDGE_TEMPERATURE) },
+      tool_choice_sent: { judge: toolChoiceSent(judgeModel) },
       think_llm: thinkResponseFor ? 'stubbed' : options.thinkAnthropic ? 'injected' : 'live',
       think_temperature: THINK_TEMPERATURE,
       judge_mode: options.judgeClient || stub ? 'injected/stub' : 'live',
@@ -929,7 +949,7 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
       judge_pairwise: true,
       judge_both_orders: true,
     },
-    judge: { model: stub ? 'stub-judge' : judgeModel, temperature: JUDGE_TEMPERATURE, rubric_version: RUBRIC_VERSION },
+    judge: { model: stub ? 'stub-judge' : judgeModel, temperature: stub ? JUDGE_TEMPERATURE : temperatureSent(judgeModel, JUDGE_TEMPERATURE), rubric_version: RUBRIC_VERSION },
     ...(attestation ? { preregistration_attestation: attestation } : {}),
     ...(paidCost ? { cost: paidCost } : {}),
     started_at: startedAt,
@@ -947,6 +967,7 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
       position_inconsistent: inconsistent.length,
       position_inconsistent_question_ids: inconsistent.map(r => r.question_id),
       judge_cost_usd: judgeCost,
+      budget_exhausted: budgetExhausted,
       per_question: rows,
     },
   };
@@ -964,11 +985,13 @@ export async function runCat29(options: Cat29Options = {}): Promise<Cat29RunResu
   log(`[cat29]   think mean:       ${Number.isNaN(tMean) ? 'n/a' : tMean.toFixed(2)}/5\n`);
   log(`[cat29]   think model:      ${thinkModelUsed ?? 'n/a'} (pinned ${thinkModel})\n`);
   log(`[cat29]   position flips:   ${inconsistent.length}/${judged.length} judged pairs\n`);
-  log(`[cat29]   verdict:          ${verdict} (run_invalid=${summary.run_invalid}, publishable=${receipt.publishable})\n`);
+  log(budgetExhausted
+    ? '[cat29]   RUN INVALID:      the budget run refused a request, so the run stopped early; see receipt errors[]\n'
+    : `[cat29]   verdict:          ${verdict} (run_invalid=${summary.run_invalid}, publishable=${receipt.publishable})\n`);
   log(`[cat29]   receipt:          ${receiptFile}\n`);
 
   // A stub run whose gate held exits 0: plumbing verified, reported as partial.
-  const exitCode = summary.run_invalid ? 1 : (measured === 'pass' ? 0 : 1);
+  const exitCode = summary.run_invalid || budgetExhausted ? 1 : (measured === 'pass' ? 0 : 1);
   return { receipt, rows, exitCode, receiptFile };
 }
 
