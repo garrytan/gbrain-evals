@@ -78,6 +78,11 @@ describe('verify-documentation-refresh: the product pin', () => {
     expect(references(root).map(e => e[0])).toEqual(['README.md']);
   });
 
+  test('a product pin that is not an exact commit fails before any hub is read', () => {
+    const root = copyWith('branch-pin', 'package.json', t => t.replace(`gbrain#${sha}`, 'gbrain#master'));
+    expect(references(root)).toEqual([['package.json', 'Product pin must have an exact 40-character Git pin']]);
+  });
+
   test('a lockfile that resolves another commit fails', () => {
     const root = copyWith('stale-lock', 'bun.lock', t => t.replace(`"gbrain": "github:garrytan/gbrain#${sha}"`, `"gbrain": "github:garrytan/gbrain#${'0'.repeat(40)}"`));
     expect(references(root)).toEqual([['bun.lock', 'Declared product pin differs from package.json pin']]);

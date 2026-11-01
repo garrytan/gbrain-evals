@@ -12,7 +12,7 @@
  * frozen-hit path carries every block's date.
  */
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
-import { importGbrain, resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
+import { HELD_GBRAIN_DEFAULTS, importGbrain, resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
 import { hashEmbed } from '../../eval/runner/memory-qa/run.ts';
 import { renderSessionPage } from '../../eval/runner/memory-qa/corpus.ts';
 import { GbrainQueryConnector, loadConnectorModules, parity, QUERY_PATH_PINS, storedText, wireRequest, WIRE_NAMES, type ConnectorModules, type DeliveredRow } from '../../eval/runner/systems/gbrain-query/connector.ts';
@@ -205,6 +205,17 @@ describe('GbrainQuerySystem', () => {
   }
   const policy = (settings: Record<string, unknown>) => ({ name: 'gbrain-query:fixed-evidence', mode: 'fixed-evidence' as const, settings: { limit: 25, ...settings } });
   const question = { text: 'Lisbon violin harbor', query_time: '2023-12-01T00:00:00' };
+
+  test('the held gbrain defaults are written to the brain, a caller setting overrides one, and the capability record lists them', async () => {
+    expect(HELD_GBRAIN_DEFAULTS).toEqual({ 'search.query_facts_block': 'false', 'search.saved_facts_supersede': 'false', 'search.remote_page_cap': '0' });
+    const sys = new GbrainQuerySystem(mods, conn, { 'search.remote_page_cap': '3' }, identity, { frozenFrom: null, rerankExpected: false });
+    await sys.reset('ns-a');
+    expect(await sys.brain.getConfig('search.query_facts_block')).toBe('false');
+    expect(await sys.brain.getConfig('search.saved_facts_supersede')).toBe('false');
+    expect(await sys.brain.getConfig('search.remote_page_cap')).toBe('3');
+    expect(((await sys.capabilities()) as unknown as Record<string, unknown>).held_defaults).toEqual(HELD_GBRAIN_DEFAULTS);
+    await sys.close();
+  });
 
   test('pins are written through the config channel and checked at open; a probe (no stage) is a plain frozen call', async () => {
     const sys = await ingested();

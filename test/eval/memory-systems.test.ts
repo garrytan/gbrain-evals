@@ -429,6 +429,18 @@ describe('memory-qa with a MemorySystem', () => {
   });
 });
 
+describe('held gbrain defaults', () => {
+  test('both memory-qa entry points pin them by default, and --pin still overrides one', async () => {
+    const { HELD_GBRAIN_DEFAULTS } = await import('../../eval/runner/gbrain-under-test.ts');
+    const legacy = await import('../../eval/runner/memory-qa/run.ts');
+    const argv = ['--benchmark', 'fixture', '--output', '/tmp/x'];
+    expect(legacy.parseRunArgs(argv).pins).toMatchObject(HELD_GBRAIN_DEFAULTS);
+    expect(parseRunArgs(argv).pins).toMatchObject(HELD_GBRAIN_DEFAULTS);
+    expect(legacy.parseRunArgs([...argv, '--pin', 'search.remote_page_cap=3']).pins['search.remote_page_cap']).toBe('3');
+    expect(parseRunArgs([...argv, '--pin', 'search.remote_page_cap=3']).pins['search.remote_page_cap']).toBe('3');
+  });
+});
+
 describe('run.ts dispatch', () => {
   test('memory-system flags send a run to run-systems.ts; a plain gbrain run stays on run.ts', async () => {
     const main = await import('../../eval/runner/memory-qa/run.ts');
