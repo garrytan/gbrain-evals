@@ -143,7 +143,8 @@ answer). A `--qa think` row also has `qa_reference_date`, the day (YYYY-MM-DD) `
 dates against: the harness asks for the question date, else the conversation's latest session date, and a gbrain
 build older than 0.60.88 reports none, so its rows carry no date. When any answer's response carried no usage, the row
 has `qa_usage_missing` instead of token means.
-The arm's `receipt.json` adds `usage.by_role`, the `sumUsage` totals per role. A question stopped by a budget stop
+The arm's `receipt.json` adds `usage.by_role`, the `sumUsage` totals per role over each question's latest row, so a
+budget-stopped row's reader call and the rerun's cached replay of it count once. A question stopped by a budget stop
 (the ledger's cap, or Particle's credit 402) keeps the records gathered before the stop on its error row. Memory-system
 cells (`eval/runner/memory-qa/run-systems.ts`) write `qa_receipts` for their reader calls.
 
