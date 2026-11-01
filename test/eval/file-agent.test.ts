@@ -7,7 +7,7 @@
  */
 import { afterAll, afterEach, beforeEach, describe, expect, test } from 'bun:test';
 import { createHash } from 'node:crypto';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { appendFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { CHAT_PRICE_OVERRIDES } from '../../eval/runner/budget-ledger.ts';
@@ -434,6 +434,32 @@ describe('file agent with particle-1 (plan GST-605 Phase 3)', () => {
     expect(receipts[2]).toMatchObject({ response_model: 'particle-ai/particle-1', usage: { input_total: 500, cache_read: 300, reasoning: 30 }, response_meta: { weight_version: 'default' } });
     expect(a.usage).toEqual({ input: 400, output: 80, cache_read: 600, cache_write: 0 });
     await sys.close();
+  });
+
+  test('a retried answer numbers its receipts on from the earlier attempt, also in a new process after a half-written line', async () => {
+    let n = 0;
+    const fetchImpl = (async () => {
+      n++;
+      if (n === 1) return new Response('{"error":{"message":"bad request"}}', { status: 400 });
+      return new Response(JSON.stringify(chat(call('submit_answer', { answer: 'Rex' }), 'tool_calls')));
+    }) as unknown as typeof fetch;
+    const workDir = join(tmp, 'particle-retried');
+    const opts = { reader: 'particle:particle-1', replicate: 0, answer_id: 'b'.repeat(64) };
+    const q = { text: 'What is my dog called?', query_time: null };
+    const sys = new FileAgentSystem({ workDir, fetchImpl });
+    await ingest(sys);
+    expect((await sys.answer(ns, q, opts)).text).toBe('');
+    expect((await sys.answer(ns, q, opts)).text).toBe('Rex');
+    await sys.close();
+    appendFileSync(join(workDir, 'receipts.ndjson'), `{"model":"particle:particle-1","question_id":"${'b'.repeat(64)}",`);
+    const again = new FileAgentSystem({ workDir, fetchImpl });
+    await ingest(again);
+    expect((await again.answer(ns, q, opts)).text).toBe('Rex');
+    await again.close();
+    const lines = readFileSync(join(workDir, 'receipts.ndjson'), 'utf8').trim().split('\n');
+    expect(lines).toHaveLength(4);
+    expect(() => JSON.parse(lines[2])).toThrow();
+    expect([lines[0], lines[1], lines[3]].map(l => JSON.parse(l)).map(r => [r.attempt, r.status])).toEqual([[0, 'error'], [1, 'ok'], [2, 'ok']]);
   });
 
   test('an empty Particle balance ends the question as budget_not_run, after the failing attempt\'s receipt', async () => {

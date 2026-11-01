@@ -193,15 +193,20 @@ export const cellAttemptsPath = (out: string, key: string) => join(out, 'cells',
  * Every provider attempt of one session of a v1 cell, retries and failures included, appended as one usage receipt
  * (attemptReceipt: request fields sent, response model, Particle's response metadata, usage, finish, errors) to the
  * cell's attempts.ndjson, for every provider. A rerun of a failed cell appends to the same file, and its attempts are
- * numbered on from the earlier run's, so (question_id, replicate, attempt) names one attempt.
+ * numbered on from the earlier run's, so (question_id, replicate, attempt) names one attempt. A line a killed run left
+ * half-written is not counted.
  */
 function attemptLog(ctx: Ctx, key: string, model: string, repeat: number, session: 1 | 2): (a: ProviderAttempt) => void {
   const path = cellAttemptsPath(ctx.out, key);
   const questionId = `${key}|s${session}`;
-  let attempt = existsSync(path) ? readFileSync(path, 'utf8').split('\n').filter(Boolean).filter(l => (JSON.parse(l) as { question_id: string }).question_id === questionId).length : 0;
+  const earlier = (line: string) => { try { return (JSON.parse(line) as { question_id?: string }).question_id === questionId; } catch { return false; } };
+  const existing = existsSync(path) ? readFileSync(path, 'utf8') : '';
+  let attempt = existing.split('\n').filter(earlier).length;
+  let lead = existing && !existing.endsWith('\n') ? '\n' : '';
   return a => {
     mkdirSync(dirname(path), { recursive: true });
-    appendFileSync(path, JSON.stringify(ctx.record(attemptReceipt(model, a, { lane: 'cat40-model-ladder', role: 'reader', question_id: questionId, replicate: repeat, attempt: attempt++ }))) + '\n');
+    appendFileSync(path, lead + JSON.stringify(ctx.record(attemptReceipt(model, a, { lane: 'cat40-model-ladder', role: 'reader', question_id: questionId, replicate: repeat, attempt: attempt++ }))) + '\n');
+    lead = '';
   };
 }
 

@@ -20,7 +20,7 @@
       "note": "loop.ts at main d8a01dfd: the unused loop hooks in the next-wave confirmation's drift note (docs/plans/2026-10-11-cat40-next-wave/PREREG.md; eval/runner/cat40/next-confirm.ts driftNote), plus the Q1 file agent's loop changes that reached main with the Q1 scoreboard (#122, 2026-10-28; 1aa5854e, c6b85de0, 905b01c0, 033663c0): an opt-in reasoning effort, a check that the answer tool is named submit_answer, and one usage normalizer (eval/runner/q1/usage.ts) that fills the same token buckets. Cat 40 passes no effort, so its request bodies are unchanged and no model cell changes."
     },
     {
-      "sha256": "c24cdec9255f2be47cddbc45e0ae828420160cd49ac5393be04a389beb98d818",
+      "sha256": "08fa8e9eca0ae3087bff453ee9cdb135e9cc40634908d49611162d458ff96bc0",
       "date": "2026-10-31",
       "note": "loop.ts with the particle-1 provider branch (plan GST-605 Phase 3, unit U8): particleLoop beside anthropicLoop and openaiLoop, provider attempts that carry the turn and the request fields sent, and runAgentText refusing particle-1. The claude-opus-5-5 and gpt-6.1-sol request bodies and retry timing are byte-identical to main's (test/eval/cat40-particle-loop.test.ts), so no Anthropic or OpenAI cell changes."
     }

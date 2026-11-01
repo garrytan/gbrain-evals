@@ -42,7 +42,7 @@
  */
 import { spawn, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { appendFileSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { CHAT_PRICE_OVERRIDES } from '../budget-ledger.ts';
@@ -291,6 +291,8 @@ export class FileAgentSystem implements AnsweringSystem {
   private workDir: string;
   /** Every provider attempt's receipt (FileAgentReceipt), one per line. */
   readonly receiptsPath: string;
+  /** Receipts already in receiptsPath per reader, question and replicate, and the newline a half-written last line needs. */
+  private recorded: { counts: Map<string, number>; lead: string } | null = null;
 
   constructor(private opts: FileAgentOptions = {}) {
     requireRipgrep();
@@ -354,6 +356,24 @@ export class FileAgentSystem implements AnsweringSystem {
     return t;
   }
 
+  /**
+   * The receipts already written, counted once per instance: the cell retries a failed answer under the same answer id
+   * (A22), and its attempts are numbered on from the earlier ones, so (model, question_id, replicate, attempt) names one
+   * attempt. A line a killed run left half-written is not counted.
+   */
+  private receiptLog() {
+    if (this.recorded) return this.recorded;
+    const text = existsSync(this.receiptsPath) ? readFileSync(this.receiptsPath, 'utf8') : '';
+    const counts = new Map<string, number>();
+    for (const line of text.split('\n')) {
+      let r: FileAgentReceipt;
+      try { r = JSON.parse(line) as FileAgentReceipt; } catch { continue; }
+      const key = `${r.model}|${r.question_id}|${r.replicate}`;
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+    return this.recorded = { counts, lead: text && !text.endsWith('\n') ? '\n' : '' };
+  }
+
   async answer(ns: string, q: PublicQuestion, opts: AnswerOptions): Promise<AgentAnswer> {
     const scripted = this.opts.scripted?.(q);
     const model = scripted ? opts.reader : parseReader(opts.reader).model;
@@ -363,10 +383,15 @@ export class FileAgentSystem implements AnsweringSystem {
     const t0 = performance.now();
     const receipts: FileAgentReceipt[] = [];
     const onAttempt = (a: ProviderAttempt) => {
-      const r = attemptReceipt(model, a, { lane: 'q1-file-agent', role: 'reader', question_id: opts.answer_id ?? ns, replicate: opts.replicate, attempt: receipts.length });
+      const log = this.receiptLog();
+      const key = `${opts.reader}|${opts.answer_id ?? ns}|${opts.replicate}`;
+      const attempt = log.counts.get(key) ?? 0;
+      const r = attemptReceipt(model, a, { lane: 'q1-file-agent', role: 'reader', question_id: opts.answer_id ?? ns, replicate: opts.replicate, attempt });
+      log.counts.set(key, attempt + 1);
       receipts.push(r);
       mkdirSync(this.workDir, { recursive: true });
-      appendFileSync(this.receiptsPath, JSON.stringify(r) + '\n');
+      appendFileSync(this.receiptsPath, log.lead + JSON.stringify(r) + '\n');
+      log.lead = '';
     };
     let run: AgentRun;
     try {

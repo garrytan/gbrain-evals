@@ -122,12 +122,18 @@ describe('particleLoop', () => {
   });
 
   test('a fake 429, 429, 200 gives three onAttempt calls; Retry-After is waited, capped at 120 s, and recorded', async () => {
-    const { run, attempts } = await drive('particle', 'particle-1', {}, { faults: [rateLimited({ 'retry-after': '0' }), rateLimited({ 'retry-after': '600' })] });
+    const { run, attempts } = await drive('particle', 'particle-1', {}, { faults: [rateLimited({ 'retry-after': '30' }), rateLimited({ 'retry-after': '600' })] });
     expect(run.stop).toBe('submitted');
     const turn1 = attempts.filter(a => a.turn === 1);
     expect(turn1.map(a => a.status)).toEqual(['error', 'error', 'ok']);
-    expect(turn1.map(a => a.retry_after_ms)).toEqual([0, 120_000, undefined]);
-    expect(delays).toEqual([0, 120_000]);
+    expect(turn1.map(a => a.retry_after_ms)).toEqual([30_000, 120_000, undefined]);
+    expect(delays).toEqual([30_000, 120_000]);
+  });
+
+  test('a Retry-After shorter than the backoff, or 0, waits the backoff', async () => {
+    const { attempts } = await drive('particle', 'particle-1', {}, { faults: [rateLimited({ 'retry-after': '0' }), rateLimited({ 'retry-after': '1' }), rateLimited({ 'retry-after': '0' })] });
+    expect(attempts.filter(a => a.turn === 1).map(a => a.retry_after_ms)).toEqual([0, 1000, 0, undefined]);
+    expect(delays).toEqual([2500, 4500, 8500]);
   });
 
   test('without a Retry-After header the backoff is the other branches\'', async () => {
@@ -164,6 +170,23 @@ describe('particleLoop', () => {
     expect(attempts[0]).toMatchObject({ status: 'error', response: empty, turn: 1 });
     expect(attempts[0].error).toContain('without choices[0].message');
     expect(delays).toEqual([2500]);
+  });
+
+  test('a 2xx whose body is not JSON is recorded and retried as a server error', async () => {
+    const { run, attempts } = await drive('particle', 'particle-1', {}, { faults: [{ status: 200, body: '<html>bad gateway</html>' }] });
+    expect(run.stop).toBe('submitted');
+    expect(attempts[0]).toMatchObject({ status: 'error', response: null, turn: 1, retry_after_ms: null });
+    expect(attempts[0].error).toContain('with a body that is not JSON: <html>bad gateway</html>');
+    expect(delays).toEqual([2500]);
+  });
+
+  test('a body that fails to read is recorded as an attempt and ends the run as an error', async () => {
+    const attempts: ProviderAttempt[] = [];
+    const broken = new ReadableStream({ start(c) { c.error(new Error('socket reset')); } });
+    const fetchImpl = (async () => new Response(broken, { status: 200 })) as unknown as typeof fetch;
+    const { run } = await drive('particle', 'particle-1', { fetchImpl, onAttempt: a => attempts.push(a) });
+    expect(run.stop).toBe('error');
+    expect(attempts).toEqual([expect.objectContaining({ status: 'error', response: null, error: 'network: reading the 200 body failed: socket reset', retry_after_ms: null, turn: 1 })]);
   });
 
   test('a network failure is recorded as an attempt and ends the run as an error', async () => {

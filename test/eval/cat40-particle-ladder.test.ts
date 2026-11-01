@@ -3,9 +3,9 @@
  * answers every request, and the ladder runs as its own process, as a paid step would. No test reaches a network.
  */
 import { afterAll, describe, expect, test } from 'bun:test';
-import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { cellAttemptsPath } from '../../eval/runner/cat40-model-ladder.ts';
 
 const ROOT = join(import.meta.dir, '../..');
@@ -71,6 +71,17 @@ describe('model ladder with particle-1 (fake Particle on loopback)', () => {
     expect(lines(join(out, 'results.jsonl')).map(r => r.score.success)).toEqual([true]);
     const all = lines(cellAttemptsPath(out, 'particle-1|oracle|A01|0'));
     expect(all.map(r => [r.question_id, r.attempt, r.status])).toEqual([['particle-1|oracle|A01|0|s2', 0, 'error'], ['particle-1|oracle|A01|0|s2', 1, 'ok']]);
+  }, 60_000);
+
+  test('a rerun counts past a line a killed run left half-written and starts its receipt on a new line', async () => {
+    const path = cellAttemptsPath(join(tmp, 'killed'), 'particle-1|oracle|A01|0');
+    mkdirSync(dirname(path), { recursive: true });
+    writeFileSync(path, `${JSON.stringify({ question_id: 'particle-1|oracle|A01|0|s2', attempt: 0, status: 'error' })}\n{"question_id":"particle-1|oracle|A01|0|s2",`);
+    const { code, stderr } = await ladder('killed', [{ status: 200, body: submit }]);
+    expect({ code, stderr: code ? stderr.slice(-2000) : '' }).toEqual({ code: 0, stderr: '' });
+    const raw = readFileSync(path, 'utf8').trim().split('\n');
+    expect(raw).toHaveLength(3);
+    expect(JSON.parse(raw[2])).toMatchObject({ question_id: 'particle-1|oracle|A01|0|s2', attempt: 1, status: 'ok' });
   }, 60_000);
 
   test('particle-1 never judges, and a run with it names its judge (the v1 default is gpt-5.4-mini)', async () => {

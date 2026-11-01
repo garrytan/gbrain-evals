@@ -151,7 +151,7 @@ export interface ProviderAttempt {
   turn?: number;
   /** What the request sent that changes the answer (effort, output limit, sampling), when the attempt came from runAgent. */
   request?: ReceiptRequest;
-  /** Particle only: the provider's Retry-After as milliseconds, capped at 120 s, waited before the next attempt; null when it sent none. */
+  /** Particle only: the provider's Retry-After as milliseconds, capped at 120 s; the next attempt waits at least this and at least the backoff. Null when it sent none. */
   retry_after_ms?: number | null;
 }
 
@@ -184,10 +184,11 @@ export const RETRYABLE_STATUS = [429, 500, 502, 503, 504, 529];
 
 /**
  * Up to 6 attempts with exponential backoff on retryable statuses. `compat` names an OpenAI-compatible provider
- * (Particle): its errors are classified by the provider module, a Retry-After it sends replaces the backoff (capped at
- * 120 s), a credit or proxy 402 throws the budget stop after its attempt is recorded, a network failure is recorded
- * before it propagates, and a 2xx without `choices[0].message` is retried as a server error. Without `compat`
- * (Anthropic, OpenAI) attempts and waits are as they always were.
+ * (Particle): its errors are classified by the provider module, a retry waits at least the Retry-After it sends (capped
+ * at 120 s) and never less than the backoff, a credit or proxy 402 throws the budget stop after its attempt is recorded,
+ * a network or body-read failure is recorded before it propagates, and a 2xx that is not JSON or has no
+ * `choices[0].message` is retried as a server error. Without `compat` (Anthropic, OpenAI) attempts and waits are as
+ * they always were.
  */
 async function postJson(fetchImpl: typeof fetch, url: string, headers: Record<string, string>, body: unknown, onAttempt?: (a: ProviderAttempt) => void, compat?: string): Promise<Record<string, unknown>> {
   let last: ProviderError | null = null;
@@ -199,15 +200,22 @@ async function postJson(fetchImpl: typeof fetch, url: string, headers: Record<st
       if (compat) onAttempt?.({ status: 'error', response: null, error: `network: ${(e as Error).message.slice(0, 500)}`, ms: Date.now() - t, retry_after_ms: null });
       throw e;
     }
-    const text = await res.text();
+    let text: string;
+    try { text = await res.text(); }
+    catch (e) {
+      if (compat) onAttempt?.({ status: 'error', response: null, error: `network: reading the ${res.status} body failed: ${(e as Error).message.slice(0, 500)}`, ms: Date.now() - t, retry_after_ms: null });
+      throw e;
+    }
     if (res.ok) {
-      const json = JSON.parse(text) as Record<string, unknown>;
-      const choices = json.choices as Array<{ message?: unknown }> | undefined;
-      if (!compat || (Array.isArray(choices) && choices[0]?.message)) {
+      let json: Record<string, unknown> | null = null;
+      try { json = JSON.parse(text) as Record<string, unknown>; }
+      catch (e) { if (!compat) throw e; }
+      const choices = json?.choices as Array<{ message?: unknown }> | undefined;
+      if (json && (!compat || (Array.isArray(choices) && choices[0]?.message))) {
         onAttempt?.({ status: 'ok', response: json, error: null, ms: Date.now() - t });
         return json;
       }
-      last = new ProviderError(502, `${compat} answered ${res.status} without choices[0].message: ${text.slice(0, 300)}`);
+      last = new ProviderError(502, `${compat} answered ${res.status} ${json ? 'without choices[0].message' : 'with a body that is not JSON'}: ${text.slice(0, 300)}`);
       onAttempt?.({ status: 'error', response: json, error: last.message, ms: Date.now() - t, retry_after_ms: null });
       await new Promise(r => setTimeout(r, Math.min(60_000, 2000 * 2 ** attempt) + Math.random() * 1000));
       continue;
@@ -217,7 +225,7 @@ async function postJson(fetchImpl: typeof fetch, url: string, headers: Record<st
     onAttempt?.({ status: 'error', response: null, error: `${res.status}: ${text.slice(0, 500)}`, ms: Date.now() - t, ...(info ? { retry_after_ms: info.retryAfterMs } : {}) });
     if (info?.kind === 'credit_exhausted' || info?.kind === 'proxy_budget') throw compatError(info);
     if (!RETRYABLE_STATUS.includes(res.status)) break;
-    await new Promise(r => setTimeout(r, info?.retryAfterMs ?? Math.min(60_000, 2000 * 2 ** attempt) + Math.random() * 1000));
+    await new Promise(r => setTimeout(r, Math.max(info?.retryAfterMs ?? 0, Math.min(60_000, 2000 * 2 ** attempt) + Math.random() * 1000)));
   }
   throw last!;
 }
