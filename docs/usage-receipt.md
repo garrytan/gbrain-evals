@@ -125,9 +125,10 @@ invented value, and `response_model` and `usage` are null as before. One `error`
 loop and memory-qa retry a Particle 2xx that has no `choices[0].message` as a server error, and that attempt's record
 keeps the body's usage (the Cat 40 loop keeps its response metadata too); `sumUsage` totals count successful records
 only. In memory-qa, a failed attempt the provider answered with a Retry-After also has `retry_after_ms`: the wait
-before the next attempt, capped at 120 seconds, absent when the provider sent none or no attempt followed. A truncated
-response keeps its own content as `answer`, even when that is empty: the reasoning text (Particle's
-`reasoning_content`) never fills an answer.
+before the next attempt, capped at 120 seconds, absent when the provider sent none or no attempt followed. In
+memory-qa and Q1, a Particle attempt waits up to the metering proxies' 900-second upstream deadline, and one that
+times out is the last attempt, because Particle may have billed it. A truncated response keeps its own content as
+`answer`, even when that is empty: the reasoning text (Particle's `reasoning_content`) never fills an answer.
 
 ## How a memory-qa row uses it
 
