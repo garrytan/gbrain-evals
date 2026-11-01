@@ -234,13 +234,15 @@ The stub reader receives the structured form of a question (what is asked, never
 
 ## Readers, judge and paid-run volume
 
-`eval/workload-suites/run-config.ts` holds the model configuration that the runs above used:
+The runs above used this model configuration from `eval/workload-suites/run-config.ts`, recorded in each suite's `run.json`:
 
 - **Fixed reader:** the newest frontier Sonnet, `anthropic:claude-sonnet-5-5`, on every cell.
 - **Frontier sweep:** a quarter of each category's questions, chosen by hash order of query id, re-read by `anthropic:claude-opus-5-5`, `openai:gpt-6-astra` and `anthropic:claude-fable-5-1`. `openai:gpt-6.1-sol`, the alternate newest GPT, re-reads the same questions. The sweep re-reads the contexts saved by the fixed-reader run, so it adds no retrieval or ingest.
 - **Judge:** `openai:gpt-6.1-sol`, only for answers the deterministic scorer marks ambiguous. It is also the alternate reader, so in B3 it judged 13 of its own answers in gbrain's arm and 9 in the comparator's. It judged none of its own answers in the other suites, because its answers there are terse enough to score deterministically.
 - **No older generation and no `gpt-5.4-mini`.** `modelRuleViolations` fails the entry point if one is configured.
 - **No-memory control:** it calls the reader with an explicit placeholder context, so an empty-context guard cannot skip the call.
+
+`run-config.ts` has changed since these runs, so a rerun of the sweep differs from the one published here. The counted sweep now reads with `openai:gpt-6.1-sol`, the newest frontier GPT, beside Opus 5.5, Sonnet 5.5 and particle-1. `openai:gpt-6-astra` is an alternate reader, not a counted one, and Fable reads only in a labeled smoke run. `modelRuleViolations` fails the entry point when the sweep lacks one of the newest frontier Opus, GPT and Sonnet models (`FRONTIER_READERS` in `eval/runner/systems/baselines.ts`).
 
 The paid bench is `eval/workload-suites/bench.ts` (phases `answer`, `sweep` and `score`). It reaches the harness providers through `eval/harness-provider/mpw_workload/bridge.py`, and B2 runs through the per-system `CorrectionAdapter` in `eval/workload-suites/correction-adapters.ts`. `bun run eval:<suite>:dry` prints the planned volume without spending. The measured spend is in the Spend table above.
 
@@ -274,6 +276,6 @@ bun eval/workload-suites/bench.ts beliefs --phase score --budget-usd 3          
 bun eval/workload-suites/report.ts --copy docs/benchmarks/2026-10-05-workload-suites
 ```
 
-Reader and judge calls are cached by prompt hash and ingested stores are reused, so rerunning a phase spends nothing on work already done. Paid output lands in `eval/reports/workload-bench/<suite>/`.
+Reader and judge calls are cached by prompt hash and ingested stores are reused, so rerunning a phase spends nothing on work already done. Paid output lands in `eval/reports/workload-bench/<suite>/`. A smoke run (`--smoke N`) writes to `<suite>-smoke<N>/` and refuses any directory `report.ts` publishes from, including `time-relationships-smoke20`, which holds B3's counted run, so give it another `--out`. Its sweep re-reads every smoke question the fixed reader answered, because a small smoke may hold none of the frontier subset.
 
 Output of the offline entry points lands in `eval/reports/workload-suites/<version>/` (ignored by Git): the record streams, `manifest.json` and `check-receipt.json` with every check result, the model configuration and the arms. `--seed N` generates another instance; `--output DIR` writes elsewhere. The generator code lives in `eval/workload-suites/`; the committed manifests in `eval/data/workload-suites/` pin the default-seed bundles byte for byte.

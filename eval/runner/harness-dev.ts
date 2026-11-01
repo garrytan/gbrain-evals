@@ -7,6 +7,7 @@
  *   bun eval/runner/harness-dev.ts sweep --provider gbrain --dataset beam --split 100k \
  *     --units 3,11,12,15 --base '{"token_budget": 8100}' [--targets 4000,8000,16000,32000] \
  *     [--extra '{"embedding_model": "voyage:voyage-4"}'] [--lane raw] [--sample 60] [--no-default] \
+ *     [--answer <llm>:<model>] [--judge <llm>:<model>] \
  *     -- <harness:cell flags: --gbrain ..., --budget-ledger ...>
  *
  * Writes the generated specs to eval/harness-provider/cells/dev/ and a track
@@ -20,8 +21,9 @@ import { join } from 'node:path';
 import type { CellSpec } from './harness-cell.ts';
 import { REPO_ROOT } from './harness-env.ts';
 
-export const DEV_ANSWER = 'gemini:gemini-3.8-flash';
-export const DEV_JUDGE: Record<string, string> = { beam: 'gemini:gemini-3.5-flash', default: 'gemini:gemini-3.5-flash' };
+export const DEV_ANSWER = 'anthropic:claude-sonnet-5-5';
+/** BEAM keeps gemini-3.5-flash because the pinned harness fixes BEAM's rubric judge (harness-cell.ts refuses another); every other dataset is judged by gpt-6.1-sol. */
+export const DEV_JUDGE: Record<string, string> = { beam: 'gemini:gemini-3.5-flash', default: 'openai:gpt-6.1-sol' };
 const SPEC_DIR = join(REPO_ROOT, 'eval/harness-provider/cells/dev');
 const LOG_DIR = join(REPO_ROOT, 'eval/reports/harness-dev');
 
@@ -33,6 +35,8 @@ export interface Track {
   targets: number[]; sample: number; runDefault: boolean;
   gbrainCredentials?: string[];
   answer?: string;
+  /** Judge override; a BEAM cell must name the judge its harness fixes (harness-cell.ts refuses another). */
+  judge?: string;
   name?: string;
   /** Run a target that no setting tunes into the gate at the setting whose mean is nearest it; the cell reports the miss. */
   offTarget?: boolean;
@@ -52,7 +56,7 @@ export function devSpec(t: Track, target: number | null, knobs: Record<string, u
   const spec: CellSpec = {
     dataset: t.dataset, split: t.split, provider: t.provider as CellSpec['provider'], mode: t.mode, lane: t.lane, seal: 'dev',
     target_tokens: target,
-    models: { answer: t.answer ?? DEV_ANSWER, judge: DEV_JUDGE[t.dataset] ?? DEV_JUDGE.default },
+    models: { answer: t.answer ?? DEV_ANSWER, judge: t.judge ?? DEV_JUDGE[t.dataset] ?? DEV_JUDGE.default },
     budget_usd: budget,
     questions: t.questionIds ? { ids: t.questionIds } : { units: t.units ?? [] },
     k: t.k ?? 10,
@@ -135,7 +139,7 @@ if (import.meta.main) {
     base: JSON.parse(flag('--base') ?? '{}'), extra: JSON.parse(flag('--extra') ?? '{}'),
     targets: (flag('--targets') ?? '4000,8000,16000,32000').split(',').filter(Boolean).map(Number),
     sample: Number(flag('--sample') ?? 60), runDefault: !own.includes('--no-default'),
-    gbrainCredentials: flag('--gbrain-credentials')?.split(','), answer: flag('--answer'), name: flag('--name'),
+    gbrainCredentials: flag('--gbrain-credentials')?.split(','), answer: flag('--answer'), judge: flag('--judge'), name: flag('--name'),
     budget: flag('--budget') ? Number(flag('--budget')) : undefined, offTarget: own.includes('--off-target-closest'),
     k: flag('--k') ? Number(flag('--k')) : undefined, probe: own.includes('--probe'),
   };

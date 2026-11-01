@@ -7,7 +7,11 @@ set -uo pipefail
 # Gate 3 runs on the #6066 head that fills the page budget and fixes the persistence stall, repeated slugs and the image arm.
 G3="$HOME/.capy/work/mpw/gbrain@a87c3e2af"
 L="--budget-ledger ${LEDGER:-.budget/mpw-dev-local.sqlite}"
-D="bun eval/runner/harness-dev.ts sweep --provider gbrain"
+# The October 5 dev phase ran on these models (memory proof wave preregistration); harness-dev.ts defaults to
+# claude-sonnet-5-5 and gpt-6.1-sol since 2026-11-01, so a rerun names them to reproduce that phase.
+ANSWER=gemini:gemini-3.8-flash
+MODELS="--answer $ANSWER --judge gemini:gemini-3.5-flash"
+D="bun eval/runner/harness-dev.ts sweep $MODELS --provider gbrain"
 EMB='"embedding_model":"voyage:voyage-4","embedding_dimensions":1024'
 arm() { echo "{$EMB,\"search_config\":{\"search.entity_anchoring\":\"$1\"}}"; }
 fired() {  # track -> number of anchored questions in the newest tuning file of its ingest cell
