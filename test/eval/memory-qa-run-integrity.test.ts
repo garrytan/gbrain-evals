@@ -121,6 +121,18 @@ describe('a paid run the budget ledger stopped (#216)', () => {
       expect([r.run_status, 'stopped' in r.summary, r.summary.qa_rows]).toEqual(['complete', false, 1]);
     } finally { server.stop(true); }
   }, 120_000);
+
+  // Value: protects=a ledger refusal that no question row records, such as one inside gbrain's fact extraction, still stops the run with a reason and exit 3; fails_when=only a question's BudgetExceededError sets stopped, so the run ends partial with no stop_reason and exit 0; why_new=the post-loop stop for a refusal no question recorded had no test (pass 1 review of this fix); seam=the run.ts CLI with --facts conversation and the extractor's Anthropic host unpriceable; no_claim=which product call was refused, which the receipt does not name
+  test('a refusal no question recorded, here during fact extraction, stops the run with a reason and exit 3', async () => {
+    const out = join(tmp(), 'out');
+    const run = await cli(['--benchmark', 'fixture', '--facts', 'conversation', '--limit', '1', ...paidArgs(), '--output', out],
+      { GBRAIN_EVALS_QA_CACHE: join(tmp(), 'qa-cache'), ANTHROPIC_BASE_URL: 'https://unpriced.invalid' });
+    expect(run.code).toBe(3);
+    expect(run.err).toContain('[BUDGET_CAP]');
+    const r = receipt(out) as { run_status: string; summary: Record<string, unknown>; counts: { rows: number } };
+    expect([r.run_status, r.counts.rows, r.summary.stopped]).toEqual(['partial', 0, 'budget']);
+    expect(String(r.summary.stop_reason)).toContain('no question recorded as its error');
+  }, 120_000);
 });
 
 describe('the run config hash covers how the reading lane judges (#248)', () => {
