@@ -121,6 +121,7 @@ export interface ReaderTokenizer {
 }
 
 const SMOKES = 'docs/benchmarks/2026-10-06-scoreboard/dev-smokes/ (bun eval/runner/q1/calibrate.ts)';
+const PARTICLE_CALIBRATION = 'docs/benchmarks/2026-11-01-particle-1-calibration/ (bun eval/runner/q1/calibration-cell.ts)';
 
 /**
  * Local encoding and calibration factor per reader. A factor is the reader's
@@ -131,14 +132,15 @@ const SMOKES = 'docs/benchmarks/2026-10-06-scoreboard/dev-smokes/ (bun eval/runn
  * up to 10% error per pack (content-dependent), above the 3% that a local
  * count is good enough for; GPT-6.1 matches o200k_base (exact on full packs,
  * 4.7% on prompts of about 130 tokens, where the chat format's six tokens
- * show).
+ * show). particle-1 bills about 1.05 prompt tokens per o200k_base token, within
+ * 0.5% on 20 packed prompts of about 8,500 tokens at effort medium.
  */
 export const READER_TOKENIZERS: Record<string, ReaderTokenizer> = {
   'anthropic:claude-opus-5-5': { encoding: 'cl100k_base', calibration: 1.4708, calibrated: true, measured: { on: '2026-10-07', samples: 199, max_error: 0.101, source: SMOKES } },
   'anthropic:claude-sonnet-5-5': { encoding: 'cl100k_base', calibration: 1.4524, calibrated: true, measured: { on: '2026-10-07', samples: 317, max_error: 0.0983, source: SMOKES } },
   'anthropic:claude-fable-5-1': { encoding: 'cl100k_base', calibration: 1.0, calibrated: false },
   'openai:gpt-6.1-sol': { encoding: 'o200k_base', calibration: 1.0009, calibrated: true, measured: { on: '2026-10-07', samples: 199, max_error: 0.0468, source: SMOKES } },
-  'particle:particle-1': { encoding: 'o200k_base', calibration: 1.0, calibrated: false },
+  'particle:particle-1': { encoding: 'o200k_base', calibration: 1.0488, calibrated: true, measured: { on: '2026-11-01', samples: 20, max_error: 0.005, source: PARTICLE_CALIBRATION } },
 };
 
 const canonicalReader = (reader: string) => reader.includes(':') ? reader : `openai:${reader}`;
