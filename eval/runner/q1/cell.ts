@@ -977,7 +977,6 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
         }
         const t0 = performance.now();
         const chatOpts = { maxTokens: readerMaxTokens(rd), replicate: rep, effort: def.effort };
-        // An OpenAI-compatible reader's answer keeps every provider attempt (records.ts `ReaderAttempt`); other readers' records are unchanged.
         const receipts: UsageReceipt[] | null = isCompatModel(rd) ? [] : null;
         const res = await meter.around('harness', `read:${aid.slice(0, 16)}`, 'reader', () => receipts
           ? chatWithReceipts(reader, { role: 'reader', question_id: q.id, replicate: rep, model: rd, delivered: null }, pack!.prompt, chatOpts, receipts)
