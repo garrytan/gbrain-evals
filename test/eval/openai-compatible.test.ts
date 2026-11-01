@@ -218,6 +218,22 @@ describe('compatSend and parseCompatResponse', () => {
     expect(() => assertMetered(stray)).toThrow('so this unlisted request would spend unmetered');
   });
 
+  // Value: protects=the Particle key never leaves in cleartext (issue #277); fails_when=an http:// base URL on a Particle API host the ledger prices passes the host check and the bearer key is sent; why_new=assertMetered read only the hostname; seam=none; no_claim=TLS certificate checks
+  test('an http:// base URL on a Particle API host is refused before it is sent, so the key never leaves in cleartext; loopback stays plain http (#277)', async () => {
+    for (const base of ['http://api.particle.ai/v1', 'http://us.api.particle.ai/v1', 'HTTP://API.PARTICLE.AI/v1']) {
+      const m = mockFetch([]);
+      const req = compatRequest('particle:particle-1', ASK, {}, { ...KEYED, PARTICLE_BASE_URL: base });
+      const e = await compatSend(req, { fetchImpl: m.impl }).catch(x => x);
+      expect(e).toBeInstanceOf(BudgetExceededError);
+      expect(e.message).toBe(`budget: http://${new URL(base).hostname} would carry the Particle key in cleartext; a host that is not loopback is reached only over https`);
+      expect(m.calls).toHaveLength(0);
+      expect(() => assertMetered(req)).toThrow('in cleartext');
+    }
+    const m = mockFetch([{ body: PARTICLE_OK }]);
+    expect((await compatSend(compatRequest('particle:particle-1', ASK, {}, SLOT), { fetchImpl: m.impl })).text).toBe('In May 2023.');
+    expect(m.calls.map(c => c.url)).toEqual(['http://127.0.0.1:8787/slot-1/particle/v1/chat/completions']);
+  });
+
   test('a 2xx answer without choices[0].message keeps the usage it reported, for the attempt\'s receipt', async () => {
     const usage = { prompt_tokens: 12, completion_tokens: 40, total_tokens: 52 };
     const e = await compatSend(compatRequest('particle:particle-1', ASK, {}, SLOT), { fetchImpl: mockFetch([{ body: { choices: [], usage } }]).impl }).catch(x => x);
@@ -274,6 +290,21 @@ describe('compatSend and parseCompatResponse', () => {
     expect(res.tool_calls).toEqual([call] as never);
     expect(res.text).toBe('');
     expect(res.logprobs).toEqual([{ token: 'ok', logprob: -0.1, top: [{ token: 'ok', logprob: -0.1 }, { token: 'OK', logprob: -2.5 }] }]);
+  });
+
+  // Value: protects=a billed 2xx answer with a malformed log-probability or tool-call list keeps its answer and usage (issue #276); fails_when=parseCompatResponse throws a TypeError, so the answer is recorded as failed with usage_raw null; why_new=the canary reads logprobs from every answer; seam=none; no_claim=what Particle sends in these fields today
+  test('a malformed log-probability or tool-call entry in a billed answer is dropped, never thrown: the answer and its usage are kept (#276)', async () => {
+    const shapes = [[null], ['ok'], [{ token: 'ok', logprob: -0.1, top_logprobs: {} }], [{ token: 'ok', logprob: -0.1, top_logprobs: 'ok' }], [{ token: 'ok', logprob: -0.1, top_logprobs: [null] }]];
+    for (const content of shapes) {
+      const body = { ...PARTICLE_OK, choices: [{ ...PARTICLE_OK.choices[0], logprobs: { content } }] };
+      const res = await compatSend(compatRequest('particle:particle-1', ASK, {}, SLOT), { fetchImpl: mockFetch([{ body }]).impl });
+      expect([res.text, res.usage, res.logprobs]).toEqual(['In May 2023.', PARTICLE_OK.usage, null]);
+    }
+    const call = { id: 'call_1', type: 'function', function: { name: 'search', arguments: '{}' } };
+    const res = parseCompatResponse({ ...PARTICLE_OK, choices: [{ finish_reason: 'tool_calls', message: { content: null, tool_calls: [null, 'search', call] } }] });
+    expect([res.tool_calls, res.usage]).toEqual([[call] as never, PARTICLE_OK.usage]);
+    expect(parseCompatResponse({ ...PARTICLE_OK, choices: [{ ...PARTICLE_OK.choices[0], logprobs: { content: [{ token: 'ok', logprob: -0.1 }, { token: '.', logprob: -0.2, top_logprobs: null }] } }] }).logprobs)
+      .toEqual([{ token: 'ok', logprob: -0.1, top: [] }, { token: '.', logprob: -0.2, top: [] }]);
   });
 });
 

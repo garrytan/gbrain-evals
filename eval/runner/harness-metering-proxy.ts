@@ -49,7 +49,9 @@
  *     [--upstream <provider>=<url> ...]
  *
  * `--upstream` points a provider at a stub (tests); without it requests go
- * to the real provider with the key from this process's environment.
+ * to the real provider with the key from this process's environment. An
+ * upstream that is not loopback must be https, because the proxy sends the
+ * real key there (issue #277).
  */
 import { createHash, randomBytes } from 'node:crypto';
 import { appendFileSync, chmodSync, existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
@@ -58,7 +60,7 @@ import {
   BudgetExceededError, BudgetRun, ledgerStatus, priceRequest, reservationUsd, streamUsageCost, unguardedFetch, usageCost,
 } from './budget-ledger.ts';
 import { UPSTREAM_DEADLINE_MS } from './metering-proxy.ts';
-import { COMPAT_PROVIDERS } from './providers/openai-compatible.ts';
+import { carriesKeyInCleartext, COMPAT_PROVIDERS } from './providers/openai-compatible.ts';
 import { normalizeUsage, responseMeta, type ResponseMeta } from './usage-receipt.ts';
 
 export type MeteredProvider = 'openai' | 'anthropic' | 'gemini' | 'groq' | 'voyage' | 'particle';
@@ -256,6 +258,9 @@ export async function startMeteringProxy(options: MeteringProxyOptions): Promise
   const { run, cellId } = options;
   const realKeys = options.realKeys ?? process.env;
   const upstreams = options.upstreams ?? {};
+  for (const [provider, base] of Object.entries(upstreams)) {
+    if (base && carriesKeyInCleartext(base)) throw new Error(`upstream ${provider}=${base} would carry the ${provider} key in cleartext; a host that is not loopback is reached only over https`);
+  }
   mkdirSync(dirname(resolve(options.requestLogPath)), { recursive: true });
   mkdirSync(options.bodiesDir, { recursive: true });
 

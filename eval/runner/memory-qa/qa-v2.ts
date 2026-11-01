@@ -43,8 +43,10 @@
  * backoff before the next attempt (capped at 120 seconds) and is recorded on
  * that attempt's receipt; Particle's credit 402 is a budget stop that ends
  * the loop at once. Each attempt's deadline is the metering proxies'
- * 900-second upstream deadline, unless the client is built with
- * `compatTimeoutMs` (the particle replay sets its own). An attempt that times
+ * 900-second upstream deadline, or on a loopback proxy slot that deadline
+ * plus the proxy's longest admission wait (`compatDeadlineMs`, issue #271),
+ * unless the client is built with `compatTimeoutMs` (the particle replay
+ * sets its own). An attempt that times
  * out (locally, or a 504 from a gateway such as the lease proxy) or loses its
  * connection after it went out ends the loop, because Particle may have
  * billed it. Their receipts also record what
@@ -65,7 +67,7 @@ import type { Instrument, JudgeCall } from './instruments.ts';
 import { rawSha256, type JudgmentRecord } from './records.ts';
 import { normalizeUsage, responseMeta, usageSourceOf, type ReceiptRequest, type ResponseMeta, type UsageReceipt } from '../usage-receipt.ts';
 import { COMPAT_PROVIDERS, compatMayHaveBilled, compatRequest, compatSend, type CompatRequest } from '../providers/openai-compatible.ts';
-import { UPSTREAM_DEADLINE_MS } from '../metering-proxy.ts';
+import { compatDeadlineMs } from '../metering-proxy.ts';
 import { ChatClient as BaseChatClient, sendsTemperature as baseSendsTemperature, chatReceipts, judgePromptsFor, judgeYes, type ChatResult } from './qa.ts';
 
 type ProviderReply = Omit<ChatResultV2, 'cached' | 'attempt_errors' | 'compat_attempts'>;
@@ -158,7 +160,7 @@ export function chatCacheKey(model: string, prompt: string, opts: ChatOptions): 
 }
 
 export class ChatClient extends BaseChatClient implements ChatLike {
-  /** `compatTimeoutMs`: each attempt's deadline for an OpenAI-compatible provider (the metering proxies' 900-second upstream deadline when unset). */
+  /** `compatTimeoutMs`: each attempt's deadline for an OpenAI-compatible provider (`compatDeadlineMs` of its URL when unset). */
   constructor(private cacheRoot: string, private retryDelayMs: (attempt: number) => number = attempt => 2000 * 2 ** attempt, private compatTimeoutMs?: number) { super(cacheRoot, retryDelayMs); }
 
   /**
@@ -215,7 +217,7 @@ async function openaiChat(model: string, prompt: string, opts: ChatOptions): Pro
 }
 
 /** One attempt to an OpenAI-compatible provider: one HTTP request through the provider module, never retried there. */
-async function compatChat(req: CompatRequest, timeoutMs = UPSTREAM_DEADLINE_MS): Promise<ProviderReply> {
+async function compatChat(req: CompatRequest, timeoutMs = compatDeadlineMs(req.url)): Promise<ProviderReply> {
   const res = await compatSend(req, { timeoutMs });
   const usage = normalizeUsage(usageSourceOf(req.model), res.usage);
   return { text: res.text, input_tokens: usage?.input_total ?? 0, output_tokens: usage?.output_total ?? 0, finish: res.finish, usage: res.usage, response_model: res.response_model,

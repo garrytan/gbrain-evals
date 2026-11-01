@@ -19,7 +19,8 @@
  */
 import { createHash } from 'node:crypto';
 import { CHAT_PRICE_OVERRIDES } from '../budget-ledger.ts';
-import { assertMetered, classifyCompatError, compatError, compatRequest, parseCompatResponse, type CompatMessage, type CompatToolCall } from '../providers/openai-compatible.ts';
+import { compatDeadlineMs } from '../metering-proxy.ts';
+import { assertMetered, classifyCompatError, compatError, compatMayHaveBilled, compatRequest, parseCompatResponse, type CompatMessage, type CompatToolCall } from '../providers/openai-compatible.ts';
 import { normalizeUsage, type NormalizedUsage } from '../q1/usage.ts';
 import { normalizeFinish, normalizeUsage as receiptUsage, receipt, responseMeta, usageSourceOf, type ReceiptRequest, type UsageReceipt } from '../usage-receipt.ts';
 
@@ -93,6 +94,11 @@ export interface AgentRun {
   text?: string;
   /** Particle runs only: turns with at least one tool call whose arguments were not a JSON object (run with `{}`). */
   unparseable_tool_turns?: number;
+  /**
+   * Particle runs only: the run ended on a turn that timed out, or lost its connection after it went out
+   * (`compatMayHaveBilled`). Particle may have billed that turn, so a caller never runs the question again.
+   */
+  timed_out?: true;
 }
 
 export const SUBMIT_TOOL: ToolSpec = {
@@ -187,16 +193,18 @@ export const RETRYABLE_STATUS = [429, 500, 502, 503, 504, 529];
  * failure included, before it propagates. `compat` names an OpenAI-compatible provider (Particle): its errors are
  * classified by the provider module, a retry waits at least the Retry-After it sends (capped at 120 s) and never less
  * than the backoff (and not after the last attempt), a credit or proxy 402 throws the budget stop after its attempt is
- * recorded, and a 2xx that is not JSON or has no `choices[0].message` is retried as a server error. Without `compat`
- * (Anthropic, OpenAI) requests, retries and waits are as they always were, and a 2xx that is not JSON still throws,
- * after its attempt is recorded.
+ * recorded, and a 2xx that is not JSON or has no `choices[0].message` is retried as a server error. A `compat` request
+ * is sent with `compatDeadlineMs` instead of Bun's 300-second fetch timeout, and a 504 (a gateway's or the lease
+ * proxy's timeout, which the provider may have billed) is never sent again (issue #253). Without `compat` (Anthropic,
+ * OpenAI) requests, retries and waits are as they always were, and a 2xx that is not JSON still throws, after its
+ * attempt is recorded.
  */
 async function postJson(fetchImpl: typeof fetch, url: string, headers: Record<string, string>, body: unknown, onAttempt?: (a: ProviderAttempt) => void, compat?: string): Promise<Record<string, unknown>> {
   let last: ProviderError | null = null;
   for (let attempt = 0; attempt < 6; attempt++) {
     const t = Date.now();
     let res: Response;
-    try { res = await fetchImpl(url, { method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: JSON.stringify(body) }); }
+    try { res = await fetchImpl(url, { method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: JSON.stringify(body), ...(compat ? { timeout: false, signal: AbortSignal.timeout(compatDeadlineMs(url)) } : {}) } as RequestInit); }
     catch (e) {
       onAttempt?.({ status: 'error', response: null, error: `network: ${(e as Error).message.slice(0, 500)}`, ms: Date.now() - t, ...(compat ? { retry_after_ms: null } : {}) });
       throw e;
@@ -232,7 +240,7 @@ async function postJson(fetchImpl: typeof fetch, url: string, headers: Record<st
     const info = compat ? classifyCompatError(compat, res.status, text, res.headers) : null;
     onAttempt?.({ status: 'error', response: null, error: `${res.status}: ${text.slice(0, 500)}`, ms: Date.now() - t, ...(info ? { retry_after_ms: info.retryAfterMs } : {}) });
     if (info?.kind === 'credit_exhausted' || info?.kind === 'proxy_budget') throw compatError(info);
-    if (!RETRYABLE_STATUS.includes(res.status) || (compat && attempt === 5)) break;
+    if (!RETRYABLE_STATUS.includes(res.status) || (compat && (attempt === 5 || res.status === 504))) break;
     await new Promise(r => setTimeout(r, Math.max(info?.retryAfterMs ?? 0, Math.min(60_000, 2000 * 2 ** attempt) + Math.random() * 1000)));
   }
   throw last!;
@@ -441,7 +449,10 @@ async function particleLoop(cfg: LoopConfig, run: AgentRun, specs: () => ToolSpe
       if (a.status === 'error' && a.response?.usage) addUsage(run, normalizeUsage('openai', a.response.usage as object));
       hook?.(a);
     };
-    const res = parseCompatResponse(await postJson(fetchImpl, req.url, req.headers, req.body, onAttempt, req.provider));
+    const res = parseCompatResponse(await postJson(fetchImpl, req.url, req.headers, req.body, onAttempt, req.provider).catch(e => {
+      if (compatMayHaveBilled(e)) run.timed_out = true;
+      throw e;
+    }));
     run.model_ms += Date.now() - s;
     addUsage(run, normalizeUsage('openai', res.usage ?? undefined));
     const calls: CompatToolCall[] = res.tool_calls.map(c => ({ id: String(c.id), type: 'function', function: { name: String(c.function?.name), arguments: String(c.function?.arguments ?? '') } }));

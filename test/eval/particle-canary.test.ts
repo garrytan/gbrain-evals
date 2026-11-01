@@ -145,6 +145,22 @@ describe('answers stopped by an output limit, blank answers and billed malformed
       expect(n).toBe(CANARY_PROMPTS.length + 1);
     } finally { server.stop(true); }
   });
+
+  // Value: protects=a billed canary answer with a malformed log-probability list keeps its answer and its receipt's usage (issue #276); fails_when=parseCompatResponse throws on a null token entry or a top_logprobs that is not a list, so the prompt fails with usage_raw null; why_new=parseCompatResponse drops malformed log probabilities instead of throwing; seam=none; no_claim=what Particle sends in these fields today
+  test('a null token entry or a top_logprobs that is not a list leaves the log probabilities unset, and the answer and its receipt\'s usage stand (#276)', async () => {
+    const shapes = [[null], [{ token: 'ok', logprob: -0.5, top_logprobs: {} }], [{ token: 'ok', logprob: -0.5, top_logprobs: [null] }]];
+    const usage = { prompt_tokens: 20, completion_tokens: 7, total_tokens: 27 };
+    let n = 0;
+    const server = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: () => Response.json({
+      model: 'particle-ai/particle-1', choices: [{ index: 0, finish_reason: 'stop', message: { role: 'assistant', content: 'ok' }, logprobs: { content: shapes[n++ % shapes.length] } }], usage,
+    }) });
+    try {
+      const rec = await runCanary({ PARTICLE_API_KEY: 'dummy-key', PARTICLE_BASE_URL: `http://127.0.0.1:${server.port}/v1` }, { retryDelayMs: () => 0 });
+      expect(rec.results.map(r => [r.status, r.answer, r.mean_logprob, r.logprobs])).toEqual(CANARY_PROMPTS.map(() => ['ok', 'ok', null, null]));
+      expect(rec.receipts.map(r => [r.status, r.usage_raw])).toEqual(CANARY_PROMPTS.map(() => ['ok', usage]));
+      expect(n).toBe(CANARY_PROMPTS.length);
+    } finally { server.stop(true); }
+  });
 });
 
 describe('the canary run', () => {

@@ -400,6 +400,18 @@ describe('metering proxy', () => {
     expect(c.committed().run).toBeCloseTo(failed.reserved_usd, 12);
   });
 
+  // Value: protects=the workload-route proxy never sends a provider's real key over http to a host that is not loopback (issue #277); fails_when=an --upstream with an http URL that is not loopback is accepted; why_new=assertMetered guards clients only, and this proxy swaps in the real key itself; seam=none; no_claim=TLS certificate checks
+  test('an upstream that is not loopback must be https, because the proxy sends the real key there (#277)', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'mp-cleartext-')); dirs.push(dir);
+    const ledgerPath = join(dir, 'ledger.sqlite');
+    initLedger({ ledgerPath });
+    const run = BudgetRun.open({ runner: 'mp-test', budgetUsd: 1, ledgerPath });
+    const start = (upstreams: Record<string, string>) => startMeteringProxy({ run, cellId: 'c', requestLogPath: join(dir, 'l.jsonl'), bodiesDir: join(dir, 'b'), labels: ['reader'], realKeys: { PARTICLE_API_KEY: 'pk-test' }, upstreams });
+    await expect(start({ particle: 'http://api.particle.ai' })).rejects.toThrow('upstream particle=http://api.particle.ai would carry the particle key in cleartext');
+    await expect(start({ openai: 'http://10.0.0.5:8080/v1' })).rejects.toThrow('cleartext');
+    await (await start({ particle: 'http://127.0.0.1:9', openai: 'https://api.openai.com' })).close();
+  });
+
   test('envFor offers only providers with a launcher key or an upstream override', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'mp-env-')); dirs.push(dir);
     const ledgerPath = join(dir, 'ledger.sqlite');
