@@ -4,6 +4,12 @@ This records what each gbrain-evals release changed and what its measurements me
 
 ## [Unreleased]
 
+### The particle-1 weight canary treats a missing signal as a failure, and the freshness check keeps the Particle key on Particle's hosts
+
+- **A missing log probability no longer reads as 0** (#230). The provider module turns a null or empty log probability into 0, so a canary answer with no real weight signal could compare as unchanged. The canary now reads each token's log probability, and each listed alternative's, from the raw response. A null, empty, string or missing value leaves that answer's log probabilities and mean unset. `--compare` measures the log-probability move only when every answer both canaries gave has a mean in both, where before it averaged the answers that had one. One missing answer now fails the comparison (exit 1).
+- **`--compare` refuses a canary sent to a loopback endpoint** (#231). A metering proxy or the keyless fake records no upstream, so a loopback canary cannot show which server answered, and two loopback canaries used to compare as the same endpoint. A loopback endpoint on either side is now refused before anything is sent. The six committed canaries all went straight to `https://api.particle.ai/v1`, so they still compare.
+- **`bun scripts/model-freshness.ts` sends `PARTICLE_API_KEY` only to a host `compatSend` would send it to** (#232). Before it reads Particle's model list, it applies `compatSend`'s host check: a Particle API host the budget ledger prices, or loopback. Any other `PARTICLE_BASE_URL` host gets no request, and the read fails with the host check's reason.
+
 ### Cat 35 keeps the external lane out of gbrain's WS0 numbers and deltas, and the scoreboard checks read more of their inputs
 
 - **The WS0 receipt's coverage map holds only gbrain's lanes (#217).** Its `n_total`, `n_scored` and `errors` counted
