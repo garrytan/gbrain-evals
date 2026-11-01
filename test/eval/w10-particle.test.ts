@@ -174,7 +174,8 @@ describe('development-lane test', () => {
 describe('keyless re-score', () => {
   test('Particle\'s off-peak window runs 20:30 to 04:00 New York time', () => {
     expect(P.particleOffPeak('2026-11-01T05:42:00Z')).toBe(true);
-    expect(P.particleOffPeak('2026-11-01T08:00:00Z')).toBe(false);
+    expect(P.particleOffPeak('2026-11-01T08:59:00Z')).toBe(true);
+    expect(P.particleOffPeak('2026-11-01T09:00:00Z')).toBe(false);
     expect(P.particleOffPeak('2026-11-01T00:29:00Z')).toBe(false);
     expect(P.particleOffPeak('2026-11-01T00:30:00Z')).toBe(true);
   });
