@@ -25,6 +25,10 @@
  */
 
 import { describe, test, expect } from 'bun:test';
+import { mkdtempSync, readFileSync } from 'fs';
+import { tmpdir } from 'os';
+import { join } from 'path';
+import { BudgetRun, initLedger } from '../../eval/runner/budget-ledger.ts';
 import {
   PROBES,
   runProbe,
@@ -270,4 +274,54 @@ describe('cat25 live judge: prompt injection hardening (audit B-JDG-01)', () => 
     expect(seen[0].temperature).toBe(0);
     expect(seen[0].model).toBe('claude-sonnet-4-6');
   });
+});
+
+describe('cat25 live runs join the budget ledger', () => {
+  // Value: protects=a live Cat 25 run without --paid --budget-run-id is refused before any request, with a skipped receipt naming the flags; fails_when=main builds the client or calls the API without a ledger run; why_new=Cat 25 spent with no ledger cap before; seam=none; no_claim=refusal path only, the joined path is a live smoke
+  test('a live run without --paid --budget-run-id is refused with a skipped receipt', () => {
+    const root = join(import.meta.dir, '..', '..');
+    const env: Record<string, string> = {};
+    for (const [k, v] of Object.entries(process.env)) if (v !== undefined && !['CAT25_DRY_RUN', 'BRAINBENCH_BUDGET_RUN_ID'].includes(k)) env[k] = v;
+    env.ANTHROPIC_API_KEY = 'test-key-not-real';
+    env.BRAINBENCH_BUDGET_LEDGER = join(mkdtempSync(join(tmpdir(), 'cat25-ledger-')), 'ledger.sqlite');
+    const proc = Bun.spawnSync(['bun', join(root, 'eval', 'runner', 'cat25-trajectory-routing.ts')], { cwd: root, env, stdout: 'pipe', stderr: 'pipe' });
+    expect(proc.exitCode).toBe(2);
+    expect(proc.stderr.toString()).toContain('--paid and --budget-run-id <id> are missing');
+    const receipt = JSON.parse(readFileSync(join(root, 'eval', 'reports', 'cat25-trajectory-routing', 'receipt.json'), 'utf-8'));
+    expect(receipt.run_status).toBe('skipped');
+    expect(receipt.skip_reason).toContain('Cat 25 live run spends money');
+  }, 30000);
+
+  const root = join(import.meta.dir, '..', '..');
+  const liveRun = (budgetUsd: number, close: boolean) => {
+    const ledgerPath = join(mkdtempSync(join(tmpdir(), 'cat25-ledger-')), 'ledger.sqlite');
+    initLedger({ ledgerPath, programCapUsd: 5, reason: 'test' });
+    const run = BudgetRun.open({ runner: 'cat25-test', budgetUsd, ledgerPath });
+    if (close) run.close();
+    const env: Record<string, string> = {};
+    for (const [k, v] of Object.entries(process.env)) if (v !== undefined && !['CAT25_DRY_RUN', 'BRAINBENCH_BUDGET_RUN_ID'].includes(k)) env[k] = v;
+    env.ANTHROPIC_API_KEY = 'test-key-not-real';
+    env.BRAINBENCH_BUDGET_LEDGER = ledgerPath;
+    const proc = Bun.spawnSync(['bun', join(root, 'eval', 'runner', 'cat25-trajectory-routing.ts'), '--paid', '--budget-run-id', run.runId], { cwd: root, env, stdout: 'pipe', stderr: 'pipe' });
+    const receipt = JSON.parse(readFileSync(join(root, 'eval', 'reports', 'cat25-trajectory-routing', 'receipt.json'), 'utf-8'));
+    return { exitCode: proc.exitCode, stderr: proc.stderr.toString(), receipt };
+  };
+
+  // Value: protects=a live run given --paid and a closed budget run id writes an error receipt, so BRAINBENCH_ALLOW_SKIP cannot pass a budget refusal as a skip; fails_when=a PaidArmRefusal under the paid flags writes run_status skipped; why_new=every refusal wrote a skipped receipt; seam=none; no_claim=refusal path only
+  test('a refusal under --paid --budget-run-id writes an error receipt, not a skip', () => {
+    const r = liveRun(1, true);
+    expect(r.exitCode).toBe(2);
+    expect(r.receipt.run_status).toBe('error');
+    expect(r.receipt.errors[0].message).toContain('is already closed');
+  }, 30000);
+
+  // Value: protects=a ledger run that refuses a request stops the run and writes an error receipt instead of a completed one on a cut-off tail; fails_when=the probe loop ignores paid.guard.exhausted; why_new=Cat 25 never checked it; seam=none; no_claim=the guard refuses the first reservation, so no request leaves the process
+  test('a budget run that refuses a request stops the run with an error receipt', () => {
+    const r = liveRun(0.000001, false);
+    expect(r.exitCode).toBe(2);
+    expect(r.stderr).toContain('the budget run refused a request');
+    expect(r.receipt.run_status).toBe('error');
+    expect(r.receipt.data.budget_exhausted).toBe(true);
+    expect(r.receipt.errors.length).toBe(1);
+  }, 60000);
 });

@@ -69,6 +69,8 @@ export type RunSpec =
     timeoutMs?: number;
     /** Latency benchmark: runs alone, never alongside another category. */
     exclusive?: boolean;
+    /** The runner refuses a live run without `--paid --budget-run-id <id>`; all.ts passes both from its paid run. */
+    paidFlags?: true;
   }
   | { kind: 'listed'; reason: string; command?: string };
 
@@ -447,7 +449,7 @@ export const REGISTRY: readonly CategoryEntry[] = [
   },
   {
     id: 'propose-takes', legacy_alias: '15', name: 'propose_takes extraction (live model)',
-    family: 'extraction', tier: 'P', script: 'eval/runner/cat15-propose-takes.ts', run: { kind: 'dispatched', timeoutMs: HOUR },
+    family: 'extraction', tier: 'P', script: 'eval/runner/cat15-propose-takes.ts', run: { kind: 'dispatched', timeoutMs: HOUR, paidFlags: true },
     cost_estimate: UNMEASURED, receipt_path: receipt('cat15-propose-takes'),
     headline: { metric: 'precision, recall and F1 of extracted takes', denominator: '48 labeled claims' },
     gate: 'report-only', promotion: REPORT_ONLY, evidence_maturity: 'regression-only',
@@ -519,7 +521,7 @@ export const REGISTRY: readonly CategoryEntry[] = [
   },
   {
     id: 'trajectory-routing', legacy_alias: '25', name: 'Trajectory routing in think (live model)',
-    family: 'reasoning', tier: 'P', script: 'eval/runner/cat25-trajectory-routing.ts', run: { kind: 'dispatched', timeoutMs: HOUR },
+    family: 'reasoning', tier: 'P', script: 'eval/runner/cat25-trajectory-routing.ts', run: { kind: 'dispatched', timeoutMs: HOUR, paidFlags: true },
     cost_estimate: UNMEASURED, receipt_path: receipt('cat25-trajectory-routing'),
     headline: { metric: 'think answers with vs without trajectory routing', denominator: 'synthetic-v1 temporal probes' },
     gate: 'report-only', promotion: REPORT_ONLY, evidence_maturity: 'regression-only',
@@ -1382,6 +1384,7 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'cat21-paired.ts': { role: 'keyless Cat 21 per-split metrics and file-clustered paired comparisons (2026-10-06)', part_of: 'code-retrieval' },
   'n2-judge-replay.ts': { role: 'N2 judge-only replay: capture and verify judge inputs, select, judge, score (W9, 2026-10-06); paid, not dispatched', part_of: 'contradiction-surfacing' },
   'openai-judge-shim.ts': { role: 'Anthropic-shaped messages.create over the OpenAI Responses API, so Anthropic-SDK judges can run OpenAI models' },
+  'anthropic-request.ts': { role: 'fits Anthropic Messages requests to the model: no temperature or forced tool choice for Claude 5, older models unchanged' },
   'takes-bootstrap-frontier.ts': { role: "gbrain takes-bootstrap eval on frontier models through the priced overlay: route check, ledger-wrapped run, keyless re-score (W4, 2026-10-06); paid, not dispatched" },
   'w6-embedding-matrix.ts': { role: 'keyless summary of the 2026-10-06 embedding matrix (Cat 13 held-out and Cat 18b receipts)' },
   'w8-negative-controls.ts': { role: 'keyless summary of the 2026-10-06 live negative controls (ratio rule, signal floors, injection checks)' },
@@ -1514,4 +1517,4 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
 };
 
 /** Subdirectories of eval/runner/ holding helper modules only. */
-export const RUNNER_HELPER_DIRS: readonly string[] = ['adapters', 'batch', 'budgeted-delivery', 'cat40', 'cat41', 'decisions', 'evaluator', 'evidence-delivery', 'external-ideas-wave-a', 'facts-absorb', 'graph-backend', 'lifecycle', 'lifecycle-lite', 'memory-proof-wave', 'memory-qa', 'memory-trust', 'messy-company', 'outcomes', 'p4-stream', 'pilot', 'power', 'q1', 'q2', 'queries', 'stats', 'system-one', 'systems', 't0', 'takes-bootstrap'];
+export const RUNNER_HELPER_DIRS: readonly string[] = ['adapters', 'batch', 'budgeted-delivery', 'cat40', 'cat41', 'decisions', 'evaluator', 'evidence-delivery', 'external-ideas-wave-a', 'facts-absorb', 'graph-backend', 'lifecycle', 'lifecycle-lite', 'memory-proof-wave', 'memory-qa', 'memory-trust', 'messy-company', 'outcomes', 'p4-stream', 'pilot', 'power', 'providers', 'q1', 'q2', 'queries', 'stats', 'system-one', 'systems', 't0', 'takes-bootstrap'];

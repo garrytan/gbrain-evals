@@ -391,7 +391,9 @@ Code is MIT licensed. Dataset and vendored benchmark attribution is recorded in 
 gbrain-evals v0.10.139 re-pins gbrain, adds the Cat 35 external lane, which scores another system's notes with Cat 35's
 judges ([contributor guide](eval/CONTRIBUTING.md#score-another-systems-cat-35-documents)), and lands the post hoc
 LongMemEval-S facts-block check and the shipped-build equivalence check
-([sealed results](docs/benchmarks/2026-10-09-memory-proof-wave-sealed-results.md)). The repository row names v0.10.139
+([sealed results](docs/benchmarks/2026-10-09-memory-proof-wave-sealed-results.md)), current Claude models in the shared
+judge and the other Claude call sites, and the particle-1 provider module (see [CHANGELOG.md](CHANGELOG.md)). The
+repository row names v0.10.139
 (was v0.10.138). The pinned product row changes from `7a6bdd357` (v0.60.454.0) to `3ec766c40` (v0.60.531.0), and so does the sentence
 under the table. Every commit the current state names is in the new release's history except `a7cb37b`, as before. A
 new paragraph under it names the four read defaults gbrain added after the old pin (the dated facts block of a budgeted

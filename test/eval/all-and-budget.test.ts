@@ -17,6 +17,7 @@ import { describe, test, expect, afterEach } from 'bun:test';
 import { existsSync, readdirSync, readFileSync } from 'fs';
 import {
   CATEGORIES,
+  childArgs,
   parseTier,
   printNotRun,
   runConcurrently,
@@ -128,6 +129,21 @@ describe('tiers', () => {
     expect(lines).toHaveLength(notRun.length + 1);
     expect(lines.some(l => l.includes('Cat 5') && l.includes('not implemented'))).toBe(true);
     expect(lines.some(l => l.includes('Cat 18b') && l.includes('tier P not selected'))).toBe(true);
+  });
+
+  // Value: protects=all.ts passes --paid --budget-run-id to Cat 15 and Cat 25, which refuse a live run without them, and to no other runner; fails_when=the registry flag or the child argv drops them, so a paid all.ts run of those categories is refused; why_new=the runners started requiring the flags; seam=none; no_claim=argv only, no spawn
+  test('Cat 15 and Cat 25 get --paid --budget-run-id from a paid run; other runners do not', () => {
+    const paid = CATEGORIES.filter(c => c.kind === 'dispatched' && c.paidFlags).map(c => c.id).sort();
+    expect(paid).toEqual(['15', '25']);
+    const cat15 = CATEGORIES.find(c => c.id === '15')!;
+    if (cat15.kind !== 'dispatched') throw new Error('unreachable');
+    expect(childArgs(cat15, 'run-1')).toEqual(['eval/runner/cat15-propose-takes.ts', '--paid', '--budget-run-id', 'run-1']);
+    expect(childArgs(cat15, undefined)).toEqual(['eval/runner/cat15-propose-takes.ts']);
+    const cat14 = CATEGORIES.find(c => c.id === '14')!;
+    if (cat14.kind !== 'dispatched') throw new Error('unreachable');
+    expect(childArgs(cat14, 'run-1')).toEqual(['eval/runner/cat14-calibration.ts']);
+    const { notRun } = selectCategories('offline');
+    expect(notRun.find(n => n.id === '25')?.command).toBe('bun eval/runner/cat25-trajectory-routing.ts --paid --budget-run-id <id>');
   });
 
   test('package.json has no fake N=10 published script (C-08)', () => {
