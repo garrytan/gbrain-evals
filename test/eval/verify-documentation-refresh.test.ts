@@ -118,6 +118,11 @@ describe('verify-documentation-refresh: the scoreboard explanation', () => {
     expect(errors[0][2]).toStartWith('The paragraph above the scoreboard block describes a publication other than');
   });
 
+  test('a README paragraph that names no publication commit fails', () => {
+    const root = copyWith('no-commit-named', 'README.md', t => t.replace(/check --commit\s+[a-f0-9]{40}/, 'check'));
+    expect(references(root, 'scoreboard_publication_reference')).toEqual([['README.md', 'The paragraph above the scoreboard block names no publication commit']]);
+  });
+
   test('a publication that records no commit yet has nothing to compare', () => {
     const published = JSON.parse(readFileSync(join(ROOT, PUBLICATION), 'utf8')).published.commit as string;
     const root = copyWith('pending-publication', PUBLICATION, t => t.replace(`"${published}"`, 'null'));

@@ -280,11 +280,34 @@ describe('cohorts, estimand and claim rules', () => {
     rmSync(dir, { recursive: true });
   });
 
+  test('a null detectable difference prints as more than 30 points', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'scoreboard-'));
+    writeSyntheticReceipt(dir, { family1: 'descriptive', cells: fieldCells() });
+    writeFileSync(join(dir, 'power.json'), JSON.stringify({ schema: 'gbrain-evals/q1-power/v1', decision: { family1: 'descriptive', detectable_difference_points: null, shrunk_comparators: null } }) + '\n');
+    const sb = derive(dir);
+    expect(sb.verdict).toContain('differences of about more than 30 points');
+    expect(sb.verdict).not.toContain('null');
+    rmSync(dir, { recursive: true });
+  });
+
   test('a power.json with no decision is an invalid receipt', () => {
     const dir = mkdtempSync(join(tmpdir(), 'scoreboard-'));
     writeSyntheticReceipt(dir);
     writeFileSync(join(dir, 'power.json'), JSON.stringify({ schema: 'gbrain-evals/q1-power/v1' }) + '\n');
     expect(() => derive(dir)).toThrow(/power\.json records no decision/);
+    rmSync(dir, { recursive: true });
+  });
+
+  test('a power decision with an unknown family1 or a malformed comparator list is an invalid receipt', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'scoreboard-'));
+    writeSyntheticReceipt(dir, { cells: fieldCells() });
+    const write = (decision: object) => writeFileSync(join(dir, 'power.json'), JSON.stringify({ schema: 'gbrain-evals/q1-power/v1', decision }) + '\n');
+    write({ family1: 'Descriptive', detectable_difference_points: 12.5, shrunk_comparators: null });
+    expect(() => derive(dir)).toThrow(/family1 "Descriptive", not full, shrunk or descriptive/);
+    write({ detectable_difference_points: 12.5, shrunk_comparators: null });
+    expect(() => derive(dir)).toThrow(/family1 undefined, not full, shrunk or descriptive/);
+    write({ family1: 'shrunk', detectable_difference_points: 12.5, shrunk_comparators: 'ext-memory-bank' });
+    expect(() => derive(dir)).toThrow(/shrunk_comparators "ext-memory-bank", not a list or null/);
     rmSync(dir, { recursive: true });
   });
 

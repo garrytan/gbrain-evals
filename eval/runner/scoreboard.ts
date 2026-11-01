@@ -847,6 +847,8 @@ export function deriveAll(receipt: string): Derivation {
   const powerBuf = readInput(reader, powerPath);
   const power = (JSON.parse(powerBuf.toString('utf8')) as PowerReport | null)?.decision;
   if (power === null || typeof power !== 'object') throw invalid(receipt, 'power.json records no decision', 'Family 1 may claim only under the preregistered power result (plan §4.6)', { next: 'run', argv: ['bun', 'eval/runner/q1/power.ts', '--output', rel(powerPath)] });
+  if (!['full', 'shrunk', 'descriptive'].includes(power.family1)) throw invalid(receipt, `power.json records family1 ${JSON.stringify(power.family1)}, not full, shrunk or descriptive`, 'Family 1 ranks its rows only under a full or shrunk power decision (plan §4.6)', { next: 'run', argv: ['bun', 'eval/runner/q1/power.ts', '--output', rel(powerPath)] });
+  if (power.shrunk_comparators !== null && !Array.isArray(power.shrunk_comparators)) throw invalid(receipt, `power.json records shrunk_comparators ${JSON.stringify(power.shrunk_comparators)}, not a list or null`, 'a shrunk Family 1 compares exactly the comparators the power check kept', { next: 'run', argv: ['bun', 'eval/runner/q1/power.ts', '--output', rel(powerPath)] });
   if (power.detectable_difference_points !== null && typeof power.detectable_difference_points !== 'number') throw invalid(receipt, `power.json records detectable_difference_points ${JSON.stringify(power.detectable_difference_points)}, not a number or null`, 'the verdict and the descriptive sentences print the preregistered detectable difference', { next: 'run', argv: ['bun', 'eval/runner/q1/power.ts', '--output', rel(powerPath)] });
   const kindList = loadKinds();
   const kinds = new Map(kindList.map(k => [k.id, k.description]));

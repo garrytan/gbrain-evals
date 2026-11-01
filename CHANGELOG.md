@@ -24,8 +24,10 @@ This records what each gbrain-evals release changed and what its measurements me
   that cannot separate two rows with the evidence each system had and the questions scored for both (for example "on
   the 192 of 199 questions scored for both"), and prints the preregistered detectable difference to one decimal (13.6,
   was 13.58). Two tests in `test/eval/scoreboard.test.ts` cover them; the rounding test renders 13.58 and fails if the
-  raw value prints. A `power.json` with no decision, or whose detectable difference is neither a number nor null, is
-  now an invalid receipt (`RECEIPT_INVALID`) instead of a bare TypeError. `scoreboard.ts` is outside the Q1 campaign's executed tree.
+  raw value prints. A `power.json` with no decision, a `family1` other than full, shrunk or descriptive, a comparator
+  list that is not a list, or a detectable difference that is neither a number nor null is now an invalid receipt
+  (`RECEIPT_INVALID`); before, these threw a bare TypeError or, for a misspelled `family1`, ranked rows the power
+  decision had not allowed. A test renders a null detectable difference as "more than 30 points". `scoreboard.ts` is outside the Q1 campaign's executed tree.
   `scripts/verify-documentation-refresh.py` fails when README's paragraph above the block names a publication commit
   other than the one `publication.json` records, and passes while no commit is recorded (between a custody render and
   its publication). A new publication therefore fails the check until someone edits that paragraph. The check reads only the commit, not the figures the paragraph quotes.
