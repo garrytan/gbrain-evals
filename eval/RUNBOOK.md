@@ -23,7 +23,7 @@ If PGLite reports a missing `pglite.wasm`, check that `@electric-sql/pglite` is 
 | Vector and hybrid retrieval in the multi-adapter runner | `OPENAI_API_KEY` |
 | LongMemEval retrieval | Key for the selected embedder; `ANTHROPIC_API_KEY` for generative expansion; `VOYAGE_API_KEY` for Voyage reranking |
 | Cat14 calibration and Cat15 claim extraction | `ANTHROPIC_API_KEY`; their embedding setup is handled by the runner |
-| Cat30–33 SkillOpt | `ANTHROPIC_API_KEY` |
+| Cat30–33 SkillOpt | `ANTHROPIC_API_KEY`; `OPENAI_API_KEY` for the default judge (`gpt-6.1-sol`), which makes LLM judge calls only in Cat32 |
 | Cat34 memory conformance | No model API; the subprocess removes provider keys |
 | Cat35 transcript distillation | `ANTHROPIC_API_KEY` and `OPENAI_API_KEY` |
 | Regenerating model-written corpora | Usually `ANTHROPIC_API_KEY`; read the particular generator first |

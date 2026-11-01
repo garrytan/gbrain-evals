@@ -12,6 +12,31 @@ This records what each gbrain-evals release changed and what its measurements me
 - **The Particle key goes only over https (#277).** `assertMetered` checked the host and ignored the scheme, so `PARTICLE_BASE_URL=http://api.particle.ai/v1` passed, and `compatSend` and `bun scripts/model-freshness.ts` would have sent the bearer key in cleartext. A host that is not loopback must now be reached over https; anything else is refused before a request is sent. Both metering proxies apply the same rule to an `--upstream` (or a constructor upstream), because each sends the provider's real key there: the lease proxy and the workload route's proxy (`eval/runner/harness-metering-proxy.ts`) refuse to start with an http upstream that is not loopback.
 - **A malformed log probability no longer turns a billed answer into a failure (#276).** `parseCompatResponse` threw a TypeError on a null log-probability entry or a `top_logprobs` that is not a list, so the particle canary recorded a billed 2xx answer as failed, with no usage on its receipt. It now keeps log probabilities only when every entry is an object and every `top_logprobs` is absent or a list of objects, and leaves them null otherwise. A tool call that is not an object is dropped. The canary reads null log probabilities as no weight signal.
 
+### SkillOpt Cats 30 to 33 re-baselined on today's models, with receipts committed
+
+- **[November 1 SkillOpt re-baseline](docs/benchmarks/2026-11-01-skillopt-rebaseline/REPORT.md)** at gbrain
+  `3ec766c40`, Haiku 5.5 target, Opus 5.5 optimizer, `gpt-6.1-sol` judge (preregistered, two amendments). Cat 30
+  passes 4 of 4 skills, Cat 31 passes, Cat 32 is partial (Part B's gate never saw a gaming candidate), and Cat 33
+  passes 4 of 4 transfer pairs. The full loop ties a one-shot rewrite for the second time (0.54 against 0.54), so the
+  iterative loop is a CUT-CANDIDATE under R48. Metered cost $12.76.
+- **The judge moves to `gpt-6.1-sol`**, outside the target's family, and every SkillOpt receipt carries each
+  optimization's final skill text and gbrain's run receipt (`skillopt_runs`). These receipts are a new identity and do
+  not pool with the June 3 run.
+- **Receipts, gbrain's step events and the metered cost are committed** under the report's directory, and four
+  `covered` entries in `docs/receipts-manifest.json` check the headline numbers. The June 3 report's disclosed gap
+  stays as it was.
+- **gbrain defects found** (success-reflection edit format, held-out feedback to the proposer, test criteria shown to
+  the optimizer, unapplied edits recorded as tried) are reported upstream; gbrain fixes them in GBRA-274.
+
+### memory-qa resumes, stops and counts its reading lane exactly; answer replays keep room for Claude 5 to think
+
+- **A stopped paid run says why and exits 3** (#216). When the budget ledger refuses a paid request (the run or program cap, or a host it cannot price) or Particle answers 402, `eval/runner/memory-qa/run.ts` still writes the stopped question's row and a `partial` receipt, and its `summary` now carries `stop_reason` beside `stopped: budget`. The command prints a `BUDGET_CAP` operator message and exits 3 (ask the user) instead of 0. A refusal that no question recorded, such as one during an embedding, stops the run the same way. A rerun of the same command still resumes at the stopped question. Memory-system cells, which run.ts hands to `run-systems.ts`, keep their exit codes.
+- **The run config hash covers how the reading lane judges** (#248). A reading-lane run's hash now includes the judging path (qa-v2's `judgeResponse`) and the output limit each judge and reader call is actually sent, which the receipt's `reading` block also records. Claude 5 judges moved from a 10-token to a 2,000-token verdict in #228 without changing the hash, so a partial run resumed across that change pooled both kinds of verdict. An output directory started before this change no longer resumes a reading-lane run; start it in a fresh `--output`. Retrieval-only runs keep their hash.
+- **Usage by role counts each question once** (#251). `usage.by_role` now sums the receipts of each question's latest row, as the counts and summary do. It summed every row in rows.ndjson, so a budget-stopped row's paid reader call and the rerun's cached replay of it both counted.
+- **gbrain think on the memory-system harness gets the conversation's date** (#210). `--system gbrain --qa think` in `eval/runner/memory-qa/run-systems.ts` now asks think for the question date, else the latest session date, as run.ts's think lane does, and each row records the `qa_reference_date` think reports. It answered relative dates against the day the run happened. `thinkReferenceDate` moved to run-systems.ts and run.ts re-exports it. A think run's hash changes, so it starts a fresh output.
+- **Live answer replays refuse a Claude 5 answer limit below 4,096 tokens** (#259). The LongMemEval and Cat 36 grounded-answer replays (`eval/runner/longmemeval-answers.ts`, `eval/runner/cat36-grounded-answers.ts`) apply the judge's thinking floor (`CLAUDE5_THINKING_FLOOR`, #237) to a Claude 5 `answer_model` too, before any answer is paid for. An answer that comes back with no text and a `length` stop spent its limit thinking, so it is now a `harness` error, excluded and never judged, instead of a `sut` miss scored 0 against gbrain. A cut answer that has text is still scored. [The situation-recall protocol](docs/benchmarks/2026-09-23-situation-recall-protocol.md) states the answer-limit rule beside the judge rule.
+- **Already fixed.** #212 (a budget refusal counted as done on resume) does not reproduce on main: #228 made a budget stop a row `error` rather than a `qa_error`, so the resume reads the question again.
+
 ### particle-1 reads Q1's packed and full-context cells through the lease proxy
 
 - **Q1's lease proxy routes Particle** (`eval/runner/metering-proxy.ts`, unit U5 of the particle-1 plan). `particle` joins its upstreams (`https://api.particle.ai`), key variables (`PARTICLE_API_KEY`), allowed routes (`POST /v1/chat/completions`, `GET /v1/models`), output fields (`max_completion_tokens`) and request paths, read from `eval/runner/providers/openai-compatible.ts`. A cell's slot environment points `PARTICLE_BASE_URL` at `<proxy>/<slot>/particle/v1` and gives the cell a dummy `PARTICLE_API_KEY`. A campaign unit whose cell reads with particle-1 passes the real key to its VM's proxy, and `shootout-cell.ts` gives the cell `PARTICLE_BASE_URL` and a dummy key as for the other providers. A slot's restored base URLs are now unset when they were unset before, instead of becoming the string `undefined`.
@@ -101,16 +126,23 @@ This records what each gbrain-evals release changed and what its measurements me
 
 - **A repository `.gstack/pregate.json` raises the pregate's per-process test timeout from 600 to 1800 seconds.** On
   4-core machines the selected test group ran past 600 seconds for three threads, and pregate records a timed-out
-  group as incomplete, which fails /ship. Any policy file also makes a touched file with no test lane a hard failure
-  (`PREGATE_NO_LANE`) that stops the check before any test runs, where the repository without one only warned. So the
-  file maps every path to no extra lane (`"dependencies": {"**": []}`). The import graph still selects each touched
-  file's tests, and a red or timed-out lane still fails. A touched file with no test now passes without the warning.
-  The catch-all also matches a deleted test, and pregate applies a `[]` declaration before its removed-test handling.
-  So deleting a test no longer runs its owning suite or the tests of files that name it in pregate, and no "coverage
-  removed" note prints. CI's full suite still runs every remaining test on the pull request. A test group that runs
-  slow now has 30 minutes before pregate marks it incomplete. Every other check, `literals` included, keeps its level. Scratch pregate runs on 2026-11-01 compared the repository
-  with and without the file. A source edit selected the same 925 tests in 51 files both ways. A failing test beside an
-  unmapped `types/ambient.d.ts` edit failed both ways. An unmapped edit alone warned before and passes now.
+  group as incomplete, which fails /ship. The file sets only `timeout_s`, so a slow test group has 30 minutes before
+  pregate marks it incomplete, and every other check, `literals` included, keeps its level.
+- **The pregate's unmapped-edit and deleted-test warnings are back** (this needs gstack 1.92.35.0 or later). The file
+  first also mapped every path to no extra lane (`"dependencies": {"**": []}`), because older gstack turned any policy
+  file into a hard `PREGATE_NO_LANE` failure for a touched file with no test lane, before any test ran. That catch-all
+  let an unmapped edit pass with no warning, and it dropped the "coverage removed" note for a deleted test (before gstack
+  1.92.35.0 the deleted test's owning suite did not run either). gstack 1.92.35.0 keeps the no-policy lane verdicts for
+  a policy that sets only `timeout_s`, so the catch-all is gone. Scratch pregate runs on 2026-11-01 (main `40bebe33`,
+  gstack 1.92.35.0) compared the two policies. An edit to `scripts/make-decision-splits.ts`, which no test covers,
+  passed under the catch-all and now warns (`PREGATE_NO_POLICY`). Deleting
+  `test/eval/verify-documentation-refresh.test.ts` ran its 26-file owning suite both ways, and only the timeout-only
+  policy names the 7 files that lost their last test. An edit to `eval/runner/providers/openai-compatible.ts` selected
+  the same 79 test files both ways. An older gstack would fail an unmapped edit with `PREGATE_NO_LANE` instead of
+  warning, so a new `.gstack/ship-policy.json` sets `min_gstack_version` to 1.92.35.0. On an older gstack the session
+  check then warns that the repository needs 1.92.35.0 and names the upgrade, and `gstack-ship-queue ready` refuses the
+  policy with `POLICY_GSTACK_TOO_OLD`. Pregate does not read this file, so until that gstack is upgraded an unmapped
+  edit still fails there with `PREGATE_NO_LANE`. Every other ship-policy key keeps its default.
 
 ### chronicle-lift scores one agent model at a time, A4 rows keep the reader's stop reason, and PrecisionMemBench's gbrain-think is metered
 

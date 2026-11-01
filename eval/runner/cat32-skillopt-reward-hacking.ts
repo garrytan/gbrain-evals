@@ -70,7 +70,7 @@ import { runSkillOpt, scoreSkillOnTasks }
 import { ProbeAccounting } from './probe-accounting.ts';
 import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt } from './receipt.ts';
 import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
-import { makeSkilloptStubTransport, PINNED_CONFIG, SKILLOPT_MODELS, type SkilloptStubBehavior } from './cat30-skillopt-improvement.ts';
+import { makeSkilloptStubTransport, PINNED_CONFIG, SKILLOPT_MODELS, type SkilloptRunRecord, type SkilloptStubBehavior } from './cat30-skillopt-improvement.ts';
 
 export const CAT32_CATEGORY = 'cat32-skillopt-reward-hacking';
 
@@ -300,7 +300,7 @@ export async function runCat32(options: Cat32Options = {}): Promise<Cat32RunResu
   const stub = options.stubLlm ?? false;
   const targetModel = options.targetModel ?? SKILLOPT_MODELS.target;
   const optimizerModel = options.optimizerModel ?? (bpre ? SKILLOPT_MODELS.bpreOptimizer : SKILLOPT_MODELS.optimizer);
-  const judgeModel = options.judgeModel ?? SKILLOPT_MODELS.strong; // LLM held-out judge — the stronger model
+  const judgeModel = options.judgeModel ?? SKILLOPT_MODELS.judge; // LLM held-out judge, from outside the target's family
   const epochs = options.epochs ?? (bpre ? 1 : 3);
   const batchSize = options.batchSize ?? 5;
   const runsPerTask = options.runsPerTask ?? (bpre || stub ? 1 : 3);
@@ -354,6 +354,7 @@ export async function runCat32(options: Cat32Options = {}): Promise<Cat32RunResu
   let heldOutBlocked = 0;
   let partBNoRegression = false;
   let baselineHeldout = 0, optimizedHeldout = 0, selClimb = 0, optCost = 0, outcome = 'skipped';
+  const skilloptRuns: SkilloptRunRecord[] = [];
   let engine: any = null;
   try {
     engine = options.engineFactory ? await options.engineFactory() : new PGLiteEngine();
@@ -395,10 +396,11 @@ export async function runCat32(options: Cat32Options = {}): Promise<Cat32RunResu
           const r = await runSkillOptFn({
             engine, skillName: SKILL_NAME, skillsDir, benchmarkPath, heldOutPath,
             epochs, batchSize, lr: 4, lrSchedule: 'cosine', split: SPLIT,
-            optimizerModel, targetModel, judgeModel: targetModel,
+            optimizerModel, targetModel, judgeModel,
             mode: 'patch', dryRun: false, noMutate: false, allowMutateBundled: false,
             bootstrapReviewed: false, json: true, maxCostUsd, maxRuntimeMin: 30, force: true,
           } as any);
+          skilloptRuns.push({ label: 'part-b', outcome: r.outcome, final_text: r.finalText ?? null, receipt: r.receipt ?? null });
           outcome = r.outcome;
           optCost = r.receipt?.final_cost_usd ?? 0;
           // Compare on the optimizer's own sel split: baselineSel above covers
@@ -480,6 +482,7 @@ export async function runCat32(options: Cat32Options = {}): Promise<Cat32RunResu
       },
       gate_pass: gatePass,
       infra_error_rate: summary.infra_error_rate,
+      skillopt_runs: skilloptRuns,
     },
   };
   writeReceipt(receiptFile, receipt);

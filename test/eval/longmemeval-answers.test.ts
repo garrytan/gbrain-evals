@@ -223,6 +223,30 @@ describe('LongMemEval retained evidence and secondary grounding', () => {
     expect(() => validateLmeAnswerProfile({ ...f.profile, judge_max_tokens: 128 })).not.toThrow();
   });
 
+  // Value: protects=a live replay with a Claude 5 answer model is refused before any spend when its answer limit leaves no room to think, so its rows cannot all score 0 against gbrain; fails_when=validateLmeAnswerProfile accepts a live Claude 5 answer_max_tokens below the thinking floor; why_new=only the judge limit had the floor (#237), and the gateway sends an explicit answer limit unchanged (#259); seam=none; no_claim=validation only, no provider call
+  test('live admission refuses a Claude 5 answer limit below the thinking floor', () => {
+    const f = fixture();
+    const live: LmeAnswerProfile = { ...f.profile, mode: 'live', answer_model: 'anthropic:claude-opus-5-5', expected_product_sha: 'a'.repeat(40), answer_max_tokens: 4096, judge_max_tokens: 4096,
+      answer_budget: { kind: 'isolated-provider-cap', approval_id: 'answer', max_usd: 1 }, judge_budget: { kind: 'isolated-provider-cap', approval_id: 'judge', max_usd: 1 } };
+    expect(() => validateLmeAnswerProfile(live)).not.toThrow();
+    for (const answer_max_tokens of [1, 1024, 4095]) expect(() => validateLmeAnswerProfile({ ...live, answer_max_tokens })).toThrow(`answer_max_tokens ${answer_max_tokens} is below the Claude 5 thinking floor (4096) for anthropic:claude-opus-5-5`);
+    expect(() => validateLmeAnswerProfile({ ...live, answer_model: 'openai:gpt-6.1-sol', answer_max_tokens: 1024 })).not.toThrow();
+  });
+
+  // Value: protects=an answer model that spent its whole limit thinking is not scored as a gbrain miss; fails_when=an empty answer with a length stop is a sut failure scored 0; why_new=both runners required stopReason end and scored any invalid answer 0 against the system under test (#259); seam=offline replay with an injected answer runtime; no_claim=how often a live Claude 5 answer runs out of room
+  test('an empty answer cut at its output limit is a harness error, excluded and never judged; a cut answer with text stays a miss', async () => {
+    const f = fixture();
+    let judged = 0;
+    const empty = await runLongMemEvalAnswers({ ...f, testRuntime: { async generate() { return { ...answer(), text: '', blocks: [], stopReason: 'length' }; }, judgeClient: client(async () => { judged++; return judgeResponse(); }) } });
+    expect(empty.errors.map(error => error.origin)).toEqual(['harness', 'harness', 'harness']);
+    expect(empty.errors[0].message).toContain('128-token answer limit');
+    expect([empty.n_scored, judged]).toEqual([0, 0]);
+    expect(empty.data!.grounding_success).toEqual({ mean: null, n: 0 });
+    const cut = await runLongMemEvalAnswers({ ...f, outputDir: join(f.root, 'cut'), testRuntime: { async generate() { return { ...answer(), stopReason: 'length' }; }, judgeClient: client() } });
+    expect([cut.n_scored, cut.errors.length]).toEqual([3, 0]);
+    expect(cut.data!.grounding_success).toEqual({ mean: 0, n: 3 });
+  });
+
   test('live checks product bindings before stripping the environment and restores it when provider keys are missing', async () => {
     const f = fixture(), capture = loadLmeAnswerReplay({ ...f, adapter: f.profile.adapter }).capture;
     const p: LmeAnswerProfile = { ...f.profile, mode: 'live', answer_model: 'openai:gpt-4.1-mini', expected_product_sha: capture.product.product_sha ?? capture.product.declared_pin.split('#')[1], expected_package_sha256: capture.product.package_sha256, judge_max_tokens: 4096,

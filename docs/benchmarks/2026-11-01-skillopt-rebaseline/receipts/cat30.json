@@ -1,0 +1,809 @@
+{
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "cat30-skillopt-improvement",
+  "gbrain_version": "0.60.531.0",
+  "gbrain_pin": "github:garrytan/gbrain#3ec766c40664b652b14e39788d177139f5a7b105",
+  "started_at": "2026-11-01T15:29:51.501Z",
+  "run_status": "completed",
+  "verdict": "pass",
+  "n_total": 4,
+  "n_scored": 4,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": true,
+  "resolved_config": {
+    "search_mode": "balanced",
+    "reranker_enabled": false,
+    "pinned_config": {
+      "search.mode": "balanced",
+      "search.reranker.enabled": "false"
+    },
+    "llm_transport": "live",
+    "mode": "full",
+    "target_model": "anthropic:claude-haiku-5-5",
+    "optimizer_model": "anthropic:claude-opus-5-5",
+    "judge_model": "openai:gpt-6.1-sol",
+    "epochs": 2,
+    "batch_size": 5,
+    "runs_per_task": 3,
+    "max_cost_usd": 6,
+    "seeds": [
+      "seed-missing-structure",
+      "seed-verbose",
+      "seed-no-brain-first",
+      "seed-no-verdict"
+    ],
+    "improve_margin": 0.05,
+    "corpus": "skillopt-v1"
+  },
+  "finished_at": "2026-11-01T15:56:29.438Z",
+  "data": {
+    "seeds": [
+      {
+        "seed": "seed-missing-structure",
+        "baseline_heldout": 0,
+        "optimized_heldout": 0.5,
+        "delta": 0.5,
+        "outcome": "accepted",
+        "baseline_sel_score": 0,
+        "best_sel_score": 1,
+        "final_cost_usd": 0.23120749999999993,
+        "improved": true
+      },
+      {
+        "seed": "seed-verbose",
+        "baseline_heldout": 0.5,
+        "optimized_heldout": 0.75,
+        "delta": 0.25,
+        "outcome": "accepted",
+        "baseline_sel_score": 0,
+        "best_sel_score": 1,
+        "final_cost_usd": 0.18740398000000003,
+        "improved": true
+      },
+      {
+        "seed": "seed-no-brain-first",
+        "baseline_heldout": 0,
+        "optimized_heldout": 1,
+        "delta": 1,
+        "outcome": "accepted",
+        "baseline_sel_score": 0,
+        "best_sel_score": 1,
+        "final_cost_usd": 0.23148006,
+        "improved": true
+      },
+      {
+        "seed": "seed-no-verdict",
+        "baseline_heldout": 0,
+        "optimized_heldout": 0.3333333333333333,
+        "delta": 0.3333333333333333,
+        "outcome": "accepted",
+        "baseline_sel_score": 0,
+        "best_sel_score": 1,
+        "final_cost_usd": 0.16505032000000006,
+        "improved": true
+      }
+    ],
+    "seeds_improved": 4,
+    "seeds_scored": 4,
+    "seeds_total": 4,
+    "total_cost_usd": 0.81514186,
+    "gate_pass": true,
+    "infra_error_rate": 0,
+    "skillopt_runs": [
+      {
+        "label": "seed-missing-structure",
+        "outcome": "accepted",
+        "final_text": "---\nname: brief-writer-example\nversion: 0.1.0\ndescription: Brief Writer\ntriggers:\n  - \"write a brief\"\nbrain_first: exempt\n---\n\n# Brief Writer\n\n## Required structure\n\nEvery brief must include these two elements, written with real substance:\n\n1. **A markdown heading titled exactly `## Key Risks`.** Under it, list the 3-5 most important risks of the recommended course of action. For each, say what could go wrong, how likely or severe it is, and how to mitigate it. Do not bury risks under other headings such as \"Risks of switching\" or \"Why waiting is better\". Use the literal heading \"Key Risks\".\n2. **An explicit confidence line in the form `Confidence: <High|Medium|Low>` followed by a one-sentence justification.** Place it right after the bottom-line answer, or in a short closing section. Base the level on how much the answer depends on unknowns: the team's context, data you lack, or fast-changing facts. For example: `Confidence: Medium. The recommendation holds for most early-stage teams, but it reverses if a customer mandate requires Kubernetes.`\n\nSuggested outline: Bottom line (with Confidence: line), then Reasoning, then When the answer changes, then ## Key Risks, then Recommended next steps.\n\nWhen asked, write a short, clear research brief that answers the question.\nKeep it focused and readable. Lead with the answer, then immediately state `Confidence: <level>` with a brief justification. Before finishing, check that the brief contains a `## Key Risks` heading and a `Confidence:` line.\n",
+        "receipt": {
+          "run_id": "a6a59330-ac3d-4538-b22d-85439cf6fa7d",
+          "skill": "seed-missing-structure",
+          "skill_sha8": "b7234bb5",
+          "benchmark_sha8": "39aeb217",
+          "optimizer_model": "anthropic:claude-opus-5-5",
+          "target_model": "anthropic:claude-haiku-5-5",
+          "judge_model": "openai:gpt-6.1-sol",
+          "epochs": 2,
+          "batch_size": 5,
+          "lr": 4,
+          "lr_schedule": "cosine",
+          "max_cost_usd": 6,
+          "started_at": "2026-11-01T15:30:37.977Z",
+          "ended_at": "2026-11-01T15:36:41.244Z",
+          "outcome": "accepted",
+          "stop_reason": "completed",
+          "reflect_errors": [
+            "reflect_success_invalid_edits: 1 proposed, 0 valid"
+          ],
+          "remediation": [
+            {
+              "code": "reflect_invalid_edits",
+              "fix": "The optimizer is not following the edits JSON contract. Try a different --optimizer-model.",
+              "docs": "docs/guides/skillopt.md#reflect_invalid_edits"
+            }
+          ],
+          "reflect_max_tokens": 32000,
+          "reflect_max_tokens_source": "default",
+          "baseline_sel_score": 0,
+          "best_sel_score": 1,
+          "test_score": 1,
+          "baseline_test_score": 0,
+          "final_cost_usd": 0.23120749999999993,
+          "prior_segments_cost_usd": 0,
+          "models_used": [
+            {
+              "requested_model": "anthropic:claude-opus-5-5",
+              "model": "anthropic:claude-opus-5-5",
+              "touchpoint": "chat",
+              "purpose": "skillopt.optimizer",
+              "calls": 3,
+              "attempts": 3,
+              "failed_calls": 0,
+              "input_tokens": 9743,
+              "output_tokens": 2257,
+              "cost_usd": 0.084112,
+              "cost_basis": "measured"
+            },
+            {
+              "requested_model": "anthropic:claude-haiku-5-5",
+              "model": "anthropic:claude-haiku-5-5",
+              "touchpoint": "chat",
+              "purpose": "skillopt.target",
+              "calls": 108,
+              "attempts": 108,
+              "failed_calls": 0,
+              "input_tokens": 688939,
+              "output_tokens": 156372,
+              "cost_usd": 0.14707989999999993,
+              "cost_basis": "measured"
+            },
+            {
+              "requested_model": "openai:text-embedding-3-large",
+              "model": "openai:text-embedding-3-large",
+              "touchpoint": "embedding",
+              "purpose": null,
+              "calls": 19,
+              "attempts": 19,
+              "failed_calls": 0,
+              "input_tokens": 120,
+              "output_tokens": 0,
+              "cost_usd": 0.000015599999999999996,
+              "cost_basis": "measured"
+            }
+          ],
+          "models_used_scope": "full_run",
+          "models_plan": [
+            {
+              "touchpoint": "optimizer",
+              "model": "anthropic:claude-opus-5-5",
+              "source": "unknown",
+              "origin": "caller-supplied",
+              "active": true
+            },
+            {
+              "touchpoint": "target",
+              "model": "anthropic:claude-haiku-5-5",
+              "source": "unknown",
+              "origin": "caller-supplied",
+              "active": true
+            },
+            {
+              "touchpoint": "judge",
+              "model": "openai:gpt-6.1-sol",
+              "source": "unknown",
+              "origin": "caller-supplied",
+              "active": false,
+              "inactive_reason": "rule/qrels benchmark"
+            },
+            {
+              "touchpoint": "expansion",
+              "model": "anthropic:claude-haiku-4-5-20251001",
+              "source": "unknown",
+              "origin": "unrecorded: gateway not resolved against this brain",
+              "active": true
+            },
+            {
+              "touchpoint": "chat",
+              "model": "anthropic:claude-haiku-5-5",
+              "source": "unknown",
+              "origin": "unrecorded: gateway not resolved against this brain",
+              "active": true
+            },
+            {
+              "touchpoint": "embedding",
+              "model": "openai:text-embedding-3-large",
+              "source": "fallback",
+              "origin": "built-in default",
+              "active": true
+            }
+          ],
+          "models_strict": {
+            "enabled": false,
+            "ok": false,
+            "violations": [
+              {
+                "touchpoint": "optimizer",
+                "model": "anthropic:claude-opus-5-5",
+                "source": "unknown",
+                "origin": "caller-supplied",
+                "fix": "gbrain config set models.tier.deep anthropic:claude-opus-5-5"
+              },
+              {
+                "touchpoint": "target",
+                "model": "anthropic:claude-haiku-5-5",
+                "source": "unknown",
+                "origin": "caller-supplied",
+                "fix": "gbrain config set models.tier.subagent anthropic:claude-haiku-5-5"
+              },
+              {
+                "touchpoint": "expansion",
+                "model": "anthropic:claude-haiku-4-5-20251001",
+                "source": "unknown",
+                "origin": "unrecorded: gateway not resolved against this brain",
+                "fix": "gbrain config set models.tier.utility anthropic:claude-haiku-4-5-20251001"
+              },
+              {
+                "touchpoint": "chat",
+                "model": "anthropic:claude-haiku-5-5",
+                "source": "unknown",
+                "origin": "unrecorded: gateway not resolved against this brain",
+                "fix": "gbrain config set models.chat anthropic:claude-haiku-5-5"
+              },
+              {
+                "touchpoint": "embedding",
+                "model": "openai:text-embedding-3-large",
+                "source": "fallback",
+                "origin": "built-in default",
+                "fix": "set embedding_model in ~/.gbrain/config.json or export GBRAIN_EMBEDDING_MODEL=openai:text-embedding-3-large (changing the embedding model needs a migration: gbrain migrate embeddings --status)"
+              }
+            ]
+          },
+          "total_steps": 2,
+          "epochs_completed": 2
+        }
+      },
+      {
+        "label": "seed-verbose",
+        "outcome": "accepted",
+        "final_text": "---\nname: thorough-analyst-example\nversion: 0.1.0\ndescription: Thorough Analyst\ntriggers:\n  - \"analyze the decision\"\nbrain_first: exempt\n---\n\n# Thorough Analyst\n\nWhen asked, analyze the decision concisely. The whole response MUST be at most 1200 characters, spaces and markdown included. Aim for about 900–1100 characters. Every rollout that wrote multi-paragraph essays scored zero.\n\nUse this compact structure:\n1. **Recommendation** (1 sentence): the default answer and a confidence level.\n2. **Key reasons for** (2–3 short bullets).\n3. **Key reasons against / risks** (2–3 short bullets).\n4. **What would change the answer** (1–2 bullets naming specific conditions or thresholds).\n5. **Next step** (1 sentence): a concrete test or metric to check.\n\nRules for staying within the limit:\n- Leave out the title heading, the restated question, preambles and closing summaries.\n- Choose the few factors that drive the decision most. Do not try to cover every angle.\n- Prefer short bullets to paragraphs, and keep each bullet to a single line where possible.\n- Before finishing, estimate the length. If the draft may exceed 1200 characters, cut the weakest bullets.\n",
+        "receipt": {
+          "run_id": "f7b851a7-497d-4abe-aefe-5a2e3a7dc0d5",
+          "skill": "seed-verbose",
+          "skill_sha8": "53b168a7",
+          "benchmark_sha8": "e5e06828",
+          "optimizer_model": "anthropic:claude-opus-5-5",
+          "target_model": "anthropic:claude-haiku-5-5",
+          "judge_model": "openai:gpt-6.1-sol",
+          "epochs": 2,
+          "batch_size": 5,
+          "lr": 4,
+          "lr_schedule": "cosine",
+          "max_cost_usd": 6,
+          "started_at": "2026-11-01T15:40:00.960Z",
+          "ended_at": "2026-11-01T15:46:12.607Z",
+          "outcome": "accepted",
+          "stop_reason": "completed",
+          "reflect_errors": [
+            "reflect_success_invalid_edits: 3 proposed, 0 valid"
+          ],
+          "remediation": [
+            {
+              "code": "reflect_invalid_edits",
+              "fix": "The optimizer is not following the edits JSON contract. Try a different --optimizer-model.",
+              "docs": "docs/guides/skillopt.md#reflect_invalid_edits"
+            }
+          ],
+          "reflect_max_tokens": 32000,
+          "reflect_max_tokens_source": "default",
+          "baseline_sel_score": 0,
+          "best_sel_score": 1,
+          "test_score": 1,
+          "baseline_test_score": 0,
+          "final_cost_usd": 0.18740398000000003,
+          "prior_segments_cost_usd": 0,
+          "models_used": [
+            {
+              "requested_model": "anthropic:claude-opus-5-5",
+              "model": "anthropic:claude-opus-5-5",
+              "touchpoint": "chat",
+              "purpose": "skillopt.optimizer",
+              "calls": 2,
+              "attempts": 2,
+              "failed_calls": 0,
+              "input_tokens": 7169,
+              "output_tokens": 1410,
+              "cost_usd": 0.056875999999999996,
+              "cost_basis": "measured"
+            },
+            {
+              "requested_model": "anthropic:claude-haiku-5-5",
+              "model": "anthropic:claude-haiku-5-5",
+              "touchpoint": "chat",
+              "purpose": "skillopt.target",
+              "calls": 77,
+              "attempts": 77,
+              "failed_calls": 0,
+              "input_tokens": 480972,
+              "output_tokens": 164847,
+              "cost_usd": 0.13052070000000005,
+              "cost_basis": "measured"
+            },
+            {
+              "requested_model": "openai:text-embedding-3-large",
+              "model": "openai:text-embedding-3-large",
+              "touchpoint": "embedding",
+              "purpose": null,
+              "calls": 6,
+              "attempts": 6,
+              "failed_calls": 0,
+              "input_tokens": 56,
+              "output_tokens": 0,
+              "cost_usd": 0.000007280000000000001,
+              "cost_basis": "measured"
+            }
+          ],
+          "models_used_scope": "full_run",
+          "models_plan": [
+            {
+              "touchpoint": "optimizer",
+              "model": "anthropic:claude-opus-5-5",
+              "source": "unknown",
+              "origin": "caller-supplied",
+              "active": true
+            },
+            {
+              "touchpoint": "target",
+              "model": "anthropic:claude-haiku-5-5",
+              "source": "unknown",
+              "origin": "caller-supplied",
+              "active": true
+            },
+            {
+              "touchpoint": "judge",
+              "model": "openai:gpt-6.1-sol",
+              "source": "unknown",
+              "origin": "caller-supplied",
+              "active": false,
+              "inactive_reason": "rule/qrels benchmark"
+            },
+            {
+              "touchpoint": "expansion",
+              "model": "anthropic:claude-haiku-4-5-20251001",
+              "source": "unknown",
+              "origin": "unrecorded: gateway not resolved against this brain",
+              "active": true
+            },
+            {
+              "touchpoint": "chat",
+              "model": "anthropic:claude-haiku-5-5",
+              "source": "unknown",
+              "origin": "unrecorded: gateway not resolved against this brain",
+              "active": true
+            },
+            {
+              "touchpoint": "embedding",
+              "model": "openai:text-embedding-3-large",
+              "source": "fallback",
+              "origin": "built-in default",
+              "active": true
+            }
+          ],
+          "models_strict": {
+            "enabled": false,
+            "ok": false,
+            "violations": [
+              {
+                "touchpoint": "optimizer",
+                "model": "anthropic:claude-opus-5-5",
+                "source": "unknown",
+                "origin": "caller-supplied",
+                "fix": "gbrain config set models.tier.deep anthropic:claude-opus-5-5"
+              },
+              {
+                "touchpoint": "target",
+                "model": "anthropic:claude-haiku-5-5",
+                "source": "unknown",
+                "origin": "caller-supplied",
+                "fix": "gbrain config set models.tier.subagent anthropic:claude-haiku-5-5"
+              },
+              {
+                "touchpoint": "expansion",
+                "model": "anthropic:claude-haiku-4-5-20251001",
+                "source": "unknown",
+                "origin": "unrecorded: gateway not resolved against this brain",
+                "fix": "gbrain config set models.tier.utility anthropic:claude-haiku-4-5-20251001"
+              },
+              {
+                "touchpoint": "chat",
+                "model": "anthropic:claude-haiku-5-5",
+                "source": "unknown",
+                "origin": "unrecorded: gateway not resolved against this brain",
+                "fix": "gbrain config set models.chat anthropic:claude-haiku-5-5"
+              },
+              {
+                "touchpoint": "embedding",
+                "model": "openai:text-embedding-3-large",
+                "source": "fallback",
+                "origin": "built-in default",
+                "fix": "set embedding_model in ~/.gbrain/config.json or export GBRAIN_EMBEDDING_MODEL=openai:text-embedding-3-large (changing the embedding model needs a migration: gbrain migrate embeddings --status)"
+              }
+            ]
+          },
+          "total_steps": 2,
+          "epochs_completed": 2
+        }
+      },
+      {
+        "label": "seed-no-brain-first",
+        "outcome": "accepted",
+        "final_text": "---\nname: quick-answerer-example\nversion: 0.1.0\ndescription: Quick Answerer\ntriggers:\n  - \"answer the question\"\nbrain_first: exempt\n---\n\n# Quick Answerer\n\n## Workflow\n\n1. **Search first.** Identify the one to three claims that most affect the decision. For example: typical free-to-paid conversion for dev tools, managed Kubernetes overhead for small teams, PCI DSS scope when building payments, or hybrid pricing adoption in B2B SaaS. Run `search` on them.\n2. **Lead with the bottom line.** Start with a clear recommendation, such as \"Usually wait\" or \"Default to a provider.\"\n3. **Give the reasoning.** Explain the conditions under which the recommendation flips, and give a practical decision rule or middle path.\n4. **Cite what you found.** Briefly note which points came from search results and which are judgment. If search returns nothing useful, say so and state your confidence level.\n\nAnswer concisely, but ground the answer in current evidence first. Before writing, call the `search` tool at least once. Use it to check facts that change over time or that you might misremember, such as current pricing norms, provider capabilities, benchmarks, regulatory requirements, or recent industry practice. Then answer directly. Never answer from memory alone without searching.\n",
+        "receipt": {
+          "run_id": "cccef58e-e81f-4457-99e7-66751ff194dc",
+          "skill": "seed-no-brain-first",
+          "skill_sha8": "0df22160",
+          "benchmark_sha8": "834b048d",
+          "optimizer_model": "anthropic:claude-opus-5-5",
+          "target_model": "anthropic:claude-haiku-5-5",
+          "judge_model": "openai:gpt-6.1-sol",
+          "epochs": 2,
+          "batch_size": 5,
+          "lr": 4,
+          "lr_schedule": "cosine",
+          "max_cost_usd": 6,
+          "started_at": "2026-11-01T15:47:09.973Z",
+          "ended_at": "2026-11-01T15:50:19.753Z",
+          "outcome": "accepted",
+          "stop_reason": "completed",
+          "reflect_errors": [
+            "reflect_success_invalid_edits: 2 proposed, 0 valid"
+          ],
+          "remediation": [
+            {
+              "code": "reflect_invalid_edits",
+              "fix": "The optimizer is not following the edits JSON contract. Try a different --optimizer-model.",
+              "docs": "docs/guides/skillopt.md#reflect_invalid_edits"
+            }
+          ],
+          "reflect_max_tokens": 32000,
+          "reflect_max_tokens_source": "default",
+          "baseline_sel_score": 0,
+          "best_sel_score": 1,
+          "test_score": 1,
+          "baseline_test_score": 0,
+          "final_cost_usd": 0.23148006,
+          "prior_segments_cost_usd": 0,
+          "models_used": [
+            {
+              "requested_model": "anthropic:claude-opus-5-5",
+              "model": "anthropic:claude-opus-5-5",
+              "touchpoint": "chat",
+              "purpose": "skillopt.optimizer",
+              "calls": 2,
+              "attempts": 2,
+              "failed_calls": 0,
+              "input_tokens": 9083,
+              "output_tokens": 1485,
+              "cost_usd": 0.06603200000000001,
+              "cost_basis": "measured"
+            },
+            {
+              "requested_model": "anthropic:claude-haiku-5-5",
+              "model": "anthropic:claude-haiku-5-5",
+              "touchpoint": "chat",
+              "purpose": "skillopt.target",
+              "calls": 134,
+              "attempts": 134,
+              "failed_calls": 0,
+              "input_tokens": 1315063,
+              "output_tokens": 67727,
+              "cost_usd": 0.16536979999999996,
+              "cost_basis": "measured"
+            },
+            {
+              "requested_model": "openai:text-embedding-3-large",
+              "model": "openai:text-embedding-3-large",
+              "touchpoint": "embedding",
+              "purpose": null,
+              "calls": 68,
+              "attempts": 68,
+              "failed_calls": 0,
+              "input_tokens": 602,
+              "output_tokens": 0,
+              "cost_usd": 0.00007826000000000003,
+              "cost_basis": "measured"
+            }
+          ],
+          "models_used_scope": "full_run",
+          "models_plan": [
+            {
+              "touchpoint": "optimizer",
+              "model": "anthropic:claude-opus-5-5",
+              "source": "unknown",
+              "origin": "caller-supplied",
+              "active": true
+            },
+            {
+              "touchpoint": "target",
+              "model": "anthropic:claude-haiku-5-5",
+              "source": "unknown",
+              "origin": "caller-supplied",
+              "active": true
+            },
+            {
+              "touchpoint": "judge",
+              "model": "openai:gpt-6.1-sol",
+              "source": "unknown",
+              "origin": "caller-supplied",
+              "active": false,
+              "inactive_reason": "rule/qrels benchmark"
+            },
+            {
+              "touchpoint": "expansion",
+              "model": "anthropic:claude-haiku-4-5-20251001",
+              "source": "unknown",
+              "origin": "unrecorded: gateway not resolved against this brain",
+              "active": true
+            },
+            {
+              "touchpoint": "chat",
+              "model": "anthropic:claude-haiku-5-5",
+              "source": "unknown",
+              "origin": "unrecorded: gateway not resolved against this brain",
+              "active": true
+            },
+            {
+              "touchpoint": "embedding",
+              "model": "openai:text-embedding-3-large",
+              "source": "fallback",
+              "origin": "built-in default",
+              "active": true
+            }
+          ],
+          "models_strict": {
+            "enabled": false,
+            "ok": false,
+            "violations": [
+              {
+                "touchpoint": "optimizer",
+                "model": "anthropic:claude-opus-5-5",
+                "source": "unknown",
+                "origin": "caller-supplied",
+                "fix": "gbrain config set models.tier.deep anthropic:claude-opus-5-5"
+              },
+              {
+                "touchpoint": "target",
+                "model": "anthropic:claude-haiku-5-5",
+                "source": "unknown",
+                "origin": "caller-supplied",
+                "fix": "gbrain config set models.tier.subagent anthropic:claude-haiku-5-5"
+              },
+              {
+                "touchpoint": "expansion",
+                "model": "anthropic:claude-haiku-4-5-20251001",
+                "source": "unknown",
+                "origin": "unrecorded: gateway not resolved against this brain",
+                "fix": "gbrain config set models.tier.utility anthropic:claude-haiku-4-5-20251001"
+              },
+              {
+                "touchpoint": "chat",
+                "model": "anthropic:claude-haiku-5-5",
+                "source": "unknown",
+                "origin": "unrecorded: gateway not resolved against this brain",
+                "fix": "gbrain config set models.chat anthropic:claude-haiku-5-5"
+              },
+              {
+                "touchpoint": "embedding",
+                "model": "openai:text-embedding-3-large",
+                "source": "fallback",
+                "origin": "built-in default",
+                "fix": "set embedding_model in ~/.gbrain/config.json or export GBRAIN_EMBEDDING_MODEL=openai:text-embedding-3-large (changing the embedding model needs a migration: gbrain migrate embeddings --status)"
+              }
+            ]
+          },
+          "total_steps": 2,
+          "epochs_completed": 2
+        }
+      },
+      {
+        "label": "seed-no-verdict",
+        "outcome": "accepted",
+        "final_text": "---\nname: advisor-example\nversion: 0.1.0\ndescription: Advisor\ntriggers:\n  - \"advise on the decision\"\nbrain_first: exempt\n---\n\n# Advisor\n\nWhen asked to advise on a decision, weigh the key considerations briefly and then commit to a clear answer. Do not stop at a list of pros and cons. The reader asked for advice, so give a position.\n\n## Required output structure\n\n1. **Recommendation:** Start with a line in the exact form `Recommendation: <your concrete call>`. For example: \"Recommendation: Ship a limited free tier now, capped by usage, with paid team features.\" Name a specific option, not \"it depends.\" If the answer is conditional, state the default call and the condition that would flip it.\n2. **Rationale:** Give the 3-5 considerations that actually drive the call, each tied to the recommendation. Skip an exhaustive survey.\n3. **Key assumptions / what would change my mind:** List the facts about the reader's situation that, if different, would reverse the advice.\n4. **Confidence:** End with a line in the exact form `Confidence: <high | medium | low> — <one-sentence justification>`. Base the level on how much the answer depends on unknown specifics. Use high when it holds across most plausible situations, medium when a few key unknowns could flip it, and low when the context is too thin to call.\n\nBoth the `Recommendation:` and `Confidence:` lines are mandatory, even when the trade-off is close.\n",
+        "receipt": {
+          "run_id": "4216d512-47af-4e5f-8729-a4894f63cbfc",
+          "skill": "seed-no-verdict",
+          "skill_sha8": "a2987a78",
+          "benchmark_sha8": "e539651a",
+          "optimizer_model": "anthropic:claude-opus-5-5",
+          "target_model": "anthropic:claude-haiku-5-5",
+          "judge_model": "openai:gpt-6.1-sol",
+          "epochs": 2,
+          "batch_size": 5,
+          "lr": 4,
+          "lr_schedule": "cosine",
+          "max_cost_usd": 6,
+          "started_at": "2026-11-01T15:51:57.614Z",
+          "ended_at": "2026-11-01T15:55:46.545Z",
+          "outcome": "accepted",
+          "stop_reason": "completed",
+          "reflect_errors": [
+            "reflect_success_invalid_edits: 4 proposed, 0 valid"
+          ],
+          "remediation": [
+            {
+              "code": "reflect_invalid_edits",
+              "fix": "The optimizer is not following the edits JSON contract. Try a different --optimizer-model.",
+              "docs": "docs/guides/skillopt.md#reflect_invalid_edits"
+            }
+          ],
+          "reflect_max_tokens": 32000,
+          "reflect_max_tokens_source": "default",
+          "baseline_sel_score": 0,
+          "best_sel_score": 1,
+          "test_score": 1,
+          "baseline_test_score": 0,
+          "final_cost_usd": 0.16505032000000006,
+          "prior_segments_cost_usd": 0,
+          "models_used": [
+            {
+              "requested_model": "anthropic:claude-opus-5-5",
+              "model": "anthropic:claude-opus-5-5",
+              "touchpoint": "chat",
+              "purpose": "skillopt.optimizer",
+              "calls": 2,
+              "attempts": 2,
+              "failed_calls": 0,
+              "input_tokens": 9131,
+              "output_tokens": 1773,
+              "cost_usd": 0.07198399999999999,
+              "cost_basis": "measured"
+            },
+            {
+              "requested_model": "anthropic:claude-haiku-5-5",
+              "model": "anthropic:claude-haiku-5-5",
+              "touchpoint": "chat",
+              "purpose": "skillopt.target",
+              "calls": 74,
+              "attempts": 74,
+              "failed_calls": 0,
+              "input_tokens": 471502,
+              "output_tokens": 91826,
+              "cost_usd": 0.09306320000000001,
+              "cost_basis": "measured"
+            },
+            {
+              "requested_model": "openai:text-embedding-3-large",
+              "model": "openai:text-embedding-3-large",
+              "touchpoint": "embedding",
+              "purpose": null,
+              "calls": 2,
+              "attempts": 2,
+              "failed_calls": 0,
+              "input_tokens": 24,
+              "output_tokens": 0,
+              "cost_usd": 0.0000031199999999999998,
+              "cost_basis": "measured"
+            }
+          ],
+          "models_used_scope": "full_run",
+          "models_plan": [
+            {
+              "touchpoint": "optimizer",
+              "model": "anthropic:claude-opus-5-5",
+              "source": "unknown",
+              "origin": "caller-supplied",
+              "active": true
+            },
+            {
+              "touchpoint": "target",
+              "model": "anthropic:claude-haiku-5-5",
+              "source": "unknown",
+              "origin": "caller-supplied",
+              "active": true
+            },
+            {
+              "touchpoint": "judge",
+              "model": "openai:gpt-6.1-sol",
+              "source": "unknown",
+              "origin": "caller-supplied",
+              "active": false,
+              "inactive_reason": "rule/qrels benchmark"
+            },
+            {
+              "touchpoint": "expansion",
+              "model": "anthropic:claude-haiku-4-5-20251001",
+              "source": "unknown",
+              "origin": "unrecorded: gateway not resolved against this brain",
+              "active": true
+            },
+            {
+              "touchpoint": "chat",
+              "model": "anthropic:claude-haiku-5-5",
+              "source": "unknown",
+              "origin": "unrecorded: gateway not resolved against this brain",
+              "active": true
+            },
+            {
+              "touchpoint": "embedding",
+              "model": "openai:text-embedding-3-large",
+              "source": "fallback",
+              "origin": "built-in default",
+              "active": true
+            }
+          ],
+          "models_strict": {
+            "enabled": false,
+            "ok": false,
+            "violations": [
+              {
+                "touchpoint": "optimizer",
+                "model": "anthropic:claude-opus-5-5",
+                "source": "unknown",
+                "origin": "caller-supplied",
+                "fix": "gbrain config set models.tier.deep anthropic:claude-opus-5-5"
+              },
+              {
+                "touchpoint": "target",
+                "model": "anthropic:claude-haiku-5-5",
+                "source": "unknown",
+                "origin": "caller-supplied",
+                "fix": "gbrain config set models.tier.subagent anthropic:claude-haiku-5-5"
+              },
+              {
+                "touchpoint": "expansion",
+                "model": "anthropic:claude-haiku-4-5-20251001",
+                "source": "unknown",
+                "origin": "unrecorded: gateway not resolved against this brain",
+                "fix": "gbrain config set models.tier.utility anthropic:claude-haiku-4-5-20251001"
+              },
+              {
+                "touchpoint": "chat",
+                "model": "anthropic:claude-haiku-5-5",
+                "source": "unknown",
+                "origin": "unrecorded: gateway not resolved against this brain",
+                "fix": "gbrain config set models.chat anthropic:claude-haiku-5-5"
+              },
+              {
+                "touchpoint": "embedding",
+                "model": "openai:text-embedding-3-large",
+                "source": "fallback",
+                "origin": "built-in default",
+                "fix": "set embedding_model in ~/.gbrain/config.json or export GBRAIN_EMBEDDING_MODEL=openai:text-embedding-3-large (changing the embedding model needs a migration: gbrain migrate embeddings --status)"
+              }
+            ]
+          },
+          "total_steps": 2,
+          "epochs_completed": 2
+        }
+      }
+    ]
+  },
+  "accounting": {
+    "planned": 4,
+    "attempted": 4,
+    "scored": 4,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  },
+  "cost": null,
+  "latency_ms": null,
+  "delivered_tokens": null,
+  "execution": {
+    "source_tree": {
+      "sha256": "f967186d5e9a713ed11eaece143d1b1dc4a7f784545b0533b968269eeb87512b",
+      "scheme": "git-index-blob-v1",
+      "files": 15244,
+      "git_head": "c58cde0636ce911e23885bc28ef286249c98c20d",
+      "dirty": true
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#3ec766c40664b652b14e39788d177139f5a7b105",
+      "declared_sha": "3ec766c40664b652b14e39788d177139f5a7b105",
+      "version": "0.60.531.0",
+      "package_sha256": "5552dac5a122d5d7ff092010de419a44c6045a482706674dc6ebbfd48b748b1b",
+      "loaded_git_head": null
+    }
+  }
+}

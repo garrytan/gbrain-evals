@@ -80,12 +80,19 @@
  * not a reasoning model), or a missing PARTICLE_API_KEY, is refused before
  * anything runs.
  *
+ * The run config hash also covers the judging path and the output limit each
+ * reader and judge call is sent (the receipt's `reading` block), so a
+ * partial run resumes only under the same ones.
+ *
  * Budget stop: when a reader, think or judge call hits the budget ledger's
- * cap or Particle's credit 402, that question's row is written as an error
- * with the receipts gathered so far, no later question or conversation runs,
- * and the receipt's summary says `stopped: budget`. A rerun of the same
+ * cap, a host the ledger cannot price or Particle's credit 402, that
+ * question's row is written as an error with the receipts gathered so far,
+ * no later question or conversation runs, the receipt's summary says
+ * `stopped: budget` with the refusal as `stop_reason`, and the command
+ * exits 3 (BUDGET_CAP: ask the user). A refusal no question recorded, such as
+ * one during an embedding, stops the run the same way. A rerun of the same
  * command resumes from that question; the stopped row stays in rows.ndjson,
- * and the receipt's counts and summary read each question's latest row.
+ * and the receipt's counts, summary and usage read each question's latest row.
  */
 import '../budget-ledger.ts';
 import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -99,16 +106,16 @@ import { requirePaidArm } from '../paid-arm.ts';
 import { gbrainSpecFrom, HELD_GBRAIN_DEFAULTS, importGbrain, overlaySummary, productIdentityFor, resolveGbrainUnderTest, type GbrainUnderTest } from '../gbrain-under-test.ts';
 import { EmbeddingCache, makeCachingTransport } from '../longmemeval-cache.ts';
 import { ndcgAtK, recallAllAtK, recallAnyAtK, uniqueInOrder, percentile } from '../metrics.ts';
-import { isoSessionDate, loadCorpus, occurrenceId, renderSessionPage, sha256, type Corpus, type MemoryQuestion, type Session } from './corpus.ts';
-import { DEFAULT_JUDGE, DEFAULT_READER, factsReaderPrompt, latestDate, packSessions, readerPrompt, repeatsTrap, sessionDateKey, unresolvedRelativeTime, type SavedFact } from './qa.ts';
-import { ChatClient, chatWithReceipts, checkEffort, hasChatRoute, isCompatModel, judgeResponse, sendsTemperature, type ChatLike } from './qa-v2.ts';
-import { compatRequest, modelsNotRun } from '../providers/openai-compatible.ts';
+import { loadCorpus, occurrenceId, renderSessionPage, sha256, type Corpus, type MemoryQuestion, type Session } from './corpus.ts';
+import { DEFAULT_JUDGE, DEFAULT_READER, factsReaderPrompt, latestDate, packSessions, readerPrompt, repeatsTrap, unresolvedRelativeTime, type SavedFact } from './qa.ts';
+import { anthropicMaxTokens, ChatClient, chatWithReceipts, checkEffort, hasChatRoute, isCompatModel, judgeResponse, sendsTemperature, type ChatLike } from './qa-v2.ts';
+import { COMPAT_PROVIDERS, compatRequest, modelsNotRun } from '../providers/openai-compatible.ts';
 import { normalizeUsage, receipt, sumUsage, thinkFinish, USAGE_RECEIPT_SCHEMA, type UsageReceipt } from '../usage-receipt.ts';
 import { devConversations, loadSplit } from '../decisions/splits.ts';
 import * as systems from './run-systems.ts';
-export { readinessProbe, type ProbeResult } from './run-systems.ts';
+export { readinessProbe, thinkReferenceDate, type ProbeResult } from './run-systems.ts';
 import { appendAccessLog } from '../sealed-confirmation-lib.ts';
-import { decideError, DecideError, renderOperatorMessage } from '../decisions/errors.ts';
+import { decideError, DecideError, exitCodeFor, renderOperatorMessage, type OperatorMessage } from '../decisions/errors.ts';
 
 export interface RunArgs {
   benchmark: string;
@@ -360,11 +367,40 @@ export function hashEmbed(text: string, dims: number): number[] {
 
 const PROVIDER_KEY: Record<string, string> = { openai: 'OPENAI_API_KEY', voyage: 'VOYAGE_API_KEY', google: 'GOOGLE_GENERATIVE_AI_API_KEY' };
 
-export function runConfigHash(a: RunArgs, gut: GbrainUnderTest, corpus: Corpus, frozenFiles: Array<{ sha256: string }> | null = null): string {
-  const pre = { benchmark: a.benchmark, split: a.split, config: a.config, pins: a.pins, embed: a.embed, model: a.embeddingModel, dims: a.embeddingDims, qa: a.qa,
+/**
+ * The output limit qa-v2's chat client sends `model` for a call asked for `maxTokens`: an Anthropic verdict call gets
+ * its 2,000-token floor (`anthropicMaxTokens`), an OpenAI reasoning model at least 2,000 tokens, and an
+ * OpenAI-compatible provider its own floor.
+ */
+function sentMaxTokens(model: string, maxTokens: number, effort?: string): number {
+  const at = model.indexOf(':');
+  const provider = at > 0 ? model.slice(0, at) : 'openai';
+  if (isCompatModel(model)) return compatRequest(model, [], { effort, maxOutputTokens: maxTokens }, { [COMPAT_PROVIDERS[provider].key_env]: 'run-config' }).sent.output_limit;
+  if (provider === 'anthropic') return anthropicMaxTokens(model.slice(at + 1), maxTokens);
+  return sendsTemperature(model) ? maxTokens : Math.max(maxTokens, 2000);
+}
+
+/**
+ * How the reading lane judges and what each call is sent, beyond its flags: the judging path (qa-v2's
+ * `judgeResponse`, a 10-token verdict per prompt) and the output limit the judge and the reader are sent. Claude 5
+ * judges moved from a 10-token to a 2,000-token verdict (#228) without changing the run config, so a partial run
+ * resumed across that change pooled both kinds of verdict (#248).
+ */
+function readingIdentity(qa: RunArgs['qa']): Record<string, string | number> {
+  return { judging: 'qa-v2 judgeResponse', judge_max_tokens_sent: sentMaxTokens(qa.judge, 10),
+    ...(qa.mode === 'reader' ? { reader_max_tokens_sent: sentMaxTokens(qa.reader, qa.maxTokens ?? 1024, qa.effort) } : {}) };
+}
+
+/** What the run config hash covers. Only reading-lane runs carry `reading`, so a retrieval-only run keeps its hash. */
+export function runConfigPreimage(a: RunArgs, gut: GbrainUnderTest, corpus: Corpus, frozenFiles: Array<{ sha256: string }> | null = null): Record<string, unknown> {
+  return { benchmark: a.benchmark, split: a.split, config: a.config, pins: a.pins, embed: a.embed, model: a.embeddingModel, dims: a.embeddingDims, qa: a.qa,
     categories: a.categories, limit: a.limit, seed: a.seed, topK: a.topK, gbrain: gut.overlay?.build.commit ?? gut.version, data: corpus.source.files, ...(a.facts !== 'none' ? { facts: a.facts } : {}),
-    ...(frozenFiles ? { retrieved_from: frozenFiles.map(f => f.sha256) } : {}), ...(a.search.limit || a.search.poolDepth || a.search.maxPerSession ? { search: a.search } : {}) };
-  return createHash('sha256').update(JSON.stringify(pre)).digest('hex');
+    ...(frozenFiles ? { retrieved_from: frozenFiles.map(f => f.sha256) } : {}), ...(a.search.limit || a.search.poolDepth || a.search.maxPerSession ? { search: a.search } : {}),
+    ...(a.qa.mode !== 'none' ? { reading: readingIdentity(a.qa) } : {}) };
+}
+
+export function runConfigHash(a: RunArgs, gut: GbrainUnderTest, corpus: Corpus, frozenFiles: Array<{ sha256: string }> | null = null): string {
+  return createHash('sha256').update(JSON.stringify(runConfigPreimage(a, gut, corpus, frozenFiles))).digest('hex');
 }
 
 /** cl100k counter from the gbrain build under test, or null when that build has no cl100k encoder (delivered tokens are then left out). */
@@ -375,16 +411,6 @@ async function cl100kCounter(gut: GbrainUnderTest): Promise<((s: string) => numb
   } catch {
     return null;
   }
-}
-
-/**
- * gbrain think's referenceDate (YYYY-MM-DD), the day relative dates in the question resolve against: the question date
- * (LongMemEval writes "2023/05/30 (Tue) 23:40"), else the conversation's latest session date (LoCoMo and BEAM questions
- * carry none); undefined when no date parses, and think then uses the run date.
- */
-export function thinkReferenceDate(questionDate: string | undefined, sessions: readonly Session[]): string | undefined {
-  const day = (raw: string | undefined) => isoSessionDate(sessionDateKey(raw))?.slice(0, 10);
-  return day(questionDate) ?? sessions.map(s => day(s.date)).filter((d): d is string => !!d).sort().pop();
 }
 
 type ThinkFn = (engine: unknown, o: Record<string, unknown>) => Promise<{
@@ -591,6 +617,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
   let engine = brainless ? null : await openEngine();
   let processed = 0;
   let stopped: 'budget' | null = null;
+  let stopReason: string | null = null;
   try {
     for (const convId of myConvs) {
       const qs = questions.filter(q => q.conversation === convId && !done.has(q.id));
@@ -637,7 +664,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
           ...(extractError ? { facts_extract_error: extractError } : {}) };
       }
       for (const q of qs) {
-        if (stopped) break;
+        if (stopped || paid?.guard.exhausted) break;
         const base: MemoryQaRow = { id: q.id, conversation: q.conversation, category: q.category, abstention: q.abstention, gold_count: q.gold.length, ...convFacts };
         let row: MemoryQaRow;
         if (importError) row = { ...base, error: `import failed: ${importError}`, error_origin: 'sut' };
@@ -672,7 +699,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
               const pack = packSessions(evidence.map(id => sessById.get(id)).filter((x): x is Session => !!x), a.qa.context === 'oracle' ? evidence.length : a.qa.sessions, a.qa.budgetTokens);
               const readFacts = a.qa.context === 'facts' ? retrieved.slice(0, a.qa.sessions).flatMap(id => factsBySession.get(id) ?? []) : [];
               const prompt = think ? null : a.qa.context === 'facts' ? factsReaderPrompt(q, readFacts, latestDate(conv.sessions)) : readerPrompt(q, pack.sessions, latestDate(conv.sessions));
-              row = { ...row, ...await readAndJudge({ benchmark: a.benchmark, qa: a.qa, q, chat, think: think ? { fn: think, engine, referenceDate: thinkReferenceDate(q.question_date, conv.sessions) } : null, prompt, countTokens, budgetExhausted: () => !!paid?.guard.exhausted }),
+              row = { ...row, ...await readAndJudge({ benchmark: a.benchmark, qa: a.qa, q, chat, think: think ? { fn: think, engine, referenceDate: systems.thinkReferenceDate(q.question_date, conv.sessions) } : null, prompt, countTokens, budgetExhausted: () => !!paid?.guard.exhausted }),
                 qa_context_tokens: think || a.qa.context === 'facts' ? undefined : pack.tokens, qa_sessions: think || a.qa.context === 'facts' ? undefined : pack.sessions.length,
                 ...(a.qa.context === 'facts' ? { qa_facts: readFacts.length, qa_facts_tokens: systems.factsContextTokens(readFacts) } : {}) };
             }
@@ -680,7 +707,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
             if (e instanceof DecideError) throw e;
             const receipts = (e as { qa_receipts?: UsageReceipt[] }).qa_receipts;
             row = { ...base, error: (e as Error).message, error_origin: /budget|BudgetExceeded/i.test((e as Error).message) ? 'harness' : 'sut', ...(receipts ? { qa_receipts: receipts } : {}) };
-            if ((e as Error).name === 'BudgetExceededError') stopped = 'budget';
+            if ((e as Error).name === 'BudgetExceededError') { stopped = 'budget'; stopReason = (e as Error).message; }
           }
         }
         rows.push(row);
@@ -693,6 +720,10 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
   } finally {
     try { await engine?.disconnect(); } catch { /* ignore */ }
     cache?.close();
+  }
+  if (paid?.guard.exhausted && !stopped) {
+    stopped = 'budget';
+    stopReason = 'the budget ledger refused a paid request (the run or program cap, or a host it cannot price) that no question recorded as its error, so the run stopped there';
   }
 
   const allRows: MemoryQaRow[] = (existsSync(rowsPath) ? readFileSync(rowsPath, 'utf8') : '').split('\n').filter(l => l.trim()).map(l => JSON.parse(l));
@@ -736,21 +767,21 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
     ...(frozen ? { retrieved_from: frozen.files.map(f => ({ path: repoRelative(f.path), sha256: f.sha256 })) } : {}),
     search_knobs: a.search,
     reranker: brainless ? { applies: false } : { applies: true, enabled: rerankOn, decided_by: a.reranker.decided_by, model: rerankModel },
-    reading: a.qa.mode === 'none' ? null : { breadth_sessions: a.qa.sessions, budget_tokens: a.qa.budgetTokens, max_output_tokens: a.qa.maxTokens ?? 1024 },
+    reading: a.qa.mode === 'none' ? null : { breadth_sessions: a.qa.sessions, budget_tokens: a.qa.budgetTokens, max_output_tokens: a.qa.maxTokens ?? 1024, ...readingIdentity(a.qa) },
     embedding: { mode: a.embed, model: a.embeddingModel, dims: a.embeddingDims, cache_stats: cache ? { ...cache.stats } : null },
     dataset: corpus.source, selection: { categories: a.categories, limit: a.limit, seed: a.seed, shard: a.shard, conversations: myConvs.length, questions_expected: expected },
     counts: { rows: latest.length, scored: scored.length, errors: latest.filter(r => r.error).length, abstention: latest.filter(r => r.abstention).length },
     summary: { recall_all_at_5: retrievalScored ? mean('recall_all_at_5') : null, recall_any_at_5: retrievalScored ? mean('recall_any_at_5') : null, recall_all_at_10: retrievalScored ? mean('recall_all_at_10') : null, ndcg_at_10: retrievalScored ? mean('ndcg_at_10') : null,
       latency_p50_ms: brainless || !scored.length ? null : percentile(scored.map(r => r.latency_ms ?? 0), 50), latency_p95_ms: brainless || !scored.length ? null : percentile(scored.map(r => r.latency_ms ?? 0), 95),
       ...(a.qa.mode !== 'none' ? (() => { const qa = latest.filter(r => typeof r.qa_score === 'number'); return { qa_score: qa.length ? qa.reduce((x, r) => x + (r.qa_score ?? 0), 0) / qa.length : null, qa_rows: qa.length, qa_errors: latest.filter(r => r.qa_error).length }; })() : {}),
-      ...(stopped ? { stopped } : {}) },
+      ...(stopped ? { stopped, stop_reason: stopReason } : {}) },
     facts: a.facts === 'none' ? null : { lane: a.facts, extractor: 'runExtractConversationFactsCore (product default model, force)', pages: 'conversation type, ISO session date', ...factStats,
       unresolved_share: factStats.facts ? factStats.unresolved / factStats.facts : null },
     qa: a.qa.mode === 'none' ? null : { ...a.qa, reader_prompt: a.qa.mode === 'think' ? 'gbrain think, asked for referenceDate = the question date, else the latest session date (YYYY-MM-DD); each row\'s qa_reference_date is the date think reports it used' : a.qa.context === 'facts' ? 'step-by-step reading prompt over the saved facts (text + stored date) of the top sessions'
       : a.qa.context === 'none' ? 'LongMemEval step-by-step reading prompt with an empty history (no memory)' : a.qa.context === 'oracle' ? 'LongMemEval step-by-step reading prompt over every gold session, in date order'
       : 'LongMemEval step-by-step reading prompt, sessions in date order', temperature_sent: { reader: sendsTemperature(a.qa.reader) ? 0 : 'none (provider default)', judge: sendsTemperature(a.qa.judge) ? 0 : 'none (provider default)' }, session_order: 'chronological (BEAM Month-DD-YYYY dates compared as dates since 2026-10-08; other formats as strings)', judge_prompts: a.benchmark.startsWith('beam') ? 'per-rubric-item yes/no' : 'LongMemEval official per-type prompts' },
     usage: a.qa.mode === 'none' ? null : (() => {
-      const all = allRows.flatMap(r => r.qa_receipts ?? []);
+      const all = latest.flatMap(r => r.qa_receipts ?? []);
       return { schema: USAGE_RECEIPT_SCHEMA, by_role: Object.fromEntries([...new Set(all.map(r => r.role))].sort().map(role => [role, sumUsage(all.filter(r => r.role === role))])) };
     })(),
     models_not_run: modelsNotRun('memory-qa', hasChatRoute),
@@ -767,7 +798,17 @@ if (import.meta.main) {
     const { receipt } = await runArm(a);
     const s = receipt.summary as Record<string, number | null>;
     process.stderr.write(`[memory-qa] ${a.benchmark} ${receipt.run_status}: ${(receipt.counts as Record<string, number>).scored} scored, recall_all@5 ${s.recall_all_at_5?.toFixed(4) ?? 'n/a'}; receipt ${join(a.output, 'receipt.json')}\n`);
-    process.exit(receipt.run_status === 'invalid' ? 4 : 0);
+    if (receipt.run_status === 'invalid') process.exit(4);
+    const stop = receipt.summary as { stopped?: string; stop_reason?: string };
+    if (stop.stopped && !('system' in a)) {
+      const op: OperatorMessage = { code: 'BUDGET_CAP', message: `the paid run stopped: ${stop.stop_reason}`,
+        why: 'the budget ledger refused a paid request (the run or program cap, or a host it cannot price), or Particle answered 402, so no later question ran',
+        fix: { next: 'ask_user', user_message: 'raise the budget, register the host and its prices in eval/runner/budget-ledger.ts, or top up the Particle balance, as the reason says; then rerun the same command, which resumes at the stopped question' },
+        artifact: join(a.output, 'receipt.json') };
+      process.stderr.write(renderOperatorMessage(op) + '\n');
+      process.exit(exitCodeFor(op));
+    }
+    process.exit(0);
   } catch (e) {
     if (e instanceof DecideError) { process.stderr.write(renderOperatorMessage(e.op) + '\n'); process.exit(e.op.fix.next === 'ask_user' ? 3 : 2); }
     throw e;

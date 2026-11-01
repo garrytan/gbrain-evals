@@ -1,7 +1,4 @@
 {
   "$schema": "https://github.com/garrytan/gstack/docs/pregate.md#pregate-v1",
-  "timeout_s": 1800,
-  "dependencies": {
-    "**": []
-  }
+  "timeout_s": 1800
 }

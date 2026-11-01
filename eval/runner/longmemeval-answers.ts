@@ -7,7 +7,7 @@ import type { SearchResult } from 'gbrain/types';
 import type { ChatResult } from 'gbrain/ai/gateway';
 import { classifyErrorOrigin, type AdapterSpec, type NdjsonRow, type Question, type RunConfigPreimage } from './longmemeval.ts';
 import { DEFAULT_JUDGE_SYSTEM_PROMPT, scoreAnswer, type JudgeEvidence, type JudgeResult } from './judge.ts';
-import { assertJudgeThinkingRoom, temperatureSent } from './anthropic-request.ts';
+import { CLAUDE5_THINKING_FLOOR, assertJudgeThinkingRoom, temperatureSent, withThinkingRoom } from './anthropic-request.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
 import { BENCHMARK_VERSION, loadReceipt, writeReceipt, type Receipt } from './receipt.ts';
 import { regressionPackageHash, resolveRegressionProduct, type ResolvedRegressionProduct } from './situation-recall-provenance.ts';
@@ -140,6 +140,7 @@ export function validateLmeAnswerProfile(p: LmeAnswerProfile): void {
   for (const limit of [p.answer_max_tokens, p.judge_max_tokens]) if (!Number.isInteger(limit) || limit < 1 || limit > 4096) throw new Error('explicit output limits in [1,4096] required');
   if (p.mode === 'offline') return;
   assertJudgeThinkingRoom(p.judge_model, p.judge_max_tokens);
+  if (withThinkingRoom(p.answer_model, p.answer_max_tokens) !== p.answer_max_tokens) throw new Error(`answer_max_tokens ${p.answer_max_tokens} is below the Claude 5 thinking floor (${CLAUDE5_THINKING_FLOOR}) for ${p.answer_model}`);
   if (!/^(openai|anthropic|google):[^\s:]+$/.test(p.answer_model) || !/^[a-f0-9]{40}$/.test(p.expected_product_sha ?? '')
     || (p.expected_package_sha256 !== undefined && !/^[a-f0-9]{64}$/.test(p.expected_package_sha256))) throw new Error('supported answer provider and exact product identity required');
   for (const cap of [p.answer_budget, p.judge_budget]) if (!cap || cap.kind !== 'isolated-provider-cap' || !cap.approval_id?.trim()
@@ -274,6 +275,7 @@ export async function runLongMemEvalAnswers(options: { datasetPath: string; rows
         failure(origin, `answer generation failed (${origin}); usage may be unavailable`); continue;
       }
       const answer = row.answer;
+      if (answer?.stopReason === 'length' && typeof answer.text === 'string' && !answer.text.trim()) { failure('harness', `the answer model spent its whole ${p.answer_max_tokens}-token answer limit before writing any text (stop reason length)`); continue; }
       if (!answer || typeof answer.text !== 'string' || !answer.text.trim() || answer.model !== p.answer_model || answer.providerId !== p.answer_model.split(':')[0] || !Array.isArray(answer.blocks)
         || !['end', 'tool_calls', 'length', 'refusal', 'content_filter', 'other'].includes(answer.stopReason) || !answer.usage
         || ![answer.usage.input_tokens, answer.usage.output_tokens, answer.usage.cache_read_tokens, answer.usage.cache_creation_tokens].every(value => Number.isInteger(value) && value >= 0)) { failure('sut', 'invalid answer model/output/usage'); continue; }
