@@ -219,8 +219,9 @@ How this page changed, newest first. Measurement history lives in the dated repo
 
 ### 2026-11-01: primary models named
 
-The opening paragraph names claude-opus-5-5 and particle-1 as the primary models and points to the shared provider
-module. Before, it pointed only to CLAUDE.md's model rules.
+[`f9b891e3`](https://github.com/garrytan/gbrain-evals/commit/f9b891e3), gbrain-evals
+[#274](https://github.com/garrytan/gbrain-evals/pull/274). The opening paragraph names claude-opus-5-5 and particle-1 as
+the primary models and points to the shared provider module. Before, it pointed only to CLAUDE.md's model rules.
 
 ### 2026-11-01: Compressed receipts are checked member by member
 
