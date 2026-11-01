@@ -86,7 +86,7 @@ import { loadCorpus, type Corpus, type MemoryQuestion, type Session } from '../m
 import { ContextStore } from '../memory-qa/arms.ts';
 import { instrumentFor, type Instrument } from '../memory-qa/instruments.ts';
 import { DEFAULT_MAX_ATTEMPTS, OUTCOMES, type Outcome } from '../memory-qa/outcomes.ts';
-import { ChatClient, judgeAnswer, READER_TEMPLATE, type ChatLike } from '../memory-qa/qa-v2.ts';
+import { ChatClient, isCompatModel, judgeAnswer, READER_TEMPLATE, type ChatLike } from '../memory-qa/qa-v2.ts';
 import { answerId, answerRecord, judgmentKey, readRecords, RecordLog, sha256, type AnswerRecord, type JudgmentRecord, type Q1Row } from '../memory-qa/records.ts';
 import { failureRow, hashEmbed, readinessProbe, selectQuestions } from '../memory-qa/run-systems.ts';
 import { checkSealedDestinations, sealedPaths } from '../memory-qa/sealed-profile.ts';
@@ -551,9 +551,10 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
   const maxAttempts = opts.maxAttempts ?? DEFAULT_MAX_ATTEMPTS;
   const arms = def.arms.filter(a => !opts.arms || opts.arms.includes(a.id));
   if (!arms.length) throw refuse({ code: 'USAGE', message: `--arms ${opts.arms?.join(',')} names no arm of ${def.id}`, why: 'a run needs at least one arm', fix: { next: 'run', argv: [...FRONT, 'show', '--cell', def.id] } });
-  const particleReaders = opts.providerProxy ? [...new Set(arms.flatMap(a => a.readers.filter(r => r.startsWith('particle:'))))] : [];
-  if (particleReaders.length) throw refuse({ code: 'NOT_YET_AVAILABLE', message: `cell ${def.id} reads with ${particleReaders.join(', ')} through --provider-proxy, and the lease proxy has no particle route yet`,
-    why: 'through the lease proxy a reader is metered only by the proxy; a particle reader would call api.particle.ai with the real key and no meter (the route comes with plan GST-605 Phase 2)', fix: { next: 'run', argv: [...FRONT, 'run', '--cell', def.id, '--out', out] } });
+  const instrument = instrumentFor(def.canonical_instrument);
+  const compatModels = opts.providerProxy ? [...new Set([...arms.flatMap(a => a.readers), instrument.canonical_judge, ...(opts.frontier === false ? [] : arms.flatMap(a => a.frontier?.judges ?? []))])].filter(isCompatModel) : [];
+  if (compatModels.length) throw refuse({ code: 'NOT_YET_AVAILABLE', message: `cell ${def.id} reads or judges with ${compatModels.join(', ')} through --provider-proxy, and the lease proxy has no particle route yet`,
+    why: 'through the lease proxy a reader or judge is metered only by the proxy; a particle reader or judge would call api.particle.ai with the real key and no meter (the route comes with plan GST-605 Phase 2)', fix: { next: 'run', argv: [...FRONT, 'run', '--cell', def.id, '--out', out] } });
 
   // Custody before anything reads the corpus.
   const custody = !deps.corpus && needsCustody(def);
@@ -573,7 +574,6 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
   const shard = opts.shard ?? { index: 0, count: 1 };
   const convIds = [...new Set(selected.map(q => q.conversation))].sort().filter((_, i) => i % shard.count === shard.index);
   const armQs = new Map(arms.map(a => [a.id, new Set((a.questions ? selectCellQuestions(selected, a.questions) : selected).map(q => q.id))]));
-  const instrument = instrumentFor(def.canonical_instrument);
   const scheduledSha = sha256(selected.map(q => q.id).join('\n'));
 
   // Run configs: written once and kept byte for byte (config_sha256 is their sha256), refused when a resume would change

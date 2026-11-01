@@ -36,7 +36,9 @@
  * limit, any sampling control) and `response_meta` (the raw `metadata`,
  * `service_tier`, `system_fingerprint`; all null on a failed attempt),
  * because those settings change answers and the provider can change the model
- * behind one id. Both fields are optional, so the schema stays v1.
+ * behind one id, and on a failed attempt `retry_after_ms`, the provider's
+ * Retry-After waited before the next attempt. These fields are optional, so the
+ * schema stays v1.
  */
 
 export const USAGE_RECEIPT_SCHEMA = 'usage-receipt/v1';
@@ -91,6 +93,8 @@ export interface UsageReceipt {
   request?: ReceiptRequest;
   /** What identifies the serving model and tier; every field is null on a failed attempt. */
   response_meta?: ResponseMeta;
+  /** A failed attempt's wait before the next one, from the provider's Retry-After, capped at 120 s; absent (memory-qa) or null (the Cat 40 loop) when it sent none. Recorded by lanes that call an OpenAI-compatible provider. */
+  retry_after_ms?: number | null;
 }
 
 /** The settings a request sent that change the answer. */
