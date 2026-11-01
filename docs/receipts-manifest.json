@@ -7524,9 +7524,9 @@
       "claim_id": "particle-w10b-replay-report",
       "readme_anchor": "docs/findings/2026-11-01-particle-1-longmemeval-w10b.md: Changelog",
       "artifact_path": "docs/benchmarks/2026-11-01-longmemeval-particle-replay/REPORT.md",
-      "artifact_sha256": "ac2dcb69e8a205670550930fa9edef28ebfa8ae0136e39e271861d3543688f07",
+      "artifact_sha256": "023fa16521eafc920f0016ab5c96b7f67223409052118af723a144fd1cb1642b",
       "status": "covered",
-      "note": "The replay report as merged in #247 (sha256 ee057662743ab8c04dc1d4a07e0f396697f8cf42f3fdabe9a915bba4342b8eca at 095d8711) plus the disclosure note added under its title on 2026-11-01. It keeps its original figures; docs/corrections.md carries the three cost corrections the recheck found."
+      "note": "The replay report as merged in #247 (sha256 ee057662743ab8c04dc1d4a07e0f396697f8cf42f3fdabe9a915bba4342b8eca at 095d8711) plus, added on 2026-11-01, the disclosure note under its title and a dated note beside each cost figure docs/corrections.md corrects. It keeps its original figures; docs/corrections.md carries the three cost corrections the recheck found."
     },
     {
       "claim_id": "particle-w10b-comparator-rows-w10b-opus55-notes",

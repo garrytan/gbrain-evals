@@ -13,7 +13,7 @@ Measured 2026-10-06. Status: **Complete** (150 of 150 questions in all four arms
 
 **The whole history scored a little higher with both readers, and the gap sits in multi-session questions.** The preregistered test of "whole history better by more than 7 points" did not pass for either reader, so the result is "gbrain within 7 points", not "the same". All of Sonnet's five-question gap and all of `gpt-6.1-sol`'s net four are in multi-session questions, where the answer is spread over more conversations than gbrain's top 5 always returns.
 
-**gbrain's reader input is about one eighth of the whole history, and its recurring cost per question is about one seventh.** The Sonnet 5.5 reader cost $0.024 per question with gbrain (reader plus rerank) and $0.173 with the whole history, at batch prices. For `gpt-6.1-sol`: $0.015 against $0.107. gbrain also pays a one-time $0.015 per history to embed it.
+**gbrain's reader input is about one eighth of the whole history, and its recurring cost per question is about one seventh.** The Sonnet 5.5 reader cost $0.024 per question with gbrain (reader plus rerank) and $0.173 with the whole history, at batch prices. For `gpt-6.1-sol`: $0.015 against $0.107 ([corrected 2026-11-01](../corrections.md#longmemeval)). gbrain also pays a one-time $0.015 per history to embed it.
 
 ## The concrete case
 
@@ -36,8 +36,8 @@ Measured 2026-10-06. Status: **Complete** (150 of 150 questions in all four arms
 |---|---|---|---|---|---|---|---|---|
 | `claude-sonnet-5-5` | whole history | Complete 150/150 | **144 (96.0%)** | 144 | 146 | 0 | 171,596 | $0.173 |
 | `claude-sonnet-5-5` | gbrain (`c5fb0201`) | Complete 150/150 | **139 (92.7%)** | 143 | 146 | 0 | 22,242 | $0.023 |
-| `gpt-6.1-sol` | whole history | Complete 150/150 | **141 (94.0%)** | 141 | 150 | 0 | 106,683 | $0.107 |
-| `gpt-6.1-sol` | gbrain (`c5fb0201`) | Complete 150/150 | **137 (91.3%)** | 139 | 146 | 0 | 13,794 | $0.014 |
+| `gpt-6.1-sol` | whole history | Complete 150/150 | **141 (94.0%)** | 141 | 150 | 0 | 106,683 | $0.107 ([corrected 2026-11-01](../corrections.md#longmemeval)) |
+| `gpt-6.1-sol` | gbrain (`c5fb0201`) | Complete 150/150 | **137 (91.3%)** | 139 | 146 | 0 | 13,794 | $0.014 ([corrected 2026-11-01](../corrections.md#longmemeval)) |
 
 Exact 95% intervals (official judge): Sonnet whole history 91.5% to 98.5%, gbrain 87.3% to 96.3%; `gpt-6.1-sol` whole history 88.9% to 97.2%, gbrain 85.6% to 95.3%. Type-weighted to the full 500's mix, the official-judge accuracies are 96.0%, 92.6%, 94.0% and 91.3%, within 0.1 point of the stratified ones.
 
@@ -64,9 +64,9 @@ By type (official judge):
 
 | | Sonnet 5.5, gbrain | Sonnet 5.5, whole history | `gpt-6.1-sol`, gbrain | `gpt-6.1-sol`, whole history |
 |---|---|---|---|---|
-| Recurring: reader input and output (batch prices) | $0.0233 | $0.1728 | $0.0144 | $0.1073 |
+| Recurring: reader input and output (batch prices) | $0.0233 | $0.1728 | $0.0144 ([corrected 2026-11-01](../corrections.md#longmemeval)) | $0.1073 ([corrected 2026-11-01](../corrections.md#longmemeval)) |
 | Recurring: retrieval query (Voyage rerank; query embedding under $0.0001) | $0.0007 | none | $0.0007 | none |
-| **Recurring total** | **$0.024** | **$0.173** | **$0.015** | **$0.107** |
+| **Recurring total** | **$0.024** | **$0.173** | **$0.015** ([corrected 2026-11-01](../corrections.md#longmemeval)) | **$0.107** ([corrected 2026-11-01](../corrections.md#longmemeval)) |
 | One-time: embedding the history (`text-embedding-3-large`) | $0.015 | none | $0.015 | none |
 
 Recurring cost is paid on every question; the one-time cost is paid once per history and amortizes over every question asked of it. Judging is excluded from both. At list prices (no batch discount), every reader figure doubles. Latency is not reported: batch requests carry no per-request timing, and batch turnaround is not latency.
