@@ -1,0 +1,88 @@
+{
+ "schema_version": 1,
+ "purpose": "second-judge sensitivity for docs/findings/2026-11-01-particle-1-longmemeval-w10b.md (not counted)",
+ "protocol": {
+  "name": "longmemeval-official-evaluate_qa-anscheck",
+  "sha256": "efcf3d0d581bcd5e4b278c3a77378a0c97b15941c58e77ba93f2b5f216414753"
+ },
+ "verdict_rule": "\"yes\" in the lowercased reply; a reader error or empty answer is wrong without a judge call",
+ "options": {
+  "maxTokens": 10,
+  "replicate": 0,
+  "effort": "low",
+  "sent_as": {
+   "openai": "reasoning_effort low, max_completion_tokens 2000, no temperature",
+   "anthropic": "output_config.effort low, max_tokens 2000, no temperature (adaptive thinking cannot be turned off)"
+  }
+ },
+ "judges": {
+  "gpt-6.1-sol": {
+   "model": "openai:gpt-6.1-sol",
+   "arms": [
+    "particle-1",
+    "claude-opus-5-5",
+    "claude-sonnet-5-5"
+   ],
+   "listing": {
+    "id": "gpt-6.1-sol",
+    "created": 1790552874,
+    "created_at": null
+   },
+   "judged": 1500,
+   "of": 1500,
+   "errors": 0,
+   "skipped": 0,
+   "yes": 1404,
+   "response_models": {
+    "gpt-6.1-sol": 1500
+   },
+   "finish": {
+    "stop": 1500
+   },
+   "from_cache": 0,
+   "usd": 0.861364
+  },
+  "claude-sonnet-5-5": {
+   "model": "anthropic:claude-sonnet-5-5",
+   "arms": [
+    "particle-1",
+    "gpt-6.1-sol"
+   ],
+   "listing": {
+    "id": "claude-sonnet-5-5",
+    "created": null,
+    "created_at": "2026-09-28T00:00:00Z"
+   },
+   "judged": 1000,
+   "of": 1000,
+   "errors": 0,
+   "skipped": 0,
+   "yes": 905,
+   "response_models": {
+    "claude-sonnet-5-5": 1000
+   },
+   "finish": {
+    "end_turn": 1000
+   },
+   "from_cache": 9,
+   "usd": 0.749498
+  }
+ },
+ "stopped": null,
+ "ledger": {
+  "usd": 1.606908,
+  "input_tokens": 706634,
+  "output_tokens": 19364,
+  "basis": "budget ledger w10-particle-second-judge-2026-11-01T17-20-49-265Z-9da34dce: 2491 paid requests, 0 charged at their reservation because usage was unavailable",
+  "ledger": "<work>/w10-second-judge/ledger.sqlite",
+  "program_cap_usd": 25,
+  "overshoot_usd": 0,
+  "event_loop_lag_ms": {
+   "p50": 0,
+   "p99": 1,
+   "max": 20.5
+  }
+ },
+ "started_at": "2026-11-01T17:21:05.105Z",
+ "finished_at": "2026-11-01T17:24:13.287Z"
+}
