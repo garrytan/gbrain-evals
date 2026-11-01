@@ -49,3 +49,8 @@ All provider calls go through `eval/runner/metering-proxy.ts` in lease mode, one
 - Cat 30 B-pre (`SKILLOPT_BPRE=1`, one seed, Haiku optimizer): pass, held-out 0.00 to 0.42, $0.0805 metered.
 - Cat 32 B-pre (part A only) with `gpt-6.1-sol` judging: pass, hack 1.00 rule against 0.01 quality, control 0.90 against 0.91, $0.0494 metered.
 - Three Sonnet 5.5 rollouts of the `seed-missing-structure` skill to price a Sonnet rollout: $0.0841 metered.
+
+## Amendment 1 (2026-11-01, while stage 1 ran, before the probe it adds): R48 frontier check
+
+Garry's rule R48 (2026-11-01) arrived after registration: every null or negative SkillOpt result gets one "Why null?" cycle (exposure, task fit, power and saturation, and whether today's frontier model does the job without the part under test), ending in KEEP, FIX-METHOD or CUT-CANDIDATE. To answer the last question with a measurement, one probe is added: the four unoptimized seed skills scored on their own held-out tasks with `anthropic:claude-opus-5-5` as the target, 2 runs per task, through the same `scoreSkillOnTasks` the categories use, metered in its own proxy slot. Cat 33 already scores each seed on Sonnet 5.5. The probe has no bar; it is reported beside the Haiku baselines. Its cost comes out of the same $32 stop, and Cat 33's projection in stage 2 includes it.
+
