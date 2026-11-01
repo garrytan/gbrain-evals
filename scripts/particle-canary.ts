@@ -17,9 +17,9 @@
  *
  * With --compare (an earlier canary of the same model, endpoint, sampling and prompt set, kept outside --out; a
  * mismatch is refused before anything is sent) it reports how many answers changed, how many came back with a different response model, system fingerprint, weight version or tier,
- * and the mean change in per-answer mean log probability. It warns above --warn-changed and --warn-logprob; those
- * thresholds are set above the largest difference seen between back-to-back canary pairs (serving noise), measured
- * before the first counted use. The curated history (docs/benchmarks/particle-canary/history.jsonl) is committed
+ * and the mean change in per-answer mean log probability. It warns above --warn-changed and --warn-logprob, which
+ * default to CANARY_WARN: thresholds set above the largest difference seen between back-to-back canary pairs (serving
+ * noise), measured before the first counted use. The curated history (docs/benchmarks/particle-canary/history.jsonl) is committed
  * with each report, never written here.
  *
  * It refuses a base URL the ledger cannot price (a request there would spend unmetered); loopback hosts (a metering
@@ -29,20 +29,28 @@
  *
  * Exit 0: every prompt answered and, with --compare, every prompt compared (warnings print above a threshold).
  * Exit 1: refused (including a --warn threshold that is not a number), a prompt failed after its retries or gave no usable answer, a budget stop (the ledger's, a proxy's
- * or Particle's credit) ended the canary, or --compare compared fewer than every prompt or, under --warn-logprob, had
- * no log probabilities to compare.
+ * or Particle's credit) ended the canary, or --compare compared fewer than every prompt or had no log probabilities to
+ * compare against the log-probability threshold (--warn-logprob, else CANARY_WARN's).
  */
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { budgetOptionsFrom, receiptCost, startPaidRun } from '../eval/runner/budget-ledger.ts';
 import { requirePaidArm } from '../eval/runner/paid-arm.ts';
+import { scrubMachinePaths } from '../eval/runner/receipt.ts';
 import { CompatHttpError, assertMetered, compatBaseUrl, compatRequest, compatSend, isLoopbackUrl, type CanarySampling, type CompatLogprob, type CompatRequest } from '../eval/runner/providers/openai-compatible.ts';
 import { normalizeFinish, normalizeUsage, receipt, responseMeta, usageSourceOf, type UsageReceipt } from '../eval/runner/usage-receipt.ts';
 
 export const CANARY_MODEL = 'particle:particle-1';
 export const CANARY_SAMPLING: CanarySampling = { mode: 'canary', temperature: 0, seed: 20261031, top_logprobs: 5 };
 export const CANARY_ESTIMATE_USD = 0.01;
+/**
+ * --compare's warning thresholds, above the serving noise of three back-to-back canary pairs on 2026-11-01 (the particle
+ * replay, docs/benchmarks/particle-canary/history.jsonl): 3, 1 and 2 of 12 answers changed, and the mean log probability
+ * moved 0.0153, 0.0025 and 0.0062. A warning fires on more than 3 changed answers or a move above 0.02.
+ */
+export const CANARY_WARN = { changed_answers: 3, mean_logprob_change: 0.02 } as const;
 const ATTEMPTS = 3;
 
 /** Short prompts with one expected answer each, so a changed answer or a moved log probability means a changed model or server. */
@@ -193,7 +201,7 @@ if (import.meta.main) {
       if (v.trim() === '' || !Number.isFinite(Number(v))) throw new Error(`${name} takes a number, not ${JSON.stringify(v)}`);
       return Number(v);
     };
-    const [changed, logprob] = [threshold('--warn-changed'), threshold('--warn-logprob')];
+    const [changed, logprob] = [threshold('--warn-changed') ?? CANARY_WARN.changed_answers, threshold('--warn-logprob') ?? CANARY_WARN.mean_logprob_change];
     const baseline: CanaryRecord | null = compare ? JSON.parse(readFileSync(compare, 'utf8')) : null;
     if (baseline) assertComparable(baseline, canaryIdentity());
     const { run, guard } = startPaidRun('particle-canary', { ...budgetOptionsFrom(argv), estimateUsd: CANARY_ESTIMATE_USD });
@@ -202,19 +210,19 @@ if (import.meta.main) {
     finally { guard.uninstall(); }
     const cost = receiptCost(run.close());
     mkdirSync(out, { recursive: true });
-    writeFileSync(target, JSON.stringify({ ...record, cost }, null, 2) + '\n');
+    writeFileSync(target, JSON.stringify({ ...record, cost: scrubMachinePaths(cost, undefined, undefined, undefined, [[join(homedir(), '.capy/work') + '/', '<work>/']]) }, null, 2) + '\n');
     const answered = record.results.filter(r => r.status === 'ok').length;
     console.log(`particle canary: ${answered} of ${CANARY_PROMPTS.length} answered${record.stopped ? `; stopped: ${record.stopped}` : ''}; ${target}`);
     let full = answered === CANARY_PROMPTS.length;
     if (baseline) {
       const diff = compareCanary(baseline, record);
       console.log(JSON.stringify(diff));
-      if (changed !== null && diff.changed_answers > changed) console.log(`warning: ${diff.changed_answers} answers changed (threshold ${changed}): the model behind particle-1 may have changed`);
+      if (diff.changed_answers > changed) console.log(`warning: ${diff.changed_answers} answers changed (threshold ${changed}): the model behind particle-1 may have changed`);
       if (diff.changed_identity > 0) console.log(`warning: ${diff.changed_identity} answers came back with a different response model, system fingerprint, weight version or service tier: the serving stack behind particle-1 changed`);
-      if (logprob !== null && diff.mean_abs_logprob_change === null) {
-        console.log('warning: no answer had log probabilities for every token in both canaries, so --warn-logprob checked nothing');
+      if (diff.mean_abs_logprob_change === null) {
+        console.log('warning: no answer had log probabilities for every token in both canaries, so the log-probability threshold checked nothing');
         full = false;
-      } else if (logprob !== null && diff.mean_abs_logprob_change! > logprob) console.log(`warning: mean log probability moved ${diff.mean_abs_logprob_change} (threshold ${logprob}): the model behind particle-1 may have changed`);
+      } else if (diff.mean_abs_logprob_change > logprob) console.log(`warning: mean log probability moved ${diff.mean_abs_logprob_change} (threshold ${logprob}): the model behind particle-1 may have changed`);
       if (!diff.complete) {
         console.log(`warning: both canaries answered only ${diff.compared} of ${CANARY_PROMPTS.length} prompts, so this comparison is not a weight check`);
         full = false;
