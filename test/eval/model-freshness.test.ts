@@ -135,8 +135,8 @@ describe('Particle in the freshness check (plan GST-605 Phase 1, item 6)', () =>
       return Response.json(PARTICLE_MODELS);
     }) as unknown as typeof fetch;
     const stray = { PARTICLE_API_KEY: 'k', PARTICLE_BASE_URL: 'https://particle.attacker.example/v1' };
-    await expect(listParticleModels(stray, fetchImpl)).rejects.toThrow('particle.attacker.example');
-    expect(await listParticleModels(stray, fetchImpl, { required: false })).toEqual({ skipped: expect.stringContaining('PARTICLE_API_KEY is not sent there') });
+    await expect(listParticleModels(stray, fetchImpl)).rejects.toThrow('PARTICLE_API_KEY is not sent to particle.attacker.example, because compatSend\'s host check refuses it: budget: the ledger cannot price particle.attacker.example');
+    expect(await listParticleModels(stray, fetchImpl, { required: false })).toEqual({ skipped: expect.stringContaining('PARTICLE_API_KEY is not sent to particle.attacker.example') });
     expect(seen).toEqual([]);
     const us = await listParticleModels({ PARTICLE_API_KEY: 'k', PARTICLE_BASE_URL: 'https://us.api.particle.ai/v1' }, fetchImpl);
     expect(seen).toEqual([{ url: 'https://us.api.particle.ai/v1/models', auth: 'Bearer k' }]);

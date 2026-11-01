@@ -161,7 +161,7 @@ export async function listParticleModels(env: Record<string, string | undefined>
     const base = compatBaseUrl('particle', env);
     const chat = compatRequest('particle:particle-1', [], {}, env);
     try { assertMetered(chat); }
-    catch { throw new Error(`Particle model list: ${new URL(base).hostname} is neither a Particle API host the budget ledger prices nor loopback, so PARTICLE_API_KEY is not sent there`); }
+    catch (e) { throw new Error(`Particle model list: PARTICLE_API_KEY is not sent to ${new URL(base).hostname}, because compatSend's host check refuses it: ${(e as Error).message}`); }
     const res = await fetchImpl(`${base}/models`, { headers: { authorization: `Bearer ${env.PARTICLE_API_KEY}` }, signal: AbortSignal.timeout(30_000) });
     if (!res.ok) throw new Error(`Particle model list: HTTP ${res.status}`);
     return { models: particleListing(await res.json()) };
