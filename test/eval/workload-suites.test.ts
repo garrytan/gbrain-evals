@@ -11,6 +11,8 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { assertScorerRejectsFakeSystems } from '../../eval/runner/mutation-kit.ts';
 import { SMOKE_ONLY_READERS } from '../../eval/runner/systems/baselines.ts';
+import { answerOne, selectQueries, sweep } from '../../eval/workload-suites/bench.ts';
+import type { Bench } from '../../eval/workload-suites/bench-infra.ts';
 import { runChecks, storePresenceFailures } from '../../eval/workload-suites/checks.ts';
 import { SUITES, runSuite } from '../../eval/workload-suites/cli.ts';
 import { bundleFiles, bundleManifest, renderContext } from '../../eval/workload-suites/common.ts';
@@ -259,6 +261,34 @@ describe('schema, model rule and frontier subset', () => {
     expect(subset).toEqual(frontierSubset(structuredClone(b)));
     const cats = new Set(b.queries.filter(q => subset.includes(q.id)).map(q => q.meta.category));
     expect(cats.size).toBe(new Set(b.queries.map(q => q.meta.category)).size);
+  });
+});
+
+describe('bench.ts sweep', () => {
+  const corrections = SUITES.corrections.generate({ seed: SUITES.corrections.defaultSeed, smoke: false });
+  const fixed = MODEL_CONFIG.fixed_reader.id;
+  const fakeBench = (calls: string[]) => ({
+    model: async (model: string, _prompt: string, opts: { tag: string }) => {
+      calls.push(`${model} ${opts.tag}`);
+      return { text: 'Answer: unknown', input_tokens: 1, output_tokens: 1, cached: false, model, finish_reason: 'stop', truncated: false };
+    },
+    proxy: { exhausted: false },
+  }) as unknown as Bench;
+
+  test('a smoke sweep reads the smoke run\'s own answered questions, even when none is in the frontier subset, and a sweep with nothing to read fails (#244)', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'wl-sweep-'));
+    try {
+      const scheduled = selectQueries(corrections, 3);
+      const subset = new Set(frontierSubset(corrections));
+      expect([scheduled.length, scheduled.filter(q => subset.has(q.id)).length]).toEqual([3, 0]);
+      for (const q of scheduled) await answerOne(fakeBench([]), corrections, dir, 'gbrain-append', fixed, q, 'Context for the question.', null, []);
+      const calls: string[] = [];
+      await sweep(fakeBench(calls), corrections, dir, ['anthropic:claude-opus-5-5'], () => {}, scheduled);
+      expect(calls.sort()).toEqual(scheduled.map(q => `anthropic:claude-opus-5-5 corrections/gbrain-append/reader/${q.id}`).sort());
+      await expect(sweep(fakeBench([]), corrections, dir, ['anthropic:claude-opus-5-5'], () => {})).rejects.toThrow(`no ${fixed} answers to sweep`);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });
 

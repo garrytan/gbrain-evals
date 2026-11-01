@@ -13,7 +13,8 @@
  *           every scheduled question with the fixed reader. B2 runs its
  *           correction schedule through the per-system CorrectionAdapter.
  *   sweep   re-read the frontier subset's saved contexts with the sweep models
- *           (no retrieval, no ingest).
+ *           (no retrieval, no ingest). A smoke sweep re-reads every scheduled
+ *           smoke question instead, and a sweep with nothing to read fails.
  *   score   deterministic scoring of every answer; only `ambiguous` answers go
  *           to the fixed judge. Writes results.json.
  *
@@ -355,12 +356,14 @@ function armsWithAnswers(dir: string): string[] {
   return existsSync(join(dir, 'answers')) ? readdirSync(join(dir, 'answers')).sort() : [];
 }
 
-async function sweep(bench: Bench, bundle: SuiteBundle, dir: string, models: string[], log: (l: string) => void) {
-  const subset = new Set(frontierSubset(bundle));
+/** Re-reads the fixed reader's saved prompts with `models`: the frontier subset's questions, or in a smoke run (`smokeQueries`) every scheduled question, which may all fall outside the subset. Throws when there is no answer to re-read. */
+export async function sweep(bench: Bench, bundle: SuiteBundle, dir: string, models: string[], log: (l: string) => void, smokeQueries: HarnessQuery[] | null = null) {
+  const selected = new Set(smokeQueries ? smokeQueries.map(q => q.id) : frontierSubset(bundle));
   const queries = new Map(bundle.queries.map(q => [q.id, q]));
   const forbidden = forbiddenIds(bundle);
-  for (const arm of armsWithAnswers(dir)) {
-    const base = readReceipts(dir, arm, MODEL_CONFIG.fixed_reader.id).filter(r => subset.has(r.query_id) && !r.error);
+  const bases = armsWithAnswers(dir).map(arm => [arm, readReceipts(dir, arm, MODEL_CONFIG.fixed_reader.id).filter(r => selected.has(r.query_id) && !r.error)] as const);
+  if (!bases.some(([, base]) => base.length)) throw new Error(`no ${MODEL_CONFIG.fixed_reader.id} answers to sweep in ${dir} for ${smokeQueries ? `the ${smokeQueries.length} scheduled smoke questions` : 'the frontier subset'}; run --phase answer first`);
+  for (const [arm, base] of bases) {
     for (const model of models) {
       await pool(base, 6, async r => {
         const path = receiptPath(dir, arm, model, r.query_id);
@@ -511,7 +514,7 @@ if (import.meta.main) {
       else await answerStatic(bench!, bundle, dir, armIds, queries, log);
     } else if (phase === 'sweep') {
       const models = requested.length ? requested : MODEL_CONFIG.frontier_sweep.map(m => m.id).filter(m => m !== MODEL_CONFIG.fixed_reader.id);
-      await sweep(bench!, bundle, dir, models, log);
+      await sweep(bench!, bundle, dir, models, log, smoke !== null ? queries : null);
     } else if (phase === 'score') {
       await score(bench, bundle, dir, log, smoke !== null);
     }
