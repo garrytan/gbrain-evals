@@ -341,7 +341,7 @@ describe('runCat5', () => {
     expect(receipt.verdict).toBe('partial'); // baseline_only → partial (no real gate yet)
     expect(receipt.n_total).toBe(2);
     expect(receipt.n_scored).toBe(2);
-    expect(receipt.judge).toEqual({ model: 'claude-haiku-4-5-20251001', temperature: 0 });
+    expect(receipt.judge).toEqual({ model: 'claude-haiku-5-5', temperature: null });
   });
 
   // Regression: unresolvable gold slugs previously produced an EMPTY source

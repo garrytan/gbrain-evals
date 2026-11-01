@@ -1,7 +1,7 @@
 /**
  * BrainBench LLM-as-judge (Cat 5 / 8 / 9).
  *
- * Uses Claude Haiku 4.5 by default via tool-use (`score_answer` tool) so
+ * Uses Claude Haiku 5.5 by default via tool-use (`score_answer` tool) so
  * output is structured and parseable without string-level hallucinations.
  * Requests go through `fitAnthropicRequest`: a Claude 5-family judge gets no
  * temperature, `tool_choice: auto` with an instruction to call the tool and,
@@ -127,7 +127,7 @@ export interface JudgeResult {
 export interface JudgeConfig {
   /** Haiku client. Default: lazy singleton reading ANTHROPIC_API_KEY. */
   client?: Anthropic;
-  /** Model ID. Default: claude-haiku-4-5-20251001 (Haiku 4.5). */
+  /** Model ID. Default: DEFAULT_JUDGE_MODEL (claude-haiku-5-5). */
   model?: string;
   /** Max tokens for judge output. Default 800. */
   maxTokens?: number;
@@ -147,7 +147,7 @@ export interface JudgeConfig {
 
 // ─── Defaults ────────────────────────────────────────────────────────
 
-const DEFAULT_MODEL = 'claude-haiku-4-5-20251001';
+export const DEFAULT_JUDGE_MODEL = 'claude-haiku-5-5';
 const DEFAULT_MAX_TOKENS = 800;
 // Judges run at temperature 0: verdicts must be reproducible (WS0 policy).
 // Claude 5-family judges reject it and sample at the provider default.
@@ -522,7 +522,7 @@ export async function scoreAnswer(
   config: JudgeConfig = {},
 ): Promise<JudgeResult> {
   const client = config.client ?? getDefaultClient();
-  const model = config.model ?? DEFAULT_MODEL;
+  const model = config.model ?? DEFAULT_JUDGE_MODEL;
   const price = judgePrice(model);
   const sent = { temperature_sent: temperatureSent(model, JUDGE_TEMPERATURE), tool_choice_sent: toolChoiceSent(model) };
   const maxTokens = config.maxTokens ?? withThinkingRoom(model, DEFAULT_MAX_TOKENS);

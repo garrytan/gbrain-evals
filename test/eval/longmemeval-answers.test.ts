@@ -66,7 +66,7 @@ function fixture() {
     errors: [], publishable: false, gbrain_pin: capture.product.declared_pin, gbrain_version: capture.product.package_version, started_at: '2026-01-01T00:00:00Z', finished_at: '2026-01-01T00:01:00Z',
     hashes: { dataset: digest(questionData), evidence_rows: digest(bytes) }, resolved_config: { evidence_capture: capture } });
   const profile: LmeAnswerProfile = { mode: 'offline', adapter: 'gbrain-keyword', dataset_sha256: capture.dataset_sha256, rows_sha256: digest(bytes), source_manifest_sha256: capture.source_manifest_sha256,
-    retrieval_config_sha256: runConfigHash(config), answer_model: 'test:answer', judge_model: 'claude-haiku-4-5-20251001', answer_max_tokens: 128, judge_max_tokens: 128 };
+    retrieval_config_sha256: runConfigHash(config), answer_model: 'test:answer', judge_model: 'claude-haiku-5-5', answer_max_tokens: 128, judge_max_tokens: 128 };
   return { root, datasetPath, rowsPath, receiptPath, profile, outputDir: join(root, 'answer-output') };
 }
 
@@ -75,7 +75,7 @@ function answer(): ChatResult {
     usage: { input_tokens: 10, output_tokens: 4, cache_read_tokens: 0, cache_creation_tokens: 0 } };
 }
 function judgeResponse(malformed = false): Anthropic.Messages.Message {
-  return { id: 'synthetic-judge', type: 'message', role: 'assistant', model: 'claude-haiku-4-5-20251001', stop_reason: 'tool_use', stop_sequence: null,
+  return { id: 'synthetic-judge', type: 'message', role: 'assistant', model: 'claude-haiku-5-5', stop_reason: 'tool_use', stop_sequence: null,
     content: malformed ? [{ type: 'text', text: 'Malformed output' }] : [{ type: 'tool_use', id: 'score', name: 'score_answer', input: { verdict: 'pass', overall_rationale: 'Scripted plumbing result only.',
       scores: ['grounding', 'answer_or_abstention'].map(criterion_id => ({ criterion_id, score: 5, rationale: 'Synthetic stub, not relevance evidence.' })) } }],
     usage: { input_tokens: 10, output_tokens: 8, cache_creation_input_tokens: 0, cache_read_input_tokens: 0 } } as Anthropic.Messages.Message;

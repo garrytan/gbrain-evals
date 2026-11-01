@@ -8,7 +8,7 @@ Cat15 checks whether the `propose_takes` extractor finds those claims without tr
 
 The runner reads eight fixture pages from the gbrain package's calibration corpus. It imports the production `EXTRACT_TAKES_PROMPT` from gbrain instead of keeping a separate copy, runs extraction, then compares the output with hand-labeled `.gradeable-claims.json` files.
 
-A Haiku judge matches extracted claims to the labels. Every extracted and labeled claim must be accounted for exactly once. Invalid judge output gets one corrective retry; a second failure is a judge error and is excluded from the score rather than reported as poor extraction.
+A Haiku 5.5 judge matches extracted claims to the labels, and Opus 5.5 extracts them by default (`CAT15_MODEL` and `CAT15_JUDGE_MODEL` override; runs before 2026-11-01 used Sonnet 4.6 and Haiku 4.5, a different identity). Every extracted and labeled claim must be accounted for exactly once. Invalid judge output gets one corrective retry; a second failure is a judge error and is excluded from the score rather than reported as poor extraction.
 
 An extracted claim that matches a label is a **true positive**. An extra claim is a **false positive**. A labeled claim that was missed is a **false negative**.
 

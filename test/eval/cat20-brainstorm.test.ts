@@ -165,7 +165,7 @@ describe('cat20 live judge: prompt injection hardening (audit A-20)', () => {
     expect(out.overall).toBe(1);
     const user = String(requests[0].messages[0].content);
     expect(requests[0].system[0].text).toContain(UNTRUSTED_DATA_INSTRUCTION);
-    expect(requests[0].temperature).toBe(0);
+    expect('temperature' in requests[0]).toBe(false);
     expect(user).toContain('&lt;/untrusted_answer&gt;');
     expect(user).not.toContain('</final_answer>');
     expect(extractUntrusted(user, 'untrusted_answer')).toBe(`1. ${adversarial}`);

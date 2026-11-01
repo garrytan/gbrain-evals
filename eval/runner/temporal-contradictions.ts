@@ -32,7 +32,7 @@
  * Paid: the judge model is called through gbrain's own gateway; the run joins the eval budget
  * ledger (--paid --budget-usd N | --budget-run-id ID).
  *
- * Usage (dev): bun eval/runner/temporal-contradictions.ts --gbrain <checkout>@<sha> --models anthropic:claude-haiku-4-5
+ * Usage (dev): bun eval/runner/temporal-contradictions.ts --gbrain <checkout>@<sha> --models anthropic:claude-haiku-5-5
  *   [--runs 3] [--seeds 3,5] [--phrasing A|A2|A3] --output <dir> --paid --budget-usd N
  * Custodian (held-out) mode: --phrasing-file <custody path> --decision-id <id> --purpose <text> --seeds <held-out seeds>,
  * exactly as temporal-edges.ts.
@@ -126,6 +126,9 @@ async function asofExact(brain: Brain, world: TemporalEdgesWorld): Promise<{ n: 
   return { n, exact };
 }
 
+/** The --models default for dev runs; counted runs name their models and are certified per model. */
+export const DEFAULT_DEV_MODEL = 'anthropic:claude-haiku-5-5';
+
 export interface ModelRun {
   model: string; run: number; seed: number; phase_status: string; phase_detail: string; totals: Record<string, number>;
   applied: number; wrong: number; late: number; late_upper_bound: number; undated_closures: number; statuses: Record<string, number>;
@@ -136,7 +139,7 @@ async function main(): Promise<void> {
   const argv = process.argv.slice(2);
   const one = (n: string) => { const i = argv.indexOf(n); return i >= 0 ? argv[i + 1] : undefined; };
   const output = resolve(one('--output') ?? 'eval/reports/temporal-contradictions');
-  const models = (one('--models') ?? 'anthropic:claude-haiku-4-5').split(',');
+  const models = (one('--models') ?? DEFAULT_DEV_MODEL).split(',');
   const runs = Number(one('--runs') ?? 3);
   const seeds = (one('--seeds') ?? DEV_SEEDS.join(',')).split(',').map(Number);
   mkdirSync(output, { recursive: true });

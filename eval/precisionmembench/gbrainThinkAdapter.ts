@@ -20,10 +20,12 @@ import type { Belief } from './scorer/belief.ts';
 import { BaseAdapter } from './scorer/baseAdapter.ts';
 import { runThink } from '../../node_modules/gbrain/src/core/think/index.ts';
 
+export const DEFAULT_THINK_MODEL = 'anthropic:claude-opus-5-5';
+
 export class GbrainThinkAdapter extends BaseAdapter {
   constructor(
     private readonly engine: BrainEngine,
-    private readonly chatModel: string = 'anthropic:claude-haiku-4-5',
+    private readonly chatModel: string = DEFAULT_THINK_MODEL,
   ) {
     super('gbrain');
   }

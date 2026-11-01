@@ -69,7 +69,7 @@
  *     (withTrajectory:false) must score <= 0.5 × the wave arm.
  *
  * Cost (live mode): 6 probes × 2 think calls (models.think pinned, default
- * claude-sonnet-4-6, temperature 0) + 12 Haiku judge calls ≈ $0.30-0.60.
+ * claude-opus-5-5) + 12 Haiku 5.5 judge calls. Not yet measured at these defaults.
  * Hermetic mode costs $0 and needs no keys.
  *
  * Run (a live run spends money, so it needs `--paid --budget-run-id <id>` naming an open budget-ledger run;
@@ -268,8 +268,9 @@ export const NEGATIVE_CONTROL_RATIO = 0.5;
 
 // ─── Models ──────────────────────────────────────────────────────────
 
-const THINK_MODEL = process.env.CAT25_MODEL ?? 'claude-sonnet-4-6';
-const JUDGE_MODEL = 'claude-haiku-4-5-20251001';
+export const DEFAULT_THINK_MODEL = 'claude-opus-5-5';
+const THINK_MODEL = process.env.CAT25_MODEL ?? DEFAULT_THINK_MODEL;
+export const JUDGE_MODEL = 'claude-haiku-5-5';
 export const THINK_TEMPERATURE = 0;
 
 // ─── Paths ───────────────────────────────────────────────────────────

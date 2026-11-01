@@ -211,8 +211,10 @@ export function buildExtractionPrompt(pageBody: string): string {
 
 // ─── Anthropic clients ─────────────────────────────────────────────
 
-const EXTRACT_MODEL = process.env.CAT15_MODEL ?? 'claude-sonnet-4-6';
-const JUDGE_MODEL = process.env.CAT15_JUDGE_MODEL ?? 'claude-haiku-4-5-20251001';
+export const DEFAULT_EXTRACT_MODEL = 'claude-opus-5-5';
+export const DEFAULT_JUDGE_MODEL = 'claude-haiku-5-5';
+const EXTRACT_MODEL = process.env.CAT15_MODEL ?? DEFAULT_EXTRACT_MODEL;
+const JUDGE_MODEL = process.env.CAT15_JUDGE_MODEL ?? DEFAULT_JUDGE_MODEL;
 const JUDGE_TEMPERATURE = 0;
 /** Extraction runs at temperature 0 so the scored extraction is reproducible (audit A-03). */
 export const EXTRACT_TEMPERATURE = 0;

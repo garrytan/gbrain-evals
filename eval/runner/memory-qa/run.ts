@@ -83,7 +83,8 @@ import { gbrainSpecFrom, importGbrain, overlaySummary, productIdentityFor, resol
 import { EmbeddingCache, makeCachingTransport } from '../longmemeval-cache.ts';
 import { ndcgAtK, recallAllAtK, recallAnyAtK, uniqueInOrder, percentile } from '../metrics.ts';
 import { isoSessionDate, loadCorpus, occurrenceId, renderSessionPage, sha256, type Corpus, type MemoryQuestion, type Session } from './corpus.ts';
-import { ChatClient, DEFAULT_JUDGE, DEFAULT_READER, chatWithReceipts, factsReaderPrompt, judgeResponse, latestDate, packSessions, readerPrompt, repeatsTrap, sendsTemperature, sessionDateKey, unresolvedRelativeTime, type SavedFact } from './qa.ts';
+import { ChatClient, chatWithReceipts, factsReaderPrompt, judgeResponse, latestDate, packSessions, readerPrompt, repeatsTrap, sendsTemperature, sessionDateKey, unresolvedRelativeTime, type SavedFact } from './qa.ts';
+import { QA_JUDGE, QA_READER } from './qa-defaults.ts';
 import { normalizeUsage, receipt, sumUsage, thinkFinish, USAGE_RECEIPT_SCHEMA, type UsageReceipt } from '../usage-receipt.ts';
 import { devConversations, loadSplit } from '../decisions/splits.ts';
 import * as systems from './run-systems.ts';
@@ -282,8 +283,8 @@ export function parseRunArgs(argv: string[]): RunArgs {
     shard: { index: si, count: sn }, output: resolve(output), argv,
     qa: {
       mode: (one('--qa') ?? 'none') as 'none' | 'reader' | 'think',
-      reader: one('--reader') ?? DEFAULT_READER[benchmark] ?? 'openai:gpt-4o-2024-08-06',
-      judge: one('--judge') ?? DEFAULT_JUDGE[benchmark] ?? 'openai:gpt-4o-2024-08-06',
+      reader: one('--reader') ?? QA_READER[benchmark] ?? 'openai:gpt-4o-2024-08-06',
+      judge: one('--judge') ?? QA_JUDGE[benchmark] ?? 'openai:gpt-4o-2024-08-06',
       runs: Number(one('--qa-runs') ?? 1), sessions: Number(one('--qa-sessions') ?? 5),
       budgetTokens: one('--qa-budget-tokens') ? Number(one('--qa-budget-tokens')) : null,
       thinkModel: one('--think-model') ?? 'anthropic:claude-sonnet-5-5',

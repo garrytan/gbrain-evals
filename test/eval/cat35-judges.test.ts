@@ -123,17 +123,18 @@ describe('scoreSalienceCoverage', () => {
     expect(r.judge_failed_ids).toEqual([]);
     expect(r.input_tokens).toBe(1000);
     expect(r.output_tokens).toBe(100);
-    // Default haiku pricing: (1000*1 + 100*5)/1e6
-    expect(r.cost_usd).toBeCloseTo(0.0015, 10);
+    // Default Haiku 5.5 pricing: (1000*0.1 + 100*0.5)/1e6
+    expect(r.cost_usd).toBeCloseTo(0.00015, 10);
   });
 
-  test('request shape: forced tool_choice + cache_control ephemeral system block', async () => {
+  test('request shape: the default Claude 5 judge is told to call the tool (no forced tool_choice) + cache_control ephemeral system block', async () => {
     const { client, calls } = makeStubClient([
       toolUse('score_salient_items', { items: ITEMS.map((i) => ({ item_id: i.item_id, status: 'ABSENT', evidence: '' })) }),
     ]);
     await scoreSalienceCoverage(coverageArgs(), { client });
     const req = calls[0];
-    expect(req.tool_choice).toEqual({ type: 'tool', name: 'score_salient_items' });
+    expect(req.tool_choice).toEqual({ type: 'auto' });
+    expect(req.messages.at(-1).content).toBe('Respond by calling the score_salient_items tool.');
     expect(req.tools[0].name).toBe('score_salient_items');
     expect(req.system[0].cache_control).toEqual({ type: 'ephemeral' });
     // Judge sees paraphrase statements, never anchors — no anchor field leaks.
@@ -163,7 +164,7 @@ describe('scoreSalienceCoverage', () => {
     // Tokens/cost accumulate across both calls.
     expect(r.input_tokens).toBe(2000);
     expect(r.output_tokens).toBe(200);
-    expect(r.cost_usd).toBeCloseTo(0.003, 10);
+    expect(r.cost_usd).toBeCloseTo(0.0003, 10);
   });
 
   test('still missing after the retry → judge_failed_ids for those items only', async () => {
@@ -189,7 +190,7 @@ describe('scoreSalienceCoverage', () => {
     // Both attempts billed.
     expect(r.input_tokens).toBe(1600);
     expect(r.output_tokens).toBe(80);
-    expect(r.cost_usd).toBeCloseTo((1600 * 1 + 80 * 5) / 1e6, 10);
+    expect(r.cost_usd).toBeCloseTo((1600 * 0.1 + 80 * 0.5) / 1e6, 10);
   });
 
   test('malformed then well-formed retry recovers', async () => {
@@ -323,7 +324,7 @@ describe('scoreGrounding', () => {
     expect(r.judge_failed).toBe(true);
     expect(r.results).toEqual([]);
     // Cost still accounted across both attempts.
-    expect(r.cost_usd).toBeCloseTo(2 * ((1000 * 1 + 100 * 5) / 1e6), 10);
+    expect(r.cost_usd).toBeCloseTo(2 * ((1000 * 0.1 + 100 * 0.5) / 1e6), 10);
   });
 
   test('malformed → retry → recovered', async () => {
@@ -782,7 +783,8 @@ describe('cat35 judges fence SUT output (PC-10)', () => {
 // ─── Temperature (audit PC-02) ────────────────────────────────────────────
 
 describe('cat35 judges run at temperature 0', () => {
-  test('every judge type sends temperature 0', async () => {
+  test('every judge type sends temperature 0 to a model that takes one', async () => {
+    process.env.CAT35_JUDGE_MODEL = 'claude-haiku-4-5-20251001';
     const { client, calls } = makeStubClient([
       toolUse('score_salient_items', { items: ITEMS.map((it) => ({ item_id: it.item_id, status: 'ABSENT', evidence: '' })) }),
       toolUse('grade_claims', { claims: [{ index: 0, verifiable: true, grounded: true }] }),
