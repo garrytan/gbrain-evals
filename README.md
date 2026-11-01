@@ -212,8 +212,9 @@ preregistered test with the same reader, judge and context budget on sealed BEAM
 with background extraction and reflection (+2.64 points, one-sided 95% bounds +0.90 and +4.41). Its cost per correct
 answer was 0.63 of the server's at 20 reads per stored conversation and level at 200. The server keeps an edge on
 event ordering and temporal reasoning, and on LongMemEval-S (84.5% against 80.3% for gbrain's pages alone). gbrain
-ran its freeze build `d7467d1cf`, whose retrieval was checked equivalent at `d7d7686de`; both are in the pin's
-history. [Sealed results](docs/benchmarks/2026-10-09-memory-proof-wave-sealed-results.md).
+ran its freeze build `d7467d1cf`, whose retrieval was
+[checked equivalent](docs/benchmarks/2026-10-09-memory-proof-wave-sealed-results.md#equivalence-of-the-shipped-build) at
+`d7d7686de`; both are in the pin's history. [Sealed results](docs/benchmarks/2026-10-09-memory-proof-wave-sealed-results.md).
 
 **Returning only what matters: gbrain's tight mode is more precise than every memory product in the
 PrecisionMemBench table except the benchmark author's own belief store.** Its mean precision is 0.586, against 0.22,
@@ -387,9 +388,11 @@ Code is MIT licensed. Dataset and vendored benchmark attribution is recorded in 
 
 ### 2026-10-31: Re-pin to gbrain `3ec766c40`; the four new read defaults are named; repository row names v0.10.139
 
-gbrain-evals v0.10.139 re-pins gbrain and adds the Cat 35 external lane, which scores another system's notes with Cat
-35's judges ([contributor guide](eval/CONTRIBUTING.md#score-another-systems-cat-35-documents)). The repository row names
-v0.10.139 (was v0.10.138). The pinned product row changes from `7a6bdd357` (v0.60.454.0) to `3ec766c40` (v0.60.531.0), and so does the sentence
+gbrain-evals v0.10.139 re-pins gbrain, adds the Cat 35 external lane, which scores another system's notes with Cat 35's
+judges ([contributor guide](eval/CONTRIBUTING.md#score-another-systems-cat-35-documents)), and lands the post hoc
+LongMemEval-S facts-block check and the shipped-build equivalence check
+([sealed results](docs/benchmarks/2026-10-09-memory-proof-wave-sealed-results.md)). The repository row names v0.10.139
+(was v0.10.138). The pinned product row changes from `7a6bdd357` (v0.60.454.0) to `3ec766c40` (v0.60.531.0), and so does the sentence
 under the table. Every commit the current state names is in the new release's history except `a7cb37b`, as before. A
 new paragraph under it names the four read defaults gbrain added after the old pin (the dated facts block of a budgeted
 `query`, v0.60.491.0; correction ordering of saved facts, v0.60.493.0; the remote page cap, v0.60.506.0; quote-fenced
@@ -399,6 +402,10 @@ harness holds the first three at their old values and unwraps the fence. The mem
 the new pin, as on main at `7a6bdd357`. Known limits: the timeline-read bullet said "At the pin" about a measurement
 made at `77cf8e111`; it now names that commit and says the pin is unmeasured. The `auto_chronicle` bullet is removed:
 it described gbrain before v0.60.49.0, which this pin and the three before it all postdate. No other result row changes.
+
+### 2026-10-31: Equivalence claim links its section
+
+The memory-bank paragraph says `d7467d1cf`'s retrieval was checked equivalent at `d7d7686de`; that claim now links the [equivalence section](docs/benchmarks/2026-10-09-memory-proof-wave-sealed-results.md#equivalence-of-the-shipped-build) of the sealed results, which reached main on 2026-10-31 together with the post hoc LongMemEval-S facts-block check. No result row on this page changes.
 
 ### 2026-10-31: Repository row names v0.10.138
 

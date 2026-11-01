@@ -236,7 +236,9 @@ procedure with documented missing pieces; it is not the current refresh command.
 
 The opening names v0.10.139 (was v0.10.138) and gbrain master `3ec766c40` (v0.60.531.0) as the product under test (was
 `7a6bdd357`, v0.60.454.0). v0.10.139 holds gbrain's four new read defaults for comparable memory-qa arms (see the
-[README](../README.md)) and adds the Cat 35 external lane ([contributor guide](../eval/CONTRIBUTING.md#score-another-systems-cat-35-documents)).
+[README](../README.md)), adds the Cat 35 external lane ([contributor guide](../eval/CONTRIBUTING.md#score-another-systems-cat-35-documents)) and
+lands the post hoc LongMemEval-S facts-block and shipped-build equivalence checks
+([sealed results](benchmarks/2026-10-09-memory-proof-wave-sealed-results.md)).
 `scripts/verify-documentation-refresh.py` now checks the opening's pin against `package.json`. No row changed.
 
 ### 2026-10-31: Opening names v0.10.138
