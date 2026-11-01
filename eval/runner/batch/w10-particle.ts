@@ -591,7 +591,7 @@ async function main(argv: string[]): Promise<number> {
   if (cmd === 'report') {
     if (!arg) throw new Error('report <replay dir>');
     const dir = resolve(arg), write = argv.includes('--write');
-    if (write) for (const f of readdirSync(dir)) if (f.startsWith('compare-')) rmSync(join(dir, f));
+    if (write) for (const f of readdirSync(dir).sort()) if (f.startsWith('compare-')) rmSync(join(dir, f));
     const compareDir = write ? dir : mkdtempSync(join(tmpdir(), 'w10-particle-report-'));
     try {
       const text = JSON.stringify(report(dir, compareDir), null, 1) + '\n';
