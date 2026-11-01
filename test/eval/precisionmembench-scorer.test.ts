@@ -31,7 +31,7 @@
  */
 
 import { describe, expect, test } from 'bun:test';
-import { mkdtempSync, readdirSync, readFileSync } from 'fs';
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'fs';
 import { tmpdir } from 'os';
 import { join } from 'path';
 import { BaseAdapter } from '../../eval/precisionmembench/scorer/baseAdapter.ts';
@@ -440,10 +440,11 @@ describe('runner receipts + payload provenance (findings -02/-03/-06 + WS0 recei
     try {
       const receiptFile = join(dir, 'receipt.json');
       const code = await runnerMain(['--mode', 'gbrain-think', '--limit', '1', '--report-dir', dir, '--receipt-path', receiptFile, ...args(dir, ledgerPath)]);
-      return { code, requests, receipt: loadReceipt(receiptFile), ledgerPath };
+      return { code, requests, receipt: loadReceipt(receiptFile), entries: existsSync(ledgerPath) ? readLedger(ledgerPath).entries : [] };
     } finally {
       globalThis.fetch = realFetch;
       for (const [k, v] of Object.entries(saved)) { if (v === undefined) delete process.env[k]; else process.env[k] = v; }
+      rmSync(dir, { recursive: true, force: true });
     }
   }
 
@@ -465,9 +466,8 @@ describe('runner receipts + payload provenance (findings -02/-03/-06 + WS0 recei
     });
     const paidRequests = r.requests.filter(x => x.startsWith('POST '));
     expect(paidRequests).toContain('POST https://api.anthropic.com/v1/messages');
-    const entries = readLedger(r.ledgerPath).entries;
-    expect(entries.length).toBe(paidRequests.length);
-    expect(entries.map(x => x.description)).toContain('anthropic:claude-opus-5-5 chat');
+    expect(r.entries.length).toBe(paidRequests.length);
+    expect(r.entries.map(x => x.description)).toContain('anthropic:claude-opus-5-5 chat');
     expect(r.receipt.cost?.basis).toContain(`${paidRequests.length} paid requests`);
     expect(r.receipt.resolved_config?.chat_model).toBe(DEFAULT_THINK_MODEL);
   }, 240_000);

@@ -448,7 +448,10 @@ function score(argv: string[]) {
     const rows = model ? all.filter(r => identityOf(r).model === model) : all;
     const identities = [...new Set(rows.map(r => JSON.stringify(identityOf(r))))];
     if (model && rows.length === 0) throw new Error(`${qaPath} has no answers from ${model}; its models are ${[...new Set(all.map(r => identityOf(r).model))].join(', ')}`);
-    if (identities.length > 1) throw new Error(`${qaPath} holds answers from ${identities.length} answer identities (${identities.join('; ')}); scoring them together would pool their arms into one lift. Pass --model <id> to score one model, or keep each configuration in its own --out.`);
+    if (identities.length > 1) {
+      const models = new Set(rows.map(r => identityOf(r).model));
+      throw new Error(`${qaPath} holds answers from ${identities.length} answer identities (${identities.join('; ')}); scoring them together would pool their arms into one lift. ${models.size > 1 ? 'Pass --model <id> to score one model, or keep each configuration in its own --out.' : 'They share one model but differ in turn cap, gbrain build or questions file, or some rows predate the recorded identity, so no flag separates them: keep each configuration in its own --out.'}`);
+    }
     for (const arm of new Set(rows.map(r => r.arm))) {
       const brains = new Set(rows.filter(r => r.arm === arm).map(r => r.brain ?? 'unrecorded'));
       if (brains.size > 1) throw new Error(`${qaPath} holds ${arm} answers from ${brains.size} builds of the ${arm} brain (${[...brains].join(', ')}); the brain was rebuilt in this --out after some answers were written. Resume with --arms none to keep one build, or rebuild into a fresh --out.`);

@@ -35,7 +35,7 @@ This records what each gbrain-evals release changed and what its measurements me
   any request. Every request it makes, the seeding embeddings included, passes the ledger's paid-request guard, and the
   receipt's `cost` comes from the ledger. `resolved_config.chat_model` names the think model. The other modes take
   `--paid --budget-run-id` too, which meters their embedding requests, and stay unmetered without them. A one-case
-  live run on 2026-11-01 settled $0.0596 from usage (one Opus 5.5 request, 36 embedding requests). The adapter's
+  live run on 2026-11-01 settled $0.0595 from usage (one Opus 5.5 request, 36 embedding requests). The adapter's
   header no longer says a cheap model is pinned.
 
 ### Top-level docs describe gbrain at the pin `3ec766c40`, and corrections and history leave the current-state pages

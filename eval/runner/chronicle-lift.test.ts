@@ -95,7 +95,7 @@ describe('agent answer identity (#236)', () => {
     const r = spawnSync('bun', [join(import.meta.dir, 'chronicle-lift.ts'), 'score', '--out', out, ...args], { encoding: 'utf8' });
     const scores = existsSync(join(out, 'scores.json')) ? JSON.parse(readFileSync(join(out, 'scores.json'), 'utf8')) : null;
     rmSync(out, { recursive: true, force: true });
-    return { code: r.status, stderr: r.stderr, qa: scores?.qa ?? null };
+    return { code: r.status, stderr: r.stderr, error: r.stderr.split('\n').find(l => l.startsWith('error: ')) ?? '', qa: scores?.qa ?? null };
   };
   // The reviewer's keyless repro: the off arm answered by Sonnet 4.6, the on arm resumed under the Sonnet 5.5 default.
   const mixed = doc.questions.flatMap(q => [row('off', q, 1, 'claude-sonnet-4-6', false), row('on-a', q, 1, 'claude-sonnet-5-5', true)]);
@@ -105,7 +105,18 @@ describe('agent answer identity (#236)', () => {
     expect(r.code).not.toBe(0);
     expect(r.stderr).toContain('claude-sonnet-4-6');
     expect(r.stderr).toContain('claude-sonnet-5-5');
+    expect(r.error).toContain('Pass --model');
     expect(r.qa).toBeNull();
+  });
+
+  test('two answer identities of one model are refused without offering --model, which cannot separate them', () => {
+    const identity = { model: 'claude-sonnet-5-5', max_turns: 12, gbrain: '0.60.531.0', questions: 'q' };
+    const rows = doc.questions.flatMap(q => [row('off', q, 1, 'claude-sonnet-5-5', true), row('on-a', q, 1, 'claude-sonnet-5-5', true, { identity, brain: 'b' })]);
+    const r = score(rows, '--model', 'claude-sonnet-5-5');
+    expect(r.code).not.toBe(0);
+    expect(r.qa).toBeNull();
+    expect(r.error).toContain('2 answer identities');
+    expect(r.error).not.toContain('--model');
   });
 
   test('score --model keeps one model\'s answers, so the false +100 pp lift disappears', () => {
