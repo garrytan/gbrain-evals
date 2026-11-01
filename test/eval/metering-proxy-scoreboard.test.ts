@@ -7,7 +7,7 @@
  * as upstream trouble. Keyless: every upstream is a fake and every key a
  * placeholder.
  */
-import { afterAll, beforeEach, describe, expect, test } from 'bun:test';
+import { afterAll, beforeEach, describe, expect, spyOn, test } from 'bun:test';
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -420,6 +420,93 @@ describe('particle-1 through the lease proxy (plan GST-605 Phase 2)', () => {
       expect((await two.post('/harness/particle/v1/chat/completions', particleChat())).status).toBe(200);
       expect(refused.seen).toHaveLength(2);
     } finally { two.proxy.stop(); }
+  });
+
+  // Value: protects=a response body that fails after the headers settles its lease entry, frees its admission slot and leaves a failed usage line, and a particle client never sends it again (issue #270); fails_when=the body read throws outside the send's catch, so the reservation stays open, the admission slot stays held, no usage line is written and the client gets a 500 it retries; why_new=only the send had a catch; seam=a fake upstream whose body stream errors after the headers; no_claim=whether Particle bills a dropped body
+  test('a body that fails after the headers settles its reservation, frees its admission slot and logs a failed line; particle is answered 504, another provider 502 unless it timed out (#270)', async () => {
+    const { compatTimedOut, classifyCompatError, CompatHttpError } = await import('../../eval/runner/providers/openai-compatible.ts');
+    const reset = Object.assign(new Error('The socket connection was closed unexpectedly.'), { code: 'ECONNRESET' });
+    for (const [prov, body, error, status] of [
+      ['particle', particleChat(), reset, 504],
+      ['openai', chat(), reset, 502],
+      ['openai', chat(), new DOMException('The operation timed out.', 'TimeoutError'), 504],
+    ] as const) {
+      const broken = upstream(() => new Response(new ReadableStream({ start(c) { c.error(error); } }), { status: 200, headers: { 'content-type': 'application/json' } }));
+      const admission = new AdmissionController({ [prov]: { concurrency: 1 } }, { maxWaitMs: 100 });
+      const { proxy, post, lines, lease } = start(broken.fetchImpl, { ...harness, admission });
+      try {
+        const res = await post(`/harness/${prov}/v1/chat/completions`, body);
+        expect([prov, error.name, res.status]).toEqual([prov, error.name, status]);
+        expect(compatTimedOut(new CompatHttpError(classifyCompatError(prov, res.status, await res.text())))).toBe(status === 504);
+        expect(broken.seen).toHaveLength(1);
+        expect(lines().map(l => [l.outcome, l.status, l.charged_reservation, l.actual_usd === l.reserved_usd && l.actual_usd! > 0])).toEqual([['failed', 200, true, true]]);
+        const ledger = ledgerStatus({ ledgerPath: lease.ledgerPath, runId: lease.runId });
+        expect([ledger.totals.open_reservations_usd, ledger.run!.committed_usd]).toEqual([0, lines()[0].reserved_usd!]);
+        expect(admission.waitFor(prov, 1)).toBe(0);
+      } finally { proxy.stop(); }
+    }
+  });
+
+  // Value: protects=a particle body that fails after the headers is answered 504 and frees its admission slot even when the ledger cannot record it, so no client sends it again (issue #270); fails_when=a settle that throws escapes the catch and Bun answers 500, which particle clients retry; why_new=the body-read catch settles the ledger first; seam=a lease whose settle throws; no_claim=SQLite's own busy handling
+  test('a particle body failure is still answered 504 with its admission slot freed when the ledger cannot settle it (#270)', async () => {
+    const reset = Object.assign(new Error('The socket connection was closed unexpectedly.'), { code: 'ECONNRESET' });
+    const broken = upstream(() => new Response(new ReadableStream({ start(c) { c.error(reset); } }), { status: 200, headers: { 'content-type': 'application/json' } }));
+    const admission = new AdmissionController({ particle: { concurrency: 1 } }, { maxWaitMs: 100 });
+    const { proxy, post, lease } = start(broken.fetchImpl, { ...harness, admission });
+    lease.settle = () => { throw new Error('SQLITE_BUSY: database is locked'); };
+    const logged = spyOn(console, 'error').mockImplementation(() => {});
+    try {
+      expect((await post('/harness/particle/v1/chat/completions', particleChat())).status).toBe(504);
+      expect(broken.seen).toHaveLength(1);
+      expect(admission.waitFor('particle', 1)).toBe(0);
+      expect(String(logged.mock.calls[0]?.[0])).toContain('so its reservation stays open: SQLITE_BUSY');
+    } finally { logged.mockRestore(); proxy.stop(); }
+  });
+
+  // Value: protects=a proxied client always outwaits the lease proxy, so the proxy never sends and bills a request its client gave up on (issue #271); fails_when=an admission wait can exceed the 600 s a proxied client's deadline counts, from the constructor or from --admission-max-wait-s; why_new=clients of a loopback proxy wait PROXIED_DEADLINE_MS, which assumes this bound; seam=a fake clock; no_claim=a real 26-minute wait
+  test('admission waits at most ADMISSION_MAX_WAIT_MS, which the deadline a proxied client waits covers with the upstream deadline (#271)', async () => {
+    const { ADMISSION_MAX_WAIT_MS, PROXIED_DEADLINE_MS, UPSTREAM_DEADLINE_MS, compatDeadlineMs } = await import('../../eval/runner/metering-proxy.ts');
+    const ac = new AdmissionController({}, { now: () => 0, maxWaitMs: 3_600_000 });
+    ac.observe('particle', 'particle-1', new Headers({ 'x-ratelimit-limit-requests': '100', 'x-ratelimit-remaining-requests': '1', 'x-ratelimit-reset-requests': '15m' }));
+    expect(ac.waitFor('particle', 1, 'particle-1')).toBe(900_000);
+    const outcome = await Promise.race([ac.acquire('particle', 1, 'particle-1').then(() => 'admitted', e => (e as Error).name), Bun.sleep(300).then(() => 'still waiting')]);
+    expect(outcome).toBe('AdmissionRefused');
+    const lease = ['--budget-ledger', 'x', '--lease-usd', '1', '--run-id', 'r'];
+    expect(() => parseProxyArgs([...lease, '--admission-max-wait-s', '3600'])).toThrow('--admission-max-wait-s must be a positive number of seconds up to 600');
+    expect(parseProxyArgs([...lease, '--admission-max-wait-s', '600']).admissionMaxWaitMs).toBe(600_000);
+    expect(ADMISSION_MAX_WAIT_MS).toBe(600_000);
+    expect(PROXIED_DEADLINE_MS).toBeGreaterThan(ADMISSION_MAX_WAIT_MS + UPSTREAM_DEADLINE_MS);
+    expect([compatDeadlineMs('http://127.0.0.1:8787/harness/particle/v1/chat/completions'), compatDeadlineMs('https://api.particle.ai/v1/chat/completions')]).toEqual([PROXIED_DEADLINE_MS, UPSTREAM_DEADLINE_MS]);
+  });
+
+  // Value: protects=a request's transport retries and its body share one upstream deadline, so a refused-then-slow request ends inside the time a proxied client waits (issues #270, #271); fails_when=the proxy makes a new AbortSignal.timeout per send again; why_new=PROXIED_DEADLINE_MS counts one upstream deadline per request; seam=a stubbed AbortSignal.timeout and a fake upstream that refuses once; no_claim=a real 900 s wait
+  test('a request sent again after a refused connection keeps the one upstream deadline it started with (#270, #271)', async () => {
+    const { UPSTREAM_DEADLINE_MS } = await import('../../eval/runner/metering-proxy.ts');
+    const signals: Array<AbortSignal | null | undefined> = [];
+    let calls = 0;
+    const refusedOnce = (async (_url: RequestInfo | URL, init?: RequestInit) => {
+      signals.push(init?.signal);
+      if (++calls === 1) throw Object.assign(new Error('Unable to connect. Is the computer able to access the url?'), { code: 'ECONNREFUSED' });
+      return particleReply();
+    }) as unknown as typeof fetch;
+    const timeout = AbortSignal.timeout;
+    const made: number[] = [];
+    AbortSignal.timeout = (ms: number) => { made.push(ms); return timeout.call(AbortSignal, ms); };
+    const { proxy, post } = start(refusedOnce, harness);
+    try {
+      expect((await post('/harness/particle/v1/chat/completions', particleChat())).status).toBe(200);
+    } finally { AbortSignal.timeout = timeout; proxy.stop(); }
+    expect(made.filter(ms => ms === UPSTREAM_DEADLINE_MS)).toHaveLength(1);
+    expect(signals).toHaveLength(2);
+    expect(signals[0]).toBeInstanceOf(AbortSignal);
+    expect(signals[1]).toBe(signals[0]);
+  });
+
+  // Value: protects=the lease proxy never sends a provider's real key over http to a host that is not loopback (issue #277); fails_when=an --upstream or a constructor upstream with an http URL that is not loopback is accepted; why_new=assertMetered guards clients only, and the proxy swaps in the real key itself; seam=none; no_claim=TLS certificate checks
+  test('an upstream that is not loopback must be https, because the proxy sends the real key there (#277)', () => {
+    expect(() => new MeteringProxy({ upstream: { particle: 'http://api.particle.ai' } })).toThrow('upstream particle=http://api.particle.ai would carry the particle key in cleartext');
+    expect(() => new MeteringProxy({ upstream: { openai: 'http://10.0.0.5:8080' } })).toThrow('cleartext');
+    expect(() => new MeteringProxy({ upstream: { particle: 'https://api.particle.ai', openai: 'http://127.0.0.1:9', voyage: 'http://localhost:9' } })).not.toThrow();
   });
 
   test('the CLI takes a per-model route cap and a particle upstream', () => {

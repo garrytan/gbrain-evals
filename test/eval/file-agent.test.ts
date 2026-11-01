@@ -449,6 +449,24 @@ describe('true full context', () => {
       expect(UPSTREAM_DEADLINE_MS).toBe(900_000);
     });
 
+    // Value: protects=a whole-history particle reading through the lease proxy is never abandoned while the proxy still sends and bills it (issue #271); fails_when=a reading on a loopback proxy slot waits only the 900 s upstream deadline, which the proxy's admission wait (up to 600 s) eats into; why_new=readCompat's deadline follows its URL (compatDeadlineMs); seam=none; no_claim=a real 26-minute wait
+    test('a reading on a loopback proxy slot waits the proxy\'s longest admission wait plus its upstream deadline; a direct reading waits the upstream deadline (#271)', async () => {
+      const { PROXIED_DEADLINE_MS } = await import('../../eval/runner/metering-proxy.ts');
+      const timeout = AbortSignal.timeout;
+      const deadlines: number[] = [];
+      const urls: string[] = [];
+      const fetchImpl = (async (url: string) => { urls.push(String(url)); return reply('stop'); }) as unknown as typeof fetch;
+      AbortSignal.timeout = (ms: number) => { deadlines.push(ms); return timeout.call(AbortSignal, ms); };
+      try {
+        process.env.PARTICLE_BASE_URL = 'http://127.0.0.1:8787/harness/particle/v1';
+        expect((await answerFullContext({ reader: 'particle:particle-1', prompt, conversation: conv.id, fetchImpl })).outcome).toBe('scored');
+        delete process.env.PARTICLE_BASE_URL;
+        expect((await answerFullContext({ reader: 'particle:particle-1', prompt, conversation: conv.id, fetchImpl })).outcome).toBe('scored');
+      } finally { AbortSignal.timeout = timeout; }
+      expect(urls).toEqual(['http://127.0.0.1:8787/harness/particle/v1/chat/completions', 'https://api.particle.ai/v1/chat/completions']);
+      expect(deadlines).toEqual([PROXIED_DEADLINE_MS, UPSTREAM_DEADLINE_MS]);
+    });
+
     // Value: protects=a particle reading whose connection resets after it went out is billed once and final in the Q1 cell; fails_when=readCompat retries the reset, or the answer lacks timed_out so the cell asks again; why_new=the lease proxy answers this reset 504, the direct path retried it; seam=none; no_claim=Bun's exact error text
     test('a reading whose connection resets after it went out is a final reader_error after one request; a refused connection stays retryable', async () => {
       let calls = 0;
@@ -573,6 +591,50 @@ describe('file agent with particle-1 (plan GST-605 Phase 3)', () => {
     const a = await sys.answer(ns, { text: 'What is my dog called?', query_time: null }, { reader: 'particle:particle-1', replicate: 0 });
     expect(a).toMatchObject({ outcome: 'budget_not_run', provider_input_tokens: 500, usage: { input: 200, output: 40, cache_read: 300, cache_write: 0 } });
     await sys.close();
+  });
+
+  // Value: protects=a file-agent question whose particle turn Particle may have billed is never run again (issue #253); fails_when=a timed-out, reset or 504 turn is retried by the loop, or the answer lacks timed_out so the cell asks the question again; why_new=the agent loop stops on a particle turn that may have been billed; seam=none; no_claim=Particle's billing of an aborted turn
+  test('a particle turn that times out, resets after it went out or is answered 504 is sent once and ends the answer as a timed-out reader_error; a refused connection does not (#253)', async () => {
+    const faults: Array<[string, () => Response]> = [
+      ['timeout', () => { throw new DOMException('The operation timed out.', 'TimeoutError'); }],
+      ['reset', () => { throw Object.assign(new TypeError('The socket connection was closed unexpectedly.'), { code: 'ECONNRESET' }); }],
+      ['504', () => new Response('{"error":{"kind":"product_error","message":"metering proxy: upstream failed: The operation timed out."}}', { status: 504 })],
+      ['refused', () => { throw Object.assign(new TypeError('Unable to connect. Is the computer able to access the url?'), { code: 'ECONNREFUSED' }); }],
+    ];
+    for (const [name, fault] of faults) {
+      let n = 0;
+      const fetchImpl = (async () => (++n === 1 ? new Response(JSON.stringify(chat(call('list_dir', { path: '.' }), 'tool_calls'))) : fault())) as unknown as typeof fetch;
+      const sys = new FileAgentSystem({ workDir: join(tmp, `particle-billed-${name}`), fetchImpl });
+      await ingest(sys);
+      const a = await sys.answer(ns, { text: 'What is my dog called?', query_time: null }, { reader: 'particle:particle-1', replicate: 0 });
+      expect([name, a.outcome, a.stop_reason, a.timed_out, a.turns, n]).toEqual([name, 'reader_error', 'provider_error', name === 'refused' ? undefined : true, 2, 2]);
+      await sys.close();
+    }
+  });
+
+  // Value: protects=a slow particle turn waits the proxies' deadline instead of Bun's 300-second fetch timeout (issue #253); fails_when=the agent loop sends a particle turn without timeout: false and a deadline, so Bun abandons it at 300 s while it is still generating and billed; why_new=postJson gives compat turns compatDeadlineMs; seam=none; no_claim=a real 900 s wait
+  test('each particle turn is sent with Bun\'s fetch timeout off and the upstream deadline, or on a loopback proxy slot the proxied deadline (#253)', async () => {
+    const { PROXIED_DEADLINE_MS } = await import('../../eval/runner/metering-proxy.ts');
+    const timeout = AbortSignal.timeout;
+    const deadlines: number[] = [];
+    const sent: Array<[string, unknown]> = [];
+    let n = 0;
+    const fetchImpl = (async (url: string, init: RequestInit & { timeout?: unknown }) => {
+      sent.push([String(url), init.timeout]);
+      return new Response(JSON.stringify(chat(++n % 2 ? call('list_dir', { path: '.' }) : call('submit_answer', { answer: 'Rex' }), 'tool_calls')));
+    }) as unknown as typeof fetch;
+    AbortSignal.timeout = (ms: number) => { deadlines.push(ms); return timeout.call(AbortSignal, ms); };
+    try {
+      for (const base of [undefined, 'http://127.0.0.1:8787/agent/particle/v1']) {
+        if (base) process.env.PARTICLE_BASE_URL = base; else delete process.env.PARTICLE_BASE_URL;
+        const sys = new FileAgentSystem({ workDir: join(tmp, `particle-deadline-${base ? 'proxy' : 'direct'}`), fetchImpl });
+        await ingest(sys);
+        expect((await sys.answer(ns, { text: 'What is my dog called?', query_time: null }, { reader: 'particle:particle-1', replicate: 0 })).text).toBe('Rex');
+        await sys.close();
+      }
+    } finally { AbortSignal.timeout = timeout; }
+    expect(sent).toEqual([...Array(2).fill(['https://api.particle.ai/v1/chat/completions', false]), ...Array(2).fill(['http://127.0.0.1:8787/agent/particle/v1/chat/completions', false])]);
+    expect(deadlines).toEqual([UPSTREAM_DEADLINE_MS, UPSTREAM_DEADLINE_MS, PROXIED_DEADLINE_MS, PROXIED_DEADLINE_MS]);
   });
 
   test('an empty Particle balance ends the question as budget_not_run, after the failing attempt\'s receipt', async () => {

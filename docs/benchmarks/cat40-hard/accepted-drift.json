@@ -23,6 +23,11 @@
       "sha256": "307afba516ccd9788135c90038e4394423673ff6997818d973fd5c321360ec0d",
       "date": "2026-10-31",
       "note": "loop.ts with the particle-1 provider branch (plan GST-605 Phase 3, unit U8): particleLoop beside anthropicLoop and openaiLoop, provider attempts that carry the turn and the request fields sent, and runAgentText refusing particle-1. The claude-opus-5-5 and gpt-6.1-sol request bodies and retry timing are byte-identical to main's (test/eval/cat40-particle-loop.test.ts), so no Anthropic or OpenAI cell changes."
+    },
+    {
+      "sha256": "e2b57478dfe742606ea4bb793b31e323c02a128782a71114a1ba4b1b674b2da2",
+      "date": "2026-11-01",
+      "note": "loop.ts with the particle turn fixes of fix wave 2 (issues #253 and #271): a particle request is sent with compatDeadlineMs (the upstream deadline, or on a loopback lease-proxy slot that deadline plus the proxy's longest admission wait) and Bun's fetch timeout off, a particle 504 is never sent again, and a run that ends on a turn Particle may have billed records timed_out. Only the compat branch changed: the claude-opus-5-5 and gpt-6.1-sol fetch init, request bodies and retry timing are unchanged (test/eval/cat40-particle-loop.test.ts), so no Anthropic or OpenAI cell changes."
     }
   ],
   "eval/runner/cat40/arms.ts": [

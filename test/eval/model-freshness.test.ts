@@ -143,6 +143,18 @@ describe('Particle in the freshness check (plan GST-605 Phase 1, item 6)', () =>
     expect('models' in us && us.models.length).toBe(4);
   });
 
+  // Value: protects=the freshness check never sends PARTICLE_API_KEY in cleartext (issue #277); fails_when=an http:// PARTICLE_BASE_URL on a Particle API host passes compatSend's host check and the model list is read with the bearer key; why_new=listParticleModels reuses assertMetered, which read only the hostname; seam=none; no_claim=TLS certificate checks
+  test('an http:// PARTICLE_BASE_URL on a Particle API host gets no request, so the key never leaves in cleartext (#277)', async () => {
+    const seen: string[] = [];
+    const fetchImpl = (async (url: string) => { seen.push(url); return Response.json(PARTICLE_MODELS); }) as unknown as typeof fetch;
+    for (const host of ['api.particle.ai', 'us.api.particle.ai']) {
+      const plain = { PARTICLE_API_KEY: 'k', PARTICLE_BASE_URL: `http://${host}/v1` };
+      await expect(listParticleModels(plain, fetchImpl)).rejects.toThrow(`PARTICLE_API_KEY is not sent to ${host}, because compatSend's host check refuses it: budget: http://${host} would carry the Particle key in cleartext`);
+      expect(await listParticleModels(plain, fetchImpl, { required: false })).toEqual({ skipped: expect.stringContaining('in cleartext') });
+    }
+    expect(seen).toEqual([]);
+  });
+
   test('a failed read throws when the run calls a Particle model and is a skip with its reason when it calls none; the read has a timeout', async () => {
     const inits: RequestInit[] = [];
     const down = (async (_url: string, init: RequestInit) => { inits.push(init); return new Response('upstream down', { status: 503 }); }) as unknown as typeof fetch;

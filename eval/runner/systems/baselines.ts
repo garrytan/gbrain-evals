@@ -42,7 +42,7 @@ import { decideError } from '../decisions/errors.ts';
 import type { Outcome } from '../memory-qa/outcomes.ts';
 import { sendsTemperature } from '../memory-qa/qa.ts';
 import type { ReaderAttempt } from '../memory-qa/records.ts';
-import { UPSTREAM_DEADLINE_MS } from '../metering-proxy.ts';
+import { compatDeadlineMs } from '../metering-proxy.ts';
 import { COMPAT_PROVIDERS, compatMayHaveBilled, compatRequest, compatSend, type CompatRequest } from '../providers/openai-compatible.ts';
 import { answerUsage, normalizeUsage } from '../q1/usage.ts';
 import { normalizeUsage as receiptUsage, usageSourceOf } from '../usage-receipt.ts';
@@ -366,7 +366,8 @@ export async function answerFullContext(opts: { reader: string; prompt: string; 
  * once each by the provider module. A 429 or 5xx (or a refused connection) is tried again after the provider's
  * Retry-After, capped at 120 seconds, or else the backoff; a context-length 400 is `does_not_fit`; a budget stop
  * (Particle's credit 402, or the lease proxy's own 402) is `budget_not_run` and is never retried. A request gets the
- * metering proxies' upstream deadline (`UPSTREAM_DEADLINE_MS`), and one that times out or loses its connection after it
+ * metering proxies' upstream deadline, plus the lease proxy's longest admission wait on a loopback proxy slot
+ * (`compatDeadlineMs`), and one that times out or loses its connection after it
  * went out (`compatMayHaveBilled`) is a `reader_error` that is never sent again, because Particle may have billed it. Each attempt is recorded, the failed ones with null response
  * fields. An answer cut off at its output limit is the answer.
  */
@@ -379,7 +380,7 @@ async function readCompat(req: CompatRequest, fit: FitCheck, cache_key: string, 
   const stop = (outcome: Outcome, error: string): FullContextAnswer => ({ text: '', outcome, fit: outcome === 'does_not_fit' ? { ...fit, fits: false } : fit, usage: empty, provider_input_tokens: 0, latency_ms: performance.now() - t0, cache_key, error, finish: null, truncated: false, attempts });
   for (let attempt = 0; ; attempt++) {
     try {
-      const res = await compatSend(req, { fetchImpl, timeoutMs: UPSTREAM_DEADLINE_MS });
+      const res = await compatSend(req, { fetchImpl, timeoutMs: compatDeadlineMs(req.url) });
       const u = normalizeUsage(source, res.usage);
       attempts.push({ status: 'ok', error: null, from_cache: false, response_model: res.response_model, finish: res.finish, reasoning_tokens: receiptUsage(source, res.usage)?.reasoning ?? null, weight_version: res.meta.weight_version, ...sent, retry_after_ms: null });
       return { text: res.text, outcome: 'scored', fit, usage: answerUsage(u), provider_input_tokens: u.total_input, latency_ms: performance.now() - t0, cache_key, finish: res.finish, truncated: res.finish === 'length', attempts };
