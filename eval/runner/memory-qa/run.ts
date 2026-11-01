@@ -8,7 +8,7 @@
  *     [--benchmark custody --corpus-file <custody path> (custodian sealed corpus; needs --split sealed)]
  *     [--facts conversation] [--qa reader|think --qa-context sessions|facts|none|oracle]
  *     [--retrieved-from <rows dir>] [--search-limit N] [--pool-depth N] [--max-per-session N]
- *     [--reranker on|off] [--qa-sessions N] [--qa-max-tokens N]
+ *     [--reranker on|off] [--qa-sessions N] [--qa-max-tokens N] [--reader <provider:model>] [--reader-effort <effort>]
  *     [--paid --budget-run-id <id>] --output <dir>
  *
  * Memory-system cells (`--system`, `--arms`, `--replay`, `--sealed-profile`, `--provider-proxy` and the other flags in
@@ -69,6 +69,23 @@
  * (default 5), recorded as the receipt's `reading.breadth_sessions`;
  * `--qa-max-tokens N` the reader's output limit (default 1,024; OpenAI
  * reasoning models get at least 2,000), equal across readers when set.
+ *
+ * Readers and judges go through qa-v2.ts's chat client: `anthropic:`,
+ * `openai:` and the OpenAI-compatible providers in eval/runner/providers
+ * (`particle:particle-1`, sent at least 16,000 output tokens because it
+ * reasons first). `--reader-effort` sets the reader's reasoning effort
+ * (`reasoning_effort`, or Anthropic's `output_config.effort`) and needs
+ * `--qa reader`; particle-1 runs at `high` unless told otherwise. An effort
+ * the reader's provider does not list (any effort, for an OpenAI model that is
+ * not a reasoning model), or a missing PARTICLE_API_KEY, is refused before
+ * anything runs.
+ *
+ * Budget stop: when a reader, think or judge call hits the budget ledger's
+ * cap or Particle's credit 402, that question's row is written as an error
+ * with the receipts gathered so far, no later question or conversation runs,
+ * and the receipt's summary says `stopped: budget`. A rerun of the same
+ * command resumes from that question; the stopped row stays in rows.ndjson,
+ * and the receipt's counts and summary read each question's latest row.
  */
 import '../budget-ledger.ts';
 import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -77,13 +94,15 @@ import { Database } from 'bun:sqlite';
 import { join, resolve } from 'node:path';
 import { homedir } from 'node:os';
 import { createHash } from 'node:crypto';
-import { budgetOptionsFrom, startPaidRun, receiptCost, type BudgetRun, type PaidRequestGuard } from '../budget-ledger.ts';
+import { BudgetExceededError, budgetOptionsFrom, startPaidRun, receiptCost, type BudgetRun, type PaidRequestGuard } from '../budget-ledger.ts';
 import { requirePaidArm } from '../paid-arm.ts';
 import { gbrainSpecFrom, HELD_GBRAIN_DEFAULTS, importGbrain, overlaySummary, productIdentityFor, resolveGbrainUnderTest, type GbrainUnderTest } from '../gbrain-under-test.ts';
 import { EmbeddingCache, makeCachingTransport } from '../longmemeval-cache.ts';
 import { ndcgAtK, recallAllAtK, recallAnyAtK, uniqueInOrder, percentile } from '../metrics.ts';
 import { isoSessionDate, loadCorpus, occurrenceId, renderSessionPage, sha256, type Corpus, type MemoryQuestion, type Session } from './corpus.ts';
-import { ChatClient, DEFAULT_JUDGE, DEFAULT_READER, chatWithReceipts, factsReaderPrompt, judgeResponse, latestDate, packSessions, readerPrompt, repeatsTrap, sendsTemperature, sessionDateKey, unresolvedRelativeTime, type SavedFact } from './qa.ts';
+import { DEFAULT_JUDGE, DEFAULT_READER, factsReaderPrompt, latestDate, packSessions, readerPrompt, repeatsTrap, sessionDateKey, unresolvedRelativeTime, type SavedFact } from './qa.ts';
+import { ChatClient, chatWithReceipts, checkEffort, hasChatRoute, isCompatModel, judgeResponse, sendsTemperature, type ChatLike } from './qa-v2.ts';
+import { compatRequest, modelsNotRun } from '../providers/openai-compatible.ts';
 import { normalizeUsage, receipt, sumUsage, thinkFinish, USAGE_RECEIPT_SCHEMA, type UsageReceipt } from '../usage-receipt.ts';
 import { devConversations, loadSplit } from '../decisions/splits.ts';
 import * as systems from './run-systems.ts';
@@ -111,7 +130,9 @@ export interface RunArgs {
   shard: { index: number; count: number };
   output: string;
   argv: string[];
-  qa: { mode: 'none' | 'reader' | 'think'; reader: string; judge: string; runs: number; sessions: number; budgetTokens: number | null; thinkModel: string; context: 'sessions' | 'facts' | 'none' | 'oracle'; maxTokens?: number };
+  qa: { mode: 'none' | 'reader' | 'think'; reader: string; judge: string; runs: number; sessions: number; budgetTokens: number | null; thinkModel: string; context: 'sessions' | 'facts' | 'none' | 'oracle'; maxTokens?: number;
+    /** The reader's reasoning effort (--reader-effort); the provider's default when unset. */
+    effort?: string };
   /** Whether hybridSearch reranks, and what decided it (the flag, an explicit pin/config, or the harness default). */
   reranker: { enabled: boolean; decided_by: 'flag' | 'pin' | 'default' | 'keyless-default' };
   facts: 'none' | 'conversation';
@@ -247,7 +268,10 @@ export function rerankerInactive(message: string, rerankModel: string): DecideEr
 }
 
 export function parseRunArgs(argv: string[]): RunArgs {
-  if (isSystemsArgv(argv)) return systems.parseRunArgs(argv) as unknown as RunArgs;
+  if (isSystemsArgv(argv)) {
+    if (argv.includes('--reader-effort')) throw new Error('--reader-effort sets the reading lane\'s reader; memory-system cells send each provider\'s default effort, so leave it out with --system, --arms, --replay or --provider-proxy');
+    return systems.parseRunArgs(argv) as unknown as RunArgs;
+  }
   const one = (name: string) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; };
   const many = (name: string) => argv.flatMap((a, i) => (a === name ? [argv[i + 1]] : []));
   const benchmark = one('--benchmark');
@@ -289,6 +313,7 @@ export function parseRunArgs(argv: string[]): RunArgs {
       thinkModel: one('--think-model') ?? 'anthropic:claude-sonnet-5-5',
       context: (one('--qa-context') ?? 'sessions') as RunArgs['qa']['context'],
       ...(one('--qa-max-tokens') ? { maxTokens: positiveInt(one('--qa-max-tokens'), '--qa-max-tokens')! } : {}),
+      ...(one('--reader-effort') ? { effort: one('--reader-effort')! } : {}),
     },
     facts: (one('--facts') ?? 'none') as 'none' | 'conversation',
     retrievedFrom: one('--retrieved-from') ? resolve(one('--retrieved-from')!) : null,
@@ -373,11 +398,16 @@ type ThinkFn = (engine: unknown, o: Record<string, unknown>) => Promise<{
  * The reading lane for one question: answer (reader prompt or gbrain think)
  * and judge, `qa.runs` times. Every attempted invocation leaves a receipt;
  * token means come from provider usage (think's returned usage, never the
- * question's length) and are left out when any answer lacked usage.
+ * question's length) and are left out when any answer lacked usage. A budget
+ * stop is rethrown with the receipts gathered so far as `qa_receipts`; any
+ * other failure is the row's `qa_error`. gbrain think turns a refused request
+ * into an `llm_error` answer instead of throwing, so a think call after which
+ * `budgetExhausted` reports the ledger refused a request is a budget stop too.
  */
 export async function readAndJudge(p: {
-  benchmark: string; qa: RunArgs['qa']; q: MemoryQuestion; chat: ChatClient;
+  benchmark: string; qa: RunArgs['qa']; q: MemoryQuestion; chat: ChatLike;
   think: { fn: ThinkFn; engine: unknown; referenceDate?: string } | null; prompt: string | null; countTokens: ((s: string) => number) | null;
+  budgetExhausted?: () => boolean;
 }): Promise<Partial<MemoryQaRow>> {
   const receipts: UsageReceipt[] = [];
   const scores: number[] = [];
@@ -395,6 +425,12 @@ export async function readAndJudge(p: {
           receipts.push(receipt({ ...base, response_model: null, status: 'error', error: (e as Error).message.slice(0, 300), finish: null, finish_raw: null, answer: '', usage: null, usage_raw: null, delivered: null }));
           throw e;
         }
+        if (p.budgetExhausted?.()) {
+          const error = `budget: the ledger refused a request during gbrain think, which reported ${res.synthesis_status ?? 'no status'}`;
+          receipts.push(receipt({ ...base, response_model: res.modelUsed ?? null, status: 'error', error, finish: thinkFinish(res.synthesis_status), finish_raw: res.synthesis_status ?? null,
+            answer: '', usage: normalizeUsage('gbrain-think', res.usage), usage_raw: res.usage ?? null, delivered: null }));
+          throw new BudgetExceededError(error);
+        }
         answer = res.answer ?? '';
         referenceDate = res.temporal?.reference_date;
         const d = res.evidence_delivery;
@@ -402,12 +438,13 @@ export async function readAndJudge(p: {
           answer, usage: normalizeUsage('gbrain-think', res.usage), usage_raw: res.usage ?? null, delivered: d ? { tokenizer: d.tokenizer, tokens: d.tokens_delivered } : null }));
       } else {
         const delivered = p.countTokens ? { tokenizer: 'cl100k', tokens: p.countTokens(p.prompt!) } : null;
-        answer = (await chatWithReceipts(p.chat, { role: 'reader', question_id: p.q.id, replicate: r, model: p.qa.reader, delivered }, p.prompt!, { maxTokens: p.qa.maxTokens ?? 1024, replicate: r }, receipts)).text;
+        answer = (await chatWithReceipts(p.chat, { role: 'reader', question_id: p.q.id, replicate: r, model: p.qa.reader, delivered }, p.prompt!, { maxTokens: p.qa.maxTokens ?? 1024, replicate: r, ...(p.qa.effort !== undefined ? { effort: p.qa.effort } : {}) }, receipts)).text;
       }
       scores.push(await judgeResponse(p.chat, p.benchmark, p.qa.judge, p.q, answer, r, receipts));
       if (p.q.abstention && repeatsTrap(answer, p.q.trap)) trap++;
     }
   } catch (e) {
+    if ((e as Error).name === 'BudgetExceededError') throw Object.assign(e as Error, { qa_receipts: receipts });
     return { qa_error: (e as Error).message.slice(0, 300), qa_receipts: receipts };
   }
   const answers = receipts.filter(x => x.role !== 'judge' && x.status === 'ok');
@@ -446,6 +483,10 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
   if (a.qa.context === 'facts' && (a.facts === 'none' || a.qa.mode !== 'reader')) throw new Error('--qa-context facts needs --facts conversation and --qa reader');
   if ((a.qa.context === 'none' || a.qa.context === 'oracle') && a.qa.mode !== 'reader') throw new Error(`--qa-context ${a.qa.context} needs --qa reader`);
   if ((a.retrievedFrom || a.qa.context === 'none' || a.qa.context === 'oracle') && (a.qa.mode === 'think' || a.facts !== 'none')) throw new Error('--retrieved-from and --qa-context none|oracle build no brain, so they cannot run think or the facts lane');
+  if (a.qa.effort !== undefined && a.qa.mode !== 'reader') throw new Error('--reader-effort sets the reader\'s effort, so it needs --qa reader');
+  if (a.qa.mode === 'reader' && isCompatModel(a.qa.reader)) compatRequest(a.qa.reader, [], { effort: a.qa.effort, maxOutputTokens: a.qa.maxTokens });
+  else if (a.qa.effort !== undefined) checkEffort(a.qa.reader, a.qa.effort);
+  if (a.qa.mode !== 'none' && isCompatModel(a.qa.judge)) compatRequest(a.qa.judge, [], {});
   const frozen = a.retrievedFrom ? loadFrozenRetrieval(a.retrievedFrom) : null;
   // No brain is built when the evidence is replayed, empty or the gold sessions themselves.
   const brainless = !!frozen || a.qa.context === 'none' || a.qa.context === 'oracle';
@@ -549,11 +590,12 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
   const rows: MemoryQaRow[] = [];
   let engine = brainless ? null : await openEngine();
   let processed = 0;
+  let stopped: 'budget' | null = null;
   try {
     for (const convId of myConvs) {
       const qs = questions.filter(q => q.conversation === convId && !done.has(q.id));
       if (!qs.length) continue;
-      if (paid?.guard.exhausted) break;
+      if (paid?.guard.exhausted || stopped) break;
       if (engine && processed > 0 && processed % RECYCLE_EVERY === 0) { try { await engine.disconnect(); } catch { /* ignore */ } engine = await openEngine(); }
       else if (engine && processed > 0) await reset(engine);
       processed++;
@@ -595,6 +637,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
           ...(extractError ? { facts_extract_error: extractError } : {}) };
       }
       for (const q of qs) {
+        if (stopped) break;
         const base: MemoryQaRow = { id: q.id, conversation: q.conversation, category: q.category, abstention: q.abstention, gold_count: q.gold.length, ...convFacts };
         let row: MemoryQaRow;
         if (importError) row = { ...base, error: `import failed: ${importError}`, error_origin: 'sut' };
@@ -629,13 +672,15 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
               const pack = packSessions(evidence.map(id => sessById.get(id)).filter((x): x is Session => !!x), a.qa.context === 'oracle' ? evidence.length : a.qa.sessions, a.qa.budgetTokens);
               const readFacts = a.qa.context === 'facts' ? retrieved.slice(0, a.qa.sessions).flatMap(id => factsBySession.get(id) ?? []) : [];
               const prompt = think ? null : a.qa.context === 'facts' ? factsReaderPrompt(q, readFacts, latestDate(conv.sessions)) : readerPrompt(q, pack.sessions, latestDate(conv.sessions));
-              row = { ...row, ...await readAndJudge({ benchmark: a.benchmark, qa: a.qa, q, chat, think: think ? { fn: think, engine, referenceDate: thinkReferenceDate(q.question_date, conv.sessions) } : null, prompt, countTokens }),
+              row = { ...row, ...await readAndJudge({ benchmark: a.benchmark, qa: a.qa, q, chat, think: think ? { fn: think, engine, referenceDate: thinkReferenceDate(q.question_date, conv.sessions) } : null, prompt, countTokens, budgetExhausted: () => !!paid?.guard.exhausted }),
                 qa_context_tokens: think || a.qa.context === 'facts' ? undefined : pack.tokens, qa_sessions: think || a.qa.context === 'facts' ? undefined : pack.sessions.length,
                 ...(a.qa.context === 'facts' ? { qa_facts: readFacts.length, qa_facts_tokens: systems.factsContextTokens(readFacts) } : {}) };
             }
           } catch (e) {
             if (e instanceof DecideError) throw e;
-            row = { ...base, error: (e as Error).message, error_origin: /budget|BudgetExceeded/i.test((e as Error).message) ? 'harness' : 'sut' };
+            const receipts = (e as { qa_receipts?: UsageReceipt[] }).qa_receipts;
+            row = { ...base, error: (e as Error).message, error_origin: /budget|BudgetExceeded/i.test((e as Error).message) ? 'harness' : 'sut', ...(receipts ? { qa_receipts: receipts } : {}) };
+            if ((e as Error).name === 'BudgetExceededError') stopped = 'budget';
           }
         }
         rows.push(row);
@@ -651,7 +696,8 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
   }
 
   const allRows: MemoryQaRow[] = (existsSync(rowsPath) ? readFileSync(rowsPath, 'utf8') : '').split('\n').filter(l => l.trim()).map(l => JSON.parse(l));
-  const scored = allRows.filter(r => !r.abstention && !r.error && r.gold_count > 0);
+  const latest = [...new Map(allRows.map(r => [r.id, r])).values()];
+  const scored = latest.filter(r => !r.abstention && !r.error && r.gold_count > 0);
   const mean = (k: keyof MemoryQaRow) => scored.length ? scored.reduce((s, r) => s + Number(r[k] ?? 0), 0) / scored.length : null;
   const retrievalScored = !!frozen || !brainless;
   const invalidReasons: string[] = [];
@@ -677,7 +723,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
     paid.guard.uninstall();
     cost = receiptCost(summary) as unknown as Record<string, unknown>;
   }
-  const runStatus = refusal ? 'refused' : invalidReasons.length ? 'invalid' : allRows.length < expected ? 'partial' : 'complete';
+  const runStatus = refusal ? 'refused' : invalidReasons.length ? 'invalid' : stopped || latest.length < expected ? 'partial' : 'complete';
   const finishedAt = new Date().toISOString();
   const attempts: Attempt[] = [...priorAttempts, { run_status: runStatus, finished_at: finishedAt, rows_added: allRows.length - rowsBefore, reranked_queries: attemptFidelity.reranked_queries,
     rerank_provider_requests: attemptFidelity.rerank_provider_requests, embedding_deferred_pages: attemptFidelity.embedding_deferred_pages, usd: (cost?.usd as number | undefined) ?? null }];
@@ -693,10 +739,11 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
     reading: a.qa.mode === 'none' ? null : { breadth_sessions: a.qa.sessions, budget_tokens: a.qa.budgetTokens, max_output_tokens: a.qa.maxTokens ?? 1024 },
     embedding: { mode: a.embed, model: a.embeddingModel, dims: a.embeddingDims, cache_stats: cache ? { ...cache.stats } : null },
     dataset: corpus.source, selection: { categories: a.categories, limit: a.limit, seed: a.seed, shard: a.shard, conversations: myConvs.length, questions_expected: expected },
-    counts: { rows: allRows.length, scored: scored.length, errors: allRows.filter(r => r.error).length, abstention: allRows.filter(r => r.abstention).length },
+    counts: { rows: latest.length, scored: scored.length, errors: latest.filter(r => r.error).length, abstention: latest.filter(r => r.abstention).length },
     summary: { recall_all_at_5: retrievalScored ? mean('recall_all_at_5') : null, recall_any_at_5: retrievalScored ? mean('recall_any_at_5') : null, recall_all_at_10: retrievalScored ? mean('recall_all_at_10') : null, ndcg_at_10: retrievalScored ? mean('ndcg_at_10') : null,
       latency_p50_ms: brainless || !scored.length ? null : percentile(scored.map(r => r.latency_ms ?? 0), 50), latency_p95_ms: brainless || !scored.length ? null : percentile(scored.map(r => r.latency_ms ?? 0), 95),
-      ...(a.qa.mode !== 'none' ? (() => { const qa = allRows.filter(r => typeof r.qa_score === 'number'); return { qa_score: qa.length ? qa.reduce((x, r) => x + (r.qa_score ?? 0), 0) / qa.length : null, qa_rows: qa.length, qa_errors: allRows.filter(r => r.qa_error).length }; })() : {}) },
+      ...(a.qa.mode !== 'none' ? (() => { const qa = latest.filter(r => typeof r.qa_score === 'number'); return { qa_score: qa.length ? qa.reduce((x, r) => x + (r.qa_score ?? 0), 0) / qa.length : null, qa_rows: qa.length, qa_errors: latest.filter(r => r.qa_error).length }; })() : {}),
+      ...(stopped ? { stopped } : {}) },
     facts: a.facts === 'none' ? null : { lane: a.facts, extractor: 'runExtractConversationFactsCore (product default model, force)', pages: 'conversation type, ISO session date', ...factStats,
       unresolved_share: factStats.facts ? factStats.unresolved / factStats.facts : null },
     qa: a.qa.mode === 'none' ? null : { ...a.qa, reader_prompt: a.qa.mode === 'think' ? 'gbrain think, asked for referenceDate = the question date, else the latest session date (YYYY-MM-DD); each row\'s qa_reference_date is the date think reports it used' : a.qa.context === 'facts' ? 'step-by-step reading prompt over the saved facts (text + stored date) of the top sessions'
@@ -706,6 +753,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
       const all = allRows.flatMap(r => r.qa_receipts ?? []);
       return { schema: USAGE_RECEIPT_SCHEMA, by_role: Object.fromEntries([...new Set(all.map(r => r.role))].sort().map(role => [role, sumUsage(all.filter(r => r.role === role))])) };
     })(),
+    models_not_run: modelsNotRun('memory-qa', hasChatRoute),
     fidelity, cost, attempts, cost_usd_all_attempts: attempts.some(x => x.usd !== null) ? Math.round(attempts.reduce((x, y) => x + (y.usd ?? 0), 0) * 1e6) / 1e6 : null, rows_file: 'rows.ndjson',
   };
   writeFileSync(join(a.output, 'receipt.json'), JSON.stringify(receipt, null, 2) + '\n');

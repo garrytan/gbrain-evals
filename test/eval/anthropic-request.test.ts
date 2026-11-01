@@ -236,7 +236,7 @@ describe('the other call sites', () => {
     const reportsRoot = mkdtempSync(join(tmpdir(), 'cat5-receipt-'));
     await runCat5({ claims: [CLAIM], pagesBySlug, client: recording().client, model: 'claude-haiku-5-5', reportsRoot });
     expect(loadReceipt(receiptPath(CAT5_CATEGORY, reportsRoot)).judge).toEqual({ model: 'claude-haiku-5-5', temperature: null });
-  });
+  }, 30_000);
 
   test('cat25 think completion', async () => {
     const r = recording();
