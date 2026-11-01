@@ -47,12 +47,12 @@ export function summarize(): { markdown: string; spend: Record<string, { usd: nu
     spend[suite] = spendOf(dir);
     lines.push(`### ${suite}`, '');
     const models = [MODEL_CONFIG.fixed_reader.id, ...MODEL_CONFIG.frontier_sweep.map(m => m.id).filter(m => m !== MODEL_CONFIG.fixed_reader.id), ...MODEL_CONFIG.alternate_readers.map(m => m.id)];
-    lines.push('| Arm | Reader | Correct | Accuracy | Judged | Delivered tokens (mean / p95) |', '|---|---|---:|---:|---:|---:|');
+    lines.push('| Arm | Reader | Correct | Accuracy | Cut off at output limit | Judged | Delivered tokens (mean / p95) |', '|---|---|---:|---:|---:|---:|---:|');
     for (const arm of Object.keys(res).sort()) {
       for (const m of models) {
         const r = res[arm][m];
         if (!r) continue;
-        lines.push(`| ${arm} | ${m} | ${r.correct}/${r.n} | ${pct(r.correct, r.n)} | ${r.judged} | ${r.context_tokens.mean ?? 'n/a'} / ${r.context_tokens.p95 ?? 'n/a'} |`);
+        lines.push(`| ${arm} | ${m} | ${r.correct}/${r.n} | ${pct(r.correct, r.n)} | ${r.truncated ?? 'n/a'} | ${r.judged} | ${r.context_tokens.mean ?? 'n/a'} / ${r.context_tokens.p95 ?? 'n/a'} |`);
       }
     }
     lines.push('');
