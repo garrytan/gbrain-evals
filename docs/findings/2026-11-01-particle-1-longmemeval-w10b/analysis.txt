@@ -9,11 +9,17 @@ W10b, 500 questions, official gpt-4o-2024-08-06 judge (recounted from rows)
 | gpt-6.1-sol | 464 | 92.8% | 13,695 / 110 | 0.0381 | 0.0190 | 0.0307 | 0.0153 (0) |
 
 particle-1 minus each reader (points; 95% cluster bootstrap, seed 20261101; exact McNemar)
-| Comparator | Difference | 95% interval | Wins / losses | McNemar p |
-|---|---|---|---|---|
-| claude-opus-5-5 | -3.4 | -5.6 to -1.4 | 6 / 23 | 0.002 |
-| claude-sonnet-5-5 | -1.0 | -3.2 to +1.0 | 13 / 18 | 0.473 |
-| gpt-6.1-sol | -1.4 | -3.6 to +0.6 | 11 / 18 | 0.265 |
+| Comparator | Difference | 95% interval | Wins / losses | McNemar p | Detectable at 80% power (summary.json) |
+|---|---|---|---|---|---|
+| claude-opus-5-5 | -3.4 | -5.6 to -1.4 | 6 / 23 | 0.002 | 3.0 |
+| claude-sonnet-5-5 | -1.0 | -3.2 to +1.0 | 13 / 18 | 0.473 | 3.1 |
+| gpt-6.1-sol | -1.4 | -3.6 to +0.6 | 11 / 18 | 0.265 | 3.0 |
+
+Answers: median length in characters; mean reasoning tokens where the usage reports them
+- particle-1: median 192 characters; mean reasoning tokens 357
+- claude-opus-5-5: median 518.5 characters; mean reasoning tokens not reported
+- claude-sonnet-5-5: median 468.5 characters; mean reasoning tokens not reported
+- gpt-6.1-sol: median 166.5 characters; mean reasoning tokens 43
 
 Question types, official judge
 | Type | n | particle-1 | claude-opus-5-5 | claude-sonnet-5-5 | gpt-6.1-sol |
@@ -44,6 +50,9 @@ Second judge gpt-6.1-sol (sensitivity, not counted)
 | particle-1 | 457 | 456 | 97.4% | 0.836 | 7 | 6 |
 | claude-opus-5-5 | 474 | 480 | 98.4% | 0.818 | 1 | 7 |
 | claude-sonnet-5-5 | 462 | 468 | 98.0% | 0.846 | 2 | 8 |
+- particle-1: right to wrong by type {'abstention': 1, 'knowledge-update': 1, 'multi-session': 2, 'single-session-preference': 2, 'temporal-reasoning': 1}; wrong to right by type {'multi-session': 1, 'single-session-preference': 3, 'single-session-user': 2}
+- claude-opus-5-5: right to wrong by type {'abstention': 1}; wrong to right by type {'abstention': 1, 'knowledge-update': 1, 'multi-session': 2, 'single-session-assistant': 1, 'temporal-reasoning': 2}
+- claude-sonnet-5-5: right to wrong by type {'abstention': 1, 'temporal-reasoning': 1}; wrong to right by type {'knowledge-update': 1, 'multi-session': 4, 'single-session-preference': 1, 'single-session-user': 1, 'temporal-reasoning': 1}
 - claude-opus-5-5: W10's 2026-10 gpt-6.1-sol verdicts give 480 correct and agree with this run on 498 of 500
 - claude-sonnet-5-5: W10's 2026-10 gpt-6.1-sol verdicts give 468 correct and agree with this run on 498 of 500
 
@@ -57,7 +66,12 @@ Second judge claude-sonnet-5-5 (sensitivity, not counted)
 |---|---|---|---|---|---|---|
 | particle-1 | 457 | 444 | 96.6% | 0.810 | 15 | 2 |
 | gpt-6.1-sol | 464 | 461 | 98.2% | 0.870 | 6 | 3 |
+- particle-1: right to wrong by type {'abstention': 1, 'knowledge-update': 2, 'multi-session': 4, 'single-session-preference': 5, 'single-session-user': 2, 'temporal-reasoning': 1}; wrong to right by type {'multi-session': 1, 'single-session-preference': 1}
+- particle-1: replies whose last yes/no word contradicts the protocol rule's verdict: 7405e8b1; read by the last word, 443 correct, agreement 96.8%, kappa 0.823, flips 15 / 1
+- gpt-6.1-sol: right to wrong by type {'knowledge-update': 1, 'multi-session': 2, 'single-session-preference': 2, 'single-session-user': 1}; wrong to right by type {'multi-session': 1, 'single-session-preference': 1, 'temporal-reasoning': 1}
+- gpt-6.1-sol: replies whose last yes/no word contradicts the protocol rule's verdict: 7405e8b1; read by the last word, 460 correct, agreement 98.4%, kappa 0.886, flips 6 / 2
 
 | particle-1 minus | Difference | 95% interval | Wins / losses | McNemar p | Same conclusion as gpt-4o |
 |---|---|---|---|---|---|
 | gpt-6.1-sol | -3.4 | -5.6 to -1.2 | 8 / 25 | 0.005 | no |
+- particle-1 minus gpt-6.1-sol, replies read by their last yes/no word: -3.4 (-5.6 to -1.2), 8 / 25, McNemar p 0.005

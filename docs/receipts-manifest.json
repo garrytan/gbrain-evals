@@ -7521,7 +7521,7 @@
       "claim_id": "particle-w10b-finding-analysis",
       "readme_anchor": "docs/findings/2026-11-01-particle-1-longmemeval-w10b.md: Result",
       "artifact_path": "docs/findings/2026-11-01-particle-1-longmemeval-w10b/analysis.json",
-      "artifact_sha256": "5ecac2eb4333a993c9f184f871af8ed610525d0ae0cc7f38f55d2cf7bbf948df",
+      "artifact_sha256": "f81c77fcf919da82ce02fc59a00e424ef9d4994259836bee8bdaaed1fffcd833",
       "status": "covered",
       "expected": {
         "/w10b_arms/particle-1/correct": 457,

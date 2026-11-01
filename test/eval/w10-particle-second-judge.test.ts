@@ -1,6 +1,7 @@
 /**
- * Second-judge sensitivity for the particle-1 W10b finding: the judge plan and the committed judgments. Keyless: reads
- * the committed W10b answers and second-judge rows, calls no provider.
+ * Second-judge sensitivity for the particle-1 W10b finding: the judge plan, the committed judgments, and the finding's
+ * keyless recheck (scripts/finding-particle-w10b.py --check). Keyless: reads the committed W10b answers and second-judge
+ * rows, calls no provider.
  */
 import { describe, expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
@@ -45,4 +46,9 @@ describe('w10-particle-second-judge', () => {
       expect(receipt.response_models).toEqual({ [judge]: rows.length });
     });
   }
+
+  test('the finding recheck reproduces the committed analysis from the rows', () => {
+    const r = Bun.spawnSync(['python3', 'scripts/finding-particle-w10b.py', '--check'], { cwd: ROOT });
+    expect({ code: r.exitCode, stderr: r.stderr.toString().trim() }).toEqual({ code: 0, stderr: 'recheck matches analysis.txt and analysis.json' });
+  }, 300_000);
 });

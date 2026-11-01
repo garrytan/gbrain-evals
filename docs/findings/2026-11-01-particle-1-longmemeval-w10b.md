@@ -34,8 +34,8 @@ where two readers disagree. Most of particle-1's 17-question gap to Opus 5.5 is 
 information is not available in the retrieved sessions; I don't know." when the sessions lack what it needs. particle-1
 applies that rule, nearly word for word, to requests for advice, where LongMemEval's rubric expects the reader to use
 preferences the user stated earlier ([replay report, the concrete case](../benchmarks/2026-11-01-longmemeval-particle-replay/REPORT.md#the-concrete-case)).
-Its answers are also short: a median of 192 characters against 520 for Opus 5.5, 469 for Sonnet 5.5 and 167 for GPT-6.1
-Sol. Open-ended rubric questions are where judges disagree most. Five of the 15 particle-1 answers that the
+Its answers are also short: a median of 192 characters against 518.5 for Opus 5.5, 468.5 for Sonnet 5.5 and 166.5 for
+GPT-6.1 Sol. Open-ended rubric questions are where judges disagree most. Five of the 15 particle-1 answers that the
 `claude-sonnet-5-5` judge marks wrong, against gpt-4o's right, are single-session-preference answers.
 
 ## Setup
@@ -102,6 +102,12 @@ judge's verdicts on the same answers.
 | Sonnet 5.5 | -1.0 (-3.2 to +1.0) | `gpt-6.1-sol` | -2.4 (-4.6 to -0.4) | 9 / 21 | 0.043 | yes: now excludes zero |
 | GPT-6.1 Sol | -1.4 (-3.6 to +0.6) | `claude-sonnet-5-5` | -3.4 (-5.6 to -1.2) | 8 / 25 | 0.005 | yes: now excludes zero |
 
+The protocol's rule reads a reply as correct when it contains "yes" anywhere. `gpt-6.1-sol` answered with a bare yes or
+no every time, but `claude-sonnet-5-5` reasoned in some replies. On question `7405e8b1`, its replies for both
+particle-1's and GPT-6.1 Sol's answers quote "Yes" and end with "No", so the rule counts both correct. Read by their
+last yes or no, the Sonnet-judged counts are 443 and 460 (kappa 0.823 and 0.886), and particle-1 minus GPT-6.1 Sol stays
+-3.4 (-5.6 to -1.2), because both replies fall on the same question.
+
 The `gpt-6.1-sol` judge is stable. On the Opus 5.5 and Sonnet 5.5 answers, W10 ran the same model as its secondary
 judge in October. Those verdicts give the same totals (480 and 468) and agree with this run on 498 of 500 answers for
 each arm. Every judgment is in the second-judge rows, and the per-type counts and every figure above are in
@@ -141,9 +147,10 @@ not be checked; the Sol figures follow OpenAI's published rate and the usage the
 
 **Judging and this finding's spend.** The replay's gpt-4o judging cost $0.48 for all four of its arms. The second
 judges cost $1.61 from the budget ledger (2,497 requests, including 6 in the smoke test): `gpt-6.1-sol` $0.86 for
-1,500 judgments, `claude-sonnet-5-5` $0.75 for 1,000. Nine of the `claude-sonnet-5-5` judgments were answered from the
-smoke test's response cache and not paid again; the run's receipt still prices them ($0.004), so its per-judge figures
-add up to $1.611 against the ledger's $1.607 for the full run. The cap was $25, with a stop at $20.
+1,500 judgments, `claude-sonnet-5-5` $0.75 for 1,000. On nine questions GPT-6.1 Sol's answer is byte-identical to
+particle-1's, so the `claude-sonnet-5-5` prompt was identical too. Those nine Sol judgments were replayed from the same
+run's response cache, share particle-1's verdict and were not paid again. The run's receipt still prices them ($0.004),
+so its per-judge figures add up to $1.611 against the ledger's $1.607 for the full run. The cap was $25, with a stop at $20.
 
 ## Why null? (R48)
 
@@ -202,9 +209,12 @@ GPT-6.1 Sol.
    python3 scripts/finding-particle-w10b.py --check
    ```
 
-   The script recounts every number in this file from the per-question rows. That covers verdicts from the stored judge
-   replies, the paired intervals with `compare.ts`'s bootstrap, cost from each row's token usage and the price table,
-   and the second-judge agreement. It checks the digests and the replay's `summary.json` first. `--check` exits 1
+   The script recounts this file's counts, intervals, costs, answer lengths, reasoning tokens and second-judge figures
+   from the per-question rows: verdicts from the stored judge replies, the paired intervals with `compare.ts`'s
+   bootstrap, cost from each row's token usage and the price table, and agreement, flips by type and the last-word
+   reading for the second judges. It checks the digests and the replay's `summary.json` first, and copies the
+   detectable gaps from `summary.json`'s power notes. The judging costs come from the replay report and the
+   second-judge receipt, and the canary figures from the replay report. `--check` exits 1
    unless its output equals the committed [analysis.txt](2026-11-01-particle-1-longmemeval-w10b/analysis.txt) and
    [analysis.json](2026-11-01-particle-1-longmemeval-w10b/analysis.json) byte for byte.
 
@@ -215,8 +225,11 @@ GPT-6.1 Sol.
    bun install --frozen-lockfile
    bun eval/runner/budget-ledger.ts init --budget-ledger <ledger> --program-cap-usd 25
    RUN=$(bun eval/runner/budget-ledger.ts open --budget-ledger <ledger> --runner w10-particle-second-judge --budget-usd 20 --estimate-usd 10 | jq -r .run_id)
-   bun eval/runner/batch/w10-particle-second-judge.ts run --out <fresh dir> --budget-ledger <ledger> --paid --budget-run-id $RUN
+   bun eval/runner/batch/w10-particle-second-judge.ts run --out <fresh dir> --cache <fresh dir> --budget-ledger <ledger> --paid --budget-run-id $RUN
    ```
+
+   A fresh `--cache` matters on a machine that ran the judges before: the default cache would replay every earlier
+   judgment at no cost.
 
    The fresh run's `rows.ndjson` files can replace the committed ones under
    `docs/findings/2026-11-01-particle-1-longmemeval-w10b/second-judge/` for the script to read. Expect a few verdicts

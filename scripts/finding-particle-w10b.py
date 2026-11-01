@@ -16,6 +16,8 @@ recomputed headline value against the replay's summary.json.
 import hashlib
 import json
 import math
+import re
+import statistics
 import sys
 from pathlib import Path
 
@@ -67,6 +69,11 @@ def rows(path):
 
 def yes(judgment):
     return 1 if judgment and not judgment.get("error") and isinstance(judgment.get("raw"), str) and "yes" in judgment["raw"].lower() else 0
+
+
+def final_word(judgment):
+    words = re.findall(r"\b(yes|no)\b", (judgment.get("raw") or "").lower())
+    return (1 if words[-1] == "yes" else 0) if words else yes(judgment)
 
 
 def score(row):
@@ -186,6 +193,7 @@ def analyse():
             raise SystemExit(f"{name}: a row's settled usd is neither its batch nor its list price")
         settled = sum(r["usd"] for r in d.values()) if batch is not None else None
         toks = [tokens(r) for r in d.values()]
+        reasoning = [((r.get("usage") or {}).get("completion_tokens_details") or {}).get("reasoning_tokens") for r in d.values()]
         by_type = {}
         for i, r in d.items():
             t = by_type.setdefault(report_type(r), [0, 0])
@@ -198,6 +206,8 @@ def analyse():
             "batch_usd_per_correct": None if batch is None else round(batch * derived / correct, 8),
             "settled_usd_per_correct": None if settled is None else round(settled / correct, 8), "rows_settled_at_list": at_list,
             "mean_input_tokens": round(sum(t[0] for t in toks) / len(toks)), "mean_output_tokens": round(sum(t[3] for t in toks) / len(toks)),
+            "mean_reasoning_tokens": None if None in reasoning else round(sum(reasoning) / len(reasoning)),
+            "median_answer_chars": statistics.median(len(r.get("hypothesis") or "") for r in d.values()),
             "by_type": dict(sorted(by_type.items())),
         }
         section, key = SUMMARY_ARM[name]
@@ -212,6 +222,7 @@ def analyse():
         s = next(c for c in summary["w10b"]["comparisons"] if c["id"] == SUMMARY_ID[name])
         if (s["delta"], s["ci95"], s["mcnemar"]["wins"], s["mcnemar"]["losses"]) != (round(p["delta"], 10), p["ci95"], p["wins"], p["losses"]) or abs(s["mcnemar"]["p_two_sided"] - p["mcnemar_p"]) > 1e-12:
             raise SystemExit(f"particle-1 minus {name}: recount differs from summary.json")
+        p["detectable_at_80pct_power"] = float(re.search(r"absolute change of about (0\.\d+)", s["power"]).group(1))
         pairs[name] = p
     out["w10b_paired"] = pairs
     if summary["decision_b"]["flip"] or pairs["claude-opus-5-5"]["ci95"][1] < -0.1:
@@ -243,6 +254,18 @@ def analyse():
         }
     out["sol_cache_write_repricing"] = sol
 
+    def agreement(name, v):
+        o = official[name]
+        return {"correct": sum(v.values()), "agreement": sum(1 for i in ids if v[i] == o[i]) / len(ids), "kappa": kappa(o, v, ids),
+                "flips_to_wrong": sum(1 for i in ids if o[i] == 1 and v[i] == 0), "flips_to_right": sum(1 for i in ids if o[i] == 0 and v[i] == 1)}
+
+    def by_type(name, keep):
+        counts = {}
+        for i in ids:
+            if keep(i):
+                counts[report_type(data[name][i])] = counts.get(report_type(data[name][i]), 0) + 1
+        return dict(sorted(counts.items()))
+
     second = {}
     for judge, comparators in SECOND_JUDGES.items():
         path = FINDING / "second-judge" / judge / "rows.ndjson"
@@ -260,13 +283,16 @@ def analyse():
             if errors:
                 raise SystemExit(f"{judge}: {len(errors)} {name} judgments failed (first {errors[0]})")
             v = {i: 0 if data[name][i].get("error") else yes(j[i]) for i in ids}
+            fw = {i: 0 if data[name][i].get("error") else final_word(j[i]) for i in ids}
+            o = official[name]
             per_arm[name] = {
-                "correct": sum(v.values()), "gpt4o_correct": sum(official[name].values()),
-                "agreement": sum(1 for i in ids if v[i] == official[name][i]) / len(ids), "kappa": kappa(official[name], v, ids),
-                "flips_to_wrong": sum(1 for i in ids if official[name][i] == 1 and v[i] == 0),
-                "flips_to_right": sum(1 for i in ids if official[name][i] == 0 and v[i] == 1),
-                "verdicts": v,
+                **agreement(name, v), "gpt4o_correct": sum(o.values()),
+                "flips_to_wrong_by_type": by_type(name, lambda i: o[i] == 1 and v[i] == 0), "flips_to_right_by_type": by_type(name, lambda i: o[i] == 0 and v[i] == 1),
+                "final_word_contradicts": sorted(i for i in ids if fw[i] != v[i]),
+                "verdicts": v, "final_word_verdicts": fw,
             }
+            if per_arm[name]["final_word_contradicts"]:
+                per_arm[name]["final_word_reading"] = agreement(name, fw)
             if judge == W10_SECONDARY_JUDGE and "secondary" in data[name][ids[0]]:
                 w10 = {i: 0 if data[name][i].get("error") else yes(data[name][i]["secondary"]) for i in ids}
                 per_arm[name]["w10_secondary_correct"] = sum(w10.values())
@@ -278,9 +304,11 @@ def analyse():
             excl = lambda ci: ci[0] > 0 or ci[1] < 0
             p["ci_excludes_zero"] = excl(p["ci95"])
             p["same_conclusion_as_gpt4o"] = excl(p["ci95"]) == excl(o["ci95"]) and (not excl(o["ci95"]) or (p["delta"] > 0) == (o["delta"] > 0))
+            if per_arm[name]["final_word_contradicts"] or per_arm["particle-1"]["final_word_contradicts"]:
+                p["final_word_reading"] = paired(per_arm[name]["final_word_verdicts"], per_arm["particle-1"]["final_word_verdicts"], ids)
             comparisons[name] = p
         for a in per_arm.values():
-            del a["verdicts"]
+            del a["verdicts"], a["final_word_verdicts"]
         second[judge] = {"arms": per_arm, "comparisons": comparisons}
     out["second_judge"] = second
     return out
@@ -295,9 +323,12 @@ def text(a):
         settled = "none" if s["settled_usd_per_correct"] is None else f"{s['settled_usd_per_correct']:.4f} ({s['rows_settled_at_list']})"
         lines.append(f"| {name} | {s['correct']} | {s['accuracy'] * 100:.1f}% | {s['mean_input_tokens']:,} / {s['mean_output_tokens']:,} | {s['list_usd_per_correct']:.4f} | {batch} | {s['recorded_list_usd_per_correct']:.4f} | {settled} |")
     lines += ["", "particle-1 minus each reader (points; 95% cluster bootstrap, seed 20261101; exact McNemar)",
-              "| Comparator | Difference | 95% interval | Wins / losses | McNemar p |", "|---|---|---|---|---|"]
+              "| Comparator | Difference | 95% interval | Wins / losses | McNemar p | Detectable at 80% power (summary.json) |", "|---|---|---|---|---|---|"]
     for name, p in a["w10b_paired"].items():
-        lines.append(f"| {name} | {pts(p['delta'])} | {pts(p['ci95'][0])} to {pts(p['ci95'][1])} | {p['wins']} / {p['losses']} | {p['mcnemar_p']:.3f} |")
+        lines.append(f"| {name} | {pts(p['delta'])} | {pts(p['ci95'][0])} to {pts(p['ci95'][1])} | {p['wins']} / {p['losses']} | {p['mcnemar_p']:.3f} | {p['detectable_at_80pct_power'] * 100:.1f} |")
+    lines += ["", "Answers: median length in characters; mean reasoning tokens where the usage reports them"]
+    for name, s in a["w10b_arms"].items():
+        lines.append(f"- {name}: median {s['median_answer_chars']:g} characters; mean reasoning tokens {s['mean_reasoning_tokens'] if s['mean_reasoning_tokens'] is not None else 'not reported'}")
     lines += ["", "Question types, official judge", "| Type | n | " + " | ".join(a["w10b_arms"]) + " |", "|---|---|" + "---|" * len(a["w10b_arms"])]
     types = a["w10b_arms"]["particle-1"]["by_type"]
     for t, (n, _) in types.items():
@@ -316,11 +347,21 @@ def text(a):
         for name, x in s["arms"].items():
             lines.append(f"| {name} | {x['gpt4o_correct']} | {x['correct']} | {x['agreement'] * 100:.1f}% | {x['kappa']:.3f} | {x['flips_to_wrong']} | {x['flips_to_right']} |")
         for name, x in s["arms"].items():
+            lines.append(f"- {name}: right to wrong by type {x['flips_to_wrong_by_type']}; wrong to right by type {x['flips_to_right_by_type']}")
+            if x["final_word_contradicts"]:
+                f = x["final_word_reading"]
+                lines.append(f"- {name}: replies whose last yes/no word contradicts the protocol rule's verdict: {', '.join(x['final_word_contradicts'])}; "
+                             f"read by the last word, {f['correct']} correct, agreement {f['agreement'] * 100:.1f}%, kappa {f['kappa']:.3f}, flips {f['flips_to_wrong']} / {f['flips_to_right']}")
+        for name, x in s["arms"].items():
             if "w10_secondary_agreement" in x:
                 lines.append(f"- {name}: W10's 2026-10 {judge} verdicts give {x['w10_secondary_correct']} correct and agree with this run on {x['w10_secondary_agreement']} of 500")
         lines += ["", "| particle-1 minus | Difference | 95% interval | Wins / losses | McNemar p | Same conclusion as gpt-4o |", "|---|---|---|---|---|---|"]
         for name, p in s["comparisons"].items():
             lines.append(f"| {name} | {pts(p['delta'])} | {pts(p['ci95'][0])} to {pts(p['ci95'][1])} | {p['wins']} / {p['losses']} | {p['mcnemar_p']:.3f} | {'yes' if p['same_conclusion_as_gpt4o'] else 'no'} |")
+        for name, p in s["comparisons"].items():
+            if "final_word_reading" in p:
+                f = p["final_word_reading"]
+                lines.append(f"- particle-1 minus {name}, replies read by their last yes/no word: {pts(f['delta'])} ({pts(f['ci95'][0])} to {pts(f['ci95'][1])}), {f['wins']} / {f['losses']}, McNemar p {f['mcnemar_p']:.3f}")
     return "\n".join(lines) + "\n"
 
 
