@@ -1,7 +1,7 @@
 ---
 id: 2026-11-01-particle-1-longmemeval-w10b
 kind: finding
-title: "particle-1 answers 91.4% of 500 LongMemEval questions on gbrain's retrieval, 1.4 to 5.6 points behind Opus 5.5, at a twenty-third of its list cost per correct answer (near ceiling, one protocol judge)"
+title: "particle-1 answers 91.4% of 500 LongMemEval questions on gbrain's retrieval, 3.4 points behind Opus 5.5 (95% interval 1.4 to 5.6), at a twenty-third of its list cost per correct answer (near ceiling, one protocol judge)"
 status: open
 grade: exploratory (the paired comparisons are named in the preregistration as descriptive; the second judge is a sensitivity added afterwards)
 repo_commit: 095d8711 for the replay rows (#247); the recheck, the second-judge rows and this file arrive in the commit that adds them
@@ -9,10 +9,14 @@ prereg: ../benchmarks/2026-11-01-longmemeval-particle-replay/PREREGISTRATION.md 
 data: committed in this repository; 40 files with their SHA-256 in 2026-11-01-particle-1-longmemeval-w10b/SHA256SUMS
 author: GBEV-25
 reviewed_by: pending; reproduced_by: pending
-disclosures: PENDING decision H
+disclosures: "Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which makes particle-1."
 ---
 
-# particle-1 answers 91.4% of 500 LongMemEval questions on gbrain's retrieval, 1.4 to 5.6 points behind Opus 5.5, at a twenty-third of its list cost per correct answer (near ceiling, one protocol judge)
+# particle-1 answers 91.4% of 500 LongMemEval questions on gbrain's retrieval, 3.4 points behind Opus 5.5 (95% interval 1.4 to 5.6), at a twenty-third of its list cost per correct answer (near ceiling, one protocol judge)
+
+Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which makes particle-1. The standing list
+of disclosures for public findings is [research/disclosures.md](drive://org-gstack-gbrain/research/disclosures.md) in
+the GStack GBrain organization's Capy Drive.
 
 ## What we found
 
@@ -256,4 +260,4 @@ Written from the particle-1 replay (#247), a keyless recheck of its rows, and th
 sensitivity. The recheck reproduced every count and interval in the replay report and found three cost corrections:
 Opus 5.5's list cost per correct answer ($0.0993, not $0.0994), the batch-rate figures for Opus 5.5 and Sonnet 5.5
 ($0.0497 and $0.0250, not $0.0507 and $0.0255), and GPT-6.1 Sol's costs at OpenAI's cache-write rate. All three are in
-[corrections](../corrections.md#longmemeval). The disclosure line waits on decision H.
+[corrections](../corrections.md#longmemeval). The disclosure line records Garry Tan's answer to decision H.
