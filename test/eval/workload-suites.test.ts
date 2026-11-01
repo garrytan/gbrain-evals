@@ -6,7 +6,7 @@
  * and scorer mutation checks.
  */
 import { describe, expect, test } from 'bun:test';
-import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, symlinkSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { assertScorerRejectsFakeSystems } from '../../eval/runner/mutation-kit.ts';
@@ -21,7 +21,7 @@ import {
   type CorrectionAdapter, type CorrectionItem, type UnrelatedWrite,
 } from '../../eval/workload-suites/corrections.ts';
 import { classifyMiss, generatePassingDetails } from '../../eval/workload-suites/passing-details.ts';
-import { RUN_DIRS } from '../../eval/workload-suites/report.ts';
+import { RUN_DIRS, publishedSuiteAt } from '../../eval/workload-suites/report.ts';
 import { MODEL_CONFIG, frontierSubset, modelRuleViolations } from '../../eval/workload-suites/run-config.ts';
 import { schemaErrors } from '../../eval/workload-suites/schema-check.ts';
 import type { ScorerLabel, SuiteBundle, SuiteDefinition, SuiteId } from '../../eval/workload-suites/types.ts';
@@ -252,6 +252,23 @@ describe('schema, model rule and frontier subset', () => {
       expect([sub, r.exitCode]).toEqual([sub, 2]);
       expect(r.stderr.toString()).toContain(`eval/reports/workload-bench/${sub} is the directory report.ts publishes ${suite} from (RUN_DIRS), so a smoke run may not write there; pass --out with another directory`);
       expect(snapshot(sub)).toBe(before);
+    }
+  });
+
+  test('a published directory reached through a symlinked path is still published, so the smoke guard refuses it too (#245)', () => {
+    const root = resolve(import.meta.dir, '../..');
+    const tmp = mkdtempSync(join(tmpdir(), 'workload-alias-'));
+    try {
+      symlinkSync(root, join(tmp, 'checkout'));
+      for (const [suite, sub] of Object.entries(RUN_DIRS)) expect([sub, publishedSuiteAt(join(tmp, 'checkout/eval/reports/workload-bench', sub))]).toEqual([sub, suite]);
+      expect(publishedSuiteAt(join(tmp, 'checkout/eval/reports/workload-bench/beliefs-smoke5'))).toBeNull();
+      const before = existsSync(join(root, 'eval/reports/workload-bench/beliefs/run.json')) ? readFileSync(join(root, 'eval/reports/workload-bench/beliefs/run.json'), 'utf8') : null;
+      const r = Bun.spawnSync(['bun', 'eval/workload-suites/bench.ts', 'beliefs', '--smoke', '5', '--phase', 'score', '--out', join(tmp, 'checkout/eval/reports/workload-bench/beliefs')], { cwd: root });
+      expect(r.exitCode).toBe(2);
+      expect(r.stderr.toString()).toContain('is the directory report.ts publishes beliefs from (RUN_DIRS), so a smoke run may not write there');
+      expect(existsSync(join(root, 'eval/reports/workload-bench/beliefs/run.json')) ? readFileSync(join(root, 'eval/reports/workload-bench/beliefs/run.json'), 'utf8') : null).toBe(before);
+    } finally {
+      rmSync(tmp, { recursive: true, force: true });
     }
   });
 

@@ -9,8 +9,8 @@
  * (scored rows without prompts, ingest and presence summaries, spend by
  * label, the run manifest) with machine paths scrubbed.
  */
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, writeFileSync } from 'node:fs';
+import { basename, dirname, join, resolve } from 'node:path';
 import { REPO_ROOT } from '../runner/harness-env.ts';
 import { MODEL_CONFIG } from './run-config.ts';
 
@@ -22,8 +22,10 @@ export const RUN_DIRS: Record<string, string> = {
   beliefs: 'beliefs',
 };
 
-/** The suite that report.ts publishes from `dir` (one of RUN_DIRS), or null. */
-export const publishedSuiteAt = (dir: string): string | null => Object.entries(RUN_DIRS).find(([, sub]) => join(BENCH, sub) === resolve(dir))?.[0] ?? null;
+/** `path` with symlinks resolved: the real path of the path, or of its nearest existing ancestor joined with the rest. */
+const realPath = (path: string): string => existsSync(path) ? realpathSync.native(path) : join(realPath(dirname(path)), basename(path));
+/** The suite that report.ts publishes from `dir` (one of RUN_DIRS), or null; a path that reaches it through a symlink counts. */
+export const publishedSuiteAt = (dir: string): string | null => Object.entries(RUN_DIRS).find(([, sub]) => realPath(join(BENCH, sub)) === realPath(resolve(dir)))?.[0] ?? null;
 
 const read = (p: string) => JSON.parse(readFileSync(p, 'utf8'));
 const pct = (a: number, b: number) => b ? `${(100 * a / b).toFixed(1)}%` : 'n/a';
