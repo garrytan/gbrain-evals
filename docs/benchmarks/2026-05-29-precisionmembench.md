@@ -108,7 +108,7 @@ export OPENAI_API_KEY=...   # embeddings; ANTHROPIC_API_KEY for think mode
 bun eval/runner/precisionmembench.ts --mode gbrain-hybrid                       # baseline (published 0.075 pre-correction; measure the effect)
 bun eval/runner/precisionmembench.ts --mode gbrain-adaptive --entity-max 1 --other-max 1   # tight caps (published 0.58 pre-correction)
 bun eval/runner/precisionmembench.ts --mode gbrain-adaptive --entity-max 1 --other-max 2   # recall-preserving
-bun eval/runner/precisionmembench.ts --mode gbrain-think                        # citation lens
+bun eval/runner/precisionmembench.ts --mode gbrain-think --paid --budget-run-id <id>   # citation lens; Opus 5.5, metered by the budget ledger
 bun eval/runner/precisionmembench.ts --mode gbrain-keyword                      # hermetic, no API key needed
 bun eval/runner/precisionmembench-instrument.ts                                 # policy sweep + cliff read
 ```

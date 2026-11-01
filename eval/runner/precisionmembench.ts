@@ -26,15 +26,25 @@
  *     precision per the empty-return rules) and kept in the denominator
  *     (probe-accounting policy).
  *
+ *   - gbrain-think asks a chat model (DEFAULT_THINK_MODEL, recorded as
+ *     resolved_config.chat_model) once per case, so it runs only as a paid arm:
+ *     --paid --budget-run-id <id> naming an open budget-ledger run, refused
+ *     before any request otherwise. Every request it makes, the seeding
+ *     embeddings included, passes the ledger's paid-request guard, and the
+ *     receipt's cost comes from the ledger.
+ *
  * Run:
  *   bun eval/runner/precisionmembench.ts --mode gbrain-hybrid
  *   bun eval/runner/precisionmembench.ts --mode gbrain-keyword   # no embed key
+ *   bun eval/runner/precisionmembench.ts --mode gbrain-think --paid --budget-run-id <id>   # metered
  *   bun eval/runner/precisionmembench.ts --mode gbrain-hybrid --limit 10
  *   bun eval/runner/precisionmembench.ts --mode gbrain-hybrid --json
  */
 
 import { readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { join } from 'path';
+import { budgetOptionsFrom, receiptCost, startPaidRun, type BudgetRun, type PaidRequestGuard } from './budget-ledger.ts';
+import { PaidArmRefusal, requirePaidArm } from './paid-arm.ts';
 import { buildReportPayload } from '../precisionmembench/scorer/buildRetrievalReport.ts';
 import {
   scoreCases,
@@ -45,7 +55,7 @@ import {
 } from '../precisionmembench/scorer/runCases.ts';
 import type { Belief } from '../precisionmembench/scorer/belief.ts';
 import { GbrainBeliefAdapter } from '../precisionmembench/gbrainAdapter.ts';
-import { GbrainThinkAdapter } from '../precisionmembench/gbrainThinkAdapter.ts';
+import { DEFAULT_THINK_MODEL, GbrainThinkAdapter } from '../precisionmembench/gbrainThinkAdapter.ts';
 import {
   createBenchEngine,
   seedGbrainEngine,
@@ -78,6 +88,8 @@ export const LEADERBOARD: Array<{ name: string; precision: number; active: numbe
 export const MODES = ['gbrain-hybrid', 'gbrain-keyword', 'gbrain-think', 'gbrain-adaptive'] as const;
 export type BenchMode = (typeof MODES)[number];
 export const FIDELITIES = ['body-text', 'structured'] as const satisfies readonly SeedFidelity[];
+/** Ledger estimate for gbrain-think, per case (one Opus 5.5 case cost $0.06 on 2026-11-01). */
+export const THINK_ESTIMATE_USD_PER_CASE = 0.1;
 
 export interface Opts {
   mode: BenchMode;
@@ -95,6 +107,7 @@ export interface Opts {
   allowSkip: boolean;
   reportDir: string;
   receiptFile: string;
+  paid: boolean;
 }
 
 /**
@@ -120,6 +133,7 @@ export function parseOpts(argv: string[]): Opts {
     allowSkip: false,
     reportDir: DEFAULT_REPORT_DIR,
     receiptFile: receiptPath('precisionmembench'),
+    paid: false,
   };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
@@ -149,7 +163,9 @@ export function parseOpts(argv: string[]): Opts {
     else if (a === '--allow-skip') opts.allowSkip = true;
     else if (a === '--report-dir') opts.reportDir = next();
     else if (a === '--receipt-path') opts.receiptFile = next();
-    else throw new Error(`unknown arg: ${a} (valid: --mode --fidelity --limit --json --no-embed --entity-max --other-max --allow-skip --report-dir --receipt-path)`);
+    else if (a === '--paid') opts.paid = true;
+    else if (a === '--budget-run-id' || a === '--budget-ledger') next();
+    else throw new Error(`unknown arg: ${a} (valid: --mode --fidelity --limit --json --no-embed --entity-max --other-max --allow-skip --report-dir --receipt-path --paid --budget-run-id --budget-ledger)`);
   }
   if (!MODES.includes(opts.mode)) {
     throw new Error(`--mode must be one of ${MODES.join(' | ')}, got '${opts.mode}'`);
@@ -284,6 +300,8 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
     partial,
     full_case_count: fullCaseCount,
     supersession_seeding: 'live — all beliefs seeded, no ground-truth soft-delete (audit precisionmembench-01)',
+    chat_model: opts.mode === 'gbrain-think' ? DEFAULT_THINK_MODEL : null,
+    paid: opts.mode === 'gbrain-think' || opts.paid ? { budget_run_id: budgetOptionsFrom(argv).runId ?? null, ledger: budgetOptionsFrom(argv).ledgerPath } : null,
   };
 
   const receiptBase: Omit<Receipt, 'run_status' | 'verdict' | 'skip_reason' | 'publishable'> = {
@@ -316,6 +334,27 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
     console.error(`[precisionmembench] SKIPPED — ${reason} ${opts.allowSkip ? '--allow-skip acknowledged.' : 'Exiting non-zero (pass --allow-skip to acknowledge).'}`);
     return opts.allowSkip ? 0 : 2;
   }
+
+  let paid: { run: BudgetRun; guard: PaidRequestGuard } | null = null;
+  if (opts.mode === 'gbrain-think' || opts.paid) {
+    const estimateUsd = opts.mode === 'gbrain-think' ? THINK_ESTIMATE_USD_PER_CASE * cases.length : null;
+    try {
+      requirePaidArm(argv, { arm: `precisionmembench ${opts.mode}`, estimateUsd, ledgerPath: budgetOptionsFrom(argv).ledgerPath });
+    } catch (err) {
+      if (!(err instanceof PaidArmRefusal)) throw err;
+      writeReceipt(opts.receiptFile, { ...receiptBase, run_status: 'skipped', skip_reason: err.message, publishable: false, finished_at: new Date().toISOString() });
+      console.error(`[precisionmembench] REFUSED — ${err.message}`);
+      return 2;
+    }
+    paid = startPaidRun(`precisionmembench:${opts.mode}`, { ...budgetOptionsFrom(argv), estimateUsd });
+  }
+  const closePaid = () => {
+    if (!paid) return {};
+    paid.guard.uninstall();
+    const cost = receiptCost(paid.run.close());
+    paid = null;
+    return { cost };
+  };
 
   const acc = new ProbeAccounting(cases.length);
 
@@ -430,6 +469,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
     writeFileSync(reportPath, JSON.stringify(payload, null, 2));
 
     await engine.disconnect();
+    const cost = closePaid();
 
     const summary = acc.summary();
     // A prefix-slice partial run is never publishable as a benchmark result.
@@ -444,6 +484,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
       errors: summary.errors,
       publishable: summary.publishable && !partial && !executionIncomplete,
       finished_at: new Date().toISOString(),
+      ...cost,
       data: {
         report_path: reportPath,
         mean_precision: r.meanPrecision,
@@ -501,6 +542,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
       errors: [...summary.errors, { probe_id: 'run', origin: 'harness', message: String(err).slice(0, 500) }],
       publishable: false,
       finished_at: new Date().toISOString(),
+      ...closePaid(),
     });
     console.error(err);
     return 1;
