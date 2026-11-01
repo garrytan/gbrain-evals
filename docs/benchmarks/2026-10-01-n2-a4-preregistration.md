@@ -67,3 +67,11 @@ An acceptable proposal is non-destructive and matches the gold class: for a same
 ## Lane cap
 
 Both arms together stay under the lane's $25 share of the $150 wave cap, enforced by one budget-ledger run opened for this lane.
+
+## Amendment, 2026-11-01: the A4 house reader moves to Sonnet 5.5
+
+Recorded before any new A4 paid cell (GST-611, audit item R4). The A4 answerer's model is now `anthropic:claude-sonnet-5-5` (`READER_MODEL` in `eval/runner/a4-abstention.ts`), because CLAUDE.md's model rules retire Sonnet 4.6. Sonnet 5.5 rejects `temperature`, so the reader samples at the provider default, and the receipt records that. The prompt, the 1,024 output tokens, the arms, the metrics and the decision rules are unchanged. The paid receipt at `3a284ae` keeps its reader identity (Sonnet 4.6 at temperature 0): a Sonnet 5.5 run is a new reader identity, reported beside it and never pooled with it. At Sonnet 5.5's $2 and $10 per million tokens the 480 reader calls cost about $2, and the $6 arm cap is unchanged.
+
+A4 rows record only the answer text and usage, not the stop reason, and gbrain's gateway sends the 1,024-token limit with thinking on. So before the first paid cell, a few-question Sonnet 5.5 smoke counts empty or cut-off answers; if there are any, the limit moves in a further amendment before any counted cell.
+
+The N2 judge does not change. This preregistration defines N2's treatment as gbrain's judge with the model gbrain picks by default, so the runner keeps mirroring gbrain's utility-tier default, and `test/eval/model-defaults.test.ts` fails when that default moves.

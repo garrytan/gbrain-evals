@@ -15,8 +15,8 @@
  *   2. Does a defined answerer abstain on unanswerable questions without
  *      refusing answerable ones? gbrain has no keyless answerer, so the
  *      answerer is gbrain's house reader used as a fixed harness reader
- *      (src/eval/longmemeval/reader.ts notes-mode system text, sonnet-4-6,
- *      1,024 output tokens, temperature 0), paid. It reads the top five
+ *      (src/eval/longmemeval/reader.ts notes-mode system text, sonnet-5-5,
+ *      1,024 output tokens, the provider's default temperature), paid. It reads the top five
  *      query results (retrieved arm) and, as a matched control, the oracle
  *      evidence from the ledger (oracle arm). Answers are scored
  *      deterministically against the ledger's unique values.
@@ -48,7 +48,7 @@ import {
 } from '../generators/a4-abstention-gen.ts';
 
 export const CATEGORY = 'a4-abstention';
-export const READER_MODEL = 'anthropic:claude-sonnet-4-6';
+export const READER_MODEL = 'anthropic:claude-sonnet-5-5';
 const DEFAULT_READER_MODEL = READER_MODEL;
 export const READER_MAX_TOKENS = 1024;
 export const PAID_ESTIMATE_USD = 3;
@@ -537,7 +537,7 @@ async function main(): Promise<void> {
   const prereg = argValue(argv, '--preregistration');
   const attestation = paid && prereg ? attestPreregistration(prereg) : null;
   const anthropicKey = process.env.ANTHROPIC_API_KEY ?? '';
-  if (paid && !anthropicKey) throw new Error('A4 paid arm needs ANTHROPIC_API_KEY (the house reader is anthropic:claude-sonnet-4-6)');
+  if (paid && !anthropicKey) throw new Error(`A4 paid arm needs ANTHROPIC_API_KEY (the house reader is ${READER_MODEL})`);
   const output = argValue(argv, '--output');
   const outPath = output ? join(output, 'receipt.json') : receiptPath(CATEGORY);
   const startedAt = new Date().toISOString();

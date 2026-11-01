@@ -104,8 +104,8 @@ import { attestPreregistration, type Attestation } from './prereg.ts';
 export const CAT29_CATEGORY = 'cat29-think-vs-search';
 
 /** Pinned think model — recorded in resolved_config; ThinkResult.modelUsed is echoed back. */
-export const THINK_MODEL = 'anthropic:claude-sonnet-4-6';
-export const JUDGE_MODEL = 'claude-haiku-4-5-20251001';
+export const THINK_MODEL = 'anthropic:claude-opus-5-5';
+export const JUDGE_MODEL = 'claude-haiku-5-5';
 /** v3 (2026-09-28): pairwise prompt, nonce-fenced answers (audit B-29-01, B-JDG-01). */
 export const RUBRIC_VERSION = 'cat29-v3';
 export const THINK_TEMPERATURE = 0;

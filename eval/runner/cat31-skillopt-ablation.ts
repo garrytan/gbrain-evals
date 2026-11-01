@@ -66,7 +66,7 @@ import {
 import { ProbeAccounting } from './probe-accounting.ts';
 import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt } from './receipt.ts';
 import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
-import { makeSkilloptStubTransport, PINNED_CONFIG, CLEAN_OUTCOMES, type SkilloptStubBehavior } from './cat30-skillopt-improvement.ts';
+import { makeSkilloptStubTransport, PINNED_CONFIG, CLEAN_OUTCOMES, SKILLOPT_MODELS, type SkilloptStubBehavior } from './cat30-skillopt-improvement.ts';
 
 export const CAT31_CATEGORY = 'cat31-skillopt-ablation';
 
@@ -269,8 +269,8 @@ export async function runCat31(options: Cat31Options = {}): Promise<Cat31RunResu
   const startedAt = new Date().toISOString();
   const bpre = options.bpre ?? false;
   const stub = options.stubLlm ?? false;
-  const targetModel = options.targetModel ?? 'anthropic:claude-haiku-4-5';
-  const optimizerModel = options.optimizerModel ?? (bpre ? 'anthropic:claude-haiku-4-5' : 'anthropic:claude-sonnet-4-6');
+  const targetModel = options.targetModel ?? SKILLOPT_MODELS.target;
+  const optimizerModel = options.optimizerModel ?? (bpre ? SKILLOPT_MODELS.bpreOptimizer : SKILLOPT_MODELS.optimizer);
   const epochs = options.epochs ?? (bpre ? 1 : 3);
   const batchSize = options.batchSize ?? 5;
   const runsPerTask = options.runsPerTask ?? (bpre || stub ? 1 : 3);

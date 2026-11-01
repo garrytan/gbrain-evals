@@ -238,9 +238,11 @@ function argFlag(name: string): string | undefined {
   const i = process.argv.indexOf(name);
   return i >= 0 ? process.argv[i + 1] : undefined;
 }
-/** `--model` / `--judge-model` override the env vars, which override the historical defaults. */
-const THINK_MODEL = anthropicModelId(argFlag('--model') ?? process.env.CAT14_MODEL ?? 'claude-sonnet-4-6');
-const JUDGE_MODEL = argFlag('--judge-model') ?? process.env.CAT14_JUDGE_MODEL ?? 'claude-haiku-4-5-20251001';
+export const DEFAULT_THINK_MODEL = 'claude-opus-5-5';
+export const DEFAULT_JUDGE_MODEL = 'claude-haiku-5-5';
+/** `--model` / `--judge-model` override the env vars, which override the defaults. */
+const THINK_MODEL = anthropicModelId(argFlag('--model') ?? process.env.CAT14_MODEL ?? DEFAULT_THINK_MODEL);
+const JUDGE_MODEL = argFlag('--judge-model') ?? process.env.CAT14_JUDGE_MODEL ?? DEFAULT_JUDGE_MODEL;
 /** Answers and judge verdicts are both sampled at temperature 0 (finding -12). */
 export const THINK_TEMPERATURE = 0;
 export const JUDGE_TEMPERATURE = 0;

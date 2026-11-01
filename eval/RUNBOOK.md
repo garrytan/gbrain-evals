@@ -198,7 +198,7 @@ bun eval/runner/cat36-grounded-answers.ts \
 bun test test/eval/cat36-grounded-answers.test.ts
 ```
 
-After separately approving the answer and judge budgets and configuring their external enforcement, use a `GroundedProfile` rather than a retrieval `Cat36Profile`. It names both models and output-token limits, the exact product identity matching the retrieval build, and separate `answer_budget`/`judge_budget` approvals. The judge currently supports only `claude-haiku-4-5-20251001`; answer models use the public OpenAI, Anthropic, or Google gateway routes. The [protocol's grounded-answer section](../docs/benchmarks/2026-09-23-situation-recall-protocol.md#replay-grounded-answers-as-a-separate-secondary-check) lists every field and provider prerequisite.
+After separately approving the answer and judge budgets and configuring their external enforcement, use a `GroundedProfile` rather than a retrieval `Cat36Profile`. It names both models and output-token limits, the exact product identity matching the retrieval build, and separate `answer_budget`/`judge_budget` approvals. The judge must be `claude-haiku-5-5` (`GROUNDED_JUDGE_MODEL`), priced from the budget ledger's table; a replay judged by Haiku 4.5 before 2026-11-01 is a different judge identity and is never pooled with Haiku 5.5 verdicts; answer models use the public OpenAI, Anthropic, or Google gateway routes. The [protocol's grounded-answer section](../docs/benchmarks/2026-09-23-situation-recall-protocol.md#replay-grounded-answers-as-a-separate-secondary-check) lists every field and provider prerequisite.
 
 ```sh
 bun eval/runner/cat36-grounded-answers.ts \

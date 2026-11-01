@@ -518,7 +518,7 @@ describe('Cat 9 runCat9 integration', () => {
     expect(receipt.verdict).toBe('partial'); // baseline_only → partial (no real gate yet)
     expect(receipt.n_total).toBe(2);
     expect(receipt.n_scored).toBe(2);
-    expect(receipt.judge).toEqual({ model: 'claude-haiku-4-5-20251001', temperature: 0 });
+    expect(receipt.judge).toEqual({ model: 'claude-haiku-5-5', temperature: null });
     expect(receipt.resolved_config!.agent_temperature).toBe(0);
     expect(receipt.resolved_config!.judge_temperature).toBe(0);
     expect(receipt.resolved_config!.judge_prompt_version).toBe(JUDGE_PROMPT_VERSION);

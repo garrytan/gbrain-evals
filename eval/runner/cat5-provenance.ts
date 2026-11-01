@@ -135,7 +135,7 @@ export interface Cat5Report {
 export interface Cat5Config {
   /** Anthropic client. Defaults to lazy singleton reading ANTHROPIC_API_KEY. */
   client?: Anthropic;
-  /** Haiku model id. Default: claude-haiku-4-5-20251001. */
+  /** Judge model id. Default: DEFAULT_JUDGE_MODEL (claude-haiku-5-5). */
   model?: string;
   /** Max tokens per judge call. Default 400. */
   maxTokens?: number;
@@ -147,7 +147,7 @@ export interface Cat5Config {
 
 // ─── Defaults ────────────────────────────────────────────────────────
 
-const DEFAULT_MODEL = 'claude-haiku-4-5-20251001';
+export const DEFAULT_JUDGE_MODEL = 'claude-haiku-5-5';
 const DEFAULT_MAX_TOKENS = 400;
 const DEFAULT_THRESHOLD = 0.9;
 
@@ -259,7 +259,7 @@ export async function classifyClaim(
   config: Cat5Config = {},
 ): Promise<ClaimScore> {
   const client = config.client ?? getDefaultClient();
-  const model = config.model ?? DEFAULT_MODEL;
+  const model = config.model ?? DEFAULT_JUDGE_MODEL;
   const price = judgePrice(model);
   const maxTokens = config.maxTokens ?? withThinkingRoom(model, DEFAULT_MAX_TOKENS);
   const userContent = renderClaimPrompt(claim, sources);
@@ -453,7 +453,7 @@ async function runConcurrently<T, R>(
 }
 
 export async function runCat5(opts: RunCat5Options): Promise<Cat5Report> {
-  judgePrice(opts.model ?? DEFAULT_MODEL);
+  judgePrice(opts.model ?? DEFAULT_JUDGE_MODEL);
   const startedAt = new Date().toISOString();
   const concurrency = opts.concurrency ?? 4;
   const acc = new ProbeAccounting(opts.claims.length);
@@ -502,7 +502,7 @@ function writeCat5Receipt(
   summary: ProbeSummary,
   startedAt: string,
 ): void {
-  const model = opts.model ?? DEFAULT_MODEL;
+  const model = opts.model ?? DEFAULT_JUDGE_MODEL;
   const base = {
     schema_version: RECEIPT_SCHEMA_VERSION,
     benchmark_version: BENCHMARK_VERSION,

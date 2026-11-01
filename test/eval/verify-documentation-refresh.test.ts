@@ -9,18 +9,19 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 
 const ROOT = resolve(import.meta.dir, '../..');
-const HUBS = ['README.md', 'docs/README.md', 'docs/settings.md', 'docs/comparison-systems.md', 'docs/retrieval-lessons.md', 'eval/README.md', 'eval/CONTRIBUTING.md'];
+const PUBLICATION = 'docs/benchmarks/2026-10-06-scoreboard/publication.json';
+const HUBS = ['README.md', 'docs/README.md', 'docs/settings.md', 'docs/comparison-systems.md', 'docs/retrieval-lessons.md', 'eval/README.md', 'eval/CONTRIBUTING.md', 'eval/CREDITS.md'];
 const tmp = mkdtempSync(join(tmpdir(), 'verify-docs-pin-'));
 afterAll(() => rmSync(tmp, { recursive: true, force: true }));
 
-function references(root: string): Array<string[]> {
+function references(root: string, check = 'product_pin_references'): Array<string[]> {
   const code = [
     'import importlib.util, json, sys',
     'from pathlib import Path',
     `spec = importlib.util.spec_from_file_location("verify_docs", ${JSON.stringify(join(ROOT, 'scripts/verify-documentation-refresh.py'))})`,
     'm = importlib.util.module_from_spec(spec)',
     'spec.loader.exec_module(m)',
-    'print(json.dumps(m.product_pin_references(Path(sys.argv[1]))))',
+    `print(json.dumps(m.${check}(Path(sys.argv[1]))))`,
   ].join('\n');
   const r = Bun.spawnSync(['python3', '-c', code, root], { cwd: ROOT });
   if (r.exitCode !== 0) throw new Error(r.stderr.toString());
@@ -30,7 +31,7 @@ function references(root: string): Array<string[]> {
 /** A copy of the files the check reads, with `edit` applied to one of them. */
 function copyWith(name: string, file: string, edit: (text: string) => string): string {
   const root = join(tmp, name);
-  for (const f of ['package.json', 'bun.lock', ...HUBS]) {
+  for (const f of ['package.json', 'bun.lock', PUBLICATION, ...HUBS]) {
     mkdirSync(dirname(join(root, f)), { recursive: true });
     cpSync(join(ROOT, f), join(root, f));
   }
@@ -59,6 +60,11 @@ describe('verify-documentation-refresh: the product pin', () => {
   test('the docs index opening is a hub too', () => {
     const root = copyWith('stale-index', 'docs/README.md', t => t.replace(`master \`${sha.slice(0, 9)}\``, 'master `7a6bdd357`'));
     expect(references(root).map(e => [e[0], e[2]])).toEqual([['docs/README.md', 'Product pin reference differs from package.json pin']]);
+  });
+
+  test('the credits page names the pin too', () => {
+    const root = copyWith('stale-credits', 'eval/CREDITS.md', t => t.replace(`master \`${sha.slice(0, 9)}\``, 'master `7a6bdd357`'));
+    expect(references(root).map(e => [e[0], e[2]])).toEqual([['eval/CREDITS.md', 'Product pin reference differs from package.json pin']]);
   });
 
   test('a hub sentence reworded out of recognition fails as missing, not as passing', () => {
@@ -95,5 +101,31 @@ describe('verify-documentation-refresh: the product pin', () => {
   test('a lockfile that resolves another commit fails', () => {
     const root = copyWith('stale-lock', 'bun.lock', t => t.replace(`"gbrain": "github:garrytan/gbrain#${sha}"`, `"gbrain": "github:garrytan/gbrain#${'0'.repeat(40)}"`));
     expect(references(root)).toEqual([['bun.lock', 'Declared product pin differs from package.json pin']]);
+  });
+});
+
+describe('verify-documentation-refresh: the scoreboard explanation', () => {
+  test('the repository passes', () => {
+    expect(references(ROOT, 'scoreboard_publication_reference')).toEqual([]);
+  });
+
+  test('a new publication fails until README\'s paragraph above the block names it', () => {
+    const published = JSON.parse(readFileSync(join(ROOT, PUBLICATION), 'utf8')).published.commit as string;
+    const root = copyWith('new-publication', PUBLICATION, t => t.replace(published, '0'.repeat(40)));
+    const errors = references(root, 'scoreboard_publication_reference');
+    expect(errors).toHaveLength(1);
+    expect(errors[0].slice(0, 2)).toEqual(['README.md', published]);
+    expect(errors[0][2]).toStartWith('The paragraph above the scoreboard block describes a publication other than');
+  });
+
+  test('a README paragraph that names no publication commit fails', () => {
+    const root = copyWith('no-commit-named', 'README.md', t => t.replace(/check --commit\s+[a-f0-9]{40}/, 'check'));
+    expect(references(root, 'scoreboard_publication_reference')).toEqual([['README.md', 'The paragraph above the scoreboard block names no publication commit']]);
+  });
+
+  test('a publication that records no commit yet has nothing to compare', () => {
+    const published = JSON.parse(readFileSync(join(ROOT, PUBLICATION), 'utf8')).published.commit as string;
+    const root = copyWith('pending-publication', PUBLICATION, t => t.replace(`"${published}"`, 'null'));
+    expect(references(root, 'scoreboard_publication_reference')).toEqual([]);
   });
 });

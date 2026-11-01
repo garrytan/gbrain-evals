@@ -20,6 +20,7 @@ import { tmpdir } from 'os';
 import {
   aggregateCoverage,
   completedWs0Receipt,
+  distillModelMismatch,
   errorWs0Receipt,
   skippedWs0Receipt,
   type PerItemRow,
@@ -168,4 +169,18 @@ describe('WS0 receipt (PC-09)', () => {
     expect(receipt.skip_reason).toContain('OPENAI_API_KEY');
     expect(receipt.publishable).toBe(false);
   }, 60_000);
+});
+
+// Value: protects=a Cat 35 delta is never computed against a prior receipt whose dream, facts or triage model differs (R4 moved the defaults from Sonnet 4.6 and Haiku 4.5 to Sonnet 5.5 and Haiku 5.5); fails_when=the config_snapshot comparison drops a key or treats a receipt without the keys as comparable; why_new=the distill-model check had no test; seam=distillModelMismatch; no_claim=pure function
+describe('distill-model comparability against a prior receipt', () => {
+  const current = { dream_model: 'anthropic:claude-sonnet-5-5', facts_model: 'anthropic:claude-sonnet-5-5', triage_model: 'anthropic:claude-haiku-5-5' };
+  test('the same three models are comparable; the first differing one is named', () => {
+    expect(distillModelMismatch({ ...current, judge_model: 'x' }, current)).toBeNull();
+    expect(distillModelMismatch({ dream_model: 'anthropic:claude-sonnet-4-6', facts_model: 'anthropic:claude-sonnet-4-6', triage_model: 'anthropic:claude-haiku-4-5' }, current)).toBe('dream_model');
+    expect(distillModelMismatch({ ...current, triage_model: 'anthropic:claude-haiku-4-5' }, current)).toBe('triage_model');
+  });
+  test('a receipt that predates the snapshot keys is not comparable', () => {
+    expect(distillModelMismatch(undefined, current)).toBe('dream_model');
+    expect(distillModelMismatch({ dream_model: current.dream_model }, current)).toBe('facts_model');
+  });
 });

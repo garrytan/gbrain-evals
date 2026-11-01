@@ -417,8 +417,10 @@ describe('cat14 runs and receipts', () => {
   }, 60000);
 
   // Value: protects=temperature_sent records numbers (null where the model takes none), as every other site does; fails_when=it goes back to booleans; why_new=Cat 14 wrote booleans while the CHANGELOG and the other sites use number | null; seam=none; no_claim=hermetic run with the default models
-  test('the receipt records the temperatures sent as numbers', () => {
-    const r = run({ ANTHROPIC_API_KEY: undefined, CAT14_DRY_RUN: '1', CAT14_PROBES: 'cat14-pos-1-geography' });
-    expect(r.receipt.resolved_config.temperature_sent).toEqual({ think: 0, judge: 0 });
+  test('the receipt records the temperatures sent as numbers, null for the Claude 5 defaults', () => {
+    const older = run({ ANTHROPIC_API_KEY: undefined, CAT14_DRY_RUN: '1', CAT14_PROBES: 'cat14-pos-1-geography', CAT14_MODEL: 'claude-sonnet-4-6', CAT14_JUDGE_MODEL: 'claude-haiku-4-5-20251001' });
+    expect(older.receipt.resolved_config.temperature_sent).toEqual({ think: 0, judge: 0 });
+    const current = run({ ANTHROPIC_API_KEY: undefined, CAT14_DRY_RUN: '1', CAT14_PROBES: 'cat14-pos-1-geography', CAT14_MODEL: undefined, CAT14_JUDGE_MODEL: undefined });
+    expect(current.receipt.resolved_config.temperature_sent).toEqual({ think: null, judge: null });
   }, 30000);
 });

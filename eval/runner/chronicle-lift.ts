@@ -14,7 +14,7 @@
  *
  *   bun eval/runner/chronicle-lift.ts corpus --out <dir>                    # render the vault only, $0
  *   bun eval/runner/chronicle-lift.ts run --out <dir> --budget-usd <n> [--arms off,on-a,on-b] [--repeats 2]
- *        [--model claude-sonnet-4-6] [--questions <ids>] [--qa-arms off,on-a] [--no-qa]
+ *        [--model claude-sonnet-5-5] [--questions <ids>] [--qa-arms off,on-a] [--no-qa]
  *        (`--arms none` reuses the brains an earlier run built in --out; finished agent cells are never rerun)
  *        [--gbrain <checkout>@<ref>]   measure a copied overlay of another gbrain commit instead of the pin
  *   bun eval/runner/chronicle-lift.ts score --out <dir> [--review <review.json>]
@@ -38,6 +38,7 @@ import { runAgent, type Arm, type SubmitPayload, type ToolSpec } from './cat40/l
 import { gbrainSpecFrom, overlaySummary, resolveGbrainUnderTest } from './gbrain-under-test.ts';
 
 export const LIFT_VERSION = 'chronicle-lift-v1';
+export const DEFAULT_AGENT_MODEL = 'claude-sonnet-5-5';
 const REPO = resolve(import.meta.dir, '../..');
 const CORPUS = join(REPO, 'eval/data/amara-life-v1');
 const LABELS = join(REPO, 'eval/data/chronicle-lift-v1');
@@ -294,7 +295,7 @@ async function run(argv: string[]) {
   const arms = (armsFlag === 'none' ? [] : armsFlag.split(',')) as ArmId[];
   const qaArms = argv.includes('--no-qa') ? [] : (flag(argv, '--qa-arms') ?? 'off,on-a').split(',') as ArmId[];
   const repeats = Number(flag(argv, '--repeats') ?? 2);
-  const model = flag(argv, '--model') ?? 'claude-sonnet-4-6';
+  const model = flag(argv, '--model') ?? DEFAULT_AGENT_MODEL;
   const maxTurns = Number(flag(argv, '--max-turns') ?? 12);
   const questionsDoc = JSON.parse(readFileSync(flag(argv, '--questions-file') ?? join(LABELS, 'questions.json'), 'utf8')) as QuestionDoc & { today: string };
   const only = flag(argv, '--questions')?.split(',');
