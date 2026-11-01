@@ -11,9 +11,17 @@
  * latest message (what Claude Code does). Native tools such as the memory
  * tool pass through as `native_anthropic` definitions.
  * OpenAI: Responses API with `previous_response_id`, automatic caching.
+ * Particle (`particle-1`): Chat Completions built, parsed and classified by the provider module
+ * (eval/runner/providers/openai-compatible.ts) and sent through the same retry loop. It resends the whole transcript
+ * each turn, so its input grows with the square of the turn count, where the OpenAI branch sends only new input after
+ * `previous_response_id`; Particle caches repeated prefixes implicitly. Only this branch waits a provider's
+ * Retry-After (capped at 120 s), and an empty Particle balance (HTTP 402) stops the run as a budget stop.
  */
+import { createHash } from 'node:crypto';
 import { CHAT_PRICE_OVERRIDES } from '../budget-ledger.ts';
+import { assertMetered, classifyCompatError, compatError, compatRequest, parseCompatResponse, type CompatMessage, type CompatToolCall } from '../providers/openai-compatible.ts';
 import { normalizeUsage, type NormalizedUsage } from '../q1/usage.ts';
+import { normalizeFinish, normalizeUsage as receiptUsage, receipt, responseMeta, usageSourceOf, type ReceiptRequest, type UsageReceipt } from '../usage-receipt.ts';
 
 export interface ToolSpec {
   name: string;
@@ -83,6 +91,8 @@ export interface AgentRun {
   tool_ms: number;
   /** Final assistant text when the model ended without submitting. */
   text?: string;
+  /** Particle runs only: turns with at least one tool call whose arguments were not a JSON object (run with `{}`). */
+  unparseable_tool_turns?: number;
 }
 
 export const SUBMIT_TOOL: ToolSpec = {
@@ -124,14 +134,26 @@ export interface LoopConfig {
   /**
    * Reasoning effort: Anthropic `output_config.effort` (as memory-qa/qa-v2.ts sends it) and, on the OpenAI Responses API
    * this loop calls, `reasoning.effort` (the Responses form of Chat Completions' `reasoning_effort`). Absent, nothing is
-   * added, so Cat 40's requests stay byte-identical.
+   * added, so Cat 40's requests stay byte-identical. Particle always sends `reasoning_effort`: this value, else `high`.
    */
   effort?: string;
   /** Called once per provider attempt, retries included, with the parsed response or the error (for usage receipts). */
   onAttempt?: (a: ProviderAttempt) => void;
 }
 
-export interface ProviderAttempt { status: 'ok' | 'error'; response: Record<string, unknown> | null; error: string | null; ms: number }
+export interface ProviderAttempt {
+  status: 'ok' | 'error';
+  /** The parsed response; on a Particle 2xx without `choices[0].message` (an error attempt), the body, for its usage. */
+  response: Record<string, unknown> | null;
+  error: string | null;
+  ms: number;
+  /** The loop's turn, 1-based, when the attempt came from runAgent. */
+  turn?: number;
+  /** What the request sent that changes the answer (effort, output limit, sampling), when the attempt came from runAgent. */
+  request?: ReceiptRequest;
+  /** Particle only: the provider's Retry-After as milliseconds, capped at 120 s; the next attempt waits at least this and at least the backoff. Null when it sent none. */
+  retry_after_ms?: number | null;
+}
 
 /** A scripted model returns the next tool call (or a final submit) given the transcript so far. */
 export type ScriptedModel = (history: Array<{ name: string; args: Record<string, unknown>; result: string }>) => { name: string; args: Record<string, unknown> };
@@ -140,9 +162,10 @@ export const DEFAULT_MAX_TURNS = 16;
 /** Sent once when a model stops without calling a tool; harnesses enforce structured output the same way. */
 export const NUDGE = 'Please call submit_answer now with your final answer.';
 
-export function provider(model: string): 'anthropic' | 'openai' {
+export function provider(model: string): 'anthropic' | 'openai' | 'particle' {
   if (model.startsWith('claude')) return 'anthropic';
   if (model.startsWith('gpt') || /^o\d/.test(model)) return 'openai';
+  if (model.startsWith('particle-')) return 'particle';
   throw new Error(`no provider for model ${model}`);
 }
 
@@ -159,21 +182,58 @@ function cap(text: string, max: number | null): { text: string; truncated: boole
 
 export const RETRYABLE_STATUS = [429, 500, 502, 503, 504, 529];
 
-async function postJson(fetchImpl: typeof fetch, url: string, headers: Record<string, string>, body: unknown, onAttempt?: (a: ProviderAttempt) => void): Promise<Record<string, unknown>> {
+/**
+ * Up to 6 attempts with exponential backoff on retryable statuses. Every attempt is recorded, a network or body-read
+ * failure included, before it propagates. `compat` names an OpenAI-compatible provider (Particle): its errors are
+ * classified by the provider module, a retry waits at least the Retry-After it sends (capped at 120 s) and never less
+ * than the backoff (and not after the last attempt), a credit or proxy 402 throws the budget stop after its attempt is
+ * recorded, and a 2xx that is not JSON or has no `choices[0].message` is retried as a server error. Without `compat`
+ * (Anthropic, OpenAI) requests, retries and waits are as they always were, and a 2xx that is not JSON still throws,
+ * after its attempt is recorded.
+ */
+async function postJson(fetchImpl: typeof fetch, url: string, headers: Record<string, string>, body: unknown, onAttempt?: (a: ProviderAttempt) => void, compat?: string): Promise<Record<string, unknown>> {
   let last: ProviderError | null = null;
   for (let attempt = 0; attempt < 6; attempt++) {
     const t = Date.now();
-    const res = await fetchImpl(url, { method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: JSON.stringify(body) });
-    const text = await res.text();
+    let res: Response;
+    try { res = await fetchImpl(url, { method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: JSON.stringify(body) }); }
+    catch (e) {
+      onAttempt?.({ status: 'error', response: null, error: `network: ${(e as Error).message.slice(0, 500)}`, ms: Date.now() - t, ...(compat ? { retry_after_ms: null } : {}) });
+      throw e;
+    }
+    let text: string;
+    try { text = await res.text(); }
+    catch (e) {
+      onAttempt?.({ status: 'error', response: null, error: `network: reading the ${res.status} body failed: ${(e as Error).message.slice(0, 500)}`, ms: Date.now() - t, ...(compat ? { retry_after_ms: null } : {}) });
+      throw e;
+    }
     if (res.ok) {
-      const json = JSON.parse(text) as Record<string, unknown>;
-      onAttempt?.({ status: 'ok', response: json, error: null, ms: Date.now() - t });
-      return json;
+      let json: Record<string, unknown> | null = null;
+      let parsed = true;
+      try { json = JSON.parse(text) as Record<string, unknown>; }
+      catch (e) {
+        if (!compat) {
+          onAttempt?.({ status: 'error', response: null, error: `${res.status} with a body that is not JSON: ${text.slice(0, 300)}`, ms: Date.now() - t });
+          throw e;
+        }
+        parsed = false;
+      }
+      const choices = (json?.choices ?? undefined) as Array<{ message?: unknown }> | undefined;
+      if (!compat || (Array.isArray(choices) && choices[0]?.message)) {
+        onAttempt?.({ status: 'ok', response: json, error: null, ms: Date.now() - t });
+        return json!;
+      }
+      last = new ProviderError(502, `${compat} answered ${res.status} ${parsed ? 'without choices[0].message' : 'with a body that is not JSON'}: ${text.slice(0, 300)}`);
+      onAttempt?.({ status: 'error', response: json, error: last.message, ms: Date.now() - t, retry_after_ms: null });
+      if (attempt < 5) await new Promise(r => setTimeout(r, Math.min(60_000, 2000 * 2 ** attempt) + Math.random() * 1000));
+      continue;
     }
     last = new ProviderError(res.status, text);
-    onAttempt?.({ status: 'error', response: null, error: `${res.status}: ${text.slice(0, 500)}`, ms: Date.now() - t });
-    if (!RETRYABLE_STATUS.includes(res.status)) break;
-    await new Promise(r => setTimeout(r, Math.min(60_000, 2000 * 2 ** attempt) + Math.random() * 1000));
+    const info = compat ? classifyCompatError(compat, res.status, text, res.headers) : null;
+    onAttempt?.({ status: 'error', response: null, error: `${res.status}: ${text.slice(0, 500)}`, ms: Date.now() - t, ...(info ? { retry_after_ms: info.retryAfterMs } : {}) });
+    if (info?.kind === 'credit_exhausted' || info?.kind === 'proxy_budget') throw compatError(info);
+    if (!RETRYABLE_STATUS.includes(res.status) || (compat && attempt === 5)) break;
+    await new Promise(r => setTimeout(r, Math.max(info?.retryAfterMs ?? 0, Math.min(60_000, 2000 * 2 ** attempt) + Math.random() * 1000)));
   }
   throw last!;
 }
@@ -220,6 +280,8 @@ export async function runAgent(cfg: LoopConfig): Promise<AgentRun> {
       }
     } else if (provider(cfg.model) === 'anthropic') {
       await anthropicLoop(cfg, run, specs, execute, maxTurns, fetchImpl);
+    } else if (provider(cfg.model) === 'particle') {
+      await particleLoop(cfg, run, specs, execute, maxTurns, fetchImpl);
     } else {
       await openaiLoop(cfg, run, specs, execute, maxTurns, fetchImpl);
     }
@@ -243,6 +305,15 @@ function addUsage(run: AgentRun, u: NormalizedUsage) {
 }
 
 type Exec = (name: string, args: Record<string, unknown>) => Promise<{ text: string; submitted: boolean }>;
+
+/** cfg.onAttempt with the loop's turn and what the request sent added to every attempt. */
+function attemptHook(cfg: LoopConfig, run: AgentRun, request: () => ReceiptRequest): ((a: ProviderAttempt) => void) | undefined {
+  return cfg.onAttempt && (a => cfg.onAttempt!({ ...a, turn: run.turns, request: request() }));
+}
+
+/** What an Anthropic or OpenAI request sent: the effort exactly as passed (these providers run the level they are sent) and the output limit. */
+const sentRequest = (effort: string | undefined, field: string, limit: number): ReceiptRequest =>
+  ({ effort_sent: effort ?? null, effort_effective: effort ?? null, output_limit_field: field, output_limit: limit, temperature_sent: null, seed_sent: null });
 
 /** Rebuilds the provider tool list when the arm's tools changed since the last turn. */
 function toolList<T>(cfg: LoopConfig, build: () => T): () => T {
@@ -268,6 +339,8 @@ async function anthropicLoop(cfg: LoopConfig, run: AgentRun, specs: () => ToolSp
   });
   const messages: Array<{ role: 'user' | 'assistant'; content: Array<Record<string, unknown>> }> = [{ role: 'user', content: [{ type: 'text', text: cfg.user }] }];
   const headers: Record<string, string> = { 'x-api-key': process.env.ANTHROPIC_API_KEY ?? '', 'anthropic-version': '2023-06-01' };
+  const request = sentRequest(cfg.effort, 'max_tokens', cfg.maxOutputTokens ?? 8192);
+  const onAttempt = attemptHook(cfg, run, () => request);
   let nudged = false;
   for (let turn = 0; turn < maxTurns; turn++) {
     run.turns++;
@@ -280,7 +353,7 @@ async function anthropicLoop(cfg: LoopConfig, run: AgentRun, specs: () => ToolSp
       model: cfg.model, max_tokens: cfg.maxOutputTokens ?? 8192,
       system: [{ type: 'text', text: cfg.system, cache_control: { type: 'ephemeral' } }], tools: currentTools(), messages,
       ...(cfg.effort !== undefined ? { output_config: { effort: cfg.effort } } : {}),
-    }, cfg.onAttempt);
+    }, onAttempt);
     run.model_ms += Date.now() - s;
     addUsage(run, normalizeUsage('anthropic', res.usage as object | undefined));
     const content = (res.content ?? []) as Array<Record<string, unknown>>;
@@ -308,6 +381,8 @@ async function anthropicLoop(cfg: LoopConfig, run: AgentRun, specs: () => ToolSp
 async function openaiLoop(cfg: LoopConfig, run: AgentRun, specs: () => ToolSpec[], execute: Exec, maxTurns: number, fetchImpl: typeof fetch) {
   const currentTools = toolList(cfg, () => specs().map(s => ({ type: 'function', name: s.name, description: s.description, parameters: s.input_schema, strict: false })));
   const headers = { authorization: `Bearer ${process.env.OPENAI_API_KEY ?? ''}` };
+  const request = sentRequest(cfg.effort, 'max_output_tokens', cfg.maxOutputTokens ?? 16_000);
+  const onAttempt = attemptHook(cfg, run, () => request);
   let input: unknown[] = [{ role: 'user', content: cfg.user }];
   let previous: string | undefined;
   let nudged = false;
@@ -317,7 +392,7 @@ async function openaiLoop(cfg: LoopConfig, run: AgentRun, specs: () => ToolSpec[
     const res = await postJson(fetchImpl, 'https://api.openai.com/v1/responses', headers, {
       model: cfg.model, instructions: cfg.system, input, tools: currentTools(), max_output_tokens: cfg.maxOutputTokens ?? 16_000,
       ...(previous ? { previous_response_id: previous } : {}), ...(cfg.effort !== undefined ? { reasoning: { effort: cfg.effort } } : {}),
-    }, cfg.onAttempt);
+    }, onAttempt);
     run.model_ms += Date.now() - s;
     addUsage(run, normalizeUsage('openai', res.usage as object | undefined));
     previous = String(res.id);
@@ -344,8 +419,86 @@ async function openaiLoop(cfg: LoopConfig, run: AgentRun, specs: () => ToolSpec[
   }
 }
 
-/** One plain text completion (the claims judges), priced like an agent call. */
+/**
+ * Particle: Chat Completions with tools as functions and `tool_choice: auto`, the system prompt as the first message,
+ * assistant tool-call turns echoed without their `reasoning_content`, tool results as `role: tool`, and one
+ * `prompt_cache_key` per conversation (the hash of its system prompt and first user message). The turn cap, nudge,
+ * retries and stop rules are the other branches'. A tool call whose arguments are not a JSON object runs with `{}`, as
+ * the OpenAI branch does, and its turn is counted in `unparseable_tool_turns`.
+ */
+async function particleLoop(cfg: LoopConfig, run: AgentRun, specs: () => ToolSpec[], execute: Exec, maxTurns: number, fetchImpl: typeof fetch) {
+  const currentTools = toolList(cfg, () => specs().map(s => ({ type: 'function' as const, function: { name: s.name, description: s.description, parameters: s.input_schema } })));
+  const messages: CompatMessage[] = [{ role: 'system', content: cfg.system }, { role: 'user', content: cfg.user }];
+  const promptCacheKey = createHash('sha256').update(`cat40\u0000${cfg.model}\u0000${cfg.system}\u0000${cfg.user}`).digest('hex').slice(0, 32);
+  let nudged = false;
+  for (let turn = 0; turn < maxTurns; turn++) {
+    run.turns++;
+    const req = compatRequest(`particle:${cfg.model}`, messages, { effort: cfg.effort ?? 'high', maxOutputTokens: cfg.maxOutputTokens ?? 16_000, tools: currentTools(), toolChoice: 'auto', promptCacheKey });
+    assertMetered(req);
+    const s = Date.now();
+    const hook = attemptHook(cfg, run, () => req.sent);
+    const onAttempt = (a: ProviderAttempt) => {
+      if (a.status === 'error' && a.response?.usage) addUsage(run, normalizeUsage('openai', a.response.usage as object));
+      hook?.(a);
+    };
+    const res = parseCompatResponse(await postJson(fetchImpl, req.url, req.headers, req.body, onAttempt, req.provider));
+    run.model_ms += Date.now() - s;
+    addUsage(run, normalizeUsage('openai', res.usage ?? undefined));
+    const calls: CompatToolCall[] = res.tool_calls.map(c => ({ id: String(c.id), type: 'function', function: { name: String(c.function?.name), arguments: String(c.function?.arguments ?? '') } }));
+    messages.push({ role: 'assistant', content: calls.length ? res.text || null : res.text, ...(calls.length ? { tool_calls: calls } : {}) });
+    if (!calls.length) {
+      run.text = res.text;
+      if (nudged) { run.stop = 'no_tool_call'; return; }
+      nudged = true;
+      messages.push({ role: 'user', content: NUDGE });
+      continue;
+    }
+    let submitted = false;
+    let unparseable = false;
+    for (const c of calls) {
+      let args: Record<string, unknown> = {};
+      try {
+        const parsed: unknown = JSON.parse(c.function.arguments || '{}');
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) args = parsed as Record<string, unknown>;
+        else unparseable = true;
+      } catch { unparseable = true; }
+      const r = await execute(c.function.name, args);
+      messages.push({ role: 'tool', tool_call_id: c.id, content: r.text });
+      submitted ||= r.submitted;
+    }
+    if (unparseable) run.unparseable_tool_turns = (run.unparseable_tool_turns ?? 0) + 1;
+    if (submitted) { run.stop = 'submitted'; return; }
+  }
+}
+
+/**
+ * One usage receipt (eval/runner/usage-receipt.ts) for a provider attempt of `model`: the turn's text with its tool
+ * calls, the finish, usage, what the request sent and, for Particle, the response metadata (null fields on a failed
+ * attempt). The caller names the lane and the question; `turn`, `ms` and `retry_after_ms` come from the attempt.
+ */
+export function attemptReceipt(model: string, a: ProviderAttempt, ids: Pick<UsageReceipt, 'lane' | 'role' | 'question_id' | 'replicate' | 'attempt'>): UsageReceipt & { turn: number | null; ms: number; retry_after_ms: number | null } {
+  const p = provider(model);
+  const r = a.response ?? {};
+  const parts = (p === 'anthropic' ? (r.content ?? []) as Array<Record<string, unknown>> : p === 'openai' ? (r.output ?? []) as Array<Record<string, unknown>> : [])
+    .flatMap(c => c.type === 'text' ? [String(c.text)] : c.type === 'tool_use' ? [`[tool_use ${String(c.name)}] ${JSON.stringify(c.input)}`]
+      : c.type === 'message' ? ((c.content as Array<Record<string, unknown>>) ?? []).map(x => String(x.text ?? '')) : c.type === 'function_call' ? [`[tool_use ${String(c.name)}] ${String(c.arguments)}`] : []);
+  const compat = p === 'particle' && a.response ? parseCompatResponse(a.response) : null;
+  if (compat) parts.push(...(compat.text ? [compat.text] : []), ...compat.tool_calls.map(c => `[tool_use ${String(c.function?.name)}] ${String(c.function?.arguments)}`));
+  const finishRaw = p === 'anthropic' ? (typeof r.stop_reason === 'string' ? r.stop_reason : null) : p === 'openai' ? (typeof r.status === 'string' ? r.status : null) : compat?.finish ?? null;
+  return {
+    ...receipt({
+      ...ids, model: `${p}:${model}`, response_model: typeof r.model === 'string' ? r.model : null, status: a.status, error: a.error, from_cache: false,
+      finish: normalizeFinish(finishRaw), finish_raw: finishRaw, answer: parts.join('\n'), usage: a.response ? receiptUsage(usageSourceOf(`${p}:${model}`), r.usage) : null,
+      usage_raw: r.usage && typeof r.usage === 'object' ? r.usage as Record<string, unknown> : null, delivered: null,
+      ...(a.request ? { request: a.request } : {}), ...(p === 'particle' ? { response_meta: responseMeta(a.response) } : {}),
+    }),
+    turn: a.turn ?? null, ms: a.ms, retry_after_ms: a.retry_after_ms ?? null,
+  };
+}
+
+/** One plain text completion (the claims judges), priced like an agent call. particle-1 never judges, so it is refused. */
 export async function runAgentText(model: string, system: string, user: string): Promise<{ text: string; usd: number }> {
+  if (provider(model) === 'particle') throw new Error(`${model} never judges (plan GST-605: particle-1 answers and acts, it does not grade); pass a judge such as gpt-6.1-sol`);
   if (provider(model) === 'openai') {
     const res = await fetch('https://api.openai.com/v1/responses', { method: 'POST', headers: { 'content-type': 'application/json', authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
       body: JSON.stringify({ model, instructions: system, input: user, max_output_tokens: 8000, reasoning: { effort: 'low' } }) });
