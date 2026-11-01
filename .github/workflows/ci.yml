@@ -165,9 +165,12 @@ jobs:
 
   # Secret scan of published receipts: every receipts/ directory and every
   # scoreboard receipt tree under docs/benchmarks/, plus the members of every
-  # tarball or gzip receipt there that is not reviewed at its current hash in
-  # test/eval/fixtures/reviewed-compressed-receipts.json. gitleaks is pinned by
-  # version and sha256; findings are redacted in the log.
+  # tarball or gzip receipt under docs/benchmarks, results, baselines and qrels
+  # that is not reviewed at its current hash and gitleaks version in
+  # test/eval/fixtures/reviewed-compressed-receipts.json; a tarball GNU tar
+  # cannot list cleanly, or one with a repeated name or a special entry, is
+  # refused unread. gitleaks is pinned by version and sha256; findings are
+  # redacted in the log.
   receipt-secrets:
     runs-on: ubuntu-latest
     timeout-minutes: 5

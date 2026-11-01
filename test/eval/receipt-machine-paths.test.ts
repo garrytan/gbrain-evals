@@ -11,23 +11,26 @@
  * member by member are frozen, by hash, in
  * fixtures/reviewed-compressed-receipts.json; any other compressed receipt is
  * read here, and only the path prefixes that file declares, each with its
- * reason, are exempt inside it. A compressed receipt in a format this test
- * cannot open, or with a member that is not UTF-8 text, fails unread.
+ * reason, are exempt inside it. A compressed receipt is known by its name or
+ * its leading bytes. One in a format this test cannot open, a tarball that
+ * scripts/scan-receipts.sh refuses (GNU tar cannot list it cleanly, it names a
+ * member twice, or it holds an entry other than a regular file or directory),
+ * or one with a member that is not UTF-8 text fails unread.
  */
 
 import { describe, expect, test } from 'bun:test';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { lstatSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { closeSync, lstatSync, mkdirSync, mkdtempSync, openSync, readdirSync, readFileSync, readSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { join, posix, resolve } from 'node:path';
 import { gunzipSync, gzipSync } from 'node:zlib';
 import { MACHINE_LOCAL_PATH, scrubMachinePaths } from '../../eval/runner/receipt.ts';
 
 const ROOT = resolve(import.meta.dir, '../..');
 const historical = (JSON.parse(readFileSync(join(import.meta.dir, 'fixtures/historical-machine-local-paths.json'), 'utf8')) as { files: Record<string, string> }).files;
 const historicalCapy = (JSON.parse(readFileSync(join(import.meta.dir, 'fixtures/historical-capy-local-paths.json'), 'utf8')) as { files: Record<string, string> }).files;
-const reviewed = JSON.parse(readFileSync(join(import.meta.dir, 'fixtures/reviewed-compressed-receipts.json'), 'utf8')) as { exempt_machine_paths: Record<string, string>; files: Record<string, string> };
+const reviewed = JSON.parse(readFileSync(join(import.meta.dir, 'fixtures/reviewed-compressed-receipts.json'), 'utf8')) as { exempt_machine_paths: Record<string, string>; files: Record<string, { sha256: string; gitleaks?: string }> };
 const VM_OVERLAY = Object.keys(reviewed.exempt_machine_paths)[0]!;
 /** Capy machine paths: the /workspace/ checkout root and the agent scratch under ~/.capy/, which home scrubbing turns into `~/.capy/...` and MACHINE_LOCAL_PATH accepts. */
 const CAPY_LOCAL_PATH = /(?:^|[\s"'=(:,\[])(?:\/workspace\/|~\/\.capy\/|\$HOME\/\.capy\/)/;
@@ -70,14 +73,52 @@ describe('scrubMachinePaths', () => {
   });
 });
 
-/** Each member of a tarball, or a gzip file's content, as [member name, bytes]. */
-function members(path: string): Array<[string, Buffer]> {
-  if (!/\.(tgz|tar\.gz|tar)$/.test(path)) return [['', gunzipSync(readFileSync(path))]];
+/** Leading bytes of the compression and archive formats neither receipt guard opens: zip, xz, zstd, bzip2, 7z, lz4, compress (.Z), lzip and rar. scripts/scan-receipts.sh refuses the same. */
+const UNREADABLE = ['504b0304', 'fd377a585a00', '28b52ffd', '425a68', '377abcaf271c', '04224d18', '1f9d', '4c5a4950', '526172211a07'];
+
+/** A file's first 262 bytes: every leading mark above, a gzip file's 1f8b and a tar stream's "ustar" at byte 257. */
+function head(path: string): Buffer {
+  const fd = openSync(path, 'r');
+  try {
+    const bytes = Buffer.alloc(262);
+    return bytes.subarray(0, readSync(fd, bytes, 0, 262, 0));
+  } finally { closeSync(fd); }
+}
+
+/** GNU tar's listing of a tarball, judged as scripts/scan-receipts.sh judges it: the reason it is refused unread (tar cannot list it cleanly, an entry is not a regular file or directory, or a member is named twice, so extraction would keep only the last copy), else the number of regular files it lists. */
+function listing(path: string): { refusal: string } | { files: number } {
+  const list = (...flags: string[]) => spawnSync('tar', [...flags, path], { encoding: 'utf8', env: { ...process.env, LC_ALL: 'C' }, maxBuffer: 256 * 1024 * 1024 });
+  const [long, names, past] = [list('-tvf'), list('-tf'), list('--ignore-zeros', '-tf')];
+  const failed = [long, names, past].find(p => p.status !== 0 || p.stderr);
+  if (failed) return { refusal: `tar cannot list it cleanly (${failed.stderr.trim().split('\n')[0] || `exit ${failed.status}`})` };
+  if (past.stdout !== names.stdout) return { refusal: 'tar cannot list it cleanly (it lists more entries past a zero block)' };
+  const kinds = long.stdout.split('\n').filter(Boolean).map(line => line[0]);
+  const listed = names.stdout.split('\n').filter(Boolean);
+  if (kinds.length !== listed.length) return { refusal: 'tar cannot list it cleanly (its two listings differ)' };
+  const seen = new Set<string>();
+  for (const [i, name] of listed.entries()) {
+    if (kinds[i] !== '-' && kinds[i] !== 'd') return { refusal: `${name} is not a regular file or directory` };
+    const key = posix.normalize(`/${name}`).replace(/^\/+|\/+$/g, '');
+    if (seen.has(key)) return { refusal: `${name} is named twice` };
+    seen.add(key);
+  }
+  return { files: kinds.filter(kind => kind === '-').length };
+}
+
+/** Each member of a tarball, or a gzip file's content, as [member name, bytes]; a string is why the tarball is refused unread. */
+function members(path: string): Array<[string, Buffer]> | string {
+  const raw = readFileSync(path);
+  const data = raw.subarray(0, 2).toString('hex') === '1f8b' ? gunzipSync(raw) : raw;
+  if (!/\.(tgz|tar\.gz|tar)$/.test(path) && data.subarray(257, 262).toString('latin1') !== 'ustar') return [['', data]];
+  const judged = listing(path);
+  if ('refusal' in judged) return judged.refusal;
   const dir = mkdtempSync(join(tmpdir(), 'receipt-members-'));
   try {
     execFileSync('tar', ['-xf', path, '-C', dir]);
-    return (readdirSync(dir, { recursive: true }) as string[]).filter(f => lstatSync(join(dir, f)).isFile()).sort()
-      .map(f => [f, readFileSync(join(dir, f))]);
+    execFileSync('chmod', ['-R', 'u+rwX', dir]);
+    const files = (readdirSync(dir, { recursive: true }) as string[]).filter(f => lstatSync(join(dir, f)).isFile()).sort();
+    if (files.length !== judged.files) return `GNU tar extracts ${files.length} files where it lists ${judged.files}`;
+    return files.map(f => [f, readFileSync(join(dir, f))]);
   } finally { rmSync(dir, { recursive: true, force: true }); }
 }
 
@@ -88,12 +129,17 @@ const text = (bytes: Buffer): string | null => {
 };
 const exempt = (text: string) => Object.keys(reviewed.exempt_machine_paths).reduce((t, prefix) => t.split(prefix).join(''), text);
 
-/** Receipts under `root` outside `frozen` whose text matches `pattern`; a tarball or gzip receipt is read member by member, and one this cannot read is an offender. */
-function offenders(root: string, files: string[], frozen: Record<string, string>, pattern: RegExp): string[] {
+/** Receipts under `root` outside `frozen` whose text matches `pattern`; a tarball or gzip receipt, known by its name or its leading bytes, is read member by member, and one this cannot read is an offender. */
+function offenders(root: string, files: string[], frozen: Record<string, unknown>, pattern: RegExp): string[] {
   return files.filter(f => !(f in frozen)).flatMap(f => {
-    if (/\.(zip|xz|zst|bz2|7z)$/.test(f)) return [`${f} (unreadable compression)`];
-    if (!/\.(tgz|tar|gz)$/.test(f)) return /\.(json|ndjson|jsonl|log)$/.test(f) && pattern.test(readFileSync(join(root, f), 'utf8')) ? [f] : [];
-    return members(join(root, f)).flatMap(([name, bytes]) => {
+    const lead = head(join(root, f));
+    if (/\.(zip|xz|zst|bz2|7z)$/.test(f) || UNREADABLE.some(magic => lead.subarray(0, magic.length / 2).toString('hex') === magic)) return [`${f} (unreadable compression)`];
+    if (!/\.(tgz|tar|gz)$/.test(f) && lead.subarray(0, 2).toString('hex') !== '1f8b' && lead.subarray(257, 262).toString('latin1') !== 'ustar') {
+      return /\.(json|ndjson|jsonl|log)$/.test(f) && pattern.test(readFileSync(join(root, f), 'utf8')) ? [f] : [];
+    }
+    const read = members(join(root, f));
+    if (typeof read === 'string') return [`${f} (refused: ${read})`];
+    return read.flatMap(([name, bytes]) => {
       const label = name ? `${f}: ${name}` : f;
       const content = text(bytes);
       if (content === null) return [`${label} (not UTF-8 text)`];
@@ -129,13 +175,47 @@ describe('compressed receipts', () => {
     } finally { rmSync(root, { recursive: true, force: true }); }
   });
 
+  test('a tarball that names a member twice, or reaches an earlier member again through a symlinked directory or a leading slash, is an offender, because extraction keeps only the last copy', () => {
+    const root = mkdtempSync(join(tmpdir(), 'receipt-members-'));
+    try {
+      const machinePath = JSON.stringify({ store: '/home/alice/cells/_stores/x' });
+      mkdirSync(join(root, 'first/e'), { recursive: true });
+      mkdirSync(join(root, 'last/d'), { recursive: true });
+      writeFileSync(join(root, 'first/x.log'), machinePath);
+      writeFileSync(join(root, 'first/e/x.log'), machinePath);
+      symlinkSync('e', join(root, 'first/d'));
+      writeFileSync(join(root, 'last/x.log'), 'clean receipt\n');
+      writeFileSync(join(root, 'last/d/x.log'), 'clean receipt\n');
+      execFileSync('tar', ['-cf', join(root, 'twice.tar'), '-C', join(root, 'first'), 'x.log']);
+      execFileSync('tar', ['-rf', join(root, 'twice.tar'), '-C', join(root, 'last'), 'x.log']);
+      execFileSync('tar', ['-cPf', join(root, 'slash.tar'), '-C', join(root, 'first'), '--transform', 's,^,/,', 'x.log']);
+      execFileSync('tar', ['-rf', join(root, 'slash.tar'), '-C', join(root, 'last'), 'x.log'], { stdio: 'pipe' });
+      execFileSync('tar', ['-cf', join(root, 'link.tar'), '-C', join(root, 'first'), 'e/x.log', 'd']);
+      execFileSync('tar', ['-rf', join(root, 'link.tar'), '-C', join(root, 'last'), 'd/x.log']);
+      expect(offenders(root, ['twice.tar', 'slash.tar', 'link.tar'], {}, MACHINE_LOCAL_PATH)).toEqual([
+        'twice.tar (refused: x.log is named twice)',
+        "slash.tar (refused: tar cannot list it cleanly (tar: Removing leading `/' from member names))",
+        'link.tar (refused: d is not a regular file or directory)',
+      ]);
+    } finally { rmSync(root, { recursive: true, force: true }); }
+  });
+
+  test('a compressed receipt is recognised by its leading bytes, whatever its name', () => {
+    const root = mkdtempSync(join(tmpdir(), 'receipt-members-'));
+    try {
+      writeFileSync(join(root, 'rows.bin'), gzipSync(JSON.stringify({ cache: '/tmp/r1-embed-cache.sqlite' })));
+      writeFileSync(join(root, 'rows.dat'), Buffer.concat([Buffer.from('BZh91AY&SY'), Buffer.alloc(16)]));
+      expect(offenders(root, ['rows.bin', 'rows.dat'], {}, MACHINE_LOCAL_PATH)).toEqual(['rows.bin', 'rows.dat (unreadable compression)']);
+    } finally { rmSync(root, { recursive: true, force: true }); }
+  });
+
   test('the only exemption is the harness VM overlay checkout, which still matches the machine-path pattern', () => {
     expect(Object.keys(reviewed.exempt_machine_paths)).toEqual(['/home/ubi/work/gbrain-evals/.gbrain-overlays/']);
     expect(MACHINE_LOCAL_PATH.test(`"${VM_OVERLAY}d7467d1cf/src/cli.ts"`)).toBe(true);
   });
 
   test('reviewed compressed receipts are unchanged', () => {
-    const changed = Object.entries(reviewed.files).filter(([f, sha]) => sha256(join(ROOT, f)) !== sha);
+    const changed = Object.entries(reviewed.files).filter(([f, entry]) => sha256(join(ROOT, f)) !== entry.sha256);
     expect(changed).toEqual([]);
   }, 60_000);
 });
