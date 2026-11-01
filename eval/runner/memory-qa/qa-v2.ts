@@ -42,13 +42,14 @@
  * loop, and never sent a temperature. A Retry-After they send replaces the
  * backoff before the next attempt (capped at 120 seconds) and is recorded on
  * that attempt's receipt; Particle's credit 402 is a budget stop that ends
- * the loop at once. Each attempt gets the metering proxies' 900-second
- * upstream deadline, and an attempt that times out (locally, or a 504 from a
- * gateway such as the lease proxy) ends the loop, because Particle may have
- * billed it. Their receipts also record what the request
- * sent and the response's identity fields; their cache key adds the effort and
- * output limit sent. Anthropic and OpenAI requests, receipts and cache keys
- * are unchanged.
+ * the loop at once. Each attempt's deadline is the metering proxies'
+ * 900-second upstream deadline, unless the client is built with
+ * `compatTimeoutMs` (the particle replay sets its own). An attempt that times
+ * out (locally, or a 504 from a gateway such as the lease proxy) ends the
+ * loop, because Particle may have billed it. Their receipts also record what
+ * the request sent and the response's identity fields; their cache key adds
+ * the effort and output limit sent. Anthropic and OpenAI requests, receipts
+ * and cache keys are unchanged.
  *
  * This module is the Q1 chat client (reasoning effort, system messages,
  * judgment retries) and instrument judging. Every export it does not redefine
@@ -156,7 +157,8 @@ export function chatCacheKey(model: string, prompt: string, opts: ChatOptions): 
 }
 
 export class ChatClient extends BaseChatClient implements ChatLike {
-  constructor(private cacheRoot: string, private retryDelayMs: (attempt: number) => number = attempt => 2000 * 2 ** attempt) { super(cacheRoot, retryDelayMs); }
+  /** `compatTimeoutMs`: each attempt's deadline for an OpenAI-compatible provider (the metering proxies' 900-second upstream deadline when unset). */
+  constructor(private cacheRoot: string, private retryDelayMs: (attempt: number) => number = attempt => 2000 * 2 ** attempt, private compatTimeoutMs?: number) { super(cacheRoot, retryDelayMs); }
 
   /**
    * A failure after retries throws the last error with `attempt_errors` (one message per attempt) attached, and for an
@@ -172,7 +174,7 @@ export class ChatClient extends BaseChatClient implements ChatLike {
     const compatAttempts: CompatAttempt[] = [];
     for (let attempt = 0; attempt < 5; attempt++) {
       try {
-        const r = compat ? await compatChat(compat) : provider === 'anthropic' ? await anthropicChat(name, prompt, opts) : await openaiChat(name, prompt, opts);
+        const r = compat ? await compatChat(compat, this.compatTimeoutMs) : provider === 'anthropic' ? await anthropicChat(name, prompt, opts) : await openaiChat(name, prompt, opts);
         writeFileSync(path, JSON.stringify(r));
         return { ...r, cached: false, attempt_errors: attemptErrors, ...(compat ? { compat_attempts: compatAttempts } : {}) };
       } catch (e) {
@@ -212,8 +214,8 @@ async function openaiChat(model: string, prompt: string, opts: ChatOptions): Pro
 }
 
 /** One attempt to an OpenAI-compatible provider: one HTTP request through the provider module, never retried there. */
-async function compatChat(req: CompatRequest): Promise<ProviderReply> {
-  const res = await compatSend(req, { timeoutMs: UPSTREAM_DEADLINE_MS });
+async function compatChat(req: CompatRequest, timeoutMs = UPSTREAM_DEADLINE_MS): Promise<ProviderReply> {
+  const res = await compatSend(req, { timeoutMs });
   const usage = normalizeUsage(usageSourceOf(req.model), res.usage);
   return { text: res.text, input_tokens: usage?.input_total ?? 0, output_tokens: usage?.output_total ?? 0, finish: res.finish, usage: res.usage, response_model: res.response_model,
     sent: req.sent, response_meta: res.meta };
