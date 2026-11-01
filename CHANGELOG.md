@@ -4,6 +4,33 @@ This records what each gbrain-evals release changed and what its measurements me
 
 ## [Unreleased]
 
+### Cat 35's external lane prices its judge calls from the documents it read, and runs only where it can read them race-free
+
+- **The pre-flight projection prices the external lane from its documents (#225).** It charged the external lane the
+  per-batch figure set for dream documents, which peak at 10.5 KB, for one coverage, grounding, distractor and usability
+  call per conversation, whatever the folder held, with hazard and joint-evidence calls left inside that figure. An
+  external document can be 64 KiB with 80 claims. `externalJudgeEstimateUsd` now sums what the budget ledger reserves
+  for every judge attempt the documents read can cause: coverage on each conversation with planted facts, and for each
+  non-empty document the usability and distractor judges, one hazard call per planted hazard, claim grounding with the
+  conversation and the joint-evidence fallback, each with its full answer allowance and one retry, at the judge model's
+  own rates. Computed with that function at this change's list prices, 24 documents of 62 KB and 80 claims project $41
+  with a claude-opus-5-5 judge, $29 with gpt-6.1-sol, $21 with claude-sonnet-5-5 and $1.03 with claude-haiku-5-5; the
+  old figure was $13.80 for every judge but a Haiku ($2.76). So an Opus-judged folder at the limits now trips the
+  default $40 `CAT35_HARD_STOP_USD` instead of passing at a third of its worst case, while a Haiku 5.5 run projects less
+  than before, because that model lists at a fraction of the old figure. The projection line names the external lane's
+  share, and `--lanes none` no longer adds batches for built-in lanes it does not run. A hermetic test in
+  `test/eval/cat35-external-lane.test.ts` runs three documents at the limits under a cap of twice the projection for two
+  small documents and checks the run stops before any judge call or ledger entry; on main both sets projected $0.60 and
+  the large run went ahead.
+- **The external lane refuses a system without `/proc/self/fd` (#226).** `readExternalDocs` reads every file through
+  the held folder handle's path under `/proc/self/fd`, which Linux has and macOS does not. Elsewhere it read by path, so a folder
+  swapped for a link and restored mid-read could hand it another folder's file: with the descriptor path hidden, a repro
+  on main returned the other folder's text with no error. Bun has no `openat` or other way to read relative to a held
+  folder, so the runner now refuses the lane before it opens a document, naming the missing path. The test file's
+  reading tests and hermetic runs skip on such systems, and a new test that runs everywhere checks the refusal.
+  [0.10.139]'s note now says the swap check held fully only on Linux.
+- `eval/CONTRIBUTING.md`'s external-lane section describes both.
+
 ### Top-level docs describe gbrain at the pin `3ec766c40`, and corrections and history leave the current-state pages
 
 - **README's results each name the commit they were measured at.** Rows that gave a release number or "Cat 35 run" now
@@ -125,7 +152,7 @@ This records what each gbrain-evals release changed and what its measurements me
 
 - **You can score a folder of another system's Markdown notes with Cat 35's judges.** Run the Cat 35 runner with `--external-lane NAME --external-dir DIR`; add `--lanes none` to score only the folder. The lane is judged the way gbrain's dream lane is, on recall with the evidence check, claim grounding, distractor leakage, the usability checklist, attribution hazards and quote fidelity. Read its recall next to the verbatim lane from the same run, which is the judge's ceiling. [eval/CONTRIBUTING.md](eval/CONTRIBUTING.md#score-another-systems-cat-35-documents) explains the folder layout, the commands and the limits.
 - **The receipt records what was scored.** Its `external_lane` block holds the lane name, the folder's real path, each file's bytes, sha256 and gradable claim count, the conversations with no file, and a note that the harness has no record of how the documents were made. A run with an external lane is never publishable as the benchmark. The lane list, prior-run deltas, blended usability, judge-failure gate and WS0 counters cover gbrain's built-in lanes only, and the runner judges every built-in lane first, so the external lane's spend or provider errors cannot change them. The external lane has its own `external_judge_failed_rate` gate, which counts toward the exit code.
-- **The runner treats the folder as untrusted.** Before any provider call it refuses the run on a symlink, a special file, a hard link, a file over 64 KiB or 80 claims, invalid UTF-8, a document that contains an answer-key id, or a folder swapped for another after its path was resolved. Judge prompts label the documents `external`, never with the contributor's lane name.
+- **The runner treats the folder as untrusted.** Before any provider call it refuses the run on a symlink, a special file, a hard link, a file over 64 KiB or 80 claims, invalid UTF-8, a document that contains an answer-key id, or a folder swapped for another after its path was resolved (on Linux; elsewhere only a swap still in place when the read finished). Judge prompts label the documents `external`, never with the contributor's lane name.
 - The feature is rebuilt on main from Khaled Aly's (@khalloud) design in [#32](https://github.com/garrytan/gbrain-evals/pull/32).
 
 ### particle-1: a provider module, receipts that record how each answer was made, a freshness check and a weight canary
