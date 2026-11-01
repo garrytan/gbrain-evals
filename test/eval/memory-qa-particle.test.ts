@@ -11,6 +11,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { BudgetRun, closeLedgers, initLedger } from '../../eval/runner/budget-ledger.ts';
 import { ChatClient, chatCacheKey, checkEffort, hasChatRoute, sendsTemperature } from '../../eval/runner/memory-qa/qa-v2.ts';
+import { UPSTREAM_DEADLINE_MS } from '../../eval/runner/metering-proxy.ts';
 import { parseRunArgs, readAndJudge, runArm, type MemoryQaRow, type RunArgs } from '../../eval/runner/memory-qa/run.ts';
 import * as systems from '../../eval/runner/memory-qa/run-systems.ts';
 import { sumUsage, type UsageReceipt } from '../../eval/runner/usage-receipt.ts';
@@ -153,6 +154,24 @@ describe('the particle route in qa-v2', () => {
     expect(mock.particle()).toHaveLength(2);
     expect(row.qa_receipts!.filter(r => r.role === 'reader').map(r => [r.attempt, r.status])).toEqual([[0, 'error'], [1, 'ok']]);
     expect(row.qa_score).toBe(1);
+  });
+
+  // Value: protects=a slow particle-1 answer is billed once (issue #250); fails_when=a timed-out attempt is sent again, or an attempt waits Bun's or compatSend's 300 s instead of the proxies' upstream deadline; why_new=the qa-v2 compat branch had no deadline and retried timeouts; seam=none; no_claim=Particle's billing of an aborted request
+  test('a particle attempt that times out ends the loop after one request, sent with the proxies\' 900-second upstream deadline (issue #250)', async () => {
+    const timeout = AbortSignal.timeout;
+    const deadlines: number[] = [];
+    AbortSignal.timeout = (ms: number) => { deadlines.push(ms); return timeout.call(AbortSignal, ms); };
+    try {
+      for (const name of ['TimeoutError', 'AbortError']) {
+        let calls = 0;
+        globalThis.fetch = (async () => { calls++; throw new DOMException('The operation timed out.', name); }) as unknown as typeof fetch;
+        const row = await readAndJudge({ benchmark: 'lme-s', qa: qa(), q, chat: new ChatClient(tmp(), () => 0), think: null, prompt: 'P', countTokens: null });
+        expect(calls).toBe(1);
+        expect(row.qa_error).toContain('timed out');
+        expect(row.qa_receipts!.filter(r => r.role === 'reader').map(r => [r.attempt, r.status, r.retry_after_ms])).toEqual([[0, 'error', undefined]]);
+      }
+    } finally { AbortSignal.timeout = timeout; }
+    expect(deadlines).toEqual([UPSTREAM_DEADLINE_MS, UPSTREAM_DEADLINE_MS]);
   });
 
   test('a 429 whose body mentions a budget is retried like any 429; only a BudgetExceededError stops the loop', async () => {
