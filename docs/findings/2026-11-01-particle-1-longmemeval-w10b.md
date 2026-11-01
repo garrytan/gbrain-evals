@@ -1,34 +1,43 @@
 ---
 id: 2026-11-01-particle-1-longmemeval-w10b
 kind: finding
-title: "particle-1 answers 91.4% of 500 LongMemEval questions on gbrain's retrieval, 3.4 points behind Opus 5.5 (95% interval 1.4 to 5.6), at a twenty-third of its list cost per correct answer (near ceiling, one protocol judge)"
+title: "particle-1 answers 91.4% of 500 LongMemEval questions on gbrain's retrieval, 3.4 points behind Opus 5.5 (95% interval 1.4 to 5.6), at about a twenty-third of its list cost per correct answer (exploratory, public dev set, near ceiling, one protocol judge)"
 status: open
 grade: exploratory (the paired comparisons are named in the preregistration as descriptive; the second judge is a sensitivity added afterwards)
-repo_commit: 095d8711 for the replay rows (#247); the recheck, the second-judge rows and this file arrive in the commit that adds them
+repo_commit: 095d8711 for the replay rows (#247); the recheck, the second-judge rows and this file arrive in 23eb96e3 (#284)
 prereg: ../benchmarks/2026-11-01-longmemeval-particle-replay/PREREGISTRATION.md (sha256 9f002bd920d7f26c9d2d8c280e08becf8ca84ab91363170a8f42f90540530885)
 data: committed in this repository; 40 files with their SHA-256 in 2026-11-01-particle-1-longmemeval-w10b/SHA256SUMS
 author: GBEV-25
-reviewed_by: pending; reproduced_by: pending
+reviewed_by: google/gemini-4-argon (R51, via GEVA-119)
+reproduced_by: GEVA-119 (gstack-evals crew, clean machine)
 disclosures: "Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which makes particle-1."
 ---
 
-# particle-1 answers 91.4% of 500 LongMemEval questions on gbrain's retrieval, 3.4 points behind Opus 5.5 (95% interval 1.4 to 5.6), at a twenty-third of its list cost per correct answer (near ceiling, one protocol judge)
+# particle-1 answers 91.4% of 500 LongMemEval questions on gbrain's retrieval, 3.4 points behind Opus 5.5 (95% interval 1.4 to 5.6), at about a twenty-third of its list cost per correct answer (exploratory, public dev set, near ceiling, one protocol judge)
 
-Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which makes particle-1. The standing list
-of disclosures for public findings is [research/disclosures.md](drive://org-gstack-gbrain/research/disclosures.md) in
-the GStack GBrain organization's Capy Drive.
+Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which makes particle-1.
+
+**Publication status:** unpublished. Done: a keyless recount of every number from the committed rows, a clean-machine
+rerun and claim check with a cross-family review, which passed the file with edits that this version applies (see
+[the claim check](#the-claim-check)), and dated notes beside the corrected cost figures in the reports this file cites.
+Still blocking a post: a recheck of the edited lines, and Garry Tan's answer on two disclosure questions: whether a
+finding also names ties to the other companies whose models it features (OpenAI, Anthropic, DeepSeek, Google), and
+whether a gbrain finding says that gbrain is his open-source project.
 
 ## What we found
 
-We gave particle-1 the exact prompts that four frontier readers answered in October: 500 LongMemEval-S questions, each
+We gave particle-1 the exact prompts that three frontier readers, Opus 5.5, Sonnet 5.5 and GPT-6.1 Sol, answered in
+October: 500 LongMemEval-S questions, each
 with the conversations gbrain retrieved for it. Under LongMemEval's own judge (`gpt-4o-2024-08-06`), particle-1
 answered 457 correctly (91.4%) against Opus 5.5's 474 (94.8%), a paired difference of -3.4 points (95% interval -5.6
 to -1.4). It cost $0.0043 per correct answer at list price against Opus 5.5's $0.0993.
 
-Against Sonnet 5.5 (462) and GPT-6.1 Sol (464), the protocol judge cannot tell particle-1 apart: the intervals are -3.2
-to +1.0 and -3.6 to +0.6 points, and the test could only have detected a gap of about 3 points. This is not evidence
-of parity. When each pair is judged instead by a model from a lab with no arm in that pair, particle-1 trails Sonnet
-5.5 by 2.4 points (-4.6 to -0.4) and GPT-6.1 Sol by 3.4 points (-5.6 to -1.2).
+Every reader scores 91% to 95% here, so the comparison is near the ceiling. Against Sonnet 5.5 (462, 92.4%) and
+GPT-6.1 Sol (464, 92.8%), the protocol judge cannot tell particle-1 apart: the differences are -1.0 points (-3.2
+to +1.0) and -1.4 points (-3.6 to +0.6), and the test could only have detected gaps of 3.1 and 3.0 points. This is
+not evidence of parity. In a sensitivity check added after the run and not counted, where each pair is judged by a
+model from a lab with no arm in that pair, particle-1 trails Sonnet 5.5 by 2.4 points (-4.6 to -0.4) and GPT-6.1
+Sol by 3.4 points (-5.6 to -1.2).
 
 ## How it works
 
@@ -49,21 +58,27 @@ GPT-6.1 Sol. Open-ended rubric questions are where judges disagree most. Five of
 - **Tasks.** The 500 questions of LongMemEval's cleaned `_s` split (`longmemeval_s_cleaned.json`, SHA-256
   `d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442`, not committed). Each prompt holds the
   conversations behind gbrain `a7cb37b`'s top five retrieved passages, frozen on 2026-09-29 for W10 and rendered
-  with gbrain's notes prompt.
+  with gbrain's notes prompt. The dataset's licence is MIT (its Hugging Face card, `xiaowu0162/longmemeval-cleaned`,
+  checked 2026-11-01).
 - **Arms.** This is a reader comparison on fixed retrieval, so it has no skill or placebo arm. W10c's whole-history
   arms, where the reader gets the entire history and no retrieval, are summarised in the replay report.
   - `particle:particle-1`, effort `high`, `max_completion_tokens` 16,000, no temperature or seed, through
-    Particle's API on 2026-11-01 (every response reported `particle-ai/particle-1` at the `default` tier).
-  - `claude-opus-5-5` and `claude-sonnet-5-5` at `output_config.effort: "low"`, and `gpt-6.1-sol` at
-    `reasoning_effort: "medium"`. These are W10's settings, run through the providers' batch APIs on 2026-10-06
+    Particle's API on 2026-11-01 (every response reported `particle-ai/particle-1` at the `default` tier, and
+    `weight_version` was null in all 500). The replay runner is `eval/runner/batch/w10-particle.ts` at `e29ad9c1`.
+  - `claude-opus-5-5` and `claude-sonnet-5-5` at `output_config.effort: "low"` with 4,096 output tokens, and
+    `gpt-6.1-sol` at `reasoning_effort: "medium"` with 12,000 completion tokens. These are W10's settings, run
+    through the providers' batch APIs on 2026-10-06
     ([W10b](../benchmarks/2026-10-07-longmemeval-w10b-reader-replay.md)).
+  - W10b's fourth notes-prompt reader, Fable 5.1, is left out: it answered a seeded 200-question subset, not the 500,
+    and this repository runs Fable only in smoke tests, never in counted cells.
   - particle-1's prompts are the comparators' committed request bodies, rebuilt and checked against W10's manifests
     (`body_sha256`), so every reader saw the same system and user text.
 - **Protocol judge.** LongMemEval's official prompt (`evaluate_qa` answer check, protocol digest
   `efcf3d0d581bcd5e4b278c3a77378a0c97b15941c58e77ba93f2b5f216414753`) on `gpt-4o-2024-08-06`, temperature 0,
   10 output tokens. An answer is correct when the reply contains "yes". gpt-4o is an OpenAI model, so by protocol it
-  judges the GPT-6.1 Sol arm from Sol's own lab.
-- **Second judges (sensitivity, not counted).** The same prompt, run on 2026-11-01. Each pair is judged by a model from a
+  judges the GPT-6.1 Sol arm from Sol's own lab. Judge calibration against human labels: not recorded.
+- **Second judges (sensitivity added after the run, not preregistered, not counted).** The same prompt, run on
+  2026-11-01. Each pair is judged by a model from a
   lab with no arm in it: `gpt-6.1-sol` judges particle-1, Opus 5.5 and Sonnet 5.5, and `claude-sonnet-5-5` judges
   particle-1 and GPT-6.1 Sol. Both run at effort `low` with 2,000 output tokens, because a reasoning model cannot
   answer in 10. Neither provider offers a dated snapshot of these models. The receipt records each listing's date
@@ -78,6 +93,20 @@ The preregistered rule for this comparison is decision B's stop rule. If the upp
 were below -10 points, the report would have to say so first. The upper bound is -1.4, so the rule does not fire. The
 paired differences are preregistered as descriptive.
 
+```text
+                               particle-1 minus this reader, points     $ per correct answer
+                               (95% interval, protocol judge)           list     billed
+                               -6   -5   -4   -3   -2   -1    0    +1
+                               -+----+----+----+----+----+----+----+-
+claude-opus-5-5    474 (94.8%)    [==========*=========]      :         $0.0993  $0.0497 (batch)
+claude-sonnet-5-5  462 (92.4%)                [==========*=========]    $0.0500  $0.0250 (batch)
+gpt-6.1-sol        464 (92.8%)              [==========*=========]      $0.0381  $0.0190 (batch)
+particle-1         457 (91.4%)                                |         $0.0043  $0.0021 (off-peak)
+```
+
+In the chart, * is the paired difference, the brackets its 95% interval and the colon zero. Billed is what was paid:
+the comparators at batch price, and particle-1 in Particle's off-peak window (see [Cost](#cost)).
+
 | Reader | Correct, protocol judge | particle-1 minus this reader (95% interval) | particle-1 wins / losses | McNemar p | Smallest gap detectable at 80% power | $ per correct, list |
 |---|---|---|---|---|---|---|
 | `particle-1` | **457 (91.4%)** | | | | | **$0.0043** |
@@ -89,8 +118,8 @@ paired differences are preregistered as descriptive.
     OpenAI cache writes, and Sol's responses report almost every prompt token as a cache write, which OpenAI prices at
     $2.50 per million rather than $2.00. See [corrections](../corrections.md#longmemeval).
 
-**Sensitivity: cross-family second judges.** Not counted. Agreement and Cohen's kappa are measured against the protocol
-judge's verdicts on the same answers.
+**Sensitivity added after the run: cross-family second judges.** Not preregistered and not counted. Agreement and
+Cohen's kappa are measured against the protocol judge's verdicts on the same answers.
 
 | Judge | Arm | Correct, protocol judge | Correct, second judge | Agreement | Kappa | Right to wrong | Wrong to right |
 |---|---|---|---|---|---|---|---|
@@ -123,7 +152,7 @@ Reader cost on the 500 questions, from each row's token usage at the list prices
 
 | Reader | Mean input / output tokens per question | List $ per question | List $ per correct | Batch $ per correct | Arm total, list |
 |---|---|---|---|---|---|
-| `particle-1` | 13,951 / 425 (357 of them reasoning) | $0.0039 | $0.0043 | none | $1.96 |
+| `particle-1` | 13,951 / 425 (357 of them reasoning) | $0.0039 | $0.0043 | none (about $0.0021 off-peak) | $1.96 |
 | `claude-opus-5-5` | 22,077 / 294 | $0.0942 | $0.0993 | $0.0497 | $47.09 |
 | `claude-sonnet-5-5` | 22,077 / 203 | $0.0462 | $0.0500 | $0.0250 | $23.09 |
 | `gpt-6.1-sol` | 13,695 / 110 | $0.0353 | $0.0381 | $0.0190 | $17.67 |
@@ -133,6 +162,8 @@ and a ninth of GPT-6.1 Sol's. Input tokens are as each provider counts them; par
 tokenizer, and the Anthropic readers count about 60% more tokens for the same text than the other two. particle-1 has
 no batch API. Every particle-1 call in the replay ran in Particle's off-peak window, so Particle's charge was about half
 the list figure, about $0.0021 per correct answer. The comparators ran through batch APIs at half the list price.
+Both discounts are half, so what was actually billed keeps the same ratios, about 23, 12 and 9 times. A caller paying
+particle-1's peak list price against the comparators' batch prices gets half those ratios, about 12, 6 and 4 times.
 
 **Price table**, USD per million tokens, checked on 2026-11-01 against each provider's page:
 
@@ -172,11 +203,14 @@ GPT-6.1 Sol.
   and 3.0 points. The observed gaps of 1.0 and 1.4 points are below that, so the null is not evidence of no effect.
 - **Frontier competence.** Today's frontier readers already score 92% to 95% on this retrieval, so particle-1 offers
   lower cost here, not higher accuracy.
-- **Judge.** Both cross-family judges put particle-1 behind, by 2.4 and 3.4 points, with intervals that exclude zero.
-  So the null depends on the judge as well as on power.
+- **Judge.** In the sensitivity check added after the run (not counted), both cross-family judges put particle-1
+  behind, by 2.4 and 3.4 points, with intervals that exclude zero. So the null depends on the judge as well as on power.
 - **Verdict: FIX-METHOD.** This benchmark, at this ceiling and with one judge, cannot settle whether particle-1 matches
   Sonnet 5.5 or GPT-6.1 Sol as a reader. A useful next test is a harder memory set where readers score well below 90%,
-  with a preregistered non-inferiority margin and a second judge counted beside the protocol judge.
+  with a preregistered non-inferiority margin and a second judge counted beside the protocol judge. Kill rule: if no
+  memory set can be admitted with the comparators below 90% and an MDD inside a preregistered non-inferiority margin,
+  or the test runs and particle-1 fails that margin against Sonnet 5.5 or GPT-6.1 Sol, stop testing particle-1 for
+  reader parity and report it as a cheaper reader that trails the frontier.
 
 ## Limits and threats
 
@@ -187,10 +221,16 @@ GPT-6.1 Sol.
   information is not available" answers to answerable questions. The second judges are not counted, differ from the
   protocol in output room and reasoning, and have no dated snapshot. A rerun of all four arms judged by Gemini, a lab
   with no arm in this comparison, is future work.
+- **No human grading.** No person graded the verdicts, and no judge was calibrated against human labels. Inspection
+  was limited to the W8 control, the replay report's two preference questions (`09d032c9`, `0edc2aef`) and question
+  `7405e8b1`.
 - **One sample per question.** Each reader answered once at the provider's default sampling.
   [W10a](../benchmarks/2026-10-07-longmemeval-w10a-current-pin.md) found two identical runs of one reader differing on
   13 of 500 answers. particle-1 is not deterministic even at temperature 0 with a seed: in the replay's weight canary,
   1 to 3 of 12 answers changed between back-to-back runs.
+- **Exclusions and retries.** No question was excluded: all 500 are scored in every arm, with no reader errors and no
+  truncated answers. Nine `claude-sonnet-5-5` verdicts on GPT-6.1 Sol came from the same run's cache, because Sol's
+  answer was byte-identical to particle-1's.
 - **Settings are W10's, not matched.** particle-1 ran at effort `high`, Opus 5.5 and Sonnet 5.5 at `low`, and GPT-6.1
   Sol at `medium`. Other settings would change both accuracy and cost. At effort `none`, particle-1 lost 11.3
   points on W10c's 150 questions (118 against 135).
@@ -209,7 +249,7 @@ GPT-6.1 Sol.
 
    ```bash
    git clone https://github.com/garrytan/gbrain-evals && cd gbrain-evals
-   git checkout <the commit that adds this file>
+   git checkout 23eb96e3c87fc53cab1819e32759728915fabf9f
    sha256sum -c docs/findings/2026-11-01-particle-1-longmemeval-w10b/SHA256SUMS
    python3 scripts/finding-particle-w10b.py --check
    ```
@@ -247,12 +287,59 @@ GPT-6.1 Sol.
 
 ## What is held out, and why
 
-Nothing. LongMemEval-S is public, and its attribution is in [the credits](../../eval/CREDITS.md). This repository does
-not redistribute the dataset file, but it commits the request manifests and every answer, judge reply and receipt
+Nothing. LongMemEval-S is public, and it comes from Wu et al., 2024
+([arXiv:2410.10813](https://arxiv.org/abs/2410.10813)), under the licence in its upstream repository. This repository
+does not redistribute the dataset file, but it commits the request manifests and every answer, judge reply and receipt
 behind this file. The 40 files the numbers come from are listed with their digests in
 [SHA256SUMS](2026-11-01-particle-1-longmemeval-w10b/SHA256SUMS).
 
+## The X hook
+
+A draft, not posted; Garry Tan approves the final text. It carries the grade, the ceiling, the interval and the
+disclosure, and says Opus 5.5 ran at effort low. The post adds the chart from [Result](#result) and a link to this file
+at its commit.
+
+> particle-1 answered 91.4% of 500 LongMemEval questions on gbrain's retrieval, 3.4 points behind Opus 5.5 at effort
+> low (95% CI 1.4 to 5.6), at about 1/23 of its list cost per correct answer. Exploratory: public dev set, one protocol
+> judge, every reader near the ceiling (91% to 95%).
+>
+> Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which makes particle-1.
+
+## The claim check
+
+GEVA-119 (gstack-evals crew) checked this file as merged at 23eb96e3 on 2026-11-01, on a clean machine, with
+`google/gemini-4-argon` as the cross-family reviewer for one round. Its verdict was pass with edits, and this
+version applies every edit. The claim-check file, `gbrain-evals-particle-1-w10b`, is not public.
+
+| Check | Result | Evidence |
+|---|---|---|
+| Clean-machine rerun | Pass | A fresh clone at 23eb96e3: 40 of 40 digests in SHA256SUMS match, and `scripts/finding-particle-w10b.py --check` exits 0. |
+| Independent recount | Pass | A separate standard-library script, which rederives each verdict from the stored judge reply and each cost from token counts, and `eval/runner/compare.ts` reproduce every number quoted here. The replay's $0.48 judging cost counts its 823 paid judgments; the rows are consistent with it but do not recompute it exactly. |
+| Interval method | Pass | The paired question bootstrap fits one answer per question per reader. Other seeds, Newcombe's paired score interval and the Wald paired interval give the same conclusions. The weakest number is the Sonnet 5.5 second-judge gap, whose upper end is -0.2 to -0.4 across methods (McNemar p 0.043). |
+| Headline at both ends of its interval | Pass | The gap to Opus 5.5 excludes zero under every method. The list cost ratio is 22.6 to 23.8 across a paired bootstrap, and 22.65 and 23.71 with particle-1 at either end of its accuracy interval. |
+| Control rate and detectable gap on each null | Pass with an edit | Sonnet 5.5 at 92.4% and GPT-6.1 Sol at 92.8%, with detectable gaps of 3.1 and 3.0 points, are now in [What we found](#what-we-found). |
+| R48 verdicts | Pass with an edit | FIX-METHOD on both nulls, now with a kill rule. |
+| Prices against primary sources | Pass | Particle's, Anthropic's and OpenAI's pricing pages on 2026-11-01 match the price table. GPT-6.1 Sol's cache writes are priced at OpenAI's 30-minute rate, the default the runner leaves in place; no invoice confirms it. |
+| Disclosure | Pass | The line stands verbatim under the title, and the headline keeps the gap to Opus 5.5 with its interval. The standing list is [docs/disclosures.md](../disclosures.md). |
+| Secrets and held-out data | Pass | No key patterns, home-directory paths or Capy thread ids in this file, its bundle or the check script. The dataset file is not committed, only its digest. |
+| The corrections, wherever the old figures appear | Pass with this version | The replay report, W10b and W10c carry a dated note beside each figure that [corrections](../corrections.md#longmemeval) revises. |
+| Cross-family review (R51) | Pass with edits | `google/gemini-4-argon`, one round, twelve findings, all applied here. |
+| Disclosure of the other companies the file features | Open | Waiting on Garry Tan (see the publication status under the title). |
+
 ## Changelog
+
+### 2026-11-01: Claim-check edits
+
+The claim check above passed the file with edits, and this version applies them. The title names the grade. What we
+found names the three comparators and gives the ceiling, the control rates and the detectable gaps. What we found,
+Setup, Result and the R48 judge bullet label the second judges as a sensitivity added after the run, not
+preregistered and not counted. R48 gains a kill rule. Setup gains the comparators' output limits, the replay runner,
+particle-1's `weight_version`, the dataset licence, judge calibration and why Fable 5.1 is left out. Result gains a
+chart. Cost says what was billed and what a caller paying particle-1's peak list price gets. Limits gains no human
+grading and no exclusions. Replicate it pins 23eb96e3, the dataset credit names its paper, and the front matter names
+the reviewer and the reproducer. The file gains a publication status line, an X hook draft and the claim check. The
+disclosure line stands alone under the title, without the drive link outsiders could not open; the claim check links
+[docs/disclosures.md](../disclosures.md). No result changed.
 
 ### 2026-11-01: First version
 

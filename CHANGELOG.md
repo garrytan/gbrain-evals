@@ -4,6 +4,14 @@ This records what each gbrain-evals release changed and what its measurements me
 
 ## [Unreleased]
 
+### particle-1 results carry their disclosure up front
+
+- **`docs/disclosures.md`** lists the relationship Garry Tan disclosed for a tested company: Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which makes particle-1. Any finding, report or summary of particle-1 results carries that line up front.
+- **The line is added** under the titles of the particle-1 replay report and the tokenizer calibration (as a dated note; neither body changed), to README's particle-1 sentence, to the docs index's particle-1 entries and to the corrections page's particle-1 cost comparison. The W10b finding drops the drive path outsiders could not open, and its claim check links the in-repository list.
+- **The W10b finding takes its claim check's edits.** GEVA-119's clean-machine claim check and cross-family review passed the finding with edits, and all are applied: the grade in the title, the three comparators by name with the ceiling, control rates and detectable gaps, the second judges labeled as a sensitivity added after the run, a kill rule for the R48 verdict, the missing Setup fields, a chart, what was billed against list prices, no human grading and no exclusions in the limits, the checkout pinned to 23eb96e3, the dataset's paper credited, and a publication status line, an X hook draft and the claim check. No result changed.
+- **Dated notes beside the corrected cost figures.** The replay report, W10b and W10c keep their original cost figures, and each figure `docs/corrections.md` corrects now carries a dated note that links its entry, as that page promises.
+- **Pins follow the report.** The replay report's SHA-256 changes, so the finding's `SHA256SUMS` and its `docs/receipts-manifest.json` entry carry the new digest. No figure changed.
+
 ### A particle request Particle may have billed is never sent again, and the Particle key goes only over https
 
 - **The Q1 file agent sends each particle turn once (#253).** Its loop, the Cat 40 agent loop, sent a particle turn with Bun's 300-second fetch timeout and retried a 504, and a Q1 cell asked a timed-out question again in its retry pass and on resume, so Particle could bill every abandoned turn. A particle turn now waits the metering proxies' deadline (`compatDeadlineMs`, below) with Bun's timeout off, a 504 is never sent again, and a turn that times out or loses its connection after it went out (`compatMayHaveBilled`) ends the run with `timed_out` set. The file agent passes that on, and the cell records the question as a final `reader_error`, through the lease proxy or straight to Particle. So a Q1 cell no longer refuses an agent arm with a particle reader behind `--provider-proxy`. Cat 40's own particle runs get the same deadline and the same 504 rule.
