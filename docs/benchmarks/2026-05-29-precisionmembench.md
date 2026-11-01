@@ -96,7 +96,7 @@ The adapter exposes keyword, hybrid, adaptive, and `think` modes. The adaptive p
 
 ## Reproducing the historical run
 
-These are the original commands. They describe the May setup, including its then-unmerged feature and provider assumptions. For a current comparison, use the [refresh report](2026-09-09-retrieval-refresh.md) and its explicit configuration.
+These are the original commands, except that the `gbrain-think` line carries the flags today's runner needs. They describe the May setup, including its then-unmerged feature and provider assumptions. For a current comparison, use the [refresh report](2026-09-09-retrieval-refresh.md) and its explicit configuration.
 
 ```bash
 cd ~/git/gbrain-evals
@@ -113,6 +113,6 @@ bun eval/runner/precisionmembench.ts --mode gbrain-keyword                      
 bun eval/runner/precisionmembench-instrument.ts                                 # policy sweep + cliff read
 ```
 
-Current output names include resolved caps and limits so two configurations do not overwrite each other. Unknown mode or fidelity values fail immediately. A `--limit N` run is partial and cannot stand in for the full benchmark. Corrected seeding can lower a score, but a lower score is not guaranteed when the software and settings also change; the September results demonstrate why we measure instead of predicting.
+Current output names include resolved caps and limits so two configurations do not overwrite each other. Unknown mode or fidelity values fail immediately. A `--limit N` run is partial and cannot stand in for the full benchmark. Today's runner runs `gbrain-think` only as a paid arm on Opus 5.5: without `--paid --budget-run-id <id>` naming an open budget-ledger run it writes a skipped receipt and exits 2 before any request, and its receipt names the think model in `resolved_config.chat_model`. Corrected seeding can lower a score, but a lower score is not guaranteed when the software and settings also change; the September results demonstrate why we measure instead of predicting.
 
 The durable May artifacts are in [2026-05-29-precisionmembench/](2026-05-29-precisionmembench/). Fresh artifacts are under [2026-09-09-retrieval-refresh/](2026-09-09-retrieval-refresh/). The runner is `eval/runner/precisionmembench.ts`; seeding and the vendored scorer live in `eval/precisionmembench/`. This small benchmark found a real product issue: good recall does not excuse an unnecessarily noisy result set. Gbrain now has a measured way to make that tradeoff explicit.
