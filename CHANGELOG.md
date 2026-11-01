@@ -4,6 +4,12 @@ This records what each gbrain-evals release changed and what its measurements me
 
 ## [Unreleased]
 
+### Claude 5 judges get room to think in the answer replays, and Cat 9 and Cat 35 price their judges correctly
+
+- **A live LongMemEval answer replay or Cat 36 grounded-answer replay refuses a judge limit its Haiku 5.5 judge would spend thinking** (#237). Both profiles pin the judge to claude-haiku-5-5 but accepted any `judge_max_tokens` from 1 to 4096, and the shared judge sends an explicit limit unchanged. A Claude 5 judge thinks inside that limit, so a small one left the judge rows failing after every answer had been paid for. A live profile's `judge_max_tokens` must now be at least 4096 (`CLAUDE5_THINKING_FLOOR` in `eval/runner/anthropic-request.ts`, the floor `withThinkingRoom` already applies to runner defaults), and a smaller one is refused before any answer is generated. Offline profiles keep any limit from 1 to 4096. The situation-recall-v1 regression inventory still describes the old 1 to 4096 range; #240 amends it.
+- **Cat 9 looks up its judge and agent prices before the first scenario** (#219). The judge's price was looked up only inside the shared judge, after each scenario's agent loop had already spent, so an unpriced judge model failed every scenario after paying for it. `runCat9` now refuses an unpriced judge or agent model before any request.
+- **Cat 35's input-token count weights cached input by the judge model's own cache rates** (#220). It weighted cache writes at 1.25x and reads at 0.1x for every model, which matches Haiku 5.5 and Sonnet 5.5 but not Opus 5.5, whose cache reads cost 0.05x its input rate, while a comment said the count matched pricing. The default Haiku 5.5 judge's counts and every `cost_usd` are unchanged. The input-token counts still follow each category's own rule: the shared judge reports uncached input, the budget ledger counts every input token, and Cat 35 reports price-weighted input.
+
 ### Top-level docs describe gbrain at the pin `3ec766c40`, and corrections and history leave the current-state pages
 
 - **README's results each name the commit they were measured at.** Rows that gave a release number or "Cat 35 run" now
