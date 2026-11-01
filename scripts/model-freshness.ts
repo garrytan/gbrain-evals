@@ -12,7 +12,9 @@
  * Particle lists each model once per service tier: the default tier, and a `flex` tier at half the price. Its own
  * models carry the `particle-ai/` namespace, which is stripped (`particle-ai/particle-1` is `particle:particle-1`);
  * models it serves for other labs keep their namespace and belong to no family here. Prices are checked against the
- * default tier. Without PARTICLE_API_KEY, Particle's list is skipped with a printed reason. The JSON output records
+ * default tier. Without PARTICLE_API_KEY, Particle's list is skipped with a printed reason. The key goes only where
+ * compatSend would send it: a Particle API host the budget ledger prices, or loopback (a metering proxy, the fake). Any
+ * other PARTICLE_BASE_URL host gets no request, and the read fails. The JSON output records
  * each called Particle model's listing (`created` and a hash of its description), for run manifests.
  *
  * Exit 0: every called model is priced and allowed, and no newer counted-family model exists.
@@ -27,7 +29,7 @@
  */
 import { createHash } from 'node:crypto';
 import { chatPrice } from '../eval/runner/budget-ledger.ts';
-import { compatBaseUrl } from '../eval/runner/providers/openai-compatible.ts';
+import { assertMetered, compatBaseUrl, compatRequest } from '../eval/runner/providers/openai-compatible.ts';
 
 export const ROUND_MODELS = [
   'anthropic:claude-opus-5-5', 'anthropic:claude-sonnet-5-5', 'anthropic:claude-fable-5-1',
@@ -148,13 +150,19 @@ export function assess(called: string[], listed: ListedModel[], priced: (id: str
 
 /**
  * Particle's list, or why it was skipped (no key). The base URL follows PARTICLE_BASE_URL like every particle request.
+ * Before the request it applies compatSend's host check (`assertMetered`, on the chat request the same base URL gets),
+ * so the bearer key never goes to a host that is neither a Particle API host the ledger prices nor loopback.
  * A failed read throws when the run calls a Particle model (`required`, the default); otherwise it is a skip with its
  * reason, so a run that calls no Particle model does not depend on Particle being up.
  */
 export async function listParticleModels(env: Record<string, string | undefined> = process.env, fetchImpl: typeof fetch = fetch, opts: { required?: boolean } = {}): Promise<{ models: ListedModel[] } | { skipped: string }> {
   if (!env.PARTICLE_API_KEY) return { skipped: 'PARTICLE_API_KEY is not set' };
   try {
-    const res = await fetchImpl(`${compatBaseUrl('particle', env)}/models`, { headers: { authorization: `Bearer ${env.PARTICLE_API_KEY}` }, signal: AbortSignal.timeout(30_000) });
+    const base = compatBaseUrl('particle', env);
+    const chat = compatRequest('particle:particle-1', [], {}, env);
+    try { assertMetered(chat); }
+    catch { throw new Error(`Particle model list: ${new URL(base).hostname} is neither a Particle API host the budget ledger prices nor loopback, so PARTICLE_API_KEY is not sent there`); }
+    const res = await fetchImpl(`${base}/models`, { headers: { authorization: `Bearer ${env.PARTICLE_API_KEY}` }, signal: AbortSignal.timeout(30_000) });
     if (!res.ok) throw new Error(`Particle model list: HTTP ${res.status}`);
     return { models: particleListing(await res.json()) };
   } catch (e) {
