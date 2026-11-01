@@ -27,17 +27,18 @@ This records what each gbrain-evals release changed and what its measurements me
   raw value prints. A `power.json` whose detectable difference is neither a number nor null is now an invalid receipt
   (`RECEIPT_INVALID`) instead of a bare TypeError. `scoreboard.ts` is outside the Q1 campaign's executed tree.
   `scripts/verify-documentation-refresh.py` fails when README's paragraph above the block names a publication commit
-  other than the one `publication.json` records, so the next render cannot leave that explanation behind.
+  other than the one `publication.json` records. A new publication therefore fails the check until someone edits that
+  paragraph. The check reads only the commit, not the figures the paragraph quotes.
 - **Corrections get their own page.** README's `## Corrections` section moved to `docs/corrections.md`, with the
   retired success figures of the first Cat 40 world and the invalid May PrecisionMemBench rows, which
   `docs/comparison-systems.md` showed struck through. That page also drops the invalid v0.48.4.0 LongMemEval QA row
   (86.6%) from its table and puts its changelog back in newest-first order.
-- **README's history moved here.** README's changelog was 59% of the page, most of it entries for a repository-row
+- **README's changelog moves to the end of this file.** It was 59% of the page, most of it entries for a repository-row
   version bump. Its entries from 2026-04-21 to 2026-10-31 moved, unchanged, to the end of this file under "README.md
   changelog"; README keeps its own changelog from 2026-11-01. README's repository row no longer names a version, so a
   release stamp no longer needs a README entry.
-- **The docs index splits its largest cell.** The agent-task row of `docs/README.md` held one cell of about 6,400
-  characters; its fourteen reports move, wording unchanged, to a new "Agents operating gbrain" section.
+- **`docs/README.md` gets an "Agents operating gbrain" section.** Its agent-task row held one cell of about 6,400
+  characters; its fourteen reports move there, wording unchanged.
 - **`eval/CREDITS.md` names the pin** (it said "current as of gbrain-evals v0.10.25"), and
   `scripts/verify-documentation-refresh.py` checks that sentence with the other hub pin sentences; its test covers it.
 - **Two `[0.10.139]` sentences say what the code does (#233).** The heading said four new read defaults were held;
