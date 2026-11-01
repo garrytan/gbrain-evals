@@ -195,6 +195,15 @@ describe('schema, model rule and frontier subset', () => {
     expect(modelRuleViolations(old).join(' ')).toContain('claude-sonnet-4-6');
   });
 
+  test('the counted sweep reads with the newest frontier GPT, gpt-6.1-sol; gpt-6-astra is only an alternate reader, and a sweep without gpt-6.1-sol is flagged', () => {
+    const ids = MODEL_CONFIG.frontier_sweep.map(m => m.id);
+    expect(ids).toContain('openai:gpt-6.1-sol');
+    expect(ids).not.toContain('openai:gpt-6-astra');
+    expect(MODEL_CONFIG.alternate_readers.map(m => m.id)).toEqual(['openai:gpt-6-astra']);
+    const astraSweep = MODEL_CONFIG.frontier_sweep.map(m => m.id === 'openai:gpt-6.1-sol' ? { id: 'openai:gpt-6-astra', family: 'gpt' as const } : m);
+    expect(modelRuleViolations({ ...MODEL_CONFIG, frontier_sweep: astraSweep })).toEqual(['frontier sweep has no openai:gpt-6.1-sol, one of the newest frontier readers (FRONTIER_READERS)']);
+  });
+
   test('Fable is smoke-only: out of the counted sweep, flagged in any counted role, and a sweep that names it needs --smoke', () => {
     const fable = { id: 'anthropic:claude-fable-5-1', family: 'fable' as const };
     const smokeOnly = `${fable.id} is smoke-only and never reads or judges a counted cell`;
