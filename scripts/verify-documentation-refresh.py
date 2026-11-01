@@ -116,21 +116,35 @@ def product_pin_references(root=ROOT):
 
 
 SCOREBOARD_PUBLICATION = "docs/benchmarks/2026-10-06-scoreboard/publication.json"
+SCOREBOARD_RENDER = "docs/benchmarks/2026-10-06-scoreboard/scoreboard.md"
+SCOREBOARD_BEGIN = "<!-- scoreboard:headline:begin -->"
+SCOREBOARD_END = "<!-- scoreboard:headline:end -->"
 
 
 def scoreboard_publication_reference(root=ROOT):
-    """README's paragraph above the scoreboard block explains one published render, so it names the commit publication.json records.
-    Between a custody render and its publication the commit is null, and there is nothing to compare yet."""
-    commit = (json.loads((root / SCOREBOARD_PUBLICATION).read_text()).get("published") or {}).get("commit")
+    """README's paragraph above the scoreboard block explains one published render: every commit it names is the one
+    publication.json records, and every decimal figure it quotes appears in the block or in scoreboard.md, the render's
+    other file. Between a custody render and its publication the commit is null, and there is nothing to compare yet."""
+    published = json.loads((root / SCOREBOARD_PUBLICATION).read_text()).get("published")
+    if not isinstance(published, dict):
+        return [[SCOREBOARD_PUBLICATION, "published is not an object, so the publication commit cannot be read"]]
+    commit = published.get("commit")
     if commit is None:
         return []
-    above = (root / "README.md").read_text().partition("<!-- scoreboard:headline:begin -->")[0].rsplit("\n## ", 1)[-1]
-    named = re.search(r"check --commit\s+([a-f0-9]{40})", above)
+    above, begin, block = (root / "README.md").read_text().partition(SCOREBOARD_BEGIN)
+    if not begin:
+        return [["README.md", "README.md has no " + SCOREBOARD_BEGIN + " line, so the paragraph above the scoreboard block cannot be found"]]
+    paragraphs = [p for p in above.rsplit("\n## ", 1)[-1].split("\n\n") if "check --commit" in p]
+    named = re.findall(r"check --commit\s+([a-f0-9]{40})", "\n\n".join(paragraphs))
     if not named:
         return [["README.md", "The paragraph above the scoreboard block names no publication commit"]]
-    if named.group(1) != commit:
-        return [["README.md", named.group(1), "The paragraph above the scoreboard block describes a publication other than " + SCOREBOARD_PUBLICATION + " records (" + commit + "); update it with the new render"]]
-    return []
+    stale = [["README.md", c, "The paragraph above the scoreboard block describes a publication other than " + SCOREBOARD_PUBLICATION + " records (" + commit + "); update it with the new render"] for c in named if c != commit]
+    if stale:
+        return stale
+    render = block.partition(SCOREBOARD_END)[0] + (root / SCOREBOARD_RENDER).read_text()
+    figures = re.findall(r"(?<![\w.])\d+\.\d+(?![\w.])", "\n\n".join(paragraphs))
+    return [["README.md", f, "The paragraph above the scoreboard block quotes a figure that neither the block nor " + SCOREBOARD_RENDER + " shows; update it with the new render"]
+            for f in figures if not re.search(r"(?<![\w.])" + re.escape(f) + r"(?!\d)", render)]
 
 
 def verify():
