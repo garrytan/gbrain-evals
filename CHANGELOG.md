@@ -23,7 +23,8 @@ This records what each gbrain-evals release changed and what its measurements me
   render with a new publication can replace it. For that render, `eval/runner/scoreboard.ts` now writes a sentence
   that cannot separate two rows with the evidence each system had and the questions scored for both (for example "on
   the 192 of 199 questions scored for both"), and prints the preregistered detectable difference to one decimal (13.6,
-  was 13.58). A test in `test/eval/scoreboard.test.ts` covers both. `scoreboard.ts` is outside the Q1 campaign's
+  was 13.58). Two tests in `test/eval/scoreboard.test.ts` cover them; the rounding test renders 13.58 and fails if the
+  raw value prints. `scoreboard.ts` is outside the Q1 campaign's
   executed tree.
 - **Corrections get their own page.** README's `## Corrections` section moved to `docs/corrections.md`, with the
   retired success figures of the first Cat 40 world and the invalid May PrecisionMemBench rows, which

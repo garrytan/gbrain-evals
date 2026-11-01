@@ -230,7 +230,13 @@ describe('cohorts, estimand and claim rules', () => {
     expect(bank.sentence).toStartWith("On BEAM-10M, with the same three answer models and 8,000 tokens of each system's own evidence, we could not tell `ext-memory-bank` and gbrain-defaults apart");
     expect(bank.sentence).toContain(`on the ${bank.cohort!.paired} of ${bank.cohort!.scheduled} questions scored for both)`);
     expect(bank.sentence).toContain(`about ${bank.mdd_points!.toFixed(1)} points would not have been detected in this comparison`);
-    expect(sb.verdict).toMatch(/detectable difference about \d+\.\d points\)/);
+    rmSync(dir, { recursive: true });
+  });
+
+  test('the verdict prints the preregistered detectable difference to one decimal', () => {
+    const { dir, sb } = fresh({ detectableDifference: 13.58 });
+    expect(sb.verdict).toContain('(detectable difference about 13.6 points)');
+    expect(sb.verdict).not.toContain('13.58');
     rmSync(dir, { recursive: true });
   });
 
