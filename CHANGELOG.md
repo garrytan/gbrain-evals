@@ -12,7 +12,10 @@ This records what each gbrain-evals release changed and what its measurements me
   (`PREGATE_NO_LANE`) that stops the check before any test runs, where the repository without one only warned. So the
   file maps every path to no extra lane (`"dependencies": {"**": []}`). The import graph still selects each touched
   file's tests, and a red or timed-out lane still fails. A touched file with no test now passes without the warning.
-  Every other check, `literals` included, keeps its level. Scratch pregate runs on 2026-11-01 compared the repository
+  The catch-all also matches a deleted test, and pregate applies a `[]` declaration before its removed-test handling.
+  So deleting a test no longer runs its owning suite or the tests of files that name it in pregate, and no "coverage
+  removed" note prints. CI's full suite still runs every remaining test on the pull request. A test group that runs
+  slow now has 30 minutes before pregate marks it incomplete. Every other check, `literals` included, keeps its level. Scratch pregate runs on 2026-11-01 compared the repository
   with and without the file. A source edit selected the same 925 tests in 51 files both ways. A failing test beside an
   unmapped `types/ambient.d.ts` edit failed both ways. An unmapped edit alone warned before and passes now.
 
