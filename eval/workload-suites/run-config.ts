@@ -4,12 +4,14 @@
  * Model ids are placeholders until the preregistration freezes them. The
  * project rule: one fixed reader for every cell (the newest frontier
  * Sonnet); a preregistered subset of questions swept across the newest
- * frontier Opus, GPT, Sonnet and Fable models, plus particle-1 (a primary
- * model, plan GST-605); one fixed judge, never particle-1. Older generations
- * and gpt-5.4-mini are never run. Before a paid run, check which models are
+ * frontier Opus, GPT and Sonnet models, plus particle-1 (a primary model,
+ * plan GST-605); one fixed judge, never particle-1. Fable reads only in a
+ * labeled smoke run, never a counted cell. Older generations and
+ * gpt-5.4-mini are never run. Before a paid run, check which models are
  * newest and update this file in a commit that runs nothing.
  */
 import { COMPAT_PROVIDERS, modelsNotRun } from '../runner/providers/openai-compatible.ts';
+import { SMOKE_ONLY_READERS } from '../runner/systems/baselines.ts';
 import { sha256 } from './common.ts';
 import type { SuiteBundle, SuiteId } from './types.ts';
 
@@ -30,9 +32,10 @@ export const MODEL_CONFIG = {
     { id: 'anthropic:claude-opus-5-5', family: 'opus' },
     { id: 'openai:gpt-6-astra', family: 'gpt' },
     { id: 'anthropic:claude-sonnet-5-5', family: 'sonnet' },
-    { id: 'anthropic:claude-fable-5-1', family: 'fable' },
     { id: 'particle:particle-1', family: 'particle' },
   ] as ModelRef[],
+  /** Readers allowed only in a labeled smoke run (`bench.ts --smoke N --models ...`), never in a counted cell: Fable (CLAUDE.md). */
+  smoke_only_readers: [...SMOKE_ONLY_READERS] as string[],
   /** The alternate newest GPT, re-reading the same frontier subset when the budget allows (it is also the judge model). */
   alternate_readers: [{ id: 'openai:gpt-6.1-sol', family: 'gpt' }] as ModelRef[],
   /** Judges only answers the deterministic scorer marks `ambiguous` (both the gold and a stale or distractor value named). */
@@ -62,13 +65,14 @@ export const MODEL_CONFIG = {
 /** Model ids the project rule excludes: older generations and gpt-5.4-mini. */
 const EXCLUDED = [/gpt-5\.4-mini/, /claude-(?:sonnet|opus)-4/, /claude-haiku/, /gpt-5(?:\.|-|$)/, /gpt-4/, /claude-sonnet-5(?!-5)/, /claude-opus-5(?!-5)/, /claude-fable-5(?!-1)/];
 
-export function modelRuleViolations(config: { fixed_reader: ModelRef; frontier_sweep: readonly ModelRef[]; judge: ModelRef } = MODEL_CONFIG): string[] {
+export function modelRuleViolations(config: { fixed_reader: ModelRef; frontier_sweep: readonly ModelRef[]; alternate_readers?: readonly ModelRef[]; judge: ModelRef } = MODEL_CONFIG): string[] {
   const out: string[] = [];
-  for (const m of [config.fixed_reader, ...config.frontier_sweep, config.judge]) {
+  for (const m of [config.fixed_reader, ...config.frontier_sweep, ...(config.alternate_readers ?? []), config.judge]) {
     if (EXCLUDED.some(re => re.test(m.id))) out.push(`${m.id} is an excluded or older-generation model`);
+    if ((SMOKE_ONLY_READERS as readonly string[]).includes(m.id)) out.push(`${m.id} is smoke-only and never reads or judges a counted cell`);
   }
   const families = new Set(config.frontier_sweep.map(m => m.family));
-  for (const f of ['opus', 'gpt', 'sonnet', 'fable'] as const) if (!families.has(f)) out.push(`frontier sweep has no ${f} model`);
+  for (const f of ['opus', 'gpt', 'sonnet'] as const) if (!families.has(f)) out.push(`frontier sweep has no ${f} model`);
   if (config.fixed_reader.family !== 'sonnet') out.push('the fixed reader must be the newest frontier Sonnet');
   if (config.judge.id.startsWith('particle:')) out.push(`${config.judge.id} never judges a counted cell`);
   if (!config.frontier_sweep.some(m => m.id === config.fixed_reader.id)) out.push('the fixed reader must be the sweep\'s Sonnet so the sweep shares one anchor');

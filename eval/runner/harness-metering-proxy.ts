@@ -427,7 +427,7 @@ export async function startMeteringProxy(options: MeteringProxyOptions): Promise
   const server = Bun.serve({
     hostname: '127.0.0.1',
     port: options.port ?? 0,
-    idleTimeout: 255,
+    idleTimeout: 0,
     async fetch(req) {
       try { return await handle(req); } catch (error) {
         return Response.json({ type: 'error', error: { type: 'mpw_proxy_error', message: retrySafe(`metering proxy error: ${(error as Error).message}`) } }, { status: 400 });
