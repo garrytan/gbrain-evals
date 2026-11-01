@@ -4,6 +4,16 @@ This records what each gbrain-evals release changed and what its measurements me
 
 ## [Unreleased]
 
+### gstack's pregate gives each test process 30 minutes in this repository
+
+- **A repository `.gstack/pregate.json` raises the pregate's per-process test timeout from 600 to 1800 seconds.** On
+  4-core machines the selected test group ran past 600 seconds for three threads, and pregate records a timed-out
+  group as incomplete, which fails /ship. The file sets nothing else that changes a verdict. Any policy file makes a
+  touched file with no test lane a hard failure (`PREGATE_NO_LANE`), where the repository without one only warned, so
+  the file lists `lanes` under `warn` to keep that warning. A red or timed-out lane still fails, and every other check,
+  `literals` included, keeps its level. Scratch runs on 2026-11-01 compared both cases with and without the file: an
+  unmapped `types/ambient.d.ts` edit warns, a failing test fails, and a test past the timeout is incomplete.
+
 ### Cat 35's external lane prices its judge calls from the documents it read, and runs only where it can read them race-free
 
 - **The pre-flight projection prices the external lane from its documents (#225).** It charged the external lane the
