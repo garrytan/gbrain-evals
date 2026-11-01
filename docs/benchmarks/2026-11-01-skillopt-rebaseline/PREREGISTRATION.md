@@ -54,3 +54,12 @@ All provider calls go through `eval/runner/metering-proxy.ts` in lease mode, one
 
 Garry's rule R48 (2026-11-01) arrived after registration: every null or negative SkillOpt result gets one "Why null?" cycle (exposure, task fit, power and saturation, and whether today's frontier model does the job without the part under test), ending in KEEP, FIX-METHOD or CUT-CANDIDATE. To answer the last question with a measurement, one probe is added: the four unoptimized seed skills scored on their own held-out tasks with `anthropic:claude-opus-5-5` as the target, 2 runs per task, through the same `scoreSkillOnTasks` the categories use, metered in its own proxy slot. Cat 33 already scores each seed on Sonnet 5.5. The probe has no bar; it is reported beside the Haiku baselines. Its cost comes out of the same $32 stop, and Cat 33's projection in stage 2 includes it.
 
+
+## Amendment 2 (2026-11-01, after stage 1's Cat 30 finished and before any Cat 33 call): Cat 33's seed list
+
+This registration contradicts itself on Cat 33. Its settings line says every setting is the category's own default in code, and then says Cat 33 runs "on the 4 seeds", and the stage-2 rule lists four seeds as Cat 33's default order. Cat 33's code default is two seeds, `seed-missing-structure` and `seed-no-verdict` (`ALL_SEEDS` in [`cat33-skillopt-transfer.ts`](../../../eval/runner/cat33-skillopt-transfer.ts)); the four-seed list is Cat 30's. Cat 33 also cannot score `seed-no-brain-first` as it stands, because unlike Cat 30 it does not import that seed's brain pages, and that seed's held-out judge scores retrieval of them.
+
+Cat 33 runs at its code default: both seeds, both pair directions, four pairs. The gate is at least 3 of 4 scored pairs transferring. The stage-2 projection at this default, from stage 1's metered prices, is about $18 against about $27 of room under $32, so the default fits and no seed is cut.
+
+This choice was made after Cat 30's four seeds had finished (all four improved) and before any Cat 33 call. The registered fallback order, read literally, would have run `seed-verbose` in place of `seed-no-verdict`. The code default is kept because the settings line names code defaults as the rule, and because Cat 33's runner has had this two-seed default since before the June run (the June report shows one row per direction and does not name seeds).
+
