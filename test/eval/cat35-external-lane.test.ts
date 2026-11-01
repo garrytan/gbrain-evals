@@ -519,7 +519,7 @@ const projection = (r: Run) => Number(/pre-flight: projected worst-case \$([0-9.
 /** Everything in a receipt that describes the built-in lanes; run-level accounting is left out. */
 function builtinView(rc: any, lane: string): any {
   const c = structuredClone(rc);
-  for (const k of ['timestamp', 'wall_seconds', 'total_cost_usd', 'judge_models_resolved', 'native_evidence', 'external_lane', 'gate_pass']) delete c[k];
+  for (const k of ['timestamp', 'wall_seconds', 'total_cost_usd', 'external_cost_usd', 'judge_models_resolved', 'native_evidence', 'external_lane', 'gate_pass']) delete c[k];
   for (const k of ['coverage_by_lane', 'hallucination', 'distractor_leakage', 'usability_by_lane', 'compression_ratio_by_lane', 'quote_fidelity_by_lane']) delete c[k][lane];
   for (const k of ['coverage_by_kind', 'coverage_by_notability', 'coverage_by_depth']) {
     for (const [group, byLane] of Object.entries<any>(c[k])) {
@@ -547,12 +547,12 @@ function builtinView(rc: any, lane: string): any {
   return c;
 }
 
-function builtinWs0View(ws0: any, lane: string): any {
+function builtinWs0View(ws0: any): any {
   const c = structuredClone(ws0);
   for (const k of ['started_at', 'finished_at', 'verdict', 'cost', 'delivered_tokens']) delete c[k];
   for (const k of ['detailed_receipt', 'external_lane']) delete c.resolved_config[k];
   delete c.data.detailed_receipt;
-  delete c.data.coverage_by_lane[lane];
+  delete c.data.external_cost_usd;
   delete c.data.gates.external_judge_failed_rate;
   return c;
 }
@@ -683,7 +683,7 @@ describe.skipIf(!FD_PATHS)('hermetic external-lane runs', () => {
     const beside = runHermetic(['--lanes', 'verbatim', ...EXT], { setup: (dir) => { writeExternalDocs(dir, { judgeFails: true }); } });
     expect(alone.exitCode, alone.stderr).toBe(0);
     expect(builtinView(beside.receipt, 'ext-notes')).toEqual(builtinView(alone.receipt, 'ext-notes'));
-    expect(builtinWs0View(beside.ws0, 'ext-notes')).toEqual(builtinWs0View(alone.ws0, 'ext-notes'));
+    expect(builtinWs0View(beside.ws0)).toEqual(builtinWs0View(alone.ws0));
     expect(beside.requests.slice(0, alone.requests.length)).toEqual(alone.requests);
     expect(beside.requests.length).toBeGreaterThan(alone.requests.length);
     // The external lane's judge failures fail only its own gate, which the run's verdict and exit code include.
@@ -718,5 +718,54 @@ describe.skipIf(!FD_PATHS)('hermetic external-lane runs', () => {
     expect(hazards('ext-mirror')).toEqual(hazards('dream'));
     const purposes = (lane: string) => rc.native_evidence.judge_events.filter((e: any) => e.lane === lane).map((e: any) => [e.transcript_id, e.purpose]);
     expect(purposes('ext-mirror')).toEqual(purposes('dream'));
+  }, 120_000);
+
+  test('the WS0 receipt\'s coverage map holds only the built-in lanes its counters and errors count (#217)', () => {
+    const alone = runHermetic(['--lanes', 'verbatim']);
+    const beside = runHermetic(['--lanes', 'verbatim', ...EXT], { setup: (dir) => { writeExternalDocs(dir); } });
+    expect(alone.exitCode, alone.stderr).toBe(0);
+    expect(beside.exitCode, beside.stderr).toBe(0);
+    // coding-reflection-01 has no document: a lane error the WS0 errors never list, so its coverage cannot sit beside them.
+    expect(beside.receipt.lane_errors['coding-reflection-01']['ext-notes']).toBe('no coding-reflection-01.md in --external-dir');
+    expect(beside.ws0.errors).toEqual(alone.ws0.errors);
+    expect(beside.ws0.n_total).toBe(alone.ws0.n_total);
+    expect(Object.keys(beside.ws0.data.coverage_by_lane)).toEqual(['verbatim']);
+    expect(beside.ws0.data.coverage_by_lane).toEqual(alone.ws0.data.coverage_by_lane);
+    expect(beside.receipt.coverage_by_lane['ext-notes']).toBeDefined();
+  }, 120_000);
+
+  test('the built-in lanes\' spend is the same with or without an external lane, whose judge spend is reported apart (#217)', () => {
+    const alone = runHermetic(['--lanes', 'verbatim']);
+    const beside = runHermetic(['--lanes', 'verbatim', ...EXT], { setup: (dir) => { writeExternalDocs(dir); } });
+    expect(alone.exitCode, alone.stderr).toBe(0);
+    expect(beside.exitCode, beside.stderr).toBe(0);
+    expect(beside.receipt.total_cost_usd).toBe(alone.receipt.total_cost_usd);
+    expect(beside.receipt.external_cost_usd).toBeGreaterThan(0);
+    expect(beside.ws0.data.external_cost_usd).toBe(beside.receipt.external_cost_usd);
+    expect(alone.receipt.external_cost_usd).toBeNull();
+    expect(alone.ws0.data.external_cost_usd).toBeNull();
+    expect(beside.stderr).toContain(`(judges+facts; dream-lane spend not surfaced), external lane $${beside.receipt.external_cost_usd.toFixed(2)}`);
+  }, 120_000);
+
+  test('prior-run discovery passes over an external-only receipt, so the next gbrain run still gets its deltas (#218)', () => {
+    const gbrain = runHermetic(['--lanes', 'verbatim']);
+    const externalOnly = runHermetic(['--lanes', 'none', ...EXT], { setup: (dir) => { writeExternalDocs(dir); } });
+    expect(gbrain.exitCode, gbrain.stderr).toBe(0);
+    expect(externalOnly.exitCode, externalOnly.stderr).toBe(0);
+    expect([gbrain.receipt.mode, externalOnly.receipt.mode, externalOnly.receipt.lanes]).toEqual(['b-pre-validity', 'b-pre-validity', []]);
+    const next = runHermetic(['--lanes', 'verbatim'], {
+      setup: (dir) => {
+        const reports = join(dir, 'eval/reports/cat35-transcript-distill');
+        mkdirSync(reports, { recursive: true });
+        writeFileSync(join(reports, '2026-10-31-000000-cat35-bpre.json'), JSON.stringify(gbrain.receipt));
+        writeFileSync(join(reports, '2026-10-31-000001-cat35-bpre.json'), JSON.stringify(externalOnly.receipt));
+      },
+    });
+    expect(next.exitCode, next.stderr).toBe(0);
+    expect(next.receipt.prior_run_skipped_reason).toBeUndefined();
+    expect(next.receipt.comparability).toBe('comparable');
+    expect(next.receipt.prior_run.path).toEndWith('/eval/reports/cat35-transcript-distill/2026-10-31-000000-cat35-bpre.json');
+    const macro = gbrain.receipt.coverage_by_lane.verbatim.macro;
+    expect(next.receipt.deltas).toEqual({ verbatim_macro: { prior: macro, current: macro, delta: 0 } });
   }, 120_000);
 });
