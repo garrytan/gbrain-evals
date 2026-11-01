@@ -3,8 +3,10 @@
   D=$(mktemp -d)/eq && cp -r docs/benchmarks/2026-10-10-memory-proof-wave-equivalence "$D" && python3 eval/harness-provider/mpw_tools/equivalence_report.py "$D"
 
 Reads <root>/<size>/{baseline,newhead}/<lane>/ for every size and lane present and writes <root>/report.json. It refuses a
-root under docs/benchmarks: the committed report.json is pinned by sha256 in docs/receipts-manifest.json, and its
-extract_stale fields come from extract-stale.log files that were never committed, so a copy's come out null. Arms:
+root under docs/benchmarks, or a report.json that links into it: the committed report.json is pinned by sha256 in
+docs/receipts-manifest.json, and its extract_stale fields come from extract-stale.log files that were never committed,
+so a copy's come out null. It writes a new file and renames it over report.json, so a copy made with hard links leaves
+the committed file unchanged too. Arms:
   p0-1, p0-2  baseline cell replayed on d7467d1cf (noise floor); p0-1 is the reference for every probe diff
   r2a         new head, baseline store; r2b: same after `extract --stale`; r3: new head, new-head store
 Probe events are matched across arms by query text (with an occurrence counter), so a diff compares the same question.
@@ -14,7 +16,9 @@ from __future__ import annotations
 import collections
 import gzip
 import json
+import os
 import sys
+import tempfile
 from pathlib import Path
 
 ARMS = ("p0-1", "p0-2", "r2a", "r2b", "r3")
@@ -126,8 +130,9 @@ def answers(d: Path) -> dict | None:
 
 def main() -> int:
     root = Path(sys.argv[1])
-    if root.resolve().is_relative_to(PUBLISHED):
-        print(f"equivalence_report: refusing to rewrite {root / 'report.json'}: published receipts are pinned by hash, so run it on a copy", file=sys.stderr)
+    out = root / "report.json"
+    if root.resolve().is_relative_to(PUBLISHED) or out.resolve().is_relative_to(PUBLISHED):
+        print(f"equivalence_report: refusing to rewrite {out}: published receipts are pinned by hash, so run it on a copy", file=sys.stderr)
         return 2
     report = {}
     for size_dir in sorted(p for p in root.iterdir() if p.is_dir()):
@@ -148,7 +153,10 @@ def main() -> int:
         g = size_dir / "newhead" / "ingest-guard.json"
         if g.exists():
             report[f"{size_dir.name}/ingest_guard"] = json.loads(g.read_text())
-    (root / "report.json").write_text(json.dumps(report, indent=1) + "\n")
+    with tempfile.NamedTemporaryFile("w", dir=root, prefix=".report.json.", delete=False) as f:
+        f.write(json.dumps(report, indent=1) + "\n")
+    os.chmod(f.name, 0o644)
+    os.replace(f.name, out)
     print(json.dumps(report, indent=1)[:200000])
     return 0
 
