@@ -194,6 +194,12 @@ export function firstHalf(text: string): string {
   return text.slice(0, cut > 0 ? cut + 1 : Math.floor(text.length / 2));
 }
 
+/** The first distill model that differs from a prior receipt's config_snapshot (a missing key differs), or null when all three match. */
+export function distillModelMismatch(priorSnapshot: unknown, models: { dream_model: string; facts_model: string; triage_model: string }): string | null {
+  const prior = (priorSnapshot ?? {}) as Record<string, unknown>;
+  return (Object.keys(models) as Array<keyof typeof models>).find(key => prior[key] !== models[key]) ?? null;
+}
+
 // ─── External lane ────────────────────────────────────────────────────────
 
 const EXTERNAL_LANE_NAME = /^[a-z][a-z0-9-]{0,31}$/;
@@ -1533,14 +1539,11 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
     const priorResolved = singleResolvedModel(prior.judge_models_resolved);
     const resolvedModelMismatch =
       currentResolved === null || priorResolved === null || currentResolved !== priorResolved;
-    const priorConfig = (prior.config_snapshot ?? {}) as Record<string, unknown>;
-    const distillModelMismatch = (
-      [['dream_model', dreamModel], ['facts_model', factsModel], ['triage_model', triageModel]] as const
-    ).find(([key, model]) => priorConfig[key] !== model)?.[0];
+    const distillMismatch = distillModelMismatch(prior.config_snapshot, { dream_model: dreamModel, facts_model: factsModel, triage_model: triageModel });
     const extendedMismatch =
       (resolvedModelMismatch && 'judge_models_resolved') ||
       (prior.judge_model && prior.judge_model !== judgeModel && 'judge_model') ||
-      distillModelMismatch ||
+      distillMismatch ||
       (prior.corpus_sha && prior.corpus_sha !== corpusSha && 'corpus_sha') ||
       (Array.isArray(prior.transcripts) &&
         JSON.stringify([...prior.transcripts].sort()) !==

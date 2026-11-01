@@ -34,7 +34,7 @@ export function defaultModelProblem(model: string): string | null {
 export interface DefaultModelException {
   /** The models the code uses, in the order the test reads them. */
   models: readonly string[];
-  kind: 'frozen-protocol' | 'product-default-mirror';
+  kind: 'frozen-protocol' | 'product-default-mirror' | 'pinned-harness';
   reason: string;
 }
 
@@ -55,6 +55,10 @@ export const DEFAULT_MODEL_EXCEPTIONS: Readonly<Record<string, DefaultModelExcep
   'memory-qa beam-100k reader and judge': { models: ['openai:gpt-4.1-mini', 'openai:gpt-4.1-mini'], kind: 'frozen-protocol', reason: 'the gpt-4.1-mini bridge to earlier BEAM runs' },
   'memory-qa beam-500k reader and judge': { models: ['openai:gpt-4.1-mini', 'openai:gpt-4.1-mini'], kind: 'frozen-protocol', reason: 'the gpt-4.1-mini bridge to earlier BEAM runs' },
   'memory-qa beam-1m reader and judge': { models: ['openai:gpt-4.1-mini', 'openai:gpt-4.1-mini'], kind: 'frozen-protocol', reason: 'the gpt-4.1-mini bridge to earlier BEAM runs' },
+  'memory-qa fixture reader and judge': {
+    models: ['openai:gpt-4o-mini', 'openai:gpt-4o-mini'], kind: 'pinned-harness',
+    reason: "run.ts sends the fixture's reader and judge calls through qa.ts, whose bytes the H1 decision pins; its Anthropic path sends the judge's 10-token verdict limit unchanged, so a Claude 5 judge can spend it thinking and score an empty verdict as wrong (A19). The fixture moves when run.ts uses qa-v2's client",
+  },
   'lifecycle-lite reader and judge': {
     models: ['openai:gpt-4o-mini', 'openai:gpt-4o-2024-08-06'], kind: 'frozen-protocol',
     reason: 'docs/benchmarks/2026-10-06-oss-memory-shootout-lifecycle-lite-preregistration.md (frozen and approved 2026-10-06) names this pair, and its counted cell manifests run on the default',

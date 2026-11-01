@@ -40,8 +40,7 @@ import { McpClient, MeteringProxy, directGitPath, GBRAIN_EMBED_MODEL } from '../
 import { provider } from '../cat40/loop.ts';
 import { runCli, type RunEnv } from '../lifecycle/drivers.ts';
 import { loadCorpus, type MemoryQuestion, type Session } from '../memory-qa/corpus.ts';
-import { ChatClient, judgeResponse } from '../memory-qa/qa.ts';
-import { QA_JUDGE } from '../memory-qa/qa-defaults.ts';
+import { ChatClient, DEFAULT_JUDGE, judgeResponse } from '../memory-qa/qa.ts';
 import { loadBeamSplit, type BeamSize } from './beam.ts';
 import { ClaudeTranscript } from './transcript.ts';
 import { additionalContext, runHook, type HookEnv } from './hooks.ts';
@@ -421,7 +420,7 @@ async function main(argv: string[]) {
   const proxy = new MeteringProxy();
   proxy.start();
   const ctx: Ctx = {
-    benchmark, tag: flag(argv, '--tag'), window, replyTokens: Number(flag(argv, '--reply-tokens') ?? 700), judgeRuns: Number(flag(argv, '--judge-runs') ?? 10), judgeModel: flag(argv, '--judge-model') ?? QA_JUDGE[benchmark] ?? 'openai:gpt-4o-2024-08-06',
+    benchmark, tag: flag(argv, '--tag'), window, replyTokens: Number(flag(argv, '--reply-tokens') ?? 700), judgeRuns: Number(flag(argv, '--judge-runs') ?? 10), judgeModel: flag(argv, '--judge-model') ?? DEFAULT_JUDGE[benchmark] ?? 'openai:gpt-4o-2024-08-06',
     profileModel: flag(argv, '--profile-model') ?? 'openai:gpt-4.1-mini', effort: flag(argv, '--effort'),
     builds: resolvedBuilds, buildDirs, work: resolve(flag(argv, '--work') ?? join(homedir(), 'p4-stream-work', createHash('sha256').update(out).digest('hex').slice(0, 10))), proxy, chat: new ChatClient(join(out, 'chat-cache')),
   };

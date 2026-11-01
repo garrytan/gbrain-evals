@@ -25,7 +25,7 @@ import { READER_MODEL as A4_READER } from '../../eval/runner/a4-abstention.ts';
 import { DEFAULT_AGENT_MODEL as CHRONICLE_AGENT } from '../../eval/runner/chronicle-lift.ts';
 import { DEFAULT_DEV_MODEL as TEMPORAL_CONTRADICTIONS_DEV } from '../../eval/runner/temporal-contradictions.ts';
 import { DEFAULT_THINK_MODEL as PRECISIONMEMBENCH_THINK } from '../../eval/precisionmembench/gbrainThinkAdapter.ts';
-import { QA_JUDGE, QA_READER } from '../../eval/runner/memory-qa/qa-defaults.ts';
+import { DEFAULT_JUDGE as QA_JUDGE, DEFAULT_READER as QA_READER } from '../../eval/runner/memory-qa/qa.ts';
 import { DEFAULT_QA as LIFECYCLE_QA } from '../../eval/runner/lifecycle-lite/run.ts';
 import { JUDGE_MODEL as N2_JUDGE } from '../../eval/runner/n2-contradiction-surfacing.ts';
 import { EXTRACTOR_MODEL as N7_EXTRACTOR } from '../../eval/runner/n7-open-loops-email.ts';

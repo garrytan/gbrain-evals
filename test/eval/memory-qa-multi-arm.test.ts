@@ -54,7 +54,7 @@ function fakeProxy(meterFor: (key: string) => Record<string, unknown> = () => ({
 }
 
 async function run(args: string[]) {
-  const proc = Bun.spawn([process.execPath, 'eval/runner/memory-qa/run.ts', '--benchmark', 'fixture', '--judge', 'openai:gpt-4o-mini', ...args], { cwd: ROOT, stdout: 'pipe', stderr: 'pipe', env: { ...process.env, GBRAIN_EVALS_QA_CACHE: join(tmp, `qa-cache-${Math.random()}`) } });
+  const proc = Bun.spawn([process.execPath, 'eval/runner/memory-qa/run.ts', '--benchmark', 'fixture', ...args], { cwd: ROOT, stdout: 'pipe', stderr: 'pipe', env: { ...process.env, GBRAIN_EVALS_QA_CACHE: join(tmp, `qa-cache-${Math.random()}`) } });
   const [err, code] = await Promise.all([new Response(proc.stderr).text(), proc.exited]);
   if (code !== 0) throw new Error(err.slice(-2000));
   return err;
