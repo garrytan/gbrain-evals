@@ -1,5 +1,7 @@
 # particle-1 reader tokenizer calibration (2026-11-01)
 
+*Note added 2026-11-01, after publication:* Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which makes particle-1. See [disclosures](../../disclosures.md).
+
 **This is a calibration run on development data, not a result.** It measures how many input tokens Particle bills
 for a packed Q1 prompt compared with the local tiktoken count, so the packer can budget particle-1's prompts. It ran
 one LoCoMo dev cell of 20 questions and gives no scoreboard number. The calibration is unit U5 of the particle-1 plan
