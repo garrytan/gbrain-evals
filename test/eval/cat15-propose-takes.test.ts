@@ -243,18 +243,30 @@ describe('matchClaims validation + retry', () => {
   });
 
   // Value: protects=the matcher request forces the match_claims tool at temperature 0 with the 2000-token limit for the default judge; fails_when=the matcher request drops its tool choice, temperature or limit; why_new=existing matcher tests check the returned result but not the request sent; seam=none; no_claim=stub client, Claude 5 matcher request not covered (judge model is an env constant read at import)
-  test('the matcher request forces match_claims at temperature 0 for the default judge', async () => {
-    const calls: Array<Record<string, unknown>> = [];
+  test('the matcher request asks the default Haiku 5.5 judge for match_claims with no temperature and room to think', async () => {
+    const calls: Array<Record<string, any>> = [];
     await matchClaims('page', EXTRACTED, GT, fakeClient([VALID_TOOL_USE], calls as any));
-    expect(calls[0]).toMatchObject({ temperature: 0, max_tokens: 2000, tool_choice: { type: 'tool', name: 'match_claims' } });
+    expect(calls[0]).toMatchObject({ model: 'claude-haiku-5-5', max_tokens: 4096, tool_choice: { type: 'auto' } });
+    expect('temperature' in calls[0]).toBe(false);
+    expect(calls[0].messages.at(-1).content).toBe('Respond by calling the match_claims tool.');
   });
+
+  // Value: protects=an older matcher judge (CAT15_JUDGE_MODEL) still gets the forced match_claims request at temperature 0 with the 2000-token limit; fails_when=the matcher request drops its tool choice, temperature or limit for a model that takes them; why_new=R4 moved the default judge to Haiku 5.5, which takes neither; seam=none; no_claim=stub client in a subprocess
+  test('an older matcher judge gets match_claims forced at temperature 0 with the 2000-token limit', () => {
+    const script = "const { matchClaims } = await import('./eval/runner/cat15-propose-takes.ts'); const seen = []; await matchClaims('page', [{ claim_text: 'x' }], [{ claim_text: 'x', kind: 'bet', domain: 'd', conviction: 0.5 }], { messages: { create: async (p) => { seen.push(p); return { content: [] }; } } }); console.log(JSON.stringify({ temperature: seen[0].temperature ?? null, max_tokens: seen[0].max_tokens, tool_choice: seen[0].tool_choice }));";
+    const env: Record<string, string> = {};
+    for (const [k, v] of Object.entries(process.env)) if (v !== undefined) env[k] = v;
+    env.CAT15_JUDGE_MODEL = 'claude-haiku-4-5-20251001';
+    const proc = Bun.spawnSync(['bun', '-e', script], { cwd: REPO_ROOT, env, stdout: 'pipe', stderr: 'pipe' });
+    expect(JSON.parse(proc.stdout.toString().trim().split('\n').at(-1)!)).toEqual({ temperature: 0, max_tokens: 2000, tool_choice: { type: 'tool', name: 'match_claims' } });
+  }, 30000);
 
   test('malformed first attempt triggers ONE corrective retry naming the defect', async () => {
     const calls: Array<{ messages: Array<{ content: unknown }> }> = [];
     const out = await matchClaims('page', EXTRACTED, GT, fakeClient([MALFORMED_TOOL_USE, VALID_TOOL_USE], calls));
     expect(out.result).not.toBeNull();
     expect(calls).toHaveLength(2);
-    expect(calls[1].messages).toHaveLength(2);
+    expect(calls[1].messages).toHaveLength(3);
     expect(String(calls[1].messages[1].content)).toMatch(/malformed/);
     expect(String(calls[1].messages[1].content)).toMatch(/cover every ground-truth claim/);
   });
@@ -565,19 +577,20 @@ describe('runner end-to-end (hermetic)', () => {
 });
 
 describe('cat15 extraction temperature (audit A-03)', () => {
-  test('the extraction call is sent at temperature 0', async () => {
+  test('the default Opus 5.5 extraction call is sent no temperature; EXTRACT_TEMPERATURE stays 0 for a model that takes one', async () => {
     const seen: Array<Record<string, unknown>> = [];
     const client = {
       messages: { create: async (params: Record<string, unknown>) => { seen.push(params); return { content: [{ type: 'text', text: '[]' }] }; } },
     } as any;
     const out = await extractClaims('A page body.', client);
     expect(out.parse_failed).toBe(false);
-    expect(seen[0].temperature).toBe(0);
+    expect(seen[0].model).toBe('claude-opus-5-5');
+    expect('temperature' in seen[0]).toBe(false);
     expect(EXTRACT_TEMPERATURE).toBe(0);
   });
 
   // Value: protects=a Claude 5 extractor (CAT15_MODEL) is sent no temperature and 4,096 tokens to think in, while the default extractor keeps gbrain's 2,048-token limit; fails_when=the extractor request skips fitAnthropicRequest or withThinkingRoom; why_new=the extractor model is read from the environment at import, so no in-process test reaches the Claude 5 request; seam=none; no_claim=stub client in a subprocess, not a live call
-  test('a Claude 5 extractor gets no temperature and room to think; the default keeps gbrain\'s limit', () => {
+  test('a Claude 5 extractor, the default included, gets no temperature and room to think; an older one keeps gbrain\'s limit', () => {
     const sentFor = (model: string | undefined) => {
       const script = "const { extractClaims } = await import('./eval/runner/cat15-propose-takes.ts'); const seen = []; await extractClaims('A page body.', { messages: { create: async (p) => { seen.push(p); return { content: [{ type: 'text', text: '[]' }] }; } } }); console.log(JSON.stringify({ max_tokens: seen[0].max_tokens, temperature: seen[0].temperature ?? null }));";
       const env: Record<string, string> = {};
@@ -587,7 +600,8 @@ describe('cat15 extraction temperature (audit A-03)', () => {
       return JSON.parse(proc.stdout.toString().trim().split('\n').at(-1)!);
     };
     expect(sentFor('claude-opus-5-5')).toEqual({ max_tokens: 4096, temperature: null });
-    expect(sentFor(undefined)).toEqual({ max_tokens: 2048, temperature: 0 });
+    expect(sentFor(undefined)).toEqual({ max_tokens: 4096, temperature: null });
+    expect(sentFor('claude-sonnet-4-6')).toEqual({ max_tokens: 2048, temperature: 0 });
   }, 30000);
 
   // Value: protects=an extractor reply cut off at max_tokens gets gbrain's one retry at 4,096 tokens, and a reply still cut off stays in the F1 denominator as a miss naming both limits, as gbrain fails that page; fails_when=extractClaims skips the retry, or runProbe drops a truncated reply from the score; why_new=a truncated reply was excluded from the score as a harness error; seam=none; no_claim=stub client and stub extractor
@@ -595,12 +609,12 @@ describe('cat15 extraction temperature (audit A-03)', () => {
     const limits: number[] = [];
     const client = { messages: { create: async (p: { max_tokens: number }) => { limits.push(p.max_tokens); return { content: [{ type: 'text', text: '[{"claim_text": "half a cla' }], stop_reason: 'max_tokens' }; } } } as any;
     const out = await extractClaims('A page body.', client);
-    expect(limits).toEqual([2048, 4096]);
+    expect(limits).toEqual([4096, 4096]);
     expect(out).toMatchObject({ claims: [], parse_failed: true, truncated: true });
     const outcome = await runProbe(CLAIMS_PROBE, false, { corpusDir: TEST_FIXTURES, extract: async () => out });
     if (outcome.kind !== 'scored') throw new Error(`expected a scored miss, got ${outcome.kind}`);
     expect(outcome.result).toMatchObject({ f1: 0, extraction_parse_failed: true, extraction_truncated: true });
-    expect(outcome.sutError).toContain('max_tokens (2048, then 4096 on gbrain');
+    expect(outcome.sutError).toContain('max_tokens (4096, then 4096 on gbrain');
   });
 
   // Value: protects=a retry that finishes is scored from its own claims; fails_when=extractClaims reads the first, cut-off reply after retrying; why_new=the retry is new; seam=none; no_claim=stub client
@@ -625,7 +639,7 @@ describe('cat15 live runs join the budget ledger', () => {
     const receipt = JSON.parse(readFileSync(RECEIPT, 'utf-8'));
     expect(receipt.run_status).toBe('skipped');
     expect(receipt.skip_reason).toContain('Cat 15 live run spends money');
-    expect(receipt.resolved_config.max_tokens_sent).toEqual({ extract: 2048, extract_retry: 4096, judge: 2000 });
+    expect(receipt.resolved_config.max_tokens_sent).toEqual({ extract: 4096, extract_retry: 4096, judge: 4096 });
   }, 30000);
 
   const scratchRun = (budgetUsd: number, close = false) => {

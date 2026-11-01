@@ -8,7 +8,7 @@ Suppose someone repeatedly misjudges hiring decisions but has a good record on t
 
 Each of the eight probes supplies a fictional brain, a question and expected behavior. The runner seeds resolved predictions and a calibration profile, then calls gbrain's real `runThink` pipeline twice: once without calibration and once with it.
 
-A Haiku judge compares the answers without knowing their configuration labels. Both answer orders are judged to reduce position bias. The profile is seeded rather than calculated by this test, so the experiment measures whether the answer uses a profile well. It does not measure profile aggregation or search quality.
+A Haiku 5.5 judge compares the answers without knowing their configuration labels. Both answer orders are judged to reduce position bias. The profile is seeded rather than calculated by this test, so the experiment measures whether the answer uses a profile well. It does not measure profile aggregation or search quality.
 
 The post-audit runner calls the public `gbrain/think` implementation directly. The CLI expressions `gbrain think` and `gbrain think --with-calibration` describe the product behavior; the test does not launch those shell commands.
 
@@ -55,7 +55,7 @@ CAT14_PROBES=cat14-pos-1-geography bun eval/runner/cat14-calibration.ts --budget
 bun test test/eval/cat14-calibration.test.ts
 ```
 
-The historical eight-probe estimate was about $0.05 and two minutes. It is not a current spending cap. `CAT14_MODEL` selects the answer model; `CAT14_JUDGE_MODEL` selects the judge. The current defaults are Sonnet 4.6 and `claude-haiku-4-5-20251001`.
+The historical eight-probe estimate was about $0.05 and two minutes. It is not a current spending cap. `CAT14_MODEL` selects the answer model; `CAT14_JUDGE_MODEL` selects the judge. The current defaults are `claude-opus-5-5` and `claude-haiku-5-5` (since 2026-11-01; earlier runs used Sonnet 4.6 and `claude-haiku-4-5-20251001`, a different answer and judge identity, so do not pool them).
 
 Per-probe dumps contain both answers, expected and observed behavior, and judge explanations. The receipt distinguishes live from hermetic runs. Scripted responses test the wiring, not whether a real model gives better advice.
 

@@ -686,6 +686,7 @@ const r6 = (x: number) => { const v = Number(x.toFixed(6)); return Object.is(v, 
 const r6n = (x: number | null) => (x === null ? null : r6(x));
 const pct = (x: number) => `${(100 * x).toFixed(1)}%`;
 const pts = (x: number) => (100 * x).toFixed(1);
+const aboutPoints = (x: number | null) => (x === null ? 'more than 30' : x.toFixed(1));
 const median = (xs: readonly number[]) => { if (!xs.length) return null; const s = [...xs].sort((a, b) => a - b); const m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
 
 function clusterRows(pairs: ReadonlyArray<{ conversation: string; d: number }>): ClusterRow[] {
@@ -793,14 +794,14 @@ function sentenceFor(ctx: Ctx, cmp: Comparison): Comparison {
   }
   if (!cmp.claim_eligible) return { ...cmp, outcome: 'incomplete', sentence: `${incompleteSentence(ctx, set, cmp.system, cmp.cohort)} (${cmp.eligibility.join('; ')})` };
   if (cmp.family === 'F1' && ctx.power.family1 === 'descriptive') {
-    return { ...cmp, outcome: 'descriptive', sentence: `${setScope(set, cmp)}, ${sys} scored ${b} and gbrain-defaults ${a} (difference ${pts(cmp.delta)} points, ${ci}). The preregistered power check found these conversations detect only differences of about ${ctx.power.detectable_difference_points ?? 'more than 30'} points, so this describes the systems and does not rank them.` };
+    return { ...cmp, outcome: 'descriptive', sentence: `${setScope(set, cmp)}, ${sys} scored ${b} and gbrain-defaults ${a} (difference ${pts(cmp.delta)} points, ${ci}). The preregistered power check found these conversations detect only differences of about ${aboutPoints(ctx.power.detectable_difference_points)} points, so this describes the systems and does not rank them.` };
   }
   if (cmp.mean_anchor >= CEILING && cmp.mean_other >= CEILING) return { ...cmp, outcome: 'ceiling', sentence: `Both answered nearly every question on ${set.label} (${a} and ${b}); it cannot separate them.` };
   if (cmp.p_holm !== null && cmp.p_holm <= ctx.campaign.statistics.alpha) {
     const [first, second, x, y] = cmp.delta > 0 ? ['gbrain-defaults', sys, a, b] : [sys, 'gbrain-defaults', b, a];
     return { ...cmp, outcome: cmp.delta > 0 ? 'gbrain-ahead' : 'gbrain-behind', sentence: `${setScope(set, cmp)}, ${first} answered more questions correctly than ${second} (${x} vs ${y}, difference ${d} points, ${ci}).` };
   }
-  return { ...cmp, outcome: 'not-separated', sentence: `On ${set.label} we could not tell ${sys} and gbrain-defaults apart (${b} vs ${a}); a difference smaller than about ${cmp.mdd_points === null ? 'n/a' : cmp.mdd_points.toFixed(1)} points would not have been detected.` };
+  return { ...cmp, outcome: 'not-separated', sentence: `${setScope(set, cmp)}, we could not tell ${sys} and gbrain-defaults apart (${b} vs ${a} on the ${cmp.cohort.paired} of ${cmp.cohort.scheduled} questions scored for both); a difference smaller than about ${cmp.mdd_points === null ? 'n/a' : cmp.mdd_points.toFixed(1)} points would not have been detected in this comparison.` };
 }
 
 function verdictStability(ctx: Ctx, f: CampaignFamily, comparisons: Comparison[]): number | null {
@@ -844,7 +845,11 @@ export function deriveAll(receipt: string): Derivation {
   const powerPath = join(receipt, 'power.json');
   if (!existsSync(powerPath)) throw invalid(receipt, 'power.json is missing', 'Family 1 may claim only under the preregistered power result (plan §4.6)', { next: 'run', argv: ['bun', 'eval/runner/q1/power.ts', '--output', rel(powerPath)] });
   const powerBuf = readInput(reader, powerPath);
-  const power = (JSON.parse(powerBuf.toString('utf8')) as PowerReport).decision;
+  const power = (JSON.parse(powerBuf.toString('utf8')) as PowerReport | null)?.decision;
+  if (power === null || typeof power !== 'object') throw invalid(receipt, 'power.json records no decision', 'Family 1 may claim only under the preregistered power result (plan §4.6)', { next: 'run', argv: ['bun', 'eval/runner/q1/power.ts', '--output', rel(powerPath)] });
+  if (!['full', 'shrunk', 'descriptive'].includes(power.family1)) throw invalid(receipt, `power.json records family1 ${JSON.stringify(power.family1)}, not full, shrunk or descriptive`, 'Family 1 ranks its rows only under a full or shrunk power decision (plan §4.6)', { next: 'run', argv: ['bun', 'eval/runner/q1/power.ts', '--output', rel(powerPath)] });
+  if (power.shrunk_comparators !== null && !Array.isArray(power.shrunk_comparators)) throw invalid(receipt, `power.json records shrunk_comparators ${JSON.stringify(power.shrunk_comparators)}, not a list or null`, 'a shrunk Family 1 compares exactly the comparators the power check kept', { next: 'run', argv: ['bun', 'eval/runner/q1/power.ts', '--output', rel(powerPath)] });
+  if (power.detectable_difference_points !== null && typeof power.detectable_difference_points !== 'number') throw invalid(receipt, `power.json records detectable_difference_points ${JSON.stringify(power.detectable_difference_points)}, not a number or null`, 'the verdict and the descriptive sentences print the preregistered detectable difference', { next: 'run', argv: ['bun', 'eval/runner/q1/power.ts', '--output', rel(powerPath)] });
   const kindList = loadKinds();
   const kinds = new Map(kindList.map(k => [k.id, k.description]));
   const headSet = campaign.sets.find(s => s.role === 'headline')!;
@@ -1023,10 +1028,10 @@ export function headCellOf(campaign: CampaignManifest, setId: string, system: st
 function verdictSentence(ctx: Ctx, f1: Comparison[], field: Scoreboard['field']): string {
   const c = ctx.campaign, set = ctx.headSet;
   const when = `On ${set.label} (${EXPOSURE_LABELS[set.exposure]}), measured ${c.measured.to} at gbrain \`${c.gbrain.commit.slice(0, 7)}\``;
-  const mdd = ctx.power.detectable_difference_points;
+  const mdd = aboutPoints(ctx.power.detectable_difference_points);
   const incompleteField = field.complete ? '' : ` The table is incomplete: ${field.missing.map(k => `\`${k}\``).join(', ')} did not run on ${set.label}, so no field-wide claim is made.`;
   if (!f1.length) return `${when}, no component comparison was run.${incompleteField}`;
-  if (ctx.power.family1 === 'descriptive') return `${when}, the component comparison is descriptive: with these conversations it detects only differences of about ${mdd ?? 'more than 30'} points, so no row is ranked.${incompleteField}`;
+  if (ctx.power.family1 === 'descriptive') return `${when}, the component comparison is descriptive: with these conversations it detects only differences of about ${mdd} points, so no row is ranked.${incompleteField}`;
   const ahead = f1.filter(x => x.outcome === 'gbrain-ahead').length, behind = f1.filter(x => x.outcome === 'gbrain-behind').length;
   const incomplete = f1.filter(x => x.outcome === 'incomplete' || x.outcome === 'not-run').length;
   if (field.complete && ahead === f1.length) return `${when}, gbrain-defaults beat the field: with the same three answer models and 8,000 tokens of evidence it answered more questions correctly than every other component row after Holm correction (detectable difference about ${mdd} points).`;

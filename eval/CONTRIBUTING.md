@@ -116,8 +116,12 @@ lanes.
    ```
 
    Without `CAT35_FULL=1` the runner scores the two-conversation smoke set. `--lanes none` scores only your folder. A run
-   needs `ANTHROPIC_API_KEY` and `OPENAI_API_KEY` like any Cat 35 run, and the runner prints its pre-flight cost
-   projection before the first judge call.
+   needs `ANTHROPIC_API_KEY` and `OPENAI_API_KEY` like any Cat 35 run. Before the first judge call the runner prints
+   its pre-flight cost projection, with your lane's share, and refuses to start when the projection exceeds
+   `CAT35_HARD_STOP_USD` (default $40). Your lane's share is priced from the documents it read, as the judge receives
+   them: every judge call that can read a document, its claims or the conversation, at the judge model's rates, each
+   with its full answer allowance and one retry, so a folder of large documents judged by an Opus or GPT model can
+   exceed the default cap.
 
 Your lane is judged the way gbrain's dream lane is, on recall of the planted facts with an evidence check that the quote
 the judge cites is in your document and in the conversation, plus claim grounding, distractor leakage, the usability
@@ -140,9 +144,11 @@ The runner treats the folder as untrusted. It opens only the `<transcript_id>.md
 provider call it refuses the whole run on a symlink, anything that is not a regular file, a hard-linked file, a file
 over 64 KiB, a file with more than 80 claims (what the grounding judge grades in one call), invalid UTF-8, a document
 that contains one of the corpus's answer-key ids (a sign the system read `gold/`), or a folder that was replaced or
-swapped for a link after the run resolved its path. On Linux the runner holds the folder open and reads every file
-through that handle. A lane name is lowercase letters, digits and dashes, up to 32 characters, and cannot reuse a
-built-in lane name. Name the lane by what the system does, such as `ext-notes`; product names belong only in
+swapped for a link after the run resolved its path. The runner holds the folder open and reads every file through that
+handle's path under `/proc/self/fd`. Bun has no other race-free way to read a folder that could be swapped mid-run, so
+on a system without `/proc/self/fd`, such as macOS, the runner refuses the external lane; run it on Linux. A lane
+name is lowercase letters, digits and dashes, up to 32 characters, and cannot reuse a built-in lane name. Name the lane
+by what the system does, such as `ext-notes`; product names belong only in
 [docs/comparison-systems.md](../docs/comparison-systems.md).
 
 Know the limits before you compare numbers. Your documents go to the judge's provider, so keep private data out of them.
@@ -162,12 +168,12 @@ A category is a runner, a seeded generator, a scorer and a dated report that ans
 2. **Write the registry row first** in [registry.ts](registry.ts): a descriptive slug as `id`, the plan id as `legacy_alias`, `tier`, `script` (`runner/n<k>-<slug>.ts`), headline metric and denominator, `evidence_maturity`, and a `contract` saying what it measures, what it does not, and what counts as an error. Start `report-only` unless a rule below gates.
 3. **Preregister promotion rules in the same commit**, before the first counted run: `safety_contracts` (exact safety assertions such as zero leaks or zero prohibited output; they gate at once), `quality_thresholds` (a metric with a fixed threshold; it gates only at that threshold) and `exploratory` metrics (never gate). Each rule names a receipt path, so the runner must write that field. A safety gate also needs a utility floor (a refuse-everything system must fail it). A candidate fix never sets its own threshold, and a wave category may not gate on its bare runner verdict.
 4. **Run hermetic by default.** Wrap the run in `withHermeticEnv` from [runner/hermetic-env.ts](runner/hermetic-env.ts): it strips every provider and TypeSafe key, uses a throwaway `GBRAIN_HOME` and fails if System One could be on. Record `decide: DECIDE_OFF` in `resolved_config`.
-5. **Take the shared flags.** `--seed`, `--output <dir>` and `--gbrain <checkout>[@ref]` (copied overlay through [runner/gbrain-under-test.ts](runner/gbrain-under-test.ts)). A paid arm runs only with `--paid --budget-run-id <id>`: call `requirePaidArm` from [runner/paid-arm.ts](runner/paid-arm.ts), then `startPaidRun` from [runner/budget-ledger.ts](runner/budget-ledger.ts), so the ledger enforces the wave cap. If `all.ts` dispatches the runner, set `paidFlags: true` on its registry row so `all.ts` passes both flags. Pass every Anthropic Messages request through `fitAnthropicRequest` from [runner/anthropic-request.ts](runner/anthropic-request.ts), so a Claude 5-family model gets no temperature and no forced tool choice, which it rejects.
+5. **Take the shared flags.** `--seed`, `--output <dir>` and `--gbrain <checkout>[@ref]` (copied overlay through [runner/gbrain-under-test.ts](runner/gbrain-under-test.ts)). A paid arm runs only with `--paid --budget-run-id <id>`: call `requirePaidArm` from [runner/paid-arm.ts](runner/paid-arm.ts), then `startPaidRun` from [runner/budget-ledger.ts](runner/budget-ledger.ts), so the ledger enforces the wave cap. If `all.ts` dispatches the runner, set `paidFlags: true` on its registry row so `all.ts` passes both flags. Pass every Anthropic Messages request through `fitAnthropicRequest` from [runner/anthropic-request.ts](runner/anthropic-request.ts), so a Claude 5-family model gets no temperature and no forced tool choice, which it rejects. Export each default model the runner picks and register it in `DEFAULTS` in [test/eval/model-defaults.test.ts](../test/eval/model-defaults.test.ts), which fails unless it is a current-generation model or a named exception with its reason in [runner/model-defaults.ts](runner/model-defaults.ts).
 6. **Generate gold, never read it from gbrain.** A seeded generator under `generators/` writes a ledger and derives gold from it with an independent oracle. Add solvability and negative controls, and presence assertions proving the data is reachable before you measure its absence; a failed presence assertion makes the run an error, not a pass. A gbrain exception where an answer is expected is a scored miss.
 7. **Ship the tests** under `test/eval/`: a generator determinism test (same seed, same ledger hash), a scorer test with hand-built gold including a negative that must fail, a deliberately broken adapter the category must fail, and a scorer mutation suite. The mutation suite uses `assertScorerRejectsFakeSystems` from [runner/mutation-kit.ts](runner/mutation-kit.ts): the honest system must pass, and the empty, always-positive, always-refuse, stale and wrong-source fakes must fail (declare a fake not applicable only with a reason). See `test/eval/scorer-mutation.test.ts` for N3, N4 and N6.
 8. **Print in a fixed order:** verdict, safety contracts, quality metrics with denominators, gbrain bugs with a one-line repro, receipt path. Record every gbrain finding with `upsertBug` from [runner/bug-ledger.ts](runner/bug-ledger.ts), classified as a bug against a stated contract, a feature gap or a category defect.
 9. **Measure the run time** of the hermetic arm and keep it under the registry's CI budget (target 60 seconds); `bun eval/runner/all.ts --only <id>` runs just your category through the same gate CI uses.
-10. **Write the report and the docs row.** A dated report in `docs/benchmarks/` following the N3 report outline, with "gbrain bugs found" and "documented limits (not bugs)" sections, and a question-first row in [docs/README.md](../docs/README.md). Copy worthwhile receipts out of `eval/reports/` and scrub machine paths with `bun eval/runner/receipt.ts scrub`.
+10. **Write the report and the docs row.** A dated report in `docs/benchmarks/` following the N3 report outline, with "gbrain bugs found" and "documented limits (not bugs)" sections, and a question-first row in [docs/README.md](../docs/README.md). Copy worthwhile receipts out of `eval/reports/` and scrub machine paths with `bun eval/runner/receipt.ts scrub`. The receipt guards read tarball and gzip receipts member by member: `test/eval/receipt-machine-paths.test.ts` fails on a machine path inside one (other than the harness VM overlay path it declares) and `scripts/scan-receipts.sh` on a key, unless the file is reviewed and listed with its hash in `test/eval/fixtures/reviewed-compressed-receipts.json` (the secret scan skips it only when its entry also names the pinned gitleaks version). Both find a compressed receipt by its name or its leading bytes and fail on a format they cannot open (zip, xz, zstd, bzip2, 7z and similar) and on a member that is not UTF-8 text (a nested archive, a database or another binary file). Both refuse a tarball unread unless GNU tar lists it cleanly, with no warning, it names no member twice and it holds only regular files and directories, so make tarballs with GNU tar from plain files, and unpack, drop or rename anything else before committing.
 
 A category with more than one tier keeps one operator guide per tier. Cat 40 Hard is the example: its generator mode, world contract ([WORLD_SCHEMA.md](../docs/benchmarks/cat40-hard/WORLD_SCHEMA.md)), runner path, scorer and paid steps are documented in the [Cat 40 Hard runbook](../docs/benchmarks/cat40-hard/RUNBOOK.md), and its registry row is `model-ladder-hard`.
 
@@ -210,6 +216,28 @@ See [CREDITS.md](CREDITS.md) for attribution. Contributions to external question
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
+
+### 2026-11-01: Compressed receipts are checked member by member
+
+Step 10 of "Add a category" now says the machine-path test and the receipt secret scan read tarball and gzip receipts
+member by member, that a compressed receipt either passes both or is reviewed and listed by hash in
+`test/eval/fixtures/reviewed-compressed-receipts.json`, that both fail on a format they cannot open or a member that
+is not UTF-8 text, and that both refuse a tarball GNU tar cannot list cleanly, one that names a member twice and one
+holding an entry other than a regular file or directory. Before #221 neither guard opened a compressed receipt.
+
+### 2026-11-01: The external lane's cost projection and platform
+
+The Cat 35 external-lane section now says the pre-flight projection prices your lane from the documents it read and
+names your lane's share, and that the runner refuses the lane on a system without `/proc/self/fd`. It said only that the
+runner printed a projection, and that on Linux it read every file through the folder handle, without saying what
+happened elsewhere: other systems read by path, which a folder swapped mid-run could redirect.
+
+### 2026-11-01: Register a new category's default models
+
+Step 5 of "Add a category" now says to export each default model a runner picks and register it in
+`test/eval/model-defaults.test.ts`, which fails on a default that is neither a current-generation model nor a named
+exception in `eval/runner/model-defaults.ts`. The test's own header asks a new category to do this, and CLAUDE.md's
+model rules now cover defaults.
 
 ### 2026-10-31: The opening names the new pin
 

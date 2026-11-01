@@ -72,6 +72,19 @@ export const IMPROVE_MARGIN = 0.05;
 export const BPRE_BASELINE_CEILING = 0.95;
 
 /**
+ * Default models for Cats 30-33. The target runs the skill and is deliberately
+ * the weak model, so an optimized skill has room to improve; the optimizer
+ * proposes rewrites; strong is the held-out LLM judge (Cat 32) and the other
+ * end of the Cat 33 transfer pairs, so it must be stronger than the target.
+ */
+export const SKILLOPT_MODELS = {
+  target: 'anthropic:claude-haiku-5-5',
+  optimizer: 'anthropic:claude-opus-5-5',
+  bpreOptimizer: 'anthropic:claude-haiku-5-5',
+  strong: 'anthropic:claude-sonnet-5-5',
+} as const;
+
+/**
  * WS5 pin — applied via engine.setConfig BEFORE any rollout and echoed in
  * resolved_config. SkillOpt rollouts can call brain search tools, and
  * gbrain's default 'balanced' bundle can enable reranking with an ambient
@@ -447,9 +460,9 @@ export async function runCat30(options: Cat30Options = {}): Promise<Cat30RunResu
   const startedAt = new Date().toISOString();
   const bpre = options.bpre ?? false;
   const stub = options.stubLlm ?? false;
-  const targetModel = options.targetModel ?? 'anthropic:claude-haiku-4-5';
-  const optimizerModel = options.optimizerModel ?? (bpre ? 'anthropic:claude-haiku-4-5' : 'anthropic:claude-sonnet-4-6');
-  const judgeModel = options.judgeModel ?? 'anthropic:claude-haiku-4-5'; // unused for rule judges
+  const targetModel = options.targetModel ?? SKILLOPT_MODELS.target;
+  const optimizerModel = options.optimizerModel ?? (bpre ? SKILLOPT_MODELS.bpreOptimizer : SKILLOPT_MODELS.optimizer);
+  const judgeModel = options.judgeModel ?? SKILLOPT_MODELS.target; // unused for rule judges
   const epochs = options.epochs ?? (bpre ? 1 : 2);
   const batchSize = options.batchSize ?? 5;
   const runsPerTask = options.runsPerTask ?? (bpre || stub ? 1 : 3);

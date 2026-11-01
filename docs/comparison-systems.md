@@ -172,8 +172,7 @@ The detailed source table below preserves earlier external snapshots. Rows sayin
 | Zep (research page, 2026) | 90.2% (451/500); multi-session 83.5%; retrieval latency 104/162 ms p50/p95 | QA-acc (NOT R@k), gpt-5.4 reader (medium reasoning) + gpt-5.4 judge, cross-encoder reranking; the 2025 paper's gpt-4o reader scored 71.2% (gpt-4o-mini 63.8%) | n/a | 500 incl. abstention | yes | [getzep.com/research](https://www.getzep.com/research/), accessed 2026-09-02; [arXiv 2501.13956](https://arxiv.org/abs/2501.13956) |
 | Hindsight (Vectorize) | 91.4% (Gemini-3 answerer, own repo; per category 97.1 / 96.4 / 80.0 / 94.9 / 91.0 / 87.2); 89.0% (GPT-OSS-120B); 94.6% on the vendor page (backbone undisclosed) | QA-acc (NOT R@k), LLM judge (GPT-OSS-120B judge in the paper); vendor page markets it under non-official category names | n/a | 500 incl. abstention | yes | [vectorize-io/hindsight-benchmarks](https://github.com/vectorize-io/hindsight-benchmarks); [hindsight.vectorize.io](https://hindsight.vectorize.io/blog/2026/03/23/agent-memory-benchmark), accessed 2026-09-02 |
 | ByteRover, earlier runs | 92.8% (464/500) run 1; 92.2% (461/500) run 2 | QA-acc (NOT R@k), Gemini 3.1 Pro answerer, Gemini 3 Flash or 3.1 Pro judge; competitor rows on their page are copied from vendors with different judges | n/a | 500 incl. abstention | yes | [byterover.dev blog](https://www.byterover.dev/blog/benchmark_ai_agent_memory_real_production_byterover_top_market_accuracy_longmemeval), accessed 2026-09-02 |
-| **gbrain v0.48.4.0 (2026-09-06)** | 86.6% (433/500), invalid (September 28, 2026: the answer model saw `answer_` evidence-session ids; historical, not re-run in this configuration); non-abstention 86.0% (404/470); abstention 29/30; per type SSA 100 / SSU 98.6 / KU 89.7 / MS 83.5 / TR 80.5 / SSP 66.7 | QA-acc (NOT R@k), claude-sonnet-4-6 reader over full sessions represented by the first five chunks (60,000-character cap per session; abstention instruction added), gpt-4o judge with the official `evaluate_qa.py` prompts at temperature 0; 500/500 judged, 0 judge errors; retrieval on the same rows 95.53% recall_all@5 | n/a | 500 incl. abstention | yes — `docs/benchmarks/2026-09-06-longmemeval-ranker-wave.md` | gbrain's first judged row; protocols differ from every vendor row above, so no comparison is claimed in either direction |
-| **gbrain v0.59.13.0 (2026-09-29), opaque session ids** | **87.8% (439/500)** house reader; 86.0% (430/500) GPT-4o reader on the same retrieved sessions (paired +21/−30, exact McNemar p = 0.26); official `evaluate_qa.py` judge 443/500 and 432/500 | QA-acc (NOT R@k). House: claude-sonnet-4-6, notes mode, 1,024 output tokens, full sessions behind the top-5 chunks. GPT-4o arm: `gpt-4o-2024-08-06` with LongMemEval's official `run_generation.py` reading prompt (JSON history, step by step), temperature 0. Reranker off, autocut off; gpt-4o judges; retrieval on the same rows 435/470 recall_all@5 | n/a | 500 incl. abstention | yes, `docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md` | Leak-free replacement for the row above in a different configuration (reranker off, notes reader), so it does not measure the leak. Retrieval, context size and judges still differ from vendor rows; no comparison claimed |
+| **gbrain v0.59.13.0 (2026-09-29), opaque session ids** | **87.8% (439/500)** house reader; 86.0% (430/500) GPT-4o reader on the same retrieved sessions (paired +21/−30, exact McNemar p = 0.26); official `evaluate_qa.py` judge 443/500 and 432/500 | QA-acc (NOT R@k). House: claude-sonnet-4-6, notes mode, 1,024 output tokens, full sessions behind the top-5 chunks. GPT-4o arm: `gpt-4o-2024-08-06` with LongMemEval's official `run_generation.py` reading prompt (JSON history, step by step), temperature 0. Reranker off, autocut off; gpt-4o judges; retrieval on the same rows 435/470 recall_all@5 | n/a | 500 incl. abstention | yes, `docs/benchmarks/2026-09-29-longmemeval-opaque-qa.md` | Leak-free replacement for the September 6 row, whose 86.6% (433/500) is invalid ([corrections](corrections.md)), in a different configuration (reranker off, notes reader), so it does not measure the leak. Retrieval, context size and judges still differ from vendor rows; no comparison claimed |
 | **gbrain v0.60.37.0 retrieval (2026-10-04), frontier reader** | **89.4% (447/500)** `gpt-5.4` reader (medium reasoning) with LongMemEval's official reading prompt; official `evaluate_qa.py` judge 448/500. GPT-4o on the identical prompts: 430/500 (paired +33/−16, exact McNemar p = 0.021) | QA-acc (NOT R@k). The prompts are the 2026-09-29 GPT-4o arm's, byte for byte: the distinct sessions behind gbrain's top-5 chunks, reranker off (435/470 recall_all@5), JSON history, step by step; gpt-4o judges | n/a | 500 incl. abstention | yes, `docs/benchmarks/2026-10-04-longmemeval-opaque-followups.md` | Same reader model as Zep's 90.2% and Memoria's 84.97%, but retrieval and judge differ (Zep used a gpt-5.4 judge); no ranking claimed |
 | ContextFit fusion QA | 84.8% overall / 86.81% task-averaged (May note); 81.8% through the official `evaluate_qa.py` with a fresh GPT-4o judge (task-averaged 83.5%); 87.2% with a GPT-5-mini answerer + local GPT-4o judge (85.2% with a GPT-4o answerer) | QA-acc (NOT R@k), their pipeline | n/a | 500 incl. 30 abstention | yes (GPT-4o or GPT-5-mini generation + GPT-4o judge) | [their QA note](https://www.context.fit/longmemeval-fusion-qa-20260519.html), reported in [issue #10](https://github.com/garrytan/gbrain-evals/issues/10); [cf repo QA evidence](https://github.com/ContextFit/cf/blob/master/benchmarks/longmemeval_contextfit_qa_evidence_20260516.md) |
 
@@ -263,7 +262,7 @@ The useful common lesson is that material can be lost or distorted before search
 
 [PrecisionMemBench](https://github.com/tenurehq/precisionmembench) has 35 stored beliefs, 77 single-query cases, and 12 session cases. Gbrain's published runs cover the 77 single-query cases. The upstream scorer returns null for some metrics, so reported means use metric-specific denominators.
 
-The table below preserves the September 1 source snapshot, with gbrain's own rows replaced by the September 9 corrected run. The two local May gbrain rows used a seeding defect: four superseded beliefs were hidden using ground-truth metadata unavailable to other providers. They stay in the table, struck through, as historical invalid rows. They are not current upper-bound forecasts.
+The table below preserves the September 1 source snapshot, with gbrain's own rows replaced by the September 9 corrected run. Two local May gbrain rows (0.582 and 0.075) used a seeding defect: four superseded beliefs were hidden using ground-truth metadata unavailable to other providers. They are invalid and listed in [corrections](corrections.md).
 
 The corrected rows use this repository's wrapper around the upstream scorer on the 77 single-query cases, with all 35 beliefs indexed live. Their mean precision counts only cases where upstream returns a non-null precision (66 of 77 for tight adaptive with reranking, 70 of 77 for broad hybrid, 49 of 77 for keyword). The upstream rows come from the upstream README and may use different denominators. Latencies were measured on different machines and are not comparable across rows.
 
@@ -274,14 +273,12 @@ The corrected rows use this repository's wrapper around the upstream scorer on t
 | gbrain tight adaptive, corrected 2026-09-09 | 0.5333 (65 non-null cases; recall 0.7320) | 229ms | [September 9 refresh](benchmarks/2026-09-09-retrieval-refresh.md) |
 | gbrain broad hybrid, corrected 2026-09-09 | 0.0565 (70 non-null cases; recall 0.9884) | 214ms | [September 9 refresh](benchmarks/2026-09-09-retrieval-refresh.md) |
 | gbrain keyword, corrected 2026-09-09 | 0.1361 (49 non-null cases; recall 0.1744) | 2ms | [September 9 refresh](benchmarks/2026-09-09-retrieval-refresh.md) |
-| ~~gbrain adaptive (tight), May 2026~~ | ~~0.582~~ (invalid: flawed seeding; superseded by the corrected rows above) | ~270ms | [our report](benchmarks/2026-05-29-precisionmembench.md) |
 | supermemory | 0.22 | 69ms | upstream README, accessed 2026-09-01 |
 | yourmemory / agentmemory | 0.17 | 313ms / 82ms | upstream README, accessed 2026-09-01 |
 | atomicmemory | 0.15 | 71ms | upstream README, accessed 2026-09-01 |
 | gbrain (author's own integration) | 0.14 | 544ms | upstream README, accessed 2026-09-01; see note below |
 | zep | 0.09 | 124ms | upstream README, accessed 2026-09-01 |
 | vector baseline | 0.09 | 72ms | upstream README, accessed 2026-09-01 |
-| ~~gbrain hybrid, historical May setup~~ | ~~0.075~~ (invalid: flawed seeding) | ~270ms | [our report](benchmarks/2026-05-29-precisionmembench.md) |
 | mem0 | 0.06 | 65ms | upstream README, accessed 2026-09-01 |
 
 The [September 9 corrected run](benchmarks/2026-09-09-retrieval-refresh.md) indexes all 35 beliefs live. Broad hybrid recorded precision 0.0565 and recall 0.9884, with or without reranking. Tight adaptive limits recorded 0.5333 / 0.7320 without reranking and 0.5859 / 0.8250 with it. Keyword search recorded 0.1361 / 0.1744. All five runs completed 77 cases with zero execution errors.
@@ -348,6 +345,16 @@ before A6b use the former environment variable names. The hashes of every file A
 
 ## Changelog
 
+### 2026-11-01: Invalid rows move to the corrections page; changelog order
+
+gbrain-evals #241. Three invalid gbrain rows leave the current-state tables for [corrections](corrections.md): the
+LongMemEval QA row for gbrain v0.48.4.0 (86.6%, 433/500, invalid since September 28 because the answer model saw
+`answer_` evidence-session ids) and the two struck-through May PrecisionMemBench rows (tight adaptive 0.582 and
+hybrid 0.075, invalid because of the seeding defect). The opaque-id QA row now names the invalid figure it replaces
+instead of "the row above", and the PrecisionMemBench paragraph says where the May rows went. The 2026-10-07 entry
+"Systems in the open-source comparison" moves below the 2026-10-08 entries so this changelog runs newest first. No
+number on this page changed.
+
 ### 2026-10-31: Re-pin to gbrain `3ec766c40`
 
 The pin named in the opening and in the LongMemEval section changed from `7a6bdd357` (v0.60.454.0) to `3ec766c40`
@@ -401,18 +408,18 @@ with commits, vendor images with digests, vendor MCP servers, vendor benchmark c
 variable names, capability key and Postgres credentials that amendment A6b replaced. Those records now point here.
 The paragraph under the table no longer names a project outside the table. No number changed.
 
-### 2026-10-07: Systems in the open-source comparison
-
-Added the table that maps the open-source shootout's kind labels (`temporal-graph`, `graph-pipeline`,
-`extract-first`, `agent-runtime`, `markdown-notes`, `memory-bank`) to their projects, versions, licenses and upstream
-repositories. The shootout's code, manifests, results and preregistrations now use the labels and link here.
-
 ### 2026-10-08: Systems in the open-source comparison and their matched results
 
 Added the table that maps the open-source shootout's kind labels (`temporal-graph`, `graph-pipeline`,
 `extract-first`, `agent-runtime`, `markdown-notes`, `memory-bank`) to their projects, versions, licenses and upstream
 repositories, and the matched results from [the comparison report](benchmarks/2026-10-06-oss-memory-shootout.md). The
 shootout's code, manifests, results and preregistrations now use the labels and link here.
+
+### 2026-10-07: Systems in the open-source comparison
+
+Added the table that maps the open-source shootout's kind labels (`temporal-graph`, `graph-pipeline`,
+`extract-first`, `agent-runtime`, `markdown-notes`, `memory-bank`) to their projects, versions, licenses and upstream
+repositories. The shootout's code, manifests, results and preregistrations now use the labels and link here.
 
 ### 2026-10-07: Re-pin to gbrain `a865f8f`
 

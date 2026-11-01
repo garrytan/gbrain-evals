@@ -11,9 +11,13 @@
  *     functions never throw for malformed model output
  *   - injectable `client` for $0 stub-driven tests
  *   - temperature 0 (judge.ts JUDGE_TEMPERATURE), recorded in the receipt
- *   - per-call token + cost accounting (haiku-4-5 $1/$5 per M,
- *     sonnet-4-6 $3/$15 per M; unknown models priced at sonnet rates as a
- *     conservative overestimate)
+ *   - per-call token + cost accounting, priced from the budget ledger's
+ *     table (judge.ts judgePrice); an unpriced model is refused before the
+ *     call, never priced at another model's rates. The input-token count
+ *     weights cache writes and reads by the model's own cache rates relative
+ *     to its input rate, so input_tokens x input rate + output_tokens x
+ *     output rate equals cost_usd to within a rounded token, at the
+ *     long-context rates when the call crossed that threshold
  *
  * NOT judge.ts `scoreAnswer`: that has a 0-5 rubric contract and bypasses the
  * LLM budget. Every real call here is wrapped in
@@ -49,7 +53,7 @@ import { JUDGE_TEMPERATURE, UNTRUSTED_DATA_INSTRUCTION, escapeUntrusted, fenceUn
  */
 export const CAT35_JUDGE_PROMPT_VERSION = '2026-09-28-v2';
 
-const DEFAULT_MODEL = 'claude-haiku-4-5-20251001';
+export const CAT35_DEFAULT_JUDGE_MODEL = 'claude-haiku-5-5';
 const DEFAULT_MAX_TOKENS = 2000;
 
 // ─── Config + client ──────────────────────────────────────────────────────
@@ -81,7 +85,7 @@ function getDefaultClient(): Anthropic {
 }
 
 function resolveModel(cfg?: Cat35JudgeCfg): string {
-  return cfg?.model ?? process.env.CAT35_JUDGE_MODEL ?? DEFAULT_MODEL;
+  return cfg?.model ?? process.env.CAT35_JUDGE_MODEL ?? CAT35_DEFAULT_JUDGE_MODEL;
 }
 
 // ─── Server-reported model accounting (generators-19 pattern) ──────────────
@@ -220,16 +224,25 @@ async function callJudgeOnce(
     output_tokens?: number;
     cache_creation_input_tokens?: number;
     cache_read_input_tokens?: number;
+    input_tokens_details?: { cached_tokens?: number; cache_write_tokens?: number };
   };
   const output_tokens = usage.output_tokens ?? 0;
   const cost_usd = priceOf(price, response);
-  // Cache tokens are billed separately (creation 1.25x input rate, reads
-  // 0.1x) and are NOT included in usage.input_tokens; the input count weights
-  // them the same way, and cost_usd prices them at the model's own rates.
+  // Anthropic reports cache writes and reads beside usage.input_tokens; an
+  // OpenAI judge (through openai-judge-shim) counts them inside input_tokens
+  // and itemizes them in input_tokens_details, the fields usageCost reads.
+  // The input count weights them by this model's own cache rates relative to
+  // its input rate (Haiku 5.5 writes at 1.25x and reads at 0.1x; Opus 5.5 and
+  // gpt-6.1-sol read at 0.05x). Every long-context tier keeps its model's
+  // cache ratios, so the weights hold above the threshold too. Each weight is
+  // rounded to six places so 0.01 / 0.1 is exactly 0.1.
+  const openaiRead = usage.input_tokens_details?.cached_tokens ?? 0;
+  const openaiWrite = usage.input_tokens_details?.cache_write_tokens ?? 0;
+  const weight = (rate: number | undefined) => Math.round(((rate ?? price.input) / price.input) * 1e6) / 1e6;
   const input_tokens = Math.round(
-    (usage.input_tokens ?? 0) +
-      (usage.cache_creation_input_tokens ?? 0) * 1.25 +
-      (usage.cache_read_input_tokens ?? 0) * 0.1,
+    (usage.input_tokens ?? 0) - openaiRead - openaiWrite +
+      ((usage.cache_creation_input_tokens ?? 0) + openaiWrite) * weight(price.cache_write) +
+      ((usage.cache_read_input_tokens ?? 0) + openaiRead) * weight(price.cache_read),
   );
   cfg?.evidence?.push({
     tool: tool.name,

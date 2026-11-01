@@ -8,7 +8,7 @@
  */
 import { describe, test, expect } from 'bun:test';
 import type Anthropic from '@anthropic-ai/sdk';
-import { acceptsForcedToolChoice, fitAnthropicRequest, temperatureSent, toolChoiceSent, withThinkingRoom } from '../../eval/runner/anthropic-request.ts';
+import { CLAUDE5_THINKING_FLOOR, acceptsForcedToolChoice, assertJudgeThinkingRoom, fitAnthropicRequest, temperatureSent, toolChoiceSent, withThinkingRoom } from '../../eval/runner/anthropic-request.ts';
 import { SCORE_ANSWER_TOOL, judgePrice, scoreAnswer, type JudgeEvidence } from '../../eval/runner/judge.ts';
 import { CAT5_CATEGORY, classifyClaim, runCat5, type Claim } from '../../eval/runner/cat5-provenance.ts';
 import { isClaude5Family, openAIMessagesShim } from '../../eval/runner/openai-judge-shim.ts';
@@ -102,6 +102,16 @@ describe('fitAnthropicRequest', () => {
     expect(withThinkingRoom('claude-opus-5-5', 8000)).toBe(8000);
     expect([...OLDER, 'openai:gpt-6.1-sol'].map(m => withThinkingRoom(m, 700))).toEqual([700, 700, 700]);
   });
+
+  // Value: protects=an explicit judge limit below the floor is refused only for a Claude 5-family judge, and the floor is the one withThinkingRoom applies; fails_when=the check refuses an older judge's small limit, or accepts a Claude 5 limit withThinkingRoom would raise; why_new=explicit limits are sent as given, so the LongMemEval and Cat 36 answer profiles check theirs before any spend (#237); seam=none; no_claim=ids only, no provider call
+  test('an explicit Claude 5 judge limit below the thinking floor is refused; other judges keep theirs', () => {
+    expect(CLAUDE5_THINKING_FLOOR).toBe(4096);
+    for (const m of CLAUDE_5) {
+      expect(() => assertJudgeThinkingRoom(m, CLAUDE5_THINKING_FLOOR - 1)).toThrow(`below the Claude 5 thinking floor (4096) for ${m}`);
+      expect(() => assertJudgeThinkingRoom(m, CLAUDE5_THINKING_FLOOR)).not.toThrow();
+    }
+    for (const m of [...OLDER, 'openai:gpt-6.1-sol']) expect(() => assertJudgeThinkingRoom(m, 10)).not.toThrow();
+  });
 });
 
 const EVIDENCE: JudgeEvidence = {
@@ -131,9 +141,9 @@ describe('judge.ts scoreAnswer', () => {
     expect(result.cost_usd).toBeCloseTo((1000 * 4 + 100 * 20) / 1e6, 12);
   });
 
-  test('Haiku 4.5 (the default) gets the pre-B1 request and price', async () => {
+  test('an explicit Haiku 4.5 judge gets the pre-B1 request and price', async () => {
     const r = recording(() => SCORE_REPLY);
-    const result = await scoreAnswer(EVIDENCE, { client: r.client });
+    const result = await scoreAnswer(EVIDENCE, { client: r.client, model: 'claude-haiku-4-5-20251001' });
     const sent = r.requests()[0]!;
     const preB1 = {
       model: 'claude-haiku-4-5-20251001',
@@ -204,14 +214,14 @@ describe('the other call sites', () => {
       }
     }
     const old = recording();
-    await classifyClaim(CLAIM, EVIDENCE.ground_truth_pages, { client: old.client });
+    await classifyClaim(CLAIM, EVIDENCE.ground_truth_pages, { client: old.client, model: 'claude-haiku-4-5-20251001' });
     expect(old.requests().map(q => [q.max_tokens, q.temperature, q.tool_choice])).toEqual([[400, 0, { type: 'tool', name: 'classify_claim' }], [400, 0, { type: 'tool', name: 'classify_claim' }]]);
   });
 
   test('cat5 prices each classifier model at its own rate', async () => {
     const opus = await classifyClaim(CLAIM, EVIDENCE.ground_truth_pages, { client: recording().client, model: 'claude-opus-5-5' });
     expect(opus.cost_usd).toBeCloseTo(2 * (10 * 4 + 5 * 20) / 1e6, 12);
-    const haiku = await classifyClaim(CLAIM, EVIDENCE.ground_truth_pages, { client: recording().client });
+    const haiku = await classifyClaim(CLAIM, EVIDENCE.ground_truth_pages, { client: recording().client, model: 'claude-haiku-4-5-20251001' });
     expect(haiku.cost_usd).toBeCloseTo(2 * (10 * 1 + 5 * 5) / 1e6, 12);
     const unpriced = recording();
     await expect(classifyClaim(CLAIM, EVIDENCE.ground_truth_pages, { client: unpriced.client, model: 'claude-unlisted-1' })).rejects.toThrow('no chat price');
@@ -225,7 +235,7 @@ describe('the other call sites', () => {
     await expect(runCat5({ claims: [CLAIM, { ...CLAIM, id: 'c2' }], pagesBySlug, client: unpriced.client, model: 'claude-unlisted-1' })).rejects.toThrow('no chat price');
     expect(unpriced.bodies.length).toBe(0);
     const cached = recording(() => ({ ...TEXT_REPLY, usage: { input_tokens: 10, output_tokens: 5, cache_read_input_tokens: 300, cache_creation_input_tokens: 40 } }));
-    const score = await classifyClaim(CLAIM, EVIDENCE.ground_truth_pages, { client: cached.client });
+    const score = await classifyClaim(CLAIM, EVIDENCE.ground_truth_pages, { client: cached.client, model: 'claude-haiku-4-5-20251001' });
     expect(score.input_tokens).toBe(2 * 350);
     expect(score.cost_usd).toBeCloseTo(2 * (10 * 1 + 300 * 0.1 + 40 * 1.25 + 5 * 5) / 1e6, 12);
   });
@@ -278,7 +288,7 @@ describe('the other call sites', () => {
     const cost = async (model?: string) => (await scoreGrounding({ label: 'x', claims: ['a claim'], transcript: 't' }, { client: recording().client, model })).cost_usd;
     expect(await cost('claude-opus-5-5')).toBeCloseTo(2 * (10 * 4 + 5 * 20) / 1e6, 12);
     expect(await cost('claude-haiku-5-5')).toBeCloseTo(2 * (10 * 0.1 + 5 * 0.5) / 1e6, 12);
-    expect(await cost()).toBeCloseTo(2 * (10 * 1 + 5 * 5) / 1e6, 12);
+    expect(await cost('claude-haiku-4-5-20251001')).toBeCloseTo(2 * (10 * 1 + 5 * 5) / 1e6, 12);
     const unpriced = recording();
     await expect(scoreGrounding({ label: 'x', claims: ['a claim'], transcript: 't' }, { client: unpriced.client, model: 'claude-unlisted-1' })).rejects.toThrow('no chat price');
     expect(unpriced.bodies.length).toBe(0);
@@ -290,7 +300,7 @@ describe('the other call sites', () => {
     try {
       const r = recording();
       await runAgentLoop('b1', 'Who is Alice?', state, { client: r.client, model: 'claude-opus-5-5', maxRetries: 1 });
-      await runAgentLoop('b1', 'Who is Alice?', state, { client: r.client, maxRetries: 1 });
+      await runAgentLoop('b1', 'Who is Alice?', state, { client: r.client, model: 'claude-sonnet-4-6', maxRetries: 1 });
       const [claude5, older] = r.requests();
       expectClaude5Request(claude5!, null);
       expect([claude5!.max_tokens, older!.max_tokens]).toEqual([4096, 1024]);
@@ -306,7 +316,7 @@ describe('the other call sites', () => {
     const state = (await adapter.init([{ slug: 'people/alice', type: 'person', title: 'Alice', compiled_truth: 'Alice has a cat.', timeline: '' }], { name: 'b1' })) as AgentAdapterState;
     try {
       const opus = await runAgentLoop('b1', 'Who is Alice?', state, { client: recording().client, model: 'claude-opus-5-5', maxRetries: 1 });
-      const sonnet = await runAgentLoop('b1', 'Who is Alice?', state, { client: recording().client, maxRetries: 1 });
+      const sonnet = await runAgentLoop('b1', 'Who is Alice?', state, { client: recording().client, model: 'claude-sonnet-4-6', maxRetries: 1 });
       expect(opus.total_cost_usd).toBeCloseTo((10 * 4 + 5 * 20) / 1e6, 12);
       expect(sonnet.total_cost_usd).toBeCloseTo((10 * 3 + 5 * 15) / 1e6, 12);
     } finally {

@@ -1,12 +1,13 @@
 /**
- * Agent adapter — Claude Sonnet driving gbrain tools.
+ * Agent adapter — a Claude model (Opus 5.5 by default) driving gbrain tools. The
+ * file and adapter names keep "sonnet" because the name is a receipt identity.
  *
  * FEATURE BOUNDARY (what is under test vs what is seeded/stubbed):
  *   - UNDER TEST: the gbrain operations surface (12 read ops via
  *     `tool-bridge.ts`, dispatched to real gbrain handlers against a real
  *     PGLite engine) plus the agent's tool-use behavior around it.
  *   - SEEDED: the brain corpus (`rawPages` via `engine.putPage`) and the
- *     poison fixtures. The Sonnet driver model is the *subject* in live
+ *     poison fixtures. The driver model is the *subject* in live
  *     runs and a stub in hermetic tests — either way the loop mechanics
  *     (retry, error envelopes, ordering labels) are what this file owns.
  *
@@ -19,7 +20,7 @@
  *
  * The agent loop (`runAgentLoop`):
  *   1. Spins up a PGLite engine seeded with `rawPages`.
- *   2. Calls Sonnet 4.6 with the 12 read + 3 dry_run tool defs from
+ *   2. Calls the agent model (DEFAULT_AGENT_MODEL unless overridden) with the 12 read + 3 dry_run tool defs from
  *      `tool-bridge.ts`. `operations.query` has `expand` stripped, so no
  *      hidden Haiku calls happen inside the trace.
  *   3. Loops tool_use → executeTool → tool_result up to `turnCap` (default 10).
@@ -76,7 +77,7 @@ export interface AgentAdapterState {
 export interface AgentRunConfig {
   /** Anthropic client. Default: lazy singleton from ANTHROPIC_API_KEY. */
   client?: Anthropic;
-  /** Sonnet model id. Default: claude-sonnet-4-6. */
+  /** Agent model id. Default: DEFAULT_AGENT_MODEL (claude-opus-5-5). */
   model?: string;
   /** Max tokens per model call. Default 1024. */
   maxTokens?: number;
@@ -130,7 +131,7 @@ export interface AgentRunResult {
 
 // ─── Defaults ────────────────────────────────────────────────────────
 
-export const DEFAULT_AGENT_MODEL = 'claude-sonnet-4-6';
+export const DEFAULT_AGENT_MODEL = 'claude-opus-5-5';
 const DEFAULT_MODEL = DEFAULT_AGENT_MODEL;
 const DEFAULT_MAX_TOKENS = 1024;
 /** The agent under test samples at temperature 0 so Cat 8/9 transcripts are reproducible; Claude 5-family agents reject it and sample at the provider default. */

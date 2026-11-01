@@ -285,7 +285,7 @@ describe('scoreAnswer — retry + fallback', () => {
       ],
       captured,
     );
-    const result = await scoreAnswer(makeEvidence(), { client });
+    const result = await scoreAnswer(makeEvidence(), { client, model: 'claude-haiku-4-5-20251001' });
     expect(result.verdict).toBe('pass');
     expect(result.fallback_used).toBe(false);
     expect(captured.length).toBe(2);
@@ -768,15 +768,16 @@ describe('untrusted answer fencing (audit C-13)', () => {
     }
   });
 
-  test('every judge call carries the untrusted-data instruction at temperature 0, custom prompts included', async () => {
+  test('every judge call carries the untrusted-data instruction, custom prompts included, and temperature 0 where the model takes one', async () => {
     const captured: Array<Record<string, unknown>> = [];
     await scoreAnswer(makeEvidence(), { client: obedientStubClient(captured) });
     await scoreAnswer(makeEvidence(), { client: obedientStubClient(captured), systemPrompt: 'Custom grader prompt.' });
+    await scoreAnswer(makeEvidence(), { client: obedientStubClient(captured), model: 'claude-haiku-4-5-20251001' });
+    expect(captured.map(params => [params.model, params.temperature])).toEqual([['claude-haiku-5-5', undefined], ['claude-haiku-5-5', undefined], ['claude-haiku-4-5-20251001', 0]]);
     for (const params of captured) {
       const system = (params.system as Array<{ text: string }>)[0].text;
       expect(system).toContain(UNTRUSTED_DATA_INSTRUCTION);
       expect(system).not.toMatch(/nonce="[0-9a-f]+"/);
-      expect(params.temperature).toBe(0);
     }
     expect(JUDGE_TEMPERATURE).toBe(0);
   });

@@ -63,7 +63,7 @@ import {
 import { ProbeAccounting } from './probe-accounting.ts';
 import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt } from './receipt.ts';
 import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
-import { makeSkilloptStubTransport, PINNED_CONFIG, CLEAN_OUTCOMES, type SkilloptStubBehavior } from './cat30-skillopt-improvement.ts';
+import { makeSkilloptStubTransport, PINNED_CONFIG, CLEAN_OUTCOMES, SKILLOPT_MODELS, type SkilloptStubBehavior } from './cat30-skillopt-improvement.ts';
 
 export const CAT33_CATEGORY = 'cat33-skillopt-transfer';
 
@@ -73,6 +73,15 @@ export const RATIO_BAND = 0.5;
 
 const SPLIT: [number, number, number] = [1, 1, 1];
 export const ALL_SEEDS = ['seed-missing-structure', 'seed-no-verdict'];
+/**
+ * (X, Y) model pairs a full run uses: optimize on X, evaluate transfer on Y.
+ * Weak→strong and strong→weak, so transfer is shown in both directions (a
+ * one-way pair could be confounded by Y simply being a stronger model).
+ */
+export const DEFAULT_PAIRS = [
+  { x: SKILLOPT_MODELS.target, y: SKILLOPT_MODELS.strong },
+  { x: SKILLOPT_MODELS.strong, y: SKILLOPT_MODELS.target },
+];
 
 // ─── Pure transfer math (exported for the regression test) ───────────────────
 
@@ -159,7 +168,7 @@ export function optionsFromEnv(argv: string[] = process.argv.slice(2)): Cat33Opt
     allowSkip: argv.includes('--allow-skip') || process.env.BRAINBENCH_ALLOW_SKIP === '1',
     seeds: bpre ? ['seed-missing-structure'] : (process.env.SKILLOPT_SEEDS ? process.env.SKILLOPT_SEEDS.split(',') : undefined),
     pairs: bpre
-      ? [{ x: 'anthropic:claude-haiku-4-5', y: 'anthropic:claude-haiku-4-5' }]
+      ? [{ x: SKILLOPT_MODELS.target, y: SKILLOPT_MODELS.target }]
       : (process.env.SKILLOPT_PAIRS
           ? process.env.SKILLOPT_PAIRS.split(',').map((p) => { const [x, y] = p.split('>'); return { x: x!, y: y! }; })
           : undefined),
@@ -330,21 +339,13 @@ export async function runCat33(options: Cat33Options = {}): Promise<Cat33RunResu
   const startedAt = new Date().toISOString();
   const bpre = options.bpre ?? false;
   const stub = options.stubLlm ?? false;
-  const optimizerModel = options.optimizerModel ?? (bpre ? 'anthropic:claude-haiku-4-5' : 'anthropic:claude-sonnet-4-6');
+  const optimizerModel = options.optimizerModel ?? (bpre ? SKILLOPT_MODELS.bpreOptimizer : SKILLOPT_MODELS.optimizer);
   const epochs = options.epochs ?? (bpre ? 1 : 3);
   const batchSize = options.batchSize ?? 5;
   const runsPerTask = options.runsPerTask ?? (bpre || stub ? 1 : 3);
   const maxCostUsd = options.maxCostUsd ?? (bpre ? 3.0 : 6.0);
   const seeds = options.seeds ?? (bpre ? ['seed-missing-structure'] : ALL_SEEDS);
-  // (X, Y) model pairs: optimize on X, evaluate transfer on Y. Default exercises
-  // Haiku→Sonnet and Sonnet→Haiku so transfer is shown in both directions (a
-  // one-way pair could be confounded by Y simply being a stronger model).
-  const pairs = options.pairs ?? (bpre
-    ? [{ x: 'anthropic:claude-haiku-4-5', y: 'anthropic:claude-haiku-4-5' }]
-    : [
-        { x: 'anthropic:claude-haiku-4-5', y: 'anthropic:claude-sonnet-4-6' },
-        { x: 'anthropic:claude-sonnet-4-6', y: 'anthropic:claude-haiku-4-5' },
-      ]);
+  const pairs = options.pairs ?? (bpre ? [{ x: SKILLOPT_MODELS.target, y: SKILLOPT_MODELS.target }] : DEFAULT_PAIRS);
   const dataDir = options.dataDir ?? join(process.cwd(), 'eval/data/skillopt-v1');
   const reportsDir = options.reportsDir ?? join(process.cwd(), 'eval/reports');
   const receiptFile = receiptPath(CAT33_CATEGORY, reportsDir);

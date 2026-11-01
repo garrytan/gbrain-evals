@@ -16,7 +16,8 @@
  * tool; with room, the same judge call used 647 to 1,325 output tokens across the three Claude 5
  * models (2026-10-31). So where a runner sets its own default limit, `withThinkingRoom` raises it
  * to at least 4,096 for this family, about the limit Cat 40's Opus-tested claims judge (4,000) and the
- * W10 Sonnet 5.5 and Opus 5.5 readers (4,096) use. A limit the caller passes explicitly is sent as given.
+ * W10 Sonnet 5.5 and Opus 5.5 readers (4,096) use. A limit the caller passes explicitly is sent as given, so a
+ * runner that takes an explicit judge limit from a profile checks it with `assertJudgeThinkingRoom` first.
  *
  * A request for any other model comes back unchanged, key order included, so older-model requests
  * stay byte-identical and their receipts stay comparable. A Claude 5 judge is a new judge identity:
@@ -30,9 +31,17 @@ export function acceptsForcedToolChoice(model: string): boolean {
   return !isClaude5Family(model);
 }
 
-/** A runner's default output limit for a model: at least 4,096 tokens for the Claude 5 family, which thinks inside it. */
+/** The least output limit a Claude 5-family request gets, because the model thinks inside it. */
+export const CLAUDE5_THINKING_FLOOR = 4096;
+
+/** A runner's default output limit for a model: at least CLAUDE5_THINKING_FLOOR tokens for the Claude 5 family. */
 export function withThinkingRoom(model: string, maxTokens: number): number {
-  return isClaude5Family(model) ? Math.max(maxTokens, 4096) : maxTokens;
+  return isClaude5Family(model) ? Math.max(maxTokens, CLAUDE5_THINKING_FLOOR) : maxTokens;
+}
+
+/** Refuses an explicit judge limit a Claude 5-family judge would spend thinking, before any paid call; explicit limits are sent as given. */
+export function assertJudgeThinkingRoom(model: string, maxTokens: number): void {
+  if (withThinkingRoom(model, maxTokens) !== maxTokens) throw new Error(`judge_max_tokens ${maxTokens} is below the Claude 5 thinking floor (${CLAUDE5_THINKING_FLOOR}) for ${model}`);
 }
 
 /** The temperature a fitted request sends, for receipts: null when the model rejects it. */
