@@ -180,6 +180,19 @@ describe('particleLoop', () => {
     expect(delays).toEqual([2500]);
   });
 
+  test('a JSON null body: the other branches fail at once as before, and Particle retries it as a server error', async () => {
+    const nullBody = (async () => new Response('null', { status: 200 })) as unknown as typeof fetch;
+    for (const [p, model] of [['anthropic', 'claude-opus-5-5'], ['openai', 'gpt-6.1-sol']] as const) {
+      const { run } = await drive(p, model, { fetchImpl: nullBody });
+      expect(run.stop).toBe('error');
+    }
+    expect(delays).toEqual([]);
+    const { run, attempts } = await drive('particle', 'particle-1', {}, { faults: [{ status: 200, body: 'null' }] });
+    expect(run.stop).toBe('submitted');
+    expect(attempts[0].error).toContain('answered 200 without choices[0].message: null');
+    expect(delays).toEqual([2500]);
+  });
+
   test('a body that fails to read is recorded as an attempt and ends the run as an error', async () => {
     const attempts: ProviderAttempt[] = [];
     const broken = new ReadableStream({ start(c) { c.error(new Error('socket reset')); } });

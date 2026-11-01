@@ -208,14 +208,15 @@ async function postJson(fetchImpl: typeof fetch, url: string, headers: Record<st
     }
     if (res.ok) {
       let json: Record<string, unknown> | null = null;
+      let parsed = true;
       try { json = JSON.parse(text) as Record<string, unknown>; }
-      catch (e) { if (!compat) throw e; }
-      const choices = json?.choices as Array<{ message?: unknown }> | undefined;
-      if (json && (!compat || (Array.isArray(choices) && choices[0]?.message))) {
+      catch (e) { if (!compat) throw e; parsed = false; }
+      const choices = (compat && !json ? undefined : json!.choices) as Array<{ message?: unknown }> | undefined;
+      if (!compat || (Array.isArray(choices) && choices[0]?.message)) {
         onAttempt?.({ status: 'ok', response: json, error: null, ms: Date.now() - t });
-        return json;
+        return json!;
       }
-      last = new ProviderError(502, `${compat} answered ${res.status} ${json ? 'without choices[0].message' : 'with a body that is not JSON'}: ${text.slice(0, 300)}`);
+      last = new ProviderError(502, `${compat} answered ${res.status} ${parsed ? 'without choices[0].message' : 'with a body that is not JSON'}: ${text.slice(0, 300)}`);
       onAttempt?.({ status: 'error', response: json, error: last.message, ms: Date.now() - t, retry_after_ms: null });
       await new Promise(r => setTimeout(r, Math.min(60_000, 2000 * 2 ** attempt) + Math.random() * 1000));
       continue;
