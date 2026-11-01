@@ -33,6 +33,7 @@ import { join, resolve } from 'node:path';
 import { initLedger, priceRequest, readLedger, reservationUsd } from '../../eval/runner/budget-ledger.ts';
 import { segmentClaims } from '../../eval/runner/cat35-checks.ts';
 import { confirmDistractorLeaks, scoreGrounding, scoreSalienceCoverage, scoreUsabilityChecklist } from '../../eval/runner/cat35-judges.ts';
+import { isOpenAIModel, openAIMessagesShim } from '../../eval/runner/openai-judge-shim.ts';
 import {
   completedWs0Receipt,
   EXTERNAL_DOC_MAX_BYTES,
@@ -274,20 +275,31 @@ describe('externalJudgeEstimateUsd', () => {
     for (const [kind, document] of Object.entries({ plain: claimDoc('a'), quotes: claimDoc('"'), control: claimDoc('\u0001') })) {
       expect(segmentClaims(document), kind).toHaveLength(EXTERNAL_DOC_MAX_CLAIMS);
       expect(Buffer.byteLength(document), kind).toBeLessThanOrEqual(EXTERNAL_DOC_MAX_BYTES);
-      const requests: any[] = [];
-      // A judge that never calls its tool makes every judge retry once, as the estimate assumes.
-      const cfg = { model: 'claude-sonnet-5-5', client: { messages: { async create(req: any) { requests.push(req); return { model: 'stub', content: [], usage: { input_tokens: 1, output_tokens: 1 } }; } } } };
-      await scoreSalienceCoverage({ lane: 'external', transcript_id: tid, document, items: g.items.map((i: any) => ({ item_id: i.item_id, statement: i.statement })) }, cfg);
-      await scoreUsabilityChecklist({ transcript_id: tid, pages: [{ slug: `external/${tid}`, body: document }], hasGoldVibes: true }, cfg);
-      await confirmDistractorLeaks({ document, hits: g.distractors.map((d: any) => ({ distractor_id: d.distractor_id, statement: d.statement })) }, cfg);
-      for (const h of g.hazards) await scoreGrounding({ label: `hazard:external:${h.hazard_id}`, claims: [h.wrong_claim], transcript: document }, cfg);
-      await scoreGrounding({ label: `external:${tid}`, claims: segmentClaims(document), transcript: conversation }, cfg);
-      await scoreGrounding({ label: `joint:external:${tid}`, claims: g.items.map(() => '\u0001'.repeat(200)), transcript: conversation }, cfg);
-      expect(requests).toHaveLength(2 * (5 + g.hazards.length));
-      const reserved = requests.reduce((usd, req) => usd + reservationUsd(priceRequest('https://api.anthropic.com/v1/messages', req)!), 0);
-      const estimate = externalJudgeEstimateUsd([{ document, transcript: conversation, items: g.items.length, distractors: g.distractors.length, hazards: g.hazards.length }], 'claude-sonnet-5-5');
-      expect(estimate, kind).toBeGreaterThanOrEqual(reserved);
-      expect(estimate, kind).toBeLessThan(reserved * 1.2);
+      for (const model of ['claude-sonnet-5-5', 'gpt-6.1-sol']) {
+        const requests: any[] = [];
+        // A judge that never answers with its tool makes every judge retry once, as the estimate assumes.
+        const openAI = isOpenAIModel(model);
+        const fetchImpl = (async (_url: string, init: { body: string }) => {
+          requests.push(JSON.parse(init.body));
+          return new Response(JSON.stringify({ status: 'completed', output: [], usage: { input_tokens: 1, output_tokens: 1 } }), { status: 200 });
+        }) as unknown as typeof fetch;
+        const client = openAI
+          ? openAIMessagesShim({ apiKey: 'test-key-not-real', fetchImpl })
+          : { messages: { async create(req: any) { requests.push(req); return { model: 'stub', content: [], usage: { input_tokens: 1, output_tokens: 1 } }; } } };
+        const cfg = { model, client };
+        await scoreSalienceCoverage({ lane: 'external', transcript_id: tid, document, items: g.items.map((i: any) => ({ item_id: i.item_id, statement: i.statement })) }, cfg);
+        await scoreUsabilityChecklist({ transcript_id: tid, pages: [{ slug: `external/${tid}`, body: document }], hasGoldVibes: true }, cfg);
+        await confirmDistractorLeaks({ document, hits: g.distractors.map((d: any) => ({ distractor_id: d.distractor_id, statement: d.statement })) }, cfg);
+        for (const h of g.hazards) await scoreGrounding({ label: `hazard:external:${h.hazard_id}`, claims: [h.wrong_claim], transcript: document }, cfg);
+        await scoreGrounding({ label: `external:${tid}`, claims: segmentClaims(document), transcript: conversation }, cfg);
+        await scoreGrounding({ label: `joint:external:${tid}`, claims: g.items.map(() => '\u0001'.repeat(200)), transcript: conversation }, cfg);
+        expect(requests, `${model} ${kind}`).toHaveLength(2 * (5 + g.hazards.length));
+        const url = openAI ? 'https://api.openai.com/v1/responses' : 'https://api.anthropic.com/v1/messages';
+        const reserved = requests.reduce((usd, req) => usd + reservationUsd(priceRequest(url, req)!), 0);
+        const estimate = externalJudgeEstimateUsd([{ document, transcript: conversation, items: g.items.length, distractors: g.distractors.length, hazards: g.hazards.length }], model);
+        expect(estimate, `${model} ${kind}`).toBeGreaterThanOrEqual(reserved);
+        expect(estimate, `${model} ${kind}`).toBeLessThan(reserved * 1.2);
+      }
     }
   });
 });

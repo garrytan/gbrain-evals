@@ -14,22 +14,24 @@ This records what each gbrain-evals release changed and what its measurements me
   non-empty document the usability and distractor judges, one hazard call per planted hazard, claim grounding with the
   conversation and the joint-evidence fallback with one evidence quote per item, each with its full answer allowance and
   one retry, at the judge model's own rates. Text counts as the judge receives it, escaped and with each claim
-  JSON-encoded, so claims full of quotes or control characters cannot pass at a fraction of their cost; a test checks the
-  estimate against what the ledger reserves for the judges' real requests. The Anthropic SDK's own transport retries
-  under each attempt are not counted (#258). Computed with that function at this change's list prices, 24 documents of
-  62 KB and 80 claims project $42 with a claude-opus-5-5 judge, $30 with gpt-6.1-sol, $21 with claude-sonnet-5-5 and
-  $1.05 with claude-haiku-5-5; the old figure was $13.80 for every judge but a Haiku ($2.76). So an Opus-judged folder at the limits now trips the
-  default $40 `CAT35_HARD_STOP_USD` instead of passing at a third of its worst case, while a Haiku 5.5 run projects less
-  than before, because that model lists at a fraction of the old figure. The projection line names the external lane's
-  share, and `--lanes none` no longer adds batches for built-in lanes it does not run. A hermetic test in
+  JSON-encoded, at the ledger's 3 bytes per token, and a test checks the estimate against what the ledger reserves for
+  the judges' real requests through both the Anthropic client and the OpenAI shim. Text that tokenizes more densely than
+  3 bytes per token, such as escaped punctuation, control characters or CJK, can bill more than the ledger and the
+  estimate reserve for it (#262), and the Anthropic SDK's own transport retries under each attempt are not counted
+  (#258). Computed with that function at this change's list prices, 24 documents of 62 KB and 80 claims project $42 with
+  a claude-opus-5-5 judge, $30 with gpt-6.1-sol, $21 with claude-sonnet-5-5 and $1.05 with claude-haiku-5-5; the old
+  figure was $13.80 for every judge but a Haiku ($2.76). So an Opus-judged folder at the limits now trips the default
+  $40 `CAT35_HARD_STOP_USD` instead of passing at a third of its worst case, while a Haiku 5.5 run projects less than
+  before, because that model lists at a fraction of the old figure. The projection line names the external lane's share,
+  and `--lanes none` no longer adds batches for built-in lanes it does not run. A hermetic test in
   `test/eval/cat35-external-lane.test.ts` runs three documents at the limits under a cap of twice the projection for two
   small documents and checks the run stops before any judge call or ledger entry; on main both sets projected $0.60 and
   the large run went ahead.
-- **The external lane refuses a system without `/proc/self/fd` (#226).** `readExternalDocs` reads every file through
-  the held folder handle's path under `/proc/self/fd`, which Linux has and macOS does not. Elsewhere it read by path,
-  so a folder swapped for a link and restored mid-read could hand it another folder's file: with the descriptor path
-  hidden, a repro on main returned the other folder's text with no error. Bun has no `openat` or other way to read relative to a held
-  folder, so the runner now refuses the lane before it opens a document, naming the missing path. The test file's
+- **The external lane refuses a system without `/proc/self/fd` (#226).** `readExternalDocs` reads every file through the
+  held folder handle's path under `/proc/self/fd`, which Linux has and macOS does not. Elsewhere it read by path, so a
+  folder swapped for a link and restored mid-read could hand it another folder's file: with the descriptor path hidden,
+  a repro on main returned the other folder's text with no error. Bun has no `openat` or other way to read relative to a
+  held folder, so the runner now refuses the lane before it opens a document, naming the missing path. The test file's
   reading tests and hermetic runs skip on such systems, and a new test that runs everywhere checks the refusal.
   [0.10.139]'s note now says the swap check held fully only on Linux.
 - `eval/CONTRIBUTING.md`'s external-lane section describes both.
