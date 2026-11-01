@@ -8,11 +8,13 @@ This records what each gbrain-evals release changed and what its measurements me
 
 - **A repository `.gstack/pregate.json` raises the pregate's per-process test timeout from 600 to 1800 seconds.** On
   4-core machines the selected test group ran past 600 seconds for three threads, and pregate records a timed-out
-  group as incomplete, which fails /ship. The file sets nothing else that changes a verdict. Any policy file makes a
-  touched file with no test lane a hard failure (`PREGATE_NO_LANE`), where the repository without one only warned, so
-  the file lists `lanes` under `warn` to keep that warning. A red or timed-out lane still fails, and every other check,
-  `literals` included, keeps its level. Scratch runs on 2026-11-01 compared both cases with and without the file: an
-  unmapped `types/ambient.d.ts` edit warns, a failing test fails, and a test past the timeout is incomplete.
+  group as incomplete, which fails /ship. Any policy file also makes a touched file with no test lane a hard failure
+  (`PREGATE_NO_LANE`) that stops the check before any test runs, where the repository without one only warned. So the
+  file maps every path to no extra lane (`"dependencies": {"**": []}`). The import graph still selects each touched
+  file's tests, and a red or timed-out lane still fails. A touched file with no test now passes without the warning.
+  Every other check, `literals` included, keeps its level. Scratch pregate runs on 2026-11-01 compared the repository
+  with and without the file. A source edit selected the same 925 tests in 51 files both ways. A failing test beside an
+  unmapped `types/ambient.d.ts` edit failed both ways. An unmapped edit alone warned before and passes now.
 
 ### Cat 35's external lane prices its judge calls from the documents it read, and runs only where it can read them race-free
 
