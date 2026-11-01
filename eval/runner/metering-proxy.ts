@@ -102,7 +102,7 @@ import { BudgetExceededError, BudgetRun, ledgerStatus, priceRequest, reservation
 
 export { sseUsage };
 import { findLeaks } from './systems/sanitize.ts';
-import { COMPAT_PROVIDERS } from './providers/openai-compatible.ts';
+import { COMPAT_PROVIDERS, compatConnectionLost } from './providers/openai-compatible.ts';
 
 /** Particle's row comes from COMPAT_PROVIDERS (eval/runner/providers/openai-compatible.ts): its upstream, key variable, output field and output floor. */
 const PARTICLE = COMPAT_PROVIDERS.particle;
@@ -641,7 +641,7 @@ export class MeteringProxy {
       catch (e) {
         if (entry) p.lease.settle(entry, null);
         this.charge(key, prov, bounded?.model ?? null, reserved, !!bounded, tag);
-        const midFlight = prov === 'particle' && transportFailure(e) && (e as { code?: string }).code !== 'ECONNREFUSED';
+        const midFlight = prov === 'particle' && compatConnectionLost(e);
         const again = !midFlight && retries < TRANSPORT_RETRY_MS.length && transportFailure(e);
         this.log({ at, key, provider: prov, route, model, outcome: 'failed', reason: `${(e as Error).message.slice(0, 280)}${again ? ' (sent again)' : ''}`, reserved_usd: reserved, actual_usd: reserved, charged_reservation: !!bounded, ...tagged });
         if (!again) {

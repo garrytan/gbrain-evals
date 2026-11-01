@@ -91,7 +91,7 @@ import { answerId, answerRecord, judgmentKey, readerAttempts, readRecords, Recor
 import { failureRow, hashEmbed, readinessProbe, selectQuestions } from '../memory-qa/run-systems.ts';
 import { checkSealedDestinations, sealedPaths } from '../memory-qa/sealed-profile.ts';
 import { PaidArmRefusal, requirePaidArm } from '../paid-arm.ts';
-import { COMPAT_PROVIDERS, compatTimedOut } from '../providers/openai-compatible.ts';
+import { COMPAT_PROVIDERS, compatMayHaveBilled } from '../providers/openai-compatible.ts';
 import { appendAccessLog } from '../sealed-confirmation-lib.ts';
 import { DEFAULT_ROUTE_CLASSES, type CampaignManifest as Q1Campaign, type CellSpec } from '../shootout-cell.ts';
 import { AgentRuntimeSystem } from '../systems/agent-runtime.ts';
@@ -906,7 +906,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
     const terminal = (id: string, outcome: Outcome) => FINAL.has(outcome) || (answerTries.get(id) ?? 0) + 1 >= maxAttempts;
     /** One answering try; an OpenAI-compatible reader's line also keeps its provider attempts, so a retried try's receipts persist. */
     const recordAttempt = (id: string, outcome: Outcome, error?: string, attempts?: ReaderAttempt[]) => { appendFileSync(join(dir, 'answer-attempts.ndjson'), JSON.stringify({ answer_id: id, outcome, error: error?.slice(0, 300), at: new Date().toISOString(), ...(attempts ? { attempts } : {}) }) + '\n'); answerTries.set(id, (answerTries.get(id) ?? 0) + 1); };
-    /** `final`: a try that must not be sent again (a timed-out OpenAI-compatible request, which the provider may have billed). */
+    /** `final`: a try that must not be sent again (an OpenAI-compatible request that timed out or lost its connection, which the provider may have billed). */
     const appendAnswer = (raw: AnswerRecord, error?: string, pack: PackedContext | null = null, final = false) => {
       const a = withDerived(raw, pack);
       if (FINAL.has(a.outcome)) { answers.append(a); return; }
@@ -994,7 +994,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
             stopped = `budget: ${msg.slice(0, 200)}`;
             return pack;
           }
-          appendAnswer(failed('reader_error'), msg, null, attempts !== undefined && compatTimedOut(res.error));
+          appendAnswer(failed('reader_error'), msg, null, attempts !== undefined && compatMayHaveBilled(res.error));
           continue;
         }
         const c = res.value!;

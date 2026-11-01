@@ -8,9 +8,13 @@ one LoCoMo dev cell of 20 questions and gives no scoreboard number. The calibrat
 ## The finding
 
 **particle-1's prompt tokens track `o200k_base` with a factor of 1.0488 and a largest per-pack error of 0.50% over
-20 packs, inside the 3% bar.** A local count is good enough to pack for particle-1, so the plan's tokenizer fallback
-(a pinned DeepSeek tokenizer or a wider fit margin) is not needed. `cl100k_base` fits even more closely (factor
-1.0118, largest error 0.11%), but the table keeps `o200k_base`, its encoding before the run, because both are far
+20 packs, inside the 3% bar.** A local count is good enough to pack particle-1's prompts of this size, so the plan's
+tokenizer fallback (a pinned DeepSeek tokenizer or a wider fit margin) is not needed for them. Every sample was a
+packed prompt of 8,064 to 8,113 `o200k_base` tokens from one conversation, so the run cannot tell a ratio from a fixed
+per-request overhead: adding 403 tokens fits the same samples with a largest error of 0.43%. The two readings differ
+by about 15% on a 2,000-token pack and 2% on a 16,000-token pack, so Q1's 2,000- and 16,000-token arms and the
+full-context fit check need samples at those sizes before particle-1 reads a counted arm.
+`cl100k_base` fits even more closely (factor 1.0118, largest error 0.11%), but the table keeps `o200k_base`, its encoding before the run, because both are far
 inside the bar. The factor is in `READER_TOKENIZERS['particle:particle-1']`
 ([render-v2.ts](../../../eval/runner/systems/render-v2.ts)).
 

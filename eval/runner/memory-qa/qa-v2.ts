@@ -45,8 +45,9 @@
  * the loop at once. Each attempt's deadline is the metering proxies'
  * 900-second upstream deadline, unless the client is built with
  * `compatTimeoutMs` (the particle replay sets its own). An attempt that times
- * out (locally, or a 504 from a gateway such as the lease proxy) ends the
- * loop, because Particle may have billed it. Their receipts also record what
+ * out (locally, or a 504 from a gateway such as the lease proxy) or loses its
+ * connection after it went out ends the loop, because Particle may have
+ * billed it. Their receipts also record what
  * the request sent and the response's identity fields; their cache key adds
  * the effort and output limit sent. Anthropic and OpenAI requests, receipts
  * and cache keys are unchanged.
@@ -63,7 +64,7 @@ import type { MemoryQuestion } from './corpus.ts';
 import type { Instrument, JudgeCall } from './instruments.ts';
 import { rawSha256, type JudgmentRecord } from './records.ts';
 import { normalizeUsage, responseMeta, usageSourceOf, type ReceiptRequest, type ResponseMeta, type UsageReceipt } from '../usage-receipt.ts';
-import { COMPAT_PROVIDERS, compatRequest, compatSend, compatTimedOut, type CompatRequest } from '../providers/openai-compatible.ts';
+import { COMPAT_PROVIDERS, compatMayHaveBilled, compatRequest, compatSend, type CompatRequest } from '../providers/openai-compatible.ts';
 import { UPSTREAM_DEADLINE_MS } from '../metering-proxy.ts';
 import { ChatClient as BaseChatClient, sendsTemperature as baseSendsTemperature, chatReceipts, judgePromptsFor, judgeYes, type ChatResult } from './qa.ts';
 
@@ -183,8 +184,8 @@ export class ChatClient extends BaseChatClient implements ChatLike {
         const status = (e as { status?: number }).status;
         const retryable = compat ? (e as { retryable?: boolean }).retryable !== false : status === undefined || status >= 500 || status === 429;
         const budget = compat ? (e as Error).name === 'BudgetExceededError' : /budget|BudgetExceeded/i.test(String((e as Error).message));
-        const timedOut = compat !== null && compatTimedOut(e);
-        const stop = budget || !retryable || timedOut || attempt === 4;
+        const billed = compat !== null && compatMayHaveBilled(e);
+        const stop = budget || !retryable || billed || attempt === 4;
         const retryAfterMs = compat && !stop ? (e as { retryAfterMs?: number | null }).retryAfterMs ?? null : null;
         if (compat) compatAttempts.push({ retry_after_ms: retryAfterMs, usage: (e as { usage?: Record<string, unknown> | null }).usage ?? null });
         if (stop) break;

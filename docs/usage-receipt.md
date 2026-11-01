@@ -127,7 +127,8 @@ keeps the body's usage (the Cat 40 loop keeps its response metadata too); `sumUs
 only. In memory-qa, a failed attempt the provider answered with a Retry-After also has `retry_after_ms`: the wait
 before the next attempt, capped at 120 seconds, absent when the provider sent none or no attempt followed. In
 memory-qa and Q1, a Particle attempt waits up to the metering proxies' 900-second upstream deadline, and one that
-times out is the last attempt, because Particle may have billed it; a Q1 cell records that answer as a final
+times out, or whose connection resets or closes after the request went out, is the last attempt, because Particle may
+have billed it; a Q1 cell records that answer as a final
 `reader_error` and does not ask the question again. For the same reason, the lease proxy answers a particle request whose connection
 was reset before the response headers arrived with a 504 instead of sending it again. A reset after the headers still
 reaches the client as a 500 that it retries (issue #270). A truncated response keeps its own content as

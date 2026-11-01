@@ -133,7 +133,8 @@ const PARTICLE_CALIBRATION = 'docs/benchmarks/2026-11-01-particle-1-calibration/
  * count is good enough for; GPT-6.1 matches o200k_base (exact on full packs,
  * 4.7% on prompts of about 130 tokens, where the chat format's six tokens
  * show). particle-1 bills about 1.05 prompt tokens per o200k_base token, within
- * 0.5% on 20 packed prompts of about 8,500 tokens at effort medium.
+ * 0.5% on 20 packed prompts of about 8,500 tokens at effort medium; no other
+ * prompt size has been measured.
  */
 export const READER_TOKENIZERS: Record<string, ReaderTokenizer> = {
   'anthropic:claude-opus-5-5': { encoding: 'cl100k_base', calibration: 1.4708, calibrated: true, measured: { on: '2026-10-07', samples: 199, max_error: 0.101, source: SMOKES } },

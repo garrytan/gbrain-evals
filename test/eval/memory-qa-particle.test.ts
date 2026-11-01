@@ -7,6 +7,7 @@
 import { afterEach, beforeEach, describe, expect, test } from 'bun:test';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdtempSync, rmSync } from 'node:fs';
+import { createServer, type AddressInfo } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { BudgetRun, closeLedgers, initLedger } from '../../eval/runner/budget-ledger.ts';
@@ -172,6 +173,19 @@ describe('the particle route in qa-v2', () => {
       }
     } finally { AbortSignal.timeout = timeout; }
     expect(deadlines).toEqual([UPSTREAM_DEADLINE_MS, UPSTREAM_DEADLINE_MS]);
+  });
+
+  // Value: protects=a particle request whose connection resets after it went out is billed once without the lease proxy; fails_when=qa-v2 retries the reset as a lost connection; why_new=the lease proxy already answers this reset 504 and never resends it, the direct client retried it; seam=a loopback socket that reads the request, then resets; no_claim=Particle's billing of a reset request
+  test('a particle request whose connection resets after it went out ends the loop after one request, as a timeout does', async () => {
+    let connections = 0;
+    const server = createServer(socket => { connections++; socket.once('data', () => socket.resetAndDestroy()); });
+    await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
+    process.env.PARTICLE_BASE_URL = `http://127.0.0.1:${(server.address() as AddressInfo).port}/v1`;
+    try {
+      const err = await new ChatClient(tmp(), () => 0).chat('particle:particle-1', 'P', { maxTokens: 64, replicate: 0 }).catch(e => e) as Error & { attempt_errors?: string[] };
+      expect(connections).toBe(1);
+      expect(err.attempt_errors).toHaveLength(1);
+    } finally { server.close(); }
   });
 
   test('a 429 whose body mentions a budget is retried like any 429; only a BudgetExceededError stops the loop', async () => {

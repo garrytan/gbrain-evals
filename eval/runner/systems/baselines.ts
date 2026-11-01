@@ -43,7 +43,7 @@ import type { Outcome } from '../memory-qa/outcomes.ts';
 import { sendsTemperature } from '../memory-qa/qa.ts';
 import type { ReaderAttempt } from '../memory-qa/records.ts';
 import { UPSTREAM_DEADLINE_MS } from '../metering-proxy.ts';
-import { COMPAT_PROVIDERS, compatRequest, compatSend, compatTimedOut, type CompatRequest } from '../providers/openai-compatible.ts';
+import { COMPAT_PROVIDERS, compatMayHaveBilled, compatRequest, compatSend, type CompatRequest } from '../providers/openai-compatible.ts';
 import { answerUsage, normalizeUsage } from '../q1/usage.ts';
 import { normalizeUsage as receiptUsage, usageSourceOf } from '../usage-receipt.ts';
 import { SystemError, type CapabilityRecord, type DeleteResult, type FinishResult, type IngestResult, type Item, type MemorySystem, type PublicQuestion, type RetrievalPolicy, type RetrieveResult, type SessionInput } from './types.ts';
@@ -301,7 +301,7 @@ export interface FullContextAnswer {
   finish?: string | null;
   truncated?: boolean;
   attempts?: ReaderAttempt[];
-  /** The last request timed out; Particle may have billed it, so the cell never sends it again. */
+  /** The last request timed out or lost its connection after it went out; Particle may have billed it, so the cell never sends it again. */
   timed_out?: boolean;
 }
 
@@ -363,11 +363,11 @@ export async function answerFullContext(opts: { reader: string; prompt: string; 
 
 /**
  * A whole-history reading by an OpenAI-compatible reader: one request per attempt of the same 5-attempt loop, sent
- * once each by the provider module. A 429 or 5xx (or a lost connection) is tried again after the provider's
+ * once each by the provider module. A 429 or 5xx (or a refused connection) is tried again after the provider's
  * Retry-After, capped at 120 seconds, or else the backoff; a context-length 400 is `does_not_fit`; a budget stop
  * (Particle's credit 402, or the lease proxy's own 402) is `budget_not_run` and is never retried. A request gets the
- * metering proxies' upstream deadline (`UPSTREAM_DEADLINE_MS`), and one that times out (`compatTimedOut`) is a
- * `reader_error` that is never sent again, because Particle may have billed it. Each attempt is recorded, the failed ones with null response
+ * metering proxies' upstream deadline (`UPSTREAM_DEADLINE_MS`), and one that times out or loses its connection after it
+ * went out (`compatMayHaveBilled`) is a `reader_error` that is never sent again, because Particle may have billed it. Each attempt is recorded, the failed ones with null response
  * fields. An answer cut off at its output limit is the answer.
  */
 async function readCompat(req: CompatRequest, fit: FitCheck, cache_key: string, fetchImpl?: typeof fetch): Promise<FullContextAnswer> {
@@ -386,13 +386,13 @@ async function readCompat(req: CompatRequest, fit: FitCheck, cache_key: string, 
     } catch (e) {
       const err = e as Error & { kind?: string; retryable?: boolean; retryAfterMs?: number | null; usage?: Record<string, unknown> | null };
       const message = String(err.message ?? e).slice(0, 300);
-      const timedOut = compatTimedOut(err);
-      const again = err.name !== 'BudgetExceededError' && err.kind !== 'context_overflow' && err.retryable !== false && !timedOut && attempt < 4;
+      const billed = compatMayHaveBilled(err);
+      const again = err.name !== 'BudgetExceededError' && err.kind !== 'context_overflow' && err.retryable !== false && !billed && attempt < 4;
       const wait = again ? err.retryAfterMs ?? null : null;
       attempts.push({ status: 'error', error: message, from_cache: false, response_model: null, finish: null, reasoning_tokens: receiptUsage(source, err.usage)?.reasoning ?? null, weight_version: null, ...sent, retry_after_ms: wait });
       if (err.name === 'BudgetExceededError') return stop('budget_not_run', message);
       if (err.kind === 'context_overflow') return stop('does_not_fit', message);
-      if (timedOut) return { ...stop('reader_error', message), timed_out: true };
+      if (billed) return { ...stop('reader_error', message), timed_out: true };
       if (!again) return stop('reader_error', message);
       await new Promise(r => setTimeout(r, wait ?? 2000 * 2 ** attempt));
     }

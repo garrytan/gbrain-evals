@@ -18,6 +18,7 @@ import { generateLadderWorld } from '../../eval/generators/model-ladder-gen.ts';
 import { loadFixture } from '../../eval/runner/memory-qa/corpus.ts';
 import { readerPrompt } from '../../eval/runner/memory-qa/qa-v2.ts';
 import { UPSTREAM_DEADLINE_MS } from '../../eval/runner/metering-proxy.ts';
+import { compatMayHaveBilled } from '../../eval/runner/providers/openai-compatible.ts';
 import { answerFullContext, checkFit, FRONTIER_READERS, FullContextSystem, READER_WINDOWS, splitForCache } from '../../eval/runner/systems/baselines.ts';
 import { classifyRun, evidenceOpened, FILE_AGENT_MAX_TURNS, FileAgentSystem, layoutSessions, parseReader, PROSE_ANSWER_TOOL, proxiedFetch, ripgrep, type GrepLimitEvent } from '../../eval/runner/systems/file-agent.ts';
 import { Sanitizer } from '../../eval/runner/systems/sanitize.ts';
@@ -446,6 +447,17 @@ describe('true full context', () => {
       } finally { AbortSignal.timeout = timeout; }
       expect(deadlines).toEqual([UPSTREAM_DEADLINE_MS, UPSTREAM_DEADLINE_MS]);
       expect(UPSTREAM_DEADLINE_MS).toBe(900_000);
+    });
+
+    // Value: protects=a particle reading whose connection resets after it went out is billed once and final in the Q1 cell; fails_when=readCompat retries the reset, or the answer lacks timed_out so the cell asks again; why_new=the lease proxy answers this reset 504, the direct path retried it; seam=none; no_claim=Bun's exact error text
+    test('a reading whose connection resets after it went out is a final reader_error after one request; a refused connection stays retryable', async () => {
+      let calls = 0;
+      const reset = Object.assign(new TypeError('The socket connection was closed unexpectedly.'), { code: 'ECONNRESET' });
+      const fetchImpl = (async () => { calls++; throw reset; }) as unknown as typeof fetch;
+      const a = await answerFullContext({ reader: 'particle:particle-1', prompt, conversation: conv.id, fetchImpl });
+      expect([a.outcome, a.timed_out, calls, a.attempts!.length]).toEqual(['reader_error', true, 1, 1]);
+      const refused = Object.assign(new TypeError('Unable to connect. Is the computer able to access the url?'), { code: 'ECONNREFUSED' });
+      expect([compatMayHaveBilled(reset), compatMayHaveBilled(refused)]).toEqual([true, false]);
     });
   });
 

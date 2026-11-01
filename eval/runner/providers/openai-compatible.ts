@@ -283,6 +283,20 @@ export function compatTimedOut(e: unknown): boolean {
   return err?.name === 'TimeoutError' || err?.name === 'AbortError' || err?.status === 504;
 }
 
+/** A connection that reset or closed after the request went out. A refused connection never reached the provider, so it is not one. */
+export function compatConnectionLost(e: unknown): boolean {
+  const err = e as { name?: string; code?: string; message?: string } | null;
+  return err?.name !== 'TimeoutError' && err?.name !== 'AbortError' && (/^(ECONNRESET|EPIPE|UND_ERR_SOCKET)$/.test(err?.code ?? '') || /socket connection was closed|socket hang up|connection reset/i.test(err?.message ?? ''));
+}
+
+/**
+ * A request the provider may have billed: it timed out (`compatTimedOut`) or its connection was lost after it went out
+ * (`compatConnectionLost`). A caller never sends it again, with or without a metering proxy in front.
+ */
+export function compatMayHaveBilled(e: unknown): boolean {
+  return compatTimedOut(e) || compatConnectionLost(e);
+}
+
 /** Particle answered 402 without a proxy's marker: the prepaid balance is empty. Throw it after the failing attempt's receipt is written. */
 export class ParticleCreditExhausted extends BudgetExceededError {
   readonly status = 402;
