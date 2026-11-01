@@ -135,7 +135,12 @@ export function storedText(rows: DeliveredRow[], unquote: ConnectorModules['unqu
     if (chunk_text === r.chunk_text) throw new Error(`${r.slug} is marked quoted but its text carries no fence naming ${label}`);
     const spans = r.delivered?.match_spans;
     if (!spans?.length) return { ...r, chunk_text };
-    const at = (p: number) => Math.min(unquote.unquoteTranscriptText(`${r.chunk_text.slice(0, p)}\u0000${r.chunk_text.slice(p)}`, label).indexOf('\u0000'), chunk_text.length);
+    const at = (p: number) => {
+      const marked = unquote.unquoteTranscriptText(`${r.chunk_text.slice(0, p)}\u0000${r.chunk_text.slice(p)}`, label);
+      const i = marked.indexOf('\u0000');
+      if (i < 0 || marked.slice(0, i) + marked.slice(i + 1) !== chunk_text) throw new Error(`${r.slug}: delivered match span offset ${p} falls on the quote fence, not the quoted text`);
+      return i;
+    };
     return { ...r, chunk_text, delivered: { ...r.delivered!, match_spans: spans.map(s => ({ ...s, start: at(s.start), end: at(s.end) })) } };
   });
 }

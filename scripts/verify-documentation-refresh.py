@@ -4,6 +4,7 @@ import hashlib
 import json
 from pathlib import Path
 import re
+import sys
 import urllib.parse
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -106,7 +107,7 @@ def product_pin_references(root=ROOT):
         version = json.loads(installed.read_text())["version"]
         stale = sorted(f for v, files in versions.items() if v != version for f in files)
         if stale:
-            errors.append([", ".join(stale), "Product pin sentences name a release other than the installed gbrain v" + version])
+            errors.append([", ".join(stale), "Product pin sentences name a release other than the installed gbrain v" + version + " (run bun install if package.json moved)"])
     if len(versions) > 1:
         errors.append([", ".join(sorted({f for files in versions.values() for f in files})),
                        "Product pin sentences name different releases: " + ", ".join(sorted(versions))])
@@ -116,6 +117,8 @@ def product_pin_references(root=ROOT):
 def verify():
     manifest = json.loads(MANIFEST.read_text())
     errors = candidate_references() + product_pin_references()
+    if not (ROOT / "node_modules" / "gbrain" / "package.json").exists():
+        print("verify-documentation-refresh: node_modules/gbrain is not installed, so the hubs' release was not checked against it", file=sys.stderr)
     for file, expected in manifest["protected_sha256"].items():
         path = ROOT / file
         if not path.exists() or hashlib.sha256(path.read_bytes()).hexdigest() != expected:

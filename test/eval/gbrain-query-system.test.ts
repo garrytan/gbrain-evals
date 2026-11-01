@@ -197,6 +197,8 @@ describe('quote-fenced chat text (gbrain v0.60.507.0 and later): the connector h
     const [row] = storedText([fenced], conn.unquote);
     expect(row.chunk_text).toBe(text);
     expect(row.delivered!.match_spans.map(s => text.slice(s.start, s.end))).toEqual(['violin', 'Lisbon']);
+    const onFence = { ...fenced, delivered: { ...fenced.delivered!, match_spans: [{ chunk_id: 1, start: 5, end: 9 }] } };
+    expect(() => storedText([onFence], conn.unquote)).toThrow(/offset 5 falls on the quote fence/);
   });
 
   test('a fenced row the build cannot unwrap, or a quoted row with no fence, is refused; other rows pass unchanged', () => {

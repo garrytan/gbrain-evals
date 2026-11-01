@@ -84,7 +84,7 @@ describe('verify-documentation-refresh: the product pin', () => {
     writeFileSync(join(root, 'node_modules/gbrain/package.json'), JSON.stringify({ name: 'gbrain', version: '0.60.1.0' }));
     const errors = references(root);
     expect(errors).toHaveLength(1);
-    expect(errors[0][1]).toBe('Product pin sentences name a release other than the installed gbrain v0.60.1.0');
+    expect(errors[0][1]).toBe('Product pin sentences name a release other than the installed gbrain v0.60.1.0 (run bun install if package.json moved)');
   });
 
   test('a product pin that is not an exact commit fails before any hub is read', () => {
