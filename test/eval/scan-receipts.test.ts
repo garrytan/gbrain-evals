@@ -31,7 +31,7 @@ function run(dirs: string[], stubBody: string, setup?: (root: string) => void) {
     const stub = join(root, 'stub-scanner');
     writeFileSync(stub, `#!/usr/bin/env bash\n${stubBody}\n`);
     chmodSync(stub, 0o755);
-    const p = Bun.spawnSync(['bash', join(root, 'scripts/scan-receipts.sh')], { env: { PATH: process.env.PATH!, GITLEAKS: stub }, stdout: 'pipe', stderr: 'pipe' });
+    const p = Bun.spawnSync(['bash', join(root, 'scripts/scan-receipts.sh')], { env: { PATH: process.env.PATH!, GITLEAKS: stub }, stdout: 'pipe', stderr: 'pipe', timeout: 30_000 });
     return { code: p.exitCode, out: p.stdout.toString() };
   } finally { rmSync(root, { recursive: true, force: true }); }
 }
@@ -77,7 +77,7 @@ describe('scan-receipts.sh', () => {
     expect(gz.out).toContain('LEAKS FOUND');
   });
 
-  test('a nested archive or an unsupported compression fails the scan instead of passing unread', () => {
+  test('a binary member or an unsupported compression fails the scan instead of passing unread', () => {
     const nested = run(['docs/benchmarks/a/receipts'], KEY_STUB, root => {
       mkdirSync(join(root, 'stage'), { recursive: true });
       writeFileSync(join(root, 'stage/rows.json.gz'), gzipSync(JSON.stringify({ key: FAKE_KEY })));
@@ -86,7 +86,7 @@ describe('scan-receipts.sh', () => {
       rmSync(join(root, 'stage'), { recursive: true });
     });
     expect(nested.code).toBe(1);
-    expect(nested.out).toContain('cannot scan nested archive or database: docs/benchmarks/w/cells/c/receipt.tgz/rows.json.gz');
+    expect(nested.out).toContain('cannot scan a member that is not UTF-8 text: docs/benchmarks/w/cells/c/receipt.tgz/rows.json.gz');
     expect(nested.out).toContain('LEAKS FOUND');
     const xz = run(['docs/benchmarks/a/receipts'], 'exit 0', root => {
       mkdirSync(join(root, 'docs/benchmarks/w/raw'), { recursive: true });
@@ -94,6 +94,21 @@ describe('scan-receipts.sh', () => {
     });
     expect(xz.code).toBe(1);
     expect(xz.out).toContain('cannot unpack docs/benchmarks/w/raw/rows.json.xz');
+  });
+
+  test('the scanner sees a short key and a 3,046-byte key that straddle window edges in a long member, and a FIFO member does not stall the scan', () => {
+    const longKey = ['-----BEGIN FAKE KEY-----', 'Q'.repeat(3000), '-----END FAKE KEY-----'].join('');
+    const bothStub = 'grep -rqE "AKIA[A-Z0-9]{16}" "$2" && grep -rqE "BEGIN FAKE KEY-----Q{3000}-----END FAKE KEY" "$2" && exit 1; exit 0';
+    const r = run(['docs/benchmarks/a/receipts'], bothStub, root => {
+      mkdirSync(join(root, 'stage'), { recursive: true });
+      writeFileSync(join(root, 'stage/rows.jsonl'), `${'a'.repeat(7000)}${longKey}${'a'.repeat(13490 - 7000 - longKey.length)}${FAKE_KEY}\n${'b'.repeat(20000)}\n`);
+      execFileSync('mkfifo', [join(root, 'stage/pipe')]);
+      mkdirSync(join(root, 'docs/benchmarks/w/cells/c'), { recursive: true });
+      execFileSync('tar', ['-czf', join(root, 'docs/benchmarks/w/cells/c/receipt.tgz'), '-C', join(root, 'stage'), 'rows.jsonl', 'pipe']);
+      rmSync(join(root, 'stage'), { recursive: true });
+    });
+    expect(r.code).toBe(1);
+    expect(r.out).toContain('LEAKS FOUND');
   });
 
   test('a compressed receipt reviewed with the pinned gitleaks is skipped until its bytes or the pin change', () => {

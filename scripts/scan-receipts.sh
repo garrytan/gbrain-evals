@@ -3,9 +3,9 @@
 # scoreboard receipt tree under docs/benchmarks/, and over the members of every compressed receipt (tarball or gzip
 # file) under docs/benchmarks/, which gitleaks cannot open itself (#221). A compressed receipt listed in
 # test/eval/fixtures/reviewed-compressed-receipts.json with its current sha256 was scanned member by member with this
-# gitleaks version at review, so it is skipped; any other is unpacked and scanned. gitleaks skips binary files, so a
-# compressed receipt in another format (.zip, .xz, .zst, .bz2, .7z), or one holding an archive or database, fails
-# unread. gitleaks is pinned by version and sha256; findings are redacted.
+# gitleaks version at review, so it is skipped; any other is unpacked and scanned. A compressed receipt in another
+# format (.zip, .xz, .zst, .bz2, .7z), or with a member that is not UTF-8 text, fails unread. gitleaks is pinned by
+# version and sha256; findings are redacted.
 #   bash scripts/scan-receipts.sh            (downloads gitleaks into a temporary directory)
 #   GITLEAKS=/path/to/gitleaks bash scripts/scan-receipts.sh
 set -euo pipefail
@@ -49,25 +49,52 @@ done < <(find docs/benchmarks -type f \( -name '*.tgz' -o -name '*.tar' -o -name
 echo "compressed receipts: $compressed found, $skipped unchanged since review, $((compressed - skipped)) unpacked"
 if [ "$compressed" != "$skipped" ]; then
   echo "scanning members of $((compressed - skipped)) compressed receipt(s)"
-  # The archive, compression and database magics test/eval/receipt-machine-paths.test.ts refuses (OPAQUE).
-  python3 - "$tmp/members" <<'EOF' || status=1
-import os, sys
-magic = (b"\x1f\x8b", b"PK\x03\x04", b"\xfd7zXZ\x00", b"\x28\xb5\x2f\xfd", b"BZh", b"7z\xbc\xaf\x27\x1c", b"SQLite format 3\x00")
-opaque = []
-for parent, _, names in os.walk(sys.argv[1]):
-    for name in names:
+  # gitleaks reads a file in 10,000-byte chunks, drops the rest of a file at a chunk whose first bytes look like a
+  # binary format, and skips some paths (.svg, .bin, node_modules). So each member, which must be UTF-8 text without
+  # NUL bytes, is cut into overlapping windows, each written as a numbered piece under a fixed header line. A piece is
+  # shorter than one chunk, so gitleaks reads it whole, and a secret up to 4,500 bytes long (an RSA-4096 private key in
+  # PEM is about 3,300) lies whole inside some piece. pieces.tsv maps a piece back to its member.
+  mkdir "$tmp/pieces"
+  python3 - "$tmp/members" "$tmp/pieces" "$tmp/pieces.tsv" <<'EOF' || status=1
+import os, stat, sys
+members, pieces, index = sys.argv[1:]
+WINDOW, OVERLAP, HEADER = 9000, 4500, b"#" * 400 + b"\n"
+rows, unreadable = [], []
+for parent, dirs, names in os.walk(members):
+    dirs.sort()
+    for name in sorted(names):
         path = os.path.join(parent, name)
-        if os.path.islink(path):
+        member = os.path.relpath(path, members)
+        if not stat.S_ISREG(os.lstat(path).st_mode):
             continue
         with open(path, "rb") as f:
-            head = f.read(262)
-        if head.startswith(magic) or head[257:262] == b"ustar":
-            opaque.append(os.path.relpath(path, sys.argv[1]))
-for path in sorted(opaque):
-    print(f"cannot scan nested archive or database: {path}")
-sys.exit(1 if opaque else 0)
+            data = f.read()
+        try:
+            data.decode("utf-8")
+        except UnicodeDecodeError:
+            unreadable.append(member)
+            continue
+        if b"\0" in data:
+            unreadable.append(member)
+            continue
+        for begin in range(0, max(len(data) - OVERLAP, 1), WINDOW - OVERLAP):
+            piece = f"{len(rows):09d}"
+            with open(os.path.join(pieces, piece), "wb") as f:
+                f.write(HEADER + data[begin:begin + WINDOW])
+            rows.append(f"{piece}\t{member}\n")
+with open(index, "w") as f:
+    f.writelines(rows)
+for member in unreadable:
+    print(f"cannot scan a member that is not UTF-8 text: {member}")
+sys.exit(1 if unreadable else 0)
 EOF
-  "$bin" dir "$tmp/members" --no-banner --redact --exit-code 1 || status=1
+  if ! "$bin" dir "$tmp/pieces" --no-banner --redact --exit-code 1 --report-format json --report-path "$tmp/leaks.json"; then
+    status=1
+    [ -s "$tmp/leaks.json" ] && python3 -c 'import json, os, sys
+index = dict(line.rstrip("\n").split("\t", 1) for line in open(sys.argv[2]))
+for leak in json.load(open(sys.argv[1])):
+    print("leak (" + leak["RuleID"] + ") in " + index[os.path.basename(leak["File"])])' "$tmp/leaks.json" "$tmp/pieces.tsv" | sort | uniq -c || true
+  fi
 fi
 echo "scan-receipts: $scanned director$([ "$scanned" = 1 ] && echo y || echo ies) scanned, $([ "$status" = 0 ] && echo 'no leaks' || echo 'LEAKS FOUND')"
 exit $status

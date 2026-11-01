@@ -12,7 +12,7 @@
  * fixtures/reviewed-compressed-receipts.json; any other compressed receipt is
  * read here, and only the path prefixes that file declares, each with its
  * reason, are exempt inside it. A compressed receipt in a format this test
- * cannot open, or with an archive or database inside it, fails unread.
+ * cannot open, or with a member that is not UTF-8 text, fails unread.
  */
 
 import { describe, expect, test } from 'bun:test';
@@ -81,9 +81,11 @@ function members(path: string): Array<[string, Buffer]> {
   } finally { rmSync(dir, { recursive: true, force: true }); }
 }
 
-/** Leading bytes of the archive, compression and database formats a member can hold that neither receipt guard reads: gzip, zip, xz, zstd, bzip2, 7z, SQLite. A tar stream is "ustar" at byte 257. scripts/scan-receipts.sh refuses the same list. */
-const OPAQUE = ['1f8b', '504b0304', 'fd377a585a00', '28b52ffd', '425a68', '377abcaf271c', '53514c69746520666f726d6174203300'];
-const opaque = (bytes: Buffer) => OPAQUE.some(magic => bytes.subarray(0, magic.length / 2).toString('hex') === magic) || bytes.subarray(257, 262).toString('latin1') === 'ustar';
+/** A member's text, or null when it is not UTF-8 text without NUL bytes (a compressed, archive or other binary member, which neither receipt guard reads; scripts/scan-receipts.sh refuses the same). */
+const text = (bytes: Buffer): string | null => {
+  if (bytes.includes(0)) return null;
+  try { return new TextDecoder('utf-8', { fatal: true }).decode(bytes); } catch { return null; }
+};
 const exempt = (text: string) => Object.keys(reviewed.exempt_machine_paths).reduce((t, prefix) => t.split(prefix).join(''), text);
 
 /** Receipts under `root` outside `frozen` whose text matches `pattern`; a tarball or gzip receipt is read member by member, and one this cannot read is an offender. */
@@ -93,8 +95,9 @@ function offenders(root: string, files: string[], frozen: Record<string, string>
     if (!/\.(tgz|tar|gz)$/.test(f)) return /\.(json|ndjson|jsonl|log)$/.test(f) && pattern.test(readFileSync(join(root, f), 'utf8')) ? [f] : [];
     return members(join(root, f)).flatMap(([name, bytes]) => {
       const label = name ? `${f}: ${name}` : f;
-      if (opaque(bytes)) return [`${label} (nested archive)`];
-      return pattern.test(exempt(bytes.toString('utf8'))) ? [label] : [];
+      const content = text(bytes);
+      if (content === null) return [`${label} (not UTF-8 text)`];
+      return pattern.test(exempt(content)) ? [label] : [];
     });
   });
 }
@@ -115,14 +118,14 @@ describe('compressed receipts', () => {
     } finally { rmSync(root, { recursive: true, force: true }); }
   });
 
-  test('a nested archive or a compression neither guard opens is an offender, whatever it holds', () => {
+  test('a binary member or a compression neither guard opens is an offender, whatever it holds', () => {
     const root = mkdtempSync(join(tmpdir(), 'receipt-members-'));
     try {
       mkdirSync(join(root, 'cell'), { recursive: true });
       writeFileSync(join(root, 'cell/rows.json.gz'), gzipSync(JSON.stringify({ store: '/home/alice/cells/_stores/x' })));
       execFileSync('tar', ['-czf', join(root, 'receipt.tgz'), '-C', join(root, 'cell'), 'rows.json.gz']);
       writeFileSync(join(root, 'rows.json.xz'), 'not opened');
-      expect(offenders(root, ['receipt.tgz', 'rows.json.xz'], {}, MACHINE_LOCAL_PATH)).toEqual(['receipt.tgz: rows.json.gz (nested archive)', 'rows.json.xz (unreadable compression)']);
+      expect(offenders(root, ['receipt.tgz', 'rows.json.xz'], {}, MACHINE_LOCAL_PATH)).toEqual(['receipt.tgz: rows.json.gz (not UTF-8 text)', 'rows.json.xz (unreadable compression)']);
     } finally { rmSync(root, { recursive: true, force: true }); }
   });
 
@@ -134,7 +137,7 @@ describe('compressed receipts', () => {
   test('reviewed compressed receipts are unchanged', () => {
     const changed = Object.entries(reviewed.files).filter(([f, sha]) => sha256(join(ROOT, f)) !== sha);
     expect(changed).toEqual([]);
-  });
+  }, 60_000);
 });
 
 describe('committed receipts', () => {
