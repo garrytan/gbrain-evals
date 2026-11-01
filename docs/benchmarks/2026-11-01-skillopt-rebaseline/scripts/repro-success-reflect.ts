@@ -1,5 +1,5 @@
 import { configureGateway, chat } from 'gbrain/ai/gateway';
-import { runReflect } from '../../node_modules/gbrain/src/core/skillopt/reflect.ts';
+import { runReflect } from '../../../../node_modules/gbrain/src/core/skillopt/reflect.ts';
 import { readFileSync } from 'fs';
 configureGateway({ embedding_model: 'openai:text-embedding-3-large', embedding_dimensions: 1536, chat_model: 'anthropic:claude-opus-5-5', env: process.env as any });
 const body = readFileSync('eval/data/skillopt-v1/seed-no-verdict/SKILL.md', 'utf8').replace(/^---[\s\S]*?---\n/, '');
