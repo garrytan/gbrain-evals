@@ -224,6 +224,26 @@ describe('Cat36 grounded-answer secondary replay', () => {
     expect(() => validateGroundedProfile({ ...profile, judge_max_tokens: 128 })).not.toThrow();
   });
 
+  // Value: protects=a live Cat 36 replay with a Claude 5 answer model is refused before any spend when its answer limit leaves no room to think, so its probes cannot all score 0 against gbrain; fails_when=validateGroundedProfile accepts a live Claude 5 answer_max_tokens below the thinking floor; why_new=only the judge limit had the floor (#237), and the gateway sends an explicit answer limit unchanged (#259); seam=none; no_claim=validation only, no provider call
+  test('live admission refuses a Claude 5 answer limit below the thinking floor', () => {
+    const live: GroundedProfile = { ...profile, mode: 'live', answer_model: 'anthropic:claude-sonnet-5-5', expected_product_sha: 'a'.repeat(40), answer_max_tokens: 4096, judge_max_tokens: 4096,
+      answer_budget: { kind: 'isolated-provider-cap', approval_id: 'answer-approval', max_usd: 1 }, judge_budget: { kind: 'isolated-provider-cap', approval_id: 'judge-approval', max_usd: 1 } };
+    expect(() => validateGroundedProfile(live)).not.toThrow();
+    for (const answer_max_tokens of [1, 1024, 4095]) expect(() => validateGroundedProfile({ ...live, answer_max_tokens })).toThrow(`answer_max_tokens ${answer_max_tokens} is below the Claude 5 thinking floor (4096) for anthropic:claude-sonnet-5-5`);
+    expect(() => validateGroundedProfile({ ...live, answer_model: 'openai:gpt-6.1-sol', answer_max_tokens: 1024 })).not.toThrow();
+  });
+
+  // Value: protects=an answer model that spent its whole limit thinking is not scored as a gbrain miss; fails_when=an empty answer with a length stop is a sut failure scored 0; why_new=both runners required stopReason end and scored any invalid answer 0 against the system under test (#259); seam=offline replay with an injected answer runtime; no_claim=how often a live Claude 5 answer runs out of room
+  test('an empty answer cut at its output limit is a harness error, excluded and never judged', async () => {
+    const f = await fixture();
+    let judged = 0;
+    const result = await runCat36GroundedAnswers({ ...f, testRuntime: { async generate() { return { ...answer(''), blocks: [], stopReason: 'length' }; }, judgeClient: judgeClient(async () => { judged++; return message(); }) } });
+    expect(result.errors.map(error => error.origin)).toEqual(['harness', 'harness', 'harness', 'harness']);
+    expect(result.errors[0].message).toContain('128-token answer limit');
+    expect([result.n_scored, judged]).toEqual([0, 0]);
+    expect(result.data!.answer_success).toEqual({ mean: null, n: 0 });
+  });
+
   test('loaded product identity and both provider credentials are checked before live inference', async () => {
     const f = await fixture();
     const product = resolveRegressionProduct({ expectedPackageSha256: regressionPackageHash(resolve('node_modules/gbrain')) });
