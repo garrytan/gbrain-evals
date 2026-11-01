@@ -1,8 +1,12 @@
 /**
  * BrainBench LLM-as-judge (Cat 5 / 8 / 9).
  *
- * Uses Claude Haiku 4.5 via tool-use (`score_answer` tool) so output is
- * structured and parseable without string-level hallucinations.
+ * Uses Claude Haiku 4.5 by default via tool-use (`score_answer` tool) so
+ * output is structured and parseable without string-level hallucinations.
+ * Requests go through `fitAnthropicRequest`: a Claude 5-family judge gets no
+ * temperature, `tool_choice: auto` with an instruction to call the tool and,
+ * unless the caller sets maxTokens, a 4,096-token limit to think in. Every
+ * judge is priced from the budget ledger's table (audit B1).
  *
  * **Structured evidence contract** (fix #16 from the plan's codex review):
  * the judge does NOT read raw tool output. It receives a pre-digested
@@ -30,9 +34,12 @@
  * scores 0, verdict=fail) so the run still completes.
  */
 
+import { chatPrice, usageCost, type RequestPrice } from './budget-ledger.ts';
 import Anthropic from '@anthropic-ai/sdk';
 import { randomBytes } from 'crypto';
+import { fitAnthropicRequest, temperatureSent, toolChoiceSent, withThinkingRoom } from './anthropic-request.ts';
 import { getDefaultLlmBudget, type LlmBudget } from './llm-budget.ts';
+import { isOpenAIModel } from './openai-judge-shim.ts';
 
 // ─── Public types ────────────────────────────────────────────────────
 
@@ -108,6 +115,10 @@ export interface JudgeResult {
   attempts: 1 | 2;
   /** Judge provenance for receipts: model + system prompt version actually used. */
   judge_model: string;
+  /** Temperature sent on every attempt; null when the model rejects it and samples at the provider default. */
+  temperature_sent: number | null;
+  /** `tool`: forced `score_answer`; `auto`: an instruction to call it instead (Claude 5 family). */
+  tool_choice_sent: 'tool' | 'auto';
   system_prompt_version?: string;
   /** Version of the shared judge template (system prompt text + evidence rendering). */
   judge_prompt_version: string;
@@ -139,6 +150,7 @@ export interface JudgeConfig {
 const DEFAULT_MODEL = 'claude-haiku-4-5-20251001';
 const DEFAULT_MAX_TOKENS = 800;
 // Judges run at temperature 0: verdicts must be reproducible (WS0 policy).
+// Claude 5-family judges reject it and sample at the provider default.
 export const JUDGE_TEMPERATURE = 0;
 /**
  * Version of the shared judge template: the default system prompt, the
@@ -148,9 +160,6 @@ export const JUDGE_TEMPERATURE = 0;
  * (audit C-13, B-JDG-01).
  */
 export const JUDGE_PROMPT_VERSION = 'judge-2026-09-28-untrusted-v1';
-// Haiku 4.5 pricing (2026-04, DOLLARS per 1M tokens: $1 input / $5 output).
-const PRICE_INPUT_PER_M = 1.0;
-const PRICE_OUTPUT_PER_M = 5.0;
 
 /**
  * Appended to every judge system prompt that sees output from the system
@@ -449,13 +458,28 @@ function parseToolUse(response: Anthropic.Messages.Message, rubric: RubricCriter
   return { input: null, defect: 'no score_answer tool_use block in response' };
 }
 
-function priceOf(input: number, output: number): number {
-  return (input * PRICE_INPUT_PER_M + output * PRICE_OUTPUT_PER_M) / 1_000_000;
+/**
+ * A judge model's list price from the budget ledger's table (`chatPrice`),
+ * looked up before any call so an unpriced model costs nothing. OpenAI
+ * models are the ones a runner calls through openai-judge-shim.
+ */
+export function judgePrice(model: string): RequestPrice {
+  const provider = isOpenAIModel(model) ? 'openai' : 'anthropic';
+  const id = model.replace(/^(?:openai|anthropic):/, '');
+  const price = chatPrice(`${provider}:${id}`);
+  if (!price) throw new Error(`no chat price for ${provider}:${id}; register it in CHAT_PRICE_OVERRIDES in eval/runner/budget-ledger.ts`);
+  return { provider, model: id, kind: 'chat', ...price, inputTokens: 0, maxOutputTokens: 0 };
+}
+
+/** USD for one response from its reported usage, cache reads and writes included. */
+function priceOf(price: RequestPrice, response: Anthropic.Messages.Message): number {
+  return usageCost(price, response)?.usd ?? 0;
 }
 
 async function callJudgeOnce(
   client: Anthropic,
   model: string,
+  price: RequestPrice,
   maxTokens: number,
   systemPrompt: string,
   userContent: string,
@@ -471,7 +495,7 @@ async function callJudgeOnce(
       content: `Your previous response was malformed: ${correctiveFeedback}. Call score_answer again with a valid, complete score set.`,
     });
   }
-  const response = await client.messages.create({
+  const response = await client.messages.create(fitAnthropicRequest({
     model,
     max_tokens: maxTokens,
     temperature: JUDGE_TEMPERATURE,
@@ -485,9 +509,9 @@ async function callJudgeOnce(
     tools: [SCORE_ANSWER_TOOL],
     tool_choice: { type: 'tool', name: 'score_answer' },
     messages,
-  });
+  }));
   const parsed = parseToolUse(response, rubric);
-  const cost_usd = priceOf(response.usage.input_tokens, response.usage.output_tokens);
+  const cost_usd = priceOf(price, response);
   return { response, parsed, cost_usd };
 }
 
@@ -499,7 +523,9 @@ export async function scoreAnswer(
 ): Promise<JudgeResult> {
   const client = config.client ?? getDefaultClient();
   const model = config.model ?? DEFAULT_MODEL;
-  const maxTokens = config.maxTokens ?? DEFAULT_MAX_TOKENS;
+  const price = judgePrice(model);
+  const sent = { temperature_sent: temperatureSent(model, JUDGE_TEMPERATURE), tool_choice_sent: toolChoiceSent(model) };
+  const maxTokens = config.maxTokens ?? withThinkingRoom(model, DEFAULT_MAX_TOKENS);
   const systemPrompt = withUntrustedInstruction(config.systemPrompt ?? DEFAULT_JUDGE_SYSTEM_PROMPT);
   // Every judge LLM call takes a slot from the shared budget so concurrent
   // scoreAnswer callers never exceed BRAINBENCH_LLM_CONCURRENCY in-flight
@@ -514,7 +540,7 @@ export async function scoreAnswer(
 
   // Attempt 1
   const attempt1 = await budget.withLlmSlot(
-    () => callJudgeOnce(client, model, maxTokens, systemPrompt, userContent, evidence.rubric),
+    () => callJudgeOnce(client, model, price, maxTokens, systemPrompt, userContent, evidence.rubric),
   );
   inputTokensTotal += attempt1.response.usage.input_tokens;
   outputTokensTotal += attempt1.response.usage.output_tokens;
@@ -525,7 +551,7 @@ export async function scoreAnswer(
   if (parsed === null) {
     const attempt2 = await budget.withLlmSlot(
       () => callJudgeOnce(
-        client, model, maxTokens, systemPrompt, userContent, evidence.rubric,
+        client, model, price, maxTokens, systemPrompt, userContent, evidence.rubric,
         attempt1.parsed.defect ?? 'invalid structured output',
       ),
     );
@@ -555,6 +581,7 @@ export async function scoreAnswer(
       fallback_used: true,
       attempts: 2,
       judge_model: model,
+      ...sent,
       system_prompt_version: config.systemPromptVersion,
       judge_prompt_version: JUDGE_PROMPT_VERSION,
     };
@@ -579,6 +606,7 @@ export async function scoreAnswer(
     fallback_used: false,
     attempts: attempt1.parsed.input !== null ? 1 : 2,
     judge_model: model,
+    ...sent,
     system_prompt_version: config.systemPromptVersion,
     judge_prompt_version: JUDGE_PROMPT_VERSION,
   };

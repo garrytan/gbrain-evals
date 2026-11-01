@@ -72,8 +72,9 @@
  * claude-sonnet-4-6, temperature 0) + 12 Haiku judge calls ≈ $0.30-0.60.
  * Hermetic mode costs $0 and needs no keys.
  *
- * Run:
- *   bun eval/runner/cat25-trajectory-routing.ts                  # live (ANTHROPIC_API_KEY)
+ * Run (a live run spends money, so it needs `--paid --budget-run-id <id>` naming an open budget-ledger run;
+ * all.ts passes both):
+ *   bun eval/runner/cat25-trajectory-routing.ts --paid --budget-run-id <id>   # live (ANTHROPIC_API_KEY)
  *   CAT25_DRY_RUN=1 bun eval/runner/cat25-trajectory-routing.ts  # hermetic conformance run
  *   bun eval/runner/cat25-trajectory-routing.ts --allow-skip     # missing key → skip receipt, exit 0
  */
@@ -88,7 +89,10 @@ import { PGLiteEngine } from 'gbrain/pglite-engine';
 import { importFromContentEmbedded } from './import-embedded.ts';
 import { configureGateway, __setEmbedTransportForTests } from 'gbrain/ai/gateway';
 import { runThink, type ThinkLLMClient, type ThinkResult } from 'gbrain/think';
-import { JUDGE_PROMPT_VERSION, scoreAnswer, type JudgeEvidence, type RubricCriterion } from './judge.ts';
+import { fitAnthropicRequest, temperatureSent, toolChoiceSent } from './anthropic-request.ts';
+import { budgetOptionsFrom, receiptCost, startPaidRun } from './budget-ledger.ts';
+import { PaidArmRefusal, paidRequested, requirePaidArm } from './paid-arm.ts';
+import { JUDGE_PROMPT_VERSION, JUDGE_TEMPERATURE, scoreAnswer, type JudgeEvidence, type RubricCriterion } from './judge.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
 import {
   writeReceipt,
@@ -490,13 +494,13 @@ export const hermeticComplete: CompleteFn = async (_params, extracted) => {
 export function makeLiveComplete(anthropic: Anthropic): CompleteFn {
   return async (params) => {
     const model = String(params.model).replace(/^anthropic[:/]/, '');
-    const res = await anthropic.messages.create({
+    const res = await anthropic.messages.create(fitAnthropicRequest({
       model,
       max_tokens: params.max_tokens,
       temperature: THINK_TEMPERATURE,
       ...(params.system !== undefined ? { system: params.system } : {}),
       messages: params.messages,
-    });
+    }));
     const block = res.content.find((b): b is Anthropic.Messages.TextBlock => b.type === 'text');
     return block?.text ?? '';
   };
@@ -822,6 +826,8 @@ function resolvedConfig(hermetic: boolean): Record<string, unknown> {
     think_temperature: THINK_TEMPERATURE,
     judge: hermetic ? 'deterministic-marker-judge' : `judge.ts scoreAnswer (${JUDGE_MODEL}, temperature 0)`,
     judge_prompt_version: hermetic ? null : JUDGE_PROMPT_VERSION,
+    temperature_sent: hermetic ? null : { think: temperatureSent(THINK_MODEL, THINK_TEMPERATURE), judge: temperatureSent(JUDGE_MODEL, JUDGE_TEMPERATURE) },
+    tool_choice_sent: hermetic ? null : { judge: toolChoiceSent(JUDGE_MODEL) },
     embedding_transport: 'stubbed deterministic hash-embed (__setEmbedTransportForTests)',
     fact_seeding: 'engine.insertFact typed-claim rows (direct; extraction is out of boundary)',
     pipeline: "gbrain runThink ('gbrain/think' subpath export), client-injected LLM, remote:false",
@@ -853,6 +859,33 @@ async function main(): Promise<void> {
     process.exit(allowSkip ? 0 : 3);
   }
 
+  // A live run spends money: it joins an open budget-ledger run, and the guard goes in before the SDK client exists.
+  const argv = process.argv.slice(2);
+  let paid: ReturnType<typeof startPaidRun> | null = null;
+  if (!hermetic) {
+    try {
+      const { budgetRunId } = requirePaidArm(argv, { arm: 'Cat 25 live run', estimateUsd: null });
+      paid = startPaidRun(CATEGORY, { ...budgetOptionsFrom(argv), runId: budgetRunId, estimateUsd: null });
+    } catch (e) {
+      if (!(e instanceof PaidArmRefusal)) throw e;
+      console.error(`[cat25] REFUSED: ${e.message}`);
+      // Asked to spend and refused (a missing, closed or drained run): an error, never a skip that BRAINBENCH_ALLOW_SKIP passes.
+      const refusedPaidRun = paidRequested(argv);
+      writeReceipt(receiptPath(CATEGORY, REPORTS_ROOT), {
+        ...baseReceipt(startedAt),
+        run_status: refusedPaidRun ? 'error' : 'skipped',
+        ...(refusedPaidRun ? {} : { skip_reason: e.message }),
+        n_total: PROBES.length,
+        n_scored: 0,
+        completion_rate: 0,
+        errors: refusedPaidRun ? [{ probe_id: 'preflight', origin: 'harness', message: e.message }] : [],
+        publishable: false,
+        resolved_config: resolvedConfig(hermetic),
+      });
+      process.exit(2);
+    }
+  }
+
   ensureStubbedGateway();
   const anthropic = hermetic ? null : new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
   const deps: ProbeRunDeps = hermetic
@@ -865,6 +898,7 @@ async function main(): Promise<void> {
   const results: ProbeResult[] = [];
 
   for (const probe of PROBES) {
+    if (paid?.guard.exhausted) break;
     process.stderr.write(`  ${probe.id}... `);
     let outcome: ProbeOutcome;
     try {
@@ -878,6 +912,7 @@ async function main(): Promise<void> {
       console.error(`\n[cat25] PREFLIGHT ABORT: ${outcome.message}`);
       acc.error(probe.id, 'harness', outcome.message);
       const s = acc.summary();
+      paid?.guard.uninstall();
       writeReceipt(receiptPath(CATEGORY, REPORTS_ROOT), {
         ...baseReceipt(startedAt),
         run_status: 'error',
@@ -887,6 +922,7 @@ async function main(): Promise<void> {
         errors: s.errors,
         publishable: false,
         resolved_config: resolvedConfig(hermetic),
+        cost: paid ? receiptCost(paid.run.close()) : null,
       });
       process.exit(2);
     }
@@ -905,6 +941,9 @@ async function main(): Promise<void> {
     }
   }
 
+  const budgetExhausted = paid?.guard.exhausted ?? false;
+  paid?.guard.uninstall();
+  const cost = paid ? receiptCost(paid.run.close()) : null;
   const summary = aggregate(results, hermetic ? 'hermetic' : 'live', PROBES.length);
   const accSummary = acc.summary();
 
@@ -914,7 +953,8 @@ async function main(): Promise<void> {
     JSON.stringify({ summary, per_probe: results, accounting: accSummary }, null, 2) + '\n',
   );
 
-  if (accSummary.run_invalid) {
+  // A budget run that refused a request stopped the run early: no trustworthy verdict.
+  if (accSummary.run_invalid || budgetExhausted) {
     writeReceipt(receiptPath(CATEGORY, REPORTS_ROOT), {
       ...baseReceipt(startedAt),
       run_status: 'error',
@@ -924,10 +964,13 @@ async function main(): Promise<void> {
       errors: accSummary.errors,
       publishable: false,
       resolved_config: resolvedConfig(hermetic),
-      judge: { model: hermetic ? 'deterministic-marker-judge' : JUDGE_MODEL, temperature: 0 },
-      data: { summary: summary as unknown as Record<string, unknown> },
+      judge: { model: hermetic ? 'deterministic-marker-judge' : JUDGE_MODEL, temperature: hermetic ? 0 : temperatureSent(JUDGE_MODEL, JUDGE_TEMPERATURE) },
+      cost,
+      data: { summary: summary as unknown as Record<string, unknown>, budget_exhausted: budgetExhausted },
     });
-    console.error(`[cat25] RUN INVALID: infra error rate ${(accSummary.infra_error_rate * 100).toFixed(0)}% over cap`);
+    console.error(budgetExhausted
+      ? '[cat25] RUN INVALID: the budget run refused a request, so the run stopped early; see receipt errors[]'
+      : `[cat25] RUN INVALID: infra error rate ${(accSummary.infra_error_rate * 100).toFixed(0)}% over cap`);
     process.exit(2);
   }
 
@@ -944,7 +987,8 @@ async function main(): Promise<void> {
     errors: accSummary.errors,
     publishable: accSummary.publishable && !hermetic,
     resolved_config: resolvedConfig(hermetic),
-    judge: { model: hermetic ? 'deterministic-marker-judge' : JUDGE_MODEL, temperature: 0 },
+    judge: { model: hermetic ? 'deterministic-marker-judge' : JUDGE_MODEL, temperature: hermetic ? 0 : temperatureSent(JUDGE_MODEL, JUDGE_TEMPERATURE) },
+    cost,
     data: {
       summary: summary as unknown as Record<string, unknown>,
       per_probe: results as unknown as Record<string, unknown>[],

@@ -85,7 +85,9 @@
  * non-zero unless invoked with --allow-skip.
  *
  * Run:
- *   bun eval/runner/cat14-calibration.ts                  # live (ANTHROPIC_API_KEY)
+ *   bun eval/runner/cat14-calibration.ts --budget-run-id <id>   # live, joined to that budget-ledger run (all.ts passes the id)
+ *   bun eval/runner/cat14-calibration.ts --budget-usd <dollars> # live, in a new budget-ledger run capped at that amount
+ *   (a live run with neither is refused: it would spend with no ledger cap)
  *   CAT14_DRY_RUN=1 bun eval/runner/cat14-calibration.ts  # hermetic conformance run
  *   CAT14_PROBES=cat14-pos-1-geography bun eval/runner/cat14-calibration.ts
  *   bun eval/runner/cat14-calibration.ts --allow-skip     # missing key → skip receipt, exit 0
@@ -112,6 +114,7 @@ import {
 } from './receipt.ts';
 import { gbrainVersion, gbrainPin } from './gbrain-version.ts';
 import { UNTRUSTED_DATA_INSTRUCTION, fenceUntrusted, newJudgeNonce } from './judge.ts';
+import { fitAnthropicRequest, temperatureSent, toolChoiceSent, withThinkingRoom } from './anthropic-request.ts';
 import { acceptsTemperature, anthropicModelId, judgeClientFor, judgeTransport } from './openai-judge-shim.ts';
 import { budgetOptionsFrom, receiptCost, startPaidRun } from './budget-ledger.ts';
 import { attestPreregistration } from './prereg.ts';
@@ -704,15 +707,15 @@ function makeLiveJudge(anthropic: Anthropic): JudgeFn {
       let lastErr = 'malformed tool output';
       for (let attempt = 1; attempt <= 2 && !out; attempt++) {
         try {
-          const res = await client.messages.create({
+          const res = await client.messages.create(fitAnthropicRequest({
             model: anthropicModelId(JUDGE_MODEL),
-            max_tokens: JUDGE_MAX_TOKENS,
+            max_tokens: withThinkingRoom(JUDGE_MODEL, JUDGE_MAX_TOKENS),
             ...(acceptsTemperature(JUDGE_MODEL) ? { temperature: JUDGE_TEMPERATURE } : {}),
             system,
             tools: [JUDGE_TOOL],
             tool_choice: { type: 'tool', name: 'judge_ab' },
             messages: [{ role: 'user', content: user }],
-          });
+          }));
           const toolUse = res.content.find((b): b is Anthropic.Messages.ToolUseBlock => b.type === 'tool_use');
           out = toolUse && toolUse.name === 'judge_ab' ? validateJudgeToolOut(toolUse.input) : null;
         } catch (err) {
@@ -1153,9 +1156,15 @@ async function main(): Promise<void> {
   ensureStubbedGateway();
   // The ledger guard goes in before the SDK client exists, so the client's fetch is the guarded one.
   const budget = budgetOptionsFrom(process.argv.slice(2));
+  if (!hermetic && budget.budgetUsd === null && budget.runId === null) {
+    const reason = 'a live run spends money and needs a budget-ledger cap: pass --budget-run-id <id> naming an open run, or --budget-usd <dollars> to open one';
+    console.error(`[cat14] REFUSED: ${reason}`);
+    writeSkipReceipt(startedAt, reason, filtered.length, hermetic, filter);
+    process.exit(2);
+  }
   const prereg = argFlag('--preregistration');
   const attestation = !hermetic && prereg ? attestPreregistration(prereg) : null;
-  const paid = !hermetic && budget.budgetUsd !== null ? startPaidRun(CATEGORY, { ...budget, estimateUsd: Number(argFlag('--estimate-usd') ?? 1) }) : null;
+  const paid = !hermetic ? startPaidRun(CATEGORY, { ...budget, estimateUsd: Number(argFlag('--estimate-usd') ?? 1) }) : null;
   const anthropic = hermetic ? null : new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY! });
   const liveComplete = anthropic ? makeLiveComplete(anthropic) : null;
   const liveJudge = anthropic ? makeLiveJudge(anthropic) : null;
@@ -1177,6 +1186,12 @@ async function main(): Promise<void> {
     } catch (e) {
       outcome = { kind: 'error', origin: 'harness', message: `runProbe threw: ${errMsg(e)}` };
     }
+    // A request the budget run refused is no SUT or judge failure: record it and stop.
+    if (paid?.guard.exhausted) {
+      acc.error(probe.id, 'harness', 'the budget run refused a request, so this probe was not scored');
+      process.stderr.write('BUDGET EXHAUSTED\n');
+      break;
+    }
     if (outcome.kind === 'error') {
       acc.error(probe.id, outcome.origin, outcome.message);
       if (outcome.origin === 'judge') judgeFailedCount++;
@@ -1196,6 +1211,7 @@ async function main(): Promise<void> {
 
   const summary = aggregate(results, { mode: hermetic ? 'hermetic' : 'live', judgeFailed: judgeFailedCount });
   const accSummary = acc.summary();
+  const budgetExhausted = paid?.guard.exhausted ?? false;
   paid?.guard.uninstall();
   const runExtras = {
     profile_mode: profileMode,
@@ -1218,7 +1234,8 @@ async function main(): Promise<void> {
   if (!existsSync(DUMPS_DIR)) mkdirSync(DUMPS_DIR, { recursive: true });
   writeFileSync(join(DUMPS_DIR, '_summary.json'), JSON.stringify(summary, null, 2));
 
-  if (accSummary.run_invalid) {
+  // Invalid runs (infra error rate over the cap, or a budget run that refused a request and stopped the run) write run_status 'error'.
+  if (accSummary.run_invalid || budgetExhausted) {
     writeReceipt(receiptPath(CATEGORY, REPORTS_ROOT), {
       ...baseReceipt(startedAt),
       run_status: 'error',
@@ -1227,12 +1244,14 @@ async function main(): Promise<void> {
       completion_rate: accSummary.completion_rate,
       errors: accSummary.errors,
       publishable: false,
-      resolved_config: { ...resolvedConfig(hermetic, filter), profile_mode: profileMode, judge_transport: judgeTransport(JUDGE_MODEL), temperature_sent: { think: acceptsTemperature(THINK_MODEL), judge: acceptsTemperature(JUDGE_MODEL) } },
-      judge: { model: hermetic ? 'heuristic-string-judge' : JUDGE_MODEL, temperature: JUDGE_TEMPERATURE },
+      resolved_config: { ...resolvedConfig(hermetic, filter), profile_mode: profileMode, judge_transport: judgeTransport(JUDGE_MODEL), temperature_sent: { think: temperatureSent(THINK_MODEL, THINK_TEMPERATURE), judge: temperatureSent(JUDGE_MODEL, JUDGE_TEMPERATURE) }, tool_choice_sent: { judge: toolChoiceSent(JUDGE_MODEL) } },
+      judge: { model: hermetic ? 'heuristic-string-judge' : JUDGE_MODEL, temperature: hermetic ? JUDGE_TEMPERATURE : temperatureSent(JUDGE_MODEL, JUDGE_TEMPERATURE) },
       ...runExtras,
-      data: { summary: summary as unknown as Record<string, unknown> },
+      data: { summary: summary as unknown as Record<string, unknown>, budget_exhausted: budgetExhausted },
     });
-    console.error(`[cat14] RUN INVALID: infra error rate ${(accSummary.infra_error_rate * 100).toFixed(0)}% over cap; see receipt errors[]`);
+    console.error(budgetExhausted
+      ? '[cat14] RUN INVALID: the budget run refused a request, so the run stopped early; see receipt errors[]'
+      : `[cat14] RUN INVALID: infra error rate ${(accSummary.infra_error_rate * 100).toFixed(0)}% over cap; see receipt errors[]`);
     process.exit(2);
   }
 
@@ -1248,8 +1267,8 @@ async function main(): Promise<void> {
     completion_rate: accSummary.completion_rate,
     errors: accSummary.errors,
     publishable: accSummary.publishable && !hermetic && !filter,
-    resolved_config: { ...resolvedConfig(hermetic, filter), profile_mode: profileMode, judge_transport: judgeTransport(JUDGE_MODEL), temperature_sent: { think: acceptsTemperature(THINK_MODEL), judge: acceptsTemperature(JUDGE_MODEL) } },
-    judge: { model: hermetic ? 'heuristic-string-judge' : JUDGE_MODEL, temperature: JUDGE_TEMPERATURE },
+    resolved_config: { ...resolvedConfig(hermetic, filter), profile_mode: profileMode, judge_transport: judgeTransport(JUDGE_MODEL), temperature_sent: { think: temperatureSent(THINK_MODEL, THINK_TEMPERATURE), judge: temperatureSent(JUDGE_MODEL, JUDGE_TEMPERATURE) }, tool_choice_sent: { judge: toolChoiceSent(JUDGE_MODEL) } },
+    judge: { model: hermetic ? 'heuristic-string-judge' : JUDGE_MODEL, temperature: hermetic ? JUDGE_TEMPERATURE : temperatureSent(JUDGE_MODEL, JUDGE_TEMPERATURE) },
     ...runExtras,
     data: { summary: summary as unknown as Record<string, unknown> },
   });

@@ -44,11 +44,13 @@ From the repository root:
 # Free setup check using scripted model responses.
 bun eval/runner/cat14-calibration.ts --hermetic
 
-# Live comparison: requires ANTHROPIC_API_KEY.
-bun eval/runner/cat14-calibration.ts
+# Live comparison: requires ANTHROPIC_API_KEY and a budget-ledger cap, either an
+# open run's id or a dollar cap for a new run. A live run with neither is refused.
+bun eval/runner/cat14-calibration.ts --budget-run-id <id>
+bun eval/runner/cat14-calibration.ts --budget-usd 1
 
 # Investigate one case.
-CAT14_PROBES=cat14-pos-1-geography bun eval/runner/cat14-calibration.ts
+CAT14_PROBES=cat14-pos-1-geography bun eval/runner/cat14-calibration.ts --budget-usd 1
 
 bun test test/eval/cat14-calibration.test.ts
 ```

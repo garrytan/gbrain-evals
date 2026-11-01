@@ -44,6 +44,8 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { PGLiteEngine } from 'gbrain/pglite-engine';
 import { OperationError } from 'gbrain/operations';
+import { fitAnthropicRequest, withThinkingRoom } from '../anthropic-request.ts';
+import { judgePrice, priceOf } from '../judge.ts';
 import type { Adapter, Page, Query, RankedDoc, BrainState, AdapterConfig } from '../types.ts';
 import {
   createToolBridge,
@@ -131,7 +133,7 @@ export interface AgentRunResult {
 export const DEFAULT_AGENT_MODEL = 'claude-sonnet-4-6';
 const DEFAULT_MODEL = DEFAULT_AGENT_MODEL;
 const DEFAULT_MAX_TOKENS = 1024;
-/** The agent under test samples at temperature 0 so Cat 8/9 transcripts are reproducible. */
+/** The agent under test samples at temperature 0 so Cat 8/9 transcripts are reproducible; Claude 5-family agents reject it and sample at the provider default. */
 export const AGENT_TEMPERATURE = 0;
 const DEFAULT_TURN_CAP = 10;
 const DEFAULT_MAX_RETRIES = 3;
@@ -142,10 +144,6 @@ const DEFAULT_MAX_RETRIES = 3;
  * short interjections ("Let me check the brain.") are not answers.
  */
 export const SUBSTANTIVE_TEXT_MIN_CHARS = 80;
-
-// Sonnet 4.6 pricing (2026-04 cents per 1M tokens).
-const PRICE_INPUT_PER_M = 3.0;
-const PRICE_OUTPUT_PER_M = 15.0;
 
 export const DEFAULT_AGENT_SYSTEM_PROMPT = `You are an assistant with access to Amara Okafor's personal knowledge brain. Amara is a Partner at Halfway Capital (a fictional VC firm). Her pages live at slugs like \`user/amara-okafor\`, \`emails/em-NNNN\`, \`slack/sl-NNNN\`, \`meeting/mtg-NNNN\`, \`notes/YYYY-MM-DD-topic\`.
 
@@ -163,10 +161,6 @@ let defaultClient: Anthropic | null = null;
 function getDefaultClient(): Anthropic {
   if (!defaultClient) defaultClient = new Anthropic();
   return defaultClient;
-}
-
-function priceOf(input: number, output: number): number {
-  return (input * PRICE_INPUT_PER_M + output * PRICE_OUTPUT_PER_M) / 1_000_000;
 }
 
 function isRateLimitError(err: unknown): boolean {
@@ -327,7 +321,8 @@ export async function runAgentLoop(
 ): Promise<AgentRunResult> {
   const client = config.client ?? getDefaultClient();
   const model = config.model ?? DEFAULT_MODEL;
-  const maxTokens = config.maxTokens ?? DEFAULT_MAX_TOKENS;
+  const price = judgePrice(model);
+  const maxTokens = config.maxTokens ?? withThinkingRoom(model, DEFAULT_MAX_TOKENS);
   const turnCap = config.turnCap ?? DEFAULT_TURN_CAP;
   const systemPrompt = config.systemPrompt ?? DEFAULT_AGENT_SYSTEM_PROMPT;
   const maxRetries = config.maxRetries ?? DEFAULT_MAX_RETRIES;
@@ -367,7 +362,7 @@ export async function runAgentLoop(
     let response: Anthropic.Messages.Message | null = null;
     for (let attempt = 0; attempt < maxRetries; attempt++) {
       try {
-        response = await client.messages.create({
+        response = await client.messages.create(fitAnthropicRequest({
           model,
           max_tokens: maxTokens,
           temperature: AGENT_TEMPERATURE,
@@ -380,7 +375,7 @@ export async function runAgentLoop(
           ],
           tools: bridge.toolDefs,
           messages,
-        });
+        }));
         break;
       } catch (err) {
         if (!isRateLimitError(err)) throw err;
@@ -397,7 +392,7 @@ export async function runAgentLoop(
 
     totalInputTokens += response.usage.input_tokens;
     totalOutputTokens += response.usage.output_tokens;
-    totalCost += priceOf(response.usage.input_tokens, response.usage.output_tokens);
+    totalCost += priceOf(price, response);
 
     turns.push({
       turn_index: turnIndex++,
