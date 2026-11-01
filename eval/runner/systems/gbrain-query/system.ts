@@ -142,8 +142,8 @@ export class GbrainQuerySystem extends GbrainBrain {
       readiness: 'synchronous: import returns after the page and its vectors are written', namespace: 'one in-memory PGLite brain per namespace (truncated between namespaces)',
       parallel_namespaces: false, streaming: 'disabled', telemetry_off: [], agent_surface: { kind: 'none' },
       retrieval_policies: { 'fixed-evidence': { settings: { limit: QUERY_LIMIT } }, 'vendor-default': { settings: { limit: QUERY_LIMIT } } },
-      query_path_pins: { ...QUERY_PATH_PINS }, held_defaults: { ...HELD_GBRAIN_DEFAULTS }, measured_path: 'trusted local caller (remote: false); remote lean rows and safe-chunk rules are not exercised',
-      deviations_from_vendor_code: ['expand: false (agent default true), matching the shootout retrieval'],
+      query_path_pins: { ...QUERY_PATH_PINS }, held_defaults: Object.fromEntries(Object.keys(HELD_GBRAIN_DEFAULTS).map(k => [k, this.settings[k]])), measured_path: 'trusted local caller (remote: false); remote lean rows and safe-chunk rules are not exercised',
+      deviations_from_vendor_code: ['expand: false (agent default true), matching the shootout retrieval', 'search.query_facts_block, search.saved_facts_supersede and search.remote_page_cap held at their values before gbrain v0.60.491.0 (held_defaults)', 'quote-fenced chat text (gbrain v0.60.507.0 and later) handed on unwrapped'],
     };
   }
 

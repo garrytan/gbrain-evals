@@ -221,6 +221,12 @@ describe('canonical outcomes', () => {
 describe('memory-qa with a MemorySystem', () => {
   const args = (out: string, ...extra: string[]) => parseRunArgs(['--benchmark', 'fixture', '--output', out, ...extra]);
 
+  test('gbrain-query runs a --pin override of a held default, and its capability record names the value it ran', async () => {
+    const { receipt } = await runArm(args(join(tmp, 'gq-pin'), '--system', 'gbrain-query', '--pin', 'search.query_facts_block=true')) as { receipt: any };
+    expect(receipt.search_pins['search.query_facts_block']).toBe('true');
+    expect(receipt.system.capabilities.held_defaults).toEqual({ 'search.query_facts_block': 'true', 'search.saved_facts_supersede': 'false', 'search.remote_page_cap': '0' });
+  }, 60_000);
+
   test('the TypeScript fake runs the fixture end to end with canonical files', async () => {
     const out = join(tmp, 'fake-run');
     const { receipt, rows } = await runArm(args(out, '--system', 'fake'));

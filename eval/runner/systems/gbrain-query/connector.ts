@@ -120,7 +120,8 @@ export async function loadConnectorModules(load: <T>(rel: string) => Promise<T>)
  * The rows with their stored chat text. Since gbrain v0.60.507.0 `query` and `assembleEvidenceForHits` return a chat
  * page's text inside a quote fence (`quoted: "transcript"`), and no setting turns that off. The connector hands on the
  * text inside the fence, unwrapped by the build's own `unquoteTranscriptText`, so a frozen list re-resolves against the
- * stored chunks and readers get the text they got before; `quoted` stays on the row and the delivery record counts
+ * stored chunks and readers get the text they got before; `quoted` stays on the row, delivered match spans move back
+ * onto the unwrapped text (a NUL marks each offset, which stored text cannot hold), and the delivery record counts
  * those blocks. A token budget still counts the fence, and a tool-call block gbrain summarized stays summarized (a
  * frozen row's text then differs from its stored chunk, which the re-resolution check refuses). A fenced row this
  * build cannot unwrap throws.
@@ -132,7 +133,10 @@ export function storedText(rows: DeliveredRow[], unquote: ConnectorModules['unqu
     if (!unquote || !label) throw new Error(`gbrain returned ${r.slug} quote-fenced, and this build exports no unquoteTranscriptText or labels the row with none (gbrain v0.60.507.0 to v0.60.520.0 fence without it); measure another build`);
     const chunk_text = unquote.unquoteTranscriptText(r.chunk_text, label);
     if (chunk_text === r.chunk_text) throw new Error(`${r.slug} is marked quoted but its text carries no fence naming ${label}`);
-    return { ...r, chunk_text };
+    const spans = r.delivered?.match_spans;
+    if (!spans?.length) return { ...r, chunk_text };
+    const at = (p: number) => Math.min(unquote.unquoteTranscriptText(`${r.chunk_text.slice(0, p)}\u0000${r.chunk_text.slice(p)}`, label).indexOf('\u0000'), chunk_text.length);
+    return { ...r, chunk_text, delivered: { ...r.delivered!, match_spans: spans.map(s => ({ ...s, start: at(s.start), end: at(s.end) })) } };
   });
 }
 

@@ -182,7 +182,22 @@ describe('quote-fenced chat text (gbrain v0.60.507.0 and later): the connector h
     const live = await c.live('live-parity', Q, 10, 3000);
     expect(live.record.quoted_blocks).toBe(live.record.blocks);
     expect(live.record.evidence_sha256).toBe(d.record.evidence_sha256);
+    const spans = live.rows.flatMap(r => (r.delivered?.match_spans ?? []).map(s => ({ text: r.chunk_text, ...s })));
+    expect(spans.length).toBeGreaterThan(0);
+    expect(spans.every(s => s.start >= 0 && s.start < s.end && s.end <= s.text.length)).toBe(true);
   }, 60_000);
+
+  test('delivered match spans move back onto the unwrapped text', async () => {
+    const tq = await load<{ fenceTranscriptRows: (rows: DeliveredRow[]) => DeliveredRow[] }>('src/core/search/transcript-quote.ts');
+    const text = 'Alice: the violin by the harbor\nBob: and the trip to Lisbon';
+    const [fenced] = tq.fenceTranscriptRows([{ slug: 'chat/0000000000000001', type: 'conversation', chunk_id: 1, chunk_text: text,
+      delivered: { unit: 'chunk', chunk_ids: [1], match_spans: ['violin', 'Lisbon'].map(w => ({ chunk_id: 1, start: text.indexOf(w), end: text.indexOf(w) + w.length })), tokens: 12, truncated: false } }]);
+    expect(fenced.delivered!.match_spans.map(s => fenced.chunk_text.slice(s.start, s.end))).toEqual(['violin', 'Lisbon']);
+    expect(fenced.delivered!.match_spans[0].start).toBeGreaterThan(text.indexOf('violin'));
+    const [row] = storedText([fenced], conn.unquote);
+    expect(row.chunk_text).toBe(text);
+    expect(row.delivered!.match_spans.map(s => text.slice(s.start, s.end))).toEqual(['violin', 'Lisbon']);
+  });
 
   test('a fenced row the build cannot unwrap, or a quoted row with no fence, is refused; other rows pass unchanged', () => {
     const row: DeliveredRow = { slug: 'chat/0000000000000001', type: 'conversation', chunk_id: 1, chunk_text: 'Alice: hello', quoted: 'transcript' };
@@ -213,7 +228,7 @@ describe('GbrainQuerySystem', () => {
     expect(await sys.brain.getConfig('search.query_facts_block')).toBe('false');
     expect(await sys.brain.getConfig('search.saved_facts_supersede')).toBe('false');
     expect(await sys.brain.getConfig('search.remote_page_cap')).toBe('3');
-    expect(((await sys.capabilities()) as unknown as Record<string, unknown>).held_defaults).toEqual(HELD_GBRAIN_DEFAULTS);
+    expect(((await sys.capabilities()) as unknown as Record<string, unknown>).held_defaults).toEqual({ ...HELD_GBRAIN_DEFAULTS, 'search.remote_page_cap': '3' });
     await sys.close();
   });
 

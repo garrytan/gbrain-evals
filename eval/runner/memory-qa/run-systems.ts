@@ -544,7 +544,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
   const system: MemorySystem = prior ? new ReplaySystem(prior.capabilities)
     : legacy ? new GbrainLegacySystem(mods!, { ...a.pins, ...a.config }, identity, { topK: a.topK, as: extractFacts ? 'conversation' : 'note', rerankPinned })
     : a.system === 'gbrain-shootout' ? new GbrainShootoutSystem(mods!, a.config, identity)
-    : a.system === 'gbrain-query' ? new GbrainQuerySystem(mods!, connectorMods!, a.config, identity, { frozenFrom: a.frozenFrom, rerankExpected: (a.config['search.reranker.enabled'] ?? 'true') !== 'false' })
+    : a.system === 'gbrain-query' ? new GbrainQuerySystem(mods!, connectorMods!, { ...Object.fromEntries(Object.keys(HELD_GBRAIN_DEFAULTS).map(k => [k, a.pins[k]])), ...a.config }, identity, { frozenFrom: a.frozenFrom, rerankExpected: (a.config['search.reranker.enabled'] ?? 'true') !== 'false' })
     : a.system === 'fake' ? new FakeMemorySystem()
     : a.system === 'full-context' ? new FullContextSystem()
     : a.system === 'no-memory' ? new NoMemorySystem()
