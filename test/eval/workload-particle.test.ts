@@ -40,7 +40,7 @@ beforeAll(async () => {
   for (let i = 0; i < 200; i++) { try { await fetch(`${fakeRoot}/particle/v1/models`, { keepalive: false }); return; } catch { await Bun.sleep(50); } }
   fake.kill();
   throw new Error(`fake provider never answered on port ${port}: ${await new Response(fake.stderr as ReadableStream).text()}`);
-});
+}, 20_000);
 afterAll(() => fake?.kill());
 
 const proxies: MeteringProxy[] = [];
