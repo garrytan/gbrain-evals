@@ -846,6 +846,7 @@ export function deriveAll(receipt: string): Derivation {
   if (!existsSync(powerPath)) throw invalid(receipt, 'power.json is missing', 'Family 1 may claim only under the preregistered power result (plan §4.6)', { next: 'run', argv: ['bun', 'eval/runner/q1/power.ts', '--output', rel(powerPath)] });
   const powerBuf = readInput(reader, powerPath);
   const power = (JSON.parse(powerBuf.toString('utf8')) as PowerReport).decision;
+  if (power.detectable_difference_points !== null && typeof power.detectable_difference_points !== 'number') throw invalid(receipt, `power.json records detectable_difference_points ${JSON.stringify(power.detectable_difference_points)}, not a number or null`, 'the verdict and the descriptive sentences print the preregistered detectable difference', { next: 'run', argv: ['bun', 'eval/runner/q1/power.ts', '--output', rel(powerPath)] });
   const kindList = loadKinds();
   const kinds = new Map(kindList.map(k => [k.id, k.description]));
   const headSet = campaign.sets.find(s => s.role === 'headline')!;

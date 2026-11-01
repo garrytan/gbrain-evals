@@ -24,8 +24,10 @@ This records what each gbrain-evals release changed and what its measurements me
   that cannot separate two rows with the evidence each system had and the questions scored for both (for example "on
   the 192 of 199 questions scored for both"), and prints the preregistered detectable difference to one decimal (13.6,
   was 13.58). Two tests in `test/eval/scoreboard.test.ts` cover them; the rounding test renders 13.58 and fails if the
-  raw value prints. `scoreboard.ts` is outside the Q1 campaign's
-  executed tree.
+  raw value prints. A `power.json` whose detectable difference is neither a number nor null is now an invalid receipt
+  (`RECEIPT_INVALID`) instead of a bare TypeError. `scoreboard.ts` is outside the Q1 campaign's executed tree.
+  `scripts/verify-documentation-refresh.py` fails when README's paragraph above the block names a publication commit
+  other than the one `publication.json` records, so the next render cannot leave that explanation behind.
 - **Corrections get their own page.** README's `## Corrections` section moved to `docs/corrections.md`, with the
   retired success figures of the first Cat 40 world and the invalid May PrecisionMemBench rows, which
   `docs/comparison-systems.md` showed struck through. That page also drops the invalid v0.48.4.0 LongMemEval QA row

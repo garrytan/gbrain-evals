@@ -273,6 +273,13 @@ describe('cohorts, estimand and claim rules', () => {
     rmSync(dir, { recursive: true });
   });
 
+  test('a power decision whose detectable difference is not a number is an invalid receipt', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'scoreboard-'));
+    writeSyntheticReceipt(dir, { detectableDifference: '13.58' as unknown as number });
+    expect(() => derive(dir)).toThrow(/detectable_difference_points "13\.58", not a number or null/);
+    rmSync(dir, { recursive: true });
+  });
+
   test('README headline: six columns, plain-word exposure, staleness with a newer release, receipt links', () => {
     const { dir, sb } = fresh();
     const md = readFileSync(join(dir, 'scoreboard.md'), 'utf8');
