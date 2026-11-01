@@ -1385,6 +1385,7 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'n2-judge-replay.ts': { role: 'N2 judge-only replay: capture and verify judge inputs, select, judge, score (W9, 2026-10-06); paid, not dispatched', part_of: 'contradiction-surfacing' },
   'openai-judge-shim.ts': { role: 'Anthropic-shaped messages.create over the OpenAI Responses API, so Anthropic-SDK judges can run OpenAI models' },
   'anthropic-request.ts': { role: 'fits Anthropic Messages requests to the model: no temperature or forced tool choice for Claude 5, older models unchanged' },
+  'model-defaults.ts': { role: 'which models a live category may name as its default, and the named exceptions that keep an older model on purpose (R4)' },
   'takes-bootstrap-frontier.ts': { role: "gbrain takes-bootstrap eval on frontier models through the priced overlay: route check, ledger-wrapped run, keyless re-score (W4, 2026-10-06); paid, not dispatched" },
   'w6-embedding-matrix.ts': { role: 'keyless summary of the 2026-10-06 embedding matrix (Cat 13 held-out and Cat 18b receipts)' },
   'w8-negative-controls.ts': { role: 'keyless summary of the 2026-10-06 live negative controls (ratio rule, signal floors, injection checks)' },

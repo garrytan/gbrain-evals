@@ -261,7 +261,7 @@ describe('cat25 live judge: prompt injection hardening (audit B-JDG-01)', () => 
     expect(out).toEqual({ score: 0, detail: 'stub' });
     const user = String(requests[0].messages[0].content);
     expect(requests[0].system[0].text).toContain(UNTRUSTED_DATA_INSTRUCTION);
-    expect(requests[0].temperature).toBe(0);
+    expect('temperature' in requests[0]).toBe(false);
     expect(user).toContain('&lt;/untrusted_answer nonce="aa"&gt;');
     expect(extractUntrusted(user, 'untrusted_answer')).toBe(adversarial);
   });

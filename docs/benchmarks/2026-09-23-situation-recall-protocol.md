@@ -345,7 +345,7 @@ Prepare and approve a separate [`GroundedProfile`](../../eval/runner/cat36-groun
 |---|---|
 | `mode` | `live` for CLI execution. |
 | `answer_model` | An explicit `openai:`, `anthropic:`, or `google:` chat model supported by the public gateway. |
-| `judge_model` | `claude-haiku-4-5-20251001`, the snapshot supported by the shared judge helper's pricing assumptions. |
+| `judge_model` | `claude-haiku-5-5` (`GROUNDED_JUDGE_MODEL`). Until 2026-11-01 it was `claude-haiku-4-5-20251001`, the snapshot the shared judge's fixed Haiku 4.5 prices assumed; the shared judge now prices every model from the budget ledger's table, and CLAUDE.md retires Haiku 4.5. A Haiku 4.5 replay is a different judge identity: never pool it with Haiku 5.5 verdicts. |
 | `answer_max_tokens`, `judge_max_tokens` | Separate integer output limits from 1 to 4096. They are not dollar limits. |
 | `expected_product_sha`, `expected_package_sha256` | Exact loaded product identity matching the retrieval build; the package hash is required for archive installs. |
 | `answer_budget`, `judge_budget` | Separate `{ "kind": "isolated-provider-cap", "approval_id": "<real approval reference>", "max_usd": <approved amount> }` records. Configure the external enforcement before execution. |

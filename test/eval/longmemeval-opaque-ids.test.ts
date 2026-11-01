@@ -88,12 +88,12 @@ describe('system under test inputs', () => {
 
     const replay = loadLmeAnswerReplay({ datasetPath, rowsPath: opts.ndjsonPath, receiptPath: result.receiptFile, adapter: 'gbrain-keyword' });
     const profile: LmeAnswerProfile = { mode: 'offline', adapter: 'gbrain-keyword', ...replay.hashes, answer_model: 'test:answer',
-      judge_model: 'claude-haiku-4-5-20251001', answer_max_tokens: 64, judge_max_tokens: 64 };
+      judge_model: 'claude-haiku-5-5', answer_max_tokens: 64, judge_max_tokens: 64 };
     delete (profile as Partial<typeof replay.hashes>).receipt_sha256;
     const inputs: LmeAnswerInput[] = [];
     const answer: ChatResult = { text: 'Scripted answer.', blocks: [{ type: 'text', text: 'Scripted answer.' }], model: 'test:answer', providerId: 'test', stopReason: 'end',
       usage: { input_tokens: 1, output_tokens: 1, cache_read_tokens: 0, cache_creation_tokens: 0 } };
-    const judgeClient = { messages: { create: async () => ({ id: 'judge', type: 'message', role: 'assistant', model: 'claude-haiku-4-5-20251001', stop_reason: 'tool_use', stop_sequence: null,
+    const judgeClient = { messages: { create: async () => ({ id: 'judge', type: 'message', role: 'assistant', model: 'claude-haiku-5-5', stop_reason: 'tool_use', stop_sequence: null,
       content: [{ type: 'tool_use', id: 'score', name: 'score_answer', input: { verdict: 'pass', overall_rationale: 'Scripted.',
         scores: ['grounding', 'answer_or_abstention'].map(criterion_id => ({ criterion_id, score: 5, rationale: 'Scripted.' })) } }],
       usage: { input_tokens: 1, output_tokens: 1 } }) } } as unknown as Anthropic;

@@ -101,6 +101,10 @@ frontier models. These rules follow the gbrain project rule of 2026-10-07.
   rather than counting it as a win or a tie.
 - **Preregistered gates keep their model list.** To change the models of an existing preregistered gate, record the
   change and its reason in the preregistration before any new cell runs.
+- **Defaults follow the same rules.** A live category's default models are current-generation models, held there by
+  `test/eval/model-defaults.test.ts`. A default that keeps an older model on purpose (a frozen protocol, or a mirror of
+  gbrain's own default) is a named exception with its reason in `eval/runner/model-defaults.ts`. Changing a default is
+  a new receipt identity: never pool its results with the old model's.
 
 To add a category, follow the "Add a category" checklist in [eval/CONTRIBUTING.md](eval/CONTRIBUTING.md): registry row and preregistered promotion rules first, the shared hermetic environment, the paid-arm guard, the scorer mutation kit and the bug ledger.
 

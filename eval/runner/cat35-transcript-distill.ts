@@ -75,6 +75,7 @@ import {
   type TriageVerdictRow,
 } from './cat35-checks.ts';
 import {
+  CAT35_DEFAULT_JUDGE_MODEL,
   CAT35_JUDGE_PROMPT_VERSION,
   confirmDistractorLeaks,
   getJudgeModelsResolved,
@@ -163,9 +164,9 @@ interface Opts {
   judgeCalibration: boolean;
   /** Optional explicit annotation file after --judge-calibration. */
   judgeCalibrationPath: string | null;
-  /** Distill / dream model override (`provider:model`); default unchanged (Haiku in BPRE, Sonnet 4.6 in full). */
+  /** Distill / dream model override (`provider:model`); default BPRE_MODEL in BPRE, FULL_MODEL in full. */
   model: string | null;
-  /** Judge model override; an OpenAI id runs through the Responses shim. Default: CAT35_JUDGE_MODEL or Haiku. */
+  /** Judge model override; an OpenAI id runs through the Responses shim. Default: CAT35_JUDGE_MODEL or CAT35_DEFAULT_JUDGE_MODEL. */
   judgeModel: string | null;
   /** W8 control arms for the dream lane: `unrelated` reads another scenario's transcript, `half` the first half of its own. */
   transcriptMode: TranscriptMode;
@@ -191,6 +192,12 @@ export function unrelatedDonors(ids: Array<{ id: string; scenario: string }>): M
 export function firstHalf(text: string): string {
   const cut = text.lastIndexOf('\n', Math.floor(text.length / 2));
   return text.slice(0, cut > 0 ? cut + 1 : Math.floor(text.length / 2));
+}
+
+/** The first distill model that differs from a prior receipt's config_snapshot (a missing key differs), or null when all three match. */
+export function distillModelMismatch(priorSnapshot: unknown, models: { dream_model: string; facts_model: string; triage_model: string }): string | null {
+  const prior = (priorSnapshot ?? {}) as Record<string, unknown>;
+  return (Object.keys(models) as Array<keyof typeof models>).find(key => prior[key] !== models[key]) ?? null;
 }
 
 // ─── External lane ────────────────────────────────────────────────────────
@@ -396,8 +403,10 @@ const HARD_STOP_USD = (() => {
   return Number.isFinite(v) && v > 0 ? v : 40;
 })();
 const DREAM_CONCURRENCY = 2;
-const HAIKU = 'anthropic:claude-haiku-4-5';
-const SONNET = 'anthropic:claude-sonnet-4-6';
+/** Dream synthesis and facts extraction in full mode. */
+export const FULL_MODEL = 'anthropic:claude-sonnet-5-5';
+/** Dream synthesis and facts extraction in BPRE mode, and dream triage in both. */
+export const BPRE_MODEL = 'anthropic:claude-haiku-5-5';
 // Worst-case pre-flight cost model (per-call bounds; deliberately pessimistic).
 const EST = {
   dreamPerTranscriptFull: 0.9, // Sonnet subagent, ≤16 turns, 600s cap
@@ -716,15 +725,15 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
   }
 
   const judgeModel =
-    opts.judgeModel ?? process.env.CAT35_JUDGE_MODEL ?? 'claude-haiku-4-5-20251001';
+    opts.judgeModel ?? process.env.CAT35_JUDGE_MODEL ?? CAT35_DEFAULT_JUDGE_MODEL;
   try {
     judgePrice(judgeModel);
   } catch (e) {
     return setupError(e instanceof Error ? e.message : String(e));
   }
-  const dreamModel = opts.model ?? (opts.full ? SONNET : HAIKU);
-  const factsModel = opts.model ?? (opts.full ? SONNET : HAIKU);
-  const triageModel = opts.model ?? HAIKU;
+  const dreamModel = opts.model ?? (opts.full ? FULL_MODEL : BPRE_MODEL);
+  const factsModel = opts.model ?? (opts.full ? FULL_MODEL : BPRE_MODEL);
+  const triageModel = opts.model ?? BPRE_MODEL;
   const maxTurns = opts.full ? 16 : 8;
 
   configureGateway({
@@ -1515,7 +1524,7 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
   if (priorFound) {
     const prior = priorFound.receipt as Record<string, any>;
     // Extended comparability (beyond computeDelta's mode/lanes/corpus):
-    // deltas across judge models, corpus content, or transcript subsets are
+    // deltas across judge or distill models, corpus content, or transcript subsets are
     // noise dressed as signal.
     //
     // Strongest layer first: deltas require BOTH receipts to carry
@@ -1530,9 +1539,11 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
     const priorResolved = singleResolvedModel(prior.judge_models_resolved);
     const resolvedModelMismatch =
       currentResolved === null || priorResolved === null || currentResolved !== priorResolved;
+    const distillMismatch = distillModelMismatch(prior.config_snapshot, { dream_model: dreamModel, facts_model: factsModel, triage_model: triageModel });
     const extendedMismatch =
       (resolvedModelMismatch && 'judge_models_resolved') ||
       (prior.judge_model && prior.judge_model !== judgeModel && 'judge_model') ||
+      distillMismatch ||
       (prior.corpus_sha && prior.corpus_sha !== corpusSha && 'corpus_sha') ||
       (Array.isArray(prior.transcripts) &&
         JSON.stringify([...prior.transcripts].sort()) !==

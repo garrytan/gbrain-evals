@@ -11,9 +11,8 @@
  *     functions never throw for malformed model output
  *   - injectable `client` for $0 stub-driven tests
  *   - temperature 0 (judge.ts JUDGE_TEMPERATURE), recorded in the receipt
- *   - per-call token + cost accounting (haiku-4-5 $1/$5 per M,
- *     sonnet-4-6 $3/$15 per M; unknown models priced at sonnet rates as a
- *     conservative overestimate)
+ *   - per-call token + cost accounting, priced from the budget ledger's
+ *     table (judge.ts judgePrice)
  *
  * NOT judge.ts `scoreAnswer`: that has a 0-5 rubric contract and bypasses the
  * LLM budget. Every real call here is wrapped in
@@ -49,7 +48,7 @@ import { JUDGE_TEMPERATURE, UNTRUSTED_DATA_INSTRUCTION, escapeUntrusted, fenceUn
  */
 export const CAT35_JUDGE_PROMPT_VERSION = '2026-09-28-v2';
 
-const DEFAULT_MODEL = 'claude-haiku-4-5-20251001';
+export const CAT35_DEFAULT_JUDGE_MODEL = 'claude-haiku-5-5';
 const DEFAULT_MAX_TOKENS = 2000;
 
 // ─── Config + client ──────────────────────────────────────────────────────
@@ -81,7 +80,7 @@ function getDefaultClient(): Anthropic {
 }
 
 function resolveModel(cfg?: Cat35JudgeCfg): string {
-  return cfg?.model ?? process.env.CAT35_JUDGE_MODEL ?? DEFAULT_MODEL;
+  return cfg?.model ?? process.env.CAT35_JUDGE_MODEL ?? CAT35_DEFAULT_JUDGE_MODEL;
 }
 
 // ─── Server-reported model accounting (generators-19 pattern) ──────────────

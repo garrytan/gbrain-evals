@@ -163,7 +163,7 @@ export interface RunCat9Options extends Cat9Config {
 }
 
 export const CAT9_CATEGORY = 'cat9-workflows';
-const DEFAULT_JUDGE_MODEL = 'claude-haiku-4-5-20251001';
+export const DEFAULT_JUDGE_MODEL = 'claude-haiku-5-5';
 
 // ─── Runner ──────────────────────────────────────────────────────────
 

@@ -46,7 +46,7 @@
  *                    the actor never sees the block and the gate fails.
  *
  * JUDGING:
- *   live     — eval/runner/judge.ts scoreAnswer (Haiku, temperature 0,
+ *   live     — eval/runner/judge.ts scoreAnswer (Haiku 5.5; temperature 0 only for a model that takes one,
  *              rubric-coverage enforced). Each arm's answer is scored
  *              INDEPENDENTLY against the same rubric + the dated readings
  *              as ground truth (absolute scoring, so A/B presentation-order
@@ -69,7 +69,7 @@
  *     (withTrajectory:false) must score <= 0.5 × the wave arm.
  *
  * Cost (live mode): 6 probes × 2 think calls (models.think pinned, default
- * claude-sonnet-4-6, temperature 0) + 12 Haiku judge calls ≈ $0.30-0.60.
+ * claude-opus-5-5) + 12 Haiku 5.5 judge calls. Not yet measured at these defaults.
  * Hermetic mode costs $0 and needs no keys.
  *
  * Run (a live run spends money, so it needs `--paid --budget-run-id <id>` naming an open budget-ledger run;
@@ -268,8 +268,9 @@ export const NEGATIVE_CONTROL_RATIO = 0.5;
 
 // ─── Models ──────────────────────────────────────────────────────────
 
-const THINK_MODEL = process.env.CAT25_MODEL ?? 'claude-sonnet-4-6';
-const JUDGE_MODEL = 'claude-haiku-4-5-20251001';
+export const DEFAULT_THINK_MODEL = 'claude-opus-5-5';
+const THINK_MODEL = process.env.CAT25_MODEL ?? DEFAULT_THINK_MODEL;
+export const JUDGE_MODEL = 'claude-haiku-5-5';
 export const THINK_TEMPERATURE = 0;
 
 // ─── Paths ───────────────────────────────────────────────────────────
@@ -824,7 +825,7 @@ function resolvedConfig(hermetic: boolean): Record<string, unknown> {
     ...SEARCH_CONFIG,
     'models.think': THINK_MODEL,
     think_temperature: THINK_TEMPERATURE,
-    judge: hermetic ? 'deterministic-marker-judge' : `judge.ts scoreAnswer (${JUDGE_MODEL}, temperature 0)`,
+    judge: hermetic ? 'deterministic-marker-judge' : `judge.ts scoreAnswer (${JUDGE_MODEL}, temperature ${temperatureSent(JUDGE_MODEL, JUDGE_TEMPERATURE) ?? 'not sent'})`,
     judge_prompt_version: hermetic ? null : JUDGE_PROMPT_VERSION,
     temperature_sent: hermetic ? null : { think: temperatureSent(THINK_MODEL, THINK_TEMPERATURE), judge: temperatureSent(JUDGE_MODEL, JUDGE_TEMPERATURE) },
     tool_choice_sent: hermetic ? null : { judge: toolChoiceSent(JUDGE_MODEL) },
@@ -892,7 +893,7 @@ async function main(): Promise<void> {
     ? { complete: hermeticComplete, judge: markerJudge }
     : { complete: makeLiveComplete(anthropic!), judge: makeScoreAnswerJudge(anthropic!) };
 
-  console.log(`[cat25] ${PROBES.length} probes, mode=${hermetic ? 'hermetic' : 'live'} think=${THINK_MODEL}@t${THINK_TEMPERATURE} judge=${hermetic ? 'marker' : `${JUDGE_MODEL}@t0`}`);
+  console.log(`[cat25] ${PROBES.length} probes, mode=${hermetic ? 'hermetic' : 'live'} think=${THINK_MODEL}@t${temperatureSent(THINK_MODEL, THINK_TEMPERATURE) ?? '-'} judge=${hermetic ? 'marker' : `${JUDGE_MODEL}@t${temperatureSent(JUDGE_MODEL, JUDGE_TEMPERATURE) ?? '-'}`}`);
 
   const acc = new ProbeAccounting(PROBES.length);
   const results: ProbeResult[] = [];
