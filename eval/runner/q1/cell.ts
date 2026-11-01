@@ -91,7 +91,7 @@ import { answerId, answerRecord, judgmentKey, readerAttempts, readRecords, Recor
 import { failureRow, hashEmbed, readinessProbe, selectQuestions } from '../memory-qa/run-systems.ts';
 import { checkSealedDestinations, sealedPaths } from '../memory-qa/sealed-profile.ts';
 import { PaidArmRefusal, requirePaidArm } from '../paid-arm.ts';
-import { COMPAT_PROVIDERS } from '../providers/openai-compatible.ts';
+import { COMPAT_PROVIDERS, compatTimedOut } from '../providers/openai-compatible.ts';
 import { appendAccessLog } from '../sealed-confirmation-lib.ts';
 import { DEFAULT_ROUTE_CLASSES, type CampaignManifest as Q1Campaign, type CellSpec } from '../shootout-cell.ts';
 import { AgentRuntimeSystem } from '../systems/agent-runtime.ts';
@@ -986,12 +986,12 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
         if (res.error !== undefined) {
           const msg = String((res.error as Error).message);
           const failed = (outcome: Outcome) => answerRecord(id, { text: '', outcome, usage: zero, latency_ms: Math.round(performance.now() - t0), provider_input_tokens: null, ...(attempts ? { finish: null, truncated: false, attempts } : {}) });
-          if (/budget|BudgetExceeded/i.test(msg)) {
+          if (attempts ? (res.error as Error).name === 'BudgetExceededError' : /budget|BudgetExceeded/i.test(msg)) {
             if (attempts) appendAnswer(failed('budget_not_run'), msg);
             stopped = `budget: ${msg.slice(0, 200)}`;
             return pack;
           }
-          appendAnswer(failed('reader_error'), msg, null, attempts !== undefined && ['TimeoutError', 'AbortError'].includes((res.error as Error).name));
+          appendAnswer(failed('reader_error'), msg, null, attempts !== undefined && compatTimedOut(res.error));
           continue;
         }
         const c = res.value!;

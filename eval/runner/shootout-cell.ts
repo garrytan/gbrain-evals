@@ -1050,7 +1050,7 @@ if (import.meta.main) {
     const cmd = argv[0];
     if (cmd === 'remote') {
       const keyless = process.env.SHOOTOUT_KEYLESS_UPSTREAM;
-      const upstream = keyless ? Object.fromEntries(['openai', 'anthropic', 'voyage', 'particle'].map(p => [p, keyless])) : undefined;
+      const upstream = keyless ? { ...Object.fromEntries(['openai', 'anthropic', 'voyage'].map(p => [p, keyless])), particle: `${keyless.replace(/\/$/, '')}/particle` } : undefined;
       process.exit(await runRemote(JSON.parse(Buffer.from(one('--cell-b64') ?? '', 'base64').toString('utf8')), { port: one('--port') ? Number(one('--port')) : undefined, upstream }));
     }
     if (cmd === 'hash') {

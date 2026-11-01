@@ -285,7 +285,7 @@ describe('admission control', () => {
     const slow = upstream(() => { throw new DOMException('The operation timed out.', 'TimeoutError'); });
     const two = start(slow.fetchImpl);
     try {
-      expect((await two.post('/s/openai/v1/chat/completions', chat())).status).toBe(502);
+      expect((await two.post('/s/openai/v1/chat/completions', chat())).status).toBe(504);
       expect(slow.seen).toHaveLength(1);
     } finally { two.proxy.stop(); }
   });
@@ -351,6 +351,23 @@ describe('particle-1 through the lease proxy (plan GST-605 Phase 2)', () => {
         ['particle-1', 'reader', 16000, 200], ['claude-opus-5-5', 'reader', 2048, 400], ['particle-1', 'reader', 16000, 400], ['particle-1', 'judge', 2048, 400], ['particle-1', 'reader', 16000, 200],
       ]);
     } finally { proxy.stop(); }
+  });
+
+  // Value: protects=a request that passed the proxy's upstream deadline is never resent by a client (issue #250); fails_when=the proxy answers its own upstream timeout with the retryable 502 a lost connection gets; why_new=compatTimedOut reads a 504 as a timeout; seam=none; no_claim=Particle's own 504
+  test('an upstream request that times out at the proxy is answered 504, which compatTimedOut reads as a timeout; any other upstream failure stays a 502', async () => {
+    const { compatTimedOut, classifyCompatError, CompatHttpError } = await import('../../eval/runner/providers/openai-compatible.ts');
+    for (const [name, status] of [['TimeoutError', 504], ['TypeError', 502]] as const) {
+      const lease = BudgetRun.openLease({ runId: `particle-upstream-${name}`, leaseUsd: 1, ledgerPath: ledgerFile() });
+      const failing = (async () => { throw name === 'TimeoutError' ? new DOMException('The operation timed out.', 'TimeoutError') : new TypeError('fetch failed: certificate has expired'); }) as unknown as typeof fetch;
+      const proxy = new MeteringProxy({ fetchImpl: failing, policy: { lease, usageLog: join(tmp, `particle-upstream-${name}.ndjson`), ...harness } });
+      proxy.start();
+      try {
+        const res = await fetch(`http://127.0.0.1:${proxy.port}/harness/particle/v1/chat/completions`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(particleChat()) });
+        expect([name, res.status]).toEqual([name, status]);
+        expect(compatTimedOut(new CompatHttpError(classifyCompatError('particle', res.status, await res.text())))).toBe(status === 504);
+      } finally { proxy.stop(); }
+    }
+    expect([compatTimedOut(new DOMException('x', 'AbortError')), compatTimedOut(new Error('fetch failed')), compatTimedOut(null)]).toEqual([true, false, false]);
   });
 
   // Value: protects=an exhausted lease stops particle before any spend; fails_when=a reservation over the lease is forwarded, or its refusal reads to the provider module as Particle's own credit stop; why_new=particle requests reserve 16,000 output tokens each; seam=none; no_claim=Particle's own 402

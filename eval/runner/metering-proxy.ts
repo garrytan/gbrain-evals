@@ -646,7 +646,7 @@ export class MeteringProxy {
         if (!again) {
           admitted?.release();
           this.observe(key, 'failed');
-          return json(502, 'product_error', `upstream failed: ${(e as Error).message}`);
+          return json((e as Error).name === 'TimeoutError' ? 504 : 502, 'product_error', `upstream failed: ${(e as Error).message}`);
         }
         await Bun.sleep(TRANSPORT_RETRY_MS[retries++]);
         if (bounded) {

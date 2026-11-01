@@ -267,6 +267,16 @@ export class CompatHttpError extends Error {
   }
 }
 
+/**
+ * A request that timed out at the client (TimeoutError or AbortError) or at a gateway in front of the provider (a 504,
+ * which the lease proxy answers when its own upstream deadline passes). The provider may have billed it, so a caller
+ * never sends it again.
+ */
+export function compatTimedOut(e: unknown): boolean {
+  const err = e as { name?: string; status?: number } | null;
+  return err?.name === 'TimeoutError' || err?.name === 'AbortError' || err?.status === 504;
+}
+
 /** Particle answered 402 without a proxy's marker: the prepaid balance is empty. Throw it after the failing attempt's receipt is written. */
 export class ParticleCreditExhausted extends BudgetExceededError {
   readonly status = 402;

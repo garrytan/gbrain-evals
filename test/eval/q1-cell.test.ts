@@ -659,11 +659,12 @@ describe('particle-1 readers through Q1\'s lease proxy (plan GST-605 Phase 2)', 
   const submit = () => ({ message: { content: null, tool_calls: [{ id: 'call_1', type: 'function', function: { name: 'submit_answer', arguments: JSON.stringify({ answer: 'The history does not say.' }) } }] }, finish: 'tool_calls' });
   let k = 0;
   /** The real lease proxy (eval/runner/metering-proxy.ts, Q1's route caps and classes) in front of a fake Particle. */
-  function leaseProxy(leaseUsd: number, answer: (n: number) => { message: Record<string, unknown>; finish: string } = answerText) {
+  function leaseProxy(leaseUsd: number, answer: (n: number) => { message: Record<string, unknown>; finish: string } | Response = answerText) {
     const seen: Array<{ url: string; auth: string | null; body: Record<string, any> }> = [];
     const upstream = (async (url: string, init: RequestInit) => {
       seen.push({ url: String(url), auth: new Headers(init.headers).get('authorization'), body: JSON.parse(String(init.body)) });
       const a = answer(seen.length);
+      if (a instanceof Response) return a;
       return Response.json({ id: `c${seen.length}`, model: 'particle-ai/particle-1', choices: [{ index: 0, message: { role: 'assistant', ...a.message }, finish_reason: a.finish }],
         usage: { prompt_tokens: 500, completion_tokens: 40, completion_tokens_details: { reasoning_tokens: 30 } }, service_tier: 'default', metadata: { weight_version: 'default' } });
     }) as unknown as typeof fetch;
@@ -750,6 +751,34 @@ describe('particle-1 readers through Q1\'s lease proxy (plan GST-605 Phase 2)', 
         expect(ndjson(join(out, 'cells', def.arms[0].cell_id, 'answers.ndjson')).map(a => [a.outcome, a.attempts.length])).toEqual(Array(2).fill(['reader_error', 1]));
       } finally { globalThis.fetch = realFetch; lp.stop(); }
     }
+  });
+
+  // Value: protects=a reading whose upstream request passed the proxy's deadline is billed once; fails_when=the proxy's timeout answer is retried by the client loop or the cell's retry pass; why_new=the proxy answers its own upstream timeout 504 and compatTimedOut reads it; seam=none; no_claim=a real 900 s wait
+  test('packed and full context: an upstream timeout at the lease proxy reaches Particle once per question and is a final reader_error', async () => {
+    for (const mode of ['packed', 'full-context'] as const) {
+      const lp = leaseProxy(1, () => { throw new DOMException('The operation timed out.', 'TimeoutError'); });
+      try {
+        const def = mode === 'packed' ? cellDef('ext-graph-pipeline', 'shim', [component({ readers: [PARTICLE], reader_replicates: {} })], slice)
+          : cellDef('baseline-full-context', 'in-process', [{ id: 'whole-full-context', mode: 'full-context', readers: [PARTICLE] }], { configuration: 'baseline', ...slice });
+        const out = join(tmp, `particle-proxy-timeout-${mode}`);
+        await runCell(def, { out, providerProxy: lp.url, ...quiet }, { corpus, system: mode === 'packed' ? new FakeMemorySystem() : new FullContextSystem('whole-history'), reader: new ChatClient(join(out, 'qa-cache')), judge: scriptedJudge() });
+        expect([mode, lp.seen.length]).toEqual([mode, 2]);
+        expect(ndjson(join(out, 'cells', def.arms[0].cell_id, 'answers.ndjson')).map(a => [a.outcome, a.attempts.length, a.attempts[0].error.startsWith('particle 504')])).toEqual(Array(2).fill(['reader_error', 1, true]));
+      } finally { lp.stop(); }
+    }
+  });
+
+  // Value: protects=only a real budget stop stops a particle cell; fails_when=a non-retryable Particle 400 whose body mentions a budget is read as the ledger's or lease's stop by its message text; why_new=the packed path now reads a compat reader's stop by the error's name, as qa-v2 does; seam=none; no_claim=Particle's real 400 bodies
+  test('packed: a Particle 400 whose body mentions a budget is a reader_error, and the cell reads on', async () => {
+    const lp = leaseProxy(1, () => new Response(JSON.stringify({ error: { message: 'max_completion_tokens exceeds the per-request token budget' } }), { status: 400, headers: { 'content-type': 'application/json' } }));
+    try {
+      const def = cellDef('ext-graph-pipeline', 'shim', [component({ readers: [PARTICLE], reader_replicates: {} })], slice);
+      const out = join(tmp, 'particle-400-budget-words');
+      const res = await runCell(def, { out, providerProxy: lp.url, maxAttempts: 1, ...quiet }, { corpus, system: new FakeMemorySystem(), reader: new ChatClient(join(out, 'qa-cache')), judge: scriptedJudge() });
+      expect(res.stopped).toBeNull();
+      expect(lp.seen).toHaveLength(2);
+      expect(ndjson(join(out, 'cells', def.arms[0].cell_id, 'answers.ndjson')).map(a => a.outcome)).toEqual(['reader_error', 'reader_error']);
+    } finally { lp.stop(); }
   });
 
   // Value: protects=the lease as a hard stop for particle; fails_when=an exhausted lease's refusal is retried, recorded as a reader error, loses its attempt, or lets the cell read or judge on; why_new=the scheduler's budget stop now sees particle's proxy refusal; seam=none; no_claim=Particle's own credit 402 (file-agent.test.ts)
