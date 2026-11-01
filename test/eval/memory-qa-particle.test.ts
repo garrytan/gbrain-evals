@@ -10,7 +10,7 @@ import { existsSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { BudgetRun, closeLedgers, initLedger } from '../../eval/runner/budget-ledger.ts';
-import { ChatClient, chatCacheKey, hasChatRoute, sendsTemperature } from '../../eval/runner/memory-qa/qa-v2.ts';
+import { ChatClient, chatCacheKey, checkEffort, hasChatRoute, sendsTemperature } from '../../eval/runner/memory-qa/qa-v2.ts';
 import { parseRunArgs, readAndJudge, runArm, type MemoryQaRow, type RunArgs } from '../../eval/runner/memory-qa/run.ts';
 import * as systems from '../../eval/runner/memory-qa/run-systems.ts';
 import { sumUsage, type UsageReceipt } from '../../eval/runner/usage-receipt.ts';
@@ -198,6 +198,18 @@ describe('the particle route in qa-v2', () => {
     expect([mock.particle().length, mock.seen.length]).toEqual([1, 2]);
   });
 
+  test('an effort the reader\'s provider does not list, any effort for an OpenAI model that does not reason, and --reader-effort without --qa reader are refused before anything runs', async () => {
+    const mock = serve([]);
+    const run = (reader: string, effort: string) => runArm(parseRunArgs(['--benchmark', 'fixture', '--qa', 'reader', '--qa-context', 'oracle', '--reader', reader, '--reader-effort', effort, '--output', join(tmp(), 'out')]));
+    await expect(run('openai:gpt-4o-2024-08-06', 'high')).rejects.toThrow('openai:gpt-4o-2024-08-06 is not an OpenAI reasoning model, so it takes no reasoning effort');
+    await expect(run('openai:gpt-6.1-sol', 'turbo')).rejects.toThrow('reasoning effort "turbo" is not one openai accepts (none, minimal, low, medium, high, xhigh, max)');
+    await expect(run('anthropic:claude-sonnet-5-5', 'minimal')).rejects.toThrow('reasoning effort "minimal" is not one anthropic accepts (low, medium, high, xhigh, max)');
+    await expect(runArm(parseRunArgs(['--benchmark', 'fixture', '--qa', 'think', '--reader-effort', 'high', '--output', join(tmp(), 'out')]))).rejects.toThrow('--reader-effort sets the reader\'s effort, so it needs --qa reader');
+    expect(() => checkEffort('anthropic:claude-opus-5-5', 'xhigh')).not.toThrow();
+    expect(() => checkEffort('openai:gpt-6.1-sol', 'none')).not.toThrow();
+    expect(mock.seen).toHaveLength(0);
+  });
+
   test('memory-system cells: every particle model the cell calls is checked before it ingests, a provider proxy refuses particle, and --reader-effort is refused', async () => {
     const mock = serve([]);
     const out = join(tmp(), 'systems');
@@ -255,7 +267,7 @@ describe('the budget stop', () => {
     expect((receipt.usage as { by_role: Record<string, { errors: number; records: number }> }).by_role.reader).toMatchObject({ records: 2, errors: 1 });
   }, 60_000);
 
-  test('run.ts: a stop on the last question leaves the run partial, and the rerun that answers it reads complete although the stopped row stays in the file', async () => {
+  test('run.ts: a stop on the last question leaves the run partial, and the rerun that answers it reads complete although the stopped row stays in the file, counting each question once', async () => {
     process.env.GBRAIN_EVALS_QA_CACHE = join(tmp(), 'qa-cache');
     const out = join(tmp(), 'run');
     const argv = ['--benchmark', 'fixture', '--qa', 'reader', '--qa-context', 'oracle', '--reader', 'particle:particle-1', '--judge', 'openai:gpt-4o-mini', '--limit', '2', ...paidArgs('last-stop'), '--output', out];
@@ -265,6 +277,8 @@ describe('the budget stop', () => {
     serve([{ body: PARTICLE_OK }]);
     const second = await runArm(parseRunArgs(argv));
     expect([second.rows.length, second.receipt.run_status, 'stopped' in (second.receipt.summary as object)]).toEqual([3, 'complete', false]);
+    expect(second.receipt.counts).toMatchObject({ rows: 2, errors: 0 });
+    expect(second.receipt.summary).toMatchObject({ qa_rows: 2, qa_errors: 0 });
   }, 60_000);
 
   test('run-systems.ts: reader calls leave receipts, and a credit 402 ends the question as budget_not_run and stops the cell', async () => {

@@ -74,15 +74,18 @@
  * `openai:` and the OpenAI-compatible providers in eval/runner/providers
  * (`particle:particle-1`, sent at least 16,000 output tokens because it
  * reasons first). `--reader-effort` sets the reader's reasoning effort
- * (`reasoning_effort`, or Anthropic's `output_config.effort`); particle-1
- * runs at `high` unless told otherwise, and an effort Particle does not list,
- * or a missing PARTICLE_API_KEY, is refused before anything runs.
+ * (`reasoning_effort`, or Anthropic's `output_config.effort`) and needs
+ * `--qa reader`; particle-1 runs at `high` unless told otherwise. An effort
+ * the reader's provider does not list (any effort, for an OpenAI model that is
+ * not a reasoning model), or a missing PARTICLE_API_KEY, is refused before
+ * anything runs.
  *
  * Budget stop: when a reader, think or judge call hits the budget ledger's
  * cap or Particle's credit 402, that question's row is written as an error
  * with the receipts gathered so far, no later question or conversation runs,
  * and the receipt's summary says `stopped: budget`. A rerun of the same
- * command resumes from that question.
+ * command resumes from that question; the stopped row stays in rows.ndjson,
+ * and the receipt's counts and summary read each question's latest row.
  */
 import '../budget-ledger.ts';
 import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -98,7 +101,7 @@ import { EmbeddingCache, makeCachingTransport } from '../longmemeval-cache.ts';
 import { ndcgAtK, recallAllAtK, recallAnyAtK, uniqueInOrder, percentile } from '../metrics.ts';
 import { isoSessionDate, loadCorpus, occurrenceId, renderSessionPage, sha256, type Corpus, type MemoryQuestion, type Session } from './corpus.ts';
 import { DEFAULT_JUDGE, DEFAULT_READER, factsReaderPrompt, latestDate, packSessions, readerPrompt, repeatsTrap, sessionDateKey, unresolvedRelativeTime, type SavedFact } from './qa.ts';
-import { ChatClient, chatWithReceipts, hasChatRoute, isCompatModel, judgeResponse, sendsTemperature, type ChatLike } from './qa-v2.ts';
+import { ChatClient, chatWithReceipts, checkEffort, hasChatRoute, isCompatModel, judgeResponse, sendsTemperature, type ChatLike } from './qa-v2.ts';
 import { compatRequest, modelsNotRun } from '../providers/openai-compatible.ts';
 import { normalizeUsage, receipt, sumUsage, thinkFinish, USAGE_RECEIPT_SCHEMA, type UsageReceipt } from '../usage-receipt.ts';
 import { devConversations, loadSplit } from '../decisions/splits.ts';
@@ -480,7 +483,9 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
   if (a.qa.context === 'facts' && (a.facts === 'none' || a.qa.mode !== 'reader')) throw new Error('--qa-context facts needs --facts conversation and --qa reader');
   if ((a.qa.context === 'none' || a.qa.context === 'oracle') && a.qa.mode !== 'reader') throw new Error(`--qa-context ${a.qa.context} needs --qa reader`);
   if ((a.retrievedFrom || a.qa.context === 'none' || a.qa.context === 'oracle') && (a.qa.mode === 'think' || a.facts !== 'none')) throw new Error('--retrieved-from and --qa-context none|oracle build no brain, so they cannot run think or the facts lane');
+  if (a.qa.effort !== undefined && a.qa.mode !== 'reader') throw new Error('--reader-effort sets the reader\'s effort, so it needs --qa reader');
   if (a.qa.mode === 'reader' && isCompatModel(a.qa.reader)) compatRequest(a.qa.reader, [], { effort: a.qa.effort, maxOutputTokens: a.qa.maxTokens });
+  else if (a.qa.effort !== undefined) checkEffort(a.qa.reader, a.qa.effort);
   if (a.qa.mode !== 'none' && isCompatModel(a.qa.judge)) compatRequest(a.qa.judge, [], {});
   const frozen = a.retrievedFrom ? loadFrozenRetrieval(a.retrievedFrom) : null;
   // No brain is built when the evidence is replayed, empty or the gold sessions themselves.
@@ -691,7 +696,8 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
   }
 
   const allRows: MemoryQaRow[] = (existsSync(rowsPath) ? readFileSync(rowsPath, 'utf8') : '').split('\n').filter(l => l.trim()).map(l => JSON.parse(l));
-  const scored = allRows.filter(r => !r.abstention && !r.error && r.gold_count > 0);
+  const latest = [...new Map(allRows.map(r => [r.id, r])).values()];
+  const scored = latest.filter(r => !r.abstention && !r.error && r.gold_count > 0);
   const mean = (k: keyof MemoryQaRow) => scored.length ? scored.reduce((s, r) => s + Number(r[k] ?? 0), 0) / scored.length : null;
   const retrievalScored = !!frozen || !brainless;
   const invalidReasons: string[] = [];
@@ -717,7 +723,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
     paid.guard.uninstall();
     cost = receiptCost(summary) as unknown as Record<string, unknown>;
   }
-  const runStatus = refusal ? 'refused' : invalidReasons.length ? 'invalid' : stopped || new Set(allRows.map(r => r.id)).size < expected ? 'partial' : 'complete';
+  const runStatus = refusal ? 'refused' : invalidReasons.length ? 'invalid' : stopped || latest.length < expected ? 'partial' : 'complete';
   const finishedAt = new Date().toISOString();
   const attempts: Attempt[] = [...priorAttempts, { run_status: runStatus, finished_at: finishedAt, rows_added: allRows.length - rowsBefore, reranked_queries: attemptFidelity.reranked_queries,
     rerank_provider_requests: attemptFidelity.rerank_provider_requests, embedding_deferred_pages: attemptFidelity.embedding_deferred_pages, usd: (cost?.usd as number | undefined) ?? null }];
@@ -733,10 +739,10 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
     reading: a.qa.mode === 'none' ? null : { breadth_sessions: a.qa.sessions, budget_tokens: a.qa.budgetTokens, max_output_tokens: a.qa.maxTokens ?? 1024 },
     embedding: { mode: a.embed, model: a.embeddingModel, dims: a.embeddingDims, cache_stats: cache ? { ...cache.stats } : null },
     dataset: corpus.source, selection: { categories: a.categories, limit: a.limit, seed: a.seed, shard: a.shard, conversations: myConvs.length, questions_expected: expected },
-    counts: { rows: allRows.length, scored: scored.length, errors: allRows.filter(r => r.error).length, abstention: allRows.filter(r => r.abstention).length },
+    counts: { rows: latest.length, scored: scored.length, errors: latest.filter(r => r.error).length, abstention: latest.filter(r => r.abstention).length },
     summary: { recall_all_at_5: retrievalScored ? mean('recall_all_at_5') : null, recall_any_at_5: retrievalScored ? mean('recall_any_at_5') : null, recall_all_at_10: retrievalScored ? mean('recall_all_at_10') : null, ndcg_at_10: retrievalScored ? mean('ndcg_at_10') : null,
       latency_p50_ms: brainless || !scored.length ? null : percentile(scored.map(r => r.latency_ms ?? 0), 50), latency_p95_ms: brainless || !scored.length ? null : percentile(scored.map(r => r.latency_ms ?? 0), 95),
-      ...(a.qa.mode !== 'none' ? (() => { const qa = allRows.filter(r => typeof r.qa_score === 'number'); return { qa_score: qa.length ? qa.reduce((x, r) => x + (r.qa_score ?? 0), 0) / qa.length : null, qa_rows: qa.length, qa_errors: allRows.filter(r => r.qa_error).length }; })() : {}),
+      ...(a.qa.mode !== 'none' ? (() => { const qa = latest.filter(r => typeof r.qa_score === 'number'); return { qa_score: qa.length ? qa.reduce((x, r) => x + (r.qa_score ?? 0), 0) / qa.length : null, qa_rows: qa.length, qa_errors: latest.filter(r => r.qa_error).length }; })() : {}),
       ...(stopped ? { stopped } : {}) },
     facts: a.facts === 'none' ? null : { lane: a.facts, extractor: 'runExtractConversationFactsCore (product default model, force)', pages: 'conversation type, ISO session date', ...factStats,
       unresolved_share: factStats.facts ? factStats.unresolved / factStats.facts : null },

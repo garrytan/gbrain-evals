@@ -111,6 +111,21 @@ export const hasChatRoute = (model: string) => model.startsWith('anthropic:') ||
 /** qa.ts's rule, except that an OpenAI-compatible provider is never sent a temperature (it samples at its own default). */
 export const sendsTemperature = (model: string) => !isCompatModel(model) && baseSendsTemperature(model);
 
+/** The reasoning efforts Anthropic (`output_config.effort`) and OpenAI (`reasoning_effort`) accept (their API references, 2026-11-01). */
+const EFFORTS: Record<string, readonly string[]> = { anthropic: ['low', 'medium', 'high', 'xhigh', 'max'], openai: ['none', 'minimal', 'low', 'medium', 'high', 'xhigh', 'max'] };
+
+/**
+ * Refuse a reasoning effort an Anthropic or OpenAI model would answer with a 400, before anything is sent: a value its
+ * provider does not list, or any effort for an OpenAI model that is not a reasoning model. `compatRequest` checks an
+ * OpenAI-compatible provider's effort against its own list. A listed value can still be one a given model does not take.
+ */
+export function checkEffort(model: string, effort: string): void {
+  const provider = model.includes(':') ? model.slice(0, model.indexOf(':')) : 'openai';
+  if (provider === 'openai' && sendsTemperature(model)) throw new Error(`${model} is not an OpenAI reasoning model, so it takes no reasoning effort`);
+  const accepted = EFFORTS[provider];
+  if (!accepted?.includes(effort)) throw new Error(`${model}: reasoning effort ${JSON.stringify(effort)} is not one ${provider} accepts (${accepted?.join(', ') ?? 'none listed'})`);
+}
+
 /** The request a compat provider gets for one call; refuses a missing key, an unknown model or an unlisted effort before anything is sent. */
 const compatCall = (model: string, prompt: string, opts: ChatOptions, env: Record<string, string | undefined> = process.env): CompatRequest =>
   compatRequest(model, [...(opts.system !== undefined ? [{ role: 'system' as const, content: opts.system }] : []), { role: 'user' as const, content: prompt }], { effort: opts.effort, maxOutputTokens: opts.maxTokens }, env);
