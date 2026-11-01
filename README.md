@@ -200,7 +200,7 @@ appears; on that looser metric gbrain finds at least one for 470 of 470. Limits:
 the verbatim-session system returns five whole sessions, the configuration was chosen on these 470 questions, and embedders and
 chunking differ, so this compares pipelines, not components.
 
-**Retrieval or the whole history: within 7 points at a seventh of the recurring cost.** On 150 LongMemEval-S questions with the same reader, gbrain's retrieval answered 139 against 144 with the whole ~115,000-token history pasted in (Sonnet 5.5), and 137 against 141 (GPT-6.1 Sol). Both stay within the preregistered 7-point margin, which is not the same as equal: the gap is in questions that need several conversations. gbrain's recurring cost per question is $0.024 against $0.173 with Sonnet 5.5, plus a one-time $0.015 to index each history. [Full-context comparison](docs/benchmarks/2026-10-07-longmemeval-w10c-full-context.md).
+**Retrieval or the whole history: within 7 points at a seventh of the recurring cost.** On 150 LongMemEval-S questions with the same reader, gbrain's retrieval answered 139 against 144 with the whole ~115,000-token history pasted in (Sonnet 5.5), and 137 against 141 (GPT-6.1 Sol). Both stay within the preregistered 7-point margin, which is not the same as equal: the gap is in questions that need several conversations. gbrain's recurring cost per question is $0.024 against $0.173 with Sonnet 5.5, plus a one-time $0.015 to index each history. [Full-context comparison](docs/benchmarks/2026-10-07-longmemeval-w10c-full-context.md). particle-1, reading the same prompts at high effort and at list price (Particle has no batch discount), answered 135 with gbrain's retrieval against 140 with the whole history, also within the margin, at $0.0047 against $0.0275 per question ([particle-1 replay](docs/benchmarks/2026-11-01-longmemeval-particle-replay/REPORT.md)).
 
 **Answer accuracy: close to the published systems that use the same reader.** With `gpt-5.4` as the reader,
 gbrain's retrieval answers 89.4%; a temporal knowledge-graph service publishes 90.2% and a database-backed memory
@@ -387,6 +387,10 @@ Code is MIT licensed. Dataset and vendored benchmark attribution is recorded in 
 [PrecisionMemBench attribution](eval/precisionmembench/ATTRIBUTION.md).
 
 ## Changelog
+
+### 2026-11-01: particle-1's two W10c rows join the full-context paragraph
+
+The "Retrieval or the whole history" paragraph gains one sentence from the [particle-1 replay](docs/benchmarks/2026-11-01-longmemeval-particle-replay/REPORT.md): particle-1 at high effort answered 135 of the 150 W10c questions on gbrain's retrieval and 140 with the whole history, within the preregistered 7-point margin (decision G), at $0.0047 and $0.0275 per question at list price. The plan for particle-1 adds this sentence whatever the result; the paragraph's headline and its Sonnet 5.5 and GPT-6.1 Sol numbers do not change. The report also finds that at this history size particle-1 reading the whole history costs about what Sonnet 5.5 reading gbrain's retrieval costs; whether the headline moves toward longer histories is a separate decision.
 
 ### 2026-10-31: Re-pin to gbrain `3ec766c40`; the four new read defaults are named; repository row names v0.10.139
 
