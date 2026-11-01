@@ -551,6 +551,10 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
   const maxAttempts = opts.maxAttempts ?? DEFAULT_MAX_ATTEMPTS;
   const arms = def.arms.filter(a => !opts.arms || opts.arms.includes(a.id));
   if (!arms.length) throw refuse({ code: 'USAGE', message: `--arms ${opts.arms?.join(',')} names no arm of ${def.id}`, why: 'a run needs at least one arm', fix: { next: 'run', argv: [...FRONT, 'show', '--cell', def.id] } });
+  const instrument = instrumentFor(def.canonical_instrument);
+  const compatModels = opts.providerProxy ? [...new Set([...arms.flatMap(a => a.readers), instrument.canonical_judge, ...(opts.frontier === false ? [] : arms.flatMap(a => a.frontier?.judges ?? []))])].filter(isCompatModel) : [];
+  if (compatModels.length) throw refuse({ code: 'NOT_YET_AVAILABLE', message: `cell ${def.id} reads or judges with ${compatModels.join(', ')} through --provider-proxy, and the lease proxy has no particle route yet`,
+    why: 'through the lease proxy a reader or judge is metered only by the proxy; a particle reader or judge would call api.particle.ai with the real key and no meter (the route comes with plan GST-605 Phase 2)', fix: { next: 'run', argv: [...FRONT, 'run', '--cell', def.id, '--out', out] } });
 
   // Custody before anything reads the corpus.
   const custody = !deps.corpus && needsCustody(def);
@@ -570,7 +574,6 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
   const shard = opts.shard ?? { index: 0, count: 1 };
   const convIds = [...new Set(selected.map(q => q.conversation))].sort().filter((_, i) => i % shard.count === shard.index);
   const armQs = new Map(arms.map(a => [a.id, new Set((a.questions ? selectCellQuestions(selected, a.questions) : selected).map(q => q.id))]));
-  const instrument = instrumentFor(def.canonical_instrument);
   const scheduledSha = sha256(selected.map(q => q.id).join('\n'));
 
   // Run configs: written once and kept byte for byte (config_sha256 is their sha256), refused when a resume would change
@@ -613,10 +616,6 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
         : runnable.length ? { next: 'run', argv: [...FRONT, 'run', '--cell', def.id, '--arms', runnable.join(',')], user_message: 'run the other arms now; the blocked arms wait for the system\'s answer route' } : { next: 'report', user_message: 'the cell waits for an answer route in the system\'s shim' } });
   }
   const readersOf = new Map(arms.map(a => [a.id, armReaders(a, capabilities)]));
-  const compatModels = [...new Set([...[...readersOf.values()].flat(), instrument.canonical_judge, ...(opts.frontier === false ? [] : arms.flatMap(a => a.frontier?.judges ?? []))])].filter(isCompatModel);
-  if (compatModels.length && opts.providerProxy) throw refuse({ code: 'NOT_YET_AVAILABLE', message: `cell ${def.id}: ${compatModels.join(', ')} cannot read or judge behind the lease proxy yet`,
-    why: 'the lease proxy has no route for OpenAI-compatible providers, so these readers and judges would spend outside the lease and its meter; particle-1 plan unit U5 adds the route',
-    fix: { next: 'report', user_message: `run ${def.id} without ${compatModels.join(', ')} until the lease proxy routes it` } });
   const chat = deps.reader ?? deps.judge ?? new ChatClient(custody ? join(out, 'cache', 'qa') : env.GBRAIN_EVALS_QA_CACHE ?? join(homedir(), '.cache', 'gbrain-evals', 'qa-cache'));
   const reader = onSlot(deps.reader ?? chat, meter, 'harness');
   const judge = onSlot(deps.judge ?? chat, meter, 'judge');
@@ -1030,13 +1029,14 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
           continue;
         }
         const pq = sanitizer.question(q, lastEventTime);
-        const res = await meter.around('agent', `answer:${aid.slice(0, 16)}`, 'reader', () => (system as AnsweringSystem).answer(ns, pq, { reader: rd, replicate: rep }));
+        const res = await meter.around('agent', `answer:${aid.slice(0, 16)}`, 'reader', () => (system as AnsweringSystem).answer(ns, pq, { reader: rd, replicate: rep, answer_id: aid }));
         if (res.error !== undefined) { appendAnswer(answerRecord(id, { text: '', outcome: 'reader_error', usage: zero, latency_ms: 0, provider_input_tokens: null }), String((res.error as Error).message)); continue; }
         const a = res.value!;
         const gold = q.gold.map(g => sanitizer.source(q.conversation, g));
         const opened = a.opened_source_ids.filter(s => gold.includes(s)).length;
         extra.evidence_opened = { ...(extra.evidence_opened ?? {}), [rd]: gold.length ? opened / new Set(gold).size : null };
         appendAnswer(answerRecord(id, { ...a, outcome: a.outcome === 'scored' && degraded ? 'ingest_degraded' : a.outcome, opened_source_ids: a.opened_source_ids.map(s => sanitizer.sessionOf(ns, s) ?? s) }), a.error);
+        if (a.outcome === 'budget_not_run') stopped = `budget: ${String(a.error).slice(0, 200)}`;
       }
       return extra;
     };
@@ -1269,8 +1269,8 @@ export function pinnedImages(root = resolve(import.meta.dir, '../../..')): Recor
 }
 
 /** Repository paths every Q1 cell executes (their git tree enters the campaign hash). */
-export const EXECUTES = ['eval/runner/q1/cell.ts', 'eval/runner/q1/cells', 'eval/runner/q1/scoreboard-errors.ts', 'eval/runner/q1/usage.ts', 'eval/runner/memory-qa', 'eval/runner/systems', 'eval/runner/cat40', 'eval/runner/decisions',
-  'eval/runner/metering-proxy.ts', 'eval/runner/budget-ledger.ts', 'eval/runner/usage-receipt.ts', 'eval/runner/providers', 'eval/runner/openai-judge-shim.ts', 'eval/runner/paid-arm.ts', 'eval/runner/metrics.ts', 'eval/runner/sealed-confirmation-lib.ts', 'eval/runner/shootout-cell.ts',
+export const EXECUTES = ['eval/runner/q1/cell.ts', 'eval/runner/q1/cells', 'eval/runner/q1/scoreboard-errors.ts', 'eval/runner/q1/usage.ts', 'eval/runner/memory-qa', 'eval/runner/systems', 'eval/runner/cat40', 'eval/runner/decisions', 'eval/runner/providers',
+  'eval/runner/metering-proxy.ts', 'eval/runner/budget-ledger.ts', 'eval/runner/usage-receipt.ts', 'eval/runner/openai-judge-shim.ts', 'eval/runner/paid-arm.ts', 'eval/runner/metrics.ts', 'eval/runner/sealed-confirmation-lib.ts', 'eval/runner/shootout-cell.ts',
   'eval/runner/evidence-delivery', 'eval/runner/gbrain-under-test.ts', 'eval/runner/lifecycle/builds.ts',
   'eval/runner/longmemeval-cache.ts', 'eval/runner/receipt.ts', 'scripts/ubicloud/ubi-runner.sh', 'eval/runner/situation-recall-provenance.ts', 'eval/generators/model-ladder-gen.ts',
   'eval/systems/PROTOCOL.md', 'eval/systems/_fake', 'eval/systems/_shim', 'eval/systems/bootstrap.sh', 'eval/systems/gbrain-defaults', 'eval/systems/kinds.json',

@@ -1,0 +1,112 @@
+{
+  "anthropic": [
+    {
+      "url": "https://api.anthropic.com/v1/messages",
+      "headerNames": [
+        "anthropic-version",
+        "content-type",
+        "x-api-key"
+      ],
+      "body": "{\"model\":\"claude-opus-5-5\",\"max_tokens\":8192,\"system\":[{\"type\":\"text\",\"text\":\"You answer from the knowledge base.\",\"cache_control\":{\"type\":\"ephemeral\"}}],\"tools\":[{\"name\":\"lookup\",\"description\":\"Look up a key.\",\"input_schema\":{\"type\":\"object\",\"properties\":{\"key\":{\"type\":\"string\"}},\"required\":[\"key\"]}},{\"name\":\"submit_answer\",\"description\":\"Submit your final answer. Call this exactly once, when you are done.\",\"input_schema\":{\"type\":\"object\",\"properties\":{\"answer\":{\"type\":\"string\",\"description\":\"The answer value only (a name, date, number, term or code), no explanation. Use NOT_ACCESSIBLE if the information is not available to the person you work for, UNKNOWN if the knowledge base does not contain it.\"},\"fields\":{\"type\":\"object\",\"description\":\"For multi-part requests: one key per requested item, each a value only.\",\"additionalProperties\":{\"type\":\"string\"}},\"sources\":{\"type\":\"array\",\"items\":{\"type\":\"string\"},\"description\":\"Ids or paths of the documents you relied on.\"},\"notes\":{\"type\":\"string\",\"description\":\"Optional brief explanation, caveats or conflicts you noticed.\"}},\"required\":[\"sources\"]},\"cache_control\":{\"type\":\"ephemeral\"}}],\"messages\":[{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"What is a?\",\"cache_control\":{\"type\":\"ephemeral\"}}]}]}"
+    },
+    {
+      "url": "https://api.anthropic.com/v1/messages",
+      "headerNames": [
+        "anthropic-version",
+        "content-type",
+        "x-api-key"
+      ],
+      "body": "{\"model\":\"claude-opus-5-5\",\"max_tokens\":8192,\"system\":[{\"type\":\"text\",\"text\":\"You answer from the knowledge base.\",\"cache_control\":{\"type\":\"ephemeral\"}}],\"tools\":[{\"name\":\"lookup\",\"description\":\"Look up a key.\",\"input_schema\":{\"type\":\"object\",\"properties\":{\"key\":{\"type\":\"string\"}},\"required\":[\"key\"]}},{\"name\":\"submit_answer\",\"description\":\"Submit your final answer. Call this exactly once, when you are done.\",\"input_schema\":{\"type\":\"object\",\"properties\":{\"answer\":{\"type\":\"string\",\"description\":\"The answer value only (a name, date, number, term or code), no explanation. Use NOT_ACCESSIBLE if the information is not available to the person you work for, UNKNOWN if the knowledge base does not contain it.\"},\"fields\":{\"type\":\"object\",\"description\":\"For multi-part requests: one key per requested item, each a value only.\",\"additionalProperties\":{\"type\":\"string\"}},\"sources\":{\"type\":\"array\",\"items\":{\"type\":\"string\"},\"description\":\"Ids or paths of the documents you relied on.\"},\"notes\":{\"type\":\"string\",\"description\":\"Optional brief explanation, caveats or conflicts you noticed.\"}},\"required\":[\"sources\"]},\"cache_control\":{\"type\":\"ephemeral\"}}],\"messages\":[{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"What is a?\"}]},{\"role\":\"assistant\",\"content\":[{\"type\":\"tool_use\",\"id\":\"toolu_1\",\"name\":\"lookup\",\"input\":{\"key\":\"a\"}}]},{\"role\":\"user\",\"content\":[{\"type\":\"tool_result\",\"tool_use_id\":\"toolu_1\",\"content\":\"value of a\",\"cache_control\":{\"type\":\"ephemeral\"}}]}]}"
+    },
+    {
+      "url": "https://api.anthropic.com/v1/messages",
+      "headerNames": [
+        "anthropic-version",
+        "content-type",
+        "x-api-key"
+      ],
+      "body": "{\"model\":\"claude-opus-5-5\",\"max_tokens\":8192,\"system\":[{\"type\":\"text\",\"text\":\"You answer from the knowledge base.\",\"cache_control\":{\"type\":\"ephemeral\"}}],\"tools\":[{\"name\":\"lookup\",\"description\":\"Look up a key.\",\"input_schema\":{\"type\":\"object\",\"properties\":{\"key\":{\"type\":\"string\"}},\"required\":[\"key\"]}},{\"name\":\"submit_answer\",\"description\":\"Submit your final answer. Call this exactly once, when you are done.\",\"input_schema\":{\"type\":\"object\",\"properties\":{\"answer\":{\"type\":\"string\",\"description\":\"The answer value only (a name, date, number, term or code), no explanation. Use NOT_ACCESSIBLE if the information is not available to the person you work for, UNKNOWN if the knowledge base does not contain it.\"},\"fields\":{\"type\":\"object\",\"description\":\"For multi-part requests: one key per requested item, each a value only.\",\"additionalProperties\":{\"type\":\"string\"}},\"sources\":{\"type\":\"array\",\"items\":{\"type\":\"string\"},\"description\":\"Ids or paths of the documents you relied on.\"},\"notes\":{\"type\":\"string\",\"description\":\"Optional brief explanation, caveats or conflicts you noticed.\"}},\"required\":[\"sources\"]},\"cache_control\":{\"type\":\"ephemeral\"}}],\"messages\":[{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"What is a?\"}]},{\"role\":\"assistant\",\"content\":[{\"type\":\"tool_use\",\"id\":\"toolu_1\",\"name\":\"lookup\",\"input\":{\"key\":\"a\"}}]},{\"role\":\"user\",\"content\":[{\"type\":\"tool_result\",\"tool_use_id\":\"toolu_1\",\"content\":\"value of a\"}]},{\"role\":\"assistant\",\"content\":[{\"type\":\"text\",\"text\":\"The value is known.\"}]},{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"Please call submit_answer now with your final answer.\",\"cache_control\":{\"type\":\"ephemeral\"}}]}]}"
+    }
+  ],
+  "openai": [
+    {
+      "url": "https://api.openai.com/v1/responses",
+      "headerNames": [
+        "authorization",
+        "content-type"
+      ],
+      "body": "{\"model\":\"gpt-6.1-sol\",\"instructions\":\"You answer from the knowledge base.\",\"input\":[{\"role\":\"user\",\"content\":\"What is a?\"}],\"tools\":[{\"type\":\"function\",\"name\":\"lookup\",\"description\":\"Look up a key.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"key\":{\"type\":\"string\"}},\"required\":[\"key\"]},\"strict\":false},{\"type\":\"function\",\"name\":\"submit_answer\",\"description\":\"Submit your final answer. Call this exactly once, when you are done.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"answer\":{\"type\":\"string\",\"description\":\"The answer value only (a name, date, number, term or code), no explanation. Use NOT_ACCESSIBLE if the information is not available to the person you work for, UNKNOWN if the knowledge base does not contain it.\"},\"fields\":{\"type\":\"object\",\"description\":\"For multi-part requests: one key per requested item, each a value only.\",\"additionalProperties\":{\"type\":\"string\"}},\"sources\":{\"type\":\"array\",\"items\":{\"type\":\"string\"},\"description\":\"Ids or paths of the documents you relied on.\"},\"notes\":{\"type\":\"string\",\"description\":\"Optional brief explanation, caveats or conflicts you noticed.\"}},\"required\":[\"sources\"]},\"strict\":false}],\"max_output_tokens\":16000}"
+    },
+    {
+      "url": "https://api.openai.com/v1/responses",
+      "headerNames": [
+        "authorization",
+        "content-type"
+      ],
+      "body": "{\"model\":\"gpt-6.1-sol\",\"instructions\":\"You answer from the knowledge base.\",\"input\":[{\"type\":\"function_call_output\",\"call_id\":\"call_1\",\"output\":\"value of a\"}],\"tools\":[{\"type\":\"function\",\"name\":\"lookup\",\"description\":\"Look up a key.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"key\":{\"type\":\"string\"}},\"required\":[\"key\"]},\"strict\":false},{\"type\":\"function\",\"name\":\"submit_answer\",\"description\":\"Submit your final answer. Call this exactly once, when you are done.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"answer\":{\"type\":\"string\",\"description\":\"The answer value only (a name, date, number, term or code), no explanation. Use NOT_ACCESSIBLE if the information is not available to the person you work for, UNKNOWN if the knowledge base does not contain it.\"},\"fields\":{\"type\":\"object\",\"description\":\"For multi-part requests: one key per requested item, each a value only.\",\"additionalProperties\":{\"type\":\"string\"}},\"sources\":{\"type\":\"array\",\"items\":{\"type\":\"string\"},\"description\":\"Ids or paths of the documents you relied on.\"},\"notes\":{\"type\":\"string\",\"description\":\"Optional brief explanation, caveats or conflicts you noticed.\"}},\"required\":[\"sources\"]},\"strict\":false}],\"max_output_tokens\":16000,\"previous_response_id\":\"resp_1\"}"
+    },
+    {
+      "url": "https://api.openai.com/v1/responses",
+      "headerNames": [
+        "authorization",
+        "content-type"
+      ],
+      "body": "{\"model\":\"gpt-6.1-sol\",\"instructions\":\"You answer from the knowledge base.\",\"input\":[{\"role\":\"user\",\"content\":\"Please call submit_answer now with your final answer.\"}],\"tools\":[{\"type\":\"function\",\"name\":\"lookup\",\"description\":\"Look up a key.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"key\":{\"type\":\"string\"}},\"required\":[\"key\"]},\"strict\":false},{\"type\":\"function\",\"name\":\"submit_answer\",\"description\":\"Submit your final answer. Call this exactly once, when you are done.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"answer\":{\"type\":\"string\",\"description\":\"The answer value only (a name, date, number, term or code), no explanation. Use NOT_ACCESSIBLE if the information is not available to the person you work for, UNKNOWN if the knowledge base does not contain it.\"},\"fields\":{\"type\":\"object\",\"description\":\"For multi-part requests: one key per requested item, each a value only.\",\"additionalProperties\":{\"type\":\"string\"}},\"sources\":{\"type\":\"array\",\"items\":{\"type\":\"string\"},\"description\":\"Ids or paths of the documents you relied on.\"},\"notes\":{\"type\":\"string\",\"description\":\"Optional brief explanation, caveats or conflicts you noticed.\"}},\"required\":[\"sources\"]},\"strict\":false}],\"max_output_tokens\":16000,\"previous_response_id\":\"resp_2\"}"
+    }
+  ],
+  "anthropic-file-agent": [
+    {
+      "url": "https://api.anthropic.com/v1/messages",
+      "headerNames": [
+        "anthropic-version",
+        "content-type",
+        "x-api-key"
+      ],
+      "body": "{\"model\":\"claude-opus-5-5\",\"max_tokens\":8192,\"system\":[{\"type\":\"text\",\"text\":\"You answer from the knowledge base.\",\"cache_control\":{\"type\":\"ephemeral\"}}],\"tools\":[{\"name\":\"lookup\",\"description\":\"Look up a key.\",\"input_schema\":{\"type\":\"object\",\"properties\":{\"key\":{\"type\":\"string\"}},\"required\":[\"key\"]}},{\"name\":\"submit_answer\",\"description\":\"Submit your final answer. Call this exactly once, when you are done.\",\"input_schema\":{\"type\":\"object\",\"properties\":{\"answer\":{\"type\":\"string\",\"description\":\"Your answer to the question, in prose, with the detail the question asks for. If the conversations do not contain the answer, say so.\"},\"sources\":{\"type\":\"array\",\"items\":{\"type\":\"string\"},\"description\":\"Optional: paths of the session files you relied on.\"}},\"required\":[\"answer\"]},\"cache_control\":{\"type\":\"ephemeral\"}}],\"messages\":[{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"What is a?\",\"cache_control\":{\"type\":\"ephemeral\"}}]}],\"output_config\":{\"effort\":\"medium\"}}"
+    },
+    {
+      "url": "https://api.anthropic.com/v1/messages",
+      "headerNames": [
+        "anthropic-version",
+        "content-type",
+        "x-api-key"
+      ],
+      "body": "{\"model\":\"claude-opus-5-5\",\"max_tokens\":8192,\"system\":[{\"type\":\"text\",\"text\":\"You answer from the knowledge base.\",\"cache_control\":{\"type\":\"ephemeral\"}}],\"tools\":[{\"name\":\"lookup\",\"description\":\"Look up a key.\",\"input_schema\":{\"type\":\"object\",\"properties\":{\"key\":{\"type\":\"string\"}},\"required\":[\"key\"]}},{\"name\":\"submit_answer\",\"description\":\"Submit your final answer. Call this exactly once, when you are done.\",\"input_schema\":{\"type\":\"object\",\"properties\":{\"answer\":{\"type\":\"string\",\"description\":\"Your answer to the question, in prose, with the detail the question asks for. If the conversations do not contain the answer, say so.\"},\"sources\":{\"type\":\"array\",\"items\":{\"type\":\"string\"},\"description\":\"Optional: paths of the session files you relied on.\"}},\"required\":[\"answer\"]},\"cache_control\":{\"type\":\"ephemeral\"}}],\"messages\":[{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"What is a?\"}]},{\"role\":\"assistant\",\"content\":[{\"type\":\"tool_use\",\"id\":\"toolu_1\",\"name\":\"lookup\",\"input\":{\"key\":\"a\"}}]},{\"role\":\"user\",\"content\":[{\"type\":\"tool_result\",\"tool_use_id\":\"toolu_1\",\"content\":\"value of a\",\"cache_control\":{\"type\":\"ephemeral\"}}]}],\"output_config\":{\"effort\":\"medium\"}}"
+    },
+    {
+      "url": "https://api.anthropic.com/v1/messages",
+      "headerNames": [
+        "anthropic-version",
+        "content-type",
+        "x-api-key"
+      ],
+      "body": "{\"model\":\"claude-opus-5-5\",\"max_tokens\":8192,\"system\":[{\"type\":\"text\",\"text\":\"You answer from the knowledge base.\",\"cache_control\":{\"type\":\"ephemeral\"}}],\"tools\":[{\"name\":\"lookup\",\"description\":\"Look up a key.\",\"input_schema\":{\"type\":\"object\",\"properties\":{\"key\":{\"type\":\"string\"}},\"required\":[\"key\"]}},{\"name\":\"submit_answer\",\"description\":\"Submit your final answer. Call this exactly once, when you are done.\",\"input_schema\":{\"type\":\"object\",\"properties\":{\"answer\":{\"type\":\"string\",\"description\":\"Your answer to the question, in prose, with the detail the question asks for. If the conversations do not contain the answer, say so.\"},\"sources\":{\"type\":\"array\",\"items\":{\"type\":\"string\"},\"description\":\"Optional: paths of the session files you relied on.\"}},\"required\":[\"answer\"]},\"cache_control\":{\"type\":\"ephemeral\"}}],\"messages\":[{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"What is a?\"}]},{\"role\":\"assistant\",\"content\":[{\"type\":\"tool_use\",\"id\":\"toolu_1\",\"name\":\"lookup\",\"input\":{\"key\":\"a\"}}]},{\"role\":\"user\",\"content\":[{\"type\":\"tool_result\",\"tool_use_id\":\"toolu_1\",\"content\":\"value of a\"}]},{\"role\":\"assistant\",\"content\":[{\"type\":\"text\",\"text\":\"The value is known.\"}]},{\"role\":\"user\",\"content\":[{\"type\":\"text\",\"text\":\"Please call submit_answer now with your final answer.\",\"cache_control\":{\"type\":\"ephemeral\"}}]}],\"output_config\":{\"effort\":\"medium\"}}"
+    }
+  ],
+  "openai-file-agent": [
+    {
+      "url": "https://api.openai.com/v1/responses",
+      "headerNames": [
+        "authorization",
+        "content-type"
+      ],
+      "body": "{\"model\":\"gpt-6.1-sol\",\"instructions\":\"You answer from the knowledge base.\",\"input\":[{\"role\":\"user\",\"content\":\"What is a?\"}],\"tools\":[{\"type\":\"function\",\"name\":\"lookup\",\"description\":\"Look up a key.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"key\":{\"type\":\"string\"}},\"required\":[\"key\"]},\"strict\":false},{\"type\":\"function\",\"name\":\"submit_answer\",\"description\":\"Submit your final answer. Call this exactly once, when you are done.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"answer\":{\"type\":\"string\",\"description\":\"Your answer to the question, in prose, with the detail the question asks for. If the conversations do not contain the answer, say so.\"},\"sources\":{\"type\":\"array\",\"items\":{\"type\":\"string\"},\"description\":\"Optional: paths of the session files you relied on.\"}},\"required\":[\"answer\"]},\"strict\":false}],\"max_output_tokens\":16000,\"reasoning\":{\"effort\":\"medium\"}}"
+    },
+    {
+      "url": "https://api.openai.com/v1/responses",
+      "headerNames": [
+        "authorization",
+        "content-type"
+      ],
+      "body": "{\"model\":\"gpt-6.1-sol\",\"instructions\":\"You answer from the knowledge base.\",\"input\":[{\"type\":\"function_call_output\",\"call_id\":\"call_1\",\"output\":\"value of a\"}],\"tools\":[{\"type\":\"function\",\"name\":\"lookup\",\"description\":\"Look up a key.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"key\":{\"type\":\"string\"}},\"required\":[\"key\"]},\"strict\":false},{\"type\":\"function\",\"name\":\"submit_answer\",\"description\":\"Submit your final answer. Call this exactly once, when you are done.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"answer\":{\"type\":\"string\",\"description\":\"Your answer to the question, in prose, with the detail the question asks for. If the conversations do not contain the answer, say so.\"},\"sources\":{\"type\":\"array\",\"items\":{\"type\":\"string\"},\"description\":\"Optional: paths of the session files you relied on.\"}},\"required\":[\"answer\"]},\"strict\":false}],\"max_output_tokens\":16000,\"previous_response_id\":\"resp_1\",\"reasoning\":{\"effort\":\"medium\"}}"
+    },
+    {
+      "url": "https://api.openai.com/v1/responses",
+      "headerNames": [
+        "authorization",
+        "content-type"
+      ],
+      "body": "{\"model\":\"gpt-6.1-sol\",\"instructions\":\"You answer from the knowledge base.\",\"input\":[{\"role\":\"user\",\"content\":\"Please call submit_answer now with your final answer.\"}],\"tools\":[{\"type\":\"function\",\"name\":\"lookup\",\"description\":\"Look up a key.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"key\":{\"type\":\"string\"}},\"required\":[\"key\"]},\"strict\":false},{\"type\":\"function\",\"name\":\"submit_answer\",\"description\":\"Submit your final answer. Call this exactly once, when you are done.\",\"parameters\":{\"type\":\"object\",\"properties\":{\"answer\":{\"type\":\"string\",\"description\":\"Your answer to the question, in prose, with the detail the question asks for. If the conversations do not contain the answer, say so.\"},\"sources\":{\"type\":\"array\",\"items\":{\"type\":\"string\"},\"description\":\"Optional: paths of the session files you relied on.\"}},\"required\":[\"answer\"]},\"strict\":false}],\"max_output_tokens\":16000,\"previous_response_id\":\"resp_2\",\"reasoning\":{\"effort\":\"medium\"}}"
+    }
+  ]
+}

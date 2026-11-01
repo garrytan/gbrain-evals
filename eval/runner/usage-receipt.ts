@@ -93,8 +93,8 @@ export interface UsageReceipt {
   request?: ReceiptRequest;
   /** What identifies the serving model and tier; every field is null on a failed attempt. */
   response_meta?: ResponseMeta;
-  /** A failed attempt's wait before the next one, from the provider's Retry-After, capped at 120 s; absent when it sent none. Recorded by lanes that call an OpenAI-compatible provider. */
-  retry_after_ms?: number;
+  /** A failed attempt's wait before the next one, from the provider's Retry-After, capped at 120 s; absent (memory-qa) or null (the Cat 40 loop) when it sent none. Recorded by lanes that call an OpenAI-compatible provider. */
+  retry_after_ms?: number | null;
 }
 
 /** The settings a request sent that change the answer. */

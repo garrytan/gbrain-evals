@@ -12,11 +12,11 @@ describes gbrain as this repository pins it today; the changelog at the bottom r
 
 | Item | Value |
 |---|---|
-| Pinned product | gbrain [`7a6bdd357`](https://github.com/garrytan/gbrain/tree/7a6bdd3579a3c35d57c63790b428a746fe2f3df7), release v0.60.454.0, declared as `gbrain` in `package.json` |
+| Pinned product | gbrain [`3ec766c40`](https://github.com/garrytan/gbrain/tree/3ec766c40664b652b14e39788d177139f5a7b105), release v0.60.531.0, declared as `gbrain` in `package.json` |
 | Fixed-purpose aliases | `gbrain-cues` (`939232f`) and `gbrain-reader` (`e78f1c3`), used only by the experiments that name them |
-| This repository | gbrain-evals v0.10.138 (`VERSION`) |
+| This repository | gbrain-evals v0.10.139 (`VERSION`) |
 
-This repository installs gbrain v0.60.454.0 (`7a6bdd357`). Some results below were measured at earlier commits; each
+This repository installs gbrain v0.60.531.0 (`3ec766c40`). Some results below were measured at earlier commits; each
 names its commit, and every commit named below is in the release's history except `a7cb37b`, the September 29 branch
 commit whose retrieval the reader replay row froze. The search modes held the same values from v0.48.4.0 through
 v0.60.169.0. Since then the default reranker became Voyage `rerank-3-lite` (was `rerank-2.5`, v0.60.223.0),
@@ -28,6 +28,19 @@ one document fold into one result row, and organization, OCR and date priors adj
 [expansion latency](docs/benchmarks/2026-10-14-expansion-latency-preregistration.md)); collapse and rank priors have no
 such check here. Retrieval results measured before v0.60.223.0 used `rerank-2.5`, and results measured before
 v0.60.332.0 ran without collapse or rank priors.
+
+Four read defaults outside the mode bundles changed after v0.60.454.0, the previous pin. A `query` with a token budget
+leads with up to 40 dated saved facts (`search.query_facts_block`, v0.60.491.0). `search` puts a newer correction
+ahead of the saved fact it corrects (`search.saved_facts_supersede`, v0.60.493.0). A remote `search` or `query` that
+names no `limit` keeps every page that matched its words but at most 3 pages that matched only by meaning
+(`search.remote_page_cap`, v0.60.506.0). Text from conversation, chat, email and meeting pages comes back inside a quote
+fence, marked as source material, from `search`, `query`, `assemble_evidence` and `think`, and over MCP from `get_page`,
+`fetch`, `recall`, `delta` facts and hot memory (v0.60.507.0, v0.60.521.0); `search_exact`, `get_chunks` and timeline
+rows still return stored text. Apart from the keyless Cats 37 to 39 check in the memory trust row, no result on this page
+was measured with them. The memory-qa harness holds the first three
+at their old values and unwraps the fence on its `query` path
+([`eval/runner/gbrain-under-test.ts`](eval/runner/gbrain-under-test.ts)); arms that measure gbrain's own defaults take
+all four as shipped.
 
 ## What gbrain does
 
@@ -73,7 +86,7 @@ save, find, update and forget what it knows. The parts that matter for an agent:
 | Serving the new value after an update | **388 of 388** probes, never stale, on PGLite and Postgres through the CLI and MCP | `77cf8e111` | [N1](docs/benchmarks/2026-10-01-n1-knowledge-update.md), [re-pin](docs/benchmarks/2026-10-11-wave14-repin.md) |
 | Nothing left behind after `forget` | **0** prohibited outputs, 6 of 6 reinstatements | `77cf8e111` | [N5](docs/benchmarks/2026-10-01-n5-forget-residue.md), [re-pin](docs/benchmarks/2026-10-11-wave14-repin.md) |
 | Private pages reaching agent callers or remote callers | **0**, in process and on Postgres over real HTTP (155 of 155 cells, 5 kinds of caller); proactive recall gated in CI | `77cf8e111` | [N6 on Postgres](docs/benchmarks/2026-10-06-n6-postgres-http.md), [N8 gate](docs/benchmarks/2026-10-06-n8-privacy-gate.md), [re-pin](docs/benchmarks/2026-10-11-wave14-repin.md) |
-| An attacker's false claim from an email or a relayed tool result, adopted in a later session (Opus 5.5, Sonnet 5.5, GPT-6.1 Sol) | **1.5% to 5%** of sessions with trust labels shown, 5.1% to 10.6% with them stripped; **0 of 360** instruction-worded injections followed per model; Cats 37 to 39 pass every keyless contract at the pin | `c2f10ee8` to `5b9c814b` (shipped as `d4dc2d4d8`); keyless at `77cf8e111` | [Memory trust](docs/benchmarks/2026-10-08-memory-trust-results-paid.md), [re-pin](docs/benchmarks/2026-10-11-wave14-repin.md) |
+| An attacker's false claim from an email or a relayed tool result, adopted in a later session (Opus 5.5, Sonnet 5.5, GPT-6.1 Sol) | **1.5% to 5%** of sessions with trust labels shown, 5.1% to 10.6% with them stripped; **0 of 360** instruction-worded injections followed per model; Cats 37 to 39 pass every keyless contract at the pin | `c2f10ee8` to `5b9c814b` (shipped as `d4dc2d4d8`); keyless at `3ec766c40` | [Memory trust](docs/benchmarks/2026-10-08-memory-trust-results-paid.md), [re-pin](docs/benchmarks/2026-10-11-wave14-repin.md) |
 | Keeping speaker and time across chat export formats | **29 of 29** formats | `77cf8e111` | [N12](docs/benchmarks/2026-10-01-n12-format-fidelity.md), [re-pin](docs/benchmarks/2026-10-11-wave14-repin.md) |
 | Finding contradicting notes | **146 of 150** conflicts with the default judge model (`claude-haiku-4-5`), 0 of 40 dated changes and 4 of 51 compatible pairs flagged; 149 at `48ed5e8` with the same prompt, the difference is sampling | `77cf8e111` | [N2](docs/benchmarks/2026-10-01-n2-contradiction-surfacing.md), [re-pin](docs/benchmarks/2026-10-11-wave14-repin.md#the-paid-n2-judge-arm) |
 | Contradiction judge on current models | **150 of 150** conflicts and **0 of 251** compatible pairs flagged, for each of four current models (Opus 5.5 the top Anthropic one); cheapest passing model $0.21 per 1,000 pairs | `c5fb0201` | [N2 judges](docs/benchmarks/2026-10-06-n2-judges.md) |
@@ -234,10 +247,9 @@ tie (95.6% each) and the older six-model lead no longer describe gbrain
 
 ## Known limits
 
-- At the pin, a timeline read on a 1,000-page brain takes about 0.075 ms against 0.045 ms before the Foundations 1
-  release (ledger entry Cat7-1, open; 0.075 and 0.078 ms on the two hosts measured at `77cf8e111`).
-- At the pin, `auto_chronicle` (on by default) writes planned follow-ups as events on their future dates; turn it
-  off there, or use v0.60.49.0 or later.
+- A timeline read on a 1,000-page brain took about 0.075 ms at `77cf8e111` against 0.045 ms before the Foundations 1
+  release (ledger entry Cat7-1, open; 0.075 and 0.078 ms on the two hosts measured). It has not been measured at the
+  pin.
 - Open loops cover Gmail only, and a commitment fulfilled by reply does not close.
 - There is no corpus-wide contradiction scanner; the judge compares notes that search returns together.
 - Associative recall, which gbrain does not claim, scores 0 of 240.
@@ -375,6 +387,26 @@ Code is MIT licensed. Dataset and vendored benchmark attribution is recorded in 
 [PrecisionMemBench attribution](eval/precisionmembench/ATTRIBUTION.md).
 
 ## Changelog
+
+### 2026-10-31: Re-pin to gbrain `3ec766c40`; the four new read defaults are named; repository row names v0.10.139
+
+gbrain-evals v0.10.139 re-pins gbrain, adds the Cat 35 external lane, which scores another system's notes with Cat 35's
+judges ([contributor guide](eval/CONTRIBUTING.md#score-another-systems-cat-35-documents)), and lands the post hoc
+LongMemEval-S facts-block check and the shipped-build equivalence check
+([sealed results](docs/benchmarks/2026-10-09-memory-proof-wave-sealed-results.md)), current Claude models in the shared
+judge and the other Claude call sites, and the particle-1 provider module (see [CHANGELOG.md](CHANGELOG.md)). The
+repository row names v0.10.139
+(was v0.10.138). The pinned product row changes from `7a6bdd357` (v0.60.454.0) to `3ec766c40` (v0.60.531.0), and so does the sentence
+under the table. Every commit the current state names is in the new release's history except `a7cb37b`, as before. A
+new paragraph under it names the four read defaults gbrain added after the old pin (the dated facts block of a budgeted
+`query`, v0.60.491.0; correction ordering of saved facts, v0.60.493.0; the remote page cap, v0.60.506.0; quote-fenced
+chat text, v0.60.507.0 and v0.60.521.0), says that apart from the keyless Cats 37 to 39 check no result on this page was
+measured with them, and says the memory-qa
+harness holds the first three at their old values and unwraps the fence. The memory trust row's keyless check moves from
+`77cf8e111` to `3ec766c40`: Cats 37, 38 and 39 pass every safety and quality contract in the BrainBench offline tier at
+the new pin, as on main at `7a6bdd357`. Known limits: the timeline-read bullet said "At the pin" about a measurement
+made at `77cf8e111`; it now names that commit and says the pin is unmeasured. The `auto_chronicle` bullet is removed:
+it described gbrain before v0.60.49.0, which this pin and the three before it all postdate. No other result row changes.
 
 ### 2026-10-31: Equivalence claim links its section
 
