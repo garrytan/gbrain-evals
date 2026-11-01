@@ -9,7 +9,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 
 const ROOT = resolve(import.meta.dir, '../..');
-const HUBS = ['README.md', 'docs/README.md', 'docs/settings.md', 'docs/comparison-systems.md', 'docs/retrieval-lessons.md', 'eval/README.md', 'eval/CONTRIBUTING.md'];
+const HUBS = ['README.md', 'docs/README.md', 'docs/settings.md', 'docs/comparison-systems.md', 'docs/retrieval-lessons.md', 'eval/README.md', 'eval/CONTRIBUTING.md', 'eval/CREDITS.md'];
 const tmp = mkdtempSync(join(tmpdir(), 'verify-docs-pin-'));
 afterAll(() => rmSync(tmp, { recursive: true, force: true }));
 
@@ -59,6 +59,11 @@ describe('verify-documentation-refresh: the product pin', () => {
   test('the docs index opening is a hub too', () => {
     const root = copyWith('stale-index', 'docs/README.md', t => t.replace(`master \`${sha.slice(0, 9)}\``, 'master `7a6bdd357`'));
     expect(references(root).map(e => [e[0], e[2]])).toEqual([['docs/README.md', 'Product pin reference differs from package.json pin']]);
+  });
+
+  test('the credits page names the pin too', () => {
+    const root = copyWith('stale-credits', 'eval/CREDITS.md', t => t.replace(`master \`${sha.slice(0, 9)}\``, 'master `7a6bdd357`'));
+    expect(references(root).map(e => [e[0], e[2]])).toEqual([['eval/CREDITS.md', 'Product pin reference differs from package.json pin']]);
   });
 
   test('a hub sentence reworded out of recognition fails as missing, not as passing', () => {

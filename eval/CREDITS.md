@@ -1,6 +1,6 @@
 # BrainBench credits
 
-BrainBench combines project-authored tests, public benchmark material and comparison implementations. Attribution matters because a test written by a project's authors supplies different evidence from an independent submission. Everything above [Changelog](#changelog) is current as of gbrain-evals v0.10.25.
+BrainBench combines project-authored tests, public benchmark material and comparison implementations. Attribution matters because a test written by a project's authors supplies different evidence from an independent submission. Everything above [Changelog](#changelog) is current as of the gbrain this repository pins, master `3ec766c40` (v0.60.531.0).
 
 ## Project work
 
@@ -43,6 +43,13 @@ A **Codex** review challenged whether the early suite established anything beyon
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
+
+### 2026-11-01: Stamped with the gbrain pin
+
+gbrain-evals __PR__. The opening said the page was current as of gbrain-evals v0.10.25; it now names the gbrain this
+repository pins, master `3ec766c40` (v0.60.531.0), and `scripts/verify-documentation-refresh.py` checks that sentence
+against `package.json` with the other hub pin sentences. Nothing else on the page changed: no external query batch or
+adapter has been contributed since the last entry.
 
 ### 2026-10-31: Credit for the Cat 35 external lane
 

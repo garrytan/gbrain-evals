@@ -223,6 +223,17 @@ describe('cohorts, estimand and claim rules', () => {
     rmSync(dir, { recursive: true });
   });
 
+  test('a sentence that cannot separate two rows names its evidence and the questions both were scored on', () => {
+    const { dir, sb } = fresh();
+    const bank = sb.comparisons.find(c => c.id === 's1-memory-bank-8k')!;
+    expect(bank.outcome).toBe('not-separated');
+    expect(bank.sentence).toStartWith("On BEAM-10M, with the same three answer models and 8,000 tokens of each system's own evidence, we could not tell `ext-memory-bank` and gbrain-defaults apart");
+    expect(bank.sentence).toContain(`on the ${bank.cohort!.paired} of ${bank.cohort!.scheduled} questions scored for both)`);
+    expect(bank.sentence).toContain(`about ${bank.mdd_points!.toFixed(1)} points would not have been detected in this comparison`);
+    expect(sb.verdict).toMatch(/detectable difference about \d+\.\d points\)/);
+    rmSync(dir, { recursive: true });
+  });
+
   test('a missing external kind blocks every field-wide claim and the table says incomplete', () => {
     const { dir, sb } = fresh();
     expect(sb.field.complete).toBe(false);

@@ -77,6 +77,7 @@ PRODUCT_PIN_SENTENCES = {
     "docs/retrieval-lessons.md": [r"as this repository pins it \(master `(?P<sha>[a-f0-9]{7,40})`, v(?P<version>[\d.]+)\)"],
     "eval/README.md": [r"Every runner loads the gbrain declared in `package.json`: master `(?P<sha>[a-f0-9]{7,40})` \(v(?P<version>[\d.]+)\)"],
     "eval/CONTRIBUTING.md": [r"The gbrain under test is the one `package.json` declares, master `(?P<sha>[a-f0-9]{7,40})` \(v(?P<version>[\d.]+)\)"],
+    "eval/CREDITS.md": [r"is current as of the gbrain this repository pins, master `(?P<sha>[a-f0-9]{7,40})` \(v(?P<version>[\d.]+)\)"],
 }
 
 
