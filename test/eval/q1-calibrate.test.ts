@@ -87,3 +87,13 @@ test('--keyless-upstream with no URL, an empty one or a non-URL is a usage error
     expect(r.stderr.toString()).toContain('--keyless-upstream needs the fake upstream');
   }
 });
+
+// Value: protects=a keyless rehearsal never turns into a paid run; fails_when=the --keyless-upstream=<url> spelling goes unrecognised and the run takes the paid branch with this environment's real keys; why_new=the flag is read only as its own argument; seam=none; no_claim=the paid branch itself
+test('--keyless-upstream=<url> is a usage error before any lease or output, never a paid run', () => {
+  const out = join(tmp, 'keyless-joined');
+  const ledger = join(tmp, 'keyless-joined.sqlite');
+  const r = Bun.spawnSync([process.execPath, 'eval/runner/q1/calibration-cell.ts', '--reader', 'particle:particle-1', '--out', out, '--budget-ledger', ledger, '--run-id', 'keyless-joined', '--lease-usd', '0.01', '--keyless-upstream=http://127.0.0.1:1'],
+    { cwd: join(import.meta.dir, '..', '..'), env: { PATH: process.env.PATH ?? '' }, stdout: 'pipe', stderr: 'pipe' });
+  expect([r.exitCode, existsSync(out), existsSync(ledger)]).toEqual([2, false, false]);
+  expect(r.stderr.toString()).toContain('--keyless-upstream takes the fake upstream\'s URL as its own argument');
+});

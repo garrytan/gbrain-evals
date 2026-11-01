@@ -866,7 +866,9 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
     const answers = new RecordLog(join(dir, 'answers.ndjson'), 'answer');
     const judgments = new RecordLog(join(dir, 'judgments.ndjson'), 'judgment');
     const answerTries = new Map<string, number>();
-    for (const t of readLines<{ answer_id: string }>(join(dir, 'answer-attempts.ndjson'))) answerTries.set(t.answer_id, (answerTries.get(t.answer_id) ?? 0) + 1);
+    /** A lease refusal's line keeps an OpenAI-compatible reader's receipts, but nothing reached the provider, so it is not a try. */
+    const isTry = (t: { outcome?: string; attempts?: unknown }) => !(t.outcome === 'budget_not_run' && t.attempts);
+    for (const t of readLines<{ answer_id: string; outcome?: string; attempts?: unknown }>(join(dir, 'answer-attempts.ndjson'))) if (isTry(t)) answerTries.set(t.answer_id, (answerTries.get(t.answer_id) ?? 0) + 1);
     const rowBuffer: Q1Row[] = [];
     const flush = () => {
       if (rowBuffer.length) appendFileSync(join(dir, 'attempts.ndjson'), rowBuffer.splice(0).map(r => JSON.stringify(r) + '\n').join(''));
@@ -905,12 +907,12 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
 
     const terminal = (id: string, outcome: Outcome) => FINAL.has(outcome) || (answerTries.get(id) ?? 0) + 1 >= maxAttempts;
     /** One answering try; an OpenAI-compatible reader's line also keeps its provider attempts, so a retried try's receipts persist. */
-    const recordAttempt = (id: string, outcome: Outcome, error?: string, attempts?: ReaderAttempt[]) => { appendFileSync(join(dir, 'answer-attempts.ndjson'), JSON.stringify({ answer_id: id, outcome, error: error?.slice(0, 300), at: new Date().toISOString(), ...(attempts ? { attempts } : {}) }) + '\n'); answerTries.set(id, (answerTries.get(id) ?? 0) + 1); };
+    const recordAttempt = (id: string, outcome: Outcome, error?: string, attempts?: ReaderAttempt[]) => { appendFileSync(join(dir, 'answer-attempts.ndjson'), JSON.stringify({ answer_id: id, outcome, error: error?.slice(0, 300), at: new Date().toISOString(), ...(attempts ? { attempts } : {}) }) + '\n'); if (isTry({ outcome, attempts })) answerTries.set(id, (answerTries.get(id) ?? 0) + 1); };
     /** `final`: a try that must not be sent again (an OpenAI-compatible request that timed out or lost its connection, which the provider may have billed). */
     const appendAnswer = (raw: AnswerRecord, error?: string, pack: PackedContext | null = null, final = false) => {
       const a = withDerived(raw, pack);
       if (FINAL.has(a.outcome)) { answers.append(a); return; }
-      if (final || terminal(a.answer_id, a.outcome)) { recordAttempt(a.answer_id, a.outcome, error, a.attempts); answers.append(a); return; }
+      if (isTry(a) && (final || terminal(a.answer_id, a.outcome))) { recordAttempt(a.answer_id, a.outcome, error, a.attempts); answers.append(a); return; }
       recordAttempt(a.answer_id, a.outcome, error, a.attempts);
     };
 

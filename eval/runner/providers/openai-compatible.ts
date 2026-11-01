@@ -283,10 +283,10 @@ export function compatTimedOut(e: unknown): boolean {
   return err?.name === 'TimeoutError' || err?.name === 'AbortError' || err?.status === 504;
 }
 
-/** A connection that reset or closed after the request went out. A refused connection never reached the provider, so it is not one. */
+/** A connection that reset or closed after the request went out. A refused connection never reached the provider, and a received HTTP status is an answer, so neither is one. */
 export function compatConnectionLost(e: unknown): boolean {
-  const err = e as { name?: string; code?: string; message?: string } | null;
-  return err?.name !== 'TimeoutError' && err?.name !== 'AbortError' && (/^(ECONNRESET|EPIPE|UND_ERR_SOCKET)$/.test(err?.code ?? '') || /socket connection was closed|socket hang up|connection reset/i.test(err?.message ?? ''));
+  const err = e as { name?: string; code?: string; message?: string; status?: unknown } | null;
+  return typeof err?.status !== 'number' && err?.name !== 'TimeoutError' && err?.name !== 'AbortError' && (/^(ECONNRESET|EPIPE|UND_ERR_SOCKET)$/.test(err?.code ?? '') || /socket connection was closed|socket hang up|connection reset/i.test(err?.message ?? ''));
 }
 
 /**

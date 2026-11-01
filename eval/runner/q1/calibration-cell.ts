@@ -51,6 +51,11 @@ if (import.meta.main) {
     console.error('usage: bun eval/runner/q1/calibration-cell.ts --reader <provider:model> --out <dir> --budget-ledger <file> --run-id <id> --lease-usd <n> [--cell <dev smoke cell>] [--keyless-upstream <url>]');
     process.exit(2);
   }
+  const joined = argv.find(a => a.startsWith('--keyless-upstream='));
+  if (joined) {
+    console.error(`--keyless-upstream takes the fake upstream's URL as its own argument (--keyless-upstream <url>), got ${JSON.stringify(joined)}; read as written, the run would spend real keys`);
+    process.exit(2);
+  }
   const keylessArg = argv.includes('--keyless-upstream') ? one('--keyless-upstream') ?? '' : null;
   if (keylessArg !== null && !/^https?:\/\/\S+$/.test(keylessArg)) {
     console.error(`--keyless-upstream needs the fake upstream's http(s) URL, got ${JSON.stringify(keylessArg)}; without one the run would spend real keys`);

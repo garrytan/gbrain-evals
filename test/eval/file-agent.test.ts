@@ -18,7 +18,7 @@ import { generateLadderWorld } from '../../eval/generators/model-ladder-gen.ts';
 import { loadFixture } from '../../eval/runner/memory-qa/corpus.ts';
 import { readerPrompt } from '../../eval/runner/memory-qa/qa-v2.ts';
 import { UPSTREAM_DEADLINE_MS } from '../../eval/runner/metering-proxy.ts';
-import { compatMayHaveBilled } from '../../eval/runner/providers/openai-compatible.ts';
+import { classifyCompatError, CompatHttpError, compatConnectionLost, compatMayHaveBilled } from '../../eval/runner/providers/openai-compatible.ts';
 import { answerFullContext, checkFit, FRONTIER_READERS, FullContextSystem, READER_WINDOWS, splitForCache } from '../../eval/runner/systems/baselines.ts';
 import { classifyRun, evidenceOpened, FILE_AGENT_MAX_TURNS, FileAgentSystem, layoutSessions, parseReader, PROSE_ANSWER_TOOL, proxiedFetch, ripgrep, type GrepLimitEvent } from '../../eval/runner/systems/file-agent.ts';
 import { Sanitizer } from '../../eval/runner/systems/sanitize.ts';
@@ -458,6 +458,12 @@ describe('true full context', () => {
       expect([a.outcome, a.timed_out, calls, a.attempts!.length]).toEqual(['reader_error', true, 1, 1]);
       const refused = Object.assign(new TypeError('Unable to connect. Is the computer able to access the url?'), { code: 'ECONNREFUSED' });
       expect([compatMayHaveBilled(reset), compatMayHaveBilled(refused)]).toEqual([true, false]);
+    });
+
+    // Value: protects=a gateway 5xx stays retryable; fails_when=compatConnectionLost reads a received response's body text as a lost connection, so the question ends final and unanswered; why_new=compatConnectionLost matches socket-close messages, and a CompatHttpError's message carries the body; seam=none; no_claim=which gateways put socket errors in a body
+    test('a received 5xx whose body names a socket error is an answer, not a lost connection', () => {
+      const answered = new CompatHttpError(classifyCompatError('particle', 502, '{"error":{"message":"upstream: socket hang up"}}'));
+      expect([answered.retryable, compatConnectionLost(answered), compatMayHaveBilled(answered)]).toEqual([true, false, false]);
     });
   });
 

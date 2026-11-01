@@ -801,6 +801,26 @@ describe('particle-1 readers through Q1\'s lease proxy (plan GST-605 Phase 2)', 
     }
   });
 
+  // Value: protects=a lease refusal never finalizes a particle question; fails_when=a budget_not_run line counts toward the cell's tries, so the third budget-stopped run writes budget_not_run as the question's answer although nothing reached Particle; why_new=the refusal's line keeps the reader's receipts in answer-attempts.ndjson; seam=none; no_claim=non-particle readers, whose lines carry no receipts
+  test('packed and full context: lease refusals keep every receipt but use none of the question\'s tries, so four budget-stopped runs leave it unanswered', async () => {
+    for (const mode of ['packed', 'full-context'] as const) {
+      const lp = leaseProxy(0.01);
+      try {
+        const def = mode === 'packed' ? cellDef('ext-graph-pipeline', 'shim', [component({ readers: [PARTICLE], reader_replicates: {} })], slice)
+          : cellDef('baseline-full-context', 'in-process', [{ id: 'whole-full-context', mode: 'full-context', readers: [PARTICLE] }], { configuration: 'baseline', ...slice });
+        const out = join(tmp, `particle-refused-runs-${mode}`);
+        for (let run = 0; run < 4; run++) {
+          const res = await runCell(def, { out, providerProxy: lp.url, ...quiet }, { corpus, system: mode === 'packed' ? new FakeMemorySystem() : new FullContextSystem('whole-history'), reader: new ChatClient(join(out, 'qa-cache')), judge: scriptedJudge() });
+          expect([mode, run, res.status]).toEqual([mode, run, 'partial']);
+        }
+        expect(lp.seen).toHaveLength(0);
+        expect(tries(out, def).map(t => [t.outcome, t.attempts.length])).toEqual(Array.from({ length: 4 }, () => ['budget_not_run', 1]));
+        const answersFile = join(out, 'cells', def.arms[0].cell_id, 'answers.ndjson');
+        expect(existsSync(answersFile) ? ndjson(answersFile) : []).toEqual([]);
+      } finally { lp.stop(); }
+    }
+  });
+
   // Value: protects=no Q1 agent arm reads particle through the lease proxy while the agent loop sends a timed-out turn again (issue #253); fails_when=an agent arm with a particle reader reaches the proxy, or the refusal happens after ingest; why_new=lifting U2's lease-proxy refusal for packed and full-context readers would otherwise reopen the agent lane; seam=none; no_claim=the agent loop's own timeout handling
   test('file agent: a particle reader on an agent arm through the lease proxy is refused before anything is sent, until issue #253', async () => {
     const def = cellDef('baseline-file-agent', 'in-process', [{ id: 'whole-agent', mode: 'agent', readers: [PARTICLE] }], { configuration: 'baseline', ...slice });
