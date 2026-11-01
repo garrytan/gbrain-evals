@@ -81,8 +81,8 @@ import { requirePaidArm } from '../paid-arm.ts';
 import { gbrainSpecFrom, HELD_GBRAIN_DEFAULTS, importGbrain, overlaySummary, productIdentityFor, resolveGbrainUnderTest, type GbrainUnderTest } from '../gbrain-under-test.ts';
 import { EmbeddingCache, makeCachingTransport } from '../longmemeval-cache.ts';
 import { ndcgAtK, recallAllAtK, recallAnyAtK, uniqueInOrder, percentile } from '../metrics.ts';
-import { loadCorpus, occurrenceId, sha256, type Corpus, type MemoryQuestion, type Session } from './corpus.ts';
-import { ChatClient, DEFAULT_JUDGE, DEFAULT_READER, chatWithReceipts, factsReaderPrompt, hasChatRoute, isCompatModel, judgeResponse, packSessions, readerPrompt, repeatsTrap, approxTokens, unresolvedRelativeTime, type SavedFact } from './qa-v2.ts';
+import { isoSessionDate, loadCorpus, occurrenceId, sha256, type Corpus, type MemoryQuestion, type Session } from './corpus.ts';
+import { ChatClient, DEFAULT_JUDGE, DEFAULT_READER, chatWithReceipts, factsReaderPrompt, hasChatRoute, isCompatModel, judgeResponse, packSessions, readerPrompt, repeatsTrap, approxTokens, sessionDateKey, unresolvedRelativeTime, type SavedFact } from './qa-v2.ts';
 import { compatRequest, modelsNotRun } from '../providers/openai-compatible.ts';
 import type { UsageReceipt } from '../usage-receipt.ts';
 import { devConversations, loadSplit } from '../decisions/splits.ts';
@@ -180,6 +180,8 @@ export interface MemoryQaRow {
   qa_context_tokens?: number;
   qa_sessions?: number;
   qa_answer?: string;
+  /** The reference date gbrain think reports it answered against (YYYY-MM-DD), as in run.ts's think lane; absent when the build reports none. */
+  qa_reference_date?: string;
   qa_error?: string;
   /** One usage-receipt/v1 record per attempted reader call, every replicate. */
   qa_receipts?: UsageReceipt[];
@@ -376,8 +378,19 @@ export function runConfigHash(a: RunArgs, gut: GbrainUnderTest, corpus: Corpus, 
     ...(a.arms ? { qa: null, context: null, policy: null, arms_policies: Object.keys(a.arms.policies).sort() } : {}),
     ...(a.ingestReplicate !== 1 ? { ingest_replicate: a.ingestReplicate } : {}),
     ...(Object.keys(a.policySettings).length ? { policy_settings: a.policySettings } : {}),
-    ...(a.frozenFrom ? { frozen_from_sha256: createHash('sha256').update(readFileSync(a.frozenFrom)).digest('hex') } : {}) };
+    ...(a.frozenFrom ? { frozen_from_sha256: createHash('sha256').update(readFileSync(a.frozenFrom)).digest('hex') } : {}),
+    ...(a.qa.mode === 'think' ? { think_reference_date: 'question date, else latest session date' } : {}) };
   return createHash('sha256').update(JSON.stringify(pre)).digest('hex');
+}
+
+/**
+ * gbrain think's referenceDate (YYYY-MM-DD), the day relative dates in the question resolve against: the question date
+ * (LongMemEval writes "2023/05/30 (Tue) 23:40"), else the conversation's latest session date (LoCoMo and BEAM questions
+ * carry none); undefined when no date parses, and think then uses the run date.
+ */
+export function thinkReferenceDate(questionDate: string | undefined, sessions: readonly Session[]): string | undefined {
+  const day = (raw: string | undefined) => isoSessionDate(sessionDateKey(raw))?.slice(0, 10);
+  return day(questionDate) ?? sessions.map(s => day(s.date)).filter((d): d is string => !!d).sort().pop();
 }
 
 const errorText = (e: unknown) => (e as Error).message.slice(0, 300);
@@ -541,7 +554,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
     ? (await importGbrain<{ runExtractConversationFactsCore: (e: unknown, o: Record<string, unknown>) => Promise<{ pages_processed: number; pages_failed: number; facts_extracted: number }> }>(gut, 'src/commands/extract-conversation-facts.ts')).runExtractConversationFactsCore
     : null;
   const factStats = { conversations: 0, pages_processed: 0, pages_failed: 0, facts: 0, unresolved: 0, errors: 0 };
-  const think = a.qa.mode === 'think' ? (await importGbrain<{ runThink: (e: unknown, o: Record<string, unknown>) => Promise<{ answer: string; synthesis_status?: string }> }>(gut, 'src/core/think/index.ts')).runThink : null;
+  const think = a.qa.mode === 'think' ? (await importGbrain<{ runThink: (e: unknown, o: Record<string, unknown>) => Promise<{ answer: string; synthesis_status?: string; temporal?: { reference_date: string } }> }>(gut, 'src/core/think/index.ts')).runThink : null;
   const chat = a.qa.mode === 'none' ? null : new ChatClient(sealed?.qaCache ?? process.env.GBRAIN_EVALS_QA_CACHE ?? join(homedir(), '.cache', 'gbrain-evals', 'qa-cache'));
   const lastDate = (sessions: Session[]) => sessions.map(x => x.date ?? '').sort().pop() || undefined;
 
@@ -889,14 +902,15 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
               const receipts: UsageReceipt[] = [];
               try {
                 const scores: number[] = [];
-                let tin = 0; let tout = 0; let answer = ''; let trap = 0;
+                let tin = 0; let tout = 0; let answer = ''; let trap = 0; let referenceDate: string | undefined;
                 const pack = packSessions(retrieved.map(id => sessById.get(id)).filter((x): x is Session => !!x), a.qa.sessions, a.qa.budgetTokens);
                 const readFacts = a.qa.context === 'facts' ? retrieved.slice(0, a.qa.sessions).flatMap(id => factsBySession.get(id) ?? []) : [];
                 for (let r = 0; r < a.qa.runs; r++) {
                   if (think) {
-                    const res = await think(brain(), { question: q.question, model: a.qa.thinkModel, modelExplicit: true, remote: false });
+                    const res = await think(brain(), { question: q.question, model: a.qa.thinkModel, modelExplicit: true, remote: false, referenceDate: thinkReferenceDate(q.question_date, conv.sessions) });
                     if (paid?.guard.exhausted) throw new BudgetExceededError(`budget: the ledger refused a request during gbrain think, which reported ${res.synthesis_status ?? 'no status'}`);
                     answer = res.answer ?? '';
+                    referenceDate = res.temporal?.reference_date;
                     tin += approxTokens(q.question);
                   } else {
                     const prompt = a.qa.context === 'facts' ? factsReaderPrompt(q, readFacts, lastDate(conv.sessions)) : readerPrompt(q, pack.sessions, lastDate(conv.sessions));
@@ -909,7 +923,8 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
                 row = { ...row, qa_score: scores.reduce((x, y) => x + y, 0) / scores.length, qa_scores: scores, qa_runs: scores.length,
                   ...(q.trap ? { qa_trap: trap / scores.length } : {}), qa_input_tokens: Math.round(tin / scores.length), qa_output_tokens: Math.round(tout / scores.length),
                   qa_context_tokens: think || a.qa.context === 'facts' ? undefined : pack.tokens, qa_sessions: think || a.qa.context === 'facts' ? undefined : pack.sessions.length,
-                  ...(a.qa.context === 'facts' ? { qa_facts: readFacts.length, qa_facts_tokens: factsContextTokens(readFacts) } : {}), qa_answer: answer.slice(0, 2000), ...(receipts.length ? { qa_receipts: receipts } : {}) };
+                  ...(a.qa.context === 'facts' ? { qa_facts: readFacts.length, qa_facts_tokens: factsContextTokens(readFacts) } : {}), qa_answer: answer.slice(0, 2000), ...(referenceDate ? { qa_reference_date: referenceDate } : {}),
+                  ...(receipts.length ? { qa_receipts: receipts } : {}) };
               } catch (e) {
                 if (budgetStop(e)) stopped = 'budget';
                 row = { ...row, qa_error: (e as Error).message.slice(0, 300), ...(receipts.length ? { qa_receipts: receipts } : {}), ...(budgetStop(e) ? { outcome: 'budget_not_run' as const } : {}) };
@@ -973,7 +988,7 @@ export async function runArm(a: RunArgs): Promise<{ receipt: Record<string, unkn
     metering: a.providerProxy ? { mode: 'lease-proxy', proxy: a.providerProxy, slot, lease_id: process.env.SHOOTOUT_LEASE_ID ?? null, retry_upstream_5xx: a.retryUpstream5xx } : { mode: paid ? 'budget-ledger' : 'none' },
     ingest: legacy ? null : { ...ingestStats, errors: allIngestErrors, errors_truncated: allIngestErrors.length >= 500 }, sanitizer: { forbidden_markers: sanitizer.markers.length }, sealed_profile: sealed ? { checked: 'output and caches inside the custody root, outside the repository and the shared cache' } : null,
   };
-  const readerPromptName = (context: ContextMode) => a.qa.mode === 'think' ? 'gbrain think' : a.qa.context === 'facts' ? 'step-by-step reading prompt over the saved facts (text + stored date) of the top sessions' : !legacy && context === 'native' ? `native memory-item reading prompt (${RENDERER_VERSION}, ${TOKENIZER.id})` : 'LongMemEval step-by-step reading prompt, sessions in date order';
+  const readerPromptName = (context: ContextMode) => a.qa.mode === 'think' ? 'gbrain think, asked for referenceDate = the question date, else the latest session date (YYYY-MM-DD); each row\'s qa_reference_date is the date think reports it used' : a.qa.context === 'facts' ? 'step-by-step reading prompt over the saved facts (text + stored date) of the top sessions' : !legacy && context === 'native' ? `native memory-item reading prompt (${RENDERER_VERSION}, ${TOKENIZER.id})` : 'LongMemEval step-by-step reading prompt, sessions in date order';
   const judgePrompts = a.arms && judgeModel === READER_ONLY ? 'none: reader-only arms, judged outside this process' : a.benchmark.startsWith('beam') ? 'per-rubric-item yes/no' : 'LongMemEval official per-type prompts';
 
   if (arms.length) {
