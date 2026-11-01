@@ -128,6 +128,21 @@ describe('Particle in the freshness check (plan GST-605 Phase 1, item 6)', () =>
     expect('models' in out && out.models.length).toBe(4);
   });
 
+  test('a PARTICLE_BASE_URL host that is neither a Particle API host nor loopback gets no request, so the key never leaves for it (#232)', async () => {
+    const seen: Array<{ url: string; auth: string | null }> = [];
+    const fetchImpl = (async (url: string, init: RequestInit) => {
+      seen.push({ url, auth: new Headers(init.headers).get('authorization') });
+      return Response.json(PARTICLE_MODELS);
+    }) as unknown as typeof fetch;
+    const stray = { PARTICLE_API_KEY: 'k', PARTICLE_BASE_URL: 'https://particle.attacker.example/v1' };
+    await expect(listParticleModels(stray, fetchImpl)).rejects.toThrow('PARTICLE_API_KEY is not sent to particle.attacker.example, because compatSend\'s host check refuses it: budget: the ledger cannot price particle.attacker.example');
+    expect(await listParticleModels(stray, fetchImpl, { required: false })).toEqual({ skipped: expect.stringContaining('PARTICLE_API_KEY is not sent to particle.attacker.example') });
+    expect(seen).toEqual([]);
+    const us = await listParticleModels({ PARTICLE_API_KEY: 'k', PARTICLE_BASE_URL: 'https://us.api.particle.ai/v1' }, fetchImpl);
+    expect(seen).toEqual([{ url: 'https://us.api.particle.ai/v1/models', auth: 'Bearer k' }]);
+    expect('models' in us && us.models.length).toBe(4);
+  });
+
   test('a failed read throws when the run calls a Particle model and is a skip with its reason when it calls none; the read has a timeout', async () => {
     const inits: RequestInit[] = [];
     const down = (async (_url: string, init: RequestInit) => { inits.push(init); return new Response('upstream down', { status: 503 }); }) as unknown as typeof fetch;
