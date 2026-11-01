@@ -31,6 +31,10 @@
  * silently shrinking the judge's world-of-facts made the judge score
  * correct answers as hallucinations.
  *
+ * Pricing: the judge and agent models are looked up in the budget ledger's
+ * price table before the first scenario, so an unpriced judge stops the run
+ * before any agent turn is paid for, not after each one (#219).
+ *
  * Error policy (WS0, via probe-accounting.ts): judge_failed verdicts are
  * 'judge' errors (excluded from pass rates, capped) — never averaged in as
  * fails. Thrown agent-loop errors are dependency/harness. Turn-capped runs
@@ -58,6 +62,7 @@ import {
 import {
   JUDGE_PROMPT_VERSION,
   JUDGE_TEMPERATURE,
+  judgePrice,
   scoreAnswer,
   type JudgeEvidence,
   type JudgeResult,
@@ -263,6 +268,8 @@ type ScenarioOutcome =
   | { kind: 'errored'; transcript?: Transcript; judgeCost?: number };
 
 export async function runCat9(opts: RunCat9Options): Promise<Cat9Report> {
+  judgePrice(opts.judge?.model ?? DEFAULT_JUDGE_MODEL);
+  judgePrice(opts.model ?? DEFAULT_AGENT_MODEL);
   const startedAt = new Date().toISOString();
   const concurrency = opts.concurrency ?? 4;
   const passRateThreshold = opts.passRateThreshold ?? 0.8;
