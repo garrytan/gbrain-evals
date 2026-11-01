@@ -547,7 +547,7 @@ async function main(argv: string[]): Promise<number> {
       console.log(text);
       if (write) { writeFileSync(join(dir, 'summary.json'), text); return 0; }
       const same = (name: string, fresh: string) => existsSync(join(dir, name)) && readFileSync(join(dir, name), 'utf8') === fresh;
-      const differs = [...(same('summary.json', text) ? [] : ['summary.json']), ...readdirSync(compareDir).filter(f => !same(f, readFileSync(join(compareDir, f), 'utf8')))];
+      const differs = [...(same('summary.json', text) ? [] : ['summary.json']), ...readdirSync(compareDir).sort().filter(f => !same(f, readFileSync(join(compareDir, f), 'utf8')))];
       if (differs.length) { console.error(`re-score differs from ${differs.map(f => join(dir, f)).join(', ')}`); return 1; }
       console.error(`re-score matches ${join(dir, 'summary.json')} and its compare files`);
       return 0;
