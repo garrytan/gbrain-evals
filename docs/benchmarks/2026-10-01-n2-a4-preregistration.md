@@ -75,3 +75,9 @@ Recorded before any new A4 paid cell (GST-611, audit item R4). The A4 answerer's
 A4 rows record only the answer text and usage, not the stop reason, and gbrain's gateway sends the 1,024-token limit with thinking on. So before the first paid cell, a few-question Sonnet 5.5 smoke counts empty or cut-off answers; if there are any, the limit moves in a further amendment before any counted cell.
 
 The N2 judge does not change. This preregistration defines N2's treatment as gbrain's judge with the model gbrain picks by default, so the runner keeps mirroring gbrain's utility-tier default, and `test/eval/model-defaults.test.ts` fails when that default moves.
+
+## Amendment, 2026-11-01 (second): stop reasons and cut-off answers
+
+Recorded before any new A4 paid cell (GitHub #238). Each A4 answer row now records the stop reason gbrain's gateway returns (`stop_reason`, which is `length` when the answer reached the 1,024-token limit). An answer cut off at the limit is scored as the reader's answer and flagged `truncated`, and the receipt counts truncations per arm (`data.paid.truncated`). The one exception is an abstention. The scoring rule reads an abstention from the final answer, and a cut-off answer never reached one, so a cut-off answer that matches the abstention pattern scores `unscorable` (an attempted, not correct, answer) under the frozen rule and the A4-4 rule alike. A cut-off answer that states a value scores as that value does.
+
+The smoke the previous amendment asks for ran on 2026-11-01 with `--smoke 2` (the first two questions of each class, 20 reader calls), Sonnet 5.5 through gbrain's gateway at the pinned v0.60.531.0, on this change's tree over gbrain-evals `cb8f4665`. Every answer ended on its own (`end`); none was cut off or empty, and the longest used 172 of the 1,024 output tokens. The limit stays at 1,024. The smoke cost $0.045 by the budget ledger's usage fields, and its receipt is not publishable and is not a counted cell.

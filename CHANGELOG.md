@@ -4,6 +4,45 @@ This records what each gbrain-evals release changed and what its measurements me
 
 ## [Unreleased]
 
+### chronicle-lift scores one agent model at a time, A4 rows keep the reader's stop reason, and PrecisionMemBench's gbrain-think is metered
+
+- **chronicle-lift never pools two agent models into one lift** (#236). A finished agent cell was keyed on arm,
+  question and repeat alone, so resuming an output directory answered under Sonnet 4.6 with the new Sonnet 5.5 default
+  skipped the cells Sonnet 4.6 had finished, and `score` read both models' answers as one comparison. On a keyless
+  repro, OFF answered by Sonnet 4.6 and ON by Sonnet 5.5, `score` at `cb8f4665` reported a +100-point lift with an
+  interval of 1 to 1. The resume key (`qaKey` in `eval/runner/chronicle-lift.ts`) now hashes the answer identity
+  (agent model, turn cap, gbrain under test, questions file) and the arm's brain build, and each row records both.
+  `score` refuses a results file that holds more than one answer identity, or one arm's answers from two builds of its
+  brain; `score --model <id>` keeps one model's answers and reports how many rows it left out. Older rows carry only
+  their model, which is enough for the check. `run` refuses, before any paid step, an `--out` that already holds
+  answers from another identity or from a brain it would rebuild, or that another run holds (`run.lock`), so resuming
+  never pays for rows `score` would refuse. The committed 2026-10-04 lift results rescore unchanged apart from a new
+  `qa.identity` naming Sonnet 4.6.
+- **A4 reader rows record the gateway's stop reason** (#238). An answer cut off at the 1,024-token limit (stop reason
+  `length`) is scored as the reader's answer, flagged `truncated` and counted per arm (`data.paid.truncated`, with
+  every arm's stop reasons in `data.paid.stop_reasons`). An abstention phrase in a cut-off answer scores `unscorable`,
+  not `abstain`, under the frozen rule and the A4-4 rule, because the preregistration reads an abstention from the
+  final answer and a cut-off answer never reached one. A second 2026-11-01 amendment to
+  `docs/benchmarks/2026-10-01-n2-a4-preregistration.md` records the rule. outcome-v3 rescoring
+  (`eval/runner/outcomes/rescore-a4.ts`) reads a cut-off row as an execution error; both committed A4 paid receipts
+  rescore identically. `--smoke <n>` asks the reader only the first n questions of each class, the check the first
+  amendment asks for before a counted cell; it needs a number and the paid reader, and its receipt is not publishable.
+  The A4 registry contract now names the Sonnet 5.5 reader at the provider's default temperature and points at the
+  amendments.
+- **The Sonnet 5.5 smoke found no cut-off answers.** `--smoke 2` (20 reader calls, 2026-11-01, scratch budget ledger):
+  every answer stopped on its own, the longest used 172 of the 1,024 output tokens, and the ledger settled $0.045 from
+  usage. The limit stays at 1,024. No counted A4 cell has run on Sonnet 5.5.
+- **PrecisionMemBench's `gbrain-think` mode is a metered paid arm** (#239). Since the move to current models it asked
+  Opus 5.5 once per case outside the budget ledger, and its receipt did not name the model. It now needs
+  `--paid --budget-run-id <id>` for an open ledger run, and without them writes a skipped receipt and exits 2 before any
+  request. Every request it makes, the seeding embeddings included, passes the ledger's paid-request guard, and the
+  receipt's `cost` comes from the ledger. gbrain's think turns a refused request into an empty answer, so a case the
+  ledger refuses is recorded as a harness error, left out of the report's totals, and the run as incomplete
+  (`run_status: error`, not publishable, exit 3). `resolved_config.chat_model` names the think model. The other modes
+  join the ledger when given `--paid` or `--budget-run-id` (either asks for the paid arm, which needs both) and stay
+  unmetered without them. A one-case live run on 2026-11-01 settled $0.0595 from usage (one Opus 5.5 request, 36
+  embedding requests). The adapter's header no longer says a cheap model is pinned.
+
 ### Receipt guards read inside tarballs, the equivalence report refuses its published directory, and the situation-recall inventory names current models
 
 - **The receipt guards open compressed receipts (#221).** `test/eval/receipt-machine-paths.test.ts` read only JSON, NDJSON, JSONL and log files, and `scripts/scan-receipts.sh` ran gitleaks only on `receipts/` and `*-scoreboard` directories, so the 1,995 committed tarball and gzip receipts under `docs/benchmarks` were checked by neither, and a key inside one would have passed. Both guards now find a compressed receipt by its leading bytes as well as its name, under the same roots (`docs/benchmarks`, `results`, `baselines` and `qrels`), and read the content of a gzip file and every member of a tarball. A tarball is read only when GNU tar lists it cleanly (exit 0, no warning, and no further entries when told to read past zero blocks), names no member twice and holds only regular files and directories; GNU tar then extracts it, and the guards read the extracted files, which are the files a consumer gets. Any other tarball is refused unread, so a member hidden behind a repeated name, a symlinked directory, a leading slash, an entry type GNU tar extracts as a plain file or a damaged header cannot pass. All 1,995 were reviewed member by member on 2026-11-01 and are listed in `test/eval/fixtures/reviewed-compressed-receipts.json` with their sha256 and the gitleaks version of their secret review; both guards skip a listed file only while its hash matches, and the secret scan only while its entry names gitleaks 8.21.2. Run with no review list, the scan's own refusal and extraction code refused none of the 1,995: each of the 195 tarballs lists cleanly with GNU tar 1.35, names no member twice and holds only regular files and directories, and the 1,995 together yield the same 91,481 members, all UTF-8 text. That review ran the scan below over all 91,481 members (about 8.0 GB) on a Ubicloud VM and found no credential: 9,494 distinct matches, of which 9,491 are generic-api-key matches on tokenizer names, sha256 memo keys, retrieval cache keys and gbrain's sync-lock UUIDs, one is the token of a 2023 Elsevier article link that a user pastes in a LongMemEval conversation (gitleaks run straight on the extracted members had missed it), and two are the jwt.io sample token that a BEAM conversation quotes as sample code. 125 memory-proof-wave cell tarballs name the harness VM's overlay checkout (`/home/ubi/work/gbrain-evals/.gbrain-overlays/`) in their ingest records; that prefix is the one declared exemption, with its reason, and the secret scan still reads those members. 63 hold other machine paths (sandbox homes and `/tmp` in session logs, Ubicloud cell stores, Capy scratch paths, home paths quoted in benchmark conversations), recorded in the fixture's comment. Both guards fail, unread, on a compressed receipt they cannot read: another format (zip, xz, zstd, bzip2, 7z, lz4, compress, lzip or rar, by name or leading bytes), or a member that is not UTF-8 text (a nested archive, a database or another binary file). The scan cuts each member into overlapping 9,000-byte windows that gitleaks reads whole, because gitleaks drops the rest of a file at any 10,000-byte chunk that starts like a binary format and skips some paths (`.svg`, `.bin`, `node_modules`); a secret up to 4,500 bytes long lies whole inside some window. No receipt was rewritten. CI's `receipt-secrets` job took about 30 s before this change; with every compressed receipt reviewed, the whole script took about 3 s locally, and a new or changed receipt adds its unpacking and scan.
