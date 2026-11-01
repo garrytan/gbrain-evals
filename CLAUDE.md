@@ -82,12 +82,27 @@ For a new report:
 ### Choose models
 
 Every model-comparison run (Cat 40 Model Ladder, answer-model benchmarks and any paid agent-task eval) uses current
-frontier models. These rules follow the gbrain project rule of 2026-10-07.
+frontier models. These rules follow the gbrain project rule of 2026-10-07 and Garry's decision of 2026-10-31 that
+`claude-opus-5-5` and `particle-1` are the primary models.
 
-- **Always run the newest frontier model of each family:** Opus, GPT and Sonnet. Today's counted readers are
+- **Run the primary models: `claude-opus-5-5` and the newest Particle model, today `particle-1` (Garry, 2026-10-31).**
+  Every model-comparison run includes both as readers or agents, and its first table shows both with cost per correct
+  answer. A campaign already preregistered adds particle-1 at its next amendment. particle-1 is Particle AI's low-cost
+  model, called as `particle:particle-1` through `https://api.particle.ai/v1` with `PARTICLE_API_KEY` (Chat Completions
+  only; responses name it `particle-ai/particle-1`). Send `reasoning_effort` explicitly (counted cells use `high`, its
+  default, unless the campaign fixes one effort for every reader) and an output limit with room for reasoning; the
+  receipt records the effort sent and effective, the limit and the weight version. A runner with no `particle:` route
+  lists particle-1 under `models_not_run` with the reason. First paired numbers:
+  [particle replay](docs/benchmarks/2026-11-01-longmemeval-particle-replay/REPORT.md).
+- **Always run the newest frontier model of each family:** Opus, GPT and Sonnet. Today's counted frontier readers are
   `claude-opus-5-5`, `claude-sonnet-5-5` and `gpt-6.1-sol`. Before a run, check which models are newest
-  (`bun scripts/model-freshness.ts` reads the providers' model lists) and add any that the run doesn't already
-  include. Register a price for a new model in `eval/runner/budget-ledger.ts` so the ledger can reserve it.
+  (`bun scripts/model-freshness.ts` reads the providers' model lists, Particle's included) and add any that the run
+  doesn't already include. Register a price for a new model in `eval/runner/budget-ledger.ts` so the ledger can reserve
+  it.
+- **particle-1 never judges a counted cell.** Counted judges stay protocol-matched (for example `gpt-4o-2024-08-06` for
+  LongMemEval and `gpt-6.1-sol` for Cat 40 Hard). particle-1 becomes the default reader and agent for a development loop
+  once it passes that loop's preregistered agreement test; development judges are the ones the dataset's harness fixes,
+  else `gpt-6.1-sol`.
 - **Fable is for smoke tests only (Garry, 2026-10-07).** Opus 5.5 is the top Anthropic model in counted runs. Run
   Fable only in small smoke tests (for example a pre-merge agent smoke), never in paid counted cells, practice
   rounds or held-out runs. A run already preregistered with Fable records the change and its reason in the
@@ -97,7 +112,8 @@ frontier models. These rules follow the gbrain project rule of 2026-10-07.
   results. If a model that appears in both runs already gives that link, add no older model. `gpt-4.1-mini` runs
   only under this exception, as the bridge to earlier BEAM runs.
 - **Do not run gpt-5.4-mini.** Never base a product change, gate or release decision on a gpt-5.4-mini-only finding.
-- **Report the models people use first.** Note a ceiling (a model at 100% on every arm cannot show a difference)
+- **Report the models people use first** after the primary models' first table. A reader-matched comparison with a
+  published system keeps that system's reader. Note a ceiling (a model at 100% on every arm cannot show a difference)
   rather than counting it as a win or a tie.
 - **Preregistered gates keep their model list.** To change the models of an existing preregistered gate, record the
   change and its reason in the preregistration before any new cell runs.

@@ -10,6 +10,24 @@ This records what each gbrain-evals release changed and what its measurements me
 - **`--compare` refuses a canary sent to a loopback endpoint** (#231). A metering proxy or the keyless fake records no upstream, so a loopback canary cannot show which server answered, and two loopback canaries used to compare as the same endpoint. A loopback endpoint on either side is now refused before anything is sent. The six committed canaries all went straight to `https://api.particle.ai/v1`, so they still compare.
 - **`bun scripts/model-freshness.ts` sends `PARTICLE_API_KEY` only to a host `compatSend` would send it to** (#232). Before it reads Particle's model list, it applies `compatSend`'s host check: a Particle API host the budget ledger prices, or loopback. Any other `PARTICLE_BASE_URL` host gets no request, and the read fails with the host check's reason.
 
+### claude-opus-5-5 and particle-1 are the primary models in the rule docs
+
+- **CLAUDE.md's "Choose models" names `claude-opus-5-5` and `particle-1` as the primary models** (unit U4 of the
+  particle-1 plan, following Garry's decision of 2026-10-31). Every model-comparison run includes both as readers or
+  agents, and its first table shows both with cost per correct answer. A campaign already preregistered adds particle-1
+  at its next amendment, and a runner with no `particle:` route lists particle-1 under `models_not_run` with the
+  reason. The rule says how to call particle-1 (`particle:particle-1` through `https://api.particle.ai/v1`, with
+  `reasoning_effort` sent explicitly and an output limit that leaves room for reasoning), what its receipt records, and
+  where its first paired numbers are: the
+  [particle-1 replay](docs/benchmarks/2026-11-01-longmemeval-particle-replay/REPORT.md).
+- **particle-1 never judges a counted cell.** Counted judges stay protocol-matched (`gpt-4o-2024-08-06` for
+  LongMemEval, `gpt-6.1-sol` for Cat 40 Hard). particle-1 becomes a development loop's default reader and agent once it
+  passes that loop's preregistered agreement test.
+- **The newest frontier Opus, GPT and Sonnet still run beside the primary models.** "Report the models people use
+  first" now comes after the primary models' first table, and a reader-matched comparison with a published system keeps
+  that system's reader. AGENTS.md's model summary and eval/CONTRIBUTING.md's opening say the same; CONTRIBUTING names
+  `eval/runner/providers/openai-compatible.ts` as particle-1's shared provider module.
+
 ### Cat 35 keeps the external lane out of gbrain's WS0 numbers and deltas, and the scoreboard checks read more of their inputs
 
 - **The WS0 receipt's coverage map holds only gbrain's lanes (#217).** Its `n_total`, `n_scored` and `errors` counted
