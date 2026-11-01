@@ -424,7 +424,7 @@ describe('runner receipts + payload provenance (findings -02/-03/-06 + WS0 recei
   });
 
   /** Run the runner with placeholder keys, a scratch ledger and a fetch that records every request and sends none. */
-  async function thinkRun(args: (dir: string, ledgerPath: string) => string[]) {
+  async function thinkRun(args: (dir: string, ledgerPath: string) => string[], mode = 'gbrain-think') {
     const dir = mkdtempSync(join(tmpdir(), 'pmb-think-'));
     const ledgerPath = join(dir, 'ledger.sqlite');
     const saved = { OPENAI_API_KEY: process.env.OPENAI_API_KEY, ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY, BRAINBENCH_BUDGET_LEDGER: process.env.BRAINBENCH_BUDGET_LEDGER };
@@ -439,7 +439,7 @@ describe('runner receipts + payload provenance (findings -02/-03/-06 + WS0 recei
     }) as typeof fetch;
     try {
       const receiptFile = join(dir, 'receipt.json');
-      const code = await runnerMain(['--mode', 'gbrain-think', '--limit', '1', '--report-dir', dir, '--receipt-path', receiptFile, ...args(dir, ledgerPath)]);
+      const code = await runnerMain(['--mode', mode, '--limit', '1', '--report-dir', dir, '--receipt-path', receiptFile, ...args(dir, ledgerPath)]);
       return { code, requests, receipt: loadReceipt(receiptFile), entries: existsSync(ledgerPath) ? readLedger(ledgerPath).entries : [] };
     } finally {
       globalThis.fetch = realFetch;
@@ -470,6 +470,28 @@ describe('runner receipts + payload provenance (findings -02/-03/-06 + WS0 recei
     expect(r.entries.map(x => x.description)).toContain('anthropic:claude-opus-5-5 chat');
     expect(r.receipt.cost?.basis).toContain(`${paidRequests.length} paid requests`);
     expect(r.receipt.resolved_config?.chat_model).toBe(DEFAULT_THINK_MODEL);
+  }, 240_000);
+
+  test('gbrain-think whose ledger run cannot cover a request records the case as unmeasured, not as an empty answer (#239)', async () => {
+    const r = await thinkRun((_dir, ledgerPath) => {
+      initLedger({ ledgerPath, programCapUsd: 5, reason: 'test' });
+      const run = BudgetRun.open({ runner: 'pmb-think-test', budgetUsd: 0.2, ledgerPath });
+      return ['--paid', '--budget-run-id', run.runId];
+    });
+    expect(r.requests.filter(x => x.startsWith('POST https://api.anthropic.com'))).toEqual([]);
+    expect(r.code).toBe(3);
+    expect(r.receipt.run_status).toBe('error');
+    expect(r.receipt.publishable).toBe(false);
+    expect(r.receipt.errors.some(e => e.origin === 'harness' && e.message.includes('budget exhausted'))).toBe(true);
+  }, 240_000);
+
+  test('--budget-run-id alone asks for the paid arm, which needs --paid too; the = forms parse (#239)', async () => {
+    expect(() => parseOpts(['--budget-run-id=run-1', '--budget-ledger=/tmp/ledger.sqlite'])).not.toThrow();
+    const r = await thinkRun(() => ['--budget-run-id', 'run-1'], 'gbrain-hybrid');
+    expect(r.requests).toEqual([]);
+    expect(r.code).toBe(2);
+    expect(r.receipt.run_status).toBe('skipped');
+    expect(r.receipt.skip_reason).toContain('--paid');
   }, 240_000);
 
   test('instrument hybrid without OPENAI_API_KEY: skipped receipt + exit 2', async () => {

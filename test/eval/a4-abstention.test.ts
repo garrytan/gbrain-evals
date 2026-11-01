@@ -4,6 +4,8 @@
  * PGLite run through the query operation.
  */
 import { describe, expect, test } from 'bun:test';
+import { spawnSync } from 'node:child_process';
+import { join } from 'node:path';
 import { registryEntry } from '../../eval/registry.ts';
 import { evaluatePromotion } from '../../eval/runner/promotion.ts';
 import { assertScorerRejectsFakeSystems } from '../../eval/runner/mutation-kit.ts';
@@ -162,6 +164,16 @@ describe('A4 reader stop reasons (#238)', () => {
     const smoke = paidQuestions(ledger, 1);
     expect(smoke.map(x => x.cls).sort()).toEqual(['absent_entity', 'answerable_note', 'answerable_profile', 'missing_attribute', 'sibling_attribute']);
     expect(smoke.every(x => ledger.questions.find(y => y.cls === x.cls) === x)).toBe(true);
+  });
+
+  test('--smoke needs a number of questions per class and the paid reader, refused before any request', () => {
+    const a4 = (...args: string[]) => spawnSync('bun', [join(import.meta.dir, '../../eval/runner/a4-abstention.ts'), ...args], { encoding: 'utf8', timeout: 60_000 });
+    const bare = a4('--paid', '--smoke');
+    expect(bare.status).not.toBe(0);
+    expect(bare.stderr).toContain('--smoke needs a positive number of questions per class');
+    const keyless = a4('--smoke', '2');
+    expect(keyless.status).not.toBe(0);
+    expect(keyless.stderr).toContain('pass it with --paid');
   });
 
   test('outcome-v3 rescoring reads a cut-off answer as an execution error, and the frozen check accepts its stored outcome', async () => {

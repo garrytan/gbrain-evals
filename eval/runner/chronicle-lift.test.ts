@@ -89,14 +89,15 @@ describe('agent answer identity (#236)', () => {
   });
   const row = (arm: string, q: QuestionDoc['questions'][number], repeat: number, model: string, correct: boolean, extra: Record<string, unknown> = {}) =>
     ({ key: `${arm}|${q.id}|${repeat}`, arm, question: q.id, type: q.type, repeat, correct, final: correct ? right(q) : null, wrote: false, run: { model, usd: 0, stop: 'submitted' }, ...extra });
-  const score = (rows: unknown[], ...args: string[]) => {
+  const lift = (cmd: 'run' | 'score', rows: unknown[], ...args: string[]) => {
     const out = mkdtempSync(join(tmpdir(), 'lift-score-'));
     writeFileSync(join(out, 'qa-results.jsonl'), rows.map(r => JSON.stringify(r)).join('\n') + '\n');
-    const r = spawnSync('bun', [join(import.meta.dir, 'chronicle-lift.ts'), 'score', '--out', out, ...args], { encoding: 'utf8' });
+    const r = spawnSync('bun', [join(import.meta.dir, 'chronicle-lift.ts'), cmd, '--out', out, ...args], { encoding: 'utf8' });
     const scores = existsSync(join(out, 'scores.json')) ? JSON.parse(readFileSync(join(out, 'scores.json'), 'utf8')) : null;
     rmSync(out, { recursive: true, force: true });
     return { code: r.status, stderr: r.stderr, error: r.stderr.split('\n').find(l => l.startsWith('error: ')) ?? '', qa: scores?.qa ?? null };
   };
+  const score = (rows: unknown[], ...args: string[]) => lift('score', rows, ...args);
   // The reviewer's keyless repro: the off arm answered by Sonnet 4.6, the on arm resumed under the Sonnet 5.5 default.
   const mixed = doc.questions.flatMap(q => [row('off', q, 1, 'claude-sonnet-4-6', false), row('on-a', q, 1, 'claude-sonnet-5-5', true)]);
 
@@ -137,6 +138,16 @@ describe('agent answer identity (#236)', () => {
     const same = score(doc.questions.flatMap(q => [row('off', q, 1, 'claude-sonnet-5-5', false, { identity, brain: 'b-off' }), row('on-a', q, 1, 'claude-sonnet-5-5', true, { identity, brain: 'b-on' })]));
     expect(same.code).toBe(0);
     expect(same.qa.lift.diff).toBe(1);
+  });
+
+  test('run refuses an --out whose answers it could not pool with its own, before any paid step', () => {
+    const legacy = lift('run', [row('off', doc.questions[0], 1, 'claude-sonnet-4-6', true)], '--arms', 'none', '--qa-arms', 'off');
+    expect(legacy.code).not.toBe(0);
+    expect(legacy.error).toContain('another answer identity');
+    const identity = { model: 'claude-sonnet-5-5', max_turns: 12, gbrain: '0.60.531.0', questions: 'q' };
+    const rebuilt = lift('run', [row('off', doc.questions[0], 1, 'claude-sonnet-5-5', true, { identity, brain: 'b' })], '--arms', 'off', '--no-qa');
+    expect(rebuilt.code).not.toBe(0);
+    expect(rebuilt.error).toContain('--arms none');
   });
 
   test('the resume key changes with the model, the turn cap, the gbrain under test, the questions and the brain', async () => {

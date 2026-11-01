@@ -17,7 +17,8 @@
  *        [--model claude-sonnet-5-5] [--questions <ids>] [--qa-arms off,on-a] [--no-qa]
  *        (`--arms none` reuses the brains an earlier run built in --out; a finished agent cell is never rerun.
  *        A cell is finished only for the same answer identity: agent model, turn cap, gbrain under test,
- *        questions file and the arm's brain build. Another model or a rebuilt brain answers again beside it.)
+ *        questions file and the arm's brain build. An --out holding answers from another identity, or from a brain
+ *        this run would rebuild, is refused before any paid step: answer each configuration in its own --out.)
  *        [--gbrain <checkout>@<ref>]   measure a copied overlay of another gbrain commit instead of the pin
  *   bun eval/runner/chronicle-lift.ts score --out <dir> [--review <review.json>] [--model <id>]
  *        (score never pools answers from two answer identities or two builds of one arm's brain: it refuses,
@@ -317,6 +318,12 @@ async function run(argv: string[]) {
   const questions = questionsDoc.questions.filter(q => !only || only.includes(q.id));
   const estimate = Number(flag(argv, '--estimate-usd') ?? 15);
   const identity: AnswerIdentity = { model, max_turns: maxTurns, gbrain: gut.overlay ? `${gut.version} overlay ${gut.overlay.build.commit}` : gut.version, questions: sha256(questionsText) };
+  const resultsPath = join(out, 'qa-results.jsonl');
+  const prior = (existsSync(resultsPath) ? readFileSync(resultsPath, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l)) : []) as Array<{ key: string; arm: string; identity?: AnswerIdentity; run: { model: string } }>;
+  const rebuilt = arms.filter(a => prior.some(r => r.arm === a));
+  if (rebuilt.length) throw new Error(`${resultsPath} holds answers from the ${rebuilt.join(', ')} brain; rebuilding it would leave answers that match no brain on disk. Pass --arms none to answer from the brains already built, or build into a fresh --out.`);
+  const foreign = [...new Set(prior.map(r => JSON.stringify(r.identity ?? { model: r.run.model })))].filter(i => i !== JSON.stringify(identity));
+  if (qaArms.length && foreign.length) throw new Error(`${resultsPath} holds answers from another answer identity (${foreign.join('; ')}); answering as ${JSON.stringify(identity)} beside them would pay for rows score refuses to pool. Answer this configuration in a fresh --out.`);
   const corpus = writeVault(out);
   writeFileSync(join(out, 'corpus.json'), JSON.stringify(corpus, null, 2) + '\n');
   const paid = arms.length > 0 || qaArms.length > 0;
@@ -338,8 +345,7 @@ async function run(argv: string[]) {
       execFileSync('tar', ['-C', join(out, 'brains', arm), '-cf', join(out, 'brains', `${arm}.tar`), 'home']);
       console.error(`[lift] ${arm}: judged ${b.judged}, events ${events.length}, metered $${b.meter.usd.toFixed(4)}, recorded $${b.spent_usd_recorded.toFixed(4)}`);
     }
-    const resultsPath = join(out, 'qa-results.jsonl');
-    const done = new Set(existsSync(resultsPath) ? readFileSync(resultsPath, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l).key) : []);
+    const done = new Set(prior.map(r => r.key));
     // One arm's failure (a refused budget reservation included) stops every arm before the guard is uninstalled,
     // so no model call can leave the process unguarded.
     let stopAll = false;
@@ -454,7 +460,7 @@ function score(argv: string[]) {
     }
     for (const arm of new Set(rows.map(r => r.arm))) {
       const brains = new Set(rows.filter(r => r.arm === arm).map(r => r.brain ?? 'unrecorded'));
-      if (brains.size > 1) throw new Error(`${qaPath} holds ${arm} answers from ${brains.size} builds of the ${arm} brain (${[...brains].join(', ')}); the brain was rebuilt in this --out after some answers were written. Resume with --arms none to keep one build, or rebuild into a fresh --out.`);
+      if (brains.size > 1) throw new Error(`${qaPath} holds ${arm} answers from ${brains.size} builds of the ${arm} brain (${[...brains].join(', ')}); the brain was rebuilt in this --out after some answers were written, so they do not all match one build. Answer each build in its own --out.`);
     }
     const byArm: Record<string, Record<string, number[]>> = {};
     for (const r of rows) {

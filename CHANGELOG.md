@@ -6,16 +6,17 @@ This records what each gbrain-evals release changed and what its measurements me
 
 ### chronicle-lift scores one agent model at a time, A4 rows keep the reader's stop reason, and PrecisionMemBench's gbrain-think is metered
 
-- **chronicle-lift never pools two agent models into one lift** (#236). A finished agent cell was keyed on arm, question
-  and repeat alone, so resuming an output directory answered under Sonnet 4.6 with the new Sonnet 5.5 default skipped
-  the cells Sonnet 4.6 had finished, and `score` read both models' answers as one comparison. On a keyless repro, OFF
-  answered by Sonnet 4.6 and ON by Sonnet 5.5, `score` at `cb8f4665` reported a +100-point lift with an interval of 1
-  to 1. The resume key (`qaKey` in `eval/runner/chronicle-lift.ts`) now hashes the answer identity (agent model,
-  turn cap, gbrain under test, questions file) and the arm's brain build, and each row records both. `score` refuses a
-  results file that holds more than one answer identity, or one arm's answers from two builds of its brain;
-  `score --model <id>` keeps one model's answers and reports how many rows it left out. Older rows carry only their
-  model, which is enough for the check. The committed 2026-10-04 lift results rescore unchanged apart from a new
-  `qa.identity` naming Sonnet 4.6.
+- **chronicle-lift never pools two agent models into one lift** (#236). A finished agent cell was keyed on arm,
+  question and repeat alone, so resuming an output directory answered under Sonnet 4.6 with the new Sonnet 5.5 default
+  skipped the cells Sonnet 4.6 had finished, and `score` read both models' answers as one comparison. On a keyless
+  repro, OFF answered by Sonnet 4.6 and ON by Sonnet 5.5, `score` at `cb8f4665` reported a +100-point lift with an
+  interval of 1 to 1. The resume key (`qaKey` in `eval/runner/chronicle-lift.ts`) now hashes the answer identity
+  (agent model, turn cap, gbrain under test, questions file) and the arm's brain build, and each row records both.
+  `score` refuses a results file that holds more than one answer identity, or one arm's answers from two builds of its
+  brain; `score --model <id>` keeps one model's answers and reports how many rows it left out. Older rows carry only
+  their model, which is enough for the check. `run` refuses, before any paid step, an `--out` that already holds
+  answers from another identity or from a brain it would rebuild, so resuming never pays for rows `score` would
+  refuse. The committed 2026-10-04 lift results rescore unchanged apart from a new `qa.identity` naming Sonnet 4.6.
 - **A4 reader rows record the gateway's stop reason** (#238). An answer cut off at the 1,024-token limit (stop reason
   `length`) is scored as the reader's answer, flagged `truncated` and counted per arm (`data.paid.truncated`, with
   every arm's stop reasons in `data.paid.stop_reasons`). An abstention phrase in a cut-off answer scores `unscorable`,
@@ -24,8 +25,9 @@ This records what each gbrain-evals release changed and what its measurements me
   `docs/benchmarks/2026-10-01-n2-a4-preregistration.md` records the rule. outcome-v3 rescoring
   (`eval/runner/outcomes/rescore-a4.ts`) reads a cut-off row as an execution error; both committed A4 paid receipts
   rescore identically. `--smoke <n>` asks the reader only the first n questions of each class, the check the first
-  amendment asks for before a counted cell; its receipt is not publishable. The A4 registry contract now names the
-  Sonnet 5.5 reader at the provider's default temperature and points at the amendments.
+  amendment asks for before a counted cell; it needs a number and the paid reader, and its receipt is not publishable.
+  The A4 registry contract now names the Sonnet 5.5 reader at the provider's default temperature and points at the
+  amendments.
 - **The Sonnet 5.5 smoke found no cut-off answers.** `--smoke 2` (20 reader calls, 2026-11-01, scratch budget ledger):
   every answer stopped on its own, the longest used 172 of the 1,024 output tokens, and the ledger settled $0.045 from
   usage. The limit stays at 1,024. No counted A4 cell has run on Sonnet 5.5.
@@ -33,10 +35,12 @@ This records what each gbrain-evals release changed and what its measurements me
   Opus 5.5 once per case outside the budget ledger, and its receipt did not name the model. It now needs
   `--paid --budget-run-id <id>` for an open ledger run, and without them writes a skipped receipt and exits 2 before
   any request. Every request it makes, the seeding embeddings included, passes the ledger's paid-request guard, and the
-  receipt's `cost` comes from the ledger. `resolved_config.chat_model` names the think model. The other modes take
-  `--paid --budget-run-id` too, which meters their embedding requests, and stay unmetered without them. A one-case
-  live run on 2026-11-01 settled $0.0595 from usage (one Opus 5.5 request, 36 embedding requests). The adapter's
-  header no longer says a cheap model is pinned.
+  receipt's `cost` comes from the ledger. gbrain's think turns a refused request into an empty answer, so a case the
+  ledger refuses is recorded as a harness error instead of scored, and the run as incomplete (`run_status: error`, not
+  publishable, exit 3). `resolved_config.chat_model` names the think model. The other modes join the ledger when given
+  `--paid` or `--budget-run-id` (either asks for the paid arm, which needs both) and stay unmetered without them. A
+  one-case live run on 2026-11-01 settled $0.0595 from usage (one Opus 5.5 request, 36 embedding requests). The
+  adapter's header no longer says a cheap model is pinned.
 
 ### Top-level docs describe gbrain at the pin `3ec766c40`, and corrections and history leave the current-state pages
 

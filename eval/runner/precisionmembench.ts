@@ -31,7 +31,10 @@
  *     --paid --budget-run-id <id> naming an open budget-ledger run, refused
  *     before any request otherwise. Every request it makes, the seeding
  *     embeddings included, passes the ledger's paid-request guard, and the
- *     receipt's cost comes from the ledger.
+ *     receipt's cost comes from the ledger. gbrain's think turns a refused
+ *     request into an empty answer, so a case the ledger refuses is recorded
+ *     as a harness error, never scored, and the run as incomplete. The other
+ *     modes join the ledger the same way when given --paid or --budget-run-id.
  *
  * Run:
  *   bun eval/runner/precisionmembench.ts --mode gbrain-hybrid
@@ -44,7 +47,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'fs';
 import { join } from 'path';
 import { budgetOptionsFrom, receiptCost, startPaidRun, type BudgetRun, type PaidRequestGuard } from './budget-ledger.ts';
-import { PaidArmRefusal, requirePaidArm } from './paid-arm.ts';
+import { PaidArmRefusal, paidRequested, requirePaidArm } from './paid-arm.ts';
 import { buildReportPayload } from '../precisionmembench/scorer/buildRetrievalReport.ts';
 import {
   scoreCases,
@@ -107,7 +110,6 @@ export interface Opts {
   allowSkip: boolean;
   reportDir: string;
   receiptFile: string;
-  paid: boolean;
 }
 
 /**
@@ -133,7 +135,6 @@ export function parseOpts(argv: string[]): Opts {
     allowSkip: false,
     reportDir: DEFAULT_REPORT_DIR,
     receiptFile: receiptPath('precisionmembench'),
-    paid: false,
   };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
@@ -163,7 +164,7 @@ export function parseOpts(argv: string[]): Opts {
     else if (a === '--allow-skip') opts.allowSkip = true;
     else if (a === '--report-dir') opts.reportDir = next();
     else if (a === '--receipt-path') opts.receiptFile = next();
-    else if (a === '--paid') opts.paid = true;
+    else if (a === '--paid' || a.startsWith('--budget-run-id=') || a.startsWith('--budget-ledger=')) continue;
     else if (a === '--budget-run-id' || a === '--budget-ledger') next();
     else throw new Error(`unknown arg: ${a} (valid: --mode --fidelity --limit --json --no-embed --entity-max --other-max --allow-skip --report-dir --receipt-path --paid --budget-run-id --budget-ledger)`);
   }
@@ -275,6 +276,7 @@ export function missingKeys(mode: BenchMode, opts = parseOpts(['--mode', mode]))
 
 export async function main(argv: string[] = process.argv.slice(2)): Promise<number> {
   const opts = parseOpts(argv);
+  const paidArm = opts.mode === 'gbrain-think' || paidRequested(argv);
   const startedAt = new Date().toISOString();
   const provider = `${opts.mode}-${opts.fidelity}`;
 
@@ -301,7 +303,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
     full_case_count: fullCaseCount,
     supersession_seeding: 'live — all beliefs seeded, no ground-truth soft-delete (audit precisionmembench-01)',
     chat_model: opts.mode === 'gbrain-think' ? DEFAULT_THINK_MODEL : null,
-    paid: opts.mode === 'gbrain-think' || opts.paid ? { budget_run_id: budgetOptionsFrom(argv).runId ?? null, ledger: budgetOptionsFrom(argv).ledgerPath } : null,
+    paid: paidArm ? { budget_run_id: budgetOptionsFrom(argv).runId ?? null, ledger: budgetOptionsFrom(argv).ledgerPath } : null,
   };
 
   const receiptBase: Omit<Receipt, 'run_status' | 'verdict' | 'skip_reason' | 'publishable'> = {
@@ -336,7 +338,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
   }
 
   let paid: { run: BudgetRun; guard: PaidRequestGuard } | null = null;
-  if (opts.mode === 'gbrain-think' || opts.paid) {
+  if (paidArm) {
     const estimateUsd = opts.mode === 'gbrain-think' ? THINK_ESTIMATE_USD_PER_CASE * cases.length : null;
     try {
       requirePaidArm(argv, { arm: `precisionmembench ${opts.mode}`, estimateUsd, ledgerPath: budgetOptionsFrom(argv).ledgerPath });
@@ -350,10 +352,10 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
   }
   const closePaid = () => {
     if (!paid) return {};
-    paid.guard.uninstall();
-    const cost = receiptCost(paid.run.close());
+    const { run, guard } = paid;
     paid = null;
-    return { cost };
+    guard.uninstall();
+    return { cost: receiptCost(run.close()) };
   };
 
   const acc = new ProbeAccounting(cases.length);
@@ -406,16 +408,19 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
     // Per-case invocation so one adapter throw is a scored miss for THAT case
     // (probe-accounting sut policy) instead of aborting the whole run. The
     // per-case scoring is unchanged: scoreCases iterates cases independently.
+    const budgetStop = 'budget exhausted: the ledger refused a paid request, so this case was not measured';
     const report: ReportEntry[] = [];
     for (const tc of cases) {
       const observationStart = adapter instanceof GbrainBeliefAdapter ? adapter.observations.length : 0;
       try {
+        if (paid?.guard.exhausted) throw new Error(budgetStop);
         const [entry] = await scoreCases(adapter, [tc], pinnedInSeed);
+        if (paid?.guard.exhausted) throw new Error(budgetStop);
         report.push(entry);
         acc.score(tc.caseId, entry.passed ? 1 : 0);
       } catch (err) {
         const msg = String(err);
-        acc.error(tc.caseId, 'sut', msg);
+        acc.error(tc.caseId, paid?.guard.exhausted ? 'harness' : 'sut', msg);
         report.push(missEntryForCrash(tc, pinnedInSeed, msg));
       } finally {
         if (adapter instanceof GbrainBeliefAdapter) {
@@ -426,7 +431,8 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
 
     const observations = adapter instanceof GbrainBeliefAdapter ? adapter.observations : [];
     const searchFailures = observations.filter(o => o.failures.length > 0);
-    const executionIncomplete = searchFailures.length > 0;
+    const budgetExhausted = paid?.guard.exhausted ?? false;
+    const executionIncomplete = searchFailures.length > 0 || budgetExhausted;
     // Reranking an empty result pool is a valid no-op. Nonempty pools are
     // checked per query by the adapter, so a single fallback cannot hide in an average.
     const rerankIncomplete = opts.reranker === 'on' &&
@@ -437,6 +443,7 @@ export async function main(argv: string[] = process.argv.slice(2)): Promise<numb
     resolvedConfig.reranker_observed = observations.filter(o => o.rerank_scored).length;
     resolvedConfig.reranker_incomplete = rerankIncomplete;
     resolvedConfig.search_failed_queries = searchFailures.length;
+    resolvedConfig.budget_exhausted = budgetExhausted;
     resolvedConfig.execution_incomplete = executionIncomplete;
     const payload: Record<string, unknown> = {
       ...buildReportPayload({ provider, entries: report, caseCount: cases.length }, report),

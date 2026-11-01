@@ -558,9 +558,9 @@ async function main(): Promise<void> {
   const seed = seedArg === undefined ? A4_DEFAULT_SEED : Number(seedArg);
   if (!Number.isInteger(seed)) throw new Error('--seed needs an integer');
   const paid = paidRequested(argv);
-  const smokeArg = argValue(argv, '--smoke');
-  const smoke = smokeArg === undefined ? null : Number(smokeArg);
+  const smoke = argv.some(a => a === '--smoke' || a.startsWith('--smoke=')) ? Number(argValue(argv, '--smoke')) : null;
   if (smoke !== null && !(Number.isInteger(smoke) && smoke > 0)) throw new Error('--smoke needs a positive number of questions per class');
+  if (smoke !== null && !paid) throw new Error('--smoke limits the paid reader; pass it with --paid --budget-run-id <id>');
   const ledgerPath = budgetOptionsFrom(argv).ledgerPath;
   const world = generateA4World({ seed });
   const { ledger } = world;
