@@ -29,6 +29,7 @@ import {
   HONEST_SKILL,
   SEED_SKILL,
 } from '../../eval/runner/cat32-skillopt-reward-hacking.ts';
+import { SKILLOPT_MODELS } from '../../eval/runner/cat30-skillopt-improvement.ts';
 
 const RUN_TIMEOUT = 180_000;
 
@@ -221,6 +222,28 @@ describe('runCat32 Part B gate', () => {
     expect(partB.no_regression).toBe(true);
     expect(partB.held_out_blocked).toBe(0);
     expect(partB.pass).toBe(false);
+  }, RUN_TIMEOUT);
+
+  test('every LLM held-out judge call and the optimizer use the cross-family judge, and the receipt keeps the run', async () => {
+    const judges: string[] = [];
+    const r = await runCat32({
+      bpre: false,
+      reportsDir: tmpReports(),
+      quiet: true,
+      engineFactory: async () => fakeEngine(),
+      scoreFn: (async (opts: any) => { if (opts.tasks[0]?.judge?.kind === 'llm') judges.push(opts.judgeModel); return scoreFake(opts); }) as any,
+      runSkillOptFn: (async (opts: any) => {
+        judges.push(opts.judgeModel);
+        return { outcome: 'accepted', finalText: HONEST_SKILL + '\nSTUB-HONEST', receipt: { best_sel_score: 1.0, final_cost_usd: 0.01 }, mutatedSkillFile: true };
+      }) as any,
+    });
+    expect(judges.length).toBeGreaterThan(0);
+    expect(new Set(judges)).toEqual(new Set([SKILLOPT_MODELS.judge]));
+    expect(SKILLOPT_MODELS.judge.startsWith('anthropic:')).toBe(false);
+    const runs = (r.receipt.data as any).skillopt_runs;
+    expect(runs).toHaveLength(1);
+    expect(runs[0].outcome).toBe('accepted');
+    expect(runs[0].final_text).toContain('STUB-HONEST');
   }, RUN_TIMEOUT);
 
   test('gate holds: a candidate was blocked and the output preserves held-out quality → pass, exit 0', async () => {

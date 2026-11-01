@@ -866,6 +866,62 @@
       "note": "The original category 30-33 receipts were written to ignored eval/reports/ and cleaned up before publication. The report preserves the figures and discloses that training and held-out tasks originally shared judge rules. August 31 changed the held-out criteria. A fresh run cannot restore missing historical evidence or guarantee the old gates, model scores, or costs."
     },
     {
+      "claim_id": "skillopt-2026-11-01-cat30",
+      "readme_anchor": "docs/benchmarks/2026-11-01-skillopt-rebaseline/REPORT.md: all four practice skills improve on held-out tasks (0.00 to 0.50, 0.50 to 0.75, 0.00 to 1.00, 0.00 to 0.33)",
+      "artifact_path": "docs/benchmarks/2026-11-01-skillopt-rebaseline/receipts/cat30.json",
+      "artifact_sha256": "62118bd9f637c44881e3ffdc413220a7694a6aea4d487f2ced405eaa3fa1d4aa",
+      "expected": {
+        "/verdict": "pass",
+        "/data/seeds_improved": 4,
+        "/data/seeds/0/optimized_heldout": 0.5,
+        "/data/gate_pass": true
+      },
+      "status": "covered",
+      "note": "gpt-6.1-sol judge (active only in Cat 32), Haiku 5.5 target, Opus 5.5 optimizer, gbrain 3ec766c40; a new receipt identity that does not pool with the June 3 run. Costs in the report come from the metering proxy (receipts/metered-cost.json)."
+    },
+    {
+      "claim_id": "skillopt-2026-11-01-cat31",
+      "readme_anchor": "docs/benchmarks/2026-11-01-skillopt-rebaseline/REPORT.md: the full loop ties a one-shot rewrite, 0.54 against 0.54 held out, paired bootstrap p = 1.00; the iterative loop is a CUT-CANDIDATE",
+      "artifact_path": "docs/benchmarks/2026-11-01-skillopt-rebaseline/receipts/cat31.json",
+      "artifact_sha256": "fb4697d70ec424935c474a39859de088b9ec667954a35d2616a6defca904f6ec",
+      "expected": {
+        "/verdict": "pass",
+        "/data/configs/A_full/mean_heldout_clean": 0.5416666666666667,
+        "/data/configs/C_one_shot/mean_heldout_clean": 0.5416666666666667,
+        "/data/paired_bootstrap_p_A_vs_C": 1
+      },
+      "status": "covered",
+      "note": "gpt-6.1-sol judge (active only in Cat 32), Haiku 5.5 target, Opus 5.5 optimizer, gbrain 3ec766c40; a new receipt identity that does not pool with the June 3 run. Costs in the report come from the metering proxy (receipts/metered-cost.json)."
+    },
+    {
+      "claim_id": "skillopt-2026-11-01-cat32",
+      "readme_anchor": "docs/benchmarks/2026-11-01-skillopt-rebaseline/REPORT.md: the planted cheat shows a 0.98 gap and the honest control 0.07; Part B held-out quality 0.55 to 0.88 with no gate refusal, so the category is partial",
+      "artifact_path": "docs/benchmarks/2026-11-01-skillopt-rebaseline/receipts/cat32.json",
+      "artifact_sha256": "84fbf55144f69f1435499ac5882da44ef707a986be699d4de80c5aaac07750ee",
+      "expected": {
+        "/verdict": "partial",
+        "/data/part_a/discrimination": 0.98,
+        "/data/part_b/optimized_heldout": 0.875,
+        "/data/part_b/held_out_blocked": 0
+      },
+      "status": "covered",
+      "note": "gpt-6.1-sol judge (active only in Cat 32), Haiku 5.5 target, Opus 5.5 optimizer, gbrain 3ec766c40; a new receipt identity that does not pool with the June 3 run. Costs in the report come from the metering proxy (receipts/metered-cost.json)."
+    },
+    {
+      "claim_id": "skillopt-2026-11-01-cat33",
+      "readme_anchor": "docs/benchmarks/2026-11-01-skillopt-rebaseline/REPORT.md: a skill optimized on Haiku 5.5 or Sonnet 5.5 helps the other model in 4 of 4 pairs",
+      "artifact_path": "docs/benchmarks/2026-11-01-skillopt-rebaseline/receipts/cat33.json",
+      "artifact_sha256": "959e531599d3360dae112c538516f09ff3ceb62cc6548bbe21a5ebc21c717c58",
+      "expected": {
+        "/verdict": "pass",
+        "/data/pairs_transferred": 4,
+        "/data/pairs_scored": 4,
+        "/data/gate_pass": true
+      },
+      "status": "covered",
+      "note": "gpt-6.1-sol judge (active only in Cat 32), Haiku 5.5 target, Opus 5.5 optimizer, gbrain 3ec766c40; a new receipt identity that does not pool with the June 3 run. Costs in the report come from the metering proxy (receipts/metered-cost.json)."
+    },
+    {
       "claim_id": "stability-snapshot",
       "readme_anchor": "docs/benchmarks/2026-05-23-v0.40.6.0-snapshot.md: historical unchanged-category tables, without per-release receipts proving stability across every intervening release",
       "artifact_path": null,

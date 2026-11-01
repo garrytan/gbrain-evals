@@ -11,6 +11,22 @@ This records what each gbrain-evals release changed and what its measurements me
 - **A cross-family second judge** (`eval/runner/batch/w10-particle-second-judge.ts`) re-judges the stored answers with the official prompt, under the budget ledger. `gpt-6.1-sol` judges particle-1, Opus 5.5 and Sonnet 5.5; `claude-sonnet-5-5` judges particle-1 and GPT-6.1 Sol. The run cost $1.61 and is a sensitivity, not counted. A keyless test (`test/eval/w10-particle-second-judge.test.ts`) checks that no judge reads its own lab's arm, that the committed rows are exactly the judgments each judge owes, and that the recheck reproduces the committed analysis. Under it, particle-1's gaps to Sonnet 5.5 (-2.4, -4.6 to -0.4) and GPT-6.1 Sol (-3.4, -5.6 to -1.2) exclude zero, where the protocol judge's do not.
 - **Corrections.** `docs/corrections.md` lists three cost corrections the recheck found. Opus 5.5's list cost per correct answer in the replay report is $0.0993, not $0.0994. The batch figures for Opus 5.5 and Sonnet 5.5 are $0.0497 and $0.0250. GPT-6.1 Sol's reader costs in W10b, W10c and the replay are repriced at OpenAI's $2.50 cache-write rate, which W10's ledger did not yet apply. README's reader-replay row no longer calls Opus 5.5 the best reader, because the W10b test compares each reader with Sonnet 4.6 only, and `docs/corrections.md` records the same claim in the W10b report's opening sentence. `docs/receipts-manifest.json` pins the replay's 30 artifacts, the comparator rows and the finding's analysis and second-judge receipts.
 
+### SkillOpt Cats 30 to 33 re-baselined on today's models, with receipts committed
+
+- **[November 1 SkillOpt re-baseline](docs/benchmarks/2026-11-01-skillopt-rebaseline/REPORT.md)** at gbrain
+  `3ec766c40`, Haiku 5.5 target, Opus 5.5 optimizer, `gpt-6.1-sol` judge (preregistered, two amendments). Cat 30
+  passes 4 of 4 skills, Cat 31 passes, Cat 32 is partial (Part B's gate never saw a gaming candidate), and Cat 33
+  passes 4 of 4 transfer pairs. The full loop ties a one-shot rewrite for the second time (0.54 against 0.54), so the
+  iterative loop is a CUT-CANDIDATE under R48. Metered cost $12.76.
+- **The judge moves to `gpt-6.1-sol`**, outside the target's family, and every SkillOpt receipt carries each
+  optimization's final skill text and gbrain's run receipt (`skillopt_runs`). These receipts are a new identity and do
+  not pool with the June 3 run.
+- **Receipts, gbrain's step events and the metered cost are committed** under the report's directory, and four
+  `covered` entries in `docs/receipts-manifest.json` check the headline numbers. The June 3 report's disclosed gap
+  stays as it was.
+- **gbrain defects found** (success-reflection edit format, held-out feedback to the proposer, test criteria shown to
+  the optimizer, unapplied edits recorded as tried) are reported upstream; gbrain fixes them in GBRA-274.
+
 ### memory-qa resumes, stops and counts its reading lane exactly; answer replays keep room for Claude 5 to think
 
 - **A stopped paid run says why and exits 3** (#216). When the budget ledger refuses a paid request (the run or program cap, or a host it cannot price) or Particle answers 402, `eval/runner/memory-qa/run.ts` still writes the stopped question's row and a `partial` receipt, and its `summary` now carries `stop_reason` beside `stopped: budget`. The command prints a `BUDGET_CAP` operator message and exits 3 (ask the user) instead of 0. A refusal that no question recorded, such as one during an embedding, stops the run the same way. A rerun of the same command still resumes at the stopped question. Memory-system cells, which run.ts hands to `run-systems.ts`, keep their exit codes.
