@@ -25,7 +25,7 @@ This is plan revision 3's decision A3, preregistered as [amendment 2](../../PRER
 
 **Served tools and settings.** The rollouts served each skill its declared read operations: `query` got `recall` and `get_timeline`, and `briefing` got `get_timeline`. Retrieval was keyword-only, and no embedding call was made. Opus ran with gbrain's defaults: no thinking and `max_tokens` 32,000. GPT-6.1 Sol ran with `max_output_tokens` 4,096 and no reasoning field sent, and OpenAI applied medium effort. Each receipt records `request_settings`.
 
-**Test split (amendment 3).** Every kept rewrite scored 1.00 on the 36 test tasks, and beat the seed on all six pairs. The seed beat no skill on five pairs, but not on Sol `query` (0.72 against 0.86). The [report](../../REPORT.md) has the full table. The read cost $163.06 on ledger run `n15-skillopt-method-test-read-2026-11-02T03-04-45-593Z-f0a9f695`.
+**Test split (amendment 3).** Every kept rewrite scored 1.00 on the 36 test tasks, and beat the seed on all six pairs. The seed beat no skill on five pairs, but not on Sol `query` (0.72 against 0.86). The report rates that a FIX-METHOD, because at this gbrain pin `get_page`, `traverse_graph` and `get_backlinks` reject every call Sol makes. The [report](../../REPORT.md) has the full table and the reproduction. The read cost $163.06 on ledger run `n15-skillopt-method-test-read-2026-11-02T03-04-45-593Z-f0a9f695`.
 
 **Spend.** The ledger run `n15-skillopt-method-frontier-probe-2026-11-02T00-00-46-604Z-1ae07142` committed $145.04 against a $330 cap:
 - smoke and F0a: $79.40;
