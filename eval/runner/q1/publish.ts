@@ -16,7 +16,10 @@
  *   3. copies each answering arm into the receipt: `cells/<arm cell id>/`, or under `appendix/` for a source the
  *      config publishes only in an appendix (the found-and-fixed rows).
  *
- * campaign.json then lists every answering arm of the generated cell manifest. An arm no source covers is
+ * `cells` names the cell manifests (default Q1's q1-cells.json; F6 lists f6-cells.json, then q1-cells.json for the
+ * rows it reuses from A24). campaign.json lists every answering arm of the first manifest, and of a later one only the
+ * arms a main source covers or `not_run` names. `headline_set` keeps one headline set when the manifests mark several,
+ * and `anchors` marks the preregistered headline arm of a GBrain cell whose arms mark none. An arm no source covers is
  * `not-run` with the config's reason (the sealed waves until they settle). Sets take their scheduled questions
  * from the public corpus where the corpus is public (LoCoMo, LongMemEval); a set on sealed data is scheduled
  * empty, with its preregistered exclusions withheld, until the custodian assembles it on the custodian's host.
@@ -32,8 +35,9 @@
  * A source on a campaign that ran under several freezes lists `states`: each state directory (under --results) and
  * the launch units whose final rows it holds; every cell merges once, from all its units' states, at the source's
  * launch tree. `not_run` names cells (definition or arm id) published as not run with their own reason, whatever
- * rows they hold. `product_outcomes` counts a cell reader's recorded outcome as the product's failure when the
- * system's own path flagged it. A sensitivity view may name `from_outcomes` instead of question ids: its questions
+ * rows they hold; an appendix source still shows their rows (F6's partial cells: no comparison, rows in an
+ * appendix). `product_outcomes` counts a cell reader's recorded outcome as the product's failure when the system's own
+ * path flagged it. A sensitivity view may name `from_outcomes` instead of question ids: its questions
  * are those with an answer of those outcomes in that cell's arms (or that one arm), counted against `count`. --custody (the custodian's
  * host, GBRAIN_EVALS_CUSTODY_LOG set) schedules the sealed sets from their corpora. --frontier-redo adds A19's Opus
  * redo judgments: each arm gets the records for its own answers in frontier-redo.ndjson, which the scoreboard uses in
@@ -48,7 +52,7 @@ import { loadSplit } from '../decisions/splits.ts';
 import { loadCorpus } from '../memory-qa/corpus.ts';
 import type { AppendixCell, CampaignCell, CampaignFamily, CampaignManifest, CampaignSet, PinEntry } from '../scoreboard.ts';
 import { scoreboardCampaignCell, selectCellQuestions, splitConversations } from './cell.ts';
-import { loadManifest, type ArmDefinition, type CellDefinition } from './cells/definitions.ts';
+import { loadManifest, MANIFEST_PATH, type ArmDefinition, type CellDefinition, type Manifest } from './cells/definitions.ts';
 import { reuseCheck } from './reuse-check.ts';
 
 const REPO_ROOT = resolve(import.meta.dir, '../../..');
@@ -99,6 +103,12 @@ export interface Publication {
   pins: Record<string, string>;
   disclosures: string[];
   render_targets: string[];
+  /** Cell manifests (repository paths) the receipt draws on, the run's own first; default Q1's q1-cells.json. See publicationManifest. */
+  cells?: string[];
+  /** The one set published with role headline when the manifests mark several (F6: S1; D8 is published descriptively). */
+  headline_set?: string;
+  /** GBrain arm cell ids published as their set's anchor and headline row, for manifests whose arms mark none (F6's preregistered arm P). */
+  anchors?: string[];
 }
 
 type GbrainBuild = Pick<CampaignManifest['gbrain'], 'commit' | 'version' | 'date'>;
@@ -159,7 +169,29 @@ export function reuseRefusal(src: PublicationSource): string | null {
   return refused.length ? `${src.campaign} at ${src.launch_tree} fails its reuse check: ${refused.map(s => `${s.system} (${s.reasons.join('; ')})`).join(', ')}` : null;
 }
 
-export interface AssembleOptions { preview?: boolean; custody?: boolean; frontierRedo?: string[] }
+/**
+ * The cell definitions a publication draws on: every manifest's cells and sets in order, an id defined in two manifests
+ * taking the first one's definition (F6's S1 baseline reruns share ids with Q1's cells), and the first manifest's readers.
+ * `own` holds the first manifest's cell ids: the receipt lists every one of them, and a later manifest's cell only when
+ * a main source covers it or `not_run` names it.
+ */
+export function publicationManifest(paths: string[] = [MANIFEST_PATH]): Manifest & { own: Set<string> } {
+  const ms = paths.map(p => loadManifest(resolve(REPO_ROOT, p)));
+  const firstById = <T extends { id: string }>(xs: T[]) => xs.filter((x, i) => xs.findIndex(y => y.id === x.id) === i);
+  return { ...ms[0], cells: firstById(ms.flatMap(m => m.cells)), sets: firstById(ms.flatMap(m => m.sets)), own: new Set(ms[0].cells.map(c => c.id)) };
+}
+
+export interface AssembleOptions {
+  preview?: boolean; custody?: boolean; frontierRedo?: string[];
+  /** Test seams: the checkout of a launch commit (default a detached worktree under --trees), and the merge of a cell's shard directories into `out` at that checkout (default `cell.ts merge`). */
+  tree?: (commit: string) => string;
+  merge?: (tree: string, def: CellDefinition, from: string[], out: string) => void;
+}
+
+function mergeAt(tree: string, def: CellDefinition, from: string[], out: string): void {
+  const r = spawnSync(process.execPath, ['eval/runner/q1/cell.ts', 'merge', '--cell', def.id, ...from.flatMap(f => ['--from', f]), '--out', out], { cwd: tree, encoding: 'utf8', maxBuffer: 1 << 28 });
+  if (r.status !== 0 && r.status !== 4) throw new Error(`merge of ${def.id} at ${tree} exited ${r.status}: ${(r.stderr || r.stdout).slice(-600)}`);
+}
 
 /**
  * The A19 frontier redo judgments from files or directories, searched recursively for .ndjson files (the backfill
@@ -181,7 +213,7 @@ export function loadFrontierRedo(paths: string[]): string[] {
 export function assemble(config: Publication, results: string, out: string, trees: string, opts: AssembleOptions = {}): CampaignManifest {
   const preview = !!opts.preview;
   if (opts.custody && !process.env.GBRAIN_EVALS_CUSTODY_LOG) throw new Error('--custody schedules the sealed sets from their corpora; set GBRAIN_EVALS_CUSTODY_LOG on the custodian host');
-  const m = loadManifest();
+  const m = publicationManifest(config.cells);
   for (const p of [config.pins, ...config.sources.map(s => s.pins ?? {})]) if (p['gbrain-defaults']) throw new Error('publication.json writes a gbrain-defaults pin by hand; the GBrain label comes from its gbrain build (publish.ts gbrainBuildLabel)');
   const label = gbrainBuildLabel(config.gbrain);
   const retired = config.retired.map(r => {
@@ -192,6 +224,8 @@ export function assemble(config: Publication, results: string, out: string, tree
   const outsideSubset = (unit: string, def: CellDefinition) => retired.some(r => r.system === def.system && (r.def !== def || !r.subset.shards.includes(Number(unit.slice(def.id.length + 2)))));
   const ownReason = (def: CellDefinition, arm?: ArmDefinition) => (arm && config.not_run[arm.cell_id]) ?? config.not_run[def.id] ?? null;
   for (const id of Object.keys(config.not_run)) if (!m.cells.some(c => c.id === id || c.arms.some(a => a.cell_id === id))) throw new Error(`publication.json not_run names ${id}, which is no cell or arm`);
+  if (config.headline_set && !m.sets.some(s => s.id === config.headline_set && s.role === 'headline')) throw new Error(`publication.json headline_set ${config.headline_set} is no headline set of its manifests`);
+  for (const id of config.anchors ?? []) if (!m.cells.some(c => c.system === 'gbrain-defaults' && c.arms.some(a => a.cell_id === id && answering(a)))) throw new Error(`publication.json anchors names ${id}, which is no answering gbrain-defaults arm`);
   for (const refusal of config.sources.map(reuseRefusal)) if (refusal) throw new Error(refusal);
   const pins: Record<string, string> = { ...bundlePins(REPO_ROOT), ...config.pins, 'gbrain-defaults': label };
   rmSync(out, { recursive: true, force: true });
@@ -210,14 +244,14 @@ export function assemble(config: Publication, results: string, out: string, tree
       for (const [unit, l] of leases) {
         if (st.units && !st.units.includes(unit)) continue;
         const def = unitCell(unit, m.cells);
-        if (!def || !covers(src, def.system) || outsideSubset(unit, def) || ownReason(def)) continue;
+        if (!def || !covers(src, def.system) || outsideSubset(unit, def) || (!src.appendix && ownReason(def))) continue;
         if (taken.has(unit)) throw new Error(`${unit} is listed under two states`);
         taken.add(unit);
         seen.push(l.at);
         byCell.set(def, [...(byCell.get(def) ?? []), join(state, 'results', unit, l.lease)]);
       }
     }
-    const tree = launchTree(src.launch_tree, trees);
+    const tree = (opts.tree ?? (c => launchTree(c, trees)))(src.launch_tree);
     const treePins: Record<string, string> = { ...bundlePins(tree), ...config.pins, 'gbrain-defaults': src.gbrain ? gbrainBuildLabel(src.gbrain) : label };
     for (const [def, leaseDirs] of byCell) {
       const from = leaseDirs.filter(d => existsSync(join(d, 'cells', def.arms[0].cell_id, 'receipt.json')));
@@ -231,11 +265,10 @@ export function assemble(config: Publication, results: string, out: string, tree
       }
       const staged = join(trees, 'merged', String(i), def.id);
       rmSync(staged, { recursive: true, force: true });
-      const r = spawnSync(process.execPath, ['eval/runner/q1/cell.ts', 'merge', '--cell', def.id, ...from.flatMap(f => ['--from', f]), '--out', staged], { cwd: tree, encoding: 'utf8', maxBuffer: 1 << 28 });
-      if (r.status !== 0 && r.status !== 4) throw new Error(`merge of ${def.id} at ${src.launch_tree} exited ${r.status}: ${(r.stderr || r.stdout).slice(-600)}`);
+      (opts.merge ?? mergeAt)(tree, def, from, staged);
       for (const arm of def.arms.filter(answering)) {
         const from = join(staged, 'cells', arm.cell_id);
-        if (!existsSync(join(from, 'receipt.json')) || ownReason(def, arm)) continue;
+        if (!existsSync(join(from, 'receipt.json')) || (!src.appendix && ownReason(def, arm))) continue;
         const receipt = JSON.parse(readFileSync(join(from, 'receipt.json'), 'utf8')) as { run_status: string; config_sha256: string };
         const pin = src.pins?.[def.system] ?? treePins[def.system];
         const entry = { status: receipt.run_status === 'invalid' ? 'invalid' as const : 'complete' as const, config_sha256: receipt.config_sha256, ...(pin ? { pin } : {}) };
@@ -273,7 +306,8 @@ export function assemble(config: Publication, results: string, out: string, tree
     const mine = redo.filter(l => own.has((JSON.parse(l) as { answer_id: string }).answer_id));
     if (mine.length) writeFileSync(join(out, 'cells', id, 'frontier-redo.ndjson'), mine.join('\n') + '\n');
   }
-  const sets: CampaignSet[] = [...new Set(m.cells.flatMap(c => c.arms.filter(answering).map(a => a.set)))].map(id => m.sets.find(s => s.id === id)!).filter(s => s.role !== 'smoke').map(s => {
+  const listed = m.cells.filter(def => m.own.has(def.id) || def.id in config.not_run || def.arms.some(a => covered.has(a.cell_id) || a.cell_id in config.not_run));
+  const sets: CampaignSet[] = [...new Set(listed.flatMap(c => c.arms.filter(answering).map(a => a.set)))].map(id => m.sets.find(s => s.id === id)!).filter(s => s.role !== 'smoke').map(s => {
     const open = PUBLIC_CORPUS.has(s.benchmark) || !!opts.custody;
     let scheduled: CampaignSet['scheduled'] = [];
     if (open) {
@@ -286,31 +320,33 @@ export function assemble(config: Publication, results: string, out: string, tree
       ...config.sensitivity.filter(v => v.sets.includes(s.id)).map(v => ({ id: v.id, label: v.label, reason: v.reason, question_ids: [...(v.from_outcomes ? derivedViews.get(v.id)! : v.question_ids)].filter(q => ids.has(q)) })),
       ...retired.filter(r => r.sets.includes(s.id)).map(r => ({ ...r.view, question_ids: [], conversations: r.conversations })),
     ];
+    const role = (config.headline_set && s.id !== config.headline_set ? 'public' : s.role) as CampaignSet['role'];
     return {
-      id: s.id, label: s.label, benchmark: s.benchmark, exposure: s.exposure as CampaignSet['exposure'], role: s.role as CampaignSet['role'],
-      cluster_unit: s.benchmark.startsWith('lme') ? 'question' as const : 'conversation' as const, claim_min_clusters: s.role === 'headline' ? 9 : 0,
+      id: s.id, label: s.label, benchmark: s.benchmark, exposure: s.exposure as CampaignSet['exposure'], role,
+      cluster_unit: s.benchmark.startsWith('lme') ? 'question' as const : 'conversation' as const, claim_min_clusters: role === 'headline' ? 9 : 0,
       scheduled, exclusions: open ? s.exclusions : [], ...(views.length ? { sensitivity: views } : {}), ...(PUBLIC_CORPUS.has(s.benchmark) ? {} : { sealed: true }),
     };
   });
 
   const pending = config.pending.map(p => ({ reason: p.reason, units: (JSON.parse(readFileSync(resolve(REPO_ROOT, p.campaign), 'utf8')) as { cells: Array<{ id: string }> }).cells.map(u => u.id) }));
-  const cells: CampaignCell[] = m.cells.flatMap(def => def.arms.filter(answering).map(arm => {
+  const cells: CampaignCell[] = listed.flatMap(def => def.arms.filter(answering).map(arm => {
     const c = covered.get(arm.cell_id);
     const r = retired.find(x => x.system === def.system);
     const subset = r?.def === def ? { conversations: r.conversations, label: r.subset.label, reason: r.subset.reason } : null;
     const reason = ownReason(def, arm) ?? (r && !subset ? r.reason : null) ?? pending.find(p => p.units.some(u => unitCell(u, [def])))?.reason ?? config.not_run_reason;
     const entry = c ?? { status: 'not-run' as const, not_run_reason: reason, config_sha256: '', ...(pins[def.system] ? { pin: pins[def.system] } : {}) };
     const po = c ? productOutcomes.get(arm.cell_id) : undefined;
-    return { ...scoreboardCampaignCell(def, arm, { status: 'complete', config_sha256: entry.config_sha256 }), ...entry, ...(subset ? { subset } : {}), ...(po ? { product_outcomes: po } : {}) };
+    return { ...scoreboardCampaignCell(def, arm, { status: 'complete', config_sha256: entry.config_sha256 }), ...(config.anchors?.includes(arm.cell_id) ? { anchor: true, headline: true } : {}), ...entry, ...(subset ? { subset } : {}), ...(po ? { product_outcomes: po } : {}) };
   }));
   const head = sets.find(s => s.role === 'headline')!;
   const s1 = cells.filter(c => c.set === head.id);
-  const f1Anchor = s1.find(c => c.system === 'gbrain-defaults' && c.arm === 'component' && c.budget === 8000 && c.anchor)!;
-  const f2Anchor = s1.find(c => c.system === 'gbrain-defaults' && c.arm === 'whole-system' && c.anchor)!;
+  const f1Anchor = s1.find(c => c.system === 'gbrain-defaults' && c.arm === 'component' && c.budget === 8000 && c.anchor);
+  if (!f1Anchor) throw new Error(`no gbrain-defaults 8k component cell on ${head.id} is marked anchor; name the preregistered headline arm in publication.json anchors`);
+  const f2Anchor = s1.find(c => c.system === 'gbrain-defaults' && c.arm === 'whole-system' && c.anchor);
   const f1 = s1.filter(c => c.system !== 'gbrain-defaults' && c.arm === 'component' && c.budget === 8000).map(c => c.cell_id);
   const families: CampaignFamily[] = [
     { id: 'F1', label: `${head.label}, 8k component rows, answers`, anchor: f1Anchor.cell_id, comparators: f1 },
-    { id: 'F2', label: `${head.label}, whole-system rows, answers`, anchor: f2Anchor.cell_id, comparators: s1.filter(c => c.system !== 'gbrain-defaults' && c.arm === 'whole-system').map(c => c.cell_id) },
+    ...(f2Anchor ? [{ id: 'F2' as const, label: `${head.label}, whole-system rows, answers`, anchor: f2Anchor.cell_id, comparators: s1.filter(c => c.system !== 'gbrain-defaults' && c.arm === 'whole-system').map(c => c.cell_id) }] : []),
     { id: 'F3', label: `${head.label}, 8k component rows, strict recall of all gold sessions at 10 (diagnostic)`, anchor: f1Anchor.cell_id, comparators: f1 },
   ];
   seen.sort();
@@ -319,7 +355,7 @@ export function assemble(config: Publication, results: string, out: string, tree
     measured: { from: (seen[0] ?? '').slice(0, 10), to: (seen.at(-1) ?? '').slice(0, 10) }, readers: m.readers, statistics: config.statistics,
     hedge_classifier: config.hedge_classifier, sets, cells, families, ...(appendix.length ? { appendix } : {}),
     ...(retired.length ? { retired: retired.map(r => ({ system: r.system, reason: r.reason, subset: { sets: r.sets, conversations: r.conversations, label: r.subset.label, reason: r.subset.reason } })) } : {}),
-    pins: Object.entries(pins).filter(([k]) => m.cells.some(c => c.system === k) && k.startsWith('ext-')).map(([system, version]) => ({ system, version, latest_release: null })),
+    pins: Object.entries(pins).filter(([k]) => listed.some(c => c.system === k) && k.startsWith('ext-')).map(([system, version]) => ({ system, version, latest_release: null })),
     release_assets: [], ...(preview ? {} : config.published.aggregates_only ? { tables: config.render_targets.find(x => x.endsWith('/scoreboard.md')) } : { receipt_base: config.published.url }), disclosures: [...(preview ? [PREVIEW_DISCLOSURE] : []), `GBrain rows measure ${label}. ${config.gbrain.footnote}`, ...config.disclosures], render_targets: preview ? [] : config.render_targets,
   };
   writeFileSync(join(out, 'campaign.json'), JSON.stringify(campaign, null, 2) + '\n');

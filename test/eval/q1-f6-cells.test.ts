@@ -128,6 +128,21 @@ describe('the F6 manifest', () => {
     expect([counted.campaign_id, counted.cap_usd, counted.cells.some(c => c.smoke)]).toEqual(['q1-scoreboard-f6-current-master', 3068.83, false]);
     for (const c of [camp, counted, campaignManifest(m, { sealed: { cap_usd: 3100 } })]) expect(c.campaign_id).toMatch(Q1_CAMPAIGN_ID);
   });
+  test('an id both manifests define resolves only with --manifest, and a unit selection with cell_manifest names it in every command (A5)', () => {
+    for (const id of ['s1.baseline-hybrid.baseline', 's1.baseline-file-agent.baseline']) {
+      expect(() => findCell(id)).toThrow(/defined in both/);
+      expect(findCell(id, undefined, 'f6')).toEqual(m.cells.find(c => c.id === id)!);
+      expect(findCell(id, undefined, 'q1')).toEqual(loadManifest().cells.find(c => c.id === id)!);
+    }
+    expect(findCell('s1.baseline-hybrid.baseline', undefined, 'f6').arms.map(a => [a.cell_id, a.frontier, a.judge_repeats, a.reader_replicates])).toEqual([['s1.baseline-hybrid.baseline.component-b8000', null, null, {}]]);
+    expect(() => findCell('s1.gbrain-defaults.f6-master', undefined, 'q2')).toThrow(/--manifest takes q1 or f6/);
+    expect(findCell('s1.gbrain-defaults.f6-master').id).toBe('s1.gbrain-defaults.f6-master');
+    const sel: UnitSelection = { campaign_id: 'q1-scoreboard-f6-current-master-a5', cap_usd: 50, units: ['s1.baseline-hybrid.baseline'], cell_manifest: 'f6' };
+    expect(campaignManifest(m, { units: sel }).cells.map(c => c.command)).toEqual([expect.stringContaining('run --cell s1.baseline-hybrid.baseline --manifest f6 --out')]);
+    for (const c of [...campaignManifest(m).cells, ...campaignManifest(loadManifest()).cells]) expect(c.command).not.toContain('--manifest');
+    expect(() => campaignManifest(m, { units: { ...sel, cell_manifest: 'q2' as 'f6' } })).toThrow(/unit selection/);
+  });
+
   test('a sharded unit\'s finish budget and timeout cover its largest shard\'s ingest with a quarter to spare (A1)', () => {
     const sharded = m.cells.filter(c => c.shards > 1);
     expect(Object.fromEntries(sharded.map(c => [c.id, c.expected_hours]))).toEqual({ 's1.gbrain-defaults.f6-master': 26, 's1.ext-temporal-graph.shipped-0.31': 31, 'd8.gbrain-defaults.f6-master': 2, 'd8.ext-memory-bank.recipe': 3, 'd8.ext-graph-pipeline.recipe': 5 });

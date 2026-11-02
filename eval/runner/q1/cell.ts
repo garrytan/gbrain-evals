@@ -1304,7 +1304,7 @@ const T2_WAVES: Record<string, number> = { 'T2-S2b': 1, 'T2-S3': 2, 'T2-S2a': 3,
 const IN_PROCESS_STACKS = new Set(['ext-agent-runtime']);
 
 /** One launch unit per cell, or per conversation shard for an S1 shim cell, in the shootout campaign's cell format. */
-export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight?: number } = {}): CellSpec[] {
+export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight?: number; cellManifest?: 'q1' | 'f6' } = {}): CellSpec[] {
   const perWave = Math.floor((opts.vcpuCapNight ?? 200) / VM_VCPU);
   const headline = (c: CellDefinition) => c.block === 'T1' || c.block === 'F6-S1';
   const t1Units = m.cells.filter(headline).flatMap(c => Array.from({ length: c.shards }, (_, i) => ({ c, i }))).sort((a, b) => b.c.estimate.usd / b.c.shards - a.c.estimate.usd / a.c.shards || (a.c.id < b.c.id ? -1 : 1) || a.i - b.i);
@@ -1312,7 +1312,7 @@ export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight
   const waveOf = new Map(t1Units.map((u, k) => [`${u.c.id}|${u.i}`, Math.floor(k / perWave) + 1]));
   const spec = (c: CellDefinition, i: number, smoke: boolean): CellSpec => {
     const id = `${c.id}${c.shards > 1 ? `.c${i}` : ''}`;
-    const run = [...FRONT, 'run', '--cell', c.id, ...(c.shards > 1 ? ['--shard', `${i}/${c.shards}`] : []), ...(c.runner === 'shim' ? ['--system-url', 'http://127.0.0.1:8700'] : []), ...(c.reanswer_invalid_before ? ['--reanswer-invalid-before', c.reanswer_invalid_before.at, ...(c.reanswer_invalid_before.outcomes ? ['--reanswer-outcomes', c.reanswer_invalid_before.outcomes.join(',')] : [])] : []), ...(c.fresh_before?.shards.includes(i) ? ['--fresh-before', c.fresh_before.at] : []), '--out', '"$SHOOTOUT_OUT"'].join(' ');
+    const run = [...FRONT, 'run', '--cell', c.id, ...(opts.cellManifest ? ['--manifest', opts.cellManifest] : []), ...(c.shards > 1 ? ['--shard', `${i}/${c.shards}`] : []), ...(c.runner === 'shim' ? ['--system-url', 'http://127.0.0.1:8700'] : []), ...(c.reanswer_invalid_before ? ['--reanswer-invalid-before', c.reanswer_invalid_before.at, ...(c.reanswer_invalid_before.outcomes ? ['--reanswer-outcomes', c.reanswer_invalid_before.outcomes.join(',')] : [])] : []), ...(c.fresh_before?.shards.includes(i) ? ['--fresh-before', c.fresh_before.at] : []), '--out', '"$SHOOTOUT_OUT"'].join(' ');
     const launch = c.launch ?? shimLaunch(c.system, c.configuration);
     const providers: Array<keyof typeof PROVIDER_KEYS> = c.system === 'gbrain-defaults' ? ['openai', 'anthropic', 'voyage'] : ['openai', 'anthropic'];
     const stack = c.runner === 'shim' || IN_PROCESS_STACKS.has(c.system);
@@ -1338,18 +1338,19 @@ export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight
 }
 
 /** A campaign over named launch units alone, under its own id and ledger cap (plan --units; F6 amendment A1). */
-export interface UnitSelection { campaign_id: string; cap_usd: number; units: string[] }
+/** cell_manifest: the manifest each unit's `cell.ts run` resolves its cell from (`--manifest`), for ids q1-cells.json and f6-cells.json both define (A5). */
+export interface UnitSelection { campaign_id: string; cap_usd: number; units: string[]; cell_manifest?: 'q1' | 'f6' }
 
 /** The Q1 scoreboard campaign manifest (shootout-cell.ts `q1-scoreboard-campaign`) for the cell manifest. */
 export function campaignManifest(m: Manifest, opts: { smoke?: boolean; sealed?: { cap_usd: number }; smokeOnly?: boolean; units?: UnitSelection } = {}): Q1Campaign {
   const f6 = (m as { campaign_id?: string }).campaign_id;
   // F6 adds the temporal graph's 0.31.2 defaults (gpt-6-luna, text-embedding-3-small) to the models its campaign admits.
   const models = [...new Set([...m.readers, ...Object.keys(m.prices), 'openai:gpt-4.1-mini', 'openai:text-embedding-3-large', 'anthropic:claude-opus-4-7', 'anthropic:claude-haiku-4-5', 'anthropic:claude-haiku-5-5', ...(f6 ? ['openai:gpt-6-luna', 'openai:text-embedding-3-small'] : [])])].sort();
-  const all = campaignCells(m, { ...opts, smoke: opts.smoke || opts.smokeOnly }).filter(c => (!opts.sealed || c.sealed) && (!opts.smokeOnly || c.smoke));
+  const all = campaignCells(m, { ...opts, smoke: opts.smoke || opts.smokeOnly, cellManifest: opts.units?.cell_manifest }).filter(c => (!opts.sealed || c.sealed) && (!opts.smokeOnly || c.smoke));
   const u = opts.units;
   if (u) {
     const unknown = u.units.filter(id => !all.some(c => c.id === id));
-    if (!Q1_CAMPAIGN_ID.test(u.campaign_id) || !(u.cap_usd > 0) || !u.units.length || new Set(u.units).size !== u.units.length || unknown.length) {
+    if (!Q1_CAMPAIGN_ID.test(u.campaign_id) || !(u.cap_usd > 0) || (u.cell_manifest !== undefined && u.cell_manifest !== 'q1' && u.cell_manifest !== 'f6') || !u.units.length || new Set(u.units).size !== u.units.length || unknown.length) {
       throw new Error(`a unit selection needs a q1-scoreboard campaign_id, a positive cap_usd and distinct known unit ids${unknown.length ? ` (unknown: ${unknown.join(', ')})` : ''}`);
     }
   }
@@ -1385,14 +1386,15 @@ export function renderPlan(m: Manifest): string {
 
 // ─── CLI ─────────────────────────────────────────────────────────────
 
-export function findCell(id: string, given?: Manifest): CellDefinition {
-  const m = given ?? loadManifest();
-  const c = m.cells.find(x => x.id === id) ?? (m.smoke_cells ?? []).find(x => x.id === id);
-  if (c) return c;
-  // F6's cells (eval/runner/q1/cells/f6.ts) live in their own manifest; their ids never collide with Q1's.
-  const f6 = !given && existsSync(F6_MANIFEST_PATH) ? loadF6Manifest() : null;
-  const hit = f6 ? [...f6.cells, ...f6.smoke_cells].find(x => x.id === id) : undefined;
-  if (hit) return hit;
+export function findCell(id: string, given?: Manifest, manifest?: string): CellDefinition {
+  if (manifest !== undefined && manifest !== 'q1' && manifest !== 'f6') throw refuse(usage(`--manifest takes q1 or f6, not ${manifest}`));
+  const m = given ?? (manifest === 'f6' ? loadF6Manifest() : loadManifest());
+  const inManifest = (x: Manifest) => x.cells.find(c => c.id === id) ?? (x.smoke_cells ?? []).find(c => c.id === id);
+  const c = inManifest(m);
+  const f6 = !given && !manifest && existsSync(F6_MANIFEST_PATH) ? loadF6Manifest() : null;
+  const hit = f6 ? inManifest(f6) : undefined;
+  if (c && hit) throw refuse({ code: 'USAGE', message: `cell ${id} is defined in both ${rel(MANIFEST_PATH)} and ${rel(F6_MANIFEST_PATH)}, with different arms or judging`, why: 'a cell runs the definition its campaign was planned from; an id both manifests define cannot be resolved without naming the manifest', fix: { next: 'run', argv: [...FRONT, 'show', '--cell', id, '--manifest', 'f6'], user_message: 'pass --manifest q1 or --manifest f6' } });
+  if (c ?? hit) return (c ?? hit)!;
   const near = [...m.cells, ...(m.smoke_cells ?? [])].filter(x => x.id.includes(id.split('.')[0] ?? '')).slice(0, 5).map(x => x.id);
   throw refuse({ code: 'USAGE', message: `no cell ${id} in ${rel(MANIFEST_PATH)}`, why: 'run, show and merge take a cell id from the generated manifest', fix: { next: 'run', argv: [...FRONT, 'plan'], user_message: near.length ? `did you mean ${near.join(', ')}?` : 'list the cells with plan' } });
 }
@@ -1444,7 +1446,7 @@ export async function main(argv: string[]): Promise<number> {
   if (sub === 'show') {
     const id = one('--cell');
     if (!id) throw refuse(usage('show needs --cell <id>'));
-    const c = findCell(id);
+    const c = findCell(id, undefined, one('--manifest'));
     if (json) { console.log(JSON.stringify(c, null, 2)); return 0; }
     console.log([`${c.id}: ${c.system} (${c.configuration}) on ${c.set} (${c.benchmark}, split ${c.split}), block ${c.block}, ${c.runner}, estimate $${c.estimate.usd.toFixed(2)}`,
       ...c.arms.map(a => `  ${a.cell_id}: ${a.mode}${a.budget ? ` ${a.budget}` : ''}${a.policy ? ` (${a.policy})` : ''}, readers ${a.readers.join(', ') || 'none'}${Object.keys(a.reader_replicates).length ? `, replicates ${JSON.stringify(a.reader_replicates)}` : ''}${a.frontier ? `, frontier ${a.frontier.judges.join('+')}${a.frontier.sample ? ` on ${a.frontier.sample} questions` : ''}` : ''}${a.judge_repeats ? `, ${a.judge_repeats.count} judge repeats (eval/runner/judge-repeat.ts)` : ''}`),
@@ -1454,7 +1456,7 @@ export async function main(argv: string[]): Promise<number> {
   if (sub === 'run' || sub === 'merge') {
     const id = one('--cell');
     if (!id) throw refuse(usage(`${sub} needs --cell <id>`));
-    const def = findCell(id);
+    const def = findCell(id, undefined, one('--manifest'));
     const out = resolve(one('--out') ?? process.env.SHOOTOUT_OUT ?? join(REPO_ROOT, 'eval/reports/q1', def.id));
     if (sub === 'merge') {
       const from = many('--from').map(f => resolve(f));
