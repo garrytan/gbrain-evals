@@ -1465,6 +1465,7 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'probe-accounting.ts': { role: 'shared probe accounting' },
   'promotion.ts': { role: 'evaluates preregistered promotion rules against a receipt' },
   'prereg.ts': { role: 'preregistration attestation and the CI order check' },
+  'quoted-reads.ts': { role: 'reads a quote-fenced fact or value from a remote gbrain read through the build\'s own unquoteFactText (gbrain v0.60.536.0 on), used by N1 and Cat 38' },
   'reading-notes-recount.ts': { role: 'keyless recount of the reading-notes artifacts', part_of: 'reading-notes' },
   'reading-headroom.ts': { role: 'keyless $0 recount of the W10a/W10b receipts: gold-session share of delivered text, notes length and committed-wrong answers (docs/benchmarks/2026-10-08-reading-headroom.md)', part_of: 'longmemeval-answers' },
   'reading-notes-requests.ts': { role: 'offline reading-notes request builder', part_of: 'reading-notes' },

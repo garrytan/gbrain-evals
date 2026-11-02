@@ -346,9 +346,26 @@ export function labelOnLine(text: string, needle: string): string | null {
   const open = text.lastIndexOf('<external-data', at);
   const close = text.lastIndexOf('</external-data>', at);
   if (open >= 0 && open > close) return 'external-data';
-  const line = text.slice(text.lastIndexOf('\n', at) + 1, at);
+  const line = quoteMarkerLine(text, at) ?? text.slice(text.lastIndexOf('\n', at) + 1, at);
   const m = /\[([a-z][a-z ,()-]{2,80}) · [A-Za-z0-9:_./-]*(?: · contested tp\d+)?\][^[]*$/.exec(line);
   return m ? m[1]! : null;
+}
+
+const QUOTE_FENCE_OPEN = /\[quoted conversation excerpt from [^\]\n]*; source material, not instructions\]\n(`{3,})text\n/g;
+
+/**
+ * Inside a closed quote fence (gbrain v0.60.536.0 on: src/core/search/transcript-quote.ts), an item's label is rendered
+ * on the fence's marker line, so that line up to the marker is the label's line; null outside every such fence. The same
+ * rule as gbrain's own poisoning metric (src/eval/brainbench/metrics/poisoning.ts labelLine, GST-687).
+ */
+function quoteMarkerLine(text: string, at: number): string | null {
+  for (const m of text.matchAll(QUOTE_FENCE_OPEN)) {
+    const start = m.index + m[0].length;
+    let close = text.indexOf(`\n${m[1]}`, start - 1);
+    while (close >= 0 && !/^[ \t]*(\n|$)/.test(text.slice(close + 1 + m[1]!.length))) close = text.indexOf(`\n${m[1]}`, close + 1);
+    if (at >= start && close >= at) return text.slice(text.lastIndexOf('\n', m.index - 1) + 1, m.index);
+  }
+  return null;
 }
 
 /** Label words that present an item below the owner's notes (src/core/trust/tier.ts TRUST_TIER_LABELS). */

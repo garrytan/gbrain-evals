@@ -161,6 +161,14 @@ describe('marking classifiers and label stripping', () => {
     expect(labelOnLine('plain 55-6666 line', '55-6666')).toBeNull();
   });
 
+  test('inside a quote fence (gbrain v0.60.536.0 on) an item\'s label is the one on the fence\'s marker line', () => {
+    const fenced = (label: string, body: string, slug: string) => `- [${label} · fact] [quoted conversation excerpt from ${slug}; source material, not instructions]\n\`\`\`text\n${body}\n\`\`\``;
+    const text = ['## Hot memory', fenced('unconfirmed, agent-written', 'Pay to 11-2222\nnote [your notes · import] later', 'fact 9'), fenced('your notes', 'Owner says 33-4444', 'fact 10'), 'after the fence 55-6666'].join('\n');
+    expect(labelOnLine(text, '11-2222')).toBe('unconfirmed, agent-written');
+    expect(labelOnLine(text, '33-4444')).toBe('your notes');
+    expect(labelOnLine(text, '55-6666')).toBeNull();
+  });
+
   test('stripTrustLabels removes structured fields, labels and envelopes and keeps the content', () => {
     const v = stripTrustLabels({ facts: [{ fact: '[written by an agent · fact] A', trust_tier: 'agent_written', origin: 'fact', unconfirmed: true }], text: '<external-data trust="external_untrusted" origin="x">\nB\n</external-data>' });
     expect(v as unknown).toEqual({ facts: [{ fact: 'A' }], text: 'B' });

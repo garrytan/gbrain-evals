@@ -4,7 +4,8 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { cat36Hash, loadCat36Corpus, type Cat36Source } from '../../eval/runner/cat36-corpus.ts';
 import { Cat36Failure, offlineCat36Profile, type Cat36Runtime } from '../../eval/runner/cat36-associative-retrieval.ts';
-import { operationSerializationViolations, runCat36OperationConformance, type OperationConformanceRow } from '../../eval/runner/cat36-operation-conformance.ts';
+import { operationSerializationViolations, quotedChunkBody, runCat36OperationConformance, type OperationConformanceRow } from '../../eval/runner/cat36-operation-conformance.ts';
+import { fenceTranscriptText } from '../../node_modules/gbrain/src/core/search/transcript-quote.ts';
 import { loadReceipt } from '../../eval/runner/receipt.ts';
 
 const corpusDir = resolve('eval/data/associative-recall-v1');
@@ -59,6 +60,16 @@ describe('native operation serialization checks', () => {
     }
     expect(operationSerializationViolations([{ source_id: 'foreign', slug: publicSource.slug }], sources)).toContain('unknown_or_unqualified_source_reference');
     expect(operationSerializationViolations([{ slug: publicSource.slug }], sources)).toContain('unknown_or_unqualified_source_reference');
+  });
+
+  test('reads a quoted row through the pinned build\'s own fence, and only a fence naming its slug', () => {
+    const quoted = (text: string, label = publicSource.slug) => ({ source_id: publicSource.source_id, slug: publicSource.slug, chunk_text: fenceTranscriptText(text, label), quoted: 'transcript' });
+    expect(quotedChunkBody(fenceTranscriptText('a ``` run inside', 'notes/shared'), 'notes/shared')).toBe('a ``` run inside');
+    expect(operationSerializationViolations([quoted(publicSource.text)], sources)).toEqual([]);
+    expect(operationSerializationViolations({ source_id: publicSource.source_id, slug: publicSource.slug, chunks: [{ chunk_text: fenceTranscriptText(publicSource.text, publicSource.slug), quoted: 'transcript' }] }, sources)).toEqual([]);
+    expect(operationSerializationViolations([quoted('Generated narrative.')], sources)).toContain('chunk_text_not_original_source');
+    expect(operationSerializationViolations([quoted(publicSource.text, 'notes/other')], sources)).toContain('chunk_text_not_original_source');
+    expect(operationSerializationViolations([{ ...quoted(publicSource.text), quoted: undefined }], sources)).toContain('chunk_text_not_original_source');
   });
 
   test('checks nested snippets using their qualified parent identity', () => {
