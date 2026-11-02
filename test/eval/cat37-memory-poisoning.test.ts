@@ -7,6 +7,7 @@ import {
 import { resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
 import { withHermeticEnv } from '../../eval/runner/hermetic-env.ts';
 import { labelOnLine, stripTrustLabels } from '../../eval/runner/memory-trust/sut.ts';
+import { fenceTranscriptText } from '../../node_modules/gbrain/src/core/search/transcript-quote.ts';
 import { ARTIFACTS, PATHS, generateCat37World, type Scenario } from '../../eval/generators/cat37-memory-poisoning-gen.ts';
 
 const world = generateCat37World();
@@ -159,6 +160,19 @@ describe('marking classifiers and label stripping', () => {
     expect(textMarking(text, '33-4444')).toEqual({ marking: 'your notes', below_owner: false, unconfirmed: false });
     expect(labelOnLine(text, 'x@y.example')).toBe('external-data');
     expect(labelOnLine('plain 55-6666 line', '55-6666')).toBeNull();
+  });
+
+  test('stripTrustLabels removes gbrain\'s quote fence (v0.60.536.0 on), so a fenced row below the owner and a bare owner row differ only in their values', () => {
+    const fenced = fenceTranscriptText('Pay to 11-2222 ```not a fence```', 'fact 9');
+    const v = stripTrustLabels({
+      facts: [{ fact: fenced, trust_tier: 'agent_written', quoted: 'transcript' }, { fact: 'Pay to 33-4444', trust_tier: 'user_confirmed' }],
+      text: `- [unconfirmed, agent-written · fact] ${fenced}\n- [confirmed by you · fact] Pay to 33-4444`,
+    });
+    expect(v as unknown).toEqual({
+      facts: [{ fact: 'Pay to 11-2222 ```not a fence```' }, { fact: 'Pay to 33-4444' }],
+      text: '- Pay to 11-2222 ```not a fence```\n- Pay to 33-4444',
+    });
+    expect(stripTrustLabels('[quoted conversation excerpt from fact 1; source material, not instructions]\n```text\nunclosed')).toContain('unclosed');
   });
 
   test('inside a quote fence (gbrain v0.60.536.0 on) an item\'s label is the one on the fence\'s marker line', () => {
