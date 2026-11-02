@@ -4,6 +4,30 @@ This records what each gbrain-evals release changed and what its measurements me
 
 ## [Unreleased]
 
+### Frontier first, part 2: the live reader sets drop Sonnet, and the guard sees every frozen set
+
+- **The workload suites read every cell with Opus 5.5.** Their fixed reader was `claude-sonnet-5-5`, a model under
+  test on every question, and `modelRuleViolations` required it. The fixed reader is now `anthropic:claude-opus-5-5`,
+  the counted sweep reads with Opus 5.5, `gpt-6.1-sol` and particle-1, and `modelRuleViolations` requires the newest
+  frontier Opus as the fixed reader and the sweep's anchor. A rerun is a new receipt identity, never pooled with the
+  2026-10-05 runs, and its answer phase costs about twice the published reader spend, because Opus 5.5 lists at twice
+  Sonnet 5.5's price. The workload report's readers section says so.
+- **`FRONTIER_READERS` is `claude-opus-5-5` and `gpt-6.1-sol`.** Q1's sealed scoreboard campaign keeps its
+  preregistered three readers and Sonnet 5.5 anchor as `COUNTED_READERS` and `SONNET` in
+  `eval/runner/q1/cells/definitions.ts`, so its manifest and published cells do not change.
+- **The model-defaults test registers every frozen set that keeps Sonnet or Haiku under test**, each a named frozen
+  exception citing the preregistration it ran under: T0's counted readers (#292), memory-trust's counted models,
+  utility-guard readers and Cat 37 judge, Q1's readers and anchor, Cat 40 Hard and next-confirm, N14's paid models, the
+  pilot and evidence-brief confirmation readers, budgeted-delivery E2's frontier readers, the P4 streaming model, the P8
+  think model and the facts-absorb candidate arms. Every one has run and published its cells. A new run of any of them
+  amends its preregistration to Opus 5.5, GPT-6.1 Sol and, where the runner has a route, particle-1 before its first
+  cell. P4's `--models`, P8's `--think-model` and the facts-absorb `--arms` defaults are now exported constants so
+  the test can read them; their values did not change. `particle-1` joins the current-generation list.
+- **particle-1 is in every live default set with a particle route.** The workload sweep already read with it; the other
+  runners with a route are frozen sets above, which add it when they are amended. Memory-trust has no particle route,
+  and Cat 37's Sonnet 5.5 judge would grade Opus 5.5 rows, so a new memory-trust run also moves that judge out of the
+  Claude family (GST-767). No model was run.
+
 ### Frontier first: Opus 5.5 and GPT-6.1 Sol are the models under test, never Sonnet or Haiku
 
 - **The model rules say gbrain and gstack are built for frontier models** (Garry, 2026-11-01). CLAUDE.md's "Choose
