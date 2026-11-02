@@ -61,6 +61,20 @@ This records what each gbrain-evals release changed and what its measurements me
   Sonnet 5.5 defaults are now named frozen exceptions: memory-trust flag-rate's agent and false-flag labeler (amendment 5
   of the memory-trust preregistration) and external-ideas wave A's decision model. No model was run.
 
+### The W10b finding reads as a plain-English story and closes with its disclosures
+
+- **A plain-English W10b finding.** Garry Tan asked for the finding to read in plain English. It now opens with a short
+  title, the infographic and a two-minute account of the test, the scores, the power-bank example, the cost per right
+  answer, what the result does and does not show, and how to check it. The precise statement, the record that was the
+  front matter and every technical section follow under Full details. No figure changed.
+- **Disclosures at the end.** He asked that the disclosures go at the end of the post and not in the X post. The
+  finding's Particle, gbrain and OpenAI lines move from under its title to a closing Disclosures section, and the file
+  has no front matter, which GitHub shows as a table above the title. `docs/disclosures.md` records his words and the
+  new rule. A finding file or long-form post closes with its lines, an X post and its images carry none, and reports and
+  summaries keep theirs up front.
+- **A new X post draft and an infographic.** The finding's X hook is rewritten without disclosure lines, and the 1080 by
+  1080 infographic it attaches sits beside the finding and at its top. No figure changed.
+
 ### The W10b write-ups carry the gbrain and OpenAI disclosures
 
 - **`docs/disclosures.md` carries the standing list:** Garry Tan's dated words and the exact line for Particle, gstack, gbrain, ggstack, QM, Hermes, OpenAI and OpenClaw, with its notes, the subjects that get no line and which pages here carry which lines.
