@@ -2,11 +2,12 @@
  * Reader, judge and arm configuration for the workload suites.
  *
  * Model ids are placeholders until the preregistration freezes them. The
- * project rule: one fixed reader for every cell (the newest frontier
- * Sonnet); a preregistered subset of questions swept across the newest
- * frontier Opus, GPT and Sonnet models, plus particle-1 (a primary model,
- * plan GST-605); one fixed judge, never particle-1. Fable reads only in a
- * labeled smoke run, never a counted cell. Older generations and
+ * project rule: one fixed reader for every cell (the newest frontier Opus,
+ * a primary model); a preregistered subset of questions swept across the
+ * newest frontier Opus and GPT models, plus particle-1 (a primary model,
+ * plan GST-605); one fixed judge, never particle-1. Sonnet and Haiku are
+ * never readers under test (frontier first, 2026-11-01). Fable reads only in
+ * a labeled smoke run, never a counted cell. Older generations and
  * gpt-5.4-mini are never run. Before a paid run, check which models are
  * newest and update this file in a commit that runs nothing.
  */
@@ -26,12 +27,11 @@ export const workloadModelsNotRun = (routed: readonly string[] = ROUTED_PROVIDER
 
 export const MODEL_CONFIG = {
   status: 'placeholder: confirm newest models and freeze in the preregistration before any paid cell',
-  checked: '2026-11-01',
-  fixed_reader: { id: 'anthropic:claude-sonnet-5-5', family: 'sonnet' } as ModelRef,
+  checked: '2026-11-02',
+  fixed_reader: { id: 'anthropic:claude-opus-5-5', family: 'opus' } as ModelRef,
   frontier_sweep: [
     { id: 'anthropic:claude-opus-5-5', family: 'opus' },
     { id: 'openai:gpt-6.1-sol', family: 'gpt' },
-    { id: 'anthropic:claude-sonnet-5-5', family: 'sonnet' },
     { id: 'particle:particle-1', family: 'particle' },
   ] as ModelRef[],
   /** Readers allowed only in a labeled smoke run (`bench.ts --smoke N --models ...`), never in a counted cell: Fable (CLAUDE.md). */
@@ -72,9 +72,9 @@ export function modelRuleViolations(config: { fixed_reader: ModelRef; frontier_s
     if ((SMOKE_ONLY_READERS as readonly string[]).includes(m.id)) out.push(`${m.id} is smoke-only and never reads or judges a counted cell`);
   }
   for (const id of FRONTIER_READERS) if (!config.frontier_sweep.some(m => m.id === id)) out.push(`frontier sweep has no ${id}, one of the newest frontier readers (FRONTIER_READERS)`);
-  if (config.fixed_reader.family !== 'sonnet') out.push('the fixed reader must be the newest frontier Sonnet');
+  if (config.fixed_reader.family !== 'opus') out.push('the fixed reader must be the newest frontier Opus');
   if (config.judge.id.startsWith('particle:')) out.push(`${config.judge.id} never judges a counted cell`);
-  if (!config.frontier_sweep.some(m => m.id === config.fixed_reader.id)) out.push('the fixed reader must be the sweep\'s Sonnet so the sweep shares one anchor');
+  if (!config.frontier_sweep.some(m => m.id === config.fixed_reader.id)) out.push('the fixed reader must be the sweep\'s Opus so the sweep shares one anchor');
   return out;
 }
 

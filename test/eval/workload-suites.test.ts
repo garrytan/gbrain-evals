@@ -193,11 +193,13 @@ describe('schema, model rule and frontier subset', () => {
 
   test('the configured readers follow the project model rule, and violations are caught', () => {
     expect(modelRuleViolations()).toEqual([]);
-    expect(MODEL_CONFIG.fixed_reader.family).toBe('sonnet');
+    expect(MODEL_CONFIG.fixed_reader.family).toBe('opus');
     const bad = { ...MODEL_CONFIG, frontier_sweep: [...MODEL_CONFIG.frontier_sweep.slice(0, 3), { id: 'openai:gpt-5.4-mini', family: 'fable' as const }] };
     expect(modelRuleViolations(bad).join(' ')).toContain('gpt-5.4-mini');
     const old = { ...MODEL_CONFIG, fixed_reader: { id: 'anthropic:claude-sonnet-4-6', family: 'sonnet' as const } };
     expect(modelRuleViolations(old).join(' ')).toContain('claude-sonnet-4-6');
+    expect(modelRuleViolations(old)).toContain('the fixed reader must be the newest frontier Opus');
+    expect(MODEL_CONFIG.frontier_sweep.map(m => m.id)).toEqual(['anthropic:claude-opus-5-5', 'openai:gpt-6.1-sol', 'particle:particle-1']);
   });
 
   test('the counted sweep reads with the newest frontier GPT, gpt-6.1-sol; gpt-6-astra is only an alternate reader, and a sweep without gpt-6.1-sol is flagged', () => {
@@ -300,9 +302,9 @@ describe('bench.ts sweep', () => {
       expect([scheduled.length, scheduled.filter(q => subset.has(q.id)).length]).toEqual([3, 0]);
       for (const q of scheduled) await answerOne(fakeBench([]), corrections, dir, 'gbrain-append', fixed, q, 'Context for the question.', null, []);
       const calls: string[] = [];
-      await sweep(fakeBench(calls), corrections, dir, ['anthropic:claude-opus-5-5'], () => {}, scheduled);
-      expect(calls.sort()).toEqual(scheduled.map(q => `anthropic:claude-opus-5-5 corrections/gbrain-append/reader/${q.id}`).sort());
-      await expect(sweep(fakeBench([]), corrections, dir, ['anthropic:claude-opus-5-5'], () => {})).rejects.toThrow(`no ${fixed} answers to sweep`);
+      await sweep(fakeBench(calls), corrections, dir, ['openai:gpt-6.1-sol'], () => {}, scheduled);
+      expect(calls.sort()).toEqual(scheduled.map(q => `openai:gpt-6.1-sol corrections/gbrain-append/reader/${q.id}`).sort());
+      await expect(sweep(fakeBench([]), corrections, dir, ['openai:gpt-6.1-sol'], () => {})).rejects.toThrow(`no ${fixed} answers to sweep`);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

@@ -46,6 +46,8 @@ import { scoreSalienceCoverage } from './cat35-judges.ts';
 import { pairedNatural, type NaturalPage } from './facts-absorb/natural.ts';
 
 export const SHIPPED_DEFAULT_MODEL = 'anthropic:claude-sonnet-4-6';
+/** The preregistered arms (docs/benchmarks/2026-10-08-facts-extraction-model/PREREGISTRATION.md). */
+export const DEFAULT_ARMS = 'sonnet46=default,luna=openai:gpt-6-luna,haiku55=anthropic:claude-haiku-5-5,disabled=disabled,drop=drop:openai:gpt-6-luna';
 export const DROPPED_OUTPUT = '{"facts":[]}';
 /** Extraction outcomes that mean the model's output could not be used. */
 export const PARSE_REASONS = ['malformed_output', 'parse_failure', 'truncated_output', 'non_terminal_stop'] as const;
@@ -261,7 +263,7 @@ async function main() {
   const flag = (name: string) => { const i = argv.indexOf(name); return i >= 0 ? argv[i + 1] : undefined; };
   const out = flag('--out');
   if (!out) throw new Error('usage: --gbrain <checkout>@<ref> --arms <label=spec,...> --out <dir> --budget-usd <n> (or --rescore / --reread with --out)');
-  const arms = parseArms(flag('--arms') ?? 'sonnet46=default,luna=openai:gpt-6-luna,haiku55=anthropic:claude-haiku-5-5,disabled=disabled,drop=drop:openai:gpt-6-luna');
+  const arms = parseArms(flag('--arms') ?? DEFAULT_ARMS);
   if (argv.includes('--rescore')) {
     // Score the facts a finished run stored again with the current scorer (no model calls, no brain access); the receipt is untouched.
     const receipt = JSON.parse(readFileSync(join(resolve(out), 'receipt.json'), 'utf8')) as { world: { seeds: number[] }; baseline: string; arms: Array<{ arm: ArmSpec; validity: ArmValidity; natural: NaturalPage[] }> };

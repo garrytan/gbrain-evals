@@ -47,6 +47,8 @@ import { additionalContext, runHook, type HookEnv } from './hooks.ts';
 import { callModel, textOf, type Block, type CallUsage, type Msg, type ToolDef } from './model.ts';
 
 export const INSTRUCTIONS_CAP = 2048;
+/** The model the 2026-10-05 held-out P4 gates ran on (docs/benchmarks/2026-10-05-heldout-program/p4.md). */
+export const DEFAULT_MODEL = 'claude-sonnet-5-5';
 export const ARM_IDS = ['A', 'Aprime', 'B', 'C', 'D'] as const;
 export type ArmId = typeof ARM_IDS[number];
 
@@ -367,7 +369,7 @@ async function main(argv: string[]) {
   mkdirSync(out, { recursive: true });
   const benchmark = flag(argv, '--benchmark') ?? 'lme-s';
   const arms = (flag(argv, '--arms') ?? 'Aprime,B,C').split(',').map(a => { const s = ARMS[a as ArmId]; if (!s) throw new Error(`unknown arm ${a}`); return s; });
-  const models = (flag(argv, '--models') ?? 'claude-sonnet-5-5').split(',');
+  const models = (flag(argv, '--models') ?? DEFAULT_MODEL).split(',');
   for (const m of models) if (!CHAT_PRICE_OVERRIDES[`${provider(m)}:${m}`]) throw new Error(`no verified price for ${m}`);
   const builds: Record<string, string> = Object.fromEntries(flags(argv, '--build').map(b => [b.slice(0, b.indexOf('=')), b.slice(b.indexOf('=') + 1)]));
   for (const a of arms) if (!builds[a.build]) throw new Error(`arm ${a.id} needs --build ${a.build}=<gbrain>@<sha>`);
