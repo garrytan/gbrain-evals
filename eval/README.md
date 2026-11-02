@@ -2,7 +2,7 @@
 
 BrainBench is our collection of tests for gbrain. Each test asks a narrower question than “does memory work?” One checks whether search finds a relationship. Another checks whether an important decision survives when a conversation becomes a note.
 
-Every runner loads the gbrain declared in `package.json`: master `a131fb20e` (v0.60.549.0) as `gbrain`, plus the fixed-purpose aliases `gbrain-cues` and `gbrain-reader` for the experiments that name them.
+Every runner loads the gbrain declared in `package.json`: master `311a83bbe` (v0.60.553.0) as `gbrain`, plus the fixed-purpose aliases `gbrain-cues` and `gbrain-reader` for the experiments that name them.
 Most category runners also take `--gbrain <checkout>[@ref]` to measure another build as a copied overlay.
 Start with the [main guide](../README.md) for what gbrain does today, or the [documentation index](../docs/README.md) for every report.
 This page explains the test machinery and how to work with it.
@@ -114,6 +114,11 @@ To reproduce an old result, match both the gbrain-evals revision and the gbrain 
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
+
+### 2026-11-02: The introduction names `311a83bbe`
+
+The introduction names gbrain master `311a83bbe` (v0.60.553.0), the new pin (was `a131fb20e`, v0.60.549.0). Nothing
+else on the page changed.
 
 ### 2026-11-02: The introduction names `a131fb20e`; one sentence per line
 

@@ -5,8 +5,11 @@
  * "Tool errors in the SkillOpt rollout path"). gbrain v0.60.549.0 (gbrain#8429) drops `""` and `null` optional
  * arguments in the rollout and write-capture registries, then checks the rest against the operation's schema.
  * These tests drive the pinned registries with no provider key, and every one but the corpus check fails at
- * `ca1281a2`. The last replays the probe's recorded Sol calls: Sol's other filled-in defaults still break
- * `get_page` and `traverse_graph`, so a Sol rollout at this pin still loses those reads.
+ * `ca1281a2`. The last replays the probe's recorded Sol calls. gbrain v0.60.553.0 (gbrain#8444) also reads the
+ * empty values a parameter's schema rules out (`0`, `[]`, `{}` on read ops, `false`, and `context` without
+ * `grep`) as absent, so 30 of the 38 `traverse_graph` calls now read; that replay fails at `a131fb20`. Every
+ * recorded `get_page` call still refuses on a non-empty value. This pin's `get_page` description also tells the model to
+ * send one window selector, so only a live Sol rollout shows whether its page reads recover.
  */
 import { describe, expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
@@ -100,7 +103,7 @@ describe("GPT-6.1 Sol's empty optional arguments in the pinned SkillOpt registri
   }
 });
 
-describe('what gbrain#8429 leaves refused: the frontier probe\'s recorded Sol calls, replayed', () => {
+describe('what gbrain#8429 and gbrain#8444 leave refused: the frontier probe\'s recorded Sol calls, replayed', () => {
   const INPUTS = join(import.meta.dir, '../../docs/benchmarks/2026-11-01-skillopt-method/probe/frontier/f0b-sol/one-shot');
   const SLUG: Record<string, string> = { get_page: PAGE, get_backlinks: PAGE, traverse_graph: 'companies/ranger-22' };
   const lines = (['query', 'briefing', 'fact-check'] as const).flatMap(skill =>
@@ -114,7 +117,7 @@ describe('what gbrain#8429 leaves refused: the frontier probe\'s recorded Sol ca
     return [{ tool: m[1]!, args }];
   });
 
-  test('every recorded get_backlinks call now reads; every get_page and traverse_graph call still fails, all but one on an argument rule #8429 does not touch', async () => {
+  test('every get_backlinks call and the 30 traverse_graph calls with hops: [] read; every get_page call and the 8 traverse_graph calls with a hop chain still fail, all but one on a non-empty argument', async () => {
     expect(loadCorpora().pages.has(SLUG.traverse_graph!)).toBe(true);
     for (const tool of Object.keys(SLUG)) {
       expect(recorded.filter(c => c.tool === tool).length).toBe(lines.filter(l => l.startsWith(`- ${tool} `)).length);
@@ -123,14 +126,20 @@ describe('what gbrain#8429 leaves refused: the frontier probe\'s recorded Sol ca
       const tally: Record<string, Record<string, number>> = {};
       for (const c of recorded) {
         const r = c.args ? await call(c.tool, { ...c.args, slug: SLUG[c.tool] }) : { error: 'arguments are not JSON' };
-        const rule = 'ok' in r ? 'ok' : (/^(?:get_page|traverse_graph): ([a-z_]+ (?:applies to grep|does not combine with|returns part of the read view|cannot be combined with))/.exec(r.error)?.[1] ?? r.error);
+        const rule = 'ok' in r ? 'ok' : (/^(?:get_page|traverse_graph): ([a-z_]+ (?:does not combine with|returns part of the read view|cannot be combined with)|pass one window selector, not \d \(got [a-z_ ]+\))/.exec(r.error)?.[1] ?? r.error);
         (tally[c.tool] ??= {})[rule] = (tally[c.tool]![rule] ?? 0) + 1;
       }
       return tally;
     }, ['get_page', 'traverse_graph', 'get_backlinks']));
     expect(outcomes).toEqual({
-      get_page: { 'context applies to grep': 436, 'known_as_of does not combine with': 169, 'grep returns part of the read view': 1, 'arguments are not JSON': 1 },
-      traverse_graph: { 'hops cannot be combined with': 38 },
+      get_page: {
+        'pass one window selector, not 2 (got lines and bytes)': 183,
+        'pass one window selector, not 3 (got lines and bytes and around_chunk_id)': 253,
+        'known_as_of does not combine with': 169,
+        'grep returns part of the read view': 1,
+        'arguments are not JSON': 1,
+      },
+      traverse_graph: { ok: 30, 'hops cannot be combined with': 8 },
       get_backlinks: { ok: 6 },
     });
   }, 120_000);
