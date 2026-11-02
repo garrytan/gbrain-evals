@@ -6,7 +6,7 @@
  * and scorer mutation checks.
  */
 import { describe, expect, test } from 'bun:test';
-import { existsSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { assertScorerRejectsFakeSystems } from '../../eval/runner/mutation-kit.ts';
@@ -21,7 +21,7 @@ import {
   type CorrectionAdapter, type CorrectionItem, type UnrelatedWrite,
 } from '../../eval/workload-suites/corrections.ts';
 import { classifyMiss, generatePassingDetails } from '../../eval/workload-suites/passing-details.ts';
-import { RUN_DIRS, publishedSuiteAt } from '../../eval/workload-suites/report.ts';
+import { RUN_DIRS, copyReceipts, publishedSuiteAt, summarize } from '../../eval/workload-suites/report.ts';
 import { MODEL_CONFIG, frontierSubset, modelRuleViolations, recordedReaderProblem } from '../../eval/workload-suites/run-config.ts';
 import { schemaErrors } from '../../eval/workload-suites/schema-check.ts';
 import type { ScorerLabel, SuiteBundle, SuiteDefinition, SuiteId } from '../../eval/workload-suites/types.ts';
@@ -299,6 +299,32 @@ describe('recorded fixed reader', () => {
       expect(recordedReaderProblem(dir)).toBeNull();
     } finally {
       rmSync(dir, { recursive: true, force: true });
+    }
+  });
+
+  test('report.ts refuses such a run directory, and a --copy target that holds one, before writing anything', () => {
+    const root = mkdtempSync(join(tmpdir(), 'wl-report-'));
+    const sonnet = JSON.stringify({ models: { ...MODEL_CONFIG, fixed_reader: { id: 'anthropic:claude-sonnet-5-5', family: 'sonnet' } } });
+    try {
+      const run = join(root, 'bench', RUN_DIRS.beliefs!);
+      const target = join(root, 'published');
+      mkdirSync(run, { recursive: true });
+      writeFileSync(join(run, 'results.json'), JSON.stringify({ results: {} }));
+      writeFileSync(join(run, 'run.json'), sonnet);
+      expect(() => summarize(join(root, 'bench'))).toThrow(`${run} was answered with fixed reader anthropic:claude-sonnet-5-5`);
+      expect(() => copyReceipts(target, join(root, 'bench'))).toThrow(`${run} was answered with fixed reader anthropic:claude-sonnet-5-5`);
+      expect(existsSync(target)).toBe(false);
+      writeFileSync(join(run, 'run.json'), JSON.stringify({ models: MODEL_CONFIG }));
+      expect(summarize(join(root, 'bench')).markdown).toContain('### beliefs\n');
+      mkdirSync(join(target, 'beliefs'), { recursive: true });
+      writeFileSync(join(target, 'beliefs', 'run.json'), sonnet);
+      expect(() => copyReceipts(target, join(root, 'bench'))).toThrow(`${join(target, 'beliefs')} was answered with fixed reader anthropic:claude-sonnet-5-5`);
+      expect([readFileSync(join(target, 'beliefs', 'run.json'), 'utf8'), existsSync(join(target, 'beliefs', 'results.json'))]).toEqual([sonnet, false]);
+      rmSync(target, { recursive: true });
+      copyReceipts(target, join(root, 'bench'));
+      expect(JSON.parse(readFileSync(join(target, 'beliefs', 'run.json'), 'utf8')).models.fixed_reader.id).toBe(MODEL_CONFIG.fixed_reader.id);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
     }
   });
 });

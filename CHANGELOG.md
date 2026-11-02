@@ -13,9 +13,10 @@ This records what each gbrain-evals release changed and what its measurements me
   2026-10-05 runs. An old run directory holds its sweep's Opus 5.5 receipts where the new fixed reader's answers go, and
   `bench.ts` and `report.ts` read the current config, so they would reuse or relabel them as fixed-reader rows. Both
   now refuse a directory whose `run.json` records another fixed reader (`recordedReaderProblem` in
-  `eval/workload-suites/run-config.ts`); move it aside before a rerun, or check out an earlier commit to re-render it. Its
-  answer phase costs about twice the published reader spend, because Opus 5.5 lists at twice Sonnet 5.5's price. The
-  workload report's readers section says both.
+  `eval/workload-suites/run-config.ts`); move it aside before a rerun, or check out an earlier commit to re-render it.
+  `report.ts --copy` also refuses a target folder whose receipts record another fixed reader, so a rerun publishes to
+  a new dated folder. Its answer phase costs about twice the published reader spend, because Opus 5.5 lists at twice
+  Sonnet 5.5's price. The workload report's readers section says both.
 - **`FRONTIER_READERS` is `claude-opus-5-5` and `gpt-6.1-sol`.** Q1's sealed scoreboard campaign keeps its
   preregistered three readers and Sonnet 5.5 anchor as `COUNTED_READERS` and `SONNET` in
   `eval/runner/q1/cells/definitions.ts`, so its manifest and published cells do not change.

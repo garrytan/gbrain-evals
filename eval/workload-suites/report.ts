@@ -2,12 +2,13 @@
 /**
  * Summarize workload-bench runs into Markdown tables and publishable receipts.
  *
- *   bun eval/workload-suites/report.ts [--copy docs/benchmarks/2026-10-05-workload-suites]
+ *   bun eval/workload-suites/report.ts [--copy docs/benchmarks/<date>-workload-suites]
  *
  * Reads eval/reports/workload-bench/<suite>/{results,run,spend}.json, the
  * ingest receipts and the B2 arm runs. With --copy, writes per-suite receipts
  * (scored rows without prompts, ingest and presence summaries, spend by
- * label, the run manifest) with machine paths scrubbed.
+ * label, the run manifest) with machine paths scrubbed. It refuses a run
+ * directory, or a --copy target, whose run.json records another fixed reader.
  */
 import { existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
@@ -42,11 +43,11 @@ function spendOf(dir: string): { usd: number; by_label: Record<string, number> }
   return out;
 }
 
-export function summarize(): { markdown: string; spend: Record<string, { usd: number; by_label: Record<string, number> }> } {
+export function summarize(bench = BENCH): { markdown: string; spend: Record<string, { usd: number; by_label: Record<string, number> }> } {
   const lines: string[] = [];
   const spend: Record<string, { usd: number; by_label: Record<string, number> }> = {};
   for (const [suite, sub] of Object.entries(RUN_DIRS)) {
-    const dir = join(BENCH, sub);
+    const dir = join(bench, sub);
     if (!existsSync(join(dir, 'results.json'))) { lines.push(`### ${suite}: no results yet`, ''); continue; }
     const recorded = recordedReaderProblem(dir);
     if (recorded) throw new Error(recorded);
@@ -90,12 +91,13 @@ export function summarize(): { markdown: string; spend: Record<string, { usd: nu
   return { markdown: lines.join('\n'), spend };
 }
 
-export function copyReceipts(target: string): void {
-  for (const [suite, sub] of Object.entries(RUN_DIRS)) {
-    const dir = join(BENCH, sub);
-    if (!existsSync(join(dir, 'results.json'))) continue;
-    const recorded = recordedReaderProblem(dir);
+export function copyReceipts(target: string, bench = BENCH): void {
+  const runs = Object.entries(RUN_DIRS).map(([suite, sub]) => [suite, join(bench, sub)] as const).filter(([, dir]) => existsSync(join(dir, 'results.json')));
+  for (const [suite, dir] of runs) {
+    const recorded = recordedReaderProblem(dir) ?? recordedReaderProblem(join(target, suite));
     if (recorded) throw new Error(recorded);
+  }
+  for (const [suite, dir] of runs) {
     const out = join(target, suite);
     mkdirSync(out, { recursive: true });
     writeFileSync(join(out, 'results.json'), scrub(JSON.stringify(read(join(dir, 'results.json')), null, 1)) + '\n');
