@@ -37,7 +37,7 @@ import { ComparatorCorrectionAdapter, GbrainCorrectionAdapter, type RetrieveRece
 import { CORRECTION_ARMS, runCorrectionArm, type ArmId, type CorrectionItem } from './corrections.ts';
 import { classifyMiss } from './passing-details.ts';
 import { publishedSuiteAt } from './report.ts';
-import { MODEL_CONFIG, frontierSubset } from './run-config.ts';
+import { MODEL_CONFIG, frontierSubset, recordedReaderProblem } from './run-config.ts';
 import type { HarnessQuery, Outcome, ScorerLabel, SuiteBundle, SuiteId } from './types.ts';
 
 export const TARGET_TOKENS = 8000;
@@ -494,6 +494,8 @@ if (import.meta.main) {
   const dir = resolve(arg(argv, '--out') ?? join(REPO_ROOT, 'eval/reports/workload-bench', `${suiteId}${smoke ? `-smoke${smoke}` : ''}${stub ? '-stub' : ''}`));
   const published = smoke !== null ? publishedSuiteAt(dir) : null;
   if (published) { console.error(`${relative(REPO_ROOT, dir)} is the directory report.ts publishes ${published} from (RUN_DIRS), so a smoke run may not write there; pass --out with another directory`); process.exit(2); }
+  const recorded = recordedReaderProblem(dir);
+  if (recorded) { console.error(recorded); process.exit(2); }
   const log = (l: string) => process.stderr.write(`${new Date().toISOString().slice(11, 19)} ${l}\n`);
   const bundle = suite.generate({ seed: suite.defaultSeed, smoke: false });
   bundle.extra['frontier-subset'] = frontierSubset(bundle);

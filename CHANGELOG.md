@@ -23,6 +23,49 @@ This records what each gbrain-evals release changed and what its measurements me
 - **An arm with a provider error on any task is unscored.** gbrain scores such a task 0 and throws only when every task fails, so `scoreArm` now returns no score and names the errored tasks, and the receipt reads partial. No committed run hit this: every task in every arm holds all of its runs.
 - The runner module the preregistration calls `probe.ts` is now `headroom.ts`, with no other change.
 
+### The W10b story applies its recheck edits
+
+- **Five wording edits from the recheck of the W10b finding's plain-English story.** The title gives the gap's 95%
+  range, the summary calls the test exploratory and narrows its account of the power-bank answers to what the rows show,
+  and the X post draft says particle-1 sometimes treats an advice request as a lookup. No number changed.
+- **The infographic's source is committed.** Its fine print calls the test exploratory and its source line names the
+  finding's record. The PNG is re-rendered, and its HTML source sits beside it, with a note that it needs the Inter and
+  Inter Display fonts installed to render the same.
+- **A wording note in the particle-1 replay report.** It says the preference questions are the largest share of the gap
+  to Opus 5.5, 7 of the 17 net questions, not most of it, and keeps every figure. The finding's `SHA256SUMS` and the
+  `docs/receipts-manifest.json` entry carry the report's new digest.
+
+### Frontier first, part 2: the live reader sets drop Sonnet, and the guard sees the frozen ones
+
+- **The workload suites read every cell with Opus 5.5.** Their fixed reader was `claude-sonnet-5-5`, a model under
+  test on every question, and `modelRuleViolations` required it. The fixed reader is now `anthropic:claude-opus-5-5`,
+  the counted sweep reads with Opus 5.5, `gpt-6.1-sol` and particle-1, and `modelRuleViolations` requires the newest
+  frontier Opus as the fixed reader and the sweep's anchor. A rerun is a new receipt identity, never pooled with the
+  2026-10-05 runs. An old run directory holds its sweep's Opus 5.5 receipts where the new fixed reader's answers go, and
+  `bench.ts` and `report.ts` read the current config, so they would reuse or relabel them as fixed-reader rows. Both
+  now refuse a directory whose `run.json` records another fixed reader (`recordedReaderProblem` in
+  `eval/workload-suites/run-config.ts`); move it aside before a rerun, or check out an earlier commit to re-render it.
+  `report.ts --copy` also refuses a target folder whose receipts record another fixed reader, so a rerun publishes to
+  a new dated folder. Its fixed-reader answers cost about twice the published answer runs' reader spend ($91 across
+  the four suites, of the $296 reader row that includes the sweep), because Opus 5.5 lists at twice Sonnet 5.5's price.
+  The workload report's readers section says both.
+- **`FRONTIER_READERS` is `claude-opus-5-5` and `gpt-6.1-sol`.** Q1's sealed scoreboard campaign keeps its
+  preregistered three readers and Sonnet 5.5 anchor as `COUNTED_READERS` and `SONNET` in
+  `eval/runner/q1/cells/definitions.ts`, so its manifest and published cells do not change.
+- **The model-defaults test registers the frozen comparison sets that keep Sonnet or Haiku under test**, each a
+  named frozen exception citing the preregistration it ran under: T0's counted readers (#292), memory-trust's counted
+  models, utility-guard readers and Cat 37 judge, Q1's readers and anchor, Cat 40 Hard and next-confirm, N14's paid
+  models, the pilot and evidence-brief confirmation readers and Haiku 5.5 brief builders (Luna too in the pilot),
+  budgeted-delivery E2's frontier readers, the P4 streaming model, the P8 think model and the facts-absorb candidate
+  arms. Every one has run and published its cells. A new run of any of them amends its preregistration to Opus 5.5,
+  GPT-6.1 Sol and, where the runner has a route, particle-1 before its first cell. P4's `--models`, P8's `--think-model` and the facts-absorb `--arms` defaults are now exported constants so
+  the test can read them; their values did not change. `particle-1` joins the current-generation list, and a new check
+  (`judgeModelProblem`) fails any registered judge that is particle-1.
+- **particle-1 is in every live default set with a particle route.** The workload sweep already read with it; the other
+  runners with a route are frozen sets above, which add it when they are amended. Memory-trust has no particle route,
+  and Cat 37's Sonnet 5.5 judge would grade Opus 5.5 rows, so a new memory-trust run also moves that judge out of the
+  Claude family (GST-767). No model was run.
+
 ## [0.10.140] - 2026-11-02
 
 ### gbrain pin moves to v0.60.542.0: SkillOpt Cats name their optimizer mode, and harnesses read inside gbrain's new quote fences
@@ -81,6 +124,20 @@ This records what each gbrain-evals release changed and what its measurements me
   protocols and product-default mirrors that keep a Sonnet 4.6 or Haiku 4.5 model stay frozen, and two preregistered
   Sonnet 5.5 defaults are now named frozen exceptions: memory-trust flag-rate's agent and false-flag labeler (amendment 5
   of the memory-trust preregistration) and external-ideas wave A's decision model. No model was run.
+
+### The W10b finding reads as a plain-English story and closes with its disclosures
+
+- **A plain-English W10b finding.** Garry Tan asked for the finding to read in plain English. It now opens with a short
+  title, the infographic and a two-minute account of the test, the scores, the power-bank example, the cost per right
+  answer, what the result does and does not show, and how to check it. The precise statement, the record that was the
+  front matter and every technical section follow under Full details. No figure changed.
+- **Disclosures at the end.** He asked that the disclosures go at the end of the post and not in the X post. The
+  finding's Particle, gbrain and OpenAI lines move from under its title to a closing Disclosures section, and the file
+  has no front matter, which GitHub shows as a table above the title. `docs/disclosures.md` records his words and the
+  new rule. A finding file or long-form post closes with its lines, an X post and its images carry none, and reports and
+  summaries keep theirs up front.
+- **A new X post draft and an infographic.** The finding's X hook is rewritten without disclosure lines, and the 1080 by
+  1080 infographic it attaches sits beside the finding and at its top. No figure changed.
 
 ### The W10b write-ups carry the gbrain and OpenAI disclosures
 

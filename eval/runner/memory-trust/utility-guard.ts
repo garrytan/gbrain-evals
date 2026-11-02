@@ -38,7 +38,7 @@ const STATE = process.env.MT_GUARD_STATE_DIR ?? join(homedir(), '.capy/work/lane
 const DATASET = process.env.LME_DATASET ?? join(homedir(), '.capy/work/lane-e/lme/longmemeval_s_cleaned.json');
 const CAPTURES = join(STATE, 'captures.ndjson');
 const ROWS = join(STATE, 'rows.ndjson');
-const READERS = ['claude-opus-5-5', 'claude-sonnet-5-5', 'gpt-6.1-sol'] as const;
+export const READERS = ['claude-opus-5-5', 'claude-sonnet-5-5', 'gpt-6.1-sol'] as const;
 /** Published per-question rows to pair against: W10a Sonnet 5.5 at c5fb0201, W10b Opus 5.5 and GPT-6.1 Sol on the 2026-09-29 retrieval. */
 const PUBLISHED: Record<string, { label: string; rows: string; correct: number }> = {
   'claude-sonnet-5-5': { label: 'W10a Sonnet 5.5 notes reader at c5fb0201', rows: 'docs/benchmarks/2026-10-07-longmemeval-w10a-current-pin/arms/w10a-sonnet55-notes/rows.ndjson', correct: 468 },
