@@ -4,6 +4,46 @@ This records what each gbrain-evals release changed and what its measurements me
 
 ## [Unreleased]
 
+### Frontier first: Opus 5.5 and GPT-6.1 Sol are the models under test, never Sonnet or Haiku
+
+- **The model rules say gbrain and gstack are built for frontier models** (Garry, 2026-11-01). CLAUDE.md's "Choose
+  models", AGENTS.md's summary and eval/CONTRIBUTING.md's opening now say every model-comparison run tests them on the
+  newest frontier Opus and GPT (`claude-opus-5-5`, `gpt-6.1-sol`) plus `particle-1` as the primary low-cost model.
+  Sonnet and Haiku are no longer required in comparison runs, and they are never models under test (agents, readers,
+  answer models, optimizers, optimization targets) or stand-ins for a frontier model, unless a run asks a question
+  about that tier and says so. Judges are separate: a protocol's judge stays, and a cheaper judge is fine where the
+  protocol allows one, as long as no model judges its own family's rows. The particle-1 rules are unchanged.
+- **Every model-under-test default R4 (#243) set to Sonnet 5.5 or Haiku 5.5 moves to a frontier model.** Each is a new
+  receipt identity, never pooled with results on the old default.
+  - `claude-opus-5-5`: the A4 house reader (was Sonnet 5.5; a third 2026-11-01 amendment to the
+    [N2/A4 preregistration](docs/benchmarks/2026-10-01-n2-a4-preregistration.md) records it and asks for an Opus 5.5
+    `--smoke 2` check before the first counted cell, and the paid estimate moves from $3 to $4 under the unchanged
+    $6 cap), chronicle-lift's agent (was Sonnet 5.5), Cat 35's dream, facts and triage models in both modes (one
+    `DISTILL_MODEL`; full mode was Sonnet 5.5, BPRE mode and triage Haiku 5.5), temporal-contradictions'
+    dev `--models` default (was Haiku 5.5; its run estimate moves from $0.30 to $1.20 per model and run), the
+    harness dev lane's reader (`DEV_ANSWER`, Sonnet 5.5 since #256), and the `--think-model` fallback of memory-qa's
+    `--qa think` lane and of feedback-think-replay (was Sonnet 5.5; now one `DEFAULT_THINK_MODEL` in
+    `eval/runner/memory-qa/run-systems.ts`). A memory-qa output directory started before this change without
+    `--think-model` hashes the old default into its run config, so resume it with
+    `--think-model anthropic:claude-sonnet-5-5`; a fresh `--output` would pay again for answered questions.
+  - SkillOpt (Cats 30 to 33) keeps its Haiku 5.5 target and B-pre optimizer and its Sonnet 5.5 transfer end for now, as
+    a dated named exception. Its held-out scoring runs outside the budget ledger, its caps are sized for Haiku, and
+    full mode counts a budget-aborted run as a seed, so it moves to Opus 5.5 only after that work (GST-903). No
+    frontier SkillOpt suite run is planned.
+- **Cat 35's default judge moves from `claude-haiku-5-5` to `gpt-6.1-sol`**, because a Claude judge would grade Opus
+  5.5's distillations. Cat 35's pre-flight estimates are repriced for Opus 5.5: a BPRE smoke projects $3.24 and a full
+  run $53.40 worst case, above the $40 default `CAT35_HARD_STOP_USD`, so a full run now needs that cap raised
+  explicitly, and the registry's Cat 35 estimate moves from $12 to $54. `eval/RUNBOOK.md`'s Cat35 pre-flight section
+  gives the new projections, and `eval/CONTRIBUTING.md`'s external-lane example now authorizes `--budget-usd 40`,
+  because the verbatim lane alone projects $13.80 under the new judge. No other judge default changes; Cats 9, 14, 15,
+  25 and 29 still grade an Opus 5.5 model with a Haiku 5.5 judge until GST-905 moves those judges.
+- **`test/eval/model-defaults.test.ts` fails when a model-under-test default names a Sonnet or Haiku model** outside
+  the named exceptions in `eval/runner/model-defaults.ts` (`underTestModelProblem`). Registered defaults now say
+  which models are under test and which judge, and the list now includes memory-qa's think model. The frozen
+  protocols and product-default mirrors that keep a Sonnet 4.6 or Haiku 4.5 model stay frozen, and two preregistered
+  Sonnet 5.5 defaults are now named frozen exceptions: memory-trust flag-rate's agent and false-flag labeler (amendment 5
+  of the memory-trust preregistration) and external-ideas wave A's decision model. No model was run.
+
 ### The W10b write-ups carry the gbrain and OpenAI disclosures
 
 - **`docs/disclosures.md` carries the standing list:** Garry Tan's dated words and the exact line for Particle, gstack, gbrain, ggstack, QM, Hermes, OpenAI and OpenClaw, with its notes, the subjects that get no line and which pages here carry which lines.

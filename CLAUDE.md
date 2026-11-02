@@ -81,9 +81,11 @@ For a new report:
 
 ### Choose models
 
-Every model-comparison run (Cat 40 Model Ladder, answer-model benchmarks and any paid agent-task eval) uses current
-frontier models. These rules follow the gbrain project rule of 2026-10-07 and Garry's decision of 2026-10-31 that
-`claude-opus-5-5` and `particle-1` are the primary models.
+gbrain and gstack are built for frontier models, so every model-comparison run (Cat 40 Model Ladder, answer-model
+benchmarks and any paid agent-task eval) tests them on the newest frontier Opus and GPT, today `claude-opus-5-5` and
+`gpt-6.1-sol`, plus `particle-1` as the primary low-cost model. These rules follow the gbrain project rule of
+2026-10-07, Garry's decision of 2026-10-31 that `claude-opus-5-5` and `particle-1` are the primary models, and his
+rule of 2026-11-01 that evals test gbrain and gstack on frontier models.
 
 - **Run the primary models: `claude-opus-5-5` and the newest Particle model, today `particle-1` (Garry, 2026-10-31).**
   Every model-comparison run includes both as readers or agents, and its first table shows both with cost per correct
@@ -94,15 +96,21 @@ frontier models. These rules follow the gbrain project rule of 2026-10-07 and Ga
   receipt records the effort sent and effective, the limit and the weight version. A runner with no `particle:` route
   lists particle-1 under `models_not_run` with the reason. First paired numbers:
   [particle replay](docs/benchmarks/2026-11-01-longmemeval-particle-replay/REPORT.md).
-- **Always run the newest frontier model of each family:** Opus, GPT and Sonnet. Today's counted frontier readers are
-  `claude-opus-5-5`, `claude-sonnet-5-5` and `gpt-6.1-sol`. Before a run, check which models are newest
-  (`bun scripts/model-freshness.ts` reads the providers' model lists, Particle's included) and add any that the run
-  doesn't already include. Register a price for a new model in `eval/runner/budget-ledger.ts` so the ledger can reserve
-  it.
+- **Always run the newest frontier Opus and GPT.** Today's counted frontier readers are `claude-opus-5-5` and
+  `gpt-6.1-sol`. Before a run, check which models are newest (`bun scripts/model-freshness.ts` reads the providers'
+  model lists, Particle's included) and add any that the run doesn't already include. Register a price for a new model
+  in `eval/runner/budget-ledger.ts` so the ledger can reserve it.
 - **particle-1 never judges a counted cell.** Counted judges stay protocol-matched (for example `gpt-4o-2024-08-06` for
   LongMemEval and `gpt-6.1-sol` for Cat 40 Hard). particle-1 becomes the default reader and agent for a development loop
   once it passes that loop's preregistered agreement test; development judges are the ones the dataset's harness fixes,
   else `gpt-6.1-sol`.
+- **Sonnet and Haiku are not models under test (Garry, 2026-11-01).** A comparison run no longer needs them. Never run
+  one as an agent, reader, answer model, optimizer or optimization target, never use one as a stand-in for a frontier
+  model, and never spend a run on transfer between them. The exception is a run that asks a question about that tier
+  and says so in its preregistration or brief.
+- **Judges are separate from the models under test.** A protocol's judge stays. Where the protocol leaves the judge
+  open, a cheaper judge is fine, Sonnet and Haiku included, as long as no model judges its own family's rows: a Claude
+  judge never grades a Claude model's answers, and a GPT judge never grades a GPT model's.
 - **Fable is for smoke tests only (Garry, 2026-10-07).** Opus 5.5 is the top Anthropic model in counted runs. Run
   Fable only in small smoke tests (for example a pre-merge agent smoke), never in paid counted cells, practice
   rounds or held-out runs. A run already preregistered with Fable records the change and its reason in the
@@ -117,10 +125,12 @@ frontier models. These rules follow the gbrain project rule of 2026-10-07 and Ga
   rather than counting it as a win or a tie.
 - **Preregistered gates keep their model list.** To change the models of an existing preregistered gate, record the
   change and its reason in the preregistration before any new cell runs.
-- **Defaults follow the same rules.** A live category's default models are current-generation models, held there by
-  `test/eval/model-defaults.test.ts`. A default that keeps an older model on purpose (a frozen protocol, or a mirror of
-  gbrain's own default) is a named exception with its reason in `eval/runner/model-defaults.ts`. Changing a default is
-  a new receipt identity: never pool its results with the old model's.
+- **Defaults follow the same rules.** A live category's default models are current-generation models, and its default
+  models under test are frontier models, never Sonnet or Haiku. `test/eval/model-defaults.test.ts` holds both. A
+  default that keeps an older model, or a Sonnet or Haiku model under test, on purpose (a frozen protocol, a mirror of
+  gbrain's own default, or a dated move that waits on named follow-up work) is a named exception with its reason in
+  `eval/runner/model-defaults.ts`. Changing a default
+  is a new receipt identity: never pool its results with the old model's.
 
 To add a category, follow the "Add a category" checklist in [eval/CONTRIBUTING.md](eval/CONTRIBUTING.md): registry row and preregistered promotion rules first, the shared hermetic environment, the paid-arm guard, the scorer mutation kit and the bug ledger.
 

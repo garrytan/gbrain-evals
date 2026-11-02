@@ -21,7 +21,7 @@ import { join } from 'node:path';
 import type { CellSpec } from './harness-cell.ts';
 import { REPO_ROOT } from './harness-env.ts';
 
-export const DEV_ANSWER = 'anthropic:claude-sonnet-5-5';
+export const DEV_ANSWER = 'anthropic:claude-opus-5-5';
 /** BEAM keeps gemini-3.5-flash because the pinned harness fixes BEAM's rubric judge (harness-cell.ts refuses another); every other dataset is judged by gpt-6.1-sol. */
 export const DEV_JUDGE: Record<string, string> = { beam: 'gemini:gemini-3.5-flash', default: 'openai:gpt-6.1-sol' };
 const SPEC_DIR = join(REPO_ROOT, 'eval/harness-provider/cells/dev');

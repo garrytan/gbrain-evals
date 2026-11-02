@@ -94,7 +94,7 @@ Use the runner's `--ndjson` option for resumable per-question output. Preserve t
 
 ## Cat35 refuses its cost preflight
 
-The default `CAT35_HARD_STOP_USD` is $40. The historical full run projected $45 and required an explicitly chosen $50 cap, despite measuring about $6.20 in judge and fact-extraction costs.
+The default `CAT35_HARD_STOP_USD` is $40. Since 2026-11-01 the defaults are Opus 5.5 distilling and a `gpt-6.1-sol` judge: the two-transcript smoke projects $3.24 and a full run $53.40, so a full run refuses unless you raise the cap explicitly (`CAT35_FULL=1 CAT35_HARD_STOP_USD=60 ... --budget-usd 60`). Neither projection has been measured yet. The historical full run on Sonnet 4.6 projected $45 and required an explicitly chosen $50 cap, despite measuring about $6.20 in judge and fact-extraction costs.
 
 This preflight is deliberately conservative. More importantly, the measured receipt excludes dream-subagent spend because the underlying phase API does not expose it. A receipt total is therefore not a complete invoice.
 
