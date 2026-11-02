@@ -213,8 +213,13 @@ export function pinAccepted(receiptPin: string | undefined, installedPin: string
   return acceptPin === receiptPin || (acceptPin.length >= 7 && !!sha && sha.startsWith(acceptPin));
 }
 
-/** A frontier receipt's probe payload, refused unless it is this category's, completed, read the dataset as it stands, and ran at this tree's gbrain pin (or the one --accept-pin names). */
-export function readFrontierReceipt(path: string, flag: string, acceptPin?: string): FrontierResult {
+/**
+ * A frontier receipt's probe payload, refused unless it is this category's,
+ * completed, read the dataset as it stands, and ran at this tree's gbrain pin
+ * or the one --accept-pin names; a pin accepted that way is added to
+ * `accepted`, for the new receipt to record.
+ */
+export function readFrontierReceipt(path: string, flag: string, acceptPin?: string, accepted?: Set<string>): FrontierResult {
   if (!existsSync(path)) throw new Error(`${flag} ${path}: no such file`);
   const r = JSON.parse(readFileSync(path, 'utf8')) as Receipt;
   const p = (r.data as { probe?: FrontierResult } | undefined)?.probe;
@@ -222,9 +227,11 @@ export function readFrontierReceipt(path: string, flag: string, acceptPin?: stri
   if (r.run_status !== 'completed') throw new Error(`${flag} ${path}: the run did not complete (${r.run_status})`);
   if (r.hashes?.dataset_manifest_sha256 !== manifestSha(DEFAULT_DATASET)) throw new Error(`${flag} ${path} read another ${datasetName(DEFAULT_DATASET)} manifest than the one in this tree`);
   const installed = gbrainPin();
+  if (!r.gbrain_pin) throw new Error(`${flag} ${path} records no gbrain pin, so it cannot be matched with this tree's ${installed}`);
   if (!pinAccepted(r.gbrain_pin, installed, acceptPin)) {
-    throw new Error(`${flag} ${path} ran at gbrain ${r.gbrain_pin ?? 'unknown'}, but this tree pins ${installed}; pass --accept-pin ${pinSha(r.gbrain_pin) ?? r.gbrain_pin} to read it anyway (the new receipt records it)`);
+    throw new Error(`${flag} ${path} ran at gbrain ${r.gbrain_pin}, but this tree pins ${installed}; pass --accept-pin ${pinSha(r.gbrain_pin) ?? r.gbrain_pin} to read it anyway (the new receipt records it)`);
   }
+  if (r.gbrain_pin !== installed) accepted?.add(r.gbrain_pin);
   return p;
 }
 
@@ -289,8 +296,9 @@ async function runFrontierCli(argv: readonly string[], log: (s: string) => void,
   const otherPath = argValue(argv, '--other');
   if (stage === 'f0b' && !fromPath) throw new Error('--stage f0b reads the F0a receipt: pass --from <F0a receipt>');
   const acceptPin = argValue(argv, '--accept-pin');
-  const from = stage === 'f0b' ? readFrontierReceipt(fromPath!, '--from', acceptPin) : undefined;
-  const other = otherPath ? readFrontierReceipt(otherPath, '--other', acceptPin) : null;
+  const accepted = new Set<string>();
+  const from = stage === 'f0b' ? readFrontierReceipt(fromPath!, '--from', acceptPin, accepted) : undefined;
+  const other = otherPath ? readFrontierReceipt(otherPath, '--other', acceptPin, accepted) : null;
   if (other && other.target === target) throw new Error(`--other ${otherPath} is for ${target} too; pass the other target's receipt`);
   const pairs = from ? f0bSkillsOf(from.skills).filter(s => !skills || skills.includes(s)).length : (skills ?? SKILLS).length;
   const estimateUsd = frontierEstimateUsd(target, stage, pairs);
@@ -333,7 +341,7 @@ async function runFrontierCli(argv: readonly string[], log: (s: string) => void,
     n_total: planned, n_scored: Math.max(0, scored), completion_rate: planned ? Math.max(0, scored) / planned : 0, errors,
     publishable: !!probe && !fake && scored === planned,
     ...(attestation ? { preregistration_attestation: attestation } : {}),
-    resolved_config: { engine: 'pglite-in-memory', decide: DECIDE_OFF, mode: fake ? 'probe-fake' : 'probe', target, stage, skills: skills ?? null, from: fromPath ?? null, other: otherPath ?? null, accepted_pin: acceptPin ?? null, keys_in_process: keyNames, models: probe?.models ?? null },
+    resolved_config: { engine: 'pglite-in-memory', decide: DECIDE_OFF, mode: fake ? 'probe-fake' : 'probe', target, stage, skills: skills ?? null, from: fromPath ?? null, other: otherPath ?? null, accepted_pin: [...accepted][0] ?? null, keys_in_process: keyNames, models: probe?.models ?? null },
     finished_at: new Date().toISOString(),
     data: { probe: probe ? frontierData(probe) : null, ...(counted ? { counted_skills: counted } : {}), reprice_trigger: probe?.reprice_trigger ?? null },
   };
@@ -362,8 +370,9 @@ async function runTestStageCli(argv: readonly string[], log: (s: string) => void
   const otherPath = argValue(argv, '--other');
   if (!fromPath) throw new Error("--stage test reads this target's F0b receipt: pass --from <F0b receipt>");
   const acceptPin = argValue(argv, '--accept-pin');
-  const from = withRewriteTexts(readFrontierReceipt(fromPath, '--from', acceptPin), fromPath);
-  const other = otherPath ? withRewriteTexts(readFrontierReceipt(otherPath, '--other', acceptPin), otherPath) : null;
+  const accepted = new Set<string>();
+  const from = withRewriteTexts(readFrontierReceipt(fromPath, '--from', acceptPin, accepted), fromPath);
+  const other = otherPath ? withRewriteTexts(readFrontierReceipt(otherPath, '--other', acceptPin, accepted), otherPath) : null;
   const plan = planTestStage({ target, fake, from, other, skills });
   const inputs = [fromPath, ...(otherPath ? [otherPath] : []), ...plan.flatMap(p => (p.rewrite ? [rewritePath(p.rewrite.source === 'own' ? fromPath : otherPath!, p.rewrite.target, p.skill, p.rewrite.number)] : []))];
   const estimateUsd = testStageEstimateUsd(target, plan.map(p => ({ skill: p.skill, rewrite: !!p.rewrite })));
@@ -404,7 +413,7 @@ async function runTestStageCli(argv: readonly string[], log: (s: string) => void
     n_total: planned, n_scored: scored, completion_rate: planned ? scored / planned : 0, errors,
     publishable: !!result && !fake && scored === planned,
     ...(attestation ? { preregistration_attestation: attestation } : {}),
-    resolved_config: { engine: 'pglite-in-memory', decide: DECIDE_OFF, mode: fake ? 'probe-fake' : 'probe', target, stage: TEST_STAGE, skills: skills ?? null, from: fromPath, other: otherPath ?? null, accepted_pin: acceptPin ?? null, keys_in_process: keyNames, models: result?.models ?? null },
+    resolved_config: { engine: 'pglite-in-memory', decide: DECIDE_OFF, mode: fake ? 'probe-fake' : 'probe', target, stage: TEST_STAGE, skills: skills ?? null, from: fromPath, other: otherPath ?? null, accepted_pin: [...accepted][0] ?? null, keys_in_process: keyNames, models: result?.models ?? null },
     finished_at: new Date().toISOString(),
     data: { probe: result ? testStageData(result, inputs) : null, reprice_trigger: result?.reprice_trigger ?? null },
   };

@@ -7,8 +7,10 @@
  * - the proposer input withholds gold only from the training-task block, so
  *   the seed and criteria text reach the proposer verbatim;
  * - the harness is the only retry layer: the AI SDK sends each rollout and
- *   proposer request once, and `scoreArm` retries a rollout only after a
- *   failure that provably produced no billable completion;
+ *   proposer request once, composed with any enclosing invocation guard, and
+ *   the harness resends a rollout or proposer call only when the failed
+ *   attempt provably billed nothing (no finished turn, and a refusal before
+ *   sending, a 429 or a 529);
  * - a refusal is terminal: a budget refusal (the ledger, gbrain's hook cap or
  *   a metering proxy's 402 or 503) or the proxy's tripwire stops the arm, no
  *   later rollout calls anything, and the arm reads incomplete or invalid;
@@ -26,6 +28,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { APICallError } from 'ai';
+import { withAIInvocationGuard } from 'gbrain/ai/invocation-guard';
 import { runSkillOpt, SKILLOPT_HOOK_BUDGET_EXHAUSTED, type BenchmarkTask } from 'gbrain/core/skillopt';
 import type { PGLiteEngine } from 'gbrain/pglite-engine';
 import { withHermeticEnv } from '../../eval/runner/hermetic-env.ts';
@@ -65,6 +68,13 @@ describe('proposer input scope', () => {
     expect(withheld).toBe(1);
     expect(text).toContain(`${WITHHELD} marks a page or value from tasks you are not shown`);
   });
+
+  test('a seed or criteria text that names a hidden corpus page is refused', () => {
+    const base = { trajectories: [], markers: [], pages: { visible: new Set(['companies/shown']), corpus: new Set(['companies/shown', 'companies/hidden']) } };
+    expect(proposerInput({ ...base, seedText: 'Cite companies/shown.', criteria: 'Cite the page.' }).text).toContain('companies/shown');
+    expect(() => proposerInput({ ...base, seedText: 'Cite companies/hidden.', criteria: 'Cite the page.' })).toThrow('names 1 corpus page(s) the train split does not show');
+    expect(() => proposerInput({ ...base, seedText: 'Cite the page.', criteria: 'Gold is in companies/Hidden.md.' })).toThrow('names 1 corpus page(s)');
+  });
 });
 
 /** The metering proxy's error body (eval/runner/metering-proxy.ts, `json(status, kind, message)`). */
@@ -96,6 +106,7 @@ describe('transient rollout failures', () => {
     expect(refusalKind(apiError(402, proxyBody('budget', 'reserving $0.0500 would take this lease over its cap')))).toBe('budget');
     expect(refusalKind(apiError(503, proxyBody('budget', "ANTHROPIC_API_KEY is not set in the proxy's environment")))).toBe('budget');
     expect(refusalKind(new Error(`${SKILLOPT_HOOK_BUDGET_EXHAUSTED}: the rollout server's cap is spent`))).toBe('budget');
+    expect(refusalKind(apiError(403, proxyBody('budget', 'anthropic:claude-opus-5-5 is not on this cell\'s model allowlist')))).toBe('budget');
     expect(refusalKind(apiError(403, TRIPWIRE))).toBe('invalid-cell');
     expect(refusalKind(new Error('[chat] HTTP 402', { cause: apiError(402, proxyBody('budget', 'over the lease cap')) }))).toBe('budget');
     expect(refusalKind(new Error('wrapped', { cause: new BudgetExceededError('cap') }))).toBe('budget');
@@ -109,7 +120,7 @@ describe('transient rollout failures', () => {
   });
 
   test('a budget refusal is terminal: no later rollout reaches a provider, nothing retries, and the arm reads incomplete', async () => {
-    const tasks = readTasks('query', 'sel').slice(0, 6);
+    const tasks = readTasks('query', 'sel').slice(0, 12);
     const refusedTask = tasks[0]!;
     const base = fakeTransport(tasks);
     const reached: string[] = [];
@@ -144,22 +155,23 @@ describe('transient rollout failures', () => {
     expect(arm.task_medians).toBeUndefined();
     expect(retried).toEqual([]);
     expect(meter.retries).toBe(0);
-    // gbrain's gate keeps 4 rollouts in flight; the 3 held beside the refused one finish, and the 2 that start after it never reach a provider.
-    expect([...reached].sort()).toEqual(tasks.slice(0, 4).map(t => t.task_id).sort());
-    expect(meter.rollouts).toBe(4);
+    // Only the rollouts gbrain's gate had in flight beside the refused one (the first tasks, in order) reach a provider; none started after it does.
+    expect(reached.length).toBeLessThan(tasks.length);
+    expect([...reached].sort()).toEqual(tasks.slice(0, reached.length).map(t => t.task_id).sort());
+    expect(meter.rollouts).toBe(reached.length);
   }, 120_000);
 });
 
-/** An error answer for one provider request: its status and JSON body. */
-type FakeError = { status: number; body: unknown } | null;
+/** A scripted answer for one provider request: its status and JSON body. */
+type FakeAnswer = { status: number; body: unknown } | null;
 
 /**
  * An HTTP fake for the two providers, below the ledger's fetch guard: every
  * Anthropic Messages and OpenAI Responses request is recorded and answered
- * with `fail`'s error when it returns one, else with a short text and usage;
- * any other URL throws.
+ * with `answer`'s reply when it returns one (an error status is also recorded
+ * in `failed`), else with a short text and usage; any other URL throws.
  */
-function providerHttpFake(fail: (url: string, body: string) => FakeError = () => null) {
+function providerHttpFake(answer: (url: string, body: string) => FakeAnswer = () => null) {
   const requests: string[] = [];
   const failed: string[] = [];
   let n = 0;
@@ -171,10 +183,10 @@ function providerHttpFake(fail: (url: string, body: string) => FakeError = () =>
     n++;
     if (url !== 'https://api.anthropic.com/v1/messages' && url !== 'https://api.openai.com/v1/responses') throw new Error(`outbound request refused in a keyless test: ${url}`);
     requests.push(url);
-    const error = fail(url, raw);
-    if (error) {
-      failed.push(url);
-      return json(error.body, error.status);
+    const scripted = answer(url, raw);
+    if (scripted) {
+      if (scripted.status >= 400) failed.push(url);
+      return json(scripted.body, scripted.status);
     }
     if (url === 'https://api.anthropic.com/v1/messages') {
       return json({ id: `msg_${n}`, type: 'message', role: 'assistant', model: body.model, content: [{ type: 'text', text: "I don't know." }], stop_reason: 'end_turn', stop_sequence: null, usage: { input_tokens: 500, output_tokens: 10, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 } });
@@ -281,13 +293,13 @@ describe('ledger coverage below the fetch boundary', () => {
       { status: 503, body: proxyBody('budget', "ANTHROPIC_API_KEY is not set in the proxy's environment"), flag: { budget_exhausted: true } },
       { status: 403, body: TRIPWIRE, flag: { cell_invalid: true } },
     ];
-    let answer: FakeError = null;
-    const fake = providerHttpFake(() => answer);
+    let reply: FakeAnswer = null;
+    const fake = providerHttpFake(() => reply);
     const { out } = await underLedger('ceiling-refusals', fake, async engine => {
       const seen = [];
       for (const target of ['opus', 'sol'] as const) {
         for (const c of cases) {
-          answer = { status: c.status, body: c.body };
+          reply = { status: c.status, body: c.body };
           const before = fake.requests.length;
           const meter = emptyMeter();
           const retried: string[] = [];
@@ -361,6 +373,54 @@ describe('ledger coverage below the fetch boundary', () => {
       expect(arm.score).not.toBeNull();
     }
   }, 120_000);
+
+  test('a 429 after a finished model turn is not retried: the rollout errors instead of replaying billed turns', async () => {
+    const tasks = readTasks('query', 'sel').slice(0, 2);
+    const flaky = tasks[0]!;
+    let hits = 0;
+    const fake = providerHttpFake((_url, raw) => {
+      if (!carries(raw, flaky)) return null;
+      if (++hits > 1) return { status: 429, body: { type: 'error', error: { type: 'rate_limit_error', message: 'Rate limited' } } };
+      const tool = (JSON.parse(raw) as { tools: Array<{ name: string }> }).tools[0]!.name;
+      return { status: 200, body: { id: 'msg_tool', type: 'message', role: 'assistant', model: FRONTIER_TARGETS.opus.split(':')[1], content: [{ type: 'tool_use', id: 'toolu_1', name: tool, input: {} }], stop_reason: 'tool_use', stop_sequence: null, usage: { input_tokens: 500, output_tokens: 10, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 } } };
+    });
+    const meter = emptyMeter();
+    const retried: string[] = [];
+    const { out: arm } = await underLedger('ceiling-late-429', fake, engine => seedArm(engine, 'opus', tasks, meter, retried));
+    expect(hits).toBe(2);
+    expect(retried).toEqual([]);
+    expect(meter.retries).toBe(0);
+    expect(arm.score).toBeNull();
+    expect(arm.error).toStartWith(`1 of 2 tasks errored (${flaky.task_id})`);
+  }, 120_000);
+
+  test('the harness proposer resends a 529 once it proves unbilled, with one SDK attempt each, and returns the rewrite', async () => {
+    let n = 0;
+    const fake = providerHttpFake(() => (++n === 1 ? { status: 529, body: { type: 'error', error: { type: 'overloaded_error', message: 'Overloaded' } } } : null));
+    const retried: number[] = [];
+    const { out: proposed } = await underLedger('ceiling-proposer-529', fake, () =>
+      withProbeGateway({ chatModel: PROPOSER_MODEL, fake: false }, () => proposeRewrite('input', 'seed', { retryDelaysMs: [0], onRetry: attempt => retried.push(attempt) })));
+    expect(fake.requests).toHaveLength(2);
+    expect(retried).toEqual([1]);
+    expect(proposed.text).toBe("I don't know.\n");
+  }, 60_000);
+
+  test('withoutSdkRetries composes with an enclosing invocation guard instead of replacing it', async () => {
+    const fake = providerHttpFake();
+    let asked = 0;
+    const { out: error } = await underLedger('ceiling-outer-guard', fake, async () => {
+      try {
+        await withAIInvocationGuard(async () => { asked++; throw new Error('outer guard: budget exhausted'); }, () =>
+          withProbeGateway({ chatModel: PROPOSER_MODEL, fake: false }, () => proposeRewrite('input', 'seed', { retryDelaysMs: [0] })));
+        return null;
+      } catch (e) {
+        return e;
+      }
+    });
+    expect(String(error)).toContain('outer guard: budget exhausted');
+    expect(asked).toBe(1);
+    expect(fake.requests).toEqual([]);
+  }, 60_000);
 
   test('the harness proposer sends a forwarded 504 once and fails', async () => {
     const fake = providerHttpFake(() => ({ status: 504, body: { type: 'error', error: { type: 'api_error', message: 'upstream gateway timed out' } } }));

@@ -17,12 +17,13 @@
  *
  * Every rollout attempt runs with the AI SDK's own retries off
  * (`withoutSdkRetries`), so the harness is the only layer that resends a
- * request. A rollout that fails in a way that provably produced no billable
- * completion (`unbilledFailure`: the connection was refused before sending,
- * or the provider rejected the request with HTTP 429 or 529) is retried, at
- * most `ROLLOUT_RETRIES` times, and counted in the meter. Any other failure, a
- * 5xx that may have been forwarded included, is that task's error, and the arm
- * has no score. In flight per arm stays at gbrain's validation-gate
+ * request. A rollout attempt that provably produced nothing billable (it
+ * finished no model turn, and its request failed with `unbilledFailure`: the
+ * connection was refused before sending, or the provider rejected it with
+ * HTTP 429 or 529) is retried, at most `ROLLOUT_RETRIES` times, and counted
+ * in the meter. Any other failure, a 5xx that may have been forwarded or a
+ * 429 after a finished turn included, is that task's error, and the arm has
+ * no score. In flight per arm stays at gbrain's validation-gate
  * concurrency (4), and arms run one at a time.
  *
  * A refusal (`refusalKind`: a budget refusal from the ledger, gbrain's hook
@@ -124,21 +125,21 @@ export interface ArmScore {
   cell_invalid?: true;
 }
 
-/** Retries per rollout after an unbilled failure; the harness is the only retry layer (`withoutSdkRetries`). */
+/** Retries per rollout or proposer call after an unbilled failure; the harness is the only retry layer (`withoutSdkRetries`). */
 export const ROLLOUT_RETRIES = 2;
 export const ROLLOUT_RETRY_DELAYS_MS: readonly number[] = [15_000, 60_000];
 
 const REFUSED_BEFORE_SEND = new Set(['ECONNREFUSED', 'ENOTFOUND', 'EAI_AGAIN']);
 
 /**
- * Run `run` under a pass-through gbrain invocation guard. gbrain sends every
- * generation under a guard with the AI SDK's `maxRetries: 0`, so no request is
- * resent below the harness, whose classifier is then the only retry layer.
- * The guard admits every call and settles nothing: the budget ledger stays at
- * the fetch boundary.
+ * Run `run` under a pass-through gbrain invocation guard, composed with any
+ * enclosing guard. gbrain sends every generation under a guard with the AI
+ * SDK's `maxRetries: 0`, so no request is resent below the harness, whose
+ * classifier is then the only retry layer. This guard admits every call and
+ * settles nothing: the budget ledger stays at the fetch boundary.
  */
 export function withoutSdkRetries<T>(run: () => Promise<T>): Promise<T> {
-  return withAIInvocationGuard(async () => ({ settle: async () => {} }), run);
+  return withAIInvocationGuard(async () => ({ settle: async () => {} }), run, { inherit: true });
 }
 
 type ChainLink = { message?: unknown; statusCode?: unknown; status?: unknown; code?: unknown; responseBody?: unknown; cause?: unknown; lastError?: unknown; errors?: unknown };
@@ -175,7 +176,8 @@ function proxyError(o: ChainLink): { kind?: unknown; message?: unknown } | null 
 /**
  * Why a failure must stop the arm, walking its cause chain: `budget` for the
  * ledger's `BudgetExceededError`, gbrain's `SKILLOPT_HOOK_BUDGET_EXHAUSTED`
- * tag, or a metering proxy's 402 or 503 whose body is `error.kind: 'budget'`;
+ * tag, or a metering proxy refusal whose body is `error.kind: 'budget'` (402
+ * over the cap, 503 without a key, 403 off the model allowlist);
  * `invalid-cell` for the proxy's 403 tripwire. Null for anything else.
  */
 export function refusalKind(error: unknown): 'budget' | 'invalid-cell' | null {
@@ -183,7 +185,7 @@ export function refusalKind(error: unknown): 'budget' | 'invalid-cell' | null {
     const status = httpStatus(o);
     const body = proxyError(o);
     if (o instanceof BudgetExceededError || (typeof o.message === 'string' && o.message.includes(SKILLOPT_HOOK_BUDGET_EXHAUSTED))) return 'budget';
-    if ((status === 402 || status === 503) && body?.kind === 'budget') return 'budget';
+    if ((status === 402 || status === 403 || status === 503) && body?.kind === 'budget') return 'budget';
     if (status === 403 && typeof body?.message === 'string' && body.message.includes('tripwire:')) return 'invalid-cell';
   }
   return null;
@@ -223,6 +225,10 @@ const benchTask = (t: MethodTask): BenchmarkTask => ({ task_id: t.task_id, task:
 
 const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
+/** An `onRetry` that logs each retried rollout or proposer call. */
+export const logRetries = (log: (line: string) => void) => (id: string, attempt: number, error: unknown) =>
+  log(`[n15 probe]   retry ${attempt} of ${id} after an unbilled failure: ${errMsg(error)}`);
+
 /**
  * Score a skill text on tasks. A failed arm, or one where any task's rollout
  * errored (gbrain scores such a task 0), is returned as `error` with a null
@@ -259,7 +265,7 @@ export async function scoreArm(o: ArmOptions): Promise<ArmScore> {
       } catch (error) {
         const kind = refusalKind(error);
         if (kind) refusal ??= { kind, error };
-        retry = attempt < ROLLOUT_RETRIES && unbilledFailure(error);
+        retry = attempt < ROLLOUT_RETRIES && calls.length === 0 && unbilledFailure(error);
         if (!retry) throw error;
         o.onRetry?.(opts.task.task_id, attempt + 1, error);
       } finally {

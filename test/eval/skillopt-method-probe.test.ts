@@ -710,7 +710,7 @@ describe('stage test, keyless end to end', () => {
       const a = cli('--fake', '--target', 'opus', '--skills', 'briefing', '--from', f0bReceipt('opus'), '--other', f0bReceipt('sol'), '--accept-pin', COMMITTED_PIN, '--output', join(dir, 'with-other'));
       expect([a.exitCode, a.stderr.toString().slice(-400)]).toEqual([0, expect.any(String)]);
       const receipt = JSON.parse(readFileSync(join(dir, 'with-other', 'receipt.json'), 'utf8'));
-      expect(receipt).toMatchObject({ run_status: 'completed', verdict: 'pass', n_total: 1, n_scored: 1, publishable: false, resolved_config: { target: 'opus', stage: 'test', accepted_pin: COMMITTED_PIN, keys_in_process: ['ANTHROPIC_API_KEY'] } });
+      expect(receipt).toMatchObject({ run_status: 'completed', verdict: 'pass', n_total: 1, n_scored: 1, publishable: false, resolved_config: { target: 'opus', stage: 'test', accepted_pin: expect.stringMatching(new RegExp(`#${COMMITTED_PIN}[0-9a-f]{32}$`)), keys_in_process: ['ANTHROPIC_API_KEY'] } });
       expect(receipt.data.probe.files_read).toEqual(['eval/data/skillopt-method-v2/briefing/test.jsonl', f0bReceipt('opus'), f0bReceipt('sol'), `${FRONTIER_DIR}/f0b-sol/one-shot/sol-briefing-rewrite-2.txt`]);
       expect(receipt.data.probe.files_read_include_test).toBe(true);
       expect(receipt.data.probe.skills[0]).toMatchObject({ skill: 'briefing', rewrite_source: 'other-target', rewrite_target: 'sol', rewrite_number: 2, rewrite_sha8: 'b35934a9', rewrite_selection_score: 1 });
