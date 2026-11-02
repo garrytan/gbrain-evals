@@ -1,4 +1,4 @@
-# Opus 5.5 beats particle-1 by 3.4 points on a memory test, at about 23 times the price per right answer
+# Opus 5.5 beats particle-1 by 3.4 points (95% range 1.4 to 5.6) on a memory test, at about 23 times the price per right answer
 
 ![particle-1 against Opus 5.5 and GPT-6.1 Sol on LongMemEval: right answers out of 500, and cost per right answer at list price](2026-11-01-particle-1-longmemeval-w10b-infographic.png)
 
@@ -15,10 +15,10 @@ Opus 5.5 got 474 right (94.8%), GPT-6.1 Sol 464 (92.8%) and particle-1 457 (91.4
 questions, which is 3.4 points, and the 95% range for that gap runs from 1.4 to 5.6 points, so it stays clear of zero.
 
 particle-1 lost the most ground on advice. A user who once mentioned buying a portable power bank later asks for tips on
-their phone's battery life. Opus 5.5 finds the power-bank conversation and builds its tips around it. particle-1 notices
-the power bank too, then answers: "The information is not available in the retrieved sessions; I don’t know what phone
-battery-life tips were previously discussed." It treats a request for advice as a lookup that came up empty. Advice
-accounts for 7 of Opus 5.5's 17 extra right answers.
+their phone's battery life. Opus 5.5 finds the power-bank conversation and gives general battery tips, ending with one
+to use the power bank. particle-1 notices the power bank too, then answers: "The information is not available in the
+retrieved sessions; I don’t know what phone battery-life tips were previously discussed." Here it treats a request for
+advice as a lookup that came up empty. Advice accounts for 7 of Opus 5.5's 17 extra right answers.
 
 At list prices, a right answer costs $0.0993 from Opus 5.5, $0.0381 from GPT-6.1 Sol and $0.0043 from particle-1. So $1
 buys about 10 right answers from Opus 5.5, about 26 from GPT-6.1 Sol and about 230 from particle-1.
@@ -31,8 +31,8 @@ buys about 10 right answers from Opus 5.5, about 26 from GPT-6.1 Sol and about 2
   comparison.
 - particle-1 and GPT-6.1 Sol are 1.4 points apart, which is too close for this test to tell apart. That does not make
   them equal: a second grader added after the run, and not counted, put particle-1 behind GPT-6.1 Sol by 3.4 points.
-- This is one early test, with one answer per question, one AI grader, and public questions that models may have seen
-  in training.
+- This is one early, exploratory test, with one answer per question, one AI grader, and public questions that models may
+  have seen in training.
 - Opus 5.5 ran at low effort, GPT-6.1 Sol at medium and particle-1 at high. Other settings would change both the scores
   and the costs.
 - It says nothing about gbrain's retrieval itself, other memory tasks, or particle-1 as an agent.
@@ -51,8 +51,9 @@ points behind Opus 5.5 (95% interval 1.4 to 5.6), at about a twenty-third of its
 - **Publication status:** unpublished. Done: a keyless recount of every number from the committed rows, a clean-machine
   rerun and claim check with a cross-family review, which passed the file with edits that this version applies (see [the
   claim check](#the-claim-check)), and dated notes beside the corrected cost figures in the reports this file cites. A
-  recheck of the edited and added lines passed on 2026-11-02. The plain-English summary above rewords these results and
-  is due its own recheck. Still blocking a post: Garry Tan's approval of the post text.
+  recheck of the edited and added lines passed on 2026-11-02. A recheck of the plain-English summary, the infographic
+  and the X post draft passed with edits on 2026-11-02, and this version applies them. Still blocking a post: Garry
+  Tan's approval of the post text.
 - **Record:** `2026-11-01-particle-1-longmemeval-w10b`, a finding, status open.
 - **Grade:** exploratory (the paired comparisons are named in the preregistration as descriptive; the second judge is a
   sensitivity added afterwards).
@@ -342,7 +343,7 @@ the ceiling and from one protocol judge, and Opus 5.5 ran at effort low.
 
 > Opus 5.5 beat particle-1 by 3.4 points on LongMemEval, 500 questions about long chat histories (95% CI 1.4 to 5.6). gbrain's memory pulled the same past conversations for every model. Opus got 474 right, GPT-6.1 Sol 464, particle-1 457.
 >
-> particle-1 lost the most ground on advice, which it treats as a lookup. Ask for phone battery tips after mentioning your new power bank, and Opus 5.5 gives tips that work the power bank in. particle-1 notices the power bank, then answers: "The information is not available in the retrieved sessions; I don’t know what phone battery-life tips were previously discussed."
+> particle-1 lost the most ground on advice, where it sometimes treats the request as a lookup. Ask for phone battery tips after mentioning your new power bank, and Opus 5.5 gives tips that work the power bank in. particle-1 notices the power bank, then answers: "The information is not available in the retrieved sessions; I don’t know what phone battery-life tips were previously discussed."
 >
 > Advice accounts for 7 of Opus's 17 extra right answers.
 >
@@ -358,12 +359,12 @@ particle-1's answer names the power bank before the quoted line, and Opus 5.5's 
 dollar divided by each list cost per correct answer in [Cost](#cost): 10.07 for Opus 5.5 and 233.58 for particle-1,
 from the unrounded figures in [analysis.json](2026-11-01-particle-1-longmemeval-w10b/analysis.json).
 
-The post attaches the infographic at the top of this file. It is 1080 by 1080 pixels, rendered from HTML with headless
-Chrome, so every word and number in it is typed text. Its counts, percentages and effort settings come from
-[Setup](#setup) and [Result](#result), its interval from [What we found](#what-we-found) and its costs from
-[Cost](#cost). "17 more right" is 474 minus 457, and the 26 right answers that $1 buys from GPT-6.1 Sol are one dollar
-divided by its unrounded list cost per correct answer in
-[analysis.json](2026-11-01-particle-1-longmemeval-w10b/analysis.json), $0.03807501 (26.26).
+The post attaches the infographic at the top of this file. It is 1080 by 1080 pixels, a headless Chrome screenshot of
+[its HTML source](2026-11-01-particle-1-longmemeval-w10b-infographic.html), set in the Inter font, so every word and
+number in it is typed text. Its counts, percentages and effort settings come from [Setup](#setup) and [Result](#result),
+its interval from [What we found](#what-we-found) and its costs from [Cost](#cost). "17 more right" is 474 minus 457,
+and the 26 right answers that $1 buys from GPT-6.1 Sol are one dollar divided by its unrounded list cost per correct
+answer in [analysis.json](2026-11-01-particle-1-longmemeval-w10b/analysis.json), $0.03807501 (26.26).
 
 ### The claim check
 
@@ -387,6 +388,15 @@ version applies every edit. The claim-check file, `gbrain-evals-particle-1-w10b`
 | Disclosure of the other companies the file features | Answered | Garry Tan answered on 2026-11-02: the gbrain and OpenAI lines join the Particle line, and Anthropic, DeepSeek and Google get no line. The three lines are only in [Disclosures](#disclosures) at the end, and the X post carries none. The words come from [docs/disclosures.md](../disclosures.md). |
 
 ### Changelog
+
+#### 2026-11-02: The plain-English story's recheck edits
+
+A recheck of the plain-English summary, the infographic and the X post draft passed with five wording edits, and this
+version applies them. The title gives the 95% range of the gap. The summary calls the test exploratory. It says Opus 5.5
+gives general battery tips that end with one to use the power bank, and that particle-1 treats this request for advice
+as a lookup, not every one. The X post says particle-1 sometimes treats an advice request as a lookup. The infographic's
+fine print calls the test exploratory, and its HTML source now sits beside it. The publication status records the
+recheck. No number changed.
 
 #### 2026-11-02: A plain-English summary, disclosures at the end, a new X post and an infographic
 
