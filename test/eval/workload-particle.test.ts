@@ -317,7 +317,7 @@ describe('a workload-suite question read by particle-1', () => {
       const reply = await callModel(unresolved.env, 'particle:particle-1', 'Q?', 'beliefs/gbrain-combined/reader/q-288-dns', 16_000, r => seen.push(r));
       expect([reply.error?.slice(0, 9), seen.length, unresolved.statuses()]).toEqual(['HTTP 502:', 6, [502, 502, 502, 502, 502, 502]]);
     } finally { sleep.mockRestore(); }
-  });
+  }, 30_000);
 
   test('a cached particle answer is keyed on the effort it was read at', async () => {
     const b = await particleBench();

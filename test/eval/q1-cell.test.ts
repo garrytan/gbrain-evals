@@ -17,6 +17,7 @@ import { buildManifest, definitionProblems, estimateCell, loadManifest, manifest
 import { ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
 import { classifyV2, CLASSIFIER_VERSION_V2, RULES_SHA256_V2 } from '../../eval/runner/q1/hedge.ts';
 import { instrumentFor } from '../../eval/runner/memory-qa/instruments.ts';
+import { DEFAULT_MAX_ATTEMPTS } from '../../eval/runner/memory-qa/outcomes.ts';
 import type { Corpus, MemoryQuestion } from '../../eval/runner/memory-qa/corpus.ts';
 import { ChatClient, type ChatLike, type ChatOptions, type ChatResult } from '../../eval/runner/memory-qa/qa-v2.ts';
 import { answerProblems, judgmentProblems, rowProblems } from '../../eval/runner/memory-qa/records.ts';
@@ -751,6 +752,20 @@ describe('particle-1 readers through Q1\'s lease proxy (plan GST-605 Phase 2)', 
         expect(ndjson(join(out, 'cells', def.arms[0].cell_id, 'answers.ndjson')).map(a => [a.outcome, a.attempts.length])).toEqual(Array(2).fill(['reader_error', 1]));
       } finally { globalThis.fetch = realFetch; lp.stop(); }
     }
+  });
+
+  // Value: protects=a particle reading that failed before any request went out is asked again, not dropped as billed (issue #288's review); fails_when=the cell reads an error thrown before qa-v2's request loop (a missing key, a bad effort, an unreadable cache file) as one Particle may have billed, so the question becomes a final reader_error on its first try; why_new=compatMayHaveBilled reads every uncoded failure as billed, so the cell asks it only about errors that carry an attempt; seam=a reader that throws before any request; no_claim=which local errors a real run can hit
+  test('packed: a particle reading that fails before any request is sent is not final, so the cell asks it again up to the attempt limit (#288)', async () => {
+    const lp = leaseProxy(1);
+    let calls = 0;
+    const reader = { chat: async (model: string) => { calls++; throw new Error(`${model}: PARTICLE_API_KEY is not set`); } } as unknown as ChatClient;
+    try {
+      const def = cellDef('ext-graph-pipeline', 'shim', [component({ readers: [PARTICLE], reader_replicates: {} })], slice);
+      const out = join(tmp, 'particle-before-send');
+      await runCell(def, { out, providerProxy: lp.url, ...quiet }, { corpus, system: new FakeMemorySystem(), reader, judge: scriptedJudge() });
+      expect([calls, lp.seen.length]).toEqual([2 * DEFAULT_MAX_ATTEMPTS, 0]);
+      expect(tries(out, def).map(t => [t.outcome, t.attempts.length])).toEqual(Array(2 * DEFAULT_MAX_ATTEMPTS).fill(['reader_error', 0]));
+    } finally { lp.stop(); }
   });
 
   // Value: protects=a reading whose upstream request passed the proxy's deadline is billed once; fails_when=the proxy's timeout answer is retried by the client loop or the cell's retry pass; why_new=the proxy answers its own upstream timeout 504 and compatTimedOut reads it; seam=none; no_claim=a real 900 s wait

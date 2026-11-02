@@ -354,18 +354,20 @@ describe('particle-1 through the lease proxy (plan GST-605 Phase 2)', () => {
     } finally { proxy.stop(); }
   });
 
-  // Value: protects=a request that passed the proxy's upstream deadline is never resent by a client (issue #250), and neither is one that failed in a way Bun does not prove happened before sending (issue #288); fails_when=the proxy answers its own upstream timeout, or a failure with no code, with the retryable 502 a refused connection gets; why_new=compatTimedOut reads a 504 as a timeout; seam=none; no_claim=Particle's own 504
-  test('an upstream request that times out at the proxy is answered 504, which compatTimedOut reads as a timeout; a certificate the client rejected stays a 502, and a failure with no code is a 504 (#288)', async () => {
+  // Value: protects=a request that passed the proxy's upstream deadline is never resent by a client (issue #250), and neither is one that failed in a way Bun does not prove happened before sending (issue #288); fails_when=the proxy answers its own upstream timeout, or a failure with no code, with the retryable 502 a refused connection gets, or sends a failure other than a refusal upstream again; why_new=compatTimedOut reads a 504 as a timeout; seam=none; no_claim=Particle's own 504
+  test('an upstream request that times out at the proxy is answered 504, which compatTimedOut reads as a timeout; a certificate the client rejected or a host that did not resolve stays a 502, a failure with no code is a 504, and none is sent upstream again (#288)', async () => {
     const { compatTimedOut, classifyCompatError, CompatHttpError } = await import('../../eval/runner/providers/openai-compatible.ts');
-    const errors = { TimeoutError: new DOMException('The operation timed out.', 'TimeoutError'), CERT_HAS_EXPIRED: Object.assign(new TypeError('certificate has expired'), { code: 'CERT_HAS_EXPIRED' }), uncoded: new TypeError('fetch failed') };
-    for (const [name, status] of [['TimeoutError', 504], ['CERT_HAS_EXPIRED', 502], ['uncoded', 504]] as const) {
+    const errors = { TimeoutError: new DOMException('The operation timed out.', 'TimeoutError'), CERT_HAS_EXPIRED: Object.assign(new TypeError('certificate has expired'), { code: 'CERT_HAS_EXPIRED' }),
+      ENOTFOUND: Object.assign(new TypeError('getaddrinfo ENOTFOUND api.particle.ai'), { code: 'ENOTFOUND' }), uncoded: new TypeError('fetch failed') };
+    for (const [name, status] of [['TimeoutError', 504], ['CERT_HAS_EXPIRED', 502], ['ENOTFOUND', 502], ['uncoded', 504]] as const) {
       const lease = BudgetRun.openLease({ runId: `particle-upstream-${name}`, leaseUsd: 1, ledgerPath: ledgerFile() });
-      const failing = (async () => { throw errors[name]; }) as unknown as typeof fetch;
+      let calls = 0;
+      const failing = (async () => { calls++; throw errors[name]; }) as unknown as typeof fetch;
       const proxy = new MeteringProxy({ fetchImpl: failing, policy: { lease, usageLog: join(tmp, `particle-upstream-${name}.ndjson`), ...harness } });
       proxy.start();
       try {
         const res = await fetch(`http://127.0.0.1:${proxy.port}/harness/particle/v1/chat/completions`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(particleChat()) });
-        expect([name, res.status]).toEqual([name, status]);
+        expect([name, res.status, calls]).toEqual([name, status, 1]);
         expect(compatTimedOut(new CompatHttpError(classifyCompatError('particle', res.status, await res.text())))).toBe(status === 504);
       } finally { proxy.stop(); }
     }

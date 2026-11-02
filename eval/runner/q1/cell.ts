@@ -993,7 +993,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
             stopped = `budget: ${msg.slice(0, 200)}`;
             return pack;
           }
-          appendAnswer(failed('reader_error'), msg, null, attempts !== undefined && compatMayHaveBilled(res.error));
+          appendAnswer(failed('reader_error'), msg, null, attempts !== undefined && attempts.length > 0 && compatMayHaveBilled(res.error));
           continue;
         }
         const c = res.value!;
