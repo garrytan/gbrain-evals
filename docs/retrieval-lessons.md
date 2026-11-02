@@ -12,7 +12,7 @@ questions (opaque session ids, gbrain `109b992`). The interesting engineering
 question is how it gets there, and which parts help on other kinds of material.
 
 This page states what the experiments show about gbrain as this repository pins
-it (master `a131fb20e`, v0.60.549.0); each number names the gbrain commit it was
+it (master `311a83bbe`, v0.60.553.0); each number names the gbrain commit it was
 measured at. Everything above [Changelog](#changelog) is current.
 [Conversation results](benchmarks/2026-10-04-longmemeval-opaque-followups.md).
 
@@ -254,6 +254,12 @@ application resemble the ones a measured configuration solves.
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
+
+### 2026-11-02: The opening names `311a83bbe`
+
+The opening names gbrain master `311a83bbe` (v0.60.553.0) as the pin (was `a131fb20e`, v0.60.549.0). The search modes
+are unchanged across the range. gbrain#8444 reads empty optional tool arguments that a parameter's schema rules out as
+absent, which changes only calls that refused before, so no lesson changes.
 
 ### 2026-11-02: The opening names `a131fb20e`
 
