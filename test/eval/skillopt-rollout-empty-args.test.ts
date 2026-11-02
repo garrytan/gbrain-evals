@@ -103,26 +103,33 @@ describe("GPT-6.1 Sol's empty optional arguments in the pinned SkillOpt registri
 describe('what gbrain#8429 leaves refused: the frontier probe\'s recorded Sol calls, replayed', () => {
   const INPUTS = join(import.meta.dir, '../../docs/benchmarks/2026-11-01-skillopt-method/probe/frontier/f0b-sol/one-shot');
   const SLUG: Record<string, string> = { get_page: PAGE, get_backlinks: PAGE, traverse_graph: 'companies/ranger-22' };
-  const recorded = (['query', 'briefing', 'fact-check'] as const).flatMap(skill =>
-    readFileSync(join(INPUTS, `sol-${skill}-input.txt`), 'utf8').split('\n').flatMap(line => {
-      const m = /^- (get_page|traverse_graph|get_backlinks) (\{.*\}) returned /.exec(line);
-      if (!m) return [];
-      return [{ tool: m[1]!, args: JSON.parse(m[2]!) as Record<string, unknown> }];
-    }));
+  const lines = (['query', 'briefing', 'fact-check'] as const).flatMap(skill =>
+    readFileSync(join(INPUTS, `sol-${skill}-input.txt`), 'utf8').split('\n'));
+  const recorded = lines.flatMap(line => {
+    const m = /^- (get_page|traverse_graph|get_backlinks) ((?:\{|").*[}"]) returned /.exec(line);
+    if (!m) return [];
+    const input: unknown = JSON.parse(m[2]!);
+    let args: Record<string, unknown> | null = null;
+    try { args = (typeof input === 'string' ? JSON.parse(input) : input) as Record<string, unknown>; } catch { /* Sol sent arguments that are not JSON */ }
+    return [{ tool: m[1]!, args }];
+  });
 
-  test('every recorded get_backlinks call now reads; every get_page and traverse_graph call still refuses on an argument rule #8429 does not touch', async () => {
+  test('every recorded get_backlinks call now reads; every get_page and traverse_graph call still fails, all but one on an argument rule #8429 does not touch', async () => {
     expect(loadCorpora().pages.has(SLUG.traverse_graph!)).toBe(true);
+    for (const tool of Object.keys(SLUG)) {
+      expect(recorded.filter(c => c.tool === tool).length).toBe(lines.filter(l => l.startsWith(`- ${tool} `)).length);
+    }
     const outcomes = await withHermeticEnv('n15-sol-recorded-calls', () => withRegistry('read-only', async call => {
       const tally: Record<string, Record<string, number>> = {};
       for (const c of recorded) {
-        const r = await call(c.tool, { ...c.args, slug: SLUG[c.tool] });
+        const r = c.args ? await call(c.tool, { ...c.args, slug: SLUG[c.tool] }) : { error: 'arguments are not JSON' };
         const rule = 'ok' in r ? 'ok' : (/^(?:get_page|traverse_graph): ([a-z_]+ (?:applies to grep|does not combine with|returns part of the read view|cannot be combined with))/.exec(r.error)?.[1] ?? r.error);
         (tally[c.tool] ??= {})[rule] = (tally[c.tool]![rule] ?? 0) + 1;
       }
       return tally;
     }, ['get_page', 'traverse_graph', 'get_backlinks']));
     expect(outcomes).toEqual({
-      get_page: { 'context applies to grep': 436, 'known_as_of does not combine with': 169, 'grep returns part of the read view': 1 },
+      get_page: { 'context applies to grep': 436, 'known_as_of does not combine with': 169, 'grep returns part of the read view': 1, 'arguments are not JSON': 1 },
       traverse_graph: { 'hops cannot be combined with': 38 },
       get_backlinks: { ok: 6 },
     });
