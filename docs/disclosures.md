@@ -2,10 +2,10 @@
 
 This page lists every relationship between Garry Tan, who directs gbrain-evals, and a company or project whose model or
 product these evals test, compare or feature. A finding file or long-form post that tests, compares or features the
-subject carries the line only in a closing Disclosures section at the end. Its front matter may name that section but
-never repeats the lines, because GitHub shows front matter as a table above the body. An X post and its images carry no
-disclosure line. A report or summary in this repository that gives the subject's results carries the line up front,
-directly under its title or beside the result. Use the words below exactly.
+subject carries the line only in a closing Disclosures section at the end, never in front matter, which GitHub shows as
+a table above the body. An X post and its images carry no disclosure line. A report or summary in this repository that
+gives the subject's results carries the line up front, directly under its title or beside the result. Use the words
+below exactly.
 
 ## Garry Tan's words
 
@@ -50,8 +50,7 @@ first.
 ## In this repository
 
 - The [particle-1 W10b finding](findings/2026-11-01-particle-1-longmemeval-w10b.md) carries the Particle, gbrain and
-  OpenAI lines only in its closing Disclosures section, and its front matter names that section. Its X post draft and
-  infographic carry none.
+  OpenAI lines only in its closing Disclosures section. Its X post draft and infographic carry none.
 - The [particle-1 replay report](benchmarks/2026-11-01-longmemeval-particle-replay/REPORT.md), README's full-context
   paragraph and the [corrections page](corrections.md)'s GPT-6.1 Sol entry carry the Particle, gbrain and OpenAI
   lines.
@@ -65,10 +64,10 @@ first.
 ### 2026-11-02: Disclosures close a finding, and X posts carry none
 
 Garry Tan asked that the disclosures go at the end of the post and not in the X post. A finding file or long-form post
-now carries its lines in a closing Disclosures section, not under its title, and an X post and its images carry none. A
-finding's front matter names that section instead of repeating the lines, because GitHub shows front matter as a table
-above the body. His words join the list. The W10b finding moves its three lines to the end, and its X post draft drops
-them. Reports and summaries keep their lines up front.
+now carries its lines in a closing Disclosures section, not under its title, and an X post and its images carry none.
+Front matter never carries them, because GitHub shows front matter as a table above the body. His words join the list.
+The W10b finding moves its three lines to the end, drops its front matter, and its X post draft drops the lines. Reports
+and summaries keep their lines up front.
 
 ### 2026-11-02: The standing list
 
