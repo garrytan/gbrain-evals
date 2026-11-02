@@ -80,6 +80,7 @@ import { gbrainSpecFrom, importGbrain, overlaySummary, productIdentityFor, resol
 import { gbrainPin } from './gbrain-version.ts';
 import { DECIDE_OFF, withHermeticEnv } from './hermetic-env.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
+import { loadFactUnquote, storedFactText, type Unquote } from './quoted-reads.ts';
 import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, noModelSpend, receiptPath, sourceTreeIdentity, writeReceipt, type Receipt } from './receipt.ts';
 import { budgetOptionsFrom, receiptCost, startPaidRun, type RunSummary } from './budget-ledger.ts';
 import { paidRequested, requirePaidArm } from './paid-arm.ts';
@@ -122,10 +123,15 @@ export interface ReadRow {
   valid_from: string | null;
 }
 
-export function readRows(facts: unknown, now = Date.now()): ReadRow[] {
+/**
+ * Since gbrain v0.60.536.0 a remote recall returns a fact below the owner's tier inside a quote fence; `unquote` (the
+ * build's own, quoted-reads.ts) gives back the stored fact text the ledger and the labels are keyed on. The tier label
+ * stays in `trust_tier`.
+ */
+export function readRows(facts: unknown, now = Date.now(), unquote?: Unquote): ReadRow[] {
   if (!Array.isArray(facts)) return [];
   return facts.map((f: Record<string, unknown>) => {
-    const text = String(f.fact ?? '');
+    const text = storedFactText(String(f.fact ?? ''), f.quoted, unquote);
     const sv = parseSlotValue(text);
     const validUntil = f.valid_until ? Date.parse(String(f.valid_until)) : null;
     return {
@@ -576,11 +582,12 @@ export async function observe(sut: TrustSut, world: Pick<GeneratedCat38, 'probes
   const pending = sut.capabilities.guarded_supersession
     ? (await sut.sql<{ related_id: number }>(`SELECT related_id FROM trust_proposals WHERE status='pending' AND related_table='facts' AND source_id=$1`, [sut.sourceId])).map(r => String(r.related_id))
     : [];
+  const unquote = await loadFactUnquote(sut.gut);
   const out: ProbeObs[] = [];
   for (const p of world.probes) {
     const r = await sut.tryOp('remote', 'recall', { entity: p.entity, limit: 50 });
     out.push({
-      probe_id: p.id, sequence: p.sequence, rows: r.ok ? readRows(r.value?.facts) : [], pending_related: pending,
+      probe_id: p.id, sequence: p.sequence, rows: r.ok ? readRows(r.value?.facts, Date.now(), unquote) : [], pending_related: pending,
       writes: outcomes[p.sequence] ?? [], ...(r.ok ? {} : { error: `${r.code}: ${r.message.slice(0, 200)}` }),
     });
   }

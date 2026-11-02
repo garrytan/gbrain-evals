@@ -182,6 +182,31 @@ describe('runCat31 error accounting', () => {
     expect(r.receipt.gbrain_version).toMatch(/^\d+\.\d+\.\d+/);
   }, RUN_TIMEOUT);
 
+  test('every arm names its optimizer mode: the loop arms ask for reflect, C for one-shot (gbrain v0.60.542.0 requires it)', async () => {
+    const calls: Array<{ optimizerMode: unknown; reflectMode: unknown; disableValidationGate: unknown }> = [];
+    const r = await runCat31({
+      bpre: false,
+      trials: 1,
+      reportsDir: tmpReports(),
+      quiet: true,
+      engineFactory: async () => fakeEngine(),
+      runSkillOptFn: (async (opts: any) => {
+        calls.push({ optimizerMode: opts.optimizerMode, reflectMode: opts.reflectMode, disableValidationGate: opts.disableValidationGate });
+        return goodRunSkillOpt(opts);
+      }) as any,
+      scoreFn: scoreByMarker,
+    });
+    expect(calls).toEqual([
+      { optimizerMode: 'reflect', reflectMode: 'both', disableValidationGate: undefined },
+      { optimizerMode: 'reflect', reflectMode: 'failure-only', disableValidationGate: undefined },
+      { optimizerMode: 'one-shot-rewrite', reflectMode: undefined, disableValidationGate: undefined },
+      { optimizerMode: 'reflect', reflectMode: undefined, disableValidationGate: true },
+    ]);
+    expect((r.receipt.resolved_config as any).optimizer_modes).toEqual({
+      A_full: 'reflect', B_single_reflect: 'reflect', C_one_shot: 'one-shot-rewrite', D_no_gate: 'reflect',
+    });
+  }, RUN_TIMEOUT);
+
   test('missing key → skipped receipt, exit 1 unless allowSkip', async () => {
     const saved = process.env.ANTHROPIC_API_KEY;
     delete process.env.ANTHROPIC_API_KEY;

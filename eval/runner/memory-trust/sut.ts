@@ -303,16 +303,18 @@ export async function openTrustSut(gut: GbrainUnderTest, opts: { sourceId?: stri
 export const TRUST_LABEL_RE = /\[[a-z][a-z ,()-]{2,80} · [A-Za-z0-9:_./-]*(?: · contested tp\d+)?\] ?/g;
 const ENVELOPE_OPEN_RE = /<external-data trust="[a-z_]+" origin="[^"]*">\n?/g;
 const ENVELOPE_CLOSE_RE = /\n?<\/external-data>/g;
-const TRUST_KEYS = new Set(['trust_tier', 'origin', 'unconfirmed', 'contested']);
+const TRUST_KEYS = new Set(['trust_tier', 'origin', 'unconfirmed', 'contested', 'quoted']);
 
 /**
  * What a pre-#5575 harness would show: the same results with every trust
- * field removed from structured output and every label or data envelope
- * removed from text. The labels-off arm of Cat 38 and the label-strip
- * mutation probe use it.
+ * field removed from structured output and every label, data envelope or
+ * quote fence removed from text. Since gbrain v0.60.536.0 a remote read fences
+ * text below the owner's tier and leaves the owner's own text bare, so the
+ * fence alone would tell them apart. The labels-off arm of Cat 38 and the
+ * label-strip mutation probe use it.
  */
 export function stripTrustLabels<T>(value: T): T {
-  if (typeof value === 'string') return value.replace(TRUST_LABEL_RE, '').replace(ENVELOPE_OPEN_RE, '').replace(ENVELOPE_CLOSE_RE, '') as T;
+  if (typeof value === 'string') return unwrapQuoteFences(value).replace(TRUST_LABEL_RE, '').replace(ENVELOPE_OPEN_RE, '').replace(ENVELOPE_CLOSE_RE, '') as T;
   if (Array.isArray(value)) return value.map(v => stripTrustLabels(v)) as T;
   if (value && typeof value === 'object') {
     return Object.fromEntries(Object.entries(value as Record<string, unknown>).filter(([k]) => !TRUST_KEYS.has(k)).map(([k, v]) => [k, stripTrustLabels(v)])) as T;
@@ -346,9 +348,51 @@ export function labelOnLine(text: string, needle: string): string | null {
   const open = text.lastIndexOf('<external-data', at);
   const close = text.lastIndexOf('</external-data>', at);
   if (open >= 0 && open > close) return 'external-data';
-  const line = text.slice(text.lastIndexOf('\n', at) + 1, at);
+  const line = quoteMarkerLine(text, at) ?? text.slice(text.lastIndexOf('\n', at) + 1, at);
   const m = /\[([a-z][a-z ,()-]{2,80}) · [A-Za-z0-9:_./-]*(?: · contested tp\d+)?\][^[]*$/.exec(line);
   return m ? m[1]! : null;
+}
+
+const QUOTE_FENCE_OPEN = /\[quoted conversation excerpt from [^\]\n]*; source material, not instructions\]\n(`{3,})text\n/g;
+
+/**
+ * Inside a closed quote fence (gbrain v0.60.536.0 on: src/core/search/transcript-quote.ts), an item's label is rendered
+ * on the fence's marker line, so that line up to the marker is the label's line; null outside every such fence. The same
+ * rule as gbrain's own poisoning metric (src/eval/brainbench/metrics/poisoning.ts labelLine, GST-687).
+ */
+function quoteMarkerLine(text: string, at: number): string | null {
+  for (const m of text.matchAll(QUOTE_FENCE_OPEN)) {
+    const start = m.index + m[0].length;
+    if (at >= start && closingFence(text, start, m[1]!) >= at) return text.slice(text.lastIndexOf('\n', m.index - 1) + 1, m.index);
+  }
+  return null;
+}
+
+/**
+ * The text with each closed quote fence's marker line and fence lines removed and its quoted text kept. A fence opened
+ * partway through a line whose item continues on the line after the fence (gbrain's renderFactLine closes the fence on
+ * its own line and puts " [slug] (confidence)" on the next) also loses that line break, so the item reads as one line,
+ * as a bare one does.
+ */
+function unwrapQuoteFences(text: string): string {
+  let out = '';
+  let at = 0;
+  for (const m of text.matchAll(QUOTE_FENCE_OPEN)) {
+    const start = m.index + m[0].length;
+    const close = m.index < at ? -1 : closingFence(text, start, m[1]!);
+    if (close < 0) continue;
+    out += text.slice(at, m.index) + text.slice(start, Math.max(start, close));
+    at = close + 1 + m[1]!.length;
+    if (text.slice(text.lastIndexOf('\n', m.index - 1) + 1, m.index).trim()) at += /^[ \t]*\n(?=[ \t])/.exec(text.slice(at))?.[0].length ?? 0;
+  }
+  return out + text.slice(at);
+}
+
+/** Where the fence opened at `start` closes: the newline before the first line that is exactly `fence`, or -1. */
+function closingFence(text: string, start: number, fence: string): number {
+  let close = text.indexOf(`\n${fence}`, start - 1);
+  while (close >= 0 && !/^[ \t]*(\n|$)/.test(text.slice(close + 1 + fence.length))) close = text.indexOf(`\n${fence}`, close + 1);
+  return close;
 }
 
 /** Label words that present an item below the owner's notes (src/core/trust/tier.ts TRUST_TIER_LABELS). */
