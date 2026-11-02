@@ -32,7 +32,7 @@
 import { chat } from 'gbrain/ai/gateway';
 import type { PGLiteEngine } from 'gbrain/pglite-engine';
 import type { MethodTask } from '../../generators/skillopt-method/common.ts';
-import { callCostUsd, scoreArm, type ArmScore, type MeterTotals } from './rollouts.ts';
+import { callCostUsd, scoreArm, withoutSdkRetries, type ArmScore, type MeterTotals } from './rollouts.ts';
 import { citationPattern, citedSlugs, renderFailedCheck, valuePattern, type GoldValue, type MethodCheck, type RuleCheck } from './score.ts';
 
 export const PROPOSER_MODEL = 'anthropic:claude-opus-5-5';
@@ -172,9 +172,13 @@ export interface ProposedRewrite { text: string | null; cost_usd: number | null;
 
 const unfence = (s: string) => /^`{3}[a-zA-Z]*\n([\s\S]*?)\n`{3}\s*$/.exec(s.trim())?.[1] ?? s;
 
-/** Step 3: one proposer call for one full SKILL.md. A refusal, an empty or unchanged reply or a reply cut at the cap yields no text. */
+/**
+ * Step 3: one proposer call for one full SKILL.md, sent once (no AI SDK
+ * retries, `withoutSdkRetries`). A refusal, an empty or unchanged reply or a
+ * reply cut at the cap yields no text.
+ */
 export async function proposeRewrite(input: string, seedText: string): Promise<ProposedRewrite> {
-  const r = await chat({ model: PROPOSER_MODEL, system: ONE_SHOT_SYSTEM, messages: [{ role: 'user', content: input }], maxTokens: ONE_SHOT_MAX_TOKENS, allowFallback: false });
+  const r = await withoutSdkRetries(() => chat({ model: PROPOSER_MODEL, system: ONE_SHOT_SYSTEM, messages: [{ role: 'user', content: input }], maxTokens: ONE_SHOT_MAX_TOKENS, allowFallback: false }));
   const cost_usd = callCostUsd({ model: r.model || PROPOSER_MODEL, ...r.usage });
   const text = unfence(r.text).trim();
   if (r.stopReason !== 'end') return { text: null, cost_usd, stop_reason: r.stopReason, error: `the proposer stopped with ${r.stopReason}` };
