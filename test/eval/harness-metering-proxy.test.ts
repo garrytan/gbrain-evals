@@ -596,6 +596,38 @@ describe('particle through the metering proxy', () => {
     } finally { AbortSignal.timeout = timeout; for (const s of sockets) s.destroy(); }
     expect(seen).toEqual(['hang', 'hang', 'reset', 'reset', 'body', 'body']);
   }, 20_000);
+
+  // Value: protects=the workload route's proxy answers a particle request that may have gone out before it failed with a 504, whatever Bun names the failure (issue #288); fails_when=it answers a malformed status line, a bad Content-Length, a bad chunk or a body that fails to decompress with the 502 a client sends again, or answers a failure proven to happen before sending (a refused connection, an unresolvable host) with a 504; why_new=compatMayHaveBilled reads every transport failure that is not proven to happen before sending as lost; seam=loopback sockets that read the request and answer badly, a closed port and an .invalid host; no_claim=what Particle's edge sends when it fails
+  test('a particle request whose upstream answers a malformed status line, a bad Content-Length, a bad chunk or a body that fails to decompress is answered 504 and sent upstream once; a refused connection or an unresolvable host, and another provider, keep the 502 (#288)', async () => {
+    const answers: Record<string, ((s: Socket) => void) | null> = {
+      'status line': s => s.end('not http at all\r\n\r\n'),
+      'content-length': s => s.end('HTTP/1.1 200 OK\r\ncontent-length: abc\r\n\r\n{}'),
+      chunk: s => s.end('HTTP/1.1 200 OK\r\ncontent-type: application/json\r\ntransfer-encoding: chunked\r\n\r\nzz\r\nhello\r\n0\r\n\r\n'),
+      gzip: s => s.end('HTTP/1.1 200 OK\r\ncontent-type: application/json\r\ncontent-encoding: gzip\r\ncontent-length: 10\r\n\r\nnotgzip!!!'),
+      refused: null,
+      dns: null,
+    };
+    for (const [fault, answer] of Object.entries(answers)) {
+      let hits = 0;
+      const upstream = createServer(s => { s.on('error', () => {}); s.once('data', () => { hits++; answer?.(s); }); });
+      await new Promise<void>(r => upstream.listen(0, '127.0.0.1', r));
+      const base = fault === 'dns' ? 'https://particle-288.invalid' : `http://127.0.0.1:${(upstream.address() as AddressInfo).port}`;
+      if (!answer) await new Promise<void>(r => upstream.close(() => r()));
+      const dir = mkdtempSync(join(tmpdir(), 'mp-particle-288-')); dirs.push(dir);
+      const ledgerPath = join(dir, 'ledger.sqlite');
+      initLedger({ ledgerPath });
+      const run = BudgetRun.open({ runner: 'mp-particle-288-test', budgetUsd: 1, ledgerPath });
+      const proxy = await startMeteringProxy({ run, cellId: `cell-288-${fault.replace(/ /g, '-')}`, requestLogPath: join(dir, 'log.jsonl'), bodiesDir: join(dir, 'bodies'), labels: ['reader'], upstreams: { particle: base, openai: base }, realKeys: { PARTICLE_API_KEY: 'stub-not-a-real-key', OPENAI_API_KEY: 'stub-not-a-real-key' } });
+      try {
+        const env = proxy.envFor('reader');
+        const particle = await post(`${env.PARTICLE_BASE_URL}/chat/completions`, { authorization: `Bearer ${env.PARTICLE_API_KEY}` }, compatRequest('particle:particle-1', ASK, {}, env).body);
+        const lost = answer !== null;
+        expect([fault, particle.status, ((await particle.json()) as any).error.type, hits]).toEqual([fault, lost ? 504 : 502, lost ? 'mpw_proxy_upstream_lost' : 'mpw_proxy_upstream_unreachable', lost ? 1 : 0]);
+        const openai = await post(`${env.OPENAI_BASE_URL}/chat/completions`, { authorization: `Bearer ${env.OPENAI_API_KEY}` }, { model: 'gpt-6.1-sol', max_completion_tokens: 20, messages: ASK });
+        expect([fault, openai.status]).toEqual([fault, 502]);
+      } finally { await proxy.close(); if (answer) upstream.close(); }
+    }
+  }, 20_000);
 });
 
 // ─── Zero balance blocks dispatch from each process ──────────────────

@@ -277,6 +277,48 @@ describe('a workload-suite question read by particle-1', () => {
     } finally { sleep.mockRestore(); }
   });
 
+  // Value: protects=callCompat sends a particle request that may have gone out before it failed only once, straight to Particle or behind the workload route's proxy, whatever Bun names the failure (issue #288); fails_when=callCompat reads a malformed status line, a bad Content-Length, a bad chunk or a body that fails to decompress as a failure that never reached Particle, or the proxy answers it with the 502 callCompat sends again; why_new=compatMayHaveBilled reads every transport failure not proven to happen before sending as billed; seam=loopback sockets that read the request and answer badly, an .invalid upstream host and Bun.sleep run at once; no_claim=what Particle's edge sends when it fails
+  test('straight to Particle or behind the harness proxy, a particle answer with a malformed status line, a bad Content-Length, a bad chunk or a body that fails to decompress is sent once; an upstream host that does not resolve is sent again (#288)', async () => {
+    const answers: Record<string, (s: Socket) => void> = {
+      'status line': s => s.end('not http at all\r\n\r\n'),
+      'content-length': s => s.end('HTTP/1.1 200 OK\r\ncontent-length: abc\r\n\r\n{}'),
+      chunk: s => s.end('HTTP/1.1 200 OK\r\ncontent-type: application/json\r\ntransfer-encoding: chunked\r\n\r\nzz\r\nhello\r\n0\r\n\r\n'),
+      gzip: s => s.end('HTTP/1.1 200 OK\r\ncontent-type: application/json\r\ncontent-encoding: gzip\r\ncontent-length: 10\r\n\r\nnotgzip!!!'),
+    };
+    const lostProxy = async (upstream: string, name: string) => {
+      const dir = mkdtempSync(join(tmpdir(), 'wl-particle-288-')); dirs.push(dir);
+      const ledgerPath = join(dir, 'ledger.sqlite');
+      initLedger({ ledgerPath, programCapUsd: 10, reason: 'workload particle test' });
+      const run = BudgetRun.open({ runner: 'workload-particle-288-test', budgetUsd: 1, ledgerPath });
+      const log = join(dir, 'requests.jsonl');
+      const proxy = await startMeteringProxy({ run, cellId: `workload-particle-288-${name.replace(/ /g, '-')}`, requestLogPath: log, bodiesDir: join(dir, 'bodies'), labels: ['reader'], upstreams: { particle: upstream }, realKeys: { PARTICLE_API_KEY: 'stub-not-a-real-key' } });
+      proxies.push(proxy);
+      return { env: proxy.envFor('reader'), statuses: () => readRequestLog(log, join(dir, 'bodies')).map(l => l.status) };
+    };
+    const sleep = spyOn(Bun, 'sleep').mockImplementation(async () => {});
+    try {
+      for (const [name, answer] of Object.entries(answers)) {
+        let hits = 0;
+        const upstream = createServer(s => { s.on('error', () => {}); s.once('data', () => { hits++; answer(s); }); });
+        await new Promise<void>(r => upstream.listen(0, '127.0.0.1', r));
+        const origin = `http://127.0.0.1:${(upstream.address() as AddressInfo).port}`;
+        try {
+          const direct: UsageReceipt[] = [];
+          const straight = await callModel({ PARTICLE_BASE_URL: `${origin}/v1`, PARTICLE_API_KEY: 'pk-placeholder-particle' }, 'particle:particle-1', 'Q?', `beliefs/gbrain-combined/reader/q-288-${name}`, 16_000, r => direct.push(r));
+          expect([name, hits, direct.length, straight.error?.startsWith('network: ')]).toEqual([name, 1, 1, true]);
+          const behind = await lostProxy(origin, name);
+          const proxied: UsageReceipt[] = [];
+          const reply = await callModel(behind.env, 'particle:particle-1', 'Q?', `beliefs/gbrain-combined/reader/q-288-${name}-proxy`, 16_000, r => proxied.push(r));
+          expect([name, hits, proxied.length, reply.error?.slice(0, 9), behind.statuses()]).toEqual([name, 2, 1, 'HTTP 504:', [504]]);
+        } finally { upstream.close(); }
+      }
+      const unresolved = await lostProxy('https://particle-288.invalid', 'dns');
+      const seen: UsageReceipt[] = [];
+      const reply = await callModel(unresolved.env, 'particle:particle-1', 'Q?', 'beliefs/gbrain-combined/reader/q-288-dns', 16_000, r => seen.push(r));
+      expect([reply.error?.slice(0, 9), seen.length, unresolved.statuses()]).toEqual(['HTTP 502:', 6, [502, 502, 502, 502, 502, 502]]);
+    } finally { sleep.mockRestore(); }
+  }, 30_000);
+
   test('a cached particle answer is keyed on the effort it was read at', async () => {
     const b = await particleBench();
     const ask = () => b.model('particle:particle-1', 'Answer: cached?', { tag: 'beliefs/gbrain-combined/reader/q-cache', maxTokens: 16_000 });

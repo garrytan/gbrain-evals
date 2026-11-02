@@ -478,6 +478,18 @@ describe('true full context', () => {
       expect([compatMayHaveBilled(reset), compatMayHaveBilled(refused)]).toEqual([true, false]);
     });
 
+    // Value: protects=a full-context particle reading that failed after it may have gone out is billed once and final in the Q1 cell, whatever Bun names the failure (issue #288); fails_when=readCompat reads a malformed response, a bad chunk or a body that fails to decompress as a failure that never reached Particle and sends it again, or the answer lacks timed_out so the cell asks again; why_new=compatMayHaveBilled reads every transport failure not proven to happen before sending as billed; seam=fetch stubs that throw the errors Bun 1.4.4 gives; no_claim=what Particle's edge sends when it fails
+    test('a reading whose response is malformed, has a bad chunk or fails to decompress is a final reader_error after one request; an unresolvable host or a rejected certificate is not read as billed (#288)', async () => {
+      const bun = (code: string, message: string) => Object.assign(new TypeError(message), { code });
+      for (const e of [bun('Malformed_HTTP_Response', 'Malformed_HTTP_Response fetching "https://api.particle.ai/v1/chat/completions".'), bun('InvalidHTTPResponse', 'InvalidHTTPResponse fetching "https://api.particle.ai/v1/chat/completions".'), bun('ZlibError', 'ZlibError fetching "https://api.particle.ai/v1/chat/completions".'), new TypeError('fetch failed')]) {
+        let calls = 0;
+        const fetchImpl = (async () => { calls++; throw e; }) as unknown as typeof fetch;
+        const a = await answerFullContext({ reader: 'particle:particle-1', prompt, conversation: conv.id, fetchImpl });
+        expect([(e as { code?: string }).code ?? e.message, a.outcome, a.timed_out, calls, a.attempts!.length]).toEqual([(e as { code?: string }).code ?? e.message, 'reader_error', true, 1, 1]);
+      }
+      expect([compatMayHaveBilled(bun('ENOTFOUND', 'getaddrinfo ENOTFOUND api.particle.ai')), compatMayHaveBilled(bun('CERT_HAS_EXPIRED', 'certificate has expired'))]).toEqual([false, false]);
+    });
+
     // Value: protects=a gateway 5xx stays retryable; fails_when=compatConnectionLost reads a received response's body text as a lost connection, so the question ends final and unanswered; why_new=compatConnectionLost matches socket-close messages, and a CompatHttpError's message carries the body; seam=none; no_claim=which gateways put socket errors in a body
     test('a received 5xx whose body names a socket error is an answer, not a lost connection', () => {
       const answered = new CompatHttpError(classifyCompatError('particle', 502, '{"error":{"message":"upstream: socket hang up"}}'));
@@ -610,6 +622,27 @@ describe('file agent with particle-1 (plan GST-605 Phase 3)', () => {
       await ingest(sys);
       const a = await sys.answer(ns, { text: 'What is my dog called?', query_time: null }, { reader: 'particle:particle-1', replicate: 0 });
       expect([name, a.outcome, a.stop_reason, a.timed_out, a.turns, n]).toEqual([name, 'reader_error', 'provider_error', name === 'refused' ? undefined : true, 2, 2]);
+      await sys.close();
+    }
+  });
+
+  // Value: protects=a file-agent question whose particle turn failed after it may have gone out is never run again, whatever Bun names the failure (issue #288); fails_when=the loop's caller reads a malformed response, a bad chunk or a body that fails to decompress as a failure that never reached Particle, so the answer lacks timed_out and the cell asks the question again; why_new=compatMayHaveBilled reads every transport failure not proven to happen before sending as billed; seam=fetch stubs that throw the errors Bun 1.4.4 gives; no_claim=what Particle's edge sends when it fails
+  test('a particle turn whose response is malformed, has a bad chunk or fails to decompress ends the answer as a timed-out reader_error; an unresolvable host or a rejected certificate does not (#288)', async () => {
+    const bun = (code: string, message: string) => Object.assign(new TypeError(message), { code });
+    const faults: Array<[string, Error, true | undefined]> = [
+      ['Malformed_HTTP_Response', bun('Malformed_HTTP_Response', 'Malformed_HTTP_Response fetching "https://api.particle.ai/v1/chat/completions".'), true],
+      ['InvalidHTTPResponse', bun('InvalidHTTPResponse', 'InvalidHTTPResponse fetching "https://api.particle.ai/v1/chat/completions".'), true],
+      ['ZlibError', bun('ZlibError', 'ZlibError fetching "https://api.particle.ai/v1/chat/completions".'), true],
+      ['ENOTFOUND', bun('ENOTFOUND', 'getaddrinfo ENOTFOUND api.particle.ai'), undefined],
+      ['CERT_HAS_EXPIRED', bun('CERT_HAS_EXPIRED', 'certificate has expired'), undefined],
+    ];
+    for (const [name, fault, timedOut] of faults) {
+      let n = 0;
+      const fetchImpl = (async () => { if (++n === 1) return new Response(JSON.stringify(chat(call('list_dir', { path: '.' }), 'tool_calls'))); throw fault; }) as unknown as typeof fetch;
+      const sys = new FileAgentSystem({ workDir: join(tmp, `particle-288-${name}`), fetchImpl });
+      await ingest(sys);
+      const a = await sys.answer(ns, { text: 'What is my dog called?', query_time: null }, { reader: 'particle:particle-1', replicate: 0 });
+      expect([name, a.outcome, a.stop_reason, a.timed_out, a.turns, n]).toEqual([name, 'reader_error', 'provider_error', timedOut, 2, 2]);
       await sys.close();
     }
   });
