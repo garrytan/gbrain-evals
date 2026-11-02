@@ -38,6 +38,7 @@ import { EmbeddingCache, makeCachingTransport } from './longmemeval-cache.ts';
 import { recallAllAtK, uniqueInOrder } from './metrics.ts';
 import { loadCorpus, occurrenceId, renderSessionPage, type MemoryQuestion } from './memory-qa/corpus.ts';
 import { ChatClient, DEFAULT_JUDGE, judgePromptsFor, judgeYes, repeatsTrap } from './memory-qa/qa.ts';
+import { DEFAULT_THINK_MODEL } from './memory-qa/run-systems.ts';
 import { devConversations, loadSplit } from './decisions/splits.ts';
 import { appendAccessLog } from './sealed-confirmation-lib.ts';
 
@@ -51,7 +52,7 @@ const judgeRuns = Number(one('--judge-runs') ?? 10);
 const judgeTemperature = Number(one('--judge-temperature') ?? 0.7);
 const trainLimit = num('--train-limit', null);
 const scoreLimit = num('--score-limit', null);
-const thinkModel = one('--think-model') ?? 'anthropic:claude-sonnet-5-5';
+const thinkModel = one('--think-model') ?? DEFAULT_THINK_MODEL;
 const judgeModel = one('--judge') ?? DEFAULT_JUDGE.locomo!;
 const arms = (one('--arms') ?? 'off,frozen,sparse,online').split(',');
 const TOP_K = 5;

@@ -317,7 +317,7 @@ export function parseRunArgs(argv: string[]): RunArgs {
       judge: one('--judge') ?? DEFAULT_JUDGE[benchmark] ?? 'openai:gpt-4o-2024-08-06',
       runs: Number(one('--qa-runs') ?? 1), sessions: Number(one('--qa-sessions') ?? 5),
       budgetTokens: one('--qa-budget-tokens') ? Number(one('--qa-budget-tokens')) : null,
-      thinkModel: one('--think-model') ?? 'anthropic:claude-sonnet-5-5',
+      thinkModel: one('--think-model') ?? systems.DEFAULT_THINK_MODEL,
       context: (one('--qa-context') ?? 'sessions') as RunArgs['qa']['context'],
       ...(one('--qa-max-tokens') ? { maxTokens: positiveInt(one('--qa-max-tokens'), '--qa-max-tokens')! } : {}),
       ...(one('--reader-effort') ? { effort: one('--reader-effort')! } : {}),

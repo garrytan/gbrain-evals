@@ -99,6 +99,9 @@ const ITEMS = [
   { item_id: 'i-3', statement: 'The retro produced a weekly co-review cadence.' },
 ];
 
+/** The Haiku 5.5 judge the request-shape and pricing tests below were written for; the default is now gpt-6.1-sol. */
+const HAIKU = 'anthropic:claude-haiku-5-5';
+
 function coverageArgs() {
   return { lane: 'dream', transcript_id: 't-1', document: 'The distilled page body.', items: ITEMS };
 }
@@ -114,7 +117,7 @@ describe('scoreSalienceCoverage', () => {
         ],
       }),
     ]);
-    const r = await scoreSalienceCoverage(coverageArgs(), { client });
+    const r = await scoreSalienceCoverage(coverageArgs(), { client, model: HAIKU });
     expect(calls).toHaveLength(1);
     expect(r.verdicts).toEqual([
       { item_id: 'i-1', status: 'FULL', evidence: 'fail loudly on duplicate keys' },
@@ -124,15 +127,15 @@ describe('scoreSalienceCoverage', () => {
     expect(r.judge_failed_ids).toEqual([]);
     expect(r.input_tokens).toBe(1000);
     expect(r.output_tokens).toBe(100);
-    // Default Haiku 5.5 pricing: (1000*0.1 + 100*0.5)/1e6
+    // Haiku 5.5 pricing: (1000*0.1 + 100*0.5)/1e6
     expect(r.cost_usd).toBeCloseTo(0.00015, 10);
   });
 
-  test('request shape: the default Claude 5 judge is told to call the tool (no forced tool_choice) + cache_control ephemeral system block', async () => {
+  test('request shape: a Claude 5 judge is told to call the tool (no forced tool_choice) + cache_control ephemeral system block', async () => {
     const { client, calls } = makeStubClient([
       toolUse('score_salient_items', { items: ITEMS.map((i) => ({ item_id: i.item_id, status: 'ABSENT', evidence: '' })) }),
     ]);
-    await scoreSalienceCoverage(coverageArgs(), { client });
+    await scoreSalienceCoverage(coverageArgs(), { client, model: HAIKU });
     const req = calls[0];
     expect(req.tool_choice).toEqual({ type: 'auto' });
     expect(req.messages.at(-1).content).toBe('Respond by calling the score_salient_items tool.');
@@ -154,7 +157,7 @@ describe('scoreSalienceCoverage', () => {
         items: [{ item_id: 'i-2', status: 'PARTIAL', evidence: 'e2' }],
       }),
     ]);
-    const r = await scoreSalienceCoverage(coverageArgs(), { client });
+    const r = await scoreSalienceCoverage(coverageArgs(), { client, model: HAIKU });
     expect(calls).toHaveLength(2);
     const retryContent = calls[1].messages[0].content as string;
     expect(retryContent).toContain('i-2'); // the missing item is listed…
@@ -184,7 +187,7 @@ describe('scoreSalienceCoverage', () => {
 
   test('malformed tool_use → one full retry → structured failure for ALL items', async () => {
     const { client, calls } = makeStubClient([malformed(), malformed()]);
-    const r = await scoreSalienceCoverage(coverageArgs(), { client });
+    const r = await scoreSalienceCoverage(coverageArgs(), { client, model: HAIKU });
     expect(calls).toHaveLength(2);
     expect(r.verdicts).toEqual([]);
     expect(r.judge_failed_ids).toEqual(['i-1', 'i-2', 'i-3']);
@@ -320,7 +323,7 @@ describe('scoreGrounding', () => {
       toolUse('grade_claims', { claims: [{ index: 0, verifiable: true, grounded: true }] }),
       toolUse('grade_claims', { claims: [{ index: 0, verifiable: true, grounded: true }] }),
     ]);
-    const r = await scoreGrounding({ label: 'x', claims: CLAIMS, transcript: 't' }, { client });
+    const r = await scoreGrounding({ label: 'x', claims: CLAIMS, transcript: 't' }, { client, model: HAIKU });
     expect(calls).toHaveLength(2);
     expect(r.judge_failed).toBe(true);
     expect(r.results).toEqual([]);
@@ -604,11 +607,11 @@ describe('cached input counts at the judge model\'s own rates', () => {
     expect(r.cost_usd).toBeCloseTo((r.input_tokens * 2 + r.output_tokens * 10) / 1e6, 10);
   });
 
-  // Value: protects=the default Haiku 5.5 judge's count rounds exactly as the old 0.1 literal did, so its receipts stay identical; fails_when=the read weight is the float quotient 0.01 / 0.1 (0.09999999999999999), which rounds a half-token count down; why_new=adversarial review of the #220 fix; seam=none; no_claim=stub client
-  test('the default Haiku 5.5 judge rounds a half-token cache-read count as before', async () => {
+  // Value: protects=a Haiku 5.5 judge's count rounds exactly as the old 0.1 literal did, so its receipts stay identical; fails_when=the read weight is the float quotient 0.01 / 0.1 (0.09999999999999999), which rounds a half-token count down; why_new=adversarial review of the #220 fix; seam=none; no_claim=stub client
+  test('a Haiku 5.5 judge rounds a half-token cache-read count as before', async () => {
     const halfUsage = { input_tokens: 0, cache_read_input_tokens: 5, output_tokens: 1 } as unknown as StubResponse['usage'];
     const { client } = makeStubClient([toolUse('score_salient_items', { items: ITEMS.map((i) => ({ item_id: i.item_id, status: 'FULL', evidence: 'ok' })) }, halfUsage)]);
-    const r = await scoreSalienceCoverage(coverageArgs(), { client });
+    const r = await scoreSalienceCoverage(coverageArgs(), { client, model: HAIKU });
     expect(r.input_tokens).toBe(1);
   });
 
@@ -616,7 +619,7 @@ describe('cached input counts at the judge model\'s own rates', () => {
   test('a long-context Haiku 5.5 call is counted at the long-context rates usageCost bills', async () => {
     const longUsage = { input_tokens: 90_000, cache_read_input_tokens: 40_000, output_tokens: 100 } as unknown as StubResponse['usage'];
     const { client } = makeStubClient([toolUse('score_salient_items', { items: ITEMS.map((i) => ({ item_id: i.item_id, status: 'FULL', evidence: 'ok' })) }, longUsage)]);
-    const r = await scoreSalienceCoverage(coverageArgs(), { client });
+    const r = await scoreSalienceCoverage(coverageArgs(), { client, model: HAIKU });
     expect(r.cost_usd).toBeCloseTo((90_000 * 0.5 + 40_000 * 0.05 + 100 * 2.5) / 1e6, 10);
     expect(r.cost_usd).toBeCloseTo((r.input_tokens * 0.5 + r.output_tokens * 2.5) / 1e6, 10);
   });
@@ -633,10 +636,10 @@ describe('cached input counts at the judge model\'s own rates', () => {
     }
   });
 
-  // Value: protects=the default Haiku 5.5 judge's input count is unchanged by the per-model weights; fails_when=the weights change the count for a model whose cache rates are 1.25x and 0.1x input; why_new=the formula now reads the model's own rates (#220); seam=none; no_claim=stub client
-  test('the default Haiku 5.5 judge keeps the 1.25x and 0.1x weights', async () => {
+  // Value: protects=a Haiku 5.5 judge's input count is unchanged by the per-model weights; fails_when=the weights change the count for a model whose cache rates are 1.25x and 0.1x input; why_new=the formula now reads the model's own rates (#220); seam=none; no_claim=stub client
+  test('a Haiku 5.5 judge keeps the 1.25x and 0.1x weights', async () => {
     const { client } = makeStubClient([coverage()]);
-    const r = await scoreSalienceCoverage(coverageArgs(), { client });
+    const r = await scoreSalienceCoverage(coverageArgs(), { client, model: HAIKU });
     expect(r.input_tokens).toBe(1000 + 400 * 1.25 + 2000 * 0.1);
     expect(r.cost_usd).toBeCloseTo((r.input_tokens * 0.1 + r.output_tokens * 0.5) / 1e6, 10);
   });

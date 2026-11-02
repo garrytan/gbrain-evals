@@ -23,7 +23,8 @@ import { scoreGrounding } from '../../eval/runner/cat35-judges.ts';
 import { ClaudeSonnetWithToolsAdapter, runAgentLoop, type AgentAdapterState } from '../../eval/runner/adapters/claude-sonnet-with-tools.ts';
 import type { SyntheticPage } from '../../eval/runner/synthetic-corpus-loader.ts';
 
-const CLAUDE_5 = ['claude-opus-5-5', 'claude-sonnet-5-5', 'claude-haiku-5-5'];
+const CLAUDE_5 = ['opus', 'sonnet', 'haiku'].map(tier => `claude-${tier}-5-5`);
+const HAIKU_5 = CLAUDE_5[2]!;
 const OLDER = ['claude-haiku-4-5-20251001', 'claude-sonnet-4-6'];
 const TEXT_REPLY = { content: [{ type: 'text', text: 'no tool call' }], usage: { input_tokens: 10, output_tokens: 5 }, stop_reason: 'end_turn' };
 
@@ -244,8 +245,8 @@ describe('the other call sites', () => {
   test('cat5 receipt judge temperature is what was sent', async () => {
     const pagesBySlug = new Map(EVIDENCE.ground_truth_pages.map(p => [p.slug, p]));
     const reportsRoot = mkdtempSync(join(tmpdir(), 'cat5-receipt-'));
-    await runCat5({ claims: [CLAIM], pagesBySlug, client: recording().client, model: 'claude-haiku-5-5', reportsRoot });
-    expect(loadReceipt(receiptPath(CAT5_CATEGORY, reportsRoot)).judge).toEqual({ model: 'claude-haiku-5-5', temperature: null });
+    await runCat5({ claims: [CLAIM], pagesBySlug, client: recording().client, model: HAIKU_5, reportsRoot });
+    expect(loadReceipt(receiptPath(CAT5_CATEGORY, reportsRoot)).judge).toEqual({ model: HAIKU_5, temperature: null });
   }, 30_000);
 
   test('cat25 think completion', async () => {
@@ -287,7 +288,7 @@ describe('the other call sites', () => {
   test('cat35 judges price each model at its own rate', async () => {
     const cost = async (model?: string) => (await scoreGrounding({ label: 'x', claims: ['a claim'], transcript: 't' }, { client: recording().client, model })).cost_usd;
     expect(await cost('claude-opus-5-5')).toBeCloseTo(2 * (10 * 4 + 5 * 20) / 1e6, 12);
-    expect(await cost('claude-haiku-5-5')).toBeCloseTo(2 * (10 * 0.1 + 5 * 0.5) / 1e6, 12);
+    expect(await cost(HAIKU_5)).toBeCloseTo(2 * (10 * 0.1 + 5 * 0.5) / 1e6, 12);
     expect(await cost('claude-haiku-4-5-20251001')).toBeCloseTo(2 * (10 * 1 + 5 * 5) / 1e6, 12);
     const unpriced = recording();
     await expect(scoreGrounding({ label: 'x', claims: ['a claim'], transcript: 't' }, { client: unpriced.client, model: 'claude-unlisted-1' })).rejects.toThrow('no chat price');
