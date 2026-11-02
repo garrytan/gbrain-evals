@@ -34,6 +34,8 @@ const FRONTIER_DIR = 'docs/benchmarks/2026-11-01-skillopt-method/probe/frontier'
 const f0aReceipt = (t: FrontierTarget) => `${FRONTIER_DIR}/f0a-${t}/receipt.json`;
 const f0bReceipt = (t: FrontierTarget) => `${FRONTIER_DIR}/f0b-${t}/receipt.json`;
 const probeOf = (path: string) => (JSON.parse(readFileSync(join(REPO_ROOT, path), 'utf8')) as { data: { probe: FrontierResult } }).data.probe;
+/** The gbrain commit every committed frontier receipt ran at; reading them in this tree needs --accept-pin. */
+const COMMITTED_PIN = 'ca1281a2';
 
 describe('tool coverage', () => {
   test("lists each seed's frontmatter brain operations that the rollout does not serve, and its tools outside the brain apart", () => {
@@ -144,7 +146,7 @@ describe('probe runs refuse to spend', () => {
     const dir = mkdtempSync(join(tmpdir(), 'n15-ledger-'));
     try {
       const env = Object.fromEntries(Object.entries(process.env).filter(([k]) => !/_API_KEY$/.test(k)));
-      for (const args of [['--probe'], ['--probe', '--target', 'sol', '--stage', 'f0a'], ['--probe', '--target', 'opus', '--stage', 'test', '--from', f0bReceipt('opus'), '--other', f0bReceipt('sol')], ['--smoke']]) {
+      for (const args of [['--probe'], ['--probe', '--target', 'sol', '--stage', 'f0a'], ['--probe', '--target', 'opus', '--stage', 'test', '--from', f0bReceipt('opus'), '--other', f0bReceipt('sol'), '--accept-pin', COMMITTED_PIN], ['--smoke']]) {
         const r = Bun.spawnSync(['bun', 'eval/runner/n15-skillopt-method.ts', ...args, '--budget-ledger', join(dir, 'ledger.sqlite'), '--output', dir], { cwd: REPO_ROOT, env, stdout: 'pipe', stderr: 'pipe' });
         expect([args.join(' '), r.exitCode]).toEqual([args.join(' '), 2]);
         expect(r.stderr.toString()).toContain('--paid --budget-run-id <id>');
@@ -705,10 +707,10 @@ describe('stage test, keyless end to end', () => {
     try {
       const env = Object.fromEntries(Object.entries(process.env).filter(([k]) => !/_API_KEY$/.test(k)));
       const cli = (...args: string[]) => Bun.spawnSync(['bun', 'eval/runner/n15-skillopt-method.ts', '--probe', '--stage', 'test', ...args], { cwd: REPO_ROOT, env, stdout: 'pipe', stderr: 'pipe' });
-      const a = cli('--fake', '--target', 'opus', '--skills', 'briefing', '--from', f0bReceipt('opus'), '--other', f0bReceipt('sol'), '--output', join(dir, 'with-other'));
+      const a = cli('--fake', '--target', 'opus', '--skills', 'briefing', '--from', f0bReceipt('opus'), '--other', f0bReceipt('sol'), '--accept-pin', COMMITTED_PIN, '--output', join(dir, 'with-other'));
       expect([a.exitCode, a.stderr.toString().slice(-400)]).toEqual([0, expect.any(String)]);
       const receipt = JSON.parse(readFileSync(join(dir, 'with-other', 'receipt.json'), 'utf8'));
-      expect(receipt).toMatchObject({ run_status: 'completed', verdict: 'pass', n_total: 1, n_scored: 1, publishable: false, resolved_config: { target: 'opus', stage: 'test', keys_in_process: ['ANTHROPIC_API_KEY'] } });
+      expect(receipt).toMatchObject({ run_status: 'completed', verdict: 'pass', n_total: 1, n_scored: 1, publishable: false, resolved_config: { target: 'opus', stage: 'test', accepted_pin: COMMITTED_PIN, keys_in_process: ['ANTHROPIC_API_KEY'] } });
       expect(receipt.data.probe.files_read).toEqual(['eval/data/skillopt-method-v2/briefing/test.jsonl', f0bReceipt('opus'), f0bReceipt('sol'), `${FRONTIER_DIR}/f0b-sol/one-shot/sol-briefing-rewrite-2.txt`]);
       expect(receipt.data.probe.files_read_include_test).toBe(true);
       expect(receipt.data.probe.skills[0]).toMatchObject({ skill: 'briefing', rewrite_source: 'other-target', rewrite_target: 'sol', rewrite_number: 2, rewrite_sha8: 'b35934a9', rewrite_selection_score: 1 });
@@ -716,7 +718,7 @@ describe('stage test, keyless end to end', () => {
       expect(existsSync(join(dir, 'with-other', 'probe-partial.json'))).toBe(true);
       expect(a.stdout.toString()).toContain("sol's rewrite 2, b35934a9, other-target");
 
-      const b = cli('--fake', '--target', 'opus', '--skills', 'briefing', '--from', f0bReceipt('opus'), '--output', join(dir, 'alone'));
+      const b = cli('--fake', '--target', 'opus', '--skills', 'briefing', '--from', f0bReceipt('opus'), '--accept-pin', COMMITTED_PIN, '--output', join(dir, 'alone'));
       expect(b.exitCode).toBe(0);
       const alone = JSON.parse(readFileSync(join(dir, 'alone', 'receipt.json'), 'utf8')).data.probe.skills[0];
       expect(alone).toMatchObject({ rewrite_source: null, rewrite_sha8: null, rewrite_minus_seed: null });
@@ -729,11 +731,13 @@ describe('stage test, keyless end to end', () => {
       writeFileSync(fakeFrom, JSON.stringify({ ...committed, data: { ...committed.data, probe: { ...committed.data.probe, mode: 'fake' } } }));
       const ledger = join(dir, 'ledger.sqlite');
       for (const [args, message] of [
-        [['--target', 'sol', '--from', f0bReceipt('opus')], "needs sol's live F0b result on skillopt-method-v2 in --from, but it is for target opus"],
-        [['--target', 'opus', '--from', f0aReceipt('opus')], 'but it is stage f0a'],
+        [['--target', 'opus', '--from', f0bReceipt('opus')], `ran at gbrain github:garrytan/gbrain#ca1281a2ed3236ac45adddb2d08e84423769c321, but this tree pins `],
+        [['--target', 'opus', '--from', f0bReceipt('opus'), '--accept-pin', 'ca1281'], 'pass --accept-pin ca1281a2ed3236ac45adddb2d08e84423769c321'],
+        [['--target', 'sol', '--from', f0bReceipt('opus'), '--accept-pin', COMMITTED_PIN], "needs sol's live F0b result on skillopt-method-v2 in --from, but it is for target opus"],
+        [['--target', 'opus', '--from', f0aReceipt('opus'), '--accept-pin', COMMITTED_PIN], 'but it is stage f0a'],
         [['--target', 'opus'], 'pass --from <F0b receipt>'],
-        [['--target', 'opus', '--from', fakeFrom, '--paid', '--budget-run-id', 'none', '--budget-ledger', ledger], "needs opus's live F0b result on skillopt-method-v2 in --from, but it is a fake run"],
-        [['--target', 'opus', '--from', f0bReceipt('opus'), '--other', f0bReceipt('opus')], 'in --other, but it is for target opus'],
+        [['--target', 'opus', '--from', fakeFrom, '--accept-pin', COMMITTED_PIN, '--paid', '--budget-run-id', 'none', '--budget-ledger', ledger], "needs opus's live F0b result on skillopt-method-v2 in --from, but it is a fake run"],
+        [['--target', 'opus', '--from', f0bReceipt('opus'), '--other', f0bReceipt('opus'), '--accept-pin', COMMITTED_PIN], 'in --other, but it is for target opus'],
       ] as const) {
         const r = cli(...args, '--output', join(dir, 'refused'));
         expect([args.join(' '), r.exitCode, r.stderr.toString().includes(message)]).toEqual([args.join(' '), 3, true]);

@@ -125,9 +125,12 @@ export const markersIn = (text: string, markers: readonly Marker[]) => markers.f
 
 /**
  * Step 2: the proposer input. A returned page is named only when it is in
- * `pages.visible` (`trainPages`); every forbidden marker, and every slug of
- * `pages.corpus` outside `pages.visible`, is replaced by WITHHELD. Throws if
- * either survives the replacement.
+ * `pages.visible` (`trainPages`); in the training-task block, every forbidden
+ * marker and every slug of `pages.corpus` outside `pages.visible` is replaced
+ * by WITHHELD, and the input says what WITHHELD marks. The seed and the
+ * criteria text pass verbatim (GST-903: the fact-check seed's "<5%
+ * unverifiable" is the seed's own rule, not gold). Throws if a marker or a
+ * hidden slug survives in the block.
  */
 export function proposerInput(o: { seedText: string; criteria: string; trajectories: readonly TrainTrajectory[]; markers: readonly Marker[]; pages: { visible: ReadonlySet<string>; corpus: ReadonlySet<string> } }): { text: string; withheld: number } {
   const passed = o.trajectories.filter(t => t.correct).length;
@@ -149,18 +152,19 @@ export function proposerInput(o: { seedText: string; criteria: string; trajector
       `Failed checks: ${t.failed.length ? t.failed.join('; ') : 'none'}`,
     ].join('\n');
   });
-  let text = [
+  let block = tasks.join('\n\n');
+  let withheld = 0;
+  block = block.replace(SLUG_TOKEN, s => (hidden(s) ? (withheld++, WITHHELD) : s));
+  for (const m of o.markers) block = block.replace(new RegExp(m.pattern, 'gm'), () => { withheld++; return WITHHELD; });
+  const left = [...markersIn(block, o.markers).map(m => m.kind), ...[...block.matchAll(SLUG_TOKEN)].filter(m => hidden(m[0])).map(() => 'corpus slug')];
+  if (left.length) throw new Error(`proposer input still holds ${left.length} forbidden marker(s) after withholding (${left.join(', ')})`);
+  const text = [
     'The current skill (SKILL.md):', '', o.seedText.trim(), '',
     'The success criteria every answer is scored against:', '', o.criteria.trim(), '',
-    `How the current skill did on ${o.trajectories.length} training tasks (it passed ${passed}):`, '',
-    tasks.join('\n\n'), '',
+    `How the current skill did on ${o.trajectories.length} training tasks (it passed ${passed}). ${WITHHELD} marks a page or value from tasks you are not shown:`, '',
+    block, '',
     'Write the improved SKILL.md now.',
   ].join('\n');
-  let withheld = 0;
-  text = text.replace(SLUG_TOKEN, s => (hidden(s) ? (withheld++, WITHHELD) : s));
-  for (const m of o.markers) text = text.replace(new RegExp(m.pattern, 'gm'), () => { withheld++; return WITHHELD; });
-  const left = [...markersIn(text, o.markers).map(m => m.kind), ...[...text.matchAll(SLUG_TOKEN)].filter(m => hidden(m[0])).map(() => 'corpus slug')];
-  if (left.length) throw new Error(`proposer input still holds ${left.length} forbidden marker(s) after withholding (${left.join(', ')})`);
   return { text, withheld };
 }
 
