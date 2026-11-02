@@ -4,6 +4,18 @@ This records what each gbrain-evals release changed and what its measurements me
 
 ## [Unreleased]
 
+### The W10b story applies its recheck edits
+
+- **Five wording edits from the recheck of the W10b finding's plain-English story.** The title gives the gap's 95%
+  range, the summary calls the test exploratory and narrows its account of the power-bank answers to what the rows show,
+  and the X post draft says particle-1 sometimes treats an advice request as a lookup. No number changed.
+- **The infographic's source is committed.** Its fine print calls the test exploratory and its source line names the
+  finding's record. The PNG is re-rendered, and its HTML source sits beside it, with a note that it needs the Inter and
+  Inter Display fonts installed to render the same.
+- **A wording note in the particle-1 replay report.** It says the preference questions are the largest share of the gap
+  to Opus 5.5, 7 of the 17 net questions, not most of it, and keeps every figure. The finding's `SHA256SUMS` and the
+  `docs/receipts-manifest.json` entry carry the report's new digest.
+
 ### Frontier first, part 2: the live reader sets drop Sonnet, and the guard sees the frozen ones
 
 - **The workload suites read every cell with Opus 5.5.** Their fixed reader was `claude-sonnet-5-5`, a model under
