@@ -69,7 +69,7 @@ import { loadCorpora, type MethodTask } from '../../generators/skillopt-method/c
 import { auditSkill, type AuditResult } from './audit.ts';
 import { datasetName, DEFAULT_DATASET, frontmatterTools, readCriteria, readSeed, readTasks, type DatasetVersion } from './dataset.ts';
 import { forbiddenMarkers, ONE_SHOT_SYSTEM, PROPOSER_MODEL, proposeRewrite, proposerInput, seedOnTrain, trainPages } from './one-shot.ts';
-import { emptyMeter, scoreArm, summarizeMeter, type ArmScore, type MeterSummary } from './rollouts.ts';
+import { emptyMeter, logRetries, scoreArm, summarizeMeter, type ArmScore, type MeterSummary } from './rollouts.ts';
 import { evaluateJudge, SKILLS, type SkillName, type Trajectory } from './score.ts';
 
 export type { ArmScore } from './rollouts.ts';
@@ -713,8 +713,8 @@ export async function runFrontierProbe(o: FrontierOptions): Promise<FrontierResu
         let result: FrontierSkillResult;
         if (o.stage === 'f0a') {
           log(`[n15 probe] ${o.target} F0a ${skill}: no skill x${FRONTIER_RUNS.no_skill}, seed x${FRONTIER_RUNS.seed} on ${d.sel.length} selection tasks`);
-          const noSkill = await scoreArm({ engine, skillText: NO_SKILL_TEXT, tasks: d.sel, model, runs: FRONTIER_RUNS.no_skill, meter });
-          const seed = await scoreArm({ engine, skillText: seedText, tasks: d.sel, model, runs: FRONTIER_RUNS.seed, meter });
+          const noSkill = await scoreArm({ engine, skillText: NO_SKILL_TEXT, tasks: d.sel, model, runs: FRONTIER_RUNS.no_skill, meter, onRetry: logRetries(log) });
+          const seed = await scoreArm({ engine, skillText: seedText, tasks: d.sel, model, runs: FRONTIER_RUNS.seed, meter, onRetry: logRetries(log) });
           result = { ...base, no_skill: noSkill.score, seed: seed.score, arms: { no_skill: noSkill, seed }, cost: summarizeMeter(meter) };
           log(`[n15 probe]   no-skill ${noSkill.score ?? 'error'}, seed ${seed.score ?? 'error'}`);
         } else {
@@ -765,7 +765,8 @@ type PairBase = Omit<FrontierSkillResult, 'skipped'>;
 async function oneShotPair(p: PairBase & { engine: PGLiteEngine; model: string; seedText: string; train: MethodTask[]; sel: MethodTask[]; meter: ReturnType<typeof emptyMeter>; log: (line: string) => void }): Promise<FrontierSkillResult> {
   const { engine, model, seedText, train, sel, meter, log, ...base } = p;
   log(`[n15 probe] ${base.target} F0b ${base.skill}: seed x${FRONTIER_RUNS.train} on ${train.length} train tasks, ${FRONTIER_REWRITE_REPEATS} rewrites scored x${FRONTIER_RUNS.rewrite} on selection`);
-  const { arm: seedTrain, trajectories } = await seedOnTrain({ engine, seedText, train, model, meter });
+  const onRetry = logRetries(log);
+  const { arm: seedTrain, trajectories } = await seedOnTrain({ engine, seedText, train, model, meter, onRetry });
   const arms: RewriteArm[] = [];
   const rewrites: string[] = [];
   let input: { text: string; withheld: number } | null = null;
@@ -776,13 +777,13 @@ async function oneShotPair(p: PairBase & { engine: PGLiteEngine; model: string; 
   for (let repeat = 0; repeat < FRONTIER_REWRITE_REPEATS; repeat++) {
     if (!input) { arms.push({ score: null, per_task: {}, outcome: 'no-train-trajectories', error: inputError ?? undefined, kept: false, cost_usd: null }); continue; }
     let proposed;
-    try { proposed = await proposeRewrite(input.text, seedText); } catch (e) { arms.push({ score: null, per_task: {}, outcome: 'proposer-error', error: errMsg(e), kept: false, cost_usd: null }); continue; }
+    try { proposed = await proposeRewrite(input.text, seedText, { onRetry: (attempt, e) => onRetry(`proposer ${repeat + 1}`, attempt, e) }); } catch (e) { arms.push({ score: null, per_task: {}, outcome: 'proposer-error', error: errMsg(e), kept: false, cost_usd: null }); continue; }
     if (!proposed.text) { arms.push({ score: null, per_task: {}, outcome: 'no-rewrite', error: proposed.error, kept: false, cost_usd: proposed.cost_usd }); continue; }
     rewrites.push(proposed.text);
     const audit = auditSkill(base.skill, proposed.text, seedText);
     const id = { text_sha8: sha8(proposed.text), audit, kept: false, cost_usd: proposed.cost_usd };
     if (audit.disqualified) { arms.push({ score: null, per_task: {}, outcome: 'audit-disqualified', ...id }); continue; }
-    arms.push({ ...await scoreArm({ engine, skillText: proposed.text, tasks: sel, model, runs: FRONTIER_RUNS.rewrite, meter }), outcome: 'scored', ...id });
+    arms.push({ ...await scoreArm({ engine, skillText: proposed.text, tasks: sel, model, runs: FRONTIER_RUNS.rewrite, meter, onRetry }), outcome: 'scored', ...id });
   }
   const seed = base.seed!;
   const beat = arms.filter(a => a.score !== null && a.score > seed).sort((a, b) => b.score! - a.score!)[0];
