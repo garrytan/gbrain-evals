@@ -1,6 +1,8 @@
 # BrainBench credits
 
-BrainBench combines project-authored tests, public benchmark material and comparison implementations. Attribution matters because a test written by a project's authors supplies different evidence from an independent submission. Everything above [Changelog](#changelog) is current as of the gbrain this repository pins, master `ca1281a2e` (v0.60.542.0).
+BrainBench combines project-authored tests, public benchmark material and comparison implementations.
+Attribution matters because a test written by a project's authors supplies different evidence from an independent submission.
+Everything above [Changelog](#changelog) is current as of the gbrain this repository pins, master `a131fb20e` (v0.60.549.0).
 
 ## Project work
 
@@ -43,6 +45,11 @@ A **Codex** review challenged whether the early suite established anything beyon
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
+
+### 2026-11-02: The opening names `a131fb20e`; one sentence per line
+
+The opening names gbrain master `a131fb20e` (v0.60.549.0) as the pin the page is current for (was `ca1281a2e`,
+v0.60.542.0) and puts each sentence on its own line, which renders the same. No credit changed.
 
 ### 2026-11-02: The opening names the new pin
 
