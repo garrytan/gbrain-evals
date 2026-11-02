@@ -7,9 +7,11 @@ This is plan revision 3's decision A3, preregistered as [amendment 2](../../PRER
 | Opus 5.5 | `query` | 0.17 | 0.75 | 1.00, 1.00 | 1.00 | one-shot at ceiling | $0.134 / $0.124 |
 | Opus 5.5 | `briefing` | 0.17 | 0.46 | audit-disqualified, audit-disqualified | 0.46 (seed) | qualifies | $0.286 / $0.297 |
 | Opus 5.5 | `fact-check` | 0.00 | 0.79 | audit-disqualified, 1.00 | 1.00 | one-shot at ceiling | $0.176 / $0.163 |
-| GPT-6.1 Sol | `query` | 0.88 | 0.71 | 0.92, 1.00 | 1.00 | one-shot at ceiling | $0.033 / $0.032 |
-| GPT-6.1 Sol | `briefing` | 0.17 | 0.54 | audit-disqualified, 1.00 | 1.00 | one-shot at ceiling | $0.079 / $0.048 |
-| GPT-6.1 Sol | `fact-check` | 0.00 | 0.58 | audit-disqualified, 1.00 | 1.00 | one-shot at ceiling | $0.091 / $0.054 |
+| GPT-6.1 Sol † | `query` | 0.88 | 0.71 | 0.92, 1.00 | 1.00 | one-shot at ceiling | $0.033 / $0.032 |
+| GPT-6.1 Sol † | `briefing` | 0.17 | 0.54 | audit-disqualified, 1.00 | 1.00 | one-shot at ceiling | $0.079 / $0.048 |
+| GPT-6.1 Sol † | `fact-check` | 0.00 | 0.58 | audit-disqualified, 1.00 | 1.00 | one-shot at ceiling | $0.091 / $0.054 |
+
+† Every cell in a GPT-6.1 Sol row is affected by a harness-path tool failure: the SkillOpt rollout path rejected every `get_page`, `traverse_graph` and `get_backlinks` call Sol made. MCP `get_page` is not affected, and gbrain#8429 fixes the rollout path. The [report](../../REPORT.md#tool-errors-in-the-skillopt-rollout-path) has the reproduction. The Opus rows are unaffected.
 
 **Gate.** Opus 5.5 is `build-one-skill` (`briefing`), and GPT-6.1 Sol is `stop`. The counted-skills pick is `briefing` on Opus and nothing on Sol. Every seed was in band, so F0b ran all six pairs. The solvability ceiling is 1.00 for every skill.
 
@@ -20,12 +22,12 @@ This is plan revision 3's decision A3, preregistered as [amendment 2](../../PRER
 - The task families are templated, so a rewrite that learns a family's procedure transfers within the set.
 
 **Other signals (not counted).**
-- On GPT-6.1 Sol `query`, no skill scored 0.88 and the seed 0.71. No skill beat the seed on 4 of the 24 tasks and never lost to it. No skill runs once per task, so this is a lead for the test split, not a result.
+- On GPT-6.1 Sol `query` (†), no skill scored 0.88 and the seed 0.71. No skill beat the seed on 4 of the 24 tasks and never lost to it. No skill runs once per task, so this is a lead for the test split, not a result.
 - On every other pair, the seed beat no skill by 0.29 to 0.79.
 
 **Served tools and settings.** The rollouts served each skill its declared read operations: `query` got `recall` and `get_timeline`, and `briefing` got `get_timeline`. Retrieval was keyword-only, and no embedding call was made. Opus ran with gbrain's defaults: no thinking and `max_tokens` 32,000. GPT-6.1 Sol ran with `max_output_tokens` 4,096 and no reasoning field sent, and OpenAI applied medium effort. Each receipt records `request_settings`.
 
-**Test split (amendment 3).** Every kept rewrite scored 1.00 on the 36 test tasks, and beat the seed on all six pairs. The seed beat no skill on five pairs, but not on Sol `query` (0.72 against 0.86). The report rates that a FIX-METHOD, because at this gbrain pin `get_page`, `traverse_graph` and `get_backlinks` reject every call Sol makes. The [report](../../REPORT.md) has the full table and the reproduction. The read cost $163.06 on ledger run `n15-skillopt-method-test-read-2026-11-02T03-04-45-593Z-f0a9f695`.
+**Test split (amendment 3).** Every kept rewrite scored 1.00 on the 36 test tasks, and beat the seed on all six pairs. The seed beat no skill on five pairs, but not on Sol `query` (0.72 against 0.86). The report rates that a FIX-METHOD (rollout-path `get_page` failures; rerun after gbrain#8429) and marks every Sol cell affected. The [report](../../REPORT.md) has the full table and the reproduction. The read cost $163.06 on ledger run `n15-skillopt-method-test-read-2026-11-02T03-04-45-593Z-f0a9f695`.
 
 **Spend.** The ledger run `n15-skillopt-method-frontier-probe-2026-11-02T00-00-46-604Z-1ae07142` committed $145.04 against a $330 cap:
 - smoke and F0a: $79.40;
