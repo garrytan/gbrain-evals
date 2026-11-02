@@ -1,7 +1,7 @@
 # Learn, evaluate, and extend gbrain
 
 This index lists every published report by the question it answers. It describes the repository as it stands:
-gbrain-evals v0.10.140, with gbrain master `ca1281a2e` (v0.60.542.0) as the product under test. Results measured at
+gbrain-evals v0.10.141, with gbrain master `a131fb20e` (v0.60.549.0) as the product under test. Results measured at
 other gbrain commits name that commit in their report. Everything above [Changelog](#changelog) is current; the
 changelog at the bottom records how this index changed.
 
@@ -263,6 +263,13 @@ and [repository writing guide](../CLAUDE.md). The
 procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
+
+### 2026-11-02: Re-pin to gbrain `a131fb20e`; opening names v0.10.141
+
+The opening names v0.10.141 (was v0.10.140) and gbrain master `a131fb20e` (v0.60.549.0) as the product under test (was
+`ca1281a2e`, v0.60.542.0). No row changed: every report keeps the commit it measured. The November 2 SkillOpt method
+report ran at `ca1281a2e`, before gbrain#8429 made SkillOpt's rollout registries drop empty optional arguments, and its
+Sol `query` verdict still waits for the rerun the report names.
 
 ### 2026-11-02: SkillOpt method report row
 
