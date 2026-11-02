@@ -292,16 +292,46 @@ export function compatTimedOut(e: unknown): boolean {
   return err?.name === 'TimeoutError' || err?.name === 'AbortError' || err?.status === 504;
 }
 
-/** A connection that reset or closed after the request went out. A refused connection never reached the provider, and a received HTTP status is an answer, so neither is one. */
-export function compatConnectionLost(e: unknown): boolean {
-  const err = e as { name?: string; code?: string; message?: string; status?: unknown } | null;
-  return typeof err?.status !== 'number' && err?.name !== 'TimeoutError' && err?.name !== 'AbortError' && (/^(ECONNRESET|EPIPE|UND_ERR_SOCKET)$/.test(err?.code ?? '') || /socket connection was closed|socket hang up|connection reset/i.test(err?.message ?? ''));
+/**
+ * The error codes Bun's fetch gives a request that failed before any byte of it was sent, so the provider never saw it
+ * (issue #288). Each was provoked on Bun 1.4.4: a refused connection (ECONNREFUSED), a host name that did not resolve
+ * (ENOTFOUND, or EAI_AGAIN with no reachable resolver), a connect with no route or no source address (ENETUNREACH,
+ * EADDRNOTAVAIL), a URL fetch refused (ERR_INVALID_URL), and a server certificate the client rejected in the TLS
+ * handshake, where the server read no byte of the request. test/eval/openai-compatible.test.ts provokes each one it
+ * can on loopback. EPROTO and ECONNRESET stay off the list although Bun can give them before sending (a server that does
+ * not speak TLS, or closes on the TLS hello), because it gives the same codes after a request went out (a TLS record
+ * corrupted after the request arrived, a connection closed after the request was read).
+ */
+export const COMPAT_PRE_SEND_CODES: ReadonlySet<string> = new Set([
+  'ECONNREFUSED', 'ENOTFOUND', 'EAI_AGAIN', 'ENETUNREACH', 'EADDRNOTAVAIL', 'ERR_INVALID_URL',
+  'DEPTH_ZERO_SELF_SIGNED_CERT', 'SELF_SIGNED_CERT_IN_CHAIN', 'UNABLE_TO_VERIFY_LEAF_SIGNATURE', 'ERR_TLS_CERT_ALTNAME_INVALID',
+  'CERT_HAS_EXPIRED', 'CERT_NOT_YET_VALID', 'CERT_SIGNATURE_FAILURE',
+]);
+
+/** A request that failed before any byte of it was sent (`COMPAT_PRE_SEND_CODES`): the only transport failure a client or a metering proxy sends again. */
+export function compatNeverSent(e: unknown): boolean {
+  const code = (e as { code?: unknown } | null)?.code;
+  return typeof code === 'string' && COMPAT_PRE_SEND_CODES.has(code);
 }
 
 /**
- * A request the provider may have billed: it timed out (`compatTimedOut`), its connection was lost after it went out
- * (`compatConnectionLost`), or it was answered 2xx without a usable `choices[0].message` (an error carrying that 2xx
- * status, issue #280). A caller never sends it again, with or without a metering proxy in front.
+ * A transport failure after which the provider may hold the request: an error with no HTTP status that is not a budget
+ * stop (`BudgetExceededError`, which `assertMetered`, a ledger guard and a credit stop throw), not a timeout
+ * (`compatTimedOut`) and not a failure proven to happen before any byte was sent (`compatNeverSent`). A reset or closed
+ * connection, a malformed status line or header, a bad Content-Length, a bad chunk, a body that fails to decompress and
+ * any failure Bun names otherwise are all lost (issue #288). A received HTTP status is an answer, so it is never one.
+ */
+export function compatConnectionLost(e: unknown): boolean {
+  if (!e || typeof e !== 'object') return false;
+  const { name, status } = e as { name?: unknown; status?: unknown };
+  return typeof status !== 'number' && name !== 'BudgetExceededError' && !compatTimedOut(e) && !compatNeverSent(e);
+}
+
+/**
+ * A request the provider may have billed: it timed out (`compatTimedOut`), its transport failed other than before any
+ * byte was sent (`compatConnectionLost`), or it was answered 2xx without a usable `choices[0].message` (an error carrying
+ * that 2xx status, issue #280). A caller never sends it again, with or without a metering proxy in front, and both
+ * metering proxies answer a particle request that failed this way 504, never the 502 a client sends again.
  */
 export function compatMayHaveBilled(e: unknown): boolean {
   const status = (e as { status?: unknown } | null)?.status;

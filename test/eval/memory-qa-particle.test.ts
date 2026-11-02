@@ -207,6 +207,20 @@ describe('the particle route in qa-v2', () => {
     } finally { server.close(); }
   });
 
+  // Value: protects=a particle request that failed after it may have gone out is billed once without the lease proxy, whatever Bun names the failure (issue #288); fails_when=qa-v2 reads a malformed status line or a bad chunk as a failure that never reached Particle and sends it again; why_new=compatMayHaveBilled reads every transport failure not proven to happen before sending as billed; seam=a loopback socket that reads the request, then answers badly; no_claim=what Particle's edge sends when it fails
+  test('a particle request answered with a malformed status line or a bad chunk ends the loop after one request (#288)', async () => {
+    for (const reply of ['not http at all\r\n\r\n', 'HTTP/1.1 200 OK\r\ncontent-type: application/json\r\ntransfer-encoding: chunked\r\n\r\nzz\r\nhello\r\n0\r\n\r\n']) {
+      let connections = 0;
+      const server = createServer(socket => { connections++; socket.on('error', () => {}); socket.once('data', () => socket.end(reply)); });
+      await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
+      process.env.PARTICLE_BASE_URL = `http://127.0.0.1:${(server.address() as AddressInfo).port}/v1`;
+      try {
+        const err = await new ChatClient(tmp(), () => 0).chat('particle:particle-1', 'P', { maxTokens: 64, replicate: 0 }).catch(e => e) as Error & { attempt_errors?: string[] };
+        expect([reply.slice(0, 15), connections, err.attempt_errors?.length]).toEqual([reply.slice(0, 15), 1, 1]);
+      } finally { server.close(); }
+    }
+  });
+
   test('a 429 whose body mentions a budget is retried like any 429; only a BudgetExceededError stops the loop', async () => {
     const mock = serve([{ status: 429, body: { error: { message: 'per-minute token budget exceeded' } } }, { body: PARTICLE_OK }]);
     const row = await readAndJudge({ benchmark: 'lme-s', qa: qa(), q, chat: new ChatClient(tmp(), () => 0), think: null, prompt: 'P', countTokens: null });
