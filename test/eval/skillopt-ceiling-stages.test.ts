@@ -32,15 +32,19 @@ const SPLITS = {
   gate: (s: SkillName) => readSealedTasks(s, 'gate', 'v3'),
 };
 
-interface TaskInfo { skill: SkillName; split: keyof typeof SPLITS; index: number; task: MethodTaskV3; wrong?: string }
+interface TaskInfo { skill: SkillName; split: keyof typeof SPLITS; index: number; task: MethodTaskV3; wrong?: string; wrongIndex?: number }
 
-/** Every train, selection and gate task, with a wrong answer in the skill's form when one exists (so a failing arm still passes every form check). */
+/** Every train, selection and gate task, with a wrong answer in the skill's form when one exists (so a failing arm still passes every form check), numbered among its split's tasks that have one. */
 const INFOS: TaskInfo[] = SKILLS.flatMap(skill => {
   const all = (Object.keys(SPLITS) as Array<keyof typeof SPLITS>).flatMap(split => SPLITS[split](skill).map((task, index) => ({ skill, split, index, task })));
+  const numbered = new Map<string, number>();
   return all.map(info => {
     const candidates = [...degenerateAnswers(skill, info.task).map(d => d.text), ...all.filter(o => o.task.task_id !== info.task.task_id).map(o => o.task.oracle_answer)];
     const wrong = candidates.find(text => { const l = evaluateLayers(text, info.task.judge); return !l.substance && !l.failed.some(c => (c as { layer?: string }).layer === 'form'); });
-    return wrong === undefined ? info : { ...info, wrong };
+    if (wrong === undefined) return info;
+    const wrongIndex = numbered.get(info.split) ?? 0;
+    numbered.set(info.split, wrongIndex + 1);
+    return { ...info, wrong, wrongIndex };
   });
 });
 
@@ -64,7 +68,9 @@ interface Recorder { proposerInputs: string[]; prompts: Array<{ model: string; s
  * every fourth (both nothing when `saturate`), no skill every task, all in the
  * skill's form; Opus answers every reachability task, and Sol is refused its
  * decisive read there (known_as_of beside a read view) and then answers
- * wrong. Tasks with no wrong answer in form are always answered right.
+ * wrong. Tasks with no wrong answer in form are always answered right, and
+ * "every other" and "every fourth" count only the split's tasks that have one,
+ * so the scores do not depend on which tasks lack one.
  */
 function gateTransport(rec: Recorder, o: { saturate?: boolean } = {}): ChatTransport {
   const harnessCalls = new Map<string, number>();
@@ -84,7 +90,7 @@ function gateTransport(rec: Recorder, o: { saturate?: boolean } = {}): ChatTrans
     const info = taskOf(user);
     if (!info) return fakeReply(opts, "I don't know.");
     const right = info.task.oracle_answer;
-    const failEvery = (n: number) => (info.wrong !== undefined && info.index % n === 0 ? info.wrong : right);
+    const failEvery = (n: number) => (info.wrong !== undefined && info.wrongIndex! % n === 0 ? info.wrong : right);
     if (user.includes('Hint:')) {
       if (!model.includes('gpt')) return fakeReply(opts, right);
       const decisive = decisivePages(info.task);
