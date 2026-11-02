@@ -127,8 +127,9 @@ rule of 2026-11-01 that evals test gbrain and gstack on frontier models.
   change and its reason in the preregistration before any new cell runs.
 - **Defaults follow the same rules.** A live category's default models are current-generation models, and its default
   models under test are frontier models, never Sonnet or Haiku. `test/eval/model-defaults.test.ts` holds both. A
-  default that keeps an older model, or a Sonnet or Haiku model under test, on purpose (a frozen protocol, or a mirror
-  of gbrain's own default) is a named exception with its reason in `eval/runner/model-defaults.ts`. Changing a default
+  default that keeps an older model, or a Sonnet or Haiku model under test, on purpose (a frozen protocol, a mirror of
+  gbrain's own default, or a dated move that waits on named follow-up work) is a named exception with its reason in
+  `eval/runner/model-defaults.ts`. Changing a default
   is a new receipt identity: never pool its results with the old model's.
 
 To add a category, follow the "Add a category" checklist in [eval/CONTRIBUTING.md](eval/CONTRIBUTING.md): registry row and preregistered promotion rules first, the shared hermetic environment, the paid-arm guard, the scorer mutation kit and the bug ledger.

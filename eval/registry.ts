@@ -581,7 +581,7 @@ export const REGISTRY: readonly CategoryEntry[] = [
     family: 'extraction', tier: 'P', script: 'eval/runner/cat35-transcript-distill.ts',
     // Worst-case dream lane alone is 24 x 600s subagent cap / 2 concurrency.
     run: { kind: 'dispatched', env: { CAT35_FULL: '1' }, timeoutMs: 3 * HOUR },
-    cost_estimate: { usd: 12, basis: 'measured $6.20-$6.36 per full run (2026-08-31 receipts) plus an estimated $2-$6 of dream synthesis the phase API does not report' },
+    cost_estimate: { usd: 54, basis: 'the pre-flight worst case for a full run with Opus 5.5 distilling and the gpt-6.1-sol judge ($53.40, 2026-11-01, not yet measured); the Sonnet 4.6 full runs measured $6.20-$6.36 (2026-08-31 receipts)' },
     receipt_path: receipt('cat35-transcript-distill'),
     headline: { metric: 'evidence-verified fact retention and hallucination rate of distilled pages', denominator: 'labeled facts across the transcript fixtures; judge failures are errors, not misses' },
     gate: 'report-only', promotion: REPORT_ONLY, evidence_maturity: 'synthetic-production-path',

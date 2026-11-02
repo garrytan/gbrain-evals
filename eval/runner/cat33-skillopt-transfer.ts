@@ -75,13 +75,12 @@ const SPLIT: [number, number, number] = [1, 1, 1];
 export const ALL_SEEDS = ['seed-missing-structure', 'seed-no-verdict'];
 /**
  * (X, Y) model pairs a full run uses: optimize on X, evaluate transfer on Y.
- * Opus 5.5 to GPT-6.1 Sol and back, so transfer is shown in both directions
- * across the two frontier families (a one-way pair could be confounded by Y
- * simply being a stronger model).
+ * Weak→strong and strong→weak, so transfer is shown in both directions (a
+ * one-way pair could be confounded by Y simply being a stronger model).
  */
 export const DEFAULT_PAIRS = [
-  { x: SKILLOPT_MODELS.target, y: SKILLOPT_MODELS.transfer },
-  { x: SKILLOPT_MODELS.transfer, y: SKILLOPT_MODELS.target },
+  { x: SKILLOPT_MODELS.target, y: SKILLOPT_MODELS.strong },
+  { x: SKILLOPT_MODELS.strong, y: SKILLOPT_MODELS.target },
 ];
 
 // ─── Pure transfer math (exported for the regression test) ───────────────────
@@ -345,7 +344,7 @@ export async function runCat33(options: Cat33Options = {}): Promise<Cat33RunResu
   const startedAt = new Date().toISOString();
   const bpre = options.bpre ?? false;
   const stub = options.stubLlm ?? false;
-  const optimizerModel = options.optimizerModel ?? SKILLOPT_MODELS.optimizer;
+  const optimizerModel = options.optimizerModel ?? (bpre ? SKILLOPT_MODELS.bpreOptimizer : SKILLOPT_MODELS.optimizer);
   const judgeModel = options.judgeModel ?? SKILLOPT_MODELS.judge; // skillopt-v1 has rule and qrels judges only
   const epochs = options.epochs ?? (bpre ? 1 : 3);
   const batchSize = options.batchSize ?? 5;

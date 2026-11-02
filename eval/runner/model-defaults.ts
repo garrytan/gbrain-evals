@@ -44,13 +44,14 @@ export function underTestModelProblem(model: string): string | null {
 export interface DefaultModelException {
   /** The models the code uses, in the order the test reads them. */
   models: readonly string[];
-  kind: 'frozen-protocol' | 'product-default-mirror' | 'pinned-harness';
+  kind: 'frozen-protocol' | 'product-default-mirror' | 'pinned-harness' | 'pending-move';
   reason: string;
 }
 
 /**
  * Keyed by the names test/eval/model-defaults.test.ts gives the defaults it reads. An exception covers both rules: a
- * frozen protocol, a product-default mirror or a pinned harness keeps whatever model it names.
+ * frozen protocol, a product-default mirror or a pinned harness keeps whatever model it names, and a pending move
+ * keeps its models until the dated follow-up its reason names lands.
  */
 export const DEFAULT_MODEL_EXCEPTIONS: Readonly<Record<string, DefaultModelException>> = {
   'memory-qa lme-s reader and judge': {
@@ -81,6 +82,11 @@ export const DEFAULT_MODEL_EXCEPTIONS: Readonly<Record<string, DefaultModelExcep
     reason: 'sealed confirmation protocol: frozen request payloads and the official judge',
   },
   'pilot judge': { models: ['gpt-4o-2024-08-06'], kind: 'frozen-protocol', reason: "LongMemEval's official judge protocol" },
+  'Cats 30-33 SkillOpt': {
+    models: ['anthropic:claude-haiku-5-5', 'anthropic:claude-opus-5-5', 'anthropic:claude-haiku-5-5', 'anthropic:claude-sonnet-5-5', 'openai:gpt-6.1-sol'],
+    kind: 'pending-move',
+    reason: '2026-11-01, pending ledger wiring, no frontier SkillOpt suite runs planned: the Haiku 5.5 target and B-pre optimizer and the Sonnet 5.5 transfer end stay until Cats 30-33 open the budget ledger, count aborted runs as harness errors and size their caps for Opus 5.5 (GST-903)',
+  },
   'memory-trust flag-rate agent and judge': {
     models: ['claude-sonnet-5-5', 'claude-sonnet-5-5'], kind: 'frozen-protocol',
     reason: "amendment 5 (2026-10-09) of docs/benchmarks/2026-10-07-memory-trust-preregistration.md names claude-sonnet-5-5 as the simulated user's agent and as the false-flag labeler",
