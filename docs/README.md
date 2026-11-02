@@ -131,6 +131,7 @@ gap does not isolate the effect of a graph alone.
 | Which judge models may grade a forecasting take, among the verdicts confident enough for gbrain's auto-resolve rule to apply? | [October 16 take grading, mirrored from gbrain #6882](benchmarks/2026-10-16-take-grading.md) ([preregistration](benchmarks/2026-10-16-take-grading-preregistration.md)): `gpt-6.1-sol` applies 496 verdicts with none wrong (upper bound 0.6%) and qualifies; `claude-opus-5-5` matches every gold verdict but is rarely confident enough to apply, `claude-sonnet-5-5` applies one wrong verdict |
 | Does gbrain's private forecast journal rank holders correctly, count every open prediction, and stay hidden from remote callers? | [October 17 forecast journal, mirrored from gbrain #6886](benchmarks/2026-10-17-forecast-journal.md) ([preregistration](benchmarks/2026-10-17-forecast-journal-preregistration.md)): on synthetic holders of known skill, median Spearman ρ 0.905, who-was-right set-F1 1.000, exact counts, 8/8 remote probes; shipped in v0.60.286.0 |
 | What did gbrain fix wave 9 cost on fact inserts, and can takes-quality receipts from before and after it be compared? | [October 5 fix wave 9 mirror, from gbrain #6111](benchmarks/2026-10-05-fix-wave-9-mirror.md): pinning `search_path` makes bulk fact inserts about 10-13% slower with fingerprints unchanged; takes-quality protocol 1 and 2 receipts are dissimilar inputs |
+| Do gbrain's shipped `query`, `briefing` and `fact-check` skills help Opus 5.5 and GPT-6.1 Sol, and does a skill optimizer have room to beat one rewrite of them? | [November 2 SkillOpt method report (N15)](benchmarks/2026-11-01-skillopt-method/REPORT.md) ([preregistration](benchmarks/2026-11-01-skillopt-method/PREREGISTRATION.md), [probe](benchmarks/2026-11-01-skillopt-method/probe/frontier/README.md)): on held-out test tasks, the shipped skill beats no skill on 5 of 6 skill and model pairs (`query` on Sol, 0.72 against 0.86, is a FIX-METHOD: SkillOpt's rollout path rejected Sol's page and graph reads, so every Sol result is marked affected until a rerun after gbrain#8429), and one Opus 5.5 rewrite scores 1.00 on all six and beats the shipped skill on each (by 0.22 to 0.53), mostly by fixing output form. With nothing left above one rewrite, the optimizer benchmark is a CUT-CANDIDATE and was not run |
 | Can a skill improve on held-out tasks, can the judge detect cheating, and does SkillOpt's iterative loop beat one rewrite? | [November 1 SkillOpt re-baseline](benchmarks/2026-11-01-skillopt-rebaseline/REPORT.md) ([preregistration](benchmarks/2026-11-01-skillopt-rebaseline/PREREGISTRATION.md)): all four practice skills improve held out, and both skills tested for transfer help the other model in 4 of 4 Haiku 5.5 and Sonnet 5.5 pairs; the full loop ties a one-shot rewrite again (0.54 against 0.54) and the iterative loop is a CUT-CANDIDATE; Cat 32's gate never saw a gaming candidate (partial). The [June 3 run](benchmarks/2026-06-03-skillopt.md) used other models and does not pool with it |
 | Can the system distinguish kinds of claims and sensible confidence? | [Calibration and proposed takes](benchmarks/2026-05-18-brainbench-cat14-cat15-calibration.md) (the advice result was retracted on September 28, 2026), [October 2 blind rerun of the advice test](benchmarks/2026-10-02-cat14-rerun.md) |
 | When gbrain fails, refuses or needs a decision, do real agents (Claude Code, Codex) ask the user before spending money or destroying data, and do they recover from the errors they can fix? | [Agent operator outcomes (Cat 41): what it measures and its gate](benchmarks/2026-10-03-agent-operator-protocol.md), [runs: v0.60.35.0 baseline, gate passed at `b3f4e8b`](benchmarks/2026-10-03-agent-operator.md) |
@@ -195,6 +196,7 @@ These documents fix a method before measuring. They publish no capability scores
 | Will a release still look better on questions nobody tuned against? | [September 29 sealed confirmation set](benchmarks/2026-09-29-sealed-confirmation-protocol.md) |
 | What end-to-end task does a 10x memory claim stand on, and what sample can show it? | [October 8 program primary preregistration (T0) and power (PW)](benchmarks/2026-10-08-program-primary-preregistration.md) |
 | What harder workload replaces T0's ceiling, and how was it calibrated? | [October 8 harder program primary preregistration (T0b), with its three calibration rounds](benchmarks/2026-10-08-program-primary-hard-preregistration.md) |
+| Do gbrain's shipped `query`, `briefing` and `fact-check` skills leave room for a skill optimizer, or does one rewrite take all the gain? | [November 1 SkillOpt method preregistration (N15)](benchmarks/2026-11-01-skillopt-method/PREREGISTRATION.md) with three amendments: Haiku 5.5 probes 1 and 2 ([probe 1's summary](benchmarks/2026-11-01-skillopt-method/probe/probe1/summary.json)), the frontier probe on Opus 5.5 and GPT-6.1 Sol, and the one test-split read reported in the [November 2 report](benchmarks/2026-11-01-skillopt-method/REPORT.md); task sets: [v2](../eval/data/skillopt-method-v2/README.md), which the probe reads, and the frozen [v1](../eval/data/skillopt-method-v1/README.md) |
 
 ## Data and methods
 
@@ -262,6 +264,10 @@ procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
 
+### 2026-11-02: SkillOpt method report row
+
+The results table gained a row for the [November 2 SkillOpt method report](benchmarks/2026-11-01-skillopt-method/REPORT.md): the shipped skill beats no skill on 5 of 6 frontier pairs (the sixth, `query` on Sol, is a FIX-METHOD because SkillOpt's rollout path rejected Sol's page and graph reads, which gbrain#8429 fixes), one rewrite scores 1.00 on all six, and the optimizer benchmark is a CUT-CANDIDATE. The N15 preregistration row no longer says the second probe has not run; it names the three amendments and links the report. No other row changed.
+
 ### 2026-11-02: Re-pin to gbrain `ca1281a2e`; opening names v0.10.140
 
 The opening names v0.10.140 (was v0.10.139) and gbrain master `ca1281a2e` (v0.60.542.0) as the product under test (was
@@ -278,6 +284,12 @@ carries no OpenAI line. No claim changed.
 
 The particle-1 replay row and the tokenizer calibration entry carry the line from [disclosures](disclosures.md):
 Y Combinator, which Garry Tan runs, is an investor in Particle. No claim changed.
+
+### 2026-11-01: SkillOpt method preregistration row
+
+"Protocols and preregistrations" gained a row for the [SkillOpt method A1 probe preregistration](benchmarks/2026-11-01-skillopt-method/PREREGISTRATION.md)
+and its task sets (N15). Probe 1 found the v1 tasks saturated, so the row also links probe 1's summary and the hardened
+v2 tasks the second probe reads; that probe has not run. No existing row changed.
 
 ### 2026-11-01: Finding link on the particle-1 replay row
 

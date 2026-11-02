@@ -38,6 +38,7 @@ import { DEV_ANSWER, DEV_JUDGE } from '../../eval/runner/harness-dev.ts';
 import { DEFAULT_THINK_MODEL as MEMORY_QA_THINK } from '../../eval/runner/memory-qa/run-systems.ts';
 import { AGENT_MODEL as FLAG_RATE_AGENT, JUDGE_MODEL as FLAG_RATE_JUDGE } from '../../eval/runner/memory-trust/flag-rate.ts';
 import { DECISION_MODEL as WAVE_A_DECISION } from '../../eval/runner/external-ideas-wave-a/lib.ts';
+import { DEFAULT_PROPOSER_MODEL as N15_PROPOSER, DEFAULT_TARGET_MODELS as N15_TARGETS } from '../../eval/runner/n15-skillopt-method.ts';
 import { COUNTED_READERS as T0_READERS } from '../../eval/runner/t0-program-primary.ts';
 import { COUNTED_MODELS as MEMORY_TRUST_MODELS, JUDGE_MODEL as CAT37_JUDGE } from '../../eval/runner/memory-trust/models.ts';
 import { READERS as UTILITY_GUARD_READERS } from '../../eval/runner/memory-trust/utility-guard.ts';
@@ -87,6 +88,7 @@ const DEFAULTS: Record<string, Registered> = {
   'evidence-delivery E1 readers': { test: [E1_SONNET, E1_GPT4O] },
   'N2 contradiction judge': { test: [N2_JUDGE] },
   'N7 open-loop extractor': { test: [N7_EXTRACTOR] },
+  'N15 SkillOpt method targets and proposer': { test: [...N15_TARGETS, N15_PROPOSER] },
   'harness dev lane reader and judge': { test: [DEV_ANSWER], judge: [DEV_JUDGE.default!] },
   'harness dev lane BEAM judge': { judge: [DEV_JUDGE.beam!] },
   'frontier readers (FRONTIER_READERS)': { test: [...FRONTIER_READERS] },

@@ -1,0 +1,28 @@
+# BrainBench N15: SkillOpt method benchmark, Phase 1 (gbrain 0.60.542.0)
+[budget] n15-skillopt-method-probe-sol-test: estimated cost $42.71; ledger <work>/ledger.sqlite
+[budget] n15-skillopt-method-probe-sol-test: joined shared run n15-skillopt-method-test-read-2026-11-02T03-04-45-593Z-f0a9f695 ($220.00 across all of its workers)
+  Setting up brain schema (v281)...
+  276 migration(s) applied
+[gbrain] content-sanity warn: contracts/2025-03-28-qfl-msa (58180 bytes) — exceeds warn threshold; stored and searchable, no action needed
+[n15 probe] sol test query: no skill x1, seed x3, sol's rewrite 2 (bafc6a5c, own) x3 on 36 test tasks
+[gbrain] embeddings are off on this brain by choice (embedding_disabled), so search is keyword-only and no query text is sent to an embedding provider. If the user wants semantic search, `gbrain doctor --json` names the enable command; turning it on needs their consent.
+[n15 probe]   no-skill 0.8611111111111112, seed 0.7222222222222222, rewrite 1
+[n15 probe] sol test briefing: no skill x1, seed x3, sol's rewrite 2 (b35934a9, own) x3 on 36 test tasks
+[n15 probe]   no-skill 0.16666666666666666, seed 0.5833333333333334, rewrite 1
+[n15 probe] sol test fact-check: no skill x1, seed x3, sol's rewrite 2 (50331458, own) x3 on 36 test tasks
+[n15 probe]   no-skill 0, seed 0.5277777777777778, rewrite 1
+probe sol test query: no-skill 0.8611, seed 0.7222, rewrite 1 (sol's rewrite 2, bafc6a5c, own), ceiling 1
+  seed minus no skill -0.1389 [-0.2778, 0], 1 wins / 6 losses, McNemar p 0.13, CUT-CANDIDATE; rewrite minus seed +0.2778 [0.1389, 0.4167], 10 wins / 0 losses, McNemar p 0.0020, rewrite-beats-seed
+  cost per correct answer: no_skill $0.0276, seed $0.0333, rewrite $0.0257; mean rollout $0.0246, 3.8452 calls per rollout
+probe sol test briefing: no-skill 0.1667, seed 0.5833, rewrite 1 (sol's rewrite 2, b35934a9, own), ceiling 1
+  seed minus no skill +0.4167 [0.1667, 0.6389], 20 wins / 5 losses, McNemar p 0.0041, KEEP; rewrite minus seed +0.4167 [0.25, 0.5833], 15 wins / 0 losses, McNemar p 0.000061, rewrite-beats-seed
+  cost per correct answer: no_skill $0.1848, seed $0.1552, rewrite $0.0338; mean rollout $0.0583, 5.4484 calls per rollout
+probe sol test fact-check: no-skill 0, seed 0.5278, rewrite 1 (sol's rewrite 2, 50331458, own), ceiling 1
+  seed minus no skill +0.5278 [0.3611, 0.6944], 19 wins / 0 losses, McNemar p 0.0000038, KEEP; rewrite minus seed +0.4722 [0.3056, 0.6389], 17 wins / 0 losses, McNemar p 0.000015, rewrite-beats-seed
+  cost per correct answer: no_skill none, seed $0.1768, rewrite $0.0358; mean rollout $0.0595, 8.9087 calls per rollout
+sent to api.openai.com gpt-6.1-sol (2522 requests): {"reasoning":null,"max_output_tokens":4096,"temperature":null,"top_p":null,"tool_choice":"auto","parallel_tool_calls":null,"store":null,"service_tier":null,"truncation":null,"text":null,"tools":11,"instructions_role":"developer"}; applied reasoning effort medium
+sent to api.openai.com gpt-6.1-sol (831 requests): {"reasoning":null,"max_output_tokens":4096,"temperature":null,"top_p":null,"tool_choice":"auto","parallel_tool_calls":null,"store":null,"service_tier":null,"truncation":null,"text":null,"tools":13,"instructions_role":"developer"}; applied reasoning effort medium
+sent to api.openai.com gpt-6.1-sol (2 requests): {"reasoning":null,"max_output_tokens":4096,"temperature":null,"top_p":null,"tool_choice":"auto","parallel_tool_calls":null,"store":null,"service_tier":null,"truncation":null,"text":null,"tools":11,"instructions_role":"developer"}; applied reasoning effort null
+sent to api.openai.com gpt-6.1-sol (1234 requests): {"reasoning":null,"max_output_tokens":4096,"temperature":null,"top_p":null,"tool_choice":"auto","parallel_tool_calls":null,"store":null,"service_tier":null,"truncation":null,"text":null,"tools":12,"instructions_role":"developer"}; applied reasoning effort medium
+sent to api.openai.com gpt-6.1-sol (1 requests): {"reasoning":null,"max_output_tokens":4096,"temperature":null,"top_p":null,"tool_choice":"auto","parallel_tool_calls":null,"store":null,"service_tier":null,"truncation":null,"text":null,"tools":12,"instructions_role":"developer"}; applied reasoning effort null
+receipt: <work>/frontier/test-sol/receipt.json
