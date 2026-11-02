@@ -63,9 +63,8 @@ import { join } from 'node:path';
 import { PGLiteEngine } from 'gbrain/pglite-engine';
 import { importFromContent } from 'gbrain/import-file';
 import { configureGateway, __setChatTransportForTests, type ChatOpts, type ChatResult } from 'gbrain/ai/gateway';
-import { runSkillOpt, type BenchmarkTask } from 'gbrain/core/skillopt';
+import { rolloutToolsForSkill, runSkillOpt, type BenchmarkTask } from 'gbrain/core/skillopt';
 import { operations } from 'gbrain/operations';
-import { READ_ONLY_BRAIN_TOOLS } from '../../../node_modules/gbrain/src/core/skillopt/rollout.ts';
 import { loadCorpora, type MethodTask } from '../../generators/skillopt-method/common.ts';
 import { auditSkill, type AuditResult } from './audit.ts';
 import { datasetName, DEFAULT_DATASET, frontmatterTools, readCriteria, readSeed, readTasks, type DatasetVersion } from './dataset.ts';
@@ -161,9 +160,10 @@ export const RETRIEVAL = 'keyword only: pages imported with noEmbed, embedding_d
 
 // ─── Tool coverage (keyless) ─────────────────────────────────────────────────
 
-/** The brain operations a SkillOpt rollout serves to the target model at the installed gbrain. */
-export function servedTools(): string[] {
-  return operations.filter(op => READ_ONLY_BRAIN_TOOLS.has(op.name) && !op.mutating && !op.localOnly).map(op => op.name).sort();
+/** The brain operations a SkillOpt rollout of this skill text serves to the target model at the installed gbrain: the read-only base, plus the reviewed read operations its frontmatter declares. */
+export function servedTools(skillText = ''): string[] {
+  const offered = rolloutToolsForSkill(skillText);
+  return operations.filter(op => offered.has(op.name) && !op.mutating && !op.localOnly).map(op => op.name).sort();
 }
 
 export interface ToolCoverage { skill: SkillName; declared: string[]; missing: string[]; outside_brain: string[]; full: boolean }
@@ -175,9 +175,9 @@ export interface ToolCoverage { skill: SkillName; declared: string[]; missing: s
  * `outside_brain`: no gbrain rollout can serve them and no task needs them.
  */
 export function toolCoverage(skills: readonly SkillName[] = SKILLS): ToolCoverage[] {
-  const served = new Set(servedTools());
   const brainOps = new Set(operations.map(op => op.name));
   return skills.map(skill => {
+    const served = new Set(servedTools(readSeed(skill)));
     const declared = frontmatterTools(readSeed(skill));
     const missing = declared.filter(t => brainOps.has(t) && !served.has(t));
     const outside_brain = declared.filter(t => !brainOps.has(t));
@@ -619,7 +619,8 @@ export interface FrontierResult {
   dataset: string;
   runs: typeof FRONTIER_RUNS;
   models_not_run: typeof MODELS_NOT_RUN;
-  served_tools: string[];
+  /** The brain operations each skill's seed rollouts are served. */
+  served_tools: Record<string, string[]>;
   coverage: ToolCoverage[];
   skills: FrontierSkillResult[];
   /** The pairs F0b runs: seed in [0.20, 0.80]. */
@@ -740,7 +741,7 @@ export async function runFrontierProbe(o: FrontierOptions): Promise<FrontierResu
     dataset: datasetName(DEFAULT_DATASET),
     runs: FRONTIER_RUNS,
     models_not_run: MODELS_NOT_RUN,
-    served_tools: servedTools(),
+    served_tools: Object.fromEntries(scope.map(s => [s, servedTools(readSeed(s))])),
     coverage,
     skills: results,
     f0b_skills: o.stage === 'f0a' ? f0bSkillsOf(results) : runs,

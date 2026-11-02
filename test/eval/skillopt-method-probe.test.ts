@@ -12,7 +12,7 @@ import { join } from 'node:path';
 import { __setEmbedTransportForTests, __setGenerateObjectTransportForTests, __setGenerateTextTransportForTests, type ChatOpts, type ChatResult } from 'gbrain/ai/gateway';
 import { loadCorpora, type MethodTask } from '../../eval/generators/skillopt-method/common.ts';
 import { withHermeticEnv } from '../../eval/runner/hermetic-env.ts';
-import { readSealedTestTasks, readTasks } from '../../eval/runner/skillopt-method/dataset.ts';
+import { readSealedTestTasks, readSeed, readTasks } from '../../eval/runner/skillopt-method/dataset.ts';
 import { forbiddenMarkers, markersIn, ONE_SHOT_SYSTEM, pagesOf, PROPOSER_MODEL, proposerInput, trainPages, WITHHELD, type TrainTrajectory } from '../../eval/runner/skillopt-method/one-shot.ts';
 import {
   countedSkills, FAKE_REWRITE_MARKER, fakeReply, fakeTransport, FRONTIER_TARGET_NAMES, FRONTIER_TARGETS, frontierEstimateUsd, frontierGate, lastUserText, NO_SKILL_TEXT,
@@ -27,9 +27,12 @@ describe('tool coverage', () => {
   test("lists each seed's frontmatter brain operations that the rollout does not serve, and its tools outside the brain apart", () => {
     expect(servedTools()).toEqual(expect.arrayContaining(['get_backlinks', 'get_page', 'list_pages', 'query', 'search', 'traverse_graph']));
     expect(servedTools()).not.toContain('put_page');
+    expect(servedTools()).not.toContain('recall');
+    expect(servedTools(readSeed('query'))).toEqual(expect.arrayContaining(['recall', 'get_timeline']));
+    expect(servedTools(readSeed('query'))).not.toContain('put_page');
     expect(toolCoverage().map(c => [c.skill, c.missing, c.outside_brain, c.full])).toEqual([
-      ['query', ['recall', 'get_timeline'], [], false],
-      ['briefing', ['get_timeline'], [], false],
+      ['query', [], [], true],
+      ['briefing', [], [], true],
       ['fact-check', [], ['web_search', 'web_fetch'], true],
     ]);
   });
@@ -239,7 +242,7 @@ describe('the frontier probe, keyless end to end', () => {
       expect({ seed: q.seed, repeats: q.one_shot_repeats, kept: q.one_shot_kept, train: q.arms.seed_train!.score }).toEqual({ seed: 0.5, repeats: [1, 1], kept: 1, train: 0.5 });
       expect(q.arms.one_shot!.map(a => [a.outcome, a.audit?.disqualified, a.kept])).toEqual([['scored', false, true], ['scored', false, false]]);
       expect(q.cost).toMatchObject({ rollouts: 24 + 2 * 72 });
-      expect(f0b.gate).toMatchObject({ verdict: 'stop', reasons: { query: ['one-shot-at-ceiling'], briefing: ['seed-above-band'], 'fact-check': ['seed-below-band'] }, waits_for_rerun: ['query'] });
+      expect(f0b.gate).toMatchObject({ verdict: 'stop', reasons: { query: ['one-shot-at-ceiling'], briefing: ['seed-above-band'], 'fact-check': ['seed-below-band'] }, waits_for_rerun: [] });
 
       expect(seen.proposerInputs.length).toBe(2);
       const input = seen.proposerInputs[0]!;

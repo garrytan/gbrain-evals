@@ -16,9 +16,8 @@
  * prompt and the cache read and write counts are parts of it.
  */
 import { toolLoop } from 'gbrain/ai/gateway';
-import { scoreSkillOnTasks, type BenchmarkTask } from 'gbrain/core/skillopt';
+import { runRollout, scoreSkillOnTasks, type BenchmarkTask } from 'gbrain/core/skillopt';
 import type { PGLiteEngine } from 'gbrain/pglite-engine';
-import { runRollout } from '../../../node_modules/gbrain/src/core/skillopt/rollout.ts';
 import type { MethodTask } from '../../generators/skillopt-method/common.ts';
 import { chatPrice } from '../budget-ledger.ts';
 import { evaluateJudge, type CheckResult, type ScoreFn, type Trajectory } from './score.ts';
