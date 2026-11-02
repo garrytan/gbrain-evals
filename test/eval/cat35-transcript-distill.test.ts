@@ -18,6 +18,7 @@ import { mkdtempSync, readFileSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import {
+  DISTILL_MODEL,
   aggregateCoverage,
   completedWs0Receipt,
   distillModelMismatch,
@@ -26,6 +27,8 @@ import {
   type PerItemRow,
 } from '../../eval/runner/cat35-transcript-distill.ts';
 import { bootstrapCI } from '../../eval/runner/cat35-checks.ts';
+import { CAT35_DEFAULT_JUDGE_MODEL } from '../../eval/runner/cat35-judges.ts';
+import { isOpenAIModel } from '../../eval/runner/openai-judge-shim.ts';
 import { loadReceipt, validateReceipt } from '../../eval/runner/receipt.ts';
 
 function item(transcript_id: string, lane: PerItemRow['lane'], status: PerItemRow['status'], joint: number | null, extra: Partial<PerItemRow> = {}): PerItemRow {
@@ -183,4 +186,10 @@ describe('distill-model comparability against a prior receipt', () => {
     expect(distillModelMismatch(undefined, current)).toBe('dream_model');
     expect(distillModelMismatch({ dream_model: current.dream_model }, current)).toBe('facts_model');
   });
+});
+
+// Value: protects=Cat 35's default judge never grades its own family's distillations (no model judges its own family's rows, GST-767); fails_when=the default distill model and the default judge come from one provider family; why_new=frontier first moved the distill model to Opus 5.5 and the judge off Haiku 5.5 (GST-798); seam=none; no_claim=the constants only, no judge call
+test('the default judge comes from outside the default distill model\'s family', () => {
+  expect(DISTILL_MODEL.startsWith('anthropic:')).toBe(true);
+  expect(isOpenAIModel(CAT35_DEFAULT_JUDGE_MODEL)).toBe(true);
 });

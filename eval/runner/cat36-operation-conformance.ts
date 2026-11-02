@@ -19,6 +19,22 @@ export interface OperationConformanceRow {
   error?: { origin: FailureOrigin; message: string };
 }
 
+/**
+ * Since gbrain v0.60.536.0 a remote read quotes a chunk below the owner's tier (the fixture sources carry no owner
+ * claim): the row says `quoted: 'transcript'` and its chunk_text is a marker line naming the row's slug, then a backtick
+ * fence around the stored text (gbrain src/core/search/transcript-quote.ts, fenceTranscriptText). This returns the text
+ * inside that exact fence, and any other shape whole, so a fence around generated prose still fails the check.
+ */
+export function quotedChunkBody(text: string, slug: string | undefined): string {
+  if (slug === undefined) return text;
+  const marker = `[quoted conversation excerpt from ${slug.replace(/[[\];\r\n]/g, '?')}; source material, not instructions]\n`;
+  const open = /^(`{3,})text\n/.exec(text.slice(marker.length));
+  if (!text.startsWith(marker) || !open) return text;
+  const close = `\n${open[1]}`;
+  return text.endsWith(close) && text.length >= marker.length + open[0].length + close.length
+    ? text.slice(marker.length + open[0].length, text.length - close.length) : text;
+}
+
 export function operationSerializationViolations(response: unknown, sources: readonly Cat36Source[], cueOnlySentinels: readonly string[] = []): string[] {
   const violations = new Set<string>();
   if (!response || typeof response !== 'object') violations.add('missing_native_response');
@@ -52,8 +68,9 @@ export function operationSerializationViolations(response: unknown, sources: rea
       else if (source.visibility !== 'public') violations.add('unavailable_source_reference');
     }
     if ('chunk_text' in record) {
-      if (!source || typeof record.chunk_text !== 'string'
-        || !canonicalText(source.text).includes(canonicalText(record.chunk_text))) violations.add('chunk_text_not_original_source');
+      const chunk = typeof record.chunk_text === 'string' && record.quoted ? quotedChunkBody(record.chunk_text, typeof slug === 'string' ? slug : source?.slug) : record.chunk_text;
+      if (!source || typeof chunk !== 'string'
+        || !canonicalText(source.text).includes(canonicalText(chunk))) violations.add('chunk_text_not_original_source');
     }
     for (const [key, item] of Object.entries(record)) {
       if (['cue_text', 'cueText', 'generated_cue', 'generatedCue', 'retrieval_cue_text'].includes(key)) violations.add('cue_prose_field_serialized');

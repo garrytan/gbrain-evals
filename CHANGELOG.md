@@ -2,7 +2,64 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
-## [Unreleased]
+## [0.10.140] - 2026-11-02
+
+### gbrain pin moves to v0.60.542.0: SkillOpt Cats name their optimizer mode, and harnesses read inside gbrain's new quote fences
+
+- **The product pin moves from `3ec766c40` (v0.60.531.0) to master `ca1281a2e` (v0.60.542.0)**, 210 commits and 11 releases later; the old pin is in the new one's history. `gbrain-cues` and `gbrain-reader` stay where they are. gbrain's dependency list did not change, so `bun.lock` changes only the `gbrain` entry. gbrain's Particle provider (gbrain #8324) is still an open pull request and is not in this release, so unit U9 of the particle-1 plan, the pin that picks it up, keeps waiting.
+- **SkillOpt makes one gated rewrite by default (gbrain v0.60.542.0), so Cats 30 to 33 name their mode.** gbrain's library now requires `optimizerMode`: `'reflect'` for the iterative loop, `'one-shot-rewrite'` for one rewrite. Cats 30, 32 and 33 pass `'reflect'`, the loop they measure. Cat 31's arms each name theirs: A, B and D `'reflect'`, C `'one-shot-rewrite'`. Each receipt's `resolved_config` records `optimizer_mode` (Cat 31 records `optimizer_modes` per arm). The `as any` casts that kept the options out of the typecheck are gone, so a new required option fails the typecheck instead of taking gbrain's default without notice.
+- **The loop changed in the same release.** gbrain's success criteria now come from training tasks only, held-out results never reach the optimizer, only applied edits are filed as rejected or accepted, the success-reflect prompt states its edit schema, and the one-shot rewrite reflects on training tasks and must pass the selection gate before it is written. A Cat 30 to 33 run at this pin therefore measures a different loop from the [November 1 re-baseline](docs/benchmarks/2026-11-01-skillopt-rebaseline/REPORT.md). That report keeps its pin, `3ec766c40`, and was not re-run; a new run is a new identity.
+- **Cat 32 Part B reads the held-out block from gbrain's run receipt.** gbrain now checks held-out once, on the final champion, before anything is written, and no longer files a refused champion in the rejected buffer as `held_out_regression`. `heldOutBlockedCount` counts the receipt's `held_out.passed: false` as the one block and falls back to the buffer on an earlier build, and Part B records the check as `held_out_check`. Part B's verdict rules are unchanged. No regression with at least one block passes, and no block is `partial`.
+- **A remote reader gets text below the owner's own notes quoted (gbrain v0.60.536.0 to v0.60.541.0), and four harnesses now read inside the fence.** An agent over MCP gets text an agent wrote, tool data, external text and text with no recorded origin inside the marked quote fence chat text already got, with `quoted: 'transcript'` on the row, and no setting turns it off. Most of what these harnesses write sits below the owner's tier (Cat 38's owner notes, written through managed sync, are the exception), so those remote reads came back fenced at the new pin:
+  - **N1** compared fenced `ontology_get` values with its ledger, so the CI slice read 0 of 20 current and 0 of 33 as-of values (current-value accuracy 0.69, history 0.42). `observeN1` now reads each value marked quoted through the build's own `unquoteFactText` (`eval/runner/quoted-reads.ts`, new), and the slice passes with 64 of 64 current-value and 57 of 57 history probes.
+  - **Cat 38** reads its recall rows through the same helper. Its label accuracy was 0.44 to 0.49 and is 100% (308 of 308).
+  - **Cat 37** read an item's trust label from the text before it on its line, which inside a fence is the fence's opening line, so unmarked poison read 0.1. `labelOnLine` in `eval/runner/memory-trust/sut.ts` now reads a fenced item's label from the fence's marker line, by the rule gbrain's own poisoning metric uses (`src/eval/brainbench/metrics/poisoning.ts`), and Cat 37 passes.
+  - **Cat 36**'s operation conformance flagged every fenced chunk as `chunk_text_not_original_source`. For a row marked quoted it now checks the text inside a fence that names the row's slug (`quotedChunkBody`), so a fence around generated text still fails.
+  - **The labels-off arms hide the fence too.** `stripTrustLabels`, which Cat 38's labels-off model arm and Cat 37's labels-absent mode apply to every tool result, now removes each quote fence and the `quoted` key, and rejoins a hook-block fact line that the fence split. At this pin a remote recall returns owner-tier facts bare and fences the rest (gbrain's `quoteFacts`), so without this a labels-off model could still tell the owner's facts from the others. No paid run used this pin, so no published number changes.
+  - A build that fences facts but has no `unquoteFactText` (v0.60.536.0, v0.60.537.0) is refused rather than scored. Arms that measure gbrain as shipped, such as the agent tool bridge (`eval/runner/tool-bridge.ts`), pass the fenced text to their agents as gbrain delivers it. The memory-qa `gbrain-query` connector reads locally, where nothing changed.
+- **Tests.** Cats 30 to 33 check each mode they pass and Cat 32's two held-out sources. Cat 36 checks quoted rows against the pinned build's own `fenceTranscriptText`, Cat 37 checks a label read inside a fence and that the strip leaves a fenced fact below the owner and a bare owner fact differing only in their values, in tool results and in hook-block lines rendered by the pinned build's own `renderFactLine`, Cat 38 checks a quoted recall row and the refusal without an unquote helper, and N1 checks a remote adapter that quotes ontology values, with and without the helper.
+- **Docs.** The hub sentences name the new pin. README's paragraph on read defaults outside the mode bundles and `docs/settings.md` describe the remote quoting, and README's memory trust row names `ca1281a2e` for its keyless check.
+- **Campaign identity.** `package.json` and `bun.lock` are in the F6 campaign's executed tree, so this release counts for F6 only under a new campaign identity. No file in the Cat 40 Hard freeze changed.
+
+### Frontier first: Opus 5.5 and GPT-6.1 Sol are the models under test, never Sonnet or Haiku
+
+- **The model rules say gbrain and gstack are built for frontier models** (Garry, 2026-11-01). CLAUDE.md's "Choose
+  models", AGENTS.md's summary and eval/CONTRIBUTING.md's opening now say every model-comparison run tests them on the
+  newest frontier Opus and GPT (`claude-opus-5-5`, `gpt-6.1-sol`) plus `particle-1` as the primary low-cost model.
+  Sonnet and Haiku are no longer required in comparison runs, and they are never models under test (agents, readers,
+  answer models, optimizers, optimization targets) or stand-ins for a frontier model, unless a run asks a question
+  about that tier and says so. Judges are separate: a protocol's judge stays, and a cheaper judge is fine where the
+  protocol allows one, as long as no model judges its own family's rows. The particle-1 rules are unchanged.
+- **Every model-under-test default R4 (#243) set to Sonnet 5.5 or Haiku 5.5 moves to a frontier model.** Each is a new
+  receipt identity, never pooled with results on the old default.
+  - `claude-opus-5-5`: the A4 house reader (was Sonnet 5.5; a third 2026-11-01 amendment to the
+    [N2/A4 preregistration](docs/benchmarks/2026-10-01-n2-a4-preregistration.md) records it and asks for an Opus 5.5
+    `--smoke 2` check before the first counted cell, and the paid estimate moves from $3 to $4 under the unchanged
+    $6 cap), chronicle-lift's agent (was Sonnet 5.5), Cat 35's dream, facts and triage models in both modes (one
+    `DISTILL_MODEL`; full mode was Sonnet 5.5, BPRE mode and triage Haiku 5.5), temporal-contradictions'
+    dev `--models` default (was Haiku 5.5; its run estimate moves from $0.30 to $1.20 per model and run), the
+    harness dev lane's reader (`DEV_ANSWER`, Sonnet 5.5 since #256), and the `--think-model` fallback of memory-qa's
+    `--qa think` lane and of feedback-think-replay (was Sonnet 5.5; now one `DEFAULT_THINK_MODEL` in
+    `eval/runner/memory-qa/run-systems.ts`). A memory-qa output directory started before this change without
+    `--think-model` hashes the old default into its run config, so resume it with
+    `--think-model anthropic:claude-sonnet-5-5`; a fresh `--output` would pay again for answered questions.
+  - SkillOpt (Cats 30 to 33) keeps its Haiku 5.5 target and B-pre optimizer and its Sonnet 5.5 transfer end for now, as
+    a dated named exception. Its held-out scoring runs outside the budget ledger, its caps are sized for Haiku, and
+    full mode counts a budget-aborted run as a seed, so it moves to Opus 5.5 only after that work (GST-903). No
+    frontier SkillOpt suite run is planned.
+- **Cat 35's default judge moves from `claude-haiku-5-5` to `gpt-6.1-sol`**, because a Claude judge would grade Opus
+  5.5's distillations. Cat 35's pre-flight estimates are repriced for Opus 5.5: a BPRE smoke projects $3.24 and a full
+  run $53.40 worst case, above the $40 default `CAT35_HARD_STOP_USD`, so a full run now needs that cap raised
+  explicitly, and the registry's Cat 35 estimate moves from $12 to $54. `eval/RUNBOOK.md`'s Cat35 pre-flight section
+  gives the new projections, and `eval/CONTRIBUTING.md`'s external-lane example now authorizes `--budget-usd 40`,
+  because the verbatim lane alone projects $13.80 under the new judge. No other judge default changes; Cats 9, 14, 15,
+  25 and 29 still grade an Opus 5.5 model with a Haiku 5.5 judge until GST-905 moves those judges.
+- **`test/eval/model-defaults.test.ts` fails when a model-under-test default names a Sonnet or Haiku model** outside
+  the named exceptions in `eval/runner/model-defaults.ts` (`underTestModelProblem`). Registered defaults now say
+  which models are under test and which judge, and the list now includes memory-qa's think model. The frozen
+  protocols and product-default mirrors that keep a Sonnet 4.6 or Haiku 4.5 model stay frozen, and two preregistered
+  Sonnet 5.5 defaults are now named frozen exceptions: memory-trust flag-rate's agent and false-flag labeler (amendment 5
+  of the memory-trust preregistration) and external-ideas wave A's decision model. No model was run.
 
 ### The W10b finding closes with its disclosures, and its X post carries none
 

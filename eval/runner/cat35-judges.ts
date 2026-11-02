@@ -53,7 +53,8 @@ import { JUDGE_TEMPERATURE, UNTRUSTED_DATA_INSTRUCTION, escapeUntrusted, fenceUn
  */
 export const CAT35_JUDGE_PROMPT_VERSION = '2026-09-28-v2';
 
-export const CAT35_DEFAULT_JUDGE_MODEL = 'claude-haiku-5-5';
+/** Outside the distill model's family: no model judges its own family's rows (DISTILL_MODEL is Opus 5.5). */
+export const CAT35_DEFAULT_JUDGE_MODEL = 'gpt-6.1-sol';
 const DEFAULT_MAX_TOKENS = 2000;
 
 // ─── Config + client ──────────────────────────────────────────────────────
