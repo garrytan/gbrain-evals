@@ -33,8 +33,10 @@
  *         now actually wired; optimizeOn failures propagate).
  *
  * ── Feature boundary ─────────────────────────────────────────────────
- * UNDER TEST: runSkillOpt (per-model optimization) + scoreSkillOnTasks as the
- * harness's independent measurement (never trusts optimizer receipts).
+ * UNDER TEST: runSkillOpt's iterative loop (per-model optimization, asked for
+ * with `optimizerMode: 'reflect'`, opt-in since gbrain v0.60.542.0) +
+ * scoreSkillOnTasks as the harness's independent measurement (never trusts
+ * optimizer receipts).
  * LEGITIMATELY SEEDED/STUBBED: the committed skillopt-v1 corpus (rule judges,
  * disjoint held-out task_ids) and, under --stub-llm only, the gateway chat
  * transport (cat30's deterministic stub; publishable:false).
@@ -238,7 +240,8 @@ async function optimizeOn(deps: PairDeps, seed: string, seedBody: string, benchm
       optimizerModel: deps.optimizerModel, targetModel, judgeModel: deps.judgeModel,
       mode: 'patch', dryRun: false, noMutate: false, allowMutateBundled: false,
       bootstrapReviewed: false, json: true, maxCostUsd: deps.maxCostUsd, maxRuntimeMin: 25, force: true,
-    } as any);
+      optimizerMode: 'reflect',
+    });
     deps.runs.push({ label: `${seed}:optimize-on:${targetModel}`, outcome: r.outcome, final_text: r.finalText ?? null, receipt: r.receipt ?? null });
     return {
       best: r.finalText ?? seedBody,
@@ -445,6 +448,7 @@ export async function runCat33(options: Cat33Options = {}): Promise<Cat33RunResu
       llm_transport: stub ? 'stubbed-obedient' : 'live',
       mode: bpre ? 'b-pre-validity' : 'full',
       optimizer_model: optimizerModel,
+      optimizer_mode: 'reflect',
       judge_model: judgeModel,
       epochs, batch_size: batchSize, runs_per_task: runsPerTask,
       max_cost_usd: maxCostUsd,

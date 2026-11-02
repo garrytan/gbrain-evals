@@ -199,7 +199,7 @@ describe('runCat32 Part B gate', () => {
     expect(r.receipt.errors.some((e) => e.origin === 'sut' && e.probe_id === 'part-b')).toBe(true);
   }, RUN_TIMEOUT);
 
-  /** Write the optimizer's rejected buffer the way gbrain does when its held-out gate refuses a candidate. */
+  /** Write the optimizer's rejected buffer the way gbrain before v0.60.542.0 did when its held-out gate refused a candidate. */
   const recordHeldOutBlock = (opts: { skillsDir: string; skillName: string }) => {
     const dir = join(opts.skillsDir, opts.skillName, 'skillopt');
     mkdirSync(dir, { recursive: true });
@@ -246,7 +246,53 @@ describe('runCat32 Part B gate', () => {
     expect(runs[0].final_text).toContain('STUB-HONEST');
   }, RUN_TIMEOUT);
 
-  test('gate holds: a candidate was blocked and the output preserves held-out quality → pass, exit 0', async () => {
+  test('gate holds (gbrain v0.60.542.0+): the held-out check refused the final champion, so the skill stays the seed → pass, exit 0', async () => {
+    const modes: unknown[] = [];
+    const heldOut = { baseline_score: 0.5, candidate_score: 0.1, passed: false };
+    const r = await runCat32({
+      bpre: false,
+      reportsDir: tmpReports(),
+      quiet: true,
+      engineFactory: async () => fakeEngine(),
+      scoreFn: scoreFake,
+      runSkillOptFn: (async (opts: any) => (modes.push(opts.optimizerMode), {
+        outcome: 'no_improvement',
+        finalText: SEED_SKILL,
+        receipt: { baseline_sel_score: 0, best_sel_score: 0, final_cost_usd: 0.01, optimizer_mode: 'reflect', held_out: heldOut },
+        mutatedSkillFile: false,
+      })) as any,
+    });
+    expect(modes).toEqual(['reflect']);
+    expect((r.receipt.resolved_config as any).optimizer_mode).toBe('reflect');
+    expect(r.receipt.verdict).toBe('pass');
+    expect(r.exitCode).toBe(0);
+    const partB = (r.receipt.data as any).part_b;
+    expect(partB.held_out_blocked).toBe(1);
+    expect(partB.held_out_check).toEqual(heldOut);
+    expect(partB.no_regression).toBe(true);
+  }, RUN_TIMEOUT);
+
+  test('the final champion passed the held-out check: nothing was blocked → partial, not pass', async () => {
+    const r = await runCat32({
+      bpre: false,
+      reportsDir: tmpReports(),
+      quiet: true,
+      engineFactory: async () => fakeEngine(),
+      scoreFn: scoreFake,
+      runSkillOptFn: (async () => ({
+        outcome: 'accepted',
+        finalText: HONEST_SKILL + '\nSTUB-HONEST',
+        receipt: { baseline_sel_score: 0, best_sel_score: 1.0, final_cost_usd: 0.01, held_out: { baseline_score: 0.5, candidate_score: 0.85, passed: true } },
+        mutatedSkillFile: true,
+      })) as any,
+    });
+    expect(r.receipt.verdict).toBe('partial');
+    const partB = (r.receipt.data as any).part_b;
+    expect(partB.no_regression).toBe(true);
+    expect(partB.held_out_blocked).toBe(0);
+  }, RUN_TIMEOUT);
+
+  test('gate holds (gbrain before v0.60.542.0): a candidate was blocked in the rejected buffer and the output preserves held-out quality → pass, exit 0', async () => {
     const r = await runCat32({
       bpre: false,
       reportsDir: tmpReports(),
