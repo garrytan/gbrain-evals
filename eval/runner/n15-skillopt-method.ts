@@ -16,11 +16,11 @@
  * A3); see eval/runner/skillopt-method/headroom.ts.
  *
  * Hermetic run (default, keyless, report-only):
- *   1. both dataset versions regenerate byte for byte and match their
- *      MANIFEST.json;
- *   2. each seed SKILL.md, in both versions, matches its sha256 at gbrain
- *      3ec766c40;
- *   3. on train and selection of both versions, every solvability-control
+ *   1. every dataset version (v1, v2 and v3) regenerates byte for byte and
+ *      matches its MANIFEST.json;
+ *   2. each seed SKILL.md, in every version, matches its sha256 at its gbrain
+ *      pin (3ec766c40 for v1 and v2, 311a83bbe for v3);
+ *   3. on train and selection of every version, every solvability-control
  *      answer passes its judge, and an empty answer and "I don't know" fail
  *      every task that is not a negative control;
  *   4. the tool coverage of each seed against what the rollout serves;
@@ -66,7 +66,7 @@ import { paidRequested, PaidArmRefusal, requirePaidArm } from './paid-arm.ts';
 import { attestPreregistration, type Attestation } from './prereg.ts';
 import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, noModelSpend, productIdentity, receiptPath, sourceTreeIdentity, writeReceipt, type ProbeError, type Receipt } from './receipt.ts';
 import { auditSkill } from './skillopt-method/audit.ts';
-import { DATASET_VERSIONS, datasetDir, datasetName, DEFAULT_DATASET, readCriteria, readSeed, readTasks, SEED_GBRAIN_COMMIT, sha256, type DatasetVersion } from './skillopt-method/dataset.ts';
+import { DATASET_VERSIONS, datasetDir, datasetName, DEFAULT_DATASET, LEGACY_VERSIONS, readCriteria, readSeed, readTasks, SEED_GBRAIN_COMMIT, sha256, type DatasetVersion, type LegacyVersion } from './skillopt-method/dataset.ts';
 import { PROPOSER_MODEL } from './skillopt-method/one-shot.ts';
 import {
   countedSkills, f0bSkillsOf, FRONTIER_TARGET_NAMES, FRONTIER_TARGETS, frontierEstimateUsd, HISTORICAL_NOTE, HISTORICAL_PROBE_MODELS, openBrain,
@@ -133,10 +133,10 @@ function parseStage(argv: readonly string[]): typeof STAGES[number] {
   return raw as typeof STAGES[number];
 }
 
-function parseDataset(argv: readonly string[]): DatasetVersion {
+function parseDataset(argv: readonly string[]): LegacyVersion {
   const raw = argValue(argv, '--dataset') ?? DEFAULT_DATASET;
-  if (!(DATASET_VERSIONS as readonly string[]).includes(raw)) throw new Error(`--dataset: unknown version ${raw} (have ${DATASET_VERSIONS.join(', ')})`);
-  return raw as DatasetVersion;
+  if (!(LEGACY_VERSIONS as readonly string[]).includes(raw)) throw new Error(`--dataset: unknown version ${raw} (have ${LEGACY_VERSIONS.join(', ')})`);
+  return raw as LegacyVersion;
 }
 
 /** Collect the values of a live run's keys before withHermeticEnv strips them; refuse when one is missing. */
@@ -567,7 +567,7 @@ async function main(): Promise<void> {
   if (d.integrity) {
     const i = d.integrity as IntegrityResult;
     log(`\nverdict: ${receipt.verdict ?? receipt.run_status} (report-only; nothing gates)`);
-    log(`datasets: ${i.dataset_problems.length ? i.dataset_problems.join('; ') : `${DATASET_VERSIONS.join(' and ')} regenerate byte for byte and match their MANIFEST.json; the probe reads ${datasetName(DEFAULT_DATASET)}`}`);
+    log(`datasets: ${i.dataset_problems.length ? i.dataset_problems.join('; ') : `${DATASET_VERSIONS.join(', ')} regenerate byte for byte and match their MANIFEST.json; the probe reads ${datasetName(DEFAULT_DATASET)}`}`);
     log(`seeds: ${i.seed_problems.length ? i.seed_problems.join('; ') : `all match their sha256 at gbrain ${SEED_GBRAIN_COMMIT.slice(0, 9)}`}`);
     for (const [s, x] of Object.entries(i.scorer)) log(`scorer ${s}: ${x.tasks - x.controls_failing.length}/${x.tasks} solvability controls pass; ${x.degenerate_passing.length} degenerate answers pass`);
     for (const c of d.coverage as ReturnType<typeof toolCoverage>) log(`tools ${c.skill}: ${c.full ? 'every frontmatter brain operation is served' : `not served: ${c.missing.join(', ')}`}${c.outside_brain.length ? `; outside the brain: ${c.outside_brain.join(', ')}` : ''}`);

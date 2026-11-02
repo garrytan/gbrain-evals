@@ -65,10 +65,11 @@ import { importFromContent } from 'gbrain/import-file';
 import { configureGateway, __setChatTransportForTests, type ChatOpts, type ChatResult } from 'gbrain/ai/gateway';
 import { rolloutToolsForSkill, runSkillOpt, type BenchmarkTask } from 'gbrain/core/skillopt';
 import { operations } from 'gbrain/operations';
-import { loadCorpora, type MethodTask } from '../../generators/skillopt-method/common.ts';
+import type { MethodTask } from '../../generators/skillopt-method/common.ts';
 import { auditSkill, type AuditResult } from './audit.ts';
-import { datasetName, DEFAULT_DATASET, frontmatterTools, readCriteria, readSeed, readTasks, type DatasetVersion } from './dataset.ts';
-import { forbiddenMarkers, ONE_SHOT_SYSTEM, PROPOSER_MODEL, proposeRewrite, proposerInput, seedOnTrain, trainPages } from './one-shot.ts';
+import { datasetName, DEFAULT_DATASET, frontmatterTools, readCriteria, readSeed, readTasks, type DatasetVersion, type LegacyVersion } from './dataset.ts';
+import { datasetContext, redactionScope } from './dataset-context.ts';
+import { ONE_SHOT_SYSTEM, PROPOSER_MODEL, proposeRewrite, proposerInput, seedOnTrain } from './one-shot.ts';
 import { emptyMeter, scoreArm, summarizeMeter, type ArmScore, type MeterSummary } from './rollouts.ts';
 import { evaluateJudge, SKILLS, type SkillName, type Trajectory } from './score.ts';
 
@@ -317,10 +318,16 @@ export function fakeReply(opts: ChatOpts, text: string, usage: Partial<ChatResul
   } as ChatResult;
 }
 
+/** A fake proposer's reply: `body` under the seed's frontmatter, which the proposer input carries verbatim and a proposer must keep (audit.ts). */
+export function fakeRewrite(opts: ChatOpts, body: string): ChatResult {
+  const front = /^---\n[\s\S]*?\n---\n/m.exec(lastUserText(opts))?.[0];
+  return fakeReply(opts, front ? `${front}\n${body}` : body);
+}
+
 /**
  * Deterministic stand-in for every model the probe calls. A proposer (gbrain's
  * optimizer or the harness one-shot) returns a body carrying
- * FAKE_REWRITE_MARKER; the target answers with the task's solvability-control
+ * FAKE_REWRITE_MARKER under the seed's frontmatter; the target answers with the task's solvability-control
  * answer when its system prompt carries the marker, answers half the tasks
  * that way under the seed (task ids ending in an even digit), and says "I
  * don't know" otherwise. It never calls a tool.
@@ -328,7 +335,7 @@ export function fakeReply(opts: ChatOpts, text: string, usage: Partial<ChatResul
 export function fakeTransport(tasks: readonly MethodTask[]): ChatTransport {
   return async opts => {
     const system = opts.system ?? '';
-    if (system.includes("SkillOpt's optimizer") || system === ONE_SHOT_SYSTEM) return fakeReply(opts, `# Rewritten skill\n\n${FAKE_REWRITE_MARKER}\n\nAnswer from the brain and cite the page that holds the answer.`);
+    if (system.includes("SkillOpt's optimizer") || system === ONE_SHOT_SYSTEM) return fakeRewrite(opts, `# Rewritten skill\n\n${FAKE_REWRITE_MARKER}\n\nAnswer from the brain and cite the page that holds the answer.`);
     const user = lastUserText(opts);
     const task = tasks.find(t => user.includes(t.task));
     if (!task) return fakeReply(opts, "I don't know.");
@@ -347,14 +354,14 @@ function configureProbeGateway(chatModel: string): void {
   configureGateway({ embedding_model: PROBE_EMBEDDING.model, embedding_dimensions: PROBE_EMBEDDING.dimensions, chat_model: chatModel, env: process.env as Record<string, string | undefined> });
 }
 
-/** The rollout brain: both corpora imported without embeddings, under PINNED_SEARCH_CONFIG. The caller disconnects it. */
-export async function openBrain(): Promise<PGLiteEngine> {
+/** The rollout brain: the dataset's pages (v1 and v2: both corpora; v3: its world) imported without embeddings, under PINNED_SEARCH_CONFIG. The caller disconnects it. */
+export async function openBrain(dataset: DatasetVersion = DEFAULT_DATASET): Promise<PGLiteEngine> {
   configureProbeGateway(FRONTIER_TARGETS.opus);
   const engine = new PGLiteEngine();
   await engine.connect({});
   await engine.initSchema();
   for (const [key, value] of Object.entries(PINNED_SEARCH_CONFIG)) await engine.setConfig(key, value);
-  for (const [slug, content] of loadCorpora().pages) await importFromContent(engine, slug, content, { noEmbed: true });
+  for (const [slug, content] of datasetContext(dataset).pages) await importFromContent(engine, slug, content, { noEmbed: true });
   return engine;
 }
 
@@ -457,7 +464,7 @@ export interface ProbeOptions {
   skills?: readonly SkillName[];
   afterHardening?: boolean;
   /** v1 reproduces probe 1, v2 probe 2. */
-  dataset?: DatasetVersion;
+  dataset?: LegacyVersion;
   log?: (line: string) => void;
   /** Called with each skill's result as soon as it is scored, so a later budget stop or crash keeps it. */
   onSkill?: (result: ProbeSkillResult) => void;
@@ -771,7 +778,7 @@ async function oneShotPair(p: PairBase & { engine: PGLiteEngine; model: string; 
   let input: { text: string; withheld: number } | null = null;
   let inputError = seedTrain.score === null ? `the seed's train pass failed: ${seedTrain.error ?? 'unscored'}` : null;
   if (!inputError) {
-    try { input = proposerInput({ seedText, criteria: readCriteria(base.skill), trajectories, markers: forbiddenMarkers(sel, train), pages: { visible: trainPages(train), corpus: new Set(loadCorpora().pages.keys()) } }); } catch (e) { inputError = errMsg(e); }
+    try { input = proposerInput({ seedText, criteria: readCriteria(base.skill), trajectories, ...redactionScope(datasetContext(DEFAULT_DATASET), train, sel) }); } catch (e) { inputError = errMsg(e); }
   }
   for (let repeat = 0; repeat < FRONTIER_REWRITE_REPEATS; repeat++) {
     if (!input) { arms.push({ score: null, per_task: {}, outcome: 'no-train-trajectories', error: inputError ?? undefined, kept: false, cost_usd: null }); continue; }

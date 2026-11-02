@@ -102,7 +102,7 @@ const shownValue = (v: GoldValue) => v.kind === 'number' ? `${v.value}${v.unit =
  * selection value that is also a train value, or that a train prompt states,
  * is train's to show.
  */
-export function forbiddenMarkers(withheld: readonly MethodTask[], exposed: readonly MethodTask[]): Marker[] {
+export function forbiddenMarkers(withheld: ReadonlyArray<Pick<MethodTask, 'task' | 'gold'>>, exposed: ReadonlyArray<Pick<MethodTask, 'task' | 'gold'>>): Marker[] {
   const shown = exposed.flatMap(t => [t.task, ...t.gold.slugs, ...t.gold.values.map(shownValue), ...(t.gold.subject ? [t.gold.subject] : [])]).join('\n');
   const markers = new Map<string, Marker>();
   for (const t of withheld) {
@@ -114,7 +114,7 @@ export function forbiddenMarkers(withheld: readonly MethodTask[], exposed: reado
 }
 
 /** The pages the train split itself shows: its gold pages and any page a train prompt names. */
-export const trainPages = (train: readonly MethodTask[]): Set<string> => new Set(train.flatMap(t => [...t.gold.slugs, ...citedSlugs(t.task)]));
+export const trainPages = (train: ReadonlyArray<Pick<MethodTask, 'task' | 'gold'>>): Set<string> => new Set(train.flatMap(t => [...t.gold.slugs, ...citedSlugs(t.task)]));
 
 /** Slug-shaped tokens (`people/adam-lee-19`, `contracts/x.md`). */
 const SLUG_TOKEN = /(?<![\w/.-])[A-Za-z0-9][\w.-]*(?:\/[\w.-]*[\w-])+(?![\w/-])/g;

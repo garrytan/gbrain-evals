@@ -18,8 +18,8 @@ import { FACT_CHECK_V2_QUOTAS } from '../../eval/generators/skillopt-method/fact
 import { assertScorerRejectsFakeSystems, type AnswerSpace } from '../../eval/runner/mutation-kit.ts';
 import { auditSkill } from '../../eval/runner/skillopt-method/audit.ts';
 import {
-  DATASET_VERSIONS, datasetDir, datasetName, DEFAULT_DATASET, readCriteria, readSealedTestTasks, readSeed, readTasks, SEED_GBRAIN_COMMIT, SEED_GBRAIN_VERSION, SEED_SHA256,
-  type DatasetVersion,
+  LEGACY_VERSIONS, datasetDir, datasetName, DEFAULT_DATASET, readCriteria, readSealedTestTasks, readSeed, readTasks, SEED_GBRAIN_COMMIT, SEED_GBRAIN_VERSION, SEED_SHA256,
+  type LegacyVersion,
 } from '../../eval/runner/skillopt-method/dataset.ts';
 import {
   citationNdcg, citedSlugs, compileJudge, countedScoreFn, CRITERIA, CRITERIA_V2, evaluateJudge, renderFailedCheck, SKILLS, SPLITS, type Gold, type SkillName,
@@ -27,13 +27,13 @@ import {
 
 const REPO_ROOT = join(import.meta.dir, '../..');
 const pass = (skill: SkillName, gold: Gold, answer: string) => evaluateJudge(answer, compileJudge(skill, gold)).correct;
-const QUOTAS: Record<DatasetVersion, Record<SkillName, Record<string, readonly number[]>>> = {
+const QUOTAS: Record<LegacyVersion, Record<SkillName, Record<string, readonly number[]>>> = {
   v1: { query: QUERY_QUOTAS, briefing: BRIEFING_QUOTAS, 'fact-check': FACT_CHECK_QUOTAS },
   v2: { query: QUERY_V2_QUOTAS, briefing: BRIEFING_V2_QUOTAS, 'fact-check': FACT_CHECK_V2_QUOTAS },
 };
-const CRITERIA_TEXTS: Record<DatasetVersion, Readonly<Record<SkillName, string>>> = { v1: CRITERIA, v2: CRITERIA_V2 };
-const trainSel = (skill: SkillName, version: DatasetVersion = DEFAULT_DATASET): MethodTask[] => [...readTasks(skill, 'train', version), ...readTasks(skill, 'sel', version)];
-const allTasks = (skill: SkillName, version: DatasetVersion = DEFAULT_DATASET): MethodTask[] => [...trainSel(skill, version), ...readSealedTestTasks(skill, version)];
+const CRITERIA_TEXTS: Record<LegacyVersion, Readonly<Record<SkillName, string>>> = { v1: CRITERIA, v2: CRITERIA_V2 };
+const trainSel = (skill: SkillName, version: LegacyVersion = DEFAULT_DATASET): MethodTask[] => [...readTasks(skill, 'train', version), ...readTasks(skill, 'sel', version)];
+const allTasks = (skill: SkillName, version: LegacyVersion = DEFAULT_DATASET): MethodTask[] => [...trainSel(skill, version), ...readSealedTestTasks(skill, version)];
 const checkKinds = (t: MethodTask) => (t.judge.kind === 'rule' ? t.judge.checks.map(c => (c as { kind?: string }).kind) : []);
 
 describe('counted scorer: tolerant value patterns', () => {
@@ -117,7 +117,7 @@ describe('counted scorer: citations, statuses and abstentions', () => {
   });
 });
 
-for (const version of DATASET_VERSIONS) describe(`frozen task sets: ${datasetName(version)}`, () => {
+for (const version of LEGACY_VERSIONS) describe(`frozen task sets: ${datasetName(version)}`, () => {
   test('generation is deterministic and matches the committed files and MANIFEST.json', () => {
     expect(datasetProblems(version)).toEqual([]);
     expect([...buildFiles(version)].map(([p, c]) => [p, createHash('sha256').update(c).digest('hex')])).toEqual([...buildFiles(version)].map(([p, c]) => [p, createHash('sha256').update(c).digest('hex')]));
@@ -204,7 +204,7 @@ describe('v2 hardening', () => {
 });
 
 describe('seeds', () => {
-  for (const version of DATASET_VERSIONS) for (const skill of SKILLS) {
+  for (const version of LEGACY_VERSIONS) for (const skill of SKILLS) {
     test(`${datasetName(version)} ${skill} seed is verbatim from gbrain ${SEED_GBRAIN_COMMIT.slice(0, 9)}`, () => {
       expect(createHash('sha256').update(readSeed(skill, version)).digest('hex')).toBe(SEED_SHA256[skill]);
       const installed = join(REPO_ROOT, 'node_modules/gbrain/skills', skill, 'SKILL.md');
@@ -217,7 +217,7 @@ describe('seeds', () => {
 
 describe('criteria text and failed-check rendering', () => {
   test('one task-independent criteria text per skill, frozen with the data, naming no gold value, slug or entity', () => {
-    for (const version of DATASET_VERSIONS) for (const skill of SKILLS) {
+    for (const version of LEGACY_VERSIONS) for (const skill of SKILLS) {
       const text = CRITERIA_TEXTS[version][skill];
       expect(readCriteria(skill, version)).toBe(text + '\n');
       expect(citedSlugs(text)).toEqual([]);
@@ -226,7 +226,7 @@ describe('criteria text and failed-check rendering', () => {
     }
   });
   test('a failed check renders without its argument', () => {
-    for (const version of DATASET_VERSIONS) for (const skill of SKILLS) for (const t of trainSel(skill, version)) for (const c of t.judge.kind === 'rule' ? t.judge.checks : []) {
+    for (const version of LEGACY_VERSIONS) for (const skill of SKILLS) for (const t of trainSel(skill, version)) for (const c of t.judge.kind === 'rule' ? t.judge.checks : []) {
       const text = renderFailedCheck(c);
       expect(/\d|\//.test(text)).toBe(false);
       for (const v of t.gold.values) expect(text.toLowerCase().includes(String(v.value).toLowerCase())).toBe(false);
@@ -234,7 +234,7 @@ describe('criteria text and failed-check rendering', () => {
   });
 });
 
-for (const version of DATASET_VERSIONS) describe(`mutation suite: ${datasetName(version)}`, () => {
+for (const version of LEGACY_VERSIONS) describe(`mutation suite: ${datasetName(version)}`, () => {
   for (const skill of SKILLS) {
     const probes = trainSel(skill, version);
     test(`${skill}: the scorer passes the honest system and fails every fake system`, () => {
