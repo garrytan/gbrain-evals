@@ -11,6 +11,8 @@
  * gpt-5.4-mini are never run. Before a paid run, check which models are
  * newest and update this file in a commit that runs nothing.
  */
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { COMPAT_PROVIDERS, modelsNotRun } from '../runner/providers/openai-compatible.ts';
 import { FRONTIER_READERS, SMOKE_ONLY_READERS } from '../runner/systems/baselines.ts';
 import { sha256 } from './common.ts';
@@ -76,6 +78,19 @@ export function modelRuleViolations(config: { fixed_reader: ModelRef; frontier_s
   if (config.judge.id.startsWith('particle:')) out.push(`${config.judge.id} never judges a counted cell`);
   if (!config.frontier_sweep.some(m => m.id === config.fixed_reader.id)) out.push('the fixed reader must be the sweep\'s Opus so the sweep shares one anchor');
   return out;
+}
+
+/**
+ * Why a run directory cannot be answered, scored or reported under MODEL_CONFIG, or null. A directory whose run.json
+ * records another fixed reader holds that reader's answers and its sweep's under the same receipt paths, so the current
+ * config would reuse or relabel them as its own fixed reader's.
+ */
+export function recordedReaderProblem(dir: string): string | null {
+  const path = join(dir, 'run.json');
+  if (!existsSync(path)) return null;
+  const recorded = (JSON.parse(readFileSync(path, 'utf8')) as { models?: { fixed_reader?: { id?: string } } }).models?.fixed_reader?.id;
+  if (!recorded || recorded === MODEL_CONFIG.fixed_reader.id) return null;
+  return `${dir} was answered with fixed reader ${recorded}, and run-config.ts names ${MODEL_CONFIG.fixed_reader.id}; move the directory aside before a new run, or check out the commit that answered it to rescore or report it`;
 }
 
 /** One measured configuration of a system on a suite. */

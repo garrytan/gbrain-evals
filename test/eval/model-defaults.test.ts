@@ -45,8 +45,8 @@ import { COUNTED_READERS as Q1_READERS, SONNET as Q1_ANCHOR } from '../../eval/r
 import { CALIBRATION_MODELS as CAT40_CALIBRATION, HARD_MODELS as CAT40_HARD, MEMORY_MODELS as CAT40_MEMORY } from '../../eval/runner/cat40/hard-ops.ts';
 import { NEXT_MODELS } from '../../eval/runner/cat40/next-confirm.ts';
 import { PAID_MODELS as N14_MODELS } from '../../eval/runner/n14-large-page-fidelity.ts';
-import { FRONTIER as PILOT_FRONTIER } from '../../eval/runner/pilot/cells.ts';
-import { SONNET as CONFIRM_READER } from '../../eval/runner/pilot/confirm.ts';
+import { CHEAP as PILOT_CHEAP, FRONTIER as PILOT_FRONTIER } from '../../eval/runner/pilot/cells.ts';
+import { BUILDER as CONFIRM_BUILDER, SONNET as CONFIRM_READER } from '../../eval/runner/pilot/confirm.ts';
 import { FRONTIER as E2_FRONTIER } from '../../eval/runner/budgeted-delivery/e2-readings.ts';
 import { DEFAULT_MODEL as P4_MODEL } from '../../eval/runner/p4-stream/run.ts';
 import { DEFAULT_THINK_MODEL as P8_THINK } from '../../eval/runner/p8-quote-grounding.ts';
@@ -97,7 +97,7 @@ const DEFAULTS: Record<string, Registered> = {
   'Cat 40 Hard models': { test: [...CAT40_HARD, ...CAT40_CALIBRATION, ...CAT40_MEMORY] },
   'Cat 40 next-confirm models': { test: [...NEXT_MODELS] },
   'N14 paid models': { test: [...N14_MODELS] },
-  'pilot and evidence-brief confirmation readers': { test: [...PILOT_FRONTIER, CONFIRM_READER] },
+  'pilot and evidence-brief confirmation models': { test: [...PILOT_FRONTIER, CONFIRM_READER, ...PILOT_CHEAP, CONFIRM_BUILDER] },
   'budgeted-delivery E2 frontier readers': { test: E2_FRONTIER.map(f => f.model) },
   'P4 streaming model': { test: [P4_MODEL] },
   'P8 think model': { test: [P8_THINK] },

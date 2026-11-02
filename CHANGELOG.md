@@ -4,27 +4,28 @@ This records what each gbrain-evals release changed and what its measurements me
 
 ## [Unreleased]
 
-### Frontier first, part 2: the live reader sets drop Sonnet, and the guard sees every frozen set
+### Frontier first, part 2: the live reader sets drop Sonnet, and the guard sees the frozen ones
 
 - **The workload suites read every cell with Opus 5.5.** Their fixed reader was `claude-sonnet-5-5`, a model under
   test on every question, and `modelRuleViolations` required it. The fixed reader is now `anthropic:claude-opus-5-5`,
   the counted sweep reads with Opus 5.5, `gpt-6.1-sol` and particle-1, and `modelRuleViolations` requires the newest
   frontier Opus as the fixed reader and the sweep's anchor. A rerun is a new receipt identity, never pooled with the
-  2026-10-05 runs, so an existing `eval/reports/workload-bench/<suite>/` directory is moved aside first: it holds its
-  sweep's Opus 5.5 receipts, which the answer phase would reuse as fixed-reader answers, because `bench.ts` does not
-  compare the run's recorded models, and `report.ts` publishes only from that directory. Its
+  2026-10-05 runs. An old run directory holds its sweep's Opus 5.5 receipts where the new fixed reader's answers go, and
+  `bench.ts` and `report.ts` read the current config, so they would reuse or relabel them as fixed-reader rows. Both
+  now refuse a directory whose `run.json` records another fixed reader (`recordedReaderProblem` in
+  `eval/workload-suites/run-config.ts`); move it aside before a rerun, or check out an earlier commit to re-render it. Its
   answer phase costs about twice the published reader spend, because Opus 5.5 lists at twice Sonnet 5.5's price. The
   workload report's readers section says both.
 - **`FRONTIER_READERS` is `claude-opus-5-5` and `gpt-6.1-sol`.** Q1's sealed scoreboard campaign keeps its
   preregistered three readers and Sonnet 5.5 anchor as `COUNTED_READERS` and `SONNET` in
   `eval/runner/q1/cells/definitions.ts`, so its manifest and published cells do not change.
-- **The model-defaults test registers every frozen set that keeps Sonnet or Haiku under test**, each a named frozen
-  exception citing the preregistration it ran under: T0's counted readers (#292), memory-trust's counted models,
-  utility-guard readers and Cat 37 judge, Q1's readers and anchor, Cat 40 Hard and next-confirm, N14's paid models, the
-  pilot and evidence-brief confirmation readers, budgeted-delivery E2's frontier readers, the P4 streaming model, the P8
-  think model and the facts-absorb candidate arms. Every one has run and published its cells. A new run of any of them
-  amends its preregistration to Opus 5.5, GPT-6.1 Sol and, where the runner has a route, particle-1 before its first
-  cell. P4's `--models`, P8's `--think-model` and the facts-absorb `--arms` defaults are now exported constants so
+- **The model-defaults test registers the frozen comparison sets that keep Sonnet or Haiku under test**, each a
+  named frozen exception citing the preregistration it ran under: T0's counted readers (#292), memory-trust's counted
+  models, utility-guard readers and Cat 37 judge, Q1's readers and anchor, Cat 40 Hard and next-confirm, N14's paid
+  models, the pilot and evidence-brief confirmation readers and Haiku 5.5 brief builders (Luna too in the pilot),
+  budgeted-delivery E2's frontier readers, the P4 streaming model, the P8 think model and the facts-absorb candidate
+  arms. Every one has run and published its cells. A new run of any of them amends its preregistration to Opus 5.5,
+  GPT-6.1 Sol and, where the runner has a route, particle-1 before its first cell. P4's `--models`, P8's `--think-model` and the facts-absorb `--arms` defaults are now exported constants so
   the test can read them; their values did not change. `particle-1` joins the current-generation list, and a new check
   (`judgeModelProblem`) fails any registered judge that is particle-1.
 - **particle-1 is in every live default set with a particle route.** The workload sweep already read with it; the other

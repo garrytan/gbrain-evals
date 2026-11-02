@@ -12,7 +12,7 @@
 import { existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, resolve } from 'node:path';
 import { REPO_ROOT } from '../runner/harness-env.ts';
-import { MODEL_CONFIG } from './run-config.ts';
+import { MODEL_CONFIG, recordedReaderProblem } from './run-config.ts';
 
 const BENCH = join(REPO_ROOT, 'eval/reports/workload-bench');
 export const RUN_DIRS: Record<string, string> = {
@@ -48,6 +48,8 @@ export function summarize(): { markdown: string; spend: Record<string, { usd: nu
   for (const [suite, sub] of Object.entries(RUN_DIRS)) {
     const dir = join(BENCH, sub);
     if (!existsSync(join(dir, 'results.json'))) { lines.push(`### ${suite}: no results yet`, ''); continue; }
+    const recorded = recordedReaderProblem(dir);
+    if (recorded) throw new Error(recorded);
     const res = read(join(dir, 'results.json')).results as Record<string, Record<string, any>>;
     spend[suite] = spendOf(dir);
     lines.push(`### ${suite}`, '');
@@ -92,6 +94,8 @@ export function copyReceipts(target: string): void {
   for (const [suite, sub] of Object.entries(RUN_DIRS)) {
     const dir = join(BENCH, sub);
     if (!existsSync(join(dir, 'results.json'))) continue;
+    const recorded = recordedReaderProblem(dir);
+    if (recorded) throw new Error(recorded);
     const out = join(target, suite);
     mkdirSync(out, { recursive: true });
     writeFileSync(join(out, 'results.json'), scrub(JSON.stringify(read(join(dir, 'results.json')), null, 1)) + '\n');

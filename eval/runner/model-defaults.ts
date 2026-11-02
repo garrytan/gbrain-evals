@@ -141,9 +141,9 @@ export const DEFAULT_MODEL_EXCEPTIONS: Readonly<Record<string, DefaultModelExcep
     models: ['anthropic:claude-opus-5-5', 'anthropic:claude-sonnet-5-5', 'openai:gpt-6.1-sol'], kind: 'frozen-protocol',
     reason: 'docs/benchmarks/2026-10-14-n14-large-page-fidelity-preregistration.md names the newest Opus, Sonnet and GPT of 2026-10-14 as its paid models, and its baseline and waves A to B4 (through 2026-10-25) ran on them; the next wave amends to Opus 5.5 and GPT-6.1 Sol first',
   },
-  'pilot and evidence-brief confirmation readers': {
-    models: ['claude-sonnet-5-5', 'gpt-6.1-sol', 'claude-sonnet-5-5'], kind: 'frozen-protocol',
-    reason: 'docs/benchmarks/2026-10-08-evidence-architecture-pilot-preregistration.md and docs/benchmarks/2026-10-08-evidence-brief-confirmation-preregistration.md name Sonnet 5.5 as the primary frontier reader, and both have run',
+  'pilot and evidence-brief confirmation models': {
+    models: ['claude-sonnet-5-5', 'gpt-6.1-sol', 'claude-sonnet-5-5', 'gpt-6-luna', 'claude-haiku-5-5', 'claude-haiku-5-5'], kind: 'frozen-protocol',
+    reason: 'docs/benchmarks/2026-10-08-evidence-architecture-pilot-preregistration.md and docs/benchmarks/2026-10-08-evidence-brief-confirmation-preregistration.md name Sonnet 5.5 as the primary frontier reader and Haiku 5.5 (with Luna in the pilot) as the cheap brief builder and DIRECT reader, and both have run',
   },
   'budgeted-delivery E2 frontier readers': {
     models: ['anthropic:claude-sonnet-5-5', 'anthropic:claude-opus-5-5', 'openai:gpt-6.1-sol'], kind: 'frozen-protocol',

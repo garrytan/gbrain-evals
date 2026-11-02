@@ -6,7 +6,7 @@
  * and scorer mutation checks.
  */
 import { describe, expect, test } from 'bun:test';
-import { existsSync, mkdtempSync, readFileSync, rmSync, symlinkSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { assertScorerRejectsFakeSystems } from '../../eval/runner/mutation-kit.ts';
@@ -22,7 +22,7 @@ import {
 } from '../../eval/workload-suites/corrections.ts';
 import { classifyMiss, generatePassingDetails } from '../../eval/workload-suites/passing-details.ts';
 import { RUN_DIRS, publishedSuiteAt } from '../../eval/workload-suites/report.ts';
-import { MODEL_CONFIG, frontierSubset, modelRuleViolations } from '../../eval/workload-suites/run-config.ts';
+import { MODEL_CONFIG, frontierSubset, modelRuleViolations, recordedReaderProblem } from '../../eval/workload-suites/run-config.ts';
 import { schemaErrors } from '../../eval/workload-suites/schema-check.ts';
 import type { ScorerLabel, SuiteBundle, SuiteDefinition, SuiteId } from '../../eval/workload-suites/types.ts';
 
@@ -280,6 +280,26 @@ describe('schema, model rule and frontier subset', () => {
     expect(subset).toEqual(frontierSubset(structuredClone(b)));
     const cats = new Set(b.queries.filter(q => subset.includes(q.id)).map(q => q.meta.category));
     expect(cats.size).toBe(new Set(b.queries.map(q => q.meta.category)).size);
+  });
+});
+
+describe('recorded fixed reader', () => {
+  test('a run directory answered under another fixed reader is refused before bench.ts touches it', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'wl-recorded-'));
+    try {
+      expect(recordedReaderProblem(dir)).toBeNull();
+      writeFileSync(join(dir, 'run.json'), JSON.stringify({ models: { ...MODEL_CONFIG, fixed_reader: { id: 'anthropic:claude-sonnet-5-5', family: 'sonnet' } } }));
+      const problem = `${dir} was answered with fixed reader anthropic:claude-sonnet-5-5, and run-config.ts names ${MODEL_CONFIG.fixed_reader.id}`;
+      expect(recordedReaderProblem(dir)).toContain(problem);
+      const before = readFileSync(join(dir, 'run.json'), 'utf8');
+      const refused = Bun.spawnSync(['bun', 'eval/workload-suites/bench.ts', 'beliefs', '--phase', 'score', '--out', dir], { cwd: resolve(import.meta.dir, '../..') });
+      expect([refused.exitCode, refused.stderr.toString().includes(problem)]).toEqual([2, true]);
+      expect(readFileSync(join(dir, 'run.json'), 'utf8')).toBe(before);
+      writeFileSync(join(dir, 'run.json'), JSON.stringify({ models: MODEL_CONFIG }));
+      expect(recordedReaderProblem(dir)).toBeNull();
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });
 
