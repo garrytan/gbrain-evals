@@ -29,7 +29,7 @@
  *                        only with McNemar p below 0.05; else
  *                        no-difference-shown
  *
- * The machinery is F0a's and F0b's (probe.ts): only the target's key,
+ * The machinery is F0a's and F0b's (headroom.ts): only the target's key,
  * keyword-only retrieval, metered rollouts, the request-settings observer on a
  * live run, `onSkill` after each pair and the reprice trigger on a pair's mean
  * rollout cost. Only this stage reads the test split (`readSealedTestTasks`),
@@ -45,7 +45,7 @@ import { datasetName, DEFAULT_DATASET, readSealedTestTasks, readSeed } from './d
 import {
   fakeTransport, FRONTIER_TARGET_NAMES, FRONTIER_TARGETS, MODELS_NOT_RUN, NO_SKILL_TEXT, observeModelRequests, openBrain, REPRICE_TRIGGER_USD, RETRIEVAL, servedTools, sha8, TARGET_KEY, withProbeGateway,
   type ChatTransport, type FrontierResult, type FrontierTarget, type RepriceTrigger, type RequestSettings,
-} from './probe.ts';
+} from './headroom.ts';
 import { emptyMeter, scoreArm, summarizeMeter, type ArmScore, type MeterSummary, type MeterTotals } from './rollouts.ts';
 import { evaluateJudge, SKILLS, type SkillName } from './score.ts';
 

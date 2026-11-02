@@ -1,6 +1,6 @@
 # SkillOpt method benchmark: frontier probe and test-split read, November 2, 2026
 
-Measured on gbrain v0.60.542.0 (`ca1281a2`) with the runner at gbrain-evals `13ae2442` (probe code) and `d4ac793b` (preregistration amendment 3). The targets are `claude-opus-5-5` and `gpt-6.1-sol`, and `claude-opus-5-5` proposed every rewrite. Run and written up in thread GBEV-24 (issue GST-799). [Preregistration](PREREGISTRATION.md): amendment 2 covers the probe and amendment 3 covers the test read, and each was pushed before the calls it covers. [Probe results](probe/frontier/README.md).
+Measured on gbrain v0.60.542.0 (`ca1281a2`) with the runner at gbrain-evals `13ae2442` (probe code) and `d4ac793b` (preregistration amendment 3). The runner module the preregistration calls `probe.ts` is now `eval/runner/skillopt-method/headroom.ts`, renamed with no other change. The targets are `claude-opus-5-5` and `gpt-6.1-sol`, and `claude-opus-5-5` proposed every rewrite. Run and written up in thread GBEV-24 (issue GST-799). [Preregistration](PREREGISTRATION.md): amendment 2 covers the probe and amendment 3 covers the test read, and each was pushed before the calls it covers. [Probe results](probe/frontier/README.md).
 
 ## The finding
 
@@ -72,7 +72,7 @@ The reproduction needs no provider key. It opens the benchmark brain, builds the
 // Run from the repository root with no provider key set:
 // env -u ANTHROPIC_API_KEY -u OPENAI_API_KEY -u VOYAGE_API_KEY -u PARTICLE_API_KEY bun repro.ts
 import { runRollout } from 'gbrain/core/skillopt';
-import { openBrain } from './eval/runner/skillopt-method/probe.ts';
+import { openBrain } from './eval/runner/skillopt-method/headroom.ts';
 import { readSeed } from './eval/runner/skillopt-method/dataset.ts';
 
 const sol: Record<string, { slug: string } & Record<string, unknown>> = {

@@ -20,7 +20,7 @@ import {
   countedSkills, FAKE_REWRITE_MARKER, fakeReply, fakeTransport, FRONTIER_TARGET_NAMES, FRONTIER_TARGETS, frontierEstimateUsd, frontierGate, lastUserText, NO_SKILL_TEXT, openBrain,
   PINNED_SEARCH_CONFIG, PROBE_EMBEDDING, PROBE_GATE, probeGate, REPRICE_TRIGGER_USD, runFrontierProbe, runProbe, runSmoke, servedTools, sha8, toolCoverage,
   type ChatTransport, type FrontierResult, type FrontierRow, type FrontierTarget, type SkillProbe,
-} from '../../eval/runner/skillopt-method/probe.ts';
+} from '../../eval/runner/skillopt-method/headroom.ts';
 import { callCostUsd, emptyMeter, meterRollout, summarizeMeter } from '../../eval/runner/skillopt-method/rollouts.ts';
 import { SKILLS } from '../../eval/runner/skillopt-method/score.ts';
 import {

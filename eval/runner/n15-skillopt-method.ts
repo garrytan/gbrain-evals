@@ -13,7 +13,7 @@
  * The probe reads skillopt-method-v2, the hardening after probe 1 found v1
  * saturated; v1 stays frozen and is checked here too. Its targets are the
  * frontier models claude-opus-5-5 and gpt-6.1-sol (plan revision 3, decision
- * A3); see eval/runner/skillopt-method/probe.ts.
+ * A3); see eval/runner/skillopt-method/headroom.ts.
  *
  * Hermetic run (default, keyless, report-only):
  *   1. both dataset versions regenerate byte for byte and match their
@@ -72,7 +72,7 @@ import {
   countedSkills, f0bSkillsOf, FRONTIER_TARGET_NAMES, FRONTIER_TARGETS, frontierEstimateUsd, HISTORICAL_NOTE, HISTORICAL_PROBE_MODELS, openBrain,
   PROBE_ESTIMATE_USD, PROBE_STAGES, runFrontierProbe, runProbe, runSmoke, SMOKE_ESTIMATE_USD, TARGET_KEY, toolCoverage,
   type CountedSkills, type FrontierResult, type FrontierSkillResult, type FrontierTarget, type ProbeResult, type ProbeSkillResult, type ProbeStage, type RequestSettings, type SmokeResult,
-} from './skillopt-method/probe.ts';
+} from './skillopt-method/headroom.ts';
 import { evaluateJudge, SKILLS, type SkillName } from './skillopt-method/score.ts';
 import { planTestStage, rewritePath, runTestStage, TEST_STAGE, testStageEstimateUsd, withRewriteTexts, type PairedDifference, type TestPairResult, type TestStageResult } from './skillopt-method/test-stage.ts';
 
