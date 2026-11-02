@@ -32,7 +32,7 @@
 import { chat } from 'gbrain/ai/gateway';
 import type { PGLiteEngine } from 'gbrain/pglite-engine';
 import type { MethodTask } from '../../generators/skillopt-method/common.ts';
-import { callCostUsd, scoreArm, type ArmScore, type MeterTotals } from './rollouts.ts';
+import { callCostUsd, ROLLOUT_RETRIES, ROLLOUT_RETRY_DELAYS_MS, scoreArm, unbilledFailure, withoutSdkRetries, type ArmOptions, type ArmScore, type MeterTotals } from './rollouts.ts';
 import { citationPattern, citedSlugs, renderFailedCheck, valuePattern, type GoldValue, type MethodCheck, type RuleCheck } from './score.ts';
 
 export const PROPOSER_MODEL = 'anthropic:claude-opus-5-5';
@@ -79,10 +79,10 @@ export function pagesOf(output: unknown): Array<{ slug: string; title: string }>
 const renderFailed = (c: RuleCheck) => `${(c as Partial<MethodCheck>).kind ?? 'check'} (${renderFailedCheck(c)})`;
 
 /** Step 1: the seed once on each train task, scored by the counted scorer, with each trajectory kept for the proposer. */
-export async function seedOnTrain(o: { engine: PGLiteEngine; seedText: string; train: readonly MethodTask[]; model: string; meter?: MeterTotals }): Promise<{ arm: ArmScore; trajectories: TrainTrajectory[] }> {
+export async function seedOnTrain(o: { engine: PGLiteEngine; seedText: string; train: readonly MethodTask[]; model: string; meter?: MeterTotals; onRetry?: ArmOptions['onRetry'] }): Promise<{ arm: ArmScore; trajectories: TrainTrajectory[] }> {
   const seen = new Map<string, TrainTrajectory>();
   const arm = await scoreArm({
-    engine: o.engine, skillText: o.seedText, tasks: o.train, model: o.model, runs: 1, meter: o.meter,
+    engine: o.engine, skillText: o.seedText, tasks: o.train, model: o.model, runs: 1, meter: o.meter, onRetry: o.onRetry,
     onRollout: (t, r) => seen.set(t.task_id, {
       task_id: t.task_id, task: t.task, answer: t.final_text, correct: r.correct, failed: r.failed.map(renderFailed),
       tool_calls: t.tool_calls.map(c => ({ name: c.name, input: c.input, failed: !!c.failed, pages: c.failed ? [] : pagesOf(c.output) })),
@@ -125,13 +125,19 @@ export const markersIn = (text: string, markers: readonly Marker[]) => markers.f
 
 /**
  * Step 2: the proposer input. A returned page is named only when it is in
- * `pages.visible` (`trainPages`); every forbidden marker, and every slug of
- * `pages.corpus` outside `pages.visible`, is replaced by WITHHELD. Throws if
- * either survives the replacement.
+ * `pages.visible` (`trainPages`); in the training-task block, every forbidden
+ * marker and every slug of `pages.corpus` outside `pages.visible` is replaced
+ * by WITHHELD, and the input says what WITHHELD marks. The seed and the
+ * criteria text pass verbatim (GST-903: the fact-check seed's "<5%
+ * unverifiable" is the seed's own rule, not gold). Throws if a marker or a
+ * hidden slug survives in the block, or if the seed or criteria name a hidden
+ * corpus page.
  */
 export function proposerInput(o: { seedText: string; criteria: string; trajectories: readonly TrainTrajectory[]; markers: readonly Marker[]; pages: { visible: ReadonlySet<string>; corpus: ReadonlySet<string> } }): { text: string; withheld: number } {
   const passed = o.trajectories.filter(t => t.correct).length;
   const hidden = (slug: string) => o.pages.corpus.has(slugKey(slug)) && !o.pages.visible.has(slugKey(slug));
+  const named = [...`${o.seedText}\n${o.criteria}`.matchAll(SLUG_TOKEN)].filter(m => hidden(m[0])).length;
+  if (named) throw new Error(`the seed or criteria text names ${named} corpus page(s) the train split does not show`);
   const returned = (pages: TrainToolCall['pages']) => {
     const named = pages.filter(p => !hidden(p.slug)).map(p => (p.title ? `${p.slug} (${p.title})` : p.slug));
     const others = pages.length - named.length;
@@ -149,18 +155,19 @@ export function proposerInput(o: { seedText: string; criteria: string; trajector
       `Failed checks: ${t.failed.length ? t.failed.join('; ') : 'none'}`,
     ].join('\n');
   });
-  let text = [
+  let block = tasks.join('\n\n');
+  let withheld = 0;
+  block = block.replace(SLUG_TOKEN, s => (hidden(s) ? (withheld++, WITHHELD) : s));
+  for (const m of o.markers) block = block.replace(new RegExp(m.pattern, 'gm'), () => { withheld++; return WITHHELD; });
+  const left = [...markersIn(block, o.markers).map(m => m.kind), ...[...block.matchAll(SLUG_TOKEN)].filter(m => hidden(m[0])).map(() => 'corpus slug')];
+  if (left.length) throw new Error(`proposer input still holds ${left.length} forbidden marker(s) after withholding (${left.join(', ')})`);
+  const text = [
     'The current skill (SKILL.md):', '', o.seedText.trim(), '',
     'The success criteria every answer is scored against:', '', o.criteria.trim(), '',
-    `How the current skill did on ${o.trajectories.length} training tasks (it passed ${passed}):`, '',
-    tasks.join('\n\n'), '',
+    `How the current skill did on ${o.trajectories.length} training tasks (it passed ${passed}). ${WITHHELD} marks a page or value from tasks you are not shown:`, '',
+    block, '',
     'Write the improved SKILL.md now.',
   ].join('\n');
-  let withheld = 0;
-  text = text.replace(SLUG_TOKEN, s => (hidden(s) ? (withheld++, WITHHELD) : s));
-  for (const m of o.markers) text = text.replace(new RegExp(m.pattern, 'gm'), () => { withheld++; return WITHHELD; });
-  const left = [...markersIn(text, o.markers).map(m => m.kind), ...[...text.matchAll(SLUG_TOKEN)].filter(m => hidden(m[0])).map(() => 'corpus slug')];
-  if (left.length) throw new Error(`proposer input still holds ${left.length} forbidden marker(s) after withholding (${left.join(', ')})`);
   return { text, withheld };
 }
 
@@ -168,9 +175,27 @@ export interface ProposedRewrite { text: string | null; cost_usd: number | null;
 
 const unfence = (s: string) => /^`{3}[a-zA-Z]*\n([\s\S]*?)\n`{3}\s*$/.exec(s.trim())?.[1] ?? s;
 
-/** Step 3: one proposer call for one full SKILL.md. A refusal, an empty or unchanged reply or a reply cut at the cap yields no text. */
-export async function proposeRewrite(input: string, seedText: string): Promise<ProposedRewrite> {
-  const r = await chat({ model: PROPOSER_MODEL, system: ONE_SHOT_SYSTEM, messages: [{ role: 'user', content: input }], maxTokens: ONE_SHOT_MAX_TOKENS, allowFallback: false });
+/**
+ * Step 3: one proposer call for one full SKILL.md, with the AI SDK's retries
+ * off (`withoutSdkRetries`); the harness resends it only after an unbilled
+ * failure (`unbilledFailure`), at most `ROLLOUT_RETRIES` times. A refusal, an
+ * empty or unchanged reply or a reply cut at the cap yields no text.
+ */
+export async function proposeRewrite(input: string, seedText: string, o: { retryDelaysMs?: readonly number[]; onRetry?: (attempt: number, error: unknown) => void } = {}): Promise<ProposedRewrite> {
+  const delays = o.retryDelaysMs ?? ROLLOUT_RETRY_DELAYS_MS;
+  const send = async (): Promise<Awaited<ReturnType<typeof chat>>> => {
+    for (let attempt = 0; ; attempt++) {
+      try {
+        return await withoutSdkRetries(() => chat({ model: PROPOSER_MODEL, system: ONE_SHOT_SYSTEM, messages: [{ role: 'user', content: input }], maxTokens: ONE_SHOT_MAX_TOKENS, allowFallback: false }));
+      } catch (error) {
+        if (attempt >= ROLLOUT_RETRIES || !unbilledFailure(error)) throw error;
+        o.onRetry?.(attempt + 1, error);
+      }
+      const delay = delays[Math.min(attempt, delays.length - 1)] ?? 0;
+      if (delay) await new Promise(r => setTimeout(r, delay));
+    }
+  };
+  const r = await send();
   const cost_usd = callCostUsd({ model: r.model || PROPOSER_MODEL, ...r.usage });
   const text = unfence(r.text).trim();
   if (r.stopReason !== 'end') return { text: null, cost_usd, stop_reason: r.stopReason, error: `the proposer stopped with ${r.stopReason}` };
