@@ -185,3 +185,34 @@ Rule 4's coverage condition is unchanged.
 **Counted skills.** Skills that qualify on both targets come first. Ties and any remaining places go to the skill with more mean headroom (1.00 minus the kept one-shot) over the targets where it qualifies. Each target takes at most two.
 
 **Budget.** The cap is $330 on its own ledger run: a smoke of one rollout per target on one train task, then F0a at about $118 and F0b at about $209 in the worst case. Planning prices are $0.26 per Opus rollout and $0.15 per Sol rollout. After each pair, the runner compares the pair's mean rollout cost with $0.40 on Opus and $0.20 on Sol. Above that, the stage stops after the pair and keeps it, and the plan is re-priced before anything else runs. A budget stop keeps every scored pair. Results go under `probe/frontier/`. Anthropic and OpenAI only; there is no Particle call, so no crew paid window applies.
+
+### Amendment 3 (2026-11-02, after the frontier probe and before any read of the test split): one read of the sealed test split
+
+This amendment was written after the frontier probe (amendment 2, [results](probe/frontier/README.md)) and before any test task was read. Garry chose G1 on GST-799: stop the optimizer study and read the sealed test split once. FOUN-32 recorded his reply on GST-799 at 2026-11-02T03:04:19Z: "Do It", which takes the recommended option.
+
+**Why.** On the five pairs where a rewrite passed the audit, one Opus 5.5 rewrite reached the 1.00 ceiling on selection. The gate read stop on GPT-6.1 Sol and build-one-skill on Opus 5.5 (`briefing`), and Opus `briefing` qualified only because both of its rewrites failed the audit. The counted optimizer study does not run, and the loop's CUT-CANDIDATE carries forward under rule 3. This read turns the probe into a counted answer on gbrain's shipped skills for both frontier targets.
+
+**What runs.** `--stage test` (`eval/runner/skillopt-method/test-stage.ts`) runs for each target and skill on the 36 test tasks of `skillopt-method-v2`, at the same build, settings, retrieval and keys as amendment 2 (gbrain `ca1281a2`):
+
+| Arm | Runs per task |
+|---|---|
+| no skill (`NO_SKILL_TEXT`) | 1 |
+| seed (the shipped SKILL.md) | 3 |
+| the kept one-shot rewrite from F0b | 3 |
+
+Opus 5.5 `briefing` has no kept rewrite of its own, so it scores Sol's kept `briefing` rewrite (rewrite 2, sha8 `b35934a9`). That rewrite was proposed by Opus 5.5 from Sol's train trajectories, and the receipt records it as `rewrite_source: other-target`. Each rewrite scored is the text whose sha8 matches its F0b kept arm. This is the only read of the test split, and nothing is rerun to move a number. A run that fails on a named infrastructure error may be repeated once, and the report lists it.
+
+**Analysis.** An arm's score is the mean over tasks of the median of its runs. Two differences are computed per pair: seed minus no skill, and rewrite minus seed. Each is paired by task and gets:
+- a 95% percentile interval from a task-level bootstrap (10,000 resamples, seed 799);
+- the counts of tasks won and lost;
+- an exact two-sided McNemar p on the discordant tasks.
+
+Each arm also reports its cost per correct answer: metered USD at list price over correct rollouts.
+
+**Verdicts, per target and skill.**
+- **Shipped skill against no skill.** KEEP when the interval's lower bound is above 0 and McNemar p is below 0.05. CUT-CANDIDATE when the point difference is 0 or below. FIX-METHOD otherwise. Every FIX-METHOD and CUT-CANDIDATE gets one "Why null?" cycle in the report.
+- **Rewrite against seed.** `rewrite-beats-seed` when the lower bound is above 0 and p is below 0.05. In that case the shipped seed is FIX-METHOD, and the rewrite goes to gbrain as a candidate. `rewrite-worse` when the upper bound is below 0 and p is below 0.05. `no-difference-shown` otherwise.
+
+There are twelve comparisons, two per pair, and each verdict is read per pair. The report also gives Holm-adjusted p across all twelve and flags any verdict that does not survive it. A null here is read beside the selection ceiling. A rewrite that holds 1.00 on test and a seed that also scores near 1.00 is a saturation result, not evidence for either.
+
+**Budget.** The estimate is $191 ($148 on Opus, $43 on Sol), priced from the probe's measured rollout costs. The cap is $220 on its own ledger run. The ledger's program cap moves from $360 to $400, which keeps the program inside the approved $1,000 and under the $800 stop. The reprice trigger stays at $0.40 per rollout on Opus and $0.20 on Sol. Results go under `probe/frontier/test-<target>/`. There are no Particle calls.
