@@ -11,7 +11,7 @@ plan sections 2 and 3). Its tasks test what a skill's procedure adds on a brain 
 - briefing three to six meetings at once, each fact and citation inside its own meeting's entry;
 - fact-checking claims of two or three parts, each part with its own status.
 
-The rollout brain is world-v3's 999 pages ([`world-v3.ts`](../../generators/skillopt-method/world-v3.ts)), and the seed
+The rollout brain is world-v3's 1,030 pages ([`world-v3.ts`](../../generators/skillopt-method/world-v3.ts)), and the seed
 skills are the ones gbrain ships at `311a83bbe` (v0.60.553.0). They are byte-identical to v1's and v2's seeds (gbrain
 `3ec766c40`): none of the three changed between the two commits. This commit's `package.json` pins gbrain `311a83bbe`
 (v0.60.553.0), the same commit the seeds come from.
@@ -103,19 +103,28 @@ bun eval/generators/skillopt-method/gen.ts write v3   # rewrite v3's files and M
 ```
 
 The world and the three generators are seeded (world 30001, generators 30011 to 30013) and call no model. The
-calibration knobs are explicit (`V3Knobs` in `world-v3.ts`): contract chain depth 3 to 5 records, 15 look-alike company
-pairs and 20 look-alike person pairs, and 2 distractors. Calibration (plan section 4) may change them on train only and
-regenerate, which makes a new MANIFEST.json and dataset hash.
+calibration knobs are explicit (`V3Knobs` in `world-v3.ts`). Calibration (plan section 4) froze them at contract chain
+depth 4 to 5 records, 20 look-alike company pairs, 24 look-alike person pairs and 6 distractors per account. The
+preregistered first set (3 to 5, 15, 20 and 2) scored the same on Opus; its amendment in
+[PREREGISTRATION.md](../../../docs/benchmarks/2026-11-02-skillopt-ceiling/PREREGISTRATION.md#amendments) has both rounds.
 
 ## Known limits
 
-- No model has run on v3 yet; calibration and the headroom gate come first.
-- The task files carry their judges' regexes inline, so v3 is about 9.7 MB, mostly the briefing and fact-check judges.
-- Pages are 173 to 309 words, short of the plan's 700-word ceiling: the generator pads each page to a seeded length
+- Calibration (train only) is the only paid read so far: the seed scored 1.0 on query and briefing and 0.75 to 0.875 on
+  fact-check, above the 0.30 to 0.60 band it aimed for. The headroom gate is next.
+- The task files carry their judges' regexes inline, so v3 is about 10.3 MB, mostly the briefing and fact-check judges.
+- Pages are 178 to 318 words, short of the plan's 700-word ceiling: the generator pads each page to a seeded length
   from its bank's filler sentences.
 - Briefing citation dates are not checked against the page.
 
 ## Changelog
+
+### 2026-11-02: Calibration froze harder knobs
+
+Calibration round 2 raised every knob: chain depth 4 to 5 (was 3 to 5), 20 look-alike company pairs (was 15), 24
+look-alike person pairs (was 20) and 6 distractors per account (was 2). The world grew from 999 to 1,030 pages and every
+split was regenerated; the task counts per family did not change. MANIFEST.json sha256 is now `3f416c5e…` (was
+`04f8f287…`). Opus scored the same at both settings, and the harder set is frozen for the gate.
 
 ### 2026-11-02: The pin sentence names gbrain `311a83bbe`
 

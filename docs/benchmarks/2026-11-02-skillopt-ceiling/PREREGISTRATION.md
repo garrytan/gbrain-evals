@@ -171,7 +171,48 @@ The plan's `docs/benchmarks/2026-11-0X-skillopt-ceiling/` directory is this one,
 
 ## Amendments
 
-None yet.
+### 2026-11-02, before the gate: calibration, re-priced stages and the review rule
+
+**Review rule.** Garry's ship-check diet (CREW.md R65, 2026-11-02) replaces the plan's review text (revision 6, section 9) for every PR from PR 2 on. Each PR gets one /ship pass, running the readers gstack-review-plan prints, then one fix round, with no second round. The second round that the plan reserved for gate results no longer exists, so this amendment, the gate results and any stop report go to review in their own follow-up PR. No spend total, cap, arm or verdict rule changes, so this needed no re-gate (Captain, 2026-11-02).
+
+**Calibration.** Ledger run `n15-ceiling-calibration-2026-11-02T22-57-47-821Z-d2072525` (hard cap $50) metered $27.95 over 1,154 requests and is closed. Calibration ran on train only, at gbrain `311a83bbe`, seed at 1 run. It never read selection, gate or test. Seed substance scores:
+
+| Round | Knobs: chain depth / company pairs / person pairs / distractors | MANIFEST.json sha256 | Target (train tasks per skill) | query | briefing | fact-check | Mean $ per rollout |
+|---|---|---|---|---|---|---|---|
+| 1 | 3 to 5 / 15 / 20 / 2 (as registered) | `04f8f287…6c71` | Opus (24) | 1.000 | 1.000 | 0.875 | 0.1574 |
+| 1 | same | same | Sol, half (12) | 1.000 | 1.000 | 0.667 | 0.0631 |
+| 2 | 4 to 5 / 20 / 24 / 6 | `3f416c5e…6d85` | Opus (24) | 1.000 | 1.000 | 0.875 | 0.1611 |
+| 2, frozen | same | same | Sol, half (12) | 1.000 | 1.000 | 0.750 | 0.0626 |
+
+No round reached the 0.30 to 0.60 band, and the knobs did not move Opus at all. Round 2 tripled the distractors, added a record to the shortest chains and raised the look-alike pairs from 35 to 44, and Opus scored the same on every skill. The reason is that search puts the deciding pages on its first result page: Opus answered query in 1.5 tool calls on average.
+
+A third round had no harder setting to try. Within the dataset's own checks (`test/eval/skillopt-method-v3.test.ts`), round 2 is as hard as the knobs go:
+- 32 person pairs drop briefing tasks for solvability;
+- chain depth 5 to 6 takes the world to 1,100 pages, past its 1,000-page design;
+- the hardest setting of all (depth 5 to 6, 32 person pairs, 6 distractors) also generated an empty distractor value.
+
+So calibration stopped at two rounds. It froze round 2, the harder world, because that gives the gate its best chance of finding room.
+
+Frozen: `DEFAULT_V3_KNOBS` = `{ seed: 30001, chain_depth: { min: 4, max: 5 }, lookalike_pairs: { companies: 20, people: 24 }, distractor_count: 6 }`. The world has 1,030 pages, with the same task counts per family and split. `MANIFEST.json` sha256 is `3f416c5e60df43cb0eae8277b4bd20c85184a82c8ea103d2571fc62d14d85e68` and `data_sha256` is `71131e3ae48f58311cf3bd20ce2bef3a020bb7be0db9f7b03a0d3fdcd2b1b7c7`, at commit [`247873fe`](https://github.com/garrytan/gbrain-evals/commit/247873fe). The gate and test splits were regenerated with the world and are still unread. Train holds trained families only, so as section 4 says, the gate report gives the seed's held-out-family score beside the band.
+
+**Sol live read.** This is the first live measure at this pin (round 2, frozen knobs). Query made no refused calls. Briefing had 121 of 253 calls refused (48%) and fact-check 186 of 221 (84%), and every briefing and fact-check rollout hit at least one refusal. By class:
+- `get_page` with two window selectors: 230;
+- a `bytes` window in the wrong shape: 61;
+- `section` or `grep` beside `lines`: 15;
+- a malformed `lines` window: 1;
+- `known_as_of` beside read-view arguments, and hop chains beside `depth`: 0.
+
+Sol still passed 12 of 12 briefing rollouts and 9 of 12 fact-check rollouts that hit a refusal. Round 1 measured the same pattern: 116 of 238 and 206 of 240. The harness passes every call through unchanged, and rollouts see only `err.message` (Known limits). The gate's cause table decides whether a Sol pair fails as `harness`.
+
+**Re-priced stages.** These use the metered means from round 2: Opus $0.1611 and Sol $0.0626 per rollout. Calibration makes no proposer call, so the proposer stays at the $0.30 planning price. Every stage is inside its approved cap, so nothing waits for a decision:
+
+| Stage | Planning | Re-priced | Cap |
+|---|---|---|---|
+| A2/A3 gate attempt | $415.80 | $311.42 | $470 |
+| A4 stop-path read | $518.40 | $386.55 | $650 |
+| B0 E1 check | $203.40 | $152.13 | $300 |
+
+B2 is re-priced from the gate's own metered costs in the counted amendment (section 6).
 
 ## Disclosures
 
