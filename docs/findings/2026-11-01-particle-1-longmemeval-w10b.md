@@ -361,10 +361,11 @@ from the unrounded figures in [analysis.json](2026-11-01-particle-1-longmemeval-
 
 The post attaches the infographic at the top of this file. It is 1080 by 1080 pixels, a headless Chrome screenshot of
 [its HTML source](2026-11-01-particle-1-longmemeval-w10b-infographic.html), set in the Inter font, so every word and
-number in it is typed text. Its counts, percentages and effort settings come from [Setup](#setup) and [Result](#result),
-its interval from [What we found](#what-we-found) and its costs from [Cost](#cost). "17 more right" is 474 minus 457,
-and the 26 right answers that $1 buys from GPT-6.1 Sol are one dollar divided by its unrounded list cost per correct
-answer in [analysis.json](2026-11-01-particle-1-longmemeval-w10b/analysis.json), $0.03807501 (26.26).
+number in it is typed text. The HTML loads no web font, so it renders the same only where Inter is installed. Its
+counts, percentages and effort settings come from [Setup](#setup) and [Result](#result), its interval from
+[What we found](#what-we-found) and its costs from [Cost](#cost). "17 more right" is 474 minus 457, and the 26 right
+answers that $1 buys from GPT-6.1 Sol are one dollar divided by its unrounded list cost per correct answer in
+[analysis.json](2026-11-01-particle-1-longmemeval-w10b/analysis.json), $0.03807501 (26.26).
 
 ### The claim check
 
@@ -391,11 +392,12 @@ version applies every edit. The claim-check file, `gbrain-evals-particle-1-w10b`
 
 #### 2026-11-02: The plain-English story's recheck edits
 
-A recheck of the plain-English summary, the infographic and the X post draft passed with five wording edits, and this
-version applies them. The title gives the 95% range of the gap. The summary calls the test exploratory. It says Opus 5.5
-gives general battery tips that end with one to use the power bank, and that particle-1 treats this request for advice
-as a lookup, not every one. The X post says particle-1 sometimes treats an advice request as a lookup. The infographic's
-fine print calls the test exploratory, and its HTML source now sits beside it. The publication status records the
+GEVA-169 (gstack-evals crew, Opus 5.5) rechecked the plain-English summary, the infographic and the X post draft as
+merged at b392700f. It passed them with five wording edits, and this version applies them. The title gives the 95% range
+of the gap. The summary calls the test exploratory. It says Opus 5.5 gives general battery tips that end with one to use
+the power bank, and that particle-1 treats this request for advice as a lookup, not every one. The X post says
+particle-1 sometimes treats an advice request as a lookup. The infographic's fine print calls the test exploratory, its
+source line names this file's record, and its HTML source now sits beside it. The publication status records the
 recheck. No number changed.
 
 #### 2026-11-02: A plain-English summary, disclosures at the end, a new X post and an infographic
