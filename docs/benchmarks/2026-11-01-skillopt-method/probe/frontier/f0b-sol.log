@@ -1,0 +1,24 @@
+# BrainBench N15: SkillOpt method benchmark, Phase 1 (gbrain 0.60.542.0)
+[budget] n15-skillopt-method-probe-sol-f0b: estimated cost $76.93; ledger <work>/ledger.sqlite
+[budget] n15-skillopt-method-probe-sol-f0b: joined shared run n15-skillopt-method-frontier-probe-2026-11-02T00-00-46-604Z-1ae07142 ($330.00 across all of its workers)
+  Setting up brain schema (v281)...
+  276 migration(s) applied
+[gbrain] content-sanity warn: contracts/2025-03-28-qfl-msa (58180 bytes) — exceeds warn threshold; stored and searchable, no action needed
+[n15 probe] sol F0b query: seed x1 on 24 train tasks, 2 rewrites scored x3 on selection
+[gbrain] embeddings are off on this brain by choice (embedding_disabled), so search is keyword-only and no query text is sent to an embedding provider. If the user wants semantic search, `gbrain doctor --json` names the enable command; turning it on needs their consent.
+[n15 probe]   train 0.75; rewrites 0.9166666666666666, 1 (kept 1)
+[n15 probe] sol F0b briefing: seed x1 on 24 train tasks, 2 rewrites scored x3 on selection
+[n15 probe]   train 0.5833333333333334; rewrites audit-disqualified, 1 (kept 1)
+[n15 probe] sol F0b fact-check: seed x1 on 24 train tasks, 2 rewrites scored x3 on selection
+[n15 probe]   train 0.4583333333333333; rewrites audit-disqualified, 1 (kept 1)
+probe sol f0b query: seed 0.7083, one-shot 0.9167/1 kept 1, ceiling 1; mean rollout $0.0319, 3.2679 calls per rollout, cached share 0.6574
+probe sol f0b briefing: seed 0.5417, one-shot none/1 kept 1, ceiling 1; mean rollout $0.0475, 4.5417 calls per rollout, cached share 0.8123
+probe sol f0b fact-check: seed 0.5833, one-shot none/1 kept 1, ceiling 1; mean rollout $0.0539, 6.3333 calls per rollout, cached share 0.841
+gate sol after f0b: stop
+sent to api.openai.com gpt-6.1-sol (549 requests): {"reasoning":null,"max_output_tokens":4096,"temperature":null,"top_p":null,"tool_choice":"auto","parallel_tool_calls":null,"store":null,"service_tier":null,"truncation":null,"text":null,"tools":13,"instructions_role":"developer"}; applied reasoning effort medium
+sent to api.anthropic.com claude-opus-5-5 (6 requests): {"thinking":null,"max_tokens":32000,"temperature":null,"top_p":null,"top_k":null,"tool_choice":null,"tools":0}
+sent to api.openai.com gpt-6.1-sol (436 requests): {"reasoning":null,"max_output_tokens":4096,"temperature":null,"top_p":null,"tool_choice":"auto","parallel_tool_calls":null,"store":null,"service_tier":null,"truncation":null,"text":null,"tools":12,"instructions_role":"developer"}; applied reasoning effort medium
+sent to api.openai.com gpt-6.1-sol (608 requests): {"reasoning":null,"max_output_tokens":4096,"temperature":null,"top_p":null,"tool_choice":"auto","parallel_tool_calls":null,"store":null,"service_tier":null,"truncation":null,"text":null,"tools":11,"instructions_role":"developer"}; applied reasoning effort medium
+sent to api.openai.com gpt-6.1-sol (1 requests): {"reasoning":null,"max_output_tokens":4096,"temperature":null,"top_p":null,"tool_choice":"auto","parallel_tool_calls":null,"store":null,"service_tier":null,"truncation":null,"text":null,"tools":11,"instructions_role":"developer"}; applied reasoning effort null
+counted skills: {"sol":[]} (targets read: sol)
+receipt: <work>/frontier/f0b-sol/receipt.json

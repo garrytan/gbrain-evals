@@ -1,0 +1,933 @@
+{
+  "category": "n15-skillopt-method",
+  "started_at": "2026-11-02T00:42:34.553Z",
+  "skills": [
+    {
+      "skill": "query",
+      "target": "sol",
+      "stage": "f0b",
+      "ceiling": 1,
+      "tool_gaps": [],
+      "no_skill": 0.875,
+      "seed": 0.7083333333333334,
+      "one_shot_repeats": [
+        0.9166666666666666,
+        1
+      ],
+      "one_shot_kept": 1,
+      "arms": {
+        "seed_train": {
+          "score": 0.75,
+          "per_task": {
+            "query-train-01": [
+              1
+            ],
+            "query-train-04": [
+              1
+            ],
+            "query-train-02": [
+              1
+            ],
+            "query-train-03": [
+              0
+            ],
+            "query-train-06": [
+              1
+            ],
+            "query-train-07": [
+              1
+            ],
+            "query-train-08": [
+              1
+            ],
+            "query-train-09": [
+              1
+            ],
+            "query-train-05": [
+              1
+            ],
+            "query-train-10": [
+              1
+            ],
+            "query-train-11": [
+              0
+            ],
+            "query-train-13": [
+              0
+            ],
+            "query-train-12": [
+              1
+            ],
+            "query-train-14": [
+              1
+            ],
+            "query-train-16": [
+              1
+            ],
+            "query-train-17": [
+              1
+            ],
+            "query-train-18": [
+              1
+            ],
+            "query-train-15": [
+              1
+            ],
+            "query-train-19": [
+              0
+            ],
+            "query-train-20": [
+              1
+            ],
+            "query-train-24": [
+              1
+            ],
+            "query-train-22": [
+              1
+            ],
+            "query-train-21": [
+              0
+            ],
+            "query-train-23": [
+              0
+            ]
+          }
+        },
+        "one_shot": [
+          {
+            "score": 0.9166666666666666,
+            "per_task": {
+              "query-sel-01": [
+                1,
+                1,
+                1
+              ],
+              "query-sel-03": [
+                1,
+                1,
+                1
+              ],
+              "query-sel-02": [
+                0,
+                0,
+                1
+              ],
+              "query-sel-04": [
+                1,
+                1,
+                1
+              ],
+              "query-sel-05": [
+                1,
+                1,
+                1
+              ],
+              "query-sel-07": [
+                1,
+                1,
+                1
+              ],
+              "query-sel-06": [
+                1,
+                1,
+                1
+              ],
+              "query-sel-08": [
+                1,
+                1,
+                1
+              ],
+              "query-sel-09": [
+                1,
+                1,
+                1
+              ],
+              "query-sel-10": [
+                1,
+                1,
+                1
+              ],
+              "query-sel-12": [
+                0,
+                0,
+                0
+              ],
+              "query-sel-11": [
+                1,
+                1,
+                1
+              ],
+              "query-sel-13": [
+                1,
+                1,
+                1
+              ],
+              "query-sel-14": [
+                1,
+                1,
+                1
+              ],
+              "query-sel-17": [
+                1,
+                1,
+                1
+              ],
+              "query-sel-15": [
+                1,
+                1,
+                1
+              ],
+              "query-sel-16": [
+                1,
+                1,
+                1
+              ],
+              "query-sel-18": [
+                1,
+                1,
+                1
+              ],
+              "query-sel-19": [
+                1,
+                1,
+                1
+              ],
+              "query-sel-20": [
+                1,
+                1,
+                1
+              ],
+              "query-sel-21": [
+                1,
+                1,
+                1
+              ],
+              "query-sel-22": [
+                1,
+                1,
+                1
+              ],
+              "query-sel-23": [
+                1,
+                1,
+                1
+              ],
+              "query-sel-24": [
+                1,
+                1,
+                1
+              ]
+            },
+            "outcome": "scored",
+            "text_sha8": "909a2eb2",
+            "audit": {
+              "skill": "query",
+              "added_lines": 91,
+              "removed_lines": 152,
+              "flags": [],
+              "disqualified": false
+            },
+            "kept": false,
+            "cost_usd": 0.123072
+          },
+          {
+            "score": 1,
+            "per_task": {
+              "query-sel-03": [
+                1,
+                1,
+                1
+              ],
+              "query-sel-02": [
+                1,
+                1,
+                0
+              ],
+              "query-sel-01": [
+                1,
+                1,
+                1
+              ],
+              "query-sel-04": [
+                1,
+                1,
+                1
+              ],
+              "query-sel-05": [
+                1,
+                1,
+                1
+              ],
+              "query-sel-07": [
+                1,
+                1,
+                1
+              ],
+              "query-sel-06": [
+                1,
+                1,
+                1
+              ],
+              "query-sel-08": [
+                1,
+                1,
+                1
+              ],
+              "query-sel-09": [
+                1,
+                1,
+                1
+              ],
+              "query-sel-10": [
+                1,
+                1,
+                1
+              ],
+              "query-sel-11": [
+                1,
+                1,
+                1
+              ],
+              "query-sel-12": [
+                1,
+                1,
+                1
+              ],
+              "query-sel-13": [
+                1,
+                1,
+                1
+              ],
+              "query-sel-14": [
+                1,
+                1,
+                1
+              ],
+              "query-sel-17": [
+                1,
+                1,
+                1
+              ],
+              "query-sel-16": [
+                1,
+                1,
+                1
+              ],
+              "query-sel-15": [
+                1,
+                1,
+                1
+              ],
+              "query-sel-18": [
+                1,
+                1,
+                1
+              ],
+              "query-sel-19": [
+                1,
+                1,
+                1
+              ],
+              "query-sel-20": [
+                1,
+                1,
+                1
+              ],
+              "query-sel-21": [
+                1,
+                1,
+                0
+              ],
+              "query-sel-22": [
+                1,
+                1,
+                1
+              ],
+              "query-sel-23": [
+                1,
+                1,
+                1
+              ],
+              "query-sel-24": [
+                1,
+                1,
+                1
+              ]
+            },
+            "outcome": "scored",
+            "text_sha8": "bafc6a5c",
+            "audit": {
+              "skill": "query",
+              "added_lines": 82,
+              "removed_lines": 154,
+              "flags": [],
+              "disqualified": false
+            },
+            "kept": true,
+            "cost_usd": 0.115912
+          }
+        ]
+      },
+      "cost": {
+        "rollouts": 168,
+        "calls": 549,
+        "usd": 5.359566400000001,
+        "unpriced_calls": 0,
+        "input_tokens": 6663854,
+        "output_tokens": 35531,
+        "cache_read_tokens": 4380764,
+        "cache_creation_tokens": 0,
+        "reasoning_tokens": 1045,
+        "mean_rollout_usd": 0.03190218095238096,
+        "calls_per_rollout": 3.267857142857143,
+        "cached_input_share": 0.6573919536652514,
+        "reasoning_tokens_per_rollout": 6.220238095238095
+      },
+      "proposer_usd": 0.238984,
+      "proposer_withheld": 27
+    },
+    {
+      "skill": "briefing",
+      "target": "sol",
+      "stage": "f0b",
+      "ceiling": 1,
+      "tool_gaps": [],
+      "no_skill": 0.16666666666666666,
+      "seed": 0.5416666666666666,
+      "one_shot_repeats": [
+        null,
+        1
+      ],
+      "one_shot_kept": 1,
+      "arms": {
+        "seed_train": {
+          "score": 0.5833333333333334,
+          "per_task": {
+            "briefing-train-03": [
+              1
+            ],
+            "briefing-train-02": [
+              0
+            ],
+            "briefing-train-01": [
+              0
+            ],
+            "briefing-train-04": [
+              1
+            ],
+            "briefing-train-08": [
+              1
+            ],
+            "briefing-train-05": [
+              0
+            ],
+            "briefing-train-06": [
+              0
+            ],
+            "briefing-train-07": [
+              0
+            ],
+            "briefing-train-12": [
+              0
+            ],
+            "briefing-train-09": [
+              1
+            ],
+            "briefing-train-10": [
+              0
+            ],
+            "briefing-train-13": [
+              1
+            ],
+            "briefing-train-11": [
+              0
+            ],
+            "briefing-train-15": [
+              1
+            ],
+            "briefing-train-14": [
+              1
+            ],
+            "briefing-train-17": [
+              1
+            ],
+            "briefing-train-16": [
+              1
+            ],
+            "briefing-train-19": [
+              0
+            ],
+            "briefing-train-20": [
+              1
+            ],
+            "briefing-train-18": [
+              0
+            ],
+            "briefing-train-23": [
+              1
+            ],
+            "briefing-train-21": [
+              1
+            ],
+            "briefing-train-22": [
+              1
+            ],
+            "briefing-train-24": [
+              1
+            ]
+          }
+        },
+        "one_shot": [
+          {
+            "score": null,
+            "per_task": {},
+            "outcome": "audit-disqualified",
+            "text_sha8": "72017265",
+            "audit": {
+              "skill": "briefing",
+              "added_lines": 127,
+              "removed_lines": 143,
+              "flags": [
+                {
+                  "kind": "date",
+                  "token": "2025-01-20",
+                  "line": "`contracts/2025-01-20-abc-msa`."
+                },
+                {
+                  "kind": "gold-value",
+                  "token": "12 percent",
+                  "line": "5. State the value plainly, for example: \"Current discount: 12% off list"
+                }
+              ],
+              "disqualified": true
+            },
+            "kept": false,
+            "cost_usd": 0.484044
+          },
+          {
+            "score": 1,
+            "per_task": {
+              "briefing-sel-03": [
+                1,
+                1,
+                1
+              ],
+              "briefing-sel-01": [
+                1,
+                1,
+                1
+              ],
+              "briefing-sel-04": [
+                1,
+                1,
+                1
+              ],
+              "briefing-sel-02": [
+                1,
+                1,
+                1
+              ],
+              "briefing-sel-05": [
+                1,
+                1,
+                1
+              ],
+              "briefing-sel-06": [
+                1,
+                1,
+                1
+              ],
+              "briefing-sel-07": [
+                1,
+                1,
+                1
+              ],
+              "briefing-sel-08": [
+                1,
+                1,
+                1
+              ],
+              "briefing-sel-09": [
+                1,
+                1,
+                1
+              ],
+              "briefing-sel-10": [
+                1,
+                1,
+                1
+              ],
+              "briefing-sel-11": [
+                1,
+                1,
+                1
+              ],
+              "briefing-sel-12": [
+                1,
+                1,
+                1
+              ],
+              "briefing-sel-13": [
+                1,
+                1,
+                1
+              ],
+              "briefing-sel-14": [
+                1,
+                1,
+                1
+              ],
+              "briefing-sel-15": [
+                1,
+                1,
+                1
+              ],
+              "briefing-sel-16": [
+                1,
+                1,
+                1
+              ],
+              "briefing-sel-17": [
+                1,
+                1,
+                1
+              ],
+              "briefing-sel-18": [
+                1,
+                1,
+                1
+              ],
+              "briefing-sel-19": [
+                1,
+                1,
+                1
+              ],
+              "briefing-sel-20": [
+                1,
+                1,
+                1
+              ],
+              "briefing-sel-21": [
+                1,
+                1,
+                1
+              ],
+              "briefing-sel-22": [
+                1,
+                1,
+                1
+              ],
+              "briefing-sel-23": [
+                1,
+                1,
+                1
+              ],
+              "briefing-sel-24": [
+                1,
+                1,
+                1
+              ]
+            },
+            "outcome": "scored",
+            "text_sha8": "b35934a9",
+            "audit": {
+              "skill": "briefing",
+              "added_lines": 107,
+              "removed_lines": 142,
+              "flags": [],
+              "disqualified": false
+            },
+            "kept": true,
+            "cost_usd": 0.473504
+          }
+        ]
+      },
+      "cost": {
+        "rollouts": 96,
+        "calls": 436,
+        "usd": 4.564749300000005,
+        "unpriced_calls": 0,
+        "input_tokens": 7555518,
+        "output_tokens": 111476,
+        "cache_read_tokens": 6137393,
+        "cache_creation_tokens": 0,
+        "reasoning_tokens": 3873,
+        "mean_rollout_usd": 0.047549471875000054,
+        "calls_per_rollout": 4.541666666666667,
+        "cached_input_share": 0.8123060523447896,
+        "reasoning_tokens_per_rollout": 40.34375
+      },
+      "proposer_usd": 0.957548,
+      "proposer_withheld": 121
+    },
+    {
+      "skill": "fact-check",
+      "target": "sol",
+      "stage": "f0b",
+      "ceiling": 1,
+      "tool_gaps": [],
+      "no_skill": 0,
+      "seed": 0.5833333333333334,
+      "one_shot_repeats": [
+        null,
+        1
+      ],
+      "one_shot_kept": 1,
+      "arms": {
+        "seed_train": {
+          "score": 0.4583333333333333,
+          "per_task": {
+            "fact-check-train-02": [
+              1
+            ],
+            "fact-check-train-04": [
+              1
+            ],
+            "fact-check-train-01": [
+              1
+            ],
+            "fact-check-train-03": [
+              0
+            ],
+            "fact-check-train-05": [
+              0
+            ],
+            "fact-check-train-07": [
+              0
+            ],
+            "fact-check-train-06": [
+              0
+            ],
+            "fact-check-train-08": [
+              0
+            ],
+            "fact-check-train-11": [
+              0
+            ],
+            "fact-check-train-09": [
+              0
+            ],
+            "fact-check-train-10": [
+              0
+            ],
+            "fact-check-train-12": [
+              1
+            ],
+            "fact-check-train-13": [
+              1
+            ],
+            "fact-check-train-15": [
+              1
+            ],
+            "fact-check-train-14": [
+              0
+            ],
+            "fact-check-train-16": [
+              0
+            ],
+            "fact-check-train-17": [
+              1
+            ],
+            "fact-check-train-18": [
+              0
+            ],
+            "fact-check-train-20": [
+              1
+            ],
+            "fact-check-train-19": [
+              1
+            ],
+            "fact-check-train-21": [
+              0
+            ],
+            "fact-check-train-22": [
+              1
+            ],
+            "fact-check-train-24": [
+              0
+            ],
+            "fact-check-train-23": [
+              1
+            ]
+          }
+        },
+        "one_shot": [
+          {
+            "score": null,
+            "per_task": {},
+            "outcome": "audit-disqualified",
+            "text_sha8": "a153fa44",
+            "audit": {
+              "skill": "fact-check",
+              "added_lines": 206,
+              "removed_lines": 314,
+              "flags": [
+                {
+                  "kind": "date",
+                  "token": "2026-03-10",
+                  "line": "form ``[`slug`](slug)`` and give the full slug, for example `contracts/2026-03-10-x`."
+                }
+              ],
+              "disqualified": true
+            },
+            "kept": false,
+            "cost_usd": 0.674416
+          },
+          {
+            "score": 1,
+            "per_task": {
+              "fact-check-sel-01": [
+                1,
+                1,
+                1
+              ],
+              "fact-check-sel-04": [
+                1,
+                1,
+                1
+              ],
+              "fact-check-sel-02": [
+                1,
+                1,
+                1
+              ],
+              "fact-check-sel-03": [
+                1,
+                1,
+                1
+              ],
+              "fact-check-sel-05": [
+                1,
+                1,
+                1
+              ],
+              "fact-check-sel-06": [
+                1,
+                1,
+                1
+              ],
+              "fact-check-sel-08": [
+                1,
+                1,
+                1
+              ],
+              "fact-check-sel-07": [
+                1,
+                1,
+                1
+              ],
+              "fact-check-sel-09": [
+                1,
+                1,
+                1
+              ],
+              "fact-check-sel-10": [
+                1,
+                1,
+                1
+              ],
+              "fact-check-sel-11": [
+                1,
+                1,
+                1
+              ],
+              "fact-check-sel-12": [
+                1,
+                1,
+                1
+              ],
+              "fact-check-sel-13": [
+                1,
+                1,
+                1
+              ],
+              "fact-check-sel-15": [
+                1,
+                1,
+                1
+              ],
+              "fact-check-sel-14": [
+                1,
+                1,
+                1
+              ],
+              "fact-check-sel-16": [
+                1,
+                1,
+                1
+              ],
+              "fact-check-sel-17": [
+                1,
+                1,
+                1
+              ],
+              "fact-check-sel-18": [
+                1,
+                1,
+                1
+              ],
+              "fact-check-sel-19": [
+                1,
+                1,
+                1
+              ],
+              "fact-check-sel-21": [
+                1,
+                1,
+                1
+              ],
+              "fact-check-sel-20": [
+                1,
+                1,
+                1
+              ],
+              "fact-check-sel-22": [
+                1,
+                1,
+                1
+              ],
+              "fact-check-sel-23": [
+                1,
+                1,
+                1
+              ],
+              "fact-check-sel-24": [
+                1,
+                1,
+                1
+              ]
+            },
+            "outcome": "scored",
+            "text_sha8": "50331458",
+            "audit": {
+              "skill": "fact-check",
+              "added_lines": 201,
+              "removed_lines": 321,
+              "flags": [],
+              "disqualified": false
+            },
+            "kept": true,
+            "cost_usd": 0.657036
+          }
+        ]
+      },
+      "cost": {
+        "rollouts": 96,
+        "calls": 608,
+        "usd": 5.178201300000008,
+        "unpriced_calls": 0,
+        "input_tokens": 9872382,
+        "output_tokens": 120920,
+        "cache_read_tokens": 8303033,
+        "cache_creation_tokens": 0,
+        "reasoning_tokens": 6472,
+        "mean_rollout_usd": 0.05393959687500008,
+        "calls_per_rollout": 6.333333333333333,
+        "cached_input_share": 0.8410364388249968,
+        "reasoning_tokens_per_rollout": 67.41666666666667
+      },
+      "proposer_usd": 1.331452,
+      "proposer_withheld": 106
+    }
+  ]
+}

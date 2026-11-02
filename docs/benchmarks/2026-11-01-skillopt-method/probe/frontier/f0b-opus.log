@@ -1,0 +1,23 @@
+# BrainBench N15: SkillOpt method benchmark, Phase 1 (gbrain 0.60.542.0)
+[budget] n15-skillopt-method-probe-opus-f0b: estimated cost $132.07; ledger <work>/ledger.sqlite
+[budget] n15-skillopt-method-probe-opus-f0b: joined shared run n15-skillopt-method-frontier-probe-2026-11-02T00-00-46-604Z-1ae07142 ($330.00 across all of its workers)
+  Setting up brain schema (v281)...
+  276 migration(s) applied
+[gbrain] content-sanity warn: contracts/2025-03-28-qfl-msa (58180 bytes) — exceeds warn threshold; stored and searchable, no action needed
+[n15 probe] opus F0b query: seed x1 on 24 train tasks, 2 rewrites scored x3 on selection
+[gbrain] embeddings are off on this brain by choice (embedding_disabled), so search is keyword-only and no query text is sent to an embedding provider. If the user wants semantic search, `gbrain doctor --json` names the enable command; turning it on needs their consent.
+[n15 probe]   train 0.7916666666666666; rewrites 1, 1 (kept 1)
+[n15 probe] opus F0b briefing: seed x1 on 24 train tasks, 2 rewrites scored x3 on selection
+[n15 probe]   train 0.5; rewrites audit-disqualified, audit-disqualified (kept seed)
+[n15 probe] opus F0b fact-check: seed x1 on 24 train tasks, 2 rewrites scored x3 on selection
+[n15 probe]   train 0.7916666666666666; rewrites audit-disqualified, 1 (kept 1)
+probe opus f0b query: seed 0.75, one-shot 1/1 kept 1, ceiling 1; mean rollout $0.1242, 3.6369 calls per rollout, cached share 0.8049
+probe opus f0b briefing: seed 0.4583, one-shot none/none kept 0.4583, ceiling 1; mean rollout $0.2974, 4.2083 calls per rollout, cached share 0.7082
+probe opus f0b fact-check: seed 0.7917, one-shot none/1 kept 1, ceiling 1; mean rollout $0.1626, 3.6146 calls per rollout, cached share 0.7631
+gate opus after f0b: build-one-skill
+sent to api.anthropic.com claude-opus-5-5 (611 requests): {"thinking":null,"max_tokens":32000,"temperature":null,"top_p":null,"top_k":null,"tool_choice":{"type":"auto"},"tools":13}
+sent to api.anthropic.com claude-opus-5-5 (6 requests): {"thinking":null,"max_tokens":32000,"temperature":null,"top_p":null,"top_k":null,"tool_choice":null,"tools":0}
+sent to api.anthropic.com claude-opus-5-5 (101 requests): {"thinking":null,"max_tokens":32000,"temperature":null,"top_p":null,"top_k":null,"tool_choice":{"type":"auto"},"tools":12}
+sent to api.anthropic.com claude-opus-5-5 (347 requests): {"thinking":null,"max_tokens":32000,"temperature":null,"top_p":null,"top_k":null,"tool_choice":{"type":"auto"},"tools":11}
+counted skills: {"opus":["briefing"]} (targets read: opus)
+receipt: <work>/frontier/f0b-opus/receipt.json

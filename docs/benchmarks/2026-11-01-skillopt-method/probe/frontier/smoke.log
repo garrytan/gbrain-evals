@@ -1,0 +1,23 @@
+# BrainBench N15: SkillOpt method benchmark, Phase 1 (gbrain 0.60.542.0)
+[budget] n15-skillopt-method-smoke: estimated cost $0.41; ledger <work>/ledger.sqlite
+[budget] n15-skillopt-method-smoke: joined shared run n15-skillopt-method-frontier-probe-2026-11-02T00-00-46-604Z-1ae07142 ($330.00 across all of its workers)
+  Setting up brain schema (v281)...
+  276 migration(s) applied
+[gbrain] content-sanity warn: contracts/2025-03-28-qfl-msa (58180 bytes) — exceeds warn threshold; stored and searchable, no action needed
+[gbrain] embeddings are off on this brain by choice (embedding_disabled), so search is keyword-only and no query text is sent to an embedding provider. If the user wants semantic search, `gbrain doctor --json` names the enable command; turning it on needs their consent.
+  Setting up brain schema (v281)...
+  276 migration(s) applied
+[gbrain] content-sanity warn: contracts/2025-03-28-qfl-msa (58180 bytes) — exceeds warn threshold; stored and searchable, no action needed
+smoke opus (anthropic:claude-opus-5-5) query-train-01: 3 turns, tools [search, get_page, get_backlinks, get_page], stop end, correct true, 64081 in / 1162 out tokens over 4 calls, reasoning 264, cached share 0.697, $0.1294 at list price
+  sent to api.anthropic.com claude-opus-5-5: {"thinking":null,"max_tokens":32000,"temperature":null,"top_p":null,"top_k":null,"tool_choice":{"type":"auto"},"tools":13}
+smoke sol (openai:gpt-6.1-sol) query-train-01: 3 turns, tools [search, traverse_graph, search], stop end, correct false, 28498 in / 163 out tokens over 4 calls, reasoning 0, cached share 0.703, $0.0206 at list price
+  sent to api.openai.com gpt-6.1-sol: {"reasoning":null,"max_output_tokens":4096,"temperature":null,"top_p":null,"tool_choice":"auto","parallel_tool_calls":null,"store":null,"service_tier":null,"truncation":null,"text":null,"tools":13,"instructions_role":"developer"}; applied reasoning effort medium
+ledger: anthropic:claude-opus-5-5 chat: 11324 in / 54 out, $0.0577 (reconciled)
+ledger: anthropic:claude-opus-5-5 chat: 15718 in / 147 out, $0.0272 (reconciled)
+ledger: anthropic:claude-opus-5-5 chat: 17603 in / 219 out, $0.0170 (reconciled)
+ledger: anthropic:claude-opus-5-5 chat: 19436 in / 742 out, $0.0275 (reconciled)
+ledger: openai:gpt-6.1-sol chat: 5673 in / 30 out, $0.0145 (reconciled)
+ledger: openai:gpt-6.1-sol chat: 7140 in / 53 out, $0.0048 (reconciled)
+ledger: openai:gpt-6.1-sol chat: 7223 in / 34 out, $0.0013 (reconciled)
+ledger: openai:gpt-6.1-sol chat: 8462 in / 46 out, $0.0043 (reconciled)
+receipt: <work>/frontier/smoke/receipt.json

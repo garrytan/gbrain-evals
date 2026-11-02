@@ -1,0 +1,975 @@
+{
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "n15-skillopt-method",
+  "gbrain_version": "0.60.542.0",
+  "gbrain_pin": "github:garrytan/gbrain#ca1281a2ed3236ac45adddb2d08e84423769c321",
+  "execution": {
+    "source_tree": {
+      "sha256": "d52d4606f6d943cc88b12c093eaeea936db97a21a1af706c763997676c4cdb62",
+      "scheme": "git-index-blob-v1",
+      "files": 15345,
+      "git_head": "a1147c9709337e90ba0b4231dc2c228d18c86d7a",
+      "dirty": false
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#ca1281a2ed3236ac45adddb2d08e84423769c321",
+      "declared_sha": "ca1281a2ed3236ac45adddb2d08e84423769c321",
+      "version": "0.60.542.0",
+      "package_sha256": "52ded02fb79721deb9d3d5788fec67190e7cb5d4fa10b40e254a3db888decfac",
+      "loaded_git_head": null
+    }
+  },
+  "hashes": {
+    "dataset": "skillopt-method-v2",
+    "dataset_manifest_sha256": "df512633dd5d2f28c67ebc3d92c523c361c87747242f9b13713f7b14fe0c3d6d",
+    "skillopt-method-v1_manifest_sha256": "8ff8a0ec97e03e3550de18821d8ebdf08f9dbfd6342f9dc2c5914d33c17e4642",
+    "criteria_query_sha256": "30ea291076101a9ca920f1fa14e267c6e67a2da88141199d67ba6b615ce5b53a",
+    "criteria_briefing_sha256": "6c848a2ed99137a88ed5fdcec237b6337adb1a26fec75e22b99c2667c64e64df",
+    "criteria_fact-check_sha256": "be49c653556c5917e302f91ca80a660cfdd27ba32031b048bc9c2ec9a512d399",
+    "seeds_gbrain_commit": "3ec766c40664b652b14e39788d177139f5a7b105"
+  },
+  "started_at": "2026-11-02T00:01:38.165Z",
+  "cost": {
+    "usd": 22.007743,
+    "input_tokens": 45506299,
+    "output_tokens": 535288,
+    "basis": "budget ledger n15-skillopt-method-frontier-probe-2026-11-02T00-00-46-604Z-1ae07142: 2385 paid requests, 0 charged at their reservation because usage was unavailable",
+    "ledger": "<work>/ledger.sqlite",
+    "program_cap_usd": 360,
+    "overshoot_usd": 0,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 3,
+      "max": 7416.3
+    }
+  },
+  "run_status": "completed",
+  "verdict": "pass",
+  "n_total": 3,
+  "n_scored": 3,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": true,
+  "preregistration_attestation": {
+    "preregistration": "docs/benchmarks/2026-11-01-skillopt-method/PREREGISTRATION.md",
+    "preregistration_commit": "a1147c9709337e90ba0b4231dc2c228d18c86d7a",
+    "runner_commit": "a1147c9709337e90ba0b4231dc2c228d18c86d7a",
+    "worktree_clean_for_preregistration": true,
+    "on_origin": true,
+    "attested_at": "2026-11-02T00:01:38.170Z"
+  },
+  "resolved_config": {
+    "engine": "pglite-in-memory",
+    "decide": "off (no key, fresh GBRAIN_HOME)",
+    "mode": "probe",
+    "target": "sol",
+    "stage": "f0a",
+    "skills": null,
+    "from": null,
+    "other": null,
+    "keys_in_process": [
+      "OPENAI_API_KEY"
+    ],
+    "models": {
+      "target": "openai:gpt-6.1-sol",
+      "proposer": null
+    }
+  },
+  "finished_at": "2026-11-02T00:42:12.451Z",
+  "data": {
+    "probe": {
+      "mode": "live",
+      "stage": "f0a",
+      "target": "sol",
+      "models": {
+        "target": "openai:gpt-6.1-sol",
+        "proposer": null
+      },
+      "dataset": "skillopt-method-v2",
+      "runs": {
+        "no_skill": 1,
+        "seed": 3,
+        "train": 1,
+        "rewrite": 3
+      },
+      "models_not_run": [
+        {
+          "model": "particle:particle-1",
+          "reason": "the rollout runs through gbrain's gateway, which has no Particle recipe at the pinned gbrain (GBRA-268, plan decision D); particle-1 joins as a target once that recipe reaches the pin, under a crew paid window"
+        }
+      ],
+      "served_tools": {
+        "query": [
+          "find_anomalies",
+          "get_backlinks",
+          "get_ingest_log",
+          "get_page",
+          "get_recent_salience",
+          "get_timeline",
+          "list_link_sources",
+          "list_pages",
+          "query",
+          "recall",
+          "resolve_slugs",
+          "search",
+          "traverse_graph"
+        ],
+        "briefing": [
+          "find_anomalies",
+          "get_backlinks",
+          "get_ingest_log",
+          "get_page",
+          "get_recent_salience",
+          "get_timeline",
+          "list_link_sources",
+          "list_pages",
+          "query",
+          "resolve_slugs",
+          "search",
+          "traverse_graph"
+        ],
+        "fact-check": [
+          "find_anomalies",
+          "get_backlinks",
+          "get_ingest_log",
+          "get_page",
+          "get_recent_salience",
+          "list_link_sources",
+          "list_pages",
+          "query",
+          "resolve_slugs",
+          "search",
+          "traverse_graph"
+        ]
+      },
+      "coverage": [
+        {
+          "skill": "query",
+          "declared": [
+            "recall",
+            "search",
+            "query",
+            "get_page",
+            "list_pages",
+            "get_backlinks",
+            "traverse_graph",
+            "get_timeline"
+          ],
+          "missing": [],
+          "outside_brain": [],
+          "full": true
+        },
+        {
+          "skill": "briefing",
+          "declared": [
+            "search",
+            "query",
+            "get_page",
+            "list_pages",
+            "get_timeline"
+          ],
+          "missing": [],
+          "outside_brain": [],
+          "full": true
+        },
+        {
+          "skill": "fact-check",
+          "declared": [
+            "search",
+            "query",
+            "get_page",
+            "web_search",
+            "web_fetch"
+          ],
+          "missing": [],
+          "outside_brain": [
+            "web_search",
+            "web_fetch"
+          ],
+          "full": true
+        }
+      ],
+      "skills": [
+        {
+          "skill": "query",
+          "target": "sol",
+          "stage": "f0a",
+          "ceiling": 1,
+          "tool_gaps": [],
+          "no_skill": 0.875,
+          "seed": 0.7083333333333334,
+          "one_shot_repeats": [],
+          "one_shot_kept": null,
+          "arms": {
+            "no_skill": {
+              "score": 0.875,
+              "per_task": {
+                "query-sel-03": [
+                  1
+                ],
+                "query-sel-04": [
+                  1
+                ],
+                "query-sel-01": [
+                  0
+                ],
+                "query-sel-02": [
+                  1
+                ],
+                "query-sel-05": [
+                  1
+                ],
+                "query-sel-07": [
+                  1
+                ],
+                "query-sel-08": [
+                  0
+                ],
+                "query-sel-06": [
+                  1
+                ],
+                "query-sel-09": [
+                  1
+                ],
+                "query-sel-13": [
+                  1
+                ],
+                "query-sel-11": [
+                  1
+                ],
+                "query-sel-12": [
+                  1
+                ],
+                "query-sel-15": [
+                  1
+                ],
+                "query-sel-17": [
+                  1
+                ],
+                "query-sel-14": [
+                  1
+                ],
+                "query-sel-10": [
+                  1
+                ],
+                "query-sel-18": [
+                  1
+                ],
+                "query-sel-16": [
+                  1
+                ],
+                "query-sel-20": [
+                  1
+                ],
+                "query-sel-19": [
+                  1
+                ],
+                "query-sel-21": [
+                  0
+                ],
+                "query-sel-24": [
+                  1
+                ],
+                "query-sel-22": [
+                  1
+                ],
+                "query-sel-23": [
+                  1
+                ]
+              }
+            },
+            "seed": {
+              "score": 0.7083333333333334,
+              "per_task": {
+                "query-sel-01": [
+                  0,
+                  0,
+                  0
+                ],
+                "query-sel-04": [
+                  0,
+                  0,
+                  0
+                ],
+                "query-sel-02": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-sel-03": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-sel-05": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-sel-06": [
+                  0,
+                  0,
+                  0
+                ],
+                "query-sel-08": [
+                  0,
+                  0,
+                  0
+                ],
+                "query-sel-07": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-sel-09": [
+                  1,
+                  0,
+                  0
+                ],
+                "query-sel-11": [
+                  0,
+                  0,
+                  0
+                ],
+                "query-sel-12": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-sel-10": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-sel-13": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-sel-15": [
+                  1,
+                  1,
+                  0
+                ],
+                "query-sel-14": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-sel-16": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-sel-17": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-sel-19": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-sel-18": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-sel-20": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-sel-21": [
+                  0,
+                  0,
+                  0
+                ],
+                "query-sel-22": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-sel-23": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-sel-24": [
+                  1,
+                  1,
+                  1
+                ]
+              }
+            }
+          },
+          "cost": {
+            "rollouts": 96,
+            "calls": 410,
+            "usd": 3.1543909000000006,
+            "unpriced_calls": 0,
+            "input_tokens": 4959944,
+            "output_tokens": 31335,
+            "cache_read_tokens": 3725709,
+            "cache_creation_tokens": 0,
+            "reasoning_tokens": 1228,
+            "mean_rollout_usd": 0.032858238541666675,
+            "calls_per_rollout": 4.270833333333333,
+            "cached_input_share": 0.7511594888974553,
+            "reasoning_tokens_per_rollout": 12.791666666666666
+          }
+        },
+        {
+          "skill": "briefing",
+          "target": "sol",
+          "stage": "f0a",
+          "ceiling": 1,
+          "tool_gaps": [],
+          "no_skill": 0.16666666666666666,
+          "seed": 0.5416666666666666,
+          "one_shot_repeats": [],
+          "one_shot_kept": null,
+          "arms": {
+            "no_skill": {
+              "score": 0.16666666666666666,
+              "per_task": {
+                "briefing-sel-04": [
+                  0
+                ],
+                "briefing-sel-03": [
+                  1
+                ],
+                "briefing-sel-02": [
+                  0
+                ],
+                "briefing-sel-05": [
+                  0
+                ],
+                "briefing-sel-01": [
+                  0
+                ],
+                "briefing-sel-06": [
+                  1
+                ],
+                "briefing-sel-07": [
+                  0
+                ],
+                "briefing-sel-08": [
+                  0
+                ],
+                "briefing-sel-09": [
+                  1
+                ],
+                "briefing-sel-11": [
+                  0
+                ],
+                "briefing-sel-13": [
+                  0
+                ],
+                "briefing-sel-12": [
+                  0
+                ],
+                "briefing-sel-14": [
+                  1
+                ],
+                "briefing-sel-15": [
+                  0
+                ],
+                "briefing-sel-16": [
+                  0
+                ],
+                "briefing-sel-10": [
+                  0
+                ],
+                "briefing-sel-19": [
+                  0
+                ],
+                "briefing-sel-18": [
+                  0
+                ],
+                "briefing-sel-21": [
+                  0
+                ],
+                "briefing-sel-20": [
+                  0
+                ],
+                "briefing-sel-23": [
+                  0
+                ],
+                "briefing-sel-24": [
+                  0
+                ],
+                "briefing-sel-22": [
+                  0
+                ],
+                "briefing-sel-17": [
+                  0
+                ]
+              }
+            },
+            "seed": {
+              "score": 0.5416666666666666,
+              "per_task": {
+                "briefing-sel-03": [
+                  0,
+                  0,
+                  0
+                ],
+                "briefing-sel-01": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-sel-04": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-sel-02": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-sel-05": [
+                  0,
+                  0,
+                  0
+                ],
+                "briefing-sel-06": [
+                  0,
+                  0,
+                  0
+                ],
+                "briefing-sel-07": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-sel-09": [
+                  0,
+                  1,
+                  1
+                ],
+                "briefing-sel-08": [
+                  1,
+                  0,
+                  0
+                ],
+                "briefing-sel-10": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-sel-11": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-sel-12": [
+                  0,
+                  0,
+                  0
+                ],
+                "briefing-sel-13": [
+                  0,
+                  0,
+                  0
+                ],
+                "briefing-sel-14": [
+                  0,
+                  0,
+                  0
+                ],
+                "briefing-sel-15": [
+                  0,
+                  0,
+                  0
+                ],
+                "briefing-sel-16": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-sel-17": [
+                  1,
+                  0,
+                  1
+                ],
+                "briefing-sel-18": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-sel-19": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-sel-20": [
+                  0,
+                  0,
+                  0
+                ],
+                "briefing-sel-21": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-sel-22": [
+                  0,
+                  0,
+                  1
+                ],
+                "briefing-sel-23": [
+                  0,
+                  1,
+                  1
+                ],
+                "briefing-sel-24": [
+                  0,
+                  0,
+                  0
+                ]
+              }
+            }
+          },
+          "cost": {
+            "rollouts": 96,
+            "calls": 694,
+            "usd": 7.596836800000001,
+            "unpriced_calls": 0,
+            "input_tokens": 15497052,
+            "output_tokens": 222307,
+            "cache_read_tokens": 13484388,
+            "cache_creation_tokens": 0,
+            "reasoning_tokens": 8727,
+            "mean_rollout_usd": 0.07913371666666667,
+            "calls_per_rollout": 7.229166666666667,
+            "cached_input_share": 0.8701260084821294,
+            "reasoning_tokens_per_rollout": 90.90625
+          }
+        },
+        {
+          "skill": "fact-check",
+          "target": "sol",
+          "stage": "f0a",
+          "ceiling": 1,
+          "tool_gaps": [],
+          "no_skill": 0,
+          "seed": 0.5833333333333334,
+          "one_shot_repeats": [],
+          "one_shot_kept": null,
+          "arms": {
+            "no_skill": {
+              "score": 0,
+              "per_task": {
+                "fact-check-sel-04": [
+                  0
+                ],
+                "fact-check-sel-03": [
+                  0
+                ],
+                "fact-check-sel-01": [
+                  0
+                ],
+                "fact-check-sel-02": [
+                  0
+                ],
+                "fact-check-sel-05": [
+                  0
+                ],
+                "fact-check-sel-06": [
+                  0
+                ],
+                "fact-check-sel-09": [
+                  0
+                ],
+                "fact-check-sel-07": [
+                  0
+                ],
+                "fact-check-sel-08": [
+                  0
+                ],
+                "fact-check-sel-10": [
+                  0
+                ],
+                "fact-check-sel-11": [
+                  0
+                ],
+                "fact-check-sel-13": [
+                  0
+                ],
+                "fact-check-sel-12": [
+                  0
+                ],
+                "fact-check-sel-16": [
+                  0
+                ],
+                "fact-check-sel-15": [
+                  0
+                ],
+                "fact-check-sel-14": [
+                  0
+                ],
+                "fact-check-sel-17": [
+                  0
+                ],
+                "fact-check-sel-18": [
+                  0
+                ],
+                "fact-check-sel-20": [
+                  0
+                ],
+                "fact-check-sel-21": [
+                  0
+                ],
+                "fact-check-sel-19": [
+                  0
+                ],
+                "fact-check-sel-22": [
+                  0
+                ],
+                "fact-check-sel-23": [
+                  0
+                ],
+                "fact-check-sel-24": [
+                  0
+                ]
+              }
+            },
+            "seed": {
+              "score": 0.5833333333333334,
+              "per_task": {
+                "fact-check-sel-04": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-sel-03": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-sel-02": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-sel-01": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-sel-05": [
+                  1,
+                  1,
+                  0
+                ],
+                "fact-check-sel-06": [
+                  0,
+                  0,
+                  0
+                ],
+                "fact-check-sel-07": [
+                  0,
+                  0,
+                  0
+                ],
+                "fact-check-sel-08": [
+                  1,
+                  0,
+                  1
+                ],
+                "fact-check-sel-10": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-sel-09": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-sel-11": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-sel-12": [
+                  1,
+                  0,
+                  0
+                ],
+                "fact-check-sel-13": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-sel-14": [
+                  1,
+                  1,
+                  0
+                ],
+                "fact-check-sel-16": [
+                  0,
+                  0,
+                  0
+                ],
+                "fact-check-sel-15": [
+                  1,
+                  0,
+                  1
+                ],
+                "fact-check-sel-17": [
+                  0,
+                  0,
+                  0
+                ],
+                "fact-check-sel-18": [
+                  0,
+                  1,
+                  1
+                ],
+                "fact-check-sel-21": [
+                  0,
+                  0,
+                  0
+                ],
+                "fact-check-sel-20": [
+                  0,
+                  0,
+                  0
+                ],
+                "fact-check-sel-19": [
+                  0,
+                  0,
+                  0
+                ],
+                "fact-check-sel-22": [
+                  0,
+                  0,
+                  0
+                ],
+                "fact-check-sel-23": [
+                  0,
+                  0,
+                  0
+                ],
+                "fact-check-sel-24": [
+                  1,
+                  1,
+                  1
+                ]
+              }
+            }
+          },
+          "cost": {
+            "rollouts": 96,
+            "calls": 1281,
+            "usd": 8.737632099999995,
+            "unpriced_calls": 0,
+            "input_tokens": 25049303,
+            "output_tokens": 281646,
+            "cache_read_tokens": 23251281,
+            "cache_creation_tokens": 0,
+            "reasoning_tokens": 17231,
+            "mean_rollout_usd": 0.09101700104166661,
+            "calls_per_rollout": 13.34375,
+            "cached_input_share": 0.9282206774376117,
+            "reasoning_tokens_per_rollout": 179.48958333333334
+          }
+        }
+      ],
+      "f0b_skills": [
+        "query",
+        "briefing",
+        "fact-check"
+      ],
+      "gate": null,
+      "reprice_trigger": null,
+      "files_read": [
+        "eval/data/skillopt-method-v2/query/sel.jsonl",
+        "eval/data/skillopt-method-v2/briefing/sel.jsonl",
+        "eval/data/skillopt-method-v2/fact-check/sel.jsonl"
+      ],
+      "retrieval": "keyword only: pages imported with noEmbed, embedding_disabled set on the brain, the gateway's embedding model on a provider whose key is not in the process; reranker and query expansion off",
+      "request_settings": [
+        {
+          "host": "api.openai.com",
+          "model": "gpt-6.1-sol",
+          "sent": {
+            "reasoning": null,
+            "max_output_tokens": 4096,
+            "temperature": null,
+            "top_p": null,
+            "tool_choice": "auto",
+            "parallel_tool_calls": null,
+            "store": null,
+            "service_tier": null,
+            "truncation": null,
+            "text": null,
+            "tools": 11,
+            "instructions_role": "developer"
+          },
+          "applied_reasoning_effort": "medium",
+          "requests": 1486
+        },
+        {
+          "host": "api.openai.com",
+          "model": "gpt-6.1-sol",
+          "sent": {
+            "reasoning": null,
+            "max_output_tokens": 4096,
+            "temperature": null,
+            "top_p": null,
+            "tool_choice": "auto",
+            "parallel_tool_calls": null,
+            "store": null,
+            "service_tier": null,
+            "truncation": null,
+            "text": null,
+            "tools": 13,
+            "instructions_role": "developer"
+          },
+          "applied_reasoning_effort": "medium",
+          "requests": 315
+        },
+        {
+          "host": "api.openai.com",
+          "model": "gpt-6.1-sol",
+          "sent": {
+            "reasoning": null,
+            "max_output_tokens": 4096,
+            "temperature": null,
+            "top_p": null,
+            "tool_choice": "auto",
+            "parallel_tool_calls": null,
+            "store": null,
+            "service_tier": null,
+            "truncation": null,
+            "text": null,
+            "tools": 12,
+            "instructions_role": "developer"
+          },
+          "applied_reasoning_effort": "medium",
+          "requests": 584
+        }
+      ],
+      "files_read_include_test": false
+    },
+    "reprice_trigger": null
+  },
+  "accounting": {
+    "planned": 3,
+    "attempted": 3,
+    "scored": 3,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  },
+  "latency_ms": null,
+  "delivered_tokens": null
+}
