@@ -2,21 +2,21 @@
  * Scored, metered rollouts for the SkillOpt method benchmark (GST-799): the
  * one arm runner the A1 probe and the harness one-shot share.
  *
- * `scoreArm` scores a skill text on tasks through gbrain's `scoreSkillOnTasks`
+ * `scoreArm` scores a skill text on tasks through gbrain's `scoreSkillPerTask`
  * with the counted scorer in its `scoreFn` seam (median of runs per task, mean
- * over tasks). Through the `rolloutFn` seam it also meters every rollout: each
- * model call's usage, read from the tool loop's `onAssistantTurn`, is priced
- * at the budget ledger's list prices (`chatPrice`, the rates the ledger
- * settles at). The ledger stays the record of spend; the meter gives the
- * per-pair figures a receipt reports and the reprice trigger reads: mean cost
- * per rollout, model calls per rollout, the cached share of input tokens and
- * reasoning tokens.
+ * over tasks), and keeps each task's median for paired comparisons. Through
+ * the `rolloutFn` seam it also meters every rollout: each model call's usage,
+ * read from the tool loop's `onAssistantTurn`, is priced at the budget
+ * ledger's list prices (`chatPrice`, the rates the ledger settles at). The
+ * ledger stays the record of spend; the meter gives the per-pair figures a
+ * receipt reports and the reprice trigger reads: mean cost per rollout, model
+ * calls per rollout, the cached share of input tokens and reasoning tokens.
  *
  * Usage follows gbrain's `ChatResult.usage`: `input_tokens` is the whole
  * prompt and the cache read and write counts are parts of it.
  */
 import { toolLoop } from 'gbrain/ai/gateway';
-import { runRollout, scoreSkillOnTasks, type BenchmarkTask } from 'gbrain/core/skillopt';
+import { runRollout, scoreSkillPerTask, type BenchmarkTask } from 'gbrain/core/skillopt';
 import type { PGLiteEngine } from 'gbrain/pglite-engine';
 import type { MethodTask } from '../../generators/skillopt-method/common.ts';
 import { chatPrice } from '../budget-ledger.ts';
@@ -93,7 +93,13 @@ export function summarizeMeter(m: MeterTotals): MeterSummary {
   };
 }
 
-export interface ArmScore { score: number | null; per_task: Record<string, number[]>; error?: string }
+export interface ArmScore {
+  score: number | null;
+  per_task: Record<string, number[]>;
+  /** Each task's median of runs, as gbrain scores it (a task whose rollout errored counts 0); absent when the arm failed. */
+  task_medians?: Record<string, number>;
+  error?: string;
+}
 
 export interface ArmOptions {
   engine: PGLiteEngine;
@@ -134,11 +140,11 @@ export async function scoreArm(o: ArmOptions): Promise<ArmScore> {
     }
   });
   try {
-    const score = await scoreSkillOnTasks({
+    const { score, perTask } = await scoreSkillPerTask({
       engine: o.engine, skillText: o.skillText, tasks: o.tasks.map(benchTask), targetModel: o.model, judgeModel: o.model,
       runsPerTask: o.runs, scoreFn, ...(rolloutFn ? { rolloutFn } : {}),
     });
-    return { score, per_task };
+    return { score, per_task, task_medians: Object.fromEntries(perTask.map(t => [t.task_id, t.median])) };
   } catch (e) {
     return { score: null, per_task, error: e instanceof Error ? e.message : String(e) };
   }

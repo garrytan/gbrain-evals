@@ -1,27 +1,39 @@
 /**
  * SkillOpt method A1 probe (GST-799; plan decision A, revision 3 decision A3):
  * tool coverage, the frontier gate and the counted-skills pick, the paid-run
- * refusals, and keyless end-to-end runs of F0a, F0b and the smoke on fake
- * transports and a stubbed fetch, for both frontier targets. The historical
+ * refusals, and keyless end-to-end runs of F0a, F0b, stage test and the smoke
+ * on fake transports and a stubbed fetch, for both frontier targets. Stage
+ * test's estimate, bootstrap, verdicts and rewrite pick are covered on their
+ * own. The historical
  * Haiku gate and probe stay covered. No model call.
  */
 import { describe, expect, test } from 'bun:test';
-import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { __setEmbedTransportForTests, __setGenerateObjectTransportForTests, __setGenerateTextTransportForTests, type ChatOpts, type ChatResult } from 'gbrain/ai/gateway';
 import { loadCorpora, type MethodTask } from '../../eval/generators/skillopt-method/common.ts';
 import { withHermeticEnv } from '../../eval/runner/hermetic-env.ts';
 import { readSealedTestTasks, readSeed, readTasks } from '../../eval/runner/skillopt-method/dataset.ts';
 import { forbiddenMarkers, markersIn, ONE_SHOT_SYSTEM, pagesOf, PROPOSER_MODEL, proposerInput, trainPages, WITHHELD, type TrainTrajectory } from '../../eval/runner/skillopt-method/one-shot.ts';
 import {
-  countedSkills, FAKE_REWRITE_MARKER, fakeReply, fakeTransport, FRONTIER_TARGET_NAMES, FRONTIER_TARGETS, frontierEstimateUsd, frontierGate, lastUserText, NO_SKILL_TEXT,
-  PINNED_SEARCH_CONFIG, PROBE_EMBEDDING, PROBE_GATE, probeGate, REPRICE_TRIGGER_USD, runFrontierProbe, runProbe, runSmoke, servedTools, toolCoverage,
-  type ChatTransport, type FrontierRow, type FrontierTarget, type SkillProbe,
+  countedSkills, FAKE_REWRITE_MARKER, fakeReply, fakeTransport, FRONTIER_TARGET_NAMES, FRONTIER_TARGETS, frontierEstimateUsd, frontierGate, lastUserText, NO_SKILL_TEXT, openBrain,
+  PINNED_SEARCH_CONFIG, PROBE_EMBEDDING, PROBE_GATE, probeGate, REPRICE_TRIGGER_USD, runFrontierProbe, runProbe, runSmoke, servedTools, sha8, toolCoverage,
+  type ChatTransport, type FrontierResult, type FrontierRow, type FrontierTarget, type SkillProbe,
 } from '../../eval/runner/skillopt-method/probe.ts';
 import { callCostUsd, emptyMeter, meterRollout, summarizeMeter } from '../../eval/runner/skillopt-method/rollouts.ts';
+import { SKILLS } from '../../eval/runner/skillopt-method/score.ts';
+import {
+  pairedBootstrap, planTestStage, rewriteVerdict, runTestStage, shippedSkillVerdict, TEST_BOOTSTRAP, TEST_ROLLOUT_USD, TEST_STAGE_ESTIMATE_USD, testRolloutsPerPair, testStageEstimateUsd,
+  withRewriteTexts, type TestPairResult,
+} from '../../eval/runner/skillopt-method/test-stage.ts';
 
 const REPO_ROOT = join(import.meta.dir, '../..');
+const FRONTIER_DIR = 'docs/benchmarks/2026-11-01-skillopt-method/probe/frontier';
+/** The committed live receipts of the frontier probe, as paths from the repository root. */
+const f0aReceipt = (t: FrontierTarget) => `${FRONTIER_DIR}/f0a-${t}/receipt.json`;
+const f0bReceipt = (t: FrontierTarget) => `${FRONTIER_DIR}/f0b-${t}/receipt.json`;
+const probeOf = (path: string) => (JSON.parse(readFileSync(join(REPO_ROOT, path), 'utf8')) as { data: { probe: FrontierResult } }).data.probe;
 
 describe('tool coverage', () => {
   test("lists each seed's frontmatter brain operations that the rollout does not serve, and its tools outside the brain apart", () => {
@@ -132,7 +144,7 @@ describe('probe runs refuse to spend', () => {
     const dir = mkdtempSync(join(tmpdir(), 'n15-ledger-'));
     try {
       const env = Object.fromEntries(Object.entries(process.env).filter(([k]) => !/_API_KEY$/.test(k)));
-      for (const args of [['--probe'], ['--probe', '--target', 'sol', '--stage', 'f0a'], ['--smoke']]) {
+      for (const args of [['--probe'], ['--probe', '--target', 'sol', '--stage', 'f0a'], ['--probe', '--target', 'opus', '--stage', 'test', '--from', f0bReceipt('opus'), '--other', f0bReceipt('sol')], ['--smoke']]) {
         const r = Bun.spawnSync(['bun', 'eval/runner/n15-skillopt-method.ts', ...args, '--budget-ledger', join(dir, 'ledger.sqlite'), '--output', dir], { cwd: REPO_ROOT, env, stdout: 'pipe', stderr: 'pipe' });
         expect([args.join(' '), r.exitCode]).toEqual([args.join(' '), 2]);
         expect(r.stderr.toString()).toContain('--paid --budget-run-id <id>');
@@ -417,7 +429,7 @@ describe('the category runner, keyless', () => {
       expect(receipt.data.probe.skills[0].rewrites).toBeUndefined();
       expect(receipt.data.counted_skills).toEqual({ order: [], per_target: { sol: [] }, targets_read: ['sol'] });
       expect(existsSync(join(dir, 'f0b', 'probe-partial.json'))).toBe(true);
-      expect(readdirSync(join(dir, 'f0b', 'one-shot')).sort()).toEqual(['sol-query-input.md', 'sol-query-rewrite-1.md', 'sol-query-rewrite-2.md']);
+      expect(readdirSync(join(dir, 'f0b', 'one-shot')).sort()).toEqual(['sol-query-input.txt', 'sol-query-rewrite-1.txt', 'sol-query-rewrite-2.txt']);
       const wrong = cli('--stage', 'f0b', '--from', join(dir, 'f0b', 'receipt.json'), '--output', join(dir, 'bad'));
       expect(wrong.exitCode).toBe(3);
       expect(wrong.stdout.toString()).toContain('it is stage f0b');
@@ -471,3 +483,221 @@ describe('proposer input', () => {
     expect(markersIn(text, markers)).toEqual([]);
   });
 });
+
+// ─── Stage test: the one read of the sealed test split ───────────────────────
+
+describe('stage test: estimate, bootstrap and verdicts', () => {
+  test("the estimate prices 252 rollouts a pair (144 without a rewrite arm) at each pair's measured rollout cost: $148.43 on Opus and $42.71 on Sol", () => {
+    expect([testRolloutsPerPair(true), testRolloutsPerPair(false)]).toEqual([252, 144]);
+    expect(TEST_STAGE_ESTIMATE_USD.opus).toBeCloseTo(252 * (0.129 + 0.29 + 0.17), 9);
+    expect(TEST_STAGE_ESTIMATE_USD.sol).toBeCloseTo(252 * (0.0325 + 0.064 + 0.073), 9);
+    expect(TEST_STAGE_ESTIMATE_USD.opus + TEST_STAGE_ESTIMATE_USD.sol).toBeCloseTo(191.142, 9);
+    expect(testStageEstimateUsd('opus', [{ skill: 'briefing', rewrite: false }])).toBeCloseTo(144 * 0.29, 9);
+    for (const t of FRONTIER_TARGET_NAMES) for (const s of SKILLS) {
+      const mean = [f0aReceipt(t), f0bReceipt(t)].map(p => probeOf(p).skills.find(x => x.skill === s)!.cost!.mean_rollout_usd!).reduce((a, b) => a + b, 0) / 2;
+      expect([t, s, Math.abs(TEST_ROLLOUT_USD[t][s] - mean) / mean < 0.015]).toEqual([t, s, true]);
+    }
+  });
+
+  test('the task-level bootstrap is deterministic: 10,000 resamples at seed 799 give the same interval on every run', () => {
+    expect(TEST_BOOTSTRAP).toEqual({ resamples: 10_000, seed: 799 });
+    const diffs = Array.from({ length: 36 }, (_, i) => (i % 3 === 0 ? 1 : i % 7 === 0 ? -1 : 0));
+    const first = pairedBootstrap(diffs);
+    expect(first).toEqual({ tasks: 36, point: 8 / 36, lower: 1 / 36, upper: 15 / 36, wins: 12, losses: 4, mcnemar_p: 2 * 2517 / 65536 });
+    expect(pairedBootstrap([...diffs])).toEqual(first);
+    expect(pairedBootstrap([...Array(34).fill(0), 1, -1])).toEqual({ tasks: 36, point: 0, lower: -3 / 36, upper: 3 / 36, wins: 1, losses: 1, mcnemar_p: 1 });
+    expect(pairedBootstrap([1, 1, 1])).toEqual({ tasks: 3, point: 1, lower: 1, upper: 1, wins: 3, losses: 0, mcnemar_p: 0.25 });
+    expect(pairedBootstrap([0.5, 0])!.mcnemar_p).toBeNull();
+    expect(pairedBootstrap([])).toBeNull();
+  });
+
+  test('the shipped skill against no skill: KEEP only when the lower bound is above 0 and McNemar p < 0.05, CUT-CANDIDATE when the point is 0 or below, else FIX-METHOD', () => {
+    expect(shippedSkillVerdict({ point: 0.2, lower: 1 / 36, mcnemar_p: 0.01 })).toBe('KEEP');
+    expect(shippedSkillVerdict({ point: 0.2, lower: Number.MIN_VALUE, mcnemar_p: 0.049 })).toBe('KEEP');
+    expect(shippedSkillVerdict({ point: 0.2, lower: 1 / 36, mcnemar_p: 0.05 })).toBe('FIX-METHOD');
+    expect(shippedSkillVerdict({ point: 0.2, lower: 1 / 36, mcnemar_p: null })).toBe('FIX-METHOD');
+    expect(shippedSkillVerdict({ point: 0.2, lower: 0, mcnemar_p: 0.01 })).toBe('FIX-METHOD');
+    expect(shippedSkillVerdict({ point: 1 / 36, lower: -0.05, mcnemar_p: 1 })).toBe('FIX-METHOD');
+    expect(shippedSkillVerdict({ point: 0, lower: -0.05, mcnemar_p: 1 })).toBe('CUT-CANDIDATE');
+    expect(shippedSkillVerdict({ point: -0.3, lower: -0.5, mcnemar_p: 0.001 })).toBe('CUT-CANDIDATE');
+    expect(shippedSkillVerdict(pairedBootstrap([...Array(34).fill(0), 1, -1])!)).toBe('CUT-CANDIDATE');
+    expect(shippedSkillVerdict(pairedBootstrap([...Array(32).fill(0), 1, 1, 1, 1])!)).toBe('FIX-METHOD');
+    expect(shippedSkillVerdict(pairedBootstrap([...Array(30).fill(0), 1, 1, 1, 1, 1, 1])!)).toBe('KEEP');
+  });
+
+  test('the rewrite against the seed: beats it only when the lower bound is above 0, worse only when the upper bound is below 0, each with McNemar p < 0.05', () => {
+    expect(rewriteVerdict({ lower: 1 / 36, upper: 0.5, mcnemar_p: 0.01 })).toBe('rewrite-beats-seed');
+    expect(rewriteVerdict({ lower: 1 / 36, upper: 0.5, mcnemar_p: 0.125 })).toBe('no-difference-shown');
+    expect(rewriteVerdict({ lower: 0, upper: 0.5, mcnemar_p: 0.01 })).toBe('no-difference-shown');
+    expect(rewriteVerdict({ lower: -0.5, upper: 0, mcnemar_p: 0.01 })).toBe('no-difference-shown');
+    expect(rewriteVerdict({ lower: 0, upper: 0, mcnemar_p: 1 })).toBe('no-difference-shown');
+    expect(rewriteVerdict({ lower: -0.5, upper: -1 / 36, mcnemar_p: 0.01 })).toBe('rewrite-worse');
+    expect(rewriteVerdict({ lower: -0.5, upper: -1 / 36, mcnemar_p: 0.125 })).toBe('no-difference-shown');
+  });
+});
+
+describe('stage test: the rewrite each pair scores, and the F0b results it refuses', () => {
+  const live = (t: FrontierTarget) => withRewriteTexts(probeOf(f0bReceipt(t)), join(REPO_ROOT, f0bReceipt(t)));
+  const picks = (plan: ReturnType<typeof planTestStage>) => plan.map(p => [p.skill, p.rewrite && [p.rewrite.source, p.rewrite.target, p.rewrite.number, p.rewrite.text_sha8]]);
+
+  test("on the live F0b receipts, Opus scores its own query and fact-check rewrites and Sol's briefing rewrite 2; Sol scores its own three", () => {
+    const opus = planTestStage({ target: 'opus', fake: false, from: live('opus'), other: live('sol') });
+    expect(picks(opus)).toEqual([['query', ['own', 'opus', 1, '52942b2a']], ['briefing', ['other-target', 'sol', 2, 'b35934a9']], ['fact-check', ['own', 'opus', 2, 'a417d566']]]);
+    expect(opus.every(p => p.rewrite && sha8(p.rewrite.text) === p.rewrite.text_sha8 && p.rewrite.selection_score === 1)).toBe(true);
+    expect(testStageEstimateUsd('opus', opus.map(p => ({ skill: p.skill, rewrite: !!p.rewrite })))).toBeCloseTo(TEST_STAGE_ESTIMATE_USD.opus, 9);
+    expect(picks(planTestStage({ target: 'sol', fake: false, from: live('sol'), other: live('opus') }))).toEqual([['query', ['own', 'sol', 2, 'bafc6a5c']], ['briefing', ['own', 'sol', 2, 'b35934a9']], ['fact-check', ['own', 'sol', 2, '50331458']]]);
+  });
+
+  test('with neither target holding a kept rewrite there is no rewrite arm, and the plan says why', () => {
+    const plan = planTestStage({ target: 'opus', fake: false, from: live('opus'), skills: ['briefing'] });
+    expect(plan).toEqual([{ skill: 'briefing', rewrite: null, no_rewrite_reason: 'no kept rewrite on either target: opus: no rewrite beat the seed (audit-disqualified, audit-disqualified); sol: no F0b result read' }]);
+    const sol = live('sol');
+    const noKept = { ...sol, skills: sol.skills.map(s => ({ ...s, arms: { ...s.arms, one_shot: s.arms.one_shot!.map(a => ({ ...a, kept: false })) } })) };
+    expect(planTestStage({ target: 'opus', fake: false, from: live('opus'), other: noKept, skills: ['briefing'] })[0]!.no_rewrite_reason).toBe('no kept rewrite on either target: opus: no rewrite beat the seed (audit-disqualified, audit-disqualified); sol: no rewrite beat the seed (audit-disqualified, scored 1.00)');
+  });
+
+  test("a kept rewrite whose text does not match its text_sha8 is refused", () => {
+    const opus = live('opus');
+    const tampered = { ...opus, skills: opus.skills.map(s => ({ ...s, rewrites: s.rewrites.map(t => t + '\nOne more line.\n') })) };
+    expect(() => planTestStage({ target: 'opus', fake: true, from: tampered, skills: ['query'] })).toThrow("opus query: no rewrite text matches the kept rewrite's text_sha8 52942b2a");
+  });
+
+  test("refuses a --from that is not this target's live F0b result, a fake one on a live run, and an --other that is not the other target's", () => {
+    const refusal = (o: Parameters<typeof planTestStage>[0]) => { try { planTestStage(o); return null; } catch (e) { return (e as Error).message; } };
+    const asFake = (r: FrontierResult): FrontierResult => ({ ...r, mode: 'fake' });
+    expect(refusal({ target: 'opus', fake: false })).toContain('--from <F0b receipt>');
+    expect(refusal({ target: 'sol', fake: false, from: live('opus') })).toBe("stage test for sol needs sol's live F0b result on skillopt-method-v2 in --from, but it is for target opus");
+    expect(refusal({ target: 'opus', fake: false, from: probeOf(f0aReceipt('opus')) })).toBe("stage test for opus needs opus's live F0b result on skillopt-method-v2 in --from, but it is stage f0a");
+    expect(refusal({ target: 'opus', fake: false, from: asFake(live('opus')) })).toBe("stage test for opus needs opus's live F0b result on skillopt-method-v2 in --from, but it is a fake run");
+    expect(refusal({ target: 'opus', fake: false, from: live('opus'), other: asFake(live('sol')) })).toContain("needs sol's live F0b result on skillopt-method-v2 in --other, but it is a fake run");
+    expect(refusal({ target: 'opus', fake: false, from: live('opus'), other: live('opus') })).toContain('in --other, but it is for target opus');
+    expect(refusal({ target: 'opus', fake: true, from: asFake(live('opus')), other: live('sol') })).toBeNull();
+  });
+});
+
+describe('stage test, keyless end to end', () => {
+  test("both targets: F0a and F0b read no test file, stage test reads only the test split, scores no skill x1, the seed x3 and the kept rewrite x3, and falls back to the other target's rewrite", async () => {
+    const seen = newSeen();
+    const calls: Array<{ model: string; system: string }> = [];
+    const capture = (tasks: readonly MethodTask[]): ChatTransport => {
+      const base = fakeTransport(tasks);
+      return async opts => { calls.push({ model: opts.model ?? '', system: opts.system ?? '' }); return base(opts); };
+    };
+    const proposals = (target: FrontierTarget) => (n: number) => `# Rewritten skill (${target} proposal ${n + 1})\n\n${FAKE_REWRITE_MARKER}\n\nAnswer from the brain and cite the page that holds the answer.\n`;
+    const scored: string[] = [];
+    const r = await run('n15-test-stage', () => sealed(seen, async () => {
+      const engine = await openBrain();
+      try {
+        const f0a = {} as Record<FrontierTarget, FrontierResult>;
+        const f0b = {} as Record<FrontierTarget, FrontierResult>;
+        for (const target of FRONTIER_TARGET_NAMES) {
+          f0a[target] = await runFrontierProbe({ target, stage: 'f0a', fake: true, skills: ['query', 'briefing'], engine });
+          f0b[target] = await runFrontierProbe({ target, stage: 'f0b', fake: true, from: f0a[target], engine, transport: recordingTransport(seen, { rewrite: proposals(target) }) });
+        }
+        const opus = structuredClone(f0b.opus);
+        const briefing = opus.skills.find(s => s.skill === 'briefing')!;
+        briefing.arms.one_shot = briefing.arms.one_shot!.map(a => ({ ...a, outcome: 'audit-disqualified' as const, score: null, kept: false }));
+        const test = {
+          opus: await runTestStage({ target: 'opus', fake: true, from: opus, other: f0b.sol, engine, transport: capture, onSkill: p => scored.push(`opus ${p.skill}`) }),
+          sol: await runTestStage({ target: 'sol', fake: true, from: f0b.sol, engine, transport: capture, onSkill: p => scored.push(`sol ${p.skill}`) }),
+        };
+        return { f0a, f0b, test };
+      } finally {
+        await engine.disconnect().catch(() => {});
+      }
+    }));
+
+    for (const t of FRONTIER_TARGET_NAMES) {
+      expect([...r.f0a[t].files_read, ...r.f0b[t].files_read].filter(f => f.endsWith('/test.jsonl'))).toEqual([]);
+      expect(r.test[t].files_read).toEqual(['eval/data/skillopt-method-v2/query/test.jsonl', 'eval/data/skillopt-method-v2/briefing/test.jsonl']);
+      expect(r.test[t]).toMatchObject({ mode: 'fake', stage: 'test', target: t, models: { target: FRONTIER_TARGETS[t], proposer: null }, runs: { no_skill: 1, seed: 3, rewrite: 3 }, reprice_trigger: null, request_settings: null });
+    }
+    expect(scored).toEqual(['opus query', 'opus briefing', 'sol query', 'sol briefing']);
+    const kept = (t: FrontierTarget, skill: string) => r.f0b[t].skills.find(s => s.skill === skill)!.arms.one_shot!.find(a => a.kept)!.text_sha8!;
+    const row = (t: FrontierTarget, skill: string) => r.test[t].skills.find(s => s.skill === skill)!;
+    const pick = (p: TestPairResult) => [p.rewrite_source, p.rewrite_target, p.rewrite_number, p.rewrite_sha8];
+    expect(pick(row('opus', 'query'))).toEqual(['own', 'opus', 1, kept('opus', 'query')]);
+    expect(pick(row('opus', 'briefing'))).toEqual(['other-target', 'sol', 1, kept('sol', 'briefing')]);
+    expect(pick(row('sol', 'query'))).toEqual(['own', 'sol', 1, kept('sol', 'query')]);
+    expect(pick(row('sol', 'briefing'))).toEqual(['own', 'sol', 1, kept('sol', 'briefing')]);
+    expect(kept('sol', 'briefing')).not.toBe(kept('opus', 'query'));
+    const opusRewrites = calls.filter(c => c.model === FRONTIER_TARGETS.opus && c.system.includes(FAKE_REWRITE_MARKER)).map(c => /\((\w+) proposal (\d)\)/.exec(c.system)![0]);
+    expect([...new Set(opusRewrites)]).toEqual(['(opus proposal 1)', '(sol proposal 3)']);
+    expect(calls.filter(c => c.model === FRONTIER_TARGETS.sol).every(c => !c.system.includes('opus proposal'))).toBe(true);
+
+    for (const p of [...r.test.opus.skills, ...r.test.sol.skills]) {
+      expect({ skill: p.skill, ceiling: p.ceiling, no_skill: p.no_skill, seed: p.seed, rewrite: p.rewrite }).toEqual({ skill: p.skill, ceiling: 1, no_skill: 0, seed: 0.5, rewrite: 1 });
+      expect([p.arms.no_skill!, p.arms.seed!, p.arms.rewrite!].map(a => [a.runs, a.cost.rollouts, Object.keys(a.task_medians!).length, Object.values(a.per_task).every(x => x.length === a.runs)])).toEqual([[1, 36, 36, true], [3, 108, 36, true], [3, 108, 36, true]]);
+      expect(p.cost).toMatchObject({ rollouts: 252, unpriced_calls: 0 });
+      expect(p.seed_minus_no_skill).toEqual({ tasks: 36, point: 0.5, lower: expect.any(Number), upper: expect.any(Number), wins: 18, losses: 0, mcnemar_p: 2 * 0.5 ** 18, verdict: 'KEEP' });
+      expect(p.seed_minus_no_skill!.point).toBe(p.seed! - p.no_skill!);
+      expect(p.rewrite_minus_seed).toMatchObject({ tasks: 36, point: 0.5, verdict: 'rewrite-beats-seed' });
+      expect(p.arms.no_skill!.cost_per_correct_usd).toBeNull();
+      expect([p.arms.seed!.correct_rollouts, p.arms.rewrite!.correct_rollouts]).toEqual([54, 108]);
+      expect(p.arms.seed!.cost_per_correct_usd).toBeCloseTo(p.arms.seed!.cost.usd / 54, 12);
+      expect(p.arms.rewrite!.cost_per_correct_usd).toBeCloseTo(p.arms.rewrite!.cost.usd / 108, 12);
+    }
+    expect({ embeds: seen.embeds, generates: seen.generates, fetches: seen.fetches }).toEqual({ embeds: 0, generates: 0, fetches: [] });
+  }, 300_000);
+
+  test('a pair over the reprice trigger stops stage test after it and marks the rest reprice-trigger; a fake run may read live F0b receipts', async () => {
+    const seen = newSeen();
+    const live = (t: FrontierTarget) => withRewriteTexts(probeOf(f0bReceipt(t)), join(REPO_ROOT, f0bReceipt(t)));
+    const kept: string[] = [];
+    const r = await run('n15-test-stage-reprice', () => sealed(seen, () => runTestStage({
+      target: 'sol', fake: true, from: live('sol'), skills: ['query', 'briefing'], onSkill: p => kept.push(p.skill),
+      transport: recordingTransport(seen, { usage: { input_tokens: 200_000, cache_read_tokens: 50_000 } }),
+    })));
+    expect(kept).toEqual(['query']);
+    expect(r.skills.map(p => [p.skill, p.skipped ?? null, p.seed, p.rewrite_sha8])).toEqual([['query', null, 0.5, 'bafc6a5c'], ['briefing', 'reprice-trigger', null, 'b35934a9']]);
+    expect(r.reprice_trigger).toMatchObject({ reason: 'reprice-trigger', skill: 'query', target: 'sol', threshold_usd: 0.2 });
+    expect(r.reprice_trigger!.mean_rollout_usd).toBeGreaterThan(0.2);
+    expect(r.files_read).toEqual(['eval/data/skillopt-method-v2/query/test.jsonl', 'eval/data/skillopt-method-v2/briefing/test.jsonl']);
+  }, 120_000);
+
+  test('the category runner, --fake on the committed live F0b receipts: Opus briefing scores Sol\'s rewrite 2, or has no rewrite arm without --other; bad --from receipts are refused before any run', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'n15-test-stage-'));
+    try {
+      const env = Object.fromEntries(Object.entries(process.env).filter(([k]) => !/_API_KEY$/.test(k)));
+      const cli = (...args: string[]) => Bun.spawnSync(['bun', 'eval/runner/n15-skillopt-method.ts', '--probe', '--stage', 'test', ...args], { cwd: REPO_ROOT, env, stdout: 'pipe', stderr: 'pipe' });
+      const a = cli('--fake', '--target', 'opus', '--skills', 'briefing', '--from', f0bReceipt('opus'), '--other', f0bReceipt('sol'), '--output', join(dir, 'with-other'));
+      expect([a.exitCode, a.stderr.toString().slice(-400)]).toEqual([0, expect.any(String)]);
+      const receipt = JSON.parse(readFileSync(join(dir, 'with-other', 'receipt.json'), 'utf8'));
+      expect(receipt).toMatchObject({ run_status: 'completed', verdict: 'pass', n_total: 1, n_scored: 1, publishable: false, resolved_config: { target: 'opus', stage: 'test', keys_in_process: ['ANTHROPIC_API_KEY'] } });
+      expect(receipt.data.probe.files_read).toEqual(['eval/data/skillopt-method-v2/briefing/test.jsonl', f0bReceipt('opus'), f0bReceipt('sol'), `${FRONTIER_DIR}/f0b-sol/one-shot/sol-briefing-rewrite-2.txt`]);
+      expect(receipt.data.probe.files_read_include_test).toBe(true);
+      expect(receipt.data.probe.skills[0]).toMatchObject({ skill: 'briefing', rewrite_source: 'other-target', rewrite_target: 'sol', rewrite_number: 2, rewrite_sha8: 'b35934a9', rewrite_selection_score: 1 });
+      expect(Object.keys(receipt.data.probe.skills[0].arms)).toEqual(['no_skill', 'seed', 'rewrite']);
+      expect(existsSync(join(dir, 'with-other', 'probe-partial.json'))).toBe(true);
+      expect(a.stdout.toString()).toContain("sol's rewrite 2, b35934a9, other-target");
+
+      const b = cli('--fake', '--target', 'opus', '--skills', 'briefing', '--from', f0bReceipt('opus'), '--output', join(dir, 'alone'));
+      expect(b.exitCode).toBe(0);
+      const alone = JSON.parse(readFileSync(join(dir, 'alone', 'receipt.json'), 'utf8')).data.probe.skills[0];
+      expect(alone).toMatchObject({ rewrite_source: null, rewrite_sha8: null, rewrite_minus_seed: null });
+      expect(alone.no_rewrite_reason).toContain('opus: no rewrite beat the seed (audit-disqualified, audit-disqualified)');
+      expect(Object.keys(alone.arms)).toEqual(['no_skill', 'seed']);
+
+      const fakeFrom = join(dir, 'fake-f0b', 'receipt.json');
+      const committed = JSON.parse(readFileSync(join(REPO_ROOT, f0bReceipt('opus')), 'utf8'));
+      mkdirSync(dirname(fakeFrom), { recursive: true });
+      writeFileSync(fakeFrom, JSON.stringify({ ...committed, data: { ...committed.data, probe: { ...committed.data.probe, mode: 'fake' } } }));
+      const ledger = join(dir, 'ledger.sqlite');
+      for (const [args, message] of [
+        [['--target', 'sol', '--from', f0bReceipt('opus')], "needs sol's live F0b result on skillopt-method-v2 in --from, but it is for target opus"],
+        [['--target', 'opus', '--from', f0aReceipt('opus')], 'but it is stage f0a'],
+        [['--target', 'opus'], 'pass --from <F0b receipt>'],
+        [['--target', 'opus', '--from', fakeFrom, '--paid', '--budget-run-id', 'none', '--budget-ledger', ledger], "needs opus's live F0b result on skillopt-method-v2 in --from, but it is a fake run"],
+        [['--target', 'opus', '--from', f0bReceipt('opus'), '--other', f0bReceipt('opus')], 'in --other, but it is for target opus'],
+      ] as const) {
+        const r = cli(...args, '--output', join(dir, 'refused'));
+        expect([args.join(' '), r.exitCode, r.stderr.toString().includes(message)]).toEqual([args.join(' '), 3, true]);
+      }
+      expect(existsSync(join(dir, 'refused'))).toBe(false);
+      expect(existsSync(ledger)).toBe(false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
+  }, 180_000);
+});
+

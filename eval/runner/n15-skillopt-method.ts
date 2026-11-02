@@ -39,17 +39,20 @@
  *   --probe --target opus|sol --stage f0a    the seed's headroom
  *   --probe --target opus|sol --stage f0b --from <F0a receipt> [--other <the other target's receipt>]
  *                                            the harness one-shot on the pairs F0a put in band, and the counted skills pick
+ *   --probe --target opus|sol --stage test --from <F0b receipt> [--other <the other target's F0b receipt>]
+ *                                            the one read of the sealed test split: no skill, the seed and the kept
+ *                                            rewrite of every F0b pair, paired by task (skillopt-method/test-stage.ts)
  *   --probe --target haiku [--after-hardening] [--dataset v1|v2]
  *                                            historical: reproduces probes 1 and 2
  *
  * The process holds only the keys a run needs: the target's (ANTHROPIC_API_KEY
  * for opus, OPENAI_API_KEY for sol), plus ANTHROPIC_API_KEY for F0b's Opus
- * proposer; the smoke holds one target's key at a time. --fake runs any of
- * them keyless on the fake transport.
+ * proposer; the smoke holds one target's key at a time, and stage test only
+ * the target's. --fake runs any of them keyless on the fake transport.
  *
  * Usage: bun eval/runner/n15-skillopt-method.ts [--output <dir>] [--json]
  *        bun eval/runner/n15-skillopt-method.ts --smoke --paid --budget-run-id <id> [--skills query]
- *        bun eval/runner/n15-skillopt-method.ts --probe --target opus|sol --stage f0a|f0b [--from <receipt>] [--other <receipt>] [--skills a,b] --paid --budget-run-id <id> [--output <dir>]
+ *        bun eval/runner/n15-skillopt-method.ts --probe --target opus|sol --stage f0a|f0b|test [--from <receipt>] [--other <receipt>] [--skills a,b] --paid --budget-run-id <id> [--output <dir>]
  */
 // First import: the budget ledger replaces globalThis.fetch with its
 // delegating fetch before any gbrain or SDK module can capture fetch.
@@ -68,9 +71,10 @@ import { PROPOSER_MODEL } from './skillopt-method/one-shot.ts';
 import {
   countedSkills, f0bSkillsOf, FRONTIER_TARGET_NAMES, FRONTIER_TARGETS, frontierEstimateUsd, HISTORICAL_NOTE, HISTORICAL_PROBE_MODELS, openBrain,
   PROBE_ESTIMATE_USD, PROBE_STAGES, runFrontierProbe, runProbe, runSmoke, SMOKE_ESTIMATE_USD, TARGET_KEY, toolCoverage,
-  type CountedSkills, type FrontierResult, type FrontierSkillResult, type FrontierTarget, type ProbeResult, type ProbeSkillResult, type ProbeStage, type SmokeResult,
+  type CountedSkills, type FrontierResult, type FrontierSkillResult, type FrontierTarget, type ProbeResult, type ProbeSkillResult, type ProbeStage, type RequestSettings, type SmokeResult,
 } from './skillopt-method/probe.ts';
 import { evaluateJudge, SKILLS, type SkillName } from './skillopt-method/score.ts';
+import { planTestStage, rewritePath, runTestStage, TEST_STAGE, testStageEstimateUsd, withRewriteTexts, type PairedDifference, type TestPairResult, type TestStageResult } from './skillopt-method/test-stage.ts';
 
 export const CATEGORY = 'n15-skillopt-method';
 export const PREREGISTRATION = 'docs/benchmarks/2026-11-01-skillopt-method/PREREGISTRATION.md';
@@ -121,10 +125,12 @@ function parseTarget(argv: readonly string[]): FrontierTarget | 'haiku' {
   throw new Error(`--target: unknown target ${raw} (have ${FRONTIER_TARGET_NAMES.join(', ')}; haiku reproduces probes 1 and 2)`);
 }
 
-function parseStage(argv: readonly string[]): ProbeStage {
+const STAGES = [...PROBE_STAGES, TEST_STAGE] as const;
+
+function parseStage(argv: readonly string[]): typeof STAGES[number] {
   const raw = argValue(argv, '--stage') ?? 'f0a';
-  if (!(PROBE_STAGES as readonly string[]).includes(raw)) throw new Error(`--stage: unknown stage ${raw} (have ${PROBE_STAGES.join(', ')})`);
-  return raw as ProbeStage;
+  if (!(STAGES as readonly string[]).includes(raw)) throw new Error(`--stage: unknown stage ${raw} (have ${STAGES.join(', ')})`);
+  return raw as typeof STAGES[number];
 }
 
 function parseDataset(argv: readonly string[]): DatasetVersion {
@@ -163,8 +169,8 @@ function pairWriter(outDir: string, startedAt: string) {
     done.push(result);
     mkdirSync(join(outDir, 'one-shot'), { recursive: true });
     writeFileSync(join(outDir, 'probe-partial.json'), JSON.stringify({ category: CATEGORY, started_at: startedAt, skills: done.map(stripRewrites) }, null, 2) + '\n');
-    if (result.proposer_input) writeFileSync(join(outDir, 'one-shot', `${result.target}-${result.skill}-input.md`), result.proposer_input);
-    result.rewrites.forEach((text, i) => writeFileSync(join(outDir, 'one-shot', `${result.target}-${result.skill}-rewrite-${i + 1}.md`), text));
+    if (result.proposer_input) writeFileSync(join(outDir, 'one-shot', `${result.target}-${result.skill}-input.txt`), result.proposer_input);
+    result.rewrites.forEach((text, i) => writeFileSync(join(outDir, 'one-shot', `${result.target}-${result.skill}-rewrite-${i + 1}.txt`), text));
   };
 }
 
@@ -310,6 +316,76 @@ async function runFrontierCli(argv: readonly string[], log: (s: string) => void,
   };
 }
 
+/** A stage-test result as a receipt payload: every file the run read, the test split first, then the F0b receipts and the rewrite files scored. */
+function testStageData(p: TestStageResult, inputs: readonly string[]) {
+  const files_read = [...p.files_read, ...inputs];
+  return { ...p, files_read, files_read_include_test: files_read.some(f => f.endsWith('/test.jsonl')) };
+}
+
+/** Write each scored pair as it lands. */
+function testPairWriter(outDir: string, startedAt: string) {
+  const done: TestPairResult[] = [];
+  return (result: TestPairResult) => {
+    done.push(result);
+    mkdirSync(outDir, { recursive: true });
+    writeFileSync(join(outDir, 'probe-partial.json'), JSON.stringify({ category: CATEGORY, started_at: startedAt, stage: TEST_STAGE, skills: done }, null, 2) + '\n');
+  };
+}
+
+async function runTestStageCli(argv: readonly string[], log: (s: string) => void, outDir: string, target: FrontierTarget, fake: boolean): Promise<Receipt> {
+  const startedAt = new Date().toISOString();
+  const skills = parseSkills(argv);
+  const fromPath = argValue(argv, '--from');
+  const otherPath = argValue(argv, '--other');
+  if (!fromPath) throw new Error("--stage test reads this target's F0b receipt: pass --from <F0b receipt>");
+  const from = withRewriteTexts(readFrontierReceipt(fromPath, '--from'), fromPath);
+  const other = otherPath ? withRewriteTexts(readFrontierReceipt(otherPath, '--other'), otherPath) : null;
+  const plan = planTestStage({ target, fake, from, other, skills });
+  const inputs = [fromPath, ...(otherPath ? [otherPath] : []), ...plan.flatMap(p => (p.rewrite ? [rewritePath(p.rewrite.source === 'own' ? fromPath : otherPath!, p.rewrite.target, p.skill, p.rewrite.number)] : []))];
+  const estimateUsd = testStageEstimateUsd(target, plan.map(p => ({ skill: p.skill, rewrite: !!p.rewrite })));
+  const keyNames = [TARGET_KEY[target]];
+  let keys: Record<string, string> = {};
+  let attestation: Attestation | null = null;
+  if (!fake) {
+    requirePaidArm(argv, { arm: `n15 frontier probe ${target} ${TEST_STAGE}`, estimateUsd });
+    keys = requireKeys(keyNames, `n15 frontier probe ${target} ${TEST_STAGE}`);
+    attestation = attestPreregistration(PREREGISTRATION);
+  }
+  const paid = paidRun(fake, `probe-${target}-${TEST_STAGE}`, argv, estimateUsd, log);
+  let result: TestStageResult | null = null;
+  let cost: RunSummary | null = null;
+  const errors: ProbeError[] = [];
+  try {
+    result = await withHermeticEnv('n15-probe', async () => {
+      for (const [k, v] of Object.entries(keys)) process.env[k] = v;
+      return runTestStage({ target, fake, from, other, skills, log, onSkill: testPairWriter(outDir, startedAt) });
+    });
+  } catch (e) {
+    errors.push({ probe_id: 'probe', origin: 'harness', message: (e as Error).message });
+  } finally {
+    paid?.guard.uninstall();
+    cost = paid ? paid.run.close() : null;
+  }
+  for (const s of result?.skills ?? []) {
+    if (s.skipped) errors.push({ probe_id: `${s.skill}:${TEST_STAGE}`, origin: 'harness', message: `not run: ${s.skipped}` });
+    for (const [arm, a] of Object.entries(s.arms)) if (a && a.score === null) errors.push({ probe_id: `${s.skill}:${arm}`, origin: 'dependency', message: a.error ?? 'unscored' });
+  }
+  const planned = plan.length;
+  const scored = result ? planned - new Set(errors.filter(e => e.probe_id !== 'probe').map(e => e.probe_id.split(':')[0])).size : 0;
+  return {
+    ...baseReceipt(startedAt),
+    ...(fake ? noModelSpend('fake transport: no model and no paid request') : { cost: cost ? receiptCost(cost) : null }),
+    run_status: result ? 'completed' : 'error',
+    ...(result ? { verdict: scored === planned ? 'pass' as const : 'partial' as const } : {}),
+    n_total: planned, n_scored: scored, completion_rate: planned ? scored / planned : 0, errors,
+    publishable: !!result && !fake && scored === planned,
+    ...(attestation ? { preregistration_attestation: attestation } : {}),
+    resolved_config: { engine: 'pglite-in-memory', decide: DECIDE_OFF, mode: fake ? 'probe-fake' : 'probe', target, stage: TEST_STAGE, skills: skills ?? null, from: fromPath, other: otherPath ?? null, keys_in_process: keyNames, models: result?.models ?? null },
+    finished_at: new Date().toISOString(),
+    data: { probe: result ? testStageData(result, inputs) : null, reprice_trigger: result?.reprice_trigger ?? null },
+  };
+}
+
 /** Each ledger entry this process made in the run: what the smoke prints per call. */
 function ledgerCalls(run: BudgetRun) {
   return readLedger(run.ledgerPath).entries
@@ -439,7 +515,28 @@ function logFrontier(p: ReturnType<typeof frontierData>, log: (s: string) => voi
   const trigger = p.reprice_trigger ? `; ${p.reprice_trigger.reason} on ${p.reprice_trigger.skill} (mean rollout $${fmt(p.reprice_trigger.mean_rollout_usd)} over $${p.reprice_trigger.threshold_usd.toFixed(2)})` : '';
   if (!p.gate) log(`gate ${p.target} after f0a: decided after F0b, which runs ${p.f0b_skills.join(', ')}${trigger}${fakeNote}`);
   else log(`gate ${p.target} after ${p.stage}: ${p.gate.verdict}${p.gate.waits_for_rerun.length ? ` (waits for a rerun of ${p.gate.waits_for_rerun.join(', ')})` : ''}${trigger}${fakeNote}`);
-  for (const r of p.request_settings ?? []) log(`sent to ${r.host} ${r.model} (${r.requests} requests): ${JSON.stringify(r.sent)}${r.applied_reasoning_effort !== undefined ? `; applied reasoning effort ${r.applied_reasoning_effort}` : ''}`);
+  logRequestSettings(p.request_settings, log);
+}
+
+function logRequestSettings(settings: RequestSettings[] | null, log: (s: string) => void): void {
+  for (const r of settings ?? []) log(`sent to ${r.host} ${r.model} (${r.requests} requests): ${JSON.stringify(r.sent)}${r.applied_reasoning_effort !== undefined ? `; applied reasoning effort ${r.applied_reasoning_effort}` : ''}`);
+}
+
+const interval = (d: (PairedDifference & { verdict: string }) | null) => (d ? `${d.point >= 0 ? '+' : ''}${fmt(d.point)} [${fmt(d.lower)}, ${fmt(d.upper)}], ${d.wins} wins / ${d.losses} losses, McNemar p ${d.mcnemar_p === null ? 'n/a' : d.mcnemar_p.toPrecision(2)}, ${d.verdict}` : 'none');
+
+function logTestStage(p: ReturnType<typeof testStageData>, log: (s: string) => void): void {
+  for (const s of p.skills) {
+    const head = `probe ${p.target} test ${s.skill}${p.mode === 'fake' ? ' (fake transport)' : ''}`;
+    const rewrite = s.rewrite_source ? `rewrite ${fmt(s.rewrite)} (${s.rewrite_target}'s rewrite ${s.rewrite_number}, ${s.rewrite_sha8}, ${s.rewrite_source})` : `no rewrite arm (${s.no_rewrite_reason})`;
+    if (s.skipped) { log(`${head}: skipped (${s.skipped}); ${rewrite}`); continue; }
+    log(`${head}: no-skill ${fmt(s.no_skill)}, seed ${fmt(s.seed)}, ${rewrite}, ceiling ${s.ceiling}`);
+    log(`  seed minus no skill ${interval(s.seed_minus_no_skill)}; rewrite minus seed ${interval(s.rewrite_minus_seed)}`);
+    const perCorrect = Object.entries(s.arms).map(([arm, a]) => `${arm} ${a.cost_per_correct_usd === null ? 'none' : `$${fmt(a.cost_per_correct_usd)}`}`).join(', ');
+    log(`  cost per correct answer: ${perCorrect}; mean rollout $${fmt(s.cost?.mean_rollout_usd)}, ${fmt(s.cost?.calls_per_rollout)} calls per rollout`);
+  }
+  if (p.reprice_trigger) log(`${p.reprice_trigger.reason} on ${p.reprice_trigger.skill}: mean rollout $${fmt(p.reprice_trigger.mean_rollout_usd)} over $${p.reprice_trigger.threshold_usd.toFixed(2)}; the stage stopped there`);
+  if (p.mode === 'fake') log(`test ${p.target}: fake numbers; they prove the path, not the verdicts`);
+  logRequestSettings(p.request_settings, log);
 }
 
 async function main(): Promise<void> {
@@ -463,7 +560,7 @@ async function main(): Promise<void> {
   let receipt: Receipt;
   if (smokeMode) receipt = await runSmokeCli(argv, log, fake);
   else if (target === 'haiku') receipt = await runHistoricalProbe(argv, log, dirname(outPath), fake);
-  else if (target && stage) receipt = await runFrontierCli(argv, log, dirname(outPath), target, stage, fake);
+  else if (target && stage) receipt = stage === TEST_STAGE ? await runTestStageCli(argv, log, dirname(outPath), target, fake) : await runFrontierCli(argv, log, dirname(outPath), target, stage, fake);
   else receipt = await runHermetic(argv, log);
   writeReceipt(outPath, receipt);
   const d = receipt.data as Record<string, any>;
@@ -483,6 +580,8 @@ async function main(): Promise<void> {
     const p = d.probe as ReturnType<typeof probeData>;
     for (const s of p.skills) log(`probe ${s.skill}${p.mode === 'fake' ? ' (fake transport)' : ''}: no-skill ${s.no_skill}, seed ${s.seed}, one-shot ${s.one_shot_repeats.join('/')} kept ${s.one_shot_kept}, seed on Opus ${s.seed_opus}, ceiling ${s.ceiling}`);
     log(`gate: ${p.gate.verdict}${p.gate.waits_for_rerun.length ? ` (waits for a rerun of ${p.gate.waits_for_rerun.join(', ')})` : ''} (${HISTORICAL_NOTE})`);
+  } else if (d.probe?.stage === TEST_STAGE) {
+    logTestStage(d.probe, log);
   } else if (d.probe) {
     logFrontier(d.probe, log);
     if (d.counted_skills) log(`counted skills: ${JSON.stringify(d.counted_skills.per_target)} (targets read: ${d.counted_skills.targets_read.join(', ')})`);

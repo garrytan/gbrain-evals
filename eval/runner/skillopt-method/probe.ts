@@ -5,7 +5,7 @@
  * Before any optimizer adapter is built, measure whether gbrain's shipped
  * skills leave room for an optimizer to show anything. The probe reads
  * skillopt-method-v2's selection split (train too for the one-shot); the test
- * split is never read.
+ * split is never read here. Stage test (test-stage.ts) is its one reader.
  *
  * Frontier probe (the default), per target (`opus`: claude-opus-5-5, `sol`:
  * gpt-6.1-sol), in two stages:
@@ -340,7 +340,7 @@ export function fakeTransport(tasks: readonly MethodTask[]): ChatTransport {
 
 // ─── Brain, gateway and request settings ─────────────────────────────────────
 
-const sha8 = (s: string) => new Bun.CryptoHasher('sha256').update(s).digest('hex').slice(0, 8);
+export const sha8 = (s: string) => new Bun.CryptoHasher('sha256').update(s).digest('hex').slice(0, 8);
 const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e));
 
 function configureProbeGateway(chatModel: string): void {
@@ -365,7 +365,7 @@ export async function openBrain(): Promise<PGLiteEngine> {
  * (a Sol run holds an OpenAI key); everything is undone afterwards. A live
  * run's caller owns the keys.
  */
-async function withProbeGateway<T>(o: { chatModel: string; fake: boolean; transport?: ChatTransport; keys?: readonly string[] }, fn: () => Promise<T>): Promise<T> {
+export async function withProbeGateway<T>(o: { chatModel: string; fake: boolean; transport?: ChatTransport; keys?: readonly string[] }, fn: () => Promise<T>): Promise<T> {
   const saved = process.env.GBRAIN_MODEL_DISCOVERY;
   const dummies = o.fake ? (o.keys ?? []).filter(k => !process.env[k]) : [];
   process.env.GBRAIN_MODEL_DISCOVERY = 'off';
