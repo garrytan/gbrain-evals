@@ -45,6 +45,22 @@
  *   --probe --target haiku [--after-hardening] [--dataset v1|v2]
  *                                            historical: reproduces probes 1 and 2
  *
+ * The ceiling attempt (GBEV-30) on skillopt-method-v3, keyless on the fake
+ * transport unless --paid is given; a live stage runs at gbrain 311a83bbe, is
+ * attested against docs/benchmarks/2026-11-02-skillopt-ceiling/PREREGISTRATION.md,
+ * refuses an estimate above its approved cap, and runs under its own ledger run
+ * (skillopt-method/ceiling-stages.ts):
+ *
+ *   --dataset v3 --stage calibration --target opus|sol [--half] [--other <the other target's calibration receipt>]
+ *                                            the seed on train: substance pass, cost per rollout and per call, and
+ *                                            every later stage re-priced (ledger run n15-ceiling-calibration, $50)
+ *   --dataset v3 --stage gate --attempt 1|2 [--rollout-usd opus=<usd>,sol=<usd>]
+ *                                            the headroom gate on six pairs, Opus first (ledger run
+ *                                            n15-ceiling-gate-<attempt>, $470)
+ *
+ * Each ceiling stage appends its rows to <output>/rows.jsonl as they land;
+ * --resume continues a stage from them, rerunning only errored tasks.
+ *
  * The process holds only the keys a run needs: the target's (ANTHROPIC_API_KEY
  * for opus, OPENAI_API_KEY for sol), plus ANTHROPIC_API_KEY for F0b's Opus
  * proposer; the smoke holds one target's key at a time, and stage test only
@@ -57,11 +73,12 @@
  * Usage: bun eval/runner/n15-skillopt-method.ts [--output <dir>] [--json]
  *        bun eval/runner/n15-skillopt-method.ts --smoke --paid --budget-run-id <id> [--skills query]
  *        bun eval/runner/n15-skillopt-method.ts --probe --target opus|sol --stage f0a|f0b|test [--from <receipt>] [--other <receipt>] [--skills a,b] --paid --budget-run-id <id> [--output <dir>]
+ *        bun eval/runner/n15-skillopt-method.ts --dataset v3 --stage calibration|gate [--target opus|sol] [--half] [--attempt 1|2] [--resume] [--paid --budget-run-id <id>] [--output <dir>]
  */
 // First import: the budget ledger replaces globalThis.fetch with its
 // delegating fetch before any gbrain or SDK module can capture fetch.
 import { budgetOptionsFrom, readLedger, receiptCost, startPaidRun, type BudgetRun, type RunSummary } from './budget-ledger.ts';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { datasetProblems } from '../generators/skillopt-method/gen.ts';
 import { gbrainPin, gbrainVersion } from './gbrain-version.ts';
@@ -70,7 +87,11 @@ import { paidRequested, PaidArmRefusal, requirePaidArm } from './paid-arm.ts';
 import { attestPreregistration, type Attestation } from './prereg.ts';
 import { BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, noModelSpend, productIdentity, receiptPath, sourceTreeIdentity, writeReceipt, type ProbeError, type Receipt } from './receipt.ts';
 import { auditSkill } from './skillopt-method/audit.ts';
-import { DATASET_VERSIONS, datasetDir, datasetName, DEFAULT_DATASET, LEGACY_VERSIONS, readCriteria, readSeed, readTasks, SEED_GBRAIN_COMMIT, sha256, type DatasetVersion, type LegacyVersion } from './skillopt-method/dataset.ts';
+import {
+  CALIBRATION_HALF_TASKS, CEILING_DATASET, CEILING_GBRAIN_COMMIT, CEILING_PREREGISTRATION, CEILING_STAGE_PLANS, CEILING_STAGES, ceilingLedgerRun, fileRows, GATE_SPLIT_TASKS, gateEstimateUsd,
+  PLANNING_PRICES_USD, runCalibration, runGateStage, type CalibrationResult, type CalibrationSkillResult, type CeilingStage, type GatePairResult, type GateStageResult,
+} from './skillopt-method/ceiling-stages.ts';
+import { DATASET_VERSIONS, datasetDir, datasetName, DEFAULT_DATASET, LEGACY_VERSIONS, readCriteria, readSeed, readTasks, SEED_GBRAIN_COMMIT, SEED_PINS, sha256, type DatasetVersion, type LegacyVersion } from './skillopt-method/dataset.ts';
 import { PROPOSER_MODEL } from './skillopt-method/one-shot.ts';
 import {
   countedSkills, f0bSkillsOf, FRONTIER_TARGET_NAMES, FRONTIER_TARGETS, frontierEstimateUsd, HISTORICAL_NOTE, HISTORICAL_PROBE_MODELS, openBrain,
@@ -419,6 +440,228 @@ async function runTestStageCli(argv: readonly string[], log: (s: string) => void
   };
 }
 
+// ─── Ceiling attempt (skillopt-method-v3; GBEV-30) ───────────────────────────
+
+function parseCeilingStage(argv: readonly string[]): CeilingStage {
+  const raw = argValue(argv, '--stage');
+  if (!raw || !(CEILING_STAGES as readonly string[]).includes(raw)) throw new Error(`--dataset v3: --stage must be one of ${CEILING_STAGES.join(', ')} (got ${raw ?? 'none'})`);
+  return raw as CeilingStage;
+}
+
+function parseAttempt(argv: readonly string[]): 1 | 2 {
+  const raw = argValue(argv, '--attempt') ?? '1';
+  if (raw !== '1' && raw !== '2') throw new Error(`--attempt must be 1 or 2 (got ${raw})`);
+  return Number(raw) as 1 | 2;
+}
+
+function parseFrontierTarget(argv: readonly string[]): FrontierTarget {
+  const raw = argValue(argv, '--target') ?? 'opus';
+  if (!(FRONTIER_TARGET_NAMES as string[]).includes(raw)) throw new Error(`--target: ${raw} is not a ceiling target (have ${FRONTIER_TARGET_NAMES.join(', ')})`);
+  return raw as FrontierTarget;
+}
+
+/** `--rollout-usd opus=0.22,sol=0.08`: the re-priced mean rollout prices the gate's estimate and re-price trigger read (default: the planning prices). */
+function parseRolloutUsd(argv: readonly string[]): Record<FrontierTarget, number> {
+  const prices: Record<FrontierTarget, number> = { ...PLANNING_PRICES_USD.rollout };
+  const raw = argValue(argv, '--rollout-usd');
+  for (const part of raw ? raw.split(',') : []) {
+    const [t, v] = part.split('=');
+    const usd = Number(v);
+    if (!t || !(FRONTIER_TARGET_NAMES as string[]).includes(t) || !Number.isFinite(usd) || usd <= 0) throw new Error(`--rollout-usd: expected target=dollars pairs such as opus=0.22,sol=0.08 (got ${raw})`);
+    prices[t as FrontierTarget] = usd;
+  }
+  return prices;
+}
+
+/** The receipt fields every ceiling stage shares: v3's dataset, criteria and seed pin in place of the probe's v2. */
+function ceilingReceipt(startedAt: string) {
+  const base = baseReceipt(startedAt);
+  return {
+    ...base,
+    hashes: {
+      ...base.hashes,
+      dataset: datasetName(CEILING_DATASET),
+      dataset_manifest_sha256: manifestSha(CEILING_DATASET),
+      ...Object.fromEntries(SKILLS.map(s => [`criteria_${s}_sha256`, sha256(readCriteria(s, CEILING_DATASET))])),
+      seeds_gbrain_commit: SEED_PINS[CEILING_DATASET].commit,
+    },
+  };
+}
+
+/**
+ * Everything a live ceiling stage checks before its first paid call: the
+ * gbrain pin (311a83bbe, plan decision S), an estimate within the stage's
+ * approved cap, --paid and --budget-run-id, the keys it needs (`test -n`), the
+ * attested preregistration, and a ledger run of the stage's own runner whose
+ * budget is within that cap.
+ */
+function startCeilingRun(argv: readonly string[], o: { stage: CeilingStage; attempt?: 1 | 2; arm: string; estimateUsd: number; keyNames: readonly string[]; log: (s: string) => void }) {
+  const pin = gbrainPin();
+  if (!pin.endsWith(`#${CEILING_GBRAIN_COMMIT}`)) throw new PaidArmRefusal(`${o.arm} runs at gbrain ${CEILING_GBRAIN_COMMIT.slice(0, 9)} (plan decision S), but this tree pins ${pin}`);
+  const cap = CEILING_STAGE_PLANS[o.stage].cap_usd;
+  if (o.estimateUsd > cap) throw new PaidArmRefusal(`${o.arm}: the estimate $${o.estimateUsd.toFixed(2)} passes the stage's approved $${cap} cap, so the stage does not start; the figure goes to the Captain`);
+  requirePaidArm(argv, { arm: o.arm, estimateUsd: o.estimateUsd });
+  const keys = requireKeys(o.keyNames, o.arm);
+  const attestation = attestPreregistration(CEILING_PREREGISTRATION);
+  const runner = ceilingLedgerRun(o.stage, o.attempt);
+  const options = budgetOptionsFrom(argv);
+  if (!options.runId || !(options.runId === runner || options.runId.startsWith(`${runner}-`))) {
+    throw new PaidArmRefusal(`${o.arm} runs under its own ledger run: pass --budget-run-id of a ${runner} run (open one with \`bun eval/runner/budget-ledger.ts open --runner ${runner} --budget-usd ${cap}\`)`);
+  }
+  const paid = startPaidRun(runner, { ...options, estimateUsd: o.estimateUsd, log: o.log });
+  if (paid.run.budgetUsd > cap + 1e-9) {
+    paid.guard.uninstall();
+    paid.run.close();
+    throw new PaidArmRefusal(`${o.arm}: ledger run ${options.runId} has a $${paid.run.budgetUsd} budget, above the stage's approved $${cap} cap`);
+  }
+  return { keys, attestation, paid };
+}
+
+/** A calibration receipt's metered mean rollout cost, for the other target's re-priced stages. */
+export function readCalibrationReceipt(path: string, target: FrontierTarget, fake: boolean): { target: FrontierTarget; mean_rollout_usd: number | null } {
+  if (!existsSync(path)) throw new Error(`--other ${path}: no such file`);
+  const r = JSON.parse(readFileSync(path, 'utf8')) as Receipt;
+  const c = (r.data as { calibration?: CalibrationResult } | undefined)?.calibration;
+  if (r.category !== CATEGORY || !c || c.stage !== 'calibration') throw new Error(`--other ${path} is not an N15 ceiling calibration receipt`);
+  if (c.target === target) throw new Error(`--other ${path} is for ${target} too; pass the other target's calibration`);
+  if (c.dataset_manifest_sha256 !== manifestSha(CEILING_DATASET)) throw new Error(`--other ${path} read another ${datasetName(CEILING_DATASET)} manifest than the one in this tree`);
+  if (!fake && c.mode !== 'live') throw new Error(`--other ${path} is a fake run`);
+  return { target: c.target, mean_rollout_usd: c.cost.mean_rollout_usd };
+}
+
+const rowsHeader = (stage: CeilingStage, fake: boolean, o: { attempt?: 1 | 2; target?: FrontierTarget; half?: boolean }) =>
+  ({ stage, attempt: o.attempt ?? null, target: o.target ?? null, half: !!o.half, mode: fake ? 'fake' as const : 'live' as const, dataset_manifest_sha256: manifestSha(CEILING_DATASET) });
+
+async function runCalibrationCli(argv: readonly string[], log: (s: string) => void, outDir: string, fake: boolean): Promise<Receipt> {
+  const startedAt = new Date().toISOString();
+  const target = parseFrontierTarget(argv);
+  const half = argv.includes('--half');
+  const otherPath = argValue(argv, '--other');
+  const other = otherPath ? readCalibrationReceipt(otherPath, target, fake) : undefined;
+  const planned = SKILLS.length * (half ? CALIBRATION_HALF_TASKS : GATE_SPLIT_TASKS.train);
+  const estimateUsd = planned * PLANNING_PRICES_USD.rollout[target];
+  const keyNames = [TARGET_KEY[target]];
+  const rows = fileRows(join(outDir, 'rows.jsonl'), rowsHeader('calibration', fake, { target, half }), argv.includes('--resume'));
+  const arm = `n15 ceiling calibration ${target}${half ? ' (half)' : ''}`;
+  const live = fake ? null : startCeilingRun(argv, { stage: 'calibration', arm, estimateUsd, keyNames, log });
+  let result: CalibrationResult | null = null;
+  let cost: RunSummary | null = null;
+  const errors: ProbeError[] = [];
+  const done: CalibrationSkillResult[] = [];
+  try {
+    result = await withHermeticEnv('n15-ceiling', async () => {
+      for (const [k, v] of Object.entries(live?.keys ?? {})) process.env[k] = v;
+      return runCalibration({
+        target, half, fake, rows, other, log,
+        onSkill: s => { done.push(s); mkdirSync(outDir, { recursive: true }); writeFileSync(join(outDir, 'calibration-partial.json'), JSON.stringify({ category: CATEGORY, started_at: startedAt, skills: done }, null, 2) + '\n'); },
+      });
+    });
+  } catch (e) {
+    errors.push({ probe_id: 'calibration', origin: 'harness', message: (e as Error).message });
+  } finally {
+    live?.paid.guard.uninstall();
+    cost = live ? live.paid.run.close() : null;
+  }
+  for (const s of result?.skills ?? []) if (s.errored_tasks.length) errors.push({ probe_id: `${s.skill}:seed`, origin: 'dependency', message: `${s.errored_tasks.length} train tasks errored (${s.errored_tasks.join(', ')}); a --resume reruns only those` });
+  const scored = result ? result.skills.filter(s => s.substance !== null).length : 0;
+  return {
+    ...ceilingReceipt(startedAt),
+    ...(fake ? noModelSpend('fake transport: no model and no paid request') : { cost: cost ? receiptCost(cost) : null }),
+    run_status: result ? 'completed' : 'error',
+    ...(result ? { verdict: scored === SKILLS.length && !result.stopped ? 'pass' as const : 'partial' as const } : {}),
+    n_total: SKILLS.length, n_scored: scored, completion_rate: scored / SKILLS.length, errors,
+    publishable: !!result && !fake && scored === SKILLS.length && !result.stopped,
+    ...(live ? { preregistration_attestation: live.attestation } : {}),
+    resolved_config: { engine: 'pglite-in-memory', decide: DECIDE_OFF, mode: fake ? 'ceiling-fake' : 'ceiling', dataset: datasetName(CEILING_DATASET), stage: 'calibration', target, half, other: otherPath ?? null, resumed: argv.includes('--resume'), keys_in_process: keyNames, ledger_runner: ceilingLedgerRun('calibration'), models: result?.models ?? null },
+    finished_at: new Date().toISOString(),
+    data: { calibration: result, stopped: result?.stopped ?? null },
+  };
+}
+
+const stripTexts = ({ texts: _t, ...rest }: GatePairResult) => rest;
+
+/** Write each pair as it lands: the partial result, and the proposer inputs and proposals as text files. */
+function gatePairWriter(outDir: string, startedAt: string) {
+  const done: GatePairResult[] = [];
+  return (pair: GatePairResult) => {
+    done.push(pair);
+    mkdirSync(join(outDir, 'one-shot'), { recursive: true });
+    writeFileSync(join(outDir, 'gate-partial.json'), JSON.stringify({ category: CATEGORY, started_at: startedAt, pairs: done.map(stripTexts) }, null, 2) + '\n');
+    const file = (name: string) => join(outDir, 'one-shot', `${pair.target}-${pair.skill}-${name}.txt`);
+    if (pair.texts.proposer_input) writeFileSync(file('input'), pair.texts.proposer_input);
+    if (pair.texts.rubric_input) writeFileSync(file('rubric-input'), pair.texts.rubric_input);
+    for (const [id, text] of Object.entries(pair.texts.proposals)) writeFileSync(file(id), text!);
+  };
+}
+
+async function runGateCli(argv: readonly string[], log: (s: string) => void, outDir: string, fake: boolean): Promise<Receipt> {
+  const startedAt = new Date().toISOString();
+  const attempt = parseAttempt(argv);
+  const prices = parseRolloutUsd(argv);
+  const estimateUsd = gateEstimateUsd(prices);
+  const keyNames = [...new Set(FRONTIER_TARGET_NAMES.map(t => TARGET_KEY[t]))];
+  const rows = fileRows(join(outDir, 'rows.jsonl'), rowsHeader('gate', fake, { attempt }), argv.includes('--resume'));
+  const arm = `n15 ceiling gate attempt ${attempt}`;
+  const live = fake ? null : startCeilingRun(argv, { stage: 'gate', attempt, arm, estimateUsd, keyNames, log });
+  let result: GateStageResult | null = null;
+  let cost: RunSummary | null = null;
+  const errors: ProbeError[] = [];
+  try {
+    result = await withHermeticEnv('n15-ceiling', async () => {
+      for (const [k, v] of Object.entries(live?.keys ?? {})) process.env[k] = v;
+      return runGateStage({ attempt, fake, rows, prices, log, onPair: gatePairWriter(outDir, startedAt) });
+    });
+  } catch (e) {
+    errors.push({ probe_id: 'gate', origin: 'harness', message: (e as Error).message });
+  } finally {
+    live?.paid.guard.uninstall();
+    cost = live ? live.paid.run.close() : null;
+  }
+  for (const p of result?.pairs ?? []) {
+    const id = `${p.skill}/${p.target}`;
+    if (p.not_run_reason === 'reprice-trigger') errors.push({ probe_id: id, origin: 'harness', message: 'not run: reprice-trigger' });
+    if (p.status !== 'errored') continue;
+    for (const a of Object.values(p.arms)) if (a!.errored_tasks.length) errors.push({ probe_id: `${id}:${a!.arm}`, origin: 'dependency', message: `${a!.errored_tasks.length} ${a!.split} tasks errored (${a!.errored_tasks.join(', ')}); a --resume reruns only those` });
+    for (const q of p.proposals) if (q.outcome === 'proposer-error') errors.push({ probe_id: `${id}:${q.id}`, origin: 'dependency', message: q.error ?? 'proposer error' });
+  }
+  const planned = result ? result.pairs.filter(p => p.not_run_reason !== 'sol-gate-not-needed').length : 0;
+  const scored = result ? result.pairs.filter(p => p.status === 'scored').length : 0;
+  const complete = !!result && scored === planned && !result.stopped && !result.reprice_trigger;
+  return {
+    ...ceilingReceipt(startedAt),
+    ...(fake ? noModelSpend('fake transport: no model and no paid request') : { cost: cost ? receiptCost(cost) : null }),
+    run_status: result ? 'completed' : 'error',
+    ...(result ? { verdict: complete ? 'pass' as const : 'partial' as const } : {}),
+    n_total: planned, n_scored: scored, completion_rate: planned ? scored / planned : 0, errors,
+    publishable: complete && !fake,
+    ...(live ? { preregistration_attestation: live.attestation } : {}),
+    resolved_config: { engine: 'pglite-in-memory', decide: DECIDE_OFF, mode: fake ? 'ceiling-fake' : 'ceiling', dataset: datasetName(CEILING_DATASET), stage: 'gate', attempt, prices, estimate_usd: estimateUsd, resumed: argv.includes('--resume'), keys_in_process: keyNames, ledger_runner: ceilingLedgerRun('gate', attempt), models: result?.models ?? null },
+    finished_at: new Date().toISOString(),
+    data: { gate: result ? { ...result, pairs: result.pairs.map(stripTexts) } : null, stopped: result?.stopped ?? null, reprice_trigger: result?.reprice_trigger ?? null },
+  };
+}
+
+function logCalibration(c: CalibrationResult, log: (s: string) => void): void {
+  for (const s of c.skills) log(`calibration ${c.target}${c.half ? ' (half)' : ''} ${s.skill}${c.mode === 'fake' ? ' (fake transport)' : ''}: substance ${fmt(s.substance)}${s.in_band === null ? '' : s.in_band ? ' (in the 0.30 to 0.60 band)' : ' (outside the 0.30 to 0.60 band)'}, full ${fmt(s.full)}, form fail ${fmt(s.form_fail)}; mean rollout $${fmt(s.cost.mean_rollout_usd)}, per call $${fmt(s.mean_call_usd)}; stops ${JSON.stringify(s.stops)}; refusals ${JSON.stringify(s.refusals.refused)}`);
+  log(`calibration ${c.target}: mean rollout $${fmt(c.cost.mean_rollout_usd)}, per call $${fmt(c.mean_call_usd)} over ${c.cost.rollouts} rollouts${c.stopped ? `; stopped at ${c.stopped.kind} (${c.stopped.skill})` : ''}`);
+  for (const e of c.repriced) log(`re-priced ${e.stage}: $${e.repriced_usd.toFixed(2)} (planning $${e.planning_usd.toFixed(2)}; opus at $${e.rollout_usd.opus.usd.toFixed(4)} ${e.rollout_usd.opus.source}, sol at $${e.rollout_usd.sol.usd.toFixed(4)} ${e.rollout_usd.sol.source}) against its $${e.cap_usd} cap${e.over_cap ? ': OVER CAP, the stage does not start without the Captain' : ''}`);
+}
+
+function logGate(g: GateStageResult, log: (s: string) => void): void {
+  for (const p of g.pairs) {
+    const head = `gate ${g.attempt} ${p.skill}/${p.target}${g.mode === 'fake' ? ' (fake transport)' : ''}`;
+    if (p.status === 'not-run') { log(`${head}: not run (${p.not_run_reason})`); continue; }
+    const s = p.scores;
+    log(`${head}: ${p.status}${p.label ? `, ${p.label}` : ''}; no skill ${fmt(s.no_skill)}, seed ${fmt(s.seed_run1)} (run 2 ${fmt(s.seed_run2)}; held-out families ${fmt(s.seed_held_out_families)}), one-shot ${fmt(s.one_shot)} (kept ${p.kept ?? 'undecided'}), reachability ${fmt(s.reachability)}, #304 rewrite ${fmt(s.kept_rewrite)}, rubric one-shot ${fmt(s.rubric_one_shot)}`);
+    if (p.gst956?.difference) log(`  GST-956 preliminary (never deciding): #304 rewrite minus seed run 1 ${interval(p.gst956.difference)}`);
+  }
+  const v = g.verdict;
+  log(`gate ${g.attempt}: ${v.verdict}${v.cause ? ` (${v.cause})` : ''}, scope ${v.scope.join(' and ') || 'none'}, H ${v.counts.H} S ${v.counts.S} D ${v.counts.D} X ${v.counts.X} V ${v.counts.V} U ${v.counts.U} of R ${v.required}, next ${v.next}${g.unsolvable.length ? `; unsolvable: ${g.unsolvable.join(', ')}` : ''}${g.mode === 'fake' ? ' (fake numbers; they prove the path, not the gate)' : ''}`);
+  if (g.stopped) log(`gate ${g.attempt} stopped at ${g.stopped.kind} on ${g.stopped.skill}/${g.stopped.target} ${g.stopped.arm}: ${g.stopped.error}`);
+  if (g.reprice_trigger) log(`gate ${g.attempt} reprice trigger on ${g.reprice_trigger.skill}/${g.reprice_trigger.target}: mean rollout $${fmt(g.reprice_trigger.mean_rollout_usd)} over $${fmt(g.reprice_trigger.threshold_usd)}`);
+  logRequestSettings(g.request_settings, log);
+}
+
 /** Each ledger entry this process made in the run: what the smoke prints per call. */
 function ledgerCalls(run: BudgetRun) {
   return readLedger(run.ledgerPath).entries
@@ -579,11 +822,15 @@ async function main(): Promise<void> {
   const output = argValue(argv, '--output');
   const probeMode = argv.includes('--probe');
   const smokeMode = argv.includes('--smoke');
-  const fake = argv.includes('--fake');
+  const ceilingStage = argValue(argv, '--dataset') === CEILING_DATASET ? parseCeilingStage(argv) : null;
+  if (ceilingStage && (probeMode || smokeMode)) throw new Error('--dataset v3 runs the ceiling stages (--stage calibration|gate), not --probe or --smoke');
+  const fake = argv.includes('--fake') || (!!ceilingStage && !paidRequested(argv));
   const target = probeMode ? parseTarget(argv) : null;
   const stage = probeMode && target !== 'haiku' ? parseStage(argv) : null;
   const reports = join(process.cwd(), 'eval/reports', CATEGORY, 'probe');
+  const ceilingDir = ceilingStage === 'calibration' ? `calibration-${parseFrontierTarget(argv)}${argv.includes('--half') ? '-half' : ''}` : `gate-${parseAttempt(argv)}`;
   const outPath = output ? join(output, 'receipt.json')
+    : ceilingStage ? join(process.cwd(), 'eval/reports', CATEGORY, 'ceiling', fake ? 'fake' : '', ceilingDir, 'receipt.json')
     : smokeMode ? join(reports, 'frontier', 'smoke', 'receipt.json')
     : target === 'haiku' ? join(reports, 'receipt.json')
     : target ? join(reports, 'frontier', `${target}-${stage}`, 'receipt.json')
@@ -591,7 +838,11 @@ async function main(): Promise<void> {
   log(`# BrainBench N15: SkillOpt method benchmark, Phase 1 (gbrain ${gbrainVersion()})`);
   if ((probeMode || smokeMode) && !fake && !paidRequested(argv)) log('This run spends money; pass --paid --budget-run-id <id> (or --fake for the keyless path).');
   let receipt: Receipt;
-  if (smokeMode) receipt = await runSmokeCli(argv, log, fake);
+  if (ceilingStage) {
+    const rowsPath = join(dirname(outPath), 'rows.jsonl');
+    if (fake && !output && !argv.includes('--resume')) rmSync(rowsPath, { force: true });
+    receipt = ceilingStage === 'calibration' ? await runCalibrationCli(argv, log, dirname(outPath), fake) : await runGateCli(argv, log, dirname(outPath), fake);
+  } else if (smokeMode) receipt = await runSmokeCli(argv, log, fake);
   else if (target === 'haiku') receipt = await runHistoricalProbe(argv, log, dirname(outPath), fake);
   else if (target && stage) receipt = stage === TEST_STAGE ? await runTestStageCli(argv, log, dirname(outPath), target, fake) : await runFrontierCli(argv, log, dirname(outPath), target, stage, fake);
   else receipt = await runHermetic(argv, log);
@@ -613,6 +864,10 @@ async function main(): Promise<void> {
     const p = d.probe as ReturnType<typeof probeData>;
     for (const s of p.skills) log(`probe ${s.skill}${p.mode === 'fake' ? ' (fake transport)' : ''}: no-skill ${s.no_skill}, seed ${s.seed}, one-shot ${s.one_shot_repeats.join('/')} kept ${s.one_shot_kept}, seed on Opus ${s.seed_opus}, ceiling ${s.ceiling}`);
     log(`gate: ${p.gate.verdict}${p.gate.waits_for_rerun.length ? ` (waits for a rerun of ${p.gate.waits_for_rerun.join(', ')})` : ''} (${HISTORICAL_NOTE})`);
+  } else if (d.calibration) {
+    logCalibration(d.calibration, log);
+  } else if (d.gate) {
+    logGate(d.gate, log);
   } else if (d.probe?.stage === TEST_STAGE) {
     logTestStage(d.probe, log);
   } else if (d.probe) {
@@ -621,7 +876,7 @@ async function main(): Promise<void> {
   }
   if (receipt.errors.length) for (const e of receipt.errors) log(`error ${e.probe_id} (${e.origin}): ${e.message}`);
   log(`receipt: ${outPath}`);
-  if (json) process.stdout.write(JSON.stringify({ run_status: receipt.run_status, verdict: receipt.verdict, gate: d.probe?.gate ?? null }, null, 2) + '\n');
+  if (json) process.stdout.write(JSON.stringify({ run_status: receipt.run_status, verdict: receipt.verdict, gate: d.probe?.gate ?? d.gate?.verdict ?? null }, null, 2) + '\n');
   process.exit(receipt.run_status === 'error' ? 3 : 0);
 }
 

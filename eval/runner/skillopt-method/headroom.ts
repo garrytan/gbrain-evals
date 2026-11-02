@@ -332,7 +332,7 @@ export function fakeRewrite(opts: ChatOpts, body: string): ChatResult {
  * that way under the seed (task ids ending in an even digit), and says "I
  * don't know" otherwise. It never calls a tool.
  */
-export function fakeTransport(tasks: readonly MethodTask[]): ChatTransport {
+export function fakeTransport(tasks: ReadonlyArray<Pick<MethodTask, 'task_id' | 'task' | 'oracle_answer'>>): ChatTransport {
   return async opts => {
     const system = opts.system ?? '';
     if (system.includes("SkillOpt's optimizer") || system === ONE_SHOT_SYSTEM) return fakeRewrite(opts, `# Rewritten skill\n\n${FAKE_REWRITE_MARKER}\n\nAnswer from the brain and cite the page that holds the answer.`);
