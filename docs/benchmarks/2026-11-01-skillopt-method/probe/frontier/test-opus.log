@@ -1,0 +1,26 @@
+# BrainBench N15: SkillOpt method benchmark, Phase 1 (gbrain 0.60.542.0)
+[budget] n15-skillopt-method-probe-opus-test: estimated cost $148.43; ledger <work>/ledger.sqlite
+[budget] n15-skillopt-method-probe-opus-test: joined shared run n15-skillopt-method-test-read-2026-11-02T03-04-45-593Z-f0a9f695 ($220.00 across all of its workers)
+  Setting up brain schema (v281)...
+  276 migration(s) applied
+[gbrain] content-sanity warn: contracts/2025-03-28-qfl-msa (58180 bytes) — exceeds warn threshold; stored and searchable, no action needed
+[n15 probe] opus test query: no skill x1, seed x3, opus's rewrite 1 (52942b2a, own) x3 on 36 test tasks
+[gbrain] embeddings are off on this brain by choice (embedding_disabled), so search is keyword-only and no query text is sent to an embedding provider. If the user wants semantic search, `gbrain doctor --json` names the enable command; turning it on needs their consent.
+[n15 probe]   no-skill 0.2777777777777778, seed 0.75, rewrite 1
+[n15 probe] opus test briefing: no skill x1, seed x3, sol's rewrite 2 (b35934a9, other-target) x3 on 36 test tasks
+[n15 probe]   no-skill 0.16666666666666666, seed 0.4722222222222222, rewrite 1
+[n15 probe] opus test fact-check: no skill x1, seed x3, opus's rewrite 2 (a417d566, own) x3 on 36 test tasks
+[n15 probe]   no-skill 0, seed 0.7777777777777778, rewrite 1
+probe opus test query: no-skill 0.2778, seed 0.75, rewrite 1 (opus's rewrite 1, 52942b2a, own), ceiling 1
+  seed minus no skill +0.4722 [0.3056, 0.6389], 17 wins / 0 losses, McNemar p 0.000015, KEEP; rewrite minus seed +0.25 [0.1111, 0.3889], 9 wins / 0 losses, McNemar p 0.0039, rewrite-beats-seed
+  cost per correct answer: no_skill $0.4873, seed $0.1622, rewrite $0.0958; mean rollout $0.1132, 3.4841 calls per rollout
+probe opus test briefing: no-skill 0.1667, seed 0.4722, rewrite 1 (sol's rewrite 2, b35934a9, other-target), ceiling 1
+  seed minus no skill +0.3056 [0.1667, 0.4444], 11 wins / 0 losses, McNemar p 0.00098, KEEP; rewrite minus seed +0.5278 [0.3611, 0.6944], 19 wins / 0 losses, McNemar p 0.0000038, rewrite-beats-seed
+  cost per correct answer: no_skill $0.9486, seed $0.7364, rewrite $0.1038; mean rollout $0.2249, 3.9206 calls per rollout
+probe opus test fact-check: no-skill 0, seed 0.7778, rewrite 1 (opus's rewrite 2, a417d566, own), ceiling 1
+  seed minus no skill +0.7778 [0.6389, 0.9167], 28 wins / 0 losses, McNemar p 7.5e-9, KEEP; rewrite minus seed +0.2222 [0.0833, 0.3611], 8 wins / 0 losses, McNemar p 0.0078, rewrite-beats-seed
+  cost per correct answer: no_skill none, seed $0.2272, rewrite $0.1345; mean rollout $0.1452, 3.8452 calls per rollout
+sent to api.anthropic.com claude-opus-5-5 (1234 requests): {"thinking":null,"max_tokens":32000,"temperature":null,"top_p":null,"top_k":null,"tool_choice":{"type":"auto"},"tools":11}
+sent to api.anthropic.com claude-opus-5-5 (750 requests): {"thinking":null,"max_tokens":32000,"temperature":null,"top_p":null,"top_k":null,"tool_choice":{"type":"auto"},"tools":13}
+sent to api.anthropic.com claude-opus-5-5 (851 requests): {"thinking":null,"max_tokens":32000,"temperature":null,"top_p":null,"top_k":null,"tool_choice":{"type":"auto"},"tools":12}
+receipt: <work>/frontier/test-opus/receipt.json

@@ -1,6 +1,6 @@
 # Frontier headroom probe
 
-This is plan revision 3's decision A3, preregistered as [amendment 2](../../PREREGISTRATION.md). It ran on 2026-11-02 at gbrain `ca1281a2` (0.60.542.0) and gbrain-evals `a1147c97` (branch `capy/gbev24-frontier-probe`), on the selection split of `skillopt-method-v2`. The test split was not read. The targets were `anthropic:claude-opus-5-5` and `openai:gpt-6.1-sol`, and every rewrite was proposed by `anthropic:claude-opus-5-5`. Every number below comes from these receipts.
+This is plan revision 3's decision A3, preregistered as [amendment 2](../../PREREGISTRATION.md). The one read of the sealed test split that followed (amendment 3) is in `test-<target>/` below, and the [report](../../REPORT.md) reads both. It ran on 2026-11-02 at gbrain `ca1281a2` (0.60.542.0) and gbrain-evals `a1147c97` (branch `capy/gbev24-frontier-probe`), on the selection split of `skillopt-method-v2`. The test split was not read. The targets were `anthropic:claude-opus-5-5` and `openai:gpt-6.1-sol`, and every rewrite was proposed by `anthropic:claude-opus-5-5`. Every number below comes from these receipts.
 
 | Target | Skill | No skill (1 run) | Seed (3 runs) | One-shot repeats | Kept | Gate | Mean rollout, F0a / F0b |
 |---|---|---|---|---|---|---|---|
@@ -25,6 +25,8 @@ This is plan revision 3's decision A3, preregistered as [amendment 2](../../PRER
 
 **Served tools and settings.** The rollouts served each skill its declared read operations: `query` got `recall` and `get_timeline`, and `briefing` got `get_timeline`. Retrieval was keyword-only, and no embedding call was made. Opus ran with gbrain's defaults: no thinking and `max_tokens` 32,000. GPT-6.1 Sol ran with `max_output_tokens` 4,096 and no reasoning field sent, and OpenAI applied medium effort. Each receipt records `request_settings`.
 
+**Test split (amendment 3).** Every kept rewrite scored 1.00 on the 36 test tasks, and beat the seed on all six pairs. The seed beat no skill on five pairs, but not on Sol `query` (0.72 against 0.86). The [report](../../REPORT.md) has the full table. The read cost $163.06 on ledger run `n15-skillopt-method-test-read-2026-11-02T03-04-45-593Z-f0a9f695`.
+
 **Spend.** The ledger run `n15-skillopt-method-frontier-probe-2026-11-02T00-00-46-604Z-1ae07142` committed $145.04 against a $330 cap:
 - smoke and F0a: $79.40;
 - F0b on Opus: $45.29;
@@ -37,6 +39,7 @@ No price trigger fired.
 | `smoke/`, `smoke.log` | one seed rollout per target on `query-train-01` |
 | `f0a-<target>/`, `f0a-<target>.log` | no skill and seed per skill |
 | `f0b-<target>/`, `f0b-<target>.log` | the one-shot per pair, with proposer inputs and rewrites under `one-shot/` |
+| `test-<target>/`, `test-<target>.log` | the sealed test-split read: no skill, seed and kept rewrite per pair, with paired intervals, McNemar p and verdicts (amendment 3) |
 
 ## Disclosures
 
