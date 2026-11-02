@@ -10,8 +10,8 @@ This records what each gbrain-evals release changed and what its measurements me
   range, the summary calls the test exploratory and narrows its account of the power-bank answers to what the rows show,
   and the X post draft says particle-1 sometimes treats an advice request as a lookup. No number changed.
 - **The infographic's source is committed.** Its fine print calls the test exploratory and its source line names the
-  finding's record. The PNG is re-rendered, and its HTML source sits beside it, with a note that it needs the Inter font
-  installed to render the same.
+  finding's record. The PNG is re-rendered, and its HTML source sits beside it, with a note that it needs the Inter and
+  Inter Display fonts installed to render the same.
 - **A wording note in the particle-1 replay report.** It says the preference questions are the largest share of the gap
   to Opus 5.5, 7 of the 17 net questions, not most of it, and keeps every figure. The finding's `SHA256SUMS` and the
   `docs/receipts-manifest.json` entry carry the report's new digest.
