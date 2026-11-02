@@ -111,7 +111,7 @@ lanes.
 3. Score the folder next to the verbatim lane:
 
    ```sh
-   CAT35_FULL=1 bun eval/runner/cat35-transcript-distill.ts --budget-usd 10 \
+   CAT35_FULL=1 bun eval/runner/cat35-transcript-distill.ts --budget-usd 40 \
      --lanes verbatim --external-lane ext-notes --external-dir path/to/folder
    ```
 
@@ -121,7 +121,9 @@ lanes.
    `CAT35_HARD_STOP_USD` (default $40). Your lane's share is priced from the documents it read, as the judge receives
    them: every judge call that can read a document, its claims or the conversation, at the judge model's rates, each
    with its full answer allowance and one retry, so a folder of large documents judged by an Opus or GPT model can
-   exceed the default cap.
+   exceed the default cap. The runner also refuses when the projection exceeds `--budget-usd`. With the default
+   `gpt-6.1-sol` judge, the command above projects $13.80 for the verbatim lane plus your lane's share, about $16 to $20
+   for documents the size of gbrain's published dream and facts pages, so it authorizes $40.
 
 Your lane is judged the way gbrain's dream lane is, on recall of the planted facts with an evidence check that the quote
 the judge cites is in your document and in the conversation, plus claim grounding, distractor leakage, the usability
@@ -223,6 +225,10 @@ How this page changed, newest first. Measurement history lives in the dated repo
 The opening paragraph says runs test gbrain and gstack on the newest frontier Opus and GPT (`claude-opus-5-5` and
 `gpt-6.1-sol`) plus `particle-1`, and never use Sonnet or Haiku as a model under test. Before, it named only the two
 primary models. The change follows Garry's rule of 2026-11-01 that gbrain and gstack are built for frontier models.
+
+The Cat 35 external-lane command now passes `--budget-usd 40` (was 10), and step 3 says the runner also refuses a
+projection above `--budget-usd`. Cat 35's default judge moved from `claude-haiku-5-5` to `gpt-6.1-sol`, so the full
+verbatim lane alone projects $13.80 and a folder of typical notes adds about $16 to $20, which a $10 budget refuses.
 
 ### 2026-11-01: primary models named
 
