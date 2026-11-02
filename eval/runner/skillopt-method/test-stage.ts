@@ -46,7 +46,7 @@ import {
   fakeTransport, FRONTIER_TARGET_NAMES, FRONTIER_TARGETS, MODELS_NOT_RUN, NO_SKILL_TEXT, observeModelRequests, openBrain, REPRICE_TRIGGER_USD, RETRIEVAL, servedTools, sha8, TARGET_KEY, withProbeGateway,
   type ChatTransport, type FrontierResult, type FrontierTarget, type RepriceTrigger, type RequestSettings,
 } from './headroom.ts';
-import { emptyMeter, scoreArm, summarizeMeter, type ArmScore, type MeterSummary, type MeterTotals } from './rollouts.ts';
+import { emptyMeter, logRetries, scoreArm, summarizeMeter, type ArmScore, type MeterSummary, type MeterTotals } from './rollouts.ts';
 import { evaluateJudge, SKILLS, type SkillName } from './score.ts';
 
 export const TEST_STAGE = 'test';
@@ -238,9 +238,10 @@ export interface TestStageOptions {
 
 export interface TestArm extends ArmScore {
   runs: number;
-  correct_rollouts: number;
+  /** Null when the arm has no score (an errored task or a refusal). */
+  correct_rollouts: number | null;
   cost: MeterSummary;
-  /** The arm's metered USD over its correct rollouts; null when none is correct. */
+  /** The arm's metered USD over its correct rollouts; null when none is correct or the arm has no score. */
   cost_per_correct_usd: number | null;
 }
 
@@ -286,7 +287,7 @@ export interface TestStageResult {
   request_settings: RequestSettings[] | null;
 }
 
-const METER_COUNTS = ['rollouts', 'calls', 'usd', 'unpriced_calls', 'input_tokens', 'output_tokens', 'cache_read_tokens', 'cache_creation_tokens'] as const;
+const METER_COUNTS = ['rollouts', 'retries', 'calls', 'usd', 'unpriced_calls', 'input_tokens', 'output_tokens', 'cache_read_tokens', 'cache_creation_tokens'] as const;
 
 function addMeter(into: MeterTotals, m: MeterTotals): void {
   for (const k of METER_COUNTS) into[k] += m[k];
@@ -332,9 +333,9 @@ export async function runTestStage(o: TestStageOptions): Promise<TestStageResult
         const pair = emptyMeter();
         const arm = async (skillText: string, runs: number): Promise<TestArm> => {
           const meter = emptyMeter();
-          const scored = await scoreArm({ engine, skillText, tasks: test, model, runs, meter });
+          const scored = await scoreArm({ engine, skillText, tasks: test, model, runs, meter, onRetry: logRetries(log) });
           addMeter(pair, meter);
-          const correct = Object.values(scored.per_task).flat().filter(x => x === 1).length;
+          const correct = scored.score === null ? null : Object.values(scored.per_task).flat().filter(x => x === 1).length;
           return { ...scored, runs, correct_rollouts: correct, cost: summarizeMeter(meter), cost_per_correct_usd: correct ? meter.usd / correct : null };
         };
         const noSkill = await arm(NO_SKILL_TEXT, TEST_RUNS.no_skill);
