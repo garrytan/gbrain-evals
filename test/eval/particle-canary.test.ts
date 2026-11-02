@@ -132,17 +132,48 @@ describe('answers stopped by an output limit, blank answers and billed malformed
     } finally { server.stop(true); }
   });
 
-  test('a 2xx answer without a message is retried, and its attempt\'s receipt keeps the usage it reported', async () => {
+  // Value: protects=a billed canary answer without a message is paid for once (issue #280); fails_when=the canary retries a 2xx without a message as a server error; why_new=compatSend marks a 2xx without a message not retryable; seam=none; no_claim=whether Particle bills an answer without a message
+  test('a 2xx answer without a message is never sent again, and its attempt\'s receipt keeps the usage it reported (#280)', async () => {
     let n = 0;
     const server = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: () => (n++ === 0
       ? Response.json({ choices: [], usage: { prompt_tokens: 20, completion_tokens: 7, total_tokens: 27 } })
       : Response.json({ model: 'particle-ai/particle-1', choices: [{ index: 0, finish_reason: 'stop', message: { role: 'assistant', content: 'ok' } }] })) });
     try {
       const rec = await runCanary({ PARTICLE_API_KEY: 'dummy-key', PARTICLE_BASE_URL: `http://127.0.0.1:${server.port}/v1` }, { retryDelayMs: () => 0 });
-      expect(rec.results.every(r => r.status === 'ok')).toBe(true);
-      expect(rec.receipts[0]).toMatchObject({ attempt: 0, status: 'error', usage_raw: { prompt_tokens: 20, completion_tokens: 7, total_tokens: 27 }, usage: { input_total: 20, output_total: 7 } });
-      expect(rec.receipts[1]).toMatchObject({ question_id: 'c01', attempt: 1, status: 'ok' });
-      expect(n).toBe(CANARY_PROMPTS.length + 1);
+      expect(rec.results.map(r => r.status)).toEqual(CANARY_PROMPTS.map((_, i) => (i === 0 ? 'error' : 'ok')));
+      expect(rec.receipts[0]).toMatchObject({ question_id: 'c01', attempt: 0, status: 'error', usage_raw: { prompt_tokens: 20, completion_tokens: 7, total_tokens: 27 }, usage: { input_total: 20, output_total: 7 } });
+      expect(rec.receipts[1]).toMatchObject({ question_id: 'c02', attempt: 0, status: 'ok' });
+      expect(n).toBe(CANARY_PROMPTS.length);
+    } finally { server.stop(true); }
+  });
+
+  // Value: protects=a canary prompt answered 504, which Particle may have billed, is paid for once (issue #282); fails_when=the canary retries a 504 like any 5xx, up to 3 sends of 64 output tokens each; why_new=the canary stops on compatMayHaveBilled; seam=none; no_claim=whether Particle bills a request its gateway timed out
+  test('a 504 is never sent again; a 503 still is (#282)', async () => {
+    for (const [status, sends] of [[504, 1], [503, 3]] as const) {
+      let n = 0;
+      const server = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: () => { n++; return Response.json({ error: { message: 'gateway' } }, { status }); } });
+      try {
+        const rec = await runCanary({ PARTICLE_API_KEY: 'dummy-key', PARTICLE_BASE_URL: `http://127.0.0.1:${server.port}/v1` }, { retryDelayMs: () => 0 });
+        expect([status, n]).toEqual([status, CANARY_PROMPTS.length * sends]);
+        expect(rec.results.every(r => r.status === 'error')).toBe(true);
+        expect(rec.receipts.filter(r => r.question_id === 'c01').map(r => r.attempt)).toEqual(Array.from({ length: sends }, (_, i) => i));
+      } finally { server.stop(true); }
+    }
+  });
+
+  // Value: protects=a billed canary answer with a malformed log-probability list keeps its answer and its receipt's usage (issue #276); fails_when=parseCompatResponse throws on a null token entry or a top_logprobs that is not a list, so the prompt fails with usage_raw null; why_new=parseCompatResponse drops malformed log probabilities instead of throwing; seam=none; no_claim=what Particle sends in these fields today
+  test('a null token entry or a top_logprobs that is not a list leaves the log probabilities unset, and the answer and its receipt\'s usage stand (#276)', async () => {
+    const shapes = [[null], [{ token: 'ok', logprob: -0.5, top_logprobs: {} }], [{ token: 'ok', logprob: -0.5, top_logprobs: [null] }]];
+    const usage = { prompt_tokens: 20, completion_tokens: 7, total_tokens: 27 };
+    let n = 0;
+    const server = Bun.serve({ port: 0, hostname: '127.0.0.1', fetch: () => Response.json({
+      model: 'particle-ai/particle-1', choices: [{ index: 0, finish_reason: 'stop', message: { role: 'assistant', content: 'ok' }, logprobs: { content: shapes[n++ % shapes.length] } }], usage,
+    }) });
+    try {
+      const rec = await runCanary({ PARTICLE_API_KEY: 'dummy-key', PARTICLE_BASE_URL: `http://127.0.0.1:${server.port}/v1` }, { retryDelayMs: () => 0 });
+      expect(rec.results.map(r => [r.status, r.answer, r.mean_logprob, r.logprobs])).toEqual(CANARY_PROMPTS.map(() => ['ok', 'ok', null, null]));
+      expect(rec.receipts.map(r => [r.status, r.usage_raw])).toEqual(CANARY_PROMPTS.map(() => ['ok', usage]));
+      expect(n).toBe(CANARY_PROMPTS.length);
     } finally { server.stop(true); }
   });
 });

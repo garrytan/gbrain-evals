@@ -32,7 +32,7 @@
  * Paid: the judge model is called through gbrain's own gateway; the run joins the eval budget
  * ledger (--paid --budget-usd N | --budget-run-id ID).
  *
- * Usage (dev): bun eval/runner/temporal-contradictions.ts --gbrain <checkout>@<sha> --models anthropic:claude-haiku-5-5
+ * Usage (dev): bun eval/runner/temporal-contradictions.ts --gbrain <checkout>@<sha> --models anthropic:claude-opus-5-5
  *   [--runs 3] [--seeds 3,5] [--phrasing A|A2|A3] --output <dir> --paid --budget-usd N
  * Custodian (held-out) mode: --phrasing-file <custody path> --decision-id <id> --purpose <text> --seeds <held-out seeds>,
  * exactly as temporal-edges.ts.
@@ -127,7 +127,7 @@ async function asofExact(brain: Brain, world: TemporalEdgesWorld): Promise<{ n: 
 }
 
 /** The --models default for dev runs; counted runs name their models and are certified per model. */
-export const DEFAULT_DEV_MODEL = 'anthropic:claude-haiku-5-5';
+export const DEFAULT_DEV_MODEL = 'anthropic:claude-opus-5-5';
 
 export interface ModelRun {
   model: string; run: number; seed: number; phase_status: string; phase_detail: string; totals: Record<string, number>;
@@ -161,7 +161,7 @@ async function main(): Promise<void> {
   const devPhrasing = one('--phrasing') ?? 'A';
   const gut = resolveGbrainUnderTest(gbrainSpecFrom(argv));
   const keys = { ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY, OPENAI_API_KEY: process.env.OPENAI_API_KEY };
-  const paid = startPaidRun('temporal-contradictions', { ...budgetOptionsFrom(argv), estimateUsd: 0.3 * models.length * runs });
+  const paid = startPaidRun('temporal-contradictions', { ...budgetOptionsFrom(argv), estimateUsd: 1.2 * models.length * runs });
 
   const result = await withHermeticEnv('temporal-contradictions', async () => {
     Object.assign(process.env, keys);

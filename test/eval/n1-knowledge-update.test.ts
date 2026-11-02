@@ -16,6 +16,9 @@ import {
 import { n1Metrics, scoreExposure, scoreN1Probe, searchRowTokens, recallTokens, type N1Answer } from '../../eval/runner/lifecycle/n1-score.ts';
 import { observeN1, scoreCheckpoint, writePlan } from '../../eval/runner/n1-knowledge-update.ts';
 import type { CallResult, Driver } from '../../eval/runner/lifecycle/drivers.ts';
+import { resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
+import { loadFactUnquote } from '../../eval/runner/quoted-reads.ts';
+import { fenceTranscriptText } from '../../node_modules/gbrain/src/core/search/transcript-quote.ts';
 
 const world = generateN1World({ seed: N1_DEFAULT_SEED });
 const { ledger } = world;
@@ -225,5 +228,21 @@ describe('N1 broken adapter', () => {
     expect(g.pass).toBe(false);
     expect(g.rows.some(r => r.stale)).toBe(true);
     expect(g.detail).toContain('no-stale-served');
+  });
+
+  test('a remote adapter that quotes ontology values (gbrain v0.60.539.0 on) passes through the build\'s own unquote, and fails loudly without it', async () => {
+    const honest = fakeDriver(ledger, false);
+    const quoting: Driver = { ...honest, remote: true, call: async (op, args) => {
+      const r = await honest.call(op, args);
+      if (op !== 'ontology_get' || !r.ok) return r;
+      const data = (r.data as Array<Record<string, unknown>>).map((v, i) => ({ ...v, value: fenceTranscriptText(String(v.value), `fact ${i + 1}`), quoted: 'transcript' }));
+      return { ...r, data, raw: JSON.stringify(data) };
+    } };
+    const ontology = probes.filter(p => p.type === 'ontology_current' || p.type === 'ontology_asof');
+    expect(ontology.length).toBeGreaterThan(0);
+    const unquote = await loadFactUnquote(resolveGbrainUnderTest(null));
+    const obs = await observeN1(quoting, ledger, ontology, 'all', unquote);
+    expect(scoreCheckpoint(ontology, [], obs, null, false).rows.filter(r => !r.pass).map(r => r.probe_id)).toEqual([]);
+    await expect(observeN1(quoting, ledger, ontology)).rejects.toThrow(/unquoteFactText/);
   });
 });

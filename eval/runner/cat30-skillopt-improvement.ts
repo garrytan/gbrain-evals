@@ -9,8 +9,10 @@
  * held-out set. Improvement = optimized_heldout - baseline_heldout.
  *
  * ── Feature boundary ─────────────────────────────────────────────────
- * UNDER TEST: gbrain's SkillOpt pipeline end to end — `runSkillOpt`
- * (reflect → patch → D12 validation gate, orchestrator.ts) plus
+ * UNDER TEST: gbrain's SkillOpt pipeline end to end — `runSkillOpt`'s
+ * iterative loop (reflect → patch → D12 validation gate, orchestrator.ts),
+ * asked for with `optimizerMode: 'reflect'` because gbrain's default since
+ * v0.60.542.0 is one gated rewrite — plus
  * `scoreSkillOnTasks` as the harness's INDEPENDENT held-out measurement
  * (does NOT trust the optimizer's own receipt).
  * LEGITIMATELY SEEDED/STUBBED: the committed skillopt-v1 seed corpus
@@ -346,10 +348,9 @@ interface SeedRunDeps {
 
 // split [1,1,1]: train5/sel5/test5 — sel>=5 (D_sel floor); test must be >0
 // (splitBench rejects a zero segment). cat30 does NOT pass heldOutPath to
-// runSkillOpt — the per-step held-out gate is cat32's job and is the real cost
-// driver; here it would just add cost. The harness measures held-out before/
-// after itself. Seeds are user-owned (temp dir), so the bundled ENFORCE never
-// fires.
+// runSkillOpt — the held-out check is cat32's job; here it would just add
+// cost. The harness measures held-out before/after itself. Seeds are
+// user-owned (temp dir), so the bundled ENFORCE never fires.
 const SPLIT: [number, number, number] = [1, 1, 1];
 
 /**
@@ -427,7 +428,8 @@ async function runSeed(deps: SeedRunDeps, seed: string): Promise<SeedResult> {
       maxCostUsd: deps.maxCostUsd,
       maxRuntimeMin: 20,
       force: true,
-    } as any);
+      optimizerMode: 'reflect',
+    });
     deps.runs.push({ label: seed, outcome: result.outcome, final_text: result.finalText ?? null, receipt: result.receipt ?? null });
     outcome = result.outcome;
     optimizedBody = result.finalText ?? seedBody;
@@ -588,6 +590,7 @@ export async function runCat30(options: Cat30Options = {}): Promise<Cat30RunResu
       mode: bpre ? 'b-pre-validity' : 'full',
       target_model: targetModel,
       optimizer_model: optimizerModel,
+      optimizer_mode: 'reflect',
       judge_model: judgeModel,
       epochs, batch_size: batchSize, runs_per_task: runsPerTask,
       max_cost_usd: maxCostUsd,

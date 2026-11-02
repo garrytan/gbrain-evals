@@ -12,11 +12,11 @@ describes gbrain as this repository pins it today; the changelog at the bottom r
 
 | Item | Value |
 |---|---|
-| Pinned product | gbrain [`3ec766c40`](https://github.com/garrytan/gbrain/tree/3ec766c40664b652b14e39788d177139f5a7b105), release v0.60.531.0, declared as `gbrain` in `package.json` |
+| Pinned product | gbrain [`ca1281a2e`](https://github.com/garrytan/gbrain/tree/ca1281a2ed3236ac45adddb2d08e84423769c321), release v0.60.542.0, declared as `gbrain` in `package.json` |
 | Fixed-purpose aliases | `gbrain-cues` (`939232f`) and `gbrain-reader` (`e78f1c3`), used only by the experiments that name them |
 | This repository | gbrain-evals at the release [`VERSION`](VERSION) names; [CHANGELOG.md](CHANGELOG.md) records each release |
 
-This repository installs gbrain v0.60.531.0 (`3ec766c40`). Some results below were measured at earlier commits; each
+This repository installs gbrain v0.60.542.0 (`ca1281a2e`). Some results below were measured at earlier commits; each
 names its commit, and every commit named below is in the release's history except three pull-request builds:
 `a7cb37b`, the September 29 branch commit whose retrieval the reader replay row froze; `94bd52e01`, the multi-relation
 planner's held-out build (merged in v0.60.60.0); and `079941d2`, Cat 35's post-wave build (shipped as v0.47.8.0). The
@@ -31,18 +31,21 @@ one document fold into one result row, and organization, OCR and date priors adj
 such check here. Retrieval results measured before v0.60.223.0 used `rerank-2.5`, and results measured before
 v0.60.332.0 ran without collapse or rank priors.
 
-Four read defaults outside the mode bundles changed after v0.60.454.0, the previous pin. A `query` with a token budget
-leads with up to 40 dated saved facts (`search.query_facts_block`, v0.60.491.0). `search` puts a newer correction
+Five read defaults outside the mode bundles changed after v0.60.454.0. A `query` with a token budget leads with up to 40 dated saved facts (`search.query_facts_block`, v0.60.491.0). `search` puts a newer correction
 ahead of the saved fact it corrects (`search.saved_facts_supersede`, v0.60.493.0). A remote `search` or `query` that
 names no `limit` keeps every page that matched its words but at most 3 pages that matched only by meaning
 (`search.remote_page_cap`, v0.60.506.0). Text from conversation, chat, email and meeting pages comes back inside a quote
 fence, marked as source material, from `search`, `query`, `assemble_evidence` and `think`, and over MCP from `get_page`,
-`fetch`, `recall`, `delta` facts and hot memory (v0.60.507.0, v0.60.521.0); `search_exact`, `get_chunks` and timeline
-rows still return stored text. Apart from the keyless Cats 37 to 39 check in the memory trust row, no result on this page
-was measured with them. The memory-qa harness holds the first three
-at their old values and unwraps the fence on its `query` path
+`fetch`, `recall`, `delta` facts and hot memory (v0.60.507.0, v0.60.521.0). Since v0.60.536.0 a remote reader, such as
+an agent over MCP, also gets any text below the owner's own notes in that fence: text an agent wrote, tool data,
+external text and text with no recorded origin, on search, recall, page, chunk, timeline, version and write-receipt
+reads, and from v0.60.538.0 to v0.60.541.0 on chronicle and takes reads, timeline sources, ontology values and a quoted
+page's title, tags and frontmatter. Local reads are unchanged, no setting turns either fence off, and `gbrain trust
+claim-sources` with `gbrain trust backfill` marks an owner's older notes as theirs. Apart from the keyless Cats 37 to
+39 check in the memory trust row, no result on this page was measured with these defaults. The memory-qa harness holds
+the first three at their old values and unwraps the fence on its `query` path, which reads locally
 ([`eval/runner/gbrain-under-test.ts`](eval/runner/gbrain-under-test.ts)). Arms that run the pinned gbrain with its own
-defaults (the shootout, the Cat 40 MCP arm and the agent tool bridges) take all four as shipped. The scoreboard's
+defaults (the shootout, the Cat 40 MCP arm and the agent tool bridges) take all five as shipped. The scoreboard's
 gbrain-defaults container builds its own gbrain, `f05943e6` (v0.60.138.0), so it runs none of them.
 
 ## What gbrain does
@@ -89,7 +92,7 @@ save, find, update and forget what it knows. The parts that matter for an agent:
 | Serving the new value after an update | **388 of 388** probes, never stale, on PGLite and Postgres through the CLI and MCP | `77cf8e111` | [N1](docs/benchmarks/2026-10-01-n1-knowledge-update.md), [re-pin](docs/benchmarks/2026-10-11-wave14-repin.md) |
 | Nothing left behind after `forget` | **0** prohibited outputs, 6 of 6 reinstatements | `77cf8e111` | [N5](docs/benchmarks/2026-10-01-n5-forget-residue.md), [re-pin](docs/benchmarks/2026-10-11-wave14-repin.md) |
 | Private pages reaching agent callers or remote callers | **0**, in process and on Postgres over real HTTP (155 of 155 cells, 5 kinds of caller); proactive recall gated in CI | `77cf8e111` | [N6 on Postgres](docs/benchmarks/2026-10-06-n6-postgres-http.md), [N8 gate](docs/benchmarks/2026-10-06-n8-privacy-gate.md), [re-pin](docs/benchmarks/2026-10-11-wave14-repin.md) |
-| An attacker's false claim from an email or a relayed tool result, adopted in a later session (Opus 5.5, Sonnet 5.5, GPT-6.1 Sol) | **1.5% to 5%** of sessions with trust labels shown, 5.1% to 10.6% with them stripped; **0 of 360** instruction-worded injections followed per model; Cats 37 to 39 pass every keyless contract at the pin | `c2f10ee8` to `5b9c814b` (shipped as `d4dc2d4d8`); keyless at `3ec766c40` | [Memory trust](docs/benchmarks/2026-10-08-memory-trust-results-paid.md), [re-pin](docs/benchmarks/2026-10-11-wave14-repin.md) |
+| An attacker's false claim from an email or a relayed tool result, adopted in a later session (Opus 5.5, Sonnet 5.5, GPT-6.1 Sol) | **1.5% to 5%** of sessions with trust labels shown, 5.1% to 10.6% with them stripped; **0 of 360** instruction-worded injections followed per model; Cats 37 to 39 pass every keyless contract at the pin | `c2f10ee8` to `5b9c814b` (shipped as `d4dc2d4d8`); keyless at `ca1281a2e` | [Memory trust](docs/benchmarks/2026-10-08-memory-trust-results-paid.md), [re-pin](docs/benchmarks/2026-10-11-wave14-repin.md) |
 | Keeping speaker and time across chat export formats | **29 of 29** formats | `77cf8e111` | [N12](docs/benchmarks/2026-10-01-n12-format-fidelity.md), [re-pin](docs/benchmarks/2026-10-11-wave14-repin.md) |
 | One very large document stored as one page (2 MB to 260 MiB, counted under the preregistered rules) | **Every preregistered rule passes**: 0 crashes, 0 responses over 1 MiB, 0 bytes lost on export, keyword recall@10 1.00 at 2 MB and no recall gap to managed parts up to 24 MiB. PGLite stores up to 128 MiB, Postgres stored up to 256 MiB, and `put_page` refuses anything above 24 MiB; larger documents are refused (`request_too_large`), not stored. `forget` on pages over 24 MiB is still unreachable (`request_too_large` at 100 MiB and above) | `7a6bdd3` (v0.60.454.0, the previous pin) | [N14 Wave B PR 4](docs/benchmarks/2026-10-25-n14-large-page-fidelity-wave-b4.md) |
 | Finding contradicting notes | **146 of 150** conflicts with the default judge model (`claude-haiku-4-5`), 0 of 40 dated changes and 4 of 51 compatible pairs flagged; 149 at `48ed5e8` with the same prompt, the difference is sampling | `77cf8e111` | [N2](docs/benchmarks/2026-10-01-n2-contradiction-surfacing.md), [re-pin](docs/benchmarks/2026-10-11-wave14-repin.md#the-paid-n2-judge-arm) |
@@ -219,7 +222,7 @@ appears; on that looser metric gbrain finds at least one for 470 of 470. Limits:
 the verbatim-session system returns five whole sessions, the configuration was chosen on these 470 questions, and embedders and
 chunking differ, so this compares pipelines, not components.
 
-**Retrieval or the whole history: within 7 points at a seventh of the recurring cost.** On 150 LongMemEval-S questions with the same reader, gbrain's retrieval (`c5fb0201`) answered 139 against 144 with the whole ~115,000-token history pasted in (Sonnet 5.5), and 137 against 141 (GPT-6.1 Sol). Both stay within the preregistered 7-point margin, which is not the same as equal: the gap is in questions that need several conversations. gbrain's recurring cost per question is $0.024 against $0.173 with Sonnet 5.5, plus a one-time $0.015 to index each history. [Full-context comparison](docs/benchmarks/2026-10-07-longmemeval-w10c-full-context.md). particle-1, reading the same prompts at high effort and at list price (Particle has no batch discount), answered 135 with gbrain's retrieval against 140 with the whole history, also within the margin by the preregistered test, though narrowly enough that a score test puts it just outside, at $0.0047 against $0.0275 per question ([particle-1 replay](docs/benchmarks/2026-11-01-longmemeval-particle-replay/REPORT.md)).
+**Retrieval or the whole history: within 7 points at a seventh of the recurring cost.** On 150 LongMemEval-S questions with the same reader, gbrain's retrieval (`c5fb0201`) answered 139 against 144 with the whole ~115,000-token history pasted in (Sonnet 5.5), and 137 against 141 (GPT-6.1 Sol). Both stay within the preregistered 7-point margin, which is not the same as equal: the gap is in questions that need several conversations. gbrain's recurring cost per question is $0.024 against $0.173 with Sonnet 5.5, plus a one-time $0.015 to index each history. [Full-context comparison](docs/benchmarks/2026-10-07-longmemeval-w10c-full-context.md). particle-1, reading the same prompts at high effort and at list price (Particle has no batch discount), answered 135 with gbrain's retrieval against 140 with the whole history, also within the margin by the preregistered test, though narrowly enough that a score test puts it just outside, at $0.0047 against $0.0275 per question ([particle-1 replay](docs/benchmarks/2026-11-01-longmemeval-particle-replay/REPORT.md)). Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which makes particle-1. gbrain is Garry Tan's own project. Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator. ([Disclosures](docs/disclosures.md).)
 
 **Answer accuracy: close to the published systems that use the same reader.** With `gpt-5.4` as the reader,
 gbrain's retrieval at `109b992` answers 89.4% ([opaque-id follow-ups](docs/benchmarks/2026-10-04-longmemeval-opaque-followups.md));
@@ -372,6 +375,27 @@ Code is MIT licensed. Dataset and vendored benchmark attribution is recorded in 
 [PrecisionMemBench attribution](eval/precisionmembench/ATTRIBUTION.md).
 
 ## Changelog
+
+### 2026-11-02: Re-pin to gbrain `ca1281a2e`
+
+The pinned product moves from `3ec766c40` (v0.60.531.0) to master `ca1281a2e` (v0.60.542.0). The paragraph on read
+defaults outside the mode bundles now covers five: since v0.60.536.0 a remote reader also gets text below the owner's
+own notes quoted, with more read surfaces quoted through v0.60.541.0. Its claim that `search_exact`, `get_chunks` and
+timeline rows return stored text no longer holds and is gone. The memory trust row's keyless check names the new pin:
+Cats 37 to 39 pass their keyless contracts at `ca1281a2e` after the harness read labels and facts inside the fence. No
+paid result was re-run, and every number keeps its own commit.
+
+### 2026-11-02: The full-context paragraph carries the gbrain and OpenAI lines
+
+The "Retrieval or the whole history" paragraph reports gbrain's result and GPT-6.1 Sol's beside particle-1's, so after
+the Particle line it now carries two more from [docs/disclosures.md](docs/disclosures.md): gbrain is Garry Tan's own project. Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator. No
+figure changed.
+
+### 2026-11-01: The particle-1 sentence carries its disclosure
+
+The particle-1 sentence in the "Retrieval or the whole history" paragraph now ends with the line from
+[docs/disclosures.md](docs/disclosures.md): Y Combinator, which Garry Tan runs, is an investor in Particle. No figure
+changed.
 
 ### 2026-11-01: The reader replay row no longer ranks readers
 

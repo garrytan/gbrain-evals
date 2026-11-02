@@ -449,6 +449,24 @@ describe('true full context', () => {
       expect(UPSTREAM_DEADLINE_MS).toBe(900_000);
     });
 
+    // Value: protects=a whole-history particle reading through the lease proxy is never abandoned while the proxy still sends and bills it (issue #271); fails_when=a reading on a loopback proxy slot waits only the 900 s upstream deadline, which the proxy's admission wait (up to 600 s) eats into; why_new=readCompat's deadline follows its URL (compatDeadlineMs); seam=none; no_claim=a real 26-minute wait
+    test('a reading on a loopback proxy slot waits the proxy\'s longest admission wait plus its upstream deadline; a direct reading waits the upstream deadline (#271)', async () => {
+      const { PROXIED_DEADLINE_MS } = await import('../../eval/runner/metering-proxy.ts');
+      const timeout = AbortSignal.timeout;
+      const deadlines: number[] = [];
+      const urls: string[] = [];
+      const fetchImpl = (async (url: string) => { urls.push(String(url)); return reply('stop'); }) as unknown as typeof fetch;
+      AbortSignal.timeout = (ms: number) => { deadlines.push(ms); return timeout.call(AbortSignal, ms); };
+      try {
+        process.env.PARTICLE_BASE_URL = 'http://127.0.0.1:8787/harness/particle/v1';
+        expect((await answerFullContext({ reader: 'particle:particle-1', prompt, conversation: conv.id, fetchImpl })).outcome).toBe('scored');
+        delete process.env.PARTICLE_BASE_URL;
+        expect((await answerFullContext({ reader: 'particle:particle-1', prompt, conversation: conv.id, fetchImpl })).outcome).toBe('scored');
+      } finally { AbortSignal.timeout = timeout; }
+      expect(urls).toEqual(['http://127.0.0.1:8787/harness/particle/v1/chat/completions', 'https://api.particle.ai/v1/chat/completions']);
+      expect(deadlines).toEqual([PROXIED_DEADLINE_MS, UPSTREAM_DEADLINE_MS]);
+    });
+
     // Value: protects=a particle reading whose connection resets after it went out is billed once and final in the Q1 cell; fails_when=readCompat retries the reset, or the answer lacks timed_out so the cell asks again; why_new=the lease proxy answers this reset 504, the direct path retried it; seam=none; no_claim=Bun's exact error text
     test('a reading whose connection resets after it went out is a final reader_error after one request; a refused connection stays retryable', async () => {
       let calls = 0;
@@ -458,6 +476,18 @@ describe('true full context', () => {
       expect([a.outcome, a.timed_out, calls, a.attempts!.length]).toEqual(['reader_error', true, 1, 1]);
       const refused = Object.assign(new TypeError('Unable to connect. Is the computer able to access the url?'), { code: 'ECONNREFUSED' });
       expect([compatMayHaveBilled(reset), compatMayHaveBilled(refused)]).toEqual([true, false]);
+    });
+
+    // Value: protects=a full-context particle reading that failed after it may have gone out is billed once and final in the Q1 cell, whatever Bun names the failure (issue #288); fails_when=readCompat reads a malformed response, a bad chunk or a body that fails to decompress as a failure that never reached Particle and sends it again, or the answer lacks timed_out so the cell asks again; why_new=compatMayHaveBilled reads every transport failure not proven to happen before sending as billed; seam=fetch stubs that throw the errors Bun 1.4.4 gives; no_claim=what Particle's edge sends when it fails
+    test('a reading whose response is malformed, has a bad chunk or fails to decompress is a final reader_error after one request; an unresolvable host or a rejected certificate is not read as billed (#288)', async () => {
+      const bun = (code: string, message: string) => Object.assign(new TypeError(message), { code });
+      for (const e of [bun('Malformed_HTTP_Response', 'Malformed_HTTP_Response fetching "https://api.particle.ai/v1/chat/completions".'), bun('InvalidHTTPResponse', 'InvalidHTTPResponse fetching "https://api.particle.ai/v1/chat/completions".'), bun('ZlibError', 'ZlibError fetching "https://api.particle.ai/v1/chat/completions".'), new TypeError('fetch failed')]) {
+        let calls = 0;
+        const fetchImpl = (async () => { calls++; throw e; }) as unknown as typeof fetch;
+        const a = await answerFullContext({ reader: 'particle:particle-1', prompt, conversation: conv.id, fetchImpl });
+        expect([(e as { code?: string }).code ?? e.message, a.outcome, a.timed_out, calls, a.attempts!.length]).toEqual([(e as { code?: string }).code ?? e.message, 'reader_error', true, 1, 1]);
+      }
+      expect([compatMayHaveBilled(bun('ENOTFOUND', 'getaddrinfo ENOTFOUND api.particle.ai')), compatMayHaveBilled(bun('CERT_HAS_EXPIRED', 'certificate has expired'))]).toEqual([false, false]);
     });
 
     // Value: protects=a gateway 5xx stays retryable; fails_when=compatConnectionLost reads a received response's body text as a lost connection, so the question ends final and unanswered; why_new=compatConnectionLost matches socket-close messages, and a CompatHttpError's message carries the body; seam=none; no_claim=which gateways put socket errors in a body
@@ -561,18 +591,85 @@ describe('file agent with particle-1 (plan GST-605 Phase 3)', () => {
     expect([lines[0], lines[1], lines[5]].map(l => JSON.parse(l)).map(r => [r.attempt, r.status])).toEqual([[0, 'error'], [1, 'ok'], [2, 'ok']]);
   });
 
-  test('a budget stop counts the usage of a billed 2xx that was retried', async () => {
+  // Value: protects=a file-agent particle turn answered 2xx without a message is billed once and its usage counted (issue #280); fails_when=the loop retries the billed 2xx, or the answer lacks timed_out so the cell asks the question again; why_new=postJson ends the turn on a compat 2xx without a message; seam=none; no_claim=whether Particle bills an answer without a message
+  test('a billed 2xx without a message is sent once, counts its usage and ends the answer as a timed-out reader_error (#280)', async () => {
     let n = 0;
     const fetchImpl = (async () => {
       n++;
       if (n === 1) return new Response(JSON.stringify({ ...chat(call('list_dir', { path: '.' }), 'tool_calls'), choices: [] }));
       return new Response('{"error":{"message":"Insufficient credits"}}', { status: 402 });
     }) as unknown as typeof fetch;
-    const sys = new FileAgentSystem({ workDir: join(tmp, 'particle-billed-402'), fetchImpl });
+    const sys = new FileAgentSystem({ workDir: join(tmp, 'particle-billed-2xx'), fetchImpl });
     await ingest(sys);
     const a = await sys.answer(ns, { text: 'What is my dog called?', query_time: null }, { reader: 'particle:particle-1', replicate: 0 });
-    expect(a).toMatchObject({ outcome: 'budget_not_run', provider_input_tokens: 500, usage: { input: 200, output: 40, cache_read: 300, cache_write: 0 } });
+    expect(a).toMatchObject({ outcome: 'reader_error', stop_reason: 'provider_error', timed_out: true, turns: 1, provider_input_tokens: 500, usage: { input: 200, output: 40, cache_read: 300, cache_write: 0 } });
+    expect(n).toBe(1);
     await sys.close();
+  });
+
+  // Value: protects=a file-agent question whose particle turn Particle may have billed is never run again (issue #253); fails_when=a timed-out, reset or 504 turn is retried by the loop, or the answer lacks timed_out so the cell asks the question again; why_new=the agent loop stops on a particle turn that may have been billed; seam=none; no_claim=Particle's billing of an aborted turn
+  test('a particle turn that times out, resets after it went out or is answered 504 is sent once and ends the answer as a timed-out reader_error; a refused connection does not (#253)', async () => {
+    const faults: Array<[string, () => Response]> = [
+      ['timeout', () => { throw new DOMException('The operation timed out.', 'TimeoutError'); }],
+      ['reset', () => { throw Object.assign(new TypeError('The socket connection was closed unexpectedly.'), { code: 'ECONNRESET' }); }],
+      ['504', () => new Response('{"error":{"kind":"product_error","message":"metering proxy: upstream failed: The operation timed out."}}', { status: 504 })],
+      ['refused', () => { throw Object.assign(new TypeError('Unable to connect. Is the computer able to access the url?'), { code: 'ECONNREFUSED' }); }],
+    ];
+    for (const [name, fault] of faults) {
+      let n = 0;
+      const fetchImpl = (async () => (++n === 1 ? new Response(JSON.stringify(chat(call('list_dir', { path: '.' }), 'tool_calls'))) : fault())) as unknown as typeof fetch;
+      const sys = new FileAgentSystem({ workDir: join(tmp, `particle-billed-${name}`), fetchImpl });
+      await ingest(sys);
+      const a = await sys.answer(ns, { text: 'What is my dog called?', query_time: null }, { reader: 'particle:particle-1', replicate: 0 });
+      expect([name, a.outcome, a.stop_reason, a.timed_out, a.turns, n]).toEqual([name, 'reader_error', 'provider_error', name === 'refused' ? undefined : true, 2, 2]);
+      await sys.close();
+    }
+  });
+
+  // Value: protects=a file-agent question whose particle turn failed after it may have gone out is never run again, whatever Bun names the failure (issue #288); fails_when=the loop's caller reads a malformed response, a bad chunk or a body that fails to decompress as a failure that never reached Particle, so the answer lacks timed_out and the cell asks the question again; why_new=compatMayHaveBilled reads every transport failure not proven to happen before sending as billed; seam=fetch stubs that throw the errors Bun 1.4.4 gives; no_claim=what Particle's edge sends when it fails
+  test('a particle turn whose response is malformed, has a bad chunk or fails to decompress ends the answer as a timed-out reader_error; an unresolvable host or a rejected certificate does not (#288)', async () => {
+    const bun = (code: string, message: string) => Object.assign(new TypeError(message), { code });
+    const faults: Array<[string, Error, true | undefined]> = [
+      ['Malformed_HTTP_Response', bun('Malformed_HTTP_Response', 'Malformed_HTTP_Response fetching "https://api.particle.ai/v1/chat/completions".'), true],
+      ['InvalidHTTPResponse', bun('InvalidHTTPResponse', 'InvalidHTTPResponse fetching "https://api.particle.ai/v1/chat/completions".'), true],
+      ['ZlibError', bun('ZlibError', 'ZlibError fetching "https://api.particle.ai/v1/chat/completions".'), true],
+      ['ENOTFOUND', bun('ENOTFOUND', 'getaddrinfo ENOTFOUND api.particle.ai'), undefined],
+      ['CERT_HAS_EXPIRED', bun('CERT_HAS_EXPIRED', 'certificate has expired'), undefined],
+    ];
+    for (const [name, fault, timedOut] of faults) {
+      let n = 0;
+      const fetchImpl = (async () => { if (++n === 1) return new Response(JSON.stringify(chat(call('list_dir', { path: '.' }), 'tool_calls'))); throw fault; }) as unknown as typeof fetch;
+      const sys = new FileAgentSystem({ workDir: join(tmp, `particle-288-${name}`), fetchImpl });
+      await ingest(sys);
+      const a = await sys.answer(ns, { text: 'What is my dog called?', query_time: null }, { reader: 'particle:particle-1', replicate: 0 });
+      expect([name, a.outcome, a.stop_reason, a.timed_out, a.turns, n]).toEqual([name, 'reader_error', 'provider_error', timedOut, 2, 2]);
+      await sys.close();
+    }
+  });
+
+  // Value: protects=a slow particle turn waits the proxies' deadline instead of Bun's 300-second fetch timeout (issue #253); fails_when=the agent loop sends a particle turn without timeout: false and a deadline, so Bun abandons it at 300 s while it is still generating and billed; why_new=postJson gives compat turns compatDeadlineMs; seam=none; no_claim=a real 900 s wait
+  test('each particle turn is sent with Bun\'s fetch timeout off and the upstream deadline, or on a loopback proxy slot the proxied deadline (#253)', async () => {
+    const { PROXIED_DEADLINE_MS } = await import('../../eval/runner/metering-proxy.ts');
+    const timeout = AbortSignal.timeout;
+    const deadlines: number[] = [];
+    const sent: Array<[string, unknown]> = [];
+    let n = 0;
+    const fetchImpl = (async (url: string, init: RequestInit & { timeout?: unknown }) => {
+      sent.push([String(url), init.timeout]);
+      return new Response(JSON.stringify(chat(++n % 2 ? call('list_dir', { path: '.' }) : call('submit_answer', { answer: 'Rex' }), 'tool_calls')));
+    }) as unknown as typeof fetch;
+    AbortSignal.timeout = (ms: number) => { deadlines.push(ms); return timeout.call(AbortSignal, ms); };
+    try {
+      for (const base of [undefined, 'http://127.0.0.1:8787/agent/particle/v1']) {
+        if (base) process.env.PARTICLE_BASE_URL = base; else delete process.env.PARTICLE_BASE_URL;
+        const sys = new FileAgentSystem({ workDir: join(tmp, `particle-deadline-${base ? 'proxy' : 'direct'}`), fetchImpl });
+        await ingest(sys);
+        expect((await sys.answer(ns, { text: 'What is my dog called?', query_time: null }, { reader: 'particle:particle-1', replicate: 0 })).text).toBe('Rex');
+        await sys.close();
+      }
+    } finally { AbortSignal.timeout = timeout; }
+    expect(sent).toEqual([...Array(2).fill(['https://api.particle.ai/v1/chat/completions', false]), ...Array(2).fill(['http://127.0.0.1:8787/agent/particle/v1/chat/completions', false])]);
+    expect(deadlines).toEqual([UPSTREAM_DEADLINE_MS, UPSTREAM_DEADLINE_MS, PROXIED_DEADLINE_MS, PROXIED_DEADLINE_MS]);
   });
 
   test('an empty Particle balance ends the question as budget_not_run, after the failing attempt\'s receipt', async () => {

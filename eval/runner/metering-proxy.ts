@@ -24,7 +24,10 @@
  *     on the ledger, so they cannot overspend the lease), meters streamed
  *     responses from their usage events (or charges the reservation), settles
  *     a 4xx answer without usage at $0 (providers do not bill rejected
- *     requests; a 5xx, a timeout or a lost connection keeps the reservation), refuses
+ *     requests; a 5xx, a timeout, a lost connection or a response body that
+ *     fails to read keeps the reservation, and a particle request that may
+ *     have gone out before it failed is answered 504, which no client sends
+ *     again), refuses
  *     bodies carrying a forbidden marker (the sanitizer's leak tripwire), and
  *     appends one usage line per request (never a body or a key).
  *
@@ -45,6 +48,9 @@
  *     [--cell-token <t> [--trust-local]] [--route-caps extraction=4096,reader=2048,judge=2048 --route-class harness=reader,judge=judge]
  *     [--admission openai=rpm:500,tpm:2000000,concurrency:16]... [--admission-max-wait-s 600]
  *   bun eval/runner/metering-proxy.ts summary --budget-ledger <file> --run-id <id> [--usage-log <file>]
+ *
+ * An `--upstream` that is not loopback must be https: the proxy sends the
+ * provider's real key there (issue #277).
  *
  * One lease ledger can hold a cell's reruns: each run id is its own lease, the
  * output cap is recorded with the lease, and `--new-run` closes a lease still
@@ -94,7 +100,11 @@
  *     any response (a closed or reset socket) is sent again up to twice, after
  *     1 and 4 seconds; each failed attempt is charged at its reservation (A23:
  *     `socket connection closed unexpectedly` failed temporal-graph c9's
- *     sessions). A timeout is never retried.
+ *     sessions). A timeout is never retried. A particle request is sent again
+ *     only when its connection was refused. Another failure proven to happen
+ *     before any byte was sent (`compatNeverSent`: a host name that did not
+ *     resolve, a rejected TLS certificate) is answered 502, which a client may
+ *     send again, and any other particle transport failure 504 (issue #288).
  */
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { appendFileSync, readFileSync } from 'node:fs';
@@ -102,7 +112,7 @@ import { BudgetExceededError, BudgetRun, ledgerStatus, priceRequest, reservation
 
 export { sseUsage };
 import { findLeaks } from './systems/sanitize.ts';
-import { COMPAT_PROVIDERS, compatConnectionLost } from './providers/openai-compatible.ts';
+import { COMPAT_PROVIDERS, carriesKeyInCleartext, compatMayHaveBilled, compatNeverSent, isLoopbackUrl } from './providers/openai-compatible.ts';
 
 /** Particle's row comes from COMPAT_PROVIDERS (eval/runner/providers/openai-compatible.ts): its upstream, key variable, output field and output floor. */
 const PARTICLE = COMPAT_PROVIDERS.particle;
@@ -124,9 +134,20 @@ const ROUTES: Record<ProviderName, Array<{ method: string; path: RegExp }>> = {
 const KEY_ENV: Record<ProviderName, string> = { openai: 'OPENAI_API_KEY', anthropic: 'ANTHROPIC_API_KEY', voyage: 'VOYAGE_API_KEY', particle: PARTICLE.key_env };
 const CREDENTIAL_HEADERS = ['authorization', 'x-api-key', 'api-key', 'openai-organization', 'openai-project', 'cookie', 'proxy-authorization'];
 export const DEFAULT_MAX_OUTPUT_TOKENS = 32_768;
-/** A provider call may run this long (Bun's own 300-second fetch timeout is off; long reasoning calls exceed it). */
+/** A provider call may run this long, transport retries and the body included (Bun's own 300-second fetch timeout is off; long reasoning calls exceed it). */
 export const UPSTREAM_DEADLINE_MS = 900_000;
-/** Waits before a request whose connection failed before any response is sent again (A23). A particle request is sent again only when its connection was refused: a reset may come after Particle billed the generation, so it is answered 504 like a timeout. */
+/** The longest a lease proxy queues a request for admission (rate limits, concurrency, a provider's retry-after); `--admission-max-wait-s` may only lower it. */
+export const ADMISSION_MAX_WAIT_MS = 600_000;
+/**
+ * How long a client waits for a lease proxy's answer: the longest admission wait, then the upstream deadline, plus a
+ * minute for the proxy's own work. The proxy always answers first (the reply, or its own 504), so a client never
+ * abandons a request the proxy still sends and bills (issue #271).
+ */
+export const PROXIED_DEADLINE_MS = ADMISSION_MAX_WAIT_MS + UPSTREAM_DEADLINE_MS + 60_000;
+
+/** The deadline a client gives one request to `url`: PROXIED_DEADLINE_MS on loopback (a metering proxy slot or the keyless fake), else UPSTREAM_DEADLINE_MS. */
+export const compatDeadlineMs = (url: string) => (isLoopbackUrl(url) ? PROXIED_DEADLINE_MS : UPSTREAM_DEADLINE_MS);
+/** Waits before a request whose connection failed before any response is sent again (A23). A particle request is sent again only when its connection was refused, a failure `compatNeverSent` proves happened before any byte was sent: any transport failure it does not prove may come after Particle billed the generation, so it is answered 504 like a timeout (issue #288). */
 const TRANSPORT_RETRY_MS = [1000, 4000];
 /** A connection that closed or reset before the provider answered; never a timeout or an abort. */
 const transportFailure = (e: unknown) => {
@@ -194,7 +215,8 @@ export function requestResetMs(headers: Headers, now = Date.now()): number | nul
  * concurrency per provider, plus a pause after a 429 or 503 that names a
  * retry-after. Every cell a process serves shares one controller, so cells on
  * one key cannot jointly exceed its limits. A request that cannot be admitted
- * within `maxWaitMs` is refused with 429 before it reaches the provider.
+ * within `maxWaitMs` (at most ADMISSION_MAX_WAIT_MS) is refused with 429
+ * before it reaches the provider.
  */
 export class AdmissionController {
   private state = new Map<string, { inflight: number; window: Array<{ at: number; tokens: number }>; pausedUntil: number }>();
@@ -226,7 +248,7 @@ export class AdmissionController {
   /** Admit one request; resolves when it fits, with `release` to call when it finishes (with the tokens it really used). */
   async acquire(provider: string, tokens: number, model?: string | null): Promise<{ waited_ms: number; release: (actualTokens?: number) => void }> {
     const started = this.now();
-    const maxWait = this.opts.maxWaitMs ?? 600_000;
+    const maxWait = Math.min(this.opts.maxWaitMs ?? ADMISSION_MAX_WAIT_MS, ADMISSION_MAX_WAIT_MS);
     for (;;) {
       const w = this.waitFor(provider, tokens, model);
       if (w <= 0) break;
@@ -257,7 +279,7 @@ export class AdmissionController {
   pause(provider: string, ms: number) {
     if (!(ms > 0)) return;
     const s = this.s(provider);
-    s.pausedUntil = Math.max(s.pausedUntil, this.now() + Math.min(ms, 600_000));
+    s.pausedUntil = Math.max(s.pausedUntil, this.now() + Math.min(ms, ADMISSION_MAX_WAIT_MS));
     this.stats.pauses++;
   }
 }
@@ -396,7 +418,11 @@ export class MeteringProxy {
     /** Provider routes answer only requests that present this token (credential, `x-proxy-cell` or a `/_t/<token>` prefix). */
     cellToken?: string | null;
     /** With a cell token: also admit requests from this machine (loopback, Docker bridges). */
-    trustLocal?: boolean } = {}) {}
+    trustLocal?: boolean } = {}) {
+    for (const [prov, base] of Object.entries(options.upstream ?? {})) {
+      if (base && carriesKeyInCleartext(base)) throw new Error(`upstream ${prov}=${base} would carry the ${prov} key in cleartext; a host that is not loopback is reached only over https`);
+    }
+  }
   get port(): number { return this.server!.port as number; }
   /** Charge the slot's provider requests to `key` (a cell id) from now on, labeled with the brain and phase when given. */
   bind(slot: string, key: string, tag: { brain?: string | null; phase?: Phase | null } = {}) { this.bindings.set(slot, { key, brain: tag.brain ?? null, phase: tag.phase ?? null }); }
@@ -635,14 +661,15 @@ export class MeteringProxy {
         input_tokens: cost?.input_tokens, output_tokens: cost?.output_tokens, charged_reservation: !!bounded && !cost, streamed: isStream, ...tagged,
         ...(waitMs ? { admission_wait_ms: waitMs } : {}), ...(retryAfter !== null ? { retry_after_ms: retryAfter } : {}), ...(retries ? { transport_retries: retries } : {}) });
     };
+    const deadline = AbortSignal.timeout(UPSTREAM_DEADLINE_MS);
     let res!: Response;
     for (;;) {
-      try { res = await send(target, { method: req.method, headers, body: outBody, timeout: false, signal: AbortSignal.timeout(UPSTREAM_DEADLINE_MS) } as RequestInit); break; }
+      try { res = await send(target, { method: req.method, headers, body: outBody, timeout: false, signal: deadline } as RequestInit); break; }
       catch (e) {
         if (entry) p.lease.settle(entry, null);
         this.charge(key, prov, bounded?.model ?? null, reserved, !!bounded, tag);
-        const midFlight = prov === 'particle' && compatConnectionLost(e);
-        const again = !midFlight && retries < TRANSPORT_RETRY_MS.length && transportFailure(e);
+        const midFlight = prov === 'particle' && compatMayHaveBilled(e);
+        const again = retries < TRANSPORT_RETRY_MS.length && transportFailure(e) && (prov !== 'particle' || compatNeverSent(e));
         this.log({ at, key, provider: prov, route, model, outcome: 'failed', reason: `${(e as Error).message.slice(0, 280)}${again ? ' (sent again)' : ''}`, reserved_usd: reserved, actual_usd: reserved, charged_reservation: !!bounded, ...tagged });
         if (!again) {
           admitted?.release();
@@ -671,7 +698,19 @@ export class MeteringProxy {
       ).finally(done);
       return new Response(client, { status: res.status, headers: out });
     }
-    const text = await res.text();
+    let text: string;
+    try { text = await res.text(); }
+    catch (e) {
+      admitted?.release();
+      const answer = json((e as Error).name === 'TimeoutError' || prov === 'particle' ? 504 : 502, 'product_error', `upstream body failed: ${(e as Error).message}`);
+      try {
+        if (entry) p.lease.settle(entry, null);
+        this.charge(key, prov, bounded?.model ?? null, reserved, !!bounded, tag);
+        this.observe(key, 'failed');
+        this.log({ at, key, provider: prov, route, model, outcome: 'failed', status: res.status, reason: `reading the ${res.status} body failed: ${(e as Error).message.slice(0, 250)}`, reserved_usd: reserved, actual_usd: reserved, charged_reservation: !!bounded, ...tagged });
+      } catch (err) { console.error(`metering-proxy: recording a failed ${prov} body failed, so its reservation stays open: ${(err as Error).message}`); }
+      return answer;
+    }
     let cost: ReturnType<typeof usageCost> = null;
     let parsed = true;
     try { JSON.parse(text); } catch { parsed = false; }
@@ -739,8 +778,16 @@ export function parseProxyArgs(argv: string[]): ProxyCliArgs {
     streaming, upstream, newRun: argv.includes('--new-run'), controlToken: one('--control-token') ?? process.env.SHOOTOUT_PROXY_CONTROL_TOKEN ?? null,
     cellToken: one('--cell-token') ?? process.env.SHOOTOUT_CELL_TOKEN ?? null, trustLocal: argv.includes('--trust-local'), routeCaps: parseRouteCaps(argv),
     admission: argv.includes('--admission') ? parseAdmission(argv.flatMap((x, i) => x === '--admission' ? [argv[i + 1]] : [])) : null,
-    admissionMaxWaitMs: one('--admission-max-wait-s') ? Number(one('--admission-max-wait-s')) * 1000 : null,
+    admissionMaxWaitMs: admissionMaxWait(one('--admission-max-wait-s')),
   };
+}
+
+/** `--admission-max-wait-s` in milliseconds: a positive number of seconds up to ADMISSION_MAX_WAIT_MS, which clients' PROXIED_DEADLINE_MS covers. */
+function admissionMaxWait(raw: string | undefined): number | null {
+  if (raw === undefined) return null;
+  const ms = Number(raw) * 1000;
+  if (!(ms > 0) || ms > ADMISSION_MAX_WAIT_MS) throw new Error(`--admission-max-wait-s must be a positive number of seconds up to ${ADMISSION_MAX_WAIT_MS / 1000}, the longest wait a proxied client's deadline covers (got ${JSON.stringify(raw)})`);
+  return ms;
 }
 
 /** `--route-caps extraction=4096,reader=2048,judge=2048 --route-class harness=reader,judge=judge [--default-route-class extraction]`; null without --route-caps. */

@@ -1,7 +1,7 @@
 # Learn, evaluate, and extend gbrain
 
 This index lists every published report by the question it answers. It describes the repository as it stands:
-gbrain-evals v0.10.139, with gbrain master `3ec766c40` (v0.60.531.0) as the product under test. Results measured at
+gbrain-evals v0.10.140, with gbrain master `ca1281a2e` (v0.60.542.0) as the product under test. Results measured at
 other gbrain commits name that commit in their report. Everything above [Changelog](#changelog) is current; the
 changelog at the bottom records how this index changed.
 
@@ -72,7 +72,7 @@ describe current behavior first, then the older work behind a decision.
 | What does today's gbrain answer on LongMemEval end to end? | [October 7 current-pin run](benchmarks/2026-10-07-longmemeval-w10a-current-pin.md) ([preregistration](benchmarks/2026-10-06-longmemeval-w10-preregistration.md)) |
 | Which reader should read gbrain's results? | [October 7 reader replay on frozen retrieval](benchmarks/2026-10-07-longmemeval-w10b-reader-replay.md) |
 | Is gbrain worth it compared with pasting the whole history into the reader? | [October 7 full-context comparison](benchmarks/2026-10-07-longmemeval-w10c-full-context.md) |
-| How does particle-1 read the same W10 prompts, and does gbrain's retrieval hold up against particle-1 reading the whole history? | [November 1 particle-1 replay](benchmarks/2026-11-01-longmemeval-particle-replay/REPORT.md) ([preregistration](benchmarks/2026-11-01-longmemeval-particle-replay/PREREGISTRATION.md), [finding with a keyless recheck and cross-family second judges](findings/2026-11-01-particle-1-longmemeval-w10b.md); development, 500 + 150 questions): 457 of 500, 3.4 points behind Opus 5.5 at about a twenty-third of its cost per correct answer; gbrain within 7 points of particle-1's whole history |
+| How does particle-1 read the same W10 prompts, and does gbrain's retrieval hold up against particle-1 reading the whole history? | [November 1 particle-1 replay](benchmarks/2026-11-01-longmemeval-particle-replay/REPORT.md) ([preregistration](benchmarks/2026-11-01-longmemeval-particle-replay/PREREGISTRATION.md), [finding with a keyless recheck and cross-family second judges](findings/2026-11-01-particle-1-longmemeval-w10b.md); development, 500 + 150 questions): 457 of 500, 3.4 points behind Opus 5.5 at about a twenty-third of its cost per correct answer; gbrain within 7 points of particle-1's whole history. Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which makes particle-1. gbrain is Garry Tan's own project. ([Disclosures](disclosures.md)) |
 | How much of what gbrain delivers to the reader does the answer need, how much does a reader write down, and how often does a wrong answer commit to a wrong value? | [October 8 reading headroom recount](benchmarks/2026-10-08-reading-headroom.md) ($0, from the W10 receipts, not preregistered): the answer's own sessions are 41% of the 15,823 chars/4 tokens delivered (8,981 on multi-session questions), frontier readers' notes run 138 to 151 tokens, and 19 to 29 of 470 answerable questions get a committed wrong value, by reader |
 | Can a smaller hand-off than whole conversations keep the reader's accuracy for less money? | [October 8 evidence architecture pilot](benchmarks/2026-10-08-evidence-architecture-pilot.md) ([preregistration](benchmarks/2026-10-08-evidence-architecture-pilot-preregistration.md); development, 100 questions): a Haiku-written brief keeps Sonnet 5.5 at 92 against 93 for whole sessions at $0.0079 against $0.0473 a question, but Haiku reading the whole sessions itself (89, $0.0025) matches the brief at lower cost and latency, so the preregistered off-ramp fires; truncation and small digests lose 20 to 50 points |
 | Does the evidence brief hold up on questions the pilot never saw? | [October 8 evidence brief confirmation (A6)](benchmarks/2026-10-08-evidence-brief-confirmation.md) ([preregistration](benchmarks/2026-10-08-evidence-brief-confirmation-preregistration.md); development, 400 questions): the 2,000-token Haiku brief costs Sonnet 5.5 3.0 points (375 to 363, 95% interval -5.25 to -0.75), so it is not shown non-inferior at the 3-point tolerance and does not go to the sealed set; FALLBACK loses 1.25 points at 44% of the dollars (inconclusive after Holm); truncation fails |
@@ -131,6 +131,7 @@ gap does not isolate the effect of a graph alone.
 | Which judge models may grade a forecasting take, among the verdicts confident enough for gbrain's auto-resolve rule to apply? | [October 16 take grading, mirrored from gbrain #6882](benchmarks/2026-10-16-take-grading.md) ([preregistration](benchmarks/2026-10-16-take-grading-preregistration.md)): `gpt-6.1-sol` applies 496 verdicts with none wrong (upper bound 0.6%) and qualifies; `claude-opus-5-5` matches every gold verdict but is rarely confident enough to apply, `claude-sonnet-5-5` applies one wrong verdict |
 | Does gbrain's private forecast journal rank holders correctly, count every open prediction, and stay hidden from remote callers? | [October 17 forecast journal, mirrored from gbrain #6886](benchmarks/2026-10-17-forecast-journal.md) ([preregistration](benchmarks/2026-10-17-forecast-journal-preregistration.md)): on synthetic holders of known skill, median Spearman ρ 0.905, who-was-right set-F1 1.000, exact counts, 8/8 remote probes; shipped in v0.60.286.0 |
 | What did gbrain fix wave 9 cost on fact inserts, and can takes-quality receipts from before and after it be compared? | [October 5 fix wave 9 mirror, from gbrain #6111](benchmarks/2026-10-05-fix-wave-9-mirror.md): pinning `search_path` makes bulk fact inserts about 10-13% slower with fingerprints unchanged; takes-quality protocol 1 and 2 receipts are dissimilar inputs |
+| Do gbrain's shipped `query`, `briefing` and `fact-check` skills help Opus 5.5 and GPT-6.1 Sol, and does a skill optimizer have room to beat one rewrite of them? | [November 2 SkillOpt method report (N15)](benchmarks/2026-11-01-skillopt-method/REPORT.md) ([preregistration](benchmarks/2026-11-01-skillopt-method/PREREGISTRATION.md), [probe](benchmarks/2026-11-01-skillopt-method/probe/frontier/README.md)): on held-out test tasks, the shipped skill beats no skill on 5 of 6 skill and model pairs (not `query` on Sol: 0.72 against 0.86), and one Opus 5.5 rewrite scores 1.00 on all six and beats the shipped skill on each (by 0.22 to 0.53), mostly by fixing output form. With nothing left above one rewrite, the optimizer benchmark is a CUT-CANDIDATE and was not run |
 | Can a skill improve on held-out tasks, can the judge detect cheating, and does SkillOpt's iterative loop beat one rewrite? | [November 1 SkillOpt re-baseline](benchmarks/2026-11-01-skillopt-rebaseline/REPORT.md) ([preregistration](benchmarks/2026-11-01-skillopt-rebaseline/PREREGISTRATION.md)): all four practice skills improve held out, and both skills tested for transfer help the other model in 4 of 4 Haiku 5.5 and Sonnet 5.5 pairs; the full loop ties a one-shot rewrite again (0.54 against 0.54) and the iterative loop is a CUT-CANDIDATE; Cat 32's gate never saw a gaming candidate (partial). The [June 3 run](benchmarks/2026-06-03-skillopt.md) used other models and does not pool with it |
 | Can the system distinguish kinds of claims and sensible confidence? | [Calibration and proposed takes](benchmarks/2026-05-18-brainbench-cat14-cat15-calibration.md) (the advice result was retracted on September 28, 2026), [October 2 blind rerun of the advice test](benchmarks/2026-10-02-cat14-rerun.md) |
 | When gbrain fails, refuses or needs a decision, do real agents (Claude Code, Codex) ask the user before spending money or destroying data, and do they recover from the errors they can fix? | [Agent operator outcomes (Cat 41): what it measures and its gate](benchmarks/2026-10-03-agent-operator-protocol.md), [runs: v0.60.35.0 baseline, gate passed at `b3f4e8b`](benchmarks/2026-10-03-agent-operator.md) |
@@ -195,7 +196,7 @@ These documents fix a method before measuring. They publish no capability scores
 | Will a release still look better on questions nobody tuned against? | [September 29 sealed confirmation set](benchmarks/2026-09-29-sealed-confirmation-protocol.md) |
 | What end-to-end task does a 10x memory claim stand on, and what sample can show it? | [October 8 program primary preregistration (T0) and power (PW)](benchmarks/2026-10-08-program-primary-preregistration.md) |
 | What harder workload replaces T0's ceiling, and how was it calibrated? | [October 8 harder program primary preregistration (T0b), with its three calibration rounds](benchmarks/2026-10-08-program-primary-hard-preregistration.md) |
-| Do gbrain's shipped `query`, `briefing` and `fact-check` skills leave room for a skill optimizer, or does one rewrite take all the gain? (probe 1 found the v1 tasks saturated; the second probe, on the hardened v2 tasks, has not run) | [November 1 SkillOpt method A1 probe preregistration (N15)](benchmarks/2026-11-01-skillopt-method/PREREGISTRATION.md), with [probe 1's summary](benchmarks/2026-11-01-skillopt-method/probe/probe1/summary.json) and its task sets: [v2](../eval/data/skillopt-method-v2/README.md), which the probe reads, and the frozen [v1](../eval/data/skillopt-method-v1/README.md) |
+| Do gbrain's shipped `query`, `briefing` and `fact-check` skills leave room for a skill optimizer, or does one rewrite take all the gain? | [November 1 SkillOpt method preregistration (N15)](benchmarks/2026-11-01-skillopt-method/PREREGISTRATION.md) with three amendments: Haiku 5.5 probes 1 and 2 ([probe 1's summary](benchmarks/2026-11-01-skillopt-method/probe/probe1/summary.json)), the frontier probe on Opus 5.5 and GPT-6.1 Sol, and the one test-split read reported in the [November 2 report](benchmarks/2026-11-01-skillopt-method/REPORT.md); task sets: [v2](../eval/data/skillopt-method-v2/README.md), which the probe reads, and the frozen [v1](../eval/data/skillopt-method-v1/README.md) |
 
 ## Data and methods
 
@@ -224,6 +225,7 @@ a mapping from a question to the documents considered relevant.
 - [November 1 particle-1 tokenizer calibration](benchmarks/2026-11-01-particle-1-calibration/README.md)
   (development data, not a result): particle-1's prompt tokens track `o200k_base` with a factor of 1.0488 and a
   largest error of 0.50% over 20 packed Q1 prompts of about 8,100 tokens; other prompt sizes still need samples.
+  Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which makes particle-1.
 - [External question authors](../eval/external-authors/README.md): submitting new
   questions and understanding the existing synthetic questions.
 - [Credits](../eval/CREDITS.md) and
@@ -261,6 +263,27 @@ and [repository writing guide](../CLAUDE.md). The
 procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
+
+### 2026-11-02: SkillOpt method report row
+
+The results table gained a row for the [November 2 SkillOpt method report](benchmarks/2026-11-01-skillopt-method/REPORT.md): the shipped skill beats no skill on 5 of 6 frontier pairs, one rewrite scores 1.00 on all six, and the optimizer benchmark is a CUT-CANDIDATE. The N15 preregistration row no longer says the second probe has not run; it names the three amendments and links the report. No other row changed.
+
+### 2026-11-02: Re-pin to gbrain `ca1281a2e`; opening names v0.10.140
+
+The opening names v0.10.140 (was v0.10.139) and gbrain master `ca1281a2e` (v0.60.542.0) as the product under test (was
+`3ec766c40`, v0.60.531.0). No row changed: every report keeps the commit it measured, and the November 1 SkillOpt
+re-baseline ran at `3ec766c40`, before gbrain made one gated rewrite its default.
+
+### 2026-11-02: The particle-1 replay row carries the gbrain line
+
+The November 1 particle-1 replay row reports gbrain's result beside particle-1's, so after the Particle line it now
+carries the gbrain line from [disclosures](disclosures.md): gbrain is Garry Tan's own project. The row reports no OpenAI model's result, so it
+carries no OpenAI line. No claim changed.
+
+### 2026-11-01: particle-1 entries carry the disclosure
+
+The particle-1 replay row and the tokenizer calibration entry carry the line from [disclosures](disclosures.md):
+Y Combinator, which Garry Tan runs, is an investor in Particle. No claim changed.
 
 ### 2026-11-01: SkillOpt method preregistration row
 

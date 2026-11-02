@@ -12,6 +12,7 @@
  */
 import { afterEach, describe, expect, spyOn, test } from 'bun:test';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, existsSync, writeFileSync } from 'node:fs';
+import { createServer, type AddressInfo, type Socket } from 'node:net';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import {
@@ -400,6 +401,18 @@ describe('metering proxy', () => {
     expect(c.committed().run).toBeCloseTo(failed.reserved_usd, 12);
   });
 
+  // Value: protects=the workload-route proxy never sends a provider's real key over http to a host that is not loopback (issue #277); fails_when=an --upstream with an http URL that is not loopback is accepted; why_new=assertMetered guards clients only, and this proxy swaps in the real key itself; seam=none; no_claim=TLS certificate checks
+  test('an upstream that is not loopback must be https, because the proxy sends the real key there (#277)', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'mp-cleartext-')); dirs.push(dir);
+    const ledgerPath = join(dir, 'ledger.sqlite');
+    initLedger({ ledgerPath });
+    const run = BudgetRun.open({ runner: 'mp-test', budgetUsd: 1, ledgerPath });
+    const start = (upstreams: Record<string, string>) => startMeteringProxy({ run, cellId: 'c', requestLogPath: join(dir, 'l.jsonl'), bodiesDir: join(dir, 'b'), labels: ['reader'], realKeys: { PARTICLE_API_KEY: 'pk-test' }, upstreams });
+    await expect(start({ particle: 'http://api.particle.ai' })).rejects.toThrow('upstream particle=http://api.particle.ai would carry the particle key in cleartext');
+    await expect(start({ openai: 'http://10.0.0.5:8080/v1' })).rejects.toThrow('cleartext');
+    await (await start({ particle: 'http://127.0.0.1:9', openai: 'https://api.openai.com' })).close();
+  });
+
   test('envFor offers only providers with a launcher key or an upstream override', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'mp-env-')); dirs.push(dir);
     const ledgerPath = join(dir, 'ledger.sqlite');
@@ -545,6 +558,75 @@ describe('particle through the metering proxy', () => {
       expect(Date.now() - t0).toBeGreaterThanOrEqual(answerMs);
       expect(readRequestLog(join(dir, 'log.jsonl'), join(dir, 'bodies'))).toMatchObject([{ method: 'GET', path: '/v1/models', status: 200, settlement: 'free' }]);
     } finally { await proxy.close(); slow.stop(true); }
+  }, 20_000);
+
+  // Value: protects=the workload route's proxy answers a particle request that failed after it went out with a 504, which no particle client sends again (issue #282); fails_when=it answers a timeout, a reset or a body that fails after the headers with the 502 a client retries, or answers a refused connection, which never reached Particle, with a 504; why_new=the lease proxy already answers these 504 (#250, #270); seam=loopback sockets that hang, reset, close mid-body or refuse, and a shortened upstream deadline; no_claim=whether Particle bills a dropped request
+  test('a particle request that times out, resets or loses its body after it went out is answered 504; a refused connection, and another provider, get the 502 (#282)', async () => {
+    const { UPSTREAM_DEADLINE_MS } = await import('../../eval/runner/metering-proxy.ts');
+    const faults: Record<string, (s: Socket) => void> = {
+      hang: () => {},
+      reset: s => s.resetAndDestroy(),
+      body: s => { s.write('HTTP/1.1 200 OK\r\ncontent-type: application/json\r\ncontent-length: 1000\r\n\r\n{"id":"x",'); setTimeout(() => s.destroy(), 20); },
+    };
+    const timeout = AbortSignal.timeout;
+    AbortSignal.timeout = (ms: number) => timeout.call(AbortSignal, ms === UPSTREAM_DEADLINE_MS ? 300 : ms);
+    const seen: string[] = [];
+    const sockets: Socket[] = [];
+    try {
+      for (const fault of ['hang', 'reset', 'body', 'refused']) {
+        const upstream = createServer(s => { sockets.push(s); s.once('data', () => { seen.push(fault); faults[fault]?.(s); }); });
+        await new Promise<void>(r => upstream.listen(0, '127.0.0.1', r));
+        const base = `http://127.0.0.1:${(upstream.address() as AddressInfo).port}`;
+        if (fault === 'refused') await new Promise<void>(r => upstream.close(() => r()));
+        const dir = mkdtempSync(join(tmpdir(), 'mp-particle-lost-')); dirs.push(dir);
+        const ledgerPath = join(dir, 'ledger.sqlite');
+        initLedger({ ledgerPath });
+        const run = BudgetRun.open({ runner: 'mp-particle-lost-test', budgetUsd: 1, ledgerPath });
+        const proxy = await startMeteringProxy({ run, cellId: `cell-${fault}`, requestLogPath: join(dir, 'log.jsonl'), bodiesDir: join(dir, 'bodies'), labels: ['reader'], upstreams: { particle: base, openai: base }, realKeys: { PARTICLE_API_KEY: 'stub-not-a-real-key', OPENAI_API_KEY: 'stub-not-a-real-key' } });
+        try {
+          const env = proxy.envFor('reader');
+          const particle = await post(`${env.PARTICLE_BASE_URL}/chat/completions`, { authorization: `Bearer ${env.PARTICLE_API_KEY}` }, compatRequest('particle:particle-1', ASK, {}, env).body);
+          const openai = await post(`${env.OPENAI_BASE_URL}/chat/completions`, { authorization: `Bearer ${env.OPENAI_API_KEY}` }, { model: 'gpt-6.1-sol', max_completion_tokens: 20, messages: ASK });
+          const lost = fault !== 'refused';
+          expect([fault, particle.status, ((await particle.json()) as any).error.type]).toEqual([fault, lost ? 504 : 502, lost ? 'mpw_proxy_upstream_lost' : 'mpw_proxy_upstream_unreachable']);
+          expect([fault, openai.status, ((await openai.json()) as any).error.type]).toEqual([fault, 502, 'mpw_proxy_upstream_unreachable']);
+          expect(readRequestLog(join(dir, 'log.jsonl'), join(dir, 'bodies')).map(l => [l.provider, l.status, l.settlement])).toEqual([['particle', lost ? 504 : 502, 'charged-reservation'], ['openai', 502, 'charged-reservation']]);
+        } finally { await proxy.close(); if (fault !== 'refused') upstream.close(); }
+      }
+    } finally { AbortSignal.timeout = timeout; for (const s of sockets) s.destroy(); }
+    expect(seen).toEqual(['hang', 'hang', 'reset', 'reset', 'body', 'body']);
+  }, 20_000);
+
+  // Value: protects=the workload route's proxy answers a particle request that may have gone out before it failed with a 504, whatever Bun names the failure (issue #288); fails_when=it answers a malformed status line, a bad Content-Length, a bad chunk or a body that fails to decompress with the 502 a client sends again, or answers a failure proven to happen before sending (a refused connection, an unresolvable host) with a 504; why_new=compatMayHaveBilled reads every transport failure that is not proven to happen before sending as lost; seam=loopback sockets that read the request and answer badly, a closed port and an .invalid host; no_claim=what Particle's edge sends when it fails
+  test('a particle request whose upstream answers a malformed status line, a bad Content-Length, a bad chunk or a body that fails to decompress is answered 504 and sent upstream once; a refused connection or an unresolvable host, and another provider, keep the 502 (#288)', async () => {
+    const answers: Record<string, ((s: Socket) => void) | null> = {
+      'status line': s => s.end('not http at all\r\n\r\n'),
+      'content-length': s => s.end('HTTP/1.1 200 OK\r\ncontent-length: abc\r\n\r\n{}'),
+      chunk: s => s.end('HTTP/1.1 200 OK\r\ncontent-type: application/json\r\ntransfer-encoding: chunked\r\n\r\nzz\r\nhello\r\n0\r\n\r\n'),
+      gzip: s => s.end('HTTP/1.1 200 OK\r\ncontent-type: application/json\r\ncontent-encoding: gzip\r\ncontent-length: 10\r\n\r\nnotgzip!!!'),
+      refused: null,
+      dns: null,
+    };
+    for (const [fault, answer] of Object.entries(answers)) {
+      let hits = 0;
+      const upstream = createServer(s => { s.on('error', () => {}); s.once('data', () => { hits++; answer?.(s); }); });
+      await new Promise<void>(r => upstream.listen(0, '127.0.0.1', r));
+      const base = fault === 'dns' ? 'https://particle-288.invalid' : `http://127.0.0.1:${(upstream.address() as AddressInfo).port}`;
+      if (!answer) await new Promise<void>(r => upstream.close(() => r()));
+      const dir = mkdtempSync(join(tmpdir(), 'mp-particle-288-')); dirs.push(dir);
+      const ledgerPath = join(dir, 'ledger.sqlite');
+      initLedger({ ledgerPath });
+      const run = BudgetRun.open({ runner: 'mp-particle-288-test', budgetUsd: 1, ledgerPath });
+      const proxy = await startMeteringProxy({ run, cellId: `cell-288-${fault.replace(/ /g, '-')}`, requestLogPath: join(dir, 'log.jsonl'), bodiesDir: join(dir, 'bodies'), labels: ['reader'], upstreams: { particle: base, openai: base }, realKeys: { PARTICLE_API_KEY: 'stub-not-a-real-key', OPENAI_API_KEY: 'stub-not-a-real-key' } });
+      try {
+        const env = proxy.envFor('reader');
+        const particle = await post(`${env.PARTICLE_BASE_URL}/chat/completions`, { authorization: `Bearer ${env.PARTICLE_API_KEY}` }, compatRequest('particle:particle-1', ASK, {}, env).body);
+        const lost = answer !== null;
+        expect([fault, particle.status, ((await particle.json()) as any).error.type, hits]).toEqual([fault, lost ? 504 : 502, lost ? 'mpw_proxy_upstream_lost' : 'mpw_proxy_upstream_unreachable', lost ? 1 : 0]);
+        const openai = await post(`${env.OPENAI_BASE_URL}/chat/completions`, { authorization: `Bearer ${env.OPENAI_API_KEY}` }, { model: 'gpt-6.1-sol', max_completion_tokens: 20, messages: ASK });
+        expect([fault, openai.status]).toEqual([fault, 502]);
+      } finally { await proxy.close(); if (answer) upstream.close(); }
+    }
   }, 20_000);
 });
 

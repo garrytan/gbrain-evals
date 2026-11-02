@@ -1,12 +1,16 @@
 # particle-1 on W10's LongMemEval prompts: 3.4 points behind Opus 5.5 at about a twenty-third of the cost per correct answer
 
+*Note added 2026-11-01, after publication:* Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which makes particle-1. See [disclosures](../../disclosures.md).
+
+*Note added 2026-11-02, after publication:* gbrain is Garry Tan's own project. Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
+
 Measured 2026-11-01, 05:46 to 05:59 UTC. Status: **Complete** (all four arms, 500 + 3 × 150 questions, no reader errors, no truncated answers, preregistered bars 1 to 4 pass in every arm). Evidence class: development (LongMemEval-S was used to tune gbrain's retrieval). Reader under test: Particle AI's `particle-1` (`particle:particle-1`), `reasoning_effort: "high"` with 16,000 `max_completion_tokens`, plus one descriptive arm at `"none"`. Comparators: the committed W10 rows of `claude-opus-5-5`, `claude-sonnet-5-5` and `gpt-6.1-sol`; no comparator model was called again. Judge: LongMemEval's official prompt on `gpt-4o-2024-08-06`, W10's primary judge. [Preregistration](PREREGISTRATION.md) at `85f55688`, amended at `b6e7f7aa` before any paid call; runner `eval/runner/batch/w10-particle.ts` at `e29ad9c1`. **The 500-question and 150-question tables are separate cohorts; do not set one beside the other.**
 
 [gbrain](https://github.com/garrytan/gbrain) is a Markdown-first memory system for agents. [LongMemEval](https://arxiv.org/abs/2410.10813) asks questions about long histories of old conversations. In October, W10 measured which reader model should read gbrain's retrieval ([W10b](../2026-10-07-longmemeval-w10b-reader-replay.md), 500 questions on frozen gbrain `a7cb37b` retrieval) and whether gbrain's retrieval holds up against pasting the whole history into the reader ([W10c](../2026-10-07-longmemeval-w10c-full-context.md), 150 questions). particle-1 is a low-cost reasoning model with a 1,048,576-token window, served through an OpenAI-compatible API at $0.25 per million input tokens and $1.00 per million output tokens. This replay sends particle-1 the exact prompts W10's readers received, byte for byte, and pairs its answers question by question with theirs.
 
 ## The finding
 
-**particle-1 answers 457 of 500 W10b questions, 3.4 points behind Opus 5.5 and within 1.5 points of Sonnet 5.5 and GPT-6.1 Sol, for about a twenty-third of Opus 5.5's cost per correct answer.** The paired difference against Opus 5.5 is -3.4 points (95% interval -5.6 to -1.4, exact McNemar p = 0.002); against Sonnet 5.5 and GPT-6.1 Sol the intervals include zero. particle-1 cost $0.0043 per correct answer at list price, against $0.099 for Opus 5.5 at list ($0.051 at the batch price W10 paid). Decision B's stop rule (an upper bound below -10 points against Opus 5.5) does not fire: the upper bound is -1.4.
+**particle-1 answers 457 of 500 W10b questions, 3.4 points behind Opus 5.5 and within 1.5 points of Sonnet 5.5 and GPT-6.1 Sol, for about a twenty-third of Opus 5.5's cost per correct answer.** The paired difference against Opus 5.5 is -3.4 points (95% interval -5.6 to -1.4, exact McNemar p = 0.002); against Sonnet 5.5 and GPT-6.1 Sol the intervals include zero. particle-1 cost $0.0043 per correct answer at list price, against $0.099 for Opus 5.5 at list ($0.051 at the batch price W10 paid; [corrected 2026-11-01](../../corrections.md#longmemeval)). Decision B's stop rule (an upper bound below -10 points against Opus 5.5) does not fire: the upper bound is -1.4.
 
 **Most of the gap to Opus 5.5 is in preference questions, where particle-1 treats a request for advice as a lookup and declines.** Seven of the 17 net questions are single-session-preference questions: Opus 5.5 answered all 30, particle-1 23. The concrete case below shows the pattern.
 
@@ -38,9 +42,9 @@ Measured 2026-11-01, 05:46 to 05:59 UTC. Status: **Complete** (all four arms, 50
 | Reader | Effort | Correct, official judge | particle-1 minus this reader (95% interval) | particle-1 wins / losses | McNemar p | Mean input tokens | Mean output tokens | $ per correct, list | $ per correct, batch |
 |---|---|---|---|---|---|---|---|---|---|
 | `particle-1` | high | **457 (91.4%)** | | | | 13,951 | 425 | **$0.0043** | none (no batch API) |
-| `claude-opus-5-5` | low | 474 (94.8%) | **-3.4 (-5.6 to -1.4)** | 6 / 23 | 0.002 | 22,077 | 294 | $0.0994 | $0.0507 |
-| `claude-sonnet-5-5` | low | 462 (92.4%) | -1.0 (-3.2 to +1.0) | 13 / 18 | 0.47 | 22,077 | 203 | $0.0500 | $0.0255 |
-| `gpt-6.1-sol` | medium | 464 (92.8%) | -1.4 (-3.6 to +0.6) | 11 / 18 | 0.26 | 13,695 | 110 | $0.0307 | $0.0154 |
+| `claude-opus-5-5` | low | 474 (94.8%) | **-3.4 (-5.6 to -1.4)** | 6 / 23 | 0.002 | 22,077 | 294 | $0.0994 ([corrected 2026-11-01](../../corrections.md#longmemeval)) | $0.0507 ([corrected 2026-11-01](../../corrections.md#longmemeval)) |
+| `claude-sonnet-5-5` | low | 462 (92.4%) | -1.0 (-3.2 to +1.0) | 13 / 18 | 0.47 | 22,077 | 203 | $0.0500 | $0.0255 ([corrected 2026-11-01](../../corrections.md#longmemeval)) |
+| `gpt-6.1-sol` | medium | 464 (92.8%) | -1.4 (-3.6 to +0.6) | 11 / 18 | 0.26 | 13,695 | 110 | $0.0307 ([corrected 2026-11-01](../../corrections.md#longmemeval)) | $0.0154 ([corrected 2026-11-01](../../corrections.md#longmemeval)) |
 
 Input tokens are as each provider counts them (particle-1's listing names DeepSeek's tokenizer). particle-1's output includes 357 reasoning tokens per answer on average. Its latency, wall time per reader call with retries, was 3.7 s at the median and 14.9 s at p95; the comparators ran through batch APIs, which record no latency.
 
@@ -64,8 +68,8 @@ Input tokens are as each provider counts them (particle-1's listing names DeepSe
 | `particle-1` | gbrain `c5fb0201` | none | 118 (78.7%) | 14,027 | 127 | $0.0036 | none | 2.9 s / 6.7 s |
 | `claude-sonnet-5-5` | whole history | low | 144 (96.0%) | 171,596 | 234 | $0.3455 | $0.1728 | not measured |
 | `claude-sonnet-5-5` | gbrain `c5fb0201` (W10a) | low | 139 (92.7%) | 22,242 | 210 | $0.0466 | $0.0233 | not measured |
-| `gpt-6.1-sol` | whole history | medium | 141 (94.0%) | 106,683 | 116 | $0.2145 | $0.1073 | not measured |
-| `gpt-6.1-sol` | gbrain `c5fb0201` | medium | 137 (91.3%) | 13,794 | 114 | $0.0287 | $0.0144 | not measured |
+| `gpt-6.1-sol` | whole history | medium | 141 (94.0%) | 106,683 | 116 | $0.2145 ([corrected 2026-11-01](../../corrections.md#longmemeval)) | $0.1073 ([corrected 2026-11-01](../../corrections.md#longmemeval)) | not measured |
+| `gpt-6.1-sol` | gbrain `c5fb0201` | medium | 137 (91.3%) | 13,794 | 114 | $0.0287 ([corrected 2026-11-01](../../corrections.md#longmemeval)) | $0.0144 ([corrected 2026-11-01](../../corrections.md#longmemeval)) | not measured |
 
 Paired differences on these 150 questions (95% intervals; wins and losses are for the first-named arm):
 
@@ -128,7 +132,7 @@ Before R1, the weight canary (`scripts/particle-canary.ts`: 12 short prompts at 
 
 ## What to use and what to avoid
 
-- **Use particle-1 where cost per correct answer matters and a few points of accuracy do not.** On gbrain's retrieval it is within 1.5 points of Sonnet 5.5 and GPT-6.1 Sol at about a twelfth and a seventh of their list cost per correct answer. Opus 5.5 is still 3.4 points better, and that gap is real (p = 0.002).
+- **Use particle-1 where cost per correct answer matters and a few points of accuracy do not.** On gbrain's retrieval it is within 1.5 points of Sonnet 5.5 and GPT-6.1 Sol at about a twelfth and a seventh ([corrected 2026-11-01](../../corrections.md#longmemeval)) of their list cost per correct answer. Opus 5.5 is still 3.4 points better, and that gap is real (p = 0.002).
 - **Avoid particle-1 for preference-style requests without a prompt change.** It treats "any tips?" as a lookup and abstains when the retrieved sessions hold no explicit answer.
 - **Keep `reasoning_effort: "high"`.** `none` saves only about 10% of the reader cost here and loses 11 points.
 - **Read decision G with its margin.** gbrain on particle-1 is within 7 points of particle-1 on the whole history by the registered test, five questions behind on 150, and a score test puts it just outside; multi-session and temporal questions still favor the whole history.

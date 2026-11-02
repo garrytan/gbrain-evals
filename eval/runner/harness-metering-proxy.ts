@@ -26,6 +26,16 @@
  * $0. Anything else without decodable usage (a 5xx, a network failure after
  * sending, an unreadable stream) is charged at its reservation.
  *
+ * A particle request that may have gone out before it failed (the upstream
+ * deadline passed, the connection reset or closed, the response was
+ * malformed, the response body failed to read, or any other transport failure
+ * `compatMayHaveBilled` reads) is answered 504 `mpw_proxy_upstream_lost`,
+ * which no particle client sends again, because Particle may have billed it.
+ * Only a failure proven to happen before any byte was sent (`compatNeverSent`:
+ * a refused connection, a host name that did not resolve, a rejected TLS
+ * certificate) is a 502 `mpw_proxy_upstream_unreachable` that a client may
+ * send again (issues #282, #288). Other providers keep the 502.
+ *
  * Refusal messages never contain the substrings 429, 500, 502, 503, 504,
  * 529 or "rate": the harness's Gemini, OpenAI and Groq clients retry any
  * error whose text contains them. Where a value (a cap, a path, an id) would
@@ -49,7 +59,9 @@
  *     [--upstream <provider>=<url> ...]
  *
  * `--upstream` points a provider at a stub (tests); without it requests go
- * to the real provider with the key from this process's environment.
+ * to the real provider with the key from this process's environment. An
+ * upstream that is not loopback must be https, because the proxy sends the
+ * real key there (issue #277).
  */
 import { createHash, randomBytes } from 'node:crypto';
 import { appendFileSync, chmodSync, existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
@@ -58,7 +70,7 @@ import {
   BudgetExceededError, BudgetRun, ledgerStatus, priceRequest, reservationUsd, streamUsageCost, unguardedFetch, usageCost,
 } from './budget-ledger.ts';
 import { UPSTREAM_DEADLINE_MS } from './metering-proxy.ts';
-import { COMPAT_PROVIDERS } from './providers/openai-compatible.ts';
+import { carriesKeyInCleartext, COMPAT_PROVIDERS, compatMayHaveBilled } from './providers/openai-compatible.ts';
 import { normalizeUsage, responseMeta, type ResponseMeta } from './usage-receipt.ts';
 
 export type MeteredProvider = 'openai' | 'anthropic' | 'gemini' | 'groq' | 'voyage' | 'particle';
@@ -256,6 +268,9 @@ export async function startMeteringProxy(options: MeteringProxyOptions): Promise
   const { run, cellId } = options;
   const realKeys = options.realKeys ?? process.env;
   const upstreams = options.upstreams ?? {};
+  for (const [provider, base] of Object.entries(upstreams)) {
+    if (base && carriesKeyInCleartext(base)) throw new Error(`upstream ${provider}=${base} would carry the ${provider} key in cleartext; a host that is not loopback is reached only over https`);
+  }
   mkdirSync(dirname(resolve(options.requestLogPath)), { recursive: true });
   mkdirSync(options.bodiesDir, { recursive: true });
 
@@ -387,8 +402,9 @@ export async function startMeteringProxy(options: MeteringProxyOptions): Promise
     try {
       upstream = await unguardedFetch(target, { method: req.method, headers, body: raw.length ? raw : undefined, redirect: 'manual', timeout: false, signal: AbortSignal.timeout(UPSTREAM_DEADLINE_MS) } as RequestInit);
     } catch (error) {
-      const message = `metering proxy could not reach ${provider}: ${(error as Error).message}`;
-      return finish(errorResponse(502, 'mpw_proxy_upstream_unreachable', message), { ...settle(null, 0, message), error: message });
+      const lost = provider === 'particle' && compatMayHaveBilled(error);
+      const message = `metering proxy ${lost ? 'lost the request it sent to' : 'could not reach'} ${provider}: ${(error as Error).message}`;
+      return finish(lost ? errorResponse(504, 'mpw_proxy_upstream_lost', message) : errorResponse(502, 'mpw_proxy_upstream_unreachable', message), { ...settle(null, 0, message), error: message });
     }
     const outHeaders = new Headers(upstream.headers);
     for (const h of ['content-encoding', 'content-length', 'transfer-encoding', 'connection']) outHeaders.delete(h);
@@ -398,7 +414,7 @@ export async function startMeteringProxy(options: MeteringProxyOptions): Promise
       let bytes: Uint8Array<ArrayBuffer>;
       try { bytes = new Uint8Array(await upstream.arrayBuffer()); } catch (error) {
         const message = `metering proxy lost the ${provider} response: ${(error as Error).message}`;
-        return finish(errorResponse(502, 'mpw_proxy_upstream_unreachable', message), { ...settle(null, upstream.status, message), error: message });
+        return finish(provider === 'particle' ? errorResponse(504, 'mpw_proxy_upstream_lost', message) : errorResponse(502, 'mpw_proxy_upstream_unreachable', message), { ...settle(null, upstream.status, message), error: message });
       }
       let parsed: unknown = null;
       try { parsed = JSON.parse(new TextDecoder().decode(bytes)); } catch {}

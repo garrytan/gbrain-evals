@@ -1,12 +1,13 @@
 /**
- * Live categories' default models follow CLAUDE.md "Choose models" (R4, GST-611): every registered default is a
- * current-generation model unless eval/runner/model-defaults.ts names it as an exception with a reason. A new
- * category registers its defaults in DEFAULTS below.
+ * Live categories' default models follow CLAUDE.md "Choose models" (R4, GST-611; frontier first, 2026-11-01): every
+ * registered default is a current-generation model, and no model under test is a Sonnet or Haiku model, unless
+ * eval/runner/model-defaults.ts names it as an exception with a reason. A new category registers its defaults in
+ * DEFAULTS below, models under test apart from judges.
  */
 import { afterAll, describe, expect, test } from 'bun:test';
 import { configureGateway, getChatModel, resetGateway } from 'gbrain/ai/gateway';
 import { TIER_DEFAULTS } from '../../node_modules/gbrain/src/core/model-config.ts';
-import { CURRENT_GENERATION, DEFAULT_MODEL_EXCEPTIONS, bareModelId, defaultModelProblem } from '../../eval/runner/model-defaults.ts';
+import { CURRENT_GENERATION, DEFAULT_MODEL_EXCEPTIONS, bareModelId, defaultModelProblem, underTestModelProblem } from '../../eval/runner/model-defaults.ts';
 import { DEFAULT_JUDGE_MODEL as SHARED_JUDGE } from '../../eval/runner/judge.ts';
 import { DEFAULT_JUDGE_MODEL as CAT5_JUDGE } from '../../eval/runner/cat5-provenance.ts';
 import { DEFAULT_AGENT_MODEL } from '../../eval/runner/adapters/claude-sonnet-with-tools.ts';
@@ -17,7 +18,7 @@ import { DEFAULT_CHAT_MODEL as CAT20_CHAT } from '../../eval/runner/cat20-brains
 import { DEFAULT_THINK_MODEL as CAT25_THINK, JUDGE_MODEL as CAT25_JUDGE } from '../../eval/runner/cat25-trajectory-routing.ts';
 import { JUDGE_MODEL as CAT29_JUDGE, THINK_MODEL as CAT29_THINK } from '../../eval/runner/cat29-think-vs-search.ts';
 import { SKILLOPT_MODELS } from '../../eval/runner/cat30-skillopt-improvement.ts';
-import { BPRE_MODEL as CAT35_BPRE, FULL_MODEL as CAT35_FULL } from '../../eval/runner/cat35-transcript-distill.ts';
+import { DISTILL_MODEL as CAT35_DISTILL } from '../../eval/runner/cat35-transcript-distill.ts';
 import { CAT35_DEFAULT_JUDGE_MODEL } from '../../eval/runner/cat35-judges.ts';
 import { GROUNDED_JUDGE_MODEL } from '../../eval/runner/cat36-grounded-answers.ts';
 import { JUDGE_MODEL as LME_ANSWERS_JUDGE } from '../../eval/runner/longmemeval-answers.ts';
@@ -34,38 +35,49 @@ import { JUDGE_MODEL as PILOT_JUDGE } from '../../eval/runner/pilot/run.ts';
 import { SHIPPED_DEFAULT_MODEL } from '../../eval/runner/facts-absorb-gate.ts';
 import { GPT4O as E1_GPT4O, SONNET as E1_SONNET } from '../../eval/runner/evidence-delivery/e1.ts';
 import { DEV_ANSWER, DEV_JUDGE } from '../../eval/runner/harness-dev.ts';
+import { DEFAULT_THINK_MODEL as MEMORY_QA_THINK } from '../../eval/runner/memory-qa/run-systems.ts';
+import { AGENT_MODEL as FLAG_RATE_AGENT, JUDGE_MODEL as FLAG_RATE_JUDGE } from '../../eval/runner/memory-trust/flag-rate.ts';
+import { DECISION_MODEL as WAVE_A_DECISION } from '../../eval/runner/external-ideas-wave-a/lib.ts';
 import { DEFAULT_PROPOSER_MODEL as N15_PROPOSER, DEFAULT_TARGET_MODELS as N15_TARGETS } from '../../eval/runner/n15-skillopt-method.ts';
 
-const DEFAULTS: Record<string, readonly string[]> = {
-  'shared judge (judge.ts)': [SHARED_JUDGE],
-  'Cat 5 judge': [CAT5_JUDGE],
-  'Cat 8/9 agent': [DEFAULT_AGENT_MODEL],
-  'Cat 9 judge': [CAT9_JUDGE],
-  'Cat 14 think and judge': [CAT14_THINK, CAT14_JUDGE],
-  'Cat 15 extractor and judge': [CAT15_EXTRACT, CAT15_JUDGE],
-  'Cat 20 generation': [CAT20_CHAT],
-  'Cat 25 think and judge': [CAT25_THINK, CAT25_JUDGE],
-  'Cat 29 think and judge': [CAT29_THINK, CAT29_JUDGE],
-  'Cats 30-33 SkillOpt': Object.values(SKILLOPT_MODELS),
-  'Cat 35 distill, triage and judge': [CAT35_FULL, CAT35_BPRE, CAT35_DEFAULT_JUDGE_MODEL],
-  'Cat 36 grounded-answer judge': [GROUNDED_JUDGE_MODEL],
-  'LongMemEval answer-grounding judge': [LME_ANSWERS_JUDGE],
-  'A4 house reader': [A4_READER],
-  'chronicle-lift agent': [CHRONICLE_AGENT],
-  'temporal-contradictions dev model': [TEMPORAL_CONTRADICTIONS_DEV],
-  'PrecisionMemBench think model': [PRECISIONMEMBENCH_THINK],
-  ...Object.fromEntries(Object.keys(QA_READER).map(b => [`memory-qa ${b} reader and judge`, [QA_READER[b]!, QA_JUDGE[b]!]])),
-  'lifecycle-lite reader and judge': [LIFECYCLE_QA.reader, LIFECYCLE_QA.judge],
-  'sealed confirmation reader and judge': [SEALED_READER, SEALED_JUDGE],
-  'pilot judge': [PILOT_JUDGE],
-  'facts-absorb gate baseline': [SHIPPED_DEFAULT_MODEL],
-  'evidence-delivery E1 readers': [E1_SONNET, E1_GPT4O],
-  'N2 contradiction judge': [N2_JUDGE],
-  'N7 open-loop extractor': [N7_EXTRACTOR],
-  'N15 SkillOpt method targets and proposer': [...N15_TARGETS, N15_PROPOSER],
-  'harness dev lane reader and judge': [DEV_ANSWER, DEV_JUDGE.default!],
-  'harness dev lane BEAM judge': [DEV_JUDGE.beam!],
+/** `test` holds the models under test: agents, readers, answer, think and extraction models, optimizers and optimization targets. */
+interface Registered { test?: readonly string[]; judge?: readonly string[] }
+const { judge: SKILLOPT_JUDGE, ...SKILLOPT_UNDER_TEST } = SKILLOPT_MODELS;
+
+const DEFAULTS: Record<string, Registered> = {
+  'shared judge (judge.ts)': { judge: [SHARED_JUDGE] },
+  'Cat 5 judge': { judge: [CAT5_JUDGE] },
+  'Cat 8/9 agent': { test: [DEFAULT_AGENT_MODEL] },
+  'Cat 9 judge': { judge: [CAT9_JUDGE] },
+  'Cat 14 think and judge': { test: [CAT14_THINK], judge: [CAT14_JUDGE] },
+  'Cat 15 extractor and judge': { test: [CAT15_EXTRACT], judge: [CAT15_JUDGE] },
+  'Cat 20 generation': { test: [CAT20_CHAT] },
+  'Cat 25 think and judge': { test: [CAT25_THINK], judge: [CAT25_JUDGE] },
+  'Cat 29 think and judge': { test: [CAT29_THINK], judge: [CAT29_JUDGE] },
+  'Cats 30-33 SkillOpt': { test: Object.values(SKILLOPT_UNDER_TEST), judge: [SKILLOPT_JUDGE] },
+  'Cat 35 distill, triage and judge': { test: [CAT35_DISTILL], judge: [CAT35_DEFAULT_JUDGE_MODEL] },
+  'Cat 36 grounded-answer judge': { judge: [GROUNDED_JUDGE_MODEL] },
+  'LongMemEval answer-grounding judge': { judge: [LME_ANSWERS_JUDGE] },
+  'A4 house reader': { test: [A4_READER] },
+  'chronicle-lift agent': { test: [CHRONICLE_AGENT] },
+  'temporal-contradictions dev model': { test: [TEMPORAL_CONTRADICTIONS_DEV] },
+  'PrecisionMemBench think model': { test: [PRECISIONMEMBENCH_THINK] },
+  ...Object.fromEntries(Object.keys(QA_READER).map(b => [`memory-qa ${b} reader and judge`, { test: [QA_READER[b]!], judge: [QA_JUDGE[b]!] }])),
+  'memory-qa and feedback-replay think model': { test: [MEMORY_QA_THINK] },
+  'lifecycle-lite reader and judge': { test: [LIFECYCLE_QA.reader], judge: [LIFECYCLE_QA.judge] },
+  'memory-trust flag-rate agent and judge': { test: [FLAG_RATE_AGENT], judge: [FLAG_RATE_JUDGE] },
+  'external-ideas wave A decision model': { test: [WAVE_A_DECISION] },
+  'sealed confirmation reader and judge': { test: [SEALED_READER], judge: [SEALED_JUDGE] },
+  'pilot judge': { judge: [PILOT_JUDGE] },
+  'facts-absorb gate baseline': { test: [SHIPPED_DEFAULT_MODEL] },
+  'evidence-delivery E1 readers': { test: [E1_SONNET, E1_GPT4O] },
+  'N2 contradiction judge': { test: [N2_JUDGE] },
+  'N7 open-loop extractor': { test: [N7_EXTRACTOR] },
+  'N15 SkillOpt method targets and proposer': { test: [...N15_TARGETS, N15_PROPOSER] },
+  'harness dev lane reader and judge': { test: [DEV_ANSWER], judge: [DEV_JUDGE.default!] },
+  'harness dev lane BEAM judge': { judge: [DEV_JUDGE.beam!] },
 };
+const models = (r: Registered): string[] => [...(r.test ?? []), ...(r.judge ?? [])];
 
 afterAll(() => resetGateway());
 
@@ -73,14 +85,23 @@ describe('default models (CLAUDE.md "Choose models")', () => {
   test('every registered default outside the named exceptions is a current-generation model', () => {
     const problems = Object.entries(DEFAULTS)
       .filter(([name]) => !DEFAULT_MODEL_EXCEPTIONS[name])
-      .flatMap(([name, models]) => models.map(defaultModelProblem).filter(p => p !== null).map(p => `${name}: ${p}`));
+      .flatMap(([name, r]) => models(r).map(defaultModelProblem).filter(p => p !== null).map(p => `${name}: ${p}`));
     expect(problems).toEqual([]);
   });
 
-  test('each exception names the models the code uses, and at least one of them is not current', () => {
+  test('no model under test outside the named exceptions is a Sonnet or Haiku model', () => {
+    const problems = Object.entries(DEFAULTS)
+      .filter(([name]) => !DEFAULT_MODEL_EXCEPTIONS[name])
+      .flatMap(([name, r]) => (r.test ?? []).map(underTestModelProblem).filter(p => p !== null).map(p => `${name}: ${p}`));
+    expect(problems).toEqual([]);
+  });
+
+  test('each exception names the models the code uses, and at least one of them breaks a rule', () => {
     for (const [name, exception] of Object.entries(DEFAULT_MODEL_EXCEPTIONS)) {
-      expect([name, DEFAULTS[name]]).toEqual([name, exception.models]);
-      expect([name, exception.models.some(m => defaultModelProblem(m) !== null)]).toEqual([name, true]);
+      const registered = DEFAULTS[name] ?? {};
+      expect([name, models(registered)]).toEqual([name, [...exception.models]]);
+      const breaks = models(registered).some(m => defaultModelProblem(m) !== null) || (registered.test ?? []).some(m => underTestModelProblem(m) !== null);
+      expect([name, breaks]).toEqual([name, true]);
       expect(exception.reason.length).toBeGreaterThan(20);
     }
   });
@@ -104,5 +125,13 @@ describe('default models (CLAUDE.md "Choose models")', () => {
     }
     expect(defaultModelProblem('openai:gpt-5.4-mini')).toBe('openai:gpt-5.4-mini: gpt-5.4-mini is never run');
     expect(defaultModelProblem('anthropic:claude-fable-5-1')).toContain('smoke tests');
+  });
+
+  test('the frontier rule: a Sonnet or Haiku model of any generation fails as a model under test; Opus and GPT pass', () => {
+    const current = ['sonnet', 'haiku'].flatMap(tier => [`anthropic:claude-${tier}-5-5`, `claude-${tier}-5-5`]);
+    for (const m of [...current, 'anthropic:claude-sonnet-4-6', 'claude-haiku-4-5-20251001']) {
+      expect([m, underTestModelProblem(m)]).toEqual([m, `${m}: Sonnet and Haiku are never models under test`]);
+    }
+    for (const m of ['anthropic:claude-opus-5-5', 'claude-opus-5-5', 'openai:gpt-6.1-sol', 'gpt-6.1-sol']) expect([m, underTestModelProblem(m)]).toEqual([m, null]);
   });
 });

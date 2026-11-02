@@ -72,6 +72,8 @@ export interface AgentAnswer {
   /** Evaluator-side only: the ingested source ids whose files the agent read before answering. */
   opened_source_ids: string[];
   error?: string;
+  /** The run ended on a particle turn the provider may have billed (AgentRun.timed_out), so the cell never asks the question again. */
+  timed_out?: true;
 }
 
 export interface AnswerOptions {
@@ -414,7 +416,7 @@ export class FileAgentSystem implements AnsweringSystem {
     }
     const { input, output, cache_read, cache_write } = run.usage;
     return { ...classifyRun(run), usage: { input, output, cache_read, cache_write }, provider_input_tokens: input + cache_read + cache_write,
-      latency_ms: performance.now() - t0, turns: run.turns, usd: run.usd, opened_source_ids: opened };
+      latency_ms: performance.now() - t0, turns: run.turns, usd: run.usd, opened_source_ids: opened, ...(run.timed_out ? { timed_out: true as const } : {}) };
   }
 
   async close() {

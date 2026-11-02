@@ -16,8 +16,10 @@
  * sha256 in external_lane, and such a run is never publishable.
  *
  * Run:
- *   bun eval/runner/cat35-transcript-distill.ts --budget-usd 1              # BPRE smoke (default): 2 transcripts, Haiku — measured $0.10 / 81s
- *   CAT35_FULL=1 bun eval/runner/cat35-transcript-distill.ts --budget-usd 20 # full 24 × 3 lanes — measured $6.20 / 29 min (Sonnet judge)
+ *   bun eval/runner/cat35-transcript-distill.ts --budget-usd 5              # BPRE smoke (default): 2 transcripts, pre-flight $3.24
+ *   CAT35_FULL=1 CAT35_HARD_STOP_USD=60 bun eval/runner/cat35-transcript-distill.ts --budget-usd 60 # full 24 × 3 lanes, pre-flight $53.40
+ *   The defaults are Opus 5.5 distilling and a gpt-6.1-sol judge, not yet measured. Before 2026-11-01 the smoke
+ *   measured $0.10 / 81s on Haiku 4.5, and the full run $6.20 / 29 min on Sonnet 4.6 with a Sonnet judge.
  *
  * Every provider request is reserved in the budget ledger first
  * (budget-ledger.ts); without --budget-usd (or BRAINBENCH_BUDGET_USD) the
@@ -164,7 +166,7 @@ interface Opts {
   judgeCalibration: boolean;
   /** Optional explicit annotation file after --judge-calibration. */
   judgeCalibrationPath: string | null;
-  /** Distill / dream model override (`provider:model`); default BPRE_MODEL in BPRE, FULL_MODEL in full. */
+  /** Distill / dream model override (`provider:model`); default DISTILL_MODEL. */
   model: string | null;
   /** Judge model override; an OpenAI id runs through the Responses shim. Default: CAT35_JUDGE_MODEL or CAT35_DEFAULT_JUDGE_MODEL. */
   judgeModel: string | null;
@@ -453,16 +455,14 @@ const HARD_STOP_USD = (() => {
   return Number.isFinite(v) && v > 0 ? v : 40;
 })();
 const DREAM_CONCURRENCY = 2;
-/** Dream synthesis and facts extraction in full mode. */
-export const FULL_MODEL = 'anthropic:claude-sonnet-5-5';
-/** Dream synthesis and facts extraction in BPRE mode, and dream triage in both. */
-export const BPRE_MODEL = 'anthropic:claude-haiku-5-5';
+/** Dream synthesis, dream triage and facts extraction in both modes: gbrain's distill pipeline on the newest frontier Opus. */
+export const DISTILL_MODEL = 'anthropic:claude-opus-5-5';
 // Worst-case pre-flight cost model (per-call bounds; deliberately pessimistic).
 const EST = {
-  dreamPerTranscriptFull: 0.9, // Sonnet subagent, ≤16 turns, 600s cap
-  dreamPerTranscriptBpre: 0.15, // Haiku, ≤8 turns
-  factsPerTranscriptFull: 0.15,
-  factsPerTranscriptBpre: 0.03,
+  dreamPerTranscriptFull: 1.2, // Opus 5.5 subagent, ≤16 turns, 600s cap
+  dreamPerTranscriptBpre: 0.6, // Opus 5.5, ≤8 turns
+  factsPerTranscriptFull: 0.2,
+  factsPerTranscriptBpre: 0.12,
   judgePerBatchHaiku: 0.03,
   judgePerBatchSonnet: 0.15,
 };
@@ -781,9 +781,9 @@ async function main(runTmp: string, runStamp: Date): Promise<number> {
   } catch (e) {
     return setupError(e instanceof Error ? e.message : String(e));
   }
-  const dreamModel = opts.model ?? (opts.full ? FULL_MODEL : BPRE_MODEL);
-  const factsModel = opts.model ?? (opts.full ? FULL_MODEL : BPRE_MODEL);
-  const triageModel = opts.model ?? BPRE_MODEL;
+  const dreamModel = opts.model ?? DISTILL_MODEL;
+  const factsModel = opts.model ?? DISTILL_MODEL;
+  const triageModel = opts.model ?? DISTILL_MODEL;
   const maxTurns = opts.full ? 16 : 8;
 
   configureGateway({

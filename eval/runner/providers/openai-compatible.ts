@@ -191,11 +191,20 @@ export interface CompatResponse {
   meta: ResponseMeta;
 }
 
+const isObject = (v: unknown): v is Record<string, any> => !!v && typeof v === 'object' && !Array.isArray(v);
+
+/**
+ * A response's fields, read defensively: a malformed part of a billed 2xx answer is dropped, never thrown, so the
+ * answer and its usage reach the caller's receipt. A tool call that is not an object is dropped. Log probabilities are
+ * kept only when every token entry is an object whose `top_logprobs` is absent or a list of objects; else they are null.
+ */
 export function parseCompatResponse(json: unknown): CompatResponse {
   const r = (json && typeof json === 'object' ? json : {}) as Record<string, any>;
   const choice = Array.isArray(r.choices) ? r.choices[0] ?? {} : {};
   const message = choice.message ?? {};
-  const content = Array.isArray(choice.logprobs?.content) ? choice.logprobs.content as Array<Record<string, any>> : null;
+  const listed = choice.logprobs?.content;
+  const content = Array.isArray(listed) && listed.every(t => isObject(t) && (t.top_logprobs == null || (Array.isArray(t.top_logprobs) && t.top_logprobs.every(isObject))))
+    ? listed as Array<Record<string, any>> : null;
   return {
     id: typeof r.id === 'string' ? r.id : null,
     text: typeof message.content === 'string' ? message.content
@@ -203,7 +212,7 @@ export function parseCompatResponse(json: unknown): CompatResponse {
     finish: typeof choice.finish_reason === 'string' ? choice.finish_reason : null,
     usage: r.usage && typeof r.usage === 'object' ? r.usage : null,
     response_model: typeof r.model === 'string' ? r.model : null,
-    tool_calls: Array.isArray(message.tool_calls) ? message.tool_calls : [],
+    tool_calls: Array.isArray(message.tool_calls) ? message.tool_calls.filter(isObject) : [],
     logprobs: content ? content.map(t => ({ token: String(t.token), logprob: Number(t.logprob), top: (t.top_logprobs ?? []).map((x: Record<string, unknown>) => ({ token: String(x.token), logprob: Number(x.logprob) })) })) : null,
     meta: responseMeta(json),
   };
@@ -252,7 +261,7 @@ export function classifyCompatError(provider: string, status: number, body: stri
   return { provider, status, kind, retryable: kind === 'rate_limited' || kind === 'server', retryAfterMs: retryAfter(header), body };
 }
 
-/** A non-2xx answer that is not a budget stop. */
+/** A non-2xx answer that is not a budget stop, or a 2xx answer without a usable `choices[0].message` (`compatSend`). */
 export class CompatHttpError extends Error {
   readonly status: number;
   readonly kind: CompatErrorKind;
@@ -283,18 +292,50 @@ export function compatTimedOut(e: unknown): boolean {
   return err?.name === 'TimeoutError' || err?.name === 'AbortError' || err?.status === 504;
 }
 
-/** A connection that reset or closed after the request went out. A refused connection never reached the provider, and a received HTTP status is an answer, so neither is one. */
-export function compatConnectionLost(e: unknown): boolean {
-  const err = e as { name?: string; code?: string; message?: string; status?: unknown } | null;
-  return typeof err?.status !== 'number' && err?.name !== 'TimeoutError' && err?.name !== 'AbortError' && (/^(ECONNRESET|EPIPE|UND_ERR_SOCKET)$/.test(err?.code ?? '') || /socket connection was closed|socket hang up|connection reset/i.test(err?.message ?? ''));
+/**
+ * The error codes Bun's fetch gives a request that failed before any byte of it was sent, so the provider never saw it
+ * (issue #288). Each was provoked on Bun 1.4.4: a refused connection (ECONNREFUSED), a host name that did not resolve
+ * (ENOTFOUND, or EAI_AGAIN with no reachable resolver), a connect with no route or no source address (ENETUNREACH,
+ * EADDRNOTAVAIL), a URL fetch refused (ERR_INVALID_URL), and a server certificate the client rejected in the TLS
+ * handshake, where the server read no byte of the request. test/eval/openai-compatible.test.ts provokes each one it
+ * can on loopback. EPROTO and ECONNRESET stay off the list although Bun can give them before sending (a server that does
+ * not speak TLS, or closes on the TLS hello), because it gives the same codes after a request went out (a TLS record
+ * corrupted after the request arrived, a connection closed after the request was read).
+ */
+export const COMPAT_PRE_SEND_CODES: ReadonlySet<string> = new Set([
+  'ECONNREFUSED', 'ENOTFOUND', 'EAI_AGAIN', 'ENETUNREACH', 'EADDRNOTAVAIL', 'ERR_INVALID_URL',
+  'DEPTH_ZERO_SELF_SIGNED_CERT', 'SELF_SIGNED_CERT_IN_CHAIN', 'UNABLE_TO_VERIFY_LEAF_SIGNATURE', 'ERR_TLS_CERT_ALTNAME_INVALID',
+  'CERT_HAS_EXPIRED', 'CERT_NOT_YET_VALID', 'CERT_SIGNATURE_FAILURE',
+]);
+
+/** A request that failed before any byte of it was sent (`COMPAT_PRE_SEND_CODES`): the only transport failure a client or a metering proxy sends again. */
+export function compatNeverSent(e: unknown): boolean {
+  const code = (e as { code?: unknown } | null)?.code;
+  return typeof code === 'string' && COMPAT_PRE_SEND_CODES.has(code);
 }
 
 /**
- * A request the provider may have billed: it timed out (`compatTimedOut`) or its connection was lost after it went out
- * (`compatConnectionLost`). A caller never sends it again, with or without a metering proxy in front.
+ * A transport failure after which the provider may hold the request: an error with no HTTP status that is not a budget
+ * stop (`BudgetExceededError`, which `assertMetered`, a ledger guard and a credit stop throw), not a timeout
+ * (`compatTimedOut`) and not a failure proven to happen before any byte was sent (`compatNeverSent`). A reset or closed
+ * connection, a malformed status line or header, a bad Content-Length, a bad chunk, a body that fails to decompress and
+ * any failure Bun names otherwise are all lost (issue #288). A received HTTP status is an answer, so it is never one.
+ */
+export function compatConnectionLost(e: unknown): boolean {
+  if (!e || typeof e !== 'object') return false;
+  const { name, status } = e as { name?: unknown; status?: unknown };
+  return typeof status !== 'number' && name !== 'BudgetExceededError' && !compatTimedOut(e) && !compatNeverSent(e);
+}
+
+/**
+ * A request the provider may have billed: it timed out (`compatTimedOut`), its transport failed other than before any
+ * byte was sent (`compatConnectionLost`), or it was answered 2xx without a usable `choices[0].message` (an error carrying
+ * that 2xx status, issue #280). A caller never sends it again, with or without a metering proxy in front, and both
+ * metering proxies answer a particle request that failed this way 504, never the 502 a client sends again.
  */
 export function compatMayHaveBilled(e: unknown): boolean {
-  return compatTimedOut(e) || compatConnectionLost(e);
+  const status = (e as { status?: unknown } | null)?.status;
+  return compatTimedOut(e) || compatConnectionLost(e) || (typeof status === 'number' && status >= 200 && status < 300);
 }
 
 /** Particle answered 402 without a proxy's marker: the prepaid balance is empty. Throw it after the failing attempt's receipt is written. */
@@ -317,20 +358,30 @@ export function isLoopbackUrl(url: string): boolean {
   return /^(localhost|127(\.\d{1,3}){3}|\[::1\])$/.test(new URL(url).hostname);
 }
 
+/** A URL a provider's bearer key must never be sent to: a host that is not loopback, reached without https (issue #277). */
+export function carriesKeyInCleartext(url: string): boolean {
+  return !isLoopbackUrl(url) && new URL(url).protocol !== 'https:';
+}
+
 /**
  * Refuse a request the budget ledger cannot price, unless it goes to a loopback host (a metering proxy slot, which
- * meters itself, or the keyless fake): the ledger's guard forwards a host it cannot price unmetered.
+ * meters itself, or the keyless fake): the ledger's guard forwards a host it cannot price unmetered. A host that is not
+ * loopback must also be reached over https, because the request carries the provider's bearer key (issue #277).
  */
 export function assertMetered(req: CompatRequest): void {
-  if (isLoopbackUrl(req.url) || priceRequest(req.url, req.body)) return;
-  throw new BudgetExceededError(`budget: the ledger cannot price ${new URL(req.url).hostname.replace(/\.$/, '')}, so this ${own(COMPAT_PROVIDERS, req.provider)?.label ?? req.provider} request would spend unmetered; register the host and the model's price in eval/runner/budget-ledger.ts first`);
+  if (isLoopbackUrl(req.url)) return;
+  const { protocol, hostname } = new URL(req.url);
+  const label = own(COMPAT_PROVIDERS, req.provider)?.label ?? req.provider;
+  if (!priceRequest(req.url, req.body)) throw new BudgetExceededError(`budget: the ledger cannot price ${hostname.replace(/\.$/, '')}, so this ${label} request would spend unmetered; register the host and the model's price in eval/runner/budget-ledger.ts first`);
+  if (carriesKeyInCleartext(req.url)) throw new BudgetExceededError(`budget: ${protocol}//${hostname} would carry the ${label} key in cleartext; a host that is not loopback is reached only over https`);
 }
 
 /**
  * Send one request, once, after `assertMetered`. A non-2xx answer throws `compatError`'s error; the caller's own loop
- * decides any retry. A 2xx answer without `choices[0].message` is a server error carrying the usage it reported,
- * never an empty answer. `timeoutMs` (300 s unless given) is the only deadline: Bun's own 300-second fetch timeout is
- * off, so a longer deadline holds.
+ * decides any retry. A 2xx answer without `choices[0].message`, or whose body is not JSON, is an error carrying its 2xx
+ * status and the usage it reported, never an empty answer, and it is not retryable: the provider answered, so it may
+ * have billed it (`compatMayHaveBilled`, issue #280). `timeoutMs` (300 s unless given) is the only deadline: Bun's own
+ * 300-second fetch timeout is off, so a longer deadline holds.
  */
 export async function compatSend(req: CompatRequest, opts: { fetchImpl?: typeof fetch; timeoutMs?: number } = {}): Promise<CompatResponse> {
   assertMetered(req);
@@ -339,9 +390,9 @@ export async function compatSend(req: CompatRequest, opts: { fetchImpl?: typeof 
   if (!res.ok) throw compatError(classifyCompatError(req.provider, res.status, text, res.headers));
   let json: unknown;
   try { json = JSON.parse(text); }
-  catch { throw new CompatHttpError({ provider: req.provider, status: res.status, kind: 'server', retryable: true, retryAfterMs: null, body: `response body is not JSON: ${text.slice(0, 200)}` }); }
+  catch { throw new CompatHttpError({ provider: req.provider, status: res.status, kind: 'server', retryable: false, retryAfterMs: null, body: `response body is not JSON: ${text.slice(0, 200)}` }); }
   const parsed = parseCompatResponse(json);
   const choices = (json as { choices?: Array<{ message?: unknown }> } | null)?.choices;
-  if (!Array.isArray(choices) || !choices[0]?.message) throw new CompatHttpError({ provider: req.provider, status: res.status, kind: 'server', retryable: true, retryAfterMs: null, body: `response has no choices[0].message: ${text.slice(0, 200)}` }, parsed.usage);
+  if (!Array.isArray(choices) || !choices[0]?.message) throw new CompatHttpError({ provider: req.provider, status: res.status, kind: 'server', retryable: false, retryAfterMs: null, body: `response has no choices[0].message: ${text.slice(0, 200)}` }, parsed.usage);
   return parsed;
 }

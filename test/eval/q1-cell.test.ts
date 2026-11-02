@@ -17,6 +17,7 @@ import { buildManifest, definitionProblems, estimateCell, loadManifest, manifest
 import { ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
 import { classifyV2, CLASSIFIER_VERSION_V2, RULES_SHA256_V2 } from '../../eval/runner/q1/hedge.ts';
 import { instrumentFor } from '../../eval/runner/memory-qa/instruments.ts';
+import { DEFAULT_MAX_ATTEMPTS } from '../../eval/runner/memory-qa/outcomes.ts';
 import type { Corpus, MemoryQuestion } from '../../eval/runner/memory-qa/corpus.ts';
 import { ChatClient, type ChatLike, type ChatOptions, type ChatResult } from '../../eval/runner/memory-qa/qa-v2.ts';
 import { answerProblems, judgmentProblems, rowProblems } from '../../eval/runner/memory-qa/records.ts';
@@ -753,6 +754,20 @@ describe('particle-1 readers through Q1\'s lease proxy (plan GST-605 Phase 2)', 
     }
   });
 
+  // Value: protects=a particle reading that failed before any request went out is asked again, not dropped as billed (issue #288's review); fails_when=the cell reads an error thrown before qa-v2's request loop (a missing key, a bad effort, an unreadable cache file) as one Particle may have billed, so the question becomes a final reader_error on its first try; why_new=compatMayHaveBilled reads every uncoded failure as billed, so the cell asks it only about errors that carry an attempt; seam=a reader that throws before any request; no_claim=which local errors a real run can hit
+  test('packed: a particle reading that fails before any request is sent is not final, so the cell asks it again up to the attempt limit (#288)', async () => {
+    const lp = leaseProxy(1);
+    let calls = 0;
+    const reader = { chat: async (model: string) => { calls++; throw new Error(`${model}: PARTICLE_API_KEY is not set`); } } as unknown as ChatClient;
+    try {
+      const def = cellDef('ext-graph-pipeline', 'shim', [component({ readers: [PARTICLE], reader_replicates: {} })], slice);
+      const out = join(tmp, 'particle-before-send');
+      await runCell(def, { out, providerProxy: lp.url, ...quiet }, { corpus, system: new FakeMemorySystem(), reader, judge: scriptedJudge() });
+      expect([calls, lp.seen.length]).toEqual([2 * DEFAULT_MAX_ATTEMPTS, 0]);
+      expect(tries(out, def).map(t => [t.outcome, t.attempts.length])).toEqual(Array(2 * DEFAULT_MAX_ATTEMPTS).fill(['reader_error', 0]));
+    } finally { lp.stop(); }
+  });
+
   // Value: protects=a reading whose upstream request passed the proxy's deadline is billed once; fails_when=the proxy's timeout answer is retried by the client loop or the cell's retry pass; why_new=the proxy answers its own upstream timeout 504 and compatTimedOut reads it; seam=none; no_claim=a real 900 s wait
   test('packed and full context: an upstream timeout at the lease proxy reaches Particle once per question and is a final reader_error', async () => {
     for (const mode of ['packed', 'full-context'] as const) {
@@ -821,18 +836,59 @@ describe('particle-1 readers through Q1\'s lease proxy (plan GST-605 Phase 2)', 
     }
   });
 
-  // Value: protects=no Q1 agent arm reads particle through the lease proxy while the agent loop sends a timed-out turn again (issue #253); fails_when=an agent arm with a particle reader reaches the proxy, or the refusal happens after ingest; why_new=lifting U2's lease-proxy refusal for packed and full-context readers would otherwise reopen the agent lane; seam=none; no_claim=the agent loop's own timeout handling
-  test('file agent: a particle reader on an agent arm through the lease proxy is refused before anything is sent, until issue #253', async () => {
+  // Value: protects=a file-agent question whose particle turn Particle may have billed is asked once behind the lease proxy (issue #253); fails_when=the agent arm is refused behind the proxy, the loop retries the proxy's 504, or the cell's A22 pass asks a timed-out question again; why_new=the agent loop marks a run that ended on a may-have-billed particle turn, and the cell records it final; seam=none; no_claim=Particle's billing of an aborted turn
+  test('file agent: a particle agent arm reads through the lease proxy\'s agent slot, and a turn that times out at the proxy is sent once and leaves the question a final reader_error (#253)', async () => {
     const def = cellDef('baseline-file-agent', 'in-process', [{ id: 'whole-agent', mode: 'agent', readers: [PARTICLE] }], { configuration: 'baseline', ...slice });
-    const lp = leaseProxy(1, submit);
+    const ok = leaseProxy(1, submit);
+    try {
+      const out = join(tmp, 'particle-agent-ok');
+      const res = await runCell(def, { out, providerProxy: ok.url, ...quiet }, { corpus, system: new FileAgentSystem({ workDir: join(out, 'trees') }), judge: scriptedJudge() });
+      expect(res.status).toBe('complete');
+      expect(ok.lines().map(l => [l.provider, l.slot, l.route_class, l.output_cap, l.outcome, l.model])).toEqual(Array(2).fill(['particle', 'agent', 'agent', 16_000, 'forwarded', 'particle-1']));
+      expect(ndjson(join(out, 'cells', def.arms[0].cell_id, 'answers.ndjson')).map(a => [a.outcome, a.text])).toEqual(Array(2).fill(['scored', 'The history does not say.']));
+    } finally { ok.stop(); }
+    const lp = leaseProxy(1, () => { throw new DOMException('The operation timed out.', 'TimeoutError'); });
     try {
       const out = join(tmp, 'particle-agent');
-      const err = await runCell(def, { out, providerProxy: lp.url, ...quiet }, { corpus, system: new FileAgentSystem({ workDir: join(out, 'trees') }), judge: scriptedJudge() }).catch(e => e) as ScoreboardError;
-      expect([err.op.code, err.op.message.replace(def.id, '<cell>')]).toEqual(['NOT_YET_AVAILABLE', 'cell <cell> answers with particle:particle-1 on an agent arm through --provider-proxy, and the agent loop still sends a timed-out turn again (issue #253)']);
-      expect(lp.seen).toHaveLength(0);
-      expect(lp.lines()).toEqual([]);
+      const res = await runCell(def, { out, providerProxy: lp.url, ...quiet }, { corpus, system: new FileAgentSystem({ workDir: join(out, 'trees') }), judge: scriptedJudge() });
+      expect(res.stopped).toBeNull();
+      expect(lp.seen).toHaveLength(2);
+      expect(lp.lines().map(l => [l.provider, l.slot, l.route_class, l.outcome])).toEqual(Array(2).fill(['particle', 'agent', 'agent', 'failed']));
+      expect(tries(out, def).map(t => t.outcome)).toEqual(['reader_error', 'reader_error']);
+      expect(ndjson(join(out, 'cells', def.arms[0].cell_id, 'answers.ndjson')).map(a => a.outcome)).toEqual(['reader_error', 'reader_error']);
     } finally { lp.stop(); }
   });
+
+  // Value: protects=a file-agent question whose particle turn Particle may have billed is asked once without the lease proxy (issue #253); fails_when=a timed-out run is a non-final reader_error, so the cell's A22 pass runs the whole agent loop again; why_new=the cell records a run that ended on a may-have-billed particle turn as final; seam=none; no_claim=Particle's billing of an aborted turn
+  test('file agent: a particle turn that times out straight to Particle is sent once and leaves the question a final reader_error (#253)', async () => {
+    const def = cellDef('baseline-file-agent', 'in-process', [{ id: 'whole-agent', mode: 'agent', readers: [PARTICLE] }], { configuration: 'baseline', ...slice });
+    process.env.PARTICLE_API_KEY = 'test-key';
+    let calls = 0;
+    const timeout = (async () => { calls++; throw new DOMException('The operation timed out.', 'TimeoutError'); }) as unknown as typeof fetch;
+    const out = join(tmp, 'particle-agent-direct');
+    const res = await runCell(def, { out, ...quiet }, { corpus, system: new FileAgentSystem({ workDir: join(out, 'trees'), fetchImpl: timeout }), judge: scriptedJudge() });
+    expect(res.stopped).toBeNull();
+    expect(calls).toBe(2);
+    expect(tries(out, def).map(t => t.outcome)).toEqual(['reader_error', 'reader_error']);
+    expect(ndjson(join(out, 'cells', def.arms[0].cell_id, 'answers.ndjson')).map(a => a.outcome)).toEqual(['reader_error', 'reader_error']);
+  });
+
+  // Value: protects=a file-agent question whose particle turn was answered 2xx without a message is asked once (issue #280); fails_when=the agent loop retries the 2xx as a server error, or the cell's A22 pass asks the question again because its reader_error is not final; why_new=a compat 2xx without a message ends the run with timed_out, which the cell records final; seam=none; no_claim=whether Particle bills an answer without a message
+  test('file agent: a particle turn answered 2xx without a message is sent once and leaves the question a final reader_error (#280)', async () => {
+    const def = cellDef('baseline-file-agent', 'in-process', [{ id: 'whole-agent', mode: 'agent', readers: [PARTICLE] }], { configuration: 'baseline', ...slice });
+    process.env.PARTICLE_API_KEY = 'test-key';
+    let calls = 0;
+    const usage = { prompt_tokens: 10, completion_tokens: 5 };
+    const emptyThenSubmit = (async () => Response.json(++calls % 2
+      ? { id: 'x', model: 'particle-ai/particle-1', choices: [], usage }
+      : { id: 'y', model: 'particle-ai/particle-1', choices: [{ index: 0, finish_reason: 'tool_calls', message: submit().message }], usage })) as unknown as typeof fetch;
+    const out = join(tmp, 'particle-agent-empty');
+    const res = await runCell(def, { out, ...quiet }, { corpus, system: new FileAgentSystem({ workDir: join(out, 'trees'), fetchImpl: emptyThenSubmit }), judge: scriptedJudge() });
+    expect(res.stopped).toBeNull();
+    expect(calls).toBe(2);
+    expect(tries(out, def).map(t => t.outcome)).toEqual(['reader_error']);
+    expect(ndjson(join(out, 'cells', def.arms[0].cell_id, 'answers.ndjson')).map(a => a.outcome)).toEqual(['reader_error', 'scored']);
+  }, 20_000);
 });
 
 describe('background tail spend after /finish (gbrain-defaults closure)', () => {

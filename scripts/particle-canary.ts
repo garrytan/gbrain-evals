@@ -41,7 +41,7 @@ import { join } from 'node:path';
 import { budgetOptionsFrom, receiptCost, startPaidRun } from '../eval/runner/budget-ledger.ts';
 import { requirePaidArm } from '../eval/runner/paid-arm.ts';
 import { scrubMachinePaths } from '../eval/runner/receipt.ts';
-import { CompatHttpError, assertMetered, compatBaseUrl, compatRequest, compatSend, isLoopbackUrl, type CanarySampling, type CompatLogprob, type CompatRequest } from '../eval/runner/providers/openai-compatible.ts';
+import { CompatHttpError, assertMetered, compatBaseUrl, compatMayHaveBilled, compatRequest, compatSend, isLoopbackUrl, type CanarySampling, type CompatLogprob, type CompatRequest } from '../eval/runner/providers/openai-compatible.ts';
 import { normalizeFinish, normalizeUsage, receipt, responseMeta, usageSourceOf, type UsageReceipt } from '../eval/runner/usage-receipt.ts';
 
 export const CANARY_MODEL = 'particle:particle-1';
@@ -117,7 +117,11 @@ export function canaryRequests(env: Record<string, string | undefined> = process
   return CANARY_PROMPTS.map(p => compatRequest(CANARY_MODEL, [{ role: 'user', content: p }], { effort: 'none', sampling: CANARY_SAMPLING }, env));
 }
 
-/** Send the canary once per prompt (up to 3 attempts on a 429 or 5xx, honoring a capped Retry-After). A budget stop ends it after its receipt. */
+/**
+ * Send the canary once per prompt (up to 3 attempts on a 429 or 5xx, honoring a capped Retry-After). A request Particle
+ * may have billed (`compatMayHaveBilled`: a 504, or a 2xx without a message) is never sent again (issue #282). A budget
+ * stop ends it after its receipt.
+ */
 export async function runCanary(env: Record<string, string | undefined> = process.env, opts: { retryDelayMs?: (attempt: number) => number } = {}): Promise<CanaryRecord> {
   const requests = canaryRequests(env);
   assertMetered(requests[0]!);
@@ -140,7 +144,7 @@ export async function runCanary(env: Record<string, string | undefined> = proces
         receipts.push(receipt({ ...base, attempt, response_model: res.response_model, status: 'ok', error: null, finish: normalizeFinish(res.finish), finish_raw: res.finish, answer: res.text,
           usage: normalizeUsage(usageSourceOf(CANARY_MODEL), res.usage), usage_raw: res.usage, response_meta: res.meta }));
         const sent = (body as { choices?: Array<{ logprobs?: { content?: Array<{ logprob?: unknown; top_logprobs?: Array<{ logprob?: unknown }> | null } | null> } }> } | null)?.choices?.[0]?.logprobs?.content;
-        const logprobs = Array.isArray(sent) && sent.length > 0 && sent.every(t => Number.isFinite(t?.logprob) && (t?.top_logprobs ?? []).every(x => Number.isFinite(x?.logprob))) ? res.logprobs : null;
+        const logprobs = res.logprobs !== null && Array.isArray(sent) && sent.length > 0 && sent.every(t => Number.isFinite(t?.logprob) && (t?.top_logprobs ?? []).every(x => Number.isFinite(x?.logprob))) ? res.logprobs : null;
         const usable = res.text.trim() !== '' && normalizeFinish(res.finish) !== 'max_tokens';
         result = { ...failed, status: usable ? 'ok' : 'error', answer: res.text, answer_sha256: usable ? sha256(res.text) : null, finish: res.finish,
           mean_logprob: logprobs?.length ? logprobs.reduce((a, t) => a + t.logprob, 0) / logprobs.length : null, logprobs,
@@ -151,7 +155,7 @@ export async function runCanary(env: Record<string, string | undefined> = proces
         receipts.push(receipt({ ...base, attempt, response_model: null, status: 'error', error: (e as Error).message.slice(0, 300), finish: null, finish_raw: null, answer: '',
           usage: normalizeUsage(usageSourceOf(CANARY_MODEL), usage), usage_raw: usage, response_meta: responseMeta(null) }));
         if ((e as Error).name === 'BudgetExceededError') { stopped = (e as Error).message; break; }
-        if (!(e instanceof CompatHttpError && e.retryable) || attempt === ATTEMPTS - 1) break;
+        if (!(e instanceof CompatHttpError && e.retryable) || compatMayHaveBilled(e) || attempt === ATTEMPTS - 1) break;
         await Bun.sleep(e.retryAfterMs ?? (opts.retryDelayMs ?? (n => 2000 * 2 ** n))(attempt));
       }
     }
