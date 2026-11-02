@@ -95,12 +95,19 @@ and call no model. `write` copies a seed skill only when it is missing, and only
 - messy-company-v1 has 18 governing pages, so the governing-record families draw at most three tasks from each of a
   few contracts per split, and their results are correlated within a contract.
 - The rollout brain holds no embeddings, so retrieval is keyword only.
-- Each seed declares a tool the rollout does not serve: `recall` and `get_timeline` for `query`, `get_timeline` for
-  `briefing`, `web_search` and `web_fetch` for `fact-check` (its web lane, which no task uses).
+- At gbrain `3ec766c40`, where probe 1 ran, each seed declared a tool the rollout did not serve: `recall` and
+  `get_timeline` for `query`, `get_timeline` for `briefing`, `web_search` and `web_fetch` for `fact-check` (its web
+  lane, which no task uses). From gbrain `ca1281a2` the rollout serves `recall` and `get_timeline`; the web lane stays
+  outside the brain.
 - Citation dates in `briefing` are not checked against the page: a page's `updated` date in the rollout brain is its
   import time.
 
 ## Changelog
+
+### 2026-11-02: Served-tools limit names the pin
+
+The served-tools limit now says it held at gbrain `3ec766c40`, where probe 1 ran, and that the rollout serves `recall`
+and `get_timeline` from gbrain `ca1281a2`. No data file changed.
 
 ### 2026-11-01: v2 becomes the default
 

@@ -141,8 +141,8 @@ every quota exactly or the next seed is tried.
 
 ## Known limits
 
-- No model has run on v2. Whether the seed lands in the gate's band, and whether a rewrite that only fixes the output
-  format stays below the ceiling, is what the second probe measures.
+- Probe 2 (Haiku 5.5, stopped early), the frontier probe on Opus 5.5 and GPT-6.1 Sol, and the one read of the test
+  split have run on v2. The [report](../../../docs/benchmarks/2026-11-01-skillopt-method/REPORT.md) has the results.
 - messy-company-v1 has 18 governing pages, 11 of them later records (amendments, renewals, an affiliate override). The
   53 rows that superseded another value sit on those 11. `gov-superseded` (a third of the query set) uses 10 of them at
   up to three tasks each. That leaves no room for a `query` pair across two records, so every `gov-pair` is
@@ -152,7 +152,8 @@ every quota exactly or the next seed is tried.
   world-only calendar repeats its two people on up to three days.
 - Tasks from one contract or one founder are correlated, as in v1.
 - The rollout brain holds no embeddings, so retrieval is keyword only. `query` declares `recall` and
-  `get_timeline`, and `briefing` declares `get_timeline`; the rollout serves neither. `fact-check`'s web tools are
+  `get_timeline`, and `briefing` declares `get_timeline`. The rollout served neither at gbrain `3ec766c40`, and serves
+  both from gbrain `ca1281a2`, where the frontier probe ran. `fact-check`'s web tools are
   outside the brain, and no task needs them.
 - The longest gold page is `contracts/2025-03-28-qfl-msa`, 12,395 cl100k tokens (58 KB). It is gold in `query` and
   `fact-check` selection tasks and in `briefing` training tasks. The next longest, `contracts/2026-02-24-orm-renewal-2026`,
@@ -160,6 +161,12 @@ every quota exactly or the next seed is tried.
 - Citation dates in `briefing` are not checked against the page.
 
 ## Changelog
+
+### 2026-11-02: Known limits name the runs and the served tools
+
+Known limits no longer say no model has run on v2: they name probe 2, the frontier probe and the test read, and link
+the report. The served-tools limit now says the rollout serves `recall` and `get_timeline` from gbrain `ca1281a2`. No
+data file changed.
 
 ### 2026-11-01: Dataset created and frozen
 

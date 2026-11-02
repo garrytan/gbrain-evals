@@ -1,6 +1,6 @@
 # Frontier headroom probe
 
-This is plan revision 3's decision A3, preregistered as [amendment 2](../../PREREGISTRATION.md). The one read of the sealed test split that followed (amendment 3) is in `test-<target>/` below, and the [report](../../REPORT.md) reads both. It ran on 2026-11-02 at gbrain `ca1281a2` (0.60.542.0) and gbrain-evals `a1147c97` (branch `capy/gbev24-frontier-probe`), on the selection split of `skillopt-method-v2`. The test split was not read. The targets were `anthropic:claude-opus-5-5` and `openai:gpt-6.1-sol`, and every rewrite was proposed by `anthropic:claude-opus-5-5`. Every number below comes from these receipts.
+This is plan revision 3's decision A3, preregistered as [amendment 2](../../PREREGISTRATION.md). The one read of the sealed test split that followed (amendment 3) is in `test-<target>/` below, and the [report](../../REPORT.md) reads both. It ran on 2026-11-02 at gbrain `ca1281a2` (0.60.542.0) and gbrain-evals `a1147c97` (branch `capy/gbev24-frontier-probe`), on the selection split of `skillopt-method-v2`. The probe did not read the test split. The targets were `anthropic:claude-opus-5-5` and `openai:gpt-6.1-sol`, and every rewrite was proposed by `anthropic:claude-opus-5-5`. Every number below comes from these receipts.
 
 | Target | Skill | No skill (1 run) | Seed (3 runs) | One-shot repeats | Kept | Gate | Mean rollout, F0a / F0b |
 |---|---|---|---|---|---|---|---|
