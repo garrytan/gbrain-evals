@@ -18,10 +18,10 @@ import { readSealedTestTasks, readSeed, readTasks } from '../../eval/runner/skil
 import { forbiddenMarkers, markersIn, ONE_SHOT_SYSTEM, pagesOf, PROPOSER_MODEL, proposerInput, trainPages, WITHHELD, type TrainTrajectory } from '../../eval/runner/skillopt-method/one-shot.ts';
 import {
   countedSkills, FAKE_REWRITE_MARKER, fakeReply, fakeTransport, FRONTIER_TARGET_NAMES, FRONTIER_TARGETS, frontierEstimateUsd, frontierGate, lastUserText, NO_SKILL_TEXT, openBrain,
-  PINNED_SEARCH_CONFIG, PROBE_EMBEDDING, PROBE_GATE, probeGate, REPRICE_TRIGGER_USD, runFrontierProbe, runProbe, runSmoke, servedTools, sha8, toolCoverage,
+  PINNED_SEARCH_CONFIG, PROBE_EMBEDDING, PROBE_GATE, probeGate, REPRICE_TRIGGER_USD, runFrontierProbe, runProbe, runSmoke, servedTools, sha8, toolCoverage, withProbeGateway,
   type ChatTransport, type FrontierResult, type FrontierRow, type FrontierTarget, type SkillProbe,
 } from '../../eval/runner/skillopt-method/headroom.ts';
-import { callCostUsd, emptyMeter, meterRollout, summarizeMeter } from '../../eval/runner/skillopt-method/rollouts.ts';
+import { callCostUsd, emptyMeter, meterRollout, scoreArm, summarizeMeter } from '../../eval/runner/skillopt-method/rollouts.ts';
 import { SKILLS } from '../../eval/runner/skillopt-method/score.ts';
 import {
   pairedBootstrap, planTestStage, rewriteVerdict, runTestStage, shippedSkillVerdict, TEST_BOOTSTRAP, TEST_ROLLOUT_USD, TEST_STAGE_ESTIMATE_USD, testRolloutsPerPair, testStageEstimateUsd,
@@ -356,6 +356,33 @@ function providerStub(seen: Seen) {
   }, { preconnect: () => {} }) as typeof fetch;
 }
 
+describe('rollout errors, keyless', () => {
+  test("a provider error on some of an arm's tasks fails the arm instead of scoring those tasks as wrong answers", async () => {
+    const seen = newSeen();
+    const tasks = readTasks('query', 'sel').slice(0, 4);
+    const failing = tasks[1]!;
+    const base = fakeTransport(tasks);
+    const transport: ChatTransport = async opts => {
+      if (lastUserText(opts).includes(failing.task)) throw new Error('fake provider failure');
+      return base(opts);
+    };
+    const arm = await run('n15-rollout-errors', () => sealed(seen, async () => {
+      const engine = await openBrain();
+      try {
+        return await withProbeGateway({ chatModel: FRONTIER_TARGETS.sol, fake: true, transport, keys: ['OPENAI_API_KEY'] }, () =>
+          scoreArm({ engine, skillText: readSeed('query'), tasks, model: FRONTIER_TARGETS.sol, runs: 1 }));
+      } finally {
+        await engine.disconnect().catch(() => {});
+      }
+    }));
+    expect(arm.score).toBeNull();
+    expect(arm.task_medians).toBeUndefined();
+    expect(arm.error).toStartWith(`1 of 4 tasks errored (${failing.task_id}); first error: `);
+    expect(arm.error).toContain('fake provider failure');
+    expect(Object.keys(arm.per_task).sort()).toEqual(tasks.filter(t => t !== failing).map(t => t.task_id).sort());
+  }, 120_000);
+});
+
 describe('the smoke and the wire, keyless', () => {
   test('the fake smoke runs one seed rollout per target and reports turns, tools, tokens and cost', async () => {
     const seen = newSeen();
@@ -639,6 +666,24 @@ describe('stage test, keyless end to end', () => {
     }
     expect({ embeds: seen.embeds, generates: seen.generates, fetches: seen.fetches }).toEqual({ embeds: 0, generates: 0, fetches: [] });
   }, 300_000);
+
+  test("a provider error on one of the seed arm's tasks leaves the seed unscored and both paired differences null", async () => {
+    const seen = newSeen();
+    const live = withRewriteTexts(probeOf(f0bReceipt('sol')), join(REPO_ROOT, f0bReceipt('sol')));
+    const seed = readSeed('query');
+    const transport = (tasks: readonly MethodTask[]): ChatTransport => {
+      const base = fakeTransport(tasks);
+      return async opts => {
+        if (opts.system === seed && lastUserText(opts).includes(tasks[0]!.task)) throw new Error('fake provider failure');
+        return base(opts);
+      };
+    };
+    const r = await run('n15-test-stage-arm-error', () => sealed(seen, () => runTestStage({ target: 'sol', fake: true, from: live, skills: ['query'], transport })));
+    const p = r.skills[0]!;
+    expect([p.no_skill, p.seed, p.rewrite]).toEqual([0, null, expect.any(Number)]);
+    expect(p.arms.seed!.error).toContain('fake provider failure');
+    expect([p.seed_minus_no_skill, p.rewrite_minus_seed]).toEqual([null, null]);
+  }, 120_000);
 
   test('a pair over the reprice trigger stops stage test after it and marks the rest reprice-trigger; a fake run may read live F0b receipts', async () => {
     const seen = newSeen();

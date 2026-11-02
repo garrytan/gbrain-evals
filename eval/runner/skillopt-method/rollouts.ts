@@ -96,7 +96,7 @@ export function summarizeMeter(m: MeterTotals): MeterSummary {
 export interface ArmScore {
   score: number | null;
   per_task: Record<string, number[]>;
-  /** Each task's median of runs, as gbrain scores it (a task whose rollout errored counts 0); absent when the arm failed. */
+  /** Each task's median of runs, as gbrain scores it; absent when the arm failed. */
   task_medians?: Record<string, number>;
   error?: string;
 }
@@ -114,7 +114,11 @@ export interface ArmOptions {
 
 const benchTask = (t: MethodTask): BenchmarkTask => ({ task_id: t.task_id, task: t.task, judge: t.judge });
 
-/** Score a skill text on tasks; a failure of the whole arm is returned as `error` with a null score. */
+/**
+ * Score a skill text on tasks. A failed arm, or one where any task's rollout
+ * errored (gbrain scores such a task 0), is returned as `error` with a null
+ * score, so a provider failure never reads as a wrong answer.
+ */
 export async function scoreArm(o: ArmOptions): Promise<ArmScore> {
   const per_task: Record<string, number[]> = {};
   const scoreFn: ScoreFn = async (trajectory, judge) => {
@@ -144,6 +148,8 @@ export async function scoreArm(o: ArmOptions): Promise<ArmScore> {
       engine: o.engine, skillText: o.skillText, tasks: o.tasks.map(benchTask), targetModel: o.model, judgeModel: o.model,
       runsPerTask: o.runs, scoreFn, ...(rolloutFn ? { rolloutFn } : {}),
     });
+    const errored = perTask.filter(t => t.error !== undefined);
+    if (errored.length) return { score: null, per_task, error: `${errored.length} of ${perTask.length} tasks errored (${errored.map(t => t.task_id).join(', ')}); first error: ${errored[0]!.error}` };
     return { score, per_task, task_medians: Object.fromEntries(perTask.map(t => [t.task_id, t.median])) };
   } catch (e) {
     return { score: null, per_task, error: e instanceof Error ? e.message : String(e) };
