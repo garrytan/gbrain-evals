@@ -13,8 +13,8 @@ plan sections 2 and 3). Its tasks test what a skill's procedure adds on a brain 
 
 The rollout brain is world-v3's 999 pages ([`world-v3.ts`](../../generators/skillopt-method/world-v3.ts)), and the seed
 skills are the ones gbrain ships at `311a83bbe` (v0.60.553.0). They are byte-identical to v1's and v2's seeds (gbrain
-`3ec766c40`): none of the three changed between the two commits. This commit's `package.json` pins gbrain `a131fb20`
-(v0.60.549.0), which ships the same three files.
+`3ec766c40`): none of the three changed between the two commits. This commit's `package.json` pins gbrain `311a83bbe`
+(v0.60.553.0), the same commit the seeds come from.
 
 Every reader names v3 explicitly: [`dataset.ts`](../../runner/skillopt-method/dataset.ts) keeps v2 as the N15 default, and
 [`dataset-context.ts`](../../runner/skillopt-method/dataset-context.ts) hands brain import, the audit and the proposer's
@@ -116,6 +116,12 @@ regenerate, which makes a new MANIFEST.json and dataset hash.
 - Briefing citation dates are not checked against the page.
 
 ## Changelog
+
+### 2026-11-02: The pin sentence names gbrain `311a83bbe`
+
+The main merge of #306 ([`5df3b68a`](https://github.com/garrytan/gbrain-evals/commit/5df3b68a)) moved `package.json`'s
+gbrain pin from `a131fb20` (v0.60.549.0) to `311a83bbe` (v0.60.553.0), so the sentence on the pin now names
+`311a83bbe`, the same commit the seeds come from. No data file or MANIFEST.json changed.
 
 ### 2026-11-02: Dataset created
 
