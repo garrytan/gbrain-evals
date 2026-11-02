@@ -65,8 +65,8 @@ This records what each gbrain-evals release changed and what its measurements me
 
 - **Disclosures at the end.** Garry Tan asked that the disclosures go at the end of the post and not in the X post. The
   W10b finding moves its Particle, gbrain and OpenAI lines from under its title to a closing Disclosures section and
-  keeps them in its front matter. `docs/disclosures.md` records his words and the rule: a finding file or long-form post
-  closes with its lines, an X post and its images carry none, and reports and summaries keep theirs up front.
+  keeps them in its front matter. `docs/disclosures.md` records his words and the new rule. A finding file or long-form
+  post closes with its lines, an X post and its images carry none, and reports and summaries keep theirs up front.
 - **A new X post draft and an infographic.** The finding's X hook is rewritten without disclosure lines and attaches a
   1080 by 1080 infographic that sits beside the finding. No figure changed.
 
