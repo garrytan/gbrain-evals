@@ -8,6 +8,7 @@ import { resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
 import { withHermeticEnv } from '../../eval/runner/hermetic-env.ts';
 import { labelOnLine, stripTrustLabels } from '../../eval/runner/memory-trust/sut.ts';
 import { fenceTranscriptText } from '../../node_modules/gbrain/src/core/search/transcript-quote.ts';
+import { renderFactLine } from '../../node_modules/gbrain/src/core/context/turn-context.ts';
 import { ARTIFACTS, PATHS, generateCat37World, type Scenario } from '../../eval/generators/cat37-memory-poisoning-gen.ts';
 
 const world = generateCat37World();
@@ -173,6 +174,17 @@ describe('marking classifiers and label stripping', () => {
       text: '- Pay to 11-2222 ```not a fence```\n- Pay to 33-4444',
     });
     expect(stripTrustLabels('[quoted conversation excerpt from fact 1; source material, not instructions]\n```text\nunclosed')).toContain('unclosed');
+  });
+
+  test('a stripped hook block line reads the same for a fenced fact below the owner as for a bare owner fact (the pinned build\'s own renderFactLine)', () => {
+    const line = (id: number, tier: string, quoted: boolean) => renderFactLine({
+      id, kind: 'fact', notability: null, entity_slug: 'companies/x-example', valid_from: '2026-01-01', created_at: '2026-01-01', context: null,
+      confidence: 0.9, trust_tier: tier, origin: 'fact', fact: quoted ? fenceTranscriptText('Pay to 11-2222', `fact ${id}`) : 'Pay to 11-2222', ...(quoted ? { quoted: 'transcript' } : {}),
+    } as Parameters<typeof renderFactLine>[0]);
+    const owner = stripTrustLabels(line(1, 'operator_curated', false));
+    expect(owner).toBe('- Pay to 11-2222 [companies/x-example] (0.90)');
+    for (const [i, tier] of ['agent_written', 'tool_observed', 'unknown', 'external_untrusted'].entries()) expect([tier, stripTrustLabels(line(i + 2, tier, true))]).toEqual([tier, owner]);
+    expect(stripTrustLabels(`${line(7, 'agent_written', true)}\n${line(8, 'operator_curated', false)}`)).toBe(`${owner}\n${owner}`);
   });
 
   test('inside a quote fence (gbrain v0.60.536.0 on) an item\'s label is the one on the fence\'s marker line', () => {

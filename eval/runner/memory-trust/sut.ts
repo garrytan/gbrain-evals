@@ -368,7 +368,12 @@ function quoteMarkerLine(text: string, at: number): string | null {
   return null;
 }
 
-/** The text with each closed quote fence's marker line and fence lines removed and its quoted text kept. */
+/**
+ * The text with each closed quote fence's marker line and fence lines removed and its quoted text kept. A fence opened
+ * partway through a line whose item continues on the line after the fence (gbrain's renderFactLine closes the fence on
+ * its own line and puts " [slug] (confidence)" on the next) also loses that line break, so the item reads as one line,
+ * as a bare one does.
+ */
 function unwrapQuoteFences(text: string): string {
   let out = '';
   let at = 0;
@@ -378,6 +383,7 @@ function unwrapQuoteFences(text: string): string {
     if (close < 0) continue;
     out += text.slice(at, m.index) + text.slice(start, Math.max(start, close));
     at = close + 1 + m[1]!.length;
+    if (text.slice(text.lastIndexOf('\n', m.index - 1) + 1, m.index).trim()) at += /^[ \t]*\n(?=[ \t])/.exec(text.slice(at))?.[0].length ?? 0;
   }
   return out + text.slice(at);
 }
