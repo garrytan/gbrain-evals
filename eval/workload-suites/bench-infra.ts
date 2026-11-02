@@ -221,9 +221,10 @@ export async function callModel(env: Record<string, string>, modelId: string, pr
  * with `compatSend` under callModel's attempt limits. A 429 or 5xx waits its Retry-After (capped at 120 s) when it
  * sends one, else the same backoff as OpenAI; a proxy's 402 is a budget refusal; Particle's credit 402 throws
  * `ParticleCreditExhausted` after its receipt. A long reasoning answer gets the metering proxies' upstream deadline,
- * not Bun's 300-second fetch timeout. A request Particle may have billed (`compatMayHaveBilled`: it timed out, lost its
- * connection after it went out, was answered 504, which the harness proxy sends when its upstream request failed after
- * it went out, or was answered 2xx without a message) is never sent again (issue #282).
+ * not Bun's 300-second fetch timeout. A request Particle may have billed (`compatMayHaveBilled`: it timed out, failed in
+ * transport other than before any byte was sent, was answered 504, which the harness proxy sends when its upstream
+ * request may have gone out before it failed, or was answered 2xx without a message) is never sent again (issues #282,
+ * #288).
  */
 async function callCompat(modelId: string, prompt: string, tag: string, maxTokens: number, env: Record<string, string>, fail: (error: string) => ModelReply, note: (attempt: number, o: AttemptOutcome) => void, deadlineMs: number): Promise<ModelReply> {
   let built: CompatRequest;

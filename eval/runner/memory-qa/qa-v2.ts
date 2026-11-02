@@ -47,9 +47,9 @@
  * plus the proxy's longest admission wait (`compatDeadlineMs`, issue #271),
  * unless the client is built with `compatTimeoutMs` (the particle replay
  * sets its own). An attempt that times
- * out (locally, or a 504 from a gateway such as the lease proxy) or loses its
- * connection after it went out ends the loop, because Particle may have
- * billed it. Their receipts also record what
+ * out (locally, or a 504 from a gateway such as the lease proxy) or fails in
+ * transport other than before any byte was sent (`compatConnectionLost`)
+ * ends the loop, because Particle may have billed it. Their receipts also record what
  * the request sent and the response's identity fields; their cache key adds
  * the effort and output limit sent. Anthropic and OpenAI requests, receipts
  * and cache keys are unchanged.

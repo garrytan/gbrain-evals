@@ -4,7 +4,9 @@
  * fake provider (eval/systems/_shim/fake_provider.py) on loopback.
  */
 import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
-import { mkdtempSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { createServer, type AddressInfo, type Socket } from 'node:net';
+import { createServer as createTlsServer, TLSSocket } from 'node:tls';
 import { tmpdir } from 'node:os';
 import { join, relative, resolve } from 'node:path';
 import { BudgetExceededError, chatPrice, priceRequest } from '../../eval/runner/budget-ledger.ts';
@@ -310,6 +312,150 @@ describe('compatSend and parseCompatResponse', () => {
     expect(parseCompatResponse({ ...PARTICLE_OK, choices: [{ ...PARTICLE_OK.choices[0], logprobs: { content: [{ token: 'ok', logprob: -0.1 }, { token: '.', logprob: -0.2, top_logprobs: null }] } }] }).logprobs)
       .toEqual([{ token: 'ok', logprob: -0.1, top: [] }, { token: '.', logprob: -0.2, top: [] }]);
   });
+});
+
+/**
+ * Throwaway TLS material for the transport tests, made with the openssl CLI in a temp dir at test time (never committed,
+ * never a real key): a self-signed localhost certificate, a test CA, and localhost certificates that CA signed, valid,
+ * for another host name, expired, not yet valid and with a broken signature.
+ */
+function tlsFixtures() {
+  const dir = mkdtempSync(join(tmpdir(), 'compat-tls-'));
+  const openssl = (...args: string[]) => {
+    const r = Bun.spawnSync(['openssl', ...args], { cwd: dir, stdout: 'ignore', stderr: 'pipe' });
+    if (r.exitCode !== 0) throw new Error(`openssl ${args[0]} failed: ${r.stderr.toString()}`);
+  };
+  const ec = ['-newkey', 'ec', '-pkeyopt', 'ec_paramgen_curve:prime256v1', '-nodes'];
+  openssl('req', '-x509', ...ec, '-keyout', 'self.key', '-out', 'self.pem', '-days', '30', '-subj', '/CN=localhost', '-addext', 'subjectAltName=DNS:localhost');
+  openssl('req', '-x509', ...ec, '-keyout', 'ca.key', '-out', 'ca.pem', '-days', '30', '-subj', '/CN=compat-test-ca', '-addext', 'basicConstraints=critical,CA:TRUE', '-addext', 'keyUsage=critical,keyCertSign');
+  writeFileSync(join(dir, 'index.txt'), '');
+  writeFileSync(join(dir, 'serial'), '1000\n');
+  writeFileSync(join(dir, 'ca.cnf'), ['[ca]', 'default_ca = test', '[test]', 'dir = .', 'database = index.txt', 'serial = serial', 'new_certs_dir = .', 'certificate = ca.pem',
+    'private_key = ca.key', 'default_md = sha256', 'policy = any', 'unique_subject = no', 'email_in_dn = no', '[any]', 'commonName = supplied', '[localhost]', 'subjectAltName = DNS:localhost', '[other]', 'subjectAltName = DNS:other.test', ''].join('\n'));
+  const sign = (name: string, ext: string, start: string, end: string) => {
+    openssl('req', ...ec, '-keyout', `${name}.key`, '-out', `${name}.csr`, '-subj', '/CN=localhost');
+    openssl('ca', '-batch', '-notext', '-config', 'ca.cnf', '-extensions', ext, '-in', `${name}.csr`, '-out', `${name}.pem`, '-startdate', start, '-enddate', end);
+  };
+  sign('leaf', 'localhost', '20260101000000Z', '20991231000000Z');
+  sign('other', 'other', '20260101000000Z', '20991231000000Z');
+  sign('expired', 'localhost', '20200101000000Z', '20200102000000Z');
+  sign('future', 'localhost', '20990101000000Z', '20990102000000Z');
+  const der = Buffer.from(readFileSync(join(dir, 'leaf.pem'), 'utf8').replace(/-----[^-]+-----|\s/g, ''), 'base64');
+  der[der.length - 4] ^= 0xff;
+  writeFileSync(join(dir, 'badsig.pem'), `-----BEGIN CERTIFICATE-----\n${der.toString('base64').replace(/.{64}/g, '$&\n')}\n-----END CERTIFICATE-----\n`);
+  const read = (file: string) => readFileSync(join(dir, file), 'utf8');
+  return { dir, read, ca: read('ca.pem') };
+}
+
+/** A loopback TLS server that answers 200 once it has read a request, and counts the request bytes it decrypted. */
+async function tlsServer(cert: string, key: string) {
+  let bytes = 0;
+  const server = createTlsServer({ cert, key }, s => {
+    s.on('error', () => {});
+    s.on('data', d => { bytes += d.length; if (d.toString().includes('\r\n\r\n')) s.end('HTTP/1.1 200 OK\r\ncontent-type: application/json\r\ncontent-length: 2\r\n\r\n{}'); });
+  });
+  server.on('tlsClientError', () => {});
+  await new Promise<void>(r => server.listen(0, '127.0.0.1', r));
+  return { port: (server.address() as AddressInfo).port, bytes: () => bytes, close: () => server.close() };
+}
+
+/** A loopback socket server that reads a request, counts its bytes, and then does what `answer` says. */
+async function rawServer(answer: (s: Socket) => void) {
+  let bytes = 0;
+  const server = createServer(s => {
+    s.on('error', () => {});
+    let answered = false;
+    s.on('data', d => { bytes += d.length; if (!answered && d.toString().includes('\r\n\r\n')) { answered = true; answer(s); } });
+  });
+  await new Promise<void>(r => server.listen(0, '127.0.0.1', r));
+  return { port: (server.address() as AddressInfo).port, bytes: () => bytes, close: () => server.close() };
+}
+
+const reject = async (send: () => Promise<unknown>) => {
+  try { await send(); } catch (e) { return e as Error & { code?: unknown }; }
+  throw new Error('the request did not fail');
+};
+
+describe('which particle transport failures may be sent again (#288)', () => {
+  const fx = tlsFixtures();
+  afterAll(() => rmSync(fx.dir, { recursive: true, force: true }));
+  const particleAt = (base: string) => compatRequest('particle:particle-1', ASK, {}, { ...KEYED, PARTICLE_BASE_URL: base });
+
+  // Value: protects=a particle request is sent again only after a failure that happened before any byte of it was sent (issue #288); fails_when=a code on the allowlist is one Bun gives after the request went out, or Bun 1.4.4 names one of these failures differently so the allowlist no longer matches it; why_new=COMPAT_PRE_SEND_CODES replaces the after-send denylist; seam=loopback servers, a closed port, an .invalid host, a multicast address and openssl-made certificates; no_claim=EAI_AGAIN and EADDRNOTAVAIL, which need a host with no network
+  test('Bun gives each code on COMPAT_PRE_SEND_CODES before a byte of the request is sent, and compatMayHaveBilled reads none of them as billed', async () => {
+    const compat = await import('../../eval/runner/providers/openai-compatible.ts') as Record<string, unknown>;
+    const codes = compat.COMPAT_PRE_SEND_CODES as ReadonlySet<string> | undefined;
+    const seen: Array<[string, unknown, number]> = [];
+    const closed = createServer();
+    await new Promise<void>(r => closed.listen(0, '127.0.0.1', r));
+    const port = (closed.address() as AddressInfo).port;
+    await new Promise<void>(r => closed.close(() => r()));
+    for (const [name, url] of [['refused', `http://127.0.0.1:${port}/v1`], ['dns', 'http://particle-288.invalid/v1'], ['no route', 'http://224.0.0.1:80/v1'], ['bad url', 'http://exa mple.test/v1']] as const) {
+      const e = await reject(() => fetch(url, { method: 'POST', body: '{}', signal: AbortSignal.timeout(10_000) }));
+      seen.push([name, e.code, 0]);
+      expect([name, compatMayHaveBilled(e)]).toEqual([name, false]);
+    }
+    for (const [name, cert, key, tls] of [
+      ['self-signed', fx.read('self.pem'), fx.read('self.key'), {}],
+      ['untrusted chain', fx.read('leaf.pem') + fx.ca, fx.read('leaf.key'), {}],
+      ['untrusted leaf', fx.read('leaf.pem'), fx.read('leaf.key'), {}],
+      ['other host', fx.read('other.pem'), fx.read('other.key'), { ca: fx.ca }],
+      ['expired', fx.read('expired.pem'), fx.read('expired.key'), { ca: fx.ca }],
+      ['not yet valid', fx.read('future.pem'), fx.read('future.key'), { ca: fx.ca }],
+      ['bad signature', fx.read('badsig.pem'), fx.read('leaf.key'), { ca: fx.ca }],
+    ] as const) {
+      const server = await tlsServer(cert, key);
+      try {
+        const e = await reject(() => compatSend(particleAt(`https://localhost:${server.port}/v1`), { fetchImpl: ((url: string, init: RequestInit) => fetch(url, { ...init, tls } as RequestInit)) as unknown as typeof fetch }));
+        seen.push([name, e.code, server.bytes()]);
+        expect([name, compatMayHaveBilled(e)]).toEqual([name, false]);
+      } finally { server.close(); }
+    }
+    const observed = seen.map(([name, code, bytes]) => [name, name === 'dns' && code === 'EAI_AGAIN' ? 'ENOTFOUND' : code, bytes] as const);
+    expect(observed).toEqual([
+      ['refused', 'ECONNREFUSED', 0], ['dns', 'ENOTFOUND', 0], ['no route', 'ENETUNREACH', 0], ['bad url', 'ERR_INVALID_URL', 0],
+      ['self-signed', 'DEPTH_ZERO_SELF_SIGNED_CERT', 0], ['untrusted chain', 'SELF_SIGNED_CERT_IN_CHAIN', 0], ['untrusted leaf', 'UNABLE_TO_VERIFY_LEAF_SIGNATURE', 0],
+      ['other host', 'ERR_TLS_CERT_ALTNAME_INVALID', 0], ['expired', 'CERT_HAS_EXPIRED', 0], ['not yet valid', 'CERT_NOT_YET_VALID', 0], ['bad signature', 'CERT_SIGNATURE_FAILURE', 0],
+    ]);
+    expect([...(codes ?? [])].sort()).toEqual([...observed.map(([, code]) => String(code)), 'EAI_AGAIN', 'EADDRNOTAVAIL'].sort());
+  }, 30_000);
+
+  // Value: protects=a particle request that failed after it went out is never sent again, whatever Bun names the failure (issue #288); fails_when=compatMayHaveBilled reads a malformed status line, a bad Content-Length, a bad chunk, a body that fails to decompress, a TLS record corrupted after the request or an unnamed failure as one that never reached Particle, so qa-v2, readCompat, callCompat and both proxies send it again; why_new=only failures proven to happen before sending are resendable; seam=loopback servers that read the request and then answer badly; no_claim=what Particle's edge sends when it fails
+  test('a failure after the request went out is read as billed, whatever code Bun gives it, and only a failure proven before sending is not', async () => {
+    const answers: Array<[string, string, (s: Socket) => void]> = [
+      ['garbage status line', 'Malformed_HTTP_Response', s => s.end('not http at all\r\n\r\n')],
+      ['malformed header', 'Malformed_HTTP_Response', s => s.end('HTTP/1.1 200 OK\r\nbad header line\r\ncontent-length: 2\r\n\r\n{}')],
+      ['bad content-length', 'InvalidContentLength', s => s.end('HTTP/1.1 200 OK\r\ncontent-length: abc\r\n\r\n{}')],
+      ['bad chunk', 'InvalidHTTPResponse', s => s.end('HTTP/1.1 200 OK\r\ncontent-type: application/json\r\ntransfer-encoding: chunked\r\n\r\nzz\r\nhello\r\n0\r\n\r\n')],
+      ['gzip', 'ZlibError', s => s.end('HTTP/1.1 200 OK\r\ncontent-type: application/json\r\ncontent-encoding: gzip\r\ncontent-length: 10\r\n\r\nnotgzip!!!')],
+      ['brotli', 'BrotliDecompressionError', s => s.end('HTTP/1.1 200 OK\r\ncontent-type: application/json\r\ncontent-encoding: br\r\ncontent-length: 10\r\n\r\nnotbrotli!')],
+      ['reset', 'ECONNRESET', s => s.resetAndDestroy()],
+    ];
+    for (const [name, code, answer] of answers) {
+      const server = await rawServer(answer);
+      try {
+        const e = await reject(() => compatSend(particleAt(`http://127.0.0.1:${server.port}/v1`)));
+        expect([name, e.code, server.bytes() > 0, compatMayHaveBilled(e)]).toEqual([name, code, true, true]);
+      } finally { server.close(); }
+    }
+    let read = 0;
+    const corrupt = createServer(raw => {
+      const t = new TLSSocket(raw, { isServer: true, cert: fx.read('leaf.pem'), key: fx.read('leaf.key') });
+      t.on('error', () => {}); raw.on('error', () => {});
+      t.on('data', d => { read += d.length; if (d.toString().includes('\r\n\r\n')) raw.write(Buffer.from('17030300ff' + 'ab'.repeat(255), 'hex')); });
+    });
+    await new Promise<void>(r => corrupt.listen(0, '127.0.0.1', r));
+    try {
+      const e = await reject(() => compatSend(particleAt(`https://localhost:${(corrupt.address() as AddressInfo).port}/v1`), { fetchImpl: ((url: string, init: RequestInit) => fetch(url, { ...init, tls: { ca: fx.ca } } as RequestInit)) as unknown as typeof fetch }));
+      expect(['tls record after the request', e.code, read > 0, compatMayHaveBilled(e)]).toEqual(['tls record after the request', 'EPROTO', true, true]);
+    } finally { corrupt.close(); }
+    expect(compatMayHaveBilled(new TypeError('fetch failed'))).toBe(true);
+    expect(compatMayHaveBilled(Object.assign(new TypeError('FailedToOpenSocket: Was there a typo in the url or port?'), { code: 'FailedToOpenSocket' }))).toBe(true);
+    const budget = await reject(() => compatSend(compatRequest('particle:particle-1', ASK, {}, { ...KEYED, PARTICLE_BASE_URL: 'https://particle-288.example/v1' })));
+    expect([budget.name, compatMayHaveBilled(budget)]).toEqual(['BudgetExceededError', false]);
+    for (const status of [402, 429, 500, 503]) expect([status, compatMayHaveBilled(compatError(classifyCompatError('particle', status, '{}')))]).toEqual([status, false]);
+    expect(compatMayHaveBilled(null)).toBe(false);
+  }, 30_000);
 });
 
 describe('receipts', () => {
