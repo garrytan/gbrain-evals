@@ -13,7 +13,7 @@ import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, 
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { campaignCells, campaignManifest, cellAggregates, contextKey, publishCell, frontierInstrumentId, probeSample, realizationId, runCell, scoreboardCampaignCell, selectCellQuestions, type CellDeps, type CellOptions, type CellResult } from '../../eval/runner/q1/cell.ts';
-import { buildManifest, definitionProblems, estimateCell, loadManifest, manifestText, MANIFEST_PATH, SETS, type ArmDefinition, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
+import { buildManifest, COUNTED_READERS, definitionProblems, estimateCell, loadManifest, manifestText, MANIFEST_PATH, SETS, type ArmDefinition, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
 import { ScoreboardError } from '../../eval/runner/q1/scoreboard-errors.ts';
 import { classifyV2, CLASSIFIER_VERSION_V2, RULES_SHA256_V2 } from '../../eval/runner/q1/hedge.ts';
 import { instrumentFor } from '../../eval/runner/memory-qa/instruments.ts';
@@ -22,7 +22,7 @@ import type { Corpus, MemoryQuestion } from '../../eval/runner/memory-qa/corpus.
 import { ChatClient, type ChatLike, type ChatOptions, type ChatResult } from '../../eval/runner/memory-qa/qa-v2.ts';
 import { answerProblems, judgmentProblems, rowProblems } from '../../eval/runner/memory-qa/records.ts';
 import { FakeMemorySystem, FAKE_CAPABILITIES, serveProtocol } from '../../eval/runner/systems/fake.ts';
-import { FRONTIER_READERS, FullContextSystem } from '../../eval/runner/systems/baselines.ts';
+import { FullContextSystem } from '../../eval/runner/systems/baselines.ts';
 import { FileAgentSystem } from '../../eval/runner/systems/file-agent.ts';
 import { BudgetExceededError, BudgetRun, closeLedgers } from '../../eval/runner/budget-ledger.ts';
 import { DEFAULT_ROUTE_CAPS, MeteringProxy } from '../../eval/runner/metering-proxy.ts';
@@ -39,7 +39,7 @@ afterAll(() => rmSync(tmp, { recursive: true, force: true }));
 const raw = JSON.parse(readFileSync(join(ROOT, 'test/eval/fixtures/q1-cell/locomo-shaped.json'), 'utf8')) as { conversations: Corpus['conversations']; questions: MemoryQuestion[] };
 const corpus: Corpus = { benchmark: 'fixture', conversations: raw.conversations, questions: raw.questions, source: { name: 'LoCoMo-shaped fixture (invented)', files: [{ path: 'test/eval/fixtures/q1-cell/locomo-shaped.json', sha256: 'fixture' }], revision: 'repo', license: 'MIT' } };
 const byText = new Map(raw.questions.map(q => [q.question, q]));
-const READERS: string[] = [...FRONTIER_READERS];
+const READERS: string[] = [...COUNTED_READERS];
 const SONNET = 'anthropic:claude-sonnet-5-5';
 
 /** Answers with the reference when the prompt carries it verbatim, else says the history does not say. */

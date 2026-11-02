@@ -19,6 +19,7 @@ import { loadFixture } from '../../eval/runner/memory-qa/corpus.ts';
 import { readerPrompt } from '../../eval/runner/memory-qa/qa-v2.ts';
 import { UPSTREAM_DEADLINE_MS } from '../../eval/runner/metering-proxy.ts';
 import { classifyCompatError, CompatHttpError, compatConnectionLost, compatMayHaveBilled } from '../../eval/runner/providers/openai-compatible.ts';
+import { COUNTED_READERS as Q1_COUNTED_READERS } from '../../eval/runner/q1/cells/definitions.ts';
 import { answerFullContext, checkFit, FRONTIER_READERS, FullContextSystem, READER_WINDOWS, splitForCache } from '../../eval/runner/systems/baselines.ts';
 import { classifyRun, evidenceOpened, FILE_AGENT_MAX_TURNS, FileAgentSystem, layoutSessions, parseReader, PROSE_ANSWER_TOOL, proxiedFetch, ripgrep, type GrepLimitEvent } from '../../eval/runner/systems/file-agent.ts';
 import { Sanitizer } from '../../eval/runner/systems/sanitize.ts';
@@ -266,8 +267,8 @@ describe('true full context', () => {
   const q = corpus.questions.find(x => x.conversation === conv.id)!;
   const prompt = readerPrompt(q, conv.sessions, '2026-04-01');
 
-  test('every frontier reader has a window and a price, in one table', () => {
-    for (const r of FRONTIER_READERS) { expect(READER_WINDOWS[r]).toBeDefined(); expect(CHAT_PRICE_OVERRIDES[r]).toBeDefined(); }
+  test('every frontier reader and Q1 counted reader has a window and a price, in one table', () => {
+    for (const r of new Set<string>([...FRONTIER_READERS, ...Q1_COUNTED_READERS])) { expect(READER_WINDOWS[r]).toBeDefined(); expect(CHAT_PRICE_OVERRIDES[r]).toBeDefined(); }
     expect(READER_WINDOWS['openai:gpt-6.1-sol'].max_input_tokens).toBe(922_000);
   });
 

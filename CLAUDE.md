@@ -124,13 +124,15 @@ rule of 2026-11-01 that evals test gbrain and gstack on frontier models.
   published system keeps that system's reader. Note a ceiling (a model at 100% on every arm cannot show a difference)
   rather than counting it as a win or a tie.
 - **Preregistered gates keep their model list.** To change the models of an existing preregistered gate, record the
-  change and its reason in the preregistration before any new cell runs.
+  change and its reason in the preregistration before any new cell runs. A preregistered program that names Sonnet or
+  Haiku as a model under test makes that change before its next run: Opus 5.5, GPT-6.1 Sol and, where the runner has a
+  route, particle-1.
 - **Defaults follow the same rules.** A live category's default models are current-generation models, and its default
-  models under test are frontier models, never Sonnet or Haiku. `test/eval/model-defaults.test.ts` holds both. A
-  default that keeps an older model, or a Sonnet or Haiku model under test, on purpose (a frozen protocol, a mirror of
-  gbrain's own default, or a dated move that waits on named follow-up work) is a named exception with its reason in
-  `eval/runner/model-defaults.ts`. Changing a default
-  is a new receipt identity: never pool its results with the old model's.
+  models under test are frontier models, never Sonnet or Haiku. `test/eval/model-defaults.test.ts` holds both, for
+  single defaults and for comparison sets. A default that keeps an older model, or a Sonnet or Haiku model under test,
+  on purpose (a frozen protocol, a mirror of gbrain's own default, or a dated move that waits on named follow-up work)
+  is a named exception with its reason in `eval/runner/model-defaults.ts`. Changing a default is a new receipt
+  identity: never pool its results with the old model's.
 
 To add a category, follow the "Add a category" checklist in [eval/CONTRIBUTING.md](eval/CONTRIBUTING.md): registry row and preregistered promotion rules first, the shared hermetic environment, the paid-arm guard, the scorer mutation kit and the bug ledger.
 

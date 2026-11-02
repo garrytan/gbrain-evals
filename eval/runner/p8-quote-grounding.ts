@@ -70,6 +70,8 @@ import { Rng } from '../generators/seeded.ts';
 const log = (s: string) => process.stderr.write(`[quotes] ${s}\n`);
 
 export const QUESTIONS_GENERATOR = 'p8-quote-grounding@2';
+/** The think model the 2026-10-05 held-out verdicts ran on (docs/benchmarks/2026-10-05-heldout-verdicts). */
+export const DEFAULT_THINK_MODEL = 'anthropic:claude-sonnet-5-5';
 export const DEV_SEEDS: readonly number[] = [1];
 export const DEV_QUESTIONS = 'eval/data/p8-quote-grounding/dev-questions.json';
 export const CORPORA = ['amara', 'sealed-confirmation'] as const;
@@ -285,7 +287,7 @@ async function main(argv = process.argv.slice(2)) {
   const out = resolve(flag('--out') ?? 'eval/reports/p8-quote-grounding/dev');
   mkdirSync(out, { recursive: true });
   const chat = new ChatClient(cacheDir(heldout !== undefined));
-  const thinkModel = flag('--think-model') ?? 'anthropic:claude-sonnet-5-5';
+  const thinkModel = flag('--think-model') ?? DEFAULT_THINK_MODEL;
   const judgeModel = flag('--judge') ?? 'gpt-6.1-sol';
   const gut = resolveGbrainUnderTest(flag('--gbrain') ?? null);
   const gateway = await importGbrain<{ configureGateway: (c: Record<string, unknown>) => void }>(gut, 'src/core/ai/gateway.ts');
