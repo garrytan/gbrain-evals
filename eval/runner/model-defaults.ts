@@ -81,6 +81,14 @@ export const DEFAULT_MODEL_EXCEPTIONS: Readonly<Record<string, DefaultModelExcep
     reason: 'sealed confirmation protocol: frozen request payloads and the official judge',
   },
   'pilot judge': { models: ['gpt-4o-2024-08-06'], kind: 'frozen-protocol', reason: "LongMemEval's official judge protocol" },
+  'memory-trust flag-rate agent and judge': {
+    models: ['claude-sonnet-5-5', 'claude-sonnet-5-5'], kind: 'frozen-protocol',
+    reason: "amendment 5 (2026-10-09) of docs/benchmarks/2026-10-07-memory-trust-preregistration.md names claude-sonnet-5-5 as the simulated user's agent and as the false-flag labeler",
+  },
+  'external-ideas wave A decision model': {
+    models: ['claude-sonnet-5-5'], kind: 'frozen-protocol',
+    reason: 'docs/benchmarks/2026-10-21-external-ideas-wave-a-preregistration.md decides the default flip on claude-sonnet-5-5, with gpt-6.1-sol and claude-opus-5-5 as secondary models',
+  },
   'facts-absorb gate baseline': {
     models: ['anthropic:claude-sonnet-4-6'], kind: 'frozen-protocol',
     reason: "the preregistered baseline arm is gbrain's shipped facts extraction model (docs/benchmarks/2026-10-08-facts-extraction-model/PREREGISTRATION.md)",

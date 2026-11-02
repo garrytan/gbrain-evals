@@ -35,6 +35,9 @@ import { JUDGE_MODEL as PILOT_JUDGE } from '../../eval/runner/pilot/run.ts';
 import { SHIPPED_DEFAULT_MODEL } from '../../eval/runner/facts-absorb-gate.ts';
 import { GPT4O as E1_GPT4O, SONNET as E1_SONNET } from '../../eval/runner/evidence-delivery/e1.ts';
 import { DEV_ANSWER, DEV_JUDGE } from '../../eval/runner/harness-dev.ts';
+import { DEFAULT_THINK_MODEL as MEMORY_QA_THINK } from '../../eval/runner/memory-qa/run-systems.ts';
+import { AGENT_MODEL as FLAG_RATE_AGENT, JUDGE_MODEL as FLAG_RATE_JUDGE } from '../../eval/runner/memory-trust/flag-rate.ts';
+import { DECISION_MODEL as WAVE_A_DECISION } from '../../eval/runner/external-ideas-wave-a/lib.ts';
 
 /** `test` holds the models under test: agents, readers, answer, think and extraction models, optimizers and optimization targets. */
 interface Registered { test?: readonly string[]; judge?: readonly string[] }
@@ -59,7 +62,10 @@ const DEFAULTS: Record<string, Registered> = {
   'temporal-contradictions dev model': { test: [TEMPORAL_CONTRADICTIONS_DEV] },
   'PrecisionMemBench think model': { test: [PRECISIONMEMBENCH_THINK] },
   ...Object.fromEntries(Object.keys(QA_READER).map(b => [`memory-qa ${b} reader and judge`, { test: [QA_READER[b]!], judge: [QA_JUDGE[b]!] }])),
+  'memory-qa and feedback-replay think model': { test: [MEMORY_QA_THINK] },
   'lifecycle-lite reader and judge': { test: [LIFECYCLE_QA.reader], judge: [LIFECYCLE_QA.judge] },
+  'memory-trust flag-rate agent and judge': { test: [FLAG_RATE_AGENT], judge: [FLAG_RATE_JUDGE] },
+  'external-ideas wave A decision model': { test: [WAVE_A_DECISION] },
   'sealed confirmation reader and judge': { test: [SEALED_READER], judge: [SEALED_JUDGE] },
   'pilot judge': { judge: [PILOT_JUDGE] },
   'facts-absorb gate baseline': { test: [SHIPPED_DEFAULT_MODEL] },

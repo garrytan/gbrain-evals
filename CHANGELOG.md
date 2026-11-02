@@ -21,8 +21,10 @@ This records what each gbrain-evals release changed and what its measurements me
     $6 cap), chronicle-lift's agent (was Sonnet 5.5), Cat 35's dream, facts and triage models in both modes (one
     `DISTILL_MODEL`; full mode was Sonnet 5.5, BPRE mode and triage Haiku 5.5), the SkillOpt target (was Haiku 5.5),
     the SkillOpt optimizer in B-pre mode too (the separate Haiku 5.5 `bpreOptimizer` is gone), temporal-contradictions'
-    dev `--models` default (was Haiku 5.5; its run estimate moves from $0.30 to $1.20 per model and run) and the
-    harness dev lane's reader (`DEV_ANSWER`, Sonnet 5.5 since #256).
+    dev `--models` default (was Haiku 5.5; its run estimate moves from $0.30 to $1.20 per model and run), the
+    harness dev lane's reader (`DEV_ANSWER`, Sonnet 5.5 since #256), and the `--think-model` fallback of memory-qa's
+    `--qa think` lane and of feedback-think-replay (was Sonnet 5.5; now one `DEFAULT_THINK_MODEL` in
+    `eval/runner/memory-qa/run-systems.ts`).
   - `gpt-6.1-sol`: the other end of Cat 33's transfer pairs (was Sonnet 5.5), so the pairs run Opus 5.5 to GPT-6.1 Sol
     and back. `SKILLOPT_MODELS.strong` is renamed `transfer`. The situation-recall-v1 inventory names the new pair
     slices in a second dated amendment, so its hash changes again and a Cat 33 profile registered against the old hash
@@ -33,8 +35,10 @@ This records what each gbrain-evals release changed and what its measurements me
   explicitly. No other judge default changes.
 - **`test/eval/model-defaults.test.ts` fails when a model-under-test default names a Sonnet or Haiku model** outside
   the named exceptions in `eval/runner/model-defaults.ts` (`underTestModelProblem`). Registered defaults now say
-  which models are under test and which judge. The frozen protocols and product-default mirrors that keep a Sonnet 4.6
-  or Haiku 4.5 model stay frozen. No model was run.
+  which models are under test and which judge, and the list now includes memory-qa's think model. The frozen
+  protocols and product-default mirrors that keep a Sonnet 4.6 or Haiku 4.5 model stay frozen, and two preregistered
+  Sonnet 5.5 defaults are now named frozen exceptions: memory-trust flag-rate's agent and false-flag labeler (amendment 5
+  of the memory-trust preregistration) and external-ideas wave A's decision model. No model was run.
 
 ### The W10b write-ups carry the gbrain and OpenAI disclosures
 

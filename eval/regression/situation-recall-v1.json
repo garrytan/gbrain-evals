@@ -15,7 +15,7 @@
     },
     {
       "date": "2026-11-01",
-      "eval_sha": "513de26de13acd0d75f8fde3b279b7267c5bde46",
+      "eval_sha": "c82ee63ca0d9b950840f3d13b7433218b0d93803",
       "issue": "GST-798",
       "change": "native_contracts.cat33.required_slices names the pair slices anthropic:claude-opus-5-5>openai:gpt-6.1-sol and its reverse (were anthropic:claude-haiku-5-5>anthropic:claude-sonnet-5-5 and its reverse).",
       "reason": "Frontier first (Garry, 2026-11-01): Sonnet and Haiku are never models under test, so Cat 33's default pairs (DEFAULT_PAIRS in eval/runner/cat33-skillopt-transfer.ts) run between the newest frontier Opus and GPT. A Cat 33 profile at the new defaults would fail the native slice check against the old slices. The inventory hash changes with this amendment; no committed file pins it. Profiles registered against the old hash fail the inventory hash check and must be registered again."

@@ -94,6 +94,9 @@ import { armHash, armsDir, ContextStore, contextKey, expandArms, loadArms, recip
 /** An arms file's `judge: "none"`: the readers answer and nothing judges in this process. */
 export const READER_ONLY = 'none';
 
+/** The model gbrain `think` answers with in `--qa think` when `--think-model` is absent: the newest frontier Opus (CLAUDE.md "Choose models"). */
+export const DEFAULT_THINK_MODEL = 'anthropic:claude-opus-5-5';
+
 /** A recipe context packed for one question: the prompt and its frozen meta. */
 interface RecipeBuild { prompt: string; meta: Record<string, unknown> }
 import { ProxyControl, upstreamTrouble, type Meter } from '../metering-proxy.ts';
@@ -274,7 +277,7 @@ export function parseRunArgs(argv: string[]): RunArgs {
       judge: one('--judge') ?? DEFAULT_JUDGE[benchmark] ?? 'openai:gpt-4o-2024-08-06',
       runs: Number(one('--qa-runs') ?? 1), sessions: Number(one('--qa-sessions') ?? 5),
       budgetTokens: (one('--budget-tokens') ?? one('--qa-budget-tokens')) ? Number(one('--budget-tokens') ?? one('--qa-budget-tokens')) : null,
-      thinkModel: one('--think-model') ?? 'anthropic:claude-sonnet-5-5',
+      thinkModel: one('--think-model') ?? DEFAULT_THINK_MODEL,
       context: (one('--qa-context') ?? 'sessions') as 'sessions' | 'facts',
     },
     facts: (one('--facts') ?? 'none') as 'none' | 'conversation',
