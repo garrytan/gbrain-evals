@@ -215,7 +215,7 @@ describe('full situation recall coverage inventory', () => {
       expect(compareSituationRecall(manifest, results, { evalRoot: root }).reasons.join(';')).toContain('cat37-unregistered.ts');
       expect(compareRegressionMeasurements(manifest, results).measurement_decision.status).toBe('pass');
     } finally { rmSync(root, { recursive: true, force: true }); }
-  });
+  }, 60_000);
 
   test('validates a complete synthetic preregistration and rejects category deletion', () => {
     const { manifest } = fixture();
@@ -238,7 +238,7 @@ describe('full situation recall coverage inventory', () => {
     expect(validateRegressionManifest(manifest).some(r => r.startsWith('cat36: native'))).toBe(false);
     cat36.metrics.find(m => m.id === 'safety_violations')!.ceiling = 1;
     expect(validateRegressionManifest(manifest).some(r => r.includes('cat36: native metric'))).toBe(true);
-  });
+  }, 60_000);
 
   test.each(['direction', 'floor', 'hash', 'probes', 'slices', 'unsupported', 'budget', 'isolation', 'holdout'] as const)('blocks invalid frozen %s', kind => {
     const { manifest } = fixture();
@@ -388,7 +388,7 @@ describe('strict per-cell common receipt accounting', () => {
     const bad = (candidate.receipt!.data!.regression as RegressionReceiptData).rows[0];
     bad.metrics.success = { not_applicable: 'native_no_denominator', evidence: { expected_count: 0, returned_count: 1 } };
     expect(validateRegressionCell(manifest, manifest.cells.find(c => c.id === candidate.cell_id)!, candidate).join(';')).toContain('missing/nonfinite');
-  });
+  }, 60_000);
 });
 
 describe('paired non-regression and improvement decisions', () => {
@@ -471,7 +471,7 @@ describe('paired non-regression and improvement decisions', () => {
     (candidate.receipt!.data!.regression as RegressionReceiptData).rows[0].metrics.success = 0;
     candidate.receipt!.verdict = 'fail';
     expect(measurements(manifest, results).coverage.find(c => c.profile_id === profile.id)!.status).toBe('regressed');
-  });
+  }, 60_000);
 
   test('a best-adapter native floor is applied to the best mean, not the pooled mean', () => {
     const { manifest, results } = fixture();

@@ -67,7 +67,7 @@ titles, so it is reported separately.
 ## Two behaviors pinned by keyless fixtures
 
 `test/eval/gbrain-query-system.test.ts` checks both on real PGLite brains with hash vectors. At the pinned gbrain
-(`a131fb20e`, v0.60.549.0; gbrain #6367 fixed both in v0.60.124.0):
+(`311a83bbe`, v0.60.553.0; gbrain #6367 fixed both in v0.60.124.0):
 
 1. **`auto` stays inside an explicit 8,000-token budget.** With 25 hits over long conversations, conversations that no
    longer fit are dropped at the budget floor instead of spilling outside it (`over_budget: false`,
@@ -95,6 +95,11 @@ const live = await c.live('live-parity', question, 25, 8000);
 ```
 
 ## Changelog
+
+### 2026-11-02: fixtures section names the v0.60.553.0 pin
+
+The fixtures section names the current pin, `311a83bbe` (v0.60.553.0), where both fixtures still pass (was
+`a131fb20e`, v0.60.549.0).
 
 ### 2026-11-02: fixtures section names the v0.60.549.0 pin
 

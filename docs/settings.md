@@ -6,7 +6,7 @@ autocut off. That setup retrieves all labeled conversations for 451/470 answerab
 with opaque session ids at gbrain `109b992`. [Recount](benchmarks/2026-10-04-longmemeval-opaque-followups.md),
 [original experiment](benchmarks/2026-09-06-longmemeval-ranker-wave.md).
 
-This page describes the gbrain this repository installs, master `a131fb20e` (v0.60.549.0, declared in
+This page describes the gbrain this repository installs, master `311a83bbe` (v0.60.553.0, declared in
 `package.json`). Most experiments here ran at gbrain v0.48.4.0 (`2efaaf8f`) or later commits named beside each
 number. The `balanced`, `conservative` and `tokenmax` mode definitions (`MODE_BUNDLES` in
 `src/core/search/mode.ts`) hold the same values from `2efaaf8f` through `77cf8e111` (v0.60.169.0), apart from three
@@ -71,7 +71,7 @@ as completed reranked measurements.
 | `search.adaptive_return` | Cap results according to query intent | Off for the broad-return baseline. Try it when irrelevant results cost more than missed additional evidence. |
 | `search.adaptive_return_entity_max` / `_other_max` / `_min_keep` | Caps for entity questions, other questions, and the minimum kept | Product defaults are 2, 6, and 1. The tight experiment explicitly uses 1, 1, and 1. |
 | `return_unit` on `search`, `query` and `recall` | How much text comes back around each hit: `chunk`, `window`, `section`, `page` or `auto` | `auto` (the default) returns the whole conversation behind each hit within a 24,000-token budget and leaves other hits as chunks. On a sealed held-out set it answered 192 of 200 against 132 for bare chunks, at about four times the reader input. Use `chunk` when reader tokens matter more than answer quality. [Sealed v2 decision](benchmarks/2026-10-02-sealed-v2-decision-1.md), [delivery study](benchmarks/2026-09-30-evidence-delivery.md) |
-| `auto_chronicle` | Turn saved meeting, conversation and calendar pages into timeline events with one chat call per page (on by default since v0.60.45.0) | Keep it on: gbrain v0.60.49.0 (`b9ee931`, PR #6010), which the installed `a131fb20e` postdates, fixed the dated follow-ups that `739e5cc` (the pin from 2026-10-04 to 2026-10-06) wrote from meeting notes as events on their future dates (0.96 wrong events per page against gbrain's 0.20 gate). At `b9ee931` it finds 37 and 38 of 38 labeled events, writes 0 events dated after their page and 0.04 wrong events per judged page, for about $0.01 per page. [Experiment](benchmarks/2026-10-04-auto-chronicle-lift.md), [rerun](benchmarks/2026-10-04-auto-chronicle-rerun.md). |
+| `auto_chronicle` | Turn saved meeting, conversation and calendar pages into timeline events with one chat call per page (on by default since v0.60.45.0) | Keep it on: gbrain v0.60.49.0 (`b9ee931`, PR #6010), which the installed `311a83bbe` postdates, fixed the dated follow-ups that `739e5cc` (the pin from 2026-10-04 to 2026-10-06) wrote from meeting notes as events on their future dates (0.96 wrong events per page against gbrain's 0.20 gate). At `b9ee931` it finds 37 and 38 of 38 labeled events, writes 0 events dated after their page and 0.04 wrong events per judged page, for about $0.01 per page. [Experiment](benchmarks/2026-10-04-auto-chronicle-lift.md), [rerun](benchmarks/2026-10-04-auto-chronicle-rerun.md). |
 | `GBRAIN_SOURCE_BOOST` | Override the source-prefix weight map | This is an environment setting, separate from the search mode. A stale prefix can make an intended preference do nothing. |
 
 The settings are defined in the pinned
@@ -167,6 +167,14 @@ the [refresh report](benchmarks/2026-09-09-retrieval-refresh.md) gives the full
 reproducible matrix used here.
 
 ## Changelog
+
+### 2026-11-02: Installed pin moves to `311a83bbe`
+
+gbrain-evals v0.10.142. The installed gbrain commit changed from `a131fb20e` (v0.60.549.0) to `311a83bbe` (v0.60.553.0).
+`MODE_BUNDLES` in `src/core/search/mode.ts` is unchanged, so the mode-definition note stands, and no read default
+outside the bundles changed. The range reads empty optional tool arguments that a parameter's schema rules out (`0`,
+`[]`, `{}` on read ops, `false`, and `get_page` `context` without `grep`) as absent (gbrain#8444), and the MCP
+entries and hooks that `gbrain setup` writes now start gbrain through a launcher. No row here depends on either.
 
 ### 2026-11-02: Installed pin moves to `a131fb20e`
 
