@@ -27,13 +27,15 @@ This records what each gbrain-evals release changed and what its measurements me
     `--think-model` hashes the old default into its run config, so resume it with
     `--think-model anthropic:claude-sonnet-5-5`; a fresh `--output` would pay again for answered questions.
   - SkillOpt (Cats 30 to 33) keeps its Haiku 5.5 target and B-pre optimizer and its Sonnet 5.5 transfer end for now, as
-    a dated named exception: its held-out scoring runs outside the budget ledger, its caps are sized for Haiku, and
+    a dated named exception. Its held-out scoring runs outside the budget ledger, its caps are sized for Haiku, and
     full mode counts a budget-aborted run as a seed, so it moves to Opus 5.5 only after that work (GST-903). No
     frontier SkillOpt suite run is planned.
 - **Cat 35's default judge moves from `claude-haiku-5-5` to `gpt-6.1-sol`**, because a Claude judge would grade Opus
   5.5's distillations. Cat 35's pre-flight estimates are repriced for Opus 5.5: a BPRE smoke projects $3.24 and a full
   run $53.40 worst case, above the $40 default `CAT35_HARD_STOP_USD`, so a full run now needs that cap raised
-  explicitly, and the registry's Cat 35 estimate moves from $12 to $54. No other judge default changes; Cats 9, 14, 15,
+  explicitly, and the registry's Cat 35 estimate moves from $12 to $54. `eval/RUNBOOK.md`'s Cat35 pre-flight section
+  gives the new projections, and `eval/CONTRIBUTING.md`'s external-lane example now authorizes `--budget-usd 40`,
+  because the verbatim lane alone projects $13.80 under the new judge. No other judge default changes; Cats 9, 14, 15,
   25 and 29 still grade an Opus 5.5 model with a Haiku 5.5 judge until GST-905 moves those judges.
 - **`test/eval/model-defaults.test.ts` fails when a model-under-test default names a Sonnet or Haiku model** outside
   the named exceptions in `eval/runner/model-defaults.ts` (`underTestModelProblem`). Registered defaults now say
