@@ -10,8 +10,9 @@ This records what each gbrain-evals release changed and what its measurements me
   test on every question, and `modelRuleViolations` required it. The fixed reader is now `anthropic:claude-opus-5-5`,
   the counted sweep reads with Opus 5.5, `gpt-6.1-sol` and particle-1, and `modelRuleViolations` requires the newest
   frontier Opus as the fixed reader and the sweep's anchor. A rerun is a new receipt identity, never pooled with the
-  2026-10-05 runs, so it goes into a new `--out`: an old directory holds its sweep's Opus 5.5 receipts, which the
-  answer phase would reuse as fixed-reader answers, because `bench.ts` does not compare the run's recorded models. Its
+  2026-10-05 runs, so an existing `eval/reports/workload-bench/<suite>/` directory is moved aside first: it holds its
+  sweep's Opus 5.5 receipts, which the answer phase would reuse as fixed-reader answers, because `bench.ts` does not
+  compare the run's recorded models, and `report.ts` publishes only from that directory. Its
   answer phase costs about twice the published reader spend, because Opus 5.5 lists at twice Sonnet 5.5's price. The
   workload report's readers section says both.
 - **`FRONTIER_READERS` is `claude-opus-5-5` and `gpt-6.1-sol`.** Q1's sealed scoreboard campaign keeps its
