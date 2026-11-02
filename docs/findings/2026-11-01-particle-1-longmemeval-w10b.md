@@ -22,8 +22,8 @@ disclosures:
 rerun and claim check with a cross-family review, which passed the file with edits that this version applies (see
 [the claim check](#the-claim-check)), and dated notes beside the corrected cost figures in the reports this file cites.
 Garry Tan answered the disclosure questions on 2026-11-02, so the gbrain and OpenAI lines join the Particle line in
-[Disclosures](#disclosures), and Anthropic, DeepSeek and Google get none. At his request the lines close this file, and the
-X post carries none. A recheck of the edited and added lines passed on 2026-11-02. Still blocking a post: Garry Tan's
+[Disclosures](#disclosures), and Anthropic, DeepSeek and Google get none. At his request the lines close this file, and
+the X post carries none. A recheck of the edited and added lines passed on 2026-11-02. Still blocking a post: Garry Tan's
 approval of the post text.
 
 ## What we found
@@ -312,9 +312,10 @@ development set, near the ceiling and from one protocol judge, and Opus 5.5 ran 
 >
 > Every answer and grade is public: https://github.com/garrytan/gbrain-evals/blob/main/docs/findings/2026-11-01-particle-1-longmemeval-w10b.md
 
-Each claim in the post comes from this file or the replay report it cites. "Advice" is LongMemEval's single-session-preference type, where particle-1 got
-23 of 30 against Opus 5.5's 30 ([How it works](#how-it-works)), so it accounts for 7 of the 17-question gap. The power
-bank is question `09d032c9` from the [replay report's concrete case](../benchmarks/2026-11-01-longmemeval-particle-replay/REPORT.md#the-concrete-case):
+Each claim in the post comes from this file or the replay report it cites. "Advice" is LongMemEval's
+single-session-preference type, where particle-1 got 23 of 30 against Opus 5.5's 30 ([How it works](#how-it-works)),
+so it accounts for 7 of the 17-question gap. The power bank is question `09d032c9` from the
+[replay report's concrete case](../benchmarks/2026-11-01-longmemeval-particle-replay/REPORT.md#the-concrete-case):
 particle-1's answer names the power bank before the quoted line, and Opus 5.5's last tip is to use it. "$1 buys" is one
 dollar divided by each list cost per correct answer in [Cost](#cost): 10.07 for Opus 5.5 and 233.58 for particle-1,
 from the unrounded figures in [analysis.json](2026-11-01-particle-1-longmemeval-w10b/analysis.json).
@@ -323,7 +324,8 @@ The post attaches this infographic:
 
 ![particle-1 against Opus 5.5 and GPT-6.1 Sol on LongMemEval: right answers out of 500, and cost per right answer at list price](2026-11-01-particle-1-longmemeval-w10b-infographic.png)
 
-It is 1080 by 1080 pixels, rendered from HTML with headless Chrome, so every word and number in it is typed text. Its counts, percentages and effort settings come from [Setup](#setup) and [Result](#result), its interval from
+It is 1080 by 1080 pixels, rendered from HTML with headless Chrome, so every word and number in it is typed text. Its
+counts, percentages and effort settings come from [Setup](#setup) and [Result](#result), its interval from
 [What we found](#what-we-found) and its costs from [Cost](#cost). "17 more right" is 474 minus 457, and GPT-6.1 Sol's
 "26 right answers per $1" is one dollar divided by $0.0381 (26.26 unrounded).
 
@@ -355,8 +357,8 @@ version applies every edit. The claim-check file, `gbrain-evals-particle-1-w10b`
 Garry Tan asked that the disclosures go at the end of the post and not in the X post. The three disclosure lines move
 from under the title to a closing [Disclosures](#disclosures) section, and the front matter keeps them. The X hook's
 draft is rewritten without them, and the post attaches a square infographic, which sits beside this file. The
-publication status records that the recheck of the disclosure lines passed, and the claim check's two disclosure rows say
-where the lines now stand. No result changed.
+publication status records that the recheck of the disclosure lines passed, and the claim check's two disclosure rows
+say where the lines now stand. No result changed.
 
 ### 2026-11-02: The gbrain and OpenAI disclosure lines
 
