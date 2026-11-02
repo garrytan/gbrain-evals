@@ -42,6 +42,11 @@ export function underTestModelProblem(model: string): string | null {
   return /^claude-(?:sonnet|haiku)-/.test(bareModelId(model)) ? `${model}: Sonnet and Haiku are never models under test` : null;
 }
 
+/** Why `model` cannot be a live category's default judge, or null when it can: particle-1 never judges a counted cell. */
+export function judgeModelProblem(model: string): string | null {
+  return bareModelId(model) === 'particle-1' ? `${model}: particle-1 never judges a counted cell` : null;
+}
+
 export interface DefaultModelException {
   /** The models the code uses, in the order the test reads them. */
   models: readonly string[];

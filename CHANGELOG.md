@@ -10,8 +10,10 @@ This records what each gbrain-evals release changed and what its measurements me
   test on every question, and `modelRuleViolations` required it. The fixed reader is now `anthropic:claude-opus-5-5`,
   the counted sweep reads with Opus 5.5, `gpt-6.1-sol` and particle-1, and `modelRuleViolations` requires the newest
   frontier Opus as the fixed reader and the sweep's anchor. A rerun is a new receipt identity, never pooled with the
-  2026-10-05 runs, and its answer phase costs about twice the published reader spend, because Opus 5.5 lists at twice
-  Sonnet 5.5's price. The workload report's readers section says so.
+  2026-10-05 runs, so it goes into a new `--out`: an old directory holds its sweep's Opus 5.5 receipts, which the
+  answer phase would reuse as fixed-reader answers, because `bench.ts` does not compare the run's recorded models. Its
+  answer phase costs about twice the published reader spend, because Opus 5.5 lists at twice Sonnet 5.5's price. The
+  workload report's readers section says both.
 - **`FRONTIER_READERS` is `claude-opus-5-5` and `gpt-6.1-sol`.** Q1's sealed scoreboard campaign keeps its
   preregistered three readers and Sonnet 5.5 anchor as `COUNTED_READERS` and `SONNET` in
   `eval/runner/q1/cells/definitions.ts`, so its manifest and published cells do not change.
@@ -22,7 +24,8 @@ This records what each gbrain-evals release changed and what its measurements me
   think model and the facts-absorb candidate arms. Every one has run and published its cells. A new run of any of them
   amends its preregistration to Opus 5.5, GPT-6.1 Sol and, where the runner has a route, particle-1 before its first
   cell. P4's `--models`, P8's `--think-model` and the facts-absorb `--arms` defaults are now exported constants so
-  the test can read them; their values did not change. `particle-1` joins the current-generation list.
+  the test can read them; their values did not change. `particle-1` joins the current-generation list, and a new check
+  (`judgeModelProblem`) fails any registered judge that is particle-1.
 - **particle-1 is in every live default set with a particle route.** The workload sweep already read with it; the other
   runners with a route are frozen sets above, which add it when they are amended. Memory-trust has no particle route,
   and Cat 37's Sonnet 5.5 judge would grade Opus 5.5 rows, so a new memory-trust run also moves that judge out of the

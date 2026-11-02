@@ -7,7 +7,7 @@
 import { afterAll, describe, expect, test } from 'bun:test';
 import { configureGateway, getChatModel, resetGateway } from 'gbrain/ai/gateway';
 import { TIER_DEFAULTS } from '../../node_modules/gbrain/src/core/model-config.ts';
-import { CURRENT_GENERATION, DEFAULT_MODEL_EXCEPTIONS, bareModelId, defaultModelProblem, underTestModelProblem } from '../../eval/runner/model-defaults.ts';
+import { CURRENT_GENERATION, DEFAULT_MODEL_EXCEPTIONS, bareModelId, defaultModelProblem, judgeModelProblem, underTestModelProblem } from '../../eval/runner/model-defaults.ts';
 import { DEFAULT_JUDGE_MODEL as SHARED_JUDGE } from '../../eval/runner/judge.ts';
 import { DEFAULT_JUDGE_MODEL as CAT5_JUDGE } from '../../eval/runner/cat5-provenance.ts';
 import { DEFAULT_AGENT_MODEL } from '../../eval/runner/adapters/claude-sonnet-with-tools.ts';
@@ -120,6 +120,13 @@ describe('default models (CLAUDE.md "Choose models")', () => {
       .filter(([name]) => !DEFAULT_MODEL_EXCEPTIONS[name])
       .flatMap(([name, r]) => (r.test ?? []).map(underTestModelProblem).filter(p => p !== null).map(p => `${name}: ${p}`));
     expect(problems).toEqual([]);
+  });
+
+  test('no registered judge is particle-1, exceptions included', () => {
+    const problems = Object.entries(DEFAULTS).flatMap(([name, r]) => (r.judge ?? []).map(judgeModelProblem).filter(p => p !== null).map(p => `${name}: ${p}`));
+    expect(problems).toEqual([]);
+    for (const m of ['particle:particle-1', 'particle-1']) expect([m, judgeModelProblem(m)]).toEqual([m, `${m}: particle-1 never judges a counted cell`]);
+    for (const m of ['openai:gpt-6.1-sol', 'anthropic:claude-haiku-5-5']) expect([m, judgeModelProblem(m)]).toEqual([m, null]);
   });
 
   test('each exception names the models the code uses, and at least one of them breaks a rule', () => {
