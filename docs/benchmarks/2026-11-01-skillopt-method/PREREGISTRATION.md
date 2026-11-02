@@ -138,3 +138,50 @@ The full notes are in each skill's `generation-report.json`.
 **Probe 2.** Same arms, models, runs, metric and gate as above, on v2's selection split, run with `--after-hardening`, so rule 3 applies: if fewer than two skills qualify and the kept one-shot is within 0.15 of the ceiling on a skill that does not, the verdict is **stop**, subject to rule 4's coverage condition. The solvability ceiling on v2 is 1.00 for all three skills.
 
 **Budget.** The estimate is $28, from probe 1's measured prices plus the longer v2 tasks. The cap is $35 on its own run in the probe's ledger, inside the plan's approved $1,000. A budget stop keeps every skill already scored. The gate is then read only where the missing arms cannot change it, and otherwise reported as `incomplete`.
+
+### Amendment 2 (2026-11-01, after probe 2 was stopped and before any frontier call): frontier targets
+
+This amendment was written after probe 2 was stopped and before any call to a frontier target in this probe.
+
+**Course change.** Garry, relayed by the Captain: "GBrain and GStack are really designed to be used with frontier models like Opus and 6.1 Sol... just transfer from Haiku to Sonnet, who gives a shit about that, man?" The crew rules now say frontier first. Plan revision 3 (`skillopt-method-plan-r3.md` in the Captain's drive, sha256 `c5b206cc9e33cc5678a6f6dc539ffb4b9264535eae8828fb933e3f809c7e6795`) replaces the Haiku target with `anthropic:claude-opus-5-5` and `openai:gpt-6.1-sol`. It drops Sonnet 5.5 scoring and Haiku-to-Sonnet transfer reporting. Dropping Sonnet departs from CLAUDE.md's "Choose models" rule for model comparisons and follows the newer frontier-first rule; this probe compares each target's seed with its own one-shot, not models with each other. `particle:particle-1` is not run, because the pin's gateway has no Particle recipe (GBRA-268); the receipt lists it under `models_not_run`.
+
+**Probe 2, stopped.** Probe 2 ran on Haiku 5.5 on v2's selection split and was stopped on the Captain's instruction after `query` and part of `briefing` ([summary](probe/probe2/summary.json), [log](probe/probe2/run.log), [partial](probe/probe2/probe-partial.json)). `query`: no skill 0.17, seed 0.875, one-shot 1.00 and 1.00 (kept 1.00), seed on Opus 0.83. `briefing`: no skill 0.17, seed 0.67; its one-shot did not run. No gate was read. Committed ledger spend is $8.91, of which $8.84 settled and $0.08 is held by four reservations that never settled. The two probes together committed $28.73.
+
+**Build.** gbrain `ca1281a2ed3236ac45adddb2d08e84423769c321` (package version 0.60.542.0, the merge of gbrain#8408), installed on branch `capy/gbev24-frontier-probe` ahead of gbrain-evals' own pin bump (GBEV-27). At this commit, the rollout serves each skill the read-only base tools plus the reviewed read operations its frontmatter declares (`rolloutToolsForSkill`). So `query` gets `recall` and `get_timeline`, and `briefing` gets `get_timeline`. Every seed's frontmatter brain operations are served, and rule 4's coverage condition holds nothing back. At the old pin, the seeds would run without tools they declare, which would lower their scores and bias the gate toward build. The three seeds are byte-identical at `3ec766c40` and `ca1281a2` (sha256 `afe2a883…`, `551c2f30…`, `49f0d356…`). Each receipt records the gbrain version and the tools served to each skill.
+
+**Arms.** For each target and skill, on v2's selection split:
+
+| Stage | Arm | System prompt | Runs per selection task |
+|---|---|---|---|
+| F0a | no-skill | `NO_SKILL_TEXT` | 1 |
+| F0a | seed | the seed SKILL.md | 3 |
+| F0b | one-shot, repeats 1 and 2 | a harness-level rewrite of the seed by `anthropic:claude-opus-5-5` | 3 |
+
+F0b runs only for pairs whose F0a seed is from 0.20 to 0.80. A skipped pair records `seed-above-band` or `seed-below-band`. The one-shot is the plan's Phase 3 one-shot arm, built now, in place of gbrain's `runSkillOpt` one-shot mode. On a frontier target, that mode would spend about 157 extra rollouts a repeat on its internal selection gate. The seed runs once on the 24 train tasks, and both repeats reuse those trajectories with independent proposer samples. The proposer (`one-shot.ts`, one call, output cap 32,000 tokens) reads three things:
+- each train task's prompt, its tool calls, its final answer, and a pass or fail with the failed check kinds but not their arguments;
+- the seed;
+- the skill's shared criteria text (`<skill>/criteria.md`).
+
+Tool outputs carry no page text. A returned page is named by slug and title only when the train split itself shows it (a train gold page, or a page a train prompt names); other pages are counted as "N other pages [withheld]". Every other corpus slug, and every selection gold slug, value and subject the train split does not show, is replaced with `[withheld]` wherever it occurs, and the input is refused if one survives. A keyless test plants gold pages to prove this. That test found test-split slugs in train search results, which is why pages are named only when train shows them. The probe reads no test file. A test value that a train answer states itself can still pass through, and `audit.ts` disqualifies a rewrite that names a page, a corpus entity, a gold value or a date. A rewrite that fails the audit is recorded and not scored. A rewrite is kept only if its selection score beats the F0a seed's. The harness one-shot sees less than gbrain's one-shot did in probes 1 and 2, because it gets no train judge arguments. So its floor is lower, and the gate leans toward build. It stays the fair floor, because it is the comparator in the counted study.
+
+**Models and retrieval.** Rollouts are gbrain's own agent loop through gbrain's gateway at the pin, so the crew's `claude_code` preset rule does not apply. Effort, temperature and limits are gbrain's defaults. gbrain's pinned `@ai-sdk/openai` drops `reasoningEffort` for gpt-6 ids, so Sol runs at its provider's default effort. gbrain's defaults at the pin send Sol `max_output_tokens: 4096`, which on a reasoning model also covers reasoning tokens. A Sol rollout that stops with `length` is scored on its final text, as the metric says, and the receipt counts such stops. The run holds only its target's key, plus `ANTHROPIC_API_KEY` in F0b for the proposer. Retrieval is keyword-only on both targets:
+- pages are imported with `noEmbed`, and the brain sets `embedding_disabled`;
+- the gateway's embedding model is `google:gemini-embedding-001`, whose key the run never holds;
+- query expansion and the reranker are off.
+
+Keyless tests drive real `search` and `query` tool calls and assert zero embedding calls. On a stubbed fetch, they assert that only the target's host and model are requested, so the pin's default expansion model (`claude-haiku-4-5`) never runs. Each live receipt records the request settings sent (`request_settings`).
+
+**Metric.** Unchanged.
+
+**Gate, per target.** A skill qualifies on a target when its seed scores from 0.20 to 0.80 and its kept one-shot is at least 0.15 below the ceiling (1.00 on v2).
+1. **Build** when at least two skills qualify.
+2. **Build on one skill** when exactly one qualifies. That target's counted study runs on that skill alone.
+3. **Stop** when no skill qualifies, and one-shot comes within 0.15 of the ceiling on a skill whose seed is in band. v2 was the one hardening rule 2 allows, so rule 3 applies, and there is no further hardening.
+4. **Out of band** when no skill's seed is in band. That result goes to the Captain after one "Why null?" cycle.
+5. **Incomplete** only when a pair that should have run did not.
+
+Rule 4's coverage condition is unchanged.
+
+**Counted skills.** Skills that qualify on both targets come first. Ties and any remaining places go to the skill with more mean headroom (1.00 minus the kept one-shot) over the targets where it qualifies. Each target takes at most two.
+
+**Budget.** The cap is $330 on its own ledger run: a smoke of one rollout per target on one train task, then F0a at about $118 and F0b at about $209 in the worst case. Planning prices are $0.26 per Opus rollout and $0.15 per Sol rollout. After each pair, the runner compares the pair's mean rollout cost with $0.40 on Opus and $0.20 on Sol. Above that, the stage stops after the pair and keeps it, and the plan is re-priced before anything else runs. A budget stop keeps every scored pair. Results go under `probe/frontier/`. Anthropic and OpenAI only; there is no Particle call, so no crew paid window applies.
