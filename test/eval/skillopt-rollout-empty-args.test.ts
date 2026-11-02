@@ -8,7 +8,8 @@
  * `ca1281a2`. The last replays the probe's recorded Sol calls. gbrain v0.60.553.0 (gbrain#8444) also reads the
  * empty values a parameter's schema rules out (`0`, `[]`, `{}` on read ops, `false`, and `context` without
  * `grep`) as absent, so 30 of the 38 `traverse_graph` calls now read; that replay fails at `a131fb20`. Every
- * `get_page` call still refuses on a non-empty value, so a Sol rollout at this pin still loses its page reads.
+ * recorded `get_page` call still refuses on a non-empty value. This pin's `get_page` description also tells the model to
+ * send one window selector, so only a live Sol rollout shows whether its page reads recover.
  */
 import { describe, expect, test } from 'bun:test';
 import { readFileSync } from 'node:fs';
