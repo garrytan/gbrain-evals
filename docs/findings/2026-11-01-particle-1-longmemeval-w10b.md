@@ -323,9 +323,7 @@ The post attaches this infographic:
 
 ![particle-1 against Opus 5.5 and GPT-6.1 Sol on LongMemEval: right answers out of 500, and cost per right answer at list price](2026-11-01-particle-1-longmemeval-w10b-infographic.png)
 
-It is 1080 by 1080 pixels, rendered with headless Chrome from
-[its HTML source](2026-11-01-particle-1-longmemeval-w10b-infographic.html), so every word and number in it is typed
-text. Its counts, percentages and effort settings come from [Setup](#setup) and [Result](#result), its interval from
+It is 1080 by 1080 pixels, rendered from HTML with headless Chrome, so every word and number in it is typed text. Its counts, percentages and effort settings come from [Setup](#setup) and [Result](#result), its interval from
 [What we found](#what-we-found) and its costs from [Cost](#cost). "17 more right" is 474 minus 457, and GPT-6.1 Sol's
 "26 right answers per $1" is one dollar divided by $0.0381 (26.26 unrounded).
 
@@ -356,7 +354,7 @@ version applies every edit. The claim-check file, `gbrain-evals-particle-1-w10b`
 
 Garry Tan asked that the disclosures go at the end of the post and not in the X post. The three disclosure lines move
 from under the title to a closing [Disclosures](#disclosures) section, and the front matter keeps them. The X hook's
-draft is rewritten without them, and the post attaches a square infographic whose HTML source sits beside this file. The
+draft is rewritten without them, and the post attaches a square infographic, which sits beside this file. The
 publication status records that the recheck of the disclosure lines passed, and the claim check's two disclosure rows say
 where the lines now stand. No result changed.
 

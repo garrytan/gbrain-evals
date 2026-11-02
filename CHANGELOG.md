@@ -68,7 +68,7 @@ This records what each gbrain-evals release changed and what its measurements me
   keeps them in its front matter. `docs/disclosures.md` records his words and the rule: a finding file or long-form post
   closes with its lines, an X post and its images carry none, and reports and summaries keep theirs up front.
 - **A new X post draft and an infographic.** The finding's X hook is rewritten without disclosure lines and attaches a
-  1080 by 1080 infographic, rendered from HTML that sits beside the finding. No figure changed.
+  1080 by 1080 infographic that sits beside the finding. No figure changed.
 
 ### The W10b write-ups carry the gbrain and OpenAI disclosures
 
