@@ -10,10 +10,7 @@ data: committed in this repository; 40 files with their SHA-256 in 2026-11-01-pa
 author: GBEV-25
 reviewed_by: google/gemini-4-argon (R51, via GEVA-119)
 reproduced_by: GEVA-119 (gstack-evals crew, clean machine)
-disclosures:
-  - "Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which makes particle-1."
-  - "gbrain is Garry Tan's own project."
-  - "Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator."
+disclosures: closing section
 ---
 
 # particle-1 answers 91.4% of 500 LongMemEval questions on gbrain's retrieval, 3.4 points behind Opus 5.5 (95% interval 1.4 to 5.6), at about a twenty-third of its list cost per correct answer (exploratory, public dev set, near ceiling, one protocol judge)
@@ -348,17 +345,18 @@ version applies every edit. The claim-check file, `gbrain-evals-particle-1-w10b`
 | Secrets and held-out data | Pass | No key patterns, home-directory paths or Capy thread ids in this file, its bundle or the check script. The dataset file is not committed, only its digest. |
 | The corrections, wherever the old figures appear | Pass with this version | The replay report, W10b and W10c carry a dated note beside each figure that [corrections](../corrections.md#longmemeval) revises. |
 | Cross-family review (R51) | Pass with edits | `google/gemini-4-argon`, one round, twelve findings, all applied here. |
-| Disclosure of the other companies the file features | Answered | Garry Tan answered on 2026-11-02: the gbrain and OpenAI lines join the Particle line, and Anthropic, DeepSeek and Google get no line. The three lines are in [Disclosures](#disclosures) and the front matter, and the X post carries none. The words come from [docs/disclosures.md](../disclosures.md). |
+| Disclosure of the other companies the file features | Answered | Garry Tan answered on 2026-11-02: the gbrain and OpenAI lines join the Particle line, and Anthropic, DeepSeek and Google get no line. The three lines are only in [Disclosures](#disclosures), the front matter names that section, and the X post carries none. The words come from [docs/disclosures.md](../disclosures.md). |
 
 ## Changelog
 
 ### 2026-11-02: Disclosures at the end, a new X post and an infographic
 
 Garry Tan asked that the disclosures go at the end of the post and not in the X post. The three disclosure lines move
-from under the title to a closing [Disclosures](#disclosures) section, and the front matter keeps them. The X hook's
-draft is rewritten without them, and the post attaches a square infographic, which sits beside this file. The
-publication status records that the recheck of the disclosure lines passed, and the claim check's two disclosure rows
-say where the lines now stand. No result changed.
+from under the title to a closing [Disclosures](#disclosures) section. The front matter names that section instead of
+repeating them, because GitHub shows front matter as a table above the body. The X hook's draft is rewritten without
+them, and the post attaches a square infographic, which sits beside this file. The publication status records that the
+recheck of the disclosure lines passed, and the claim check's two disclosure rows say where the lines now stand. No
+result changed.
 
 ### 2026-11-02: The gbrain and OpenAI disclosure lines
 
