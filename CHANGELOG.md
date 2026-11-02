@@ -2,7 +2,7 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
-## [0.10.142] - 2026-11-02
+## [0.10.144] - 2026-11-02
 
 ### gbrain pin moves to v0.60.553.0: SkillOpt's rollout registries read Sol's other empty arguments as absent
 
