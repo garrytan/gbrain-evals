@@ -18,18 +18,13 @@ disclosures:
 
 # particle-1 answers 91.4% of 500 LongMemEval questions on gbrain's retrieval, 3.4 points behind Opus 5.5 (95% interval 1.4 to 5.6), at about a twenty-third of its list cost per correct answer (exploratory, public dev set, near ceiling, one protocol judge)
 
-Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which makes particle-1.
-
-gbrain is Garry Tan's own project.
-
-Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
-
 **Publication status:** unpublished. Done: a keyless recount of every number from the committed rows, a clean-machine
 rerun and claim check with a cross-family review, which passed the file with edits that this version applies (see
 [the claim check](#the-claim-check)), and dated notes beside the corrected cost figures in the reports this file cites.
-Garry Tan answered the disclosure questions on 2026-11-02, so the gbrain and OpenAI lines above join the Particle line,
-and Anthropic, DeepSeek and Google get none. Still blocking a post: a recheck of the edited and added lines, and Garry
-Tan's approval of the post text.
+Garry Tan answered the disclosure questions on 2026-11-02, so the gbrain and OpenAI lines join the Particle line in
+[Disclosures](#disclosures), and Anthropic, DeepSeek and Google get none. At his request the lines close this file, and the
+X post carries none. A recheck of the edited and added lines passed on 2026-11-02. Still blocking a post: Garry Tan's
+approval of the post text.
 
 ## What we found
 
@@ -302,19 +297,37 @@ behind this file. The 40 files the numbers come from are listed with their diges
 
 ## The X hook
 
-A draft, not posted; Garry Tan approves the final text. It carries the grade, the ceiling, the interval and the
-three disclosure lines, and says Opus 5.5 ran at effort low. The post adds the chart from [Result](#result) and a link to this file
-at its commit.
+A draft, not posted; Garry Tan approves the final text. At his request, the X post and its image carry no disclosure
+lines: the three lines close this file, in [Disclosures](#disclosures), and the post links here. The post keeps the gap
+to Opus 5.5 with its interval. The caveats it has no room for are in this file: the result is exploratory, on a public
+development set, near the ceiling and from one protocol judge, and Opus 5.5 ran at effort low.
 
-> particle-1 answered 91.4% of 500 LongMemEval questions on gbrain's retrieval, 3.4 points behind Opus 5.5 at effort
-> low (95% CI 1.4 to 5.6), at about 1/23 of its list cost per correct answer. Exploratory: public dev set, one protocol
-> judge, every reader near the ceiling (91% to 95%).
+> Opus 5.5 beat particle-1 by 3.4 points on LongMemEval, 500 questions about long chat histories (95% CI 1.4 to 5.6). gbrain's memory pulled the same past conversations for every model. Opus got 474 right, GPT-6.1 Sol 464, particle-1 457.
 >
-> Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which makes particle-1.
+> particle-1 lost the most ground on advice, which it treats as a lookup. Ask for phone battery tips after mentioning your new power bank, and Opus 5.5 gives tips that work the power bank in. particle-1 notices the power bank, then answers: "The information is not available in the retrieved sessions; I don’t know what phone battery-life tips were previously discussed."
 >
-> gbrain is Garry Tan's own project.
+> Advice accounts for 7 of Opus's 17 extra right answers.
 >
-> Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.
+> At list prices, $1 buys about 10 right answers from Opus 5.5 and about 230 from particle-1.
+>
+> Every answer and grade is public: https://github.com/garrytan/gbrain-evals/blob/main/docs/findings/2026-11-01-particle-1-longmemeval-w10b.md
+
+Each claim in the post comes from this file or the replay report it cites. "Advice" is LongMemEval's single-session-preference type, where particle-1 got
+23 of 30 against Opus 5.5's 30 ([How it works](#how-it-works)), so it accounts for 7 of the 17-question gap. The power
+bank is question `09d032c9` from the [replay report's concrete case](../benchmarks/2026-11-01-longmemeval-particle-replay/REPORT.md#the-concrete-case):
+particle-1's answer names the power bank before the quoted line, and Opus 5.5's last tip is to use it. "$1 buys" is one
+dollar divided by each list cost per correct answer in [Cost](#cost): 10.07 for Opus 5.5 and 233.58 for particle-1,
+from the unrounded figures in [analysis.json](2026-11-01-particle-1-longmemeval-w10b/analysis.json).
+
+The post attaches this infographic:
+
+![particle-1 against Opus 5.5 and GPT-6.1 Sol on LongMemEval: right answers out of 500, and cost per right answer at list price](2026-11-01-particle-1-longmemeval-w10b-infographic.png)
+
+It is 1080 by 1080 pixels, rendered with headless Chrome from
+[its HTML source](2026-11-01-particle-1-longmemeval-w10b-infographic.html), so every word and number in it is typed
+text. Its counts, percentages and effort settings come from [Setup](#setup) and [Result](#result), its interval from
+[What we found](#what-we-found) and its costs from [Cost](#cost). "17 more right" is 474 minus 457, and GPT-6.1 Sol's
+"26 right answers per $1" is one dollar divided by $0.0381 (26.26 unrounded).
 
 ## The claim check
 
@@ -331,13 +344,21 @@ version applies every edit. The claim-check file, `gbrain-evals-particle-1-w10b`
 | Control rate and detectable gap on each null | Pass with an edit | Sonnet 5.5 at 92.4% and GPT-6.1 Sol at 92.8%, with detectable gaps of 3.1 and 3.0 points, are now in [What we found](#what-we-found). |
 | R48 verdicts | Pass with an edit | FIX-METHOD on both nulls, now with a kill rule. |
 | Prices against primary sources | Pass | Particle's, Anthropic's and OpenAI's pricing pages on 2026-11-01 match the price table. GPT-6.1 Sol's cache writes are priced at OpenAI's 30-minute rate, the default the runner leaves in place; no invoice confirms it. |
-| Disclosure | Pass | The line stands verbatim under the title, and the headline keeps the gap to Opus 5.5 with its interval. The standing list is [docs/disclosures.md](../disclosures.md). |
+| Disclosure | Pass | The line stood verbatim under the title when checked, and the headline keeps the gap to Opus 5.5 with its interval. Since 2026-11-02 the line is in [Disclosures](#disclosures) at the end, at Garry Tan's request. The standing list is [docs/disclosures.md](../disclosures.md). |
 | Secrets and held-out data | Pass | No key patterns, home-directory paths or Capy thread ids in this file, its bundle or the check script. The dataset file is not committed, only its digest. |
 | The corrections, wherever the old figures appear | Pass with this version | The replay report, W10b and W10c carry a dated note beside each figure that [corrections](../corrections.md#longmemeval) revises. |
 | Cross-family review (R51) | Pass with edits | `google/gemini-4-argon`, one round, twelve findings, all applied here. |
-| Disclosure of the other companies the file features | Answered | Garry Tan answered on 2026-11-02: the gbrain and OpenAI lines are added under the title and in the X hook, and Anthropic, DeepSeek and Google get no line. The words come from [docs/disclosures.md](../disclosures.md). |
+| Disclosure of the other companies the file features | Answered | Garry Tan answered on 2026-11-02: the gbrain and OpenAI lines join the Particle line, and Anthropic, DeepSeek and Google get no line. The three lines are in [Disclosures](#disclosures) and the front matter, and the X post carries none. The words come from [docs/disclosures.md](../disclosures.md). |
 
 ## Changelog
+
+### 2026-11-02: Disclosures at the end, a new X post and an infographic
+
+Garry Tan asked that the disclosures go at the end of the post and not in the X post. The three disclosure lines move
+from under the title to a closing [Disclosures](#disclosures) section, and the front matter keeps them. The X hook's
+draft is rewritten without them, and the post attaches a square infographic whose HTML source sits beside this file. The
+publication status records that the recheck of the disclosure lines passed, and the claim check's two disclosure rows say
+where the lines now stand. No result changed.
 
 ### 2026-11-02: The gbrain and OpenAI disclosure lines
 
@@ -366,3 +387,11 @@ sensitivity. The recheck reproduced every count and interval in the replay repor
 Opus 5.5's list cost per correct answer ($0.0993, not $0.0994), the batch-rate figures for Opus 5.5 and Sonnet 5.5
 ($0.0497 and $0.0250, not $0.0507 and $0.0255), and GPT-6.1 Sol's costs at OpenAI's cache-write rate. All three are in
 [corrections](../corrections.md#longmemeval). The disclosure line records Garry Tan's answer to decision H.
+
+## Disclosures
+
+Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which makes particle-1.
+
+gbrain is Garry Tan's own project.
+
+Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.

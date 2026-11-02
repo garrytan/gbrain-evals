@@ -1,14 +1,16 @@
 # Disclosures
 
 This page lists every relationship between Garry Tan, who directs gbrain-evals, and a company or project whose model
-or product these evals test, compare or feature. A finding file or post that tests, compares or features the subject
-carries the line, as a paragraph under the title, and the post itself carries it too. A report or summary in this
-repository that gives the subject's results carries the line up front, directly under its title or beside the result.
-Use the words below exactly.
+or product these evals test, compare or feature. A finding file or long-form post that tests, compares or features the
+subject carries the line in a closing Disclosures section at the end, and a finding file may also keep the lines in its
+front matter. An X post and its images carry no disclosure line. A report or summary in this repository that gives the
+subject's results carries the line up front, directly under its title or beside the result. Use the words below exactly.
 
 ## Garry Tan's words
 
 - 2026-11-01: "YC is an investor in Particle."
+- 2026-11-01 23:46 UTC, about the particle-1 W10b post: "Put the disclosures at the end of the post and not at all in the X
+  post."
 - 2026-11-02: "Also Y Combinator is an investor in Hermes, and it was also the origin of OpenAI through YC Research,
   which was started by Sam Altman, the prior president of Y Combinator. And OpenAI is now the key benefactor of
   OpenClaw, and the creator of OpenClaw, Peter Steinberger, works for OpenAI. These are all disclosures you should add.
@@ -46,8 +48,9 @@ first.
 
 ## In this repository
 
-- The [particle-1 W10b finding](findings/2026-11-01-particle-1-longmemeval-w10b.md), its X hook draft, the
-  [particle-1 replay report](benchmarks/2026-11-01-longmemeval-particle-replay/REPORT.md), README's full-context
+- The [particle-1 W10b finding](findings/2026-11-01-particle-1-longmemeval-w10b.md) carries the Particle, gbrain and
+  OpenAI lines in its closing Disclosures section and its front matter. Its X post draft and infographic carry none.
+- The [particle-1 replay report](benchmarks/2026-11-01-longmemeval-particle-replay/REPORT.md), README's full-context
   paragraph and the [corrections page](corrections.md)'s GPT-6.1 Sol entry carry the Particle, gbrain and OpenAI
   lines.
 - The [docs index](README.md)'s particle-1 replay row carries the Particle and gbrain lines. It reports no OpenAI
@@ -56,6 +59,13 @@ first.
   entry carry the Particle line. They report neither gbrain's result nor an OpenAI model's.
 
 ## Changelog
+
+### 2026-11-02: Disclosures close a finding, and X posts carry none
+
+Garry Tan asked that the disclosures go at the end of the post and not in the X post. A finding file or long-form post
+now carries its lines in a closing Disclosures section, not under its title, and an X post and its images carry none.
+His words join the list. The W10b finding moves its three lines to the end, and its X post draft drops them. Reports
+and summaries keep their lines up front.
 
 ### 2026-11-02: The standing list
 
