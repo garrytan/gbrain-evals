@@ -345,14 +345,14 @@
       ],
       "id": "f6-s1-gbrain-degraded-ingest",
       "label": "without the 40 questions of gbrain's two degraded S1 conversations (A3)",
-      "reason": "gbrain's F6 build refused /finish on conversations 10m-8 and 10m-9 (pages_skipped_unparsed 2 and 3), so their answers are ingest_degraded. The headline row scores them; this view leaves those questions out for every system, so each row is read on the conversations gbrain's build finished.",
+      "reason": "gbrain's F6 build refused /finish on conversations 10m-8 and 10m-9 (pages_skipped_unparsed 2 and 3), so their 120 answers (40 questions, three readers) are ingest_degraded. The headline row scores them; this view leaves those questions out for every system, so each row is read on the conversations gbrain's build finished.",
       "question_ids": [],
       "from_outcomes": {
         "cell": "s1.gbrain-defaults.f6-master.p",
         "outcomes": [
           "ingest_degraded"
         ],
-        "count": 40
+        "count": 120
       }
     }
   ],
