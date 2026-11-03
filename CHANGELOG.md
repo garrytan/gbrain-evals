@@ -2,6 +2,15 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [Unreleased]
+
+### CI restores the pinned harness source from a verified cached pack instead of fetching 700 MB from GitHub (GST-1266)
+
+- **What was slow.** Both harness jobs fetch the pinned agent-memory-benchmark commit, about 700 MB at depth 1, from GitHub before building their venv. While GitHub served packs slowly on 2026-11-03, that fetch took from 21 s to 23 minutes, and harness (proxy) used 1,612 s of its 30-minute cap in #354's run 41703426339. Building the venv took 12 to 16 s in every run.
+- **The harness setup keeps the fetched commit as `.harness/packs/<commit>.pack`,** and CI caches that directory under the hash of `eval/harness-provider/harness.lock.json`. When a pack is present, `eval/runner/harness-env.ts` reads it into a fresh repository with `git index-pack --strict`, which hashes and checks every object, then runs `git fsck` on the pinned commit to prove the commit and its whole tree are present, and checks it out. A pack that fails either check is deleted and the commit is fetched from GitHub as before, so a stale or tampered cache can skip the fetch but cannot change the checked-out files. Restoring the real 711 MB pack took 7.5 s on a 4-core machine, and the result matched a GitHub checkout file for file.
+- **The venv is not cached.** It takes about 15 s to build, and nothing in the lock could verify a cached one, so every run still builds it from the verified source.
+- `test/eval/harness-env.test.ts` covers the restore and three refused packs: one missing an object of the pinned tree, one of another commit, and one that is not a pack.
+
 ## [0.10.155] - 2026-11-03
 
 ### The particle-1 add-on's re-read tool and report close #347's four open review findings
@@ -13,13 +22,6 @@ This records what each gbrain-evals release changed and what its measurements me
 - **One ceiling for all re-read leases.** `--ledger-cap-usd` (A6: $100) refuses a lease that would take the add-on ledger's committed spend past it, before any request. Re-attaching to a lease that is still open, as a resume after a crash does, counts that lease's spend once. The keyless/paid `--out` check now runs before `verify.json` is written and refuses with a usage message instead of a stack trace.
 - **A6's revision** adds a second-judge sensitivity (gpt-6.1-sol on the same rubric) for a result that favors particle-1, says how the two ledger ceilings keep the add-on under its $150 hard cap, and states that failed tries are not priced. `cell.ts plan --manifest f6` prints the add-on block after F6's counted total, marked as outside it.
 - **Tests.** Each of the four findings has a test that fails at #347's head. `test/eval/q1-f6-cells.test.ts` fails if F6's frozen campaign regenerates to anything but its 61 committed units.
-
-### CI restores the pinned harness source from a verified cached pack instead of fetching 700 MB from GitHub (GST-1266)
-
-- **What was slow.** Both harness jobs fetch the pinned agent-memory-benchmark commit, about 700 MB at depth 1, from GitHub before building their venv. While GitHub served packs slowly on 2026-11-03, that fetch took from 21 s to 23 minutes, and harness (proxy) used 1,612 s of its 30-minute cap in #354's run 41703426339. Building the venv took 12 to 16 s in every run.
-- **The harness setup keeps the fetched commit as `.harness/packs/<commit>.pack`,** and CI caches that directory under the hash of `eval/harness-provider/harness.lock.json`. When a pack is present, `eval/runner/harness-env.ts` reads it into a fresh repository with `git index-pack --strict`, which hashes and checks every object, then runs `git fsck` on the pinned commit to prove the commit and its whole tree are present, and checks it out. A pack that fails either check is deleted and the commit is fetched from GitHub as before, so a stale or tampered cache can skip the fetch but cannot change the checked-out files. Restoring the real 711 MB pack took 7.5 s on a 4-core machine, and the result matched a GitHub checkout file for file.
-- **The venv is not cached.** It takes about 15 s to build, and nothing in the lock could verify a cached one, so every run still builds it from the verified source.
-- `test/eval/harness-env.test.ts` covers the restore and three refused packs: one missing an object of the pinned tree, one of another commit, and one that is not a pack.
 
 ### CI restores the repository's git objects from the Actions cache instead of fetching 1.3 GB per job (GST-1253)
 
