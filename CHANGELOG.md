@@ -4,6 +4,12 @@ This records what each gbrain-evals release changed and what its measurements me
 
 ## [Unreleased]
 
+### /ship's reviewers leave out the regenerated v3 SkillOpt data (#316)
+
+- **`.gstack/ship-policy.json` sets `review_exclude_paths` to `eval/data/skillopt-method-v3/*/**`** and raises `min_gstack_version` from 1.92.35.0 to 1.93.33.0, the gstack release that added the key. gstack reads the policy from the base branch only, so it applies to pull requests reviewed after this lands. #309 regenerates the v3 data, and its reviewer diff was 21,860,233 bytes, over gstack's review ceiling of 2,000,000 bytes. On a local merge of #309 with this policy as its base, 16 data files are left out and the reviewer diff is 70,289 bytes.
+- **CI still checks every excluded file byte for byte.** The pattern covers the five generated subdirectories (`briefing`, `fact-check`, `query`, `seeds` and `world`), and MANIFEST.json lists every file in them. In the `tests` job, `test/eval/skillopt-method-v3.test.ts` regenerates v3 and compares it with the committed files and MANIFEST.json. In the `checks` job, `bun run validate` checks the files against MANIFEST's sha256 values. A one-byte change to `query/train.jsonl` fails both. README.md and MANIFEST.json sit at the dataset root, outside the pattern, so reviewers still read them: no check covers the hand-written README.
+- **`eval/runner/skillopt-method/dataset.ts`'s doc comment names the `world/` directory** instead of the full path of `world/pages.jsonl`. gstack keeps an excluded file in review when code that stays in review names its full path, so the old comment would have kept the pages file in #309's diff.
+
 ### The 8k conversion gate holds the facts block to the row cap of the decision's pinned gbrain (#311)
 
 - **`retrievalChecks` now checks the facts-block row cap that the decision's pinned gbrain applies** (`eval/runner/budgeted-delivery/c8k.ts`). From gbrain v0.60.555.0 (gbrain#8411) the block stops at the caller's `limit`. A decision pinned there or later now holds A3 and B3 to `min(40, limit)`: 25 rows, the limit c8k passes in their query. Before v0.60.555.0 the cap stays at 40. The guard used to check 40 rows at every pin, so at a new pin a regression that let rows 26 to 40 through would have passed the gate.
