@@ -1,7 +1,7 @@
 # Learn, evaluate, and extend gbrain
 
 This index lists every published report by the question it answers. It describes the repository as it stands:
-gbrain-evals v0.10.150, with gbrain master `62637c96a` (v0.60.557.0) as the product under test. Results measured at
+gbrain-evals v0.10.153, with gbrain master `62637c96a` (v0.60.557.0) as the product under test. Results measured at
 other gbrain commits name that commit in their report. Everything above [Changelog](#changelog) is current; the
 changelog at the bottom records how this index changed.
 
@@ -265,6 +265,10 @@ and [repository writing guide](../CLAUDE.md). The
 procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
+
+### 2026-11-03: Opening names v0.10.153
+
+The opening names v0.10.153 (was v0.10.150). No row changed.
 
 ### 2026-11-03: SkillOpt ceiling row names the calibration re-read
 
