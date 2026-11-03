@@ -48,8 +48,9 @@
  * The ceiling attempt (GBEV-30) on skillopt-method-v3, keyless on the fake
  * transport unless --paid is given; a live stage runs at gbrain 311a83bbe, is
  * attested against docs/benchmarks/2026-11-02-skillopt-ceiling/PREREGISTRATION.md,
- * refuses an estimate above its approved cap, and runs under one ledger run of
- * its own for the whole stage, resumes included (skillopt-method/ceiling-stages.ts):
+ * refuses an estimate above its approved cap, and runs under ledger runs of its
+ * own whose budgets together stay within that cap, resumes included
+ * (skillopt-method/ceiling-stages.ts):
  *
  *   --dataset v3 --stage calibration --target opus|sol [--half] [--other <the other target's calibration receipt>]
  *                                            the seed on train: substance pass, cost per rollout and per call, and
@@ -493,12 +494,13 @@ function ceilingReceipt(startedAt: string) {
 /**
  * Everything a live ceiling stage checks before its first paid call: the
  * gbrain pin (311a83bbe, plan decision S) in package.json and in the installed
- * code, an estimate within the stage's approved cap, one ledger run of the
- * stage's own runner for the whole stage (section 5: no other run of that
- * runner has spent), --paid and --budget-run-id, the keys it needs (`test -n`),
- * the attested preregistration, and a run budget within that cap. A --resume
- * is admitted on the work it has left: the estimate less what its rows
- * already metered.
+ * code, an estimate within the stage's approved cap, --paid and a
+ * --budget-run-id of the stage's own runner, the keys it needs (`test -n`) and
+ * the attested preregistration. The cap covers the whole stage across its
+ * ledger runs: a run is admitted only when its budget, and the work it has
+ * left (the estimate less what its rows already metered), fit in the cap less
+ * everything earlier runs of that runner committed. A closed run never
+ * reopens, so a resume after one opens a new run inside what is left.
  */
 function startCeilingRun(argv: readonly string[], o: { stage: CeilingStage; attempt?: 1 | 2; arm: string; estimateUsd: number; spentUsd: number; keyNames: readonly string[]; log: (s: string) => void }) {
   const pin = gbrainPin();
@@ -512,23 +514,26 @@ function startCeilingRun(argv: readonly string[], o: { stage: CeilingStage; atte
   if (!options.runId || !(options.runId === runner || options.runId.startsWith(`${runner}-`))) {
     throw new PaidArmRefusal(`${o.arm} runs under its own ledger run: pass --budget-run-id of a ${runner} run (open one with \`bun eval/runner/budget-ledger.ts open --runner ${runner} --budget-usd ${cap}\`)`);
   }
-  const ledger = readLedger(options.ledgerPath);
-  const spent = new Map<string, number>();
-  for (const e of ledger.entries) spent.set(e.run_id, (spent.get(e.run_id) ?? 0) + (e.actual_usd ?? e.reserved_usd));
-  const earlier = ledger.runs.filter(r => r.run_id !== options.runId && (r.run_id === runner || r.run_id.startsWith(`${runner}-`)) && (spent.get(r.run_id) ?? 0) > 0);
-  if (earlier.length) {
-    throw new PaidArmRefusal(`${o.arm}: this stage already spent under ${earlier.map(r => `${r.run_id} ($${spent.get(r.run_id)!.toFixed(2)})`).join(', ')}; a stage runs under one ledger run (preregistration section 5), so its $${cap} cap covers all of its spend. Resume under ${earlier[earlier.length - 1]!.run_id}`);
-  }
-  requirePaidArm(argv, { arm: o.arm, estimateUsd: Math.max(0, o.estimateUsd - o.spentUsd) });
+  const workLeftUsd = Math.max(0, o.estimateUsd - o.spentUsd);
+  requirePaidArm(argv, { arm: o.arm, estimateUsd: workLeftUsd });
+  const earlierUsd = [...stageRunsCommitted(options.ledgerPath, runner)].reduce((sum, [id, usd]) => (id === options.runId ? sum : sum + usd), 0);
+  const leftUsd = cap - earlierUsd;
+  const left = `earlier runs of ${runner} committed $${earlierUsd.toFixed(2)} of the stage's $${cap} cap, so $${leftUsd.toFixed(2)} is left`;
+  const budgetUsd = ledgerStatus({ ledgerPath: options.ledgerPath, runId: options.runId }).run!.budget_usd;
+  if (budgetUsd > leftUsd + 1e-9) throw new PaidArmRefusal(`${o.arm}: ledger run ${options.runId} has a $${budgetUsd.toFixed(2)} budget, but ${left}; open a run with --budget-usd ${Math.max(0, leftUsd).toFixed(2)} or less`);
+  if (workLeftUsd > leftUsd + 1e-9) throw new PaidArmRefusal(`${o.arm}: the work left is estimated at $${workLeftUsd.toFixed(2)}, but ${left}, so the stage does not start; the figure goes to the Captain`);
   const keys = requireKeys(o.keyNames, o.arm);
   const attestation = attestPreregistration(CEILING_PREREGISTRATION);
   const paid = startPaidRun(runner, { ...options, estimateUsd: o.estimateUsd, log: o.log });
-  if (paid.run.budgetUsd > cap + 1e-9) {
-    paid.guard.uninstall();
-    paid.run.close();
-    throw new PaidArmRefusal(`${o.arm}: ledger run ${options.runId} has a $${paid.run.budgetUsd} budget, above the stage's approved $${cap} cap`);
-  }
   return { keys, attestation, paid };
+}
+
+/** Committed spend (settled, or the reservation while open) of every ledger run of a stage's runner, closed runs included. */
+function stageRunsCommitted(ledgerPath: string, runner: string): Map<string, number> {
+  const ledger = readLedger(ledgerPath);
+  const committed = new Map(ledger.runs.filter(r => r.run_id === runner || r.run_id.startsWith(`${runner}-`)).map(r => [r.run_id, 0]));
+  for (const e of ledger.entries) if (committed.has(e.run_id)) committed.set(e.run_id, committed.get(e.run_id)! + (e.actual_usd ?? e.reserved_usd));
+  return committed;
 }
 
 /** A calibration receipt's target and metered mean rollout cost, from a calibration of this tree's v3 manifest (a live one unless this run is fake). */
@@ -590,11 +595,13 @@ function requireRegeneratedGate(argv: readonly string[]): string {
 /** What a stage's rows already metered (rollouts, failed ones included, and proposer calls): a --resume is admitted on the estimate less this. */
 const rowsSpentUsd = (rows: RowStore) => rows.rows.reduce((usd, r) => usd + (r.kind === 'rollout' ? r.usage?.usd ?? 0 : r.cost_usd ?? 0), 0);
 
-/** The stage's whole ledger run after this process closed: a resumed stage's `cost` counts only this process, and this counts the stage. */
-function stageLedgerRun(argv: readonly string[]): { run_id: string; budget_usd: number; committed_usd: number } | null {
+/** The stage's ledger spend after this process closed: `cost` counts only this process, this run's `committed_usd` every process in it, and `stage_committed_usd` every run of the stage's runner. */
+function stageLedgerRun(argv: readonly string[], runner: string): { run_id: string; budget_usd: number; committed_usd: number; stage_committed_usd: number } | null {
   const options = budgetOptionsFrom(argv);
   const run = options.runId ? ledgerStatus({ ledgerPath: options.ledgerPath, runId: options.runId }).run : null;
-  return run ? { run_id: run.run_id, budget_usd: run.budget_usd, committed_usd: Number(run.committed_usd.toFixed(6)) } : null;
+  if (!run) return null;
+  const stageUsd = [...stageRunsCommitted(options.ledgerPath, runner).values()].reduce((a, b) => a + b, 0);
+  return { run_id: run.run_id, budget_usd: run.budget_usd, committed_usd: Number(run.committed_usd.toFixed(6)), stage_committed_usd: Number(stageUsd.toFixed(6)) };
 }
 
 const rowsHeader = (stage: CeilingStage, fake: boolean, o: { attempt?: 1 | 2; target?: FrontierTarget; half?: boolean }) =>
@@ -642,7 +649,7 @@ async function runCalibrationCli(argv: readonly string[], log: (s: string) => vo
     ...(live ? { preregistration_attestation: live.attestation } : {}),
     resolved_config: { engine: 'pglite-in-memory', decide: DECIDE_OFF, mode: fake ? 'ceiling-fake' : 'ceiling', dataset: datasetName(CEILING_DATASET), stage: 'calibration', target, half, other: otherPath ?? null, resumed: argv.includes('--resume'), keys_in_process: keyNames, ledger_runner: ceilingLedgerRun('calibration'), models: result?.models ?? null },
     finished_at: new Date().toISOString(),
-    data: { calibration: result, stopped: result?.stopped ?? null, ledger_run: live ? stageLedgerRun(argv) : null },
+    data: { calibration: result, stopped: result?.stopped ?? null, ledger_run: live ? stageLedgerRun(argv, ceilingLedgerRun('calibration')) : null },
   };
 }
 
@@ -706,7 +713,7 @@ async function runGateCli(argv: readonly string[], log: (s: string) => void, out
     ...(live ? { preregistration_attestation: live.attestation } : {}),
     resolved_config: { engine: 'pglite-in-memory', decide: DECIDE_OFF, mode: fake ? 'ceiling-fake' : 'ceiling', dataset: datasetName(CEILING_DATASET), stage: 'gate', attempt, prices, calibration, previous, estimate_usd: estimateUsd, resumed: argv.includes('--resume'), keys_in_process: keyNames, ledger_runner: ceilingLedgerRun('gate', attempt), models: result?.models ?? null },
     finished_at: new Date().toISOString(),
-    data: { gate: result ? { ...result, pairs: result.pairs.map(stripTexts) } : null, stopped: result?.stopped ?? null, reprice_trigger: result?.reprice_trigger ?? null, ledger_run: live ? stageLedgerRun(argv) : null },
+    data: { gate: result ? { ...result, pairs: result.pairs.map(stripTexts) } : null, stopped: result?.stopped ?? null, reprice_trigger: result?.reprice_trigger ?? null, ledger_run: live ? stageLedgerRun(argv, ceilingLedgerRun('gate', attempt)) : null },
   };
 }
 
