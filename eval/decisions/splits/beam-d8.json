@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "benchmark": "beam-d8",
+  "salt": "gbrain-evals-heldout-split-v1",
+  "method": "no dev split: all ten D8 conversations are sealed; harness work uses BEAM 100K and 1M dev conversations and synthetic fixtures in the D8 layout instead",
+  "dev_fraction": 0,
+  "dev": [],
+  "sealed": [
+    "d8-1",
+    "d8-10",
+    "d8-2",
+    "d8-3",
+    "d8-4",
+    "d8-5",
+    "d8-6",
+    "d8-7",
+    "d8-8",
+    "d8-9"
+  ],
+  "created_at": "2026-10-29",
+  "note": "Committed before any system ran on D8, the long-history reserve: ten conversations generated with BEAM's generator and held in owner custody. Conversation d8-<n> is conversations/<n> under GBRAIN_EVALS_D8_SOURCE on the custodian host. Every conversation is sealed: the custodian runs the cells and returns aggregates until publication retires the set."
+}

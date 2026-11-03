@@ -1116,6 +1116,26 @@ describe('own-answer arms through the answer route (POST /answer)', () => {
     } finally { server.stop(true); fake.stop(); }
   });
 
+  test('F6: an own answer stopped by its output limit records its synthesis_status as the reason when the system gave no error code', async () => {
+    const fake = serveProtocol(new FakeMemorySystem());
+    const server = Bun.serve({ port: 0, hostname: '127.0.0.1', idleTimeout: 0, fetch: async req => {
+      const path = new URL(req.url).pathname;
+      if (path === '/answer') return Response.json({ answer: 'partial', outcome: 'harness_invalid', synthesis_status: 'output_truncated', degraded: null, source_ids: [], model: null, usage: { input: 0, output: 0 }, usd: null, service_ms: 1, raw: {} });
+      const res = await fetch(`${fake.url}${path}`, { method: req.method, headers: { 'content-type': 'application/json' }, body: req.method === 'POST' ? await req.text() : undefined, keepalive: false });
+      const json = await res.json() as Record<string, unknown>;
+      if (path === '/capabilities') Object.assign(json, { system: 'gbrain-defaults', answer: { modes: ['think'] } });
+      return Response.json(json, { status: res.status });
+    } });
+    try {
+      const def = cellDef('gbrain-defaults', 'shim', [{ ...think, readers: ['openai:gpt-6.1-sol'] }], { configuration: 'full-surface' });
+      const out = join(tmp, 'f6-truncated-reason');
+      await runCell(def, { out, systemUrl: `http://127.0.0.1:${server.port}`, maxAttempts: 1, ...quiet }, { corpus, reader: scriptedReader(), judge: scriptedJudge() });
+      const attempts = [...new Bun.Glob('runs/*/r/*/answer-attempts.ndjson').scanSync(out)].flatMap(f => ndjson(join(out, f)));
+      expect(attempts.length).toBeGreaterThan(0);
+      for (const a of attempts) expect([a.outcome, a.error]).toEqual(['harness_invalid', 'the system classified its answer path as a harness failure: synthesis_status output_truncated']);
+    } finally { server.stop(true); fake.stop(); }
+  });
+
   test('A23: --reanswer-invalid-before answers again the harness_invalid answers recorded before the cutoff, on a new realization that carries every other record; a cutoff before them changes nothing', async () => {
     const fake = serveProtocol(new FakeMemorySystem());
     let invalid = true, calls = 0;
@@ -1151,6 +1171,40 @@ describe('own-answer arms through the answer route (POST /answer)', () => {
       expect(new Set(outcomes())).toEqual(new Set(['scored']));
       const events = [...new Bun.Glob('runs/*/realizations.ndjson').scanSync(out)].flatMap(f => ndjson(join(out, f)));
       expect(events.filter(e => e.event === 'invalidated' && /answered again under a ruling \(A23\)/.test(e.reason)).length).toBeGreaterThan(0);
+    } finally { server.stop(true); fake.stop(); }
+  });
+
+  test('A25 candidate: a re-answered harness_invalid answer behind a failed retrieval retrieves again instead of being rebuilt from the carried failure', async () => {
+    const fake = serveProtocol(new FakeMemorySystem());
+    let invalid = true, retrieves = 0;
+    const server = Bun.serve({ port: 0, hostname: '127.0.0.1', idleTimeout: 0, fetch: async req => {
+      const path = new URL(req.url).pathname;
+      if (path === '/retrieve') {
+        retrieves++;
+        if (invalid) return Response.json({ error: { kind: 'invalid_request', message: 'degraded read (harness failure; retry after quiesce): pending embeddings' } }, { status: 503 });
+      }
+      const res = await fetch(`${fake.url}${path}`, { method: req.method, headers: { 'content-type': 'application/json' }, body: req.method === 'POST' ? await req.text() : undefined, keepalive: false });
+      const json = await res.json() as Record<string, unknown>;
+      if (path === '/capabilities') Object.assign(json, { system: 'gbrain-defaults' });
+      return Response.json(json, { status: res.status });
+    } });
+    try {
+      const def = cellDef('gbrain-defaults', 'shim', [component({ readers: [SONNET], reader_replicates: {} })], { configuration: 'shipped-defaults' });
+      const out = join(tmp, 'a25-carried-retrieval');
+      const run = (reanswerInvalidBefore: string | null) => runCell(def, { out, systemUrl: `http://127.0.0.1:${server.port}`, maxAttempts: 1, reanswerInvalidBefore, reanswerOutcomes: ['harness_invalid'], ...quiet }, { corpus, reader: scriptedReader(), judge: scriptedJudge() });
+      const answers = () => ndjson(join(out, 'cells', def.arms[0].cell_id, 'answers.ndjson'));
+      await run(null);
+      const first = answers();
+      expect(first.length).toBeGreaterThan(0);
+      expect(first.every(a => a.outcome === 'harness_invalid' && a.latency_ms === 0)).toBe(true);
+      const asked = retrieves;
+      invalid = false;
+      await run(new Date(Date.now() + 3_600_000).toISOString());
+      expect(retrieves).toBeGreaterThan(asked);
+      const second = answers();
+      expect(second).toHaveLength(first.length);
+      expect(new Set(second.map(a => a.outcome))).toEqual(new Set(['scored']));
+      expect(second.some(a => first.some(b => b.realization_id === a.realization_id))).toBe(false);
     } finally { server.stop(true); fake.stop(); }
   });
 
