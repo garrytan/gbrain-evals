@@ -34,6 +34,8 @@ import { appendFileSync, existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { Campaign, resolveRunner } from '../shootout-cell.ts';
 
+const REPO_ROOT = resolve(import.meta.dir, '../../..');
+
 export interface Raise { lease_id: string; cell: string; at: string; from_usd: number; to_usd: number; reason: string; host_entry: string; vm_ledger: string; vm_cap_usd: number }
 type Ssh = (vm: string, command: string) => { code: number | null; out: string; err: string };
 
@@ -80,12 +82,13 @@ export function leaseUsd(c: Campaign, leaseId: string): number {
 /** Grow (or, with a negative delta, give back) the host reservation of a lease, checked as a reservation is. */
 function resizeHost(c: Campaign, entryId: string, delta: number, block: { name: string; cap: number; held: number } | null, what: string) {
   const s = JSON.parse(readFileSync(join(c.stateDir, 'campaign.json'), 'utf8')) as { run_id: string; ledger: string };
-  const db = new Database(s.ledger, { readwrite: true, create: false, strict: true });
+  const ledger = resolve(REPO_ROOT, s.ledger);
+  const db = new Database(ledger, { readwrite: true, create: false, strict: true });
   try {
     db.exec('PRAGMA busy_timeout = 60000');
     db.transaction(() => {
       const entry = db.query('SELECT reserved_usd, actual_usd FROM entries WHERE id = ? AND run_id = ?').get(entryId, s.run_id) as { reserved_usd: number; actual_usd: number | null } | null;
-      if (!entry) throw new Error(`${what}: no reservation ${entryId} in ${s.ledger}`);
+      if (!entry) throw new Error(`${what}: no reservation ${entryId} in ${ledger}`);
       if (entry.actual_usd !== null) throw new Error(`${what}: reservation ${entryId} is already settled`);
       if (delta > 0) {
         const run = db.query('SELECT budget_usd, committed_usd, finished_at FROM runs WHERE run_id = ?').get(s.run_id) as { budget_usd: number; committed_usd: number; finished_at: string | null };
