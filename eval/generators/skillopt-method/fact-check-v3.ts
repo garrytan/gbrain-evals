@@ -26,22 +26,49 @@
  *   lookalike-founder  a founding claim about a company that shares a stem
  *                      with another, or naming a near-name person
  *
+ * Revision 1 (rev1-v3.ts; `V3Knobs.revision` 1) replaces every family. Trained:
+ *
+ *   legal-superseded   an account's term as of a date when the record in force
+ *                      was issued to its legal entity, stated with the value
+ *                      the records naming the account hold, or right
+ *                      (supersession)
+ *   contact-claim      a term of "the account where P works as T", right or
+ *                      wrong (indirect)
+ *   join-claim         "X was the only account on A and B", naming the one
+ *                      account or a near miss (join)
+ *   absent-entity      a claim about a legal-entity name no page carries
+ *                      (abstention)
+ *
+ * Held out (gate and test only):
+ *
+ *   rep-extreme-claim  which of a rep's accounts had the most or fewest seats,
+ *                      the highest or lowest price, the largest or smallest
+ *                      discount on a date (aggregation)
+ *   rep-total-claim    the total seats on a date across a rep's accounts
+ *                      (aggregation)
+ *   former-role-claim  "X founded the company that C's former T works with
+ *                      now" (indirect)
+ *
  * Usage: generated through eval/generators/skillopt-method/gen.ts.
  */
 import { Rng } from '../seeded.ts';
+import {
+  absentLegalName, accountsOf, assembleRev1, condPhrase, contactFacts, daysDecidedBy, formerRoleFacts, groupFacts, groupPhrase, joinFacts, repsOf, termFact,
+  type DraftRev1, type ProbeSpec,
+} from './rev1-v3.ts';
 import {
   absentFromWorld, acquirerFromText, assembleV3, careerFromText, founderFromText, goldOf, loadWorldV3, nameValue, possessive, roleHolderFromText, soleInvestorFromText,
   stintFromText, valueFromText, type CandidateV3, type DraftV3, type SkillGenerationV3, type WorldCorpus,
 } from './common-v3.ts';
 import {
-  addDays, ATTR_IDS, ATTRS, chainEnd, currentStint, daysBetween, DEFAULT_V3_KNOBS, longDate, valueAt, WORLD_NOW, type AttrId, type AttrValue, type Org, type V3Knobs,
+  addDays, ATTR_IDS, ATTRS, chainEnd, currentStint, daysBetween, DEFAULT_V3_KNOBS, LEGAL_ENTITY, longDate, monthStart, revisionOf, valueAt, VENDOR, WORLD_NOW, type AttrId, type AttrValue, type Org, type V3Knobs,
 } from './world-v3.ts';
 import { ACCOUNT_SUFFIXES, COMPANY_KINDS } from './world-v3-banks.ts';
 import type { PartKey, PartSpec } from '../../runner/skillopt-method/score-v3.ts';
 import type { GoldValue, StatusClass } from '../../runner/skillopt-method/score.ts';
 
 export const FACT_CHECK_V3_SEED = 30_013;
-export const FACT_CHECK_V3_QUOTAS = {
+const QUOTAS_R0 = {
   superseded: [6, 6, 5, 12],
   compound: [6, 6, 5, 12],
   'not-founder': [6, 6, 4, 12],
@@ -50,7 +77,21 @@ export const FACT_CHECK_V3_QUOTAS = {
   'three-hop': [0, 0, 6, 16],
   'lookalike-founder': [0, 0, 6, 16],
 } as const;
-export const FACT_CHECK_V3_HELD_OUT = ['role-on-date', 'three-hop', 'lookalike-founder'] as const;
+const QUOTAS_R1 = {
+  'legal-superseded': [6, 6, 5, 12],
+  'contact-claim': [6, 6, 5, 12],
+  'join-claim': [6, 6, 4, 12],
+  'absent-entity': [6, 6, 4, 12],
+  'rep-extreme-claim': [0, 0, 6, 16],
+  'rep-total-claim': [0, 0, 6, 16],
+  'former-role-claim': [0, 0, 6, 16],
+} as const;
+/** Per revision: family quotas [train, sel, gate, test] and the held-out families. */
+export const FACT_CHECK_V3_QUOTAS_BY_REVISION = { 0: QUOTAS_R0, 1: QUOTAS_R1 } as const;
+export const FACT_CHECK_V3_HELD_OUT_BY_REVISION = { 0: ['role-on-date', 'three-hop', 'lookalike-founder'], 1: ['rep-extreme-claim', 'rep-total-claim', 'former-role-claim'] } as const;
+/** The default revision's. */
+export const FACT_CHECK_V3_QUOTAS: Readonly<Record<string, readonly [number, number, number, number]>> = FACT_CHECK_V3_QUOTAS_BY_REVISION[revisionOf(DEFAULT_V3_KNOBS)];
+export const FACT_CHECK_V3_HELD_OUT: readonly string[] = FACT_CHECK_V3_HELD_OUT_BY_REVISION[revisionOf(DEFAULT_V3_KNOBS)];
 const COMPOUND_ATTRS: readonly (AttrId & PartKey)[] = ['seats', 'price', 'discount', 'notice', 'payment', 'tier'];
 
 export const taskTextV3 = (claim: string) => `Fact-check this claim before it ships. A gbrain pipeline produced it from the brain, so it is a data-derived claim.\n\nCLAIM: ${claim}`;
@@ -319,6 +360,142 @@ export function factCheckV3Drafts(corpus: WorldCorpus, rng: Rng): DraftV3[] {
   return drafts;
 }
 
+/** Revision 1's drafts, each with the searches the findability control runs (on the claim). */
+export function factCheckV3Rev1Drafts(corpus: WorldCorpus, rng: Rng): DraftRev1[] {
+  const { world: w } = corpus;
+  const drafts: DraftRev1[] = [];
+  const single = (status: StatusClass, correct?: GoldValue): PartSpec[] => [{ key: null, status, ...(correct ? { correct } : {}) }];
+  /** One claim with one status: supported, or contradicted with the value the brain holds. */
+  const claimTask = (family: string, claim: string, anchor: string, keys: string[], status: StatusClass, correct: GoldValue, shownCorrect: string, claimed: GoldValue | null, groups: string[][], distractorSlugs: string[], source: string, path: string, evidence: string, probes: ProbeSpec[], priority: number) => {
+    const slugs = [...new Set(groups.flat())];
+    drafts.push({ ok: true, priority, probes, candidate: {
+      family, task: taskTextV3(claim), anchor: { kind: 'claim', id: anchor }, fact_keys: keys, answerable: true,
+      gold: { values: status === 'contradicted' ? [correct] : [], slugs, cite: groups, status, spec: { kind: 'fact-check', status, parts: single(status, status === 'contradicted' ? correct : undefined), cite: groups } },
+      distractors: { slugs: distractorSlugs.filter(s => !slugs.includes(s)), values: claimed ? [claimed] : [] },
+      source, oracle: { path, evidence },
+      oracle_answer: report([{ claim, status, source: groups.map(g => g[0]).join(', '), ...(status === 'contradicted' ? { correct: shownCorrect } : {}) }]),
+    } });
+  };
+  const termPath = 'the contract pages the account lists: the latest record in force that sets the term, rescinded records dropped; a record that names the legal entity the account page names counts as the account\'s';
+  const say = (attr: AttrId, v: AttrValue) => ATTRS[attr].say(v);
+
+  // legal-superseded: the value the records naming the account hold, or the right one.
+  for (const a of accountsOf(corpus).filter(o => o.legal)) {
+    const chain = w.chains.get(a.slug)!;
+    for (const attr of ATTR_IDS) for (const c of chain.filter(x => x.signed >= a.legal!.since && attr in x.sets)) {
+      for (const d of daysDecidedBy(chain, c, attr, (lo, hi) => rng.int(lo, hi), 2)) {
+        const anchor = `claim:${a.slug}:${attr}@${d}`;
+        const t = termFact(corpus, a, attr, d);
+        if ('reason' in t) { drafts.push({ ok: false, family: 'legal-superseded', anchor, reason: t.reason }); continue; }
+        if (!t.alias) { drafts.push({ ok: false, family: 'legal-superseded', anchor, reason: 'the record in force names the account itself' }); continue; }
+        const right = rng.float() < 0.35;
+        const claimedValue = right ? t.value : t.stale ?? rng.pick(t.distractors.map(x => x.value));
+        const claimed = goldOf(attr, claimedValue);
+        if (!right && JSON.stringify(claimed) === JSON.stringify(t.answer)) continue;
+        const claim = `As of ${longDate(d)}, ${a.name} had ${say(attr, claimedValue)}.`;
+        claimTask('legal-superseded', claim, anchor, [t.key], right ? 'supported' : 'contradicted', t.answer, ATTRS[attr].cell(t.value), right ? null : claimed, [t.slugs], [...t.distractorSlugs, a.slug],
+          `world-v3 ${a.slug} contract chain, ${attr} on ${d}; the record in force names ${a.legal!.name}`, termPath, t.evidence, [{ query: claim, patterns: ['supersession'], deciding: t.slugs, newest: t.newest }], t.stale !== null ? 2 : 1);
+      }
+    }
+  }
+
+  // contact-claim: a term of the account a contact works at.
+  for (const cf of contactFacts(corpus)) {
+    const chain = w.chains.get(cf.account.slug)!;
+    for (const attr of ATTR_IDS) {
+      if (new Set(chain.flatMap(c => (attr in c.sets ? [String(c.sets[attr])] : []))).size < 2) continue;
+      for (const c of chain.filter(x => attr in x.sets)) for (const d of daysDecidedBy(chain, c, attr, (lo, hi) => rng.int(lo, hi), 1, addDays(cf.since, 14))) {
+        const anchor = `claim:contact:${cf.person.slug}:${attr}@${d}`;
+        const t = termFact(corpus, cf.account, attr, d);
+        if ('reason' in t) { drafts.push({ ok: false, family: 'contact-claim', anchor, reason: t.reason }); continue; }
+        const right = rng.float() < 0.4;
+        const claimedValue = right ? t.value : rng.pick(t.distractors.map(x => x.value));
+        const claim = `As of ${longDate(d)}, the account where ${cf.person.name} works as ${cf.title} had ${say(attr, claimedValue)}.`;
+        claimTask('contact-claim', claim, anchor, [t.key, `works:${cf.person.slug}@${cf.account.slug}`], right ? 'supported' : 'contradicted', t.answer, ATTRS[attr].cell(t.value), right ? null : goldOf(attr, claimedValue), [t.slugs], [...t.distractorSlugs, cf.account.slug],
+          `world-v3 ${cf.person.slug} at ${cf.account.slug}, ${attr} on ${d}`, `the person's career list and the account's contacts list (the only current ${cf.title} there); then ${termPath}`, `${cf.evidence}\n${t.evidence}`,
+          [{ query: claim, patterns: t.alias ? ['indirect', 'supersession'] : ['indirect'], deciding: [cf.person.slug, ...t.slugs], ...(t.alias ? { newest: t.newest } : {}) }], t.alias ? 2 : 1);
+      }
+    }
+  }
+
+  // join-claim: the one account meeting two conditions, or a near miss named in its place.
+  const pick = <T,>(xs: readonly T[], n: number) => rng.shuffle(xs).slice(0, n);
+  for (let m = '2024-01-01'; m <= addDays(WORLD_NOW, -30); m = monthStart(m, 2)) {
+    const day = addDays(m, rng.int(9, 20));
+    for (const j of joinFacts(corpus, day, pick)) {
+      const chain = w.chains.get(j.account.slug)!;
+      if (chain.some(c => Math.abs(daysBetween(c.effective, day)) < 3 || Math.abs(daysBetween(c.signed, day)) < 3)) continue;
+      const right = rng.float() < 0.4;
+      const named = right ? j.account : rng.pick(j.near);
+      const claim = `As of ${longDate(day)}, ${named.name} was the only account ${condPhrase(j.conds[0])} and ${condPhrase(j.conds[1])}.`;
+      claimTask('join-claim', claim, `claim:${j.keys[0]}`, j.keys, right ? 'supported' : 'contradicted', nameValue(j.account.name), j.account.name, right ? null : nameValue(named.name), j.groups, j.near.map(o => o.slug),
+        `world-v3 accounts on ${day}: ${j.keys[0]}`, "every account's owner line and contract pages, read for the terms in force on the date; the one account meeting both conditions", j.evidence,
+        [{ query: claim, patterns: ['join'], deciding: j.groups.flat() }], j.near.length);
+    }
+  }
+
+  // absent-entity: a legal-entity-style name no page carries.
+  for (const a of accountsOf(corpus).filter(o => o.legal)) {
+    const name = absentLegalName(corpus, a, rng.shuffle(LEGAL_ENTITY.suffixes));
+    const anchor = `claim:absent:${name ?? a.slug}`;
+    if (!name || !absentFromWorld(corpus, name) || [...w.orgs.values(), ...w.people.values()].some(e => e.name === name)) { drafts.push({ ok: false, family: 'absent-entity', anchor, reason: 'no unused suffix' }); continue; }
+    const chain = w.chains.get(a.slug)!;
+    const attr = rng.pick(['seats', 'tier', 'payment'] as const);
+    const rec = chain.filter(c => c.signed >= a.legal!.since && attr in c.sets).at(0) ?? chain.filter(c => c.signed >= a.legal!.since).at(0);
+    const d = rec ? addDays(rec.effective, rng.int(5, 40)) : null;
+    if (!d || d > [addDays(WORLD_NOW, -2), chainEnd(chain)].sort()[0]!) { drafts.push({ ok: false, family: 'absent-entity', anchor, reason: 'no date after the legal entity took over' }); continue; }
+    const v = valueAt(chain, attr, d)!;
+    const claim = `As of ${longDate(d)}, ${name} had ${say(attr, v.value)}.`;
+    const near = [a.slug, v.record.slug];
+    drafts.push({ ok: true, priority: 1, probes: [{ query: claim, patterns: ['abstention'], deciding: [], near }], candidate: {
+      family: 'absent-entity', task: taskTextV3(claim), anchor: { kind: 'claim', id: anchor }, fact_keys: [`name:${name.toLowerCase()}`], answerable: false,
+      gold: { values: [], slugs: [], subject: name, status: 'not-supported', spec: { kind: 'fact-check', status: 'not-supported', parts: single('not-supported'), cite: [] } },
+      distractors: { slugs: near, values: [] },
+      source: `world-v3 absent name from ${a.legal!.name}, the legal entity of ${a.slug}`, oracle: { path: 'absence of the full name from every page', evidence: `"${name}" occurs on no page; ${a.legal!.name} (${a.slug}) does` },
+      oracle_answer: report([{ claim, status: 'not-supported', source: `no page for ${name}; nearest: ${near.join(', ')}` }]),
+      near_miss: near,
+    } });
+  }
+
+  // rep-extreme-claim and rep-total-claim (held out)
+  for (const rep of repsOf(corpus)) {
+    for (let m = '2024-02-01'; m <= addDays(WORLD_NOW, -30); m = monthStart(m, 1)) {
+      const day = addDays(m, rng.int(4, 24));
+      for (const f of groupFacts(corpus, rep, day)) {
+        const right = rng.float() < 0.4;
+        if (f.op === 'max' || f.op === 'min') {
+          if (rng.float() > 0.4) continue;
+          const named = right ? f.winner! : rng.pick(f.members.filter(x => x !== f.winner));
+          const claim = `On ${longDate(day)}, of the accounts ${rep.name} owns at ${VENDOR.name}, ${named.name} had ${groupPhrase(f.attr, f.op)}.`;
+          claimTask('rep-extreme-claim', claim, `claim:${f.key}:${day}`, [f.key], right ? 'supported' : 'contradicted', f.answer, f.winner!.name, right ? null : nameValue(named.name), [f.winnerSlugs], f.members.map(x => x.slug),
+            `world-v3 accounts owned by ${rep.slug}, ${f.attr} ${f.op} on ${day}`, "every account page naming the rep as owner; each account's contract pages read for the term in force on the date; the one account with the extreme value", f.evidence,
+            [{ query: claim, patterns: ['aggregation'], deciding: f.winnerSlugs, needed: f.needed }], 1);
+        } else if (f.op === 'sum') {
+          const claimedTotal = right ? Number(f.answer.value) : Number(rng.pick(f.distractors).value);
+          const claim = `On ${longDate(day)}, the accounts ${rep.name} owns at ${VENDOR.name} held ${claimedTotal} subscribed seats in total.`;
+          claimTask('rep-total-claim', claim, `claim:${f.key}:${day}`, [f.key], right ? 'supported' : 'contradicted', f.answer, String(f.answer.value), right ? null : goldOf('seats', claimedTotal), f.memberSlugs, f.members.map(x => x.slug),
+            `world-v3 accounts owned by ${rep.slug}, seats on ${day}`, "every account page naming the rep as owner; each account's contract pages read for the seat count in force on the date; their sum", f.evidence,
+            [{ query: claim, patterns: ['aggregation'], deciding: f.memberSlugs.flat(), needed: f.needed }], 1);
+        }
+      }
+    }
+  }
+
+  // former-role-claim (held out)
+  for (const f of formerRoleFacts(corpus, possessive)) {
+    const right = rng.float() < 0.45;
+    const named = right ? f.founder.name : rng.pick(f.distractors).value as string;
+    const claim = `${named} founded the company that ${f.phrase} works with now.`;
+    const slugs = [f.company.slug, f.founder.slug];
+    claimTask('former-role-claim', claim, `claim:former:${f.person.slug}:${f.former.slug}`, [`founder:${f.company.slug}`, `works:${f.person.slug}@${f.company.slug}`], right ? 'supported' : 'contradicted', nameValue(f.founder.name), f.founder.name, right ? null : nameValue(named), [slugs], [f.former.slug, f.person.slug],
+      `world-v3 ${f.person.slug}, formerly ${f.title} at ${f.former.slug}`, "every career list, for the one that lists the title at the former organization as ended; that person's current company, confirmed by its page; its founding line, confirmed by the founder's page", f.evidence,
+      [{ query: claim, patterns: ['indirect'], deciding: f.deciding }], right ? 1 : 2);
+  }
+  return drafts;
+}
+
 export function generateFactCheckV3(knobs: V3Knobs = DEFAULT_V3_KNOBS): SkillGenerationV3 {
-  return assembleV3('fact-check', FACT_CHECK_V3_SEED, knobs, factCheckV3Drafts(loadWorldV3(knobs), new Rng(FACT_CHECK_V3_SEED)), FACT_CHECK_V3_QUOTAS, { heldOut: FACT_CHECK_V3_HELD_OUT });
+  const corpus = loadWorldV3(knobs);
+  if (revisionOf(knobs) === 1) return assembleRev1('fact-check', FACT_CHECK_V3_SEED, knobs, corpus, factCheckV3Rev1Drafts(corpus, new Rng(FACT_CHECK_V3_SEED)), QUOTAS_R1, FACT_CHECK_V3_HELD_OUT_BY_REVISION[1]);
+  return assembleV3('fact-check', FACT_CHECK_V3_SEED, knobs, factCheckV3Drafts(corpus, new Rng(FACT_CHECK_V3_SEED)), QUOTAS_R0, { heldOut: FACT_CHECK_V3_HELD_OUT_BY_REVISION[0] });
 }

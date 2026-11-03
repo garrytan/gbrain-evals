@@ -27,22 +27,47 @@
  * (different days) of one family, so a bundle's tasks form one group and the
  * assembler keeps at most three of them.
  *
+ * Revision 1 (rev1-v3.ts; `V3Knobs.revision` 1) replaces every family. Each
+ * calendar has two or three asked meetings, each one fact as of the day:
+ * a contact's account's term (indirect), an account's term when the record in
+ * force names its legal entity (supersession), a rep's account with the most
+ * or fewest seats, highest or lowest price, largest or smallest discount
+ * (aggregation), or a contact no page carries (abstention); held-out kinds
+ * add a company's founder named through a former officer (indirect), a rep's
+ * account that renews first (aggregation) and the one account meeting two
+ * conditions (join). Trained families:
+ *
+ *   contact-terms    two contact meetings and up to one more
+ *   legal-terms      two legal-entity meetings and up to one more
+ *   rep-review       a rep's account review and one or two more
+ *   unknown-contact  a contact no page carries and one or two more
+ *
+ * Held out (gate and test only): former-role, rep-renewal and join-review,
+ * each that meeting and one or two more of the trained kinds. A bundle's
+ * calendars fall in one window of 60 days; no fact or page serves two
+ * bundles.
+ *
  * Usage: generated through eval/generators/skillopt-method/gen.ts.
  */
 import { Rng } from '../seeded.ts';
+import {
+  accountsOf, assembleRev1, condPhrase, contactFacts, formerRoleFacts, groupFacts, groupPhrase, joinFacts, repsOf, termFact,
+  type ContactFact, type DraftRev1, type FormerRoleFact, type GroupFact, type JoinFact, type ProbeSpec,
+} from './rev1-v3.ts';
 import {
   absentFromWorld, assembleV3, goldOf, loadWorldV3, nameValue, roleHolderFromText, stintFromText, uniqueValues, valueFromText, weekdayName, type CandidateV3,
   type DraftV3, type SkillGenerationV3, type WorldCorpus,
 } from './common-v3.ts';
 import {
-  addDays, ATTR_IDS, ATTRS, chainEnd, currentStint, daysBetween, DEFAULT_V3_KNOBS, longDate, stintAt, tenureAt, valueAt, weekdayOn, WORLD_NOW, type AttrId, type Contract, type Org, type Person,
+  addDays, ATTR_IDS, ATTRS, chainEnd, currentStint, daysBetween, DEFAULT_V3_KNOBS, longDate, revisionOf, stintAt, tenureAt, valueAt, weekdayOn, WORLD_NOW, type AttrId, type Contract, type Org, type Person,
   type V3Knobs,
 } from './world-v3.ts';
+import { possessive } from './common.ts';
 import type { MeetingSpec } from '../../runner/skillopt-method/score-v3.ts';
 import type { GoldValue } from '../../runner/skillopt-method/score.ts';
 
 export const BRIEFING_V3_SEED = 30_012;
-export const BRIEFING_V3_QUOTAS = {
+const QUOTAS_R0 = {
   'meetings-3-4': [10, 10, 8, 20],
   'unknown-attendee': [7, 7, 5, 14],
   'lookalike-attendee': [7, 7, 5, 14],
@@ -50,7 +75,21 @@ export const BRIEFING_V3_QUOTAS = {
   'renewal-pending': [0, 0, 6, 16],
   'meetings-5-6': [0, 0, 6, 16],
 } as const;
-export const BRIEFING_V3_HELD_OUT = ['changed-companies', 'renewal-pending', 'meetings-5-6'] as const;
+const QUOTAS_R1 = {
+  'contact-terms': [6, 6, 5, 12],
+  'legal-terms': [6, 6, 5, 12],
+  'rep-review': [6, 6, 4, 12],
+  'unknown-contact': [6, 6, 4, 12],
+  'former-role': [0, 0, 6, 16],
+  'rep-renewal': [0, 0, 6, 16],
+  'join-review': [0, 0, 6, 16],
+} as const;
+/** Per revision: family quotas [train, sel, gate, test] and the held-out families. */
+export const BRIEFING_V3_QUOTAS_BY_REVISION = { 0: QUOTAS_R0, 1: QUOTAS_R1 } as const;
+export const BRIEFING_V3_HELD_OUT_BY_REVISION = { 0: ['changed-companies', 'renewal-pending', 'meetings-5-6'], 1: ['former-role', 'rep-renewal', 'join-review'] } as const;
+/** The default revision's. */
+export const BRIEFING_V3_QUOTAS: Readonly<Record<string, readonly [number, number, number, number]>> = BRIEFING_V3_QUOTAS_BY_REVISION[revisionOf(DEFAULT_V3_KNOBS)];
+export const BRIEFING_V3_HELD_OUT: readonly string[] = BRIEFING_V3_HELD_OUT_BY_REVISION[revisionOf(DEFAULT_V3_KNOBS)];
 /** Calendars each bundle offers; the assembler places at most three. */
 const VARIANTS = 4;
 /** Bundles built per family, relative to the fewest that could fill its quota at three tasks each. */
@@ -231,7 +270,7 @@ export function briefingV3Drafts(corpus: WorldCorpus, rng: Rng): DraftV3[] {
     }
   };
 
-  const target = (family: keyof typeof BRIEFING_V3_QUOTAS) => Math.ceil((BRIEFING_V3_QUOTAS[family].reduce<number>((a, b) => a + b, 0) / 3) * SLACK);
+  const target = (family: keyof typeof QUOTAS_R0) => Math.ceil((QUOTAS_R0[family].reduce<number>((a, b) => a + b, 0) / 3) * SLACK);
   const fill = (n: number) => { const out: Subject[] = []; for (let i = 0; i < n; i++) { const s = generic(); if (s) out.push(s); } return out.length === n ? out : null; };
 
   // renewal-pending: an account inside a renewal's signed-not-in-force window, asked a term the renewal changes.
@@ -280,6 +319,214 @@ export function briefingV3Drafts(corpus: WorldCorpus, rng: Rng): DraftV3[] {
   return drafts;
 }
 
+type Kind1 = 'contact' | 'legal' | 'rep' | 'absent' | 'former' | 'renewal' | 'join' | 'filler';
+interface Built1 { meeting: Omit<MeetingSpec, 'time'>; ask: string; keys: string[]; nearMiss: string[]; names: string[]; source: string; evidence: string; line: (day: string) => string; probe: ProbeSpec }
+/** Calendars each revision-1 bundle offers, the bundles per family (relative to the fewest that could fill its quota at three tasks each), and the window a bundle's days fall in. */
+const R1 = { variants: 4, slack: 1.2, window: 60 } as const;
+
+/** Revision 1's drafts: bundles of calendars over one window, each with the searches the findability control runs (one per asked meeting). */
+export function briefingV3Rev1Drafts(corpus: WorldCorpus, rng: Rng): DraftRev1[] {
+  const { world: w, pages } = corpus;
+  const drafts: DraftRev1[] = [];
+  const taken = new Set<string>();
+  const last = addDays(WORLD_NOW, -1);
+  const title = (slug: string) => pages.get(slug)!.match(/^# (.+)$/m)![1]!;
+  const contacts = rng.shuffle(contactFacts(corpus));
+  const legalAccounts = rng.shuffle(accountsOf(corpus).filter(a => a.legal));
+  const reps = rng.shuffle(repsOf(corpus));
+  const formers = rng.shuffle(formerRoleFacts(corpus, possessive));
+  const absentPool = rng.shuffle([...w.people.values()].filter(p => !p.lookalike && currentStint(p)?.role === 'contact'));
+  const groupMemo = new Map<string, GroupFact[]>();
+  const groupsOn = (rep: Person, day: string) => { const k = `${rep.slug}@${day}`; if (!groupMemo.has(k)) groupMemo.set(k, groupFacts(corpus, rep, day)); return groupMemo.get(k)!; };
+  const joinMemo = new Map<string, JoinFact[]>();
+  const joinsOn = (day: string) => { if (!joinMemo.has(day)) joinMemo.set(day, joinFacts(corpus, day, (xs, n) => xs.slice(0, n))); return joinMemo.get(day)!; };
+  const usedPeople = new Set<string>();
+
+  /** A term meeting for `a`'s `attr` on `day`. */
+  const termMeeting = (kind: 'contact' | 'legal', a: Org, attr: AttrId, day: string, cf?: ContactFact): Built1 | null => {
+    const t = termFact(corpus, a, attr, day);
+    if ('reason' in t || (kind === 'legal' && !t.alias)) return null;
+    const subject = cf ? cf.person.name : a.name;
+    const ask = cf ? `${cf.person.name}: the ${ATTRS[attr].phrase} in force today at the account they work for.` : `${a.name}: the account's ${ATTRS[attr].phrase} in force today.`;
+    const patterns: ProbeSpec['patterns'] = cf ? (t.alias ? ['indirect', 'supersession'] : ['indirect']) : ['supersession'];
+    return {
+      meeting: { title: `${rng.pick(cf ? PERSON_MEETINGS : ACCOUNT_MEETINGS)} ${subject}`, subject, answer: t.answer, distractors: t.distractors, cite: t.slugs },
+      ask, keys: [t.key, ...t.slugs.map(s => `page:${s}`), ...(cf ? [`works:${cf.person.slug}@${a.slug}`] : [])], nearMiss: [], names: [a.name, ...(a.legal ? [a.legal.name] : [])],
+      source: `${a.slug} ${attr} on ${day}${cf ? ` via ${cf.person.slug}` : ''}`, evidence: (cf ? `${cf.evidence}; ` : '') + t.evidence,
+      line: d => `${subject}: ${ATTRS[attr].phrase} ${ATTRS[attr].cell(t.value)}, from ${title(t.record.slug)} [Source: ${t.record.slug}, updated ${d}].`,
+      probe: { query: ask, patterns, deciding: [...(cf ? [cf.person.slug] : []), ...t.slugs], ...(t.alias ? { newest: t.newest } : {}) },
+    };
+  };
+  const groupMeeting = (f: GroupFact, day: string): Built1 => {
+    const renewal = f.op === 'next-renewal';
+    const ask = renewal ? `${f.rep.name}: which of the accounts they own renews first after today.` : `${f.rep.name}: which of the accounts they own has ${groupPhrase(f.attr, f.op)} today.`;
+    return {
+      meeting: { title: `${renewal ? 'Renewals check-in with' : 'Account review with'} ${f.rep.name}`, subject: f.rep.name, answer: f.answer, distractors: f.distractors, cite: f.winnerSlugs },
+      ask, keys: [f.key, ...f.winnerSlugs.map(s => `page:${s}`)], nearMiss: [], names: f.members.map(m => m.name),
+      source: `accounts owned by ${f.rep.slug}, ${f.attr} ${f.op} on ${day}`, evidence: f.evidence,
+      line: d => `${f.rep.name}: ${f.winner!.name} has ${groupPhrase(f.attr, f.op)} of the ${f.members.length} accounts they own [Source: ${f.winnerSlugs[0]}, updated ${d}].`,
+      probe: { query: ask, patterns: ['aggregation'], deciding: f.winnerSlugs, needed: f.needed },
+    };
+  };
+
+  /** One subject of `kind` whose meeting builds on every day, touching no fact or page another bundle took and no name another meeting of the calendar answers or mentions. */
+  const subject = (kind: Kind1, days: readonly string[], names: Set<string>, answers: Set<string>): { built: Built1[]; claim: string[] } | null => {
+    const fits = (built: Built1[], person?: string) => {
+      const keys = [...new Set(built.flatMap(b => b.keys))];
+      if (keys.some(k => taken.has(k)) || (person && usedPeople.has(person))) return null;
+      const ans = built.flatMap(b => (b.meeting.answer?.kind === 'name' ? [b.meeting.answer.value] : []));
+      if (built.some(b => b.names.some(n => answers.has(n))) || ans.some(n => names.has(n))) return null;
+      return { built, claim: [...keys, ...(person ? [`person:${person}`] : [])] };
+    };
+    if (kind === 'filler') {
+      for (const k of rng.shuffle(['contact', 'legal', 'rep'] as const)) { const s = subject(k, days, names, answers); if (s) return s; }
+      return null;
+    }
+    const every = (f: (day: string) => Built1 | null) => { const out: Built1[] = []; for (const d of days) { const b = f(d); if (!b) return null; out.push(b); } return new Set(out.map(b => b.ask)).size === 1 ? out : null; };
+    if (kind === 'contact') for (const cf of contacts) {
+      if (usedPeople.has(cf.person.slug) || days[0]! < addDays(cf.since, 14)) continue;
+      const chain = w.chains.get(cf.account.slug)!;
+      for (const attr of rng.shuffle(ATTR_IDS.filter(x => new Set(chain.flatMap(c => (x in c.sets ? [String(c.sets[x])] : []))).size > 1))) {
+        const b = every(d => termMeeting('contact', cf.account, attr, d, cf));
+        const ok = b && fits(b, cf.person.slug);
+        if (ok) return ok;
+      }
+    }
+    if (kind === 'legal') for (const a of legalAccounts) {
+      if (days[0]! < a.legal!.since) continue;
+      for (const attr of rng.shuffle([...ATTR_IDS])) {
+        const b = every(d => termMeeting('legal', a, attr, d));
+        const ok = b && fits(b);
+        if (ok) return ok;
+      }
+    }
+    if (kind === 'rep' || kind === 'renewal') for (const rep of reps) {
+      const ops = kind === 'renewal' ? [['renewal_date', 'next-renewal']] as const : rng.shuffle(['seats', 'price', 'discount'].flatMap(attr => [[attr, 'max'], [attr, 'min']] as const));
+      for (const [attr, op] of ops) {
+        const b = every(d => { const f = groupsOn(rep, d).find(x => x.attr === attr && x.op === op); return f ? groupMeeting(f, d) : null; });
+        const ok = b && fits(b);
+        if (ok) return ok;
+      }
+    }
+    if (kind === 'former') for (const f of formers) {
+      const cur = currentStint(f.person)!;
+      if (usedPeople.has(f.person.slug) || days[0]! < addDays(cur.start, 14)) continue;
+      const subjectText = `the former ${f.title} of ${f.former.name}`;
+      const ask = `The former ${f.title} of ${f.former.name}: who founded the company they work with today.`;
+      const slugs = [f.company.slug, f.founder.slug];
+      const b = days.map((): Built1 => ({
+        meeting: { title: `Intro call with ${subjectText}`, subject: subjectText, answer: nameValue(f.founder.name), distractors: f.distractors, cite: slugs },
+        ask, keys: [`founder:${f.company.slug}`, `works:${f.person.slug}@${f.company.slug}`, ...slugs.map(s => `page:${s}`)], nearMiss: [], names: [f.former.name, f.company.name],
+        source: `${f.person.slug}, formerly ${f.title} at ${f.former.slug}`, evidence: f.evidence,
+        line: d => `${subjectText}: ${f.person.name}, now with ${f.company.name}, which ${f.founder.name} founded [Source: ${f.company.slug}, updated ${d}].`,
+        probe: { query: ask, patterns: ['indirect'], deciding: f.deciding },
+      }));
+      const ok = fits(b, f.person.slug);
+      if (ok) return ok;
+    }
+    if (kind === 'join') for (const j of joinsOn(days[0]!)) {
+      const b = every(d => {
+        const x = joinsOn(d).find(y => y.keys[0]!.replace(/@.*$/, '') === j.keys[0]!.replace(/@.*$/, '') && y.account === j.account);
+        if (!x) return null;
+        const ask = `Account health review: the one account ${condPhrase(x.conds[0])} and ${condPhrase(x.conds[1])} today.`;
+        return {
+          meeting: { title: 'Account health review (internal)', subject: 'Account health review', answer: nameValue(x.account.name), distractors: x.near.map(o => nameValue(o.name)), cite: x.groups.flat() },
+          ask, keys: [x.keys[0]!.replace(/@.*$/, ''), ...x.keys.slice(1), ...x.groups.flat().map(s => `page:${s}`)], nearMiss: x.near.map(o => o.slug), names: x.near.map(o => o.name),
+          source: `accounts on ${d}: ${x.keys[0]}`, evidence: x.evidence,
+          line: dd => `Account health review: ${x.account.name} [Source: ${x.groups[1]![0]}, updated ${dd}].`,
+          probe: { query: ask, patterns: ['join'], deciding: x.groups.flat() },
+        };
+      });
+      const ok = b && fits(b);
+      if (ok) return ok;
+    }
+    if (kind === 'absent') for (let i = 0; i + 1 < absentPool.length; i += 2) {
+      const pa = absentPool[i]!, pb = absentPool[i + 1]!;
+      const name = `${pa.first} ${pb.last}`;
+      if (taken.has(`name:${name.toLowerCase()}`) || pa.first === pb.first || pa.last === pb.last || !absentFromWorld(corpus, name) || [...w.people.values()].some(p => p.name === name)) continue;
+      const near = [pa, pb].map(p => ({ p, a: w.orgs.get(currentStint(p)!.org)! }));
+      const ask = `${name}: the support tier in force today at the account they work for.`;
+      const b = days.map((): Built1 => ({
+        meeting: { title: `${rng.pick(PERSON_MEETINGS)} ${name}`, subject: name, absent: true, distractors: uniqueValues(near.map(x => nameValue(x.a.name))) },
+        ask, keys: [`name:${name.toLowerCase()}`], nearMiss: near.flatMap(x => [x.p.slug, x.a.slug]), names: near.map(x => x.a.name),
+        source: `absent name from ${pa.slug} and ${pb.slug}`, evidence: `"${name}" occurs on no page`, line: () => `No brain page for ${name}.`,
+        probe: { query: ask, patterns: ['abstention'], deciding: [], near: near.flatMap(x => [x.p.slug, x.a.slug]) },
+      }));
+      const ok = fits(b);
+      if (ok) return ok;
+    }
+    return null;
+  };
+
+  let bundleNo = 0;
+  const bundle = (family: string, kinds: Kind1[], priority: number) => {
+    const id = `r1b${String(++bundleNo).padStart(3, '0')}`;
+    for (let attempt = 0; attempt < 8; attempt++) {
+      const from = addDays('2024-03-01', rng.int(0, daysBetween('2024-03-01', addDays(last, -R1.window))));
+      const days = [...new Set(Array.from({ length: R1.variants * 2 }, () => weekdayOn(addDays(from, rng.int(1, R1.window)))))].filter(d => d >= from && d <= last).slice(0, R1.variants).sort();
+      if (days.length < 2) continue;
+      const names = new Set<string>(), answers = new Set<string>();
+      const chosen: Array<{ built: Built1[]; claim: string[] }> = [];
+      for (const kind of kinds) {
+        const s = subject(kind, days, names, answers);
+        if (!s) break;
+        chosen.push(s);
+        for (const n of s.built.flatMap(b => b.names)) names.add(n);
+        for (const b of s.built) if (b.meeting.answer?.kind === 'name') answers.add(b.meeting.answer.value);
+        for (const k of s.claim) taken.add(k);
+        for (const k of s.claim) if (k.startsWith('person:')) usedPeople.add(k.slice(7));
+      }
+      if (chosen.length !== kinds.length) {
+        for (const s of chosen) for (const k of s.claim) { taken.delete(k); if (k.startsWith('person:')) usedPeople.delete(k.slice(7)); }
+        continue;
+      }
+      days.forEach((day, i) => {
+        const built = chosen.map(s => s.built[i]!);
+        const internal = rng.shuffle(INTERNAL).slice(0, rng.int(1, 2));
+        const times = rng.shuffle(TIMES).slice(0, built.length + internal.length).sort();
+        const entries = rng.shuffle([...built.map(b => ({ b, text: b.meeting.title })), ...internal.map(text => ({ b: null as Built1 | null, text }))]).map((e, k) => ({ ...e, time: times[k]! }));
+        const asked = entries.filter((e): e is typeof e & { b: Built1 } => !!e.b);
+        const nameAnswers = asked.flatMap(e => (e.b.meeting.answer?.kind === 'name' ? [e.b.meeting.answer] : []));
+        const meetings: MeetingSpec[] = asked.map(e => ({ time: e.time, ...e.b.meeting, distractors: uniqueValues([...e.b.meeting.distractors, ...nameAnswers], e.b.meeting.answer ? [e.b.meeting.answer] : []) }));
+        const groups = asked.filter(e => e.b.meeting.cite?.length).map(e => e.b.meeting.cite!);
+        const values = meetings.flatMap(m => (m.answer ? [m.answer] : []));
+        const absent = meetings.find(m => m.absent);
+        drafts.push({ ok: true, priority, probes: asked.map(e => e.b.probe), candidate: {
+          family,
+          task: [`Daily briefing for ${weekdayName(day)}, ${longDate(day)}.`, '', "Today's calendar:", ...entries.map(e => `- ${e.time} ${e.text}`), '', 'For these meetings, include:', ...asked.map(e => `- ${e.b.ask}`)].join('\n'),
+          anchor: { kind: 'calendar', id: `cal:${id}@${day}` },
+          fact_keys: [...new Set(asked.flatMap(e => e.b.keys.filter(k => !k.startsWith('page:'))))],
+          answerable: values.length > 0,
+          gold: { values, slugs: [...new Set(groups.flat())], cite: groups, ...(absent ? { subject: absent.subject } : {}), spec: { kind: 'briefing', times, meetings } },
+          distractors: { slugs: [...new Set(asked.flatMap(e => e.b.nearMiss))], values: uniqueValues(meetings.flatMap(m => m.distractors)) },
+          source: `world-v3 revision-1 bundle ${id}: ${asked.map(e => e.b.source).join('; ')}`,
+          oracle: { path: "per meeting: the contact's career list and the account's contacts list, then the account's contract pages (the record in force that day, a record naming the account's legal entity counting as the account's); every account page naming a rep as owner and those accounts' contract pages; the career list naming a former officer and the company's founding line; every account's owner line and contract pages for a join; or absence from every page", evidence: asked.map(e => e.b.evidence).join('\n') },
+          oracle_answer: ['MEETINGS TODAY', ...asked.map(e => `- ${e.time} ${e.b.meeting.title}\n  ${e.b.line(day)}`)].join('\n'),
+          ...(absent ? { near_miss: [...new Set(asked.filter(e => e.b.meeting.absent).flatMap(e => e.b.nearMiss))] } : {}),
+        } });
+      });
+      return;
+    }
+    drafts.push({ ok: false, family, anchor: `cal:${id}`, reason: 'no window where every subject builds without touching another bundle' });
+  };
+
+  const bundles = (family: keyof typeof QUOTAS_R1) => Math.ceil((QUOTAS_R1[family].reduce<number>((a, b) => a + b, 0) / 3) * R1.slack);
+  const fillers = (lo: number, hi: number): Kind1[] => Array.from({ length: rng.int(lo, hi) }, () => 'filler');
+  const plan: Array<[keyof typeof QUOTAS_R1, () => Kind1[], number]> = [
+    ['contact-terms', () => ['contact', 'contact', ...fillers(0, 1)], 1],
+    ['legal-terms', () => ['legal', 'legal', ...fillers(0, 1)], 1],
+    ['join-review', () => ['join', ...fillers(1, 2)], 2],
+    ['former-role', () => ['former', ...fillers(1, 2)], 2],
+    ['rep-renewal', () => ['renewal', ...fillers(1, 2)], 2],
+    ['rep-review', () => ['rep', ...fillers(1, 2)], 1],
+    ['unknown-contact', () => ['absent', ...fillers(1, 2)], 1],
+  ];
+  for (const [family, kinds, priority] of plan) for (let i = 0; i < bundles(family); i++) bundle(family, rng.shuffle(kinds()), priority);
+  return drafts;
+}
+
 export function generateBriefingV3(knobs: V3Knobs = DEFAULT_V3_KNOBS): SkillGenerationV3 {
-  return assembleV3('briefing', BRIEFING_V3_SEED, knobs, briefingV3Drafts(loadWorldV3(knobs), new Rng(BRIEFING_V3_SEED)), BRIEFING_V3_QUOTAS, { heldOut: BRIEFING_V3_HELD_OUT });
+  const corpus = loadWorldV3(knobs);
+  if (revisionOf(knobs) === 1) return assembleRev1('briefing', BRIEFING_V3_SEED, knobs, corpus, briefingV3Rev1Drafts(corpus, new Rng(BRIEFING_V3_SEED)), QUOTAS_R1, BRIEFING_V3_HELD_OUT_BY_REVISION[1]);
+  return assembleV3('briefing', BRIEFING_V3_SEED, knobs, briefingV3Drafts(corpus, new Rng(BRIEFING_V3_SEED)), QUOTAS_R0, { heldOut: BRIEFING_V3_HELD_OUT_BY_REVISION[0] });
 }

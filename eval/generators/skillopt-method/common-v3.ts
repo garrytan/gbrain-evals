@@ -30,11 +30,14 @@ import {
 import { Rng } from '../seeded.ts';
 import { compileJudgeV3, SPLITS_V3, type GoldV3, type SplitV3 } from '../../runner/skillopt-method/score-v3.ts';
 import { evaluateLayers, type GoldValue, type SkillName } from '../../runner/skillopt-method/score.ts';
+import type { FindabilityReport } from './rev1-v3.ts';
 
 export { SPLITS_V3, type SplitV3 };
 export const SPLIT_SIZES_V3: Readonly<Record<SplitV3, number>> = { train: 24, sel: 24, gate: 36, test: 96 };
 export const MAX_TASKS_PER_GROUP_V3 = 3;
 export const ASSEMBLY_ATTEMPTS_V3 = 400;
+/** The reason a revision-1 findability drop carries (rev1-v3.ts), so screening counts it apart from oracle drops. */
+export const FINDABILITY_DROP = 'findability control:';
 
 export interface MethodTaskV3 extends Omit<MethodTask, 'split' | 'gold'> {
   split: SplitV3;
@@ -68,6 +71,9 @@ export interface GenerationReportV3 {
   unused_candidates: number;
   assembly_attempt: number;
   notes?: string[];
+  /** Revision 1: candidates the findability control dropped, and the search ranks of the placed tasks. */
+  dropped_by_findability?: number;
+  findability?: FindabilityReport;
 }
 export interface SkillGenerationV3 { tasks: MethodTaskV3[]; report: GenerationReportV3 }
 
@@ -330,7 +336,12 @@ function screenV3(skill: SkillName, drafts: readonly DraftV3[], report: Generati
   for (const d of drafts) {
     const family = d.ok ? d.candidate.family : d.family;
     report.candidates[family] = (report.candidates[family] ?? 0) + 1;
-    if (!d.ok) { report.dropped_by_oracle++; report.dropped.push({ family, anchor: d.anchor, reason: d.reason }); continue; }
+    if (!d.ok) {
+      if (report.dropped_by_findability !== undefined && d.reason.startsWith(FINDABILITY_DROP)) report.dropped_by_findability++;
+      else report.dropped_by_oracle++;
+      report.dropped.push({ family, anchor: d.anchor, reason: d.reason });
+      continue;
+    }
     const judge = compileJudgeV3(skill, d.candidate.gold);
     if (!evaluateLayers(d.candidate.oracle_answer, judge).full) {
       report.dropped_by_solvability++;
@@ -398,8 +409,9 @@ export function roundRobin<T extends { family: string }>(tasks: readonly T[], fa
  * attempts until one fills every quota exactly. Throws with the capacity
  * report of the best attempt when none does.
  */
-export function assembleV3(skill: SkillName, seed: number, knobs: V3Knobs, drafts: readonly DraftV3[], quotas: QuotasV3, opts: { heldOut: readonly string[]; notes?: readonly string[] }): SkillGenerationV3 {
+export function assembleV3(skill: SkillName, seed: number, knobs: V3Knobs, drafts: readonly DraftV3[], quotas: QuotasV3, opts: { heldOut: readonly string[]; notes?: readonly string[]; findability?: true }): SkillGenerationV3 {
   const report: GenerationReportV3 = { skill, seed, knobs, candidates: {}, dropped_by_oracle: 0, dropped_by_solvability: 0, dropped_by_degenerate: 0, dropped: [], capacity: [], groups: 0, largest_group: 0, unused_candidates: 0, assembly_attempt: -1 };
+  if (opts.findability) report.dropped_by_findability = 0;
   for (const f of opts.heldOut) if (quotas[f]![0] || quotas[f]![1]) throw new Error(`${skill}: held-out family ${f} has train or selection quota`);
   const kept = screenV3(skill, drafts, report);
   const families = Object.keys(quotas);

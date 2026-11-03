@@ -354,14 +354,14 @@ function configureProbeGateway(chatModel: string): void {
   configureGateway({ embedding_model: PROBE_EMBEDDING.model, embedding_dimensions: PROBE_EMBEDDING.dimensions, chat_model: chatModel, env: process.env as Record<string, string | undefined> });
 }
 
-/** The rollout brain: the dataset's pages (v1 and v2: both corpora; v3: its world) imported without embeddings, under PINNED_SEARCH_CONFIG. The caller disconnects it. */
-export async function openBrain(dataset: DatasetVersion = DEFAULT_DATASET): Promise<PGLiteEngine> {
+/** The rollout brain: the dataset's pages (v1 and v2: both corpora; v3: its world) imported without embeddings, under PINNED_SEARCH_CONFIG. `pages` replaces the dataset's (the findability control's world before it is written). The caller disconnects it. */
+export async function openBrain(dataset: DatasetVersion = DEFAULT_DATASET, pages: ReadonlyMap<string, string> = datasetContext(dataset).pages): Promise<PGLiteEngine> {
   configureProbeGateway(FRONTIER_TARGETS.opus);
   const engine = new PGLiteEngine();
   await engine.connect({});
   await engine.initSchema();
   for (const [key, value] of Object.entries(PINNED_SEARCH_CONFIG)) await engine.setConfig(key, value);
-  for (const [slug, content] of datasetContext(dataset).pages) await importFromContent(engine, slug, content, { noEmbed: true });
+  for (const [slug, content] of pages) await importFromContent(engine, slug, content, { noEmbed: true });
   return engine;
 }
 

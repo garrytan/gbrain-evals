@@ -28,21 +28,48 @@
  *   note-contradicts  an account's term as of a date after an informal note
  *                     stated another value the signed records do not hold
  *
+ * Revision 1 (rev1-v3.ts; `V3Knobs.revision` 1) replaces every family. Trained:
+ *
+ *   legal-as-of     an account's term as of a date when the record in force
+ *                   was issued to the account's legal entity, so the records
+ *                   naming the account hold a superseded value (supersession)
+ *   contact-as-of   the term of "the account where P works as T" (indirect)
+ *   join-two        the one account meeting two conditions that two pages
+ *                   decide: two terms, or its owner and a term (join)
+ *   rep-extreme     which of a rep's accounts had the most or fewest seats,
+ *                   the highest or lowest price, the largest or smallest
+ *                   discount on a date (aggregation)
+ *   absent-entity   a legal-entity name no page carries, built from a real
+ *                   legal entity's stem (abstention)
+ *
+ * Held out (gate and test only):
+ *
+ *   former-role     the founder of the company "C's former T" works with now
+ *                   (indirect)
+ *   parent-ceo      the chief executive on a date of the company that
+ *                   acquired C (indirect)
+ *   rep-total       the total seats on a date across a rep's accounts
+ *                   (aggregation)
+ *
  * Usage: generated through eval/generators/skillopt-method/gen.ts.
  */
 import { Rng } from '../seeded.ts';
+import {
+  absentLegalName, accountsOf, assembleRev1, cite as citeAll, condPhrase, contactFacts, daysDecidedBy, formerRoleFacts, groupFacts, groupPhrase, joinFacts, parentFact, repsOf, termFact,
+  type DraftRev1, type ProbeSpec,
+} from './rev1-v3.ts';
 import {
   absentFromWorld, acquirerFromText, assembleV3, founderFromText, goldOf, loadWorldV3, nameValue, possessive, roleHolderFromText, soleInvestorFromText,
   stintFromText, uniqueValues, valueFromText, type DraftV3, type SkillGenerationV3, type WorldCorpus,
 } from './common-v3.ts';
 import {
-  addDays, ATTR_IDS, ATTRS, chainEnd, currentStint, daysBetween, DEFAULT_V3_KNOBS, longDate, stintAt, valueAt, WORLD_NOW, type AttrId, type Contract, type Org, type Person, type V3Knobs,
+  addDays, ATTR_IDS, ATTRS, chainEnd, currentStint, daysBetween, DEFAULT_V3_KNOBS, LEGAL_ENTITY, longDate, monthStart, revisionOf, stintAt, valueAt, VENDOR, WORLD_NOW, type AttrId, type Contract, type Org, type Person, type V3Knobs,
 } from './world-v3.ts';
 import { ACCOUNT_SUFFIXES, COMPANY_KINDS } from './world-v3-banks.ts';
 import type { GoldValue } from '../../runner/skillopt-method/score.ts';
 
 export const QUERY_V3_SEED = 30_011;
-export const QUERY_V3_QUOTAS = {
+const QUOTAS_R0 = {
   'as-of': [7, 7, 5, 14],
   'two-hop': [6, 6, 5, 12],
   lookalike: [6, 6, 4, 12],
@@ -51,7 +78,22 @@ export const QUERY_V3_QUOTAS = {
   'role-on-date': [0, 0, 6, 16],
   'note-contradicts': [0, 0, 6, 16],
 } as const;
-export const QUERY_V3_HELD_OUT = ['three-hop', 'role-on-date', 'note-contradicts'] as const;
+const QUOTAS_R1 = {
+  'legal-as-of': [5, 5, 4, 10],
+  'contact-as-of': [5, 5, 4, 10],
+  'join-two': [5, 5, 4, 10],
+  'rep-extreme': [5, 5, 3, 10],
+  'absent-entity': [4, 4, 3, 8],
+  'former-role': [0, 0, 6, 16],
+  'parent-ceo': [0, 0, 6, 16],
+  'rep-total': [0, 0, 6, 16],
+} as const;
+/** Per revision: family quotas [train, sel, gate, test] and the held-out families. */
+export const QUERY_V3_QUOTAS_BY_REVISION = { 0: QUOTAS_R0, 1: QUOTAS_R1 } as const;
+export const QUERY_V3_HELD_OUT_BY_REVISION = { 0: ['three-hop', 'role-on-date', 'note-contradicts'], 1: ['former-role', 'parent-ceo', 'rep-total'] } as const;
+/** The default revision's. */
+export const QUERY_V3_QUOTAS: Readonly<Record<string, readonly [number, number, number, number]>> = QUERY_V3_QUOTAS_BY_REVISION[revisionOf(DEFAULT_V3_KNOBS)];
+export const QUERY_V3_HELD_OUT: readonly string[] = QUERY_V3_HELD_OUT_BY_REVISION[revisionOf(DEFAULT_V3_KNOBS)];
 
 const show = (attr: AttrId, v: number | string) => ATTRS[attr].cell(v);
 const cite = (slugs: readonly string[]) => slugs.map(s => `[Source: ${s}]`).join(' ');
@@ -335,6 +377,151 @@ export function queryV3Drafts(corpus: WorldCorpus, rng: Rng): DraftV3[] {
   return drafts;
 }
 
+/** Revision 1's drafts, each with the searches the findability control runs. */
+export function queryV3Rev1Drafts(corpus: WorldCorpus, rng: Rng): DraftRev1[] {
+  const { world: w, pages } = corpus;
+  const drafts: DraftRev1[] = [];
+  const valueTask = (family: string, task: string, anchor: string, keys: string[], answer: GoldValue, distractors: GoldValue[], groups: string[][], distractorSlugs: string[], source: string, path: string, evidence: string, answerText: string, why: string, probes: ProbeSpec[], priority: number) => {
+    const slugs = [...new Set(groups.flat())];
+    drafts.push({ ok: true, priority, probes, candidate: {
+      family, task, anchor: { kind: 'record', id: anchor }, fact_keys: keys, answerable: true,
+      gold: { values: [answer], slugs, cite: groups, spec: { kind: 'value', answer, distractors, cite: groups } },
+      distractors: { slugs: distractorSlugs.filter(s => !slugs.includes(s)), values: distractors },
+      source, oracle: { path, evidence }, oracle_answer: `Answer: ${answerText}\n\n${why}`,
+    } });
+  };
+  const termPath = 'the contract pages the account lists, read for their effective dates, the values they set and the records they rescind; the latest record in force that sets the term, rescinded records dropped; a record that names the legal entity the account page names counts as the account\'s';
+
+  // legal-as-of: a date on which a record issued to the legal entity decides the term.
+  for (const a of accountsOf(corpus).filter(o => o.legal)) {
+    const chain = w.chains.get(a.slug)!;
+    for (const attr of ATTR_IDS) for (const c of chain.filter(x => x.signed >= a.legal!.since && attr in x.sets)) {
+      for (const d of daysDecidedBy(chain, c, attr, (lo, hi) => rng.int(lo, hi), 2)) {
+        const anchor = `asof:${a.slug}:${attr}@${d}`;
+        const t = termFact(corpus, a, attr, d);
+        if ('reason' in t) { drafts.push({ ok: false, family: 'legal-as-of', anchor, reason: t.reason }); continue; }
+        if (!t.alias) { drafts.push({ ok: false, family: 'legal-as-of', anchor, reason: 'the record in force names the account itself' }); continue; }
+        const task = `As of ${longDate(d)}, what was ${possessive(a.name)} ${ATTRS[attr].phrase}?`;
+        valueTask('legal-as-of', task, anchor, [t.key], t.answer, t.distractors, [t.slugs], [...t.distractorSlugs, a.slug], `world-v3 ${a.slug} contract chain, ${attr} on ${d}; the record in force names ${a.legal!.name}`, termPath, t.evidence,
+          show(attr, t.value), `As of ${longDate(d)}, the record in force is ${pages.get(t.record.slug)!.match(/^# (.+)$/m)![1]}, issued to ${a.legal!.name}, the legal entity of ${a.name} ${citeAll(t.slugs)}.`,
+          [{ query: task, patterns: ['supersession'], deciding: t.slugs, newest: t.newest }], t.stale !== null ? 2 : 1);
+      }
+    }
+  }
+
+  // contact-as-of: the term of the account a contact works at, on a date they worked there.
+  for (const cf of contactFacts(corpus)) {
+    const chain = w.chains.get(cf.account.slug)!;
+    for (const attr of ATTR_IDS) {
+      if (new Set(chain.flatMap(c => (attr in c.sets ? [String(c.sets[attr])] : []))).size < 2) continue;
+      for (const c of chain.filter(x => attr in x.sets)) for (const d of daysDecidedBy(chain, c, attr, (lo, hi) => rng.int(lo, hi), 1, addDays(cf.since, 14))) {
+        const anchor = `contact:${cf.person.slug}:${attr}@${d}`;
+        const t = termFact(corpus, cf.account, attr, d);
+        if ('reason' in t) { drafts.push({ ok: false, family: 'contact-as-of', anchor, reason: t.reason }); continue; }
+        const task = `As of ${longDate(d)}, what was the ${ATTRS[attr].phrase} of the account where ${cf.person.name} works as ${cf.title}?`;
+        valueTask('contact-as-of', task, anchor, [t.key, `works:${cf.person.slug}@${cf.account.slug}`], t.answer, t.distractors, [t.slugs], [...t.distractorSlugs, cf.account.slug], `world-v3 ${cf.person.slug} at ${cf.account.slug}, ${attr} on ${d}`,
+          `the person's career list and the account's contacts list (the only current ${cf.title} there); then ${termPath}`, `${cf.evidence}\n${t.evidence}`,
+          show(attr, t.value), `${cf.person.name} works as ${cf.title} at ${cf.account.name} [Source: ${cf.person.slug}]. As of ${longDate(d)}, the record in force is ${pages.get(t.record.slug)!.match(/^# (.+)$/m)![1]} ${citeAll(t.slugs)}.`,
+          [{ query: task, patterns: t.alias ? ['indirect', 'supersession'] : ['indirect'], deciding: [cf.person.slug, ...t.slugs], ...(t.alias ? { newest: t.newest } : {}) }], t.alias ? 2 : 1);
+      }
+    }
+  }
+
+  // join-two: the one account meeting two conditions, on a grid of dates.
+  const pick = <T,>(xs: readonly T[], n: number) => rng.shuffle(xs).slice(0, n);
+  for (let d = '2024-01-01'; d <= addDays(WORLD_NOW, -30); d = monthStart(d, 2)) {
+    const day = addDays(d, rng.int(9, 20));
+    for (const j of joinFacts(corpus, day, pick)) {
+      const chain = w.chains.get(j.account.slug)!;
+      if (chain.some(c => Math.abs(daysBetween(c.effective, day)) < 3 || Math.abs(daysBetween(c.signed, day)) < 3)) continue;
+      const task = `As of ${longDate(day)}, which account was ${condPhrase(j.conds[0])} and ${condPhrase(j.conds[1])}?`;
+      valueTask('join-two', task, j.keys[0]!, j.keys, nameValue(j.account.name), j.near.map(o => nameValue(o.name)), j.groups, j.near.map(o => o.slug), `world-v3 accounts on ${day}: ${j.keys[0]}`,
+        "every account's owner line and contract pages, read for the terms in force on the date; the one account meeting both conditions", j.evidence,
+        j.account.name, `${j.account.name} is the only account that was ${condPhrase(j.conds[0])} and ${condPhrase(j.conds[1])} on ${longDate(day)} ${citeAll(j.groups.map(g => g[0]!))}.`,
+        [{ query: task, patterns: ['join'], deciding: j.groups.flat() }], j.near.length);
+    }
+  }
+
+  // rep-extreme and rep-total: a rep's accounts on a grid of dates.
+  for (const rep of repsOf(corpus)) {
+    for (let d = '2024-02-01'; d <= addDays(WORLD_NOW, -30); d = monthStart(d, 1)) {
+      const day = addDays(d, rng.int(4, 24));
+      for (const f of groupFacts(corpus, rep, day)) {
+        if ((f.op === 'max' || f.op === 'min') && rng.float() < 0.35) {
+          const task = `On ${longDate(day)}, which of the accounts ${rep.name} owns at ${VENDOR.name} had ${groupPhrase(f.attr, f.op)}?`;
+          valueTask('rep-extreme', task, `${f.key}:${day}`, [f.key], f.answer, f.distractors, [f.winnerSlugs], f.members.map(m => m.slug), `world-v3 accounts owned by ${rep.slug}, ${f.attr} ${f.op} on ${day}`,
+            "every account page naming the rep as owner; each account's contract pages read for the term in force on the date; the one account with the extreme value", f.evidence,
+            f.winner!.name, `Of the ${f.members.length} accounts ${rep.name} owns, ${f.winner!.name} had ${groupPhrase(f.attr, f.op)} on ${longDate(day)} ${citeAll(f.winnerSlugs)}.`,
+            [{ query: task, patterns: ['aggregation'], deciding: f.winnerSlugs, needed: f.needed }], 1);
+        } else if (f.op === 'sum') {
+          const task = `What was the total subscribed seat count, on ${longDate(day)}, across all the accounts ${rep.name} owns at ${VENDOR.name}?`;
+          valueTask('rep-total', task, `${f.key}:${day}`, [f.key], f.answer, f.distractors, f.memberSlugs, f.members.map(m => m.slug), `world-v3 accounts owned by ${rep.slug}, seats on ${day}`,
+            "every account page naming the rep as owner; each account's contract pages read for the seat count in force on the date; their sum", f.evidence,
+            String(f.answer.value), `The ${f.members.length} accounts ${rep.name} owns held ${f.answer.value} seats in total on ${longDate(day)}: ${f.memberSlugs.map(g => `[Source: ${g[0]}]`).join(' ')}.`,
+            [{ query: task, patterns: ['aggregation'], deciding: f.memberSlugs.flat(), needed: f.needed }], 1);
+        }
+      }
+    }
+  }
+
+  // absent-entity: a legal-entity-style name no page carries.
+  for (const a of accountsOf(corpus).filter(o => o.legal)) {
+    const name = absentLegalName(corpus, a, rng.shuffle(LEGAL_ENTITY.suffixes));
+    const anchor = `absent:${name ?? a.slug}`;
+    if (!name || !absentFromWorld(corpus, name) || [...w.orgs.values(), ...w.people.values()].some(e => e.name === name)) { drafts.push({ ok: false, family: 'absent-entity', anchor, reason: 'no unused suffix' }); continue; }
+    const chain = w.chains.get(a.slug)!;
+    const rec = chain.filter(c => c.signed >= a.legal!.since && c.sets.seats !== undefined).at(0);
+    const d = rec ? daysDecidedBy(chain, rec, 'seats', (lo, hi) => rng.int(lo, hi), 1)[0] : addDays([addDays(WORLD_NOW, -2), chainEnd(chain)].sort()[0]!, -rng.int(5, 30));
+    if (!d || d < a.legal!.since) { drafts.push({ ok: false, family: 'absent-entity', anchor, reason: 'no date after the legal entity took over' }); continue; }
+    const v = valueAt(chain, 'seats', d)!;
+    const task = `As of ${longDate(d)}, what was ${possessive(name)} ${ATTRS.seats.phrase}?`;
+    const near = [a.slug, v.record.slug];
+    drafts.push({ ok: true, priority: 1, probes: [{ query: task, patterns: ['abstention'], deciding: [], near }], candidate: {
+      family: 'absent-entity', task, anchor: { kind: 'entity', id: anchor }, fact_keys: [`name:${name.toLowerCase()}`], answerable: false,
+      gold: { values: [], slugs: [], subject: name, spec: { kind: 'absent', name, distractors: [goldOf('seats', v.value)] } },
+      distractors: { slugs: near, values: [goldOf('seats', v.value)] },
+      source: `world-v3 absent name from ${a.legal!.name}, the legal entity of ${a.slug}`,
+      oracle: { path: 'absence of the full name from every page', evidence: `"${name}" occurs on no page; ${a.legal!.name} (${a.slug}) does` },
+      oracle_answer: `The brain doesn't have information on ${name}. The closest pages are about ${a.legal!.name}, the legal entity of ${a.name} [Source: ${a.slug}].`,
+      near_miss: near,
+    } });
+  }
+
+  // former-role (held out)
+  for (const f of formerRoleFacts(corpus, possessive)) {
+    const task = `Who founded the company that ${f.phrase} works with now?`;
+    const slugs = [f.company.slug, f.founder.slug];
+    valueTask('former-role', task, `former:${f.person.slug}:${f.former.slug}`, [`founder:${f.company.slug}`, `works:${f.person.slug}@${f.company.slug}`], nameValue(f.founder.name), f.distractors, [slugs], [f.former.slug, f.person.slug], `world-v3 ${f.person.slug}, formerly ${f.title} at ${f.former.slug}`,
+      "every career list, for the one that lists the title at the former organization as ended; that person's current company, confirmed by its page; its founding line, confirmed by the founder's page", f.evidence,
+      f.founder.name, `${f.phrase} is ${f.person.name} [Source: ${f.person.slug}], who works with ${f.company.name}, founded by ${f.founder.name} ${citeAll(slugs)}.`,      [{ query: task, patterns: ['indirect'], deciding: f.deciding }], f.distractors.length);
+  }
+
+  // parent-ceo (held out)
+  for (const c of [...w.orgs.values()].filter(o => o.acquiredBy)) {
+    const parent = w.orgs.get(c.acquiredBy!.org)!;
+    for (const t of parent.ceo) {
+      const from = [addDays(c.acquiredBy!.date, 30), addDays(t.start, 20)].sort().at(-1)!;
+      const to = [addDays(WORLD_NOW, -2), addDays(t.end ?? WORLD_NOW, -20)].sort()[0]!;
+      if (daysBetween(from, to) < 10) continue;
+      for (let k = 0; k < 2; k++) {
+        const day = addDays(from, rng.int(0, daysBetween(from, to)));
+        const anchor = `parent:${c.slug}@${day}`;
+        const f = parentFact(corpus, c, day);
+        if ('reason' in f) { drafts.push({ ok: false, family: 'parent-ceo', anchor, reason: f.reason }); continue; }
+        const task = `Who was the chief executive, on ${longDate(day)}, of the company that acquired ${c.name}?`;
+        const slugs = [parent.slug, f.ceo.slug];
+        valueTask('parent-ceo', task, anchor, [`acq:${c.slug}`, f.key], nameValue(f.ceo.name), f.distractors, [slugs], [c.slug, ...(c.founder ? [c.founder] : [])], `world-v3 ${c.slug} acquired by ${parent.slug}, chief executive on ${day}`,
+          "the acquired company's ownership line; the acquirer's leadership line read for the tenure covering the date, confirmed by the holder's career list", f.evidence,
+          f.ceo.name, `${parent.name} acquired ${c.name} [Source: ${c.slug}]; on ${longDate(day)} its chief executive was ${f.ceo.name} ${citeAll(slugs)}.`,
+          [{ query: task, patterns: ['indirect'], deciding: f.deciding }], parent.ceo.length > 1 ? 2 : 1);
+      }
+    }
+  }
+  return drafts;
+}
+
 export function generateQueryV3(knobs: V3Knobs = DEFAULT_V3_KNOBS): SkillGenerationV3 {
-  return assembleV3('query', QUERY_V3_SEED, knobs, queryV3Drafts(loadWorldV3(knobs), new Rng(QUERY_V3_SEED)), QUERY_V3_QUOTAS, { heldOut: QUERY_V3_HELD_OUT });
+  const corpus = loadWorldV3(knobs);
+  if (revisionOf(knobs) === 1) return assembleRev1('query', QUERY_V3_SEED, knobs, corpus, queryV3Rev1Drafts(corpus, new Rng(QUERY_V3_SEED)), QUOTAS_R1, QUERY_V3_HELD_OUT_BY_REVISION[1]);
+  return assembleV3('query', QUERY_V3_SEED, knobs, queryV3Drafts(corpus, new Rng(QUERY_V3_SEED)), QUOTAS_R0, { heldOut: QUERY_V3_HELD_OUT_BY_REVISION[0] });
 }

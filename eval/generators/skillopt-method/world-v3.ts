@@ -48,6 +48,14 @@ export interface V3Knobs {
   lookalike_pairs: { companies: number; people: number };
   /** Wrong-value mentions per account, alternating between informal notes (a claim the record contradicts) and meeting notes (an unsigned proposal). */
   distractor_count: number;
+  /**
+   * The task revision (plan section 4's one revision). Absent or 0: the
+   * calibrated set. 1: the revision-1 families (rev1-v3.ts), over a world
+   * where two thirds of the accounts with three or more records moved their
+   * later contracts to a legal entity whose name shares no word with the
+   * account's (`LegalEntity`).
+   */
+  revision?: 0 | 1;
 }
 
 export const DEFAULT_V3_KNOBS: Readonly<V3Knobs> = { seed: 30_001, chain_depth: { min: 4, max: 5 }, lookalike_pairs: { companies: 20, people: 24 }, distractor_count: 6 };
@@ -58,6 +66,11 @@ export const WORLD_NOW = '2026-10-30';
 export const PAGE_WORDS = { min: 150, max: 700 } as const;
 
 export const VENDOR = { name: 'Lanterncrest Software', slug: 'companies/lanterncrest-software', product: 'Lanterncrest Yard' } as const;
+
+/** Revision 1: the share of accounts with a legal entity, the suffixes its name takes, and the offset of the seed that draws them (so the rest of the world is drawn as at revision 0). */
+export const LEGAL_ENTITY = { share: 2 / 3, suffixes: ['Holdings', 'Group', 'Partners', 'Enterprises', 'Industries'], seedOffset: 1_009 } as const;
+/** The task revision a knob set asks for. */
+export const revisionOf = (knobs: Pick<V3Knobs, 'revision'>): 0 | 1 => knobs.revision ?? 0;
 
 // ─── Dates ───────────────────────────────────────────────────────────────────
 
@@ -97,7 +110,11 @@ export interface Org {
   owner: string | null;
   lookalike: string | null;
   product: string; customer: string;
+  /** Revision 1, accounts only: the legal entity its contracts signed on or after `since` are issued to, by a name that shares no word with the account's. */
+  legal?: LegalEntity;
 }
+
+export interface LegalEntity { name: string; since: string }
 
 export const ATTR_IDS = ['seats', 'price', 'discount', 'renewal_date', 'notice', 'payment', 'tier'] as const;
 export type AttrId = typeof ATTR_IDS[number];
@@ -476,11 +493,9 @@ export function generateWorldV3(knobs: V3Knobs = DEFAULT_V3_KNOBS): WorldV3 {
   // Contract chains.
   const contracts = new Map<string, Contract>();
   const chains = new Map<string, Contract[]>();
-  for (const a of accounts) {
-    const chain = makeChain(rng, a, knobs, vendorStaff.map(p => p.slug));
-    chains.set(a.slug, chain);
-    for (const c of chain) contracts.set(c.slug, c);
-  }
+  for (const a of accounts) chains.set(a.slug, makeChain(rng, a, knobs, vendorStaff.map(p => p.slug)));
+  if (revisionOf(knobs) >= 1) assignLegalEntities(new Rng(knobs.seed + LEGAL_ENTITY.seedOffset), accounts, chains, stemPool.slice(reservedStems.length));
+  for (const chain of chains.values()) for (const c of chain) contracts.set(c.slug, c);
 
   // Meetings, notes, mentions and announcements.
   const mentions: Mention[] = [];
@@ -689,6 +704,37 @@ function tryChain(rng: Rng, a: Org, depth: number, staff: readonly string[]): Co
 /** Every account's latest term runs at least until this day. */
 const ACTIVE_UNTIL = '2025-09-30';
 
+/**
+ * Revision 1: a share of the accounts move their contracts to a legal entity
+ * part way through the chain. Every record signed from the first moved one on
+ * names the entity in its title, its slug and its text, and never the
+ * account's own name, so a search on the account's name ranks its older
+ * records first. The account page names the entity and lists every record.
+ */
+function assignLegalEntities(rng: Rng, accounts: readonly Org[], chains: Map<string, Contract[]>, stems: readonly string[]): void {
+  let next = 0;
+  for (const a of accounts) {
+    const chain = chains.get(a.slug)!;
+    if (rng.float() >= LEGAL_ENTITY.share || chain.length < 3) continue;
+    const first = rng.int(2, chain.length - 1);
+    const stem = stems[next++];
+    if (!stem) throw new Error('world-v3: ran out of stems for legal entities');
+    const name = `${stem} ${rng.pick(LEGAL_ENTITY.suffixes)}`;
+    a.legal = { name, since: chain[first]!.signed };
+    const renamed = new Map<string, string>();
+    for (const c of chain.slice(first)) {
+      const slug = c.slug.replace(`contracts/${slugify(a.name)}-`, `contracts/${slugify(name)}-`);
+      renamed.set(c.slug, slug);
+      c.slug = slug;
+      c.title = `${c.title.split(':')[0]}: ${name}`;
+    }
+    for (const c of chain) if (c.rescinds && renamed.has(c.rescinds)) c.rescinds = renamed.get(c.rescinds)!;
+  }
+}
+
+/** The name a record calls its customer: the legal entity from the day the account moved its contracts to it, else the account's name. */
+export const partyOf = (a: Org, c: Pick<Contract, 'signed'>): string => (a.legal && c.signed >= a.legal.since ? a.legal.name : a.name);
+
 // ─── Rendering ───────────────────────────────────────────────────────────────
 
 const link = (title: string, slug: string) => `[${title}](${slug})`;
@@ -786,8 +832,9 @@ function renderAll(w: WorldV3, rng: Rng): Map<string, string> {
     const contacts = [...w.people.values()].flatMap(p => p.stints.filter(s => s.org === a.slug).map(s => ({ p, s }))).sort((x, y) => x.s.start.localeCompare(y.s.start) || x.p.slug.localeCompare(y.p.slug));
     const snap = snapshotOf(w, a).date;
     const sv = (attr: AttrId) => ATTRS[attr].cell(valueAt(chain, attr, snap)!.value);
+    const legal = a.legal ? ` Since ${longDate(a.legal.since)}, its contracts with ${VENDOR.name} have been issued to its legal entity, ${a.legal.name}.` : '';
     const sections = [
-      `# ${a.name}\n\n${a.name} is a customer of ${link(VENDOR.name, VENDOR.slug)} for ${VENDOR.product}. ${pickN(ACCOUNT_FILLER, 2).map(t => fill(t, slots)).join(' ')}`,
+      `# ${a.name}\n\n${a.name} is a customer of ${link(VENDOR.name, VENDOR.slug)} for ${VENDOR.product}.${legal} ${pickN(ACCOUNT_FILLER, 2).map(t => fill(t, slots)).join(' ')}`,
       `## Contacts\n\n${contacts.map(({ p, s }) => `- ${pl(p.slug)}, ${s.title} (${span(s.start, s.end)})`).join('\n')}\n- Account owner at ${VENDOR.name}: ${pl(a.owner!)}`,
       `## Contract history\n\n${chain.map(c => `- ${link(c.title.split(':')[0]!, c.slug)}, signed ${longDate(c.signed)}`).join('\n')}`,
       `## Account snapshot\n\nLast reviewed ${longDate(snap)}. Seats: ${sv('seats')}. Support: ${sv('tier')}. Current term ends: ${sv('renewal_date')}. The snapshot is copied from the last account review and is not updated when a contract changes; the signed records above govern.`,
@@ -800,7 +847,8 @@ function renderAll(w: WorldV3, rng: Rng): Map<string, string> {
     const a = org(c.account);
     const chain = w.chains.get(a.slug)!;
     const msa = chain[0]!;
-    const boiler = () => pickN(CONTRACT_FILLER, 2).map(t => fill(t, { vendor: VENDOR.name, account: a.name })).join(' ');
+    const party = partyOf(a, c);
+    const boiler = () => pickN(CONTRACT_FILLER, 2).map(t => fill(t, { vendor: VENDOR.name, account: party })).join(' ');
     const parts: string[] = [`# ${c.title}`];
     if (c.kind === 'msa') {
       parts.push(`This Master Subscription Agreement is between ${VENDOR.name} and ${link(a.name, a.slug)} for ${VENDOR.product}, ${VENDOR.name}'s dock and yard scheduling product.`);
@@ -810,14 +858,14 @@ function renderAll(w: WorldV3, rng: Rng): Map<string, string> {
     } else if (c.kind === 'rescission') {
       const target = w.contracts.get(c.rescinds!)!;
       const name = target.title.split(':')[0]!;
-      parts.push(`This rescission agreement between ${VENDOR.name} and ${link(a.name, a.slug)} rescinds ${link(name, target.slug)} in full.`);
+      parts.push(`This rescission agreement between ${VENDOR.name} and ${link(party, a.slug)} rescinds ${link(name, target.slug)} in full.`);
       parts.push(`## Dates\n\nSigned: ${longDate(c.signed)}.\nEffective: ${longDate(c.effective)}.`);
       parts.push(`## Effect\n\nFrom ${longDate(c.effective)}, ${name} has no further effect. Every term it changed returns to the value in force immediately before ${name} took effect. ${name} applied from ${longDate(target.effective)} until ${longDate(addDays(c.effective, -1))}.`);
     } else {
       const rows = (Object.keys(c.sets) as AttrId[]).sort((x, y) => ATTR_IDS.indexOf(x) - ATTR_IDS.indexOf(y));
-      const what = c.kind === 'renewal' ? `This renewal order renews the subscription of ${link(a.name, a.slug)} under the ${link('Master Subscription Agreement', msa.slug)}.`
-        : c.kind === 'amendment' ? `This amendment is between ${VENDOR.name} and ${link(a.name, a.slug)}. It amends the ${link('Master Subscription Agreement', msa.slug)}.`
-          : `This side letter is a letter agreement between ${VENDOR.name} and ${link(a.name, a.slug)} under the ${link('Master Subscription Agreement', msa.slug)}.`;
+      const what = c.kind === 'renewal' ? `This renewal order renews the subscription of ${link(party, a.slug)} under the ${link('Master Subscription Agreement', msa.slug)}.`
+        : c.kind === 'amendment' ? `This amendment is between ${VENDOR.name} and ${link(party, a.slug)}. It amends the ${link('Master Subscription Agreement', msa.slug)}.`
+          : `This side letter is a letter agreement between ${VENDOR.name} and ${link(party, a.slug)} under the ${link('Master Subscription Agreement', msa.slug)}.`;
       parts.push(what);
       const dates = c.kind === 'renewal'
         ? `Signed: ${longDate(c.signed)}.\nEffective: ${longDate(c.effective)}.\nThe renewal term runs from ${longDate(c.termStart!)} to ${longDate(c.termEnd!)}. This order was signed ahead of the start of the renewal term; until ${longDate(c.effective)} the current term and its terms continue to apply.`
@@ -827,7 +875,7 @@ function renderAll(w: WorldV3, rng: Rng): Map<string, string> {
       parts.push(`From ${longDate(c.effective)}, ${rows.map(x => `the ${ATTRS[x].label.toLowerCase()} is ${ATTRS[x].cell(c.sets[x]!)}`).join(' and ')}. All other terms are unchanged.`);
     }
     parts.push(`Prepared by ${pl(c.preparedBy)} for the order file. ${boiler()}`);
-    const body = padTo(rng, target(), parts.join('\n\n') + '\n', CONTRACT_FILLER.map(t => fill(t, { vendor: VENDOR.name, account: a.name })));
+    const body = padTo(rng, target(), parts.join('\n\n') + '\n', CONTRACT_FILLER.map(t => fill(t, { vendor: VENDOR.name, account: party })));
     pages.set(c.slug, frontmatter('deal', c.title, c.signed) + body);
   }
 
