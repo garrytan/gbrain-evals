@@ -1410,8 +1410,9 @@ cap. Since gbrain-evals#320, `raise-lease.ts` also refuses to grow a lease's res
 is unknown keeps the host reservation, and a raise never skips the block cap.** A20 says the host reservation is given
 back if the VM step fails. Since gbrain-evals#329, `raise-lease.ts` gives it back only when the VM lease ledger refuses
 the raise. A VM step that ends without a result (a timeout, an ssh error or output that does not read back) keeps the
-reservation and stops, so a person reconciles the two ledgers. Since gbrain-evals#330, a raise is also refused when the
-state directory belongs to another campaign or the lease's cell is not in the manifest, so the block cap always applies.
+reservation, records the raise as unknown so the campaign and the block cap count it, and stops, so a person reconciles
+the two ledgers. Since gbrain-evals#330, a raise is also refused when the state directory belongs to another campaign or
+the lease's cell is not in the manifest, so the block cap always applies.
 
 ## Changelog
 

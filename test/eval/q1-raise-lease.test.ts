@@ -165,26 +165,42 @@ describe('raise-lease (A17 campaigns)', () => {
     mkdirSync(join(s.vmLedger(l.lease_id), '..'), { recursive: true });
     BudgetRun.openLease({ runId: l.lease_id, leaseUsd: 4, ledgerPath: s.vmLedger(l.lease_id) });
     const raiseTo5 = () => raise(s.c, l.lease_id, 5, 'owner approved $5', (vm, command) => command.includes("'raise'") ? step(() => s.ssh(vm, command), { ledger: s.vmLedger(l.lease_id), lease: l.lease_id }) : s.ssh(vm, command));
-    const ledgers = () => [s.hostCommitted().committed_usd, ledgerStatus({ ledgerPath: s.vmLedger(l.lease_id), runId: l.lease_id }).run!.budget_usd, raises(s.state).length];
-    return { raiseTo5, ledgers };
+    const ledgers = () => [s.hostCommitted().committed_usd, ledgerStatus({ ledgerPath: s.vmLedger(l.lease_id), runId: l.lease_id }).run!.budget_usd, raises(s.state).map(r => r.vm_result ?? 'confirmed')];
+    return { ...s, l, raiseTo5, ledgers };
   }
 
-  test('a VM step that ends without a result keeps the host reservation, records no raise and says so (#329)', () => {
+  test('a VM step that ends without a result keeps the host reservation, records the raise as unknown and says so (#329)', () => {
     const dropped = vmStep(run => { run(); return { code: 255, out: '', err: 'Connection to vm-0 closed by remote host.' }; });
-    expect(dropped.raiseTo5).toThrow(/ended without a result \(exit 255\): Connection to vm-0 closed.*the host reservation stays at \$5.00 and no raise is recorded.*raise-lease.ts show/);
-    expect(dropped.ledgers()).toEqual([5, 5, 0]);
+    expect(dropped.raiseTo5).toThrow(/ended without a result \(exit 255\): Connection to vm-0 closed.*the host reservation stays at \$5.00 and the raise is recorded with vm_result "unknown".*raise-lease.ts show/);
+    expect(dropped.ledgers()).toEqual([5, 5, ['unknown']]);
+    expect(raises(dropped.state)[0]).toMatchObject({ from_usd: 4, to_usd: 5, vm_ledger: null, vm_cap_usd: null });
     const timedOut = vmStep(() => ({ code: null, out: '', err: '' }));
     expect(timedOut.raiseTo5).toThrow(/ended without a result \(exit null\).*stays at \$5.00/);
-    expect(timedOut.ledgers()).toEqual([5, 4, 0]);
+    expect(timedOut.ledgers()).toEqual([5, 4, ['unknown']]);
     const unread = vmStep(run => ({ ...run(), out: 'Welcome to Ubuntu' }));
     expect(unread.raiseTo5).toThrow(/ended without a result \(exit 0\).*stays at \$5.00/);
-    expect(unread.ledgers()).toEqual([5, 5, 0]);
+    expect(unread.ledgers()).toEqual([5, 5, ['unknown']]);
+  });
+
+  test('a raise with an unknown VM result counts against its block and stops a retry until the ledgers are reconciled (#329)', () => {
+    const s = vmStep(run => { run(); return { code: null, out: '', err: '' }; });
+    expect(s.raiseTo5).toThrow(/ended without a result/);
+    expect([s.c.lease(s.l.lease_id).raised_usd, s.c.blockSpend('T1'), leaseUsd(s.c, s.l.lease_id)]).toEqual([5, 5, 5]);
+    const m = s.launch('cell-1', 'vm-1');
+    mkdirSync(join(s.vmLedger(m.lease_id), '..'), { recursive: true });
+    BudgetRun.openLease({ runId: m.lease_id, leaseUsd: 4, ledgerPath: s.vmLedger(m.lease_id) });
+    expect(() => raise(s.c, m.lease_id, 4.5, 'past the block', s.ssh)).toThrow(/block T1 would hold \$9.50, over its \$9.00 cap/);
+
+    const timedOut = vmStep(() => ({ code: null, out: '', err: '' }));
+    expect(timedOut.raiseTo5).toThrow(/ended without a result/);
+    expect(() => raise(timedOut.c, timedOut.l.lease_id, 6, 'retry', timedOut.ssh)).toThrow(/the VM ledger holds lease 4 \(finished: false\), not an open \$5.00/);
+    expect(timedOut.ledgers()).toEqual([5, 4, ['unknown']]);
   });
 
   test('a VM step the lease ledger refuses gives the host reservation back (#329)', () => {
     const refused = vmStep((run, vm) => { closeRun(vm.ledger, vm.lease); return run(); });
     expect(refused.raiseTo5).toThrow(/was not raised \(exit 3\): lease .* is not open in .*; the host reservation is back at \$4.00/);
-    expect(refused.ledgers()).toEqual([4, 4, 0]);
+    expect(refused.ledgers()).toEqual([4, 4, []]);
   });
 
   test('a reserved lease cannot be settled and is abandoned at its full reservation; a finished lease is not raised', () => {

@@ -17,12 +17,13 @@
  * before every reservation, so the raise binds from the proxy's next call
  * without a restart. A VM step the lease ledger refuses gives the host
  * reservation back. A VM step that ends without a result (a timeout, an ssh
- * error, output that does not read back) keeps it and stops, because the VM
- * may already hold the raise; a person reconciles the two ledgers. A raise is
- * refused when the state directory belongs to another campaign or its lease's
- * cell is not in the manifest, so a block cap is never skipped. Every raise is
- * appended to <state>/raises.ndjson; leases.ndjson is left to the campaign's
- * own events.
+ * error, output that does not read back) keeps it, records the raise with
+ * vm_result "unknown" so the campaign and its block cap count it, and stops,
+ * because the VM may already hold the raise; a person reconciles the two
+ * ledgers. A raise is refused when the state directory belongs to another
+ * campaign or its lease's cell is not in the manifest, so a block cap is never
+ * skipped. Every raise is appended to <state>/raises.ndjson; leases.ndjson is
+ * left to the campaign's own events.
  *
  * Settling needs nothing new for a sealed lease: its VM ledger stays in custody,
  * the pulled lease summary carries the lease as launched, and `settle` settles
@@ -41,7 +42,7 @@ import { Campaign, resolveRunner } from '../shootout-cell.ts';
 
 const REPO_ROOT = resolve(import.meta.dir, '../../..');
 
-export interface Raise { lease_id: string; cell: string; at: string; from_usd: number; to_usd: number; reason: string; host_entry: string; vm_ledger: string; vm_cap_usd: number }
+export interface Raise { lease_id: string; cell: string; at: string; from_usd: number; to_usd: number; reason: string; host_entry: string; vm_ledger: string | null; vm_cap_usd: number | null; vm_result?: 'unknown' }
 type Ssh = (vm: string, command: string) => { code: number | null; out: string; err: string };
 
 /** Run on the VM: the lease ledger's run budget and cap grow by the same amount in one transaction, or nothing changes. A refusal exits VM_REFUSED, having changed nothing. */
@@ -142,10 +143,11 @@ export function raise(c: Campaign, leaseId: string, toUsd: number, reason: strin
     resizeHost(c, l.entry_id, -delta, null, `give back ${what}`);
     throw new Error(`${what}: the VM ledger on ${l.vm} was not raised (exit ${r.code}): ${(r.err || r.out).slice(-400)}; the host reservation is back at ${usd(from)}`);
   }
-  const done = r.code === 0 ? lastJson(r.out) as { ledger: string; budget_usd: number; cap_usd: number } | null : null;
-  if (!done || Math.abs(done.budget_usd - toUsd) > 1e-6) throw new Error(`${what}: the VM step on ${l.vm} ended without a result (exit ${r.code}): ${(r.err || r.out).slice(-400)}; the VM ledger may hold either amount, so the host reservation stays at ${usd(toUsd)} and no raise is recorded. Read the VM ledger with \`raise-lease.ts show\` and reconcile the two ledgers by hand before this lease is raised, settled or abandoned`);
-  const rec: Raise = { lease_id: leaseId, cell: l.cell, at: new Date().toISOString(), from_usd: from, to_usd: toUsd, reason, host_entry: l.entry_id, vm_ledger: done.ledger, vm_cap_usd: done.cap_usd };
+  const out = r.code === 0 ? lastJson(r.out) as { ledger: string; budget_usd: number; cap_usd: number } | null : null;
+  const done = out && Math.abs(out.budget_usd - toUsd) <= 1e-6 ? out : null;
+  const rec: Raise = { lease_id: leaseId, cell: l.cell, at: new Date().toISOString(), from_usd: from, to_usd: toUsd, reason, host_entry: l.entry_id, vm_ledger: done?.ledger ?? null, vm_cap_usd: done?.cap_usd ?? null, ...(done ? {} : { vm_result: 'unknown' as const }) };
   appendFileSync(join(c.stateDir, 'raises.ndjson'), JSON.stringify(rec) + '\n');
+  if (!done) throw new Error(`${what}: the VM step on ${l.vm} ended without a result (exit ${r.code}): ${(r.err || r.out).slice(-400)}; the VM ledger may hold either amount, so the host reservation stays at ${usd(toUsd)} and the raise is recorded with vm_result "unknown", which the campaign and its block cap count at ${usd(toUsd)}. Read the VM ledger with \`raise-lease.ts show\` and reconcile the two ledgers by hand before this lease is raised, settled or abandoned`);
   return rec;
 }
 
