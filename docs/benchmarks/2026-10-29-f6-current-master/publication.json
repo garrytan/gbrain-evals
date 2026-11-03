@@ -338,7 +338,24 @@
       }
     }
   ],
-  "sensitivity": [],
+  "sensitivity": [
+    {
+      "sets": [
+        "S1"
+      ],
+      "id": "f6-s1-gbrain-degraded-ingest",
+      "label": "without the 40 questions of gbrain's two degraded S1 conversations (A3)",
+      "reason": "gbrain's F6 build refused /finish on conversations 10m-8 and 10m-9 (pages_skipped_unparsed 2 and 3), so their answers are ingest_degraded. The headline row scores them; this view leaves those questions out for every system, so each row is read on the conversations gbrain's build finished.",
+      "question_ids": [],
+      "from_outcomes": {
+        "cell": "s1.gbrain-defaults.f6-master.p",
+        "outcomes": [
+          "ingest_degraded"
+        ],
+        "count": 40
+      }
+    }
+  ],
   "not_run": {
     "s4-slice.gbrain-defaults.f6-master": "cut (A4): first in the preregistered scope-cut order, stopped after $4.22 of its $89.98 lease so the S1 file agent and S1 temporal graph shards fit under the $3,100 approval; no S4-slice row is published",
     "s2a.gbrain-defaults.f6-master": "partial (A4): this A1 cell settled without finishing and is not resumed, because S2a and S3 come before the S1 cells in the scope-cut order; its answered rows are published in the appendix \"partial A1 cells (A4)\" with the cause, and no comparison is drawn from them",
@@ -368,19 +385,20 @@
     "ext-temporal-graph": "bundle shipped-0.31, lock de6585d0, capabilities 2c8fd392"
   },
   "disclosures": [
-    "[FILL BEFORE PUBLISHING: spend] F6 spend settled at $<total> across the six counted ledgers (frozen campaign, A1, A2, A3, A4, A4b) against the $3,068.83 counted cap, which is the $3,100 approval less the $31.17 dry run; $<measured> of it is measured and $1,267.14 is booked at full reservation for the 22 leases the VM sweep destroyed (A3), whose true spend was not measured. Of <n> launch units, <a> settled complete, <b> partial and <c> not run; each not-run row says why.",
+    "F6 spend settled at $2,909.74 across the six counted ledgers (frozen campaign $1,031.23, A1 $1,005.11, A2 $91.41, A3 $441.12, A4 $94.84, A4b $246.03) against the $3,068.83 counted cap, which is the $3,100 approval less the $31.17 dry run; with the dry run, $2,940.91 of the $3,100. $1,642.60 of it is measured and $1,267.14 is booked at full reservation for the 22 leases the VM sweep destroyed (A3), whose true spend was not measured. The receipt lists 131 cells: 87 with rows and 44 not run, each with its reason.",
     "Campaigns: the frozen campaign q1-scoreboard-f6-current-master (hash 6c422770, freeze commit 1929c441) and five amendments, each with its own manifest, hash and ledger: A1 q1-scoreboard-f6-current-master-a1 (2f5db2a2), A2 -a2 (3eb38788), A3 -a3 (2ad97fef), A4 -a4 (fee2706d) and A4b -a4b (fff66e08). Every unit publishes from the campaign that ran it. Cells whose shards span campaigns (D8 gbrain, D8 graph pipeline, S1 temporal graph) merge once at the A4b launch commit d9fffb93; the merge code and the cell definitions it reads are identical across the F6 launch commits apart from expected hours, a launch-control field.",
     "D8 gbrain (A1, A2): in the frozen campaign the canary c0 and shards c1 and c3 to c9 timed out on gbrain's /finish at the original finish budget, so every answer of theirs is ingest_degraded; those realizations are never published. The row takes c2 from the frozen campaign, c0 from A1 (finish budget sized from the largest conversation) and c1 and c3 to c9 from A2, each built afresh.",
     "VM sweep (A3): from 16:33 to 16:36 UTC on 2026-10-30 another team's test of an unmerged runner change destroyed every Ubicloud VM in the project named without an expiry and older than 4 hours, 22 F6 VMs among them (S1 gbrain c0 to c9, S1 temporal graph c0 to c9, the S1 file agent and D8 graph pipeline c9). No realization from them is published. A3 relaunched S1 gbrain c0 to c9, S1 temporal graph c0 to c3 and D8 graph pipeline c9 from fresh stores, with VM names that carry an expiry and a watcher that saves each unit's spend every 30 minutes; A4 and A4b ran the rest.",
     "S1 file agent (A4): resumed from the checkpoint the frozen campaign pulled before the sweep. Its store was ingested again, the 140 rows already answered were kept with their judgments, and only the questions without answers were answered (the harness's `answers` resume mode).",
-    "S1 temporal graph 0.31.2 publishes every shard that completed: c0 to c3 from A3 and c4 to c9 from A4b. [FILL BEFORE PUBLISHING: drop any A4b shard that did not complete from publication.json and give the count here: <k> of 10 conversations.] A conversation whose shard did not complete leaves its questions unscored, so the row is incomplete and makes no claim.",
+    "S1 temporal graph 0.31.2 publishes every shard that completed: c0 to c3 from A3 and c4 to c9 from A4b, all 10 of 10 conversations (199 of 199 questions scored).",
     "S4-slice (A4): cut, first in the preregistered scope-cut order, after $4.22 of its $89.98 lease; no S4-slice row is published.",
     "Partial A1 cells (A4), not resumed because S2a and S3 come before the S1 cells in the scope-cut order: S3 gbrain reached its 4-hour timeout after 700 answered rows ($51.57), S2a gbrain its 8-hour timeout after 420 rows ($39.57), and S2a temporal graph used its whole $25.10 lease after 139 rows ($25.03). Their answered rows are in the appendix as partial, with that cause; no comparison is drawn from them.",
     "Budget ledger fix (A4, commit 69adc404): the ledger now accepts a reservation that brings a run or the program exactly to its cap, within 1e-9 dollars. Before it, float rounding refused such a reservation by about 2e-14 dollars and held A3's last unit for 3 hours, until another lease settled below its reservation. No cell's rows changed.",
     "Rows reused from Q1's A24 campaign (q1-scoreboard-sealed, launch commit 008b83fe) for ext-extract-first, ext-memory-bank, ext-graph-pipeline, ext-markdown-kb, ext-verbatim-session, baseline-none, baseline-recency and baseline-full-context, each declared in the F6 preregistration and passing eval/runner/q1/reuse-check.ts from 008b83fe to d9fffb93. baseline-hybrid and baseline-file-agent fail that check, so their S1 rows were rerun at the F6 tree and their S2b, S2a and S3 rows are not run. ext-temporal-graph's A24 rows were retired (its pinned configuration calls models its provider retired); F6 measures its 0.31.2 shipped defaults instead (configuration shipped-0.31).",
     "S1 is descriptive and unranked: with 10 conversations Q1's power check detects only differences of about 13.6 points, so no S1 row leads, beats or trails another. Arm P is gbrain's headline row on every set; arms A0, A, B, C, D and E are measurements beside it. D8 is published here descriptively.",
-    "[FILL BEFORE PUBLISHING: D8 confirmatory family] The preregistered D8 family (P \u2212 A, D \u2212 A and B \u2212 A; exact two-sided McNemar on claude-sonnet-5-5's paired correct/incorrect, question-level paired bootstrap, Holm at 0.05) is not computed by eval/runner/scoreboard.ts; link its result here.",
-    "S1 file agent (A5): like the S1 hybrid, the A4 unit ran Q1's definition of its cell id, and its receipt is merged and published under that definition, as it ran. The two definitions have the same questions, readers, agent mode and canonical judge; Q1's also asks for frontier judges, ten judge repeats and 20 ingest-latency probes. F6's comparison reads only the canonical judge (judge_replicate 0), so it is what F6's definition would have produced; the extra work was paid inside the $3,100 cap. The cell runner now refuses an id both manifests define unless --manifest names one."
+    "D8 confirmatory family (preregistered; computed in custody from the receipt's canonical judgments by the procedure the preregistration names, since eval/runner/scoreboard.ts does not compute it): on claude-sonnet-5-5's paired correct/incorrect over 300 questions (canonical score >= 0.5), (1) the facts block P - A is +1.33 points (92.00% vs 90.67%; 12 wins, 8 losses; exact McNemar p = 0.503; question-level paired bootstrap 95% interval -1.67 to +4.33, conversation-cluster interval -2.67 to +6.33); (2) the full stack D - A is +0.33 points (13 wins, 12 losses; p = 1.0; interval -3.00 to +3.67); (3) recall B - A is 0.00 points (10 wins, 10 losses; p = 1.0; interval -3.00 to +3.00). Holm-adjusted p is 1.0 for all three, so none passes at 0.05, and \"the facts block helps on D8\" is not written: on these fresh long histories the facts block did not measurably change accuracy. Opus 5.5 (P - A +1.00, 20 wins, 17 losses) and gpt-6.1-sol (+0.67, 15 wins, 13 losses) agree. Arm A already answers about 9 in 10 correctly for every reader, which limits the room any arm has to gain; the facts block was delivered (about 85% of P's contexts carry fact items, about 15 per context).",
+    "S1 file agent (A5): like the S1 hybrid, the A4 unit ran Q1's definition of its cell id, and its receipt is merged and published under that definition, as it ran. The two definitions have the same questions, readers, agent mode and canonical judge; Q1's also asks for frontier judges, ten judge repeats and 20 ingest-latency probes. F6's comparison reads only the canonical judge (judge_replicate 0), so it is what F6's definition would have produced; the extra work was paid inside the $3,100 cap. The cell runner now refuses an id both manifests define unless --manifest names one.",
+    "S1 gbrain (A3): two of the ten conversations (10m-8 and 10m-9, shards c8 and c9) ingested degraded: gbrain's F6 build refused its own /finish because 2 and 3 pages were skipped as unparsed (pages_skipped_unparsed), the product's own failure, not a harness budget. Their 40 questions were answered from those stores and are scored, as every ingest_degraded answer is, so the headline row keeps them; the sensitivity view f6-s1-gbrain-degraded-ingest reads every system without those 40 questions."
   ],
   "render_targets": [
     "docs/benchmarks/2026-10-29-f6-current-master/scoreboard.md"

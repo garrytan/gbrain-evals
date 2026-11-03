@@ -257,11 +257,10 @@ describe('F6 publication.json', () => {
     expect(config.sources.filter(s => !s.appendix && s.campaign.endsWith('q1-scoreboard-sealed.json'))).toEqual(reuse);
   });
 
-  test('the disclosures carry the amendments, marked placeholders, and no interim totals', () => {
+  test('the disclosures carry the amendments, the settled spend and the D8 family, with no placeholder left', () => {
     const all = config.disclosures.join('\n');
-    for (const s of ['S4-slice (A4)', 'VM sweep (A3)', '69adc404', '140 rows', 'Partial A1 cells (A4)']) expect(all).toContain(s);
-    expect(config.disclosures.filter(d => d.startsWith('[FILL BEFORE PUBLISHING:'))).toHaveLength(2);
-    expect(all).toContain('[FILL BEFORE PUBLISHING: drop any A4b shard');
+    for (const s of ['S4-slice (A4)', 'VM sweep (A3)', '69adc404', '140 rows', 'Partial A1 cells (A4)', '$2,909.74', '10 of 10 conversations', 'D8 confirmatory family', 'pages_skipped_unparsed']) expect(all).toContain(s);
+    expect(all).not.toContain('FILL BEFORE PUBLISHING');
     expect(config.render_targets).toEqual([`${dir}/scoreboard.md`]);
   });
 });
