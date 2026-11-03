@@ -72,6 +72,14 @@ def synthesis(system: str, prompt: str) -> str:
                        "citations": [{"page_slug": slugs[0], "row_num": None, "citation_index": 1}] if slugs else [], "gaps": []})
 
 
+def extracted_facts(prompt: str) -> str:
+    """gbrain's conversation fact extractor expects {"facts": [...]}: one event fact per user turn line
+    ("<speaker> (<ts>): <text>"), copied from the turn, so F6's extraction path runs keyless."""
+    turns = [ln.split("): ", 1)[1].strip() for ln in prompt.splitlines() if "): " in ln and "assistant" not in ln.split("): ", 1)[0].lower()]
+    return json.dumps({"facts": [{"fact": t[:200], "kind": "event", "entity": None, "confidence": 1.0, "notability": "high", "metric": None, "value": None,
+                                  "unit": None, "period": None} for t in turns[:3] if t]})
+
+
 def messages(body: dict[str, Any]) -> dict[str, Any]:
     msgs = body.get("messages") or []
     prompt = "\n".join(fp.content_text(m.get("content")) for m in msgs)
@@ -86,6 +94,8 @@ def messages(body: dict[str, Any]) -> dict[str, Any]:
         stop = "tool_use"
     elif fmt.get("type") == "json_schema":
         content, stop = [{"type": "text", "text": json.dumps(structured(fmt.get("schema") or {}, prompt))}], "end_turn"
+    elif "One fact per atomic claim" in system:
+        content, stop = [{"type": "text", "text": extracted_facts(prompt)}], "end_turn"
     elif "synthesis engine" in system:
         content, stop = [{"type": "text", "text": synthesis(system, prompt)}], "end_turn"
     else:

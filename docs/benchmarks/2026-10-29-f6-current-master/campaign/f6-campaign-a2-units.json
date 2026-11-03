@@ -1,0 +1,14 @@
+{
+  "campaign_id": "q1-scoreboard-f6-current-master-a2",
+  "cap_usd": 115,
+  "units": [
+    "d8.gbrain-defaults.f6-master.c1",
+    "d8.gbrain-defaults.f6-master.c3",
+    "d8.gbrain-defaults.f6-master.c4",
+    "d8.gbrain-defaults.f6-master.c5",
+    "d8.gbrain-defaults.f6-master.c6",
+    "d8.gbrain-defaults.f6-master.c7",
+    "d8.gbrain-defaults.f6-master.c8",
+    "d8.gbrain-defaults.f6-master.c9"
+  ]
+}
