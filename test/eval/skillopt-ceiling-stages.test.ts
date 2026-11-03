@@ -452,6 +452,41 @@ describe('gate stage, stops and skips', () => {
     expect(r.verdict.verdict).toBe('incomplete');
   }, 300_000);
 
+  test('a budget refusal four billed turns into a rollout keeps that spend: the rollout\'s error row and usage are written before the stage stops, and voided counts the interrupted arm and its dollars (#331)', async () => {
+    const base = gateTransport(newRecorder());
+    const path = join(tempDir(), 'rows.jsonl');
+    const refused = SPLITS.gate('query')[0]!;
+    let turns = 0;
+    const r = await gate({
+      attempt: 1, rows: fileRows(path, GATE_HEADER, false),
+      transport: () => async opts => {
+        const user = userText(opts);
+        const seedOnGate = !isProposer(opts.system) && !user.includes('Hint:') && !(opts.system ?? '').includes(NO_SKILL_TEXT);
+        if (!seedOnGate || taskOf(user)?.task.task_id !== refused.task_id) return base(opts);
+        if (++turns === 5) throw new BudgetExceededError('reserving $0.2600 would take this run to $470.0100, over its $470.00 budget');
+        const blocks = [{ type: 'tool-call', toolCallId: `c${turns}`, toolName: 'brain_get_page', input: { slug: decisivePages(refused)[0] ?? 'people/none' } }];
+        return { ...fakeReply(opts, ''), blocks, stopReason: 'tool_calls' } as unknown as ChatResult;
+      },
+    });
+    expect(turns).toBe(5);
+    expect(r.stopped).toMatchObject({ kind: 'budget_exhausted', target: 'opus', skill: 'query', arm: 'seed' });
+    const failed = rollouts(readRows(path)).filter(x => x.error !== undefined);
+    expect(failed.map(x => [x.task_id, x.arm, x.split, x.run, x.usage?.calls])).toEqual([[refused.task_id, 'seed', 'gate', 1, 4]]);
+    expect(failed[0]!.error).toMatch(/^budget refusal: .*over its \$470\.00 budget/);
+    const usd = failed[0]!.usage!.usd;
+    expect(usd).toBeGreaterThan(0);
+    const pair = r.pairs[0]!;
+    expect([pair.skill, pair.target, pair.status]).toEqual(['query', 'opus', 'stopped']);
+    expect(pair.arms.seed!.substance).toBeNull();
+    expect(pair.arms.seed!.voided.calls).toBe(4);
+    expect(pair.arms.seed!.voided.usd).toBeCloseTo(usd, 12);
+    expect(r.voided.opus.arms).toBe(1);
+    expect(r.voided.opus.usd).toBeCloseTo(usd, 12);
+    expect(r.voided.sol).toEqual({ arms: 0, usd: 0 });
+    expect(pair.cost.usd).toBeGreaterThanOrEqual(usd);
+    expect(r.verdict.verdict).toBe('incomplete');
+  }, 300_000);
+
   test('the re-price trigger: once the mean rollout cost passes 1.25 times its price after a pair, the stage stops after that pair', async () => {
     const rows = memoryRows();
     const r = await gate({ attempt: 2, rows, prices: { opus: 0.0001, sol: 0.0001 }, transport: () => gateTransport(newRecorder()) });
