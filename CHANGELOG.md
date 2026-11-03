@@ -4,6 +4,12 @@ This records what each gbrain-evals release changed and what its measurements me
 
 ## [Unreleased]
 
+### CI restores the repository's git objects from the Actions cache instead of fetching 1.3 GB per job (GST-1253)
+
+- **What broke.** From about 15:10 UTC on 2026-11-03, GitHub served this repository's checkout packs many times slower than before. Every CI job fetched main's tip tree, about 1.3 GB packed and nearly all of it receipts under `docs/benchmarks/`, so a checkout that had taken about 27 s took 2 to 17 minutes. From 17:05, prereg-order, receipt-secrets and tested-tree (5-minute jobs) and the tests shards (15 minutes) were cancelled inside `actions/checkout`, and no run could pass.
+- **A new `git-cache` job keeps the whole `.git`** (every branch, full history) in the Actions cache. A push to main refreshes it for the new commit, and a pull request builds one only when neither it nor main has one yet. Every other job restores it before `actions/checkout`, which then fetches only the new objects and checks out the same commit at the same depth, so each check reads the same files and history as before. prereg-order still runs on full history.
+- **Credentials and fallbacks.** The cache is saved only after a checkout with `persist-credentials: false`, and a step refuses to save a `.git` whose config holds a credential. A pull request restores main's cache but writes only its own. Every job still runs when `git-cache` fails and then checks out from GitHub as before, so a cache failure cannot turn a required check into a skipped one.
+
 ### F6 amendment A6: the particle-1 add-on (GST-1153)
 
 - **A6 in F6's preregistration** adds particle-1 rows beside F6's published rows before any of them runs: re-reads of the frozen 8,000-token contexts on S1 and S2b (gbrain P and A0, the extract-first and memory-bank servers, the temporal-graph library 0.31.2), and the S1 file agent with particle-1 as its agent. It changes no F6 cell, bar, verdict, ledger or published number. Hard cap $150, charged to Q1's eval total.

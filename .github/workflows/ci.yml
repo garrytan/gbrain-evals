@@ -17,10 +17,59 @@ on:
     branches: [main]
 
 jobs:
-  checks:
+  # One copy of the repository's git objects for every job (GST-1253). The tip
+  # tree is about 1.3 GB packed, nearly all of it receipts under docs/benchmarks/,
+  # and every job used to fetch it from GitHub. From 2026-11-03 GitHub served
+  # those packs slowly enough that 5- and 15-minute jobs ran out of time inside
+  # actions/checkout. This job keeps the whole .git (every branch, full history)
+  # in the Actions cache: a push to main refreshes it for the new commit, and a
+  # pull request builds one only when neither the PR nor main has one yet. Every
+  # other job restores it before actions/checkout, which then fetches only what
+  # is new and checks out the same commit with the same depth as before, so each
+  # job checks exactly what it did. The save follows a checkout with
+  # persist-credentials: false and refuses a stored credential. Every other job
+  # runs even when this one fails, and then checks out from GitHub as before, so
+  # a broken cache never turns a required check into a skipped one.
+  git-cache:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
+      - id: cache
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: .git
+          key: git-objects-v1-${{ github.sha }}
+          restore-keys: git-objects-v1-
+          lookup-only: ${{ github.event_name != 'push' }}
+
+      - if: steps.cache.outputs.cache-hit != 'true' && (github.event_name == 'push' || steps.cache.outputs.cache-matched-key == '')
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - if: steps.cache.outputs.cache-hit != 'true' && (github.event_name == 'push' || steps.cache.outputs.cache-matched-key == '')
+        name: Refuse to cache a stored credential
+        run: test -z "$(git config --local --get-regexp 'extraheader')$(git config --local --get-regexp '^includeif\.')"
+
+      - if: steps.cache.outputs.cache-hit != 'true' && (github.event_name == 'push' || steps.cache.outputs.cache-matched-key == '')
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: .git
+          key: git-objects-v1-${{ github.sha }}
+
+  checks:
+    needs: git-cache
+    if: ${{ !cancelled() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: .git
+          key: git-objects-v1-${{ github.sha }}
+          restore-keys: git-objects-v1-
+
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
@@ -70,6 +119,8 @@ jobs:
   # external gbrain checkout and records a skip; BRAINBENCH_ALLOW_SKIP
   # acknowledges receipt-declared skips.
   brainbench:
+    needs: git-cache
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     strategy:
@@ -77,6 +128,12 @@ jobs:
       matrix:
         shard: [1, 2, 3]
     steps:
+      - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: .git
+          key: git-objects-v1-${{ github.sha }}
+          restore-keys: git-objects-v1-
+
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
@@ -99,9 +156,17 @@ jobs:
           retention-days: 14
 
   prereg-order:
+    needs: git-cache
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: .git
+          key: git-objects-v1-${{ github.sha }}
+          restore-keys: git-objects-v1-
+
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
@@ -116,6 +181,8 @@ jobs:
         run: bun eval/runner/prereg.ts
 
   tests:
+    needs: git-cache
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
@@ -123,6 +190,12 @@ jobs:
       matrix:
         shard: [1, 2, 3, 4]
     steps:
+      - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: .git
+          key: git-objects-v1-${{ github.sha }}
+          restore-keys: git-objects-v1-
+
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
@@ -162,6 +235,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: .git
+          key: git-objects-v1-${{ github.sha }}
+          restore-keys: git-objects-v1-
+
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
@@ -196,9 +275,17 @@ jobs:
   # is a paid, ledger-reserved judge with no keyless fixture provider yet.
   # Wiring the fixture through it is gbrain-evals issue #195.
   scoreboard:
+    needs: git-cache
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
+      - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: .git
+          key: git-objects-v1-${{ github.sha }}
+          restore-keys: git-objects-v1-
+
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
@@ -220,9 +307,17 @@ jobs:
   # refused unread. gitleaks is pinned by version and sha256; findings are
   # redacted in the log.
   receipt-secrets:
+    needs: git-cache
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
+      - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: .git
+          key: git-objects-v1-${{ github.sha }}
+          restore-keys: git-objects-v1-
+
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: gitleaks on docs/benchmarks/**/receipts, scoreboard receipts and compressed receipts
@@ -238,6 +333,8 @@ jobs:
   # from each other, so they run as two jobs side by side instead of in series,
   # each installing the venv itself; the test files are unchanged.
   harness:
+    needs: git-cache
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
@@ -247,6 +344,12 @@ jobs:
     env:
       MPW_REQUIRE_HARNESS: '1'
     steps:
+      - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: .git
+          key: git-objects-v1-${{ github.sha }}
+          restore-keys: git-objects-v1-
+
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
