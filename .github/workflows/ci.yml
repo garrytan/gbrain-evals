@@ -38,7 +38,7 @@ jobs:
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: .git
-          key: git-objects-v1-${{ github.sha }}
+          key: ${{ format('git-objects-v1-{0}', github.sha) }}
           restore-keys: git-objects-v1-
           lookup-only: ${{ github.event_name != 'push' }}
 
@@ -56,7 +56,7 @@ jobs:
         uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: .git
-          key: git-objects-v1-${{ github.sha }}
+          key: ${{ format('git-objects-v1-{0}', github.sha) }}
 
   checks:
     needs: git-cache
@@ -67,7 +67,7 @@ jobs:
       - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: .git
-          key: git-objects-v1-${{ github.sha }}
+          key: ${{ format('git-objects-v1-{0}', github.sha) }}
           restore-keys: git-objects-v1-
 
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -131,7 +131,7 @@ jobs:
       - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: .git
-          key: git-objects-v1-${{ github.sha }}
+          key: ${{ format('git-objects-v1-{0}', github.sha) }}
           restore-keys: git-objects-v1-
 
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -164,7 +164,7 @@ jobs:
       - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: .git
-          key: git-objects-v1-${{ github.sha }}
+          key: ${{ format('git-objects-v1-{0}', github.sha) }}
           restore-keys: git-objects-v1-
 
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -193,7 +193,7 @@ jobs:
       - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: .git
-          key: git-objects-v1-${{ github.sha }}
+          key: ${{ format('git-objects-v1-{0}', github.sha) }}
           restore-keys: git-objects-v1-
 
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -238,7 +238,7 @@ jobs:
       - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: .git
-          key: git-objects-v1-${{ github.sha }}
+          key: ${{ format('git-objects-v1-{0}', github.sha) }}
           restore-keys: git-objects-v1-
 
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -283,7 +283,7 @@ jobs:
       - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: .git
-          key: git-objects-v1-${{ github.sha }}
+          key: ${{ format('git-objects-v1-{0}', github.sha) }}
           restore-keys: git-objects-v1-
 
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -315,7 +315,7 @@ jobs:
       - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: .git
-          key: git-objects-v1-${{ github.sha }}
+          key: ${{ format('git-objects-v1-{0}', github.sha) }}
           restore-keys: git-objects-v1-
 
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -347,7 +347,7 @@ jobs:
       - uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: .git
-          key: git-objects-v1-${{ github.sha }}
+          key: ${{ format('git-objects-v1-{0}', github.sha) }}
           restore-keys: git-objects-v1-
 
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
