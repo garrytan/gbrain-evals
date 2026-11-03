@@ -1,0 +1,15 @@
+# BEAM's Python dependencies for the RS1 mint (eval/custody/rs1/mint.sh), the subset its plan, question, answer,
+# chat, truncate and probe stages import, with the versions BEAM's requirements.txt pins at b2da22e.
+# requirements.lock pins them and every transitive dependency by hash. To regenerate it, save BEAM's requirements.txt
+# at the pinned commit, without its en-core-web-sm URL line, as beam-constraints.txt beside this file, then run:
+#   uv pip compile requirements.in -c beam-constraints.txt --generate-hashes --python-version 3.12 \
+#     --python-platform x86_64-manylinux_2_28 -o requirements.lock
+faker==37.4.0
+json_repair==0.44.1
+langchain==0.3.26
+langchain-core==0.3.75
+langchain-google-genai==2.0.10
+networkx==3.5
+numpy==1.26.4
+tiktoken==0.9.0
+transformers==4.54.1
