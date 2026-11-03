@@ -2,6 +2,16 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [Unreleased]
+
+### gstack's pregate and /ship use CI's test run instead of running the suite again
+
+- **CI's new `tested-tree` job records what the run tested** (`scripts/ci-tested-tree.ts`). After the checks job and all four test shards pass, it uploads `tree.json`: the run, the tree it tested, every test file it ran and how many Bun tests ran. The Bun files come from each shard's JUnit report, so the record lists only files Bun actually ran; the Python file is the one the checks job runs. The job runs no tests, and no existing job changes what it checks.
+- **`.gstack/pregate.json` maps the test lanes to that run** (gstack 1.94.0.0, F1). `run_profiles` names the `ci.yml` jobs and the `tested-tree` artifact, and `ship_lanes_from` maps `bun run test`, `TEST_SHARDS=1 bun run test`, `TEST_SHARDS=2 bun run test`, `bun run test:unit` and `bun run test:py` to the files each one runs. When a green run at the branch's exact, clean tree lists every one of those files, /ship takes it as the lane's result and the pregate's tests stage counts the selected test files it ran as passed. A dirty tree, a fork run, a run older than 24 hours, a newer red or running run, or a pull-request run that tested a merge with a newer main never carries. Any other lane command still runs on the machine.
+- **The repository floor moves to gstack 1.94.4.0.** gstack before 1.94.0.0 refuses a `pregate.json` that has `ship_lanes_from`, so `.gstack/ship-policy.json` raises `min_gstack_version` from 1.92.35.0 to 1.94.4.0, the version this crew requires. An older session's check names the upgrade.
+- **CLAUDE.md lists the lane commands that carry.**
+- **Tests.** `test/eval/ci-tested-tree.test.ts` checks the inventory each lane prints, the JUnit reading, the `tree.json` fields for push and pull-request runs, the refusals, and that `ci.yml`, `pregate.json` and `package.json` agree on the jobs, the artifact, the lane commands and the Python tests.
+
 ## [0.10.145] - 2026-11-03
 
 ### gbrain pin moves to v0.60.557.0: a SkillOpt rollout shows the model MCP's suggestion and fix on a refused read
