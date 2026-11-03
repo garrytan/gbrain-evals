@@ -1,0 +1,168 @@
+{
+  "skill": "fact-check",
+  "seed": 30013,
+  "knobs": {
+    "seed": 30001,
+    "chain_depth": {
+      "min": 3,
+      "max": 5
+    },
+    "lookalike_pairs": {
+      "companies": 15,
+      "people": 20
+    },
+    "distractor_count": 2
+  },
+  "candidates": {
+    "superseded": 887,
+    "compound": 223,
+    "not-founder": 201,
+    "absent": 105,
+    "role-on-date": 79,
+    "three-hop": 63,
+    "lookalike-founder": 36
+  },
+  "dropped_by_oracle": 0,
+  "dropped_by_solvability": 0,
+  "dropped_by_degenerate": 0,
+  "dropped": [],
+  "capacity": [
+    {
+      "family": "superseded",
+      "held_out": false,
+      "candidates": 887,
+      "confirmed": 887,
+      "quota": {
+        "train": 6,
+        "sel": 6,
+        "gate": 5,
+        "test": 12
+      },
+      "placed": {
+        "train": 6,
+        "sel": 6,
+        "gate": 5,
+        "test": 12
+      },
+      "short": 0
+    },
+    {
+      "family": "compound",
+      "held_out": false,
+      "candidates": 223,
+      "confirmed": 223,
+      "quota": {
+        "train": 6,
+        "sel": 6,
+        "gate": 5,
+        "test": 12
+      },
+      "placed": {
+        "train": 6,
+        "sel": 6,
+        "gate": 5,
+        "test": 12
+      },
+      "short": 0
+    },
+    {
+      "family": "not-founder",
+      "held_out": false,
+      "candidates": 201,
+      "confirmed": 201,
+      "quota": {
+        "train": 6,
+        "sel": 6,
+        "gate": 4,
+        "test": 12
+      },
+      "placed": {
+        "train": 6,
+        "sel": 6,
+        "gate": 4,
+        "test": 12
+      },
+      "short": 0
+    },
+    {
+      "family": "absent",
+      "held_out": false,
+      "candidates": 105,
+      "confirmed": 105,
+      "quota": {
+        "train": 6,
+        "sel": 6,
+        "gate": 4,
+        "test": 12
+      },
+      "placed": {
+        "train": 6,
+        "sel": 6,
+        "gate": 4,
+        "test": 12
+      },
+      "short": 0
+    },
+    {
+      "family": "role-on-date",
+      "held_out": true,
+      "candidates": 79,
+      "confirmed": 79,
+      "quota": {
+        "train": 0,
+        "sel": 0,
+        "gate": 6,
+        "test": 16
+      },
+      "placed": {
+        "train": 0,
+        "sel": 0,
+        "gate": 6,
+        "test": 16
+      },
+      "short": 0
+    },
+    {
+      "family": "three-hop",
+      "held_out": true,
+      "candidates": 63,
+      "confirmed": 63,
+      "quota": {
+        "train": 0,
+        "sel": 0,
+        "gate": 6,
+        "test": 16
+      },
+      "placed": {
+        "train": 0,
+        "sel": 0,
+        "gate": 6,
+        "test": 16
+      },
+      "short": 0
+    },
+    {
+      "family": "lookalike-founder",
+      "held_out": true,
+      "candidates": 36,
+      "confirmed": 36,
+      "quota": {
+        "train": 0,
+        "sel": 0,
+        "gate": 6,
+        "test": 16
+      },
+      "placed": {
+        "train": 0,
+        "sel": 0,
+        "gate": 6,
+        "test": 16
+      },
+      "short": 0
+    }
+  ],
+  "groups": 131,
+  "largest_group": 3,
+  "unused_candidates": 1414,
+  "assembly_attempt": 0
+}
