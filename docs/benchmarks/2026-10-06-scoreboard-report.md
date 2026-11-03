@@ -128,13 +128,13 @@ a local copy. When the full receipt is released, `check --commit` recomputes it 
      and kept in the denominator (`publication.json` `product_outcomes`; the renderer refuses any other count). gbrain
      #7421 (2026-10-24, after the pin) extends the 16,000-token limit to OpenAI reasoning models from gpt-5 to gpt-9.
    - **file agent: 7 `context_overflow` stops are product failures (correction, 2026-11-03).** On S1 (6) and S2b (1),
-     `claude-opus-5-5` answers stopped when the provider refused the request at its context limit. The preregistered
-     outcome rule (`eval/runner/memory-qa/outcomes.ts`) counts an agent's own `turn_cap` and `context_overflow` stops
-     as product failures, scored 0 and kept in the denominator (ruling 2026-11-03 via GBRA-108: the preregistered rule
-     wins). The published render counted these 7 as harness failures, because `scoreboard.ts` kept its own, shorter
-     product-failure list; it now uses the outcome rules' list, so the next custody render scores the file agent's S1
-     and S2b rows on all 199 and 240 questions. [Corrections](../corrections.md#q1-head-to-head-scoreboard) carries the
-     custodian's rescore.
+     `claude-opus-5-5` answers stopped on an error the file agent classified as a context-length refusal from its text;
+     the HTTP status was not recorded. The preregistered outcome rule (`eval/runner/memory-qa/outcomes.ts`) counts an
+     agent's own `turn_cap` and `context_overflow` stops as product failures, scored 0 and kept in the denominator
+     (ruling 2026-11-03 via GBRA-108: the preregistered rule wins). The first published render (`f15e7302`) counted
+     these 7 as harness failures, because `scoreboard.ts` kept its own, shorter product-failure list. It now uses the
+     outcome rules' list, and the custodian's re-render with it (`bf902d9f`) scores the file agent's S1 and S2b rows on
+     all 199 and 240 questions. [Corrections](../corrections.md#q1-head-to-head-scoreboard) lists the figures that moved.
    - **S3 file-agent: 23 gpt-6.1-sol `reader_error` answers.** A harness failure, so those questions leave that row's
      mean under the outcome rules; the row says how many.
    - **S3 agent runtime: 200 gpt-6.1-sol `retrieval_error` answers (A19, item E).** The runtime calls gpt-6.1-sol
