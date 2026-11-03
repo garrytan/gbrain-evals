@@ -4,6 +4,14 @@ This records what each gbrain-evals release changed and what its measurements me
 
 ## [Unreleased]
 
+### gstack's pregate and /ship use CI's test run instead of running the suite again
+
+- **CI's new `tested-tree` job records what the run tested** (`scripts/ci-tested-tree.ts`). After the checks job and all four test shards pass, it uploads `tree.json`: the run, the tree it tested, every test file it ran and how many Bun tests ran. The Bun files come from each shard's JUnit report, so the record lists only files Bun actually ran; the Python file is the one the checks job runs. The job runs no tests. It fails, and uploads nothing, when a file the inventory lists did not run: Bun's report leaves out a test file that registers no tests, and a run missing one file carries no lane, so the job goes red instead of carry stopping quietly. No existing job changes what it checks.
+- **`.gstack/pregate.json` maps the test lanes to that run** (gstack 1.94.0.0, F1). `run_profiles` names the `ci.yml` jobs and the `tested-tree` artifact, and `ship_lanes_from` maps `bun run test`, `TEST_SHARDS=1 bun run test`, `TEST_SHARDS=2 bun run test`, `bun run test:unit` and `bun run test:py` to the files each one runs. When a green run at the branch's exact, clean tree lists every one of those files, /ship takes it as the lane's result and the pregate's tests stage counts the selected test files it ran as passed. A dirty tree, a fork run, a run older than 24 hours, a newer red or running run, or a pull-request run that tested a merge with a newer main never carries. Any other lane command still runs on the machine.
+- **The repository floor moves to gstack 1.94.4.0.** gstack before 1.94.0.0 refuses a `pregate.json` that has `ship_lanes_from`, so `.gstack/ship-policy.json` raises `min_gstack_version` from 1.92.35.0 to 1.94.4.0, the version this crew requires. An older session's check names the upgrade.
+- **CLAUDE.md lists the lane commands that carry.**
+- **Tests.** `test/eval/ci-tested-tree.test.ts` checks the inventory each lane prints, the JUnit reading (on a hand-written report and on one Bun writes), the `tree.json` fields for push and pull-request runs, the `record` command's pass and its failure when a file did not run, the refusals, and that `ci.yml`, `pregate.json` and `package.json` agree on the jobs, the artifact, the lane commands and the Python tests.
+
 ### The Q1 scoreboard is re-rendered under the stop rule
 
 - **README's Q1 block and `docs/benchmarks/2026-10-06-scoreboard/scoreboard.md` are the custodian's re-render of the sealed receipt with `scoreboard.ts` at `a1c346e8`.** `publication.json` now records results commit `bf902d9f`, whose `SHA256SUMS` hashes to `00fabc3b…3f2d` (was `f15e7302`, `9a955a32…84b5`); only the four aggregate lines changed, and the receipt's inputs did not. `bun eval/runner/scoreboard.ts check --commit bf902d9fdacd814940ab12ef4c453fb36ea1d4cb` matches both public files.
