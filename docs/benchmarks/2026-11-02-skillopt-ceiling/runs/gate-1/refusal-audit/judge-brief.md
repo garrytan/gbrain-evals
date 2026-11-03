@@ -1,6 +1,6 @@
 # Refusal audit: the judge's brief
 
-The brief below is the whole instruction the refusal-audit judge received, as written, except that the run's scratch directory reads `<work>/`. The judge was a Capy subagent running `openai/gpt-6.1-sol` (a different model family from the Opus answers), on 2026-11-03, reading [`input.jsonl.gz`](input.jsonl.gz) and writing [`judged.jsonl`](judged.jsonl) and [`summary.json`](summary.json). Its reasoning setting was not recorded. It made no API call of its own and read no other file.
+The brief below is the whole instruction the refusal-audit judge received, as written, except that the run's scratch directory reads `<work>/`. The judge was a Capy subagent running `openai/gpt-6.1-sol` (a different model family from the Opus answers), on 2026-11-03, reading [`input.jsonl.gz`](input.jsonl.gz) and writing [`judged.jsonl`](judged.jsonl) and [`summary.json`](summary.json). Its reasoning setting was not recorded. Its own report says it made no API calls and no repository changes.
 
 ---
 

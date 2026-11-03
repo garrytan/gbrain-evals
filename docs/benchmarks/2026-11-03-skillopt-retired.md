@@ -63,7 +63,7 @@ Gate 1 cost $133.87 over 3,304 requests, against its $470 cap: `query` $23.74, `
 - It does not measure `fact-check` (above) or GPT-6.1 Sol. At calibration, on 12 practice tasks each, Sol scored 1.000, 1.000 and 0.917 with the shipped skills while gbrain's rollout path refused 52% of its `briefing` tool calls and 84% of its `fact-check` tool calls, and no retry after any of those 305 refusals succeeded. That is a separate harness problem in gbrain's rollout path, which this benchmark never resolved.
 - It does not measure particle-1, which gbrain's gateway can't call at this pin.
 - It ran one gate where the preregistration allowed two. The preregistered path was one task revision, a second gate and then a read of the sealed test split before any cut. Garry's decision ends the study after gate 1, so this is his call on gate 1's evidence, not a preregistered verdict. The revision was built and never run, and the 96 test tasks per skill stay sealed.
-- It never measured the iterative loop, whose arms would have run only after a gate pass, so it gives no evidence on the loop either way. The two earlier results that measured it, #304 and the [November 1 re-baseline](2026-11-01-skillopt-rebaseline/REPORT.md), found the full loop tied a one-shot rewrite.
+- It never measured the iterative loop, whose arms would have run only after a gate pass, so it gives no evidence on the loop either way. The two earlier results that measured it, the [June 3 run](2026-06-03-skillopt.md) and the [November 1 re-baseline](2026-11-01-skillopt-rebaseline/REPORT.md), found the full loop tied a one-shot rewrite.
 
 ## What changes in this repository
 
