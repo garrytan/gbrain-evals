@@ -112,9 +112,10 @@ says which ones do not and why. Everything above [Changelog](#changelog) is curr
   file-agent question with a stop left that row. All 7 stops are `claude-opus-5-5` answers that the file agent
   classified `context_overflow` from the provider's error text; none hit the turn cap. No stop's HTTP status was
   recorded: the answer records, meters and ledger keep neither the status nor the error text, and the proxy logs went
-  with the runner VMs. Each stop has the same shape, a first turn of about 1,130 to 1,160 input tokens that succeeded
-  and a second request, carrying the first grep result, that failed, which fits a context-length refusal after an
-  uncapped grep. The custodian re-rendered the receipt under the rule with `scoreboard.ts` at `a1c346e8` (results
+  with the runner VMs. The custodian, reading the sealed receipt, reports that each stop has the same shape: a first
+  turn of about 1,130 to 1,160 input tokens that succeeded and a second request, carrying the first grep result, that
+  failed, which fits a context-length refusal after an uncapped grep. The custodian re-rendered the receipt under the
+  rule with `scoreboard.ts` at `a1c346e8` (results
   commit `bf902d9f`), and README's block and the scoreboard tables now show it. On BEAM-10M (S1) the file agent's row
   goes from 67.96% (193/199) to 67.25% (199/199), printed 68.0% to 67.2%, and its Opus reader from 73.53% to 71.31%; on
   BEAM-1M sealed (S2b) from 71.13% (239/240) to 71.11% (240/240) and its Opus reader from 76.51% to 76.19%. Its S1

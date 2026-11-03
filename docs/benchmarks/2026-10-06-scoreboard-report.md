@@ -63,7 +63,7 @@ a local copy. When the full receipt is released, `check --commit` recomputes it 
 ## Report sections, in order
 
 1. **The finding.** The generated verdict sentence for BEAM-10M (family F1), with the date range, the gbrain build
-   and, when F1 is descriptive (power decision: minimum detectable difference about 13.58 points), the sentence that
+   and, when F1 is descriptive (power decision: minimum detectable difference about 13.6 points), the sentence that
    says so. Then where gbrain loses, from the three largest losses the generator lists.
 2. **The headline table.** The README block: six columns (accuracy at 8k with the three-reader mean, dollars per
    month for a personal agent, p50 answer latency, write-to-queryable p50, receipt link), one row per kind, and
