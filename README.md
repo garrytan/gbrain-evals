@@ -145,28 +145,17 @@ the same three answer models and the same 8,000-token budget, and names each sys
 [the scoreboard guide](docs/scoreboard.md) covers how to reproduce a number, add a system or dispute a row.
 
 The block is checked against the hash the campaign published (`bun eval/runner/scoreboard.ts check --commit
-f15e73025cc38779528808e670db80909e538547`), so it changes only when the receipt is rendered again in custody. Two
-numbers in its first loss bullet come from a different comparison than its first table. That bullet compares gbrain's
-whole-system row, 59.0% (58.9% on all its questions), with the file agent's 68.3% on the 192 questions scored for both,
-while the table's 56.3% is gbrain's 8,000-token component row. The bullet's 12.9-point detectable difference belongs to
-that whole-system comparison; the 13.58 points in the opening sentence is the preregistered power check for the
-component rows. The generator now names the evidence and the shared questions in each such sentence, and the next
-custody render will print them.
-
-The block's two file-agent cells, 68.0% on BEAM-10M and 71.1% on BEAM-1M sealed, leave out questions they should
-count. Seven of the file agent's answers are recorded `context_overflow` (6 on BEAM-10M, 1 on BEAM-1M sealed), every one
-a `claude-opus-5-5` answer the provider refused at its context limit, and the published render counted them as harness
-failures, so their questions left those rows. The preregistered outcome rule counts an agent's own `turn_cap` and
-`context_overflow` stops as product failures, scored 0 and kept in the denominator (ruling 2026-11-03 via GBRA-108:
-the preregistered rule wins), and `eval/runner/scoreboard.ts` now applies it. Scored that way, the file agent covers
-all 199 BEAM-10M and all 240 BEAM-1M sealed questions, its BEAM-10M cell falls below 68.0% and its BEAM-1M sealed cell
-still rounds to 71.1%. The loss bullet's shared questions become the 198 that gbrain's whole-system row scored, where
-gbrain has 58.9%; the file agent's figure on them and the detectable difference need the receipt's per-question values.
-The next custody render prints the corrected tables, and [corrections](docs/corrections.md#q1-head-to-head-scoreboard)
-has the custodian's rescore.
+bf902d9fdacd814940ab12ef4c453fb36ea1d4cb`), so it changes only when the receipt is rendered again in custody. It was
+last rendered on 2026-11-03, when the file agent's 7 `context_overflow` stops (6 on BEAM-10M, 1 on BEAM-1M sealed)
+began to count as product failures, scored 0 and kept in the denominator, as the preregistered outcome rule says;
+before, they left their questions out of its rows as harness failures
+([corrections](docs/corrections.md#q1-head-to-head-scoreboard)). The first loss bullet compares gbrain's whole-system
+row with the file agent on the questions both scored, while the first table's 56.3% is gbrain's 8,000-token component
+row. The bullet's 12.4-point detectable difference belongs to that whole-system comparison; the 13.6 points in the
+opening sentence is the preregistered power check for the component rows.
 
 <!-- scoreboard:headline:begin -->
-On BEAM-10M (never used to tune gbrain), measured 2026-10-27 at gbrain `f05943e`, the component comparison is descriptive: with these conversations it detects only differences of about 13.58 points, so no row is ranked. The table is incomplete: `ext-graph-pipeline`, `ext-markdown-kb` did not run on BEAM-10M, so no field-wide claim is made.
+On BEAM-10M (never used to tune gbrain), measured 2026-10-27 at gbrain `f05943e`, the component comparison is descriptive: with these conversations it detects only differences of about 13.6 points, so no row is ranked. The table is incomplete: `ext-graph-pipeline`, `ext-markdown-kb` did not run on BEAM-10M, so no field-wide claim is made.
 
 | Kind and configuration | BEAM-10M accuracy at 8k, three-reader mean | Dollars per month, personal agent | p50 answer latency | Write to queryable, p50 | Receipt |
 |---|---|---|---|---|---|
@@ -179,7 +168,7 @@ On BEAM-10M (never used to tune gbrain), measured 2026-10-27 at gbrain `f05943e`
 | `ext-verbatim-session`: a verbatim-session memory system (whole sessions, vector search, LLM rerank off); component, 8,000 tokens | 50.8% (199/199; 95% interval 44.2% to 57.9%) | not measured | 7.4 s | not measured | [cell](docs/benchmarks/2026-10-06-scoreboard/scoreboard.md#cells) |
 | `ext-agent-runtime`: a self-editing agent memory runtime (the agent edits its own memory blocks and files) | not run on BEAM-10M | not measured | not measured | not measured | none |
 | `baseline-full-context`: the whole history in the prompt, where it fits the reader's window; whole history, where it fits | no scored questions | not measured | not measured | not measured | [cell](docs/benchmarks/2026-10-06-scoreboard/scoreboard.md#cells) |
-| `baseline-file-agent`: an agent with list, grep and read tools over the same Markdown files; file agent, uncapped grep, 40 turns | incomplete: 68.0% (193/199; 95% interval 64.3% to 72.0%), whole system | not measured | 19.8 s | not measured | [cell](docs/benchmarks/2026-10-06-scoreboard/scoreboard.md#cells) |
+| `baseline-file-agent`: an agent with list, grep and read tools over the same Markdown files; file agent, uncapped grep, 40 turns | 67.2% (199/199; 95% interval 64.0% to 70.7%), whole system | not measured | 19.8 s | not measured | [cell](docs/benchmarks/2026-10-06-scoreboard/scoreboard.md#cells) |
 | `baseline-hybrid`: plain Postgres full-text plus pgvector search with reciprocal-rank fusion; component, 8,000 tokens | 51.6% (199/199; 95% interval 44.3% to 58.7%) | not measured | 7.7 s | not measured | [cell](docs/benchmarks/2026-10-06-scoreboard/scoreboard.md#cells) |
 | `baseline-none`: the question alone, no memory; component, 8,000 tokens | 25.8% (199/199; 95% interval 23.2% to 28.3%) | not measured | 3.2 s | not measured | [cell](docs/benchmarks/2026-10-06-scoreboard/scoreboard.md#cells) |
 
@@ -189,7 +178,7 @@ Descriptive, not tested: correct-abstention rate (abstention-question answers th
 |---|---|---|---|
 | `gbrain-defaults`: gbrain with its shipped defaults, installed and read the documented way; GBrain 0.60.138.0 (f05943e6, 2026-10-09) | 67.8% (140/140) | 63.1% (240/240) | 56.3% (197/199) |
 | `baseline-full-context`: the whole history in the prompt, where it fits the reader's window | 72.2% (140/140) | no scored questions | no scored questions |
-| `baseline-file-agent`: an agent with list, grep and read tools over the same Markdown files | 72.8% (140/140) | 71.1% (239/240) | 68.0% (193/199) |
+| `baseline-file-agent`: an agent with list, grep and read tools over the same Markdown files | 72.8% (140/140) | 71.1% (240/240) | 67.2% (199/199) |
 | best external row, `ext-extract-first`: an extract-first memory server (an LLM extracts and updates facts on every write) | 69.5% (140/140) | 63.4% (240/240) | 58.9% (199/199) |
 
 - BEAM-10M: never used to tune gbrain.
@@ -200,7 +189,7 @@ Descriptive, not tested: correct-abstention rate (abstention-question answers th
 - LongMemEval-S: gbrain was developed on it.
 - LongMemEval-S, shootout slice: gbrain was developed on it.
 - LongMemEval-M: gbrain was developed on it.
-- Where gbrain loses: On BEAM-10M we could not tell `baseline-file-agent` and gbrain-defaults apart (68.3% vs 59.0%); a difference smaller than about 12.9 points would not have been detected.
+- Where gbrain loses: On BEAM-10M, with the same three answer models and each system at its own default amount of evidence, we could not tell `baseline-file-agent` and gbrain-defaults apart (67.6% vs 58.9% on the 198 of 199 questions scored for both); a difference smaller than about 12.4 points would not have been detected in this comparison.
 - Where gbrain loses: On BEAM-10M, 2k/16k sweep subset (10 conversations), `ext-extract-first` scored 59.3% and gbrain-defaults 52.4% (difference -6.9 points, 95% interval -12.3 to -1.4 points). 10 conversations describe these systems on this set; they cannot rank them.
 - Where gbrain loses: On LoCoMo (10 conversations), `baseline-full-context` scored 84.2% and gbrain-defaults 80.0% (difference -4.2 points, 95% interval -7.0 to -1.0 points). 10 conversations describe these systems on this set; they cannot rank them.
 - GBrain rows measure GBrain 0.60.138.0 (f05943e6, 2026-10-09). That is not current master; a rerun of the GBrain rows at current master is planned after amendment A23.
@@ -387,6 +376,16 @@ Code is MIT licensed. Dataset and vendored benchmark attribution is recorded in 
 [PrecisionMemBench attribution](eval/precisionmembench/ATTRIBUTION.md).
 
 ## Changelog
+
+### 2026-11-03: The Q1 block is re-rendered under the stop rule
+
+The Q1 block and the scoreboard tables are the custodian's re-render of the receipt with `scoreboard.ts` at
+`a1c346e8` (results commit `bf902d9f`, `SHA256SUMS` `00fabc3b`), so the file agent's 7 `context_overflow` stops
+now score 0. Its BEAM-10M cell moves from incomplete 68.0% (193/199) to 67.2% (199/199), and its BEAM-1M sealed cell
+from 71.1% (239/240) to 71.1% (240/240). The first loss bullet now reads 67.6% vs 58.9% on the 198 of 199 questions
+scored for both, with a 12.4-point detectable difference (was 68.3% vs 59.0% on 192, 12.9 points), and the opening
+sentence rounds the power check to 13.6 points. The paragraph above the block names the new commit and drops the
+explanation the re-render made unnecessary. No other row changed.
 
 ### 2026-11-03: The Q1 file agent's context-overflow stops count as product failures
 
