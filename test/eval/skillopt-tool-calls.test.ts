@@ -121,8 +121,10 @@ describe("Sol's 651 recorded calls from #304, replayed at the installed pin", ()
   const EXPECTED: Record<string, { refused: Record<RefusalClass, number>; read: number }> = {
     // v0.60.549.0: the window refusal still read "context applies to grep".
     a131fb20ef4aafd017f0c6a6565ce5627dc46897: { refused: { 'multi-window-selector': 0, 'known-as-of-with-read-view': 169, 'hop-chain-with-depth': 38, other: 438 }, read: 6 },
-    // v0.60.553.0, the ceiling attempt's pin (plan decision S).
+    // v0.60.553.0, the ceiling attempt's first pin.
     '311a83bbefb127118acb252fe827cb047126aa4d': { refused: { 'multi-window-selector': 436, 'known-as-of-with-read-view': 169, 'hop-chain-with-depth': 8, other: 2 }, read: 36 },
+    // v0.60.557.0, the ceiling attempt's pin (plan decision S, as amended 2026-11-03): each refusal's text is now MCP's JSON error (gbrain#8458), and the classes are unchanged.
+    '62637c96a5a5c2e9d55594f87a33d79c2f30b54f': { refused: { 'multi-window-selector': 436, 'known-as-of-with-read-view': 169, 'hop-chain-with-depth': 8, other: 2 }, read: 36 },
   };
 
   test('every recorded get_page, traverse_graph and get_backlinks call, classified by the refusal text this pin returns', async () => {

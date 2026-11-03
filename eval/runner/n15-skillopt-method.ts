@@ -46,7 +46,7 @@
  *                                            historical: reproduces probes 1 and 2
  *
  * The ceiling attempt (GBEV-30) on skillopt-method-v3, keyless on the fake
- * transport unless --paid is given; a live stage runs at gbrain 311a83bbe, is
+ * transport unless --paid is given; a live stage runs at gbrain 62637c96a, is
  * attested against docs/benchmarks/2026-11-02-skillopt-ceiling/PREREGISTRATION.md,
  * refuses an estimate above its approved cap, and runs under ledger runs of its
  * own whose budgets together stay within that cap, resumes included
@@ -493,7 +493,7 @@ function ceilingReceipt(startedAt: string) {
 
 /**
  * Everything a live ceiling stage checks before its first paid call: the
- * gbrain pin (311a83bbe, plan decision S) in package.json and in the installed
+ * gbrain pin (62637c96a, plan decision S) in package.json and in the installed
  * code, an estimate within the stage's approved cap, --paid and a
  * --budget-run-id of the stage's own runner, the keys it needs (`test -n`) and
  * the attested preregistration. The cap covers the whole stage across its
