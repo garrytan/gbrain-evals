@@ -40,7 +40,7 @@ import { importGbrain, resolveGbrainUnderTest, type GbrainUnderTest } from '../g
 import { compareAggregate, custodyCheck, leakScan, oneSidedLossP, readLog, returnLog, scoreAggregate, toCustodyCorpus, type H1Rule, type SealedDecision } from './h1.ts';
 import { kindGuard } from './e2-readings.ts';
 import {
-  BRAIN_SETTINGS, C8K_ARMS, FACTS_BLOCK_MAX_ROWS, FACTS_BLOCK_SHARE, KEYLESS_SETTINGS, RECIPE_HASH, RENDER_RECIPE, RENDERER_VERSION,
+  BRAIN_SETTINGS, C8K_ARMS, FACTS_BLOCK_LIMIT_SINCE, FACTS_BLOCK_MAX_ROWS, FACTS_BLOCK_SHARE, KEYLESS_SETTINGS, RECIPE_HASH, RENDER_RECIPE, RENDERER_VERSION,
   armById, brainName, clearArmKeys, factCounts, factRows, importHistory, loadProductModules, openBrain, queryArm, renderContext, repairSafeChunks, resultRows, setArmKeys, stdioDispatchOpts,
   type EvidenceRow, type ProductModules,
 } from './c8k-product.ts';
@@ -320,7 +320,8 @@ export function retrievalChecks(d: C8kDecision, corpus: Corpus, ev: ReturnType<t
     const factCap = Math.floor(d.construction.query_budget * FACTS_BLOCK_SHARE);
     const disclosures = rows.filter(r => r.notices.includes('behavior_changes')).length;
     const safeIndexPending = rows.filter(r => Array.isArray(r.degraded) && (r.degraded as Array<{ stage?: string }>).some(s => s?.stage === 'safe_index_pending')).length;
-    const factsOver = 'search.query_facts_block' in arm.keys ? rows.filter((r, i) => factTokens[i] > factCap || factsOf(r).length > FACTS_BLOCK_MAX_ROWS).length : 0;
+    const factRowCap = d.gbrain.version.localeCompare(FACTS_BLOCK_LIMIT_SINCE, 'en', { numeric: true }) >= 0 ? Math.min(FACTS_BLOCK_MAX_ROWS, Number(arm.params.limit)) : FACTS_BLOCK_MAX_ROWS;
+    const factsOver = 'search.query_facts_block' in arm.keys ? rows.filter((r, i) => factTokens[i] > factCap || factsOf(r).length > factRowCap).length : 0;
     let outside = 0, receipts = 0;
     for (const r of rows) for (const x of resultRows(r.blocks)) {
       if (typeof x.slug !== 'string' || factRows([x]).length) continue;
@@ -339,7 +340,7 @@ export function retrievalChecks(d: C8kDecision, corpus: Corpus, ev: ReturnType<t
     if (safeIndexPending) problems.push(`${arm.id}: ${safeIndexPending} results report safe_index_pending (a page is withheld from remote readers; the safe-chunks repair did not finish)`);
     if (overBudget) problems.push(`${arm.id}: ${overBudget} results do not report budget_used at most ${d.construction.query_budget}`);
     if (notCapOnly) problems.push(`${arm.id}: ${notCapOnly} results do not report auto_packing cap_only`);
-    if (factsOver) problems.push(`${arm.id}: ${factsOver} results carry facts over ${factCap} tokens or ${FACTS_BLOCK_MAX_ROWS} rows`);
+    if (factsOver) problems.push(`${arm.id}: ${factsOver} results carry facts over ${factCap} tokens or ${factRowCap} rows`);
   }
   const unknown = count(ev.evidence.filter(r => !C8K_ARMS.some(a => a.id === r.arm)).map(r => r.arm));
   for (const [arm, n] of Object.entries(unknown)) problems.push(`${arm}: ${n} results of an arm outside the arm table`);

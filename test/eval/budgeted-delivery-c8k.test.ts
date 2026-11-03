@@ -11,7 +11,7 @@ import { tmpdir } from 'node:os';
 import { Database } from 'bun:sqlite';
 import { join, resolve } from 'node:path';
 import { assertFilled, budgetSummary, buildCorpus, decideC8k, determinismQuestions, loadDecision, readEvidence, retrievalChecks, runDecide, runExport, runExtract, runFreeze, runGate, runRead, writeAnswers, type C8kDecision } from '../../eval/runner/budgeted-delivery/c8k.ts';
-import { BRAIN_SETTINGS, C8K_ARMS, C8K_KEYS, FACTS_BLOCK_MAX_ROWS, HARNESS_BUDGET_TOKENS, QUERY_BUDGET, READER_TEMPLATE_SHA256, RECIPE_HASH, RENDERER_VERSION, brainName, productHistory, renderContext, type EvidenceRow, type ProductModules } from '../../eval/runner/budgeted-delivery/c8k-product.ts';
+import { BRAIN_SETTINGS, C8K_ARMS, C8K_KEYS, FACTS_BLOCK_MAX_ROWS, FACTS_BLOCK_SHARE, HARNESS_BUDGET_TOKENS, QUERY_BUDGET, QUERY_LIMIT, READER_TEMPLATE_SHA256, RECIPE_HASH, RENDERER_VERSION, brainName, productHistory, renderContext, type EvidenceRow, type ProductModules } from '../../eval/runner/budgeted-delivery/c8k-product.ts';
 import type { Corpus } from '../../eval/runner/memory-qa/corpus.ts';
 import { sha256File } from '../../eval/runner/sealed-confirmation-lib.ts';
 import { slugOf } from '../../eval/runner/systems/gbrain.ts';
@@ -394,6 +394,17 @@ describe('retrievalChecks (decision rule step 1) on hand-built evidence', () => 
       const { problems } = retrievalChecks(D, corpus, ev, () => 1);
       expect(problems.length === 1 && want.test(problems[0]) ? name : `${name}: ${JSON.stringify(problems)}`).toBe(name);
     }
+  });
+
+  // Value: protects=the facts-row guard holds a decision pinned at gbrain v0.60.555.0 or later to the arm's own limit (gbrain#8411) and the committed decision to 40 rows; fails_when=the guard checks 40 rows whatever the pin, or the arm limit at a pin before gbrain#8411; why_new=#311 found the guard looser than the product's contract; seam=none; no_claim=does not run gbrain's facts block
+  test('the facts-row guard follows the pinned gbrain: the arm limit from v0.60.555.0, 40 rows before it', () => {
+    const corpus = fixtureCorpus();
+    const facts = (n: number) => { const ev = cleanEvidence(corpus); ev.evidence.find(r => r.arm === 'A3' && r.question_id === 'q-a1')!.blocks = [JSON.stringify(Array.from({ length: n }, (_, i) => ({ result_type: 'fact', slug: `facts/f-${i}`, fact: 'f' })))]; return ev; };
+    const limited = { ...D, gbrain: { ...D.gbrain, version: '0.60.557.0' } };
+    expect(retrievalChecks(limited, corpus, facts(QUERY_LIMIT), () => 1).problems).toEqual([]);
+    expect(retrievalChecks(limited, corpus, facts(QUERY_LIMIT + 1), () => 1).problems).toEqual([`A3: 1 results carry facts over ${Math.floor(QUERY_BUDGET * FACTS_BLOCK_SHARE)} tokens or ${QUERY_LIMIT} rows`]);
+    expect(D.gbrain.version).toBe('0.60.461.0');
+    expect(retrievalChecks(D, corpus, facts(QUERY_LIMIT + 1), () => 1).problems).toEqual([]);
   });
 });
 
