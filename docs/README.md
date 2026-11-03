@@ -197,6 +197,7 @@ These documents fix a method before measuring. They publish no capability scores
 | What end-to-end task does a 10x memory claim stand on, and what sample can show it? | [October 8 program primary preregistration (T0) and power (PW)](benchmarks/2026-10-08-program-primary-preregistration.md) |
 | What harder workload replaces T0's ceiling, and how was it calibrated? | [October 8 harder program primary preregistration (T0b), with its three calibration rounds](benchmarks/2026-10-08-program-primary-hard-preregistration.md) |
 | Do gbrain's shipped `query`, `briefing` and `fact-check` skills leave room for a skill optimizer, or does one rewrite take all the gain? | [November 1 SkillOpt method preregistration (N15)](benchmarks/2026-11-01-skillopt-method/PREREGISTRATION.md) with three amendments: Haiku 5.5 probes 1 and 2 ([probe 1's summary](benchmarks/2026-11-01-skillopt-method/probe/probe1/summary.json)), the frontier probe on Opus 5.5 and GPT-6.1 Sol, and the one test-split read reported in the [November 2 report](benchmarks/2026-11-01-skillopt-method/REPORT.md); task sets: [v2](../eval/data/skillopt-method-v2/README.md), which the probe reads, and the frozen [v1](../eval/data/skillopt-method-v1/README.md) |
+| Can a harder task set, scored on substance, leave room above one Opus 5.5 rewrite of the shipped `query`, `briefing` and `fact-check` skills, and if it can, does gbrain's SkillOpt loop beat that rewrite? | [November 2 SkillOpt ceiling preregistration (N15)](benchmarks/2026-11-02-skillopt-ceiling/PREREGISTRATION.md) with its calibration and pin amendments; its headroom gate has not run; task set: [v3](../eval/data/skillopt-method-v3/README.md) |
 
 ## Data and methods
 
@@ -263,6 +264,12 @@ and [repository writing guide](../CLAUDE.md). The
 procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
+
+### 2026-11-03: SkillOpt ceiling preregistration row
+
+"Protocols and preregistrations" gained a row for the [SkillOpt ceiling preregistration](benchmarks/2026-11-02-skillopt-ceiling/PREREGISTRATION.md)
+(N15) and its [v3](../eval/data/skillopt-method-v3/README.md) task set. Its headroom gate has not run. No existing row
+changed.
 
 ### 2026-11-03: Re-pin to gbrain `62637c96a`; opening names v0.10.145; the SkillOpt method row
 

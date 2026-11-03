@@ -20,18 +20,17 @@ Calibration reads train only. The gate reads train, selection and the sealed gat
 
 ## Build and data
 
-- gbrain `311a83bbe` (v0.60.553.0), which carries gbrain#8444. Every paid stage runs at one pin, which never changes after the first paid call. If gbrain's GBRA-280 release (rollouts pass models MCP's structured error, suggestion and runnable fix included) is out when calibration is ready to spend, the pin moves to it first by a dated amendment, before any paid call.
+- gbrain `62637c96a` (v0.60.557.0), gbrain's GBRA-280 release, which carries gbrain#8444 and gbrain#8458 (a rollout's refused read hands the model MCP's structured error, suggestion and runnable fix included). Calibration's re-read and every later paid stage run at this pin, which never changes again. The first calibration ran at `311a83bbe` (v0.60.553.0) before this release was out; the 2026-11-03 amendment records it as exploratory and superseded.
 - Models under test: `claude-opus-5-5` and `gpt-6.1-sol`. Proposer: `claude-opus-5-5`.
 - Dataset [`eval/data/skillopt-method-v3`](../../../eval/data/skillopt-method-v3/README.md): `MANIFEST.json` sha256 `eebc02ff1884e587ac4adf299970517db236293fc2e8a194836210447c46de65`, `data_sha256` `10a0a282dd4d43ec7d907b3b4ef31228c124a1adc7e13d4f473eeb113597c4ee`, at knobs chain depth 3 to 5, 15 look-alike company pairs, 20 look-alike person pairs and 2 distractors (world seed 30001, generator seeds 30011 to 30013). Calibration may change the knobs on train only and regenerate; the frozen knobs and the new hashes then go in its amendment.
-- Each skill has 24 train, 24 selection, 36 gate and 96 test tasks; held-out families appear only in gate and test. The world has 999 pages. Seeds are gbrain's shipped skills at `311a83bbe`, byte-identical to v1's and v2's.
+- Each skill has 24 train, 24 selection, 36 gate and 96 test tasks; held-out families appear only in gate and test. The world has 999 pages. Seeds are gbrain's shipped skills at `311a83bbe`, byte-identical to v1's and v2's and unchanged at `62637c96a`.
 - Harness: [`eval/runner/n15-skillopt-method.ts`](../../../eval/runner/n15-skillopt-method.ts) and [`eval/runner/skillopt-method/`](../../../eval/runner/skillopt-method/). Retrieval is keyword only.
 - Program total: $9,500 across every stage, with the $337 #304 already spent counted. Stage caps: calibration $50, each gate attempt $470, stop-path read $650, E1 check $300, pilot $60; B2 at its counted amendment's figure plus 15%, at most $9,500 less everything the program ledger has committed when B2 starts. A stage whose re-priced estimate passes its cap does not start until the Captain decides; a stage-cap raise that keeps the $9,500 total is the Captain's decision.
 
 ## Known limits
 
 - The loop's slow/meta update is a stub in gbrain (`orchestrator.ts`), so the loop is tested as shipped.
-- Rollouts see only `err.message`, not MCP's suggestion and fix (GBRA-280 pending). This line is removed by amendment if the pin moves to GBRA-280's release.
-- Sol's recorded calls from #304, replayed at this pin, still refuse on 615 of 651 (multi-window-selector `get_page` 436, `known_as_of` beside read-view arguments 169, a hop chain beside `depth` 8, other 2). That replay cannot predict a live run, since this pin's `get_page` description tells models to send one window selector; calibration's Sol read is the first live measure.
+- Sol's recorded calls from #304, replayed at this pin, still refuse on 615 of 651 (multi-window-selector `get_page` 436, `known_as_of` beside read-view arguments 169, a hop chain beside `depth` 8, other 2). Every refusal the registry answers now carries MCP's code, suggestion and, where one exists, a runnable fix; following the fix once reads all 436 multi-selector calls and none of the 169 `known_as_of` calls. That replay cannot predict a live run, since this pin's `get_page` description tells models to send one window selector and a model may or may not follow a fix; calibration's re-read at this pin is the live measure.
 - Pages run 173 to 309 words.
 
 ## The plan's sections 2 to 8 (revision 6, verbatim)
@@ -173,6 +172,8 @@ The plan's `docs/benchmarks/2026-11-0X-skillopt-ceiling/` directory is this one,
 
 ### 2026-11-02, before the gate: calibration, re-priced stages and the review rule
 
+The 2026-11-03 amendment below records this calibration as exploratory and superseded: it ran at `311a83bbe`, its frozen knobs stand, and its scores, Sol counts and re-priced figures are not used.
+
 **Review rule.** Garry's ship-check diet (CREW.md R65, 2026-11-02) replaces the plan's review text (revision 6, section 9) for every PR from PR 2 on. Each PR gets one /ship pass, running the readers gstack-review-plan prints, then one fix round, with no second round. The second round that the plan reserved for gate results no longer exists, so this amendment, the gate results and any stop report go to review in their own follow-up PR. No spend total, cap, arm or verdict rule changes, so this needed no re-gate (Captain, 2026-11-02).
 
 **Calibration.** Ledger run `n15-ceiling-calibration-2026-11-02T22-57-47-821Z-d2072525` (hard cap $50) metered $27.95 over 1,154 requests and is closed. Calibration ran on train only, at gbrain `311a83bbe`, seed at 1 run. It never read selection, gate or test. Seed substance scores:
@@ -213,6 +214,31 @@ Sol still passed 12 of 12 briefing rollouts and 9 of 12 fact-check rollouts that
 | B0 E1 check | $203.40 | $152.13 | $300 |
 
 B2 is re-priced from the gate's own metered costs in the counted amendment (section 6).
+
+### 2026-11-03, before the calibration re-read: pin v0.60.557.0, true fact-check claims, review rules
+
+**Pin.** The pin moves from `311a83bbe` (v0.60.553.0) to `62637c96a` (v0.60.557.0), gbrain's GBRA-280 release, published 2026-11-03. Its gbrain#8458 hands a rollout's refused read the JSON error an MCP caller gets: code, message, suggestion, a docs link and a runnable `fix`. The repo moved its pin in [#310](https://github.com/garrytan/gbrain-evals/pull/310), whose review of the range names gbrain#8458 as the change that reaches the SkillOpt harness. Build and data said the pin would move to this release before any paid call, but calibration spent at `311a83bbe` before the release was out. Section 5 has the Captain re-plan before any stage runs at a later release, and the Captain (GBEV-3, 2026-11-03) did: the pin moves, calibration is read again at it, and from that re-read on the pin never changes. `CEILING_GBRAIN_COMMIT` names `62637c96a`, so a live stage refuses any other pin in `package.json` or in the installed code, and section 5's pin line reads `62637c96a` from here on. The three seed skills at `62637c96a` match their pinned sha256s. The Known limits line saying rollouts see only `err.message` is removed, as it said it would be, and the replay line now describes this pin.
+
+**The first calibration is exploratory and superseded.** Ledger run `n15-ceiling-calibration-2026-11-02T22-57-47-821Z-d2072525` ($27.95) read train at `311a83bbe` on MANIFEST `3f416c5e…`. The knobs it froze stand. Its seed scores, Sol refusal counts and re-priced stage figures are not used for pricing or for any verdict. Its receipts name an older manifest, so the gate refuses them as price sources.
+
+**Data since the frozen knobs.** Two changes regenerated v3 at the frozen knobs. Neither read selection, gate or test.
+
+- #308's review fixes to the fact-check tasks and the v3 checks: MANIFEST `a677090b495cf61ec61698b2b5ea44b1eef3b7e15d9420627ae05674d65ca287`, `data_sha256` `582347c582a3891548405ee5a8ef447c009c6bb45dd8ca703562ec2cb5a49f3e`, at [`d0bf7515`](https://github.com/garrytan/gbrain-evals/commit/d0bf7515).
+- GST-1150, true claims in the trained fact-check families. Among them only compound made true claims, so an oracle report with every status set to FALSE passed substance on 83.3% of train and 75.0% of selection against 63.9% of gate: a rewrite that rejected too much lost little where it was trained and selected. Now superseded states, for about half its claims, the value in force on the claim's date while a later record holds another; not-founder makes, per company, the real founder's claim and one false claim; and compound's partly true claims fill the splits apart from its wholly false ones. A guard (`statusSkewV3`, run by `gen.ts check` and by `test/eval/skillopt-method-v3.test.ts`) fails the build when an oracle report with every status FALSE, or every status VERIFIED, passes substance on a larger share of train or of selection than of gate. MANIFEST `a6ddcbefec76bd928dd212f3c4d115966e1d5264dfd10bb27281c0547f0beea1`, `data_sha256` `225d18a16c724e4b42ef7070b786637bab52c0851e27633d843c5df85405c7ed`, at [`b9b09479`](https://github.com/garrytan/gbrain-evals/commit/b9b09479). `gen.ts check` regenerates it byte for byte at `62637c96a`. This is the manifest the re-read and the gate read.
+
+| Fact-check tasks | With a true part (train / sel / gate / test) | Every-FALSE report passes | Every-VERIFIED report passes |
+|---|---|---|---|
+| Revision 0, before (`d0bf7515`) | 4 / 6 / 13 / 31 | 83.3% / 75.0% / 63.9% / 67.7% | 8.3% / 8.3% / 27.8% / 26.0% |
+| Revision 0, now (`b9b09479`) | 11 / 11 / 15 / 38 | 54.2% / 54.2% / 58.3% / 60.4% | 33.3% / 33.3% / 33.3% / 33.3% |
+| Revision 1, now (`02ece4fc`) | 12 / 12 / 16 / 42 | 50.0% / 50.0% / 55.6% / 56.3% | 29.2% / 29.2% / 30.6% / 32.3% |
+
+Splits hold 24, 24, 36 and 96 tasks. Revision 0's every-VERIFIED share ties gate's, which the guard allows; revision 1's is half a gate task below it. Revision 1 is section 4's one revision, built and not run, on branch `gbev30/skillopt-ceiling-rev1`; it gained true-claim variants for its own fact-check families and passes the same guard at MANIFEST `fa6d7dac…` (`data_sha256` `ddcf59cf…`). Its findability control keeps a search cache keyed to gbrain 0.60.553.0, so revision 1 is searched again and regenerated at `62637c96a` before it could run, and a revision amendment would name its final hashes and guard shares.
+
+**Calibration re-read.** Before the gate, calibration is read once more at `62637c96a` on MANIFEST `a6ddcbef…`, with the knobs frozen: the seed at 1 run on train, Opus on all 24 tasks per skill and Sol on 12. It runs under the calibration stage's $50 cap, which has $22.05 left after the first run, since a stage's cap covers all of its ledger runs. It is the first live Sol read at this pin and the source of every later stage's prices. Its scores, Sol's refusals by class and the re-priced stages go in a dated amendment before the gate spends.
+
+**Review rules.** Two crew rules changed after the 2026-11-02 amendment. R65's review rule now reads: review runs once, on the final head, running the plan gstack-review-plan prints (full depth for security, user data, money and merge-check code, light otherwise), then one fix round. R66 (2026-11-03) requires gstack 1.93.36.0 or later and has /autoplan take `--kind`.
+
+No spend total, stage cap, arm, split or verdict rule changes in this amendment.
 
 ## Disclosures
 

@@ -92,8 +92,8 @@ export const CEILING_STAGES = ['calibration', 'gate'] as const;
 export type CeilingStage = typeof CEILING_STAGES[number];
 export const CEILING_DATASET = 'v3' as const;
 export const CEILING_PREREGISTRATION = 'docs/benchmarks/2026-11-02-skillopt-ceiling/PREREGISTRATION.md';
-/** Every ceiling stage runs at gbrain 311a83bbe (v0.60.553.0; plan decision S). */
-export const CEILING_GBRAIN_COMMIT = '311a83bbefb127118acb252fe827cb047126aa4d';
+/** Every ceiling stage runs at gbrain 62637c96a (v0.60.557.0; plan decision S, as amended 2026-11-03). */
+export const CEILING_GBRAIN_COMMIT = '62637c96a5a5c2e9d55594f87a33d79c2f30b54f';
 
 export const GATE_RUNS = { no_skill: 1, seed: 2, seed_sel: 2, train: 1, proposal_sel: 2, one_shot: 2, kept_rewrite: 1, rubric: 1, reachability: 1 } as const;
 export const GATE_PROPOSALS = 2;

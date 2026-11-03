@@ -13,8 +13,8 @@ plan sections 2 and 3). Its tasks test what a skill's procedure adds on a brain 
 
 The rollout brain is world-v3's 1,030 pages ([`world-v3.ts`](../../generators/skillopt-method/world-v3.ts)), and the seed
 skills are the ones gbrain ships at `311a83bbe` (v0.60.553.0). They are byte-identical to v1's and v2's seeds (gbrain
-`3ec766c40`): none of the three changed between the two commits. This commit's `package.json` pins gbrain `311a83bbe`
-(v0.60.553.0), the same commit the seeds come from.
+`3ec766c40`): none of the three changed between the two commits. This commit's `package.json` pins gbrain `62637c96a`
+(v0.60.557.0), where the three seed skills are still byte-identical.
 
 Every reader names v3 explicitly: [`dataset.ts`](../../runner/skillopt-method/dataset.ts) keeps v2 as the N15 default, and
 [`dataset-context.ts`](../../runner/skillopt-method/dataset-context.ts) hands brain import, the audit and the proposer's
@@ -136,6 +136,12 @@ preregistered first set (3 to 5, 15, 20 and 2) scored the same on Opus; its amen
 - Briefing citation dates are not checked against the page.
 
 ## Changelog
+
+### 2026-11-03: The pin sentence names gbrain `62637c96a`
+
+The repo's gbrain pin moved from `311a83bbe` (v0.60.553.0) to `62637c96a` (v0.60.557.0), so the pin sentence names the
+new commit and says the seed skills are still byte-identical there. No data file or MANIFEST.json changed: `gen.ts check`
+regenerates v3 byte for byte at the new pin.
 
 ### 2026-11-02: Trained fact-check families make true claims (GST-1150)
 
