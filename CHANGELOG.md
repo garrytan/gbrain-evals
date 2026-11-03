@@ -2,7 +2,17 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
-## [Unreleased]
+## [0.10.155] - 2026-11-03
+
+### The particle-1 add-on's re-read tool and report close #347's four open review findings
+
+- **A resume reads what its answers were read from.** `eval/runner/q1/reread-cell.ts` freezes the sources, run configuration, reader and effort in `<out>/reread-source.json` on the first run, and a resume with other sources or another effort refuses before `verify.json` changes. The same sources in another order resume. A resume whose sources no longer verify refuses as a failed preflight and keeps the `verify.json` its answers were read under. An `--out` that already holds another arm's or reader's re-read refuses too.
+- **The published-answer check compares whole answers.** A published answer whose text, usage or outcome differs from its staged answer refuses the run; #347 compared ids and context hashes alone.
+- **The report merges one run's shards only.** `eval/runner/q1/particle-addon-report.ts` refuses shards of one cell from different run configurations or sources, re-read shards with different keyless markers, and a re-read that is keyless, carries no keyless marker or holds another reader's answers. The file-agent unit's receipt carries no keyless marker (a keyless rehearsal shows only as `keyless_upstream` in its root's `lease-summary.json`), so a rehearsal's root is never given to the report.
+- **Unjudged answers are counted.** An answer whose canonical judgment is missing leaves the denominator and now shows as unjudged among the answers not scored, whether its retrieval was whole or `ingest_degraded`. A judged `ingest_degraded` answer stays in the denominator and is not listed as not scored. The first table gives both means over the questions both readers have, with the pair count and particle-1's run status beside them.
+- **One ceiling for all re-read leases.** `--ledger-cap-usd` (A6: $100) refuses a lease that would take the add-on ledger's committed spend past it, before any request. Re-attaching to a lease that is still open, as a resume after a crash does, counts that lease's spend once. The keyless/paid `--out` check now runs before `verify.json` is written and refuses with a usage message instead of a stack trace.
+- **A6's revision** adds a second-judge sensitivity (gpt-6.1-sol on the same rubric) for a result that favors particle-1, says how the two ledger ceilings keep the add-on under its $150 hard cap, and states that failed tries are not priced. `cell.ts plan --manifest f6` prints the add-on block after F6's counted total, marked as outside it.
+- **Tests.** Each of the four findings has a test that fails at #347's head. `test/eval/q1-f6-cells.test.ts` fails if F6's frozen campaign regenerates to anything but its 61 committed units.
 
 ### CI restores the repository's git objects from the Actions cache instead of fetching 1.3 GB per job (GST-1253)
 

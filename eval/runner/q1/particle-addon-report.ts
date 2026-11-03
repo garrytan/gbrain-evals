@@ -25,7 +25,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 
 import { join, resolve } from 'node:path';
 import { priceUsage } from '../cat40/loop.ts';
 import { PASS_THRESHOLD } from '../memory-qa/instruments.ts';
-import { HARNESS_FAILURES, NOT_APPLICABLE, PRODUCT_FAILURES } from '../memory-qa/outcomes.ts';
+import { HARNESS_FAILURES, NOT_APPLICABLE, PRODUCT_FAILURES, type Outcome } from '../memory-qa/outcomes.ts';
 import { judgmentKey, readRecords, sha256, type AnswerRecord, type JudgmentRecord } from '../memory-qa/records.ts';
 import { clusteredPairedDelta, type PairedDelta } from '../stats/paired.ts';
 import { ALL_SETS, type SetId } from './cells/definitions.ts';
@@ -49,11 +49,11 @@ const DISCLOSURE = {
 /** The bootstrap seed: the first 32 bits of sha256(`seed`). */
 export const seedNumber = (seed: string) => parseInt(sha256(seed).slice(0, 8), 16);
 
-interface Receipt { schema?: string; cell_id: string; set?: string; block?: string; run_status?: string; config_sha256?: string | null; system: { kind: string }; instrument: { id: string; sha256: string; judge: string }; source?: { arm_cell_id: string; config_sha256?: string | null }; verify?: Record<string, number> }
+interface Receipt { schema?: string; cell_id: string; set?: string; block?: string; run_status?: string; config_sha256?: string | null; system: { kind: string }; instrument: { id: string; sha256: string; judge: string }; source?: { arm_cell_id: string; config_sha256?: string | null }; verify?: Record<string, number>; keyless?: boolean }
 export interface PublishedCell { id: string; receipt: Receipt; answers: AnswerRecord[]; judgments: JudgmentRecord[] }
 
 const STATUS_RANK = ['complete', 'partial', 'invalid'];
-/** Every published cell under the roots, shards merged by answer id and judgment key (the merged run_status is the worst shard's); two different records under one key refuse. */
+/** Every published cell under the roots, shards merged by answer id and judgment key (the merged run_status is the worst shard's); shards of other instruments, run configurations, sources or keyless markers, or two different records under one key, refuse. */
 export function loadCells(roots: string[]): Map<string, PublishedCell> {
   const cells = new Map<string, PublishedCell>();
   for (const root of roots) {
@@ -68,6 +68,8 @@ export function loadCells(roots: string[]): Map<string, PublishedCell> {
       const prior = cells.get(id);
       if (!prior) { cells.set(id, { id, receipt, answers, judgments }); continue; }
       if (JSON.stringify(prior.receipt.instrument) !== JSON.stringify(receipt.instrument)) throw new Error(`cell ${id} is judged by different instruments in different roots`);
+      const provenance = (r: Receipt) => JSON.stringify([r.config_sha256 ?? null, r.source?.arm_cell_id ?? null, r.source?.config_sha256 ?? null, r.keyless ?? null]);
+      if (provenance(prior.receipt) !== provenance(receipt)) throw new Error(`cell ${id} comes from different run configurations, sources or keyless markers in different roots`);
       const merge = <T>(a: T[], b: T[], key: (x: T) => string, kind: string) => {
         const m = new Map(a.map(x => [key(x), JSON.stringify(x)]));
         for (const x of b) {
@@ -97,6 +99,9 @@ export function unitsOf(cells: Map<string, PublishedCell>): Unit[] {
     const source = c.receipt.schema === REREAD_RECEIPT_SCHEMA ? c.receipt.source!.arm_cell_id
       : c.id.startsWith(`${F6_PARTICLE_ADDON.id}.`) ? `${F6_PARTICLE_ADDON.source}${c.id.slice(F6_PARTICLE_ADDON.id.length)}` : null;
     if (!source) continue;
+    const readers = [...new Set(c.answers.map(a => a.reader))];
+    if (readers.length !== 1 || readers[0] !== PARTICLE) throw new Error(`${c.id} holds answers by ${readers.join(', ') || 'no reader'}, and a particle-1 cell holds particle-1's alone`);
+    if (c.receipt.schema === REREAD_RECEIPT_SCHEMA && c.receipt.keyless !== false) throw new Error(`${c.id} is ${c.receipt.keyless ? 'a keyless rehearsal' : 'a re-read with no keyless marker'}, so it holds no particle-1 results`);
     const frontier = cells.get(source);
     if (!frontier) throw new Error(`particle-1 cell ${c.id} pairs with ${source}, which no --root publishes`);
     if (c.receipt.instrument.id !== frontier.receipt.instrument.id || c.receipt.instrument.sha256 !== frontier.receipt.instrument.sha256) throw new Error(`${c.id} and ${source} are judged by different instruments`);
@@ -110,7 +115,7 @@ export function unitsOf(cells: Map<string, PublishedCell>): Unit[] {
   return units.sort((a, b) => (a.frontier.id < b.frontier.id ? -1 : 1));
 }
 
-interface Value { conversation: string; context: string; outcome: string; value: number | null; correct: boolean; usd: number }
+interface Value { conversation: string; context: string; outcome: Outcome; value: number | null; correct: boolean; usd: number }
 
 /** Each reader's replicate-0 answers by question, leaving out the set's preregistered exclusions: the canonical score, 0 for a product failure, or null outside the denominator. */
 function valuesOf(cell: PublishedCell, excluded: ReadonlySet<string>): Map<string, Map<string, Value>> {
@@ -132,7 +137,7 @@ const round = (x: number, d = 4) => Math.round(x * 10 ** d) / 10 ** d;
 const interval = (d: PairedDelta) => (d.ci95 ? [round(d.ci95[0]), round(d.ci95[1])] as [number, number] : null);
 
 export interface ReaderRow { reader: string; answers: number; scored: number; mean: number | null; ci95: [number, number] | null; correct: number; reader_usd: number; usd_per_correct: number | null; not_scored: Record<string, number> }
-export interface DeltaRow { minus: string; pairs: number; clusters: number; delta: number; ci95: [number, number] | null; p_two_sided: number }
+export interface DeltaRow { minus: string; pairs: number; clusters: number; frontier_mean: number; particle_mean: number; delta: number; ci95: [number, number] | null; p_two_sided: number }
 export interface UnitReport { frontier_cell: string; particle_cell: string; system: string; kind: 're-read' | 'file agent'; run_status: { frontier: string | null; particle: string | null }; excluded: number; verify: Record<string, number> | null; readers: ReaderRow[]; particle_minus: DeltaRow[] }
 
 /**
@@ -157,7 +162,10 @@ export function unitReport(u: Unit, seed = SEED): UnitReport {
     const correct = scored.filter(([, v]) => v.correct).length;
     const usd = xs.reduce((s, [, v]) => s + v.usd, 0);
     const notScored: Record<string, number> = {};
-    for (const [, v] of xs) if (v.outcome !== 'scored') notScored[v.outcome] = (notScored[v.outcome] ?? 0) + 1;
+    for (const [, v] of xs) {
+      const why = v.value === null ? (NOT_APPLICABLE.has(v.outcome) || HARNESS_FAILURES.has(v.outcome) ? v.outcome : 'unjudged') : PRODUCT_FAILURES.has(v.outcome) ? v.outcome : null;
+      if (why) notScored[why] = (notScored[why] ?? 0) + 1;
+    }
     return { reader, answers: xs.length, scored: scored.length, mean: d ? round(d.delta) : null, ci95: d ? interval(d) : null, correct, reader_usd: round(usd), usd_per_correct: correct ? round(usd / correct) : null,
       not_scored: Object.fromEntries(Object.entries(notScored).sort(([a], [b]) => (a < b ? -1 : 1))) };
   });
@@ -167,7 +175,8 @@ export function unitReport(u: Unit, seed = SEED): UnitReport {
     const pairs = [...mine.entries()].filter(([q, v]) => v.value !== null && theirs.get(q)?.value != null).map(([q, v]) => ({ id: q, cluster: v.conversation, a: theirs.get(q)!.value!, b: v.value! }));
     if (!pairs.length) return [];
     const d = clusteredPairedDelta(pairs, opts);
-    return [{ minus: f, pairs: d.n_pairs, clusters: d.n_clusters, delta: round(d.delta), ci95: interval(d), p_two_sided: round(d.p_two_sided) }];
+    const mean = (xs: number[]) => round(xs.reduce((s, x) => s + x, 0) / xs.length);
+    return [{ minus: f, pairs: d.n_pairs, clusters: d.n_clusters, frontier_mean: mean(pairs.map(x => x.a)), particle_mean: mean(pairs.map(x => x.b)), delta: round(d.delta), ci95: interval(d), p_two_sided: round(d.p_two_sided) }];
   });
   const present = new Set([...u.frontier.answers, ...u.particle.answers].map(a => a.question_id));
   return { frontier_cell: u.frontier.id, particle_cell: u.particle.id, system: u.frontier.receipt.system.kind, kind: rereading ? 're-read' : 'file agent',
@@ -186,10 +195,11 @@ export function renderReport(units: UnitReport[]): string {
   lines.push(DISCLOSURE.particle);
   if (units.some(u => u.system === 'gbrain-defaults')) lines.push('', DISCLOSURE.gbrain);
   if (units.some(u => u.readers.some(r => r.reader.startsWith('openai:') && r.scored))) lines.push('', DISCLOSURE.openai);
-  lines.push('', '## claude-opus-5-5 and particle-1', '', '| Cell | How particle-1 read it | Opus mean | particle-1 mean | particle-1 minus Opus (95% CI) | Opus $ per correct | particle-1 $ per correct |', '|---|---|---:|---:|---:|---:|---:|');
+  lines.push('', '## claude-opus-5-5 and particle-1', '', 'Both means are over the questions both readers have in their denominators.', '',
+    '| Cell | How particle-1 read it | particle-1 run | Questions paired | Opus mean | particle-1 mean | particle-1 minus Opus (95% CI) | Opus $ per correct | particle-1 $ per correct |', '|---|---|---|---:|---:|---:|---:|---:|---:|');
   for (const u of units) {
     const opus = u.readers.find(r => r.reader === OPUS), p = u.readers.find(r => r.reader === PARTICLE), d = u.particle_minus.find(x => x.minus === OPUS);
-    lines.push(`| ${u.frontier_cell} | ${u.kind} | ${pct(opus?.mean ?? null)} | ${pct(p?.mean ?? null)} | ${d ? `${pts(d.delta)} points (${ci(d.ci95, pts)})` : 'n/a'} | ${usdText(opus?.usd_per_correct ?? null)} | ${usdText(p?.usd_per_correct ?? null)} |`);
+    lines.push(`| ${u.frontier_cell} | ${u.kind} | ${u.run_status.particle ?? 'n/a'} | ${d?.pairs ?? 0} | ${pct(d?.frontier_mean ?? null)} | ${pct(d?.particle_mean ?? null)} | ${d ? `${pts(d.delta)} points (${ci(d.ci95, pts)})` : 'n/a'} | ${usdText(opus?.usd_per_correct ?? null)} | ${usdText(p?.usd_per_correct ?? null)} |`);
   }
   for (const u of units) {
     lines.push('', `## ${u.frontier_cell}`, '', `particle-1 cell \`${u.particle_cell}\` (${u.kind === 're-read' ? 'the frozen contexts the frontier readers read, sent byte for byte' : 'the file agent, run again with particle-1 as its model'}). Run status: frontier ${u.run_status.frontier ?? 'n/a'}, particle-1 ${u.run_status.particle ?? 'n/a'}. Preregistered exclusions left out: ${u.excluded}.`, '');
@@ -198,7 +208,7 @@ export function renderReport(units: UnitReport[]): string {
     for (const d of u.particle_minus) lines.push('', `particle-1 minus ${name(d.minus)}: ${pts(d.delta)} points (95% CI ${ci(d.ci95, pts)}), ${d.pairs} questions in ${d.clusters} conversations, two-sided sign-flip p ${d.p_two_sided}.`);
     if (u.verify) lines.push('', `Verified before any request: ${Object.entries(u.verify).map(([k, v]) => `${k.replaceAll('_', ' ')} ${v}`).join(', ')}.`);
   }
-  lines.push('', '## Method', '', `Replicate 0 of each reader, without the questions the set's preregistration excludes. A product failure (${[...PRODUCT_FAILURES].join(', ')}) scores 0; a harness failure (${[...HARNESS_FAILURES].join(', ')}), an answer without a scored canonical judgment and a not-applicable answer (${[...NOT_APPLICABLE].join(', ')}) leave the denominator. A correct answer has a canonical score of at least ${PASS_THRESHOLD}. Reader dollars price each answer's usage at the budget ledger's base list rates. Intervals are a bootstrap over conversations, ${RESAMPLES.toLocaleString('en-US')} resamples, seed \`${SEED}\` (${seedNumber(SEED)}); paired differences use the questions both readers have in their denominators.`, '');
+  lines.push('', '## Method', '', `Replicate 0 of each reader, without the questions the set's preregistration excludes. A product failure (${[...PRODUCT_FAILURES].join(', ')}) scores 0; a harness failure (${[...HARNESS_FAILURES].join(', ')}), an answer without a scored canonical judgment (counted as unjudged) and a not-applicable answer (${[...NOT_APPLICABLE].join(', ')}) leave the denominator. A correct answer has a canonical score of at least ${PASS_THRESHOLD}. Reader dollars price each answer's usage at the budget ledger's base list rates; failed tries are not priced, since only OpenAI-compatible readers record their usage, and each cell's metered spend is in its receipt. Intervals are a bootstrap over conversations, ${RESAMPLES.toLocaleString('en-US')} resamples, seed \`${SEED}\` (${seedNumber(SEED)}); paired differences use the questions both readers have in their denominators.`, '');
   return lines.join('\n');
 }
 
