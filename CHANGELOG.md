@@ -11,6 +11,14 @@ This records what each gbrain-evals release changed and what its measurements me
 - **`productUnderTest` now refuses a decision whose `gbrain.version` differs from the build's VERSION**, as it already did for the commit, because the row cap reads that field.
 - **Tests.** `test/eval/budgeted-delivery-c8k.test.ts` checks that 25 rows pass and 26 fail under a v0.60.557.0 decision, that 26 fail at exactly v0.60.555.0 and pass at v0.60.554.0, and that 26 pass under the committed decision. The new test failed on main before the fix.
 
+### The scoreboard scores an agent's turn-cap and context-overflow stops as product failures
+
+- **`eval/runner/scoreboard.ts` now takes its product failures from the outcome rules (`eval/runner/memory-qa/outcomes.ts`).** It kept its own list, `retrieval_error` and `unsupported`, so an answering agent's `turn_cap` or `context_overflow` stop fell through to the judged path, found no judgment and left its question as a harness failure. The preregistered rule scores those stops 0 and keeps them in the denominator, and the ruling of 2026-11-03 via GBRA-108 is that this rule wins. Only an answer or retrieval row recorded with one of those two outcomes scores differently; every other outcome scores as before.
+- **The Q1 scoreboard's file-agent cells change at the next custody render.** Its published render counted 7 `context_overflow` stops, all `claude-opus-5-5` answers the provider refused at its context limit, as harness failures. The custodian's rescore under the rule puts the file agent's BEAM-10M row at 67.25% (199/199, was 67.96%, 193/199) and its BEAM-1M sealed row at 71.11% (240/240, was 71.13%, 239/240). No other system's row changes. README's block and `scoreboard.md` stay as published until the receipt is rendered again in custody, because the public check pins both to the published `SHA256SUMS`.
+- **Tests.** A new case in `test/eval/scoreboard.test.ts` turns three of a synthetic file agent's passing answers into one `turn_cap` and two `context_overflow` stops and expects three more product failures, the same valued count and a lower mean. It fails before the fix, which counts the three as harness failures.
+- **Docs.** README's paragraph above the Q1 block, a new Q1 section in [corrections](docs/corrections.md#q1-head-to-head-scoreboard) and a row note in the [scoreboard report](docs/benchmarks/2026-10-06-scoreboard-report.md) say what the published cells leave out, name the rule and give the rescore. F6's documents are unchanged.
+- **Campaign identity.** `scoreboard.ts` renders receipts after their cells run, so no campaign's executed tree changes. A receipt that holds such a stop and was rendered before this release, Q1's included, keeps its stored `scoreboard.json`, which `check --custody` refuses until the receipt is rendered again.
+
 ## [0.10.145] - 2026-11-03
 
 ### gbrain pin moves to v0.60.557.0: a SkillOpt rollout shows the model MCP's suggestion and fix on a refused read
