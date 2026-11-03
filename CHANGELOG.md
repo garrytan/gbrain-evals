@@ -2,6 +2,17 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [Unreleased]
+
+### A lease raise keeps its reservation when the VM result is unknown, refuses another campaign's state and runs one at a time (#329, #330)
+
+- **A VM step that ends without a result keeps the host reservation (#329).** `eval/runner/q1/raise-lease.ts` used to give the host reservation back whenever the VM step failed, so a raise that reached the VM but lost its reply left the VM holding more than the campaign ledger counted. It now gives the reservation back only when the VM lease ledger refuses the raise or the VM step fails before its COMMIT; both report as refusals. A timeout, an ssh error or output that does not read back keeps the reservation, records the raise in `<state>/raises.ndjson` with `vm_result: "unknown"` so the campaign and its block cap count the raised amount, and stops for a person to reconcile. When giving the reservation back fails, the error names both failures and the amount the host still holds.
+- **A raise refuses another campaign's or another freeze's state directory (#330).** The state's `campaign_id` and `manifest_sha256` must match the checkout's campaign, and the lease's cell must be in the manifest, so the block cap that applies is always the freeze's own. A mismatched state directory used to skip the block cap.
+- **One raise runs at a time per freeze.** A raise holds `<state>/raise.lock` from reading the lease's amount until its record is written, and any other raise, dry run included, is refused at once. A raise whose record cannot be written keeps the lock. Nothing breaks a lock automatically: `clear-stale-lock --confirm <campaign id>` clears it once its holder is gone, after the check in `eval/RUNBOOK.md`'s new section "Raise a running Q1 lease", which reconciles the two ledgers only in the safe direction.
+- **The Q1 scoreboard preregistration gets amendment A27**, a dated post-hoc documentation correction that records these rules. No outcome rule, cap or cell changes.
+- **Tests.** `test/eval/q1-raise-lease.test.ts` adds keyless tests for each rule above, including an overlap repro in which a second raise is refused while the first holds the lock.
+- **Known gaps.** #344 tracks a write-ahead record and a `reconcile --lease` command, needed before a B2 run that expects more than a couple of lease raises. #345 lists the other review notes this release ships with.
+
 ## [0.10.153] - 2026-11-03
 
 ### F6's arm-B rows carry a dated limitation: recall responses were never classified (#343)
