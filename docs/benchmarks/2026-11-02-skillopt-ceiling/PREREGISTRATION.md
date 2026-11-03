@@ -254,7 +254,7 @@ No spend total, stage cap, arm, split or verdict rule changes in this amendment.
 | Opus (24) | 1.000 | 1.000 | 1.000 | 0.1647 |
 | Sol, half (12) | 1.000 | 1.000 | 0.917 | 0.0736 |
 
-Full scores match except Opus briefing (0.958) and Sol fact-check (0.917, where one rollout stopped at the turn limit). Opus's mean rollout cost $0.0766 on query, $0.2784 on briefing and $0.1390 on fact-check, and Sol's $0.0141, $0.1084 and $0.0983. On Opus the seed sits at the top of train, as it did in the first calibration. The knobs stay frozen, and the gate's held-out families decide whether there is headroom.
+Full scores match except Opus briefing (0.958) and Sol fact-check (0.917, where one rollout stopped at the turn limit). Opus's mean rollout cost $0.0766 on query, $0.2784 on briefing and $0.1390 on fact-check, and Sol's $0.0141, $0.1084 and $0.0983. On Opus the seed sits at the top of train, above the 0.30 to 0.60 band as in the first calibration (where fact-check scored 0.875). The knobs stay frozen, and the gate's held-out families decide whether there is headroom.
 
 **Sol at this pin.** Opus made 336 tool calls and none was refused, and Sol's query made 16 with none refused. On briefing, 127 of Sol's 246 calls were refused (52%: `get_page` with two window selectors 87, other 40), and on fact-check 178 of 212 (84%: 146 and 32). The receipts count no recovered read after a refusal, 0 of 305, and 12 abandoned two-selector reads on each of the two skills. So gbrain#8458's structured error did not change Sol's refusal rate from the first calibration's 48% and 84%. Sol still scored 12 of 12 on briefing and 11 of 12 on fact-check. The gate's cause table decides whether a Sol pair fails as `harness`.
 
@@ -266,7 +266,7 @@ Full scores match except Opus briefing (0.958) and Sol fact-check (0.917, where 
 | A4 stop-path read | $518.40 | $411.71 | $650 |
 | B0 E1 check | $203.40 | $161.91 | $300 |
 
-If no Opus pair shows headroom, Sol's gate does not run, and a gate attempt costs about $227.96: Opus's 1,368 rollouts and 9 proposer calls. The re-price rule's 1.25× thresholds are $0.2058 per scored rollout on Opus and $0.0920 on Sol. The gate runs Opus's query pair first and briefing second. At train costs, Opus's window after those two pairs averages about $0.178, under its threshold, so the trigger fires there only if gate rollouts cost about 16% more than train's. B2 is re-priced from the gate's own metered costs in the counted amendment (section 6).
+If no Opus pair shows headroom and the Opus pairs read `saturated`, Sol's gate does not run (section 4), and a gate attempt costs about $227.96: Opus's 1,368 rollouts and 9 proposer calls. The re-price rule's 1.25× thresholds are $0.2058 per scored rollout on Opus and $0.0920 on Sol. The gate runs Opus's query pair first and briefing second. At train costs, Opus's window after those two pairs averages about $0.178, under its threshold, so the trigger fires there only if gate rollouts cost about 16% more than train's. B2 is re-priced from the gate's own metered costs in the counted amendment (section 6).
 
 No spend total, stage cap, arm, split or verdict rule changes in this amendment.
 
