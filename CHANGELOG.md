@@ -2,7 +2,12 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
-## [Unreleased]
+## [0.10.147] - 2026-11-03
+
+### A closed campaign run refuses a lease raise (#319)
+
+- **`eval/runner/q1/raise-lease.ts` no longer grows a lease's host reservation once the campaign run is closed.** Before, `resizeHost` checked the run budget, the campaign cap and the block cap but not `finished_at`, so a raise after the close committed new money to the closed run and then raised the VM lease ledger. It now reads `finished_at` in the same `BEGIN IMMEDIATE` transaction as the resize and refuses with "budget run <id> already finished", the refusal `BudgetRun.reserve` makes since 0.10.146. Giving the reservation back after a failed VM step still works on a closed run.
+- **Tests.** `test/eval/q1-raise-lease.test.ts` adds two keyless tests. One raises a lease on the open run, closes the run and expects the next raise to be refused with both ledgers unchanged. The other closes the run while the VM step is in flight, fails that step and expects the host reservation back at its amount before the raise.
 
 ### RS1 custody scripts: mint, validate and hash the sealed ranking set (GST-1154, PR 1 of the RS1 plan)
 
