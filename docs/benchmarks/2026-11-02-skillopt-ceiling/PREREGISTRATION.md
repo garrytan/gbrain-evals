@@ -245,6 +245,8 @@ Splits hold 24, 24, 36 and 96 tasks. Both revisions' every-VERIFIED shares on tr
 
 No spend total, stage cap, arm, split or verdict rule changes in this amendment.
 
+**Refusal audit (added 2026-11-03, before the gate spends, at GBEV-3's condition).** The gate report lists every answer that passes substance with a negation within five words of the value that decides it, and each listed answer is checked by hand or by a cross-family judge (no judge grades its own family's rows, and particle-1 never judges); the report gives the false-correct count per pair, and a pair whose false-correct rate would flip its saturated verdict reads FIX-METHOD, not cut evidence.
+
 ## Disclosures
 
 gbrain is Garry Tan's own project.
