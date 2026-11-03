@@ -804,11 +804,12 @@ def step_probe_part(ctx, ability, usage):
 
 
 def failed_slots(ctx, attempt):
-    """Slots the validation report failed, or None when it asks for no regeneration of this conversation."""
+    """Slots the validation report failed, or None when it asks for no regeneration of this conversation or a resumed
+    run already regenerated the selection it read."""
     if not ctx.args.regenerate:
         return None
     conv = read_json(ctx.args.regenerate).get("conversations", {}).get(ctx.cid)
-    if not conv or conv.get("status") != "regenerate":
+    if not conv or conv.get("status") != "regenerate" or conv.get("select_attempt") == attempt - 2:
         return None
     if conv.get("select_attempt") != attempt - 1:
         raise StepFailure(f"the validation report read selection attempt {conv.get('select_attempt')}, not {attempt - 1}")
@@ -817,10 +818,12 @@ def failed_slots(ctx, attempt):
 
 def step_select(ctx, attempt, usage):
     """Two items per ability, in an order fixed by the conversation seed. A regeneration keeps every item that passed
-    validation and replaces each failed one with the next unused candidate; a failed candidate is never chosen again."""
+    validation and replaces each failed one with the next unused candidate; a failed candidate is never chosen again for
+    its ability. Every ability's candidate file uses the same index keys, so a rejection is an (ability, key) pair."""
     previous = read_json(ctx.conv / "selection" / f"{attempt - 1}.json") if attempt > 1 else {"slots": {}, "failed": []}
     failed = failed_slots(ctx, attempt) or set() if attempt > 1 else set()
-    rejected = set(previous["failed"]) | {previous["slots"][s] for s in failed if previous["slots"].get(s)}
+    rejected = {tuple(f.split("/", 1)) for f in previous["failed"]}
+    rejected |= {(s.split("#")[0], previous["slots"][s]) for s in failed if previous["slots"].get(s)}
     slots = {}
     for ability in ABILITIES:
         path = candidate_file(ctx.beam_chat, ability)
@@ -835,11 +838,11 @@ def step_select(ctx, attempt, usage):
                 slots[s] = kept[s]
                 continue
             seen = {question.get(k) for k in taken}
-            slots[s] = next((k for k, _ in pool if k not in taken and k not in rejected and question[k] not in seen), None)
+            slots[s] = next((k for k, _ in pool if k not in taken and (ability, k) not in rejected and question[k] not in seen), None)
             if slots[s] is not None:
                 taken.add(slots[s])
     path = ctx.conv / "selection" / f"{attempt}.json"
-    write_json(path, {"attempt": attempt, "slots": slots, "failed": sorted(rejected)})
+    write_json(path, {"attempt": attempt, "slots": slots, "failed": sorted(f"{a}/{k}" for a, k in rejected)})
     return [path], {"empty_slots": sum(1 for v in slots.values() if v is None)}
 
 
@@ -878,7 +881,8 @@ def finish_rubric(ctx, attempt):
         for n in range(ITEMS_PER_ABILITY):
             slot = f"{ability}#{n}"
             if slots.get(slot) is not None:
-                questions[ability].append(read_json(ctx.conv / "rubric" / str(attempt) / f"{slot}.json")["item"])
+                item = read_json(ctx.conv / "rubric" / str(attempt) / f"{slot}.json")["item"]
+                questions[ability].append({**item, "custody": CUSTODY_MARKER})
     path = ctx.beam_chat / "probing_questions" / "attempts" / f"{attempt}.json"
     write_json(path, questions)
     return [path]

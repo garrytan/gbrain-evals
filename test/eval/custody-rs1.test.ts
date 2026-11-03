@@ -155,6 +155,20 @@ describe('RS1 custody scripts end to end (mint.sh --fake)', () => {
     expect(existsSync(join(root, 'rs1-custody-a/validate-cache'))).toBe(true);
   });
 
+  test('a --fake run never answers a later --paid run from the reply cache', () => {
+    const set = join(root, 'rs1-custody-a/set');
+    const cache = join(root, 'rs1-custody-a/shared-cache');
+    const report = (name: string) => join(root, 'rs1-custody-a/validation', name);
+    const args = (mode: string, name: string) => [VALIDATE, '--set', set, '--beam-dir', beam, '--report', report(name), '--cache', cache, mode, '--target-tokens', '30000', '--tolerance', '0.5', '--window-tokens', '4000', '--overlap-tokens', '400'];
+    expect(run('bun', args('--fake', 'fake-cached.json')).code).toBe(0);
+    expect(JSON.parse(readFileSync(report('fake-cached.json'), 'utf8')).validators).toEqual(VALIDATOR_IDS.map(id => `fake-${id}`));
+    const paid = run('bun', args('--paid', 'paid.json'), { GEMINI_API_KEY: 'test-gemini-key-not-real', ANTHROPIC_API_KEY: 'test-anthropic-key-not-real', BRAINBENCH_BUDGET_LEDGER: join(root, 'ledger.sqlite') });
+    expect(paid.code).toBe(2);
+    expect(paid.err).toMatch(/^rs1-validate refused: /);
+    expect(paid.all).not.toContain('not-real');
+    expect(existsSync(report('paid.json'))).toBe(false);
+  });
+
   test('a regenerate report from validate.ts replaces exactly the failed slots in mint.sh --regenerate', async () => {
     const set = join(root, 'rs1-custody-b/set');
     const target = 'temporal_reasoning#1';
@@ -177,6 +191,35 @@ describe('RS1 custody scripts end to end (mint.sh --fake)', () => {
     expect(revalidated.conversations.c001.status).toBe('keep');
     expect(leaks(r.all, sealedProbes(set, seedLine('test seed b')))).toBe(0);
   }, 120_000);
+
+  test('a failed candidate is rejected only for its own ability, and a rerun with an applied report skips it', () => {
+    const out = join(root, 'rs1-custody-reject');
+    const conv = join(out, 'set/conversations/c001');
+    const one = (extra: string[] = []) => run('bash', [MINT, '--fake', '--beam-dir', beam, '--out', out, '--seed-file', seedA, '--count', '1', ...extra]);
+    const selection = (n: number) => JSON.parse(readFileSync(join(conv, 'selection', `${n}.json`), 'utf8')).slots as Record<string, string | null>;
+    const report = (name: string, attempt: number, failing: string[]) => {
+      const path = join(root, `${name}.json`);
+      writeFileSync(path, JSON.stringify({ conversations: { c001: { status: 'regenerate', select_attempt: attempt, items: Object.fromEntries(SLOTS.map(s => [s, { pass: !failing.includes(s), gates: [] }])) } } }));
+      return path;
+    };
+    expect(one().code).toBe(0);
+    const first = selection(1);
+    const updates = ['knowledge_update#0', 'knowledge_update#1'];
+    const other = SLOTS.find(s => !updates.includes(s) && !updates.some(u => first[u] === first[s]));
+    expect(other).toBeDefined();
+    const applied = report('reject-1', 1, [other!]);
+    expect(one(['--regenerate', applied]).code).toBe(0);
+    const rerun = one(['--regenerate', applied]);
+    expect(rerun.code).toBe(0);
+    expect(rerun.out).toContain('step=select status=skipped attempt=2 ');
+    expect(one(['--regenerate', report('reject-2', 2, updates)]).code).toBe(0);
+    const third = selection(3);
+    for (const u of updates) {
+      expect(third[u]).not.toBeNull();
+      expect(updates.map(x => first[x])).not.toContain(third[u]);
+    }
+    expect(third[updates[0]]).not.toBe(third[updates[1]]);
+  }, 240_000);
 
   test('hashlist.ts writes a sha256sum-format list, prints only counts and hashes, and a restore check matches it', () => {
     const set = join(root, 'rs1-custody-a/set');

@@ -35,7 +35,9 @@
  * validate, and replies already cached under --cache are not bought again. The verdict is "stop" (exit 4) when more than
  * 20% of the items of finished conversations (kept, or dropped at the floor) fail.
  *
- * Model calls sit behind one interface (ModelClient), so tests inject fakes. Paid calls follow the q1 cells' ledger
+ * Model calls sit behind one interface (ModelClient), so tests inject fakes. --fake's stand-ins carry their own ids
+ * (fake-gemini:…, fake-anthropic:…), so their cached replies never answer a --paid run and a fake report never names the
+ * paid validators. Paid calls follow the q1 cells' ledger
  * path: requirePaidArm (--paid and an open run with room for the estimate), then startPaidRun, whose fetch guard prices
  * and reserves every request in the budget ledger before it is sent. The ledger prices gemini-3.8-flash generateContent
  * and claude-haiku-5-5, long-prompt tier included.
@@ -552,7 +554,7 @@ export function planValidation(opts: Options, clients: ModelClient[], index: Pub
   // eval/runner/systems/render-v2.ts), every reply uses its whole output allowance, and long-prompt rates apply above
   // their threshold.
   const estimateUsd = calls.filter(c => !c.cached).reduce((s, c) => {
-    const id = clients[c.client].id;
+    const id = clients[c.client].id.replace(/^fake-/, '');
     const p = chatPrice(id) ?? (() => { throw new ValidateError(`no price for ${id}`); })();
     const input = (id.startsWith('anthropic:') ? 1.47 : 1) * c.tokens;
     const rates = p.long && input > p.long.above_input_tokens ? p.long : p;
@@ -670,7 +672,7 @@ async function main(argv: string[]): Promise<number> {
   if (!existsSync(join(opts.setDir, 'conversations'))) throw new ValidateError(`${opts.setDir} holds no conversations/`);
   const geminiKey = process.env.GEMINI_API_KEY, anthropicKey = process.env.ANTHROPIC_API_KEY;
   if (!fake && (!geminiKey || !anthropicKey)) throw new ValidateError('paid validation needs GEMINI_API_KEY and ANTHROPIC_API_KEY');
-  const clients = fake ? VALIDATOR_IDS.map(id => fakeClient(id)) : [geminiClient(geminiKey!), anthropicClient(anthropicKey!)];
+  const clients = fake ? VALIDATOR_IDS.map(id => fakeClient(`fake-${id}`)) : [geminiClient(geminiKey!), anthropicClient(anthropicKey!)];
   const plan = planValidation(opts, clients, buildPublicIndex(opts.beamDir, opts.publicIndexPath));
   const paid = !fake && plan.calls.some(c => !c.cached);
   if (paid) requirePaidArm(argv, { arm: 'rs1 validate', estimateUsd: plan.estimateUsd });

@@ -12,12 +12,15 @@
 #   - Custody paths. --out must sit outside any git checkout and its name must start with "rs1-custody" (the sealed
 #     key in .gstack/pregate.json refuses commits under such a path). The seed file comes from --seed-file or
 #     RS1_SEED_FILE, never a default; it must be named *.rs1-seed, sit outside any git checkout, be mode 600 or 400
-#     and hold "rs1-seed-v1:" and 64 hex digits.
+#     and hold "rs1-seed-v1:" and 64 hex digits. The custody marker the sealed key's text rule matches sits in
+#     topic.json, the topic attempts, the rubric files and every item of beam/1/probing_questions; BEAM's chat, plan
+#     and topics files under beam/ hold BEAM's own formats and are guarded by their path only.
 #   - Deterministic seeds. Conversation i's seed is HMAC-SHA256(seed, "rs1/conversation/<i>"); its topic, category,
 #     BEAM's random user profile and the item selection all derive from it.
 #   - Resume without re-sampling. Each conversation's manifest.json records every finished step with the sha256 of
 #     its outputs. A finished step is verified and skipped, never run again; a changed output stops the run.
-#   - One key per step. Each step runs under 'env -i' with an explicit allowlist. In real mode a paid step gets a
+#   - One key per step. Each step runs under 'env -i' with an explicit allowlist, from inside --out so a relative
+#     write BEAM makes (its bad_json.log) stays in custody. In real mode a paid step gets a
 #     metering-proxy token for its one provider (gemini-3.8-flash, or OpenAI embeddings for topic_check): mint.sh
 #     starts eval/runner/harness-metering-proxy.ts for that step with only that provider's real key, joined to the
 #     open RS1 budget run, so the ledger prices and reserves every request before it is sent.
@@ -81,6 +84,7 @@ OUT="$(cd "$OUT" && pwd)"
 SEED_FILE="$(cd "$(dirname "$SEED_FILE")" && pwd)/$(basename "$SEED_FILE")"
 inside_checkout "$SEED_FILE" && die "the seed file must sit outside any git checkout"
 [ -z "$REGENERATE" ] || [ -f "$REGENERATE" ] || die "--regenerate names no file"
+[ -z "$REGENERATE" ] || REGENERATE="$(cd "$(dirname "$REGENERATE")" && pwd)/$(basename "$REGENERATE")"
 
 TOOLING="$OUT/tooling"
 mkdir -p "$TOOLING" "$OUT/set/conversations"
@@ -165,7 +169,7 @@ run_step() {
   local args=(step --out "$OUT" --conv-index "$index" --step "$step" --seed-file "$SEED_FILE" --mode "$MODE"
     --beam-dir "$BEAM_DIR" --topic-source "$TOPIC_SOURCE")
   [ -z "$REGENERATE" ] || args+=(--regenerate "$REGENERATE")
-  line="$(env -i "${allow[@]}" "$PY" "$HERE/rs1_mint.py" "${args[@]}")" || rc=$?
+  line="$(cd "$OUT" && env -i "${allow[@]}" "$PY" "$HERE/rs1_mint.py" "${args[@]}")" || rc=$?
   stop_proxy
   printf '%s\n' "$line"
   case "$line" in *" status=skipped "*) STEPS_SKIPPED=$((STEPS_SKIPPED + 1)) ;; *) STEPS_RUN=$((STEPS_RUN + 1)) ;; esac
