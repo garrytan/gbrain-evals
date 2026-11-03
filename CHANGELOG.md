@@ -13,6 +13,15 @@ This records what each gbrain-evals release changed and what its measurements me
 - **Tests.** `test/eval/q1-raise-lease.test.ts` adds keyless tests for each rule above, including an overlap repro in which a second raise is refused while the first holds the lock.
 - **Known gaps.** #344 tracks a write-ahead record and a `reconcile --lease` command, needed before a B2 run that expects more than a couple of lease raises. #345 lists the other review notes this release ships with.
 
+## [0.10.151] - 2026-11-03
+
+### The SkillOpt ceiling preregistration records the calibration re-read and re-prices the later stages (#341)
+
+- **`docs/benchmarks/2026-11-02-skillopt-ceiling/PREREGISTRATION.md` adds the dated amendment that the 2026-11-03 section asks for before the gate spends.** Ledger run `n15-ceiling-calibration-2026-11-03T12-54-22-002Z-99f3820d` metered $15.45 of its $22.04 cap over 580 requests and is closed, so the calibration stage holds $43.40 of its $50. It read train at commit `d9649d09`, gbrain `62637c96a` and MANIFEST `5729db40…`, with the knobs frozen. Opus's seed scored 1.000 on query, briefing and fact-check (24 train tasks each) at $0.1647 per rollout, and Sol's scored 1.000, 1.000 and 0.917 on half of train at $0.0736.
+- **Sol still refuses most window reads at this pin.** 127 of its 246 briefing calls (52%) and 178 of its 212 fact-check calls (84%) were refused, and no refusal was followed by a recovered read, close to the first calibration's 48% and 84%. Opus had no refused call.
+- **Every later stage is re-priced from the re-read's metered means and stays inside its cap:** a gate attempt $331.34 (cap $470), the stop-path read $411.71 ($650) and the E1 check $161.91 ($300). A gate attempt where Sol's gate is skipped costs about $227.96. The 1.25x re-price thresholds are $0.2058 per scored rollout on Opus and $0.0920 on Sol.
+- No spend total, stage cap, arm, split or verdict rule changes. This release changes documentation only.
+
 ## [0.10.150] - 2026-11-03
 
 ### F6: BEAM-10M rerun at gbrain's current release, 8,000-token budget (#321)
