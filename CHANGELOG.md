@@ -2,6 +2,15 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.146] - 2026-11-03
+
+### A closed budget run refuses new reservations from every handle
+
+- **`BudgetRun.reserve` now refuses a closed run.** Before, a close (the opener's own, a joined process finishing the run, or `budget-ledger.ts close`) only stopped later `join` calls. A handle that joined before the close kept reserving against the run, and kept spending. Now `reserve` reads the run's `finished_at` in the same `SELECT`, inside the write transaction that records the reservation, and refuses with the error `join` already uses: `<description>: budget run <id> already finished`. A close and a racing reservation can't interleave, because `closeRun` takes the same write lock. The refusal is a `BudgetExceededError`, so every caller already treats it as a terminal budget stop and never retries it. A new allowance is refused the same way.
+- **What a close leaves open.** A reservation or allowance taken before the close still settles through the handle that took it, and an open allowance keeps admitting requests up to its amount until it is closed. A process started after the close can't join the run to settle, so settle or abandon open leases and batch intents before closing a run.
+- **Tests.** `test/eval/budget-ledger.test.ts` adds four keyless tests. A joined handle that closes the run is refused and records nothing. A close through either of two handles, or through `closeRun` (what `budget-ledger.ts close` calls), stops the other handle. An open run reserves and settles as before. Reservations and allowances taken before the close still settle. Three of the four fail on main at `8c5cf784`; the open-run test passes there by design. `test/eval/skillopt-ceiling-preconditions.test.ts` checks that `refusalKind` reads the closed-run refusal as a budget stop.
+- **Docs.** The "Failures stop spending" list in `docs/budget-ledger.md` gets the closed-run rule and what a close leaves open.
+
 ## [0.10.145] - 2026-11-03
 
 ### gbrain pin moves to v0.60.557.0: a SkillOpt rollout shows the model MCP's suggestion and fix on a refused read
