@@ -527,3 +527,99 @@ cells use their whole leases. So A4b runs all 6 shards, c4 to c9.
   fresh clone at commit d9fffb93. This addendum changes no hashed file.
 - **Launch condition:** A4b launches once both S2b cells have settled and the five earlier ledgers together book
   $2,723.11 or less ($3,068.83 minus A4b's cap).
+
+### A6 (2026-11-03): the particle-1 add-on
+
+Written before any add-on cell or re-read runs. Owner GBEV-31, approved by GBEV-3 on 2026-11-03 (options A1 and B2,
+under GBRA-108's four conditions). It changes no F6 cell, bar, verdict, ledger or published number, and F6's counted cap
+stays $3,068.83. It adds particle-1 rows beside F6's published rows, as the repository's model rules ask of a campaign
+already preregistered.
+
+**What runs.**
+1. **Re-reads.** particle-1 re-reads, byte for byte, the frozen 8,000-token contexts behind F6's published rows
+   (`runs/<cell id>/contexts.ndjson`; for a reused row, its A24 cell's own), with `eval/runner/q1/reread-cell.ts`.
+   Nothing is retrieved or packed again.
+   - S1 (BEAM-10M sealed): gbrain arms P and A0; the extract-first and memory-bank servers (A24 rows that F6 reuses);
+     the temporal-graph library 0.31.2.
+   - S2b (BEAM-1M sealed): gbrain arms P and A0; the extract-first and memory-bank servers; the temporal-graph library
+     0.31.2.
+
+   No hybrid row is re-read: F6 publishes S1 hybrid as invalid (A5 in `publication.json`) and S2b hybrid as not run, so
+   neither has a frozen context F6 stands behind. A row whose contexts are missing in custody is not re-read: its re-read
+   refuses before any request and writes the counts to verify.json, and the findings file lists the row as "not re-read:
+   no frozen context". No other row takes its place.
+2. **File agent.** On S1 the file agent runs with particle-1 as its agent: F6's file-agent definition (whole-system
+   agent, uncapped grep, 40 turns) with particle-1 as its only reader, as cell `s1.baseline-file-agent.particle` in
+   block F6-P1. `f6-cells.json` lists it under `addon_cells`, outside F6's counted cells, so F6's $1908.89 estimate,
+   its campaign and its publication stay as they are; only the add-on's own campaign runs it.
+
+**Byte-for-byte check.** Before any request, `reread-cell.ts` checks every source: each frozen context must hash
+(SHA-256) to its recorded prompt_sha256 and context_sha256, the published run-config's schedule must be the one this
+tree selects, the published answers must be the staged ones, and every scheduled question must have one frozen context
+that every stored answer of the arm read. Any problem refuses the whole re-read. Each re-read writes verify.json (rows
+checked and matched, refusals, and the SHA-256 of each contexts file), and the report prints those counts.
+
+**Reader settings.** particle-1 at effort medium, the effort F6 fixes for every reader (particle-1's own default is
+high), through the in-process lease proxy, with the reader@particle:particle-1 output floor of 16,000 tokens. Prompts
+and packing are F6's, unchanged. Replicate 0 only.
+
+**Judging.** The canonical BEAM judge, gpt-4.1-mini on the BEAM rubric instrument, as for every F6 row. particle-1 never
+judges. There is no frontier-judge column and no judge repeat.
+
+**Second-judge sensitivity.** docs/disclosures.md asks for one when a result favors particle-1. If particle-1 minus
+claude-opus-5-5 is above 0 on any cell, both readers' answers on that cell are judged again by gpt-6.1-sol on the same
+BEAM rubric instrument, a family that grades neither reader's rows, and the findings file gives that delta and its
+interval beside the canonical one. The second judge never replaces the canonical score or enters the first table. Its
+dollars come out of the re-read ceiling below, and the path that runs it ships in its own reviewed PR, with tests,
+before it runs.
+
+**File-agent stops.** The preregistered outcome rule (`memory-qa/outcomes.ts`) counts the file agent's turn_cap and
+context_overflow answers as product failures, scored 0 and kept in the denominator. GBRA-108 ruled on 2026-11-03 that
+this rule wins, F6 publishes under it, and the add-on's file-agent row follows it, so it compares like for like with
+F6's file-agent rows. The report gives the count of stops per reader and class.
+
+**Report.** `eval/runner/q1/particle-addon-report.ts` pairs each particle-1 row with the frontier cell it re-read, or,
+for the file agent, with F6's file-agent cell, and leaves out the set's preregistered exclusions as F6's published rows
+do. Per reader: the questions in its denominator, its mean canonical score with a 95% interval, its correct answers
+(canonical score at least 0.5), its answers not scored (by outcome, with an answer whose canonical judgment is missing
+counted as unjudged), its reader dollars at list price from the answers' usage, and its reader dollars per correct
+answer. Failed tries are not priced: only OpenAI-compatible readers record a failed try's usage, so pricing them would
+charge particle-1 alone. Each cell's metered spend, failed tries included, is in its receipt and on its ledger. Build and ingest dollars are the system's and the same for every
+reader, so they do not enter the per-reader figure; the findings file gives them once per system from F6's ledgers
+(Q1's A24 ledger for reused rows). The first table shows claude-opus-5-5 and particle-1 side by side for each system on
+S1 and S2b; the other readers follow. Intervals are a bootstrap over conversations (clusters), 10,000 resamples, seed
+`f6-p1`.
+
+**No ranking.** S1's minimum detectable difference is about 13.6 points (see Statistics), so every add-on comparison
+is descriptive: for each system, particle-1 minus each frontier reader, paired by question, with its clustered 95%
+interval. No verdict words ("ahead", "beats", "ties") are used, and a result favorable to particle-1 keeps its gap to
+Opus and the interval in its headline.
+
+**Campaign and money.**
+- **File agent:** campaign `q1-scoreboard-f6-current-master-p1`, manifest
+  `2026-10-29-f6-current-master/campaign/f6-campaign-p1.json`, units in `f6-campaign-p1-units.json`, ledger capped at
+  $16.15 (the cell's lease: estimate $8.04 × 1.25 plus twice its $3.05 peak reservation). Its hash
+  (`bun eval/runner/shootout-cell.ts hash --campaign <manifest>`) is computed by the custodian from a fresh clone at
+  this amendment's merge commit before the unit launches, and recorded in the add-on's report.
+- **Re-reads:** one lease per arm and reader on the add-on's own ledger in custody, each with its own --out and run id,
+  under a ceiling of $100 for all of them together: `reread-cell.ts --ledger-cap-usd 100` refuses a lease that would
+  take the ledger's committed spend past it, before any request. Q1's sealed ledgers are not written.
+- **Hard cap:** $150 for the whole add-on, VM time included, charged to Q1's eval total ($8,800). On 2026-11-03 Q1's six
+  ledgers in custody (the frozen campaign, A22, A23, A24, the full-run ledger and the backfill) held $7,034.32 committed
+  with no open reservation, which leaves $1,765.68. If a later charge leaves less than $150, nothing runs and GBEV-3 is
+  told. The two ledger ceilings hold metered spend to $116.15, which leaves $33.85 of the hard cap for VM time; the
+  custodian reads the VM bill before the file-agent unit launches and stops the add-on at $150. Estimate: about $14 for
+  re-reads and their judges, $8 for the file agent and up to $10 of VM time, about $32.
+- Paid particle-1 calls run only inside a crew paid window (PAID WINDOW REQUEST, GO, DONE). No rerun or resume without a
+  paid window and a named repair.
+- **Launch condition:** this amendment, with the revision below, merges before any add-on cell or re-read runs. The add-on runs on the custody
+  host from `~/Private/gbrain-heldout-custody/`, after F6's results merged (#321, 5c929af4) and with F6's VMs gone.
+
+**Disclosures in the findings file (closing section):** "gbrain is Garry Tan's own project."; the OpenAI line for
+gpt-6.1-sol rows; "Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which makes particle-1."
+
+**Revision (2026-11-03, before any add-on run).** The follow-up to #347 fixed four review findings in the re-read tool
+and the report: a resume from other sources or at another effort, a published-answer check that compared ids alone,
+shards of different provenance merging, and unjudged answers missing from the not-scored counts. It also added the
+second-judge sensitivity, the lease ceiling check, the unjudged count, the note on failed tries and the not re-read
+wording above. No cell, arm, cap, estimate or verdict rule changed.

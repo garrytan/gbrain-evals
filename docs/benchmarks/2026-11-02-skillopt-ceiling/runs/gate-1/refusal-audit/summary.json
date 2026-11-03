@@ -1,0 +1,191 @@
+{
+  "total_judged": 191,
+  "false_correct": 0,
+  "ambiguous": 0,
+  "by_pair": {
+    "query/opus": {
+      "total_judged": 14,
+      "false_correct": 0,
+      "ambiguous": 0
+    },
+    "briefing/opus": {
+      "total_judged": 29,
+      "false_correct": 0,
+      "ambiguous": 0
+    },
+    "fact-check/opus": {
+      "total_judged": 148,
+      "false_correct": 0,
+      "ambiguous": 0
+    }
+  },
+  "by_arm": {
+    "no-skill": {
+      "total_judged": 31,
+      "false_correct": 0,
+      "ambiguous": 0
+    },
+    "seed": {
+      "total_judged": 69,
+      "false_correct": 0,
+      "ambiguous": 0
+    },
+    "kept-rewrite": {
+      "total_judged": 34,
+      "false_correct": 0,
+      "ambiguous": 0
+    },
+    "reachability": {
+      "total_judged": 31,
+      "false_correct": 0,
+      "ambiguous": 0
+    },
+    "rubric-one-shot": {
+      "total_judged": 26,
+      "false_correct": 0,
+      "ambiguous": 0
+    }
+  },
+  "by_run": {
+    "1": {
+      "total_judged": 159,
+      "false_correct": 0,
+      "ambiguous": 0
+    },
+    "2": {
+      "total_judged": 32,
+      "false_correct": 0,
+      "ambiguous": 0
+    }
+  },
+  "by_pair_arm_run": [
+    {
+      "pair": "query/opus",
+      "arm": "no-skill",
+      "run": 1,
+      "total_judged": 1,
+      "false_correct": 0,
+      "ambiguous": 0
+    },
+    {
+      "pair": "query/opus",
+      "arm": "seed",
+      "run": 1,
+      "total_judged": 3,
+      "false_correct": 0,
+      "ambiguous": 0
+    },
+    {
+      "pair": "query/opus",
+      "arm": "seed",
+      "run": 2,
+      "total_judged": 2,
+      "false_correct": 0,
+      "ambiguous": 0
+    },
+    {
+      "pair": "query/opus",
+      "arm": "kept-rewrite",
+      "run": 1,
+      "total_judged": 5,
+      "false_correct": 0,
+      "ambiguous": 0
+    },
+    {
+      "pair": "query/opus",
+      "arm": "reachability",
+      "run": 1,
+      "total_judged": 3,
+      "false_correct": 0,
+      "ambiguous": 0
+    },
+    {
+      "pair": "briefing/opus",
+      "arm": "no-skill",
+      "run": 1,
+      "total_judged": 5,
+      "false_correct": 0,
+      "ambiguous": 0
+    },
+    {
+      "pair": "briefing/opus",
+      "arm": "seed",
+      "run": 1,
+      "total_judged": 8,
+      "false_correct": 0,
+      "ambiguous": 0
+    },
+    {
+      "pair": "briefing/opus",
+      "arm": "seed",
+      "run": 2,
+      "total_judged": 6,
+      "false_correct": 0,
+      "ambiguous": 0
+    },
+    {
+      "pair": "briefing/opus",
+      "arm": "kept-rewrite",
+      "run": 1,
+      "total_judged": 5,
+      "false_correct": 0,
+      "ambiguous": 0
+    },
+    {
+      "pair": "briefing/opus",
+      "arm": "reachability",
+      "run": 1,
+      "total_judged": 5,
+      "false_correct": 0,
+      "ambiguous": 0
+    },
+    {
+      "pair": "fact-check/opus",
+      "arm": "no-skill",
+      "run": 1,
+      "total_judged": 25,
+      "false_correct": 0,
+      "ambiguous": 0
+    },
+    {
+      "pair": "fact-check/opus",
+      "arm": "seed",
+      "run": 1,
+      "total_judged": 26,
+      "false_correct": 0,
+      "ambiguous": 0
+    },
+    {
+      "pair": "fact-check/opus",
+      "arm": "seed",
+      "run": 2,
+      "total_judged": 24,
+      "false_correct": 0,
+      "ambiguous": 0
+    },
+    {
+      "pair": "fact-check/opus",
+      "arm": "kept-rewrite",
+      "run": 1,
+      "total_judged": 24,
+      "false_correct": 0,
+      "ambiguous": 0
+    },
+    {
+      "pair": "fact-check/opus",
+      "arm": "rubric-one-shot",
+      "run": 1,
+      "total_judged": 26,
+      "false_correct": 0,
+      "ambiguous": 0
+    },
+    {
+      "pair": "fact-check/opus",
+      "arm": "reachability",
+      "run": 1,
+      "total_judged": 23,
+      "false_correct": 0,
+      "ambiguous": 0
+    }
+  ]
+}

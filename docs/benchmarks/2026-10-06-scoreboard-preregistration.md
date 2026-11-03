@@ -1406,7 +1406,25 @@ held-out material, including for the follow-up current-master rerun (F6), so the
 also refuses a raise.** A20's list of raise refusals names the campaign budget, the ledger cap and the lease's block
 cap. Since gbrain-evals#320, `raise-lease.ts` also refuses to grow a lease's reservation once the campaign run is closed.
 
+**A27 (2026-11-03, post-hoc documentation correction; no outcome rule, cap or cell changes): a raise whose VM result
+is unknown keeps the host reservation, a raise never skips its freeze's block cap, and one raise runs at a time.** A20
+says the host reservation is given back if the VM step fails. Since gbrain-evals#329, `raise-lease.ts` gives it back
+only when the VM lease ledger refuses the raise or the VM step fails before its COMMIT. A VM step that ends without a
+result (a timeout, an ssh error or output that does not read back) keeps the reservation, records the raise as unknown so
+the campaign and the block cap count it, and stops, so a person reconciles the two ledgers. Since gbrain-evals#330, a
+raise is also refused when the state directory belongs to another campaign or to another freeze of this one (its
+`campaign_id` or `manifest_sha256` differs from the checkout's campaign), or the lease's cell is not in the manifest, so
+the block cap that applies is always the freeze's own. One raise runs at a time per freeze: a raise holds
+`<state>/raise.lock`, a second raise is refused while it is held, and a lock left by a crash refuses every raise until the
+person running the campaign clears it (`eval/RUNBOOK.md`, "Raise a running Q1 lease").
+
 ## Changelog
+
+### 2026-11-03: amendment A27
+
+Text only (gbrain-evals#336, which fixes #329 and #330). It records how `raise-lease.ts` treats an unknown VM result, a
+state directory of another campaign or freeze, and overlapping raises. No outcome rule, cap or cell changes, and no
+frozen hash changes, because `raise-lease.ts` lives outside the hashed tree.
 
 ### 2026-10-27: amendment A25 (publication scope)
 

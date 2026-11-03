@@ -232,8 +232,8 @@ export interface ArmOptions {
   onRetry?: (taskId: string, attempt: number, error: unknown) => void;
   /** Called with each task whose rollouts errored, and its first error, when the arm fails on them. */
   onTaskError?: (taskId: string, error: string) => void;
-  /** Called with the model calls a failed rollout attempt made before it failed (only when it made any), so their spend is not lost with the rollout. */
-  onFailedRollout?: (taskId: string, calls: readonly CallUsage[]) => void;
+  /** Called with the model calls a failed rollout attempt made before it failed (only when it made any) and the error it failed with, so their spend is not lost with the rollout. */
+  onFailedRollout?: (taskId: string, calls: readonly CallUsage[], error: unknown) => void;
 }
 
 const benchTask = (t: ArmTask): BenchmarkTask => ({ task_id: t.task_id, task: t.task, judge: t.judge });
@@ -283,7 +283,7 @@ export async function scoreArm(o: ArmOptions): Promise<ArmScore> {
       } catch (error) {
         const kind = refusalKind(error);
         if (kind) refusal ??= { kind, error };
-        if (calls.length) o.onFailedRollout?.(opts.task.task_id, calls);
+        if (calls.length) o.onFailedRollout?.(opts.task.task_id, calls, error);
         retry = attempt < ROLLOUT_RETRIES && calls.length === 0 && unbilledFailure(error);
         if (!retry) throw error;
         o.onRetry?.(opts.task.task_id, attempt + 1, error);

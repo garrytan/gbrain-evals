@@ -245,6 +245,79 @@ Splits hold 24, 24, 36 and 96 tasks. Both revisions' every-VERIFIED shares on tr
 
 No spend total, stage cap, arm, split or verdict rule changes in this amendment.
 
+### 2026-11-03, after the calibration re-read: scores, Sol refusals and re-priced stages
+
+**Calibration re-read.** Ledger run `n15-ceiling-calibration-2026-11-03T12-54-22-002Z-99f3820d` (cap $22.04, inside the $22.05 the stage had left) metered $15.45 over 580 requests and is closed, so the calibration stage holds $43.40 of its $50. It ran at commit `d9649d09`, gbrain `62637c96a` (v0.60.557.0) and MANIFEST `5729db40…a615`, on train only, with the knobs frozen and the seed at 1 run. A machine restart during Sol's fact-check read left $0.42 of reservations open, which keep counting at their full amount, and about $0.52 of settled spend on rollouts that were in flight, which `--resume` ran again. Both are inside the $15.45. Seed substance scores:
+
+| Target (train tasks per skill) | query | briefing | fact-check | Mean $ per rollout |
+|---|---|---|---|---|
+| Opus (24) | 1.000 | 1.000 | 1.000 | 0.1647 |
+| Sol, half (12) | 1.000 | 1.000 | 0.917 | 0.0736 |
+
+Full scores match except Opus briefing (0.958) and Sol fact-check (0.917, where one rollout stopped at the turn limit). Opus's mean rollout cost $0.0766 on query, $0.2784 on briefing and $0.1390 on fact-check, and Sol's $0.0141, $0.1084 and $0.0983. On Opus the seed sits at the top of train, above the 0.30 to 0.60 band as in the first calibration (where fact-check scored 0.875). The knobs stay frozen, and the gate's held-out families decide whether there is headroom.
+
+**Sol at this pin.** Opus made 336 tool calls and none was refused, and Sol's query made 16 with none refused. On briefing, 127 of Sol's 246 calls were refused (52%: `get_page` with two window selectors 87, other 40), and on fact-check 178 of 212 (84%: 146 and 32). The receipts count no recovered read after a refusal, 0 of 305, and 12 abandoned two-selector reads on each of the two skills. So gbrain#8458's structured error did not change Sol's refusal rate from the first calibration's 48% and 84%. Sol still scored 12 of 12 on briefing and 11 of 12 on fact-check. The gate's cause table decides whether a Sol pair fails as `harness`.
+
+**Re-priced stages.** These use the re-read's metered means, Opus $0.1647 and Sol $0.0736 per rollout, with the proposer still at its $0.30 planning price. Every stage is inside its approved cap:
+
+| Stage | Planning | Re-priced | Cap |
+|---|---|---|---|
+| A2/A3 gate attempt | $415.80 | $331.34 | $470 |
+| A4 stop-path read | $518.40 | $411.71 | $650 |
+| B0 E1 check | $203.40 | $161.91 | $300 |
+
+If no Opus pair shows headroom and the Opus pairs read `saturated`, Sol's gate does not run (section 4), and a gate attempt costs about $227.96: Opus's 1,368 rollouts and 9 proposer calls. The re-price rule's 1.25× thresholds are $0.2058 per scored rollout on Opus and $0.0920 on Sol. The gate runs Opus's query pair first and briefing second. At train costs, Opus's window after those two pairs averages about $0.178, under its threshold, so the trigger fires there only if gate rollouts cost about 16% more than train's. B2 is re-priced from the gate's own metered costs in the counted amendment (section 6).
+
+No spend total, stage cap, arm, split or verdict rule changes in this amendment.
+
+### 2026-11-03, before the gate: refusal audit and refusal rows (#331)
+
+**Refusal audit (added 2026-11-03, before the gate spends, at GBEV-3's condition).** The gate report lists every answer that passes substance with a negation within five words of the value that decides it, and each listed answer is checked by hand or by a cross-family judge (no judge grades its own family's rows, and particle-1 never judges); the report gives the false-correct count per pair, and a pair whose false-correct rate would flip its saturated verdict reads FIX-METHOD, not cut evidence. This adds one R48 reading of a saturated pair and changes no spend total, stage cap, arm or split: the receipt's labels, Sol's skip and attempt 2's admission still run on the unaudited labels, and the next paragraph says how a flipped pair counts.
+
+Refusal audit and the cause table (GBEV-3, 2026-11-03): a pair the refusal audit flips is FIX-METHOD and is never evidence for a pass or a cut. In the pass test and the cause table it counts as V, except that `saturated` stands only if it still holds with every flipped pair counted as H. A flipped Opus pair counts as headroom for the Sol skip: if Sol's gate was skipped, the attempt reads `incomplete`, never a cut, until Sol's pairs run under the same attempt's ledger run and cap, before the attempt is read or any revision starts.
+
+Error rows on a refusal (added 2026-11-03, #331): when a refusal stops a stage, a rollout that billed a call before it failed keeps an error row with its usage as voided spend; that row is never scored and its task reruns on resume, and a refused rollout that billed nothing gets no row. The refusal rules above (the third rule and section 5) read with this.
+
+This amendment changes one verdict rule, the flipped-pair clause, and no spend total, stage cap, arm or split.
+
+### 2026-11-03, after gate 1: results, and the precision of the re-priced figures (#349)
+
+**Run.** Ledger run `n15-ceiling-gate-1-2026-11-03T16-27-45-284Z-54bc0fda` (cap $470, estimate $331.34) metered $133.87 over 3,304 requests and is closed. It ran at runner commit `88d3b3f5`, attesting this file at `71d52121`, at gbrain `62637c96a` (v0.60.557.0) and MANIFEST `5729db40…a615`. The [receipt](runs/gate-1/receipt.json), every rollout's row ([`rows.jsonl.gz`](runs/gate-1/rows.jsonl.gz)), the proposer's inputs and outputs ([`one-shot/`](runs/gate-1/one-shot/)) and the refusal audit ([`refusal-audit/`](runs/gate-1/refusal-audit/)) are committed beside this file, with the calibration re-read's two receipts and rows ([`runs/calibration-reread/`](runs/calibration-reread/)). The Sol receipt's `cost.usd` ($0.47 over 64 requests) covers only the process that resumed after the restart; the first process's 291 requests ($3.12, the $0.42 of open reservations included) have no receipt of their own, so the two receipts add to $12.33 and the stage's metered total is the ledger's $15.45 over 580 requests. In the committed copies the run's scratch directory reads `<work>/`, as committed receipts must not hold machine paths.
+
+**Verdict: fail, cause `saturated`, scoped to Opus.** Counts H 0, S 2, D 0, X 0, V 1, U 0 with R = 2. No Opus pair had headroom and the Opus pairs read `saturated`, so Sol's gate did not run (section 4). Scores are substance pass on the 36 gate tasks per skill; 18 of each skill's 36 come from held-out families, which no train or selection task shares:
+
+| Opus 5.5 pair | Label | No skill | Seed, run 1 / run 2 | Kept one-shot | Reachability | #304's rewrite | Rubric one-shot | Seed, held-out families | No skill, held-out families |
+|---|---|---|---|---|---|---|---|---|---|
+| `query` | saturated | 1.000 | 1.000 / 1.000 | the seed, 1.000 | 1.000 | 1.000 | 1.000 | 1.000 | 1.000 |
+| `briefing` | saturated | 0.972 | 1.000 / 1.000 | the seed, 1.000 | 0.972 | 1.000 | audit-disqualified | 1.000 | 1.000 |
+| `fact-check` | invalid | 0.861 | 0.889 / 0.889 | the seed, 0.889 | 0.889 | 0.889 | 0.889 | 0.778 | 0.778 |
+
+The receipt gives every column but the last, which is computed from the receipt's per-task results and each gate task's `held_out` flag in `gate.jsonl`.
+
+- No proposal beat the seed on selection, where the seed scored 1.000 on all three skills, so the seed is the kept one-shot on every pair. `briefing`'s second proposal and its rubric one-shot were disqualified by the leak audit, which rejects any date in a proposal: each had put one in an invented citation example.
+- `fact-check` reads `invalid` because 22 of its 36 no-skill answers (61%) failed a form check, against the 10% limit; 17 of those 22 were right on substance. The contract asks for "a label of your skill's six-level scale", which an arm with no skill cannot know, so it wrote labels such as `CONTRADICTED`. That is a contract bug, not a model result.
+- Every arm, reachability included, missed the same four `fact-check` tasks, all from the held-out three-hop family. In all 24 of those rollouts the answer names the person the answer key holds, and each fails the per-part status check: the answers check the claim's three links one by one and mark the true links verified or supported, and the answer key scores the claim as one contradicted part. So `fact-check`'s 0.861 and 0.778 are a scoring mismatch on one family, not room an optimizer could use.
+- Refusal audit: 191 substance-true answers had a negation within five words of the deciding value (`query` 14, `briefing` 29, `fact-check` 148). GPT-6.1 Sol, a different model family from the Opus answers, judged each one as a Capy subagent working from a written brief ([`judge-brief.md`](runs/gate-1/refusal-audit/judge-brief.md)): 0 false-correct and 0 ambiguous, so no pair flips.
+- GST-956, preliminary and never deciding (section 7): #304's rewrite against seed run 1 is +0 [0, 0] on all three pairs, 0 wins and 0 losses, McNemar p 1.0, `no-difference-shown`.
+- Opus made 4,756 tool calls in the stage's 1,068 rollouts and none was refused; no rollout stopped at the turn limit or the output limit. No arm was voided, no spend went unscored and the re-price trigger did not fire: the stage's mean rollout cost was $0.061 after `query`, $0.132 after `briefing` and $0.123 after `fact-check`, under the $0.2058 threshold. Per pair, `query` cost $23.74, `briefing` $67.92 and `fact-check` $42.21, proposer calls included.
+
+**The re-priced figures' precision (#349).** The previous amendment's re-priced figures come from the re-read receipts' unrounded means, $0.164665525 per Opus rollout and $0.0735933139 per Sol rollout (the gate receipt's `resolved_config.prices`), not from the $0.1647 and $0.0736 its table prints. With the unrounded means the stop-path read is 1,728 × ($0.164665525 + $0.0735933139) = $411.71, the gate attempt $331.34, the Opus-only attempt $227.96, B0 $161.91 and Opus's 1.25× trigger $0.2058. Recomputed from the rounded means they would read $411.78, $331.39, $228.01, $161.94 and $0.2059. Sol's trigger is $0.0920 either way. No figure, cap or rule changes.
+
+Under section 4 the next step would be the one revision and a second gate. The next amendment records why neither runs.
+
+### 2026-11-03, after gate 1: the benchmark is retired
+
+Garry Tan, relayed by the Captain (GBEV-3) on 2026-11-03: "I guess we are just saturated and we should note saturation and consider the category retired". This retires K, the SkillOpt optimizer benchmark, on gate 1's evidence.
+
+- Gate 2 does not run. The revision built for it (branch `gbev30/skillopt-ceiling-rev1`, never balanced and never run) is abandoned, and the stop-path read (A4), B0, B1 and B2 do not run. The 96 test tasks per skill were never read and stay sealed.
+- This departs from the preregistered path. Section 4 allowed one revision and a second gate before a cut, and section 8 a stop-path read on test; Garry's decision ends the study after one gate. The verdict is his call on gate 1's evidence, not a preregistered CUT-CANDIDATE, and it rests on `query` and `briefing` on Opus 5.5: `fact-check` was unreadable and Sol did not run.
+- L, gbrain's iterative loop. Garry's words, the same day: "Ok I guess we should just retire it from gbrain as well. But we should mark it as deprecated and remove it in a month". gbrain#8525, open as this is written, adds gbrain's deprecation notice, and removal is due on or after 2026-12-03. This study never measured the loop (B1 and B2 never ran), so it gives no evidence on the loop either way; the two earlier results that did, the June 3 run and the November 1 re-baseline, found the full loop tied a one-shot rewrite (#304 did not run the loop arms). In gbrain-evals, Cats 30 to 33, which run the loop, are marked deprecated and are deleted after gbrain's removal release reaches the pin.
+- GST-956 keeps only its preliminary read above; its deciding read on test does not run. GST-955 (Sol on multi-hop `query`) is not answered.
+- The program ledger is closed. It holds three runs, all closed: the superseded first calibration ($27.95), the calibration re-read ($15.45) and gate 1 ($133.87), $177.27 committed over 5,038 requests against the $9,163 program cap (the $9,500 total less #304's $337), and `verify` passes. The re-read's $0.42 of open reservations stay counted in the total. With #304, the program spent $514.27 of its $9,500.
+- The runner, the v1 to v3 task sets and their keyless checks stay, as do the published receipts. No new result is published from this benchmark.
+
+No paid call follows this amendment.
+
 ## Disclosures
 
 gbrain is Garry Tan's own project.
