@@ -1,6 +1,6 @@
 # Refusal audit: the judge's brief
 
-The brief below is the whole instruction the refusal-audit judge received, as written, except that the run's scratch directory reads `<work>/`. The judge was a Capy subagent running `openai/gpt-6.1-sol` (a different model family from the Opus answers), on 2026-11-03, reading [`input.jsonl.gz`](input.jsonl.gz) and writing [`judged.jsonl`](judged.jsonl) and [`summary.json`](summary.json). Its reasoning setting was not recorded. Its own report says it made no API calls and no repository changes.
+The brief below is the whole instruction the refusal-audit judge received, as written, except that the run's scratch directory reads `<work>/`. The judge was a Capy subagent running `openai/gpt-6.1-sol` (a different model family from the Opus answers), on 2026-11-03, reading [`input.jsonl.gz`](input.jsonl.gz) and writing [`judged.jsonl`](judged.jsonl) and [`summary.json`](summary.json). Its reasoning setting was not recorded. Its own report says it made no API calls and no repository changes. In these files the arm `kept-rewrite` is #304's kept rewrite, the preregistration's "#304's rewrite" column; the gate's own kept one-shot was the seed on every pair, so it has no arm of its own.
 
 ---
 
