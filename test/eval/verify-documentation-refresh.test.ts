@@ -188,6 +188,7 @@ describe('verify-documentation-refresh: the scoreboard explanation', () => {
 
   test('a figure in another paragraph above the block is checked too', () => {
     const root = copyWith('stale-figure-next-paragraph', 'README.md', t => t.replace('q1-head-to-head-scoreboard)). The first loss bullet', 'q1-head-to-head-scoreboard)).\n\nThe first loss bullet').replace('the 13.6 points in the\nopening sentence', 'the 13.85 points in the\nopening sentence'));
+    expect(readFileSync(join(root, 'README.md'), 'utf8')).toContain('q1-head-to-head-scoreboard)).\n\nThe first loss bullet');
     expect(references(root, 'scoreboard_publication_reference')).toEqual([
       ['README.md', '13.85', 'The paragraph above the scoreboard block quotes a figure that neither the block nor ' + RENDER + ' shows; update it with the new render'],
     ]);
