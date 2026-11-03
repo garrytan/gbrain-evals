@@ -25,7 +25,7 @@ import { resolve } from 'node:path';
 import { CHAT_PRICE_OVERRIDES, reservationUsd } from '../../budget-ledger.ts';
 import { DEFAULT_ROUTE_CAPS } from '../../metering-proxy.ts';
 import {
-  ALL_SETS, ASSUMPTIONS, F6_ASSUMPTIONS, f6ExtractionLedgerUsd, FRONTIER_JUDGES, hoursPerMtok, makeCell, MANIFEST_SCHEMA, OVERLAY_KEYS, priceOf, READERS, SONNET,
+  ALL_SETS, ASSUMPTIONS, F6_ASSUMPTIONS, f6ExtractionLedgerUsd, FRONTIER_JUDGES, hoursPerMtok, loadManifest, makeCell, MANIFEST_SCHEMA, OVERLAY_KEYS, priceOf, READERS, SONNET,
   type ArmSpec, type BlockId, type CellDefinition, type F6BlockId, type Manifest, type RetrievalIdentity, type SetId,
 } from './definitions.ts';
 
@@ -165,8 +165,25 @@ const rerun = (system: string, arm: ArmSpec) => {
   const m = F6_MEASURED_ESTIMATES[c.id];
   return withLease({ ...c, estimate: { usd: m.usd, lines: { q1_measured: m.usd } } });
 };
+/**
+ * The particle-1 add-on (GBEV-31): Q1's S1 file agent read by particle-1 alone. It is the file-agent rerun's
+ * definition with its readers replaced and an id of its own, in a block of its own (F6-P1), so it carries its own
+ * estimate, lease and ledger cap and the frozen F6 campaigns keep their blocks. The estimate is Q1's measured
+ * file-agent spend scaled to particle-1's list price: estimateCell prices this cell at particle-1's list rates on the
+ * token assumptions it priced Q1's three-reader cell on (ASSUMPTIONS.agent: 130,000 input and 2,000 output tokens per S1
+ * question, then the canonical judge), and each line is multiplied by Q1's measured spend over that model's price for
+ * Q1's cell ($275.96 / $245.99).
+ */
+export const F6_PARTICLE_ADDON = { id: 's1.baseline-file-agent.particle', reader: 'particle:particle-1', source: 's1.baseline-file-agent.baseline' } as const;
+export function particleAddonCell(): CellDefinition {
+  const { id, reader, source } = F6_PARTICLE_ADDON;
+  const c = makeCell('S1', 'baseline-file-agent', 'baseline', [{ id: 'whole-agent', mode: 'agent', label: 'file agent, uncapped grep, 40 turns', readers: [reader] }], { block: 'F6-P1', probes: noProbes('S1') });
+  const scale = F6_MEASURED_ESTIMATES[source].usd / loadManifest().cells.find(x => x.id === source)!.estimate.usd;
+  const lines = Object.fromEntries(Object.entries(c.estimate.lines).map(([k, v]) => [k, Math.round(v * scale * 100) / 100]));
+  return withLease({ ...c, id, arms: c.arms.map(a => ({ ...a, cell_id: `${id}.${a.id}` })), estimate: { usd: Math.round(Object.values(lines).reduce((s, v) => s + v, 0) * 100) / 100, lines } });
+}
 
-/** F6's counted cells, in priority order (S4-slice last). */
+/** F6's counted cells, in priority order (S4-slice last), then the particle-1 add-on. */
 export function generateF6Cells(): CellDefinition[] {
   return [
     gbrain('S1', 'F6-S1', ALL_ARMS, ['p', 'd']),
@@ -177,6 +194,7 @@ export function generateF6Cells(): CellDefinition[] {
     gbrain('D8', 'F6-D8', D8_GBRAIN_ARMS),
     ...D8_SYSTEMS.map(([system, configuration]) => other('D8', 'F6-D8', system, configuration)),
     gbrain('S4-slice', 'F6-S4', ALL_ARMS),
+    particleAddonCell(),
   ];
 }
 
@@ -199,6 +217,7 @@ const F6_BLOCKS: Record<F6BlockId, string> = {
   'F6-D8': 'F6 D8 long-history reserve',
   'F6-S4': 'F6 S4-slice LongMemEval-S (lowest priority)',
   'F6-dry': 'F6 priced dry run (public dev data)',
+  'F6-P1': 'F6 particle-1 add-on (the S1 file agent read by particle-1)',
 };
 
 export interface F6Manifest extends Manifest { f6_assumptions: typeof F6_ASSUMPTIONS; dry_run_cap_usd: number; dry_run_spent_usd: number; campaign_id: string }
@@ -207,9 +226,12 @@ export function buildF6Manifest(): F6Manifest {
   const cells = generateF6Cells();
   const smoke = generateF6DryRunCells();
   const round = (x: number) => Math.round(x * 100) / 100;
+  // A block stops at 1.5 times its estimate, or at its units' leases where they hold more (the particle-1 add-on, whose
+  // lease is mostly the peak reservation), since the campaign ledger refuses a lease that would pass its block's cap.
   const blocks = (Object.keys(F6_BLOCKS) as F6BlockId[]).filter(id => id !== 'F6-dry').map(id => {
-    const estimate = round(cells.filter(c => c.block === id).reduce((s, c) => s + c.estimate.usd, 0));
-    return { id: id as BlockId, label: F6_BLOCKS[id], plan_usd: estimate, estimate_usd: estimate, cap_usd: round(estimate * 1.5) };
+    const own = cells.filter(c => c.block === id);
+    const estimate = round(own.reduce((s, c) => s + c.estimate.usd, 0));
+    return { id: id as BlockId, label: F6_BLOCKS[id], plan_usd: estimate, estimate_usd: estimate, cap_usd: round(Math.max(estimate * 1.5, own.reduce((s, c) => s + c.lease!.usd * c.shards, 0))) };
   });
   const models = [...READERS, ...FRONTIER_JUDGES, ASSUMPTIONS.judge.lme.model, ASSUMPTIONS.judge.beam.model, F6_ASSUMPTIONS.extraction.model, 'openai:gpt-6-luna'].map(m => [m, priceOf(m)] as const);
   const sets = [...new Set([...cells, ...smoke].map(c => c.set))].map(s => ALL_SETS[s]);

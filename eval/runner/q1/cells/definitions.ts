@@ -45,8 +45,8 @@ export type Q1SetId = 'S1' | 'S1-sweep' | 'S2a' | 'S2b' | 'S3' | 'S4' | 'S4-slic
 /** F6's own set (eval/runner/q1/cells/f6.ts): the D8 long-history reserve. */
 export type SetId = Q1SetId | 'D8';
 export type Q1BlockId = 'T1' | 'T2-S2a' | 'T2-S2b' | 'T2-S3' | 'T2-S4-S5';
-/** F6's spend blocks (eval/runner/q1/cells/f6.ts), charged to F6's own cap. */
-export type F6BlockId = 'F6-S1' | 'F6-T2' | 'F6-D8' | 'F6-S4' | 'F6-dry';
+/** F6's spend blocks (eval/runner/q1/cells/f6.ts), charged to F6's own cap; F6-P1 is the particle-1 add-on's (GBEV-31). */
+export type F6BlockId = 'F6-S1' | 'F6-T2' | 'F6-D8' | 'F6-S4' | 'F6-dry' | 'F6-P1';
 export type BlockId = Q1BlockId | F6BlockId;
 export type Split = 'dev' | 'sealed' | 'all';
 
@@ -705,7 +705,7 @@ function selectionProblems(s: Selection, where: string): string[] {
   return [`${where}: unknown selection kind ${JSON.stringify((s as { kind?: unknown }).kind)}`];
 }
 
-export const F6_BLOCK_IDS: readonly F6BlockId[] = ['F6-S1', 'F6-T2', 'F6-D8', 'F6-S4', 'F6-dry'];
+export const F6_BLOCK_IDS: readonly F6BlockId[] = ['F6-S1', 'F6-T2', 'F6-D8', 'F6-S4', 'F6-dry', 'F6-P1'];
 
 /** An arm's retrieval identity: only on gbrain cells whose stack runs F6 (GBRAIN_F6=1), on a packed or retrieval-only arm, naming a known op, its own arguments and all six overlay keys. */
 function retrievalProblems(d: CellDefinition, a: ArmDefinition, w: string): string[] {

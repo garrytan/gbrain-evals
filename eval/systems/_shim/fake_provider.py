@@ -30,7 +30,8 @@ Particle (any path containing `/particle/v1/`, as PARTICLE_BASE_URL points there
   402 (credit exhausted), 400 `context` (context length exceeded) or any status, each with an optional raw `body`.
 
 Every request is appended to the log (one JSON line: route, model, dimensions, schema name, response format, whether
-the credential is the container's dummy, a body hash), never the body or the credential itself.
+the credential is the container's dummy, a body hash, the sha256 of its last user message's text), never the body or
+the credential itself.
 
 Run: python3 eval/systems/_shim/fake_provider.py [--port 8787] [--log fake-provider.jsonl]
      (or FAKE_PROVIDER_PORT / FAKE_PROVIDER_LOG)
@@ -384,7 +385,8 @@ def make_handler(log_path: str | None) -> type[BaseHTTPRequestHandler]:
                                             "response_format": (body.get("response_format") or {}).get("type"), "logprobs": bool(body.get("logprobs")),
                                             "effort": body.get("reasoning_effort"), "max_completion_tokens": body.get("max_completion_tokens"),
                                             **({"fault": fault["status"]} if fault else {}),
-                                            "auth_is_dummy": "dummy" in cred, "auth_present": bool(cred), "sha256": hashlib.sha256(raw).hexdigest()[:16]}) + "\n")
+                                            "auth_is_dummy": "dummy" in cred, "auth_present": bool(cred), "sha256": hashlib.sha256(raw).hexdigest()[:16],
+                                            "user_sha256": next((hashlib.sha256(m["content"].encode()).hexdigest() for m in reversed(body.get("messages") or []) if isinstance(m, dict) and m.get("role") == "user" and isinstance(m.get("content"), str)), None)}) + "\n")
             if not route:
                 return self._send(404, {"error": {"message": f"no route {path}"}})
             if particle and name == "responses":
