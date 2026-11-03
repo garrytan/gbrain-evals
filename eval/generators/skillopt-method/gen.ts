@@ -7,7 +7,8 @@
  *
  *   bun eval/generators/skillopt-method/gen.ts write [v1|v2|v3]   # regenerates one version's task files and MANIFEST.json (default v2)
  *   bun eval/generators/skillopt-method/gen.ts check [v1|v2|v3]   # exits 1 unless regeneration reproduces the committed
- *                                                                 # files and every file matches MANIFEST.json (default: every version)
+ *                                                                 # files, every file matches MANIFEST.json and v3's
+ *                                                                 # fact-check status skew holds (default: every version)
  *
  * `write` copies each seed skill only when it is missing and only if its
  * sha256 matches the version's pin in dataset.ts, from node_modules/gbrain or
@@ -27,7 +28,7 @@ import { generateBriefing } from './briefing.ts';
 import { generateBriefingV2 } from './briefing-v2.ts';
 import { generateBriefingV3 } from './briefing-v3.ts';
 import { splitLeaks, type SkillGeneration } from './common.ts';
-import { loadWorldV3, splitLeaksV3, type SkillGenerationV3 } from './common-v3.ts';
+import { loadWorldV3, splitLeaksV3, statusSkewV3, type MethodTaskV3, type SkillGenerationV3 } from './common-v3.ts';
 import { generateFactCheck } from './fact-check.ts';
 import { generateFactCheckV2 } from './fact-check-v2.ts';
 import { generateFactCheckV3 } from './fact-check-v3.ts';
@@ -125,9 +126,11 @@ export function regenerationDiffs(version: DatasetVersion = DEFAULT_DATASET): st
   return out;
 }
 
-/** Regeneration and manifest problems for one version, each prefixed with it. */
+/** Regeneration and manifest problems for one version, each prefixed with it; for v3, also the committed fact-check set's status skew (statusSkewV3). */
 export function datasetProblems(version: DatasetVersion): string[] {
-  return [...regenerationDiffs(version), ...checkManifest(datasetDir(version), version).map(p => `${version} ${p}`)];
+  const factCheck = version === 'v3' ? DATASET_SPLITS.v3.map(sp => join(datasetDir(version), 'fact-check', `${sp}.jsonl`)).filter(f => existsSync(f)) : [];
+  const skew = factCheck.length ? statusSkewV3(factCheck.flatMap(f => readFileSync(f, 'utf8').split('\n').filter(Boolean).map(l => JSON.parse(l) as MethodTaskV3))).problems : [];
+  return [...regenerationDiffs(version), ...checkManifest(datasetDir(version), version).map(p => `${version} ${p}`), ...skew.map(p => `${version} fact-check: ${p}`)];
 }
 
 function copySeed(skill: SkillName, version: DatasetVersion): void {

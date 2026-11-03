@@ -681,7 +681,7 @@
       "limit": 20,
       "clock": "2026-10-30T12:00:00.000Z",
       "embeddings": "off",
-      "queries": 4197
+      "queries": 4201
     },
     "rules": {
       "indirect": "the first 5 hits do not hold every deciding page",

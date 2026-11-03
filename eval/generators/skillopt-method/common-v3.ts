@@ -17,8 +17,14 @@
  *
  * Assembly keeps v2's rules over four splits (train, sel, gate, test): one
  * anchor per task, every gold fact and gold page in one split, at most three
- * tasks per connected group, and held-out families only in gate and test. Each
- * task records its group id for resampling. Train is ordered round-robin by
+ * tasks per connected group, and held-out families only in gate and test. A
+ * family whose tasks have more than one gold status (a fact-check family that
+ * makes claims right or wrong) fills each split's quota by status, in the
+ * proportion of its confirmed candidates; a false claim with a true part counts
+ * apart from one false throughout. Train and selection give neither an
+ * every-claim-FALSE nor an every-claim-VERIFIED report a larger share of
+ * passes than gate (statusSkewV3). Each task records its group id for
+ * resampling. Train is ordered round-robin by
  * family, so gbrain's batches of 8 each cover every trained family. A family
  * that cannot fill its quota fails generation with the capacity report.
  */
@@ -271,7 +277,7 @@ export function absentFromWorld(corpus: WorldCorpus, phrase: string): boolean {
 
 const show = (v: GoldValue) => (v.kind === 'number' ? (v.unit === 'percent' ? `${v.value}%` : v.unit === 'days' ? `${v.value} days` : v.unit === 'money' ? `$${v.value.toLocaleString('en-US')}` : String(v.value)) : v.kind === 'date' ? longDate(v.value) : v.value);
 
-/** Answers no system should pass on substance: empty, "I don't know", every candidate value and page at once, and a refusal where an answer exists. */
+/** Answers no system should pass on substance: empty, "I don't know", every candidate value and page at once, a refusal where an answer exists, and a fact-check that calls every claim true, or every claim or part false when one is true. */
 export function degenerateAnswers(skill: SkillName, c: Pick<CandidateV3, 'gold' | 'distractors' | 'answerable'>): Array<{ kind: string; text: string }> {
   const spec = c.gold.spec;
   const slugs = [...new Set([...c.gold.slugs, ...c.distractors.slugs])];
@@ -285,11 +291,39 @@ export function degenerateAnswers(skill: SkillName, c: Pick<CandidateV3, 'gold' 
     out.push({ kind: 'everything', text: ['VERIFIED', 'FALSE', 'UNVERIFIED'].map((s, i) => `[${i + 1}] CLAIM: the claim\nSTATUS: ${s}\nSOURCE: ${slugs.join(', ')}\nNOTES: ${values.map(show).join(', ')}`).join('\n\n') });
     if (spec.status !== 'not-supported') out.push({ kind: 'refuse', text: '[1] CLAIM: the claim\nSTATUS: 🤷 UNVERIFIED\nSOURCE: none\nNOTES: The brain has no record of this.' });
     if (spec.status !== 'supported') out.push({ kind: 'always-positive', text: '[1] CLAIM: the claim\nSTATUS: ✅ VERIFIED\nSOURCE: ' + slugs.join(', ') });
+    if (spec.parts.some(p => p.status === 'supported')) {
+      const claims = spec.parts.length > 1 ? spec.parts.map(p => `the claim's ${p.key}`) : ['the claim'];
+      out.push({ kind: 'always-negative', text: claims.map((claim, i) => `[${i + 1}] CLAIM: ${claim}\nSTATUS: ❌ FALSE\nSOURCE: ${slugs.join(', ')}\nNOTES: ${values.map(show).join(', ')}`).join('\n\n') });
+    }
   } else {
     if (spec.kind !== 'value' || spec.distractors.length) out.push({ kind: 'everything', text: `Answer: ${values.map(show).join(', ')} ${cites}` });
     if (c.answerable) out.push({ kind: 'refuse', text: "The brain doesn't have information on that." });
   }
   return out;
+}
+
+/**
+ * GST-1150: for each split of a fact-check task set, the share of tasks whose
+ * oracle report still passes substance with every STATUS: line set to FALSE
+ * (all-false) or to VERIFIED (all-true). A problem when train or selection
+ * gives either report a larger share than gate, since a skill that leans one
+ * way would then score better where it is trained and selected than where it
+ * is gated.
+ */
+export function statusSkewV3(tasks: readonly MethodTaskV3[]): { shares: Record<'all-false' | 'all-true', Partial<Record<SplitV3, number>>>; problems: string[] } {
+  const shares: Record<'all-false' | 'all-true', Partial<Record<SplitV3, number>>> = { 'all-false': {}, 'all-true': {} };
+  for (const split of SPLITS_V3) {
+    const inSplit = tasks.filter(t => t.split === split);
+    if (!inSplit.length) continue;
+    for (const [report, label] of [['all-false', '❌ FALSE'], ['all-true', '✅ VERIFIED']] as const) {
+      shares[report][split] = inSplit.filter(t => evaluateLayers(t.oracle_answer.replace(/^STATUS: .*$/gm, `STATUS: ${label}`), t.judge).substance).length / inSplit.length;
+    }
+  }
+  const problems = (['all-false', 'all-true'] as const).flatMap(report => (['train', 'sel'] as const).flatMap(split => {
+    const s = shares[report][split], gate = shares[report].gate;
+    return s !== undefined && gate !== undefined && s > gate ? [`${report} oracle reports pass substance on ${(100 * s).toFixed(1)}% of ${split}, more than gate's ${(100 * gate).toFixed(1)}%`] : [];
+  }));
+  return { shares, problems };
 }
 
 // ─── Screening and assembly ──────────────────────────────────────────────────
@@ -359,8 +393,8 @@ function screenV3(skill: SkillName, drafts: readonly DraftV3[], report: Generati
   return kept;
 }
 
-/** One seeded attempt (v2's fillOnce over four splits). */
-function fillOnceV3(kept: readonly Kept[], quotas: QuotasV3, order: readonly string[], rng: Rng): Array<CandidateV3 & { split: SplitV3 }> {
+/** One seeded attempt (v2's fillOnce over four splits), filling the quota of each stratum (`stratum` names a candidate's). */
+function fillOnceV3(kept: readonly Kept[], quotas: QuotasV3, order: readonly string[], rng: Rng, stratum: (c: CandidateV3) => string): Array<CandidateV3 & { split: SplitV3 }> {
   const assigned = Object.fromEntries(Object.keys(quotas).map(f => [f, { train: 0, sel: 0, gate: 0, test: 0 }])) as Record<string, Record<SplitV3, number>>;
   const quota = (f: string, sp: SplitV3) => quotas[f]![SPLITS_V3.indexOf(sp)]!;
   const need = (f: string, sp: SplitV3) => quota(f, sp) - assigned[f]![sp];
@@ -369,32 +403,64 @@ function fillOnceV3(kept: readonly Kept[], quotas: QuotasV3, order: readonly str
   const anchors = new Set<string>();
   const placed: Array<CandidateV3 & { split: SplitV3 }> = [];
   const splitOrder = rng.shuffle(SPLITS_V3);
-  const queue = order.flatMap(f => rng.shuffle(kept.filter(k => k.candidate.family === f)).sort((a, b) => b.priority - a.priority));
+  const queue = order.flatMap(f => rng.shuffle(kept.filter(k => stratum(k.candidate) === f)).sort((a, b) => b.priority - a.priority));
   for (const { candidate: c } of queue) {
     if (anchors.has(c.anchor.id)) continue;
+    const s = stratum(c);
     const keys = taskKeys(c);
     const touched = [...new Set(keys.map(k => groupOf.get(k)).filter((g): g is number => g !== undefined))];
     let split: SplitV3 | undefined;
     if (touched.length) {
       if (new Set(touched.map(g => groups[g]!.split)).size > 1) continue;
       split = groups[touched[0]!]!.split;
-      if (touched.reduce((n, g) => n + groups[g]!.size, 0) + 1 > MAX_TASKS_PER_GROUP_V3 || need(c.family, split) <= 0) continue;
+      if (touched.reduce((n, g) => n + groups[g]!.size, 0) + 1 > MAX_TASKS_PER_GROUP_V3 || need(s, split) <= 0) continue;
     } else {
-      split = splitOrder.filter(sp => need(c.family, sp) > 0).sort((a, b) => need(c.family, b) / quota(c.family, b) - need(c.family, a) / quota(c.family, a))[0];
+      split = splitOrder.filter(sp => need(s, sp) > 0).sort((a, b) => need(s, b) / quota(s, b) - need(s, a) / quota(s, a))[0];
       if (!split) continue;
     }
     const merged = { split, size: touched.reduce((n, g) => n + groups[g]!.size, 0) + 1, keys: [...keys, ...touched.flatMap(g => groups[g]!.keys)] };
     groups.push(merged);
     for (const k of merged.keys) groupOf.set(k, groups.length - 1);
     anchors.add(c.anchor.id);
-    assigned[c.family]![split]++;
+    assigned[s]![split]++;
     placed.push({ ...c, split });
   }
   return placed;
 }
 
-const shortfall = (placed: ReadonlyArray<{ family: string; split: SplitV3 }>, quotas: QuotasV3) =>
-  Object.entries(quotas).reduce((n, [f, q]) => n + SPLITS_V3.reduce((m, sp, i) => m + Math.max(0, q[i]! - placed.filter(c => c.family === f && c.split === sp).length), 0), 0);
+const shortfall = (placed: ReadonlyArray<CandidateV3 & { split: SplitV3 }>, quotas: QuotasV3, stratum: (c: CandidateV3) => string) =>
+  Object.entries(quotas).reduce((n, [f, q]) => n + SPLITS_V3.reduce((m, sp, i) => m + Math.max(0, q[i]! - placed.filter(c => stratum(c) === f && c.split === sp).length), 0), 0);
+
+/**
+ * Each family's quotas split by gold status in proportion to its confirmed
+ * candidates (largest remainder per split), so a family the generator makes
+ * right or wrong places true and false claims in the generator's mix. A false
+ * claim with a true part is its own stratum, so a compound claim's mix of
+ * reports that fail when every part is called FALSE holds in every split. A
+ * family with one status keeps its own name and quotas.
+ */
+function statusStrata(kept: ReadonlyArray<{ candidate: Pick<CandidateV3, 'family' | 'gold'> }>, quotas: QuotasV3): { quotas: QuotasV3; stratum: (c: Pick<CandidateV3, 'family' | 'gold'>) => string } {
+  const key = (g: GoldV3) => (g.status ?? '') + (g.status === 'contradicted' && g.spec.kind === 'fact-check' && g.spec.parts.some(p => p.status === 'supported') ? '+supported-part' : '');
+  const statuses = new Map<string, string[]>();
+  for (const f of Object.keys(quotas)) statuses.set(f, [...new Set(kept.filter(k => k.candidate.family === f).map(k => key(k.candidate.gold)))].sort());
+  const stratum = (c: Pick<CandidateV3, 'family' | 'gold'>) => (statuses.get(c.family)!.length > 1 ? `${c.family}|${key(c.gold)}` : c.family);
+  const out: Record<string, [number, number, number, number]> = {};
+  for (const [f, q] of Object.entries(quotas)) {
+    const ss = statuses.get(f)!;
+    if (ss.length <= 1) { out[f] = [...q] as [number, number, number, number]; continue; }
+    const counts = ss.map(s => kept.filter(k => k.candidate.family === f && key(k.candidate.gold) === s).length);
+    const total = counts.reduce((a, b) => a + b, 0);
+    for (const s of ss) out[`${f}|${s}`] = [0, 0, 0, 0];
+    q.forEach((n, i) => {
+      const exact = counts.map(c => (n * c) / total);
+      const base = exact.map(Math.floor);
+      const byRemainder = ss.map((_, j) => j).sort((a, b) => exact[b]! - base[b]! - (exact[a]! - base[a]!) || a - b);
+      for (let r = n - base.reduce((a, b) => a + b, 0), k = 0; r > 0; r--, k++) base[byRemainder[k]!]!++;
+      ss.forEach((s, j) => { out[`${f}|${s}`]![i] = base[j]!; });
+    });
+  }
+  return { quotas: out, stratum };
+}
 
 /** Train in round-robin family order (families in quota order), so every batch of 8 holds every trained family. */
 export function roundRobin<T extends { family: string }>(tasks: readonly T[], families: readonly string[]): T[] {
@@ -417,15 +483,16 @@ export function assembleV3(skill: SkillName, seed: number, knobs: V3Knobs, draft
   const families = Object.keys(quotas);
   const stray = kept.find(k => !families.includes(k.candidate.family));
   if (stray) throw new Error(`${skill}: family ${stray.candidate.family} has no quota`);
-  const total = (f: string) => quotas[f]!.reduce((a, b) => a + b, 0);
-  const supply = (f: string) => kept.filter(k => k.candidate.family === f).length / total(f);
-  const order = [...families].sort((a, b) => supply(a) - supply(b) || a.localeCompare(b));
+  const strata = statusStrata(kept, quotas);
+  const total = (f: string) => strata.quotas[f]!.reduce((a, b) => a + b, 0);
+  const supply = (f: string) => kept.filter(k => strata.stratum(k.candidate) === f).length / total(f);
+  const order = Object.keys(strata.quotas).sort((a, b) => supply(a) - supply(b) || a.localeCompare(b));
   let best: Array<CandidateV3 & { split: SplitV3 }> = [];
   let attempt = 0;
   for (; attempt < ASSEMBLY_ATTEMPTS_V3; attempt++) {
-    const placed = fillOnceV3(kept, quotas, order, new Rng(seed + attempt * 104_729));
-    if (!best.length || shortfall(placed, quotas) < shortfall(best, quotas)) best = placed;
-    if (shortfall(placed, quotas) === 0) break;
+    const placed = fillOnceV3(kept, strata.quotas, order, new Rng(seed + attempt * 104_729), strata.stratum);
+    if (!best.length || shortfall(placed, strata.quotas, strata.stratum) < shortfall(best, strata.quotas, strata.stratum)) best = placed;
+    if (shortfall(placed, strata.quotas, strata.stratum) === 0) break;
   }
   report.capacity = families.map(f => {
     const quota = Object.fromEntries(SPLITS_V3.map((sp, i) => [sp, quotas[f]![i]!])) as Record<SplitV3, number>;
@@ -433,8 +500,8 @@ export function assembleV3(skill: SkillName, seed: number, knobs: V3Knobs, draft
     return { family: f, held_out: opts.heldOut.includes(f), candidates: report.candidates[f] ?? 0, confirmed: kept.filter(k => k.candidate.family === f).length, quota, placed, short: SPLITS_V3.reduce((n, sp) => n + Math.max(0, quota[sp] - placed[sp]), 0) };
   });
   if (opts.notes?.length) report.notes = [...opts.notes];
-  if (shortfall(best, quotas) > 0) {
-    const rows = report.capacity.filter(r => r.short).map(r => `${r.family} placed ${SPLITS_V3.map(sp => `${r.placed[sp]}/${r.quota[sp]}`).join(' ')} from ${r.confirmed} confirmed`);
+  if (shortfall(best, strata.quotas, strata.stratum) > 0) {
+    const rows = Object.entries(strata.quotas).filter(([s, q]) => SPLITS_V3.some((sp, i) => best.filter(c => strata.stratum(c) === s && c.split === sp).length < q[i]!)).map(([s, q]) => `${s} placed ${SPLITS_V3.map((sp, i) => `${best.filter(c => strata.stratum(c) === s && c.split === sp).length}/${q[i]}`).join(' ')} from ${kept.filter(k => strata.stratum(k.candidate) === s).length} confirmed`);
     throw new Error(`${skill}: capacity short after ${ASSEMBLY_ATTEMPTS_V3} attempts: ${rows.join('; ')}`);
   }
   report.assembly_attempt = attempt;

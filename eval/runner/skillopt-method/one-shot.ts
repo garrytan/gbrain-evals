@@ -46,6 +46,9 @@ export const ONE_SHOT_SYSTEM = [
   'Reply with the full SKILL.md and nothing else.',
 ].join(' ');
 
+/** ONE_SHOT_SYSTEM for an input that shows each training task's pass or fail but not its failed checks (`failedChecks: false`, gbrain's shipped feedback). */
+export const ONE_SHOT_SYSTEM_PASS_FAIL = ONE_SHOT_SYSTEM.replace('its final answer, and which checks failed.', 'its final answer, and whether it passed.');
+
 /** A text a forbidden marker was replaced with. */
 export const WITHHELD = '[withheld]';
 
@@ -204,13 +207,13 @@ const unfence = (s: string) => /^`{3}[a-zA-Z]*\n([\s\S]*?)\n`{3}\s*$/.exec(s.tri
  * each resend in `retries`. A refusal, an empty or unchanged reply or a reply
  * cut at the cap yields no text.
  */
-export async function proposeRewrite(input: string, seedText: string, o: { retryDelaysMs?: readonly number[]; onRetry?: (attempt: number, error: unknown) => void } = {}): Promise<ProposedRewrite> {
+export async function proposeRewrite(input: string, seedText: string, o: { system?: string; retryDelaysMs?: readonly number[]; onRetry?: (attempt: number, error: unknown) => void } = {}): Promise<ProposedRewrite> {
   const delays = o.retryDelaysMs ?? ROLLOUT_RETRY_DELAYS_MS;
   let retries = 0;
   const send = async (): Promise<Awaited<ReturnType<typeof chat>>> => {
     for (let attempt = 0; ; attempt++) {
       try {
-        return await withoutSdkRetries(() => chat({ model: PROPOSER_MODEL, system: ONE_SHOT_SYSTEM, messages: [{ role: 'user', content: input }], maxTokens: ONE_SHOT_MAX_TOKENS, allowFallback: false }));
+        return await withoutSdkRetries(() => chat({ model: PROPOSER_MODEL, system: o.system ?? ONE_SHOT_SYSTEM, messages: [{ role: 'user', content: input }], maxTokens: ONE_SHOT_MAX_TOKENS, allowFallback: false }));
       } catch (error) {
         if (attempt >= ROLLOUT_RETRIES || !unbilledFailure(error)) throw error;
         retries++;

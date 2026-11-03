@@ -70,7 +70,7 @@ import { describeJudges } from 'gbrain/core/skillopt';
 import type { PGLiteEngine } from 'gbrain/pglite-engine';
 import { degenerateAnswers, type MethodTaskV3 } from '../../generators/skillopt-method/common-v3.ts';
 import { auditSkill, type AuditResult } from './audit.ts';
-import { armPrompt, type Arm } from './contract.ts';
+import { armPrompt, readContract, type Arm } from './contract.ts';
 import { datasetName, readCriteria, readSealedTasks, readSeed, readTasks } from './dataset.ts';
 import { datasetContext, redactionScope } from './dataset-context.ts';
 import { GATE, gateVerdict, labelPair, solGateNeeded, type GatePair, type GateResult, type PairLabel } from './gate.ts';
@@ -79,7 +79,7 @@ import {
   type ChatTransport, type FrontierTarget, type RequestSettings,
 } from './headroom.ts';
 import { readKeptRewrite } from './kept-rewrites.ts';
-import { assertNoHiddenPages, PROPOSER_MODEL, proposeRewrite, proposerInput, renderFailed, type TrainTrajectory } from './one-shot.ts';
+import { assertNoHiddenPages, ONE_SHOT_SYSTEM_PASS_FAIL, PROPOSER_MODEL, proposeRewrite, proposerInput, renderFailed, type TrainTrajectory } from './one-shot.ts';
 import { callCostUsd, emptyMeter, logRetries, refusalKind, scoreArm, summarizeMeter, type CallUsage, type MeterSummary, type MeterTotals } from './rollouts.ts';
 import { compileJudgeV3 } from './score-v3.ts';
 import { evaluateLayers, SKILLS, type CheckResult, type Judge, type RuleCheck, type SkillName } from './score.ts';
@@ -255,15 +255,22 @@ export function fileRows(path: string, header: Omit<RowsHeader, 'kind'>, resume:
 const rolloutKey = (r: Pick<RolloutRow, 'target' | 'skill' | 'arm' | 'split' | 'task_id' | 'run' | 'skill_sha8'>) => [r.target, r.skill, r.arm, r.split, r.task_id, r.run, r.skill_sha8].join('|');
 const proposalKey = (target: FrontierTarget, skill: SkillName, id: ProposalId) => [target, skill, id].join('|');
 
-/** The latest row per rollout and per proposal, kept current as rows are appended. */
+/** The latest row per rollout and per proposal, kept current as rows are appended, and every failed rollout's rows (a rerun supersedes them, but their spend stays). */
 function indexRows(store: RowStore) {
   const rollouts = new Map<string, RolloutRow>();
+  const failed = new Map<string, RolloutRow[]>();
   const proposals = new Map<string, ProposalRow>();
-  const add = (r: CeilingRow) => (r.kind === 'rollout' ? rollouts.set(rolloutKey(r), r) : proposals.set(proposalKey(r.target, r.skill, r.proposal), r));
+  const add = (r: CeilingRow) => {
+    if (r.kind === 'proposal') { proposals.set(proposalKey(r.target, r.skill, r.proposal), r); return; }
+    const key = rolloutKey(r);
+    rollouts.set(key, r);
+    if (r.error !== undefined) failed.set(key, [...(failed.get(key) ?? []), r]);
+  };
   store.rows.forEach(add);
   return {
     append(row: CeilingRow) { store.append(row); add(row); },
     rollout: (k: Parameters<typeof rolloutKey>[0]) => rollouts.get(rolloutKey(k)),
+    failed: (k: Parameters<typeof rolloutKey>[0]) => failed.get(rolloutKey(k)) ?? [],
     proposal: (target: FrontierTarget, skill: SkillName, id: ProposalId) => proposals.get(proposalKey(target, skill, id)),
   };
 }
@@ -285,12 +292,12 @@ function usageOf(calls: readonly CallUsage[]): RolloutUsage {
   return u;
 }
 
-/** A meter over scored rows: their rollouts, calls, tokens and list-price dollars. */
+/** A meter over rollout rows: scored rows count as rollouts, and an error row's paid calls add their calls, tokens and list-price dollars, so a failed rollout's spend raises the mean per scored rollout. */
 export function meterOfRows(rows: readonly RolloutRow[]): MeterTotals {
   const m = emptyMeter();
   for (const r of rows) {
-    if (r.error !== undefined || !r.usage) continue;
-    m.rollouts++;
+    if (!r.usage) continue;
+    if (r.error === undefined) m.rollouts++;
     m.calls += r.usage.calls;
     m.usd += r.usage.usd;
     m.unpriced_calls += r.usage.unpriced_calls;
@@ -358,13 +365,13 @@ interface PairContext {
   log: (line: string) => void;
 }
 
-/** The rows of an arm, per task in order, each with one slot per run (undefined when the run has no row). */
-function armRows(c: PairContext, spec: ArmSpec): Array<{ task: MethodTaskV3; runs: Array<RolloutRow | undefined> }> {
+/** The rows of an arm, per task in order, each with one slot per run (undefined when the run has no row) and every failed row of those runs. */
+function armRows(c: PairContext, spec: ArmSpec): Array<{ task: MethodTaskV3; runs: Array<RolloutRow | undefined>; failed: RolloutRow[] }> {
   const skill_sha8 = sha8(spec.skillText);
-  return spec.tasks.map(task => ({
-    task,
-    runs: Array.from({ length: spec.runs }, (_, i) => c.rows.rollout({ target: c.target, skill: c.skill, arm: spec.arm, split: spec.split, task_id: task.task_id, run: i + 1, skill_sha8 })),
-  }));
+  return spec.tasks.map(task => {
+    const keys = Array.from({ length: spec.runs }, (_, i) => ({ target: c.target, skill: c.skill, arm: spec.arm, split: spec.split, task_id: task.task_id, run: i + 1, skill_sha8 }));
+    return { task, runs: keys.map(k => c.rows.rollout(k)), failed: keys.flatMap(k => c.rows.failed(k)) };
+  });
 }
 
 export function summarizeArm(spec: ArmSpec, cells: ReturnType<typeof armRows>): ArmSummary {
@@ -380,7 +387,7 @@ export function summarizeArm(spec: ArmSpec, cells: ReturnType<typeof armRows>): 
     errored_tasks: cells.filter(c => c.runs.some(r => !r || r.error !== undefined)).map(c => c.task.task_id),
     refusals: tallyRefusals(scored.map(r => r.tool_calls ?? [])),
     stops: countStops(scored.map(r => r.stop_reason)),
-    cost: summarizeMeter(meterOfRows(scored)),
+    cost: summarizeMeter(meterOfRows([...scored, ...cells.flatMap(c => c.failed)])),
   };
 }
 
@@ -403,9 +410,11 @@ async function runArm(c: PairContext, spec: ArmSpec): Promise<ArmSummary> {
     const base = { kind: 'rollout' as const, target: c.target, skill: c.skill, arm: spec.arm, split: spec.split, run, skill_sha8 };
     const seen = new Set<string>();
     const taskErrors = new Map<string, string>();
+    const failedCalls = new Map<string, CallUsage[]>();
     c.log(`[n15 ceiling] ${c.target} ${c.skill} ${spec.arm} run ${run}: ${need.length} ${spec.split} tasks`);
     const arm = await scoreArm({
       engine: c.engine, skillText: spec.skillText, model, runs: 1, evaluate: substance, onRetry: logRetries(c.log), onTaskError: (id, error) => taskErrors.set(id, error),
+      onFailedRollout: (id, calls) => failedCalls.set(id, [...(failedCalls.get(id) ?? []), ...calls]),
       tasks: need.map(t => ({ task_id: t.task_id, task: prompt(t), judge: t.judge })),
       onRollout: (trajectory, _result, calls) => {
         seen.add(trajectory.task_id);
@@ -417,7 +426,11 @@ async function runArm(c: PairContext, spec: ArmSpec): Promise<ArmSummary> {
       },
     });
     if (arm.budget_exhausted || arm.cell_invalid) throw new StageStopped({ kind: arm.budget_exhausted ? 'budget_exhausted' : 'cell_invalid', target: c.target, skill: c.skill, arm: spec.arm, error: arm.error ?? '' });
-    for (const t of need) if (!seen.has(t.task_id)) c.rows.append({ ...base, task_id: t.task_id, error: taskErrors.get(t.task_id) ?? arm.error ?? 'unscored', at: new Date().toISOString() });
+    for (const t of need) {
+      if (seen.has(t.task_id)) continue;
+      const calls = failedCalls.get(t.task_id);
+      c.rows.append({ ...base, task_id: t.task_id, error: taskErrors.get(t.task_id) ?? arm.error ?? 'unscored', ...(calls ? { usage: usageOf(calls) } : {}), at: new Date().toISOString() });
+    }
   }
   return summarizeArm(spec, armRows(c, spec));
 }
@@ -514,6 +527,7 @@ export interface CalibrationOptions {
 export async function runCalibration(o: CalibrationOptions): Promise<CalibrationResult> {
   const log = o.log ?? (() => {});
   const ctx = datasetContext(CEILING_DATASET);
+  for (const s of SKILLS) readContract(s);
   const files_read: string[] = [];
   const tasks = new Map(SKILLS.map(s => {
     files_read.push(`eval/data/${datasetName(CEILING_DATASET)}/${s}/train.jsonl`);
@@ -556,7 +570,7 @@ export async function runCalibration(o: CalibrationOptions): Promise<Calibration
     observer?.stop();
     if (!o.engine) await engine.disconnect().catch(() => {});
   }
-  const meter = meterOfRows(all);
+  const meter = sumMeters(skills.map(s => s.cost));
   const cost = summarizeMeter(meter);
   return {
     mode: o.fake ? 'fake' : 'live', stage: 'calibration', target: o.target, half: !!o.half,
@@ -594,7 +608,7 @@ export interface GatePairResult {
   skill: SkillName;
   target: FrontierTarget;
   status: 'scored' | 'errored' | 'stopped' | 'not-run';
-  not_run_reason?: 'sol-gate-not-needed' | 'reprice-trigger' | 'stage-stopped';
+  not_run_reason?: 'sol-gate-not-needed' | 'reprice-trigger' | 'stage-stopped' | 'opus-incomplete';
   arms: Partial<Record<GateArm, ArmSummary>>;
   proposals: ProposalSummary[];
   /** The kept one-shot: a proposal that beat the seed on selection, else the seed; null while undecided. */
@@ -686,13 +700,21 @@ async function runPair(c: PairContext, d: SkillData, unsolvable: readonly SkillN
   const ctx = datasetContext(CEILING_DATASET);
   const scope = redactionScope(ctx, d.train, [...d.sel, ...d.gate]);
   const train = seedTrain.substance === null ? null : armRows(c, trainSpec).map(x => trainTrajectory(x.task, x.runs[0]!, armPrompt(x.task.task, c.skill, 'seed')));
-  const harnessInput = train && proposerInput({ seedText: d.seed, criteria: d.feedback, trajectories: train, ...scope, failedChecks: false });
-  const rubricInput = train && proposerInput({ seedText: d.seed, criteria: d.criteria, trajectories: train, ...scope });
+  let harnessInput: ReturnType<typeof proposerInput> | null = null;
+  let rubricInput: ReturnType<typeof proposerInput> | null = null;
+  let inputError: string | null = null;
+  try {
+    harnessInput = train && proposerInput({ seedText: d.seed, criteria: d.feedback, trajectories: train, ...scope, failedChecks: false });
+    rubricInput = train && proposerInput({ seedText: d.seed, criteria: d.criteria, trajectories: train, ...scope });
+  } catch (e) {
+    inputError = `the proposer input could not be built: ${errMsg(e)}`;
+    c.log(`[n15 ceiling] ${c.target} ${c.skill}: ${inputError}; the pair reads errored and no proposer call is made`);
+  }
   if (harnessInput) r.texts.proposer_input = harnessInput.text;
   if (rubricInput) r.texts.rubric_input = rubricInput.text;
 
-  const propose = async (id: ProposalId, input: { text: string } | null): Promise<ProposalSummary> => {
-    if (!input) return { id, outcome: 'not-run', cost_usd: null, retries: 0, error: `the seed's train pass is unscored (${seedTrain.errored_tasks.length} tasks errored)` };
+  const propose = async (id: ProposalId, input: { text: string } | null, system?: string): Promise<ProposalSummary> => {
+    if (!input) return { id, outcome: 'not-run', cost_usd: null, retries: 0, error: inputError ?? `the seed's train pass is unscored (${seedTrain.errored_tasks.length} tasks errored)` };
     const input_sha8 = sha8(input.text);
     let row = c.rows.proposal(c.target, c.skill, id);
     if (row && row.outcome !== 'proposer-error' && row.input_sha8 !== input_sha8) throw new Error(`${c.target} ${c.skill} ${id}: the stored proposal was made from input ${row.input_sha8}, but the rows now give ${input_sha8}`);
@@ -700,7 +722,7 @@ async function runPair(c: PairContext, d: SkillData, unsolvable: readonly SkillN
       const base = { kind: 'proposal' as const, target: c.target, skill: c.skill, proposal: id, input_sha8 };
       c.log(`[n15 ceiling] ${c.target} ${c.skill} ${id}: proposer call`);
       try {
-        const p = await proposeRewrite(input.text, d.seed, { onRetry: (attempt, e) => logRetries(c.log)(id, attempt, e) });
+        const p = await proposeRewrite(input.text, d.seed, { system, onRetry: (attempt, e) => logRetries(c.log)(id, attempt, e) });
         row = { ...base, outcome: p.text ? 'proposed' : 'no-rewrite', ...(p.text ? { text: p.text, text_sha8: sha8(p.text) } : {}), ...(p.error ? { error: p.error } : {}), cost_usd: p.cost_usd, retries: p.retries, stop_reason: p.stop_reason, at: new Date().toISOString() };
       } catch (e) {
         const kind = refusalKind(e);
@@ -718,7 +740,7 @@ async function runPair(c: PairContext, d: SkillData, unsolvable: readonly SkillN
 
   // The harness one-shot: two proposals, each clean one scored on selection.
   for (const id of ['proposal-1', 'proposal-2'] as const) {
-    const p = await propose(id, harnessInput);
+    const p = await propose(id, harnessInput, ONE_SHOT_SYSTEM_PASS_FAIL);
     r.proposals.push(p);
     if (p.outcome === 'proposed') p.selection = (await arm({ arm: id, split: 'sel', tasks: d.sel, runs: GATE_RUNS.proposal_sel, skillText: r.texts.proposals[id]! })).substance;
   }
@@ -775,7 +797,7 @@ async function runPair(c: PairContext, d: SkillData, unsolvable: readonly SkillN
     r.gate_pair = {
       skill: c.skill, target: c.target,
       form_fail: { no_skill: noSkill.form_fail!, seed: seed.form_fail! },
-      proposals_passing_audit: GATE_PROPOSALS - harnessOneShot.filter(p => p.outcome === 'audit-disqualified').length,
+      proposals_passing_audit: harnessOneShot.filter(p => p.outcome === 'proposed').length,
       reachability: reach.substance!,
       limited_share: failed.length ? limited / failed.length : 0,
       refusal_limited: (failed.length > 0 && failed.filter(refused).length / failed.length > GATE.maxLimitedShare) || reachRefused / reachRows.length > 1 - GATE.minReachability,
@@ -801,7 +823,8 @@ export async function runGateStage(o: GateStageOptions): Promise<GateStageResult
     const seed = readSeed(s, CEILING_DATASET);
     return [s, { train, sel: readTasks(s, 'sel', CEILING_DATASET), gate: readSealedTasks(s, 'gate', CEILING_DATASET), seed, kept: readKeptRewrite(s), criteria: readCriteria(s, CEILING_DATASET), feedback: describeJudges(train) }] as const;
   }));
-  // Static checks before any paid call: every text the proposer gets verbatim names no page the train split does not show.
+  // Static checks before any paid call: the prompts' contracts are the committed contract.md files, and every text the proposer gets verbatim names no page the train split does not show.
+  for (const s of SKILLS) readContract(s);
   for (const [s, d] of data) {
     const { pages } = redactionScope(ctx, d.train, [...d.sel, ...d.gate]);
     try { assertNoHiddenPages(d.seed, d.feedback, pages); assertNoHiddenPages(d.seed, d.criteria, pages); } catch (e) { throw new Error(`${s}: ${errMsg(e)}`); }
@@ -821,6 +844,11 @@ export async function runGateStage(o: GateStageOptions): Promise<GateStageResult
   try {
     for (const target of FRONTIER_TARGET_NAMES) {
       if (target === 'sol' && !stopped && !trigger) {
+        if (pairs.some(p => p.target === 'opus' && p.status === 'errored')) {
+          for (const skill of SKILLS) { const p = emptyPair(skill, target, 'not-run', 'opus-incomplete'); pairs.push(p); o.onPair?.(p); }
+          log(`[n15 ceiling] gate ${o.attempt}: an Opus pair errored, so Sol's gate waits for a --resume that completes Opus first; the stage reads incomplete`);
+          continue;
+        }
         solNeeded = solGateNeeded({ pairs: scoredPairs(), unsolvable, attempt: o.attempt });
         if (!solNeeded) {
           for (const skill of SKILLS) { const p = emptyPair(skill, target, 'not-run', 'sol-gate-not-needed'); pairs.push(p); o.onPair?.(p); }

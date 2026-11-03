@@ -69,7 +69,7 @@ import type { MethodTask } from '../../generators/skillopt-method/common.ts';
 import { auditSkill, type AuditResult } from './audit.ts';
 import { datasetName, DEFAULT_DATASET, frontmatterTools, readCriteria, readSeed, readTasks, type DatasetVersion, type LegacyVersion } from './dataset.ts';
 import { datasetContext, redactionScope } from './dataset-context.ts';
-import { ONE_SHOT_SYSTEM, PROPOSER_MODEL, proposeRewrite, proposerInput, seedOnTrain } from './one-shot.ts';
+import { ONE_SHOT_SYSTEM, ONE_SHOT_SYSTEM_PASS_FAIL, PROPOSER_MODEL, proposeRewrite, proposerInput, seedOnTrain } from './one-shot.ts';
 import { emptyMeter, logRetries, scoreArm, summarizeMeter, type ArmScore, type MeterSummary } from './rollouts.ts';
 import { evaluateJudge, SKILLS, type SkillName, type Trajectory } from './score.ts';
 
@@ -335,7 +335,7 @@ export function fakeRewrite(opts: ChatOpts, body: string): ChatResult {
 export function fakeTransport(tasks: ReadonlyArray<Pick<MethodTask, 'task_id' | 'task' | 'oracle_answer'>>): ChatTransport {
   return async opts => {
     const system = opts.system ?? '';
-    if (system.includes("SkillOpt's optimizer") || system === ONE_SHOT_SYSTEM) return fakeRewrite(opts, `# Rewritten skill\n\n${FAKE_REWRITE_MARKER}\n\nAnswer from the brain and cite the page that holds the answer.`);
+    if (system.includes("SkillOpt's optimizer") || system === ONE_SHOT_SYSTEM || system === ONE_SHOT_SYSTEM_PASS_FAIL) return fakeRewrite(opts, `# Rewritten skill\n\n${FAKE_REWRITE_MARKER}\n\nAnswer from the brain and cite the page that holds the answer.`);
     const user = lastUserText(opts);
     const task = tasks.find(t => user.includes(t.task));
     if (!task) return fakeReply(opts, "I don't know.");

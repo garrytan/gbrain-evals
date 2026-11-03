@@ -5,14 +5,18 @@
  *
  *   superseded         an account's term as of a date, stated with a value
  *                      another record holds (superseded, signed but not yet in
- *                      force, or rescinded); contradicted
+ *                      force, or rescinded), contradicted; or stated with the
+ *                      value in force on the date while a later record holds
+ *                      another, supported (about half the family)
  *   compound           two or three terms of one account as of one date, each
  *                      part right or wrong; the report gives a status per part
  *                      (or one for the whole claim) and the value the brain
  *                      holds for each wrong part
- *   not-founder        "P founded C" where P only works or worked at C (a
- *                      later chief executive, an officer, a team member);
- *                      contradicted, with the real founder
+ *   not-founder        per company, "P founded C" where P only works or
+ *                      worked at C (a later chief executive when there is one,
+ *                      else an officer or a team member), contradicted, with
+ *                      the real founder; and the real founder's claim,
+ *                      supported
  *   absent             a claim about an entity no page carries, built from a
  *                      real one; the brain cannot support it
  *
@@ -30,10 +34,14 @@
  *
  *   legal-superseded   an account's term as of a date when the record in force
  *                      was issued to its legal entity, stated with the value
- *                      the records naming the account hold, or right
+ *                      the records naming the account hold, or right; or,
+ *                      when that record sets another claim-part term, the two
+ *                      terms with the second right, a status per part
  *                      (supersession)
- *   contact-claim      a term of "the account where P works as T", right or
- *                      wrong (indirect)
+ *   contact-claim      two terms of "the account where P works as T" that one
+ *                      record sets, one wrong and one right, a status per part;
+ *                      or, when the record sets one claim-part term, that term
+ *                      right or wrong (indirect)
  *   join-claim         "X was the only account on A and B", naming the one
  *                      account or a near miss (join)
  *   absent-entity      a claim about a legal-entity name no page carries
@@ -54,7 +62,7 @@
 import { Rng } from '../seeded.ts';
 import {
   absentLegalName, accountsOf, assembleRev1, condPhrase, contactFacts, daysDecidedBy, formerRoleFacts, groupFacts, groupPhrase, joinFacts, repsOf, termFact,
-  type DraftRev1, type ProbeSpec,
+  type DraftRev1, type ProbeSpec, type TermFact,
 } from './rev1-v3.ts';
 import {
   absentFromWorld, acquirerFromText, assembleV3, careerFromText, founderFromText, goldOf, loadWorldV3, nameValue, possessive, roleHolderFromText, soleInvestorFromText,
@@ -147,18 +155,23 @@ export function factCheckV3Drafts(corpus: WorldCorpus, rng: Rng): DraftV3[] {
     const d = decide(a, attr, date);
     if (!d) { drafts.push({ ok: false, family: 'superseded', anchor, reason: 'oracle: the contract pages disagree with the chain' }); continue; }
     if (!d.others.length) continue;
-    const claimed = fromString(attr, rng.pick(d.others));
+    const later = w.chains.get(a.slug)!.filter(c => c.effective > date && attr in c.sets && String(c.sets[attr]) !== String(d.value));
+    const right = later.length > 0 && rng.float() < 0.7;
+    const claimed = right ? d.value : fromString(attr, rng.pick(d.others));
     if (attr === 'renewal_date' && (claimed === date || d.value === date)) continue;
     const claim = `As of ${longDate(date)}, ${possessive(a.name)} ${ATTRS[attr].phrase} was ${ATTRS[attr].cell(claimed)}.`;
     const correct = goldOf(attr, d.value);
+    const status: StatusClass = right ? 'supported' : 'contradicted';
     ok({
       family: 'superseded', task: taskTextV3(claim), anchor: { kind: 'claim', id: anchor },
       fact_keys: [`val:${a.slug}:${attr}@${d.slugs[0]}`], answerable: true,
-      gold: { values: [correct], slugs: d.slugs, cite: [d.slugs], status: 'contradicted', spec: { kind: 'fact-check', status: 'contradicted', parts: single('contradicted', correct), cite: [d.slugs] } },
-      distractors: { slugs: w.chains.get(a.slug)!.filter(c => !d.slugs.includes(c.slug) && attr in c.sets).map(c => c.slug), values: [goldOf(attr, claimed)] },
+      gold: { values: right ? [] : [correct], slugs: d.slugs, cite: [d.slugs], status, spec: { kind: 'fact-check', status, parts: single(status, right ? undefined : correct), cite: [d.slugs] } },
+      distractors: { slugs: w.chains.get(a.slug)!.filter(c => !d.slugs.includes(c.slug) && attr in c.sets).map(c => c.slug), values: right ? [] : [goldOf(attr, claimed)] },
       source: `world-v3 ${a.slug} contract chain, ${attr} on ${date}`,
-      oracle: { path: 'the contract pages the account lists: the latest record in force that sets the term, rescinded records dropped', evidence: d.evidence },
-      oracle_answer: report([{ claim, status: 'contradicted', source: d.slugs.join(', '), correct: ATTRS[attr].cell(d.value) }]),
+      oracle: right
+        ? { path: 'the contract pages the account lists: the latest record in force on the date that sets the term, rescinded records dropped; a later record sets another value', evidence: `${d.evidence}\nLater: ${later.map(c => `${c.title}, effective ${longDate(c.effective)}: ${ATTRS[attr].cell(c.sets[attr]!)}`).join('; ')}` }
+        : { path: 'the contract pages the account lists: the latest record in force that sets the term, rescinded records dropped', evidence: d.evidence },
+      oracle_answer: report([{ claim, status, source: d.slugs.join(', '), ...(right ? {} : { correct: ATTRS[attr].cell(d.value) }) }]),
     }, 1);
   }
 
@@ -194,28 +207,40 @@ export function factCheckV3Drafts(corpus: WorldCorpus, rng: Rng): DraftV3[] {
     }
   }
 
-  // not-founder: someone who works or worked at the company, claimed as its founder.
+  // not-founder: per company, the real founder's claim, and one person who works or worked there claimed as its founder.
   for (const c of companies) {
     if (!c.founder) continue;
     const f = founderFromText(pages, c.slug);
-    for (const p of [...w.people.values()].filter(x => x.slug !== c.founder && x.stints.some(s => s.org === c.slug))) {
-      const anchor = `claim:founder:${c.slug}:${p.slug}`;
-      if ('reason' in f) { drafts.push({ ok: false, family: 'not-founder', anchor, reason: f.reason }); continue; }
-      if (!careerFromText(pages, p.slug).some(s => s.org === c.slug)) { drafts.push({ ok: false, family: 'not-founder', anchor, reason: `${p.slug}'s career list does not name ${c.slug}` }); continue; }
-      const claim = `${p.name} founded ${c.name}.`;
-      const correct = nameValue(f.name);
-      const slugs = [c.slug, f.slug];
-      const ceo = c.ceo.some(t => t.person === p.slug);
-      ok({
-        family: 'not-founder', task: taskTextV3(claim), anchor: { kind: 'claim', id: anchor },
-        fact_keys: [`founder:${c.slug}`, `assoc:${p.slug}@${c.slug}`], answerable: true,
-        gold: { values: [correct], slugs, cite: [slugs], status: 'contradicted', spec: { kind: 'fact-check', status: 'contradicted', parts: single('contradicted', correct), cite: [slugs] } },
-        distractors: { slugs: [p.slug], values: [nameValue(p.name)] },
-        source: `world-v3 ${c.slug} founder and ${p.slug}'s career`,
-        oracle: { path: "the company's founding line, confirmed by the founder's page; the claimed person's career list names the company in another role", evidence: f.evidence },
-        oracle_answer: report([{ claim, status: 'contradicted', source: slugs.join(', '), correct: f.name }]),
-      }, ceo ? 2 : 1);
-    }
+    const founderAnchor = `claim:founder:${c.slug}:${c.founder}`;
+    if ('reason' in f || f.slug !== c.founder) { drafts.push({ ok: false, family: 'not-founder', anchor: founderAnchor, reason: 'reason' in f ? f.reason : 'the founding line names another person' }); continue; }
+    const others = [...w.people.values()].filter(x => x.slug !== c.founder && x.stints.some(s => s.org === c.slug));
+    const slugs = [c.slug, f.slug];
+    const right = `${f.name} founded ${c.name}.`;
+    ok({
+      family: 'not-founder', task: taskTextV3(right), anchor: { kind: 'claim', id: founderAnchor },
+      fact_keys: [`founder:${c.slug}`], answerable: true,
+      gold: { values: [], slugs, cite: [slugs], status: 'supported', spec: { kind: 'fact-check', status: 'supported', parts: single('supported'), cite: [slugs] } },
+      distractors: { slugs: others.map(x => x.slug), values: [] },
+      source: `world-v3 ${c.slug} founder`,
+      oracle: { path: "the company's founding line, confirmed by the founder's page", evidence: f.evidence },
+      oracle_answer: report([{ claim: right, status: 'supported', source: slugs.join(', ') }]),
+    }, 1);
+    if (!others.length) continue;
+    const ceos = others.filter(x => c.ceo.some(t => t.person === x.slug));
+    const p = rng.pick(ceos.length ? ceos : others);
+    const anchor = `claim:founder:${c.slug}:${p.slug}`;
+    if (!careerFromText(pages, p.slug).some(s => s.org === c.slug)) { drafts.push({ ok: false, family: 'not-founder', anchor, reason: `${p.slug}'s career list does not name ${c.slug}` }); continue; }
+    const claim = `${p.name} founded ${c.name}.`;
+    const correct = nameValue(f.name);
+    ok({
+      family: 'not-founder', task: taskTextV3(claim), anchor: { kind: 'claim', id: anchor },
+      fact_keys: [`founder:${c.slug}`, `assoc:${p.slug}@${c.slug}`], answerable: true,
+      gold: { values: [correct], slugs, cite: [slugs], status: 'contradicted', spec: { kind: 'fact-check', status: 'contradicted', parts: single('contradicted', correct), cite: [slugs] } },
+      distractors: { slugs: [p.slug], values: [nameValue(p.name)] },
+      source: `world-v3 ${c.slug} founder and ${p.slug}'s career`,
+      oracle: { path: "the company's founding line, confirmed by the founder's page; the claimed person's career list names the company in another role", evidence: f.evidence },
+      oracle_answer: report([{ claim, status: 'contradicted', source: slugs.join(', '), correct: f.name }]),
+    }, ceos.length ? 2 : 1);
   }
 
   // absent
@@ -378,8 +403,25 @@ export function factCheckV3Rev1Drafts(corpus: WorldCorpus, rng: Rng): DraftRev1[
   };
   const termPath = 'the contract pages the account lists: the latest record in force that sets the term, rescinded records dropped; a record that names the legal entity the account page names counts as the account\'s';
   const say = (attr: AttrId, v: AttrValue) => ATTRS[attr].say(v);
+  /** The other claim-part terms of the account that the same records decide on the day. */
+  const sameRecordTerms = (a: Org, t: TermFact) => (COMPOUND_ATTRS.includes(t.attr as PartKey) ? COMPOUND_ATTRS.filter(x => x !== t.attr).flatMap(x => { const u = termFact(corpus, a, x, t.date); return 'reason' in u || u.slugs.join('|') !== t.slugs.join('|') ? [] : [u]; }) : []);
+  /** Two terms of one account on one day, decided by the same records: `wrong` stated with `claimed`, `right` as it stands; a status per part. The claim names each part's key word, so a block that copies it covers both. */
+  const twoTermTask = (family: string, subject: string, anchor: string, wrong: TermFact, claimed: AttrValue, right: TermFact, keys: string[], distractorSlugs: string[], source: string, path: string, evidence: string, probes: (claim: string) => ProbeSpec[], priority: number) => {
+    const terms = [{ f: wrong, value: claimed, ok: false }, { f: right, value: right.value, ok: true }].sort((x, y) => ATTR_IDS.indexOf(x.f.attr) - ATTR_IDS.indexOf(y.f.attr));
+    const claim = `As of ${longDate(wrong.date)}, ${subject} had ${terms.map(x => (x.f.attr === 'price' ? 'a list price of ' : '') + say(x.f.attr, x.value)).join(' and ')}.`;
+    const slugs = wrong.slugs;
+    const parts: PartSpec[] = terms.map(x => ({ key: x.f.attr as PartKey, status: x.ok ? 'supported' : 'contradicted', ...(x.ok ? {} : { correct: x.f.answer }) }));
+    drafts.push({ ok: true, priority, probes: probes(claim), candidate: {
+      family, task: taskTextV3(claim), anchor: { kind: 'claim', id: anchor }, fact_keys: keys, answerable: true,
+      gold: { values: [wrong.answer], slugs, cite: [slugs], status: 'contradicted', spec: { kind: 'fact-check', status: 'contradicted', parts, cite: [slugs] } },
+      distractors: { slugs: [...new Set(distractorSlugs)].filter(s => !slugs.includes(s)), values: [goldOf(wrong.attr, claimed)] },
+      source, oracle: { path: `for each term, ${path}`, evidence },
+      oracle_answer: report(terms.map(x => ({ claim: `As of ${longDate(wrong.date)}, the ${ATTRS[x.f.attr].phrase} of ${subject} was ${ATTRS[x.f.attr].cell(x.value)}.`, status: x.ok ? 'supported' : 'contradicted', source: slugs.join(', '), ...(x.ok ? {} : { correct: ATTRS[x.f.attr].cell(x.f.value) }) }))),
+    } });
+  };
 
-  // legal-superseded: the value the records naming the account hold, or the right one.
+  // legal-superseded: the value the records naming the account hold, or the right one; or, when the record in force
+  // sets another claim-part term, the two terms, the first stated with that value and the second right.
   for (const a of accountsOf(corpus).filter(o => o.legal)) {
     const chain = w.chains.get(a.slug)!;
     for (const attr of ATTR_IDS) for (const c of chain.filter(x => x.signed >= a.legal!.since && attr in x.sets)) {
@@ -388,7 +430,16 @@ export function factCheckV3Rev1Drafts(corpus: WorldCorpus, rng: Rng): DraftRev1[
         const t = termFact(corpus, a, attr, d);
         if ('reason' in t) { drafts.push({ ok: false, family: 'legal-superseded', anchor, reason: t.reason }); continue; }
         if (!t.alias) { drafts.push({ ok: false, family: 'legal-superseded', anchor, reason: 'the record in force names the account itself' }); continue; }
-        const right = rng.float() < 0.35;
+        const seconds = sameRecordTerms(a, t);
+        if (seconds.length) {
+          const u = rng.pick(seconds);
+          const staleValue = t.stale ?? rng.pick(t.distractors.map(x => x.value));
+          if (JSON.stringify(goldOf(attr, staleValue)) === JSON.stringify(t.answer)) continue;
+          twoTermTask('legal-superseded', a.name, anchor, t, staleValue, u, [t.key, u.key], [...t.distractorSlugs, ...u.distractorSlugs, a.slug],
+            `world-v3 ${a.slug} contract chain, ${attr} and ${u.attr} on ${d}; the record in force names ${a.legal!.name}`, termPath, `${t.evidence}\n${u.evidence}`, claim => [{ query: claim, patterns: ['supersession'], deciding: t.slugs, newest: t.newest }], t.stale !== null ? 2 : 1);
+          continue;
+        }
+        const right = rng.float() < 0.5;
         const claimedValue = right ? t.value : t.stale ?? rng.pick(t.distractors.map(x => x.value));
         const claimed = goldOf(attr, claimedValue);
         if (!right && JSON.stringify(claimed) === JSON.stringify(t.answer)) continue;
@@ -399,7 +450,7 @@ export function factCheckV3Rev1Drafts(corpus: WorldCorpus, rng: Rng): DraftRev1[
     }
   }
 
-  // contact-claim: a term of the account a contact works at.
+  // contact-claim: two terms the record in force sets, one wrong; or, when it sets one claim-part term, that term right or wrong.
   for (const cf of contactFacts(corpus)) {
     const chain = w.chains.get(cf.account.slug)!;
     for (const attr of ATTR_IDS) {
@@ -408,7 +459,15 @@ export function factCheckV3Rev1Drafts(corpus: WorldCorpus, rng: Rng): DraftRev1[
         const anchor = `claim:contact:${cf.person.slug}:${attr}@${d}`;
         const t = termFact(corpus, cf.account, attr, d);
         if ('reason' in t) { drafts.push({ ok: false, family: 'contact-claim', anchor, reason: t.reason }); continue; }
-        const right = rng.float() < 0.4;
+        const seconds = sameRecordTerms(cf.account, t);
+        if (seconds.length) {
+          const u = rng.pick(seconds);
+          twoTermTask('contact-claim', `the account where ${cf.person.name} works as ${cf.title}`, anchor, t, rng.pick(t.distractors.map(x => x.value)), u, [t.key, u.key, `works:${cf.person.slug}@${cf.account.slug}`], [...t.distractorSlugs, ...u.distractorSlugs, cf.account.slug],
+            `world-v3 ${cf.person.slug} at ${cf.account.slug}, ${attr} and ${u.attr} on ${d}`, `the person's career list and the account's contacts list (the only current ${cf.title} there); then ${termPath}`, `${cf.evidence}\n${t.evidence}\n${u.evidence}`,
+            claim => [{ query: claim, patterns: t.alias ? ['indirect', 'supersession'] : ['indirect'], deciding: [cf.person.slug, ...t.slugs], ...(t.alias ? { newest: t.newest } : {}) }], t.alias ? 2 : 1);
+          continue;
+        }
+        const right = rng.float() < 0.6;
         const claimedValue = right ? t.value : rng.pick(t.distractors.map(x => x.value));
         const claim = `As of ${longDate(d)}, the account where ${cf.person.name} works as ${cf.title} had ${say(attr, claimedValue)}.`;
         claimTask('contact-claim', claim, anchor, [t.key, `works:${cf.person.slug}@${cf.account.slug}`], right ? 'supported' : 'contradicted', t.answer, ATTRS[attr].cell(t.value), right ? null : goldOf(attr, claimedValue), [t.slugs], [...t.distractorSlugs, cf.account.slug],
@@ -425,7 +484,7 @@ export function factCheckV3Rev1Drafts(corpus: WorldCorpus, rng: Rng): DraftRev1[
     for (const j of joinFacts(corpus, day, pick)) {
       const chain = w.chains.get(j.account.slug)!;
       if (chain.some(c => Math.abs(daysBetween(c.effective, day)) < 3 || Math.abs(daysBetween(c.signed, day)) < 3)) continue;
-      const right = rng.float() < 0.4;
+      const right = rng.float() < 0.85;
       const named = right ? j.account : rng.pick(j.near);
       const claim = `As of ${longDate(day)}, ${named.name} was the only account ${condPhrase(j.conds[0])} and ${condPhrase(j.conds[1])}.`;
       claimTask('join-claim', claim, `claim:${j.keys[0]}`, j.keys, right ? 'supported' : 'contradicted', nameValue(j.account.name), j.account.name, right ? null : nameValue(named.name), j.groups, j.near.map(o => o.slug),
