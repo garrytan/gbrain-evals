@@ -57,13 +57,13 @@ a local copy. When the full receipt is released, `check --commit` recomputes it 
 | Results branch | `evals/q1-scoreboard-results` |
 | Published path | `published/q1-scoreboard/SHA256SUMS` (aggregates only, A25) |
 | Full receipt | sealed in custody until F6 closes, or as Garry decides |
-| Commit | `f15e73025cc38779528808e670db80909e538547` |
-| `SHA256SUMS` sha256 | `9a955a32d90895c27e3e41151e517e2db2371f249186eb86fae9faeb9bb884b5` |
+| Commit | `bf902d9fdacd814940ab12ef4c453fb36ea1d4cb` (re-rendered 2026-11-03 under the stop rule; first published at `f15e7302`) |
+| `SHA256SUMS` sha256 | `00fabc3b8c63cf13529fd78c8d9f1bb8567e5e447dd5ae2263c27e2793b33f2d` (was `9a955a32…84b5`) |
 
 ## Report sections, in order
 
 1. **The finding.** The generated verdict sentence for BEAM-10M (family F1), with the date range, the gbrain build
-   and, when F1 is descriptive (power decision: minimum detectable difference about 13.58 points), the sentence that
+   and, when F1 is descriptive (power decision: minimum detectable difference about 13.6 points), the sentence that
    says so. Then where gbrain loses, from the three largest losses the generator lists.
 2. **The headline table.** The README block: six columns (accuracy at 8k with the three-reader mean, dollars per
    month for a personal agent, p50 answer latency, write-to-queryable p50, receipt link), one row per kind, and
@@ -128,13 +128,13 @@ a local copy. When the full receipt is released, `check --commit` recomputes it 
      and kept in the denominator (`publication.json` `product_outcomes`; the renderer refuses any other count). gbrain
      #7421 (2026-10-24, after the pin) extends the 16,000-token limit to OpenAI reasoning models from gpt-5 to gpt-9.
    - **file agent: 7 `context_overflow` stops are product failures (correction, 2026-11-03).** On S1 (6) and S2b (1),
-     `claude-opus-5-5` answers stopped when the provider refused the request at its context limit. The preregistered
-     outcome rule (`eval/runner/memory-qa/outcomes.ts`) counts an agent's own `turn_cap` and `context_overflow` stops
-     as product failures, scored 0 and kept in the denominator (ruling 2026-11-03 via GBRA-108: the preregistered rule
-     wins). The published render counted these 7 as harness failures, because `scoreboard.ts` kept its own, shorter
-     product-failure list; it now uses the outcome rules' list, so the next custody render scores the file agent's S1
-     and S2b rows on all 199 and 240 questions. [Corrections](../corrections.md#q1-head-to-head-scoreboard) carries the
-     custodian's rescore.
+     `claude-opus-5-5` answers stopped on an error the file agent classified as a context-length refusal from its text;
+     the HTTP status was not recorded. The preregistered outcome rule (`eval/runner/memory-qa/outcomes.ts`) counts an
+     agent's own `turn_cap` and `context_overflow` stops as product failures, scored 0 and kept in the denominator
+     (ruling 2026-11-03 via GBRA-108: the preregistered rule wins). The first published render (`f15e7302`) counted
+     these 7 as harness failures, because `scoreboard.ts` kept its own, shorter product-failure list. It now uses the
+     outcome rules' list, and the custodian's re-render with it (`bf902d9f`) scores the file agent's S1 and S2b rows on
+     all 199 and 240 questions. [Corrections](../corrections.md#q1-head-to-head-scoreboard) lists the figures that moved.
    - **S3 file-agent: 23 gpt-6.1-sol `reader_error` answers.** A harness failure, so those questions leave that row's
      mean under the outcome rules; the row says how many.
    - **S3 agent runtime: 200 gpt-6.1-sol `retrieval_error` answers (A19, item E).** The runtime calls gpt-6.1-sol

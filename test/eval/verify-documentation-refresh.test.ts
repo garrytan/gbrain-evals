@@ -133,14 +133,14 @@ describe('verify-documentation-refresh: the scoreboard explanation', () => {
   test('a figure in README\'s paragraph that the published render does not show fails, naming the figure', () => {
     const render = readFileSync(join(ROOT, 'README.md'), 'utf8') + readFileSync(join(ROOT, RENDER), 'utf8');
     expect(render).not.toContain('13.85');
-    const root = copyWith('stale-figure', 'README.md', t => t.replace('the 13.58 points in the opening sentence', 'the 13.85 points in the opening sentence'));
+    const root = copyWith('stale-figure', 'README.md', t => t.replace('the 13.6 points in the\nopening sentence', 'the 13.85 points in the\nopening sentence'));
     expect(references(root, 'scoreboard_publication_reference')).toEqual([
       ['README.md', '13.85', 'The paragraph above the scoreboard block quotes a figure that neither the block nor ' + RENDER + ' shows; update it with the new render'],
     ]);
   });
 
   test('a figure that ends a sentence in README\'s paragraph is checked too', () => {
-    const root = copyWith('stale-figure-at-end', 'README.md', t => t.replace('the 13.58 points in the opening sentence is the preregistered power check for the\ncomponent rows.', 'the opening sentence\'s power check for the component rows detects 13.85.'));
+    const root = copyWith('stale-figure-at-end', 'README.md', t => t.replace('the 13.6 points in the\nopening sentence is the preregistered power check for the component rows.', 'the opening sentence\'s power check for the component rows detects 13.85.'));
     expect(references(root, 'scoreboard_publication_reference')).toEqual([
       ['README.md', '13.85', 'The paragraph above the scoreboard block quotes a figure that neither the block nor ' + RENDER + ' shows; update it with the new render'],
     ]);
@@ -187,7 +187,8 @@ describe('verify-documentation-refresh: the scoreboard explanation', () => {
   });
 
   test('a figure in another paragraph above the block is checked too', () => {
-    const root = copyWith('stale-figure-next-paragraph', 'README.md', t => t.replace('rendered again in custody. Two\nnumbers', 'rendered again in custody.\n\nTwo numbers').replace('the 13.58 points in the opening sentence', 'the 13.85 points in the opening sentence'));
+    const root = copyWith('stale-figure-next-paragraph', 'README.md', t => t.replace('q1-head-to-head-scoreboard)). The first loss bullet', 'q1-head-to-head-scoreboard)).\n\nThe first loss bullet').replace('the 13.6 points in the\nopening sentence', 'the 13.85 points in the\nopening sentence'));
+    expect(readFileSync(join(root, 'README.md'), 'utf8')).toContain('q1-head-to-head-scoreboard)).\n\nThe first loss bullet');
     expect(references(root, 'scoreboard_publication_reference')).toEqual([
       ['README.md', '13.85', 'The paragraph above the scoreboard block quotes a figure that neither the block nor ' + RENDER + ' shows; update it with the new render'],
     ]);
