@@ -428,10 +428,14 @@ async function runArm(c: PairContext, spec: ArmSpec): Promise<ArmSummary> {
     const seen = new Set<string>();
     const taskErrors = new Map<string, string>();
     const failedCalls = new Map<string, CallUsage[]>();
+    const failedErrors = new Map<string, string>();
     c.log(`[n15 ceiling] ${c.target} ${c.skill} ${spec.arm} run ${run}: ${need.length} ${spec.split} tasks`);
     const arm = await scoreArm({
       engine: c.engine, skillText: spec.skillText, model, runs: 1, evaluate: substance, onRetry: logRetries(c.log), onTaskError: (id, error) => taskErrors.set(id, error),
-      onFailedRollout: (id, calls) => failedCalls.set(id, [...(failedCalls.get(id) ?? []), ...calls]),
+      onFailedRollout: (id, calls, error) => {
+        failedCalls.set(id, [...(failedCalls.get(id) ?? []), ...calls]);
+        if (!refusalKind(error)) failedErrors.set(id, errMsg(error));
+      },
       tasks: need.map(t => ({ task_id: t.task_id, task: prompt(t), judge: t.judge })),
       onRollout: (trajectory, _result, calls) => {
         seen.add(trajectory.task_id);
@@ -447,7 +451,7 @@ async function runArm(c: PairContext, spec: ArmSpec): Promise<ArmSummary> {
       if (seen.has(t.task_id)) continue;
       const calls = failedCalls.get(t.task_id);
       if (refused && !calls) continue;
-      c.rows.append({ ...base, task_id: t.task_id, error: taskErrors.get(t.task_id) ?? arm.error ?? 'unscored', ...(calls ? { usage: usageOf(calls) } : {}), at: new Date().toISOString() });
+      c.rows.append({ ...base, task_id: t.task_id, error: taskErrors.get(t.task_id) ?? failedErrors.get(t.task_id) ?? arm.error ?? 'unscored', ...(calls ? { usage: usageOf(calls) } : {}), at: new Date().toISOString() });
     }
     if (refused) throw new StageStopped({ kind: arm.budget_exhausted ? 'budget_exhausted' : 'cell_invalid', target: c.target, skill: c.skill, arm: spec.arm, error: arm.error ?? '' });
   }
