@@ -5,6 +5,8 @@ The pinned test requires the recipe and common configurations, which belong to t
 that the record holds exactly shipped-0.31 instead and runs every other step as written.
 
     python3 docs/comparison-systems/ext-temporal-graph/shipped-0.31/test_shim.py --url http://127.0.0.1:8700
+
+Under pytest, the three tests below check the wrapper itself offline.
 """
 from __future__ import annotations
 
@@ -35,6 +37,49 @@ def main() -> int:
         return 1
     pinned.check = check
     return pinned.main()
+
+
+def test_check_skips_only_the_pinned_config_assertion(monkeypatch) -> None:
+    seen: list[tuple[bool, str]] = []
+    monkeypatch.setitem(globals(), "pinned_check", lambda cond, msg: seen.append((cond, msg)))
+    check(False, PINNED_CONFIG_CHECK)
+    check(False, "search returned no items")
+    check(True, "status 200")
+    assert seen == [(False, "search returned no items"), (True, "status 200")]
+
+
+class _Capabilities:
+    def __init__(self, configs: list[str]) -> None:
+        self.body = json.dumps({"configs": configs}).encode()
+
+    def __enter__(self) -> "_Capabilities":
+        return self
+
+    def __exit__(self, *exc: object) -> None:
+        return None
+
+    def read(self) -> bytes:
+        return self.body
+
+
+def test_main_refuses_a_record_that_is_not_only_shipped_031(monkeypatch) -> None:
+    logged: list[tuple[str, dict]] = []
+    monkeypatch.setattr(sys, "argv", ["test_shim.py", "--url", "http://shim.invalid"])
+    monkeypatch.setattr(urllib.request, "urlopen", lambda url, timeout: _Capabilities(["common", "recipe", "shipped-0.31"]))
+    monkeypatch.setattr(pinned, "log", lambda step, **kw: logged.append((step, kw)))
+    monkeypatch.setattr(pinned, "main", lambda: (_ for _ in ()).throw(AssertionError("pinned test must not run")))
+    assert main() == 1
+    assert logged and logged[0][0] == "FAIL"
+
+
+def test_main_runs_the_pinned_test_with_the_wrapped_check(monkeypatch) -> None:
+    urls: list[str] = []
+    monkeypatch.setattr(sys, "argv", ["test_shim.py", "--url", "http://shim.invalid/"])
+    monkeypatch.setattr(urllib.request, "urlopen", lambda url, timeout: urls.append(url) or _Capabilities(["shipped-0.31"]))
+    monkeypatch.setattr(pinned, "check", pinned_check)
+    monkeypatch.setattr(pinned, "main", lambda: 0 if pinned.check is check else 2)
+    assert main() == 0
+    assert urls == ["http://shim.invalid/capabilities"]
 
 
 if __name__ == "__main__":
