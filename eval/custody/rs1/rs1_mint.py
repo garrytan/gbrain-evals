@@ -282,6 +282,23 @@ def text_of(value):
     return str(getattr(value, "content", value))
 
 
+class ProviderRefusal(BaseException):
+    """A model call refused with an HTTP status a resend would not change: a 4xx other than 408 and 429, the metering
+    proxy's 402 budget refusal included. A BaseException, so BEAM's 'except Exception' retry loops cannot swallow it
+    and leave a step recorded as done without its output. Its message is the status and the error class only."""
+
+
+def refusal_status(error):
+    seen = set()
+    while error is not None and id(error) not in seen:
+        seen.add(id(error))
+        code = getattr(error, "code", None)
+        if isinstance(code, int) and 400 <= code < 500 and code not in (408, 429):
+            return code
+        error = error.__cause__ or error.__context__
+    return None
+
+
 class Reply:
     def __init__(self, content, usage_metadata):
         self.content = content
@@ -290,7 +307,9 @@ class Reply:
 
 class RecordingModel:
     """What BEAM sees as an LLM: '.invoke()' that records usage. BEAM's 'max_tokens=' keyword becomes Gemini's
-    'max_output_tokens', the one generation setting BEAM passes per call."""
+    'max_output_tokens', the one generation setting BEAM passes per call. BEAM's question step sends a prompt made only
+    of system messages; Gemini rejects a request with no contents (HTTP 400), so such a prompt goes as one user turn of
+    the same text, as an OpenAI chat model would read it. A refusal a resend would not change raises ProviderRefusal."""
 
     def __init__(self, inner, model_id, usage):
         self.inner, self.model_id, self.usage = inner, model_id, usage
@@ -298,7 +317,15 @@ class RecordingModel:
     def invoke(self, value, max_tokens=None, **kwargs):
         if max_tokens is not None:
             kwargs["generation_config"] = {**kwargs.get("generation_config", {}), "max_output_tokens": max_tokens}
-        reply = self.inner.invoke(value, **kwargs)
+        if isinstance(value, (list, tuple)) and value and all(getattr(m, "type", None) == "system" for m in value):
+            value = text_of(value)
+        try:
+            reply = self.inner.invoke(value, **kwargs)
+        except Exception as error:
+            status = refusal_status(error)
+            if status is None:
+                raise
+            raise ProviderRefusal(f"HTTP {status} {type(error).__name__}") from error
         meta = getattr(reply, "usage_metadata", None) or {}
         self.usage.record(self.model_id, meta.get("input_tokens", 0), meta.get("output_tokens", 0))
         return reply
@@ -1173,7 +1200,7 @@ def main(argv):
             path.write_text(detail, encoding="utf-8")
         emit({"conv": cid, "step": args.step, "status": "error", "error_class": type(error).__name__,
               "error_sha256": sha256_bytes(str(error).encode("utf-8"))[:16]})
-        if isinstance(error, StepFailure):
+        if isinstance(error, (StepFailure, ProviderRefusal)):
             os.write(SAVED_ERR, f"rs1-mint refused: {error}\n".encode("utf-8"))
         return 1
 
