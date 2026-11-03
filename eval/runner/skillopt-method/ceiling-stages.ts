@@ -59,8 +59,10 @@
  * a resumed stage skips what scored and reruns only errored tasks and proposer
  * errors (their earlier requests stay charged in the ledger). An arm with an
  * errored task is unscored, and so is its pair; later pairs still run. A
- * budget refusal or a tripwire (`refusalKind`) stops the stage at once: no row
- * is written for the refused rollouts, and the stage reads incomplete. After
+ * budget refusal or a tripwire (`refusalKind`) stops the stage at once: a
+ * rollout that billed a call before it failed gets its error row and usage, a
+ * refused rollout that billed nothing gets no row, and the stage reads
+ * incomplete. After
  * each pair, the 1.25x re-price rule reads billed spend per scored rollout on
  * that target over a window from stage start or the last stop (the rollout
  * rows this process wrote; each --resume opens a new window), voided spend
@@ -407,7 +409,9 @@ export function summarizeArm(spec: ArmSpec, cells: ReturnType<typeof armRows>): 
 /**
  * Run an arm's missing and errored rollouts, one run index at a time, and
  * return its summary. A scored rollout already in the rows is never re-run. A
- * refusal throws `StageStopped` and writes no row for the refused rollouts.
+ * refusal throws `StageStopped` once each rollout that billed a call before it
+ * failed has its error row and usage; a refused rollout that billed nothing
+ * gets no row.
  */
 async function runArm(c: PairContext, spec: ArmSpec): Promise<ArmSummary> {
   const skill_sha8 = sha8(spec.skillText);
@@ -424,10 +428,14 @@ async function runArm(c: PairContext, spec: ArmSpec): Promise<ArmSummary> {
     const seen = new Set<string>();
     const taskErrors = new Map<string, string>();
     const failedCalls = new Map<string, CallUsage[]>();
+    const failedErrors = new Map<string, string>();
     c.log(`[n15 ceiling] ${c.target} ${c.skill} ${spec.arm} run ${run}: ${need.length} ${spec.split} tasks`);
     const arm = await scoreArm({
       engine: c.engine, skillText: spec.skillText, model, runs: 1, evaluate: substance, onRetry: logRetries(c.log), onTaskError: (id, error) => taskErrors.set(id, error),
-      onFailedRollout: (id, calls) => failedCalls.set(id, [...(failedCalls.get(id) ?? []), ...calls]),
+      onFailedRollout: (id, calls, error) => {
+        failedCalls.set(id, [...(failedCalls.get(id) ?? []), ...calls]);
+        if (!refusalKind(error)) failedErrors.set(id, errMsg(error));
+      },
       tasks: need.map(t => ({ task_id: t.task_id, task: prompt(t), judge: t.judge })),
       onRollout: (trajectory, _result, calls) => {
         seen.add(trajectory.task_id);
@@ -438,12 +446,14 @@ async function runArm(c: PairContext, spec: ArmSpec): Promise<ArmSummary> {
         });
       },
     });
-    if (arm.budget_exhausted || arm.cell_invalid) throw new StageStopped({ kind: arm.budget_exhausted ? 'budget_exhausted' : 'cell_invalid', target: c.target, skill: c.skill, arm: spec.arm, error: arm.error ?? '' });
+    const refused = arm.budget_exhausted || arm.cell_invalid;
     for (const t of need) {
       if (seen.has(t.task_id)) continue;
       const calls = failedCalls.get(t.task_id);
-      c.rows.append({ ...base, task_id: t.task_id, error: taskErrors.get(t.task_id) ?? arm.error ?? 'unscored', ...(calls ? { usage: usageOf(calls) } : {}), at: new Date().toISOString() });
+      if (refused && !calls) continue;
+      c.rows.append({ ...base, task_id: t.task_id, error: taskErrors.get(t.task_id) ?? failedErrors.get(t.task_id) ?? arm.error ?? 'unscored', ...(calls ? { usage: usageOf(calls) } : {}), at: new Date().toISOString() });
     }
+    if (refused) throw new StageStopped({ kind: arm.budget_exhausted ? 'budget_exhausted' : 'cell_invalid', target: c.target, skill: c.skill, arm: spec.arm, error: arm.error ?? '' });
   }
   return summarizeArm(spec, armRows(c, spec));
 }
@@ -709,11 +719,19 @@ const run1Over = (a: ArmSummary | undefined, tasks: readonly MethodTaskV3[]) => 
 /**
  * One pair (see the header). Arms run one at a time; each later step that
  * needs an unscored arm is skipped and the pair reads errored. A refusal
- * throws `StageStopped` with the pair so far in `partial`.
+ * throws `StageStopped` with the pair so far in `partial`, the interrupted
+ * arm's summary included.
  */
 async function runPair(c: PairContext, d: SkillData, unsolvable: readonly SkillName[], partial: GatePairResult): Promise<GatePairResult> {
   const r = partial;
-  const arm = async (spec: ArmSpec) => (r.arms[spec.arm] = await runArm(c, spec));
+  const arm = async (spec: ArmSpec) => {
+    try {
+      return (r.arms[spec.arm] = await runArm(c, spec));
+    } catch (e) {
+      if (e instanceof StageStopped) r.arms[spec.arm] = summarizeArm(spec, armRows(c, spec));
+      throw e;
+    }
+  };
   const rubricPrompt = (t: MethodTaskV3) => armPrompt(t.task, c.skill, 'rubric-one-shot');
 
   const noSkill = await arm({ arm: 'no-skill', split: 'gate', tasks: d.gate, runs: GATE_RUNS.no_skill, skillText: NO_SKILL_TEXT });
