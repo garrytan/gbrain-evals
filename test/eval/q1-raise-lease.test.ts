@@ -8,7 +8,7 @@ import { afterAll, beforeEach, describe, expect, test } from 'bun:test';
 import { appendFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { BudgetRun, closeLedgers, ledgerStatus, verifyLedger } from '../../eval/runner/budget-ledger.ts';
+import { BudgetRun, closeLedgers, closeRun, ledgerStatus, verifyLedger } from '../../eval/runner/budget-ledger.ts';
 import { Campaign, type CampaignManifest } from '../../eval/runner/shootout-cell.ts';
 import { leaseUsd, raise, raises, settle } from '../../eval/runner/q1/raise-lease.ts';
 
@@ -101,6 +101,22 @@ describe('raise-lease (A17 campaigns)', () => {
     BudgetRun.openLease({ runId: m.lease_id, leaseUsd: 3, ledgerPath: vmLedger(m.lease_id) });
     expect(() => raise(c, m.lease_id, 5, 'x', ssh)).toThrow(/holds lease 3 .*not an open \$4.00/);
     expect(() => raise(c, m.lease_id, 5, '  ', ssh)).toThrow(/needs --reason/);
+  });
+
+  test('a raise is refused once the campaign run is closed and leaves both ledgers as they were (#319)', () => {
+    const { c, state, launch, vmLedger, ssh, hostCommitted, ledger } = setup();
+    const l = launch('cell-0', 'vm-0');
+    mkdirSync(join(vmLedger(l.lease_id), '..'), { recursive: true });
+    BudgetRun.openLease({ runId: l.lease_id, leaseUsd: 4, ledgerPath: vmLedger(l.lease_id) });
+    expect(raise(c, l.lease_id, 4.5, 'owner approved $4.50', ssh)).toMatchObject({ from_usd: 4, to_usd: 4.5 });
+    expect(hostCommitted().committed_usd).toBe(4.5);
+
+    closeRun(ledger, JSON.parse(readFileSync(join(state, 'campaign.json'), 'utf8')).run_id);
+    expect(() => raise(c, l.lease_id, 5, 'after close', ssh)).toThrow(/raise .* from \$4.50 to \$5.00: budget run .* already finished/);
+    expect(hostCommitted()).toMatchObject({ committed_usd: 4.5, finished_at: expect.any(String) });
+    expect(ledgerStatus({ ledgerPath: vmLedger(l.lease_id), runId: l.lease_id }).run!.budget_usd).toBe(4.5);
+    expect([leaseUsd(c, l.lease_id), raises(state).length]).toEqual([4.5, 1]);
+    expect(verifyLedger(ledger).ok).toBe(true);
   });
 
   test('a reserved lease cannot be settled and is abandoned at its full reservation; a finished lease is not raised', () => {
