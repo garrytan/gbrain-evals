@@ -15,7 +15,8 @@
  * layout:
  *
  *   query       the first sentence that names any candidate value (the gold
- *               value or a distractor) must name the gold value and no
+ *               value or a distractor) must name the gold value, not negated
+ *               or refused ("not 240", "cannot confirm 240"), and no
  *               distractor; an absent entity's abstention must come before
  *               any distractor value; an unresolvable look-alike must name
  *               every candidate and say it is ambiguous by the first sentence
@@ -28,13 +29,18 @@
  *               characters, up to another meeting's subject or time) counts.
  *               The gold value's sentence holds no distractor either
  *   fact-check  a block runs from a "CLAIM:" line (any case, numbered or
- *               not) to the next one or the next heading. With blocks, every
- *               block that names one part (its key word) must give a status
- *               the part allows, a block that names every part answers for
- *               the claim as a whole, and no such block may give a status the
- *               part rules out; without blocks, sentences take their place.
- *               A contradicted part's correct value sits in a block or a line
- *               that names the part
+ *               not) to the next one or the next heading. With blocks, a
+ *               block's status is what its STATUS: lines give (or, with none,
+ *               the first word after its CLAIM: label), and the parts
+ *               it covers are the ones its CLAIM: line names (their key
+ *               words). Every block that names one part must give a status the
+ *               part allows, a block that names every part answers for the
+ *               claim as a whole, and no such block may give a status the part
+ *               rules out (any status outside the allowed ones, disputed
+ *               included); without blocks, sentences take their place, with a
+ *               status word wherever a status goes. A contradicted part's
+ *               correct value sits in a block whose CLAIM: line names the part
+ *               or on a line that names it
  *
  * Sentences end at a newline or at end punctuation followed by white space,
  * except after a listed abbreviation (BOUNDARY), and world-v3 names never hold
@@ -106,6 +112,11 @@ const AMBIGUITY = alt([
   'which of (?:them|these|the two)', '(?:two|several|multiple) (?:different )?(?:people|persons|pages|entries|matches|records|profiles|contacts)', '(?:two|several|multiple) [A-Za-z]+ named',
 ].map(ci));
 
+/** A negation or refusal directly governing `v`, at most two filler words before it: "not 240", "no longer 240", "cannot confirm the 240", "isn't 240", "never had 240". */
+const NEGATION = alt(['not', 'never', 'no longer', 'cannot', 'unable to', "(?:is|are|was|were|do|does|did|has|have|had|can|could)n't"].map(ci));
+const FILLER = alt(['the', 'a', 'an', 'confirm', 'verify', 'be', 'been', 'have', 'has', 'had', 'say', 'exactly', 'quite', 'actually'].map(ci));
+const negated = (v: string) => `\\b${NEGATION}(?:[^\\S\\n]+${FILLER}){0,2}[^\\S\\n]+[*_"“(]*${v}`;
+
 // ─── Statuses (fact-check) ───────────────────────────────────────────────────
 
 export const STATUS_WORDS: Readonly<Record<StatusClass | 'disputed', readonly string[]>> = {
@@ -118,19 +129,24 @@ export const STATUS_WORDS: Readonly<Record<StatusClass | 'disputed', readonly st
 export const SEED_STATUS_LABELS = ['VERIFIED', 'LIKELY ACCURATE', 'UNVERIFIED', 'DISPUTED', 'LIKELY INACCURATE', 'FALSE'];
 
 const ACCEPT: Readonly<Record<StatusClass, readonly (StatusClass | 'disputed')[]>> = { supported: ['supported'], contradicted: ['contradicted'], 'not-supported': ['not-supported', 'contradicted'] };
-const REJECT: Readonly<Record<StatusClass, readonly (StatusClass | 'disputed')[]>> = { supported: ['contradicted', 'not-supported', 'disputed'], contradicted: ['supported', 'not-supported'], 'not-supported': ['supported'] };
+const REJECT: Readonly<Record<StatusClass, readonly (StatusClass | 'disputed')[]>> = { supported: ['contradicted', 'not-supported', 'disputed'], contradicted: ['supported', 'not-supported', 'disputed'], 'not-supported': ['supported', 'disputed'] };
+
+/** The first status word after a status's lead-in (white space, markup, an emoji, a level number). */
+const statusWord = (classes: readonly (StatusClass | 'disputed')[]) => {
+  const words = classes.flatMap(c => STATUS_WORDS[c]).map(w => (w.includes('(?') ? ci(w.slice(0, w.indexOf('('))) + w.slice(w.indexOf('(')) : ci(w)));
+  return `[^\\S\\n]*[*_]*[^A-Za-z\\n]{0,8}(?:${ci('level')}[^\\S\\n]*\\d+[^A-Za-z\\n]{0,6})?${alt(words)}(?![A-Za-z])`;
+};
 
 /** A status word where a status goes: at a line start, after a colon or table bar, or after is/are/was/were; never a count ("Verified: 2"). */
 export function statusToken(classes: readonly (StatusClass | 'disputed')[]): string {
-  const words = classes.flatMap(c => STATUS_WORDS[c]).map(w => (w.includes('(?') ? ci(w.slice(0, w.indexOf('('))) + w.slice(w.indexOf('(')) : ci(w)));
-  return `(?:^|[:|]|\\b${alt(['is', 'are', 'was', 'were'].map(ci))}\\b)[^\\S\\n]*[*_]*[^A-Za-z\\n]{0,8}(?:${ci('level')}[^\\S\\n]*\\d+[^A-Za-z\\n]{0,6})?${alt(words)}(?![A-Za-z])(?![^\\n]{0,24}:[^\\S\\n]*\\d)`;
+  return `(?:^|[:|]|\\b${alt(['is', 'are', 'was', 'were'].map(ci))}\\b)${statusWord(classes)}(?![^\\n]{0,24}:[^\\S\\n]*\\d)`;
 }
 
 /** Claim parts a compound claim can hold, and the key word that finds the block or line covering each. */
 export const PART_KEYS = {
-  seats: `(?<!${ci('per')}\\s)\\b${ci('seat')}s?\\b`,
+  seats: `(?<!${ci('per')}[\\s-]|/)\\b${ci('seat')}s?\\b`,
   price: `\\b${ci('price')}`,
-  discount: `\\b${ci('discount')}`,
+  discount: `(?<!${ci('before')}\\s|${ci('pre')}[\\s-])\\b${ci('discount')}`,
   notice: `\\b${ci('notice')}`,
   payment: `(?:\\b${ci('payment')}|\\b${ci('net')}[\\s-]?\\d)`,
   tier: `(?:\\b${ci('tier')}\\b|\\b${ci('support')}\\b)`,
@@ -142,8 +158,12 @@ const BLOCK_START = `[^\\S\\n]*(?:[-*>#]+[^\\S\\n]*)?(?:\\*\\*|__)?(?:\\[\\d+\\]
 /** One character inside the current block. */
 const IN_BLOCK = `(?:(?!\\n(?:${BLOCK_START}|#{1,6}\\s))[\\s\\S])`;
 const inBlock = (x: string) => `(?=${IN_BLOCK}*?${x})`;
+/** `x` on the block's CLAIM: line (from a block start). */
+const onClaimLine = (x: string) => `(?=[^\\n]*?${x})`;
 const inSentence = (x: string) => `(?=${NB}*?${x})`;
 const STATUS_LINE = `[^\\S\\n]*(?:[-*>]+[^\\S\\n]*)?(?:\\*\\*|__)?${ci('status')}(?:\\*\\*|__)?[^\\S\\n]*:`;
+/** The block gives a status of `classes` (from a block start): on one of its STATUS: lines or, when it has none, as the first word after its CLAIM: label ("**Claim:** FALSE"). */
+const statusLine = (classes: readonly (StatusClass | 'disputed')[]) => `(?:(?=${IN_BLOCK}*?\\n${STATUS_LINE}${statusWord(classes)})|(?!${IN_BLOCK}*?\\n${STATUS_LINE})(?=${BLOCK_START}${statusWord(classes)}))`;
 const HAS_BLOCKS = `(?=[\\s\\S]*?^${BLOCK_START})`;
 const NO_BLOCKS = `(?![\\s\\S]*?^${BLOCK_START})`;
 
@@ -156,7 +176,7 @@ function queryChecks(spec: QueryValueSpec | QueryAbsentSpec | QueryAmbiguousSpec
     const cands = alt([spec.answer, ...spec.distractors].map(valuePattern));
     const wrong = spec.distractors.length ? [alt(spec.distractors.map(valuePattern))] : [];
     return [
-      check('answer', 'substance', firstSentenceWith(cands, [valuePattern(spec.answer)], wrong)),
+      check('answer', 'substance', firstSentenceWith(cands, [valuePattern(spec.answer)], [...wrong, negated(valuePattern(spec.answer))])),
       ...spec.cite.map(g => check('citation', 'substance', citationPattern('query', g))),
       check('answer-form', 'form', `${START}\\s*(?:(?:[#>*_-]|[^\\S\\n])*${ci('answer')}[*_]*[^\\S\\n]*:|${NB}*?${cands})`),
       check('citation-form', 'form', `${START}${spec.cite.map(g => `(?=[\\s\\S]*?${sourceBracket(g)})`).join('')}`),
@@ -212,14 +232,15 @@ function factCheckChecks(spec: FactCheckSpec): V3Check[] {
   if (compound && keys.some(k => !k)) throw new Error('fact-check: every part of a compound claim needs a key');
   spec.parts.forEach((p, i) => {
     const token = (cls: StatusClass, which: typeof ACCEPT) => statusToken(which[cls]);
+    const status = (cls: StatusClass, which: typeof ACCEPT) => statusLine(which[cls]);
     let accept: string, reject: string;
     if (!compound) {
-      accept = `(?:${HAS_BLOCKS}(?=[\\s\\S]*?^(?=${BLOCK_START})${inBlock(token(spec.status, ACCEPT))})|${NO_BLOCKS}(?=[\\s\\S]*?${token(spec.status, ACCEPT)}))`;
-      reject = `(?:${HAS_BLOCKS}(?=[\\s\\S]*?^(?=${BLOCK_START})${inBlock(token(spec.status, REJECT))})|${NO_BLOCKS}(?=[\\s\\S]*?${token(spec.status, REJECT)}))`;
+      accept = `(?:${HAS_BLOCKS}(?=[\\s\\S]*?^(?=${BLOCK_START})${status(spec.status, ACCEPT)})|${NO_BLOCKS}(?=[\\s\\S]*?${token(spec.status, ACCEPT)}))`;
+      reject = `(?:${HAS_BLOCKS}(?=[\\s\\S]*?^(?=${BLOCK_START})${status(spec.status, REJECT)})|${NO_BLOCKS}(?=[\\s\\S]*?${token(spec.status, REJECT)}))`;
     } else {
-      const allB = keys.map(k => inBlock(k!)).join('');
+      const allB = keys.map(k => onClaimLine(k!)).join('');
       const allS = keys.map(k => inSentence(k!)).join('');
-      const block = (which: typeof ACCEPT) => `^(?=${BLOCK_START})(?:${inBlock(keys[i]!)}(?!${allB})${inBlock(token(p.status, which))}|${allB}${inBlock(token(spec.status, which))})`;
+      const block = (which: typeof ACCEPT) => `^(?=${BLOCK_START})(?:${onClaimLine(keys[i]!)}(?!${allB})${status(p.status, which)}|${allB}${status(spec.status, which)})`;
       const sentence = (which: typeof ACCEPT) => `(?:${START}|${BOUNDARY})(?:${inSentence(keys[i]!)}(?!${allS})${inSentence(token(p.status, which))}|${allS}${inSentence(token(spec.status, which))})`;
       accept = `(?:${HAS_BLOCKS}(?=[\\s\\S]*?${block(ACCEPT)})|${NO_BLOCKS}(?=[\\s\\S]*?${sentence(ACCEPT)}))`;
       reject = `(?:${HAS_BLOCKS}(?=[\\s\\S]*?${block(REJECT)})|${NO_BLOCKS}(?=[\\s\\S]*?${sentence(REJECT)}))`;
@@ -227,7 +248,7 @@ function factCheckChecks(spec: FactCheckSpec): V3Check[] {
     out.push(check('part-status', 'substance', `${START}${accept}(?!${reject})`));
     if (p.correct) {
       const v = valuePattern(p.correct);
-      out.push(check('part-value', 'substance', compound ? `(?:^(?=${BLOCK_START})${inBlock(keys[i]!)}${inBlock(v)}|^(?=[^\\n]*?${keys[i]!})(?=[^\\n]*?${v}))` : v));
+      out.push(check('part-value', 'substance', compound ? `(?:^(?=${BLOCK_START})${onClaimLine(keys[i]!)}${inBlock(v)}|^(?=[^\\n]*?${keys[i]!})(?=[^\\n]*?${v}))` : v));
     }
   });
   for (const g of spec.cite) out.push(check('citation', 'substance', citationPattern('fact-check', g)));

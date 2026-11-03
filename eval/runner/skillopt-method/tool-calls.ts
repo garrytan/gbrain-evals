@@ -18,7 +18,10 @@
  *
  * A decisive read is a get_page or traverse_graph call on a page that decides
  * the task: a gold page, or for an abstention task one of its near-miss pages.
- * A refused call is recovered when the next call to the same tool succeeds.
+ * A refused decisive read limits the rollout only when no get_page or
+ * traverse_graph call on that page succeeds anywhere in the rollout. In the
+ * refusal tally, a refused call is recovered when the next call to the same
+ * tool succeeds.
  * Stop reasons are counted per arm as completed, turn limit (gbrain's 20-turn
  * `max_turns`), output length (`length`) or other.
  */
@@ -70,10 +73,14 @@ const slugOf = (input: unknown): string | null => {
   return typeof slug === 'string' ? slug.toLowerCase().replace(/\.md$/, '') : null;
 };
 
-/** The refused get_page and traverse_graph calls on a decisive page. */
+/** The refused get_page and traverse_graph calls on a decisive page that no successful get_page or traverse_graph call in the rollout served. */
 export function refusedDecisiveReads(calls: readonly ToolCallRecord[], decisive: readonly string[]): ToolCallRecord[] {
   const pages = new Set(decisive.map(s => s.toLowerCase()));
-  return calls.filter(c => c.error !== undefined && DECISIVE_TOOLS.has(c.name) && pages.has(slugOf(c.input) ?? ''));
+  const isRead = (c: ToolCallRecord, page: string) => DECISIVE_TOOLS.has(c.name) && slugOf(c.input) === page;
+  return calls.filter(c => {
+    const page = slugOf(c.input);
+    return c.error !== undefined && page !== null && pages.has(page) && isRead(c, page) && !calls.some(n => n.error === undefined && isRead(n, page));
+  });
 }
 
 /** Whether the refused call at `i` was recovered: the next call to the same tool succeeds. Null when no later call to that tool came. */
@@ -132,8 +139,9 @@ export type HarnessLimit = 'turn-limit' | 'output-length' | 'refused-decisive-re
 
 /**
  * What limited a rollout, if the harness did: a turn-limit stop, an
- * output-length stop, or a refused decisive read. Null when it completed and
- * gbrain served every decisive read it asked for.
+ * output-length stop, or a decisive read refused and never served in the
+ * rollout. Null when it completed and gbrain served every decisive read it
+ * asked for.
  */
 export function harnessLimit(r: { stop_reason?: string | null; tool_calls?: readonly ToolCallRecord[] }, decisive: readonly string[]): HarnessLimit | null {
   const stop = stopClass(r.stop_reason);

@@ -49,6 +49,11 @@ ordered round-robin by family, so each of gbrain's batches of 8 covers every tra
 | | three-hop (held out) | 0 / 0 / 6 / 16 | A founding claim three hops out, right or naming the wrong hop's founder |
 | | lookalike-founder (held out) | 0 / 0 / 6 / 16 | A founding claim about a company sharing a stem with another, or naming a near-name person |
 
+A fact-check family that makes claims right or wrong (compound, role-on-date, three-hop and lookalike-founder) fills
+each split by gold status in the proportion of its confirmed candidates, so true claims sit in every split and a report
+that calls everything false fails them. Fact-check tasks by gold status (supported / contradicted / not-supported) are
+2 / 16 / 6 in train, 2 / 16 / 6 in selection, 10 / 22 / 4 in gate and 27 / 57 / 12 in test.
+
 Every task has its own anchor. Tasks that share an anchor, a gold fact or a gold page form one connected group; a
 group sits in one split with at most three tasks, and each task records its `group_id` for resampling. Abstention
 tasks record their `near_miss` pages (the look-alikes and closest wrong entities) for the gate's reachability control.
@@ -60,13 +65,14 @@ The generators read the world model (people, companies, contract chains, mention
 alone (contract dates and terms, a company's founding line and leadership list, a person's career list), and a
 candidate whose two paths disagree is dropped. Each kept task then passes two keyless controls: its solvability control
 (an answer in the contract's shape built from the deciding pages) passes every check, and every degenerate answer
-(empty, "I don't know", every candidate value at once, a refusal where an answer exists) fails substance.
+(empty, "I don't know", every candidate value at once, a refusal where an answer exists, a fact-check report that calls
+a false claim true, and one that calls every claim or part false when a part is true) fails substance.
 
 | Skill | Candidates | Dropped by the oracle | By the solvability control | By a degenerate answer | Groups (largest) |
 |---|---|---|---|---|---|
 | `query` | 1,298 | 0 | 0 | 0 | 135 (3) |
 | `briefing` | 309 | 7 | 0 | 0 | 76 (3) |
-| `fact-check` | 1,594 | 0 | 0 | 0 | 130 (3) |
+| `fact-check` | 1,594 | 0 | 0 | 0 | 131 (3) |
 
 `<skill>/generation-report.json` holds the capacity report: per family, the confirmed candidates and the tasks placed in
 each split against the quota. Generation fails when any count is short; every family and split is met.
@@ -82,7 +88,12 @@ Each task's judge is a gbrain rule judge of m-flag regexes ([`score-v3.ts`](../.
 each tagged `substance` (the value concluded, the deciding page, the abstention, each part's status) or `form` (the
 contract's markup). A task scores a full pass (every check) and a substance pass (substance checks only); gbrain's own
 rule score is the fraction of the same checks. Substance loci do not depend on layout, so correct content in a table,
-bold lines or prose passes substance and fails form.
+bold lines or prose passes substance and fails form. A query answer passes only when the first sentence naming a
+candidate value states the gold value without negating or refusing it ("not 240" and "cannot confirm 240" fail). In a
+fact-check report with `CLAIM:` blocks, a block's status is what its `STATUS:` lines say (or, with none, the first word
+after its `CLAIM:` label), and the parts it covers are the ones its `CLAIM:` line names, so status words and part words
+in notes do not count. A block may not give a covered part any status outside the ones that part allows, `DISPUTED`
+included.
 
 ## Files
 
@@ -110,12 +121,35 @@ regenerate, which makes a new MANIFEST.json and dataset hash.
 ## Known limits
 
 - No model has run on v3 yet; calibration and the headroom gate come first.
-- The task files carry their judges' regexes inline, so v3 is about 9.7 MB, mostly the briefing and fact-check judges.
+- The task files carry their judges' regexes inline, so v3 is about 10.7 MB (10,733,381 bytes over MANIFEST.json's
+  files), mostly the briefing and fact-check judges.
 - Pages are 173 to 309 words, short of the plan's 700-word ceiling: the generator pads each page to a seeded length
   from its bank's filler sentences.
 - Briefing citation dates are not checked against the page.
 
 ## Changelog
+
+### 2026-11-02: Fact-check places true claims; the fact-check and query scorers read status and negation as meant
+
+Round-1 review of #308 found four scorer and dataset defects, fixed together with a regenerated v3:
+
+- Fact-check assembly sorted true claims behind false ones, so no placed task was supported (train 0 / 18 / 6, selection
+  0 / 18 / 6, gate 0 / 32 / 4, test 0 / 84 / 12 by supported / contradicted / not-supported) and a report calling
+  everything false passed every absent task. Each family that makes claims right or wrong now fills its quotas by
+  status in its candidates' proportion: 2 / 16 / 6, 2 / 16 / 6, 10 / 22 / 4 and 27 / 57 / 12. Quotas, seeds and knobs
+  are unchanged; fact-check groups went from 130 to 131. A new degenerate answer (every claim or part FALSE) must fail
+  substance on every task with a true part; it dropped no candidate.
+- The fact-check scorer read a status word anywhere in a block and counted a part covered when its key word appeared
+  anywhere in it, so a correct report failed for "was correct before the amendment", "Amendment status: confirmed",
+  per-part lines under a whole-claim block or "USD 1,175/seat/year" in a price block. Status now comes from the
+  `STATUS:` lines and coverage from the `CLAIM:` line; "/seat", "per-seat" and "before discount" no longer name a part.
+- A second block giving `DISPUTED` for a contradicted or unsupported claim passed; it now fails.
+- A query answer that negated or refused the gold value ("Not 240 seats", "I cannot confirm 240 seats") passed; it now
+  fails, while "240 seats, not the 200 the MSA set" still passes.
+
+The query judges changed with the scorer; query tasks and their placement did not, and briefing is byte-identical.
+MANIFEST.json's sha256 went from `04f8f287` to `e944b2d8` and `data_sha256` from `7167655f` to `eba61eb6`; the
+dataset grew from 10,056,321 to 10,733,381 bytes (the "about 9.7 MB" line now reads about 10.7 MB).
 
 ### 2026-11-02: The pin sentence names gbrain `311a83bbe`
 

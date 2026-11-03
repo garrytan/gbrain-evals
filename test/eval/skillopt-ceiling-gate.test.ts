@@ -99,9 +99,14 @@ describe('gateVerdict', () => {
     });
   });
 
-  test('both targets wholly harness-limited: harness with nothing measured', () => {
+  test('both targets wholly harness-limited: harness with nothing measured, revised once unless gbrain refusals caused every limit', () => {
     const X: PairLabel[] = ['harness-limited', 'harness-limited', 'harness-limited'];
-    expect(gate(X, X)).toMatchObject({ verdict: 'fail', cause: 'harness', scope: [], next: 'stop' });
+    expect(gate(X, X)).toMatchObject({ verdict: 'fail', cause: 'harness', scope: [], next: 'revise' });
+    expect(gate(X, X, { attempt: 2 })).toMatchObject({ verdict: 'fail', cause: 'harness', scope: [], next: 'stop' });
+    const refused = [...pairs('opus', X, { refusal_limited: true }), ...pairs('sol', X, { refusal_limited: true })];
+    expect(gateVerdict({ pairs: refused, unsolvable: [], attempt: 1 })).toMatchObject({ cause: 'harness', scope: [], next: 'stop' });
+    const mixed = [...pairs('opus', X), ...pairs('sol', X, { refusal_limited: true })];
+    expect(gateVerdict({ pairs: mixed, unsolvable: [], attempt: 1 })).toMatchObject({ cause: 'harness', scope: [], next: 'revise' });
   });
 
   test('harness from gbrain refusals skips the revision; other harness limits may revise', () => {
