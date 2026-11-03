@@ -11,21 +11,23 @@
 #   proxy  --lease-id ID --lease-usd N [--max-output-tokens M] [--port 8787] [--out DIR]
 #          Start the metering proxy for the cell's lease, detached, and wait for its status endpoint. A cell launched
 #          by `bun eval/runner/shootout-cell.ts` already runs the proxy (SHOOTOUT_PROXY is set), so `up` skips this.
-#   up     --system NAME [--config recipe|common] [--port 8700] [--proxy-port 8787] [--timeout 900]
+#   up     --system NAME [--config recipe|common|<own build>] [--port 8700] [--proxy-port 8787] [--timeout 900]
 #          Start the system's compose stack with SHIM_CONFIG, its egress relay pointed at the proxy on this host, and
-#          the shim published on 127.0.0.1:PORT; wait for GET /health to answer {"ok": true}.
-#   restart --system NAME [--port 8700] [--timeout 900]
+#          the shim published on 127.0.0.1:PORT; wait for GET /health to answer {"ok": true}. A configuration with its
+#          own build (e.g. ext-temporal-graph shipped-0.31) has <bundle>/<config>/docker-compose.yml; every subcommand
+#          then needs the same --config to find that stack.
+#   restart --system NAME [--config C] [--port 8700] [--timeout 900]
 #          Restart the stack's containers in place (`docker compose restart`): processes start fresh, volumes and
 #          container file systems are kept. Waits for GET /health as `up` does. lifecycle-lite's restart checkpoint
 #          runs it as its --restart-cmd.
-#   down   --system NAME      Stop the stack and remove its volumes.
-#   snapshot --system NAME --out TAR [--port 8700] [--timeout 900]
+#   down   --system NAME [--config C]   Stop the stack and remove its volumes.
+#   snapshot --system NAME --out TAR [--config C] [--port 8700] [--timeout 900]
 #          Stop the stack, tar every named volume of its compose project into TAR (one <volume>.tar per volume plus
 #          volumes.json), write TAR.sha256, start the stack again and wait for GET /health. A Q1 shim cell's
 #          snapshot_command runs it with --out "$SHOOTOUT_SNAPSHOT_DIR/<system>.tar" once ingest is complete. It
 #          refuses, before stopping anything, when a container keeps data in an anonymous volume, which no snapshot
 #          would carry.
-#   restore --system NAME --from TAR [--config recipe|common] [--port 8700] [--timeout 900]
+#   restore --system NAME --from TAR [--config C] [--port 8700] [--timeout 900]
 #          Check TAR against TAR.sha256 when present, create the stack without starting it, replace every named
 #          volume's contents with the snapshot's, then start the stack and wait for GET /health. A Q1 shim cell's
 #          restore_command runs it with --from "$SHOOTOUT_RESTORE_DIR/<system>.tar" before the cell command.
@@ -73,6 +75,10 @@ compose_file() {
   # the harness addresses them by kind id (eval/systems/kinds.json).
   [ -f "$f" ] || f="docs/comparison-systems/$SYSTEM/docker-compose.yml"
   [ -f "$f" ] || die "no compose file for system $SYSTEM (looked in eval/systems/$SYSTEM and docs/comparison-systems/$SYSTEM); kind ids are listed in eval/systems/kinds.json"
+  # A configuration that needs its own build (a newer package release beside a pinned one) keeps its stack in a
+  # subdirectory named after it, so the pinned configurations' files stay byte-identical.
+  case "$CONFIG" in ''|.*|*[!A-Za-z0-9._-]*) die "--config must be a configuration name (letters, digits, '.', '_', '-'), got '$CONFIG'" ;; esac
+  [ ! -f "$(dirname "$f")/$CONFIG/docker-compose.yml" ] || f="$(dirname "$f")/$CONFIG/docker-compose.yml"
   echo "$f"
 }
 
@@ -275,7 +281,7 @@ case "$cmd" in
     ;;
 
   *)
-    sed -n '2,39p' "$0" >&2
+    sed -n '2,42p' "$0" >&2
     exit 2
     ;;
 esac

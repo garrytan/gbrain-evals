@@ -1,0 +1,406 @@
+{
+  "campaign_id": "q1-scoreboard-f6-current-master",
+  "campaign_hash": "6c4227709d69505e7ddeb6b6e8f9db25e46a1b8252632248be9091086186b85a",
+  "published": {
+    "branch": "evals/q1-scoreboard-results",
+    "path": "published/q1-scoreboard-f6-current-master",
+    "commit": "b8b936a11a98e880cd2b6c730262ef0a88cbdbcf",
+    "sha256": "09ba1ff8d468c4656732680e732ab59f58570a6626fc9438235100e3d39a5ace",
+    "url": "https://github.com/garrytan/gbrain-evals/tree/evals/q1-scoreboard-results/published/q1-scoreboard-f6-current-master",
+    "aggregates_only": true
+  },
+  "gbrain": {
+    "commit": "0ccf2bdd4f42ed50be4cfb515eaa804ddb4b7049",
+    "version": "0.60.493.0",
+    "date": "2026-10-29",
+    "resolved_search_mode": "tokenmax",
+    "footnote": "That was the newest published gbrain release when the F6 harness was built and frozen (2026-10-30); later releases are not measured here. The headline gbrain row is arm P, fixed by the F6 preregistration before any result."
+  },
+  "hedge_classifier": "none",
+  "statistics": {
+    "alpha": 0.05,
+    "draws": 1999,
+    "descriptive_draws": 1999,
+    "seed": 20261006
+  },
+  "pending": [],
+  "not_run_reason": "no settled unit of this cell wrote a receipt",
+  "cells": [
+    "eval/runner/q1/cells/f6-cells.json",
+    "eval/runner/q1/cells/q1-cells.json"
+  ],
+  "headline_set": "S1",
+  "anchors": [
+    "s1.gbrain-defaults.f6-master.p",
+    "s2b.gbrain-defaults.f6-master.p",
+    "s2a.gbrain-defaults.f6-master.p",
+    "s3.gbrain-defaults.f6-master.p",
+    "d8.gbrain-defaults.f6-master.p"
+  ],
+  "sources": [
+    {
+      "campaign": "docs/benchmarks/2026-10-29-f6-current-master/campaign/f6-campaign.json",
+      "launch_tree": "d9fffb93",
+      "states": [
+        {
+          "dir": "q1-scoreboard-f6-current-master",
+          "units": [
+            "d8.gbrain-defaults.f6-master.c2"
+          ]
+        },
+        {
+          "dir": "q1-scoreboard-f6-current-master-a1",
+          "units": [
+            "d8.gbrain-defaults.f6-master.c0",
+            "d8.ext-graph-pipeline.recipe.c0",
+            "d8.ext-graph-pipeline.recipe.c1",
+            "d8.ext-graph-pipeline.recipe.c2",
+            "d8.ext-graph-pipeline.recipe.c3",
+            "d8.ext-graph-pipeline.recipe.c4",
+            "d8.ext-graph-pipeline.recipe.c5",
+            "d8.ext-graph-pipeline.recipe.c6",
+            "d8.ext-graph-pipeline.recipe.c7",
+            "d8.ext-graph-pipeline.recipe.c8",
+            "d8.ext-memory-bank.recipe.c0",
+            "d8.ext-memory-bank.recipe.c1",
+            "d8.ext-memory-bank.recipe.c2",
+            "d8.ext-memory-bank.recipe.c3",
+            "d8.ext-memory-bank.recipe.c4",
+            "d8.ext-memory-bank.recipe.c5",
+            "d8.ext-memory-bank.recipe.c6",
+            "d8.ext-memory-bank.recipe.c7",
+            "d8.ext-memory-bank.recipe.c8",
+            "d8.ext-memory-bank.recipe.c9",
+            "d8.baseline-hybrid.baseline",
+            "d8.baseline-none.baseline",
+            "s2b.gbrain-defaults.f6-master",
+            "s2b.ext-temporal-graph.shipped-0.31",
+            "s3.ext-temporal-graph.shipped-0.31"
+          ]
+        },
+        {
+          "dir": "q1-scoreboard-f6-current-master-a2",
+          "units": [
+            "d8.gbrain-defaults.f6-master.c1",
+            "d8.gbrain-defaults.f6-master.c3",
+            "d8.gbrain-defaults.f6-master.c4",
+            "d8.gbrain-defaults.f6-master.c5",
+            "d8.gbrain-defaults.f6-master.c6",
+            "d8.gbrain-defaults.f6-master.c7",
+            "d8.gbrain-defaults.f6-master.c8",
+            "d8.gbrain-defaults.f6-master.c9"
+          ]
+        },
+        {
+          "dir": "q1-scoreboard-f6-current-master-a3",
+          "units": [
+            "s1.gbrain-defaults.f6-master.c0",
+            "s1.gbrain-defaults.f6-master.c1",
+            "s1.gbrain-defaults.f6-master.c2",
+            "s1.gbrain-defaults.f6-master.c3",
+            "s1.gbrain-defaults.f6-master.c4",
+            "s1.gbrain-defaults.f6-master.c5",
+            "s1.gbrain-defaults.f6-master.c6",
+            "s1.gbrain-defaults.f6-master.c7",
+            "s1.gbrain-defaults.f6-master.c8",
+            "s1.gbrain-defaults.f6-master.c9",
+            "s1.ext-temporal-graph.shipped-0.31.c0",
+            "s1.ext-temporal-graph.shipped-0.31.c1",
+            "s1.ext-temporal-graph.shipped-0.31.c2",
+            "s1.ext-temporal-graph.shipped-0.31.c3",
+            "d8.ext-graph-pipeline.recipe.c9"
+          ]
+        },
+        {
+          "dir": "q1-scoreboard-f6-current-master-a4",
+          "units": [
+            "s1.baseline-file-agent.baseline"
+          ]
+        },
+        {
+          "dir": "q1-scoreboard-f6-current-master-a4b",
+          "units": [
+            "s1.ext-temporal-graph.shipped-0.31.c4",
+            "s1.ext-temporal-graph.shipped-0.31.c5",
+            "s1.ext-temporal-graph.shipped-0.31.c6",
+            "s1.ext-temporal-graph.shipped-0.31.c7",
+            "s1.ext-temporal-graph.shipped-0.31.c8",
+            "s1.ext-temporal-graph.shipped-0.31.c9"
+          ]
+        }
+      ]
+    },
+    {
+      "campaign": "docs/benchmarks/2026-10-29-f6-current-master/campaign/f6-campaign-a1.json",
+      "launch_tree": "3d3cc9f3",
+      "states": [
+        {
+          "dir": "q1-scoreboard-f6-current-master-a1",
+          "units": [
+            "s2a.gbrain-defaults.f6-master"
+          ]
+        }
+      ],
+      "appendix": {
+        "name": "partial A1 cells (A4)",
+        "dir": "partial-a1",
+        "reason": "S2a gbrain (A1): reached its 8-hour unit timeout (4 hours expected) after 420 answered rows, $39.57; not resumed (A4). Partial: the questions it did not answer are unscored, and no comparison is drawn from these rows."
+      }
+    },
+    {
+      "campaign": "docs/benchmarks/2026-10-29-f6-current-master/campaign/f6-campaign-a1.json",
+      "launch_tree": "3d3cc9f3",
+      "states": [
+        {
+          "dir": "q1-scoreboard-f6-current-master-a1",
+          "units": [
+            "s2a.ext-temporal-graph.shipped-0.31"
+          ]
+        }
+      ],
+      "appendix": {
+        "name": "partial A1 cells (A4)",
+        "dir": "partial-a1",
+        "reason": "S2a temporal graph 0.31.2 (A1): used its whole $25.10 lease after 139 answered rows, $25.03; not resumed (A4). Partial: the questions it did not answer are unscored, and no comparison is drawn from these rows."
+      }
+    },
+    {
+      "campaign": "docs/benchmarks/2026-10-29-f6-current-master/campaign/f6-campaign-a1.json",
+      "launch_tree": "3d3cc9f3",
+      "states": [
+        {
+          "dir": "q1-scoreboard-f6-current-master-a1",
+          "units": [
+            "s3.gbrain-defaults.f6-master"
+          ]
+        }
+      ],
+      "appendix": {
+        "name": "partial A1 cells (A4)",
+        "dir": "partial-a1",
+        "reason": "S3 gbrain (A1): reached its 4-hour unit timeout (1 hour expected) after 700 answered rows, $51.57; not resumed (A4). Partial: the questions it did not answer are unscored, and no comparison is drawn from these rows."
+      }
+    },
+    {
+      "campaign": "docs/benchmarks/2026-10-06-scoreboard/campaign/q1-scoreboard-sealed.json",
+      "launch_tree": "008b83fe",
+      "systems": [
+        "ext-extract-first",
+        "ext-memory-bank",
+        "ext-graph-pipeline",
+        "ext-markdown-kb",
+        "ext-verbatim-session",
+        "baseline-none",
+        "baseline-recency",
+        "baseline-full-context"
+      ],
+      "states": [
+        {
+          "dir": "a17",
+          "units": [
+            "s1.ext-extract-first.common.c0",
+            "s1.ext-extract-first.common.c1",
+            "s1.ext-extract-first.common.c2",
+            "s1.ext-extract-first.common.c3",
+            "s1.ext-extract-first.common.c4",
+            "s1.ext-extract-first.common.c5",
+            "s1.ext-extract-first.common.c6",
+            "s1.ext-extract-first.common.c7",
+            "s1.ext-extract-first.common.c8",
+            "s1.ext-extract-first.common.c9",
+            "s1.ext-memory-bank.recipe.c2",
+            "s1.ext-memory-bank.recipe.c4",
+            "s1.ext-memory-bank.recipe.c5",
+            "s1.ext-memory-bank.recipe.c6",
+            "s1.ext-memory-bank.recipe.c7",
+            "s1.ext-memory-bank.recipe.c8",
+            "s1.ext-memory-bank.recipe.c9",
+            "s1.baseline-none.baseline"
+          ]
+        },
+        {
+          "dir": "a22",
+          "units": [
+            "s1.ext-graph-pipeline.common.c2",
+            "s1.ext-verbatim-session.recipe.c0",
+            "s1.ext-verbatim-session.recipe.c1",
+            "s1.ext-verbatim-session.recipe.c2",
+            "s1.ext-verbatim-session.recipe.c3",
+            "s1.ext-verbatim-session.recipe.c4",
+            "s1.ext-verbatim-session.recipe.c5",
+            "s1.ext-verbatim-session.recipe.c6",
+            "s1.ext-verbatim-session.recipe.c7",
+            "s1.ext-verbatim-session.recipe.c8",
+            "s1.ext-verbatim-session.recipe.c9",
+            "s1.baseline-recency.baseline",
+            "s1.baseline-full-context.baseline",
+            "s2b.ext-extract-first.common",
+            "s2b.ext-memory-bank.recipe",
+            "s2b.ext-verbatim-session.recipe",
+            "s2b.baseline-recency.baseline",
+            "s2b.baseline-none.baseline"
+          ]
+        },
+        {
+          "dir": "a23",
+          "units": [
+            "s1.ext-memory-bank.recipe.c0",
+            "s1.ext-memory-bank.recipe.c1"
+          ]
+        },
+        {
+          "dir": "a24",
+          "units": [
+            "s1.ext-memory-bank.recipe.c3",
+            "s2b.ext-graph-pipeline.recipe.c0",
+            "s2b.ext-graph-pipeline.recipe.c1",
+            "s2b.ext-graph-pipeline.recipe.c2",
+            "s2b.baseline-full-context.baseline",
+            "s2a.ext-extract-first.common",
+            "s2a.ext-memory-bank.recipe",
+            "s2a.ext-graph-pipeline.recipe",
+            "s2a.ext-markdown-kb.recipe",
+            "s2a.ext-verbatim-session.recipe",
+            "s2a.baseline-recency.baseline",
+            "s2a.baseline-none.baseline",
+            "s2a.ext-memory-bank.common",
+            "s2a.ext-graph-pipeline.common",
+            "s2a.ext-markdown-kb.common",
+            "s2a.baseline-full-context.baseline",
+            "s3.ext-extract-first.recipe",
+            "s3.ext-memory-bank.recipe",
+            "s3.ext-graph-pipeline.recipe",
+            "s3.ext-markdown-kb.recipe",
+            "s3.ext-verbatim-session.recipe",
+            "s3.baseline-recency.baseline",
+            "s3.baseline-none.baseline",
+            "s3.ext-extract-first.common",
+            "s3.ext-memory-bank.common",
+            "s3.ext-graph-pipeline.common",
+            "s3.ext-markdown-kb.common",
+            "s3.baseline-full-context.baseline",
+            "s3.ext-extract-first.recipe.r2",
+            "s3.ext-memory-bank.recipe.r2",
+            "s3.ext-graph-pipeline.recipe.r2",
+            "s3.ext-markdown-kb.recipe.r2",
+            "s3.ext-verbatim-session.recipe.r2"
+          ]
+        }
+      ],
+      "reuse_check": {
+        "planned": "d9fffb93",
+        "preregistration": "docs/benchmarks/2026-10-29-f6-current-master-preregistration.md",
+        "a24_source": "q1-scoreboard-sealed"
+      }
+    },
+    {
+      "campaign": "docs/benchmarks/2026-10-06-scoreboard/campaign/q1-scoreboard-sealed.json",
+      "launch_tree": "008b83fe",
+      "systems": [
+        "gbrain-defaults"
+      ],
+      "gbrain": {
+        "commit": "f05943e653fd9d938b343b1774a35325ba792271",
+        "version": "0.60.138.0",
+        "date": "2026-10-09"
+      },
+      "states": [
+        {
+          "dir": "a17",
+          "units": [
+            "s1.gbrain-defaults.shipped-defaults.c0",
+            "s1.gbrain-defaults.shipped-defaults.c2",
+            "s1.gbrain-defaults.shipped-defaults.c3"
+          ]
+        },
+        {
+          "dir": "a22",
+          "units": [
+            "s1.gbrain-defaults.shipped-defaults.c1",
+            "s1.gbrain-defaults.shipped-defaults.c6",
+            "s1.gbrain-defaults.shipped-defaults.c7",
+            "s1.gbrain-defaults.shipped-defaults.c8",
+            "s1.gbrain-defaults.shipped-defaults.c9"
+          ]
+        },
+        {
+          "dir": "a24",
+          "units": [
+            "s1.gbrain-defaults.shipped-defaults.c4",
+            "s1.gbrain-defaults.shipped-defaults.c5"
+          ]
+        }
+      ],
+      "appendix": {
+        "name": "Q1 gbrain row (0.60.138.0)",
+        "dir": "q1-gbrain",
+        "reason": "Q1's sealed BEAM-10M gbrain-defaults rows from the A24 campaign, measured at GBrain 0.60.138.0 (f05943e6) with Q1's call shape. The F6 preregistration reports F6's arm P beside this row, labeled with its version; it is shown for reference and never compared."
+      }
+    }
+  ],
+  "sensitivity": [
+    {
+      "sets": [
+        "S1"
+      ],
+      "id": "f6-s1-gbrain-degraded-ingest",
+      "label": "without the 40 questions of gbrain's two degraded S1 conversations (A3)",
+      "reason": "gbrain's F6 build refused /finish on two conversations, shards c8 and c9 (pages_skipped_unparsed 2 and 3), so their 120 answers (40 questions, three readers) are ingest_degraded. The headline row scores them; this view leaves those questions out for every system, so each row is read on the conversations gbrain's build finished.",
+      "question_ids": [],
+      "from_outcomes": {
+        "cell": "s1.gbrain-defaults.f6-master.p",
+        "outcomes": [
+          "ingest_degraded"
+        ],
+        "count": 120
+      }
+    }
+  ],
+  "not_run": {
+    "s4-slice.gbrain-defaults.f6-master": "cut (A4): first in the preregistered scope-cut order, stopped after $4.22 of its $89.98 lease so the S1 file agent and S1 temporal graph shards fit under the $3,100 approval; no S4-slice row is published",
+    "s2a.gbrain-defaults.f6-master": "partial (A4): this A1 cell settled without finishing and is not resumed, because S2a and S3 come before the S1 cells in the scope-cut order; its answered rows are published in the appendix \"partial A1 cells (A4)\" with the cause, and no comparison is drawn from them",
+    "s2a.ext-temporal-graph.shipped-0.31": "partial (A4): this A1 cell settled without finishing and is not resumed, because S2a and S3 come before the S1 cells in the scope-cut order; its answered rows are published in the appendix \"partial A1 cells (A4)\" with the cause, and no comparison is drawn from them",
+    "s3.gbrain-defaults.f6-master": "partial (A4): this A1 cell settled without finishing and is not resumed, because S2a and S3 come before the S1 cells in the scope-cut order; its answered rows are published in the appendix \"partial A1 cells (A4)\" with the cause, and no comparison is drawn from them",
+    "s1.ext-graph-pipeline.common": "the product's own behavior (Q1 A23, reused from A24): its graph store's hard-coded 32 GiB size limit, once reached, fails every later write and retrieval, and its incremental re-extraction makes each session cost more; three shards ingested for 62 hours without finishing",
+    "s1.ext-markdown-kb.recipe": "projected ~61 h > 48 h limit per conversation (Q1 A23, reused from A24: the product's own reindex cost grows with the square of the chunk count)",
+    "s2b.ext-markdown-kb.recipe": "projected about 60 h > cell wall clock on the pinned VM (Q1, reused from A24)",
+    "s2a.ext-verbatim-session.common": "the harness has no common-config adapter for this system at this freeze (diagnostic config only; Q1, reused from A24)",
+    "s3.ext-verbatim-session.common": "the harness has no common-config adapter for this system at this freeze (diagnostic config only; Q1, reused from A24)",
+    "s2b.baseline-hybrid.baseline": "not run in F6: the A24 baseline-hybrid row is not reused (eval/runner/q1/reuse-check.ts refuses it: its competitor-path hash changed), and F6 reruns only its S1 row",
+    "s2a.baseline-hybrid.baseline": "not run in F6: the A24 baseline-hybrid row is not reused (eval/runner/q1/reuse-check.ts refuses it: its competitor-path hash changed), and F6 reruns only its S1 row",
+    "s3.baseline-hybrid.baseline": "not run in F6: the A24 baseline-hybrid row is not reused (eval/runner/q1/reuse-check.ts refuses it: its competitor-path hash changed), and F6 reruns only its S1 row",
+    "s2b.baseline-file-agent.baseline": "not run in F6: the A24 baseline-file-agent row is not reused (eval/runner/q1/reuse-check.ts refuses it: its competitor-path hash changed), and F6 reruns only its S1 row",
+    "s2a.baseline-file-agent.baseline": "not run in F6: the A24 baseline-file-agent row is not reused (eval/runner/q1/reuse-check.ts refuses it: its competitor-path hash changed), and F6 reruns only its S1 row",
+    "s3.baseline-file-agent.baseline": "not run in F6: the A24 baseline-file-agent row is not reused (eval/runner/q1/reuse-check.ts refuses it: its competitor-path hash changed), and F6 reruns only its S1 row",
+    "s1.baseline-hybrid.baseline": "invalid (A5): the A1 unit ran Q1's definition of this cell id (four arms, Sonnet reader replicates, frontier judges, judge repeats) instead of F6's single 8,000-token arm, because the cell runner resolved an id that both cell manifests define from Q1's manifest first. Separately, 6 of its 10 conversations ingested degraded: the hybrid baseline sent sessions longer than the embedding model's 8,192-token input limit, the provider refused them (17 failed sessions), and /finish never reported ready. The cell then hit its unit timeout with 300 of the 8,000-token arm's 1,000 promised answers. None of its rows are published."
+  },
+  "product_outcomes": [],
+  "retired": [],
+  "pins": {
+    "baseline-none": "harness baseline",
+    "baseline-recency": "harness baseline",
+    "baseline-hybrid": "harness baseline",
+    "baseline-full-context": "harness baseline",
+    "baseline-file-agent": "harness baseline",
+    "ext-temporal-graph": "bundle shipped-0.31, lock de6585d0, capabilities 2c8fd392"
+  },
+  "disclosures": [
+    "F6 spend settled at $2,909.74 across the six counted ledgers (frozen campaign $1,031.23, A1 $1,005.11, A2 $91.41, A3 $441.12, A4 $94.84, A4b $246.03) against the $3,068.83 counted cap, which is the $3,100 approval less the $31.17 dry run; with the dry run, $2,940.91 of the $3,100. $1,642.60 of it is measured and $1,267.14 is booked at full reservation for the 22 leases the VM sweep destroyed (A3), whose true spend was not measured. The receipt lists 131 cells: 87 with rows and 44 not run, each with its reason.",
+    "Campaigns: the frozen campaign q1-scoreboard-f6-current-master (hash 6c422770, freeze commit 1929c441) and five amendments, each with its own manifest, hash and ledger: A1 q1-scoreboard-f6-current-master-a1 (2f5db2a2), A2 -a2 (3eb38788), A3 -a3 (2ad97fef), A4 -a4 (fee2706d) and A4b -a4b (fff66e08). Every unit publishes from the campaign that ran it. Cells whose shards span campaigns (D8 gbrain, D8 graph pipeline, S1 temporal graph) merge once at the A4b launch commit d9fffb93; the merge code and the cell definitions it reads are identical across the F6 launch commits apart from expected hours, a launch-control field.",
+    "D8 gbrain (A1, A2): in the frozen campaign the canary c0 and shards c1 and c3 to c9 timed out on gbrain's /finish at the original finish budget, so every answer of theirs is ingest_degraded; those realizations are never published. The row takes c2 from the frozen campaign, c0 from A1 (finish budget sized from the largest conversation) and c1 and c3 to c9 from A2, each built afresh.",
+    "VM sweep (A3): from 16:33 to 16:36 UTC on 2026-10-30 another team's test of an unmerged runner change destroyed every Ubicloud VM in the project named without an expiry and older than 4 hours, 22 F6 VMs among them (S1 gbrain c0 to c9, S1 temporal graph c0 to c9, the S1 file agent and D8 graph pipeline c9). No realization from them is published. A3 relaunched S1 gbrain c0 to c9, S1 temporal graph c0 to c3 and D8 graph pipeline c9 from fresh stores, with VM names that carry an expiry and a watcher that saves each unit's spend every 30 minutes; A4 and A4b ran the rest.",
+    "S1 file agent (A4): resumed from the checkpoint the frozen campaign pulled before the sweep. Its store was ingested again, the 140 rows already answered were kept with their judgments, and only the questions without answers were answered (the harness's `answers` resume mode).",
+    "S1 temporal graph 0.31.2 publishes every shard that completed: c0 to c3 from A3 and c4 to c9 from A4b, all 10 of 10 conversations (199 of 199 questions scored).",
+    "S4-slice (A4): cut, first in the preregistered scope-cut order, after $4.22 of its $89.98 lease; no S4-slice row is published.",
+    "Partial A1 cells (A4), not resumed because S2a and S3 come before the S1 cells in the scope-cut order: S3 gbrain reached its 4-hour timeout after 700 answered rows ($51.57), S2a gbrain its 8-hour timeout after 420 rows ($39.57), and S2a temporal graph used its whole $25.10 lease after 139 rows ($25.03). Their answered rows are in the appendix as partial, with that cause; no comparison is drawn from them.",
+    "Budget ledger fix (A4, commit 69adc404): the ledger now accepts a reservation that brings a run or the program exactly to its cap, within 1e-9 dollars. Before it, float rounding refused such a reservation by about 2e-14 dollars and held A3's last unit for 3 hours, until another lease settled below its reservation. No cell's rows changed.",
+    "Rows reused from Q1's A24 campaign (q1-scoreboard-sealed, launch commit 008b83fe) for ext-extract-first, ext-memory-bank, ext-graph-pipeline, ext-markdown-kb, ext-verbatim-session, baseline-none, baseline-recency and baseline-full-context, each declared in the F6 preregistration and passing eval/runner/q1/reuse-check.ts from 008b83fe to d9fffb93. baseline-hybrid and baseline-file-agent fail that check, so their S1 rows were rerun at the F6 tree and their S2b, S2a and S3 rows are not run. ext-temporal-graph's A24 rows were retired (its pinned configuration calls models its provider retired); F6 measures its 0.31.2 shipped defaults instead (configuration shipped-0.31).",
+    "S1 is descriptive and unranked: with 10 conversations Q1's power check detects only differences of about 13.6 points, so no S1 row leads, beats or trails another. Arm P is gbrain's headline row on every set; arms A0, A, B, C, D and E are measurements beside it. D8 is published here descriptively.",
+    "D8 confirmatory family (preregistered; computed in custody from the receipt's canonical judgments by the procedure the preregistration names, since eval/runner/scoreboard.ts does not compute it): on claude-sonnet-5-5's paired correct/incorrect over 300 questions (canonical score >= 0.5), (1) the facts block P - A is +1.33 points (92.00% vs 90.67%; 12 wins, 8 losses; exact McNemar p = 0.503; question-level paired bootstrap 95% interval -1.67 to +4.33, conversation-cluster interval -2.67 to +6.33); (2) the full stack D - A is +0.33 points (13 wins, 12 losses; p = 1.0; interval -3.00 to +3.67); (3) recall B - A is 0.00 points (10 wins, 10 losses; p = 1.0; interval -3.00 to +3.00). Holm-adjusted p is 1.0 for all three, so none passes at 0.05, and \"the facts block helps on D8\" is not written: on these fresh long histories the facts block did not measurably change accuracy. Opus 5.5 (P - A +1.00, 20 wins, 17 losses) and gpt-6.1-sol (+0.67, 15 wins, 13 losses) agree. Arm A already answers about 9 in 10 correctly for every reader, which limits the room any arm has to gain; the facts block was delivered (about 85% of P's contexts carry fact items, about 15 per context).",
+    "S1 file agent (A5): like the S1 hybrid, the A4 unit ran Q1's definition of its cell id, and its receipt is merged and published under that definition, as it ran. The two definitions have the same questions, readers, agent mode and canonical judge; Q1's also asks for frontier judges, ten judge repeats and 20 ingest-latency probes. F6's comparison reads only the canonical judge (judge_replicate 0), so it is what F6's definition would have produced; the extra work was paid inside the $3,100 cap. The cell runner now refuses an id both manifests define unless --manifest names one.",
+    "S1 gbrain (A3): two of the ten conversations (shards c8 and c9) ingested degraded: gbrain's F6 build refused its own /finish because 2 and 3 pages were skipped as unparsed (pages_skipped_unparsed), the product's own failure, not a harness budget. Their 40 questions were answered from those stores and are scored, as every ingest_degraded answer is, so the headline row keeps them; the sensitivity view f6-s1-gbrain-degraded-ingest reads every system without those 40 questions."
+  ],
+  "render_targets": [
+    "docs/benchmarks/2026-10-29-f6-current-master/scoreboard.md"
+  ]
+}

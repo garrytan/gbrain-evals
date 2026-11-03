@@ -321,6 +321,18 @@ describe('memory-qa with a MemorySystem', () => {
     expect(asked).toEqual([last.turns[1].content.slice(0, 300)]);
   });
 
+  test('readiness probe: an F6 policy (settings.op) probes with its own settings; any other policy probes with the system\'s fixed-evidence settings', async () => {
+    const last = { source_id: 'ns-last', time: null, turns: [{ role: 'user', content: 'x'.repeat(200), time: null }] } as unknown as SessionInput;
+    const sent: unknown[] = [];
+    const probe = new FakeMemorySystem();
+    probe.retrieve = async (_ns, _q, p) => { sent.push(p.settings); return { items: [{ text: 'x', source_ids: ['ns-last'] } as unknown as Item], applied_settings: {}, truncated: false }; };
+    const caps = { ...(await new FakeMemorySystem().capabilities()), retrieval_policies: { 'fixed-evidence': { settings: { limit: 40 } } } };
+    const f6 = { op: 'query', args: { limit: 50 }, overlay: {} };
+    expect(await readinessProbe(probe, 'ns', last, { mode: 'fixed-evidence', settings: f6 } as never, caps as never)).toBe('found');
+    expect(await readinessProbe(probe, 'ns', last, { mode: 'vendor-default', settings: { k: 5 } } as never, caps as never)).toBe('found');
+    expect(sent).toEqual([f6, { limit: 40 }]);
+  });
+
   test('readiness probe: a shim whose quiescence signal lies (indexes late) marks its conversations ingest-degraded; an honest one passes', async () => {
     const late = new FakeMemorySystem();
     const original = late.retrieve.bind(late);
