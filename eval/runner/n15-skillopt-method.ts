@@ -744,9 +744,9 @@ function logGate(g: GateStageResult, log: (s: string) => void): void {
   const v = g.verdict;
   log(`gate ${g.attempt}: ${v.verdict}${v.cause ? ` (${v.cause})` : ''}, scope ${v.scope.join(' and ') || 'none'}, H ${v.counts.H} S ${v.counts.S} D ${v.counts.D} X ${v.counts.X} V ${v.counts.V} U ${v.counts.U} of R ${v.required}, next ${v.next}${g.unsolvable.length ? `; unsolvable: ${g.unsolvable.join(', ')}` : ''}${g.mode === 'fake' ? ' (fake numbers; they prove the path, not the gate)' : ''}`);
   if (g.stopped) log(`gate ${g.attempt} stopped at ${g.stopped.kind} on ${g.stopped.skill}/${g.stopped.target} ${g.stopped.arm}: ${g.stopped.error}`);
-  if (g.reprice_trigger) log(`gate ${g.attempt} reprice trigger on ${g.reprice_trigger.skill}/${g.reprice_trigger.target}: mean cost per scored rollout $${fmt(g.reprice_trigger.mean_rollout_usd)} over $${fmt(g.reprice_trigger.threshold_usd)}`);
-  if (g.unscored_spend) log(`gate ${g.attempt} unscored spend on ${g.unscored_spend.skill}/${g.unscored_spend.target}: $${fmt(g.unscored_spend.usd)} billed with no scored rollout; a --resume reruns that pair`);
-  for (const t of FRONTIER_TARGET_NAMES) if (g.voided[t].arms) log(`gate ${g.attempt} ${t} voided spend: $${fmt(g.voided[t].usd)} on ${g.voided[t].arms} arms (failed rollouts; on the ledger, outside the re-price mean)`);
+  if (g.reprice_trigger) log(`gate ${g.attempt} reprice trigger on ${g.reprice_trigger.skill}/${g.reprice_trigger.target}: the window's billed spend per scored rollout $${fmt(g.reprice_trigger.mean_rollout_usd)} over $${fmt(g.reprice_trigger.threshold_usd)}`);
+  if (g.unscored_spend) log(`gate ${g.attempt} unscored spend on ${g.unscored_spend.skill}/${g.unscored_spend.target}: $${fmt(g.unscored_spend.usd)} billed in the window with no scored rollout; a --resume opens a new window`);
+  for (const t of FRONTIER_TARGET_NAMES) if (g.voided[t].arms) log(`gate ${g.attempt} ${t} voided spend: $${fmt(g.voided[t].usd)} on ${g.voided[t].arms} arms (failed rollouts; on the ledger and in the re-price window)`);
   logRequestSettings(g.request_settings, log);
 }
 

@@ -61,14 +61,14 @@
  * errored task is unscored, and so is its pair; later pairs still run. A
  * budget refusal or a tripwire (`refusalKind`) stops the stage at once: no row
  * is written for the refused rollouts, and the stage reads incomplete. After
- * each pair: a pair that billed spend but scored no rollout stops the stage
- * (`unscored-spend`), and a --resume reruns that pair and goes on past it, so
- * each resume risks at most one such pair; otherwise, when the stage's mean
- * cost per scored rollout on that target (the metered cost of scored rollouts
- * only) passes 1.25 times its (re-priced) planning price, the stage stops after
- * that pair (`reprice-trigger`). Failed rollouts' spend stays on the ledger
- * and counts against the run's cap; the stage reports it apart as voided
- * spend, beside the count of arms that carry it.
+ * each pair, the 1.25x re-price rule reads billed spend per scored rollout on
+ * that target over a window from stage start or the last stop (the rollout
+ * rows this process wrote; each --resume opens a new window), voided spend
+ * included: past 1.25 times the (re-priced) planning price, the stage stops
+ * after that pair (`reprice-trigger`), and a window that billed spend but
+ * scored no rollout is the `unscored-spend` stop. All billed spend stays on
+ * the ledger and counts against the run's cap; the stage also reports voided
+ * spend apart, beside the count of arms that carry it.
  */
 import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
@@ -266,6 +266,7 @@ function indexRows(store: RowStore) {
   const rollouts = new Map<string, RolloutRow>();
   const failed = new Map<string, RolloutRow[]>();
   const proposals = new Map<string, ProposalRow>();
+  const fresh: RolloutRow[] = [];
   const add = (r: CeilingRow) => {
     if (r.kind === 'proposal') { proposals.set(proposalKey(r.target, r.skill, r.proposal), r); return; }
     const key = rolloutKey(r);
@@ -274,7 +275,9 @@ function indexRows(store: RowStore) {
   };
   store.rows.forEach(add);
   return {
-    append(row: CeilingRow) { store.append(row); add(row); },
+    append(row: CeilingRow) { store.append(row); add(row); if (row.kind === 'rollout') fresh.push(row); },
+    /** The rollout rows on `target` this process wrote: the re-price window since stage start or the --resume that opened it. */
+    fresh: (target: FrontierTarget) => fresh.filter(r => r.target === target),
     rollout: (k: Parameters<typeof rolloutKey>[0]) => rollouts.get(rolloutKey(k)),
     failed: (k: Parameters<typeof rolloutKey>[0]) => failed.get(rolloutKey(k)) ?? [],
     proposal: (target: FrontierTarget, skill: SkillName, id: ProposalId) => proposals.get(proposalKey(target, skill, id)),
@@ -298,7 +301,7 @@ function usageOf(calls: readonly CallUsage[]): RolloutUsage {
   return u;
 }
 
-/** A meter over rollout rows: scored rows count as rollouts, and an error row's paid calls add their calls, tokens and list-price dollars, so a failed rollout's spend raises the mean per scored rollout. */
+/** A meter over rollout rows: scored rows count as rollouts, and an error row's paid calls add their calls, tokens and list-price dollars, so a failed rollout's spend raises the mean per scored rollout. Calibration's mean and the gate's re-price window both read it this way. */
 export function meterOfRows(rows: readonly RolloutRow[]): MeterTotals {
   const m = emptyMeter();
   for (const r of rows) {
@@ -640,11 +643,11 @@ export interface GatePairResult {
   texts: { proposer_input?: string; rubric_input?: string; proposals: Partial<Record<ProposalId, string>> };
 }
 
-/** `mean_rollout_usd` is the metered cost of the target's scored rollouts over their count. */
+/** `mean_rollout_usd` is the window's billed spend on the target, voided included, over its scored rollouts. */
 export interface RepriceStop { reason: 'reprice-trigger'; target: FrontierTarget; skill: SkillName; mean_rollout_usd: number; threshold_usd: number }
-/** A pair that billed `usd` and scored no rollout; a --resume reruns it. */
+/** A window that billed `usd` on the target and scored no rollout; a --resume opens a new window. */
 export interface UnscoredStop { reason: 'unscored-spend'; target: FrontierTarget; skill: SkillName; usd: number }
-/** Failed rollouts' spend on a target and the arms that carry it: on the ledger, outside the re-price mean. */
+/** Failed rollouts' spend on a target and the arms that carry it, reported apart (it is on the ledger and in the re-price window too). */
 export interface VoidedSpend { arms: number; usd: number }
 
 export interface GateStageResult {
@@ -900,19 +903,15 @@ export async function runGateStage(o: GateStageOptions): Promise<GateStageResult
           o.onPair?.(pair);
           log(`[n15 ceiling] gate ${o.attempt} ${target} ${skill}: ${pair.status}${pair.label ? `, ${pair.label}` : ''}; one-shot ${pair.scores.one_shot ?? 'n/a'} (kept ${pair.kept ?? 'undecided'}), seed ${pair.scores.seed_run1 ?? 'n/a'}, reachability ${pair.scores.reachability ?? 'n/a'}`);
           if (stopped) continue;
-          if (pair.cost.rollouts === 0 && pair.cost.calls > 0) {
-            unscored = { reason: 'unscored-spend', target, skill, usd: pair.cost.usd };
-            log(`[n15 ceiling] unscored spend: ${target} ${skill} billed $${pair.cost.usd.toFixed(4)} over ${pair.cost.calls} calls and scored no rollout; the stage stops after this pair, and a --resume reruns it`);
-            continue;
-          }
-          const mine = pairs.filter(p => p.target === target);
-          const stage = sumMeters(mine.map(p => p.cost));
-          const voided = voidedOf(mine);
-          const meanUsd = stage.rollouts ? (stage.usd - voided.usd) / stage.rollouts : null;
+          const window = meterOfRows(rows.fresh(target));
+          const meanUsd = window.rollouts ? window.usd / window.rollouts : null;
           const threshold = REPRICE_FACTOR * prices[target];
-          if (meanUsd !== null && meanUsd > threshold) {
+          if (meanUsd === null && window.calls > 0) {
+            unscored = { reason: 'unscored-spend', target, skill, usd: window.usd };
+            log(`[n15 ceiling] unscored spend: this window billed $${window.usd.toFixed(4)} on ${target} over ${window.calls} calls and scored no rollout; the stage stops after this pair, and a --resume opens a new window`);
+          } else if (meanUsd !== null && meanUsd > threshold) {
             trigger = { reason: 'reprice-trigger', target, skill, mean_rollout_usd: meanUsd, threshold_usd: threshold };
-            log(`[n15 ceiling] reprice trigger: the stage's mean cost per scored ${target} rollout is $${meanUsd.toFixed(4)}, above $${threshold.toFixed(4)} (1.25 x $${prices[target].toFixed(4)}); voided spend $${voided.usd.toFixed(4)} on ${voided.arms} arms is outside that mean; the stage stops after this pair`);
+            log(`[n15 ceiling] reprice trigger: this window's billed spend per scored ${target} rollout, voided included, is $${meanUsd.toFixed(4)}, above $${threshold.toFixed(4)} (1.25 x $${prices[target].toFixed(4)}); the stage stops after this pair`);
           }
         }
       });

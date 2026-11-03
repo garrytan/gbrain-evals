@@ -95,9 +95,9 @@ each tagged `substance` (the value concluded, the deciding page, the abstention,
 contract's markup). A task scores a full pass (every check) and a substance pass (substance checks only); gbrain's own
 rule score is the fraction of the same checks. Substance loci do not depend on layout, so correct content in a table,
 bold lines or prose passes substance and fails form. A query answer passes only when the first sentence naming a
-candidate value states the gold value without negating or refusing it ("not 240", "can't confirm 240" and "I don't see
-240" fail; a negation does not count when change, changed or changing is one of the two words after the value, so "I
-don't see the 240 seats changing" passes). In a
+candidate value states the gold value without negating or refusing it ("not 240", "can't confirm 240", "I don't see
+240" and "wasn't able to see the 240" fail: up to three filler words may sit between the negation and the value). The
+rule understates one correct answer: "I don't see the 240 seats changing" reads as a refusal and fails substance. In a
 fact-check report with `CLAIM:` blocks, a block's status is what its `STATUS:` lines say (or, with none, the first word
 after its `CLAIM:` label), and the parts it covers are the ones its `CLAIM:` line names, so status words and part words
 in notes do not count. A block may not give a covered part any status outside the ones that part allows, `DISPUTED`
@@ -132,7 +132,7 @@ preregistered first set (3 to 5, 15, 20 and 2) scored the same on Opus; its amen
 - Calibration (train only) is the only paid read so far. It ran before #308's scorer and fact-check fixes, at MANIFEST.json
   `04f8f287…` and `3f416c5e…`: the seed scored 1.0 on query and briefing and 0.75 to 0.875 on fact-check, above the
   0.30 to 0.60 band it aimed for. It is read again at the final manifest before the headroom gate.
-- The task files carry their judges' regexes inline, so v3 is about 11.0 MB (11,007,358 bytes over MANIFEST.json's
+- The task files carry their judges' regexes inline, so v3 is about 11.0 MB (10,986,498 bytes over MANIFEST.json's
   files), mostly the briefing and fact-check judges.
 - Pages are 178 to 318 words, short of the plan's 700-word ceiling: the generator pads each page to a seeded length
   from its bank's filler sentences.
@@ -146,9 +146,11 @@ preregistered first set (3 to 5, 15, 20 and 2) scored the same on Opus; its amen
 
 - The first "see" fix (below) let refusals that name the gold value pass: "I do not see 240 seats in the brain",
   "didn't see", "wasn't able to see", "can not see", "never see", and on an as-of task "I don't see 570 seats in force
-  on that date. The record in force then shows 695 seats." "See" is a filler word after every negation again, and a
-  negation does not count when change, changed or changing is one of the two words after the value, so "I don't see
-  the 240 seats changing" still passes.
+  on that date. The record in force then shows 695 seats." The scorer is back to #308's rule: "see" is a filler word
+  after any negation, and up to three filler words may sit between the negation and the value, so "I wasn't able to
+  see the 570 seats" fails too. No change word after the value exempts a negation: a try at that exemption let "I
+  cannot confirm 240 seats changed" and "I do not see the **240 seats** changing" pass. The rule understates one
+  correct answer again: "I don't see the 240 seats changing" fails substance.
 - not-founder's real-founder claim repeated a claim lookalike-founder (held out) already makes for a company with a
   look-alike name: fact-check-test-29 and fact-check-test-94 were both "Kofi Xiong founded Tolmoor Materials.".
   not-founder no longer makes that claim for such a company, and the v3 test fails when two tasks of a skill share
@@ -158,8 +160,8 @@ preregistered first set (3 to 5, 15, 20 and 2) scored the same on Opus; its amen
 pass the guard unread. not-founder's candidates went from 158 to 118 and fact-check's groups from 136 to 138. Train,
 selection, gate and test now hold 10, 10, 14 and 36 fact-check tasks with a true part, and of their 24, 24, 36 and 96
 tasks the every-FALSE report passes substance on 14, 14, 22 and 60 and the every-VERIFIED report on 7, 7, 11 and 30,
-still no larger a share of train or selection than of gate. MANIFEST.json 2ddc6270 -> 1e408c67, data_sha256
-5107c033 -> 3c679da6; the dataset went from 11,123,477 to 11,007,358 bytes (Known limits had kept the 10,985,950 from
+still no larger a share of train or selection than of gate. MANIFEST.json 2ddc6270 -> 5729db40, data_sha256
+5107c033 -> ecd2d5cb; the dataset went from 11,123,477 to 10,986,498 bytes (Known limits had kept the 10,985,950 from
 before the first fix).
 
 ### 2026-11-03: "I don't see the 240 seats changing" keeps its 240

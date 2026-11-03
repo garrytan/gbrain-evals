@@ -458,19 +458,19 @@ describe('skillopt-method-v3: scorer cases', () => {
     expect(run('query', qv, 'Answer: 240 seats, not the 200 the MSA set [Source: contracts/wyncrest-produce-renewal-2025]')).toEqual([true, true]);
     expect(run('query', qv, 'Answer: 240 seats (no change since the renewal) [Source: contracts/wyncrest-produce-renewal-2025]')).toEqual([true, true]);
     expect(run('query', qv, 'Answer: the seat count has not changed from 240 [Source: contracts/wyncrest-produce-renewal-2025]')).toEqual([true, true]);
-    expect(run('query', qv, "Wyncrest Produce has 240 seats, and I don't see the 240 seats changing [Source: contracts/wyncrest-produce-renewal-2025].")).toEqual([true, true]);
-    expect(run('query', qv, "I don't see the 240 seats changing after the renewal [Source: contracts/wyncrest-produce-renewal-2025].")).toEqual([true, true]);
   });
-  test('query: every refusal built on see stays negated and the as-of trap scores wrong; change, changed or changing in the two words after the value keeps it', () => {
-    const refusals = ['I do not see 240 seats in the brain', "I don't see 240 seats in the brain", 'I don’t see 240 seats in the brain', "I didn't see 240 seats", "I wasn't able to see 240 seats in the brain", 'I can not see 240 seats in the brain', 'I never see 240 seats in the brain', 'I cannot see 240 seats', "I can't see 240 seats", "I couldn't see 240 seats", 'I could not see 240 seats', 'I am unable to see 240 seats', 'I am not able to see 240 seats'];
+  test('query: every probed refusal fails and the as-of trap scores wrong; the understating case ("I don\'t see the 240 seats changing") reads as a refusal', () => {
+    const refusals = ['I do not see 240 seats in the brain', "I don't see 240 seats in the brain", 'I don’t see 240 seats in the brain', "I didn't see 240 seats", "I wasn't able to see 240 seats in the brain", 'I was not able to see 240 seats in the brain', 'I can not see 240 seats in the brain', 'I never see 240 seats in the brain', 'I cannot see 240 seats', "I can't see 240 seats", "I couldn't see 240 seats", 'I could not see 240 seats', 'I am unable to see 240 seats', 'I am not able to see 240 seats',
+      'I cannot confirm 240 seats changed in the renewal. I cannot determine the seat count.', 'I do not see the **240 seats** changing after the renewal.', "I don't see the 240 seats changing after the renewal", "Wyncrest Produce has 240 seats, and I don't see the 240 seats changing"];
     for (const refusal of refusals) expect([refusal, run('query', qv, `${refusal} [Source: contracts/wyncrest-produce-renewal-2025].`)]).toEqual([refusal, [false, false]]);
     const asOf: GoldV3 = { values: [{ kind: 'number', value: 570 }], slugs: ['contracts/wyncrest-produce-renewal-2025'], spec: { kind: 'value', answer: { kind: 'number', value: 570 }, distractors: [{ kind: 'number', value: 695 }], cite: [['contracts/wyncrest-produce-renewal-2025']] } };
-    expect(run('query', asOf, "I don't see 570 seats in force on that date. The record in force then shows 695 seats. [Source: contracts/wyncrest-produce-renewal-2025]")).toEqual([false, false]);
+    const asOfRefusals = ["I don't see 570 seats in force on that date. The record in force then shows 695 seats.", "I'm not able to see the 570 seats in force on that date. The record in force then shows 695 seats.", "I couldn't actually see the 570 seats in the record.", "I can't quite see the 570 seats on that date.", "I wasn't able to see the 570 seats in the brain."];
+    for (const refusal of asOfRefusals) expect([refusal, run('query', asOf, `${refusal} [Source: contracts/wyncrest-produce-renewal-2025]`)]).toEqual([refusal, [false, false]]);
     expect(run('query', asOf, 'Answer: 570 seats were in force on that date [Source: contracts/wyncrest-produce-renewal-2025]. The 695 came later.')).toEqual([true, true]);
-    expect(run('query', qv, "I can't see the 240 changing [Source: contracts/wyncrest-produce-renewal-2025].")).toEqual([true, true]);
-    expect(run('query', qv, "I don't see 240 seats changed by the amendment [Source: contracts/wyncrest-produce-renewal-2025].")).toEqual([true, true]);
-    expect(run('query', qv, "I don't see 240 seats in the brain changing [Source: contracts/wyncrest-produce-renewal-2025].")).toEqual([false, false]);
-    expect(run('query', qv, "I don't see 240 seats. Nothing has changed [Source: contracts/wyncrest-produce-renewal-2025].")).toEqual([false, false]);
+    expect(run('query', qv, 'The renewal sets 240 seats [Source: contracts/wyncrest-produce-renewal-2025].')).toEqual([true, true]);
+    const notice: GoldV3 = { values: [{ kind: 'number', value: 30, unit: 'days' }], slugs: ['contracts/wyncrest-produce-renewal-2025'], spec: { kind: 'value', answer: { kind: 'number', value: 30, unit: 'days' }, distractors: [{ kind: 'number', value: 60, unit: 'days' }], cite: [['contracts/wyncrest-produce-renewal-2025']] } };
+    for (const refusal of ["I don't see the 30 days changing.", "I don't see the 30-day notice changing."]) expect([refusal, run('query', notice, `${refusal} [Source: contracts/wyncrest-produce-renewal-2025]`)]).toEqual([refusal, [false, false]]);
+    expect(run('query', notice, 'The renewal sets a 30-day notice period [Source: contracts/wyncrest-produce-renewal-2025].')).toEqual([true, true]);
   });
   test('query: abstentions and look-alikes', () => {
     const qa: GoldV3 = { values: [], slugs: [], subject: 'Wyncrest Freight', spec: { kind: 'absent', name: 'Wyncrest Freight', distractors: [{ kind: 'number', value: 240 }] } };
