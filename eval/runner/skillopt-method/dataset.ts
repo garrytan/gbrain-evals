@@ -8,7 +8,7 @@
  *   eval/data/skillopt-method-<version>/<skill>/generation-report.json   candidates, oracle and solvability drops
  *   eval/data/skillopt-method-<version>/seeds/<skill>/SKILL.md           the seed skill, verbatim from gbrain at its pin
  *   eval/data/skillopt-method-v3/<skill>/contract.md                     v3: the output contract appended to task prompts (contract.ts)
- *   eval/data/skillopt-method-v3/world/pages.jsonl                       v3: the rollout brain's pages (world-v3)
+ *   eval/data/skillopt-method-v3/world/                                  v3: the rollout brain's pages, one JSON line each (world-v3)
  *
  * v1 is what probe 1 ran on; it saturated (the seed and one rewrite reached
  * the ceiling), so v2 hardened the tasks once and is the default the N15 path
