@@ -25,7 +25,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 
 import { join, resolve } from 'node:path';
 import { priceUsage } from '../cat40/loop.ts';
 import { PASS_THRESHOLD } from '../memory-qa/instruments.ts';
-import { HARNESS_FAILURES, NOT_APPLICABLE, PRODUCT_FAILURES } from '../memory-qa/outcomes.ts';
+import { HARNESS_FAILURES, NOT_APPLICABLE, PRODUCT_FAILURES, type Outcome } from '../memory-qa/outcomes.ts';
 import { judgmentKey, readRecords, sha256, type AnswerRecord, type JudgmentRecord } from '../memory-qa/records.ts';
 import { clusteredPairedDelta, type PairedDelta } from '../stats/paired.ts';
 import { ALL_SETS, type SetId } from './cells/definitions.ts';
@@ -115,7 +115,7 @@ export function unitsOf(cells: Map<string, PublishedCell>): Unit[] {
   return units.sort((a, b) => (a.frontier.id < b.frontier.id ? -1 : 1));
 }
 
-interface Value { conversation: string; context: string; outcome: string; value: number | null; correct: boolean; usd: number }
+interface Value { conversation: string; context: string; outcome: Outcome; value: number | null; correct: boolean; usd: number }
 
 /** Each reader's replicate-0 answers by question, leaving out the set's preregistered exclusions: the canonical score, 0 for a product failure, or null outside the denominator. */
 function valuesOf(cell: PublishedCell, excluded: ReadonlySet<string>): Map<string, Map<string, Value>> {
@@ -163,7 +163,7 @@ export function unitReport(u: Unit, seed = SEED): UnitReport {
     const usd = xs.reduce((s, [, v]) => s + v.usd, 0);
     const notScored: Record<string, number> = {};
     for (const [, v] of xs) {
-      const why = v.outcome !== 'scored' ? v.outcome : v.value === null ? 'unjudged' : null;
+      const why = v.value === null ? (NOT_APPLICABLE.has(v.outcome) || HARNESS_FAILURES.has(v.outcome) ? v.outcome : 'unjudged') : PRODUCT_FAILURES.has(v.outcome) ? v.outcome : null;
       if (why) notScored[why] = (notScored[why] ?? 0) + 1;
     }
     return { reader, answers: xs.length, scored: scored.length, mean: d ? round(d.delta) : null, ci95: d ? interval(d) : null, correct, reader_usd: round(usd), usd_per_correct: correct ? round(usd / correct) : null,

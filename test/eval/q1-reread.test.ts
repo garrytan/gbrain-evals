@@ -195,6 +195,7 @@ describe('re-read: verification before any request', () => {
     }
     const both = prepareReread(def, arm, { sources: shards, reader: PARTICLE, out: join(tmp, 'two-shards') }, { corpus });
     expect([both.verify.ok, both.verify.sources.length, both.plan.map(x => x.question.id).sort()]).toEqual([true, 2, scheduled.map(q => q.id).sort()]);
+    expect(prepareReread(def, arm, { sources: [shards[1], shards[0]], reader: PARTICLE, out: join(tmp, 'two-shards') }, { corpus }).verify.ok).toBe(true);
     const copied = (n: string, edit: (out: string) => void) => {
       const out = join(tmp, `shard-tampered-${n}`);
       cpSync(dirname(dirname(shards[1])), out, { recursive: true });
@@ -228,12 +229,14 @@ describe('re-read: verification before any request', () => {
     const out = join(tmp, 'resume-other-sources');
     prepareReread(def, arm, { sources: [staging], reader: PARTICLE, out }, { corpus });
     const before = readFileSync(join(out, 'verify.json'));
-    for (const [n, d, src] of [['sources', def, other], ['effort', { ...def, effort: 'high' }, staging]] as const) {
+    for (const [n, d, src] of [['sources', def, other], ['effort', { ...def, effort: 'high' } as unknown as CellDefinition, staging]] as const) {
       const op = refusal(() => prepareReread(d, arm, { sources: [src], reader: PARTICLE, out }, { corpus }));
       expect([n, op.code, op.message]).toEqual([n, 'USAGE', expect.stringContaining('holds a re-read of other sources, another run configuration or another effort')]);
       expect(readFileSync(join(out, 'verify.json'))).toEqual(before);
     }
     expect(prepareReread(def, arm, { sources: [staging], reader: PARTICLE, out }, { corpus }).verify.ok).toBe(true);
+    const missing = refusal(() => prepareReread(def, arm, { sources: [join(tmp, 'no-such-source', 'runs', def.id)], reader: PARTICLE, out }, { corpus }));
+    expect([missing.code, readFileSync(join(out, 'verify.json'))]).toEqual(['PREFLIGHT_FAILED', before]);
   });
 
   // Value: protects=the published-answer cross-check (review finding reread-cell.ts:80, pinned); fails_when=a published answer whose text, usage or outcome differs from its staged answer passes verification; why_new=#347 compared answer_id and context_sha256 only; seam=none; no_claim=none
@@ -261,6 +264,15 @@ describe('re-read: verification before any request', () => {
     expect(refusal(() => openRereadLease({ runId: 'arm-2', leaseUsd: 60, ledgerPath, capUsd: 100 })).message).toContain('which holds $50.00 committed, would pass its $100.00 ceiling');
     const second = openRereadLease({ runId: 'arm-2b', leaseUsd: 50, ledgerPath, capUsd: 100 });
     second.close();
+  });
+
+  // Value: protects=resuming a crashed re-read under A6's ceiling; fails_when=re-attaching to a lease that is still open counts its own spend twice and refuses a resume the ceiling allows; why_new=review of the follow-up (specialist, reread-cell.ts:313); seam=none; no_claim=none
+  test('re-attaching to an open re-read lease counts its spend once against the ceiling', () => {
+    const ledgerPath = join(tmp, 'reattach-ledger.sqlite');
+    const first = openRereadLease({ runId: 'arm-1', leaseUsd: 60, ledgerPath, capUsd: 100 });
+    first.settle(first.reserve(50, 'a reading'), { usd: 50 });
+    openRereadLease({ runId: 'arm-1', leaseUsd: 60, ledgerPath, capUsd: 100 }).close();
+    expect(refusal(() => openRereadLease({ runId: 'arm-2', leaseUsd: 60, ledgerPath, capUsd: 100 })).message).toContain('which holds $50.00 committed, would pass its $100.00 ceiling');
   });
 
   // Value: protects=a paid re-read's verify.json, which its receipt points at; fails_when=a keyless rehearsal into a paid --out (or the reverse) rewrites verify.json before the --out claim refuses; why_new=review of #347; seam=none; no_claim=none

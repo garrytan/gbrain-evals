@@ -211,13 +211,18 @@ export function prepareReread(def: CellDefinition, arm: ArmDefinition, opts: Rer
   const corpus = deps.corpus ?? loadCorpus(def.benchmark, undefined, devOnly(def) ?? undefined);
   const { verify, plan } = verifySources(def, arm, opts.sources, corpus, opts.reader);
   const frozen = join(out, 'reread-source.json');
-  const identity = JSON.stringify({ arm_cell_id: arm.cell_id, reader: opts.reader, effort: def.effort, config_sha256: verify.source_config_sha256, contexts_sha256: verify.sources.map(s => s.contexts_sha256) }) + '\n';
-  if (existsSync(frozen) && readFileSync(frozen, 'utf8') !== identity) throw refuse({ code: 'USAGE', message: `${out} holds a re-read of other sources, another run configuration or another effort; give this run a fresh --out`,
+  const resuming = existsSync(frozen);
+  if (!plan) {
+    if (!resuming) writeFileSync(join(out, 'verify.json'), JSON.stringify(verify, null, 2) + '\n');
+    throw refuse({ code: 'PREFLIGHT_FAILED', message: `re-read of ${arm.cell_id} refused before any request: ${verify.problems.join('; ')}`,
+      why: 'a re-read sends exactly the bytes the source readers read, so every frozen context, answer and schedule must check out first',
+      fix: { next: 'report', user_message: resuming ? `the sources no longer verify; ${join(out, 'verify.json')} still holds the check the answers in ${out} were read under` : `the counts are in ${join(out, 'verify.json')}` } });
+  }
+  const identity = JSON.stringify({ arm_cell_id: arm.cell_id, reader: opts.reader, effort: def.effort, config_sha256: verify.source_config_sha256, contexts_sha256: verify.sources.map(s => s.contexts_sha256).sort() }) + '\n';
+  if (resuming && readFileSync(frozen, 'utf8') !== identity) throw refuse({ code: 'USAGE', message: `${out} holds a re-read of other sources, another run configuration or another effort; give this run a fresh --out`,
     why: 'a resume keeps the answers already in --out, so it must read the sources they were read from', fix: { next: 'run', argv: [...FRONT, '--out', '<a fresh directory>'] } });
   writeFileSync(join(out, 'verify.json'), JSON.stringify(verify, null, 2) + '\n');
-  if (!plan) throw refuse({ code: 'PREFLIGHT_FAILED', message: `re-read of ${arm.cell_id} refused before any request: ${verify.problems.join('; ')}`,
-    why: 'a re-read sends exactly the bytes the source readers read, so every frozen context, answer and schedule must check out first', fix: { next: 'report', user_message: `the counts are in ${join(out, 'verify.json')}` } });
-  if (!existsSync(frozen)) writeFileSync(frozen, identity);
+  if (!resuming) writeFileSync(frozen, identity);
   return { def, arm, reader: opts.reader, out, manifest: opts.manifest ?? null, keyless: !!opts.keyless, instrument, verify, plan };
 }
 
@@ -307,10 +312,12 @@ export async function runReread(p: PreparedReread, opts: { providerProxy?: strin
 /**
  * The re-read's lease on the add-on's own ledger. Each lease opens its own run and raises that ledger's cap by its own
  * amount, so the cap A6 sets on all the leases together is checked here: a lease that would take the ledger's committed
- * spend (open reservations included) past `capUsd` is refused before it opens.
+ * spend (open reservations included) past `capUsd` is refused before it opens. A lease still open under the same run id
+ * re-attaches: its own spend was inside its amount when it opened, so only the rest of the ledger's spend is added to it.
  */
 export function openRereadLease(o: { runId: string; leaseUsd: number; ledgerPath: string; capUsd: number }): BudgetRun {
-  const spent = existsSync(ledgerPaths(o.ledgerPath).ledger) ? ledgerStatus({ ledgerPath: o.ledgerPath }).totals.committed_usd : 0;
+  const status = existsSync(ledgerPaths(o.ledgerPath).ledger) ? ledgerStatus({ ledgerPath: o.ledgerPath, runId: o.runId }) : null;
+  const spent = status ? status.totals.committed_usd - (status.run && !status.run.finished_at ? status.run.committed_usd : 0) : 0;
   if (!(o.capUsd > 0) || spent + o.leaseUsd > o.capUsd + 1e-9) throw refuse({ code: 'USAGE', message: `a $${o.leaseUsd.toFixed(2)} lease on ${o.ledgerPath}, which holds $${spent.toFixed(2)} committed, would pass its $${o.capUsd.toFixed(2)} ceiling`,
     why: 'every re-read lease of the add-on ledger shares one ceiling (A6: $100), and a refused lease sends nothing', fix: { next: 'ask_user', user_message: 'the re-reads would pass their preregistered ceiling; tell GBEV-3 before any more run' } });
   return BudgetRun.openLease({ runId: o.runId, leaseUsd: o.leaseUsd, ledgerPath: o.ledgerPath, runner: 'q1-reread-cell' });

@@ -199,6 +199,17 @@ describe('the particle-1 add-on report', () => {
     expect([p.answers, p.scored, p.not_scored]).toEqual([6, 4, { reader_error: 1, retrieval_error: 1, unjudged: 1 }]);
   });
 
+  // Value: protects=the not-scored counts of a re-read whose source retrieval was degraded; fails_when=a judged ingest_degraded answer is listed as not scored, or an unjudged one is listed as ingest_degraded instead of unjudged; why_new=review of the follow-up (red team, particle-addon-report.ts:166); seam=none; no_claim=none
+  test('a judged ingest_degraded answer stays out of not_scored, and an unjudged one counts as unjudged', () => {
+    const root = unjudgedShard('degraded');
+    const file = join(root, 'cells', REREAD, 'answers.ndjson');
+    writeFileSync(file, readFileSync(file, 'utf8').split('\n').filter(Boolean).map((l, i) => (i < 2 ? l.replace('"outcome":"scored"', '"outcome":"ingest_degraded"') : l) + '\n').join(''));
+    expect(readFileSync(file, 'utf8').split('"outcome":"ingest_degraded"')).toHaveLength(3);
+    const p = unitReport(unitsOf(loadCells([shardA, shardB, root]))[0]).readers.find(x => x.reader === PARTICLE)!;
+    // Questions 0 and 1 are ingest_degraded: 0 lost its judgment (unjudged), 1 is judged (scores 0, in the denominator).
+    expect([p.answers, p.scored, p.not_scored]).toEqual([6, 4, { reader_error: 1, retrieval_error: 1, unjudged: 1 }]);
+  });
+
   // Value: protects=the add-on's published particle-1 rows are particle-1's paid answers, and its first table compares like with like; fails_when=a keyless rehearsal, a re-read with no keyless marker or another reader's re-read reports as particle-1, or the first table's means come from different denominators or hide a partial run; why_new=review of #347 (follow-up); seam=invented published cells; no_claim=none
   test('refuses keyless, unmarked and non-particle re-reads; the first table pairs its means and shows the pair count and run status', () => {
     const reread2 = (name: string, receipt: Record<string, unknown>, plan: Plan = PARTICLE_PLAN) => {
