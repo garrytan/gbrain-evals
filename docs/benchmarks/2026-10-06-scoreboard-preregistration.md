@@ -1406,6 +1406,13 @@ held-out material, including for the follow-up current-master rerun (F6), so the
 also refuses a raise.** A20's list of raise refusals names the campaign budget, the ledger cap and the lease's block
 cap. Since gbrain-evals#320, `raise-lease.ts` also refuses to grow a lease's reservation once the campaign run is closed.
 
+**A27 (2026-11-03, post-hoc documentation correction; no outcome rule, cap or cell changes): a raise whose VM result
+is unknown keeps the host reservation, and a raise never skips the block cap.** A20 says the host reservation is given
+back if the VM step fails. Since gbrain-evals#329, `raise-lease.ts` gives it back only when the VM lease ledger refuses
+the raise. A VM step that ends without a result (a timeout, an ssh error or output that does not read back) keeps the
+reservation and stops, so a person reconciles the two ledgers. Since gbrain-evals#330, a raise is also refused when the
+state directory belongs to another campaign or the lease's cell is not in the manifest, so the block cap always applies.
+
 ## Changelog
 
 ### 2026-10-27: amendment A25 (publication scope)
