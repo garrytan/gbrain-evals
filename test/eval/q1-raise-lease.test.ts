@@ -119,6 +119,25 @@ describe('raise-lease (A17 campaigns)', () => {
     expect(verifyLedger(ledger).ok).toBe(true);
   });
 
+  test('a raise whose VM step fails after the campaign run closed still gives the host reservation back (#319)', () => {
+    const { c, state, launch, vmLedger, ssh, hostCommitted, ledger } = setup();
+    const l = launch('cell-0', 'vm-0');
+    mkdirSync(join(vmLedger(l.lease_id), '..'), { recursive: true });
+    BudgetRun.openLease({ runId: l.lease_id, leaseUsd: 4, ledgerPath: vmLedger(l.lease_id) });
+    const runId = JSON.parse(readFileSync(join(state, 'campaign.json'), 'utf8')).run_id;
+    const closedMidRaise = (vm: string, command: string) => {
+      if (!command.includes("'raise'")) return ssh(vm, command);
+      closeRun(ledger, runId);
+      return { code: 255, out: '', err: 'ssh: connect refused' };
+    };
+
+    expect(() => raise(c, l.lease_id, 5, 'closed mid-raise', closedMidRaise)).toThrow(/was not raised.*back at \$4.00/);
+    expect(hostCommitted()).toMatchObject({ committed_usd: 4, finished_at: expect.any(String) });
+    expect(ledgerStatus({ ledgerPath: vmLedger(l.lease_id), runId: l.lease_id }).run!.budget_usd).toBe(4);
+    expect([leaseUsd(c, l.lease_id), raises(state).length]).toEqual([4, 0]);
+    expect(verifyLedger(ledger).ok).toBe(true);
+  });
+
   test('a reserved lease cannot be settled and is abandoned at its full reservation; a finished lease is not raised', () => {
     const { c, state, launch, hostCommitted, ssh } = setup();
     const r = c.reserve('cell-0');
