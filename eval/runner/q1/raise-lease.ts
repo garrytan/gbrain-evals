@@ -27,14 +27,16 @@
  * appended to <state>/raises.ndjson; leases.ndjson is left to the campaign's
  * own events.
  *
- * One raise runs at a time per campaign. A raise holds <state>/raise.lock (its
+ * One raise runs at a time per freeze. A raise holds <state>/raise.lock (its
  * pid, host, start time and arguments) from reading the lease's amount until
- * its record is written, and a held lock refuses a second raise at once.
- * Nothing breaks the lock automatically: after a crash it refuses every raise
- * until the person running the campaign checks the holder's lease and VM with
- * `show`, reconciles an unknown raise, and runs `clear-stale-lock`, which
- * refuses while the holder's pid is alive on this host and needs the campaign
- * id typed out (eval/RUNBOOK.md, "Raise a running Q1 lease").
+ * its record is written, and a held lock refuses a second raise at once. A
+ * raise whose record cannot be written keeps the lock. Nothing breaks the lock
+ * automatically: after a crash it refuses every raise until the person running
+ * the campaign compares the holder lease's amount with the VM's (`show`),
+ * records a raise the VM holds but the campaign does not, and runs
+ * `clear-stale-lock`, which refuses while the holder's pid is alive on this
+ * host and needs the campaign id typed out (eval/RUNBOOK.md, "Raise a running
+ * Q1 lease").
  *
  * Settling needs nothing new for a sealed lease: its VM ledger stays in custody,
  * the pulled lease summary carries the lease as launched, and `settle` settles
@@ -108,8 +110,8 @@ interface Holder { pid: number; host: string; started_at: string; lease_id: stri
 const lockPath = (c: Campaign) => join(c.stateDir, 'raise.lock');
 const holderOf = (path: string) => { try { return JSON.parse(readFileSync(path, 'utf8')) as Holder; } catch { return null; } };
 
-/** The operating rule a held lock refuses with: one raise at a time per campaign, who clears a stale lock, and how. */
-const lockRule = (c: Campaign, lease: string) => `One raise runs at a time per campaign, and nothing breaks a held lock. If that raise is still running, let it finish. If it is not, the person running the campaign first checks the holder's lease and VM with \`bun eval/runner/q1/raise-lease.ts show --campaign ${c.manifestPath} --state ${c.stateDir} --lease ${lease}\`. If its last raise has vm_result "unknown", they reconcile it by appending a record for that lease to ${join(c.stateDir, 'raises.ndjson')} whose to_usd is the amount the VM ledger holds. Then they clear the lock with \`bun eval/runner/q1/raise-lease.ts clear-stale-lock --campaign ${c.manifestPath} --state ${c.stateDir} --confirm ${c.manifest.campaign_id}\` (eval/RUNBOOK.md, "Raise a running Q1 lease")`;
+/** The operating rule a held lock refuses with: one raise at a time per freeze, who clears a stale lock, and how. */
+const lockRule = (c: Campaign, lease: string) => `One raise runs at a time per freeze, and nothing breaks a held lock. If that raise is still running, let it finish. If it is not, the person running the campaign first runs \`bun eval/runner/q1/raise-lease.ts show --campaign ${c.manifestPath} --state ${c.stateDir} --lease ${lease}\` and compares its lease_usd with the VM's budget_usd. Only if the VM holds more, the raise reached the VM without a record: they append a record for that lease to ${join(c.stateDir, 'raises.ndjson')} from lease_usd to the VM's amount. Otherwise they change nothing, and an unknown raise stands until the lease settles. Then they clear the lock with \`bun eval/runner/q1/raise-lease.ts clear-stale-lock --campaign ${c.manifestPath} --state ${c.stateDir} --confirm ${c.manifest.campaign_id}\` (eval/RUNBOOK.md, "Raise a running Q1 lease")`;
 
 /** Take the campaign's raise lock, or refuse at once when another raise holds it. Returns its release. */
 function lock(c: Campaign, raise: Omit<Holder, 'pid' | 'host' | 'started_at'>): () => void {
@@ -170,6 +172,7 @@ export function raise(c: Campaign, leaseId: string, toUsd: number, reason: strin
   if (s.campaign_id !== c.manifest.campaign_id) throw new Error(`${c.stateDir} belongs to campaign ${s.campaign_id}, not ${c.manifest.campaign_id}; pass one campaign's manifest and state directory`);
   if (s.manifest_sha256 !== c.sha256) throw new Error(`${c.stateDir} was frozen at ${String(s.manifest_sha256).slice(0, 12)}, but campaign ${c.manifest.campaign_id} hashes to ${c.sha256.slice(0, 12)} in this checkout; raise from the freeze's own checkout with that freeze's state directory`);
   const release = lock(c, { lease_id: leaseId, to_usd: toUsd, reason, dry_run: opts.dryRun === true });
+  let unrecorded = false;
   try {
     const l = c.lease(leaseId);
     if (l.status !== 'launched') throw new Error(`lease ${leaseId} is ${l.status}; only a running (launched) lease is raised in place`);
@@ -202,10 +205,13 @@ export function raise(c: Campaign, leaseId: string, toUsd: number, reason: strin
     const out = r.code === 0 ? lastJson(r.out) as { ledger: string; budget_usd: number; cap_usd: number } | null : null;
     const done = out && Math.abs(out.budget_usd - toUsd) <= 1e-6 ? out : null;
     const rec: Raise = { lease_id: leaseId, cell: l.cell, at: new Date().toISOString(), from_usd: from, to_usd: toUsd, reason, host_entry: l.entry_id, vm_ledger: done?.ledger ?? null, vm_cap_usd: done?.cap_usd ?? null, ...(done ? {} : { vm_result: 'unknown' as const }) };
-    appendFileSync(join(c.stateDir, 'raises.ndjson'), JSON.stringify(rec) + '\n');
+    try { appendFileSync(join(c.stateDir, 'raises.ndjson'), JSON.stringify(rec) + '\n'); } catch (e) {
+      unrecorded = true;
+      throw new Error(`${what}: ${done ? `the VM ledger on ${l.vm} was raised` : `the VM step on ${l.vm} ended without a result (exit ${r.code})`}, but the raise could not be recorded in ${join(c.stateDir, 'raises.ndjson')}: ${(e as Error).message}; the host reservation stays at ${usd(toUsd)} and ${lockPath(c)} stays held. ${lockRule(c, leaseId)}`);
+    }
     if (!done) throw new Error(`${what}: the VM step on ${l.vm} ended without a result (exit ${r.code}): ${(r.err || r.out).slice(-400)}; the VM ledger may hold either amount, so the host reservation stays at ${usd(toUsd)} and the raise is recorded with vm_result "unknown", which the campaign and its block cap count at ${usd(toUsd)}. Read the VM ledger with \`raise-lease.ts show\` and reconcile the two ledgers by hand before this lease is raised, settled or abandoned (eval/RUNBOOK.md, "Raise a running Q1 lease")`);
     return rec;
-  } finally { release(); }
+  } finally { if (!unrecorded) release(); }
 }
 
 /** The campaign's own settle, refused when a pulled VM ledger carries a raised lease the frozen settle would reject. */

@@ -238,7 +238,23 @@ describe('raise-lease (A17 campaigns)', () => {
     expect(existsSync(join(s.state, 'raise.lock'))).toBe(false);
   });
 
-  test('one raise runs at a time per campaign: a raise that overlaps another is refused at once, so a lost reply cannot lower the lease or pass the block cap', () => {
+  test('a raise whose record cannot be written keeps the raise lock, so no later raise runs on an undercounted block', () => {
+    const s = vmStep(run => {
+      mkdirSync(join(s.state, 'raises.ndjson'));
+      run();
+      return { code: 255, out: '', err: 'Connection reset' };
+    });
+    expect(s.raiseTo5).toThrow(/ended without a result \(exit 255\), but the raise could not be recorded in .*raises.ndjson: .*; the host reservation stays at \$5.00 and .*raise.lock stays held\. One raise runs at a time per freeze/);
+    rmSync(join(s.state, 'raises.ndjson'), { recursive: true });
+    expect([s.hostCommitted().committed_usd, ledgerStatus({ ledgerPath: s.vmLedger(s.l.lease_id), runId: s.l.lease_id }).run!.budget_usd, leaseUsd(s.c, s.l.lease_id), existsSync(join(s.state, 'raise.lock'))]).toEqual([5, 5, 4, true]);
+    const m = s.launch('cell-1', 'vm-1');
+    mkdirSync(join(s.vmLedger(m.lease_id), '..'), { recursive: true });
+    BudgetRun.openLease({ runId: m.lease_id, leaseUsd: 4, ledgerPath: s.vmLedger(m.lease_id) });
+    expect(() => raise(s.c, m.lease_id, 4.5, 'while unrecorded', s.ssh)).toThrow(/another raise holds .*raise.lock/);
+    expect(s.hostCommitted().committed_usd).toBe(9);
+  });
+
+  test('one raise runs at a time per freeze: a raise that overlaps another is refused at once, so a lost reply cannot lower the lease or pass the block cap', () => {
     const { c, state, launch, vmLedger, ssh, hostCommitted } = setup();
     const a = launch('cell-0', 'vm-0'), b = launch('cell-1', 'vm-1');
     for (const l of [a, b]) { mkdirSync(join(vmLedger(l.lease_id), '..'), { recursive: true }); BudgetRun.openLease({ runId: l.lease_id, leaseUsd: 4, ledgerPath: vmLedger(l.lease_id) }); }
@@ -249,7 +265,7 @@ describe('raise-lease (A17 campaigns)', () => {
       return ssh(vm, command);
     };
     expect(raise(c, a.lease_id, 5, 'operator A', first)).toMatchObject({ from_usd: 4, to_usd: 5, vm_cap_usd: expect.any(Number) });
-    expect(overlap).toMatch(new RegExp(`raise ${a.lease_id} refused: another raise holds ${join(state, 'raise.lock')} \\(pid ${process.pid} on ${hostname()} since .*, raising ${a.lease_id} to \\$5.00\\)\\. One raise runs at a time per campaign`));
+    expect(overlap).toMatch(new RegExp(`raise ${a.lease_id} refused: another raise holds ${join(state, 'raise.lock')} \\(pid ${process.pid} on ${hostname()} since .*, raising ${a.lease_id} to \\$5.00\\)\\. One raise runs at a time per freeze`));
     expect(reached).toBe(0);
     expect([leaseUsd(c, a.lease_id), ledgerStatus({ ledgerPath: vmLedger(a.lease_id), runId: a.lease_id }).run!.budget_usd, hostCommitted().committed_usd, raises(state).map(r => r.vm_result ?? 'confirmed')]).toEqual([5, 5, 9, ['confirmed']]);
     expect(() => raise(c, b.lease_id, 4.5, 'past the block', ssh)).toThrow(/block T1 would hold \$9.50, over its \$9.00 cap/);
@@ -269,7 +285,7 @@ describe('raise-lease (A17 campaigns)', () => {
     };
 
     hold(process.pid);
-    for (const dryRun of [true, false]) expect(() => raise(c, l.lease_id, 5, 'while held', ssh, { dryRun })).toThrow(/another raise holds .*raise.lock \(pid \d+ on .* since 2026-11-03T00:00:00.000Z, raising .* to \$6.00\)\. One raise runs at a time per campaign, and nothing breaks a held lock\..*the person running the campaign first checks the holder's lease and VM with `bun eval\/runner\/q1\/raise-lease.ts show .*vm_result "unknown".*to_usd is the amount the VM ledger holds.*`bun eval\/runner\/q1\/raise-lease.ts clear-stale-lock --campaign .* --confirm raise-\d+`/);
+    for (const dryRun of [true, false]) expect(() => raise(c, l.lease_id, 5, 'while held', ssh, { dryRun })).toThrow(/another raise holds .*raise.lock \(pid \d+ on .* since 2026-11-03T00:00:00.000Z, raising .* to \$6.00\)\. One raise runs at a time per freeze, and nothing breaks a held lock\..*the person running the campaign first runs `bun eval\/runner\/q1\/raise-lease.ts show .*` and compares its lease_usd with the VM's budget_usd\. Only if the VM holds more, .*from lease_usd to the VM's amount\. Otherwise they change nothing, and an unknown raise stands until the lease settles\..*`bun eval\/runner\/q1\/raise-lease.ts clear-stale-lock --campaign .* --confirm raise-\d+`/);
     expect(() => clearStaleLock(c, c.manifest.campaign_id)).toThrow(/held by pid \d+, which is still running on this host/);
 
     const gone = Bun.spawnSync(['true']).pid;

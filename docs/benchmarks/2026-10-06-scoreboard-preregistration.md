@@ -1414,7 +1414,7 @@ result (a timeout, an ssh error or output that does not read back) keeps the res
 the campaign and the block cap count it, and stops, so a person reconciles the two ledgers. Since gbrain-evals#330, a
 raise is also refused when the state directory belongs to another campaign or to another freeze of this one (its
 `campaign_id` or `manifest_sha256` differs from the checkout's campaign), or the lease's cell is not in the manifest, so
-the block cap that applies is always the freeze's own. One raise runs at a time per campaign: a raise holds
+the block cap that applies is always the freeze's own. One raise runs at a time per freeze: a raise holds
 `<state>/raise.lock`, a second raise is refused while it is held, and a lock left by a crash refuses every raise until the
 person running the campaign clears it (`eval/RUNBOOK.md`, "Raise a running Q1 lease").
 
