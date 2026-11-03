@@ -2,6 +2,14 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.148] - 2026-11-03
+
+### A lease raise opens the campaign ledger from any directory (#326, #325)
+
+- **`eval/runner/q1/raise-lease.ts` opens the ledger the campaign state names, wherever the raise runs from.** Since A23, `campaign.json` records the ledger path relative to the checkout, and `resizeHost` opened that path as written, so a raise run outside the repository root could not open the ledger (`create: false`) and refused. It now resolves the path as `Campaign` does. A relative path resolves against the checkout root (from `import.meta.dir`), and an absolute path is opened as written, except one from before A23 that no longer exists on this host but ends with the manifest's ledger path, which opens the manifest's ledger. A missing ledger still refuses, and no ledger is created. The change stays in `raise-lease.ts`, outside the campaigns' hashed tree, so no frozen hash changes.
+- **The Q1 scoreboard preregistration gets amendment A26, a dated post-hoc documentation correction.** A20's list of raise refusals names the campaign budget, the ledger cap and the block cap. A26 adds the closed-run refusal from #320 and changes no outcome rule, cap or cell.
+- **Tests.** `test/eval/q1-raise-lease.test.ts` adds four keyless tests. Three run the CLI from a directory outside the checkout. In them a relative ledger path opens the right ledger (this one fails on 0.10.147), an absolute path is opened as written, and a missing ledger, relative or absolute, refuses without creating a file. The fourth raises a lease whose `campaign.json` holds a pre-A23 absolute path from another host.
+
 ## [0.10.147] - 2026-11-03
 
 ### A closed campaign run refuses a lease raise (#319)
