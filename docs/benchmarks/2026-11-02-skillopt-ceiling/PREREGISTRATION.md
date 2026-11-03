@@ -270,6 +270,16 @@ If no Opus pair shows headroom and the Opus pairs read `saturated`, Sol's gate d
 
 No spend total, stage cap, arm, split or verdict rule changes in this amendment.
 
+### 2026-11-03, before the gate: refusal audit and refusal rows (#331)
+
+**Refusal audit (added 2026-11-03, before the gate spends, at GBEV-3's condition).** The gate report lists every answer that passes substance with a negation within five words of the value that decides it, and each listed answer is checked by hand or by a cross-family judge (no judge grades its own family's rows, and particle-1 never judges); the report gives the false-correct count per pair, and a pair whose false-correct rate would flip its saturated verdict reads FIX-METHOD, not cut evidence. This adds one R48 reading of a saturated pair and changes no spend total, stage cap, arm or split: the receipt's labels, Sol's skip and attempt 2's admission still run on the unaudited labels, and the next paragraph says how a flipped pair counts.
+
+Refusal audit and the cause table (GBEV-3, 2026-11-03): a pair the refusal audit flips is FIX-METHOD and is never evidence for a pass or a cut. In the pass test and the cause table it counts as V, except that `saturated` stands only if it still holds with every flipped pair counted as H. A flipped Opus pair counts as headroom for the Sol skip: if Sol's gate was skipped, the attempt reads `incomplete`, never a cut, until Sol's pairs run under the same attempt's ledger run and cap, before the attempt is read or any revision starts.
+
+Error rows on a refusal (added 2026-11-03, #331): when a refusal stops a stage, a rollout that billed a call before it failed keeps an error row with its usage as voided spend; that row is never scored and its task reruns on resume, and a refused rollout that billed nothing gets no row. The refusal rules above (the third rule and section 5) read with this.
+
+This amendment changes one verdict rule, the flipped-pair clause, and no spend total, stage cap, arm or split.
+
 ## Disclosures
 
 gbrain is Garry Tan's own project.

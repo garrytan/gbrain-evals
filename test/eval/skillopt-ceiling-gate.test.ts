@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { causeOf, gateVerdict, labelPair, solGateNeeded, stopVerdict, type GateInput, type GatePair, type PairLabel } from '../../eval/runner/skillopt-method/gate.ts';
+import type { Counts } from '../../eval/runner/skillopt-method/gate.ts';
 import type { FrontierTarget } from '../../eval/runner/skillopt-method/headroom.ts';
 import type { SkillName } from '../../eval/runner/skillopt-method/score.ts';
 
@@ -61,6 +62,34 @@ describe('causeOf: the truth table over scoped counts', () => {
     [c({ H: 2, S: 1 }), 2, null],
   ] as const)('%o with R = %d gives %s', (counts, required, cause) => {
     expect(causeOf(counts, required)).toBe(cause);
+  });
+});
+
+describe('Refusal audit and the cause table (GBEV-3, 2026-11-03): a flipped pair counts as V, and `saturated` stands only if it holds with every flipped pair counted as H', () => {
+  const c = (o: Partial<Counts>): Counts => ({ H: 0, S: 0, D: 0, X: 0, V: 0, U: 0, ...o });
+  const withFlips = (counts: Counts, flips: number, required: number) => {
+    const asV = causeOf({ ...counts, S: counts.S - flips, V: counts.V + flips }, required);
+    return asV === 'saturated' ? causeOf({ ...counts, S: counts.S - flips, H: counts.H + flips }, required) : asV;
+  };
+
+  test('Opus alone (R = 2), (H, S, D) = (1, 2, 0) with one saturated pair flipped reads invalid', () => {
+    expect(withFlips(c({ H: 1, S: 2 }), 1, 2)).toBe('invalid');
+  });
+
+  test('six pairs (R = 4), H = 3 and S = 3 with one saturated pair flipped reads invalid', () => {
+    expect(withFlips(c({ H: 3, S: 3 }), 1, 4)).toBe('invalid');
+  });
+
+  test('Opus alone (R = 2), (H, S, D) = (0, 3, 0) with one saturated pair flipped is still saturated, so a cut can stand', () => {
+    expect(withFlips(c({ S: 3 }), 1, 2)).toBe('saturated');
+  });
+
+  test('with no flipped pair it is the plain truth table', () => {
+    const rows: [Counts, number][] = [
+      [c({ H: 4, S: 2 }), 4], [c({ S: 3, D: 3 }), 4], [c({ H: 1, S: 5 }), 4], [c({ H: 3, S: 3 }), 4],
+      [c({ H: 2, X: 2, S: 2 }), 4], [c({ H: 1, X: 1, V: 2, S: 2 }), 4], [c({ S: 2, D: 1 }), 2], [c({ H: 1, S: 2 }), 2], [c({ H: 2, S: 1 }), 2],
+    ];
+    for (const [counts, required] of rows) expect(withFlips(counts, 0, required)).toBe(causeOf(counts, required));
   });
 });
 
