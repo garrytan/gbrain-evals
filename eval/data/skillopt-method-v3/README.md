@@ -49,6 +49,11 @@ ordered round-robin by family, so each of gbrain's batches of 8 covers every tra
 | | three-hop (held out) | 0 / 0 / 6 / 16 | A founding claim three hops out, right or naming the wrong hop's founder |
 | | lookalike-founder (held out) | 0 / 0 / 6 / 16 | A founding claim about a company sharing a stem with another, or naming a near-name person |
 
+A fact-check family that makes claims right or wrong (compound, role-on-date, three-hop and lookalike-founder) fills
+each split by gold status in the proportion of its confirmed candidates, so true claims sit in every split and a report
+that calls everything false fails every task with a true part. Fact-check tasks by gold status (supported / contradicted
+/ not-supported) are 2 / 16 / 6 in train, 2 / 16 / 6 in selection, 10 / 22 / 4 in gate and 27 / 57 / 12 in test.
+
 Every task has its own anchor. Tasks that share an anchor, a gold fact or a gold page form one connected group; a
 group sits in one split with at most three tasks, and each task records its `group_id` for resampling. Abstention
 tasks record their `near_miss` pages (the look-alikes and closest wrong entities) for the gate's reachability control.
@@ -60,13 +65,14 @@ The generators read the world model (people, companies, contract chains, mention
 alone (contract dates and terms, a company's founding line and leadership list, a person's career list), and a
 candidate whose two paths disagree is dropped. Each kept task then passes two keyless controls: its solvability control
 (an answer in the contract's shape built from the deciding pages) passes every check, and every degenerate answer
-(empty, "I don't know", every candidate value at once, a refusal where an answer exists) fails substance.
+(empty, "I don't know", every candidate value at once, a refusal where an answer exists, a fact-check report that calls
+a false claim true, and one that calls every claim or part false when a part is true) fails substance.
 
 | Skill | Candidates | Dropped by the oracle | By the solvability control | By a degenerate answer | Groups (largest) |
 |---|---|---|---|---|---|
 | `query` | 1,298 | 0 | 0 | 0 | 135 (3) |
 | `briefing` | 309 | 7 | 0 | 0 | 76 (3) |
-| `fact-check` | 1,594 | 0 | 0 | 0 | 130 (3) |
+| `fact-check` | 1,594 | 0 | 0 | 0 | 131 (3) |
 
 `<skill>/generation-report.json` holds the capacity report: per family, the confirmed candidates and the tasks placed in
 each split against the quota. Generation fails when any count is short; every family and split is met.
@@ -82,7 +88,12 @@ Each task's judge is a gbrain rule judge of m-flag regexes ([`score-v3.ts`](../.
 each tagged `substance` (the value concluded, the deciding page, the abstention, each part's status) or `form` (the
 contract's markup). A task scores a full pass (every check) and a substance pass (substance checks only); gbrain's own
 rule score is the fraction of the same checks. Substance loci do not depend on layout, so correct content in a table,
-bold lines or prose passes substance and fails form.
+bold lines or prose passes substance and fails form. A query answer passes only when the first sentence naming a
+candidate value states the gold value without negating or refusing it ("not 240" and "can't confirm 240" fail). In a
+fact-check report with `CLAIM:` blocks, a block's status is what its `STATUS:` lines say (or, with none, the first word
+after its `CLAIM:` label), and the parts it covers are the ones its `CLAIM:` line names, so status words and part words
+in notes do not count. A block may not give a covered part any status outside the ones that part allows, `DISPUTED`
+included.
 
 ## Files
 
@@ -110,9 +121,15 @@ preregistered first set (3 to 5, 15, 20 and 2) scored the same on Opus; its amen
 
 ## Known limits
 
-- Calibration (train only) is the only paid read so far: the seed scored 1.0 on query and briefing and 0.75 to 0.875 on
-  fact-check, above the 0.30 to 0.60 band it aimed for. The headroom gate is next.
-- The task files carry their judges' regexes inline, so v3 is about 10.3 MB, mostly the briefing and fact-check judges.
+- Calibration (train only) is the only paid read so far. It ran before #308's scorer and fact-check fixes, at MANIFEST.json
+  `04f8f287…` and `3f416c5e…`: the seed scored 1.0 on query and briefing and 0.75 to 0.875 on fact-check, above the
+  0.30 to 0.60 band it aimed for. It is read again at the final manifest before the headroom gate.
+- Among the trained families only compound makes true claims, so train and selection hold few fact-check tasks with a
+  true part. At the registered knobs that was 3 and 4, against 13 in gate and 31 in test, and the oracle report with
+  every status set to FALSE passed substance on 21 of 24 train, 20 of 24 selection, 23 of 36 gate and 65 of 96 test
+  tasks, so selection can punish a rewrite that rejects too much on only 4 tasks (GST-1150, fixed before the gate).
+- The task files carry their judges' regexes inline, so v3 is about 11.0 MB (10,976,191 bytes over MANIFEST.json's
+  files), mostly the briefing and fact-check judges.
 - Pages are 178 to 318 words, short of the plan's 700-word ceiling: the generator pads each page to a seeded length
   from its bank's filler sentences.
 - Briefing citation dates are not checked against the page.
@@ -122,9 +139,45 @@ preregistered first set (3 to 5, 15, 20 and 2) scored the same on Opus; its amen
 ### 2026-11-02: Calibration froze harder knobs
 
 Calibration round 2 raised every knob: chain depth 4 to 5 (was 3 to 5), 20 look-alike company pairs (was 15), 24
-look-alike person pairs (was 20) and 6 distractors per account (was 2). The world grew from 999 to 1,030 pages and every
-split was regenerated; the task counts per family did not change. MANIFEST.json sha256 is now `3f416c5e…` (was
-`04f8f287…`). Opus scored the same at both settings, and the harder set is frozen for the gate.
+look-alike person pairs (was 20) and 6 distractors per account (was 2). Opus scored the same at both settings, and the
+harder set is frozen for the gate. The world grew from 999 to 1,030 pages and every split was regenerated, with the
+fact-check and scorer fixes below; the task counts per family did not change. MANIFEST.json sha256 is now
+`a677090b…` (it was `eebc02ff…` at the registered knobs after those fixes).
+
+### 2026-11-02: Query refusals with "can't", "won't" and common refusal verbs fail
+
+Pass-2 review of #308 found the query negation guard still let refusals of the gold value pass. It built "can't" as
+"cann't" and had no "won't", so "I can't confirm 240 seats" passed substance with a straight or curly apostrophe, and
+"could not find 240", "doesn't show 240", "no record of 240" and "not able to confirm 240" passed too. All of them now
+fail. The status paragraph now says a report calling everything false fails each task with a true part, where it said
+such a report fails the true claims; Known limits gives how few of those tasks train and selection hold and what an
+all-FALSE report scores on each split.
+
+The query judges changed with the scorer; query tasks and their placement did not, and briefing and fact-check are
+byte-identical. MANIFEST.json's sha256 went from `e944b2d8` to `eebc02ff` and `data_sha256` from `eba61eb6` to
+`10a0a282`; the dataset grew from 10,733,381 to 10,763,777 bytes.
+
+### 2026-11-02: Fact-check places true claims; the fact-check and query scorers read status and negation as meant
+
+Round-1 review of #308 found four scorer and dataset defects, fixed together with a regenerated v3:
+
+- Fact-check assembly sorted true claims behind false ones, so no placed task was supported (train 0 / 18 / 6, selection
+  0 / 18 / 6, gate 0 / 32 / 4, test 0 / 84 / 12 by supported / contradicted / not-supported) and a report calling
+  everything false passed every absent task. Each family that makes claims right or wrong now fills its quotas by
+  status in its candidates' proportion: 2 / 16 / 6, 2 / 16 / 6, 10 / 22 / 4 and 27 / 57 / 12. Quotas, seeds and knobs
+  are unchanged; fact-check groups went from 130 to 131. A new degenerate answer (every claim or part FALSE) must fail
+  substance on every task with a true part; it dropped no candidate.
+- The fact-check scorer read a status word anywhere in a block and counted a part covered when its key word appeared
+  anywhere in it, so a correct report failed for "was correct before the amendment", "Amendment status: confirmed",
+  per-part lines under a whole-claim block or "USD 1,175/seat/year" in a price block. Status now comes from the
+  `STATUS:` lines and coverage from the `CLAIM:` line; "/seat", "per-seat" and "before discount" no longer name a part.
+- A second block giving `DISPUTED` for a contradicted or unsupported claim passed; it now fails.
+- A query answer that negated or refused the gold value ("Not 240 seats", "I cannot confirm 240 seats") passed; it now
+  fails, while "240 seats, not the 200 the MSA set" still passes.
+
+The query judges changed with the scorer; query tasks and their placement did not, and briefing is byte-identical.
+MANIFEST.json's sha256 went from `04f8f287` to `e944b2d8` and `data_sha256` from `7167655f` to `eba61eb6`; the
+dataset grew from 10,056,321 to 10,733,381 bytes (the "about 9.7 MB" line now reads about 10.7 MB).
 
 ### 2026-11-02: The pin sentence names gbrain `311a83bbe`
 

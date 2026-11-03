@@ -74,8 +74,21 @@ describe('decisive reads and harness limits', () => {
   });
 
   test('a refused decisive read is a refused get_page or traverse_graph call on a decisive page (any case, with or without .md); a refused read of another page or by another tool is not', () => {
-    const calls = [refused('get_page', 'People/A.md', KNOWN), refused('get_page', 'people/z', KNOWN), refused('search', 'people/a', 'bad query'), refused('traverse_graph', 'deals/b', HOPS), ok('get_page', 'people/a')];
+    const calls = [refused('get_page', 'People/A.md', KNOWN), refused('get_page', 'people/z', KNOWN), refused('search', 'people/a', 'bad query'), refused('traverse_graph', 'deals/b', HOPS), ok('get_page', 'people/z')];
     expect(refusedDecisiveReads(calls, ['people/a', 'deals/b']).map(c => (c.input as { slug: string }).slug)).toEqual(['People/A.md', 'deals/b']);
+  });
+
+  test('a refused decisive read does not count when a get_page or traverse_graph call on the same page succeeded anywhere in the rollout; a read of another page or by another tool does not clear it', () => {
+    expect(refusedDecisiveReads([refused('get_page', 'People/A.md', WINDOW), ok('get_page', 'people/a')], ['people/a'])).toEqual([]);
+    expect(refusedDecisiveReads([refused('traverse_graph', 'deals/b', HOPS), ok('get_page', 'deals/b.md')], ['deals/b'])).toEqual([]);
+    expect(refusedDecisiveReads([refused('get_page', 'people/a', WINDOW), ok('get_page', 'people/z'), ok('search', 'people/a')], ['people/a'])).toHaveLength(1);
+    expect(refusedDecisiveReads([ok('get_page', 'people/a'), refused('get_page', 'people/a', WINDOW)], ['people/a'])).toEqual([]);
+  });
+
+  test('a successful traverse_graph clears only a refused traverse_graph on its page: its nodes carry no page body, so a refused get_page stays limited', () => {
+    expect(refusedDecisiveReads([refused('get_page', 'contracts/acme-msa', WINDOW), ok('traverse_graph', 'contracts/acme-msa')], ['contracts/acme-msa'])).toHaveLength(1);
+    expect(harnessLimit({ stop_reason: 'end', tool_calls: [refused('get_page', 'contracts/acme-msa', WINDOW), ok('traverse_graph', 'contracts/acme-msa')] }, ['contracts/acme-msa'])).toBe('refused-decisive-read');
+    expect(refusedDecisiveReads([refused('traverse_graph', 'contracts/acme-msa', HOPS), ok('traverse_graph', 'contracts/acme-msa')], ['contracts/acme-msa'])).toEqual([]);
   });
 
   test('stop reasons: end is completed, max_turns the 20-turn limit, length the output limit; a rollout is harness-limited by either limit or a refused decisive read', () => {
@@ -83,7 +96,9 @@ describe('decisive reads and harness limits', () => {
     expect(countStops(['end', 'end', 'max_turns', 'length', null])).toEqual({ completed: 2, 'turn-limit': 1, 'output-length': 1, other: 1 });
     expect(harnessLimit({ stop_reason: 'max_turns', tool_calls: [] }, ['people/a'])).toBe('turn-limit');
     expect(harnessLimit({ stop_reason: 'length' }, ['people/a'])).toBe('output-length');
-    expect(harnessLimit({ stop_reason: 'end', tool_calls: [refused('get_page', 'people/a', WINDOW), ok('get_page', 'people/a')] }, ['people/a'])).toBe('refused-decisive-read');
+    expect(harnessLimit({ stop_reason: 'end', tool_calls: [refused('get_page', 'people/a', WINDOW)] }, ['people/a'])).toBe('refused-decisive-read');
+    expect(harnessLimit({ stop_reason: 'end', tool_calls: [refused('get_page', 'people/a', WINDOW), ok('get_page', 'people/z')] }, ['people/a'])).toBe('refused-decisive-read');
+    expect(harnessLimit({ stop_reason: 'end', tool_calls: [refused('get_page', 'people/a', WINDOW), ok('get_page', 'people/a')] }, ['people/a'])).toBeNull();
     expect(harnessLimit({ stop_reason: 'end', tool_calls: [refused('get_page', 'people/z', WINDOW)] }, ['people/a'])).toBeNull();
     expect(harnessLimit({ stop_reason: 'end', tool_calls: [ok('get_page', 'people/a')] }, ['people/a'])).toBeNull();
   });

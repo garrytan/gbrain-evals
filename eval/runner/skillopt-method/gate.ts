@@ -175,7 +175,8 @@ function readLabels(labels: Record<string, PairLabel | 'not-run'>, input: Omit<G
 
   if (input.budget_stop) return result('incomplete', null, 'stop');
   if (input.unsolvable.length) return result('invalid', 'invalid', input.attempt === 1 ? 'revise' : 'stop');
-  if (!scope.length) return result('fail', 'harness', 'stop');
+  const revisable = (limitedPairs: readonly string[]) => input.attempt === 1 && !(limitedPairs.length > 0 && limitedPairs.every(k => refusalLimited.has(k)));
+  if (!scope.length) return result('fail', 'harness', revisable(Object.keys(labels)) ? 'revise' : 'stop');
   const cause = causeOf(counts, required);
   if (cause === null) return counts.H >= GATE.minPoweredPairs ? result('pass', null, 'b0') : result('fail', 'underpowered', 'stop');
   const scopedLimited = scoped.filter(k => labels[k] === 'harness-limited');

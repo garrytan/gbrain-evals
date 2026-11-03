@@ -385,6 +385,34 @@ describe('skillopt-method-v3: layouts and mutations over train and selection', (
       }
     }
   });
+
+  test('fact-check: status words outside the STATUS: line, a whole-claim block with a status line per part, and part words in notes do not change substance', () => {
+    let compound = 0;
+    for (const t of trainSel('fact-check')) {
+      const s = t.gold.spec;
+      if (s.kind !== 'fact-check') throw new Error(t.task_id);
+      const noisy = t.oracle_answer.replace(/^NOTES: (.*)$/gm, (_, n) => 'NOTES: ' + n + ' The claimed value was correct before the record in force took effect; the figure is per seat, USD 1/seat/year before discount.\nAmendment status: confirmed in force');
+      expect([t.task_id, 'status words in notes', layers(t, noisy).substance]).toEqual([t.task_id, 'status words in notes', true]);
+      if (s.parts.length < 2) continue;
+      compound++;
+      const slugs = s.cite.map(g => g[0]!).join(', ');
+      const fixes = s.parts.flatMap(p => (p.correct ? [shown(p.correct)] : []));
+      const whole = '[1] CLAIM: ' + claimOf(t) + '\nLANE: data-derived\nSTATUS: ' + LABEL[s.status] + '\nSOURCE: ' + slugs + '\n' + s.parts.map(p => '- ' + PART_WORD[p.key!] + ': ' + (p.status === 'supported' ? 'correct' : 'incorrect' + (p.correct ? ', the brain holds ' + shown(p.correct) : ''))).join('\n') + '\n' + (fixes.length ? 'Correct value: ' + fixes.join('; ') : 'NOTES: The pages in force confirm it.');
+      expect([t.task_id, 'whole-claim block with part lines', layers(t, whole).failed.map(c => (c as V3Check).kind)]).toEqual([t.task_id, 'whole-claim block with part lines', []]);
+    }
+    expect(compound).toBeGreaterThan(5);
+  });
+
+  test('fact-check: every split places true claims, and every right-or-wrong family places both true and false claims in each split it fills', () => {
+    const tasks = allTasks('fact-check');
+    for (const sp of SPLITS_V3) expect([sp, tasks.some(t => t.split === sp && t.gold.status === 'supported')]).toEqual([sp, true]);
+    for (const family of ['compound', 'role-on-date', 'three-hop', 'lookalike-founder']) for (const sp of SPLITS_V3) {
+      const placed = tasks.filter(t => t.family === family && t.split === sp);
+      if (!placed.length) continue;
+      const statuses = [...new Set(placed.map(t => t.gold.status))].sort();
+      expect([family, sp, statuses]).toEqual([family, sp, ['contradicted', 'supported']]);
+    }
+  });
 });
 
 describe('skillopt-method-v3: scorer cases', () => {
@@ -397,6 +425,17 @@ describe('skillopt-method-v3: scorer cases', () => {
     expect(run('query', qv, 'Answer: 335 seats [Source: contracts/wyncrest-produce-renewal-2025]')).toEqual([false, false]);
     expect(run('query', qv, 'Let me check the records.\n\nThe seat count is 240 (contracts/wyncrest-produce-renewal-2025).')).toEqual([false, true]);
     expect(run('query', qv, 'Per the Dec. 2025 renewal, i.e. contracts/wyncrest-produce-renewal-2025, the count is 240. Before that 335.')).toEqual([false, true]);
+  });
+  test('query: a negated or refused gold value fails; a correction or a note after the value passes', () => {
+    expect(run('query', qv, 'Answer: Not 240 seats [Source: contracts/wyncrest-produce-renewal-2025]')).toEqual([false, false]);
+    expect(run('query', qv, 'I cannot confirm 240 seats [Source: contracts/wyncrest-produce-renewal-2025].')).toEqual([false, false]);
+    expect(run('query', qv, 'Answer: Wyncrest Produce no longer has 240 seats [Source: contracts/wyncrest-produce-renewal-2025]')).toEqual([false, false]);
+    for (const refusal of ["I can't confirm 240 seats", 'I can’t confirm 240 seats', "It won't be 240 seats", 'It won’t be 240 seats', "The brain doesn't show 240 seats", 'I could not find 240 seats', 'There is no record of 240 seats', 'I am not able to confirm 240 seats']) {
+      expect(run('query', qv, `${refusal} [Source: contracts/wyncrest-produce-renewal-2025].`)).toEqual([false, false]);
+    }
+    expect(run('query', qv, 'Answer: 240 seats, not the 200 the MSA set [Source: contracts/wyncrest-produce-renewal-2025]')).toEqual([true, true]);
+    expect(run('query', qv, 'Answer: 240 seats (no change since the renewal) [Source: contracts/wyncrest-produce-renewal-2025]')).toEqual([true, true]);
+    expect(run('query', qv, 'Answer: the seat count has not changed from 240 [Source: contracts/wyncrest-produce-renewal-2025]')).toEqual([true, true]);
   });
   test('query: abstentions and look-alikes', () => {
     const qa: GoldV3 = { values: [], slugs: [], subject: 'Wyncrest Freight', spec: { kind: 'absent', name: 'Wyncrest Freight', distractors: [{ kind: 'number', value: 240 }] } };
@@ -427,6 +466,42 @@ describe('skillopt-method-v3: scorer cases', () => {
     expect(run('fact-check', fc, perPart + '\n\n[3] CLAIM: The seat count of 300.\nSTATUS: ✅ VERIFIED\nSOURCE: contracts/a-msa')).toEqual([false, false]);
     expect(run('fact-check', fc, perPart.replace('STATUS: ✅ VERIFIED', 'STATUS: ❌ FALSE'))).toEqual([false, false]);
     expect(run('fact-check', fc, '| Part | Claimed | Brain | Status |\n|---|---|---|---|\n| Seats | 300 | 240 (contracts/a-amendment-1) | FALSE |\n| Discount | 15% | 15% (contracts/a-msa) | VERIFIED |')).toEqual([false, true]);
+  });
+  test('fact-check: a block\'s status is read from its STATUS: lines and its parts from its CLAIM: line', () => {
+    const f01: GoldV3 = { values: [], slugs: [], status: 'contradicted', spec: { kind: 'fact-check', status: 'contradicted', cite: [['contracts/yewlow-fasteners-amendment-1']], parts: [{ key: null, status: 'contradicted', correct: { kind: 'name', value: 'Tier 1' } }] } };
+    const oracle01 = '# Fact-Check Report: data-derived claim\n\n## Corrections Applied\n1. As of November 9, 2024, Yewlow Fasteners\' support tier was Tier 3. — was: as claimed, now: Tier 1, source: contracts/yewlow-fasteners-amendment-1\n\n## Full Claim-by-Claim Report\n[1] CLAIM: As of November 9, 2024, Yewlow Fasteners\' support tier was Tier 3.\nLANE: data-derived\nSTATUS: ❌ FALSE\nSOURCE: contracts/yewlow-fasteners-amendment-1\nNOTES: Correct value: Tier 1.';
+    expect(run('fact-check', f01, oracle01)).toEqual([true, true]);
+    expect(run('fact-check', f01, oracle01 + ' Tier 3 was correct before the amendment took effect.')).toEqual([true, true]);
+    expect(run('fact-check', f01, oracle01 + '\nAmendment status: confirmed in force')).toEqual([true, true]);
+    expect(run('fact-check', f01, oracle01 + '\n\n[2] CLAIM: As of November 9, 2024, Yewlow Fasteners\' support tier was Tier 3.\nLANE: data-derived\nSTATUS: ⚖️ DISPUTED\nSOURCE: contracts/yewlow-fasteners-amendment-1')).toEqual([false, false]);
+
+    const f02: GoldV3 = { values: [], slugs: [], status: 'contradicted', spec: { kind: 'fact-check', status: 'contradicted', cite: [['contracts/wynlow-fulfillment-renewal-2025'], ['contracts/wynlow-fulfillment-amendment-1']], parts: [{ key: 'seats', status: 'contradicted', correct: { kind: 'number', value: 625 } }, { key: 'price', status: 'contradicted', correct: { kind: 'number', value: 1250, unit: 'money' } }, { key: 'tier', status: 'supported' }] } };
+    const whole02 = '[1] CLAIM: As of December 9, 2025, Wynlow Fulfillment\'s subscribed seat count was 515, its list price per seat per year was USD 1,450 and its support tier was Tier 2.\nLANE: data-derived\nSTATUS: ❌ FALSE\nSOURCE: contracts/wynlow-fulfillment-renewal-2025, contracts/wynlow-fulfillment-amendment-1\n- Seat count: incorrect, the brain holds 625\n- List price: incorrect, the brain holds USD 1,250\n- Support tier: correct (Tier 2)\nCorrect value: 625 seats; USD 1,250';
+    expect(run('fact-check', f02, whole02)).toEqual([true, true]);
+    expect(run('fact-check', f02, whole02 + '\n\n[2] CLAIM: As of December 9, 2025, Wynlow Fulfillment\'s subscribed seat count was 515.\nLANE: data-derived\nSTATUS: ⚖️ DISPUTED\nSOURCE: contracts/wynlow-fulfillment-renewal-2025')).toEqual([false, false]);
+
+    const f18: GoldV3 = { values: [], slugs: [], status: 'contradicted', spec: { kind: 'fact-check', status: 'contradicted', cite: [['contracts/prahaven-hardware-renewal-2024'], ['contracts/prahaven-hardware-renewal-2024', 'contracts/prahaven-hardware-rescission-1']], parts: [{ key: 'seats', status: 'contradicted', correct: { kind: 'number', value: 560 } }, { key: 'price', status: 'supported' }, { key: 'discount', status: 'contradicted', correct: { kind: 'number', value: 5, unit: 'percent' } }] } };
+    const block18 = (n: number, claim: string, status: string, source: string, notes: string) => '[' + n + '] CLAIM: As of February 12, 2025, Prahaven Hardware\'s ' + claim + '\nLANE: data-derived\nSTATUS: ' + status + '\nSOURCE: ' + source + '\n' + notes;
+    const report18 = (price: string, priceNotes: string) => [
+      block18(1, 'subscribed seat count was 465.', '❌ FALSE', 'contracts/prahaven-hardware-renewal-2024', 'Correct value: 560.'),
+      block18(2, price, '✅ VERIFIED', 'contracts/prahaven-hardware-renewal-2024', priceNotes),
+      block18(3, 'percentage discount was 10%.', '❌ FALSE', 'contracts/prahaven-hardware-renewal-2024, contracts/prahaven-hardware-rescission-1', 'Correct value: 5%.'),
+    ].join('\n\n');
+    expect(run('fact-check', f18, report18('list price per seat per year was USD 1,175.', 'The page in force confirms it.'))).toEqual([true, true]);
+    expect(run('fact-check', f18, report18('list price per seat per year was USD 1,175.', 'The renewal lists USD 1,175/seat/year, before discount, for every seat.'))).toEqual([true, true]);
+    expect(run('fact-check', f18, report18('list price was USD 1,175/seat/year.', 'The page in force confirms it.'))).toEqual([true, true]);
+    expect(run('fact-check', f18, report18('per-seat list price was USD 1,175 before discount.', 'The page in force confirms it.'))).toEqual([true, true]);
+  });
+  test('fact-check: every part marked FALSE is a degenerate answer that fails a task with a supported part', () => {
+    const fc: GoldV3 = { values: [], slugs: [], status: 'contradicted', spec: { kind: 'fact-check', status: 'contradicted', cite: [['contracts/a-msa'], ['contracts/a-amendment-1']], parts: [{ key: 'seats', status: 'contradicted', correct: { kind: 'number', value: 240 } }, { key: 'discount', status: 'supported' }] } };
+    const fs: GoldV3 = { values: [], slugs: ['companies/acme', 'people/jo-ray'], status: 'supported', spec: { kind: 'fact-check', status: 'supported', cite: [['companies/acme', 'people/jo-ray']], parts: [{ key: null, status: 'supported' }] } };
+    for (const gold of [fc, fs]) {
+      const negative = degenerateAnswers('fact-check', { gold, distractors: { slugs: [], values: [] }, answerable: true }).find(d => d.kind === 'always-negative');
+      expect(negative).toBeTruthy();
+      expect(run('fact-check', gold, negative!.text)).toEqual([false, false]);
+    }
+    const contradicted: GoldV3 = { values: [], slugs: [], status: 'contradicted', spec: { kind: 'fact-check', status: 'contradicted', cite: [['contracts/a-msa']], parts: [{ key: null, status: 'contradicted', correct: { kind: 'number', value: 240 } }] } };
+    expect(degenerateAnswers('fact-check', { gold: contradicted, distractors: { slugs: [], values: [] }, answerable: true }).map(d => d.kind)).not.toContain('always-negative');
   });
 });
 
