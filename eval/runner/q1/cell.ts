@@ -87,7 +87,7 @@ import { ContextStore } from '../memory-qa/arms.ts';
 import { instrumentFor, type Instrument } from '../memory-qa/instruments.ts';
 import { DEFAULT_MAX_ATTEMPTS, OUTCOMES, type Outcome } from '../memory-qa/outcomes.ts';
 import { ChatClient, chatWithReceipts, isCompatModel, judgeAnswer, READER_TEMPLATE, type ChatLike } from '../memory-qa/qa-v2.ts';
-import { answerId, answerRecord, judgmentKey, readerAttempts, readRecords, RecordLog, sha256, type AnswerRecord, type JudgmentRecord, type Q1Row, type ReaderAttempt } from '../memory-qa/records.ts';
+import { answerId, answerRecord, judgmentKey, readerAttempts, readRecords, RecordLog, sha256, type AnswerPayload, type AnswerRecord, type JudgmentRecord, type Q1Row, type ReaderAttempt } from '../memory-qa/records.ts';
 import { failureRow, hashEmbed, readinessProbe, selectQuestions } from '../memory-qa/run-systems.ts';
 import { checkSealedDestinations, sealedPaths } from '../memory-qa/sealed-profile.ts';
 import { PaidArmRefusal, requirePaidArm } from '../paid-arm.ts';
@@ -114,7 +114,7 @@ export const ROW_FLUSH_EVERY = 20;
 const FRONT = ['bun', 'eval/runner/q1/cell.ts'];
 /** Outcomes a resume never retries (eval/runner/memory-qa/outcomes.ts); every other outcome retries up to the attempt limit. */
 const FINAL: ReadonlySet<Outcome> = new Set(['scored', 'unsupported', 'ingest_degraded', 'turn_cap', 'context_overflow', 'does_not_fit']);
-const JUDGED: ReadonlySet<Outcome> = new Set(['scored', 'ingest_degraded']);
+export const JUDGED: ReadonlySet<Outcome> = new Set(['scored', 'ingest_degraded']);
 const READER_MAX_TOKENS = 2048;
 /**
  * The output limit a packed or full-context reader is sent: READER_MAX_TOKENS, raised to an OpenAI-compatible model's
@@ -219,6 +219,33 @@ export function needsCustody(def: Pick<CellDefinition, 'benchmark' | 'split'>): 
   try { return loadSplit(def.benchmark).sealed.length > 0; } catch { return true; }
 }
 
+/**
+ * Contract 10 for a run that opens a sealed cell's conversations: GBRAIN_EVALS_CUSTODY_LOG set, `out` a custody root
+ * outside the repository, and the opening logged (with `purpose`) before the corpus or any sealed staging is read.
+ */
+export function custodyGate(def: Pick<CellDefinition, 'id' | 'benchmark' | 'split'>, out: string, env: Record<string, string | undefined>, purpose: string): void {
+  const log = env.GBRAIN_EVALS_CUSTODY_LOG;
+  if (!log) throw refuse({ code: 'CUSTODY_REQUIRED', message: `cell ${def.id} opens sealed conversations (${def.benchmark}, split ${def.split}) and GBRAIN_EVALS_CUSTODY_LOG is not set`,
+    why: 'sealed sets open only on the custodian\'s host, and every opening is logged before a question is read', fix: { next: 'ask_user', user_message: `ask the custodian to run ${def.id} on the custody host (decision q1-scoreboard)` } });
+  try { checkSealedDestinations(sealedPaths(out, out)); }
+  catch (e) { throw refuse({ code: 'SEALED_CELL_LOCAL', message: `cell ${def.id}: ${(e as Error).message}`, why: 'sealed rows, answers, contexts and caches stay inside a custody root outside the repository; only --aggregates may write inside it', fix: { next: 'run', argv: [...FRONT, 'run', '--cell', def.id, '--out', '<custody root outside the repository>'] } }); }
+  appendAccessLog(log, { action: 'open', purpose, decision_id: env.GBRAIN_EVALS_DECISION_ID ?? 'q1-scoreboard', labels_sha256: 'public-split-file', run_sha256: null });
+}
+
+/** The questions a cell schedules: its split's (and only_conversations') questions under its selection, cut to `limit` when one is given. */
+export function scheduledQuestions(def: CellDefinition, corpus: Corpus, limit: number | null): MemoryQuestion[] {
+  const allowed = new Set([...splitConversations(def.benchmark, def.split, corpus)].filter(c => !def.only_conversations || def.only_conversations.includes(c)));
+  const selected = selectCellQuestions(corpus.questions.filter(q => allowed.has(q.conversation)), def.selection);
+  return limit ? selectCellQuestions(selectQuestions(selected, limit, 42), { kind: 'all' }) : selected;
+}
+
+/** Q1 never judges with an OpenAI-compatible model: particle-1 reads but never judges a counted cell (plan GST-605). */
+export function refuseCompatJudges(cellId: string, judges: string[]): void {
+  const compat = [...new Set(judges)].filter(isCompatModel);
+  if (compat.length) throw refuse({ code: 'USAGE', message: `cell ${cellId} judges with ${compat.join(', ')}, and Q1 never judges with an OpenAI-compatible model`,
+    why: 'particle-1 reads but never judges a counted cell (plan GST-605); a judge is the instrument every reader is scored by, so it stays one the preregistration names', fix: { next: 'report', user_message: `judge ${cellId} with its instrument's canonical judge, and list frontier judges from the preregistration only` } });
+}
+
 // ─── Dependencies and options ────────────────────────────────────────
 
 export interface CellOptions {
@@ -289,14 +316,14 @@ export interface IngestSummary {
   readiness_probe: string; degraded: boolean; errors: Array<{ source_id: string; kind: string; message: string }>;
 }
 export interface ProbeRecord { realization_id: string; source_id: string; kind: 'last' | 'sample'; status: 'found' | 'missed' | 'not-measurable'; write_start_to_queryable_ms: number | null; polls: number }
-interface StagedRetrieval {
+export interface StagedRetrieval {
   key: string; question_id: string; policy: string; attempt: number; outcome: Outcome; error?: string; error_kind?: string;
   items: Item[]; applied_settings: Record<string, unknown>; truncated: boolean; latency_ms: number | null; harness_ms: number; query_time: string | null; at: string;
   /** A22: the realization whose store answered this retrieval, when it was carried into a later realization. */
   realization_id?: string;
 }
 /** `background_tail` is a realization's system-slot spend after its /finish and outside retrieval and own-answer calls (key `tail:<realization>`). */
-interface MeterLine { phase: 'ingest' | 'retrieval' | 'reader' | 'judge' | 'background_tail'; key: string; usd: number; requests: number; unpriced: number }
+export interface MeterLine { phase: 'ingest' | 'retrieval' | 'reader' | 'judge' | 'background_tail'; key: string; usd: number; requests: number; unpriced: number }
 const SPEND_PHASES = ['ingest', 'retrieval', 'reader', 'judge', 'background_tail'] as const;
 
 class Staging {
@@ -320,7 +347,7 @@ class Staging {
 }
 
 /** Latest record per key from an append-only log. */
-function latestBy<T>(path: string, key: (x: T) => string): Map<string, T> {
+export function latestBy<T>(path: string, key: (x: T) => string): Map<string, T> {
   const m = new Map<string, T>();
   for (const x of readLines<T>(path)) m.set(key(x), x);
   return m;
@@ -354,7 +381,7 @@ export function readerFitTokenizer(reader: string): FitTokenizer {
 
 // ─── Metering ────────────────────────────────────────────────────────
 
-interface Metering {
+export interface Metering {
   slotEnv<T>(slot: string, fn: () => Promise<T>): Promise<T>;
   around<T>(slot: string, key: string, phase: MeterLine['phase'], fn: () => Promise<T>): Promise<{ value?: T; error?: unknown; meter: Meter | null }>;
   phase(slot: string, phase: Phase | null): Promise<void>;
@@ -366,7 +393,8 @@ interface Metering {
   tail(slot: string, realization: { id: string; ns: string } | null): Promise<void>;
 }
 
-function metering(proxy: string | null, staging: Staging, env: Record<string, string | undefined>): Metering {
+/** A run's proxy slots and meters (a no-op without a proxy); each finalized key's spend is written to `sink`. */
+export function metering(proxy: string | null, sink: { meter(m: MeterLine): void }, env: Record<string, string | undefined>): Metering {
   if (!proxy) return {
     slotEnv: (_slot, fn) => fn(),
     async around(_slot, _key, _phase, fn) { try { return { value: await fn(), meter: null }; } catch (error) { return { error, meter: null }; } },
@@ -388,7 +416,7 @@ function metering(proxy: string | null, staging: Staging, env: Record<string, st
     const t = tails.get(slot);
     if (t) await ctl.bind(slot, t.key, { brain: t.brain, phase: 'background' }); else await ctl.unbind(slot);
   };
-  const record = (phase: MeterLine['phase'], key: string, m: Meter) => staging.meter({ phase, key, usd: m.usd, requests: m.requests, unpriced: m.unpriced });
+  const record = (phase: MeterLine['phase'], key: string, m: Meter) => sink.meter({ phase, key, usd: m.usd, requests: m.requests, unpriced: m.unpriced });
   return {
     slotEnv,
     async around(slot, key, phase, fn) {
@@ -411,7 +439,7 @@ function metering(proxy: string | null, staging: Staging, env: Record<string, st
 }
 
 /** A ChatLike whose calls go out on a proxy slot (readers on `harness`, judges on `judge`). */
-const onSlot = (chat: ChatLike, m: Metering, slot: string): ChatLike => ({ chat: (model, prompt, opts) => m.slotEnv(slot, () => chat.chat(model, prompt, opts)) });
+export const onSlot = (chat: ChatLike, m: Metering, slot: string): ChatLike => ({ chat: (model, prompt, opts) => m.slotEnv(slot, () => chat.chat(model, prompt, opts)) });
 
 // ─── Systems ─────────────────────────────────────────────────────────
 
@@ -569,25 +597,14 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
   const arms = def.arms.filter(a => !opts.arms || opts.arms.includes(a.id));
   if (!arms.length) throw refuse({ code: 'USAGE', message: `--arms ${opts.arms?.join(',')} names no arm of ${def.id}`, why: 'a run needs at least one arm', fix: { next: 'run', argv: [...FRONT, 'show', '--cell', def.id] } });
   const instrument = instrumentFor(def.canonical_instrument);
-  const compatJudges = [...new Set([instrument.canonical_judge, ...(opts.frontier === false ? [] : arms.flatMap(a => a.frontier?.judges ?? []))])].filter(isCompatModel);
-  if (compatJudges.length) throw refuse({ code: 'USAGE', message: `cell ${def.id} judges with ${compatJudges.join(', ')}, and Q1 never judges with an OpenAI-compatible model`,
-    why: 'particle-1 reads but never judges a counted cell (plan GST-605); a judge is the instrument every reader is scored by, so it stays one the preregistration names', fix: { next: 'report', user_message: `judge ${def.id} with its instrument's canonical judge, and list frontier judges from the preregistration only` } });
+  refuseCompatJudges(def.id, [instrument.canonical_judge, ...(opts.frontier === false ? [] : arms.flatMap(a => a.frontier?.judges ?? []))]);
 
   // Custody before anything reads the corpus.
   const custody = !deps.corpus && needsCustody(def);
-  if (custody) {
-    const log = env.GBRAIN_EVALS_CUSTODY_LOG;
-    if (!log) throw refuse({ code: 'CUSTODY_REQUIRED', message: `cell ${def.id} opens sealed conversations (${def.benchmark}, split ${def.split}) and GBRAIN_EVALS_CUSTODY_LOG is not set`,
-      why: 'sealed sets open only on the custodian\'s host, and every opening is logged before a question is read', fix: { next: 'ask_user', user_message: `ask the custodian to run ${def.id} on the custody host (decision q1-scoreboard)` } });
-    try { checkSealedDestinations(sealedPaths(out, out)); }
-    catch (e) { throw refuse({ code: 'SEALED_CELL_LOCAL', message: `cell ${def.id}: ${(e as Error).message}`, why: 'sealed rows, answers, contexts and caches stay inside a custody root outside the repository; only --aggregates may write inside it', fix: { next: 'run', argv: [...FRONT, 'run', '--cell', def.id, '--out', '<custody root outside the repository>'] } }); }
-    appendAccessLog(log, { action: 'open', purpose: `q1 cell ${def.id}`, decision_id: env.GBRAIN_EVALS_DECISION_ID ?? 'q1-scoreboard', labels_sha256: 'public-split-file', run_sha256: null });
-  }
+  if (custody) custodyGate(def, out, env, `q1 cell ${def.id}`);
   mkdirSync(out, { recursive: true });
   const corpus = deps.corpus ?? loadCorpus(def.benchmark, undefined, devOnly(def) ?? undefined);
-  const allowed = new Set([...splitConversations(def.benchmark, def.split, corpus)].filter(c => !def.only_conversations || def.only_conversations.includes(c)));
-  let selected = selectCellQuestions(corpus.questions.filter(q => allowed.has(q.conversation)), def.selection);
-  if (opts.limit) selected = selectCellQuestions(selectQuestions(selected, opts.limit, 42), { kind: 'all' });
+  const selected = scheduledQuestions(def, corpus, opts.limit ?? null);
   const shard = opts.shard ?? { index: 0, count: 1 };
   const convIds = [...new Set(selected.map(q => q.conversation))].sort().filter((_, i) => i % shard.count === shard.index);
   const armQs = new Map(arms.map(a => [a.id, new Set((a.questions ? selectCellQuestions(selected, a.questions) : selected).map(q => q.id))]));
@@ -873,10 +890,7 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
     const retrievals = latestBy<StagedRetrieval>(retrievalsPath, r => r.key);
     const answers = new RecordLog(join(dir, 'answers.ndjson'), 'answer');
     const judgments = new RecordLog(join(dir, 'judgments.ndjson'), 'judgment');
-    const answerTries = new Map<string, number>();
-    /** A lease refusal's line keeps an OpenAI-compatible reader's receipts, but nothing reached the provider, so it is not a try. */
-    const isTry = (t: { outcome?: string; attempts?: unknown }) => !(t.outcome === 'budget_not_run' && t.attempts);
-    for (const t of readLines<{ answer_id: string; outcome?: string; attempts?: unknown }>(join(dir, 'answer-attempts.ndjson'))) if (isTry(t)) answerTries.set(t.answer_id, (answerTries.get(t.answer_id) ?? 0) + 1);
+    const appendAnswer = answerAppender(dir, answers, maxAttempts);
     const rowBuffer: Q1Row[] = [];
     const flush = () => {
       if (rowBuffer.length) appendFileSync(join(dir, 'attempts.ndjson'), rowBuffer.splice(0).map(r => JSON.stringify(r) + '\n').join(''));
@@ -911,17 +925,6 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
       appendFileSync(retrievalsPath, JSON.stringify(res.staged) + '\n');
       retrievals.set(key, res.staged);
       return res.staged;
-    };
-
-    const terminal = (id: string, outcome: Outcome) => FINAL.has(outcome) || (answerTries.get(id) ?? 0) + 1 >= maxAttempts;
-    /** One answering try; an OpenAI-compatible reader's line also keeps its provider attempts, so a retried try's receipts persist. */
-    const recordAttempt = (id: string, outcome: Outcome, error?: string, attempts?: ReaderAttempt[]) => { appendFileSync(join(dir, 'answer-attempts.ndjson'), JSON.stringify({ answer_id: id, outcome, error: error?.slice(0, 300), at: new Date().toISOString(), ...(attempts ? { attempts } : {}) }) + '\n'); if (isTry({ outcome, attempts })) answerTries.set(id, (answerTries.get(id) ?? 0) + 1); };
-    /** `final`: a try that must not be sent again (an OpenAI-compatible request that timed out, lost its connection or was answered 2xx without a message, which the provider may have billed). */
-    const appendAnswer = (raw: AnswerRecord, error?: string, pack: PackedContext | null = null, final = false) => {
-      const a = withDerived(raw, pack);
-      if (FINAL.has(a.outcome)) { answers.append(a); return; }
-      if (isTry(a) && (final || terminal(a.answer_id, a.outcome))) { recordAttempt(a.answer_id, a.outcome, error, a.attempts); answers.append(a); return; }
-      recordAttempt(a.answer_id, a.outcome, error, a.attempts);
     };
 
     const judgeOne = async (q: MemoryQuestion, a: AnswerRecord, arm: ArmDefinition) => {
@@ -989,28 +992,13 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
           if (r && (FINAL.has(r.outcome) || r.attempt >= maxAttempts)) answers.append(answerRecord(id, { text: '', outcome: r.outcome, usage: zero, latency_ms: 0, provider_input_tokens: null }));
           continue;
         }
-        const t0 = performance.now();
-        const chatOpts = { maxTokens: readerMaxTokens(rd), replicate: rep, effort: def.effort };
-        const receipts: UsageReceipt[] | null = isCompatModel(rd) ? [] : null;
-        const res = await meter.around('harness', `read:${aid.slice(0, 16)}`, 'reader', () => receipts
-          ? chatWithReceipts(reader, { role: 'reader', question_id: q.id, replicate: rep, model: rd, delivered: null }, pack!.prompt, chatOpts, receipts)
-          : reader.chat(rd, pack!.prompt, chatOpts));
-        const attempts = receipts ? readerAttempts(receipts) : undefined;
-        if (res.error !== undefined) {
-          const msg = String((res.error as Error).message);
-          const failed = (outcome: Outcome) => answerRecord(id, { text: '', outcome, usage: zero, latency_ms: Math.round(performance.now() - t0), provider_input_tokens: null, ...(attempts ? { finish: null, truncated: false, attempts } : {}) });
-          if (attempts ? (res.error as Error).name === 'BudgetExceededError' : /budget|BudgetExceeded/i.test(msg)) {
-            if (attempts) appendAnswer(failed('budget_not_run'), msg);
-            stopped = `budget: ${msg.slice(0, 200)}`;
-            return pack;
-          }
-          appendAnswer(failed('reader_error'), msg, null, attempts !== undefined && attempts.length > 0 && compatMayHaveBilled(res.error));
-          continue;
+        const reading = await readPrompt(reader, meter, { reader: rd, prompt: pack!.prompt, question_id: q.id, replicate: rep, effort: def.effort, key: `read:${aid.slice(0, 16)}`, outcome: r!.outcome });
+        if (reading.budget !== undefined) {
+          if (reading.payload) appendAnswer(answerRecord(id, reading.payload), reading.budget);
+          stopped = `budget: ${reading.budget.slice(0, 200)}`;
+          return pack;
         }
-        const c = res.value!;
-        const u = normalizeUsage(readerConvention(rd), c.usage ?? c);
-        appendAnswer(answerRecord(id, { text: c.text, outcome: r!.outcome, usage: answerUsage(u), latency_ms: Math.round(performance.now() - t0), provider_input_tokens: u.total_input,
-          ...(attempts ? { finish: c.finish, truncated: c.finish === 'length', attempts } : {}) }), undefined, pack);
+        appendAnswer(answerRecord(id, reading.payload!), reading.error, reading.error === undefined ? pack : null, reading.final);
       }
       return pack;
     };
@@ -1172,6 +1160,55 @@ export async function runCell(def: CellDefinition, opts: CellOptions, deps: Cell
 }
 
 /**
+ * The append of one answering try to an answers log beside its answer-attempts.ndjson in `dir`: a final outcome is the
+ * answer; any other is a try, and becomes the answer on the attempt limit or when `final` (a try that must not be sent
+ * again: an OpenAI-compatible request that timed out, lost its connection or was answered 2xx without a message, which
+ * the provider may have billed). A lease refusal's line keeps an OpenAI-compatible reader's receipts, but nothing reached
+ * the provider, so it is not a try. An OpenAI-compatible reader's line keeps its provider attempts, so a retried try's
+ * receipts persist.
+ */
+export function answerAppender(dir: string, answers: RecordLog<'answer'>, maxAttempts: number): (raw: AnswerRecord, error?: string, pack?: PackedContext | null, final?: boolean) => void {
+  const path = join(dir, 'answer-attempts.ndjson');
+  const tries = new Map<string, number>();
+  const isTry = (t: { outcome?: string; attempts?: unknown }) => !(t.outcome === 'budget_not_run' && t.attempts);
+  for (const t of readLines<{ answer_id: string; outcome?: string; attempts?: unknown }>(path)) if (isTry(t)) tries.set(t.answer_id, (tries.get(t.answer_id) ?? 0) + 1);
+  const terminal = (id: string, outcome: Outcome) => FINAL.has(outcome) || (tries.get(id) ?? 0) + 1 >= maxAttempts;
+  const recordAttempt = (id: string, outcome: Outcome, error?: string, attempts?: ReaderAttempt[]) => { appendFileSync(path, JSON.stringify({ answer_id: id, outcome, error: error?.slice(0, 300), at: new Date().toISOString(), ...(attempts ? { attempts } : {}) }) + '\n'); if (isTry({ outcome, attempts })) tries.set(id, (tries.get(id) ?? 0) + 1); };
+  return (raw, error, pack = null, final = false) => {
+    const a = withDerived(raw, pack);
+    if (FINAL.has(a.outcome)) { answers.append(a); return; }
+    if (isTry(a) && (final || terminal(a.answer_id, a.outcome))) { recordAttempt(a.answer_id, a.outcome, error, a.attempts); answers.append(a); return; }
+    recordAttempt(a.answer_id, a.outcome, error, a.attempts);
+  };
+}
+
+/**
+ * One reading of a frozen prompt on the `harness` slot, as a packed arm reads (an OpenAI-compatible reader through
+ * `chatWithReceipts`, at `readerMaxTokens`). `payload` is the answer to record: `outcome` on success, else a
+ * `reader_error` that is `final` when the provider may have billed it. A budget stop sets `budget` (the run stops) and
+ * keeps a compat reader's `budget_not_run` payload, whose receipts are recorded but which is not a try.
+ */
+export async function readPrompt(reader: ChatLike, meter: Metering, a: { reader: string; prompt: string; question_id: string; replicate: number; effort: string; key: string; outcome: Outcome }): Promise<{ payload: AnswerPayload | null; error?: string; final: boolean; budget?: string }> {
+  const t0 = performance.now();
+  const chatOpts = { maxTokens: readerMaxTokens(a.reader), replicate: a.replicate, effort: a.effort };
+  const receipts: UsageReceipt[] | null = isCompatModel(a.reader) ? [] : null;
+  const res = await meter.around('harness', a.key, 'reader', () => receipts
+    ? chatWithReceipts(reader, { role: 'reader', question_id: a.question_id, replicate: a.replicate, model: a.reader, delivered: null }, a.prompt, chatOpts, receipts)
+    : reader.chat(a.reader, a.prompt, chatOpts));
+  const attempts = receipts ? readerAttempts(receipts) : undefined;
+  if (res.error !== undefined) {
+    const msg = String((res.error as Error).message);
+    const failed = (outcome: Outcome): AnswerPayload => ({ text: '', outcome, usage: { input: 0, output: 0, cache_read: 0, cache_write: 0 }, latency_ms: Math.round(performance.now() - t0), provider_input_tokens: null, ...(attempts ? { finish: null, truncated: false, attempts } : {}) });
+    if (attempts ? (res.error as Error).name === 'BudgetExceededError' : /budget|BudgetExceeded/i.test(msg)) return { payload: attempts ? failed('budget_not_run') : null, final: false, budget: msg };
+    return { payload: failed('reader_error'), error: msg, final: attempts !== undefined && attempts.length > 0 && compatMayHaveBilled(res.error) };
+  }
+  const c = res.value!;
+  const u = normalizeUsage(readerConvention(a.reader), c.usage ?? c);
+  return { payload: { text: c.text, outcome: a.outcome, usage: answerUsage(u), latency_ms: Math.round(performance.now() - t0), provider_input_tokens: u.total_input,
+    ...(attempts ? { finish: c.finish, truncated: c.finish === 'length', attempts } : {}) }, final: false };
+}
+
+/**
  * The per-answer derived field on a judged answer (preregistration, "Derived columns"): the evidence its reader was
  * given, as the packed context's per-tokenizer counts on a component arm or the reader's total input tokens
  * (`reader_input`) on a whole-system arm. The hedge verdict is not stamped here: the scoreboard computes it at render
@@ -1191,7 +1228,7 @@ interface PublishCtx {
 }
 
 /** The valid realization of each conversation across staging roots (shards), and its records. */
-function gatherStaging(cellId: string, roots: string[]) {
+export function gatherStaging(cellId: string, roots: string[]) {
   const convs = new Map<string, { root: string; rid: string; ingest?: IngestSummary; probes: ProbeRecord[]; restored_from?: string; carried_from?: string; attempts: number }>();
   for (const root of roots) {
     const st = new Staging(root, cellId);
@@ -1335,13 +1372,13 @@ const VM_VCPU = 4;
 /** The provider keys a cell's VM receives (ubi-runner --pass): only its metering proxy reads them; the cell sees dummy keys. */
 const PROVIDER_KEYS = { openai: 'OPENAI_API_KEY', anthropic: 'ANTHROPIC_API_KEY', voyage: 'VOYAGE_API_KEY', particle: COMPAT_PROVIDERS.particle.key_env } as const;
 /** Waves: T1 first (S1 shim shards packed under the overnight cap), then each T2 set after T1 settles, in the preregistered scope-reduction order reversed. */
-const T2_WAVES: Record<string, number> = { 'T2-S2b': 1, 'T2-S3': 2, 'T2-S2a': 3, 'T2-S4-S5': 4, 'F6-T2': 1, 'F6-D8': 2, 'F6-S4': 3, 'F6-dry': 1 };
+const T2_WAVES: Record<string, number> = { 'T2-S2b': 1, 'T2-S3': 2, 'T2-S2a': 3, 'T2-S4-S5': 4, 'F6-T2': 1, 'F6-D8': 2, 'F6-S4': 3, 'F6-dry': 1, 'F6-P1': 1 };
 
 /** In-process systems whose adapter drives the bundle's own container: the unit builds it at setup and brings it up around the run like a shim stack (A19). */
 const IN_PROCESS_STACKS = new Set(['ext-agent-runtime']);
 
-/** One launch unit per cell, or per conversation shard for an S1 shim cell, in the shootout campaign's cell format. */
-export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight?: number; cellManifest?: 'q1' | 'f6' } = {}): CellSpec[] {
+/** One launch unit per cell, or per conversation shard for an S1 shim cell, in the shootout campaign's cell format; `addons` adds the manifest's addon_cells (a unit selection's campaign). */
+export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight?: number; cellManifest?: 'q1' | 'f6'; addons?: boolean } = {}): CellSpec[] {
   const perWave = Math.floor((opts.vcpuCapNight ?? 200) / VM_VCPU);
   const headline = (c: CellDefinition) => c.block === 'T1' || c.block === 'F6-S1';
   const t1Units = m.cells.filter(headline).flatMap(c => Array.from({ length: c.shards }, (_, i) => ({ c, i }))).sort((a, b) => b.c.estimate.usd / b.c.shards - a.c.estimate.usd / a.c.shards || (a.c.id < b.c.id ? -1 : 1) || a.i - b.i);
@@ -1371,6 +1408,7 @@ export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight
   const out: CellSpec[] = [];
   for (const c of m.cells) for (let i = 0; i < c.shards; i++) out.push(spec(c, i, false));
   if (opts.smoke) for (const c of m.smoke_cells ?? []) out.push(spec(c, 0, true));
+  if (opts.addons) for (const c of m.addon_cells ?? []) for (let i = 0; i < c.shards; i++) out.push(spec(c, i, false));
   return out;
 }
 
@@ -1382,8 +1420,8 @@ export interface UnitSelection { campaign_id: string; cap_usd: number; units: st
 export function campaignManifest(m: Manifest, opts: { smoke?: boolean; sealed?: { cap_usd: number }; smokeOnly?: boolean; units?: UnitSelection } = {}): Q1Campaign {
   const f6 = (m as { campaign_id?: string }).campaign_id;
   // F6 adds the temporal graph's 0.31.2 defaults (gpt-6-luna, text-embedding-3-small) to the models its campaign admits.
-  const models = [...new Set([...m.readers, ...Object.keys(m.prices), 'openai:gpt-4.1-mini', 'openai:text-embedding-3-large', 'anthropic:claude-opus-4-7', 'anthropic:claude-haiku-4-5', 'anthropic:claude-haiku-5-5', ...(f6 ? ['openai:gpt-6-luna', 'openai:text-embedding-3-small'] : [])])].sort();
-  const all = campaignCells(m, { ...opts, smoke: opts.smoke || opts.smokeOnly, cellManifest: opts.units?.cell_manifest }).filter(c => (!opts.sealed || c.sealed) && (!opts.smokeOnly || c.smoke));
+  const base = [...m.readers, ...Object.keys(m.prices), 'openai:gpt-4.1-mini', 'openai:text-embedding-3-large', 'anthropic:claude-opus-4-7', 'anthropic:claude-haiku-4-5', 'anthropic:claude-haiku-5-5', ...(f6 ? ['openai:gpt-6-luna', 'openai:text-embedding-3-small'] : [])];
+  const all = campaignCells(m, { ...opts, smoke: opts.smoke || opts.smokeOnly, cellManifest: opts.units?.cell_manifest, addons: !!opts.units }).filter(c => (!opts.sealed || c.sealed) && (!opts.smokeOnly || c.smoke));
   const u = opts.units;
   if (u) {
     const unknown = u.units.filter(id => !all.some(c => c.id === id));
@@ -1392,6 +1430,9 @@ export function campaignManifest(m: Manifest, opts: { smoke?: boolean; sealed?: 
     }
   }
   const cells = u ? all.filter(c => u.units.includes(c.id)) : all;
+  // A campaign also admits the OpenAI-compatible readers its units read (the particle-1 add-on's), which no price table of the manifest lists.
+  const compat = [...m.cells, ...(m.smoke_cells ?? []), ...(m.addon_cells ?? [])].filter(c => cells.some(x => x.id === c.id || x.id.startsWith(`${c.id}.c`))).flatMap(c => c.arms.flatMap(a => a.readers)).filter(isCompatModel);
+  const models = [...new Set([...base, ...compat])].sort();
   const id = u ? u.campaign_id : f6 ? `${f6}${opts.smokeOnly ? '-dry-run' : opts.sealed ? '-sealed' : ''}` : opts.sealed ? 'q1-scoreboard-sealed' : 'q1-scoreboard';
   const dryCap = (m as { dry_run_cap_usd?: number }).dry_run_cap_usd;
   const blocks = [...m.blocks, ...(opts.smokeOnly && dryCap ? [{ id: 'F6-dry' as const, estimate_usd: Math.round(m.smoke_cells.reduce((s, c) => s + c.estimate.usd, 0) * 100) / 100, cap_usd: dryCap }] : [])];
@@ -1426,13 +1467,13 @@ export function renderPlan(m: Manifest): string {
 export function findCell(id: string, given?: Manifest, manifest?: string): CellDefinition {
   if (manifest !== undefined && manifest !== 'q1' && manifest !== 'f6') throw refuse(usage(`--manifest takes q1 or f6, not ${manifest}`));
   const m = given ?? (manifest === 'f6' ? loadF6Manifest() : loadManifest());
-  const inManifest = (x: Manifest) => x.cells.find(c => c.id === id) ?? (x.smoke_cells ?? []).find(c => c.id === id);
+  const inManifest = (x: Manifest) => x.cells.find(c => c.id === id) ?? (x.smoke_cells ?? []).find(c => c.id === id) ?? (x.addon_cells ?? []).find(c => c.id === id);
   const c = inManifest(m);
   const f6 = !given && !manifest && existsSync(F6_MANIFEST_PATH) ? loadF6Manifest() : null;
   const hit = f6 ? inManifest(f6) : undefined;
   if (c && hit) throw refuse({ code: 'USAGE', message: `cell ${id} is defined in both ${rel(MANIFEST_PATH)} and ${rel(F6_MANIFEST_PATH)}, with different arms or judging`, why: 'a cell runs the definition its campaign was planned from; an id both manifests define cannot be resolved without naming the manifest', fix: { next: 'run', argv: [...FRONT, 'show', '--cell', id, '--manifest', 'f6'], user_message: 'pass --manifest q1 or --manifest f6' } });
   if (c ?? hit) return (c ?? hit)!;
-  const near = [...m.cells, ...(m.smoke_cells ?? [])].filter(x => x.id.includes(id.split('.')[0] ?? '')).slice(0, 5).map(x => x.id);
+  const near = [...m.cells, ...(m.smoke_cells ?? []), ...(m.addon_cells ?? [])].filter(x => x.id.includes(id.split('.')[0] ?? '')).slice(0, 5).map(x => x.id);
   throw refuse({ code: 'USAGE', message: `no cell ${id} in ${rel(MANIFEST_PATH)}`, why: 'run, show and merge take a cell id from the generated manifest', fix: { next: 'run', argv: [...FRONT, 'plan'], user_message: near.length ? `did you mean ${near.join(', ')}?` : 'list the cells with plan' } });
 }
 

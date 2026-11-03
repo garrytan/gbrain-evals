@@ -11,18 +11,19 @@ import { join, resolve } from 'node:path';
 import { campaignManifest, findCell, finishTimeoutFor, runCell, type UnitSelection } from '../../eval/runner/q1/cell.ts';
 import { Q1_CAMPAIGN_ID } from '../../eval/runner/shootout-cell.ts';
 import { ALL_SETS, definitionProblems, estimateCell, F6_ASSUMPTIONS, f6ExtractionLedgerUsd, loadManifest, manifestText, MANIFEST_PATH, policyKey, type ArmDefinition, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
-import { ALL_ARMS, buildF6Manifest, maxShardHours, maxShardUsd, F6_ARMS, F6_CAP_USD, F6_DRY_RUN_CAP_USD, F6_MANIFEST_PATH, f6ManifestText, peakReservationUsd } from '../../eval/runner/q1/cells/f6.ts';
+import { ALL_ARMS, buildF6Manifest, maxShardHours, maxShardUsd, F6_ARMS, F6_CAP_USD, F6_DRY_RUN_CAP_USD, F6_MANIFEST_PATH, F6_PARTICLE_ADDON, f6ManifestText, peakReservationUsd } from '../../eval/runner/q1/cells/f6.ts';
 import type { Corpus, MemoryQuestion } from '../../eval/runner/memory-qa/corpus.ts';
 import type { ChatLike, ChatResult } from '../../eval/runner/memory-qa/qa-v2.ts';
 import type { PublicQuestion, RetrievalPolicy } from '../../eval/runner/systems/types.ts';
 import { FakeMemorySystem } from '../../eval/runner/systems/fake.ts';
+import { publicationManifest } from '../../eval/runner/q1/publish.ts';
 
 const ROOT = resolve(import.meta.dir, '../..');
 const tmp = mkdtempSync(join(tmpdir(), 'q1-f6-'));
 afterAll(() => rmSync(tmp, { recursive: true, force: true }));
 const kinds = new Set((JSON.parse(readFileSync(join(ROOT, 'eval/systems/kinds.json'), 'utf8')) as { kinds: Array<{ id: string }> }).kinds.map(k => k.id));
 const m = buildF6Manifest();
-const all = [...m.cells, ...m.smoke_cells];
+const all = [...m.cells, ...m.smoke_cells, ...m.addon_cells!];
 const SONNET = 'anthropic:claude-sonnet-5-5';
 
 describe('the F6 manifest', () => {
@@ -57,7 +58,7 @@ describe('the F6 manifest', () => {
     for (const c of all) {
       expect(c.probes.conversations).toBe(0);
       for (const a of c.arms) {
-        expect([a.mode, a.budget, a.readers, a.reader_replicates, a.judge_repeats]).toEqual(c.system === 'baseline-file-agent' ? ['agent', null, m.readers, {}, null] : ['packed', 8000, m.readers, {}, null]);
+        expect([a.mode, a.budget, a.readers, a.reader_replicates, a.judge_repeats]).toEqual(c.system === 'baseline-file-agent' ? ['agent', null, c.id === F6_PARTICLE_ADDON.id ? [F6_PARTICLE_ADDON.reader] : m.readers, {}, null] : ['packed', 8000, m.readers, {}, null]);
         const frontier = c.id === 's1.gbrain-defaults.f6-master' && (a.id === 'p' || a.id === 'd');
         expect(a.frontier).toEqual(frontier ? { judges: ['anthropic:claude-opus-5-5', 'openai:gpt-6.1-sol'], readers: [SONNET], sample: null } : null);
       }
@@ -221,6 +222,34 @@ describe('the F6 manifest', () => {
     const total = round(115.36 + s1Open + a1Leases + a2.cap_usd);
     expect(total).toBe(2560.29);
     expect(total).toBeLessThanOrEqual(frozen.cap_usd);
+  });
+  // Value: protects=the particle-1 add-on measures particle-1 on exactly the file agent F6 reruns, under its own spend line, and leaves F6's counted cells alone; fails_when=the add-on changes an existing cell, joins F6's counted cells, estimate, campaign or publication, differs from the file-agent rerun beyond its reader, id, block, estimate and lease, its block cap refuses its own lease, or its campaign does not admit particle-1; why_new=GBEV-31 adds the cell (review of #347: it had joined F6's own list); seam=none; no_claim=what particle-1 spends (the estimate is a scaling of Q1's measured spend)
+  test('the particle-1 add-on is the file-agent rerun read by particle-1 alone, in block F6-P1 under its own estimate, lease and cap, outside F6\'s counted cells, estimate, campaign and publication; its p1 campaign regenerates and admits particle-1', () => {
+    const base = m.cells.find(c => c.id === 's1.baseline-file-agent.baseline')!;
+    const p1 = m.addon_cells!.find(c => c.id === F6_PARTICLE_ADDON.id)!;
+    expect([m.cells.some(c => c.id === p1.id), m.total_usd, findCell(p1.id, undefined, 'f6')]).toEqual([false, 1908.89, p1]);
+    const dir = join(ROOT, 'docs/benchmarks/2026-10-29-f6-current-master');
+    const frozen = JSON.parse(readFileSync(join(dir, 'campaign/f6-campaign.json'), 'utf8')) as { cells: Array<{ id: string }> };
+    expect(campaignManifest(m).cells.map(c => c.id)).toEqual(frozen.cells.map(c => c.id));
+    expect(publicationManifest(JSON.parse(readFileSync(join(dir, 'publication.json'), 'utf8')).cells).own.has(p1.id)).toBe(false);
+    const strip = (c: CellDefinition) => ({ ...c, id: null, block: null, estimate: null, lease: null, arms: c.arms.map(a => ({ ...a, cell_id: null, readers: null })) });
+    expect(strip(p1)).toEqual(strip(base));
+    expect([p1.block, p1.arms[0].cell_id, p1.arms[0].readers]).toEqual(['F6-P1', 's1.baseline-file-agent.particle.whole-agent', ['particle:particle-1']]);
+    // Q1's measured file-agent spend over what the estimate model priced Q1's three-reader cell at, times the model's lines at particle-1's list price.
+    const scale = 275.96 / loadManifest().cells.find(c => c.id === 's1.baseline-file-agent.baseline')!.estimate.usd;
+    const model = estimateCell({ ...p1, estimate: undefined as never } as Omit<CellDefinition, 'estimate'>);
+    expect(scale).toBeCloseTo(275.96 / 245.99, 10);
+    expect(p1.estimate).toEqual({ usd: 8.04, lines: Object.fromEntries(Object.entries(model.lines).map(([k, v]) => [k, Math.round(v * scale * 100) / 100])) });
+    expect(p1.lease!.usd).toBe(Math.ceil((8.04 * 1.25 + 2 * peakReservationUsd(p1).usd) * 100) / 100);
+    expect(m.blocks.find(b => b.id === 'F6-P1')).toMatchObject({ estimate_usd: 8.04, cap_usd: p1.lease!.usd });
+    for (const b of m.blocks.filter(b => b.id !== 'F6-P1')) expect(b.cap_usd).toBe(Math.round(b.estimate_usd * 1.5 * 100) / 100);
+    const sel = JSON.parse(readFileSync(join(dir, 'campaign/f6-campaign-p1-units.json'), 'utf8')) as UnitSelection;
+    const camp = campaignManifest(m, { units: sel });
+    expect([camp.campaign_id, camp.cap_usd, camp.cells.map(c => [c.id, c.lease_usd, c.pass, c.block])]).toEqual(['q1-scoreboard-f6-current-master-p1', p1.lease!.usd, [[F6_PARTICLE_ADDON.id, p1.lease!.usd, ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY', 'PARTICLE_API_KEY'], 'F6-P1']]]);
+    expect(camp.cells[0].command).toBe('bun eval/runner/q1/cell.ts run --cell s1.baseline-file-agent.particle --manifest f6 --out "$SHOOTOUT_OUT"');
+    expect(camp.models).toContain('particle:particle-1');
+    expect(campaignManifest(m, { units: JSON.parse(readFileSync(join(dir, 'campaign/f6-campaign-a4-units.json'), 'utf8')) }).models).not.toContain('particle:particle-1');
+    expect(readFileSync(join(dir, 'campaign/f6-campaign-p1.json'), 'utf8')).toBe(JSON.stringify(camp, null, 2) + '\n');
   });
 });
 

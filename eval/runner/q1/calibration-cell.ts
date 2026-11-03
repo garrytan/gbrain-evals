@@ -35,12 +35,25 @@ export function calibrationCell(def: CellDefinition, reader: string): CellDefini
 }
 
 /** Records in `out` whether it holds a keyless or a paid run, and refuses an `out` that holds the other kind. */
-export function claimOut(out: string, keyless: boolean): void {
+export function claimOut(out: string, keyless: boolean, kind = 'calibration'): void {
   const marker = join(out, 'upstream.json');
   if (existsSync(marker) && JSON.parse(readFileSync(marker, 'utf8')).keyless !== keyless) {
-    throw new Error(`${out} holds a ${keyless ? 'paid' : 'keyless'} calibration run; give this run a fresh --out`);
+    throw new Error(`${out} holds a ${keyless ? 'paid' : 'keyless'} ${kind} run; give this run a fresh --out`);
   }
   writeFileSync(marker, JSON.stringify({ keyless }) + '\n');
+}
+
+/**
+ * `--keyless-upstream <url>`: the fake upstream's http(s) URL without its trailing slash, or null without the flag. The
+ * flag without a URL, or spelled `--keyless-upstream=<url>`, throws a usage error: read as written, the run would spend real keys.
+ */
+export function keylessUpstreamArg(argv: string[]): string | null {
+  const joined = argv.find(a => a.startsWith('--keyless-upstream='));
+  if (joined) throw new Error(`--keyless-upstream takes the fake upstream's URL as its own argument (--keyless-upstream <url>), got ${JSON.stringify(joined)}; read as written, the run would spend real keys`);
+  if (!argv.includes('--keyless-upstream')) return null;
+  const url = argv[argv.indexOf('--keyless-upstream') + 1] ?? '';
+  if (!/^https?:\/\/\S+$/.test(url)) throw new Error(`--keyless-upstream needs the fake upstream's http(s) URL, got ${JSON.stringify(url)}; without one the run would spend real keys`);
+  return url.replace(/\/$/, '');
 }
 
 if (import.meta.main) {
@@ -51,17 +64,9 @@ if (import.meta.main) {
     console.error('usage: bun eval/runner/q1/calibration-cell.ts --reader <provider:model> --out <dir> --budget-ledger <file> --run-id <id> --lease-usd <n> [--cell <dev smoke cell>] [--keyless-upstream <url>]');
     process.exit(2);
   }
-  const joined = argv.find(a => a.startsWith('--keyless-upstream='));
-  if (joined) {
-    console.error(`--keyless-upstream takes the fake upstream's URL as its own argument (--keyless-upstream <url>), got ${JSON.stringify(joined)}; read as written, the run would spend real keys`);
-    process.exit(2);
-  }
-  const keylessArg = argv.includes('--keyless-upstream') ? one('--keyless-upstream') ?? '' : null;
-  if (keylessArg !== null && !/^https?:\/\/\S+$/.test(keylessArg)) {
-    console.error(`--keyless-upstream needs the fake upstream's http(s) URL, got ${JSON.stringify(keylessArg)}; without one the run would spend real keys`);
-    process.exit(2);
-  }
-  const keyless = keylessArg?.replace(/\/$/, '') ?? null;
+  let keyless: string | null;
+  try { keyless = keylessUpstreamArg(argv); }
+  catch (e) { console.error((e as Error).message); process.exit(2); }
   const out = resolve(outArg);
   mkdirSync(out, { recursive: true });
   claimOut(out, !!keyless);
