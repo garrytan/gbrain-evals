@@ -145,7 +145,7 @@ start_proxy() {
   case "$provider" in gemini) key=GEMINI_API_KEY ;; openai) key=OPENAI_API_KEY ;; esac
   for name in $(compgen -e); do case "$name" in PATH|HOME|"$key") ;; *) drop+=(-u "$name") ;; esac; done
   rm -f "$ready"
-  env "${drop[@]}" bun "$REPO/eval/runner/harness-metering-proxy.ts" \
+  env ${drop[@]+"${drop[@]}"} bun "$REPO/eval/runner/harness-metering-proxy.ts" \
     --budget-ledger "$LEDGER" --budget-run-id "$RUN_ID" --cell-id "rs1-$cid-$step" --labels rs1 --ready-file "$ready" \
     --request-log "$OUT/proxy/requests/$cid-$step.jsonl" --bodies-dir "$OUT/proxy/bodies" \
     >>"$OUT/proxy/$cid-$step.log" 2>&1 &

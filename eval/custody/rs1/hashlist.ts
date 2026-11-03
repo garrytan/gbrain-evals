@@ -25,7 +25,7 @@ export function hashTree(root: string): HashList {
   const entries: Array<[string, string]> = [];
   let bytes = 0;
   const walk = (dir: string) => {
-    for (const name of readdirSync(dir)) {
+    for (const name of readdirSync(dir).sort()) {
       const path = join(dir, name);
       const rel = relative(root, path).split(sep).join('/');
       if (/[\n\r\\]/.test(rel)) throw new HashListError(`a path under the root holds a newline or backslash (entry ${entries.length + 1})`);
