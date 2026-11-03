@@ -112,6 +112,7 @@ export async function productUnderTest(spec: string, d: C8kDecision, keyless: bo
   const gut = resolveGbrainUnderTest(spec);
   if (!gut.overlay) throw new Error('--gbrain <checkout>@<commit> is required: the pinned dependency predates the GBRA-205 keys');
   if (gut.overlay.build.commit !== d.gbrain.commit) throw new Error(`--gbrain resolved to ${gut.overlay.build.commit}; the decision pins ${d.gbrain.commit}`);
+  if (gut.version !== d.gbrain.version) throw new Error(`--gbrain resolved to version ${gut.version}; the decision records ${d.gbrain.version}`);
   if (gut.overlay.checkout_dirty) throw new Error('the gbrain checkout has local changes; the overlay copies the commit only, so clean it first');
   const gateway = await importGbrain<{ configureGateway: (c: Record<string, unknown>) => void; __setEmbedTransportForTests: (fn: unknown) => void; __setRerankTransportForTests: RetrievalCacheModules['setRerankTransport'] }>(gut, 'src/core/ai/gateway.ts');
   if (keyless) {
