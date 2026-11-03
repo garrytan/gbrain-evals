@@ -4,9 +4,9 @@
  * through the real lease proxy, in front of eval/systems/_shim/fake_provider.py or a scripted upstream.
  */
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, test } from 'bun:test';
-import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { appendFileSync, cpSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 import { runCell, scheduledQuestions } from '../../eval/runner/q1/cell.ts';
 import { estimateCell, type ArmDefinition, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
 import { prepareReread, rereadArm, rereadCellId, runReread, REREAD_VERIFY_SCHEMA, type PreparedReread } from '../../eval/runner/q1/reread-cell.ts';
@@ -183,6 +183,31 @@ describe('re-read: verification before any request', () => {
     });
     const op = refusal(() => prepareReread(def, arm, { sources: [src], reader: PARTICLE, out: join(tmp, 'refused-schedule') }, { corpus }));
     expect(op.message).toContain('not the schedule its run-config.json froze');
+  });
+
+  // Value: protects=the counted S1 re-reads, whose sources are a sharded cell's runs; fails_when=two shards do not verify together, or a conversation staged twice, two run configurations, a malformed context line or a wrong root is read instead of refused; why_new=review of #347; seam=none; no_claim=none
+  test('two shard sources verify together; a conversation staged twice, two run configurations, a malformed context line and a wrong root refuse', async () => {
+    const shards: string[] = [];
+    for (const index of [0, 1]) {
+      const out = join(tmp, `shard-${index}`);
+      await runCell(def, { out, shard: { index, count: 2 }, ...quiet }, { corpus, system: new FailsOneQuestion(scheduled[1].question), reader: scriptedReader(), judge: scriptedJudge() });
+      shards.push(join(out, 'runs', def.id));
+    }
+    const both = prepareReread(def, arm, { sources: shards, reader: PARTICLE, out: join(tmp, 'two-shards') }, { corpus });
+    expect([both.verify.ok, both.verify.sources.length, both.plan.map(x => x.question.id).sort()]).toEqual([true, 2, scheduled.map(q => q.id).sort()]);
+    const copied = (n: string, edit: (out: string) => void) => {
+      const out = join(tmp, `shard-tampered-${n}`);
+      cpSync(dirname(dirname(shards[1])), out, { recursive: true });
+      edit(out);
+      return join(out, 'runs', def.id);
+    };
+    const cases: Array<[string, string[], string]> = [
+      ['twice', [shards[0], shards[0]], 'stages a conversation another source stages too'],
+      ['config', [shards[0], copied('config', out => appendFileSync(join(out, 'cells', arm.cell_id, 'run-config.json'), '\n'))], 'different run configurations'],
+      ['malformed', [shards[0], copied('malformed', out => appendFileSync(join(out, 'runs', def.id, 'contexts.ndjson'), 'not json\n'))], 'contexts.ndjson line(s) are not JSON'],
+      ['root', [shards[0], dirname(shards[1])], `is not a runs/${def.id} staging root`],
+    ];
+    for (const [n, sources, why] of cases) expect([n, refusal(() => prepareReread(def, arm, { sources, reader: PARTICLE, out: join(tmp, `refused-shards-${n}`) }, { corpus })).message]).toEqual([n, expect.stringContaining(why)]);
   });
 
   // Value: protects=particle-1 never judges (plan GST-605, GST-767); fails_when=a re-read is judged by an OpenAI-compatible model; why_new=the re-read judges on its own path; seam=an instrument naming particle as its judge; no_claim=none

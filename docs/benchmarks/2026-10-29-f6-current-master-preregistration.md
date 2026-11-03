@@ -570,12 +570,14 @@ this rule wins, F6 publishes under it, and the add-on's file-agent row follows i
 F6's file-agent rows. The report gives the count of stops per reader and class.
 
 **Report.** `eval/runner/q1/particle-addon-report.ts` pairs each particle-1 row with the frontier cell it re-read, or,
-for the file agent, with F6's file-agent cell. Per reader: the questions in its denominator, its mean canonical score
-with a 95% interval, its correct answers (canonical score at least 0.5), its reader dollars at list price from the
-answers' usage, and its reader dollars per correct answer. Build and ingest dollars are the system's and the same for
-every reader, so they are reported once per system from F6's ledgers (Q1's A24 ledger for reused rows) and do not enter
-the per-reader figure. The first table shows claude-opus-5-5 and particle-1 side by side for each system on S1 and S2b;
-the other readers follow. Intervals are a bootstrap over conversations (clusters), 10,000 resamples, seed `f6-p1`.
+for the file agent, with F6's file-agent cell, and leaves out the set's preregistered exclusions as F6's published rows
+do. Per reader: the questions in its denominator, its mean canonical score with a 95% interval, its correct answers
+(canonical score at least 0.5), its answers not scored (by outcome), its reader dollars at list price from the answers'
+usage, and its reader dollars per correct answer. Build and ingest dollars are the system's and the same for every
+reader, so they do not enter the per-reader figure; the findings file gives them once per system from F6's ledgers
+(Q1's A24 ledger for reused rows). The first table shows claude-opus-5-5 and particle-1 side by side for each system on
+S1 and S2b; the other readers follow. Intervals are a bootstrap over conversations (clusters), 10,000 resamples, seed
+`f6-p1`.
 
 **No ranking.** S1's minimum detectable difference is about 13.6 points (see Statistics), so every add-on comparison
 is descriptive: for each system, particle-1 minus each frontier reader, paired by question, with its clustered 95%

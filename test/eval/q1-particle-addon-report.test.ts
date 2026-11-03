@@ -1,7 +1,8 @@
 /**
  * The particle-1 add-on's report (eval/runner/q1/particle-addon-report.ts) over invented published cells: per-reader
  * means, correct answers and list-price dollars, particle-1's paired differences, the seeded clustered bootstrap, the
- * pairing of re-read and file-agent cells, shard merging, the disclosure lines, and the refusal to print a question id.
+ * pairing of re-read and file-agent cells, shard merging, the disclosure lines, the refusal to print a question id, the
+ * set's preregistered exclusions, the per-reader outcome counts, and the refusals of a pairing that cannot stand.
  */
 import { afterAll, describe, expect, test } from 'bun:test';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -19,9 +20,10 @@ const OPUS = 'anthropic:claude-opus-5-5', SOL = 'openai:gpt-6.1-sol', SONNET = '
 const INSTRUMENT = { id: 'locomo', sha256: sha256('instrument'), judge: 'openai:gpt-judge' };
 const QUESTIONS = Array.from({ length: 12 }, (_, i) => ({ id: `invented-q${String(i).padStart(2, '0')}`, conversation: `invented-c${Math.floor(i / 3)}` }));
 const usage = { input: 1000, output: 100, cache_read: 0, cache_write: 0 };
+const CONFIG = sha256('run-config');
 
 /** Scores per reader by question index: a number is the canonical score; a string is the answer's failure outcome. */
-type Plan = Record<string, Array<number | 'retrieval_error' | 'reader_error'>>;
+type Plan = Record<string, Array<number | 'retrieval_error' | 'reader_error' | 'turn_cap'>>;
 function publish(root: string, cellId: string, system: string, plan: Plan, receipt: Record<string, unknown> = {}, only?: (i: number) => boolean, questions = QUESTIONS) {
   const dir = join(root, 'cells', cellId);
   mkdirSync(dir, { recursive: true });
@@ -37,7 +39,7 @@ function publish(root: string, cellId: string, system: string, plan: Plan, recei
   });
   writeFileSync(join(dir, 'answers.ndjson'), answers.map(a => JSON.stringify(a) + '\n').join(''));
   writeFileSync(join(dir, 'judgments.ndjson'), judgments.map(j => JSON.stringify(j) + '\n').join(''));
-  writeFileSync(join(dir, 'receipt.json'), JSON.stringify({ cell_id: cellId, system: { kind: system }, instrument: INSTRUMENT, ...receipt }));
+  writeFileSync(join(dir, 'receipt.json'), JSON.stringify({ cell_id: cellId, set: 'S3', block: 'T2-S3', run_status: 'complete', config_sha256: CONFIG, system: { kind: system }, instrument: INSTRUMENT, ...receipt }));
 }
 
 const ones = (n: number) => Array<number>(n).fill(1);
@@ -51,7 +53,7 @@ const VERIFY = { contexts_checked: 11, contexts_matched: 11, scheduled_questions
 const shardA = join(tmp, 'shard-a'), shardB = join(tmp, 'shard-b'), reread = join(tmp, 'reread');
 publish(shardA, ARM, 'ext-graph-pipeline', FRONTIER, {}, i => i < 6);
 publish(shardB, ARM, 'ext-graph-pipeline', FRONTIER, {}, i => i >= 6);
-publish(reread, REREAD, 'ext-graph-pipeline', PARTICLE_PLAN, { schema: REREAD_RECEIPT_SCHEMA, source: { arm_cell_id: ARM }, verify: VERIFY });
+publish(reread, REREAD, 'ext-graph-pipeline', PARTICLE_PLAN, { schema: REREAD_RECEIPT_SCHEMA, source: { arm_cell_id: ARM, config_sha256: CONFIG }, verify: VERIFY });
 const roots = [shardA, shardB, reread];
 
 describe('the particle-1 add-on report', () => {
@@ -75,6 +77,7 @@ describe('the particle-1 add-on report', () => {
     expect(vsOpus.ci95![1]).toBeGreaterThanOrEqual(vsOpus.delta);
     expect(r.particle_minus.map(d => d.minus)).toEqual([OPUS, SOL]);
     expect(r.verify).toEqual(VERIFY);
+    expect([p.not_scored, opus.not_scored, r.excluded, r.run_status]).toEqual([{ reader_error: 1, retrieval_error: 1 }, {}, 0, { frontier: 'complete', particle: 'complete' }]);
   });
 
   // Value: protects=the preregistered bootstrap (seed f6-p1, 10,000 resamples, conversation clusters) is the one run, and reruns reproduce it; fails_when=the seed, resample count or clustering drifts, or the interval is not deterministic; why_new=new; seam=none; no_claim=none
@@ -100,7 +103,7 @@ describe('the particle-1 add-on report', () => {
     for (const q of QUESTIONS) { expect(text).not.toContain(q.id); expect(text).not.toContain(q.conversation); }
     expect(text).not.toContain('SECRET-ANSWER');
     const leaky = join(tmp, 'leaky');
-    publish(leaky, REREAD, 'ext-graph-pipeline', PARTICLE_PLAN, { schema: REREAD_RECEIPT_SCHEMA, source: { arm_cell_id: ARM } }, undefined, [{ id: 'claude-opus-5-5', conversation: 'invented-c0' }, ...QUESTIONS.slice(1)]);
+    publish(leaky, REREAD, 'ext-graph-pipeline', PARTICLE_PLAN, { schema: REREAD_RECEIPT_SCHEMA, source: { arm_cell_id: ARM, config_sha256: CONFIG } }, undefined, [{ id: 'claude-opus-5-5', conversation: 'invented-c0' }, ...QUESTIONS.slice(1)]);
     expect(() => writeReport([shardA, shardB, leaky], join(tmp, 'out-leaky'))).toThrow('the report would carry 1 question id(s); nothing was written');
     expect(existsSync(join(tmp, 'out-leaky'))).toBe(false);
   });
@@ -108,11 +111,12 @@ describe('the particle-1 add-on report', () => {
   // Value: protects=docs/disclosures.md (a report giving particle-1 results carries the lines up front) and the file-agent pairing; fails_when=the Particle line is missing or not under the title, the gbrain or OpenAI line is missing when their results are shown, or the file-agent add-on is not paired with the rerun; why_new=new; seam=none; no_claim=none
   test('the Particle line sits under the title, with the gbrain and OpenAI lines when their results are shown; the file-agent add-on pairs with the file-agent rerun', () => {
     const fa = join(tmp, 'file-agent');
-    publish(fa, 's1.baseline-file-agent.baseline.whole-agent', 'baseline-file-agent', { [OPUS]: ones(12), [SOL]: ones(12) });
-    publish(fa, 's1.baseline-file-agent.particle.whole-agent', 'baseline-file-agent', { [PARTICLE]: [...ones(6), ...Array(6).fill(0)] });
+    const S1 = { set: 'S1', block: 'F6-S1' };
+    publish(fa, 's1.baseline-file-agent.baseline.whole-agent', 'baseline-file-agent', { [OPUS]: ones(12), [SOL]: ones(12) }, S1);
+    publish(fa, 's1.baseline-file-agent.particle.whole-agent', 'baseline-file-agent', { [PARTICLE]: [...ones(6), ...Array(6).fill(0)] }, { ...S1, block: 'F6-P1' });
     const gb = join(tmp, 'gbrain');
-    publish(gb, 's1.gbrain-defaults.f6-master.p', 'gbrain-defaults', { [OPUS]: ones(12) });
-    publish(gb, 's1.gbrain-defaults.f6-master.p.reread-particle-particle-1', 'gbrain-defaults', { [PARTICLE]: ones(12) }, { schema: REREAD_RECEIPT_SCHEMA, source: { arm_cell_id: 's1.gbrain-defaults.f6-master.p' } });
+    publish(gb, 's1.gbrain-defaults.f6-master.p', 'gbrain-defaults', { [OPUS]: ones(12) }, S1);
+    publish(gb, 's1.gbrain-defaults.f6-master.p.reread-particle-particle-1', 'gbrain-defaults', { [PARTICLE]: ones(12) }, { ...S1, schema: REREAD_RECEIPT_SCHEMA, source: { arm_cell_id: 's1.gbrain-defaults.f6-master.p', config_sha256: CONFIG } });
     const units = unitsOf(loadCells([fa, gb])).map(u => unitReport(u));
     expect(units.map(u => [u.frontier_cell, u.particle_cell, u.kind])).toEqual([['s1.baseline-file-agent.baseline.whole-agent', 's1.baseline-file-agent.particle.whole-agent', 'file agent'],
       ['s1.gbrain-defaults.f6-master.p', 's1.gbrain-defaults.f6-master.p.reread-particle-particle-1', 're-read']]);
@@ -124,5 +128,42 @@ describe('the particle-1 add-on report', () => {
     expect(noOpenAi).toContain('gbrain is Garry Tan\'s own project.');
     expect(noOpenAi).not.toContain('OpenAI began');
     expect(() => unitsOf(loadCells([reread]))).toThrow(`pairs with ${ARM}, which no --root publishes`);
+  });
+
+  // Value: protects=the published add-on numbers match the scoreboard's cohort and compare like with like; fails_when=an S1 exclusion enters a mean, a file-agent stop is not counted per reader, or a re-read pairs with an invalid frontier, another run configuration, Q1's file agent or different contexts; why_new=review of #347; seam=invented cells; no_claim=none
+  test('S1 leaves out its preregistered exclusion, counts stops per reader, and refuses a pairing that cannot stand', () => {
+    const S1Q = [{ id: '10m-1:abstention:0', conversation: 'invented-c0' }, ...QUESTIONS.slice(1)];
+    const S1 = { set: 'S1', block: 'F6-S1' };
+    const ex = join(tmp, 'excluded');
+    publish(ex, 's1.baseline-file-agent.baseline.whole-agent', 'baseline-file-agent', { [OPUS]: [0, ...ones(11)] }, S1, undefined, S1Q);
+    publish(ex, 's1.baseline-file-agent.particle.whole-agent', 'baseline-file-agent', { [PARTICLE]: [1, 'turn_cap', 'turn_cap', ...ones(9)] }, { ...S1, block: 'F6-P1' }, undefined, S1Q);
+    const r = unitReport(unitsOf(loadCells([ex]))[0]);
+    const opus = r.readers.find(x => x.reader === OPUS)!, p = r.readers.find(x => x.reader === PARTICLE)!;
+    expect([r.excluded, opus.answers, opus.mean, p.answers, p.scored, p.correct, p.not_scored]).toEqual([1, 11, 1, 11, 11, 9, { turn_cap: 2 }]);
+    expect(r.particle_minus.find(d => d.minus === OPUS)!.pairs).toBe(11);
+    expect(renderReport([r])).toContain('| particle-1 | 11 | 11 | ');
+    expect(renderReport([r])).toContain('turn_cap 2 |');
+
+    const bad = (name: string, frontier: Record<string, unknown>, particle: Record<string, unknown>, contexts = false) => {
+      const root = join(tmp, name);
+      publish(root, ARM, 'ext-graph-pipeline', FRONTIER, frontier);
+      publish(root, REREAD, 'ext-graph-pipeline', PARTICLE_PLAN, { schema: REREAD_RECEIPT_SCHEMA, source: { arm_cell_id: ARM, config_sha256: CONFIG }, ...particle });
+      if (contexts) {
+        const file = join(root, 'cells', REREAD, 'answers.ndjson');
+        writeFileSync(file, readFileSync(file, 'utf8').split('\n').filter(Boolean).map(l => JSON.stringify({ ...JSON.parse(l), context_sha256: sha256('other') })).join('\n') + '\n');
+      }
+      return () => unitsOf(loadCells([root])).map(u => unitReport(u));
+    };
+    expect(bad('invalid', { run_status: 'invalid' }, {})).toThrow(`${ARM} is published as invalid`);
+    expect(bad('config', {}, { source: { arm_cell_id: ARM, config_sha256: sha256('other config') } })).toThrow('re-read a run configuration other than the one');
+    expect(bad('set', { set: 'S9' }, {})).toThrow('names no known set');
+    expect(bad('contexts', {}, {}, true)).toThrow('particle-1 and anthropic:claude-opus-5-5 read different contexts for one question');
+    const q1 = join(tmp, 'q1-file-agent');
+    publish(q1, 's1.baseline-file-agent.baseline.whole-agent', 'baseline-file-agent', { [OPUS]: ones(12) }, { set: 'S1', block: 'T1' });
+    publish(q1, 's1.baseline-file-agent.particle.whole-agent', 'baseline-file-agent', { [PARTICLE]: ones(12) }, { ...S1, block: 'F6-P1' });
+    expect(() => unitsOf(loadCells([q1]))).toThrow("pairs only with F6's file-agent rerun, and s1.baseline-file-agent.baseline.whole-agent here is from block T1");
+    const shardX = join(tmp, 'shard-x');
+    publish(shardX, ARM, 'ext-graph-pipeline', FRONTIER, { run_status: 'partial' }, i => i >= 6);
+    expect(loadCells([shardA, shardX]).get(ARM)!.receipt.run_status).toBe('partial');
   });
 });

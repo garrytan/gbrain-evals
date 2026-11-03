@@ -176,7 +176,7 @@ export function provider(model: string): 'anthropic' | 'openai' | 'particle' {
   throw new Error(`no provider for model ${model}`);
 }
 
-export function priceUsage(model: string, u: Usage): number {
+export function priceUsage(model: string, u: Omit<Usage, 'requests'> & { requests?: number }): number {
   const p = CHAT_PRICE_OVERRIDES[`${provider(model)}:${model}`];
   if (!p) throw new Error(`no verified price for ${model}; add it to CHAT_PRICE_OVERRIDES`);
   return (u.input * p.input + u.cache_read * (p.cache_read ?? p.input) + u.cache_write * (p.cache_write ?? p.input) + u.output * p.output) / 1e6;
