@@ -1,6 +1,17 @@
 {
   "$schema": "https://github.com/garrytan/gstack/docs/pregate.md#pregate-v1",
   "timeout_s": 1800,
+  "warn": ["literals"],
+  "strays": { "allow": ["docs/comparison-systems/ext-temporal-graph/shipped-0.31/probe.py", "test/eval/temporal-graph-shipped.test.ts"] },
+  "allowlist": [
+    { "finding": "env.kv", "paths": ["docs/comparison-systems/ext-temporal-graph/**/docker-compose.yml"], "pattern": "(?:neo4j/)?shootout-\\x67raphiti(?=$|[\\s\"'])", "reason": "internal-network graph-database dummy password, already on main" }
+  ],
+  "sealed": {
+    "paths": ["**/rs1-custody*", "**/rs1-custody*/**", "**/*.rs1-seed"],
+    "case_insensitive": true,
+    "answer_markers": ["RS1-SEALED-CUSTODY-v[0-9]+"],
+    "seed_patterns": ["rs1-seed-v1:[0-9a-f]{64}"]
+  },
   "run_profiles": {
     "ci-carry/tests": { "workflow": "ci.yml", "events": ["pull_request", "push"], "jobs": ["checks", "tests (1)", "tests (2)", "tests (3)", "tests (4)", "tested-tree"], "artifact": "tested-tree", "os": "Linux" }
   },

@@ -7,8 +7,9 @@
  * Two ledgers hold the lease, and both grow by the same amount:
  *
  *   host  the campaign ledger's reservation for the lease (entries, runs and
- *         program committed), refused past the run budget, the campaign cap or
- *         the lease's block cap, in one BEGIN IMMEDIATE transaction
+ *         program committed), refused once the campaign run is closed or past
+ *         the run budget, the campaign cap or the lease's block cap, in one
+ *         BEGIN IMMEDIATE transaction
  *   VM    the lease ledger's run budget and its ledger cap, over `ubi-runner ssh`
  *         in one transaction, then read back
  *
@@ -87,7 +88,8 @@ function resizeHost(c: Campaign, entryId: string, delta: number, block: { name: 
       if (!entry) throw new Error(`${what}: no reservation ${entryId} in ${s.ledger}`);
       if (entry.actual_usd !== null) throw new Error(`${what}: reservation ${entryId} is already settled`);
       if (delta > 0) {
-        const run = db.query('SELECT budget_usd, committed_usd FROM runs WHERE run_id = ?').get(s.run_id) as { budget_usd: number; committed_usd: number };
+        const run = db.query('SELECT budget_usd, committed_usd, finished_at FROM runs WHERE run_id = ?').get(s.run_id) as { budget_usd: number; committed_usd: number; finished_at: string | null };
+        if (run.finished_at !== null) throw new Error(`${what}: budget run ${s.run_id} already finished`);
         const cap = (db.query('SELECT program_cap_usd FROM caps ORDER BY seq DESC LIMIT 1').get() as { program_cap_usd: number }).program_cap_usd;
         const program = (db.query('SELECT committed_usd FROM program WHERE id = 1').get() as { committed_usd: number }).committed_usd;
         if (run.committed_usd + delta > run.budget_usd + 1e-9) throw new Error(`${what}: the campaign would hold ${usd(run.committed_usd + delta)}, over its ${usd(run.budget_usd)} budget`);
