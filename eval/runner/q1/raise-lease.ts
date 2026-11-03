@@ -31,7 +31,7 @@
  */
 import { Database } from 'bun:sqlite';
 import { appendFileSync, existsSync, readFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { isAbsolute, join, resolve } from 'node:path';
 import { Campaign, resolveRunner } from '../shootout-cell.ts';
 
 const REPO_ROOT = resolve(import.meta.dir, '../../..');
@@ -82,7 +82,8 @@ export function leaseUsd(c: Campaign, leaseId: string): number {
 /** Grow (or, with a negative delta, give back) the host reservation of a lease, checked as a reservation is. */
 function resizeHost(c: Campaign, entryId: string, delta: number, block: { name: string; cap: number; held: number } | null, what: string) {
   const s = JSON.parse(readFileSync(join(c.stateDir, 'campaign.json'), 'utf8')) as { run_id: string; ledger: string };
-  const ledger = resolve(REPO_ROOT, s.ledger);
+  const legacy = isAbsolute(s.ledger) && !existsSync(s.ledger) && s.ledger.endsWith(`/${c.manifest.ledger}`);
+  const ledger = legacy ? c.ledger : resolve(REPO_ROOT, s.ledger);
   const db = new Database(ledger, { readwrite: true, create: false, strict: true });
   try {
     db.exec('PRAGMA busy_timeout = 60000');

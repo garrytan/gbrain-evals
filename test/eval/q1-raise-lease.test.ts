@@ -17,10 +17,10 @@ const tmp = mkdtempSync(join(tmpdir(), 'raise-lease-'));
 afterAll(() => rmSync(tmp, { recursive: true, force: true }));
 let n = 0;
 
-function setup(Cls: typeof Campaign = Campaign) {
+function setup(Cls: typeof Campaign = Campaign, ledgerIn = (dir: string) => join(dir, 'campaign.sqlite')) {
   const dir = join(tmp, `c${++n}`);
   mkdirSync(dir, { recursive: true });
-  const manifest = { kind: 'oss-shootout-campaign', schema_version: 1, campaign_id: `raise-${n}`, cap_usd: 10, ledger: join(dir, 'campaign.sqlite'),
+  const manifest = { kind: 'oss-shootout-campaign', schema_version: 1, campaign_id: `raise-${n}`, cap_usd: 10, ledger: ledgerIn(dir),
     blocks: { T1: { estimate_usd: 6, cap_usd: 9 } },
     cells: [0, 1].map(i => ({ id: `cell-${i}`, system: 'fake', benchmark: 'fixture', config: 'common', lease_usd: 4, command: 'true', block: 'T1' })) } as unknown as CampaignManifest;
   writeFileSync(join(dir, 'manifest.json'), JSON.stringify(manifest));
@@ -38,8 +38,9 @@ function setup(Cls: typeof Campaign = Campaign) {
     const p = Bun.spawnSync(['bash', '-c', command], { env: { ...process.env, HOME: home }, stdout: 'pipe', stderr: 'pipe' });
     return { code: p.exitCode, out: p.stdout.toString().trim(), err: p.stderr.toString().trim() };
   };
-  const hostCommitted = () => ledgerStatus({ ledgerPath: manifest.ledger, runId: JSON.parse(readFileSync(join(state, 'campaign.json'), 'utf8')).run_id }).run!;
-  return { c, state, launch, home, vmLedger, ssh, hostCommitted, ledger: manifest.ledger };
+  const ledger = resolve(ROOT, manifest.ledger);
+  const hostCommitted = () => ledgerStatus({ ledgerPath: ledger, runId: JSON.parse(readFileSync(join(state, 'campaign.json'), 'utf8')).run_id }).run!;
+  return { c, state, launch, home, vmLedger, ssh, hostCommitted, ledger };
 }
 
 describe('raise-lease (A17 campaigns)', () => {
@@ -299,5 +300,21 @@ describe('raise-lease run from outside the checkout (#326)', () => {
     expect(s.hostCommitted().committed_usd).toBe(4);
     expect(ledgerStatus({ ledgerPath: s.vmLedger(l.lease_id), runId: l.lease_id }).run!.budget_usd).toBe(4);
     expect(raises(s.state)).toEqual([]);
+  });
+
+  test('a pre-A23 absolute ledger path that is gone from this host resolves to the manifest ledger, as Campaign does', () => {
+    const s = setup(Campaign, dir => relative(ROOT, join(dir, 'campaign.sqlite')));
+    const l = s.launch('cell-0', 'vm-0');
+    mkdirSync(join(s.vmLedger(l.lease_id), '..'), { recursive: true });
+    BudgetRun.openLease({ runId: l.lease_id, leaseUsd: 4, ledgerPath: s.vmLedger(l.lease_id) });
+    const statePath = join(s.state, 'campaign.json');
+    const oldHost = `${join('/old-host', ...ROOT.split(sep).filter(Boolean))}/${s.c.manifest.ledger}`;
+    expect(existsSync(oldHost)).toBe(false);
+    writeFileSync(statePath, JSON.stringify({ ...JSON.parse(readFileSync(statePath, 'utf8')), ledger: oldHost }, null, 2) + '\n');
+
+    expect(s.c.status().committed_usd).toBe(4);
+    expect(raise(s.c, l.lease_id, 5, 'owner approved $5', s.ssh)).toMatchObject({ from_usd: 4, to_usd: 5 });
+    expect([s.hostCommitted().committed_usd, s.c.status().committed_usd]).toEqual([5, 5]);
+    expect(ledgerStatus({ ledgerPath: s.vmLedger(l.lease_id), runId: l.lease_id }).run!.budget_usd).toBe(5);
   });
 });
