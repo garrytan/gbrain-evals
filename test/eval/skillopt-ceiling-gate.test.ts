@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test';
-import { causeOf, gateVerdict, labelPair, solGateNeeded, stopVerdict, type Counts, type GateInput, type GatePair, type PairLabel } from '../../eval/runner/skillopt-method/gate.ts';
+import { causeOf, gateVerdict, labelPair, solGateNeeded, stopVerdict, type GateInput, type GatePair, type PairLabel } from '../../eval/runner/skillopt-method/gate.ts';
+import type { Counts } from '../../eval/runner/skillopt-method/gate.ts';
 import type { FrontierTarget } from '../../eval/runner/skillopt-method/headroom.ts';
 import type { SkillName } from '../../eval/runner/skillopt-method/score.ts';
 
