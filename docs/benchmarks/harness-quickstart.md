@@ -4,7 +4,7 @@ This guide runs gbrain, and an extract-first memory server we call the comparato
 
 gbrain-evals pins the harness to one commit and wraps it in an audited cell runner. The wrapper fixes problems in the harness's own runner that would change results, and it meters every model call. A **cell** is one dataset slice, one memory system, one answer model, one delivered-context target and one budget. Its id is a hash of everything that can change the result, so a changed setting makes a new cell instead of overwriting an old one.
 
-You need Linux or macOS, [Bun](https://bun.sh/) 1.4 or newer (check with `bun --version`; `bun upgrade` updates it), [uv](https://docs.astral.sh/uv/) and Git. The first install downloads about 2.3 GB of Python wheels into uv's cache and builds a 1.6 GB environment, so allow about 4.5 GB of disk with the clone.
+You need Linux or macOS, [Bun](https://bun.sh/) 1.4 or newer (check with `bun --version`; `bun upgrade` updates it), [uv](https://docs.astral.sh/uv/) and Git. The first install downloads about 2.3 GB of Python wheels into uv's cache and builds a 1.6 GB environment. `harness:setup` also keeps a 0.7 GB pack of the pinned harness commit, so allow about 5.2 GB of disk with the clone.
 
 ## 1. Install
 
@@ -15,7 +15,7 @@ bun install --frozen-lockfile
 bun run harness:setup
 ```
 
-`harness:setup` fetches the pinned harness commit into `.harness/src/`, installs it into `.harness/venv/<lock-hash>/` with CPU wheels, and downloads the one dataset file the harness can no longer fetch itself (LifeBench, pinned by sha256). It never reads a `.env` file.
+`harness:setup` fetches the pinned harness commit into `.harness/src/` and keeps it as a pack in `.harness/packs/`, so a later setup restores the checkout from that pack, after checking it against the pinned commit, instead of fetching again. It installs the harness into `.harness/venv/<lock-hash>/` with CPU wheels, and downloads the one dataset file the harness can no longer fetch itself (LifeBench, pinned by sha256). It never reads a `.env` file.
 
 ## 2. Run the keyless plumbing check
 
