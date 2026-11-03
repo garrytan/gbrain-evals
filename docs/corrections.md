@@ -113,12 +113,14 @@ says which ones do not and why. Everything above [Changelog](#changelog) is curr
   limit; none hit the turn cap. The custodian's rescore under the rule, from the sealed receipt: on BEAM-10M (S1) the
   file agent's row goes from 67.96% (193/199) to 67.25% (199/199) and its Opus reader from 73.53% to 71.31%; on BEAM-1M
   sealed (S2b) the row goes from 71.13% (239/240) to 71.11% (240/240) and its Opus reader from 76.51% to 76.19%. No other
-  Q1 row changes. README's loss bullet compares the file agent with gbrain's whole-system row on the questions both
-  scored, 68.3% against 59.0% on 192; with the file agent scored on all 199, those become the 198 gbrain's row scored,
-  where gbrain has 58.9%, and the file agent's figure on them and the detectable difference come with the custody
-  render. README's block and the scoreboard tables keep the published figures until the receipt is rendered again in
-  custody, because the public check pins both to the published `SHA256SUMS`. `scoreboard.ts` now takes its product
-  failures from `outcomes.ts`. gbrain is Garry Tan's own project.
+  system's row changes. The file agent's two S1 sensitivity views gain the same questions, from 191/197 to 197/197
+  without the questions of shipped-defaults' 10 `harness_invalid` answers and from 154/159 to 159/159 on temporal-graph's
+  8 conversations, at values the custody render gives. README's loss bullet compares the file agent with gbrain's
+  whole-system row on the questions both scored, 68.3% against 59.0% on 192; with the file agent scored on all 199,
+  those become the 198 gbrain's row scored, where gbrain has 58.9%, and the file agent's figure on them and the
+  detectable difference come with the custody render. README's block and the scoreboard tables keep the published
+  figures until the receipt is rendered again in custody, because the public check pins both to the published
+  `SHA256SUMS`. `scoreboard.ts` now takes its product failures from `outcomes.ts`. gbrain is Garry Tan's own project.
   [Report](benchmarks/2026-10-06-scoreboard-report.md), [tables](benchmarks/2026-10-06-scoreboard/scoreboard.md).
 
 ## Changelog
