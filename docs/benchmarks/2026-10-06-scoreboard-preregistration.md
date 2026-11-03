@@ -1402,6 +1402,10 @@ held-out material, including for the follow-up current-master rerun (F6), so the
   publication of BEAM-1M per-question rows under D2 (Custody, Q2). Per-question rows of every sealed set publish only
   with the receipt.
 
+**A26 (2026-11-03, post-hoc documentation correction; no outcome rule, cap or cell changes): a closed campaign run
+also refuses a raise.** A20's list of raise refusals names the campaign budget, the ledger cap and the lease's block
+cap. Since gbrain-evals#320, `raise-lease.ts` also refuses to grow a lease's reservation once the campaign run is closed.
+
 ## Changelog
 
 ### 2026-10-27: amendment A25 (publication scope)
