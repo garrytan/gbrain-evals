@@ -139,6 +139,18 @@ result = {"a": a, "b": b, "c": c, "first_calls": f.cli_calls[:n], "calls_after_b
     expect(r.error.kind).toBe('product_error');
     expect(r.error.message).toContain("search.query_facts_block='true'");
   });
+  test('a switch that fails part way forgets the previous overlay, so asking for it again rewrites and rereads every key', () => {
+    const r = f6(`f = Fake(); f.apply_overlay("ns-a", overlay()); f.readback = {"search.query_facts_block": "false"}
+try:
+    f.apply_overlay("ns-a", overlay(query_facts_block=True))
+except shim.ShimError:
+    pass
+f.readback = {}; n = len(f.cli_calls); again = f.apply_overlay("ns-a", overlay())
+result = {"again": again, "sets": len([c for c in f.cli_calls[n:] if c[1] == "set"]), "gets": len([c for c in f.cli_calls[n:] if c[1] == "get"])}`).ok;
+    expect(r.again.switched).toBe(true);
+    expect(r.again.resolved['search.query_facts_block']).toBe('false');
+    expect([r.sets, r.gets]).toEqual([6, 6]);
+  });
 });
 
 describe('F6 brain build (extraction under a recorded cap)', () => {

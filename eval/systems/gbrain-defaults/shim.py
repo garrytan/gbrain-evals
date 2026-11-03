@@ -1037,6 +1037,9 @@ class GbrainDefaultsAdapter(Adapter):
         if st.get("overlay_sha256") != sha:
             t0 = time.perf_counter()
             self.stop_serve()
+            st.pop("overlay_sha256", None)
+            st.pop("overlay_resolved", None)
+            self.save_state(st)
             for key in SEARCH_OVERLAY_KEYS:
                 self.cli("config", "set", key, overlay_text(overlay[key]))
             resolved = {key: self.cli("config", "get", key).stdout.strip() for key in SEARCH_OVERLAY_KEYS}
