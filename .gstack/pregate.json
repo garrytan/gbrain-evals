@@ -4,7 +4,7 @@
   "warn": ["literals"],
   "strays": { "allow": ["docs/comparison-systems/ext-temporal-graph/shipped-0.31/probe.py", "test/eval/temporal-graph-shipped.test.ts"] },
   "allowlist": [
-    { "finding": "env.kv", "paths": ["docs/comparison-systems/ext-temporal-graph/**/docker-compose.yml"], "pattern": "(?:neo4j/)?shootout-\\x67raphiti", "reason": "internal-network graph-database dummy password, already on main" }
+    { "finding": "env.kv", "paths": ["docs/comparison-systems/ext-temporal-graph/**/docker-compose.yml"], "pattern": "(?:neo4j/)?shootout-\\x67raphiti(?=$|[\\s\"'])", "reason": "internal-network graph-database dummy password, already on main" }
   ],
   "sealed": {
     "paths": ["**/rs1-custody*", "**/rs1-custody*/**", "**/*.rs1-seed"],
