@@ -50,8 +50,9 @@
  *
  * Derivation rules (preregistered; changing one changes scoreboard.json):
  *   - An answer's canonical score is its judgment from the cell's canonical
- *     instrument at judge_replicate 0. Product failures (retrieval_error,
- *     unsupported) score 0 and stay in the denominator; ingest_degraded keeps
+ *     instrument at judge_replicate 0. Product failures (memory-qa/outcomes.ts:
+ *     retrieval_error, unsupported, and an agent's turn_cap or context_overflow
+ *     stop) score 0 and stay in the denominator; ingest_degraded keeps
  *     its judged score; harness failures (reader_error, judge_error,
  *     harness_invalid, budget_not_run), a malformed judgment or a missing one
  *     exclude the question from that cell. does_not_fit (not applicable: the
@@ -161,7 +162,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 import { gunzipSync } from 'node:zlib';
 import { renderOperatorMessage, type OperatorFix, type OperatorMessage } from './decisions/errors.ts';
-import type { Outcome } from './memory-qa/outcomes.ts';
+import { PRODUCT_FAILURES, type Outcome } from './memory-qa/outcomes.ts';
 import { clusteredPairedDelta, holmAdjusted, normalQuantile } from './stats/paired.ts';
 import { wildTest, type ClusterRow } from './stats/wild-cluster.ts';
 import { scanTree, secretMessage } from './q1/secret-scan.ts';
@@ -188,7 +189,6 @@ export const FRONTIER_AGREEMENT_FLAG = 0.9;
 /** A19's Opus redo records for a cell's own answers, used in place of the logged record under the same key. */
 export const FRONTIER_REDO_FILE = 'frontier-redo.ndjson';
 const FIELD_EXEMPT: Record<string, string> = { 'ext-agent-runtime': 'runs only the LoCoMo slice (plan §4.1)' };
-const PRODUCT_FAILURES = new Set<Outcome>(['retrieval_error', 'unsupported']);
 const HARNESS_FAILURES = new Set<Outcome>(['reader_error', 'judge_error', 'harness_invalid', 'budget_not_run']);
 /** memory-qa/outcomes.ts NOT_APPLICABLE: a whole history that did not fit the reader's window; out of that system's denominator, counted and shown. */
 const NOT_APPLICABLE = new Set<Outcome>(['does_not_fit']);

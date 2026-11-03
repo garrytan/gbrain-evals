@@ -153,6 +153,18 @@ that whole-system comparison; the 13.58 points in the opening sentence is the pr
 component rows. The generator now names the evidence and the shared questions in each such sentence, and the next
 custody render will print them.
 
+The block's two file-agent cells, 68.0% on BEAM-10M and 71.1% on BEAM-1M sealed, leave out questions they should
+count. Seven of the file agent's answers are recorded `context_overflow` (6 on BEAM-10M, 1 on BEAM-1M sealed), every one
+a `claude-opus-5-5` answer the provider refused at its context limit, and the published render counted them as harness
+failures, so their questions left those rows. The preregistered outcome rule counts an agent's own `turn_cap` and
+`context_overflow` stops as product failures, scored 0 and kept in the denominator (ruling 2026-11-03 via GBRA-108:
+the preregistered rule wins), and `eval/runner/scoreboard.ts` now applies it. Scored that way, the file agent covers
+all 199 BEAM-10M and all 240 BEAM-1M sealed questions, its BEAM-10M cell falls below 68.0% and its BEAM-1M sealed cell
+still rounds to 71.1%. The loss bullet's shared questions become the 198 that gbrain's whole-system row scored, where
+gbrain has 58.9%; the file agent's figure on them and the detectable difference need the receipt's per-question values.
+The next custody render prints the corrected tables, and [corrections](docs/corrections.md#q1-head-to-head-scoreboard)
+has the custodian's rescore.
+
 <!-- scoreboard:headline:begin -->
 On BEAM-10M (never used to tune gbrain), measured 2026-10-27 at gbrain `f05943e`, the component comparison is descriptive: with these conversations it detects only differences of about 13.58 points, so no row is ranked. The table is incomplete: `ext-graph-pipeline`, `ext-markdown-kb` did not run on BEAM-10M, so no field-wide claim is made.
 
@@ -375,6 +387,16 @@ Code is MIT licensed. Dataset and vendored benchmark attribution is recorded in 
 [PrecisionMemBench attribution](eval/precisionmembench/ATTRIBUTION.md).
 
 ## Changelog
+
+### 2026-11-03: The Q1 file agent's context-overflow stops count as product failures
+
+The paragraph above the Q1 block now says that the block's two file-agent cells (68.0% on BEAM-10M, 193/199, and
+71.1% on BEAM-1M sealed, 239/240) leave out 7 `context_overflow` stops that the preregistered outcome rule scores 0 as
+product failures, and what changes when the receipt is rendered again in custody: both cells cover every question, the
+BEAM-10M cell falls and the loss bullet's shared questions become the 198 gbrain's whole-system row scored. The
+block's hash check pins it to the published render, so the block itself is unchanged until that custody render.
+`eval/runner/scoreboard.ts` now takes its product failures from the outcome rules; the rescore is in
+[corrections](docs/corrections.md#q1-head-to-head-scoreboard).
 
 ### 2026-11-03: Re-pin to gbrain `62637c96a`
 

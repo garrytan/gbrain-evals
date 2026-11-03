@@ -796,6 +796,28 @@ describe('A24 render: product outcomes, frontier agreement, SHA256SUMS and the r
     rmSync(dir, { recursive: true });
   });
 
+  test('a file agent that stops at its turn cap or overflows its context fails as the product, scored 0 and kept in the denominator', () => {
+    const { dir } = fresh();
+    const cell = 's1-file-agent';
+    const cdir = join(dir, 'cells', cell);
+    const baseline = render(dir).cells.find(c => c.cell_id === cell)!;
+    const answers = ndjson(join(cdir, 'answers.ndjson'));
+    const judgments = ndjson(join(cdir, 'judgments.ndjson'));
+    const passed = new Set(judgments.filter(j => j.judge_replicate === 0 && j.score >= 0.5).map(j => j.answer_id));
+    const hit = answers.filter(a => a.reader === 'gpt-6.1-sol' && passed.has(a.answer_id)).slice(0, 3);
+    expect(hit.length).toBe(3);
+    const stop = new Map(hit.map((a, i) => [a.answer_id, i === 0 ? 'turn_cap' : 'context_overflow']));
+    write(join(cdir, 'answers.ndjson'), answers.map(a => (stop.has(a.answer_id) ? { ...a, outcome: stop.get(a.answer_id) } : a)));
+    write(join(cdir, 'judgments.ndjson'), judgments.filter(j => !stop.has(j.answer_id)));
+    const after = render(dir).cells.find(c => c.cell_id === cell)!;
+    expect(after.product_failures).toBe(baseline.product_failures + 3);
+    expect(after.harness_failures).toBe(baseline.harness_failures);
+    expect(after.valued).toBe(baseline.valued);
+    expect(after.mean!).toBeLessThan(baseline.mean!);
+    expect(checkReceipt(dir, {}).messages).toEqual([]);
+    rmSync(dir, { recursive: true });
+  });
+
   test('frontier agreement is reported on the covered set with coverage, and an A19 redo replaces the logged record under its key', () => {
     const { dir } = fresh();
     const cell = 's1-gbrain-8k';
