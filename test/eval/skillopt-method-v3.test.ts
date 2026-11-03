@@ -19,7 +19,7 @@ import { ARMS, armPrompt, CONTRACTS, readContract } from '../../eval/runner/skil
 import { datasetContext, redactionScope } from '../../eval/runner/skillopt-method/dataset-context.ts';
 import { datasetDir, readCriteria, readSealedTasks, readSeed, readTasks, SEED_PINS, sha256 } from '../../eval/runner/skillopt-method/dataset.ts';
 import { markersIn, proposerInput, WITHHELD, type TrainTrajectory } from '../../eval/runner/skillopt-method/one-shot.ts';
-import { compileJudgeV3, CRITERIA_V3, SPLITS_V3, type FactCheckSpec, type GoldV3, type MeetingSpec, type PartKey, type V3Check } from '../../eval/runner/skillopt-method/score-v3.ts';
+import { compileJudgeV3, CRITERIA_V3, SEED_STATUS_LABELS, SPLITS_V3, type FactCheckSpec, type GoldV3, type MeetingSpec, type PartKey, type V3Check } from '../../eval/runner/skillopt-method/score-v3.ts';
 import { citedSlugs, evaluateLayers, SKILLS, type GoldValue, type Judge, type SkillName, type StatusClass } from '../../eval/runner/skillopt-method/score.ts';
 import { checkSkilloptMethod } from '../../eval/runner/validate-data.ts';
 
@@ -293,6 +293,20 @@ describe('skillopt-method-v3: contract', () => {
       if (arm === 'bare-no-skill') expect(prompt).toBe(t.task);
     }
     expect(ARMS).toContain('no-skill');
+  });
+
+  test('the fact-check contract names the six labels: a no-skill answer using one passes the form checks, and CONTRADICTED still fails the label check', () => {
+    const tasks = trainSel('fact-check').filter(t => t.gold.spec.kind === 'fact-check' && t.gold.spec.status !== 'not-supported');
+    expect(tasks.some(t => t.gold.status === 'supported') && tasks.some(t => t.gold.status === 'contradicted')).toBe(true);
+    for (const t of tasks) {
+      const prompt = armPrompt(t.task, 'fact-check', 'no-skill');
+      for (const label of SEED_STATUS_LABELS) expect([t.task_id, label, prompt.includes(label)]).toEqual([t.task_id, label, true]);
+      const correct = t.gold.values[0];
+      const answer = (label: string) => '[1] CLAIM: ' + claimOf(t) + '\nSTATUS: ' + label + (correct ? '\nCorrect value: ' + shown(correct) : '') + '\nSources: ' + t.gold.slugs.join(', ');
+      for (const label of SEED_STATUS_LABELS) expect([t.task_id, label, formPasses(t, answer(label))]).toEqual([t.task_id, label, true]);
+      const failedForm = layers(t, answer('CONTRADICTED')).failed.filter(c => (c as V3Check).layer === 'form').map(c => (c as V3Check).kind);
+      expect([t.task_id, failedForm]).toEqual([t.task_id, ['status-label-form']]);
+    }
   });
 });
 

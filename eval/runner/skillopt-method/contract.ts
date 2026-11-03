@@ -15,7 +15,9 @@
  *               each asked fact and its citation inside its meeting's entry
  *   fact-check  the seed writes "[N] CLAIM:" blocks with one STATUS: line and
  *               a Corrections Applied list; the contract asks for one block per
- *               claim or per part, and the correct value of a contradicted part
+ *               claim or per part, and the correct value of a contradicted part,
+ *               and names the seed's six status labels so an arm without the
+ *               skill can use them
  *
  * The contracts are frozen with the data as <skill>/contract.md.
  */
@@ -23,6 +25,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { datasetDir } from './dataset.ts';
 import type { SkillName } from './score.ts';
+import { SEED_STATUS_LABELS } from './score-v3.ts';
 
 export const CONTRACTS: Readonly<Record<SkillName, string>> = {
   query: [
@@ -39,7 +42,7 @@ export const CONTRACTS: Readonly<Record<SkillName, string>> = {
   ].join('\n'),
   'fact-check': [
     'Output contract (how your report is read):',
-    '- Use your skill\'s claim-by-claim report: one "[N] CLAIM:" block for the claim, or one per part of a claim that states several values, each block with exactly one STATUS: line carrying a label of your skill\'s six-level scale.',
+    `- Use your skill's claim-by-claim report: one "[N] CLAIM:" block for the claim, or one per part of a claim that states several values, each block with exactly one STATUS: line carrying one of the six labels ${SEED_STATUS_LABELS.slice(0, -1).join(', ')} or ${SEED_STATUS_LABELS.at(-1)}.`,
     '- For each part the brain contradicts, give the value the brain holds, as a "Correct value:" line in that block or in your skill\'s "was X, now Y" correction.',
     '- Cite each page that decides a part by its slug.',
   ].join('\n'),

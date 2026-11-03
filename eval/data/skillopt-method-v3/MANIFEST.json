@@ -74,8 +74,8 @@
     },
     {
       "path": "fact-check/contract.md",
-      "sha256": "c9b2cbebdd9fbd3d267d3f95c5aa8e6e03da5024c40df58f39bfae9b609e99bf",
-      "bytes": 477
+      "sha256": "58fdeb65274e7f87fd78baaa3a861d7fc948878e85dbf8ffce42139ea4d92ec1",
+      "bytes": 535
     },
     {
       "path": "fact-check/criteria.md",
@@ -148,5 +148,5 @@
       "test": 96
     }
   },
-  "data_sha256": "5388e3bf43649ce2f5c0b6534ab0148f844aa24f60bcca28393d25c560bc04cf"
+  "data_sha256": "4afe07de5588929097e3f91f664eeb4946cb93206744260e736983fe04035148"
 }

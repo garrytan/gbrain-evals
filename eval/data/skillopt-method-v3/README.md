@@ -146,10 +146,12 @@ each split against the quota. Generation fails when any count is short; every fa
 
 ## Contract and scorer
 
-Every arm's prompt is the task followed by `<skill>/contract.md` ([`contract.ts`](../../runner/skillopt-method/contract.ts)),
-except the bare no-skill arm. Each contract adopts the seed's own documented output (the query seed's direct answer and
-`[Source: ...]` citations, the briefing seed's MEETINGS TODAY list, the fact-check seed's `[N] CLAIM:` blocks) and adds
-only what binds facts.
+Every arm's prompt is the task followed by `<skill>/contract.md`
+([`contract.ts`](../../runner/skillopt-method/contract.ts)), except the bare no-skill arm. Each contract adopts the
+seed's own documented output (the query seed's direct answer and `[Source: ...]` citations, the briefing seed's MEETINGS
+TODAY list, the fact-check seed's `[N] CLAIM:` blocks) and adds only what binds facts. The fact-check contract also
+names the six status labels the form check accepts (VERIFIED, LIKELY ACCURATE, UNVERIFIED, DISPUTED, LIKELY INACCURATE
+and FALSE), so an arm without the seed's text can use them.
 
 Each task's judge is a gbrain rule judge of m-flag regexes ([`score-v3.ts`](../../runner/skillopt-method/score-v3.ts)),
 each tagged `substance` (the value concluded, the deciding page, the abstention, each part's status) or `form` (the
@@ -186,10 +188,13 @@ bun eval/generators/skillopt-method/findability-v3.ts check   # re-search every 
 
 The world and the three generators are seeded (world 30001, its legal entities 31010, generators 30011 to 30013) and
 call no model. The knobs are explicit (`V3Knobs` in `world-v3.ts`); `revision: 1` selects these families and the
-legal-entity world, and `revision` absent or 0 regenerates the calibrated set (MANIFEST.json sha256 `5729db40…`). Calibration (plan section 4) froze them at contract chain
-depth 4 to 5 records, 20 look-alike company pairs, 24 look-alike person pairs and 6 distractors per account. The
-preregistered first set (3 to 5, 15, 20 and 2) scored the same on Opus; its amendment in
-[PREREGISTRATION.md](../../../docs/benchmarks/2026-11-02-skillopt-ceiling/PREREGISTRATION.md#amendments) has both rounds.
+legal-entity world, and `revision` absent or 0 regenerates the calibrated set's world and task files byte for byte
+(main's MANIFEST.json sha256 `5729db40…`, frozen with the fact-check contract as it read before it named the six
+labels). Calibration (plan section 4) froze them at contract chain depth 4 to 5 records, 20 look-alike company pairs, 24
+look-alike person pairs and 6 distractors per account. The preregistered first set (3 to 5, 15, 20 and 2) scored the
+same on Opus; its amendment in
+[PREREGISTRATION.md](../../../docs/benchmarks/2026-11-02-skillopt-ceiling/PREREGISTRATION.md#amendments) has both
+rounds.
 
 ## Known limits
 
@@ -201,13 +206,26 @@ preregistered first set (3 to 5, 15, 20 and 2) scored the same on Opus; its amen
   much one search hands over, not how hard a task is.
 - Briefing calendars hold two or three asked meetings (revision 0 held three to six), because no fact or page may serve
   two bundles and the hard kinds' pools (56 single-title contacts, 76 legal-entity records) are finite.
-- The task files carry their judges' regexes inline, so v3 is about 10.2 MB (10,211,909 bytes over MANIFEST.json's
+- The task files carry their judges' regexes inline, so v3 is about 10.2 MB (10,211,967 bytes over MANIFEST.json's
   files), mostly the briefing and fact-check judges.
 - Pages are 178 to 318 words, short of the plan's 700-word ceiling: the generator pads each page to a seeded length
   from its bank's filler sentences.
 - Briefing citation dates are not checked against the page.
 
 ## Changelog
+
+### 2026-11-03: The fact-check contract names the six status labels
+
+Gate 1's fact-check pair read `invalid` because its no-skill arm failed the form check on 22 of 36 gate tasks: the
+contract asked for "a label of your skill's six-level scale", which an arm without the seed's text cannot know, so it
+wrote labels such as CONTRADICTED. The contract now lists the six labels the form check accepts, taken from
+`SEED_STATUS_LABELS` in `score-v3.ts`: VERIFIED, LIKELY ACCURATE, UNVERIFIED, DISPUTED, LIKELY INACCURATE and FALSE. The
+scorer, the form check, the arms and every task are unchanged; only `fact-check/contract.md` and MANIFEST.json changed.
+A keyless test pins that a no-skill answer using any of the six passes every form check on each train and selection
+claim with a true or false status, and that CONTRADICTED still fails the label check. `revision` 0 still regenerates
+main's world and task files byte for byte; main's frozen revision-0 data keeps the earlier contract. MANIFEST.json's
+sha256 went from `c2d0e052` to `900d1768` and `data_sha256` from `5388e3bf` to `4afe07de`; the dataset grew from
+10,211,909 to 10,211,967 bytes.
 
 ### 2026-11-03: Revision 1 moves onto gbrain `62637c96a` and revision 0's final data
 
