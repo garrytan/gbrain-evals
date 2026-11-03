@@ -4,6 +4,13 @@ This records what each gbrain-evals release changed and what its measurements me
 
 ## [Unreleased]
 
+### The 8k conversion gate holds the facts block to the row cap of the decision's pinned gbrain (#311)
+
+- **`retrievalChecks` now checks the facts-block row cap that the decision's pinned gbrain applies** (`eval/runner/budgeted-delivery/c8k.ts`). From gbrain v0.60.555.0 (gbrain#8411) the block stops at the caller's `limit`. A decision pinned there or later now holds A3 and B3 to `min(40, limit)`: 25 rows, the limit c8k passes in their query. Before v0.60.555.0 the cap stays at 40. The guard used to check 40 rows at every pin, so at a new pin a regression that let rows 26 to 40 through would have passed the gate.
+- **The committed decision does not change.** It pins gbrain `cf3ec433` (v0.60.461.0), whose block takes up to 40 rows whatever the limit, so its guard, gate receipts, numbers and verdicts stay as recorded. Those receipts record each arm's mean fact rows and largest fact-token total, not each result's row count, so the repo alone cannot show whether a held-out result had more than 25 rows.
+- **`productUnderTest` now refuses a decision whose `gbrain.version` differs from the build's VERSION**, as it already did for the commit, because the row cap reads that field.
+- **Tests.** `test/eval/budgeted-delivery-c8k.test.ts` checks that 25 rows pass and 26 fail under a v0.60.557.0 decision, that 26 fail at exactly v0.60.555.0 and pass at v0.60.554.0, and that 26 pass under the committed decision. The new test failed on main before the fix.
+
 ### The scoreboard scores an agent's turn-cap and context-overflow stops as product failures
 
 - **`eval/runner/scoreboard.ts` now takes its product failures from the outcome rules (`eval/runner/memory-qa/outcomes.ts`).** It kept its own list, `retrieval_error` and `unsupported`, so an answering agent's `turn_cap` or `context_overflow` stop fell through to the judged path, found no judgment and left its question as a harness failure. The preregistered rule scores those stops 0 and keeps them in the denominator, and the ruling of 2026-11-03 via GBRA-108 is that this rule wins. Only an answer or retrieval row recorded with one of those two outcomes scores differently; every other outcome scores as before.
