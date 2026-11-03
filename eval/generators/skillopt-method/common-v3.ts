@@ -20,7 +20,10 @@
  * tasks per connected group, and held-out families only in gate and test. A
  * family whose tasks have more than one gold status (a fact-check family that
  * makes claims right or wrong) fills each split's quota by status, in the
- * proportion of its confirmed candidates. Each task records its group id for
+ * proportion of its confirmed candidates; a false claim with a true part counts
+ * apart from one false throughout. Train and selection give neither an
+ * every-claim-FALSE nor an every-claim-VERIFIED report a larger share of
+ * passes than gate (statusSkewV3). Each task records its group id for
  * resampling. Train is ordered round-robin by
  * family, so gbrain's batches of 8 each cover every trained family. A family
  * that cannot fill its quota fails generation with the capacity report.
@@ -293,6 +296,30 @@ export function degenerateAnswers(skill: SkillName, c: Pick<CandidateV3, 'gold' 
   return out;
 }
 
+/**
+ * GST-1150: for each split of a fact-check task set, the share of tasks whose
+ * oracle report still passes substance with every STATUS: line set to FALSE
+ * (all-false) or to VERIFIED (all-true). A problem when train or selection
+ * gives either report a larger share than gate, since a skill that leans one
+ * way would then score better where it is trained and selected than where it
+ * is gated.
+ */
+export function statusSkewV3(tasks: readonly MethodTaskV3[]): { shares: Record<'all-false' | 'all-true', Partial<Record<SplitV3, number>>>; problems: string[] } {
+  const shares: Record<'all-false' | 'all-true', Partial<Record<SplitV3, number>>> = { 'all-false': {}, 'all-true': {} };
+  for (const split of SPLITS_V3) {
+    const inSplit = tasks.filter(t => t.split === split);
+    if (!inSplit.length) continue;
+    for (const [report, label] of [['all-false', '❌ FALSE'], ['all-true', '✅ VERIFIED']] as const) {
+      shares[report][split] = inSplit.filter(t => evaluateLayers(t.oracle_answer.replace(/^STATUS: .*$/gm, `STATUS: ${label}`), t.judge).substance).length / inSplit.length;
+    }
+  }
+  const problems = (['all-false', 'all-true'] as const).flatMap(report => (['train', 'sel'] as const).flatMap(split => {
+    const s = shares[report][split], gate = shares[report].gate;
+    return s !== undefined && gate !== undefined && s > gate ? [`${report} oracle reports pass substance on ${(100 * s).toFixed(1)}% of ${split}, more than gate's ${(100 * gate).toFixed(1)}%`] : [];
+  }));
+  return { shares, problems };
+}
+
 // ─── Screening and assembly ──────────────────────────────────────────────────
 
 const taskKeys = (t: Pick<CandidateV3, 'anchor' | 'fact_keys' | 'gold'>) => [...new Set([`anchor:${t.anchor.id}`, ...t.fact_keys, ...t.gold.slugs.map(x => `page:${x}`)])];
@@ -396,18 +423,21 @@ const shortfall = (placed: ReadonlyArray<CandidateV3 & { split: SplitV3 }>, quot
 /**
  * Each family's quotas split by gold status in proportion to its confirmed
  * candidates (largest remainder per split), so a family the generator makes
- * right or wrong places true and false claims in the generator's mix. A family
- * with one status keeps its own name and quotas.
+ * right or wrong places true and false claims in the generator's mix. A false
+ * claim with a true part is its own stratum, so a compound claim's mix of
+ * reports that fail when every part is called FALSE holds in every split. A
+ * family with one status keeps its own name and quotas.
  */
 function statusStrata(kept: ReadonlyArray<{ candidate: Pick<CandidateV3, 'family' | 'gold'> }>, quotas: QuotasV3): { quotas: QuotasV3; stratum: (c: Pick<CandidateV3, 'family' | 'gold'>) => string } {
+  const key = (g: GoldV3) => (g.status ?? '') + (g.status === 'contradicted' && g.spec.kind === 'fact-check' && g.spec.parts.some(p => p.status === 'supported') ? '+supported-part' : '');
   const statuses = new Map<string, string[]>();
-  for (const f of Object.keys(quotas)) statuses.set(f, [...new Set(kept.filter(k => k.candidate.family === f).map(k => k.candidate.gold.status ?? ''))].sort());
-  const stratum = (c: Pick<CandidateV3, 'family' | 'gold'>) => (statuses.get(c.family)!.length > 1 ? `${c.family}|${c.gold.status ?? ''}` : c.family);
+  for (const f of Object.keys(quotas)) statuses.set(f, [...new Set(kept.filter(k => k.candidate.family === f).map(k => key(k.candidate.gold)))].sort());
+  const stratum = (c: Pick<CandidateV3, 'family' | 'gold'>) => (statuses.get(c.family)!.length > 1 ? `${c.family}|${key(c.gold)}` : c.family);
   const out: Record<string, [number, number, number, number]> = {};
   for (const [f, q] of Object.entries(quotas)) {
     const ss = statuses.get(f)!;
     if (ss.length <= 1) { out[f] = [...q] as [number, number, number, number]; continue; }
-    const counts = ss.map(s => kept.filter(k => k.candidate.family === f && (k.candidate.gold.status ?? '') === s).length);
+    const counts = ss.map(s => kept.filter(k => k.candidate.family === f && key(k.candidate.gold) === s).length);
     const total = counts.reduce((a, b) => a + b, 0);
     for (const s of ss) out[`${f}|${s}`] = [0, 0, 0, 0];
     q.forEach((n, i) => {

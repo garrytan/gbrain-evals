@@ -9,7 +9,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { scoreTrajectory } from 'gbrain/core/skillopt';
 import { datasetProblems } from '../../eval/generators/skillopt-method/gen.ts';
-import { degenerateAnswers, MAX_TASKS_PER_GROUP_V3, SPLIT_SIZES_V3, splitLeaksV3, type MethodTaskV3 } from '../../eval/generators/skillopt-method/common-v3.ts';
+import { degenerateAnswers, MAX_TASKS_PER_GROUP_V3, SPLIT_SIZES_V3, splitLeaksV3, statusSkewV3, type MethodTaskV3 } from '../../eval/generators/skillopt-method/common-v3.ts';
 import { QUERY_V3_HELD_OUT, QUERY_V3_QUOTAS } from '../../eval/generators/skillopt-method/query-v3.ts';
 import { BRIEFING_V3_HELD_OUT, BRIEFING_V3_QUOTAS } from '../../eval/generators/skillopt-method/briefing-v3.ts';
 import { FACT_CHECK_V3_HELD_OUT, FACT_CHECK_V3_QUOTAS } from '../../eval/generators/skillopt-method/fact-check-v3.ts';
@@ -406,12 +406,21 @@ describe('skillopt-method-v3: layouts and mutations over train and selection', (
   test('fact-check: every split places true claims, and every right-or-wrong family places both true and false claims in each split it fills', () => {
     const tasks = allTasks('fact-check');
     for (const sp of SPLITS_V3) expect([sp, tasks.some(t => t.split === sp && t.gold.status === 'supported')]).toEqual([sp, true]);
-    for (const family of ['compound', 'role-on-date', 'three-hop', 'lookalike-founder']) for (const sp of SPLITS_V3) {
+    for (const family of ['superseded', 'compound', 'not-founder', 'role-on-date', 'three-hop', 'lookalike-founder']) for (const sp of SPLITS_V3) {
       const placed = tasks.filter(t => t.family === family && t.split === sp);
       if (!placed.length) continue;
       const statuses = [...new Set(placed.map(t => t.gold.status))].sort();
       expect([family, sp, statuses]).toEqual([family, sp, ['contradicted', 'supported']]);
     }
+  });
+
+  test('fact-check: oracle reports with every status FALSE, or every status VERIFIED, pass substance on no larger a share of train or of selection than of gate', () => {
+    const { shares, problems } = statusSkewV3(allTasks('fact-check'));
+    for (const report of ['all-false', 'all-true'] as const) {
+      expect([report, shares[report].gate! > 0, shares[report].gate! < 1]).toEqual([report, true, true]);
+      for (const sp of ['train', 'sel'] as const) expect([report, sp, shares[report][sp]! <= shares[report].gate!]).toEqual([report, sp, true]);
+    }
+    expect(problems).toEqual([]);
   });
 });
 

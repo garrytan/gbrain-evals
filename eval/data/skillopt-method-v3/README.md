@@ -41,18 +41,23 @@ ordered round-robin by family, so each of gbrain's batches of 8 covers every tra
 | | changed-companies (held out) | 0 / 0 / 6 / 16 | An attendee who changed companies; the current one counts |
 | | renewal-pending (held out) | 0 / 0 / 6 / 16 | An account with a renewal signed but not yet in force on the day |
 | | meetings-5-6 (held out) | 0 / 0 / 6 / 16 | Five or six external meetings |
-| `fact-check` | superseded | 6 / 6 / 5 / 12 | A term as of a date stated with a value another record holds; contradicted, with the value in force |
+| `fact-check` | superseded | 6 / 6 / 5 / 12 | A term as of a date stated with a value another record holds (contradicted, with the value in force), or with the value in force while a later record holds another (supported) |
 | | compound | 6 / 6 / 5 / 12 | Two or three terms of one account on one date, each part right or wrong |
-| | not-founder | 6 / 6 / 4 / 12 | "P founded C" where P only works or worked at C |
+| | not-founder | 6 / 6 / 4 / 12 | Per company, "P founded C" where P only works or worked at C (contradicted), and the real founder's claim (supported) |
 | | absent | 6 / 6 / 4 / 12 | A claim about an entity no page carries; near-miss pages recorded |
 | | role-on-date (held out) | 0 / 0 / 6 / 16 | "On D, P was C's chief executive" (or chief technology officer), right or wrong |
 | | three-hop (held out) | 0 / 0 / 6 / 16 | A founding claim three hops out, right or naming the wrong hop's founder |
 | | lookalike-founder (held out) | 0 / 0 / 6 / 16 | A founding claim about a company sharing a stem with another, or naming a near-name person |
 
-A fact-check family that makes claims right or wrong (compound, role-on-date, three-hop and lookalike-founder) fills
-each split by gold status in the proportion of its confirmed candidates, so true claims sit in every split and a report
-that calls everything false fails every task with a true part. Fact-check tasks by gold status (supported / contradicted
-/ not-supported) are 2 / 16 / 6 in train, 2 / 16 / 6 in selection, 10 / 22 / 4 in gate and 27 / 57 / 12 in test.
+Every fact-check family except absent makes claims right or wrong. Each fills each split by gold status in the
+proportion of its confirmed candidates, and compound's false claims with a true part fill apart from those false
+throughout, so true claims sit in every split and a report that calls everything false fails every task with a true
+part. Fact-check tasks by gold status (supported / contradicted / not-supported) are 8 / 10 / 6 in train, 8 / 10 / 6 in
+selection, 12 / 20 / 4 in gate and 32 / 52 / 12 in test; 11, 11, 15 and 38 of them have a true part. The oracle report
+with every status set to FALSE passes substance on 13 of 24 train, 13 of 24 selection, 21 of 36 gate and 58 of 96 test
+tasks, and with every status set to VERIFIED on 8, 8, 12 and 32. `gen.ts check` and the v3 test fail when train or
+selection gives either report a larger share than gate (`statusSkewV3` in
+[`common-v3.ts`](../../generators/skillopt-method/common-v3.ts)).
 
 Every task has its own anchor. Tasks that share an anchor, a gold fact or a gold page form one connected group; a
 group sits in one split with at most three tasks, and each task records its `group_id` for resampling. Abstention
@@ -70,9 +75,9 @@ a false claim true, and one that calls every claim or part false when a part is 
 
 | Skill | Candidates | Dropped by the oracle | By the solvability control | By a degenerate answer | Groups (largest) |
 |---|---|---|---|---|---|
-| `query` | 1,298 | 0 | 0 | 0 | 135 (3) |
-| `briefing` | 309 | 7 | 0 | 0 | 76 (3) |
-| `fact-check` | 1,594 | 0 | 0 | 0 | 131 (3) |
+| `query` | 1,323 | 0 | 0 | 0 | 131 (3) |
+| `briefing` | 309 | 6 | 0 | 0 | 75 (3) |
+| `fact-check` | 1,755 | 0 | 0 | 0 | 136 (3) |
 
 `<skill>/generation-report.json` holds the capacity report: per family, the confirmed candidates and the tasks placed in
 each split against the quota. Generation fails when any count is short; every family and split is met.
@@ -124,17 +129,35 @@ preregistered first set (3 to 5, 15, 20 and 2) scored the same on Opus; its amen
 - Calibration (train only) is the only paid read so far. It ran before #308's scorer and fact-check fixes, at MANIFEST.json
   `04f8f287…` and `3f416c5e…`: the seed scored 1.0 on query and briefing and 0.75 to 0.875 on fact-check, above the
   0.30 to 0.60 band it aimed for. It is read again at the final manifest before the headroom gate.
-- Among the trained families only compound makes true claims, so train and selection hold few fact-check tasks with a
-  true part. At the registered knobs that was 3 and 4, against 13 in gate and 31 in test, and the oracle report with
-  every status set to FALSE passed substance on 21 of 24 train, 20 of 24 selection, 23 of 36 gate and 65 of 96 test
-  tasks, so selection can punish a rewrite that rejects too much on only 4 tasks (GST-1150, fixed before the gate).
-- The task files carry their judges' regexes inline, so v3 is about 11.0 MB (10,976,191 bytes over MANIFEST.json's
+- The task files carry their judges' regexes inline, so v3 is about 11.0 MB (10,985,950 bytes over MANIFEST.json's
   files), mostly the briefing and fact-check judges.
 - Pages are 178 to 318 words, short of the plan's 700-word ceiling: the generator pads each page to a seeded length
   from its bank's filler sentences.
 - Briefing citation dates are not checked against the page.
 
 ## Changelog
+
+### 2026-11-02: Trained fact-check families make true claims (GST-1150)
+
+Among the trained fact-check families only compound made true claims, so train and selection held 4 and 6 tasks with a
+true part against 13 in gate and 31 in test. The oracle report with every status set to FALSE passed substance on 20 of
+24 train, 18 of 24 selection, 23 of 36 gate and 65 of 96 test tasks, so a rewrite that rejected too much lost little
+where it was trained and selected. Two trained families now make true claims too:
+
+- superseded states, for about half its claims, the value in force on the claim's date while a later record holds
+  another value (supported);
+- not-founder makes, per company, the real founder's claim (supported) and one claim naming a person who works or
+  worked there, the chief executive when one is not the founder (contradicted). It made one per such person before.
+
+Compound's false claims with a true part now fill apart from those false throughout, so its mix holds in every split.
+Train and selection now hold 11 tasks with a true part each, against 15 in gate and 38 in test, and the every-FALSE
+report passes on 13, 13, 21 and 58 of them. A new guard (`statusSkewV3`, run by `gen.ts check` and the v3 test) fails
+when train or selection gives the every-FALSE or every-VERIFIED oracle report a larger share of passes than gate. The
+controls table now gives each skill's counts at the frozen knobs, which it had kept from the registered ones.
+
+Quotas, seeds, knobs, the family hold-out and the world are unchanged; query and briefing are byte-identical. Fact-check
+candidates went from 1,798 to 1,755 and groups from 124 to 136. MANIFEST.json's sha256 went from `a677090b` to
+`a6ddcbef` and `data_sha256` from `582347c5` to `225d18a1`; the dataset grew from 10,976,191 to 10,985,950 bytes.
 
 ### 2026-11-02: Calibration froze harder knobs
 

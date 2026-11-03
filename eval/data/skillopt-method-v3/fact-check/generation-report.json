@@ -14,9 +14,9 @@
     "distractor_count": 6
   },
   "candidates": {
-    "superseded": 1039,
+    "superseded": 1038,
     "compound": 261,
-    "not-founder": 200,
+    "not-founder": 158,
     "absent": 110,
     "role-on-date": 79,
     "three-hop": 61,
@@ -30,8 +30,8 @@
     {
       "family": "superseded",
       "held_out": false,
-      "candidates": 1039,
-      "confirmed": 1039,
+      "candidates": 1038,
+      "confirmed": 1038,
       "quota": {
         "train": 6,
         "sel": 6,
@@ -68,8 +68,8 @@
     {
       "family": "not-founder",
       "held_out": false,
-      "candidates": 200,
-      "confirmed": 200,
+      "candidates": 158,
+      "confirmed": 158,
       "quota": {
         "train": 6,
         "sel": 6,
@@ -161,8 +161,8 @@
       "short": 0
     }
   ],
-  "groups": 124,
+  "groups": 136,
   "largest_group": 3,
-  "unused_candidates": 1618,
+  "unused_candidates": 1575,
   "assembly_attempt": 0
 }
