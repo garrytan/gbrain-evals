@@ -5,21 +5,22 @@
  * without reopening, and the frozen settle closes the raised lease.
  */
 import { afterAll, beforeEach, describe, expect, test } from 'bun:test';
-import { appendFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import { BudgetRun, closeLedgers, ledgerStatus, verifyLedger } from '../../eval/runner/budget-ledger.ts';
+import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
+import { BudgetRun, closeLedgers, closeRun, ledgerStatus, verifyLedger } from '../../eval/runner/budget-ledger.ts';
 import { Campaign, type CampaignManifest } from '../../eval/runner/shootout-cell.ts';
 import { leaseUsd, raise, raises, settle } from '../../eval/runner/q1/raise-lease.ts';
 
+const ROOT = resolve(import.meta.dir, '../..');
 const tmp = mkdtempSync(join(tmpdir(), 'raise-lease-'));
 afterAll(() => rmSync(tmp, { recursive: true, force: true }));
 let n = 0;
 
-function setup(Cls: typeof Campaign = Campaign) {
+function setup(Cls: typeof Campaign = Campaign, ledgerIn = (dir: string) => join(dir, 'campaign.sqlite')) {
   const dir = join(tmp, `c${++n}`);
   mkdirSync(dir, { recursive: true });
-  const manifest = { kind: 'oss-shootout-campaign', schema_version: 1, campaign_id: `raise-${n}`, cap_usd: 10, ledger: join(dir, 'campaign.sqlite'),
+  const manifest = { kind: 'oss-shootout-campaign', schema_version: 1, campaign_id: `raise-${n}`, cap_usd: 10, ledger: ledgerIn(dir),
     blocks: { T1: { estimate_usd: 6, cap_usd: 9 } },
     cells: [0, 1].map(i => ({ id: `cell-${i}`, system: 'fake', benchmark: 'fixture', config: 'common', lease_usd: 4, command: 'true', block: 'T1' })) } as unknown as CampaignManifest;
   writeFileSync(join(dir, 'manifest.json'), JSON.stringify(manifest));
@@ -37,8 +38,9 @@ function setup(Cls: typeof Campaign = Campaign) {
     const p = Bun.spawnSync(['bash', '-c', command], { env: { ...process.env, HOME: home }, stdout: 'pipe', stderr: 'pipe' });
     return { code: p.exitCode, out: p.stdout.toString().trim(), err: p.stderr.toString().trim() };
   };
-  const hostCommitted = () => ledgerStatus({ ledgerPath: manifest.ledger, runId: JSON.parse(readFileSync(join(state, 'campaign.json'), 'utf8')).run_id }).run!;
-  return { c, state, launch, home, vmLedger, ssh, hostCommitted, ledger: manifest.ledger };
+  const ledger = resolve(ROOT, manifest.ledger);
+  const hostCommitted = () => ledgerStatus({ ledgerPath: ledger, runId: JSON.parse(readFileSync(join(state, 'campaign.json'), 'utf8')).run_id }).run!;
+  return { c, state, launch, home, vmLedger, ssh, hostCommitted, ledger };
 }
 
 describe('raise-lease (A17 campaigns)', () => {
@@ -101,6 +103,41 @@ describe('raise-lease (A17 campaigns)', () => {
     BudgetRun.openLease({ runId: m.lease_id, leaseUsd: 3, ledgerPath: vmLedger(m.lease_id) });
     expect(() => raise(c, m.lease_id, 5, 'x', ssh)).toThrow(/holds lease 3 .*not an open \$4.00/);
     expect(() => raise(c, m.lease_id, 5, '  ', ssh)).toThrow(/needs --reason/);
+  });
+
+  test('a raise is refused once the campaign run is closed and leaves both ledgers as they were (#319)', () => {
+    const { c, state, launch, vmLedger, ssh, hostCommitted, ledger } = setup();
+    const l = launch('cell-0', 'vm-0');
+    mkdirSync(join(vmLedger(l.lease_id), '..'), { recursive: true });
+    BudgetRun.openLease({ runId: l.lease_id, leaseUsd: 4, ledgerPath: vmLedger(l.lease_id) });
+    expect(raise(c, l.lease_id, 4.5, 'owner approved $4.50', ssh)).toMatchObject({ from_usd: 4, to_usd: 4.5 });
+    expect(hostCommitted().committed_usd).toBe(4.5);
+
+    closeRun(ledger, JSON.parse(readFileSync(join(state, 'campaign.json'), 'utf8')).run_id);
+    expect(() => raise(c, l.lease_id, 5, 'after close', ssh)).toThrow(/raise .* from \$4.50 to \$5.00: budget run .* already finished/);
+    expect(hostCommitted()).toMatchObject({ committed_usd: 4.5, finished_at: expect.any(String) });
+    expect(ledgerStatus({ ledgerPath: vmLedger(l.lease_id), runId: l.lease_id }).run!.budget_usd).toBe(4.5);
+    expect([leaseUsd(c, l.lease_id), raises(state).length]).toEqual([4.5, 1]);
+    expect(verifyLedger(ledger).ok).toBe(true);
+  });
+
+  test('a raise whose VM step fails after the campaign run closed still gives the host reservation back (#319)', () => {
+    const { c, state, launch, vmLedger, ssh, hostCommitted, ledger } = setup();
+    const l = launch('cell-0', 'vm-0');
+    mkdirSync(join(vmLedger(l.lease_id), '..'), { recursive: true });
+    BudgetRun.openLease({ runId: l.lease_id, leaseUsd: 4, ledgerPath: vmLedger(l.lease_id) });
+    const runId = JSON.parse(readFileSync(join(state, 'campaign.json'), 'utf8')).run_id;
+    const closedMidRaise = (vm: string, command: string) => {
+      if (!command.includes("'raise'")) return ssh(vm, command);
+      closeRun(ledger, runId);
+      return { code: 255, out: '', err: 'ssh: connect refused' };
+    };
+
+    expect(() => raise(c, l.lease_id, 5, 'closed mid-raise', closedMidRaise)).toThrow(/was not raised.*back at \$4.00/);
+    expect(hostCommitted()).toMatchObject({ committed_usd: 4, finished_at: expect.any(String) });
+    expect(ledgerStatus({ ledgerPath: vmLedger(l.lease_id), runId: l.lease_id }).run!.budget_usd).toBe(4);
+    expect([leaseUsd(c, l.lease_id), raises(state).length]).toEqual([4, 0]);
+    expect(verifyLedger(ledger).ok).toBe(true);
   });
 
   test('a reserved lease cannot be settled and is abandoned at its full reservation; a finished lease is not raised', () => {
@@ -191,5 +228,93 @@ describe('raise-lease (A17 campaigns)', () => {
     expect(c.abandon(l.lease_id, 'setup failed', { log: never })).toMatchObject({ status: 'abandoned', actual_usd: 0 });
     expect([c.blockSpend('T1'), c.status().unsettled_usd, hostCommitted().committed_usd]).toEqual([0, 0, 0]);
     expect(readFileSync(join(state, 'evidence', `${l.lease_id}.log`), 'utf8')).toBe(readFileSync(never, 'utf8'));
+  });
+});
+
+describe('raise-lease run from outside the checkout (#326)', () => {
+  beforeEach(() => closeLedgers());
+
+  /** The CLI as an operator runs it, from a directory outside the checkout and deeper than it, over a fake ubi-runner whose ssh runs the command in the test's VM home. */
+  function fromElsewhere(s: ReturnType<typeof setup>, lease: string) {
+    const away = join(tmp, ...ROOT.split(sep).filter(Boolean), 'away');
+    mkdirSync(away, { recursive: true });
+    expect(relative(ROOT, away).startsWith('..')).toBe(true);
+    const runner = join(dirname(s.ledger), 'ubi-runner.sh');
+    writeFileSync(runner, `[ "$1" = ssh ] || exit 2\nHOME='${s.home}' exec bash -c "$3"\n`);
+    mkdirSync(join(s.vmLedger(lease), '..'), { recursive: true });
+    BudgetRun.openLease({ runId: lease, leaseUsd: 4, ledgerPath: s.vmLedger(lease) });
+    const run = (usd: string) => {
+      const p = Bun.spawnSync([process.execPath, join(ROOT, 'eval/runner/q1/raise-lease.ts'), 'raise', '--campaign', join(dirname(s.ledger), 'manifest.json'), '--state', s.state, '--lease', lease, '--usd', usd, '--reason', 'owner approved'],
+        { cwd: away, env: { ...process.env, UBI_RUNNER: runner }, stdout: 'pipe', stderr: 'pipe' });
+      return { code: p.exitCode, out: p.stdout.toString(), err: p.stderr.toString() };
+    };
+    const record = (ledger: string) => {
+      const p = join(s.state, 'campaign.json');
+      writeFileSync(p, JSON.stringify({ ...JSON.parse(readFileSync(p, 'utf8')), ledger }, null, 2) + '\n');
+    };
+    return { away, run, record };
+  }
+
+  test('a relative ledger path resolves against the checkout, not the working directory', () => {
+    const s = setup();
+    const l = s.launch('cell-0', 'vm-0');
+    const { away, run } = fromElsewhere(s, l.lease_id);
+    const recorded = JSON.parse(readFileSync(join(s.state, 'campaign.json'), 'utf8')).ledger as string;
+    expect([isAbsolute(recorded), resolve(ROOT, recorded)]).toEqual([false, s.ledger]);
+    expect(existsSync(resolve(away, recorded))).toBe(false);
+
+    const r = run('5');
+    expect(r.err).toBe('');
+    expect(r.code).toBe(0);
+    expect(JSON.parse(r.out)).toMatchObject({ lease_id: l.lease_id, from_usd: 4, to_usd: 5 });
+    expect(s.hostCommitted().committed_usd).toBe(5);
+    expect(ledgerStatus({ ledgerPath: s.vmLedger(l.lease_id), runId: l.lease_id }).run!.budget_usd).toBe(5);
+    expect(verifyLedger(s.ledger).ok).toBe(true);
+  });
+
+  test('an absolute ledger path is opened as written', () => {
+    const s = setup();
+    const l = s.launch('cell-0', 'vm-0');
+    const { run, record } = fromElsewhere(s, l.lease_id);
+    record(s.ledger);
+
+    const r = run('4.5');
+    expect(r.code).toBe(0);
+    expect(JSON.parse(r.out)).toMatchObject({ from_usd: 4, to_usd: 4.5 });
+    expect(s.hostCommitted().committed_usd).toBe(4.5);
+    expect(JSON.parse(readFileSync(join(s.state, 'campaign.json'), 'utf8')).ledger).toBe(s.ledger);
+  });
+
+  test('a missing ledger, relative or absolute, refuses the raise and is never created', () => {
+    const s = setup();
+    const l = s.launch('cell-0', 'vm-0');
+    const { away, run, record } = fromElsewhere(s, l.lease_id);
+    const gone = join(dirname(s.ledger), 'moved', 'campaign.sqlite');
+    for (const recorded of [relative(ROOT, gone), gone]) {
+      record(recorded);
+      const r = run('5');
+      expect(r.code).toBe(1);
+      expect(r.err).toContain('raise-lease: unable to open database file');
+      expect([existsSync(gone), existsSync(resolve(away, recorded))]).toEqual([false, false]);
+    }
+    expect(s.hostCommitted().committed_usd).toBe(4);
+    expect(ledgerStatus({ ledgerPath: s.vmLedger(l.lease_id), runId: l.lease_id }).run!.budget_usd).toBe(4);
+    expect(raises(s.state)).toEqual([]);
+  });
+
+  test('a pre-A23 absolute ledger path that is gone from this host resolves to the manifest ledger, as Campaign does', () => {
+    const s = setup(Campaign, dir => relative(ROOT, join(dir, 'campaign.sqlite')));
+    const l = s.launch('cell-0', 'vm-0');
+    mkdirSync(join(s.vmLedger(l.lease_id), '..'), { recursive: true });
+    BudgetRun.openLease({ runId: l.lease_id, leaseUsd: 4, ledgerPath: s.vmLedger(l.lease_id) });
+    const statePath = join(s.state, 'campaign.json');
+    const oldHost = `${join('/old-host', ...ROOT.split(sep).filter(Boolean))}/${s.c.manifest.ledger}`;
+    expect(existsSync(oldHost)).toBe(false);
+    writeFileSync(statePath, JSON.stringify({ ...JSON.parse(readFileSync(statePath, 'utf8')), ledger: oldHost }, null, 2) + '\n');
+
+    expect(s.c.status().committed_usd).toBe(4);
+    expect(raise(s.c, l.lease_id, 5, 'owner approved $5', s.ssh)).toMatchObject({ from_usd: 4, to_usd: 5 });
+    expect([s.hostCommitted().committed_usd, s.c.status().committed_usd]).toEqual([5, 5]);
+    expect(ledgerStatus({ ledgerPath: s.vmLedger(l.lease_id), runId: l.lease_id }).run!.budget_usd).toBe(5);
   });
 });

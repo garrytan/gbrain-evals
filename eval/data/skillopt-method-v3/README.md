@@ -18,8 +18,8 @@ procedure adds on a brain built to need it:
 
 The rollout brain is world-v3's 1,030 pages ([`world-v3.ts`](../../generators/skillopt-method/world-v3.ts)), and the seed
 skills are the ones gbrain ships at `311a83bbe` (v0.60.553.0). They are byte-identical to v1's and v2's seeds (gbrain
-`3ec766c40`): none of the three changed between the two commits. This commit's `package.json` pins gbrain `311a83bbe`
-(v0.60.553.0), the same commit the seeds come from.
+`3ec766c40`): none of the three changed between the two commits. This commit's `package.json` pins gbrain `62637c96a`
+(v0.60.557.0), where the three seed skills are still byte-identical.
 
 Every reader names v3 explicitly: [`dataset.ts`](../../runner/skillopt-method/dataset.ts) keeps v2 as the N15 default, and
 [`dataset-context.ts`](../../runner/skillopt-method/dataset-context.ts) hands brain import, the audit and the proposer's
@@ -70,9 +70,10 @@ with every status set to VERIFIED on 7, 7, 11 and 31. `gen.ts check` and the v3 
 gives either report a larger share than gate (`statusSkewV3` in
 [`common-v3.ts`](../../generators/skillopt-method/common-v3.ts)).
 
-Every task has its own anchor. Tasks that share an anchor, a gold fact or a gold page form one connected group; a
-group sits in one split with at most three tasks, and each task records its `group_id` for resampling. Abstention
-tasks record their `near_miss` pages (the look-alikes and closest wrong entities) for the gate's reachability control.
+Every task has its own anchor, and no two tasks of a skill share prompt text. Tasks that share an anchor, a gold fact or
+a gold page form one connected group; a group sits in one split with at most three tasks, and each task records its
+`group_id` for resampling. Abstention tasks record their `near_miss` pages (the look-alikes and closest wrong
+entities) for the gate's reachability control.
 
 ## Gold and controls
 
@@ -155,7 +156,9 @@ each tagged `substance` (the value concluded, the deciding page, the abstention,
 contract's markup). A task scores a full pass (every check) and a substance pass (substance checks only); gbrain's own
 rule score is the fraction of the same checks. Substance loci do not depend on layout, so correct content in a table,
 bold lines or prose passes substance and fails form. A query answer passes only when the first sentence naming a
-candidate value states the gold value without negating or refusing it ("not 240" and "can't confirm 240" fail). In a
+candidate value states the gold value without negating or refusing it ("not 240", "can't confirm 240", "I don't see
+240" and "wasn't able to see the 240" fail: up to three filler words may sit between the negation and the value). The
+rule understates one correct answer: "I don't see the 240 seats changing" reads as a refusal and fails substance. In a
 fact-check report with `CLAIM:` blocks, a block's status is what its `STATUS:` lines say (or, with none, the first word
 after its `CLAIM:` label), and the parts it covers are the ones its `CLAIM:` line names, so status words and part words
 in notes do not count. A block may not give a covered part any status outside the ones that part allows, `DISPUTED`
@@ -183,7 +186,7 @@ bun eval/generators/skillopt-method/findability-v3.ts check   # re-search every 
 
 The world and the three generators are seeded (world 30001, its legal entities 31010, generators 30011 to 30013) and
 call no model. The knobs are explicit (`V3Knobs` in `world-v3.ts`); `revision: 1` selects these families and the
-legal-entity world, and `revision` absent or 0 regenerates the calibrated set (MANIFEST.json sha256 `a6ddcbef…`). Calibration (plan section 4) froze them at contract chain
+legal-entity world, and `revision` absent or 0 regenerates the calibrated set (MANIFEST.json sha256 `5729db40…`). Calibration (plan section 4) froze them at contract chain
 depth 4 to 5 records, 20 look-alike company pairs, 24 look-alike person pairs and 6 distractors per account. The
 preregistered first set (3 to 5, 15, 20 and 2) scored the same on Opus; its amendment in
 [PREREGISTRATION.md](../../../docs/benchmarks/2026-11-02-skillopt-ceiling/PREREGISTRATION.md#amendments) has both rounds.
@@ -205,6 +208,60 @@ preregistered first set (3 to 5, 15, 20 and 2) scored the same on Opus; its amen
 - Briefing citation dates are not checked against the page.
 
 ## Changelog
+
+### 2026-11-03: Revision 1 moves onto gbrain `62637c96a` and revision 0's final data
+
+Main at `d9649d09` (#309) is merged in: the round-3 query scorer (up to three filler words between a negation and
+the value), `statusSkewV3`'s check that every oracle report has a `STATUS:` line, the test that no two tasks of a
+skill share prompt text, revision 0's not-founder fix for look-alike companies, and the gbrain pin `62637c96a`
+(v0.60.557.0). The data was regenerated, not merged by hand.
+
+The findability cache was keyed to gbrain 0.60.553.0, so every one of its 4,201 probes was searched again at 0.60.557.0.
+Every hit list came back identical, so no candidate's findability changed, no fact-check or briefing task changed, and
+the status-skew guard reads as before: train, selection, gate and test hold 12, 12, 16 and 42 fact-check tasks with a
+true part, and the every-FALSE report passes substance on 12, 12, 20 and 54 of them and the every-VERIFIED report on 7,
+7, 11 and 31 (29.2% of train and selection against 30.6% of gate). Query judges changed with the scorer; query tasks and
+placement did not. The generation reports name the new gbrain version. `revision` 0 regenerates main's files byte for
+byte. MANIFEST.json's sha256 went from `fa6d7dac` to `c2d0e052` and `data_sha256` from `ddcf59cf` to `5388e3bf`; the
+dataset stays at 10,211,909 bytes.
+
+### 2026-11-03: Refusals built on "see" fail again, and no two tasks share prompt text
+
+/ship's review of #309 found two faults in the data the calibration re-read was to pin:
+
+- The first "see" fix (below) let refusals that name the gold value pass: "I do not see 240 seats in the brain",
+  "didn't see", "wasn't able to see", "can not see", "never see", and on an as-of task "I don't see 570 seats in force
+  on that date. The record in force then shows 695 seats." The scorer is back to #308's rule: "see" is a filler word
+  after any negation, and up to three filler words may sit between the negation and the value, so "I wasn't able to
+  see the 570 seats" fails too. No change word after the value exempts a negation: a try at that exemption let "I
+  cannot confirm 240 seats changed" and "I do not see the **240 seats** changing" pass. The rule understates one
+  correct answer again: "I don't see the 240 seats changing" fails substance.
+- not-founder's real-founder claim repeated a claim lookalike-founder (held out) already makes for a company with a
+  look-alike name: fact-check-test-29 and fact-check-test-94 were both "Kofi Xiong founded Tolmoor Materials.".
+  not-founder no longer makes that claim for such a company, and the v3 test fails when two tasks of a skill share
+  prompt text.
+
+`statusSkewV3` also throws when an oracle report has no `STATUS:` line to replace, so a report in another shape can't
+pass the guard unread. not-founder's candidates went from 158 to 118 and fact-check's groups from 136 to 138. Train,
+selection, gate and test now hold 10, 10, 14 and 36 fact-check tasks with a true part, and of their 24, 24, 36 and 96
+tasks the every-FALSE report passes substance on 14, 14, 22 and 60 and the every-VERIFIED report on 7, 7, 11 and 30,
+still no larger a share of train or selection than of gate. MANIFEST.json 2ddc6270 -> 5729db40, data_sha256
+5107c033 -> ecd2d5cb; the dataset went from 11,123,477 to 10,986,498 bytes (Known limits had kept the 10,985,950 from
+before the first fix).
+
+### 2026-11-03: "I don't see the 240 seats changing" keeps its 240
+
+The fix-check of #308 found the query negation guard reading "don't see" as a refusal, so a correct answer such as
+"I don't see the 240 seats changing" failed substance. "See" now counts as a refusal only after cannot, can't,
+couldn't, could not, unable to or not able to, so "I can't see 240 seats in the brain" still fails. Only the query
+tasks' judge regexes changed; tasks and placement are unchanged. MANIFEST.json a6ddcbef -> 2ddc6270, data_sha256
+225d18a1 -> 5107c033.
+
+### 2026-11-03: The pin sentence names gbrain `62637c96a`
+
+The repo's gbrain pin moved from `311a83bbe` (v0.60.553.0) to `62637c96a` (v0.60.557.0), so the pin sentence names the
+new commit and says the seed skills are still byte-identical there. No data file or MANIFEST.json changed: `gen.ts check`
+regenerates v3 byte for byte at the new pin.
 
 ### 2026-11-02: Revision 1 takes the calibration branch's fixes, and its trained fact-check families make true claims (GST-1150)
 

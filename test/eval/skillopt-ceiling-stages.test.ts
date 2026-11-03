@@ -463,6 +463,78 @@ describe('gate stage, stops and skips', () => {
     expect(new Set(rows.rows.map(x => `${x.target}/${x.skill}`))).toEqual(new Set(['opus/query']));
     expect(r.attempt).toBe(2);
   }, 300_000);
+
+  /** Every rollout of a task `fails` picks (every task when omitted) bills a turn, then fails. */
+  const failingAfterBilledTurn = (fails: (info: TaskInfo) => boolean = () => true): ChatTransport => {
+    const base = gateTransport(newRecorder());
+    return async opts => {
+      const info = isProposer(opts.system) ? undefined : taskOf(userText(opts));
+      if (!info || !fails(info)) return base(opts);
+      if (hasToolResult(opts)) throw new Error('upstream 500');
+      const blocks = [{ type: 'tool-call', toolCallId: 'c1', toolName: 'brain_get_page', input: { slug: decisivePages(info.task)[0] ?? 'people/none' } }];
+      return { ...fakeReply(opts, ''), blocks, stopReason: 'tool_calls' } as unknown as ChatResult;
+    };
+  };
+  /** The fake Opus mean per rollout on a clean query pair: the price calibration would set. */
+  let calibratedUsd: number | undefined;
+  const calibrated = async () => (calibratedUsd ??= (await gate({ attempt: 1, rows: memoryRows(), prices: { opus: 1e-9, sol: 1e-9 }, transport: () => gateTransport(newRecorder()) })).pairs[0]!.cost.mean_rollout_usd!);
+
+  test('a pair where half the rollouts fail after a billed turn raises the window\'s billed spend per scored rollout past 1.25 times the price, and the stage stops after it', async () => {
+    const price = await calibrated();
+    const r = await gate({ attempt: 1, rows: memoryRows(), prices: { opus: price, sol: 1 }, transport: () => failingAfterBilledTurn(i => i.skill === 'query' && i.index % 2 === 0) });
+    expect(r.unscored_spend).toBeNull();
+    expect(r.reprice_trigger).toMatchObject({ reason: 'reprice-trigger', target: 'opus', skill: 'query' });
+    expect(r.reprice_trigger!.mean_rollout_usd).toBeCloseTo(r.pairs[0]!.cost.usd / r.pairs[0]!.cost.rollouts, 9);
+    expect(r.reprice_trigger!.mean_rollout_usd).toBeGreaterThan(1.25 * price);
+    expect(r.pairs[0]!.status).toBe('errored');
+    expect(r.pairs[0]!.cost.rollouts).toBeGreaterThan(0);
+    expect(r.voided.opus.arms).toBeGreaterThan(0);
+    expect(r.voided.opus.usd).toBeGreaterThan(0);
+    expect(r.pairs.slice(1).every(p => p.status === 'not-run' && p.not_run_reason === 'reprice-trigger')).toBe(true);
+  }, 600_000);
+
+  test('a window that bills spend but scores no rollout is the unscored-spend stop; a --resume opens a new window, reruns the pair at the calibrated price and goes on past it, and voided spend is reported apart', async () => {
+    const price = await calibrated();
+    const prices = { opus: price, sol: 1 };
+    const rows = memoryRows();
+    const first = await gate({ attempt: 1, rows, prices, transport: () => failingAfterBilledTurn() });
+    expect(first.unscored_spend).toMatchObject({ reason: 'unscored-spend', target: 'opus', skill: 'query' });
+    expect(first.reprice_trigger).toBeNull();
+    expect(first.pairs[0]!.cost.rollouts).toBe(0);
+    expect(first.unscored_spend!.usd).toBeGreaterThan(0);
+    expect(first.unscored_spend!.usd).toBeCloseTo(first.pairs[0]!.cost.usd, 9);
+    expect(first.voided.opus.arms).toBeGreaterThan(0);
+    expect(first.voided.opus.usd).toBeCloseTo(first.pairs[0]!.cost.usd, 9);
+    expect(first.pairs.slice(1).every(p => p.status === 'not-run' && p.not_run_reason === 'unscored-spend')).toBe(true);
+    const resumed = await gate({ attempt: 1, rows, prices, transport: () => gateTransport(newRecorder()) });
+    expect(resumed.unscored_spend).toBeNull();
+    expect(resumed.pairs[0]!.status).toBe('scored');
+    expect(resumed.pairs[0]!.cost.usd / resumed.pairs[0]!.cost.rollouts).toBeGreaterThan(1.25 * price);
+    expect(resumed.voided.opus.usd).toBeCloseTo(first.voided.opus.usd, 9);
+    expect(resumed.reprice_trigger).toBeNull();
+    expect(resumed.pairs.map(p => p.status)).toEqual(['scored', 'scored', 'scored', 'scored', 'scored', 'scored']);
+  }, 600_000);
+
+  test('unscored, a --resume, unscored again: each window stops after its first pair to bill without scoring, so each resume risks at most one pair', async () => {
+    const price = await calibrated();
+    const prices = { opus: price, sol: 1 };
+    const rows = memoryRows();
+    await gate({ attempt: 1, rows, prices, transport: () => failingAfterBilledTurn() });
+    const again = await gate({ attempt: 1, rows, prices, transport: () => failingAfterBilledTurn() });
+    expect(again.unscored_spend).toMatchObject({ reason: 'unscored-spend', target: 'opus', skill: 'query' });
+    expect(again.pairs.slice(1).every(p => p.status === 'not-run' && p.not_run_reason === 'unscored-spend')).toBe(true);
+    expect(new Set(rollouts(rows.rows).map(x => `${x.target}/${x.skill}`))).toEqual(new Set(['opus/query']));
+    const r = await gate({ attempt: 1, rows, prices, transport: () => failingAfterBilledTurn(i => i.skill === 'briefing') });
+    expect(r.unscored_spend).toBeNull();
+    expect(r.reprice_trigger).toMatchObject({ reason: 'reprice-trigger', target: 'opus', skill: 'briefing' });
+    expect(r.reprice_trigger!.mean_rollout_usd).toBeGreaterThan(1.25 * price);
+    expect(r.pairs.map(p => [p.skill, p.target, p.status, p.not_run_reason ?? null])).toEqual([
+      ['query', 'opus', 'scored', null], ['briefing', 'opus', 'errored', null], ['fact-check', 'opus', 'not-run', 'reprice-trigger'],
+      ['query', 'sol', 'not-run', 'reprice-trigger'], ['briefing', 'sol', 'not-run', 'reprice-trigger'], ['fact-check', 'sol', 'not-run', 'reprice-trigger'],
+    ]);
+    expect(new Set(rollouts(rows.rows).map(x => `${x.target}/${x.skill}`))).toEqual(new Set(['opus/query', 'opus/briefing']));
+    expect(r.verdict.verdict).toBe('incomplete');
+  }, 600_000);
 });
 
 describe('runner CLI (--dataset v3)', () => {

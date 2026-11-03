@@ -12,11 +12,11 @@ describes gbrain as this repository pins it today; the changelog at the bottom r
 
 | Item | Value |
 |---|---|
-| Pinned product | gbrain [`311a83bbe`](https://github.com/garrytan/gbrain/tree/311a83bbefb127118acb252fe827cb047126aa4d), release v0.60.553.0, declared as `gbrain` in `package.json` |
+| Pinned product | gbrain [`62637c96a`](https://github.com/garrytan/gbrain/tree/62637c96a5a5c2e9d55594f87a33d79c2f30b54f), release v0.60.557.0, declared as `gbrain` in `package.json` |
 | Fixed-purpose aliases | `gbrain-cues` (`939232f`) and `gbrain-reader` (`e78f1c3`), used only by the experiments that name them |
 | This repository | gbrain-evals at the release [`VERSION`](VERSION) names; [CHANGELOG.md](CHANGELOG.md) records each release |
 
-This repository installs gbrain v0.60.553.0 (`311a83bbe`). Some results below were measured at earlier commits; each
+This repository installs gbrain v0.60.557.0 (`62637c96a`). Some results below were measured at earlier commits; each
 names its commit, and every commit named below is in the release's history except three pull-request builds:
 `a7cb37b`, the September 29 branch commit whose retrieval the reader replay row froze; `94bd52e01`, the multi-relation
 planner's held-out build (merged in v0.60.60.0); and `079941d2`, Cat 35's post-wave build (shipped as v0.47.8.0). The
@@ -31,7 +31,7 @@ one document fold into one result row, and organization, OCR and date priors adj
 such check here. Retrieval results measured before v0.60.223.0 used `rerank-2.5`, and results measured before
 v0.60.332.0 ran without collapse or rank priors.
 
-Five read defaults outside the mode bundles changed after v0.60.454.0. A `query` with a token budget leads with up to 40 dated saved facts (`search.query_facts_block`, v0.60.491.0). `search` puts a newer correction
+Five read defaults outside the mode bundles changed after v0.60.454.0. A `query` with a token budget leads with up to 40 dated saved facts, and since v0.60.555.0 never more than its `limit` (`search.query_facts_block`, v0.60.491.0); a `query` without a budget gets no facts block, so its `limit` caps the whole result. `search` puts a newer correction
 ahead of the saved fact it corrects (`search.saved_facts_supersede`, v0.60.493.0). A remote `search` or `query` that
 names no `limit` keeps every page that matched its words but at most 3 pages that matched only by meaning
 (`search.remote_page_cap`, v0.60.506.0). Text from conversation, chat, email and meeting pages comes back inside a quote
@@ -92,7 +92,7 @@ save, find, update and forget what it knows. The parts that matter for an agent:
 | Serving the new value after an update | **388 of 388** probes, never stale, on PGLite and Postgres through the CLI and MCP | `77cf8e111` | [N1](docs/benchmarks/2026-10-01-n1-knowledge-update.md), [re-pin](docs/benchmarks/2026-10-11-wave14-repin.md) |
 | Nothing left behind after `forget` | **0** prohibited outputs, 6 of 6 reinstatements | `77cf8e111` | [N5](docs/benchmarks/2026-10-01-n5-forget-residue.md), [re-pin](docs/benchmarks/2026-10-11-wave14-repin.md) |
 | Private pages reaching agent callers or remote callers | **0**, in process and on Postgres over real HTTP (155 of 155 cells, 5 kinds of caller); proactive recall gated in CI | `77cf8e111` | [N6 on Postgres](docs/benchmarks/2026-10-06-n6-postgres-http.md), [N8 gate](docs/benchmarks/2026-10-06-n8-privacy-gate.md), [re-pin](docs/benchmarks/2026-10-11-wave14-repin.md) |
-| An attacker's false claim from an email or a relayed tool result, adopted in a later session (Opus 5.5, Sonnet 5.5, GPT-6.1 Sol) | **1.5% to 5%** of sessions with trust labels shown, 5.1% to 10.6% with them stripped; **0 of 360** instruction-worded injections followed per model; Cats 37 to 39 pass every keyless contract at the pin | `c2f10ee8` to `5b9c814b` (shipped as `d4dc2d4d8`); keyless at `311a83bbe` | [Memory trust](docs/benchmarks/2026-10-08-memory-trust-results-paid.md), [re-pin](docs/benchmarks/2026-10-11-wave14-repin.md) |
+| An attacker's false claim from an email or a relayed tool result, adopted in a later session (Opus 5.5, Sonnet 5.5, GPT-6.1 Sol) | **1.5% to 5%** of sessions with trust labels shown, 5.1% to 10.6% with them stripped; **0 of 360** instruction-worded injections followed per model; Cats 37 to 39 pass every keyless contract at the pin | `c2f10ee8` to `5b9c814b` (shipped as `d4dc2d4d8`); keyless at `62637c96a` | [Memory trust](docs/benchmarks/2026-10-08-memory-trust-results-paid.md), [re-pin](docs/benchmarks/2026-10-11-wave14-repin.md) |
 | Keeping speaker and time across chat export formats | **29 of 29** formats | `77cf8e111` | [N12](docs/benchmarks/2026-10-01-n12-format-fidelity.md), [re-pin](docs/benchmarks/2026-10-11-wave14-repin.md) |
 | One very large document stored as one page (2 MB to 260 MiB, counted under the preregistered rules) | **Every preregistered rule passes**: 0 crashes, 0 responses over 1 MiB, 0 bytes lost on export, keyword recall@10 1.00 at 2 MB and no recall gap to managed parts up to 24 MiB. PGLite stores up to 128 MiB, Postgres stored up to 256 MiB, and `put_page` refuses anything above 24 MiB; larger documents are refused (`request_too_large`), not stored. `forget` on pages over 24 MiB is still unreachable (`request_too_large` at 100 MiB and above) | `7a6bdd3` (v0.60.454.0, the previous pin) | [N14 Wave B PR 4](docs/benchmarks/2026-10-25-n14-large-page-fidelity-wave-b4.md) |
 | Finding contradicting notes | **146 of 150** conflicts with the default judge model (`claude-haiku-4-5`), 0 of 40 dated changes and 4 of 51 compatible pairs flagged; 149 at `48ed5e8` with the same prompt, the difference is sampling | `77cf8e111` | [N2](docs/benchmarks/2026-10-01-n2-contradiction-surfacing.md), [re-pin](docs/benchmarks/2026-10-11-wave14-repin.md#the-paid-n2-judge-arm) |
@@ -145,16 +145,17 @@ the same three answer models and the same 8,000-token budget, and names each sys
 [the scoreboard guide](docs/scoreboard.md) covers how to reproduce a number, add a system or dispute a row.
 
 The block is checked against the hash the campaign published (`bun eval/runner/scoreboard.ts check --commit
-f15e73025cc38779528808e670db80909e538547`), so it changes only when the receipt is rendered again in custody. Two
-numbers in its first loss bullet come from a different comparison than its first table. That bullet compares gbrain's
-whole-system row, 59.0% (58.9% on all its questions), with the file agent's 68.3% on the 192 questions scored for both,
-while the table's 56.3% is gbrain's 8,000-token component row. The bullet's 12.9-point detectable difference belongs to
-that whole-system comparison; the 13.58 points in the opening sentence is the preregistered power check for the
-component rows. The generator now names the evidence and the shared questions in each such sentence, and the next
-custody render will print them.
+bf902d9fdacd814940ab12ef4c453fb36ea1d4cb`), so it changes only when the receipt is rendered again in custody. It was
+last rendered on 2026-11-03, when the file agent's 7 `context_overflow` stops (6 on BEAM-10M, 1 on BEAM-1M sealed)
+began to count as product failures, scored 0 and kept in the denominator, as the preregistered outcome rule says;
+before, they left their questions out of its rows as harness failures
+([corrections](docs/corrections.md#q1-head-to-head-scoreboard)). The first loss bullet compares gbrain's whole-system
+row with the file agent on the questions both scored, while the first table's 56.3% is gbrain's 8,000-token component
+row. The bullet's 12.4-point detectable difference belongs to that whole-system comparison; the 13.6 points in the
+opening sentence is the preregistered power check for the component rows.
 
 <!-- scoreboard:headline:begin -->
-On BEAM-10M (never used to tune gbrain), measured 2026-10-27 at gbrain `f05943e`, the component comparison is descriptive: with these conversations it detects only differences of about 13.58 points, so no row is ranked. The table is incomplete: `ext-graph-pipeline`, `ext-markdown-kb` did not run on BEAM-10M, so no field-wide claim is made.
+On BEAM-10M (never used to tune gbrain), measured 2026-10-27 at gbrain `f05943e`, the component comparison is descriptive: with these conversations it detects only differences of about 13.6 points, so no row is ranked. The table is incomplete: `ext-graph-pipeline`, `ext-markdown-kb` did not run on BEAM-10M, so no field-wide claim is made.
 
 | Kind and configuration | BEAM-10M accuracy at 8k, three-reader mean | Dollars per month, personal agent | p50 answer latency | Write to queryable, p50 | Receipt |
 |---|---|---|---|---|---|
@@ -167,7 +168,7 @@ On BEAM-10M (never used to tune gbrain), measured 2026-10-27 at gbrain `f05943e`
 | `ext-verbatim-session`: a verbatim-session memory system (whole sessions, vector search, LLM rerank off); component, 8,000 tokens | 50.8% (199/199; 95% interval 44.2% to 57.9%) | not measured | 7.4 s | not measured | [cell](docs/benchmarks/2026-10-06-scoreboard/scoreboard.md#cells) |
 | `ext-agent-runtime`: a self-editing agent memory runtime (the agent edits its own memory blocks and files) | not run on BEAM-10M | not measured | not measured | not measured | none |
 | `baseline-full-context`: the whole history in the prompt, where it fits the reader's window; whole history, where it fits | no scored questions | not measured | not measured | not measured | [cell](docs/benchmarks/2026-10-06-scoreboard/scoreboard.md#cells) |
-| `baseline-file-agent`: an agent with list, grep and read tools over the same Markdown files; file agent, uncapped grep, 40 turns | incomplete: 68.0% (193/199; 95% interval 64.3% to 72.0%), whole system | not measured | 19.8 s | not measured | [cell](docs/benchmarks/2026-10-06-scoreboard/scoreboard.md#cells) |
+| `baseline-file-agent`: an agent with list, grep and read tools over the same Markdown files; file agent, uncapped grep, 40 turns | 67.2% (199/199; 95% interval 64.0% to 70.7%), whole system | not measured | 19.8 s | not measured | [cell](docs/benchmarks/2026-10-06-scoreboard/scoreboard.md#cells) |
 | `baseline-hybrid`: plain Postgres full-text plus pgvector search with reciprocal-rank fusion; component, 8,000 tokens | 51.6% (199/199; 95% interval 44.3% to 58.7%) | not measured | 7.7 s | not measured | [cell](docs/benchmarks/2026-10-06-scoreboard/scoreboard.md#cells) |
 | `baseline-none`: the question alone, no memory; component, 8,000 tokens | 25.8% (199/199; 95% interval 23.2% to 28.3%) | not measured | 3.2 s | not measured | [cell](docs/benchmarks/2026-10-06-scoreboard/scoreboard.md#cells) |
 
@@ -177,7 +178,7 @@ Descriptive, not tested: correct-abstention rate (abstention-question answers th
 |---|---|---|---|
 | `gbrain-defaults`: gbrain with its shipped defaults, installed and read the documented way; GBrain 0.60.138.0 (f05943e6, 2026-10-09) | 67.8% (140/140) | 63.1% (240/240) | 56.3% (197/199) |
 | `baseline-full-context`: the whole history in the prompt, where it fits the reader's window | 72.2% (140/140) | no scored questions | no scored questions |
-| `baseline-file-agent`: an agent with list, grep and read tools over the same Markdown files | 72.8% (140/140) | 71.1% (239/240) | 68.0% (193/199) |
+| `baseline-file-agent`: an agent with list, grep and read tools over the same Markdown files | 72.8% (140/140) | 71.1% (240/240) | 67.2% (199/199) |
 | best external row, `ext-extract-first`: an extract-first memory server (an LLM extracts and updates facts on every write) | 69.5% (140/140) | 63.4% (240/240) | 58.9% (199/199) |
 
 - BEAM-10M: never used to tune gbrain.
@@ -188,7 +189,7 @@ Descriptive, not tested: correct-abstention rate (abstention-question answers th
 - LongMemEval-S: gbrain was developed on it.
 - LongMemEval-S, shootout slice: gbrain was developed on it.
 - LongMemEval-M: gbrain was developed on it.
-- Where gbrain loses: On BEAM-10M we could not tell `baseline-file-agent` and gbrain-defaults apart (68.3% vs 59.0%); a difference smaller than about 12.9 points would not have been detected.
+- Where gbrain loses: On BEAM-10M, with the same three answer models and each system at its own default amount of evidence, we could not tell `baseline-file-agent` and gbrain-defaults apart (67.6% vs 58.9% on the 198 of 199 questions scored for both); a difference smaller than about 12.4 points would not have been detected in this comparison.
 - Where gbrain loses: On BEAM-10M, 2k/16k sweep subset (10 conversations), `ext-extract-first` scored 59.3% and gbrain-defaults 52.4% (difference -6.9 points, 95% interval -12.3 to -1.4 points). 10 conversations describe these systems on this set; they cannot rank them.
 - Where gbrain loses: On LoCoMo (10 conversations), `baseline-full-context` scored 84.2% and gbrain-defaults 80.0% (difference -4.2 points, 95% interval -7.0 to -1.0 points). 10 conversations describe these systems on this set; they cannot rank them.
 - GBrain rows measure GBrain 0.60.138.0 (f05943e6, 2026-10-09). That is not current master; a rerun of the GBrain rows at current master is planned after amendment A23.
@@ -375,6 +376,34 @@ Code is MIT licensed. Dataset and vendored benchmark attribution is recorded in 
 [PrecisionMemBench attribution](eval/precisionmembench/ATTRIBUTION.md).
 
 ## Changelog
+
+### 2026-11-03: The Q1 block is re-rendered under the stop rule
+
+The Q1 block and the scoreboard tables are the custodian's re-render of the receipt with `scoreboard.ts` at
+`a1c346e8` (results commit `bf902d9f`, `SHA256SUMS` `00fabc3b`), so the file agent's 7 `context_overflow` stops
+now score 0. Its BEAM-10M cell moves from incomplete 68.0% (193/199) to 67.2% (199/199), and its BEAM-1M sealed cell
+from 71.1% (239/240) to 71.1% (240/240). The first loss bullet now reads 67.6% vs 58.9% on the 198 of 199 questions
+scored for both, with a 12.4-point detectable difference (was 68.3% vs 59.0% on 192, 12.9 points), and the opening
+sentence rounds the power check to 13.6 points. The paragraph above the block names the new commit and drops the
+explanation the re-render made unnecessary. No other row changed.
+
+### 2026-11-03: The Q1 file agent's context-overflow stops count as product failures
+
+The paragraph above the Q1 block now says that the block's two file-agent cells (68.0% on BEAM-10M, 193/199, and
+71.1% on BEAM-1M sealed, 239/240) leave out 7 `context_overflow` stops that the preregistered outcome rule scores 0 as
+product failures, and what changes when the receipt is rendered again in custody: both cells cover every question, the
+BEAM-10M cell falls and the loss bullet's shared questions become the 198 gbrain's whole-system row scored. The
+block's hash check pins it to the published render, so the block itself is unchanged until that custody render.
+`eval/runner/scoreboard.ts` now takes its product failures from the outcome rules; the rescore is in
+[corrections](docs/corrections.md#q1-head-to-head-scoreboard).
+
+### 2026-11-03: Re-pin to gbrain `62637c96a`
+
+The pinned product moves from `311a83bbe` (v0.60.553.0) to master `62637c96a` (v0.60.557.0). One read default outside
+the mode bundles changed in the range: since v0.60.555.0 (gbrain#8448) the facts block runs only on a `query` that
+passes a token budget and adds at most `limit` rows, so that paragraph's facts-block sentence now says so. The memory
+trust row's keyless check names the new pin: Cats 37 to 39 pass their keyless contracts at `62637c96a`. No paid result
+was re-run, and every number keeps its own commit.
 
 ### 2026-11-02: Re-pin to gbrain `311a83bbe`
 

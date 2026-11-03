@@ -14,27 +14,27 @@
     },
     {
       "path": "query/gate.jsonl",
-      "sha256": "b0c9223ed452297efe99fc0c764cfd108f1afa46b1720aa60e6d02e78c0f6788",
+      "sha256": "e288af798a989db05c61041e9ed2129538cad94d6c540f5405a811c5ef422951",
       "bytes": 253615
     },
     {
       "path": "query/generation-report.json",
-      "sha256": "69c5971a6820decd1a9356fab64a31ea5f92c3e35437b2b8977eb2cf304136e6",
+      "sha256": "3a8575aefc6dab01709356f39df83f07e9891e3787f62855f757085b2c523fe3",
       "bytes": 208584
     },
     {
       "path": "query/sel.jsonl",
-      "sha256": "1544040626bcc93802249911340ef498adadc8404462b58dc51362d3c156005b",
+      "sha256": "3b92e423ba9ec3aa52dd8186c4220e5efe9b95902c065725d9905c147d10ebf2",
       "bytes": 158910
     },
     {
       "path": "query/test.jsonl",
-      "sha256": "7e1eaf57f95be1209792a3e95d4f1a21ceddc4d1844d4ca7bc3e0b42f2da0e32",
+      "sha256": "ee6b870e1dc6aebc87aca5fcdb73d756672474a26b9137806300d49daea4fcd9",
       "bytes": 667015
     },
     {
       "path": "query/train.jsonl",
-      "sha256": "74a12a206d488f75994b100ffd8bcb350eba31caf8ca9343d180f89676853978",
+      "sha256": "dbff3a5dc3b86abadadd482815cd4acb5e9a4b460b9526691b63af8b642e8a72",
       "bytes": 163375
     },
     {
@@ -54,7 +54,7 @@
     },
     {
       "path": "briefing/generation-report.json",
-      "sha256": "22cff2d65828bda3f4170abb4c1585b3946edda8202c32be057417b4380314ff",
+      "sha256": "b99e3a9690cb43b6cb9e8e45eb6dc211120a9666c4d1e274ec21f0c59456c5fd",
       "bytes": 378116
     },
     {
@@ -89,7 +89,7 @@
     },
     {
       "path": "fact-check/generation-report.json",
-      "sha256": "d04fbf5adbdb9274332565f6594841eb03c2b6bf82a86f64c329cf3909b5ec3e",
+      "sha256": "4c1ee9aa029f6dcc6d35eb751cc785801962612f5e072a1c4d485ee81e9ec19a",
       "bytes": 274946
     },
     {
@@ -148,5 +148,5 @@
       "test": 96
     }
   },
-  "data_sha256": "ddcf59cf33c6207ea65bcd88d799649904e116c3a167a12c143a068c04f64b59"
+  "data_sha256": "5388e3bf43649ce2f5c0b6534ab0148f844aa24f60bcca28393d25c560bc04cf"
 }

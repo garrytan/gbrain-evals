@@ -218,6 +218,17 @@ describe('skillopt-method-v3: frozen data', () => {
       }
     });
 
+    test('no two tasks share prompt text, in any family or split', () => {
+      const seen = new Map<string, string>();
+      const dups: string[][] = [];
+      for (const t of tasks) {
+        const first = seen.get(t.task);
+        if (first) dups.push([first, t.task_id]);
+        else seen.set(t.task, t.task_id);
+      }
+      expect(dups).toEqual([]);
+    });
+
     test('the capacity report meets every family and split, with no solvability or degenerate drop', () => {
       for (const row of report.capacity) {
         expect([row.family, row.short]).toEqual([row.family, 0]);
@@ -423,6 +434,8 @@ describe('skillopt-method-v3: layouts and mutations over train and selection', (
       for (const sp of ['train', 'sel'] as const) expect([report, sp, shares[report][sp]! <= shares[report].gate!]).toEqual([report, sp, true]);
     }
     expect(problems).toEqual([]);
+    const [first] = allTasks('fact-check');
+    expect(() => statusSkewV3([{ ...first!, oracle_answer: first!.oracle_answer.replace(/^STATUS: /gm, '**STATUS:** ') }])).toThrow(`${first!.task_id}'s oracle report has no STATUS: line`);
   });
 });
 
@@ -441,12 +454,25 @@ describe('skillopt-method-v3: scorer cases', () => {
     expect(run('query', qv, 'Answer: Not 240 seats [Source: contracts/wyncrest-produce-renewal-2025]')).toEqual([false, false]);
     expect(run('query', qv, 'I cannot confirm 240 seats [Source: contracts/wyncrest-produce-renewal-2025].')).toEqual([false, false]);
     expect(run('query', qv, 'Answer: Wyncrest Produce no longer has 240 seats [Source: contracts/wyncrest-produce-renewal-2025]')).toEqual([false, false]);
-    for (const refusal of ["I can't confirm 240 seats", 'I can’t confirm 240 seats', "It won't be 240 seats", 'It won’t be 240 seats', "The brain doesn't show 240 seats", 'I could not find 240 seats', 'There is no record of 240 seats', 'I am not able to confirm 240 seats']) {
+    for (const refusal of ["I can't confirm 240 seats", 'I can’t confirm 240 seats', "It won't be 240 seats", 'It won’t be 240 seats', "The brain doesn't show 240 seats", 'I could not find 240 seats', 'There is no record of 240 seats', 'I am not able to confirm 240 seats', "I can't see 240 seats in the brain", 'I could not see the 240 seats']) {
       expect(run('query', qv, `${refusal} [Source: contracts/wyncrest-produce-renewal-2025].`)).toEqual([false, false]);
     }
     expect(run('query', qv, 'Answer: 240 seats, not the 200 the MSA set [Source: contracts/wyncrest-produce-renewal-2025]')).toEqual([true, true]);
     expect(run('query', qv, 'Answer: 240 seats (no change since the renewal) [Source: contracts/wyncrest-produce-renewal-2025]')).toEqual([true, true]);
     expect(run('query', qv, 'Answer: the seat count has not changed from 240 [Source: contracts/wyncrest-produce-renewal-2025]')).toEqual([true, true]);
+  });
+  test('query: every probed refusal fails and the as-of trap scores wrong; the understating case ("I don\'t see the 240 seats changing") reads as a refusal', () => {
+    const refusals = ['I do not see 240 seats in the brain', "I don't see 240 seats in the brain", 'I don’t see 240 seats in the brain', "I didn't see 240 seats", "I wasn't able to see 240 seats in the brain", 'I was not able to see 240 seats in the brain', 'I can not see 240 seats in the brain', 'I never see 240 seats in the brain', 'I cannot see 240 seats', "I can't see 240 seats", "I couldn't see 240 seats", 'I could not see 240 seats', 'I am unable to see 240 seats', 'I am not able to see 240 seats',
+      'I cannot confirm 240 seats changed in the renewal. I cannot determine the seat count.', 'I do not see the **240 seats** changing after the renewal.', "I don't see the 240 seats changing after the renewal", "Wyncrest Produce has 240 seats, and I don't see the 240 seats changing"];
+    for (const refusal of refusals) expect([refusal, run('query', qv, `${refusal} [Source: contracts/wyncrest-produce-renewal-2025].`)]).toEqual([refusal, [false, false]]);
+    const asOf: GoldV3 = { values: [{ kind: 'number', value: 570 }], slugs: ['contracts/wyncrest-produce-renewal-2025'], spec: { kind: 'value', answer: { kind: 'number', value: 570 }, distractors: [{ kind: 'number', value: 695 }], cite: [['contracts/wyncrest-produce-renewal-2025']] } };
+    const asOfRefusals = ["I don't see 570 seats in force on that date. The record in force then shows 695 seats.", "I'm not able to see the 570 seats in force on that date. The record in force then shows 695 seats.", "I couldn't actually see the 570 seats in the record.", "I can't quite see the 570 seats on that date.", "I wasn't able to see the 570 seats in the brain."];
+    for (const refusal of asOfRefusals) expect([refusal, run('query', asOf, `${refusal} [Source: contracts/wyncrest-produce-renewal-2025]`)]).toEqual([refusal, [false, false]]);
+    expect(run('query', asOf, 'Answer: 570 seats were in force on that date [Source: contracts/wyncrest-produce-renewal-2025]. The 695 came later.')).toEqual([true, true]);
+    expect(run('query', qv, 'The renewal sets 240 seats [Source: contracts/wyncrest-produce-renewal-2025].')).toEqual([true, true]);
+    const notice: GoldV3 = { values: [{ kind: 'number', value: 30, unit: 'days' }], slugs: ['contracts/wyncrest-produce-renewal-2025'], spec: { kind: 'value', answer: { kind: 'number', value: 30, unit: 'days' }, distractors: [{ kind: 'number', value: 60, unit: 'days' }], cite: [['contracts/wyncrest-produce-renewal-2025']] } };
+    for (const refusal of ["I don't see the 30 days changing.", "I don't see the 30-day notice changing."]) expect([refusal, run('query', notice, `${refusal} [Source: contracts/wyncrest-produce-renewal-2025]`)]).toEqual([refusal, [false, false]]);
+    expect(run('query', notice, 'The renewal sets a 30-day notice period [Source: contracts/wyncrest-produce-renewal-2025].')).toEqual([true, true]);
   });
   test('query: abstentions and look-alikes', () => {
     const qa: GoldV3 = { values: [], slugs: [], subject: 'Wyncrest Freight', spec: { kind: 'absent', name: 'Wyncrest Freight', distractors: [{ kind: 'number', value: 240 }] } };

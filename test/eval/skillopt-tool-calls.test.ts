@@ -78,7 +78,7 @@ describe('decisive reads and harness limits', () => {
     expect(refusedDecisiveReads(calls, ['people/a', 'deals/b']).map(c => (c.input as { slug: string }).slug)).toEqual(['People/A.md', 'deals/b']);
   });
 
-  test('a refused decisive read does not count when a get_page or traverse_graph call on the same page succeeded anywhere in the rollout; a read of another page or by another tool does not clear it', () => {
+  test('a refused decisive read does not count when a get_page call on the same page succeeded anywhere in the rollout (or, for a refused traverse_graph, a traverse_graph call too); a read of another page or by another tool does not clear it', () => {
     expect(refusedDecisiveReads([refused('get_page', 'People/A.md', WINDOW), ok('get_page', 'people/a')], ['people/a'])).toEqual([]);
     expect(refusedDecisiveReads([refused('traverse_graph', 'deals/b', HOPS), ok('get_page', 'deals/b.md')], ['deals/b'])).toEqual([]);
     expect(refusedDecisiveReads([refused('get_page', 'people/a', WINDOW), ok('get_page', 'people/z'), ok('search', 'people/a')], ['people/a'])).toHaveLength(1);
@@ -121,8 +121,10 @@ describe("Sol's 651 recorded calls from #304, replayed at the installed pin", ()
   const EXPECTED: Record<string, { refused: Record<RefusalClass, number>; read: number }> = {
     // v0.60.549.0: the window refusal still read "context applies to grep".
     a131fb20ef4aafd017f0c6a6565ce5627dc46897: { refused: { 'multi-window-selector': 0, 'known-as-of-with-read-view': 169, 'hop-chain-with-depth': 38, other: 438 }, read: 6 },
-    // v0.60.553.0, the ceiling attempt's pin (plan decision S).
+    // v0.60.553.0, the ceiling attempt's first pin.
     '311a83bbefb127118acb252fe827cb047126aa4d': { refused: { 'multi-window-selector': 436, 'known-as-of-with-read-view': 169, 'hop-chain-with-depth': 8, other: 2 }, read: 36 },
+    // v0.60.557.0, the ceiling attempt's pin (plan decision S, as amended 2026-11-03): each refusal's text is now MCP's JSON error (gbrain#8458), and the classes are unchanged.
+    '62637c96a5a5c2e9d55594f87a33d79c2f30b54f': { refused: { 'multi-window-selector': 436, 'known-as-of-with-read-view': 169, 'hop-chain-with-depth': 8, other: 2 }, read: 36 },
   };
 
   test('every recorded get_page, traverse_graph and get_backlinks call, classified by the refusal text this pin returns', async () => {

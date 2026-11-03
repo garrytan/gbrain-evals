@@ -7,8 +7,9 @@
  * Two ledgers hold the lease, and both grow by the same amount:
  *
  *   host  the campaign ledger's reservation for the lease (entries, runs and
- *         program committed), refused past the run budget, the campaign cap or
- *         the lease's block cap, in one BEGIN IMMEDIATE transaction
+ *         program committed), refused once the campaign run is closed or past
+ *         the run budget, the campaign cap or the lease's block cap, in one
+ *         BEGIN IMMEDIATE transaction
  *   VM    the lease ledger's run budget and its ledger cap, over `ubi-runner ssh`
  *         in one transaction, then read back
  *
@@ -30,8 +31,10 @@
  */
 import { Database } from 'bun:sqlite';
 import { appendFileSync, existsSync, readFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { isAbsolute, join, resolve } from 'node:path';
 import { Campaign, resolveRunner } from '../shootout-cell.ts';
+
+const REPO_ROOT = resolve(import.meta.dir, '../../..');
 
 export interface Raise { lease_id: string; cell: string; at: string; from_usd: number; to_usd: number; reason: string; host_entry: string; vm_ledger: string; vm_cap_usd: number }
 type Ssh = (vm: string, command: string) => { code: number | null; out: string; err: string };
@@ -79,15 +82,18 @@ export function leaseUsd(c: Campaign, leaseId: string): number {
 /** Grow (or, with a negative delta, give back) the host reservation of a lease, checked as a reservation is. */
 function resizeHost(c: Campaign, entryId: string, delta: number, block: { name: string; cap: number; held: number } | null, what: string) {
   const s = JSON.parse(readFileSync(join(c.stateDir, 'campaign.json'), 'utf8')) as { run_id: string; ledger: string };
-  const db = new Database(s.ledger, { readwrite: true, create: false, strict: true });
+  const legacy = isAbsolute(s.ledger) && !existsSync(s.ledger) && s.ledger.endsWith(`/${c.manifest.ledger}`);
+  const ledger = legacy ? c.ledger : resolve(REPO_ROOT, s.ledger);
+  const db = new Database(ledger, { readwrite: true, create: false, strict: true });
   try {
     db.exec('PRAGMA busy_timeout = 60000');
     db.transaction(() => {
       const entry = db.query('SELECT reserved_usd, actual_usd FROM entries WHERE id = ? AND run_id = ?').get(entryId, s.run_id) as { reserved_usd: number; actual_usd: number | null } | null;
-      if (!entry) throw new Error(`${what}: no reservation ${entryId} in ${s.ledger}`);
+      if (!entry) throw new Error(`${what}: no reservation ${entryId} in ${ledger}`);
       if (entry.actual_usd !== null) throw new Error(`${what}: reservation ${entryId} is already settled`);
       if (delta > 0) {
-        const run = db.query('SELECT budget_usd, committed_usd FROM runs WHERE run_id = ?').get(s.run_id) as { budget_usd: number; committed_usd: number };
+        const run = db.query('SELECT budget_usd, committed_usd, finished_at FROM runs WHERE run_id = ?').get(s.run_id) as { budget_usd: number; committed_usd: number; finished_at: string | null };
+        if (run.finished_at !== null) throw new Error(`${what}: budget run ${s.run_id} already finished`);
         const cap = (db.query('SELECT program_cap_usd FROM caps ORDER BY seq DESC LIMIT 1').get() as { program_cap_usd: number }).program_cap_usd;
         const program = (db.query('SELECT committed_usd FROM program WHERE id = 1').get() as { committed_usd: number }).committed_usd;
         if (run.committed_usd + delta > run.budget_usd + 1e-9) throw new Error(`${what}: the campaign would hold ${usd(run.committed_usd + delta)}, over its ${usd(run.budget_usd)} budget`);

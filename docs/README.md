@@ -1,7 +1,7 @@
 # Learn, evaluate, and extend gbrain
 
 This index lists every published report by the question it answers. It describes the repository as it stands:
-gbrain-evals v0.10.142, with gbrain master `311a83bbe` (v0.60.553.0) as the product under test. Results measured at
+gbrain-evals v0.10.145, with gbrain master `62637c96a` (v0.60.557.0) as the product under test. Results measured at
 other gbrain commits name that commit in their report. Everything above [Changelog](#changelog) is current; the
 changelog at the bottom records how this index changed.
 
@@ -131,7 +131,7 @@ gap does not isolate the effect of a graph alone.
 | Which judge models may grade a forecasting take, among the verdicts confident enough for gbrain's auto-resolve rule to apply? | [October 16 take grading, mirrored from gbrain #6882](benchmarks/2026-10-16-take-grading.md) ([preregistration](benchmarks/2026-10-16-take-grading-preregistration.md)): `gpt-6.1-sol` applies 496 verdicts with none wrong (upper bound 0.6%) and qualifies; `claude-opus-5-5` matches every gold verdict but is rarely confident enough to apply, `claude-sonnet-5-5` applies one wrong verdict |
 | Does gbrain's private forecast journal rank holders correctly, count every open prediction, and stay hidden from remote callers? | [October 17 forecast journal, mirrored from gbrain #6886](benchmarks/2026-10-17-forecast-journal.md) ([preregistration](benchmarks/2026-10-17-forecast-journal-preregistration.md)): on synthetic holders of known skill, median Spearman ρ 0.905, who-was-right set-F1 1.000, exact counts, 8/8 remote probes; shipped in v0.60.286.0 |
 | What did gbrain fix wave 9 cost on fact inserts, and can takes-quality receipts from before and after it be compared? | [October 5 fix wave 9 mirror, from gbrain #6111](benchmarks/2026-10-05-fix-wave-9-mirror.md): pinning `search_path` makes bulk fact inserts about 10-13% slower with fingerprints unchanged; takes-quality protocol 1 and 2 receipts are dissimilar inputs |
-| Do gbrain's shipped `query`, `briefing` and `fact-check` skills help Opus 5.5 and GPT-6.1 Sol, and does a skill optimizer have room to beat one rewrite of them? | [November 2 SkillOpt method report (N15)](benchmarks/2026-11-01-skillopt-method/REPORT.md) ([preregistration](benchmarks/2026-11-01-skillopt-method/PREREGISTRATION.md), [probe](benchmarks/2026-11-01-skillopt-method/probe/frontier/README.md)): on held-out test tasks, the shipped skill beats no skill on 5 of 6 skill and model pairs (`query` on Sol, 0.72 against 0.86, is a FIX-METHOD: SkillOpt's rollout path rejected Sol's page and graph reads, so every Sol result is marked affected; at the pinned `311a83bbe`, gbrain#8429 and gbrain#8444 read Sol's empty arguments as absent and 30 of its 38 recorded `traverse_graph` calls now read, but every recorded `get_page` call still refuses, because Sol sent two or three window selectors or a real `known_as_of` beside read-view arguments; this pin's `get_page` description also tells models to send one window selector, so only a Sol rerun can show whether its page reads recover), and one Opus 5.5 rewrite scores 1.00 on all six and beats the shipped skill on each (by 0.22 to 0.53), mostly by fixing output form. With nothing left above one rewrite, the optimizer benchmark is a CUT-CANDIDATE and was not run |
+| Do gbrain's shipped `query`, `briefing` and `fact-check` skills help Opus 5.5 and GPT-6.1 Sol, and does a skill optimizer have room to beat one rewrite of them? | [November 2 SkillOpt method report (N15)](benchmarks/2026-11-01-skillopt-method/REPORT.md) ([preregistration](benchmarks/2026-11-01-skillopt-method/PREREGISTRATION.md), [probe](benchmarks/2026-11-01-skillopt-method/probe/frontier/README.md)): on held-out test tasks, the shipped skill beats no skill on 5 of 6 skill and model pairs (`query` on Sol, 0.72 against 0.86, is a FIX-METHOD: SkillOpt's rollout path rejected Sol's page and graph reads, so every Sol result is marked affected; at the pinned `62637c96a`, gbrain#8429 and gbrain#8444 read Sol's empty arguments as absent and 30 of its 38 recorded `traverse_graph` calls now read, but every recorded `get_page` call still refuses, because Sol sent two or three window selectors or a real `known_as_of` beside read-view arguments; the `get_page` description tells models to send one window selector, and since gbrain#8458 a refusal hands the model MCP's suggestion and runnable fix, which reads all 436 of the multi-selector calls when followed verbatim, so only a Sol rerun can show whether its page reads recover), and one Opus 5.5 rewrite scores 1.00 on all six and beats the shipped skill on each (by 0.22 to 0.53), mostly by fixing output form. With nothing left above one rewrite, the optimizer benchmark is a CUT-CANDIDATE and was not run |
 | Can a skill improve on held-out tasks, can the judge detect cheating, and does SkillOpt's iterative loop beat one rewrite? | [November 1 SkillOpt re-baseline](benchmarks/2026-11-01-skillopt-rebaseline/REPORT.md) ([preregistration](benchmarks/2026-11-01-skillopt-rebaseline/PREREGISTRATION.md)): all four practice skills improve held out, and both skills tested for transfer help the other model in 4 of 4 Haiku 5.5 and Sonnet 5.5 pairs; the full loop ties a one-shot rewrite again (0.54 against 0.54) and the iterative loop is a CUT-CANDIDATE; Cat 32's gate never saw a gaming candidate (partial). The [June 3 run](benchmarks/2026-06-03-skillopt.md) used other models and does not pool with it |
 | Can the system distinguish kinds of claims and sensible confidence? | [Calibration and proposed takes](benchmarks/2026-05-18-brainbench-cat14-cat15-calibration.md) (the advice result was retracted on September 28, 2026), [October 2 blind rerun of the advice test](benchmarks/2026-10-02-cat14-rerun.md) |
 | When gbrain fails, refuses or needs a decision, do real agents (Claude Code, Codex) ask the user before spending money or destroying data, and do they recover from the errors they can fix? | [Agent operator outcomes (Cat 41): what it measures and its gate](benchmarks/2026-10-03-agent-operator-protocol.md), [runs: v0.60.35.0 baseline, gate passed at `b3f4e8b`](benchmarks/2026-10-03-agent-operator.md) |
@@ -197,6 +197,7 @@ These documents fix a method before measuring. They publish no capability scores
 | What end-to-end task does a 10x memory claim stand on, and what sample can show it? | [October 8 program primary preregistration (T0) and power (PW)](benchmarks/2026-10-08-program-primary-preregistration.md) |
 | What harder workload replaces T0's ceiling, and how was it calibrated? | [October 8 harder program primary preregistration (T0b), with its three calibration rounds](benchmarks/2026-10-08-program-primary-hard-preregistration.md) |
 | Do gbrain's shipped `query`, `briefing` and `fact-check` skills leave room for a skill optimizer, or does one rewrite take all the gain? | [November 1 SkillOpt method preregistration (N15)](benchmarks/2026-11-01-skillopt-method/PREREGISTRATION.md) with three amendments: Haiku 5.5 probes 1 and 2 ([probe 1's summary](benchmarks/2026-11-01-skillopt-method/probe/probe1/summary.json)), the frontier probe on Opus 5.5 and GPT-6.1 Sol, and the one test-split read reported in the [November 2 report](benchmarks/2026-11-01-skillopt-method/REPORT.md); task sets: [v2](../eval/data/skillopt-method-v2/README.md), which the probe reads, and the frozen [v1](../eval/data/skillopt-method-v1/README.md) |
+| Can a harder task set, scored on substance, leave room above one Opus 5.5 rewrite of the shipped `query`, `briefing` and `fact-check` skills, and if it can, does gbrain's SkillOpt loop beat that rewrite? | [November 2 SkillOpt ceiling preregistration (N15)](benchmarks/2026-11-02-skillopt-ceiling/PREREGISTRATION.md) with its calibration and pin amendments; its headroom gate has not run; task set: [v3](../eval/data/skillopt-method-v3/README.md) |
 
 ## Data and methods
 
@@ -263,6 +264,22 @@ and [repository writing guide](../CLAUDE.md). The
 procedure with documented missing pieces; it is not the current refresh command.
 
 ## Changelog
+
+### 2026-11-03: SkillOpt ceiling preregistration row
+
+"Protocols and preregistrations" gained a row for the [SkillOpt ceiling preregistration](benchmarks/2026-11-02-skillopt-ceiling/PREREGISTRATION.md)
+(N15) and its [v3](../eval/data/skillopt-method-v3/README.md) task set. Its headroom gate has not run. No existing row
+changed.
+
+### 2026-11-03: Re-pin to gbrain `62637c96a`; opening names v0.10.145; the SkillOpt method row
+
+The opening names v0.10.145 (was v0.10.142) and gbrain master `62637c96a` (v0.60.557.0) as the product under test (was
+`311a83bbe`, v0.60.553.0). Every report keeps the commit it measured. The SkillOpt method row named the `get_page`
+description as the one change since the probe that a replay cannot test. gbrain#8458, in this release, also hands the
+model the error an MCP caller gets for the same refused read: its code, message, suggestion and a runnable `fix`. Followed verbatim, that fix reads all 436
+recorded Sol `get_page` calls that sent two or three window selectors; the 169 that sent a real `known_as_of` still
+find no recorded page in the probe's corpus brain (`test/eval/skillopt-rollout-empty-args.test.ts`). The row now says
+so, and still says only a Sol rerun can show whether its page reads recover. No other row changed.
 
 ### 2026-11-02: Re-pin to gbrain `311a83bbe`; opening names v0.10.142; the SkillOpt method row
 

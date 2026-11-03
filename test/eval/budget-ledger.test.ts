@@ -3,8 +3,8 @@ import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
-  BudgetExceededError, BudgetRun, budgetOptionsFrom, closeLedgers, initLedger, installPaidRequestGuard, ledgerTotals, priceRequest, readLedger, receiptCost,
-  reservationUsd, startPaidRun, usageCost,
+  BudgetExceededError, BudgetRun, budgetOptionsFrom, closeLedgers, closeRun, initLedger, installPaidRequestGuard, ledgerStatus, ledgerTotals, priceRequest, readLedger,
+  receiptCost, reservationUsd, startPaidRun, usageCost, verifyLedger,
 } from '../../eval/runner/budget-ledger.ts';
 import Anthropic from '@anthropic-ai/sdk';
 
@@ -325,6 +325,74 @@ describe('shared runs (longmemeval-batch workers)', () => {
     expect(run.runId).toBe(owner.runId);
     expect(run.budgetUsd).toBe(2);
     expect(read(path).runs.length).toBe(1);
+  });
+});
+
+describe('closed runs refuse new reservations', () => {
+  test('a joined handle that closes the run cannot reserve on it again, and the refusal records nothing', () => {
+    const path = ledgerPath();
+    const owner = BudgetRun.open({ runner: 'gate', budgetUsd: 5, ledgerPath: path });
+    const worker = BudgetRun.join({ runId: owner.runId, ledgerPath: path });
+    worker.close({ finish: true });
+    expect(read(path).runs[0].finished_at).not.toBeNull();
+    expect(() => worker.reserve(0.1, 'pair after close')).toThrow(BudgetExceededError);
+    expect(() => worker.reserve(0.1, 'pair after close')).toThrow(`pair after close: budget run ${owner.runId} already finished`);
+    expect(() => worker.allowance(0.1, 'arm after close')).toThrow('already finished');
+    expect(() => owner.reserve(0.1, 'owner after close')).toThrow('already finished');
+    expect(read(path).entries).toHaveLength(0);
+    expect(ledgerStatus({ ledgerPath: path, runId: owner.runId }).run!.committed_usd).toBe(0);
+    expect(verifyLedger(path).ok).toBe(true);
+  });
+
+  test('with two handles on one run, a close through either one stops the other from reserving', () => {
+    const path = ledgerPath();
+    const owner = BudgetRun.open({ runner: 'gate', budgetUsd: 5, ledgerPath: path });
+    const a = BudgetRun.join({ runId: owner.runId, ledgerPath: path });
+    const b = BudgetRun.join({ runId: owner.runId, ledgerPath: path });
+    b.settle(b.reserve(0.2, 'pair b'), { usd: 0.2 });
+    a.close({ finish: true });
+    expect(() => b.reserve(0.2, 'pair b again')).toThrow('already finished');
+    const other = BudgetRun.open({ runner: 'gate', budgetUsd: 5, ledgerPath: path });
+    const held = BudgetRun.join({ runId: other.runId, ledgerPath: path });
+    closeRun(path, other.runId);
+    expect(() => held.reserve(0.2, 'pair after a CLI close')).toThrow('already finished');
+    expect(read(path).entries.map(e => e.description)).toEqual(['pair b']);
+    expect(ledgerTotals(read(path)).committed_usd).toBeCloseTo(0.2, 9);
+    expect(verifyLedger(path).ok).toBe(true);
+  });
+
+  test('an open run still reserves and settles as before', () => {
+    const path = ledgerPath();
+    const owner = BudgetRun.open({ runner: 'gate', budgetUsd: 1, ledgerPath: path });
+    const worker = BudgetRun.join({ runId: owner.runId, ledgerPath: path });
+    const id = worker.reserve(0.5, 'pair');
+    expect(ledgerStatus({ ledgerPath: path, runId: owner.runId }).run!.committed_usd).toBeCloseTo(0.5, 9);
+    worker.settle(id, { usd: 0.3, input_tokens: 10, output_tokens: 5 });
+    owner.settle(owner.reserve(0.4, 'owner pair'), null);
+    expect(read(path).entries.map(e => [e.status, e.actual_usd])).toEqual([['reconciled', 0.3], ['charged-reservation', 0.4]]);
+    expect(ledgerStatus({ ledgerPath: path, runId: owner.runId }).run!.committed_usd).toBeCloseTo(0.7, 9);
+    expect(() => worker.reserve(0.31, 'over budget')).toThrow('over its $1.00 budget');
+    expect(verifyLedger(path).ok).toBe(true);
+  });
+
+  test('a reservation or allowance taken before the close still settles after it', () => {
+    const path = ledgerPath();
+    const owner = BudgetRun.open({ runner: 'gate', budgetUsd: 5, ledgerPath: path });
+    const worker = BudgetRun.join({ runId: owner.runId, ledgerPath: path });
+    const measured = worker.reserve(0.5, 'in flight, measured');
+    const unknown = worker.reserve(0.25, 'in flight, no usage');
+    const allowance = worker.allowance(1, 'arm');
+    allowance.hold(0.1, 'request inside the allowance');
+    owner.close();
+    allowance.charge(0.1, { usd: 0.05, input_tokens: 100, output_tokens: 10 });
+    expect(read(path).runs[0].finished_at).not.toBeNull();
+    worker.settle(measured, { usd: 0.2 });
+    worker.settle(unknown, null);
+    allowance.close();
+    expect(read(path).entries.map(e => [e.status, e.actual_usd])).toEqual([['reconciled', 0.2], ['charged-reservation', 0.25], ['reconciled', 0.05]]);
+    expect(read(path).entries.every(e => e.actual_usd !== null)).toBe(true);
+    expect(() => worker.reserve(0.1, 'after the settles')).toThrow('already finished');
+    expect(verifyLedger(path).ok).toBe(true);
   });
 });
 

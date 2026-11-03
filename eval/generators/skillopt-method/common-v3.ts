@@ -311,6 +311,7 @@ export function degenerateAnswers(skill: SkillName, c: Pick<CandidateV3, 'gold' 
  * is gated.
  */
 export function statusSkewV3(tasks: readonly MethodTaskV3[]): { shares: Record<'all-false' | 'all-true', Partial<Record<SplitV3, number>>>; problems: string[] } {
+  for (const t of tasks) if (!/^STATUS: /m.test(t.oracle_answer)) throw new Error(`statusSkewV3: ${t.task_id}'s oracle report has no STATUS: line to replace`);
   const shares: Record<'all-false' | 'all-true', Partial<Record<SplitV3, number>>> = { 'all-false': {}, 'all-true': {} };
   for (const split of SPLITS_V3) {
     const inSplit = tasks.filter(t => t.split === split);
