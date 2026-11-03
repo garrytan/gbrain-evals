@@ -47,6 +47,26 @@ The full guide, including migration, recovery and the event-loop lag recorded in
 
 The receipt's `cost` and `delivered_tokens` fields come from this ledger.
 
+## Raise a running Q1 lease
+
+`eval/runner/q1/raise-lease.ts` raises a running lease of a Q1 campaign on both ledgers: the lease's reservation in the campaign ledger, then the VM lease ledger over `ubi-runner ssh`. The file lives outside the campaign's hashed tree. Run it from the checkout of the freeze the campaign runs, with that freeze's state directory. A state directory of another campaign, or of another freeze of the same campaign, is refused.
+
+```sh
+bun eval/runner/q1/raise-lease.ts raise --campaign <manifest.json> --state <dir> --lease <id> --usd <new lease> --reason "<who approved it and why>" [--dry-run]
+bun eval/runner/q1/raise-lease.ts show --campaign <manifest.json> --state <dir> --lease <id>
+```
+
+- **One raise at a time per campaign.** A raise holds `<state>/raise.lock` from reading the lease's amount until its record is written. The lock records the holder's pid, host, start time and arguments. Any other raise, dry run included, is refused at once while the lock is held and never waits.
+- **A stale lock.** Nothing breaks a lock automatically. After a crash or a lost session, the lock refuses every raise until the person running the campaign clears it. They first check the holder's lease and VM with `show` (the lock file names the lease), reconcile the holder's raise if it is unknown (below), and then run:
+
+  ```sh
+  bun eval/runner/q1/raise-lease.ts clear-stale-lock --campaign <manifest.json> --state <dir> --confirm <campaign id>
+  ```
+
+  It refuses while the holder's pid is still running on this host, and only clears with the campaign id typed out.
+- **A refused VM step.** When the VM lease ledger refuses the raise, or the VM step fails before its COMMIT, the host reservation is given back. If giving it back fails too, the error names both failures and the amount the host still holds, and that difference is given back on the host ledger by hand.
+- **An unknown raise.** A VM step that ends without a result (a timeout, an ssh error, output that does not read back) keeps the host reservation and appends the raise to `<state>/raises.ndjson` with `vm_result: "unknown"`, so the campaign and its block cap count the raised amount. To reconcile it while the lease runs, read the VM ledger's `budget_usd` with `show`. Then append a copy of the unknown record to `raises.ndjson` with `from_usd` set to its `to_usd`, `to_usd` set to the VM's amount, `vm_ledger` and `vm_cap_usd` from `show`, no `vm_result`, and a `reason` naming the reconciliation. When the VM still holds the old amount, the host keeps the larger reservation until the lease settles at its measured spend, so the caps stay conservative. Raise that lease again only after reconciling.
+
 ## Start with a narrow run
 
 ```sh
