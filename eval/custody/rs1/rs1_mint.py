@@ -329,6 +329,14 @@ def gemini_model(temperature, usage):
     return RecordingModel(inner, f"gemini:{GEN_MODEL}", usage)
 
 
+class UnmeteredSlot:
+    """BEAM's model slot in a real-mode step that mint.sh gives no metering proxy (chat_json, truncate). Those steps
+    make no model call, and one would bypass metering, so every call refuses."""
+
+    def invoke(self, value, **kwargs):
+        raise StepFailure("this step has no metering proxy, so it makes no model call")
+
+
 class StubModel:
     """Deterministic stand-in for every model call (stub-model mode). It answers each BEAM prompt template in the
     format BEAM's parser expects, recognizing the template by its literal prefix, and RS1's own topic and rubric
@@ -647,7 +655,8 @@ class Context:
 
     def beam(self, usage):
         if self._beam is None:
-            slot = self.model(usage, 0.0)
+            unmetered = self.mode == "real" and not os.environ.get("RS1_PROXY_READY")
+            slot = UnmeteredSlot() if unmetered else self.model(usage, 0.0)
             self._beam = load_beam(self.beam_dir, slot)
             if isinstance(slot, StubModel):
                 slot.bind_templates(self._beam.prompts)
