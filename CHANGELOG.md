@@ -2,6 +2,16 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.152] - 2026-11-03
+
+### A budget stop in the SkillOpt ceiling gate keeps the spend it billed (#331)
+
+- **A rollout that fails after a billed call keeps its row and its usage when a budget refusal or a tripwire stops the stage.** `runArm` in `eval/runner/skillopt-method/ceiling-stages.ts` now writes each billed failed rollout's error row, with the usage `onFailedRollout` collected, before it throws `StageStopped`. On a refused arm, a task that billed nothing still writes no row. Before, the throw came first, so those calls stayed on the ledger but never reached the rows, and the gate receipt's voided report missed them.
+- **The interrupted arm counts in `voided`.** `runPair` summarizes a stopped arm from its rows before it rethrows, so the receipt's `voided` per target shows that arm and its dollars.
+- **Each failed rollout's row names its own error.** `onFailedRollout` in `rollouts.ts` now passes the error, so a concurrent upstream 500 reads as itself, not as the budget refusal. The refused rollout keeps the arm's "budget refusal:" or "invalid cell:" label.
+- **Preregistration.** The 2026-11-03 amendment of `docs/benchmarks/2026-11-02-skillopt-ceiling/PREREGISTRATION.md` adds the refusal audit (GBEV-3's condition) and GBEV-3's clause on how a flipped pair counts: it is FIX-METHOD and never evidence for a pass or a cut, it counts as H against a cut and as V for the pass test, and a flipped Opus pair behind Sol's skip leaves the attempt `incomplete` until Sol's pairs run. No cap, re-price rule, scorer, data or `MANIFEST.json` changes.
+- **Tests.** `test/eval/skillopt-ceiling-stages.test.ts` adds a keyless gate run in which one rollout bills four turns and then hits `BudgetExceededError` while another bills one turn and fails with an upstream 500. Both rows are written with their usage (4 and 1 calls) and their own errors, and `voided` reports the seed arm with 5 calls and their dollars. The test fails on 0.10.149. No paid call ran.
+
 ## [0.10.149] - 2026-11-03
 
 ### The SkillOpt ceiling attempt freezes v3, pins gbrain `62637c96a` and fixes the v3 query scorer and the gate's re-price stop (#309)
