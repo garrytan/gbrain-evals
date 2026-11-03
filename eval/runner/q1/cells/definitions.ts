@@ -177,6 +177,8 @@ export interface Manifest {
   cells: CellDefinition[];
   /** Paid dev smokes (`generateSmokeCells`): dev conversations only, outside every block total. */
   smoke_cells: CellDefinition[];
+  /** Cells outside the counted list, the block totals and the publication, run only by a unit-selection campaign that names them (F6's particle-1 add-on, A6). */
+  addon_cells?: CellDefinition[];
   total_usd: number;
   plan_total_usd: number;
   cap_usd: number;

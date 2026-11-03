@@ -549,7 +549,8 @@ already preregistered.
    no frozen context" and is not replaced.
 2. **File agent.** On S1 the file agent runs with particle-1 as its agent: F6's file-agent definition (whole-system
    agent, uncapped grep, 40 turns) with particle-1 as its only reader, as cell `s1.baseline-file-agent.particle` in
-   block F6-P1 of `f6-cells.json`.
+   block F6-P1. `f6-cells.json` lists it under `addon_cells`, outside F6's counted cells, so F6's $1908.89 estimate,
+   its campaign and its publication stay as they are; only the add-on's own campaign runs it.
 
 **Byte-for-byte check.** Before any request, `reread-cell.ts` checks every source: each frozen context must hash
 (SHA-256) to its recorded prompt_sha256 and context_sha256, the published run-config's schedule must be the one this

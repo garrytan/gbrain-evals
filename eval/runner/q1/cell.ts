@@ -1377,8 +1377,8 @@ const T2_WAVES: Record<string, number> = { 'T2-S2b': 1, 'T2-S3': 2, 'T2-S2a': 3,
 /** In-process systems whose adapter drives the bundle's own container: the unit builds it at setup and brings it up around the run like a shim stack (A19). */
 const IN_PROCESS_STACKS = new Set(['ext-agent-runtime']);
 
-/** One launch unit per cell, or per conversation shard for an S1 shim cell, in the shootout campaign's cell format. */
-export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight?: number; cellManifest?: 'q1' | 'f6' } = {}): CellSpec[] {
+/** One launch unit per cell, or per conversation shard for an S1 shim cell, in the shootout campaign's cell format; `addons` adds the manifest's addon_cells (a unit selection's campaign). */
+export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight?: number; cellManifest?: 'q1' | 'f6'; addons?: boolean } = {}): CellSpec[] {
   const perWave = Math.floor((opts.vcpuCapNight ?? 200) / VM_VCPU);
   const headline = (c: CellDefinition) => c.block === 'T1' || c.block === 'F6-S1';
   const t1Units = m.cells.filter(headline).flatMap(c => Array.from({ length: c.shards }, (_, i) => ({ c, i }))).sort((a, b) => b.c.estimate.usd / b.c.shards - a.c.estimate.usd / a.c.shards || (a.c.id < b.c.id ? -1 : 1) || a.i - b.i);
@@ -1408,6 +1408,7 @@ export function campaignCells(m: Manifest, opts: { smoke?: boolean; vcpuCapNight
   const out: CellSpec[] = [];
   for (const c of m.cells) for (let i = 0; i < c.shards; i++) out.push(spec(c, i, false));
   if (opts.smoke) for (const c of m.smoke_cells ?? []) out.push(spec(c, 0, true));
+  if (opts.addons) for (const c of m.addon_cells ?? []) for (let i = 0; i < c.shards; i++) out.push(spec(c, i, false));
   return out;
 }
 
@@ -1420,7 +1421,7 @@ export function campaignManifest(m: Manifest, opts: { smoke?: boolean; sealed?: 
   const f6 = (m as { campaign_id?: string }).campaign_id;
   // F6 adds the temporal graph's 0.31.2 defaults (gpt-6-luna, text-embedding-3-small) to the models its campaign admits.
   const base = [...m.readers, ...Object.keys(m.prices), 'openai:gpt-4.1-mini', 'openai:text-embedding-3-large', 'anthropic:claude-opus-4-7', 'anthropic:claude-haiku-4-5', 'anthropic:claude-haiku-5-5', ...(f6 ? ['openai:gpt-6-luna', 'openai:text-embedding-3-small'] : [])];
-  const all = campaignCells(m, { ...opts, smoke: opts.smoke || opts.smokeOnly, cellManifest: opts.units?.cell_manifest }).filter(c => (!opts.sealed || c.sealed) && (!opts.smokeOnly || c.smoke));
+  const all = campaignCells(m, { ...opts, smoke: opts.smoke || opts.smokeOnly, cellManifest: opts.units?.cell_manifest, addons: !!opts.units }).filter(c => (!opts.sealed || c.sealed) && (!opts.smokeOnly || c.smoke));
   const u = opts.units;
   if (u) {
     const unknown = u.units.filter(id => !all.some(c => c.id === id));
@@ -1430,7 +1431,7 @@ export function campaignManifest(m: Manifest, opts: { smoke?: boolean; sealed?: 
   }
   const cells = u ? all.filter(c => u.units.includes(c.id)) : all;
   // A campaign also admits the OpenAI-compatible readers its units read (the particle-1 add-on's), which no price table of the manifest lists.
-  const compat = [...m.cells, ...(m.smoke_cells ?? [])].filter(c => cells.some(x => x.id === c.id || x.id.startsWith(`${c.id}.c`))).flatMap(c => c.arms.flatMap(a => a.readers)).filter(isCompatModel);
+  const compat = [...m.cells, ...(m.smoke_cells ?? []), ...(m.addon_cells ?? [])].filter(c => cells.some(x => x.id === c.id || x.id.startsWith(`${c.id}.c`))).flatMap(c => c.arms.flatMap(a => a.readers)).filter(isCompatModel);
   const models = [...new Set([...base, ...compat])].sort();
   const id = u ? u.campaign_id : f6 ? `${f6}${opts.smokeOnly ? '-dry-run' : opts.sealed ? '-sealed' : ''}` : opts.sealed ? 'q1-scoreboard-sealed' : 'q1-scoreboard';
   const dryCap = (m as { dry_run_cap_usd?: number }).dry_run_cap_usd;
@@ -1466,13 +1467,13 @@ export function renderPlan(m: Manifest): string {
 export function findCell(id: string, given?: Manifest, manifest?: string): CellDefinition {
   if (manifest !== undefined && manifest !== 'q1' && manifest !== 'f6') throw refuse(usage(`--manifest takes q1 or f6, not ${manifest}`));
   const m = given ?? (manifest === 'f6' ? loadF6Manifest() : loadManifest());
-  const inManifest = (x: Manifest) => x.cells.find(c => c.id === id) ?? (x.smoke_cells ?? []).find(c => c.id === id);
+  const inManifest = (x: Manifest) => x.cells.find(c => c.id === id) ?? (x.smoke_cells ?? []).find(c => c.id === id) ?? (x.addon_cells ?? []).find(c => c.id === id);
   const c = inManifest(m);
   const f6 = !given && !manifest && existsSync(F6_MANIFEST_PATH) ? loadF6Manifest() : null;
   const hit = f6 ? inManifest(f6) : undefined;
   if (c && hit) throw refuse({ code: 'USAGE', message: `cell ${id} is defined in both ${rel(MANIFEST_PATH)} and ${rel(F6_MANIFEST_PATH)}, with different arms or judging`, why: 'a cell runs the definition its campaign was planned from; an id both manifests define cannot be resolved without naming the manifest', fix: { next: 'run', argv: [...FRONT, 'show', '--cell', id, '--manifest', 'f6'], user_message: 'pass --manifest q1 or --manifest f6' } });
   if (c ?? hit) return (c ?? hit)!;
-  const near = [...m.cells, ...(m.smoke_cells ?? [])].filter(x => x.id.includes(id.split('.')[0] ?? '')).slice(0, 5).map(x => x.id);
+  const near = [...m.cells, ...(m.smoke_cells ?? []), ...(m.addon_cells ?? [])].filter(x => x.id.includes(id.split('.')[0] ?? '')).slice(0, 5).map(x => x.id);
   throw refuse({ code: 'USAGE', message: `no cell ${id} in ${rel(MANIFEST_PATH)}`, why: 'run, show and merge take a cell id from the generated manifest', fix: { next: 'run', argv: [...FRONT, 'plan'], user_message: near.length ? `did you mean ${near.join(', ')}?` : 'list the cells with plan' } });
 }
 

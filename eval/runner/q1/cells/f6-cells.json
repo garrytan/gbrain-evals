@@ -2780,66 +2780,6 @@
         "usd": 89.98,
         "basis": "F6: estimate per shard x 1.25 plus twice the peak reservation ($0.1916, reader anthropic:claude-opus-5-5)"
       }
-    },
-    {
-      "schema": "gbrain-evals/q1-cell/v1",
-      "id": "s1.baseline-file-agent.particle",
-      "set": "S1",
-      "block": "F6-P1",
-      "benchmark": "beam-10m",
-      "split": "sealed",
-      "selection": {
-        "kind": "all"
-      },
-      "exclusions": [
-        {
-          "question_id": "10m-1:abstention:0",
-          "reason": "exposed in another thread's audit (eval/decisions/splits/beam-10m.json exclusions); run and reported apart, never in the confirmatory cohort"
-        }
-      ],
-      "system": "baseline-file-agent",
-      "configuration": "baseline",
-      "runner": "in-process",
-      "ingest_replicate": 1,
-      "effort": "medium",
-      "canonical_instrument": "beam-10m",
-      "probes": {
-        "sample": 0,
-        "seed": "f6-probes-s1",
-        "conversations": 0
-      },
-      "shards": 1,
-      "expected_hours": 6,
-      "arms": [
-        {
-          "id": "whole-agent",
-          "cell_id": "s1.baseline-file-agent.particle.whole-agent",
-          "set": "S1",
-          "arm": "whole-system",
-          "mode": "agent",
-          "policy": null,
-          "budget": null,
-          "questions": null,
-          "readers": [
-            "particle:particle-1"
-          ],
-          "reader_replicates": {},
-          "frontier": null,
-          "judge_repeats": null,
-          "label": "file agent, uncapped grep, 40 turns"
-        }
-      ],
-      "estimate": {
-        "usd": 8.04,
-        "lines": {
-          "agent": 7.74,
-          "judges": 0.3
-        }
-      },
-      "lease": {
-        "usd": 16.15,
-        "basis": "F6: estimate per shard x 1.25 plus twice the peak reservation ($3.05, file agent: one first turn per reader at once (1))"
-      }
     }
   ],
   "smoke_cells": [
@@ -3504,7 +3444,69 @@
       }
     }
   ],
-  "total_usd": 1916.93,
+  "addon_cells": [
+    {
+      "schema": "gbrain-evals/q1-cell/v1",
+      "id": "s1.baseline-file-agent.particle",
+      "set": "S1",
+      "block": "F6-P1",
+      "benchmark": "beam-10m",
+      "split": "sealed",
+      "selection": {
+        "kind": "all"
+      },
+      "exclusions": [
+        {
+          "question_id": "10m-1:abstention:0",
+          "reason": "exposed in another thread's audit (eval/decisions/splits/beam-10m.json exclusions); run and reported apart, never in the confirmatory cohort"
+        }
+      ],
+      "system": "baseline-file-agent",
+      "configuration": "baseline",
+      "runner": "in-process",
+      "ingest_replicate": 1,
+      "effort": "medium",
+      "canonical_instrument": "beam-10m",
+      "probes": {
+        "sample": 0,
+        "seed": "f6-probes-s1",
+        "conversations": 0
+      },
+      "shards": 1,
+      "expected_hours": 6,
+      "arms": [
+        {
+          "id": "whole-agent",
+          "cell_id": "s1.baseline-file-agent.particle.whole-agent",
+          "set": "S1",
+          "arm": "whole-system",
+          "mode": "agent",
+          "policy": null,
+          "budget": null,
+          "questions": null,
+          "readers": [
+            "particle:particle-1"
+          ],
+          "reader_replicates": {},
+          "frontier": null,
+          "judge_repeats": null,
+          "label": "file agent, uncapped grep, 40 turns"
+        }
+      ],
+      "estimate": {
+        "usd": 8.04,
+        "lines": {
+          "agent": 7.74,
+          "judges": 0.3
+        }
+      },
+      "lease": {
+        "usd": 16.15,
+        "basis": "F6: estimate per shard x 1.25 plus twice the peak reservation ($3.05, file agent: one first turn per reader at once (1))"
+      }
+    }
+  ],
+  "total_usd": 1908.89,
   "plan_total_usd": 3100,
   "cap_usd": 3068.83,
   "dry_run_cap_usd": 60,

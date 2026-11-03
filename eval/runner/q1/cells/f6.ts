@@ -172,7 +172,8 @@ const rerun = (system: string, arm: ArmSpec) => {
  * file-agent spend scaled to particle-1's list price: estimateCell prices this cell at particle-1's list rates on the
  * token assumptions it priced Q1's three-reader cell on (ASSUMPTIONS.agent: 130,000 input and 2,000 output tokens per S1
  * question, then the canonical judge), and each line is multiplied by Q1's measured spend over that model's price for
- * Q1's cell ($275.96 / $245.99).
+ * Q1's cell ($275.96 / $245.99). It is listed under the manifest's addon_cells, outside F6's counted cells, so F6's
+ * estimate, campaign and publication do not change.
  */
 export const F6_PARTICLE_ADDON = { id: 's1.baseline-file-agent.particle', reader: 'particle:particle-1', source: 's1.baseline-file-agent.baseline' } as const;
 export function particleAddonCell(): CellDefinition {
@@ -183,7 +184,7 @@ export function particleAddonCell(): CellDefinition {
   return withLease({ ...c, id, arms: c.arms.map(a => ({ ...a, cell_id: `${id}.${a.id}` })), estimate: { usd: Math.round(Object.values(lines).reduce((s, v) => s + v, 0) * 100) / 100, lines } });
 }
 
-/** F6's counted cells, in priority order (S4-slice last), then the particle-1 add-on. */
+/** F6's counted cells, in priority order (S4-slice last). */
 export function generateF6Cells(): CellDefinition[] {
   return [
     gbrain('S1', 'F6-S1', ALL_ARMS, ['p', 'd']),
@@ -194,7 +195,6 @@ export function generateF6Cells(): CellDefinition[] {
     gbrain('D8', 'F6-D8', D8_GBRAIN_ARMS),
     ...D8_SYSTEMS.map(([system, configuration]) => other('D8', 'F6-D8', system, configuration)),
     gbrain('S4-slice', 'F6-S4', ALL_ARMS),
-    particleAddonCell(),
   ];
 }
 
@@ -225,21 +225,22 @@ export interface F6Manifest extends Manifest { f6_assumptions: typeof F6_ASSUMPT
 export function buildF6Manifest(): F6Manifest {
   const cells = generateF6Cells();
   const smoke = generateF6DryRunCells();
+  const addons = [particleAddonCell()];
   const round = (x: number) => Math.round(x * 100) / 100;
   // A block stops at 1.5 times its estimate, or at its units' leases where they hold more (the particle-1 add-on, whose
   // lease is mostly the peak reservation), since the campaign ledger refuses a lease that would pass its block's cap.
   const blocks = (Object.keys(F6_BLOCKS) as F6BlockId[]).filter(id => id !== 'F6-dry').map(id => {
-    const own = cells.filter(c => c.block === id);
+    const own = [...cells, ...addons].filter(c => c.block === id);
     const estimate = round(own.reduce((s, c) => s + c.estimate.usd, 0));
     return { id: id as BlockId, label: F6_BLOCKS[id], plan_usd: estimate, estimate_usd: estimate, cap_usd: round(Math.max(estimate * 1.5, own.reduce((s, c) => s + c.lease!.usd * c.shards, 0))) };
   });
   const models = [...READERS, ...FRONTIER_JUDGES, ASSUMPTIONS.judge.lme.model, ASSUMPTIONS.judge.beam.model, F6_ASSUMPTIONS.extraction.model, 'openai:gpt-6-luna'].map(m => [m, priceOf(m)] as const);
-  const sets = [...new Set([...cells, ...smoke].map(c => c.set))].map(s => ALL_SETS[s]);
+  const sets = [...new Set([...cells, ...smoke, ...addons].map(c => c.set))].map(s => ALL_SETS[s]);
   return {
     schema: MANIFEST_SCHEMA, generated_by: 'bun eval/runner/q1/cells/f6.ts', preregistration: F6_PREREGISTRATION, readers: READERS, effort: 'medium',
     prices: Object.fromEntries(models.sort(([a], [b]) => (a < b ? -1 : 1))), assumptions: ASSUMPTIONS, f6_assumptions: F6_ASSUMPTIONS,
-    sets, blocks, cells, smoke_cells: smoke,
-    total_usd: round(blocks.reduce((s, b) => s + b.estimate_usd, 0)), plan_total_usd: F6_CAP_USD, cap_usd: F6_COUNTED_CAP_USD, dry_run_cap_usd: F6_DRY_RUN_CAP_USD, dry_run_spent_usd: F6_DRY_RUN_SPENT_USD, campaign_id: F6_CAMPAIGN_ID,
+    sets, blocks, cells, smoke_cells: smoke, addon_cells: addons,
+    total_usd: round(blocks.filter(b => cells.some(c => c.block === b.id)).reduce((s, b) => s + b.estimate_usd, 0)), plan_total_usd: F6_CAP_USD, cap_usd: F6_COUNTED_CAP_USD, dry_run_cap_usd: F6_DRY_RUN_CAP_USD, dry_run_spent_usd: F6_DRY_RUN_SPENT_USD, campaign_id: F6_CAMPAIGN_ID,
   };
 }
 
