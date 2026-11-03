@@ -2,6 +2,14 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.156] - 2026-11-03
+
+### A re-read verifies shards that differ only in launch metadata (F6 preregistration A6, Revision 2)
+
+- **Shards launched under different amendments verify together.** `eval/runner/q1/reread-cell.ts` now accepts re-read sources whose run configurations differ only in `cell.expected_hours`, `cell.fresh_before`, `cell.lease`, `cell.restore_command`, `cell.snapshot_command` and `cell.shards` (`REREAD_LAUNCH_FIELDS`), present or absent. Any other difference still refuses the whole re-read before any request, including a new or unknown field and a whitespace change. The S1 memory-bank row's 10 shards froze their run-config.json under A17, A23 and A24, and the byte-for-byte check refused them as three run configurations.
+- **One identity per reading.** A single run configuration keeps its own SHA-256 as the re-read's `source.config_sha256`. Several that agree are identified by the SHA-256 of their shared configuration without the launch fields (`readingConfig`). `verify.json` records each source's own run-config SHA-256, and the receipt lists them as `source.config_sha256s`.
+- **The report pairs the re-read with a frontier cell that publishes one of them.** `eval/runner/q1/particle-addon-report.ts` pairs a re-read with the frontier cell whose run configuration is one of its sources' and refuses any other. No cell, arm, cap, estimate or verdict rule changed.
+
 ## [0.10.155] - 2026-11-03
 
 ### The particle-1 add-on's re-read tool and report close #347's four open review findings
