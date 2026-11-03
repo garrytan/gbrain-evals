@@ -13,6 +13,13 @@ This records what each gbrain-evals release changed and what its measurements me
 - **Tests.** `test/eval/q1-raise-lease.test.ts` adds keyless tests for each rule above, including an overlap repro in which a second raise is refused while the first holds the lock.
 - **Known gaps.** #344 tracks a write-ahead record and a `reconcile --lease` command, needed before a B2 run that expects more than a couple of lease raises. #345 lists the other review notes this release ships with.
 
+## [0.10.153] - 2026-11-03
+
+### F6's arm-B rows carry a dated limitation: recall responses were never classified (#343)
+
+- **`docs/benchmarks/2026-10-29-f6-current-master/publication.json` adds one disclosure, dated 2026-11-03.** Arm B is the only gbrain arm that retrieves with `recall`, so the note covers its rows only: S1 `s1.gbrain-defaults.f6-master.b`, S2b `s2b.gbrain-defaults.f6-master.b` and D8 arm B, including D8's B - A, plus the partial A1 appendix rows `s2a.gbrain-defaults.f6-master.b` and `s3.gbrain-defaults.f6-master.b`. At the pinned gbrain, `recall` reports degradation in its response (`facts_degraded`, `search_degraded`, delivery fallbacks). The gbrain-defaults shim classified every recall response as scored, and neither the shim nor the runner kept that metadata, so a silently degraded recall would have scored as a miss. Whether any did was not measured. Keyword-only page search is ruled out, because the same serves' query arm ran with vectors. Facts that had no embedding at query time are not ruled out. The headline arm P and D8's P - A retrieve with `query`, so they are unaffected. No number changes, and arm B is not rerun.
+- **The custodian re-rendered the receipt with the note.** Four `SHA256SUMS` entries changed: `campaign.json`, `scoreboard.json`, `scoreboard.md` and the `render/` entry for the public `scoreboard.md` (the disclosure, and `campaign.json`'s hash line in the table). Every cell's rows, answers and judgments hash as before. `publication.json` now pins results commit `9862f0e4`, whose `SHA256SUMS` hashes to `e95f36a8…ff9c` (was `b8b936a1`, `09ba1ff8…5ace`). `scoreboard.md` is the custodian's render, byte for byte, and `checkSums` on the new `SHA256SUMS` with F6's `publication.json` reports its one rendered public file matching.
+
 ## [0.10.151] - 2026-11-03
 
 ### The SkillOpt ceiling preregistration records the calibration re-read and re-prices the later stages (#341)
