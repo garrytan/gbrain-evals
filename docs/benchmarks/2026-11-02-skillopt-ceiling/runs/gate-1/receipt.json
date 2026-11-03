@@ -37,7 +37,7 @@
     "input_tokens": 73613807,
     "output_tokens": 1666708,
     "basis": "budget ledger n15-ceiling-gate-1-2026-11-03T16-27-45-284Z-54bc0fda: 3304 paid requests, 0 charged at their reservation because usage was unavailable",
-    "ledger": "/home/user/.capy/work/gbev30/ledger/ledger.sqlite",
+    "ledger": "<work>/ledger/ledger.sqlite",
     "program_cap_usd": 9163,
     "overshoot_usd": 0,
     "event_loop_lag_ms": {
@@ -73,8 +73,8 @@
       "sol": 0.07359331388888887
     },
     "calibration": [
-      "/home/user/.capy/work/gbev30/cal-reread/opus/receipt.json",
-      "/home/user/.capy/work/gbev30/cal-reread/sol/receipt.json"
+      "<work>/cal-reread/opus/receipt.json",
+      "<work>/cal-reread/sol/receipt.json"
     ],
     "previous": null,
     "estimate_usd": 331.3380916,

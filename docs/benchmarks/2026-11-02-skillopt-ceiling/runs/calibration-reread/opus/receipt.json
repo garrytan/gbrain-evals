@@ -37,7 +37,7 @@
     "input_tokens": 6099647,
     "output_tokens": 122854,
     "basis": "budget ledger n15-ceiling-calibration-2026-11-03T12-54-22-002Z-99f3820d: 225 paid requests, 0 charged at their reservation because usage was unavailable",
-    "ledger": "/home/user/.capy/work/gbev30/ledger/ledger.sqlite",
+    "ledger": "<work>/ledger/ledger.sqlite",
     "program_cap_usd": 9163,
     "overshoot_usd": 0,
     "event_loop_lag_ms": {

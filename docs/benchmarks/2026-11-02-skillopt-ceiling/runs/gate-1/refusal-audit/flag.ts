@@ -28,9 +28,9 @@ for (const r of rows) {
       if (hits.length > 6) break;
     }
   }
-  if (hits.length) flagged.push({ key, task_id: r.task_id, run: r.run, status: t.gold?.status ?? null, gold: (t.gold?.values ?? []).map(v => v.value), hits });
+  if (hits.length) flagged.push({ cell: key, task_id: r.task_id, run: r.run, status: t.gold?.status ?? null, gold: (t.gold?.values ?? []).map(v => v.value), hits });
 }
 writeFileSync(G + '/refusal-audit-flagged.json', JSON.stringify(flagged, null, 1));
-const byKey = {}; for (const f of flagged) byKey[f.key] = (byKey[f.key] ?? 0) + 1;
+const byKey = {}; for (const f of flagged) byKey[f.cell] = (byKey[f.cell] ?? 0) + 1;
 console.log(JSON.stringify({ totals, flaggedByKey: byKey, flagged: flagged.length }));
 
