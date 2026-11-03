@@ -58,7 +58,7 @@ export interface V3Knobs {
   revision?: 0 | 1;
 }
 
-export const DEFAULT_V3_KNOBS: Readonly<V3Knobs> = { seed: 30_001, chain_depth: { min: 4, max: 5 }, lookalike_pairs: { companies: 20, people: 24 }, distractor_count: 6 };
+export const DEFAULT_V3_KNOBS: Readonly<V3Knobs> = { seed: 30_001, chain_depth: { min: 4, max: 5 }, lookalike_pairs: { companies: 20, people: 24 }, distractor_count: 6, revision: 1 };
 
 export const WORLD_SIZE = { companies: 90, investors: 8, people: 330, accounts: 60, meetings: 150, notes: 80, vendor_staff: 12, acquisitions: 16 } as const;
 /** The world's present: every page is dated on or before it, and "current" means as of it. */

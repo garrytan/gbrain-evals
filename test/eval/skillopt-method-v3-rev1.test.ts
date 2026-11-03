@@ -32,7 +32,7 @@ const familyPatterns = (skill: SkillName, family: string) => new Set(probesOf(sk
 const isAbstention = (t: MethodTaskV3) => !t.answerable || t.gold.spec.kind === 'absent' || (t.gold.spec.kind === 'fact-check' && t.gold.spec.status === 'not-supported') || (t.gold.spec.kind === 'briefing' && t.gold.spec.meetings.some(m => m.absent));
 
 describe('skillopt-method-v3 revision 1: the world', () => {
-  test('revision 0 (the default until revision 1 ships) is the calibrated world: no legal entity, the pinned page hash', () => {
+  test('revision 0 regenerates the calibrated world: no legal entity, the pinned page hash', () => {
     const w0 = generateWorldV3({ ...DEFAULT_V3_KNOBS, revision: 0 });
     expect(worldHash(w0.pages)).toBe(REV0_WORLD_SHA256);
     expect(worldHash(generateWorldV3({ ...DEFAULT_V3_KNOBS, revision: undefined }).pages)).toBe(REV0_WORLD_SHA256);
