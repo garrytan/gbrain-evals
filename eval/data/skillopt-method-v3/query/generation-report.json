@@ -4,23 +4,23 @@
   "knobs": {
     "seed": 30001,
     "chain_depth": {
-      "min": 3,
+      "min": 4,
       "max": 5
     },
     "lookalike_pairs": {
-      "companies": 15,
-      "people": 20
+      "companies": 20,
+      "people": 24
     },
-    "distractor_count": 2
+    "distractor_count": 6
   },
   "candidates": {
-    "as-of": 791,
-    "note-contradicts": 57,
-    "two-hop": 133,
-    "three-hop": 63,
+    "as-of": 680,
+    "note-contradicts": 179,
+    "two-hop": 128,
+    "three-hop": 61,
     "role-on-date": 79,
-    "lookalike": 60,
-    "absent": 115
+    "lookalike": 76,
+    "absent": 120
   },
   "dropped_by_oracle": 0,
   "dropped_by_solvability": 0,
@@ -30,8 +30,8 @@
     {
       "family": "as-of",
       "held_out": false,
-      "candidates": 791,
-      "confirmed": 791,
+      "candidates": 680,
+      "confirmed": 680,
       "quota": {
         "train": 7,
         "sel": 7,
@@ -49,8 +49,8 @@
     {
       "family": "two-hop",
       "held_out": false,
-      "candidates": 133,
-      "confirmed": 133,
+      "candidates": 128,
+      "confirmed": 128,
       "quota": {
         "train": 6,
         "sel": 6,
@@ -68,8 +68,8 @@
     {
       "family": "lookalike",
       "held_out": false,
-      "candidates": 60,
-      "confirmed": 60,
+      "candidates": 76,
+      "confirmed": 76,
       "quota": {
         "train": 6,
         "sel": 6,
@@ -87,8 +87,8 @@
     {
       "family": "absent",
       "held_out": false,
-      "candidates": 115,
-      "confirmed": 115,
+      "candidates": 120,
+      "confirmed": 120,
       "quota": {
         "train": 5,
         "sel": 5,
@@ -106,8 +106,8 @@
     {
       "family": "three-hop",
       "held_out": true,
-      "candidates": 63,
-      "confirmed": 63,
+      "candidates": 61,
+      "confirmed": 61,
       "quota": {
         "train": 0,
         "sel": 0,
@@ -144,8 +144,8 @@
     {
       "family": "note-contradicts",
       "held_out": true,
-      "candidates": 57,
-      "confirmed": 57,
+      "candidates": 179,
+      "confirmed": 179,
       "quota": {
         "train": 0,
         "sel": 0,
@@ -161,8 +161,8 @@
       "short": 0
     }
   ],
-  "groups": 135,
+  "groups": 131,
   "largest_group": 3,
-  "unused_candidates": 1118,
+  "unused_candidates": 1143,
   "assembly_attempt": 0
 }

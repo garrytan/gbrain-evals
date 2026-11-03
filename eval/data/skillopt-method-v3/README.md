@@ -11,10 +11,10 @@ plan sections 2 and 3). Its tasks test what a skill's procedure adds on a brain 
 - briefing three to six meetings at once, each fact and citation inside its own meeting's entry;
 - fact-checking claims of two or three parts, each part with its own status.
 
-The rollout brain is world-v3's 999 pages ([`world-v3.ts`](../../generators/skillopt-method/world-v3.ts)), and the seed
+The rollout brain is world-v3's 1,030 pages ([`world-v3.ts`](../../generators/skillopt-method/world-v3.ts)), and the seed
 skills are the ones gbrain ships at `311a83bbe` (v0.60.553.0). They are byte-identical to v1's and v2's seeds (gbrain
-`3ec766c40`): none of the three changed between the two commits. This commit's `package.json` pins gbrain `311a83bbe`
-(v0.60.553.0), the same commit the seeds come from.
+`3ec766c40`): none of the three changed between the two commits. This commit's `package.json` pins gbrain `62637c96a`
+(v0.60.557.0), where the three seed skills are still byte-identical.
 
 Every reader names v3 explicitly: [`dataset.ts`](../../runner/skillopt-method/dataset.ts) keeps v2 as the N15 default, and
 [`dataset-context.ts`](../../runner/skillopt-method/dataset-context.ts) hands brain import, the audit and the proposer's
@@ -41,22 +41,28 @@ ordered round-robin by family, so each of gbrain's batches of 8 covers every tra
 | | changed-companies (held out) | 0 / 0 / 6 / 16 | An attendee who changed companies; the current one counts |
 | | renewal-pending (held out) | 0 / 0 / 6 / 16 | An account with a renewal signed but not yet in force on the day |
 | | meetings-5-6 (held out) | 0 / 0 / 6 / 16 | Five or six external meetings |
-| `fact-check` | superseded | 6 / 6 / 5 / 12 | A term as of a date stated with a value another record holds; contradicted, with the value in force |
+| `fact-check` | superseded | 6 / 6 / 5 / 12 | A term as of a date stated with a value another record holds (contradicted, with the value in force), or with the value in force while a later record holds another (supported) |
 | | compound | 6 / 6 / 5 / 12 | Two or three terms of one account on one date, each part right or wrong |
-| | not-founder | 6 / 6 / 4 / 12 | "P founded C" where P only works or worked at C |
+| | not-founder | 6 / 6 / 4 / 12 | Per company, "P founded C" where P only works or worked at C (contradicted), and the real founder's claim (supported) unless the company has a look-alike name |
 | | absent | 6 / 6 / 4 / 12 | A claim about an entity no page carries; near-miss pages recorded |
 | | role-on-date (held out) | 0 / 0 / 6 / 16 | "On D, P was C's chief executive" (or chief technology officer), right or wrong |
 | | three-hop (held out) | 0 / 0 / 6 / 16 | A founding claim three hops out, right or naming the wrong hop's founder |
 | | lookalike-founder (held out) | 0 / 0 / 6 / 16 | A founding claim about a company sharing a stem with another, or naming a near-name person |
 
-A fact-check family that makes claims right or wrong (compound, role-on-date, three-hop and lookalike-founder) fills
-each split by gold status in the proportion of its confirmed candidates, so true claims sit in every split and a report
-that calls everything false fails every task with a true part. Fact-check tasks by gold status (supported / contradicted
-/ not-supported) are 2 / 16 / 6 in train, 2 / 16 / 6 in selection, 10 / 22 / 4 in gate and 27 / 57 / 12 in test.
+Every fact-check family except absent makes claims right or wrong. Each fills each split by gold status in the
+proportion of its confirmed candidates, and compound's false claims with a true part fill apart from those false
+throughout, so true claims sit in every split and a report that calls everything false fails every task with a true
+part. Fact-check tasks by gold status (supported / contradicted / not-supported) are 7 / 11 / 6 in train, 7 / 11 / 6 in
+selection, 11 / 21 / 4 in gate and 30 / 54 / 12 in test; 10, 10, 14 and 36 of them have a true part. The oracle report
+with every status set to FALSE passes substance on 14 of 24 train, 14 of 24 selection, 22 of 36 gate and 60 of 96 test
+tasks, and with every status set to VERIFIED on 7, 7, 11 and 30. `gen.ts check` and the v3 test fail when train or
+selection gives either report a larger share than gate (`statusSkewV3` in
+[`common-v3.ts`](../../generators/skillopt-method/common-v3.ts)).
 
-Every task has its own anchor. Tasks that share an anchor, a gold fact or a gold page form one connected group; a
-group sits in one split with at most three tasks, and each task records its `group_id` for resampling. Abstention
-tasks record their `near_miss` pages (the look-alikes and closest wrong entities) for the gate's reachability control.
+Every task has its own anchor, and no two tasks of a skill share prompt text. Tasks that share an anchor, a gold fact or
+a gold page form one connected group; a group sits in one split with at most three tasks, and each task records its
+`group_id` for resampling. Abstention tasks record their `near_miss` pages (the look-alikes and closest wrong
+entities) for the gate's reachability control.
 
 ## Gold and controls
 
@@ -70,9 +76,9 @@ a false claim true, and one that calls every claim or part false when a part is 
 
 | Skill | Candidates | Dropped by the oracle | By the solvability control | By a degenerate answer | Groups (largest) |
 |---|---|---|---|---|---|
-| `query` | 1,298 | 0 | 0 | 0 | 135 (3) |
-| `briefing` | 309 | 7 | 0 | 0 | 76 (3) |
-| `fact-check` | 1,594 | 0 | 0 | 0 | 131 (3) |
+| `query` | 1,323 | 0 | 0 | 0 | 131 (3) |
+| `briefing` | 309 | 6 | 0 | 0 | 75 (3) |
+| `fact-check` | 1,715 | 0 | 0 | 0 | 138 (3) |
 
 `<skill>/generation-report.json` holds the capacity report: per family, the confirmed candidates and the tasks placed in
 each split against the quota. Generation fails when any count is short; every family and split is met.
@@ -89,7 +95,9 @@ each tagged `substance` (the value concluded, the deciding page, the abstention,
 contract's markup). A task scores a full pass (every check) and a substance pass (substance checks only); gbrain's own
 rule score is the fraction of the same checks. Substance loci do not depend on layout, so correct content in a table,
 bold lines or prose passes substance and fails form. A query answer passes only when the first sentence naming a
-candidate value states the gold value without negating or refusing it ("not 240" and "can't confirm 240" fail). In a
+candidate value states the gold value without negating or refusing it ("not 240", "can't confirm 240", "I don't see
+240" and "wasn't able to see the 240" fail: up to three filler words may sit between the negation and the value). The
+rule understates one correct answer: "I don't see the 240 seats changing" reads as a refusal and fails substance. In a
 fact-check report with `CLAIM:` blocks, a block's status is what its `STATUS:` lines say (or, with none, the first word
 after its `CLAIM:` label), and the parts it covers are the ones its `CLAIM:` line names, so status words and part words
 in notes do not count. A block may not give a covered part any status outside the ones that part allows, `DISPUTED`
@@ -114,24 +122,91 @@ bun eval/generators/skillopt-method/gen.ts write v3   # rewrite v3's files and M
 ```
 
 The world and the three generators are seeded (world 30001, generators 30011 to 30013) and call no model. The
-calibration knobs are explicit (`V3Knobs` in `world-v3.ts`): contract chain depth 3 to 5 records, 15 look-alike company
-pairs and 20 look-alike person pairs, and 2 distractors. Calibration (plan section 4) may change them on train only and
-regenerate, which makes a new MANIFEST.json and dataset hash.
+calibration knobs are explicit (`V3Knobs` in `world-v3.ts`). Calibration (plan section 4) froze them at contract chain
+depth 4 to 5 records, 20 look-alike company pairs, 24 look-alike person pairs and 6 distractors per account. The
+preregistered first set (3 to 5, 15, 20 and 2) scored the same on Opus; its amendment in
+[PREREGISTRATION.md](../../../docs/benchmarks/2026-11-02-skillopt-ceiling/PREREGISTRATION.md#amendments) has both rounds.
 
 ## Known limits
 
-- No model has run on v3 yet; calibration and the headroom gate come first.
-- Among the trained families only compound makes true claims, so train and selection hold few fact-check tasks with a
-  true part (3 and 4, against 13 in gate and 31 in test). The oracle report with every status set to FALSE passes
-  substance on 21 of 24 train, 20 of 24 selection, 23 of 36 gate and 65 of 96 test tasks, so selection can punish a
-  rewrite that rejects too much on only 4 tasks.
-- The task files carry their judges' regexes inline, so v3 is about 10.8 MB (10,763,777 bytes over MANIFEST.json's
+- Calibration (train only) is the only paid read so far. It ran before #308's scorer and fact-check fixes, at MANIFEST.json
+  `04f8f287…` and `3f416c5e…`: the seed scored 1.0 on query and briefing and 0.75 to 0.875 on fact-check, above the
+  0.30 to 0.60 band it aimed for. It is read again at the final manifest before the headroom gate.
+- The task files carry their judges' regexes inline, so v3 is about 11.0 MB (10,986,498 bytes over MANIFEST.json's
   files), mostly the briefing and fact-check judges.
-- Pages are 173 to 309 words, short of the plan's 700-word ceiling: the generator pads each page to a seeded length
+- Pages are 178 to 318 words, short of the plan's 700-word ceiling: the generator pads each page to a seeded length
   from its bank's filler sentences.
 - Briefing citation dates are not checked against the page.
 
 ## Changelog
+
+### 2026-11-03: Refusals built on "see" fail again, and no two tasks share prompt text
+
+/ship's review of #309 found two faults in the data the calibration re-read was to pin:
+
+- The first "see" fix (below) let refusals that name the gold value pass: "I do not see 240 seats in the brain",
+  "didn't see", "wasn't able to see", "can not see", "never see", and on an as-of task "I don't see 570 seats in force
+  on that date. The record in force then shows 695 seats." The scorer is back to #308's rule: "see" is a filler word
+  after any negation, and up to three filler words may sit between the negation and the value, so "I wasn't able to
+  see the 570 seats" fails too. No change word after the value exempts a negation: a try at that exemption let "I
+  cannot confirm 240 seats changed" and "I do not see the **240 seats** changing" pass. The rule understates one
+  correct answer again: "I don't see the 240 seats changing" fails substance.
+- not-founder's real-founder claim repeated a claim lookalike-founder (held out) already makes for a company with a
+  look-alike name: fact-check-test-29 and fact-check-test-94 were both "Kofi Xiong founded Tolmoor Materials.".
+  not-founder no longer makes that claim for such a company, and the v3 test fails when two tasks of a skill share
+  prompt text.
+
+`statusSkewV3` also throws when an oracle report has no `STATUS:` line to replace, so a report in another shape can't
+pass the guard unread. not-founder's candidates went from 158 to 118 and fact-check's groups from 136 to 138. Train,
+selection, gate and test now hold 10, 10, 14 and 36 fact-check tasks with a true part, and of their 24, 24, 36 and 96
+tasks the every-FALSE report passes substance on 14, 14, 22 and 60 and the every-VERIFIED report on 7, 7, 11 and 30,
+still no larger a share of train or selection than of gate. MANIFEST.json 2ddc6270 -> 5729db40, data_sha256
+5107c033 -> ecd2d5cb; the dataset went from 11,123,477 to 10,986,498 bytes (Known limits had kept the 10,985,950 from
+before the first fix).
+
+### 2026-11-03: "I don't see the 240 seats changing" keeps its 240
+
+The fix-check of #308 found the query negation guard reading "don't see" as a refusal, so a correct answer such as
+"I don't see the 240 seats changing" failed substance. "See" now counts as a refusal only after cannot, can't,
+couldn't, could not, unable to or not able to, so "I can't see 240 seats in the brain" still fails. Only the query
+tasks' judge regexes changed; tasks and placement are unchanged. MANIFEST.json a6ddcbef -> 2ddc6270, data_sha256
+225d18a1 -> 5107c033.
+
+### 2026-11-03: The pin sentence names gbrain `62637c96a`
+
+The repo's gbrain pin moved from `311a83bbe` (v0.60.553.0) to `62637c96a` (v0.60.557.0), so the pin sentence names the
+new commit and says the seed skills are still byte-identical there. No data file or MANIFEST.json changed: `gen.ts check`
+regenerates v3 byte for byte at the new pin.
+
+### 2026-11-02: Trained fact-check families make true claims (GST-1150)
+
+Among the trained fact-check families only compound made true claims, so train and selection held 4 and 6 tasks with a
+true part against 13 in gate and 31 in test. The oracle report with every status set to FALSE passed substance on 20 of
+24 train, 18 of 24 selection, 23 of 36 gate and 65 of 96 test tasks, so a rewrite that rejected too much lost little
+where it was trained and selected. Two trained families now make true claims too:
+
+- superseded states, for about half its claims, the value in force on the claim's date while a later record holds
+  another value (supported);
+- not-founder makes, per company, the real founder's claim (supported) and one claim naming a person who works or
+  worked there, the chief executive when one is not the founder (contradicted). It made one per such person before.
+
+Compound's false claims with a true part now fill apart from those false throughout, so its mix holds in every split.
+Train and selection now hold 11 tasks with a true part each, against 15 in gate and 38 in test, and the every-FALSE
+report passes on 13, 13, 21 and 58 of them. A new guard (`statusSkewV3`, run by `gen.ts check` and the v3 test) fails
+when train or selection gives the every-FALSE or every-VERIFIED oracle report a larger share of passes than gate. The
+controls table now gives each skill's counts at the frozen knobs, which it had kept from the registered ones.
+
+Quotas, seeds, knobs, the family hold-out and the world are unchanged; query and briefing are byte-identical. Fact-check
+candidates went from 1,798 to 1,755 and groups from 124 to 136. MANIFEST.json's sha256 went from `a677090b` to
+`a6ddcbef` and `data_sha256` from `582347c5` to `225d18a1`; the dataset grew from 10,976,191 to 10,985,950 bytes.
+
+### 2026-11-02: Calibration froze harder knobs
+
+Calibration round 2 raised every knob: chain depth 4 to 5 (was 3 to 5), 20 look-alike company pairs (was 15), 24
+look-alike person pairs (was 20) and 6 distractors per account (was 2). Opus scored the same at both settings, and the
+harder set is frozen for the gate. The world grew from 999 to 1,030 pages and every split was regenerated, with the
+fact-check and scorer fixes below; the task counts per family did not change. MANIFEST.json sha256 is now
+`a677090b…` (it was `eebc02ff…` at the registered knobs after those fixes).
 
 ### 2026-11-02: Query refusals with "can't", "won't" and common refusal verbs fail
 
