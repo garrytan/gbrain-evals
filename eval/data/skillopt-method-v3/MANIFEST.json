@@ -14,8 +14,8 @@
     },
     {
       "path": "query/gate.jsonl",
-      "sha256": "92f522af238d855b28e5f5d5a5046a23cdbd8d1e28af3db1d7a32ba84915cae8",
-      "bytes": 219173
+      "sha256": "dd65e843e77d82708aefb434f95d234bb5ed6803cb566f6b893827a9f3890797",
+      "bytes": 247786
     },
     {
       "path": "query/generation-report.json",
@@ -24,18 +24,18 @@
     },
     {
       "path": "query/sel.jsonl",
-      "sha256": "f873c73920f8d242079d8a832c26e2003674caa6a6b01c59f793a7296f992f1b",
-      "bytes": 152649
+      "sha256": "3daaec214bc624b770f7c28bcf943a2af76534f04356888017c6e5132a98b282",
+      "bytes": 170186
     },
     {
       "path": "query/test.jsonl",
-      "sha256": "8d711212b8fde19f1eaa65d91a6564c6b7d6235ca792d5cae1812c7d8a2d0f96",
-      "bytes": 567522
+      "sha256": "68ab31f7c68fa776ccd38142c2792cb34232031209809e08f7e653a8cacbbac5",
+      "bytes": 643208
     },
     {
       "path": "query/train.jsonl",
-      "sha256": "140a3bc6e8eaa1560da19b57d3b656662750d78ebbbc4336edc83922bfca8fd8",
-      "bytes": 149453
+      "sha256": "499b9a6e34529ec0cd3bbca06114f22c327e8ff10034b9453f0f9641b551f684",
+      "bytes": 165144
     },
     {
       "path": "briefing/contract.md",
@@ -148,5 +148,5 @@
       "test": 96
     }
   },
-  "data_sha256": "225d18a16c724e4b42ef7070b786637bab52c0851e27633d843c5df85405c7ed"
+  "data_sha256": "5107c03358ad421edd350c5e8ef970454ad934475575c9c42465d83dff9b4f9a"
 }

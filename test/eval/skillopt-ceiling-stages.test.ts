@@ -463,6 +463,27 @@ describe('gate stage, stops and skips', () => {
     expect(new Set(rows.rows.map(x => `${x.target}/${x.skill}`))).toEqual(new Set(['opus/query']));
     expect(r.attempt).toBe(2);
   }, 300_000);
+
+  test('the re-price trigger also fires when a pair bills spend but scores no rollout: every rollout failing after a billed turn stops the stage after that pair', async () => {
+    const rows = memoryRows();
+    const r = await gate({
+      attempt: 1, rows, prices: { opus: 0.2, sol: 0.1 },
+      transport: () => {
+        const base = gateTransport(newRecorder());
+        return async opts => {
+          const info = isProposer(opts.system) ? undefined : taskOf(userText(opts));
+          if (!info) return base(opts);
+          if (hasToolResult(opts)) throw new Error('upstream 500');
+          const blocks = [{ type: 'tool-call', toolCallId: 'c1', toolName: 'brain_get_page', input: { slug: decisivePages(info.task)[0] ?? 'people/none' } }];
+          return { ...fakeReply(opts, ''), blocks, stopReason: 'tool_calls' } as unknown as ChatResult;
+        };
+      },
+    });
+    expect(r.reprice_trigger).toMatchObject({ reason: 'reprice-trigger', target: 'opus', skill: 'query', mean_rollout_usd: null });
+    expect(r.pairs[0]!.cost.rollouts).toBe(0);
+    expect(r.pairs[0]!.cost.usd).toBeGreaterThan(0);
+    expect(r.pairs.slice(1).every(p => p.status === 'not-run' && p.not_run_reason === 'reprice-trigger')).toBe(true);
+  }, 300_000);
 });
 
 describe('runner CLI (--dataset v3)', () => {

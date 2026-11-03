@@ -137,6 +137,14 @@ preregistered first set (3 to 5, 15, 20 and 2) scored the same on Opus; its amen
 
 ## Changelog
 
+### 2026-11-03: "I don't see the 240 seats changing" keeps its 240
+
+The fix-check of #308 found the query negation guard reading "don't see" as a refusal, so a correct answer such as
+"I don't see the 240 seats changing" failed substance. "See" now counts as a refusal only after cannot, can't,
+couldn't, could not, unable to or not able to, so "I can't see 240 seats in the brain" still fails. Only the query
+tasks' judge regexes changed; tasks and placement are unchanged. MANIFEST.json a6ddcbef -> 2ddc6270, data_sha256
+225d18a1 -> 5107c033.
+
 ### 2026-11-03: The pin sentence names gbrain `62637c96a`
 
 The repo's gbrain pin moved from `311a83bbe` (v0.60.553.0) to `62637c96a` (v0.60.557.0), so the pin sentence names the

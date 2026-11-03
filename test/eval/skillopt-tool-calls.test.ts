@@ -78,7 +78,7 @@ describe('decisive reads and harness limits', () => {
     expect(refusedDecisiveReads(calls, ['people/a', 'deals/b']).map(c => (c.input as { slug: string }).slug)).toEqual(['People/A.md', 'deals/b']);
   });
 
-  test('a refused decisive read does not count when a get_page or traverse_graph call on the same page succeeded anywhere in the rollout; a read of another page or by another tool does not clear it', () => {
+  test('a refused decisive read does not count when a get_page call on the same page succeeded anywhere in the rollout (or, for a refused traverse_graph, a traverse_graph call too); a read of another page or by another tool does not clear it', () => {
     expect(refusedDecisiveReads([refused('get_page', 'People/A.md', WINDOW), ok('get_page', 'people/a')], ['people/a'])).toEqual([]);
     expect(refusedDecisiveReads([refused('traverse_graph', 'deals/b', HOPS), ok('get_page', 'deals/b.md')], ['deals/b'])).toEqual([]);
     expect(refusedDecisiveReads([refused('get_page', 'people/a', WINDOW), ok('get_page', 'people/z'), ok('search', 'people/a')], ['people/a'])).toHaveLength(1);

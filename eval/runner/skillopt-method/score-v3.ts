@@ -112,10 +112,11 @@ const AMBIGUITY = alt([
   'which of (?:them|these|the two)', '(?:two|several|multiple) (?:different )?(?:people|persons|pages|entries|matches|records|profiles|contacts)', '(?:two|several|multiple) [A-Za-z]+ named',
 ].map(ci));
 
-/** A negation or refusal directly governing `v`, at most two filler words before it: "not 240", "no longer 240", "cannot confirm the 240", "isn't 240", "can't confirm 240", "could not find 240", "no record of 240", "never had 240". */
+/** A negation or refusal directly governing `v`, at most two filler words before it: "not 240", "no longer 240", "cannot confirm the 240", "isn't 240", "can't confirm 240", "could not find 240", "no record of 240", "never had 240", "can't see 240". "See" counts only after cannot, can't, couldn't, could not, unable to or not able to, so "I don't see the 240 seats changing" keeps its 240. */
 const NEGATION = alt(['not', 'never', 'no longer', 'no record of', 'cannot', 'unable to', "(?:is|are|was|were|do|does|did|has|have|had|could|would)n't", "can't", "won't"].map(ci));
-const FILLER = alt(['the', 'a', 'an', 'confirm', 'verify', 'find', 'show', 'see', 'locate', 'able to', 'be', 'been', 'have', 'has', 'had', 'say', 'exactly', 'quite', 'actually'].map(ci));
-const negated = (v: string) => `\\b${NEGATION}(?:[^\\S\\n]+${FILLER}){0,2}[^\\S\\n]+[*_"“(]*${v}`;
+const FILLER = alt(['the', 'a', 'an', 'confirm', 'verify', 'find', 'show', 'locate', 'able to', 'be', 'been', 'have', 'has', 'had', 'say', 'exactly', 'quite', 'actually'].map(ci));
+const UNABLE = alt(['cannot', "can't", "couldn't", 'could not', 'unable to', 'not able to'].map(ci));
+const negated = (v: string) => `\\b(?:${NEGATION}(?:[^\\S\\n]+${FILLER}){0,2}|${UNABLE}(?:[^\\S\\n]+${FILLER})?[^\\S\\n]+${ci('see')}(?:[^\\S\\n]+${FILLER})?)[^\\S\\n]+[*_"“(]*${v}`;
 
 // ─── Statuses (fact-check) ───────────────────────────────────────────────────
 

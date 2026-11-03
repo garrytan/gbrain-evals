@@ -630,7 +630,8 @@ export interface GatePairResult {
   texts: { proposer_input?: string; rubric_input?: string; proposals: Partial<Record<ProposalId, string>> };
 }
 
-export interface RepriceStop { reason: 'reprice-trigger'; target: FrontierTarget; skill: SkillName; mean_rollout_usd: number; threshold_usd: number }
+/** `mean_rollout_usd` is null when the target billed spend with no scored rollout. */
+export interface RepriceStop { reason: 'reprice-trigger'; target: FrontierTarget; skill: SkillName; mean_rollout_usd: number | null; threshold_usd: number }
 
 export interface GateStageResult {
   mode: 'fake' | 'live';
@@ -879,9 +880,11 @@ export async function runGateStage(o: GateStageOptions): Promise<GateStageResult
           const stage = sumMeters(pairs.filter(p => p.target === target).map(p => p.cost));
           const meanUsd = stage.rollouts ? stage.usd / stage.rollouts : null;
           const threshold = REPRICE_FACTOR * prices[target];
-          if (meanUsd !== null && meanUsd > threshold) {
+          if (meanUsd === null ? stage.usd > 0 : meanUsd > threshold) {
             trigger = { reason: 'reprice-trigger', target, skill, mean_rollout_usd: meanUsd, threshold_usd: threshold };
-            log(`[n15 ceiling] reprice trigger: the stage's mean ${target} rollout is $${meanUsd.toFixed(4)}, above $${threshold.toFixed(4)} (1.25 x $${prices[target].toFixed(4)}); the stage stops after this pair`);
+            log(meanUsd === null
+              ? `[n15 ceiling] reprice trigger: the stage billed $${stage.usd.toFixed(4)} on ${target} with no scored rollout; the stage stops after this pair`
+              : `[n15 ceiling] reprice trigger: the stage's mean ${target} rollout is $${meanUsd.toFixed(4)}, above $${threshold.toFixed(4)} (1.25 x $${prices[target].toFixed(4)}); the stage stops after this pair`);
           }
         }
       });
