@@ -13,7 +13,7 @@ This records what each gbrain-evals release changed and what its measurements me
 - **Tests.** `test/eval/q1-raise-lease.test.ts` adds keyless tests for each rule above, including an overlap repro in which a second raise is refused while the first holds the lock.
 - **Known gaps.** #344 tracks a write-ahead record and a `reconcile --lease` command, needed before a B2 run that expects more than a couple of lease raises. #345 lists the other review notes this release ships with.
 
-## [0.10.152] - 2026-11-03
+## [0.10.154] - 2026-11-03
 
 ### A budget stop in the SkillOpt ceiling gate keeps the spend it billed (#331)
 
