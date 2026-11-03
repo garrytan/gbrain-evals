@@ -18,7 +18,8 @@
  * Before any request (prepareReread): the custody gate a sealed cell needs (as runCell), then the byte-for-byte check
  * of every source. Each frozen context of the arm must hash to its prompt_sha256 and to its context_sha256 (render-v2:
  * sha256 of the pack identity, a NUL and the prompt), which ties the bytes to the answers that read them; the
- * published run-config's schedule must be the one this tree selects; the published answers must be the staged ones;
+ * published run-configs must agree in every field but REREAD_LAUNCH_FIELDS, and their schedule must be the one this
+ * tree selects; the published answers must be the staged ones;
  * and each scheduled question must have one frozen context that every stored answer of the arm read (a question whose
  * retrieval failed has none and keeps that failure, as the source cell recorded it). verify.json in --out holds the counts and each contexts file's
  * sha256; any problem refuses the whole run, and stdout carries only counts and hashes.
@@ -70,7 +71,7 @@ export interface PlannedRead { question: MemoryQuestion; realization_id: string;
 
 export interface RereadVerify {
   schema: typeof REREAD_VERIFY_SCHEMA; ok: boolean; cell: string; arm: string; arm_cell_id: string; reader: string;
-  sources: Array<{ path: string; contexts_sha256: string | null; contexts_records: number; arm_records: number }>;
+  sources: Array<{ path: string; contexts_sha256: string | null; contexts_records: number; arm_records: number; config_sha256: string | null }>;
   counts: {
     contexts_checked: number; contexts_matched: number; scheduled_questions: number; questions_with_context: number; questions_without_context: number;
     stored_answers_cross_checked: number; published_answers: number; contexts_not_read: number;
@@ -83,6 +84,25 @@ const noContext = (outcome: string) => sha256(`no-context|${outcome}`);
 const armOf = (key: string) => key.slice(key.lastIndexOf('|') + 1);
 const questionOf = (key: string) => key.slice(key.indexOf('|') + 1, key.lastIndexOf('|'));
 const answerIdentity = (xs: AnswerRecord[]) => xs.map(a => JSON.stringify(a)).sort().join('\n');
+
+/**
+ * The launch metadata in a run config's `cell` that a re-read's sources may differ in (GBEV-3's decision A, A6 revision):
+ * Q1 wrote these into run-config.json before A24, so shards of one cell launched under A17, A23 and A24 publish different
+ * bytes for the same reading. Deny by default: every other field, a new or unknown one included, must match.
+ */
+export const REREAD_LAUNCH_FIELDS = ['expected_hours', 'fresh_before', 'lease', 'restore_command', 'snapshot_command', 'shards'] as const;
+
+/**
+ * A run config without REREAD_LAUNCH_FIELDS, serialized as runConfigText writes it; null when the bytes are not that
+ * serialization of their own JSON, so a difference in anything but those fields (whitespace included) still refuses.
+ */
+export function readingConfig(text: string): string | null {
+  let c: { cell?: unknown };
+  try { c = JSON.parse(text); } catch { return null; }
+  if (JSON.stringify(c, null, 2) + '\n' !== text) return null;
+  if (c.cell && typeof c.cell === 'object') for (const k of REREAD_LAUNCH_FIELDS) delete (c.cell as Record<string, unknown>)[k];
+  return JSON.stringify(c, null, 2) + '\n';
+}
 
 /**
  * The byte-for-byte check of every source and the reading plan. Problems are counted, never named by question, since
@@ -101,7 +121,7 @@ export function verifySources(def: CellDefinition, arm: ArmDefinition, sources: 
     const root = resolve(given);
     const out = dirname(dirname(root));
     const contextsPath = join(root, 'contexts.ndjson');
-    const src = { path: root, contexts_sha256: null as string | null, contexts_records: 0, arm_records: 0 };
+    const src = { path: root, contexts_sha256: null as string | null, contexts_records: 0, arm_records: 0, config_sha256: null as string | null };
     verify.sources.push(src);
     if (basename(root) !== def.id || basename(dirname(root)) !== 'runs') { problems.push(`source ${i} is not a runs/${def.id} staging root`); continue; }
     if (!existsSync(contextsPath) || !existsSync(join(root, 'realizations.ndjson'))) { problems.push(`source ${i} has no contexts.ndjson or realizations.ndjson`); continue; }
@@ -120,7 +140,7 @@ export function verifySources(def: CellDefinition, arm: ArmDefinition, sources: 
     }
     if (malformed) problems.push(`source ${i}: ${malformed} contexts.ndjson line(s) are not JSON`);
     const config = join(out, 'cells', arm.cell_id, 'run-config.json');
-    if (existsSync(config)) configs.set(readFileSync(config, 'utf8'), sha256(readFileSync(config)));
+    if (existsSync(config)) { src.config_sha256 = sha256(readFileSync(config)); configs.set(readFileSync(config, 'utf8'), src.config_sha256); }
     else problems.push(`source ${i} has no published run-config.json for ${arm.cell_id}`);
     const mine: AnswerRecord[] = [];
     for (const [conv, s] of gatherStaging(def.id, [out])) {
@@ -139,11 +159,12 @@ export function verifySources(def: CellDefinition, arm: ArmDefinition, sources: 
     if (stagedQs !== publishedQs.size) problems.push(`source ${i}: ${stagedQs} questions have staged answers and ${publishedQs.size} published ones; republish its cells (bun eval/runner/q1/cell.ts merge)`);
   }
   if (counts.contexts_matched !== counts.contexts_checked) problems.push(`${counts.contexts_checked - counts.contexts_matched} of ${counts.contexts_checked} frozen contexts of arm ${arm.id} do not hash to their prompt_sha256 and context_sha256`);
-  if (configs.size > 1) problems.push(`the sources publish ${configs.size} different run configurations for ${arm.cell_id}`);
+  const readings = new Set([...configs.keys()].map(t => (configs.size > 1 ? readingConfig(t) : null) ?? t));
+  if (readings.size > 1) problems.push(`the sources publish ${readings.size} different run configurations for ${arm.cell_id}, comparing every field but cell.${REREAD_LAUNCH_FIELDS.join(', cell.')}`);
   if (problems.length) return { verify, plan: null };
 
-  const [configText, configSha] = [...configs.entries()][0];
-  verify.source_config_sha256 = configSha;
+  const [configText] = readings;
+  verify.source_config_sha256 = configs.size > 1 ? sha256(configText) : configs.get(configText)!;
   const config = JSON.parse(configText) as { limit: number | null; scheduled_sha256: string };
   const selected = scheduledQuestions(def, corpus, config.limit);
   if (sha256(selected.map(q => q.id).join('\n')) !== config.scheduled_sha256) {
@@ -291,7 +312,7 @@ export async function runReread(p: PreparedReread, opts: { providerProxy?: strin
   const sum = (k: keyof AnswerRecord['usage']) => all.reduce((s, a) => s + a.usage[k], 0);
   const receipt = {
     schema: REREAD_RECEIPT_SCHEMA, cell_id: cellId, run_status: status, stopped, keyless: p.keyless,
-    source: { cell: def.id, manifest: p.manifest, arm: arm.id, arm_cell_id: arm.cell_id, config_sha256: p.verify.source_config_sha256, contexts: p.verify.sources.map(s => ({ sha256: s.contexts_sha256, records: s.contexts_records, arm_records: s.arm_records })) },
+    source: { cell: def.id, manifest: p.manifest, arm: arm.id, arm_cell_id: arm.cell_id, config_sha256: p.verify.source_config_sha256, config_sha256s: [...new Set(p.verify.sources.map(s => s.config_sha256))].sort(), contexts: p.verify.sources.map(s => ({ sha256: s.contexts_sha256, records: s.contexts_records, arm_records: s.arm_records })) },
     set: arm.set, benchmark: def.benchmark, split: def.split, block: def.block,
     system: { kind: def.system, configuration: def.configuration },
     arm: { id: arm.id, arm: arm.arm, mode: arm.mode, policy: arm.policy, budget: arm.budget, label: arm.label },

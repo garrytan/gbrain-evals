@@ -192,6 +192,21 @@ describe('the particle-1 add-on report', () => {
     expect(halves('same', { arm_cell_id: ARM, config_sha256: CONFIG })().get(REREAD)!.answers).toHaveLength(PARTICLE_PLAN[PARTICLE].length);
   });
 
+  // Value: protects=the S1 memory-bank row, whose re-read verified shards that froze different launch fields (A6 revision); fails_when=a re-read of several run-configs cannot pair with a frontier publishing one of them, or pairs with a frontier publishing none; why_new=GBEV-3 decision A; seam=invented cells; no_claim=none
+  test('a re-read whose shards published several run-configs pairs with a frontier that publishes one of them, and with no other', () => {
+    const A23 = sha256('a23 run-config');
+    const several = (name: string, frontier: string) => {
+      const root = join(tmp, name);
+      publish(root, ARM, 'ext-graph-pipeline', FRONTIER, { config_sha256: frontier });
+      publish(root, REREAD, 'ext-graph-pipeline', PARTICLE_PLAN, { schema: REREAD_RECEIPT_SCHEMA, keyless: false, source: { arm_cell_id: ARM, config_sha256: sha256('reading config'), config_sha256s: [CONFIG, A23].sort() } });
+      return () => unitsOf(loadCells([root]));
+    };
+    expect(several('several-a17', CONFIG)().map(u => u.frontier.id)).toEqual([ARM]);
+    expect(several('several-a23', A23)().map(u => u.frontier.id)).toEqual([ARM]);
+    expect(several('several-other', sha256('a run-config no shard published'))).toThrow('re-read a run configuration other than the one');
+    expect(several('several-reading', sha256('reading config'))).toThrow('re-read a run configuration other than the one');
+  });
+
   // Value: protects=not_scored accounts for every answer that leaves the denominator (review finding particle-addon-report.ts:122, pinned); fails_when=an answer whose canonical judgment is missing leaves the denominator without a not_scored count; why_new=#347 counted not_scored by answer outcome only; seam=a re-read shard with one judgment removed; no_claim=none
   test('review finding particle-addon-report.ts:122: an answer whose canonical judgment is missing counts as unjudged in not_scored', () => {
     const p = unitReport(unitsOf(loadCells([shardA, shardB, unjudgedShard()]))[0]).readers.find(x => x.reader === PARTICLE)!;
