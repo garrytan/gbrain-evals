@@ -2,6 +2,15 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [Unreleased]
+
+### CI restores the pinned harness source from a verified cached pack instead of fetching 700 MB from GitHub (GST-1266)
+
+- **What was slow.** Both harness jobs fetch the pinned agent-memory-benchmark commit, about 700 MB at depth 1, from GitHub before building their venv. While GitHub served packs slowly on 2026-11-03, that fetch took from 21 s to 23 minutes, and harness (proxy) used 1,612 s of its 30-minute cap in #354's run 41703426339. Building the venv took 12 to 16 s in every run.
+- **The harness setup keeps the fetched commit as `.harness/packs/<commit>.pack`,** and CI caches that directory under the hash of `eval/harness-provider/harness.lock.json`. When a pack is present, `eval/runner/harness-env.ts` reads it into a fresh repository with `git index-pack --strict`, which hashes and checks every object, then runs `git fsck` on the pinned commit to prove the commit and its whole tree are present, and checks it out. A pack that fails either check is deleted and the commit is fetched from GitHub as before, so a stale, corrupt or wrong pack cannot change the checked-out files. The check covers the pack, not the cache entry around it. As with the `.git` cache, what keeps a tampered entry out is that only main's runs and a pull request's own runs can write the entries a run restores. A pack refused on a cache hit is never replaced, so under GitHub Actions the refusal is printed as a warning on the run, and bumping the key's `v1` replaces the entry. Restoring the real 711 MB pack took 7.5 s on a 4-core machine, and the result matched a GitHub checkout file for file.
+- **The venv is not cached.** It takes about 15 s to build, and nothing in the lock could verify a cached one, so every run still builds it from the verified source.
+- `test/eval/harness-env.test.ts` covers the restore and three refused packs, which are one missing an object of the pinned tree, one of another commit, and one that is not a pack.
+
 ## [0.10.155] - 2026-11-03
 
 ### The particle-1 add-on's re-read tool and report close #347's four open review findings

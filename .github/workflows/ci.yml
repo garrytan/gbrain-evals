@@ -337,6 +337,19 @@ jobs:
   # proxy and launcher tests (about 2.5 minutes) need the same venv but nothing
   # from each other, so they run as two jobs side by side instead of in series,
   # each installing the venv itself; the test files are unchanged.
+  #
+  # The harness setup fetches the pinned agent-memory-benchmark commit (about
+  # 700 MB at depth 1) from GitHub, which took up to 23 minutes of this 30-minute
+  # job on 2026-11-03 (GST-1266). The setup keeps that commit as a pack, which
+  # this job caches under the lock file's hash. A later setup reads the pack into
+  # a fresh repository and checks it against the lock's pinned commit (see
+  # eval/runner/harness-env.ts), so a stale, corrupt or wrong pack is dropped
+  # and the commit is fetched as before. That check covers the pack only; like
+  # the .git cache, the entry itself is trusted because only main's runs and a
+  # pull request's own runs write the entries a run restores. A pack refused on
+  # a cache hit is never replaced, since the save runs only on a miss: the setup
+  # prints a warning on the run, and bumping the key's v1 replaces the entry.
+  # The venv is still built on every run.
   harness:
     needs: git-cache
     if: ${{ !cancelled() }}
@@ -367,8 +380,20 @@ jobs:
       - name: Install (frozen lockfile)
         run: bun install --frozen-lockfile
 
+      - id: harness-pack
+        uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: .harness/packs
+          key: ${{ format('harness-pack-v1-{0}', hashFiles('eval/harness-provider/harness.lock.json')) }}
+
       - name: Install the pinned harness (CPU wheels)
         run: bun run harness:setup
+
+      - if: steps.harness-pack.outputs.cache-hit != 'true'
+        uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
+        with:
+          path: .harness/packs
+          key: ${{ steps.harness-pack.outputs.cache-primary-key }}
 
       - name: Harness wrapper tests (pytest)
         if: matrix.suite == 'pytest'
