@@ -1450,11 +1450,12 @@ export function renderPlan(m: Manifest): string {
   const cells = campaignCells(m);
   const waves = [...new Set(cells.map(c => c.wave!))].sort((a, b) => a - b).map(w => ({ w, n: cells.filter(c => c.wave === w).length, hours: Math.max(...cells.filter(c => c.wave === w).map(c => c.expected_hours ?? 0)), blocks: [...new Set(cells.filter(c => c.wave === w).map(c => c.block))].join(', ') }));
   const usd = (x: number) => `$${x.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  const addon = m.blocks.filter(b => (m.addon_cells ?? []).some(c => c.block === b.id));
   return [
     `Q1 cell manifest: ${m.cells.length} cells, ${m.cells.reduce((s, c) => s + c.arms.length, 0)} scoreboard cells, estimate ${usd(m.total_usd)} (PLAN §7 total ${usd(m.plan_total_usd)} including $260 shared work outside the cells), cap ${usd(m.cap_usd)}.`,
     `Readers ${m.readers.join(', ')} at effort ${m.effort}; prices from eval/runner/budget-ledger.ts; token assumptions in eval/runner/q1/cells/q1-cells.json.`, '',
-    '| Block | PLAN §7 | Estimate | Hard cap (1.5x) |', '|---|---:|---:|---:|', ...m.blocks.map(b => `| ${b.label} | ${usd(b.plan_usd)} | ${usd(b.estimate_usd)} | ${usd(b.cap_usd)} |`),
-    `| Total (cells) | ${usd(m.plan_total_usd - 260)} | ${usd(m.total_usd)} | |`, '',
+    '| Block | PLAN §7 | Estimate | Hard cap (1.5x) |', '|---|---:|---:|---:|', ...m.blocks.filter(b => !addon.includes(b)).map(b => `| ${b.label} | ${usd(b.plan_usd)} | ${usd(b.estimate_usd)} | ${usd(b.cap_usd)} |`),
+    `| Total (cells) | ${usd(m.plan_total_usd - 260)} | ${usd(m.total_usd)} | |`, ...addon.map(b => `| ${b.label}, outside the total | ${usd(b.plan_usd)} | ${usd(b.estimate_usd)} | ${usd(b.cap_usd)} |`), '',
     `| Wave | Launch units | Blocks | Expected hours |`, '|---:|---:|---|---:|', ...waves.map(w => `| ${w.w} | ${w.n} | ${w.blocks} | ${w.hours} |`), '',
     '| Cell | Block | System | Configuration | Arms | Shards | Estimate |', '|---|---|---|---|---:|---:|---:|',
     ...m.cells.map(c => `| ${c.id} | ${c.block} | ${c.system} | ${c.configuration} | ${c.arms.length} | ${c.shards} | ${usd(c.estimate.usd)} |`), '',

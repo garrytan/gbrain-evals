@@ -74,6 +74,22 @@ test('a calibration --out holds one kind of run: a paid run refuses a keyless ru
   mkdirSync(paid, { recursive: true });
   claimOut(paid, false);
   expect(() => claimOut(paid, true)).toThrow('holds a paid calibration run');
+  let refused: unknown;
+  try { claimOut(paid, true); } catch (e) { refused = e; }
+  expect((refused as { op?: { code?: string } }).op?.code).toBe('USAGE');
+});
+
+// Value: protects=calibration-cell's CLI refuses a mismatched --out as a usage error (exit 2) before any lease; fails_when=the CLI try/catch around claimOut is dropped and the refusal crashes with exit 1 and a stack; why_new=the claimOut test calls the function only, never the CLI; seam=none; no_claim=the paid branch itself (no keys in env; the refusal comes first)
+test('the CLI turns a mismatched --out into a usage error with exit 2, before any lease', () => {
+  const out = join(tmp, 'claim-cli');
+  mkdirSync(out, { recursive: true });
+  writeFileSync(join(out, 'upstream.json'), JSON.stringify({ keyless: true }) + '\n');
+  const ledger = join(tmp, 'claim-cli.sqlite');
+  const r = Bun.spawnSync([process.execPath, 'eval/runner/q1/calibration-cell.ts', '--reader', 'particle:particle-1', '--out', out, '--budget-ledger', ledger, '--run-id', 'claim-cli', '--lease-usd', '0.01'],
+    { cwd: join(import.meta.dir, '..', '..'), env: { PATH: process.env.PATH ?? '' }, stdout: 'pipe', stderr: 'pipe' });
+  expect([r.exitCode, existsSync(ledger)]).toEqual([2, false]);
+  expect(r.stderr.toString()).toContain('USAGE: ');
+  expect(r.stderr.toString()).toContain('holds a keyless calibration run');
 });
 
 // Value: protects=a keyless rehearsal never turns into a paid run; fails_when=--keyless-upstream without an http(s) URL falls through to the paid branch, which hands the proxy this environment's real keys; why_new=calibration-cell.ts holds real keys behind a keyless switch; seam=none; no_claim=the paid branch itself

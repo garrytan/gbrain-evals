@@ -53,8 +53,17 @@ const VERIFY = { contexts_checked: 11, contexts_matched: 11, scheduled_questions
 const shardA = join(tmp, 'shard-a'), shardB = join(tmp, 'shard-b'), reread = join(tmp, 'reread');
 publish(shardA, ARM, 'ext-graph-pipeline', FRONTIER, {}, i => i < 6);
 publish(shardB, ARM, 'ext-graph-pipeline', FRONTIER, {}, i => i >= 6);
-publish(reread, REREAD, 'ext-graph-pipeline', PARTICLE_PLAN, { schema: REREAD_RECEIPT_SCHEMA, source: { arm_cell_id: ARM, config_sha256: CONFIG }, verify: VERIFY });
+publish(reread, REREAD, 'ext-graph-pipeline', PARTICLE_PLAN, { schema: REREAD_RECEIPT_SCHEMA, keyless: false, source: { arm_cell_id: ARM, config_sha256: CONFIG }, verify: VERIFY });
 const roots = [shardA, shardB, reread];
+
+/** A partial particle-1 re-read of questions 0-5 whose first judgment was lost. */
+function unjudgedShard(name = 'unjudged'): string {
+  const root = join(tmp, name);
+  publish(root, REREAD, 'ext-graph-pipeline', PARTICLE_PLAN, { schema: REREAD_RECEIPT_SCHEMA, keyless: false, source: { arm_cell_id: ARM, config_sha256: CONFIG }, run_status: 'partial' }, i => i < 6);
+  const file = join(root, 'cells', REREAD, 'judgments.ndjson');
+  writeFileSync(file, readFileSync(file, 'utf8').split('\n').filter(Boolean).slice(1).map(l => l + '\n').join(''));
+  return root;
+}
 
 describe('the particle-1 add-on report', () => {
   // Value: protects=the add-on's published numbers; fails_when=a mean, denominator, correct count, list-price dollar figure or paired difference is computed off the outcome rules, or the shards are not merged; why_new=particle-addon-report.ts is new; seam=invented cells; no_claim=any real result
@@ -103,7 +112,7 @@ describe('the particle-1 add-on report', () => {
     for (const q of QUESTIONS) { expect(text).not.toContain(q.id); expect(text).not.toContain(q.conversation); }
     expect(text).not.toContain('SECRET-ANSWER');
     const leaky = join(tmp, 'leaky');
-    publish(leaky, REREAD, 'ext-graph-pipeline', PARTICLE_PLAN, { schema: REREAD_RECEIPT_SCHEMA, source: { arm_cell_id: ARM, config_sha256: CONFIG } }, undefined, [{ id: 'claude-opus-5-5', conversation: 'invented-c0' }, ...QUESTIONS.slice(1)]);
+    publish(leaky, REREAD, 'ext-graph-pipeline', PARTICLE_PLAN, { schema: REREAD_RECEIPT_SCHEMA, keyless: false, source: { arm_cell_id: ARM, config_sha256: CONFIG } }, undefined, [{ id: 'claude-opus-5-5', conversation: 'invented-c0' }, ...QUESTIONS.slice(1)]);
     expect(() => writeReport([shardA, shardB, leaky], join(tmp, 'out-leaky'))).toThrow('the report would carry 1 question id(s); nothing was written');
     expect(existsSync(join(tmp, 'out-leaky'))).toBe(false);
   });
@@ -116,14 +125,14 @@ describe('the particle-1 add-on report', () => {
     publish(fa, 's1.baseline-file-agent.particle.whole-agent', 'baseline-file-agent', { [PARTICLE]: [...ones(6), ...Array(6).fill(0)] }, { ...S1, block: 'F6-P1' });
     const gb = join(tmp, 'gbrain');
     publish(gb, 's1.gbrain-defaults.f6-master.p', 'gbrain-defaults', { [OPUS]: ones(12) }, S1);
-    publish(gb, 's1.gbrain-defaults.f6-master.p.reread-particle-particle-1', 'gbrain-defaults', { [PARTICLE]: ones(12) }, { ...S1, schema: REREAD_RECEIPT_SCHEMA, source: { arm_cell_id: 's1.gbrain-defaults.f6-master.p', config_sha256: CONFIG } });
+    publish(gb, 's1.gbrain-defaults.f6-master.p.reread-particle-particle-1', 'gbrain-defaults', { [PARTICLE]: ones(12) }, { ...S1, schema: REREAD_RECEIPT_SCHEMA, keyless: false, source: { arm_cell_id: 's1.gbrain-defaults.f6-master.p', config_sha256: CONFIG } });
     const units = unitsOf(loadCells([fa, gb])).map(u => unitReport(u));
     expect(units.map(u => [u.frontier_cell, u.particle_cell, u.kind])).toEqual([['s1.baseline-file-agent.baseline.whole-agent', 's1.baseline-file-agent.particle.whole-agent', 'file agent'],
       ['s1.gbrain-defaults.f6-master.p', 's1.gbrain-defaults.f6-master.p.reread-particle-particle-1', 're-read']]);
     const md = renderReport(units).split('\n');
     expect(md.slice(0, 7)).toEqual(['# particle-1 add-on: F6 cells read by particle-1', '', 'Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which makes particle-1.', '',
       'gbrain is Garry Tan\'s own project.', '', 'Disclosure: OpenAI began through YC Research, which was started by Sam Altman, a former president of Y Combinator. Garry Tan runs Y Combinator.']);
-    expect(md).toContain('| s1.baseline-file-agent.baseline.whole-agent | file agent | 100.0% | 50.0% | -50.0 points (' + md.find(l => l.startsWith('| s1.baseline-file-agent'))!.split('points (')[1]);
+    expect(md).toContain('| s1.baseline-file-agent.baseline.whole-agent | file agent | complete | 12 | 100.0% | 50.0% | -50.0 points (' + md.find(l => l.startsWith('| s1.baseline-file-agent'))!.split('points (')[1]);
     const noOpenAi = renderReport(unitsOf(loadCells([gb])).map(u => unitReport(u)));
     expect(noOpenAi).toContain('gbrain is Garry Tan\'s own project.');
     expect(noOpenAi).not.toContain('OpenAI began');
@@ -147,7 +156,7 @@ describe('the particle-1 add-on report', () => {
     const bad = (name: string, frontier: Record<string, unknown>, particle: Record<string, unknown>, contexts = false) => {
       const root = join(tmp, name);
       publish(root, ARM, 'ext-graph-pipeline', FRONTIER, frontier);
-      publish(root, REREAD, 'ext-graph-pipeline', PARTICLE_PLAN, { schema: REREAD_RECEIPT_SCHEMA, source: { arm_cell_id: ARM, config_sha256: CONFIG }, ...particle });
+      publish(root, REREAD, 'ext-graph-pipeline', PARTICLE_PLAN, { schema: REREAD_RECEIPT_SCHEMA, keyless: false, source: { arm_cell_id: ARM, config_sha256: CONFIG }, ...particle });
       if (contexts) {
         const file = join(root, 'cells', REREAD, 'answers.ndjson');
         writeFileSync(file, readFileSync(file, 'utf8').split('\n').filter(Boolean).map(l => JSON.stringify({ ...JSON.parse(l), context_sha256: sha256('other') })).join('\n') + '\n');
@@ -165,5 +174,57 @@ describe('the particle-1 add-on report', () => {
     const shardX = join(tmp, 'shard-x');
     publish(shardX, ARM, 'ext-graph-pipeline', FRONTIER, { run_status: 'partial' }, i => i >= 6);
     expect(loadCells([shardA, shardX]).get(ARM)!.receipt.run_status).toBe('partial');
+  });
+
+  // Value: protects=a merged cell holds one run's answers (review finding particle-addon-report.ts:70, pinned); fails_when=shards of one cell id from different run configurations, source arms or source configurations merge under the first receipt; why_new=#347 compared only the instrument; seam=invented shards; no_claim=none
+  test('review finding particle-addon-report.ts:70: shards of one cell from different run configurations or sources refuse to merge', () => {
+    const other = join(tmp, 'other-config');
+    publish(other, ARM, 'ext-graph-pipeline', FRONTIER, { config_sha256: sha256('another run-config') }, i => i >= 6);
+    expect(() => loadCells([shardA, other])).toThrow('comes from different run configurations, sources or keyless markers in different roots');
+    const halves = (name: string, source: Record<string, unknown>) => {
+      const [a, b] = [join(tmp, `${name}-a`), join(tmp, `${name}-b`)];
+      publish(a, REREAD, 'ext-graph-pipeline', PARTICLE_PLAN, { schema: REREAD_RECEIPT_SCHEMA, keyless: false, source: { arm_cell_id: ARM, config_sha256: CONFIG } }, i => i < 6);
+      publish(b, REREAD, 'ext-graph-pipeline', PARTICLE_PLAN, { schema: REREAD_RECEIPT_SCHEMA, keyless: false, source }, i => i >= 6);
+      return () => loadCells([a, b]);
+    };
+    expect(halves('source-config', { arm_cell_id: ARM, config_sha256: sha256('another source run-config') })).toThrow('comes from different run configurations, sources or keyless markers in different roots');
+    expect(halves('source-arm', { arm_cell_id: `${ARM}-other`, config_sha256: CONFIG })).toThrow('comes from different run configurations, sources or keyless markers in different roots');
+    expect(halves('same', { arm_cell_id: ARM, config_sha256: CONFIG })().get(REREAD)!.answers).toHaveLength(PARTICLE_PLAN[PARTICLE].length);
+  });
+
+  // Value: protects=not_scored accounts for every answer that leaves the denominator (review finding particle-addon-report.ts:122, pinned); fails_when=an answer whose canonical judgment is missing leaves the denominator without a not_scored count; why_new=#347 counted not_scored by answer outcome only; seam=a re-read shard with one judgment removed; no_claim=none
+  test('review finding particle-addon-report.ts:122: an answer whose canonical judgment is missing counts as unjudged in not_scored', () => {
+    const p = unitReport(unitsOf(loadCells([shardA, shardB, unjudgedShard()]))[0]).readers.find(x => x.reader === PARTICLE)!;
+    // Questions 0-5: question 0 lost its judgment (unjudged), 2 is a retrieval_error (scores 0), 3 a reader_error.
+    expect([p.answers, p.scored, p.not_scored]).toEqual([6, 4, { reader_error: 1, retrieval_error: 1, unjudged: 1 }]);
+  });
+
+  // Value: protects=the not-scored counts of a re-read whose source retrieval was degraded; fails_when=a judged ingest_degraded answer is listed as not scored, or an unjudged one is listed as ingest_degraded instead of unjudged; why_new=review of the follow-up (red team, particle-addon-report.ts:166); seam=none; no_claim=none
+  test('a judged ingest_degraded answer stays out of not_scored, and an unjudged one counts as unjudged', () => {
+    const root = unjudgedShard('degraded');
+    const file = join(root, 'cells', REREAD, 'answers.ndjson');
+    writeFileSync(file, readFileSync(file, 'utf8').split('\n').filter(Boolean).map((l, i) => (i < 2 ? l.replace('"outcome":"scored"', '"outcome":"ingest_degraded"') : l) + '\n').join(''));
+    expect(readFileSync(file, 'utf8').split('"outcome":"ingest_degraded"')).toHaveLength(3);
+    const p = unitReport(unitsOf(loadCells([shardA, shardB, root]))[0]).readers.find(x => x.reader === PARTICLE)!;
+    // Questions 0 and 1 are ingest_degraded: 0 lost its judgment (unjudged), 1 is judged (scores 0, in the denominator).
+    expect([p.answers, p.scored, p.not_scored]).toEqual([6, 4, { reader_error: 1, retrieval_error: 1, unjudged: 1 }]);
+  });
+
+  // Value: protects=the add-on's published particle-1 rows are particle-1's paid answers, and its first table compares like with like; fails_when=a keyless rehearsal, a re-read with no keyless marker or another reader's re-read reports as particle-1, or the first table's means come from different denominators or hide a partial run; why_new=review of #347 (follow-up); seam=invented published cells; no_claim=none
+  test('refuses keyless, unmarked and non-particle re-reads; the first table pairs its means and shows the pair count and run status', () => {
+    const reread2 = (name: string, receipt: Record<string, unknown>, plan: Plan = PARTICLE_PLAN) => {
+      const root = join(tmp, name);
+      publish(root, REREAD, 'ext-graph-pipeline', plan, { schema: REREAD_RECEIPT_SCHEMA, source: { arm_cell_id: ARM, config_sha256: CONFIG }, ...receipt });
+      return () => unitsOf(loadCells([shardA, shardB, root]));
+    };
+    expect(reread2('keyless', { keyless: true })).toThrow('is a keyless rehearsal, so it holds no particle-1 results');
+    expect(reread2('unmarked', {})).toThrow('is a re-read with no keyless marker');
+    expect(reread2('opus-reread', { keyless: false }, { [OPUS]: ones(12) })).toThrow(`holds answers by ${OPUS}, and a particle-1 cell holds particle-1's alone`);
+    const r = unitReport(unitsOf(loadCells([shardA, shardB, unjudgedShard('unjudged-table')]))[0]);
+    const d = r.particle_minus.find(x => x.minus === OPUS)!;
+    // Paired on questions 1, 2, 4 and 5: Opus 1, 1, 1, 1; particle-1 0, 0, 0, 1.
+    expect([d.pairs, d.frontier_mean, d.particle_mean, d.delta]).toEqual([4, 1, 0.25, -0.75]);
+    expect(renderReport([r])).toContain(`| ${ARM} | re-read | partial | 4 | 100.0% | 25.0% | -75.0 points (`);
+    expect(renderReport([r])).toContain('unjudged 1 |');
   });
 });

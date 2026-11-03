@@ -8,7 +8,7 @@ import { afterAll, describe, expect, test } from 'bun:test';
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
-import { campaignManifest, findCell, finishTimeoutFor, runCell, type UnitSelection } from '../../eval/runner/q1/cell.ts';
+import { campaignManifest, findCell, finishTimeoutFor, renderPlan, runCell, type UnitSelection } from '../../eval/runner/q1/cell.ts';
 import { Q1_CAMPAIGN_ID } from '../../eval/runner/shootout-cell.ts';
 import { ALL_SETS, definitionProblems, estimateCell, F6_ASSUMPTIONS, f6ExtractionLedgerUsd, loadManifest, manifestText, MANIFEST_PATH, policyKey, type ArmDefinition, type CellDefinition } from '../../eval/runner/q1/cells/definitions.ts';
 import { ALL_ARMS, buildF6Manifest, maxShardHours, maxShardUsd, F6_ARMS, F6_CAP_USD, F6_DRY_RUN_CAP_USD, F6_MANIFEST_PATH, F6_PARTICLE_ADDON, f6ManifestText, peakReservationUsd } from '../../eval/runner/q1/cells/f6.ts';
@@ -159,6 +159,23 @@ describe('the F6 manifest', () => {
     // The D8 canary's largest conversation (1.03M ingested tokens) needed about 1.9 hours of gbrain's /finish per million.
     expect(finishTimeoutFor(m.cells.find(c => c.id === 'd8.gbrain-defaults.f6-master')!) / 3600).toBeGreaterThanOrEqual(1.25 * 1.9 * 1.0327);
   });
+  // Value: protects=F6's frozen counted campaign (GBEV-3, follow-up to #347); fails_when=F6's campaign regenerates to any unit set other than the 61 committed in f6-campaign.json, as when the particle-1 add-on cell leaked into it; why_new=the add-on's addon_cells must stay out of F6's counted cells; seam=none; no_claim=the units' leases and timeouts, which later amendments changed
+  test('F6\'s frozen campaign regenerates to exactly its 61 committed units, from the built and the committed manifest', () => {
+    const frozen = JSON.parse(readFileSync(join(ROOT, 'docs/benchmarks/2026-10-29-f6-current-master/campaign/f6-campaign.json'), 'utf8')) as { cells: Array<{ id: string }> };
+    const committed = frozen.cells.map(c => c.id);
+    expect(committed).toHaveLength(61);
+    for (const manifest of [m, loadManifest(F6_MANIFEST_PATH)]) expect(campaignManifest(manifest).cells.map(c => c.id)).toEqual(committed);
+  });
+
+  // Value: protects=the plan's block table adds up; fails_when=the add-on block prints among F6's counted blocks while the total leaves it out; why_new=review of #347 (fix-check note, cell.ts:1454); seam=none; no_claim=none
+  test('plan prints the add-on block after F6\'s counted total, marked as outside it', () => {
+    const lines = renderPlan(m).split('\n');
+    const total = lines.findIndex(l => l.startsWith('| Total (cells) |'));
+    expect(lines[total]).toContain('| $1,908.89 |');
+    expect(lines.slice(0, total).filter(l => l.includes('particle-1'))).toEqual([]);
+    expect(lines[total + 1]).toMatch(/^\| F6 particle-1 add-on .*, outside the total \| \$8\.04 \| \$8\.04 \| \$16\.15 \|$/);
+  });
+
   test('plan --units: the named units alone under their own campaign id, cap and ledger; A1 holds every unit the frozen campaign did not launch (A1)', () => {
     const dir = join(ROOT, 'docs/benchmarks/2026-10-29-f6-current-master/campaign');
     const sel = JSON.parse(readFileSync(join(dir, 'f6-campaign-a1-units.json'), 'utf8')) as UnitSelection;
