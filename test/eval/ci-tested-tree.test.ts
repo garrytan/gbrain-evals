@@ -1,6 +1,8 @@
 import { describe, expect, test } from 'bun:test';
 import { spawnSync } from 'node:child_process';
-import { readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { inventory, isBunTestFile, junitFiles, PYTHON_TESTS, treeRecord } from '../../scripts/ci-tested-tree.ts';
 
 const root = new URL('../../', import.meta.url);
@@ -52,6 +54,22 @@ describe('ci-tested-tree record', () => {
   test('reads the files a JUnit report ran and counts the tests that ran', () => {
     expect(junitFiles(JUNIT)).toEqual({ files: ['eval/runner/b&c.test.ts', 'test/eval/a.test.ts'], tests: 5 });
     expect(() => junitFiles('<testsuite file="a.test.ts" />')).toThrow('no <testsuites>');
+    expect(() => junitFiles('<testsuites tests="2" skipped="3"></testsuites>')).toThrow('valid tests');
+    expect(() => junitFiles('<testsuites name="bun test"></testsuites>')).toThrow('valid tests');
+  });
+
+  test("reads Bun's own JUnit report: repo-relative files, skips excluded, and no entry for a file that registers no tests", () => {
+    const dir = mkdtempSync(join(tmpdir(), 'ci-tested-tree-'));
+    try {
+      writeFileSync(join(dir, 'ran.test.ts'), "import { test } from 'bun:test';\ntest('runs', () => {});\ntest.skip('skipped', () => {});\n");
+      writeFileSync(join(dir, 'skipped.test.ts'), "import { test } from 'bun:test';\ntest.skip('only skipped', () => {});\n");
+      writeFileSync(join(dir, 'empty.test.ts'), "import { test } from 'bun:test';\nif (process.env.NEVER_SET_CI_TESTED_TREE) test('never registered', () => {});\n");
+      const r = spawnSync(process.execPath, ['test', '--reporter=junit', '--reporter-outfile=out.xml', 'ran.test.ts', 'skipped.test.ts', 'empty.test.ts'], { cwd: dir, encoding: 'utf8' });
+      expect(r.status).toBe(0);
+      expect(junitFiles(readFileSync(join(dir, 'out.xml'), 'utf8'))).toEqual({ files: ['ran.test.ts', 'skipped.test.ts'], tests: 1 });
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 
   test('a push run records its own commit as the head; a pull_request run records the merge commit and the head', () => {
@@ -65,12 +83,42 @@ describe('ci-tested-tree record', () => {
   test('refuses a record it cannot make whole', () => {
     const reports = [junitFiles(JUNIT)];
     expect(() => treeRecord({ ...ENV, GITHUB_EVENT_NAME: 'pull_request' }, { reports, tree: TREE })).toThrow('PR_HEAD_SHA');
+    expect(() => treeRecord({ ...ENV, GITHUB_SHA: 'abc' }, { reports, tree: TREE })).toThrow('GITHUB_SHA');
+    expect(() => treeRecord({ ...ENV, GITHUB_EVENT_NAME: 'Push!' }, { reports, tree: TREE })).toThrow('GITHUB_EVENT_NAME');
     expect(() => treeRecord({ ...ENV, GITHUB_RUN_ATTEMPT: '0' }, { reports, tree: TREE })).toThrow('GITHUB_RUN_ATTEMPT');
     expect(() => treeRecord({ ...ENV, GITHUB_WORKFLOW_REF: 'nope' }, { reports, tree: TREE })).toThrow('GITHUB_WORKFLOW_REF');
     expect(() => treeRecord({ ...ENV, RUNNER_OS: undefined }, { reports, tree: TREE })).toThrow('RUNNER_OS');
     expect(() => treeRecord(ENV, { reports, tree: 'HEAD' })).toThrow('tree id');
     expect(() => treeRecord(ENV, { reports: [], tree: TREE })).toThrow('no JUnit report');
     expect(() => treeRecord(ENV, { reports: [{ files: [], tests: 0 }], tree: TREE })).toThrow('no test files');
+  });
+
+  test('the record command writes tree.json when every inventory file ran, and fails without writing when one did not', () => {
+    const git = (...args: string[]) => spawnSync('git', args, { cwd: root, encoding: 'utf8' }).stdout.trim();
+    const unit = spawnSync(process.execPath, ['--no-env-file', '--config=/dev/null', 'scripts/ci-tested-tree.ts', 'inventory', '--lane', 'unit'], { cwd: root, encoding: 'utf8' }).stdout.trim().split('\n');
+    const dir = mkdtempSync(join(tmpdir(), 'ci-tested-tree-'));
+    const env = { ...process.env, ...ENV, GITHUB_SHA: git('rev-parse', 'HEAD'), GITHUB_STEP_SUMMARY: join(dir, 'summary.md') };
+    const junit = (files: string[]) => `<testsuites tests="${files.length}" skipped="0">${files.map(f => `<testsuite file="${f}" tests="1" />`).join('')}</testsuites>`;
+    const record = (files: string[], out: string) => {
+      mkdirSync(join(dir, out), { recursive: true });
+      writeFileSync(join(dir, out, 'tests-1.xml'), junit(files));
+      return spawnSync(process.execPath, ['--no-env-file', '--config=/dev/null', 'scripts/ci-tested-tree.ts', 'record', '--junit', join(dir, out), '--out', join(dir, out, 'tree.json')], { cwd: root, encoding: 'utf8', env });
+    };
+    try {
+      const ok = record(unit, 'all');
+      expect(ok.status).toBe(0);
+      const tree = JSON.parse(readFileSync(join(dir, 'all', 'tree.json'), 'utf8'));
+      expect([tree.tree, tree.head_sha, tree.files, tree.tests]).toEqual([git('rev-parse', 'HEAD^{tree}'), env.GITHUB_SHA, [...unit, ...PYTHON_TESTS].sort(), unit.length]);
+      expect(readFileSync(env.GITHUB_STEP_SUMMARY, 'utf8')).toStartWith(`TESTED_TREE: run 41/2 push head ${env.GITHUB_SHA.slice(0, 12)}`);
+      const short = record(unit.slice(1), 'short');
+      expect(short.status).toBe(1);
+      expect(short.stdout).toContain(`::error::1 inventory file(s) did not run`);
+      expect(short.stdout).toContain(unit[0]!);
+      expect(short.stderr).toContain('tree.json was not written');
+      expect(existsSync(join(dir, 'short', 'tree.json'))).toBe(false);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });
 

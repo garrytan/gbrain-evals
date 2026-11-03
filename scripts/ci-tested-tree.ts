@@ -12,6 +12,9 @@
  *   bun scripts/ci-tested-tree.ts inventory [--lane test|unit|py]       the test files the lane runs, one per line
  *   bun scripts/ci-tested-tree.ts record --junit <dir> --out <tree.json>  in CI, after the checks job and every shard passed
  *
+ * `record` fails, and writes nothing, when an inventory file did not run. Bun's report leaves out a test file that
+ * registers no tests, and a run missing one file carries no lane, so the job goes red instead of carry stopping quietly.
+ *
  * The Bun files come from each shard's JUnit report, so tree.json lists only files Bun ran, and `tests` counts
  * the Bun tests that ran (skips excluded). The Python files are the ones the checks job runs; the job needs it.
  */
@@ -96,17 +99,18 @@ function record(args: string[]): void {
   if (!dir || !out) throw new Error('record needs --junit <dir> and --out <tree.json>');
   const reports = readdirSync(dir).filter(f => f.endsWith('.xml')).sort().map(f => junitFiles(readFileSync(join(dir, f), 'utf8')));
   const rec = treeRecord(process.env, { reports, tree: git(['rev-parse', '--verify', `${process.env.GITHUB_SHA ?? ''}^{tree}`]).trim() });
-  mkdirSync(dirname(out), { recursive: true });
-  writeFileSync(out, `${JSON.stringify(rec, null, 2)}\n`);
   const ran = new Set(rec.files);
   const listed = inventory('test', tracked());
   const missing = listed.filter(f => !ran.has(f));
   const extra = rec.files.filter(f => !listed.includes(f));
   const lines = [`TESTED_TREE: run ${rec.run_id}/${rec.run_attempt} ${rec.event} head ${rec.head_sha.slice(0, 12)} tree ${rec.tree.slice(0, 12)} files=${rec.files.length} tests=${rec.tests} os=${rec.os}`];
-  if (missing.length) lines.push(`::warning::${missing.length} inventory file(s) did not run, so no /ship lane carries from this run: ${missing.slice(0, 10).join(', ')}`);
+  if (missing.length) lines.push(`::error::${missing.length} inventory file(s) did not run, so no /ship lane could carry from this run (a test file must register at least one test; a skipped one counts): ${missing.slice(0, 10).join(', ')}`);
   if (extra.length) lines.push(`::warning::${extra.length} file(s) ran that the inventory does not list: ${extra.slice(0, 10).join(', ')}`);
   for (const line of lines) console.log(line);
-  if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${lines.map(l => l.replace(/^::warning::/, 'Warning: ')).join('\n')}\n`);
+  if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${lines.map(l => l.replace(/^::error::/, 'Error: ').replace(/^::warning::/, 'Warning: ')).join('\n')}\n`);
+  if (missing.length) throw new Error(`${missing.length} inventory file(s) did not run; tree.json was not written`);
+  mkdirSync(dirname(out), { recursive: true });
+  writeFileSync(out, `${JSON.stringify(rec, null, 2)}\n`);
 }
 
 if (import.meta.main) {

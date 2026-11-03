@@ -83,7 +83,7 @@ For a new report:
 
 CI is the one full test run. `.gstack/pregate.json` maps these exact /ship lane commands in `ship_lanes_from`: `bun run test`, `TEST_SHARDS=1 bun run test`, `TEST_SHARDS=2 bun run test`, `bun run test:unit` and `bun run test:py`. Once CI has passed at the branch's exact, clean tree, /ship takes that run as the lane's result (`LANE: <label> carried run=<id>/<attempt>`) instead of running the suite again, and the pregate's tests stage does the same for the test files it selects (`CI_CARRY: accepted`). Both read the record that CI's `tested-tree` job writes with `scripts/ci-tested-tree.ts`, which names the tree the run tested and every test file it ran.
 
-Pass the full suite to /ship as `--lane test='bun run test'` and push early, so CI runs beside the review. A pull-request run tests GitHub's merge of the branch into main, so it carries only while the branch contains main's tip. Any other lane command, the typecheck included, runs on your machine.
+Pass the full suite to /ship as `--lane test='bun run test'` and push early, so CI runs beside the review. A pull-request run tests GitHub's merge of the branch into main, so it carries only while the branch contains main's tip. Any other lane command, the typecheck included, runs on your machine. The `tested-tree` job fails when a test file under `test/eval/` or `eval/` registers no tests, because Bun's report leaves the file out and no lane could carry; give it at least one test (a skipped one counts).
 
 ### Choose models
 
