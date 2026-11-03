@@ -199,7 +199,8 @@ describe('RS1 custody scripts end to end (mint.sh --fake)', () => {
     const selection = (n: number) => JSON.parse(readFileSync(join(conv, 'selection', `${n}.json`), 'utf8')).slots as Record<string, string | null>;
     const report = (name: string, attempt: number, failing: string[]) => {
       const path = join(root, `${name}.json`);
-      writeFileSync(path, JSON.stringify({ conversations: { c001: { status: 'regenerate', select_attempt: attempt, items: Object.fromEntries(SLOTS.map(s => [s, { pass: !failing.includes(s), gates: [] }])) } } }));
+      const chat = sha(readFileSync(join(conv, 'beam/1/chat.json'), 'utf8'));
+      writeFileSync(path, JSON.stringify({ conversations: { c001: { status: 'regenerate', select_attempt: attempt, chat_sha256: chat, items: Object.fromEntries(SLOTS.map(s => [s, { pass: !failing.includes(s), gates: [] }])) } } }));
       return path;
     };
     expect(one().code).toBe(0);
@@ -220,6 +221,19 @@ describe('RS1 custody scripts end to end (mint.sh --fake)', () => {
     }
     expect(third[updates[0]]).not.toBe(third[updates[1]]);
   }, 240_000);
+
+  test('mint.sh --regenerate refuses a report that read another chat', () => {
+    const out = join(root, 'rs1-custody-foreign');
+    const one = (extra: string[] = []) => run('bash', [MINT, '--fake', '--beam-dir', beam, '--out', out, '--seed-file', seedA, '--count', '1', ...extra]);
+    expect(one().code).toBe(0);
+    const report = join(root, 'foreign-report.json');
+    const items = Object.fromEntries(SLOTS.map((s, i) => [s, { pass: i > 0, gates: [] }]));
+    writeFileSync(report, JSON.stringify({ validators: [...VALIDATOR_IDS], conversations: { c001: { status: 'regenerate', select_attempt: 1, chat_sha256: sha('another chat'), items } } }));
+    const r = one(['--regenerate', report]);
+    expect(r.code).not.toBe(0);
+    expect(r.err).toContain('rs1-mint refused: ');
+    expect(existsSync(join(out, 'set/conversations/c001/selection/2.json'))).toBe(false);
+  }, 120_000);
 
   test('hashlist.ts writes a sha256sum-format list, prints only counts and hashes, and a restore check matches it', () => {
     const set = join(root, 'rs1-custody-a/set');
@@ -466,6 +480,43 @@ describe('validate.ts gates', () => {
       expect(r.all).not.toContain('not-real');
     }
     expect(existsSync(join(root, 'cli-report.json'))).toBe(false);
+  });
+});
+
+// ─── mint.sh start_proxy ─────────────────────────────────────────────
+
+describe('mint.sh start_proxy', () => {
+  test('passes the provider key to the metering proxy through the environment, never on a command line', () => {
+    const dir = scratch('proxy');
+    const src = readFileSync(MINT, 'utf8');
+    const fn = (name: string) => new RegExp(`^${name}\\(\\) \\{[\\s\\S]*?^\\}`, 'm').exec(src)![0];
+    const dummy = 'rs1-dummy-gemini-value-not-a-key', other = 'rs1-dummy-openai-value-not-a-key', canary = 'rs1-canary-value';
+    mkdirSync(join(dir, 'bin'));
+    mkdirSync(join(dir, 'out/proxy/ready'), { recursive: true });
+    writeFileSync(join(dir, 'bin/env'), `#!/bin/bash\ntr '\\0' '\\n' < /proc/$$/cmdline > '${dir}/env.cmdline'\nexec /usr/bin/env "$@"\n`, { mode: 0o755 });
+    writeFileSync(join(dir, 'bin/bun'), `#!/bin/bash\ntrap 'kill $! 2>/dev/null; exit 0' TERM\nwhile [ $# -gt 0 ]; do [ "$1" = --ready-file ] && echo '{}' > "$2"; shift; done\nsleep 30 & wait\n`, { mode: 0o755 });
+    const harness = [
+      'set -euo pipefail',
+      `OUT='${dir}/out' LEDGER='${dir}/ledger.sqlite' RUN_ID=rs1-test REPO='${REPO}'`,
+      `export GEMINI_API_KEY='${dummy}' OPENAI_API_KEY='${other}' RS1_CANARY='${canary}'`,
+      'die() { echo "refused: $*" >&2; exit 2; }',
+      'PROXY_PID=""',
+      fn('stop_proxy'),
+      fn('start_proxy'),
+      'start_proxy c001 plan gemini',
+      `tr '\\0' '\\n' < "/proc/$PROXY_PID/cmdline" > '${dir}/proxy.cmdline'`,
+      `tr '\\0' '\\n' < "/proc/$PROXY_PID/environ" > '${dir}/proxy.environ'`,
+      'stop_proxy',
+    ].join('\n');
+    const r = run('bash', ['-c', harness], { PATH: `${join(dir, 'bin')}:${process.env.PATH ?? '/usr/bin:/bin'}` });
+    expect(r.code).toBe(0);
+    const envArgv = readFileSync(join(dir, 'env.cmdline'), 'utf8'), proxyArgv = readFileSync(join(dir, 'proxy.cmdline'), 'utf8');
+    const proxyEnv = readFileSync(join(dir, 'proxy.environ'), 'utf8').split('\n');
+    expect(proxyArgv).toContain('harness-metering-proxy.ts');
+    for (const argv of [envArgv, proxyArgv]) for (const value of [dummy, other, canary]) expect(argv).not.toContain(value);
+    expect(proxyEnv).toContain(`GEMINI_API_KEY=${dummy}`);
+    expect(proxyEnv.join('\n')).not.toContain(other);
+    expect(proxyEnv.join('\n')).not.toContain(canary);
   });
 });
 

@@ -65,6 +65,8 @@ export const ITEMS_PER_ABILITY = 2;
 export const SELECT_ATTEMPTS = 3;
 const TOPIC_ATTEMPTS = 5;
 export const VALIDATOR_IDS = ['gemini:gemini-3.8-flash', 'anthropic:claude-haiku-5-5'] as const;
+/** Part of every reply-cache key. v2 began when --fake got its own ids, so no reply cached before then is reused. */
+const CACHE_VERSION = 'rs1-validate-cache/v2';
 export const SLOTS = ABILITIES.flatMap(a => Array.from({ length: ITEMS_PER_ABILITY }, (_, n) => `${a}#${n}`));
 
 export interface Options {
@@ -462,7 +464,7 @@ export function planValidation(opts: Options, clients: ModelClient[], index: Pub
   const seenQuestions: Array<{ norm: string; shingles: Set<string> }> = [];
   const low = Math.round(opts.targetTokens * (1 - opts.tolerance)), high = Math.round(opts.targetTokens * (1 + opts.tolerance));
   const call = (client: number, prompt: string, tokens: number, settle: Call['settle']) => {
-    const cacheFile = opts.cacheDir ? join(opts.cacheDir, `${sha256(`${clients[client].id}\0${prompt}`)}.json`) : null;
+    const cacheFile = opts.cacheDir ? join(opts.cacheDir, `${sha256(`${CACHE_VERSION}\0${clients[client].id}\0${prompt}`)}.json`) : null;
     calls.push({ client, prompt, tokens, cacheFile, cached: !!cacheFile && existsSync(cacheFile), settle });
   };
 

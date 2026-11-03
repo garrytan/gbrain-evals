@@ -43,6 +43,8 @@ CHAT_SIZE = "1M"
 # gpt-4o-mini encoding.
 TRUNCATE_TOKENS = 1_040_000
 GEN_MODEL = "gemini-3.8-flash"
+# validate.ts VALIDATOR_IDS: the two paid validators a real mint's regeneration report must name.
+PAID_VALIDATORS = ["gemini:gemini-3.8-flash", "anthropic:claude-haiku-5-5"]
 EMBED_MODEL = "text-embedding-3-large"
 TOPIC_COSINE_MAX = 0.85
 TOPIC_JACCARD_MAX = 0.6
@@ -787,7 +789,7 @@ def step_probe_part(ctx, ability, usage):
         return [path]
     beam = ctx.beam(usage)
     plan = ctx.beam_chat / ("plan_new_trunecated.pickle" if (ctx.beam_chat / "plan_new_trunecated.pickle").exists() else "plan_new.pickle")
-    chat = ctx.beam_chat / ("chat_trunecated.json" if (ctx.beam_chat / "chat_trunecated.json").exists() else "chat.json")
+    chat = chat_file(ctx)
     if ability == "abstention":
         response = beam.main.generate_probing_questions(chat_address=str(chat), indexes=[], bullets=[],
                                                         probing_question_type="abstention", llm_name="gpt",
@@ -803,14 +805,25 @@ def step_probe_part(ctx, ability, usage):
     return [path]
 
 
+def chat_file(ctx):
+    """The chat BEAM's later steps and validate.ts read: the truncated chat when truncation wrote one."""
+    return ctx.beam_chat / ("chat_trunecated.json" if (ctx.beam_chat / "chat_trunecated.json").exists() else "chat.json")
+
+
 def failed_slots(ctx, attempt):
     """Slots the validation report failed, or None when it asks for no regeneration of this conversation or a resumed
-    run already regenerated the selection it read."""
+    run already regenerated the selection it read. A real mint takes only a report both paid validators wrote, and
+    every mode refuses a report that read another chat than this conversation's."""
     if not ctx.args.regenerate:
         return None
-    conv = read_json(ctx.args.regenerate).get("conversations", {}).get(ctx.cid)
+    report = read_json(ctx.args.regenerate)
+    conv = report.get("conversations", {}).get(ctx.cid)
     if not conv or conv.get("status") != "regenerate" or conv.get("select_attempt") == attempt - 2:
         return None
+    if ctx.mode == "real" and report.get("validators") != PAID_VALIDATORS:
+        raise StepFailure("a real mint regenerates only from a report the two paid validators wrote")
+    if conv.get("chat_sha256") != sha256_file(chat_file(ctx)):
+        raise StepFailure("the validation report read another chat than this conversation's")
     if conv.get("select_attempt") != attempt - 1:
         raise StepFailure(f"the validation report read selection attempt {conv.get('select_attempt')}, not {attempt - 1}")
     return {slot for slot, item in conv["items"].items() if not item["pass"]}
@@ -822,6 +835,8 @@ def step_select(ctx, attempt, usage):
     its ability. Every ability's candidate file uses the same index keys, so a rejection is an (ability, key) pair."""
     previous = read_json(ctx.conv / "selection" / f"{attempt - 1}.json") if attempt > 1 else {"slots": {}, "failed": []}
     failed = failed_slots(ctx, attempt) or set() if attempt > 1 else set()
+    if any("/" not in f for f in previous["failed"]):
+        raise StepFailure(f"selection {attempt - 1} records rejections without their ability (an older format)")
     rejected = {tuple(f.split("/", 1)) for f in previous["failed"]}
     rejected |= {(s.split("#")[0], previous["slots"][s]) for s in failed if previous["slots"].get(s)}
     slots = {}

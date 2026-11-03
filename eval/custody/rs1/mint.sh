@@ -13,8 +13,10 @@
 #     key in .gstack/pregate.json refuses commits under such a path). The seed file comes from --seed-file or
 #     RS1_SEED_FILE, never a default; it must be named *.rs1-seed, sit outside any git checkout, be mode 600 or 400
 #     and hold "rs1-seed-v1:" and 64 hex digits. The custody marker the sealed key's text rule matches sits in
-#     topic.json, the topic attempts, the rubric files and every item of beam/1/probing_questions; BEAM's chat, plan
-#     and topics files under beam/ hold BEAM's own formats and are guarded by their path only.
+#     topic.json, the topic attempts, the rubric files, and every item of beam/1/probing_questions/probing_questions.json
+#     and its attempts/. BEAM's chat, plan and topics files and the per-ability candidate files under
+#     beam/1/probing_questions/<ability>/ hold BEAM's own formats and are guarded by their path only.
+#     Files under --out are created owner-only (umask 077).
 #   - Deterministic seeds. Conversation i's seed is HMAC-SHA256(seed, "rs1/conversation/<i>"); its topic, category,
 #     BEAM's random user profile and the item selection all derive from it.
 #   - Resume without re-sampling. Each conversation's manifest.json records every finished step with the sha256 of
@@ -36,6 +38,7 @@
 # usage.json (counts-only usage per step and conversation), proxy/ (request logs, and request bodies holding RS1
 # text), tooling/ (BEAM checkout, venv, tiktoken cache). Everything but tooling/ belongs in the encrypted archive.
 set -euo pipefail
+umask 077
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$HERE/../../.." && pwd)"
@@ -134,12 +137,15 @@ stop_proxy() {
 }
 trap stop_proxy EXIT
 
-# Starts a metering proxy for one paid step holding only that provider's real key; sets READY to its ready file.
+# Starts a metering proxy for one paid step holding only that provider's real key; sets READY to its ready file. The
+# key reaches the proxy through the environment: env's command line names only the variables it removes.
 start_proxy() {
-  local cid="$1" step="$2" provider="$3" ready="$OUT/proxy/ready/$1-$2.json" key
-  case "$provider" in gemini) key="GEMINI_API_KEY=$GEMINI_API_KEY" ;; openai) key="OPENAI_API_KEY=$OPENAI_API_KEY" ;; esac
+  local cid="$1" step="$2" provider="$3" ready="$OUT/proxy/ready/$1-$2.json" key name
+  local drop=()
+  case "$provider" in gemini) key=GEMINI_API_KEY ;; openai) key=OPENAI_API_KEY ;; esac
+  for name in $(compgen -e); do case "$name" in PATH|HOME|"$key") ;; *) drop+=(-u "$name") ;; esac; done
   rm -f "$ready"
-  env -i PATH="$PATH" HOME="$HOME" "$key" bun "$REPO/eval/runner/harness-metering-proxy.ts" \
+  env "${drop[@]}" bun "$REPO/eval/runner/harness-metering-proxy.ts" \
     --budget-ledger "$LEDGER" --budget-run-id "$RUN_ID" --cell-id "rs1-$cid-$step" --labels rs1 --ready-file "$ready" \
     --request-log "$OUT/proxy/requests/$cid-$step.jsonl" --bodies-dir "$OUT/proxy/bodies" \
     >>"$OUT/proxy/$cid-$step.log" 2>&1 &
