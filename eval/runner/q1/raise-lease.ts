@@ -15,9 +15,14 @@
  *
  * The VM's metering proxy reads the run budget and the cap from its ledger
  * before every reservation, so the raise binds from the proxy's next call
- * without a restart. A VM step that fails gives the host reservation back.
- * Every raise is appended to <state>/raises.ndjson; leases.ndjson is left to
- * the campaign's own events.
+ * without a restart. A VM step the lease ledger refuses gives the host
+ * reservation back. A VM step that ends without a result (a timeout, an ssh
+ * error, output that does not read back) keeps it and stops, because the VM
+ * may already hold the raise; a person reconciles the two ledgers. A raise is
+ * refused when the state directory belongs to another campaign or its lease's
+ * cell is not in the manifest, so a block cap is never skipped. Every raise is
+ * appended to <state>/raises.ndjson; leases.ndjson is left to the campaign's
+ * own events.
  *
  * Settling needs nothing new for a sealed lease: its VM ledger stays in custody,
  * the pulled lease summary carries the lease as launched, and `settle` settles
@@ -39,13 +44,15 @@ const REPO_ROOT = resolve(import.meta.dir, '../../..');
 export interface Raise { lease_id: string; cell: string; at: string; from_usd: number; to_usd: number; reason: string; host_entry: string; vm_ledger: string; vm_cap_usd: number }
 type Ssh = (vm: string, command: string) => { code: number | null; out: string; err: string };
 
-/** Run on the VM: the lease ledger's run budget and cap grow by the same amount in one transaction, or nothing changes. */
+/** Run on the VM: the lease ledger's run budget and cap grow by the same amount in one transaction, or nothing changes. A refusal exits VM_REFUSED, having changed nothing. */
+const VM_REFUSED = 3;
 const VM_LEDGER = `
 import glob, json, os, sqlite3, sys, datetime, getpass, socket
 mode, lease = sys.argv[1], sys.argv[2]
+def refuse(why): print(why, file=sys.stderr); sys.exit(${VM_REFUSED})
 home = os.path.expanduser('~')
 found = glob.glob(f'{home}/custody/{lease}/proxy/lease.sqlite') + glob.glob(f'{home}/work/*/eval/reports/shootout/*/{lease}/lease.sqlite')
-if len(found) != 1: sys.exit(f'expected one lease ledger for {lease}, found {found}')
+if len(found) != 1: refuse(f'expected one lease ledger for {lease}, found {found}')
 c = sqlite3.connect(found[0], timeout=60, isolation_level=None)
 c.execute('PRAGMA busy_timeout = 60000')
 def state():
@@ -56,8 +63,8 @@ if mode == 'show': print(json.dumps(state())); sys.exit(0)
 frm, to, reason = float(sys.argv[3]), float(sys.argv[4]), ' '.join(sys.argv[5:])
 c.execute('BEGIN IMMEDIATE')
 row = c.execute('SELECT budget_usd, finished_at FROM runs WHERE run_id = ?', (lease,)).fetchone()
-if not row or row[1] is not None: c.execute('ROLLBACK'); sys.exit(f'lease {lease} is not open in {found[0]}')
-if abs(row[0] - frm) > 1e-6: c.execute('ROLLBACK'); sys.exit(f'lease {lease} is {row[0]} on the VM, not {frm}')
+if not row or row[1] is not None: c.execute('ROLLBACK'); refuse(f'lease {lease} is not open in {found[0]}')
+if abs(row[0] - frm) > 1e-6: c.execute('ROLLBACK'); refuse(f'lease {lease} is {row[0]} on the VM, not {frm}')
 cap = c.execute('SELECT program_cap_usd FROM caps ORDER BY seq DESC LIMIT 1').fetchone()[0]
 c.execute('UPDATE runs SET budget_usd = ? WHERE run_id = ?', (to, lease))
 c.execute('INSERT INTO caps (program_cap_usd, kind, reason, by, at) VALUES (?, ?, ?, ?, ?)', (round(cap + to - frm, 6), 'set_cap', f'raise lease {lease} to {to}: {reason}', f'{getpass.getuser()}@{socket.gethostname()}', datetime.datetime.now(datetime.timezone.utc).isoformat()))
@@ -108,6 +115,8 @@ function resizeHost(c: Campaign, entryId: string, delta: number, block: { name: 
 }
 
 export function raise(c: Campaign, leaseId: string, toUsd: number, reason: string, ssh: Ssh, opts: { dryRun?: boolean } = {}): Raise | { dry_run: true; lease_id: string; from_usd: number; to_usd: number; vm: unknown } {
+  const owner = (JSON.parse(readFileSync(join(c.stateDir, 'campaign.json'), 'utf8')) as { campaign_id: string }).campaign_id;
+  if (owner !== c.manifest.campaign_id) throw new Error(`${c.stateDir} belongs to campaign ${owner}, not ${c.manifest.campaign_id}; pass one campaign's manifest and state directory`);
   const l = c.lease(leaseId);
   if (l.status !== 'launched') throw new Error(`lease ${leaseId} is ${l.status}; only a running (launched) lease is raised in place`);
   if (!l.vm) throw new Error(`lease ${leaseId} has no recorded VM`);
@@ -120,7 +129,7 @@ export function raise(c: Campaign, leaseId: string, toUsd: number, reason: strin
   if (!shown) throw new Error(`${what}: the VM ledger on ${l.vm} could not be read`);
   if (shown.finished || shown.budget_usd === null || Math.abs(shown.budget_usd - from) > 1e-6) throw new Error(`${what}: the VM ledger holds lease ${shown.budget_usd} (finished: ${shown.finished}), not an open ${usd(from)}`);
   const blockOf = (cellId: string) => (c.manifest.cells.find(x => x.id === cellId) as { block?: string } | undefined)?.block;
-  const name = blockOf(l.cell), cap = name ? (c.manifest as { blocks?: Record<string, { cap_usd: number }> }).blocks?.[name]?.cap_usd : undefined;
+  const name = c.cell(l.cell).block, cap = name ? (c.manifest as { blocks?: Record<string, { cap_usd: number }> }).blocks?.[name]?.cap_usd : undefined;
   const pending = (r: Raise) => { const x = c.lease(r.lease_id); return x.raised_usd === undefined && x.status !== 'settled' && !(x.status === 'abandoned' && x.actual_usd === 0); };
   const block = name && cap !== undefined ? { name, cap, held: c.blockSpend(name) + raises(c.stateDir).filter(r => blockOf(r.cell) === name && pending(r)).reduce((n, r) => n + r.to_usd - r.from_usd, 0) } : null;
   if (opts.dryRun) {
@@ -129,11 +138,12 @@ export function raise(c: Campaign, leaseId: string, toUsd: number, reason: strin
   }
   resizeHost(c, l.entry_id, delta, block, what);
   const r = ssh(l.vm, vmCommand(['raise', leaseId, String(from), String(toUsd), reason]));
-  const done = r.code === 0 ? lastJson(r.out) as { ledger: string; budget_usd: number; cap_usd: number } | null : null;
-  if (!done || Math.abs(done.budget_usd - toUsd) > 1e-6) {
+  if (r.code === VM_REFUSED) {
     resizeHost(c, l.entry_id, -delta, null, `give back ${what}`);
     throw new Error(`${what}: the VM ledger on ${l.vm} was not raised (exit ${r.code}): ${(r.err || r.out).slice(-400)}; the host reservation is back at ${usd(from)}`);
   }
+  const done = r.code === 0 ? lastJson(r.out) as { ledger: string; budget_usd: number; cap_usd: number } | null : null;
+  if (!done || Math.abs(done.budget_usd - toUsd) > 1e-6) throw new Error(`${what}: the VM step on ${l.vm} ended without a result (exit ${r.code}): ${(r.err || r.out).slice(-400)}; the VM ledger may hold either amount, so the host reservation stays at ${usd(toUsd)} and no raise is recorded. Read the VM ledger with \`raise-lease.ts show\` and reconcile the two ledgers by hand before this lease is raised, settled or abandoned`);
   const rec: Raise = { lease_id: leaseId, cell: l.cell, at: new Date().toISOString(), from_usd: from, to_usd: toUsd, reason, host_entry: l.entry_id, vm_ledger: done.ledger, vm_cap_usd: done.cap_usd };
   appendFileSync(join(c.stateDir, 'raises.ndjson'), JSON.stringify(rec) + '\n');
   return rec;
