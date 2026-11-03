@@ -58,8 +58,16 @@ first.
   model's result.
 - The [particle-1 tokenizer calibration](benchmarks/2026-11-01-particle-1-calibration/README.md) and its docs index
   entry carry the Particle line. They report neither gbrain's result nor an OpenAI model's.
+- The [SkillOpt retirement finding](benchmarks/2026-11-03-skillopt-retired.md) carries the gbrain, OpenAI and Particle
+  lines in its closing Disclosures section. It reports gbrain's result and GPT-6.1 Sol's calibration result, and says
+  particle-1 was not run.
 
 ## Changelog
+
+### 2026-11-03: The SkillOpt retirement finding
+
+"In this repository" lists the [SkillOpt retirement finding](benchmarks/2026-11-03-skillopt-retired.md), which carries
+the gbrain, OpenAI and Particle lines in its closing Disclosures section.
 
 ### 2026-11-02: Disclosures close a finding, and X posts carry none
 

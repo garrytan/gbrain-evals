@@ -1,0 +1,137 @@
+---
+name: briefing
+version: 1.3.0
+description: Compile daily briefing with meeting context, active deals, and citation tracking
+triggers:
+  - "daily briefing"
+  - "morning briefing"
+  - "what's happening today"
+  - "brain pulse"
+  - "pre-briefing pull"
+tools:
+  - search
+  - query
+  - get_page
+  - list_pages
+  - get_timeline
+mutating: false
+upstream: briefing@fc834ee
+---
+
+# Briefing Skill
+
+Compile a daily briefing from brain context. The meeting entries are the core of the briefing. Every other section is optional extra.
+
+> **Filing rule:** When the briefing creates or updates brain pages,
+> follow `skills/_brain-filing-rules.md`.
+
+## Contract
+
+- Every external meeting on the calendar gets one entry. The entry states the fact the task asks for, as of the briefing date, and cites the page that holds it.
+- Every fact includes an inline `[Source: slug, updated DATE]` citation inside its own meeting's entry.
+- Meeting participants are resolved against the brain by exact name. Gaps are stated as `No brain page for <name>`.
+- The briefing is read-only. No pages are created or modified unless the user explicitly asks.
+- Facts are true **on the briefing date**. They are not the newest values in the brain.
+
+## Order of work (do the meetings first)
+
+Budget your effort. A briefing that covers every meeting but skips the extras is far better than one that runs out of time halfway through.
+
+1. **List the external meetings.** Internal blocks (standup, hiring sync, pipeline review, focus block, inbox, plain "Lunch" with no person) need no lookup. External meetings name a person or a company.
+2. **Resolve each one** using the procedures below. Use a few targeted calls per meeting: `search` on the name, then `get_page` on the right page, or `list_pages` with a `contracts/<account>` prefix for account terms.
+3. **Write the meeting entries.**
+4. **Optional extras, only if time allows:** salience (`get_recent_salience`), anomalies (`find_anomalies`), active deals and action items. The CLI-only pulls (`gbrain recall`, `gbrain waiting`, the hot memory pulse) are often unavailable. If they are, add one line saying they were not run, and move on.
+
+## Resolving each kind of fact
+
+### A person: "which company are they with today"
+
+- Find the person's own page by an exact name match. Run `search` on the full name. The result counts only if its title is exactly that name.
+  - A similar spelling (Peterson / Petersen, Nyborg / Nyberg) is a different person.
+  - A shared first name or a shared surname alone is a different person.
+  - A search's top hit is not the attendee unless its name matches exactly.
+- Read the page's role history. The answer is the role whose start date is on or before the briefing date and that has no end date before it.
+- Cite the **person's own page** (`people/...`) for this fact. A company page can corroborate it in a later sentence.
+- **No exact match:** confirm with a keyword search on the full name, then on the surname. If there is still no exact match, write `No brain page for <Full Name>.` in that entry. Do not give a company for the attendee. You may list near-miss names in a later sentence, but state clearly that they are different people and attach no value to the attendee.
+
+### A company: "who is its chief executive today"
+
+- Read the company page (`companies/...`) and check its leadership history against the briefing date. Note when one CEO handed over to another, and when the founder moved to executive chair.
+- Watch for traps:
+  - A parent company's CEO is not the subsidiary's CEO.
+  - A company with a similar name is a different company.
+  - Future-dated announcements do not count yet.
+- Cite the company page in the answer sentence. You may also cite the CEO's own page.
+
+### An account term: price, seats, discount, support tier, renewal date, payment terms
+
+- List every contract for the account with `list_pages` on the `contracts/<account-slug>` prefix. Expect an MSA, amendments, renewal orders, side letters and rescissions.
+- Put the contracts in order by **effective date**. A contract applies only if it was signed **and** took effect on or before the briefing date.
+- The value in force is the one set by the latest such record that **changed that particular term**. Most amendments change only some terms. The others carry forward from earlier records.
+- A rescission cancels its amendment from the rescission's effective date. After that date, the earlier value applies again.
+- Do not use any of these as the answer:
+  - account-page snapshots (often stale)
+  - meeting notes where values were only "floated"
+  - Slack or hallway rumours
+  - contracts dated or effective after the briefing date
+- Cite the contract that set the value in force (for example the MSA if no later record changed it, or the amendment or renewal that did).
+- The "renewal date" is the last day of the term in force today.
+
+### Dates in citations
+
+Many pages carry a fallback "updated" date that is later than the briefing date. Cite the date the brain records. Judge currency from the dates written inside the documents. Add at most one short note at the top saying this.
+
+## Entry format (strict)
+
+Each external meeting entry must begin with a plain list item whose text starts with the time and title exactly as the calendar lists them:
+
+```
+- 09:00 Intro call with Jane Doe
+  Jane Doe is with Acme Corp today. [Source: people/jane-doe-123, updated 2026-01-01]
+  Later sentences: role start date, other values found, context...
+```
+
+Format rules:
+
+- The line must start with `- ` followed directly by the time. Bold is allowed only **after** the marker: `- **09:00 Title**` is fine. `**- 09:00 Title**` breaks the entry, so never wrap the dash in bold.
+- Do not reword, shorten or merge titles.
+- Keep entries in calendar order under `MEETINGS TODAY`. Internal meetings can get a one-line entry or be listed together after the external ones.
+- **First sentence after the heading line:** state the asked-for fact and its citation. This sentence names only the answer. It names no superseded value, future value, rumoured value or other candidate. Put those in later sentences.
+- Keep each meeting's facts and citations inside its own entry, before the next meeting's line. A fact cited only in another meeting's entry, or in a summary section, does not count for this meeting.
+- For a missing attendee, the entry must contain the exact phrase `No brain page for <Full Name>`.
+
+## Output template
+
+```
+DAILY BRIEFING -- [date]
+========================
+
+MEETINGS TODAY
+
+- [time] [meeting title exactly as listed]
+  [Answer sentence]. [Source: slug, updated DATE]
+  [Supporting context, other values found and why they don't apply, contacts.]
+
+- [time] [internal meeting title]
+  Internal, no lookup needed.
+
+ACTIVE DEALS (optional)
+ACTION ITEMS (optional)
+NOTES ON COVERAGE (one or two lines: date caveat, pulls not run)
+```
+
+## When it fails
+
+- If a tool or pull is unavailable or errors, ship the rest of the briefing and name the missing section in one line. Never drop a meeting entry.
+- If `recall` or `query` comes back empty with a degraded notice, write "the brain is searching keywords only right now" in that section rather than "nothing happened".
+- If `gbrain waiting` refuses on stale data, name the sync it asks for. Do not build the "waiting on you" section from stale mail.
+
+## Anti-Patterns
+
+- Answering from the newest record instead of the record in force on the briefing date.
+- Citing an account snapshot, rumour or "floated" figure as the term in force.
+- Treating a near-name match as the attendee.
+- Putting a competing value in the same sentence as the answer.
+- Wrapping the entry's leading `-` in bold, or putting the time and title anywhere other than the start of the line.
+- Spending effort on salience, anomaly or recall sections before every meeting entry is written.
+- Modifying brain pages unprompted.

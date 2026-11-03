@@ -1,0 +1,2471 @@
+The current skill (SKILL.md):
+
+---
+name: briefing
+version: 1.3.0
+description: Compile daily briefing with meeting context, active deals, and citation tracking
+triggers:
+  - "daily briefing"
+  - "morning briefing"
+  - "what's happening today"
+  - "brain pulse"
+  - "pre-briefing pull"
+tools:
+  - search
+  - query
+  - get_page
+  - list_pages
+  - get_timeline
+mutating: false
+upstream: briefing@fc834ee
+---
+
+# Briefing Skill
+
+Compile a daily briefing from brain context.
+
+> **Filing rule:** When the briefing creates or updates brain pages,
+> follow `skills/_brain-filing-rules.md`.
+
+## Contract
+
+- Every fact in the briefing includes an inline `[Source: slug, updated DATE]` citation.
+- Meeting participants are resolved against the brain; gaps are explicitly flagged.
+- Active deals and action items include deadlines and recency context.
+- The briefing is read-only: no brain pages are created or modified unless the user explicitly requests it.
+- Stale alerts surface pages relevant to today's context, not just all stale pages.
+
+## Pre-Briefing Context Pull
+
+Run these BEFORE composing the briefing sections. All four pulls are read-only.
+
+0a. **Salience scan.** Surface pages with high emotional or activity salience:
+
+   ```bash
+   gbrain salience --days 7
+   ```
+
+   Returns pages ranked by emotional weight and recent activity. Fold the top
+   5-10 into the briefing under a "High-Salience Pages" section — these are the
+   entities and topics that are emotionally or operationally hot right now. Use
+   this to prioritize which meetings/deals/people get the most briefing depth.
+
+0b. **Anomaly detection.** Surface statistical anomalies in the brain:
+
+   ```bash
+   gbrain anomalies
+   ```
+
+   Defaults to today against a 30-day baseline; widen with
+   `--lookback-days N` or lower the threshold with `--sigma 2`. Flags cohorts
+   (by tag, by type) whose activity broke from their normal cadence — sudden
+   spikes in mentions or pages updating far off their usual rhythm. Add hits to
+   an "Anomalies" section after the brain pulse.
+
+0c. **Personal recall.** Check stored personal facts and preferences before
+   composing:
+
+   ```bash
+   gbrain recall --query "current priorities and preferences" --json
+   ```
+
+   Use recall to pull personal context — dietary preferences, communication
+   preferences, prior commitments or promises made. This prevents the briefing
+   from contradicting things the user has previously stated or decided.
+
+0d. **Hot memory pulse (v0.32).** Before composing anything else, run:
+
+   ```bash
+   gbrain recall --since-last-run --supersessions --pending --rollup --json
+   ```
+
+   Fold the result into the briefing under a "Brain pulse" section at the top:
+   1. **Contradictions resolved overnight** — the `--supersessions` output. Lead
+      with these because they're new corrections to your model of the world.
+   2. **Top mentions** — `top_entities` from `--rollup` (top 5 entity slugs by
+      fact count in the window).
+   3. **New facts since last briefing** — group the `facts` array under each
+      entity from the rollup; include `kind`, `notability`, and `confidence`.
+   4. **Pending consolidation footer** — when `pending_consolidation_count > 0`,
+      note `N facts await dream-cycle consolidation` so the operator can decide
+      whether to run `gbrain dream` before reading further.
+
+   The `--since-last-run` flag advances `~/.gbrain/recall-cursors/<source>.json`
+   so the next briefing picks up exactly where this one left off. If you're
+   running this as a cron job, pass `--source <slug>` or set `GBRAIN_SOURCE`
+   explicitly — cron doesn't start in your repo-root cwd, so dotfile resolution
+   may miss the right source. Thin-client installs (`gbrain init --mcp-only`)
+   route through the remote brain transparently.
+
+0e. **Open loops (when google sources exist).** Pull who is waiting on the
+   user and what they promised:
+
+   ```bash
+   gbrain waiting --json
+   ```
+
+   Fold the top counterparties (what's owed, due dates, evidence quotes,
+   deep links) into the ACTION ITEMS section — these are real loop rows, not
+   inferred follow-ups, so they outrank prose heuristics. `waiting` refuses
+   on stale google sources (no successful sync in 24h) and names the exact
+   fix — that's by design: run the sync it names, then retry (see
+   `skills/google-loops/SKILL.md`).
+
+## Phases
+
+1. **Today's meetings.** For each meeting on the calendar:
+   - Search gbrain for each participant by name
+   - Read their pages from gbrain for compiled_truth context
+   - Summarize: who they are, recent timeline, relationship to you
+2. **Active deals.** List deal pages in gbrain filtered to active status:
+   - Deadlines approaching in the next 7 days
+   - Recent timeline entries (last 7 days)
+3. **Time-sensitive threads.** Open items from timeline entries:
+   - Items with deadlines in the next 48 hours
+   - Follow-ups that are overdue
+4. **Recent changes.** Pages updated in the last 24 hours:
+   - What changed and why (read timeline entries from gbrain)
+5. **People in play.** List person pages in gbrain sorted by recency:
+   - Updated in last 7 days
+   - Have high activity (many recent timeline entries)
+6. **Stale alerts.** From gbrain health check:
+   - Pages flagged as stale that are relevant to today's meetings
+
+## GBrain-Native Context Loading
+
+Before generating any briefing, load context from gbrain systematically.
+
+### Before a meeting
+
+For every attendee on the calendar invite:
+- Find their brain page by an exact match only: `gbrain whois <email> --json`,
+  then `gbrain whois "<name>" --json` when the address has no match; exactly
+  one match counts ([identity rule](../conventions/brain-first.md#identity-exact-match)).
+  A search's top hit is not the attendee.
+- `gbrain get <slug>` -- load compiled truth, recent timeline, relationship context
+- If no page exists, note the gap ("No brain page for alice-example -- consider enrichment")
+
+### Before an email reply
+
+Before drafting or triaging any email:
+- Resolve the sender with `gbrain whois <address> --json` (exact email, title
+  or alias; [identity rule](../conventions/brain-first.md#identity-exact-match)); no
+  match, or an ambiguous one, means an unknown sender, not the nearest known contact
+- Read their compiled truth to understand who they are, what they care about, and
+  your relationship history. This turns a cold reply into an informed one.
+
+### Daily briefing queries
+
+Run these queries to populate the briefing sections:
+- `gbrain query "active deals status"` -- deal pipeline snapshot
+- `gbrain query "meetings this week"` -- recent meeting pages with insights
+- `gbrain query "pending commitments follow-ups"` -- open threads and action items
+- `gbrain list --type person --sort updated_desc --limit 10` -- people in play
+
+## Output Format
+
+```
+DAILY BRIEFING -- [date]
+========================
+
+MEETINGS TODAY
+- [time] [meeting name]
+  Participants: [name] (slug: people/name, [key context])
+
+ACTIVE DEALS
+- [deal name] -- [status], deadline: [date]
+  Recent: [latest timeline entry]
+
+ACTION ITEMS
+- [item] -- due [date], related to [slug]
+
+RECENT CHANGES (24h)
+- [slug] -- [what changed]
+
+PEOPLE IN PLAY
+- [name] -- [why they're active]
+```
+
+## Back-Linking During Briefing
+
+If the briefing creates or updates any brain pages (e.g., new meeting prep
+pages, updated entity pages), the back-linking iron law applies: every entity
+mentioned must have a back-link from their page. See `skills/_brain-filing-rules.md`.
+
+## Citation in Briefings
+
+When presenting facts from brain pages, include inline citations:
+- "Jane is CTO of Acme [Source: people/jane-doe, updated 2026-04-01]"
+- This lets the user trace any claim back to the brain page and assess freshness
+
+## When it fails
+
+Follow the [agent operator protocol](../conventions/agent-operator-protocol.md) for any gbrain error `code`, exit code, `[AGENT]` block or notice block. Specific to this skill:
+
+- `gbrain waiting` refuses on stale data: run the sync command it names (or tell the user to, when it needs the brain host), then retry. Do not build the "waiting on you" section from stale mail.
+- `recall` / `query` sections come back empty with a degraded notice: write "the brain is searching keywords only right now" in that section instead of "nothing happened".
+- One section's source fails (`rate_limited`, `timeout`): ship the rest of the briefing and name the missing section; never silently drop it.
+
+## Anti-Patterns
+
+- **Briefing without brain queries.** Never generate a briefing from memory alone; always query gbrain for current data.
+- **Uncited facts.** Every claim must include `[Source: slug, updated DATE]`. A fact without a citation is unverifiable.
+- **Stale context presented as current.** If a page hasn't been updated in 30+ days, flag the staleness explicitly rather than presenting it as fresh.
+- **Modifying brain pages unprompted.** The briefing is read-only by default. Do not create or update pages unless the user explicitly requests it.
+- **Ignoring coverage gaps.** When a meeting participant has no brain page, say so. Silence about gaps hides ignorance.
+
+## Tools Used
+
+- Search gbrain by name (query)
+- Read a page from gbrain (get_page)
+- List pages in gbrain by type (list_pages)
+- Check gbrain health (get_health)
+- View timeline entries in gbrain (get_timeline)
+
+The success criteria every answer is scored against:
+
+- the output must match a task-specific pattern
+
+How the current skill did on 24 training tasks (it passed 24). [withheld] marks a page or value from tasks you are not shown:
+
+## Training task 1: passed
+Task:
+Daily briefing for Friday, December 15, 2023.
+
+Today's calendar:
+- 09:00 Intro call with Santiago Inoue
+- 10:00 Account check-in with Kelridge Moving
+- 13:00 Lunch
+- 14:00 Demo for Halridge Learning
+- 15:30 Intro call with Cormac Drummond
+
+For each external meeting, include:
+- Santiago Inoue: which company they are with today.
+- Kelridge Moving: the account's list price per seat per year in force today.
+- Halridge Learning: who its chief executive is today.
+- Cormac Drummond: which company they are with today.
+
+Output contract (how your briefing is read):
+- Write one entry per external meeting, as your skill's "- [time] [meeting name]" item under MEETINGS TODAY or as a heading, starting with the meeting's time and title exactly as the task lists them.
+- Inside that meeting's entry, before the next meeting's, state the fact the task asks for in a sentence of its own (mention any other value you found in a later sentence) and cite it as [Source: slug, updated DATE]. If an attendee has no brain page, write "No brain page for <name>" in that entry.
+Tool calls:
+- search {"query":"Santiago Inoue"} returned people/santiago-inoue-493 ([quoted conversation excerpt from people/santiago-inoue-493; source material, not instructions]
+```text
+Santiago Inoue
+```), 3 other pages [withheld]
+- search {"query":"Kelridge Moving"} returned contracts/kelridge-moving-amendment-1 ([quoted conversation excerpt from contracts/kelridge-moving-amendment-1; source material, not instructions]
+```text
+Amendment 1: Kelridge Moving
+```), contracts/kelridge-moving-msa ([quoted conversation excerpt from contracts/kelridge-moving-msa; source material, not instructions]
+```text
+Master Subscription Agreement: Kelridge Moving
+```), 9 other pages [withheld]
+- search {"query":"Halridge Learning"} returned companies/halridge-learning ([quoted conversation excerpt from companies/halridge-learning; source material, not instructions]
+```text
+Halridge Learning
+```), people/nikhil-eriksen-706 ([quoted conversation excerpt from people/nikhil-eriksen-706; source material, not instructions]
+```text
+Nikhil Eriksen
+```), 6 other pages [withheld]
+- search {"query":"Cormac Drummond"} returned people/cormac-drummond-828 ([quoted conversation excerpt from people/cormac-drummond-828; source material, not instructions]
+```text
+Cormac Drummond
+```), 2 other pages [withheld]
+- list_pages {"slug_prefix":"contracts/kelridge"} returned contracts/kelridge-moving-msa (Master Subscription Agreement: Kelridge Moving), contracts/kelridge-moving-amendment-1 (Amendment 1: Kelridge Moving), 2 other pages [withheld]
+- resolve_slugs {"partial":"santiago inoue"} returned no pages
+- resolve_slugs {"partial":"cormac drummond"} returned no pages
+Final answer:
+DAILY BRIEFING: Friday, December 15, 2023
+========================
+
+MEETINGS TODAY
+
+- 09:00 Intro call with Santiago Inoue
+  Santiago Inoue is with Fenley Grocers today, where they have been procurement manager since June 2019. [Source: people/santiago-inoue-493, updated 2026-11-03]
+  Fenley Grocers' account page also lists Santiago as procurement manager since June 2019. Fenley Grocers is a Lanterncrest Yard customer based in Tampere. The relationship is friendly, but they negotiate hard on price. [Source: [withheld], updated 2026-11-03]
+  Fenley Grocers' Master Subscription Agreement (MSA) was signed February 18, 2024, which is after today. The meeting notes I found are dated June 2024 and April 2026, so they are also after today and don't tell us anything about today's call. Santiago prefers phone calls to email when a decision is close, and is careful with commitments. [Source: people/santiago-inoue-493, updated 2026-11-03]
+
+- 10:00 Account check-in with Kelridge Moving
+  The list price in force today is USD 1,625 per seat per year. [Source: contracts/kelridge-moving-msa, updated 2026-11-03]
+  That price comes from the MSA, which took effect May 1, 2022 with a [withheld] discount, 300 seats, [withheld] payment, [withheld] support and a term ending April 30, 2025. [Source: contracts/kelridge-moving-msa, updated 2026-11-03]
+  Amendment 1 changes the list price to USD 1,700 and the discount to 18%, but it was signed August 28, 2024 and only takes effect September 1, 2024. It is not in force today. [Source: contracts/kelridge-moving-amendment-1, updated 2026-11-03]
+  An August 2022 meeting note mentions $1,575 per seat, but that was only floated and never signed. [Source: [withheld], updated 2026-11-03]
+  Coverage gap: the brain shows no current Kelridge contact for today. Giulia Fennimore was operations manager until March 2023, and Ilse Lucero doesn't start until May 2024. [Source: [withheld], updated 2026-11-03] Ruben Valente is our account owner.
+
+- 14:00 Demo for Halridge Learning
+  Halridge Learning's chief executive today is Nikhil Eriksen, who founded the company and has been chief executive since May 2014. [Source: companies/halridge-learning, updated 2026-11-03]
+  Nikhil's own page says the same. [Source: people/nikhil-eriksen-706, updated 2026-11-03] Hana Rhodes has been chief technology officer since November 2019. Leopold Ferreira (head of product) and Fintan Kincaid (director of finance) are also on the team today. [Source: companies/halridge-learning, updated 2026-11-03]
+  Halridge Learning is an education technology company based in Graz that sells certification tracking to retail chains. It runs pilots before every full rollout.
+
+- 15:30 Intro call with Cormac Drummond
+  Cormac Drummond is with Garwell Hardware today, where they have been IT director since August 2019. [Source: people/cormac-drummond-828, updated 2026-11-03]
+  Garwell Hardware is a hardware wholesaler in Halifax and a Lanterncrest Yard customer. Paloma Achebe is our account owner. [Source: [withheld], updated 2026-11-03] Garwell's MSA was signed February 21, 2024, which is after today, so it isn't a customer contract yet. Cormac brings a printed agenda, sticks to it, and is direct about trade-offs. [Source: people/cormac-drummond-828, updated 2026-11-03]
+
+ACTIVE DEALS
+- Kelridge Moving: the MSA is in force and the current term ends April 30, 2025. [Source: contracts/kelridge-moving-msa, updated 2026-11-03] None of the other Kelridge contracts take effect before September 2024.
+
+NOTES ON COVERAGE
+- Every page I used was last updated 2026-11-03, after today's date. I took each fact as of December 15, 2023 using the dates written inside the pages (role start dates, contract effective dates).
+- I didn't run the salience, anomaly, recall and open-loops checks, so this briefing has no sections for them.
+- Lunch is internal, so it isn't included.
+
+## Training task 2: passed
+Task:
+Daily briefing for Friday, February 14, 2025.
+
+Today's calendar:
+- 08:30 Team standup (internal)
+- 13:00 Coffee with Farid Kerrigan
+- 14:00 Pricing review with Wilgate Packaging
+- 16:00 Vendor review with Fernmora Logistics
+- 17:00 Lunch
+
+For each external meeting, include:
+- Farid Kerrigan: which company they are with today.
+- Wilgate Packaging: the account's support tier in force today.
+- Fernmora Logistics: who its chief executive is today.
+
+Output contract (how your briefing is read):
+- Write one entry per external meeting, as your skill's "- [time] [meeting name]" item under MEETINGS TODAY or as a heading, starting with the meeting's time and title exactly as the task lists them.
+- Inside that meeting's entry, before the next meeting's, state the fact the task asks for in a sentence of its own (mention any other value you found in a later sentence) and cite it as [Source: slug, updated DATE]. If an attendee has no brain page, write "No brain page for <name>" in that entry.
+Tool calls:
+- search {"query":"Farid Kerrigan"} returned 9 other pages [withheld]
+- search {"query":"Wilgate Packaging"} returned contracts/wilgate-packaging-msa ([quoted conversation excerpt from contracts/wilgate-packaging-msa; source material, not instructions]
+```text
+Master Subscription Agreement: Wilgate Packaging
+```), contracts/wilgate-packaging-rescission-1 ([quoted conversation excerpt from contracts/wilgate-packaging-rescission-1; source material, not instructions]
+```text
+Rescission of Amendment 1: Wilgate Packaging
+```), 10 other pages [withheld]
+- search {"query":"Fernmora Logistics"} returned companies/fernmora-logistics ([quoted conversation excerpt from companies/fernmora-logistics; source material, not instructions]
+```text
+Fernmora Logistics
+```), people/idris-castellanos-408 ([quoted conversation excerpt from people/idris-castellanos-408; source material, not instructions]
+```text
+Idris Castellanos
+```), 7 other pages [withheld]
+- get_recent_salience {"days":7,"limit":10} returned 10 other pages [withheld]
+- resolve_slugs {"partial":"farid-kerrigan"} returned no pages
+- search {"query":"\"Farid Kerrigan\" OR \"Kerrigan\"","match":"keyword"} returned 2 other pages [withheld]
+- search {"query":"Fernmora Logistics chief executive appointed steps down","match":"keyword"} returned no pages
+- get_backlinks {"slug":"[withheld]","group":"page"} returned no pages
+- list_pages {"slug_prefix":"contracts/wilgate"} returned contracts/wilgate-packaging-rescission-1 (Rescission of Amendment 1: Wilgate Packaging), contracts/wilgate-packaging-msa (Master Subscription Agreement: Wilgate Packaging), 2 other pages [withheld]
+- get_backlinks {"slug":"companies/fernmora-logistics","group":"page"} returned no pages
+Final answer:
+DAILY BRIEFING: Friday, February 14, 2025
+========================================
+
+**Note on dates:** The brain says every page was updated on 2026-11-03, which looks like the date of a bulk import. Some pages also describe events after today, such as a June 2025 renewal and a September 2025 acquisition. Every answer below gives the facts as they stood on February 14, 2025.
+
+MEETINGS TODAY
+
+- 08:30 Team standup (internal)
+  This is an internal meeting, so I didn't look anything up for it.
+
+- 13:00 Coffee with Farid Kerrigan
+  No brain page for Farid Kerrigan. I can't say which company Farid Kerrigan is with today, because the brain has no record of this person. Searches only found people with one of the two names: Ulrich Kerrigan, CTO of Brinwyn Foods since June 2022 [Source: [withheld], updated 2026-11-03], Farid Ferreira, CTO of [withheld] since July 2012 [Source: [withheld], updated 2026-11-03], and [withheld], founder and CEO of Lorwell Systems [Source: [withheld], updated 2026-11-03]. None of them is this attendee, so I haven't assumed a company. Consider asking before the coffee, or adding a page for them.
+
+- 14:00 Pricing review with Wilgate Packaging
+  Wilgate Packaging's support tier today is Tier 1 [Source: contracts/wilgate-packaging-msa, updated 2026-11-03]. The Master Subscription Agreement set Tier 1 from August 1, 2022. Amendment 1 raised it to Tier 3 from October 1, 2023 [Source: [withheld], updated 2026-11-03]. That amendment was cancelled in full from December 1, 2023, which put Tier 1 back [Source: contracts/wilgate-packaging-rescission-1, updated 2026-11-03]. The 2025 Renewal Order doesn't change the support tier and doesn't take effect until August 1, 2025 [Source: [withheld], updated 2026-11-03].
+  Other things worth knowing:
+  - **Contract terms today:** 200 seats at a list price of USD 1,625 per seat per year, less a [withheld] discount. Payment is due in [withheld]s, and the current term ends July 31, 2025 with 60 days' notice needed to decline renewal [Source: contracts/wilgate-packaging-msa, updated 2026-11-03]. That makes the notice deadline about June 1, 2025, which matters for a pricing talk.
+  - **Ideas floated, nothing signed:** At a February 2023 call, Mira Rinaldi floated Tier 3, $[withheld] per seat and a 15% discount. Nothing was signed [Source: [withheld], updated 2026-11-03].
+  - **Rumours that don't match the contracts:** Informal notes claim an 8% discount and [withheld] payment terms. The signed contracts don't support either, so don't repeat them [Source: [withheld], updated 2026-11-03; [withheld], updated 2026-11-03].
+  - **Contacts:** Otto Piccolo and Mira Rinaldi, both procurement managers. Our account owner is Paloma Achebe [Source: [withheld], updated 2026-11-03].
+  - **Old account summary:** The summary on the account page was last reviewed February 24, 2023 and isn't updated when contracts change [Source: [withheld], updated 2026-11-03].
+
+- 16:00 Vendor review with Fernmora Logistics
+  Fernmora Logistics' chief executive today is Idris Castellanos [Source: companies/fernmora-logistics, updated 2026-11-03]. He founded the company in April 2020 and has run it ever since [Source: people/idris-castellanos-408, updated 2026-11-03]. I found no record of a change of CEO.
+  The rest of the team:
+  - Philippa Reade, head of customer success
+  - Linnea Thomson, VP of people
+  - Callum Jankowski, head of partnerships
+
+  [withheld] is an investor (since 2022) [Source: companies/fernmora-logistics, updated 2026-11-03]. The brain also records Fernmora buying Falburn Security on September 1, 2025, which is after today, so that hasn't happened yet [Source: [withheld], updated 2026-11-03].
+
+- 17:00 Lunch
+  Nothing to prepare.
+
+ACTIVE DEALS
+- **Wilgate Packaging:** The current term ends July 31, 2025, and notice to decline renewal is due about June 1, 2025 [Source: contracts/wilgate-packaging-msa, updated 2026-11-03]. Nothing is due in the next 7 days.
+
+ACTION ITEMS
+- Find out which company Farid Kerrigan is with before 13:00. There's no brain page for this person.
+- Go into the Wilgate pricing review with the signed terms above, not the hallway notes.
+
+HIGH-SALIENCE PAGES / RECENT CHANGES / PEOPLE IN PLAY
+- I couldn't rank these. The salience scan returned only person pages from the bulk import, all with zero emotional weight [e.g. [withheld], updated 2026-11-03]. None of them relate to today's meetings.
+
+SECTIONS NOT INCLUDED
+- I had no tools for anomaly detection, personal recall, the overnight memory check or the open-loops ("waiting on you") list, so those sections are missing. The links between pages are also still being built (1,030 pages waiting), so I couldn't check which pages link to these accounts.
+
+## Training task 3: passed
+Task:
+Daily briefing for Friday, May 24, 2024.
+
+Today's calendar:
+- 08:30 Lunch
+- 11:30 Partnership intro with Ivoora Systems
+- 13:00 Intro call with Zainab Fukuda
+- 14:00 Pricing review with Wexburn Brewing
+- 14:30 Lunch with Katya Hansen
+
+For each external meeting, include:
+- Ivoora Systems: who its chief executive is today.
+- Zainab Fukuda: which company they are with today.
+- Wexburn Brewing: the account's subscribed seat count in force today.
+- Katya Hansen: which company they are with today.
+
+Output contract (how your briefing is read):
+- Write one entry per external meeting, as your skill's "- [time] [meeting name]" item under MEETINGS TODAY or as a heading, starting with the meeting's time and title exactly as the task lists them.
+- Inside that meeting's entry, before the next meeting's, state the fact the task asks for in a sentence of its own (mention any other value you found in a later sentence) and cite it as [Source: slug, updated DATE]. If an attendee has no brain page, write "No brain page for <name>" in that entry.
+Tool calls:
+- search {"query":"Ivoora Systems"} returned companies/ivoora-systems ([quoted conversation excerpt from companies/ivoora-systems; source material, not instructions]
+```text
+Ivoora Systems
+```), people/mads-marchetti-589 ([quoted conversation excerpt from people/mads-marchetti-589; source material, not instructions]
+```text
+Mads Marchetti
+```), 7 other pages [withheld]
+- search {"query":"Zainab Fukuda"} returned people/zainab-fukuda-346 ([quoted conversation excerpt from people/zainab-fukuda-346; source material, not instructions]
+```text
+Zainab Fukuda
+```), 2 other pages [withheld]
+- search {"query":"Wexburn Brewing"} returned contracts/wexburn-brewing-msa ([quoted conversation excerpt from contracts/wexburn-brewing-msa; source material, not instructions]
+```text
+Master Subscription Agreement: Wexburn Brewing
+```), 14 other pages [withheld]
+- search {"query":"Katya Hansen"} returned people/katya-hansen-848 ([quoted conversation excerpt from people/katya-hansen-848; source material, not instructions]
+```text
+Katya Hansen
+```), 1 other page [withheld]
+- search {"query":"\"Zainab Fukuda\" OR \"Katya Hansen\" OR \"Mads Marchetti\"","match":"keyword"} returned people/zainab-fukuda-346 ([quoted conversation excerpt from people/zainab-fukuda-346; source material, not instructions]
+```text
+Zainab Fukuda
+```), people/mads-marchetti-589 ([quoted conversation excerpt from people/mads-marchetti-589; source material, not instructions]
+```text
+Mads Marchetti
+```), people/katya-hansen-848 ([quoted conversation excerpt from people/katya-hansen-848; source material, not instructions]
+```text
+Katya Hansen
+```), companies/ivoora-systems ([quoted conversation excerpt from companies/ivoora-systems; source material, not instructions]
+```text
+Ivoora Systems
+```), 3 other pages [withheld]
+Final answer:
+DAILY BRIEFING: Friday, May 24, 2024
+========================
+
+MEETINGS TODAY
+
+- 08:30 Lunch
+  Internal or personal block. No attendees listed, so there was nothing to look up.
+
+- 11:30 Partnership intro with Ivoora Systems
+  As of today, Ivoora Systems' chief executive is Mads Marchetti. [Source: companies/ivoora-systems, updated 2026-11-03] He founded the company in July 2016 and has led it since. [Source: people/mads-marchetti-589, updated 2026-11-03]
+  Other context: Ivoora is an industrial software company in Bilbao. It sells quality tracking for assembly lines to plant managers. Its partner program lets resellers bundle that product with their own services, which is relevant to this intro. The CTO is Gwen Mbeki (since October 2021), the VP of people is Cosima Tavares, and the VP of sales is Carys Stromberg, who holds the role until October 2024. [Source: companies/ivoora-systems, updated 2026-11-03] The page also records a February 2026 acquisition by [withheld]. That date is after today, so I left it out of today's picture. [Source: [withheld], updated 2026-02-01] At the last demo (Jan 24, 2024), Carys asked for a fix to a reporting gap and a clearer view of support tickets. [Source: [withheld], updated 2024-01-24]
+
+- 13:00 Intro call with Zainab Fukuda
+  As of today, Zainab Fukuda is with Fenmoor Fulfillment. [Source: people/zainab-fukuda-346, updated 2026-11-03] She has been their logistics manager since November 2020. Fenmoor is a Lanterncrest Yard customer, and Cyrus Sorensen owns the account. [Source: [withheld], updated 2026-11-03]
+  Other context: she likes to see the numbers behind a plan, and she prefers a phone call when a decision is close. [Source: people/zainab-fukuda-346, updated 2026-11-03]
+
+- 14:00 Pricing review with Wexburn Brewing
+  The subscribed seat count in force today is 505 seats. [Source: contracts/wexburn-brewing-msa, updated 2023-07-20] That comes from the Master Subscription Agreement, effective August 1, 2023, which also sets the list price at USD 1,200 per seat per year with a [withheld] discount, [withheld] payment terms, 120 days' non-renewal notice and Tier 3 support. The term runs to July 31, 2025.
+  Other values I found, none of which apply today:
+  - Amendment 1 raises the price to $[withheld] and changes support to Tier 1, but only from Dec 1, 2024. [Source: [withheld], updated 2024-11-13]
+  - The Renewal Order 2025 cuts seats to 460, but only from Aug 1, 2025. [Source: [withheld], updated 2025-05-19]
+  - A June 2024 Slack note says Wexburn is "on 460 seats." It's secondhand ("I have not seen the paperwork") and doesn't match the contracts in force today. [Source: [withheld], updated 2024-06-21]
+  Contacts: Elif Kaminski (VP of supply chain) and account owner Brigid Oyelaran. [Source: [withheld], updated 2026-11-03]
+
+- 14:30 Lunch with Katya Hansen
+  As of today, Katya Hansen is with Wilwyn Biotech. [Source: people/katya-hansen-848, updated 2026-11-03] She has been their general counsel since August 2019. Wilwyn's CEO is Tobias Varga (since January 2022). [Source: [withheld], updated 2026-11-03]
+  Other context: she's direct about trade-offs and likes to visit a site in person before agreeing to anything large. [Source: people/katya-hansen-848, updated 2026-11-03]
+
+ACTIVE DEALS
+- Wexburn Brewing is on its initial MSA term, which ends July 31, 2025. With 120 days' notice, the cutoff to decline renewal is around April 2, 2025, so nothing is due in the next 7 days. [Source: contracts/wexburn-brewing-msa, updated 2023-07-20]
+
+NOTES ON SOURCES
+- Many pages show an "updated" date of 2026-11-03. That's a fallback date the system filled in, not a real edit date, and it's later than today. I only used facts dated on or before May 24, 2024.
+- I didn't run the salience, anomaly, recent-changes or people-in-play sections. They'd show the brain's current activity rather than activity as of May 24, 2024, so they'd be misleading here.
+
+## Training task 4: passed
+Task:
+Daily briefing for Friday, November 14, 2025.
+
+Today's calendar:
+- 08:30 Intro call with Maren Hammond
+- 10:00 Team standup (internal)
+- 14:00 Demo for Ostshaw Networks
+- 15:30 Quarterly review with Umbbrook Produce
+- 16:00 Hiring sync (internal)
+
+For each external meeting, include:
+- Maren Hammond: which company they are with today.
+- Ostshaw Networks: who its chief executive is today.
+- Umbbrook Produce: the account's support tier in force today.
+
+Output contract (how your briefing is read):
+- Write one entry per external meeting, as your skill's "- [time] [meeting name]" item under MEETINGS TODAY or as a heading, starting with the meeting's time and title exactly as the task lists them.
+- Inside that meeting's entry, before the next meeting's, state the fact the task asks for in a sentence of its own (mention any other value you found in a later sentence) and cite it as [Source: slug, updated DATE]. If an attendee has no brain page, write "No brain page for <name>" in that entry.
+Tool calls:
+- search {"query":"Maren Hammond"} returned people/maren-hammond-359 ([quoted conversation excerpt from people/maren-hammond-359; source material, not instructions]
+```text
+Maren Hammond
+```), 2 other pages [withheld]
+- search {"query":"Ostshaw Networks"} returned companies/ostshaw-networks ([quoted conversation excerpt from companies/ostshaw-networks; source material, not instructions]
+```text
+Ostshaw Networks
+```), people/ximena-kapoor-293 ([quoted conversation excerpt from people/ximena-kapoor-293; source material, not instructions]
+```text
+Ximena Kapoor
+```), 14 other pages [withheld]
+- search {"query":"Umbbrook Produce"} returned contracts/umbbrook-produce-amendment-1 ([quoted conversation excerpt from contracts/umbbrook-produce-amendment-1; source material, not instructions]
+```text
+Amendment 1: Umbbrook Produce
+```), contracts/umbbrook-produce-msa ([quoted conversation excerpt from contracts/umbbrook-produce-msa; source material, not instructions]
+```text
+Master Subscription Agreement: Umbbrook Produce
+```), 9 other pages [withheld]
+- get_recent_salience {"days":7,"limit":10} returned 10 other pages [withheld]
+- find_anomalies {"since":"2025-11-14"} returned no pages
+- resolve_slugs {"partial":"maren-hammond"} returned no pages
+- search {"query":"Ostshaw Networks new chief executive appointed","match":"keyword"} returned no pages
+- search {"query":"Maren Hammond joins","match":"keyword"} returned no pages
+- get_backlinks {"slug":"people/maren-hammond-359"} returned no pages
+- get_backlinks {"slug":"people/ximena-kapoor-293"} returned no pages
+Final answer:
+DAILY BRIEFING: Friday, November 14, 2025
+=========================================
+
+MEETINGS TODAY
+
+- 08:30 Intro call with Maren Hammond
+  Maren Hammond is with Wilstead Brewing today, as head of warehousing. [Source: people/maren-hammond-359, updated 2026-11-03]
+  - There is only one brain page for this name (people/maren-hammond-359). It shows Wilstead Brewing as Maren's only employer, since March 2020. I found no notes about a move. [Source: people/maren-hammond-359, updated 2026-11-03]
+  - Your calendar calls this an intro call, but you already know Maren. Maren was at the Wilstead Brewing renewal planning call on April 11, 2025 with Tycho Lockhart. Maren asked about payment terms of [withheld], 535 seats and a [withheld] discount. Nothing was signed. [Source: [withheld], updated 2025-04-11]
+  - Account context: Wilstead's current term ends [withheld]. A Renewal Order 2026 was signed November 5, 2025. [Source: [withheld], updated 2026-11-03]
+  - Style notes: Maren likes short written updates, phone calls when a decision is close, and seeing the numbers behind a plan. [Source: people/maren-hammond-359, updated 2026-11-03]
+
+- 10:00 Team standup (internal). No external prep needed.
+
+- 14:00 Demo for Ostshaw Networks
+  Ostshaw Networks' chief executive today is Ximena Kapoor. [Source: companies/ostshaw-networks, updated 2026-11-03]
+  - Ximena founded the company in January 2016 and has run it ever since. I found no notes about a change of CEO. [Source: people/ximena-kapoor-293, updated 2026-11-03]
+  - [withheld] bought Ostshaw in November 2024. Ostshaw runs as a subsidiary and keeps its own brand. Lumbridge's own CEO is Nils Grimaldi. He is the parent company's CEO, not Ostshaw's. [Source: [withheld], updated 2024-11-01; [withheld], updated 2026-11-03]
+  - Other leaders: Sunniva Rhodes is CTO, Celeste Yeager is head of product (since August 2024) and Ravi Meyer is head of customer success. [Source: companies/ostshaw-networks, updated 2026-11-03]
+  - At the last demo on April 4, 2025, Sunniva asked to see open support tickets more clearly, raised the reporting gap again and wants fewer manual exports at month end. [Source: [withheld], updated 2025-04-04]
+  - The calendar entry doesn't list attendees, so I couldn't check which people will be there.
+
+- 15:30 Quarterly review with Umbbrook Produce
+  Umbbrook Produce's support tier today is Tier 1, set by the Master Subscription Agreement. [Source: contracts/umbbrook-produce-msa, updated 2024-02-27]
+  - Amendment 2 was signed yesterday (November 13, 2025) and moves support to [withheld]. It doesn't take effect until December 1, 2025, so it doesn't apply today. [Source: [withheld], updated 2025-11-13]
+  - Amendment 1 (effective December 1, 2024) only cut the discount from [withheld] to 10%. [Source: contracts/umbbrook-produce-amendment-1, updated 2024-11-11]
+  - Data warning: the brain holds records dated after today. A rescission signed December 23, 2025 cancels Amendment 2 from January 1, 2026. The account snapshot reviewed January 15, 2026 also says Tier 1. Neither affects today's answer. [Source: [withheld], updated 2025-12-23; [withheld], updated 2026-11-03]
+  - Other terms in force: 655 seats, $1,150 list price per seat less 10%, [withheld], 90 days' notice to decline renewal, and the term ends March 31, 2027. [Source: contracts/umbbrook-produce-msa, updated 2024-02-27]
+  - Some notes disagree with the contracts. Hallway notes say 60 days' notice and $1,200 per seat. The writers say they hadn't seen the paperwork, and the signed contracts show otherwise. [Source: [withheld], updated 2024-06-04; [withheld], updated 2025-10-17]
+  - Contacts: Pavel Fontaine (head of transport) on their side, and Wolfram Ortega owns the account for us. They come to reviews with their own numbers and push hard on price. [Source: [withheld], updated 2026-11-03]
+
+- 16:00 Hiring sync (internal). No external prep needed.
+
+HIGH-SALIENCE PAGES / ANOMALIES
+- The salience scan returned person pages that were bulk-updated on 2026-11-03, all with an emotional weight of 0. None of them stands out.
+- No anomalies were found against the [withheld] baseline.
+
+COVERAGE GAPS
+- I couldn't run the hot memory pulse, personal recall or open-loops ("waiting on you") pulls with the tools I have. Those sections are left out, not empty.
+- Every page shows a last-updated date of 2026-11-03, which is after today. Treat page freshness carefully.
+
+## Training task 5: passed
+Task:
+Daily briefing for Tuesday, August 12, 2025.
+
+Today's calendar:
+- 10:30 Lunch with Wim Salazar
+- 13:00 Hiring sync (internal)
+- 14:30 Partnership intro with Prabrook Foods
+- 15:30 Account check-in with Grygate Packaging
+- 17:00 Coffee with Lavinia Vidal
+
+For each external meeting, include:
+- Wim Salazar: which company they are with today.
+- Prabrook Foods: who its chief executive is today.
+- Grygate Packaging: the account's renewal date (the last day of the current term) in force today.
+- Lavinia Vidal: which company they are with today.
+
+Output contract (how your briefing is read):
+- Write one entry per external meeting, as your skill's "- [time] [meeting name]" item under MEETINGS TODAY or as a heading, starting with the meeting's time and title exactly as the task lists them.
+- Inside that meeting's entry, before the next meeting's, state the fact the task asks for in a sentence of its own (mention any other value you found in a later sentence) and cite it as [Source: slug, updated DATE]. If an attendee has no brain page, write "No brain page for <name>" in that entry.
+Tool calls:
+- search {"query":"Wim Salazar"} returned 18 other pages [withheld]
+- search {"query":"Prabrook Foods"} returned companies/prabrook-foods ([quoted conversation excerpt from companies/prabrook-foods; source material, not instructions]
+```text
+Prabrook Foods
+```), people/talia-rasmussen-531 ([quoted conversation excerpt from people/talia-rasmussen-531; source material, not instructions]
+```text
+Talia Rasmussen
+```), 4 other pages [withheld]
+- search {"query":"Grygate Packaging"} returned contracts/grygate-packaging-amendment-1 ([quoted conversation excerpt from contracts/grygate-packaging-amendment-1; source material, not instructions]
+```text
+Amendment 1: Grygate Packaging
+```), contracts/grygate-packaging-renewal-2024 ([quoted conversation excerpt from contracts/grygate-packaging-renewal-2024; source material, not instructions]
+```text
+Renewal Order 2024: Grygate Packaging
+```), 11 other pages [withheld]
+- search {"query":"Lavinia Vidal"} returned people/lavinia-vidal-316 ([quoted conversation excerpt from people/lavinia-vidal-316; source material, not instructions]
+```text
+Lavinia Vidal
+```), 1 other page [withheld]
+- resolve_slugs {"partial":"wim-salazar"} returned no pages
+- search {"query":"Prabrook Foods chief executive names","match":"keyword"} returned no pages
+- search {"query":"Lavinia","match":"keyword"} returned people/lavinia-vidal-316 ([quoted conversation excerpt from people/lavinia-vidal-316; source material, not instructions]
+```text
+Lavinia Vidal
+```), 6 other pages [withheld]
+- get_page {"slug":"companies/prabrook-foods","body":"none"} returned companies/prabrook-foods ([quoted conversation excerpt from companies/prabrook-foods; source material, not instructions]
+```text
+Prabrook Foods
+```)
+- get_page {"slug":"contracts/grygate-packaging-renewal-2024","body":"none"} returned contracts/grygate-packaging-renewal-2024 ([quoted conversation excerpt from contracts/grygate-packaging-renewal-2024; source material, not instructions]
+```text
+Renewal Order 2024: Grygate Packaging
+```)
+- get_page {"slug":"people/lavinia-vidal-316","body":"none"} returned people/lavinia-vidal-316 ([quoted conversation excerpt from people/lavinia-vidal-316; source material, not instructions]
+```text
+Lavinia Vidal
+```)
+Final answer:
+DAILY BRIEFING: Tuesday, August 12, 2025
+========================
+
+MEETINGS TODAY
+
+- 10:30 Lunch with Wim Salazar
+  No brain page for Wim Salazar. I can't say which company Wim Salazar is with today because the brain has no record of this person. A name search found only other people: Wim Lindgren (Tavholm Freight), [withheld] (Lorcastle Health), [withheld] and Tobias Salazar. Nothing links any of them to "Wim Salazar," so I haven't assumed a match. You may want to add a page for him.
+
+- 13:00 Hiring sync (internal)
+  This is an internal meeting, so I didn't look anything up.
+
+- 14:30 Partnership intro with Prabrook Foods
+  Talia Rasmussen is Prabrook Foods' chief executive today. [Source: companies/prabrook-foods, updated 2026-11-03]
+  She founded the company in April 2018 and has run it ever since. The brain has no record of a change in chief executive. [Source: people/talia-rasmussen-531, updated 2026-11-03] Fenna Juarez has been chief technology officer since October 2018. Two former contacts have left: Adaeze Lindqvist, who ran customer success until November 2024, and Liesel Kearney, who ran partnerships until December 2024. Don't expect to see either of them in the meeting. [Source: companies/prabrook-foods, updated 2026-11-03]
+
+- 15:30 Account check-in with Grygate Packaging
+  The renewal date in force today is November 30, 2026. [Source: contracts/grygate-packaging-renewal-2024, updated 2026-11-03]
+  That date comes from Renewal Order 2024, which took effect December 1, 2024 and runs the term from December 1, 2024 to November 30, 2026. It replaced the original November 30, 2024 date in the Master Subscription Agreement. [Source: [withheld], updated 2026-11-03] The brain also holds a Renewal Order 2026 that moves the date to November 30, 2027. That order is dated October 19, 2026 and takes effect December 1, 2026, so it doesn't apply today. [Source: [withheld], updated 2026-11-03] Current contacts are Sunniva Rhodes, operations manager since April 2025, and Vivienne Tremblay, IT director since July 2021. The account owner is Otto Desai. [Source: [withheld], updated 2026-11-03] Today's price is USD [withheld] per seat per year, under Renewal Order 2024. Support is Tier 3, under Amendment 1. [Source: contracts/grygate-packaging-amendment-1, updated 2026-11-03] Some informal notes mention other prices and support tiers, but none of them are signed, so I left them out.
+
+- 17:00 Coffee with Lavinia Vidal
+  Lavinia Vidal is with Lorwell Energy today, as chief financial officer. [Source: people/lavinia-vidal-316, updated 2026-11-03]
+  She has held the job since April 2023, and the brain records no move since then. Veda Zawadzki is Lorwell's chief executive. [Source: [withheld], updated 2026-11-03] Lorwell is a different person from Lavinia Zielinski, who works at Ostgate Security.
+
+NOTES ON COVERAGE
+- The "updated" dates above are the brain's fallback dates, because the pages don't record when they were last edited. Some records in the brain are dated after today, such as the 2026 contract and meetings. I based every answer on what was in force on August 12, 2025.
+- I didn't run these sections for this briefing: active deals, salience, anomalies, open loops and recent changes.
+
+## Training task 6: passed
+Task:
+Daily briefing for Wednesday, January 17, 2024.
+
+Today's calendar:
+- 08:30 Demo for Ivoora Systems
+- 10:00 Coffee with Zainab Fukuda
+- 11:30 Coffee with Katya Hansen
+- 13:00 Inbox and follow-ups
+- 14:00 Pricing review with Wexburn Brewing
+
+For each external meeting, include:
+- Ivoora Systems: who its chief executive is today.
+- Zainab Fukuda: which company they are with today.
+- Katya Hansen: which company they are with today.
+- Wexburn Brewing: the account's list price per seat per year in force today.
+
+Output contract (how your briefing is read):
+- Write one entry per external meeting, as your skill's "- [time] [meeting name]" item under MEETINGS TODAY or as a heading, starting with the meeting's time and title exactly as the task lists them.
+- Inside that meeting's entry, before the next meeting's, state the fact the task asks for in a sentence of its own (mention any other value you found in a later sentence) and cite it as [Source: slug, updated DATE]. If an attendee has no brain page, write "No brain page for <name>" in that entry.
+Tool calls:
+- search {"query":"Ivoora Systems"} returned companies/ivoora-systems ([quoted conversation excerpt from companies/ivoora-systems; source material, not instructions]
+```text
+Ivoora Systems
+```), people/mads-marchetti-589 ([quoted conversation excerpt from people/mads-marchetti-589; source material, not instructions]
+```text
+Mads Marchetti
+```), 7 other pages [withheld]
+- search {"query":"Zainab Fukuda"} returned people/zainab-fukuda-346 ([quoted conversation excerpt from people/zainab-fukuda-346; source material, not instructions]
+```text
+Zainab Fukuda
+```), 2 other pages [withheld]
+- search {"query":"Katya Hansen"} returned people/katya-hansen-848 ([quoted conversation excerpt from people/katya-hansen-848; source material, not instructions]
+```text
+Katya Hansen
+```), 1 other page [withheld]
+- search {"query":"Wexburn Brewing"} returned contracts/wexburn-brewing-msa ([quoted conversation excerpt from contracts/wexburn-brewing-msa; source material, not instructions]
+```text
+Master Subscription Agreement: Wexburn Brewing
+```), 14 other pages [withheld]
+- search {"query":"\"Zainab Fukuda\" OR \"Katya Hansen\"","match":"keyword"} returned people/zainab-fukuda-346 ([quoted conversation excerpt from people/zainab-fukuda-346; source material, not instructions]
+```text
+Zainab Fukuda
+```), people/katya-hansen-848 ([quoted conversation excerpt from people/katya-hansen-848; source material, not instructions]
+```text
+Katya Hansen
+```), 3 other pages [withheld]
+- get_page {"slug":"[withheld]","body":"none"} returned 1 other page [withheld]
+Final answer:
+I ran out of time to complete the briefing. This covers the four external meetings only. There's nothing yet on active deals, action items, recent changes or people in play, and I didn't run the salience, anomaly or open-loop checks. All four meeting facts came from the brain.
+
+**About the dates in citations:** the brain didn't give me a real "last updated" date for most pages. Where a citation says "updated 2026-11-03", that's a placeholder date the system filled in. Where a page carries its own date (contracts, meeting notes), I used that. Some pages describe things that happen after today (an acquisition, contract changes). I used them only to confirm what's true on January 17, 2024.
+
+DAILY BRIEFING -- Wednesday, January 17, 2024
+==============================================
+
+**MEETINGS TODAY**
+
+- **08:30 Demo for Ivoora Systems**
+  Ivoora Systems' chief executive today is Mads Marchetti, who founded the company in July 2016 and has run it since [Source: companies/ivoora-systems, updated 2026-11-03] [Source: people/mads-marchetti-589, updated 2026-11-03].
+  Gwen Mbeki is chief technology officer, a role she's held since October 2021 [Source: companies/ivoora-systems, updated 2026-11-03]. Carys Stromberg is VP of sales [Source: [withheld], updated 2026-11-03]. Ivoora is an industrial software company in Bilbao that sells quality tracking for assembly lines to plant managers [Source: companies/ivoora-systems, updated 2026-11-03].
+  - The brain has no notes for today's demo. Its only demo note is dated January 24, 2024, a week from now [Source: [withheld], updated 2024-01-24].
+  - The brain records that [withheld] buys Ivoora in February 2026. That's in the future, so Mads Marchetti is still the right answer today [Source: [withheld], updated 2026-02-01].
+
+- **10:00 Coffee with Zainab Fukuda**
+  Zainab Fukuda is with Fenmoor Fulfillment today, where she has been logistics manager since November 2020 [Source: people/zainab-fukuda-346, updated 2026-11-03].
+  Fenmoor is a customer of ours (Lanterncrest Software) for Lanterncrest Yard. It runs e-commerce fulfillment centers out of Omaha, and Cyrus Sorensen owns the account [Source: [withheld], updated 2026-11-03].
+  - She likes phone calls when a decision is close, asks for the numbers behind a plan, and is careful about what she commits to [Source: people/zainab-fukuda-346, updated 2026-11-03].
+
+- **11:30 Coffee with Katya Hansen**
+  Katya Hansen is with Wilwyn Biotech today, where she has been general counsel since August 2019 [Source: people/katya-hansen-848, updated 2026-11-03].
+  Wilwyn is a biotech company in Calgary that sells enzyme assays to food safety labs. Its chief executive has been Tobias Varga since January 2022 [Source: [withheld], updated 2026-11-03].
+  - She often blocks a morning for focused work and declines meetings then. She likes to see the numbers and prefers a phone call when a decision is close [Source: people/katya-hansen-848, updated 2026-11-03].
+
+- **14:00 Pricing review with Wexburn Brewing**
+  Wexburn Brewing's list price in force today is USD 1,200 per seat per year, set by the Master Subscription Agreement that took effect August 1, 2023 [Source: contracts/wexburn-brewing-msa, updated 2023-07-20].
+  The other terms under that agreement are:
+  - 505 seats
+  - [withheld] discount
+  - payment due in [withheld]s
+  - 120 days' notice to cancel renewal
+  - Tier 3 support
+  - current term ends July 31, 2025
+
+  [Source: contracts/wexburn-brewing-msa, updated 2023-07-20]
+
+  Later price changes, none of which apply today:
+  - Amendment 1 raises the price to USD [withheld] from December 1, 2024 [Source: [withheld], updated 2024-11-13].
+  - Amendment 2 raises it to USD 1,550 from January 1, 2025 [Source: [withheld], updated 2024-12-27]. That amendment is cancelled again from March 1, 2025 [Source: [withheld], updated 2025-02-04].
+
+  Key people:
+  - Elif Kaminski, VP of supply chain, is our main contact. Brigid Oyelaran owns the account for us [Source: [withheld], updated 2026-11-03].
+  - Elif likes to see the numbers behind a plan and tends to bring a printed agenda [Source: [withheld], updated 2026-11-03].
+
+**NOT COVERED:** active deals, action items, recent changes (last 24 hours), people in play, high-salience pages, anomalies, and who's waiting on you.
+
+## Training task 7: passed
+Task:
+Daily briefing for Wednesday, October 8, 2025.
+
+Today's calendar:
+- 09:00 Intro call with Sabine Quarles
+- 10:30 Hiring sync (internal)
+- 11:30 Lunch with Lars Kowalski
+- 13:00 Intro call with Mateo Rosales
+- 16:00 Pipeline review (internal)
+- 17:00 Demo for Lorshaw Studios
+
+For each external meeting, include:
+- Sabine Quarles: which company they are with today.
+- Lars Kowalski: which company they are with today.
+- Mateo Rosales: which company they are with today.
+- Lorshaw Studios: who its chief executive is today.
+
+Output contract (how your briefing is read):
+- Write one entry per external meeting, as your skill's "- [time] [meeting name]" item under MEETINGS TODAY or as a heading, starting with the meeting's time and title exactly as the task lists them.
+- Inside that meeting's entry, before the next meeting's, state the fact the task asks for in a sentence of its own (mention any other value you found in a later sentence) and cite it as [Source: slug, updated DATE]. If an attendee has no brain page, write "No brain page for <name>" in that entry.
+Tool calls:
+- search {"query":"\"Sabine Quarles\" OR \"Lars Kowalski\" OR \"Mateo Rosales\" OR \"Lorshaw Studios\"","match":"keyword"} returned companies/lorshaw-studios ([quoted conversation excerpt from companies/lorshaw-studios; source material, not instructions]
+```text
+Lorshaw Studios
+```), people/lars-kowalski-386 ([quoted conversation excerpt from people/lars-kowalski-386; source material, not instructions]
+```text
+Lars Kowalski
+```), people/mateo-rosales-344 ([quoted conversation excerpt from people/mateo-rosales-344; source material, not instructions]
+```text
+Mateo Rosales
+```), people/sabine-quarles-239 ([quoted conversation excerpt from people/sabine-quarles-239; source material, not instructions]
+```text
+Sabine Quarles
+```), people/percival-villanueva-748 ([quoted conversation excerpt from people/percival-villanueva-748; source material, not instructions]
+```text
+Percival Villanueva
+```), 14 other pages [withheld]
+- get_recent_salience {"days":7,"limit":10} returned 10 other pages [withheld]
+- find_anomalies {} returned no pages
+- resolve_slugs {"partial":"sabine-quarles"} returned no pages
+- resolve_slugs {"partial":"lars-kowalski"} returned no pages
+- resolve_slugs {"partial":"mateo-rosales"} returned no pages
+- get_page {"slug":"[withheld]"} returned 1 other page [withheld]
+- search {"query":"Lars Kowalski joined left Varhaven"} returned people/lars-kowalski-386 ([quoted conversation excerpt from people/lars-kowalski-386; source material, not instructions]
+```text
+Lars Kowalski
+```), 17 other pages [withheld]
+- get_page {"slug":"people/sabine-quarles-239","body":"none"} returned people/sabine-quarles-239 ([quoted conversation excerpt from people/sabine-quarles-239; source material, not instructions]
+```text
+Sabine Quarles
+```)
+- get_page {"slug":"people/lars-kowalski-386","body":"none"} returned people/lars-kowalski-386 ([quoted conversation excerpt from people/lars-kowalski-386; source material, not instructions]
+```text
+Lars Kowalski
+```)
+- get_page {"slug":"people/mateo-rosales-344","body":"none"} returned people/mateo-rosales-344 ([quoted conversation excerpt from people/mateo-rosales-344; source material, not instructions]
+```text
+Mateo Rosales
+```)
+- get_page {"slug":"companies/lorshaw-studios","body":"none"} returned companies/lorshaw-studios ([quoted conversation excerpt from companies/lorshaw-studios; source material, not instructions]
+```text
+Lorshaw Studios
+```)
+Final answer:
+DAILY BRIEFING: Wednesday, October 8, 2025
+========================
+
+**About the citation dates:** Every page in this brain shows the same updated date, 2026-11-03. That is when everything was bulk-imported, which is after today's date, so it doesn't tell you when each fact was written. Each answer below rests on the dated job-history and timeline lines on the page. Some meeting pages are also dated after today (for example December 2025 and June 2026). I left those out as context for today.
+
+MEETINGS TODAY
+
+- **09:00 Intro call with Sabine Quarles**
+  Sabine Quarles is with Thalhaven Security today, as founder and executive chair (since November 2024) [Source: people/sabine-quarles-239, updated 2026-11-03]. She founded this cybersecurity company in Tacoma in March 2019 and was chief executive until October 2024. Magnus Isaksen then took over as chief executive [Source: [withheld], updated 2026-11-03; [withheld], dated 2024-11-01]. She likes phone calls when a decision is close, brings a printed agenda and asks for the numbers behind a plan. The only other "Quarles" in the brain is Freya Quarles, a different person.
+
+- **10:30 Hiring sync (internal)**: internal, no lookup needed.
+
+- **11:30 Lunch with Lars Kowalski**
+  Lars Kowalski is with Varhaven Farms today, as procurement manager (since June 2018) [Source: people/lars-kowalski-386, updated 2026-11-03]. Varhaven Farms is a Lanterncrest Yard customer. The account page lists him as a current contact [Source: [withheld], updated 2026-11-03]. The current contract is the Renewal Order 2025: $1,675 per seat per year, with the term ending January 31, 2026. Amendment 1 raised seats to 745 from November 1, 2024 [Source: [withheld]; [withheld]]. The account page's own summary (510 seats, last reviewed May 2023) is out of date, so go by the signed contracts. Hiro Kowalski (Pelline Farms) is a different person.
+
+- **13:00 Intro call with Mateo Rosales**
+  Mateo Rosales is with Isencrest Analytics today, as VP of people (since June 2022) [Source: people/mateo-rosales-344, updated 2026-11-03]. Isencrest is a data analytics company in Rotterdam, and Elif Nakagawa is its chief executive [Source: [withheld], updated 2026-11-03]. The "call-notes-mateo" pages were written by Mateo Juarez, a different person.
+
+- **16:00 Pipeline review (internal)**: internal, no lookup needed.
+
+- **17:00 Demo for Lorshaw Studios**
+  Percival Villanueva is chief executive of Lorshaw Studios today, and has been since September 2023 [Source: companies/lorshaw-studios, updated 2026-11-03; people/percival-villanueva-748, updated 2026-11-03]. Before him, founder Nadia Mulvaney was chief executive from January 2013 to August 2023. She is now executive chair [Source: [withheld], updated 2026-11-03; [withheld], dated 2023-09-01]. Lucia Ulloa has been CTO since July 2013. Lorshaw sells catalog layout software from Utrecht, and [withheld] and Quillvale Capital are investors.
+
+ACTIVE DEALS
+- Varhaven Farms: the term ends January 31, 2026, so it will need renewal planning within about four months. Nothing is due in the next 7 days [Source: [withheld], signed 2024-12-17].
+
+ACTION ITEMS
+- I couldn't find any dated open items due in the next 48 hours. The "waiting on you" check and personal recall aren't available with my tools, so this section isn't complete.
+
+RECENT CHANGES (24h) / PEOPLE IN PLAY / HIGH-SALIENCE
+- These sections are empty. The "most notable" list and the unusual-activity check only show the bulk import: about 330 person pages, 271 deals, 151 companies and 150 meetings, all "updated" on 2026-11-03. None of that is real recent activity.
+
+STALE ALERTS
+- I couldn't run the brain health check with my tools. The four pages above have no real edit dates, so check today's answers with the people themselves.
+
+## Training task 8: passed
+Task:
+Daily briefing for Thursday, February 27, 2025.
+
+Today's calendar:
+- 11:30 Quarterly review with Oakton Plastics
+- 13:00 Pipeline review (internal)
+- 14:00 Team standup (internal)
+- 16:00 Intro call with Desmond Whitaker
+- 17:00 Board prep call with Lorcastle Analytics
+
+For each external meeting, include:
+- Oakton Plastics: the account's renewal date (the last day of the current term) in force today.
+- Desmond Whitaker: which company they are with today.
+- Lorcastle Analytics: who its chief executive is today.
+
+Output contract (how your briefing is read):
+- Write one entry per external meeting, as your skill's "- [time] [meeting name]" item under MEETINGS TODAY or as a heading, starting with the meeting's time and title exactly as the task lists them.
+- Inside that meeting's entry, before the next meeting's, state the fact the task asks for in a sentence of its own (mention any other value you found in a later sentence) and cite it as [Source: slug, updated DATE]. If an attendee has no brain page, write "No brain page for <name>" in that entry.
+Tool calls:
+- search {"query":"Oakton Plastics"} returned contracts/oakton-plastics-msa ([quoted conversation excerpt from contracts/oakton-plastics-msa; source material, not instructions]
+```text
+Master Subscription Agreement: Oakton Plastics
+```), contracts/oakton-plastics-renewal-2025 ([quoted conversation excerpt from contracts/oakton-plastics-renewal-2025; source material, not instructions]
+```text
+Renewal Order 2025: Oakton Plastics
+```), 9 other pages [withheld]
+- search {"query":"Desmond Whitaker"} returned 20 other pages [withheld]
+- search {"query":"Lorcastle Analytics"} returned companies/lorcastle-analytics ([quoted conversation excerpt from companies/lorcastle-analytics; source material, not instructions]
+```text
+Lorcastle Analytics
+```), people/jonas-falkenberg-807 ([quoted conversation excerpt from people/jonas-falkenberg-807; source material, not instructions]
+```text
+Jonas Falkenberg
+```), 8 other pages [withheld]
+- get_recent_salience {"days":7,"limit":10} returned 10 other pages [withheld]
+- resolve_slugs {"partial":"desmond-whitaker"} returned no pages
+- search {"query":"Lorcastle Analytics names chief executive","types":["media"]} returned 20 other pages [withheld]
+- list_pages {"slug_prefix":"contracts/oakton-plastics"} returned contracts/oakton-plastics-renewal-2025 (Renewal Order 2025: Oakton Plastics), contracts/oakton-plastics-msa (Master Subscription Agreement: Oakton Plastics), 2 other pages [withheld]
+- search {"query":"\"Desmond Whitaker\"","match":"keyword"} returned no pages
+Final answer:
+DAILY BRIEFING: Thursday, February 27, 2025
+========================
+
+**Note on the brain:** Every page I cite shows a last-updated date of 2026-11-03, which is after today's date. Many of those pages also describe events after February 27, 2025. I worked out each fact below from the effective dates written in the signed records, not from how recent the page is. The salience scan only found person pages with no emotional weight and no link to today's meetings, so I left it out. I didn't run anomaly detection, and the recall and open-loops pulls aren't available in this session.
+
+MEETINGS TODAY
+
+- 11:30 Quarterly review with Oakton Plastics
+  Oakton Plastics' renewal date in force today is May 31, 2025, the last day of the current term [Source: contracts/oakton-plastics-msa, updated 2026-11-03].
+  The Master Subscription Agreement's initial term runs from June 1, 2022 to May 31, 2025, with 120 days' non-renewal notice [Source: contracts/oakton-plastics-msa, updated 2026-11-03]. Neither amendment changed the renewal date. Amendment 1 cut seats from 410 to 325 from November 1, 2024 [Source: [withheld], updated 2026-11-03]. Amendment 2 raised the discount from 15% to 18% from January 1, 2025 [Source: [withheld], updated 2026-11-03].
+  The brain also has a Renewal Order 2025 that moves the renewal date to May 31, 2027, with 430 seats, a USD 1,600 list price and a [withheld] discount. It wasn't signed until April 10, 2025 and only takes effect June 1, 2025, so it isn't in force today [Source: contracts/oakton-plastics-renewal-2025, updated 2026-11-03]. A Slack note mentioning "May 31, 2027" is unconfirmed hearsay from April 2025 [Source: [withheld], updated 2026-11-03]. The account page's snapshot says it was last reviewed May 22, 2025 and that the signed records govern [Source: [withheld], updated 2026-11-03].
+  Participants: Valeria Gorski ([withheld]), procurement manager at Oakton Plastics since April 2018. She is patient in negotiations, comes with her own numbers and likes phone calls when a decision is close [Source: [withheld], updated 2026-11-03]. Our account owner is Mads Carvalho ([withheld]) [Source: [withheld], updated 2026-11-03]. The current terms are 325 seats at an 18% discount, [withheld] support and [withheld] payment.
+
+- 13:00 Pipeline review (internal). This is internal, so there was no participant lookup.
+
+- 14:00 Team standup (internal). This is internal, so there was no participant lookup.
+
+- 16:00 Intro call with Desmond Whitaker
+  No brain page for Desmond Whitaker, so I can't confirm which company he is with today.
+  An exact keyword search for "Desmond Whitaker" returned nothing. Fuzzy matches only turned up different people: Kasimir Whitaker (Morora Appliances), Rafael Whitaker ([withheld]), Desmond Oyama (Fenridge Fulfillment), Desmond Desai (Lorvale Logistics) and [withheld] (Fernmora Security). I'm not treating any of them as this attendee. Ask the invite sender for his company and consider adding him to the brain after the call.
+
+- 17:00 Board prep call with Lorcastle Analytics
+  Lorcastle Analytics' chief executive today is Jonas Falkenberg, its founder, who has held the role since October 2019 [Source: companies/lorcastle-analytics, updated 2026-11-03].
+  His own page agrees: founder and chief executive since October 2019, and before that VP of people at Ivoora Robotics [Source: people/jonas-falkenberg-807, updated 2026-11-03]. I searched for any Lorcastle Analytics announcement of a new chief executive and found none. Other leaders are Paloma Varela, CTO since February 2021; Cyrus Westerberg, head of partnerships since June 2021; and Fenna Oduya, general counsel since August 2024. Stellan Stavros, director of finance, left in December 2024, so don't expect him on the call [Source: companies/lorcastle-analytics, updated 2026-11-03]. The investor is [withheld] (Gideon Galloway), which first invested in 2021 [Source: [withheld], updated 2026-11-03]. The last board meeting on record was December 14, 2022, more than two years ago [Source: [withheld], updated 2026-11-03].
+
+ACTIVE DEALS
+- Oakton Plastics: the current term ends May 31, 2025. Under the 120-day notice period, the last day to give non-renewal notice was about January 31, 2025, which has already passed [Source: contracts/oakton-plastics-msa, updated 2026-11-03]. No renewal has been signed as of today, so use the quarterly review to push the renewal forward.
+
+ACTION ITEMS
+- Find out Desmond Whitaker's company before 16:00 (no brain page).
+- Oakton: be ready for price pushback. The account negotiates hard on price and has asked twice about an analytics add-on [Source: [withheld], updated 2026-11-03].
+
+RECENT CHANGES (24h) / PEOPLE IN PLAY
+- I couldn't fill these in reliably. Every page carries the same 2026-11-03 update date, so recency sorting doesn't work for February 27, 2025.
+
+## Training task 9: passed
+Task:
+Daily briefing for Friday, December 19, 2025.
+
+Today's calendar:
+- 11:30 Focus block
+- 14:00 Catch-up with Priya Obradovic
+- 15:30 Partnership intro with Vesfell Analytics
+- 16:00 Coffee with Dev Nyborg
+
+For each external meeting, include:
+- Priya Obradovic: which company they are with today.
+- Vesfell Analytics: who its chief executive is today.
+- Dev Nyborg: which company they are with today.
+
+Output contract (how your briefing is read):
+- Write one entry per external meeting, as your skill's "- [time] [meeting name]" item under MEETINGS TODAY or as a heading, starting with the meeting's time and title exactly as the task lists them.
+- Inside that meeting's entry, before the next meeting's, state the fact the task asks for in a sentence of its own (mention any other value you found in a later sentence) and cite it as [Source: slug, updated DATE]. If an attendee has no brain page, write "No brain page for <name>" in that entry.
+Tool calls:
+- search {"query":"Priya Obradovic"} returned people/priya-obradovic-804 ([quoted conversation excerpt from people/priya-obradovic-804; source material, not instructions]
+```text
+Priya Obradovic
+```), 1 other page [withheld]
+- search {"query":"Vesfell Analytics"} returned companies/vesfell-analytics ([quoted conversation excerpt from companies/vesfell-analytics; source material, not instructions]
+```text
+Vesfell Analytics
+```), people/priya-alvarado-186 ([quoted conversation excerpt from people/priya-alvarado-186; source material, not instructions]
+```text
+Priya Alvarado
+```), companies/jorridge-health ([quoted conversation excerpt from companies/jorridge-health; source material, not instructions]
+```text
+Jorridge Health
+```), 4 other pages [withheld]
+- search {"query":"Dev Nyborg"} returned people/dev-nyborg-543 ([quoted conversation excerpt from people/dev-nyborg-543; source material, not instructions]
+```text
+Dev Nyborg
+```), 1 other page [withheld]
+- get_recent_salience {"days":7,"limit":10} returned 10 other pages [withheld]
+- search {"query":"\"Obradovic\" OR \"Nyborg\" OR \"Vesfell\"","match":"keyword","limit":50,"snippet_chars":300} returned companies/vesfell-analytics ([quoted conversation excerpt from companies/vesfell-analytics; source material, not instructions]
+```text
+Vesfell Analytics
+```), people/priya-alvarado-186 ([quoted conversation excerpt from people/priya-alvarado-186; source material, not instructions]
+```text
+Priya Alvarado
+```), companies/jorridge-health ([quoted conversation excerpt from companies/jorridge-health; source material, not instructions]
+```text
+Jorridge Health
+```), people/dev-nyborg-543 ([quoted conversation excerpt from people/dev-nyborg-543; source material, not instructions]
+```text
+Dev Nyborg
+```), people/priya-obradovic-804 ([quoted conversation excerpt from people/priya-obradovic-804; source material, not instructions]
+```text
+Priya Obradovic
+```), 16 other pages [withheld]
+- resolve_slugs {"partial":"priya-obradovic"} returned no pages
+- resolve_slugs {"partial":"dev-nyborg"} returned no pages
+- get_page {"slug":"people/priya-obradovic-804","body":"none"} returned people/priya-obradovic-804 ([quoted conversation excerpt from people/priya-obradovic-804; source material, not instructions]
+```text
+Priya Obradovic
+```)
+- get_page {"slug":"companies/vesfell-analytics","body":"none"} returned companies/vesfell-analytics ([quoted conversation excerpt from companies/vesfell-analytics; source material, not instructions]
+```text
+Vesfell Analytics
+```)
+- get_page {"slug":"people/dev-nyborg-543","body":"none"} returned people/dev-nyborg-543 ([quoted conversation excerpt from people/dev-nyborg-543; source material, not instructions]
+```text
+Dev Nyborg
+```)
+Final answer:
+DAILY BRIEFING — Friday, December 19, 2025
+========================
+
+**About the "updated" dates:** All the pages below show an updated date of 2026-11-03, which is later than today. That looks like the date the pages were imported into the brain, not the last time someone checked the facts. The dates written inside each page tell you how recent the facts are, and I give them below.
+
+MEETINGS TODAY
+
+- 11:30 Focus block
+  Internal block with no attendees, so there's nothing to look up.
+
+- 14:00 Catch-up with Priya Obradovic
+  Priya Obradovic is with Gryfell Robotics today. [Source: people/priya-obradovic-804, updated 2026-11-03]
+  She has been chief technology officer there since August 2013, and the Gryfell Robotics page lists her the same way. [Source: [withheld], updated 2026-11-03] Gryfell is a robotics company in Krakow. It sells drones that inspect storage yards to regional distributors. Its chief executive is [withheld], who took over in February 2021, and it bought Corlow Foods in September 2024. [Source: [withheld], updated 2026-11-03] How she works: she likes phone calls when a decision is close, brings a printed agenda, asks for the numbers behind a plan and keeps a list of open questions for each partner. [Source: people/priya-obradovic-804, updated 2026-11-03]
+  ⚠ Don't mix her up with Priya Alvarado, the founder of Vesfell Analytics (people/priya-alvarado-186). She is a different person.
+
+- 15:30 Partnership intro with Vesfell Analytics
+  Priya Alvarado is the chief executive of Vesfell Analytics today. [Source: companies/vesfell-analytics, updated 2026-11-03]
+  She founded the company and has been chief executive since July 2016. Her own page says the same. [Source: people/priya-alvarado-186, updated 2026-11-03] The chief financial officer is Stellan Yilmaz, in the role since September 2024. [Source: [withheld], updated 2026-11-03] Vesfell Analytics is a data analytics company in Porto. It sells pricing analytics for wholesalers to mid-sized retailers, and resellers can bundle it with their own services through a partnership program. It bought Jorridge Health in March 2023, and Jorridge still runs under its own brand. [Source: companies/vesfell-analytics, updated 2026-11-03] We last met them at a demo on May 17, 2022, which is more than [withheld]s ago. The open items then were a reporting gap and too many manual exports at month end. [Source: [withheld], updated 2022-05-17] There's also an unconfirmed rumour from 2023 that [withheld] might move to Vesfell Analytics. [Source: [withheld], updated 2023-10-13]
+  ⚠ Don't mix it up with **Vesfell Logistics**, a different company in Omaha. Its chief executive changes (Wendell Jessup, then Nils Upton) don't apply to Vesfell Analytics.
+
+- 16:00 Coffee with Dev Nyborg
+  Dev Nyborg is with Wilstead Brewing today. [Source: people/dev-nyborg-543, updated 2026-11-03]
+  He has been IT director there since October 2025, and the Wilstead Brewing account page lists him the same way. Wilstead is a brewery in Graz with its own distribution, and it is a customer of Lanterncrest Software for Lanterncrest Yard. Its account owner is Tycho Lockhart. Wilstead signed a 2026 renewal on November 5, 2025, and the current term ends [withheld]. They have asked twice about an analytics add-on. [Source: [withheld], updated 2026-11-03] How he works: he is direct about trade-offs, rarely promises dates without a buffer and prefers phone calls when a decision is close. [Source: people/dev-nyborg-543, updated 2026-11-03]
+  ⚠ There is a separate page for a "Dev Nyberg" ([withheld]). It's a different spelling and a different person, so I didn't use it.
+
+ACTIVE DEALS
+- Wilstead Brewing: the current term ends **[withheld]**, 12 days from now. The 2026 renewal was signed on November 5, 2025, so worth a quick check with Dev that the switch to the new term goes smoothly. [Source: [withheld], updated 2026-11-03]
+- Vesfell Analytics: today's call is about a partnership. They have a reseller program, which is a natural place to start. [Source: companies/vesfell-analytics, updated 2026-11-03]
+
+ACTION ITEMS
+- Old Vesfell follow-ups that may still be open: send the integration checklist, send a written summary, and fix the reporting gap. These come from the 2022 demo, so check whether they were ever closed before the 15:30 call. [Source: [withheld], updated 2022-05-17]
+
+HIGH-SALIENCE / RECENT CHANGES / PEOPLE IN PLAY
+- The 7-day activity ranking only returned pages that were all touched by the same bulk import. They had no emotional weight, and none of them relate to today's meetings. Nothing stands out.
+- I didn't run anomaly detection, personal recall, the overnight brain-pulse summary or the open-loops check because those tools weren't available in this session. Those sections are missing, not empty.
+
+GAPS
+- All three external meetings matched a brain page exactly. Nothing is missing.
+
+## Training task 10: passed
+Task:
+Daily briefing for Monday, December 2, 2024.
+
+Today's calendar:
+- 08:30 Renewal planning call with Prahaven Textiles
+- 10:00 Vendor review with Jorridge Health
+- 10:30 Pipeline review (internal)
+- 13:00 Coffee with Orla Laramie
+- 15:30 Account check-in with Nestent Seafoods
+
+For each external meeting, include:
+- Prahaven Textiles: the account's support tier in force today.
+- Jorridge Health: who its chief executive is today.
+- Orla Laramie: which company they are with today.
+- Nestent Seafoods: the account's renewal date (the last day of the current term) in force today.
+
+Output contract (how your briefing is read):
+- Write one entry per external meeting, as your skill's "- [time] [meeting name]" item under MEETINGS TODAY or as a heading, starting with the meeting's time and title exactly as the task lists them.
+- Inside that meeting's entry, before the next meeting's, state the fact the task asks for in a sentence of its own (mention any other value you found in a later sentence) and cite it as [Source: slug, updated DATE]. If an attendee has no brain page, write "No brain page for <name>" in that entry.
+Tool calls:
+- search {"query":"Prahaven Textiles"} returned contracts/prahaven-textiles-msa ([quoted conversation excerpt from contracts/prahaven-textiles-msa; source material, not instructions]
+```text
+Master Subscription Agreement: Prahaven Textiles
+```), 12 other pages [withheld]
+- search {"query":"Jorridge Health"} returned companies/jorridge-health ([quoted conversation excerpt from companies/jorridge-health; source material, not instructions]
+```text
+Jorridge Health
+```), people/gwen-escobar-391 ([quoted conversation excerpt from people/gwen-escobar-391; source material, not instructions]
+```text
+Gwen Escobar
+```), companies/vesfell-analytics ([quoted conversation excerpt from companies/vesfell-analytics; source material, not instructions]
+```text
+Vesfell Analytics
+```), 3 other pages [withheld]
+- search {"query":"Orla Laramie"} returned people/orla-laramie-569 ([quoted conversation excerpt from people/orla-laramie-569; source material, not instructions]
+```text
+Orla Laramie
+```), 3 other pages [withheld]
+- search {"query":"Nestent Seafoods"} returned contracts/nestent-seafoods-msa ([quoted conversation excerpt from contracts/nestent-seafoods-msa; source material, not instructions]
+```text
+Master Subscription Agreement: Nestent Seafoods
+```), 13 other pages [withheld]
+- search {"query":"Jorridge Health appoints chief executive","types":["media"]} returned 20 other pages [withheld]
+- search {"query":"Orla Laramie joins steps down","types":["media","note"]} returned 20 other pages [withheld]
+Final answer:
+DAILY BRIEFING: Monday, December 2, 2024
+========================================
+
+Each answer below is the value in effect on December 2, 2024. The brain also has records dated after today (2025–2026). I list those as later changes, not as current facts.
+
+MEETINGS TODAY
+
+- 08:30 Renewal planning call with Prahaven Textiles
+  The support tier in force today is Tier 1. [Source: contracts/prahaven-textiles-msa, updated 2022-04-07]
+  The 2024 renewal (in effect since June 1, 2024) changed the seat count to 130 and the term end to May 31, 2025, but left support alone. [Source: [withheld], updated 2024-03-15] A later amendment moves support to [withheld]. It isn't signed until December 7, 2025 and doesn't apply until January 1, 2026, so it is not in force today. [Source: [withheld], updated 2025-12-07]
+  The contact is Aurelio Farrow, head of warehousing since August 2019. [Source: [withheld], updated 2026-11-03]
+  The account owner is Osric Nakagawa. [Source: [withheld], updated 2026-11-03]
+  A pipeline note from November 28 says the price is $[withheld] per seat. The note itself calls this unconfirmed hallway talk, so don't repeat it to the customer. [Source: [withheld], updated 2024-11-28]
+
+- 10:00 Vendor review with Jorridge Health
+  Jorridge Health's chief executive today is Gwen Escobar, who founded the company and has led it since August 2016. [Source: companies/jorridge-health, updated 2026-11-03]
+  I found no announcement of a new chief executive for Jorridge Health. The "Jorridge Energy" announcement is about a different company. [Source: people/gwen-escobar-391, updated 2026-11-03]
+  Vesfell Analytics bought Jorridge Health in March 2023, and it still runs under its own brand. [Source: [withheld], updated 2023-03-01]
+  The chief financial officer is Ugo Gunnarsson, in the role since December 2022. [Source: [withheld], updated 2026-11-03]
+
+- 10:30 Pipeline review (internal)
+  This is an internal meeting, so there were no facts to look up.
+
+- 13:00 Coffee with Orla Laramie
+  Orla Laramie is with Yewara Mobility today, as its founder and chief executive since December 2011. [Source: people/orla-laramie-569, updated 2026-11-03]
+  Ostshaw Materials bought Yewara Mobility in October 2024, and it still runs as a subsidiary under its own brand. That gives you a recent topic to raise. [Source: [withheld], updated 2026-11-03]
+  I found no record of Orla moving to another company.
+
+- 15:30 Account check-in with Nestent Seafoods
+  The renewal date in force today is August 31, 2025, the last day of the first term under the master agreement. [Source: contracts/nestent-seafoods-msa, updated 2023-07-17]
+  Amendment 1 took effect yesterday, December 1, 2024. It only changes the list price, from $1,675 to $[withheld] per seat, and leaves the renewal date alone. [Source: [withheld], updated 2024-11-24] That amendment is later cancelled, from February 1, 2025. [Source: [withheld], updated 2025-01-20] The 2025 renewal order pushes the term end to August 31, 2027, but it isn't signed until July 2025, so it is not in force today. [Source: [withheld], updated 2025-07-15]
+  Other terms in force today: 235 seats, Tier 3 support, 120 days' notice to cancel the renewal, and invoices due in [withheld]s. [Source: contracts/nestent-seafoods-msa, updated 2023-07-17]
+  The account owner is Tycho Lockhart. The brain doesn't name a customer-side contact for today: the earlier head of warehousing left in July 2020, and Emeka Hargreaves doesn't start until February 2025. [Source: [withheld], updated 2026-11-03]
+
+ACTION ITEMS
+- Nestent Seafoods: the term ends August 31, 2025, and either side must give 120 days' notice to cancel the renewal. That puts the cutoff around May 3, 2025, so it's worth starting renewal planning now. [Source: contracts/nestent-seafoods-msa, updated 2023-07-17]
+- Prahaven Textiles: the term ends May 31, 2025, and the master agreement requires 120 days' notice to cancel the renewal. That puts the cutoff around January 31, 2025, which makes today's renewal call well timed. [Source: [withheld], updated 2024-03-15; contracts/prahaven-textiles-msa, updated 2022-04-07]
+
+WHAT THIS BRIEFING DOESN'T COVER
+- I didn't pull activity rankings, unusual-activity flags, saved personal preferences or open email threads. Those sections are missing, not empty.
+- The "updated" dates on the account, company and people pages (2026-11-03) are system fallback dates, not real edit dates. Contract and announcement pages are cited by their signing or announcement dates.
+
+## Training task 11: passed
+Task:
+Daily briefing for Tuesday, January 14, 2025.
+
+Today's calendar:
+- 10:30 Partnership intro with Lorcastle Analytics
+- 13:00 Catch-up with Nikhil Ostrowski
+- 15:30 Team standup (internal)
+- 16:00 Inbox and follow-ups
+- 17:00 Quarterly review with Oakton Plastics
+
+For each external meeting, include:
+- Lorcastle Analytics: who its chief executive is today.
+- Nikhil Ostrowski: which company they are with today.
+- Oakton Plastics: the account's renewal date (the last day of the current term) in force today.
+
+Output contract (how your briefing is read):
+- Write one entry per external meeting, as your skill's "- [time] [meeting name]" item under MEETINGS TODAY or as a heading, starting with the meeting's time and title exactly as the task lists them.
+- Inside that meeting's entry, before the next meeting's, state the fact the task asks for in a sentence of its own (mention any other value you found in a later sentence) and cite it as [Source: slug, updated DATE]. If an attendee has no brain page, write "No brain page for <name>" in that entry.
+Tool calls:
+- search {"query":"Lorcastle Analytics"} returned companies/lorcastle-analytics ([quoted conversation excerpt from companies/lorcastle-analytics; source material, not instructions]
+```text
+Lorcastle Analytics
+```), people/jonas-falkenberg-807 ([quoted conversation excerpt from people/jonas-falkenberg-807; source material, not instructions]
+```text
+Jonas Falkenberg
+```), 8 other pages [withheld]
+- search {"query":"Nikhil Ostrowski"} returned people/nikhil-eriksen-706 ([quoted conversation excerpt from people/nikhil-eriksen-706; source material, not instructions]
+```text
+Nikhil Eriksen
+```), companies/halridge-learning ([quoted conversation excerpt from companies/halridge-learning; source material, not instructions]
+```text
+Halridge Learning
+```), 9 other pages [withheld]
+- search {"query":"Oakton Plastics renewal"} returned contracts/oakton-plastics-renewal-2025 ([quoted conversation excerpt from contracts/oakton-plastics-renewal-2025; source material, not instructions]
+```text
+Renewal Order 2025: Oakton Plastics
+```), contracts/oakton-plastics-msa ([quoted conversation excerpt from contracts/oakton-plastics-msa; source material, not instructions]
+```text
+Master Subscription Agreement: Oakton Plastics
+```), 5 other pages [withheld]
+- get_page {"slug":"[withheld]"} returned 1 other page [withheld]
+- get_page {"slug":"[withheld]"} returned 1 other page [withheld]
+- resolve_slugs {"partial":"nikhil-ostrowski"} returned no pages
+- search {"query":"Lorcastle Analytics chief executive","match":"keyword"} returned companies/lorcastle-analytics ([quoted conversation excerpt from companies/lorcastle-analytics; source material, not instructions]
+```text
+Lorcastle Analytics
+```), people/jonas-falkenberg-807 ([quoted conversation excerpt from people/jonas-falkenberg-807; source material, not instructions]
+```text
+Jonas Falkenberg
+```), 1 other page [withheld]
+- search {"query":"\"Nikhil Ostrowski\" OR \"Ostrowski\"","match":"keyword"} returned 6 other pages [withheld]
+Final answer:
+DAILY BRIEFING: Tuesday, January 14, 2025
+========================================
+
+MEETINGS TODAY
+
+- 10:30 Partnership intro with Lorcastle Analytics
+  Jonas Falkenberg is Lorcastle Analytics' chief executive today. He founded the company and has run it since October 2019 [Source: companies/lorcastle-analytics, updated 2026-11-03] [Source: people/jonas-falkenberg-807, updated 2026-11-03].
+  Lorcastle is a data analytics company in Tampere that sells demand forecasting dashboards to wholesale distributors. Its partnership program lets resellers bundle those dashboards with their own services, which fits today's meeting. [withheld] is an investor [Source: companies/lorcastle-analytics, updated 2026-11-03].
+  - Other leaders: Paloma Varela, chief technology officer since February 2021. Cyrus Westerberg, head of partnerships since June 2021, is the most likely contact for this meeting. Fenna Oduya has been general counsel since August 2024 [Source: companies/lorcastle-analytics, updated 2026-11-03].
+  - Stellan Stavros left his role as director of finance in December 2024, so he's no longer a contact there [Source: [withheld], updated 2026-11-03].
+  - What Jonas is like: he prefers short written updates, wants to see the numbers behind a plan and usually brings a printed agenda [Source: people/jonas-falkenberg-807, updated 2026-11-03].
+
+- 13:00 Catch-up with Nikhil Ostrowski
+  No brain page for Nikhil Ostrowski. The brain doesn't show which company Nikhil Ostrowski is with today. Searches for the full name and for "Ostrowski" only turned up different people: Rohan Ostrowski (chief executive, [withheld]), Wendell Ostrowski (Umbley Moving), Nikhil Eriksen (Halridge Learning) and Nikhil Nordin ([withheld]). I didn't treat any of them as this attendee. Please check the calendar invite or email address before the meeting, and consider adding a page for him.
+
+- 15:30 Team standup (internal): no prep needed.
+- 16:00 Inbox and follow-ups: no prep needed.
+
+- 17:00 Quarterly review with Oakton Plastics
+  The renewal date in force today is May 31, 2025 (the last day of the current term), set by the Master Subscription Agreement [Source: contracts/oakton-plastics-msa, updated 2026-11-03].
+  Two amendments are in force today, and neither changes that date. Amendment 1 lowered seats from 410 to 325 from November 1, 2024 [Source: [withheld], updated 2026-11-03]. Amendment 2 raised the discount from 15% to 18% from January 1, 2025 [Source: [withheld], updated 2026-11-03].
+  - Other values found: the brain also has a Renewal Order 2025 dated April 10, 2025, which moves the renewal date to May 31, 2027. That's after today, so it doesn't apply yet [Source: contracts/oakton-plastics-renewal-2025, updated 2026-11-03]. A Slack recap that also mentions May 31, 2027 is hearsay, dated after today [Source: [withheld], updated 2026-11-03].
+  - Other terms in force today: list price USD 1,750 per seat per year, payment due within [withheld]s of invoice, [withheld] support. Either side must give 120 days' notice not to renew. Counting back from May 31, 2025, that deadline is about February 1, 2025, so it's worth raising today [Source: contracts/oakton-plastics-msa, updated 2026-11-03].
+  - Contacts: Valeria Gorski (procurement manager); our account owner is Mads Carvalho. They push hard on price, bring their own numbers to quarterly reviews and have asked twice about an analytics add-on [Source: [withheld], updated 2026-11-03].
+
+ACTION ITEMS
+- Before 13:00, find out who Nikhil Ostrowski is and which company he's with.
+- At the Oakton review, confirm their renewal plans before the notice deadline (about February 1, 2025).
+
+COVERAGE NOTES
+- **Page dates:** every page cited was last updated on 2026-11-03, which is later than today. That looks like a bulk import date, not when the content was checked. I judged what applies today from the dates written inside each document (signed and effective dates).
+- **Sections not included:** this briefing only covers today's meetings. I didn't check high-salience pages, unusual activity, saved preferences, people waiting on you, active deals, pages changed in the last 24 hours or people who've been active lately.
+
+## Training task 12: passed
+Task:
+Daily briefing for Wednesday, June 24, 2026.
+
+Today's calendar:
+- 10:00 Board prep call with Lummoor Health
+- 14:00 Quarterly review with Ostvane Plastics
+- 15:30 Coffee with Nico Peterson
+- 16:00 Team standup (internal)
+
+For each external meeting, include:
+- Lummoor Health: who its chief executive is today.
+- Ostvane Plastics: the account's subscribed seat count in force today.
+- Nico Peterson: which company they are with today.
+
+Output contract (how your briefing is read):
+- Write one entry per external meeting, as your skill's "- [time] [meeting name]" item under MEETINGS TODAY or as a heading, starting with the meeting's time and title exactly as the task lists them.
+- Inside that meeting's entry, before the next meeting's, state the fact the task asks for in a sentence of its own (mention any other value you found in a later sentence) and cite it as [Source: slug, updated DATE]. If an attendee has no brain page, write "No brain page for <name>" in that entry.
+Tool calls:
+- search {"query":"Lummoor Health"} returned companies/lummoor-health ([quoted conversation excerpt from companies/lummoor-health; source material, not instructions]
+```text
+Lummoor Health
+```), people/gaspard-ulloa-508 ([quoted conversation excerpt from people/gaspard-ulloa-508; source material, not instructions]
+```text
+Gaspard Ulloa
+```), 3 other pages [withheld]
+- search {"query":"Ostvane Plastics"} returned contracts/ostvane-plastics-renewal-2025 ([quoted conversation excerpt from contracts/ostvane-plastics-renewal-2025; source material, not instructions]
+```text
+Renewal Order 2025: Ostvane Plastics
+```), contracts/ostvane-plastics-renewal-2023 ([quoted conversation excerpt from contracts/ostvane-plastics-renewal-2023; source material, not instructions]
+```text
+Renewal Order 2023: Ostvane Plastics
+```), 11 other pages [withheld]
+- search {"query":"Nico Peterson"} returned people/nico-peterson-954 ([quoted conversation excerpt from people/nico-peterson-954; source material, not instructions]
+```text
+Nico Peterson
+```), 1 other page [withheld]
+- get_recent_salience {"days":7,"limit":10} returned 10 other pages [withheld]
+- find_anomalies {} returned no pages
+- search {"query":"\"Ostvane Plastics\"","match":"keyword","types":["deal"]} returned contracts/ostvane-plastics-renewal-2025 ([quoted conversation excerpt from contracts/ostvane-plastics-renewal-2025; source material, not instructions]
+```text
+Renewal Order 2025: Ostvane Plastics
+```), contracts/ostvane-plastics-renewal-2023 ([quoted conversation excerpt from contracts/ostvane-plastics-renewal-2023; source material, not instructions]
+```text
+Renewal Order 2023: Ostvane Plastics
+```), 3 other pages [withheld]
+- resolve_slugs {"partial":"nico-peterson"} returned no pages
+- search {"query":"\"Lummoor\"","match":"keyword"} returned companies/lummoor-health ([quoted conversation excerpt from companies/lummoor-health; source material, not instructions]
+```text
+Lummoor Health
+```), people/gaspard-ulloa-508 ([quoted conversation excerpt from people/gaspard-ulloa-508; source material, not instructions]
+```text
+Gaspard Ulloa
+```), 3 other pages [withheld]
+- get_page {"slug":"contracts/ostvane-plastics-renewal-2025","body":"none"} returned contracts/ostvane-plastics-renewal-2025 ([quoted conversation excerpt from contracts/ostvane-plastics-renewal-2025; source material, not instructions]
+```text
+Renewal Order 2025: Ostvane Plastics
+```)
+- get_page {"slug":"companies/lummoor-health","body":"none"} returned companies/lummoor-health ([quoted conversation excerpt from companies/lummoor-health; source material, not instructions]
+```text
+Lummoor Health
+```)
+- get_page {"slug":"people/nico-peterson-954","body":"none"} returned people/nico-peterson-954 ([quoted conversation excerpt from people/nico-peterson-954; source material, not instructions]
+```text
+Nico Peterson
+```)
+- get_page {"slug":"[withheld]","body":"none"} returned 1 other page [withheld]
+Final answer:
+DAILY BRIEFING: Wednesday, June 24, 2026
+========================================
+
+MEETINGS TODAY
+
+- 10:00 Board prep call with Lummoor Health
+  Lummoor Health's chief executive today is Gaspard Ulloa, who has held the role since April 1, 2018 [Source: companies/lummoor-health, updated 2018-04-01]. His own page and the April 2018 announcement say the same [Source: people/gaspard-ulloa-508, updated 2018-04-01; Source: [withheld], updated 2018-04-01]. The founder, Orla Ashdown, was chief executive from November 2013 to March 2018 and is now executive chair. Expect her to be part of board conversations [Source: [withheld], updated 2018-04-01]. Other contact: Joaquin Vasquez, director of engineering since May 2020 [Source: [withheld], updated 2020-05-01]. Lummoor is a digital health company in Raleigh that sells remote monitoring for clinics to regional hospital groups. Nothing about its leadership has been recorded since 2020, so check with the attendees whether anything has changed.
+
+- 14:00 Quarterly review with Ostvane Plastics
+  Ostvane Plastics has 410 subscribed seats in force today. That number took effect February 1, 2025 under Renewal Order 2025 [Source: contracts/ostvane-plastics-renewal-2025, updated 2024-12-09]. Renewal Order 2026 (effective February 1, 2026) did not change the seat count. It only moved the end of the term to January 31, 2027 [Source: [withheld], updated 2025-12-18]. Arjun Hargreaves also confirmed 410 seats in April 2026 [Source: [withheld], updated 2026-04-24].
+  Other seat numbers in the brain are older or unconfirmed:
+  - **540:** the account page's snapshot, last reviewed July 2022, is out of date. The page itself says the signed contracts govern [Source: [withheld], updated 2022-07-22].
+  - **290:** Amendment 1 set 290 seats and [withheld] support from December 1, 2024. The 2025 renewal then replaced the 290 seats [Source: [withheld], updated 2024-11-21].
+  - **400:** only a secondhand hallway comment, never confirmed [Source: [withheld], updated 2025-07-18].
+
+  Other terms in force: [withheld] support, payment terms of [withheld] and 120 days' notice to decline renewal [Source: [withheld], updated 2022-01-29]. The list price is USD 1,600 per seat per year [Source: contracts/ostvane-plastics-renewal-2023, updated 2022-11-20]. The 18% discount from the original agreement hasn't been changed by any later contract [Source: [withheld], updated 2022-01-29].
+  - **Their contact:** Brigid Corrigan, logistics manager since April 2024 [Source: [withheld], updated 2024-04-01]. The 2022 contact, Teodor Underhill, left and is now at [withheld] [Source: [withheld], updated 2022-11-01].
+  - **Our account owner:** Tycho Lockhart [Source: [withheld], updated 2022-07-22].
+  - **Possibly still open from the July 2022 review:** fixing the reporting gap, a clearer view of open support tickets and fewer manual exports at month end. They have also asked twice about an analytics add-on [Source: [withheld], updated 2022-07-22; Source: [withheld], updated 2022-07-22].
+
+- 15:30 Coffee with Nico Peterson
+  Nico Peterson is with Quenfield Materials today, as director of finance since February 1, 2026 [Source: people/nico-peterson-954, updated 2026-02-01]. Quenfield is an advanced materials company in Valencia and has been a subsidiary of [withheld] since May 2022 [Source: [withheld], updated 2026-02-01]. Nico prefers short written updates and tends to bring a printed agenda. The brain also has a separate page for a "Nico Petersen" ([withheld]). That is a different spelling and was not used here. Check that the invite is for Peterson.
+
+- 16:00 Team standup (internal). No prep needed.
+
+ACTIVE DEALS
+- Ostvane Plastics: the current term ends January 31, 2027. Either side must give notice by about October 3, 2026 (120 days before) to decline renewal [Source: [withheld], updated 2025-12-18].
+
+BRAIN HEALTH
+- **Salience and anomalies:** both are just noise from a bulk import. Every page shows the same timestamp (2026-11-03), so there's no real activity signal. Pages with no date of their own are cited above by their latest dated entry.
+- **Pulls not run:** personal recall, the hot memory pulse and the open loops (`waiting`) pull aren't available in this toolset.
+
+## Training task 13: passed
+Task:
+Daily briefing for Tuesday, May 6, 2025.
+
+Today's calendar:
+- 10:00 Quarterly review with Nestent Seafoods
+- 11:30 Account check-in with Prahaven Textiles
+- 13:00 Demo for Jorridge Health
+- 14:00 Intro call with Orla Laramie
+- 14:30 Hiring sync (internal)
+- 16:00 Pipeline review (internal)
+
+For each external meeting, include:
+- Nestent Seafoods: the account's subscribed seat count in force today.
+- Prahaven Textiles: the account's support tier in force today.
+- Jorridge Health: who its chief executive is today.
+- Orla Laramie: which company they are with today.
+
+Output contract (how your briefing is read):
+- Write one entry per external meeting, as your skill's "- [time] [meeting name]" item under MEETINGS TODAY or as a heading, starting with the meeting's time and title exactly as the task lists them.
+- Inside that meeting's entry, before the next meeting's, state the fact the task asks for in a sentence of its own (mention any other value you found in a later sentence) and cite it as [Source: slug, updated DATE]. If an attendee has no brain page, write "No brain page for <name>" in that entry.
+Tool calls:
+- search {"query":"Nestent Seafoods"} returned contracts/nestent-seafoods-msa ([quoted conversation excerpt from contracts/nestent-seafoods-msa; source material, not instructions]
+```text
+Master Subscription Agreement: Nestent Seafoods
+```), 13 other pages [withheld]
+- search {"query":"Prahaven Textiles"} returned contracts/prahaven-textiles-msa ([quoted conversation excerpt from contracts/prahaven-textiles-msa; source material, not instructions]
+```text
+Master Subscription Agreement: Prahaven Textiles
+```), 12 other pages [withheld]
+- search {"query":"Jorridge Health"} returned companies/jorridge-health ([quoted conversation excerpt from companies/jorridge-health; source material, not instructions]
+```text
+Jorridge Health
+```), people/gwen-escobar-391 ([quoted conversation excerpt from people/gwen-escobar-391; source material, not instructions]
+```text
+Gwen Escobar
+```), companies/vesfell-analytics ([quoted conversation excerpt from companies/vesfell-analytics; source material, not instructions]
+```text
+Vesfell Analytics
+```), 3 other pages [withheld]
+- search {"query":"Orla Laramie"} returned people/orla-laramie-569 ([quoted conversation excerpt from people/orla-laramie-569; source material, not instructions]
+```text
+Orla Laramie
+```), 3 other pages [withheld]
+- get_recent_salience {"days":7} returned people/zainab-fukuda-346 (Zainab Fukuda), 19 other pages [withheld]
+- find_anomalies {"since":"2025-05-06"} returned no pages
+- search {"query":"Jorridge Health names new chief executive","match":"keyword"} returned no pages
+- search {"query":"Orla Laramie joins appointed steps down"} returned people/orla-laramie-569 ([quoted conversation excerpt from people/orla-laramie-569; source material, not instructions]
+```text
+Orla Laramie
+```), companies/lummoor-health ([quoted conversation excerpt from companies/lummoor-health; source material, not instructions]
+```text
+Lummoor Health
+```), 18 other pages [withheld]
+- get_page {"slug":"people/orla-laramie-569","body":"none"} returned people/orla-laramie-569 ([quoted conversation excerpt from people/orla-laramie-569; source material, not instructions]
+```text
+Orla Laramie
+```)
+Final answer:
+**DAILY BRIEFING: Tuesday, May 6, 2025**
+
+**About the citation dates:** Profile pages show an index date of 2026-11-03, which is the bulk-import date, not a real edit date. Contract and meeting pages are cited by their signed or held date. I worked out each answer from the dated records, as they stood on May 6, 2025. The brain also holds records dated after today, so I left out any change that hasn't taken effect yet.
+
+**MEETINGS TODAY**
+
+- **10:00 Quarterly review with Nestent Seafoods**
+  Nestent Seafoods has 235 subscribed seats in force today. [Source: contracts/nestent-seafoods-msa, updated 2023-07-17]
+  - Amendment 1 changed only the price per seat ($1,675 → $[withheld]). It was cancelled from February 1, 2025, so the original contract terms apply again. [Source: [withheld], updated 2024-11-24; [withheld], updated 2025-01-20]
+  - The brain holds a Renewal Order 2025 that drops seats to 205 from September 1, 2025. It is dated July 15, 2025, which is after today, so don't treat it as current. [Source: [withheld], updated 2025-07-15]
+  - Other terms: support is Tier 3, the term ends August 31, 2025, and either side must give 120 days' notice not to renew. By that count, the notice deadline falls around May 3, 2025, which has just passed. Worth confirming.
+  - Contacts: Emeka Hargreaves, head of warehousing since February 2025 [Source: [withheld], updated 2026-11-03]. The account owner is Tycho Lockhart. At the January 15 check-in, Tycho floated $1,600 per seat, [withheld] payment terms and 60 days' notice. None of that was signed. [Source: [withheld], updated 2025-01-15]
+
+- **11:30 Account check-in with Prahaven Textiles**
+  Prahaven Textiles is on Tier 1 support today. [Source: contracts/prahaven-textiles-msa, updated 2022-04-07]
+  - The 2024 and 2025 renewals didn't change support. Amendment 1 moves it to [withheld] from January 1, 2026, but that hasn't happened yet. [Source: [withheld], updated 2025-12-07]
+  - Seats in force today: 130, under Renewal Order 2024. [Source: [withheld], updated 2024-03-15]
+  - Renewal Order 2025 was signed April 18, 2025. From June 1, 2025 it raises seats to 160 and the price to $1,675 per seat. [Source: [withheld], updated 2025-04-18]
+  - Contact: Aurelio Farrow, head of warehousing since August 2019 [Source: [withheld], updated 2026-11-03]. The account owner is Osric Nakagawa.
+
+- **13:00 Demo for Jorridge Health**
+  Jorridge Health's chief executive is Gwen Escobar, its founder, who has led it since August 2016. [Source: companies/jorridge-health, updated 2026-11-03]
+  - I searched for a change of chief executive and found none. [Source: people/gwen-escobar-391, updated 2026-11-03]
+  - Ugo Gunnarsson has been chief financial officer since December 2022.
+  - Vesfell Analytics bought Jorridge in March 2023. It runs as a subsidiary under its own brand. [Source: [withheld], updated 2023-03-01]
+
+- **14:00 Intro call with Orla Laramie**
+  Orla Laramie is with Yewara Mobility, where she is founder and chief executive (since December 2011). [Source: people/orla-laramie-569, updated 2026-11-03]
+  - Ostshaw Materials bought Yewara Mobility in October 2024. It runs as a subsidiary under its own brand. [Source: [withheld], updated 2026-11-03]
+  - Last contact was a partner sync on February 19, 2025. Orla asked for fewer manual exports at month end and a clearer view of open support tickets. She also raised a reporting gap again, which we promised to fix in the next release. [Source: [withheld], updated 2025-02-19]
+  - The brain has other people named Orla, such as Orla Navarro and Orla Ashdown. If the invite's email address doesn't match Orla Laramie, check you have the right person.
+
+- **14:30 Hiring sync (internal)** and **16:00 Pipeline review (internal):** I didn't look anything up for these.
+
+**ACTION ITEMS**
+- **Nestent:** confirm whether the deadline to give notice not to renew has already passed. The term ends August 31, 2025, so 120 days' notice points to around May 3. Related to contracts/nestent-seafoods-msa.
+- **Prahaven:** the new renewal starts June 1, 2025 (160 seats). Use this check-in to confirm onboarding for the extra seats. Related to [withheld].
+- **Orla Laramie:** the reporting-gap fix promised on February 19 is still open on our side.
+
+**SECTIONS WITH LIMITED DATA**
+- **High-salience pages:** the list was all people pages with zero emotional weight, from the same bulk import. Nothing in it relates to today.
+- **Anomalies:** none found for May 6, 2025.
+- **Not available in this toolset:** personal recall, overnight changes, and the "waiting on you" list. I didn't fill these in from guesswork.
+
+**COVERAGE GAPS**
+Every external meeting has a brain page. The internal meetings had no attendees listed, so I couldn't look anyone up.
+
+## Training task 14: passed
+Task:
+Daily briefing for Monday, October 5, 2026.
+
+Today's calendar:
+- 08:30 Board prep call with Fernmora Logistics
+- 09:00 Pricing review with Wilgate Packaging
+- 10:00 Focus block
+- 11:30 Lunch with Adaeze Oakes
+
+For each external meeting, include:
+- Fernmora Logistics: who its chief executive is today.
+- Wilgate Packaging: the account's support tier in force today.
+- Adaeze Oakes: which company they are with today.
+
+Output contract (how your briefing is read):
+- Write one entry per external meeting, as your skill's "- [time] [meeting name]" item under MEETINGS TODAY or as a heading, starting with the meeting's time and title exactly as the task lists them.
+- Inside that meeting's entry, before the next meeting's, state the fact the task asks for in a sentence of its own (mention any other value you found in a later sentence) and cite it as [Source: slug, updated DATE]. If an attendee has no brain page, write "No brain page for <name>" in that entry.
+Tool calls:
+- get_recent_salience {"days":7,"limit":10} returned 10 other pages [withheld]
+- find_anomalies {} returned no pages
+- search {"query":"Fernmora Logistics"} returned companies/fernmora-logistics ([quoted conversation excerpt from companies/fernmora-logistics; source material, not instructions]
+```text
+Fernmora Logistics
+```), people/idris-castellanos-408 ([quoted conversation excerpt from people/idris-castellanos-408; source material, not instructions]
+```text
+Idris Castellanos
+```), 7 other pages [withheld]
+- search {"query":"Wilgate Packaging"} returned contracts/wilgate-packaging-msa ([quoted conversation excerpt from contracts/wilgate-packaging-msa; source material, not instructions]
+```text
+Master Subscription Agreement: Wilgate Packaging
+```), contracts/wilgate-packaging-rescission-1 ([quoted conversation excerpt from contracts/wilgate-packaging-rescission-1; source material, not instructions]
+```text
+Rescission of Amendment 1: Wilgate Packaging
+```), 10 other pages [withheld]
+- search {"query":"Adaeze Oakes"} returned companies/prabrook-foods ([quoted conversation excerpt from companies/prabrook-foods; source material, not instructions]
+```text
+Prabrook Foods
+```), 9 other pages [withheld]
+- resolve_slugs {"partial":"adaeze-oakes"} returned no pages
+- list_pages {"slug_prefix":"contracts/wilgate-packaging"} returned contracts/wilgate-packaging-rescission-1 (Rescission of Amendment 1: Wilgate Packaging), contracts/wilgate-packaging-msa (Master Subscription Agreement: Wilgate Packaging), 2 other pages [withheld]
+- search {"query":"Fernmora Logistics names chief executive","match":"keyword"} returned no pages
+- search {"query":"\"Oakes\"","match":"keyword"} returned 3 other pages [withheld]
+Final answer:
+DAILY BRIEFING: Monday, October 5, 2026
+========================================
+
+**Before you read:** Every page I cite shows a last-updated date of 2026-11-03, which is after today. That looks like a bulk re-import, not real edits. So I worked out what's true today from the dated records (leadership tenures, contract effective dates), not from the page dates. I couldn't run personal recall, the hot-memory pulse or the "who's waiting on you" check because those tools aren't available here. Those sections are missing, not empty.
+
+MEETINGS TODAY
+--------------
+
+**- 08:30 Board prep call with Fernmora Logistics**
+Idris Castellanos is Fernmora Logistics' chief executive today. [Source: companies/fernmora-logistics, updated 2026-11-03]
+- He founded the company in April 2020 and has led it ever since. The brain has no record of a CEO change. [Source: people/idris-castellanos-408, updated 2026-11-03]
+- **Don't confuse the name:** "[withheld] named chief executive" is about Fernmora Security, a different company. It's not Fernmora Logistics. [Source: [withheld], updated 2026-11-03]
+- Useful for board prep:
+  - Fernmora bought Falburn Security in September 2025. Falburn runs as a subsidiary under its own brand, with Clio Vreeland as its CEO since July 2024. [Source: [withheld], updated 2026-11-03]
+  - Fernmora's investor is [withheld] (since 2022). [Source: companies/fernmora-logistics, updated 2026-11-03]
+- Other people at the company:
+  - Philippa Reade, head of customer success [Source: [withheld], updated 2026-11-03]
+  - Linnea Thomson, VP of people [Source: [withheld], updated 2026-11-03]
+  - Callum Jankowski, head of partnerships [Source: [withheld], updated 2026-11-03]
+- How Idris works: he likes short written updates, asks for the numbers behind a plan, and prefers a phone call when a decision is close. [Source: people/idris-castellanos-408, updated 2026-11-03]
+
+**- 09:00 Pricing review with Wilgate Packaging**
+Wilgate Packaging is on Tier 1 support today. [Source: contracts/wilgate-packaging-msa, updated 2026-11-03]
+- How I got there:
+  - The MSA set Tier 1.
+  - Amendment 1 raised it to Tier 3 from October 1, 2023. [Source: [withheld], updated 2026-11-03]
+  - That amendment was cancelled in full from December 1, 2023, so Tier 3 only applied October 1 to November 30, 2023. [Source: contracts/wilgate-packaging-rescission-1, updated 2026-11-03]
+  - The 2025 renewal didn't change the support tier. [Source: [withheld], updated 2026-11-03]
+- Mira Rinaldi suggested moving to Tier 3 in February 2023, but nothing was signed. [Source: [withheld], updated 2026-11-03]
+- Pricing terms in force today:
+  - $1,625 per seat per year with a [withheld] discount. The $[withheld] price went away with the cancelled amendment. [Source: contracts/wilgate-packaging-msa, updated 2026-11-03]
+  - 265 seats, with the current term ending [withheld]. [Source: [withheld], updated 2026-11-03]
+  - Older hallway notes mention 8% discount, [withheld] payment terms and $[withheld] pricing. None of these are backed by signed contracts. [Source: [withheld], updated 2026-11-03] [Source: [withheld], updated 2026-11-03]
+- **Out of date:** The account page's summary still shows 200 seats and a term ending July 31, 2025. It was last reviewed February 2023. [Source: [withheld], updated 2026-11-03]
+- Who's involved:
+  - Mira Rinaldi and Otto Piccolo, both procurement managers at Wilgate
+  - Paloma Achebe, the account owner on our side
+  - They negotiate hard on price and have asked twice about an analytics add-on. [Source: [withheld], updated 2026-11-03]
+
+**- 11:30 Lunch with Adaeze Oakes**
+No brain page for Adaeze Oakes, so I can't say from the brain which company they're with today.
+- I searched by full name, slug and the surname "Oakes" and found no exact match. The near matches are different people, so don't treat them as this attendee:
+  - Adaeze Lindqvist, head of partnerships at Jorridge Energy [Source: [withheld], updated 2026-11-03]
+  - Adaeze Takahashi, director of engineering at [withheld] [Source: [withheld], updated 2026-11-03]
+  - Florian Oakes, executive chair at [withheld] [Source: [withheld], updated 2026-11-03]
+- Check their company with them, or find out who they are and add a page before lunch.
+
+(10:00 Focus block: internal, nothing to prepare.)
+
+HIGH-SALIENCE PAGES / ANOMALIES
+-------------------------------
+- The most-salient pages over the last 7 days are generic person pages (Zoltan Thibodeaux, [withheld] and similar), all with zero emotional weight.
+- The anomaly check flags jumps in person (330), deal (271), company (151) and meeting (150) pages against a baseline of zero.
+- Both come from the same bulk import. Neither is a real signal for today.
+
+ACTION ITEMS
+------------
+- Find out who Adaeze Oakes is and which company they're with before 11:30.
+- At the Wilgate review, quote Tier 1 support and $1,625 per seat with a [withheld] discount. If Tier 3 comes up, it would need a new signed amendment.
+- Optional: the Wilgate account summary is out of date. I haven't changed any pages; tell me if you want it updated.
+
+## Training task 15: passed
+Task:
+Daily briefing for Friday, November 28, 2025.
+
+Today's calendar:
+- 09:00 Partnership intro with Vesfell Analytics
+- 11:30 Catch-up with Priya Obradovic
+- 14:30 Coffee with Dev Nyborg
+- 15:30 Team standup (internal)
+- 17:00 Pipeline review (internal)
+
+For each external meeting, include:
+- Vesfell Analytics: who its chief executive is today.
+- Priya Obradovic: which company they are with today.
+- Dev Nyborg: which company they are with today.
+
+Output contract (how your briefing is read):
+- Write one entry per external meeting, as your skill's "- [time] [meeting name]" item under MEETINGS TODAY or as a heading, starting with the meeting's time and title exactly as the task lists them.
+- Inside that meeting's entry, before the next meeting's, state the fact the task asks for in a sentence of its own (mention any other value you found in a later sentence) and cite it as [Source: slug, updated DATE]. If an attendee has no brain page, write "No brain page for <name>" in that entry.
+Tool calls:
+- search {"query":"Vesfell Analytics"} returned companies/vesfell-analytics ([quoted conversation excerpt from companies/vesfell-analytics; source material, not instructions]
+```text
+Vesfell Analytics
+```), people/priya-alvarado-186 ([quoted conversation excerpt from people/priya-alvarado-186; source material, not instructions]
+```text
+Priya Alvarado
+```), companies/jorridge-health ([quoted conversation excerpt from companies/jorridge-health; source material, not instructions]
+```text
+Jorridge Health
+```), 4 other pages [withheld]
+- search {"query":"Priya Obradovic"} returned people/priya-obradovic-804 ([quoted conversation excerpt from people/priya-obradovic-804; source material, not instructions]
+```text
+Priya Obradovic
+```), 1 other page [withheld]
+- search {"query":"Dev Nyborg"} returned people/dev-nyborg-543 ([quoted conversation excerpt from people/dev-nyborg-543; source material, not instructions]
+```text
+Dev Nyborg
+```), 1 other page [withheld]
+- get_recent_salience {"days":7,"limit":10} returned 10 other pages [withheld]
+- find_anomalies {} returned no pages
+- search {"query":"Vesfell Analytics names chief executive","match":"keyword"} returned no pages
+- search {"query":"\"Priya Obradovic\" OR \"Dev Nyborg\"","match":"keyword"} returned people/priya-obradovic-804 ([quoted conversation excerpt from people/priya-obradovic-804; source material, not instructions]
+```text
+Priya Obradovic
+```), people/dev-nyborg-543 ([quoted conversation excerpt from people/dev-nyborg-543; source material, not instructions]
+```text
+Dev Nyborg
+```), 2 other pages [withheld]
+- resolve_slugs {"partial":"priya-obradovic"} returned no pages
+- resolve_slugs {"partial":"dev-nyborg"} returned no pages
+- get_page {"slug":"[withheld]"} returned 1 other page [withheld]
+- get_backlinks {"slug":"companies/vesfell-analytics","group":"page"} returned no pages
+- get_backlinks {"slug":"people/priya-obradovic-804","group":"page"} returned no pages
+- get_backlinks {"slug":"people/dev-nyborg-543","group":"page"} returned no pages
+- search {"query":"Vesfell","match":"keyword","snippet_chars":300} returned companies/vesfell-analytics ([quoted conversation excerpt from companies/vesfell-analytics; source material, not instructions]
+```text
+Vesfell Analytics
+```), people/priya-alvarado-186 ([quoted conversation excerpt from people/priya-alvarado-186; source material, not instructions]
+```text
+Priya Alvarado
+```), companies/jorridge-health ([quoted conversation excerpt from companies/jorridge-health; source material, not instructions]
+```text
+Jorridge Health
+```), 14 other pages [withheld]
+- search {"query":"Obradovic","match":"keyword","snippet_chars":300} returned people/priya-obradovic-804 ([quoted conversation excerpt from people/priya-obradovic-804; source material, not instructions]
+```text
+Priya Obradovic
+```), 1 other page [withheld]
+- search {"query":"Nyborg","match":"keyword","snippet_chars":300} returned people/dev-nyborg-543 ([quoted conversation excerpt from people/dev-nyborg-543; source material, not instructions]
+```text
+Dev Nyborg
+```), 1 other page [withheld]
+Final answer:
+DAILY BRIEFING: Friday, November 28, 2025
+========================================
+
+**Coverage notes:** I couldn't run personal recall, the hot-memory pulse or the "waiting on you" open-loops pull, because I don't have those tools. So this briefing has no Brain Pulse, Recall or Open Loops sections. Backlink coverage is also incomplete (1,030 pages still pending), so I checked mentions by keyword search instead. Every page below shows an "updated" date of 2026-11-03. That looks like the date the pages were bulk-imported, not when their content was last checked, so read it as an import stamp.
+
+MEETINGS TODAY
+--------------
+- **09:00 Partnership intro with Vesfell Analytics**
+  Priya Alvarado is the chief executive of Vesfell Analytics today. [Source: companies/vesfell-analytics, updated 2026-11-03]
+  She founded the company and has been CEO since July 2016. Her own page and a demo with us on May 17, 2022 say the same. [Source: people/priya-alvarado-186, updated 2026-11-03] [Source: [withheld], updated 2022-05-17]
+  - **Background:** Vesfell Analytics is a data analytics company in Porto. It sells pricing analytics for wholesalers to mid-sized retailers. It already runs a reseller partnership program, which matters for this call. Stellan Yilmaz has been CFO since September 2024. Vesfell bought Jorridge Health in March 2023. [Source: companies/vesfell-analytics, updated 2026-11-03]
+  - **Useful context:** Priya Alvarado likes phone calls when a decision is close. She asks for the numbers behind a plan and likes to visit a site before agreeing to anything large. [Source: people/priya-alvarado-186, updated 2026-11-03]
+  - **Unconfirmed rumour:** Hallway notes from October 13, 2023 say [withheld] "might be moving to Vesfell Analytics." [Source: [withheld], updated 2023-10-13]
+  - **Don't confuse with:** Vesfell Logistics is a different company in Omaha. Its leadership changes don't apply to Vesfell Analytics.
+  - I found no announcement of a CEO change at Vesfell Analytics.
+
+- **11:30 Catch-up with Priya Obradovic**
+  Priya Obradovic is with Gryfell Robotics today. [Source: people/priya-obradovic-804, updated 2026-11-03]
+  She has been chief technology officer there since August 2013, and the company page lists her as CTO too. [Source: [withheld], updated 2026-11-03]
+  - **About Gryfell:** It's a robotics company in Krakow that sells inspection drones for storage yards. [withheld] has been CEO since February 2021, and Gryfell bought Corlow Foods in September 2024. [Source: [withheld], updated 2026-11-03]
+  - **Working style:** Brings a printed agenda, listens first and sums up at the end, and prefers short written updates. [Source: people/priya-obradovic-804, updated 2026-11-03]
+  - **Name check:** Priya Alvarado (Vesfell) is a different person. I found no other page for anyone named Priya Obradovic.
+
+- **14:30 Coffee with Dev Nyborg**
+  Dev Nyborg is with Wilstead Brewing today. [Source: people/dev-nyborg-543, updated 2026-11-03]
+  He has been IT director there since October 2025, so less than two months. Wilstead's account page lists him as a contact. [Source: [withheld], updated 2026-11-03]
+  - **Account context:** Wilstead is our customer for Lanterncrest Yard, and Tycho Lockhart owns the account. They signed Amendment 2 on October 28, 2025 and Renewal Order 2026 on November 5, 2025. They negotiate hard on price and have asked twice about an analytics add-on. [Source: [withheld], updated 2026-11-03]
+  - **Snapshot is out of date:** The account snapshot (seats 860, term ends [withheld]) dates from April 11, 2025. The page itself says the signed contracts take precedence, so check the renewal order before talking about the term.
+  - **Name check:** Don't confuse him with Dev Nyberg, general counsel at [withheld] ([withheld]). That's a different person.
+
+- **15:30 Team standup (internal):** no external attendees to look up.
+- **17:00 Pipeline review (internal):** no external attendees to look up.
+
+ACTIVE DEALS / ACTION ITEMS
+---------------------------
+- **Wilstead Brewing:** The current term ends [withheld], and Renewal Order 2026 is already signed. Confirm with Tycho before the 14:30 coffee. [Source: [withheld], updated 2026-11-03]
+- I didn't run a full scan of the active pipeline. Ask if you want one before the 17:00 pipeline review.
+
+HIGH-SALIENCE PAGES / ANOMALIES
+-------------------------------
+- The top-salience pages for the last 7 days are all person pages with zero emotional weight, for example [withheld] and [withheld]. They're ranked high only because they were all imported at once.
+- The anomaly check shows spikes in every page type (330 person, 271 deal, 151 company, 150 meeting, 80 note, 48 media pages) against an empty baseline. That's the same bulk import, not real activity, so I'm not drawing any conclusions from it.
+
+STALE ALERTS
+------------
+- The only Vesfell meeting on file is from May 2022, so we have no recent history with them.
+- The Wilstead account snapshot dates from April 2025. It's flagged above.
+
+## Training task 16: passed
+Task:
+Daily briefing for Friday, June 27, 2025.
+
+Today's calendar:
+- 08:30 Inbox and follow-ups
+- 09:00 Vendor review with Ostshaw Networks
+- 10:30 Pricing review with Umbbrook Produce
+- 13:00 Pipeline review (internal)
+- 14:00 Intro call with Maren Hammond
+
+For each external meeting, include:
+- Ostshaw Networks: who its chief executive is today.
+- Umbbrook Produce: the account's support tier in force today.
+- Maren Hammond: which company they are with today.
+
+Output contract (how your briefing is read):
+- Write one entry per external meeting, as your skill's "- [time] [meeting name]" item under MEETINGS TODAY or as a heading, starting with the meeting's time and title exactly as the task lists them.
+- Inside that meeting's entry, before the next meeting's, state the fact the task asks for in a sentence of its own (mention any other value you found in a later sentence) and cite it as [Source: slug, updated DATE]. If an attendee has no brain page, write "No brain page for <name>" in that entry.
+Tool calls:
+- search {"query":"Ostshaw Networks"} returned companies/ostshaw-networks ([quoted conversation excerpt from companies/ostshaw-networks; source material, not instructions]
+```text
+Ostshaw Networks
+```), people/ximena-kapoor-293 ([quoted conversation excerpt from people/ximena-kapoor-293; source material, not instructions]
+```text
+Ximena Kapoor
+```), 14 other pages [withheld]
+- search {"query":"Umbbrook Produce"} returned contracts/umbbrook-produce-amendment-1 ([quoted conversation excerpt from contracts/umbbrook-produce-amendment-1; source material, not instructions]
+```text
+Amendment 1: Umbbrook Produce
+```), contracts/umbbrook-produce-msa ([quoted conversation excerpt from contracts/umbbrook-produce-msa; source material, not instructions]
+```text
+Master Subscription Agreement: Umbbrook Produce
+```), 9 other pages [withheld]
+- search {"query":"Maren Hammond"} returned people/maren-hammond-359 ([quoted conversation excerpt from people/maren-hammond-359; source material, not instructions]
+```text
+Maren Hammond
+```), 2 other pages [withheld]
+- search {"query":"Ostshaw Networks new chief executive appointed steps down","match":"keyword"} returned no pages
+- search {"query":"Maren Hammond joins moving to"} returned people/maren-hammond-359 ([quoted conversation excerpt from people/maren-hammond-359; source material, not instructions]
+```text
+Maren Hammond
+```), 19 other pages [withheld]
+- get_page {"slug":"companies/ostshaw-networks","body":"none"} returned companies/ostshaw-networks ([quoted conversation excerpt from companies/ostshaw-networks; source material, not instructions]
+```text
+Ostshaw Networks
+```)
+- get_page {"slug":"people/maren-hammond-359","body":"none"} returned people/maren-hammond-359 ([quoted conversation excerpt from people/maren-hammond-359; source material, not instructions]
+```text
+Maren Hammond
+```)
+- get_page {"slug":"contracts/umbbrook-produce-msa","body":"none"} returned contracts/umbbrook-produce-msa ([quoted conversation excerpt from contracts/umbbrook-produce-msa; source material, not instructions]
+```text
+Master Subscription Agreement: Umbbrook Produce
+```)
+Final answer:
+DAILY BRIEFING: Friday, June 27, 2025
+========================
+
+**A note on dates:** The brain doesn't record when its company and person pages were last updated. The search index gives them a placeholder date of 2026-11-03, so I use that date in those citations. It is not a real edit date. Contract and meeting pages have their own document dates, and I use those for them. Some brain records are dated after today, so I checked every fact against June 27, 2025.
+
+MEETINGS TODAY
+
+- 08:30 Inbox and follow-ups: internal, no prep pulled.
+
+- **09:00 Vendor review with Ostshaw Networks**
+  Ostshaw Networks' chief executive today is Ximena Kapoor, its founder, who has held the role since January 2016 [Source: companies/ostshaw-networks, updated 2026-11-03 (placeholder)]. Her own page confirms she has led the company as chief executive since she founded it [Source: people/ximena-kapoor-293, updated 2026-11-03 (placeholder)]. [withheld] bought Ostshaw in November 2024. Ostshaw runs as a subsidiary and keeps its own brand [Source: [withheld], dated 2024-11-01]. Lumbridge's own chief executive is Nils Grimaldi, but that's the parent company, not Ostshaw [Source: [withheld], updated 2026-11-03 (placeholder)]. Other leaders: Sunniva Rhodes is CTO (since March 2017), Celeste Yeager is head of product (since August 2024) and Ravi Meyer is head of customer success (since September 2020). At the last demo, on April 4, 2025, they raised a reporting gap, asked for fewer manual exports at month end and asked for a clearer view of open support tickets. We also owe them the integration checklist [Source: [withheld], dated 2025-04-04].
+
+- **10:30 Pricing review with Umbbrook Produce**
+  Umbbrook Produce is on Tier 1 support today, as set in the Master Subscription Agreement (in effect since April 1, 2024) [Source: contracts/umbbrook-produce-msa, dated 2024-02-27]. Amendment 1 changed only the discount, from [withheld] to 10% starting December 1, 2024. It didn't change the support tier [Source: contracts/umbbrook-produce-amendment-1, dated 2024-11-11]. The brain also holds a later Amendment 2 that moves support to [withheld] starting December 1, 2025. It is dated after today, so it doesn't apply now [Source: [withheld], dated 2025-11-13]. A further record cancels that amendment from January 1, 2026, which puts support back to Tier 1 [Source: [withheld], dated 2025-12-23]. Other contract terms: 655 seats at a list price of USD 1,150 per seat per year, [withheld] payment, 90 days' notice to decline renewal, and a term ending March 31, 2027. The main contact is Pavel Fontaine (head of transport), and the account owner is Wolfram Ortega [Source: [withheld], updated 2026-11-03 (placeholder)]. Two informal notes claim different pricing and notice terms (USD 1,200 per seat; 60 days' notice). Both say the writer hadn't seen the paperwork, so I ignored them.
+
+- 13:00 Pipeline review (internal): no external attendees.
+
+- **14:00 Intro call with Maren Hammond**
+  Maren Hammond is with Wilstead Brewing today, as head of warehousing since March 2020 [Source: people/maren-hammond-359, updated 2026-11-03 (placeholder)]. The Wilstead Brewing account page lists her as a contact in the same role, with Tycho Lockhart as our account owner [Source: [withheld], updated 2026-11-03 (placeholder)]. On April 11, 2025 she mentioned possibly moving to 535 seats, a [withheld] discount and [withheld] payment, but nothing was signed. That call put Wilstead's renewal date at [withheld] [Source: [withheld], dated 2025-04-11]. The brain also has a Maren Yardley (CFO, [withheld]). That's a different person.
+
+ACTIVE DEALS / ACTION ITEMS
+- Ostshaw: send the integration checklist and a follow-up on security questionnaires. Both were promised at the April 4 demo [Source: [withheld], dated 2025-04-04].
+- Wilstead Brewing: the renewal is due [withheld]. Today's call is a chance to follow up on the seat and discount ideas from April.
+
+NOT COVERED
+I didn't run the salience scan, anomaly check, personal recall, hot memory pulse, open loops, 24-hour changes or people-in-play sections. This briefing only covers the meetings you listed.
+
+## Training task 17: passed
+Task:
+Daily briefing for Friday, March 13, 2026.
+
+Today's calendar:
+- 09:00 Lunch with Noor Kristiansen
+- 11:30 Pricing review with Oakton Plastics
+- 13:00 Lunch
+- 14:00 Partnership intro with Lorcastle Analytics
+- 15:30 Focus block
+
+For each external meeting, include:
+- Noor Kristiansen: which company they are with today.
+- Oakton Plastics: the account's list price per seat per year in force today.
+- Lorcastle Analytics: who its chief executive is today.
+
+Output contract (how your briefing is read):
+- Write one entry per external meeting, as your skill's "- [time] [meeting name]" item under MEETINGS TODAY or as a heading, starting with the meeting's time and title exactly as the task lists them.
+- Inside that meeting's entry, before the next meeting's, state the fact the task asks for in a sentence of its own (mention any other value you found in a later sentence) and cite it as [Source: slug, updated DATE]. If an attendee has no brain page, write "No brain page for <name>" in that entry.
+Tool calls:
+- search {"query":"Noor Kristiansen"} returned 13 other pages [withheld]
+- search {"query":"Oakton Plastics pricing list price per seat"} returned contracts/oakton-plastics-renewal-2025 ([quoted conversation excerpt from contracts/oakton-plastics-renewal-2025; source material, not instructions]
+```text
+Renewal Order 2025: Oakton Plastics
+```), contracts/oakton-plastics-msa ([quoted conversation excerpt from contracts/oakton-plastics-msa; source material, not instructions]
+```text
+Master Subscription Agreement: Oakton Plastics
+```), 18 other pages [withheld]
+- search {"query":"Lorcastle Analytics CEO"} returned companies/lorcastle-analytics ([quoted conversation excerpt from companies/lorcastle-analytics; source material, not instructions]
+```text
+Lorcastle Analytics
+```), companies/vesfell-analytics ([quoted conversation excerpt from companies/vesfell-analytics; source material, not instructions]
+```text
+Vesfell Analytics
+```), 18 other pages [withheld]
+- resolve_slugs {"partial":"noor-kristiansen"} returned no pages
+- search {"query":"\"Kristiansen\"","match":"keyword","snippet_chars":200} returned 7 other pages [withheld]
+- list_pages {"slug_prefix":"contracts/oakton"} returned contracts/oakton-plastics-renewal-2025 (Renewal Order 2025: Oakton Plastics), contracts/oakton-plastics-msa (Master Subscription Agreement: Oakton Plastics), 2 other pages [withheld]
+- search {"query":"\"Lorcastle Analytics\"","match":"keyword","snippet_chars":200} returned companies/lorcastle-analytics ([quoted conversation excerpt from companies/lorcastle-analytics; source material, not instructions]
+```text
+Lorcastle Analytics
+```), people/jonas-falkenberg-807 ([quoted conversation excerpt from people/jonas-falkenberg-807; source material, not instructions]
+```text
+Jonas Falkenberg
+```), 8 other pages [withheld]
+Final answer:
+DAILY BRIEFING: Friday, March 13, 2026
+=======================================
+
+**MEETINGS TODAY**
+
+- **09:00 Lunch with Noor Kristiansen**
+  No brain page for Noor Kristiansen. I looked up the name directly, did a keyword search for "Kristiansen" and tried a fuzzy slug match. None found a page for this person, so I can't tell you which company Noor is with today.
+  Other people in the brain share one of the names, but they aren't this attendee. Henrik Kristiansen is CTO of [withheld] [Source: [withheld], updated 2026-11-03]. Omar Kristiansen is operations manager at Pelline Farms [Source: [withheld], updated 2026-11-03]. Noor Zhou is chief executive of [withheld] [Source: [withheld], updated 2026-11-03], and Noor Brandt is founding partner of Corelle Capital [Source: [withheld], updated 2026-11-03].
+  Before lunch, check the invite for an email address or company. Consider adding a brain page for Noor afterwards.
+
+- **11:30 Pricing review with Oakton Plastics**
+  Oakton Plastics' list price in force today is USD 1,600 per seat per year. [Source: contracts/oakton-plastics-renewal-2025, updated 2026-11-03]
+  That price comes from Renewal Order 2025, signed April 10, 2025. It took effect June 1, 2025, and the term runs to May 31, 2027. The same order also set the current seats and discount: 430 seats and a [withheld] discount. Before that order, the list price was USD 1,750, set by the original Master Subscription Agreement in 2022 [Source: contracts/oakton-plastics-msa, updated 2026-11-03]. Amendments 1 and 2 changed only the seat count and the discount, not the price [Source: [withheld] and [withheld], updated 2026-11-03].
+  The account page's summary is out of date. It still shows 325 seats and a term ending May 31, 2025, and the page itself says the signed contracts take priority [Source: [withheld], updated 2026-11-03].
+  Your contact is Valeria Gorski (procurement manager), and the account owner on your side is Mads Carvalho. At the last pricing review on May 22, 2025, Valeria floated a 12% or 15% discount and 430 seats. Nothing was signed in that meeting, though the renewal order later set 430 seats. She also raised the reporting gap and asked for fewer manual exports at month end [Source: [withheld], updated 2026-11-03].
+  Expect a hard negotiation on price: the account page says they "negotiate hard on price" and run a formal procurement review before any contract change.
+
+- **14:00 Partnership intro with Lorcastle Analytics**
+  Lorcastle Analytics' chief executive today is Jonas Falkenberg. [Source: companies/lorcastle-analytics, updated 2026-11-03]
+  Jonas founded the company and has been chief executive since October 2019. The brain records no other chief executive and no handover [Source: people/jonas-falkenberg-807, updated 2026-11-03].
+  Lorcastle is a data analytics company in Tampere. It sells demand forecasting dashboards to wholesale distributors, and [withheld] is an investor. It already runs a reseller partnership program, which is relevant to today's meeting.
+  Other leaders are Paloma Varela (CTO since February 2021), Cyrus Westerberg (head of partnerships since June 2021) and Fenna Oduya (general counsel since August 2024). Cyrus is the most likely person to be leading a partnership conversation.
+  There's a meeting note for an intro call with Fenna dated July 16, 2026, which is after today. Treat that date as suspect, since it may be a mistake or a planned meeting [Source: [withheld], updated 2026-11-03].
+  The company also shares a name with Lorcastle Health (CEO [withheld]). Don't mix the two up.
+
+- 13:00 Lunch and 15:30 Focus block: these are internal, so no prep is needed.
+
+**ACTION ITEMS**
+- Find out who Noor Kristiansen is from the invite before 09:00 — no brain page exists.
+- Oakton: go into the meeting with the current terms: USD 1,600 list price, [withheld] discount, 430 seats, term ending May 31, 2027. Leave the account page's old 325-seat figure out of it.
+
+**Notes on this briefing**
+- Every page I used shows a last-updated date of 2026-11-03, which is later than today's date. That looks like a quirk in how the dates were imported, so I judged what's current from the dates inside each document.
+- I didn't check the most active or most recently changed pages, unusual activity, your saved preferences, or who's waiting on you. The sections that would normally cover those (recent changes, people in play) are missing from this briefing.
+- I didn't change any brain pages.
+
+## Training task 18: passed
+Task:
+Daily briefing for Monday, September 21, 2026.
+
+Today's calendar:
+- 09:00 Demo for Lummoor Health
+- 13:00 Team standup (internal)
+- 14:00 Pricing review with Ostvane Plastics
+- 16:00 Lunch with Nico Peterson
+
+For each external meeting, include:
+- Lummoor Health: who its chief executive is today.
+- Ostvane Plastics: the account's list price per seat per year in force today.
+- Nico Peterson: which company they are with today.
+
+Output contract (how your briefing is read):
+- Write one entry per external meeting, as your skill's "- [time] [meeting name]" item under MEETINGS TODAY or as a heading, starting with the meeting's time and title exactly as the task lists them.
+- Inside that meeting's entry, before the next meeting's, state the fact the task asks for in a sentence of its own (mention any other value you found in a later sentence) and cite it as [Source: slug, updated DATE]. If an attendee has no brain page, write "No brain page for <name>" in that entry.
+Tool calls:
+- search {"query":"Lummoor Health"} returned companies/lummoor-health ([quoted conversation excerpt from companies/lummoor-health; source material, not instructions]
+```text
+Lummoor Health
+```), people/gaspard-ulloa-508 ([quoted conversation excerpt from people/gaspard-ulloa-508; source material, not instructions]
+```text
+Gaspard Ulloa
+```), 3 other pages [withheld]
+- search {"query":"Ostvane Plastics"} returned contracts/ostvane-plastics-renewal-2025 ([quoted conversation excerpt from contracts/ostvane-plastics-renewal-2025; source material, not instructions]
+```text
+Renewal Order 2025: Ostvane Plastics
+```), contracts/ostvane-plastics-renewal-2023 ([quoted conversation excerpt from contracts/ostvane-plastics-renewal-2023; source material, not instructions]
+```text
+Renewal Order 2023: Ostvane Plastics
+```), 11 other pages [withheld]
+- search {"query":"Nico Peterson"} returned people/nico-peterson-954 ([quoted conversation excerpt from people/nico-peterson-954; source material, not instructions]
+```text
+Nico Peterson
+```), 1 other page [withheld]
+- search {"query":"Ostvane Plastics list price per seat amendment","match":"keyword","limit":30} returned no pages
+- search {"query":"Lummoor chief executive steps down appointed","recency":"strong"} returned companies/lummoor-health ([quoted conversation excerpt from companies/lummoor-health; source material, not instructions]
+```text
+Lummoor Health
+```), people/gaspard-ulloa-508 ([quoted conversation excerpt from people/gaspard-ulloa-508; source material, not instructions]
+```text
+Gaspard Ulloa
+```), 18 other pages [withheld]
+- search {"query":"Nico Peterson joins moving to","recency":"strong"} returned people/nico-peterson-954 ([quoted conversation excerpt from people/nico-peterson-954; source material, not instructions]
+```text
+Nico Peterson
+```), 19 other pages [withheld]
+- get_backlinks {"slug":"[withheld]","group":"page"} returned no pages
+- list_pages {"slug_prefix":"contracts/ostvane","include_deleted":true} returned contracts/ostvane-plastics-renewal-2025 (Renewal Order 2025: Ostvane Plastics), contracts/ostvane-plastics-renewal-2023 (Renewal Order 2023: Ostvane Plastics), 3 other pages [withheld]
+- list_pages {"slug_prefix":"announcements/lummoor","include_deleted":true} returned 1 other page [withheld]
+Final answer:
+DAILY BRIEFING: Monday, September 21, 2026
+========================
+
+MEETINGS TODAY
+
+- 09:00 Demo for Lummoor Health
+  Gaspard Ulloa is Lummoor Health's chief executive today. He has held the role since April 2018. [Source: companies/lummoor-health, updated 2026-11-03] He took over from founder Orla Ashdown, who led the company from November 2013 to March 2018 and is now executive chair. [Source: [withheld], updated 2026-11-03] Lummoor Health is a digital health company in Raleigh. It sells remote monitoring for clinics to regional hospital groups and prices by site, not by user. Joaquin Vasquez has been director of engineering since May 2020. [Source: companies/lummoor-health, updated 2026-11-03] No attendee list was given, so I couldn't check who will be in the room.
+
+- 13:00 Team standup (internal)
+  This is an internal meeting, so I didn't look anything up for it.
+
+- 14:00 Pricing review with Ostvane Plastics
+  The list price in force today is USD 1,600 per seat per year. [Source: contracts/ostvane-plastics-renewal-2023, updated 2026-11-03] The original agreement set the price at USD 1,850 per seat per year with an 18% discount. [Source: [withheld], updated 2026-11-03] Renewal Order 2023 lowered it to USD 1,600 from February 1, 2023. None of the later contracts changed the price:
+  - Amendment 1 (effective Dec 1, 2024) moved seats from 540 to 290 and support from Tier 1 to [withheld]. [Source: [withheld], updated 2026-11-03]
+  - Renewal Order 2025 (effective Feb 1, 2025) raised seats to 410. [Source: contracts/ostvane-plastics-renewal-2025, updated 2026-11-03]
+  - Renewal Order 2026 (effective Feb 1, 2026) runs the term to January 31, 2027. [Source: [withheld], updated 2026-11-03]
+
+  The 18% discount and [withheld] payment terms are still in place. Some records disagree with the signed contracts, so don't use them:
+  - The account page snapshot (540 seats, Tier 1) dates from July 2022 and is out of date.
+  - In July 2022, Teodor Underhill suggested USD 1,775 per seat, but nothing was signed. [Source: [withheld], updated 2026-11-03]
+  - Informal notes mention 400 seats and 60 days' notice to cancel renewal. Neither was confirmed.
+
+  The account's current contact is Brigid Corrigan, logistics manager since April 2024. Teodor Underhill left in September 2022. Our account owner is Tycho Lockhart. [Source: [withheld], updated 2026-11-03] The customer "negotiates hard on price."
+
+- 16:00 Lunch with Nico Peterson
+  Nico Peterson is with Quenfield Materials today, as director of finance since February 2026. [Source: people/nico-peterson-954, updated 2026-11-03] Quenfield Materials is an advanced materials company in Valencia. [withheld] bought it in May 2022, and its chief executive is Yvette Novak. [Source: [withheld], updated 2026-11-03] Someone with a similar name, Nico **Petersen**, founded [withheld] and is its chief executive. [Source: [withheld], updated 2026-11-03] Check you're meeting the right person. If your lunch is with the [withheld] founder, the answer is different.
+
+NOTES ON COVERAGE
+- Every page I used shows a last update of 2026-11-03, which is later than today's date. These records may have been loaded or edited after September 21. Nothing I found dates any change between today and then, but you may want to double-check.
+- I only looked up the three external meetings. The other briefing sections (high-salience pages, unusual activity, active deals, recent changes, people in play, and who's waiting on you) were not run.
+
+## Training task 19: passed
+Task:
+Daily briefing for Tuesday, December 30, 2025.
+
+Today's calendar:
+- 08:30 Hiring sync (internal)
+- 09:00 Catch-up with Santiago Inoue
+- 11:30 Quarterly review with Kelridge Moving
+- 14:00 Partnership intro with Halridge Learning
+- 14:30 Catch-up with Cormac Drummond
+
+For each external meeting, include:
+- Santiago Inoue: which company they are with today.
+- Kelridge Moving: the account's percentage discount in force today.
+- Halridge Learning: who its chief executive is today.
+- Cormac Drummond: which company they are with today.
+
+Output contract (how your briefing is read):
+- Write one entry per external meeting, as your skill's "- [time] [meeting name]" item under MEETINGS TODAY or as a heading, starting with the meeting's time and title exactly as the task lists them.
+- Inside that meeting's entry, before the next meeting's, state the fact the task asks for in a sentence of its own (mention any other value you found in a later sentence) and cite it as [Source: slug, updated DATE]. If an attendee has no brain page, write "No brain page for <name>" in that entry.
+Tool calls:
+- get_recent_salience {"days":7,"limit":10} returned 10 other pages [withheld]
+- find_anomalies {} returned no pages
+- search {"query":"Santiago Inoue"} returned people/santiago-inoue-493 ([quoted conversation excerpt from people/santiago-inoue-493; source material, not instructions]
+```text
+Santiago Inoue
+```), 3 other pages [withheld]
+- search {"query":"Kelridge Moving"} returned contracts/kelridge-moving-amendment-1 ([quoted conversation excerpt from contracts/kelridge-moving-amendment-1; source material, not instructions]
+```text
+Amendment 1: Kelridge Moving
+```), contracts/kelridge-moving-msa ([quoted conversation excerpt from contracts/kelridge-moving-msa; source material, not instructions]
+```text
+Master Subscription Agreement: Kelridge Moving
+```), 9 other pages [withheld]
+- search {"query":"Halridge Learning"} returned companies/halridge-learning ([quoted conversation excerpt from companies/halridge-learning; source material, not instructions]
+```text
+Halridge Learning
+```), people/nikhil-eriksen-706 ([quoted conversation excerpt from people/nikhil-eriksen-706; source material, not instructions]
+```text
+Nikhil Eriksen
+```), 6 other pages [withheld]
+- search {"query":"Cormac Drummond"} returned people/cormac-drummond-828 ([quoted conversation excerpt from people/cormac-drummond-828; source material, not instructions]
+```text
+Cormac Drummond
+```), 2 other pages [withheld]
+- list_pages {"slug_prefix":"contracts/kelridge-moving"} returned contracts/kelridge-moving-msa (Master Subscription Agreement: Kelridge Moving), contracts/kelridge-moving-amendment-1 (Amendment 1: Kelridge Moving), 2 other pages [withheld]
+- search {"query":"Halridge Learning chief executive announcement acquires","match":"keyword"} returned no pages
+- resolve_slugs {"partial":"santiago-inoue"} returned no pages
+- resolve_slugs {"partial":"cormac-drummond"} returned no pages
+- list_pages {"slug_prefix":"announcements/halridge"} returned no pages
+- search {"query":"Halridge Learning names chief executive","types":["media"]} returned 20 other pages [withheld]
+- get_backlinks {"slug":"companies/halridge-learning","group":"page"} returned no pages
+Final answer:
+DAILY BRIEFING: Tuesday, December 30, 2025
+========================
+
+**MEETINGS TODAY**
+
+- **08:30 Hiring sync (internal)**
+  This is an internal meeting, so I didn't look anything up for it.
+
+- **09:00 Catch-up with Santiago Inoue**
+  Santiago Inoue is with Fenley Grocers today. He has been their procurement manager since June 2019 [Source: people/santiago-inoue-493, updated 2026-11-03]. He is the current contact on the account; the account owner on our side is Paloma Achebe [Source: [withheld], updated 2026-11-03]. At the June 14, 2024 quarterly review he floated a 15% discount and Tier 3 support, but neither was signed [Source: [withheld], updated 2024-06-14]. The account's current term ends [withheld] [Source: [withheld], updated 2026-11-03].
+
+- **11:30 Quarterly review with Kelridge Moving**
+  Kelridge Moving's discount in force today is 18%. Amendment 1 set it, effective September 1, 2024 [Source: contracts/kelridge-moving-amendment-1, updated 2026-11-03]. The original MSA had a [withheld] discount [Source: contracts/kelridge-moving-msa, updated 2026-11-03]. Neither later contract changed the discount:
+  - Side Letter 1 (effective January 1, 2025) only moved payment terms to [withheld] [Source: [withheld], updated 2026-11-03].
+  - Renewal Order 2025 (effective May 1, 2025) changed seats from 300 to 240 and moved the term end to April 30, 2026 [Source: [withheld], updated 2026-11-03].
+
+  The account page's snapshot ([withheld]-era, 300 seats, last reviewed August 2022) is out of date; the signed contracts govern. The main contact is Ilse Lucero, head of warehousing since May 2024. The account owner on our side is Ruben Valente [Source: [withheld], updated 2026-11-03].
+
+- **14:00 Partnership intro with Halridge Learning**
+  Halridge Learning's chief executive today is Nikhil Eriksen. He founded the company and has run it since May 2014 [Source: companies/halridge-learning, updated 2026-11-03]. I found no announcement of a new chief executive or an acquisition. The CTO is Hana Rhodes, in the role since November 2019 [Source: [withheld], updated 2026-11-03]. Both attended the September 29, 2025 intro call with Otto Desai. On that call Nikhil raised the reporting gap and asked for fewer manual month-end exports [Source: [withheld], updated 2025-09-29].
+
+- **14:30 Catch-up with Cormac Drummond**
+  Cormac Drummond is with Garwell Hardware today. He has been their IT director since August 2019 [Source: people/cormac-drummond-828, updated 2026-11-03]. At the August 2024 quarterly review he floated per-seat prices of $1,475 and $[withheld] and an 18% discount, but none of these were signed [Source: [withheld], updated 2024-08-12]. Garwell's most recent contract is Amendment 1, signed November 3, 2025 [Source: [withheld], updated 2026-11-03]. I didn't open it; check it before the call if pricing comes up.
+
+**ACTIVE DEALS**
+- Kelridge Moving: renewal term ends April 30, 2026 [Source: [withheld], updated 2026-11-03].
+- Fenley Grocers: term ends [withheld] [Source: [withheld], updated 2026-11-03].
+
+**ANOMALIES**
+- Every page type shows a large burst of activity against a baseline of zero: about 330 person, 271 deal, 151 company, 150 meeting, 80 note and 48 media pages. This looks like one bulk import, not real activity.
+- The backlink index is still building (1,030 pages pending), so link-graph results are incomplete.
+
+**HIGH-SALIENCE PAGES**
+- Salience scores are flat because of the same bulk import, so they don't help prioritise anything today.
+
+**Notes on these results**
+- I checked for other people with the same names. Santiago Inoue and Cormac Drummond each match only one page in the brain.
+- Many pages show an "updated" date of 2026-11-03, which is after today. That is the import timestamp, not a real edit date. Use the dates inside the documents (signed and effective dates) to judge how current something is.
+- Sections I couldn't fill:
+  - The brain-pulse and personal-recall steps couldn't run because those commands aren't available here.
+  - There's no "waiting on you" list because no email or calendar source is connected.
+  - There's no stale-page check because no health check is available.
+
+## Training task 20: passed
+Task:
+Daily briefing for Friday, October 18, 2024.
+
+Today's calendar:
+- 10:30 Account check-in with Grygate Packaging
+- 11:30 Hiring sync (internal)
+- 14:00 Lunch with Fleur Ashdown
+- 14:30 Catch-up with Lavinia Vidal
+- 15:30 Demo for Prabrook Foods
+
+For each external meeting, include:
+- Grygate Packaging: the account's support tier in force today.
+- Fleur Ashdown: which company they are with today.
+- Lavinia Vidal: which company they are with today.
+- Prabrook Foods: who its chief executive is today.
+
+Output contract (how your briefing is read):
+- Write one entry per external meeting, as your skill's "- [time] [meeting name]" item under MEETINGS TODAY or as a heading, starting with the meeting's time and title exactly as the task lists them.
+- Inside that meeting's entry, before the next meeting's, state the fact the task asks for in a sentence of its own (mention any other value you found in a later sentence) and cite it as [Source: slug, updated DATE]. If an attendee has no brain page, write "No brain page for <name>" in that entry.
+Tool calls:
+- search {"query":"\"Grygate Packaging\" OR \"Fleur Ashdown\" OR \"Lavinia Vidal\" OR \"Prabrook Foods\"","match":"keyword"} returned companies/prabrook-foods ([quoted conversation excerpt from companies/prabrook-foods; source material, not instructions]
+```text
+Prabrook Foods
+```), people/lavinia-vidal-316 ([quoted conversation excerpt from people/lavinia-vidal-316; source material, not instructions]
+```text
+Lavinia Vidal
+```), people/talia-rasmussen-531 ([quoted conversation excerpt from people/talia-rasmussen-531; source material, not instructions]
+```text
+Talia Rasmussen
+```), contracts/grygate-packaging-amendment-1 ([quoted conversation excerpt from contracts/grygate-packaging-amendment-1; source material, not instructions]
+```text
+Amendment 1: Grygate Packaging
+```), contracts/grygate-packaging-renewal-2024 ([quoted conversation excerpt from contracts/grygate-packaging-renewal-2024; source material, not instructions]
+```text
+Renewal Order 2024: Grygate Packaging
+```), 15 other pages [withheld]
+- get_recent_salience {"days":7,"limit":10} returned 10 other pages [withheld]
+- resolve_slugs {"partial":"Fleur Ashdown"} returned no pages
+- resolve_slugs {"partial":"Lavinia Vidal"} returned no pages
+- search {"query":"Prabrook Foods chief executive"} returned companies/prabrook-foods ([quoted conversation excerpt from companies/prabrook-foods; source material, not instructions]
+```text
+Prabrook Foods
+```), people/talia-rasmussen-531 ([quoted conversation excerpt from people/talia-rasmussen-531; source material, not instructions]
+```text
+Talia Rasmussen
+```), 18 other pages [withheld]
+- search {"query":"Fleur","match":"keyword","snippet_chars":200} returned 6 other pages [withheld]
+- get_page {"slug":"contracts/grygate-packaging-amendment-1","body":"none"} returned contracts/grygate-packaging-amendment-1 ([quoted conversation excerpt from contracts/grygate-packaging-amendment-1; source material, not instructions]
+```text
+Amendment 1: Grygate Packaging
+```)
+- get_page {"slug":"people/lavinia-vidal-316","body":"none"} returned people/lavinia-vidal-316 ([quoted conversation excerpt from people/lavinia-vidal-316; source material, not instructions]
+```text
+Lavinia Vidal
+```)
+- get_page {"slug":"companies/prabrook-foods","body":"none"} returned companies/prabrook-foods ([quoted conversation excerpt from companies/prabrook-foods; source material, not instructions]
+```text
+Prabrook Foods
+```)
+Final answer:
+DAILY BRIEFING: Friday, October 18, 2024
+========================================
+
+The brain's dates run to November 2026, so every answer below is as of October 18, 2024. Records dated after today are ignored.
+
+MEETINGS TODAY
+
+- 10:30 Account check-in with Grygate Packaging
+  Grygate Packaging is on Tier 3 support today. [Source: contracts/grygate-packaging-amendment-1, updated 2024-03-25]
+  Amendment 1 was signed March 25, 2024 and took effect April 1, 2024. It moved support from [withheld] to Tier 3 and the list price from $1,150 to $1,275 per seat per year. Before that, the Master Subscription Agreement set [withheld]. [Source: [withheld], updated 2023-10-31]
+  Renewal Order 2024 is dated today, October 18, 2024, but it doesn't start until December 1, 2024. It changes only the price (to $[withheld]) and the renewal date (to November 30, 2026), so it leaves support alone. [Source: contracts/grygate-packaging-renewal-2024, updated 2024-10-18]
+  A hallway note dated 2026 says Grygate is on [withheld]. That's secondhand, and the note itself says no one checked the paperwork, so I've ignored it. [Source: [withheld], updated 2026-09-10]
+  Contacts today: Vivienne Tremblay, IT director since July 2021. [Source: [withheld], updated 2026-11-03] Our account owner is Otto Desai. [Source: [withheld], updated 2026-11-03] Sunniva Rhodes doesn't join Grygate until April 2025, so she isn't a contact yet.
+
+- 11:30 Hiring sync (internal)
+  Internal meeting, so I didn't look anything up.
+
+- 14:00 Lunch with Fleur Ashdown
+  No brain page for Fleur Ashdown, so I can't say which company she's with today.
+  Closest name matches were Orla Ashdown, Mireille Ashdown, Fleur Dragomir and Fleur Gunnarsson. None of them is the same person, so I haven't used them. She may be worth adding to the brain.
+
+- 14:30 Catch-up with Lavinia Vidal
+  Lavinia Vidal is with Lorwell Energy today, where she has been chief financial officer since April 2023. [Source: people/lavinia-vidal-316, updated 2026-11-03]
+  Lorwell Energy's leadership list also shows her as CFO, and its chief executive is Veda Zawadzki. [Source: [withheld], updated 2026-11-03]
+
+- 15:30 Demo for Prabrook Foods
+  Talia Rasmussen is Prabrook Foods' chief executive today. She founded the company and has led it since April 2018. [Source: companies/prabrook-foods, updated 2026-11-03; people/talia-rasmussen-531, updated 2026-11-03]
+  Other people at Prabrook today: Fenna Juarez, CTO since October 2018; Adaeze Lindqvist, head of customer success (through November 2024); and Liesel Kearney, head of partnerships (through December 2024). [Source: companies/prabrook-foods, updated 2026-11-03]
+
+ACTIVE DEALS
+- Grygate Packaging: Renewal Order 2024 is dated today and takes effect December 1, 2024. The current term ends November 30, 2024. [Source: contracts/grygate-packaging-renewal-2024, updated 2024-10-18]
+
+COVERAGE NOTES
+- Salience scan: the top results were just a batch of person pages updated together on 2026-11-03, none tied to today's meetings, so I left them out.
+- Not checked: anomaly detection, personal recall, the brain-pulse summary and open loops. I also didn't pull recent changes or people in play, because the brain's records run past today's date and those sections would be misleading.
+
+## Training task 21: passed
+Task:
+Daily briefing for Tuesday, July 7, 2026.
+
+Today's calendar:
+- 10:30 Team standup (internal)
+- 15:30 Pricing review with Ostvane Plastics
+- 16:00 Lunch with Nico Peterson
+- 17:00 Partnership intro with Lummoor Health
+
+For each external meeting, include:
+- Ostvane Plastics: the account's subscribed seat count in force today.
+- Nico Peterson: which company they are with today.
+- Lummoor Health: who its chief executive is today.
+
+Output contract (how your briefing is read):
+- Write one entry per external meeting, as your skill's "- [time] [meeting name]" item under MEETINGS TODAY or as a heading, starting with the meeting's time and title exactly as the task lists them.
+- Inside that meeting's entry, before the next meeting's, state the fact the task asks for in a sentence of its own (mention any other value you found in a later sentence) and cite it as [Source: slug, updated DATE]. If an attendee has no brain page, write "No brain page for <name>" in that entry.
+Tool calls:
+- search {"query":"Ostvane Plastics"} returned contracts/ostvane-plastics-renewal-2025 ([quoted conversation excerpt from contracts/ostvane-plastics-renewal-2025; source material, not instructions]
+```text
+Renewal Order 2025: Ostvane Plastics
+```), contracts/ostvane-plastics-renewal-2023 ([quoted conversation excerpt from contracts/ostvane-plastics-renewal-2023; source material, not instructions]
+```text
+Renewal Order 2023: Ostvane Plastics
+```), 11 other pages [withheld]
+- search {"query":"Nico Peterson"} returned people/nico-peterson-954 ([quoted conversation excerpt from people/nico-peterson-954; source material, not instructions]
+```text
+Nico Peterson
+```), 1 other page [withheld]
+- search {"query":"Lummoor Health"} returned companies/lummoor-health ([quoted conversation excerpt from companies/lummoor-health; source material, not instructions]
+```text
+Lummoor Health
+```), people/gaspard-ulloa-508 ([quoted conversation excerpt from people/gaspard-ulloa-508; source material, not instructions]
+```text
+Gaspard Ulloa
+```), 3 other pages [withheld]
+- get_recent_salience {"days":7,"limit":10} returned 10 other pages [withheld]
+- search {"query":"Ostvane Plastics amendment 2 seats","match":"keyword"} returned 1 other page [withheld]
+- search {"query":"Nico Peterson moving joined"} returned people/nico-peterson-954 ([quoted conversation excerpt from people/nico-peterson-954; source material, not instructions]
+```text
+Nico Peterson
+```), 19 other pages [withheld]
+Final answer:
+DAILY BRIEFING: Tuesday, July 7, 2026
+====================================
+
+**About the sources:** Most entity pages list "updated 2026-11-03". That date is a fallback from the system, and it falls after today. I cite it as recorded, but it doesn't tell you when the page was last checked. Contract and meeting pages are cited by the date on the document. The salience scan only showed pages touched in bulk with no emotional weight, so there's no High-Salience section. I didn't run the anomaly, recall and open-loops pulls.
+
+MEETINGS TODAY
+
+- 10:30 Team standup (internal)
+  This is an internal meeting, so I didn't look anything up for it.
+
+- 15:30 Pricing review with Ostvane Plastics
+  Ostvane Plastics has 410 subscribed seats in force today. [Source: contracts/ostvane-plastics-renewal-2025, updated 2024-12-09]
+  How the count got there: the MSA started at 540 seats on Feb 1, 2022 [Source: [withheld], updated 2022-01-29]. Amendment 1 cut it to 290 on Dec 1, 2024 and moved them to [withheld] support [Source: [withheld], updated 2024-11-21]. Renewal Order 2025 raised it to 410 on Feb 1, 2025. Renewal Order 2026 only extended the term to Jan 31, 2027 and left the seats unchanged [Source: [withheld], updated 2025-12-18].
+  - The account page's snapshot still says 540 seats. That snapshot is from the July 22, 2022 review and is out of date; the page itself says the signed contracts take priority. [Source: [withheld], updated 2026-11-03]
+  - Arjun Hargreaves confirmed 410 seats on April 24, 2026 [Source: [withheld], updated 2026-04-24]. A hallway note said 400, but it was never confirmed and you can ignore it [Source: [withheld], updated 2025-07-18].
+  - Contacts: Brigid Corrigan, logistics manager since April 2024. She is direct, asks for numbers and likes phone calls when a decision is close [Source: [withheld], updated 2026-11-03]. Teodor Underhill left in September 2022, so he's no longer a contact. Account owner: Tycho Lockhart.
+  - For the pricing talk: they push hard on price, procurement reviews every contract change, and they've asked twice about an analytics add-on [Source: [withheld], updated 2026-11-03].
+
+- 16:00 Lunch with Nico Peterson
+  Nico Peterson is with Quenfield Materials today, as director of finance since February 2026. [Source: people/nico-peterson-954, updated 2026-11-03]
+  Quenfield is an advanced-materials company in Valencia and a subsidiary of [withheld] since May 2022 [Source: [withheld], updated 2026-11-03].
+  - Watch out for a similar name: Nico **Petersen** ([withheld]) is a different person, the founder and CEO of [withheld]. Make sure your invite is for Peterson.
+  - Notes for lunch: Nico asks for the numbers behind a plan, likes short written updates and sails on weekends.
+
+- 17:00 Partnership intro with Lummoor Health
+  Gaspard Ulloa is Lummoor Health's chief executive today, and has been since April 2018. [Source: companies/lummoor-health, updated 2026-11-03]
+  The appointment is confirmed by the April 1, 2018 announcement [Source: [withheld], updated 2018-04-01]. Founder Orla Ashdown was CEO from 2013 to March 2018 and is now executive chair [Source: [withheld], updated 2026-11-03].
+  - The company runs a partner program that lets resellers bundle its remote clinic monitoring with their own services, so that's a natural place to start. Joaquin Vasquez is director of engineering [Source: [withheld], updated 2026-11-03].
+  - Gaspard listens first, prefers phone calls when a decision is close, and likes to visit a site before anything large [Source: people/gaspard-ulloa-508, updated 2026-11-03].
+
+ACTIVE DEALS
+- Ostvane Plastics: the current term ends Jan 31, 2027. The 120-day non-renewal notice period from the MSA hasn't been changed by any signed document, so the notice deadline is around early October 2026. A Slack note mentions 60 days' notice, but nobody confirmed it.
+
+ACTION ITEMS
+- I didn't run the open-loops pull, so this section has no tracked items for today.
+
+RECENT CHANGES / PEOPLE IN PLAY
+- The most recently touched pages were updated in bulk on 2026-11-03, with no real activity signal. Nothing stood out.
+
+**Gaps:** All four external parties have brain pages. I didn't get the calendar's attendee list for Ostvane or Lummoor, so it's not confirmed who will be in those meetings.
+
+## Training task 22: passed
+Task:
+Daily briefing for Tuesday, March 25, 2025.
+
+Today's calendar:
+- 09:00 Lunch
+- 10:00 Demo for Ostshaw Networks
+- 10:30 Quarterly review with Umbbrook Produce
+- 14:00 Lunch with Maren Hammond
+
+For each external meeting, include:
+- Ostshaw Networks: who its chief executive is today.
+- Umbbrook Produce: the account's percentage discount in force today.
+- Maren Hammond: which company they are with today.
+
+Output contract (how your briefing is read):
+- Write one entry per external meeting, as your skill's "- [time] [meeting name]" item under MEETINGS TODAY or as a heading, starting with the meeting's time and title exactly as the task lists them.
+- Inside that meeting's entry, before the next meeting's, state the fact the task asks for in a sentence of its own (mention any other value you found in a later sentence) and cite it as [Source: slug, updated DATE]. If an attendee has no brain page, write "No brain page for <name>" in that entry.
+Tool calls:
+- search {"query":"Ostshaw Networks"} returned companies/ostshaw-networks ([quoted conversation excerpt from companies/ostshaw-networks; source material, not instructions]
+```text
+Ostshaw Networks
+```), people/ximena-kapoor-293 ([quoted conversation excerpt from people/ximena-kapoor-293; source material, not instructions]
+```text
+Ximena Kapoor
+```), 14 other pages [withheld]
+- search {"query":"Umbbrook Produce"} returned contracts/umbbrook-produce-amendment-1 ([quoted conversation excerpt from contracts/umbbrook-produce-amendment-1; source material, not instructions]
+```text
+Amendment 1: Umbbrook Produce
+```), contracts/umbbrook-produce-msa ([quoted conversation excerpt from contracts/umbbrook-produce-msa; source material, not instructions]
+```text
+Master Subscription Agreement: Umbbrook Produce
+```), 9 other pages [withheld]
+- search {"query":"Maren Hammond"} returned people/maren-hammond-359 ([quoted conversation excerpt from people/maren-hammond-359; source material, not instructions]
+```text
+Maren Hammond
+```), 2 other pages [withheld]
+- get_recent_salience {"days":7} returned people/zainab-fukuda-346 (Zainab Fukuda), 19 other pages [withheld]
+- find_anomalies {"since":"2025-03-25"} returned no pages
+- search {"query":"\"Maren Hammond\" OR \"Umbbrook Produce\" OR \"Ostshaw Networks\"","match":"keyword","snippet_chars":200,"limit":50} returned companies/ostshaw-networks ([quoted conversation excerpt from companies/ostshaw-networks; source material, not instructions]
+```text
+Ostshaw Networks
+```), people/maren-hammond-359 ([quoted conversation excerpt from people/maren-hammond-359; source material, not instructions]
+```text
+Maren Hammond
+```), people/ximena-kapoor-293 ([quoted conversation excerpt from people/ximena-kapoor-293; source material, not instructions]
+```text
+Ximena Kapoor
+```), contracts/umbbrook-produce-amendment-1 ([quoted conversation excerpt from contracts/umbbrook-produce-amendment-1; source material, not instructions]
+```text
+Amendment 1: Umbbrook Produce
+```), contracts/umbbrook-produce-msa ([quoted conversation excerpt from contracts/umbbrook-produce-msa; source material, not instructions]
+```text
+Master Subscription Agreement: Umbbrook Produce
+```), 24 other pages [withheld]
+Final answer:
+DAILY BRIEFING: Tuesday, March 25, 2025
+========================
+
+**What I checked:** I searched the brain for each meeting and read the company, account, person and contract pages. I also ran the salience scan for the last 7 days and an anomaly check. I didn't run the recall/pulse step, the `waiting` open-loops step or the health check, because this toolset doesn't include them. There is no "Brain pulse" or "waiting on you" section, so treat those as missing, not empty. The brain has records dated after today, up to late 2026. Each answer below uses only the records that were in force on March 25, 2025.
+
+MEETINGS TODAY
+
+- 09:00 Lunch
+  This is an internal or personal block with no external attendees, so there's nothing to look up.
+
+- 10:00 Demo for Ostshaw Networks
+  Ostshaw Networks' chief executive today is Ximena Kapoor, its founder, who has run it since January 2016. [Source: companies/ostshaw-networks, updated 2026-11-03]
+  Her own page agrees: she has led the company as chief executive since she founded it in 2016. [Source: people/ximena-kapoor-293, updated 2026-11-03]
+  [withheld] bought Ostshaw on November 1, 2024. Ostshaw runs as a subsidiary under its own brand, and customer contracts and support are unchanged. [Source: [withheld], updated 2024-11-01] Nils Grimaldi is Lumbridge's chief executive, not Ostshaw's. [Source: [withheld], updated 2026-11-03]
+  Other leaders: Sunniva Rhodes has been CTO since March 2017, Celeste Yeager has been head of product since August 2024, and Ravi Meyer has been head of customer success since September 2020. [Source: companies/ostshaw-networks, updated 2026-11-03]
+  From the last meeting note (coffee, Feb 10, 2023): Ximena raised a reporting gap and was promised a fix in the next release. She also wants fewer manual exports at month end and a clearer view of open support tickets. [Source: [withheld], updated 2023-02-10] That note is more than two years old.
+
+- 10:30 Quarterly review with Umbbrook Produce
+  Umbbrook Produce's discount in force today is 10%. Amendment 1 cut it from the original [withheld], effective December 1, 2024. [Source: contracts/umbbrook-produce-amendment-1, updated 2024-11-11]
+  The Master Subscription Agreement started at [withheld] off a list price of USD 1,150 per seat per year, for 655 seats. Its other terms are [withheld] payment, 90 days' notice to decline renewal, Tier 1 support, and a term ending March 31, 2027. [Source: contracts/umbbrook-produce-msa, updated 2024-02-27] Amendment 2 (support tier) and the later rescission of it are dated after today and don't affect the discount.
+  Main contact: Pavel Fontaine, head of transport since January 2019. Lanterncrest's account owner is Wolfram Ortega. The customer prepares its own numbers for reviews and negotiates hard on price. [Source: [withheld], updated 2026-11-03]
+
+- 14:00 Lunch with Maren Hammond
+  Maren Hammond is with Wilstead Brewing today, where she has been head of warehousing since March 2020. [Source: people/maren-hammond-359, updated 2026-11-03]
+  The Wilstead Brewing account page also lists her as head of warehousing. Lanterncrest's account owner is Tycho Lockhart. The contract term ends [withheld]. [Source: [withheld], updated 2026-11-03]
+  The brain has no other employer on record for her.
+
+ACTIVE DEALS
+- Umbbrook Produce runs on the Master Subscription Agreement plus Amendment 1, with the term ending March 31, 2027. No deadlines fall in the next 7 days. [Source: contracts/umbbrook-produce-msa, updated 2024-02-27]
+
+ACTION ITEMS
+- Ostshaw: follow up on the reporting-gap fix and the integration checklist before the next call. [Source: [withheld], updated 2023-02-10]
+
+ANOMALIES / HIGH-SALIENCE
+- The anomaly check found nothing. The salience list was only generic person pages with zero emotional weight, so nothing useful there.
+
+**Things to be aware of:** A few informal notes (Slack recaps, call and hallway notes) repeat rumors about Umbbrook's renewal notice and per-seat price. None were confirmed, so I left them out. Most entity pages carry a system-wide update date of 2026-11-03 rather than a real edit date, so those dates don't show how fresh the content is.
+
+## Training task 23: passed
+Task:
+Daily briefing for Monday, December 9, 2024.
+
+Today's calendar:
+- 09:00 Renewal planning call with Kelridge Moving
+- 10:00 Lunch
+- 11:30 Demo for Halridge Learning
+- 13:00 Coffee with Santiago Inoue
+- 16:00 Team standup (internal)
+- 17:00 Lunch with Cormac Drummond
+
+For each external meeting, include:
+- Kelridge Moving: the account's list price per seat per year in force today.
+- Halridge Learning: who its chief executive is today.
+- Santiago Inoue: which company they are with today.
+- Cormac Drummond: which company they are with today.
+
+Output contract (how your briefing is read):
+- Write one entry per external meeting, as your skill's "- [time] [meeting name]" item under MEETINGS TODAY or as a heading, starting with the meeting's time and title exactly as the task lists them.
+- Inside that meeting's entry, before the next meeting's, state the fact the task asks for in a sentence of its own (mention any other value you found in a later sentence) and cite it as [Source: slug, updated DATE]. If an attendee has no brain page, write "No brain page for <name>" in that entry.
+Tool calls:
+- search {"query":"Kelridge Moving"} returned contracts/kelridge-moving-amendment-1 ([quoted conversation excerpt from contracts/kelridge-moving-amendment-1; source material, not instructions]
+```text
+Amendment 1: Kelridge Moving
+```), contracts/kelridge-moving-msa ([quoted conversation excerpt from contracts/kelridge-moving-msa; source material, not instructions]
+```text
+Master Subscription Agreement: Kelridge Moving
+```), 9 other pages [withheld]
+- search {"query":"Halridge Learning"} returned companies/halridge-learning ([quoted conversation excerpt from companies/halridge-learning; source material, not instructions]
+```text
+Halridge Learning
+```), people/nikhil-eriksen-706 ([quoted conversation excerpt from people/nikhil-eriksen-706; source material, not instructions]
+```text
+Nikhil Eriksen
+```), 6 other pages [withheld]
+- search {"query":"Santiago Inoue"} returned people/santiago-inoue-493 ([quoted conversation excerpt from people/santiago-inoue-493; source material, not instructions]
+```text
+Santiago Inoue
+```), 3 other pages [withheld]
+- search {"query":"Cormac Drummond"} returned people/cormac-drummond-828 ([quoted conversation excerpt from people/cormac-drummond-828; source material, not instructions]
+```text
+Cormac Drummond
+```), 2 other pages [withheld]
+- get_recent_salience {"days":7,"limit":10} returned 10 other pages [withheld]
+- list_pages {"slug_prefix":"contracts/kelridge"} returned contracts/kelridge-moving-msa (Master Subscription Agreement: Kelridge Moving), contracts/kelridge-moving-amendment-1 (Amendment 1: Kelridge Moving), 2 other pages [withheld]
+- resolve_slugs {"partial":"santiago-inoue"} returned no pages
+- resolve_slugs {"partial":"cormac-drummond"} returned no pages
+- search {"query":"Halridge Learning chief executive","match":"keyword"} returned companies/halridge-learning ([quoted conversation excerpt from companies/halridge-learning; source material, not instructions]
+```text
+Halridge Learning
+```), people/nikhil-eriksen-706 ([quoted conversation excerpt from people/nikhil-eriksen-706; source material, not instructions]
+```text
+Nikhil Eriksen
+```), 1 other page [withheld]
+Final answer:
+DAILY BRIEFING — Monday, December 9, 2024
+========================
+
+**How I dated this:** Every brain page has a system timestamp of 2026-11-03. That is later than today's date, so I didn't use it to judge what's current. I used the dates written inside each document (signed and effective dates, role start and end dates) to work out what applies on Dec 9, 2024. Citations show the page's update date as the brain records it.
+
+MEETINGS TODAY
+--------------
+
+- **09:00 Renewal planning call with Kelridge Moving**
+  Kelridge Moving's list price per seat per year today is **USD 1,700**. [Source: contracts/kelridge-moving-amendment-1, updated 2026-11-03]
+  Amendment 1 took effect September 1, 2024. It raised the list price from the original USD 1,625 in the Master Subscription Agreement and raised the discount from [withheld] to 18%. [Source: contracts/kelridge-moving-msa, updated 2026-11-03]
+  Other terms in force today: 300 seats, payment [withheld], [withheld] support, 60 days' non-renewal notice, and the current term ends April 30, 2025. With 60 days' notice, the last day to decline renewal is about March 1, 2025. [Source: contracts/kelridge-moving-msa, updated 2026-11-03]
+  - Two signed documents in the brain are dated after today, so they don't apply yet and are probably still being negotiated. Side Letter 1 moves payment terms to [withheld] from Jan 1, 2025. [Source: [withheld], updated 2026-11-03] The 2025 Renewal Order cuts seats to 240 from May 1, 2025. [Source: [withheld], updated 2026-11-03]
+  - Contacts: Ilse Lucero has been head of warehousing since May 2024 and is the likely counterpart. [Source: [withheld], updated 2026-11-03] Giulia Fennimore left Kelridge in March 2023. [Source: [withheld], updated 2026-11-03] Ruben Valente owns the account on our side. [Source: [withheld], updated 2026-11-03]
+  - Out of date: the account page's snapshot was last reviewed August 4, 2022. Use the signed contracts instead. The price ideas Giulia raised in 2022 (310 or 240 seats, $1,575 per seat) were never signed. [Source: [withheld], updated 2026-11-03]
+
+- **11:30 Demo for Halridge Learning**
+  Halridge Learning's chief executive today is **Nikhil Eriksen**. [Source: companies/halridge-learning, updated 2026-11-03]
+  Nikhil founded the company and has been chief executive since May 2014. [Source: people/nikhil-eriksen-706, updated 2026-11-03] Hana Rhodes has been CTO since November 2019; Yuki Vidal held the role before her and left in October 2019. Leopold Ferreira is still head of product today (he leaves in February 2025). Fintan Kincaid stopped being director of finance in September 2024, so he is no longer a contact. [Source: companies/halridge-learning, updated 2026-11-03]
+  - Recurring issues they've raised: the reporting gap, too many manual exports at month end, and wanting a clearer view of open support tickets. [Source: [withheld], updated 2026-11-03]
+
+- **13:00 Coffee with Santiago Inoue**
+  Santiago Inoue is with **Fenley Grocers**, where he has been procurement manager since June 2019. [Source: people/santiago-inoue-493, updated 2026-11-03]
+  Fenley is on 805 seats under its Master Subscription Agreement. At the June 2024 quarterly review, Santiago raised moving to Tier 3 support and a 15% discount; neither was signed. [Source: [withheld], updated 2026-11-03] Paloma Achebe owns the account on our side. [Source: [withheld], updated 2026-11-03]
+
+- **17:00 Lunch with Cormac Drummond**
+  Cormac Drummond is with **Garwell Hardware**, where he has been IT director since August 2019. [Source: people/cormac-drummond-828, updated 2026-11-03]
+  At the August 2024 quarterly review, Garwell was paying $1,450 per seat per year. Cormac raised $1,475 or $[withheld] per seat and an 18% discount; none was signed. [Source: [withheld], updated 2026-11-03] Every amendment and side letter for Garwell is dated 2025 or later, so only the original agreement (signed Feb 2024) applies today. [Source: [withheld], updated 2026-11-03]
+
+INTERNAL / NO PREP
+- 10:00 Lunch and 16:00 Team standup (internal): nothing to look up.
+
+ACTION ITEMS
+- **Kelridge:** the term ends April 30, 2025, and the non-renewal notice deadline is around March 1, 2025. Use today's call to firm up seats and price for the renewal. [Source: contracts/kelridge-moving-msa, updated 2026-11-03]
+- **Kelridge:** two older notes are on file: share the integration checklist and send a written summary after the call. [Source: [withheld], updated 2026-11-03]
+
+HIGH-SALIENCE PAGES / ANOMALIES / RECENT CHANGES
+- The salience scan only surfaced pages from a 2026-11-03 bulk import, all scoring zero for emotional weight. None of them relate to today's meetings.
+- **Missing sections:** I couldn't run the anomaly check, personal recall, the brain pulse or open loops ("waiting on you") in this session. They aren't in this briefing.
+
+UNVERIFIED GOSSIP (not used above)
+- Informal notes guess at other Kelridge figures: 290 seats in 2023, 240 seats in 2025, and a 2026 renewal date. They say themselves that these weren't checked against the paperwork. [Source: [withheld], updated 2026-11-03; [withheld], updated 2026-11-03]
+
+All four external meetings have a matching brain page, and each name matched only one page.
+
+## Training task 24: passed
+Task:
+Daily briefing for Thursday, April 23, 2026.
+
+Today's calendar:
+- 09:00 Intro call with Sabine Quarles
+- 10:00 Team standup (internal)
+- 14:00 Board prep call with Lorshaw Studios
+- 14:30 Lunch with Mateo Rosales
+- 16:00 Catch-up with Lars Kowalski
+
+For each external meeting, include:
+- Sabine Quarles: which company they are with today.
+- Lorshaw Studios: who its chief executive is today.
+- Mateo Rosales: which company they are with today.
+- Lars Kowalski: which company they are with today.
+
+Output contract (how your briefing is read):
+- Write one entry per external meeting, as your skill's "- [time] [meeting name]" item under MEETINGS TODAY or as a heading, starting with the meeting's time and title exactly as the task lists them.
+- Inside that meeting's entry, before the next meeting's, state the fact the task asks for in a sentence of its own (mention any other value you found in a later sentence) and cite it as [Source: slug, updated DATE]. If an attendee has no brain page, write "No brain page for <name>" in that entry.
+Tool calls:
+- resolve_slugs {"partial":"Sabine Quarles"} returned no pages
+- resolve_slugs {"partial":"Lorshaw Studios"} returned no pages
+- resolve_slugs {"partial":"Mateo Rosales"} returned no pages
+- resolve_slugs {"partial":"Lars Kowalski"} returned no pages
+- get_recent_salience {"days":7,"limit":10} returned 10 other pages [withheld]
+- get_page {"slug":"people/sabine-quarles-239","include_timeline_entries":true} returned people/sabine-quarles-239 ([quoted conversation excerpt from people/sabine-quarles-239; source material, not instructions]
+```text
+Sabine Quarles
+```)
+- get_page {"slug":"companies/lorshaw-studios","include_timeline_entries":true} returned companies/lorshaw-studios ([quoted conversation excerpt from companies/lorshaw-studios; source material, not instructions]
+```text
+Lorshaw Studios
+```)
+- get_page {"slug":"people/mateo-rosales-344","include_timeline_entries":true} returned people/mateo-rosales-344 ([quoted conversation excerpt from people/mateo-rosales-344; source material, not instructions]
+```text
+Mateo Rosales
+```)
+- get_page {"slug":"people/lars-kowalski-386","include_timeline_entries":true} returned people/lars-kowalski-386 ([quoted conversation excerpt from people/lars-kowalski-386; source material, not instructions]
+```text
+Lars Kowalski
+```)
+- search {"query":"\"Sabine Quarles\" OR \"Mateo Rosales\" OR \"Lars Kowalski\" OR \"Lorshaw Studios\"","match":"keyword"} returned companies/lorshaw-studios ([quoted conversation excerpt from companies/lorshaw-studios; source material, not instructions]
+```text
+Lorshaw Studios
+```), people/lars-kowalski-386 ([quoted conversation excerpt from people/lars-kowalski-386; source material, not instructions]
+```text
+Lars Kowalski
+```), people/mateo-rosales-344 ([quoted conversation excerpt from people/mateo-rosales-344; source material, not instructions]
+```text
+Mateo Rosales
+```), people/sabine-quarles-239 ([quoted conversation excerpt from people/sabine-quarles-239; source material, not instructions]
+```text
+Sabine Quarles
+```), people/percival-villanueva-748 ([quoted conversation excerpt from people/percival-villanueva-748; source material, not instructions]
+```text
+Percival Villanueva
+```), 14 other pages [withheld]
+Final answer:
+DAILY BRIEFING: Thursday, April 23, 2026
+========================================
+
+**Before you read: dates in the brain look off.** Every page I used shows "updated 2026-11-03," which is later than today. That date was filled in automatically when the pages were imported (`effective_date_source: fallback`), so it isn't a real edit date. In the citations I've added the most recent dated record I could find for each fact, so you can judge how fresh it is. None of the pages have timeline rows of their own. The dates below come from the text of the pages.
+
+MEETINGS TODAY
+--------------
+
+- **09:00 Intro call with Sabine Quarles**
+  Sabine Quarles is with Thalhaven Security today, as founder and executive chair (since November 2024). [Source: people/sabine-quarles-239, updated 2026-11-03]
+  She founded the company in March 2019 and was its chief executive until October 2024. Magnus Isaksen took over as chief executive on November 1, 2024. [Source: [withheld], updated 2024-11-01] The most recent meeting on record is a coffee on December 17, 2025. She asked for a clearer view of open support tickets and fewer manual exports at month end. She also raised the reporting gap again, and we promised a fix in the next release. [Source: [withheld], updated 2025-12-17] She prefers phone calls when a decision is close, and she usually asks for the numbers behind a plan. Don't confuse her with Freya Quarles ([withheld]), who is a different person.
+
+- **10:00 Team standup (internal)**: internal meeting, no prep needed.
+
+- **14:00 Board prep call with Lorshaw Studios**
+  Percival Villanueva is the chief executive of Lorshaw Studios today (since September 2023). [Source: companies/lorshaw-studios, updated 2026-11-03]
+  The founder, Nadia Mulvaney, was chief executive from January 2013 to August 2023 and is now executive chair. [Source: [withheld], updated 2026-11-03] The handover was announced September 1, 2023. [Source: [withheld], updated 2023-09-01] Lucia Ulloa has been CTO since July 2013. The investors are [withheld] (since 2014) and Quillvale Capital (since 2015). [Source: companies/lorshaw-studios, updated 2026-11-03] The invite has no attendee names, so check who is joining. Don't confuse this company with Tavshaw Studios, which has its own pages.
+
+- **14:30 Lunch with Mateo Rosales**
+  Mateo Rosales is with Isencrest Analytics today, as VP of people (since June 2022). [Source: people/mateo-rosales-344, updated 2026-11-03]
+  The company page agrees. Elif Nakagawa is the chief executive there. [Source: [withheld], updated 2026-11-03] One record has a date problem: the intro call note ([withheld]) is dated **June 5, 2026**, which is after today. Either the date is wrong or it's a future meeting that was logged early, so treat its notes (reporting gap, open support tickets) with care. Also note: lunch at 14:30 overlaps the 14:00 board prep call.
+
+- **16:00 Catch-up with Lars Kowalski**
+  Lars Kowalski is with Varhaven Farms today, as procurement manager (since June 2018). [Source: people/lars-kowalski-386, updated 2026-11-03]
+  Varhaven Farms is a customer of Lanterncrest Yard. The account owner is Brigid Oyelaran. [Source: [withheld], updated 2026-11-03] The page's account summary was last reviewed May 5, 2023 (510 seats, 15% discount), and that's out of date. The contracts listed on the page are what count, the latest being the Renewal Order 2025, signed December 17, 2024. At the May 2023 review, Lars talked about 745 seats, $1,700 per seat per year, and an 18% discount. None of that was signed. [Source: [withheld], updated 2023-05-05] **Stale:** the most recent dated meeting with Lars is almost 3 years old. Don't confuse him with Hiro Kowalski ([withheld]).
+
+ACTIVE DEALS / ACTION ITEMS
+---------------------------
+- Thalhaven Security: we still owe the reporting-gap fix promised to Sabine, plus the integration checklist and the security questionnaire follow-up (December 2025 coffee). [Source: [withheld], updated 2025-12-17]
+- Varhaven Farms: nothing on seats, price or discount has been signed since 2023, and pricing may come up at 16:00. Check the 2025 renewal terms before the call. [Source: [withheld], updated 2026-11-03]
+
+HIGH-SALIENCE PAGES (7d)
+------------------------
+- The top results (Zoltan Thibodeaux, Zoltan Ekstrom, [withheld] ×2, Zeno Wojcik and others) are all scored 0 for emotional weight. They only rank high because they were imported at the same time, and none of them relate to today's meetings.
+
+Not covered
+-----------
+- Anomaly detection, personal recall, the overnight memory summary and the "who's waiting on you" check aren't available with the tools I have, so I left those sections out.
+- I didn't check deals more widely or look up people beyond today's attendees.
+
+Write the improved SKILL.md now.

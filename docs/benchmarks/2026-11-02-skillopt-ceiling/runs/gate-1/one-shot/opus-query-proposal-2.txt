@@ -1,0 +1,118 @@
+---
+name: query
+version: 1.0.0
+description: |
+  Answer questions using the brain's knowledge with 3-layer search, synthesis,
+  and citation propagation. Use when the user asks a question, wants a lookup,
+  or needs information from the brain.
+triggers:
+  - "what do we know about"
+  - "tell me about"
+  - "who is"
+  - "what happened"
+  - "search for"
+  - "look up"
+  - "background on"
+  - "notes on"
+  - "who knows who"
+  - "relationship between"
+  - "connections"
+  - "graph query"
+tools:
+  - recall
+  - search
+  - query
+  - get_page
+  - list_pages
+  - get_backlinks
+  - traverse_graph
+  - get_timeline
+mutating: false
+---
+
+# Query Skill
+
+Answer questions from the brain's pages with search, careful reading, and cited synthesis.
+
+> **Memory verbs (MEMORY_VERBS v1, gbrain ≥ 0.43).** When the server offers them, prefer
+> `recall(query | entity, budget_tokens)` for saved-memory reads, `entity(name)` for a
+> person/company card, and `synthesize(question)` only when the answer must combine
+> evidence across pages. Otherwise use `search` / `query` / `get_page`.
+
+## Contract
+
+- Every answer is grounded in brain content. Never answer from general knowledge.
+- Every deciding claim cites a page as `[Source: slug]`.
+- Gaps are stated explicitly: "the brain doesn't have information on X".
+- Ambiguous names are flagged, not silently resolved.
+- Conflicting or superseded values are reported after the answer, with citations.
+
+## Answer format (always)
+
+1. **First line holds the answer and only the answer:** `Answer: <value>`. No caveats, no alternative values, no hedging in that line.
+2. Then a short explanation of why that value holds, citing each deciding page as `[Source: slug]`.
+3. Then "Other values I found:" listing earlier/later records, snapshots, rumors, and look-alikes, each with its source and the reason it does not answer the question.
+4. Special first lines (use these instead of a value when they apply):
+   - Named person/company not in the brain: `Answer: The brain doesn't have information on <name>.` Give no value taken from a near match.
+   - Name fits more than one entity and the question gives no way to choose: start with `ambiguous:` and name each candidate with its distinguishing details and the value for each.
+
+If the task gives its own output contract, follow it exactly; it overrides this format.
+
+## Procedure
+
+### 1. Find the entity
+- Search the exact name first (`search {"query": "<name>"}`), adding a topic word when useful ("<company> renewal", "<company> seats").
+- Check whether a page actually is the named entity. A hit that only shares a first name, last name, or one word of a company name is NOT a match.
+- If no page clearly matches, confirm before declaring a gap: run an exact keyword search (`match: "keyword"`, quoted name) and a slug lookup (`resolve_slugs`). If all come back empty, report "the brain doesn't have information on <name>". Mention partial-name look-alikes after that line only as "not this entity".
+- If two or more distinct pages share the exact name (different slugs, overlapping current roles, different backgrounds/cities), it's ambiguous. Don't merge them and don't pick one. One person with an old and a new job is not ambiguity: use the current role.
+
+### 2. Follow the chain for multi-hop questions
+"Who founded the company X works with?" means: find X's page, get the **current** employer (latest role with no end date), then open that company's page for the founder. Confirm with the founder's own page or meeting notes when available.
+- Past employers, rumored moves ("might be moving", "unconfirmed"), investors, parent/acquiring companies, later CEOs, and "founding partner" titles at other firms are not the answer. Mention them as context only.
+
+### 3. Resolve "as of <date>" questions from the document trail
+For contract terms (tier, seats, price, discount, renewal date, payment terms):
+- Collect every signed document for that account: master agreement, amendments, renewal orders, side letters, rescissions. Open the ones search surfaces, and check for others you haven't seen.
+- For each, note the **effective date** (not the signing date) and which fields it changes.
+- A document signed before the as-of date but effective after it does NOT apply yet. These documents usually say the current terms continue until then.
+- A rescission cancels the amendment from its effective date. Changed fields revert to their prior values.
+- Documents that don't touch the field leave it unchanged.
+- "Renewal date / last day of current term" = end date of the term in force on the as-of date.
+- Account snapshots, check-in notes, pipeline notes, and rumors are lower authority than signed contracts, and often describe a different date. Use them only as corroboration and list them under other values.
+- Walk the trail chronologically and state the value in force on the exact date.
+
+### 4. Read, then synthesize
+- Search chunks are often enough. Open full pages (`get_page`) when the chunk doesn't show effective dates, the full role history, or the founder line.
+- For "what happened" questions use timelines. For relationships use backlinks or graph traversal (`traverse_graph`, link types like `works_at`, `founded`, `attended`, `invested_in`, `advises`).
+
+## Source precedence
+
+1. User's direct statements
+2. Signed/primary records and compiled truth (contract documents, the entity's own page)
+3. Timeline entries and meeting notes
+4. Snapshots, hearsay notes, external sources
+
+When sources conflict, give the higher-authority value as the answer and note the other with its citation. Don't drop it silently.
+
+## When retrieval fails
+
+- Check results for notices. With `empty_retrieval kind=degraded` or `search_degraded`, an empty result is not proof of absence. Say keyword-only search may be missing notes, retry exact names and synonyms with `search`, then report.
+- A clean miss ("no retrieval degradation"), confirmed by keyword search and slug lookup, is a real gap.
+- `listing_truncated` / `budget_truncated`: say "showing the first N" and narrow or page before claiming absence.
+- `page_not_found`: search by title before reporting the page missing.
+
+## Anti-Patterns
+
+- Putting two values, or a hedge, in the first line
+- Taking a value from a similarly named person or company
+- Using a signing date as if it were the effective date
+- Trusting an account snapshot or rumor over signed documents
+- Answering a "works with" question with a past or rumored employer
+- Calling a name ambiguous when it is one person's job history, or merging two distinct people
+- Declaring a gap after only one fuzzy search
+
+## Token Budget
+
+Read search excerpts first; load full pages only when needed. For tight budgets,
+`recall` with `budget_policy: "query_first"` gives ranked pages first claim on the
+budget. If a needed page doesn't fit, say so. Don't treat it as missing memory.
