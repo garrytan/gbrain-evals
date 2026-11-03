@@ -1,0 +1,64 @@
+{"family": "other-given-form", "query": "Matt Quorvant", "expect": "people/matthew-quorvant", "rank": null, "top": ["companies/example-org-0", "people/matt-oakley", "archive/matt-quorvant-mail-9"]}
+{"family": "title-given-form", "query": "Matthew Quorvant", "expect": "people/matthew-quorvant", "rank": 1, "top": ["people/matthew-quorvant", "companies/example-org-0"]}
+{"family": "surname-only", "query": "Quorvant", "expect": "people/matthew-quorvant", "rank": 1, "top": ["people/matthew-quorvant", "companies/example-org-0", "archive/matt-quorvant-mail-9"]}
+{"family": "titled-name", "query": "Dr Matt Quorvant", "expect": "people/matthew-quorvant", "rank": null, "top": ["people/matt-oakley", "people/matt-norwood", "people/matt-marlow"]}
+{"family": "other-given-form", "query": "Robert Zelbrick", "expect": "people/bob-zelbrick", "rank": null, "top": ["companies/example-org-1", "people/robert-ellery", "people/robert-dunmore"]}
+{"family": "title-given-form", "query": "Bob Zelbrick", "expect": "people/bob-zelbrick", "rank": 1, "top": ["people/bob-zelbrick", "companies/example-org-1", "archive/bob-zelbrick-mail-9"]}
+{"family": "surname-only", "query": "Zelbrick", "expect": "people/bob-zelbrick", "rank": 1, "top": ["people/bob-zelbrick", "companies/example-org-1", "archive/bob-zelbrick-mail-9"]}
+{"family": "titled-name", "query": "Dr Robert Zelbrick", "expect": "people/bob-zelbrick", "rank": 6, "top": ["people/robert-ellery", "people/robert-dunmore", "people/robert-cedar"]}
+{"family": "other-given-form", "query": "Bill Marrowfen", "expect": "people/william-marrowfen", "rank": null, "top": ["companies/example-org-2", "people/bill-oakley", "archive/bill-marrowfen-mail-9"]}
+{"family": "title-given-form", "query": "William Marrowfen", "expect": "people/william-marrowfen", "rank": 1, "top": ["people/william-marrowfen", "companies/example-org-2"]}
+{"family": "surname-only", "query": "Marrowfen", "expect": "people/william-marrowfen", "rank": 1, "top": ["people/william-marrowfen", "companies/example-org-2", "archive/bill-marrowfen-mail-9"]}
+{"family": "titled-name", "query": "Dr Bill Marrowfen", "expect": "people/william-marrowfen", "rank": null, "top": ["people/bill-oakley", "people/bill-norwood", "people/bill-marlow"]}
+{"family": "other-given-form", "query": "Elizabeth Thistlecombe", "expect": "people/liz-thistlecombe", "rank": null, "top": ["companies/example-org-3", "people/elizabeth-ellery", "people/elizabeth-dunmore"]}
+{"family": "title-given-form", "query": "Liz Thistlecombe", "expect": "people/liz-thistlecombe", "rank": 1, "top": ["people/liz-thistlecombe", "companies/example-org-3", "archive/liz-thistlecombe-mail-9"]}
+{"family": "surname-only", "query": "Thistlecombe", "expect": "people/liz-thistlecombe", "rank": 1, "top": ["people/liz-thistlecombe", "companies/example-org-3", "archive/liz-thistlecombe-mail-9"]}
+{"family": "titled-name", "query": "Dr Elizabeth Thistlecombe", "expect": "people/liz-thistlecombe", "rank": 6, "top": ["people/elizabeth-ellery", "people/elizabeth-dunmore", "people/elizabeth-cedar"]}
+{"family": "other-given-form", "query": "Jim Vandermeer", "expect": "people/james-vandermeer", "rank": null, "top": ["companies/example-org-4", "people/jim-oakley", "archive/jim-vandermeer-mail-9"]}
+{"family": "title-given-form", "query": "James Vandermeer", "expect": "people/james-vandermeer", "rank": 1, "top": ["people/james-vandermeer", "companies/example-org-4"]}
+{"family": "surname-only", "query": "Vandermeer", "expect": "people/james-vandermeer", "rank": 1, "top": ["people/james-vandermeer", "companies/example-org-4", "archive/jim-vandermeer-mail-9"]}
+{"family": "titled-name", "query": "Dr Jim Vandermeer", "expect": "people/james-vandermeer", "rank": null, "top": ["people/jim-oakley", "people/jim-norwood", "people/jim-marlow"]}
+{"family": "other-given-form", "query": "Katherine Oxleigh", "expect": "people/kate-oxleigh", "rank": null, "top": ["companies/example-org-5", "people/katherine-ellery", "people/katherine-dunmore"]}
+{"family": "title-given-form", "query": "Kate Oxleigh", "expect": "people/kate-oxleigh", "rank": 1, "top": ["people/kate-oxleigh", "companies/example-org-5", "archive/kate-oxleigh-mail-9"]}
+{"family": "surname-only", "query": "Oxleigh", "expect": "people/kate-oxleigh", "rank": 1, "top": ["people/kate-oxleigh", "companies/example-org-5", "archive/kate-oxleigh-mail-9"]}
+{"family": "titled-name", "query": "Dr Katherine Oxleigh", "expect": "people/kate-oxleigh", "rank": 6, "top": ["people/katherine-ellery", "people/katherine-dunmore", "people/katherine-cedar"]}
+{"family": "other-given-form", "query": "Mike Pellworth", "expect": "people/michael-pellworth", "rank": null, "top": ["companies/example-org-6", "people/mike-oakley", "archive/mike-pellworth-mail-9"]}
+{"family": "title-given-form", "query": "Michael Pellworth", "expect": "people/michael-pellworth", "rank": 1, "top": ["people/michael-pellworth", "companies/example-org-6"]}
+{"family": "surname-only", "query": "Pellworth", "expect": "people/michael-pellworth", "rank": 1, "top": ["people/michael-pellworth", "companies/example-org-6", "archive/mike-pellworth-mail-9"]}
+{"family": "titled-name", "query": "Dr Mike Pellworth", "expect": "people/michael-pellworth", "rank": null, "top": ["people/mike-oakley", "people/mike-norwood", "people/mike-marlow"]}
+{"family": "other-given-form", "query": "Christopher Kindrick", "expect": "people/chris-kindrick", "rank": null, "top": ["companies/example-org-7", "people/christopher-ellery", "people/christopher-dunmore"]}
+{"family": "title-given-form", "query": "Chris Kindrick", "expect": "people/chris-kindrick", "rank": 1, "top": ["people/chris-kindrick", "companies/example-org-7", "archive/chris-kindrick-mail-9"]}
+{"family": "surname-only", "query": "Kindrick", "expect": "people/chris-kindrick", "rank": 1, "top": ["people/chris-kindrick", "companies/example-org-7", "archive/chris-kindrick-mail-9"]}
+{"family": "titled-name", "query": "Dr Christopher Kindrick", "expect": "people/chris-kindrick", "rank": 6, "top": ["people/christopher-ellery", "people/christopher-dunmore", "people/christopher-cedar"]}
+{"family": "other-given-form", "query": "Jen Halvorsen", "expect": "people/jennifer-halvorsen", "rank": null, "top": ["companies/example-org-8", "people/jen-oakley", "archive/jen-halvorsen-mail-9"]}
+{"family": "title-given-form", "query": "Jennifer Halvorsen", "expect": "people/jennifer-halvorsen", "rank": 1, "top": ["people/jennifer-halvorsen", "companies/example-org-8"]}
+{"family": "surname-only", "query": "Halvorsen", "expect": "people/jennifer-halvorsen", "rank": 1, "top": ["people/jennifer-halvorsen", "companies/example-org-8", "archive/jen-halvorsen-mail-9"]}
+{"family": "titled-name", "query": "Dr Jen Halvorsen", "expect": "people/jennifer-halvorsen", "rank": null, "top": ["people/jen-oakley", "people/jen-norwood", "people/jen-marlow"]}
+{"family": "other-given-form", "query": "Thomas Ashgrove", "expect": "people/tom-ashgrove", "rank": null, "top": ["companies/example-org-9", "people/thomas-ellery", "people/thomas-dunmore"]}
+{"family": "title-given-form", "query": "Tom Ashgrove", "expect": "people/tom-ashgrove", "rank": 1, "top": ["people/tom-ashgrove", "companies/example-org-9", "archive/tom-ashgrove-mail-9"]}
+{"family": "surname-only", "query": "Ashgrove", "expect": "people/tom-ashgrove", "rank": 1, "top": ["people/tom-ashgrove", "companies/example-org-9", "archive/tom-ashgrove-mail-9"]}
+{"family": "titled-name", "query": "Dr Thomas Ashgrove", "expect": "people/tom-ashgrove", "rank": 6, "top": ["people/thomas-ellery", "people/thomas-dunmore", "people/thomas-cedar"]}
+{"family": "other-given-form", "query": "Rick Brenlow", "expect": "people/richard-brenlow", "rank": null, "top": ["companies/example-org-10", "people/rick-oakley", "archive/rick-brenlow-mail-9"]}
+{"family": "title-given-form", "query": "Richard Brenlow", "expect": "people/richard-brenlow", "rank": 1, "top": ["people/richard-brenlow", "companies/example-org-10"]}
+{"family": "surname-only", "query": "Brenlow", "expect": "people/richard-brenlow", "rank": 1, "top": ["people/richard-brenlow", "companies/example-org-10", "archive/rick-brenlow-mail-9"]}
+{"family": "titled-name", "query": "Dr Rick Brenlow", "expect": "people/richard-brenlow", "rank": null, "top": ["people/rick-oakley", "people/rick-norwood", "people/rick-marlow"]}
+{"family": "other-given-form", "query": "Susan Corrigal", "expect": "people/sue-corrigal", "rank": null, "top": ["companies/example-org-11", "people/susan-ellery", "people/susan-dunmore"]}
+{"family": "title-given-form", "query": "Sue Corrigal", "expect": "people/sue-corrigal", "rank": 1, "top": ["people/sue-corrigal", "companies/example-org-11", "archive/sue-corrigal-mail-9"]}
+{"family": "surname-only", "query": "Corrigal", "expect": "people/sue-corrigal", "rank": 1, "top": ["people/sue-corrigal", "companies/example-org-11", "archive/sue-corrigal-mail-9"]}
+{"family": "titled-name", "query": "Dr Susan Corrigal", "expect": "people/sue-corrigal", "rank": 6, "top": ["people/susan-ellery", "people/susan-dunmore", "people/susan-cedar"]}
+{"family": "rare-word-or-fallback", "query": "Acme Quokka", "expect": "notes/quokka", "late_slug": "notes/quokka", "rank": null, "top": ["notes/acme-weekly-sync-12", "notes/acme-sync-9", "notes/acme-sync-8"]}
+{"family": "rare-word-or-fallback", "query": "Globex Pangolin", "expect": "notes/pangolin", "late_slug": "notes/pangolin", "rank": null, "top": ["notes/globex-sync-9", "notes/globex-sync-8", "notes/globex-sync-7"]}
+{"family": "rare-word-or-fallback", "query": "Initech Narwhal", "expect": "notes/narwhal", "late_slug": "notes/narwhal", "rank": null, "top": ["notes/initech-sync-9", "notes/initech-sync-8", "notes/initech-sync-7"]}
+{"family": "rare-word-or-fallback", "query": "Umbrella Axolotl", "expect": "notes/axolotl", "late_slug": "notes/axolotl", "rank": null, "top": ["notes/umbrella-sync-9", "notes/umbrella-sync-8", "notes/umbrella-sync-7"]}
+{"family": "non-name-control", "query": "art history reading", "expect": "notes/art-history-reading-list", "rank": 1, "top": ["notes/art-history-reading-list"]}
+{"family": "non-name-control", "query": "bill payment schedule", "expect": "notes/bill-payment-schedule", "rank": 1, "top": ["notes/bill-payment-schedule"]}
+{"family": "non-name-control", "query": "frank feedback notes", "expect": "notes/frank-feedback-notes", "rank": 1, "top": ["notes/frank-feedback-notes"]}
+{"family": "non-name-control", "query": "rich text editor", "expect": "notes/rich-text-editor-spec", "rank": 1, "top": ["notes/rich-text-editor-spec"]}
+{"family": "non-name-control", "query": "will estate planning", "expect": "notes/will-and-estate-planning", "rank": 1, "top": ["notes/will-and-estate-planning"]}
+{"family": "non-name-control", "query": "pat awards", "expect": "notes/pat-on-the-back-awards", "rank": 1, "top": ["notes/pat-on-the-back-awards"]}
+{"family": "non-name-control", "query": "Acme weekly sync 12", "expect": "notes/acme-weekly-sync-12", "rank": 2, "top": ["notes/acme-sync-12", "notes/acme-weekly-sync-12"]}
+{"family": "non-name-control", "query": "quarterly budget review", "expect": "notes/quarterly-budget-review", "rank": 1, "top": ["notes/quarterly-budget-review"]}
+{"family": "non-name-control", "query": "hiring plan", "expect": "notes/hiring-plan-2026", "rank": 1, "top": ["notes/hiring-plan-2026"]}
+{"family": "non-name-control", "query": "offsite logistics", "expect": "notes/offsite-logistics", "rank": 1, "top": ["notes/offsite-logistics"]}
+{"family": "non-name-control", "query": "sue vendor memo", "expect": "notes/sue-the-vendor-memo", "rank": 1, "top": ["notes/sue-the-vendor-memo"]}
+{"family": "non-name-control", "query": "al fresco dining", "expect": "notes/al-fresco-dining-guide", "rank": 1, "top": ["notes/al-fresco-dining-guide"]}

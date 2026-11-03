@@ -9,7 +9,8 @@
  */
 
 import { describe, test, expect } from 'bun:test';
-import { existsSync, readFileSync } from 'fs';
+import { existsSync, mkdtempSync, readFileSync } from 'fs';
+import { tmpdir } from 'os';
 import { join } from 'path';
 import type Anthropic from '@anthropic-ai/sdk';
 import {
@@ -35,6 +36,7 @@ import {
   type ExtractedClaim,
   type GroundTruthClaim,
 } from '../../eval/runner/cat15-propose-takes.ts';
+import { BudgetRun, initLedger } from '../../eval/runner/budget-ledger.ts';
 
 const REPO_ROOT = join(import.meta.dir, '..', '..');
 const RUNNER = join(REPO_ROOT, 'eval', 'runner', 'cat15-propose-takes.ts');
@@ -240,12 +242,31 @@ describe('matchClaims validation + retry', () => {
     expect(out.result!.matches[0].extracted_index).toBe(0);
   });
 
+  // Value: protects=the matcher request forces the match_claims tool at temperature 0 with the 2000-token limit for the default judge; fails_when=the matcher request drops its tool choice, temperature or limit; why_new=existing matcher tests check the returned result but not the request sent; seam=none; no_claim=stub client, Claude 5 matcher request not covered (judge model is an env constant read at import)
+  test('the matcher request asks the default Haiku 5.5 judge for match_claims with no temperature and room to think', async () => {
+    const calls: Array<Record<string, any>> = [];
+    await matchClaims('page', EXTRACTED, GT, fakeClient([VALID_TOOL_USE], calls as any));
+    expect(calls[0]).toMatchObject({ model: 'claude-haiku-5-5', max_tokens: 4096, tool_choice: { type: 'auto' } });
+    expect('temperature' in calls[0]).toBe(false);
+    expect(calls[0].messages.at(-1).content).toBe('Respond by calling the match_claims tool.');
+  });
+
+  // Value: protects=an older matcher judge (CAT15_JUDGE_MODEL) still gets the forced match_claims request at temperature 0 with the 2000-token limit; fails_when=the matcher request drops its tool choice, temperature or limit for a model that takes them; why_new=R4 moved the default judge to Haiku 5.5, which takes neither; seam=none; no_claim=stub client in a subprocess
+  test('an older matcher judge gets match_claims forced at temperature 0 with the 2000-token limit', () => {
+    const script = "const { matchClaims } = await import('./eval/runner/cat15-propose-takes.ts'); const seen = []; await matchClaims('page', [{ claim_text: 'x' }], [{ claim_text: 'x', kind: 'bet', domain: 'd', conviction: 0.5 }], { messages: { create: async (p) => { seen.push(p); return { content: [] }; } } }); console.log(JSON.stringify({ temperature: seen[0].temperature ?? null, max_tokens: seen[0].max_tokens, tool_choice: seen[0].tool_choice }));";
+    const env: Record<string, string> = {};
+    for (const [k, v] of Object.entries(process.env)) if (v !== undefined) env[k] = v;
+    env.CAT15_JUDGE_MODEL = 'claude-haiku-4-5-20251001';
+    const proc = Bun.spawnSync(['bun', '-e', script], { cwd: REPO_ROOT, env, stdout: 'pipe', stderr: 'pipe' });
+    expect(JSON.parse(proc.stdout.toString().trim().split('\n').at(-1)!)).toEqual({ temperature: 0, max_tokens: 2000, tool_choice: { type: 'tool', name: 'match_claims' } });
+  }, 30000);
+
   test('malformed first attempt triggers ONE corrective retry naming the defect', async () => {
     const calls: Array<{ messages: Array<{ content: unknown }> }> = [];
     const out = await matchClaims('page', EXTRACTED, GT, fakeClient([MALFORMED_TOOL_USE, VALID_TOOL_USE], calls));
     expect(out.result).not.toBeNull();
     expect(calls).toHaveLength(2);
-    expect(calls[1].messages).toHaveLength(2);
+    expect(calls[1].messages).toHaveLength(3);
     expect(String(calls[1].messages[1].content)).toMatch(/malformed/);
     expect(String(calls[1].messages[1].content)).toMatch(/cover every ground-truth claim/);
   });
@@ -556,14 +577,98 @@ describe('runner end-to-end (hermetic)', () => {
 });
 
 describe('cat15 extraction temperature (audit A-03)', () => {
-  test('the extraction call is sent at temperature 0', async () => {
+  test('the default Opus 5.5 extraction call is sent no temperature; EXTRACT_TEMPERATURE stays 0 for a model that takes one', async () => {
     const seen: Array<Record<string, unknown>> = [];
     const client = {
       messages: { create: async (params: Record<string, unknown>) => { seen.push(params); return { content: [{ type: 'text', text: '[]' }] }; } },
     } as any;
     const out = await extractClaims('A page body.', client);
     expect(out.parse_failed).toBe(false);
-    expect(seen[0].temperature).toBe(0);
+    expect(seen[0].model).toBe('claude-opus-5-5');
+    expect('temperature' in seen[0]).toBe(false);
     expect(EXTRACT_TEMPERATURE).toBe(0);
   });
+
+  // Value: protects=a Claude 5 extractor (CAT15_MODEL) is sent no temperature and 4,096 tokens to think in, while the default extractor keeps gbrain's 2,048-token limit; fails_when=the extractor request skips fitAnthropicRequest or withThinkingRoom; why_new=the extractor model is read from the environment at import, so no in-process test reaches the Claude 5 request; seam=none; no_claim=stub client in a subprocess, not a live call
+  test('a Claude 5 extractor, the default included, gets no temperature and room to think; an older one keeps gbrain\'s limit', () => {
+    const sentFor = (model: string | undefined) => {
+      const script = "const { extractClaims } = await import('./eval/runner/cat15-propose-takes.ts'); const seen = []; await extractClaims('A page body.', { messages: { create: async (p) => { seen.push(p); return { content: [{ type: 'text', text: '[]' }] }; } } }); console.log(JSON.stringify({ max_tokens: seen[0].max_tokens, temperature: seen[0].temperature ?? null }));";
+      const env: Record<string, string> = {};
+      for (const [k, v] of Object.entries(process.env)) if (v !== undefined && k !== 'CAT15_MODEL') env[k] = v;
+      if (model) env.CAT15_MODEL = model;
+      const proc = Bun.spawnSync(['bun', '-e', script], { cwd: REPO_ROOT, env, stdout: 'pipe', stderr: 'pipe' });
+      return JSON.parse(proc.stdout.toString().trim().split('\n').at(-1)!);
+    };
+    expect(sentFor('claude-opus-5-5')).toEqual({ max_tokens: 4096, temperature: null });
+    expect(sentFor(undefined)).toEqual({ max_tokens: 4096, temperature: null });
+    expect(sentFor('claude-sonnet-4-6')).toEqual({ max_tokens: 2048, temperature: 0 });
+  }, 30000);
+
+  // Value: protects=an extractor reply cut off at max_tokens gets gbrain's one retry at 4,096 tokens, and a reply still cut off stays in the F1 denominator as a miss naming both limits, as gbrain fails that page; fails_when=extractClaims skips the retry, or runProbe drops a truncated reply from the score; why_new=a truncated reply was excluded from the score as a harness error; seam=none; no_claim=stub client and stub extractor
+  test('a reply cut off at max_tokens is retried once at 4,096 tokens, then scored as a miss', async () => {
+    const limits: number[] = [];
+    const client = { messages: { create: async (p: { max_tokens: number }) => { limits.push(p.max_tokens); return { content: [{ type: 'text', text: '[{"claim_text": "half a cla' }], stop_reason: 'max_tokens' }; } } } as any;
+    const out = await extractClaims('A page body.', client);
+    expect(limits).toEqual([4096, 4096]);
+    expect(out).toMatchObject({ claims: [], parse_failed: true, truncated: true });
+    const outcome = await runProbe(CLAIMS_PROBE, false, { corpusDir: TEST_FIXTURES, extract: async () => out });
+    if (outcome.kind !== 'scored') throw new Error(`expected a scored miss, got ${outcome.kind}`);
+    expect(outcome.result).toMatchObject({ f1: 0, extraction_parse_failed: true, extraction_truncated: true });
+    expect(outcome.sutError).toContain('max_tokens (4096, then 4096 on gbrain');
+  });
+
+  // Value: protects=a retry that finishes is scored from its own claims; fails_when=extractClaims reads the first, cut-off reply after retrying; why_new=the retry is new; seam=none; no_claim=stub client
+  test('a retry that finishes is scored from its claims', async () => {
+    const replies = [
+      { content: [{ type: 'text', text: '[{"claim_text": "half' }], stop_reason: 'max_tokens' },
+      { content: [{ type: 'text', text: '[{"claim_text": "Alice paid 85 dollars."}]' }], stop_reason: 'end_turn' },
+    ];
+    const out = await extractClaims('A page body.', { messages: { create: async () => replies.shift() } } as any);
+    expect(out).toMatchObject({ claims: [{ claim_text: 'Alice paid 85 dollars.' }], parse_failed: false });
+    expect(out.truncated).toBeUndefined();
+  });
+});
+
+describe('cat15 live runs join the budget ledger', () => {
+  // Value: protects=a live Cat 15 run without --paid --budget-run-id is refused before any request, with a skipped receipt naming the flags; fails_when=main builds the client or calls the API without a ledger run; why_new=Cat 15 spent with no ledger cap before; seam=none; no_claim=refusal path only, the joined path is a live smoke
+  test('a live run without --paid --budget-run-id is refused with a skipped receipt', () => {
+    const ledger = join(mkdtempSync(join(tmpdir(), 'cat15-ledger-')), 'ledger.sqlite');
+    const r = runRunner({ CAT15_DRY_RUN: undefined, ANTHROPIC_API_KEY: 'test-key-not-real', BRAINBENCH_BUDGET_LEDGER: ledger, BRAINBENCH_BUDGET_RUN_ID: undefined });
+    expect(r.exitCode).toBe(2);
+    expect(r.stderr).toContain('--paid and --budget-run-id <id> are missing');
+    const receipt = JSON.parse(readFileSync(RECEIPT, 'utf-8'));
+    expect(receipt.run_status).toBe('skipped');
+    expect(receipt.skip_reason).toContain('Cat 15 live run spends money');
+    expect(receipt.resolved_config.max_tokens_sent).toEqual({ extract: 4096, extract_retry: 4096, judge: 4096 });
+  }, 30000);
+
+  const scratchRun = (budgetUsd: number, close = false) => {
+    const ledgerPath = join(mkdtempSync(join(tmpdir(), 'cat15-ledger-')), 'ledger.sqlite');
+    initLedger({ ledgerPath, programCapUsd: 5, reason: 'test' });
+    const run = BudgetRun.open({ runner: 'cat15-test', budgetUsd, ledgerPath });
+    if (close) run.close();
+    return { ledgerPath, runId: run.runId };
+  };
+
+  // Value: protects=a live run given --paid and a closed budget run id writes an error receipt, so BRAINBENCH_ALLOW_SKIP cannot pass a budget refusal as a skip; fails_when=a PaidArmRefusal under the paid flags writes run_status skipped; why_new=every refusal wrote a skipped receipt; seam=none; no_claim=refusal path only
+  test('a refusal under --paid --budget-run-id writes an error receipt, not a skip', () => {
+    const { ledgerPath, runId } = scratchRun(1, true);
+    const r = runRunner({ CAT15_DRY_RUN: undefined, ANTHROPIC_API_KEY: 'test-key-not-real', BRAINBENCH_BUDGET_LEDGER: ledgerPath, BRAINBENCH_BUDGET_RUN_ID: undefined }, ['--paid', '--budget-run-id', runId]);
+    expect(r.exitCode).toBe(2);
+    const receipt = JSON.parse(readFileSync(RECEIPT, 'utf-8'));
+    expect(receipt.run_status).toBe('error');
+    expect(receipt.errors[0].message).toContain('is already closed');
+  }, 30000);
+
+  // Value: protects=a ledger run that refuses a request stops the run and writes an error receipt instead of a completed one on a cut-off tail; fails_when=the probe loop ignores paid.guard.exhausted; why_new=Cat 15 never checked it; seam=none; no_claim=the guard refuses the first reservation, so no request leaves the process
+  test('a budget run that refuses a request stops the run with an error receipt', () => {
+    const { ledgerPath, runId } = scratchRun(0.000001);
+    const r = runRunner({ CAT15_DRY_RUN: undefined, ANTHROPIC_API_KEY: 'test-key-not-real', BRAINBENCH_BUDGET_LEDGER: ledgerPath, BRAINBENCH_BUDGET_RUN_ID: undefined, CAT15_PROBES: 'cat15-train-concept-market,cat15-train-meeting-fundraise' }, ['--paid', '--budget-run-id', runId]);
+    expect(r.exitCode).toBe(2);
+    expect(r.stderr).toContain('the budget run refused a request');
+    const receipt = JSON.parse(readFileSync(RECEIPT, 'utf-8'));
+    expect(receipt.run_status).toBe('error');
+    expect(receipt.data.budget_exhausted).toBe(true);
+    expect(receipt.errors.map((e: { probe_id: string }) => e.probe_id)).toEqual(['cat15-train-concept-market']);
+  }, 60000);
 });

@@ -1,0 +1,30 @@
+{
+ "schema_version": 1,
+ "family_id": "particle-replay-g-gbrain-noninferior-to-particle-full",
+ "registered_at": "2026-11-01",
+ "description": "Decision G: on W10c's 150 questions, gbrain's current-pin retrieval (B) non-inferior to particle-1 reading the whole history (A) at a 7-point margin, official judge, Holm across two: particle-1 on gbrain's retrieval, and Sonnet 5.5 on gbrain's retrieval (W10a rows).",
+ "alpha": 0.05,
+ "seed": 20261101,
+ "draws": 10000,
+ "id_field": "question_id",
+ "comparisons": [
+  {
+   "id": "particle-gbrain-vs-particle-full",
+   "metric": "correct__particle_gbrain",
+   "gate": "noninferiority",
+   "direction": "higher",
+   "tolerance": 0.07,
+   "cluster_by": "question_id",
+   "description": "B particle-1 at high on gbrain c5fb0201 retrieval; A particle-1 at high on the whole history"
+  },
+  {
+   "id": "sonnet55-gbrain-vs-particle-full",
+   "metric": "correct__sonnet55_gbrain",
+   "gate": "noninferiority",
+   "direction": "higher",
+   "tolerance": 0.07,
+   "cluster_by": "question_id",
+   "description": "B claude-sonnet-5-5 at low on gbrain c5fb0201 retrieval (W10a rows); A particle-1 at high on the whole history"
+  }
+ ]
+}

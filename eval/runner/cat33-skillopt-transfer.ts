@@ -33,8 +33,10 @@
  *         now actually wired; optimizeOn failures propagate).
  *
  * ── Feature boundary ─────────────────────────────────────────────────
- * UNDER TEST: runSkillOpt (per-model optimization) + scoreSkillOnTasks as the
- * harness's independent measurement (never trusts optimizer receipts).
+ * UNDER TEST: runSkillOpt's iterative loop (per-model optimization, asked for
+ * with `optimizerMode: 'reflect'`, opt-in since gbrain v0.60.542.0) +
+ * scoreSkillOnTasks as the harness's independent measurement (never trusts
+ * optimizer receipts).
  * LEGITIMATELY SEEDED/STUBBED: the committed skillopt-v1 corpus (rule judges,
  * disjoint held-out task_ids) and, under --stub-llm only, the gateway chat
  * transport (cat30's deterministic stub; publishable:false).
@@ -63,7 +65,7 @@ import {
 import { ProbeAccounting } from './probe-accounting.ts';
 import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt } from './receipt.ts';
 import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
-import { makeSkilloptStubTransport, PINNED_CONFIG, CLEAN_OUTCOMES, type SkilloptStubBehavior } from './cat30-skillopt-improvement.ts';
+import { makeSkilloptStubTransport, PINNED_CONFIG, CLEAN_OUTCOMES, SKILLOPT_MODELS, type SkilloptRunRecord, type SkilloptStubBehavior } from './cat30-skillopt-improvement.ts';
 
 export const CAT33_CATEGORY = 'cat33-skillopt-transfer';
 
@@ -73,6 +75,15 @@ export const RATIO_BAND = 0.5;
 
 const SPLIT: [number, number, number] = [1, 1, 1];
 export const ALL_SEEDS = ['seed-missing-structure', 'seed-no-verdict'];
+/**
+ * (X, Y) model pairs a full run uses: optimize on X, evaluate transfer on Y.
+ * Weak→strong and strong→weak, so transfer is shown in both directions (a
+ * one-way pair could be confounded by Y simply being a stronger model).
+ */
+export const DEFAULT_PAIRS = [
+  { x: SKILLOPT_MODELS.target, y: SKILLOPT_MODELS.strong },
+  { x: SKILLOPT_MODELS.strong, y: SKILLOPT_MODELS.target },
+];
 
 // ─── Pure transfer math (exported for the regression test) ───────────────────
 
@@ -132,6 +143,7 @@ export interface Cat33Options {
   seeds?: string[];
   pairs?: Array<{ x: string; y: string }>;
   optimizerModel?: string;
+  judgeModel?: string;
   epochs?: number;
   batchSize?: number;
   runsPerTask?: number;
@@ -159,11 +171,12 @@ export function optionsFromEnv(argv: string[] = process.argv.slice(2)): Cat33Opt
     allowSkip: argv.includes('--allow-skip') || process.env.BRAINBENCH_ALLOW_SKIP === '1',
     seeds: bpre ? ['seed-missing-structure'] : (process.env.SKILLOPT_SEEDS ? process.env.SKILLOPT_SEEDS.split(',') : undefined),
     pairs: bpre
-      ? [{ x: 'anthropic:claude-haiku-4-5', y: 'anthropic:claude-haiku-4-5' }]
+      ? [{ x: SKILLOPT_MODELS.target, y: SKILLOPT_MODELS.target }]
       : (process.env.SKILLOPT_PAIRS
           ? process.env.SKILLOPT_PAIRS.split(',').map((p) => { const [x, y] = p.split('>'); return { x: x!, y: y! }; })
           : undefined),
     optimizerModel: process.env.SKILLOPT_OPTIMIZER_MODEL,
+    judgeModel: process.env.SKILLOPT_JUDGE_MODEL,
     epochs: process.env.SKILLOPT_EPOCHS ? Number(process.env.SKILLOPT_EPOCHS) : undefined,
     batchSize: process.env.SKILLOPT_BATCH_SIZE ? Number(process.env.SKILLOPT_BATCH_SIZE) : undefined,
     runsPerTask: process.env.SKILLOPT_HELDOUT_RUNS ? Number(process.env.SKILLOPT_HELDOUT_RUNS) : undefined,
@@ -204,12 +217,14 @@ interface PairDeps {
   acc: ProbeAccounting;
   bpre: boolean;
   optimizerModel: string;
+  judgeModel: string;
   epochs: number;
   batchSize: number;
   runsPerTask: number;
   maxCostUsd: number;
   runSkillOptFn: typeof runSkillOpt;
   scoreFn: typeof scoreSkillOnTasks;
+  runs: SkilloptRunRecord[];
   log: (s: string) => void;
 }
 
@@ -222,10 +237,12 @@ async function optimizeOn(deps: PairDeps, seed: string, seedBody: string, benchm
     const r = await deps.runSkillOptFn({
       engine: deps.engine, skillName: seed, skillsDir: tmpSkills, benchmarkPath,
       epochs: deps.epochs, batchSize: deps.batchSize, lr: 4, lrSchedule: 'cosine', split: SPLIT,
-      optimizerModel: deps.optimizerModel, targetModel, judgeModel: targetModel,
+      optimizerModel: deps.optimizerModel, targetModel, judgeModel: deps.judgeModel,
       mode: 'patch', dryRun: false, noMutate: false, allowMutateBundled: false,
       bootstrapReviewed: false, json: true, maxCostUsd: deps.maxCostUsd, maxRuntimeMin: 25, force: true,
-    } as any);
+      optimizerMode: 'reflect',
+    });
+    deps.runs.push({ label: `${seed}:optimize-on:${targetModel}`, outcome: r.outcome, final_text: r.finalText ?? null, receipt: r.receipt ?? null });
     return {
       best: r.finalText ?? seedBody,
       cost: r.receipt?.final_cost_usd ?? 0,
@@ -245,7 +262,7 @@ async function runPair(deps: PairDeps, seed: string, x: string, y: string): Prom
   const seedBody = readFileSync(join(seedDir, 'SKILL.md'), 'utf8');
   const benchmarkPath = join(seedDir, 'benchmark.jsonl');
   const transferTasks = loadHeldOut(join(seedDir, 'held-out.jsonl'));
-  const scoreOnY = (skillText: string) => deps.scoreFn({ engine: deps.engine, skillText, tasks: transferTasks, targetModel: y, judgeModel: y, runsPerTask: deps.runsPerTask });
+  const scoreOnY = (skillText: string) => deps.scoreFn({ engine: deps.engine, skillText, tasks: transferTasks, targetModel: y, judgeModel: deps.judgeModel, runsPerTask: deps.runsPerTask });
   const base: Omit<PairResult, 'x_outcome' | 'y_outcome'> = {
     seed, x, y, seed_on_y: null, xopt_on_y: null, yopt_on_y: null,
     transfer_lift: null, transfer_ratio: null, band_ok: false, transferred: false, cost_usd: 0,
@@ -330,21 +347,14 @@ export async function runCat33(options: Cat33Options = {}): Promise<Cat33RunResu
   const startedAt = new Date().toISOString();
   const bpre = options.bpre ?? false;
   const stub = options.stubLlm ?? false;
-  const optimizerModel = options.optimizerModel ?? (bpre ? 'anthropic:claude-haiku-4-5' : 'anthropic:claude-sonnet-4-6');
+  const optimizerModel = options.optimizerModel ?? (bpre ? SKILLOPT_MODELS.bpreOptimizer : SKILLOPT_MODELS.optimizer);
+  const judgeModel = options.judgeModel ?? SKILLOPT_MODELS.judge; // skillopt-v1 has rule and qrels judges only
   const epochs = options.epochs ?? (bpre ? 1 : 3);
   const batchSize = options.batchSize ?? 5;
   const runsPerTask = options.runsPerTask ?? (bpre || stub ? 1 : 3);
   const maxCostUsd = options.maxCostUsd ?? (bpre ? 3.0 : 6.0);
   const seeds = options.seeds ?? (bpre ? ['seed-missing-structure'] : ALL_SEEDS);
-  // (X, Y) model pairs: optimize on X, evaluate transfer on Y. Default exercises
-  // Haiku→Sonnet and Sonnet→Haiku so transfer is shown in both directions (a
-  // one-way pair could be confounded by Y simply being a stronger model).
-  const pairs = options.pairs ?? (bpre
-    ? [{ x: 'anthropic:claude-haiku-4-5', y: 'anthropic:claude-haiku-4-5' }]
-    : [
-        { x: 'anthropic:claude-haiku-4-5', y: 'anthropic:claude-sonnet-4-6' },
-        { x: 'anthropic:claude-sonnet-4-6', y: 'anthropic:claude-haiku-4-5' },
-      ]);
+  const pairs = options.pairs ?? (bpre ? [{ x: SKILLOPT_MODELS.target, y: SKILLOPT_MODELS.target }] : DEFAULT_PAIRS);
   const dataDir = options.dataDir ?? join(process.cwd(), 'eval/data/skillopt-v1');
   const reportsDir = options.reportsDir ?? join(process.cwd(), 'eval/reports');
   const receiptFile = receiptPath(CAT33_CATEGORY, reportsDir);
@@ -391,6 +401,7 @@ export async function runCat33(options: Cat33Options = {}): Promise<Cat33RunResu
 
   const acc = new ProbeAccounting(expected);
   const results: PairResult[] = [];
+  const skilloptRuns: SkilloptRunRecord[] = [];
   let engine: any = null;
   try {
     engine = options.engineFactory ? await options.engineFactory() : new PGLiteEngine();
@@ -400,9 +411,10 @@ export async function runCat33(options: Cat33Options = {}): Promise<Cat33RunResu
 
     const deps: PairDeps = {
       engine, isolatedHome, dataDir, acc, bpre,
-      optimizerModel, epochs, batchSize, runsPerTask, maxCostUsd,
+      optimizerModel, judgeModel, epochs, batchSize, runsPerTask, maxCostUsd,
       runSkillOptFn: options.runSkillOptFn ?? runSkillOpt,
       scoreFn: options.scoreFn ?? scoreSkillOnTasks,
+      runs: skilloptRuns,
       log,
     };
     for (const seed of seeds) for (const { x, y } of pairs) results.push(await runPair(deps, seed, x, y));
@@ -436,6 +448,8 @@ export async function runCat33(options: Cat33Options = {}): Promise<Cat33RunResu
       llm_transport: stub ? 'stubbed-obedient' : 'live',
       mode: bpre ? 'b-pre-validity' : 'full',
       optimizer_model: optimizerModel,
+      optimizer_mode: 'reflect',
+      judge_model: judgeModel,
       epochs, batch_size: batchSize, runs_per_task: runsPerTask,
       max_cost_usd: maxCostUsd,
       seeds, pairs,
@@ -452,6 +466,7 @@ export async function runCat33(options: Cat33Options = {}): Promise<Cat33RunResu
       total_cost_usd: totalCost,
       gate_pass: gatePass,
       infra_error_rate: summary.infra_error_rate,
+      skillopt_runs: skilloptRuns,
     },
   };
   writeReceipt(receiptFile, receipt);

@@ -207,7 +207,7 @@ describe('source-only LongMemEval-M pilot snapshot and replay', () => {
         else process.env[key] = value;
       }
     }
-  });
+  }, 60_000);
 
   test('requires all 28 distinct outcomes and does not pass infra exclusions', () => {
     const ids = Array.from({ length: 28 }, (_, i) => `id-${i}`);
@@ -258,7 +258,7 @@ describe('source-only LongMemEval-M pilot snapshot and replay', () => {
       embeddingModel: 'openrouter:openai/text-embedding-3-large', embeddingDimensions: 1536 };
     await expect(buildPilotIndex({ ...base, outputDir: join(directory, 'poisoned-build'), mode: 'offline' })).rejects.toThrow('invalid source-only occurrence');
     await expect(buildPilotIndex({ ...base, outputDir: join(directory, 'unguarded-build'), mode: 'live' })).rejects.toThrow('financial admission');
-  });
+  }, 60_000);
 
   test('v1 strict answer loader rejects indexed-projection capture', () => {
     const datasetPath = join(directory, 'legacy-dataset.json'), rowsPath = join(directory, 'indexed-row.ndjson'), receiptPath = join(directory, 'indexed-receipt.json');

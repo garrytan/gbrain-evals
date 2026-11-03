@@ -1,0 +1,204 @@
+{
+  "source": "eval/runner/metering-proxy.ts usage log (providers usage fields at list price, eval/runner/budget-ledger.ts price table)",
+  "total_usd": 12.760094,
+  "slots": {
+    "smoke": {
+      "usd": 0.080499,
+      "requests": 115,
+      "by_model": {
+        "anthropic:claude-haiku-5-5": {
+          "usd": 0.080483,
+          "requests": 99,
+          "input_tokens": 622601,
+          "output_tokens": 139179
+        },
+        "openai:text-embedding-3-large": {
+          "usd": 1.6e-05,
+          "requests": 16,
+          "input_tokens": 122,
+          "output_tokens": 0
+        }
+      }
+    },
+    "cat32bpre": {
+      "usd": 0.049439,
+      "requests": 57,
+      "by_model": {
+        "anthropic:claude-haiku-5-5": {
+          "usd": 0.0252,
+          "requests": 43,
+          "input_tokens": 263440,
+          "output_tokens": 43771
+        },
+        "openai:gpt-6.1-sol": {
+          "usd": 0.024238,
+          "requests": 12,
+          "input_tokens": 7517,
+          "output_tokens": 812
+        },
+        "openai:text-embedding-3-large": {
+          "usd": 2e-06,
+          "requests": 2,
+          "input_tokens": 12,
+          "output_tokens": 0
+        }
+      }
+    },
+    "probe": {
+      "usd": 0.084119,
+      "requests": 3,
+      "by_model": {
+        "anthropic:claude-sonnet-5-5": {
+          "usd": 0.084119,
+          "requests": 3,
+          "input_tokens": 18154,
+          "output_tokens": 3874
+        }
+      }
+    },
+    "cat32": {
+      "usd": 0.655023,
+      "requests": 618,
+      "by_model": {
+        "anthropic:claude-haiku-5-5": {
+          "usd": 0.249476,
+          "requests": 418,
+          "input_tokens": 2600948,
+          "output_tokens": 438516
+        },
+        "openai:gpt-6.1-sol": {
+          "usd": 0.28819,
+          "requests": 108,
+          "input_tokens": 85069,
+          "output_tokens": 11324
+        },
+        "openai:text-embedding-3-large": {
+          "usd": 8.8e-05,
+          "requests": 89,
+          "input_tokens": 680,
+          "output_tokens": 0
+        },
+        "anthropic:claude-opus-5-5": {
+          "usd": 0.117268,
+          "requests": 3,
+          "input_tokens": 13744,
+          "output_tokens": 2428
+        }
+      }
+    },
+    "cat30": {
+      "usd": 0.751903,
+      "requests": 713,
+      "by_model": {
+        "anthropic:claude-haiku-5-5": {
+          "usd": 0.445861,
+          "requests": 571,
+          "input_tokens": 4344814,
+          "output_tokens": 696728
+        },
+        "openai:text-embedding-3-large": {
+          "usd": 0.000142,
+          "requests": 133,
+          "input_tokens": 1090,
+          "output_tokens": 0
+        },
+        "anthropic:claude-opus-5-5": {
+          "usd": 0.3059,
+          "requests": 9,
+          "input_tokens": 35126,
+          "output_tokens": 6925
+        }
+      }
+    },
+    "cat31": {
+      "usd": 1.296332,
+      "requests": 994,
+      "by_model": {
+        "anthropic:claude-haiku-5-5": {
+          "usd": 0.708997,
+          "requests": 879,
+          "input_tokens": 5560943,
+          "output_tokens": 1288483
+        },
+        "openai:text-embedding-3-large": {
+          "usd": 9.3e-05,
+          "requests": 98,
+          "input_tokens": 716,
+          "output_tokens": 0
+        },
+        "anthropic:claude-opus-5-5": {
+          "usd": 0.587242,
+          "requests": 17,
+          "input_tokens": 73567,
+          "output_tokens": 11520
+        }
+      }
+    },
+    "repro": {
+      "usd": 0.011481,
+      "requests": 1,
+      "by_model": {
+        "anthropic:claude-opus-5-5": {
+          "usd": 0.011481,
+          "requests": 1,
+          "input_tokens": 537,
+          "output_tokens": 440
+        }
+      }
+    },
+    "r48": {
+      "usd": 1.71437,
+      "requests": 55,
+      "by_model": {
+        "anthropic:claude-opus-5-5": {
+          "usd": 1.714367,
+          "requests": 52,
+          "input_tokens": 315744,
+          "output_tokens": 75783
+        },
+        "openai:text-embedding-3-large": {
+          "usd": 2e-06,
+          "requests": 3,
+          "input_tokens": 18,
+          "output_tokens": 0
+        }
+      }
+    },
+    "cat33": {
+      "usd": 8.116928,
+      "requests": 1099,
+      "by_model": {
+        "anthropic:claude-haiku-5-5": {
+          "usd": 0.41043,
+          "requests": 524,
+          "input_tokens": 3323705,
+          "output_tokens": 730439
+        },
+        "anthropic:claude-opus-5-5": {
+          "usd": 0.959409,
+          "requests": 24,
+          "input_tokens": 113033,
+          "output_tokens": 19717
+        },
+        "openai:text-embedding-3-large": {
+          "usd": 8.2e-05,
+          "requests": 91,
+          "input_tokens": 631,
+          "output_tokens": 0
+        },
+        "anthropic:claude-sonnet-5-5": {
+          "usd": 6.747007,
+          "requests": 460,
+          "input_tokens": 2901521,
+          "output_tokens": 595324
+        }
+      }
+    }
+  },
+  "ledger_totals": {
+    "committed_usd": 12.76009315,
+    "reconciled_usd": 12.76009315,
+    "open_reservations_usd": 0,
+    "requests": 3655
+  }
+}

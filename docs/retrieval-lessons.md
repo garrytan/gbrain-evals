@@ -12,7 +12,7 @@ questions (opaque session ids, gbrain `109b992`). The interesting engineering
 question is how it gets there, and which parts help on other kinds of material.
 
 This page states what the experiments show about gbrain as this repository pins
-it (master `77cf8e111`, v0.60.169.0); each number names the gbrain commit it was
+it (master `311a83bbe`, v0.60.553.0); each number names the gbrain commit it was
 measured at. Everything above [Changelog](#changelog) is current.
 [Conversation results](benchmarks/2026-10-04-longmemeval-opaque-followups.md).
 
@@ -254,6 +254,36 @@ application resemble the ones a measured configuration solves.
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
+
+### 2026-11-02: The opening names `311a83bbe`
+
+The opening names gbrain master `311a83bbe` (v0.60.553.0) as the pin (was `a131fb20e`, v0.60.549.0). The search modes
+are unchanged across the range. gbrain#8444 reads empty optional tool arguments that a parameter's schema rules out as
+absent, which changes only calls that refused before, so no lesson changes.
+
+### 2026-11-02: The opening names `a131fb20e`
+
+The opening names gbrain master `a131fb20e` (v0.60.549.0) as the pin (was `ca1281a2e`, v0.60.542.0). The search modes
+are unchanged across the range. Per-page readers and folder rules (v0.60.543.0) narrow remote reads only on a brain
+whose pages name readers, which no measurement on this page uses, so no lesson changes.
+
+### 2026-11-02: The opening names the new pin
+
+The opening names gbrain master `ca1281a2e` (v0.60.542.0) as the pin (was `3ec766c40`, v0.60.531.0). The search modes
+are unchanged across the range. The new behavior that touches reads, a remote reader getting text below the owner's
+own notes inside a quote fence (v0.60.536.0 on, [settings](settings.md)), reaches no measurement on this page, so no
+lesson changes.
+
+### 2026-10-31: The opening names the current pin
+
+The opening names gbrain master `3ec766c40` (v0.60.531.0) as the pin. It still named `77cf8e111`
+(v0.60.169.0): three re-pins (`f717b1a5b`, `6e1086492`, `7a6bdd357`) had not updated it, because the documentation
+verifier checked only the `gbrain-cues` pin. `scripts/verify-documentation-refresh.py` now checks this sentence against
+`package.json` too. Every
+number here names the commit it was measured at, so no lesson changes. Since `77cf8e111` the default reranker became
+`rerank-3-lite`, `tokenmax` stopped expanding queries, every mode turned on collapse and rank priors, and four read
+defaults outside the modes arrived in v0.60.491.0 to v0.60.521.0 ([settings](settings.md)); no measurement on this page
+ran with them.
 
 ### 2026-10-11: The opening names the current pin
 

@@ -13,7 +13,8 @@
  *           every scheduled question with the fixed reader. B2 runs its
  *           correction schedule through the per-system CorrectionAdapter.
  *   sweep   re-read the frontier subset's saved contexts with the sweep models
- *           (no retrieval, no ingest).
+ *           (no retrieval, no ingest). A smoke sweep re-reads every scheduled
+ *           smoke question instead, and a sweep with nothing to read fails.
  *   score   deterministic scoring of every answer; only `ambiguous` answers go
  *           to the fixed judge. Writes results.json.
  *
@@ -21,19 +22,22 @@
  * (cl100k), the retrieval metadata and the model's usage. Reader and judge
  * calls are cached by prompt hash, so rerunning a phase spends nothing on
  * calls already made. Default output: eval/reports/workload-bench/<suite>/.
+ * A smoke run never writes into a directory report.ts publishes from.
  */
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { join, relative, resolve } from 'node:path';
 import { gbrainSpecFrom, resolveGbrainUnderTest } from '../runner/gbrain-under-test.ts';
 import { REPO_ROOT } from '../runner/harness-env.ts';
+import { COMPAT_PROVIDERS } from '../runner/providers/openai-compatible.ts';
 import { startBench, type Bench, type Bridge } from './bench-infra.ts';
 import { SUITES, manifestPath } from './cli.ts';
 import { bundleManifest, countValue, sha256, valueForms } from './common.ts';
 import { ComparatorCorrectionAdapter, GbrainCorrectionAdapter, type RetrieveReceipt } from './correction-adapters.ts';
 import { CORRECTION_ARMS, runCorrectionArm, type ArmId, type CorrectionItem } from './corrections.ts';
 import { classifyMiss } from './passing-details.ts';
-import { MODEL_CONFIG, frontierSubset } from './run-config.ts';
+import { publishedSuiteAt } from './report.ts';
+import { MODEL_CONFIG, frontierSubset, recordedReaderProblem } from './run-config.ts';
 import type { HarnessQuery, Outcome, ScorerLabel, SuiteBundle, SuiteId } from './types.ts';
 
 export const TARGET_TOKENS = 8000;
@@ -96,6 +100,9 @@ export interface AnswerReceipt {
   answer_raw: string;
   answer: string;
   error: string | null;
+  /** The provider's finish reason; a reply cut off at its output limit is `truncated` and scored as the answer it is (null: unknown). */
+  finish_reason: string | null;
+  truncated: boolean | null;
   input_tokens: number | null;
   output_tokens: number | null;
 }
@@ -117,7 +124,10 @@ export function parseAnswer(text: string): string {
   return (m ? m[1]! : text).trim();
 }
 
-const maxTokensFor = (model: string) => model.startsWith('openai:') ? 4000 : MODEL_CONFIG.reader.max_output_tokens;
+/** Reader output limit: 4,000 for OpenAI, particle-1's output floor (16,000, room for its reasoning), else the shared reader config's 400. */
+export const maxTokensFor = (model: string) => model.startsWith('openai:') ? 4000
+  : model.startsWith('particle:') ? COMPAT_PROVIDERS.particle.models['particle-1'].output_floor
+  : MODEL_CONFIG.reader.max_output_tokens;
 
 /** Identifiers that must never reach a model: every document, query and unit id of the bundle. */
 function forbiddenIds(bundle: SuiteBundle): string[] {
@@ -133,9 +143,16 @@ function leakCheck(prompt: string, forbidden: string[], where: string): void {
   if (hit) throw new Error(`leak: ${where} carries the identifier ${hit}`);
 }
 
-async function pool<T>(items: T[], n: number, fn: (x: T) => Promise<void>): Promise<void> {
+/** Runs `fn` over `items` n at a time. After the first error no new item starts, and every call in flight finishes (and writes its receipt) before that error is thrown. */
+export async function pool<T>(items: T[], n: number, fn: (x: T) => Promise<void>): Promise<void> {
   let i = 0;
-  await Promise.all(Array.from({ length: Math.min(n, items.length) }, async () => { while (i < items.length) await fn(items[i++]!); }));
+  let failure = null as { error: unknown } | null;
+  await Promise.all(Array.from({ length: Math.min(n, items.length) }, async () => {
+    while (!failure && i < items.length) {
+      try { await fn(items[i++]!); } catch (error) { failure ??= { error }; }
+    }
+  }));
+  if (failure) throw failure.error;
 }
 
 export function selectQueries(bundle: SuiteBundle, smoke: number | null): HarnessQuery[] {
@@ -158,7 +175,7 @@ export function selectQueries(bundle: SuiteBundle, smoke: number | null): Harnes
 function writeJson(path: string, value: unknown) { mkdirSync(join(path, '..'), { recursive: true }); writeFileSync(path, JSON.stringify(value, null, 1) + '\n'); }
 const receiptPath = (dir: string, arm: string, model: string, qid: string) => join(dir, 'answers', arm, model.replace(/[:/]/g, '_'), `${qid}.json`);
 
-async function answerOne(bench: Bench, bundle: SuiteBundle, dir: string, arm: string, model: string, q: HarnessQuery, context: string, meta: RetrieveReceipt | null, forbidden: string[], extra: Partial<AnswerReceipt> = {}): Promise<AnswerReceipt> {
+export async function answerOne(bench: Bench, bundle: SuiteBundle, dir: string, arm: string, model: string, q: HarnessQuery, context: string, meta: RetrieveReceipt | null, forbidden: string[], extra: Partial<AnswerReceipt> = {}): Promise<AnswerReceipt> {
   const path = receiptPath(dir, arm, model, q.id + (extra.checkpoint !== undefined ? '' : ''));
   if (existsSync(path)) {
     const prior = JSON.parse(readFileSync(path, 'utf8')) as AnswerReceipt;
@@ -170,7 +187,7 @@ async function answerOne(bench: Bench, bundle: SuiteBundle, dir: string, arm: st
   const receipt: AnswerReceipt = {
     suite: bundle.suite, arm, model, query_id: q.id, unit: q.user_id, prompt_sha256: sha256(prompt), prompt,
     context_tokens_cl100k: meta?.tokens_cl100k ?? null, retrieve_meta: meta ? { ...meta.meta, retrieve_ms: meta.retrieve_ms } : null,
-    answer_raw: reply.text, answer: parseAnswer(reply.text), error: reply.error ?? null,
+    answer_raw: reply.text, answer: parseAnswer(reply.text), error: reply.error ?? null, finish_reason: reply.finish_reason, truncated: reply.truncated,
     input_tokens: reply.input_tokens, output_tokens: reply.output_tokens, ...extra,
   };
   writeJson(path, receipt);
@@ -339,19 +356,21 @@ function armsWithAnswers(dir: string): string[] {
   return existsSync(join(dir, 'answers')) ? readdirSync(join(dir, 'answers')).sort() : [];
 }
 
-async function sweep(bench: Bench, bundle: SuiteBundle, dir: string, models: string[], log: (l: string) => void) {
-  const subset = new Set(frontierSubset(bundle));
+/** Re-reads the fixed reader's saved prompts with `models`: the frontier subset's questions, or in a smoke run (`smokeQueries`) every scheduled question, which may all fall outside the subset. Throws when there is no answer to re-read. */
+export async function sweep(bench: Bench, bundle: SuiteBundle, dir: string, models: string[], log: (l: string) => void, smokeQueries: HarnessQuery[] | null = null) {
+  const selected = new Set(smokeQueries ? smokeQueries.map(q => q.id) : frontierSubset(bundle));
   const queries = new Map(bundle.queries.map(q => [q.id, q]));
   const forbidden = forbiddenIds(bundle);
-  for (const arm of armsWithAnswers(dir)) {
-    const base = readReceipts(dir, arm, MODEL_CONFIG.fixed_reader.id).filter(r => subset.has(r.query_id) && !r.error);
+  const bases = armsWithAnswers(dir).map(arm => [arm, readReceipts(dir, arm, MODEL_CONFIG.fixed_reader.id).filter(r => selected.has(r.query_id) && !r.error)] as const);
+  if (!bases.some(([, base]) => base.length)) throw new Error(`no ${MODEL_CONFIG.fixed_reader.id} answers to sweep in ${dir} for ${smokeQueries ? `the ${smokeQueries.length} scheduled smoke questions` : 'the frontier subset'}; run --phase answer first`);
+  for (const [arm, base] of bases) {
     for (const model of models) {
       await pool(base, 6, async r => {
         const path = receiptPath(dir, arm, model, r.query_id);
         if (existsSync(path) && !JSON.parse(readFileSync(path, 'utf8')).error) return;
         leakCheck(r.prompt, forbidden, `the ${model} prompt for ${r.query_id}`);
         const reply = await bench.model(model, r.prompt, { tag: `${bundle.suite}/${arm}/reader/${r.query_id}`, maxTokens: maxTokensFor(model) });
-        writeJson(path, { ...r, model, answer_raw: reply.text, answer: parseAnswer(reply.text), error: reply.error ?? null, input_tokens: reply.input_tokens, output_tokens: reply.output_tokens });
+        writeJson(path, { ...r, model, answer_raw: reply.text, answer: parseAnswer(reply.text), error: reply.error ?? null, finish_reason: reply.finish_reason, truncated: reply.truncated, input_tokens: reply.input_tokens, output_tokens: reply.output_tokens });
       });
       if (bench.proxy.exhausted) throw new Error(`budget exhausted: ${bench.proxy.lastRefusal}`);
       log(`[${bundle.suite}/${arm}] sweep ${model}: ${base.length} questions`);
@@ -369,9 +388,9 @@ Answer to grade: {answer}
 The answer is correct only if it commits to the correct answer as the current answer. Mentioning an outdated value as history is fine; hedging between values or committing to a wrong value is not.
 Reply with exactly one line of JSON: {"correct": true} or {"correct": false}.`;
 
-export interface ScoredAnswer { query_id: string; category: string; checkpoint?: number; outcome: Outcome | 'error'; correct: boolean; judged: boolean; miss?: string; context_tokens: number | null }
+export interface ScoredAnswer { query_id: string; category: string; checkpoint?: number; outcome: Outcome | 'error'; correct: boolean; judged: boolean; truncated: boolean | null; finish_reason: string | null; miss?: string; context_tokens: number | null }
 
-async function score(bench: Bench | null, bundle: SuiteBundle, dir: string, log: (l: string) => void) {
+export async function score(bench: Bench | null, bundle: SuiteBundle, dir: string, log: (l: string) => void, smokeRun = false) {
   const suite = SUITES[bundle.suite];
   const labels = new Map(bundle.labels.map(l => [l.query_id, l]));
   const queries = new Map(bundle.queries.map(q => [q.id, q]));
@@ -385,8 +404,8 @@ async function score(bench: Bench | null, bundle: SuiteBundle, dir: string, log:
       }
     }
   }
-  const out: Record<string, Record<string, { n: number; correct: number; accuracy: number; by_category: Record<string, { n: number; correct: number }>; outcomes: Record<string, number>; judged: number; misses?: Record<string, number>; checkpoints?: Record<string, unknown>; context_tokens: { mean: number | null; p95: number | null }; rows: ScoredAnswer[] }>> = {};
-  const models = [MODEL_CONFIG.fixed_reader.id, ...MODEL_CONFIG.frontier_sweep.map(m => m.id).filter(m => m !== MODEL_CONFIG.fixed_reader.id), ...MODEL_CONFIG.alternate_readers.map(m => m.id)];
+  const out: Record<string, Record<string, { n: number; correct: number; accuracy: number; truncated: number | null; by_category: Record<string, { n: number; correct: number }>; outcomes: Record<string, number>; judged: number; misses?: Record<string, number>; checkpoints?: Record<string, unknown>; context_tokens: { mean: number | null; p95: number | null }; rows: ScoredAnswer[] }>> = {};
+  const models = [MODEL_CONFIG.fixed_reader.id, ...MODEL_CONFIG.frontier_sweep.map(m => m.id).filter(m => m !== MODEL_CONFIG.fixed_reader.id), ...MODEL_CONFIG.alternate_readers.map(m => m.id), ...(smokeRun ? MODEL_CONFIG.smoke_only_readers : [])];
   for (const arm of armsWithAnswers(dir)) {
     for (const model of models) {
       const receipts = readReceipts(dir, arm, model);
@@ -395,7 +414,8 @@ async function score(bench: Bench | null, bundle: SuiteBundle, dir: string, log:
       for (const r of receipts) {
         const label = labels.get(r.query_id)!;
         const q = queries.get(r.query_id)!;
-        if (r.error) { rows.push({ query_id: r.query_id, category: label.category, checkpoint: r.checkpoint, outcome: 'error', correct: false, judged: false, context_tokens: r.context_tokens_cl100k }); continue; }
+        const cut = { truncated: r.truncated ?? null, finish_reason: r.finish_reason ?? null };
+        if (r.error) { rows.push({ query_id: r.query_id, category: label.category, checkpoint: r.checkpoint, outcome: 'error', correct: false, judged: false, ...cut, context_tokens: r.context_tokens_cl100k }); continue; }
         let { outcome } = suite.score(label, r.answer);
         let correct = outcome === 'correct';
         let judged = false;
@@ -406,7 +426,7 @@ async function score(bench: Bench | null, bundle: SuiteBundle, dir: string, log:
           const m = /\{\s*"correct"\s*:\s*(true|false)\s*\}/.exec(reply.text);
           if (m) { judged = true; correct = m[1] === 'true'; outcome = correct ? 'correct' : 'wrong'; }
         }
-        const row: ScoredAnswer = { query_id: r.query_id, category: label.category, checkpoint: r.checkpoint, outcome, correct, judged, context_tokens: r.context_tokens_cl100k };
+        const row: ScoredAnswer = { query_id: r.query_id, category: label.category, checkpoint: r.checkpoint, outcome, correct, judged, ...cut, context_tokens: r.context_tokens_cl100k };
         if (bundle.suite === 'passing-details' && label.gold.kind === 'value') {
           const store = BENCH_ARMS['passing-details'].find(a => a.id === arm)?.store ?? arm;
           // A facts-only lane stores only what extraction kept, so its presence is the facts check alone.
@@ -439,15 +459,16 @@ async function score(bench: Bench | null, bundle: SuiteBundle, dir: string, log:
       for (const c of Object.values(checkpoints)) { c.corrected_value_accuracy = c.correct / c.n; c.stale_answer_rate = c.stale / c.n; }
       const toks = rows.map(r => r.context_tokens).filter((x): x is number => typeof x === 'number').sort((a, b) => a - b);
       const correct = rows.filter(r => r.correct).length;
+      const truncated = rows.some(r => r.truncated === null) ? null : rows.filter(r => r.truncated).length;
       out[arm] ??= {};
       out[arm][model] = {
-        n: rows.length, correct, accuracy: rows.length ? correct / rows.length : 0, by_category: byCat, outcomes, judged: rows.filter(r => r.judged).length,
+        n: rows.length, correct, accuracy: rows.length ? correct / rows.length : 0, truncated, by_category: byCat, outcomes, judged: rows.filter(r => r.judged).length,
         ...(Object.keys(misses).length ? { misses } : {}),
         ...(Object.keys(checkpoints).length ? { checkpoints } : {}),
         context_tokens: { mean: toks.length ? Math.round(toks.reduce((a, b) => a + b, 0) / toks.length) : null, p95: toks.length ? toks[Math.min(toks.length - 1, Math.floor(toks.length * 0.95))]! : null },
         rows,
       };
-      log(`[${bundle.suite}/${arm}] ${model}: ${correct}/${rows.length} correct (${(100 * correct / rows.length).toFixed(1)}%)`);
+      log(`[${bundle.suite}/${arm}] ${model}: ${correct}/${rows.length} correct (${(100 * correct / rows.length).toFixed(1)}%), ${truncated ?? 'unknown'} cut off at the output limit`);
     }
   }
   writeJson(join(dir, 'results.json'), { suite: bundle.suite, scored_at: new Date().toISOString(), results: out });
@@ -461,9 +482,20 @@ if (import.meta.main) {
   const suite = SUITES[suiteId];
   if (!suite) { console.error('usage: bun eval/workload-suites/bench.ts <suite> --phase answer|sweep|score [--arms a,b] [--smoke N] [--budget-usd N] [--out DIR] [--stub] [--models m1,m2]'); process.exit(2); }
   const phase = arg(argv, '--phase') ?? 'answer';
-  const smoke = arg(argv, '--smoke') ? Number(arg(argv, '--smoke')) : null;
+  const smoke = argv.includes('--smoke') ? Number(arg(argv, '--smoke')) : null;
+  if (smoke !== null && !(Number.isInteger(smoke) && smoke > 0)) { console.error(`--smoke takes a positive whole number of questions, not ${arg(argv, '--smoke') ?? 'nothing'}`); process.exit(2); }
   const stub = argv.includes('--stub');
+  const requested = arg(argv, '--models')?.split(',').map(m => m.trim()) ?? [];
+  const readers = [...MODEL_CONFIG.frontier_sweep, ...MODEL_CONFIG.alternate_readers].map(m => m.id);
+  const unscored = requested.filter(m => !readers.includes(m) && !MODEL_CONFIG.smoke_only_readers.includes(m));
+  if (unscored.length) { console.error(`${unscored.join(', ')} is not a reader in run-config.ts, so no score would read its answers; --models takes frontier_sweep and alternate_readers ids, and smoke_only_readers ids with --smoke N`); process.exit(2); }
+  const smokeOnly = requested.filter(m => MODEL_CONFIG.smoke_only_readers.includes(m));
+  if (smokeOnly.length && smoke === null) { console.error(`${smokeOnly.join(', ')} reads only in a labeled smoke run, never a counted one (CLAUDE.md); pass --smoke N`); process.exit(2); }
   const dir = resolve(arg(argv, '--out') ?? join(REPO_ROOT, 'eval/reports/workload-bench', `${suiteId}${smoke ? `-smoke${smoke}` : ''}${stub ? '-stub' : ''}`));
+  const published = smoke !== null ? publishedSuiteAt(dir) : null;
+  if (published) { console.error(`${relative(REPO_ROOT, dir)} is the directory report.ts publishes ${published} from (RUN_DIRS), so a smoke run may not write there; pass --out with another directory`); process.exit(2); }
+  const recorded = recordedReaderProblem(dir);
+  if (recorded) { console.error(recorded); process.exit(2); }
   const log = (l: string) => process.stderr.write(`${new Date().toISOString().slice(11, 19)} ${l}\n`);
   const bundle = suite.generate({ seed: suite.defaultSeed, smoke: false });
   bundle.extra['frontier-subset'] = frontierSubset(bundle);
@@ -483,10 +515,10 @@ if (import.meta.main) {
       if (suiteId === 'corrections') await answerCorrections(bench!, bundle, dir, armIds, queries, log);
       else await answerStatic(bench!, bundle, dir, armIds, queries, log);
     } else if (phase === 'sweep') {
-      const models = arg(argv, '--models')?.split(',') ?? MODEL_CONFIG.frontier_sweep.map(m => m.id).filter(m => m !== MODEL_CONFIG.fixed_reader.id);
-      await sweep(bench!, bundle, dir, models, log);
+      const models = requested.length ? requested : MODEL_CONFIG.frontier_sweep.map(m => m.id).filter(m => m !== MODEL_CONFIG.fixed_reader.id);
+      await sweep(bench!, bundle, dir, models, log, smoke !== null ? queries : null);
     } else if (phase === 'score') {
-      await score(bench, bundle, dir, log);
+      await score(bench, bundle, dir, log, smoke !== null);
     }
   } catch (e) {
     log(`FAILED: ${(e as Error).stack ?? e}`);

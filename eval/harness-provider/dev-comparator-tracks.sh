@@ -14,7 +14,11 @@ for k in ("longmemeval/s", "locomo/locomo10", "lifebench/en_agent_sample", "long
     open("eval/reports/harness-dev/" + k.replace("/", "_") + ".ids.json", "w").write(json.dumps(d[k], ensure_ascii=False))
 PY
 ids() { echo "eval/reports/harness-dev/$(echo $1 | tr '/' '_').ids.json"; }
-D="bun eval/runner/harness-dev.ts sweep --provider comparator"
+# The October 5 dev phase ran on these models (memory proof wave preregistration); harness-dev.ts defaults to
+# claude-sonnet-5-5 and gpt-6.1-sol since 2026-11-01, so a rerun names them to reproduce that phase.
+ANSWER=gemini:gemini-3.8-flash
+MODELS="--answer $ANSWER --judge gemini:gemini-3.5-flash"
+D="bun eval/runner/harness-dev.ts sweep $MODELS --provider comparator"
 COMBINED='{"max_tokens":3500,"max_chunk_tokens":2000}'
 FACTS='{"max_tokens":8000,"max_chunk_tokens":0}'
 RAW='{"max_tokens":0,"max_chunk_tokens":8000}'
@@ -33,7 +37,7 @@ public() {  # dataset split ids-key
 agent() {  # dataset split ids-key
   $D --dataset "$1" --split "$2" --question-ids-file "$(ids $3)" --lane combined --mode agentic-rag --base "$COMBINED" --targets 8000 --no-default --sample 20 --name "comparator-$1-agentic" -- $L
   # Agent mode answers with the server's own synthesis (reflect) on the shared answer model; no knobs, one default cell.
-  $D --dataset "$1" --split "$2" --question-ids-file "$(ids $3)" --lane combined --mode agent --base '{}' --extra '{"serve_model":"gemini:gemini-3.8-flash"}' --targets '' --name "comparator-$1-agent" -- $L
+  $D --dataset "$1" --split "$2" --question-ids-file "$(ids $3)" --lane combined --mode agent --base '{}' --extra "{\"serve_model\":\"$ANSWER\"}" --targets '' --name "comparator-$1-agent" -- $L
 }
 if [ "${ONLY_PUBLIC:-0}" != 1 ]; then
 ( beam 100k 3,11,12,15 > eval/reports/harness-dev/track-beam-100k.log 2>&1 ) &

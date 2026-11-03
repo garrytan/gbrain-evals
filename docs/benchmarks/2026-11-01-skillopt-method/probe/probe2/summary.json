@@ -1,0 +1,50 @@
+{
+ "category": "n15-skillopt-method",
+ "probe": 2,
+ "after_hardening": true,
+ "dataset": "skillopt-method-v2",
+ "gbrain_evals_commit": "df96339b",
+ "status": "stopped: Garry's course change (frontier targets only; Haiku dropped as target), relayed by the Captain on 2026-11-01. The process was cancelled during briefing's one-shot stage; no receipt, and the gate was not reached.",
+ "skills_scored": [
+  {
+   "skill": "query",
+   "ceiling": 1,
+   "no_skill": 0.16666666666666666,
+   "seed": 0.875,
+   "one_shot_repeats": [
+    1,
+    1
+   ],
+   "one_shot_kept": 1,
+   "seed_opus": 0.8333333333333334,
+   "tool_gaps": [
+    "recall",
+    "get_timeline"
+   ]
+  }
+ ],
+ "skills_partial": [
+  {
+   "skill": "briefing",
+   "no_skill": 0.1667,
+   "seed": 0.6667,
+   "source": "run.log; the one-shot and Opus arms did not run"
+  }
+ ],
+ "cost": {
+  "basis": "budget ledger, provider usage fields at list price",
+  "usd": 8.8379,
+  "by_model": [
+   {
+    "model": "anthropic:claude-haiku-5-5 chat",
+    "requests": 2835,
+    "usd": 4.4004
+   },
+   {
+    "model": "anthropic:claude-opus-5-5 chat",
+    "requests": 87,
+    "usd": 4.4375
+   }
+  ]
+ }
+}

@@ -5,9 +5,9 @@
  * true full-context baseline (reader windows, fit and refusal, per-conversation
  * prompt caching against a recorded fetch).
  */
-import { afterAll, describe, expect, test } from 'bun:test';
+import { afterAll, afterEach, beforeEach, describe, expect, test } from 'bun:test';
 import { createHash } from 'node:crypto';
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { appendFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { CHAT_PRICE_OVERRIDES } from '../../eval/runner/budget-ledger.ts';
@@ -17,6 +17,9 @@ import { DecideError } from '../../eval/runner/decisions/errors.ts';
 import { generateLadderWorld } from '../../eval/generators/model-ladder-gen.ts';
 import { loadFixture } from '../../eval/runner/memory-qa/corpus.ts';
 import { readerPrompt } from '../../eval/runner/memory-qa/qa-v2.ts';
+import { UPSTREAM_DEADLINE_MS } from '../../eval/runner/metering-proxy.ts';
+import { classifyCompatError, CompatHttpError, compatConnectionLost, compatMayHaveBilled } from '../../eval/runner/providers/openai-compatible.ts';
+import { COUNTED_READERS as Q1_COUNTED_READERS } from '../../eval/runner/q1/cells/definitions.ts';
 import { answerFullContext, checkFit, FRONTIER_READERS, FullContextSystem, READER_WINDOWS, splitForCache } from '../../eval/runner/systems/baselines.ts';
 import { classifyRun, evidenceOpened, FILE_AGENT_MAX_TURNS, FileAgentSystem, layoutSessions, parseReader, PROSE_ANSWER_TOOL, proxiedFetch, ripgrep, type GrepLimitEvent } from '../../eval/runner/systems/file-agent.ts';
 import { Sanitizer } from '../../eval/runner/systems/sanitize.ts';
@@ -264,8 +267,8 @@ describe('true full context', () => {
   const q = corpus.questions.find(x => x.conversation === conv.id)!;
   const prompt = readerPrompt(q, conv.sessions, '2026-04-01');
 
-  test('every frontier reader has a window and a price, in one table', () => {
-    for (const r of FRONTIER_READERS) { expect(READER_WINDOWS[r]).toBeDefined(); expect(CHAT_PRICE_OVERRIDES[r]).toBeDefined(); }
+  test('every frontier reader and Q1 counted reader has a window and a price, in one table', () => {
+    for (const r of new Set<string>([...FRONTIER_READERS, ...Q1_COUNTED_READERS])) { expect(READER_WINDOWS[r]).toBeDefined(); expect(CHAT_PRICE_OVERRIDES[r]).toBeDefined(); }
     expect(READER_WINDOWS['openai:gpt-6.1-sol'].max_input_tokens).toBe(922_000);
   });
 
@@ -368,6 +371,133 @@ describe('true full context', () => {
     await sys.close();
   });
 
+  // Value: protects=existing readers' full-context requests, which counted Q1 cells froze; fails_when=adding the particle transport changes one byte of an Anthropic or OpenAI body; why_new=answerFullContext gains a second transport; seam=none; no_claim=provider-side behavior
+  test('Anthropic and OpenAI full-context request bodies are byte for byte main 8ca8d2cc\'s (sha256 pinned before particle-1 joined)', async () => {
+    const fixed = 'History:\nSession 1: alice: I moved to Lisbon.\n\nCurrent Date: 2023/05/01\nQuestion: Where does Alice live?\nAnswer:';
+    const pinned: Record<string, string> = {
+      'anthropic:claude-opus-5-5': 'c3d7e0a1e0548aa843fb055bc9fa70e941fc8562655ebb8e9aa12d4e4fef4bbf',
+      'anthropic:claude-sonnet-5-5': '2ca566d6650b17480c3cc45deff079a69393087b40bfbf5456f9d0ccebd06399',
+      'openai:gpt-6.1-sol': 'c6bf19e08831d83c697ae48f787b3bb8d6686e33eab7d82ff8d980beb237a59d',
+    };
+    for (const [reader, sha] of Object.entries(pinned)) {
+      let body = '';
+      const fetchImpl = (async (_u: string, init: RequestInit) => { body = String(init.body); return Response.json(reader.startsWith('anthropic') ? { content: [{ type: 'text', text: 'Lisbon' }], usage: { input_tokens: 10, output_tokens: 2 } } : { choices: [{ message: { content: 'Lisbon' } }], usage: { prompt_tokens: 10, completion_tokens: 2 } }); }) as unknown as typeof fetch;
+      const a = await answerFullContext({ reader, prompt: fixed, conversation: 'ns-1', maxOutputTokens: 2048, fetchImpl });
+      expect([reader, createHash('sha256').update(body).digest('hex')]).toEqual([reader, sha]);
+      expect(Object.keys(a).sort()).toEqual(['cache_key', 'fit', 'latency_ms', 'outcome', 'provider_input_tokens', 'text', 'usage']);
+    }
+  });
+
+  describe('particle-1 (plan GST-605 Phase 2)', () => {
+    const KEYS = ['PARTICLE_API_KEY', 'PARTICLE_BASE_URL'] as const;
+    let saved: Record<string, string | undefined> = {};
+    beforeEach(() => { saved = Object.fromEntries(KEYS.map(k => [k, process.env[k]])); process.env.PARTICLE_API_KEY = 'test-key'; delete process.env.PARTICLE_BASE_URL; });
+    afterEach(() => { for (const k of KEYS) { if (saved[k] === undefined) delete process.env[k]; else process.env[k] = saved[k]; } });
+    const reply = (finish: string) => Response.json({ id: 'c', model: 'particle-ai/particle-1', choices: [{ index: 0, message: { role: 'assistant', content: 'Lisbon' }, finish_reason: finish }],
+      usage: { prompt_tokens: 900, completion_tokens: 16000, prompt_tokens_details: { cached_tokens: 600 }, completion_tokens_details: { reasoning_tokens: 15990 } }, service_tier: 'default', metadata: { weight_version: 'default' } });
+
+    // Value: protects=bar 2 receipts and the truncation rule on the Q1 full-context path; fails_when=a particle reading skips the provider module, loses a failed attempt, retries a truncated answer, or counts the 2,048 cap in its fit check; why_new=answerFullContext gains the particle transport; seam=none; no_claim=keyless (a recorded fetch)
+    test('a reading goes through the provider module with its output floor, keeps every attempt, and an answer cut at its output limit is scored as truncated, never retried', async () => {
+      const sent: Array<{ url: string; auth: string | null; body: Record<string, any> }> = [];
+      let n = 0;
+      const fetchImpl = (async (url: string, init: RequestInit) => {
+        sent.push({ url: String(url), auth: new Headers(init.headers).get('authorization'), body: JSON.parse(String(init.body)) });
+        return ++n === 1 ? new Response('{"error":{"message":"Rate limit exceeded"}}', { status: 429, headers: { 'retry-after': '0' } }) : reply('length');
+      }) as unknown as typeof fetch;
+      const a = await answerFullContext({ reader: 'particle:particle-1', prompt, conversation: conv.id, maxOutputTokens: 2048, fetchImpl });
+      expect(sent.map(s => [s.url, s.auth])).toEqual([['https://api.particle.ai/v1/chat/completions', 'Bearer test-key'], ['https://api.particle.ai/v1/chat/completions', 'Bearer test-key']]);
+      expect(sent[0].body).toEqual({ model: 'particle-1', messages: [{ role: 'user', content: prompt }], reasoning_effort: 'medium', max_completion_tokens: 16_000, prompt_cache_key: a.cache_key });
+      expect(a).toMatchObject({ outcome: 'scored', text: 'Lisbon', finish: 'length', truncated: true, provider_input_tokens: 900, usage: { input: 300, output: 16000, cache_read: 600, cache_write: 0 }, fit: { fits: true, output_tokens: 16_000 } });
+      expect(a.attempts).toEqual([
+        { status: 'error', error: 'particle 429: {"error":{"message":"Rate limit exceeded"}}', from_cache: false, response_model: null, finish: null, reasoning_tokens: null, weight_version: null, effort_sent: 'medium', effort_effective: 'high', output_limit: 16_000, retry_after_ms: 0 },
+        { status: 'ok', error: null, from_cache: false, response_model: 'particle-ai/particle-1', finish: 'length', reasoning_tokens: 15990, weight_version: 'default', effort_sent: 'medium', effort_effective: 'high', output_limit: 16_000, retry_after_ms: null },
+      ]);
+      expect(READER_WINDOWS['particle:particle-1']).toMatchObject({ context_window: 1_048_576, max_output_tokens: 131_072 });
+      const edge = 'x'.repeat(3_100_000);
+      expect(checkFit('particle:particle-1', edge, 2048).fits).toBe(true);
+      const refused = await answerFullContext({ reader: 'particle:particle-1', prompt: edge, conversation: conv.id, maxOutputTokens: 2048, fetchImpl });
+      expect([refused.outcome, refused.fit.output_tokens, sent.length]).toEqual(['does_not_fit', 16_000, 2]);
+    });
+
+    // Value: protects=a credit stop ends the reading as budget_not_run with its receipt, never as an answer error; fails_when=a credit or lease 402 is retried or recorded as reader_error, or a context overflow is a reader error; why_new=new transport; seam=none; no_claim=Particle's real 402 body
+    test('Particle\'s credit 402 and the lease proxy\'s 402 are budget_not_run after one attempt; a context-length 400 is does_not_fit', async () => {
+      const once = (res: () => Response) => { let calls = 0; return { fetchImpl: (async () => { calls++; return res(); }) as unknown as typeof fetch, calls: () => calls }; };
+      for (const body of ['{"error":{"message":"Insufficient credits"}}', '{"error":{"kind":"budget","message":"metering proxy: reserving $0.02 would take this run over its budget"}}']) {
+        const f = once(() => new Response(body, { status: 402 }));
+        const a = await answerFullContext({ reader: 'particle:particle-1', prompt, conversation: conv.id, fetchImpl: f.fetchImpl });
+        expect([a.outcome, f.calls(), a.attempts!.length, a.attempts![0].status, a.attempts![0].output_limit, a.truncated]).toEqual(['budget_not_run', 1, 1, 'error', 16_000, false]);
+        expect(a.error).toMatch(/^budget: /);
+      }
+      const long = once(() => new Response('{"error":{"message":"This model\'s maximum context length is 1048576 tokens"}}', { status: 400 }));
+      const d = await answerFullContext({ reader: 'particle:particle-1', prompt, conversation: conv.id, fetchImpl: long.fetchImpl });
+      expect([d.outcome, d.fit.fits, long.calls()]).toEqual(['does_not_fit', false, 1]);
+    });
+
+    // Value: protects=a slow particle-1 reading is billed once; fails_when=a timed-out request is sent again (issue #250's bug on this path) or waits less than the proxies' upstream deadline; why_new=readCompat sends with compatSend; seam=none; no_claim=Particle's billing of an aborted request
+    test('a reading that times out is a reader_error after one request, sent with the proxies\' 900-second upstream deadline', async () => {
+      const timeout = AbortSignal.timeout;
+      const deadlines: number[] = [];
+      AbortSignal.timeout = (ms: number) => { deadlines.push(ms); return timeout.call(AbortSignal, ms); };
+      try {
+        for (const name of ['TimeoutError', 'AbortError']) {
+          let calls = 0;
+          const fetchImpl = (async () => { calls++; throw new DOMException('The operation timed out.', name); }) as unknown as typeof fetch;
+          const a = await answerFullContext({ reader: 'particle:particle-1', prompt, conversation: conv.id, fetchImpl });
+          expect([a.outcome, calls, a.attempts!.length, a.attempts![0].status, a.attempts![0].retry_after_ms]).toEqual(['reader_error', 1, 1, 'error', null]);
+        }
+      } finally { AbortSignal.timeout = timeout; }
+      expect(deadlines).toEqual([UPSTREAM_DEADLINE_MS, UPSTREAM_DEADLINE_MS]);
+      expect(UPSTREAM_DEADLINE_MS).toBe(900_000);
+    });
+
+    // Value: protects=a whole-history particle reading through the lease proxy is never abandoned while the proxy still sends and bills it (issue #271); fails_when=a reading on a loopback proxy slot waits only the 900 s upstream deadline, which the proxy's admission wait (up to 600 s) eats into; why_new=readCompat's deadline follows its URL (compatDeadlineMs); seam=none; no_claim=a real 26-minute wait
+    test('a reading on a loopback proxy slot waits the proxy\'s longest admission wait plus its upstream deadline; a direct reading waits the upstream deadline (#271)', async () => {
+      const { PROXIED_DEADLINE_MS } = await import('../../eval/runner/metering-proxy.ts');
+      const timeout = AbortSignal.timeout;
+      const deadlines: number[] = [];
+      const urls: string[] = [];
+      const fetchImpl = (async (url: string) => { urls.push(String(url)); return reply('stop'); }) as unknown as typeof fetch;
+      AbortSignal.timeout = (ms: number) => { deadlines.push(ms); return timeout.call(AbortSignal, ms); };
+      try {
+        process.env.PARTICLE_BASE_URL = 'http://127.0.0.1:8787/harness/particle/v1';
+        expect((await answerFullContext({ reader: 'particle:particle-1', prompt, conversation: conv.id, fetchImpl })).outcome).toBe('scored');
+        delete process.env.PARTICLE_BASE_URL;
+        expect((await answerFullContext({ reader: 'particle:particle-1', prompt, conversation: conv.id, fetchImpl })).outcome).toBe('scored');
+      } finally { AbortSignal.timeout = timeout; }
+      expect(urls).toEqual(['http://127.0.0.1:8787/harness/particle/v1/chat/completions', 'https://api.particle.ai/v1/chat/completions']);
+      expect(deadlines).toEqual([PROXIED_DEADLINE_MS, UPSTREAM_DEADLINE_MS]);
+    });
+
+    // Value: protects=a particle reading whose connection resets after it went out is billed once and final in the Q1 cell; fails_when=readCompat retries the reset, or the answer lacks timed_out so the cell asks again; why_new=the lease proxy answers this reset 504, the direct path retried it; seam=none; no_claim=Bun's exact error text
+    test('a reading whose connection resets after it went out is a final reader_error after one request; a refused connection stays retryable', async () => {
+      let calls = 0;
+      const reset = Object.assign(new TypeError('The socket connection was closed unexpectedly.'), { code: 'ECONNRESET' });
+      const fetchImpl = (async () => { calls++; throw reset; }) as unknown as typeof fetch;
+      const a = await answerFullContext({ reader: 'particle:particle-1', prompt, conversation: conv.id, fetchImpl });
+      expect([a.outcome, a.timed_out, calls, a.attempts!.length]).toEqual(['reader_error', true, 1, 1]);
+      const refused = Object.assign(new TypeError('Unable to connect. Is the computer able to access the url?'), { code: 'ECONNREFUSED' });
+      expect([compatMayHaveBilled(reset), compatMayHaveBilled(refused)]).toEqual([true, false]);
+    });
+
+    // Value: protects=a full-context particle reading that failed after it may have gone out is billed once and final in the Q1 cell, whatever Bun names the failure (issue #288); fails_when=readCompat reads a malformed response, a bad chunk or a body that fails to decompress as a failure that never reached Particle and sends it again, or the answer lacks timed_out so the cell asks again; why_new=compatMayHaveBilled reads every transport failure not proven to happen before sending as billed; seam=fetch stubs that throw the errors Bun 1.4.4 gives; no_claim=what Particle's edge sends when it fails
+    test('a reading whose response is malformed, has a bad chunk or fails to decompress is a final reader_error after one request; an unresolvable host or a rejected certificate is not read as billed (#288)', async () => {
+      const bun = (code: string, message: string) => Object.assign(new TypeError(message), { code });
+      for (const e of [bun('Malformed_HTTP_Response', 'Malformed_HTTP_Response fetching "https://api.particle.ai/v1/chat/completions".'), bun('InvalidHTTPResponse', 'InvalidHTTPResponse fetching "https://api.particle.ai/v1/chat/completions".'), bun('ZlibError', 'ZlibError fetching "https://api.particle.ai/v1/chat/completions".'), new TypeError('fetch failed')]) {
+        let calls = 0;
+        const fetchImpl = (async () => { calls++; throw e; }) as unknown as typeof fetch;
+        const a = await answerFullContext({ reader: 'particle:particle-1', prompt, conversation: conv.id, fetchImpl });
+        expect([(e as { code?: string }).code ?? e.message, a.outcome, a.timed_out, calls, a.attempts!.length]).toEqual([(e as { code?: string }).code ?? e.message, 'reader_error', true, 1, 1]);
+      }
+      expect([compatMayHaveBilled(bun('ENOTFOUND', 'getaddrinfo ENOTFOUND api.particle.ai')), compatMayHaveBilled(bun('CERT_HAS_EXPIRED', 'certificate has expired'))]).toEqual([false, false]);
+    });
+
+    // Value: protects=a gateway 5xx stays retryable; fails_when=compatConnectionLost reads a received response's body text as a lost connection, so the question ends final and unanswered; why_new=compatConnectionLost matches socket-close messages, and a CompatHttpError's message carries the body; seam=none; no_claim=which gateways put socket errors in a body
+    test('a received 5xx whose body names a socket error is an answer, not a lost connection', () => {
+      const answered = new CompatHttpError(classifyCompatError('particle', 502, '{"error":{"message":"upstream: socket hang up"}}'));
+      expect([answered.retryable, compatConnectionLost(answered), compatMayHaveBilled(answered)]).toEqual([true, false, false]);
+    });
+  });
+
   test('public ids: the shootout full-context system is unchanged; Q1 modes name the kinds', async () => {
     const legacy = await new FullContextSystem().capabilities();
     expect(new FullContextSystem().name).toBe('full-context');
@@ -376,5 +506,191 @@ describe('true full context', () => {
     expect(new FullContextSystem('whole-history').name).toBe('baseline-full-context');
     expect(new FullContextSystem('recency').name).toBe('baseline-recency');
     expect((await new FullContextSystem('whole-history').capabilities()).fit).toMatch(/does_not_fit/);
+  });
+});
+
+describe('file agent with particle-1 (plan GST-605 Phase 3)', () => {
+  const KEYS = ['PARTICLE_API_KEY', 'PARTICLE_BASE_URL'] as const;
+  let saved: Record<string, string | undefined> = {};
+  beforeEach(() => { saved = Object.fromEntries(KEYS.map(k => [k, process.env[k]])); process.env.PARTICLE_API_KEY = 'test-key'; delete process.env.PARTICLE_BASE_URL; });
+  afterEach(() => { for (const k of KEYS) { if (saved[k] === undefined) delete process.env[k]; else process.env[k] = saved[k]; } });
+
+  const ns = 'ns-00000000000000p1';
+  const ingest = async (sys: FileAgentSystem) => sys.ingestSession(ns, { source_id: 'src-00000000000000p1', turns: [{ role: 'user', speaker: 'User', content: 'my dog is called Rex' }] }, '2026-01-02T00:00:00Z');
+  const chat = (message: Record<string, unknown>, finish: string) => ({ id: 'c', model: 'particle-ai/particle-1', choices: [{ index: 0, message: { role: 'assistant', ...message }, finish_reason: finish }],
+    usage: { prompt_tokens: 500, completion_tokens: 40, prompt_tokens_details: { cached_tokens: 300 }, completion_tokens_details: { reasoning_tokens: 30 } }, service_tier: 'default', metadata: { weight_version: 'default' } });
+  const call = (name: string, args: unknown) => ({ content: null, tool_calls: [{ id: `call_${name}`, type: 'function', function: { name, arguments: JSON.stringify(args) } }] });
+
+  test('readers: particle:particle-1 parses; a particle: id the loop cannot route refuses', () => {
+    expect(parseReader('particle:particle-1')).toEqual({ provider: 'particle', model: 'particle-1' });
+    for (const bad of ['particle:gpt-6.1-sol', 'openai:particle-1', 'particle:particle-9']) expect(() => parseReader(bad)).toThrow(DecideError);
+  });
+
+  test('proxiedFetch sends Particle\'s documented base URLs to PARTICLE_BASE_URL and leaves others alone', async () => {
+    const seen: string[] = [];
+    const base = (async (u: string | URL | Request) => { seen.push(String(u)); return new Response('{}'); }) as typeof fetch;
+    const f = proxiedFetch({ PARTICLE_BASE_URL: 'http://127.0.0.1:8787/slot-2/particle/v1/' }, base);
+    await f('https://api.particle.ai/v1/chat/completions');
+    await f('https://us.api.particle.ai/v1/chat/completions');
+    await f('http://127.0.0.1:8787/slot-2/particle/v1/chat/completions');
+    await proxiedFetch({}, base)('https://api.particle.ai/v1/chat/completions');
+    expect(seen).toEqual(['http://127.0.0.1:8787/slot-2/particle/v1/chat/completions', 'http://127.0.0.1:8787/slot-2/particle/v1/chat/completions',
+      'http://127.0.0.1:8787/slot-2/particle/v1/chat/completions', 'https://api.particle.ai/v1/chat/completions']);
+  });
+
+  test('a multi-turn question with one retry: every fake request leaves one receipt, keyed by the answer id, with its turn', async () => {
+    const bodies: Array<Record<string, any>> = [];
+    let n = 0;
+    const fetchImpl = (async (_url: string, init: RequestInit) => {
+      bodies.push(JSON.parse(String(init.body)));
+      n++;
+      if (n === 1) return new Response(JSON.stringify(chat(call('list_dir', { path: '.' }), 'tool_calls')));
+      if (n === 2) return new Response('{"error":{"message":"Rate limit exceeded"}}', { status: 429, headers: { 'retry-after': '0' } });
+      return new Response(JSON.stringify(chat(call('submit_answer', { answer: 'Rex' }), 'tool_calls')));
+    }) as unknown as typeof fetch;
+    const sys = new FileAgentSystem({ workDir: join(tmp, 'particle-retry'), fetchImpl });
+    await ingest(sys);
+    const a = await sys.answer(ns, { text: 'What is my dog called?', query_time: null }, { reader: 'particle:particle-1', replicate: 0, answer_id: 'a'.repeat(64) });
+    expect(a).toMatchObject({ text: 'Rex', outcome: 'scored', stop_reason: 'submitted', turns: 2 });
+    expect(bodies).toHaveLength(3);
+    expect(bodies.every(b => b.model === 'particle-1' && b.reasoning_effort === 'medium' && b.max_completion_tokens === 16_000)).toBe(true);
+    expect(bodies[0].tools.map((t: any) => t.function.name)).toEqual(['list_dir', 'grep', 'read_file', 'submit_answer']);
+    const receipts = readFileSync(sys.receiptsPath, 'utf8').trim().split('\n').map(l => JSON.parse(l));
+    expect(receipts).toHaveLength(bodies.length);
+    expect(receipts.map(r => [r.attempt, r.turn, r.status])).toEqual([[0, 1, 'ok'], [1, 2, 'error'], [2, 2, 'ok']]);
+    expect(receipts.every(r => r.lane === 'q1-file-agent' && r.question_id === 'a'.repeat(64) && r.model === 'particle:particle-1')).toBe(true);
+    expect(receipts[0].request).toEqual({ effort_sent: 'medium', effort_effective: 'high', output_limit_field: 'max_completion_tokens', output_limit: 16_000, temperature_sent: null, seed_sent: null });
+    expect(receipts[1]).toMatchObject({ response_model: null, usage: null, retry_after_ms: 0, response_meta: { weight_version: null, service_tier: null } });
+    expect(receipts[2]).toMatchObject({ response_model: 'particle-ai/particle-1', usage: { input_total: 500, cache_read: 300, reasoning: 30 }, response_meta: { weight_version: 'default' } });
+    expect(a.usage).toEqual({ input: 400, output: 80, cache_read: 600, cache_write: 0 });
+    await sys.close();
+  });
+
+  test('a retried answer numbers its receipts on from the earlier attempt, also in a new process after stray and half-written lines', async () => {
+    let n = 0;
+    const fetchImpl = (async () => {
+      n++;
+      if (n === 1) return new Response('{"error":{"message":"bad request"}}', { status: 400 });
+      return new Response(JSON.stringify(chat(call('submit_answer', { answer: 'Rex' }), 'tool_calls')));
+    }) as unknown as typeof fetch;
+    const workDir = join(tmp, 'particle-retried');
+    const opts = { reader: 'particle:particle-1', replicate: 0, answer_id: 'b'.repeat(64) };
+    const q = { text: 'What is my dog called?', query_time: null };
+    const sys = new FileAgentSystem({ workDir, fetchImpl });
+    await ingest(sys);
+    expect((await sys.answer(ns, q, opts)).text).toBe('');
+    expect((await sys.answer(ns, q, opts)).text).toBe('Rex');
+    await sys.close();
+    appendFileSync(join(workDir, 'receipts.ndjson'), `null\n7\n{"model":"particle:particle-1","question_id":"${'b'.repeat(64)}",`);
+    const again = new FileAgentSystem({ workDir, fetchImpl });
+    await ingest(again);
+    expect((await again.answer(ns, q, opts)).text).toBe('Rex');
+    await again.close();
+    const lines = readFileSync(join(workDir, 'receipts.ndjson'), 'utf8').trim().split('\n');
+    expect(lines).toHaveLength(6);
+    expect(() => JSON.parse(lines[4])).toThrow();
+    expect([lines[0], lines[1], lines[5]].map(l => JSON.parse(l)).map(r => [r.attempt, r.status])).toEqual([[0, 'error'], [1, 'ok'], [2, 'ok']]);
+  });
+
+  // Value: protects=a file-agent particle turn answered 2xx without a message is billed once and its usage counted (issue #280); fails_when=the loop retries the billed 2xx, or the answer lacks timed_out so the cell asks the question again; why_new=postJson ends the turn on a compat 2xx without a message; seam=none; no_claim=whether Particle bills an answer without a message
+  test('a billed 2xx without a message is sent once, counts its usage and ends the answer as a timed-out reader_error (#280)', async () => {
+    let n = 0;
+    const fetchImpl = (async () => {
+      n++;
+      if (n === 1) return new Response(JSON.stringify({ ...chat(call('list_dir', { path: '.' }), 'tool_calls'), choices: [] }));
+      return new Response('{"error":{"message":"Insufficient credits"}}', { status: 402 });
+    }) as unknown as typeof fetch;
+    const sys = new FileAgentSystem({ workDir: join(tmp, 'particle-billed-2xx'), fetchImpl });
+    await ingest(sys);
+    const a = await sys.answer(ns, { text: 'What is my dog called?', query_time: null }, { reader: 'particle:particle-1', replicate: 0 });
+    expect(a).toMatchObject({ outcome: 'reader_error', stop_reason: 'provider_error', timed_out: true, turns: 1, provider_input_tokens: 500, usage: { input: 200, output: 40, cache_read: 300, cache_write: 0 } });
+    expect(n).toBe(1);
+    await sys.close();
+  });
+
+  // Value: protects=a file-agent question whose particle turn Particle may have billed is never run again (issue #253); fails_when=a timed-out, reset or 504 turn is retried by the loop, or the answer lacks timed_out so the cell asks the question again; why_new=the agent loop stops on a particle turn that may have been billed; seam=none; no_claim=Particle's billing of an aborted turn
+  test('a particle turn that times out, resets after it went out or is answered 504 is sent once and ends the answer as a timed-out reader_error; a refused connection does not (#253)', async () => {
+    const faults: Array<[string, () => Response]> = [
+      ['timeout', () => { throw new DOMException('The operation timed out.', 'TimeoutError'); }],
+      ['reset', () => { throw Object.assign(new TypeError('The socket connection was closed unexpectedly.'), { code: 'ECONNRESET' }); }],
+      ['504', () => new Response('{"error":{"kind":"product_error","message":"metering proxy: upstream failed: The operation timed out."}}', { status: 504 })],
+      ['refused', () => { throw Object.assign(new TypeError('Unable to connect. Is the computer able to access the url?'), { code: 'ECONNREFUSED' }); }],
+    ];
+    for (const [name, fault] of faults) {
+      let n = 0;
+      const fetchImpl = (async () => (++n === 1 ? new Response(JSON.stringify(chat(call('list_dir', { path: '.' }), 'tool_calls'))) : fault())) as unknown as typeof fetch;
+      const sys = new FileAgentSystem({ workDir: join(tmp, `particle-billed-${name}`), fetchImpl });
+      await ingest(sys);
+      const a = await sys.answer(ns, { text: 'What is my dog called?', query_time: null }, { reader: 'particle:particle-1', replicate: 0 });
+      expect([name, a.outcome, a.stop_reason, a.timed_out, a.turns, n]).toEqual([name, 'reader_error', 'provider_error', name === 'refused' ? undefined : true, 2, 2]);
+      await sys.close();
+    }
+  });
+
+  // Value: protects=a file-agent question whose particle turn failed after it may have gone out is never run again, whatever Bun names the failure (issue #288); fails_when=the loop's caller reads a malformed response, a bad chunk or a body that fails to decompress as a failure that never reached Particle, so the answer lacks timed_out and the cell asks the question again; why_new=compatMayHaveBilled reads every transport failure not proven to happen before sending as billed; seam=fetch stubs that throw the errors Bun 1.4.4 gives; no_claim=what Particle's edge sends when it fails
+  test('a particle turn whose response is malformed, has a bad chunk or fails to decompress ends the answer as a timed-out reader_error; an unresolvable host or a rejected certificate does not (#288)', async () => {
+    const bun = (code: string, message: string) => Object.assign(new TypeError(message), { code });
+    const faults: Array<[string, Error, true | undefined]> = [
+      ['Malformed_HTTP_Response', bun('Malformed_HTTP_Response', 'Malformed_HTTP_Response fetching "https://api.particle.ai/v1/chat/completions".'), true],
+      ['InvalidHTTPResponse', bun('InvalidHTTPResponse', 'InvalidHTTPResponse fetching "https://api.particle.ai/v1/chat/completions".'), true],
+      ['ZlibError', bun('ZlibError', 'ZlibError fetching "https://api.particle.ai/v1/chat/completions".'), true],
+      ['ENOTFOUND', bun('ENOTFOUND', 'getaddrinfo ENOTFOUND api.particle.ai'), undefined],
+      ['CERT_HAS_EXPIRED', bun('CERT_HAS_EXPIRED', 'certificate has expired'), undefined],
+    ];
+    for (const [name, fault, timedOut] of faults) {
+      let n = 0;
+      const fetchImpl = (async () => { if (++n === 1) return new Response(JSON.stringify(chat(call('list_dir', { path: '.' }), 'tool_calls'))); throw fault; }) as unknown as typeof fetch;
+      const sys = new FileAgentSystem({ workDir: join(tmp, `particle-288-${name}`), fetchImpl });
+      await ingest(sys);
+      const a = await sys.answer(ns, { text: 'What is my dog called?', query_time: null }, { reader: 'particle:particle-1', replicate: 0 });
+      expect([name, a.outcome, a.stop_reason, a.timed_out, a.turns, n]).toEqual([name, 'reader_error', 'provider_error', timedOut, 2, 2]);
+      await sys.close();
+    }
+  });
+
+  // Value: protects=a slow particle turn waits the proxies' deadline instead of Bun's 300-second fetch timeout (issue #253); fails_when=the agent loop sends a particle turn without timeout: false and a deadline, so Bun abandons it at 300 s while it is still generating and billed; why_new=postJson gives compat turns compatDeadlineMs; seam=none; no_claim=a real 900 s wait
+  test('each particle turn is sent with Bun\'s fetch timeout off and the upstream deadline, or on a loopback proxy slot the proxied deadline (#253)', async () => {
+    const { PROXIED_DEADLINE_MS } = await import('../../eval/runner/metering-proxy.ts');
+    const timeout = AbortSignal.timeout;
+    const deadlines: number[] = [];
+    const sent: Array<[string, unknown]> = [];
+    let n = 0;
+    const fetchImpl = (async (url: string, init: RequestInit & { timeout?: unknown }) => {
+      sent.push([String(url), init.timeout]);
+      return new Response(JSON.stringify(chat(++n % 2 ? call('list_dir', { path: '.' }) : call('submit_answer', { answer: 'Rex' }), 'tool_calls')));
+    }) as unknown as typeof fetch;
+    AbortSignal.timeout = (ms: number) => { deadlines.push(ms); return timeout.call(AbortSignal, ms); };
+    try {
+      for (const base of [undefined, 'http://127.0.0.1:8787/agent/particle/v1']) {
+        if (base) process.env.PARTICLE_BASE_URL = base; else delete process.env.PARTICLE_BASE_URL;
+        const sys = new FileAgentSystem({ workDir: join(tmp, `particle-deadline-${base ? 'proxy' : 'direct'}`), fetchImpl });
+        await ingest(sys);
+        expect((await sys.answer(ns, { text: 'What is my dog called?', query_time: null }, { reader: 'particle:particle-1', replicate: 0 })).text).toBe('Rex');
+        await sys.close();
+      }
+    } finally { AbortSignal.timeout = timeout; }
+    expect(sent).toEqual([...Array(2).fill(['https://api.particle.ai/v1/chat/completions', false]), ...Array(2).fill(['http://127.0.0.1:8787/agent/particle/v1/chat/completions', false])]);
+    expect(deadlines).toEqual([UPSTREAM_DEADLINE_MS, UPSTREAM_DEADLINE_MS, PROXIED_DEADLINE_MS, PROXIED_DEADLINE_MS]);
+  });
+
+  test('an empty Particle balance ends the question as budget_not_run, after the failing attempt\'s receipt', async () => {
+    let n = 0;
+    const fetchImpl = (async () => {
+      n++;
+      if (n === 1) return new Response(JSON.stringify(chat(call('list_dir', { path: '.' }), 'tool_calls')));
+      return new Response('{"error":{"message":"Insufficient credits"}}', { status: 402 });
+    }) as unknown as typeof fetch;
+    const sys = new FileAgentSystem({ workDir: join(tmp, 'particle-402'), fetchImpl });
+    await ingest(sys);
+    const a = await sys.answer(ns, { text: 'What is my dog called?', query_time: null }, { reader: 'particle:particle-1', replicate: 0 });
+    expect(a).toMatchObject({ text: '', outcome: 'budget_not_run', stop_reason: 'budget', turns: 2, provider_input_tokens: 500 });
+    expect(a.error).toStartWith('budget: Particle credit exhausted');
+    expect(a.usage).toEqual({ input: 200, output: 40, cache_read: 300, cache_write: 0 });
+    expect(a.usd).toBeCloseTo((200 * 0.25 + 300 * 0.03 + 40 * 1.0) / 1e6, 12);
+    expect(n).toBe(2);
+    const receipts = readFileSync(sys.receiptsPath, 'utf8').trim().split('\n').map(l => JSON.parse(l));
+    expect(receipts.map(r => [r.status, r.question_id])).toEqual([['ok', ns], ['error', ns]]);
+    expect(receipts[1].error).toStartWith('402:');
+    await sys.close();
   });
 });

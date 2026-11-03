@@ -114,7 +114,10 @@
           "type": "string"
         },
         "temperature": {
-          "type": "number"
+          "type": [
+            "number",
+            "null"
+          ]
         },
         "rubric_version": {
           "type": "string"

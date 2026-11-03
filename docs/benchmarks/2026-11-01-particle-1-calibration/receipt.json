@@ -1,0 +1,199 @@
+{
+  "schema": "gbrain-evals/q1-cell-receipt/v1",
+  "cell_id": "s3-smoke.baseline-hybrid.baseline.component-b8000",
+  "run_cell": "s3-smoke.baseline-hybrid.baseline",
+  "config_sha256": "85a0d47d193cc051d332777512e1b816277b4a45b026d3a36fbd7b8c81162dfd",
+  "run_status": "complete",
+  "invalid_reasons": [],
+  "stopped": null,
+  "set": "S3-smoke",
+  "benchmark": "locomo",
+  "split": "dev",
+  "block": "T2-S3",
+  "system": {
+    "kind": "baseline-hybrid",
+    "configuration": "baseline",
+    "runner": "in-process",
+    "capability_system": "plain-hybrid",
+    "versions": {
+      "package": "in-repo",
+      "lock_sha256": null,
+      "image": null,
+      "vendor_benchmark_code": null
+    },
+    "capabilities": {
+      "system": "plain-hybrid",
+      "protocol": 1,
+      "versions": {
+        "package": "in-repo",
+        "lock_sha256": null,
+        "image": null,
+        "vendor_benchmark_code": null
+      },
+      "configs": {
+        "common": {
+          "model_roles": {
+            "embedder": "openai:text-embedding-3-large@1536",
+            "dims": 1536
+          },
+          "notes": "Postgres full-text plus pgvector cosine, reciprocal-rank fusion; whole sessions; embedding input cut at 24,000 characters"
+        }
+      },
+      "time": "in-text",
+      "provenance": {
+        "status": "exact",
+        "mechanism": "one item per ingested session"
+      },
+      "delete": "native",
+      "readiness": "synchronous: up to 256 sessions are buffered and embedded 16 at a time, one per request; retrieve, delete and finish write every buffered session of the namespace first, so a session is searchable once ingest returns",
+      "namespace": "in-process",
+      "parallel_namespaces": false,
+      "retrieval_policies": {
+        "vendor-default": {
+          "settings": {
+            "k": 10
+          }
+        },
+        "fixed-evidence": {
+          "settings": {
+            "k": 30
+          }
+        }
+      },
+      "streaming": "disabled",
+      "telemetry_off": [],
+      "agent_surface": {
+        "kind": "none"
+      },
+      "deviations_from_vendor_code": []
+    }
+  },
+  "arm": {
+    "id": "component-b8000",
+    "arm": "component",
+    "mode": "packed",
+    "policy": "fixed-evidence",
+    "budget": 8000,
+    "variant": null,
+    "label": "component, 8,000 tokens (dev smoke)"
+  },
+  "readers": [
+    "particle:particle-1"
+  ],
+  "reader_replicates": {},
+  "effort": "medium",
+  "instrument": {
+    "id": "locomo",
+    "sha256": "754c83f541b77e652f0b97edac9cb82a1561b8a38822eb88591c807c0dad13be",
+    "judge": "openai:gpt-4o-2024-08-06"
+  },
+  "frontier": null,
+  "selection": {
+    "questions": 20,
+    "conversations": 1,
+    "scheduled_sha256": "f4435143a1c220eecdbb2f9325c9c88af95d3cfa95059550078392090dca689f"
+  },
+  "counts": {
+    "rows": 20,
+    "answers": 20,
+    "answers_promised": 20,
+    "judgments": 20,
+    "unjudged": 0,
+    "outcomes": {
+      "scored": 20
+    },
+    "truncated": 0
+  },
+  "per_reader_mean": {
+    "particle:particle-1": 0.75
+  },
+  "realizations": [
+    {
+      "conversation": "conv-44",
+      "realization_id": "7149f5ef6335d302247cd30d8391d017529f3a04e709a09878b59f0935d0c342",
+      "attempts": 1,
+      "restored_from": null,
+      "degraded": false,
+      "background_liabilities": null
+    }
+  ],
+  "ingest": {
+    "conversations": 1,
+    "messages": 675,
+    "ingested_tokens": 20474,
+    "wall_ms": {
+      "total": 3136,
+      "p50": 3136,
+      "p95": 3136
+    },
+    "failed_sessions": 0,
+    "degraded_conversations": 0,
+    "readiness_samples_ms": [
+      545,
+      1135.9,
+      1207.8,
+      1190.8,
+      1183.5,
+      1118.6,
+      1174.6,
+      1222.9,
+      1106.2,
+      1139.2,
+      1237.7,
+      1187.6,
+      1088.9,
+      1221.6,
+      1203.1,
+      1123.5,
+      1140.1,
+      1154.9,
+      1223.5,
+      1204.3,
+      1191.6
+    ],
+    "write_start_to_queryable_ms": {
+      "p50": 1183.5,
+      "p95": 1223.5,
+      "probes": 21,
+      "found": 21,
+      "missed": 0,
+      "not_measurable": 0
+    }
+  },
+  "timings": {
+    "retrieval_ms": {
+      "p50": 197.8,
+      "p95": 258.7
+    },
+    "answer_ms": {
+      "p50": 8311,
+      "p95": 40563
+    }
+  },
+  "usage": {
+    "input": 169707,
+    "output": 27028,
+    "cache_read": 0,
+    "cache_write": 0
+  },
+  "spend": {
+    "source": "metering proxy (whole cell, every arm)",
+    "usd": {
+      "ingest": 0.002842,
+      "retrieval": 0.000035,
+      "reader": 0.069455,
+      "judge": 0.013815,
+      "background_tail": 0
+    },
+    "total_usd": 0.086147,
+    "background_tail_usd_by_realization": {}
+  },
+  "files": {
+    "rows": "rows.ndjson",
+    "answers": "answers.ndjson",
+    "judgments": "judgments.ndjson",
+    "run_config": "run-config.json",
+    "readiness": "readiness.ndjson",
+    "contexts": "../../runs/s3-smoke.baseline-hybrid.baseline/contexts.ndjson"
+  }
+}

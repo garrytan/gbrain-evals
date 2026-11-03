@@ -2,17 +2,18 @@
 /**
  * Summarize workload-bench runs into Markdown tables and publishable receipts.
  *
- *   bun eval/workload-suites/report.ts [--copy docs/benchmarks/2026-10-05-workload-suites]
+ *   bun eval/workload-suites/report.ts [--copy docs/benchmarks/<date>-workload-suites]
  *
  * Reads eval/reports/workload-bench/<suite>/{results,run,spend}.json, the
  * ingest receipts and the B2 arm runs. With --copy, writes per-suite receipts
  * (scored rows without prompts, ingest and presence summaries, spend by
- * label, the run manifest) with machine paths scrubbed.
+ * label, the run manifest) with machine paths scrubbed. It refuses a run
+ * directory, or a --copy target, whose run.json records another fixed reader.
  */
-import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, writeFileSync } from 'node:fs';
+import { basename, dirname, join, resolve } from 'node:path';
 import { REPO_ROOT } from '../runner/harness-env.ts';
-import { MODEL_CONFIG } from './run-config.ts';
+import { MODEL_CONFIG, recordedReaderProblem } from './run-config.ts';
 
 const BENCH = join(REPO_ROOT, 'eval/reports/workload-bench');
 export const RUN_DIRS: Record<string, string> = {
@@ -21,6 +22,11 @@ export const RUN_DIRS: Record<string, string> = {
   'time-relationships': 'time-relationships-smoke20',
   beliefs: 'beliefs',
 };
+
+/** `path` with symlinks resolved: the real path of the path, or of its nearest existing ancestor joined with the rest. */
+const realPath = (path: string): string => existsSync(path) ? realpathSync.native(path) : join(realPath(dirname(path)), basename(path));
+/** The suite that report.ts publishes from `dir` (one of RUN_DIRS), or null; a path that reaches it through a symlink counts. */
+export const publishedSuiteAt = (dir: string): string | null => Object.entries(RUN_DIRS).find(([, sub]) => realPath(join(BENCH, sub)) === realPath(resolve(dir)))?.[0] ?? null;
 
 const read = (p: string) => JSON.parse(readFileSync(p, 'utf8'));
 const pct = (a: number, b: number) => b ? `${(100 * a / b).toFixed(1)}%` : 'n/a';
@@ -37,22 +43,24 @@ function spendOf(dir: string): { usd: number; by_label: Record<string, number> }
   return out;
 }
 
-export function summarize(): { markdown: string; spend: Record<string, { usd: number; by_label: Record<string, number> }> } {
+export function summarize(bench = BENCH): { markdown: string; spend: Record<string, { usd: number; by_label: Record<string, number> }> } {
   const lines: string[] = [];
   const spend: Record<string, { usd: number; by_label: Record<string, number> }> = {};
   for (const [suite, sub] of Object.entries(RUN_DIRS)) {
-    const dir = join(BENCH, sub);
+    const dir = join(bench, sub);
     if (!existsSync(join(dir, 'results.json'))) { lines.push(`### ${suite}: no results yet`, ''); continue; }
+    const recorded = recordedReaderProblem(dir);
+    if (recorded) throw new Error(recorded);
     const res = read(join(dir, 'results.json')).results as Record<string, Record<string, any>>;
     spend[suite] = spendOf(dir);
     lines.push(`### ${suite}`, '');
     const models = [MODEL_CONFIG.fixed_reader.id, ...MODEL_CONFIG.frontier_sweep.map(m => m.id).filter(m => m !== MODEL_CONFIG.fixed_reader.id), ...MODEL_CONFIG.alternate_readers.map(m => m.id)];
-    lines.push('| Arm | Reader | Correct | Accuracy | Judged | Delivered tokens (mean / p95) |', '|---|---|---:|---:|---:|---:|');
+    lines.push('| Arm | Reader | Correct | Accuracy | Cut off at output limit | Judged | Delivered tokens (mean / p95) |', '|---|---|---:|---:|---:|---:|---:|');
     for (const arm of Object.keys(res).sort()) {
       for (const m of models) {
         const r = res[arm][m];
         if (!r) continue;
-        lines.push(`| ${arm} | ${m} | ${r.correct}/${r.n} | ${pct(r.correct, r.n)} | ${r.judged} | ${r.context_tokens.mean ?? 'n/a'} / ${r.context_tokens.p95 ?? 'n/a'} |`);
+        lines.push(`| ${arm} | ${m} | ${r.correct}/${r.n} | ${pct(r.correct, r.n)} | ${r.truncated ?? 'n/a'} | ${r.judged} | ${r.context_tokens.mean ?? 'n/a'} / ${r.context_tokens.p95 ?? 'n/a'} |`);
       }
     }
     lines.push('');
@@ -83,10 +91,13 @@ export function summarize(): { markdown: string; spend: Record<string, { usd: nu
   return { markdown: lines.join('\n'), spend };
 }
 
-export function copyReceipts(target: string): void {
-  for (const [suite, sub] of Object.entries(RUN_DIRS)) {
-    const dir = join(BENCH, sub);
-    if (!existsSync(join(dir, 'results.json'))) continue;
+export function copyReceipts(target: string, bench = BENCH): void {
+  const runs = Object.entries(RUN_DIRS).map(([suite, sub]) => [suite, join(bench, sub)] as const).filter(([, dir]) => existsSync(join(dir, 'results.json')));
+  for (const [suite, dir] of runs) {
+    const recorded = recordedReaderProblem(dir) ?? recordedReaderProblem(join(target, suite));
+    if (recorded) throw new Error(recorded);
+  }
+  for (const [suite, dir] of runs) {
     const out = join(target, suite);
     mkdirSync(out, { recursive: true });
     writeFileSync(join(out, 'results.json'), scrub(JSON.stringify(read(join(dir, 'results.json')), null, 1)) + '\n');

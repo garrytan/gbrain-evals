@@ -191,6 +191,21 @@ describe('runCat33 error propagation', () => {
     expect(r.receipt.gbrain_version).toMatch(/^\d+\.\d+\.\d+/);
   }, RUN_TIMEOUT);
 
+  test('asks gbrain for the iterative loop on every optimize call and records the mode', async () => {
+    const modes: unknown[] = [];
+    const r = await runCat33({
+      bpre: true,
+      reportsDir: tmpReports(),
+      quiet: true,
+      engineFactory: async () => fakeEngine(),
+      runSkillOptFn: (async (opts: any) => { modes.push(opts.optimizerMode); return goodRunSkillOpt(opts); }) as any,
+      scoreFn: scoreByMarker,
+    });
+    expect(modes.length).toBeGreaterThan(0);
+    expect(new Set(modes)).toEqual(new Set(['reflect']));
+    expect((r.receipt.resolved_config as any).optimizer_mode).toBe('reflect');
+  }, RUN_TIMEOUT);
+
   test('scoring failure on Y → dependency origin, pair excluded from gate denominator', async () => {
     const r = await runCat33({
       bpre: false,

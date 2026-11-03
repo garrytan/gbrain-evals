@@ -223,6 +223,23 @@ describe('cohorts, estimand and claim rules', () => {
     rmSync(dir, { recursive: true });
   });
 
+  test('a sentence that cannot separate two rows names its evidence and the questions both were scored on', () => {
+    const { dir, sb } = fresh();
+    const bank = sb.comparisons.find(c => c.id === 's1-memory-bank-8k')!;
+    expect(bank.outcome).toBe('not-separated');
+    expect(bank.sentence).toStartWith("On BEAM-10M, with the same three answer models and 8,000 tokens of each system's own evidence, we could not tell `ext-memory-bank` and gbrain-defaults apart");
+    expect(bank.sentence).toContain(`on the ${bank.cohort!.paired} of ${bank.cohort!.scheduled} questions scored for both)`);
+    expect(bank.sentence).toContain(`about ${bank.mdd_points!.toFixed(1)} points would not have been detected in this comparison`);
+    rmSync(dir, { recursive: true });
+  });
+
+  test('the verdict prints the preregistered detectable difference to one decimal', () => {
+    const { dir, sb } = fresh({ detectableDifference: 9.58 });
+    expect(sb.verdict).toContain('(detectable difference about 9.6 points)');
+    expect(sb.verdict).not.toContain('9.58');
+    rmSync(dir, { recursive: true });
+  });
+
   test('a missing external kind blocks every field-wide claim and the table says incomplete', () => {
     const { dir, sb } = fresh();
     expect(sb.field.complete).toBe(false);
@@ -253,6 +270,103 @@ describe('cohorts, estimand and claim rules', () => {
     const dir = mkdtempSync(join(tmpdir(), 'scoreboard-'));
     writeSyntheticReceipt(dir, { family1: 'shrunk', shrunkComparators: ['ext-memory-bank', 'ext-extract-first', 'baseline-hybrid', 'ext-graph-pipeline'] });
     expect(() => derive(dir)).toThrow(/shrink rule kept/);
+    rmSync(dir, { recursive: true });
+  });
+
+  test('a power decision whose detectable difference is not a number is an invalid receipt', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'scoreboard-'));
+    writeSyntheticReceipt(dir, { detectableDifference: '13.58' as unknown as number });
+    expect(() => derive(dir)).toThrow(/detectable_difference_points "13\.58", not a number or null/);
+    rmSync(dir, { recursive: true });
+  });
+
+  test('a null detectable difference prints as more than 30 points', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'scoreboard-'));
+    writeSyntheticReceipt(dir, { family1: 'descriptive', cells: fieldCells() });
+    writeFileSync(join(dir, 'power.json'), JSON.stringify({ schema: 'gbrain-evals/q1-power/v1', decision: { family1: 'descriptive', detectable_difference_points: null, shrunk_comparators: null } }) + '\n');
+    const sb = derive(dir);
+    expect(sb.verdict).toContain('differences of about more than 30 points');
+    expect(sb.verdict).not.toContain('null');
+    rmSync(dir, { recursive: true });
+  });
+
+  test('a power.json with no decision is an invalid receipt', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'scoreboard-'));
+    writeSyntheticReceipt(dir);
+    writeFileSync(join(dir, 'power.json'), JSON.stringify({ schema: 'gbrain-evals/q1-power/v1' }) + '\n');
+    expect(() => derive(dir)).toThrow(/power\.json records no decision/);
+    rmSync(dir, { recursive: true });
+  });
+
+  test('a power decision with an unknown family1 or a malformed comparator list is an invalid receipt', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'scoreboard-'));
+    writeSyntheticReceipt(dir, { cells: fieldCells() });
+    const write = (decision: object) => writeFileSync(join(dir, 'power.json'), JSON.stringify({ schema: 'gbrain-evals/q1-power/v1', decision }) + '\n');
+    write({ family1: 'Descriptive', detectable_difference_points: 12.5, shrunk_comparators: null });
+    expect(() => derive(dir)).toThrow(/family1 "Descriptive", not full, shrunk or descriptive/);
+    write({ detectable_difference_points: 12.5, shrunk_comparators: null });
+    expect(() => derive(dir)).toThrow(/family1 undefined, not full, shrunk or descriptive/);
+    write({ family1: 'shrunk', detectable_difference_points: 12.5, shrunk_comparators: 'ext-memory-bank' });
+    expect(() => derive(dir)).toThrow(/shrunk_comparators "ext-memory-bank", not a list or null/);
+    rmSync(dir, { recursive: true });
+  });
+
+  test('a power.json that is not JSON is an invalid receipt, so check reports it instead of stopping', () => {
+    const dir = mkdtempSync(join(tmpdir(), 'scoreboard-'));
+    writeSyntheticReceipt(dir, { cells: fieldCells() });
+    writeFileSync(join(dir, 'power.json'), '{"schema": "gbrain-evals/q1-power/v1", "decision": {\n');
+    expect(() => derive(dir)).toThrow(/^RECEIPT_INVALID: .*power\.json is not valid JSON/);
+    expect(checkReceipt(dir).messages.map(m => m.code)).toContain('RECEIPT_INVALID');
+    rmSync(dir, { recursive: true });
+  });
+
+  const powerDir = () => {
+    const dir = mkdtempSync(join(tmpdir(), 'scoreboard-'));
+    writeSyntheticReceipt(dir, { cells: fieldCells() });
+    return { dir, write: (decision: object) => writeFileSync(join(dir, 'power.json'), JSON.stringify({ schema: 'gbrain-evals/q1-power/v1', decision }) + '\n') };
+  };
+
+  test('a power decision whose comparator list holds an entry that is not a system id is an invalid receipt', () => {
+    const { dir, write } = powerDir();
+    write({ family1: 'descriptive', detectable_difference_points: 12.5, shrunk_comparators: ['ext-memory-bank', 7] });
+    expect(() => derive(dir)).toThrow(/shrunk_comparators \["ext-memory-bank",7\], whose entries are not all system ids/);
+    rmSync(dir, { recursive: true });
+  });
+
+  test('a power decision whose detectable difference is zero or less is an invalid receipt', () => {
+    const { dir, write } = powerDir();
+    write({ family1: 'descriptive', detectable_difference_points: 0, shrunk_comparators: null });
+    expect(() => derive(dir)).toThrow(/detectable_difference_points 0, not above zero/);
+    write({ family1: 'descriptive', detectable_difference_points: -4.2, shrunk_comparators: null });
+    expect(() => derive(dir)).toThrow(/detectable_difference_points -4\.2, not above zero/);
+    rmSync(dir, { recursive: true });
+  });
+
+  test('a full or shrunk power decision with no detectable difference is an invalid receipt, since power.ts ranks a family only under a measured one', () => {
+    const { dir, write } = powerDir();
+    const kept = ['ext-extract-first', 'ext-memory-bank', 'ext-graph-pipeline', 'ext-temporal-graph', 'ext-markdown-kb', 'ext-verbatim-session', 'baseline-hybrid', 'baseline-none'];
+    for (const [family1, shrunk_comparators] of [['full', null], ['shrunk', kept]] as const) {
+      write({ family1, threshold_points: 10, detectable_difference_points: 8.5, shrunk_comparators });
+      expect(() => derive(dir)).not.toThrow();
+      write({ family1, threshold_points: 10, detectable_difference_points: null, shrunk_comparators });
+      expect(() => derive(dir)).toThrow(new RegExp(`family1 ${family1} with no detectable difference`));
+    }
+    rmSync(dir, { recursive: true });
+  });
+
+  test('a full or shrunk power decision whose detectable difference is above its threshold is an invalid receipt, since power.ts ranks a family only at or under it', () => {
+    const { dir, write } = powerDir();
+    const kept = ['ext-extract-first', 'ext-memory-bank', 'ext-graph-pipeline', 'ext-temporal-graph', 'ext-markdown-kb', 'ext-verbatim-session', 'baseline-hybrid', 'baseline-none'];
+    for (const [family1, shrunk_comparators] of [['full', null], ['shrunk', kept]] as const) {
+      write({ family1, threshold_points: 10, detectable_difference_points: 10, shrunk_comparators });
+      expect(() => derive(dir)).not.toThrow();
+      write({ family1, threshold_points: 10, detectable_difference_points: 10.5, shrunk_comparators });
+      expect(() => derive(dir)).toThrow(new RegExp(`family1 ${family1} with detectable difference 10\\.5 and threshold_points 10,`));
+      write({ family1, detectable_difference_points: 8.5, shrunk_comparators });
+      expect(() => derive(dir)).toThrow(new RegExp(`family1 ${family1} with detectable difference 8\\.5 and threshold_points null,`));
+    }
+    write({ family1: 'descriptive', threshold_points: 10, detectable_difference_points: 13.58, shrunk_comparators: null });
+    expect(() => derive(dir)).not.toThrow();
     rmSync(dir, { recursive: true });
   });
 

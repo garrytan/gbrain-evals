@@ -1,0 +1,3648 @@
+{
+  "schema": "particle-canary/v1",
+  "at": "2026-11-01T05:46:45.771Z",
+  "model": "particle:particle-1",
+  "base_url": "https://api.particle.ai/v1",
+  "prompts_sha256": "e643bd7e673aed5f9ec1c3ccaada4cc06bc64d4ccdbb7f5483bcb11cd6d6a0eb",
+  "sampling": {
+    "mode": "canary",
+    "temperature": 0,
+    "seed": 20261031,
+    "top_logprobs": 5
+  },
+  "effort": "none",
+  "max_output_tokens": 64,
+  "results": [
+    {
+      "id": "c01",
+      "prompt_sha256": "94a361003e20e329bffd86271b26929afbc70290e80233d534b1928d40ac389e",
+      "status": "ok",
+      "answer": "391",
+      "answer_sha256": "a934c244755c66aebb0d6f9f5687038ffae8f00b00b28b4e17521016393f38b9",
+      "finish": "stop",
+      "mean_logprob": -0.00005412390953551949,
+      "logprobs": [
+        {
+          "token": "391",
+          "logprob": -0.00010753256356110796,
+          "top": [
+            {
+              "token": "391",
+              "logprob": -0.00010753256356110796
+            },
+            {
+              "token": "17",
+              "logprob": -9.250107765197754
+            },
+            {
+              "token": "392",
+              "logprob": -13.500107765197754
+            },
+            {
+              "token": "39",
+              "logprob": -13.625107765197754
+            },
+            {
+              "token": "390",
+              "logprob": -13.875107765197754
+            }
+          ]
+        },
+        {
+          "token": "<｜end▁of▁sentence｜>",
+          "logprob": -7.152555099310121e-7,
+          "top": [
+            {
+              "token": "<｜end▁of▁sentence｜>",
+              "logprob": -7.152555099310121e-7
+            },
+            {
+              "token": ".",
+              "logprob": -14.875000953674316
+            },
+            {
+              "token": "\n",
+              "logprob": -16.5
+            },
+            {
+              "token": "</",
+              "logprob": -16.8125
+            },
+            {
+              "token": "?",
+              "logprob": -17.125
+            }
+          ]
+        }
+      ],
+      "response_model": "particle-ai/particle-1",
+      "weight_version": "default",
+      "service_tier": "default",
+      "system_fingerprint": null
+    },
+    {
+      "id": "c02",
+      "prompt_sha256": "9304dc494fe1ced965e8cb6b195e4404f9d6ca60afecc2ae6b815ee8dca3c75d",
+      "status": "ok",
+      "answer": "Canberra",
+      "answer_sha256": "b36f06bee2e4f5485ff63ddc504a3f130d3bd06ec15693e8318babdc06e778ee",
+      "finish": "stop",
+      "mean_logprob": -0.000361264034523856,
+      "logprobs": [
+        {
+          "token": "Can",
+          "logprob": -0.00004994744449504651,
+          "top": [
+            {
+              "token": "Can",
+              "logprob": -0.00004994744449504651
+            },
+            {
+              "token": "Sydney",
+              "logprob": -10.750049591064453
+            },
+            {
+              "token": "The",
+              "logprob": -11.625049591064453
+            },
+            {
+              "token": "I",
+              "logprob": -12.500049591064453
+            },
+            {
+              "token": " Canberra",
+              "logprob": -12.625049591064453
+            }
+          ]
+        },
+        {
+          "token": "berra",
+          "logprob": -2.3841855067985307e-7,
+          "top": [
+            {
+              "token": "berra",
+              "logprob": -2.3841855067985307e-7
+            },
+            {
+              "token": "ter",
+              "logprob": -15.625
+            },
+            {
+              "token": "<｜end▁of▁sentence｜>",
+              "logprob": -16.5
+            },
+            {
+              "token": "b",
+              "logprob": -17
+            },
+            {
+              "token": "ber",
+              "logprob": -17.875
+            }
+          ]
+        },
+        {
+          "token": "<｜end▁of▁sentence｜>",
+          "logprob": -0.0010336062405258417,
+          "top": [
+            {
+              "token": "<｜end▁of▁sentence｜>",
+              "logprob": -0.0010336062405258417
+            },
+            {
+              "token": ".",
+              "logprob": -6.876033782958984
+            },
+            {
+              "token": "\n",
+              "logprob": -14.876033782958984
+            },
+            {
+              "token": "\n\n",
+              "logprob": -15.626033782958984
+            },
+            {
+              "token": ",",
+              "logprob": -16.501033782958984
+            }
+          ]
+        }
+      ],
+      "response_model": "particle-ai/particle-1",
+      "weight_version": "default",
+      "service_tier": "default",
+      "system_fingerprint": null
+    },
+    {
+      "id": "c03",
+      "prompt_sha256": "7207bd3947396f57b3273e87ad7e49d4b449064d14e8a26735fd3e35f87443bc",
+      "status": "ok",
+      "answer": "y-r-a-s-s-e-c-e-n",
+      "answer_sha256": "fa57b7355cf354f985b83deda9f3c8ba5acf150c8675f6134cc7487667d5aecb",
+      "finish": "stop",
+      "mean_logprob": -0.028621419819751283,
+      "logprobs": [
+        {
+          "token": "y",
+          "logprob": -0.24192005395889282,
+          "top": [
+            {
+              "token": "y",
+              "logprob": -0.24192005395889282
+            },
+            {
+              "token": "Here",
+              "logprob": -2.241919994354248
+            },
+            {
+              "token": "The",
+              "logprob": -2.616919994354248
+            },
+            {
+              "token": "\"",
+              "logprob": -3.741919994354248
+            },
+            {
+              "token": "Sure",
+              "logprob": -5.116919994354248
+            }
+          ]
+        },
+        {
+          "token": "-r",
+          "logprob": -0.0384090356528759,
+          "top": [
+            {
+              "token": "-r",
+              "logprob": -0.0384090356528759
+            },
+            {
+              "token": "ras",
+              "logprob": -3.2884089946746826
+            },
+            {
+              "token": " r",
+              "logprob": -8.788409233093262
+            },
+            {
+              "token": "-",
+              "logprob": -9.663409233093262
+            },
+            {
+              "token": " -",
+              "logprob": -10.413409233093262
+            }
+          ]
+        },
+        {
+          "token": "-a",
+          "logprob": -3.576278118089249e-7,
+          "top": [
+            {
+              "token": "-a",
+              "logprob": -3.576278118089249e-7
+            },
+            {
+              "token": "-A",
+              "logprob": -15
+            },
+            {
+              "token": "-o",
+              "logprob": -18.25
+            },
+            {
+              "token": "-r",
+              "logprob": -19.625
+            },
+            {
+              "token": "-e",
+              "logprob": -19.75
+            }
+          ]
+        },
+        {
+          "token": "-s",
+          "logprob": 0,
+          "top": [
+            {
+              "token": "-s",
+              "logprob": 0
+            },
+            {
+              "token": "-S",
+              "logprob": -17.875
+            },
+            {
+              "token": "-r",
+              "logprob": -19.125
+            },
+            {
+              "token": "-",
+              "logprob": -19.75
+            },
+            {
+              "token": " -",
+              "logprob": -21.5
+            }
+          ]
+        },
+        {
+          "token": "-s",
+          "logprob": -0.0002044230350293219,
+          "top": [
+            {
+              "token": "-s",
+              "logprob": -0.0002044230350293219
+            },
+            {
+              "token": "-e",
+              "logprob": -8.500204086303711
+            },
+            {
+              "token": "-S",
+              "logprob": -13.875204086303711
+            },
+            {
+              "token": " -",
+              "logprob": -16.62520408630371
+            },
+            {
+              "token": " s",
+              "logprob": -18.75020408630371
+            }
+          ]
+        },
+        {
+          "token": "-e",
+          "logprob": -0.000001311301275563892,
+          "top": [
+            {
+              "token": "-e",
+              "logprob": -0.000001311301275563892
+            },
+            {
+              "token": "-a",
+              "logprob": -14.000000953674316
+            },
+            {
+              "token": "-i",
+              "logprob": -14.875000953674316
+            },
+            {
+              "token": "-E",
+              "logprob": -16.000001907348633
+            },
+            {
+              "token": "-o",
+              "logprob": -17.750001907348633
+            }
+          ]
+        },
+        {
+          "token": "-c",
+          "logprob": -5.960462772236497e-7,
+          "top": [
+            {
+              "token": "-c",
+              "logprob": -5.960462772236497e-7
+            },
+            {
+              "token": "-s",
+              "logprob": -14.500000953674316
+            },
+            {
+              "token": "-n",
+              "logprob": -16.75
+            },
+            {
+              "token": "-C",
+              "logprob": -17.25
+            },
+            {
+              "token": "-t",
+              "logprob": -17.5
+            }
+          ]
+        },
+        {
+          "token": "-e",
+          "logprob": -0.000012516897186287679,
+          "top": [
+            {
+              "token": "-e",
+              "logprob": -0.000012516897186287679
+            },
+            {
+              "token": "-s",
+              "logprob": -12.000012397766113
+            },
+            {
+              "token": "-i",
+              "logprob": -12.750012397766113
+            },
+            {
+              "token": "-n",
+              "logprob": -14.000012397766113
+            },
+            {
+              "token": "-c",
+              "logprob": -14.125012397766113
+            }
+          ]
+        },
+        {
+          "token": "-n",
+          "logprob": -0.0005055579822510481,
+          "top": [
+            {
+              "token": "-n",
+              "logprob": -0.0005055579822510481
+            },
+            {
+              "token": "-s",
+              "logprob": -7.625505447387695
+            },
+            {
+              "token": "-N",
+              "logprob": -11.125505447387695
+            },
+            {
+              "token": "-r",
+              "logprob": -13.875505447387695
+            },
+            {
+              "token": "-d",
+              "logprob": -14.500505447387695
+            }
+          ]
+        },
+        {
+          "token": "<｜end▁of▁sentence｜>",
+          "logprob": -0.005160345695912838,
+          "top": [
+            {
+              "token": "<｜end▁of▁sentence｜>",
+              "logprob": -0.005160345695912838
+            },
+            {
+              "token": "\n\n",
+              "logprob": -6.005160331726074
+            },
+            {
+              "token": " —",
+              "logprob": -7.005160331726074
+            },
+            {
+              "token": " →",
+              "logprob": -7.005160331726074
+            },
+            {
+              "token": ".",
+              "logprob": -7.505160331726074
+            }
+          ]
+        }
+      ],
+      "response_model": "particle-ai/particle-1",
+      "weight_version": "default",
+      "service_tier": "default",
+      "system_fingerprint": null
+    },
+    {
+      "id": "c04",
+      "prompt_sha256": "33e107c0b2049f9d82fb573b4d54c1598e8dd1b1e4c799a70ef3fcc2d3bbf3c9",
+      "status": "ok",
+      "answer": "The chemical symbol for tungsten is **W**.",
+      "answer_sha256": "fead5b4589c5b86d3ba09b0038ac60be026e9d28f6ce0bcf5edec25eb9bd8841",
+      "finish": "stop",
+      "mean_logprob": -0.0041818123267020725,
+      "logprobs": [
+        {
+          "token": "The",
+          "logprob": -0.000003814704541582614,
+          "top": [
+            {
+              "token": "The",
+              "logprob": -0.000003814704541582614
+            },
+            {
+              "token": "W",
+              "logprob": -13.625003814697266
+            },
+            {
+              "token": "T",
+              "logprob": -13.875003814697266
+            },
+            {
+              "token": "I",
+              "logprob": -14.500003814697266
+            },
+            {
+              "token": "A",
+              "logprob": -15.250003814697266
+            }
+          ]
+        },
+        {
+          "token": " chemical",
+          "logprob": -1.1920928244535389e-7,
+          "top": [
+            {
+              "token": " chemical",
+              "logprob": -1.1920928244535389e-7
+            },
+            {
+              "token": " answer",
+              "logprob": -16.75
+            },
+            {
+              "token": " Chemical",
+              "logprob": -17.125
+            },
+            {
+              "token": "化学",
+              "logprob": -18.375
+            },
+            {
+              "token": " хими",
+              "logprob": -18.5
+            }
+          ]
+        },
+        {
+          "token": " symbol",
+          "logprob": 0,
+          "top": [
+            {
+              "token": " symbol",
+              "logprob": 0
+            },
+            {
+              "token": "符号",
+              "logprob": -17.125
+            },
+            {
+              "token": " symbols",
+              "logprob": -19.25
+            },
+            {
+              "token": " **",
+              "logprob": -19.25
+            },
+            {
+              "token": "<｜end▁of▁sentence｜>",
+              "logprob": -19.375
+            }
+          ]
+        },
+        {
+          "token": " for",
+          "logprob": 0,
+          "top": [
+            {
+              "token": " for",
+              "logprob": 0
+            },
+            {
+              "token": " is",
+              "logprob": -16.75
+            },
+            {
+              "token": " of",
+              "logprob": -17.625
+            },
+            {
+              "token": " для",
+              "logprob": -18.5
+            },
+            {
+              "token": " (",
+              "logprob": -18.875
+            }
+          ]
+        },
+        {
+          "token": " tungsten",
+          "logprob": -4.768370445162873e-7,
+          "top": [
+            {
+              "token": " tungsten",
+              "logprob": -4.768370445162873e-7
+            },
+            {
+              "token": " **",
+              "logprob": -14.5
+            },
+            {
+              "token": " Tung",
+              "logprob": -20.25
+            },
+            {
+              "token": "钨",
+              "logprob": -20.5
+            },
+            {
+              "token": " tantal",
+              "logprob": -20.5
+            }
+          ]
+        },
+        {
+          "token": " is",
+          "logprob": -1.1920928244535389e-7,
+          "top": [
+            {
+              "token": " is",
+              "logprob": -1.1920928244535389e-7
+            },
+            {
+              "token": " (",
+              "logprob": -16.5625
+            },
+            {
+              "token": " Is",
+              "logprob": -17.1875
+            },
+            {
+              "token": ".",
+              "logprob": -17.75
+            },
+            {
+              "token": ",",
+              "logprob": -18
+            }
+          ]
+        },
+        {
+          "token": " **",
+          "logprob": -0.000010132738680113107,
+          "top": [
+            {
+              "token": " **",
+              "logprob": -0.000010132738680113107
+            },
+            {
+              "token": " W",
+              "logprob": -11.50001049041748
+            },
+            {
+              "token": " ",
+              "logprob": -17.750009536743164
+            },
+            {
+              "token": " \\(",
+              "logprob": -19.750009536743164
+            },
+            {
+              "token": "�",
+              "logprob": -20.000009536743164
+            }
+          ]
+        },
+        {
+          "token": "W",
+          "logprob": 0,
+          "top": [
+            {
+              "token": "W",
+              "logprob": 0
+            },
+            {
+              "token": " W",
+              "logprob": -18
+            },
+            {
+              "token": "Ws",
+              "logprob": -19.125
+            },
+            {
+              "token": "T",
+              "logprob": -19.125
+            },
+            {
+              "token": "V",
+              "logprob": -19.875
+            }
+          ]
+        },
+        {
+          "token": "**.",
+          "logprob": -0.022730516269803047,
+          "top": [
+            {
+              "token": "**.",
+              "logprob": -0.022730516269803047
+            },
+            {
+              "token": "**",
+              "logprob": -4.272730350494385
+            },
+            {
+              "token": "**,",
+              "logprob": -4.772730350494385
+            },
+            {
+              "token": "**.\n\n",
+              "logprob": -9.522730827331543
+            },
+            {
+              "token": "**(",
+              "logprob": -18.272729873657227
+            }
+          ]
+        },
+        {
+          "token": "<｜end▁of▁sentence｜>",
+          "logprob": -0.019072944298386574,
+          "top": [
+            {
+              "token": "<｜end▁of▁sentence｜>",
+              "logprob": -0.019072944298386574
+            },
+            {
+              "token": " It",
+              "logprob": -4.019073009490967
+            },
+            {
+              "token": " (",
+              "logprob": -7.019073009490967
+            },
+            {
+              "token": "  \n\n",
+              "logprob": -11.519072532653809
+            },
+            {
+              "token": " \n\n",
+              "logprob": -11.894072532653809
+            }
+          ]
+        }
+      ],
+      "response_model": "particle-ai/particle-1",
+      "weight_version": "default",
+      "service_tier": "default",
+      "system_fingerprint": null
+    },
+    {
+      "id": "c05",
+      "prompt_sha256": "05295ba41ced21ccb68a834f0517aa7ac227cc36112d4e3d057c32211f42ba71",
+      "status": "ok",
+      "answer": "13",
+      "answer_sha256": "3fdba35f04dc8c462986c992bcf875546257113072a909c162f7e470e581e278",
+      "finish": "stop",
+      "mean_logprob": -0.013377932242292445,
+      "logprobs": [
+        {
+          "token": "13",
+          "logprob": -0.026707347482442856,
+          "top": [
+            {
+              "token": "13",
+              "logprob": -0.026707347482442856
+            },
+            {
+              "token": "11",
+              "logprob": -3.651707410812378
+            },
+            {
+              "token": "The",
+              "logprob": -8.526707649230957
+            },
+            {
+              "token": "Next",
+              "logprob": -9.776707649230957
+            },
+            {
+              "token": "I",
+              "logprob": -10.776707649230957
+            }
+          ]
+        },
+        {
+          "token": "<｜end▁of▁sentence｜>",
+          "logprob": -0.00004851700214203447,
+          "top": [
+            {
+              "token": "<｜end▁of▁sentence｜>",
+              "logprob": -0.00004851700214203447
+            },
+            {
+              "token": ".",
+              "logprob": -10.875048637390137
+            },
+            {
+              "token": "\n\n",
+              "logprob": -11.125048637390137
+            },
+            {
+              "token": ",",
+              "logprob": -11.375048637390137
+            },
+            {
+              "token": " (",
+              "logprob": -13.500048637390137
+            }
+          ]
+        }
+      ],
+      "response_model": "particle-ai/particle-1",
+      "weight_version": "default",
+      "service_tier": "default",
+      "system_fingerprint": null
+    },
+    {
+      "id": "c06",
+      "prompt_sha256": "e8c4d638b36500467ddc3ee6356ce6e0ec81d5a05805285595058ff9a3f3fa34",
+      "status": "ok",
+      "answer": "Bonjour",
+      "answer_sha256": "9172e8eec99f144f72eca9a568759580edadb2cfd154857f07e657569493bc44",
+      "finish": "stop",
+      "mean_logprob": -0.17335711792111397,
+      "logprobs": [
+        {
+          "token": "Bon",
+          "logprob": -0.4988669157028198,
+          "top": [
+            {
+              "token": "Bon",
+              "logprob": -0.4988669157028198
+            },
+            {
+              "token": "\"",
+              "logprob": -0.9988669157028198
+            },
+            {
+              "token": "Good",
+              "logprob": -3.7488670349121094
+            },
+            {
+              "token": "The",
+              "logprob": -7.123867034912109
+            },
+            {
+              "token": "“",
+              "logprob": -9.99886703491211
+            }
+          ]
+        },
+        {
+          "token": "jour",
+          "logprob": 0,
+          "top": [
+            {
+              "token": "jour",
+              "logprob": 0
+            },
+            {
+              "token": "jur",
+              "logprob": -18.625
+            },
+            {
+              "token": " mat",
+              "logprob": -19.375
+            },
+            {
+              "token": "jou",
+              "logprob": -20.25
+            },
+            {
+              "token": " jour",
+              "logprob": -20.5
+            }
+          ]
+        },
+        {
+          "token": "<｜end▁of▁sentence｜>",
+          "logprob": -0.02120443806052208,
+          "top": [
+            {
+              "token": "<｜end▁of▁sentence｜>",
+              "logprob": -0.02120443806052208
+            },
+            {
+              "token": ".",
+              "logprob": -3.8962044715881348
+            },
+            {
+              "token": " (",
+              "logprob": -8.146203994750977
+            },
+            {
+              "token": " —",
+              "logprob": -8.646203994750977
+            },
+            {
+              "token": " !",
+              "logprob": -9.146203994750977
+            }
+          ]
+        }
+      ],
+      "response_model": "particle-ai/particle-1",
+      "weight_version": "default",
+      "service_tier": "default",
+      "system_fingerprint": null
+    },
+    {
+      "id": "c07",
+      "prompt_sha256": "2f711200660c41242ba60e330df9a42e2af081574f8c72ea7c3bad280426aedf",
+      "status": "ok",
+      "answer": "366",
+      "answer_sha256": "600b4cdf20cc06a7b5a5cca5f7464296861815519af6d8a14604201b13965ab8",
+      "finish": "stop",
+      "mean_logprob": -0.000003993503241872531,
+      "logprobs": [
+        {
+          "token": "366",
+          "logprob": -0.000003576272320060525,
+          "top": [
+            {
+              "token": "366",
+              "logprob": -0.000003576272320060525
+            },
+            {
+              "token": "The",
+              "logprob": -14.625003814697266
+            },
+            {
+              "token": "I",
+              "logprob": -14.750003814697266
+            },
+            {
+              "token": "166",
+              "logprob": -14.875003814697266
+            },
+            {
+              "token": "A",
+              "logprob": -14.875003814697266
+            }
+          ]
+        },
+        {
+          "token": "<｜end▁of▁sentence｜>",
+          "logprob": -0.000004410734163684538,
+          "top": [
+            {
+              "token": "<｜end▁of▁sentence｜>",
+              "logprob": -0.000004410734163684538
+            },
+            {
+              "token": ".",
+              "logprob": -12.750004768371582
+            },
+            {
+              "token": "</",
+              "logprob": -14.625004768371582
+            },
+            {
+              "token": "\n\n",
+              "logprob": -15.125004768371582
+            },
+            {
+              "token": " days",
+              "logprob": -15.375004768371582
+            }
+          ]
+        }
+      ],
+      "response_model": "particle-ai/particle-1",
+      "weight_version": "default",
+      "service_tier": "default",
+      "system_fingerprint": null
+    },
+    {
+      "id": "c08",
+      "prompt_sha256": "f8c677037adcd409e75af3aeaf730e83ae0b77bc4e90715a4fbe63696ecbedd9",
+      "status": "ok",
+      "answer": "apple, kiwi, mango, pear",
+      "answer_sha256": "baca05ca18047f36b69349bae45cc19d8bed53c8d087751312a6805a1581ac0a",
+      "finish": "stop",
+      "mean_logprob": -0.0012502733858947106,
+      "logprobs": [
+        {
+          "token": "apple",
+          "logprob": -0.011214910075068474,
+          "top": [
+            {
+              "token": "apple",
+              "logprob": -0.011214910075068474
+            },
+            {
+              "token": "Here",
+              "logprob": -4.511214733123779
+            },
+            {
+              "token": "Apple",
+              "logprob": -9.636215209960938
+            },
+            {
+              "token": "I",
+              "logprob": -10.761215209960938
+            },
+            {
+              "token": "Alright",
+              "logprob": -10.886215209960938
+            }
+          ]
+        },
+        {
+          "token": ",",
+          "logprob": -0.0000015497195136049413,
+          "top": [
+            {
+              "token": ",",
+              "logprob": -0.0000015497195136049413
+            },
+            {
+              "token": "，",
+              "logprob": -13.812501907348633
+            },
+            {
+              "token": "、",
+              "logprob": -15.437501907348633
+            },
+            {
+              "token": ",\n",
+              "logprob": -16.375001907348633
+            },
+            {
+              "token": "،",
+              "logprob": -16.875001907348633
+            }
+          ]
+        },
+        {
+          "token": " ki",
+          "logprob": -0.0000023841830625315197,
+          "top": [
+            {
+              "token": " ki",
+              "logprob": -0.0000023841830625315197
+            },
+            {
+              "token": "ki",
+              "logprob": -13.875001907348633
+            },
+            {
+              "token": " pear",
+              "logprob": -14.250001907348633
+            },
+            {
+              "token": " mango",
+              "logprob": -14.500001907348633
+            },
+            {
+              "token": " k",
+              "logprob": -16.250001907348633
+            }
+          ]
+        },
+        {
+          "token": "wi",
+          "logprob": 0,
+          "top": [
+            {
+              "token": "wi",
+              "logprob": 0
+            },
+            {
+              "token": " wi",
+              "logprob": -21.875
+            },
+            {
+              "token": "wa",
+              "logprob": -24
+            },
+            {
+              "token": "Wi",
+              "logprob": -25.625
+            },
+            {
+              "token": "wan",
+              "logprob": -25.875
+            }
+          ]
+        },
+        {
+          "token": ",",
+          "logprob": -1.1920928244535389e-7,
+          "top": [
+            {
+              "token": ",",
+              "logprob": -1.1920928244535389e-7
+            },
+            {
+              "token": " mango",
+              "logprob": -16.125
+            },
+            {
+              "token": "、",
+              "logprob": -18.1875
+            },
+            {
+              "token": ",m",
+              "logprob": -18.6875
+            },
+            {
+              "token": "，",
+              "logprob": -19.3125
+            }
+          ]
+        },
+        {
+          "token": " mango",
+          "logprob": -2.3841855067985307e-7,
+          "top": [
+            {
+              "token": " mango",
+              "logprob": -2.3841855067985307e-7
+            },
+            {
+              "token": " manga",
+              "logprob": -15.375
+            },
+            {
+              "token": " mang",
+              "logprob": -18.25
+            },
+            {
+              "token": " mand",
+              "logprob": -18.375
+            },
+            {
+              "token": " mange",
+              "logprob": -18.5
+            }
+          ]
+        },
+        {
+          "token": ",",
+          "logprob": -8.344646857949556e-7,
+          "top": [
+            {
+              "token": ",",
+              "logprob": -8.344646857949556e-7
+            },
+            {
+              "token": " pear",
+              "logprob": -14.500000953674316
+            },
+            {
+              "token": "<｜end▁of▁sentence｜>",
+              "logprob": -15.250000953674316
+            },
+            {
+              "token": " Pear",
+              "logprob": -17
+            },
+            {
+              "token": ".",
+              "logprob": -18.0625
+            }
+          ]
+        },
+        {
+          "token": " pear",
+          "logprob": 0,
+          "top": [
+            {
+              "token": " pear",
+              "logprob": 0
+            },
+            {
+              "token": " pe",
+              "logprob": -18.625
+            },
+            {
+              "token": " pearl",
+              "logprob": -19.125
+            },
+            {
+              "token": "<｜end▁of▁sentence｜>",
+              "logprob": -20.5
+            },
+            {
+              "token": " Pear",
+              "logprob": -21.75
+            }
+          ]
+        },
+        {
+          "token": "<｜end▁of▁sentence｜>",
+          "logprob": -0.00003242440288886428,
+          "top": [
+            {
+              "token": "<｜end▁of▁sentence｜>",
+              "logprob": -0.00003242440288886428
+            },
+            {
+              "token": ".",
+              "logprob": -10.500032424926758
+            },
+            {
+              "token": "\n\n",
+              "logprob": -12.750032424926758
+            },
+            {
+              "token": ",",
+              "logprob": -13.750032424926758
+            },
+            {
+              "token": "\n",
+              "logprob": -14.875032424926758
+            }
+          ]
+        }
+      ],
+      "response_model": "particle-ai/particle-1",
+      "weight_version": "default",
+      "service_tier": "default",
+      "system_fingerprint": null
+    },
+    {
+      "id": "c09",
+      "prompt_sha256": "8252f6fe9bf7f20fd451bc122eeebf440cdf34c6e108cf00afe49af76ba8cedd",
+      "status": "ok",
+      "answer": "The past tense of \"swim\" is **swam**.\n\nExample: \"Yesterday, I swam in the lake.\"\n\n(The past participle is \"swum,\" as in \"I have swum.\")",
+      "answer_sha256": "2bbd749d1d577c2b8d65135be41dcfe9e507bf5d3cd4c97eb68fb889d53957f0",
+      "finish": "stop",
+      "mean_logprob": -0.08139733965302501,
+      "logprobs": [
+        {
+          "token": "The",
+          "logprob": -0.00005006664650863968,
+          "top": [
+            {
+              "token": "The",
+              "logprob": -0.00005006664650863968
+            },
+            {
+              "token": "Great",
+              "logprob": -11.875049591064453
+            },
+            {
+              "token": "Here",
+              "logprob": -12.000049591064453
+            },
+            {
+              "token": "I",
+              "logprob": -12.125049591064453
+            },
+            {
+              "token": "Simple",
+              "logprob": -12.500049591064453
+            }
+          ]
+        },
+        {
+          "token": " past",
+          "logprob": -0.000004410734163684538,
+          "top": [
+            {
+              "token": " past",
+              "logprob": -0.000004410734163684538
+            },
+            {
+              "token": " simple",
+              "logprob": -13.000004768371582
+            },
+            {
+              "token": " verb",
+              "logprob": -14.750004768371582
+            },
+            {
+              "token": " paste",
+              "logprob": -15.062504768371582
+            },
+            {
+              "token": " word",
+              "logprob": -15.437504768371582
+            }
+          ]
+        },
+        {
+          "token": " tense",
+          "logprob": 0,
+          "top": [
+            {
+              "token": " tense",
+              "logprob": 0
+            },
+            {
+              "token": " simple",
+              "logprob": -18
+            },
+            {
+              "token": " Tense",
+              "logprob": -18.25
+            },
+            {
+              "token": "�",
+              "logprob": -20.625
+            },
+            {
+              "token": " ten",
+              "logprob": -20.875
+            }
+          ]
+        },
+        {
+          "token": " of",
+          "logprob": -0.0000017881377516459906,
+          "top": [
+            {
+              "token": " of",
+              "logprob": -0.0000017881377516459906
+            },
+            {
+              "token": " is",
+              "logprob": -13.875001907348633
+            },
+            {
+              "token": " (",
+              "logprob": -14.625001907348633
+            },
+            {
+              "token": " and",
+              "logprob": -16.187501907348633
+            },
+            {
+              "token": " for",
+              "logprob": -16.812501907348633
+            }
+          ]
+        },
+        {
+          "token": " \"",
+          "logprob": -0.26318395137786865,
+          "top": [
+            {
+              "token": " \"",
+              "logprob": -0.26318395137786865
+            },
+            {
+              "token": " the",
+              "logprob": -1.5131839513778687
+            },
+            {
+              "token": " “",
+              "logprob": -4.513184070587158
+            },
+            {
+              "token": " **",
+              "logprob": -8.38818359375
+            },
+            {
+              "token": " swim",
+              "logprob": -14.76318359375
+            }
+          ]
+        },
+        {
+          "token": "sw",
+          "logprob": -2.3841855067985307e-7,
+          "top": [
+            {
+              "token": "sw",
+              "logprob": -2.3841855067985307e-7
+            },
+            {
+              "token": "Sw",
+              "logprob": -15.875
+            },
+            {
+              "token": " swim",
+              "logprob": -15.875
+            },
+            {
+              "token": "to",
+              "logprob": -18.5
+            },
+            {
+              "token": "**",
+              "logprob": -19
+            }
+          ]
+        },
+        {
+          "token": "im",
+          "logprob": -2.3841855067985307e-7,
+          "top": [
+            {
+              "token": "im",
+              "logprob": -2.3841855067985307e-7
+            },
+            {
+              "token": " swim",
+              "logprob": -16
+            },
+            {
+              "token": "am",
+              "logprob": -17.75
+            },
+            {
+              "token": "um",
+              "logprob": -17.8125
+            },
+            {
+              "token": "imb",
+              "logprob": -17.9375
+            }
+          ]
+        },
+        {
+          "token": "\"",
+          "logprob": -5.960462772236497e-7,
+          "top": [
+            {
+              "token": "\"",
+              "logprob": -5.960462772236497e-7
+            },
+            {
+              "token": "”",
+              "logprob": -15.000000953674316
+            },
+            {
+              "token": " is",
+              "logprob": -17.3125
+            },
+            {
+              "token": "\"—",
+              "logprob": -17.4375
+            },
+            {
+              "token": ",\"",
+              "logprob": -17.5
+            }
+          ]
+        },
+        {
+          "token": " is",
+          "logprob": -0.0000017881377516459906,
+          "top": [
+            {
+              "token": " is",
+              "logprob": -0.0000017881377516459906
+            },
+            {
+              "token": " has",
+              "logprob": -14.500001907348633
+            },
+            {
+              "token": " can",
+              "logprob": -14.500001907348633
+            },
+            {
+              "token": " depends",
+              "logprob": -15.562501907348633
+            },
+            {
+              "token": " in",
+              "logprob": -15.812501907348633
+            }
+          ]
+        },
+        {
+          "token": " **",
+          "logprob": -0.018150663003325462,
+          "top": [
+            {
+              "token": " **",
+              "logprob": -0.018150663003325462
+            },
+            {
+              "token": " \"",
+              "logprob": -4.018150806427002
+            },
+            {
+              "token": " “",
+              "logprob": -14.268150329589844
+            },
+            {
+              "token": "**",
+              "logprob": -17.018150329589844
+            },
+            {
+              "token": "�",
+              "logprob": -17.143150329589844
+            }
+          ]
+        },
+        {
+          "token": "sw",
+          "logprob": -0.061975233256816864,
+          "top": [
+            {
+              "token": "sw",
+              "logprob": -0.061975233256816864
+            },
+            {
+              "token": "\"",
+              "logprob": -2.8119752407073975
+            },
+            {
+              "token": " swam",
+              "logprob": -12.061975479125977
+            },
+            {
+              "token": "“",
+              "logprob": -13.186975479125977
+            },
+            {
+              "token": "”",
+              "logprob": -18.811975479125977
+            }
+          ]
+        },
+        {
+          "token": "am",
+          "logprob": -0.0004889961564913392,
+          "top": [
+            {
+              "token": "am",
+              "logprob": -0.0004889961564913392
+            },
+            {
+              "token": "um",
+              "logprob": -7.625488758087158
+            },
+            {
+              "token": "im",
+              "logprob": -14.500489234924316
+            },
+            {
+              "token": "an",
+              "logprob": -15.125489234924316
+            },
+            {
+              "token": "m",
+              "logprob": -15.375489234924316
+            }
+          ]
+        },
+        {
+          "token": "**.\n\n",
+          "logprob": -0.4412405788898468,
+          "top": [
+            {
+              "token": "**.\n\n",
+              "logprob": -0.4412405788898468
+            },
+            {
+              "token": "**.",
+              "logprob": -1.1912405490875244
+            },
+            {
+              "token": "**",
+              "logprob": -2.9412405490875244
+            },
+            {
+              "token": "**,",
+              "logprob": -9.066240310668945
+            },
+            {
+              "token": "**:",
+              "logprob": -13.941240310668945
+            }
+          ]
+        },
+        {
+          "token": "Example",
+          "logprob": -0.17486433684825897,
+          "top": [
+            {
+              "token": "Example",
+              "logprob": -0.17486433684825897
+            },
+            {
+              "token": "-",
+              "logprob": -2.4248642921447754
+            },
+            {
+              "token": "For",
+              "logprob": -2.6748642921447754
+            },
+            {
+              "token": "Examples",
+              "logprob": -6.924864292144775
+            },
+            {
+              "token": "(",
+              "logprob": -6.924864292144775
+            }
+          ]
+        },
+        {
+          "token": ":",
+          "logprob": -0.00009798523387871683,
+          "top": [
+            {
+              "token": ":",
+              "logprob": -0.00009798523387871683
+            },
+            {
+              "token": ":\n",
+              "logprob": -9.25009822845459
+            },
+            {
+              "token": ":\n\n",
+              "logprob": -14.25009822845459
+            },
+            {
+              "token": " sentences",
+              "logprob": -14.87509822845459
+            },
+            {
+              "token": " usage",
+              "logprob": -14.87509822845459
+            }
+          ]
+        },
+        {
+          "token": " \"",
+          "logprob": -0.38736236095428467,
+          "top": [
+            {
+              "token": " \"",
+              "logprob": -0.38736236095428467
+            },
+            {
+              "token": " *",
+              "logprob": -1.1373623609542847
+            },
+            {
+              "token": " Yesterday",
+              "logprob": -7.887362480163574
+            },
+            {
+              "token": " “",
+              "logprob": -9.137362480163574
+            },
+            {
+              "token": " I",
+              "logprob": -12.262362480163574
+            }
+          ]
+        },
+        {
+          "token": "Yesterday",
+          "logprob": -0.001189477858133614,
+          "top": [
+            {
+              "token": "Yesterday",
+              "logprob": -0.001189477858133614
+            },
+            {
+              "token": "I",
+              "logprob": -6.751189708709717
+            },
+            {
+              "token": "She",
+              "logprob": -11.001189231872559
+            },
+            {
+              "token": " Yesterday",
+              "logprob": -13.376189231872559
+            },
+            {
+              "token": "He",
+              "logprob": -14.501189231872559
+            }
+          ]
+        },
+        {
+          "token": ",",
+          "logprob": -0.048594143241643906,
+          "top": [
+            {
+              "token": ",",
+              "logprob": -0.048594143241643906
+            },
+            {
+              "token": " I",
+              "logprob": -3.0485942363739014
+            },
+            {
+              "token": " she",
+              "logprob": -11.92359447479248
+            },
+            {
+              "token": " he",
+              "logprob": -16.298593521118164
+            },
+            {
+              "token": "I",
+              "logprob": -16.798593521118164
+            }
+          ]
+        },
+        {
+          "token": " I",
+          "logprob": -0.0024757706560194492,
+          "top": [
+            {
+              "token": " I",
+              "logprob": -0.0024757706560194492
+            },
+            {
+              "token": " she",
+              "logprob": -6.002475738525391
+            },
+            {
+              "token": " he",
+              "logprob": -16.50247573852539
+            },
+            {
+              "token": " we",
+              "logprob": -17.87747573852539
+            },
+            {
+              "token": "I",
+              "logprob": -20.50247573852539
+            }
+          ]
+        },
+        {
+          "token": " swam",
+          "logprob": -0.10020830482244492,
+          "top": [
+            {
+              "token": " swam",
+              "logprob": -0.10020830482244492
+            },
+            {
+              "token": " **",
+              "logprob": -2.350208282470703
+            },
+            {
+              "token": " swim",
+              "logprob": -13.975208282470703
+            },
+            {
+              "token": " *",
+              "logprob": -14.225208282470703
+            },
+            {
+              "token": " _",
+              "logprob": -16.475208282470703
+            }
+          ]
+        },
+        {
+          "token": " in",
+          "logprob": -0.0015166220255196095,
+          "top": [
+            {
+              "token": " in",
+              "logprob": -0.0015166220255196095
+            },
+            {
+              "token": " across",
+              "logprob": -6.501516819000244
+            },
+            {
+              "token": " at",
+              "logprob": -11.251516342163086
+            },
+            {
+              "token": " laps",
+              "logprob": -14.626516342163086
+            },
+            {
+              "token": " two",
+              "logprob": -14.751516342163086
+            }
+          ]
+        },
+        {
+          "token": " the",
+          "logprob": 0,
+          "top": [
+            {
+              "token": " the",
+              "logprob": 0
+            },
+            {
+              "token": " a",
+              "logprob": -19.125
+            },
+            {
+              "token": "<｜end▁of▁sentence｜>",
+              "logprob": -22
+            },
+            {
+              "token": " ",
+              "logprob": -22.25
+            },
+            {
+              "token": " that",
+              "logprob": -22.75
+            }
+          ]
+        },
+        {
+          "token": " lake",
+          "logprob": -0.06043151021003723,
+          "top": [
+            {
+              "token": " lake",
+              "logprob": -0.06043151021003723
+            },
+            {
+              "token": " ocean",
+              "logprob": -3.310431480407715
+            },
+            {
+              "token": " pool",
+              "logprob": -3.810431480407715
+            },
+            {
+              "token": " river",
+              "logprob": -12.935431480407715
+            },
+            {
+              "token": " sea",
+              "logprob": -15.310431480407715
+            }
+          ]
+        },
+        {
+          "token": ".\"\n\n",
+          "logprob": -0.12697823345661163,
+          "top": [
+            {
+              "token": ".\"\n\n",
+              "logprob": -0.12697823345661163
+            },
+            {
+              "token": ".\"",
+              "logprob": -2.1269781589508057
+            },
+            {
+              "token": ".\"\n",
+              "logprob": -10.001977920532227
+            },
+            {
+              "token": ".”\n\n",
+              "logprob": -12.501977920532227
+            },
+            {
+              "token": ".”",
+              "logprob": -14.001977920532227
+            }
+          ]
+        },
+        {
+          "token": "(The",
+          "logprob": -0.40908917784690857,
+          "top": [
+            {
+              "token": "(The",
+              "logprob": -0.40908917784690857
+            },
+            {
+              "token": "The",
+              "logprob": -1.409089207649231
+            },
+            {
+              "token": "(",
+              "logprob": -2.4090890884399414
+            },
+            {
+              "token": "Note",
+              "logprob": -6.659089088439941
+            },
+            {
+              "token": "(I",
+              "logprob": -9.284089088439941
+            }
+          ]
+        },
+        {
+          "token": " past",
+          "logprob": -0.000002145764938177308,
+          "top": [
+            {
+              "token": " past",
+              "logprob": -0.000002145764938177308
+            },
+            {
+              "token": " participle",
+              "logprob": -14.250001907348633
+            },
+            {
+              "token": " irregular",
+              "logprob": -14.375001907348633
+            },
+            {
+              "token": " pattern",
+              "logprob": -15.000001907348633
+            },
+            {
+              "token": " **",
+              "logprob": -16.375001907348633
+            }
+          ]
+        },
+        {
+          "token": " participle",
+          "logprob": -4.768370445162873e-7,
+          "top": [
+            {
+              "token": " participle",
+              "logprob": -4.768370445162873e-7
+            },
+            {
+              "token": " particle",
+              "logprob": -15.75
+            },
+            {
+              "token": " partic",
+              "logprob": -16
+            },
+            {
+              "token": " tense",
+              "logprob": -16.375
+            },
+            {
+              "token": " perfect",
+              "logprob": -16.375
+            }
+          ]
+        },
+        {
+          "token": " is",
+          "logprob": -0.00002312633478140924,
+          "top": [
+            {
+              "token": " is",
+              "logprob": -0.00002312633478140924
+            },
+            {
+              "token": ",",
+              "logprob": -11.250022888183594
+            },
+            {
+              "token": " form",
+              "logprob": -11.500022888183594
+            },
+            {
+              "token": " forms",
+              "logprob": -19.125022888183594
+            },
+            {
+              "token": " would",
+              "logprob": -19.125022888183594
+            }
+          ]
+        },
+        {
+          "token": " \"",
+          "logprob": -0.2519312798976898,
+          "top": [
+            {
+              "token": " \"",
+              "logprob": -0.2519312798976898
+            },
+            {
+              "token": " **",
+              "logprob": -1.5019313097000122
+            },
+            {
+              "token": " *",
+              "logprob": -13.501931190490723
+            },
+            {
+              "token": " “",
+              "logprob": -14.126931190490723
+            },
+            {
+              "token": " sw",
+              "logprob": -16.37693214416504
+            }
+          ]
+        },
+        {
+          "token": "sw",
+          "logprob": -0.0000036954811548639555,
+          "top": [
+            {
+              "token": "sw",
+              "logprob": -0.0000036954811548639555
+            },
+            {
+              "token": "**",
+              "logprob": -12.500003814697266
+            },
+            {
+              "token": " sw",
+              "logprob": -17.000003814697266
+            },
+            {
+              "token": "have",
+              "logprob": -18.500003814697266
+            },
+            {
+              "token": "Sw",
+              "logprob": -21.250003814697266
+            }
+          ]
+        },
+        {
+          "token": "um",
+          "logprob": 0,
+          "top": [
+            {
+              "token": "um",
+              "logprob": 0
+            },
+            {
+              "token": "UM",
+              "logprob": -24.625
+            },
+            {
+              "token": " um",
+              "logprob": -25.375
+            },
+            {
+              "token": "**",
+              "logprob": -25.625
+            },
+            {
+              "token": "w",
+              "logprob": -25.875
+            }
+          ]
+        },
+        {
+          "token": ",\"",
+          "logprob": -0.00008427741704508662,
+          "top": [
+            {
+              "token": ",\"",
+              "logprob": -0.00008427741704508662
+            },
+            {
+              "token": ".\"",
+              "logprob": -9.750083923339844
+            },
+            {
+              "token": "\"—",
+              "logprob": -11.000083923339844
+            },
+            {
+              "token": "\"",
+              "logprob": -12.250083923339844
+            },
+            {
+              "token": "\":",
+              "logprob": -12.500083923339844
+            }
+          ]
+        },
+        {
+          "token": " as",
+          "logprob": -0.3132740259170532,
+          "top": [
+            {
+              "token": " as",
+              "logprob": -0.3132740259170532
+            },
+            {
+              "token": " used",
+              "logprob": -1.3132740259170532
+            },
+            {
+              "token": " e",
+              "logprob": -11.313274383544922
+            },
+            {
+              "token": " and",
+              "logprob": -17.938274383544922
+            },
+            {
+              "token": " for",
+              "logprob": -18.563274383544922
+            }
+          ]
+        },
+        {
+          "token": " in",
+          "logprob": -2.3841855067985307e-7,
+          "top": [
+            {
+              "token": " in",
+              "logprob": -2.3841855067985307e-7
+            },
+            {
+              "token": " used",
+              "logprob": -15.25
+            },
+            {
+              "token": " في",
+              "logprob": -19.375
+            },
+            {
+              "token": " в",
+              "logprob": -19.5
+            },
+            {
+              "token": "ใน",
+              "logprob": -19.625
+            }
+          ]
+        },
+        {
+          "token": " \"",
+          "logprob": 0,
+          "top": [
+            {
+              "token": " \"",
+              "logprob": 0
+            },
+            {
+              "token": ":",
+              "logprob": -17.625
+            },
+            {
+              "token": " “",
+              "logprob": -18.5
+            },
+            {
+              "token": ",",
+              "logprob": -19.875
+            },
+            {
+              "token": "<｜end▁of▁sentence｜>",
+              "logprob": -26.125
+            }
+          ]
+        },
+        {
+          "token": "I",
+          "logprob": -0.000001311301275563892,
+          "top": [
+            {
+              "token": "I",
+              "logprob": -0.000001311301275563892
+            },
+            {
+              "token": "She",
+              "logprob": -14.000000953674316
+            },
+            {
+              "token": " I",
+              "logprob": -14.750000953674316
+            },
+            {
+              "token": "He",
+              "logprob": -16.000001907348633
+            },
+            {
+              "token": "have",
+              "logprob": -19.750001907348633
+            }
+          ]
+        },
+        {
+          "token": " have",
+          "logprob": -5.960462772236497e-7,
+          "top": [
+            {
+              "token": " have",
+              "logprob": -5.960462772236497e-7
+            },
+            {
+              "token": " had",
+              "logprob": -14.250000953674316
+            },
+            {
+              "token": "have",
+              "logprob": -18
+            },
+            {
+              "token": " has",
+              "logprob": -19.625
+            },
+            {
+              "token": " Have",
+              "logprob": -23.625
+            }
+          ]
+        },
+        {
+          "token": " sw",
+          "logprob": 0,
+          "top": [
+            {
+              "token": " sw",
+              "logprob": 0
+            },
+            {
+              "token": " swam",
+              "logprob": -17.25
+            },
+            {
+              "token": "/sw",
+              "logprob": -19.5
+            },
+            {
+              "token": " Sw",
+              "logprob": -19.875
+            },
+            {
+              "token": " swim",
+              "logprob": -20.375
+            }
+          ]
+        },
+        {
+          "token": "um",
+          "logprob": 0,
+          "top": [
+            {
+              "token": "um",
+              "logprob": 0
+            },
+            {
+              "token": "UM",
+              "logprob": -22.25
+            },
+            {
+              "token": "un",
+              "logprob": -22.375
+            },
+            {
+              "token": "ум",
+              "logprob": -22.625
+            },
+            {
+              "token": " um",
+              "logprob": -23
+            }
+          ]
+        },
+        {
+          "token": ".\"",
+          "logprob": -0.7554364204406738,
+          "top": [
+            {
+              "token": ".\"",
+              "logprob": -0.7554364204406738
+            },
+            {
+              "token": " across",
+              "logprob": -1.5054364204406738
+            },
+            {
+              "token": " before",
+              "logprob": -1.7554364204406738
+            },
+            {
+              "token": " in",
+              "logprob": -2.005436420440674
+            },
+            {
+              "token": " there",
+              "logprob": -7.505436420440674
+            }
+          ]
+        },
+        {
+          "token": ")",
+          "logprob": -0.000024199192921514623,
+          "top": [
+            {
+              "token": ")",
+              "logprob": -0.000024199192921514623
+            },
+            {
+              "token": " )",
+              "logprob": -11.12502384185791
+            },
+            {
+              "token": "）",
+              "logprob": -13.12502384185791
+            },
+            {
+              "token": ").",
+              "logprob": -13.50002384185791
+            },
+            {
+              "token": ")\n\n\n",
+              "logprob": -13.87502384185791
+            }
+          ]
+        },
+        {
+          "token": "<｜end▁of▁sentence｜>",
+          "logprob": 0,
+          "top": [
+            {
+              "token": "<｜end▁of▁sentence｜>",
+              "logprob": 0
+            },
+            {
+              "token": " \n\n",
+              "logprob": -18.125
+            },
+            {
+              "token": " Let",
+              "logprob": -19.3125
+            },
+            {
+              "token": " ✅",
+              "logprob": -19.625
+            },
+            {
+              "token": " The",
+              "logprob": -19.625
+            }
+          ]
+        }
+      ],
+      "response_model": "particle-ai/particle-1",
+      "weight_version": "default",
+      "service_tier": "default",
+      "system_fingerprint": null
+    },
+    {
+      "id": "c10",
+      "prompt_sha256": "ca87638fd4b2d32ab996f0fe9d06c6663b56595ff1f79cd93795ae84976ef07f",
+      "status": "ok",
+      "answer": "212",
+      "answer_sha256": "fa2b7af0a811b9acde602aacb78e3638e8506dfead5fe6c3425b10b526f94bdd",
+      "finish": "stop",
+      "mean_logprob": -0.00006502449087975037,
+      "logprobs": [
+        {
+          "token": "212",
+          "logprob": -0.0001292145170737058,
+          "top": [
+            {
+              "token": "212",
+              "logprob": -0.0001292145170737058
+            },
+            {
+              "token": "100",
+              "logprob": -10.625128746032715
+            },
+            {
+              "token": "The",
+              "logprob": -10.625128746032715
+            },
+            {
+              "token": "To",
+              "logprob": -11.500128746032715
+            },
+            {
+              "token": "I",
+              "logprob": -11.875128746032715
+            }
+          ]
+        },
+        {
+          "token": "<｜end▁of▁sentence｜>",
+          "logprob": -8.344646857949556e-7,
+          "top": [
+            {
+              "token": "<｜end▁of▁sentence｜>",
+              "logprob": -8.344646857949556e-7
+            },
+            {
+              "token": ".",
+              "logprob": -14.250000953674316
+            },
+            {
+              "token": "</",
+              "logprob": -16.125
+            },
+            {
+              "token": "\n",
+              "logprob": -17.375
+            },
+            {
+              "token": "0",
+              "logprob": -17.75
+            }
+          ]
+        }
+      ],
+      "response_model": "particle-ai/particle-1",
+      "weight_version": "default",
+      "service_tier": "default",
+      "system_fingerprint": null
+    },
+    {
+      "id": "c11",
+      "prompt_sha256": "b2111d691dfad511037ca035bbafc35b2424f3f41a9946ff48faa32ee62d2431",
+      "status": "ok",
+      "answer": "Mercury",
+      "answer_sha256": "6a7367ef7970d165bf9a60a16ef4365b2b7670f5064a35438e2ea0049dbdb1dd",
+      "finish": "stop",
+      "mean_logprob": -0.0010656736437013592,
+      "logprobs": [
+        {
+          "token": "Mer",
+          "logprob": -0.000017523612768854946,
+          "top": [
+            {
+              "token": "Mer",
+              "logprob": -0.000017523612768854946
+            },
+            {
+              "token": "Ven",
+              "logprob": -11.750017166137695
+            },
+            {
+              "token": "The",
+              "logprob": -13.375017166137695
+            },
+            {
+              "token": "Mars",
+              "logprob": -13.625017166137695
+            },
+            {
+              "token": "mer",
+              "logprob": -14.000017166137695
+            }
+          ]
+        },
+        {
+          "token": "cury",
+          "logprob": -1.1920928244535389e-7,
+          "top": [
+            {
+              "token": "cury",
+              "logprob": -1.1920928244535389e-7
+            },
+            {
+              "token": "cur",
+              "logprob": -16.125
+            },
+            {
+              "token": "cy",
+              "logprob": -17.75
+            },
+            {
+              "token": "<｜end▁of▁sentence｜>",
+              "logprob": -18.625
+            },
+            {
+              "token": "ury",
+              "logprob": -19.625
+            }
+          ]
+        },
+        {
+          "token": "<｜end▁of▁sentence｜>",
+          "logprob": -0.0031793781090527773,
+          "top": [
+            {
+              "token": "<｜end▁of▁sentence｜>",
+              "logprob": -0.0031793781090527773
+            },
+            {
+              "token": ".",
+              "logprob": -5.753179550170898
+            },
+            {
+              "token": "\n",
+              "logprob": -14.253179550170898
+            },
+            {
+              "token": "\n\n",
+              "logprob": -14.628179550170898
+            },
+            {
+              "token": "?",
+              "logprob": -14.878179550170898
+            }
+          ]
+        }
+      ],
+      "response_model": "particle-ai/particle-1",
+      "weight_version": "default",
+      "service_tier": "default",
+      "system_fingerprint": null
+    },
+    {
+      "id": "c12",
+      "prompt_sha256": "e0553f46a3fc1ae36146ed25f7dd99b4653af7ef8a68fac18aaea1bf7bd5a0c6",
+      "status": "ok",
+      "answer": "The author of \"Pride and Prejudice\" is Jane Austen.",
+      "answer_sha256": "349edda78634ee84cb01f470784e010d226290c5b489318bab5b94b1c4edf120",
+      "finish": "stop",
+      "mean_logprob": -0.03185850144231826,
+      "logprobs": [
+        {
+          "token": "The",
+          "logprob": -0.0005231918767094612,
+          "top": [
+            {
+              "token": "The",
+              "logprob": -0.0005231918767094612
+            },
+            {
+              "token": "Jane",
+              "logprob": -7.625523090362549
+            },
+            {
+              "token": "\"",
+              "logprob": -10.375523567199707
+            },
+            {
+              "token": "Pr",
+              "logprob": -12.750523567199707
+            },
+            {
+              "token": "That",
+              "logprob": -15.000523567199707
+            }
+          ]
+        },
+        {
+          "token": " author",
+          "logprob": 0,
+          "top": [
+            {
+              "token": " author",
+              "logprob": 0
+            },
+            {
+              "token": " Author",
+              "logprob": -18.75
+            },
+            {
+              "token": "author",
+              "logprob": -19.375
+            },
+            {
+              "token": " автор",
+              "logprob": -19.375
+            },
+            {
+              "token": " authors",
+              "logprob": -19.5
+            }
+          ]
+        },
+        {
+          "token": " of",
+          "logprob": -0.00001680836794548668,
+          "top": [
+            {
+              "token": " of",
+              "logprob": -0.00001680836794548668
+            },
+            {
+              "token": " is",
+              "logprob": -11.000017166137695
+            },
+            {
+              "token": " was",
+              "logprob": -17.625017166137695
+            },
+            {
+              "token": ",",
+              "logprob": -17.750017166137695
+            },
+            {
+              "token": " and",
+              "logprob": -18.687517166137695
+            }
+          ]
+        },
+        {
+          "token": " \"",
+          "logprob": -0.4741428792476654,
+          "top": [
+            {
+              "token": " \"",
+              "logprob": -0.4741428792476654
+            },
+            {
+              "token": " *",
+              "logprob": -0.9741429090499878
+            },
+            {
+              "token": " **",
+              "logprob": -10.474143028259277
+            },
+            {
+              "token": " “",
+              "logprob": -10.474143028259277
+            },
+            {
+              "token": " Pride",
+              "logprob": -11.599143028259277
+            }
+          ]
+        },
+        {
+          "token": "Pr",
+          "logprob": -2.3841855067985307e-7,
+          "top": [
+            {
+              "token": "Pr",
+              "logprob": -2.3841855067985307e-7
+            },
+            {
+              "token": " Pride",
+              "logprob": -15.25
+            },
+            {
+              "token": "Pri",
+              "logprob": -17.125
+            },
+            {
+              "token": "P",
+              "logprob": -19.625
+            },
+            {
+              "token": "**",
+              "logprob": -20.75
+            }
+          ]
+        },
+        {
+          "token": "ide",
+          "logprob": 0,
+          "top": [
+            {
+              "token": "ide",
+              "logprob": 0
+            },
+            {
+              "token": " ide",
+              "logprob": -24.125
+            },
+            {
+              "token": "IDE",
+              "logprob": -25.5
+            },
+            {
+              "token": "Ide",
+              "logprob": -26.875
+            },
+            {
+              "token": "iv",
+              "logprob": -26.875
+            }
+          ]
+        },
+        {
+          "token": " and",
+          "logprob": 0,
+          "top": [
+            {
+              "token": " and",
+              "logprob": 0
+            },
+            {
+              "token": " &",
+              "logprob": -19.125
+            },
+            {
+              "token": " of",
+              "logprob": -20
+            },
+            {
+              "token": " ",
+              "logprob": -20.625
+            },
+            {
+              "token": " **",
+              "logprob": -20.875
+            }
+          ]
+        },
+        {
+          "token": " Pre",
+          "logprob": 0,
+          "top": [
+            {
+              "token": " Pre",
+              "logprob": 0
+            },
+            {
+              "token": " **",
+              "logprob": -20.25
+            },
+            {
+              "token": " Pr",
+              "logprob": -22
+            },
+            {
+              "token": "Pre",
+              "logprob": -23.125
+            },
+            {
+              "token": " Pred",
+              "logprob": -23.75
+            }
+          ]
+        },
+        {
+          "token": "judice",
+          "logprob": -0.0000017881377516459906,
+          "top": [
+            {
+              "token": "judice",
+              "logprob": -0.0000017881377516459906
+            },
+            {
+              "token": "jud",
+              "logprob": -13.375001907348633
+            },
+            {
+              "token": "text",
+              "logprob": -16.125001907348633
+            },
+            {
+              "token": "condition",
+              "logprob": -16.500001907348633
+            },
+            {
+              "token": "tt",
+              "logprob": -17.500001907348633
+            }
+          ]
+        },
+        {
+          "token": "\"",
+          "logprob": 0,
+          "top": [
+            {
+              "token": "\"",
+              "logprob": 0
+            },
+            {
+              "token": " is",
+              "logprob": -18
+            },
+            {
+              "token": "”",
+              "logprob": -18.375
+            },
+            {
+              "token": " \"",
+              "logprob": -19.5
+            },
+            {
+              "token": ",\"",
+              "logprob": -20.125
+            }
+          ]
+        },
+        {
+          "token": " is",
+          "logprob": -1.1920928244535389e-7,
+          "top": [
+            {
+              "token": " is",
+              "logprob": -1.1920928244535389e-7
+            },
+            {
+              "token": " (",
+              "logprob": -16.625
+            },
+            {
+              "token": " was",
+              "logprob": -17.25
+            },
+            {
+              "token": "is",
+              "logprob": -18.625
+            },
+            {
+              "token": " and",
+              "logprob": -19.125
+            }
+          ]
+        },
+        {
+          "token": " Jane",
+          "logprob": -0.0031777145341038704,
+          "top": [
+            {
+              "token": " Jane",
+              "logprob": -0.0031777145341038704
+            },
+            {
+              "token": " **",
+              "logprob": -5.753177642822266
+            },
+            {
+              "token": "Jane",
+              "logprob": -17.628177642822266
+            },
+            {
+              "token": " J",
+              "logprob": -18.128177642822266
+            },
+            {
+              "token": " Mary",
+              "logprob": -20.378177642822266
+            }
+          ]
+        },
+        {
+          "token": " Austen",
+          "logprob": 0,
+          "top": [
+            {
+              "token": " Austen",
+              "logprob": 0
+            },
+            {
+              "token": " Aust",
+              "logprob": -23.25
+            },
+            {
+              "token": " Austin",
+              "logprob": -23.625
+            },
+            {
+              "token": " aust",
+              "logprob": -24.25
+            },
+            {
+              "token": "Aust",
+              "logprob": -25.25
+            }
+          ]
+        },
+        {
+          "token": ".",
+          "logprob": -0.000014781842764932662,
+          "top": [
+            {
+              "token": ".",
+              "logprob": -0.000014781842764932662
+            },
+            {
+              "token": ",",
+              "logprob": -11.625014305114746
+            },
+            {
+              "token": ".\n\n",
+              "logprob": -13.000014305114746
+            },
+            {
+              "token": " (",
+              "logprob": -13.375014305114746
+            },
+            {
+              "token": " —",
+              "logprob": -14.250014305114746
+            }
+          ]
+        },
+        {
+          "token": "<｜end▁of▁sentence｜>",
+          "logprob": 0,
+          "top": [
+            {
+              "token": "<｜end▁of▁sentence｜>",
+              "logprob": 0
+            },
+            {
+              "token": " (",
+              "logprob": -18.125
+            },
+            {
+              "token": " It",
+              "logprob": -18.5
+            },
+            {
+              "token": " She",
+              "logprob": -19.625
+            },
+            {
+              "token": " The",
+              "logprob": -19.75
+            }
+          ]
+        }
+      ],
+      "response_model": "particle-ai/particle-1",
+      "weight_version": "default",
+      "service_tier": "default",
+      "system_fingerprint": null
+    }
+  ],
+  "receipts": [
+    {
+      "schema": "usage-receipt/v1",
+      "lane": "particle-canary",
+      "role": "reader",
+      "question_id": "c01",
+      "replicate": 0,
+      "model": "particle:particle-1",
+      "from_cache": false,
+      "delivered": null,
+      "request": {
+        "effort_sent": "none",
+        "effort_effective": "none",
+        "output_limit_field": "max_completion_tokens",
+        "output_limit": 64,
+        "temperature_sent": 0,
+        "seed_sent": 20261031
+      },
+      "attempt": 0,
+      "response_model": "particle-ai/particle-1",
+      "status": "ok",
+      "error": null,
+      "finish": "stop",
+      "finish_raw": "stop",
+      "answer": "391",
+      "usage": {
+        "convention": "openai-chat",
+        "input_total": 72,
+        "input_uncached": 72,
+        "cache_read": 0,
+        "cache_write": 0,
+        "output_total": 2,
+        "reasoning": 0
+      },
+      "usage_raw": {
+        "prompt_tokens": 72,
+        "total_tokens": 74,
+        "completion_tokens": 2,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "reasoning_tokens": 0
+      },
+      "response_meta": {
+        "metadata": {
+          "weight_version": "default",
+          "weight_versions": [
+            {
+              "version": "default",
+              "start": 0,
+              "end": 2
+            }
+          ]
+        },
+        "weight_version": "default",
+        "service_tier": "default",
+        "system_fingerprint": null,
+        "non_default_tier": false,
+        "truncated": false
+      }
+    },
+    {
+      "schema": "usage-receipt/v1",
+      "lane": "particle-canary",
+      "role": "reader",
+      "question_id": "c02",
+      "replicate": 0,
+      "model": "particle:particle-1",
+      "from_cache": false,
+      "delivered": null,
+      "request": {
+        "effort_sent": "none",
+        "effort_effective": "none",
+        "output_limit_field": "max_completion_tokens",
+        "output_limit": 64,
+        "temperature_sent": 0,
+        "seed_sent": 20261031
+      },
+      "attempt": 0,
+      "response_model": "particle-ai/particle-1",
+      "status": "ok",
+      "error": null,
+      "finish": "stop",
+      "finish_raw": "stop",
+      "answer": "Canberra",
+      "usage": {
+        "convention": "openai-chat",
+        "input_total": 69,
+        "input_uncached": 69,
+        "cache_read": 0,
+        "cache_write": 0,
+        "output_total": 3,
+        "reasoning": 0
+      },
+      "usage_raw": {
+        "prompt_tokens": 69,
+        "total_tokens": 72,
+        "completion_tokens": 3,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "reasoning_tokens": 0
+      },
+      "response_meta": {
+        "metadata": {
+          "weight_version": "default",
+          "weight_versions": [
+            {
+              "version": "default",
+              "start": 0,
+              "end": 3
+            }
+          ]
+        },
+        "weight_version": "default",
+        "service_tier": "default",
+        "system_fingerprint": null,
+        "non_default_tier": false,
+        "truncated": false
+      }
+    },
+    {
+      "schema": "usage-receipt/v1",
+      "lane": "particle-canary",
+      "role": "reader",
+      "question_id": "c03",
+      "replicate": 0,
+      "model": "particle:particle-1",
+      "from_cache": false,
+      "delivered": null,
+      "request": {
+        "effort_sent": "none",
+        "effort_effective": "none",
+        "output_limit_field": "max_completion_tokens",
+        "output_limit": 64,
+        "temperature_sent": 0,
+        "seed_sent": 20261031
+      },
+      "attempt": 0,
+      "response_model": "particle-ai/particle-1",
+      "status": "ok",
+      "error": null,
+      "finish": "stop",
+      "finish_raw": "stop",
+      "answer": "y-r-a-s-s-e-c-e-n",
+      "usage": {
+        "convention": "openai-chat",
+        "input_total": 66,
+        "input_uncached": 66,
+        "cache_read": 0,
+        "cache_write": 0,
+        "output_total": 10,
+        "reasoning": 0
+      },
+      "usage_raw": {
+        "prompt_tokens": 66,
+        "total_tokens": 76,
+        "completion_tokens": 10,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "reasoning_tokens": 0
+      },
+      "response_meta": {
+        "metadata": {
+          "weight_version": "default",
+          "weight_versions": [
+            {
+              "version": "default",
+              "start": 0,
+              "end": 10
+            }
+          ]
+        },
+        "weight_version": "default",
+        "service_tier": "default",
+        "system_fingerprint": null,
+        "non_default_tier": false,
+        "truncated": false
+      }
+    },
+    {
+      "schema": "usage-receipt/v1",
+      "lane": "particle-canary",
+      "role": "reader",
+      "question_id": "c04",
+      "replicate": 0,
+      "model": "particle:particle-1",
+      "from_cache": false,
+      "delivered": null,
+      "request": {
+        "effort_sent": "none",
+        "effort_effective": "none",
+        "output_limit_field": "max_completion_tokens",
+        "output_limit": 64,
+        "temperature_sent": 0,
+        "seed_sent": 20261031
+      },
+      "attempt": 0,
+      "response_model": "particle-ai/particle-1",
+      "status": "ok",
+      "error": null,
+      "finish": "stop",
+      "finish_raw": "stop",
+      "answer": "The chemical symbol for tungsten is **W**.",
+      "usage": {
+        "convention": "openai-chat",
+        "input_total": 65,
+        "input_uncached": 65,
+        "cache_read": 0,
+        "cache_write": 0,
+        "output_total": 10,
+        "reasoning": 0
+      },
+      "usage_raw": {
+        "prompt_tokens": 65,
+        "total_tokens": 75,
+        "completion_tokens": 10,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "reasoning_tokens": 0
+      },
+      "response_meta": {
+        "metadata": {
+          "weight_version": "default",
+          "weight_versions": [
+            {
+              "version": "default",
+              "start": 0,
+              "end": 10
+            }
+          ]
+        },
+        "weight_version": "default",
+        "service_tier": "default",
+        "system_fingerprint": null,
+        "non_default_tier": false,
+        "truncated": false
+      }
+    },
+    {
+      "schema": "usage-receipt/v1",
+      "lane": "particle-canary",
+      "role": "reader",
+      "question_id": "c05",
+      "replicate": 0,
+      "model": "particle:particle-1",
+      "from_cache": false,
+      "delivered": null,
+      "request": {
+        "effort_sent": "none",
+        "effort_effective": "none",
+        "output_limit_field": "max_completion_tokens",
+        "output_limit": 64,
+        "temperature_sent": 0,
+        "seed_sent": 20261031
+      },
+      "attempt": 0,
+      "response_model": "particle-ai/particle-1",
+      "status": "ok",
+      "error": null,
+      "finish": "stop",
+      "finish_raw": "stop",
+      "answer": "13",
+      "usage": {
+        "convention": "openai-chat",
+        "input_total": 81,
+        "input_uncached": 81,
+        "cache_read": 0,
+        "cache_write": 0,
+        "output_total": 2,
+        "reasoning": 0
+      },
+      "usage_raw": {
+        "prompt_tokens": 81,
+        "total_tokens": 83,
+        "completion_tokens": 2,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "reasoning_tokens": 0
+      },
+      "response_meta": {
+        "metadata": {
+          "weight_version": "default",
+          "weight_versions": [
+            {
+              "version": "default",
+              "start": 0,
+              "end": 2
+            }
+          ]
+        },
+        "weight_version": "default",
+        "service_tier": "default",
+        "system_fingerprint": null,
+        "non_default_tier": false,
+        "truncated": false
+      }
+    },
+    {
+      "schema": "usage-receipt/v1",
+      "lane": "particle-canary",
+      "role": "reader",
+      "question_id": "c06",
+      "replicate": 0,
+      "model": "particle:particle-1",
+      "from_cache": false,
+      "delivered": null,
+      "request": {
+        "effort_sent": "none",
+        "effort_effective": "none",
+        "output_limit_field": "max_completion_tokens",
+        "output_limit": 64,
+        "temperature_sent": 0,
+        "seed_sent": 20261031
+      },
+      "attempt": 0,
+      "response_model": "particle-ai/particle-1",
+      "status": "ok",
+      "error": null,
+      "finish": "stop",
+      "finish_raw": "stop",
+      "answer": "Bonjour",
+      "usage": {
+        "convention": "openai-chat",
+        "input_total": 65,
+        "input_uncached": 65,
+        "cache_read": 0,
+        "cache_write": 0,
+        "output_total": 3,
+        "reasoning": 0
+      },
+      "usage_raw": {
+        "prompt_tokens": 65,
+        "total_tokens": 68,
+        "completion_tokens": 3,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "reasoning_tokens": 0
+      },
+      "response_meta": {
+        "metadata": {
+          "weight_version": "default",
+          "weight_versions": [
+            {
+              "version": "default",
+              "start": 0,
+              "end": 3
+            }
+          ]
+        },
+        "weight_version": "default",
+        "service_tier": "default",
+        "system_fingerprint": null,
+        "non_default_tier": false,
+        "truncated": false
+      }
+    },
+    {
+      "schema": "usage-receipt/v1",
+      "lane": "particle-canary",
+      "role": "reader",
+      "question_id": "c07",
+      "replicate": 0,
+      "model": "particle:particle-1",
+      "from_cache": false,
+      "delivered": null,
+      "request": {
+        "effort_sent": "none",
+        "effort_effective": "none",
+        "output_limit_field": "max_completion_tokens",
+        "output_limit": 64,
+        "temperature_sent": 0,
+        "seed_sent": 20261031
+      },
+      "attempt": 0,
+      "response_model": "particle-ai/particle-1",
+      "status": "ok",
+      "error": null,
+      "finish": "stop",
+      "finish_raw": "stop",
+      "answer": "366",
+      "usage": {
+        "convention": "openai-chat",
+        "input_total": 72,
+        "input_uncached": 72,
+        "cache_read": 0,
+        "cache_write": 0,
+        "output_total": 2,
+        "reasoning": 0
+      },
+      "usage_raw": {
+        "prompt_tokens": 72,
+        "total_tokens": 74,
+        "completion_tokens": 2,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "reasoning_tokens": 0
+      },
+      "response_meta": {
+        "metadata": {
+          "weight_version": "default",
+          "weight_versions": [
+            {
+              "version": "default",
+              "start": 0,
+              "end": 2
+            }
+          ]
+        },
+        "weight_version": "default",
+        "service_tier": "default",
+        "system_fingerprint": null,
+        "non_default_tier": false,
+        "truncated": false
+      }
+    },
+    {
+      "schema": "usage-receipt/v1",
+      "lane": "particle-canary",
+      "role": "reader",
+      "question_id": "c08",
+      "replicate": 0,
+      "model": "particle:particle-1",
+      "from_cache": false,
+      "delivered": null,
+      "request": {
+        "effort_sent": "none",
+        "effort_effective": "none",
+        "output_limit_field": "max_completion_tokens",
+        "output_limit": 64,
+        "temperature_sent": 0,
+        "seed_sent": 20261031
+      },
+      "attempt": 0,
+      "response_model": "particle-ai/particle-1",
+      "status": "ok",
+      "error": null,
+      "finish": "stop",
+      "finish_raw": "stop",
+      "answer": "apple, kiwi, mango, pear",
+      "usage": {
+        "convention": "openai-chat",
+        "input_total": 77,
+        "input_uncached": 77,
+        "cache_read": 0,
+        "cache_write": 0,
+        "output_total": 9,
+        "reasoning": 0
+      },
+      "usage_raw": {
+        "prompt_tokens": 77,
+        "total_tokens": 86,
+        "completion_tokens": 9,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "reasoning_tokens": 0
+      },
+      "response_meta": {
+        "metadata": {
+          "weight_version": "default",
+          "weight_versions": [
+            {
+              "version": "default",
+              "start": 0,
+              "end": 9
+            }
+          ]
+        },
+        "weight_version": "default",
+        "service_tier": "default",
+        "system_fingerprint": null,
+        "non_default_tier": false,
+        "truncated": false
+      }
+    },
+    {
+      "schema": "usage-receipt/v1",
+      "lane": "particle-canary",
+      "role": "reader",
+      "question_id": "c09",
+      "replicate": 0,
+      "model": "particle:particle-1",
+      "from_cache": false,
+      "delivered": null,
+      "request": {
+        "effort_sent": "none",
+        "effort_effective": "none",
+        "output_limit_field": "max_completion_tokens",
+        "output_limit": 64,
+        "temperature_sent": 0,
+        "seed_sent": 20261031
+      },
+      "attempt": 0,
+      "response_model": "particle-ai/particle-1",
+      "status": "ok",
+      "error": null,
+      "finish": "stop",
+      "finish_raw": "stop",
+      "answer": "The past tense of \"swim\" is **swam**.\n\nExample: \"Yesterday, I swam in the lake.\"\n\n(The past participle is \"swum,\" as in \"I have swum.\")",
+      "usage": {
+        "convention": "openai-chat",
+        "input_total": 69,
+        "input_uncached": 69,
+        "cache_read": 0,
+        "cache_write": 0,
+        "output_total": 42,
+        "reasoning": 0
+      },
+      "usage_raw": {
+        "prompt_tokens": 69,
+        "total_tokens": 111,
+        "completion_tokens": 42,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "reasoning_tokens": 0
+      },
+      "response_meta": {
+        "metadata": {
+          "weight_version": "default",
+          "weight_versions": [
+            {
+              "version": "default",
+              "start": 0,
+              "end": 42
+            }
+          ]
+        },
+        "weight_version": "default",
+        "service_tier": "default",
+        "system_fingerprint": null,
+        "non_default_tier": false,
+        "truncated": false
+      }
+    },
+    {
+      "schema": "usage-receipt/v1",
+      "lane": "particle-canary",
+      "role": "reader",
+      "question_id": "c10",
+      "replicate": 0,
+      "model": "particle:particle-1",
+      "from_cache": false,
+      "delivered": null,
+      "request": {
+        "effort_sent": "none",
+        "effort_effective": "none",
+        "output_limit_field": "max_completion_tokens",
+        "output_limit": 64,
+        "temperature_sent": 0,
+        "seed_sent": 20261031
+      },
+      "attempt": 0,
+      "response_model": "particle-ai/particle-1",
+      "status": "ok",
+      "error": null,
+      "finish": "stop",
+      "finish_raw": "stop",
+      "answer": "212",
+      "usage": {
+        "convention": "openai-chat",
+        "input_total": 71,
+        "input_uncached": 71,
+        "cache_read": 0,
+        "cache_write": 0,
+        "output_total": 2,
+        "reasoning": 0
+      },
+      "usage_raw": {
+        "prompt_tokens": 71,
+        "total_tokens": 73,
+        "completion_tokens": 2,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "reasoning_tokens": 0
+      },
+      "response_meta": {
+        "metadata": {
+          "weight_version": "default",
+          "weight_versions": [
+            {
+              "version": "default",
+              "start": 0,
+              "end": 2
+            }
+          ]
+        },
+        "weight_version": "default",
+        "service_tier": "default",
+        "system_fingerprint": null,
+        "non_default_tier": false,
+        "truncated": false
+      }
+    },
+    {
+      "schema": "usage-receipt/v1",
+      "lane": "particle-canary",
+      "role": "reader",
+      "question_id": "c11",
+      "replicate": 0,
+      "model": "particle:particle-1",
+      "from_cache": false,
+      "delivered": null,
+      "request": {
+        "effort_sent": "none",
+        "effort_effective": "none",
+        "output_limit_field": "max_completion_tokens",
+        "output_limit": 64,
+        "temperature_sent": 0,
+        "seed_sent": 20261031
+      },
+      "attempt": 0,
+      "response_model": "particle-ai/particle-1",
+      "status": "ok",
+      "error": null,
+      "finish": "stop",
+      "finish_raw": "stop",
+      "answer": "Mercury",
+      "usage": {
+        "convention": "openai-chat",
+        "input_total": 70,
+        "input_uncached": 70,
+        "cache_read": 0,
+        "cache_write": 0,
+        "output_total": 3,
+        "reasoning": 0
+      },
+      "usage_raw": {
+        "prompt_tokens": 70,
+        "total_tokens": 73,
+        "completion_tokens": 3,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "reasoning_tokens": 0
+      },
+      "response_meta": {
+        "metadata": {
+          "weight_version": "default",
+          "weight_versions": [
+            {
+              "version": "default",
+              "start": 0,
+              "end": 3
+            }
+          ]
+        },
+        "weight_version": "default",
+        "service_tier": "default",
+        "system_fingerprint": null,
+        "non_default_tier": false,
+        "truncated": false
+      }
+    },
+    {
+      "schema": "usage-receipt/v1",
+      "lane": "particle-canary",
+      "role": "reader",
+      "question_id": "c12",
+      "replicate": 0,
+      "model": "particle:particle-1",
+      "from_cache": false,
+      "delivered": null,
+      "request": {
+        "effort_sent": "none",
+        "effort_effective": "none",
+        "output_limit_field": "max_completion_tokens",
+        "output_limit": 64,
+        "temperature_sent": 0,
+        "seed_sent": 20261031
+      },
+      "attempt": 0,
+      "response_model": "particle-ai/particle-1",
+      "status": "ok",
+      "error": null,
+      "finish": "stop",
+      "finish_raw": "stop",
+      "answer": "The author of \"Pride and Prejudice\" is Jane Austen.",
+      "usage": {
+        "convention": "openai-chat",
+        "input_total": 68,
+        "input_uncached": 68,
+        "cache_read": 0,
+        "cache_write": 0,
+        "output_total": 15,
+        "reasoning": 0
+      },
+      "usage_raw": {
+        "prompt_tokens": 68,
+        "total_tokens": 83,
+        "completion_tokens": 15,
+        "completion_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "cached_tokens": 0
+        },
+        "reasoning_tokens": 0
+      },
+      "response_meta": {
+        "metadata": {
+          "weight_version": "default",
+          "weight_versions": [
+            {
+              "version": "default",
+              "start": 0,
+              "end": 15
+            }
+          ]
+        },
+        "weight_version": "default",
+        "service_tier": "default",
+        "system_fingerprint": null,
+        "non_default_tier": false,
+        "truncated": false
+      }
+    }
+  ],
+  "stopped": null,
+  "cost": {
+    "usd": 0.000314,
+    "input_tokens": 845,
+    "output_tokens": 103,
+    "basis": "budget ledger w10-particle-u3-2026-11-01T05-45-53-538Z-2259dad5: 12 paid requests, 0 charged at their reservation because usage was unavailable",
+    "ledger": "<work>/u3/ledger.sqlite",
+    "program_cap_usd": 12,
+    "overshoot_usd": 0,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 0,
+      "max": 11.1
+    }
+  }
+}

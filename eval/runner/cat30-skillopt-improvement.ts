@@ -9,8 +9,10 @@
  * held-out set. Improvement = optimized_heldout - baseline_heldout.
  *
  * ── Feature boundary ─────────────────────────────────────────────────
- * UNDER TEST: gbrain's SkillOpt pipeline end to end — `runSkillOpt`
- * (reflect → patch → D12 validation gate, orchestrator.ts) plus
+ * UNDER TEST: gbrain's SkillOpt pipeline end to end — `runSkillOpt`'s
+ * iterative loop (reflect → patch → D12 validation gate, orchestrator.ts),
+ * asked for with `optimizerMode: 'reflect'` because gbrain's default since
+ * v0.60.542.0 is one gated rewrite — plus
  * `scoreSkillOnTasks` as the harness's INDEPENDENT held-out measurement
  * (does NOT trust the optimizer's own receipt).
  * LEGITIMATELY SEEDED/STUBBED: the committed skillopt-v1 seed corpus
@@ -70,6 +72,25 @@ export const CAT30_CATEGORY = 'cat30-skillopt-improvement';
 export const IMPROVE_MARGIN = 0.05;
 /** B-pre validity requires the seed to actually FAIL at baseline. */
 export const BPRE_BASELINE_CEILING = 0.95;
+
+/**
+ * Default models for Cats 30-33. The target runs the skill and is deliberately
+ * the weak model, so an optimized skill has room to improve; the optimizer
+ * proposes rewrites; strong is the other end of the Cat 33 transfer pairs, so
+ * it must be stronger than the target. judge is every LLM judge (Cat 32's
+ * held-out quality judge) and the judge model each category hands gbrain.
+ * Every target is a Claude model, so the judge comes from another family: no
+ * model judges its own family's counted rows (Captain rule GST-767, applied
+ * here 2026-11-01; Cat 32's judge was strong, and Cats 30, 31 and 33 named the
+ * target, before then).
+ */
+export const SKILLOPT_MODELS = {
+  target: 'anthropic:claude-haiku-5-5',
+  optimizer: 'anthropic:claude-opus-5-5',
+  bpreOptimizer: 'anthropic:claude-haiku-5-5',
+  strong: 'anthropic:claude-sonnet-5-5',
+  judge: 'openai:gpt-6.1-sol',
+} as const;
 
 /**
  * WS5 pin — applied via engine.setConfig BEFORE any rollout and echoed in
@@ -223,6 +244,14 @@ export interface SeedResult {
   error_origin?: 'sut' | 'dependency';
 }
 
+/** One runSkillOpt call as the category receipt keeps it: the skill it returned and gbrain's own run receipt. */
+export interface SkilloptRunRecord {
+  label: string;
+  outcome: string;
+  final_text: string | null;
+  receipt: unknown;
+}
+
 export interface Cat30Options {
   bpre?: boolean;
   stubLlm?: boolean;
@@ -313,15 +342,15 @@ interface SeedRunDeps {
   maxCostUsd: number;
   runSkillOptFn: typeof runSkillOpt;
   scoreFn: typeof scoreSkillOnTasks;
+  runs: SkilloptRunRecord[];
   log: (s: string) => void;
 }
 
 // split [1,1,1]: train5/sel5/test5 — sel>=5 (D_sel floor); test must be >0
 // (splitBench rejects a zero segment). cat30 does NOT pass heldOutPath to
-// runSkillOpt — the per-step held-out gate is cat32's job and is the real cost
-// driver; here it would just add cost. The harness measures held-out before/
-// after itself. Seeds are user-owned (temp dir), so the bundled ENFORCE never
-// fires.
+// runSkillOpt — the held-out check is cat32's job; here it would just add
+// cost. The harness measures held-out before/after itself. Seeds are
+// user-owned (temp dir), so the bundled ENFORCE never fires.
 const SPLIT: [number, number, number] = [1, 1, 1];
 
 /**
@@ -399,7 +428,9 @@ async function runSeed(deps: SeedRunDeps, seed: string): Promise<SeedResult> {
       maxCostUsd: deps.maxCostUsd,
       maxRuntimeMin: 20,
       force: true,
-    } as any);
+      optimizerMode: 'reflect',
+    });
+    deps.runs.push({ label: seed, outcome: result.outcome, final_text: result.finalText ?? null, receipt: result.receipt ?? null });
     outcome = result.outcome;
     optimizedBody = result.finalText ?? seedBody;
     receipt = result.receipt ?? {};
@@ -447,9 +478,9 @@ export async function runCat30(options: Cat30Options = {}): Promise<Cat30RunResu
   const startedAt = new Date().toISOString();
   const bpre = options.bpre ?? false;
   const stub = options.stubLlm ?? false;
-  const targetModel = options.targetModel ?? 'anthropic:claude-haiku-4-5';
-  const optimizerModel = options.optimizerModel ?? (bpre ? 'anthropic:claude-haiku-4-5' : 'anthropic:claude-sonnet-4-6');
-  const judgeModel = options.judgeModel ?? 'anthropic:claude-haiku-4-5'; // unused for rule judges
+  const targetModel = options.targetModel ?? SKILLOPT_MODELS.target;
+  const optimizerModel = options.optimizerModel ?? (bpre ? SKILLOPT_MODELS.bpreOptimizer : SKILLOPT_MODELS.optimizer);
+  const judgeModel = options.judgeModel ?? SKILLOPT_MODELS.judge; // skillopt-v1 has rule and qrels judges only
   const epochs = options.epochs ?? (bpre ? 1 : 2);
   const batchSize = options.batchSize ?? 5;
   const runsPerTask = options.runsPerTask ?? (bpre || stub ? 1 : 3);
@@ -507,6 +538,7 @@ export async function runCat30(options: Cat30Options = {}): Promise<Cat30RunResu
 
   const acc = new ProbeAccounting(seeds.length);
   const results: SeedResult[] = [];
+  const skilloptRuns: SkilloptRunRecord[] = [];
   let engine: any = null;
   try {
     engine = options.engineFactory ? await options.engineFactory() : new PGLiteEngine();
@@ -521,6 +553,7 @@ export async function runCat30(options: Cat30Options = {}): Promise<Cat30RunResu
       epochs, batchSize, runsPerTask, maxCostUsd,
       runSkillOptFn: options.runSkillOptFn ?? runSkillOpt,
       scoreFn: options.scoreFn ?? scoreSkillOnTasks,
+      runs: skilloptRuns,
       log,
     };
     for (const seed of seeds) results.push(await runSeed(deps, seed));
@@ -557,6 +590,7 @@ export async function runCat30(options: Cat30Options = {}): Promise<Cat30RunResu
       mode: bpre ? 'b-pre-validity' : 'full',
       target_model: targetModel,
       optimizer_model: optimizerModel,
+      optimizer_mode: 'reflect',
       judge_model: judgeModel,
       epochs, batch_size: batchSize, runs_per_task: runsPerTask,
       max_cost_usd: maxCostUsd,
@@ -573,6 +607,7 @@ export async function runCat30(options: Cat30Options = {}): Promise<Cat30RunResu
       total_cost_usd: totalCost,
       gate_pass: gatePass,
       infra_error_rate: summary.infra_error_rate,
+      skillopt_runs: skilloptRuns,
     },
   };
   writeReceipt(receiptFile, receipt);

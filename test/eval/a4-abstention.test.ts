@@ -4,6 +4,8 @@
  * PGLite run through the query operation.
  */
 import { describe, expect, test } from 'bun:test';
+import { spawnSync } from 'node:child_process';
+import { join } from 'node:path';
 import { registryEntry } from '../../eval/registry.ts';
 import { evaluatePromotion } from '../../eval/runner/promotion.ts';
 import { assertScorerRejectsFakeSystems } from '../../eval/runner/mutation-kit.ts';
@@ -127,4 +129,61 @@ describe('A4 on PGLite through the query operation (small world)', () => {
     expect(c.answerable_evidence_rate).toBeGreaterThan(0);
     expect(r.rows.find(x => x.cls === 'missing_attribute')!.lookup!.grade).toBe('strong');
   }, 120_000);
+});
+
+describe('A4 reader stop reasons (#238)', () => {
+  const missing = ledger.questions.find(x => x.cls === 'missing_attribute')!;
+  const answerable = ledger.questions.find(x => x.cls === 'answerable_profile' && x.attribute === 'headcount')!;
+  // A Sonnet 5.5 answer cut off at the 1,024-token limit while it was still reading the evidence.
+  const cutOff = `Looking at the retrieved notes, the profile for ${missing.entity} does not mention its ${missing.attribute}. Let me check whether a later session`;
+
+  test('a finished answer keeps its stop reason; its abstention is an abstention', async () => {
+    const { scoreReaderAnswer } = await import('../../eval/runner/a4-abstention.ts');
+    expect(scoreReaderAnswer(missing, IDK, 'end', ledger.values)).toMatchObject({ outcome: 'abstain', outcome_v2: 'abstain', stop_reason: 'end', truncated: false });
+  });
+
+  test('an answer cut off at its output limit is scored as the model\'s answer and flagged; a cut-off abstention is not a deliberate abstention', async () => {
+    const { scoreReaderAnswer } = await import('../../eval/runner/a4-abstention.ts');
+    expect(scoreAnswer(missing, cutOff, ledger.values).outcome).toBe('abstain');
+    expect(scoreReaderAnswer(missing, cutOff, 'length', ledger.values)).toMatchObject({ outcome: 'unscorable', outcome_v2: 'unscorable', stop_reason: 'length', truncated: true });
+    expect(scoreReaderAnswer(answerable, `Final answer: ${answerable.answer}`, 'length', ledger.values)).toMatchObject({ outcome: 'correct', truncated: true });
+    expect(scoreReaderAnswer(answerable, '', 'length', ledger.values)).toMatchObject({ outcome: 'unscorable', truncated: true });
+  });
+
+  test('the paid summary counts truncations and stop reasons per arm', async () => {
+    const { paidSummary } = await import('../../eval/runner/a4-abstention.ts');
+    const row = (arm: 'retrieved' | 'oracle', stop_reason: string): AnswerRow => ({ id: answerable.id, cls: answerable.cls, arm, outcome: 'unscorable', final: '', hedged: false, stop_reason, truncated: stop_reason === 'length' });
+    const s = paidSummary([row('retrieved', 'length'), row('retrieved', 'end'), row('oracle', 'end')], []);
+    expect(s.truncated).toEqual({ retrieved: 1, oracle: 0 });
+    expect(s.stop_reasons).toEqual({ retrieved: { length: 1, end: 1 }, oracle: { end: 1 } });
+  });
+
+  test('a smoke reads the first questions of every class', async () => {
+    const { paidQuestions } = await import('../../eval/runner/a4-abstention.ts');
+    expect(paidQuestions(ledger, null)).toHaveLength(ledger.questions.length);
+    const smoke = paidQuestions(ledger, 1);
+    expect(smoke.map(x => x.cls).sort()).toEqual(['absent_entity', 'answerable_note', 'answerable_profile', 'missing_attribute', 'sibling_attribute']);
+    expect(smoke.every(x => ledger.questions.find(y => y.cls === x.cls) === x)).toBe(true);
+  });
+
+  test('--smoke needs a number of questions per class and the paid reader, refused before any request', () => {
+    const a4 = (...args: string[]) => spawnSync('bun', [join(import.meta.dir, '../../eval/runner/a4-abstention.ts'), ...args], { encoding: 'utf8', timeout: 60_000 });
+    const bare = a4('--paid', '--smoke');
+    expect(bare.status).not.toBe(0);
+    expect(bare.stderr).toContain('--smoke needs a positive number of questions per class');
+    const keyless = a4('--smoke', '2');
+    expect(keyless.status).not.toBe(0);
+    expect(keyless.stderr).toContain('pass it with --paid');
+  });
+
+  test('outcome-v3 rescoring reads a cut-off answer as an execution error, and the frozen check accepts its stored outcome', async () => {
+    const { rescoreA4Receipt } = await import('../../eval/runner/outcomes/rescore-a4.ts');
+    const answers: AnswerRow[] = [
+      { id: missing.id, cls: missing.cls, arm: 'retrieved', outcome: 'unscorable', outcome_v2: 'unscorable', final: cutOff, hedged: false, stop_reason: 'length', truncated: true },
+      { id: missing.id, cls: missing.cls, arm: 'oracle', outcome: 'abstain', outcome_v2: 'abstain', final: IDK, hedged: false, stop_reason: 'end', truncated: false },
+    ];
+    const out = rescoreA4Receipt({ resolved_config: { seed: 20261001 }, data: { paid: { answers } } });
+    expect(out.retrieved.v3.execution_errors).toBe(1);
+    expect(out.oracle.v3.execution_errors).toBe(0);
+  });
 });

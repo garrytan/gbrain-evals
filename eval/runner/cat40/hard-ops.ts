@@ -9,6 +9,12 @@
  *   bun eval/runner/cat40/hard-ops.ts freeze write --knobs <knobs.round-N.json> --note "<why this round froze>"
  *   bun eval/runner/cat40/hard-ops.ts freeze check
  *
+ * Accepted drift (docs/benchmarks/cat40-hard/accepted-drift.json): a frozen file may change after the freeze only by a
+ * dated record of its new hash, `file -> [{ sha256, date, note }]`, each note also in calibration.md. A Hard run
+ * passing `--accept-freeze-drift` starts only when every drifted file's current hash is listed there (a revert to an
+ * earlier listed hash passes too); without the flag any drift stops it. The check runs when a Hard run starts, never
+ * in CI, so another lane's edit to a frozen file does not block main.
+ *
  * Exit 3 with a stable code (hard.ts HARD_STOP_CODES) on any refusal.
  */
 import { copyFileSync, existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
@@ -257,12 +263,42 @@ export function frozenKnobDigest(): string | null {
   return existsSync(FROZEN_KNOBS) ? knobDigest(validateKnobs(JSON.parse(readFileSync(FROZEN_KNOBS, 'utf8')), FROZEN_KNOBS)) : null;
 }
 
-/** Frozen files whose hash differs from freeze.json; empty when there is no freeze record or nothing changed. */
-export function freezeDrift(): string[] {
-  if (!existsSync(FREEZE_PATH)) return [];
-  const rec = JSON.parse(readFileSync(FREEZE_PATH, 'utf8')) as FreezeRecord;
-  const now = codeHashes(REPO_ROOT);
-  return Object.keys({ ...rec.code, ...now }).filter(f => rec.code[f] !== now[f]);
+export const ACCEPTED_DRIFT_PATH = join(HARD_DOCS, 'accepted-drift.json');
+
+/** One accepted hash of a frozen file: the date it was accepted and why (the same note is in calibration.md). */
+export interface AcceptedDrift { sha256: string; date: string; note: string }
+
+/** The accepted-drift record, file to its accepted hashes; empty when there is none. A malformed record throws. */
+export function loadAcceptedDrift(path = ACCEPTED_DRIFT_PATH): Record<string, AcceptedDrift[]> {
+  if (!existsSync(path)) return {};
+  const rec = JSON.parse(readFileSync(path, 'utf8')) as unknown;
+  const bad = (why: string) => new Error(`${path}: ${why}; the record is file -> [{ sha256, date: YYYY-MM-DD, note }]`);
+  if (!rec || typeof rec !== 'object' || Array.isArray(rec)) throw bad('not an object');
+  for (const [file, entries] of Object.entries(rec)) {
+    if (!Array.isArray(entries) || !entries.length) throw bad(`${file} has no entries`);
+    for (const e of entries as AcceptedDrift[]) {
+      if (!/^[0-9a-f]{64}$/.test(String(e?.sha256)) || !/^\d{4}-\d{2}-\d{2}$/.test(String(e?.date)) || typeof e?.note !== 'string' || !e.note.trim()) throw bad(`${file} has an entry without a sha256, date and note`);
+    }
+  }
+  return rec as Record<string, AcceptedDrift[]>;
+}
+
+export interface DriftPaths { root?: string; freezePath?: string; acceptedPath?: string }
+
+/**
+ * Frozen files whose hash differs from freeze.json; empty when there is no freeze record or nothing changed. With
+ * `accepted` (a Hard run that passed --accept-freeze-drift), files whose current hash accepted-drift.json lists are left
+ * out, so what remains is the unlisted drift.
+ */
+export function freezeDrift(accepted = false, paths: DriftPaths = {}): string[] {
+  const freezePath = paths.freezePath ?? FREEZE_PATH;
+  if (!existsSync(freezePath)) return [];
+  const rec = JSON.parse(readFileSync(freezePath, 'utf8')) as FreezeRecord;
+  const now = codeHashes(paths.root ?? REPO_ROOT);
+  const drift = Object.keys({ ...rec.code, ...now }).filter(f => rec.code[f] !== now[f]);
+  if (!accepted) return drift;
+  const listed = loadAcceptedDrift(paths.acceptedPath);
+  return drift.filter(f => !(listed[f] ?? []).some(e => e.sha256 === now[f]));
 }
 
 if (import.meta.main) {
@@ -298,7 +334,9 @@ if (import.meta.main) {
       console.log(JSON.stringify(writeFreeze(resolve(knobs), note), null, 2));
     } else if (cmd === 'freeze' && argv[1] === 'check') {
       const drift = freezeDrift();
+      const unlisted = freezeDrift(true);
       console.log(drift.length ? `frozen code changed: ${drift.join(', ')}` : existsSync(FREEZE_PATH) ? 'frozen code unchanged' : 'no freeze record yet');
+      if (drift.length) console.log(unlisted.length ? `not in accepted-drift.json at their current hash (a Hard run stops even with --accept-freeze-drift): ${unlisted.join(', ')}` : 'accepted-drift.json lists every current hash (a Hard run starts with --accept-freeze-drift)');
       process.exit(drift.length ? 3 : 0);
     } else {
       console.error('usage: bun eval/runner/cat40/hard-ops.ts project --step <step> [--measured <files>] [--world <world.json>] | roster | confirm-ledger --world main|sealed | oracle-gate --attempts <file> | freeze write --knobs <file> --note <text> | freeze check');

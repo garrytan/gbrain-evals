@@ -56,7 +56,7 @@ export function openAIMessagesShim(options: ShimOptions = {}): Pick<Anthropic, '
     const json = await res.json() as {
       id?: string; model?: string; status?: string; error?: { message?: string };
       output?: Array<{ type: string; content?: Array<{ type: string; text?: string }> }>;
-      usage?: { input_tokens?: number; output_tokens?: number };
+      usage?: { input_tokens?: number; output_tokens?: number; input_tokens_details?: Record<string, number> };
     };
     if (!res.ok) throw Object.assign(new Error(`OpenAI ${res.status}: ${json.error?.message ?? 'request failed'}`), { status: res.status });
     const out = (json.output ?? []).filter(o => o.type === 'message').flatMap(o => o.content ?? []).filter(c => c.type === 'output_text').map(c => c.text ?? '').join('');
@@ -68,7 +68,11 @@ export function openAIMessagesShim(options: ShimOptions = {}): Pick<Anthropic, '
     return {
       id: json.id ?? 'shim', type: 'message', role: 'assistant', model: json.model ?? model, content,
       stop_reason: truncated ? 'max_tokens' : content[0]!.type === 'tool_use' ? 'tool_use' : 'end_turn', stop_sequence: null,
-      usage: { input_tokens: json.usage?.input_tokens ?? 0, output_tokens: json.usage?.output_tokens ?? 0 },
+      usage: {
+        input_tokens: json.usage?.input_tokens ?? 0,
+        output_tokens: json.usage?.output_tokens ?? 0,
+        ...(json.usage?.input_tokens_details ? { input_tokens_details: json.usage.input_tokens_details } : {}),
+      },
     } as unknown as Anthropic.Message;
   };
   return { messages: { create } } as unknown as Pick<Anthropic, 'messages'>;
@@ -99,5 +103,16 @@ export function judgeTransport(model: string): string {
  */
 export function acceptsTemperature(model: string): boolean {
   if (isOpenAIModel(model)) return false;
-  return !/(?:^|[:/])(?:anthropic[:/])?claude-[a-z]+-5(?:[.-]|$)/i.test(model);
+  return !isClaude5Family(model);
+}
+
+/**
+ * Whether a model id names a Claude model of generation 5 or later
+ * (`claude-opus-5-5`, `anthropic:claude-sonnet-5`, the Bedrock-style
+ * `anthropic.claude-haiku-5-5-v1:0`). Older ids (`claude-haiku-4-5-20251001`,
+ * `claude-3-5-sonnet`) are not.
+ */
+export function isClaude5Family(model: string): boolean {
+  const generation = /(?:^|[:/.])claude-[a-z]+-(\d+)(?:[.-]|$)/i.exec(model)?.[1];
+  return generation !== undefined && Number(generation) >= 5;
 }

@@ -1,0 +1,166 @@
+{
+ "at": "2026-11-01T05:45:54.604Z",
+ "results": {
+  "particle:particle-1": {
+   "ok": true,
+   "text": "ready",
+   "finish": "stop",
+   "response_model": "particle-ai/particle-1",
+   "usage": {
+    "prompt_tokens": 64,
+    "total_tokens": 66,
+    "completion_tokens": 2,
+    "completion_tokens_details": {
+     "reasoning_tokens": 0
+    },
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "reasoning_tokens": 0
+   },
+   "response_meta": {
+    "metadata": null,
+    "weight_version": null,
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "non_default_tier": false,
+    "truncated": false
+   },
+   "latency_ms": 445
+  },
+  "openai:gpt-4o-2024-08-06": {
+   "ok": true,
+   "text": "Yes",
+   "finish": "length",
+   "response_model": "gpt-4o-2024-08-06",
+   "usage": {
+    "prompt_tokens": 14,
+    "completion_tokens": 1,
+    "total_tokens": 15,
+    "prompt_tokens_details": {
+     "cached_tokens": 0,
+     "audio_tokens": 0
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 0,
+     "audio_tokens": 0,
+     "accepted_prediction_tokens": 0,
+     "rejected_prediction_tokens": 0
+    }
+   },
+   "response_meta": null,
+   "latency_ms": 570
+  }
+ },
+ "receipts": [
+  {
+   "schema": "usage-receipt/v1",
+   "lane": "memory-qa",
+   "role": "reader",
+   "question_id": "preflight",
+   "replicate": 0,
+   "model": "particle:particle-1",
+   "delivered": null,
+   "attempt": 0,
+   "response_model": "particle-ai/particle-1",
+   "status": "ok",
+   "error": null,
+   "from_cache": false,
+   "finish": "stop",
+   "finish_raw": "stop",
+   "answer": "ready",
+   "usage_raw": {
+    "prompt_tokens": 64,
+    "total_tokens": 66,
+    "completion_tokens": 2,
+    "completion_tokens_details": {
+     "reasoning_tokens": 0
+    },
+    "prompt_tokens_details": {
+     "cached_tokens": 0
+    },
+    "reasoning_tokens": 0
+   },
+   "usage": {
+    "convention": "openai-chat",
+    "input_total": 64,
+    "input_uncached": 64,
+    "cache_read": 0,
+    "cache_write": 0,
+    "output_total": 2,
+    "reasoning": 0
+   },
+   "request": {
+    "effort_sent": "none",
+    "effort_effective": "none",
+    "output_limit_field": "max_completion_tokens",
+    "output_limit": 16000,
+    "temperature_sent": null,
+    "seed_sent": null
+   },
+   "response_meta": {
+    "metadata": null,
+    "weight_version": null,
+    "service_tier": "default",
+    "system_fingerprint": null,
+    "non_default_tier": false,
+    "truncated": false
+   }
+  },
+  {
+   "schema": "usage-receipt/v1",
+   "lane": "memory-qa",
+   "role": "judge",
+   "question_id": "preflight",
+   "replicate": 0,
+   "model": "openai:gpt-4o-2024-08-06",
+   "delivered": null,
+   "attempt": 0,
+   "response_model": "gpt-4o-2024-08-06",
+   "status": "ok",
+   "error": null,
+   "from_cache": false,
+   "finish": "max_tokens",
+   "finish_raw": "length",
+   "answer": "Yes",
+   "usage_raw": {
+    "prompt_tokens": 14,
+    "completion_tokens": 1,
+    "total_tokens": 15,
+    "prompt_tokens_details": {
+     "cached_tokens": 0,
+     "audio_tokens": 0
+    },
+    "completion_tokens_details": {
+     "reasoning_tokens": 0,
+     "audio_tokens": 0,
+     "accepted_prediction_tokens": 0,
+     "rejected_prediction_tokens": 0
+    }
+   },
+   "usage": {
+    "convention": "openai-chat",
+    "input_total": 14,
+    "input_uncached": 14,
+    "cache_read": 0,
+    "cache_write": 0,
+    "output_total": 1,
+    "reasoning": 0
+   }
+  }
+ ],
+ "cost": {
+  "usd": 0.000063,
+  "input_tokens": 78,
+  "output_tokens": 3,
+  "basis": "budget ledger w10-particle-u3-2026-11-01T05-45-53-538Z-2259dad5: 2 paid requests, 0 charged at their reservation because usage was unavailable",
+  "ledger": "<work>/u3/ledger.sqlite",
+  "program_cap_usd": 12,
+  "overshoot_usd": 0,
+  "event_loop_lag_ms": {
+   "p50": 0,
+   "p99": 3,
+   "max": 3.3
+  }
+ }
+}

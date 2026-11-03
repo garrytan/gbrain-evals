@@ -359,6 +359,9 @@ describe('runner (T1, T2, T6: CEO-F3, CEO-F12, DX-F3, DX-F7, ENG-F1, ENG-F2, ENG
     const heldout = generateHardWorld(SMOKE);
     await expect(main(['--world', writeWorld(heldout), '--models', 'claude-sonnet-5-5', '--judge', 'gpt-6.1-sol', '--arms', 'fs', '--out', tmp(), '--preflight'])).rejects.toThrow('HARD_KNOBS_NOT_FROZEN');
   });
+  test('particle-1 does not run on Hard worlds: amendment A6 keeps the model list, and the Hard freeze does not cover its transport', async () => {
+    await expect(main(['--world', writeWorld(world), '--models', 'particle-1', '--judge', 'gpt-6.1-sol', '--arms', 'fs', '--out', tmp(), '--preflight'])).rejects.toThrow('particle-1 does not run on Hard worlds');
+  });
   test('strict flags: unknown flags, missing values, non-numbers and empty selections are refused; --help prints usage', () => {
     expect(() => checkRunnerFlags(['--bogus'])).toThrow('unknown flag --bogus');
     expect(() => checkRunnerFlags(['--repeat', 'two'])).toThrow('must be a number');

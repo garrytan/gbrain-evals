@@ -6,15 +6,22 @@
  * gbrain's own runSkillOpt with different internal knobs, scored on the SAME
  * held-out set so they're directly comparable.
  *
- * Configs (each repeated TRIALS times for a paired-bootstrap CI):
- *   A  full pipeline      reflectMode:'both'  + D12 validation gate
- *   B  single-reflect     reflectMode:'failure-only'  (cost/perf comparison —
- *                         report optimizer token cost alongside; full mode can
- *                         spend up to 2 optimizer calls/step so a raw A>B win is
- *                         confounded with spend, codex r2 #9)
+ * Configs (each repeated TRIALS times for a paired-bootstrap CI). Every arm
+ * names its optimizerMode: gbrain requires it since v0.60.542.0, where one
+ * gated rewrite became the default and the loop became opt-in.
+ *   A  full pipeline      optimizerMode:'reflect', reflectMode:'both'  + D12
+ *                         validation gate
+ *   B  single-reflect     optimizerMode:'reflect', reflectMode:'failure-only'
+ *                         (cost/perf comparison — report optimizer token cost
+ *                         alongside; full mode can spend up to 2 optimizer
+ *                         calls/step so a raw A>B win is confounded with
+ *                         spend, codex r2 #9)
  *   C  one-shot rewrite   optimizerMode:'one-shot-rewrite'  (the load-bearing
- *                         "do I even need the loop?" baseline — a real method)
- *   D  greedy no-gate     disableValidationGate:true  (accept every edit)
+ *                         "do I even need the loop?" baseline — a real method;
+ *                         since v0.60.542.0 it rewrites from train rollouts and
+ *                         faces the same D12 selection gate as a loop step)
+ *   D  greedy no-gate     optimizerMode:'reflect', disableValidationGate:true
+ *                         (accept every edit)
  * Plus reference floors (no optimizer spend):
  *   seed  the unoptimized seed scored directly
  *
@@ -61,12 +68,12 @@ import { PGLiteEngine } from 'gbrain/pglite-engine';
 import { configureGateway, __setChatTransportForTests } from 'gbrain/ai/gateway';
 // SkillOpt entry points via gbrain's public `./core/skillopt` export (audit skillopt-cats-11).
 import {
-  runSkillOpt, scoreSkillOnTasks, loadHeldOut,
+  runSkillOpt, scoreSkillOnTasks, loadHeldOut, type SkillOptOpts,
 } from 'gbrain/core/skillopt';
 import { ProbeAccounting } from './probe-accounting.ts';
 import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt } from './receipt.ts';
 import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
-import { makeSkilloptStubTransport, PINNED_CONFIG, CLEAN_OUTCOMES, type SkilloptStubBehavior } from './cat30-skillopt-improvement.ts';
+import { makeSkilloptStubTransport, PINNED_CONFIG, CLEAN_OUTCOMES, SKILLOPT_MODELS, type SkilloptRunRecord, type SkilloptStubBehavior } from './cat30-skillopt-improvement.ts';
 
 export const CAT31_CATEGORY = 'cat31-skillopt-ablation';
 
@@ -76,11 +83,12 @@ export const GATE_EPS = 0.05;
 export const BOOTSTRAP_SEED = 0x5eed31;
 
 export type ConfigKey = 'A_full' | 'B_single_reflect' | 'C_one_shot' | 'D_no_gate';
-const FULL_CONFIGS: Array<{ key: ConfigKey; opts: Record<string, unknown> }> = [
-  { key: 'A_full', opts: { reflectMode: 'both' } },
-  { key: 'B_single_reflect', opts: { reflectMode: 'failure-only' } },
+type ArmOpts = Pick<SkillOptOpts, 'optimizerMode' | 'reflectMode' | 'disableValidationGate'>;
+const FULL_CONFIGS: Array<{ key: ConfigKey; opts: ArmOpts }> = [
+  { key: 'A_full', opts: { optimizerMode: 'reflect', reflectMode: 'both' } },
+  { key: 'B_single_reflect', opts: { optimizerMode: 'reflect', reflectMode: 'failure-only' } },
   { key: 'C_one_shot', opts: { optimizerMode: 'one-shot-rewrite' } },
-  { key: 'D_no_gate', opts: { disableValidationGate: true } },
+  { key: 'D_no_gate', opts: { optimizerMode: 'reflect', disableValidationGate: true } },
 ];
 const SPLIT: [number, number, number] = [1, 1, 1];
 
@@ -132,6 +140,7 @@ export interface Cat31Options {
   trials?: number;
   targetModel?: string;
   optimizerModel?: string;
+  judgeModel?: string;
   epochs?: number;
   batchSize?: number;
   runsPerTask?: number;
@@ -160,6 +169,7 @@ export function optionsFromEnv(argv: string[] = process.argv.slice(2)): Cat31Opt
     trials: process.env.SKILLOPT_TRIALS ? Number(process.env.SKILLOPT_TRIALS) : undefined,
     targetModel: process.env.SKILLOPT_TARGET_MODEL,
     optimizerModel: process.env.SKILLOPT_OPTIMIZER_MODEL,
+    judgeModel: process.env.SKILLOPT_JUDGE_MODEL,
     epochs: process.env.SKILLOPT_EPOCHS ? Number(process.env.SKILLOPT_EPOCHS) : undefined,
     batchSize: process.env.SKILLOPT_BATCH_SIZE ? Number(process.env.SKILLOPT_BATCH_SIZE) : undefined,
     runsPerTask: process.env.SKILLOPT_HELDOUT_RUNS ? Number(process.env.SKILLOPT_HELDOUT_RUNS) : undefined,
@@ -217,16 +227,18 @@ interface TrialDeps {
   acc: ProbeAccounting;
   targetModel: string;
   optimizerModel: string;
+  judgeModel: string;
   epochs: number;
   batchSize: number;
   runsPerTask: number;
   maxCostUsd: number;
   runSkillOptFn: typeof runSkillOpt;
   scoreFn: typeof scoreSkillOnTasks;
+  runs: SkilloptRunRecord[];
   log: (s: string) => void;
 }
 
-async function runConfigTrial(deps: TrialDeps, cfgOpts: Record<string, unknown>, seedBody: string, benchmarkPath: string, heldTasks: any[], tag: string): Promise<TrialScore> {
+async function runConfigTrial(deps: TrialDeps, cfgOpts: ArmOpts, seedBody: string, benchmarkPath: string, heldTasks: any[], tag: string): Promise<TrialScore> {
   const tmpSkills = join(deps.isolatedHome, `skills-${tag}`);
   mkdirSync(join(tmpSkills, deps.seed), { recursive: true });
   cpSync(join(deps.dataDir, deps.seed, 'SKILL.md'), join(tmpSkills, deps.seed, 'SKILL.md'));
@@ -235,11 +247,12 @@ async function runConfigTrial(deps: TrialDeps, cfgOpts: Record<string, unknown>,
     r = await deps.runSkillOptFn({
       engine: deps.engine, skillName: deps.seed, skillsDir: tmpSkills, benchmarkPath,
       epochs: deps.epochs, batchSize: deps.batchSize, lr: 4, lrSchedule: 'cosine', split: SPLIT,
-      optimizerModel: deps.optimizerModel, targetModel: deps.targetModel, judgeModel: deps.targetModel,
+      optimizerModel: deps.optimizerModel, targetModel: deps.targetModel, judgeModel: deps.judgeModel,
       mode: 'patch', dryRun: false, noMutate: false, allowMutateBundled: false,
       bootstrapReviewed: false, json: true, maxCostUsd: deps.maxCostUsd, maxRuntimeMin: 25, force: true,
       ...cfgOpts,
-    } as any);
+    });
+    deps.runs.push({ label: tag, outcome: r.outcome, final_text: r.finalText ?? null, receipt: r.receipt ?? null });
   } catch (e: any) {
     const msg = `runSkillOpt threw: ${e?.message ?? e}`;
     deps.log(`[cat31]   ${tag} SUT error: ${msg}\n`);
@@ -252,7 +265,7 @@ async function runConfigTrial(deps: TrialDeps, cfgOpts: Record<string, unknown>,
     return { heldout: null, sel: r.receipt?.best_sel_score ?? null, cost: r.receipt?.final_cost_usd ?? 0, outcome: r.outcome, error: msg, error_origin: 'sut' };
   }
   try {
-    const heldout = await deps.scoreFn({ engine: deps.engine, skillText: r.finalText ?? seedBody, tasks: heldTasks, targetModel: deps.targetModel, judgeModel: deps.targetModel, runsPerTask: deps.runsPerTask });
+    const heldout = await deps.scoreFn({ engine: deps.engine, skillText: r.finalText ?? seedBody, tasks: heldTasks, targetModel: deps.targetModel, judgeModel: deps.judgeModel, runsPerTask: deps.runsPerTask });
     deps.acc.score(tag, heldout);
     return { heldout, sel: r.receipt?.best_sel_score ?? 0, cost: r.receipt?.final_cost_usd ?? 0, outcome: r.outcome };
   } catch (e: any) {
@@ -269,8 +282,9 @@ export async function runCat31(options: Cat31Options = {}): Promise<Cat31RunResu
   const startedAt = new Date().toISOString();
   const bpre = options.bpre ?? false;
   const stub = options.stubLlm ?? false;
-  const targetModel = options.targetModel ?? 'anthropic:claude-haiku-4-5';
-  const optimizerModel = options.optimizerModel ?? (bpre ? 'anthropic:claude-haiku-4-5' : 'anthropic:claude-sonnet-4-6');
+  const targetModel = options.targetModel ?? SKILLOPT_MODELS.target;
+  const optimizerModel = options.optimizerModel ?? (bpre ? SKILLOPT_MODELS.bpreOptimizer : SKILLOPT_MODELS.optimizer);
+  const judgeModel = options.judgeModel ?? SKILLOPT_MODELS.judge; // skillopt-v1 has rule and qrels judges only
   const epochs = options.epochs ?? (bpre ? 1 : 3);
   const batchSize = options.batchSize ?? 5;
   const runsPerTask = options.runsPerTask ?? (bpre || stub ? 1 : 3);
@@ -324,6 +338,7 @@ export async function runCat31(options: Cat31Options = {}): Promise<Cat31RunResu
 
   const acc = new ProbeAccounting(expected);
   const byConfig: Record<string, TrialScore[]> = {};
+  const skilloptRuns: SkilloptRunRecord[] = [];
   let seedHeldout = NaN;
   let engine: any = null;
   try {
@@ -341,7 +356,7 @@ export async function runCat31(options: Cat31Options = {}): Promise<Cat31RunResu
     // Reference floor: the unoptimized seed on held-out (cheap, no optimizer).
     // A floor-scoring failure is fatal — the gate is meaningless without it.
     try {
-      seedHeldout = await scoreFn({ engine, skillText: seedBody, tasks: heldTasks, targetModel, judgeModel: targetModel, runsPerTask });
+      seedHeldout = await scoreFn({ engine, skillText: seedBody, tasks: heldTasks, targetModel, judgeModel, runsPerTask });
       acc.score('seed-floor', seedHeldout);
     } catch (e: any) {
       acc.error('seed-floor', 'dependency', `seed floor scoring failed: ${e?.message ?? e}`);
@@ -361,9 +376,10 @@ export async function runCat31(options: Cat31Options = {}): Promise<Cat31RunResu
 
     const deps: TrialDeps = {
       engine, isolatedHome, dataDir, seed, acc,
-      targetModel, optimizerModel, epochs, batchSize, runsPerTask, maxCostUsd,
+      targetModel, optimizerModel, judgeModel, epochs, batchSize, runsPerTask, maxCostUsd,
       runSkillOptFn: options.runSkillOptFn ?? runSkillOpt,
       scoreFn,
+      runs: skilloptRuns,
       log,
     };
     for (const cfg of configs) {
@@ -413,6 +429,8 @@ export async function runCat31(options: Cat31Options = {}): Promise<Cat31RunResu
       seed,
       target_model: targetModel,
       optimizer_model: optimizerModel,
+      optimizer_modes: Object.fromEntries(configs.map(c => [c.key, c.opts.optimizerMode])),
+      judge_model: judgeModel,
       epochs, batch_size: batchSize, runs_per_task: runsPerTask, trials,
       max_cost_usd: maxCostUsd,
       lift_margin: LIFT_MARGIN,
@@ -433,6 +451,7 @@ export async function runCat31(options: Cat31Options = {}): Promise<Cat31RunResu
       gate_pass: gatePass,
       gate_reasons: reasons,
       infra_error_rate: summary.infra_error_rate,
+      skillopt_runs: skilloptRuns,
     },
   };
   writeReceipt(receiptFile, receipt);

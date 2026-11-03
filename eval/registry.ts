@@ -69,6 +69,8 @@ export type RunSpec =
     timeoutMs?: number;
     /** Latency benchmark: runs alone, never alongside another category. */
     exclusive?: boolean;
+    /** The runner refuses a live run without `--paid --budget-run-id <id>`; all.ts passes both from its paid run. */
+    paidFlags?: true;
   }
   | { kind: 'listed'; reason: string; command?: string };
 
@@ -447,7 +449,7 @@ export const REGISTRY: readonly CategoryEntry[] = [
   },
   {
     id: 'propose-takes', legacy_alias: '15', name: 'propose_takes extraction (live model)',
-    family: 'extraction', tier: 'P', script: 'eval/runner/cat15-propose-takes.ts', run: { kind: 'dispatched', timeoutMs: HOUR },
+    family: 'extraction', tier: 'P', script: 'eval/runner/cat15-propose-takes.ts', run: { kind: 'dispatched', timeoutMs: HOUR, paidFlags: true },
     cost_estimate: UNMEASURED, receipt_path: receipt('cat15-propose-takes'),
     headline: { metric: 'precision, recall and F1 of extracted takes', denominator: '48 labeled claims' },
     gate: 'report-only', promotion: REPORT_ONLY, evidence_maturity: 'regression-only',
@@ -519,7 +521,7 @@ export const REGISTRY: readonly CategoryEntry[] = [
   },
   {
     id: 'trajectory-routing', legacy_alias: '25', name: 'Trajectory routing in think (live model)',
-    family: 'reasoning', tier: 'P', script: 'eval/runner/cat25-trajectory-routing.ts', run: { kind: 'dispatched', timeoutMs: HOUR },
+    family: 'reasoning', tier: 'P', script: 'eval/runner/cat25-trajectory-routing.ts', run: { kind: 'dispatched', timeoutMs: HOUR, paidFlags: true },
     cost_estimate: UNMEASURED, receipt_path: receipt('cat25-trajectory-routing'),
     headline: { metric: 'think answers with vs without trajectory routing', denominator: 'synthetic-v1 temporal probes' },
     gate: 'report-only', promotion: REPORT_ONLY, evidence_maturity: 'regression-only',
@@ -579,7 +581,7 @@ export const REGISTRY: readonly CategoryEntry[] = [
     family: 'extraction', tier: 'P', script: 'eval/runner/cat35-transcript-distill.ts',
     // Worst-case dream lane alone is 24 x 600s subagent cap / 2 concurrency.
     run: { kind: 'dispatched', env: { CAT35_FULL: '1' }, timeoutMs: 3 * HOUR },
-    cost_estimate: { usd: 12, basis: 'measured $6.20-$6.36 per full run (2026-08-31 receipts) plus an estimated $2-$6 of dream synthesis the phase API does not report' },
+    cost_estimate: { usd: 54, basis: 'the pre-flight worst case for a full run with Opus 5.5 distilling and the gpt-6.1-sol judge ($53.40, 2026-11-01, not yet measured); the Sonnet 4.6 full runs measured $6.20-$6.36 (2026-08-31 receipts)' },
     receipt_path: receipt('cat35-transcript-distill'),
     headline: { metric: 'evidence-verified fact retention and hallucination rate of distilled pages', denominator: 'labeled facts across the transcript fixtures; judge failures are errors, not misses' },
     gate: 'report-only', promotion: REPORT_ONLY, evidence_maturity: 'synthetic-production-path',
@@ -927,6 +929,20 @@ export const REGISTRY: readonly CategoryEntry[] = [
     contract: 'Generates one very large Markdown document per kind (an iMessage-style group chat in the imessage-slack line shape at 2 MB, 20 MB or 200 MB; a project log; a novel), each with four planted needles per decile and a one-detail distractor per needle, and writes it into a fresh in-memory PGLite brain per arm through gbrain\'s operation handlers (trusted local caller), in a child process under an RSS watchdog. Arms: the whole document as one page with default reads (gbrain as it is), the managed-parts split (a hub page plus one page per `## ` section, the conversation-archive and imessage-daily design), and the native large page, run only when a capability probe of the operation registry finds get_page body modes with a window. Scores keyword needle recall@10 by decile against ledger gold (a hit is a stored chunk holding the answer as a whole token), read correctness inside the egress cap, the largest response frame, append cost with a counting fake embedder, the export round trip and ingest time and RSS. It does not measure real embeddings, vector or hybrid recall or agent QA (the paid arm, behind --paid --budget-run-id), the git layout, sync, transports other than in-process operations, or Postgres. A refused or unsearchable page is a scored miss; a gbrain exception where an answer is expected is a scored miss; a crashed arm process is a safety failure with its probes scored as misses; a failed presence assertion or a brain that cannot find its control page is a harness error and voids the run.',
   },
   {
+    id: 'skillopt-method', legacy_alias: 'N15', name: 'SkillOpt method benchmark, Phase 1: frozen task sets, counted scorer and A1 headroom probe on gbrain\'s shipped query, briefing and fact-check skills',
+    family: 'optimization', tier: 'H', script: 'eval/runner/n15-skillopt-method.ts', run: { kind: 'dispatched', timeoutMs: 300_000 },
+    cost_estimate: FREE, receipt_path: receipt('n15-skillopt-method'),
+    headline: { metric: 'dataset frozen and regenerable, seeds verbatim, solvability controls passing and degenerate answers failing on train and selection, tool coverage per seed, and the A1 probe path end to end on a fake transport', denominator: 'skillopt-method-v2 (the probe\'s data since probe 1 saturated v1; v1 stays frozen and checked): 3 skills x 84 tasks (24 train, 24 selection, 36 sealed test); the live probe (manual, --probe --paid --budget-run-id) scores selection, and only its --stage test reads the sealed test split, the one read amendment 3 preregistered' },
+    gate: 'report-only', evidence_maturity: 'synthetic-production-path',
+    promotion: {
+      preregistered: '2026-11-01',
+      basis: 'report-only: Phase 1 of the SkillOpt method plan (GST-799) builds the task sets and the A1 probe; the probe gate (build Phase 2 only if, on at least two skills, the seed scores 0.2 to 0.8 on selection and the kept one-shot rewrite stays 0.15 below the solvability ceiling) is preregistered in docs/benchmarks/2026-11-01-skillopt-method/PREREGISTRATION.md and decides the plan, not CI',
+      safety_contracts: [], quality_thresholds: [],
+      exploratory: ['data.integrity (dataset regeneration and manifest, seed hashes, solvability controls and degenerate answers)', 'data.coverage (seed frontmatter tools the rollout does not serve)', 'data.fake_probe (the probe path on the fake transport; its numbers are fixed by the fake)', 'data.probe.gate in the live probe receipt (eval/reports/n15-skillopt-method/probe/receipt.json)'],
+    },
+    contract: 'Builds and checks the measuring stick for comparing skill optimizers on gbrain\'s own skills, keyless. Task sets (eval/data/skillopt-method-v2, the hardening after probe 1 found v1 saturated, and v1, both frozen by sha256 MANIFEST) come from messy-company-v1 governing-records labels and world-v1 structured facts; v2 asks for values a later record superseded, two values at once, a second hop to a founder\'s page and every meeting on a calendar; each task has one anchor, every anchor, gold fact and gold page sits in one split, and an independent oracle (the deciding passage on the governing page, the other side of a world-v1 relationship and the page prose) confirmed every gold value, with drops recorded per skill. Negative controls are invented or look-alike names absent from every page of both corpora. The counted score is binary: every gold value matches a tolerant pattern, a gold page is cited for each part of the answer in the skill\'s own form (briefing: [Source: slug, updated DATE]; fact-check: a STATUS line on its scale), and an unanswerable subject gets an abstention that names it; citation nDCG is an uncounted diagnostic. Seeds are copied verbatim from gbrain 3ec766c40 and pinned by sha256. It does not compare optimizers (no rollout server, no outside arms) and spends nothing by default; the live A1 probe runs only with --probe --paid --budget-run-id; its F0a and F0b stages read the selection split only, and --stage test is the one preregistered read of the sealed test split (amendment 3), scoring no skill, the seed and the kept rewrite on the pairs F0b scored. A dataset version that does not regenerate byte for byte, a seed off its hash, a failing solvability control or a passing degenerate answer makes the verdict fail; a fake probe that reads a test file or leaves an arm unscored is a harness error.',
+  },
+  {
     id: 'open-loops-email', legacy_alias: 'N7', name: 'Open loops on Gmail-shaped threads: turn-flip detection, closure, manual close and mute',
     family: 'agent', tier: 'H', script: 'eval/runner/n7-open-loops-email.ts', run: { kind: 'dispatched' },
     cost_estimate: FREE, receipt_path: receipt('n7-open-loops-email'),
@@ -1030,7 +1046,7 @@ export const REGISTRY: readonly CategoryEntry[] = [
       ],
       exploratory: ['data.crag.by_class (grade by question class)', 'data.crag.operating_points (risk and coverage of the grade used as an abstention gate)', 'data.crag.strong_on_unanswerable', 'data.s4 (where S4 could not abstain even when on: identity hit or strong deterministic grade)', 'data.paid.* (paid receipt only: house reader on retrieved and oracle evidence, CRAG-gated reader)'],
     },
-    contract: 'Seeds fictional companies (profile pages and diligence notes, every attribute value unique) into PGLite through put_page and asks 240 questions through the query operation (keyword only, no key, expansion off, top five). Hermetic: scores the zero-LLM CRAG grade attached to each response against evidence sufficiency (answer text present in the top five) and against answerability from the ledger, reported as coarse operating points, not a calibrated curve; and computes, with gbrain\'s own reducer inputs, where System One S4 could never abstain (identity hit or strong grade). Paid: the answerer is defined explicitly as gbrain\'s house reader (src/eval/longmemeval/reader.ts notes-mode system text, claude-sonnet-4-6, 1,024 output tokens, temperature 0) over the top five results, and over matched oracle evidence as a control; answers are scored deterministically against the ledger (correct, wrong, wrong-source, abstain). gbrain has no keyless answerer, so the keyless path cannot abstain; that is a gap, not a failure. S4 on is a separate arm that needs a TypeSafe key, explicit enabling and a budget guard that can price TypeSafe requests. Safety refusals are out of scope. A gbrain exception where an answer is expected is a scored miss; a failed presence assertion voids the run.',
+    contract: 'Seeds fictional companies (profile pages and diligence notes, every attribute value unique) into PGLite through put_page and asks 240 questions through the query operation (keyword only, no key, expansion off, top five). Hermetic: scores the zero-LLM CRAG grade attached to each response against evidence sufficiency (answer text present in the top five) and against answerability from the ledger, reported as coarse operating points, not a calibrated curve; and computes, with gbrain\'s own reducer inputs, where System One S4 could never abstain (identity hit or strong grade). Paid: the answerer is defined explicitly as gbrain\'s house reader (src/eval/longmemeval/reader.ts notes-mode system text, claude-opus-5-5 at the provider\'s default temperature, 1,024 output tokens; the 2026-11-01 amendments to docs/benchmarks/2026-10-01-n2-a4-preregistration.md moved it from claude-sonnet-4-6 at temperature 0 to claude-sonnet-5-5 and then to claude-opus-5-5, and the readers are never pooled) over the top five results, and over matched oracle evidence as a control; answers are scored deterministically against the ledger (correct, wrong, wrong-source, abstain). Every answer records the gateway\'s stop reason: an answer cut off at the output limit is scored as the reader\'s answer, flagged truncated and counted per arm, and an abstention phrase in it scores unscorable, never abstain (the second 2026-11-01 amendment). --smoke <n> reads the first n questions of each class, the preregistered check for cut-off answers before a counted run; its receipt is not publishable. gbrain has no keyless answerer, so the keyless path cannot abstain; that is a gap, not a failure. S4 on is a separate arm that needs a TypeSafe key, explicit enabling and a budget guard that can price TypeSafe requests. Safety refusals are out of scope. A gbrain exception where an answer is expected is a scored miss; a failed presence assertion voids the run.',
   },
   {
     id: 'system-one-jev-record', legacy_alias: 'SO', name: 'System One (Jev decision support) record: datasets, receipts and pair definitions',
@@ -1382,6 +1398,8 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'cat21-paired.ts': { role: 'keyless Cat 21 per-split metrics and file-clustered paired comparisons (2026-10-06)', part_of: 'code-retrieval' },
   'n2-judge-replay.ts': { role: 'N2 judge-only replay: capture and verify judge inputs, select, judge, score (W9, 2026-10-06); paid, not dispatched', part_of: 'contradiction-surfacing' },
   'openai-judge-shim.ts': { role: 'Anthropic-shaped messages.create over the OpenAI Responses API, so Anthropic-SDK judges can run OpenAI models' },
+  'anthropic-request.ts': { role: 'fits Anthropic Messages requests to the model: no temperature or forced tool choice for Claude 5, older models unchanged' },
+  'model-defaults.ts': { role: 'which models a live category may name as its default, and the named exceptions that keep an older model on purpose (R4)' },
   'takes-bootstrap-frontier.ts': { role: "gbrain takes-bootstrap eval on frontier models through the priced overlay: route check, ledger-wrapped run, keyless re-score (W4, 2026-10-06); paid, not dispatched" },
   'w6-embedding-matrix.ts': { role: 'keyless summary of the 2026-10-06 embedding matrix (Cat 13 held-out and Cat 18b receipts)' },
   'w8-negative-controls.ts': { role: 'keyless summary of the 2026-10-06 live negative controls (ratio rule, signal floors, injection checks)' },
@@ -1461,6 +1479,7 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
   'probe-accounting.ts': { role: 'shared probe accounting' },
   'promotion.ts': { role: 'evaluates preregistered promotion rules against a receipt' },
   'prereg.ts': { role: 'preregistration attestation and the CI order check' },
+  'quoted-reads.ts': { role: 'reads a quote-fenced fact or value from a remote gbrain read through the build\'s own unquoteFactText (gbrain v0.60.536.0 on), used by N1 and Cat 38' },
   'reading-notes-recount.ts': { role: 'keyless recount of the reading-notes artifacts', part_of: 'reading-notes' },
   'reading-headroom.ts': { role: 'keyless $0 recount of the W10a/W10b receipts: gold-session share of delivered text, notes length and committed-wrong answers (docs/benchmarks/2026-10-08-reading-headroom.md)', part_of: 'longmemeval-answers' },
   'reading-notes-requests.ts': { role: 'offline reading-notes request builder', part_of: 'reading-notes' },
@@ -1514,4 +1533,4 @@ export const RUNNER_HELPERS: Readonly<Record<string, RunnerHelper>> = {
 };
 
 /** Subdirectories of eval/runner/ holding helper modules only. */
-export const RUNNER_HELPER_DIRS: readonly string[] = ['adapters', 'batch', 'budgeted-delivery', 'cat40', 'cat41', 'decisions', 'evaluator', 'evidence-delivery', 'external-ideas-wave-a', 'facts-absorb', 'graph-backend', 'lifecycle', 'lifecycle-lite', 'memory-proof-wave', 'memory-qa', 'memory-trust', 'messy-company', 'outcomes', 'p4-stream', 'pilot', 'power', 'q1', 'q2', 'queries', 'stats', 'system-one', 'systems', 't0', 'takes-bootstrap'];
+export const RUNNER_HELPER_DIRS: readonly string[] = ['adapters', 'batch', 'budgeted-delivery', 'cat40', 'cat41', 'decisions', 'evaluator', 'evidence-delivery', 'external-ideas-wave-a', 'facts-absorb', 'graph-backend', 'lifecycle', 'lifecycle-lite', 'memory-proof-wave', 'memory-qa', 'memory-trust', 'messy-company', 'outcomes', 'p4-stream', 'pilot', 'power', 'providers', 'q1', 'q2', 'queries', 'skillopt-method', 'stats', 'system-one', 'systems', 't0', 'takes-bootstrap'];

@@ -1,0 +1,19 @@
+{
+ "schema_version": 1,
+ "experiments": [
+  {
+   "id": "longmemeval-particle-replay",
+   "preregistration": "docs/benchmarks/2026-11-01-longmemeval-particle-replay/PREREGISTRATION.md",
+   "results": [
+    "docs/benchmarks/2026-11-01-longmemeval-particle-replay/arms/**",
+    "docs/benchmarks/2026-11-01-longmemeval-particle-replay/canary/**",
+    "docs/benchmarks/2026-11-01-longmemeval-particle-replay/preflight/**",
+    "docs/benchmarks/2026-11-01-longmemeval-particle-replay/build.json",
+    "docs/benchmarks/2026-11-01-longmemeval-particle-replay/compare-*.ndjson",
+    "docs/benchmarks/2026-11-01-longmemeval-particle-replay/summary.json",
+    "docs/benchmarks/2026-11-01-longmemeval-particle-replay/REPORT.md",
+    "docs/benchmarks/particle-canary/history.jsonl"
+   ]
+  }
+ ]
+}

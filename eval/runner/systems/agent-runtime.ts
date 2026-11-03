@@ -65,7 +65,7 @@ export function runtimeModel(reader: string): string {
   if (prov === 'anthropic') return `anthropic/${reader.slice(i + 1)}`;
   if (prov === 'openai') return `openai-compatible/${reader.slice(i + 1)}`;
   throw decideError({ code: 'SPEC_INVALID', message: `reader ${JSON.stringify(reader)} is not an anthropic: or openai: model id`, why: 'the runtime reaches models only through the proxy providers its shim registers (Anthropic and OpenAI-compatible)',
-    fix: { next: 'report', user_message: 'pass a reader such as anthropic:claude-sonnet-5-5 or openai:gpt-6.1-sol', verify: ['grep', '-n', 'FRONTIER_READERS', 'eval/runner/systems/baselines.ts'] } });
+    fix: { next: 'report', user_message: 'pass a reader such as anthropic:claude-opus-5-5 or openai:gpt-6.1-sol', verify: ['grep', '-n', 'FRONTIER_READERS', 'eval/runner/systems/baselines.ts'] } });
 }
 
 export interface RuntimeProcess { code: number | null; stdout: string; stderr: string; timed_out: boolean }

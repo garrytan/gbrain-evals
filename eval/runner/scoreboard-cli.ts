@@ -113,9 +113,9 @@ async function portFree(port: number): Promise<boolean> {
   try { const s = Bun.serve({ port, hostname: '127.0.0.1', fetch: () => new Response('') }); s.stop(true); return true; } catch { return false; }
 }
 
-async function dockerUp(): Promise<boolean> {
+async function dockerUp(env: Record<string, string | undefined>): Promise<boolean> {
   try {
-    const p = Bun.spawn(['docker', 'info', '--format', '{{.ServerVersion}}'], { stdout: 'ignore', stderr: 'ignore' });
+    const p = Bun.spawn(['docker', 'info', '--format', '{{.ServerVersion}}'], { env, stdout: 'ignore', stderr: 'ignore' });
     const t = setTimeout(() => p.kill(), 10_000);
     const code = await p.exited;
     clearTimeout(t);
@@ -134,13 +134,15 @@ export async function doctor(a: Args, env: Record<string, string | undefined> = 
   const paid = forWhat === 'local' || forWhat === 'run' || forWhat === 'sealed';
   const remote = forWhat === 'run' || forWhat === 'sealed';
 
-  const [maj, min] = Bun.version.split('.').map(Number);
-  add({ id: 'bun', ok: maj > 1 || (maj === 1 && min >= 4), severity: 'error', detail: `Bun ${Bun.version} (needs 1.4.0 or later)`, code: 'PREFLIGHT_FAILED',
-    fix: { next: 'run', argv: ['bash', '-c', 'curl -fsSL https://bun.sh/install | bash -s bun-v1.4.2'], verify: ['bun', '--version'] } });
+  const bunRange = (JSON.parse(readFileSync(join(REPO_ROOT, 'package.json'), 'utf8')) as { engines?: { bun?: string } }).engines?.bun ?? '';
+  const bunMin = /^>=(\d+\.\d+\.\d+)$/.exec(bunRange)?.[1];
+  if (!bunMin) throw new Error(`package.json engines.bun must read ">=X.Y.Z" (doctor installs that version), not ${JSON.stringify(bunRange)}`);
+  add({ id: 'bun', ok: Bun.semver.satisfies(Bun.version.replace(/[-+].*$/, ''), bunRange), severity: 'error', detail: `Bun ${Bun.version} (needs ${bunRange}, package.json engines)`, code: 'PREFLIGHT_FAILED',
+    fix: { next: 'run', argv: ['bash', '-c', `curl -fsSL https://bun.sh/install | bash -s bun-v${bunMin}`], verify: ['bun', '--version'] } });
   const py = Bun.spawnSync(['python3', '--version'], { stdout: 'pipe', stderr: 'pipe' });
   add({ id: 'python3', ok: py.exitCode === 0, severity: err(forWhat === 'fixture' || forWhat === 'local'), detail: py.exitCode === 0 ? py.stdout.toString().trim() || py.stderr.toString().trim() : 'python3 not found (the reference shim and fake provider are Python)', code: 'PREFLIGHT_FAILED',
     fix: { next: 'tell_user_to_run', argv: ['sudo', 'apt-get', 'install', '-y', 'python3'], verify: ['python3', '--version'] } });
-  const docker = await dockerUp();
+  const docker = await dockerUp(env);
   add({ id: 'docker', ok: docker, severity: err(forWhat === 'local'), detail: docker ? 'Docker daemon reachable' : 'Docker daemon not reachable (run --local needs it; Ubicloud cells install it on the VM)', code: 'DOCKER_MISSING',
     fix: { next: 'tell_user_to_run', argv: ['sudo', 'systemctl', 'start', 'docker'], user_message: 'start Docker (or install it) on this machine', verify: ['docker', 'info'] } });
   add({ id: 'architecture', ok: process.arch === 'x64', severity: 'warn', detail: `${process.platform}/${process.arch}${process.arch === 'x64' ? '' : ' (system images are built for linux/amd64; local runs emulate)'}` });

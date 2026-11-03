@@ -1,0 +1,353 @@
+{
+  "skill": "query",
+  "seed": 15011,
+  "candidates": {
+    "gov-superseded": 53,
+    "gov-pair": 226,
+    "multi-hop": 110,
+    "negative": 17
+  },
+  "dropped_by_oracle": 62,
+  "dropped_by_solvability": 0,
+  "dropped": [
+    {
+      "family": "multi-hop",
+      "anchor": "people/alice-davis-172",
+      "reason": "second hop: founder page missing"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "people/alice-davis-172",
+      "reason": "second hop: founder page missing"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "people/beth-williams-177",
+      "reason": "first hop: no primary affiliation page"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "people/carol-jackson-81",
+      "reason": "first hop: neither the company's _facts nor its page prose name the person"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "people/chris-jackson-91",
+      "reason": "first hop: neither the company's _facts nor its page prose name the person"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "people/chris-singh-96",
+      "reason": "first hop: no primary affiliation page"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "people/david-zhang-83",
+      "reason": "first hop: neither the company's _facts nor its page prose name the person"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "people/eric-martinez-93",
+      "reason": "first hop: neither the company's _facts nor its page prose name the person"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "people/fiona-moore-88",
+      "reason": "first hop: neither the company's _facts nor its page prose name the person"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "people/helen-martinez-87",
+      "reason": "first hop: neither the company's _facts nor its page prose name the person"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "people/iris-lee-82",
+      "reason": "first hop: neither the company's _facts nor its page prose name the person"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "people/jack-davis-89",
+      "reason": "first hop: neither the company's _facts nor its page prose name the person"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "people/julia-davis-86",
+      "reason": "first hop: neither the company's _facts nor its page prose name the person"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "people/kate-lopez-99",
+      "reason": "first hop: no primary affiliation page"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "people/linda-taylor-178",
+      "reason": "first hop: no primary affiliation page"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "people/olivia-miller-176#advisors",
+      "reason": "first hop: 2 companies list the person among advisors"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "people/priya-taylor-85",
+      "reason": "first hop: neither the company's _facts nor its page prose name the person"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "people/rachel-brown-95",
+      "reason": "first hop: no primary affiliation page"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "people/rachel-gonzalez-175",
+      "reason": "second hop: founder page missing"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "people/rachel-gonzalez-175#advisors",
+      "reason": "first hop: 2 companies list the person among advisors"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "people/rosa-jackson-90",
+      "reason": "first hop: neither the company's _facts nor its page prose name the person"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "people/rosa-miller-98",
+      "reason": "first hop: no primary affiliation page"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "people/rosa-nakamura-94",
+      "reason": "first hop: neither the company's _facts nor its page prose name the person"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "people/sarah-lopez-84",
+      "reason": "first hop: neither the company's _facts nor its page prose name the person"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "people/sarah-williams-92",
+      "reason": "first hop: neither the company's _facts nor its page prose name the person"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "people/tara-jackson-173",
+      "reason": "first hop: no primary affiliation page"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "people/tara-kapoor-111",
+      "reason": "first hop: person page prose does not name the company"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "people/tara-kapoor-111#employees",
+      "reason": "first hop: neither page's prose names the other"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "people/tina-hernandez-97",
+      "reason": "first hop: no primary affiliation page"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "people/tina-jones-112",
+      "reason": "first hop: person page prose does not name the company"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "people/tina-jones-112#employees",
+      "reason": "first hop: neither page's prose names the other"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "people/tina-wang-179",
+      "reason": "first hop: no primary affiliation page"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "people/tina-wang-179#advisors",
+      "reason": "first hop: 2 companies list the person among advisors"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "people/vera-rodriguez-171#advisors",
+      "reason": "first hop: 2 companies list the person among advisors"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "people/wendy-hernandez-80",
+      "reason": "first hop: neither the company's _facts nor its page prose name the person"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "people/wendy-wilson-170",
+      "reason": "second hop: founder page missing"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "people/wendy-wilson-170#advisors",
+      "reason": "first hop: 3 companies list the person among advisors"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "people/xavier-nakamura-118",
+      "reason": "first hop: person page prose does not name the company"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "people/xavier-nakamura-118#employees",
+      "reason": "first hop: neither page's prose names the other"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "people/yara-moore-174",
+      "reason": "first hop: no primary affiliation page"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "people/yara-moore-174#advisors",
+      "reason": "first hop: 2 companies list the person among advisors"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "meetings/board-beta-2025-q2-1",
+      "reason": "first hop: meeting page prose does not name the topic company"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "meetings/board-gamma-2025-q3-2",
+      "reason": "first hop: meeting page prose does not name the topic company"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "meetings/board-helix-2025-q2-9",
+      "reason": "first hop: no attendee other than the founder identifies the meeting by type and date"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "meetings/board-nimbus-2025-q2-5",
+      "reason": "first hop: no attendee other than the founder identifies the meeting by type and date"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "meetings/board-pulse-2025-q1-8",
+      "reason": "first hop: meeting page prose does not name the topic company"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "meetings/board-quantum-2025-q4-7",
+      "reason": "first hop: no attendee other than the founder identifies the meeting by type and date"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "meetings/demo-day-2024-02-16-batch-1",
+      "reason": "first hop: meeting page prose does not name the topic company"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "meetings/demo-day-2024-03-17-batch-2",
+      "reason": "first hop: meeting page prose does not name the topic company"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "meetings/demo-day-2024-09-23-batch-8",
+      "reason": "first hop: meeting page prose does not name the topic company"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "meetings/demo-day-2025-01-17-batch-12",
+      "reason": "first hop: meeting page prose does not name the topic company"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "meetings/demo-day-2025-03-19-batch-14",
+      "reason": "first hop: meeting page prose does not name the topic company"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "meetings/oneonone-1-2025-02-02",
+      "reason": "first hop: meeting page prose does not name the topic company"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "meetings/oneonone-12-2025-01-13",
+      "reason": "first hop: meeting page prose does not name the topic company"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "meetings/oneonone-14-2025-03-15",
+      "reason": "first hop: meeting page prose does not name the topic company"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "meetings/oneonone-2-2025-03-03",
+      "reason": "first hop: meeting page prose does not name the topic company"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "meetings/oneonone-20-2025-09-21",
+      "reason": "first hop: meeting page prose does not name the topic company"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "meetings/oneonone-21-2025-10-22",
+      "reason": "first hop: no attendee other than the founder identifies the meeting by type and date"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "meetings/oneonone-22-2025-11-23",
+      "reason": "first hop: no attendee other than the founder identifies the meeting by type and date"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "meetings/oneonone-23-2025-12-24",
+      "reason": "first hop: no attendee other than the founder identifies the meeting by type and date"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "meetings/oneonone-24-2025-01-25",
+      "reason": "first hop: no attendee other than the founder identifies the meeting by type and date"
+    },
+    {
+      "family": "multi-hop",
+      "anchor": "meetings/oneonone-8-2025-09-09",
+      "reason": "first hop: meeting page prose does not name the topic company"
+    }
+  ],
+  "components": 46,
+  "assigned": {
+    "gov-superseded": {
+      "train": 8,
+      "sel": 8,
+      "test": 12
+    },
+    "gov-pair": {
+      "train": 5,
+      "sel": 5,
+      "test": 7
+    },
+    "multi-hop": {
+      "train": 7,
+      "sel": 7,
+      "test": 11
+    },
+    "negative": {
+      "train": 4,
+      "sel": 4,
+      "test": 6
+    }
+  },
+  "unused_candidates": 260,
+  "assembly_attempt": 22,
+  "notes": [
+    "gov-superseded fills a third of the set (8/8/12) from 53 superseding rows on 11 later records (amendments, renewals, an affiliate override), at most three tasks per record, the group limit; 10 of the 11 records are used.",
+    "gov-pair draws only pairs whose two attributes one record governs: every pair across two records touches a later record that gov-superseded already fills, and no seeded attempt fits a cross-record pair beside it at 8/8/12 (two fit at 7/7/10). fact-check's compound claims carry the cross-record pairs. The pairs placed first are those with the most traps (a newer record signed but not yet in force, a draft, a misstatement elsewhere)."
+  ]
+}

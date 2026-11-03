@@ -1,0 +1,13 @@
+import { configureGateway, chat } from 'gbrain/ai/gateway';
+import { runReflect } from '../../../../node_modules/gbrain/src/core/skillopt/reflect.ts';
+import { readFileSync } from 'fs';
+configureGateway({ embedding_model: 'openai:text-embedding-3-large', embedding_dimensions: 1536, chat_model: 'anthropic:claude-opus-5-5', env: process.env as any });
+const body = readFileSync('eval/data/skillopt-v1/seed-no-verdict/SKILL.md', 'utf8').replace(/^---[\s\S]*?---\n/, '');
+const ok = { trajectory: { task: 'Advise on whether to raise a bridge round or cut burn.', tool_calls: [], final_text: 'Recommendation: cut burn first.\n\nThe runway math favors cutting 20% of spend now.\n\nConfidence: medium', stop_reason: 'end', usage: {} }, score: 1 };
+let raw = '';
+const spy: any = async (o: any) => { const r = await chat(o); raw = r.text; return r; };
+const res = await runReflect({ skillBodyText: body, successes: [ok, ok] as any, failures: [], rejected: [], optimizerModel: 'anthropic:claude-opus-5-5', maxTokens: 32000, chatFn: spy } as any);
+console.log('RAW_REPLY_START');
+console.log(raw.slice(0, 1500));
+console.log('RAW_REPLY_END');
+console.log('successEdits', res.successEdits.length, 'errors', JSON.stringify(res.errors));

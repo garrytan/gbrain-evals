@@ -23,7 +23,7 @@ If PGLite reports a missing `pglite.wasm`, check that `@electric-sql/pglite` is 
 | Vector and hybrid retrieval in the multi-adapter runner | `OPENAI_API_KEY` |
 | LongMemEval retrieval | Key for the selected embedder; `ANTHROPIC_API_KEY` for generative expansion; `VOYAGE_API_KEY` for Voyage reranking |
 | Cat14 calibration and Cat15 claim extraction | `ANTHROPIC_API_KEY`; their embedding setup is handled by the runner |
-| Cat30–33 SkillOpt | `ANTHROPIC_API_KEY` |
+| Cat30–33 SkillOpt | `ANTHROPIC_API_KEY`; `OPENAI_API_KEY` for the default judge (`gpt-6.1-sol`), which makes LLM judge calls only in Cat32 |
 | Cat34 memory conformance | No model API; the subprocess removes provider keys |
 | Cat35 transcript distillation | `ANTHROPIC_API_KEY` and `OPENAI_API_KEY` |
 | Regenerating model-written corpora | Usually `ANTHROPIC_API_KEY`; read the particular generator first |
@@ -34,7 +34,7 @@ A skipped adapter or incomplete receipt is not a measured pass. Some runners acc
 
 ## Authorize spending with the budget ledger
 
-LongMemEval, Cat13 and Cat35 refuse to make provider requests until you pass `--budget-usd <dollars>` (or set `BRAINBENCH_BUDGET_USD`). Each run prints its cost estimate first and refuses when the estimate is above the budget.
+LongMemEval, Cat13 and Cat35 refuse to make provider requests until you pass `--budget-usd <dollars>` (or set `BRAINBENCH_BUDGET_USD`). Each run prints its cost estimate first and refuses when the estimate is above the budget. A live Cat14 or Cat29 run needs `--budget-usd <dollars>` or `--budget-run-id <id>` naming an open ledger run, and a live Cat15 or Cat25 run needs `--paid --budget-run-id <id>`. When `all.ts` dispatches them, it passes its own budget run and ledger.
 
 Every request to a paid provider host is reserved in a ledger before it is sent, including SDK retries and the requests gbrain makes internally during extraction and synthesis. After the response, the reservation is reconciled to the provider-reported usage. A request whose usage cannot be read is charged at its full reservation. A reservation that would take the run past `--budget-usd`, or all runs together past the program cap, is refused and the request is never sent.
 
@@ -94,7 +94,7 @@ Use the runner's `--ndjson` option for resumable per-question output. Preserve t
 
 ## Cat35 refuses its cost preflight
 
-The default `CAT35_HARD_STOP_USD` is $40. The historical full run projected $45 and required an explicitly chosen $50 cap, despite measuring about $6.20 in judge and fact-extraction costs.
+The default `CAT35_HARD_STOP_USD` is $40. Since 2026-11-01 the defaults are Opus 5.5 distilling and a `gpt-6.1-sol` judge: the two-transcript smoke projects $3.24 and a full run $53.40, so a full run refuses unless you raise the cap explicitly (`CAT35_FULL=1 CAT35_HARD_STOP_USD=60 ... --budget-usd 60`). Neither projection has been measured yet. The historical full run on Sonnet 4.6 projected $45 and required an explicitly chosen $50 cap, despite measuring about $6.20 in judge and fact-extraction costs.
 
 This preflight is deliberately conservative. More importantly, the measured receipt excludes dream-subagent spend because the underlying phase API does not expose it. A receipt total is therefore not a complete invoice.
 
@@ -198,7 +198,7 @@ bun eval/runner/cat36-grounded-answers.ts \
 bun test test/eval/cat36-grounded-answers.test.ts
 ```
 
-After separately approving the answer and judge budgets and configuring their external enforcement, use a `GroundedProfile` rather than a retrieval `Cat36Profile`. It names both models and output-token limits, the exact product identity matching the retrieval build, and separate `answer_budget`/`judge_budget` approvals. The judge currently supports only `claude-haiku-4-5-20251001`; answer models use the public OpenAI, Anthropic, or Google gateway routes. The [protocol's grounded-answer section](../docs/benchmarks/2026-09-23-situation-recall-protocol.md#replay-grounded-answers-as-a-separate-secondary-check) lists every field and provider prerequisite.
+After separately approving the answer and judge budgets and configuring their external enforcement, use a `GroundedProfile` rather than a retrieval `Cat36Profile`. It names both models and output-token limits, the exact product identity matching the retrieval build, and separate `answer_budget`/`judge_budget` approvals. The judge must be `claude-haiku-5-5` (`GROUNDED_JUDGE_MODEL`), priced from the budget ledger's table; a replay judged by Haiku 4.5 before 2026-11-01 is a different judge identity and is never pooled with Haiku 5.5 verdicts; answer models use the public OpenAI, Anthropic, or Google gateway routes. The [protocol's grounded-answer section](../docs/benchmarks/2026-09-23-situation-recall-protocol.md#replay-grounded-answers-as-a-separate-secondary-check) lists every field and provider prerequisite.
 
 ```sh
 bun eval/runner/cat36-grounded-answers.ts \

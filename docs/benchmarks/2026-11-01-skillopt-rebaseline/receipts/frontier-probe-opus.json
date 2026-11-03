@@ -1,0 +1,33 @@
+{
+  "probe": "r48-frontier-check",
+  "gbrain_version": "0.60.531.0",
+  "gbrain_pin": "github:garrytan/gbrain#3ec766c40664b652b14e39788d177139f5a7b105",
+  "target_model": "anthropic:claude-opus-5-5",
+  "judge_model": "openai:gpt-6.1-sol",
+  "runs_per_task": 2,
+  "pinned_config": {
+    "search.mode": "balanced",
+    "search.reranker.enabled": "false"
+  },
+  "corpus": "skillopt-v1",
+  "started_at": "2026-11-01T15:49:15.541Z",
+  "finished_at": "2026-11-01T15:54:21.902Z",
+  "seeds": [
+    {
+      "seed": "seed-missing-structure",
+      "heldout": 0
+    },
+    {
+      "seed": "seed-verbose",
+      "heldout": 0.5
+    },
+    {
+      "seed": "seed-no-brain-first",
+      "heldout": 0
+    },
+    {
+      "seed": "seed-no-verdict",
+      "heldout": 0
+    }
+  ]
+}

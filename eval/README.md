@@ -2,7 +2,11 @@
 
 BrainBench is our collection of tests for gbrain. Each test asks a narrower question than “does memory work?” One checks whether search finds a relationship. Another checks whether an important decision survives when a conversation becomes a note.
 
-Every runner loads the gbrain declared in `package.json`: master `77cf8e111` (v0.60.169.0) as `gbrain`, plus the fixed-purpose aliases `gbrain-cues` and `gbrain-reader` for the experiments that name them. Most category runners also take `--gbrain <checkout>[@ref]` to measure another build as a copied overlay. Start with the [main guide](../README.md) for what gbrain does today, or the [documentation index](../docs/README.md) for every report. This page explains the test machinery and how to work with it. Everything above [Changelog](#changelog) is current.
+Every runner loads the gbrain declared in `package.json`: master `311a83bbe` (v0.60.553.0) as `gbrain`, plus the fixed-purpose aliases `gbrain-cues` and `gbrain-reader` for the experiments that name them.
+Most category runners also take `--gbrain <checkout>[@ref]` to measure another build as a copied overlay.
+Start with the [main guide](../README.md) for what gbrain does today, or the [documentation index](../docs/README.md) for every report.
+This page explains the test machinery and how to work with it.
+Everything above [Changelog](#changelog) is current.
 
 ## Start with a free check
 
@@ -110,6 +114,33 @@ To reproduce an old result, match both the gbrain-evals revision and the gbrain 
 
 How this page changed, newest first. Measurement history lives in the dated reports and in
 [CHANGELOG.md](../CHANGELOG.md).
+
+### 2026-11-02: The introduction names `311a83bbe`
+
+The introduction names gbrain master `311a83bbe` (v0.60.553.0), the new pin (was `a131fb20e`, v0.60.549.0). Nothing
+else on the page changed.
+
+### 2026-11-02: The introduction names `a131fb20e`; one sentence per line
+
+The introduction names gbrain master `a131fb20e` (v0.60.549.0), the new pin (was `ca1281a2e`, v0.60.542.0), and puts
+each sentence on its own line, which renders the same. Nothing else on the page changed.
+
+### 2026-11-02: The introduction names the new pin
+
+The introduction names gbrain master `ca1281a2e` (v0.60.542.0), the new pin (was `3ec766c40`, v0.60.531.0). Nothing
+else on the page changed.
+
+### 2026-10-31: The introduction names the new pin
+
+The introduction names gbrain master `3ec766c40` (v0.60.531.0), the new pin (was `7a6bdd357`, v0.60.454.0).
+`scripts/verify-documentation-refresh.py` now checks this sentence against `package.json`, so a re-pin that misses it fails
+`bun run validate`.
+
+### 2026-10-31: The introduction names the current pin again
+
+The introduction names gbrain master `7a6bdd357` (v0.60.454.0) as the `gbrain` every runner loads, matching
+`package.json`. It still named `77cf8e111` (v0.60.169.0), which stopped being the pin on October 18; the later re-pins
+had not updated this page.
 
 ### 2026-10-11: The introduction names the current pin
 

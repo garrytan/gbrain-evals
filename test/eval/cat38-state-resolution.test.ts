@@ -22,7 +22,8 @@ import {
   scoreServed, servedCurrent, stratifiedProbes, type ProbeObs, type ReadRow, type Violation,
 } from '../../eval/runner/cat38-state-resolution.ts';
 import { assertScorerRejectsFakeSystems } from '../../eval/runner/mutation-kit.ts';
-import { resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
+import { importGbrain, resolveGbrainUnderTest } from '../../eval/runner/gbrain-under-test.ts';
+import { loadFactUnquote } from '../../eval/runner/quoted-reads.ts';
 import { withHermeticEnv } from '../../eval/runner/hermetic-env.ts';
 import type { TrustCapabilities } from '../../eval/runner/memory-trust/sut.ts';
 
@@ -374,6 +375,18 @@ describe('end to end against the pinned gbrain', () => {
     expect(s.exploratory.negative_control_accuracy).toBe(1);
     expect(findingsFrom(s, r.violations, r.capabilities, 'repro')).toEqual([]);
   }, 180_000);
+
+  test('readRows reads a quote-fenced fact (gbrain v0.60.536.0 on) through the build\'s own unquoteFactText, and refuses one without it', async () => {
+    const gut = resolveGbrainUnderTest(null);
+    const { fenceTranscriptText } = await importGbrain<{ fenceTranscriptText: (text: string, label: string) => string }>(gut, 'src/core/search/transcript-quote.ts');
+    const unquote = await loadFactUnquote(gut);
+    const quoted = [{ fact_id: '9', fact: fenceTranscriptText('X Example 1\'s office city is oslo.', 'fact 9'), quoted: 'transcript', trust_tier: 'agent_written' }];
+    expect(readRows(quoted, Date.now(), unquote).map(r => [r.value, r.tier])).toEqual([['oslo', 'agent_written']]);
+    expect(() => readRows(quoted)).toThrow(/unquoteFactText/);
+    const empty = mkdtempSync(join(tmpdir(), 'cat38-no-quote-'));
+    try { expect(await loadFactUnquote({ ...gut, root: empty })).toBeUndefined(); }
+    finally { rmSync(empty, { recursive: true, force: true }); }
+  });
 });
 
 test('only the challenger of a contested pair leaves the served set; the challenged higher-tier row stays current', () => {

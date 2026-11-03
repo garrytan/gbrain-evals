@@ -1,0 +1,2377 @@
+{
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "n15-skillopt-method",
+  "gbrain_version": "0.60.542.0",
+  "gbrain_pin": "github:garrytan/gbrain#ca1281a2ed3236ac45adddb2d08e84423769c321",
+  "execution": {
+    "source_tree": {
+      "sha256": "40af29b5179969b4cfc4cdbfb661d8d5fcb74c336731859bd1eee77064e0feee",
+      "scheme": "git-index-blob-v1",
+      "files": 15379,
+      "git_head": "d4ac793b62894c7e2c194f7c1230bedd66c17c86",
+      "dirty": false
+    },
+    "product": {
+      "package": "gbrain",
+      "declared_pin": "github:garrytan/gbrain#ca1281a2ed3236ac45adddb2d08e84423769c321",
+      "declared_sha": "ca1281a2ed3236ac45adddb2d08e84423769c321",
+      "version": "0.60.542.0",
+      "package_sha256": "52ded02fb79721deb9d3d5788fec67190e7cb5d4fa10b40e254a3db888decfac",
+      "loaded_git_head": null
+    }
+  },
+  "hashes": {
+    "dataset": "skillopt-method-v2",
+    "dataset_manifest_sha256": "df512633dd5d2f28c67ebc3d92c523c361c87747242f9b13713f7b14fe0c3d6d",
+    "skillopt-method-v1_manifest_sha256": "8ff8a0ec97e03e3550de18821d8ebdf08f9dbfd6342f9dc2c5914d33c17e4642",
+    "criteria_query_sha256": "30ea291076101a9ca920f1fa14e267c6e67a2da88141199d67ba6b615ce5b53a",
+    "criteria_briefing_sha256": "6c848a2ed99137a88ed5fdcec237b6337adb1a26fec75e22b99c2667c64e64df",
+    "criteria_fact-check_sha256": "be49c653556c5917e302f91ca80a660cfdd27ba32031b048bc9c2ec9a512d399",
+    "seeds_gbrain_commit": "3ec766c40664b652b14e39788d177139f5a7b105"
+  },
+  "started_at": "2026-11-02T03:04:54.647Z",
+  "cost": {
+    "usd": 121.794608,
+    "input_tokens": 72814195,
+    "output_tokens": 1312519,
+    "basis": "budget ledger n15-skillopt-method-test-read-2026-11-02T03-04-45-593Z-f0a9f695: 2835 paid requests, 0 charged at their reservation because usage was unavailable",
+    "ledger": "<work>/ledger.sqlite",
+    "program_cap_usd": 400,
+    "overshoot_usd": 0,
+    "event_loop_lag_ms": {
+      "p50": 0,
+      "p99": 3,
+      "max": 7980.4
+    }
+  },
+  "run_status": "completed",
+  "verdict": "pass",
+  "n_total": 3,
+  "n_scored": 3,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": true,
+  "preregistration_attestation": {
+    "preregistration": "docs/benchmarks/2026-11-01-skillopt-method/PREREGISTRATION.md",
+    "preregistration_commit": "d4ac793b62894c7e2c194f7c1230bedd66c17c86",
+    "runner_commit": "d4ac793b62894c7e2c194f7c1230bedd66c17c86",
+    "worktree_clean_for_preregistration": true,
+    "on_origin": true,
+    "attested_at": "2026-11-02T03:04:54.708Z"
+  },
+  "resolved_config": {
+    "engine": "pglite-in-memory",
+    "decide": "off (no key, fresh GBRAIN_HOME)",
+    "mode": "probe",
+    "target": "opus",
+    "stage": "test",
+    "skills": null,
+    "from": "docs/benchmarks/2026-11-01-skillopt-method/probe/frontier/f0b-opus/receipt.json",
+    "other": "docs/benchmarks/2026-11-01-skillopt-method/probe/frontier/f0b-sol/receipt.json",
+    "keys_in_process": [
+      "ANTHROPIC_API_KEY"
+    ],
+    "models": {
+      "target": "anthropic:claude-opus-5-5",
+      "proposer": null
+    }
+  },
+  "finished_at": "2026-11-02T04:03:13.580Z",
+  "data": {
+    "probe": {
+      "mode": "live",
+      "stage": "test",
+      "target": "opus",
+      "models": {
+        "target": "anthropic:claude-opus-5-5",
+        "proposer": null
+      },
+      "dataset": "skillopt-method-v2",
+      "runs": {
+        "no_skill": 1,
+        "seed": 3,
+        "rewrite": 3
+      },
+      "bootstrap": {
+        "resamples": 10000,
+        "seed": 799
+      },
+      "models_not_run": [
+        {
+          "model": "particle:particle-1",
+          "reason": "the rollout runs through gbrain's gateway, which has no Particle recipe at the pinned gbrain (GBRA-268, plan decision D); particle-1 joins as a target once that recipe reaches the pin, under a crew paid window"
+        }
+      ],
+      "skills": [
+        {
+          "skill": "query",
+          "target": "opus",
+          "ceiling": 1,
+          "rewrite_source": "own",
+          "rewrite_target": "opus",
+          "rewrite_number": 1,
+          "rewrite_sha8": "52942b2a",
+          "rewrite_selection_score": 1,
+          "served_tools": {
+            "seed": [
+              "find_anomalies",
+              "get_backlinks",
+              "get_ingest_log",
+              "get_page",
+              "get_recent_salience",
+              "get_timeline",
+              "list_link_sources",
+              "list_pages",
+              "query",
+              "recall",
+              "resolve_slugs",
+              "search",
+              "traverse_graph"
+            ],
+            "rewrite": [
+              "find_anomalies",
+              "get_backlinks",
+              "get_ingest_log",
+              "get_page",
+              "get_recent_salience",
+              "get_timeline",
+              "list_link_sources",
+              "list_pages",
+              "query",
+              "recall",
+              "resolve_slugs",
+              "search",
+              "traverse_graph"
+            ]
+          },
+          "no_skill": 0.2777777777777778,
+          "seed": 0.75,
+          "rewrite": 1,
+          "arms": {
+            "no_skill": {
+              "score": 0.2777777777777778,
+              "per_task": {
+                "query-test-03": [
+                  0
+                ],
+                "query-test-04": [
+                  0
+                ],
+                "query-test-02": [
+                  0
+                ],
+                "query-test-01": [
+                  1
+                ],
+                "query-test-07": [
+                  0
+                ],
+                "query-test-05": [
+                  0
+                ],
+                "query-test-08": [
+                  1
+                ],
+                "query-test-06": [
+                  1
+                ],
+                "query-test-09": [
+                  1
+                ],
+                "query-test-10": [
+                  0
+                ],
+                "query-test-12": [
+                  0
+                ],
+                "query-test-11": [
+                  0
+                ],
+                "query-test-13": [
+                  0
+                ],
+                "query-test-15": [
+                  0
+                ],
+                "query-test-16": [
+                  0
+                ],
+                "query-test-14": [
+                  0
+                ],
+                "query-test-17": [
+                  1
+                ],
+                "query-test-19": [
+                  0
+                ],
+                "query-test-20": [
+                  0
+                ],
+                "query-test-18": [
+                  0
+                ],
+                "query-test-21": [
+                  0
+                ],
+                "query-test-22": [
+                  0
+                ],
+                "query-test-24": [
+                  0
+                ],
+                "query-test-23": [
+                  0
+                ],
+                "query-test-25": [
+                  1
+                ],
+                "query-test-27": [
+                  0
+                ],
+                "query-test-28": [
+                  0
+                ],
+                "query-test-26": [
+                  0
+                ],
+                "query-test-29": [
+                  0
+                ],
+                "query-test-30": [
+                  0
+                ],
+                "query-test-31": [
+                  1
+                ],
+                "query-test-32": [
+                  0
+                ],
+                "query-test-33": [
+                  1
+                ],
+                "query-test-36": [
+                  0
+                ],
+                "query-test-34": [
+                  1
+                ],
+                "query-test-35": [
+                  1
+                ]
+              },
+              "task_medians": {
+                "query-test-01": 1,
+                "query-test-02": 0,
+                "query-test-03": 0,
+                "query-test-04": 0,
+                "query-test-05": 0,
+                "query-test-06": 1,
+                "query-test-07": 0,
+                "query-test-08": 1,
+                "query-test-09": 1,
+                "query-test-10": 0,
+                "query-test-11": 0,
+                "query-test-12": 0,
+                "query-test-13": 0,
+                "query-test-14": 0,
+                "query-test-15": 0,
+                "query-test-16": 0,
+                "query-test-17": 1,
+                "query-test-18": 0,
+                "query-test-19": 0,
+                "query-test-20": 0,
+                "query-test-21": 0,
+                "query-test-22": 0,
+                "query-test-23": 0,
+                "query-test-24": 0,
+                "query-test-25": 1,
+                "query-test-26": 0,
+                "query-test-27": 0,
+                "query-test-28": 0,
+                "query-test-29": 0,
+                "query-test-30": 0,
+                "query-test-31": 1,
+                "query-test-32": 0,
+                "query-test-33": 1,
+                "query-test-34": 1,
+                "query-test-35": 1,
+                "query-test-36": 0
+              },
+              "runs": 1,
+              "correct_rollouts": 10,
+              "cost": {
+                "rollouts": 36,
+                "calls": 128,
+                "usd": 4.873328,
+                "unpriced_calls": 0,
+                "input_tokens": 2398448,
+                "output_tokens": 25480,
+                "cache_read_tokens": 1589205,
+                "cache_creation_tokens": 808915,
+                "reasoning_tokens": 3718,
+                "mean_rollout_usd": 0.13537022222222223,
+                "calls_per_rollout": 3.5555555555555554,
+                "cached_input_share": 0.6625972295417704,
+                "reasoning_tokens_per_rollout": 103.27777777777777
+              },
+              "cost_per_correct_usd": 0.4873328
+            },
+            "seed": {
+              "score": 0.75,
+              "per_task": {
+                "query-test-03": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-02": [
+                  0,
+                  0,
+                  0
+                ],
+                "query-test-04": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-01": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-05": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-07": [
+                  0,
+                  0,
+                  0
+                ],
+                "query-test-06": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-08": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-09": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-10": [
+                  0,
+                  0,
+                  0
+                ],
+                "query-test-11": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-13": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-12": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-15": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-14": [
+                  0,
+                  0,
+                  0
+                ],
+                "query-test-16": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-17": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-18": [
+                  0,
+                  0,
+                  0
+                ],
+                "query-test-19": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-20": [
+                  0,
+                  0,
+                  0
+                ],
+                "query-test-22": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-21": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-23": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-24": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-25": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-26": [
+                  1,
+                  0,
+                  0
+                ],
+                "query-test-27": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-28": [
+                  0,
+                  0,
+                  0
+                ],
+                "query-test-29": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-30": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-31": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-32": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-33": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-35": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-34": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-36": [
+                  0,
+                  0,
+                  0
+                ]
+              },
+              "task_medians": {
+                "query-test-01": 1,
+                "query-test-02": 0,
+                "query-test-03": 1,
+                "query-test-04": 1,
+                "query-test-05": 1,
+                "query-test-06": 1,
+                "query-test-07": 0,
+                "query-test-08": 1,
+                "query-test-09": 1,
+                "query-test-10": 0,
+                "query-test-11": 1,
+                "query-test-12": 1,
+                "query-test-13": 1,
+                "query-test-14": 0,
+                "query-test-15": 1,
+                "query-test-16": 1,
+                "query-test-17": 1,
+                "query-test-18": 0,
+                "query-test-19": 1,
+                "query-test-20": 0,
+                "query-test-21": 1,
+                "query-test-22": 1,
+                "query-test-23": 1,
+                "query-test-24": 1,
+                "query-test-25": 1,
+                "query-test-26": 0,
+                "query-test-27": 1,
+                "query-test-28": 0,
+                "query-test-29": 1,
+                "query-test-30": 1,
+                "query-test-31": 1,
+                "query-test-32": 1,
+                "query-test-33": 1,
+                "query-test-34": 1,
+                "query-test-35": 1,
+                "query-test-36": 0
+              },
+              "runs": 3,
+              "correct_rollouts": 82,
+              "cost": {
+                "rollouts": 108,
+                "calls": 378,
+                "usd": 13.303445800000006,
+                "unpriced_calls": 0,
+                "input_tokens": 9575377,
+                "output_tokens": 97762,
+                "cache_read_tokens": 7609939,
+                "cache_creation_tokens": 1964466,
+                "reasoning_tokens": 13047,
+                "mean_rollout_usd": 0.12318005370370376,
+                "calls_per_rollout": 3.5,
+                "cached_input_share": 0.79474040552137,
+                "reasoning_tokens_per_rollout": 120.80555555555556
+              },
+              "cost_per_correct_usd": 0.1622371439024391
+            },
+            "rewrite": {
+              "score": 1,
+              "per_task": {
+                "query-test-03": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-04": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-01": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-02": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-05": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-06": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-07": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-08": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-09": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-10": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-11": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-12": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-13": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-14": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-15": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-16": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-17": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-19": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-18": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-20": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-21": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-23": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-22": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-24": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-25": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-27": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-26": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-28": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-29": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-30": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-31": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-32": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-33": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-34": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-35": [
+                  1,
+                  1,
+                  1
+                ],
+                "query-test-36": [
+                  1,
+                  1,
+                  1
+                ]
+              },
+              "task_medians": {
+                "query-test-01": 1,
+                "query-test-02": 1,
+                "query-test-03": 1,
+                "query-test-04": 1,
+                "query-test-05": 1,
+                "query-test-06": 1,
+                "query-test-07": 1,
+                "query-test-08": 1,
+                "query-test-09": 1,
+                "query-test-10": 1,
+                "query-test-11": 1,
+                "query-test-12": 1,
+                "query-test-13": 1,
+                "query-test-14": 1,
+                "query-test-15": 1,
+                "query-test-16": 1,
+                "query-test-17": 1,
+                "query-test-18": 1,
+                "query-test-19": 1,
+                "query-test-20": 1,
+                "query-test-21": 1,
+                "query-test-22": 1,
+                "query-test-23": 1,
+                "query-test-24": 1,
+                "query-test-25": 1,
+                "query-test-26": 1,
+                "query-test-27": 1,
+                "query-test-28": 1,
+                "query-test-29": 1,
+                "query-test-30": 1,
+                "query-test-31": 1,
+                "query-test-32": 1,
+                "query-test-33": 1,
+                "query-test-34": 1,
+                "query-test-35": 1,
+                "query-test-36": 1
+              },
+              "runs": 3,
+              "correct_rollouts": 108,
+              "cost": {
+                "rollouts": 108,
+                "calls": 372,
+                "usd": 10.3454204,
+                "unpriced_calls": 0,
+                "input_tokens": 8595854,
+                "output_tokens": 103502,
+                "cache_read_tokens": 7229777,
+                "cache_creation_tokens": 1365117,
+                "reasoning_tokens": 11011,
+                "mean_rollout_usd": 0.09579092962962964,
+                "calls_per_rollout": 3.4444444444444446,
+                "cached_input_share": 0.8410772216466217,
+                "reasoning_tokens_per_rollout": 101.95370370370371
+              },
+              "cost_per_correct_usd": 0.09579092962962964
+            }
+          },
+          "seed_minus_no_skill": {
+            "tasks": 36,
+            "point": 0.4722222222222222,
+            "lower": 0.3055555555555556,
+            "upper": 0.6388888888888888,
+            "wins": 17,
+            "losses": 0,
+            "mcnemar_p": 0.0000152587890625,
+            "verdict": "KEEP"
+          },
+          "rewrite_minus_seed": {
+            "tasks": 36,
+            "point": 0.25,
+            "lower": 0.1111111111111111,
+            "upper": 0.3888888888888889,
+            "wins": 9,
+            "losses": 0,
+            "mcnemar_p": 0.00390625,
+            "verdict": "rewrite-beats-seed"
+          },
+          "cost": {
+            "rollouts": 252,
+            "calls": 878,
+            "usd": 28.52219420000001,
+            "unpriced_calls": 0,
+            "input_tokens": 20569679,
+            "output_tokens": 226744,
+            "cache_read_tokens": 16428921,
+            "cache_creation_tokens": 4138498,
+            "reasoning_tokens": 27776,
+            "mean_rollout_usd": 0.11318331031746034,
+            "calls_per_rollout": 3.484126984126984,
+            "cached_input_share": 0.7986960321549014,
+            "reasoning_tokens_per_rollout": 110.22222222222223
+          }
+        },
+        {
+          "skill": "briefing",
+          "target": "opus",
+          "ceiling": 1,
+          "rewrite_source": "other-target",
+          "rewrite_target": "sol",
+          "rewrite_number": 2,
+          "rewrite_sha8": "b35934a9",
+          "rewrite_selection_score": 1,
+          "served_tools": {
+            "seed": [
+              "find_anomalies",
+              "get_backlinks",
+              "get_ingest_log",
+              "get_page",
+              "get_recent_salience",
+              "get_timeline",
+              "list_link_sources",
+              "list_pages",
+              "query",
+              "resolve_slugs",
+              "search",
+              "traverse_graph"
+            ],
+            "rewrite": [
+              "find_anomalies",
+              "get_backlinks",
+              "get_ingest_log",
+              "get_page",
+              "get_recent_salience",
+              "get_timeline",
+              "list_link_sources",
+              "list_pages",
+              "query",
+              "resolve_slugs",
+              "search",
+              "traverse_graph"
+            ]
+          },
+          "no_skill": 0.16666666666666666,
+          "seed": 0.4722222222222222,
+          "rewrite": 1,
+          "arms": {
+            "no_skill": {
+              "score": 0.16666666666666666,
+              "per_task": {
+                "briefing-test-04": [
+                  0
+                ],
+                "briefing-test-01": [
+                  0
+                ],
+                "briefing-test-02": [
+                  0
+                ],
+                "briefing-test-03": [
+                  0
+                ],
+                "briefing-test-05": [
+                  1
+                ],
+                "briefing-test-06": [
+                  0
+                ],
+                "briefing-test-07": [
+                  0
+                ],
+                "briefing-test-09": [
+                  0
+                ],
+                "briefing-test-08": [
+                  0
+                ],
+                "briefing-test-11": [
+                  1
+                ],
+                "briefing-test-10": [
+                  0
+                ],
+                "briefing-test-13": [
+                  0
+                ],
+                "briefing-test-12": [
+                  0
+                ],
+                "briefing-test-14": [
+                  0
+                ],
+                "briefing-test-15": [
+                  0
+                ],
+                "briefing-test-17": [
+                  1
+                ],
+                "briefing-test-16": [
+                  0
+                ],
+                "briefing-test-20": [
+                  0
+                ],
+                "briefing-test-19": [
+                  0
+                ],
+                "briefing-test-21": [
+                  0
+                ],
+                "briefing-test-18": [
+                  0
+                ],
+                "briefing-test-22": [
+                  0
+                ],
+                "briefing-test-23": [
+                  0
+                ],
+                "briefing-test-24": [
+                  0
+                ],
+                "briefing-test-25": [
+                  0
+                ],
+                "briefing-test-26": [
+                  0
+                ],
+                "briefing-test-27": [
+                  0
+                ],
+                "briefing-test-28": [
+                  0
+                ],
+                "briefing-test-29": [
+                  0
+                ],
+                "briefing-test-30": [
+                  0
+                ],
+                "briefing-test-31": [
+                  1
+                ],
+                "briefing-test-34": [
+                  1
+                ],
+                "briefing-test-32": [
+                  0
+                ],
+                "briefing-test-33": [
+                  0
+                ],
+                "briefing-test-36": [
+                  1
+                ],
+                "briefing-test-35": [
+                  0
+                ]
+              },
+              "task_medians": {
+                "briefing-test-01": 0,
+                "briefing-test-02": 0,
+                "briefing-test-03": 0,
+                "briefing-test-04": 0,
+                "briefing-test-05": 1,
+                "briefing-test-06": 0,
+                "briefing-test-07": 0,
+                "briefing-test-08": 0,
+                "briefing-test-09": 0,
+                "briefing-test-10": 0,
+                "briefing-test-11": 1,
+                "briefing-test-12": 0,
+                "briefing-test-13": 0,
+                "briefing-test-14": 0,
+                "briefing-test-15": 0,
+                "briefing-test-16": 0,
+                "briefing-test-17": 1,
+                "briefing-test-18": 0,
+                "briefing-test-19": 0,
+                "briefing-test-20": 0,
+                "briefing-test-21": 0,
+                "briefing-test-22": 0,
+                "briefing-test-23": 0,
+                "briefing-test-24": 0,
+                "briefing-test-25": 0,
+                "briefing-test-26": 0,
+                "briefing-test-27": 0,
+                "briefing-test-28": 0,
+                "briefing-test-29": 0,
+                "briefing-test-30": 0,
+                "briefing-test-31": 1,
+                "briefing-test-32": 0,
+                "briefing-test-33": 0,
+                "briefing-test-34": 1,
+                "briefing-test-35": 0,
+                "briefing-test-36": 1
+              },
+              "runs": 1,
+              "correct_rollouts": 6,
+              "cost": {
+                "rollouts": 36,
+                "calls": 137,
+                "usd": 5.691424,
+                "unpriced_calls": 0,
+                "input_tokens": 2724274,
+                "output_tokens": 54144,
+                "cache_read_tokens": 1877600,
+                "cache_creation_tokens": 846328,
+                "reasoning_tokens": 8913,
+                "mean_rollout_usd": 0.1580951111111111,
+                "calls_per_rollout": 3.8055555555555554,
+                "cached_input_share": 0.689211143959822,
+                "reasoning_tokens_per_rollout": 247.58333333333334
+              },
+              "cost_per_correct_usd": 0.9485706666666666
+            },
+            "seed": {
+              "score": 0.4722222222222222,
+              "per_task": {
+                "briefing-test-04": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-03": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-02": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-01": [
+                  0,
+                  0,
+                  0
+                ],
+                "briefing-test-06": [
+                  0,
+                  1,
+                  0
+                ],
+                "briefing-test-05": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-08": [
+                  0,
+                  1,
+                  1
+                ],
+                "briefing-test-07": [
+                  0,
+                  0,
+                  1
+                ],
+                "briefing-test-09": [
+                  0,
+                  0,
+                  0
+                ],
+                "briefing-test-10": [
+                  0,
+                  0,
+                  0
+                ],
+                "briefing-test-11": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-12": [
+                  0,
+                  0,
+                  1
+                ],
+                "briefing-test-13": [
+                  0,
+                  0,
+                  0
+                ],
+                "briefing-test-15": [
+                  0,
+                  0,
+                  0
+                ],
+                "briefing-test-14": [
+                  0,
+                  0,
+                  0
+                ],
+                "briefing-test-16": [
+                  0,
+                  0,
+                  0
+                ],
+                "briefing-test-17": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-18": [
+                  0,
+                  1,
+                  0
+                ],
+                "briefing-test-19": [
+                  0,
+                  1,
+                  1
+                ],
+                "briefing-test-20": [
+                  1,
+                  0,
+                  1
+                ],
+                "briefing-test-21": [
+                  1,
+                  0,
+                  0
+                ],
+                "briefing-test-22": [
+                  1,
+                  1,
+                  0
+                ],
+                "briefing-test-23": [
+                  0,
+                  0,
+                  0
+                ],
+                "briefing-test-24": [
+                  0,
+                  0,
+                  0
+                ],
+                "briefing-test-25": [
+                  0,
+                  0,
+                  1
+                ],
+                "briefing-test-26": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-27": [
+                  0,
+                  0,
+                  0
+                ],
+                "briefing-test-28": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-29": [
+                  0,
+                  0,
+                  1
+                ],
+                "briefing-test-30": [
+                  1,
+                  1,
+                  0
+                ],
+                "briefing-test-31": [
+                  1,
+                  0,
+                  1
+                ],
+                "briefing-test-32": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-33": [
+                  0,
+                  1,
+                  0
+                ],
+                "briefing-test-34": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-36": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-35": [
+                  0,
+                  1,
+                  0
+                ]
+              },
+              "task_medians": {
+                "briefing-test-01": 0,
+                "briefing-test-02": 1,
+                "briefing-test-03": 1,
+                "briefing-test-04": 1,
+                "briefing-test-05": 1,
+                "briefing-test-06": 0,
+                "briefing-test-07": 0,
+                "briefing-test-08": 1,
+                "briefing-test-09": 0,
+                "briefing-test-10": 0,
+                "briefing-test-11": 1,
+                "briefing-test-12": 0,
+                "briefing-test-13": 0,
+                "briefing-test-14": 0,
+                "briefing-test-15": 0,
+                "briefing-test-16": 0,
+                "briefing-test-17": 1,
+                "briefing-test-18": 0,
+                "briefing-test-19": 1,
+                "briefing-test-20": 1,
+                "briefing-test-21": 0,
+                "briefing-test-22": 1,
+                "briefing-test-23": 0,
+                "briefing-test-24": 0,
+                "briefing-test-25": 0,
+                "briefing-test-26": 1,
+                "briefing-test-27": 0,
+                "briefing-test-28": 1,
+                "briefing-test-29": 0,
+                "briefing-test-30": 1,
+                "briefing-test-31": 1,
+                "briefing-test-32": 1,
+                "briefing-test-33": 0,
+                "briefing-test-34": 1,
+                "briefing-test-35": 0,
+                "briefing-test-36": 1
+              },
+              "runs": 3,
+              "correct_rollouts": 54,
+              "cost": {
+                "rollouts": 108,
+                "calls": 459,
+                "usd": 39.766397200000014,
+                "unpriced_calls": 0,
+                "input_tokens": 19454972,
+                "output_tokens": 407601,
+                "cache_read_tokens": 13679031,
+                "cache_creation_tokens": 5774807,
+                "reasoning_tokens": 97043,
+                "mean_rollout_usd": 0.36820738148148163,
+                "calls_per_rollout": 4.25,
+                "cached_input_share": 0.7031123457797832,
+                "reasoning_tokens_per_rollout": 898.5462962962963
+              },
+              "cost_per_correct_usd": 0.7364147629629633
+            },
+            "rewrite": {
+              "score": 1,
+              "per_task": {
+                "briefing-test-04": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-03": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-02": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-01": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-05": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-06": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-07": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-08": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-09": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-11": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-10": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-12": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-13": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-14": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-15": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-16": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-17": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-18": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-19": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-20": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-21": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-22": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-23": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-24": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-25": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-26": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-27": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-28": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-29": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-30": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-31": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-32": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-34": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-33": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-35": [
+                  1,
+                  1,
+                  1
+                ],
+                "briefing-test-36": [
+                  1,
+                  1,
+                  1
+                ]
+              },
+              "task_medians": {
+                "briefing-test-01": 1,
+                "briefing-test-02": 1,
+                "briefing-test-03": 1,
+                "briefing-test-04": 1,
+                "briefing-test-05": 1,
+                "briefing-test-06": 1,
+                "briefing-test-07": 1,
+                "briefing-test-08": 1,
+                "briefing-test-09": 1,
+                "briefing-test-10": 1,
+                "briefing-test-11": 1,
+                "briefing-test-12": 1,
+                "briefing-test-13": 1,
+                "briefing-test-14": 1,
+                "briefing-test-15": 1,
+                "briefing-test-16": 1,
+                "briefing-test-17": 1,
+                "briefing-test-18": 1,
+                "briefing-test-19": 1,
+                "briefing-test-20": 1,
+                "briefing-test-21": 1,
+                "briefing-test-22": 1,
+                "briefing-test-23": 1,
+                "briefing-test-24": 1,
+                "briefing-test-25": 1,
+                "briefing-test-26": 1,
+                "briefing-test-27": 1,
+                "briefing-test-28": 1,
+                "briefing-test-29": 1,
+                "briefing-test-30": 1,
+                "briefing-test-31": 1,
+                "briefing-test-32": 1,
+                "briefing-test-33": 1,
+                "briefing-test-34": 1,
+                "briefing-test-35": 1,
+                "briefing-test-36": 1
+              },
+              "runs": 3,
+              "correct_rollouts": 108,
+              "cost": {
+                "rollouts": 108,
+                "calls": 392,
+                "usd": 11.215345199999996,
+                "unpriced_calls": 0,
+                "input_tokens": 7463934,
+                "output_tokens": 168866,
+                "cache_read_tokens": 6141801,
+                "cache_creation_tokens": 1321133,
+                "reasoning_tokens": 16890,
+                "mean_rollout_usd": 0.10384578888888886,
+                "calls_per_rollout": 3.6296296296296298,
+                "cached_input_share": 0.8228637873807566,
+                "reasoning_tokens_per_rollout": 156.38888888888889
+              },
+              "cost_per_correct_usd": 0.10384578888888886
+            }
+          },
+          "seed_minus_no_skill": {
+            "tasks": 36,
+            "point": 0.3055555555555556,
+            "lower": 0.16666666666666666,
+            "upper": 0.4444444444444444,
+            "wins": 11,
+            "losses": 0,
+            "mcnemar_p": 0.0009765625,
+            "verdict": "KEEP"
+          },
+          "rewrite_minus_seed": {
+            "tasks": 36,
+            "point": 0.5277777777777778,
+            "lower": 0.3611111111111111,
+            "upper": 0.6944444444444444,
+            "wins": 19,
+            "losses": 0,
+            "mcnemar_p": 0.000003814697265625,
+            "verdict": "rewrite-beats-seed"
+          },
+          "cost": {
+            "rollouts": 252,
+            "calls": 988,
+            "usd": 56.67316640000001,
+            "unpriced_calls": 0,
+            "input_tokens": 29643180,
+            "output_tokens": 630611,
+            "cache_read_tokens": 21698432,
+            "cache_creation_tokens": 7942268,
+            "reasoning_tokens": 122846,
+            "mean_rollout_usd": 0.2248935174603175,
+            "calls_per_rollout": 3.9206349206349205,
+            "cached_input_share": 0.7319873238970988,
+            "reasoning_tokens_per_rollout": 487.484126984127
+          }
+        },
+        {
+          "skill": "fact-check",
+          "target": "opus",
+          "ceiling": 1,
+          "rewrite_source": "own",
+          "rewrite_target": "opus",
+          "rewrite_number": 2,
+          "rewrite_sha8": "a417d566",
+          "rewrite_selection_score": 1,
+          "served_tools": {
+            "seed": [
+              "find_anomalies",
+              "get_backlinks",
+              "get_ingest_log",
+              "get_page",
+              "get_recent_salience",
+              "list_link_sources",
+              "list_pages",
+              "query",
+              "resolve_slugs",
+              "search",
+              "traverse_graph"
+            ],
+            "rewrite": [
+              "find_anomalies",
+              "get_backlinks",
+              "get_ingest_log",
+              "get_page",
+              "get_recent_salience",
+              "list_link_sources",
+              "list_pages",
+              "query",
+              "resolve_slugs",
+              "search",
+              "traverse_graph"
+            ]
+          },
+          "no_skill": 0,
+          "seed": 0.7777777777777778,
+          "rewrite": 1,
+          "arms": {
+            "no_skill": {
+              "score": 0,
+              "per_task": {
+                "fact-check-test-04": [
+                  0
+                ],
+                "fact-check-test-03": [
+                  0
+                ],
+                "fact-check-test-01": [
+                  0
+                ],
+                "fact-check-test-02": [
+                  0
+                ],
+                "fact-check-test-05": [
+                  0
+                ],
+                "fact-check-test-06": [
+                  0
+                ],
+                "fact-check-test-07": [
+                  0
+                ],
+                "fact-check-test-08": [
+                  0
+                ],
+                "fact-check-test-09": [
+                  0
+                ],
+                "fact-check-test-10": [
+                  0
+                ],
+                "fact-check-test-13": [
+                  0
+                ],
+                "fact-check-test-12": [
+                  0
+                ],
+                "fact-check-test-11": [
+                  0
+                ],
+                "fact-check-test-17": [
+                  0
+                ],
+                "fact-check-test-14": [
+                  0
+                ],
+                "fact-check-test-15": [
+                  0
+                ],
+                "fact-check-test-16": [
+                  0
+                ],
+                "fact-check-test-18": [
+                  0
+                ],
+                "fact-check-test-19": [
+                  0
+                ],
+                "fact-check-test-20": [
+                  0
+                ],
+                "fact-check-test-21": [
+                  0
+                ],
+                "fact-check-test-22": [
+                  0
+                ],
+                "fact-check-test-23": [
+                  0
+                ],
+                "fact-check-test-24": [
+                  0
+                ],
+                "fact-check-test-25": [
+                  0
+                ],
+                "fact-check-test-27": [
+                  0
+                ],
+                "fact-check-test-26": [
+                  0
+                ],
+                "fact-check-test-28": [
+                  0
+                ],
+                "fact-check-test-29": [
+                  0
+                ],
+                "fact-check-test-31": [
+                  0
+                ],
+                "fact-check-test-30": [
+                  0
+                ],
+                "fact-check-test-33": [
+                  0
+                ],
+                "fact-check-test-32": [
+                  0
+                ],
+                "fact-check-test-34": [
+                  0
+                ],
+                "fact-check-test-36": [
+                  0
+                ],
+                "fact-check-test-35": [
+                  0
+                ]
+              },
+              "task_medians": {
+                "fact-check-test-01": 0,
+                "fact-check-test-02": 0,
+                "fact-check-test-03": 0,
+                "fact-check-test-04": 0,
+                "fact-check-test-05": 0,
+                "fact-check-test-06": 0,
+                "fact-check-test-07": 0,
+                "fact-check-test-08": 0,
+                "fact-check-test-09": 0,
+                "fact-check-test-10": 0,
+                "fact-check-test-11": 0,
+                "fact-check-test-12": 0,
+                "fact-check-test-13": 0,
+                "fact-check-test-14": 0,
+                "fact-check-test-15": 0,
+                "fact-check-test-16": 0,
+                "fact-check-test-17": 0,
+                "fact-check-test-18": 0,
+                "fact-check-test-19": 0,
+                "fact-check-test-20": 0,
+                "fact-check-test-21": 0,
+                "fact-check-test-22": 0,
+                "fact-check-test-23": 0,
+                "fact-check-test-24": 0,
+                "fact-check-test-25": 0,
+                "fact-check-test-26": 0,
+                "fact-check-test-27": 0,
+                "fact-check-test-28": 0,
+                "fact-check-test-29": 0,
+                "fact-check-test-30": 0,
+                "fact-check-test-31": 0,
+                "fact-check-test-32": 0,
+                "fact-check-test-33": 0,
+                "fact-check-test-34": 0,
+                "fact-check-test-35": 0,
+                "fact-check-test-36": 0
+              },
+              "runs": 1,
+              "correct_rollouts": 0,
+              "cost": {
+                "rollouts": 36,
+                "calls": 127,
+                "usd": 5.2630403999999995,
+                "unpriced_calls": 0,
+                "input_tokens": 2454668,
+                "output_tokens": 38405,
+                "cache_read_tokens": 1620432,
+                "cache_creation_tokens": 833910,
+                "reasoning_tokens": 4991,
+                "mean_rollout_usd": 0.14619556666666667,
+                "calls_per_rollout": 3.5277777777777777,
+                "cached_input_share": 0.6601430417473972,
+                "reasoning_tokens_per_rollout": 138.63888888888889
+              },
+              "cost_per_correct_usd": null
+            },
+            "seed": {
+              "score": 0.7777777777777778,
+              "per_task": {
+                "fact-check-test-01": [
+                  1,
+                  1,
+                  0
+                ],
+                "fact-check-test-02": [
+                  0,
+                  1,
+                  1
+                ],
+                "fact-check-test-03": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-04": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-05": [
+                  1,
+                  0,
+                  1
+                ],
+                "fact-check-test-06": [
+                  0,
+                  1,
+                  1
+                ],
+                "fact-check-test-08": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-07": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-09": [
+                  0,
+                  0,
+                  1
+                ],
+                "fact-check-test-10": [
+                  0,
+                  1,
+                  1
+                ],
+                "fact-check-test-12": [
+                  1,
+                  1,
+                  0
+                ],
+                "fact-check-test-11": [
+                  1,
+                  0,
+                  0
+                ],
+                "fact-check-test-13": [
+                  0,
+                  1,
+                  1
+                ],
+                "fact-check-test-14": [
+                  0,
+                  0,
+                  1
+                ],
+                "fact-check-test-15": [
+                  0,
+                  0,
+                  0
+                ],
+                "fact-check-test-16": [
+                  1,
+                  1,
+                  0
+                ],
+                "fact-check-test-17": [
+                  0,
+                  1,
+                  1
+                ],
+                "fact-check-test-18": [
+                  0,
+                  1,
+                  0
+                ],
+                "fact-check-test-19": [
+                  1,
+                  0,
+                  1
+                ],
+                "fact-check-test-20": [
+                  1,
+                  0,
+                  1
+                ],
+                "fact-check-test-21": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-22": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-23": [
+                  0,
+                  0,
+                  1
+                ],
+                "fact-check-test-24": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-25": [
+                  1,
+                  0,
+                  1
+                ],
+                "fact-check-test-26": [
+                  0,
+                  1,
+                  1
+                ],
+                "fact-check-test-27": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-28": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-29": [
+                  0,
+                  1,
+                  1
+                ],
+                "fact-check-test-30": [
+                  0,
+                  1,
+                  0
+                ],
+                "fact-check-test-31": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-32": [
+                  1,
+                  1,
+                  0
+                ],
+                "fact-check-test-34": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-33": [
+                  1,
+                  0,
+                  0
+                ],
+                "fact-check-test-35": [
+                  0,
+                  1,
+                  1
+                ],
+                "fact-check-test-36": [
+                  1,
+                  0,
+                  1
+                ]
+              },
+              "task_medians": {
+                "fact-check-test-01": 1,
+                "fact-check-test-02": 1,
+                "fact-check-test-03": 1,
+                "fact-check-test-04": 1,
+                "fact-check-test-05": 1,
+                "fact-check-test-06": 1,
+                "fact-check-test-07": 1,
+                "fact-check-test-08": 1,
+                "fact-check-test-09": 0,
+                "fact-check-test-10": 1,
+                "fact-check-test-11": 0,
+                "fact-check-test-12": 1,
+                "fact-check-test-13": 1,
+                "fact-check-test-14": 0,
+                "fact-check-test-15": 0,
+                "fact-check-test-16": 1,
+                "fact-check-test-17": 1,
+                "fact-check-test-18": 0,
+                "fact-check-test-19": 1,
+                "fact-check-test-20": 1,
+                "fact-check-test-21": 1,
+                "fact-check-test-22": 1,
+                "fact-check-test-23": 0,
+                "fact-check-test-24": 1,
+                "fact-check-test-25": 1,
+                "fact-check-test-26": 1,
+                "fact-check-test-27": 1,
+                "fact-check-test-28": 1,
+                "fact-check-test-29": 1,
+                "fact-check-test-30": 0,
+                "fact-check-test-31": 1,
+                "fact-check-test-32": 1,
+                "fact-check-test-33": 0,
+                "fact-check-test-34": 1,
+                "fact-check-test-35": 1,
+                "fact-check-test-36": 1
+              },
+              "runs": 3,
+              "correct_rollouts": 74,
+              "cost": {
+                "rollouts": 108,
+                "calls": 474,
+                "usd": 16.811197599999993,
+                "unpriced_calls": 0,
+                "input_tokens": 11482320,
+                "output_tokens": 214304,
+                "cache_read_tokens": 9351108,
+                "cache_creation_tokens": 2130048,
+                "reasoning_tokens": 35583,
+                "mean_rollout_usd": 0.15565923703703696,
+                "calls_per_rollout": 4.388888888888889,
+                "cached_input_share": 0.8143918650586293,
+                "reasoning_tokens_per_rollout": 329.47222222222223
+              },
+              "cost_per_correct_usd": 0.22717834594594585
+            },
+            "rewrite": {
+              "score": 1,
+              "per_task": {
+                "fact-check-test-04": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-02": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-01": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-03": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-05": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-07": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-06": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-08": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-09": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-10": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-11": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-12": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-13": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-15": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-14": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-16": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-17": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-18": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-19": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-20": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-21": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-22": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-23": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-24": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-25": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-26": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-27": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-28": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-29": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-30": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-32": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-31": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-33": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-34": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-35": [
+                  1,
+                  1,
+                  1
+                ],
+                "fact-check-test-36": [
+                  1,
+                  1,
+                  1
+                ]
+              },
+              "task_medians": {
+                "fact-check-test-01": 1,
+                "fact-check-test-02": 1,
+                "fact-check-test-03": 1,
+                "fact-check-test-04": 1,
+                "fact-check-test-05": 1,
+                "fact-check-test-06": 1,
+                "fact-check-test-07": 1,
+                "fact-check-test-08": 1,
+                "fact-check-test-09": 1,
+                "fact-check-test-10": 1,
+                "fact-check-test-11": 1,
+                "fact-check-test-12": 1,
+                "fact-check-test-13": 1,
+                "fact-check-test-14": 1,
+                "fact-check-test-15": 1,
+                "fact-check-test-16": 1,
+                "fact-check-test-17": 1,
+                "fact-check-test-18": 1,
+                "fact-check-test-19": 1,
+                "fact-check-test-20": 1,
+                "fact-check-test-21": 1,
+                "fact-check-test-22": 1,
+                "fact-check-test-23": 1,
+                "fact-check-test-24": 1,
+                "fact-check-test-25": 1,
+                "fact-check-test-26": 1,
+                "fact-check-test-27": 1,
+                "fact-check-test-28": 1,
+                "fact-check-test-29": 1,
+                "fact-check-test-30": 1,
+                "fact-check-test-31": 1,
+                "fact-check-test-32": 1,
+                "fact-check-test-33": 1,
+                "fact-check-test-34": 1,
+                "fact-check-test-35": 1,
+                "fact-check-test-36": 1
+              },
+              "runs": 3,
+              "correct_rollouts": 108,
+              "cost": {
+                "rollouts": 108,
+                "calls": 368,
+                "usd": 14.525009599999986,
+                "unpriced_calls": 0,
+                "input_tokens": 8664348,
+                "output_tokens": 202455,
+                "cache_read_tokens": 6842683,
+                "cache_creation_tokens": 1820713,
+                "reasoning_tokens": 24929,
+                "mean_rollout_usd": 0.1344908296296295,
+                "calls_per_rollout": 3.4074074074074074,
+                "cached_input_share": 0.789751635091296,
+                "reasoning_tokens_per_rollout": 230.82407407407408
+              },
+              "cost_per_correct_usd": 0.1344908296296295
+            }
+          },
+          "seed_minus_no_skill": {
+            "tasks": 36,
+            "point": 0.7777777777777778,
+            "lower": 0.6388888888888888,
+            "upper": 0.9166666666666666,
+            "wins": 28,
+            "losses": 0,
+            "mcnemar_p": 7.450580596923828e-9,
+            "verdict": "KEEP"
+          },
+          "rewrite_minus_seed": {
+            "tasks": 36,
+            "point": 0.2222222222222222,
+            "lower": 0.08333333333333333,
+            "upper": 0.3611111111111111,
+            "wins": 8,
+            "losses": 0,
+            "mcnemar_p": 0.0078125,
+            "verdict": "rewrite-beats-seed"
+          },
+          "cost": {
+            "rollouts": 252,
+            "calls": 969,
+            "usd": 36.599247599999984,
+            "unpriced_calls": 0,
+            "input_tokens": 22601336,
+            "output_tokens": 455164,
+            "cache_read_tokens": 17814223,
+            "cache_creation_tokens": 4784671,
+            "reasoning_tokens": 65503,
+            "mean_rollout_usd": 0.14523510952380947,
+            "calls_per_rollout": 3.8452380952380953,
+            "cached_input_share": 0.7881933616667617,
+            "reasoning_tokens_per_rollout": 259.9325396825397
+          }
+        }
+      ],
+      "reprice_trigger": null,
+      "files_read": [
+        "eval/data/skillopt-method-v2/query/test.jsonl",
+        "eval/data/skillopt-method-v2/briefing/test.jsonl",
+        "eval/data/skillopt-method-v2/fact-check/test.jsonl",
+        "docs/benchmarks/2026-11-01-skillopt-method/probe/frontier/f0b-opus/receipt.json",
+        "docs/benchmarks/2026-11-01-skillopt-method/probe/frontier/f0b-sol/receipt.json",
+        "docs/benchmarks/2026-11-01-skillopt-method/probe/frontier/f0b-opus/one-shot/opus-query-rewrite-1.txt",
+        "docs/benchmarks/2026-11-01-skillopt-method/probe/frontier/f0b-sol/one-shot/sol-briefing-rewrite-2.txt",
+        "docs/benchmarks/2026-11-01-skillopt-method/probe/frontier/f0b-opus/one-shot/opus-fact-check-rewrite-2.txt"
+      ],
+      "retrieval": "keyword only: pages imported with noEmbed, embedding_disabled set on the brain, the gateway's embedding model on a provider whose key is not in the process; reranker and query expansion off",
+      "request_settings": [
+        {
+          "host": "api.anthropic.com",
+          "model": "claude-opus-5-5",
+          "sent": {
+            "thinking": null,
+            "max_tokens": 32000,
+            "temperature": null,
+            "top_p": null,
+            "top_k": null,
+            "tool_choice": {
+              "type": "auto"
+            },
+            "tools": 11
+          },
+          "requests": 1234
+        },
+        {
+          "host": "api.anthropic.com",
+          "model": "claude-opus-5-5",
+          "sent": {
+            "thinking": null,
+            "max_tokens": 32000,
+            "temperature": null,
+            "top_p": null,
+            "top_k": null,
+            "tool_choice": {
+              "type": "auto"
+            },
+            "tools": 13
+          },
+          "requests": 750
+        },
+        {
+          "host": "api.anthropic.com",
+          "model": "claude-opus-5-5",
+          "sent": {
+            "thinking": null,
+            "max_tokens": 32000,
+            "temperature": null,
+            "top_p": null,
+            "top_k": null,
+            "tool_choice": {
+              "type": "auto"
+            },
+            "tools": 12
+          },
+          "requests": 851
+        }
+      ],
+      "files_read_include_test": true
+    },
+    "reprice_trigger": null
+  },
+  "accounting": {
+    "planned": 3,
+    "attempted": 3,
+    "scored": 3,
+    "errors": 0,
+    "misses": null,
+    "source": "derived"
+  },
+  "latency_ms": null,
+  "delivered_tokens": null
+}

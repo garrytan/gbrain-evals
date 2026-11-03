@@ -4,7 +4,11 @@
 # and the full-context baseline. Usage: G=<gbrain checkout>@<sha> LEDGER=... bash eval/harness-provider/dev-gbrain-local-tracks.sh
 set -uo pipefail
 L="--budget-ledger ${LEDGER:-.budget/mpw-dev-local.sqlite}"
-D="bun eval/runner/harness-dev.ts sweep"
+# The October 5 dev phase ran on these models (memory proof wave preregistration); harness-dev.ts defaults to
+# claude-sonnet-5-5 and gpt-6.1-sol since 2026-11-01, so a rerun names them to reproduce that phase.
+ANSWER=gemini:gemini-3.8-flash
+MODELS="--answer $ANSWER --judge gemini:gemini-3.5-flash"
+D="bun eval/runner/harness-dev.ts sweep $MODELS"
 X='"embedding_model":"voyage:voyage-4","embedding_dimensions":1024,"date_header":false'
 mkdir -p eval/reports/harness-dev
 c1() {

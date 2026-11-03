@@ -2,6 +2,638 @@
 
 This records what each gbrain-evals release changed and what its measurements meant at the time. Versions follow `VERSION` and `package.json`. Historical scores keep their original dates; later corrections do not turn them into measurements of today's code.
 
+## [0.10.144] - 2026-11-02
+
+### gbrain pin moves to v0.60.553.0: SkillOpt's rollout registries read Sol's other empty arguments as absent
+
+- **The product pin moves from `a131fb20e` (v0.60.549.0) to master `311a83bbe` (v0.60.553.0)**, 69 commits and four releases later; the old pin is in the new one's history. `gbrain-cues` and `gbrain-reader` stay where they are. gbrain's dependency list did not change, so `bun.lock` changes only the `gbrain` entry. gbrain's Particle provider (gbrain #8324) is still an open pull request and is not in this release, so unit U9 of the particle-1 plan keeps waiting.
+- **SkillOpt's rollout and write-capture registries read the empty values a parameter's schema rules out as absent (gbrain#8444, v0.60.553.0)**: `0` below a numeric minimum, `[]` where a list must be non-empty, `{}` on a read op's object that requires a member, `false` on a flag that acts only when true, and `get_page` `context` without `grep`. MCP, `gbrain call` and the subagent registry share the same normalization. A value inside the valid range is never dropped, except `context`, which is dropped at any value when `grep` is absent. `{}` counts as absent only on read ops, so `edit_page` with `within: {}` still refuses; SkillOpt's registries serve no real write op, only write-capture's virtual `put_page`, `submit_job` and `file_upload`, which skip this normalization, so that limit does not reach a rollout.
+- **Sol's recorded page reads still fail on this path.** Replayed through the pinned rollout registry, the N15 frontier probe's 651 recorded Sol calls come out as follows. All 6 `get_backlinks` calls read, as at `a131fb20e`. 30 of the 38 `traverse_graph` calls, the ones sending `hops: []`, now read; the other 8 send a real hop chain beside `depth`, `link_type` and `direction` and still refuse. All 607 `get_page` calls still fail. The 436 that failed on `context` without `grep` now pass that rule and stop at the one-window-selector rule, because Sol sends both `lines` and `bytes` (183 calls) and often a real `around_chunk_id` as well (253). 169 refuse on a real `known_as_of` beside read-view arguments, 1 on `grep` beside `lines`, and 1 sent arguments that are not JSON. So 36 of 651 calls read and 615 refuse. All 606 recorded `get_page` calls with JSON arguments carry both `lines` and `bytes`.
+- **What a SkillOpt rollout shows Sol on a refusal.** gbrain's gateway tool loop returns only the error's message to the model, for example `get_page: pass one window selector, not 2 (got lines and bytes).` The suggestion and the runnable `fix` that #8444 adds reach MCP callers but not a SkillOpt rollout. #8444 also changed what Sol reads before its first call: `get_page`'s description and its window parameters now say to pass one window selector. The replay sends argument sets Sol wrote against the old text and calls each once, so it shows neither Sol's first calls at this pin nor whether it recovers on its next turn; a Sol rollout at this pin, such as the `query` rerun the N15 report asks for, measures both.
+- **Tests.** The replay in `test/eval/skillopt-rollout-empty-args.test.ts` now expects the counts above. It fails at `a131fb20e`, where the 436 calls stop on `context` and all 38 `traverse_graph` calls refuse. The test's other four checks are unchanged and pass. The harness still sends each recorded argument set as Sol sent it. The typecheck and Cats 37 to 39 needed no change at this pin.
+- **Six slow tests now set a 60-second timeout.** In `test/eval/situation-recall-regression.test.ts`, "release validation discovers a new category even with a freshly hashed old inventory", "new capability acceptance applies only to C1 while baseline misses remain measurements", "native output-dependent empty precision is tagged and unequal paired eligibility blocks" and "mapped native metrics cannot turn a dummy metric and loose floor into release proof" took 3.4 to 5.7 seconds each in one timed run of the file at the old or new pin on a 4-CPU machine, against bun's 5-second default. The first two failed this release's local pre-merge check, and alone at the old pin the first timed out in 3 of 7 runs. In `test/eval/longmemeval-m-pilot-replay.test.ts`, "source builder rejects scoring labels and unguarded live work" took 4.2 and 5.0 seconds and failed the pre-merge check once at 5.6 seconds, and "uncalibrated cue-on diagnostic still requires current product embedding signature" took 4.0 and 3.9 seconds. Each now sets 60 seconds, the timeout both files already give their other slow steps. Their assertions did not change, and this release does not touch the code they test.
+- **Docs.** The hub sentences name the new pin, README's memory trust row names `311a83bbe` for its keyless check, and the docs index's SkillOpt method row says every recorded Sol `get_page` call still refuses and only a Sol rerun can show whether its page reads recover.
+- **Campaign identity.** `package.json` and `bun.lock` are in the F6 campaign's executed tree, so this release counts for F6 only under a new campaign identity. No file in the Cat 40 Hard freeze changed. A SkillOpt rollout at this pin (N15, Cats 30 to 33) can see different tool results from one at `a131fb20e`, so its scores are a new identity, never pooled with earlier runs.
+## [0.10.143] - 2026-11-02
+
+### N15's paid stages refuse receipts from another pin, resend only what was never billed, and stop at a budget refusal
+
+- **A stage refuses a receipt from another gbrain pin** (GST-903). `--stage f0b` and `--stage test` read the receipts they build on (`--from`, `--other`) only when the receipt ran at this tree's gbrain pin. `--accept-pin <sha>`, the whole pin or at least the first 7 characters of its commit, reads one from another pin, and the new receipt records the pin it accepted as `resolved_config.accepted_pin`. A receipt that records no pin is refused with its own message. The committed frontier receipts ran at `ca1281a2`, so reading them in this tree needs `--accept-pin ca1281a2`.
+- **The one-shot proposer sees the seed and the success criteria as written.** Only the block of training-task trajectories is withheld from: WITHHELD replaces each forbidden marker and each corpus slug the train split does not show, and the input says what WITHHELD marks. Before, the withholding ran over the whole input, so it could replace the seed's own rules, such as the fact-check seed's "<5% unverifiable", with WITHHELD. A seed or criteria text that names a corpus page the train split does not show is refused.
+- **The harness is the only layer that resends a request.** Every rollout attempt and the harness proposer call run under a pass-through gbrain invocation guard (`withoutSdkRetries`), so gbrain sends them with the AI SDK's own retries off. The harness resends a rollout or a proposer call at most twice, 15 s and then 60 s later, and only when the failure proves nothing was billed: the connection failed before sending, or the provider answered 429 or 529 before the rollout finished any model turn. A 5xx is never resent, because a gateway can return one after forwarding the request, and neither is a 429 after a finished turn, so a retry never replays billed turns. Each retry is logged and counted as `retries` in the stage's meter, and its calls are in the cost.
+- **A budget refusal or the tripwire stops the arm.** A refusal from the budget ledger, from gbrain's SkillOpt hook cap, or from the metering proxy (402 over the cap, 503 without a key, 403 off the model allowlist) marks the arm `budget_exhausted`. No later rollout of that arm sends anything, and the arm reads incomplete, never as a score. The proxy's 403 tripwire marks the arm `cell_invalid` the same way.
+- **An arm with any errored task still has no score**, as in 0.10.141. In the test stage, an arm with no score also has no `correct_rollouts` and no cost per correct answer.
+- **Tests.** `test/eval/skillopt-ceiling-preconditions.test.ts` (new, keyless) checks the pin refusal, the proposer input's scope, and which failures are resent or stop the arm, through cause chains and the AI SDK's retry wrapper. Through an HTTP fake below the budget ledger, it checks that each provider request from a rollout on either target, from the harness proposer, and from `runSkillOpt`'s one-shot and loop steps reserves and settles one ledger entry. It also checks that a proxy refusal or the tripwire stops the arm after one request, a forwarded 504 is sent once and charged at its reservation, a 529 or 429 is resent by the harness with one SDK attempt each, and the ledger's own cap refuses the next request before sending. `test/eval/skillopt-method-probe.test.ts` passes `--accept-pin` where it reads the committed receipts.
+- **No committed result changes.** The frontier probe and the sealed test read ran before these rules and keep their receipts and reports.
+
+## [0.10.141] - 2026-11-02
+
+### gbrain pin moves to v0.60.549.0: SkillOpt's rollout registries read GPT's empty optional arguments as absent
+
+- **The product pin moves from `ca1281a2e` (v0.60.542.0) to master `a131fb20e` (v0.60.549.0)**, 268 commits and seven releases later; the old pin is in the new one's history. `gbrain-cues` and `gbrain-reader` stay where they are. gbrain's dependency list did not change, so `bun.lock` changes only the `gbrain` entry. gbrain's Particle provider (gbrain #8324) is still an open pull request and is not in this release, so unit U9 of the particle-1 plan, the pin that picks it up, keeps waiting.
+- **SkillOpt's rollout and write-capture registries treat `""` and `null` optional arguments as absent (gbrain#8429, v0.60.549.0)**, then check the rest against the operation's schema, as MCP dispatch already did. `gbrain call` drops them the same way, and a remote `memory_recall` with an empty `acting_user` reads as one without it. At `ca1281a2e` the registries handed GPT-6.1 Sol's `known_as_of: ""`, `cursor: ""`, `section: ""` and `grep: ""` to the handler, which refused them, so every Sol `get_page` and `get_backlinks` call in the N15 frontier probe failed.
+- **The SkillOpt registries also refuse a wrong-typed or out-of-enum argument before the handler runs** (`invalid_params`), where `ca1281a2e` handed it to the handler. A SkillOpt rollout at this pin (N15, Cats 30 to 33) can see different tool errors from one at `ca1281a2e`, so its scores are a new identity, never pooled with the November 1 re-baseline or the November 2 N15 runs. Those reports keep their pins and were not re-run.
+- **Sol's page reads still fail on this path.** Sol fills in other optional arguments with defaults that gbrain's argument rules refuse, and #8429 leaves those rules alone. Replayed through the pinned rollout registry, all 6 of the frontier probe's recorded Sol `get_backlinks` calls now read, but all 607 recorded `get_page` calls still fail (436 on `context` without `grep`, 169 on a real `known_as_of` beside read-view arguments, 1 on `grep` beside `lines`, and 1 whose arguments Sol sent as a 9,714-character string that is not JSON), and so do all 38 `traverse_graph` calls (`hops` beside `depth`, `link_type` or `direction`). So while Sol keeps sending these defaults, a Sol rollout at this pin, such as the `query` rerun the N15 report asks for, still has its page reads refused.
+- **Tests.** `test/eval/skillopt-rollout-empty-args.test.ts` (new, keyless) runs a Sol rollout through the gateway tool loop on a fake transport, calling `get_page` and `get_backlinks` with `""` and with `null` optional arguments, and checks each answers as the call without them does. It checks both registries directly, including that a non-empty bad `known_as_of` still refuses and a wrong-typed `include_content` is refused, and it replays the recorded Sol calls above. Every test in it but the corpus check fails at `ca1281a2e`. The typecheck, N15 and Cats 30 to 33 needed no harness change at this pin, because the harness fakes send only valid arguments.
+- **Docs.** The hub sentences name the new pin, README's memory trust row names `a131fb20e` for its keyless check, and the docs index's SkillOpt method row says a Sol rerun at this pin would still lose its `get_page` and `traverse_graph` reads. The one-line opening paragraphs of `eval/CONTRIBUTING.md`, `eval/CREDITS.md`, `eval/README.md` and `docs/comparison-systems.md`, and that page's LongMemEval paragraph, now put each sentence on its own line, so a later edit to another sentence does not conflict with this one.
+- **Campaign identity.** `package.json` and `bun.lock` are in the F6 campaign's executed tree, so this release counts for F6 only under a new campaign identity. No file in the Cat 40 Hard freeze changed.
+
+### SkillOpt method benchmark (N15): task sets, scorer, frontier probe and the sealed test read
+
+- **A new report-only category, `skillopt-method` (N15), for comparing skill optimizers on gbrain's own skills** (issue GST-799, plan decision A). `bun eval/runner/n15-skillopt-method.ts` runs keyless: it checks that the task sets regenerate byte for byte and match their manifest, that the seed skills match their pinned sha256, that every solvability control passes and no empty or "I don't know" answer does, lists the seed tools the rollout does not serve, and runs the A1 probe end to end on an in-process fake transport. It spends nothing and gates nothing.
+- **Task sets** (`eval/data/skillopt-method-v1` and `-v2`, each frozen by sha256 and checked by `validate-data`): 84 tasks for each of `query`, `briefing` and `fact-check` (24 train, 24 selection, 36 sealed test), generated by `eval/generators/skillopt-method/` from messy-company-v1's governing-records dev labels and world-v1's facts. The v1 figures follow; v2 has its own bullet below. Each task has one anchor; no anchor, gold fact or gold page appears in two splits. An independent oracle confirmed every gold value and dropped 79, 39 and 53 candidates. Negative controls name people or companies no page carries. Briefing tasks list the day's meetings.
+- **Scorer** (`eval/runner/skillopt-method/score.ts`): correct only when every gold value matches a tolerant pattern and a gold page is cited in the skill's own form (`briefing`'s `[Source: slug, updated DATE]`, `fact-check`'s statuses). It plugs into gbrain's `scoreSkillOnTasks` `scoreFn` seam; citation nDCG is reported, never counted. One criteria text per skill names no gold, and a failed check renders without its argument. A mutation suite covers the kit's five fakes, a wrong citation, paraphrases, abstentions and a gold-pasting skill. `eval/runner/skillopt-method/audit.ts` flags corpus-specific tokens a frozen skill added to its seed.
+- **The A1 probe** (`--probe --paid --budget-run-id <id>`, $20 cap): no skill, the seed, two one-shot rewrites through `runSkillOpt` and the seed on Opus 5.5, on the selection split only, with the gate preregistered in [the preregistration](docs/benchmarks/2026-11-01-skillopt-method/PREREGISTRATION.md). Probe 1 ran on v1 ([summary](docs/benchmarks/2026-11-01-skillopt-method/probe/probe1/summary.json)): no skill qualified, and a one-shot rewrite reached the ceiling on all three, so the gate called for one hardening round. Probe 2, on v2, was stopped on the Captain's instruction after `query` and part of `briefing`, when the targets moved to frontier models ([summary](docs/benchmarks/2026-11-01-skillopt-method/probe/probe2/summary.json)).
+- **v2, the one hardening round** ([`eval/data/skillopt-method-v2`](eval/data/skillopt-method-v2/README.md), seeds 15011 to 15013). Probe 1 found v1 too easy: the shipped seed scored 1.00 on `query` and 0.96 on `briefing` on the selection split, and one rewrite took `fact-check` from 0.58 to 1.00. v2 keeps v1's output contracts, check kinds, split sizes, group rule and oracle, and asks for procedure:
+  - `query`: a value as of a date that a later record superseded (a third of the set), two values at once, and a founder reached through a person or a meeting, cited by the founder's own page;
+  - `briefing`: every external meeting on a calendar of two or three, one of them sometimes with a person no page carries;
+  - `fact-check`: claims stating a superseded value, and compound claims to check part by part.
+
+  The scorer gains one citation check per source (`gold.cite`) and an abstention beside answered meetings; v1 still regenerates byte for byte. The runner and probe read v2 by default and check both versions.
+- CLAUDE.md's test table points shipped-skill changes at N15; the category's default models (the Opus 5.5 and GPT-6.1 Sol targets and the Opus 5.5 proposer) are registered in `test/eval/model-defaults.test.ts`. N15 runs in the offline BrainBench tier. The category catalog tests list it, and `eval/runner/brainbench-shard-weights.json` gives it 6 s, measured on a 4-CPU cloud machine before its first CI run.
+- **The frontier probe** (plan revision 3, decision A3; `eval/runner/skillopt-method/headroom.ts`, `one-shot.ts` and `rollouts.ts`). The A1 probe targets `claude-opus-5-5` and `gpt-6.1-sol` (`--target opus|sol`, default `opus`) in two stages. `--stage f0a` scores no skill at 1 run per task and the seed at 3 on v2's selection split. `--stage f0b --from <F0a receipt>` runs only the pairs whose seed is in [0.20, 0.80]: the harness one-shot runs the seed once on each train task and makes one Opus 5.5 call per rewrite, twice from the same trajectories; each rewrite is audited before it is scored at 3 runs per task, and one that fails the audit is recorded and not scored. The proposer sees the slug and title of each page the train split shows and never page text; selection gold and every other corpus slug are withheld. Each pair records its mean cost per rollout, calls per rollout, cached share of input tokens and reasoning tokens, and a pair over $0.40 (Opus) or $0.20 (Sol) per rollout stops the stage with `reprice-trigger`. The gate reads each target (build, build-one-skill, stop, out-of-band or incomplete), and `counted_skills` picks at most two skills per target. Retrieval is keyword only on both targets (`embedding_disabled`, an embedding model whose key the run never holds, query expansion and reranker off), and a run holds only its target's key, plus Anthropic's for F0b's proposer. `--smoke` runs one seed rollout per target. Keyless tests drive F0a, F0b and the smoke for both targets on fake transports and a stubbed fetch. The Haiku 5.5 probe stays reproducible as `--target haiku`, marked historical. The probe ran at gbrain `ca1281a2` (0.60.542.0) for $145.04 ([results](docs/benchmarks/2026-11-01-skillopt-method/probe/frontier/README.md)). Every seed was in band. On the five pairs where a rewrite passed the audit, one Opus 5.5 rewrite reached the 1.00 ceiling. So the gate reads stop on GPT-6.1 Sol, and build-one-skill on Opus 5.5, whose `briefing` qualifies only because both of its rewrites failed the audit.
+- **The sealed test read** (`--stage test --from <F0b receipt>`, [amendment 3](docs/benchmarks/2026-11-01-skillopt-method/PREREGISTRATION.md), Garry's G1). The one read of the 36-task test split scores no skill once per task and the shipped seed and the kept rewrite three times each, for all six pairs, with paired task-level bootstrap intervals and an exact McNemar p per comparison. A pair whose own rewrites all failed the audit scores the other target's kept rewrite (`--other`). It cost $163.06 against a $220 cap.
+- **The report** ([`REPORT.md`](docs/benchmarks/2026-11-01-skillopt-method/REPORT.md)). One rewrite reached 1.00 on all six pairs and beat the shipped skill by 0.22 to 0.53, so the optimizer benchmark as designed is a CUT-CANDIDATE and its optimizer arms did not run. The shipped skill beats no skill on five pairs. `query` on GPT-6.1 Sol (0.72 against 0.86) is a FIX-METHOD: SkillOpt's rollout path rejected every `get_page`, `traverse_graph` and `get_backlinks` call Sol made, because it reads Sol's empty optional arguments as real ones (gbrain#8429). Every Sol cell is marked affected, the report carries a keyless reproduction with gbrain's error text, and the Opus cells stand.
+- **An arm with a provider error on any task is unscored.** gbrain scores such a task 0 and throws only when every task fails, so `scoreArm` now returns no score and names the errored tasks, and the receipt reads partial. No committed run hit this: every task in every arm holds all of its runs.
+- The runner module the preregistration calls `probe.ts` is now `headroom.ts`, with no other change.
+
+### The W10b story applies its recheck edits
+
+- **Five wording edits from the recheck of the W10b finding's plain-English story.** The title gives the gap's 95%
+  range, the summary calls the test exploratory and narrows its account of the power-bank answers to what the rows show,
+  and the X post draft says particle-1 sometimes treats an advice request as a lookup. No number changed.
+- **The infographic's source is committed.** Its fine print calls the test exploratory and its source line names the
+  finding's record. The PNG is re-rendered, and its HTML source sits beside it, with a note that it needs the Inter and
+  Inter Display fonts installed to render the same.
+- **A wording note in the particle-1 replay report.** It says the preference questions are the largest share of the gap
+  to Opus 5.5, 7 of the 17 net questions, not most of it, and keeps every figure. The finding's `SHA256SUMS` and the
+  `docs/receipts-manifest.json` entry carry the report's new digest.
+
+### Frontier first, part 2: the live reader sets drop Sonnet, and the guard sees the frozen ones
+
+- **The workload suites read every cell with Opus 5.5.** Their fixed reader was `claude-sonnet-5-5`, a model under
+  test on every question, and `modelRuleViolations` required it. The fixed reader is now `anthropic:claude-opus-5-5`,
+  the counted sweep reads with Opus 5.5, `gpt-6.1-sol` and particle-1, and `modelRuleViolations` requires the newest
+  frontier Opus as the fixed reader and the sweep's anchor. A rerun is a new receipt identity, never pooled with the
+  2026-10-05 runs. An old run directory holds its sweep's Opus 5.5 receipts where the new fixed reader's answers go, and
+  `bench.ts` and `report.ts` read the current config, so they would reuse or relabel them as fixed-reader rows. Both
+  now refuse a directory whose `run.json` records another fixed reader (`recordedReaderProblem` in
+  `eval/workload-suites/run-config.ts`); move it aside before a rerun, or check out an earlier commit to re-render it.
+  `report.ts --copy` also refuses a target folder whose receipts record another fixed reader, so a rerun publishes to
+  a new dated folder. Its fixed-reader answers cost about twice the published answer runs' reader spend ($91 across
+  the four suites, of the $296 reader row that includes the sweep), because Opus 5.5 lists at twice Sonnet 5.5's price.
+  The workload report's readers section says both.
+- **`FRONTIER_READERS` is `claude-opus-5-5` and `gpt-6.1-sol`.** Q1's sealed scoreboard campaign keeps its
+  preregistered three readers and Sonnet 5.5 anchor as `COUNTED_READERS` and `SONNET` in
+  `eval/runner/q1/cells/definitions.ts`, so its manifest and published cells do not change.
+- **The model-defaults test registers the frozen comparison sets that keep Sonnet or Haiku under test**, each a
+  named frozen exception citing the preregistration it ran under: T0's counted readers (#292), memory-trust's counted
+  models, utility-guard readers and Cat 37 judge, Q1's readers and anchor, Cat 40 Hard and next-confirm, N14's paid
+  models, the pilot and evidence-brief confirmation readers and Haiku 5.5 brief builders (Luna too in the pilot),
+  budgeted-delivery E2's frontier readers, the P4 streaming model, the P8 think model and the facts-absorb candidate
+  arms. Every one has run and published its cells. A new run of any of them amends its preregistration to Opus 5.5,
+  GPT-6.1 Sol and, where the runner has a route, particle-1 before its first cell. P4's `--models`, P8's `--think-model` and the facts-absorb `--arms` defaults are now exported constants so
+  the test can read them; their values did not change. `particle-1` joins the current-generation list, and a new check
+  (`judgeModelProblem`) fails any registered judge that is particle-1.
+- **particle-1 is in every live default set with a particle route.** The workload sweep already read with it; the other
+  runners with a route are frozen sets above, which add it when they are amended. Memory-trust has no particle route,
+  and Cat 37's Sonnet 5.5 judge would grade Opus 5.5 rows, so a new memory-trust run also moves that judge out of the
+  Claude family (GST-767). No model was run.
+
+## [0.10.140] - 2026-11-02
+
+### gbrain pin moves to v0.60.542.0: SkillOpt Cats name their optimizer mode, and harnesses read inside gbrain's new quote fences
+
+- **The product pin moves from `3ec766c40` (v0.60.531.0) to master `ca1281a2e` (v0.60.542.0)**, 210 commits and 11 releases later; the old pin is in the new one's history. `gbrain-cues` and `gbrain-reader` stay where they are. gbrain's dependency list did not change, so `bun.lock` changes only the `gbrain` entry. gbrain's Particle provider (gbrain #8324) is still an open pull request and is not in this release, so unit U9 of the particle-1 plan, the pin that picks it up, keeps waiting.
+- **SkillOpt makes one gated rewrite by default (gbrain v0.60.542.0), so Cats 30 to 33 name their mode.** gbrain's library now requires `optimizerMode`: `'reflect'` for the iterative loop, `'one-shot-rewrite'` for one rewrite. Cats 30, 32 and 33 pass `'reflect'`, the loop they measure. Cat 31's arms each name theirs: A, B and D `'reflect'`, C `'one-shot-rewrite'`. Each receipt's `resolved_config` records `optimizer_mode` (Cat 31 records `optimizer_modes` per arm). The `as any` casts that kept the options out of the typecheck are gone, so a new required option fails the typecheck instead of taking gbrain's default without notice.
+- **The loop changed in the same release.** gbrain's success criteria now come from training tasks only, held-out results never reach the optimizer, only applied edits are filed as rejected or accepted, the success-reflect prompt states its edit schema, and the one-shot rewrite reflects on training tasks and must pass the selection gate before it is written. A Cat 30 to 33 run at this pin therefore measures a different loop from the [November 1 re-baseline](docs/benchmarks/2026-11-01-skillopt-rebaseline/REPORT.md). That report keeps its pin, `3ec766c40`, and was not re-run; a new run is a new identity.
+- **Cat 32 Part B reads the held-out block from gbrain's run receipt.** gbrain now checks held-out once, on the final champion, before anything is written, and no longer files a refused champion in the rejected buffer as `held_out_regression`. `heldOutBlockedCount` counts the receipt's `held_out.passed: false` as the one block and falls back to the buffer on an earlier build, and Part B records the check as `held_out_check`. Part B's verdict rules are unchanged. No regression with at least one block passes, and no block is `partial`.
+- **A remote reader gets text below the owner's own notes quoted (gbrain v0.60.536.0 to v0.60.541.0), and four harnesses now read inside the fence.** An agent over MCP gets text an agent wrote, tool data, external text and text with no recorded origin inside the marked quote fence chat text already got, with `quoted: 'transcript'` on the row, and no setting turns it off. Most of what these harnesses write sits below the owner's tier (Cat 38's owner notes, written through managed sync, are the exception), so those remote reads came back fenced at the new pin:
+  - **N1** compared fenced `ontology_get` values with its ledger, so the CI slice read 0 of 20 current and 0 of 33 as-of values (current-value accuracy 0.69, history 0.42). `observeN1` now reads each value marked quoted through the build's own `unquoteFactText` (`eval/runner/quoted-reads.ts`, new), and the slice passes with 64 of 64 current-value and 57 of 57 history probes.
+  - **Cat 38** reads its recall rows through the same helper. Its label accuracy was 0.44 to 0.49 and is 100% (308 of 308).
+  - **Cat 37** read an item's trust label from the text before it on its line, which inside a fence is the fence's opening line, so unmarked poison read 0.1. `labelOnLine` in `eval/runner/memory-trust/sut.ts` now reads a fenced item's label from the fence's marker line, by the rule gbrain's own poisoning metric uses (`src/eval/brainbench/metrics/poisoning.ts`), and Cat 37 passes.
+  - **Cat 36**'s operation conformance flagged every fenced chunk as `chunk_text_not_original_source`. For a row marked quoted it now checks the text inside a fence that names the row's slug (`quotedChunkBody`), so a fence around generated text still fails.
+  - **The labels-off arms hide the fence too.** `stripTrustLabels`, which Cat 38's labels-off model arm and Cat 37's labels-absent mode apply to every tool result, now removes each quote fence and the `quoted` key, and rejoins a hook-block fact line that the fence split. At this pin a remote recall returns owner-tier facts bare and fences the rest (gbrain's `quoteFacts`), so without this a labels-off model could still tell the owner's facts from the others. No paid run used this pin, so no published number changes.
+  - A build that fences facts but has no `unquoteFactText` (v0.60.536.0, v0.60.537.0) is refused rather than scored. Arms that measure gbrain as shipped, such as the agent tool bridge (`eval/runner/tool-bridge.ts`), pass the fenced text to their agents as gbrain delivers it. The memory-qa `gbrain-query` connector reads locally, where nothing changed.
+- **Tests.** Cats 30 to 33 check each mode they pass and Cat 32's two held-out sources. Cat 36 checks quoted rows against the pinned build's own `fenceTranscriptText`, Cat 37 checks a label read inside a fence and that the strip leaves a fenced fact below the owner and a bare owner fact differing only in their values, in tool results and in hook-block lines rendered by the pinned build's own `renderFactLine`, Cat 38 checks a quoted recall row and the refusal without an unquote helper, and N1 checks a remote adapter that quotes ontology values, with and without the helper.
+- **Docs.** The hub sentences name the new pin. README's paragraph on read defaults outside the mode bundles and `docs/settings.md` describe the remote quoting, and README's memory trust row names `ca1281a2e` for its keyless check.
+- **Campaign identity.** `package.json` and `bun.lock` are in the F6 campaign's executed tree, so this release counts for F6 only under a new campaign identity. No file in the Cat 40 Hard freeze changed.
+
+### Frontier first: Opus 5.5 and GPT-6.1 Sol are the models under test, never Sonnet or Haiku
+
+- **The model rules say gbrain and gstack are built for frontier models** (Garry, 2026-11-01). CLAUDE.md's "Choose
+  models", AGENTS.md's summary and eval/CONTRIBUTING.md's opening now say every model-comparison run tests them on the
+  newest frontier Opus and GPT (`claude-opus-5-5`, `gpt-6.1-sol`) plus `particle-1` as the primary low-cost model.
+  Sonnet and Haiku are no longer required in comparison runs, and they are never models under test (agents, readers,
+  answer models, optimizers, optimization targets) or stand-ins for a frontier model, unless a run asks a question
+  about that tier and says so. Judges are separate: a protocol's judge stays, and a cheaper judge is fine where the
+  protocol allows one, as long as no model judges its own family's rows. The particle-1 rules are unchanged.
+- **Every model-under-test default R4 (#243) set to Sonnet 5.5 or Haiku 5.5 moves to a frontier model.** Each is a new
+  receipt identity, never pooled with results on the old default.
+  - `claude-opus-5-5`: the A4 house reader (was Sonnet 5.5; a third 2026-11-01 amendment to the
+    [N2/A4 preregistration](docs/benchmarks/2026-10-01-n2-a4-preregistration.md) records it and asks for an Opus 5.5
+    `--smoke 2` check before the first counted cell, and the paid estimate moves from $3 to $4 under the unchanged
+    $6 cap), chronicle-lift's agent (was Sonnet 5.5), Cat 35's dream, facts and triage models in both modes (one
+    `DISTILL_MODEL`; full mode was Sonnet 5.5, BPRE mode and triage Haiku 5.5), temporal-contradictions'
+    dev `--models` default (was Haiku 5.5; its run estimate moves from $0.30 to $1.20 per model and run), the
+    harness dev lane's reader (`DEV_ANSWER`, Sonnet 5.5 since #256), and the `--think-model` fallback of memory-qa's
+    `--qa think` lane and of feedback-think-replay (was Sonnet 5.5; now one `DEFAULT_THINK_MODEL` in
+    `eval/runner/memory-qa/run-systems.ts`). A memory-qa output directory started before this change without
+    `--think-model` hashes the old default into its run config, so resume it with
+    `--think-model anthropic:claude-sonnet-5-5`; a fresh `--output` would pay again for answered questions.
+  - SkillOpt (Cats 30 to 33) keeps its Haiku 5.5 target and B-pre optimizer and its Sonnet 5.5 transfer end for now, as
+    a dated named exception. Its held-out scoring runs outside the budget ledger, its caps are sized for Haiku, and
+    full mode counts a budget-aborted run as a seed, so it moves to Opus 5.5 only after that work (GST-903). No
+    frontier SkillOpt suite run is planned.
+- **Cat 35's default judge moves from `claude-haiku-5-5` to `gpt-6.1-sol`**, because a Claude judge would grade Opus
+  5.5's distillations. Cat 35's pre-flight estimates are repriced for Opus 5.5: a BPRE smoke projects $3.24 and a full
+  run $53.40 worst case, above the $40 default `CAT35_HARD_STOP_USD`, so a full run now needs that cap raised
+  explicitly, and the registry's Cat 35 estimate moves from $12 to $54. `eval/RUNBOOK.md`'s Cat35 pre-flight section
+  gives the new projections, and `eval/CONTRIBUTING.md`'s external-lane example now authorizes `--budget-usd 40`,
+  because the verbatim lane alone projects $13.80 under the new judge. No other judge default changes; Cats 9, 14, 15,
+  25 and 29 still grade an Opus 5.5 model with a Haiku 5.5 judge until GST-905 moves those judges.
+- **`test/eval/model-defaults.test.ts` fails when a model-under-test default names a Sonnet or Haiku model** outside
+  the named exceptions in `eval/runner/model-defaults.ts` (`underTestModelProblem`). Registered defaults now say
+  which models are under test and which judge, and the list now includes memory-qa's think model. The frozen
+  protocols and product-default mirrors that keep a Sonnet 4.6 or Haiku 4.5 model stay frozen, and two preregistered
+  Sonnet 5.5 defaults are now named frozen exceptions: memory-trust flag-rate's agent and false-flag labeler (amendment 5
+  of the memory-trust preregistration) and external-ideas wave A's decision model. No model was run.
+
+### The W10b finding reads as a plain-English story and closes with its disclosures
+
+- **A plain-English W10b finding.** Garry Tan asked for the finding to read in plain English. It now opens with a short
+  title, the infographic and a two-minute account of the test, the scores, the power-bank example, the cost per right
+  answer, what the result does and does not show, and how to check it. The precise statement, the record that was the
+  front matter and every technical section follow under Full details. No figure changed.
+- **Disclosures at the end.** He asked that the disclosures go at the end of the post and not in the X post. The
+  finding's Particle, gbrain and OpenAI lines move from under its title to a closing Disclosures section, and the file
+  has no front matter, which GitHub shows as a table above the title. `docs/disclosures.md` records his words and the
+  new rule. A finding file or long-form post closes with its lines, an X post and its images carry none, and reports and
+  summaries keep theirs up front.
+- **A new X post draft and an infographic.** The finding's X hook is rewritten without disclosure lines, and the 1080 by
+  1080 infographic it attaches sits beside the finding and at its top. No figure changed.
+
+### The W10b write-ups carry the gbrain and OpenAI disclosures
+
+- **`docs/disclosures.md` carries the standing list:** Garry Tan's dated words and the exact line for Particle, gstack, gbrain, ggstack, QM, Hermes, OpenAI and OpenClaw, with its notes, the subjects that get no line and which pages here carry which lines.
+- **The W10b finding carries the gbrain and OpenAI lines** beside the Particle line under its title, in its front matter and in its X hook draft, and its publication status and claim-check table record Garry's answer. The particle-1 replay report (in a dated note), README's full-context paragraph and the corrections page's GPT-6.1 Sol entry carry both lines, and the docs index's replay row carries the gbrain line, because each reports gbrain's result or an OpenAI model's beside particle-1's.
+- **Pins follow the report.** The replay report's SHA-256 changes, so the finding's `SHA256SUMS` and its `docs/receipts-manifest.json` entry carry the new digest. No figure changed.
+
+### particle-1 results carry their disclosure up front
+
+- **`docs/disclosures.md`** lists the relationship Garry Tan disclosed for a tested company: Disclosure: Y Combinator, which Garry Tan runs, is an investor in Particle, which makes particle-1. Any finding, report or summary of particle-1 results carries that line up front.
+- **The line is added** under the titles of the particle-1 replay report and the tokenizer calibration (as a dated note; neither body changed), to README's particle-1 sentence, to the docs index's particle-1 entries and to the corrections page's particle-1 cost comparison. The W10b finding drops the drive path outsiders could not open, and its claim check links the in-repository list.
+- **The W10b finding takes its claim check's edits.** GEVA-119's clean-machine claim check and cross-family review passed the finding with edits, and all are applied: the grade in the title, the three comparators by name with the ceiling, control rates and detectable gaps, the second judges labeled as a sensitivity added after the run, a kill rule for the R48 verdict, the missing Setup fields, a chart, what was billed against list prices, no human grading and no exclusions in the limits, the checkout pinned to 23eb96e3, the dataset's paper credited, and a publication status line, an X hook draft and the claim check. No result changed.
+- **Dated notes beside the corrected cost figures.** The replay report, W10b and W10c keep their original cost figures, and each figure `docs/corrections.md` corrects now carries a dated note that links its entry, as that page promises.
+- **Pins follow the report.** The replay report's SHA-256 changes, so the finding's `SHA256SUMS` and its `docs/receipts-manifest.json` entry carry the new digest. No figure changed.
+
+### A particle request Particle may have billed is never sent again, and the Particle key goes only over https
+
+- **The Q1 file agent sends each particle turn once (#253).** Its loop, the Cat 40 agent loop, sent a particle turn with Bun's 300-second fetch timeout and retried a 504, and a Q1 cell asked a timed-out question again in its retry pass and on resume, so Particle could bill every abandoned turn. A particle turn now waits the metering proxies' deadline (`compatDeadlineMs`, below) with Bun's timeout off, a 504 is never sent again, and a turn that times out or loses its connection after it went out (`compatMayHaveBilled`) ends the run with `timed_out` set. The file agent passes that on, and the cell records the question as a final `reader_error`, through the lease proxy or straight to Particle. So a Q1 cell no longer refuses an agent arm with a particle reader behind `--provider-proxy`. Cat 40's own particle runs get the same deadline and the same 504 rule.
+- **A response body that fails after the headers settles its lease entry (#270).** The lease proxy read the upstream body outside its error handling, so a body that timed out or reset never settled its lease entry, never freed its admission slot and wrote no usage line, and repeated failures could use up a proxy process's admission. The client got a 500 and sent the request again. The proxy now frees the slot, charges the reservation, logs a `failed` usage line and answers 504 for a particle request, which no client sends again. If the ledger cannot record the failure, the reservation stays open and the answer is still the 504. Another provider gets a 502, or a 504 when the deadline ran out. One 900-second deadline now covers a request's transport retries and its body, where each transport retry used to get its own.
+- **A client of the lease proxy waits longer than the proxy does (#271).** A client's 900-second deadline started before the lease proxy's admission wait, which can last 600 seconds, so under rate-limit pressure the client could give up while the proxy still sent the request, paid for it and threw the answer away. `compatDeadlineMs` in `eval/runner/metering-proxy.ts` gives a request to a loopback host `PROXIED_DEADLINE_MS`: the longest admission wait (`ADMISSION_MAX_WAIT_MS`, 600 seconds), then the 900-second upstream deadline, plus a minute. A request to any other host keeps the upstream deadline. qa-v2's chat client, `answerFullContext` and the agent loop use it. The proxy caps its admission wait and any Retry-After pause at `ADMISSION_MAX_WAIT_MS`, and it refuses `--admission-max-wait-s` above 600.
+- **The Particle key goes only over https (#277).** `assertMetered` checked the host and ignored the scheme, so `PARTICLE_BASE_URL=http://api.particle.ai/v1` passed, and `compatSend` and `bun scripts/model-freshness.ts` would have sent the bearer key in cleartext. A host that is not loopback must now be reached over https; anything else is refused before a request is sent. Both metering proxies apply the same rule to an `--upstream` (or a constructor upstream), because each sends the provider's real key there: the lease proxy and the workload route's proxy (`eval/runner/harness-metering-proxy.ts`) refuse to start with an http upstream that is not loopback.
+- **A particle 2xx without a message is never sent again (#280).** The Cat 40 agent loop, which the Q1 file agent runs, retried a particle answer with status 2xx and no `choices[0].message` (or a body that is not JSON) up to five more times as a server error, and `compatSend`, which qa-v2's chat client, Q1's full-context reader, the workload route and the particle canary use, marked it retryable. Particle answered each of those, and one that reports usage was billed, so every resend could be billed again. Such an answer now ends its attempt. The agent loop's and qa-v2's attempt receipts keep any usage it reported; Q1's full-context reader keeps only its reasoning tokens, though a lease proxy in front of it still meters the whole request. `compatSend` marks it not retryable, and `compatMayHaveBilled` reads an error with a 2xx status as a request Particle may have billed, so no client sends it again in the same run: the agent loop ends the run with `timed_out` set, and a Q1 cell records the question as a final `reader_error`, as it does for a timeout. No Cat 40 Hard result changes, because particle-1 does not run on Hard worlds (amendment A6). An Anthropic or OpenAI request is unchanged.
+- **The workload route sends a particle request Particle may have billed only once per run (#282).** The workload route's proxy (`eval/runner/harness-metering-proxy.ts`) answered a particle request that failed after it went out with a 502 `mpw_proxy_upstream_unreachable`, and its particle client (`callCompat` in `eval/workload-suites/bench-infra.ts`) sent it up to five more times; a keyless repro of a body that fails after the headers reached the upstream 6 times. The proxy now answers a timeout, a connection that reset or closed, a response body that fails after the headers, and any other failure not proven to happen before the request was sent (#288, below) with a 504 `mpw_proxy_upstream_lost`, and keeps the 502 for a failure that never reached Particle, such as a refused connection. Other providers keep the 502. `callCompat` checked only for a client-side timeout; it now stops on `compatMayHaveBilled`, so a 504, a transport failure not proven to happen before sending and a 2xx without a message are never sent again in that run, while a 429, another 5xx and a refused connection still are. A rerun of `--phase answer` or `--phase sweep` with the same `--out` still asks an errored receipt again (issue #287). The particle canary (`scripts/particle-canary.ts`) no longer retries a 504.
+- **Only a particle failure proven to happen before sending is sent again (#288).** `compatConnectionLost` in `eval/runner/providers/openai-compatible.ts` listed the transport failures that count as lost after sending (a reset, a broken pipe, a closed socket) and read every other one as a failure that never reached Particle. So a malformed status line or header (Bun's `Malformed_HTTP_Response`), a bad Content-Length (`InvalidContentLength`), a bad chunk (`InvalidHTTPResponse`) or a body that fails to decompress (`ZlibError`, `BrotliDecompressionError`) after the request went out was answered 502 by both metering proxies and sent again by `callCompat`, qa-v2's chat client and Q1's full-context reader; keyless repros reached the upstream 5 times through `callCompat` and qa-v2. The rule is reversed. `COMPAT_PRE_SEND_CODES` lists the codes Bun's fetch gives before any byte of a request is sent, each provoked on Bun 1.4.4: a refused connection, a host name that does not resolve, an unreachable network or no local address to send from, a URL fetch refuses, and seven TLS certificate rejections (self-signed, untrusted chain or leaf, wrong host name, expired, not yet valid, bad signature). `compatMayHaveBilled` reads every other particle transport failure as one Particle may have billed, so both proxies answer it 504 and no client sends it again in that run; the Q1 file agent ends such a turn with `timed_out`. A Q1 cell reads a particle reading as billed only when it made at least one attempt, so an error raised before any request (a missing key, an unreadable cache file) stays a `reader_error` the cell asks again. A failed TLS handshake (`EPROTO`) and a reset (`ECONNRESET`) stay off the list, because Bun gives the same codes after a request went out. A budget stop, a credit stop and an HTTP status keep their own paths, and other providers' requests are unchanged. No Cat 40 Hard result changes: `eval/runner/cat40/loop.ts` is unchanged, and particle-1 does not run on Hard worlds.
+- **A malformed log probability no longer turns a billed answer into a failure (#276).** `parseCompatResponse` threw a TypeError on a null log-probability entry or a `top_logprobs` that is not a list, so the particle canary recorded a billed 2xx answer as failed, with no usage on its receipt. It now keeps log probabilities only when every entry is an object and every `top_logprobs` is absent or a list of objects, and leaves them null otherwise. A tool call that is not an object is dropped. The canary reads null log probabilities as no weight signal.
+
+### The first finding file: particle-1 against frontier readers on LongMemEval W10b
+
+- **A finding file** ([`docs/findings/2026-11-01-particle-1-longmemeval-w10b.md`](docs/findings/2026-11-01-particle-1-longmemeval-w10b.md)) states the particle-1 replay's W10b result in the public finding format: 457 of 500 under LongMemEval's gpt-4o judge, 3.4 points behind Opus 5.5 (95% interval -5.6 to -1.4) at $0.0043 per correct answer against $0.0993. It also gives the dated price table, the limits and an R48 "Why null?" verdict (FIX-METHOD) for the Sonnet 5.5 and GPT-6.1 Sol comparisons. It discloses that Y Combinator, which Garry Tan runs, is an investor in Particle, which makes particle-1.
+- **A keyless recheck** (`scripts/finding-particle-w10b.py`) recounts every number the finding quotes from the committed per-question rows. It checks 40 digests and the replay's `summary.json`, and `--check` fails unless its output matches the committed `analysis.txt` and `analysis.json`.
+- **A cross-family second judge** (`eval/runner/batch/w10-particle-second-judge.ts`) re-judges the stored answers with the official prompt, under the budget ledger. `gpt-6.1-sol` judges particle-1, Opus 5.5 and Sonnet 5.5; `claude-sonnet-5-5` judges particle-1 and GPT-6.1 Sol. The run cost $1.61 and is a sensitivity, not counted. A keyless test (`test/eval/w10-particle-second-judge.test.ts`) checks that no judge reads its own lab's arm, that the committed rows are exactly the judgments each judge owes, and that the recheck reproduces the committed analysis. Under it, particle-1's gaps to Sonnet 5.5 (-2.4, -4.6 to -0.4) and GPT-6.1 Sol (-3.4, -5.6 to -1.2) exclude zero, where the protocol judge's do not.
+- **Corrections.** `docs/corrections.md` lists three cost corrections the recheck found. Opus 5.5's list cost per correct answer in the replay report is $0.0993, not $0.0994. The batch figures for Opus 5.5 and Sonnet 5.5 are $0.0497 and $0.0250. GPT-6.1 Sol's reader costs in W10b, W10c and the replay are repriced at OpenAI's $2.50 cache-write rate, which W10's ledger did not yet apply. README's reader-replay row no longer calls Opus 5.5 the best reader, because the W10b test compares each reader with Sonnet 4.6 only, and `docs/corrections.md` records the same claim in the W10b report's opening sentence. `docs/receipts-manifest.json` pins the replay's 30 artifacts, the comparator rows and the finding's analysis and second-judge receipts.
+
+### SkillOpt Cats 30 to 33 re-baselined on today's models, with receipts committed
+
+- **[November 1 SkillOpt re-baseline](docs/benchmarks/2026-11-01-skillopt-rebaseline/REPORT.md)** at gbrain
+  `3ec766c40`, Haiku 5.5 target, Opus 5.5 optimizer, `gpt-6.1-sol` judge (preregistered, two amendments). Cat 30
+  passes 4 of 4 skills, Cat 31 passes, Cat 32 is partial (Part B's gate never saw a gaming candidate), and Cat 33
+  passes 4 of 4 transfer pairs. The full loop ties a one-shot rewrite for the second time (0.54 against 0.54), so the
+  iterative loop is a CUT-CANDIDATE under R48. Metered cost $12.76.
+- **The judge moves to `gpt-6.1-sol`**, outside the target's family, and every SkillOpt receipt carries each
+  optimization's final skill text and gbrain's run receipt (`skillopt_runs`). These receipts are a new identity and do
+  not pool with the June 3 run.
+- **Receipts, gbrain's step events and the metered cost are committed** under the report's directory, and four
+  `covered` entries in `docs/receipts-manifest.json` check the headline numbers. The June 3 report's disclosed gap
+  stays as it was.
+- **gbrain defects found** (success-reflection edit format, held-out feedback to the proposer, test criteria shown to
+  the optimizer, unapplied edits recorded as tried) are reported upstream; gbrain fixes them in GBRA-274.
+
+### memory-qa resumes, stops and counts its reading lane exactly; answer replays keep room for Claude 5 to think
+
+- **A stopped paid run says why and exits 3** (#216). When the budget ledger refuses a paid request (the run or program cap, or a host it cannot price) or Particle answers 402, `eval/runner/memory-qa/run.ts` still writes the stopped question's row and a `partial` receipt, and its `summary` now carries `stop_reason` beside `stopped: budget`. The command prints a `BUDGET_CAP` operator message and exits 3 (ask the user) instead of 0. A refusal that no question recorded, such as one during an embedding, stops the run the same way. A rerun of the same command still resumes at the stopped question. Memory-system cells, which run.ts hands to `run-systems.ts`, keep their exit codes.
+- **The run config hash covers how the reading lane judges** (#248). A reading-lane run's hash now includes the judging path (qa-v2's `judgeResponse`) and the output limit each judge and reader call is actually sent, which the receipt's `reading` block also records. Claude 5 judges moved from a 10-token to a 2,000-token verdict in #228 without changing the hash, so a partial run resumed across that change pooled both kinds of verdict. An output directory started before this change no longer resumes a reading-lane run; start it in a fresh `--output`. Retrieval-only runs keep their hash.
+- **Usage by role counts each question once** (#251). `usage.by_role` now sums the receipts of each question's latest row, as the counts and summary do. It summed every row in rows.ndjson, so a budget-stopped row's paid reader call and the rerun's cached replay of it both counted.
+- **gbrain think on the memory-system harness gets the conversation's date** (#210). `--system gbrain --qa think` in `eval/runner/memory-qa/run-systems.ts` now asks think for the question date, else the latest session date, as run.ts's think lane does, and each row records the `qa_reference_date` think reports. It answered relative dates against the day the run happened. `thinkReferenceDate` moved to run-systems.ts and run.ts re-exports it. A think run's hash changes, so it starts a fresh output.
+- **Live answer replays refuse a Claude 5 answer limit below 4,096 tokens** (#259). The LongMemEval and Cat 36 grounded-answer replays (`eval/runner/longmemeval-answers.ts`, `eval/runner/cat36-grounded-answers.ts`) apply the judge's thinking floor (`CLAUDE5_THINKING_FLOOR`, #237) to a Claude 5 `answer_model` too, before any answer is paid for. An answer that comes back with no text and a `length` stop spent its limit thinking, so it is now a `harness` error, excluded and never judged, instead of a `sut` miss scored 0 against gbrain. A cut answer that has text is still scored. [The situation-recall protocol](docs/benchmarks/2026-09-23-situation-recall-protocol.md) states the answer-limit rule beside the judge rule.
+- **Already fixed.** #212 (a budget refusal counted as done on resume) does not reproduce on main: #228 made a budget stop a row `error` rather than a `qa_error`, so the resume reads the question again.
+
+### particle-1 reads Q1's packed and full-context cells through the lease proxy
+
+- **Q1's lease proxy routes Particle** (`eval/runner/metering-proxy.ts`, unit U5 of the particle-1 plan). `particle` joins its upstreams (`https://api.particle.ai`), key variables (`PARTICLE_API_KEY`), allowed routes (`POST /v1/chat/completions`, `GET /v1/models`), output fields (`max_completion_tokens`) and request paths, read from `eval/runner/providers/openai-compatible.ts`. A cell's slot environment points `PARTICLE_BASE_URL` at `<proxy>/<slot>/particle/v1` and gives the cell a dummy `PARTICLE_API_KEY`. A campaign unit whose cell reads with particle-1 passes the real key to its VM's proxy, and `shootout-cell.ts` gives the cell `PARTICLE_BASE_URL` and a dummy key as for the other providers. A slot's restored base URLs are now unset when they were unset before, instead of becoming the string `undefined`.
+- **A per-model reader cap.** particle-1 is always sent at least 16,000 output tokens, because its reasoning shares the limit, and the reader route cap is 2,048. Route caps now take a `<class>@<provider>:<model>` key that the proxy checks before the class cap. `DEFAULT_ROUTE_CAPS` gains `reader@particle:particle-1: 16000`, so the campaign manifest's `output_caps`, the VM payload and the proxy's `--route-caps` carry it. Every other reader on the same slot stays at 2,048 (a test sends Opus at 16,000 and sees it refused).
+- **Packed and full-context cells read with particle-1.** `answerFullContext` builds and sends a particle reading through the provider module, one request per attempt of its 5-attempt loop, with a `prompt_cache_key` per conversation and the 16,000-token floor counted in the fit check. A 429 or 5xx waits the provider's Retry-After, capped at 120 seconds; Particle's credit 402 or the lease's own 402 is `budget_not_run`, and a context-length 400 is `does_not_fit`. `READER_WINDOWS` gains particle-1 (1,048,576 tokens, 131,072 of them output). The packed reader already reached Particle through qa-v2. A reader's output limit comes from `readerMaxTokens` in `eval/runner/q1/cell.ts`, and an arm's run config records any limit above 2,048 under `reader.max_tokens_by_reader`.
+- **Receipts and truncation.** A particle reader's answer record carries `finish`, `truncated` and `attempts`: one entry per provider attempt with its status, response model, finish, reasoning tokens, weight version, effort sent and effective, output limit and Retry-After wait, failed attempts and cache hits included. A try answered again later keeps its attempts in `answer-attempts.ndjson`. An answer cut at its output limit is scored as the model's answer and never retried, and the arm's receipt counts truncated answers (`counts.truncated`). A budget stop on a packed particle reading records the failing attempt before the cell stops. That record keeps the reading's attempts but is not one of the question's tries, so a question the lease refused stays open for the next run instead of becoming a final `budget_not_run` on the third stop. Every lease-proxy budget refusal is a budget stop for a particle reader, whatever its status. A missing `PARTICLE_API_KEY` (503) and a model off the cell's allowlist (403) used to be retried as a server or client error (issue #254).
+- **A timed-out particle request is not sent again by the chat client or a Q1 cell (issue #250).** qa-v2's chat client, which memory-qa's reading lane and Q1's packed reader use, sent a particle request with the provider module's 300-second deadline and retried a timeout up to five times, and Particle may bill each attempt. Each attempt now gets the metering proxies' 900-second upstream deadline (`UPSTREAM_DEADLINE_MS`), and a timeout, or a connection that resets or closes after the request went out (`compatMayHaveBilled`), ends the loop with its receipt. A received HTTP status is never a lost connection, even a 5xx whose body names a socket error, so a gateway 5xx stays retryable. Q1's full-context particle reading does the same. A timeout is a client-side `TimeoutError` or `AbortError`, or a 504 (`compatTimedOut` in `eval/runner/providers/openai-compatible.ts`). The lease proxy answers its own upstream deadline with a 504 instead of a 502. It also stops sending a particle request again when the connection was reset or closed before the response headers arrived, because Particle may have billed the generation by then. It answers that with a 504 too, and resends a particle request only when the connection was refused. A Q1 cell records a timed-out packed or full-context particle reading as a final `reader_error` with its attempt, so the cell's in-process retry pass never asks that question again. The Q1 file agent's turns, a body that fails after the response headers, a lease proxy's admission wait, a 2xx without `choices[0].message` and the workload route's proxy are fixed under "A particle request Particle may have billed is never sent again" (issues #253, #270, #271, #280 and #282). Two paths still resend across runs (issue #287). A memory-qa resume asks a question again, up to its 3-attempt limit, when its particle read timed out, lost its connection, was answered 504 or was answered 2xx without a message, because `reader_error` is not final there. A workload rerun with the same `--out` asks every errored receipt again.
+- **particle-1's tokenizer is calibrated.** A new calibration cell (`eval/runner/q1/calibration-cell.ts`) reads one dev smoke cell's packed arm with one reader and no frontier judges through a lease proxy in the same process, and writes the reader's factor and largest per-pack error under both tiktoken encodings. Its paid run on 2026-11-01 (LoCoMo dev `conv-44`, 20 questions, $0.0861 from the proxy's usage fields, $0.0862 with its one-request preflight) gave particle-1 a factor of 1.0488 on `o200k_base` with a largest error of 0.50%, inside the 3% bar, so `READER_TOKENIZERS['particle:particle-1']` is calibrated for packs of that size and the plan's tokenizer fallback is not needed for them. Every sample was about 8,100 `o200k_base` tokens, so the 2,000- and 16,000-token arms need samples at their own sizes before particle-1 reads a counted arm. All 20 answers were scored and none was truncated. The receipts, without answer text, are in [`docs/benchmarks/2026-11-01-particle-1-calibration/`](docs/benchmarks/2026-11-01-particle-1-calibration/README.md). The cell's proxy answers only the run's own cell and control tokens. `--keyless-upstream` given without an http(s) URL after it, or written as `--keyless-upstream=<url>`, is a usage error rather than a paid run.
+- **particle-1 never judges a Q1 cell.** A particle canonical or frontier judge is refused before the cell starts, with or without the lease proxy. The refusal of particle readers behind the lease proxy (unit U2) is lifted for packed, full-context and agent arms. Memory-system cells (`run-systems.ts`) still refuse particle behind `--provider-proxy`.
+- **What does not change.** Other readers' requests, answer records and run configs are unchanged: the Anthropic and OpenAI full-context bodies are pinned by sha256 from main `8ca8d2cc` (`test/eval/file-agent.test.ts`). No counted Q1 cell reads with particle-1; adding it as its own arm is the Q1 owner's amendment. `docs/scoreboard.md` now gives the judge cap as 2,048 tokens, the value the code holds; it said 1,024.
+- **Campaign identity.** `eval/runner/metering-proxy.ts`, `eval/runner/q1/cell.ts`, `eval/runner/shootout-cell.ts`, `eval/runner/memory-qa` and `eval/runner/systems` are in Q1's executed tree, so the Q1 campaign hash moves, and a new campaign manifest's `output_caps` gains the per-model key.
+
+### The particle-1 weight canary treats a missing signal as a failure, and the freshness check keeps the Particle key on Particle's hosts
+
+- **A missing log probability no longer reads as 0** (#230). The provider module turns a null or empty log probability into 0, so a canary answer with no real weight signal could compare as unchanged. The canary now reads each token's log probability, and each listed alternative's, from the raw response. A null, empty, string or missing value leaves that answer's log probabilities and mean unset. `--compare` measures the log-probability move only when every answer both canaries gave has a mean in both, where before it averaged the answers that had one. One missing answer now fails the comparison (exit 1).
+- **`--compare` refuses a canary sent to a loopback endpoint** (#231). A metering proxy or the keyless fake records no upstream, so a loopback canary cannot show which server answered, and two loopback canaries used to compare as the same endpoint. A loopback endpoint on either side is now refused before anything is sent. The six committed canaries all went straight to `https://api.particle.ai/v1`, so they still compare.
+- **`bun scripts/model-freshness.ts` sends `PARTICLE_API_KEY` only to a host `compatSend` would send it to** (#232). Before it reads Particle's model list, it applies `compatSend`'s host check: a Particle API host the budget ledger prices, or loopback. Any other `PARTICLE_BASE_URL` host gets no request, and the read fails with the host check's reason.
+
+### claude-opus-5-5 and particle-1 are the primary models in the rule docs
+
+- **CLAUDE.md's "Choose models" names `claude-opus-5-5` and `particle-1` as the primary models** (unit U4 of the
+  particle-1 plan, following Garry's decision of 2026-10-31). Every model-comparison run includes both as readers or
+  agents, and its first table shows both with cost per correct answer. A campaign already preregistered adds particle-1
+  at its next amendment, and a runner with no `particle:` route lists particle-1 under `models_not_run` with the
+  reason. The rule says how to call particle-1 (`particle:particle-1` through `https://api.particle.ai/v1`, with
+  `reasoning_effort` sent explicitly and an output limit that leaves room for reasoning), what its receipt records, and
+  where its first paired numbers are: the
+  [particle-1 replay](docs/benchmarks/2026-11-01-longmemeval-particle-replay/REPORT.md).
+- **particle-1 never judges a counted cell.** Counted judges stay protocol-matched (`gpt-4o-2024-08-06` for
+  LongMemEval, `gpt-6.1-sol` for Cat 40 Hard). particle-1 becomes a development loop's default reader and agent once it
+  passes that loop's preregistered agreement test.
+- **The newest frontier Opus, GPT and Sonnet still run beside the primary models.** "Report the models people use
+  first" now comes after the primary models' first table, and a reader-matched comparison with a published system keeps
+  that system's reader. AGENTS.md's model summary and eval/CONTRIBUTING.md's opening say the same; CONTRIBUTING names
+  `eval/runner/providers/openai-compatible.ts` as particle-1's shared provider module.
+
+### Cat 35 keeps the external lane out of gbrain's WS0 numbers and deltas, and the scoreboard checks read more of their inputs
+
+- **The WS0 receipt's coverage map holds only gbrain's lanes (#217).** Its `n_total`, `n_scored` and `errors` counted
+  the built-in lanes only, but `data.coverage_by_lane` also carried the external lane. A missing external document,
+  which scores zero as a lane error, or a failed external judge call moved a coverage figure that the receipt's errors
+  never listed. `data.coverage_by_lane` now holds the built-in lanes, and the external lane's scores stay under its name
+  in the detailed receipt's per-lane maps.
+- **The external lane's judge spend is reported apart (#217).** `total_cost_usd` counted it, so the built-in lanes'
+  cost rose whenever an external lane ran beside them. `total_cost_usd` now counts the built-in lanes' judges and fact
+  extraction, and `external_cost_usd`, in the detailed receipt and in WS0 `data`, holds the external lane's judge
+  spend (null without one). The scorecard's cost line names both. The WS0 `cost`, read from the budget ledger, still
+  covers every paid request; subtract `external_cost_usd` for gbrain's share. `attribution_hazards` needed no change:
+  every row names its lane, and its one reader that ignores the lane (`situation-recall-native-35.ts`) refuses a
+  receipt with an external lane before reading it.
+- **Prior-run deltas pass over an external-only receipt (#218).** Discovery took the newest receipt in the same mode, so
+  a `--lanes none` run became the prior receipt of the next gbrain run, which then skipped its deltas as a lanes
+  mismatch (`prior=[], current=[verbatim]` in a keyless run). It now prefers the newest receipt with the same mode and
+  lane set, then the same mode, then any. A receipt whose `lanes` is not a list of lane names is no longer a candidate;
+  sorting such a list stopped the run after its judges had been paid and before its receipt was written.
+- **The scoreboard refuses a `power.json` that `eval/runner/q1/power.ts` cannot write.** A file that is not JSON is now
+  `RECEIPT_INVALID`; it threw a bare parse error that stopped `scoreboard.ts check`. So are a comparator list with an
+  entry that is not a system id, a detectable difference of zero or less, a full or shrunk decision with no detectable
+  difference, and a full or shrunk decision whose difference is above the `threshold_points` it records, or that records
+  none. power.ts ranks Family 1 only under a measured difference at or under its 10-point threshold; such a decision
+  used to rank rows while printing "about more than 30 points" or a difference above that threshold.
+- **The documentation verifier checks the scoreboard explanation's figures and every commit it names.**
+  `scripts/verify-documentation-refresh.py` reads README's text between its last heading and the scoreboard block, not
+  only the paragraph that names the commit. It now fails when a decimal figure there (today 59.0, 58.9, 68.3, 56.3, 12.9
+  and 13.58) appears neither in the block nor in `docs/benchmarks/2026-10-06-scoreboard/scoreboard.md`, the render's
+  other file. It compares every token after `check --commit` with the publication commit, so a second, shortened or
+  lengthened commit fails (it read only the first 40 hex characters). It also fails when README has no
+  `<!-- scoreboard:headline:begin -->` line (it read the last section instead, and passed if that named the commit) or no
+  `<!-- scoreboard:headline:end -->` line (it read the rest of README as the render), when `publication.json`'s
+  `published` is not an object (it crashed), and when `published.commit` is missing or neither null nor text (a number
+  crashed it, and a missing key passed as a pending publication). Whole numbers, such as the 192 shared questions, are
+  not checked, because the render does not print that count.
+- The last two items cover the three findings #241's adversarial review deferred (the figures, the `power.json` gaps
+  and the verifier's fragility), none of which had an issue, and the gaps this change's own adversarial review found in
+  them. No published receipt, result or README line changes.
+
+### particle-1 replays W10's LongMemEval reader prompts: first paired numbers against Opus 5.5, Sonnet 5.5 and GPT-6.1 Sol
+
+- **`bun eval/runner/batch/w10-particle.ts` replays W10's recorded reader prompts on particle-1** (unit U3 of the particle-1 plan). `build` rebuilds each comparator's system and user text from W10's committed request bodies and checks it against W10's manifests. `run <arm>` reads and judges every question under a ledger run with a 900-second deadline per attempt, and writes rows, one receipt per attempt and the preregistered bars 1 to 4. `report` re-scores the committed rows without a key and refuses an arm that stopped, left questions unrun, failed a bar or holds a failed judge call. In check mode it verifies `summary.json` and the compare files and flags a compare file it no longer writes.
+- **On W10b's 500 questions, particle-1 answered 457.** That is 3.4 points behind Opus 5.5 (95% interval -5.6 to -1.4, McNemar p = 0.002) and within the noise of Sonnet 5.5 (-1.0) and GPT-6.1 Sol (-1.4). At list price it costs $0.0043 per correct answer, against $0.099 for Opus, $0.050 for Sonnet and $0.031 for Sol. Decision B does not flip.
+- **On W10c's 150 questions, gbrain's retrieval stays within 7 points of particle-1 reading the whole history** (135 against 140). Decision G passes both comparisons after Holm by the registered bootstrap test, but Tango's score test, which `summary.json` now carries beside it, puts the particle-1 comparison just outside (p = 0.060). Effort `none` loses 11.3 points. The development-lane test is inconclusive, so the lane stays on Sonnet 5.5.
+- **The weight canary's warning thresholds come from three noise pairs.** `CANARY_WARN` warns on more than 3 changed answers or a mean log-probability move above 0.02, and the pairs are in `docs/benchmarks/particle-canary/history.jsonl`.
+- **`ChatClient` takes a per-attempt deadline for OpenAI-compatible providers** (`compatTimeoutMs`). Unset, it uses the metering proxies' 900-second upstream deadline that the #250 entry above describes.
+- **Spend.** The ledger recorded $7.23 at list price ($6.75 for particle-1, $0.48 for the gpt-4o judge). Every particle-1 call ran in Particle's off-peak window, so its estimated charge is about $3.38.
+
+### gstack's pregate gives each test process 30 minutes in this repository
+
+- **A repository `.gstack/pregate.json` raises the pregate's per-process test timeout from 600 to 1800 seconds.** On
+  4-core machines the selected test group ran past 600 seconds for three threads, and pregate records a timed-out
+  group as incomplete, which fails /ship. The file sets only `timeout_s`, so a slow test group has 30 minutes before
+  pregate marks it incomplete, and every other check, `literals` included, keeps its level.
+- **The pregate's unmapped-edit and deleted-test warnings are back** (this needs gstack 1.92.35.0 or later). The file
+  first also mapped every path to no extra lane (`"dependencies": {"**": []}`), because older gstack turned any policy
+  file into a hard `PREGATE_NO_LANE` failure for a touched file with no test lane, before any test ran. That catch-all
+  let an unmapped edit pass with no warning, and it dropped the "coverage removed" note for a deleted test (before gstack
+  1.92.35.0 the deleted test's owning suite did not run either). gstack 1.92.35.0 keeps the no-policy lane verdicts for
+  a policy that sets only `timeout_s`, so the catch-all is gone. Scratch pregate runs on 2026-11-01 (main `40bebe33`,
+  gstack 1.92.35.0) compared the two policies. An edit to `scripts/make-decision-splits.ts`, which no test covers,
+  passed under the catch-all and now warns (`PREGATE_NO_POLICY`). Deleting
+  `test/eval/verify-documentation-refresh.test.ts` ran its 26-file owning suite both ways, and only the timeout-only
+  policy names the 7 files that lost their last test. An edit to `eval/runner/providers/openai-compatible.ts` selected
+  the same 79 test files both ways. An older gstack would fail an unmapped edit with `PREGATE_NO_LANE` instead of
+  warning, so a new `.gstack/ship-policy.json` sets `min_gstack_version` to 1.92.35.0. On an older gstack the session
+  check then warns that the repository needs 1.92.35.0 and names the upgrade, and `gstack-ship-queue ready` refuses the
+  policy with `POLICY_GSTACK_TOO_OLD`. Pregate does not read this file, so until that gstack is upgraded an unmapped
+  edit still fails there with `PREGATE_NO_LANE`. Every other ship-policy key keeps its default.
+
+### chronicle-lift scores one agent model at a time, A4 rows keep the reader's stop reason, and PrecisionMemBench's gbrain-think is metered
+
+- **chronicle-lift never pools two agent models into one lift** (#236). A finished agent cell was keyed on arm,
+  question and repeat alone, so resuming an output directory answered under Sonnet 4.6 with the new Sonnet 5.5 default
+  skipped the cells Sonnet 4.6 had finished, and `score` read both models' answers as one comparison. On a keyless
+  repro, OFF answered by Sonnet 4.6 and ON by Sonnet 5.5, `score` at `cb8f4665` reported a +100-point lift with an
+  interval of 1 to 1. The resume key (`qaKey` in `eval/runner/chronicle-lift.ts`) now hashes the answer identity
+  (agent model, turn cap, gbrain under test, questions file) and the arm's brain build, and each row records both.
+  `score` refuses a results file that holds more than one answer identity, or one arm's answers from two builds of its
+  brain; `score --model <id>` keeps one model's answers and reports how many rows it left out. Older rows carry only
+  their model, which is enough for the check. `run` refuses, before any paid step, an `--out` that already holds
+  answers from another identity or from a brain it would rebuild, or that another run holds (`run.lock`), so resuming
+  never pays for rows `score` would refuse. The committed 2026-10-04 lift results rescore unchanged apart from a new
+  `qa.identity` naming Sonnet 4.6.
+- **A4 reader rows record the gateway's stop reason** (#238). An answer cut off at the 1,024-token limit (stop reason
+  `length`) is scored as the reader's answer, flagged `truncated` and counted per arm (`data.paid.truncated`, with
+  every arm's stop reasons in `data.paid.stop_reasons`). An abstention phrase in a cut-off answer scores `unscorable`,
+  not `abstain`, under the frozen rule and the A4-4 rule, because the preregistration reads an abstention from the
+  final answer and a cut-off answer never reached one. A second 2026-11-01 amendment to
+  `docs/benchmarks/2026-10-01-n2-a4-preregistration.md` records the rule. outcome-v3 rescoring
+  (`eval/runner/outcomes/rescore-a4.ts`) reads a cut-off row as an execution error; both committed A4 paid receipts
+  rescore identically. `--smoke <n>` asks the reader only the first n questions of each class, the check the first
+  amendment asks for before a counted cell; it needs a number and the paid reader, and its receipt is not publishable.
+  The A4 registry contract now names the Sonnet 5.5 reader at the provider's default temperature and points at the
+  amendments.
+- **The Sonnet 5.5 smoke found no cut-off answers.** `--smoke 2` (20 reader calls, 2026-11-01, scratch budget ledger):
+  every answer stopped on its own, the longest used 172 of the 1,024 output tokens, and the ledger settled $0.045 from
+  usage. The limit stays at 1,024. No counted A4 cell has run on Sonnet 5.5.
+- **PrecisionMemBench's `gbrain-think` mode is a metered paid arm** (#239). Since the move to current models it asked
+  Opus 5.5 once per case outside the budget ledger, and its receipt did not name the model. It now needs
+  `--paid --budget-run-id <id>` for an open ledger run, and without them writes a skipped receipt and exits 2 before any
+  request. Every request it makes, the seeding embeddings included, passes the ledger's paid-request guard, and the
+  receipt's `cost` comes from the ledger. gbrain's think turns a refused request into an empty answer, so a case the
+  ledger refuses is recorded as a harness error, left out of the report's totals, and the run as incomplete
+  (`run_status: error`, not publishable, exit 3). `resolved_config.chat_model` names the think model. The other modes
+  join the ledger when given `--paid` or `--budget-run-id` (either asks for the paid arm, which needs both) and stay
+  unmetered without them. A one-case live run on 2026-11-01 settled $0.0595 from usage (one Opus 5.5 request, 36
+  embedding requests). The adapter's header no longer says a cheap model is pinned.
+
+### Receipt guards read inside tarballs, the equivalence report refuses its published directory, and the situation-recall inventory names current models
+
+- **The receipt guards open compressed receipts (#221).** `test/eval/receipt-machine-paths.test.ts` read only JSON, NDJSON, JSONL and log files, and `scripts/scan-receipts.sh` ran gitleaks only on `receipts/` and `*-scoreboard` directories, so the 1,995 committed tarball and gzip receipts under `docs/benchmarks` were checked by neither, and a key inside one would have passed. Both guards now find a compressed receipt by its leading bytes as well as its name, under the same roots (`docs/benchmarks`, `results`, `baselines` and `qrels`), and read the content of a gzip file and every member of a tarball. A tarball is read only when GNU tar lists it cleanly (exit 0, no warning, and no further entries when told to read past zero blocks), names no member twice and holds only regular files and directories; GNU tar then extracts it, and the guards read the extracted files, which are the files a consumer gets. Any other tarball is refused unread, so a member hidden behind a repeated name, a symlinked directory, a leading slash, an entry type GNU tar extracts as a plain file or a damaged header cannot pass. All 1,995 were reviewed member by member on 2026-11-01 and are listed in `test/eval/fixtures/reviewed-compressed-receipts.json` with their sha256 and the gitleaks version of their secret review; both guards skip a listed file only while its hash matches, and the secret scan only while its entry names gitleaks 8.21.2. Run with no review list, the scan's own refusal and extraction code refused none of the 1,995: each of the 195 tarballs lists cleanly with GNU tar 1.35, names no member twice and holds only regular files and directories, and the 1,995 together yield the same 91,481 members, all UTF-8 text. That review ran the scan below over all 91,481 members (about 8.0 GB) on a Ubicloud VM and found no credential: 9,494 distinct matches, of which 9,491 are generic-api-key matches on tokenizer names, sha256 memo keys, retrieval cache keys and gbrain's sync-lock UUIDs, one is the token of a 2023 Elsevier article link that a user pastes in a LongMemEval conversation (gitleaks run straight on the extracted members had missed it), and two are the jwt.io sample token that a BEAM conversation quotes as sample code. 125 memory-proof-wave cell tarballs name the harness VM's overlay checkout (`/home/ubi/work/gbrain-evals/.gbrain-overlays/`) in their ingest records; that prefix is the one declared exemption, with its reason, and the secret scan still reads those members. 63 hold other machine paths (sandbox homes and `/tmp` in session logs, Ubicloud cell stores, Capy scratch paths, home paths quoted in benchmark conversations), recorded in the fixture's comment. Both guards fail, unread, on a compressed receipt they cannot read: another format (zip, xz, zstd, bzip2, 7z, lz4, compress, lzip or rar, by name or leading bytes), or a member that is not UTF-8 text (a nested archive, a database or another binary file). The scan cuts each member into overlapping 9,000-byte windows that gitleaks reads whole, because gitleaks drops the rest of a file at any 10,000-byte chunk that starts like a binary format and skips some paths (`.svg`, `.bin`, `node_modules`); a secret up to 4,500 bytes long lies whole inside some window. No receipt was rewritten. CI's `receipt-secrets` job took about 30 s before this change; with every compressed receipt reviewed, the whole script took about 3 s locally, and a new or changed receipt adds its unpacking and scan.
+- **`equivalence_report.py` no longer rewrites the published report (#222).** Its usage line ran it on `docs/benchmarks/2026-10-10-memory-proof-wave-equivalence`, which rewrites `report.json` with null `extract_stale` fields and breaks the `mpw-equivalence-report` sha256 pin in `docs/receipts-manifest.json` (on a scratch copy of the repository the hash went from `2e850589…` to `aacd51eb…`). The script now refuses a directory under `docs/benchmarks`, or a copy whose `report.json` is a symbolic link into one, and exits 2 with the file left unchanged. It writes a new file and renames it over `report.json`, so a copy made with hard links leaves the committed file unchanged too, and its usage line runs it on a copy, as the sealed-results report already said. `test/eval/mpw-equivalence-report.test.ts` covers each case.
+- **The situation-recall-v1 inventory names the current models (#240).** `eval/regression/situation-recall-v1.json` named Cat 33's pair slices `anthropic:claude-haiku-4-5>anthropic:claude-sonnet-4-6` and its reverse, and the LongMemEval-answers live profile's `judge_model=claude-haiku-4-5-20251001`. R4 moved Cat 33's default pairs to Haiku 5.5 and Sonnet 5.5 and the judge to `claude-haiku-5-5`, so a Cat 33 regression registration at the new defaults failed closed with "native slice missing". The inventory now names the new pair slices and judge, asks a live profile for `judge_max_tokens` 4096 because a Claude 5 judge thinks inside that limit (offline profiles keep any limit from 1 to 4096, and the live validators refuse a lower one since #237), and records the change in a dated `amendments` entry. Its hash (`regressionHash` of the inventory) moves from `2cc0a5e8…` to `d51e68ac…`; no committed file pinned the old one, and a manifest registered against it fails the inventory hash check. Cat 33's runner exports its default pairs as `DEFAULT_PAIRS`, and a test in `test/eval/situation-recall-regression.test.ts` registers a Cat 33 profile at those pairs and checks the inventory's judge against `JUDGE_MODEL`. No model was run.
+
+### Cat 35's external lane prices its judge calls from the documents it read, and runs only where it can read them race-free
+
+- **The pre-flight projection prices the external lane from its documents (#225).** It charged the external lane the
+  per-batch figure set for dream documents, which peak at 10.5 KB, for one coverage, grounding, distractor and usability
+  call per conversation, whatever the folder held, with hazard and joint-evidence calls left inside that figure. An
+  external document can be 64 KiB with 80 claims. `externalJudgeEstimateUsd` now sums what the budget ledger reserves
+  for every judge attempt the documents read can cause: coverage on each conversation with planted facts, and for each
+  non-empty document the usability and distractor judges, one hazard call per planted hazard, claim grounding with the
+  conversation and the joint-evidence fallback with one evidence quote per item, each with its full answer allowance and
+  one retry, at the judge model's own rates. Text counts as the judge receives it, escaped and with each claim
+  JSON-encoded, at the ledger's 3 bytes per token, and a test checks the estimate against what the ledger reserves for
+  the judges' real requests through both the Anthropic client and the OpenAI shim. Text that tokenizes more densely than
+  3 bytes per token, such as escaped punctuation, control characters or CJK, can bill more than the ledger and the
+  estimate reserve for it (#262), and the Anthropic SDK's own transport retries under each attempt are not counted
+  (#258). Computed with that function at this change's list prices, 24 documents of 62 KB and 80 claims project $42 with
+  a claude-opus-5-5 judge, $30 with gpt-6.1-sol, $21 with claude-sonnet-5-5 and $1.05 with claude-haiku-5-5; the old
+  figure was $13.80 for every judge but a Haiku ($2.76). So an Opus-judged folder at the limits now trips the default
+  $40 `CAT35_HARD_STOP_USD` instead of passing at a third of its worst case, while a Haiku 5.5 run projects less than
+  before, because that model lists at a fraction of the old figure. The projection line names the external lane's share,
+  and `--lanes none` no longer adds batches for built-in lanes it does not run. A hermetic test in
+  `test/eval/cat35-external-lane.test.ts` runs three documents at the limits under a cap of twice the projection for two
+  small documents and checks the run stops before any judge call or ledger entry; on main both sets projected $0.60 and
+  the large run went ahead.
+- **The external lane refuses a system without `/proc/self/fd` (#226).** `readExternalDocs` reads every file through the
+  held folder handle's path under `/proc/self/fd`, which Linux has and macOS does not. Elsewhere it read by path, so a
+  folder swapped for a link and restored mid-read could hand it another folder's file: with the descriptor path hidden,
+  a repro on main returned the other folder's text with no error. Bun has no `openat` or other way to read relative to a
+  held folder, so the runner now refuses the lane before it opens a document, naming the missing path. The test file's
+  reading tests and hermetic runs skip on such systems, and a new test that runs everywhere checks the refusal.
+  [0.10.139]'s note now says the swap check held fully only on Linux.
+- `eval/CONTRIBUTING.md`'s external-lane section describes both.
+
+### Workload sweeps read with gpt-6.1-sol and smoke runs stay out of published directories; the harness dev lane reads with Sonnet 5.5
+
+- **The counted workload sweep reads with gpt-6.1-sol** (GST-752). `frontier_sweep` in `eval/workload-suites/run-config.ts` listed `openai:gpt-6-astra` as its GPT, but CLAUDE.md requires the newest frontier GPT, `gpt-6.1-sol`, in every model-comparison run. The sweep is now Opus 5.5, gpt-6.1-sol, Sonnet 5.5 and particle-1. gpt-6-astra moves to `alternate_readers`: `--models` still takes it, but it is not a counted frontier reader. `modelRuleViolations` now requires each model in `FRONTIER_READERS` (`eval/runner/systems/baselines.ts`: claude-opus-5-5, gpt-6.1-sol and claude-sonnet-5-5) in the sweep, where it required only some model of each family. `bun scripts/model-freshness.ts` found no newer Opus, GPT or Sonnet on 2026-11-01, the config's new `checked` date, and gpt-6.1-sol already had a ledger price. No preregistration froze the workload-suite model list. The October 5 run copies committed under `docs/benchmarks/2026-10-05-workload-suites/` keep the configuration they recorded (gpt-6-astra and Fable in the sweep), and the report now says the current sweep differs.
+- **A smoke sweep reads the smoke run's own questions** (#244). `sweep()` in `eval/workload-suites/bench.ts` re-read only the fixed reader's answers inside the frontier subset (a hash-chosen quarter of each category), so a small smoke could sweep nothing: corrections `--smoke 3` schedules three questions, none of them in the subset, and swept 0 of 3 with only a "0 questions" log line. A smoke sweep now re-reads every scheduled question the fixed reader answered. Any sweep with no answer to re-read now fails (exit 1) and says to run `--phase answer` first. A counted sweep still reads the frontier subset.
+- **A smoke run cannot write into a directory `report.ts` publishes from** (#245). `bench.ts --smoke N` now refuses, before it writes anything, an output directory in `report.ts`'s `RUN_DIRS`, whether `--out` names it, reaches it through a symlink, or it is the default name. That covers B3's `time-relationships-smoke20`, which holds the counted run, so `time-relationships --smoke 20` now needs its own `--out`. Before, a smoke run there rewrote `run.json` with `smoke: 20`, and a later smoke score added its readers' rows and spend to the receipts `report.ts --copy` publishes. The check reads `RUN_DIRS` through `report.ts`'s new `publishedSuiteAt`, so the list stays in one place.
+- **The harness dev lane reads with claude-sonnet-5-5 and judges with gpt-6.1-sol** (GST-758). `eval/runner/harness-dev.ts` defaulted to `gemini-3.8-flash` as reader and `gemini-3.5-flash` as judge, and no Gemini key is configured, so the lane could not run. BEAM cells keep `gemini-3.5-flash`, because the pinned harness fixes BEAM's rubric judge and `harness-cell.ts` refuses another, so a BEAM dev cell still needs a Gemini key. A live smoke on 2026-11-01 ran the dev lane's cell spec (`devSpec`) on two LoCoMo questions (`conv-26_q0` and `conv-26_q1`, gbrain at the pin, 8,000-token target) through the metering proxy: both Sonnet 5.5 answers and both gpt-6.1-sol judge calls returned 200, both questions scored correct, and every gate passed, for $0.060 in its ledger's usage fields. The Anthropic client sent `model`, `max_tokens`, `tools` and `tool_choice` with no `temperature`, and the harness's OpenAI client sent gpt-6.1-sol `model` and a JSON-schema `response_format`, with no `temperature` and no output limit. In the October 5 BEAM acceptance cells the Claude models declined 4 of 10 questions, which the harness now scores as answers. `test/eval/model-defaults.test.ts` now holds the dev lane's defaults, with BEAM's judge a named exception in `eval/runner/model-defaults.ts`. A dev cell on the new models is a new receipt identity, so never pool it with the Gemini dev cells. The eight `eval/harness-provider/dev-*.sh` scripts that reproduce the October 5 dev phase now name that phase's models (`--answer gemini:gemini-3.8-flash --judge gemini:gemini-3.5-flash`, through `harness-dev.ts`'s new `--judge`), so a rerun still reproduces it. The comparator's agent-mode synthesis model reads the same variable as the answer model, as it did before. Before, a rerun would have taken the new defaults and rewritten the committed dev cell specs with them. `test/eval/harness-dev.test.ts` checks both.
+
+### Claude 5 judges get room to think in the answer replays, and Cat 9 and Cat 35 price their judges correctly
+
+- **A live LongMemEval answer replay or Cat 36 grounded-answer replay refuses a judge limit its Haiku 5.5 judge would spend thinking** (#237). Both profiles pin the judge to claude-haiku-5-5 but accepted any `judge_max_tokens` from 1 to 4096, and the shared judge sends an explicit limit unchanged. A Claude 5 judge thinks inside that limit, so a small one left the judge rows failing after every answer had been paid for. A live profile's `judge_max_tokens` must now be at least 4096 (`CLAUDE5_THINKING_FLOOR` in `eval/runner/anthropic-request.ts`, the floor `withThinkingRoom` already applies to runner defaults), and a smaller one is refused before any answer is generated. Offline profiles keep any limit from 1 to 4096. The situation-recall-v1 regression inventory describes both limits (#240).
+- **Cat 9 looks up its judge and agent prices before the first scenario** (#219). The judge's price was looked up only inside the shared judge, after each scenario's agent loop had already spent, so an unpriced judge model failed every scenario after paying for it. `runCat9` now refuses an unpriced judge or agent model before any request.
+- **Cat 35's input-token count weights cached input by the judge model's own cache rates** (#220). It weighted Anthropic cache writes at 1.25x and reads at 0.1x for every model, which matches Haiku 5.5 and Sonnet 5.5 but not Opus 5.5, whose cache reads cost 0.05x its input rate, and it counted an OpenAI judge's cached input, which arrives inside `input_tokens`, at 1.0x, while a comment said the count matched pricing. The default Haiku 5.5 judge's counts and every `cost_usd` are unchanged. The input-token counts still follow each category's own rule. The shared judge reports uncached input, the budget ledger counts every input token, and Cat 35 reports price-weighted input.
+
+### Top-level docs describe gbrain at the pin `3ec766c40`, and corrections and history leave the current-state pages
+
+- **README's results each name the commit they were measured at.** Rows that gave a release number or "Cat 35 run" now
+  name the measured build (the multi-relation planner's `94bd52e01`, Cat 41's `b3f4e8b`, the managed-sync heads, sync
+  freshness `4ba4c36f`, Cat 35's `079941d2`), and the pin sentence lists the three named commits outside v0.60.531.0's
+  history. A new row reports N14 large-page fidelity, counted at the previous pin `7a6bdd3`. README no longer says the
+  bug-ledger reproductions pass at `77cf8e111` and the correctness rows are "rerun at every pin": no re-pin since
+  `77cf8e111` reran them in full, and CI's smaller offline-tier versions passed at `3ec766c40` in #223's checks. Every
+  comparison names its gbrain commit and links its report. The known limits name their ledger entries and add that the
+  scoreboard's gbrain rows measure `f05943e6`. The pin section no longer says the gbrain-defaults container takes the
+  four new read defaults.
+- **The scoreboard block stays as published.** Its first loss bullet compares gbrain's whole-system row (59.0%, 192
+  shared questions) with the file agent, while its table shows gbrain's 8k component row (56.3%), and its 12.9-point and
+  13.58-point detectable differences come from different comparisons. README explains this above the block. The block
+  cannot change here: its hash and `scoreboard.md`'s are in the published `SHA256SUMS` at `f15e7302`, which
+  `bun eval/runner/scoreboard.ts check --commit f15e73025cc38779528808e670db80909e538547` verifies, so only a custody
+  render with a new publication can replace it. For that render, `eval/runner/scoreboard.ts` now writes a sentence
+  that cannot separate two rows with the evidence each system had and the questions scored for both (for example "on
+  the 192 of 199 questions scored for both"), and prints the preregistered detectable difference to one decimal (13.6,
+  was 13.58). Two tests in `test/eval/scoreboard.test.ts` cover them; the rounding test renders 13.58 and fails if the
+  raw value prints. A `power.json` with no decision, a `family1` other than full, shrunk or descriptive, a comparator
+  list that is not a list, or a detectable difference that is neither a number nor null is now an invalid receipt
+  (`RECEIPT_INVALID`). Before, a missing decision or a non-number difference threw a bare TypeError, a misspelled
+  `family1` ranked rows the power decision had not allowed, and a comparator list given as a string was split into
+  characters or copied as it was. A test renders a null detectable difference as "more than 30 points". `scoreboard.ts` is outside the Q1 campaign's executed tree.
+  `scripts/verify-documentation-refresh.py` fails when README's paragraph above the block names a publication commit
+  other than the one `publication.json` records, and passes while no commit is recorded (between a custody render and
+  its publication). A new publication therefore fails the check until someone edits that paragraph. The check reads only the commit, not the figures the paragraph quotes.
+- **Corrections get their own page.** README's `## Corrections` section moved to `docs/corrections.md`, with the
+  retired success figures of the first Cat 40 world and the invalid May PrecisionMemBench rows, which
+  `docs/comparison-systems.md` showed struck through. That page also drops the invalid v0.48.4.0 LongMemEval QA row
+  (86.6%) from its table and puts its changelog back in newest-first order.
+- **README's changelog moves to the end of this file.** It was 59% of the page, most of it entries for a repository-row
+  version bump. Its entries from 2026-04-21 to 2026-10-31 moved, unchanged, to the end of this file under "README.md
+  changelog"; README keeps its own changelog from 2026-11-01. README's repository row no longer names a version, so a
+  release stamp no longer needs a README entry.
+- **`docs/README.md` gets an "Agents operating gbrain" section.** Its agent-task row held one cell of about 6,400
+  characters; its fourteen reports move there, wording unchanged.
+- **`eval/CREDITS.md` names the pin** (it said "current as of gbrain-evals v0.10.25"), and
+  `scripts/verify-documentation-refresh.py` checks that sentence with the other hub pin sentences; its test covers it.
+- **Two `[0.10.139]` sentences say what the code does (#233).** The heading said four new read defaults were held;
+  three are held and quote-fenced chat text is unwrapped. The "What still follows the product" bullet listed the
+  gbrain-defaults container among arms that take all four defaults; that container builds its own `f05943e6` on Bun
+  1.4.2 and runs none of them.
+- **The particle-1 U6 entry moves here from `[0.10.139]`**, because #227 merged after v0.10.139 was stamped.
+
+### Workload suites count truncated answers, read Fable only in smoke runs, and the harness proxy keeps slow requests open
+
+- **An answer cut off at its output limit is the model's answer.** It is scored as is, usually wrong. It is never treated as an error and never asked again. Every reader reply now carries its provider's `finish_reason` and `truncated` flag, for Anthropic, OpenAI and particle-1 alike. A reply is truncated when `normalizeFinish` reads its finish reason as `max_tokens` (`length`, `max_tokens` or a context-window stop). Each answer receipt and each scored row in `results.json` records both fields, and each arm and reader there gets a `truncated` count. The score log line names the count, and the published table (`report.ts`) gains a "Cut off at output limit" column. A high count means that reader's output limit is too low. A reply that carries no finish reason, and an answer receipt or cached reply written before this change, has `truncated` null (unknown), and an arm with such a row reports its count as unknown (`n/a` in the table) rather than zero.
+- **Fable is out of the counted frontier sweep.** CLAUDE.md allows Fable only in smoke tests, but the workload suites listed `anthropic:claude-fable-5-1` in `frontier_sweep`, and `modelRuleViolations` required a Fable model there. The sweep is now Opus 5.5, gpt-6-astra, Sonnet 5.5 and particle-1, and the rule requires an Opus, a GPT and a Sonnet model. Fable stays available as `MODEL_CONFIG.smoke_only_readers`, taken from `SMOKE_ONLY_READERS` in `eval/runner/systems/baselines.ts`. `modelRuleViolations` flags a smoke-only reader used as the fixed reader, in the sweep, as an alternate reader or as the judge. `bench.ts --models` refuses one unless the run is a labeled smoke run (`--smoke N`), and only a scoring run with `--smoke N` scores its answers. `--smoke` takes only a positive whole number, so `--smoke 0` can no longer score smoke-only answers into a counted directory, and `--models` takes only the readers `score` reads (`frontier_sweep` and `alternate_readers`, plus `smoke_only_readers` in a smoke run), so a sweep never pays for answers no score counts. The dry-run plan now counts three sweep readers instead of four.
+- **The harness metering proxy no longer closes a request it is still answering.** It ran `Bun.serve` with `idleTimeout: 255` and now uses 0, as the lease proxy does. On Bun 1.4.4 that limit cuts only a request without a body. A GET held for 270 s was reset at 256 s, while a POST with a JSON body held for 270 s returned normally. Every paid chat request is a POST with a body, so paid requests were never cut and resent. Slow GETs, such as model listings, were.
+- **particle-1 answered the workload suites' live question on 2026-11-01** (unit U6, under its own $0.50 ledger run, from main `4086e616`). It read the passing-details question "What's the code to open my bike lock?" through the harness proxy at effort `high` with a 16,000-token limit and answered correctly in 1.1 s. The ledger's settled cost, $0.0002395 for a one-word preflight and the question, matches the proxy request log exactly. Every bar 2 field was logged. Particle's response carried no `metadata` and no `system_fingerprint`, so `weight_version` is null on a successful answer.
+
+### particle-1 reads in memory-qa: `--reader particle:particle-1`, a receipt per attempt and a budget stop
+
+- **`bun eval/runner/memory-qa/run.ts --reader particle:particle-1` now reaches Particle** (unit U2 of the particle-1 plan). The reading lane's chat client (`eval/runner/memory-qa/qa-v2.ts`) builds and sends requests for any provider in `eval/runner/providers/openai-compatible.ts` through that module, once per attempt of its existing 5-attempt loop: `reasoning_effort` (default `high`), at least 16,000 output tokens and no `temperature`. A Retry-After from the provider replaces the backoff before the next attempt, capped at 120 seconds, a 200 without an answer is retried like Particle's other server errors, and a call whose fifth attempt fails now throws at once instead of waiting first. For these providers only a budget stop (`BudgetExceededError`) or an error the module classes as not retryable ends the loop early, so a 429 whose body mentions a budget is retried. `--reader-effort` sets the reading lane's reader effort and needs `--qa reader`. An effort the reader's provider does not list (Anthropic `low`, `medium`, `high`, `xhigh`, `max`; OpenAI `none`, `minimal`, `low`, `medium`, `high`, `xhigh`, `max`; Particle its own), or any effort for an OpenAI model that is not a reasoning model, is refused before anything runs, so a typo no longer turns every question into a 400; a listed value can still be one a given model does not take. A memory-system cell refuses the flag. A missing `PARTICLE_API_KEY` for any reader or judge the run calls, or an effort Particle does not list, is refused before anything runs, memory-system cells included. A memory-system cell behind `--provider-proxy` refuses a particle reader or judge, because that lane points only OpenAI, Anthropic and Voyage at the proxy and those requests would spend outside the lease. `run.ts` now uses qa-v2's client and judges through qa-v2's `judgeResponse`, which sends qa.ts's prompts and output limit; `qa.ts` keeps the bytes the budgeted-delivery H1 decision pins.
+- **Each attempt's receipt records what was sent and what answered.** particle reader and judge receipts carry `request` (effort sent and effective, output limit) and `response_meta` (Particle's metadata, service tier, fingerprint, truncation), and a failed attempt answered with a Retry-After carries the new optional `retry_after_ms`. A particle cache key adds the effort and output limit sent. Memory-system cells (`run-systems.ts`) now write `qa_receipts` for their reader calls.
+- **A budget stop ends the run.** When a reader, think or judge call ends on the ledger's cap or Particle's credit 402, the question's row is written with its receipts, no later question or conversation runs, the receipt's summary says `stopped: budget`, and the run reads `partial`. Before, the reading lane recorded the stop as an answer error (`qa_error`), went on to the next question, and a rerun counted those questions as done; now the stopped question is an error row that a rerun retries, and the receipt's status, counts and QA summary read each question's latest row, so a rerun that answers it reads `complete` only when no question is left and counts that question once. gbrain think reports a refused request as an `llm_error` answer instead of throwing, so a think call after which the ledger has refused a request is a budget stop too; before, its empty answer was judged and scored 0, in both lanes. Memory-system cells mark the stopped question `budget_not_run`, which a rerun retries while the question has used fewer than its three attempts.
+- **What changes for other models.** OpenAI and Anthropic request bodies and cache keys stay as they were, pinned by test. One behavior change: Claude 5 verdict calls in `run.ts` (judge calls under 1,024 output tokens) are now sent 2,000 tokens, the floor qa-v2 already gives Q1, so those calls get new cache keys. Receipts list `models_not_run`, empty here because both primary models have a route.
+- **Campaign identity.** `eval/runner/memory-qa` and `eval/runner/q1/cell.ts` are in Q1's executed tree (`EXECUTES` in `eval/runner/q1/cell.ts`), so the Q1 campaign hash moves: a Q1-style campaign frozen before this change resumes only under a new campaign identity. A new test in `test/eval/q1-campaign.test.ts` checks that a file added under `eval/runner/providers`, which 0.10.139 put in that tree, changes the hash and refuses resume under the earlier freeze.
+
+### particle-1 in the workload suites and the harness metering proxy
+
+- **The workload suites can read with particle-1** (unit U6 of the particle-1 plan). `particle:particle-1` joins the frontier sweep in `eval/workload-suites/run-config.ts` as its own `particle` family and is refused as the judge. `bench-infra.ts` sends it through the harness metering proxy with `compatRequest` at effort `high` and an output limit of at least its 16,000-token floor (`maxTokensFor` in `bench.ts`), and writes one usage receipt per attempt to `attempts.ndjson`, carrying the request's settings and the response's identity. A 429 or 5xx waits its Retry-After, capped at 120 s. Particle's credit 402 writes its receipt and then stops every later reader and judge call, and a proxy budget refusal stays a refusal. The model cache keys a particle answer on the effort it was read at. `MODEL_CONFIG.models_not_run` lists any primary model the workload suites have no route for; today that list is empty. OpenAI and Anthropic reader requests are byte for byte what they were.
+- **The harness metering proxy serves Particle.** Its `particle` row comes from `COMPAT_PROVIDERS`: prefix `/particle`, upstream `https://api.particle.ai`, key `PARTICLE_API_KEY`, and children get `PARTICLE_BASE_URL=<proxy>/particle/v1`. Every request-log line records what served it (`response_model`, `reasoning_tokens` and `response_meta`), read from a JSON body, an event stream or a Gemini chunk array. `readRequestLog` joins each line's request side from its stored body. That side holds the effort sent, the level it runs at with the table's source and date, and the output-limit field and value. Bar 2 of the particle-1 plan can be checked for every particle request from that log. The stub upstream answers `/particle/v1/chat/completions` the way Particle does.
+- **Behavior change: long answers, unwritable receipts and the worker pool.** The harness proxy's upstream calls and `compatSend` now take the lease proxy's 900-second deadline instead of Bun's 300-second fetch timeout, and a particle request that times out is not sent again. A receipt that cannot be written stops the call instead of reading as a network failure that resends the paid request. When one call in the sweep's worker pool fails, the pool lets the calls already in flight finish before it raises that error.
+- **Not run against Particle yet.** The unit's one live workload question waits for its paid window. Everything above is checked keylessly against the fake provider and the stub upstream.
+
+### Live categories default to the current Claude generation
+
+- **Live categories that pick their own model now default to claude-opus-5-5, claude-sonnet-5-5 or claude-haiku-5-5** (R4, GST-611), as CLAUDE.md's model rules ask. Agents and models under test move to Opus 5.5: the Cat 8/9 agent, the Cat 14, 25 and 29 think model, the Cat 15 extractor, Cat 20's brainstorm model, PrecisionMemBench's gbrain-think answer model and the SkillOpt optimizer. Judges move to Haiku 5.5: the shared judge (`eval/runner/judge.ts`), the Cat 5, 9, 14, 15, 25, 29, 35 and 36 judges and the LongMemEval answer-grounding judge. Same-tier roles move within their tier: Sonnet 5.5 for the A4 paid-arm house reader (a dated amendment to the N2/A4 preregistration), chronicle-lift's agent, Cat 35's full-mode dream and facts models, the Cat 32 held-out judge and the strong end of the Cat 33 transfer pairs; Haiku 5.5 for Cat 35's BPRE and triage models, the SkillOpt target and BPRE optimizer (kept weak so an optimized skill has headroom) and temporal-contradictions' dev `--models` default. Cat 40's model-ladder claims judge, an inline default that still names gpt-5.4-mini, is out of scope here (GST-608).
+- **Each changed default is a new receipt identity: never pool its results with runs on the old defaults.** Cat 35's prior-run comparison now also refuses a delta when the dream, facts or triage model differs (`distillModelMismatch`), so a new run is not compared with the committed Sonnet 4.6 and Haiku 4.5 baselines. The Cat 20 and Cat 25 receipts name the judge temperature actually sent instead of a hard-coded 0, and the Cat 36 and LongMemEval answer-grounding receipts record it too (null for Haiku 5.5). Cat 15's default extractor gets 4,096 tokens on its first call, since a Claude 5 model thinks inside `max_tokens`; `max_tokens_sent` records it.
+- **Some defaults keep an older model on purpose, each named with its reason in `eval/runner/model-defaults.ts`.** Frozen protocols keep theirs: the memory-qa LongMemEval-S, custody, LoCoMo and BEAM pairs (the official GPT-4o judge, the LoCoMo reader that links to the published numbers, the gpt-4.1-mini BEAM bridge), lifecycle-lite, the sealed confirmation, the pilot judge, the facts-absorb gate baseline and the evidence-delivery E1 readers. Two defaults mirror gbrain's own: N2's contradiction judge (`TIER_DEFAULTS.utility`, Haiku 4.5) and N7's open-loop extractor (the gateway's default chat model, Sonnet 4.6), because those preregistrations measure the model gbrain picks. The memory-qa `fixture` reader and judge stay `gpt-4o-mini` because `qa.ts` sets them and the H1 decision pins `qa.ts`'s bytes. `run.ts` already sends them through qa-v2's client, which gives a Claude 5 verdict call a 2,000-token floor (A19), so they can move once their default is set outside `qa.ts`.
+- **`test/eval/model-defaults.test.ts` keeps defaults current.** It imports each runner's exported default and fails when one outside the exception list is an older-generation model, gpt-5.4-mini or Fable; it also fails when an exception no longer names what the code uses, or when a mirror differs from gbrain's default at the installed pin, so a gbrain default change moves the mirror with it. An inline default that a runner does not export is not covered.
+- **Checked live on 2026-11-01 under a scratch budget ledger ($0.18 settled from provider usage, 27 requests):** the shared judge, the Cat 5 classifier, the Cat 15 extractor and matcher, the Cat 25 judge, the Cat 29 pairwise judge, the Cat 35 grounding judge and the Cat 8/9 agent each answered at their new default; gbrain's think path answered with Haiku 5.5 and Sonnet 5.5; one Cat 14 probe ran end to end with Opus 5.5 think and the Haiku 5.5 judge. No counted run uses the new defaults yet.
+- **Campaign identity.** No changed file is in a Q1 campaign manifest, the Cat 40 Hard freeze or another `freeze.json`. The situation-recall-v1 regression inventory (`eval/regression/situation-recall-v1.json`) named Cat 33's Haiku 4.5 and Sonnet 4.6 pair slices and, in LongMemEval-answers prerequisite text that no code reads, the Haiku 4.5 judge; the #240 amendment above moves both to the new defaults.
+
+## [0.10.139] - 2026-10-31
+
+### gbrain pin moves to v0.60.531.0: three new read defaults held and quote-fenced chat text unwrapped for comparable arms
+
+- **The product pin moves from `7a6bdd357` (v0.60.454.0) to master `3ec766c40` (v0.60.531.0)**, 1,138 commits and 77 releases later; the old pin is in the new one's history. `gbrain-cues` and `gbrain-reader` stay where they are. gbrain's own dependency list did not change, so `bun.lock` changes only the `gbrain` entry. gbrain's Particle provider (gbrain #8324) is not in this release; a later pin picks it up.
+- **The memory-qa harness holds three new gbrain defaults at their old values.** `HELD_GBRAIN_DEFAULTS` in `eval/runner/gbrain-under-test.ts` sets `search.query_facts_block=false` (v0.60.491.0 put up to 40 dated saved facts at the head of a `query` with a token budget), `search.saved_facts_supersede=false` (v0.60.493.0 puts a newer correction ahead of the saved fact it corrects) and `search.remote_page_cap=0` (v0.60.506.0 keeps at most 3 meaning-only pages in a remote `search` or `query` that names no `limit`). They join `DEFAULT_PINS` in `memory-qa/run.ts` and `memory-qa/run-systems.ts`, so receipts record them under `search_pins`, and the `gbrain-query` system's settings, whose capability record lists the values it wrote to the brain as `held_defaults` and names both changes in `deviations_from_vendor_code`. A `--pin` or `--config` still overrides each one, on `gbrain-query` too. The keyless memory-qa golden (`test/eval/fixtures/memory-qa-golden.json`) gains the three keys under `search_pins`; its rows and reader prompt hashes are unchanged. Tests check the three values, both entry points' default pins, the settings a `gbrain-query` brain opens with and its capability record. The legacy and shootout paths call `hybridSearch`, which none of the four changes reach.
+- **Quote-fenced chat text (v0.60.507.0, v0.60.521.0) has no switch, so the `gbrain-query` connector unwraps it.** `query` and `assemble_evidence` now return a conversation page's text inside a marked quote fence. The connector hands on the stored text through gbrain's own `unquoteTranscriptText`, so a frozen list re-resolves against the stored chunks and readers get the text they got before. Without it, the E2 test's re-resolution refused all 25 frozen chunks as changed at the new pin. Delivered match spans move back onto the unwrapped text, and each delivery record counts those blocks as `quoted_blocks`. Two parts cannot be undone. A token budget counts the fence, so a budgeted delivery can carry slightly less text, and a tool-call block gbrain summarized stays summarized (a frozen row's text then differs from its stored chunk, which the re-resolution check refuses). A build that fences but has no `unquoteTranscriptText` (v0.60.507.0 to v0.60.520.0) is refused.
+- **What still follows the product.** Arms that run the pinned gbrain with its own defaults take all four as shipped: `gbrain-shootout`, the Cat 40 MCP arm and the agent tool bridges of Cats 8, 9 and 37 to 39. The harness does not hold the defaults in the gbrain-defaults container either, but that container builds its own `GBRAIN_SHA` (default `f05943e6`, v0.60.138.0) on Bun 1.4.2 (`eval/systems/gbrain-defaults/Dockerfile`), so it runs none of the four until it is rebuilt at v0.60.531.0 or later, which also needs Bun 1.4.4. A Cat 40 rerun that wants comparable cells passes the three keys with `--gbrain-config` and records that in its preregistration. `--qa think` over conversation pages (`--facts conversation`) gets fenced evidence inside gbrain's `think`, where the harness cannot reach.
+- **VM Bun.** gbrain v0.60.531.0's CLI exits on Bun below 1.4.4, so `eval/systems/bootstrap.sh` installs Bun 1.4.4 by default (was 1.4.2); the bootstrap test that 0.10.138's toolchain entry added caught it. The Cat 41 image and the harness-provider VM scripts install Bun for a gbrain ref they choose and are unchanged.
+- **The documentation verifier checks the product pin.** `scripts/verify-documentation-refresh.py` checked only the `gbrain-cues` pin, so hubs drifted: `eval/README.md` and `eval/CONTRIBUTING.md` named `77cf8e111` (v0.60.169.0) through three re-pins until 0.10.138 fixed them by hand, and `docs/retrieval-lessons.md` still does. It now checks `bun.lock` and each hub sentence that names the product pin (README, `docs/README.md`, `docs/settings.md`, `docs/comparison-systems.md`, `docs/retrieval-lessons.md`, `eval/README.md`, `eval/CONTRIBUTING.md`) against `package.json`, and that they name one release, the one the installed gbrain reports. Run on main's documentation at `96e2f618` it names exactly that page. `test/eval/verify-documentation-refresh.test.ts` covers it, and the hubs name the new pin.
+- `@types/bun` stays 1.4.2: at the new pin `src/core/cli-preflight.ts` still stores `signalCode` in a `string | null`, and bun-types 1.4.4 fails the typecheck there with TS2322.
+- **Campaign identity.** `package.json`, `bun.lock`, `eval/runner/memory-qa`, `eval/runner/systems`, `eval/runner/gbrain-under-test.ts` and `eval/systems/bootstrap.sh` are in the F6 campaign's executed tree, so this release counts for F6 only under a new campaign identity. No file in the Cat 40 Hard freeze changed.
+
+### particle-1 runs in Cat 40 and the Q1 file agent, and Hard freeze drift needs a dated record
+
+- **Cat 40's agent loop runs particle-1** (`eval/runner/cat40/loop.ts`, unit U8 of the particle-1 plan). `particleLoop` sends Chat Completions with tools, `tool_choice: auto`, one `prompt_cache_key` per conversation, `reasoning_effort` `high` unless a caller passes one, and a 16,000-token output limit. It builds and parses requests with the provider module and sends them through the loop's own retries. A Particle retry waits at least the Retry-After it was sent, capped at 120 seconds, and never less than the backoff. An empty Particle balance stops the run with the budget stop after the failing attempt is recorded. `runAgentText` refuses particle-1, so it never judges. The claude-opus-5-5 and gpt-6.1-sol request bodies and retry timing are byte-identical to before (`test/eval/cat40-particle-loop.test.ts`).
+- **Every provider attempt leaves a usage receipt.** The v1 ladder writes each attempt of a cell to `cells/<cell>/attempts.ndjson`, for every provider, including retries, network failures and bodies that are not JSON. The Q1 file agent writes `receipts.ndjson`, keyed by answer id and turn. A rerun numbers its attempts on from the earlier ones.
+- **The Q1 file agent reads with `particle:particle-1`.** A budget stop ends the question as `budget_not_run` and stops the cell's later work. `eval/runner/providers` is now in Q1's executed tree, so it enters the campaign hash.
+- **particle-1 runs on v1 ladder worlds only, and it never judges.** A v1 run with particle-1 must pass `--judge`, because the v1 default judge is gpt-5.4-mini, which the model rules never run. `--judge particle-1` is refused. A Hard world refuses particle-1, because amendment A6 keeps the Hard model list and the Hard freeze does not cover the particle transport. A Q1 cell refuses a particle reader through `--provider-proxy` until the lease proxy has a particle route.
+- **Behavior change: `--accept-freeze-drift` accepts only recorded drift.** Before, the flag let a Cat 40 Hard run start over any change to a frozen file. Now the current hash of each drifted file must appear in `docs/benchmarks/cat40-hard/accepted-drift.json`, with its date and a note that is also in `calibration.md`. An unlisted drift stops the run with `HARD_FREEZE_DRIFT`. The record starts with the five files already drifted at main and with `loop.ts` after this change. Garry approved this as decision E1 of the particle-1 plan. The check runs when a Hard run starts, never in CI.
+- **Checked live on 2026-11-01** under a $2 budget ledger. The A01 oracle smoke got a 200 with `prompt_cache_key` set and passed. The operability run (model-ladder-v1, 10 tasks, oracle and fs arms, particle-1, `--judge gpt-6.1-sol`) found no unparseable tool calls in 153 turns and passed 10 of 10 oracle tasks. Its 153 particle-1 requests read 1,338,089 input tokens, 436,224 of them from cache (32.6%), and the run cost $0.369 in all.
+- **Campaign identity.** `loop.ts` and `cat40-model-ladder.ts` changed, so Cat 40 arms recorded before this change cannot be reused after it.
+
+### Current Claude models work in the shared judge and the other Claude call sites
+
+- **claude-opus-5-5, claude-sonnet-5-5 and claude-haiku-5-5 no longer get HTTP 400 from the shared judge (`eval/runner/judge.ts`), the Cat 5, 14, 15, 29 and 35 judges, the Cat 15 extractor, the Cat 25 think client or the Cat 8/9 agent.** Those requests sent `temperature: 0`, which all three reject, or a forced `tool_choice`, which Opus 5.5 and Sonnet 5.5 reject. Each request now goes through `fitAnthropicRequest` in `eval/runner/anthropic-request.ts`. A Claude 5-family model (an id naming generation 5 or later, provider-prefixed ids such as `anthropic.claude-sonnet-5-5-v1:0` included; one predicate, `isClaude5Family`, decides it for every field) gets no temperature and `tool_choice: auto` with a message telling it to call the tool, and a runner's own default output limit rises to at least 4,096 tokens, because these models think inside that limit (at Cat 14's 700 tokens, Opus 5.5 spent them all thinking). The Cat 15 extractor's limit, gbrain's 2,048-token default, rises the same way; gbrain's own extractor retries at 4,096. A limit the caller passes is sent as given. No category's default model changes.
+- **Older models get the same request bytes as before**, so their receipts stay comparable. A Claude 5 judge is a new judge identity: do not pool its verdicts with Haiku 4.5 verdicts.
+- **Receipts record what was sent.** Each shared-judge result carries `temperature_sent` (null when omitted) and `tool_choice_sent` (`tool` or `auto`), and the Cat 5, 8, 9, 14, 15, 25, 29 and 35 receipts record them per role, the temperature as a number or null. A receipt's `judge.temperature` is the temperature sent, null when none was; the receipt type and schema now allow null.
+- **The shared judge, the Cat 5, 29 and 35 judges and the Cat 8/9 agent price each model from the budget ledger's table** (`chatPrice`), cache reads and writes included, instead of fixed Haiku 4.5 or Sonnet 4.6 rates, and refuse a model with no price before they send anything. An OpenAI judge's cached input is priced at its cache rate, as the ledger prices it, because the OpenAI shim now keeps `input_tokens_details`. A Cat 5 run with an unpriced model now fails once before any claim instead of once per claim, and Cat 5 receipt input tokens include cache reads and writes, as its cost does.
+- **Behavior change: a live Cat 15 or Cat 25 run needs `--paid --budget-run-id <id>`** naming an open budget-ledger run, and the ledger caps and records its spend; before, both runners spent with no ledger at all. `all.ts` passes both flags to them (the registry's `paidFlags`), and their dry runs need neither. Cat 14 and Cat 29 now refuse a live run with no ledger cap: they need a run id (`--budget-run-id`, or the `BRAINBENCH_BUDGET_RUN_ID` that `all.ts` sets) or `--budget-usd <dollars>`. Before, a run with neither spent uncapped, and a run id alone was ignored, so under `all.ts` they ran unguarded. `all.ts` also hands every child the ledger it checked the run in (`BRAINBENCH_BUDGET_LEDGER`), so a sweep given `--budget-ledger <path>` no longer has its children look for the run in the default ledger. A Cat 15 or Cat 25 run refused under `--paid --budget-run-id` (a missing, closed or spent run) writes an error receipt, not a skip that `BRAINBENCH_ALLOW_SKIP` would pass. A Cat 14, 15, 25 or 29 run whose ledger refuses a request partway stops and writes an error receipt instead of a completed one, and Cat 29 no longer judges an answer whose think request the ledger refused.
+- **A Cat 15 extractor reply cut off at its token limit gets gbrain's one retry at 4,096 tokens** (`PROPOSE_TAKES_RETRY_MAX_TOKENS`), as gbrain's extractor does, and a reply still cut off scores as a miss (F1 0, `extraction_truncated`), because gbrain fails that page. Before, a cut-off reply scored as an unparseable miss with no retry. The receipt records the limits sent (`max_tokens_sent`). This retry is the one change to an older model's requests, and it happens only after a reply was cut off.
+- **Checked live on 2026-10-31** under a scratch budget ledger: the shared judge passed on its first attempt with claude-opus-5-5, claude-sonnet-5-5, claude-haiku-5-5 and claude-haiku-4-5-20251001, and its reported cost matched the ledger's settled cost; every changed call site answered with all four models; one Cat 14 probe scored with an Opus 5.5 judge. A $0 test, `test/eval/anthropic-request.test.ts`, holds the contract.
+- **Campaign identity.** `eval/runner/openai-judge-shim.ts` and `eval/runner/receipt.ts` are in the F6 campaign's executed tree. This change counts for F6, or any Q1-style campaign frozen before it, only under a new campaign identity. No file in the Cat 40 Hard freeze changed.
+
+### The post hoc LongMemEval-S facts-block check and the shipped-build equivalence check reach main
+
+- **Removing the facts block alone closes none of the LongMemEval-S gap between gbrain's combined lane and its pages-only lane.** An exploratory, post hoc rerun of wave 1's combined shard 1 (100 questions, October 10, gbrain freeze build `d7467d1cf`) set `facts_tokens` to 0 and left the page budget at 6,300 tokens. Under one joint blinded re-judge it answered 71 correct, the same 71 as the combined lane with the block, against 80 for the pages-only lane and 83 for the comparator. Dropping the block changed the verdict on 8 questions: 4 gained and 4 lost. The check decides nothing, and the planned same-store cell at 1,800 fact tokens was refused by its ledger cap. Spend was $9.39 for the cell and $0.25 for the re-judge ([report](docs/benchmarks/2026-10-09-memory-proof-wave-sealed-results.md#descriptive-rows-longmemeval-s-and-locomo10), receipts under `docs/benchmarks/2026-10-10-memory-proof-wave-lme-facts0/`). Wave 2's step 0 later traced the gap to search mode instead.
+- **The sealed-results report now carries the equivalence check of the build that shipped as gbrain#6066** ([section](docs/benchmarks/2026-10-09-memory-proof-wave-sealed-results.md#equivalence-of-the-shipped-build)). On the public BEAM dev conversations, retrieval at `d7d7686de` stays inside the same-build noise of `d7467d1cf` at 100k, 500k and 1M. End to end, results are within noise except that re-ingesting extracts a new fact set, so the combined rows also measure a new extraction. Its receipts were already on main; the README's equivalence claim now links this section.
+- Both sections and the `facts_tokens` 0 receipts were written on October 10 on branch `capy/mpw-harness`, which never had a pull request. The receipts land byte for byte from that branch. The sections land as written with four edits. They point to wave 2's step 0, they say "the verdict on 8 questions" where the facts-block check said "8 answers", they give the raw stores' gate-flag counts beside the combined ones, and they quote the `equivalence_report.py` command on a fresh copy of the directory, because the script rewrites `report.json` in place and cannot regenerate its `extract_stale` fields. `docs/receipts-manifest.json` gains six entries that pin their hashes and quoted values, and the re-judge ledger status, which records a Capy scratch path, joins `test/eval/fixtures/historical-capy-local-paths.json`. Nothing was rerun.
+
+### Score another system's Cat 35 documents beside gbrain's lanes
+
+- **You can score a folder of another system's Markdown notes with Cat 35's judges.** Run the Cat 35 runner with `--external-lane NAME --external-dir DIR`; add `--lanes none` to score only the folder. The lane is judged the way gbrain's dream lane is, on recall with the evidence check, claim grounding, distractor leakage, the usability checklist, attribution hazards and quote fidelity. Read its recall next to the verbatim lane from the same run, which is the judge's ceiling. [eval/CONTRIBUTING.md](eval/CONTRIBUTING.md#score-another-systems-cat-35-documents) explains the folder layout, the commands and the limits.
+- **The receipt records what was scored.** Its `external_lane` block holds the lane name, the folder's real path, each file's bytes, sha256 and gradable claim count, the conversations with no file, and a note that the harness has no record of how the documents were made. A run with an external lane is never publishable as the benchmark. The lane list, prior-run deltas, blended usability, judge-failure gate and WS0 counters cover gbrain's built-in lanes only, and the runner judges every built-in lane first, so the external lane's spend or provider errors cannot change them. The external lane has its own `external_judge_failed_rate` gate, which counts toward the exit code.
+- **The runner treats the folder as untrusted.** Before any provider call it refuses the run on a symlink, a special file, a hard link, a file over 64 KiB or 80 claims, invalid UTF-8, a document that contains an answer-key id, or a folder swapped for another after its path was resolved (on Linux; elsewhere only a swap still in place when the read finished). Judge prompts label the documents `external`, never with the contributor's lane name.
+- The feature is rebuilt on main from Khaled Aly's (@khalloud) design in [#32](https://github.com/garrytan/gbrain-evals/pull/32).
+
+### particle-1: a provider module, receipts that record how each answer was made, a freshness check and a weight canary
+
+- **particle-1 requests are built, sent and classified in one place** (`eval/runner/providers/openai-compatible.ts`, unit U1 of the particle-1 plan). Particle's row reads its base URL from `PARTICLE_BASE_URL` (default `https://api.particle.ai/v1`) and its key from `PARTICLE_API_KEY`, and lists particle-1 with a 1,048,576-token context, a 131,072-token output ceiling, default effort `high` and a 16,000-token output floor. Every request sends `reasoning_effort` and an output limit and never `temperature` or `seed`. A 402 without either metering proxy's marker is Particle credit exhaustion and ends the run through each runner's existing budget stop. A request to a host the budget ledger cannot price goes only to a loopback host (a metering proxy slot or the keyless fake); the ledger prices `api.particle.ai` and `us.api.particle.ai` since #207. No runner calls particle-1 yet; the memory-qa, workload-suite and Cat 40 units wire it in.
+- **Usage receipts record the request's settings and the response's identity.** `UsageReceipt` gains optional `request` (the effort sent and the level it runs at, the output-limit field and value, temperature and seed) and `response_meta` (Particle's raw `metadata`, weight version, service tier, system fingerprint, and whether the tier was non-default or the answer was cut off). `usageSourceOf` reads particle models with the OpenAI chat convention instead of throwing. The schema stays `usage-receipt/v1` ([docs/usage-receipt.md](docs/usage-receipt.md)).
+- **`bun scripts/model-freshness.ts` reads Particle's free model list.** With `PARTICLE_API_KEY` set it matches `particle-ai/particle-1` by id and service tier and checks the ledger price against the default tier. A called Particle model that is unlisted, listed with no readable price or priced differently in the ledger blocks the run; a newer Particle model or a changed particle-1 listing warns. `particle:particle-1` joins the default model set.
+- **A paid, opt-in weight canary, as code and keyless tests.** `bun scripts/particle-canary.ts --paid --budget-run-id <id> --out <dir>` sends 12 fixed prompts at effort `none` with temperature 0, a fixed seed and log probabilities, output capped at 64 tokens, and writes answer hashes, log probabilities and one receipt per attempt. `--compare` reports changed answers, changed serving identity and the mean log-probability move, and refuses a baseline of another model, sampling or endpoint before anything is sent. It has not run against Particle; its warning thresholds come from back-to-back noise pairs measured before its first counted use.
+- **The keyless fake provider serves Particle** under `/particle/v1/`: response model, metadata, reasoning tokens, an empty answer when reasoning fills the output limit, tool calls, log probabilities, a two-tier model list and 405 on `/responses`, with queued 429, 402 and context-length faults.
+- **Campaign identity.** `eval/runner/usage-receipt.ts` and `eval/systems/_shim/` are in the executed tree that Q1-style campaigns hash (`eval/runner/q1/cell.ts`), so this counts for F6, or any Q1-style campaign frozen before it, only under a new campaign identity.
+
+## [0.10.138] - 2026-10-31
+
+### Shared agents (on_behalf_of): search cost and recall
+
+- **gbrain PR #7852 lets a shared agent read as the audience its harness names, and calls without an audience cost nothing measurable** ([report](docs/benchmarks/2026-10-28-shared-agent-audience.md)). Measured at `e5bee20d` against its parent `9167c248` on one Ubicloud VM, 8 interleaved runs per side, with raw JSON committed: every cell is within plus or minus 1% at 0%, 20% and 80% restricted. #7852 ships in train M (gbrain PR #8134, head `244f30dd`), where the train M attribution run from 0.10.137 puts the train within -1.3% to +0.3% of folder rules (A2) on a brain with no restrictions.
+- **An audience costs 0.1 to 2.2 ms over the member's own token and keeps that member's recall.** A one-member audience adds under 0.8 ms. A two-member audience adds up to 1.3 ms at `e5bee20d` and up to 2.2 ms (keyword search) at the train M head. hit@10 is 1.0 in every audience cell on train M. The measured search code is the same at both heads, apart from a path under the operator privacy hatch that the bench never turns on.
+
+### The budget ledger meters Particle and refuses hosts it cannot price
+
+- **A paid run can no longer spend through a host the ledger doesn't know.** While a paid-request guard is installed, a request to any HTTP host that is neither in the ledger's paid-host table nor loopback is refused before it is sent, and the runner stops scheduling paid work. Before, such a host counted as free, so an OpenAI-compatible vendor reached through `OPENAI_BASE_URL` spent outside the cap and left no ledger record. A live particle-1 memory-qa smoke on 2026-10-31 recorded its Anthropic judge request and not the Particle reader call. Loopback hosts (the metering proxies, local fakes and shims, at `localhost`, `127.0.0.0/8`, `[::1]`, `0.0.0.0` or an IPv4-mapped `127.x` address) and local files pass as before. A guarded request no longer follows redirects, so an admitted host cannot forward it to one the ledger cannot price; batch status and result reads still follow them.
+- **particle-1 is priced.** `api.particle.ai` and `us.api.particle.ai` are paid hosts for provider `particle`, and `particle:particle-1` lists at $0.25 input, $0.03 cached input and $1.00 output per million tokens (docs.particle.ai, checked 2026-10-31). Requests settle from OpenAI chat usage, with reasoning tokens counted inside `completion_tokens`. A request that names no output limit reserves Particle's 32,000-token default, and a dated model id now takes its family's output cap as it already took its price. A request that turns on Particle's hosted web search is refused, because each search bills $0.0025 outside usage. Off-peak calls bill at half price and settle here at the peak rate, so the ledger overstates them.
+
+### memory-qa `--qa think` answers relative dates from the question's day
+
+- `gbrain think` now gets a `referenceDate`: the question date, else the conversation's latest session date (LoCoMo and BEAM questions carry none). Before, "last month" in a LongMemEval question resolved against the day of the run. Each row records the date think reports it answered against as `qa_reference_date`; a gbrain build older than 0.60.88 ignores `referenceDate` and reports none, so its rows carry no date. This covers `run.ts`'s own think lane; `--system gbrain --qa think` in `run-systems.ts` still passes no date (#210). No published report on main used `--qa think`, so no committed number changes.
+- `eval/runner/budget-ledger.ts` and `eval/runner/memory-qa/run.ts` are in the F6 campaign's frozen tree. These changes land on main only and count for F6 only under a new campaign identity.
+
+### Tests and receipts
+
+- `test/eval/q1-raise-lease.test.ts` covers a raised lease that finished and is then abandoned. It is charged its raised reservation, or closed at $0 only when its launch log shows the cell command never started (#196, #197).
+- `rescore-may-2026-08-31.json` names the committed copy of its source rows instead of the gitignored path the aggregator read, and its manifest entry is re-hashed. The manifest entry for `judge-calibration-2026-08-25.json` now says its judge, `claude-sonnet-4-6`, is a movable alias. Both were leftovers of #26.
+
+### Toolchain: Bun 1.4.4, a typecheck that fits in memory, two CI flakes fixed
+
+- **`bun run typecheck` passes without a hand-set heap limit.** The program needs about 4.4 GB of heap, more than Node's default limit, so the script died of heap exhaustion (exit 134 after 1:54 at a 4.4 GB peak, measured at `e9bda629`). The script now raises the limit itself (`NODE_OPTIONS=--max-old-space-size=8192`); with it the run peaks near 4.9 GB of memory, so it still needs a machine with more than about 5 GB of RAM. CI used to raise it in its own step environment, which hid the failure; CI now runs the same script, and `test/eval/ci-workflow.test.ts` checks that it does and that the script keeps the limit and both programs.
+- **CI runs Bun 1.4.4 in every job**, and `package.json` declares `"engines": { "bun": ">=1.4.4" }`. Bun 1.4.2 is below gbrain's `SECURE_BUN_VERSION` (a Brotli decoder CVE) and below the minimum that newer gbrain CLIs accept, so this comes before the next gbrain pin bump. A test checks that every CI job installs the version `engines` names, and the scoreboard's `doctor` now checks the launching host's Bun against `engines` and offers to install that version (it accepted any 1.4.x and offered 1.4.2). Doctor refuses an `engines.bun` that is not of the form `>=X.Y.Z`, the form whose version it installs, and the CI test checks that form. `@types/bun` stays at 1.4.2: version 1.4.4 types a subprocess's `signalCode` as a signal name or a number, and gbrain's `src/core/cli-preflight.ts` (at the pin and at master `922ba1a9`) stores it in a `string | null`, which the typecheck of gbrain's sources rejects. It moves once gbrain accepts the wider type. The VM bootstrap scripts and the Cat 41 image keep their recorded Bun 1.4.2: each is part of a campaign's measured setup, and Bun 1.4.2 still installs this lockfile. A new test checks that the Bun `eval/systems/bootstrap.sh` installs by default meets the pinned gbrain CLI's `MINIMUM_BUN_VERSION`, so a gbrain bump that raises that floor fails CI instead of a paid VM.
+- **Two timing failures in CI's `tests (3)` are fixed at their causes**, with no assertion changed in either test file.
+  - `test/eval/scoreboard-cli.test.ts`: doctor checks Docker with `docker info`. On a cold daemon that took more than 5 seconds on a CI runner (2026-10-28, `1c66e565`), so tests that never need Docker hit Bun's 5-second test timeout, and one then read the killed child's empty output. Doctor now checks Docker in the environment it is given, like its other checks, and the test puts a `docker` that always fails first on that PATH. With a `docker` that sleeps 8 seconds on the PATH, 13 of the file's 20 tests failed before this change and none after.
+  - `test/eval/q1-campaign.test.ts`: the VM-side tests picked a random port from 24000 to 32999, which overlaps Linux's range for outgoing connections. On 2026-10-29 (`d58b4e33`) port 32890 was taken, the metering proxy exited at once, and `runRemote` kept polling for 10 seconds before failing. These tests and `q1-custody-launch.test.ts` now take a port the operating system reports free. `runRemote` now waits until the proxy's status route answers for this lease with the sha256 of the control token this launch gave it, and fails as soon as the proxy exits or is killed, naming its exit code or signal; each status request gives up after a second, so a listener that never answers cannot hold the launch. Before, a different server already answering on the port passed the check and received the cell's traffic, and so would a proxy left over from an earlier launch of the same lease; new tests hold the port with each of those, and with a listener that never answers, and check that the launch fails and the cell never runs. The metering proxy's status route now carries that hash as `control_sha256`.
+- **Campaign identity.** `package.json`, `eval/runner/shootout-cell.ts` and `eval/runner/metering-proxy.ts` are in the F6 campaign's executed tree (`bun.lock` is unchanged). This release counts for F6, or any Q1-style campaign frozen before it, only under a new campaign identity. No file in the Cat 40 Hard freeze changed.
+
+## [0.10.137] - 2026-10-31
+
+### Per-member read access: search cost on a brain with no restrictions
+
+- **gbrain's per-member read access, as it ships in train M (gbrain PR #8134: #7812 readers, #7842 folder rules, #7852 shared-agent audiences), costs hybrid search 1.5 to 1.9% and keyword-only search 2.2% on a brain with no restrictions** ([report](docs/benchmarks/2026-10-28-member-read-access.md)). Measured at `244f30dd` against master `922ba1a9` on one Ubicloud VM, 10 runs per side with the order alternated, raw JSON committed. That is the median of per-run p50s, the method the 2% gate was set with; the median of each round's paired ratio gives 2.2 to 2.6% (hybrid) and 2.7 to 2.8% (keyword). GBRA-108 accepted train M on the gate method.
+- **Run order shifts the result by about a point.** An 8 + 8 run with the train always first read +4.1 to +4.7% for hybrid; a run with master always first read +0.1 to +1.1%. The #7812 runs (October 28, at `f1c39714` against `8e9cd64d`: hybrid +1.5 to 1.6%, keyword +3.2 to 3.9%) always ran the branch first, so they likely read a point or so high.
+- **Where the keyword cost comes from.** Ablations on #7812 put it on reading one `pages` column per matched row: replacing the predicate with `TRUE` cuts the cost to +0.5%, and dropping the index changes nothing. Removing the cost would leave a one-request window at a brain's first restricted page, so GBRA-108 accepted it with the fail-safe kept. Folder rules and shared-agent audiences add no cost of their own (a master, A1, A2, train run within 2.6 points of each other).
+- **Restricted brains.** Members, and shared agents naming those members, get every page they may read (hit@10 1.0 at 20% and 80% restricted).
+
+### The October 7 10x memory advantage plan lands on main as a superseded record
+
+- **Eleven reports and preregistrations on main cite a plan that main didn't have.** Three reports and eight
+  preregistrations from the plan's waves 0 to 5 name `docs/plans/2026-10-07-10x-memory-advantage/PLAN.md`, the branch
+  `capy/10x-memory-advantage-plan` or a link into it. The plan lived only on that branch, whose pull request, #97, was
+  closed unmerged on 2026-10-29. The folder (the plan, its five audits, six reviews and the eng test plan) now lands at
+  that path from the branch's last commit, `2b6ff9af` (2026-10-17). Its README opens with a dated banner: the plan
+  is superseded, and no wave, cap or gate runs from it. Seven files are byte for byte the branch's. In the other six,
+  each of the 118 external product names is replaced by its kind id in square brackets (`[ext-extract-first]`), as
+  the name guard requires outside `docs/comparison-systems.md`; nothing else changed, and the branch keeps the
+  original wording.
+- None of the eleven citations changes, and the branch stays. The preregistrations are frozen (each changes only by
+  an amendment appended at its end, and some are bound by recorded SHA-256 hashes), and every citation already
+  resolves: the path now exists on main, and the branch keeps every revision of the plan as each report read it.
+- The [docs index](docs/README.md) links the folder from its route table.
+
+## [0.10.136] - 2026-10-29
+
+### Spring-loaded skills for gbrain GBRA-194 measured
+
+- **The opt-in skill index `gbrain setup <harness> --skill-loading spring` writes, at gbrain branch `12669180` (not on master)** ([report](docs/benchmarks/2026-10-24-spring-loaded-skills.md), preregistration and receipts under `docs/benchmarks/2026-10-24-spring-loaded-skills/`). On 12 tasks that each need one bundled skill's procedure, real Claude Code and Codex CLIs and three models (claude-sonnet-5-5, claude-opus-5-5, gpt-6.1-sol; 360 counted trials), the index got agents to load the right skill before acting in 29 of 36 Claude Code trials, against 15 with every skill in the native skills directory and 0 with no skill text, and tied native on Codex at 22 of 24. It adds about 2,057 standing input tokens per Claude Code turn (native adds 8,579) and 1,429 per Codex turn (native 6,420). Pass rates sit near the floor in the harnesses' real permission modes in every arm, because headless Claude Code denied gbrain MCP calls and Codex's read-only sandbox refused brain writes; the labeled MCP pre-approved configuration carries the pass comparison (21 against 12 for native). The preregistered rule proposes spring as the default; that decision is gbrain's, and the build under test keeps it off. Model spend was $41.27 against a $55 cap.
+
+## [0.10.135] - 2026-10-29
+
+### Brain-first install block for gbrain GBRA-188 measured
+
+- **The managed block `gbrain setup claude-code` and `gbrain setup codex` write, at gbrain `10f74dbd` (block v1)** ([report](docs/benchmarks/2026-10-24-brain-first-install-block.md), receipts under `docs/benchmarks/2026-10-24-brain-first-install-block/`). On a synthetic two-source brain with 20 tasks, real Claude Code and Codex CLIs and four models (780 counted trials), the block and a one-sentence told rule both reached the brain in 221 of 221 trials on the tasks that need it, against 82% to 97% with no instructions. The block passed 254 of 260 trials, the told rule 251 and no instructions 222, at between 4% less and 6% more spend per trial than no instructions, with no scope leak in any arm. The paraphrase result is tuned on the tasks that chose the wording, not held out. gbrain v0.60.495.0 shipped block v2 with a reworded search line and a per-turn rule; neither was measured here.
+
+## [0.10.134] - 2026-10-29
+
+### Short first names in full-name search: gbrain#7471 measured
+
+- **gbrain#7472, the fix for gbrain#7471, at `ad136eeb3` against master `3f0b6eecd` (v0.60.426.0)** ([report](docs/benchmarks/2026-10-24-name-variants-7471.md), receipts under `docs/benchmarks/2026-10-24-name-variants-7471/`). On a synthetic 560-page brain with 64 queries, a full-name query using the other form of the given name ("Matt X" for the page titled "Matthew X") went from 0 of 12 to 12 of 12 at rank 1 on keyword-only search and on hybrid search with the reranker off. No query ranked worse on the branch in any configuration. With the Voyage reranker on, both trees return the person page at rank 2. BrainBench is identical on all 24 cells. This is development evidence on placeholder names, not a held-out result.
+
 ## [0.10.133] - 2026-10-29
 
 ### The 8k conversion wave: preregistration, harness and held-out result
@@ -3648,3 +4280,758 @@ Saved JSONs were added for the tight result and ordinary settings. One shipped-d
 ## [0.1.0] - prior
 
 Initial BrainBench included world-v1 and amara-life-v1, the 12-category catalog, LongMemEval-S integration and the v0.40.6.0 snapshot. Its historical 97.60% LongMemEval figure was compared with MemPalace's 96.6% raw figure; subsequent releases clarified the metric and comparison limits. See the dated reports for the original experiments.
+
+## README.md changelog, 2026-04-21 to 2026-10-31
+
+Until 2026-11-01, README.md kept every change to it in its own changelog, which had grown to 59% of the page. Those
+entries moved here unchanged, newest first; in them, "this page" means README.md. README's own changelog records
+its changes from 2026-11-01 on.
+
+### 2026-10-31: Re-pin to gbrain `3ec766c40`; the four new read defaults are named; repository row names v0.10.139
+
+gbrain-evals v0.10.139 re-pins gbrain, adds the Cat 35 external lane, which scores another system's notes with Cat 35's
+judges ([contributor guide](eval/CONTRIBUTING.md#score-another-systems-cat-35-documents)), and lands the post hoc
+LongMemEval-S facts-block check and the shipped-build equivalence check
+([sealed results](docs/benchmarks/2026-10-09-memory-proof-wave-sealed-results.md)), current Claude models in the shared
+judge and the other Claude call sites, and the particle-1 provider module (see [CHANGELOG.md](CHANGELOG.md)). The
+repository row names v0.10.139
+(was v0.10.138). The pinned product row changes from `7a6bdd357` (v0.60.454.0) to `3ec766c40` (v0.60.531.0), and so does the sentence
+under the table. Every commit the current state names is in the new release's history except `a7cb37b`, as before. A
+new paragraph under it names the four read defaults gbrain added after the old pin (the dated facts block of a budgeted
+`query`, v0.60.491.0; correction ordering of saved facts, v0.60.493.0; the remote page cap, v0.60.506.0; quote-fenced
+chat text, v0.60.507.0 and v0.60.521.0), says that apart from the keyless Cats 37 to 39 check no result on this page was
+measured with them, and says the memory-qa
+harness holds the first three at their old values and unwraps the fence. The memory trust row's keyless check moves from
+`77cf8e111` to `3ec766c40`: Cats 37, 38 and 39 pass every safety and quality contract in the BrainBench offline tier at
+the new pin, as on main at `7a6bdd357`. Known limits: the timeline-read bullet said "At the pin" about a measurement
+made at `77cf8e111`; it now names that commit and says the pin is unmeasured. The `auto_chronicle` bullet is removed:
+it described gbrain before v0.60.49.0, which this pin and the three before it all postdate. No other result row changes.
+
+### 2026-10-31: Equivalence claim links its section
+
+The memory-bank paragraph says `d7467d1cf`'s retrieval was checked equivalent at `d7d7686de`; that claim now links the [equivalence section](docs/benchmarks/2026-10-09-memory-proof-wave-sealed-results.md#equivalence-of-the-shipped-build) of the sealed results, which reached main on 2026-10-31 together with the post hoc LongMemEval-S facts-block check. No result row on this page changes.
+
+### 2026-10-31: Repository row names v0.10.138
+
+gbrain-evals v0.10.138 adds the [shared-agent audience cost report](docs/benchmarks/2026-10-28-shared-agent-audience.md) for gbrain #7852 and train M (#8134). The repository row names v0.10.138 (was v0.10.137). No result row on this page changes; the report is listed in the [docs index](docs/README.md).
+
+### 2026-10-31: Repository row names v0.10.137
+
+gbrain-evals v0.10.137 adds the [member read access search cost report](docs/benchmarks/2026-10-28-member-read-access.md) for gbrain #7812 and train M (#8134). The repository row names v0.10.137 (was v0.10.136). No result row on this page changes; the report is listed in the [docs index](docs/README.md).
+
+### 2026-10-29: Repository row names v0.10.136
+
+gbrain-evals v0.10.136 adds the [spring-loaded skills report](docs/benchmarks/2026-10-24-spring-loaded-skills.md) for gbrain GBRA-194. The repository row names v0.10.136 (was v0.10.135). No result row on this page changes; the report is listed in the [docs index](docs/README.md).
+
+### 2026-10-29: Repository row names v0.10.135
+
+gbrain-evals v0.10.135 adds the [brain-first install block report](docs/benchmarks/2026-10-24-brain-first-install-block.md) for gbrain GBRA-188. The repository row names v0.10.135 (was v0.10.134). No result row on this page changes; the report is listed in the [docs index](docs/README.md).
+
+### 2026-10-29: Repository row names v0.10.134
+
+gbrain-evals v0.10.134 adds the [name-variant report](docs/benchmarks/2026-10-24-name-variants-7471.md) for gbrain#7471. The repository row names v0.10.134 (was v0.10.133). No result row on this page changes; the report is listed in the [docs index](docs/README.md).
+
+### 2026-10-29: Repository row names v0.10.133
+
+gbrain-evals v0.10.133 adds the [8k conversion report](docs/benchmarks/2026-10-26-gbrain-8k-conversion.md) with its preregistration, harness and held-out result. The repository row names v0.10.133 (was v0.10.132). No result row on this page changes; the report is listed in the [docs index](docs/README.md).
+
+### 2026-10-29: Repository row names v0.10.132
+
+gbrain-evals v0.10.132 makes `reuse-check.ts` and `arm_power.py` refuse inputs they used to pass, described in the [contributor guide](eval/CONTRIBUTING.md#cut-the-cost-of-a-preregistered-run). The repository row names v0.10.132 (was v0.10.131). No result row on this page changes.
+
+### 2026-10-28: Repository row names v0.10.131
+
+gbrain-evals v0.10.131 adds the [eval cost audit](docs/audit/2026-10-28-eval-cost-audit.md) and two Cat 40 cost tools, listed in the [docs index](docs/README.md). The repository row names v0.10.131 (was v0.10.130). No result row on this page changes.
+
+### 2026-10-27: Q1 scoreboard headline block, measured; repository row names v0.10.130
+
+The Q1 scoreboard's headline block between the `scoreboard:headline` markers now holds the measured results rendered
+from the campaign receipt: BEAM-10M at 8,000 tokens, the BEAM-100K to BEAM-10M size curve, and the notes on every row
+that is incomplete or not run. The sentence above the block no longer says the sealed waves are running, and links
+[the report](docs/benchmarks/2026-10-06-scoreboard-report.md) and [the scoreboard guide](docs/scoreboard.md). Every GBrain
+row measures gbrain 0.60.138.0 (`f05943e6`), not current master; a rerun is planned (F6). The repository row names
+v0.10.130 (was v0.10.129). No other result on this page changed.
+
+### 2026-10-25: Re-pin to gbrain `7a6bdd357`; repository row names v0.10.129
+
+gbrain-evals v0.10.129. The pinned product row changes from `6e1086492` (v0.60.324.0) to `7a6bdd357` (v0.60.454.0). On pages over 1 MiB, gbrain
+now keeps links, mentions, timeline, fences, conversation facts and synopses per segment, cuts forced chunks at sentence
+ends and imports a new transcript session as one page (large pages Wave B PR 4, gbrain #7316); a git-canonical page that
+turns private and then world again gets its file back (gbrain #7586). `src/core/search/mode.ts` changed between the two
+commits: gbrain v0.60.332.0 added `collapse` and `rank_priors` to every mode bundle, both on (gbrain changelog,
+0.60.332.0), so the search-mode sentences under the table now name them and say that earlier retrieval results ran
+without them. Every commit that paragraph names is still in the release's history except `a7cb37b`. No result row on
+this page changes. The repository row names v0.10.129 (was v0.10.128).
+
+### 2026-10-21: Repository row names v0.10.128
+
+gbrain-evals v0.10.128 adds the gbrain#7195 measurements to the [agent retrieval shapes report](docs/benchmarks/2026-10-20-agent-retrieval-shapes.md). The repository row names v0.10.128 (was v0.10.127).
+
+### 2026-10-20: Repository row names v0.10.127
+
+gbrain-evals v0.10.127 adds the gbrain#7186 measurements to the [agent retrieval shapes report](docs/benchmarks/2026-10-20-agent-retrieval-shapes.md). The repository row names v0.10.127 (was v0.10.126).
+
+### 2026-10-20: Repository row names v0.10.126
+
+gbrain-evals v0.10.126 adds the report-only [agent retrieval shapes](docs/benchmarks/2026-10-20-agent-retrieval-shapes.md) category (ARS). The repository row names v0.10.126 (was v0.10.125).
+
+### 2026-10-20: Sync freshness rows; repository row names v0.10.125
+
+gbrain-evals v0.10.125 adds the two sync freshness rows below (GBRA-133) and the PR 2b section of the [sync freshness report](docs/benchmarks/2026-10-19-sync-freshness.md): no-op round trips on managed Postgres and search latency during a sync. The repository row names v0.10.125 (was v0.10.124).
+
+#### First managed sync after activation row
+
+New row in Current results: the first managed sync after activating a classic brain, on gbrain v0.60.320.0 (#6712 PR 4b,
+#7053), mirrored from GBRA-133 in
+[the sync freshness report](docs/benchmarks/2026-10-19-sync-freshness.md#first-managed-sync-after-activating-a-classic-brain-gbrain-v0603200-6712-pr-4b).
+Every run converged in one pass: Postgres 100,000 pages took 129.6 s and 23,243 statements (n = 1); 10,000 pages took
+about 13 s on both engines (n = 3). No other row changes.
+
+#### Sync freshness row
+
+New row in Current results: how fast a commit becomes searchable through a running `gbrain serve` after gbrain
+v0.60.316.0 (#7079) added the commit notifier, mirrored from GBRA-133 PR 2b.6 in
+[the sync freshness report](docs/benchmarks/2026-10-19-sync-freshness.md): 0.60 s p50 in watch mode on Postgres (was
+3.7 s on managed brains and never on classic ones), 2.15 s p50 in poll mode, and a PGLite embedding gap after a provider
+outage. No other row changes.
+
+### 2026-10-20: Re-pin to gbrain `6e1086492`; repository row names v0.10.124
+
+gbrain-evals v0.10.124. The pinned product row changes from `f717b1a5b` (v0.60.299.0) to `6e1086492` (v0.60.324.0),
+which adds `append_page`, upload sessions for pages larger than one request, and segmented `edit_page` (large pages Wave
+B PR 3, gbrain #7104). `src/core/search/mode.ts` is identical at both commits, so the search-mode sentences stand, and
+every commit the paragraph under the table names is still in the release's history except `a7cb37b`. This release also
+records the N14 run at Wave B PR 3 ([report](docs/benchmarks/2026-10-20-n14-large-page-fidelity-wave-b3.md)). No result
+row on this page changes. The repository row names v0.10.124 (was v0.10.123).
+
+### 2026-10-18: Re-pin to gbrain `f717b1a5b`; repository row names v0.10.123
+
+gbrain-evals v0.10.123. The pinned product row changes from `77cf8e111` (v0.60.169.0) to `f717b1a5b` (v0.60.299.0), which
+turns segmented page storage on by default (large pages Wave B). The paragraph under the table now lists only `a7cb37b` as
+a named commit outside the release's history: the other three it listed shipped before v0.60.299.0. It also says the
+search modes changed after v0.60.169.0, with the Voyage `rerank-3-lite` default and `tokenmax` without expansion, and
+cites the two addenda that checked them. This release also records the N14 run at the switch-on
+([report](docs/benchmarks/2026-10-18-n14-large-page-fidelity-wave-b2.md)). No result row on this page changes. The
+repository row names v0.10.123 (was v0.10.122).
+
+### 2026-10-18: Graph backend row (HydraDB vs Postgres); repository row names v0.10.122
+
+Current results gains a graph-walk row from the [graph backend benchmark](docs/benchmarks/2026-10-17-graph-backend.md)
+(GBRA-123, preregistered): gbrain's breadth-first walks on Postgres (#6934, `fc1121cae58`) answer faster than HydraDB
+at 10,000, 100,000 and 1,000,000 pages with identical answers, so production HydraDB routing is not built. No existing
+number changed. The repository row names v0.10.122 (was v0.10.121).
+
+### 2026-10-17: W11 confirms gbrain W4 on sealed material; repository row names v0.10.121
+
+gbrain-evals v0.10.121 records the custodian's W11 run on gbrain v0.60.289.0: the weekly belief diff scores set-F1 1.0
+on three fresh seeds with fresh wording, with exact before and after on 28 of 28 re-scores and correct cause and
+evidence on 108 of 108 changes. The repository row names v0.10.121 (was v0.10.120).
+
+### 2026-10-17: W11 sealed-confirmation preregistration for gbrain W4; repository row names v0.10.120
+
+gbrain-evals v0.10.120 preregisters W11, the sealed confirmation of gbrain W4's weekly belief diff on a fresh seed and
+fresh wording minted in custody, with a $0 harness that ports W4's own probe. The repository row names v0.10.120 (was
+v0.10.119).
+
+### 2026-10-17: Living pages decided on prior; repository row names v0.10.119
+
+gbrain-evals v0.10.119 records the living-pages verdict for gbrain W9: with no owner data, W9 is not built in V1 and W10
+is dropped with it, because the build threshold (1,387 reads per changed page-day) is far above any known personal-brain
+read rate. The repository row names v0.10.119 (was v0.10.118).
+
+### 2026-10-17: Living-pages preregistration; repository row names v0.10.118
+
+gbrain-evals v0.10.118 preregisters the living-pages build decision for gbrain W9: a refreshed page beats anchored
+retrieval only above about 1,387 reads per change once review time is priced, and the owner's ratio is read from two
+aggregate queries. The repository row names v0.10.118 (was v0.10.117).
+
+### 2026-10-17: Forecast-journal row; repository row names v0.10.117
+
+gbrain-evals v0.10.117 mirrors the $0 forecast-journal gate for gbrain #6886 (wave 4b W7, shipped in v0.60.286.0): on
+synthetic holders of known skill the journal ranks them in their true order (median ρ 0.905), counts every open
+prediction exactly, and stays invisible to remote callers. New row after the take-grading row. The repository row names
+v0.10.117 (was v0.10.116).
+
+### 2026-10-17: P1 E2 rerun on gbrain W5; repository row names v0.10.116
+
+gbrain-evals v0.10.116 records the custodian's P1 E2 rerun on gbrain v0.60.273.0 (W5): every late closure is disclosed
+as an upper bound, and Opus 5.5, Sonnet 5.5 and GPT-6.1 Sol keep `apply` (0 wrong and 0 undated closures, as-of
+exact 0.392 to 0.397). The repository row names v0.10.116 (was v0.10.115).
+
+### 2026-10-17: Take grading shipped in gbrain v0.60.282.0; repository row names v0.10.115
+
+gbrain #6882 merged as `4e698e9d9` (v0.60.282.0), so gpt-6.1-sol is gbrain's measured take-grading judge for prompt
+`hybrid-evidence-v2`; the take-grading report and its `verdict.json` name the release. The report also records the
+auto-resolve follow-ups decided on October 16. The repository row names v0.10.115 (was v0.10.114).
+
+### 2026-10-17: Take-grading row; repository row names v0.10.114
+
+gbrain-evals v0.10.114 records the take-grading eval for gbrain #6882 (wave 4b W6, `d99b84694`): among the verdicts the
+auto-resolve rule would apply, gpt-6.1-sol applied 496 with none wrong (one-sided 95% upper bound 0.6%, under the
+preregistered 1%), so it is gbrain's measured take-grading judge; Opus 5.5 and Sonnet 5.5 do not qualify. New row
+after the slug-conflict row. The repository row names v0.10.114 (was v0.10.113).
+
+### 2026-10-16: Repository row names v0.10.113
+
+gbrain-evals v0.10.113 records N6 on gbrain's weekly belief diff (`delta {beliefs: true}`) at the v0.60.273.0 release
+(`6c3e6fe0`, #6866): 0 leaks and 0 oracles in process and over Postgres HTTP, with real-history signal on both
+(measured through `--gbrain`; the pin is unchanged), and adds the P1 E2 rerun preregistration for gbrain W5. No result
+row on this page changes. The repository row names v0.10.113 (was v0.10.112).
+
+### 2026-10-16: Repository row names v0.10.112
+
+gbrain-evals v0.10.112 records N6 on gbrain's recorded-time reads (`known_as_of`) at the v0.60.267.0 release (`933a7677`,
+#6850): 0 leaks and 0 oracles in process and over Postgres HTTP, with real-history signal on both (measured through
+`--gbrain`; the pin is unchanged). No result row on this page changes. The repository row names v0.10.112 (was v0.10.111).
+
+### 2026-10-16: Repository row names v0.10.111
+
+gbrain-evals v0.10.111 records N1 with gbrain's belief ledger on, at the v0.60.265.0 release (`09943580e`, #6806):
+388 of 388 current values and 0 stale with the ledger off and on (measured through `--gbrain`; the pin is unchanged). No
+result row on this page changes. The repository row names v0.10.111 (was v0.10.110).
+
+### 2026-10-16: Repository row names v0.10.110
+
+gbrain-evals v0.10.110 records the LHF wave 2 plan, its reviews and measured verdicts (gbrain v0.60.259.0, #6822), and
+the preregistered attendance paraphrase gate, which failed (measured through `--gbrain`; the pin is unchanged). No
+result row on this page changes. The repository row names v0.10.110 (was v0.10.109).
+
+### 2026-10-15: Repository row names v0.10.109
+
+gbrain-evals v0.10.109 records an exploratory N14 run of segmented page storage (large pages Wave B PR 1, gbrain
+v0.60.252.0, measured through `--gbrain`; the pin is unchanged). No result row on this page changes. The repository row
+names v0.10.109 (was v0.10.108).
+
+### 2026-10-15: Repository row names v0.10.108
+
+gbrain-evals v0.10.108 records the D9 check of remote `find_contradictions` on gbrain v0.60.250.0: N6 now seeds a
+stored contradiction report and finds 0 leaks, and N2's compatible-pair rule still holds, so its wave 14 number carries
+forward. No result row on this page changes. The repository row names v0.10.108 (was v0.10.107).
+
+### 2026-10-15: Repository row names v0.10.107
+
+gbrain-evals v0.10.107 records the D7 Cat 41 brief scenarios. In 48 native Claude Code and Codex sessions on gbrain
+v0.60.247.0, the pushed brief cut time to the first correct output by 6% against a preregistered 20%. So it shows no
+time-saved signal, and the brief stays off by default; this is development evidence only. No result row on this page
+changes. The repository row names v0.10.107 (was v0.10.106).
+
+### 2026-10-15: Repository row names v0.10.106
+
+gbrain-evals v0.10.106 records the D6 proactive-brief development v2 run. On the T0 carrier with gbrain v0.60.247.0,
+with session-1 facts aged or crowded out of hot memory, the brief cut session-2 tool calls by 6% against a
+preregistered 20%, so it shows no time-saved signal; success held at 72 of 72 in both arms. This is development
+evidence only. No result row on this page changes. The repository row names v0.10.106 (was v0.10.105).
+
+### 2026-10-15: Cat 40 next-wave confirmation; repository row names v0.10.105
+
+gbrain-evals v0.10.105 adds the Cat 40 next-wave development record, preregistration and confirmation. A new row under
+Current results reports what ships: Part 1 without F5 ahead of plain files by +10.67 points on two sealed worlds, the
+pre-wave baseline ahead on both generators, and the public build with F5 marked not shipped because F5 failed its
+precision ship condition. The repository row names v0.10.105 (was v0.10.104).
+
+### 2026-10-15: Repository row names v0.10.104
+
+gbrain-evals v0.10.104 adds the N14 large-page fidelity rerun after large pages Wave A (gbrain `44eb049`, measured
+through `--gbrain`; the pin is unchanged). No result row on this page changes. The repository row names v0.10.104 (was
+v0.10.103).
+
+### 2026-10-14: Repository row names v0.10.103
+
+gbrain-evals v0.10.103 records the D6 proactive-brief development run. On the T0 carrier with gbrain v0.60.240.0,
+brief-on and brief-off both finished 70 of 72 paired tasks, so it shows no improvement signal; this is development
+evidence only. No result row on this page changes. The repository row names v0.10.103 (was v0.10.102).
+
+### 2026-10-14: Repository row names v0.10.102
+
+gbrain-evals v0.10.102 records the D5 brief re-smoke on gbrain #6703, which passes, and makes the Cat 40 runner scrub
+machine paths from the files it writes. No result row on this page changes. The repository row names v0.10.102 (was
+v0.10.101).
+
+### 2026-10-14: Repository row names v0.10.101
+
+gbrain-evals v0.10.101 records the Cat 40 smoke for gbrain #6703's `context_pack` `counterparty` and `intent`
+parameters. No result row on this page changes. The repository row names v0.10.101 (was v0.10.100).
+
+### 2026-10-14: Repository row names v0.10.100
+
+gbrain-evals v0.10.100 adds BrainBench N14, large-page fidelity, and its hermetic baseline on gbrain master `c71fe74`.
+The category is report-only and held until gbrain ships a large-page API. No result row on this page changes. The
+repository row names v0.10.100 (was v0.10.99).
+
+### 2026-10-14: Repository row names v0.10.99
+
+gbrain-evals v0.10.99 adds the query-expansion latency result: on 300 LongMemEval-S questions, `query` without
+expansion on `tokenmax` keeps retrieval quality within the preregistered margins at about a ninth of the latency. No
+result row on this page changes. The repository row names v0.10.99 (was v0.10.98).
+
+### 2026-10-14: Repository row names v0.10.98
+
+gbrain-evals v0.10.98 records the F5 owner-phrase run on messy-company-v1. No result on this page changed. The
+repository row names v0.10.98 (was v0.10.97).
+
+### 2026-10-14: Repository row names v0.10.97
+
+gbrain-evals v0.10.97 adds the messy-company-v1 dataset. No result on this page changed. The repository row names
+v0.10.97 (was v0.10.96).
+
+### 2026-10-14: Cat 41 fifth-run report corrected; repository row names v0.10.96
+
+gbrain-evals v0.10.96. The [fifth Cat 41 setup report](docs/benchmarks/2026-10-14-cat41-setup-run5.md) had compared
+install-guide reading times measured two different ways. Measured one way, they are 14.4, 16.9 and 10.2 s against
+the fourth run's 14.5, 6.9 and 8.2 s. The report also gained a descriptive appendix. No verdict and no result row on
+this page changes. The repository row names v0.10.96 (was v0.10.95).
+
+### 2026-10-14: Cat 41 setup fifth run; repository row names v0.10.95
+
+gbrain-evals v0.10.95. On gbrain v0.60.219.0, with the fourth run's design unchanged, first push is met for the first
+time: the hook printed the preference into all 3 fresh Claude Code sessions, and every agent kept it in gbrain only.
+Consent is met (no provider request). Wired recall misses by 0.2 s (60.2 s against 60 s), and faster setup misses
+(2.8%) ([report](docs/benchmarks/2026-10-14-cat41-setup-run5.md)). No result row on this page changes. The repository
+row names v0.10.95 (was v0.10.93, since v0.10.94 did not update it).
+
+### 2026-10-13: Repository row names v0.10.93
+
+gbrain-evals v0.10.93 adds the reranker-settings addendum: on 300 LongMemEval-S questions, Voyage `rerank-3-lite` at
+the shipped 50 × 1,400 shape keeps retrieval quality within the preregistered margins and cuts rerank cost 60%, with
+about the same latency. No result row on this page changes. The repository row names v0.10.93 (was v0.10.92).
+
+### 2026-10-13: receipt source-tree hash fix; repository row names v0.10.92
+
+gbrain-evals v0.10.92 hashes the source tree for receipts from git's index, reading only changed files, so the
+first receipt in a test no longer hashes 1.7 GB. No result on this page changes. The repository row names v0.10.92 (was v0.10.91).
+
+### 2026-10-13: Cat 41 setup fourth run; repository row names v0.10.91
+
+gbrain-evals v0.10.91. With a world-visible preference as the first-push item, gbrain v0.60.208.0's hook printed it
+into all 3 fresh Claude Code sessions. First push still met its target in only 1 of 3 runs, because two agents also
+saved the preference to Claude Code's own memory. Wired recall (55.5 s) and consent (no provider request) are met,
+and faster setup (20.7%) is missed ([report](docs/benchmarks/2026-10-13-cat41-setup-run4.md)). No result row on this
+page changes. The repository row names v0.10.91 (was v0.10.89, since v0.10.90 did not update it).
+
+### 2026-10-13: Cat 41 setup on v0.60.208.0; repository row names v0.10.89
+
+gbrain-evals v0.10.89. On gbrain v0.60.208.0 setup meets wired recall (54.3 s against 60 s) and consent (no provider
+request in any run). It misses first push (0/3: every agent saved the locker code as a private fact, which push never
+carries). The faster-setup claim misses as scored and holds on reading (28.1%)
+([report](docs/benchmarks/2026-10-13-cat41-setup-v208.md)). No result row on this page changes. The repository row
+names v0.10.89 (was v0.10.88).
+
+### 2026-10-13: W1 guidance smoke; repository row names v0.10.88
+
+gbrain-evals v0.10.88 adds the W1 guidance smoke (A12g): with the gbrain plugin installed natively, Opus 5.5 passed 2 of
+5 sessions and Fable 5.1 5 of 5, so the `recall` `question` guidance stays parked
+([report](docs/benchmarks/2026-10-13-w1-guidance-smoke.md)). No result row on this page changes. The repository row
+names v0.10.88 (was v0.10.86; v0.10.87 did not update it).
+
+### 2026-10-13: Cat 41 setup re-measure; repository row names v0.10.86
+
+gbrain-evals v0.10.86. On gbrain v0.60.203.0 setup still misses wired recall (67.8 s against 60 s), first push (0/3)
+and consent, and meets the faster-setup threshold as scored (26.5%) but not on reading (19%, a frozen date-rule miss)
+([report](docs/benchmarks/2026-10-13-cat41-setup-remeasure.md)). The repository row names v0.10.86 (was v0.10.85).
+
+### 2026-10-13: Memory proof wave 2 results; repository row names v0.10.85
+
+gbrain-evals v0.10.85 adds the wave 2 BEAM row to current results and a memory comparison to how gbrain compares. Both are measured at gbrain
+`71b6d85` (#6445): `combined-v2` passes gates 1, 2 and 3, and adaptive W5 passes its gate at factor 1.50. No other row
+changes. The repository row names v0.10.85 (was v0.10.84). The installed-pin note says `71b6d85` ships in gbrain
+v0.60.202.0 (#6445), with W5 on by default at factor 1.50 and the W1 `question` guidance deferred (was: #6445 has not
+merged).
+
+### 2026-10-13: Repository row names v0.10.84
+
+gbrain-evals v0.10.84 adds the reranker-settings verdict on LongMemEval-S: none of 18 cheaper rerank settings holds
+strict recall@10 within 2 questions of the shipped 50 × 1,400 `rerank-2.5` setting on 300 questions, so the default
+stays. No result row on this page changes. The repository row names v0.10.84 (was v0.10.83).
+
+### 2026-10-12: BEAM-1M S1 fixes; repository row names v0.10.83
+
+gbrain-evals v0.10.83. The memory-qa harness now reranks by default and fails closed without the reranker (+4.5
+points strict recall at 5 on BEAM-1M dev, a harness change rather than a product change), and the S1 report records
+the diverse pool and wider reading staying off ([report](docs/benchmarks/2026-10-12-beam-1m-s1-fixes.md)). The
+repository row names v0.10.83 (was v0.10.82).
+
+### 2026-10-12: Cat 41 scripted user v7 and setup re-measure preregistration; repository row names v0.10.82
+
+gbrain-evals v0.10.82. Cat 41's scripted user now answers a closing question the same way in every install arm, the
+October 12 setup runs are re-scored under v7 beside their unchanged report, and the setup re-measure is preregistered
+against the same targets. The repository row names v0.10.82 (was v0.10.81).
+
+### 2026-10-12: Low-hanging-fruit wave paid gates; repository row names v0.10.81
+
+gbrain-evals v0.10.81 records the paid gates of the low-hanging-fruit wave
+([report](docs/benchmarks/2026-10-12-lhf-wave.md)). No current-results row changes, because the results gate gbrain
+defaults rather than score a release. The repository row names v0.10.81 (was v0.10.80).
+
+### 2026-10-12: Cat 41 `gbrain setup claude-code` TTHW; repository row names v0.10.80
+
+gbrain-evals v0.10.80. The wave 2 setup measurement on v0.60.184.0 misses its wired-recall (83.8 s against 60 s),
+first-push (0/3) and consent targets as written and meets the faster-setup threshold as scored (35%, 23% like-for-like)
+([report](docs/benchmarks/2026-10-12-cat41-setup-tthw.md)). The repository row names v0.10.80 (was v0.10.79).
+
+### 2026-10-12: Cat 40 warm boot waits for the persistence drain; repository row names v0.10.79
+
+gbrain-evals v0.10.79. The Cat 40 warm boot no longer snapshots a slot while gbrain is still draining persistence
+effects, and the D2/D4 notice smoke is recorded ([verdict](docs/benchmarks/2026-10-12-d2d4-smoke/VERDICT.md)). The
+repository row names v0.10.79 (was v0.10.78).
+
+### 2026-10-12: Retire the Cat 40 v1 success headline; repository row names v0.10.78
+
+gbrain-evals v0.10.78. The Cat 40 results row no longer reports 95.6% success on five frontier models: gbrain ran
+without its reranker in all 500 of those cells (gbrain-evals #110) and the world is at its ceiling, so the tie and the
+older six-model lead are retired without a rerun. The row keeps the permission result (0 of 100 finance-only leaks into
+context), which does not depend on reranking. A new row reports the Cat 40 Hard confirmation (+7.7 and +13.0 points
+over plain files on a fresh and a sealed world, reranking verified), and "How gbrain compares" describes agent tasks
+from it. The repository row names v0.10.78 (was v0.10.77).
+
+### 2026-10-12: Q1 scoreboard headline block, pending
+
+New block at the top of "How gbrain compares": the Q1 scoreboard's six-column headline table between the
+`scoreboard:headline` markers, every cell pending until the sealed waves settle. `bun eval/runner/scoreboard.ts
+render` replaces it from the campaign receipt. No existing result changed.
+
+### 2026-10-11: T0b sealed confirmation; repository row names v0.10.77
+
+gbrain-evals v0.10.77. The custodian-sealed T0b confirmation reports the shipped stack (v0.60.174.0) failing 5 of 576
+runs where v0.60.106.0 fails 271, verdict `10x` under `t0b-score-v2` and `improvement` under `t0b-score-v1`
+([report](docs/benchmarks/2026-10-11-t0b-sealed-confirmation.md)). The repository row names v0.10.77 (was v0.10.76).
+
+### 2026-10-11: Pin gbrain v0.60.169.0 (`77cf8e111`); repository row names v0.10.76
+
+gbrain-evals v0.10.76. The pin moves from `8a3eedeac` (v0.60.126.0) to the release v0.60.169.0, `77cf8e111`, after a
+paired keyless regression check that found no gbrain regression ([re-pin report](docs/benchmarks/2026-10-11-wave14-repin.md)).
+The rows rerun at every pin now name `77cf8e111`: N1 (388 of 388, unchanged), N5 (0 prohibited outputs, unchanged),
+the privacy row (0 leaks, 155 of 155 Postgres cells, unchanged) and N12, which reads 29 of 29 formats instead of 28 of
+28 because gbrain registered one more chat pattern (`plain-role-no-time`) and N12 now covers it. The bug-ledger
+sentence counts 29 repros and adds the three memory trust repros. The Cat7-1 limit adds its measurement at the pin.
+Features the old pin predated now appear, each on evidence measured at a commit in the new pin's history: memory
+trust labels (a capability and a results row from the paid run at `c2f10ee8` to `5b9c814b`, with Cats 37 to 39
+passing keyless at the pin), the verbatim-quote probe (`fecc7827`, 500 of 500 clean against 429), scoped vector
+search at 1M to 2M chunks (`2e84d234e`) and the matched BEAM comparison with a memory-bank server (`d7467d1cf`). The
+N2 row moves to `77cf8e111` after its paid judge arm was rerun with Garry's approval ($7.07): it reads 146 of 150
+instead of 149 of 150, with the same judge model and prompt. Three conflicts the earlier run caught were called
+changes over time, which is sampling variation at the provider's default temperature (exact McNemar p = 0.25). It
+also flags 4 of 51 compatible pairs instead of 6. The repository row names v0.10.76 (was v0.10.75).
+
+### 2026-10-11: Repository row names v0.10.75
+
+gbrain-evals v0.10.75 adds the Cat 40 Hard fix wave's plan, development record, confirmation preregistration and
+results, and records that the sealed Hard world has now run once. No result row on this page changes. The repository
+row names v0.10.75 (was v0.10.74).
+
+### 2026-10-11: Repository row names v0.10.74
+
+gbrain-evals v0.10.74 adds Cat 40 Hard: the tier, its calibration record, the October 7 held-out result and the fix
+wave's confirmation, where gbrain v0.60.139.0 is ahead of plain files on a fresh and a sealed world (+7.7 and +13.0
+points). No result row on this page changes. The repository row names v0.10.74 (was v0.10.73).
+
+### 2026-10-11: Repository row names v0.10.73
+
+gbrain-evals v0.10.73 folds in two contributor fixes: the Bash 3.2 resume-args guard in the phase 1 run script and
+the shared judge's rejection of non-finite scores. No result row on this page changes. The repository row names
+v0.10.73 (was v0.10.72).
+
+### 2026-10-11: Repository row names v0.10.72
+
+gbrain-evals v0.10.72 publishes the memory proof wave: the preregistration and addenda, the harness, and the sealed
+BEAM results ([report](docs/benchmarks/2026-10-09-memory-proof-wave-sealed-results.md)) for the build that shipped as
+gbrain #6066 (v0.60.164.0). No result row or capability on this page changes. The repository row names v0.10.72 (was
+v0.10.71).
+
+### 2026-10-10: Repository row names v0.10.71
+
+gbrain-evals v0.10.71 adds the H1 results ([report](docs/benchmarks/2026-10-10-gbrain-budgeted-delivery-h1.md)): on
+sealed confirmation v2, `depth_first` packing lost to the shipped `cap_only` at an explicit 5,500-token budget (122
+against 145 of 200), so gbrain's explicit-budget default does not change. No result row or capability on this page
+changes: the page states no explicit-budget packing result, and calls without a budget are unaffected. The repository
+row names v0.10.71 (was v0.10.70).
+
+### 2026-10-10: Repository row names v0.10.70
+
+gbrain-evals v0.10.70 adds the preregistration of H1, the held-out test of `depth_first` packing against the shipped
+`cap_only` on sealed confirmation v2 ([preregistration](docs/benchmarks/2026-10-10-gbrain-budgeted-delivery-h1-preregistration.md)).
+It is not a result, so no result row on this page changes. The repository row names v0.10.70 (was v0.10.69).
+
+### 2026-10-10: Repository row names v0.10.69
+
+gbrain-evals v0.10.69 adds T0b generator v2 (unique short codes), scorer `t0b-score-v2`, custodian-sealed seed and world
+tooling, and preregistration amendment 5 for the sealed confirmation of the shipped stack. No paid cells. The
+repository row names v0.10.69 (was v0.10.68).
+
+### 2026-10-10: Repository row names v0.10.68
+
+gbrain-evals v0.10.68 adds the T0b namesake diagnostic: the 11 namesake-flagged runs left on the alias-stack arms are
+scorer false positives, with no conflation and no wrong-entity resolution by gbrain. The repository row names v0.10.68
+(was v0.10.67).
+
+### 2026-10-09: Repository row names v0.10.67
+
+gbrain-evals v0.10.67 adds the memory trust categories (Cats 37 to 39), their preregistration and the paid run for
+gbrain #6396 (merged as `d4dc2d4d8`, v0.60.139.0, the #5575 memory trust feature): the [paid report](docs/benchmarks/2026-10-08-memory-trust-results-paid.md).
+No result row on this page changes, because the pin is still `8a3eedeac`, which predates the feature. The repository
+row names v0.10.67 (was v0.10.66).
+
+### 2026-10-09: Repository row names v0.10.66
+
+gbrain-evals v0.10.66 adds the verbatim-probe paired verdict for gbrain #6391 (merged as `f05943e65` in v0.60.138.0):
+the verbatim-quote probe: 71 questions gained a clean read and none lost one (429 to 500 of 500, exact McNemar p = 8.5e-22), with strict recall@10 unchanged at 496 of 500. No result row on this page changes, because the pin is still `8a3eedeac`. The repository row names v0.10.66
+(was v0.10.65).
+
+### 2026-10-09: Repository row names v0.10.65
+
+gbrain-evals v0.10.65 adds the HNSW scale report, mirrored from gbrain #6380 (merged as `2e84d234e` in v0.60.135.0):
+at 1M to 2M chunks, pooled vector attempts that scan 20,000 tuples lift random 10% scope recall@50 from 0.52 to 0.77
+to 0.96 to 0.99, and topic-coherent selective sources remain a gap. No result row on this page changes, because the
+pin is still `8a3eedeac`. The repository row names v0.10.65 (was v0.10.64).
+
+### 2026-10-09: Repository row names v0.10.64
+
+gbrain-evals v0.10.64 adds the T0b alias-stack report: short-code aliases (gbrain #6271 at `f24ca6afe`) on top of
+Candidate 1 cut failures from 18 to 4 of 72 on fresh seeds (`improvement`) and from 25 to 11 of 144 on development seeds
+(`inconclusive`). The repository row names v0.10.64 (was v0.10.63).
+
+### 2026-10-09: Slug-conflict judgment added to current results
+
+gbrain-evals v0.10.63 (the repository row names it; was v0.10.62). New row: gbrain #6377 (`ac6e0868`, branch `capy/gbra72-content-repair`) adds a content-repair lane whose model tier judges a file whose frontmatter `slug:` names another page. On 48 synthetic pairs over three runs, `claude-opus-5-5`, `gpt-6.1-sol` and `claude-sonnet-5-5` gave no harmful answer (no `remove_slug` on a true duplicate, no `merge_into` of two different things, no wrong canonical), removed every stray slug and deferred every ambiguous pair; they recognised 92.0%, 85.3% and 80.0% of true duplicates and deferred the rest. All three qualify; Opus 5.5 leads gbrain's `CONTENT_REPAIR_MEASURED_MODELS`. Details in [the judgment report](docs/benchmarks/2026-10-09-content-repair-judgment.md) and [its preregistration](docs/benchmarks/2026-10-09-content-repair-judgment-preregistration.md).
+### 2026-10-09: Repository row names v0.10.62
+
+gbrain-evals v0.10.62 adds the budgeted delivery E2 report (how `auto` should pack an explicit token budget; development
+data). The repository row names v0.10.62 (was v0.10.59).
+
+### 2026-10-09: Pin gbrain `8a3eedeac`; repository row names v0.10.59
+
+gbrain-evals v0.10.59. The pin moves from `fc548317f` (v0.60.122.0) to `8a3eedeac` (v0.60.126.0), the merge of gbrain #6362,
+which puts the newest dated mentions of each entity on `context_pack` cards, on by default, as measured in the
+[Candidate 1 report](docs/benchmarks/2026-10-09-candidate-1-newer-mentions.md). The repository row names v0.10.59
+(was v0.10.57).
+
+### 2026-10-09: Repository row names v0.10.57
+
+gbrain-evals v0.10.57 adds the evidence brief confirmation (wave 1 A6). The repository row names v0.10.57 (was v0.10.56).
+
+### 2026-10-09: Cat 40 rows note gbrain ran without its reranker; repository row names v0.10.56
+
+gbrain-evals v0.10.56 adds dated corrections to the Cat 40 results that ran gbrain without reranking (restored harness slots kept a closed metering-proxy port; fixed in #76 and #109). The Cat 40 results row now says gbrain's reranker failed in all 500 cells, the agent-tasks comparison says both sets measured gbrain with the reranker off, and Corrections gains a bullet listing the affected runs. The numbers are unchanged. The repository row names v0.10.56 (was v0.10.55).
+
+### 2026-10-08: Repository row names v0.10.55
+
+gbrain-evals v0.10.55 adds the T0b root-cause report, a measurement of gbrain master v0.60.122.0 on the T0b protocol, and harness fixes so restored gbrain slots search with the reranker. The repository row names v0.10.55 (was v0.10.54). Results rows keep the commits they were measured at, so no row changes.
+
+### 2026-10-08: Repository row names v0.10.54
+
+gbrain-evals v0.10.54 adds the harder program primary (T0b): its preregistration with three calibration rounds and its development baseline at gbrain v0.60.106.0. The repository row names v0.10.54 (was v0.10.53). Results rows keep the commits they were measured at, so no row changes.
+
+### 2026-10-08: Pin gbrain `fc548317f`; repository row names v0.10.53
+
+gbrain-evals v0.10.53. The pin moves from `61624308b` (v0.60.120.0) to `fc548317f` (v0.60.122.0), the merge of gbrain #6350, which ships the eval-only evidence brief builder the wave 1 evidence architecture pilot measured. The repository row names v0.10.53 (was v0.10.52).
+
+### 2026-10-08: Repository row names v0.10.52
+
+gbrain-evals v0.10.52 adds the program primary (T0) preregistration and its development baseline at gbrain v0.60.106.0, and the power work (PW). The repository row names v0.10.52 (was v0.10.51). Results rows keep the commits they were measured at, so no row changes.
+
+### 2026-10-08: Pin gbrain `61624308b`; repository row names v0.10.51
+
+gbrain-evals v0.10.51. The pin moves from `a865f8f` (v0.60.104.0) to `61624308b` (v0.60.120.0), the merge of gbrain #6343 (Q2 parser gaps: the line-grammar guards and diagnostics, settings-bound link extraction, and the held-out-confirmed link-typing units U1, U3 and U4). The repository row names v0.10.51 (was v0.10.45; the 0.10.46 to 0.10.50 releases did not restamp it). This release adds the Q2 preregistration, harness, custodian runbook and held-out verdicts (typed relation lines stay opt-in). Results rows keep the commits they were measured at, so no row changes.
+
+### 2026-10-08: ClientRead wedge row; repository row names v0.10.45
+
+gbrain-evals v0.10.45. New row: a managed Postgres sync behind a transaction-mode pooler wedges with one process and no lanes when one round trip never completes, and two consumers on one host were a multiplier, not the cause (0 wedges in 2 h 49 min of the two-consumer shape), mirrored from gbrain's Phase 0 record for #6317 in [the ClientRead wedge report](docs/benchmarks/2026-10-08-managed-sync-clientread-wedge.md). The repository row names v0.10.45 (was v0.10.43).
+### 2026-10-08: Repository row names v0.10.44
+
+gbrain-evals v0.10.44. The repository row names v0.10.44 (was v0.10.43). This release adds the BEAM-1M failure analysis on the development split (wave 0 item B2 of the 10x memory advantage plan) and fixes the BEAM date order in the memory-qa reader prompt; the results table has no BEAM-1M row, so no other row changes.
+
+### 2026-10-08: Repository row names v0.10.43
+
+gbrain-evals v0.10.43. The repository row names v0.10.43 (was v0.10.42). This release adds the shared usage receipt, the reading headroom recount and the model-rule and price updates (wave 0 items A1, A2 and R1 of the 10x memory advantage plan); none of them changes a row in the results table, so no other row changes.
+
+### 2026-10-08: Managed Postgres preparation stall row for gbrain #6298
+
+gbrain-evals v0.10.42. The repository row names v0.10.42 (was v0.10.41). The results table gained a row for the preparation stall fix in gbrain v0.60.112.0 (#6298): a 15,000-entry catch-up with heavy fact adoption that never drained on v0.60.105.0 drains in two passes at pool 10 and three at pool 3, a stuck write is held within 240 s, and a table lock still pins the connection pool (gbrain #6318). One pass at a 3600 s timeout is not met. Full verdicts are in [the report](docs/benchmarks/2026-10-08-managed-sync-preparation-stall.md). No other row changes.
+
+### 2026-10-08: Managed Postgres catch-up row updated for gbrain #6279
+
+gbrain-evals v0.10.41. The catch-up row now reads 372.7 pages/min steady and 33.5 min for the 10,000-file backlog (was 152.8 pages/min and about 1.2 h on v0.60.73.0, from a 4-vCPU host), with a page save at 2.5 s instead of 8.6 s, mirrored from gbrain #6279's before-and-after on one 16-vCPU VM in [the lanes and foreground report](docs/benchmarks/2026-10-07-managed-sync-lanes-foreground.md). Three of gbrain's targets missed and are named there: first commit (20 s against 15 s), page saves during a catch-up, and catch-up speed while an agent saves a page every 5 s (15% of idle against 50%).
+
+### 2026-10-07: Version stamp for the fix wave 12 agent smoke
+
+gbrain-evals v0.10.40. The repository row names v0.10.40 (was v0.10.39). The release adds the fix wave 12 agent smoke, listed in the [docs index](docs/README.md). It is pinned to gbrain v0.60.106.0 (`7aa2caa`, #6269), which shipped the put_page UUID line and reverted the forget-caveat move. No result row on this page changes, because the pin stays at `a865f8f`.
+
+### 2026-10-07: Version stamp for the fix wave 11 records
+
+gbrain-evals v0.10.39. The repository row names v0.10.39 (was v0.10.38). The release adds two records paired with gbrain fix wave 11, listed in the [docs index](docs/README.md): the relaxed HNSW scan order mirror and the D12 agent smoke. No result row on this page changes, because both measure an unmerged gbrain branch rather than the pin.
+
+### 2026-10-07: Re-pin to gbrain `a865f8f`; N1-7 fixed
+
+gbrain-evals v0.10.37. The pin moves from `c5fb0201` (v0.60.95.0) to `a865f8f` (v0.60.104.0), which contains gbrain's fix for N1-7. The ledger sentence now says N1-7 is fixed (was: one open gbrain bug). The privacy and chat-format rows name `a865f8f`, where their keyless checks were rerun; the paid rows, the attendance world and the Postgres-over-HTTP privacy cells stay at `c5fb0201`, named as such.
+
+### 2026-10-07: LongMemEval answers at the current pin, the full-context comparison, Fable smoke-only
+
+gbrain-evals v0.10.37. The LongMemEval answer row moves from 453 of 500 (Sonnet 4.6 house reader, v0.59.13.0) to 468 of 500 at `c5fb0201` with the Sonnet 5.5 benchmark notes reader; against the same reader on the old retrieval that is "no change shown" (462, p = 0.08), so the move reflects the reader and the current pin. The `gpt-5.4` frontier-reader row (447 of 500) is replaced by the best current reader on the same frozen retrieval, Opus 5.5 at 474. "How gbrain compares" gains the matched-reader full-context comparison. Takes and contradiction-judge rows count Opus 5.5 as the top Anthropic model; Fable 5.1 results are smoke-only under Garry's 2026-10-07 rule.
+
+### 2026-10-06: Re-pin to gbrain `c5fb0201` and the October follow-up round
+
+gbrain-evals v0.10.37. The pin moves from `739e5cc` (v0.60.46.0) to `c5fb0201` (v0.60.95.0), which contains every held-out-program plan, so the "newer builds also measured" row is gone. Results rows: privacy now covers Postgres over real HTTP and the N8 gate at `c5fb0201` (was N6 and N8 at `739e5cc`); chat formats 28 of 28 (was 27 of 27); new rows for attendance from documented lists, the contradiction judge on current models and the takes classifier on frontier models; the Cat 35 row says its judge calibration awaits a person's review; the ledger sentence names the October 6 re-pin and the open N1-7 bug it found. Reasons and receipts: the [round plan](docs/plans/2026-10-06-followups-round/PLAN.md) and its reports.
+
+How this page changed, newest first. Measurement history lives in the dated reports and in
+[CHANGELOG.md](CHANGELOG.md); this section records what this page said and why it changed.
+
+### 2026-10-06: Fence repair accuracy added to current results
+
+gbrain-evals v0.10.36. New row: gbrain v0.60.102.0 ([`5b58910`](https://github.com/garrytan/gbrain/commit/5b5891069), #6229) repairs malformed facts and takes tables by itself, and its model tier ships with a measured default. On a 52-fence held-out set written before the repair fixes existed, gpt-6.1-sol and claude-opus-5-5 each repaired 96.0% of the fences that reach the model with zero wrong cells, and answered HOLD on the rest; claude-opus-4-7 and claude-sonnet-5-5 did not qualify. Details and both preregistered rounds are in [the fence repair report](docs/benchmarks/2026-10-06-fence-repair-tier3.md).
+
+### 2026-10-05: Managed Postgres catch-up speed added to current results
+
+gbrain-evals v0.10.26. New row: a managed Postgres brain 57 ms from its database catches up at 152.8 pages per minute in steady state with gbrain v0.60.73.0 (a 10,000-file backlog in about 1.2 h), mirrored from gbrain's own bench in [the catch-up report](docs/benchmarks/2026-10-05-managed-sync-catchup.md). The page had no write-throughput row before.
+
+### 2026-10-05: Other systems described by kind, not by name
+
+The "How gbrain compares" section and the changelog entries below describe other memory systems by kind (a verbatim-session memory system, a token-native retrieval system, a temporal knowledge-graph service, hosted memory products, a model provider's memory tool) instead of naming them. Their names, versions and sources stay in [comparisons and their protocols](docs/comparison-systems.md), which this page links. No number changed.
+
+### 2026-10-05: Rewritten as what gbrain does, current results and how it compares
+
+gbrain-evals v0.10.23. The page now has three parts above the changelog, replacing a run of dated findings and "Update, October 2/3/4" blocks:
+
+- **What gbrain does:** the capabilities in plain words (hybrid retrieval, relationships, whole-conversation delivery, correctness, the agent operator contract, the write path), with a table naming the gbrain under test (pin `739e5cc`, v0.60.46.0, its aliases and the newer builds also measured).
+- **Current results:** one table of every headline number with its gbrain commit and report, including results the page had not carried: Cat 40 on five frontier models (95.6%, 0 of 100 finance leaks), the multi-relation planner's held-out pass (24 better, 0 worse) and PrecisionMemBench precision (0.586).
+- **How gbrain compares:** strict LongMemEval retrieval against other systems' saved rankings (now led by the 451/470 opaque-id recount instead of the September 6 449/470), answer accuracy beside published systems with the same `gpt-5.4` reader, PrecisionMemBench against the upstream table, concept search against reranked vectors, and Cat 40 against files, Postgres and a built-in memory tool.
+- **Known limits** replace the October 1 wins-and-losses lists: Cat7-1, `auto_chronicle` at the pin, Gmail-only open loops, no corpus-wide contradiction scanner, associative recall and the missing held-out check of the retrieval configuration.
+- The narrative of each re-pin, fix wave and correction now lives in the entries below, the dated reports and Corrections.
+
+### 2026-10-04: `auto_chronicle` verdict updated for the fix rerun
+
+[`bfe09be`](https://github.com/garrytan/gbrain-evals/commit/bfe09be). The October 4 `auto_chronicle` paragraph now limits "default-on is contradicted" to `739e5cc` and adds a rerun at gbrain PR #6010 (`5a44025`, not yet merged), which drops events dated after their page. That rerun found 0 such events, 0.04 wrong events per page and recall of 37 and 38 of 38, so default-on is supported there. A link to the rerun report joins the two existing links.
+
+### 2026-10-04: October 4 re-pin update and the `auto_chronicle` off-versus-on test
+
+[`b54b978`](https://github.com/garrytan/gbrain-evals/commit/b54b978). A new "Update, October 4" block reports the offline tier at `109b992` against `739e5cc` (gbrain v0.60.46.0). No category's accuracy changes except A4's: keyless `query` grades 100 of 120 answerable questions `moderate` (was 40). All 28 ledger repros pass, refusals now name the exact command, and N6 moved to one session per probe after a once-per-session notice tripped three probes. The block also reports the first off-versus-on test of `auto_chronicle`: it found 35 and 37 of 38 labeled events and raised "who did I meet that day" from 60% to 100%, but it wrote planned follow-ups as events on future dates (0.96 wrong events per page against a 0.20 gate), so default-on was contradicted under the preregistered rule.
+
+### 2026-10-04: Cat 41 result names the shipped release
+
+[`94cf3ac`](https://github.com/garrytan/gbrain-evals/commit/94cf3ac). The Cat 41 paragraph now credits gbrain v0.60.46.0 (the operator wave, measured at candidate `b3f4e8b`) instead of "candidate release `b3f4e8b` (v0.60.38.0)". The numbers are unchanged.
+
+### 2026-10-04: New section on agents operating gbrain (Cat 40 and Cat 41)
+
+[`da5093b`](https://github.com/garrytan/gbrain-evals/commit/da5093b). A new "When an agent operates gbrain" section describes both categories as they stand. Cat 41 runs pinned Claude Code and Codex CLI sessions through 17 risky requests. The candidate passes its gate with 0 consent violations across 66 safety sessions, 0 false "no notes" answers and token overhead of at most +5.9%, and it finishes 96 of 102 sessions. Released v0.60.35.0, for comparison, has 25 violating steps in 12 safety sessions and finishes 78 of 102. Cat 40 (Model Ladder) swaps only the memory (files with `grep`, a model provider's memory tool, plain Postgres, gbrain's MCP server) across 50 company-knowledge tasks. The section adds run commands (about $80 for both), and the "What should you learn here?" table gains a row for each category.
+
+### 2026-10-04: Re-pin to gbrain `739e5cc`
+
+[`bf5fa53`](https://github.com/garrytan/gbrain-evals/commit/bf5fa53). The installed-pin sentence moves from `109b992` (v0.60.37.0) to `739e5cc` (v0.60.46.0), which carries the Cat 40 cost wave, `auto_chronicle` and the agent-first operator wave. `src/core/search/mode.ts` is byte-identical, so the search-mode claim stands. The October 4 recount sentence now calls `109b992` "the pin at the time".
+
+### 2026-10-04: LongMemEval recounted with opaque session ids
+
+[`6bc98aa`](https://github.com/garrytan/gbrain-evals/commit/6bc98aa). Every published retrieval arm was recounted at `109b992` with opaque session ids, so the `answer_` prefix never reaches gbrain. The page changes in several places:
+
+- "Where gbrain stands" adds the recount (451/470, 95.96%, paired +2/−0 against 449/470). The strict `recall_all@5` table gains two rows: 451/470 with the reranker and 434/470 (92.34%) without.
+- A frontier-reader result joins the answer-accuracy paragraph. `gpt-5.4` on the GPT-4o arm's official prompts answered 447/500 (89.4%), winning 33 and losing 16 against GPT-4o (p = 0.021).
+- The reading-notes study, re-run with opaque ids, still favors notes: 304/361 to 320/361 (+25/−9, p = 0.009).
+- The trimming claim adds the recount values (384/470 to 451/470). "Query rewrites hurt retrieval" is now dated to September 6, because the recount shows 436/470 against 434/470, so expansion stays off only for its extra model call.
+- The Corrections entry replaces "pending a re-run" with these outcomes.
+
+### 2026-10-03: Wave 8 and Foundations 1 re-pin update
+
+[`6eefe68`](https://github.com/garrytan/gbrain-evals/commit/6eefe68). A new "Update, October 3" block for gbrain `109b992` says fix wave 8 and Foundations 1 change no category's accuracy: 30 of 30 categories reach the same verdicts and all 27 ledger repros pass. It lists what the nine new checks show: unpriced models refused under a user cap, `gbrain import` of an ignored folder (3 of 3, was 0) and typed edges at 128 right and 43 wrong (was 125 and 52). It also reports one regression, a timeline read going from 0.05 ms to 0.10 ms on 1,000 pages.
+
+### 2026-10-03: Re-pin to gbrain `109b992`
+
+[`f321afb`](https://github.com/garrytan/gbrain-evals/commit/f321afb). The installed-pin sentence moves from `48ed5e8` (v0.60.32.0) to `109b992` (v0.60.37.0, fix wave 8 plus Foundations 1). The System One sentence is reworded from "That release adds" to "Its System One decision slots stay off".
+
+### 2026-10-03: Fix wave 7 rerun update
+
+[`5e46ca0`](https://github.com/garrytan/gbrain-evals/commit/5e46ca0). A new "Update, October 3" block reports gbrain `48ed5e8` closing eight more ledger gaps. The N2 contradiction judge (prompt v4) found 149 of 150 conflicts (was 132), but it called 6 of 51 compatible pairs contradictions, above the 10% limit, so the page drops the word "separates". The block also covers N7 open loops, N9 one-hop seeds (unresolved fell from 45 to 6 of 435), N12 `Participants:` lines (5 of 5, was 0) and A4 grades (all 120 unanswerable now `weak`).
+
+### 2026-10-02: Re-pin to gbrain `48ed5e8`
+
+[`c8350c5`](https://github.com/garrytan/gbrain-evals/commit/c8350c5). The installed-pin sentence moves from `d44296c` (v0.60.30.0) to `48ed5e8` (v0.60.32.0, fix wave 7). Mode bundles are unchanged.
+
+### 2026-10-02: Concept-search claim rewritten around a matched reranked comparison
+
+[`522c860`](https://github.com/garrytan/gbrain-evals/commit/522c860). The concept-search paragraph had said vector search with a reranker was untested. It now reports that run at gbrain `d44296c`: vector search with the same Voyage reranker scored 128/181 against gbrain's 130/181, with 8 wins and 10 losses for gbrain, so the two are level. The unreranked gbrain cell moves from 102 to 99 of 181, and the reranker's gain is now +40/−9 (was +37/−9). The advice changes to "rerank both" when comparing with a vector store. The September 9 cells (102, 118, 130) stay linked as older-pin history.
+
+### 2026-10-02: Sealed v2 release decision for `auto` evidence delivery
+
+[`2eebf81`](https://github.com/garrytan/gbrain-evals/commit/2eebf81), gbrain-evals v0.10.8. The evidence-delivery paragraph adds the first preregistered decision on the harder sealed v2 set (200 questions, histories of about 143,000 tokens). At gbrain `d44296c`, `auto` with a 24,000-token budget answered 192 of 200 against 132 for chunks (+60/−0, 95% interval +24 to +36 points), so the check passed. The cost is about four times the reader input.
+
+### 2026-10-02: All 20 October 1 bugs verified fixed
+
+[`bd8e44b`](https://github.com/garrytan/gbrain-evals/commit/bd8e44b). A new "Update, October 2" block reports the rerun at gbrain `d44296c` with the same runners and seeds. N1 current-value accuracy went from 288/388 to 388/388, N5 prohibited outputs from 2 to 0, N8 private-page leaks to 0, and N12 now gates CI. The N2 judge found 132 of 150 conflicts, and false contradictions fell from 109 to 26. N9 multi-hop planning is still open, and A4 was not rerun.
+
+### 2026-10-02: Re-pin to gbrain `d44296c`
+
+[`adffe95`](https://github.com/garrytan/gbrain-evals/commit/adffe95). The installed-pin sentence moves from `3a284ae` (v0.60.26.0) to `d44296c` (v0.60.30.0), which contains fix waves 5 and 6. Mode bundles are unchanged.
+
+### 2026-10-01: October 1 category wave results
+
+[`f94e98d`](https://github.com/garrytan/gbrain-evals/commit/f94e98d), gbrain-evals v0.10.5. A new block summarizes eleven keyless or cheap categories run at gbrain `3a284ae`. It lists where gbrain held up (N4, N6, N7 at 45/45, N12, N1, N5) and where it failed: `volunteer_context` leaked 4 private pages (N8), `ontology_propose` refusals cost 100 of 388 probes (N1), the contradiction judge found 105 of 150 (N2), and there was no multi-relation plan (N9). Of 20 bugs, 8 were in fix wave 5 and 10 were scheduled for wave 6. The installed pin moves from `6c8373c` (v0.60.13.0) to `3a284ae` (v0.60.26.0), with a note that its System One slots stay off without a TypeSafe key.
+
+### 2026-10-01: New section on System One (Jev)
+
+[`b13b219`](https://github.com/garrytan/gbrain-evals/commit/b13b219), gbrain-evals v0.10.4. A new "Where a small decision model helps" section reports matched pairs for nine Jev (`jev-1.13.0`) decision slots. Jev helped dream triage (0 of 18 buried items missed, against 10, but 57 of 109 transcripts sent to the page writer instead of 21) and contradiction proposals (94 of 97 updated facts, against none). Reranking, evidence trimming and abstention regressed, so `gbrain decide enable --recommended` turns on two slots only. The "What should you learn here?" table gains a System One row.
+
+### 2026-09-30: Evidence delivery and reranker-on answer accuracy
+
+[`1ec19a2`](https://github.com/garrytan/gbrain-evals/commit/1ec19a2), gbrain-evals v0.10.2. The answer-accuracy paragraph adds two reranker-on results: the notes reader at 453/500 (90.6%, +31/−17, p = 0.059), and the published configuration without the leak at 432/500 against the invalid 433/500 (+15/−16). A new evidence-delivery block reports that whole pages answered 361 of 400 held-out questions against 253 for chunks (p = 6e-27). Neighbor chunks closed only 30% to 36% of the gap, short of the preregistered 60%. The block also reports that the `auto` v2 release check failed on the sealed set (149 against 147 of 150). The Corrections entry and pin follow suit: `608a174` becomes "the previous pin" and the installed pin moves to `6c8373c` (v0.60.13.0).
+
+### 2026-09-29: "Where gbrain stands" comparison and a Corrections section
+
+[`88d0b19`](https://github.com/garrytan/gbrain-evals/commit/88d0b19), gbrain-evals v0.10.1. This release reworked the page after the September 28 audit:
+
+- A new "Where gbrain stands" section adds a strict `recall_all@5` table. gbrain shows 449/470 with the reranker and 439/470 without. Other systems, from our strict recounts of saved rankings, show 423/470, 376/424 and 403/470, and one self-reports 411/470. Limits and an answer-accuracy paragraph follow; the paragraph gives the leak-free 439/500 (87.8%) and says we claim no answer ranking.
+- The 433/500 claim is marked invalid because the answer model saw `answer_` session ids. A new paragraph shows full sessions beat chunks (89/100 against 65/100).
+- The concept claim now states that gbrain without a reranker (102/181) trails vector search (118/181). The relationship claim widens to 145 questions (first-place hits 14% to 24%) and adds the paraphrase check: 0.411 in both arms at `b80cad6`, and 33 of 145 triggered at `608a174`.
+- The write-side paragraph adds evidence-verified retention (58.2% to 74.9%) and an in-sample caveat. A new Corrections section lists the invalid or overstated numbers, including the 49.1% `graph-oracle-parse` row and the May calibration result.
+- The pin text now separates the measured pin `2efaaf8f` (v0.48.4.0) from the installed `608a174` (v0.60.10.0), and a lifecycle row joins the table.
+
+### 2026-09-26: Reading-notes study added
+
+[`b439f12`](https://github.com/garrytan/gbrain-evals/commit/b439f12), gbrain-evals v0.10.0. A new shortlist paragraph reports the September 24 matched reading study: brief notes before answering raised judged correct answers from 308/361 to 324/361 on fixed retrieved sessions. It is labeled as answer reading, not a retrieval gain. The pinned gbrain link moves from `2efaaf8f` to `939232f1`.
+
+### 2026-09-09: Rewritten as a guide to retrieval evidence
+
+[`9238ec8`](https://github.com/garrytan/gbrain-evals/commit/9238ec8), gbrain-evals v0.8.0. The page was rewritten from scratch, removing 258 lines. Gone are the "beats the field" head-to-head table, the "three things nobody else does" list, the PrecisionMemBench section, the area table, the corpus and layout sections and the per-benchmark run commands. The new page opens with the different kinds of retrieval problem and points to `docs/retrieval-lessons.md`, `docs/settings.md` and `docs/README.md`. A "Why put gbrain on your shortlist?" section makes five evidence-linked claims: 449/470 (95.53%) LongMemEval strict retrieval with 433/500 answers, 130/181 against 118/181 on concept questions, investor first-place hits from 9/39 to 21/39, trimming off raising retrieval from 379/470 to 449/470, and an inspectable pipeline pinned at gbrain `2efaaf8f`. The rest is a question-to-document table, a keyless `grep-only` quick experiment, a write-side summary (70.2% to 88.1% retention, 7.0% hallucination) and an "Inspect or extend" section.
+
+### 2026-09-02: LongMemEval rows updated for the v0.48.2.0 re-run
+
+[`4ceb7f9`](https://github.com/garrytan/gbrain-evals/commit/4ceb7f9), gbrain-evals v0.6.1. Both LongMemEval rows replace 83.4% with the September 2 re-run on the cleaned Sept-2025 revision: 93.19% `recall_all@5` reranker off (438/470) and 95.32% with `voyage:rerank-2.5` (448/470), plus per-type figures. The comparison cell now uses our strict recounts of another system's saved rankings (85.7% raw, 90.0% with LLM rerank) and a third system's self-reported 87.45%. The run commands switch to the cleaned dataset URL, `VOYAGE_API_KEY` and the five published arms. Several cells drop their "first run scored 61.5%" and audit narrative in favor of present-tense statements, and the "benchmarks that bite back" bullet now names the committed gates.
+
+### 2026-09-01: Outside-review remediation and claim hygiene
+
+[`29e9ac9`](https://github.com/garrytan/gbrain-evals/commit/29e9ac9), gbrain-evals v0.6.0. The LongMemEval head-to-head row now says these are retrieval-component numbers, not QA accuracy. It records another system's 96.6% as any-hit and adds a third system's self-reported 84.3% and 87.45% All@5, so it claims no `recall_all` lead. Cat 35 leakage changes from "zero" to 1.2% (1/86), and the Cat 34 rows gain links to committed receipts and the 0.552 codex seam. The PrecisionMemBench 0.582 becomes an upper bound (the best hosted product now 0.22 upstream), the default precision moves from 0.076 to 0.075, and the relational 97.9%/49.1% row is flagged as pre-audit.
+
+### 2026-09-01: LongMemEval erratum resolved at 83.4%
+
+[`91d2af8`](https://github.com/garrytan/gbrain-evals/commit/91d2af8), gbrain-evals v0.5.1. Both LongMemEval rows replace "re-measurement pending" with the official `recall_all@5` of 83.4% (n=470), recomputed at $0 from the May run's raw rows. The rows keep 97.6% any-hit as a diagnostic (488/500) and name multi-session (71.9%) and temporal (69.3%) as the source of the loss.
+
+### 2026-08-31: Eval audit and the head-to-head section
+
+[`bd5ba0d`](https://github.com/garrytan/gbrain-evals/commit/bd5ba0d), gbrain-evals v0.5.0 (per `CHANGELOG.md`; the commit subject says BrainBench v0.3.0). A new "Where gbrain beats the field" table compares five arenas (LongMemEval 97.6%, Cat 35 88.1%, Cat 34, PrecisionMemBench 0.582 against a hosted product's 0.43, relational 49.1% P@5). A "three things nobody else does" list cites the 35-agent audit (239 findings, 236 fixed). "Where gbrain lands today" is renamed "The numbers, report by report", and the LongMemEval row gains an any-hit erratum. The page now describes what CI actually runs and adds a keys note for `eval:run` (`OPENAI_API_KEY`, about $2 first run), `--top-k 5` in the commands and the exact-SHA pin in reproduce steps.
+
+### 2026-08-31: Cat 35 republished at 88.1% and Cat 34 row added
+
+[`d101b01`](https://github.com/garrytan/gbrain-evals/commit/d101b01), gbrain-evals v0.4.0. The Cat 35 row moves from 61.5% to 88.1% salient-unit recall with all 20 sessions emitting, after the gbrain v0.47.8.0 fix wave (hallucination halved to 7%, quote fidelity 45% to 83%). A new Cat 34 memory-conformance row reports 0 know-to-ask failures, push precision 1.0 and recall 0.91 across 149 gold turns.
+
+### 2026-08-30: Cat 35 transcript distillation added
+
+[`d5b94c7`](https://github.com/garrytan/gbrain-evals/commit/d5b94c7), gbrain-evals v0.3.0. The results table gains a Cat 35 row (61.5% salient-unit recall, 85% usable, 0% noise leakage, against a 93.1% judge ceiling). The corpora list adds the 24 fictional agent sessions (173 salient units, 86 distractors). The layout gains `generators/` and `scripts/`, and a note explains that Cat 35 deep-imports `gbrain/src` internals, which is why the dependency is pinned to an exact SHA.
+
+### 2026-06-03: Plain-English rewrite and SkillOpt result
+
+[`565b807`](https://github.com/garrytan/gbrain-evals/commit/565b807). The page was rewritten in plain English as "the test suite for gbrain". It gained a "How these benchmarks work" explainer (corpus, sealed answers, score; recall and precision) and a "Where gbrain lands today" table with a plain-English column. The table adds a SkillOpt row (4/4 skills 0 to 1.00). A "We report the bad numbers too" section frames the PrecisionMemBench 0.076 default. The Cat catalog becomes an area table, and the corpus, layout and contributing sections are simplified.
+
+### 2026-05-30: Streamlined around LongMemEval and PrecisionMemBench added
+
+[`8fa09ff`](https://github.com/garrytan/gbrain-evals/commit/8fa09ff), gbrain-evals v0.2.0. A "Headline result" quote puts LongMemEval 97.60% R@5 against another system's 96.6% at the top, and the results table adds PrecisionMemBench (#2, 0.582 precision with the opt-in gate). A new PrecisionMemBench section reports the 0.076 default, the 0.582 adaptive result and the narrow-probe caveat, with run commands. The page drops the Cat 2 catalog row, the paid `eval:brainbench` commands and the design-doc section, condenses the layout and contributing sections, and lists `VERSION` and `CHANGELOG.md`.
+
+### 2026-05-24: v0.40.6.0 snapshot headline
+
+[`9ecc5b2`](https://github.com/garrytan/gbrain-evals/commit/9ecc5b2). "Latest results" now leads with the gbrain v0.40.6.0 comprehensive snapshot and three headline claims: LongMemEval 97.60% R@5 against another system's 96.6%, BrainBench 49.1% P@5 (38 points over vector RAG), and zero retrieval regression across 20 releases. The table gains snapshot and Cat 14+15 calibration rows, and one comparator is removed from the comparison mentions.
+
+### 2026-05-07: LongMemEval result and public-benchmark family
+
+[`c2d26e6`](https://github.com/garrytan/gbrain-evals/commit/c2d26e6). The intro now covers two families, BrainBench and public benchmarks. A "Latest results" section leads with LongMemEval `_s` at 97.60% R@5 (+1.0 point over another system's raw retrieval) and a dated table of reports. The quickstart splits into LongMemEval (dataset download, keys, batch runner, about $2 first run) and BrainBench. A "Public benchmarks" table lists the LongMemEval splits, ConvoMem and LoCoMo, and the layout adds the LongMemEval runner files, the embed cache and `docs/comparison-systems.md`.
+
+### 2026-04-23: Adapters renamed to plain English
+
+[`8dab7f7`](https://github.com/garrytan/gbrain-evals/commit/8dab7f7). Adapter names in the intro, layout and subpath list change: `ripgrep-bm25` becomes `grep-only`, `vector-only` becomes `vector` and `hybrid-nograph` becomes `vector-grep-rrf-fusion`.
+
+### 2026-04-21: Created with the BrainBench v1 extraction
+
+[`5bd8848`](https://github.com/garrytan/gbrain-evals/commit/5bd8848). The first README presented BrainBench as a benchmark for personal knowledge agent stacks. It scored four adapters on a 240-page fictional corpus, with a headline of gbrain P@5 49.1% and R@5 97.9% (+31.4 points over its graph-disabled variant). It covered why the repo is separate from gbrain, a quickstart, the Cat 1 to 12 catalog with thresholds, the world-v1 and amara-life-v1 corpora, the repo layout, three contributor paths, methodology, the license and the `gbrain/*` subpath exports it consumes.

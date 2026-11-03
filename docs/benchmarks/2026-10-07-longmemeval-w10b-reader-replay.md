@@ -46,7 +46,7 @@ Fable 5.1 ran on a seeded 200-question subset before Garry's 2026-10-07 rule tha
 | Sonnet 4.6 direct (R2, 2026-09-29) | 500 | Complete | 437 | 436 | 487 | 0 | 90 | (Sept.) |
 | Sonnet 5.5 notes | 500 | Complete | 462 | 468 | 488 | 0 | 203 | $11.77 |
 | Sonnet 5.5 direct | 500 | Complete | 465 | 470 | 491 | 0 | 108 | $11.30 |
-| GPT-6.1 Sol notes | 500 | Complete | 464 | 464 | 494 | 0 | 110 | $7.12 |
+| GPT-6.1 Sol notes | 500 | Complete | 464 | 464 | 494 | 0 | 110 | $7.12 ([corrected 2026-11-01](../corrections.md#longmemeval)) |
 | GPT-5.4, official prompt | 500 | Complete | 460 | 459 | 491 | 0 | 452 | $9.53 |
 | Opus 5.5 notes | 500 | Complete | **474** | **480** | 494 | 0 | 294 | $24.01 |
 
@@ -103,12 +103,12 @@ Most of Opus 5.5's lead over Sonnet 4.6 is in multi-session questions (+9) and p
 |---|---|---|---|
 | Sonnet 5.5 notes (with 10-question pilot) | $11.77 | $0.34 | $21.71 |
 | Sonnet 5.5 direct | $11.30 | $0.26 | $21.28 |
-| GPT-6.1 Sol notes | $7.12 | $0.25 | $38.69 |
+| GPT-6.1 Sol notes | $7.12 ([corrected 2026-11-01](../corrections.md#longmemeval)) | $0.25 | $38.69 |
 | GPT-5.4 official (pilot, batch, retry of 57) | $9.53 | $0.39 | $61.44 |
 | Opus 5.5 notes (with pilot) | $24.01 | $0.35 | $43.42 |
 | Fable 5.1 notes, 200 (with pilot) | $24.49 | $0.16 | $33.70 |
 | Secondary judge on the September Sonnet 4.6 answers | | $0.32 | |
-| **Total (W10b run, $107 cap)** | | | **$90.29** |
+| **Total (W10b run, $107 cap)** | | | **$90.29** ([corrected 2026-11-01](../corrections.md#longmemeval)) |
 
 Every arm ran through the batch APIs at 50% of list price; each provider-and-model's 10-question pilot confirmed the discount from the provider's own accounting before the full batch (`service_tier: "batch"` on every Anthropic message; OpenAI batch usage equal to the sum of its rows). Reader batches finished in 3 to 12 minutes, except `gpt-5.4`'s, which stalled at 431 of 490 for 45 minutes and was cancelled (unfinished requests are not billed); its 57 unfinished requests used their one preregistered resubmission and all succeeded. Two judge batches stalled the same way near the end (2 and 15 requests) and were handled the same way. No reservation was refused and nothing was resubmitted automatically. Batch requests carry no per-request latency, so none is reported.
 

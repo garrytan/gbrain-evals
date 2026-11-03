@@ -1,0 +1,59 @@
+{
+  "schema_version": 2,
+  "benchmark_version": "0.5.0",
+  "category": "cat30-skillopt-improvement",
+  "gbrain_version": "0.60.531.0",
+  "gbrain_pin": "github:garrytan/gbrain#3ec766c40664b652b14e39788d177139f5a7b105",
+  "started_at": "2026-11-01T15:20:31.634Z",
+  "run_status": "completed",
+  "verdict": "pass",
+  "n_total": 1,
+  "n_scored": 1,
+  "completion_rate": 1,
+  "errors": [],
+  "publishable": false,
+  "resolved_config": {
+    "search_mode": "balanced",
+    "reranker_enabled": false,
+    "pinned_config": {
+      "search.mode": "balanced",
+      "search.reranker.enabled": "false"
+    },
+    "llm_transport": "live",
+    "mode": "b-pre-validity",
+    "target_model": "anthropic:claude-haiku-5-5",
+    "optimizer_model": "anthropic:claude-haiku-5-5",
+    "judge_model": "openai:gpt-6.1-sol",
+    "epochs": 1,
+    "batch_size": 5,
+    "runs_per_task": 1,
+    "max_cost_usd": 3,
+    "seeds": [
+      "seed-missing-structure"
+    ],
+    "improve_margin": 0.05,
+    "corpus": "skillopt-v1"
+  },
+  "finished_at": "2026-11-01T15:25:43.523Z",
+  "data": {
+    "seeds": [
+      {
+        "seed": "seed-missing-structure",
+        "baseline_heldout": 0,
+        "optimized_heldout": 0.4166666666666667,
+        "delta": 0.4166666666666667,
+        "outcome": "accepted",
+        "baseline_sel_score": 0,
+        "best_sel_score": 0.7,
+        "final_cost_usd": 0.11370521000000001,
+        "improved": true
+      }
+    ],
+    "seeds_improved": 1,
+    "seeds_scored": 1,
+    "seeds_total": 1,
+    "total_cost_usd": 0.11370521000000001,
+    "gate_pass": true,
+    "infra_error_rate": 0
+  }
+}

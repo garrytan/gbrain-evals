@@ -2,29 +2,44 @@
  * Reader, judge and arm configuration for the workload suites.
  *
  * Model ids are placeholders until the preregistration freezes them. The
- * project rule: one fixed reader for every cell (the newest frontier
- * Sonnet); a preregistered subset of questions swept across the newest
- * frontier Opus, GPT, Sonnet and Fable models; one fixed judge. Older
- * generations and gpt-5.4-mini are never run. Before a paid run, check which
- * models are newest and update this file in a commit that runs nothing.
+ * project rule: one fixed reader for every cell (the newest frontier Opus,
+ * a primary model); a preregistered subset of questions swept across the
+ * newest frontier Opus and GPT models, plus particle-1 (a primary model,
+ * plan GST-605); one fixed judge, never particle-1. Sonnet and Haiku are
+ * never readers under test (frontier first, 2026-11-01). Fable reads only in
+ * a labeled smoke run, never a counted cell. Older generations and
+ * gpt-5.4-mini are never run. Before a paid run, check which models are
+ * newest and update this file in a commit that runs nothing.
  */
+import { existsSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { COMPAT_PROVIDERS, modelsNotRun } from '../runner/providers/openai-compatible.ts';
+import { FRONTIER_READERS, SMOKE_ONLY_READERS } from '../runner/systems/baselines.ts';
 import { sha256 } from './common.ts';
 import type { SuiteBundle, SuiteId } from './types.ts';
 
-export interface ModelRef { id: string; family: 'sonnet' | 'opus' | 'gpt' | 'fable' }
+export interface ModelRef { id: string; family: 'sonnet' | 'opus' | 'gpt' | 'fable' | 'particle' }
+
+/** The providers bench-infra.ts `callModel` sends reader and judge calls to: Anthropic, OpenAI and every COMPAT_PROVIDERS row. */
+export const ROUTED_PROVIDERS: readonly string[] = ['anthropic', 'openai', ...Object.keys(COMPAT_PROVIDERS)];
+
+/** The primary models (PRIMARY_MODELS) the workload suites have no route for, each with its reason; outside every identity and resume check. */
+export const workloadModelsNotRun = (routed: readonly string[] = ROUTED_PROVIDERS) =>
+  modelsNotRun('workload-suites', model => routed.includes(model.slice(0, model.indexOf(':'))));
 
 export const MODEL_CONFIG = {
   status: 'placeholder: confirm newest models and freeze in the preregistration before any paid cell',
-  checked: '2026-10-05',
-  fixed_reader: { id: 'anthropic:claude-sonnet-5-5', family: 'sonnet' } as ModelRef,
+  checked: '2026-11-02',
+  fixed_reader: { id: 'anthropic:claude-opus-5-5', family: 'opus' } as ModelRef,
   frontier_sweep: [
     { id: 'anthropic:claude-opus-5-5', family: 'opus' },
-    { id: 'openai:gpt-6-astra', family: 'gpt' },
-    { id: 'anthropic:claude-sonnet-5-5', family: 'sonnet' },
-    { id: 'anthropic:claude-fable-5-1', family: 'fable' },
+    { id: 'openai:gpt-6.1-sol', family: 'gpt' },
+    { id: 'particle:particle-1', family: 'particle' },
   ] as ModelRef[],
-  /** The alternate newest GPT, re-reading the same frontier subset when the budget allows (it is also the judge model). */
-  alternate_readers: [{ id: 'openai:gpt-6.1-sol', family: 'gpt' }] as ModelRef[],
+  /** Readers allowed only in a labeled smoke run (`bench.ts --smoke N --models ...`), never in a counted cell: Fable (CLAUDE.md). */
+  smoke_only_readers: [...SMOKE_ONLY_READERS] as string[],
+  /** gpt-6-astra re-reads the same frontier subset when the budget allows. It is an alternate reader, never a counted frontier reader: the sweep's GPT is gpt-6.1-sol (CLAUDE.md). */
+  alternate_readers: [{ id: 'openai:gpt-6-astra', family: 'gpt' }] as ModelRef[],
   /** Judges only answers the deterministic scorer marks `ambiguous` (both the gold and a stale or distractor value named). */
   judge: { id: 'openai:gpt-6.1-sol', family: 'gpt' } as ModelRef,
   /** Fraction of each category's questions in the frontier sweep, chosen by hash order of query id. */
@@ -46,21 +61,36 @@ export const MODEL_CONFIG = {
     /** The no-memory control calls the reader with this exact context, so an empty-context guard cannot skip the call. */
     no_memory_context: '(no memories were retrieved)',
   },
+  models_not_run: workloadModelsNotRun(),
 } as const;
 
 /** Model ids the project rule excludes: older generations and gpt-5.4-mini. */
 const EXCLUDED = [/gpt-5\.4-mini/, /claude-(?:sonnet|opus)-4/, /claude-haiku/, /gpt-5(?:\.|-|$)/, /gpt-4/, /claude-sonnet-5(?!-5)/, /claude-opus-5(?!-5)/, /claude-fable-5(?!-1)/];
 
-export function modelRuleViolations(config: { fixed_reader: ModelRef; frontier_sweep: readonly ModelRef[]; judge: ModelRef } = MODEL_CONFIG): string[] {
+export function modelRuleViolations(config: { fixed_reader: ModelRef; frontier_sweep: readonly ModelRef[]; alternate_readers?: readonly ModelRef[]; judge: ModelRef } = MODEL_CONFIG): string[] {
   const out: string[] = [];
-  for (const m of [config.fixed_reader, ...config.frontier_sweep, config.judge]) {
+  for (const m of [config.fixed_reader, ...config.frontier_sweep, ...(config.alternate_readers ?? []), config.judge]) {
     if (EXCLUDED.some(re => re.test(m.id))) out.push(`${m.id} is an excluded or older-generation model`);
+    if ((SMOKE_ONLY_READERS as readonly string[]).includes(m.id)) out.push(`${m.id} is smoke-only and never reads or judges a counted cell`);
   }
-  const families = new Set(config.frontier_sweep.map(m => m.family));
-  for (const f of ['opus', 'gpt', 'sonnet', 'fable'] as const) if (!families.has(f)) out.push(`frontier sweep has no ${f} model`);
-  if (config.fixed_reader.family !== 'sonnet') out.push('the fixed reader must be the newest frontier Sonnet');
-  if (!config.frontier_sweep.some(m => m.id === config.fixed_reader.id)) out.push('the fixed reader must be the sweep\'s Sonnet so the sweep shares one anchor');
+  for (const id of FRONTIER_READERS) if (!config.frontier_sweep.some(m => m.id === id)) out.push(`frontier sweep has no ${id}, one of the newest frontier readers (FRONTIER_READERS)`);
+  if (config.fixed_reader.family !== 'opus') out.push('the fixed reader must be the newest frontier Opus');
+  if (config.judge.id.startsWith('particle:')) out.push(`${config.judge.id} never judges a counted cell`);
+  if (!config.frontier_sweep.some(m => m.id === config.fixed_reader.id)) out.push('the fixed reader must be the sweep\'s Opus so the sweep shares one anchor');
   return out;
+}
+
+/**
+ * Why a run directory cannot be answered, scored or reported under MODEL_CONFIG, or null. A directory whose run.json
+ * records another fixed reader holds that reader's answers and its sweep's under the same receipt paths, so the current
+ * config would reuse or relabel them as its own fixed reader's.
+ */
+export function recordedReaderProblem(dir: string): string | null {
+  const path = join(dir, 'run.json');
+  if (!existsSync(path)) return null;
+  const recorded = (JSON.parse(readFileSync(path, 'utf8')) as { models?: { fixed_reader?: { id?: string } } }).models?.fixed_reader?.id;
+  if (!recorded || recorded === MODEL_CONFIG.fixed_reader.id) return null;
+  return `${dir} was answered with fixed reader ${recorded}, and run-config.ts names ${MODEL_CONFIG.fixed_reader.id}; move the directory aside before a new run, or check out the commit that answered it to rescore or report it`;
 }
 
 /** One measured configuration of a system on a suite. */

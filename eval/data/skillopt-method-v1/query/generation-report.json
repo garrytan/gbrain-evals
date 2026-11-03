@@ -1,0 +1,433 @@
+{
+  "skill": "query",
+  "seed": 15001,
+  "candidates": {
+    "gov-value": 164,
+    "founder": 80,
+    "affiliation": 80,
+    "negative": 17
+  },
+  "dropped_by_oracle": 79,
+  "dropped_by_solvability": 0,
+  "dropped": [
+    {
+      "family": "founder",
+      "anchor": "companies/accel-5",
+      "reason": "0 founders in _facts"
+    },
+    {
+      "family": "founder",
+      "anchor": "companies/acme-labs-50",
+      "reason": "founder page missing"
+    },
+    {
+      "family": "founder",
+      "anchor": "companies/amazon-3",
+      "reason": "0 founders in _facts"
+    },
+    {
+      "family": "founder",
+      "anchor": "companies/andreessen-horowitz-2",
+      "reason": "0 founders in _facts"
+    },
+    {
+      "family": "founder",
+      "anchor": "companies/apple-4",
+      "reason": "0 founders in _facts"
+    },
+    {
+      "family": "founder",
+      "anchor": "companies/benchmark-3",
+      "reason": "0 founders in _facts"
+    },
+    {
+      "family": "founder",
+      "anchor": "companies/bessemer-12",
+      "reason": "0 founders in _facts"
+    },
+    {
+      "family": "founder",
+      "anchor": "companies/beta-labs-51",
+      "reason": "founder page missing"
+    },
+    {
+      "family": "founder",
+      "anchor": "companies/delta-labs-53",
+      "reason": "founder page missing"
+    },
+    {
+      "family": "founder",
+      "anchor": "companies/epsilon-labs-54",
+      "reason": "founder page missing"
+    },
+    {
+      "family": "founder",
+      "anchor": "companies/first-round-10",
+      "reason": "0 founders in _facts"
+    },
+    {
+      "family": "founder",
+      "anchor": "companies/floodgate-9",
+      "reason": "0 founders in _facts"
+    },
+    {
+      "family": "founder",
+      "anchor": "companies/founders-fund-0",
+      "reason": "0 founders in _facts"
+    },
+    {
+      "family": "founder",
+      "anchor": "companies/gamma-labs-52",
+      "reason": "founder page missing"
+    },
+    {
+      "family": "founder",
+      "anchor": "companies/google-1",
+      "reason": "0 founders in _facts"
+    },
+    {
+      "family": "founder",
+      "anchor": "companies/greylock-4",
+      "reason": "0 founders in _facts"
+    },
+    {
+      "family": "founder",
+      "anchor": "companies/helix-labs-59",
+      "reason": "founder page missing"
+    },
+    {
+      "family": "founder",
+      "anchor": "companies/index-ventures-7",
+      "reason": "0 founders in _facts"
+    },
+    {
+      "family": "founder",
+      "anchor": "companies/initialized-11",
+      "reason": "0 founders in _facts"
+    },
+    {
+      "family": "founder",
+      "anchor": "companies/khosla-ventures-8",
+      "reason": "0 founders in _facts"
+    },
+    {
+      "family": "founder",
+      "anchor": "companies/kleiner-perkins-14",
+      "reason": "0 founders in _facts"
+    },
+    {
+      "family": "founder",
+      "anchor": "companies/lightspeed-6",
+      "reason": "0 founders in _facts"
+    },
+    {
+      "family": "founder",
+      "anchor": "companies/meridian-40",
+      "reason": "founder page missing"
+    },
+    {
+      "family": "founder",
+      "anchor": "companies/meta-2",
+      "reason": "0 founders in _facts"
+    },
+    {
+      "family": "founder",
+      "anchor": "companies/microsoft-0",
+      "reason": "0 founders in _facts"
+    },
+    {
+      "family": "founder",
+      "anchor": "companies/nea-13",
+      "reason": "0 founders in _facts"
+    },
+    {
+      "family": "founder",
+      "anchor": "companies/nexus-41",
+      "reason": "founder page missing"
+    },
+    {
+      "family": "founder",
+      "anchor": "companies/nimbus-labs-55",
+      "reason": "founder page missing"
+    },
+    {
+      "family": "founder",
+      "anchor": "companies/orbit-42",
+      "reason": "founder page missing"
+    },
+    {
+      "family": "founder",
+      "anchor": "companies/prism-43",
+      "reason": "founder page missing"
+    },
+    {
+      "family": "founder",
+      "anchor": "companies/pulse-labs-58",
+      "reason": "founder page missing"
+    },
+    {
+      "family": "founder",
+      "anchor": "companies/quantum-labs-57",
+      "reason": "founder page missing"
+    },
+    {
+      "family": "founder",
+      "anchor": "companies/quasar-44",
+      "reason": "founder page missing"
+    },
+    {
+      "family": "founder",
+      "anchor": "companies/resonance-45",
+      "reason": "founder page missing"
+    },
+    {
+      "family": "founder",
+      "anchor": "companies/sequoia-capital-1",
+      "reason": "0 founders in _facts"
+    },
+    {
+      "family": "founder",
+      "anchor": "companies/spire-46",
+      "reason": "founder page missing"
+    },
+    {
+      "family": "founder",
+      "anchor": "companies/talon-47",
+      "reason": "founder page missing"
+    },
+    {
+      "family": "founder",
+      "anchor": "companies/umbra-48",
+      "reason": "founder page missing"
+    },
+    {
+      "family": "founder",
+      "anchor": "companies/vector-labs-56",
+      "reason": "founder page missing"
+    },
+    {
+      "family": "founder",
+      "anchor": "companies/vellum-49",
+      "reason": "founder page missing"
+    },
+    {
+      "family": "affiliation",
+      "anchor": "people/beth-williams-177",
+      "reason": "no primary affiliation page"
+    },
+    {
+      "family": "affiliation",
+      "anchor": "people/carol-jackson-81",
+      "reason": "neither the company's _facts nor its page prose name the person"
+    },
+    {
+      "family": "affiliation",
+      "anchor": "people/carol-wilson-28",
+      "reason": "person page prose does not name the company"
+    },
+    {
+      "family": "affiliation",
+      "anchor": "people/chris-jackson-91",
+      "reason": "neither the company's _facts nor its page prose name the person"
+    },
+    {
+      "family": "affiliation",
+      "anchor": "people/chris-singh-96",
+      "reason": "no primary affiliation page"
+    },
+    {
+      "family": "affiliation",
+      "anchor": "people/chris-williams-37",
+      "reason": "person page prose does not name the company"
+    },
+    {
+      "family": "affiliation",
+      "anchor": "people/david-zhang-83",
+      "reason": "neither the company's _facts nor its page prose name the person"
+    },
+    {
+      "family": "affiliation",
+      "anchor": "people/eric-martinez-93",
+      "reason": "neither the company's _facts nor its page prose name the person"
+    },
+    {
+      "family": "affiliation",
+      "anchor": "people/fiona-moore-88",
+      "reason": "neither the company's _facts nor its page prose name the person"
+    },
+    {
+      "family": "affiliation",
+      "anchor": "people/helen-johnson-32",
+      "reason": "person page prose does not name the company"
+    },
+    {
+      "family": "affiliation",
+      "anchor": "people/helen-martinez-87",
+      "reason": "neither the company's _facts nor its page prose name the person"
+    },
+    {
+      "family": "affiliation",
+      "anchor": "people/henry-johnson-12",
+      "reason": "person page prose does not name the company"
+    },
+    {
+      "family": "affiliation",
+      "anchor": "people/iris-lee-82",
+      "reason": "neither the company's _facts nor its page prose name the person"
+    },
+    {
+      "family": "affiliation",
+      "anchor": "people/jack-davis-89",
+      "reason": "neither the company's _facts nor its page prose name the person"
+    },
+    {
+      "family": "affiliation",
+      "anchor": "people/julia-davis-86",
+      "reason": "neither the company's _facts nor its page prose name the person"
+    },
+    {
+      "family": "affiliation",
+      "anchor": "people/kate-lopez-99",
+      "reason": "no primary affiliation page"
+    },
+    {
+      "family": "affiliation",
+      "anchor": "people/linda-taylor-178",
+      "reason": "no primary affiliation page"
+    },
+    {
+      "family": "affiliation",
+      "anchor": "people/mark-jones-2",
+      "reason": "person page prose does not name the company"
+    },
+    {
+      "family": "affiliation",
+      "anchor": "people/priya-taylor-85",
+      "reason": "neither the company's _facts nor its page prose name the person"
+    },
+    {
+      "family": "affiliation",
+      "anchor": "people/quinn-miller-39",
+      "reason": "person page prose does not name the company"
+    },
+    {
+      "family": "affiliation",
+      "anchor": "people/rachel-brown-95",
+      "reason": "no primary affiliation page"
+    },
+    {
+      "family": "affiliation",
+      "anchor": "people/rosa-jackson-90",
+      "reason": "neither the company's _facts nor its page prose name the person"
+    },
+    {
+      "family": "affiliation",
+      "anchor": "people/rosa-miller-98",
+      "reason": "no primary affiliation page"
+    },
+    {
+      "family": "affiliation",
+      "anchor": "people/rosa-nakamura-94",
+      "reason": "neither the company's _facts nor its page prose name the person"
+    },
+    {
+      "family": "affiliation",
+      "anchor": "people/sarah-lopez-84",
+      "reason": "neither the company's _facts nor its page prose name the person"
+    },
+    {
+      "family": "affiliation",
+      "anchor": "people/sarah-williams-92",
+      "reason": "neither the company's _facts nor its page prose name the person"
+    },
+    {
+      "family": "affiliation",
+      "anchor": "people/tara-jackson-173",
+      "reason": "no primary affiliation page"
+    },
+    {
+      "family": "affiliation",
+      "anchor": "people/tara-kapoor-111",
+      "reason": "person page prose does not name the company"
+    },
+    {
+      "family": "affiliation",
+      "anchor": "people/tina-hernandez-97",
+      "reason": "no primary affiliation page"
+    },
+    {
+      "family": "affiliation",
+      "anchor": "people/tina-jones-112",
+      "reason": "person page prose does not name the company"
+    },
+    {
+      "family": "affiliation",
+      "anchor": "people/tina-wang-179",
+      "reason": "no primary affiliation page"
+    },
+    {
+      "family": "affiliation",
+      "anchor": "people/vera-chen-14",
+      "reason": "person page prose does not name the company"
+    },
+    {
+      "family": "affiliation",
+      "anchor": "people/vera-singh-20",
+      "reason": "person page prose does not name the company"
+    },
+    {
+      "family": "affiliation",
+      "anchor": "people/vera-wilson-25",
+      "reason": "person page prose does not name the company"
+    },
+    {
+      "family": "affiliation",
+      "anchor": "people/victor-taylor-1",
+      "reason": "person page prose does not name the company"
+    },
+    {
+      "family": "affiliation",
+      "anchor": "people/wendy-hernandez-80",
+      "reason": "neither the company's _facts nor its page prose name the person"
+    },
+    {
+      "family": "affiliation",
+      "anchor": "people/xavier-nakamura-118",
+      "reason": "person page prose does not name the company"
+    },
+    {
+      "family": "affiliation",
+      "anchor": "people/yara-johnson-8",
+      "reason": "person page prose does not name the company"
+    },
+    {
+      "family": "affiliation",
+      "anchor": "people/yara-moore-174",
+      "reason": "no primary affiliation page"
+    }
+  ],
+  "components": 77,
+  "assigned": {
+    "gov-value": {
+      "train": 10,
+      "sel": 10,
+      "test": 15
+    },
+    "founder": {
+      "train": 5,
+      "sel": 5,
+      "test": 8
+    },
+    "affiliation": {
+      "train": 5,
+      "sel": 5,
+      "test": 7
+    },
+    "negative": {
+      "train": 4,
+      "sel": 4,
+      "test": 6
+    }
+  },
+  "unused_candidates": 178
+}

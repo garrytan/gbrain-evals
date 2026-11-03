@@ -72,7 +72,8 @@ import { makeHashEmbedTransport } from './cat18-embedding-providers.ts';
 import { ProbeAccounting } from './probe-accounting.ts';
 import { writeReceipt, receiptPath, BENCHMARK_VERSION, RECEIPT_SCHEMA_VERSION, type Receipt } from './receipt.ts';
 import { gbrainVersion as gbrainVersionResolved, gbrainPin } from './gbrain-version.ts';
-import { JUDGE_PROMPT_VERSION, scoreAnswer, type JudgeEvidence, type RubricCriterion } from './judge.ts';
+import { DEFAULT_JUDGE_MODEL, JUDGE_PROMPT_VERSION, JUDGE_TEMPERATURE, scoreAnswer, type JudgeEvidence, type RubricCriterion } from './judge.ts';
+import { temperatureSent } from './anthropic-request.ts';
 import { chat } from 'gbrain/ai/gateway';
 import { budgetOptionsFrom, receiptCost, startPaidRun, type BudgetOptions } from './budget-ledger.ts';
 import { attestPreregistration, type Attestation } from './prereg.ts';
@@ -95,6 +96,8 @@ export const DEFAULT_MIN_IDEAS = 3;
 /** Live-judge floor on scoreAnswer's 0-5 overall (>= partial threshold). */
 export const DEFAULT_MIN_JUDGE_SCORE = 2.5;
 export const EMBED_MODEL = 'openai:text-embedding-3-large';
+/** Brainstorm generation (and gbrain's internal judge) model under test. */
+export const DEFAULT_CHAT_MODEL = 'anthropic:claude-opus-5-5';
 export const EMBED_DIM = 1536;
 
 /** WS5: pin the retrieval knobs runBrainstorm's close-set hybridSearch reads.
@@ -233,7 +236,7 @@ export interface Cat20Options {
   maxCostUsd?: number;
   reportsDir?: string;
   quiet?: boolean;
-  /** Generation (and internal judge) chat model; default unchanged (claude-sonnet-4-6). */
+  /** Generation (and internal judge) chat model; default DEFAULT_CHAT_MODEL. */
   model?: string;
   /** External per-idea judges (`provider:model`), each scoring every generated idea blind to the internal pass/fail. */
   ideaJudges?: string[];
@@ -483,7 +486,7 @@ export async function runCat20(options: Cat20Options = {}): Promise<Cat20RunResu
     __setEmbedTransportForTests(makeHashEmbedTransport());
   }
   const stubChatFn = stubLlm ? makeStubChatFn(options.stubChatKind ?? 'grounded') : undefined;
-  const chatModel = options.model ?? 'anthropic:claude-sonnet-4-6';
+  const chatModel = options.model ?? DEFAULT_CHAT_MODEL;
   const ideaJudges = options.ideaJudges ?? [];
   const ideaJudgeChat = options.ideaJudgeChat ?? (stubLlm ? undefined : chat);
 
@@ -671,7 +674,7 @@ export async function runCat20(options: Cat20Options = {}): Promise<Cat20RunResu
       live_judge: liveJudge,
       ...(liveJudge ? { min_judge_score: minJudgeScore, judge_prompt_version: JUDGE_PROMPT_VERSION } : {}),
     },
-    ...(liveJudge ? { judge: { model: 'claude-haiku-4-5-20251001', temperature: 0, rubric_version: 'cat20-novelty-usefulness-v1' } } : {}),
+    ...(liveJudge ? { judge: { model: DEFAULT_JUDGE_MODEL, temperature: temperatureSent(DEFAULT_JUDGE_MODEL, JUDGE_TEMPERATURE), rubric_version: 'cat20-novelty-usefulness-v1' } } : {}),
     finished_at: new Date().toISOString(),
     ...(attestation ? { preregistration_attestation: attestation } : {}),
     ...(cost ? { cost } : {}),
